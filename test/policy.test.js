@@ -87,6 +87,20 @@ describe('the supply chain', () => {
     }
   });
 
+  test('every override is pinned to an exact version or to a direct dependency', () => {
+    const walk = (o, at) => Object.entries(o ?? {}).flatMap(([k, v]) => (typeof v === 'object' ? walk(v, `${at}${k} > `) : [[`${at}${k}`, v]]));
+    for (const [name, spec] of walk(readJSON('package.json').overrides, '')) {
+      assert.match(spec, /^(\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?|\$[\w@/.-]+)$/, `override ${name}@${spec} is not exact`);
+    }
+  });
+
+  test('a security fix the pins hold back is forced, so no known advisory stays in the tree', () => {
+    const lock = readJSON('package-lock.json').packages;
+    const moments = Object.entries(lock).filter(([k]) => k.endsWith('node_modules/moment')).map(([, v]) => v.version);
+    assert.ok(moments.length, 'moment is in the tree, through the obsidian types');
+    for (const v of moments) assert.ok(v.localeCompare('2.31.0', undefined, { numeric: true }) >= 0, `moment ${v} carries GHSA-4p3w-j4w9-5jqw`);
+  });
+
   test('the only runtime dependency is the Graphviz WebAssembly engine', () => {
     const workspaceNames = new Set(jsPackages().map((p) => readJSON(`${p}/package.json`).name));
     for (const p of jsPackages()) {
