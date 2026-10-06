@@ -1,0 +1,14 @@
+{
+  "name": "@graph-note/obsidian",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The Obsidian plugin: draws graph blocks and edits them.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "node esbuild.config.mjs"
+  },
+  "dependencies": {
+    "@viz-js/viz": "3.31.0"
+  }
+}

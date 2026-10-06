@@ -1,0 +1,53 @@
+{
+  "about": "What each bundled package carries inside it, and under which licence, keyed by its exact version. When a version changes, the tests fail until the new version's contents are checked and recorded here. THIRD_PARTY_NOTICES.md is generated from this file by scripts/notices.mjs.",
+  "packages": {
+    "@viz-js/viz@3.31.0": {
+      "licence": "MIT",
+      "licenceText": "texts/viz-js.MIT.txt",
+      "source": "https://github.com/mdaines/viz-js",
+      "checked": "2026-10-07, from lib/provenance.json and packages/viz/backend in the viz-js repository",
+      "inside": [
+        {
+          "name": "Graphviz",
+          "version": "16.1.0",
+          "licence": "EPL-2.0",
+          "licenceText": "texts/graphviz.EPL-2.0.txt",
+          "provenance": "https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/16.1.0/graphviz-16.1.0.tar.gz",
+          "source": "https://gitlab.com/graphviz/graphviz/-/tree/16.1.0",
+          "note": "Compiled unmodified to WebAssembly and inlined in the package's JavaScript. Its source is available under EPL-2.0 at the link above."
+        },
+        {
+          "name": "Expat",
+          "version": "2.8.5",
+          "licence": "MIT",
+          "licenceText": "texts/expat.MIT.txt",
+          "provenance": "https://github.com/libexpat/libexpat/releases/download/R_2_8_5/expat-2.8.5.tar.gz",
+          "source": "https://github.com/libexpat/libexpat/tree/R_2_8_5"
+        },
+        {
+          "name": "Emscripten",
+          "version": "6.0.10",
+          "licence": "MIT OR NCSA",
+          "licenceText": "texts/emscripten.MIT-NCSA.txt",
+          "provenance": "pkg:docker/emscripten/emsdk@6.0.10?platform=linux%2Famd64",
+          "source": "https://github.com/emscripten-core/emscripten/tree/6.0.10",
+          "note": "The compiler's runtime and system libraries, linked into the WebAssembly."
+        }
+      ]
+    }
+  },
+  "buildToolExceptions": {
+    "minimatch": {
+      "licence": "BlueOak-1.0.0",
+      "reason": "A permissive licence (Blue Oak Model License). Used by ESLint to match file names; never bundled."
+    },
+    "argparse": {
+      "licence": "Python-2.0",
+      "reason": "A permissive licence (Python Software Foundation License). Used by a lint dependency to read options; never bundled."
+    },
+    "eslint-plugin-no-unsanitized": {
+      "licence": "MPL-2.0",
+      "reason": "Weak copyleft at the file level, applying only to its own files if modified and distributed. Part of the Obsidian review rules; run at lint time, never bundled or modified."
+    }
+  }
+}

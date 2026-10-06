@@ -1,0 +1,26 @@
+# Version updates wait seven days after publication and arrive grouped, once a
+# week. Security updates are not grouped and have no cooldown: they are raised
+# as soon as an advisory is published, and run the full CI suite as a pull request.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      npm-version-updates:
+        applies-to: version-updates
+        patterns: ['*']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions-version-updates:
+        applies-to: version-updates
+        patterns: ['*']

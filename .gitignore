@@ -1,0 +1,8 @@
+node_modules/
+# Built by CI from a tag, never committed.
+main.js
+dist/
+*.tsbuildinfo
+.venv/
+__pycache__/
+.DS_Store

@@ -1,0 +1,30 @@
+{
+  "name": "graph-note",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Draw the graphs written in notes, and edit them by typing or by dragging the drawing.",
+  "license": "MIT",
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "npm run build --workspace packages/obsidian",
+    "typecheck": "tsc -p packages/obsidian --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@eslint/json": "0.14.0",
+    "esbuild": "0.28.2",
+    "eslint": "9.39.5",
+    "eslint-plugin-obsidianmd": "0.4.2",
+    "obsidian": "1.13.1",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.0"
+  }
+}
