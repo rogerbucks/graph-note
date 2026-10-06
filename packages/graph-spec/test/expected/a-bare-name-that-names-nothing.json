@@ -1,9 +1,0 @@
-{
-  "canon": {},
-  "verdicts": {},
-  "reviews": [],
-  "whys": [],
-  "changesets": [],
-  "lint": [],
-  "error": "line 3: no thing called nobody in graph g — check the spelling — or write it here with its kind: (nobody:Kind {…})"
-}

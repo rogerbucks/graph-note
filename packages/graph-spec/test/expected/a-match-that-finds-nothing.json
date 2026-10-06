@@ -1,9 +1,0 @@
-{
-  "canon": {},
-  "verdicts": {},
-  "reviews": [],
-  "whys": [],
-  "changesets": [],
-  "lint": [],
-  "error": "line 2: MATCH finds no A with id 'missing' in graph g — the node must be written earlier — in this document or one loaded before it"
-}

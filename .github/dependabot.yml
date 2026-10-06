@@ -27,6 +27,17 @@ updates:
         applies-to: version-updates
         patterns: ['*']
 
+  - package-ecosystem: uv
+    directory: /python/graph_spec
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      uv-version-updates:
+        applies-to: version-updates
+        patterns: ['*']
+
   - package-ecosystem: github-actions
     directory: /
     schedule:

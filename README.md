@@ -7,8 +7,9 @@ An Obsidian plugin that draws the graphs written in notes, and lets them be edit
 ## What is here
 
 - `packages/obsidian` — the plugin.
-- `packages/graph-spec` — the graph format library: reader, rules and layout source (arriving in slice 1).
-- `python/graph_spec` — the same library in Python (arriving in slice 1).
+- `packages/graph-spec` — the graph format library in plain JavaScript: reader, rules, completeness, joins and views. One file with no dependencies, loadable by a web page or by Node.
+- `python/graph_spec` — the same library in Python, plus the Graphviz drawing and the Grafeo-backed checks. Its answers are tested against the JavaScript library on every shared case.
+- Each release also carries both libraries as one archive, `graph-spec-libraries-<version>.tar.gz`, with a build provenance attestation.
 - `manifest.json`, `versions.json`, `styles.css` — the files the plugin store reads. `main.js` is built by CI from a tag and attached to each release; it is never committed.
 
 ## Privacy and network use
@@ -29,6 +30,16 @@ npm run build
 ```
 
 The second line installs the pre-commit check, which refuses any staged file that looks confidential or personal: a classification other than Public in a note's frontmatter, a note's uuid line, an absolute home-folder path, a personal email address, a phone number or a card number. CI runs the same check over every file, so a commit that skipped the hook is still caught.
+
+The Python library has its own pinned environment (uv, Python 3.14):
+
+```sh
+cd python/graph_spec
+uv sync --locked
+uv run --locked python -m unittest discover -s tests
+```
+
+A host that uses the Python library sets `graph_spec.CLASSIFICATION_NOTE`, `graph_spec.OWNER_ENGINE` and `graph_spec.WRITTEN_BY` after importing it; the defaults name no machine or person, and no classification note is read until one is set.
 
 ### Supply chain
 

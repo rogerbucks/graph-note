@@ -219,6 +219,16 @@ describe('GitHub Actions', () => {
     }
   });
 
+  test('CI runs the Python library tests from its locked environment', () => {
+    if (!exists('python/graph_spec/pyproject.toml')) return;
+    const ci = read('.github/workflows/ci.yml');
+    assert.ok('python' in jobs(ci), 'ci.yml has a python job');
+    const runs = jobs(ci).python.join('\n');
+    assert.match(runs, /uv sync --locked/, 'installs exactly what the lockfile pins');
+    assert.match(runs, /uv run --locked python -m unittest discover -s tests/, 'runs the tests');
+    assert.match(runs, /working-directory: python\/graph_spec/);
+  });
+
   test('CI lints with the Obsidian review rules', () => {
     const ci = read('.github/workflows/ci.yml');
     assert.ok('lint' in jobs(ci), 'ci.yml has a lint job');
@@ -226,6 +236,19 @@ describe('GitHub Actions', () => {
     assert.match(readJSON('package.json').scripts.lint, /^eslint\b/);
     assert.match(read('eslint.config.mjs'), /from ['"]eslint-plugin-obsidianmd['"]/);
     assert.match(read('eslint.config.mjs'), /obsidianmd\.configs\.recommended/);
+  });
+
+  test('releases carry the graph-spec libraries as one attested archive, for the vault to vendor', () => {
+    const rel = read('.github/workflows/release.yml');
+    const runs = runCommands(rel).join('\n');
+    const archive = /git archive [^\n]*-o "?(graph-spec-libraries-\$GITHUB_REF_NAME\.tar\.gz)"?[^\n]*/.exec(runs);
+    assert.ok(archive, 'the archive is made by git archive, from the tagged commit');
+    for (const part of ['LICENSE', 'packages/graph-spec/src', 'packages/graph-spec/bin', 'python/graph_spec/src', 'python/graph_spec/pyproject.toml', 'python/graph_spec/uv.lock']) {
+      assert.ok(archive[0].includes(part), `the archive holds ${part}`);
+    }
+    const attest = rel.slice(rel.indexOf('actions/attest-build-provenance'));
+    assert.match(attest, /graph-spec-libraries-\*\.tar\.gz/, 'the archive has a provenance attestation');
+    assert.match(runCommands(rel).find((r) => /gh release create/.test(r)), /graph-spec-libraries-\$GITHUB_REF_NAME\.tar\.gz/, 'the archive is attached to the release');
   });
 
   test('every library the plugin bundles is linted with the Obsidian review rules', () => {

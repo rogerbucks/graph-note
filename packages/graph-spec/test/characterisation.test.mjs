@@ -11,7 +11,8 @@ import { cases, changesetCase } from './cases.mjs';
 const here = (rel) => fileURLToPath(new URL(rel, import.meta.url));
 const adapter = here('../bin/graph-spec-check-node.js');
 const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-const expected = (name) => JSON.parse(readFileSync(here(`./expected/${slug(name)}.json`), 'utf8'));
+const answers = JSON.parse(readFileSync(here('./expected.json'), 'utf8'));
+const expected = (name) => answers[slug(name)];
 
 function run(q) {
   const r = spawnSync(process.execPath, [adapter], { input: JSON.stringify(q), encoding: 'utf8' });

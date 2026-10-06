@@ -1,0 +1,33 @@
+{
+  "$schema": "graph_svg@2",
+  "_locked": "Locked 6 Oct 2026 by the decision that graph drawings use one locked style, laid out by Graphviz. Change a value only with a new decision that names what it reverses.",
+  "_about": "Presentation for graph_svg.py — the graph drawings in notes. Edit here, never in the script. Colours are Obsidian theme variables, so a drawing follows light and dark mode. Each kind of thing takes a hue in kind_hues chosen from its name (kinds keep the colour they had when they first appeared; red and green are kept for the for/against readings); kind_colours pins a kind to a hue. Each relationship reading takes a hue in edge_hues chosen from its name, and its label matches its line, so a label can always be matched to its link. edge_colours pins readings whose colour carries meaning: green for, red against — which is why green and red are kept out of edge_hues. page_width is the width a drawing should fit without shrinking (Obsidian's readable line width); each graph is laid out in every direction listed and the least-shrunk wins, unless it would be taller than max_height_ratio times its width. A drawing is sized as Mermaid sizes its own — full width, capped at natural size — and zoom handles small text.",
+  "_readability": "Checked 6 Oct 2026. line_height 1.25: lines inside a box spaced 1.25x the font size — the spacing for labels in diagrams and interfaces (1.2-1.3x), not for paragraphs (1.4-1.5x); at 1.5x the lines of one box read as separate sentences. Graphviz's own was about 1.0x. caption_gap 3 (points): space between the kind caption and the text. caption_letter_spacing 0.08 (em): capitals need tracking, about 5-10%. box_padding 0.24,0.15 (inches): about 1.4 em across and 0.9 em up and down. font_size 12.5 pt (about 17 px), kind_font_size 9 pt (12 px, the smallest text), edge_font_size 10.5 pt (14 px), all at natural size. label_mix 50 and line_mix 75: each hue blended with the theme's text colour to that percentage, so labels reach 4.5:1 contrast (WCAG 2.2 SC 1.4.3) and lines and borders 3:1 (SC 1.4.11) in both themes — measured on Obsidian's default themes at 5.4:1 and 3.2:1 or better.",
+  "font": "Helvetica",
+  "font_size": 12.5,
+  "kind_font_size": 9,
+  "edge_font_size": 10.5,
+  "line_height": 1.25,
+  "caption_gap": 3,
+  "caption_letter_spacing": 0.08,
+  "box_padding": "0.24,0.15",
+  "wrap_chars": 22,
+  "ranksep": 0.55,
+  "nodesep": 0.5,
+  "kind_hues": ["blue", "purple", "orange", "cyan", "pink", "yellow"],
+  "kind_colours": {},
+  "fill_opacity": 0.16,
+  "label_mix": 50,
+  "line_mix": 75,
+  "text": "var(--text-normal)",
+  "muted": "var(--text-muted)",
+  "edge": "var(--text-muted)",
+  "edge_hues": ["cyan", "orange", "purple", "pink", "blue", "yellow"],
+  "edge_colours": {
+    "favours": "green", "supports": "green", "confirms": "green",
+    "counts against": "red", "contradicts": "red", "weakens": "red", "refutes": "red"
+  },
+  "page_width": 700,
+  "directions": ["LR", "TB"],
+  "max_height_ratio": 1.6
+}

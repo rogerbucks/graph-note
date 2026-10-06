@@ -1,6 +1,6 @@
 // Characterisation cases for the graph-spec library: requests in the shape the
 // Node adapter (bin/graph-spec-check-node.js) takes. Every graph here is
-// written for this repository. The expected answers in expected/ were recorded
+// written for this repository. The expected answers in expected.json were recorded
 // from the library before it moved into this repository, so a case that
 // changes answer is a change in behaviour.
 const lines = (...xs) => xs.join('\n');
@@ -133,13 +133,13 @@ export const cases = {
     join: {
       docs: [
         lines(
-          '// graph: shop · document doc_a · schema s1 · as of 2026-10-01',
+          '// graph: shop · document doc:shop-a · schema s1 · as of 2026-10-01',
           "(widget:Product {name: 'Widget', price: 10, colour: 'blue'}),",
           "(acme:Maker {name: 'Acme'}),",
           '(widget)-[:MADE_BY]->(acme)',
         ),
         lines(
-          '// graph: shop · document doc_b · schema s1 · as of 2026-10-02',
+          '// graph: shop · document doc:shop-b · schema s1 · as of 2026-10-02',
           "(widget:Product:Gadget {name: 'Widget', price: 12, colour: 'blue'}),",
           "(acme:Maker {name: 'Acme'}),",
           "(other:Maker {name: 'Acme'}),",

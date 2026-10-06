@@ -29,13 +29,16 @@ jobs:
       - run: npm run build
       - name: The tag matches the manifest version
         run: test "$GITHUB_REF_NAME" = "$(node -p "require('./manifest.json').version")"
+      - name: Archive the graph-spec libraries from the tagged commit, for the vault to vendor
+        run: git archive --format=tar.gz -o "graph-spec-libraries-$GITHUB_REF_NAME.tar.gz" HEAD LICENSE THIRD_PARTY_NOTICES.md packages/graph-spec/package.json packages/graph-spec/src packages/graph-spec/bin python/graph_spec/pyproject.toml python/graph_spec/uv.lock python/graph_spec/src
       - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: |
             main.js
             manifest.json
             styles.css
+            graph-spec-libraries-*.tar.gz
       - name: Draft the release with the store assets
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" main.js manifest.json styles.css THIRD_PARTY_NOTICES.md --draft --verify-tag --title "$GITHUB_REF_NAME" --generate-notes
+        run: gh release create "$GITHUB_REF_NAME" main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$GITHUB_REF_NAME.tar.gz" --draft --verify-tag --title "$GITHUB_REF_NAME" --generate-notes

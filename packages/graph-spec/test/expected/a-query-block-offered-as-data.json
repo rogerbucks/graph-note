@@ -1,9 +1,0 @@
-{
-  "canon": {},
-  "verdicts": {},
-  "reviews": [],
-  "whys": [],
-  "changesets": [],
-  "lint": [],
-  "error": "line 1: this is a query block — queries ask questions of a graph; they are not data"
-}
