@@ -228,6 +228,16 @@ describe('GitHub Actions', () => {
     assert.match(read('eslint.config.mjs'), /obsidianmd\.configs\.recommended/);
   });
 
+  test('every library the plugin bundles is linted with the Obsidian review rules', () => {
+    const plugin = readJSON('packages/obsidian/package.json');
+    const bundled = Object.keys(plugin.dependencies ?? {}).filter((d) => d.startsWith('@graph-note/'));
+    const ignores = /ignores:\s*\[([^\]]*)\]/.exec(read('eslint.config.mjs'))[1];
+    for (const name of bundled) {
+      const dir = `packages/${name.split('/')[1]}/src`;
+      assert.doesNotMatch(ignores, new RegExp(`['"]${dir}/?['"]`), `${dir} is bundled into the plugin, so it must be linted`);
+    }
+  });
+
   test('releases are built by CI from a bare version tag, with provenance and the store assets', () => {
     const rel = read('.github/workflows/release.yml');
     const on = block(rel.split('\n'), 'on', 0).join('\n');

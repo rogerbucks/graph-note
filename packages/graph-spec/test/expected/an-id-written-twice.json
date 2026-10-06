@@ -1,0 +1,9 @@
+{
+  "canon": {},
+  "verdicts": {},
+  "reviews": [],
+  "whys": [],
+  "changesets": [],
+  "lint": [],
+  "error": "line 2: id 'a' is already a node in graph g — an id names one node (§10) — MATCH it to add to it, or supersede it (§12)"
+}

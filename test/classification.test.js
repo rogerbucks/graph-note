@@ -108,6 +108,13 @@ describe('what the check lets through', () => {
   test('a long number that fails the card checksum', () => {
     assert.deepEqual(rules(`id ${notLuhn}`), []);
   });
+
+  test('a long number that cannot start a card, such as a run of zeros', () => {
+    // Card numbers start with 2 to 6; a zero hash passes the checksum but is no card.
+    assert.deepEqual(rules(`against ${'0'.repeat(16)} · by ada`), []);
+    assert.deepEqual(rules(`id ${luhnComplete('1'.repeat(15))}`), []);
+    assert.deepEqual(rules(`id ${luhnComplete('9'.repeat(15))}`), []);
+  });
 });
 
 describe('what the check reports', () => {

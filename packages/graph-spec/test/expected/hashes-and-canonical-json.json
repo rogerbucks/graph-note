@@ -1,0 +1,19 @@
+{
+  "canon": {},
+  "verdicts": {},
+  "reviews": [],
+  "whys": [],
+  "changesets": [],
+  "lint": [],
+  "views": {},
+  "sha256": [
+    "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+    "d2c8c9bb6b6d28d0dbb5573e3c3ad68c2944e72325d34d8eee142f545142894e"
+  ],
+  "jcs": [
+    "{\"a\":[1,\"x\",true,null],\"b\":2,\"c\":{\"y\":\"é\",\"z\":1}}",
+    "\"plain\"",
+    "1.5"
+  ]
+}

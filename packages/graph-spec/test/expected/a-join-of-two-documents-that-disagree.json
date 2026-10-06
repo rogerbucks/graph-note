@@ -1,0 +1,85 @@
+{
+  "canon": {},
+  "verdicts": {},
+  "reviews": [],
+  "whys": [],
+  "changesets": [],
+  "lint": [],
+  "views": {},
+  "join": {
+    "rows": [
+      [
+        "duplicate",
+        "acme, other",
+        "name",
+        "POSSIBLE DUPLICATE — flagged, never merged by the join",
+        "decide; if one thing, declare an id map and re-join"
+      ],
+      [
+        "labels-refine",
+        "widget",
+        "labels",
+        "refined — one adds to the other",
+        "—"
+      ],
+      [
+        "value",
+        "widget",
+        "price",
+        "VALUE CONFLICT — contested",
+        "find evidence; a finding confirms one"
+      ]
+    ],
+    "claims": {
+      "claim:join/widget/price=10@": [
+        "contested",
+        "low"
+      ],
+      "claim:join/widget/price=12@": [
+        "contested",
+        "low"
+      ]
+    },
+    "pairs": [
+      [
+        "claim:join/widget/price=10@",
+        "claim:join/widget/price=12@"
+      ]
+    ],
+    "paradoxes": [],
+    "nodes": {
+      "acme": [
+        [
+          "Maker"
+        ],
+        {
+          "id": "acme",
+          "name": "Acme"
+        }
+      ],
+      "other": [
+        [
+          "Maker"
+        ],
+        {
+          "id": "other",
+          "name": "Acme"
+        }
+      ],
+      "widget": [
+        [
+          "Gadget",
+          "Product"
+        ],
+        {
+          "colour": "blue",
+          "id": "widget",
+          "name": "Widget"
+        }
+      ]
+    },
+    "edges": {
+      "[\"widget\",\"MADE_BY\",\"acme\",[]]": {}
+    }
+  }
+}

@@ -74,8 +74,9 @@ const RULES = [
   {
     rule: 'card',
     what: 'a card number',
+    // Card numbers start with 2 to 6 (the card networks' ranges) and pass the Luhn checksum.
     test: (line) =>
-      [...line.matchAll(/(?<![\w.-])\d(?:[ -]?\d){12,18}(?![\w.-])/g)]
+      [...line.matchAll(/(?<![\w.-])[2-6](?:[ -]?\d){12,18}(?![\w.-])/g)]
         .some(([m]) => luhn(m.replace(/[ -]/g, ''))),
   },
 ];

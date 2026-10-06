@@ -1,0 +1,28 @@
+{
+  "canon": {
+    "library": "07c5e5ae854dd7217d7f7375fb36fb8e11c1729dc0b3b63ea567f0cfadcade74"
+  },
+  "verdicts": {
+    "library": [
+      [
+        "§5: every element has a declared type",
+        true
+      ],
+      [
+        "§18: the flat projection rebuilds the graph",
+        true
+      ]
+    ]
+  },
+  "reviews": [],
+  "whys": [],
+  "changesets": [],
+  "lint": [],
+  "views": {
+    "library": {
+      "projection": "{\"blocks\":{\"ada\":{\"id\":\"ada\",\"name\":\"Ada\",\"type\":[\"Person\"],\"wrote\":[\"notes\"]},\"grace\":{\"checked\":\"2026-10-07T18:30:00+10:00\",\"id\":\"grace\",\"name\":\"Grace\",\"type\":[\"Person\"]},\"notes\":{\"id\":\"notes\",\"pages\":66,\"published\":\"1843-10-01\",\"shelf\":3,\"title\":\"Notes on the engine\",\"type\":[\"Book\"]},\"type:Book\":{\"id\":\"type:Book\",\"kind\":\"node\",\"name\":\"Book\",\"type\":[\"ElementType\"]},\"type:Person\":{\"id\":\"type:Person\",\"kind\":\"node\",\"name\":\"Person\",\"type\":[\"ElementType\"]},\"type:WROTE\":{\"id\":\"type:WROTE\",\"kind\":\"edge\",\"name\":\"WROTE\",\"reading\":\"wrote\",\"reverse_name\":\"written by\",\"type\":[\"ElementType\"]}},\"relationships\":[{\"from\":\"grace\",\"relationship\":\"WROTE\",\"to\":\"notes\",\"year\":1952}]}",
+      "relationships": "flowchart LR\n    n0[\"ada<br/>Ada\"]\n    n1[\"grace<br/>Grace\"]\n    n2[\"notes<br/>Notes on the engine\"]\n    n0 -->|wrote| n2\n    n1 -->|wrote| n2",
+      "legend": "wrote = WROTE · reverse: written by"
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "canon": {
+    "story": "59fabc139be6547856a1466474b9fee32f488095b028048ca9a33eed3468d576"
+  },
+  "verdicts": {
+    "story": [
+      [
+        "§5: a draft's kinds and relationship types hold no near-duplicates",
+        true
+      ],
+      [
+        "§18: the flat projection rebuilds the graph",
+        true
+      ],
+      [
+        "§22 rule 1: altitude falls at every step into a path — no path contains itself",
+        true
+      ],
+      [
+        "§22 rule 2: each path's steps are numbered 1 to n",
+        true
+      ],
+      [
+        "§22 rule 3: every path grounds out in facts",
+        true
+      ],
+      [
+        "§22 rule 4: a path that declares an order keeps it",
+        true
+      ]
+    ]
+  },
+  "reviews": [],
+  "whys": [],
+  "changesets": [],
+  "lint": [],
+  "views": {
+    "story": {
+      "projection": "{\"blocks\":{\"f1\":{\"id\":\"f1\",\"name\":\"Rain fell\",\"type\":[\"Fact\"]},\"f2\":{\"id\":\"f2\",\"name\":\"The river rose\",\"type\":[\"Fact\"]},\"f3\":{\"id\":\"f3\",\"name\":\"The bridge closed\",\"type\":[\"Fact\"]},\"inner\":{\"altitude\":1,\"id\":\"inner\",\"name\":\"The flood\",\"type\":[\"Path\"]},\"outer\":{\"altitude\":2,\"id\":\"outer\",\"name\":\"The week\",\"type\":[\"Path\"]}},\"relationships\":[{\"from\":\"inner\",\"relationship\":\"STEP\",\"seq\":1,\"to\":\"f1\"},{\"from\":\"inner\",\"relationship\":\"STEP\",\"seq\":2,\"to\":\"f2\"},{\"from\":\"outer\",\"relationship\":\"STEP\",\"seq\":1,\"to\":\"inner\"},{\"from\":\"outer\",\"relationship\":\"STEP\",\"seq\":2,\"to\":\"f3\"}]}",
+      "relationships": "flowchart LR\n    n0[\"f1<br/>Rain fell\"]\n    n1[\"f2<br/>The river rose\"]\n    n2[\"f3<br/>The bridge closed\"]\n    n3[\"inner<br/>The flood\"]\n    n4[\"outer<br/>The week\"]\n    n3 -->|step| n0\n    n3 -->|step| n1\n    n4 -->|step| n2\n    n4 -->|step| n3",
+      "legend": "step = STEP",
+      "path outer at 2": "flowchart TB\n    p[\"outer<br/>The week<br/>at altitude 2\"]\n    s0[\"inner<br/>The flood\"]\n    s1[\"f3<br/>The bridge closed\"]\n    p --> s0\n    s0 --> s1",
+      "path outer at 1": "flowchart TB\n    p[\"outer<br/>The week<br/>at altitude 1\"]\n    s0[\"inner<br/>The flood\"]\n    s1[\"f3<br/>The bridge closed\"]\n    p --> s0\n    s0 --> s1",
+      "path outer at 0": "flowchart TB\n    p[\"outer<br/>The week<br/>at altitude 0\"]\n    s0[\"f1<br/>Rain fell\"]\n    s1[\"f2<br/>The river rose\"]\n    s2[\"f3<br/>The bridge closed\"]\n    p --> s0\n    s0 --> s1\n    s1 --> s2"
+    }
+  }
+}

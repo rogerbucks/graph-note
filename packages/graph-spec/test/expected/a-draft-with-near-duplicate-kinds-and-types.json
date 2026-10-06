@@ -1,0 +1,28 @@
+{
+  "canon": {
+    "draft": "0bcee60a1bf9a3f3ec79bab19eac2017d9eecd665bf3dde03e8a78d7023fa23a"
+  },
+  "verdicts": {
+    "draft": [
+      [
+        "§5: a draft's kinds and relationship types hold no near-duplicates",
+        false
+      ],
+      [
+        "§18: the flat projection rebuilds the graph",
+        true
+      ]
+    ]
+  },
+  "reviews": [],
+  "whys": [],
+  "changesets": [],
+  "lint": [],
+  "views": {
+    "draft": {
+      "projection": "{\"blocks\":{\"a\":{\"id\":\"a\",\"title\":\"One\",\"type\":[\"Book\"]},\"b\":{\"id\":\"b\",\"title\":\"Two\",\"type\":[\"Bok\"]},\"c\":{\"id\":\"c\",\"name\":\"Lin\",\"type\":[\"Person\"],\"write\":[\"b\"],\"wrote\":[\"a\"]}},\"relationships\":[]}",
+      "relationships": "flowchart LR\n    n0[\"a<br/>One\"]\n    n1[\"b<br/>Two\"]\n    n2[\"c<br/>Lin\"]\n    n2 -->|write| n1\n    n2 -->|wrote| n0",
+      "legend": "write = WRITE\nwrote = WROTE"
+    }
+  }
+}

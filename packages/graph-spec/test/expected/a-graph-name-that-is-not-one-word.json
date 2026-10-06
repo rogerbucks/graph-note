@@ -1,0 +1,9 @@
+{
+  "canon": {},
+  "verdicts": {},
+  "reviews": [],
+  "whys": [],
+  "changesets": [],
+  "lint": [],
+  "error": "line 1: the graph name 'reader-choice' is not one word — use letters, digits and underscores only — reader_choice, not reader-choice (§3)"
+}
