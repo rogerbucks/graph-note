@@ -255,6 +255,18 @@ describe('Dependabot', () => {
     for (const e of ['npm', 'github-actions']) assert.ok(names.includes(e), e);
   });
 
+  test('major versions the Obsidian linter cannot take are held back, each with its reason', () => {
+    const npm = updates().find((u) => u.ecosystem === 'npm').chunk;
+    // Pinned exactly by the Obsidian linter, so every version is held, not only majors.
+    assert.match(npm, /dependency-name: '@eslint\/json'[^\n]*\n(?!\s*update-types)/, '@eslint/json is held at every version');
+    for (const name of ['eslint', '@eslint/js', 'typescript']) {
+      // A name starting with @ must be quoted in YAML.
+      const entry = new RegExp(`dependency-name: ['"]?${name.replace('/', '\\/')}['"]?\\n\\s*update-types: \\['version-update:semver-major'\\]`);
+      assert.match(npm, entry, `${name} is held back at major versions only`);
+    }
+    assert.match(npm, /# Held back:/, 'the reason is written down');
+  });
+
   test('a Python package is watched too', () => {
     if (!exists('python/graph_spec/pyproject.toml')) return;
     assert.ok(updates().some((u) => u.ecosystem === 'uv'));
