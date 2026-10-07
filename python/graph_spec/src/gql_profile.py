@@ -36,6 +36,26 @@ import datetime as dt
 UTC = dt.timezone.utc
 
 
+def _bare_names(block):
+    """Each link type written without its colon, in text order: (line, offset in the block, name).
+    Strings and comments are blanked first, so words in them are never taken for one."""
+    blanked = re.sub(
+        r"//[^\n]*",
+        lambda m: " " * len(m.group()),
+        re.sub(r"'(?:[^'\\\n]|\\.)*'?", lambda m: " " * len(m.group()), block),
+    )
+    return [
+        (blanked.count("\n", 0, m.start(1)) + 1, m.start(1), m.group(1))
+        for m in re.finditer(r"-\[\s*([A-Za-z_]\w*)(?=\s*[\]{])", blanked)
+    ]
+
+
+def _bare(block):
+    """The line and name of the first relationship type written without its colon, if any."""
+    found = _bare_names(block)
+    return (found[0][0], found[0][2]) if found else None
+
+
 def to_gql(block):
     """A block as standard GQL (§3): the data shortcut's INSERT put back and, where a name stands
     for an id, the id: written on each new node and a MATCH added for each existing node named. A
@@ -49,6 +69,16 @@ def to_gql(block):
     )
     if i is None:
         return block
+    bare = _bare(block)
+    if bare:
+        # no engine is given a block that still holds a bare type (req:3.engine-gets-corrected)
+        line, written = bare
+        raise ProfileError(
+            line,
+            f"[{written}] has no colon",
+            "an engine is given only corrected text — read the block with its graph and load "
+            f"Store.corrected(block), or write it with its colon: [:{written.upper()}]",
+        )
     try:
         matches, paths, sets = Parser(tokens(block)).statement()
     except ProfileError:
@@ -309,12 +339,17 @@ class Parser:
         while self.at("p", "-"):
             self.take("p", "-")
             self.take("p", "[")
-            self.take("p", ":")
+            # a type written without its colon is read here and resolved by the store, which
+            # knows the graph's types (§3, req:3.bare-link-type)
+            bare = not self.at("p", ":")
+            if not bare:
+                self.take("p", ":")
+            line = self.line()
             typ = self.name()
             props = self.props()
             self.take("p", "]")
             self.take("arrow")
-            rels.append({"type": typ, "props": props})
+            rels.append({"type": typ, "props": props, "bare": bare, "line": line})
             nodes.append(self.node())
         return nodes, rels
 
@@ -389,6 +424,10 @@ class Store:
         # schema name -> its graph; data graph -> the schema its header names; commas: [{graph,
         # line}] where a missing comma was read in (§3)
         self.commas = []
+        # bares: [{graph, line, written, type}] where a type written without its colon was read as
+        # the graph's one type of that name, ignoring case (§3); _fixes: the same, by block text
+        self.bares = []
+        self._fixes = {}
 
     def graph(self, g):
         return self.graphs.setdefault(g, {"nodes": {}, "edges": []})
@@ -397,6 +436,56 @@ class Store:
         return next(
             (k for k, n in self.graph(g)["nodes"].items() if n["props"].get("id") == nid), None
         )
+
+    def edge_types(self, g):
+        """The relationship types graph g knows so far: written with their colon, declared by an
+        ElementType, or in the shared schema it names."""
+        out = set()
+        for name in [g] + (
+            [self.schemas[self.named[g]]] if self.named.get(g) in self.schemas else []
+        ):
+            stored = self.graph(name)
+            out |= {e[1] for e in stored["edges"]}
+            out |= {
+                n["props"].get("name")
+                for n in stored["nodes"].values()
+                if "ElementType" in n["labels"] and n["props"].get("kind") == "edge"
+            }
+        return {t for t in out if isinstance(t, str)}
+
+    def _resolve(self, g, r, block):
+        """A bare type read as the graph's one type of that name, ignoring case — or refused."""
+        written = r["type"]
+        found = sorted(t for t in self.edge_types(g) if t.lower() == written.lower())
+        if not found:
+            raise ProfileError(
+                r["line"],
+                f"[{written}] has no colon, and graph {g} has no relationship type called "
+                f"{written}",
+                f"a relationship type is written with its colon: [:{written.upper()}]",
+            )
+        if len(found) > 1:
+            raise ProfileError(
+                r["line"],
+                f"[{written}] has no colon, and graph {g} has relationship types "
+                f"{', '.join(found[:-1])} and {found[-1]}, which differ only by case",
+                f"write the one meant with its colon, such as [:{found[0]}]",
+            )
+        self.bares.append({"graph": g, "line": r["line"], "written": written, "type": found[0]})
+        self._fixes.setdefault(block, []).append((r["line"], written, found[0]))
+        return found[0]
+
+    def corrected(self, block):
+        """The block with each bare type this store read written with its colon, as its graph
+        spells it — the text an engine may be given (req:3.engine-gets-corrected). Each is found by
+        its place among the block's bare types, never by searching the text."""
+        out = block
+        places = _bare_names(block)
+        for (_, at, written), (_, _, typ) in reversed(
+            list(zip(places, self._fixes.get(block, [])))
+        ):
+            out = out[:at] + ":" + typ + out[at + len(written) :]
+        return out
 
     def apply(self, block):
         g, kind = header(block)
@@ -492,9 +581,8 @@ class Store:
                         )
                     bound[n["var"]] = k
             for a, r, b in zip(nodes, rels, nodes[1:]):
-                graph["edges"].append(
-                    (bound[a["var"]], r["type"], bound[b["var"]], dict(r["props"]))
-                )
+                typ = self._resolve(g, r, block) if r.get("bare") else r["type"]
+                graph["edges"].append((bound[a["var"]], typ, bound[b["var"]], dict(r["props"])))
         for var, key, val, n in sets:
             if var not in bound and self.find(g, var) is not None:
                 bound[var] = self.find(g, var)  # SET name.key names the node with that id (§3)

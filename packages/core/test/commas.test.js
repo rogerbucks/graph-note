@@ -1,7 +1,7 @@
 // The comma added for you (editor spec §4, comma_added_for_you; decided 7 Oct 2026): while typing, once the next pattern
 // starts on a new line and the line before is otherwise valid, the comma is added at the end of the line before. Never
 // when it would not make the block valid, never twice, never inside a string or a comment.
-import { test } from 'node:test';
+import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { commaFor } from '../src/commas.ts';
 
@@ -65,4 +65,64 @@ test('in a note, the comma is added only inside a graph block: never in a query,
   assert.equal(commaInNote(prose, 'Some text (aside)\n('.length), null);
   const python = '```python\nf(a)\n(\n```';
   assert.equal(commaInNote(python, '```python\nf(a)\n('.length), null);
+});
+
+// The colon added for you (editor spec §4, colon_added_for_you; decided 7 Oct 2026): a link type typed without its colon,
+// matching exactly one type of the graph ignoring case, has the colon added — and the type as the graph spells it — as
+// the ] that closes it is typed. Never for a first use, case-only twins, a query, or inside a string or a comment.
+describe('the colon added for you', async () => {
+  const { colonFor, colonInNote } = await import('../src/commas.ts');
+  const FIRST = "// graph: g\n(r:Reason {title: 'Sun'}),\n(o:Option {name: 'Coast'}),\n(r)-[:FAVOURS]->(o)";
+  /** The text after typing `typed` at the end of `before`, with the colon added where one is wanted. */
+  const after = (before, typed = ']', earlier = []) => {
+    const text = before + typed,
+      e = colonFor(text, text.length, earlier);
+    return e ? text.slice(0, e.from) + e.text + text.slice(e.to) : null;
+  };
+
+  test('the ] that closes a bare type known to the graph adds the colon, and the type as the graph spells it', () => {
+    assert.equal(after(FIRST + ',\n(r)-[favours'), FIRST + ',\n(r)-[:FAVOURS]');
+    assert.equal(
+      after("// graph: g\n(s:Reason {title: 'Quiet'}),\n(s)-[Favours", ']', [FIRST]),
+      "// graph: g\n(s:Reason {title: 'Quiet'}),\n(s)-[:FAVOURS]",
+    );
+  });
+
+  test('a link with properties gets its colon too', () => {
+    assert.equal(after(FIRST + ",\n(r)-[favours {how: 'much'}"), FIRST + ",\n(r)-[:FAVOURS {how: 'much'}]");
+  });
+
+  test('a type declared only in a comment does not count', () => {
+    const commented =
+      "// graph: g\n// (t:ElementType {name: 'CITES', kind: 'edge'}),\n(r:Reason {title: 'Sun'}),\n(r)-[cites";
+    assert.equal(after(commented), null);
+  });
+
+  test('a type the graph declares counts', () => {
+    const declared =
+      "// graph: g\n(t:ElementType {name: 'CITES', kind: 'edge', reading: 'cites', reverse_name: 'is cited by'}),\n(r:Reason {title: 'Sun'}),\n(o:Option {name: 'Coast'}),\n(r)-[cites";
+    assert.match(after(declared), /\(r\)-\[:CITES\]$/);
+  });
+
+  test('none for a first use, case-only twins, a type with its colon, or anything but a closing ]', () => {
+    assert.equal(after("// graph: g\n(r:Reason {title: 'Sun'}),\n(r)-[favours"), null);
+    assert.equal(after(FIRST + ',\n(r)-[:Favours]->(o),\n(r)-[favours'), null);
+    assert.equal(after(FIRST + ',\n(r)-[:FAVOURS'), null);
+    assert.equal(after(FIRST + ',\n(r)-[favours', 's'), null);
+  });
+
+  test('none inside a string or a comment, in a query, or for another graph’s types', () => {
+    assert.equal(after(FIRST + ",\n(x:Note {text: '(r)-[favours"), null);
+    assert.equal(after(FIRST + ',\n// (r)-[favours'), null);
+    assert.equal(after('// graph: g · QUERY\nMATCH (r)-[favours', ']', [FIRST]), null);
+    assert.equal(after("// graph: h\n(s:Reason {title: 'Quiet'}),\n(s)-[favours", ']', [FIRST]), null);
+  });
+
+  test('in a note, only in a graph block, with the graph’s earlier blocks counted', () => {
+    const note = '```gql\n' + FIRST + "\n```\n\n```gql\n// graph: g\n(s:Reason {title: 'Quiet'}),\n(s)-[favours]\n```";
+    const caret = note.indexOf('favours]') + 'favours]'.length;
+    const e = colonInNote(note, caret);
+    assert.equal(note.slice(0, e.from) + e.text + note.slice(e.to), note.replace('[favours]', '[:FAVOURS]'));
+    assert.equal(colonInNote('Some text -[favours] here', 'Some text -[favours]'.length), null);
+  });
 });

@@ -69,8 +69,9 @@ UTC = dt.timezone.utc
 
 def strip(s):
     """Comments out, and the data shortcut's INSERT put back (§3) — what Grafeo reads."""
+    # a comment line is emptied, not dropped, so a line number still names the block's own line
     return _gp.to_gql(
-        "\n".join(line for line in s.splitlines() if not line.strip().startswith("//"))
+        "\n".join("" if line.strip().startswith("//") else line for line in s.splitlines())
     )
 
 
@@ -1668,7 +1669,7 @@ def typed(db):
     edge type has both readings, forward and reverse."""
     element_types = Q(
         db,
-        "MATCH (t:ElementType) RETURN t.name AS n, t.kind AS k, t.reverse_name AS r, t.reading AS f, t.marker AS m",  # noqa: E501  # one literal: embedded_queries reads it whole
+        "MATCH (:GraphMeta)-[:DECLARES]->(t:ElementType) RETURN DISTINCT t.name AS n, t.kind AS k, t.reverse_name AS r, t.reading AS f, t.marker AS m",  # noqa: E501  # one literal: embedded_queries reads it whole
     )
     if any(t["k"] == "edge" and not (t["r"] and t["f"]) for t in element_types):
         return False
@@ -3717,7 +3718,7 @@ def untyped(db):
     declared without both readings."""
     element_types = Q(
         db,
-        "MATCH (t:ElementType) RETURN t.name AS n, t.kind AS k, t.reverse_name AS r, t.reading AS f, t.marker AS m",  # noqa: E501  # one literal: embedded_queries reads it whole
+        "MATCH (:GraphMeta)-[:DECLARES]->(t:ElementType) RETURN DISTINCT t.name AS n, t.kind AS k, t.reverse_name AS r, t.reading AS f, t.marker AS m",  # noqa: E501  # one literal: embedded_queries reads it whole
     )
     nodes, edges = _declared(element_types)
     labels = {

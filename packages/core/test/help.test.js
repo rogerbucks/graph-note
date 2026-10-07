@@ -283,3 +283,16 @@ test('a pattern written over several lines is read back beside its last line', (
   assert.equal(lines.get(2), 'Which device? is a Question');
   assert.equal(lines.get(3), 'A is an Option');
 });
+
+describe('a relationship type written without its colon', () => {
+  test('its fix writes the colon, as the graph spells the type, in place of what was written', () => {
+    const first = "// graph: g\n(r:Reason {title: 'Sun'}),\n(o:Option {name: 'Coast'}),\n(r)-[:FAVOURS]->(o)";
+    const bare = "// graph: g\n(s:Reason {title: 'Quiet'}),\n(favours)-[favours]->(o)".replace('(favours)', '(s)');
+    const [d] = diagnostics(readNote([first, bare]), 'g', 1, bare, 'note.md');
+    assert.equal(d.severity, SEVERITY.Warning);
+    assert.deepEqual(d.range, { start: { line: 2, character: 5 }, end: { line: 2, character: 12 } });
+    const [fix] = d.data.fixes;
+    assert.equal(fix.title, 'Write the colon: [:FAVOURS]');
+    assert.deepEqual(fix.edit.changes['note.md'], [{ range: d.range, newText: ':FAVOURS' }]);
+  });
+});

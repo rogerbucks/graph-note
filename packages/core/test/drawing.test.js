@@ -270,3 +270,103 @@ describe('a missing comma', () => {
     assert.ok(problems.some((p) => p.line === 4 && p.severity === 'error'));
   });
 });
+
+describe('a relationship type written without its colon', () => {
+  // req:3.bare-link-type: read as the graph's one type of that name, ignoring case, and reported with a fix
+  const FIRST = "// graph: g\n(r:Reason {title: 'Sun'}),\n(o:Option {name: 'Coast'}),\n(r)-[:FAVOURS]->(o)";
+  const BARE = "// graph: g\n(s:Reason {title: 'Quiet'}),\n(s)-[favours]->(o)";
+
+  test('is drawn as that type, with a warning whose fix writes the colon, as the graph spells the type', () => {
+    const r = readNote([FIRST, BARE]);
+    assert.deepEqual(
+      r.graphs.get('g').links.map((l) => l.type),
+      ['FAVOURS', 'FAVOURS'],
+    );
+    assert.deepEqual(r.problems, [
+      {
+        graph: 'g',
+        block: 1,
+        line: 3,
+        severity: 'warning',
+        message: '[favours] has no colon; it is read as the relationship type FAVOURS',
+        fix: 'write it with its colon: [:FAVOURS]',
+        replace: { written: 'favours', with: [':FAVOURS'] },
+        fixTitle: 'Write the colon: [:FAVOURS]',
+        span: { line: 2, character: 5, end: 12 },
+      },
+    ]);
+  });
+
+  test('the fix covers only the name: with spaces in the brackets, after the same words in a string, or twice on a line', () => {
+    const spans = (block) => readNote([FIRST, block]).problems.map((p) => p.span);
+    assert.deepEqual(spans("// graph: g\n(s:Reason {title: 'Quiet'}),\n(s)-[ favours ]->(o)"), [
+      { line: 2, character: 6, end: 13 },
+    ]);
+    assert.deepEqual(spans("// graph: g\n(s:Reason {title: 'see [favours'})-[favours]->(o)"), [
+      { line: 1, character: 36, end: 43 },
+    ]);
+    assert.deepEqual(spans("// graph: g\n(s:Reason {title: 'Quiet'}),\n(s)-[favours]->(o), (s)-[favours]->(r)"), [
+      { line: 2, character: 5, end: 12 },
+      { line: 2, character: 25, end: 32 },
+    ]);
+  });
+
+  test('a first use is an error: it is not drawn, and says to write the colon', () => {
+    const r = readNote([BARE.replace('(o)', "(o:Option {name: 'Coast'})")]);
+    assert.equal(r.problems[0]?.severity, 'error');
+    assert.match(
+      r.problems[0]?.message ?? '',
+      /\[favours\] has no colon, and graph g has no relationship type called favours/,
+    );
+  });
+});
+
+describe('a schema whose types its GraphMeta does not declare', () => {
+  // graph spec model §5: each ElementType is linked from the GraphMeta by DECLARES. A graph locked by an earlier build
+  // has none: it is told so, with a fix that adds them.
+  const DATA = "// graph: g\n(a:Book {title: 'A'}),\n(p:Person {name: 'P'})";
+  const OLD = [
+    '// graph: g',
+    "(g_schema:GraphMeta {graph: 'g', schema: 'g@1'}),",
+    "(kind_book:Meta:ElementType {name: 'Book', kind: 'node', origin: 'source'}),",
+    "(kind_person:Meta:ElementType {name: 'Person', kind: 'node', origin: 'source'})",
+  ].join('\n');
+
+  test('is a warning on the first type it leaves out, whose fix adds every DECLARES missing from that block', () => {
+    const r = readNote([DATA, OLD]);
+    assert.deepEqual(r.problems, [
+      {
+        graph: 'g',
+        block: 1,
+        line: 3,
+        severity: 'warning',
+        message: 'the schema does not declare Book and Person: its GraphMeta must DECLARE each type (§5)',
+        fix: 'add a DECLARES link from g_schema to each',
+        insert: {
+          line: 3,
+          character: OLD.split('\n')[3].length,
+          text: ',\n(g_schema)-[:DECLARES]->(kind_book),\n(g_schema)-[:DECLARES]->(kind_person)',
+        },
+        fixTitle: 'Declare each type',
+      },
+    ]);
+    const fixed = OLD + ',\n(g_schema)-[:DECLARES]->(kind_book),\n(g_schema)-[:DECLARES]->(kind_person)';
+    assert.deepEqual(readNote([DATA, fixed]).problems, []);
+  });
+
+  test('with no GraphMeta at all, the fix writes one too', () => {
+    const none = OLD.replace("(g_schema:GraphMeta {graph: 'g', schema: 'g@1'}),\n", '');
+    const [p] = readNote([DATA, none]).problems;
+    assert.equal(p.message, 'the schema has no GraphMeta to declare Book and Person: each type must be declared (§5)');
+    assert.equal(
+      p.insert.text,
+      ",\n(g_schema:GraphMeta {graph: 'g', schema: 'g@1'}),\n(g_schema)-[:DECLARES]->(kind_book),\n(g_schema)-[:DECLARES]->(kind_person)",
+    );
+    const fixed = none + p.insert.text;
+    assert.deepEqual(readNote([DATA, fixed]).problems, []);
+  });
+
+  test('a draft, or a schema that declares each type, has no such warning', () => {
+    assert.deepEqual(readNote([DATA]).problems, []);
+  });
+});

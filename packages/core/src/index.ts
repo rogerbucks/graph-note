@@ -29,7 +29,8 @@ export { PaneSession } from './pane.ts';
 export type { Choice, PaneWrite } from './pane.ts';
 export { completenessReport } from './completeness.ts';
 export type { CompletenessReport, RuleReport } from './completeness.ts';
-export { commaFor, commaInNote } from './commas.ts';
+export { commaFor, commaInNote, colonFor, colonInNote } from './commas.ts';
+export type { TextChange } from './commas.ts';
 export {
   parseValue,
   propertiesOf,

@@ -492,6 +492,57 @@ describe('the comma added for you', () => {
   });
 });
 
+describe('the colon added for you', () => {
+  // colon_added_for_you (spec §4): a link type typed without its colon, matching one type of the graph, gets it as ] is typed
+  test('closing a bare type known to the graph adds the colon and the graph’s spelling; the caret stays after the ]', async () => {
+    const env = await open();
+    try {
+      const t = textarea(env.el),
+        before = READER + ',\n(eyes)-[favours';
+      t.value = before;
+      t.setSelectionRange(before.length, before.length);
+      t.dispatch('input');
+      type(env.el, before + ']');
+      assert.equal(t.value, READER + ',\n(eyes)-[:FAVOURS]');
+      assert.equal(t.selectionStart, t.value.length);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('one undo takes the colon back, and only the colon', async () => {
+    const env = await open();
+    try {
+      const t = textarea(env.el),
+        before = READER + ',\n(eyes)-[favours';
+      t.value = before;
+      t.setSelectionRange(before.length, before.length);
+      t.dispatch('input');
+      type(env.el, before + ']');
+      assert.ok(t.dispatch('keydown', { key: 'z', metaKey: true }).defaultPrevented);
+      assert.equal(t.value, before + ']');
+      assert.equal(t.selectionStart, t.value.length);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a first use gets no colon: it is not guessed', async () => {
+    const env = await open();
+    try {
+      const t = textarea(env.el),
+        before = READER + ',\n(eyes)-[cites';
+      t.value = before;
+      t.setSelectionRange(before.length, before.length);
+      t.dispatch('input');
+      type(env.el, before + ']');
+      assert.equal(t.value, before + ']');
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
 describe('the comma added for you in the note itself', () => {
   /** A typing update of the note's own editor: `text` after a ( was typed at `caret`. */
   function typing(text, caret, dispatched) {
@@ -541,6 +592,88 @@ describe('the comma added for you in the note itself', () => {
       }
       await wait(10);
       assert.deepEqual(dispatched, []);
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
+describe('the colon added for you in the note itself', () => {
+  function typing(text, caret, dispatched) {
+    const doc = { toString: () => text };
+    const view = { state: { doc }, dispatch: (spec) => dispatched.push(spec) };
+    return {
+      docChanged: true,
+      state: { doc },
+      view,
+      transactions: [{ isUserEvent: (e) => e === 'input.type' }],
+      changes: { iterChanges: (cb) => cb(caret - 1, caret - 1, caret - 1, caret, { toString: () => ']' }) },
+    };
+  }
+
+  test('typing ] to close a bare type known to the graph adds the colon, as its own step', async () => {
+    const env = await load({});
+    try {
+      const [listener] = env.state.listeners;
+      const note = '```gql\n// graph: g\n(a:T),\n(b:T),\n(a)-[:LIKES]->(b),\n(b)-[likes]\n```';
+      const dispatched = [];
+      listener(typing(note, note.indexOf('likes]') + 6, dispatched));
+      await wait(10);
+      assert.equal(dispatched.length, 1);
+      const at = note.indexOf('likes]');
+      assert.deepEqual(dispatched[0].changes, { from: at, to: at + 5, insert: ':LIKES' });
+      assert.deepEqual(dispatched[0].annotations, { userEvent: 'input.colon' });
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
+describe('what is added for you, with Obsidian’s brackets paired as you type', () => {
+  // Obsidian pairs brackets by default: typing ( inserts () with the caret between, and typing ] before a ] already there
+  // only moves the caret past it. The comma and the colon must come all the same.
+  function update({ text, before = text, inserted = null, from = 0, head, startHead }, dispatched) {
+    const doc = { toString: () => text };
+    const view = { state: { doc }, dispatch: (spec) => dispatched.push(spec) };
+    return {
+      docChanged: inserted !== null,
+      startState: { doc: { toString: () => before }, selection: { main: { head: startHead } } },
+      state: { doc, selection: { main: { head } } },
+      view,
+      transactions: [{ isUserEvent: (e) => e === 'input.type' }],
+      changes: {
+        iterChanges: (cb) => {
+          if (inserted !== null) cb(from, from, from, from + inserted.length, { toString: () => inserted });
+        },
+      },
+    };
+  }
+
+  test('typing ( that inserts () still adds the comma', async () => {
+    const env = await load({});
+    try {
+      const [listener] = env.state.listeners;
+      const note = '# N\n```gql\n// graph: g\n(a:T)\n()\n```',
+        from = note.indexOf('()\n```'),
+        dispatched = [];
+      listener(update({ text: note, inserted: '()', from, head: from + 1, startHead: from }, dispatched));
+      await wait(10);
+      assert.deepEqual(dispatched[0]?.changes, { from: note.indexOf('(a:T)') + 5, insert: ',' });
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('typing ] over the ] already there still adds the colon', async () => {
+    const env = await load({});
+    try {
+      const [listener] = env.state.listeners;
+      const note = '```gql\n// graph: g\n(a:T),\n(b:T),\n(a)-[:LIKES]->(b),\n(b)-[likes]\n```',
+        at = note.indexOf('likes]'),
+        dispatched = [];
+      listener(update({ text: note, head: at + 6, startHead: at + 5 }, dispatched));
+      await wait(10);
+      assert.deepEqual(dispatched[0]?.changes, { from: at, to: at + 5, insert: ':LIKES' });
     } finally {
       env.uninstall();
     }

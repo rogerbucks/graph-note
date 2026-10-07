@@ -12,6 +12,11 @@ const library = [
     "(t_book:ElementType {id: 'type:Book', name: 'Book', kind: 'node'}),",
     "(t_person:ElementType {id: 'type:Person', name: 'Person', kind: 'node'}),",
     "(t_wrote:ElementType {id: 'type:WROTE', name: 'WROTE', kind: 'edge', reading: 'wrote', reverse_name: 'written by'}),",
+    // declared by the graph's GraphMeta, as §5 asks (since 8 Oct 2026 an undeclared ElementType types nothing)
+    "(library_schema:GraphMeta {id: 'meta:library', graph: 'library', schema: 'library@1'}),",
+    '(library_schema)-[:DECLARES]->(t_book),',
+    '(library_schema)-[:DECLARES]->(t_person),',
+    '(library_schema)-[:DECLARES]->(t_wrote),',
     "(ada:Person {name: 'Ada'}),",
     "(notes:Book {title: 'Notes on the engine', published: DATE '1843-10-01'}),",
     '(ada)-[:WROTE]->(notes)',
@@ -29,6 +34,39 @@ export const cases = {
   'a typed graph, read through every shortcut': {
     blocks: library,
     graphs: ['library'],
+    matrix: {},
+  },
+
+  'a schema its GraphMeta does not declare types nothing (§5)': {
+    blocks: [
+      lines(
+        '// graph: undeclared',
+        "(u_schema:GraphMeta {graph: 'undeclared', schema: 'undeclared@1'}),",
+        "(t_book:ElementType {name: 'Book', kind: 'node'}),",
+        "(t_person:ElementType {name: 'Person', kind: 'node'}),",
+        '(u_schema)-[:DECLARES]->(t_book),',
+        "(ada:Person {name: 'Ada'}),",
+        "(notes:Book {title: 'Notes'})",
+      ),
+    ],
+    graphs: ['undeclared'],
+    matrix: {},
+  },
+
+  'a relationship type written without its colon, read as the graph’s one type of that name (§3)': {
+    blocks: [
+      lines('// graph: bare', "(r:Reason {title: 'Sun'}),", "(o:Option {name: 'Coast'}),", '(r)-[:FAVOURS]->(o)'),
+      lines('// graph: bare', "(s:Reason {title: 'Quiet'}),", '(s)-[favours]->(o)'),
+    ],
+    graphs: ['bare'],
+    matrix: {},
+  },
+
+  'a first use written without its colon is refused (§3)': {
+    blocks: [
+      lines('// graph: bare', "(r:Reason {title: 'Sun'}),", "(o:Option {name: 'Coast'}),", '(r)-[favours]->(o)'),
+    ],
+    graphs: ['bare'],
     matrix: {},
   },
 
