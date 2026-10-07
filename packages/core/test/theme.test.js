@@ -77,3 +77,14 @@ for c in cases:
 print(json.dumps(out))`, sizes);
   sizes.forEach((s, i) => assert.equal(choose(s.map(([w, h], k) => ({ rankdir: ['LR', 'TB'][k], width: w, height: h }))).rankdir, py[i], JSON.stringify(s)));
 });
+
+test('where color-mix is not supported (iOS before 16.2; Obsidian runs on iOS 15), each blend falls back to its theme hue', async () => {
+  const { withoutColorMix } = await import('../src/theme.ts');
+  const viz = await instance();
+  const { source, kinds, readings } = layoutSource(readNote([GRAPHS[0]]).graphs.get('g'), 'LR');
+  const svg = themed(viz.renderString(source, { format: 'svg' }), kinds, readings);
+  const plain = withoutColorMix(svg);
+  assert.doesNotMatch(plain, /color-mix/);
+  assert.match(plain, /stroke:var\(--color-green\)/, 'favours is still green');
+  assert.equal(plain.replace(/var\(--color-\w+\)/g, 'X'), svg.replace(/color-mix\(in srgb, var\(--color-\w+\) \d+%, var\(--text-normal\)\)/g, 'X'), 'nothing else changes');
+});

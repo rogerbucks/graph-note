@@ -6,7 +6,7 @@ export type { Block, Span, Box, Link, GraphDrawing, Problem, NoteReading } from 
 export { layoutSource, drawingSource, STYLE } from './layout.ts';
 export { explain, distance } from './estimates.ts';
 export type { Estimate } from './estimates.ts';
-export { themed, choose, sizeOf, fixed } from './theme.ts';
+export { themed, choose, sizeOf, fixed, withoutColorMix } from './theme.ts';
 export { loadEngine, draw, details } from './render.ts';
 export type { Engine, Drawn, Details, LinkDetail } from './render.ts';
 export { Zoom, MIN_SCALE, MAX_SCALE, STEP } from './zoom.ts';

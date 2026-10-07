@@ -91,3 +91,12 @@ export function choose<T extends Laid>(laid: T[]): T {
   if (!best) throw new Error('nothing was laid out');
   return best[1];
 }
+
+/**
+ * The drawing with each blend replaced by its plain theme hue, for where CSS color-mix() is not supported — iOS before
+ * 16.2, where Obsidian still runs (it needs iOS 15). There a blend would be dropped and the shape drawn black; the plain hue
+ * keeps every colour's meaning, at a little less contrast. The host uses it only where color-mix is unsupported.
+ */
+export function withoutColorMix(svg: string): string {
+  return svg.replace(/color-mix\(in srgb, (var\(--color-\w+\)) \d+%, var\(--text-normal\)\)/g, '$1');
+}

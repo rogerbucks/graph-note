@@ -391,3 +391,26 @@ describe('help behind the badge', () => {
     assert.match(sr.textContent, /Easy on the eyes favours Large reader\./);
   });
 });
+
+describe('older phones', () => {
+  const styleOf = (el) => el.querySelectorAll('path, polygon').map((p) => p.getAttribute('style') ?? '').join(' ');
+
+  test('where CSS color-mix is supported, the drawing keeps the locked style’s blends', async () => {
+    const env = await load();
+    try {
+      globalThis.CSS = { supports: () => true };
+      const { el } = await show(env, fence(GRAPH));
+      assert.match(styleOf(el), /color-mix/);
+    } finally { delete globalThis.CSS; env.uninstall(); }
+  });
+
+  test('where it is not (iOS before 16.2), each blend falls back to its plain theme hue, never to black', async () => {
+    const env = await load();
+    try {
+      globalThis.CSS = { supports: (_p, v) => !/color-mix/.test(v) };
+      const { el } = await show(env, fence(GRAPH));
+      assert.doesNotMatch(styleOf(el), /color-mix/);
+      assert.match(styleOf(el), /var\(--color-\w+\)/);
+    } finally { delete globalThis.CSS; env.uninstall(); }
+  });
+});

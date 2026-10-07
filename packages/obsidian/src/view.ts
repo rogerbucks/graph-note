@@ -2,7 +2,7 @@
 // zooms and pans by button, gesture and key (the core's Zoom decides; this passes the events in and shows the view), opens
 // full screen, and shows a box's details when it is tapped or opened from the keyboard.
 import { MarkdownRenderChild, setIcon } from 'obsidian';
-import { Zoom, details, textVersion } from '@graph-note/core';
+import { Zoom, details, textVersion, withoutColorMix } from '@graph-note/core';
 import type { CompletenessReport, Drawn, Estimate, Mode, NoteReading, Problem, View, ZoomEvent } from '@graph-note/core';
 
 /** A problem, with the note line it is on. */
@@ -162,7 +162,9 @@ export class GraphView extends MarkdownRenderChild {
 
   /** The drawing, parsed from its SVG text, each box made reachable from the keyboard and named for screen readers. */
   private insertSvg(): SVGSVGElement {
-    const parsed = new DOMParser().parseFromString(this.o.drawn.svg, 'image/svg+xml').documentElement;
+    // CSS color-mix arrived in iOS 16.2, and Obsidian runs on iOS 15: without it a blend would draw black, so use the plain hue
+    const mixes = typeof CSS === 'undefined' || CSS.supports('color', 'color-mix(in srgb, red 50%, blue)');
+    const parsed = new DOMParser().parseFromString(mixes ? this.o.drawn.svg : withoutColorMix(this.o.drawn.svg), 'image/svg+xml').documentElement;
     const svg = this.viewport.appendChild(activeDocument.importNode(parsed, true)) as unknown as SVGSVGElement;
     svg.removeAttribute('style');
     svg.classList.add('graph-note-svg');
