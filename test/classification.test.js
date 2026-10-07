@@ -8,7 +8,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { mkdtempSync, mkdirSync, writeFileSync, copyFileSync, chmodSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, copyFileSync, chmodSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -132,6 +132,35 @@ describe('what the check reports', () => {
     assert.match(r.stderr, /notes\.md:2/);
     assert.match(r.stderr, /email/);
     assert.doesNotMatch(r.stderr + r.stdout, new RegExp(value.replace('.', '\\.')));
+  });
+});
+
+describe('built from general patterns only', () => {
+  // general_patterns_only (spec §13): the check must never hold a list of personal details — no list of names, as
+  // strings or as a pattern's alternatives. listsIn finds one; it is proved on planted lists, then run on the check.
+  const NAME = /^[A-Z][a-z]+(?:[ '-][A-Z]?[a-z]+)*$/;
+  function listsIn(source) {
+    const found = [];
+    for (const m of source.matchAll(/\[([^\[\]]*)\]/g)) {
+      const items = [...(m[1] ?? '').matchAll(/'([^']*)'|"([^"]*)"/g)].map((x) => x[1] ?? x[2] ?? '');
+      if (items.length >= 2 && items.filter((x) => NAME.test(x)).length >= 2) found.push(m[0]);
+    }
+    for (const m of source.matchAll(/\(((?:[A-Za-z]{4,}\|){2,}[A-Za-z]{4,})\)/g))
+      if ((m[1] ?? '').split('|').filter((x) => NAME.test(x)).length >= 2) found.push(m[0]);
+    return found;
+  }
+
+  test('a list of names, as strings or as a pattern’s alternatives, is found', () => {
+    const first = ['Ali', 'ce'].join(''),
+      second = ['Bern', 'ard'].join(''),
+      third = ['Car', 'ol'].join('');
+    assert.equal(listsIn(`const PEOPLE = ['${first} Smith', '${second} Jones'];`).length, 1);
+    assert.equal(listsIn(`const RE = /(${first}|${second}|${third})/;`).length, 1);
+    assert.deepEqual(listsIn("execFileSync('git', ['diff', '--cached', '--name-only'])"), []);
+  });
+
+  test('the check holds none: only patterns and checksums', () => {
+    assert.deepEqual(listsIn(readFileSync(path('scripts/check-classification.mjs'), 'utf8')), []);
   });
 });
 
