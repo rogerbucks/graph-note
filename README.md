@@ -9,7 +9,7 @@ An Obsidian plugin that draws the graphs written in notes, and lets them be edit
 - `packages/obsidian` — the plugin.
 - `packages/graph-spec` — the graph format library in plain JavaScript: reader, rules, completeness, joins and views. One file with no dependencies, loadable by a web page or by Node.
 - `python/graph_spec` — the same library in Python, plus the Graphviz drawing and the Grafeo-backed checks. Its answers are tested against the JavaScript library on every shared case.
-- Each release also carries both libraries as one archive, `graph-spec-libraries-<version>.tar.gz`, with a build provenance attestation.
+- Each release also carries both libraries as one archive, `graph-spec-libraries-<version>.tar.gz`. Every asset is listed with its SHA-256 in `SHA256SUMS`.
 - `manifest.json`, `versions.json`, `styles.css` — the files the plugin store reads. `main.js` is built by CI from a tag and attached to each release; it is never committed.
 
 ## Privacy and network use
@@ -48,7 +48,7 @@ A host that uses the Python library sets `graph_spec.CLASSIFICATION_NOTE`, `grap
 - **Verified.** CI runs `npm audit signatures` before every build.
 - **Slow to adopt, quick to patch.** Dependabot proposes version updates weekly, after a seven-day cooldown; security updates are raised at once.
 - **Pinned actions.** Every GitHub Action is pinned to a full commit hash, and CI runs with read-only permissions. Only the release job may write.
-- **Built by CI.** Releases are built from a version tag (no `v` prefix) with a build provenance attestation.
+- **Built by CI.** Releases are built from a version tag (no `v` prefix), with `SHA256SUMS` for every asset, and a build provenance attestation once the repository is public: GitHub keeps attestations only for public repositories owned by a person.
 - **No test framework.** Tests use the runner built into Node.
 
 ## Licence

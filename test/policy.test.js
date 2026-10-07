@@ -265,6 +265,20 @@ describe('GitHub Actions', () => {
     assert.match(runCommands(rel).find((r) => /gh release create/.test(r)), /graph-spec-libraries-\$GITHUB_REF_NAME\.tar\.gz/, 'the archive is attached to the release');
   });
 
+  test('provenance is attested once the repository is public; until then every asset carries a SHA-256', () => {
+    // GitHub refuses attestations for private repositories owned by a person (found on the first tag, 0.1.0).
+    const rel = read('.github/workflows/release.yml');
+    const attest = rel.split('\n').findIndex((l) => /uses:\s*actions\/attest-build-provenance@/.test(l));
+    assert.match(rel.split('\n')[attest + 1] ?? '', /^\s*if:\s*\$\{\{\s*!github\.event\.repository\.private\s*\}\}\s*$/, 'the attestation runs when the repository is public');
+    const sums = runCommands(rel).find((r) => /sha256sum/.test(r));
+    assert.ok(sums, 'a checksum step');
+    for (const asset of ['main.js', 'manifest.json', 'styles.css', 'THIRD_PARTY_NOTICES.md', 'graph-spec-libraries-$GITHUB_REF_NAME.tar.gz']) {
+      assert.ok(sums.includes(asset), `the checksums cover ${asset}`);
+    }
+    assert.match(sums, /> SHA256SUMS\b/);
+    assert.match(runCommands(rel).find((r) => /gh release create/.test(r)), /\bSHA256SUMS\b/, 'the checksums are attached to the release');
+  });
+
   test('every library the plugin bundles is linted with the Obsidian review rules', () => {
     const plugin = readJSON('packages/obsidian/package.json');
     const bundled = Object.keys(plugin.dependencies ?? {}).filter((d) => d.startsWith('@graph-note/'));
