@@ -172,19 +172,28 @@ describe('which blocks are graphs', () => {
 describe('a missing comma', () => {
   const block = "// graph: g\n(a:T {name: 'A'}),\n(b:T {name: 'B'})\n(c:T {name: 'C'}),\n(a)-[:R]->(b)";
 
-  test('only the path after the missing comma is left out: the one before it, and links to it, are still drawn', () => {
-    const { graphs, problems } = readNote([block]);
-    assert.deepEqual(graphs.get('g').boxes.map((b) => b.key), ['a', 'b']);
+  test('a line break between two complete patterns is read as the comma: everything is drawn', () => {
+    const { graphs } = readNote([block]);
+    assert.deepEqual(graphs.get('g').boxes.map((b) => b.key), ['a', 'b', 'c']);
     assert.deepEqual(graphs.get('g').links.map((l) => [l.from, l.to]), [['a', 'b']]);
-    assert.deepEqual(graphs.get('g').estimates, [], 'no guess is made for a thing that is there');
-    assert.equal(problems.length, 1);
+    assert.deepEqual(graphs.get('g').estimates, []);
   });
 
-  test('the problem says a comma is missing, and where', () => {
-    const [p] = readNote([block]).problems;
-    assert.equal(p.line, 4);
-    assert.equal(p.message, "unexpected '(' — a comma is missing at the end of the line before");
-    assert.equal(p.fix, "add a comma at the end of the line before, after (b:T {name: 'B'})");
+  test('it is a warning on the line missing the comma, whose fix adds it', () => {
+    const { problems } = readNote([block]);
+    assert.equal(problems.length, 1);
+    const [p] = problems;
+    assert.deepEqual([p.line, p.severity], [3, 'warning']);
+    assert.equal(p.message, 'a comma is missing at the end of this line; it is read as if it were there');
+    assert.equal(p.fix, 'add a comma at the end of the line');
     assert.deepEqual(p.insert, { line: 2, character: 17, text: ',' }, 'the edit that adds it: 0-based line and character in the block');
+  });
+
+  test('when the next line is not otherwise valid, it is left out, and the problem still says the comma is missing', () => {
+    const broken = "// graph: g\n(a:T {name: 'A'}),\n(b:T {name: 'B'})\n(c:T {name: }),\n(a)-[:R]->(b)";
+    const { graphs, problems } = readNote([broken]);
+    assert.deepEqual(graphs.get('g').boxes.map((b) => b.key), ['a', 'b']);
+    assert.deepEqual(graphs.get('g').links.map((l) => [l.from, l.to]), [['a', 'b']]);
+    assert.ok(problems.some((p) => p.line === 4 && p.severity === 'error'));
   });
 });

@@ -98,7 +98,7 @@ def tokens(block):
     return out
 
 class Parser:
-    def __init__(self, toks): self.t, self.i = toks, 0
+    def __init__(self, toks): self.t, self.i, self.commas = toks, 0, []   # commas: the lines a missing comma was read after (§3)
     def peek(self, k=0): return self.t[self.i + k] if self.i + k < len(self.t) else ('end', '', self.t[-1][2] if self.t else 1, '')
     def name(self):
         """A label, type, key or variable — a keyword in a name's place is a name (Grafeo 0.5.43 accepts date, to and on as names)."""
@@ -158,7 +158,16 @@ class Parser:
         elif not self.at('kw', 'SET'): self.take('kw', 'INSERT')   # a SET alone names its nodes, by MATCH or by id (6 Oct 2026)
         if not self.at('kw', 'SET'):
             paths.append(self.path())
-            while self.at('p', ','): self.take('p', ','); paths.append(self.path())
+            while True:
+                if self.at('p', ','): self.take('p', ','); paths.append(self.path()); continue
+                # §3, 7 Oct 2026: a complete pattern starting on a later line, with no comma before it, is read as if the comma were there
+                prev = self.t[self.i - 1] if self.i else None
+                if self.at('p', '(') and prev and self.line() > prev[2]:
+                    at = self.i
+                    try: p = self.path()
+                    except ProfileError: self.i = at
+                    else: self.commas.append(prev[2]); paths.append(p); continue
+                break
         if self.at('kw', 'SET'):
             self.take('kw', 'SET')
             while True:
@@ -172,7 +181,7 @@ def unquote(s): return re.sub(r"\\(.)", lambda m: {'n': '\n', 't': '\t'}.get(m.g
 
 class Store:
     """Graphs built from data blocks, in the order they are applied — {graph: {'nodes': {key: {'labels', 'props'}}, 'edges': [...]}}."""
-    def __init__(self): self.graphs = {}; self._k = 0; self.schemas = {}; self.named = {}   # schema name -> its graph; data graph -> the schema its header names
+    def __init__(self): self.graphs = {}; self._k = 0; self.schemas = {}; self.named = {}; self.commas = []   # schema name -> its graph; data graph -> the schema its header names; commas: [{graph, line}] where a missing comma was read in (§3)
     def graph(self, g): return self.graphs.setdefault(g, {'nodes': {}, 'edges': []})
     def find(self, g, nid):
         return next((k for k, n in self.graph(g)['nodes'].items() if n['props'].get('id') == nid), None)
@@ -188,7 +197,8 @@ class Store:
             if m: self.named[g] = m.group(1)
         toks = tokens(block)
         if not toks: return g
-        matches, paths, sets = Parser(toks).statement()
+        P = Parser(toks); matches, paths, sets = P.statement()
+        self.commas.extend({'graph': g, 'line': n} for n in P.commas)
         G = self.graph(g); bound = {}
         for m in matches:
             if set(m['props']) != {'id'}: raise ProfileError(m['line'], "MATCH must find a node by its id alone", "write MATCH (v:Label {id: '…'})")

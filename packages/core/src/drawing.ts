@@ -202,11 +202,22 @@ function readBlocks(texts: string[], shared: string[]): { store: gs.Store; probl
     const store = new gs.Store();
     for (const s of shared) { try { store.apply(s); } catch { /* a shared schema that cannot be read types nothing */ } }
     let failed: { block: number; error: unknown } | null = null;
+    const commas: Problem[] = [];
     for (let i = 0; i < clean.length && !failed; i++) {
       if (skip.has(i)) continue;
+      const before = store.commas.length;
       try { store.apply(clean[i] ?? ''); } catch (error) { failed = { block: i, error }; }
+      // a comma the reader read in (§3): a warning on its line, whose fix adds it — the note itself is never rewritten unasked
+      for (const c of store.commas.slice(before)) {
+        const code = (clean[i] ?? '').split('\n')[c.line - 1] ?? '';
+        commas.push({
+          graph: c.graph, block: i, line: c.line, severity: 'warning',
+          message: 'a comma is missing at the end of this line; it is read as if it were there', fix: 'add a comma at the end of the line',
+          insert: { line: c.line - 1, character: code.trimEnd().length, text: ',' },
+        });
+      }
     }
-    if (!failed) return { store, problems: problems.sort((a, b) => a.block - b.block || a.line - b.line) };
+    if (!failed) return { store, problems: problems.concat(commas).sort((a, b) => a.block - b.block || a.line - b.line) };
     const { block, error } = failed, text = clean[block] ?? '';
     const pe = error instanceof gs.ProfileError ? error : null;
     const line = pe?.line ?? 1;

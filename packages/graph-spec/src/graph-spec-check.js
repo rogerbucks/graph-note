@@ -112,7 +112,7 @@ both on every case and requires the same answers. SHA-256 is computed here, sync
     return `${t.getUTCFullYear().toString().padStart(4, '0')}-${p(t.getUTCMonth() + 1)}-${p(t.getUTCDate())}T${p(t.getUTCHours())}:${p(t.getUTCMinutes())}:${p(t.getUTCSeconds())}` + (micro && Number(micro) ? '.' + micro : '');
   }
   class Parser {
-    constructor(t) { this.t = t; this.i = 0; }
+    constructor(t) { this.t = t; this.i = 0; this.commas = []; }   // commas: the lines a missing comma was read after (§3)
     peek(k = 0) { return this.t[this.i + k] || ['end', '', this.t.length ? this.t[this.t.length - 1][2] : 1, '']; }
     line() { return this.peek()[2]; }
     take(kind, text) {
@@ -159,7 +159,19 @@ both on every case and requires the same answers. SHA-256 is computed here, sync
       while (this.at('kw', 'MATCH')) { this.take('kw', 'MATCH'); matches.push(this.node()); while (this.at('p', ',')) { this.take('p', ','); matches.push(this.node()); } }
       if (!matches.length && this.at('p', '(')) { /* the data shortcut (§3): a block that only lists things and links means INSERT */ }
       else if (!this.at('kw', 'SET')) this.take('kw', 'INSERT');   // a SET alone names its nodes, by MATCH or by id (6 Oct 2026)
-      if (!this.at('kw', 'SET')) { paths.push(this.path()); while (this.at('p', ',')) { this.take('p', ','); paths.push(this.path()); } }
+      if (!this.at('kw', 'SET')) {
+        paths.push(this.path());
+        for (;;) {
+          if (this.at('p', ',')) { this.take('p', ','); paths.push(this.path()); continue; }
+          // §3, 7 Oct 2026: a complete pattern starting on a later line, with no comma before it, is read as if the comma were there
+          const prev = this.t[this.i - 1];
+          if (this.at('p', '(') && prev && this.line() > prev[2]) {
+            const at = this.i;
+            try { const p = this.path(); this.commas.push(prev[2]); paths.push(p); continue; } catch (e) { if (!(e instanceof ProfileError)) throw e; this.i = at; }
+          }
+          break;
+        }
+      }
       if (this.at('kw', 'SET')) {
         this.take('kw', 'SET');
         for (;;) { const n = this.line(), v = this.name(); this.take('p', '.'); const key = this.name(); this.take('p', '='); sets.push([v, key, this.value(), n]); if (!this.at('p', ',')) break; this.take('p', ','); }
@@ -182,7 +194,7 @@ both on every case and requires the same answers. SHA-256 is computed here, sync
     }
   }
   class Store {
-    constructor() { this.graphs = {}; this.k = 0; this.schemas = {}; this.named = {}; }   // schema name -> its graph; data graph -> the schema its header names
+    constructor() { this.graphs = {}; this.k = 0; this.schemas = {}; this.named = {}; this.commas = []; }   // commas: [{graph, line}] where a missing comma was read in (§3)   // schema name -> its graph; data graph -> the schema its header names
     graph(g) { return this.graphs[g] || (this.graphs[g] = { nodes: new Map(), edges: [] }); }
     find(g, id) { for (const [k, n] of this.graph(g).nodes) if (n.props.id === id) return k; return null; }
     apply(block) {
@@ -193,7 +205,8 @@ both on every case and requires the same answers. SHA-256 is computed here, sync
       if (kind === 'schema') { const name = /·\s*SCHEMA\s+(\S+)/.exec(first)[1]; g = 'schema ' + name; this.schemas[name] = g; delete this.graphs[g]; }   // a shared schema (§5), kept apart under its own name
       else { const sm = /·\s*schema\s+(\S+)/.exec(first); if (sm) this.named[g] = sm[1]; }
       const toks = tokens(block); if (!toks.length) return g;
-      const [matches, paths, sets] = new Parser(toks).statement();
+      const P = new Parser(toks), [matches, paths, sets] = P.statement();
+      for (const line of P.commas) this.commas.push({ graph: g, line });
       const G = this.graph(g), bound = {};
       for (const m of matches) {
         const keys = Object.keys(m.props);

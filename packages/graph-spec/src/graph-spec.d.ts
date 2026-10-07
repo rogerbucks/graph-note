@@ -29,6 +29,8 @@ declare namespace GraphSpecCheck {
     graphs: Record<string, unknown>;
     schemas: Record<string, string>;
     named: Record<string, string>;
+    /** Where a missing comma between two patterns on separate lines was read as if it were there (§3): the graph, and the line. */
+    commas: { graph: string; line: number }[];
     /** Applies one block, and returns the graph it wrote to. Throws ProfileError. */
     apply(block: string): string;
   }
