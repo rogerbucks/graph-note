@@ -97,3 +97,18 @@ describe('what tapping a box shows', () => {
     assert.equal(details(readNote(note), 'reader', 'missing'), null);
   });
 });
+
+describe('speed', () => {
+  test('a graph of 50 things is read and drawn in under half a second (spec §11; the phone is checked on the device)', async () => {
+    const engine = await loadEngine();
+    const nodes = Array.from({ length: 50 }, (_, i) => `(n${i}:${['Question', 'Option', 'Reason', 'Claim', 'Source'][i % 5]} {name: 'Thing ${i}, a few words long'})`);
+    const links = Array.from({ length: 70 }, (_, i) => `(n${i % 50})-[:${['ANSWERS', 'FAVOURS', 'CITES'][i % 3]}]->(n${(i * 7 + 3) % 50})`);
+    const block = `// graph: g\n${[...nodes, ...links].join(',\n')}`;
+    draw(readNote([block]).graphs.get('g'), engine);   // warm: the first draw compiles the engine's code paths
+    const t = performance.now();
+    const drawn = draw(readNote([block]).graphs.get('g'), engine);
+    const ms = performance.now() - t;
+    assert.match(drawn.svg, /^<svg/);
+    assert.ok(ms < 500, `${ms.toFixed(0)} ms`);
+  });
+});
