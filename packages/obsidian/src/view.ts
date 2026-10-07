@@ -1,9 +1,17 @@
 // A drawn graph (spec §3): the bar — problems badge, Fit, zoom out, zoom in, Full screen, Edit — and the drawing, which
 // zooms and pans by button, gesture and key (the core's Zoom decides; this passes the events in and shows the view), opens
 // full screen, and shows a box's details when it is tapped or opened from the keyboard.
-import { MarkdownRenderChild, setIcon } from 'obsidian';
-import { Zoom, details, textVersion, withoutColorMix } from '@graph-note/core';
-import type { CompletenessReport, Drawn, Estimate, Mode, NoteReading, Problem, View, ZoomEvent } from '@graph-note/core';
+import { MarkdownRenderChild, Platform, setIcon } from 'obsidian';
+import { Zoom, blockItems, details, hops, linkDetails, parseValue, propertiesOf, propertyNames, setProperty, textVersion, withoutColorMix } from '@graph-note/core';
+import type { CompletenessReport, Drawn, Estimate, Mode, NoteReading, Problem, PropType, View, ZoomEvent } from '@graph-note/core';
+
+/** The editor open in place on this card, as the inspector needs it: the block's text as typed, and a way to replace it. */
+export interface Editing {
+  session: { text: string } | null;
+  replace(text: string): void;
+  /** What the details were open on, so the inspector reopens on it in the redrawn card. */
+  selected: { key: string } | { link: number } | null;
+}
 
 /** A problem, with the note line it is on. */
 export interface ShownProblem extends Problem {
@@ -23,10 +31,16 @@ export interface ViewOptions {
   onClose?: () => void;
   /** The completeness report shown behind the badge (spec §8). */
   completeness?: CompletenessReport;
+  /** Edit here: opens the text in place, inside this card (spec §4). */
+  onEditHere?: () => void;
+  /** Called once the card is built, with the place in it where the editor in place sits. */
+  onReady?: (slot: HTMLElement) => void;
+  /** The editor open in place on this card, if any: then the details are the inspector (spec §14). */
+  editing?: () => Editing | undefined;
 }
 
 /** What a tap or a key can land on: a box, by its id, or an estimated link, by its place in the drawing's estimates. */
-type Target = { key: string } | { estimate: number };
+type Target = { key: string } | { estimate: number } | { link: number };
 
 const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? '' : 's'}`;
 const problemText = (p: ShownProblem) => `Line ${p.noteLine}: ${p.message} — ${p.fix}`;
@@ -117,7 +131,8 @@ export class GraphView extends MarkdownRenderChild {
     button(bar, 'Zoom in', 'zoom-in', () => this.zoom.zoomIn());
     if (mode === 'full') button(bar, 'Close full screen', 'minimize', () => this.o.onClose?.());
     else button(bar, 'Full screen', 'expand', () => this.openFullscreen());
-    if (mode !== 'pane') button(bar, 'Edit', 'pencil', () => this.o.onEdit());
+    if (mode !== 'pane' && this.o.onEditHere) button(bar, 'Edit here', 'pencil', () => this.o.onEditHere?.());
+    if (mode !== 'pane') button(bar, 'Edit in pane', 'panel-right-open', () => this.o.onEdit());
 
     const list = renderProblems(root, problems, true, this.o.completeness);
     this.viewport = root.createDiv({
@@ -135,6 +150,7 @@ export class GraphView extends MarkdownRenderChild {
     }
     this.detailsEl = root.createDiv({ cls: 'graph-note-details', attr: { role: 'region', 'aria-live': 'polite' } });
     this.detailsEl.hidden = true;
+    const slot = mode === 'note' ? root.createDiv({ cls: 'graph-note-edit-slot' }) : null;
 
     this.zoom = new Zoom({ width: this.o.drawn.width, height: this.o.drawn.height }, this.viewportSize(), mode);
     this.zoom.onChange = (v) => this.apply(v);
@@ -145,6 +161,9 @@ export class GraphView extends MarkdownRenderChild {
     observer.observe(this.viewport);
     this.register(() => observer.disconnect());
     if (mode === 'full') this.viewport.focus();
+    if (slot) this.o.onReady?.(slot);
+    const reopen = this.o.editing?.()?.selected;
+    if (reopen) this.open(reopen);
   }
 
   override onunload(): void {
@@ -184,6 +203,15 @@ export class GraphView extends MarkdownRenderChild {
     for (const g of Array.from(svg.querySelectorAll('g.edge'))) {
       const n = Number(/^edge(\d+)$/.exec(g.getAttribute('id') ?? '')?.[1]) - 1;
       const e = n < written ? d?.estimates.find((x) => x.kind === 'type' && x.index === n) : named[n - written];
+      const l = n < written ? d?.links[n] : undefined;
+      if (!e && l) {   // a written link: tap it, or press Enter on it, for its details
+        g.setAttribute('data-link', String(n));
+        g.setAttribute('tabindex', '0');
+        g.setAttribute('role', 'button');
+        g.setAttribute('aria-pressed', 'false');
+        g.setAttribute('aria-label', `Link: ${textOf(l.from)} ${l.reading} ${textOf(l.to)}`);
+        continue;
+      }
       if (!e || !d) continue;
       g.setAttribute('data-estimate', String(d.estimates.indexOf(e)));
       g.setAttribute('tabindex', '0');
@@ -221,12 +249,14 @@ export class GraphView extends MarkdownRenderChild {
     const el = target as Element | null;
     const key = el?.closest?.('g.node')?.getAttribute('data-key');
     if (key) return { key };
-    const estimate = el?.closest?.('g.edge')?.getAttribute('data-estimate');
-    return estimate ? { estimate: Number(estimate) } : null;
+    const edge = el?.closest?.('g.edge'), estimate = edge?.getAttribute('data-estimate'), link = edge?.getAttribute('data-link');
+    if (estimate) return { estimate: Number(estimate) };
+    return link ? { link: Number(link) } : null;
   }
 
   private open(t: Target): void {
     if ('key' in t) this.showDetails(t.key);
+    else if ('link' in t) this.showLink(t.link);
     else { const e = this.drawing()?.estimates[t.estimate]; if (e) this.showEstimate(e); }
   }
 
@@ -263,13 +293,35 @@ export class GraphView extends MarkdownRenderChild {
     });
   }
 
-  /** Marks the box whose details are open — a heavier outline, and pressed for screen readers — and only that one. */
-  private select(key: string | null): void {
-    for (const g of Array.from(this.svg.querySelectorAll('g.node'))) {
-      const on = g.getAttribute('data-key') === key;
+  /** Marks the box or link whose details are open — a heavier line, and pressed for screen readers — and only that one. */
+  private select(key: string | null, link: number | null = null): void {
+    for (const g of Array.from(this.svg.querySelectorAll('g.node, g.edge'))) {
+      const on = (key !== null && g.getAttribute('data-key') === key) || (link !== null && g.getAttribute('data-link') === String(link));
       g.classList.toggle('is-selected', on);
-      if (g.hasAttribute('data-key')) g.setAttribute('aria-pressed', String(on));
+      if (g.hasAttribute('aria-pressed')) g.setAttribute('aria-pressed', String(on));
     }
+  }
+
+  /** What tapping a link shows: its reading, the things at either end, its properties, and any problem on it. */
+  private showLink(index: number): void {
+    const d = linkDetails(this.o.reading, this.o.graph, index);
+    if (!d) return;
+    this.select(null, index);
+    const el = this.panel(`${d.from.text} ${d.reading} ${d.to.text}`, d.type);
+    const ul = el.createEl('ul');
+    ul.createEl('li', { text: `From: ${d.from.text}` });
+    ul.createEl('li', { text: `To: ${d.to.text}` });
+    if (d.properties.length && !this.o.editing?.()?.session) {
+      el.createEl('h4', { text: 'Properties' });
+      const props = el.createEl('ul');
+      for (const [k, v] of d.properties) props.createEl('li', { text: `${k}: ${v}` });
+    }
+    if (d.problems.length) {
+      el.createEl('h4', { text: 'Problems' });
+      const probs = el.createEl('ul');
+      for (const p of d.problems) probs.createEl('li', { text: problemText({ ...p, noteLine: this.o.lineOf(p) }) });
+    }
+    this.inspector(el, { link: index }, '');
   }
 
   /** The details panel, emptied and shown, with a heading and a close button. */
@@ -278,10 +330,15 @@ export class GraphView extends MarkdownRenderChild {
     el.empty();
     el.hidden = false;
     el.setAttribute('aria-label', `Details of ${title}`);
+    el.toggleClass('is-sheet', Platform.isPhone && !!this.o.editing?.()?.session);   // the inspector, on a phone: a bottom sheet (§14)
     const head = el.createDiv({ cls: 'graph-note-details-head' });
     head.createEl('strong', { text: title });
     if (kind) head.createSpan({ cls: 'graph-note-kind', text: kind });
-    button(head, 'Close details', 'x', () => { el.hidden = true; this.select(null); this.viewport.focus(); });
+    button(head, 'Close details', 'x', () => {
+      el.hidden = true; this.select(null); this.viewport.focus();
+      const ed = this.o.editing?.();
+      if (ed) ed.selected = null;
+    });
     return el;
   }
 
@@ -308,6 +365,61 @@ export class GraphView extends MarkdownRenderChild {
     links('Links in', d.in.map((l) => `${l.text} ${l.reading} this`));
     if (!d.out.length && !d.in.length) el.createEl('p', { text: 'No links in or out.' });
     links('Problems', d.problems.map((p) => problemText({ ...p, noteLine: this.o.lineOf(p) })));
+    this.inspector(el, { thing: key }, d.kind.split(' · ')[0] ?? '');
+  }
+
+  /**
+   * The inspector (spec §14): in edit mode, every property of the thing or link, each changed, added or removed — its value
+   * checked against its type first — written as text into the block being edited.
+   */
+  private inspector(el: HTMLElement, target: { thing: string } | { link: number }, kind: string): void {
+    const ed = this.o.editing?.();
+    if (!ed?.session) return;
+    ed.selected = 'thing' in target ? { key: target.thing } : { link: target.link };
+    const sec = el.createDiv({ cls: 'graph-note-inspector' });
+    sec.createEl('h4', { text: 'Edit properties' });
+    const alert = sec.createDiv({ cls: 'graph-note-alert', attr: { role: 'alert' } });
+    alert.hidden = true;
+    const types: PropType[] = ['text', 'number', 'date', 'datetime', 'boolean'];
+    const typeSelect = (row: HTMLElement, label: string, chosen: PropType) => {
+      const sel = row.createEl('select', { cls: 'dropdown', attr: { 'aria-label': label } });
+      for (const t of types) { const o = sel.createEl('option', { text: t, attr: { value: t } }); if (t === chosen) o.setAttribute('selected', ''); }
+      sel.value = chosen;
+      return sel;
+    };
+    // a link is edited in its own brackets, counted among the links written in the block being edited
+    const inBlock = (): { thing: string } | { link: number } => {
+      if ('thing' in target) return target;
+      const l = this.drawing()?.links[target.link], text = ed.session?.text ?? '';
+      let n = 0;
+      for (const it of blockItems(text)) for (const [s, t, e] of hops(it.text)) { if (l && s === l.from && t === l.type && e === l.to) return { link: n }; n++; }
+      return { link: -1 };
+    };
+    const apply = (key: string, type: PropType | null, value: string | null) => {
+      const parsed = type === null || value === null ? null : parseValue(type, value);
+      if (parsed && !parsed.ok) { alert.hidden = false; alert.setText(`${key}: ${parsed.error}.`); return; }
+      const r = setProperty(ed.session?.text ?? '', this.o.graph, inBlock(), key, parsed ? parsed.gql : null);
+      if (!r.ok) { alert.hidden = false; alert.setText(`${key}: ${r.reason}.`); return; }
+      alert.hidden = true;
+      ed.replace(r.text);
+    };
+    for (const p of propertiesOf(this.o.reading, this.o.graph, target)) {
+      const row = sec.createDiv({ cls: 'graph-note-prop' });
+      row.createSpan({ cls: 'graph-note-prop-name', text: p.key });
+      const value = row.createEl('input', { attr: { type: 'text', 'aria-label': `Value of ${p.key}` } });
+      value.value = p.value;
+      const type = typeSelect(row, `Type of ${p.key}`, p.type);
+      button(row, `Save ${p.key}`, 'check', () => apply(p.key, type.value as PropType, value.value), 'Save');
+      button(row, `Remove ${p.key}`, 'trash', () => apply(p.key, null, null));
+    }
+    const add = sec.createDiv({ cls: 'graph-note-prop is-new' });
+    const listId = `graph-note-names-${++described}`;
+    const names = add.createEl('datalist', { attr: { id: listId } });
+    for (const n of propertyNames(this.o.reading, this.o.graph, kind)) names.createEl('option', { attr: { value: n } });
+    const name = add.createEl('input', { attr: { type: 'text', list: listId, 'aria-label': 'New property name', placeholder: 'Name' } });
+    const type = typeSelect(add, 'New property type', 'text');
+    const value = add.createEl('input', { attr: { type: 'text', 'aria-label': 'New property value', placeholder: 'Value' } });
+    button(add, 'Add property', 'plus', () => apply(name.value.trim(), type.value as PropType, value.value), 'Add');
   }
 
   private openFullscreen(): void {

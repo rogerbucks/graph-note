@@ -35,6 +35,7 @@ export class Component {
   removeChild(c) { this._children = this._children.filter((x) => x !== c); c.unload(); return c; }
   register(f) { this._cleanups.push(f); }
   registerDomEvent(el, type, fn, opts) { el.addEventListener(type, fn, opts); this._cleanups.push(() => el.removeEventListener(type, fn, opts)); }
+  registerEvent() {}
 }
 export class MarkdownRenderChild extends Component { constructor(el) { super(); this.containerEl = el; } }
 export const processors = new Map();
@@ -73,6 +74,7 @@ export class Plugin extends Component {
   constructor() { super(); this.app = app; }
   registerMarkdownCodeBlockProcessor(lang, fn) { processors.set(lang, fn); }
   registerView(type, f) { views.set(type, f); }
+  registerEditorExtension() {}
   async loadData() { return null; }
   async saveData() {}
 }

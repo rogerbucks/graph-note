@@ -7,6 +7,7 @@
 .graph-note-view > .graph-note-problems, .graph-note-view > .graph-note-details { margin: 0; border: 0; border-radius: 0; border-top: 1px solid var(--background-modifier-border); padding: var(--size-4-2) var(--size-4-3); }
 .graph-note-view > .graph-note-problems { border-top: 0; border-bottom: 1px solid var(--background-modifier-border); background: var(--background-secondary); }
 .graph-note-svg g.is-selected > :is(path, polygon) { stroke-width: 3; }
+.graph-note-svg g.edge[data-link] { cursor: pointer; }
 
 /* The bar: every control at least 44 points, as touch needs (spec §5), and none that only shows on hover. */
 .graph-note-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--size-4-1); margin-bottom: var(--size-4-1); }
@@ -49,6 +50,21 @@
 
 /* Hidden means hidden, whatever display a rule gives the element. */
 .graph-note-pane [hidden], .graph-note [hidden] { display: none !important; }
+
+/* The inspector: each property a row of name, value, type and its buttons; on a phone, a sheet at the bottom of the screen. */
+.graph-note-inspector { display: flex; flex-direction: column; gap: var(--size-4-1); margin-top: var(--size-4-2); }
+.graph-note-prop { display: flex; flex-wrap: wrap; align-items: center; gap: var(--size-4-1); }
+.graph-note-prop input, .graph-note-prop select, .graph-note-prop button { min-height: 44px; }
+.graph-note-prop input { flex: 1 1 8em; min-width: 6em; }
+.graph-note-prop-name { min-width: 6em; font-family: var(--font-monospace); }
+.graph-note-alert { color: var(--text-error); }
+.graph-note-alert::before { content: '✖ '; }
+.graph-note-details.is-sheet { position: sticky; bottom: 0; z-index: 2; max-height: 60vh; overflow: auto; background: var(--background-primary); box-shadow: var(--shadow-s); border-radius: var(--radius-l) var(--radius-l) 0 0; padding-bottom: max(var(--size-4-2), env(safe-area-inset-bottom)); }
+
+/* The editor in place sits inside the drawing's card, under the drawing, as part of it. */
+.graph-note-edit-slot:empty { display: none; }
+.graph-note-view > .graph-note-edit-slot { border-top: 1px solid var(--background-modifier-border); padding: var(--size-4-2) var(--size-4-3); }
+.graph-note-inline { height: auto; }
 
 /* The edit pane: drawing above, text below; on a phone, two tabs and a bottom sheet. Every control at least 44 points. */
 .graph-note-pane { display: flex; flex-direction: column; gap: var(--size-4-2); height: 100%; }

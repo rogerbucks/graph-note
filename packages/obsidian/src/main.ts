@@ -6,6 +6,7 @@ import type { Engine } from '@graph-note/core';
 import { renderBlock } from './block';
 import { GraphPane, PANE } from './pane';
 import { addCommas } from './editor';
+import { BlockEditor } from './block-editor';
 
 /** Where Edit was pressed: the note, the line of the block's opening fence (0-based), and the graph it draws. */
 export interface EditTarget {
@@ -73,6 +74,29 @@ export default class GraphNotePlugin extends Plugin {
   graphviz(): Promise<Engine> {
     this.engine ??= this.loadEngine();
     return this.engine;
+  }
+
+  /** The editors open in place, in drawings' cards: they outlive each redraw of their block. */
+  private readonly inline = new Set<BlockEditor>();
+
+  /** The editor open in place on a note's block, by the line of its opening fence, if there is one. */
+  inlineFor(path: string, line: number): BlockEditor | undefined {
+    return [...this.inline].find((e) => e.path === path && e.session?.ref.line === line);
+  }
+
+  /** Edit here: opens the block's text in place, inside its drawing's card (spec §4), with the focus in it. */
+  async editHere(target: EditTarget, slot: HTMLElement): Promise<void> {
+    let editor = this.inlineFor(target.path, target.line);
+    if (!editor) {
+      const e = new BlockEditor(this, 'inline');
+      e.onDone = () => { this.inline.delete(e); e.detach(); this.removeChild(e); };
+      this.inline.add(e);
+      this.addChild(e);
+      e.mount(slot);
+      await e.open(target.path, target.line);
+      editor = e;
+    } else editor.mount(slot);
+    editor.focus();
   }
 
   /** Opens the edit pane beside the note, on a block (spec §4); one pane, reused. */

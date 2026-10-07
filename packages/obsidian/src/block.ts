@@ -54,10 +54,15 @@ export async function renderBlock(plugin: GraphNotePlugin, source: string, el: H
     renderCode(root, source);
     return;
   }
+  let slot: HTMLElement | null = null;
   ctx.addChild(new GraphView(root, {
     reading, graph, drawn, problems, mode: 'note',
     completeness: completenessReport(reading, graph, new Date().toISOString().slice(0, 10)),
     lineOf: (at) => (blocks[at.block]?.line ?? 0) + at.line,
     onEdit: () => { void plugin.openEditor(target); },
+    // edit here: the editor in place sits in the card; one already open for this block moves into the redrawn card
+    onEditHere: () => { if (slot) void plugin.editHere(target, slot); },
+    onReady: (at) => { slot = at; plugin.inlineFor(target.path, target.line)?.mount(at); },
+    editing: () => plugin.inlineFor(target.path, target.line),
   }));
 }

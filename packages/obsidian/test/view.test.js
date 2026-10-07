@@ -106,7 +106,7 @@ describe('the bar', () => {
     const { el } = await show(env, fence(GRAPH));
     const bar = el.querySelector('.graph-note-bar');
     assert.equal(bar.getAttribute('role'), 'toolbar');
-    for (const label of ['No problems', 'Fit', 'Zoom out', 'Zoom in', 'Full screen', 'Edit']) assert.ok(labelled(bar, label), label);
+    for (const label of ['No problems', 'Fit', 'Zoom out', 'Zoom in', 'Full screen', 'Edit here', 'Edit in pane']) assert.ok(labelled(bar, label), label);
   });
 
   test('each control says what it is in words and an icon, not by colour', async () => {
@@ -130,7 +130,7 @@ describe('the bar', () => {
     const opened = [];
     env.plugin.openEditor = (target) => opened.push(target);
     const { el } = await show(env, fence(GRAPH));
-    labelled(el, 'Edit').click();
+    labelled(el, 'Edit in pane').click();
     assert.equal(opened.length, 1);
     assert.deepEqual({ path: opened[0].path, line: opened[0].line, graph: opened[0].graph }, { path: 'Some note.md', line: 0, graph: 'reader' });
   });
@@ -446,5 +446,30 @@ describe('one frame: the bar and the details belong to their drawing', () => {
     labelled(panel, 'Close details').click();
     assert.ok(!second.classList.contains('is-selected'), 'closing the details clears the mark');
     assert.match(styles, /\.graph-note-svg g\.is-selected > :is\(path, polygon\)\s*\{[^}]*stroke-width:\s*3;/);
+  });
+});
+
+describe('details of a link', () => {
+  let env; before(async () => { env = await load(); }); after(() => env.uninstall());
+
+  test('tapping a link shows its reading, the things at either end, and its properties', async () => {
+    const { el } = await show(env, fence(GRAPH.replace("(eyes)-[:FAVOURS]->(large)", "(eyes)-[:FAVOURS {strength: 'strong'}]->(large)")));
+    const link = el.querySelectorAll('g.edge')[2];
+    const vp = el.querySelector('.graph-note-viewport');
+    vp.dispatch('pointerdown', { target: link, pointerId: 5, pointerType: 'touch', clientX: 40, clientY: 40, button: 0 });
+    vp.dispatch('pointerup', { target: link, pointerId: 5, pointerType: 'touch', clientX: 40, clientY: 40, button: 0 });
+    const panel = el.querySelector('.graph-note-details');
+    assert.ok(!panel.hidden);
+    for (const s of ['Easy on the eyes', 'favours', 'Large reader', 'FAVOURS', 'strength', 'strong']) assert.ok(panel.textContent.includes(s), s);
+    assert.ok(link.classList.contains('is-selected'), 'the link is marked as selected');
+  });
+
+  test('each link can be reached and opened from the keyboard, and is named for screen readers', async () => {
+    const { el } = await show(env, fence(GRAPH));
+    const link = el.querySelectorAll('g.edge')[0];
+    assert.equal(link.getAttribute('tabindex'), '0');
+    assert.equal(link.getAttribute('aria-label'), 'Link: Large reader answers Which device?');
+    link.dispatch('keydown', { key: 'Enter' });
+    assert.match(el.querySelector('.graph-note-details').textContent, /answers/);
   });
 });
