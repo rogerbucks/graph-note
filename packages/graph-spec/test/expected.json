@@ -296,5 +296,34 @@
         "legend": ""
       }
     }
+  },
+  "a-relationship-type-written-without-its-colon-read-as-the-graph-s-one-type-of-that-name-3": {
+    "canon": { "bare": "98dae544a3f56a2c7912044d7e378c8e9cb3feb19493f107a99b86d45ad203de" },
+    "verdicts": {
+      "bare": [
+        ["§5: a draft's kinds and relationship types hold no near-duplicates", true],
+        ["§18: the flat projection rebuilds the graph", true]
+      ]
+    },
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "views": {
+      "bare": {
+        "projection": "{\"blocks\":{\"o\":{\"id\":\"o\",\"name\":\"Coast\",\"type\":[\"Option\"]},\"r\":{\"favours\":[\"o\"],\"id\":\"r\",\"title\":\"Sun\",\"type\":[\"Reason\"]},\"s\":{\"favours\":[\"o\"],\"id\":\"s\",\"title\":\"Quiet\",\"type\":[\"Reason\"]}},\"relationships\":[]}",
+        "relationships": "flowchart LR\n    n0[\"o<br/>Coast\"]\n    n1[\"r<br/>Sun\"]\n    n2[\"s<br/>Quiet\"]\n    n1 -->|favours| n0\n    n2 -->|favours| n0",
+        "legend": "favours = FAVOURS"
+      }
+    }
+  },
+  "a-first-use-written-without-its-colon-is-refused-3": {
+    "canon": {},
+    "verdicts": {},
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "error": "line 4: [favours] has no colon, and graph bare has no relationship type called favours — a relationship type is written with its colon: [:FAVOURS]"
   }
 }

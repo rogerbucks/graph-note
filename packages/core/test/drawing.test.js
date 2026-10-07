@@ -270,3 +270,38 @@ describe('a missing comma', () => {
     assert.ok(problems.some((p) => p.line === 4 && p.severity === 'error'));
   });
 });
+
+describe('a relationship type written without its colon', () => {
+  // req:3.bare-link-type: read as the graph's one type of that name, ignoring case, and reported with a fix
+  const FIRST = "// graph: g\n(r:Reason {title: 'Sun'}),\n(o:Option {name: 'Coast'}),\n(r)-[:FAVOURS]->(o)";
+  const BARE = "// graph: g\n(s:Reason {title: 'Quiet'}),\n(s)-[favours]->(o)";
+
+  test('is drawn as that type, with a warning whose fix writes the colon, as the graph spells the type', () => {
+    const r = readNote([FIRST, BARE]);
+    assert.deepEqual(
+      r.graphs.get('g').links.map((l) => l.type),
+      ['FAVOURS', 'FAVOURS'],
+    );
+    assert.deepEqual(r.problems, [
+      {
+        graph: 'g',
+        block: 1,
+        line: 3,
+        severity: 'warning',
+        message: '[favours] has no colon; it is read as the relationship type FAVOURS',
+        fix: 'write it with its colon: [:FAVOURS]',
+        replace: { written: '[favours', with: ['[:FAVOURS'] },
+        fixTitle: 'Write the colon: [:FAVOURS]',
+      },
+    ]);
+  });
+
+  test('a first use is an error: it is not drawn, and says to write the colon', () => {
+    const r = readNote([BARE.replace('(o)', "(o:Option {name: 'Coast'})")]);
+    assert.equal(r.problems[0]?.severity, 'error');
+    assert.match(
+      r.problems[0]?.message ?? '',
+      /\[favours\] has no colon, and graph g has no relationship type called favours/,
+    );
+  });
+});

@@ -53,6 +53,23 @@ export const cases = {
     matrix: {},
   },
 
+  'a relationship type written without its colon, read as the graph’s one type of that name (§3)': {
+    blocks: [
+      lines('// graph: bare', "(r:Reason {title: 'Sun'}),", "(o:Option {name: 'Coast'}),", '(r)-[:FAVOURS]->(o)'),
+      lines('// graph: bare', "(s:Reason {title: 'Quiet'}),", '(s)-[favours]->(o)'),
+    ],
+    graphs: ['bare'],
+    matrix: {},
+  },
+
+  'a first use written without its colon is refused (§3)': {
+    blocks: [
+      lines('// graph: bare', "(r:Reason {title: 'Sun'}),", "(o:Option {name: 'Coast'}),", '(r)-[favours]->(o)'),
+    ],
+    graphs: ['bare'],
+    matrix: {},
+  },
+
   'a draft with near-duplicate kinds and types': {
     blocks: [
       lines(

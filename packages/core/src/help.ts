@@ -148,7 +148,7 @@ export function diagnostics(
       : [];
     const fixes: CodeAction[] = inserts.concat(
       (p.replace?.with ?? []).map((w) => ({
-        title: `Change ${p.replace?.written} to ${w}`,
+        title: p.fixTitle ?? `Change ${p.replace?.written} to ${w}`,
         kind: 'quickfix',
         isPreferred: p.replace?.with.length === 1,
         edit: { changes: { [uri]: [{ range, newText: w }] } },

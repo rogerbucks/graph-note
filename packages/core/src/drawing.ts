@@ -54,6 +54,8 @@ export interface Problem {
   replace?: { written: string; with: string[] };
   /** Text to add, at a 0-based line and character of the block: the fix, as an edit. */
   insert?: { line: number; character: number; text: string };
+  /** What the fix is called where it is offered, when "Change … to …" would not say it. */
+  fixTitle?: string;
 }
 
 /** What a note's graph blocks say: each graph as drawn, the problems, and the graphs themselves, as written and joined. */
@@ -247,6 +249,7 @@ function readBlocks(texts: string[], shared: string[]): { store: gs.Store; probl
     for (let i = 0; i < clean.length && !failed; i++) {
       if (skip.has(i)) continue;
       const before = store.commas.length;
+      const bareBefore = store.bares.length;
       try {
         store.apply(clean[i] ?? '');
       } catch (error) {
@@ -263,6 +266,20 @@ function readBlocks(texts: string[], shared: string[]): { store: gs.Store; probl
           message: 'a comma is missing at the end of this line; it is read as if it were there',
           fix: 'add a comma at the end of the line',
           insert: { line: c.line - 1, character: code.trimEnd().length, text: ',' },
+        });
+      }
+      // a type written without its colon, read as the graph's one type of that name (§3): a warning, whose fix writes
+      // the colon and the type as the graph spells it
+      for (const b of store.bares.slice(bareBefore)) {
+        commas.push({
+          graph: b.graph,
+          block: i,
+          line: b.line,
+          severity: 'warning',
+          message: `[${b.written}] has no colon; it is read as the relationship type ${b.type}`,
+          fix: `write it with its colon: [:${b.type}]`,
+          replace: { written: `[${b.written}`, with: [`[:${b.type}`] },
+          fixTitle: `Write the colon: [:${b.type}]`,
         });
       }
     }

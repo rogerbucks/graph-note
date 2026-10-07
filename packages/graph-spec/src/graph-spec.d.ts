@@ -31,6 +31,8 @@ declare namespace GraphSpecCheck {
     named: Record<string, string>;
     /** Where a missing comma between two patterns on separate lines was read as if it were there (§3): the graph, and the line. */
     commas: { graph: string; line: number }[];
+    /** Where a relationship type written without its colon was read as the graph's one type of that name (§3). */
+    bares: { graph: string; line: number; written: string; type: string }[];
     /** Applies one block, and returns the graph it wrote to. Throws ProfileError. */
     apply(block: string): string;
   }

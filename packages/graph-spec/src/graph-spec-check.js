@@ -318,12 +318,16 @@ both on every case and requires the same answers. SHA-256 is computed here, sync
       while (this.at('p', '-')) {
         this.take('p', '-');
         this.take('p', '[');
-        this.take('p', ':');
+        // a type written without its colon is read here and resolved by the store, which knows the graph's types
+        // (§3, req:3.bare-link-type)
+        const bare = !this.at('p', ':');
+        if (!bare) this.take('p', ':');
+        const line = this.line();
         const type = this.name();
         const props = this.props();
         this.take('p', ']');
         this.take('arrow');
-        rels.push({ type, props });
+        rels.push({ type, props, bare, line });
         nodes.push(this.node());
       }
       return [nodes, rels];
@@ -428,7 +432,43 @@ both on every case and requires the same answers. SHA-256 is computed here, sync
       this.schemas = {};
       this.named = {};
       this.commas = [];
+      // bares: [{graph, line, written, type}] where a type written without its colon was read as the graph's one type
+      // of that name, ignoring case (§3)
+      this.bares = [];
     } // commas: [{graph, line}] where a missing comma was read in (§3)   // schema name -> its graph; data graph -> the schema its header names
+    /** The relationship types graph g knows so far: written with their colon, declared by an ElementType, or in the
+     * shared schema it names. */
+    edgeTypes(g) {
+      const out = new Set();
+      const names = [g, ...(this.named[g] in this.schemas ? [this.schemas[this.named[g]]] : [])];
+      for (const name of names) {
+        const stored = this.graph(name);
+        for (const e of stored.edges) out.add(e[1]);
+        for (const n of stored.nodes.values())
+          if (n.labels.has('ElementType') && n.props.kind === 'edge' && typeof n.props.name === 'string')
+            out.add(n.props.name);
+      }
+      return out;
+    }
+    /** A bare type read as the graph's one type of that name, ignoring case — or refused. */
+    resolve(g, r) {
+      const written = r.type;
+      const found = [...this.edgeTypes(g)].filter((t) => t.toLowerCase() === written.toLowerCase()).sort();
+      if (!found.length)
+        throw new ProfileError(
+          r.line,
+          `[${written}] has no colon, and graph ${g} has no relationship type called ${written}`,
+          `a relationship type is written with its colon: [:${written.toUpperCase()}]`,
+        );
+      if (found.length > 1)
+        throw new ProfileError(
+          r.line,
+          `[${written}] has no colon, and graph ${g} has relationship types ${found.slice(0, -1).join(', ')} and ${found.at(-1)}, which differ only by case`,
+          `write the one meant with its colon, such as [:${found[0]}]`,
+        );
+      this.bares.push({ graph: g, line: r.line, written, type: found[0] });
+      return found[0];
+    }
     graph(g) {
       return this.graphs[g] || (this.graphs[g] = { nodes: new Map(), edges: [] });
     }
@@ -509,7 +549,12 @@ both on every case and requires the same answers. SHA-256 is computed here, sync
           }
         }
         rels.forEach((r, i) =>
-          graph.edges.push([bound[nodes[i].v], r.type, bound[nodes[i + 1].v], Object.assign({}, r.props)]),
+          graph.edges.push([
+            bound[nodes[i].v],
+            r.bare ? this.resolve(g, r) : r.type,
+            bound[nodes[i + 1].v],
+            Object.assign({}, r.props),
+          ]),
         );
       }
       for (const [v, key, val, n] of sets) {
