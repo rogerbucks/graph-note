@@ -7,6 +7,11 @@ CI. A change that breaks one fails before it is merged.
 
 - **Spec, then test, then code.** Each behaviour is a requirement in the spec first. Its test is written next and seen
   to fail, and only then is the code written. A commit message says which tests were seen failing first.
+- **CI proves it.** `scripts/tests-first.mjs` replays each new commit: its tests run against its parent's code, and
+  every test new in the commit must fail there. A test written after its code, such as one that pins behaviour that
+  already existed, is listed in `test/seen-failing.json` with the reason, or the build fails. `test/tests-first.json`
+  records the replays (`node scripts/tests-first.mjs --record`): for each test file, what was seen failing first, what
+  was excused, and what could not be replayed.
 - **The gate before every commit:** `npm run format:check`, `npm run lint`, `npm run typecheck` and `npm test`, plus
   `ruff check` and `ruff format --check` when the Python library changed. CI runs them all again.
 - **A large or risky change goes through a pull request**, and is merged only once CI passes on it. That means one that
@@ -89,3 +94,4 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/licences.test.js` — licences through the whole build chain.
 - `test/offline.test.js` — the bundled engine makes no network request.
 - `test/policy.test.js` — the plugin-store files, supply-chain pins and least-privilege CI.
+- `test/tests-first.test.js` — every test is seen to fail before its code, replayed commit by commit.
