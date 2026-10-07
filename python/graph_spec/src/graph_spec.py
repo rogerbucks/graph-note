@@ -69,8 +69,9 @@ UTC = dt.timezone.utc
 
 def strip(s):
     """Comments out, and the data shortcut's INSERT put back (§3) — what Grafeo reads."""
+    # a comment line is emptied, not dropped, so a line number still names the block's own line
     return _gp.to_gql(
-        "\n".join(line for line in s.splitlines() if not line.strip().startswith("//"))
+        "\n".join("" if line.strip().startswith("//") else line for line in s.splitlines())
     )
 
 

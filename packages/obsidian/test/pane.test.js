@@ -628,3 +628,54 @@ describe('the colon added for you in the note itself', () => {
     }
   });
 });
+
+describe('what is added for you, with Obsidian’s brackets paired as you type', () => {
+  // Obsidian pairs brackets by default: typing ( inserts () with the caret between, and typing ] before a ] already there
+  // only moves the caret past it. The comma and the colon must come all the same.
+  function update({ text, before = text, inserted = null, from = 0, head, startHead }, dispatched) {
+    const doc = { toString: () => text };
+    const view = { state: { doc }, dispatch: (spec) => dispatched.push(spec) };
+    return {
+      docChanged: inserted !== null,
+      startState: { doc: { toString: () => before }, selection: { main: { head: startHead } } },
+      state: { doc, selection: { main: { head } } },
+      view,
+      transactions: [{ isUserEvent: (e) => e === 'input.type' }],
+      changes: {
+        iterChanges: (cb) => {
+          if (inserted !== null) cb(from, from, from, from + inserted.length, { toString: () => inserted });
+        },
+      },
+    };
+  }
+
+  test('typing ( that inserts () still adds the comma', async () => {
+    const env = await load({});
+    try {
+      const [listener] = env.state.listeners;
+      const note = '# N\n```gql\n// graph: g\n(a:T)\n()\n```',
+        from = note.indexOf('()\n```'),
+        dispatched = [];
+      listener(update({ text: note, inserted: '()', from, head: from + 1, startHead: from }, dispatched));
+      await wait(10);
+      assert.deepEqual(dispatched[0]?.changes, { from: note.indexOf('(a:T)') + 5, insert: ',' });
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('typing ] over the ] already there still adds the colon', async () => {
+    const env = await load({});
+    try {
+      const [listener] = env.state.listeners;
+      const note = '```gql\n// graph: g\n(a:T),\n(b:T),\n(a)-[:LIKES]->(b),\n(b)-[likes]\n```',
+        at = note.indexOf('likes]'),
+        dispatched = [];
+      listener(update({ text: note, head: at + 6, startHead: at + 5 }, dispatched));
+      await wait(10);
+      assert.deepEqual(dispatched[0]?.changes, { from: at, to: at + 5, insert: ':LIKES' });
+    } finally {
+      env.uninstall();
+    }
+  });
+});

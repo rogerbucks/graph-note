@@ -88,6 +88,16 @@ describe('the colon added for you', async () => {
     );
   });
 
+  test('a link with properties gets its colon too', () => {
+    assert.equal(after(FIRST + ",\n(r)-[favours {how: 'much'}"), FIRST + ",\n(r)-[:FAVOURS {how: 'much'}]");
+  });
+
+  test('a type declared only in a comment does not count', () => {
+    const commented =
+      "// graph: g\n// (t:ElementType {name: 'CITES', kind: 'edge'}),\n(r:Reason {title: 'Sun'}),\n(r)-[cites";
+    assert.equal(after(commented), null);
+  });
+
   test('a type the graph declares counts', () => {
     const declared =
       "// graph: g\n(t:ElementType {name: 'CITES', kind: 'edge', reading: 'cites', reverse_name: 'is cited by'}),\n(r:Reason {title: 'Sun'}),\n(o:Option {name: 'Coast'}),\n(r)-[cites";

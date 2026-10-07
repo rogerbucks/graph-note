@@ -122,12 +122,17 @@ export function diagnostics(
   const own = reading.problems.filter((p: Problem) => p.graph === graph && p.block === block);
   for (const p of own) {
     const line = p.line - 1,
-      range = rangeOf(text, line, p.replace?.written);
+      range = p.span
+        ? {
+            start: { line: p.span.line, character: p.span.character },
+            end: { line: p.span.line, character: p.span.end },
+          }
+        : rangeOf(text, line, p.replace?.written);
     const add = p.insert;
     const inserts: CodeAction[] = add
       ? [
           {
-            title: 'Add the missing comma',
+            title: p.fixTitle ?? 'Add the missing comma',
             kind: 'quickfix',
             isPreferred: true,
             edit: {

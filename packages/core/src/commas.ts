@@ -61,7 +61,8 @@ const blank = (text: string) =>
 function typesIn(text: string): Set<string> {
   const out = new Set<string>();
   for (const m of blank(text).matchAll(/-\[\s*:\s*([A-Za-z_]\w*)/g)) out.add(m[1] ?? '');
-  for (const m of text.matchAll(/ElementType\s*\{([^{}]*)\}/g)) {
+  // a commented-out line declares nothing: comments are blanked, strings kept, so a type's name can still be read
+  for (const m of text.replace(/\/\/[^\n]*/g, (c) => ' '.repeat(c.length)).matchAll(/ElementType\s*\{([^{}]*)\}/g)) {
     const name = /\bname:\s*'([^']*)'/.exec(m[1] ?? '')?.[1];
     if (name && /\bkind:\s*'edge'/.test(m[1] ?? '')) out.add(name);
   }
@@ -80,7 +81,7 @@ export function colonFor(text: string, caret: number, earlier: string[] = []): T
   const firstLine = text.split('\n').find((l) => l.trim()) ?? '';
   if (!graph || /·\s*QUERY\b/.test(firstLine)) return null;
   const before = blank(text.slice(0, caret));
-  const m = /-\[\s*([A-Za-z_]\w*)\s*\]$/.exec(before);
+  const m = /-\[\s*([A-Za-z_]\w*)\s*(?:\{[^{}]*\}\s*)?\]$/.exec(before);
   if (!m || m.index === undefined) return null;
   const written = m[1] ?? '',
     from = m.index + m[0].indexOf(written, 2);

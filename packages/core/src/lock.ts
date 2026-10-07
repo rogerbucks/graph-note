@@ -56,7 +56,9 @@ export function lockBlock(reading: NoteReading, graph: string, today: string): s
   ].sort(byCode);
   const readings = gs.readings(g);
   const types = [...new Set(g.edges.map(([, t]) => t))].sort(byCode).map((t) => [t, gs.word(readings, t)] as const);
-  const meta = id(`${graph}_schema`);
+  // a draft that has its GraphMeta already keeps it, and the types are declared from it
+  const own = g.labelled('GraphMeta').find((m) => /^[A-Za-z_]\w*$/.test(m));
+  const meta = own ?? id(`${graph}_schema`);
   const declared: string[] = [];
   const declare = (want: string) => {
     const v = id(want);
@@ -67,8 +69,7 @@ export function lockBlock(reading: NoteReading, graph: string, today: string): s
     header,
     `// ── The schema: locked ${today} from the data above ──`,
     '// The reverse readings are guesses — check each one.',
-    `(${meta}:GraphMeta {`,
-    `    graph: ${q(graph)}, schema: ${q(`${graph}@1`)}}),`,
+    ...(own ? [] : [`(${meta}:GraphMeta {`, `    graph: ${q(graph)}, schema: ${q(`${graph}@1`)}}),`]),
     '',
     '// ── Kinds of thing ──',
     ...kinds.flatMap((k) => [

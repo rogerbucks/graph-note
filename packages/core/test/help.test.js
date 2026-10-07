@@ -290,9 +290,9 @@ describe('a relationship type written without its colon', () => {
     const bare = "// graph: g\n(s:Reason {title: 'Quiet'}),\n(favours)-[favours]->(o)".replace('(favours)', '(s)');
     const [d] = diagnostics(readNote([first, bare]), 'g', 1, bare, 'note.md');
     assert.equal(d.severity, SEVERITY.Warning);
-    assert.deepEqual(d.range, { start: { line: 2, character: 4 }, end: { line: 2, character: 12 } });
+    assert.deepEqual(d.range, { start: { line: 2, character: 5 }, end: { line: 2, character: 12 } });
     const [fix] = d.data.fixes;
     assert.equal(fix.title, 'Write the colon: [:FAVOURS]');
-    assert.deepEqual(fix.edit.changes['note.md'], [{ range: d.range, newText: '[:FAVOURS' }]);
+    assert.deepEqual(fix.edit.changes['note.md'], [{ range: d.range, newText: ':FAVOURS' }]);
   });
 });

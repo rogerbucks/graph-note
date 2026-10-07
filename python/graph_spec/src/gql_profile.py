@@ -36,16 +36,24 @@ import datetime as dt
 UTC = dt.timezone.utc
 
 
+def _bare_names(block):
+    """Each link type written without its colon, in text order: (line, offset in the block, name).
+    Strings and comments are blanked first, so words in them are never taken for one."""
+    blanked = re.sub(
+        r"//[^\n]*",
+        lambda m: " " * len(m.group()),
+        re.sub(r"'(?:[^'\\\n]|\\.)*'?", lambda m: " " * len(m.group()), block),
+    )
+    return [
+        (blanked.count("\n", 0, m.start(1)) + 1, m.start(1), m.group(1))
+        for m in re.finditer(r"-\[\s*([A-Za-z_]\w*)(?=\s*[\]{])", blanked)
+    ]
+
+
 def _bare(block):
     """The line and name of the first relationship type written without its colon, if any."""
-    try:
-        toks = tokens(block)
-    except ProfileError:
-        return None
-    for a, b, c in zip(toks, toks[1:], toks[2:]):
-        if a[:2] == ("p", "-") and b[:2] == ("p", "[") and c[0] in ("id", "kw"):
-            return c[2], c[3]
-    return None
+    found = _bare_names(block)
+    return (found[0][0], found[0][2]) if found else None
 
 
 def to_gql(block):
@@ -469,16 +477,15 @@ class Store:
 
     def corrected(self, block):
         """The block with each bare type this store read written with its colon, as its graph
-        spells it — the text an engine may be given (req:3.engine-gets-corrected)."""
-        lines = block.split("\n")
-        for line, written, typ in self._fixes.get(block, []):
-            lines[line - 1] = re.sub(
-                r"\[(\s*)" + re.escape(written) + r"\b",
-                lambda m: f"[{m.group(1)}:{typ}",
-                lines[line - 1],
-                count=1,
-            )
-        return "\n".join(lines)
+        spells it — the text an engine may be given (req:3.engine-gets-corrected). Each is found by
+        its place among the block's bare types, never by searching the text."""
+        out = block
+        places = _bare_names(block)
+        for (_, at, written), (_, _, typ) in reversed(
+            list(zip(places, self._fixes.get(block, [])))
+        ):
+            out = out[:at] + ":" + typ + out[at + len(written) :]
+        return out
 
     def apply(self, block):
         g, kind = header(block)

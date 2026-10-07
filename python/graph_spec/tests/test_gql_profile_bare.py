@@ -114,5 +114,41 @@ class EngineGetsCorrected(unittest.TestCase):
         self.assertEqual(sorted(r["t"] for r in rows), ["FAVOURS", "FAVOURS"])
 
 
+class CorrectedByPlace(unittest.TestCase):
+    """The corrected text writes the colon where the reader read each bare type, by its place."""
+
+    def test_not_inside_a_string_and_across_a_line_break(self):
+        block = (
+            "// graph: g\n(s:Reason {title: 'see [favours'})-[favours]->(o),\n"
+            "(s)-[\n  favours]->(r)"
+        )
+        st = read(FIRST, block)
+        self.assertEqual(
+            st.corrected(block),
+            "// graph: g\n(s:Reason {title: 'see [favours'})-[:FAVOURS]->(o),\n"
+            "(s)-[\n  :FAVOURS]->(r)",
+        )
+
+
+class EngineGuardEdges(unittest.TestCase):
+    def test_an_edge_variable_is_not_taken_for_a_bare_type(self):
+        try:
+            gp.to_gql("// graph: g\nMATCH (a)-[r:LIKES]->(b)")
+        except gp.ProfileError as e:
+            self.assertNotIn("has no colon", str(e))
+
+    def test_a_block_that_cannot_be_read_is_still_refused_if_it_holds_one(self):
+        with self.assertRaises(gp.ProfileError) as e:
+            gp.to_gql("// graph: g\n(a:T {x: @}),\n(a)-[likes]->(b)")
+        self.assertIn("[likes] has no colon", str(e.exception))
+
+    def test_the_line_given_is_the_line_in_the_block(self):
+        with self.assertRaises(gp.ProfileError) as e:
+            gs.load(
+                "// graph: g\n// a comment\n" + FIRST.split("\n", 1)[1] + ",\n(r)-[favours]->(o)"
+            )
+        self.assertEqual(e.exception.line, 6)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -52,6 +52,10 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 - [ ] Typing ( to start the next pattern on a new line adds the comma to the line before; typing ] after a link type
       written without its colon, such as -[favours, adds the colon and the type as the graph spells it, [:FAVOURS]. One
       undo takes either back. Both work in the pane, in place and in the note itself.
+- [ ] In the note itself, with Obsidian's "Auto pair brackets" on (Settings → Editor), and again with it off: the comma
+      comes when ( is typed, and the colon when ] is typed or stepped over.
+- [ ] A graph locked by an earlier build shows a ⚠ that its schema does not declare its types; its fix adds the
+      DECLARES links, and the ⚠ goes.
 - [ ] A link type left without its colon is drawn as that type, with a ⚠ whose fix writes the colon. A new type written
       without its colon is an error that says to write it.
 - [ ] A draft graph offers Lock the graph. Locking writes its schema as a new block after the graph.

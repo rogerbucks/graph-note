@@ -9,16 +9,22 @@ import { colonInNote, commaInNote } from '@graph-note/core';
 
 /** The note editor's extension that adds the comma and the colon for you as you type. */
 export const addForYou = EditorView.updateListener.of((u) => {
-  if (!u.docChanged || !u.transactions.some((t) => t.isUserEvent('input.type'))) return;
+  if (!u.transactions.some((t) => t.isUserEvent('input.type'))) return;
   let caret = -1,
     typed = '';
-  u.changes.iterChanges((_fromA, _toA, _fromB, toB, inserted) => {
-    const t = inserted.toString();
-    if (t === '(' || t === ']') {
-      caret = toB;
-      typed = t;
-    }
-  });
+  if (u.docChanged)
+    u.changes.iterChanges((_fromA, _toA, fromB, toB, inserted) => {
+      const t = inserted.toString();
+      // Obsidian pairs brackets as they are typed: ( comes as (), with the caret between
+      if (t === '(' || t === ']') [caret, typed] = [toB, t];
+      else if (t === '()') [caret, typed] = [fromB + 1, '('];
+    });
+  else {
+    // and a ] typed before the ] already there only moves the caret past it
+    const from = u.startState.selection.main.head,
+      head = u.state.selection.main.head;
+    if (head === from + 1 && u.state.doc.toString()[from] === ']') [caret, typed] = [head, ']'];
+  }
   if (caret < 0) return;
   const note = u.state.doc.toString();
   let change: { from: number; to?: number; insert: string } | null = null,

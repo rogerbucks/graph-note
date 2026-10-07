@@ -95,6 +95,21 @@ describe('Lock the graph', () => {
     assert.deepEqual(t5, ['§5: every element has a declared type', true]);
   });
 
+  test('a draft that already has its GraphMeta keeps it: Lock declares from it, and writes no second one', () => {
+    const withMeta = DRAFT.replace(
+      '// graph: reader · SOURCE\n',
+      "// graph: reader · SOURCE\n(meta:GraphMeta {graph: 'reader', schema: 'reader@1'}),\n",
+    );
+    const block = lockBlock(readNote([withMeta]), 'reader', '2026-10-08');
+    assert.doesNotMatch(block, /:GraphMeta/);
+    assert.match(block, /\(meta\)-\[:DECLARES\]->\(kind_option\)/);
+    const w = gs.worldFromStore(gs.read([withMeta, block]));
+    assert.deepEqual(
+      gs.check(w, 'reader').find(([label]) => label.startsWith('§5')),
+      ['§5: every element has a declared type', true],
+    );
+  });
+
   test('a schema node’s id never clashes with a thing already in the graph', () => {
     const clash = DRAFT.replace('(large:Option', "(kind_option:Option {name: 'clash'}),\n(large:Option");
     const block = lockBlock(readNote([clash]), 'reader', '2026-10-07');
