@@ -296,7 +296,7 @@ describe('details on demand', () => {
     const panel = el.querySelector('.graph-note-details');
     assert.ok(!panel.hidden);
     const text = panel.textContent;
-    for (const s of ['Large reader', 'Option', 'answers', 'Which device?', 'favours', 'Easy on the eyes']) assert.ok(text.includes(s), s);
+    for (const s of ['Large reader', 'Option', 'answers → Which device?', 'Easy on the eyes favours this']) assert.ok(text.includes(s), s);
   });
 
   test('each box can be reached and opened from the keyboard', async () => {

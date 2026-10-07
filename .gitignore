@@ -9,3 +9,6 @@ __pycache__/
 
 # The phone spike is built locally, never committed.
 spikes/*/main.js
+
+# Local preview servers for the browser harness; they name folders on this machine.
+.claude/launch.json

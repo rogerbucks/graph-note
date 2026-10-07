@@ -201,7 +201,7 @@ export class GraphView extends MarkdownRenderChild {
       for (const i of items) ul.createEl('li', { text: i });
     };
     links('Links out', d.out.map((l) => `${l.reading} → ${l.text}`));
-    links('Links in', d.in.map((l) => `${l.text} → ${l.reading}`));
+    links('Links in', d.in.map((l) => `${l.text} ${l.reading} this`));
     if (!d.out.length && !d.in.length) el.createEl('p', { text: 'No links in or out.' });
     links('Problems', d.problems.map((p) => problemText({ ...p, noteLine: this.o.lineOf(p) })));
   }

@@ -35,6 +35,8 @@ The second line installs the pre-commit check, which refuses any staged file tha
 
 The plugin is tested from installed files, not from the plugin store: `npm run build` (once) or `npm run dev` (on every save) writes `main.js`, and with `manifest.json` and `styles.css` at the repository root these are the three files a test vault installs into `.obsidian/plugins/graph-note/`. Obsidian Sync carries them to a phone when it syncs installed community plugins. Reload the plugin in Obsidian after each build. Releases are still built only by CI, from a tag.
 
+To look at the drawing and try its controls in an ordinary browser first, `node packages/obsidian/test/harness/build.mjs <folder>` builds a page that draws a sample note with the real plugin and a small stand-in for Obsidian; serve the folder and open it.
+
 The Python library has its own pinned environment (uv, Python 3.14):
 
 ```sh
