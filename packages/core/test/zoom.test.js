@@ -266,6 +266,20 @@ describe('double tap', () => {
     close(far.view().scale, 0.5);
   });
 
+  test('two quick taps near a box or link are left to the host, to choose between what is near; a drag from there still pans', () => {
+    const z = make();
+    for (const [id, t] of [[1, 1000], [2, 1200]]) {
+      z.handle({ kind: 'down', id, pointer: 'touch', x: 100, y: 50, near: true });
+      assert.equal(z.handle({ kind: 'up', id, x: 100, y: 50, time: t }), false);
+    }
+    close(z.view().scale, 0.5);
+    const m = make(); m.zoomAt(2, 0, 0);
+    const x0 = m.view().x;
+    assert.equal(m.handle({ kind: 'down', id: 1, pointer: 'mouse', x: 200, y: 100, near: true }), true);
+    m.handle({ kind: 'move', id: 1, x: 150, y: 100 });
+    close(m.view().x, x0 - 50);
+  });
+
   test('a drag is not a tap', () => {
     const z = make(); z.zoomAt(2, 0, 0);
     const s = z.view().scale;

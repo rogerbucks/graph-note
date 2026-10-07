@@ -4,6 +4,8 @@
 // it; the names already used on things of the same kind are offered first.
 import type { Graph } from '@graph-note/graph-spec';
 import type { NoteReading } from './drawing.ts';
+import { blockItems } from './drawing.ts';
+import { hops } from './estimates.ts';
 
 /** The kinds of value the document profile holds. It holds no lists. */
 export type PropType = 'text' | 'number' | 'date' | 'datetime' | 'boolean';
@@ -84,6 +86,35 @@ function blank(text: string): string {
   return text.replace(/\/\/[^\n]*/g, (m) => ' '.repeat(m.length)).replace(/'(?:[^'\\]|\\.)*'/g, (m) => `'${' '.repeat(m.length - 2)}'`);
 }
 
+/** Each pattern of the (blanked) text that writes or mentions the thing: its labels in [1], its map in [2]. */
+const thingPatterns = (b: string, id: string) => [...b.matchAll(new RegExp(`\\(\\s*${id}\\s*((?::\\s*\\w+\\s*)*)(\\{[^{}]*\\})?\\s*\\)`, 'g'))];
+/** Each link's brackets in the (blanked) text, in order: its map in [1]. */
+const linkBrackets = (b: string) => [...b.matchAll(/-\[\s*:\s*\w+\s*(\{[^{}]*\})?\s*\]/g)];
+
+/**
+ * Where an item is written in a block, as the editor shows it when the item is selected in the drawing: the pattern that
+ * writes a thing (or, failing that, its first mention), or a link's brackets with its arrow. Null when it is not here.
+ */
+export function spanOf(block: string, t: Target): { from: number; to: number } | null {
+  const b = blank(block);
+  if ('thing' in t) {
+    const all = thingPatterns(b, t.thing), m = all.find((x) => x[1] || x[2]) ?? all[0];
+    return m?.index === undefined ? null : { from: m.index, to: m.index + m[0].length };
+  }
+  const m = linkBrackets(b)[t.link];
+  if (m?.index === undefined) return null;
+  const from = b[m.index - 1] === '<' ? m.index - 1 : m.index, end = m.index + m[0].length;
+  return { from, to: b.startsWith('->', end) ? end + 2 : b.startsWith('-', end) ? end + 1 : end };
+}
+
+/** A drawn link, by its place among the graph's links, as counted among the links written in this block; -1 if not here. */
+export function linkInBlock(reading: NoteReading, graph: string, index: number, block: string): number {
+  const l = reading.graphs.get(graph)?.links[index];
+  let n = 0;
+  for (const it of blockItems(block)) for (const [s, t, e] of hops(it.text)) { if (l && s === l.from && t === l.type && e === l.to) return n; n++; }
+  return -1;
+}
+
 export type Edit = { ok: true; text: string } | { ok: false; reason: string };
 
 /**
@@ -97,12 +128,11 @@ export function setProperty(block: string, graph: string, t: Target, key: string
   // where the map is, or where one would go
   let open = -1, close = -1, at = -1;
   if ('thing' in t) {
-    const re = new RegExp(`\\(\\s*${t.thing}\\s*((?::\\s*\\w+\\s*)*)(\\{[^{}]*\\})?\\s*\\)`, 'g');
-    const m = [...b.matchAll(re)].find((x) => x[1] || x[2]);
+    const m = thingPatterns(b, t.thing).find((x) => x[1] || x[2]);
     if (!m || m.index === undefined) return { ok: false, reason: `${t.thing} is not written in this block: edit it where it is written, in graph ${graph}` };
     if (m[2]) { open = m.index + m[0].indexOf(m[2]); close = open + m[2].length - 1; } else at = m.index + m[0].replace(/\s*\)$/, '').length;
   } else {
-    const m = [...b.matchAll(/-\[\s*:\s*\w+\s*(\{[^{}]*\})?\s*\]/g)][t.link];
+    const m = linkBrackets(b)[t.link];
     if (!m || m.index === undefined) return { ok: false, reason: `this block has no link number ${t.link + 1}` };
     if (m[1]) { open = m.index + m[0].indexOf(m[1]); close = open + m[1].length - 1; } else at = m.index + m[0].replace(/\s*\]$/, '').length;
   }

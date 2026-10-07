@@ -4,7 +4,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
-import { parseValue, setProperty, propertyNames, propertiesOf } from '../src/inspector.ts';
+import { parseValue, setProperty, propertyNames, propertiesOf, spanOf, linkInBlock } from '../src/inspector.ts';
 
 const BLOCK = `// graph: reader
 (q:Question {title: 'Which device?'}),
@@ -110,5 +110,43 @@ describe('in a locked graph', () => {
     const r = readNote([BLOCK, schema]);
     assert.deepEqual(propertyNames(r, 'reader', 'Option'), ['name', 'price']);
     assert.deepEqual(propertyNames(r, 'reader', 'Source'), ['title']);
+  });
+});
+
+// Selecting in the drawing moves the editor to the item (editor spec §4, select_moves_text; asked for 7 Oct 2026): the text
+// of the pattern that writes a thing, or of a link's own brackets and arrow, in the block being edited.
+describe('where an item is written in the block', () => {
+  const span = (text, t) => { const s = spanOf(text, t); return s && text.slice(s.from, s.to); };
+
+  test('a thing: the pattern that writes it, not a later mention of it', () => {
+    assert.equal(span(BLOCK, { thing: 'large' }), "(large:Option {name: 'Large reader', price: 300, ordered: DATE '2026-10-01'})");
+    assert.equal(span(BLOCK, { thing: 'q' }), "(q:Question {title: 'Which device?'})");
+  });
+
+  test('a thing only mentioned in this block: its first mention', () => {
+    assert.equal(span('// graph: reader\n(x:T),\n(large)-[:ANSWERS]->(q)', { thing: 'q' }), '(q)');
+  });
+
+  test('a thing not in this block at all: nowhere', () => {
+    assert.equal(spanOf(BLOCK, { thing: 'nobody' }), null);
+  });
+
+  test('a link: its brackets with its arrow, counted among the links of this block, either way round', () => {
+    assert.equal(span(BLOCK, { link: 0 }), '-[:ANSWERS]->');
+    assert.equal(span(BLOCK, { link: 1 }), "-[:CITES {where: 'day 2'}]->");
+    assert.equal(span('// graph: g\n(a)<-[:R]-(b)', { link: 0 }), '<-[:R]-');
+    assert.equal(spanOf(BLOCK, { link: 2 }), null);
+  });
+
+  test('a name inside a string or a comment is never taken for the thing', () => {
+    const text = "// graph: g\n// (a:T) was here\n(b:T {note: '(a:T)'}),\n(a:T)";
+    assert.equal(spanOf(text, { thing: 'a' })?.from, text.lastIndexOf('(a:T)'));
+  });
+
+  test('a drawn link, found in the block being edited: by its ends and type', () => {
+    const r = readNote([BLOCK]);
+    assert.equal(linkInBlock(r, 'reader', 1, BLOCK), 1);
+    assert.equal(linkInBlock(r, 'reader', 1, '// graph: reader\n(large)-[:CITES]->(notes)'), 0);
+    assert.equal(linkInBlock(r, 'reader', 0, '// graph: reader\n(x:T)'), -1);
   });
 });

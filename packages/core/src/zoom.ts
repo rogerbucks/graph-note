@@ -32,13 +32,14 @@ interface Mods { ctrl?: boolean; meta?: boolean; alt?: boolean }
 export type ZoomEvent =
   | ({ kind: 'key'; key: string } & Mods)
   | ({ kind: 'wheel'; x: number; y: number; dy: number } & Mods)
-  | { kind: 'down'; id: number; pointer: 'mouse' | 'touch' | 'pen'; x: number; y: number; onBox?: boolean }
+  | { kind: 'down'; id: number; pointer: 'mouse' | 'touch' | 'pen'; x: number; y: number; onBox?: boolean; near?: boolean }
   | { kind: 'move'; id: number; x: number; y: number }
   | { kind: 'up'; id: number; x: number; y: number; time: number }
   | { kind: 'cancel'; id: number }
   | { kind: 'dblclick'; x: number; y: number; onBox?: boolean };
 
-interface Pointer { touch: boolean; x: number; y: number; sx: number; sy: number; moved: boolean; onBox: boolean; pans: boolean }
+/** `near`: down near a box or link, so a tap there chooses between them (the host's), and is never half of a double tap. */
+interface Pointer { touch: boolean; x: number; y: number; sx: number; sy: number; moved: boolean; onBox: boolean; near: boolean; pans: boolean }
 interface Pinch { d: number; px: number; py: number; scale: number }
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
@@ -148,7 +149,7 @@ export class Zoom {
   private down(e: Extract<ZoomEvent, { kind: 'down' }>): boolean {
     const touch = e.pointer === 'touch';
     const pans = !e.onBox && (!touch || this.zoomedIn());
-    this.pointers.set(e.id, { touch, x: e.x, y: e.y, sx: e.x, sy: e.y, moved: false, onBox: !!e.onBox, pans });
+    this.pointers.set(e.id, { touch, x: e.x, y: e.y, sx: e.x, sy: e.y, moved: false, onBox: !!e.onBox, near: !!e.near, pans });
     const touches = [...this.pointers.values()].filter((p) => p.touch);
     if (touch && touches.length === 2) { this.startPinch(touches); return true; }
     return pans;
@@ -188,7 +189,7 @@ export class Zoom {
       for (const q of this.pointers.values()) { q.moved = true; q.sx = q.x; q.sy = q.y; }   // the finger left behind does not jump
       return true;
     }
-    if (!p || !p.touch || p.moved || p.onBox) return !!p?.pans;
+    if (!p || !p.touch || p.moved || p.onBox || p.near) return !!p?.pans;
     const last = this.lastTap;
     if (last && e.time - last.time <= DOUBLE_TAP_MS && Math.hypot(e.x - last.x, e.y - last.y) <= DOUBLE_TAP_PX) {
       this.lastTap = null;
