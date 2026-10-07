@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
-await esbuild.build({
+const options = {
   absWorkingDir: here,
   entryPoints: ['src/main.ts'],
   outfile: join(here, '..', '..', 'main.js'),
@@ -20,4 +20,8 @@ await esbuild.build({
   sourcemap: false,
   minify: false,
   logLevel: 'info',
-});
+};
+
+// --watch (npm run dev): rebuild on every save, for installing into a test vault.
+if (process.argv.includes('--watch')) await (await esbuild.context(options)).watch();
+else await esbuild.build(options);

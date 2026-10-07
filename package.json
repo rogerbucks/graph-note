@@ -13,6 +13,7 @@
   },
   "scripts": {
     "build": "npm run build --workspace packages/obsidian",
+    "dev": "npm run dev --workspace packages/obsidian",
     "typecheck": "tsc -p packages/obsidian --noEmit",
     "lint": "eslint . --max-warnings 0",
     "test": "node --test"
