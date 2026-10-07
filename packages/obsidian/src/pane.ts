@@ -351,16 +351,17 @@ export class GraphPane extends ItemView {
     el.suggest.empty();
     el.suggest.hidden = !this.suggestions.items.length;
     for (const item of this.suggestions.items.slice(0, 12)) {
-      button(el.suggest, item.detail ? `${item.label} — ${item.detail}` : item.label, null, () => this.accept(item), item.label);
+      const shown = item.insertText ?? item.label;
+      button(el.suggest, item.detail ? `${shown} — ${item.detail}` : shown, null, () => this.accept(item), shown);
     }
   }
 
   private accept(item: CompletionItem): void {
     const el = this.el;
     if (!el) return;
-    const caret = el.text.selectionStart ?? el.text.value.length, from = this.suggestions.from;
-    el.text.value = el.text.value.slice(0, from) + item.label + el.text.value.slice(caret);
-    el.text.setSelectionRange(from + item.label.length, from + item.label.length);
+    const caret = el.text.selectionStart ?? el.text.value.length, from = item.from ?? this.suggestions.from, text = item.insertText ?? item.label;
+    el.text.value = el.text.value.slice(0, from) + text + el.text.value.slice(caret);
+    el.text.setSelectionRange(from + text.length, from + text.length);
     el.text.focus();
     this.typed();
   }

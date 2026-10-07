@@ -120,6 +120,27 @@ describe('suggestions while typing', () => {
     assert.deepEqual(after('(eyes)-[:F').items.map((i) => i.label), ['FAVOURS']);
   });
 
+  test('a relationship brings its colon: after -[ the types are offered as :TYPE, so the colon is never typed', () => {
+    const c = after('(eyes)-[');
+    assert.deepEqual(c.items.map((i) => [i.label, i.insertText]), [['ANSWERS', ':ANSWERS'], ['FAVOURS', ':FAVOURS']]);
+    const f = after('(eyes)-[FA');
+    assert.deepEqual(f.items.map((i) => i.insertText), [':FAVOURS'], 'a bare start of the name is taken over by the suggestion');
+    assert.equal(f.from, BLOCK.length + 2 + '(eyes)-['.length);
+  });
+
+  test('a kind brings its colon: after a new thing’s name, the kinds are offered as :Kind, added after the name', () => {
+    const typed = '(new_thing';
+    const c = after(typed);
+    const kinds = c.items.filter((i) => i.kind === KIND.Class);
+    assert.deepEqual(kinds.map((i) => [i.label, i.insertText, i.from]), [
+      ['Option', ':Option', BLOCK.length + 2 + typed.length], ['Question', ':Question', BLOCK.length + 2 + typed.length], ['Reason', ':Reason', BLOCK.length + 2 + typed.length],
+    ]);
+  });
+
+  test('after the name of a thing already in the graph, no kinds: it is a reference, not a new thing', () => {
+    assert.deepEqual(after('(eyes').items.filter((i) => i.kind === KIND.Class), []);
+  });
+
   test('after the end of a link, the names again', () => {
     assert.deepEqual(after('(eyes)-[:FAVOURS]->(qu').items.map((i) => i.label), ['question']);
   });

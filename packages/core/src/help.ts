@@ -35,6 +35,10 @@ export interface CompletionItem {
   label: string;
   kind: (typeof KIND)[keyof typeof KIND];
   detail?: string;
+  /** What choosing it writes, when that is not the label — a type or kind with its colon. */
+  insertText?: string;
+  /** Where what it writes starts, when not where the list's own `from` is. */
+  from?: number;
 }
 
 const sentence = (s: string, keepCase = false) => {
@@ -127,6 +131,13 @@ export function completions(reading: NoteReading, graph: string, text: string, o
   if (!d) return none;
   const starts = (p: string) => (s: string) => s.toLowerCase().startsWith(p.toLowerCase());
   let m: RegExpExecArray | null;
+  // a relationship brings its colon (spec §4): after -[ the types are offered as :TYPE
+  if ((m = /-\[\s*(\w*)$/.exec(before))) {
+    const p = m[1] ?? '';
+    const types = schema ? [...schema.types.keys()] : [...new Set(d.links.map((l) => l.type))];
+    const reading_ = (t: string) => schema?.types.get(t) ?? d.links.find((l) => l.type === t)?.reading;
+    return { from: offset - p.length, items: types.filter(starts(p)).sort().map((t) => ({ label: t, kind: KIND.Interface, detail: reading_(t) ?? t.replace(/_/g, ' ').toLowerCase(), insertText: `:${t}` })) };
+  }
   if ((m = /-\[\s*:\s*(\w*)$/.exec(before))) {
     const p = m[1] ?? '';
     const types = schema ? [...schema.types.keys()] : [...new Set(d.links.map((l) => l.type))];
@@ -140,7 +151,11 @@ export function completions(reading: NoteReading, graph: string, text: string, o
   }
   if ((m = /\(\s*(\w*)$/.exec(before))) {
     const p = m[1] ?? '';
-    return { from: offset - p.length, items: d.boxes.filter((b) => starts(p)(b.key)).sort((a, b) => (a.key < b.key ? -1 : 1)).map((b) => ({ label: b.key, kind: KIND.Variable, detail: b.kind ? `${b.kind}: ${b.text}` : b.text })) };
+    const names: CompletionItem[] = d.boxes.filter((b) => starts(p)(b.key)).sort((a, b) => (a.key < b.key ? -1 : 1)).map((b) => ({ label: b.key, kind: KIND.Variable, detail: b.kind ? `${b.kind}: ${b.text}` : b.text }));
+    // a kind brings its colon (spec §4): after a new thing's name, the kinds are offered as :Kind, added after the name —
+    // but only once the name can be nothing but a new thing; while it may still be a reference, the names come alone
+    const kinds = p && !names.length ? (schema ? schema.kinds : [...new Set(d.boxes.flatMap((b) => b.kind.split(' · ').filter(Boolean)))]).sort().map((k) => ({ label: k, kind: KIND.Class, insertText: `:${k}`, from: offset })) : [];
+    return { from: offset - p.length, items: names.concat(kinds) };
   }
   return none;
 }
