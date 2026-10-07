@@ -208,3 +208,11 @@ describe('a missing comma', () => {
     }]);
   });
 });
+
+test('a pattern written over several lines is read back beside its last line', () => {
+  const text = "// graph: g\n(q:Question {\n    title: 'Which device?'}),\n(a:Option {name: 'A'})";
+  const lines = readBack(readNote([text]), 'g', text);
+  assert.equal(lines.get(1), undefined);
+  assert.equal(lines.get(2), 'Which device? is a Question');
+  assert.equal(lines.get(3), 'A is an Option');
+});

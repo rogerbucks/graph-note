@@ -103,9 +103,9 @@ interface Item {
   comma: number;
 }
 
-/** The top-level items of a block — each path, SET or MATCH — with the text and the 0-based line each starts on. */
-export function blockItems(text: string): { text: string; line: number }[] {
-  return items(text).map((it) => ({ text: text.slice(it.from, it.to), line: lineAt(text, it.from) - 1 }));
+/** The top-level items of a block — each path, SET or MATCH — with the text and the 0-based lines each starts and ends on. */
+export function blockItems(text: string): { text: string; line: number; end: number }[] {
+  return items(text).map((it) => ({ text: text.slice(it.from, it.to), line: lineAt(text, it.from) - 1, end: lineAt(text, it.to - 1) - 1 }));
 }
 
 /** Splits a block into its top-level items: at commas outside brackets, strings and comments, and before SET, MATCH and INSERT. */

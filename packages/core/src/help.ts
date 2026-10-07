@@ -162,7 +162,7 @@ export function completions(reading: NoteReading, graph: string, text: string, o
 
 const article = (k: string) => (/^[aeiou]/i.test(k) ? 'an' : 'a');
 
-/** Each line of the block read back in plain English, by its 0-based line: what it writes, in the words of the graph. */
+/** Each pattern of the block read back in plain English, by the 0-based line it ends on: what it writes, in the graph's words. */
 export function readBack(reading: NoteReading, graph: string, text: string): Map<number, string> {
   const d = reading.graphs.get(graph), out = new Map<number, string>();
   const textOf = (k: string) => d?.boxes.find((b) => b.key === k)?.text ?? `${k} (not in the graph)`;
@@ -179,7 +179,7 @@ export function readBack(reading: NoteReading, graph: string, text: string): Map
         if (node) { const kind = (node[2] ?? '').split(':').filter((k) => !gs.SCHEMA_LABELS.includes(k))[0]; if (kind) said = `${textOf(node[1] ?? '')} is ${article(kind)} ${kind}`; }
       }
     }
-    if (said) out.set(it.line, out.has(it.line) ? `${out.get(it.line)}; ${said}` : said);
+    if (said) out.set(it.end, out.has(it.end) ? `${out.get(it.end)}; ${said}` : said);   // beside the pattern's last line
   }
   return out;
 }
