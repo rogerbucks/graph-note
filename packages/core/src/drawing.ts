@@ -3,6 +3,10 @@
 // that cannot be read is left out, the rest of its block is drawn, and what was left out is listed as a problem.
 import gs from '@graph-note/graph-spec';
 import type { Graph, World } from '@graph-note/graph-spec';
+import { estimate } from './estimates.ts';
+import type { Estimate } from './estimates.ts';
+
+export type { Estimate };
 
 /** A gql block in a note: its text, and the note line (1-based) its opening fence is on. */
 export interface Block {
@@ -28,7 +32,10 @@ export interface Link {
 export interface GraphDrawing {
   graph: string;
   boxes: Box[];
+  /** Every link as written, in order — what graph_svg.py draws. */
   links: Link[];
+  /** Near misses drawn as guesses (spec §3): never written to the note. */
+  estimates: Estimate[];
 }
 
 /** Something that could not be read: its graph, the block (index in the note), the line in that block (1 = its graph line), what is wrong, and the fix. */
@@ -38,6 +45,10 @@ export interface Problem {
   line: number;
   message: string;
   fix: string;
+  /** An error leaves something out of the drawing; a warning draws it, as an estimate. */
+  severity: 'error' | 'warning';
+  /** The text left out of the drawing, when a path or clause was. */
+  dropped?: string;
 }
 
 export interface NoteReading {
@@ -131,7 +142,7 @@ function dataKind(text: string): 'data' | 'schema' | null | Problem {
   } catch (e) {
     if (!isGraphLine(text)) return null;
     const p = e instanceof gs.ProfileError ? e : null;
-    return { graph: null, block: -1, line: p?.line ?? 1, message: p?.msg ?? 'the graph line cannot be read', fix: p?.fix ?? "start the block with '// graph: <name>'" };
+    return { graph: null, block: -1, severity: 'error', line: p?.line ?? 1, message: p?.msg ?? 'the graph line cannot be read', fix: p?.fix ?? "start the block with '// graph: <name>'" };
   }
 }
 
@@ -164,7 +175,7 @@ function readBlocks(texts: string[], shared: string[]): { store: gs.Store; probl
     const { block, error } = failed, text = clean[block] ?? '';
     const pe = error instanceof gs.ProfileError ? error : null;
     const line = pe?.line ?? 1;
-    const problem: Problem = { graph: graphOf(text), block, line, message: pe?.msg ?? 'this could not be read', fix: pe?.fix ?? 'check the line against the guide to writing a graph note' };
+    const problem: Problem = { graph: graphOf(text), block, line, severity: 'error', message: pe?.msg ?? 'this could not be read', fix: pe?.fix ?? 'check the line against the guide to writing a graph note' };
     const all = items(text);
     const touching = all.filter((it) => lineAt(text, it.from) <= line && line <= lineAt(text, it.to - 1));
     const before = all.filter((it) => lineAt(text, it.from) <= line).pop();
@@ -180,7 +191,7 @@ function readBlocks(texts: string[], shared: string[]): { store: gs.Store; probl
       if (!chosen.length) chosen = drop;
     }
     clean[block] = without(text, all, chosen);
-    problems.push(problem);
+    problems.push({ ...problem, dropped: chosen.map((it) => text.slice(it.from, it.to)).join('\n') });
   }
 }
 
@@ -204,6 +215,7 @@ function drawingOf(world: World, name: string, own: Graph | undefined): GraphDra
     graph: name,
     boxes: ids.map((key) => ({ key, kind: [...(g.nodes.get(key)?.[0] ?? [])].filter((l) => !hidden.has(l)).sort(byCode).join(' · '), text: textOf(g, key) })),
     links: g.edges.filter(([s, , d]) => drawn.has(s) && drawn.has(d)).map(([from, type, to]) => ({ from, type, reading: gs.word(R, type), to })),
+    estimates: [],
   };
 }
 
@@ -220,7 +232,10 @@ export function readNote(blocks: string[], upTo = blocks.length - 1, shared: str
   const graphs = new Map<string, GraphDrawing>();
   for (const name of Object.keys(world)) {
     const own = whole[name]?.labelled('ElementType').length ? whole[name] : undefined;
-    graphs.set(name, drawingOf(world, name, own));
+    const d = drawingOf(world, name, own);
+    const shared = (world[name] as Graph).labelled('ElementType').length ? undefined : (gs.schemaFor(world, name)[1] ?? own);
+    d.estimates = estimate(world[name] as Graph, name, d, shared, problems, upto);
+    graphs.set(name, d);
   }
   return { graphs, problems, world, texts: upto };
 }

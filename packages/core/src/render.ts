@@ -3,7 +3,7 @@
 // so drawing needs no network on any device (spec §1).
 import { instance } from '@viz-js/viz';
 import type { GraphDrawing, NoteReading, Problem } from './drawing.ts';
-import { layoutSource, STYLE } from './layout.ts';
+import { drawingSource, layoutSource, STYLE } from './layout.ts';
 import { themed, sizeOf, choose } from './theme.ts';
 
 /** Graphviz: layout source in, SVG text out. Throws when it cannot lay the source out. */
@@ -32,7 +32,7 @@ export interface Drawn {
  */
 export function draw(drawing: GraphDrawing, engine: Engine): Drawn {
   const laid = STYLE.directions.map((rankdir) => {
-    const src = layoutSource(drawing, rankdir as 'LR' | 'TB'), svg = engine.render(src.source);
+    const src = layoutSource(drawing, rankdir as 'LR' | 'TB'), svg = engine.render(drawingSource(drawing, rankdir as 'LR' | 'TB'));
     return { rankdir, ...sizeOf(svg), svg, src };
   });
   const best = choose(laid);

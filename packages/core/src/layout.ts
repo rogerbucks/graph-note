@@ -25,3 +25,25 @@ export function layoutSource(d: GraphDrawing, rankdir: 'LR' | 'TB'): LayoutSourc
   );
   return { source, kinds, readings };
 }
+
+/**
+ * The source the drawing is laid out from: the layout source, with estimated links (spec §3) drawn dashed and marked with
+ * a warning sign and the word "estimated" — so a guess is never shown by line style alone. With no estimates it is the
+ * layout source exactly, as graph_svg.py writes it.
+ */
+export function drawingSource(d: GraphDrawing, rankdir: 'LR' | 'TB'): string {
+  const lines = layoutSource(d, rankdir).source.split('\n');
+  const estimates = d.estimates ?? [];
+  if (!estimates.length) return lines.join('\n');
+  const guess = (reading: string) => `label="⚠ ${GraphLayout.escape(reading)} (estimated)", color="#0000fc", fontcolor="#0000fe", style="dashed"`;
+  const edgeLines = lines.flatMap((l, i) => (/^ {2}"[^"]*" -> "[^"]*" \[label=/.test(l) ? [i] : []));
+  for (const e of estimates) {
+    if (e.kind !== 'type' || e.index === undefined) continue;
+    const at = edgeLines[e.index];
+    if (at === undefined) continue;
+    lines[at] = (lines[at] ?? '').replace(/label="[^"]*", color="#0003[0-9a-f]{2}", fontcolor="#0004[0-9a-f]{2}"/, guess(e.reading));
+  }
+  const added = estimates.filter((e) => e.kind === 'name').map((e) => `  "${e.from}" -> "${e.to}" [${guess(e.reading)}];`);
+  lines.splice(lines.length - 1, 0, ...added);
+  return lines.join('\n');
+}

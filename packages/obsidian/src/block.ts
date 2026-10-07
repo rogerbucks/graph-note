@@ -55,7 +55,7 @@ export async function renderBlock(plugin: GraphNotePlugin, source: string, el: H
   }
   ctx.addChild(new GraphView(root, {
     reading, graph, drawn, problems, mode: 'note',
-    lineOf: (p) => shown(p).noteLine,
+    lineOf: (at) => (blocks[at.block]?.line ?? 0) + at.line,
     onEdit: () => plugin.openEditor(target),
   }));
 }

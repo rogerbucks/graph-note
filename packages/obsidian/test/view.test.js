@@ -314,3 +314,37 @@ describe('details on demand', () => {
     assert.match(el.querySelector('.graph-note-details').textContent, /nowhere/);
   });
 });
+
+describe('estimated links', () => {
+  let env; before(async () => { env = await load(); }); after(() => env.uninstall());
+  const TYPO = fence(GRAPH + ",\n(eyes)-[:FAVOURS]->(tablett)");
+
+  test('a near miss is drawn as a guess: one more link, dashed, with a warning sign and the word estimated', async () => {
+    const { el } = await show(env, TYPO);
+    const edges = el.querySelectorAll('g.edge');
+    assert.equal(edges.length, 5);
+    const guess = edges[4];
+    assert.equal(guess.getAttribute('data-estimate'), '0');
+    assert.ok(guess.querySelectorAll('path').some((p) => p.getAttribute('stroke-dasharray')), 'dashed');
+    assert.match(guess.textContent, /⚠ favours \(estimated\)/);
+    assert.ok(labelled(el, '1 problem'), 'and counted behind the badge');
+  });
+
+  test('tapping an estimated link explains it in a sentence, on the note’s own line', async () => {
+    const { el } = await show(env, TYPO);
+    const guess = el.querySelectorAll('g.edge')[4], vp = el.querySelector('.graph-note-viewport');
+    vp.dispatch('pointerdown', { target: guess, pointerId: 4, pointerType: 'mouse', clientX: 30, clientY: 30, button: 0 });
+    vp.dispatch('pointerup', { target: guess, pointerId: 4, pointerType: 'mouse', clientX: 30, clientY: 30, button: 0 });
+    assert.equal(el.querySelector('.graph-note-details').textContent.includes(
+      'Line 9 links to tablett, which is not in graph reader. It was taken to mean tablet, one letter away. To fix it, change tablett to tablet.'), true);
+  });
+
+  test('an estimated link can be reached and explained from the keyboard', async () => {
+    const { el } = await show(env, TYPO);
+    const guess = el.querySelectorAll('g.edge')[4];
+    assert.equal(guess.getAttribute('tabindex'), '0');
+    assert.match(guess.getAttribute('aria-label'), /^Estimated link: Easy on the eyes favours Tablet/);
+    guess.dispatch('keydown', { key: 'Enter' });
+    assert.match(el.querySelector('.graph-note-details').textContent, /taken to mean tablet/);
+  });
+});
