@@ -49,6 +49,8 @@ export interface Problem {
   severity: 'error' | 'warning';
   /** The text left out of the drawing, when a path or clause was. */
   dropped?: string;
+  /** A word to change, and what it could be changed to — one fix each. */
+  replace?: { written: string; with: string[] };
 }
 
 export interface NoteReading {
@@ -58,23 +60,37 @@ export interface NoteReading {
   texts: string[];
   /** The world as read, for checks and details. */
   world: World;
+  /** The whole note's world, whose schemas lock a graph even when written after the block drawn (§5). */
+  whole: World;
 }
 
 const FENCE = /^ {0,3}(`{3,}|~{3,})\s*gql\s*$/i;
 
-/** The gql fenced blocks of a note, in order. An unclosed fence runs to the end, as Markdown reads it. */
-export function gqlBlocks(note: string): Block[] {
-  const lines = note.split('\n'), out: Block[] = [];
+/** A gql block's place in a note: its text (lines joined by \\n), the 0-based lines of its opening fence and of its closing one (the line count when unclosed). */
+export interface Span {
+  text: string;
+  open: number;
+  close: number;
+}
+
+/** Where each gql fenced block of a note is. An unclosed fence runs to the end, as Markdown reads it. */
+export function gqlSpans(note: string): Span[] {
+  const lines = note.split('\n').map((l) => l.replace(/\r$/, '')), out: Span[] = [];
   for (let i = 0; i < lines.length; i++) {
     const open = FENCE.exec(lines[i] ?? '');
     if (!open) continue;
     const mark = open[1] ?? '```', close = new RegExp(`^ {0,3}${mark[0] === '`' ? '`' : '~'}{${mark.length},}\\s*$`);
     let j = i + 1;
     while (j < lines.length && !close.test(lines[j] ?? '')) j++;
-    out.push({ text: lines.slice(i + 1, j).join('\n'), line: i + 1 });
+    out.push({ text: lines.slice(i + 1, j).join('\n'), open: i, close: j });
     i = j;
   }
   return out;
+}
+
+/** The gql fenced blocks of a note, in order, each with the note line (1-based) its fence opens on. */
+export function gqlBlocks(note: string): Block[] {
+  return gqlSpans(note).map((s) => ({ text: s.text, line: s.open + 1 }));
 }
 
 /** A top-level item of a block — one path, or one SET or MATCH clause — by its character span. */
@@ -83,6 +99,11 @@ interface Item {
   to: number;
   /** The comma that separates it from the next item, if any. */
   comma: number;
+}
+
+/** The top-level items of a block — each path, SET or MATCH — with the text and the 0-based line each starts on. */
+export function blockItems(text: string): { text: string; line: number }[] {
+  return items(text).map((it) => ({ text: text.slice(it.from, it.to), line: lineAt(text, it.from) - 1 }));
 }
 
 /** Splits a block into its top-level items: at commas outside brackets, strings and comments, and before SET, MATCH and INSERT. */
@@ -237,5 +258,5 @@ export function readNote(blocks: string[], upTo = blocks.length - 1, shared: str
     d.estimates = estimate(world[name] as Graph, name, d, shared, problems, upto);
     graphs.set(name, d);
   }
-  return { graphs, problems, world, texts: upto };
+  return { graphs, problems, world, whole, texts: upto };
 }

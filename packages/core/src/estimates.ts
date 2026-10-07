@@ -120,6 +120,7 @@ export function estimate(g: Graph, graph: string, d: GraphDrawing, shared: Graph
     if ('several' in near) {
       p.message = `no thing called ${missing} in graph ${graph}; ${either(near.several)} are equally close, so it is not drawn`;
       p.fix = `change ${missing} to the one you mean: ${orList(near.several)}`;
+      p.replace = { written: missing, with: near.several };
       continue;
     }
     const resolve = (n: string) => (ids.has(n) ? { id: n, d: 0 } : (() => { const x = nearest(n, ids); return x && 'one' in x ? { id: x.one, d: x.d } : null; })());
@@ -138,6 +139,7 @@ export function estimate(g: Graph, graph: string, d: GraphDrawing, shared: Graph
     }
     p.message = `${missing} is not in graph ${graph}; it is drawn as an estimate of ${near.one}`;
     p.fix = `change ${missing} to ${near.one}`;
+    p.replace = { written: missing, with: [near.one] };
     p.severity = 'warning';
   }
 
@@ -162,6 +164,7 @@ export function estimate(g: Graph, graph: string, d: GraphDrawing, shared: Graph
     problems.push({
       graph, block: at.block, line: at.line, severity: 'warning',
       message: `${l.type} is not a relationship in graph ${graph}; it is drawn as an estimate of ${near.one}`, fix: `change ${l.type} to ${near.one}`,
+      replace: { written: l.type, with: [near.one] },
     });
   });
   problems.sort((a, b) => a.block - b.block || a.line - b.line);
