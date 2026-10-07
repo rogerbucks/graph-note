@@ -176,3 +176,14 @@ describe('a text version of the graph, for screen readers', () => {
     assert.ok(t.includes('Estimated, not written: Easy on the eyes favours Small reader.'));
   });
 });
+
+describe('a missing comma', () => {
+  test('its fix adds the comma at the end of the line before', () => {
+    const text = BLOCK.replace("(large_reader:Option {name: 'Large reader'}),", "(large_reader:Option {name: 'Large reader'})");
+    const d = diagnostics(readNote([text]), 'reader', 0, text, URI).find((x) => /comma is missing/.test(x.message));
+    assert.deepEqual(d.data.fixes, [{
+      title: 'Add the missing comma', kind: 'quickfix', isPreferred: true,
+      edit: { changes: { [URI]: [{ range: { start: at(3, 44), end: at(3, 44) }, newText: ',' }] } },
+    }]);
+  });
+});

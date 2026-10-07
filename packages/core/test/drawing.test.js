@@ -168,3 +168,23 @@ describe('which blocks are graphs', () => {
     }
   });
 });
+
+describe('a missing comma', () => {
+  const block = "// graph: g\n(a:T {name: 'A'}),\n(b:T {name: 'B'})\n(c:T {name: 'C'}),\n(a)-[:R]->(b)";
+
+  test('only the path after the missing comma is left out: the one before it, and links to it, are still drawn', () => {
+    const { graphs, problems } = readNote([block]);
+    assert.deepEqual(graphs.get('g').boxes.map((b) => b.key), ['a', 'b']);
+    assert.deepEqual(graphs.get('g').links.map((l) => [l.from, l.to]), [['a', 'b']]);
+    assert.deepEqual(graphs.get('g').estimates, [], 'no guess is made for a thing that is there');
+    assert.equal(problems.length, 1);
+  });
+
+  test('the problem says a comma is missing, and where', () => {
+    const [p] = readNote([block]).problems;
+    assert.equal(p.line, 4);
+    assert.equal(p.message, "unexpected '(' — a comma is missing at the end of the line before");
+    assert.equal(p.fix, "add a comma at the end of the line before, after (b:T {name: 'B'})");
+    assert.deepEqual(p.insert, { line: 2, character: 17, text: ',' }, 'the edit that adds it: 0-based line and character in the block');
+  });
+});

@@ -79,10 +79,15 @@ export function diagnostics(reading: NoteReading, graph: string, block: number, 
   const own = reading.problems.filter((p: Problem) => p.graph === graph && p.block === block);
   for (const p of own) {
     const line = p.line - 1, range = rangeOf(text, line, p.replace?.written);
-    const fixes: CodeAction[] = (p.replace?.with ?? []).map((w) => ({
+    const add = p.insert;
+    const inserts: CodeAction[] = add ? [{
+      title: 'Add the missing comma', kind: 'quickfix', isPreferred: true,
+      edit: { changes: { [uri]: [{ range: { start: { line: add.line, character: add.character }, end: { line: add.line, character: add.character } }, newText: add.text }] } },
+    }] : [];
+    const fixes: CodeAction[] = inserts.concat((p.replace?.with ?? []).map((w) => ({
       title: `Change ${p.replace?.written} to ${w}`, kind: 'quickfix', isPreferred: p.replace?.with.length === 1,
       edit: { changes: { [uri]: [{ range, newText: w }] } },
-    }));
+    })));
     out.push({
       range, severity: p.severity === 'warning' ? SEVERITY.Warning : SEVERITY.Error, source: 'graph-note',
       message: sentence(p.message, !!p.replace && p.message.startsWith(p.replace.written)), data: { fix: sentence(p.fix), fixes },

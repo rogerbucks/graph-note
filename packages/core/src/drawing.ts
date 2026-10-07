@@ -51,6 +51,8 @@ export interface Problem {
   dropped?: string;
   /** A word to change, and what it could be changed to — one fix each. */
   replace?: { written: string; with: string[] };
+  /** Text to add, at a 0-based line and character of the block: the fix, as an edit. */
+  insert?: { line: number; character: number; text: string };
 }
 
 export interface NoteReading {
@@ -120,6 +122,8 @@ function items(text: string): Item[] {
       if ((w === 'SET' || w === 'MATCH' || w === 'INSERT') && start !== -1) end(-1);
     }
     if (c === ',' && depth === 0) { end(i); continue; }
+    // a path closed at the end of one line and another opened on the next: a missing comma, so two items, for recovery
+    if (c === '(' && depth === 0 && start !== -1 && text[last] === ')' && text.slice(last + 1, i).includes('\n')) end(-1);
     if (start === -1) start = i;
     if (c === "'") {
       i++;
@@ -141,7 +145,9 @@ function without(text: string, all: Item[], drop: Item[]): string {
   const blank = (from: number, to: number) => { for (let k = from; k < to; k++) if (chars[k] !== '\n') chars[k] = ' '; };
   for (const it of drop) {
     blank(it.from, it.to);
-    if (it.comma !== -1) blank(it.comma, it.comma + 1);
+    const prior = all[all.indexOf(it) - 1];
+    // keep its comma when the one before it is missing: it is then all that parts what came before from what comes after
+    if (it.comma !== -1 && !(prior && prior.comma === -1 && !drop.includes(prior))) blank(it.comma, it.comma + 1);
     else {
       const before = all[all.indexOf(it) - 1];
       if (before && before.comma !== -1 && !drop.includes(before)) blank(before.comma, before.comma + 1);
@@ -206,6 +212,14 @@ function readBlocks(texts: string[], shared: string[]): { store: gs.Store; probl
     const line = pe?.line ?? 1;
     const problem: Problem = { graph: graphOf(text), block, line, severity: 'error', message: pe?.msg ?? 'this could not be read', fix: pe?.fix ?? 'check the line against the guide to writing a graph note' };
     const all = items(text);
+    // "unexpected '('" straight after a path that ends its line with no comma: say so, and offer the comma
+    const opened = all.findIndex((it) => lineAt(text, it.from) === line), prior = all[opened - 1];
+    if (pe?.msg === "unexpected '('" && prior && prior.comma === -1 && text[prior.to - 1] === ')') {
+      const at = text.slice(0, prior.to).split('\n'), lastLine = (at[at.length - 1] ?? '').trim();
+      problem.message = `${pe.msg} — a comma is missing at the end of the line before`;
+      problem.fix = `add a comma at the end of the line before, after ${lastLine}`;
+      problem.insert = { line: at.length - 1, character: (at[at.length - 1] ?? '').length, text: ',' };
+    }
     const touching = all.filter((it) => lineAt(text, it.from) <= line && line <= lineAt(text, it.to - 1));
     const before = all.filter((it) => lineAt(text, it.from) <= line).pop();
     const drop = touching.length ? touching : before ? [before] : [];
