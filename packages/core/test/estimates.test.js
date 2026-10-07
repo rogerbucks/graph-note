@@ -125,3 +125,37 @@ describe('estimates are only ever guesses', () => {
     assert.doesNotMatch(layoutSource(g(r), 'LR').source, /"eyes" -> "small_reader"/, 'what Python would draw is untouched');
   });
 });
+
+describe('how near (decided 7 Oct 2026): one letter under eight characters, two from eight, ignoring case and underscores', () => {
+  const graph = (ids, link) => readNote([`// graph: g\n${ids.map((i) => `(${i}:T)`).join(',\n')},\n${link}`]).graphs.get('g');
+
+  test('a name shorter than three characters is never estimated', () => {
+    assert.deepEqual(graph(['a', 'c', 'abc'], '(abc)-[:R]->(b)').estimates, []);
+    assert.deepEqual(graph(['ab', 'abc'], '(abc)-[:R]->(ac)').estimates, []);
+  });
+
+  test('a name of three characters may be estimated, one letter away', () => {
+    assert.equal(graph(['cat', 'dog'], '(dog)-[:R]->(cot)').estimates[0]?.to, 'cat');
+  });
+
+  test('under eight characters, two letters away is too far', () => {
+    assert.deepEqual(graph(['tablet', 'eyes'], '(eyes)-[:R]->(tbalet)').estimates, []);
+  });
+
+  test('from eight characters, two letters away is near', () => {
+    assert.equal(graph(['large_reader', 'eyes'], '(eyes)-[:R]->(lrge_readr)').estimates[0]?.to, 'large_reader');
+  });
+
+  test('case and underscores do not count: a name differing only in them is estimated, and says so', () => {
+    const [e] = graph(['large_reader', 'eyes'], '(eyes)-[:R]->(LargeReader)').estimates;
+    assert.equal(e.to, 'large_reader');
+    assert.match(e.explain, /taken to mean large_reader, which differs only in case or underscores\./);
+  });
+
+  test('the same rule holds for relationship types', () => {
+    const d = readNote([`// graph: g\n(a:T),\n(b:T),\n(a)-[:FAVOURS]->(b),\n(b)-[:FAVOURS]->(a),\n(a)-[:FAVOURZZ]->(b)`]).graphs.get('g');
+    assert.deepEqual(d.estimates, [], 'FAVOURZZ is seven letters from FAVOURS’ seven: two letters is too far');
+    const e = readNote([`// graph: g\n(a:T),\n(b:T),\n(a)-[:FAVOURS]->(b),\n(b)-[:FAVOURS]->(a),\n(a)-[:favours]->(b)`]).graphs.get('g');
+    assert.equal(e.estimates[0]?.taken, 'FAVOURS');
+  });
+});

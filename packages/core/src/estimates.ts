@@ -41,19 +41,28 @@ export function distance(a: string, b: string): number {
   return row[b.length] ?? 0;
 }
 
-/** The nearest of `among` within two letters of `name`: the one, or the several equally near, or none. */
+/** A name as the graph library compares near duplicates: case and underscores ignored. */
+const plain = (s: string) => s.replace(/_/g, '').toLowerCase();
+
+/**
+ * The nearest of `among` to `name`, by the rule decided 7 Oct 2026: near is one letter for names under eight characters
+ * and two from eight, ignoring case and underscores, as the graph library counts near duplicates; a name under three
+ * characters is never estimated. The one, or the several equally near, or none.
+ */
 function nearest(name: string, among: Iterable<string>): { one: string; d: number } | { several: string[] } | null {
-  let best = 3, found: string[] = [];
+  if (name.length < 3) return null;
+  let best = Infinity, found: string[] = [];
   for (const c of among) {
     if (c === name) continue;
-    const d = distance(name, c);
+    const a = plain(name), b = plain(c), d = distance(a, b);
+    if (d > (Math.min(a.length, b.length) >= 8 ? 2 : 1)) continue;
     if (d < best) { best = d; found = [c]; } else if (d === best) found.push(c);
   }
   if (!found.length) return null;
   return found.length === 1 ? { one: found[0] ?? '', d: best } : { several: found.sort() };
 }
 
-const away = (d: number) => (d === 1 ? 'one letter' : 'two letters');
+const away = (d: number) => (d === 0 ? 'which differs only in case or underscores' : d === 1 ? 'one letter away' : 'two letters away');
 const either = (xs: string[]) => (xs.length === 2 ? `${xs[0]} and ${xs[1]}` : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`);
 const orList = (xs: string[]) => (xs.length === 2 ? `${xs[0]} or ${xs[1]}` : `${xs.slice(0, -1).join(', ')} or ${xs[xs.length - 1]}`);
 
@@ -69,7 +78,7 @@ export function explain(kind: 'name' | 'type', graph: string, fixes: Correction[
   const and = (xs: string[]) => (xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`);
   const many = fixes.length > 1, written = and(fixes.map((f) => f.written));
   const what = kind === 'name' ? `links to ${written}, which ${many ? 'are' : 'is'} not in graph ${graph}` : `uses the relationship ${written}, which is not in graph ${graph}`;
-  const taken = many ? fixes.map((f) => `${f.taken}, ${away(f.d)} away`).join(', and ') : `${fixes[0]?.taken}, ${away(fixes[0]?.d ?? 1)} away`;
+  const taken = many ? fixes.map((f) => `${f.taken}, ${away(f.d)}`).join(', and ') : `${fixes[0]?.taken}, ${away(fixes[0]?.d ?? 1)}`;
   return `Line ${line} ${what}. ${many ? 'They were' : 'It was'} taken to mean ${taken}. To fix it, change ${and(fixes.map((f) => `${f.written} to ${f.taken}`))}.`;
 }
 
@@ -123,14 +132,14 @@ export function estimate(g: Graph, graph: string, d: GraphDrawing, shared: Graph
       p.replace = { written: missing, with: near.several };
       continue;
     }
-    const resolve = (n: string) => (ids.has(n) ? { id: n, d: 0 } : (() => { const x = nearest(n, ids); return x && 'one' in x ? { id: x.one, d: x.d } : null; })());
+    const resolve = (n: string) => (ids.has(n) ? { id: n, d: 0, guessed: false } : (() => { const x = nearest(n, ids); return x && 'one' in x ? { id: x.one, d: x.d, guessed: true } : null; })());
     const drawn = hops(p.dropped).map(([s, t, e]) => [resolve(s), t, resolve(e), s, e] as const);
     if (!drawn.length || drawn.some(([s, , e]) => !s || !e)) continue;
     for (const [s, t, e, ws, we] of drawn) {
-      if (!s || !e || (s.d === 0 && e.d === 0)) continue;
+      if (!s || !e || (!s.guessed && !e.guessed)) continue;
       const fixes: Correction[] = [];
-      if (s.d) fixes.push({ written: ws, taken: s.id, d: s.d });
-      if (e.d) fixes.push({ written: we, taken: e.id, d: e.d });
+      if (s.guessed) fixes.push({ written: ws, taken: s.id, d: s.d });
+      if (e.guessed) fixes.push({ written: we, taken: e.id, d: e.d });
       out.push({
         kind: 'name', block: p.block, line: p.line, from: s.id, type: t, reading: reading(t), to: e.id,
         written: fixes.map((f) => f.written).join(', '), taken: fixes.map((f) => f.taken).join(', '),
