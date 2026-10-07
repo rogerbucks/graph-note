@@ -168,10 +168,21 @@ SPEC_MARKERS = frozenset({"Meta"})  # marks a schema node; never types a node by
 SPEC_EDGES = frozenset({"DECLARES"})
 
 
+def declared_in(graph):
+    """§5: the ElementTypes that type — those the graph's GraphMeta DECLARES."""
+    return [
+        graph.p(i)
+        for i in graph.labelled("ElementType")
+        if any(graph.has(e[0], "GraphMeta") for e in graph.inc(i, "DECLARES"))
+    ]
+
+
 def types(g, shared=None, builtin=True):
-    element_types = [g.p(i) for i in g.labelled("ElementType")] or (
-        [shared.p(i) for i in shared.labelled("ElementType")] if shared is not None else []
-    )
+    # a graph's own schema, where it has one, or the shared one it names
+    if g.labelled("ElementType"):
+        element_types = declared_in(g)
+    else:
+        element_types = declared_in(shared) if shared is not None else []
     nodes, edges = (
         {t.get("name") for t in element_types if t.get("kind") == "node"},
         {t.get("name") for t in element_types if t.get("kind") == "edge"},

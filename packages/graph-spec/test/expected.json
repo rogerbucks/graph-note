@@ -14,8 +14,8 @@
     "reviews": [],
     "whys": [],
     "changesets": [
-      { "failed": [], "after": "415d7430429f1323", "refreshes": [] },
-      { "failed": ["it was made against the graph as it stands"], "after": "c5da5b177f7f5199", "refreshes": [] }
+      { "failed": [], "after": "5e79de97087e10c4", "refreshes": [] },
+      { "failed": ["it was made against the graph as it stands"], "after": "4f7522a52031960b", "refreshes": [] }
     ],
     "lint": [],
     "views": {}
@@ -111,7 +111,7 @@
     "error": "line 1: this is a query block — queries ask questions of a graph; they are not data"
   },
   "a-typed-graph-read-through-every-shortcut": {
-    "canon": { "library": "07c5e5ae854dd7217d7f7375fb36fb8e11c1729dc0b3b63ea567f0cfadcade74" },
+    "canon": { "library": "591ff647f2820967ee38884a38da98b0f8d9c53a04c1c83761fe37f71874413f" },
     "verdicts": {
       "library": [
         ["§5: every element has a declared type", true],
@@ -124,7 +124,7 @@
     "lint": [],
     "views": {
       "library": {
-        "projection": "{\"blocks\":{\"ada\":{\"id\":\"ada\",\"name\":\"Ada\",\"type\":[\"Person\"],\"wrote\":[\"notes\"]},\"grace\":{\"checked\":\"2026-10-07T18:30:00+10:00\",\"id\":\"grace\",\"name\":\"Grace\",\"type\":[\"Person\"]},\"notes\":{\"id\":\"notes\",\"pages\":66,\"published\":\"1843-10-01\",\"shelf\":3,\"title\":\"Notes on the engine\",\"type\":[\"Book\"]},\"type:Book\":{\"id\":\"type:Book\",\"kind\":\"node\",\"name\":\"Book\",\"type\":[\"ElementType\"]},\"type:Person\":{\"id\":\"type:Person\",\"kind\":\"node\",\"name\":\"Person\",\"type\":[\"ElementType\"]},\"type:WROTE\":{\"id\":\"type:WROTE\",\"kind\":\"edge\",\"name\":\"WROTE\",\"reading\":\"wrote\",\"reverse_name\":\"written by\",\"type\":[\"ElementType\"]}},\"relationships\":[{\"from\":\"grace\",\"relationship\":\"WROTE\",\"to\":\"notes\",\"year\":1952}]}",
+        "projection": "{\"blocks\":{\"ada\":{\"id\":\"ada\",\"name\":\"Ada\",\"type\":[\"Person\"],\"wrote\":[\"notes\"]},\"grace\":{\"checked\":\"2026-10-07T18:30:00+10:00\",\"id\":\"grace\",\"name\":\"Grace\",\"type\":[\"Person\"]},\"meta:library\":{\"declares\":[\"type:Book\",\"type:Person\",\"type:WROTE\"],\"graph\":\"library\",\"id\":\"meta:library\",\"schema\":\"library@1\",\"type\":[\"GraphMeta\"]},\"notes\":{\"id\":\"notes\",\"pages\":66,\"published\":\"1843-10-01\",\"shelf\":3,\"title\":\"Notes on the engine\",\"type\":[\"Book\"]},\"type:Book\":{\"id\":\"type:Book\",\"kind\":\"node\",\"name\":\"Book\",\"type\":[\"ElementType\"]},\"type:Person\":{\"id\":\"type:Person\",\"kind\":\"node\",\"name\":\"Person\",\"type\":[\"ElementType\"]},\"type:WROTE\":{\"id\":\"type:WROTE\",\"kind\":\"edge\",\"name\":\"WROTE\",\"reading\":\"wrote\",\"reverse_name\":\"written by\",\"type\":[\"ElementType\"]}},\"relationships\":[{\"from\":\"grace\",\"relationship\":\"WROTE\",\"to\":\"notes\",\"year\":1952}]}",
         "relationships": "flowchart LR\n    n0[\"ada<br/>Ada\"]\n    n1[\"grace<br/>Grace\"]\n    n2[\"notes<br/>Notes on the engine\"]\n    n0 -->|wrote| n2\n    n1 -->|wrote| n2",
         "legend": "wrote = WROTE · reverse: written by"
       }
@@ -276,5 +276,25 @@
       ["outside the document profile"]
     ],
     "views": {}
+  },
+  "a-schema-its-graphmeta-does-not-declare-types-nothing-5": {
+    "canon": { "undeclared": "89e093ffe01bdfa3dc790bd6c7c5891bf5531bc3b11f9bec579f0b4c99c86f5b" },
+    "verdicts": {
+      "undeclared": [
+        ["§5: every element has a declared type", false],
+        ["§18: the flat projection rebuilds the graph", true]
+      ]
+    },
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "views": {
+      "undeclared": {
+        "projection": "{\"blocks\":{\"ada\":{\"id\":\"ada\",\"name\":\"Ada\",\"type\":[\"Person\"]},\"notes\":{\"id\":\"notes\",\"title\":\"Notes\",\"type\":[\"Book\"]},\"t_book\":{\"id\":\"t_book\",\"kind\":\"node\",\"name\":\"Book\",\"type\":[\"ElementType\"]},\"t_person\":{\"id\":\"t_person\",\"kind\":\"node\",\"name\":\"Person\",\"type\":[\"ElementType\"]},\"u_schema\":{\"declares\":[\"t_book\"],\"graph\":\"undeclared\",\"id\":\"u_schema\",\"schema\":\"undeclared@1\",\"type\":[\"GraphMeta\"]}},\"relationships\":[]}",
+        "relationships": "flowchart LR\n    n0[\"ada<br/>Ada\"]\n    n1[\"notes<br/>Notes\"]",
+        "legend": ""
+      }
+    }
   }
 }

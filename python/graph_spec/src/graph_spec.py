@@ -1668,7 +1668,7 @@ def typed(db):
     edge type has both readings, forward and reverse."""
     element_types = Q(
         db,
-        "MATCH (t:ElementType) RETURN t.name AS n, t.kind AS k, t.reverse_name AS r, t.reading AS f, t.marker AS m",  # noqa: E501  # one literal: embedded_queries reads it whole
+        "MATCH (:GraphMeta)-[:DECLARES]->(t:ElementType) RETURN DISTINCT t.name AS n, t.kind AS k, t.reverse_name AS r, t.reading AS f, t.marker AS m",  # noqa: E501  # one literal: embedded_queries reads it whole
     )
     if any(t["k"] == "edge" and not (t["r"] and t["f"]) for t in element_types):
         return False
@@ -3717,7 +3717,7 @@ def untyped(db):
     declared without both readings."""
     element_types = Q(
         db,
-        "MATCH (t:ElementType) RETURN t.name AS n, t.kind AS k, t.reverse_name AS r, t.reading AS f, t.marker AS m",  # noqa: E501  # one literal: embedded_queries reads it whole
+        "MATCH (:GraphMeta)-[:DECLARES]->(t:ElementType) RETURN DISTINCT t.name AS n, t.kind AS k, t.reverse_name AS r, t.reading AS f, t.marker AS m",  # noqa: E501  # one literal: embedded_queries reads it whole
     )
     nodes, edges = _declared(element_types)
     labels = {

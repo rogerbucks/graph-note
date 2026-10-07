@@ -601,9 +601,15 @@ both on every case and requires the same answers. SHA-256 is computed here, sync
     SPEC_NODES = ['GraphMeta', 'ElementType', 'Meta', 'Cardinality', 'Coverage'],
     SPEC_MARKERS = ['Meta'],
     SPEC_EDGES = ['DECLARES'];
+  // §5: an ElementType types only when the graph's GraphMeta DECLARES it
+  const declaredIn = (graph) =>
+    graph
+      .labelled('ElementType')
+      .filter((i) => graph.inc(i, 'DECLARES').some((e) => graph.has(e[0], 'GraphMeta')))
+      .map((i) => graph.p(i));
   function types(g, shared, builtin = true) {
-    let elementTypes = g.labelled('ElementType').map((i) => g.p(i));
-    if (!elementTypes.length && shared) elementTypes = shared.labelled('ElementType').map((i) => shared.p(i));
+    // a graph's own schema, where it has one, or the shared one it names
+    const elementTypes = g.labelled('ElementType').length ? declaredIn(g) : shared ? declaredIn(shared) : [];
     const nodes = new Set([
       ...elementTypes.filter((t) => t.kind === 'node').map((t) => t.name),
       ...(builtin ? SPEC_NODES : []),
