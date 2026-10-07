@@ -192,31 +192,12 @@
   display: none !important;
 }
 
-/* The inspector: each property a row of name, value, type and its buttons; on a phone, a sheet at the bottom of the screen. */
-.graph-note-inspector {
-  display: flex;
-  flex-direction: column;
-  gap: var(--size-4-1);
+/* The inspector: Obsidian's own Properties panel (its metadata classes carry the theme's spacing, type and colours), set
+   inside the details; on a phone, a sheet at the bottom of the screen. */
+.graph-note-inspector.metadata-container {
   margin-top: var(--size-4-2);
-}
-.graph-note-prop {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--size-4-1);
-}
-.graph-note-prop input,
-.graph-note-prop select,
-.graph-note-prop button {
-  min-height: 44px;
-}
-.graph-note-prop input {
-  flex: 1 1 8em;
-  min-width: 6em;
-}
-.graph-note-prop-name {
-  min-width: 6em;
-  font-family: var(--font-monospace);
+  margin-block-end: 0;
+  transform: none;
 }
 .graph-note-alert {
   color: var(--text-error);

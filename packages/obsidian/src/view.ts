@@ -2,19 +2,8 @@
 // zooms and pans by button, gesture and key (the core's Zoom decides; this passes the events in and shows the view), opens
 // full screen, and shows a box's details when it is tapped or opened from the keyboard.
 import { MarkdownRenderChild, Platform, setIcon } from 'obsidian';
-import {
-  Zoom,
-  blockItems,
-  details,
-  hops,
-  linkDetails,
-  parseValue,
-  propertiesOf,
-  propertyNames,
-  setProperty,
-  textVersion,
-  withoutColorMix,
-} from '@graph-note/core';
+import { Zoom, details, linkDetails, linkInBlock, textVersion, withoutColorMix } from '@graph-note/core';
+import { renderProperties } from './properties';
 import type {
   CompletenessReport,
   Drawn,
@@ -22,7 +11,6 @@ import type {
   Mode,
   NoteReading,
   Problem,
-  PropType,
   View,
   ZoomEvent,
 } from '@graph-note/core';
@@ -486,70 +474,18 @@ export class GraphView extends MarkdownRenderChild {
     const ed = this.o.editing?.();
     if (!ed?.session) return;
     ed.selected = 'thing' in target ? { key: target.thing } : { link: target.link };
-    const sec = el.createDiv({ cls: 'graph-note-inspector' });
-    sec.createEl('h4', { text: 'Edit properties' });
-    const alert = sec.createDiv({ cls: 'graph-note-alert', attr: { role: 'alert' } });
-    alert.hidden = true;
-    const types: PropType[] = ['text', 'number', 'date', 'datetime', 'boolean'];
-    const typeSelect = (row: HTMLElement, label: string, chosen: PropType) => {
-      const sel = row.createEl('select', { cls: 'dropdown', attr: { 'aria-label': label } });
-      for (const t of types) {
-        const o = sel.createEl('option', { text: t, attr: { value: t } });
-        if (t === chosen) o.setAttribute('selected', '');
-      }
-      sel.value = chosen;
-      return sel;
-    };
-    // a link is edited in its own brackets, counted among the links written in the block being edited
-    const inBlock = (): { thing: string } | { link: number } => {
-      if ('thing' in target) return target;
-      const l = this.drawing()?.links[target.link],
-        text = ed.session?.text ?? '';
-      let n = 0;
-      for (const it of blockItems(text))
-        for (const [s, t, e] of hops(it.text)) {
-          if (l && s === l.from && t === l.type && e === l.to) return { link: n };
-          n++;
-        }
-      return { link: -1 };
-    };
-    const apply = (key: string, type: PropType | null, value: string | null) => {
-      const parsed = type === null || value === null ? null : parseValue(type, value);
-      if (parsed && !parsed.ok) {
-        alert.hidden = false;
-        alert.setText(`${key}: ${parsed.error}.`);
-        return;
-      }
-      const r = setProperty(ed.session?.text ?? '', this.o.graph, inBlock(), key, parsed ? parsed.gql : null);
-      if (!r.ok) {
-        alert.hidden = false;
-        alert.setText(`${key}: ${r.reason}.`);
-        return;
-      }
-      alert.hidden = true;
-      ed.replace(r.text);
-    };
-    for (const p of propertiesOf(this.o.reading, this.o.graph, target)) {
-      const row = sec.createDiv({ cls: 'graph-note-prop' });
-      row.createSpan({ cls: 'graph-note-prop-name', text: p.key });
-      const value = row.createEl('input', { attr: { type: 'text', 'aria-label': `Value of ${p.key}` } });
-      value.value = p.value;
-      const type = typeSelect(row, `Type of ${p.key}`, p.type);
-      button(row, `Save ${p.key}`, 'check', () => apply(p.key, type.value as PropType, value.value), 'Save');
-      button(row, `Remove ${p.key}`, 'trash', () => apply(p.key, null, null));
-    }
-    const add = sec.createDiv({ cls: 'graph-note-prop is-new' });
-    const listId = `graph-note-names-${++described}`;
-    const names = add.createEl('datalist', { attr: { id: listId } });
-    for (const n of propertyNames(this.o.reading, this.o.graph, kind)) names.createEl('option', { attr: { value: n } });
-    const name = add.createEl('input', {
-      attr: { type: 'text', list: listId, 'aria-label': 'New property name', placeholder: 'Name' },
+    const text = () => ed.session?.text ?? '';
+    renderProperties(el, {
+      reading: this.o.reading,
+      graph: this.o.graph,
+      target,
+      kind,
+      text,
+      // a link is edited in its own brackets, counted among the links written in the block being edited
+      inBlock: () =>
+        'thing' in target ? target : { link: linkInBlock(this.o.reading, this.o.graph, target.link, text()) },
+      replace: (t) => ed.replace(t),
     });
-    const type = typeSelect(add, 'New property type', 'text');
-    const value = add.createEl('input', {
-      attr: { type: 'text', 'aria-label': 'New property value', placeholder: 'Value' },
-    });
-    button(add, 'Add property', 'plus', () => apply(name.value.trim(), type.value as PropType, value.value), 'Add');
   }
 
   private openFullscreen(): void {

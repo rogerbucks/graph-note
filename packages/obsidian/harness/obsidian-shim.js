@@ -193,6 +193,55 @@ export class Notice {
     setTimeout(() => n.remove(), 4000);
   }
 }
+/** Obsidian's menu, enough to try one in a browser: a list of items under the pointer, closed by a pick or a click away. */
+export class Menu {
+  constructor() {
+    this.items = [];
+  }
+  addItem(build) {
+    const item = { title: '', checked: false };
+    const api = {
+      setTitle: (t) => ((item.title = t), api),
+      setIcon: () => api,
+      setChecked: (c) => ((item.checked = c), api),
+      setSection: () => api,
+      setWarning: () => api,
+      onClick: (f) => ((item.click = f), api),
+    };
+    build(api);
+    this.items.push(item);
+    return this;
+  }
+  addSeparator() {
+    return this;
+  }
+  showAtMouseEvent(e) {
+    return this.showAtPosition({ x: e.clientX, y: e.clientY });
+  }
+  showAtPosition({ x, y }) {
+    const el = document.body.createDiv({ cls: 'menu' });
+    Object.assign(el.style, { position: 'fixed', left: `${x}px`, top: `${y}px`, zIndex: 100 });
+    for (const it of this.items) {
+      const row = el.createDiv({ cls: 'menu-item', text: `${it.checked ? '✓ ' : ''}${it.title}` });
+      row.addEventListener('click', (e) => {
+        close();
+        it.click?.(e);
+      });
+    }
+    const close = () => {
+      el.remove();
+      document.removeEventListener('pointerdown', away, true);
+    };
+    const away = (e) => {
+      if (!el.contains(e.target)) close();
+    };
+    setTimeout(() => document.addEventListener('pointerdown', away, true));
+    return this;
+  }
+  hide() {
+    return this;
+  }
+}
 const GLYPH = {
   'zoom-in': '+',
   'zoom-out': '−',

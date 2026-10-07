@@ -53,6 +53,17 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 - [ ] Phone: the pane offers Drawing and Text as two tabs, with problems in a sheet at the bottom. Every button is easy
       to hit with a thumb, and nothing needs a hover.
 
+## Editing in place and the inspector — spec §4, §14
+
+- [ ] Edit here opens the text inside the drawing's card, and typing there redraws the drawing without losing the place.
+- [ ] In edit mode, tapping a box or a link shows its properties, looking as a note's Properties panel looks in this
+      theme: the same rows, icons, spacing, type and colours, in both the light and dark themes.
+- [ ] A number has a number field, a date opens the date picker, and true or false is a checkbox.
+- [ ] A value is written when its field is left; a value that does not fit its type says why, and nothing changes.
+- [ ] Tapping a property's icon opens a menu to change its type or remove it. Add property adds a row in place, its
+      name suggested from the names already used.
+- [ ] Phone: the properties open as a sheet at the bottom of the screen, and every field and icon is easy to hit.
+
 ## Accessibility — spec §8, §11
 
 - [ ] Desktop, keyboard only: Tab reaches every button, the drawing, each box and each estimated link. Enter opens a

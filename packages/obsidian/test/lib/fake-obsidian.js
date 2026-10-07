@@ -192,6 +192,60 @@ export function fakeObsidian(state = {}) {
       return this;
     }
   }
+  // A menu, as Obsidian shows one from a button: each item with its title, icon and tick, recorded when it is shown.
+  state.menus = [];
+  class Menu {
+    constructor() {
+      this.items = [];
+    }
+    addItem(build) {
+      const item = {
+        title: '',
+        icon: '',
+        checked: false,
+        setTitle(t) {
+          item.title = String(t);
+          return item;
+        },
+        setIcon(i) {
+          item.icon = i;
+          return item;
+        },
+        setChecked(c) {
+          item.checked = !!c;
+          return item;
+        },
+        setSection() {
+          return item;
+        },
+        setWarning() {
+          return item;
+        },
+        onClick(f) {
+          item.click = () => f({});
+          return item;
+        },
+        click() {},
+      };
+      build(item);
+      this.items.push(item);
+      return this;
+    }
+    addSeparator() {
+      return this;
+    }
+    showAtMouseEvent() {
+      state.menus.push(this);
+      return this;
+    }
+    showAtPosition() {
+      state.menus.push(this);
+      return this;
+    }
+    hide() {
+      return this;
+    }
+  }
   const setIcon = (el, icon) => {
     el.setAttribute('data-icon', icon);
     state.icons.push(icon);
@@ -211,6 +265,7 @@ export function fakeObsidian(state = {}) {
     WorkspaceLeaf,
     TFile,
     Notice,
+    Menu,
     setIcon,
     setTooltip,
     Platform,
