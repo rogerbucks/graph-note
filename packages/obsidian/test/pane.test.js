@@ -679,3 +679,24 @@ describe('what is added for you, with Obsidian’s brackets paired as you type',
     }
   });
 });
+
+describe('a note nobody is editing', () => {
+  // comma_never_rewritten_unasked (spec §4): drawing a note never rewrites it — the line break is read as the comma, and
+  // the fix is offered, not made
+  test('is drawn with a missing comma read in, and offered the fix, but never rewritten', async () => {
+    const { fakeContext } = await import('./lib/fake-obsidian.js');
+    const block = "// graph: g\n(a:T {name: 'A'})\n(b:T {name: 'B'})";
+    const note = ['# N', '', fence(block), ''].join('\n');
+    const env = await load({ files: { [PATH]: note } });
+    try {
+      const el = env.doc.body.createDiv();
+      await env.state.processors.get('gql')(block, el, fakeContext(note, 2));
+      assert.equal(el.querySelectorAll('g.node').length, 2, 'both things are drawn');
+      assert.match(el.querySelector('.graph-note-problems').textContent, /a comma is missing at the end of this line/);
+      await wait(400);
+      assert.equal(env.state.files.get(PATH), note, 'the note is as it was');
+    } finally {
+      env.uninstall();
+    }
+  });
+});

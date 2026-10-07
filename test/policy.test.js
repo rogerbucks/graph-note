@@ -494,3 +494,19 @@ describe('the content check is installed', () => {
     assert.match(read('README.md'), /git config core\.hooksPath \.githooks/);
   });
 });
+
+describe('its own repository', () => {
+  // own_repo (spec §13): the source lives in its own Git repository outside the vault, with GitHub as its remote
+  test('the source is a Git repository whose remote is on GitHub', async () => {
+    const { execFileSync } = await import('node:child_process');
+    assert.ok(exists('.git'));
+    const url = execFileSync('git', ['remote', 'get-url', 'origin'], { cwd: path('.'), encoding: 'utf8' }).trim();
+    assert.match(url, /github\.com[:/][^/]+\/graph-note(\.git)?$/);
+  });
+
+  test('it sits inside no Obsidian vault: no folder above it holds one', async () => {
+    const { existsSync } = await import('node:fs');
+    const { dirname, join } = await import('node:path');
+    for (let d = dirname(path('.')); d !== dirname(d); d = dirname(d)) assert.ok(!existsSync(join(d, '.obsidian')), d);
+  });
+});
