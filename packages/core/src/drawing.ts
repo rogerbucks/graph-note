@@ -31,8 +31,9 @@ export interface GraphDrawing {
   links: Link[];
 }
 
-/** Something that could not be read: the block (index in the note), the line in that block (1 = its graph line), what is wrong, and the fix. */
+/** Something that could not be read: its graph, the block (index in the note), the line in that block (1 = its graph line), what is wrong, and the fix. */
 export interface Problem {
+  graph: string | null;
   block: number;
   line: number;
   message: string;
@@ -42,6 +43,8 @@ export interface Problem {
 export interface NoteReading {
   graphs: Map<string, GraphDrawing>;
   problems: Problem[];
+  /** The blocks as written, up to the one drawn. */
+  texts: string[];
   /** The world as read, for checks and details. */
   world: World;
 }
@@ -115,6 +118,9 @@ function without(text: string, all: Item[], drop: Item[]): string {
   return chars.join('');
 }
 
+/** The graph a block names, or null. */
+const graphOf = (text: string): string | null => /^\s*\/\/\s*graph:\s*(\S+)/.exec(text.split('\n').find((l) => l.trim()) ?? '')?.[1] ?? null;
+
 const isGraphLine = (text: string) => /^\s*\/\/\s*graph:/.test(text.split('\n').find((l) => l.trim()) ?? '');
 
 /** The kind of a block, or null when it holds no data to draw: a query, an excerpt, a change set, or no graph line. */
@@ -125,7 +131,7 @@ function dataKind(text: string): 'data' | 'schema' | null | Problem {
   } catch (e) {
     if (!isGraphLine(text)) return null;
     const p = e instanceof gs.ProfileError ? e : null;
-    return { block: -1, line: p?.line ?? 1, message: p?.msg ?? 'the graph line cannot be read', fix: p?.fix ?? "start the block with '// graph: <name>'" };
+    return { graph: null, block: -1, line: p?.line ?? 1, message: p?.msg ?? 'the graph line cannot be read', fix: p?.fix ?? "start the block with '// graph: <name>'" };
   }
 }
 
@@ -139,7 +145,7 @@ function readBlocks(texts: string[], shared: string[]): { store: gs.Store; probl
   texts.forEach((t, i) => {
     const k = dataKind(t);
     if (k === null) skip.add(i);
-    else if (typeof k === 'object') { skip.add(i); problems.push({ ...k, block: i }); }
+    else if (typeof k === 'object') { skip.add(i); problems.push({ ...k, block: i, graph: graphOf(t) }); }
   });
   for (let attempt = 0; ; attempt++) {
     const store = new gs.Store();
@@ -153,7 +159,7 @@ function readBlocks(texts: string[], shared: string[]): { store: gs.Store; probl
     const { block, error } = failed, text = clean[block] ?? '';
     const pe = error instanceof gs.ProfileError ? error : null;
     const line = pe?.line ?? 1;
-    const problem: Problem = { block, line, message: pe?.msg ?? 'this could not be read', fix: pe?.fix ?? 'check the line against the guide to writing a graph note' };
+    const problem: Problem = { graph: graphOf(text), block, line, message: pe?.msg ?? 'this could not be read', fix: pe?.fix ?? 'check the line against the guide to writing a graph note' };
     const all = items(text);
     const touching = all.filter((it) => lineAt(text, it.from) <= line && line <= lineAt(text, it.to - 1));
     const before = all.filter((it) => lineAt(text, it.from) <= line).pop();
@@ -211,5 +217,5 @@ export function readNote(blocks: string[], upTo = blocks.length - 1, shared: str
     const own = whole[name]?.labelled('ElementType').length ? whole[name] : undefined;
     graphs.set(name, drawingOf(world, name, own));
   }
-  return { graphs, problems, world };
+  return { graphs, problems, world, texts: upto };
 }
