@@ -156,3 +156,15 @@ describe('a graph with problems is still drawn', () => {
     assert.deepEqual(graphs.get('g').boxes.map((b) => [b.key, b.text]), [['a', 'one, two'], ['c', 'c']]);
   });
 });
+
+describe('which blocks are graphs', () => {
+  test('a data block with a graph line draws its graph; anything else is code', async () => {
+    const { graphOfBlock } = await import('../src/drawing.ts');
+    assert.equal(graphOfBlock('// graph: reader · SOURCE\n(a:T)'), 'reader');
+    assert.equal(graphOfBlock('\n\n// graph: g\n(a:T)'), 'g');
+    for (const code of ['// graph: g · QUERY\nMATCH (n) RETURN n', '// graph: s · SCHEMA s@1\n(a:T)', '// graph: g · excerpt\n(a:T)',
+      '// graph: g · CHANGE SET c1 · against 0123456789abcdef · by ann\n(a:T)', 'MATCH (n) RETURN n', '', '// graph: not-one-word\n(a)']) {
+      assert.equal(graphOfBlock(code), null, code);
+    }
+  });
+});

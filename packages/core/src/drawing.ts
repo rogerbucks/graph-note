@@ -135,6 +135,11 @@ function dataKind(text: string): 'data' | 'schema' | null | Problem {
   }
 }
 
+/** The graph a block draws: its name when it is a data block with a graph line, else null — a query, schema, excerpt or plain code. */
+export function graphOfBlock(text: string): string | null {
+  return dataKind(text) === 'data' ? graphOf(text) : null;
+}
+
 /**
  * Reads a note's data blocks, leaving out what cannot be read. Returns the blocks as read and the problems.
  * Each block is applied in order to a fresh store; when one fails, the item at the failing line is blanked and the

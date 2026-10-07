@@ -6,5 +6,16 @@
   "license": "MIT",
   "type": "commonjs",
   "main": "src/graph-spec-check.js",
-  "types": "src/graph-spec.d.ts"
+  "types": "src/graph-spec.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/graph-spec.d.ts",
+      "default": "./src/graph-spec-check.js"
+    },
+    "./src/graph-layout.js": {
+      "types": "./src/graph-layout-types.d.ts",
+      "default": "./src/graph-layout.js"
+    },
+    "./package.json": "./package.json"
+  }
 }

@@ -1,4 +1,36 @@
-/* Graph Note — styles for the drawing and the edit pane. */
+/* Graph Note — styles for the drawing and the edit pane. Colours come from the theme, so light and dark both work. */
+
+/* The bar: every control at least 44 points, as touch needs (spec §5), and none that only shows on hover. */
+.graph-note-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--size-4-1); margin-bottom: var(--size-4-1); }
+.graph-note-bar button { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: var(--size-4-1); }
+.graph-note-badge { margin-right: auto; }
+.graph-note-badge-text { font-size: var(--font-ui-small); }
+
+/* The drawing: resized to zoom, never stretched, so its text stays sharp; moved, not scrolled, to pan. */
+.graph-note-viewport { position: relative; overflow: hidden; height: var(--graph-note-height, auto); touch-action: var(--graph-note-touch, pan-x pan-y); border-radius: var(--radius-s); }
+.graph-note-viewport:focus-visible { outline: 2px solid var(--interactive-accent); outline-offset: 2px; }
+.graph-note-viewport.is-zoomed { cursor: grab; }
+.graph-note-viewport.is-zoomed:active { cursor: grabbing; }
+.graph-note-svg { position: absolute; left: 0; top: 0; max-width: none; transform: translate(var(--graph-note-x, 0), var(--graph-note-y, 0)); }
+.graph-note-svg g.node { cursor: pointer; }
+.graph-note-svg g.node:focus { outline: none; }
+.graph-note-svg g.node:focus-visible > :is(path, polygon) { stroke-width: 3; }
+
+/* Full screen: over the whole window, inside the phone's safe area. */
+.graph-note-fullscreen { position: fixed; inset: 0; z-index: var(--layer-modal); background: var(--background-primary); display: flex; flex-direction: column; padding: max(var(--size-4-2), env(safe-area-inset-top)) max(var(--size-4-2), env(safe-area-inset-right)) max(var(--size-4-2), env(safe-area-inset-bottom)) max(var(--size-4-2), env(safe-area-inset-left)); }
+.graph-note-fullscreen > .graph-note { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.graph-note-fullscreen .graph-note-viewport { flex: 1; height: auto; }
+
+/* Problems, details and the banner: words and an icon, never colour alone. */
+.graph-note-problems ul, .graph-note-details ul { margin: var(--size-4-1) 0; padding-left: var(--size-4-6); }
+.graph-note-details { margin-top: var(--size-4-2); padding: var(--size-4-2) var(--size-4-3); border: 1px solid var(--background-modifier-border); border-radius: var(--radius-m); }
+.graph-note-details-head { display: flex; align-items: center; gap: var(--size-4-2); }
+.graph-note-details-head button { margin-left: auto; min-width: 44px; min-height: 44px; }
+.graph-note-details h4 { margin: var(--size-4-2) 0 0; font-size: var(--font-ui-small); color: var(--text-muted); }
+.graph-note-kind { font-size: var(--font-ui-smaller); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+.graph-note-banner { padding: var(--size-4-2) var(--size-4-3); border-left: 3px solid var(--text-error); background: var(--background-secondary); margin-bottom: var(--size-4-2); }
+.graph-note-empty { padding: var(--size-4-3); border: 1px dashed var(--background-modifier-border); border-radius: var(--radius-m); }
+.graph-note-empty button { min-height: 44px; }
 
 /* GQL text, coloured by token class as the gql-highlight plugin colours it, from the theme's own code colours. */
 .gql-kw      { color: var(--code-keyword, #c678dd); }
