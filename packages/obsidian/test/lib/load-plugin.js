@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { fakeDocument, installGlobals } from './fake-dom.js';
-import { fakeObsidian } from './fake-obsidian.js';
+import { fakeObsidian, fakeCodeMirror } from './fake-obsidian.js';
 
 const require = createRequire(import.meta.url);
 export const root = fileURLToPath(new URL('../../../../', import.meta.url));
@@ -21,7 +21,8 @@ export async function load(options = {}) {
   const state = { taken: options.taken, mobile: options.mobile, files: new Map(Object.entries(options.files ?? {})), data: options.data ?? null };
   const obsidian = fakeObsidian(state);
   const Module = require('node:module'), real = Module._load, file = `${root}main.js`;
-  Module._load = (req, ...rest) => (req === 'obsidian' ? obsidian : real(req, ...rest));
+  const cm = fakeCodeMirror(state);
+  Module._load = (req, ...rest) => (req === 'obsidian' ? obsidian : cm[req] ?? real(req, ...rest));
   let Plugin;
   try {
     const m = new Module(file);

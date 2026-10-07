@@ -12,5 +12,9 @@
   "dependencies": {
     "@graph-note/core": "0.1.0",
     "@viz-js/viz": "3.31.0"
+  },
+  "devDependencies": {
+    "@codemirror/state": "6.5.0",
+    "@codemirror/view": "6.38.6"
   }
 }

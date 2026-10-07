@@ -48,3 +48,15 @@ test('a link line counts as a complete pattern', () => {
   const text = "// graph: g\n(a:T),\n(b:T),\n(a)-[:R]->(b)\n";
   assert.equal(after(text), text.lastIndexOf(')') + 1);
 });
+
+test('in a note, the comma is added only inside a graph block: never in a query, other code, or the note’s prose', async () => {
+  const { commaInNote } = await import('../src/commas.ts');
+  const graph = '```gql\n// graph: g\n(a:T)\n(\n```';
+  assert.equal(commaInNote('Intro.\n\n' + graph, 'Intro.\n\n```gql\n// graph: g\n(a:T)\n('.length), 'Intro.\n\n```gql\n// graph: g\n(a:T)'.length);
+  const query = '```gql\n// graph: g · QUERY\nMATCH (a:T)\n(\n```';
+  assert.equal(commaInNote(query, '```gql\n// graph: g · QUERY\nMATCH (a:T)\n('.length), null);
+  const prose = 'Some text (aside)\n(more';
+  assert.equal(commaInNote(prose, 'Some text (aside)\n('.length), null);
+  const python = '```python\nf(a)\n(\n```';
+  assert.equal(commaInNote(python, '```python\nf(a)\n('.length), null);
+});

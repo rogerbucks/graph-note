@@ -343,3 +343,82 @@ describe('shared schemas', () => {
     } finally { env.uninstall(); }
   });
 });
+
+describe('the comma added for you', () => {
+  test('starting the next pattern on a new line adds the comma at the end of the line before, and the caret stays put', async () => {
+    const env = await open();
+    try {
+      const t = textarea(env.el);
+      const before = READER + '\n';
+      t.value = before; t.setSelectionRange(before.length, before.length); t.dispatch('input');
+      type(env.el, before + '(');
+      assert.equal(t.value, READER + ',\n(');
+      assert.equal(t.selectionStart, t.value.length, 'the caret is still just after the (');
+    } finally { env.uninstall(); }
+  });
+
+  test('one undo takes the comma back, and only the comma', async () => {
+    const env = await open();
+    try {
+      const t = textarea(env.el), before = READER + '\n';
+      t.value = before; t.setSelectionRange(before.length, before.length); t.dispatch('input');
+      type(env.el, before + '(');
+      const ev = t.dispatch('keydown', { key: 'z', metaKey: true });
+      assert.ok(ev.defaultPrevented);
+      assert.equal(t.value, READER + '\n(');
+      assert.equal(t.selectionStart, t.value.length);
+      assert.equal(t.dispatch('keydown', { key: 'z', metaKey: true }).defaultPrevented, false, 'the next undo is the platform’s own');
+    } finally { env.uninstall(); }
+  });
+
+  test('a line that is not otherwise valid gets no comma', async () => {
+    const env = await open();
+    try {
+      const broken = READER + ",\n(x:T {name: })\n";
+      const t = textarea(env.el);
+      t.value = broken; t.setSelectionRange(broken.length, broken.length); t.dispatch('input');
+      type(env.el, broken + '(');
+      assert.equal(t.value, broken + '(');
+    } finally { env.uninstall(); }
+  });
+});
+
+describe('the comma added for you in the note itself', () => {
+  /** A typing update of the note's own editor: `text` after a ( was typed at `caret`. */
+  function typing(text, caret, dispatched) {
+    const doc = { toString: () => text };
+    const view = { state: { doc }, dispatch: (spec) => dispatched.push(spec) };
+    return {
+      docChanged: true, state: { doc }, view,
+      transactions: [{ isUserEvent: (e) => e === 'input.type' }],
+      changes: { iterChanges: (cb) => cb(caret - 1, caret - 1, caret - 1, caret, { toString: () => '(' }) },
+    };
+  }
+
+  test('typing ( to start the next pattern in a graph block adds the comma, as its own step', async () => {
+    const env = await load({});
+    try {
+      const [listener] = env.state.listeners;
+      const note = '# N\n```gql\n// graph: g\n(a:T)\n(\n```';
+      const dispatched = [];
+      listener(typing(note, note.indexOf('(\n```') + 1, dispatched));
+      assert.deepEqual(dispatched, [], 'not while the editor is updating');
+      await wait(10);
+      assert.equal(dispatched.length, 1);
+      assert.deepEqual(dispatched[0].changes, { from: note.indexOf('(a:T)') + 5, insert: ',' });
+      assert.deepEqual(dispatched[0].annotations, { userEvent: 'input.comma' }, 'its own step, so one undo takes it back');
+    } finally { env.uninstall(); }
+  });
+
+  test('typing ( in prose, in other code, or in a query adds nothing', async () => {
+    const env = await load({});
+    try {
+      const [listener] = env.state.listeners, dispatched = [];
+      for (const note of ['Text (aside)\n(', '```python\nf(a)\n(\n```', '```gql\n// graph: g · QUERY\nMATCH (a)\n(\n```']) {
+        listener(typing(note, note.lastIndexOf('(') + 1, dispatched));
+      }
+      await wait(10);
+      assert.deepEqual(dispatched, []);
+    } finally { env.uninstall(); }
+  });
+});

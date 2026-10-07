@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { fakeDocument, installGlobals } from './lib/fake-dom.js';
-import { fakeObsidian, fakeContext } from './lib/fake-obsidian.js';
+import { fakeObsidian, fakeContext, fakeCodeMirror } from './lib/fake-obsidian.js';
 
 const require = createRequire(import.meta.url);
 const root = fileURLToPath(new URL('../../../', import.meta.url));
@@ -25,7 +25,8 @@ async function load(options = {}) {
   const obsidian = fakeObsidian(state);
   // main.js is CommonJS, as Obsidian loads it; the repository's own package type would make Node read it as a module
   const Module = require('node:module'), real = Module._load, file = `${root}main.js`;
-  Module._load = (req, ...rest) => (req === 'obsidian' ? obsidian : real(req, ...rest));
+  const cm = fakeCodeMirror(state);
+  Module._load = (req, ...rest) => (req === 'obsidian' ? obsidian : cm[req] ?? real(req, ...rest));
   let Plugin;
   try {
     const m = new Module(file);

@@ -95,3 +95,13 @@ export function fakeContext(note, fenceLine, children = []) {
     children,
   };
 }
+
+/** Stand-ins for the CodeMirror modules Obsidian supplies at run time: enough to load the plugin and drive its editor hooks. */
+export function fakeCodeMirror(state = {}) {
+  state.listeners = [];
+  const view = {
+    EditorView: { updateListener: { of: (fn) => { state.listeners.push(fn); return { listener: fn }; } } },
+  };
+  const cmState = { Transaction: { userEvent: { of: (v) => ({ userEvent: v }) } } };
+  return { '@codemirror/view': view, '@codemirror/state': cmState };
+}

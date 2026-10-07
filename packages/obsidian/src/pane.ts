@@ -5,7 +5,7 @@
 // core's session, which never overwrites a block changed meanwhile and keeps what was typed as a draft.
 import { ItemView, Notice, Platform, TFile, setIcon } from 'obsidian';
 import type { ViewStateResult, WorkspaceLeaf } from 'obsidian';
-import { PaneSession, namesSharedSchema, completions, diagnostics, draw, gqlSpans, graphOfBlock, insertBlockAfter, isDraft, lockBlock, readBack, tokenize } from '@graph-note/core';
+import { PaneSession, commaFor, namesSharedSchema, completions, diagnostics, draw, gqlSpans, graphOfBlock, insertBlockAfter, isDraft, lockBlock, readBack, tokenize } from '@graph-note/core';
 import type { CompletionItem, Diagnostic, NoteReading } from '@graph-note/core';
 import type GraphNotePlugin from './main';
 import type { EditTarget } from './main';
@@ -153,7 +153,8 @@ export class GraphPane extends ItemView {
     this.registerDomEvent(text, 'scroll', () => { overlay.scrollTop = text.scrollTop; overlay.scrollLeft = text.scrollLeft; });
     this.registerDomEvent(text, 'keydown', (e: KeyboardEvent) => {
       const first = this.suggestions.items[0];
-      if (e.key === 'Tab' && !e.shiftKey && first) { e.preventDefault(); this.accept(first); }
+      if (e.key === 'Tab' && !e.shiftKey && first) { e.preventDefault(); this.accept(first); return; }
+      this.undoComma(e);
     });
 
     this.analyse();
@@ -177,11 +178,52 @@ export class GraphPane extends ItemView {
   private typed(): void {
     const el = this.el, s = this.session;
     if (!el || !s) return;
+    this.addComma(s.text);
     s.type(el.text.value);
     this.analyse();
     this.announce();
     this.paint();
     this.schedule();
+  }
+
+  /** The comma just added for you, and the text it left, so the very next undo takes back only it (spec §4). */
+  private autoComma: { at: number; value: string } | null = null;
+
+  /**
+   * The comma added for you (spec §4): when the ( just typed starts the next pattern on a new line, and the line before is
+   * otherwise valid, the comma goes at the end of that line. The very next undo takes it back, and only it.
+   */
+  private addComma(before: string): void {
+    const t = this.el?.text;
+    this.autoComma = null;
+    if (!t) return;
+    const v = t.value, caret = t.selectionStart ?? v.length;
+    if (v.length !== before.length + 1 || v.slice(0, caret - 1) + v.slice(caret) !== before) return;
+    const at = commaFor(v, caret);
+    if (at === null) return;
+    t.value = v.slice(0, at) + ',' + v.slice(at);
+    t.setSelectionRange(caret + 1, caret + 1);
+    this.autoComma = { at, value: t.value };
+  }
+
+  /** Undo straight after a comma was added for you: takes back the comma alone. */
+  private undoComma(e: KeyboardEvent): void {
+    const t = this.el?.text, c = this.autoComma;
+    if (!t || !c || e.key.toLowerCase() !== 'z' || e.shiftKey || !(e.metaKey || e.ctrlKey) || t.value !== c.value) return;
+    e.preventDefault();
+    const caret = (t.selectionStart ?? t.value.length) - 1;
+    t.value = t.value.slice(0, c.at) + t.value.slice(c.at + 1);
+    t.setSelectionRange(caret, caret);
+    this.autoComma = null;
+    this.typedAgain();
+  }
+
+  /** What was typed, analysed and written, without asking for another comma. */
+  private typedAgain(): void {
+    const el = this.el, s = this.session;
+    if (!el || !s) return;
+    s.type(el.text.value);
+    this.analyse(); this.announce(); this.paint(); this.schedule();
   }
 
   private caretMoved(): void {

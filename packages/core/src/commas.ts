@@ -2,6 +2,7 @@
 // before is otherwise valid, the comma that parts them is added at the end of that line. The reader would read the line
 // break as the comma anyway (format spec §3); adding it keeps the text plain GQL for every other reader.
 import gs from '@graph-note/graph-spec';
+import { gqlSpans, graphOfBlock } from './drawing.ts';
 
 /**
  * Where to add the comma after a ( was typed just before `caret` in a block's text — the index in the text, just after
@@ -25,4 +26,15 @@ export function commaFor(text: string, caret: number): number | null {
     end = start - 1;
   }
   return null;
+}
+
+/** The same, in a whole note: where to add the comma after a ( typed just before `caret`, or null outside a graph block. */
+export function commaInNote(note: string, caret: number): number | null {
+  const lineOf = (pos: number) => note.slice(0, pos).split('\n').length - 1;
+  const line = lineOf(caret);
+  const span = gqlSpans(note).find((s) => s.open < line && line < s.close);
+  if (!span || !graphOfBlock(span.text)) return null;
+  const start = note.split('\n').slice(0, span.open + 1).join('\n').length + 1;   // the block's first character
+  const at = commaFor(span.text, caret - start);
+  return at === null ? null : start + at;
 }
