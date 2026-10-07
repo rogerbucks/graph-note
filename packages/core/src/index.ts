@@ -30,7 +30,15 @@ export type { Choice, PaneWrite } from './pane.ts';
 export { completenessReport } from './completeness.ts';
 export type { CompletenessReport, RuleReport } from './completeness.ts';
 export { commaFor, commaInNote } from './commas.ts';
-export { parseValue, propertiesOf, propertyNames, setProperty, spanOf, linkInBlock } from './inspector.ts';
+export {
+  parseValue,
+  propertiesOf,
+  propertyNames,
+  setProperty,
+  renameProperty,
+  spanOf,
+  linkInBlock,
+} from './inspector.ts';
 export { hitAreas, nearby, TapCycle } from './hits.ts';
 export type { HitAreas, Shape } from './hits.ts';
 export type { PropType, Property, Target, Edit, Parsed } from './inspector.ts';

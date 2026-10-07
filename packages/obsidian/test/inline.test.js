@@ -152,6 +152,7 @@ describe('the inspector, in edit mode', () => {
     "(large:Option {name: 'Large reader', price: 300, ordered: DATE '2026-10-01', checked: TRUE})",
   );
   const NOTE2 = NOTE.replace(READER, PRICED);
+  const READER_LAST = '(large)-[:ANSWERS]->(q)';
   const field = (el, label) => el.querySelectorAll('input').find((x) => x.getAttribute('aria-label') === label);
   const row = (el, key) => el.querySelector(`.metadata-property[data-property-key="${key}"]`);
   const text = (el) => el.querySelector('textarea').value;
@@ -344,6 +345,113 @@ describe('the inspector, in edit mode', () => {
       assert.doesNotMatch(text(el), /price/);
     } finally {
       env.uninstall();
+    }
+  });
+
+  test('renaming onto a name the thing already has is refused, so no value is lost; a new row too', async () => {
+    const env = await load({ files: { [PATH]: NOTE2 } });
+    try {
+      const el = await editing(env);
+      tap(el, 1);
+      const panel = el.querySelector('.graph-note-details');
+      enter(row(panel, 'price').querySelector('.metadata-property-key-input'), 'name');
+      assert.match(panel.querySelector('[role="alert"]').textContent, /already has a property called name/);
+      assert.equal(text(el), PRICED);
+      assert.equal(row(panel, 'price').querySelector('.metadata-property-key-input').value, 'price');
+      panel.querySelector('.metadata-add-button').click();
+      enter(field(panel, 'New property name'), 'price');
+      enter(field(panel, 'Value of new property'), '1');
+      assert.match(panel.querySelector('[role="alert"]').textContent, /already has a property called price/);
+      assert.equal(text(el), PRICED);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a renamed value is kept exactly as written', async () => {
+    const env = await load({ files: { [PATH]: NOTE2.replace('price: 300', 'price: 1.50') } });
+    try {
+      const el = await editing(env);
+      tap(el, 1);
+      enter(
+        row(el.querySelector('.graph-note-details'), 'price').querySelector('.metadata-property-key-input'),
+        'cost',
+      );
+      assert.match(text(el), /cost: 1\.50/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a new row’s value typed before its name is written once the name is given', async () => {
+    const env = await load({ files: { [PATH]: NOTE2 } });
+    try {
+      const el = await editing(env);
+      tap(el, 1);
+      const panel = el.querySelector('.graph-note-details');
+      panel.querySelector('.metadata-add-button').click();
+      enter(field(panel, 'Value of new property'), 'grey');
+      assert.match(panel.querySelector('[role="alert"]').textContent, /name it first/);
+      enter(field(panel, 'New property name'), 'colour');
+      assert.match(text(el), /colour: 'grey'\}/);
+      assert.ok(panel.querySelector('[role="alert"]').hidden, 'the alert goes once the property is written');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('once written, a new row is a property like the others: named, and removed from the note', async () => {
+    const env = await load({ files: { [PATH]: NOTE2 } });
+    try {
+      const el = await editing(env);
+      tap(el, 1);
+      const panel = el.querySelector('.graph-note-details');
+      panel.querySelector('.metadata-add-button').click();
+      enter(field(panel, 'New property name'), 'colour');
+      enter(field(panel, 'Value of new property'), 'grey');
+      assert.ok(row(panel, 'colour'), 'the row carries its name');
+      assert.ok(field(panel, 'Value of colour'));
+      pick(env, panel, 'colour', 'Remove');
+      assert.doesNotMatch(text(el), /colour/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a property set elsewhere is not removed here, and the row stays, saying why', async () => {
+    const env = await load({
+      files: { [PATH]: NOTE2.replace(READER_LAST, `${READER_LAST}\nSET large.status = 'bought'`) },
+    });
+    try {
+      const el = await editing(env);
+      tap(el, 1);
+      const panel = el.querySelector('.graph-note-details');
+      pick(env, panel, 'status', 'Remove');
+      assert.match(panel.querySelector('[role="alert"]').textContent, /status is not written in its pattern here/);
+      assert.ok(row(panel, 'status'));
+      assert.match(text(el), /SET large\.status = 'bought'/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a new date and time takes the offset of the chosen day, not of today', async () => {
+    const tz = process.env.TZ;
+    process.env.TZ = 'Australia/Sydney';
+    const env = await load({ files: { [PATH]: NOTE2 } });
+    try {
+      const el = await editing(env);
+      tap(el, 1);
+      const panel = el.querySelector('.graph-note-details');
+      panel.querySelector('.metadata-add-button').click();
+      enter(field(panel, 'New property name'), 'start');
+      pick(env, panel, '', 'Date & time');
+      enter(field(panel, 'Value of new property'), '2026-07-01T09:00');
+      assert.match(text(el), /start: DATETIME '2026-07-01T09:00\+10:00'/);
+    } finally {
+      env.uninstall();
+      if (tz === undefined) delete process.env.TZ;
+      else process.env.TZ = tz;
     }
   });
 

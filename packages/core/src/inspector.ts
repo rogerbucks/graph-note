@@ -160,17 +160,19 @@ export function linkInBlock(reading: NoteReading, graph: string, index: number, 
 /** A property edit: the block's new text, or why it cannot be made here. */
 export type Edit = { ok: true; text: string } | { ok: false; reason: string };
 
-/**
- * Sets a property — `gql` is its value as written, or null to remove it — in the pattern of this block that writes the
- * thing, or in the brackets of the block's `link`-th relationship (counted in this block). Only that map changes.
- */
-export function setProperty(block: string, graph: string, t: Target, key: string, gql: string | null): Edit {
-  if ('thing' in t && key === 'id')
-    return { ok: false, reason: 'the id is the thing’s name: rename the thing instead' };
-  if (!/^[A-Za-z_]\w*$/.test(key))
-    return { ok: false, reason: 'a property name is one word: letters, digits and underscores' };
+/** A thing's or link's map in a block: where it is (or where one would go), and its entries by their spans. */
+type MapAt =
+  | { ok: false; reason: string }
+  | {
+      ok: true;
+      open: number;
+      close: number;
+      at: number;
+      entries: { from: number; to: number; key: string; colon: number }[];
+    };
+
+function mapOf(block: string, graph: string, t: Target): MapAt {
   const b = blank(block);
-  // where the map is, or where one would go
   let open = -1,
     close = -1,
     at = -1;
@@ -193,24 +195,42 @@ export function setProperty(block: string, graph: string, t: Target, key: string
       close = open + m[1].length - 1;
     } else at = m.index + m[0].replace(/\s*\]$/, '').length;
   }
-  if (open === -1) {
-    if (gql === null) return { ok: true, text: block };
-    return { ok: true, text: `${block.slice(0, at)} {${key}: ${gql}}${block.slice(at)}` };
+  const entries: { from: number; to: number; key: string; colon: number }[] = [];
+  if (open !== -1) {
+    let from = 0;
+    for (const part of b.slice(open + 1, close).split(',')) {
+      const k = /^\s*(\w+)\s*:/.exec(part);
+      if (k)
+        entries.push({
+          from: open + 1 + from,
+          to: open + 1 + from + part.length,
+          key: k[1] ?? '',
+          colon: open + 1 + from + part.indexOf(':'),
+        });
+      from += part.length + 1;
+    }
   }
-  // the entries of the map, by their spans in the text
-  const inner = b.slice(open + 1, close),
-    entries: { from: number; to: number; key: string; colon: number }[] = [];
-  let from = 0;
-  for (const part of inner.split(',')) {
-    const k = /^\s*(\w+)\s*:/.exec(part);
-    if (k)
-      entries.push({
-        from: open + 1 + from,
-        to: open + 1 + from + part.length,
-        key: k[1] ?? '',
-        colon: open + 1 + from + part.indexOf(':'),
-      });
-    from += part.length + 1;
+  return { ok: true, open, close, at, entries };
+}
+
+const ONE_WORD = /^[A-Za-z_]\w*$/;
+const notHere = (key: string) => `${key} is not written in its pattern here: change it where it is written`;
+
+/**
+ * Sets a property — `gql` is its value as written, or null to remove it — in the pattern of this block that writes the
+ * thing, or in the brackets of the block's `link`-th relationship (counted in this block). Only that map changes. A
+ * property set elsewhere (by SET, or in another block) cannot be removed here, and says so.
+ */
+export function setProperty(block: string, graph: string, t: Target, key: string, gql: string | null): Edit {
+  if ('thing' in t && key === 'id')
+    return { ok: false, reason: 'the id is the thing’s name: rename the thing instead' };
+  if (!ONE_WORD.test(key)) return { ok: false, reason: 'a property name is one word: letters, digits and underscores' };
+  const map = mapOf(block, graph, t);
+  if (!map.ok) return map;
+  const { open, close, at, entries } = map;
+  if (open === -1) {
+    if (gql === null) return { ok: false, reason: notHere(key) };
+    return { ok: true, text: `${block.slice(0, at)} {${key}: ${gql}}${block.slice(at)}` };
   }
   const e = entries.find((x) => x.key === key);
   if (e && gql !== null) {
@@ -245,7 +265,24 @@ export function setProperty(block: string, graph: string, t: Target, key: string
         block.slice(e.to),
     };
   }
-  if (gql === null) return { ok: true, text: block };
+  if (gql === null) return { ok: false, reason: notHere(key) };
   const end = open + 1 + block.slice(open + 1, close).trimEnd().length;
   return { ok: true, text: `${block.slice(0, end)}${entries.length ? ', ' : ''}${key}: ${gql}${block.slice(end)}` };
+}
+
+/**
+ * Renames a property in the map where it is written, keeping its value exactly as written. A name the thing or link
+ * already has is refused, as renaming onto it would lose that property's value.
+ */
+export function renameProperty(block: string, graph: string, t: Target, from: string, to: string): Edit {
+  if ('thing' in t && (from === 'id' || to === 'id'))
+    return { ok: false, reason: 'the id is the thing’s name: rename the thing instead' };
+  if (!ONE_WORD.test(to)) return { ok: false, reason: 'a property name is one word: letters, digits and underscores' };
+  const map = mapOf(block, graph, t);
+  if (!map.ok) return map;
+  if (map.entries.some((x) => x.key === to)) return { ok: false, reason: `it already has a property called ${to}` };
+  const e = map.entries.find((x) => x.key === from);
+  if (!e) return { ok: false, reason: notHere(from) };
+  const k = e.from + block.slice(e.from, e.colon).indexOf(from);
+  return { ok: true, text: block.slice(0, k) + to + block.slice(k + from.length) };
 }

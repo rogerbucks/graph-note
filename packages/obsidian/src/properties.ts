@@ -4,7 +4,7 @@
 // switch for true or false. It is built on Obsidian's own markup and classes, so it takes the theme for free. Each change is
 // checked against its type and written as text into the block being edited (§2, edits are text).
 import { Menu, setIcon } from 'obsidian';
-import { parseValue, propertiesOf, propertyNames, setProperty } from '@graph-note/core';
+import { parseValue, propertiesOf, propertyNames, renameProperty, setProperty } from '@graph-note/core';
 import type { NoteReading, Property, PropType, Target } from '@graph-note/core';
 
 /** What the properties need: the reading, the thing or link, and the block being edited, to read and to replace. */
@@ -34,11 +34,10 @@ const titleOf = (t: PropType) => TYPES.find((x) => x.type === t)?.title ?? t;
 
 let lists = 0;
 
-/** The offset an instant is written with: its own, or this device's on that day. */
-function offsetOf(words: string): string {
-  const own = /(Z|[+-]\d\d:?\d\d)$/.exec(words)?.[1];
-  if (own) return own;
-  const minutes = -new Date(words || Date.now()).getTimezoneOffset(),
+/** This device's offset on the day and time given (a local YYYY-MM-DDTHH:MM, as a date and time field holds), or now. */
+function offsetOn(local: string): string {
+  const at = new Date(local),
+    minutes = -(Number.isNaN(at.getTime()) ? new Date() : at).getTimezoneOffset(),
     sign = minutes < 0 ? '-' : '+',
     abs = Math.abs(minutes);
   return `${sign}${String(Math.floor(abs / 60)).padStart(2, '0')}:${String(abs % 60).padStart(2, '0')}`;
@@ -67,7 +66,9 @@ function field(parent: HTMLElement, type: PropType, words: string, label: string
 /** The value a field holds, in words, as parseValue reads it. */
 function wordsIn(input: HTMLInputElement, type: PropType, was: string): string {
   if (type === 'boolean') return input.checked ? 'true' : 'false';
-  if (type === 'datetime' && input.value) return input.value + offsetOf(was);
+  // an instant keeps the offset it was written with; a new one takes this device's on the day chosen
+  if (type === 'datetime' && input.value)
+    return input.value + (/(Z|[+-]\d\d:?\d\d)$/.exec(was)?.[1] ?? offsetOn(input.value));
   return input.value;
 }
 
@@ -110,12 +111,16 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
     return true;
   };
 
+  /** The names the thing or link has now, as this panel knows them: none may be taken twice. */
+  const keys = new Set(propertiesOf(o.reading, o.graph, o.target).map((p) => p.key));
+
   /** One row: its type icon and name, and its field. `p` is null for a property being added. */
   const row = (p: Property | null) => {
-    const state: { key: string; type: PropType; words: string } = {
+    const state: { key: string; type: PropType; words: string; written: boolean } = {
       key: p?.key ?? '',
       type: p?.type ?? 'text',
       words: p?.value ?? '',
+      written: !!p,
     };
     const el = rows.createDiv({
       cls: 'metadata-property',
@@ -125,53 +130,66 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
     const icon = keyEl.createSpan({ cls: 'metadata-property-icon', attr: { role: 'button', tabindex: '0' } });
     const name = keyEl.createEl('input', {
       cls: 'metadata-property-key-input',
-      attr: {
-        type: 'text',
-        list: listId,
-        autocapitalize: 'none',
-        'aria-label': p ? `Name of ${state.key}` : 'New property name',
-        placeholder: 'Property name',
-      },
+      attr: { type: 'text', list: listId, autocapitalize: 'none', placeholder: 'Property name' },
     });
     name.value = state.key;
     const valueEl = el.createDiv({ cls: 'metadata-property-value' });
-    let input = field(valueEl, state.type, state.words, p ? `Value of ${state.key}` : 'Value of new property');
+    const valueLabel = () => (state.written ? `Value of ${state.key}` : 'Value of new property');
+    let input = field(valueEl, state.type, state.words, valueLabel());
     const show = () => {
       setIcon(icon, TYPES.find((t) => t.type === state.type)?.icon ?? 'text');
       icon.setAttribute('aria-label', `Type of ${state.key || 'new property'}: ${titleOf(state.type)}`);
+      name.setAttribute('aria-label', state.written ? `Name of ${state.key}` : 'New property name');
+      input.setAttribute('aria-label', valueLabel());
+      el.setAttribute('data-property-key', state.written ? state.key : '');
       el.setAttribute('data-property-type', state.type);
     };
     const refield = () => {
       valueEl.empty();
-      input = field(valueEl, state.type, state.words, p ? `Value of ${state.key}` : 'Value of new property');
+      input = field(valueEl, state.type, state.words, valueLabel());
       input.addEventListener('change', onValue);
     };
     // a value is written when its field is left; a new property once it has both a name and a value
     const onValue = () => {
       const words = wordsIn(input, state.type, state.words);
-      if (!p && !state.key) return refuse('new property', 'name it first');
-      if (!p && words === '' && state.type !== 'boolean') return;
-      if (write(state.key, [{ key: state.key, type: state.type, words }])) state.words = words;
+      if (!state.written) {
+        if (!state.key) return refuse('new property', 'name it first');
+        if (words === '' && state.type !== 'boolean') return;
+        if (keys.has(state.key)) return refuse(state.key, `it already has a property called ${state.key}`);
+      }
+      if (!write(state.key, [{ key: state.key, type: state.type, words }])) return;
+      state.words = words;
+      if (!state.written) {
+        state.written = true;
+        keys.add(state.key);
+        show();
+      }
     };
     input.addEventListener('change', onValue);
     name.addEventListener('change', () => {
       const next = name.value.trim();
       if (!next || next === state.key) return void (name.value = state.key);
-      if (!p) {
+      if (!state.written) {
         state.key = next;
-        if (state.words !== '' || state.type === 'boolean') onValue();
+        show();
+        onValue();
         return;
       }
-      // renamed: the value goes under the new name, and the old one goes
-      if (
-        write(next, [
-          { key: next, type: state.type, words: state.words },
-          { key: state.key, type: null, words: '' },
-        ])
-      ) {
-        state.key = next;
-        el.setAttribute('data-property-key', next);
-      } else name.value = state.key;
+      // renamed in place: only the name changes, its value kept exactly as written
+      const r = keys.has(next)
+        ? ({ ok: false, reason: `it already has a property called ${next}` } as const)
+        : renameProperty(o.text(), o.graph, o.inBlock(), state.key, next);
+      if (!r.ok) {
+        refuse(state.key, r.reason);
+        name.value = state.key;
+        return;
+      }
+      alert.hidden = true;
+      o.replace(r.text);
+      keys.delete(state.key);
+      keys.add(next);
+      state.key = next;
+      show();
     });
     const menu = () => {
       const m = new Menu();
@@ -184,7 +202,7 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
             .onClick(() => {
               if (t.type === state.type) return;
               const words = t.type === 'boolean' ? state.words : wordsIn(input, state.type, state.words);
-              if (p && !write(state.key, [{ key: state.key, type: t.type, words }])) return;
+              if (state.written && !write(state.key, [{ key: state.key, type: t.type, words }])) return;
               state.type = t.type;
               state.words = words;
               show();
@@ -212,7 +230,9 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
           .setIcon('trash-2')
           .setWarning(true)
           .onClick(() => {
-            if (!p || write(state.key, [{ key: state.key, type: null, words: '' }])) el.remove();
+            if (state.written && !write(state.key, [{ key: state.key, type: null, words: '' }])) return;
+            keys.delete(state.key);
+            el.remove();
           }),
       );
       const r = icon.getBoundingClientRect();

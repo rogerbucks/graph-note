@@ -4,7 +4,15 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
-import { parseValue, setProperty, propertyNames, propertiesOf, spanOf, linkInBlock } from '../src/inspector.ts';
+import {
+  parseValue,
+  setProperty,
+  renameProperty,
+  propertyNames,
+  propertiesOf,
+  spanOf,
+  linkInBlock,
+} from '../src/inspector.ts';
 
 const BLOCK = `// graph: reader
 (q:Question {title: 'Which device?'}),
@@ -182,5 +190,46 @@ describe('where an item is written in the block', () => {
     assert.equal(linkInBlock(r, 'reader', 1, BLOCK), 1);
     assert.equal(linkInBlock(r, 'reader', 1, '// graph: reader\n(large)-[:CITES]->(notes)'), 0);
     assert.equal(linkInBlock(r, 'reader', 0, '// graph: reader\n(x:T)'), -1);
+  });
+});
+
+describe('renaming a property', () => {
+  test('only the name changes: the value is kept exactly as written', () => {
+    const text = BLOCK.replace('price: 300', 'price: 1.50');
+    assert.equal(
+      renameProperty(text, 'reader', { thing: 'large' }, 'price', 'cost').text,
+      text.replace('price: 1.50', 'cost: 1.50'),
+    );
+    assert.equal(
+      renameProperty(BLOCK, 'reader', { link: 1 }, 'where', 'page').text,
+      BLOCK.replace("where: 'day 2'", "page: 'day 2'"),
+    );
+  });
+
+  test('a name already used on the thing is refused: renaming onto it would lose its value', () => {
+    const r = renameProperty(BLOCK, 'reader', { thing: 'large' }, 'price', 'name');
+    assert.equal(r.ok, false);
+    assert.match(r.reason, /already has a property called name/);
+  });
+
+  test('a property not in the thing’s map here is refused, saying where it is', () => {
+    assert.match(
+      renameProperty(BLOCK, 'reader', { thing: 'large' }, 'colour', 'hue').reason,
+      /not written in its pattern here/,
+    );
+  });
+
+  test('the id cannot be renamed, nor anything renamed to id', () => {
+    assert.match(renameProperty(BLOCK, 'reader', { thing: 'large' }, 'id', 'x').reason, /name/);
+    assert.match(renameProperty(BLOCK, 'reader', { thing: 'large' }, 'price', 'id').reason, /name/);
+  });
+});
+
+describe('removing a property', () => {
+  test('one set elsewhere — by SET, or in another block — is refused, not reported as removed', () => {
+    const text = `${BLOCK}\nSET large.status = 'bought'`;
+    const r = setProperty(text, 'reader', { thing: 'large' }, 'status', null);
+    assert.equal(r.ok, false);
+    assert.match(r.reason, /not written in its pattern here/);
   });
 });

@@ -146,7 +146,7 @@ describe('naming conventions', () => {
       .map((f) => basename(f, '.py'));
     for (const f of walk(`${PYTHON}/tests`).filter((x) => /test_\w+\.py$/.test(x)))
       if (!named(pyMods, basename(f, '.py').slice(5)) && !spanning.has(f)) loose.push(f);
-    for (const f of walk('test').filter((x) => x.endsWith('.test.js'))) if (!spanning.has(f)) loose.push(f);
+    for (const f of walk('test').filter((x) => /\.test\.(js|mjs)$/.test(x))) if (!spanning.has(f)) loose.push(f);
     assert.deepEqual(loose, []);
     for (const f of spanning) assert.ok(exists(f), `${f} is listed but missing`);
   });
@@ -194,7 +194,7 @@ describe('Obsidian’s guidelines, beyond the linter', () => {
     const css = read('styles.css').replace(/\/\*[\s\S]*?\*\//g, '');
     assert.doesNotMatch(css, /#[0-9a-f]{3,8}\b/i, 'no hex colours');
     assert.doesNotMatch(css, /\b(rgba?|hsla?)\(\s*\d/, 'no fixed rgb or hsl');
-    for (const [, sel] of css.matchAll(/(?:^|})\s*([^{}@]+?)\s*\{/g)) {
+    for (const [, sel] of css.matchAll(/(?:^|[{};])\s*([^{}@;]+?)\s*\{/gm)) {
       for (const s of sel.split(/,(?![^(]*\))/))
         if (!s.includes('@') && !/^\d|^from$|^to$/.test(s.trim()))
           assert.match(s, /\.(graph-note\b|gql-)/, `selector ${s.trim()}`);
@@ -210,9 +210,13 @@ describe('Obsidian’s guidelines, beyond the linter', () => {
 
   test('every listener on the app, window or document is registered, so it goes when the plugin does', () => {
     for (const { f, text } of pluginSource()) {
-      assert.doesNotMatch(text, /\b(window|document|activeWindow|activeDocument)\.addEventListener/, f);
-      for (const m of text.matchAll(/this\.app\.(workspace|vault|metadataCache)\.on\(/g))
-        assert.match(text.slice(Math.max(0, (m.index ?? 0) - 30), m.index), /registerEvent\(\s*$/, `${f}: ${m[0]}`);
+      assert.doesNotMatch(text, /\b(window|document|activeWindow|activeDocument)(\.body)?\.addEventListener/, f);
+      for (const m of text.matchAll(/\.app\.(workspace|vault|metadataCache)\.on\(/g))
+        assert.match(
+          text.slice(Math.max(0, (m.index ?? 0) - 30), m.index),
+          /registerEvent\(\s*[\w.]*$/,
+          `${f}: ${m[0]}`,
+        );
     }
   });
 
