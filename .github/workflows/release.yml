@@ -29,8 +29,10 @@ jobs:
       - run: npm run build
       - name: The tag matches the manifest version
         run: test "$GITHUB_REF_NAME" = "$(node -p "require('./manifest.json').version")"
+      - name: Bundle the core's layout source into one file, for the vault's layout parity check
+        run: npm run build:layout
       - name: Archive the graph-spec libraries from the tagged commit, for the vault to vendor
-        run: git archive --format=tar.gz -o "graph-spec-libraries-$GITHUB_REF_NAME.tar.gz" HEAD LICENSE THIRD_PARTY_NOTICES.md packages/graph-spec/package.json packages/graph-spec/src packages/graph-spec/bin python/graph_spec/pyproject.toml python/graph_spec/uv.lock python/graph_spec/src
+        run: git archive --format=tar.gz -o "graph-spec-libraries-$GITHUB_REF_NAME.tar.gz" --prefix=packages/core/dist/ --add-file=packages/core/dist/layout-source-node.cjs --prefix= HEAD LICENSE THIRD_PARTY_NOTICES.md packages/graph-spec/package.json packages/graph-spec/src packages/graph-spec/bin python/graph_spec/pyproject.toml python/graph_spec/uv.lock python/graph_spec/src
       - name: Checksums for every asset
         run: sha256sum main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$GITHUB_REF_NAME.tar.gz" > SHA256SUMS
       # GitHub keeps attestations only for public repositories owned by a person; while private, SHA256SUMS stands in.

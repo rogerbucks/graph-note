@@ -16,7 +16,8 @@
     "dev": "npm run dev --workspace packages/obsidian",
     "typecheck": "tsc -p packages/core --noEmit && tsc -p packages/obsidian --noEmit",
     "lint": "eslint . --max-warnings 0",
-    "test": "node --test"
+    "test": "node --test",
+    "build:layout": "node packages/core/esbuild.layout.mjs"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

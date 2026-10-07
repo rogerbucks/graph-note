@@ -260,6 +260,10 @@ describe('GitHub Actions', () => {
     for (const part of ['LICENSE', 'packages/graph-spec/src', 'packages/graph-spec/bin', 'python/graph_spec/src', 'python/graph_spec/pyproject.toml', 'python/graph_spec/uv.lock']) {
       assert.ok(archive[0].includes(part), `the archive holds ${part}`);
     }
+    // the core's layout source, bundled into one file, for the vault's layout parity check (spec §12)
+    assert.match(archive[0], /--prefix=packages\/core\/dist\/ --add-file=packages\/core\/dist\/layout-source-node\.cjs --prefix= /, 'the archive holds the bundled layout source');
+    const built = runCommands(rel).findIndex((r) => /npm run build:layout/.test(r));
+    assert.ok(built >= 0 && built < runCommands(rel).findIndex((r) => /git archive/.test(r)), 'the layout source is bundled before the archive is made');
     const attest = rel.slice(rel.indexOf('actions/attest-build-provenance'));
     assert.match(attest, /graph-spec-libraries-\*\.tar\.gz/, 'the archive has a provenance attestation');
     assert.match(runCommands(rel).find((r) => /gh release create/.test(r)), /graph-spec-libraries-\$GITHUB_REF_NAME\.tar\.gz/, 'the archive is attached to the release');
