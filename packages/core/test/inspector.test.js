@@ -4,7 +4,15 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
-import { parseValue, setProperty, propertyNames, propertiesOf, spanOf, linkInBlock } from '../src/inspector.ts';
+import {
+  parseValue,
+  setProperty,
+  renameProperty,
+  propertyNames,
+  propertiesOf,
+  spanOf,
+  linkInBlock,
+} from '../src/inspector.ts';
 
 const BLOCK = `// graph: reader
 (q:Question {title: 'Which device?'}),
@@ -19,7 +27,10 @@ describe('values, checked against their type before they are written', () => {
     assert.deepEqual(parseValue('text', "it's"), { ok: true, gql: "'it\\'s'" });
     assert.deepEqual(parseValue('number', '12.5'), { ok: true, gql: '12.5' });
     assert.deepEqual(parseValue('date', '2026-10-07'), { ok: true, gql: "DATE '2026-10-07'" });
-    assert.deepEqual(parseValue('datetime', '2026-10-07T21:30:00+10:00'), { ok: true, gql: "DATETIME '2026-10-07T21:30:00+10:00'" });
+    assert.deepEqual(parseValue('datetime', '2026-10-07T21:30:00+10:00'), {
+      ok: true,
+      gql: "DATETIME '2026-10-07T21:30:00+10:00'",
+    });
     assert.deepEqual(parseValue('boolean', 'true'), { ok: true, gql: 'TRUE' });
   });
 
@@ -45,7 +56,9 @@ describe('every property of a thing or a link', () => {
   });
 
   test('a link’s properties, by its place among the graph’s links', () => {
-    assert.deepEqual(propertiesOf(readNote([BLOCK]), 'reader', { link: 1 }), [{ key: 'where', value: 'day 2', type: 'text' }]);
+    assert.deepEqual(propertiesOf(readNote([BLOCK]), 'reader', { link: 1 }), [
+      { key: 'where', value: 'day 2', type: 'text' },
+    ]);
   });
 });
 
@@ -56,19 +69,42 @@ describe('edits are text, in the block where the thing is written', () => {
   });
 
   test('adding a property appends it to the thing’s map, or gives the thing a map', () => {
-    assert.equal(setProperty(BLOCK, 'reader', { thing: 'large' }, 'colour', "'grey'").text, BLOCK.replace("ordered: DATE '2026-10-01'}", "ordered: DATE '2026-10-01', colour: 'grey'}"));
-    assert.equal(setProperty(BLOCK.replace("(small:Option {name: 'Small reader'})", '(small:Option)'), 'reader', { thing: 'small' }, 'price', '99').text,
-      BLOCK.replace("(small:Option {name: 'Small reader'})", '(small:Option {price: 99})'));
+    assert.equal(
+      setProperty(BLOCK, 'reader', { thing: 'large' }, 'colour', "'grey'").text,
+      BLOCK.replace("ordered: DATE '2026-10-01'}", "ordered: DATE '2026-10-01', colour: 'grey'}"),
+    );
+    assert.equal(
+      setProperty(
+        BLOCK.replace("(small:Option {name: 'Small reader'})", '(small:Option)'),
+        'reader',
+        { thing: 'small' },
+        'price',
+        '99',
+      ).text,
+      BLOCK.replace("(small:Option {name: 'Small reader'})", '(small:Option {price: 99})'),
+    );
   });
 
   test('removing a property takes it out of the map, and an emptied map with it', () => {
-    assert.equal(setProperty(BLOCK, 'reader', { thing: 'large' }, 'price', null).text, BLOCK.replace('price: 300, ', ''));
-    assert.equal(setProperty(BLOCK, 'reader', { thing: 'small' }, 'name', null).text, BLOCK.replace("(small:Option {name: 'Small reader'})", '(small:Option)'));
+    assert.equal(
+      setProperty(BLOCK, 'reader', { thing: 'large' }, 'price', null).text,
+      BLOCK.replace('price: 300, ', ''),
+    );
+    assert.equal(
+      setProperty(BLOCK, 'reader', { thing: 'small' }, 'name', null).text,
+      BLOCK.replace("(small:Option {name: 'Small reader'})", '(small:Option)'),
+    );
   });
 
   test('a link’s properties are edited in its own brackets', () => {
-    assert.equal(setProperty(BLOCK, 'reader', { link: 1 }, 'where', "'day 3'").text, BLOCK.replace("where: 'day 2'", "where: 'day 3'"));
-    assert.equal(setProperty(BLOCK, 'reader', { link: 0 }, 'weight', '2').text, BLOCK.replace('(large)-[:ANSWERS]->(q)', '(large)-[:ANSWERS {weight: 2}]->(q)'));
+    assert.equal(
+      setProperty(BLOCK, 'reader', { link: 1 }, 'where', "'day 3'").text,
+      BLOCK.replace("where: 'day 2'", "where: 'day 3'"),
+    );
+    assert.equal(
+      setProperty(BLOCK, 'reader', { link: 0 }, 'weight', '2').text,
+      BLOCK.replace('(large)-[:ANSWERS]->(q)', '(large)-[:ANSWERS {weight: 2}]->(q)'),
+    );
   });
 
   test('a string holding braces, commas or quotes is not mistaken for the map’s own', () => {
@@ -116,10 +152,16 @@ describe('in a locked graph', () => {
 // Selecting in the drawing moves the editor to the item (editor spec §4, select_moves_text; asked for 7 Oct 2026): the text
 // of the pattern that writes a thing, or of a link's own brackets and arrow, in the block being edited.
 describe('where an item is written in the block', () => {
-  const span = (text, t) => { const s = spanOf(text, t); return s && text.slice(s.from, s.to); };
+  const span = (text, t) => {
+    const s = spanOf(text, t);
+    return s && text.slice(s.from, s.to);
+  };
 
   test('a thing: the pattern that writes it, not a later mention of it', () => {
-    assert.equal(span(BLOCK, { thing: 'large' }), "(large:Option {name: 'Large reader', price: 300, ordered: DATE '2026-10-01'})");
+    assert.equal(
+      span(BLOCK, { thing: 'large' }),
+      "(large:Option {name: 'Large reader', price: 300, ordered: DATE '2026-10-01'})",
+    );
     assert.equal(span(BLOCK, { thing: 'q' }), "(q:Question {title: 'Which device?'})");
   });
 
@@ -148,5 +190,46 @@ describe('where an item is written in the block', () => {
     assert.equal(linkInBlock(r, 'reader', 1, BLOCK), 1);
     assert.equal(linkInBlock(r, 'reader', 1, '// graph: reader\n(large)-[:CITES]->(notes)'), 0);
     assert.equal(linkInBlock(r, 'reader', 0, '// graph: reader\n(x:T)'), -1);
+  });
+});
+
+describe('renaming a property', () => {
+  test('only the name changes: the value is kept exactly as written', () => {
+    const text = BLOCK.replace('price: 300', 'price: 1.50');
+    assert.equal(
+      renameProperty(text, 'reader', { thing: 'large' }, 'price', 'cost').text,
+      text.replace('price: 1.50', 'cost: 1.50'),
+    );
+    assert.equal(
+      renameProperty(BLOCK, 'reader', { link: 1 }, 'where', 'page').text,
+      BLOCK.replace("where: 'day 2'", "page: 'day 2'"),
+    );
+  });
+
+  test('a name already used on the thing is refused: renaming onto it would lose its value', () => {
+    const r = renameProperty(BLOCK, 'reader', { thing: 'large' }, 'price', 'name');
+    assert.equal(r.ok, false);
+    assert.match(r.reason, /already has a property called name/);
+  });
+
+  test('a property not in the thing’s map here is refused, saying where it is', () => {
+    assert.match(
+      renameProperty(BLOCK, 'reader', { thing: 'large' }, 'colour', 'hue').reason,
+      /not written in its pattern here/,
+    );
+  });
+
+  test('the id cannot be renamed, nor anything renamed to id', () => {
+    assert.match(renameProperty(BLOCK, 'reader', { thing: 'large' }, 'id', 'x').reason, /name/);
+    assert.match(renameProperty(BLOCK, 'reader', { thing: 'large' }, 'price', 'id').reason, /name/);
+  });
+});
+
+describe('removing a property', () => {
+  test('one set elsewhere — by SET, or in another block — is refused, not reported as removed', () => {
+    const text = `${BLOCK}\nSET large.status = 'bought'`;
+    const r = setProperty(text, 'reader', { thing: 'large' }, 'status', null);
+    assert.equal(r.ok, false);
+    assert.match(r.reason, /not written in its pattern here/);
   });
 });

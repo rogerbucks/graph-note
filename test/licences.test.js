@@ -50,7 +50,10 @@ describe('the allow-list', () => {
 
 describe('what is bundled into a release', () => {
   test('the bundled packages are found from the lockfile', () => {
-    assert.deepEqual(bundledPackages().map((p) => p.name), ['@viz-js/viz']);
+    assert.deepEqual(
+      bundledPackages().map((p) => p.name),
+      ['@viz-js/viz'],
+    );
   });
 
   test('every bundled package declares an allowed licence', () => {

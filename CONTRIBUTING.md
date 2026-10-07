@@ -1,0 +1,91 @@
+# Contributing
+
+How the code is written here. Every rule a tool can check is checked: by `test/conventions.test.js`, by the linter, or by
+CI. A change that breaks one fails before it is merged.
+
+## How a change is made
+
+- **Spec, then test, then code.** Each behaviour is a requirement in the spec first. Its test is written next and seen
+  to fail, and only then is the code written. A commit message says which tests were seen failing first.
+- **The gate before every commit:** `npm run format:check`, `npm run lint`, `npm run typecheck` and `npm test`, plus
+  `ruff check` and `ruff format --check` when the Python library changed. CI runs them all again.
+- **A large or risky change goes through a pull request**, and is merged only once CI passes on it. That means one that
+  touches many files, changes a library both languages share, or changes the build, CI or dependencies. The biggest are
+  reviewed before merging. A small, contained change may be committed straight to `main` once the gate passes.
+- **UK spelling** in code, comments, messages and the interface.
+
+## Obsidian’s guidelines
+
+The plugin store's own linter (`eslint-plugin-obsidianmd`, run by `npm run lint` with no warnings allowed) checks most
+of Obsidian's rules, sentence case in the interface among them. These are the guidelines it does not check:
+
+- **Styles use the theme variables**, such as `var(--text-normal)` or `var(--color-orange)`, never a fixed colour. Every
+  selector in `styles.css` is scoped by one of the plugin's own classes, `graph-note-*` or `gql-*`.
+- **No inline styles and no HTML strings.** Classes from `styles.css`, `setCssProps` for values that change, and
+  Obsidian's DOM helpers (`createEl`, `createDiv`), never `innerHTML`.
+- **Every listener is registered.** Listeners on the app, the workspace, the window or the document go through
+  `registerEvent` or `registerDomEvent`, so they go when the plugin does. A listener on an element the plugin made goes
+  with the element.
+- **Every timer is registered or cleared.** Intervals go through `registerInterval`. A timeout kept on a component is
+  cleared with `clearTimeout` in its `onunload`. Timers are the window's (`window.setTimeout`), as the linter asks.
+- **The vault changes only through its API.** Never the file system or the adapter. A note is changed with
+  `vault.process`, so the change is made atomically against the note as it is now.
+- **The app is `this.app`**, never the global `app`.
+- **No network requests.** The one future exception is spec §13's: sending to an AI or a database the user has set up,
+  only when the user sends or imports.
+
+## Code style
+
+- **One formatter for each language.** Prettier for JavaScript, TypeScript, CSS, JSON and YAML (`.prettierrc.json`:
+  120 characters, single quotes). Ruff for Python. Run `npx prettier --write .` and, in `python/graph_spec`,
+  `uv run --locked ruff format`. CI runs `npm run format:check` and `ruff format --check`.
+- **TypeScript is strict** in every package (`"strict": true`). The core is written in erasable TypeScript only, so
+  Node runs its tests with no build.
+- **The Python library follows PEP 8**, checked by `ruff check` (rules E, W, F and N, with lines up to 99 characters,
+  the most PEP 8 allows by agreement). A `# noqa` is allowed only with its reason on the same line.
+- **Tools are pinned exactly**, carry a licence on the allow-list, run no install scripts, and are taken only once a
+  release is at least 7 days old.
+
+## Naming
+
+- **Files:** kebab-case for JavaScript and TypeScript (`block-editor.ts`), snake_case for Python (`graph_svg.py`).
+- **Types, interfaces and classes:** PascalCase (`GraphView`, `NoteReading`).
+- **Functions, methods, variables and parameters:** camelCase (`readNote`, `linkInBlock`). A parameter that is not used
+  starts with `_`.
+- **Constants:** UPPER_SNAKE (`WRITE_AFTER_MS`), at module level only. Inside a function every name is camelCase.
+- **Python:** snake_case for functions, variables and modules; PascalCase for classes; UPPER_SNAKE for constants.
+- **Tests are named after their file:** `zoom.ts` is tested by `zoom.test.js`, and `graph_svg.py` by
+  `test_graph_svg.py`. A name may add the aspect tested after a hyphen (`layout-parity.test.js` tests `layout.ts`). A
+  test of behaviour that spans several modules is named after its subject and listed below.
+
+## Layout
+
+- **Each package keeps its code in `src/` and its tests in `test/`.** The Python library uses `src/` and `tests/`, as
+  Python's tools expect. Tools that run from the command line go in `bin/`; the browser harness in `harness/`.
+- **One module, one purpose.** Each module opens with a comment saying what it is for, and which part of the spec.
+- **The public interface is documented where it is declared:** every export has its own comment, directly above it.
+- **The core is host-free:** it imports no Obsidian, editor or Node module, so it runs on a phone and, later, in VS Code.
+
+## Tests that span modules
+
+These test behaviour across modules, or the repository itself, so they are named after their subject:
+
+- `packages/core/test/abuse.test.js` — no sequence of edits or text crashes the viewer (spec §12).
+- `packages/core/test/edits.test.js` — every edit from the pane round-trips; locking writes a schema the checks pass.
+- `packages/core/test/imports.test.js` — the core imports no host.
+- `packages/obsidian/test/accessibility.test.js` — contrast in both themes, and a keyboard path for every action.
+- `packages/obsidian/test/build.test.mjs` — the build writes the files the plugin is installed from.
+- `packages/obsidian/test/inline.test.js` — editing in place in the drawing's card, and the inspector.
+- `packages/graph-spec/test/characterisation.test.mjs` — the library gives the answers recorded before it moved here.
+- `packages/graph-spec/test/commas.test.mjs` — both readers read a missing comma the same way.
+- `packages/graph-spec/test/layout.test.mjs` — the layout source is byte-identical to the Python library's.
+- `packages/graph-spec/test/lint-parity.test.mjs` — the JavaScript dialect linter matches the Python one.
+- `python/graph_spec/tests/test_layout_source.py` — the Graphviz source is the one written before the move.
+- `python/graph_spec/tests/test_licences.py` — every Python package carries an allowed licence.
+- `python/graph_spec/tests/test_parity.py` — the Python library gives the JavaScript library's answers.
+- `python/graph_spec/tests/test_settings.py` — what a host sets after importing the library.
+- `test/classification.test.js` — the content check refuses confidential or personal files.
+- `test/conventions.test.js` — the conventions on this page.
+- `test/licences.test.js` — licences through the whole build chain.
+- `test/offline.test.js` — the bundled engine makes no network request.
+- `test/policy.test.js` — the plugin-store files, supply-chain pins and least-privilege CI.

@@ -18,7 +18,7 @@ The plugin makes no network requests. A later version will be able to send conte
 
 ## Developing
 
-Requires Node 24 or later.
+Requires Node 24 or later. How the code is written — the conventions, and how each is checked — is in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ```sh
 npm ci

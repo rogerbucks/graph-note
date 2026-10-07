@@ -6,15 +6,23 @@ import assert from 'node:assert/strict';
 import { replaceBlock, History } from '../src/store.ts';
 import { gqlBlocks } from '../src/drawing.ts';
 
-const NOTE = '# A note\n\nIntro.\n\n```gql\n// graph: g\n(a:T)\n```\n\nMiddle.\n\n```gql\n// graph: h\n(b:T)\n```\nEnd, with no newline';
-const refOf = (note, n) => { const b = gqlBlocks(note)[n]; return { line: b.line - 1, text: b.text }; };
+const NOTE =
+  '# A note\n\nIntro.\n\n```gql\n// graph: g\n(a:T)\n```\n\nMiddle.\n\n```gql\n// graph: h\n(b:T)\n```\nEnd, with no newline';
+const refOf = (note, n) => {
+  const b = gqlBlocks(note)[n];
+  return { line: b.line - 1, text: b.text };
+};
 
 describe('writing a block', () => {
   test('only the block’s own lines change; every other byte is kept', () => {
     const r = replaceBlock(NOTE, refOf(NOTE, 0), '// graph: g\n(a:T),\n(c:T)');
     assert.equal(r.ok, true);
     assert.equal(r.note, NOTE.replace('// graph: g\n(a:T)\n```', '// graph: g\n(a:T),\n(c:T)\n```'));
-    assert.deepEqual(r.ref, { line: 4, text: '// graph: g\n(a:T),\n(c:T)' }, 'and the pane now holds the block as written');
+    assert.deepEqual(
+      r.ref,
+      { line: 4, text: '// graph: g\n(a:T),\n(c:T)' },
+      'and the pane now holds the block as written',
+    );
   });
 
   test('Windows line endings and a missing final newline are kept as they were', () => {
@@ -69,14 +77,20 @@ describe('no blind overwrite', () => {
 describe('undo', () => {
   test('every write can be undone, back to the original bytes, and redone', () => {
     const h = new History();
-    let note = NOTE, ref = refOf(NOTE, 0);
+    let note = NOTE,
+      ref = refOf(NOTE, 0);
     for (const text of ['// graph: g\n(a:T),\n(c:T)', '// graph: g\n(a:T),\n(c:T),\n(d:T)']) {
       const r = replaceBlock(note, ref, text);
       h.record(ref.text, r.ref.text);
-      note = r.note; ref = r.ref;
+      note = r.note;
+      ref = r.ref;
     }
     assert.ok(h.canUndo());
-    for (let step; (step = h.undo());) { const r = replaceBlock(note, ref, step); note = r.note; ref = r.ref; }
+    for (let step; (step = h.undo());) {
+      const r = replaceBlock(note, ref, step);
+      note = r.note;
+      ref = r.ref;
+    }
     assert.equal(note, NOTE);
     assert.equal(h.canUndo(), false);
     const redo = h.redo();
@@ -85,7 +99,8 @@ describe('undo', () => {
 
   test('a new write after undoing drops what could have been redone', () => {
     const h = new History();
-    h.record('a', 'b'); h.record('b', 'c');
+    h.record('a', 'b');
+    h.record('b', 'c');
     h.undo();
     h.record('b', 'x');
     assert.equal(h.redo(), null);

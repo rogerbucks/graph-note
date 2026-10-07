@@ -3,6 +3,7 @@
 import { Notice, setIcon } from 'obsidian';
 import { tokenize } from '@graph-note/core';
 
+/** A gql block that is not a graph, such as a query, shown as coloured code with a copy button. */
 export function renderCode(parent: HTMLElement, source: string): HTMLElement {
   const pre = parent.createEl('pre', { cls: 'language-gql graph-note-code' });
   const code = pre.createEl('code', { cls: 'language-gql is-loaded' });

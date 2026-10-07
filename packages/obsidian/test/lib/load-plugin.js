@@ -17,19 +17,30 @@ export function build() {
 
 /** Loads main.js — CommonJS, as Obsidian loads it — with the stand-ins; returns the plugin, the stand-ins' record, the document and the app. */
 export async function load(options = {}) {
-  const doc = fakeDocument(options.width ?? 700), uninstall = installGlobals(doc);
-  const state = { taken: options.taken, mobile: options.mobile, files: new Map(Object.entries(options.files ?? {})), data: options.data ?? null };
+  const doc = fakeDocument(options.width ?? 700),
+    uninstall = installGlobals(doc);
+  const state = {
+    taken: options.taken,
+    mobile: options.mobile,
+    files: new Map(Object.entries(options.files ?? {})),
+    data: options.data ?? null,
+  };
   const obsidian = fakeObsidian(state);
-  const Module = require('node:module'), real = Module._load, file = `${root}main.js`;
+  const Module = require('node:module'),
+    real = Module._load,
+    file = `${root}main.js`;
   const cm = fakeCodeMirror(state);
-  Module._load = (req, ...rest) => (req === 'obsidian' ? obsidian : cm[req] ?? real(req, ...rest));
+  Module._load = (req, ...rest) => (req === 'obsidian' ? obsidian : (cm[req] ?? real(req, ...rest)));
   let Plugin;
   try {
     const m = new Module(file);
-    m.filename = file; m.paths = Module._nodeModulePaths(root);
+    m.filename = file;
+    m.paths = Module._nodeModulePaths(root);
     m._compile(readFileSync(file, 'utf8'), file);
     Plugin = m.exports.default;
-  } finally { Module._load = real; }
+  } finally {
+    Module._load = real;
+  }
   const plugin = new Plugin(obsidian.app, { id: 'graph-note' });
   if (options.engine) plugin.loadEngine = options.engine;
   await plugin.onload();
@@ -41,5 +52,8 @@ export const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 /** Waits until `ready()` is true, or fails after `ms`: for what the engine draws, which takes as long as it takes to start. */
 export async function until(ready, ms = 3000) {
   const t0 = Date.now();
-  while (!ready()) { if (Date.now() - t0 > ms) throw new Error('timed out waiting'); await wait(10); }
+  while (!ready()) {
+    if (Date.now() - t0 > ms) throw new Error('timed out waiting');
+    await wait(10);
+  }
 }

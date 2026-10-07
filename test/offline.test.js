@@ -7,17 +7,28 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 const attempts = [];
-const trap = (kind) => class { constructor() { attempts.push(kind); throw new Error(`${kind} refused`); } };
+const trap = (kind) =>
+  class {
+    constructor() {
+      attempts.push(kind);
+      throw new Error(`${kind} refused`);
+    }
+  };
 
 test('the Graphviz engine starts and draws without reaching for the network', async () => {
   const saved = { fetch: globalThis.fetch, XMLHttpRequest: globalThis.XMLHttpRequest, WebSocket: globalThis.WebSocket };
-  globalThis.fetch = (url) => { attempts.push(`fetch ${url}`); return Promise.reject(new Error('fetch refused')); };
+  globalThis.fetch = (url) => {
+    attempts.push(`fetch ${url}`);
+    return Promise.reject(new Error('fetch refused'));
+  };
   globalThis.XMLHttpRequest = trap('XMLHttpRequest');
   globalThis.WebSocket = trap('WebSocket');
   try {
     const { instance } = await import('@viz-js/viz');
     const viz = await instance();
-    const svg = viz.renderString('digraph { a -> b [label="answers"]; c -> a; subgraph cluster_x { d; e } }', { format: 'svg' });
+    const svg = viz.renderString('digraph { a -> b [label="answers"]; c -> a; subgraph cluster_x { d; e } }', {
+      format: 'svg',
+    });
     assert.match(svg, /<svg/);
     for (const format of ['svg', 'dot', 'json', 'plain']) viz.renderString('digraph { x -> y }', { format });
   } finally {
@@ -29,8 +40,15 @@ test('the Graphviz engine starts and draws without reaching for the network', as
 test('the trap records an attempt', async () => {
   const before = attempts.length;
   const saved = globalThis.fetch;
-  globalThis.fetch = (url) => { attempts.push(`fetch ${url}`); return Promise.reject(new Error('fetch refused')); };
-  try { await globalThis.fetch('https://example.com/engine.wasm').catch(() => {}); } finally { globalThis.fetch = saved; }
+  globalThis.fetch = (url) => {
+    attempts.push(`fetch ${url}`);
+    return Promise.reject(new Error('fetch refused'));
+  };
+  try {
+    await globalThis.fetch('https://example.com/engine.wasm').catch(() => {});
+  } finally {
+    globalThis.fetch = saved;
+  }
   assert.equal(attempts.length, before + 1);
   attempts.length = before;
 });

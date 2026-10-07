@@ -22,6 +22,7 @@ interface Saved {
   drafts?: Drafts;
 }
 
+/** The plugin: draws each graph block, opens the editors, and keeps the drafts and the shared schemas. */
 export default class GraphNotePlugin extends Plugin {
   private engine: Promise<Engine> | null = null;
   private saved: Saved = {};
@@ -33,11 +34,17 @@ export default class GraphNotePlugin extends Plugin {
     this.registerView(PANE, (leaf) => new GraphPane(leaf, this));
     this.registerEditorExtension(addCommas);
     try {
-      this.registerMarkdownCodeBlockProcessor('gql', (source: string, el: HTMLElement, ctx: MarkdownPostProcessorContext) => renderBlock(this, source, el, ctx));
+      this.registerMarkdownCodeBlockProcessor(
+        'gql',
+        (source: string, el: HTMLElement, ctx: MarkdownPostProcessorContext) => renderBlock(this, source, el, ctx),
+      );
     } catch (e) {
       // Only one plugin may draw a code block language. Say which setting to change, rather than fail quietly.
       console.error('Graph Note could not take gql blocks', e);
-      new Notice('Another plugin already draws gql blocks, so graphs cannot be drawn. Update or turn off the gql-highlight plugin, then reload Obsidian.', 0);
+      new Notice(
+        'Another plugin already draws gql blocks, so graphs cannot be drawn. Update or turn off the gql-highlight plugin, then reload Obsidian.',
+        0,
+      );
     }
   }
 
@@ -46,12 +53,19 @@ export default class GraphNotePlugin extends Plugin {
     if (!this.schemas) {
       const found = new Map<string, string[]>();
       const read = async (f: TFile) => {
-        const blocks = gqlBlocks(await this.app.vault.cachedRead(f)).map((b) => b.text).filter(isSharedSchema);
-        if (blocks.length) found.set(f.path, blocks); else found.delete(f.path);
+        const blocks = gqlBlocks(await this.app.vault.cachedRead(f))
+          .map((b) => b.text)
+          .filter(isSharedSchema);
+        if (blocks.length) found.set(f.path, blocks);
+        else found.delete(f.path);
       };
       for (const f of this.app.vault.getMarkdownFiles()) await read(f);
       this.schemas = found;
-      this.registerEvent(this.app.vault.on('modify', (f) => { if (f instanceof TFile && f.extension === 'md') void read(f); }));
+      this.registerEvent(
+        this.app.vault.on('modify', (f) => {
+          if (f instanceof TFile && f.extension === 'md') void read(f);
+        }),
+      );
     }
     return [...this.schemas.values()].flat();
   }
@@ -89,7 +103,11 @@ export default class GraphNotePlugin extends Plugin {
     let editor = this.inlineFor(target.path, target.line);
     if (!editor) {
       const e = new BlockEditor(this, 'inline');
-      e.onDone = () => { this.inline.delete(e); e.detach(); this.removeChild(e); };
+      e.onDone = () => {
+        this.inline.delete(e);
+        e.detach();
+        this.removeChild(e);
+      };
       this.inline.add(e);
       this.addChild(e);
       e.mount(slot);

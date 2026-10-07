@@ -17,7 +17,8 @@ export function reverseGuess(reading: string): string {
   if (of) return `has ${of[1]}`;
   const [verb = '', ...rest] = reading.split(' ');
   if (!/s$/.test(verb) || verb.length < 3) return `inverse of ${reading}`;
-  const base = verb.slice(0, -1), done = /e$/.test(base) ? `${base}d` : `${base}ed`;
+  const base = verb.slice(0, -1),
+    done = /e$/.test(base) ? `${base}d` : `${base}ed`;
   return ['is', done, ...rest, 'by'].join(' ');
 }
 
@@ -27,9 +28,19 @@ const q = (s: string) => `'${s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
 export function lockBlock(reading: NoteReading, graph: string, today: string): string {
   const d = reading.graphs.get(graph);
   if (!d) throw new Error(`there is no graph ${graph} to lock`);
-  const header = reading.texts.map((t) => t.split('\n').find((l) => l.trim()) ?? '').find((l) => new RegExp(`^\\s*//\\s*graph:\\s*${graph}(\\s|$)`).test(l))?.trim() ?? `// graph: ${graph}`;
+  const header =
+    reading.texts
+      .map((t) => t.split('\n').find((l) => l.trim()) ?? '')
+      .find((l) => new RegExp(`^\\s*//\\s*graph:\\s*${graph}(\\s|$)`).test(l))
+      ?.trim() ?? `// graph: ${graph}`;
   const taken = new Set([...(reading.whole[graph]?.nodes.keys() ?? []), ...(reading.world[graph]?.nodes.keys() ?? [])]);
-  const id = (want: string) => { let v = want, n = 1; while (taken.has(v)) v = `${want}_${++n}`; taken.add(v); return v; };
+  const id = (want: string) => {
+    let v = want,
+      n = 1;
+    while (taken.has(v)) v = `${want}_${++n}`;
+    taken.add(v);
+    return v;
+  };
   const byCode = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
   const kinds = [...new Set(d.boxes.flatMap((b) => b.kind.split(' · ').filter(Boolean)))].sort(byCode);
   const types = [...new Map(d.links.map((l) => [l.type, l.reading])).entries()].sort((a, b) => byCode(a[0], b[0]));
@@ -40,9 +51,16 @@ export function lockBlock(reading: NoteReading, graph: string, today: string): s
     `(${id(`${graph}_schema`)}:GraphMeta {graph: ${q(graph)}, schema: ${q(`${graph}@1`)}}),`,
     '',
     '// ── Kinds of thing ──',
-    ...kinds.map((k) => `(${id(`kind_${k.toLowerCase()}`)}:Meta:ElementType {name: ${q(k)}, kind: 'node', origin: 'source'}),`),
+    ...kinds.map(
+      (k) => `(${id(`kind_${k.toLowerCase()}`)}:Meta:ElementType {name: ${q(k)}, kind: 'node', origin: 'source'}),`,
+    ),
     '',
     '// ── Relationship types, with their readings both ways ──',
-    ...types.map(([t, r]) => `(${id(`link_${t.toLowerCase()}`)}:Meta:ElementType {name: ${q(t)}, kind: 'edge', origin: 'source', reading: ${q(r)}, reverse_name: ${q(reverseGuess(r))}}),`),
-  ].join('\n').replace(/,$/, '');
+    ...types.map(
+      ([t, r]) =>
+        `(${id(`link_${t.toLowerCase()}`)}:Meta:ElementType {name: ${q(t)}, kind: 'edge', origin: 'source', reading: ${q(r)}, reverse_name: ${q(reverseGuess(r))}}),`,
+    ),
+  ]
+    .join('\n')
+    .replace(/,$/, '');
 }

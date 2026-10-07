@@ -10,7 +10,11 @@ import { cases, changesetCase } from './cases.mjs';
 
 const here = (rel) => fileURLToPath(new URL(rel, import.meta.url));
 const adapter = here('../bin/graph-spec-check-node.js');
-const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const slug = (s) =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
 const answers = JSON.parse(readFileSync(here('./expected.json'), 'utf8'));
 const expected = (name) => answers[slug(name)];
 

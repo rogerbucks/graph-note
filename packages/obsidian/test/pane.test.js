@@ -30,7 +30,12 @@ async function open(options = {}, line = 2) {
   return { ...env, leaf, pane: leaf?.view, el: leaf?.view.contentEl };
 }
 const textarea = (el) => el.querySelector('textarea');
-const type = (el, value, caret = value.length) => { const t = textarea(el); t.value = value; t.setSelectionRange(caret, caret); t.dispatch('input'); };
+const type = (el, value, caret = value.length) => {
+  const t = textarea(el);
+  t.value = value;
+  t.setSelectionRange(caret, caret);
+  t.dispatch('input');
+};
 const labelled = (el, label) => el.querySelectorAll('button').find((b) => b.getAttribute('aria-label') === label);
 const note = (env) => env.state.files.get(PATH);
 
@@ -42,7 +47,9 @@ describe('its own pane, on the block that was tapped', () => {
       assert.equal(env.leaf.how, 'split', 'beside the note');
       assert.equal(env.state.revealed, env.leaf);
       assert.equal(textarea(env.el).value, READER);
-    } finally { env.uninstall(); }
+    } finally {
+      env.uninstall();
+    }
   });
 
   test('opening Edit again reuses the pane, on the new block', async () => {
@@ -51,7 +58,9 @@ describe('its own pane, on the block that was tapped', () => {
       await env.plugin.openEditor({ path: PATH, line: 13, graph: 'other' });
       assert.equal(env.app.workspace.getLeavesOfType('graph-note-pane').length, 1);
       assert.equal(textarea(env.el).value, OTHER);
-    } finally { env.uninstall(); }
+    } finally {
+      env.uninstall();
+    }
   });
 
   test('a note with several graph blocks offers a picker, and choosing one opens it', async () => {
@@ -59,16 +68,25 @@ describe('its own pane, on the block that was tapped', () => {
     try {
       const picker = env.el.querySelector('select');
       assert.equal(picker.getAttribute('aria-label'), 'Graph block');
-      assert.deepEqual(picker.querySelectorAll('option').map((o) => o.textContent), ['reader · line 3', 'other · line 14']);
+      assert.deepEqual(
+        picker.querySelectorAll('option').map((o) => o.textContent),
+        ['reader · line 3', 'other · line 14'],
+      );
       picker.value = '13';
       picker.dispatch('change');
       assert.equal(textarea(env.el).value, OTHER);
-    } finally { env.uninstall(); }
+    } finally {
+      env.uninstall();
+    }
   });
 
   test('a note with one graph block has no picker', async () => {
     const env = await open({ note: fence(READER) }, 0);
-    try { assert.equal(env.el.querySelector('select'), null); } finally { env.uninstall(); }
+    try {
+      assert.equal(env.el.querySelector('select'), null);
+    } finally {
+      env.uninstall();
+    }
   });
 
   test('the pane draws what is typed', async () => {
@@ -79,18 +97,34 @@ describe('its own pane, on the block that was tapped', () => {
       await until(() => env.el.querySelectorAll('g.node').length === 4);
       type(env.el, READER + ',\n(eyes)-[:FAVOURS]->(nowhere)');
       await until(() => !!env.el.querySelectorAll('button').find((b) => b.getAttribute('aria-label') === '1 problem'));
-    } finally { env.uninstall(); }
+    } finally {
+      env.uninstall();
+    }
   });
 });
 
 describe('the text', () => {
-  let env; before(async () => { env = await open(); }); after(() => env.uninstall());
+  let env;
+  before(async () => {
+    env = await open();
+  });
+  after(() => env.uninstall());
 
   test('is coloured with the same tokenizer as gql-highlight', () => {
     const overlay = env.el.querySelector('.graph-note-overlay');
-    assert.equal(overlay.getAttribute('aria-hidden'), 'true', 'the colours are a picture of the text; the text itself is in the field');
-    assert.deepEqual(overlay.querySelectorAll('span.gql-label').map((s) => s.textContent), ['Question', 'Option', 'Reason']);
-    assert.deepEqual(overlay.querySelectorAll('span.gql-edge').map((s) => s.textContent), ['ANSWERS', 'FAVOURS']);
+    assert.equal(
+      overlay.getAttribute('aria-hidden'),
+      'true',
+      'the colours are a picture of the text; the text itself is in the field',
+    );
+    assert.deepEqual(
+      overlay.querySelectorAll('span.gql-label').map((s) => s.textContent),
+      ['Question', 'Option', 'Reason'],
+    );
+    assert.deepEqual(
+      overlay.querySelectorAll('span.gql-edge').map((s) => s.textContent),
+      ['ANSWERS', 'FAVOURS'],
+    );
   });
 
   test('each line is read back in plain English beside it', () => {
@@ -132,7 +166,9 @@ describe('problems, in place', () => {
       assert.equal(textarea(env.el).value, READER + ',\n(eyes)-[:FAVOURS]->(large)');
       await wait(400);
       assert.equal(note(env), NOTE.replace(READER, READER + ',\n(eyes)-[:FAVOURS]->(large)'));
-    } finally { env.uninstall(); }
+    } finally {
+      env.uninstall();
+    }
   });
 
   test('every problem is listed with its line, and each line marked with a sign as well as a colour', async () => {
@@ -144,7 +180,9 @@ describe('problems, in place', () => {
       assert.equal(items.length, 2);
       assert.match(items[0], /^Line 7: /);
       assert.ok(env.el.querySelectorAll('.graph-note-overlay .graph-note-line-sign').length >= 2);
-    } finally { env.uninstall(); }
+    } finally {
+      env.uninstall();
+    }
   });
 });
 
@@ -160,8 +198,13 @@ describe('suggestions while typing', () => {
       chip.click();
       assert.equal(textarea(env.el).value, READER + ',\n(eyes)-[:FAVOURS');
       type(env.el, READER + ',\n(eyes)-[:FAVOURS]->(la');
-      assert.deepEqual(bar.querySelectorAll('button').map((b) => b.getAttribute('aria-label')), ['large — Option: Large reader']);
-    } finally { env.uninstall(); }
+      assert.deepEqual(
+        bar.querySelectorAll('button').map((b) => b.getAttribute('aria-label')),
+        ['large — Option: Large reader'],
+      );
+    } finally {
+      env.uninstall();
+    }
   });
 
   test('Tab takes the first suggestion from the keyboard', async () => {
@@ -171,7 +214,9 @@ describe('suggestions while typing', () => {
       const ev = textarea(env.el).dispatch('keydown', { key: 'Tab' });
       assert.ok(ev.defaultPrevented);
       assert.equal(textarea(env.el).value, READER + ',\n(eyes)-[:FAVOURS]->(question');
-    } finally { env.uninstall(); }
+    } finally {
+      env.uninstall();
+    }
   });
 
   test('with nothing to suggest, the bar is hidden and Tab is left alone', async () => {
@@ -180,7 +225,9 @@ describe('suggestions while typing', () => {
       type(env.el, READER + ",\n(x:Reason {title: 'abc");
       assert.ok(env.el.querySelector('.graph-note-suggestions').hidden);
       assert.equal(textarea(env.el).dispatch('keydown', { key: 'Tab' }).defaultPrevented, false);
-    } finally { env.uninstall(); }
+    } finally {
+      env.uninstall();
+    }
   });
 });
 
@@ -199,7 +246,9 @@ describe('on a phone', () => {
       assert.ok(env.el.querySelector('.graph-note-pane-text').hidden);
       assert.ok(env.el.querySelector('.graph-note-sheet'), 'a bottom sheet');
       assert.ok(env.el.querySelector('.graph-note-sheet .graph-note-pane-problems'));
-    } finally { env.uninstall(); }
+    } finally {
+      env.uninstall();
+    }
   });
 
   test('on a desktop there are no tabs: drawing and text sit together', async () => {
@@ -208,11 +257,16 @@ describe('on a phone', () => {
       assert.equal(env.el.querySelector('[role="tablist"]'), null);
       assert.ok(!env.el.querySelector('.graph-note-pane-drawing').hidden);
       assert.ok(!env.el.querySelector('.graph-note-pane-text').hidden);
-    } finally { env.uninstall(); }
+    } finally {
+      env.uninstall();
+    }
   });
 
   test('every control in the pane is at least 44 points', () => {
-    assert.match(styles, /\.graph-note-pane button,\s*\.graph-note-pane select\s*\{[^}]*min-height:\s*44px;[^}]*min-width:\s*44px;/);
+    assert.match(
+      styles,
+      /\.graph-note-pane button,\s*\.graph-note-pane select\s*\{[^}]*min-height:\s*44px;[^}]*min-width:\s*44px;/,
+    );
   });
 });
 
@@ -225,7 +279,9 @@ describe('writing to the note', () => {
       while (note(env) === NOTE && Date.now() - t0 < 1000) await wait(10);
       assert.ok(Date.now() - t0 <= 350, `${Date.now() - t0} ms`);
       assert.equal(note(env), NOTE.replace(READER, READER + ",\n(price:Reason {title: 'Costs more'})"));
-    } finally { env.uninstall(); }
+    } finally {
+      env.uninstall();
+    }
   });
 
   test('a block changed in the note meanwhile is never overwritten: the pane reloads it and keeps what was typed as a draft', async () => {
@@ -239,21 +295,30 @@ describe('writing to the note', () => {
       assert.equal(textarea(env.el).value, READER + ',\n(theirs:Reason)', 'reloaded');
       const banner = env.el.querySelector('.graph-note-draft');
       assert.match(banner.textContent, /kept as a draft/);
-      assert.deepEqual(Object.values(env.state.data.drafts).map((d) => d.text), [READER + ',\n(mine:Reason)']);
+      assert.deepEqual(
+        Object.values(env.state.data.drafts).map((d) => d.text),
+        [READER + ',\n(mine:Reason)'],
+      );
       labelled(banner, 'Restore draft').click();
       assert.equal(textarea(env.el).value, READER + ',\n(mine:Reason)');
-    } finally { env.uninstall(); }
+    } finally {
+      env.uninstall();
+    }
   });
 
   test('a draft kept from before is offered when the pane opens on its block again', async () => {
-    const env = await open({ data: { drafts: { [`${PATH}#reader`]: { text: READER + ',\n(mine:Reason)', kept: '2026-10-07T22:00:00.000Z' } } } });
+    const env = await open({
+      data: { drafts: { [`${PATH}#reader`]: { text: READER + ',\n(mine:Reason)', kept: '2026-10-07T22:00:00.000Z' } } },
+    });
     try {
       const banner = env.el.querySelector('.graph-note-draft');
       assert.ok(!banner.hidden);
       labelled(banner, 'Discard draft').click();
       assert.deepEqual(env.state.data.drafts, {});
       assert.ok(banner.hidden);
-    } finally { env.uninstall(); }
+    } finally {
+      env.uninstall();
+    }
   });
 
   test('a change to the note under a clean pane reloads it', async () => {
@@ -263,7 +328,9 @@ describe('writing to the note', () => {
       await env.app.vault.modify({ path: PATH }, theirs);
       await wait(20);
       assert.equal(textarea(env.el).value, READER + ',\n(theirs:Reason)');
-    } finally { env.uninstall(); }
+    } finally {
+      env.uninstall();
+    }
   });
 
   test('Undo and Redo take back and put back each change in the note', async () => {
@@ -273,14 +340,19 @@ describe('writing to the note', () => {
       await wait(400);
       type(env.el, READER + ',\n(one:Reason),\n(two:Reason)');
       await wait(400);
-      labelled(env.el, 'Undo').click(); await wait(20);
+      labelled(env.el, 'Undo').click();
+      await wait(20);
       assert.equal(note(env), NOTE.replace(READER, READER + ',\n(one:Reason)'));
-      labelled(env.el, 'Undo').click(); await wait(20);
+      labelled(env.el, 'Undo').click();
+      await wait(20);
       assert.equal(note(env), NOTE);
       assert.equal(textarea(env.el).value, READER);
-      labelled(env.el, 'Redo').click(); await wait(20);
+      labelled(env.el, 'Redo').click();
+      await wait(20);
       assert.equal(note(env), NOTE.replace(READER, READER + ',\n(one:Reason)'));
-    } finally { env.uninstall(); }
+    } finally {
+      env.uninstall();
+    }
   });
 });
 
@@ -292,9 +364,14 @@ describe('Lock the graph', () => {
       assert.ok(lock);
       lock.click();
       await wait(50);
-      assert.match(note(env), /```\n\n```gql\n\/\/ graph: reader\n\/\/ ── The schema: locked \d{4}-\d\d-\d\d from the data above ──/);
+      assert.match(
+        note(env),
+        /```\n\n```gql\n\/\/ graph: reader\n\/\/ ── The schema: locked \d{4}-\d\d-\d\d from the data above ──/,
+      );
       assert.equal(labelled(env.el, 'Lock the graph'), undefined, 'a locked graph is no longer offered it');
-    } finally { env.uninstall(); }
+    } finally {
+      env.uninstall();
+    }
   });
 });
 
@@ -310,13 +387,18 @@ describe('problems announced', () => {
       assert.equal(env.doc.activeElement, textarea(env.el));
       type(env.el, READER + ',\n(eyes)-[:FAVOURS]->(nowhere)\n');
       assert.equal(live.textContent, '', 'the same problem is not announced again');
-    } finally { env.uninstall(); }
+    } finally {
+      env.uninstall();
+    }
   });
 });
 
 describe('shared schemas', () => {
-  const SCHEMA_NOTE = "# Schemas\n\n```gql\n// graph: shared · SCHEMA seeing@1\n(t1:Meta:ElementType {name: 'Thing', kind: 'node'}),\n(t2:Meta:ElementType {name: 'SEES', kind: 'edge', reading: 'can see', reverse_name: 'is seen by'})\n```\n";
-  const USES = fence("// graph: view · schema seeing@1\n(a:Thing {name: 'A'}), (b:Thing {name: 'B'}), (a)-[:SEES]->(b)");
+  const SCHEMA_NOTE =
+    "# Schemas\n\n```gql\n// graph: shared · SCHEMA seeing@1\n(t1:Meta:ElementType {name: 'Thing', kind: 'node'}),\n(t2:Meta:ElementType {name: 'SEES', kind: 'edge', reading: 'can see', reverse_name: 'is seen by'})\n```\n";
+  const USES = fence(
+    "// graph: view · schema seeing@1\n(a:Thing {name: 'A'}), (b:Thing {name: 'B'}), (a)-[:SEES]->(b)",
+  );
 
   test('a graph that names a shared schema reads its links in that schema’s words, in the note and in the pane', async () => {
     const env = await load({ files: { 'Schemas.md': SCHEMA_NOTE, 'View.md': USES } });
@@ -324,12 +406,17 @@ describe('shared schemas', () => {
       const el = env.doc.body.createDiv();
       const lines = USES.split('\n');
       const { fakeContext } = await import('./lib/fake-obsidian.js');
-      await env.state.processors.get('gql')(lines.slice(1, -1).join('\n'), el, { ...fakeContext(USES, 0), sourcePath: 'View.md' });
+      await env.state.processors.get('gql')(lines.slice(1, -1).join('\n'), el, {
+        ...fakeContext(USES, 0),
+        sourcePath: 'View.md',
+      });
       assert.match(el.querySelector('g.edge').textContent, /can see/);
       await env.plugin.openEditor({ path: 'View.md', line: 0, graph: 'view' });
       const pane = env.app.workspace.getLeavesOfType('graph-note-pane')[0].view.contentEl;
       assert.ok(pane.querySelectorAll('.graph-note-readback').some((s) => /A can see B/.test(s.textContent)));
-    } finally { env.uninstall(); }
+    } finally {
+      env.uninstall();
+    }
   });
 
   test('a graph that names no shared schema never reads the vault for one', async () => {
@@ -337,10 +424,15 @@ describe('shared schemas', () => {
     try {
       let reads = 0;
       const read = env.app.vault.cachedRead;
-      env.app.vault.cachedRead = async (f) => { reads++; return read(f); };
+      env.app.vault.cachedRead = async (f) => {
+        reads++;
+        return read(f);
+      };
       await env.plugin.openEditor({ path: PATH, line: 2, graph: 'reader' });
       assert.equal(reads, 0);
-    } finally { env.uninstall(); }
+    } finally {
+      env.uninstall();
+    }
   });
 });
 
@@ -350,36 +442,53 @@ describe('the comma added for you', () => {
     try {
       const t = textarea(env.el);
       const before = READER + '\n';
-      t.value = before; t.setSelectionRange(before.length, before.length); t.dispatch('input');
+      t.value = before;
+      t.setSelectionRange(before.length, before.length);
+      t.dispatch('input');
       type(env.el, before + '(');
       assert.equal(t.value, READER + ',\n(');
       assert.equal(t.selectionStart, t.value.length, 'the caret is still just after the (');
-    } finally { env.uninstall(); }
+    } finally {
+      env.uninstall();
+    }
   });
 
   test('one undo takes the comma back, and only the comma', async () => {
     const env = await open();
     try {
-      const t = textarea(env.el), before = READER + '\n';
-      t.value = before; t.setSelectionRange(before.length, before.length); t.dispatch('input');
+      const t = textarea(env.el),
+        before = READER + '\n';
+      t.value = before;
+      t.setSelectionRange(before.length, before.length);
+      t.dispatch('input');
       type(env.el, before + '(');
       const ev = t.dispatch('keydown', { key: 'z', metaKey: true });
       assert.ok(ev.defaultPrevented);
       assert.equal(t.value, READER + '\n(');
       assert.equal(t.selectionStart, t.value.length);
-      assert.equal(t.dispatch('keydown', { key: 'z', metaKey: true }).defaultPrevented, false, 'the next undo is the platform’s own');
-    } finally { env.uninstall(); }
+      assert.equal(
+        t.dispatch('keydown', { key: 'z', metaKey: true }).defaultPrevented,
+        false,
+        'the next undo is the platform’s own',
+      );
+    } finally {
+      env.uninstall();
+    }
   });
 
   test('a line that is not otherwise valid gets no comma', async () => {
     const env = await open();
     try {
-      const broken = READER + ",\n(x:T {name: })\n";
+      const broken = READER + ',\n(x:T {name: })\n';
       const t = textarea(env.el);
-      t.value = broken; t.setSelectionRange(broken.length, broken.length); t.dispatch('input');
+      t.value = broken;
+      t.setSelectionRange(broken.length, broken.length);
+      t.dispatch('input');
       type(env.el, broken + '(');
       assert.equal(t.value, broken + '(');
-    } finally { env.uninstall(); }
+    } finally {
+      env.uninstall();
+    }
   });
 });
 
@@ -389,7 +498,9 @@ describe('the comma added for you in the note itself', () => {
     const doc = { toString: () => text };
     const view = { state: { doc }, dispatch: (spec) => dispatched.push(spec) };
     return {
-      docChanged: true, state: { doc }, view,
+      docChanged: true,
+      state: { doc },
+      view,
       transactions: [{ isUserEvent: (e) => e === 'input.type' }],
       changes: { iterChanges: (cb) => cb(caret - 1, caret - 1, caret - 1, caret, { toString: () => '(' }) },
     };
@@ -406,19 +517,32 @@ describe('the comma added for you in the note itself', () => {
       await wait(10);
       assert.equal(dispatched.length, 1);
       assert.deepEqual(dispatched[0].changes, { from: note.indexOf('(a:T)') + 5, insert: ',' });
-      assert.deepEqual(dispatched[0].annotations, { userEvent: 'input.comma' }, 'its own step, so one undo takes it back');
-    } finally { env.uninstall(); }
+      assert.deepEqual(
+        dispatched[0].annotations,
+        { userEvent: 'input.comma' },
+        'its own step, so one undo takes it back',
+      );
+    } finally {
+      env.uninstall();
+    }
   });
 
   test('typing ( in prose, in other code, or in a query adds nothing', async () => {
     const env = await load({});
     try {
-      const [listener] = env.state.listeners, dispatched = [];
-      for (const note of ['Text (aside)\n(', '```python\nf(a)\n(\n```', '```gql\n// graph: g · QUERY\nMATCH (a)\n(\n```']) {
+      const [listener] = env.state.listeners,
+        dispatched = [];
+      for (const note of [
+        'Text (aside)\n(',
+        '```python\nf(a)\n(\n```',
+        '```gql\n// graph: g · QUERY\nMATCH (a)\n(\n```',
+      ]) {
         listener(typing(note, note.lastIndexOf('(') + 1, dispatched));
       }
       await wait(10);
       assert.deepEqual(dispatched, []);
-    } finally { env.uninstall(); }
+    } finally {
+      env.uninstall();
+    }
   });
 });

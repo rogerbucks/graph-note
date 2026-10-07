@@ -33,7 +33,14 @@ describe('the areas of a drawing', () => {
   test('each box and each link, by its id, in the drawing’s units', () => {
     const a = hitAreas(SVG);
     assert.deepEqual(a.viewBox, { x: 0, y: 0, width: 166, height: 71 });
-    assert.deepEqual(a.shapes.map((s) => [s.id, s.kind]), [['node1', 'node'], ['node2', 'node'], ['edge1', 'edge']]);
+    assert.deepEqual(
+      a.shapes.map((s) => [s.id, s.kind]),
+      [
+        ['node1', 'node'],
+        ['node2', 'node'],
+        ['edge1', 'edge'],
+      ],
+    );
   });
 
   test('every box and link of a real drawing has an area', async () => {

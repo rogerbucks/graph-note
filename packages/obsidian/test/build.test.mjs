@@ -18,7 +18,10 @@ test('npm run dev rebuilds the plugin on every save', () => {
 
 test('in watch mode the build writes main.js and keeps watching', async (t) => {
   const started = Date.now();
-  const child = spawn(process.execPath, ['esbuild.config.mjs', '--watch'], { cwd: `${root}packages/obsidian`, stdio: 'ignore' });
+  const child = spawn(process.execPath, ['esbuild.config.mjs', '--watch'], {
+    cwd: `${root}packages/obsidian`,
+    stdio: 'ignore',
+  });
   t.after(() => child.kill());
   const main = `${root}main.js`;
   for (let i = 0; i < 100 && !(existsSync(main) && statSync(main).mtimeMs >= started - 1000); i++) await sleep(100);

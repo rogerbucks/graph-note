@@ -11,7 +11,8 @@ import { STYLE } from './layout.ts';
  */
 export function fixed(x: number, digits: number): string {
   const [whole = '0', frac = ''] = Math.abs(x).toFixed(100).replace(/0+$/, '').split('.');
-  const keep = frac.slice(0, digits).padEnd(digits, '0'), rest = frac.slice(digits);
+  const keep = frac.slice(0, digits).padEnd(digits, '0'),
+    rest = frac.slice(digits);
   const last = Number((digits ? keep : whole).slice(-1));
   const up = rest > '5' || (rest === '5' && last % 2 === 1);
   const n = (BigInt(whole + keep) + (up ? 1n : 0n)).toString().padStart(digits + 1, '0');
@@ -24,29 +25,35 @@ const blend = (hue: string, pct: number) => `color-mix(in srgb, var(--color-${hu
 
 /** The placeholder colours of a layout, each with the theme colour that replaces it. */
 function colours(kinds: string[], readings: string[]): Map<string, string> {
-  const S = STYLE, out = new Map<string, string>([['#0000fd', S.text], ['#0000fe', S.muted], ['#0000fc', S.edge], ['#000000', S.edge]]);
-  const kh = GraphLayout.pick(kinds, S.kind_hues, S.kind_colours);
+  const out = new Map<string, string>([
+    ['#0000fd', STYLE.text],
+    ['#0000fe', STYLE.muted],
+    ['#0000fc', STYLE.edge],
+    ['#000000', STYLE.edge],
+  ]);
+  const kh = GraphLayout.pick(kinds, STYLE.kind_hues, STYLE.kind_colours);
   kinds.forEach((k, i) => {
-    out.set(`#0001${hex2(i)}`, `rgba(var(--color-${kh[k]}-rgb), ${S.fill_opacity})`);
-    out.set(`#0002${hex2(i)}`, blend(kh[k] ?? '', S.line_mix));
+    out.set(`#0001${hex2(i)}`, `rgba(var(--color-${kh[k]}-rgb), ${STYLE.fill_opacity})`);
+    out.set(`#0002${hex2(i)}`, blend(kh[k] ?? '', STYLE.line_mix));
   });
-  const eh = GraphLayout.pick(readings, S.edge_hues, S.edge_colours);
+  const eh = GraphLayout.pick(readings, STYLE.edge_hues, STYLE.edge_colours);
   readings.forEach((r, i) => {
-    out.set(`#0003${hex2(i)}`, blend(eh[r] ?? '', S.line_mix));
-    out.set(`#0004${hex2(i)}`, blend(eh[r] ?? '', S.label_mix));
+    out.set(`#0003${hex2(i)}`, blend(eh[r] ?? '', STYLE.line_mix));
+    out.set(`#0004${hex2(i)}`, blend(eh[r] ?? '', STYLE.label_mix));
   });
   return out;
 }
 
 /** The SVG Graphviz drew, with theme colours, the kind captions tracked out, and sized to fit a note — as graph_svg._themed. */
 export function themed(svg: string, kinds: string[], readings: string[]): string {
-  const S = STYLE, colour = colours(kinds, readings);
-  const ls = S.caption_letter_spacing * S.kind_font_size;
+  const colour = colours(kinds, readings);
+  const ls = STYLE.caption_letter_spacing * STYLE.kind_font_size;
   // the kind caption is in capitals: tracked out a little, as capitals need, and kept centred
   svg = svg.replace(/(<text[^>]*fill="#0000fe"[^>]*>)([^<]*)<\/text>/g, (_, open: string, caption: string) => {
     let tag = open;
     const n = [...caption].length;
-    if (tag.includes('text-anchor="start"')) tag = tag.replace(/\sx="([\d.-]+)"/, (_m, x: string) => ` x="${fixed(parseFloat(x) - (n * ls) / 2, 2)}"`);
+    if (tag.includes('text-anchor="start"'))
+      tag = tag.replace(/\sx="([\d.-]+)"/, (_m, x: string) => ` x="${fixed(parseFloat(x) - (n * ls) / 2, 2)}"`);
     return tag.replace('<text ', `<text letter-spacing="${fixed(ls, 2)}" `) + caption + '</text>';
   });
   svg = svg.replace(/<(?:path|polygon|ellipse|polyline|text)\b[^>]*>/g, (tag) => {
@@ -54,17 +61,29 @@ export function themed(svg: string, kinds: string[], readings: string[]): string
     for (const attr of ['fill', 'stroke']) {
       const a = new RegExp(`\\s${attr}="(#[0-9a-f]{6})"`).exec(tag);
       const c = a ? colour.get(a[1] ?? '') : undefined;
-      if (a && c !== undefined) { tag = tag.split(a[0]).join(''); style.push(`${attr}:${c}`); }
+      if (a && c !== undefined) {
+        tag = tag.split(a[0]).join('');
+        style.push(`${attr}:${c}`);
+      }
     }
     return style.length ? tag.replace(' ', ` style="${style.join(';')}" `) : tag;
   });
   svg = svg.replace(/<\?xml[\s\S]*?\?>|<!DOCTYPE[\s\S]*?>|<!--[\s\S]*?-->|<title>[\s\S]*?<\/title>/g, '');
   const m = /<svg width="([\d.]+)pt" height="([\d.]+)pt"/.exec(svg);
-  if (m) svg = svg.replace(m[0], `<svg width="${fixed((parseFloat(m[1] ?? '0') * 4) / 3, 0)}" style="max-width:100%;height:auto;filter:none"`);
+  if (m)
+    svg = svg.replace(
+      m[0],
+      `<svg width="${fixed((parseFloat(m[1] ?? '0') * 4) / 3, 0)}" style="max-width:100%;height:auto;filter:none"`,
+    );
   // an HTML block in Markdown ends at a blank line, and an indented line can read as code — so neither may appear
-  return svg.split(/\r\n|\r|\n/).map((l) => l.trim()).filter((l) => l).join('\n');
+  return svg
+    .split(/\r\n|\r|\n/)
+    .map((l) => l.trim())
+    .filter((l) => l)
+    .join('\n');
 }
 
+/** One laid-out drawing, as choose() weighs it: its direction and size. */
 export interface Laid {
   rankdir: string;
   /** Natural size in CSS pixels. */
@@ -85,7 +104,9 @@ export function sizeOf(svg: string): { width: number; height: number } {
 export function choose<T extends Laid>(laid: T[]): T {
   let best: [number, T] | null = null;
   for (const l of laid) {
-    const fit = Math.min(1.0, STYLE.page_width / l.width) - (l.height > STYLE.max_height_ratio * Math.max(l.width, STYLE.page_width) ? 0.25 : 0);
+    const fit =
+      Math.min(1.0, STYLE.page_width / l.width) -
+      (l.height > STYLE.max_height_ratio * Math.max(l.width, STYLE.page_width) ? 0.25 : 0);
     if (best === null || fit > best[0] + 0.02) best = [fit, l];
   }
   if (!best) throw new Error('nothing was laid out');

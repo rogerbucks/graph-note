@@ -36,6 +36,7 @@ jobs:
           node-version: 24
       - run: npm ci
       - run: npm audit signatures
+      - run: npm run format:check
       - run: npm run lint
 
   python:
@@ -56,4 +57,6 @@ jobs:
           version: 0.12.17
           enable-cache: false
       - run: uv sync --locked
+      - run: uv run --locked ruff check
+      - run: uv run --locked ruff format --check
       - run: uv run --locked python -m unittest discover -s tests

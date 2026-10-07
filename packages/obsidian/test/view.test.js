@@ -21,19 +21,26 @@ before(() => {
 
 /** Loads the built plugin against fresh fakes; returns the plugin, the fakes' record, and the document. */
 async function load(options = {}) {
-  const doc = fakeDocument(options.width ?? 700), uninstall = installGlobals(doc), state = { taken: options.taken, mobile: options.mobile };
+  const doc = fakeDocument(options.width ?? 700),
+    uninstall = installGlobals(doc),
+    state = { taken: options.taken, mobile: options.mobile };
   const obsidian = fakeObsidian(state);
   // main.js is CommonJS, as Obsidian loads it; the repository's own package type would make Node read it as a module
-  const Module = require('node:module'), real = Module._load, file = `${root}main.js`;
+  const Module = require('node:module'),
+    real = Module._load,
+    file = `${root}main.js`;
   const cm = fakeCodeMirror(state);
-  Module._load = (req, ...rest) => (req === 'obsidian' ? obsidian : cm[req] ?? real(req, ...rest));
+  Module._load = (req, ...rest) => (req === 'obsidian' ? obsidian : (cm[req] ?? real(req, ...rest)));
   let Plugin;
   try {
     const m = new Module(file);
-    m.filename = file; m.paths = Module._nodeModulePaths(root);
+    m.filename = file;
+    m.paths = Module._nodeModulePaths(root);
     m._compile(readFileSync(file, 'utf8'), file);
     Plugin = m.exports.default;
-  } finally { Module._load = real; }
+  } finally {
+    Module._load = real;
+  }
   const plugin = new Plugin();
   if (options.engine) plugin.loadEngine = options.engine;
   await plugin.onload();
@@ -51,9 +58,11 @@ const GRAPH = `// graph: reader · SOURCE
 
 /** Runs the gql processor on block `n` of a note, as Obsidian would; resolves when it has drawn. */
 async function show(env, note, n = 0) {
-  const lines = note.split('\n'), fences = lines.flatMap((l, i) => (/^```gql/.test(l) ? [i] : []));
+  const lines = note.split('\n'),
+    fences = lines.flatMap((l, i) => (/^```gql/.test(l) ? [i] : []));
   const fenceLine = fences[n];
-  let end = fenceLine + 1; while (!/^```\s*$/.test(lines[end])) end++;
+  let end = fenceLine + 1;
+  while (!/^```\s*$/.test(lines[end])) end++;
   const source = lines.slice(fenceLine + 1, end).join('\n');
   const el = env.doc.body.createDiv({ cls: 'block-language-gql' });
   const ctx = fakeContext(note, fenceLine);
@@ -65,7 +74,11 @@ const labelled = (el, label) => el.querySelectorAll('button').find((b) => b.getA
 const svgOf = (el) => el.querySelector('svg');
 
 describe('drawn where it is written', () => {
-  let env; before(async () => { env = await load(); }); after(() => env.uninstall());
+  let env;
+  before(async () => {
+    env = await load();
+  });
+  after(() => env.uninstall());
 
   test('the plugin draws gql blocks, in reading view and in Live Preview alike', () => {
     assert.ok(env.state.processors.has('gql'));
@@ -86,8 +99,13 @@ describe('drawn where it is written', () => {
   });
 
   test('a later block draws the graph as built so far', async () => {
-    const note = [fence(GRAPH), 'Then:', fence("// graph: reader · SOURCE\n(price:Reason {title: 'Costs more'}),\n(price)-[:COUNTS_AGAINST]->(large)")].join('\n');
-    const first = await show(env, note, 0), second = await show(env, note, 1);
+    const note = [
+      fence(GRAPH),
+      'Then:',
+      fence("// graph: reader · SOURCE\n(price:Reason {title: 'Costs more'}),\n(price)-[:COUNTS_AGAINST]->(large)"),
+    ].join('\n');
+    const first = await show(env, note, 0),
+      second = await show(env, note, 1);
     assert.equal(first.el.querySelectorAll('g.node').length, 4);
     assert.equal(second.el.querySelectorAll('g.node').length, 5);
   });
@@ -100,13 +118,18 @@ describe('drawn where it is written', () => {
 });
 
 describe('the bar', () => {
-  let env; before(async () => { env = await load(); }); after(() => env.uninstall());
+  let env;
+  before(async () => {
+    env = await load();
+  });
+  after(() => env.uninstall());
 
   test('the drawing carries a problems badge, Fit, zoom out, zoom in, Full screen and Edit', async () => {
     const { el } = await show(env, fence(GRAPH));
     const bar = el.querySelector('.graph-note-bar');
     assert.equal(bar.getAttribute('role'), 'toolbar');
-    for (const label of ['No problems', 'Fit', 'Zoom out', 'Zoom in', 'Full screen', 'Edit here', 'Edit in pane']) assert.ok(labelled(bar, label), label);
+    for (const label of ['No problems', 'Fit', 'Zoom out', 'Zoom in', 'Full screen', 'Edit here', 'Edit in pane'])
+      assert.ok(labelled(bar, label), label);
   });
 
   test('each control says what it is in words and an icon, not by colour', async () => {
@@ -132,15 +155,22 @@ describe('the bar', () => {
     const { el } = await show(env, fence(GRAPH));
     labelled(el, 'Edit in pane').click();
     assert.equal(opened.length, 1);
-    assert.deepEqual({ path: opened[0].path, line: opened[0].line, graph: opened[0].graph }, { path: 'Some note.md', line: 0, graph: 'reader' });
+    assert.deepEqual(
+      { path: opened[0].path, line: opened[0].line, graph: opened[0].graph },
+      { path: 'Some note.md', line: 0, graph: 'reader' },
+    );
   });
 });
 
 describe('a graph with problems is still drawn', () => {
-  let env; before(async () => { env = await load(); }); after(() => env.uninstall());
+  let env;
+  before(async () => {
+    env = await load();
+  });
+  after(() => env.uninstall());
 
   test('what can be read is drawn, and the rest is listed behind the badge', async () => {
-    const note = fence(GRAPH + ",\n(eyes)-[:FAVOURS]->(nowhere),\n(broken:Reason {title: })");
+    const note = fence(GRAPH + ',\n(eyes)-[:FAVOURS]->(nowhere),\n(broken:Reason {title: })');
     const { el } = await show(env, note);
     assert.equal(el.querySelectorAll('g.node').length, 4);
     const badge = labelled(el, '2 problems');
@@ -161,7 +191,10 @@ describe('a graph with problems is still drawn', () => {
     assert.equal(svgOf(el), null);
     assert.match(el.querySelector('code').textContent, /\(a:T \{name: \}\)/);
     assert.match(el.querySelector('.graph-note-problems').textContent, /Line 3/);
-    assert.ok(!el.querySelector('.graph-note-problems').hidden, 'shown at once: there is no drawing to look at instead');
+    assert.ok(
+      !el.querySelector('.graph-note-problems').hidden,
+      'shown at once: there is no drawing to look at instead',
+    );
   });
 
   test('an empty graph opens on a prompt to start with a thing', async () => {
@@ -172,15 +205,25 @@ describe('a graph with problems is still drawn', () => {
 });
 
 describe('code that is not a graph', () => {
-  let env; before(async () => { env = await load(); }); after(() => env.uninstall());
+  let env;
+  before(async () => {
+    env = await load();
+  });
+  after(() => env.uninstall());
 
   test('a query, a schema or an excerpt is shown as coloured code, as gql-highlight shows it', async () => {
     const { el } = await show(env, fence('// graph: reader · QUERY\nMATCH (n:Option) RETURN n.name'));
     assert.equal(svgOf(el), null);
     const code = el.querySelector('code');
     assert.equal(code.textContent, '// graph: reader · QUERY\nMATCH (n:Option) RETURN n.name');
-    assert.deepEqual(code.querySelectorAll('span.gql-kw').map((s) => s.textContent), ['MATCH', 'RETURN']);
-    assert.deepEqual(code.querySelectorAll('span.gql-label').map((s) => s.textContent), ['Option']);
+    assert.deepEqual(
+      code.querySelectorAll('span.gql-kw').map((s) => s.textContent),
+      ['MATCH', 'RETURN'],
+    );
+    assert.deepEqual(
+      code.querySelectorAll('span.gql-label').map((s) => s.textContent),
+      ['Option'],
+    );
   });
 
   test('its copy button copies the code', async () => {
@@ -199,23 +242,35 @@ describe('when something else is wrong, it says so', () => {
       assert.equal(env.state.notices.length, 1);
       assert.match(env.state.notices[0], /gql/);
       assert.match(env.state.notices[0], /gql-highlight/);
-    } finally { env.uninstall(); }
+    } finally {
+      env.uninstall();
+    }
   });
 
   test('if the drawing engine cannot start, the text is shown with a banner, never a blank', async () => {
-    const env = await load({ engine: async () => { throw new Error('no WebAssembly here'); } });
+    const env = await load({
+      engine: async () => {
+        throw new Error('no WebAssembly here');
+      },
+    });
     try {
       const { el } = await show(env, fence(GRAPH));
       assert.equal(svgOf(el), null);
       assert.match(el.querySelector('.graph-note-banner').textContent, /could not start/);
       assert.match(el.querySelector('.graph-note-banner').textContent, /stale/);
       assert.match(el.querySelector('code').textContent, /large_reader|large/);
-    } finally { env.uninstall(); }
+    } finally {
+      env.uninstall();
+    }
   });
 });
 
 describe('zoom in the note', () => {
-  let env; before(async () => { env = await load({ width: 300 }); }); after(() => env.uninstall());
+  let env;
+  before(async () => {
+    env = await load({ width: 300 });
+  });
+  after(() => env.uninstall());
   const widthOf = (el) => Number(svgOf(el).getAttribute('width'));
 
   test('the drawing starts fitted to the note, no wider than it', async () => {
@@ -228,7 +283,8 @@ describe('zoom in the note', () => {
     const fitted = widthOf(el);
     labelled(el, 'Zoom in').click();
     assert.ok(widthOf(el) > fitted);
-    labelled(el, 'Zoom out').click(); labelled(el, 'Zoom out').click();
+    labelled(el, 'Zoom out').click();
+    labelled(el, 'Zoom out').click();
     assert.ok(widthOf(el) < fitted);
     labelled(el, 'Fit').click();
     assert.equal(widthOf(el), fitted);
@@ -237,7 +293,8 @@ describe('zoom in the note', () => {
 
   test('plus, minus and zero work when the drawing has focus', async () => {
     const { el } = await show(env, fence(GRAPH));
-    const vp = el.querySelector('.graph-note-viewport'), fitted = widthOf(el);
+    const vp = el.querySelector('.graph-note-viewport'),
+      fitted = widthOf(el);
     assert.equal(vp.getAttribute('tabindex'), '0', 'the drawing can take focus');
     assert.ok(vp.dispatch('keydown', { key: '+' }).defaultPrevented);
     assert.ok(widthOf(el) > fitted);
@@ -247,7 +304,8 @@ describe('zoom in the note', () => {
 
   test('the wheel alone scrolls the note; with Ctrl or Command it zooms the drawing', async () => {
     const { el } = await show(env, fence(GRAPH));
-    const vp = el.querySelector('.graph-note-viewport'), fitted = widthOf(el);
+    const vp = el.querySelector('.graph-note-viewport'),
+      fitted = widthOf(el);
     assert.equal(vp.dispatch('wheel', { deltaY: -100, clientX: 10, clientY: 10 }).defaultPrevented, false);
     assert.equal(widthOf(el), fitted);
     assert.ok(vp.dispatch('wheel', { deltaY: -100, clientX: 10, clientY: 10, ctrlKey: true }).defaultPrevented);
@@ -258,14 +316,22 @@ describe('zoom in the note', () => {
     const { el } = await show(env, fence(GRAPH));
     const vp = el.querySelector('.graph-note-viewport');
     assert.equal(vp.cssProps['--graph-note-touch'], 'pan-x pan-y');
-    assert.equal(vp.dispatch('pointerdown', { pointerId: 1, pointerType: 'touch', clientX: 50, clientY: 50, button: 0 }).defaultPrevented, false);
+    assert.equal(
+      vp.dispatch('pointerdown', { pointerId: 1, pointerType: 'touch', clientX: 50, clientY: 50, button: 0 })
+        .defaultPrevented,
+      false,
+    );
     labelled(el, 'Zoom in').click();
     assert.equal(vp.cssProps['--graph-note-touch'], 'none', 'once zoomed in, one finger pans');
   });
 });
 
 describe('full screen', () => {
-  let env; before(async () => { env = await load(); }); after(() => env.uninstall());
+  let env;
+  before(async () => {
+    env = await load();
+  });
+  after(() => env.uninstall());
 
   test('Full screen shows the drawing over the whole window, and Escape leaves it', async () => {
     const { el } = await show(env, fence(GRAPH));
@@ -283,25 +349,40 @@ describe('full screen', () => {
     const { el } = await show(env, fence(GRAPH));
     labelled(el, 'Full screen').click();
     const overlay = env.doc.body.querySelector('.graph-note-fullscreen');
-    assert.ok(overlay.querySelector('.graph-note-viewport').dispatch('wheel', { deltaY: -100, clientX: 10, clientY: 10 }).defaultPrevented);
+    assert.ok(
+      overlay.querySelector('.graph-note-viewport').dispatch('wheel', { deltaY: -100, clientX: 10, clientY: 10 })
+        .defaultPrevented,
+    );
     labelled(overlay, 'Close full screen').click();
     assert.equal(env.doc.body.querySelector('.graph-note-fullscreen'), null);
   });
 });
 
 describe('details on demand', () => {
-  let env; before(async () => { env = await load(); }); after(() => env.uninstall());
+  let env;
+  before(async () => {
+    env = await load();
+  });
+  after(() => env.uninstall());
 
   test('tapping a box shows its text, its kind, and its links in and out', async () => {
     const { el } = await show(env, fence(GRAPH));
     const box = el.querySelectorAll('g.node')[1];
     const vp = el.querySelector('.graph-note-viewport');
-    vp.dispatch('pointerdown', { target: box, pointerId: 3, pointerType: 'touch', clientX: 20, clientY: 20, button: 0 });
+    vp.dispatch('pointerdown', {
+      target: box,
+      pointerId: 3,
+      pointerType: 'touch',
+      clientX: 20,
+      clientY: 20,
+      button: 0,
+    });
     vp.dispatch('pointerup', { target: box, pointerId: 3, pointerType: 'touch', clientX: 21, clientY: 20, button: 0 });
     const panel = el.querySelector('.graph-note-details');
     assert.ok(!panel.hidden);
     const text = panel.textContent;
-    for (const s of ['Large reader', 'Option', 'answers → Which device?', 'Easy on the eyes favours this']) assert.ok(text.includes(s), s);
+    for (const s of ['Large reader', 'Option', 'answers → Which device?', 'Easy on the eyes favours this'])
+      assert.ok(text.includes(s), s);
   });
 
   test('each box can be reached and opened from the keyboard', async () => {
@@ -321,8 +402,12 @@ describe('details on demand', () => {
 });
 
 describe('estimated links', () => {
-  let env; before(async () => { env = await load(); }); after(() => env.uninstall());
-  const TYPO = fence(GRAPH + ",\n(eyes)-[:FAVOURS]->(tablett)");
+  let env;
+  before(async () => {
+    env = await load();
+  });
+  after(() => env.uninstall());
+  const TYPO = fence(GRAPH + ',\n(eyes)-[:FAVOURS]->(tablett)');
 
   test('a near miss is drawn as a guess: one more link, dashed, with a warning sign and the word estimated', async () => {
     const { el } = await show(env, TYPO);
@@ -330,18 +415,42 @@ describe('estimated links', () => {
     assert.equal(edges.length, 5);
     const guess = edges[4];
     assert.equal(guess.getAttribute('data-estimate'), '0');
-    assert.ok(guess.querySelectorAll('path').some((p) => p.getAttribute('stroke-dasharray')), 'dashed');
+    assert.ok(
+      guess.querySelectorAll('path').some((p) => p.getAttribute('stroke-dasharray')),
+      'dashed',
+    );
     assert.match(guess.textContent, /⚠ favours \(estimated\)/);
     assert.ok(labelled(el, '1 problem'), 'and counted behind the badge');
   });
 
   test('tapping an estimated link explains it in a sentence, on the note’s own line', async () => {
     const { el } = await show(env, TYPO);
-    const guess = el.querySelectorAll('g.edge')[4], vp = el.querySelector('.graph-note-viewport');
-    vp.dispatch('pointerdown', { target: guess, pointerId: 4, pointerType: 'mouse', clientX: 30, clientY: 30, button: 0 });
-    vp.dispatch('pointerup', { target: guess, pointerId: 4, pointerType: 'mouse', clientX: 30, clientY: 30, button: 0 });
-    assert.equal(el.querySelector('.graph-note-details').textContent.includes(
-      'Line 9 links to tablett, which is not in graph reader. It was taken to mean tablet, one letter away. To fix it, change tablett to tablet.'), true);
+    const guess = el.querySelectorAll('g.edge')[4],
+      vp = el.querySelector('.graph-note-viewport');
+    vp.dispatch('pointerdown', {
+      target: guess,
+      pointerId: 4,
+      pointerType: 'mouse',
+      clientX: 30,
+      clientY: 30,
+      button: 0,
+    });
+    vp.dispatch('pointerup', {
+      target: guess,
+      pointerId: 4,
+      pointerType: 'mouse',
+      clientX: 30,
+      clientY: 30,
+      button: 0,
+    });
+    assert.equal(
+      el
+        .querySelector('.graph-note-details')
+        .textContent.includes(
+          'Line 9 links to tablett, which is not in graph reader. It was taken to mean tablet, one letter away. To fix it, change tablett to tablet.',
+        ),
+      true,
+    );
   });
 
   test('an estimated link can be reached and explained from the keyboard', async () => {
@@ -355,10 +464,16 @@ describe('estimated links', () => {
 });
 
 describe('help behind the badge', () => {
-  let env; before(async () => { env = await load(); }); after(() => env.uninstall());
+  let env;
+  before(async () => {
+    env = await load();
+  });
+  after(() => env.uninstall());
 
   test('the completeness report is behind the badge: covered, deferred and missing, with a fix for each gap', async () => {
-    const rule = GRAPH + ",\n(every_option_answers:Cardinality {kind: 'Option', relationship: 'ANSWERS', direction: 'out', min: 1, says: 'every option answers the question'}),\n(spare:Option {name: 'Spare'})";
+    const rule =
+      GRAPH +
+      ",\n(every_option_answers:Cardinality {kind: 'Option', relationship: 'ANSWERS', direction: 'out', min: 1, says: 'every option answers the question'}),\n(spare:Option {name: 'Spare'})";
     const { el } = await show(env, fence(rule));
     const badge = labelled(el, '1 gap');
     assert.ok(badge, 'the badge counts the gap');
@@ -370,7 +485,13 @@ describe('help behind the badge', () => {
   });
 
   test('many problems are grouped by kind, the worst first', async () => {
-    const many = GRAPH + ',\n' + Array.from({ length: 6 }, (_, i) => `(eyes)-[:FAVOURS]->(gone_${i})`).join(',\n') + ',\n' + Array.from({ length: 4 }, (_, i) => `(x${i}:T {v: })`).join(',\n') + ',\n(eyes)-[:FAVOURS]->(tablett)';
+    const many =
+      GRAPH +
+      ',\n' +
+      Array.from({ length: 6 }, (_, i) => `(eyes)-[:FAVOURS]->(gone_${i})`).join(',\n') +
+      ',\n' +
+      Array.from({ length: 4 }, (_, i) => `(x${i}:T {v: })`).join(',\n') +
+      ',\n(eyes)-[:FAVOURS]->(tablett)';
     const { el } = await show(env, fence(many));
     const groups = el.querySelectorAll('.graph-note-problems details');
     assert.ok(groups.length >= 2, 'grouped');
@@ -384,7 +505,10 @@ describe('help behind the badge', () => {
     const { el } = await show(env, fence(GRAPH + ',\n(eyes)-[:FAVOURS]->(nowhere),\n(eyes)-[:FAVOURS]->(tablett)'));
     const items = el.querySelectorAll('.graph-note-problems li');
     assert.equal(items.length, 2);
-    assert.ok(items.every((li) => /^(✖ Error|⚠ Warning)/.test(li.textContent)), items.map((li) => li.textContent).join('|'));
+    assert.ok(
+      items.every((li) => /^(✖ Error|⚠ Warning)/.test(li.textContent)),
+      items.map((li) => li.textContent).join('|'),
+    );
   });
 
   test('the drawing has a text version for screen readers: every thing and every link, in sentences', async () => {
@@ -398,7 +522,11 @@ describe('help behind the badge', () => {
 });
 
 describe('older phones', () => {
-  const styleOf = (el) => el.querySelectorAll('path, polygon').map((p) => p.getAttribute('style') ?? '').join(' ');
+  const styleOf = (el) =>
+    el
+      .querySelectorAll('path, polygon')
+      .map((p) => p.getAttribute('style') ?? '')
+      .join(' ');
 
   test('where CSS color-mix is supported, the drawing keeps the locked style’s blends', async () => {
     const env = await load();
@@ -406,7 +534,10 @@ describe('older phones', () => {
       globalThis.CSS = { supports: () => true };
       const { el } = await show(env, fence(GRAPH));
       assert.match(styleOf(el), /color-mix/);
-    } finally { delete globalThis.CSS; env.uninstall(); }
+    } finally {
+      delete globalThis.CSS;
+      env.uninstall();
+    }
   });
 
   test('where it is not (iOS before 16.2), each blend falls back to its plain theme hue, never to black', async () => {
@@ -416,20 +547,34 @@ describe('older phones', () => {
       const { el } = await show(env, fence(GRAPH));
       assert.doesNotMatch(styleOf(el), /color-mix/);
       assert.match(styleOf(el), /var\(--color-\w+\)/);
-    } finally { delete globalThis.CSS; env.uninstall(); }
+    } finally {
+      delete globalThis.CSS;
+      env.uninstall();
+    }
   });
 });
 
 describe('one frame: the bar and the details belong to their drawing', () => {
-  let env; before(async () => { env = await load(); }); after(() => env.uninstall());
+  let env;
+  before(async () => {
+    env = await load();
+  });
+  after(() => env.uninstall());
 
   test('the bar, the drawing and the details sit in one framed card, the bar as its header strip', async () => {
     const { el } = await show(env, fence(GRAPH));
     const card = el.querySelector('.graph-note-view');
-    for (const part of ['.graph-note-bar', '.graph-note-viewport', '.graph-note-details', '.graph-note-problems']) assert.ok(card.querySelector(part), part);
+    for (const part of ['.graph-note-bar', '.graph-note-viewport', '.graph-note-details', '.graph-note-problems'])
+      assert.ok(card.querySelector(part), part);
     assert.equal(card.children[0].className, 'graph-note-bar', 'the bar comes first, at the top edge');
-    assert.match(styles, /\.graph-note-view\s*\{[^}]*border:\s*1px solid var\(--background-modifier-border\);[^}]*border-radius:/);
-    assert.match(styles, /\.graph-note-view > \.graph-note-bar\s*\{[^}]*background:\s*var\(--background-secondary\);[^}]*border-bottom:/);
+    assert.match(
+      styles,
+      /\.graph-note-view\s*\{[^}]*border:\s*1px solid var\(--background-modifier-border\);[^}]*border-radius:/,
+    );
+    assert.match(
+      styles,
+      /\.graph-note-view > \.graph-note-bar\s*\{[^}]*background:\s*var\(--background-secondary\);[^}]*border-bottom:/,
+    );
   });
 
   test('the box whose details are open is marked as selected, by a heavier outline as well as for screen readers', async () => {
@@ -450,17 +595,32 @@ describe('one frame: the bar and the details belong to their drawing', () => {
 });
 
 describe('details of a link', () => {
-  let env; before(async () => { env = await load(); }); after(() => env.uninstall());
+  let env;
+  before(async () => {
+    env = await load();
+  });
+  after(() => env.uninstall());
 
   test('tapping a link shows its reading, the things at either end, and its properties', async () => {
-    const { el } = await show(env, fence(GRAPH.replace("(eyes)-[:FAVOURS]->(large)", "(eyes)-[:FAVOURS {strength: 'strong'}]->(large)")));
+    const { el } = await show(
+      env,
+      fence(GRAPH.replace('(eyes)-[:FAVOURS]->(large)', "(eyes)-[:FAVOURS {strength: 'strong'}]->(large)")),
+    );
     const link = el.querySelectorAll('g.edge')[2];
     const vp = el.querySelector('.graph-note-viewport');
-    vp.dispatch('pointerdown', { target: link, pointerId: 5, pointerType: 'touch', clientX: 40, clientY: 40, button: 0 });
+    vp.dispatch('pointerdown', {
+      target: link,
+      pointerId: 5,
+      pointerType: 'touch',
+      clientX: 40,
+      clientY: 40,
+      button: 0,
+    });
     vp.dispatch('pointerup', { target: link, pointerId: 5, pointerType: 'touch', clientX: 40, clientY: 40, button: 0 });
     const panel = el.querySelector('.graph-note-details');
     assert.ok(!panel.hidden);
-    for (const s of ['Easy on the eyes', 'favours', 'Large reader', 'FAVOURS', 'strength', 'strong']) assert.ok(panel.textContent.includes(s), s);
+    for (const s of ['Easy on the eyes', 'favours', 'Large reader', 'FAVOURS', 'strength', 'strong'])
+      assert.ok(panel.textContent.includes(s), s);
     assert.ok(link.classList.contains('is-selected'), 'the link is marked as selected');
   });
 

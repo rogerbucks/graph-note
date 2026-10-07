@@ -1,0 +1,8 @@
+# Built, generated or vendored: never formatted by hand or by Prettier.
+main.js
+dist/
+package-lock.json
+licences/
+spikes/
+python/
+*.md

@@ -13,15 +13,29 @@ export const SEVERITY = { Error: 1, Warning: 2, Information: 3, Hint: 4 } as con
 /** LSP CompletionItemKind: names are variables, kinds are classes, relationships are interfaces. */
 export const KIND = { Variable: 6, Class: 7, Interface: 8 } as const;
 
-export interface Position { line: number; character: number }
-export interface Range { start: Position; end: Position }
-export interface TextEdit { range: Range; newText: string }
+/** A place in a block, as the Language Server Protocol counts it: a 0-based line, and a character on it. */
+export interface Position {
+  line: number;
+  character: number;
+}
+/** A stretch of a block, from one position up to another (LSP). */
+export interface Range {
+  start: Position;
+  end: Position;
+}
+/** Text to put in place of a range (LSP). */
+export interface TextEdit {
+  range: Range;
+  newText: string;
+}
+/** A fix offered for a problem: its title, and the edits that make it (LSP). */
 export interface CodeAction {
   title: string;
   kind: 'quickfix';
   isPreferred?: boolean;
   edit: { changes: Record<string, TextEdit[]> };
 }
+/** A problem in a block, where it is, how bad, and the fixes for it (LSP). */
 export interface Diagnostic {
   range: Range;
   severity: (typeof SEVERITY)[keyof typeof SEVERITY];
@@ -31,6 +45,7 @@ export interface Diagnostic {
   /** The fix in words, and the fixes that can be applied as edits. */
   data: { fix: string; fixes: CodeAction[] };
 }
+/** A suggestion while typing: the word, what kind it is, a line about it, and what goes in (LSP). */
 export interface CompletionItem {
   label: string;
   kind: (typeof KIND)[keyof typeof KIND];
@@ -45,21 +60,29 @@ const sentence = (s: string, keepCase = false) => {
   const t = s.trim();
   return (keepCase ? t : t.charAt(0).toUpperCase() + t.slice(1)).replace(/([^.!?])$/, '$1.');
 };
-const wordRe = (w: string) => new RegExp(`(^|[^A-Za-z0-9_])(${w.replace(/[^A-Za-z0-9_]/g, '\\$&')})(?![A-Za-z0-9_])`, 'g');
+const wordRe = (w: string) =>
+  new RegExp(`(^|[^A-Za-z0-9_])(${w.replace(/[^A-Za-z0-9_]/g, '\\$&')})(?![A-Za-z0-9_])`, 'g');
 
 /** Where a word is on a line of the block, or the whole line, trimmed, when the word cannot be found. */
 function rangeOf(text: string, line: number, word?: string): Range {
   const l = text.split('\n')[line] ?? '';
   if (word) {
     const m = wordRe(word).exec(l);
-    if (m) { const c = m.index + (m[1] ?? '').length; return { start: { line, character: c }, end: { line, character: c + word.length } }; }
+    if (m) {
+      const c = m.index + (m[1] ?? '').length;
+      return { start: { line, character: c }, end: { line, character: c + word.length } };
+    }
   }
-  const start = l.length - l.trimStart().length, end = l.trimEnd().length;
+  const start = l.length - l.trimStart().length,
+    end = l.trimEnd().length;
   return { start: { line, character: start }, end: { line, character: Math.max(end, start + 1) } };
 }
 
 /** The graph's own schema, or the shared one it names: its node and edge types, or null for a draft. */
-function schemaOf(reading: NoteReading, graph: string): { kinds: string[]; types: Map<string, string | undefined> } | null {
+function schemaOf(
+  reading: NoteReading,
+  graph: string,
+): { kinds: string[]; types: Map<string, string | undefined> } | null {
   const g = reading.world[graph];
   if (!g) return null;
   let s: Graph | undefined = g.labelled('ElementType').length ? g : gs.schemaFor(reading.world, graph)[1];
@@ -70,31 +93,73 @@ function schemaOf(reading: NoteReading, graph: string): { kinds: string[]; types
   }
   if (!s) return null;
   const str = (v: unknown) => (typeof v === 'string' ? v : undefined);
-  const T = s.labelled('ElementType').map((i) => s.p(i));
+  const elementTypes = s.labelled('ElementType').map((i) => s.p(i));
   return {
-    kinds: T.filter((t) => t.kind === 'node').flatMap((t) => str(t.name) ?? []).sort(),
-    types: new Map(T.filter((t) => t.kind === 'edge').flatMap((t) => { const n = str(t.name); return n ? [[n, str(t.reading)] as const] : []; })),
+    kinds: elementTypes
+      .filter((t) => t.kind === 'node')
+      .flatMap((t) => str(t.name) ?? [])
+      .sort(),
+    types: new Map(
+      elementTypes
+        .filter((t) => t.kind === 'edge')
+        .flatMap((t) => {
+          const n = str(t.name);
+          return n ? [[n, str(t.reading)] as const] : [];
+        }),
+    ),
   };
 }
 
 /** Each problem of one block, as an LSP diagnostic with its place and its fixes. */
-export function diagnostics(reading: NoteReading, graph: string, block: number, text: string, uri: string): Diagnostic[] {
+export function diagnostics(
+  reading: NoteReading,
+  graph: string,
+  block: number,
+  text: string,
+  uri: string,
+): Diagnostic[] {
   const out: Diagnostic[] = [];
   const own = reading.problems.filter((p: Problem) => p.graph === graph && p.block === block);
   for (const p of own) {
-    const line = p.line - 1, range = rangeOf(text, line, p.replace?.written);
+    const line = p.line - 1,
+      range = rangeOf(text, line, p.replace?.written);
     const add = p.insert;
-    const inserts: CodeAction[] = add ? [{
-      title: 'Add the missing comma', kind: 'quickfix', isPreferred: true,
-      edit: { changes: { [uri]: [{ range: { start: { line: add.line, character: add.character }, end: { line: add.line, character: add.character } }, newText: add.text }] } },
-    }] : [];
-    const fixes: CodeAction[] = inserts.concat((p.replace?.with ?? []).map((w) => ({
-      title: `Change ${p.replace?.written} to ${w}`, kind: 'quickfix', isPreferred: p.replace?.with.length === 1,
-      edit: { changes: { [uri]: [{ range, newText: w }] } },
-    })));
+    const inserts: CodeAction[] = add
+      ? [
+          {
+            title: 'Add the missing comma',
+            kind: 'quickfix',
+            isPreferred: true,
+            edit: {
+              changes: {
+                [uri]: [
+                  {
+                    range: {
+                      start: { line: add.line, character: add.character },
+                      end: { line: add.line, character: add.character },
+                    },
+                    newText: add.text,
+                  },
+                ],
+              },
+            },
+          },
+        ]
+      : [];
+    const fixes: CodeAction[] = inserts.concat(
+      (p.replace?.with ?? []).map((w) => ({
+        title: `Change ${p.replace?.written} to ${w}`,
+        kind: 'quickfix',
+        isPreferred: p.replace?.with.length === 1,
+        edit: { changes: { [uri]: [{ range, newText: w }] } },
+      })),
+    );
     out.push({
-      range, severity: p.severity === 'warning' ? SEVERITY.Warning : SEVERITY.Error, source: 'graph-note',
-      message: sentence(p.message, !!p.replace && p.message.startsWith(p.replace.written)), data: { fix: sentence(p.fix), fixes },
+      range,
+      severity: p.severity === 'warning' ? SEVERITY.Warning : SEVERITY.Error,
+      source: 'graph-note',
+      message: sentence(p.message, !!p.replace && p.message.startsWith(p.replace.written)),
+      data: { fix: sentence(p.fix), fixes },
     });
   }
   // in a draft, a kind one or two letters from a kind written more often is warned of (§8)
@@ -104,7 +169,9 @@ export function diagnostics(reading: NoteReading, graph: string, block: number, 
     for (const b of d.boxes) for (const k of b.kind.split(' · ').filter(Boolean)) count.set(k, (count.get(k) ?? 0) + 1);
     const lines = text.split('\n');
     for (const [k, n] of count) {
-      const near = [...count].filter(([u, m]) => u !== k && m > n && distance(k, u) <= 2).sort((a, b) => distance(k, a[0]) - distance(k, b[0]));
+      const near = [...count]
+        .filter(([u, m]) => u !== k && m > n && distance(k, u) <= 2)
+        .sort((a, b) => distance(k, a[0]) - distance(k, b[0]));
       const u = near[0]?.[0];
       if (!u || (near[1] && distance(k, near[1][0]) === distance(k, u))) continue;
       const dist = distance(k, u);
@@ -112,22 +179,48 @@ export function diagnostics(reading: NoteReading, graph: string, block: number, 
         if (!new RegExp(`:\\s*${k}\\b`).test(l.replace(/\/\/.*$/, ''))) return;
         const range = rangeOf(text, line, k);
         out.push({
-          range, severity: SEVERITY.Warning, code: 'near-duplicate', source: 'graph-note',
+          range,
+          severity: SEVERITY.Warning,
+          code: 'near-duplicate',
+          source: 'graph-note',
           message: `The kind ${k} is ${dist === 1 ? 'one letter' : 'two letters'} from ${u}, already in the graph.`,
-          data: { fix: `Change ${k} to ${u}, or keep ${k} if it is a new kind.`, fixes: [{ title: `Change ${k} to ${u}`, kind: 'quickfix', isPreferred: true, edit: { changes: { [uri]: [{ range, newText: u }] } } }] },
+          data: {
+            fix: `Change ${k} to ${u}, or keep ${k} if it is a new kind.`,
+            fixes: [
+              {
+                title: `Change ${k} to ${u}`,
+                kind: 'quickfix',
+                isPreferred: true,
+                edit: { changes: { [uri]: [{ range, newText: u }] } },
+              },
+            ],
+          },
         });
       });
     }
   }
-  return out.sort((a, b) => a.range.start.line - b.range.start.line || a.range.start.character - b.range.start.character);
+  return out.sort(
+    (a, b) => a.range.start.line - b.range.start.line || a.range.start.character - b.range.start.character,
+  );
 }
 
 /** What to suggest at a place in the block: names, kinds or relationships already in the graph — only the schema's when it is locked. */
-export function completions(reading: NoteReading, graph: string, text: string, offset: number): { from: number; items: CompletionItem[] } {
-  const before = text.slice(0, offset), none = { from: offset, items: [] };
+export function completions(
+  reading: NoteReading,
+  graph: string,
+  text: string,
+  offset: number,
+): { from: number; items: CompletionItem[] } {
+  const before = text.slice(0, offset),
+    none = { from: offset, items: [] };
   const last = tokenize(before).pop();
-  if (last && (last.c === 'comment' || (last.c === 'string' && (last.s.length < 2 || last.s[last.s.length - 1] !== last.s[0])))) return none;
-  const d = reading.graphs.get(graph), schema = schemaOf(reading, graph);
+  if (
+    last &&
+    (last.c === 'comment' || (last.c === 'string' && (last.s.length < 2 || last.s[last.s.length - 1] !== last.s[0])))
+  )
+    return none;
+  const d = reading.graphs.get(graph),
+    schema = schemaOf(reading, graph);
   if (!d) return none;
   const starts = (p: string) => (s: string) => s.toLowerCase().startsWith(p.toLowerCase());
   let m: RegExpExecArray | null;
@@ -135,26 +228,57 @@ export function completions(reading: NoteReading, graph: string, text: string, o
   if ((m = /-\[\s*(\w*)$/.exec(before))) {
     const p = m[1] ?? '';
     const types = schema ? [...schema.types.keys()] : [...new Set(d.links.map((l) => l.type))];
-    const reading_ = (t: string) => schema?.types.get(t) ?? d.links.find((l) => l.type === t)?.reading;
-    return { from: offset - p.length, items: types.filter(starts(p)).sort().map((t) => ({ label: t, kind: KIND.Interface, detail: reading_(t) ?? t.replace(/_/g, ' ').toLowerCase(), insertText: `:${t}` })) };
+    const readingOf = (t: string) => schema?.types.get(t) ?? d.links.find((l) => l.type === t)?.reading;
+    return {
+      from: offset - p.length,
+      items: types
+        .filter(starts(p))
+        .sort()
+        .map((t) => ({
+          label: t,
+          kind: KIND.Interface,
+          detail: readingOf(t) ?? t.replace(/_/g, ' ').toLowerCase(),
+          insertText: `:${t}`,
+        })),
+    };
   }
   if ((m = /-\[\s*:\s*(\w*)$/.exec(before))) {
     const p = m[1] ?? '';
     const types = schema ? [...schema.types.keys()] : [...new Set(d.links.map((l) => l.type))];
-    const reading_ = (t: string) => schema?.types.get(t) ?? d.links.find((l) => l.type === t)?.reading;
-    return { from: offset - p.length, items: types.filter(starts(p)).sort().map((t) => ({ label: t, kind: KIND.Interface, detail: reading_(t) ?? t.replace(/_/g, ' ').toLowerCase() })) };
+    const readingOf = (t: string) => schema?.types.get(t) ?? d.links.find((l) => l.type === t)?.reading;
+    return {
+      from: offset - p.length,
+      items: types
+        .filter(starts(p))
+        .sort()
+        .map((t) => ({ label: t, kind: KIND.Interface, detail: readingOf(t) ?? t.replace(/_/g, ' ').toLowerCase() })),
+    };
   }
   if ((m = /\(\s*\w+\s*:\s*(?:\w+\s*:\s*)*(\w*)$/.exec(before))) {
     const p = m[1] ?? '';
     const kinds = schema ? schema.kinds : [...new Set(d.boxes.flatMap((b) => b.kind.split(' · ').filter(Boolean)))];
-    return { from: offset - p.length, items: kinds.filter(starts(p)).sort().map((k) => ({ label: k, kind: KIND.Class })) };
+    return {
+      from: offset - p.length,
+      items: kinds
+        .filter(starts(p))
+        .sort()
+        .map((k) => ({ label: k, kind: KIND.Class })),
+    };
   }
   if ((m = /\(\s*(\w*)$/.exec(before))) {
     const p = m[1] ?? '';
-    const names: CompletionItem[] = d.boxes.filter((b) => starts(p)(b.key)).sort((a, b) => (a.key < b.key ? -1 : 1)).map((b) => ({ label: b.key, kind: KIND.Variable, detail: b.kind ? `${b.kind}: ${b.text}` : b.text }));
+    const names: CompletionItem[] = d.boxes
+      .filter((b) => starts(p)(b.key))
+      .sort((a, b) => (a.key < b.key ? -1 : 1))
+      .map((b) => ({ label: b.key, kind: KIND.Variable, detail: b.kind ? `${b.kind}: ${b.text}` : b.text }));
     // a kind brings its colon (spec §4): after a new thing's name, the kinds are offered as :Kind, added after the name —
     // but only once the name can be nothing but a new thing; while it may still be a reference, the names come alone
-    const kinds = p && !names.length ? (schema ? schema.kinds : [...new Set(d.boxes.flatMap((b) => b.kind.split(' · ').filter(Boolean)))]).sort().map((k) => ({ label: k, kind: KIND.Class, insertText: `:${k}`, from: offset })) : [];
+    const kinds =
+      p && !names.length
+        ? (schema ? schema.kinds : [...new Set(d.boxes.flatMap((b) => b.kind.split(' · ').filter(Boolean)))])
+            .sort()
+            .map((k) => ({ label: k, kind: KIND.Class, insertText: `:${k}`, from: offset }))
+        : [];
     return { from: offset - p.length, items: names.concat(kinds) };
   }
   return none;
@@ -164,9 +288,13 @@ const article = (k: string) => (/^[aeiou]/i.test(k) ? 'an' : 'a');
 
 /** Each pattern of the block read back in plain English, by the 0-based line it ends on: what it writes, in the graph's words. */
 export function readBack(reading: NoteReading, graph: string, text: string): Map<number, string> {
-  const d = reading.graphs.get(graph), out = new Map<number, string>();
+  const d = reading.graphs.get(graph),
+    out = new Map<number, string>();
   const textOf = (k: string) => d?.boxes.find((b) => b.key === k)?.text ?? `${k} (not in the graph)`;
-  const words = (t: string) => d?.links.find((l) => l.type === t)?.reading ?? d?.estimates.find((e) => e.type === t)?.reading ?? t.replace(/_/g, ' ').toLowerCase();
+  const words = (t: string) =>
+    d?.links.find((l) => l.type === t)?.reading ??
+    d?.estimates.find((e) => e.type === t)?.reading ??
+    t.replace(/_/g, ' ').toLowerCase();
   for (const it of blockItems(text)) {
     let said: string | null = null;
     const set = /^SET\s+(\w+)\.(\w+)\s*=\s*([\s\S]+)$/i.exec(it.text.trim());
@@ -176,10 +304,13 @@ export function readBack(reading: NoteReading, graph: string, text: string): Map
       if (hs.length) said = hs.map(([s, t, e]) => `${textOf(s)} ${words(t)} ${textOf(e)}`).join('; ');
       else {
         const node = /^\(\s*(\w+)\s*:\s*([\w:]+)/.exec(it.text.trim());
-        if (node) { const kind = (node[2] ?? '').split(':').filter((k) => !gs.SCHEMA_LABELS.includes(k))[0]; if (kind) said = `${textOf(node[1] ?? '')} is ${article(kind)} ${kind}`; }
+        if (node) {
+          const kind = (node[2] ?? '').split(':').filter((k) => !gs.SCHEMA_LABELS.includes(k))[0];
+          if (kind) said = `${textOf(node[1] ?? '')} is ${article(kind)} ${kind}`;
+        }
       }
     }
-    if (said) out.set(it.end, out.has(it.end) ? `${out.get(it.end)}; ${said}` : said);   // beside the pattern's last line
+    if (said) out.set(it.end, out.has(it.end) ? `${out.get(it.end)}; ${said}` : said); // beside the pattern's last line
   }
   return out;
 }

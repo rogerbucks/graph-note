@@ -26,7 +26,8 @@ describe('drawing', () => {
     for (const g of [WIDE, CHAIN]) {
       const drawing = readNote([g]).graphs.get('g');
       const laid = ['LR', 'TB'].map((rankdir) => {
-        const src = layoutSource(drawing, rankdir), svg = engine.render(src.source);
+        const src = layoutSource(drawing, rankdir),
+          svg = engine.render(src.source);
         return { rankdir, ...sizeOf(svg), svg, src };
       });
       const best = choose(laid);
@@ -45,7 +46,12 @@ describe('drawing', () => {
   });
 
   test('when the engine fails, the failure is said, not swallowed', () => {
-    const broken = { version: '0.0.0', render() { throw new Error('out of memory'); } };
+    const broken = {
+      version: '0.0.0',
+      render() {
+        throw new Error('out of memory');
+      },
+    };
     assert.throws(() => draw(readNote([CHAIN]).graphs.get('g'), broken), /out of memory/);
   });
 
@@ -55,25 +61,38 @@ describe('drawing', () => {
     const drawn = draw(drawing, engine);
     const nodeIds = [...drawn.svg.matchAll(/<g id="(node\d+)" class="node"/g)].map((m) => m[1]);
     const edgeIds = [...drawn.svg.matchAll(/<g id="(edge\d+)" class="edge"/g)].map((m) => m[1]);
-    assert.deepEqual(nodeIds, drawing.boxes.map((_, i) => `node${i + 1}`));
-    assert.deepEqual(edgeIds, drawing.links.map((_, i) => `edge${i + 1}`));
+    assert.deepEqual(
+      nodeIds,
+      drawing.boxes.map((_, i) => `node${i + 1}`),
+    );
+    assert.deepEqual(
+      edgeIds,
+      drawing.links.map((_, i) => `edge${i + 1}`),
+    );
     // the order is the layout source's order: check it against the titles Graphviz writes before theming removes them
     const raw = engine.render(layoutSource(drawing, drawn.rankdir).source);
-    const titles = [...raw.matchAll(/<g id="node(\d+)" class="node">\s*<title>([^<]*)<\/title>/g)].map((m) => [Number(m[1]), m[2]]);
+    const titles = [...raw.matchAll(/<g id="node(\d+)" class="node">\s*<title>([^<]*)<\/title>/g)].map((m) => [
+      Number(m[1]),
+      m[2],
+    ]);
     titles.forEach(([n, key]) => assert.equal(drawing.boxes[n - 1].key, key));
   });
 });
 
 describe('what tapping a box shows', () => {
-  const note = [`// graph: reader
+  const note = [
+    `// graph: reader
 (q:Question {title: 'Which device?'}), (large:Option {name: 'Large reader'}), (tablet:Option {name: 'Tablet'}),
 (eyes:Reason {title: 'Easy on the eyes'}),
-(large)-[:ANSWERS]->(q), (tablet)-[:ANSWERS]->(q), (eyes)-[:FAVOURS]->(large), (eyes)-[:COUNTS_AGAINST]->(tablet)`];
+(large)-[:ANSWERS]->(q), (tablet)-[:ANSWERS]->(q), (eyes)-[:FAVOURS]->(large), (eyes)-[:COUNTS_AGAINST]->(tablet)`,
+  ];
 
   test('its text, its kind, and its links in and out, each read in words with the thing at the other end', () => {
     const reading = readNote(note);
     assert.deepEqual(details(reading, 'reader', 'large'), {
-      key: 'large', text: 'Large reader', kind: 'Option',
+      key: 'large',
+      text: 'Large reader',
+      kind: 'Option',
       out: [{ reading: 'answers', key: 'q', text: 'Which device?' }],
       in: [{ reading: 'favours', key: 'eyes', text: 'Easy on the eyes' }],
       problems: [],
@@ -101,10 +120,17 @@ describe('what tapping a box shows', () => {
 describe('speed', () => {
   test('a graph of 50 things is read and drawn in under half a second (spec §11; the phone is checked on the device)', async () => {
     const engine = await loadEngine();
-    const nodes = Array.from({ length: 50 }, (_, i) => `(n${i}:${['Question', 'Option', 'Reason', 'Claim', 'Source'][i % 5]} {name: 'Thing ${i}, a few words long'})`);
-    const links = Array.from({ length: 70 }, (_, i) => `(n${i % 50})-[:${['ANSWERS', 'FAVOURS', 'CITES'][i % 3]}]->(n${(i * 7 + 3) % 50})`);
+    const nodes = Array.from(
+      { length: 50 },
+      (_, i) =>
+        `(n${i}:${['Question', 'Option', 'Reason', 'Claim', 'Source'][i % 5]} {name: 'Thing ${i}, a few words long'})`,
+    );
+    const links = Array.from(
+      { length: 70 },
+      (_, i) => `(n${i % 50})-[:${['ANSWERS', 'FAVOURS', 'CITES'][i % 3]}]->(n${(i * 7 + 3) % 50})`,
+    );
     const block = `// graph: g\n${[...nodes, ...links].join(',\n')}`;
-    draw(readNote([block]).graphs.get('g'), engine);   // warm: the first draw compiles the engine's code paths
+    draw(readNote([block]).graphs.get('g'), engine); // warm: the first draw compiles the engine's code paths
     const t = performance.now();
     const drawn = draw(readNote([block]).graphs.get('g'), engine);
     const ms = performance.now() - t;
@@ -122,9 +148,16 @@ describe('what tapping a link shows', () => {
   test('its type and reading, the things at either end, and its properties', async () => {
     const { linkDetails } = await import('../src/render.ts');
     assert.deepEqual(linkDetails(readNote([block]), 'reader', 1), {
-      index: 1, type: 'CITES', reading: 'cites',
-      from: { key: 'large', text: 'Large reader' }, to: { key: 'notes', text: 'Trial notes' },
-      properties: [['checked', 'true'], ['on', '2026-10-01'], ['where', 'day 2']],
+      index: 1,
+      type: 'CITES',
+      reading: 'cites',
+      from: { key: 'large', text: 'Large reader' },
+      to: { key: 'notes', text: 'Trial notes' },
+      properties: [
+        ['checked', 'true'],
+        ['on', '2026-10-01'],
+        ['where', 'day 2'],
+      ],
       problems: [],
     });
     assert.deepEqual(linkDetails(readNote([block]), 'reader', 0).properties, []);
@@ -134,7 +167,9 @@ describe('what tapping a link shows', () => {
     const { linkDetails } = await import('../src/render.ts');
     const r = readNote([block + ',\n(large)-[:CITES]->(nowhere)']);
     assert.equal(linkDetails(r, 'reader', 1).problems.length, 0, 'not another link’s problem');
-    const bad = readNote([block.replace("(large)-[:ANSWERS]->(q)", "(large)-[:ANSWERS]->(q), (large)-[:ANSWERS]->(nowhere)")]);
+    const bad = readNote([
+      block.replace('(large)-[:ANSWERS]->(q)', '(large)-[:ANSWERS]->(q), (large)-[:ANSWERS]->(nowhere)'),
+    ]);
     assert.equal(linkDetails(bad, 'reader', 0).problems.length, 1);
   });
 

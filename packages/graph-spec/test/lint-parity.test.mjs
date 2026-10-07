@@ -14,27 +14,83 @@ const PY_SRC = fileURLToPath(new URL('../../../python/graph_spec/src', import.me
 const { lint } = require('../src/graph-spec-check.js');
 
 function pythonLint(texts) {
-  const prog = `import json, sys\nsys.path.insert(0, ${JSON.stringify(PY_SRC)})\nimport graph_spec\n`
-    + 'print(json.dumps([[[f["trap"], f["line"]] for f in graph_spec.lint(t)] for t in json.load(sys.stdin)]))';
+  const prog =
+    `import json, sys\nsys.path.insert(0, ${JSON.stringify(PY_SRC)})\nimport graph_spec\n` +
+    'print(json.dumps([[[f["trap"], f["line"]] for f in graph_spec.lint(t)] for t in json.load(sys.stdin)]))';
   const r = spawnSync('python3', ['-c', prog], { input: JSON.stringify(texts), encoding: 'utf8', maxBuffer: 1 << 26 });
   assert.equal(r.status, 0, r.stderr);
   return JSON.parse(r.stdout);
 }
 
-const sorted = (fs) => fs.map((f) => [f.trap, f.line]).sort((a, b) => a[1] - b[1] || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+const sorted = (fs) =>
+  fs.map((f) => [f.trap, f.line]).sort((a, b) => a[1] - b[1] || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
 const pySorted = (fs) => fs.slice().sort((a, b) => a[1] - b[1] || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
 
 const EDGES = [
-  'MATCH (a:Thing {id: 1}) RETURN a.for', '(n:for)', '(n: \n group)', 'x.group BY y', 'RETURN [a.name, b.size]', 'RETURN [[a.x]]',
-  'WITH x [a.b]', 'RETURN a [b.c]', 'RETURN -[a.b]', "RETURN '' [a.b]", 'RETURN ] [a.b]', 'RETURN > [a.b]', 'RETURN ) [a.b]',
-  'RETURN \n\n  [a.b]', 'RETURN ( \n [a.b]', '[a.b]', '  [a.b]', 'RETURN [:R]', 'RETURN [a.id]', 'RETURN [x.y] [p.q]', 'a.b.c.for',
+  'MATCH (a:Thing {id: 1}) RETURN a.for',
+  '(n:for)',
+  '(n: \n group)',
+  'x.group BY y',
+  'RETURN [a.name, b.size]',
+  'RETURN [[a.x]]',
+  'WITH x [a.b]',
+  'RETURN a [b.c]',
+  'RETURN -[a.b]',
+  "RETURN '' [a.b]",
+  'RETURN ] [a.b]',
+  'RETURN > [a.b]',
+  'RETURN ) [a.b]',
+  'RETURN \n\n  [a.b]',
+  'RETURN ( \n [a.b]',
+  '[a.b]',
+  '  [a.b]',
+  'RETURN [:R]',
+  'RETURN [a.id]',
+  'RETURN [x.y] [p.q]',
+  'a.b.c.for',
 ];
 
 function randomTexts(n, seed) {
-  const parts = ['[', ']', '(', ')', ':', '.', ',', '{', '}', '-', '>', "'", ' ', ' ', '\n', '\t', 'a', 'b', 'x.y', 'for', 'group', 'groups', 'BY', 'on', 'id', 'p.id', '_v', '1', "X'", "x'"];
+  const parts = [
+    '[',
+    ']',
+    '(',
+    ')',
+    ':',
+    '.',
+    ',',
+    '{',
+    '}',
+    '-',
+    '>',
+    "'",
+    ' ',
+    ' ',
+    '\n',
+    '\t',
+    'a',
+    'b',
+    'x.y',
+    'for',
+    'group',
+    'groups',
+    'BY',
+    'on',
+    'id',
+    'p.id',
+    '_v',
+    '1',
+    "X'",
+    "x'",
+  ];
   let s = seed >>> 0;
-  const next = () => { s = (s * 1664525 + 1013904223) >>> 0; return s; };
-  return Array.from({ length: n }, () => Array.from({ length: 4 + (next() % 24) }, () => parts[next() % parts.length]).join(''));
+  const next = () => {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s;
+  };
+  return Array.from({ length: n }, () =>
+    Array.from({ length: 4 + (next() % 24) }, () => parts[next() % parts.length]).join(''),
+  );
 }
 
 test('the linter finds the same traps on the same lines as Python, on hand-picked edges', () => {

@@ -4,9 +4,22 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { statSync } from 'node:fs';
 import {
-  exists, read, readJSON, path, notIgnored, jsPackages, sourceFiles, workflowFiles,
-  block, permissionValues, jobs, usesRefs, runCommands,
-  findsNetwork, findsHotkeys, forbiddenImports,
+  exists,
+  read,
+  readJSON,
+  path,
+  notIgnored,
+  jsPackages,
+  sourceFiles,
+  workflowFiles,
+  block,
+  permissionValues,
+  jobs,
+  usesRefs,
+  runCommands,
+  findsNetwork,
+  findsHotkeys,
+  forbiddenImports,
 } from './lib/repo.js';
 
 const SEMVER = /^\d+\.\d+\.\d+$/;
@@ -17,7 +30,12 @@ const RUNTIME_ALLOWED = new Set(['@viz-js/viz']);
 const AI_SEND_MODULE = 'packages/obsidian/src/ai/send.ts';
 const TEST_FRAMEWORKS = ['jest', 'mocha', 'vitest', 'ava', 'tap', 'jasmine', 'uvu', 'chai'];
 
-const allDeps = (pkg) => ({ ...pkg.dependencies, ...pkg.devDependencies, ...pkg.optionalDependencies, ...pkg.peerDependencies });
+const allDeps = (pkg) => ({
+  ...pkg.dependencies,
+  ...pkg.devDependencies,
+  ...pkg.optionalDependencies,
+  ...pkg.peerDependencies,
+});
 
 describe('the plugin-store files', () => {
   test('manifest.json carries every field the store requires', () => {
@@ -88,7 +106,10 @@ describe('the supply chain', () => {
   });
 
   test('every override is pinned to an exact version or to a direct dependency', () => {
-    const walk = (o, at) => Object.entries(o ?? {}).flatMap(([k, v]) => (typeof v === 'object' ? walk(v, `${at}${k} > `) : [[`${at}${k}`, v]]));
+    const walk = (o, at) =>
+      Object.entries(o ?? {}).flatMap(([k, v]) =>
+        typeof v === 'object' ? walk(v, `${at}${k} > `) : [[`${at}${k}`, v]],
+      );
     for (const [name, spec] of walk(readJSON('package.json').overrides, '')) {
       assert.match(spec, /^(\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?|\$[\w@/.-]+)$/, `override ${name}@${spec} is not exact`);
     }
@@ -96,9 +117,15 @@ describe('the supply chain', () => {
 
   test('a security fix the pins hold back is forced, so no known advisory stays in the tree', () => {
     const lock = readJSON('package-lock.json').packages;
-    const moments = Object.entries(lock).filter(([k]) => k.endsWith('node_modules/moment')).map(([, v]) => v.version);
+    const moments = Object.entries(lock)
+      .filter(([k]) => k.endsWith('node_modules/moment'))
+      .map(([, v]) => v.version);
     assert.ok(moments.length, 'moment is in the tree, through the obsidian types');
-    for (const v of moments) assert.ok(v.localeCompare('2.31.0', undefined, { numeric: true }) >= 0, `moment ${v} carries GHSA-4p3w-j4w9-5jqw`);
+    for (const v of moments)
+      assert.ok(
+        v.localeCompare('2.31.0', undefined, { numeric: true }) >= 0,
+        `moment ${v} carries GHSA-4p3w-j4w9-5jqw`,
+      );
   });
 
   test('the only runtime dependency is the Graphviz WebAssembly engine', () => {
@@ -125,7 +152,10 @@ describe('the supply chain', () => {
 
   test('.npmrc stops install scripts and saves exact versions', () => {
     const settings = Object.fromEntries(
-      read('.npmrc').split('\n').filter((l) => l.includes('=')).map((l) => l.split('=').map((s) => s.trim())),
+      read('.npmrc')
+        .split('\n')
+        .filter((l) => l.includes('='))
+        .map((l) => l.split('=').map((s) => s.trim())),
     );
     assert.equal(settings['ignore-scripts'], 'true');
     assert.equal(settings['save-exact'], 'true');
@@ -134,7 +164,11 @@ describe('the supply chain', () => {
   test('tests run on the runner built into Node, with no test framework', () => {
     for (const p of jsPackages()) {
       const names = Object.keys(allDeps(readJSON(`${p}/package.json`)));
-      assert.deepEqual(names.filter((n) => TEST_FRAMEWORKS.includes(n)), [], p);
+      assert.deepEqual(
+        names.filter((n) => TEST_FRAMEWORKS.includes(n)),
+        [],
+        p,
+      );
     }
     assert.match(readJSON('package.json').scripts.test, /^node --test\b/);
   });
@@ -212,11 +246,17 @@ describe('GitHub Actions', () => {
     test(`${f} installs with npm ci and verifies signatures before it builds`, () => {
       const runs = runCommands(read(f));
       const at = (re) => runs.findIndex((r) => re.test(r));
-      const ci = at(/^npm ci\b/), sig = at(/^npm audit signatures\b/), build = at(/^npm run build\b/);
+      const ci = at(/^npm ci\b/),
+        sig = at(/^npm audit signatures\b/),
+        build = at(/^npm run build\b/);
       assert.ok(ci >= 0, 'npm ci');
       assert.ok(sig > ci, 'npm audit signatures after npm ci');
       assert.ok(build > sig, 'build after the signatures are verified');
-      assert.equal(runs.some((r) => /\bnpm (install|i)\b/.test(r)), false, 'never npm install');
+      assert.equal(
+        runs.some((r) => /\bnpm (install|i)\b/.test(r)),
+        false,
+        'never npm install',
+      );
     });
 
     test(`${f} runs the content check over every file`, () => {
@@ -229,7 +269,10 @@ describe('GitHub Actions', () => {
     assert.match(block(ci.split('\n'), 'on', 0).join('\n'), /pull_request:/);
     const runs = runCommands(ci);
     for (const re of [/^npm test\b/, /^npm run typecheck\b/, /^npm run build\b/]) {
-      assert.ok(runs.some((r) => re.test(r)), String(re));
+      assert.ok(
+        runs.some((r) => re.test(r)),
+        String(re),
+      );
     }
   });
 
@@ -257,43 +300,85 @@ describe('GitHub Actions', () => {
     const runs = runCommands(rel).join('\n');
     const archive = /git archive [^\n]*-o "?(graph-spec-libraries-\$GITHUB_REF_NAME\.tar\.gz)"?[^\n]*/.exec(runs);
     assert.ok(archive, 'the archive is made by git archive, from the tagged commit');
-    for (const part of ['LICENSE', 'packages/graph-spec/src', 'packages/graph-spec/bin', 'python/graph_spec/src', 'python/graph_spec/pyproject.toml', 'python/graph_spec/uv.lock']) {
+    for (const part of [
+      'LICENSE',
+      'packages/graph-spec/src',
+      'packages/graph-spec/bin',
+      'python/graph_spec/src',
+      'python/graph_spec/pyproject.toml',
+      'python/graph_spec/uv.lock',
+    ]) {
       assert.ok(archive[0].includes(part), `the archive holds ${part}`);
     }
     // the core's layout source, bundled into one file, for the vault's layout parity check (spec §12)
-    assert.match(archive[0], /--prefix=packages\/core\/dist\/ --add-file=packages\/core\/dist\/layout-source-node\.cjs --prefix= /, 'the archive holds the bundled layout source');
+    assert.match(
+      archive[0],
+      /--prefix=packages\/core\/dist\/ --add-file=packages\/core\/dist\/layout-source-node\.cjs --prefix= /,
+      'the archive holds the bundled layout source',
+    );
     const built = runCommands(rel).findIndex((r) => /npm run build:layout/.test(r));
-    assert.ok(built >= 0 && built < runCommands(rel).findIndex((r) => /git archive/.test(r)), 'the layout source is bundled before the archive is made');
+    assert.ok(
+      built >= 0 && built < runCommands(rel).findIndex((r) => /git archive/.test(r)),
+      'the layout source is bundled before the archive is made',
+    );
     const attest = rel.slice(rel.indexOf('actions/attest-build-provenance'));
     assert.match(attest, /graph-spec-libraries-\*\.tar\.gz/, 'the archive has a provenance attestation');
-    assert.match(runCommands(rel).find((r) => /gh release create/.test(r)), /graph-spec-libraries-\$GITHUB_REF_NAME\.tar\.gz/, 'the archive is attached to the release');
+    assert.match(
+      runCommands(rel).find((r) => /gh release create/.test(r)),
+      /graph-spec-libraries-\$GITHUB_REF_NAME\.tar\.gz/,
+      'the archive is attached to the release',
+    );
   });
 
   test('provenance is attested once the repository is public; until then every asset carries a SHA-256', () => {
     // GitHub refuses attestations for private repositories owned by a person (found on the first tag, 0.1.0).
     const rel = read('.github/workflows/release.yml');
     const attest = rel.split('\n').findIndex((l) => /uses:\s*actions\/attest-build-provenance@/.test(l));
-    assert.match(rel.split('\n')[attest + 1] ?? '', /^\s*if:\s*\$\{\{\s*!github\.event\.repository\.private\s*\}\}\s*$/, 'the attestation runs when the repository is public');
+    assert.match(
+      rel.split('\n')[attest + 1] ?? '',
+      /^\s*if:\s*\$\{\{\s*!github\.event\.repository\.private\s*\}\}\s*$/,
+      'the attestation runs when the repository is public',
+    );
     const sums = runCommands(rel).find((r) => /sha256sum/.test(r));
     assert.ok(sums, 'a checksum step');
-    for (const asset of ['main.js', 'manifest.json', 'styles.css', 'THIRD_PARTY_NOTICES.md', 'graph-spec-libraries-$GITHUB_REF_NAME.tar.gz']) {
+    for (const asset of [
+      'main.js',
+      'manifest.json',
+      'styles.css',
+      'THIRD_PARTY_NOTICES.md',
+      'graph-spec-libraries-$GITHUB_REF_NAME.tar.gz',
+    ]) {
       assert.ok(sums.includes(asset), `the checksums cover ${asset}`);
     }
     assert.match(sums, /> SHA256SUMS\b/);
-    assert.match(runCommands(rel).find((r) => /gh release create/.test(r)), /\bSHA256SUMS\b/, 'the checksums are attached to the release');
+    assert.match(
+      runCommands(rel).find((r) => /gh release create/.test(r)),
+      /\bSHA256SUMS\b/,
+      'the checksums are attached to the release',
+    );
   });
 
   test('every library the plugin bundles is linted with the Obsidian review rules', () => {
-    const deps = (name) => Object.keys(readJSON(`packages/${name.split('/')[1]}/package.json`).dependencies ?? {}).filter((d) => d.startsWith('@graph-note/'));
+    const deps = (name) =>
+      Object.keys(readJSON(`packages/${name.split('/')[1]}/package.json`).dependencies ?? {}).filter((d) =>
+        d.startsWith('@graph-note/'),
+      );
     const bundled = new Set();
     for (const todo = deps('@graph-note/obsidian'); todo.length;) {
       const name = todo.pop();
-      if (!bundled.has(name)) { bundled.add(name); todo.push(...deps(name)); }
+      if (!bundled.has(name)) {
+        bundled.add(name);
+        todo.push(...deps(name));
+      }
     }
     const ignores = /ignores:\s*\[([^\]]*)\]/.exec(read('eslint.config.mjs'))[1];
     for (const name of bundled) {
       const dir = `packages/${name.split('/')[1]}/src`;
-      assert.doesNotMatch(ignores, new RegExp(`['"]${dir}/?['"]`), `${dir} is bundled into the plugin, so it must be linted`);
+      assert.doesNotMatch(
+        ignores,
+        new RegExp(`['"]${dir}/?['"]`),
+        `${dir} is bundled into the plugin, so it must be linted`,
+      );
     }
   });
 
@@ -316,7 +401,9 @@ describe('GitHub Actions', () => {
 
 describe('Dependabot', () => {
   const updates = () =>
-    read('.github/dependabot.yml').split(/^\s*- package-ecosystem:/m).slice(1)
+    read('.github/dependabot.yml')
+      .split(/^\s*- package-ecosystem:/m)
+      .slice(1)
       .map((chunk) => ({ ecosystem: chunk.split('\n')[0].trim().replace(/['"]/g, ''), chunk }));
 
   test('it watches npm and GitHub Actions', () => {
@@ -327,10 +414,16 @@ describe('Dependabot', () => {
   test('major versions the Obsidian linter cannot take are held back, each with its reason', () => {
     const npm = updates().find((u) => u.ecosystem === 'npm').chunk;
     // Pinned exactly by the Obsidian linter, so every version is held, not only majors.
-    assert.match(npm, /dependency-name: '@eslint\/json'[^\n]*\n(?!\s*update-types)/, '@eslint/json is held at every version');
+    assert.match(
+      npm,
+      /dependency-name: '@eslint\/json'[^\n]*\n(?!\s*update-types)/,
+      '@eslint/json is held at every version',
+    );
     for (const name of ['eslint', '@eslint/js', 'typescript']) {
       // A name starting with @ must be quoted in YAML.
-      const entry = new RegExp(`dependency-name: ['"]?${name.replace('/', '\\/')}['"]?\\n\\s*update-types: \\['version-update:semver-major'\\]`);
+      const entry = new RegExp(
+        `dependency-name: ['"]?${name.replace('/', '\\/')}['"]?\\n\\s*update-types: \\['version-update:semver-major'\\]`,
+      );
       assert.match(npm, entry, `${name} is held back at major versions only`);
     }
     assert.match(npm, /# Held back:/, 'the reason is written down');
@@ -377,7 +470,10 @@ describe('the shipped source', () => {
   });
 
   test('no command sets a default hotkey', () => {
-    assert.deepEqual(sourceFiles().filter((f) => findsHotkeys(read(f))), []);
+    assert.deepEqual(
+      sourceFiles().filter((f) => findsHotkeys(read(f))),
+      [],
+    );
   });
 
   test('no source imports Node or Electron built-ins', () => {

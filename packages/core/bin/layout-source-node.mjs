@@ -16,15 +16,25 @@ import { gqlBlocks, readNote } from '../src/drawing.ts';
 import { layoutSource } from '../src/layout.ts';
 
 let input = '';
-process.stdin.on('data', (d) => { input += d; });
+process.stdin.on('data', (d) => {
+  input += d;
+});
 process.stdin.on('end', () => {
-  const q = JSON.parse(input || '{}'), out = {};
+  const q = JSON.parse(input || '{}'),
+    out = {};
   for (const [path, text] of Object.entries(q.notes ?? {})) {
     out[path] = {};
     try {
-      const reading = readNote(gqlBlocks(text).map((b) => b.text), undefined, q.shared ?? []);
-      for (const [graph, d] of reading.graphs) out[path][graph] = { LR: layoutSource(d, 'LR').source, TB: layoutSource(d, 'TB').source };
-    } catch (e) { out[path] = { error: String(e?.message ?? e) }; }
+      const reading = readNote(
+        gqlBlocks(text).map((b) => b.text),
+        undefined,
+        q.shared ?? [],
+      );
+      for (const [graph, d] of reading.graphs)
+        out[path][graph] = { LR: layoutSource(d, 'LR').source, TB: layoutSource(d, 'TB').source };
+    } catch (e) {
+      out[path] = { error: String(e?.message ?? e) };
+    }
   }
   process.stdout.write(JSON.stringify(out));
 });

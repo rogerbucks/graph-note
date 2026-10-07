@@ -93,7 +93,8 @@ test('the core writes the same layout source as graph_svg.py, for every graph an
     const reading = readNote(gqlBlocks(NOTES[name]).map((b) => b.text));
     assert.deepEqual([...reading.graphs.keys()].sort(), Object.keys(python[n]), name);
     for (const [graph, drawing] of reading.graphs) {
-      for (const rd of ['LR', 'TB']) assert.equal(layoutSource(drawing, rd).source, python[n][graph][rd], `${name}: ${graph} ${rd}`);
+      for (const rd of ['LR', 'TB'])
+        assert.equal(layoutSource(drawing, rd).source, python[n][graph][rd], `${name}: ${graph} ${rd}`);
     }
   });
 });

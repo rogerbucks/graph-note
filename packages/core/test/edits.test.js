@@ -26,7 +26,9 @@ describe('Lock the graph', () => {
 
   test('locking writes a schema block: every kind and relationship, with its readings both ways', () => {
     const block = lockBlock(readNote([DRAFT]), 'reader', '2026-10-07');
-    assert.equal(block, `// graph: reader · SOURCE
+    assert.equal(
+      block,
+      `// graph: reader · SOURCE
 // ── The schema: locked 2026-10-07 from the data above ──
 // The reverse readings are guesses — check each one.
 (reader_schema:GraphMeta {graph: 'reader', schema: 'reader@1'}),
@@ -39,18 +41,20 @@ describe('Lock the graph', () => {
 // ── Relationship types, with their readings both ways ──
 (link_answers:Meta:ElementType {name: 'ANSWERS', kind: 'edge', origin: 'source', reading: 'answers', reverse_name: 'is answered by'}),
 (link_counts_against:Meta:ElementType {name: 'COUNTS_AGAINST', kind: 'edge', origin: 'source', reading: 'counts against', reverse_name: 'is counted against by'}),
-(link_favours:Meta:ElementType {name: 'FAVOURS', kind: 'edge', origin: 'source', reading: 'favours', reverse_name: 'is favoured by'})`);
+(link_favours:Meta:ElementType {name: 'FAVOURS', kind: 'edge', origin: 'source', reading: 'favours', reverse_name: 'is favoured by'})`,
+    );
   });
 
   test('the locked graph passes the spec’s own type check, as the Python and JavaScript libraries run it', () => {
     const blocks = [DRAFT, lockBlock(readNote([DRAFT]), 'reader', '2026-10-07')];
-    const store = gs.read(blocks), w = gs.worldFromStore(store);
+    const store = gs.read(blocks),
+      w = gs.worldFromStore(store);
     const t5 = gs.check(w, 'reader').find(([label]) => label.startsWith('§5'));
     assert.deepEqual(t5, ['§5: every element has a declared type', true]);
   });
 
   test('a schema node’s id never clashes with a thing already in the graph', () => {
-    const clash = DRAFT.replace("(large:Option", "(kind_option:Option {name: 'clash'}),\n(large:Option");
+    const clash = DRAFT.replace('(large:Option', "(kind_option:Option {name: 'clash'}),\n(large:Option");
     const block = lockBlock(readNote([clash]), 'reader', '2026-10-07');
     assert.match(block, /\(kind_option_2:Meta:ElementType \{name: 'Option'/);
     assert.doesNotThrow(() => gs.read([clash, block]));
@@ -72,14 +76,19 @@ describe('Lock the graph', () => {
     const r = insertBlockAfter(NOTE, { line: b.line - 1, text: b.text }, block);
     assert.equal(r.ok, true);
     assert.equal(r.note, NOTE.replace('```\n\nAfter.', '```\n\n```gql\n' + block + '\n```\n\nAfter.'));
-    assert.deepEqual(gqlBlocks(r.note).map((x) => x.text), [DRAFT, block]);
+    assert.deepEqual(
+      gqlBlocks(r.note).map((x) => x.text),
+      [DRAFT, block],
+    );
   });
 });
 
 describe('every edit round-trips', () => {
   test('applied and read back, an edit gives the graph intended; undone, the original bytes', () => {
     const h = new History();
-    let note = NOTE, b = gqlBlocks(note)[0], ref = { line: b.line - 1, text: b.text };
+    let note = NOTE,
+      b = gqlBlocks(note)[0],
+      ref = { line: b.line - 1, text: b.text };
     const edits = [
       DRAFT + ",\n(price:Reason {title: 'Costs more'}),\n(price)-[:COUNTS_AGAINST]->(large)",
       DRAFT.replace("title: 'Easy on the eyes'", "title: 'Easier on the eyes'"),
@@ -92,9 +101,14 @@ describe('every edit round-trips', () => {
       const want = readNote([text]).graphs.get('reader');
       assert.deepEqual(back, want, 'read back, the graph intended');
       h.record(ref.text, r.ref.text);
-      note = r.note; ref = r.ref;
+      note = r.note;
+      ref = r.ref;
     }
-    for (let step; (step = h.undo());) { const r = replaceBlock(note, ref, step); note = r.note; ref = r.ref; }
+    for (let step; (step = h.undo());) {
+      const r = replaceBlock(note, ref, step);
+      note = r.note;
+      ref = r.ref;
+    }
     assert.equal(note, NOTE, 'undone, the original bytes');
   });
 });

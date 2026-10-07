@@ -2,7 +2,8 @@
 // exactly as it does (spec §4, "colour"). Proved token for token against answers recorded from gql-highlight itself.
 // `--` is not a comment here: the standard allows it, but it collides with edge patterns, and graph notes write `//`.
 
-const KEYWORDS = new Set(`
+const KEYWORDS = new Set(
+  `
 ABS ACYCLIC ALL ALL_DIFFERENT AND ANY AS ASC ASCENDING AT BINDING BY CALL CASE CAST CATALOG
 CLEAR CLONE CLOSE COMMIT CONNECTING COPY COUNT CREATE CURRENT DELETE DESC DESCENDING DESTINATION
 DETACH DIRECTED DISTINCT DROP EDGE EDGES ELEMENT ELEMENTS ELSE END EXCEPT EXISTS FILTER FINISH
@@ -11,13 +12,20 @@ LAST LET LIKE LIMIT MATCH NEXT NO NODE NODES NODETACH NOT OF OFFSET ON ONLY OPTI
 OTHERWISE PARAMETER PATH PATHS PROPERTY PROJECT READ RELATIONSHIP RELATIONSHIPS REMOVE REPLACE
 RESET RETURN ROLLBACK SAME SCHEMA SESSION SET SHORTEST SIMPLE SKIP SOURCE START TABLE THEN TO
 TRAIL TRANSACTION TYPE UNDIRECTED UNION USE VERTEX VERTICES WALK WHEN WHERE WITH WRITE XOR YIELD
-`.trim().split(/\s+/));
+`
+    .trim()
+    .split(/\s+/),
+);
 
-const TYPES = new Set(`
+const TYPES = new Set(
+  `
 BIGINT BINARY BOOL BOOLEAN BYTES CHAR DATE DATETIME DECIMAL DOUBLE DURATION FLOAT FLOAT32 FLOAT64
 INT INT8 INT16 INT32 INT64 INTEGER LIST LOCAL LOCAL_DATETIME LOCAL_TIME RECORD SMALLINT STRING
 TIME TIMESTAMP UINT VARCHAR ZONED ZONED_DATETIME ZONED_TIME
-`.trim().split(/\s+/));
+`
+    .trim()
+    .split(/\s+/),
+);
 
 const VALUES = new Set(['TRUE', 'FALSE', 'NULL', 'UNKNOWN']);
 
@@ -25,7 +33,23 @@ const VALUES = new Set(['TRUE', 'FALSE', 'NULL', 'UNKNOWN']);
 const CALLABLE = new Set(['ABS', 'COUNT', 'LABELS', 'TYPE']);
 
 /** The token classes; each is coloured by a rule named `.gql-<class>` in styles.css. */
-export const TOKEN_CLASSES = ['kw', 'type', 'label', 'edge', 'prop', 'string', 'value', 'comment', 'fn', 'param', 'var', 'arrow', 'op', 'punct'] as const;
+export const TOKEN_CLASSES = [
+  'kw',
+  'type',
+  'label',
+  'edge',
+  'prop',
+  'string',
+  'value',
+  'comment',
+  'fn',
+  'param',
+  'var',
+  'arrow',
+  'op',
+  'punct',
+] as const;
+/** The class of a token, as the editor colours it. */
 export type TokenClass = (typeof TOKEN_CLASSES)[number];
 
 /** A piece of the text, and its class; null for whitespace and anything not coloured. */
@@ -56,25 +80,38 @@ const RULES: [Kind, RegExp][] = [
 /** Splits GQL text into tokens. Joining every token's text gives back the text exactly. */
 export function tokenize(src: string): Token[] {
   const out: Token[] = [];
-  const stack: string[] = [];   // open brackets: '(' node, '[' edge, '{' map
-  let labelMode = false;        // inside a label expression after ':'
+  const stack: string[] = []; // open brackets: '(' node, '[' edge, '{' map
+  let labelMode = false; // inside a label expression after ':'
   let prev: Token | null = null;
   let i = 0;
   const top = () => stack[stack.length - 1];
 
   while (i < src.length) {
-    let kind: Kind | null = null, text = '';
+    let kind: Kind | null = null,
+      text = '';
     for (const [k, re] of RULES) {
       re.lastIndex = i;
       const m = re.exec(src);
-      if (m && m[0].length) { kind = k; text = m[0]; break; }
+      if (m && m[0].length) {
+        kind = k;
+        text = m[0];
+        break;
+      }
     }
     let c: TokenClass | null = null;
     switch (kind) {
-      case 'comment': c = 'comment'; break;
-      case 'string': c = 'string'; break;
-      case 'param': c = 'param'; break;
-      case 'number': c = 'value'; break;
+      case 'comment':
+        c = 'comment';
+        break;
+      case 'string':
+        c = 'string';
+        break;
+      case 'param':
+        c = 'param';
+        break;
+      case 'number':
+        c = 'value';
+        break;
       case 'quoted':
       case 'word': {
         const up = text.toUpperCase();
@@ -96,7 +133,9 @@ export function tokenize(src: string): Token[] {
         if (text.endsWith('[')) stack.push('[');
         if (text.startsWith(']') && top() === '[') stack.pop();
         break;
-      case 'op': c = 'op'; break;
+      case 'op':
+        c = 'op';
+        break;
       case 'punct': {
         c = 'punct';
         if (text === '(' || text === '[' || text === '{') stack.push(text);
@@ -104,14 +143,16 @@ export function tokenize(src: string): Token[] {
         if (want && top() === want) stack.pop();
         break;
       }
-      default: c = null;
+      default:
+        c = null;
     }
 
     // Label expressions: `:A`, `:A:B`, `:A|B`, `:A&B`, `:!A` — inside ( ) or [ ], not { }.
     if (kind !== 'ws' && kind !== 'comment') {
       if (text === ':' && top() !== '{') labelMode = true;
-      else if (labelMode && (c === 'label' || c === 'edge' || ['|', '&', '!'].includes(text))) { /* stay in the label expression */ }
-      else labelMode = false;
+      else if (labelMode && (c === 'label' || c === 'edge' || ['|', '&', '!'].includes(text))) {
+        /* stay in the label expression */
+      } else labelMode = false;
       prev = { c, s: text };
     }
     out.push({ c, s: text });

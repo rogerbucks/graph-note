@@ -96,15 +96,17 @@ export function jobs(text) {
 }
 
 /** Every `uses:` reference in a workflow. */
-export const usesRefs = (text) =>
-  [...text.matchAll(/^\s*(?:-\s*)?uses:\s*['"]?([^'"\s#]+)/gm)].map((m) => m[1]);
+export const usesRefs = (text) => [...text.matchAll(/^\s*(?:-\s*)?uses:\s*['"]?([^'"\s#]+)/gm)].map((m) => m[1]);
 
 /** Every `run:` command in a workflow, in order, joined into one string per step. */
 export const runCommands = (text) =>
   [...text.matchAll(/^(\s*)(?:-\s*)?run:\s*(\|?)(.*)$/gm)].map((m, i, all) => {
     if (!m[2]) return m[3].trim();
     // A block scalar: the indented lines that follow.
-    const after = text.slice(m.index + m[0].length).split('\n').slice(1);
+    const after = text
+      .slice(m.index + m[0].length)
+      .split('\n')
+      .slice(1);
     const body = [];
     for (const l of after) {
       if (l.trim() && l.length - l.trimStart().length <= m[1].length + 2) break;
@@ -120,11 +122,7 @@ export const findsNetwork = (code) => NETWORK.test(code);
 
 export const findsHotkeys = (code) => /\bhotkeys\s*:/.test(code);
 
-const FORBIDDEN_MODULES = new Set([
-  ...builtinModules,
-  ...builtinModules.map((m) => `node:${m}`),
-  'electron',
-]);
+const FORBIDDEN_MODULES = new Set([...builtinModules, ...builtinModules.map((m) => `node:${m}`), 'electron']);
 /** Modules a piece of source imports or requires that mobile does not have. */
 export function forbiddenImports(code) {
   const specs = [

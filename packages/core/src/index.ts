@@ -1,5 +1,13 @@
 // The host-free core of the graph note editor (spec §10). It imports no host: no obsidian, no vscode.
-export { gqlBlocks, gqlSpans, readNote, graphOfBlock, isSharedSchema, namesSharedSchema, blockItems } from './drawing.ts';
+export {
+  gqlBlocks,
+  gqlSpans,
+  readNote,
+  graphOfBlock,
+  isSharedSchema,
+  namesSharedSchema,
+  blockItems,
+} from './drawing.ts';
 export { hops } from './estimates.ts';
 export { replaceBlock, insertBlockAfter, History } from './store.ts';
 export type { BlockRef, WriteResult } from './store.ts';
@@ -22,7 +30,15 @@ export type { Choice, PaneWrite } from './pane.ts';
 export { completenessReport } from './completeness.ts';
 export type { CompletenessReport, RuleReport } from './completeness.ts';
 export { commaFor, commaInNote } from './commas.ts';
-export { parseValue, propertiesOf, propertyNames, setProperty, spanOf, linkInBlock } from './inspector.ts';
+export {
+  parseValue,
+  propertiesOf,
+  propertyNames,
+  setProperty,
+  renameProperty,
+  spanOf,
+  linkInBlock,
+} from './inspector.ts';
 export { hitAreas, nearby, TapCycle } from './hits.ts';
 export type { HitAreas, Shape } from './hits.ts';
 export type { PropType, Property, Target, Edit, Parsed } from './inspector.ts';
