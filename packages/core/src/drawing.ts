@@ -167,6 +167,14 @@ function dataKind(text: string): 'data' | 'schema' | null | Problem {
   }
 }
 
+const firstLine = (text: string) => text.split('\n').find((l) => l.trim()) ?? '';
+
+/** Whether a block is a shared schema (§5): its graph line says SCHEMA and its name. */
+export const isSharedSchema = (text: string): boolean => /^\s*\/\/\s*graph:.*·\s*SCHEMA\s+\S+/.test(firstLine(text));
+
+/** Whether a block's graph is typed by a shared schema it names: its graph line says "schema" and the schema's name. */
+export const namesSharedSchema = (text: string): boolean => /^\s*\/\/\s*graph:.*·\s*schema\s+\S+/.test(firstLine(text));
+
 /** The graph a block draws: its name when it is a data block with a graph line, else null — a query, schema, excerpt or plain code. */
 export function graphOfBlock(text: string): string | null {
   return dataKind(text) === 'data' ? graphOf(text) : null;

@@ -2,7 +2,7 @@
 // shown as coloured code. A graph is never blank: what can be read is drawn and the rest is listed; when nothing can be
 // read, or the engine cannot start, the text is shown with its problems or a banner.
 import type { MarkdownPostProcessorContext } from 'obsidian';
-import { completenessReport, draw, gqlBlocks, graphOfBlock, readNote } from '@graph-note/core';
+import { completenessReport, draw, gqlBlocks, graphOfBlock, namesSharedSchema, readNote } from '@graph-note/core';
 import type { Block, Drawn, Problem } from '@graph-note/core';
 import type GraphNotePlugin from './main';
 import { renderCode } from './code';
@@ -19,7 +19,8 @@ export async function renderBlock(plugin: GraphNotePlugin, source: string, el: H
   if (index < 0) { blocks = [{ text: source, line: 0 }]; index = 0; }   // shown on its own, as in a hover preview
   const texts = blocks.map((b, i) => (i === index ? source : b.text));
 
-  const reading = readNote(texts, index);
+  const shared = texts.some(namesSharedSchema) ? await plugin.sharedSchemas() : [];
+  const reading = readNote(texts, index, shared);
   // a problem's line in the note: the block's fence line, plus its line in the block (1 = the line after the fence)
   const shown = (p: Problem): ShownProblem => ({ ...p, noteLine: (blocks[p.block]?.line ?? 0) + p.line });
   const problems = reading.problems.filter((p) => p.graph === graph).map(shown);

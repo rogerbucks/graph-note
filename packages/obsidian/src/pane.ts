@@ -5,7 +5,7 @@
 // core's session, which never overwrites a block changed meanwhile and keeps what was typed as a draft.
 import { ItemView, Notice, Platform, TFile, setIcon } from 'obsidian';
 import type { ViewStateResult, WorkspaceLeaf } from 'obsidian';
-import { PaneSession, completions, diagnostics, draw, gqlSpans, graphOfBlock, insertBlockAfter, isDraft, lockBlock, readBack, tokenize } from '@graph-note/core';
+import { PaneSession, namesSharedSchema, completions, diagnostics, draw, gqlSpans, graphOfBlock, insertBlockAfter, isDraft, lockBlock, readBack, tokenize } from '@graph-note/core';
 import type { CompletionItem, Diagnostic, NoteReading } from '@graph-note/core';
 import type GraphNotePlugin from './main';
 import type { EditTarget } from './main';
@@ -64,6 +64,7 @@ export class GraphPane extends ItemView {
         this.path = t.path;
         this.note = await this.app.vault.read(file);
         try { this.session = new PaneSession(this.note, t.line ?? 0); } catch (e) { this.session = null; new Notice(String((e as Error).message)); }
+        if (this.session && gqlSpans(this.note).some((x) => namesSharedSchema(x.text))) this.session.shared = await this.plugin.sharedSchemas();
         this.render();
       }
     }

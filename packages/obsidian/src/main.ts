@@ -1,7 +1,7 @@
 // Graph Note: draws the graphs written in notes (spec §3), and edits them in a pane beside the note (spec §4).
-import { Notice, Plugin } from 'obsidian';
+import { Notice, Plugin, TFile } from 'obsidian';
 import type { MarkdownPostProcessorContext } from 'obsidian';
-import { loadEngine } from '@graph-note/core';
+import { gqlBlocks, isSharedSchema, loadEngine } from '@graph-note/core';
 import type { Engine } from '@graph-note/core';
 import { renderBlock } from './block';
 import { GraphPane, PANE } from './pane';
@@ -23,6 +23,8 @@ interface Saved {
 export default class GraphNotePlugin extends Plugin {
   private engine: Promise<Engine> | null = null;
   private saved: Saved = {};
+  /** The vault's shared schema blocks, by note: read once, the first time a graph names one, then kept up to date. */
+  private schemas: Map<string, string[]> | null = null;
 
   override async onload(): Promise<void> {
     this.saved = ((await this.loadData()) as Saved | null) ?? {};
@@ -34,6 +36,21 @@ export default class GraphNotePlugin extends Plugin {
       console.error('Graph Note could not take gql blocks', e);
       new Notice('Another plugin already draws gql blocks, so graphs cannot be drawn. Update or turn off the gql-highlight plugin, then reload Obsidian.', 0);
     }
+  }
+
+  /** Every shared schema block in the vault (§5), for graphs that name one. */
+  async sharedSchemas(): Promise<string[]> {
+    if (!this.schemas) {
+      const found = new Map<string, string[]>();
+      const read = async (f: TFile) => {
+        const blocks = gqlBlocks(await this.app.vault.cachedRead(f)).map((b) => b.text).filter(isSharedSchema);
+        if (blocks.length) found.set(f.path, blocks); else found.delete(f.path);
+      };
+      for (const f of this.app.vault.getMarkdownFiles()) await read(f);
+      this.schemas = found;
+      this.registerEvent(this.app.vault.on('modify', (f) => { if (f instanceof TFile && f.extension === 'md') void read(f); }));
+    }
+    return [...this.schemas.values()].flat();
   }
 
   drafts(): Drafts {

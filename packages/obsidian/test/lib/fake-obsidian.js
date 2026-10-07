@@ -23,6 +23,7 @@ export function fakeObsidian(state = {}) {
   const vault = {
     getFileByPath: file,
     getAbstractFileByPath: file,
+    getMarkdownFiles: () => [...files.keys()].filter((p) => p.endsWith('.md')).map((p) => new TFile(p)),
     read: async (f) => files.get(f.path),
     cachedRead: async (f) => files.get(f.path),
     process: async (f, fn) => { const next = fn(files.get(f.path)); if (next !== files.get(f.path)) { files.set(f.path, next); (state.writes ??= []).push(f.path); listeners.forEach((l) => l(file(f.path))); } return next; },

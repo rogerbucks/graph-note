@@ -1,5 +1,5 @@
 // The host-free core of the graph note editor (spec §10). It imports no host: no obsidian, no vscode.
-export { gqlBlocks, gqlSpans, readNote, graphOfBlock } from './drawing.ts';
+export { gqlBlocks, gqlSpans, readNote, graphOfBlock, isSharedSchema, namesSharedSchema } from './drawing.ts';
 export { replaceBlock, insertBlockAfter, History } from './store.ts';
 export type { BlockRef, WriteResult } from './store.ts';
 export type { Block, Span, Box, Link, GraphDrawing, Problem, NoteReading } from './drawing.ts';

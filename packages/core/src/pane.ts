@@ -30,6 +30,8 @@ export class PaneSession {
   /** The block as the pane last read or wrote it. */
   ref: BlockRef;
   dirty = false;
+  /** The vault's shared schemas (§5), for a graph that names one: the host loads them. */
+  shared: string[] = [];
   private readonly history = new History();
   private lastNote = '';
 
@@ -63,7 +65,7 @@ export class PaneSession {
     const at = spans.findIndex((s) => s.open === this.ref.line && s.text === this.ref.text);
     const index = at >= 0 ? at : spans.findIndex((s) => s.text === this.ref.text);
     const texts = spans.map((s, i) => (i === index ? this.text : s.text));
-    return index >= 0 ? readNote(texts, index) : readNote([this.text]);
+    return index >= 0 ? readNote(texts, index, this.shared) : readNote([this.text], 0, this.shared);
   }
 
   /** Writes what is typed into the note, or refuses — keeping it as a draft and reloading the block as it now is. */

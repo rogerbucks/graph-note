@@ -313,3 +313,33 @@ describe('problems announced', () => {
     } finally { env.uninstall(); }
   });
 });
+
+describe('shared schemas', () => {
+  const SCHEMA_NOTE = "# Schemas\n\n```gql\n// graph: shared · SCHEMA seeing@1\n(t1:Meta:ElementType {name: 'Thing', kind: 'node'}),\n(t2:Meta:ElementType {name: 'SEES', kind: 'edge', reading: 'can see', reverse_name: 'is seen by'})\n```\n";
+  const USES = fence("// graph: view · schema seeing@1\n(a:Thing {name: 'A'}), (b:Thing {name: 'B'}), (a)-[:SEES]->(b)");
+
+  test('a graph that names a shared schema reads its links in that schema’s words, in the note and in the pane', async () => {
+    const env = await load({ files: { 'Schemas.md': SCHEMA_NOTE, 'View.md': USES } });
+    try {
+      const el = env.doc.body.createDiv();
+      const lines = USES.split('\n');
+      const { fakeContext } = await import('./lib/fake-obsidian.js');
+      await env.state.processors.get('gql')(lines.slice(1, -1).join('\n'), el, { ...fakeContext(USES, 0), sourcePath: 'View.md' });
+      assert.match(el.querySelector('g.edge').textContent, /can see/);
+      await env.plugin.openEditor({ path: 'View.md', line: 0, graph: 'view' });
+      const pane = env.app.workspace.getLeavesOfType('graph-note-pane')[0].view.contentEl;
+      assert.ok(pane.querySelectorAll('.graph-note-readback').some((s) => /A can see B/.test(s.textContent)));
+    } finally { env.uninstall(); }
+  });
+
+  test('a graph that names no shared schema never reads the vault for one', async () => {
+    const env = await load({ files: { 'Schemas.md': SCHEMA_NOTE, 'Reader.md': NOTE } });
+    try {
+      let reads = 0;
+      const read = env.app.vault.cachedRead;
+      env.app.vault.cachedRead = async (f) => { reads++; return read(f); };
+      await env.plugin.openEditor({ path: PATH, line: 2, graph: 'reader' });
+      assert.equal(reads, 0);
+    } finally { env.uninstall(); }
+  });
+});
