@@ -24,25 +24,67 @@ describe('Lock the graph', () => {
     assert.equal(isDraft(locked, 'reader'), false);
   });
 
-  test('locking writes a schema block: every kind and relationship, with its readings both ways', () => {
+  test('locking writes a schema block: every kind and relationship, with its readings both ways, each declared by the graph', () => {
+    // the shape and layout of the guide's locked schema (How to write a graph note): lines under 70 characters, a long
+    // thing split over lines, a "// ──" line before each part, and the graph's GraphMeta DECLARES each type
     const block = lockBlock(readNote([DRAFT]), 'reader', '2026-10-07');
     assert.equal(
       block,
       `// graph: reader · SOURCE
 // ── The schema: locked 2026-10-07 from the data above ──
 // The reverse readings are guesses — check each one.
-(reader_schema:GraphMeta {graph: 'reader', schema: 'reader@1'}),
+(reader_schema:GraphMeta {
+    graph: 'reader', schema: 'reader@1'}),
 
 // ── Kinds of thing ──
-(kind_option:Meta:ElementType {name: 'Option', kind: 'node', origin: 'source'}),
-(kind_question:Meta:ElementType {name: 'Question', kind: 'node', origin: 'source'}),
-(kind_reason:Meta:ElementType {name: 'Reason', kind: 'node', origin: 'source'}),
+(kind_option:Meta:ElementType {
+    name: 'Option', kind: 'node', origin: 'source'}),
+(kind_question:Meta:ElementType {
+    name: 'Question', kind: 'node', origin: 'source'}),
+(kind_reason:Meta:ElementType {
+    name: 'Reason', kind: 'node', origin: 'source'}),
 
 // ── Relationship types, with their readings both ways ──
-(link_answers:Meta:ElementType {name: 'ANSWERS', kind: 'edge', origin: 'source', reading: 'answers', reverse_name: 'is answered by'}),
-(link_counts_against:Meta:ElementType {name: 'COUNTS_AGAINST', kind: 'edge', origin: 'source', reading: 'counts against', reverse_name: 'is counted against by'}),
-(link_favours:Meta:ElementType {name: 'FAVOURS', kind: 'edge', origin: 'source', reading: 'favours', reverse_name: 'is favoured by'})`,
+(link_answers:Meta:ElementType {
+    name: 'ANSWERS', kind: 'edge', origin: 'source',
+    reading: 'answers', reverse_name: 'is answered by'}),
+(link_counts_against:Meta:ElementType {
+    name: 'COUNTS_AGAINST', kind: 'edge', origin: 'source',
+    reading: 'counts against',
+    reverse_name: 'is counted against by'}),
+(link_favours:Meta:ElementType {
+    name: 'FAVOURS', kind: 'edge', origin: 'source',
+    reading: 'favours', reverse_name: 'is favoured by'}),
+
+// ── The graph declares each one ──
+(reader_schema)-[:DECLARES]->(kind_option),
+(reader_schema)-[:DECLARES]->(kind_question),
+(reader_schema)-[:DECLARES]->(kind_reason),
+(reader_schema)-[:DECLARES]->(link_answers),
+(reader_schema)-[:DECLARES]->(link_counts_against),
+(reader_schema)-[:DECLARES]->(link_favours)`,
     );
+    for (const line of block.split('\n')) assert.ok(line.length < 70, line);
+  });
+
+  test('a graph written over several blocks is locked whole, even from its first block', () => {
+    // Roger's try-out, 8 Oct 2026: locking from Step 1 declared only Step 1's kinds and types
+    const step1 = `// graph: trip · SOURCE
+(where:Question {title: 'Where to?'}),
+(coast:Option {name: 'The coast'}),
+(coast)-[:ANSWERS]->(where)`;
+    const step2 = `// graph: trip · SOURCE
+(sun:Reason {title: 'Sun'}),
+(sun)-[:FAVOURS]->(coast)`;
+    const block = lockBlock(readNote([step1, step2], 0), 'trip', '2026-10-08');
+    for (const name of ['Option', 'Question', 'Reason', 'ANSWERS', 'FAVOURS'])
+      assert.match(block, new RegExp(`name: '${name}'`));
+    const w = gs.worldFromStore(gs.read([step1, step2, block]));
+    assert.deepEqual(
+      gs.check(w, 'trip').find(([label]) => label.startsWith('§5')),
+      ['§5: every element has a declared type', true],
+    );
+    assert.equal(w.trip.out('trip_schema', 'DECLARES').length, 5);
   });
 
   test('the locked graph passes the spec’s own type check, as the Python and JavaScript libraries run it', () => {
@@ -56,7 +98,7 @@ describe('Lock the graph', () => {
   test('a schema node’s id never clashes with a thing already in the graph', () => {
     const clash = DRAFT.replace('(large:Option', "(kind_option:Option {name: 'clash'}),\n(large:Option");
     const block = lockBlock(readNote([clash]), 'reader', '2026-10-07');
-    assert.match(block, /\(kind_option_2:Meta:ElementType \{name: 'Option'/);
+    assert.match(block, /\(kind_option_2:Meta:ElementType \{\n {4}name: 'Option'/);
     assert.doesNotThrow(() => gs.read([clash, block]));
   });
 

@@ -1,6 +1,7 @@
 // Lock the graph (spec §8): a draft's kinds and relationship types, worked out from its data, written as its schema — a
 // block written last, as the graph spec's §5 asks — with each relationship read both ways. The reverse readings are
 // guesses, and the block says so, for the writer to check.
+import gs from '@graph-note/graph-spec';
 import type { NoteReading } from './drawing.ts';
 
 /** A graph with no schema of its own, none written later in its note, and none it names, is a draft (§5). */
@@ -22,12 +23,19 @@ export function reverseGuess(reading: string): string {
   return ['is', done, ...rest, 'by'].join(' ');
 }
 
+/** A line kept under 70 characters, as the guide asks: as one line if it fits, otherwise as the two given. */
+const fit = (one: string, first: string, second: string) => (one.length < 70 ? [one] : [first, second]);
+
 const q = (s: string) => `'${s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
 
-/** The schema block that locks a draft: its kinds and relationship types, each with its readings, dated. */
+/**
+ * The schema block that locks a draft: every kind and relationship type of the whole graph — across all its blocks in the
+ * note, whichever block it is locked from — each with its readings, dated, and each declared by the graph's GraphMeta.
+ * Laid out as the guide lays a locked schema out: a long thing split over lines, a "// ──" line before each part.
+ */
 export function lockBlock(reading: NoteReading, graph: string, today: string): string {
-  const d = reading.graphs.get(graph);
-  if (!d) throw new Error(`there is no graph ${graph} to lock`);
+  const g = reading.whole[graph] ?? reading.world[graph];
+  if (!g) throw new Error(`there is no graph ${graph} to lock`);
   const header =
     reading.texts
       .map((t) => t.split('\n').find((l) => l.trim()) ?? '')
@@ -42,24 +50,45 @@ export function lockBlock(reading: NoteReading, graph: string, today: string): s
     return v;
   };
   const byCode = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
-  const kinds = [...new Set(d.boxes.flatMap((b) => b.kind.split(' · ').filter(Boolean)))].sort(byCode);
-  const types = [...new Map(d.links.map((l) => [l.type, l.reading])).entries()].sort((a, b) => byCode(a[0], b[0]));
+  const hidden = new Set(gs.SCHEMA_LABELS);
+  const kinds = [
+    ...new Set([...g.nodes.values()].flatMap(([labels]) => [...labels].filter((l) => !hidden.has(l)))),
+  ].sort(byCode);
+  const readings = gs.readings(g);
+  const types = [...new Set(g.edges.map(([, t]) => t))].sort(byCode).map((t) => [t, gs.word(readings, t)] as const);
+  const meta = id(`${graph}_schema`);
+  const declared: string[] = [];
+  const declare = (want: string) => {
+    const v = id(want);
+    declared.push(v);
+    return v;
+  };
   return [
     header,
     `// ── The schema: locked ${today} from the data above ──`,
     '// The reverse readings are guesses — check each one.',
-    `(${id(`${graph}_schema`)}:GraphMeta {graph: ${q(graph)}, schema: ${q(`${graph}@1`)}}),`,
+    `(${meta}:GraphMeta {`,
+    `    graph: ${q(graph)}, schema: ${q(`${graph}@1`)}}),`,
     '',
     '// ── Kinds of thing ──',
-    ...kinds.map(
-      (k) => `(${id(`kind_${k.toLowerCase()}`)}:Meta:ElementType {name: ${q(k)}, kind: 'node', origin: 'source'}),`,
-    ),
+    ...kinds.flatMap((k) => [
+      `(${declare(`kind_${k.toLowerCase()}`)}:Meta:ElementType {`,
+      `    name: ${q(k)}, kind: 'node', origin: 'source'}),`,
+    ]),
     '',
     '// ── Relationship types, with their readings both ways ──',
-    ...types.map(
-      ([t, r]) =>
-        `(${id(`link_${t.toLowerCase()}`)}:Meta:ElementType {name: ${q(t)}, kind: 'edge', origin: 'source', reading: ${q(r)}, reverse_name: ${q(reverseGuess(r))}}),`,
-    ),
+    ...types.flatMap(([t, r]) => [
+      `(${declare(`link_${t.toLowerCase()}`)}:Meta:ElementType {`,
+      `    name: ${q(t)}, kind: 'edge', origin: 'source',`,
+      ...fit(
+        `    reading: ${q(r)}, reverse_name: ${q(reverseGuess(r))}}),`,
+        `    reading: ${q(r)},`,
+        `    reverse_name: ${q(reverseGuess(r))}}),`,
+      ),
+    ]),
+    '',
+    '// ── The graph declares each one ──',
+    ...declared.map((d) => `(${meta})-[:DECLARES]->(${d}),`),
   ]
     .join('\n')
     .replace(/,$/, '');

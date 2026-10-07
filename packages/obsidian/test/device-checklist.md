@@ -50,6 +50,8 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
       kept as a draft, and Restore draft brings it back.
 - [ ] Undo and Redo take back and put back each change in the note.
 - [ ] A draft graph offers Lock the graph. Locking writes its schema as a new block after the graph.
+- [ ] Lock a graph built over two blocks, from its first block: the schema declares every kind and relationship of
+      both blocks, and the graph then shows no problems.
 - [ ] Phone: the pane offers Drawing and Text as two tabs, with problems in a sheet at the bottom. Every button is easy
       to hit with a thumb, and nothing needs a hover.
 
