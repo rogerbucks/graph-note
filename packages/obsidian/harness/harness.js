@@ -1,5 +1,5 @@
 // Draws every gql block of the sample note with the real plugin bundle, as Obsidian's reading view would.
-import Plugin from '../../src/main.ts';
+import Plugin from '../src/main.ts';
 import { processors } from 'obsidian';
 import note from './sample.md';
 

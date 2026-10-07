@@ -1,5 +1,5 @@
 // Builds a page that shows the plugin drawing a sample note in an ordinary browser, for looking at it and trying the
-// controls before it goes onto a device: node packages/obsidian/test/harness/build.mjs <folder>
+// controls before it goes onto a device: node packages/obsidian/harness/build.mjs <folder>
 import esbuild from 'esbuild';
 import { copyFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -12,5 +12,5 @@ await esbuild.build({
   entryPoints: [join(here, 'harness.js')], outfile: join(out, 'harness.js'), bundle: true, format: 'esm', platform: 'browser', target: 'es2022',
   alias: { obsidian: join(here, 'obsidian-shim.js') }, loader: { '.md': 'text' }, logLevel: 'warning',
 });
-copyFileSync(join(here, '..', '..', '..', '..', 'styles.css'), join(out, 'styles.css'));
+copyFileSync(join(here, '..', '..', '..', 'styles.css'), join(out, 'styles.css'));
 copyFileSync(join(here, 'index.html'), join(out, 'index.html'));
