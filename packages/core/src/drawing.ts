@@ -29,6 +29,7 @@ export interface Link {
   to: string;
 }
 
+/** One graph, ready to draw: its boxes, its links, and the estimates added where what was written was a near miss. */
 export interface GraphDrawing {
   graph: string;
   boxes: Box[];
@@ -55,6 +56,7 @@ export interface Problem {
   insert?: { line: number; character: number; text: string };
 }
 
+/** What a note's graph blocks say: each graph as drawn, the problems, and the graphs themselves, as written and joined. */
 export interface NoteReading {
   graphs: Map<string, GraphDrawing>;
   problems: Problem[];
@@ -77,11 +79,13 @@ export interface Span {
 
 /** Where each gql fenced block of a note is. An unclosed fence runs to the end, as Markdown reads it. */
 export function gqlSpans(note: string): Span[] {
-  const lines = note.split('\n').map((l) => l.replace(/\r$/, '')), out: Span[] = [];
+  const lines = note.split('\n').map((l) => l.replace(/\r$/, '')),
+    out: Span[] = [];
   for (let i = 0; i < lines.length; i++) {
     const open = FENCE.exec(lines[i] ?? '');
     if (!open) continue;
-    const mark = open[1] ?? '```', close = new RegExp(`^ {0,3}${mark[0] === '`' ? '`' : '~'}{${mark.length},}\\s*$`);
+    const mark = open[1] ?? '```',
+      close = new RegExp(`^ {0,3}${mark[0] === '`' ? '`' : '~'}{${mark.length},}\\s*$`);
     let j = i + 1;
     while (j < lines.length && !close.test(lines[j] ?? '')) j++;
     out.push({ text: lines.slice(i + 1, j).join('\n'), open: i, close: j });
@@ -105,25 +109,41 @@ interface Item {
 
 /** The top-level items of a block — each path, SET or MATCH — with the text and the 0-based lines each starts and ends on. */
 export function blockItems(text: string): { text: string; line: number; end: number }[] {
-  return items(text).map((it) => ({ text: text.slice(it.from, it.to), line: lineAt(text, it.from) - 1, end: lineAt(text, it.to - 1) - 1 }));
+  return items(text).map((it) => ({
+    text: text.slice(it.from, it.to),
+    line: lineAt(text, it.from) - 1,
+    end: lineAt(text, it.to - 1) - 1,
+  }));
 }
 
 /** Splits a block into its top-level items: at commas outside brackets, strings and comments, and before SET, MATCH and INSERT. */
 function items(text: string): Item[] {
   const out: Item[] = [];
-  let depth = 0, start = -1, last = -1;
-  const end = (comma: number) => { if (start !== -1) out.push({ from: start, to: last + 1, comma }); start = -1; };
+  let depth = 0,
+    start = -1,
+    last = -1;
+  const end = (comma: number) => {
+    if (start !== -1) out.push({ from: start, to: last + 1, comma });
+    start = -1;
+  };
   for (let i = 0; i < text.length; i++) {
     const c = text[i] ?? '';
-    if (c === '/' && text[i + 1] === '/') { while (i < text.length && text[i] !== '\n') i++; continue; }
+    if (c === '/' && text[i + 1] === '/') {
+      while (i < text.length && text[i] !== '\n') i++;
+      continue;
+    }
     if (/\s/.test(c)) continue;
     if (depth === 0 && /[A-Za-z]/.test(c) && (i === 0 || !/\w/.test(text[i - 1] ?? ''))) {
       const w = /^[A-Za-z]+/.exec(text.slice(i))?.[0].toUpperCase();
       if ((w === 'SET' || w === 'MATCH' || w === 'INSERT') && start !== -1) end(-1);
     }
-    if (c === ',' && depth === 0) { end(i); continue; }
+    if (c === ',' && depth === 0) {
+      end(i);
+      continue;
+    }
     // a path closed at the end of one line and another opened on the next: a missing comma, so two items, for recovery
-    if (c === '(' && depth === 0 && start !== -1 && text[last] === ')' && text.slice(last + 1, i).includes('\n')) end(-1);
+    if (c === '(' && depth === 0 && start !== -1 && text[last] === ')' && text.slice(last + 1, i).includes('\n'))
+      end(-1);
     if (start === -1) start = i;
     if (c === "'") {
       i++;
@@ -142,7 +162,9 @@ const lineAt = (text: string, pos: number) => text.slice(0, pos).split('\n').len
 /** The block with an item blanked out (newlines kept, so every other line keeps its number), with the comma beside it. */
 function without(text: string, all: Item[], drop: Item[]): string {
   const chars = [...text];
-  const blank = (from: number, to: number) => { for (let k = from; k < to; k++) if (chars[k] !== '\n') chars[k] = ' '; };
+  const blank = (from: number, to: number) => {
+    for (let k = from; k < to; k++) if (chars[k] !== '\n') chars[k] = ' ';
+  };
   for (const it of drop) {
     blank(it.from, it.to);
     const prior = all[all.indexOf(it) - 1];
@@ -157,7 +179,8 @@ function without(text: string, all: Item[], drop: Item[]): string {
 }
 
 /** The graph a block names, or null. */
-const graphOf = (text: string): string | null => /^\s*\/\/\s*graph:\s*(\S+)/.exec(text.split('\n').find((l) => l.trim()) ?? '')?.[1] ?? null;
+const graphOf = (text: string): string | null =>
+  /^\s*\/\/\s*graph:\s*(\S+)/.exec(text.split('\n').find((l) => l.trim()) ?? '')?.[1] ?? null;
 
 const isGraphLine = (text: string) => /^\s*\/\/\s*graph:/.test(text.split('\n').find((l) => l.trim()) ?? '');
 
@@ -169,7 +192,14 @@ function dataKind(text: string): 'data' | 'schema' | null | Problem {
   } catch (e) {
     if (!isGraphLine(text)) return null;
     const p = e instanceof gs.ProfileError ? e : null;
-    return { graph: null, block: -1, severity: 'error', line: p?.line ?? 1, message: p?.msg ?? 'the graph line cannot be read', fix: p?.fix ?? "start the block with '// graph: <name>'" };
+    return {
+      graph: null,
+      block: -1,
+      severity: 'error',
+      line: p?.line ?? 1,
+      message: p?.msg ?? 'the graph line cannot be read',
+      fix: p?.fix ?? "start the block with '// graph: <name>'",
+    };
   }
 }
 
@@ -192,41 +222,71 @@ export function graphOfBlock(text: string): string | null {
  * whole read starts again, so a half-applied block never leaves part of a bad path behind.
  */
 function readBlocks(texts: string[], shared: string[]): { store: gs.Store; problems: Problem[] } {
-  const clean = texts.slice(), problems: Problem[] = [], skip = new Set<number>();
+  const clean = texts.slice(),
+    problems: Problem[] = [],
+    skip = new Set<number>();
   texts.forEach((t, i) => {
     const k = dataKind(t);
     if (k === null) skip.add(i);
-    else if (typeof k === 'object') { skip.add(i); problems.push({ ...k, block: i, graph: graphOf(t) }); }
+    else if (typeof k === 'object') {
+      skip.add(i);
+      problems.push({ ...k, block: i, graph: graphOf(t) });
+    }
   });
   for (let attempt = 0; ; attempt++) {
     const store = new gs.Store();
-    for (const s of shared) { try { store.apply(s); } catch { /* a shared schema that cannot be read types nothing */ } }
+    for (const s of shared) {
+      try {
+        store.apply(s);
+      } catch {
+        /* a shared schema that cannot be read types nothing */
+      }
+    }
     let failed: { block: number; error: unknown } | null = null;
     const commas: Problem[] = [];
     for (let i = 0; i < clean.length && !failed; i++) {
       if (skip.has(i)) continue;
       const before = store.commas.length;
-      try { store.apply(clean[i] ?? ''); } catch (error) { failed = { block: i, error }; }
+      try {
+        store.apply(clean[i] ?? '');
+      } catch (error) {
+        failed = { block: i, error };
+      }
       // a comma the reader read in (§3): a warning on its line, whose fix adds it — the note itself is never rewritten unasked
       for (const c of store.commas.slice(before)) {
         const code = (clean[i] ?? '').split('\n')[c.line - 1] ?? '';
         commas.push({
-          graph: c.graph, block: i, line: c.line, severity: 'warning',
-          message: 'a comma is missing at the end of this line; it is read as if it were there', fix: 'add a comma at the end of the line',
+          graph: c.graph,
+          block: i,
+          line: c.line,
+          severity: 'warning',
+          message: 'a comma is missing at the end of this line; it is read as if it were there',
+          fix: 'add a comma at the end of the line',
           insert: { line: c.line - 1, character: code.trimEnd().length, text: ',' },
         });
       }
     }
-    if (!failed) return { store, problems: problems.concat(commas).sort((a, b) => a.block - b.block || a.line - b.line) };
-    const { block, error } = failed, text = clean[block] ?? '';
+    if (!failed)
+      return { store, problems: problems.concat(commas).sort((a, b) => a.block - b.block || a.line - b.line) };
+    const { block, error } = failed,
+      text = clean[block] ?? '';
     const pe = error instanceof gs.ProfileError ? error : null;
     const line = pe?.line ?? 1;
-    const problem: Problem = { graph: graphOf(text), block, line, severity: 'error', message: pe?.msg ?? 'this could not be read', fix: pe?.fix ?? 'check the line against the guide to writing a graph note' };
+    const problem: Problem = {
+      graph: graphOf(text),
+      block,
+      line,
+      severity: 'error',
+      message: pe?.msg ?? 'this could not be read',
+      fix: pe?.fix ?? 'check the line against the guide to writing a graph note',
+    };
     const all = items(text);
     // "unexpected '('" straight after a path that ends its line with no comma: say so, and offer the comma
-    const opened = all.findIndex((it) => lineAt(text, it.from) === line), prior = all[opened - 1];
+    const opened = all.findIndex((it) => lineAt(text, it.from) === line),
+      prior = all[opened - 1];
     if (pe?.msg === "unexpected '('" && prior && prior.comma === -1 && text[prior.to - 1] === ')') {
-      const at = text.slice(0, prior.to).split('\n'), lastLine = (at[at.length - 1] ?? '').trim();
+      const at = text.slice(0, prior.to).split('\n'),
+        lastLine = (at[at.length - 1] ?? '').trim();
       problem.message = `${pe.msg} — a comma is missing at the end of the line before`;
       problem.fix = `add a comma at the end of the line before, after ${lastLine}`;
       problem.insert = { line: at.length - 1, character: (at[at.length - 1] ?? '').length, text: ',' };
@@ -234,14 +294,26 @@ function readBlocks(texts: string[], shared: string[]): { store: gs.Store; probl
     const touching = all.filter((it) => lineAt(text, it.from) <= line && line <= lineAt(text, it.to - 1));
     const before = all.filter((it) => lineAt(text, it.from) <= line).pop();
     const drop = touching.length ? touching : before ? [before] : [];
-    if (!drop.length || attempt > texts.length + all.length * 2) { skip.add(block); problems.push(problem); continue; }
+    if (!drop.length || attempt > texts.length + all.length * 2) {
+      skip.add(block);
+      problems.push(problem);
+      continue;
+    }
     // Of several items on the failing line, leave out only the one at fault when that can be told.
     let chosen = drop;
     if (drop.length > 1) {
-      chosen = [drop.find((it) => {
-        const trial = without(text, all, [it]);
-        try { const s = new gs.Store(); s.apply(trial); return true; } catch (e) { return !(e instanceof gs.ProfileError && e.line === line); }
-      }) ?? drop[0]].filter((x): x is Item => !!x);
+      chosen = [
+        drop.find((it) => {
+          const trial = without(text, all, [it]);
+          try {
+            const s = new gs.Store();
+            s.apply(trial);
+            return true;
+          } catch (e) {
+            return !(e instanceof gs.ProfileError && e.line === line);
+          }
+        }) ?? drop[0],
+      ].filter((x): x is Item => !!x);
       if (!chosen.length) chosen = drop;
     }
     clean[block] = without(text, all, chosen);
@@ -252,7 +324,10 @@ function readBlocks(texts: string[], shared: string[]): { store: gs.Store; probl
 /** A thing's text: its name, else its title, text or label, else its id — as graph-spec-draw.py chooses. */
 function textOf(g: Graph, id: string): string {
   const p = g.p(id);
-  for (const k of ['name', 'title', 'text', 'label']) { const v = p[k]; if (typeof v === 'string' && v) return v; }
+  for (const k of ['name', 'title', 'text', 'label']) {
+    const v = p[k];
+    if (typeof v === 'string' && v) return v;
+  }
   return id;
 }
 
@@ -262,13 +337,22 @@ function drawingOf(world: World, name: string, own: Graph | undefined): GraphDra
   const g = world[name] as Graph;
   const hidden = new Set(gs.SCHEMA_LABELS);
   const shared = g.labelled('ElementType').length ? undefined : (gs.schemaFor(world, name)[1] ?? own);
-  const R = gs.readings(g, shared);
+  const readings = gs.readings(g, shared);
   const ids = [...g.nodes.keys()].filter((i) => ![...(g.nodes.get(i)?.[0] ?? [])].some((l) => hidden.has(l)));
   const drawn = new Set(ids);
   return {
     graph: name,
-    boxes: ids.map((key) => ({ key, kind: [...(g.nodes.get(key)?.[0] ?? [])].filter((l) => !hidden.has(l)).sort(byCode).join(' · '), text: textOf(g, key) })),
-    links: g.edges.filter(([s, , d]) => drawn.has(s) && drawn.has(d)).map(([from, type, to]) => ({ from, type, reading: gs.word(R, type), to })),
+    boxes: ids.map((key) => ({
+      key,
+      kind: [...(g.nodes.get(key)?.[0] ?? [])]
+        .filter((l) => !hidden.has(l))
+        .sort(byCode)
+        .join(' · '),
+      text: textOf(g, key),
+    })),
+    links: g.edges
+      .filter(([s, , d]) => drawn.has(s) && drawn.has(d))
+      .map(([from, type, to]) => ({ from, type, reading: gs.word(readings, type), to })),
     estimates: [],
   };
 }
@@ -287,7 +371,9 @@ export function readNote(blocks: string[], upTo = blocks.length - 1, shared: str
   for (const name of Object.keys(world)) {
     const own = whole[name]?.labelled('ElementType').length ? whole[name] : undefined;
     const d = drawingOf(world, name, own);
-    const shared = (world[name] as Graph).labelled('ElementType').length ? undefined : (gs.schemaFor(world, name)[1] ?? own);
+    const shared = (world[name] as Graph).labelled('ElementType').length
+      ? undefined
+      : (gs.schemaFor(world, name)[1] ?? own);
     d.estimates = estimate(world[name] as Graph, name, d, shared, problems, upto);
     graphs.set(name, d);
   }

@@ -7,9 +7,13 @@ import { Zoom, MIN_SCALE, MAX_SCALE } from '../src/zoom.ts';
 
 const close = (a, b, msg) => assert.ok(Math.abs(a - b) < 1e-9, `${msg ?? ''} ${a} ≈ ${b}`);
 /** A drawing 1000 × 500 at natural size, in a viewport 500 wide and 250 high — fitted at half size. */
-const make = (mode = 'note', content = { width: 1000, height: 500 }, viewport = { width: 500, height: 250 }) => new Zoom(content, viewport, mode);
+const make = (mode = 'note', content = { width: 1000, height: 500 }, viewport = { width: 500, height: 250 }) =>
+  new Zoom(content, viewport, mode);
 /** Where a point of the drawing (in natural units) sits in the viewport. */
-const at = (z, px, py) => { const t = z.view(); return [t.x + px * t.scale, t.y + py * t.scale]; };
+const at = (z, px, py) => {
+  const t = z.view();
+  return [t.x + px * t.scale, t.y + py * t.scale];
+};
 
 describe('fit', () => {
   test('a drawing starts fitted: whole, centred, never above natural size in a note', () => {
@@ -30,7 +34,9 @@ describe('fit', () => {
 
   test('Fit returns to the whole drawing after zooming and panning', () => {
     const z = make();
-    z.zoomIn(); z.zoomIn(); z.panBy(-80, -40);
+    z.zoomIn();
+    z.zoomIn();
+    z.panBy(-80, -40);
     z.fit();
     close(z.view().scale, 0.5);
     assert.deepEqual([z.view().x, z.view().y], [0, 0]);
@@ -57,8 +63,10 @@ describe('limits', () => {
     close(z.view().scale, 4);
     for (let i = 0; i < 80; i++) z.zoomOut();
     close(z.view().scale, 0.25);
-    z.zoomAt(1e9, 10, 10); close(z.view().scale, 4);
-    z.zoomAt(1e-9, 10, 10); close(z.view().scale, 0.25);
+    z.zoomAt(1e9, 10, 10);
+    close(z.view().scale, 4);
+    z.zoomAt(1e-9, 10, 10);
+    close(z.view().scale, 0.25);
   });
 
   test('the drawing is resized, not stretched, so its text stays sharp at every level', () => {
@@ -101,27 +109,33 @@ describe('buttons and keys', () => {
 
   test('plus, minus and zero zoom in, zoom out and fit when the drawing has focus', () => {
     const z = make();
-    assert.equal(z.handle({ kind: 'key', key: '+' }), true); assert.ok(z.view().scale > 0.5);
+    assert.equal(z.handle({ kind: 'key', key: '+' }), true);
+    assert.ok(z.view().scale > 0.5);
     assert.equal(z.handle({ kind: 'key', key: '=' }), true, 'the plus key unshifted');
     const s = z.view().scale;
-    assert.equal(z.handle({ kind: 'key', key: '-' }), true); assert.ok(z.view().scale < s);
-    assert.equal(z.handle({ kind: 'key', key: '0' }), true); assert.ok(z.isFitted());
+    assert.equal(z.handle({ kind: 'key', key: '-' }), true);
+    assert.ok(z.view().scale < s);
+    assert.equal(z.handle({ kind: 'key', key: '0' }), true);
+    assert.ok(z.isFitted());
     assert.equal(z.handle({ kind: 'key', key: 'a' }), false, 'other keys are left to the host');
   });
 
   test('Escape leaves full-screen, and is left alone in a note', () => {
     const exits = [];
-    const full = make('full'); full.onExit = () => exits.push('exit');
+    const full = make('full');
+    full.onExit = () => exits.push('exit');
     assert.equal(full.handle({ kind: 'key', key: 'Escape' }), true);
     assert.deepEqual(exits, ['exit']);
-    const note = make('note'); note.onExit = () => exits.push('wrong');
+    const note = make('note');
+    note.onExit = () => exits.push('wrong');
     assert.equal(note.handle({ kind: 'key', key: 'Escape' }), false);
     assert.deepEqual(exits, ['exit']);
   });
 
   test('a key with Ctrl, Command or Alt held is left to the host', () => {
     const z = make();
-    for (const mod of ['ctrl', 'meta', 'alt']) assert.equal(z.handle({ kind: 'key', key: '+', [mod]: true }), false, mod);
+    for (const mod of ['ctrl', 'meta', 'alt'])
+      assert.equal(z.handle({ kind: 'key', key: '+', [mod]: true }), false, mod);
     close(z.view().scale, 0.5);
   });
 });
@@ -136,11 +150,13 @@ describe('the mouse wheel and the trackpad', () => {
   test('with Ctrl or Command held — and a trackpad pinch, which arrives as Ctrl and the wheel — it zooms about the pointer', () => {
     for (const mod of ['ctrl', 'meta']) {
       const z = make();
-      const [px, py] = [120, 60], before = [(px - z.view().x) / z.view().scale, (py - z.view().y) / z.view().scale];
+      const [px, py] = [120, 60],
+        before = [(px - z.view().x) / z.view().scale, (py - z.view().y) / z.view().scale];
       assert.equal(z.handle({ kind: 'wheel', x: px, y: py, dy: -100, [mod]: true }), true, mod);
       assert.ok(z.view().scale > 0.5, 'wheel up zooms in');
       const [ax, ay] = at(z, ...before);
-      close(ax, px, 'the point under the pointer stays under it'); close(ay, py);
+      close(ax, px, 'the point under the pointer stays under it');
+      close(ay, py);
       z.handle({ kind: 'wheel', x: px, y: py, dy: 300, [mod]: true });
       assert.ok(z.view().scale < 0.6, 'wheel down zooms out');
     }
@@ -158,7 +174,8 @@ describe('the mouse wheel and the trackpad', () => {
 
 describe('dragging', () => {
   test('dragging empty space with the mouse pans', () => {
-    const z = make(); z.zoomAt(2, 0, 0);
+    const z = make();
+    z.zoomAt(2, 0, 0);
     const x0 = z.view().x;
     assert.equal(z.handle({ kind: 'down', id: 1, pointer: 'mouse', x: 200, y: 100 }), true);
     z.handle({ kind: 'move', id: 1, x: 150, y: 90 });
@@ -167,7 +184,8 @@ describe('dragging', () => {
   });
 
   test('dragging from a box does not pan: the box is left to the host', () => {
-    const z = make(); z.zoomAt(2, 0, 0);
+    const z = make();
+    z.zoomAt(2, 0, 0);
     const before = z.view();
     assert.equal(z.handle({ kind: 'down', id: 1, pointer: 'mouse', x: 200, y: 100, onBox: true }), false);
     z.handle({ kind: 'move', id: 1, x: 100, y: 50 });
@@ -183,7 +201,8 @@ describe('dragging', () => {
   });
 
   test('on touch, once zoomed in, one finger pans the drawing', () => {
-    const z = make(); z.zoomAt(2, 0, 0);
+    const z = make();
+    z.zoomAt(2, 0, 0);
     assert.equal(z.touchAction(), 'none');
     const y0 = z.view().y;
     assert.equal(z.handle({ kind: 'down', id: 1, pointer: 'touch', x: 200, y: 100 }), true);
@@ -192,7 +211,8 @@ describe('dragging', () => {
   });
 
   test('a pointer that is cancelled stops the drag', () => {
-    const z = make(); z.zoomAt(2, 0, 0);
+    const z = make();
+    z.zoomAt(2, 0, 0);
     z.handle({ kind: 'down', id: 1, pointer: 'mouse', x: 200, y: 100 });
     z.handle({ kind: 'cancel', id: 1 });
     const before = z.view();
@@ -204,14 +224,16 @@ describe('dragging', () => {
 describe('pinching', () => {
   test('pinching zooms about the point between the fingers', () => {
     const z = make();
-    const mid = [150, 100], before = [(mid[0] - z.view().x) / z.view().scale, (mid[1] - z.view().y) / z.view().scale];
+    const mid = [150, 100],
+      before = [(mid[0] - z.view().x) / z.view().scale, (mid[1] - z.view().y) / z.view().scale];
     z.handle({ kind: 'down', id: 1, pointer: 'touch', x: 100, y: 100 });
     assert.equal(z.handle({ kind: 'down', id: 2, pointer: 'touch', x: 200, y: 100 }), true);
     z.handle({ kind: 'move', id: 1, x: 50, y: 100 });
     z.handle({ kind: 'move', id: 2, x: 250, y: 100 });
     close(z.view().scale, 1, 'twice the distance, twice the size');
     const [ax, ay] = at(z, ...before);
-    close(ax, mid[0]); close(ay, mid[1]);
+    close(ax, mid[0]);
+    close(ay, mid[1]);
   });
 
   test('moving both fingers together pans as it pinches', () => {
@@ -224,7 +246,8 @@ describe('pinching', () => {
     z.handle({ kind: 'move', id: 1, x: 40, y: 90 });
     z.handle({ kind: 'move', id: 2, x: 240, y: 90 });
     close(z.view().scale, before.scale);
-    close(z.view().x, before.x - 10); close(z.view().y, before.y - 10);
+    close(z.view().x, before.x - 10);
+    close(z.view().y, before.y - 10);
   });
 
   test('a pinch stays within the limits', () => {
@@ -244,7 +267,8 @@ describe('double tap', () => {
     assert.equal(z.handle({ kind: 'dblclick', x: 100, y: 50 }), true);
     close(z.view().scale, 1);
     const [ax, ay] = at(z, ...before);
-    close(ax, 100); close(ay, 50);
+    close(ax, 100);
+    close(ay, 50);
   });
 
   test('double-clicking a box is left to the host', () => {
@@ -254,26 +278,36 @@ describe('double tap', () => {
   });
 
   test('two quick taps in the same place zoom in there; slow or distant taps do not', () => {
-    const tap = (z, x, y, time, id) => { z.handle({ kind: 'down', id, pointer: 'touch', x, y }); z.handle({ kind: 'up', id, x, y, time }); };
+    const tap = (z, x, y, time, id) => {
+      z.handle({ kind: 'down', id, pointer: 'touch', x, y });
+      z.handle({ kind: 'up', id, x, y, time });
+    };
     const z = make();
-    tap(z, 100, 50, 1000, 1); tap(z, 104, 52, 1200, 2);
+    tap(z, 100, 50, 1000, 1);
+    tap(z, 104, 52, 1200, 2);
     close(z.view().scale, 1);
     const slow = make();
-    tap(slow, 100, 50, 1000, 1); tap(slow, 100, 50, 1500, 2);
+    tap(slow, 100, 50, 1000, 1);
+    tap(slow, 100, 50, 1500, 2);
     close(slow.view().scale, 0.5);
     const far = make();
-    tap(far, 100, 50, 1000, 1); tap(far, 200, 50, 1100, 2);
+    tap(far, 100, 50, 1000, 1);
+    tap(far, 200, 50, 1100, 2);
     close(far.view().scale, 0.5);
   });
 
   test('two quick taps near a box or link are left to the host, to choose between what is near; a drag from there still pans', () => {
     const z = make();
-    for (const [id, t] of [[1, 1000], [2, 1200]]) {
+    for (const [id, t] of [
+      [1, 1000],
+      [2, 1200],
+    ]) {
       z.handle({ kind: 'down', id, pointer: 'touch', x: 100, y: 50, near: true });
       assert.equal(z.handle({ kind: 'up', id, x: 100, y: 50, time: t }), false);
     }
     close(z.view().scale, 0.5);
-    const m = make(); m.zoomAt(2, 0, 0);
+    const m = make();
+    m.zoomAt(2, 0, 0);
     const x0 = m.view().x;
     assert.equal(m.handle({ kind: 'down', id: 1, pointer: 'mouse', x: 200, y: 100, near: true }), true);
     m.handle({ kind: 'move', id: 1, x: 150, y: 100 });
@@ -281,9 +315,13 @@ describe('double tap', () => {
   });
 
   test('a drag is not a tap', () => {
-    const z = make(); z.zoomAt(2, 0, 0);
+    const z = make();
+    z.zoomAt(2, 0, 0);
     const s = z.view().scale;
-    for (const [id, t] of [[1, 1000], [2, 1100]]) {
+    for (const [id, t] of [
+      [1, 1000],
+      [2, 1100],
+    ]) {
       z.handle({ kind: 'down', id, pointer: 'touch', x: 100, y: 50 });
       z.handle({ kind: 'move', id, x: 160, y: 50 });
       z.handle({ kind: 'up', id, x: 160, y: 50, time: t });
@@ -297,7 +335,9 @@ describe('telling the host', () => {
     const z = make();
     const seen = [];
     z.onChange = (v) => seen.push(v.scale);
-    z.zoomIn(); z.fit(); z.handle({ kind: 'wheel', x: 1, y: 1, dy: -10 });
+    z.zoomIn();
+    z.fit();
+    z.handle({ kind: 'wheel', x: 1, y: 1, dy: -10 });
     assert.equal(seen.length, 2);
   });
 });

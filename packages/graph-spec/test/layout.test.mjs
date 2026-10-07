@@ -25,20 +25,48 @@ function python(code, cases) {
 const recorded = JSON.parse(readFileSync(here('../../../python/graph_spec/tests/layout_cases.json'), 'utf8'));
 const kinds = ['Question', 'Option', 'Reason', 'Claim', 'Source', 'Evidence', 'Person', 'Decision'];
 const cases = {
-  ...Object.fromEntries(Object.entries(recorded).map(([k, c]) => [k, { nodes: c.nodes, edges: c.edges, rankdir: c.rankdir }])),
+  ...Object.fromEntries(
+    Object.entries(recorded).map(([k, c]) => [k, { nodes: c.nodes, edges: c.edges, rankdir: c.rankdir }]),
+  ),
   'more kinds than hues, and the readings that carry meaning': {
     nodes: kinds.map((k, i) => [`k${i}`, k, `${k} number ${i}`]),
-    edges: [['k0', 'favours', 'k1'], ['k2', 'counts against', 'k1'], ['k3', 'supports', 'k4'], ['k5', 'refutes', 'k3'], ['k6', 'decides', 'k7'], ['k7', 'rests on', 'k5'], ['k1', 'answers', 'k0']],
+    edges: [
+      ['k0', 'favours', 'k1'],
+      ['k2', 'counts against', 'k1'],
+      ['k3', 'supports', 'k4'],
+      ['k5', 'refutes', 'k3'],
+      ['k6', 'decides', 'k7'],
+      ['k7', 'rests on', 'k5'],
+      ['k1', 'answers', 'k0'],
+    ],
     rankdir: 'TB',
   },
   'quotes, ampersands, accents and a word longer than a line': {
-    nodes: [['a', 'Note', 'It\'s "quoted" & <marked> — déjà vu'], ['b', 'Note', 'Supercalifragilisticexpialidocious-and-more'], ['c', 'Ünïcödé', 'Grüße aus Köln, straße']],
-    edges: [['a', 'links "to"', 'b'], ['b', 'links "to"', 'c']],
+    nodes: [
+      ['a', 'Note', 'It\'s "quoted" & <marked> — déjà vu'],
+      ['b', 'Note', 'Supercalifragilisticexpialidocious-and-more'],
+      ['c', 'Ünïcödé', 'Grüße aus Köln, straße'],
+    ],
+    edges: [
+      ['a', 'links "to"', 'b'],
+      ['b', 'links "to"', 'c'],
+    ],
     rankdir: 'LR',
   },
   'a kind that only receives links, beside the main destination': {
-    nodes: [['q', 'Question', 'Which?'], ['o1', 'Option', 'One'], ['o2', 'Option', 'Two'], ['s', 'Source', 'A report'], ['r', 'Reason', 'Cheaper']],
-    edges: [['o1', 'answers', 'q'], ['o2', 'answers', 'q'], ['r', 'favours', 'o1'], ['r', 'from', 's']],
+    nodes: [
+      ['q', 'Question', 'Which?'],
+      ['o1', 'Option', 'One'],
+      ['o2', 'Option', 'Two'],
+      ['s', 'Source', 'A report'],
+      ['r', 'Reason', 'Cheaper'],
+    ],
+    edges: [
+      ['o1', 'answers', 'q'],
+      ['o2', 'answers', 'q'],
+      ['r', 'favours', 'o1'],
+      ['r', 'from', 's'],
+    ],
     rankdir: 'LR',
   },
   'one thing, no links': { nodes: [['x', 'Thing', '']], edges: [], rankdir: 'LR' },
@@ -67,17 +95,37 @@ describe('the layout source', () => {
 });
 
 describe('the parts it is built from', () => {
-  const texts = ['', '   ', 'Which device?', 'It costs nothing extra', 'exactly twenty-two ch.', 'Rain is likely tomorrow, says the forecast for the weekend',
-    'Supercalifragilisticexpialidocious-and-more words', 'tabs\tand\nnew lines  and   runs of spaces', 'a b c d e f g h i j k l m n o p q r s t u v w x y z',
-    'déjà vu, naïve café — Grüße', 'end with a space ', ' start with one', 'twentytwocharacterword then more', 'twentythreecharacterwor then more',
-    'Mathematical 𝔊𝔯𝔞𝔭𝔥𝔰 and 𝔫𝔬𝔱𝔢𝔰 wrap by character here'];
+  const texts = [
+    '',
+    '   ',
+    'Which device?',
+    'It costs nothing extra',
+    'exactly twenty-two ch.',
+    'Rain is likely tomorrow, says the forecast for the weekend',
+    'Supercalifragilisticexpialidocious-and-more words',
+    'tabs\tand\nnew lines  and   runs of spaces',
+    'a b c d e f g h i j k l m n o p q r s t u v w x y z',
+    'déjà vu, naïve café — Grüße',
+    'end with a space ',
+    ' start with one',
+    'twentytwocharacterword then more',
+    'twentythreecharacterwor then more',
+    'Mathematical 𝔊𝔯𝔞𝔭𝔥𝔰 and 𝔫𝔬𝔱𝔢𝔰 wrap by character here',
+  ];
   const py = python(
     "import textwrap, zlib, html\nprint(json.dumps({'wrap': [textwrap.wrap(t, 22, break_on_hyphens=False) for t in cases['texts']], 'crc': [zlib.crc32(n.encode()) for n in cases['names']], 'escape': [html.escape(t) for t in cases['texts']], 'round': [round(x) for x in cases['halves']]}))",
-    { texts, names: [...kinds, 'favours', 'counts against', 'déjà', ''], halves: [0.5, 1.5, 2.5, 3.125, 3.5, 4.5, -0.5, 2.675] },
+    {
+      texts,
+      names: [...kinds, 'favours', 'counts against', 'déjà', ''],
+      halves: [0.5, 1.5, 2.5, 3.125, 3.5, 4.5, -0.5, 2.675],
+    },
   );
 
   test("text wraps as Python's textwrap does", () => {
-    assert.deepEqual(texts.map((t) => layout.wrap(t, 22)), py.wrap);
+    assert.deepEqual(
+      texts.map((t) => layout.wrap(t, 22)),
+      py.wrap,
+    );
   });
 
   test("names hash as zlib's CRC-32 does", () => {

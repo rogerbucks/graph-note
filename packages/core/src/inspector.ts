@@ -10,17 +10,24 @@ import { hops } from './estimates.ts';
 /** The kinds of value the document profile holds. It holds no lists. */
 export type PropType = 'text' | 'number' | 'date' | 'datetime' | 'boolean';
 
+/** A value typed in, checked against its type: written as GQL, or why it cannot be. */
 export type Parsed = { ok: true; gql: string } | { ok: false; error: string };
 
 /** A value typed in, checked against its type, and written as GQL — or why it cannot be. */
 export function parseValue(type: PropType | 'list', input: string): Parsed {
   const v = input.trim();
   switch (type) {
-    case 'text': return { ok: true, gql: `'${input.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'` };
+    case 'text':
+      return { ok: true, gql: `'${input.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'` };
     case 'number':
-      return /^-?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(v) ? { ok: true, gql: v } : { ok: false, error: 'expected a number, such as 12 or 3.5' };
+      return /^-?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(v)
+        ? { ok: true, gql: v }
+        : { ok: false, error: 'expected a number, such as 12 or 3.5' };
     case 'date': {
-      const ok = /^\d{4}-\d\d-\d\d$/.test(v) && !Number.isNaN(Date.parse(`${v}T00:00:00Z`)) && new Date(`${v}T00:00:00Z`).toISOString().slice(0, 10) === v;
+      const ok =
+        /^\d{4}-\d\d-\d\d$/.test(v) &&
+        !Number.isNaN(Date.parse(`${v}T00:00:00Z`)) &&
+        new Date(`${v}T00:00:00Z`).toISOString().slice(0, 10) === v;
       return ok ? { ok: true, gql: `DATE '${v}'` } : { ok: false, error: 'expected a date, written YYYY-MM-DD' };
     }
     case 'datetime': {
@@ -30,11 +37,15 @@ export function parseValue(type: PropType | 'list', input: string): Parsed {
       return { ok: true, gql: `DATETIME '${v}'` };
     }
     case 'boolean':
-      return /^(true|false)$/i.test(v) ? { ok: true, gql: v.toUpperCase() } : { ok: false, error: 'expected true or false' };
-    case 'list': return { ok: false, error: 'the document profile holds no lists: write one property for each value' };
+      return /^(true|false)$/i.test(v)
+        ? { ok: true, gql: v.toUpperCase() }
+        : { ok: false, error: 'expected true or false' };
+    case 'list':
+      return { ok: false, error: 'the document profile holds no lists: write one property for each value' };
   }
 }
 
+/** One property of a thing or link, as the inspector shows it. */
 export interface Property {
   key: string;
   /** The value in words, as it is typed in. */
@@ -43,8 +54,15 @@ export interface Property {
 }
 
 const typeOf = (v: unknown): PropType =>
-  typeof v === 'number' ? 'number' : typeof v === 'boolean' ? 'boolean'
-    : v && typeof v === 'object' && 'kind' in v ? ((v as { kind: string }).kind === 'date' ? 'date' : 'datetime') : 'text';
+  typeof v === 'number'
+    ? 'number'
+    : typeof v === 'boolean'
+      ? 'boolean'
+      : v && typeof v === 'object' && 'kind' in v
+        ? (v as { kind: string }).kind === 'date'
+          ? 'date'
+          : 'datetime'
+        : 'text';
 const wordsOf = (v: unknown): string => (v && typeof v === 'object' && 's' in v ? String(v.s) : String(v));
 
 /** A thing, by its id, or a link, by its place among the graph's links as drawn. */
@@ -60,8 +78,10 @@ function propsOf(g: Graph, reading: NoteReading, graph: string, t: Target): Reco
 export function propertiesOf(reading: NoteReading, graph: string, t: Target): Property[] {
   const g = reading.world[graph];
   if (!g) return [];
-  return Object.entries(propsOf(g, reading, graph, t)).filter(([k]) => !('thing' in t && k === 'id'))
-    .sort(([a], [b]) => (a < b ? -1 : 1)).map(([key, v]) => ({ key, value: wordsOf(v), type: typeOf(v) }));
+  return Object.entries(propsOf(g, reading, graph, t))
+    .filter(([k]) => !('thing' in t && k === 'id'))
+    .sort(([a], [b]) => (a < b ? -1 : 1))
+    .map(([key, v]) => ({ key, value: wordsOf(v), type: typeOf(v) }));
 }
 
 /** The property names to offer: those used on things of this kind first, most used first; then the graph's others. */
@@ -70,24 +90,40 @@ export function propertyNames(reading: NoteReading, graph: string, kind: string)
   if (!g) return [];
   // a locked graph offers only what its schema declares for the kind: ElementTypes of kind 'property', named Kind.name (§14)
   const schema = reading.whole[graph] ?? g;
-  const declared = schema.labelled('ElementType').map((i) => schema.p(i)).filter((t) => t.kind === 'property').flatMap((t) => (typeof t.name === 'string' ? [t.name] : []));
-  if (declared.length) return declared.filter((n) => n.startsWith(`${kind}.`)).map((n) => n.slice(kind.length + 1)).sort();
+  const declared = schema
+    .labelled('ElementType')
+    .map((i) => schema.p(i))
+    .filter((t) => t.kind === 'property')
+    .flatMap((t) => (typeof t.name === 'string' ? [t.name] : []));
+  if (declared.length)
+    return declared
+      .filter((n) => n.startsWith(`${kind}.`))
+      .map((n) => n.slice(kind.length + 1))
+      .sort();
   const count = (ids: string[]) => {
     const n = new Map<string, number>();
     for (const i of ids) for (const k of Object.keys(g.p(i))) if (k !== 'id') n.set(k, (n.get(k) ?? 0) + 1);
     return [...n].sort(([a, x], [b, y]) => y - x || (a < b ? -1 : 1)).map(([k]) => k);
   };
   const own = count(kind ? g.labelled(kind) : []);
-  return own.concat(count([...g.nodes.keys()]).filter((k) => !own.includes(k)).sort());
+  return own.concat(
+    count([...g.nodes.keys()])
+      .filter((k) => !own.includes(k))
+      .sort(),
+  );
 }
 
 /** The text with strings and comments blanked to spaces of the same length, so positions hold and their contents never match. */
 function blank(text: string): string {
-  return text.replace(/\/\/[^\n]*/g, (m) => ' '.repeat(m.length)).replace(/'(?:[^'\\]|\\.)*'/g, (m) => `'${' '.repeat(m.length - 2)}'`);
+  return text
+    .replace(/\/\/[^\n]*/g, (m) => ' '.repeat(m.length))
+    .replace(/'(?:[^'\\]|\\.)*'/g, (m) => `'${' '.repeat(m.length - 2)}'`);
 }
 
 /** Each pattern of the (blanked) text that writes or mentions the thing: its labels in [1], its map in [2]. */
-const thingPatterns = (b: string, id: string) => [...b.matchAll(new RegExp(`\\(\\s*${id}\\s*((?::\\s*\\w+\\s*)*)(\\{[^{}]*\\})?\\s*\\)`, 'g'))];
+const thingPatterns = (b: string, id: string) => [
+  ...b.matchAll(new RegExp(`\\(\\s*${id}\\s*((?::\\s*\\w+\\s*)*)(\\{[^{}]*\\})?\\s*\\)`, 'g')),
+];
 /** Each link's brackets in the (blanked) text, in order: its map in [1]. */
 const linkBrackets = (b: string) => [...b.matchAll(/-\[\s*:\s*\w+\s*(\{[^{}]*\})?\s*\]/g)];
 
@@ -98,12 +134,14 @@ const linkBrackets = (b: string) => [...b.matchAll(/-\[\s*:\s*\w+\s*(\{[^{}]*\})
 export function spanOf(block: string, t: Target): { from: number; to: number } | null {
   const b = blank(block);
   if ('thing' in t) {
-    const all = thingPatterns(b, t.thing), m = all.find((x) => x[1] || x[2]) ?? all[0];
+    const all = thingPatterns(b, t.thing),
+      m = all.find((x) => x[1] || x[2]) ?? all[0];
     return m?.index === undefined ? null : { from: m.index, to: m.index + m[0].length };
   }
   const m = linkBrackets(b)[t.link];
   if (m?.index === undefined) return null;
-  const from = b[m.index - 1] === '<' ? m.index - 1 : m.index, end = m.index + m[0].length;
+  const from = b[m.index - 1] === '<' ? m.index - 1 : m.index,
+    end = m.index + m[0].length;
   return { from, to: b.startsWith('->', end) ? end + 2 : b.startsWith('-', end) ? end + 1 : end };
 }
 
@@ -111,10 +149,15 @@ export function spanOf(block: string, t: Target): { from: number; to: number } |
 export function linkInBlock(reading: NoteReading, graph: string, index: number, block: string): number {
   const l = reading.graphs.get(graph)?.links[index];
   let n = 0;
-  for (const it of blockItems(block)) for (const [s, t, e] of hops(it.text)) { if (l && s === l.from && t === l.type && e === l.to) return n; n++; }
+  for (const it of blockItems(block))
+    for (const [s, t, e] of hops(it.text)) {
+      if (l && s === l.from && t === l.type && e === l.to) return n;
+      n++;
+    }
   return -1;
 }
 
+/** A property edit: the block's new text, or why it cannot be made here. */
 export type Edit = { ok: true; text: string } | { ok: false; reason: string };
 
 /**
@@ -122,47 +165,85 @@ export type Edit = { ok: true; text: string } | { ok: false; reason: string };
  * thing, or in the brackets of the block's `link`-th relationship (counted in this block). Only that map changes.
  */
 export function setProperty(block: string, graph: string, t: Target, key: string, gql: string | null): Edit {
-  if ('thing' in t && key === 'id') return { ok: false, reason: 'the id is the thing’s name: rename the thing instead' };
-  if (!/^[A-Za-z_]\w*$/.test(key)) return { ok: false, reason: 'a property name is one word: letters, digits and underscores' };
+  if ('thing' in t && key === 'id')
+    return { ok: false, reason: 'the id is the thing’s name: rename the thing instead' };
+  if (!/^[A-Za-z_]\w*$/.test(key))
+    return { ok: false, reason: 'a property name is one word: letters, digits and underscores' };
   const b = blank(block);
   // where the map is, or where one would go
-  let open = -1, close = -1, at = -1;
+  let open = -1,
+    close = -1,
+    at = -1;
   if ('thing' in t) {
     const m = thingPatterns(b, t.thing).find((x) => x[1] || x[2]);
-    if (!m || m.index === undefined) return { ok: false, reason: `${t.thing} is not written in this block: edit it where it is written, in graph ${graph}` };
-    if (m[2]) { open = m.index + m[0].indexOf(m[2]); close = open + m[2].length - 1; } else at = m.index + m[0].replace(/\s*\)$/, '').length;
+    if (!m || m.index === undefined)
+      return {
+        ok: false,
+        reason: `${t.thing} is not written in this block: edit it where it is written, in graph ${graph}`,
+      };
+    if (m[2]) {
+      open = m.index + m[0].indexOf(m[2]);
+      close = open + m[2].length - 1;
+    } else at = m.index + m[0].replace(/\s*\)$/, '').length;
   } else {
     const m = linkBrackets(b)[t.link];
     if (!m || m.index === undefined) return { ok: false, reason: `this block has no link number ${t.link + 1}` };
-    if (m[1]) { open = m.index + m[0].indexOf(m[1]); close = open + m[1].length - 1; } else at = m.index + m[0].replace(/\s*\]$/, '').length;
+    if (m[1]) {
+      open = m.index + m[0].indexOf(m[1]);
+      close = open + m[1].length - 1;
+    } else at = m.index + m[0].replace(/\s*\]$/, '').length;
   }
   if (open === -1) {
     if (gql === null) return { ok: true, text: block };
     return { ok: true, text: `${block.slice(0, at)} {${key}: ${gql}}${block.slice(at)}` };
   }
   // the entries of the map, by their spans in the text
-  const inner = b.slice(open + 1, close), entries: { from: number; to: number; key: string; colon: number }[] = [];
+  const inner = b.slice(open + 1, close),
+    entries: { from: number; to: number; key: string; colon: number }[] = [];
   let from = 0;
   for (const part of inner.split(',')) {
     const k = /^\s*(\w+)\s*:/.exec(part);
-    if (k) entries.push({ from: open + 1 + from, to: open + 1 + from + part.length, key: k[1] ?? '', colon: open + 1 + from + part.indexOf(':') });
+    if (k)
+      entries.push({
+        from: open + 1 + from,
+        to: open + 1 + from + part.length,
+        key: k[1] ?? '',
+        colon: open + 1 + from + part.indexOf(':'),
+      });
     from += part.length + 1;
   }
   const e = entries.find((x) => x.key === key);
   if (e && gql !== null) {
-    const vFrom = e.colon + 1 + (block.slice(e.colon + 1, e.to).length - block.slice(e.colon + 1, e.to).trimStart().length);
+    const vFrom =
+      e.colon + 1 + (block.slice(e.colon + 1, e.to).length - block.slice(e.colon + 1, e.to).trimStart().length);
     const vTo = e.colon + 1 + block.slice(e.colon + 1, e.to).trimEnd().length;
     return { ok: true, text: block.slice(0, vFrom) + gql + block.slice(vTo) };
   }
-  if (e) {   // remove it, with the comma that parts it from its neighbour; an emptied map goes too
+  if (e) {
+    // remove it, with the comma that parts it from its neighbour; an emptied map goes too
     if (entries.length === 1) {
-      let start = open; while (start > 0 && /[ \t]/.test(block[start - 1] ?? '')) start--;
+      let start = open;
+      while (start > 0 && /[ \t]/.test(block[start - 1] ?? '')) start--;
       return { ok: true, text: block.slice(0, start) + block.slice(close + 1) };
     }
-    const i = entries.indexOf(e), next = entries[i + 1];
-    if (next) return { ok: true, text: block.slice(0, e.from + (block.slice(e.from, e.to).length - block.slice(e.from, e.to).trimStart().length)) + block.slice(next.from + (block.slice(next.from, next.to).length - block.slice(next.from, next.to).trimStart().length)) };
+    const i = entries.indexOf(e),
+      next = entries[i + 1];
+    if (next)
+      return {
+        ok: true,
+        text:
+          block.slice(0, e.from + (block.slice(e.from, e.to).length - block.slice(e.from, e.to).trimStart().length)) +
+          block.slice(
+            next.from + (block.slice(next.from, next.to).length - block.slice(next.from, next.to).trimStart().length),
+          ),
+      };
     const prev = entries[i - 1];
-    return { ok: true, text: block.slice(0, (prev?.from ?? 0) + block.slice(prev?.from ?? 0, prev?.to ?? 0).trimEnd().length) + block.slice(e.to) };
+    return {
+      ok: true,
+      text:
+        block.slice(0, (prev?.from ?? 0) + block.slice(prev?.from ?? 0, prev?.to ?? 0).trimEnd().length) +
+        block.slice(e.to),
+    };
   }
   if (gql === null) return { ok: true, text: block };
   const end = open + 1 + block.slice(open + 1, close).trimEnd().length;

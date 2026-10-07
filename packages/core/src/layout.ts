@@ -5,9 +5,11 @@ import GraphLayout from '@graph-note/graph-spec/src/graph-layout.js';
 import STYLE from '../../../python/graph_spec/src/graph_svg.style.json' with { type: 'json' };
 import type { GraphDrawing } from './drawing.ts';
 
+/** The drawing's style: the same settings file the Python library draws with. */
 export type Style = typeof STYLE;
 export { STYLE };
 
+/** What is handed to Graphviz for one direction: the DOT source, and the kinds and readings to colour it by. */
 export interface LayoutSource {
   source: string;
   /** The kinds in order of first appearance, and the readings: their colours are chosen from these. */
@@ -35,15 +37,21 @@ export function drawingSource(d: GraphDrawing, rankdir: 'LR' | 'TB'): string {
   const lines = layoutSource(d, rankdir).source.split('\n');
   const estimates = d.estimates ?? [];
   if (!estimates.length) return lines.join('\n');
-  const guess = (reading: string) => `label="⚠ ${GraphLayout.escape(reading)} (estimated)", color="#0000fc", fontcolor="#0000fe", style="dashed"`;
+  const guess = (reading: string) =>
+    `label="⚠ ${GraphLayout.escape(reading)} (estimated)", color="#0000fc", fontcolor="#0000fe", style="dashed"`;
   const edgeLines = lines.flatMap((l, i) => (/^ {2}"[^"]*" -> "[^"]*" \[label=/.test(l) ? [i] : []));
   for (const e of estimates) {
     if (e.kind !== 'type' || e.index === undefined) continue;
     const at = edgeLines[e.index];
     if (at === undefined) continue;
-    lines[at] = (lines[at] ?? '').replace(/label="[^"]*", color="#0003[0-9a-f]{2}", fontcolor="#0004[0-9a-f]{2}"/, guess(e.reading));
+    lines[at] = (lines[at] ?? '').replace(
+      /label="[^"]*", color="#0003[0-9a-f]{2}", fontcolor="#0004[0-9a-f]{2}"/,
+      guess(e.reading),
+    );
   }
-  const added = estimates.filter((e) => e.kind === 'name').map((e) => `  "${e.from}" -> "${e.to}" [${guess(e.reading)}];`);
+  const added = estimates
+    .filter((e) => e.kind === 'name')
+    .map((e) => `  "${e.from}" -> "${e.to}" [${guess(e.reading)}];`);
   lines.splice(lines.length - 1, 0, ...added);
   return lines.join('\n');
 }

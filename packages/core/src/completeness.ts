@@ -4,6 +4,7 @@
 import gs from '@graph-note/graph-spec';
 import type { NoteReading } from './drawing.ts';
 
+/** One completeness rule of a graph, as the report shows it: what it says, and what is missing, overdue or deferred. */
 export interface RuleReport {
   rule: string;
   says: string;
@@ -18,12 +19,14 @@ export interface RuleReport {
   malformed: string;
 }
 
+/** The completeness report behind the badge (spec §8): every rule of the graph, and how many gaps there are in all. */
 export interface CompletenessReport {
   rules: RuleReport[];
   /** How many gaps are missing across every rule. */
   gaps: number;
 }
 
+/** The completeness report of a graph, as of `today` (YYYY-MM-DD): each of its rules, checked against what is written. */
 export function completenessReport(reading: NoteReading, graph: string, today: string): CompletenessReport {
   const g = reading.world[graph];
   if (!g) return { rules: [], gaps: 0 };
@@ -36,8 +39,15 @@ export function completenessReport(reading: NoteReading, graph: string, today: s
     if (r.overdue.length) parts.push(`${r.overdue.length} overdue`);
     if (r.missing.length) parts.push(`${r.missing.length} missing`);
     return {
-      rule: r.rule, says: r.says, summary: r.malformed ? 'cannot be checked' : parts.join(', '), covered, counted: r.counted,
-      deferred: r.deferred.map(name), overdue: r.overdue.map(name), missing: r.missing.map((m) => ({ at: name(m.at), fix: m.fix })), malformed: r.malformed,
+      rule: r.rule,
+      says: r.says,
+      summary: r.malformed ? 'cannot be checked' : parts.join(', '),
+      covered,
+      counted: r.counted,
+      deferred: r.deferred.map(name),
+      overdue: r.overdue.map(name),
+      missing: r.missing.map((m) => ({ at: name(m.at), fix: m.fix })),
+      malformed: r.malformed,
     };
   });
   return { rules, gaps: rules.reduce((n, r) => n + r.missing.length, 0) };

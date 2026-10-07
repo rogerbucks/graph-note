@@ -6,8 +6,10 @@ import type GraphNotePlugin from './main';
 import type { EditTarget } from './main';
 import { BlockEditor } from './block-editor';
 
+/** The edit pane's view type. */
 export const PANE = 'graph-note-pane';
 
+/** The edit pane: a view beside the note, holding the block editor. */
 export class GraphPane extends ItemView {
   private readonly editor: BlockEditor;
 
@@ -16,12 +18,22 @@ export class GraphPane extends ItemView {
     this.editor = new BlockEditor(plugin, 'pane');
   }
 
-  getViewType(): string { return PANE; }
-  getDisplayText(): string { return this.editor.session ? `Graph ${this.editor.session.graph}` : 'Graph'; }
-  override getIcon(): string { return 'git-fork'; }
+  getViewType(): string {
+    return PANE;
+  }
+  getDisplayText(): string {
+    return this.editor.session ? `Graph ${this.editor.session.graph}` : 'Graph';
+  }
+  override getIcon(): string {
+    return 'git-fork';
+  }
 
   override getState(): Record<string, unknown> {
-    return { path: this.editor.path, line: this.editor.session?.ref.line ?? 0, graph: this.editor.session?.graph ?? '' };
+    return {
+      path: this.editor.path,
+      line: this.editor.session?.ref.line ?? 0,
+      graph: this.editor.session?.graph ?? '',
+    };
   }
 
   override async setState(state: unknown, result: ViewStateResult): Promise<void> {

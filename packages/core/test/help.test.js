@@ -28,17 +28,26 @@ describe('problems, in plain English, with their place and a fix', () => {
     assert.equal(d.severity, SEVERITY.Warning);
     assert.equal(d.source, 'graph-note');
     assert.equal(d.message, 'small_reeder is not in graph reader; it is drawn as an estimate of small_reader.');
-    assert.deepEqual(d.data.fixes, [{
-      title: 'Change small_reeder to small_reader', kind: 'quickfix', isPreferred: true,
-      edit: { changes: { [URI]: [{ range: { start: at(10, 20), end: at(10, 32) }, newText: 'small_reader' }] } },
-    }]);
+    assert.deepEqual(d.data.fixes, [
+      {
+        title: 'Change small_reeder to small_reader',
+        kind: 'quickfix',
+        isPreferred: true,
+        edit: { changes: { [URI]: [{ range: { start: at(10, 20), end: at(10, 32) }, newText: 'small_reader' }] } },
+      },
+    ]);
   });
 
   test('a link between equals offers each of them as a fix', () => {
-    const text = BLOCK.replace("(eyes:Reason", "(large_readers:Option {name: 'x'}),\n(eyes:Reason") + ',\n(eyes)-[:FAVOURS]->(large_readerx)';
+    const text =
+      BLOCK.replace('(eyes:Reason', "(large_readers:Option {name: 'x'}),\n(eyes:Reason") +
+      ',\n(eyes)-[:FAVOURS]->(large_readerx)';
     const [d] = diagnostics(readNote([text]), 'reader', 0, text, URI);
     assert.equal(d.severity, SEVERITY.Error);
-    assert.deepEqual(d.data.fixes.map((f) => f.title), ['Change large_readerx to large_reader', 'Change large_readerx to large_readers']);
+    assert.deepEqual(
+      d.data.fixes.map((f) => f.title),
+      ['Change large_readerx to large_reader', 'Change large_readerx to large_readers'],
+    );
   });
 
   test('a near-miss relationship type is a warning on the type, with its fix', () => {
@@ -49,7 +58,7 @@ describe('problems, in plain English, with their place and a fix', () => {
   });
 
   test('a line that cannot be read is an error over that line, with its fix in words where no edit can be made', () => {
-    const text = BLOCK + ",\n  (broken:Reason {title: })";
+    const text = BLOCK + ',\n  (broken:Reason {title: })';
     const [d] = diagnostics(readNote([text]), 'reader', 0, text, URI);
     assert.deepEqual(d.range, { start: at(10, 2), end: at(10, 27) });
     assert.equal(d.severity, SEVERITY.Error);
@@ -59,7 +68,7 @@ describe('problems, in plain English, with their place and a fix', () => {
   });
 
   test('every message is a sentence, and every problem has a place', () => {
-    const text = BLOCK + ",\n(eyes)-[:FAVOURS]->(nowhere),\n(x:T {y: }),\n(eyes)-[:FAVORS]->(question)";
+    const text = BLOCK + ',\n(eyes)-[:FAVOURS]->(nowhere),\n(x:T {y: }),\n(eyes)-[:FAVORS]->(question)';
     const ds = diagnostics(readNote([text]), 'reader', 0, text, URI);
     assert.equal(ds.length, 3);
     for (const d of ds) {
@@ -70,7 +79,7 @@ describe('problems, in plain English, with their place and a fix', () => {
   });
 
   test('only the problems of the block being edited are given', () => {
-    const other = "// graph: reader\n(eyes)-[:FAVOURS]->(nowhere)";
+    const other = '// graph: reader\n(eyes)-[:FAVOURS]->(nowhere)';
     const r = readNote([BLOCK, other]);
     assert.deepEqual(diagnostics(r, 'reader', 0, BLOCK, URI), []);
     assert.equal(diagnostics(r, 'reader', 1, other, URI).length, 1);
@@ -92,13 +101,19 @@ describe('a draft warns of near duplicates', () => {
     const schema = `// graph: reader
 (k1:Meta:ElementType {name: 'Reason', kind: 'node'}), (k2:Meta:ElementType {name: 'Reasn', kind: 'node'})`;
     const text = BLOCK + ",\n(cost:Reasn {title: 'Heavy'})";
-    assert.equal(diagnostics(readNote([text, schema]), 'reader', 0, text, URI).filter((d) => d.code === 'near-duplicate').length, 0);
+    assert.equal(
+      diagnostics(readNote([text, schema]), 'reader', 0, text, URI).filter((d) => d.code === 'near-duplicate').length,
+      0,
+    );
   });
 });
 
 describe('suggestions while typing', () => {
   const r = readNote([BLOCK]);
-  const after = (typed) => { const text = BLOCK + ',\n' + typed; return completions(r, 'reader', text, text.length); };
+  const after = (typed) => {
+    const text = BLOCK + ',\n' + typed;
+    return completions(r, 'reader', text, text.length);
+  };
 
   test('after an opening bracket, the names already in the graph, with their text', () => {
     const c = after('(sm');
@@ -108,8 +123,18 @@ describe('suggestions while typing', () => {
   });
 
   test('after a colon in a node, the kinds already in the graph', () => {
-    assert.deepEqual(after('(new_thing:').items.map((i) => [i.label, i.kind]), [['Option', KIND.Class], ['Question', KIND.Class], ['Reason', KIND.Class]]);
-    assert.deepEqual(after('(new_thing:Re').items.map((i) => i.label), ['Reason']);
+    assert.deepEqual(
+      after('(new_thing:').items.map((i) => [i.label, i.kind]),
+      [
+        ['Option', KIND.Class],
+        ['Question', KIND.Class],
+        ['Reason', KIND.Class],
+      ],
+    );
+    assert.deepEqual(
+      after('(new_thing:Re').items.map((i) => i.label),
+      ['Reason'],
+    );
   });
 
   test('after the start of a link, the relationships already in the graph, with their readings', () => {
@@ -117,14 +142,27 @@ describe('suggestions while typing', () => {
       { label: 'ANSWERS', kind: KIND.Interface, detail: 'answers' },
       { label: 'FAVOURS', kind: KIND.Interface, detail: 'favours' },
     ]);
-    assert.deepEqual(after('(eyes)-[:F').items.map((i) => i.label), ['FAVOURS']);
+    assert.deepEqual(
+      after('(eyes)-[:F').items.map((i) => i.label),
+      ['FAVOURS'],
+    );
   });
 
   test('a relationship brings its colon: after -[ the types are offered as :TYPE, so the colon is never typed', () => {
     const c = after('(eyes)-[');
-    assert.deepEqual(c.items.map((i) => [i.label, i.insertText]), [['ANSWERS', ':ANSWERS'], ['FAVOURS', ':FAVOURS']]);
+    assert.deepEqual(
+      c.items.map((i) => [i.label, i.insertText]),
+      [
+        ['ANSWERS', ':ANSWERS'],
+        ['FAVOURS', ':FAVOURS'],
+      ],
+    );
     const f = after('(eyes)-[FA');
-    assert.deepEqual(f.items.map((i) => i.insertText), [':FAVOURS'], 'a bare start of the name is taken over by the suggestion');
+    assert.deepEqual(
+      f.items.map((i) => i.insertText),
+      [':FAVOURS'],
+      'a bare start of the name is taken over by the suggestion',
+    );
     assert.equal(f.from, BLOCK.length + 2 + '(eyes)-['.length);
   });
 
@@ -132,17 +170,28 @@ describe('suggestions while typing', () => {
     const typed = '(new_thing';
     const c = after(typed);
     const kinds = c.items.filter((i) => i.kind === KIND.Class);
-    assert.deepEqual(kinds.map((i) => [i.label, i.insertText, i.from]), [
-      ['Option', ':Option', BLOCK.length + 2 + typed.length], ['Question', ':Question', BLOCK.length + 2 + typed.length], ['Reason', ':Reason', BLOCK.length + 2 + typed.length],
-    ]);
+    assert.deepEqual(
+      kinds.map((i) => [i.label, i.insertText, i.from]),
+      [
+        ['Option', ':Option', BLOCK.length + 2 + typed.length],
+        ['Question', ':Question', BLOCK.length + 2 + typed.length],
+        ['Reason', ':Reason', BLOCK.length + 2 + typed.length],
+      ],
+    );
   });
 
   test('after the name of a thing already in the graph, no kinds: it is a reference, not a new thing', () => {
-    assert.deepEqual(after('(eyes').items.filter((i) => i.kind === KIND.Class), []);
+    assert.deepEqual(
+      after('(eyes').items.filter((i) => i.kind === KIND.Class),
+      [],
+    );
   });
 
   test('after the end of a link, the names again', () => {
-    assert.deepEqual(after('(eyes)-[:FAVOURS]->(qu').items.map((i) => i.label), ['question']);
+    assert.deepEqual(
+      after('(eyes)-[:FAVOURS]->(qu').items.map((i) => i.label),
+      ['question'],
+    );
   });
 
   test('inside a string or a comment, nothing is suggested', () => {
@@ -156,9 +205,15 @@ describe('suggestions while typing', () => {
 (e1:Meta:ElementType {name: 'FAVOURS', kind: 'edge', reading: 'favours'})`;
     const locked = readNote([BLOCK, schema]);
     const text = BLOCK + ',\n(n:';
-    assert.deepEqual(completions(locked, 'reader', text, text.length).items.map((i) => i.label), ['Option', 'Reason']);
+    assert.deepEqual(
+      completions(locked, 'reader', text, text.length).items.map((i) => i.label),
+      ['Option', 'Reason'],
+    );
     const link = BLOCK + ',\n(eyes)-[:';
-    assert.deepEqual(completions(locked, 'reader', link, link.length).items.map((i) => i.label), ['FAVOURS']);
+    assert.deepEqual(
+      completions(locked, 'reader', link, link.length).items.map((i) => i.label),
+      ['FAVOURS'],
+    );
   });
 });
 
@@ -172,7 +227,9 @@ describe('read back in plain English', () => {
   });
 
   test('a line with several links reads each, and a SET says what it sets', () => {
-    const text = BLOCK + ",\n(eyes)-[:FAVOURS]->(small_reader), (price)-[:FAVOURS]->(large_reader)\nSET large_reader.status = 'bought'";
+    const text =
+      BLOCK +
+      ",\n(eyes)-[:FAVOURS]->(small_reader), (price)-[:FAVOURS]->(large_reader)\nSET large_reader.status = 'bought'";
     const lines = readBack(readNote([text]), 'reader', text);
     assert.equal(lines.get(10), 'Easy on the eyes favours Small reader; Costs less favours Large reader');
     assert.equal(lines.get(11), 'Large reader: status is bought');
@@ -180,7 +237,10 @@ describe('read back in plain English', () => {
 
   test('a name the graph does not have is read as written, never guessed silently', () => {
     const text = BLOCK + ',\n(eyes)-[:FAVOURS]->(small_reeder)';
-    assert.equal(readBack(readNote([text]), 'reader', text).get(10), 'Easy on the eyes favours small_reeder (not in the graph)');
+    assert.equal(
+      readBack(readNote([text]), 'reader', text).get(10),
+      'Easy on the eyes favours small_reeder (not in the graph)',
+    );
   });
 });
 
@@ -200,12 +260,19 @@ describe('a text version of the graph, for screen readers', () => {
 
 describe('a missing comma', () => {
   test('its fix adds the comma at the end of the line before', () => {
-    const text = BLOCK.replace("(large_reader:Option {name: 'Large reader'}),", "(large_reader:Option {name: 'Large reader'})");
+    const text = BLOCK.replace(
+      "(large_reader:Option {name: 'Large reader'}),",
+      "(large_reader:Option {name: 'Large reader'})",
+    );
     const d = diagnostics(readNote([text]), 'reader', 0, text, URI).find((x) => /comma is missing/.test(x.message));
-    assert.deepEqual(d.data.fixes, [{
-      title: 'Add the missing comma', kind: 'quickfix', isPreferred: true,
-      edit: { changes: { [URI]: [{ range: { start: at(3, 44), end: at(3, 44) }, newText: ',' }] } },
-    }]);
+    assert.deepEqual(d.data.fixes, [
+      {
+        title: 'Add the missing comma',
+        kind: 'quickfix',
+        isPreferred: true,
+        edit: { changes: { [URI]: [{ range: { start: at(3, 44), end: at(3, 44) }, newText: ',' }] } },
+      },
+    ]);
   });
 });
 

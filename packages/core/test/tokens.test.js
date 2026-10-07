@@ -12,22 +12,63 @@ const expected = JSON.parse(readFileSync(new URL('./tokens.expected.json', impor
 
 for (const [name, { source, tokens }] of Object.entries(expected)) {
   test(`the same tokens as gql-highlight: ${name}`, () => {
-    assert.deepEqual(tokenize(source).map((t) => [t.c, t.s]), tokens);
+    assert.deepEqual(
+      tokenize(source).map((t) => [t.c, t.s]),
+      tokens,
+    );
   });
 }
 
 test('tokens join back into the text exactly, whatever the text', () => {
-  const parts = ["'", '"', '`', '//', '/*', '*/', '(', ')', '[', ']', '{', '}', ':', '|', '-[', ']->', 'MATCH', 'x', '\n', ' ', '$', '1.5', 'é', '→', '\\'];
+  const parts = [
+    "'",
+    '"',
+    '`',
+    '//',
+    '/*',
+    '*/',
+    '(',
+    ')',
+    '[',
+    ']',
+    '{',
+    '}',
+    ':',
+    '|',
+    '-[',
+    ']->',
+    'MATCH',
+    'x',
+    '\n',
+    ' ',
+    '$',
+    '1.5',
+    'é',
+    '→',
+    '\\',
+  ];
   let s = 7;
   for (let i = 0; i < 2000; i++) {
     let text = '';
-    for (let k = 0; k < 30; k++) { s = (s * 1103515245 + 12345) >>> 0; text += parts[s % parts.length]; }
-    assert.equal(tokenize(text).map((t) => t.s).join(''), text);
+    for (let k = 0; k < 30; k++) {
+      s = (s * 1103515245 + 12345) >>> 0;
+      text += parts[s % parts.length];
+    }
+    assert.equal(
+      tokenize(text)
+        .map((t) => t.s)
+        .join(''),
+      text,
+    );
   }
 });
 
 test('every class has a colour rule in styles.css, named as gql-highlight names it', () => {
-  const classes = new Set(Object.values(expected).flatMap((c) => c.tokens.map(([k]) => k)).filter((k) => k));
+  const classes = new Set(
+    Object.values(expected)
+      .flatMap((c) => c.tokens.map(([k]) => k))
+      .filter((k) => k),
+  );
   for (const c of classes) assert.ok(TOKEN_CLASSES.includes(c), c);
   for (const c of TOKEN_CLASSES) assert.match(styles, new RegExp(`\\.gql-${c}\\s*\\{[^}]*color:`), c);
 });

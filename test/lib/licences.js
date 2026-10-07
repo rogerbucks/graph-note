@@ -40,12 +40,18 @@ export function licenceAllowed(expr, component) {
   };
   const and = () => {
     let v = primary();
-    while (ts[i] === 'AND') { i++; v = primary() && v; }
+    while (ts[i] === 'AND') {
+      i++;
+      v = primary() && v;
+    }
     return v;
   };
   const or = () => {
     let v = and();
-    while (ts[i] === 'OR') { i++; v = and() || v; }
+    while (ts[i] === 'OR') {
+      i++;
+      v = and() || v;
+    }
     return v;
   };
   const result = or();

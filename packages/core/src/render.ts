@@ -32,13 +32,20 @@ export interface Drawn {
  */
 export function draw(drawing: GraphDrawing, engine: Engine): Drawn {
   const laid = STYLE.directions.map((rankdir) => {
-    const src = layoutSource(drawing, rankdir as 'LR' | 'TB'), svg = engine.render(drawingSource(drawing, rankdir as 'LR' | 'TB'));
+    const src = layoutSource(drawing, rankdir as 'LR' | 'TB'),
+      svg = engine.render(drawingSource(drawing, rankdir as 'LR' | 'TB'));
     return { rankdir, ...sizeOf(svg), svg, src };
   });
   const best = choose(laid);
-  return { svg: themed(best.svg, best.src.kinds, best.src.readings), rankdir: best.rankdir, width: best.width, height: best.height };
+  return {
+    svg: themed(best.svg, best.src.kinds, best.src.readings),
+    rankdir: best.rankdir,
+    width: best.width,
+    height: best.height,
+  };
 }
 
+/** One link in or out of a box, as its details list it. */
 export interface LinkDetail {
   reading: string;
   key: string;
@@ -55,17 +62,26 @@ export interface Details {
   problems: Problem[];
 }
 
-const names = (line: string, key: string) => new RegExp(`(^|[^A-Za-z0-9_])${key.replace(/[^A-Za-z0-9_]/g, '\\$&')}([^A-Za-z0-9_]|$)`).test(line.replace(/\/\/.*$/, ''));
+const names = (line: string, key: string) =>
+  new RegExp(`(^|[^A-Za-z0-9_])${key.replace(/[^A-Za-z0-9_]/g, '\\$&')}([^A-Za-z0-9_]|$)`).test(
+    line.replace(/\/\/.*$/, ''),
+  );
 
+/** What tapping a box shows: its text, kind, links in and out, and any problem on it; null if it is not drawn. */
 export function details(reading: NoteReading, graph: string, key: string): Details | null {
-  const d = reading.graphs.get(graph), box = d?.boxes.find((b) => b.key === key);
+  const d = reading.graphs.get(graph),
+    box = d?.boxes.find((b) => b.key === key);
   if (!d || !box) return null;
   const textOf = (k: string) => d.boxes.find((b) => b.key === k)?.text ?? k;
   return {
-    key, text: box.text, kind: box.kind,
+    key,
+    text: box.text,
+    kind: box.kind,
     out: d.links.filter((l) => l.from === key).map((l) => ({ reading: l.reading, key: l.to, text: textOf(l.to) })),
     in: d.links.filter((l) => l.to === key).map((l) => ({ reading: l.reading, key: l.from, text: textOf(l.from) })),
-    problems: reading.problems.filter((p) => p.graph === graph && names(reading.texts[p.block]?.split('\n')[p.line - 1] ?? '', key)),
+    problems: reading.problems.filter(
+      (p) => p.graph === graph && names(reading.texts[p.block]?.split('\n')[p.line - 1] ?? '', key),
+    ),
   };
 }
 
@@ -85,14 +101,22 @@ const said = (v: unknown): string => (v && typeof v === 'object' && 's' in v ? S
 
 /** The details of the drawing's `index`-th link (in the order written), or null when there is none. */
 export function linkDetails(reading: NoteReading, graph: string, index: number): LinkDetails | null {
-  const d = reading.graphs.get(graph), l = d?.links[index], g = reading.world[graph];
+  const d = reading.graphs.get(graph),
+    l = d?.links[index],
+    g = reading.world[graph];
   if (!d || !l || !g) return null;
-  const drawn = new Set(d.boxes.map((b) => b.key)), textOf = (k: string) => d.boxes.find((b) => b.key === k)?.text ?? k;
+  const drawn = new Set(d.boxes.map((b) => b.key)),
+    textOf = (k: string) => d.boxes.find((b) => b.key === k)?.text ?? k;
   const props = g.edges.filter(([s, , t]) => drawn.has(s) && drawn.has(t))[index]?.[3] ?? {};
   return {
-    index, type: l.type, reading: l.reading,
-    from: { key: l.from, text: textOf(l.from) }, to: { key: l.to, text: textOf(l.to) },
-    properties: Object.entries(props).sort(([a], [b]) => (a < b ? -1 : 1)).map(([k, v]) => [k, said(v)]),
+    index,
+    type: l.type,
+    reading: l.reading,
+    from: { key: l.from, text: textOf(l.from) },
+    to: { key: l.to, text: textOf(l.to) },
+    properties: Object.entries(props)
+      .sort(([a], [b]) => (a < b ? -1 : 1))
+      .map(([k, v]) => [k, said(v)]),
     problems: reading.problems.filter((p) => {
       const line = reading.texts[p.block]?.split('\n')[p.line - 1] ?? '';
       return p.graph === graph && names(line, l.from) && names(line, l.to) && names(line, l.type);

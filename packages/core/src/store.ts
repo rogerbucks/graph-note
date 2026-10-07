@@ -11,9 +11,9 @@ export interface BlockRef {
   text: string;
 }
 
+/** A note's new text, or why the write was refused and the block as it now is. */
 export type WriteResult =
-  | { ok: true; note: string; ref: BlockRef }
-  | { ok: false; reason: string; current: Block | null };
+  { ok: true; note: string; ref: BlockRef } | { ok: false; reason: string; current: Block | null };
 
 /** The note with one block's text replaced — or the reason it cannot be, and the block as it now is. */
 export function replaceBlock(note: string, ref: BlockRef, next: string): WriteResult {
@@ -22,8 +22,18 @@ export function replaceBlock(note: string, ref: BlockRef, next: string): WriteRe
   const same = spans.filter((s) => s.text === ref.text);
   const target = here && here.text === ref.text ? here : same.length === 1 ? same[0] : undefined;
   if (!target) {
-    if (same.length > 1) return { ok: false, reason: 'the block cannot be told apart from more than one identical block in the note', current: null };
-    if (here) return { ok: false, reason: 'the block has changed since the pane read it', current: { text: here.text, line: here.open + 1 } };
+    if (same.length > 1)
+      return {
+        ok: false,
+        reason: 'the block cannot be told apart from more than one identical block in the note',
+        current: null,
+      };
+    if (here)
+      return {
+        ok: false,
+        reason: 'the block has changed since the pane read it',
+        current: { text: here.text, line: here.open + 1 },
+      };
     return { ok: false, reason: 'the block is no longer in the note where the pane read it', current: null };
   }
   // lines with their own endings, so every byte outside the block is kept
@@ -32,7 +42,9 @@ export function replaceBlock(note: string, ref: BlockRef, next: string): WriteRe
   const text = next.replace(/\r\n/g, '\n');
   const body = text.split('\n');
   const unclosed = target.close >= lines.length;
-  const written = body.map((l, i) => (unclosed && i === body.length - 1 && !/\n$/.test(lines[lines.length - 1] ?? '') ? l : l + eol));
+  const written = body.map((l, i) =>
+    unclosed && i === body.length - 1 && !/\n$/.test(lines[lines.length - 1] ?? '') ? l : l + eol,
+  );
   lines.splice(target.open + 1, target.close - target.open - 1, ...written);
   return { ok: true, note: lines.join(''), ref: { line: target.open, text } };
 }
@@ -65,8 +77,12 @@ export class History {
     this.undone.length = 0;
   }
 
-  canUndo(): boolean { return this.done.length > 0; }
-  canRedo(): boolean { return this.undone.length > 0; }
+  canUndo(): boolean {
+    return this.done.length > 0;
+  }
+  canRedo(): boolean {
+    return this.undone.length > 0;
+  }
 
   /** The text to write to undo the last write, or null when there is nothing to undo. */
   undo(): string | null {

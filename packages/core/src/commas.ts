@@ -16,7 +16,8 @@ export function commaFor(text: string, caret: number): number | null {
   // the line before, skipping blank lines and comment lines
   let end = lineStart - 1;
   while (end >= 0) {
-    const start = text.lastIndexOf('\n', end - 1) + 1, line = text.slice(start, end).trim();
+    const start = text.lastIndexOf('\n', end - 1) + 1,
+      line = text.slice(start, end).trim();
     if (line && !line.startsWith('//')) {
       const code = text.slice(start, end).trimEnd();
       if (!code.endsWith(')')) return null;
@@ -34,7 +35,11 @@ export function commaInNote(note: string, caret: number): number | null {
   const line = lineOf(caret);
   const span = gqlSpans(note).find((s) => s.open < line && line < s.close);
   if (!span || !graphOfBlock(span.text)) return null;
-  const start = note.split('\n').slice(0, span.open + 1).join('\n').length + 1;   // the block's first character
+  const start =
+    note
+      .split('\n')
+      .slice(0, span.open + 1)
+      .join('\n').length + 1; // the block's first character
   const at = commaFor(span.text, caret - start);
   return at === null ? null : start + at;
 }

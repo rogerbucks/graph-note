@@ -2,8 +2,30 @@
 // zooms and pans by button, gesture and key (the core's Zoom decides; this passes the events in and shows the view), opens
 // full screen, and shows a box's details when it is tapped or opened from the keyboard.
 import { MarkdownRenderChild, Platform, setIcon } from 'obsidian';
-import { Zoom, blockItems, details, hops, linkDetails, parseValue, propertiesOf, propertyNames, setProperty, textVersion, withoutColorMix } from '@graph-note/core';
-import type { CompletenessReport, Drawn, Estimate, Mode, NoteReading, Problem, PropType, View, ZoomEvent } from '@graph-note/core';
+import {
+  Zoom,
+  blockItems,
+  details,
+  hops,
+  linkDetails,
+  parseValue,
+  propertiesOf,
+  propertyNames,
+  setProperty,
+  textVersion,
+  withoutColorMix,
+} from '@graph-note/core';
+import type {
+  CompletenessReport,
+  Drawn,
+  Estimate,
+  Mode,
+  NoteReading,
+  Problem,
+  PropType,
+  View,
+  ZoomEvent,
+} from '@graph-note/core';
 
 /** The editor open in place on this card, as the inspector needs it: the block's text as typed, and a way to replace it. */
 export interface Editing {
@@ -18,6 +40,7 @@ export interface ShownProblem extends Problem {
   noteLine: number;
 }
 
+/** What a drawing needs: the reading, the graph, its drawn SVG and problems, where it is shown, and what its buttons do. */
 export interface ViewOptions {
   reading: NoteReading;
   graph: string;
@@ -57,17 +80,33 @@ function kindOf(p: Problem): string {
 }
 
 /** The problems — one by one, or grouped by kind with the worst first when there are many — and the completeness report. */
-export function renderProblems(parent: HTMLElement, problems: ShownProblem[], hidden: boolean, completeness?: CompletenessReport): HTMLElement {
+export function renderProblems(
+  parent: HTMLElement,
+  problems: ShownProblem[],
+  hidden: boolean,
+  completeness?: CompletenessReport,
+): HTMLElement {
   const box = parent.createDiv({ cls: 'graph-note-problems' });
   box.hidden = hidden;
-  const item = (ul: HTMLElement, p: ShownProblem) => ul.createEl('li', { cls: p.severity === 'warning' ? 'is-warning' : 'is-error', text: `${sign(p)} — ${problemText(p)}` });
+  const item = (ul: HTMLElement, p: ShownProblem) =>
+    ul.createEl('li', {
+      cls: p.severity === 'warning' ? 'is-warning' : 'is-error',
+      text: `${sign(p)} — ${problemText(p)}`,
+    });
   if (problems.length > GROUP_OVER) {
     const groups = new Map<string, ShownProblem[]>();
-    for (const p of problems) { const k = `${p.severity}|${kindOf(p)}`; groups.set(k, [...(groups.get(k) ?? []), p]); }
-    const order = [...groups].sort(([a, x], [b, y]) => (a.startsWith('error') === b.startsWith('error') ? y.length - x.length : a.startsWith('error') ? -1 : 1));
+    for (const p of problems) {
+      const k = `${p.severity}|${kindOf(p)}`;
+      groups.set(k, [...(groups.get(k) ?? []), p]);
+    }
+    const order = [...groups].sort(([a, x], [b, y]) =>
+      a.startsWith('error') === b.startsWith('error') ? y.length - x.length : a.startsWith('error') ? -1 : 1,
+    );
     for (const [k, ps] of order) {
       const d = box.createEl('details');
-      d.createEl('summary', { text: `${k.startsWith('warning') ? 'Warning' : 'Error'}: ${ps.length} × ${k.split('|')[1]}` });
+      d.createEl('summary', {
+        text: `${k.startsWith('warning') ? 'Warning' : 'Error'}: ${ps.length} × ${k.split('|')[1]}`,
+      });
       const ul = d.createEl('ul');
       for (const p of ps) item(ul, p);
     }
@@ -91,7 +130,13 @@ export function renderProblems(parent: HTMLElement, problems: ShownProblem[], hi
 
 let described = 0;
 
-function button(parent: HTMLElement, label: string, icon: string, onClick: () => void, text?: string): HTMLButtonElement {
+function button(
+  parent: HTMLElement,
+  label: string,
+  icon: string,
+  onClick: () => void,
+  text?: string,
+): HTMLButtonElement {
   const b = parent.createEl('button', { cls: 'clickable-icon', attr: { 'aria-label': label, type: 'button' } });
   setIcon(b, icon);
   if (text) b.createSpan({ cls: 'graph-note-badge-text', text });
@@ -99,6 +144,7 @@ function button(parent: HTMLElement, label: string, icon: string, onClick: () =>
   return b;
 }
 
+/** A drawn graph with its bar, zoom, full screen, details and, in edit mode, the inspector. */
 export class GraphView extends MarkdownRenderChild {
   private readonly o: ViewOptions;
   private zoom!: Zoom;
@@ -114,16 +160,29 @@ export class GraphView extends MarkdownRenderChild {
   }
 
   override onload(): void {
-    const { problems, mode } = this.o, root = this.containerEl;
+    const { problems, mode } = this.o,
+      root = this.containerEl;
     root.addClass('graph-note-view', `is-${mode}`);
 
-    const bar = root.createDiv({ cls: 'graph-note-bar', attr: { role: 'toolbar', 'aria-label': `Graph ${this.o.graph}` } });
+    const bar = root.createDiv({
+      cls: 'graph-note-bar',
+      attr: { role: 'toolbar', 'aria-label': `Graph ${this.o.graph}` },
+    });
     const gaps = this.o.completeness?.gaps ?? 0;
-    const label = [problems.length ? plural(problems.length, 'problem') : '', gaps ? plural(gaps, 'gap') : ''].filter(Boolean).join(', ') || 'No problems';
-    const badge = button(bar, label, problems.length || gaps ? 'alert-triangle' : 'check-circle', () => {
-      list.hidden = !list.hidden;
-      badge.setAttribute('aria-expanded', String(!list.hidden));
-    }, label);
+    const label =
+      [problems.length ? plural(problems.length, 'problem') : '', gaps ? plural(gaps, 'gap') : '']
+        .filter(Boolean)
+        .join(', ') || 'No problems';
+    const badge = button(
+      bar,
+      label,
+      problems.length || gaps ? 'alert-triangle' : 'check-circle',
+      () => {
+        list.hidden = !list.hidden;
+        badge.setAttribute('aria-expanded', String(!list.hidden));
+      },
+      label,
+    );
     badge.addClass('graph-note-badge');
     badge.setAttribute('aria-expanded', 'false');
     button(bar, 'Fit', 'maximize', () => this.zoom.fit());
@@ -137,7 +196,11 @@ export class GraphView extends MarkdownRenderChild {
     const list = renderProblems(root, problems, true, this.o.completeness);
     this.viewport = root.createDiv({
       cls: 'graph-note-viewport',
-      attr: { tabindex: '0', role: 'group', 'aria-label': `Drawing of graph ${this.o.graph}: ${plural(this.o.drawn.width ? this.boxes().length : 0, 'thing')}. Plus, minus and zero zoom; Escape leaves full screen.` },
+      attr: {
+        tabindex: '0',
+        role: 'group',
+        'aria-label': `Drawing of graph ${this.o.graph}: ${plural(this.o.drawn.width ? this.boxes().length : 0, 'thing')}. Plus, minus and zero zoom; Escape leaves full screen.`,
+      },
     });
     this.svg = this.insertSvg();
     // the drawing as sentences, for screen readers (spec §11)
@@ -183,7 +246,10 @@ export class GraphView extends MarkdownRenderChild {
   private insertSvg(): SVGSVGElement {
     // CSS color-mix arrived in iOS 16.2, and Obsidian runs on iOS 15: without it a blend would draw black, so use the plain hue
     const mixes = typeof CSS === 'undefined' || CSS.supports('color', 'color-mix(in srgb, red 50%, blue)');
-    const parsed = new DOMParser().parseFromString(mixes ? this.o.drawn.svg : withoutColorMix(this.o.drawn.svg), 'image/svg+xml').documentElement;
+    const parsed = new DOMParser().parseFromString(
+      mixes ? this.o.drawn.svg : withoutColorMix(this.o.drawn.svg),
+      'image/svg+xml',
+    ).documentElement;
     const svg = this.viewport.appendChild(activeDocument.importNode(parsed, true)) as unknown as SVGSVGElement;
     svg.removeAttribute('style');
     svg.classList.add('graph-note-svg');
@@ -198,13 +264,16 @@ export class GraphView extends MarkdownRenderChild {
       g.setAttribute('aria-pressed', 'false');
     }
     // links: each written link in order, then the estimated ones added to the drawing (spec §3)
-    const d = this.drawing(), written = d?.links.length ?? 0, named = (d?.estimates ?? []).filter((e) => e.kind === 'name');
+    const d = this.drawing(),
+      written = d?.links.length ?? 0,
+      named = (d?.estimates ?? []).filter((e) => e.kind === 'name');
     const textOf = (k: string) => this.boxes().find((b) => b.key === k)?.text ?? k;
     for (const g of Array.from(svg.querySelectorAll('g.edge'))) {
       const n = Number(/^edge(\d+)$/.exec(g.getAttribute('id') ?? '')?.[1]) - 1;
       const e = n < written ? d?.estimates.find((x) => x.kind === 'type' && x.index === n) : named[n - written];
       const l = n < written ? d?.links[n] : undefined;
-      if (!e && l) {   // a written link: tap it, or press Enter on it, for its details
+      if (!e && l) {
+        // a written link: tap it, or press Enter on it, for its details
         g.setAttribute('data-link', String(n));
         g.setAttribute('tabindex', '0');
         g.setAttribute('role', 'button');
@@ -249,7 +318,9 @@ export class GraphView extends MarkdownRenderChild {
     const el = target as Element | null;
     const key = el?.closest?.('g.node')?.getAttribute('data-key');
     if (key) return { key };
-    const edge = el?.closest?.('g.edge'), estimate = edge?.getAttribute('data-estimate'), link = edge?.getAttribute('data-link');
+    const edge = el?.closest?.('g.edge'),
+      estimate = edge?.getAttribute('data-estimate'),
+      link = edge?.getAttribute('data-link');
     if (estimate) return { estimate: Number(estimate) };
     return link ? { link: Number(link) } : null;
   }
@@ -257,14 +328,24 @@ export class GraphView extends MarkdownRenderChild {
   private open(t: Target): void {
     if ('key' in t) this.showDetails(t.key);
     else if ('link' in t) this.showLink(t.link);
-    else { const e = this.drawing()?.estimates[t.estimate]; if (e) this.showEstimate(e); }
+    else {
+      const e = this.drawing()?.estimates[t.estimate];
+      if (e) this.showEstimate(e);
+    }
   }
 
   private bindEvents(): void {
     const vp = this.viewport;
-    const use = (e: Event, ev: ZoomEvent) => { if (this.zoom.handle(ev)) { e.preventDefault(); return true; } return false; };
+    const use = (e: Event, ev: ZoomEvent) => {
+      if (this.zoom.handle(ev)) {
+        e.preventDefault();
+        return true;
+      }
+      return false;
+    };
     this.registerDomEvent(vp, 'pointerdown', (e: PointerEvent) => {
-      const target = this.targetAt(e.target), p = this.point(e);
+      const target = this.targetAt(e.target),
+        p = this.point(e);
       if (target) this.boxDown = { id: e.pointerId, ...p, target };
       const pointer = e.pointerType === 'touch' || e.pointerType === 'pen' ? e.pointerType : 'mouse';
       if (use(e, { kind: 'down', id: e.pointerId, pointer, ...p, onBox: !!target })) {
@@ -272,7 +353,9 @@ export class GraphView extends MarkdownRenderChild {
         vp.focus({ preventScroll: true });
       }
     });
-    this.registerDomEvent(vp, 'pointermove', (e: PointerEvent) => { use(e, { kind: 'move', id: e.pointerId, ...this.point(e) }); });
+    this.registerDomEvent(vp, 'pointermove', (e: PointerEvent) => {
+      use(e, { kind: 'move', id: e.pointerId, ...this.point(e) });
+    });
     this.registerDomEvent(vp, 'pointerup', (e: PointerEvent) => {
       const p = this.point(e);
       use(e, { kind: 'up', id: e.pointerId, ...p, time: e.timeStamp ?? 0 });
@@ -280,15 +363,29 @@ export class GraphView extends MarkdownRenderChild {
       this.boxDown = null;
       if (down && down.id === e.pointerId && Math.hypot(p.x - down.x, p.y - down.y) < 10) this.open(down.target);
     });
-    this.registerDomEvent(vp, 'pointercancel', (e: PointerEvent) => { this.boxDown = null; this.zoom.handle({ kind: 'cancel', id: e.pointerId }); });
-    this.registerDomEvent(vp, 'wheel', (e: WheelEvent) => {
-      const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
-      use(e, { kind: 'wheel', ...this.point(e), dy, ctrl: e.ctrlKey, meta: e.metaKey });
-    }, { passive: false });
-    this.registerDomEvent(vp, 'dblclick', (e: MouseEvent) => { use(e, { kind: 'dblclick', ...this.point(e), onBox: !!this.targetAt(e.target) }); });
+    this.registerDomEvent(vp, 'pointercancel', (e: PointerEvent) => {
+      this.boxDown = null;
+      this.zoom.handle({ kind: 'cancel', id: e.pointerId });
+    });
+    this.registerDomEvent(
+      vp,
+      'wheel',
+      (e: WheelEvent) => {
+        const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
+        use(e, { kind: 'wheel', ...this.point(e), dy, ctrl: e.ctrlKey, meta: e.metaKey });
+      },
+      { passive: false },
+    );
+    this.registerDomEvent(vp, 'dblclick', (e: MouseEvent) => {
+      use(e, { kind: 'dblclick', ...this.point(e), onBox: !!this.targetAt(e.target) });
+    });
     this.registerDomEvent(vp, 'keydown', (e: KeyboardEvent) => {
       const target = this.targetAt(e.target);
-      if (target && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); this.open(target); return; }
+      if (target && (e.key === 'Enter' || e.key === ' ')) {
+        e.preventDefault();
+        this.open(target);
+        return;
+      }
       use(e, { kind: 'key', key: e.key, ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey });
     });
   }
@@ -296,7 +393,9 @@ export class GraphView extends MarkdownRenderChild {
   /** Marks the box or link whose details are open — a heavier line, and pressed for screen readers — and only that one. */
   private select(key: string | null, link: number | null = null): void {
     for (const g of Array.from(this.svg.querySelectorAll('g.node, g.edge'))) {
-      const on = (key !== null && g.getAttribute('data-key') === key) || (link !== null && g.getAttribute('data-link') === String(link));
+      const on =
+        (key !== null && g.getAttribute('data-key') === key) ||
+        (link !== null && g.getAttribute('data-link') === String(link));
       g.classList.toggle('is-selected', on);
       if (g.hasAttribute('aria-pressed')) g.setAttribute('aria-pressed', String(on));
     }
@@ -330,12 +429,14 @@ export class GraphView extends MarkdownRenderChild {
     el.empty();
     el.hidden = false;
     el.setAttribute('aria-label', `Details of ${title}`);
-    el.toggleClass('is-sheet', Platform.isPhone && !!this.o.editing?.()?.session);   // the inspector, on a phone: a bottom sheet (§14)
+    el.toggleClass('is-sheet', Platform.isPhone && !!this.o.editing?.()?.session); // the inspector, on a phone: a bottom sheet (§14)
     const head = el.createDiv({ cls: 'graph-note-details-head' });
     head.createEl('strong', { text: title });
     if (kind) head.createSpan({ cls: 'graph-note-kind', text: kind });
     button(head, 'Close details', 'x', () => {
-      el.hidden = true; this.select(null); this.viewport.focus();
+      el.hidden = true;
+      this.select(null);
+      this.viewport.focus();
       const ed = this.o.editing?.();
       if (ed) ed.selected = null;
     });
@@ -361,10 +462,19 @@ export class GraphView extends MarkdownRenderChild {
       const ul = el.createEl('ul');
       for (const i of items) ul.createEl('li', { text: i });
     };
-    links('Links out', d.out.map((l) => `${l.reading} → ${l.text}`));
-    links('Links in', d.in.map((l) => `${l.text} ${l.reading} this`));
+    links(
+      'Links out',
+      d.out.map((l) => `${l.reading} → ${l.text}`),
+    );
+    links(
+      'Links in',
+      d.in.map((l) => `${l.text} ${l.reading} this`),
+    );
     if (!d.out.length && !d.in.length) el.createEl('p', { text: 'No links in or out.' });
-    links('Problems', d.problems.map((p) => problemText({ ...p, noteLine: this.o.lineOf(p) })));
+    links(
+      'Problems',
+      d.problems.map((p) => problemText({ ...p, noteLine: this.o.lineOf(p) })),
+    );
     this.inspector(el, { thing: key }, d.kind.split(' · ')[0] ?? '');
   }
 
@@ -383,23 +493,39 @@ export class GraphView extends MarkdownRenderChild {
     const types: PropType[] = ['text', 'number', 'date', 'datetime', 'boolean'];
     const typeSelect = (row: HTMLElement, label: string, chosen: PropType) => {
       const sel = row.createEl('select', { cls: 'dropdown', attr: { 'aria-label': label } });
-      for (const t of types) { const o = sel.createEl('option', { text: t, attr: { value: t } }); if (t === chosen) o.setAttribute('selected', ''); }
+      for (const t of types) {
+        const o = sel.createEl('option', { text: t, attr: { value: t } });
+        if (t === chosen) o.setAttribute('selected', '');
+      }
       sel.value = chosen;
       return sel;
     };
     // a link is edited in its own brackets, counted among the links written in the block being edited
     const inBlock = (): { thing: string } | { link: number } => {
       if ('thing' in target) return target;
-      const l = this.drawing()?.links[target.link], text = ed.session?.text ?? '';
+      const l = this.drawing()?.links[target.link],
+        text = ed.session?.text ?? '';
       let n = 0;
-      for (const it of blockItems(text)) for (const [s, t, e] of hops(it.text)) { if (l && s === l.from && t === l.type && e === l.to) return { link: n }; n++; }
+      for (const it of blockItems(text))
+        for (const [s, t, e] of hops(it.text)) {
+          if (l && s === l.from && t === l.type && e === l.to) return { link: n };
+          n++;
+        }
       return { link: -1 };
     };
     const apply = (key: string, type: PropType | null, value: string | null) => {
       const parsed = type === null || value === null ? null : parseValue(type, value);
-      if (parsed && !parsed.ok) { alert.hidden = false; alert.setText(`${key}: ${parsed.error}.`); return; }
+      if (parsed && !parsed.ok) {
+        alert.hidden = false;
+        alert.setText(`${key}: ${parsed.error}.`);
+        return;
+      }
       const r = setProperty(ed.session?.text ?? '', this.o.graph, inBlock(), key, parsed ? parsed.gql : null);
-      if (!r.ok) { alert.hidden = false; alert.setText(`${key}: ${r.reason}.`); return; }
+      if (!r.ok) {
+        alert.hidden = false;
+        alert.setText(`${key}: ${r.reason}.`);
+        return;
+      }
       alert.hidden = true;
       ed.replace(r.text);
     };
@@ -416,16 +542,27 @@ export class GraphView extends MarkdownRenderChild {
     const listId = `graph-note-names-${++described}`;
     const names = add.createEl('datalist', { attr: { id: listId } });
     for (const n of propertyNames(this.o.reading, this.o.graph, kind)) names.createEl('option', { attr: { value: n } });
-    const name = add.createEl('input', { attr: { type: 'text', list: listId, 'aria-label': 'New property name', placeholder: 'Name' } });
+    const name = add.createEl('input', {
+      attr: { type: 'text', list: listId, 'aria-label': 'New property name', placeholder: 'Name' },
+    });
     const type = typeSelect(add, 'New property type', 'text');
-    const value = add.createEl('input', { attr: { type: 'text', 'aria-label': 'New property value', placeholder: 'Value' } });
+    const value = add.createEl('input', {
+      attr: { type: 'text', 'aria-label': 'New property value', placeholder: 'Value' },
+    });
     button(add, 'Add property', 'plus', () => apply(name.value.trim(), type.value as PropType, value.value), 'Add');
   }
 
   private openFullscreen(): void {
     if (this.fullscreen) return;
-    const overlay = activeDocument.body.createDiv({ cls: 'graph-note-fullscreen', attr: { role: 'dialog', 'aria-modal': 'true', 'aria-label': `Graph ${this.o.graph}, full screen` } });
-    const view = new GraphView(overlay.createDiv({ cls: 'graph-note' }), { ...this.o, mode: 'full', onClose: () => this.closeFullscreen() });
+    const overlay = activeDocument.body.createDiv({
+      cls: 'graph-note-fullscreen',
+      attr: { role: 'dialog', 'aria-modal': 'true', 'aria-label': `Graph ${this.o.graph}, full screen` },
+    });
+    const view = new GraphView(overlay.createDiv({ cls: 'graph-note' }), {
+      ...this.o,
+      mode: 'full',
+      onClose: () => this.closeFullscreen(),
+    });
     this.fullscreen = { view, overlay };
     this.addChild(view);
   }

@@ -50,15 +50,15 @@ const RULES = [
     rule: 'home-path',
     what: 'an absolute path in a home folder',
     test: (line) =>
-      /(?<![\w.~-])\/(Users|home)\/(?!Shared\/)[\w.-]+/.test(line) ||
-      /\b[A-Za-z]:\\Users\\[\w.-]+/.test(line),
+      /(?<![\w.~-])\/(Users|home)\/(?!Shared\/)[\w.-]+/.test(line) || /\b[A-Za-z]:\\Users\\[\w.-]+/.test(line),
   },
   {
     rule: 'email',
     what: 'a personal email address',
     test: (line) =>
-      [...line.matchAll(/(?<![\w.+-])([\w.+-]+)@([A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,})\b/g)]
-        .some(([, local, domain]) => !SAFE_EMAIL_DOMAIN.test(domain) && !SAFE_EMAIL_LOCAL.test(local)),
+      [...line.matchAll(/(?<![\w.+-])([\w.+-]+)@([A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,})\b/g)].some(
+        ([, local, domain]) => !SAFE_EMAIL_DOMAIN.test(domain) && !SAFE_EMAIL_LOCAL.test(local),
+      ),
   },
   {
     rule: 'phone',
@@ -76,8 +76,7 @@ const RULES = [
     what: 'a card number',
     // Card numbers start with 2 to 6 (the card networks' ranges) and pass the Luhn checksum.
     test: (line) =>
-      [...line.matchAll(/(?<![\w.-])[2-6](?:[ -]?\d){12,18}(?![\w.-])/g)]
-        .some(([m]) => luhn(m.replace(/[ -]/g, ''))),
+      [...line.matchAll(/(?<![\w.-])[2-6](?:[ -]?\d){12,18}(?![\w.-])/g)].some(([m]) => luhn(m.replace(/[ -]/g, ''))),
   },
 ];
 
@@ -105,8 +104,10 @@ const git = (...args) => execFileSync('git', args, { maxBuffer: 1 << 30 });
 const names = (out) => out.toString('utf8').split('\0').filter(Boolean);
 
 function stagedFiles() {
-  return names(git('diff', '--cached', '--name-only', '-z', '--diff-filter=ACMR'))
-    .map((name) => ({ name, content: git('show', `:${name}`) }));
+  return names(git('diff', '--cached', '--name-only', '-z', '--diff-filter=ACMR')).map((name) => ({
+    name,
+    content: git('show', `:${name}`),
+  }));
 }
 
 function trackedFiles() {

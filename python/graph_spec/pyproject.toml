@@ -16,3 +16,14 @@ dependencies = [
 [tool.uv]
 # The modules are flat files in src/, imported by path, so there is nothing to build.
 package = false
+
+[dependency-groups]
+# Ruff checks the library against PEP 8 and formats it (CONTRIBUTING.md). Pinned, as every tool is.
+dev = ["ruff==0.16.9"]
+
+[tool.ruff]
+# PEP 8 lets a team agree on up to 99 characters.
+line-length = 99
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "N"]

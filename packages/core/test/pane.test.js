@@ -20,7 +20,10 @@ describe('the block', () => {
 
   test('a note with several graph blocks offers each in a picker; queries are not offered', () => {
     const s = new PaneSession(NOTE, 2);
-    assert.deepEqual(s.choices(), [{ line: 2, graph: 'alpha', label: 'alpha · line 3' }, { line: 12, graph: 'beta', label: 'beta · line 13' }]);
+    assert.deepEqual(s.choices(), [
+      { line: 2, graph: 'alpha', label: 'alpha · line 3' },
+      { line: 12, graph: 'beta', label: 'beta · line 13' },
+    ]);
     s.select(12);
     assert.equal(s.text, B);
   });
@@ -53,7 +56,13 @@ describe('writing what is typed', () => {
   test('the drawing in the pane is of what is typed, before it is written', () => {
     const s = new PaneSession(NOTE, 2);
     s.type(A + ",\n(c:T {name: 'C'})");
-    assert.deepEqual(s.reading(NOTE).graphs.get('alpha').boxes.map((b) => b.key), ['a', 'c']);
+    assert.deepEqual(
+      s
+        .reading(NOTE)
+        .graphs.get('alpha')
+        .boxes.map((b) => b.key),
+      ['a', 'c'],
+    );
   });
 });
 
@@ -108,7 +117,10 @@ describe('undo and redo', () => {
   test('each write can be undone and redone, back to the original note', () => {
     const s = new PaneSession(NOTE, 2);
     let note = NOTE;
-    for (const t of [A + ',\n(c:T)', A + ',\n(c:T),\n(d:T)']) { s.type(t); note = s.write(note).note; }
+    for (const t of [A + ',\n(c:T)', A + ',\n(c:T),\n(d:T)']) {
+      s.type(t);
+      note = s.write(note).note;
+    }
     assert.equal(s.canUndo(), true);
     note = s.undo(note).note;
     assert.equal(s.text, A + ',\n(c:T)');

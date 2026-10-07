@@ -7,6 +7,7 @@ import type { NoteReading } from './drawing.ts';
 import { History, replaceBlock } from './store.ts';
 import type { BlockRef } from './store.ts';
 
+/** One of a note's graph blocks, as the pane's picker offers it. */
 export interface Choice {
   /** The 0-based line of the block's opening fence. */
   line: number;
@@ -14,15 +15,18 @@ export interface Choice {
   label: string;
 }
 
-export type PaneWrite =
-  | { ok: true; note: string; unchanged?: true }
-  | { ok: false; reason: string; draft: string };
+/** What writing the pane's text into the note did: the new note, or why not and the draft kept. */
+export type PaneWrite = { ok: true; note: string; unchanged?: true } | { ok: false; reason: string; draft: string };
 
 /** The note's graph blocks, each with its fence line and its graph. */
 function graphBlocks(note: string) {
-  return gqlSpans(note).flatMap((s) => { const graph = graphOfBlock(s.text); return graph ? [{ ...s, graph }] : []; });
+  return gqlSpans(note).flatMap((s) => {
+    const graph = graphOfBlock(s.text);
+    return graph ? [{ ...s, graph }] : [];
+  });
 }
 
+/** The edit pane's state for one block of one note (spec §4): its text, history, reading and writing back. */
 export class PaneSession {
   graph: string;
   /** What the pane shows: the block as typed. */
@@ -39,19 +43,29 @@ export class PaneSession {
     const blocks = graphBlocks(note);
     const b = blocks.find((x) => x.open === line) ?? blocks[0];
     if (!b) throw new Error('this note has no graph block to edit');
-    this.graph = b.graph; this.text = b.text; this.ref = { line: b.open, text: b.text }; this.lastNote = note;
+    this.graph = b.graph;
+    this.text = b.text;
+    this.ref = { line: b.open, text: b.text };
+    this.lastNote = note;
   }
 
   /** The graph blocks the picker offers, in the note last seen. */
   choices(): Choice[] {
-    return graphBlocks(this.lastNote).map((b) => ({ line: b.open, graph: b.graph, label: `${b.graph} · line ${b.open + 1}` }));
+    return graphBlocks(this.lastNote).map((b) => ({
+      line: b.open,
+      graph: b.graph,
+      label: `${b.graph} · line ${b.open + 1}`,
+    }));
   }
 
   /** Switches to another block of the note. Write what was typed first. */
   select(line: number): void {
     const b = graphBlocks(this.lastNote).find((x) => x.open === line);
     if (!b) return;
-    this.graph = b.graph; this.text = b.text; this.ref = { line: b.open, text: b.text }; this.dirty = false;
+    this.graph = b.graph;
+    this.text = b.text;
+    this.ref = { line: b.open, text: b.text };
+    this.dirty = false;
   }
 
   type(text: string): void {
@@ -75,11 +89,16 @@ export class PaneSession {
     const r = replaceBlock(note, this.ref, this.text);
     if (r.ok) {
       if (record) this.history.record(this.ref.text, this.text);
-      this.ref = r.ref; this.dirty = false; this.lastNote = r.note;
+      this.ref = r.ref;
+      this.dirty = false;
+      this.lastNote = r.note;
       return { ok: true, note: r.note };
     }
     const draft = this.text;
-    if (r.current) { this.ref = { line: r.current.line - 1, text: r.current.text }; this.text = r.current.text; }
+    if (r.current) {
+      this.ref = { line: r.current.line - 1, text: r.current.text };
+      this.text = r.current.text;
+    }
     this.dirty = false;
     return { ok: false, reason: r.reason, draft };
   }
@@ -89,27 +108,42 @@ export class PaneSession {
     this.lastNote = note;
     const spans = gqlSpans(note);
     const same = spans.filter((s) => s.text === this.ref.text);
-    const found = spans.find((s) => s.open === this.ref.line && s.text === this.ref.text) ?? (same.length === 1 ? same[0] : undefined);
-    if (found) { this.ref = { line: found.open, text: found.text }; return 'unchanged'; }
+    const found =
+      spans.find((s) => s.open === this.ref.line && s.text === this.ref.text) ??
+      (same.length === 1 ? same[0] : undefined);
+    if (found) {
+      this.ref = { line: found.open, text: found.text };
+      return 'unchanged';
+    }
     if (this.dirty) return 'conflict';
     const here = spans.find((s) => s.open === this.ref.line && graphOfBlock(s.text) === this.graph);
     if (!here) return 'conflict';
-    this.ref = { line: here.open, text: here.text }; this.text = here.text;
+    this.ref = { line: here.open, text: here.text };
+    this.text = here.text;
     return 'reloaded';
   }
 
-  canUndo(): boolean { return this.dirty || this.history.canUndo(); }
-  canRedo(): boolean { return this.history.canRedo(); }
+  canUndo(): boolean {
+    return this.dirty || this.history.canUndo();
+  }
+  canRedo(): boolean {
+    return this.history.canRedo();
+  }
 
   private step(note: string, text: string | null): PaneWrite {
     if (text === null) return { ok: true, note, unchanged: true };
-    this.text = text; this.dirty = text !== this.ref.text;
+    this.text = text;
+    this.dirty = text !== this.ref.text;
     return this.write(note, false);
   }
 
   /** Undoes the last write; typing not yet written is written first, so it can be redone. */
   undo(note: string): PaneWrite {
-    if (this.dirty) { const w = this.write(note); if (!w.ok) return w; note = w.note; }
+    if (this.dirty) {
+      const w = this.write(note);
+      if (!w.ok) return w;
+      note = w.note;
+    }
     return this.step(note, this.history.undo());
   }
 

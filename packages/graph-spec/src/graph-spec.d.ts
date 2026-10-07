@@ -79,7 +79,10 @@ declare namespace GraphSpecCheck {
     malformed: string;
   }
   /** §25: each completeness rule the graph declares, with what is covered, deferred, overdue and missing. */
-  function completeness(g: Graph, today: string): { rules: CompletenessRule[]; deferred_malformed: { at: string; fix: string }[] };
+  function completeness(
+    g: Graph,
+    today: string,
+  ): { rules: CompletenessRule[]; deferred_malformed: { at: string; fix: string }[] };
 
   /** A data block's shape against the profile, without applying it: the problem, or null. */
   function checkSyntax(block: string): ProfileError | null;

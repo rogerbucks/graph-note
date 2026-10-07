@@ -63,7 +63,8 @@ describe('what the check refuses', () => {
       ['(555)', '123-4567'].join(' '),
       ['555', '123', '4567'].join('-'),
       ['07700', '900123'].join(' '),
-    ]) assert.deepEqual(rules(`call ${phone}`), ['phone'], phone);
+    ])
+      assert.deepEqual(rules(`call ${phone}`), ['phone'], phone);
   });
 
   test('a card number', () => {
@@ -102,7 +103,10 @@ describe('what the check lets through', () => {
 
   test('dates, versions, times, counts and hashes', () => {
     assert.deepEqual(rules('2026-10-07 at 12:30, version 10.11.0, 1167/1167 passed, 192.168.1.1'), []);
-    assert.deepEqual(rules('sha512-Kx7Q1234567890123456789/abc+def== and 3d3c42e5aac5ba805825da76410c181273ba90b1'), []);
+    assert.deepEqual(
+      rules('sha512-Kx7Q1234567890123456789/abc+def== and 3d3c42e5aac5ba805825da76410c181273ba90b1'),
+      [],
+    );
   });
 
   test('a long number that fails the card checksum', () => {
@@ -121,7 +125,8 @@ describe('what the check reports', () => {
   test('it names the rule and line but never echoes the value', () => {
     const value = email('someone', 'gmail.com');
     const r = spawnSync(process.execPath, [path('scripts/check-classification.mjs'), '--stdin', 'notes.md'], {
-      input: `x\n${value}\n`, encoding: 'utf8',
+      input: `x\n${value}\n`,
+      encoding: 'utf8',
     });
     assert.equal(r.status, 1);
     assert.match(r.stderr, /notes\.md:2/);
@@ -131,7 +136,11 @@ describe('what the check reports', () => {
 });
 
 describe('the hook and the whole-repository check', () => {
-  const git = (cwd, ...args) => spawnSync('git', ['-c', 'user.name=Test', '-c', `user.email=${email('test', 'example.com')}`, ...args], { cwd, encoding: 'utf8' });
+  const git = (cwd, ...args) =>
+    spawnSync('git', ['-c', 'user.name=Test', '-c', `user.email=${email('test', 'example.com')}`, ...args], {
+      cwd,
+      encoding: 'utf8',
+    });
 
   function scratchRepo() {
     const dir = mkdtempSync(join(tmpdir(), 'graph-note-hook-'));
@@ -180,13 +189,19 @@ describe('the hook and the whole-repository check', () => {
     writeFileSync(join(dir, 'note.md'), `call ${['+44', '7700', '900123'].join(' ')}\n`);
     git(dir, 'add', '.');
     git(dir, 'commit', '-q', '--no-verify', '-m', 'skipped the hook');
-    const r = spawnSync(process.execPath, ['scripts/check-classification.mjs', '--all'], { cwd: dir, encoding: 'utf8' });
+    const r = spawnSync(process.execPath, ['scripts/check-classification.mjs', '--all'], {
+      cwd: dir,
+      encoding: 'utf8',
+    });
     assert.equal(r.status, 1);
     assert.match(r.stderr, /note\.md:1.*phone/);
   });
 
   test('this repository passes its own check', () => {
-    const r = spawnSync(process.execPath, ['scripts/check-classification.mjs', '--all'], { cwd: ROOT, encoding: 'utf8' });
+    const r = spawnSync(process.execPath, ['scripts/check-classification.mjs', '--all'], {
+      cwd: ROOT,
+      encoding: 'utf8',
+    });
     assert.equal(r.status, 0, r.stderr);
   });
 

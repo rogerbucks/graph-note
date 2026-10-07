@@ -20,16 +20,58 @@ const SEED = `// graph: reader · SOURCE
 SET large.status = 'bought'`;
 
 let s = 20261007;
-const rand = (n) => { s = (s * 1103515245 + 12345) >>> 0; return s % n; };
-const PIECES = ['(', ')', '[', ']', '{', '}', ':', ',', "'", '-', '>', '<-', '-[:', ']->', '//', '\n', ' ', 'SET ', 'MATCH ', 'x', 'large', 'eyes', 'Q', '9', '\\', 'é', '→', '/*', '`', '"', 'DATE ', 'TRUE', '·', '// graph: '];
+const rand = (n) => {
+  s = (s * 1103515245 + 12345) >>> 0;
+  return s % n;
+};
+const PIECES = [
+  '(',
+  ')',
+  '[',
+  ']',
+  '{',
+  '}',
+  ':',
+  ',',
+  "'",
+  '-',
+  '>',
+  '<-',
+  '-[:',
+  ']->',
+  '//',
+  '\n',
+  ' ',
+  'SET ',
+  'MATCH ',
+  'x',
+  'large',
+  'eyes',
+  'Q',
+  '9',
+  '\\',
+  'é',
+  '→',
+  '/*',
+  '`',
+  '"',
+  'DATE ',
+  'TRUE',
+  '·',
+  '// graph: ',
+];
 
 /** One random edit: delete a span, insert a piece, or duplicate a span. */
 function mutate(text) {
-  const i = rand(text.length + 1), j = Math.min(text.length, i + rand(12));
+  const i = rand(text.length + 1),
+    j = Math.min(text.length, i + rand(12));
   switch (rand(3)) {
-    case 0: return text.slice(0, i) + text.slice(j);
-    case 1: return text.slice(0, i) + PIECES[rand(PIECES.length)] + text.slice(i);
-    default: return text.slice(0, i) + text.slice(i, j) + text.slice(i);
+    case 0:
+      return text.slice(0, i) + text.slice(j);
+    case 1:
+      return text.slice(0, i) + PIECES[rand(PIECES.length)] + text.slice(i);
+    default:
+      return text.slice(0, i) + text.slice(i, j) + text.slice(i);
   }
 }
 
@@ -50,7 +92,12 @@ function everything(text, engine) {
     completions(reading, graph, text, rand(text.length + 1));
     readBack(reading, graph, text);
   }
-  assert.equal(tokenize(text).map((t) => t.s).join(''), text);
+  assert.equal(
+    tokenize(text)
+      .map((t) => t.s)
+      .join(''),
+    text,
+  );
 }
 
 test('a thousand random edits of a real graph never crash the viewer or leave it blank', async () => {
@@ -58,7 +105,11 @@ test('a thousand random edits of a real graph never crash the viewer or leave it
   let text = SEED;
   for (let i = 0; i < 1000; i++) {
     text = rand(10) === 0 ? SEED : mutate(text);
-    try { everything(text, engine); } catch (e) { assert.fail(`edit ${i} broke it:\n${text}\n${e.stack}`); }
+    try {
+      everything(text, engine);
+    } catch (e) {
+      assert.fail(`edit ${i} broke it:\n${text}\n${e.stack}`);
+    }
   }
 });
 
@@ -67,14 +118,19 @@ test('random text, of every kind, never crashes the viewer', async () => {
   for (let i = 0; i < 300; i++) {
     let text = '// graph: g\n';
     for (let k = rand(60); k > 0; k--) text += PIECES[rand(PIECES.length)];
-    try { everything(text, engine); } catch (e) { assert.fail(`text ${i} broke it:\n${text}\n${e.stack}`); }
+    try {
+      everything(text, engine);
+    } catch (e) {
+      assert.fail(`text ${i} broke it:\n${text}\n${e.stack}`);
+    }
   }
 });
 
 test('a note of random blocks is always read: its blocks found, its graphs read', () => {
   for (let i = 0; i < 200; i++) {
     let note = '';
-    for (let k = rand(8); k > 0; k--) note += ['```gql\n', '```\n', '~~~gql\n', '~~~\n', 'text\n', SEED + '\n', mutate(SEED) + '\n'][rand(7)];
+    for (let k = rand(8); k > 0; k--)
+      note += ['```gql\n', '```\n', '~~~gql\n', '~~~\n', 'text\n', SEED + '\n', mutate(SEED) + '\n'][rand(7)];
     const blocks = gqlBlocks(note).map((b) => b.text);
     assert.doesNotThrow(() => readNote(blocks), note);
   }

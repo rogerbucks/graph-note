@@ -2,119 +2,476 @@
 
 /* One frame: the bar, the drawing, its problems and its details sit in one card, the bar as its header strip — so it is
    plain which bar and which details belong to which drawing. */
-.graph-note-view { border: 1px solid var(--background-modifier-border); border-radius: var(--radius-m); overflow: hidden; background: var(--background-primary); }
-.graph-note-view > .graph-note-bar { background: var(--background-secondary); border-bottom: 1px solid var(--background-modifier-border); margin: 0; padding: var(--size-4-1) var(--size-4-2); }
-.graph-note-view > .graph-note-problems, .graph-note-view > .graph-note-details { margin: 0; border: 0; border-radius: 0; border-top: 1px solid var(--background-modifier-border); padding: var(--size-4-2) var(--size-4-3); }
-.graph-note-view > .graph-note-problems { border-top: 0; border-bottom: 1px solid var(--background-modifier-border); background: var(--background-secondary); }
-.graph-note-svg g.is-selected > :is(path, polygon) { stroke-width: 3; }
-.graph-note-svg g.edge[data-link] { cursor: pointer; }
+.graph-note-view {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  overflow: hidden;
+  background: var(--background-primary);
+}
+.graph-note-view > .graph-note-bar {
+  background: var(--background-secondary);
+  border-bottom: 1px solid var(--background-modifier-border);
+  margin: 0;
+  padding: var(--size-4-1) var(--size-4-2);
+}
+.graph-note-view > .graph-note-problems,
+.graph-note-view > .graph-note-details {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  border-top: 1px solid var(--background-modifier-border);
+  padding: var(--size-4-2) var(--size-4-3);
+}
+.graph-note-view > .graph-note-problems {
+  border-top: 0;
+  border-bottom: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+}
+.graph-note-svg g.is-selected > :is(path, polygon) {
+  stroke-width: 3;
+}
+.graph-note-svg g.edge[data-link] {
+  cursor: pointer;
+}
 
 /* The bar: every control at least 44 points, as touch needs (spec §5), and none that only shows on hover. */
-.graph-note-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--size-4-1); margin-bottom: var(--size-4-1); }
-.graph-note-bar button { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: var(--size-4-1); }
-.graph-note-badge { margin-right: auto; }
+.graph-note-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-4-1);
+  margin-bottom: var(--size-4-1);
+}
+.graph-note-bar button {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--size-4-1);
+}
+.graph-note-badge {
+  margin-right: auto;
+}
 /* In Live Preview, Obsidian puts its own edit-block button at a code block's top right, shown on hover; leave it room, as
    Obsidian does for its PDF toolbar, so it never covers the bar's last button. */
-.cm-embed-block .graph-note-bar { padding-inline-end: var(--size-4-9); }
-.graph-note-badge-text { font-size: var(--font-ui-small); }
+.cm-embed-block .graph-note-bar {
+  padding-inline-end: var(--size-4-9);
+}
+.graph-note-badge-text {
+  font-size: var(--font-ui-small);
+}
 
 /* The drawing: resized to zoom, never stretched, so its text stays sharp; moved, not scrolled, to pan. */
-.graph-note-viewport { position: relative; overflow: hidden; height: var(--graph-note-height, auto); touch-action: var(--graph-note-touch, pan-x pan-y); border-radius: var(--radius-s); }
-.graph-note-viewport:focus-visible { outline: 2px solid var(--interactive-accent); outline-offset: 2px; }
-.graph-note-viewport.is-zoomed { cursor: grab; }
-.graph-note-viewport.is-zoomed:active { cursor: grabbing; }
-.graph-note-svg { position: absolute; left: 0; top: 0; max-width: none; transform: translate(var(--graph-note-x, 0), var(--graph-note-y, 0)); }
-.graph-note-svg g.node { cursor: pointer; }
-.graph-note-svg g.node:focus { outline: none; }
-.graph-note-svg g.node:focus-visible > :is(path, polygon) { stroke-width: 3; }
+.graph-note-viewport {
+  position: relative;
+  overflow: hidden;
+  height: var(--graph-note-height, auto);
+  touch-action: var(--graph-note-touch, pan-x pan-y);
+  border-radius: var(--radius-s);
+}
+.graph-note-viewport:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
+}
+.graph-note-viewport.is-zoomed {
+  cursor: grab;
+}
+.graph-note-viewport.is-zoomed:active {
+  cursor: grabbing;
+}
+.graph-note-svg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  max-width: none;
+  transform: translate(var(--graph-note-x, 0), var(--graph-note-y, 0));
+}
+.graph-note-svg g.node {
+  cursor: pointer;
+}
+.graph-note-svg g.node:focus {
+  outline: none;
+}
+.graph-note-svg g.node:focus-visible > :is(path, polygon) {
+  stroke-width: 3;
+}
 
 /* Full screen: over the whole window, inside the phone's safe area. */
-.graph-note-fullscreen { position: fixed; inset: 0; z-index: var(--layer-modal); background: var(--background-primary); display: flex; flex-direction: column; padding: max(var(--size-4-2), env(safe-area-inset-top)) max(var(--size-4-2), env(safe-area-inset-right)) max(var(--size-4-2), env(safe-area-inset-bottom)) max(var(--size-4-2), env(safe-area-inset-left)); }
-.graph-note-fullscreen > .graph-note { flex: 1; display: flex; flex-direction: column; min-height: 0; }
-.graph-note-fullscreen .graph-note-viewport { flex: 1; height: auto; }
+.graph-note-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: var(--layer-modal);
+  background: var(--background-primary);
+  display: flex;
+  flex-direction: column;
+  padding: max(var(--size-4-2), env(safe-area-inset-top)) max(var(--size-4-2), env(safe-area-inset-right))
+    max(var(--size-4-2), env(safe-area-inset-bottom)) max(var(--size-4-2), env(safe-area-inset-left));
+}
+.graph-note-fullscreen > .graph-note {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.graph-note-fullscreen .graph-note-viewport {
+  flex: 1;
+  height: auto;
+}
 
 /* Problems, details and the banner: words and an icon, never colour alone. */
-.graph-note-problems summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
-.graph-note-problems ul, .graph-note-details ul { margin: var(--size-4-1) 0; padding-left: var(--size-4-6); }
-.graph-note-details { margin-top: var(--size-4-2); padding: var(--size-4-2) var(--size-4-3); border: 1px solid var(--background-modifier-border); border-radius: var(--radius-m); }
-.graph-note-details-head { display: flex; align-items: center; gap: var(--size-4-2); }
-.graph-note-details-head button { margin-left: auto; min-width: 44px; min-height: 44px; }
-.graph-note-details h4 { margin: var(--size-4-2) 0 0; font-size: var(--font-ui-small); color: var(--text-muted); }
-.graph-note-kind { font-size: var(--font-ui-smaller); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
-.graph-note-banner { padding: var(--size-4-2) var(--size-4-3); border-left: 3px solid var(--text-error); background: var(--background-secondary); margin-bottom: var(--size-4-2); }
-.graph-note-empty { padding: var(--size-4-3); border: 1px dashed var(--background-modifier-border); border-radius: var(--radius-m); }
-.graph-note-empty button { min-height: 44px; }
+.graph-note-problems summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.graph-note-problems ul,
+.graph-note-details ul {
+  margin: var(--size-4-1) 0;
+  padding-left: var(--size-4-6);
+}
+.graph-note-details {
+  margin-top: var(--size-4-2);
+  padding: var(--size-4-2) var(--size-4-3);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+}
+.graph-note-details-head {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-2);
+}
+.graph-note-details-head button {
+  margin-left: auto;
+  min-width: 44px;
+  min-height: 44px;
+}
+.graph-note-details h4 {
+  margin: var(--size-4-2) 0 0;
+  font-size: var(--font-ui-small);
+  color: var(--text-muted);
+}
+.graph-note-kind {
+  font-size: var(--font-ui-smaller);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+.graph-note-banner {
+  padding: var(--size-4-2) var(--size-4-3);
+  border-left: 3px solid var(--text-error);
+  background: var(--background-secondary);
+  margin-bottom: var(--size-4-2);
+}
+.graph-note-empty {
+  padding: var(--size-4-3);
+  border: 1px dashed var(--background-modifier-border);
+  border-radius: var(--radius-m);
+}
+.graph-note-empty button {
+  min-height: 44px;
+}
 
 /* Text for screen readers only: off the screen, never display:none, so it is still read. */
-.graph-note-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.graph-note-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
 
 /* Hidden means hidden, whatever display a rule gives the element. */
-.graph-note-pane [hidden], .graph-note [hidden] { display: none !important; }
+.graph-note-pane [hidden],
+.graph-note [hidden] {
+  display: none !important;
+}
 
 /* The inspector: each property a row of name, value, type and its buttons; on a phone, a sheet at the bottom of the screen. */
-.graph-note-inspector { display: flex; flex-direction: column; gap: var(--size-4-1); margin-top: var(--size-4-2); }
-.graph-note-prop { display: flex; flex-wrap: wrap; align-items: center; gap: var(--size-4-1); }
-.graph-note-prop input, .graph-note-prop select, .graph-note-prop button { min-height: 44px; }
-.graph-note-prop input { flex: 1 1 8em; min-width: 6em; }
-.graph-note-prop-name { min-width: 6em; font-family: var(--font-monospace); }
-.graph-note-alert { color: var(--text-error); }
-.graph-note-alert::before { content: '✖ '; }
-.graph-note-details.is-sheet { position: sticky; bottom: 0; z-index: 2; max-height: 60vh; overflow: auto; background: var(--background-primary); box-shadow: var(--shadow-s); border-radius: var(--radius-l) var(--radius-l) 0 0; padding-bottom: max(var(--size-4-2), env(safe-area-inset-bottom)); }
+.graph-note-inspector {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-4-1);
+  margin-top: var(--size-4-2);
+}
+.graph-note-prop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-4-1);
+}
+.graph-note-prop input,
+.graph-note-prop select,
+.graph-note-prop button {
+  min-height: 44px;
+}
+.graph-note-prop input {
+  flex: 1 1 8em;
+  min-width: 6em;
+}
+.graph-note-prop-name {
+  min-width: 6em;
+  font-family: var(--font-monospace);
+}
+.graph-note-alert {
+  color: var(--text-error);
+}
+.graph-note-alert::before {
+  content: '✖ ';
+}
+.graph-note-details.is-sheet {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  max-height: 60vh;
+  overflow: auto;
+  background: var(--background-primary);
+  box-shadow: var(--shadow-s);
+  border-radius: var(--radius-l) var(--radius-l) 0 0;
+  padding-bottom: max(var(--size-4-2), env(safe-area-inset-bottom));
+}
 
 /* The editor in place sits inside the drawing's card, under the drawing, as part of it. */
-.graph-note-edit-slot:empty { display: none; }
-.graph-note-view > .graph-note-edit-slot { border-top: 1px solid var(--background-modifier-border); padding: var(--size-4-2) var(--size-4-3); }
-.graph-note-inline { height: auto; }
+.graph-note-edit-slot:empty {
+  display: none;
+}
+.graph-note-view > .graph-note-edit-slot {
+  border-top: 1px solid var(--background-modifier-border);
+  padding: var(--size-4-2) var(--size-4-3);
+}
+.graph-note-inline {
+  height: auto;
+}
 
 /* The edit pane: drawing above, text below; on a phone, two tabs and a bottom sheet. Every control at least 44 points. */
-.graph-note-pane { display: flex; flex-direction: column; gap: var(--size-4-2); height: 100%; }
-.graph-note-pane button, .graph-note-pane select { min-height: 44px; min-width: 44px; }
-.graph-note-pane-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--size-4-2); }
-.graph-note-pane-tools { display: flex; flex-wrap: wrap; gap: var(--size-4-1); margin-left: auto; }
-.graph-note-pane-tools button { display: inline-flex; align-items: center; gap: var(--size-4-1); }
-.graph-note-tabs { display: flex; gap: var(--size-4-1); border-bottom: 1px solid var(--background-modifier-border); }
-.graph-note-tabs button[aria-selected="true"] { border-bottom: 2px solid var(--interactive-accent); font-weight: 600; }
-.graph-note-pane-drawing { min-height: 120px; }
-.graph-note-pane-drawing .graph-note-viewport { height: 40vh; }
-.graph-note-draft { padding: var(--size-4-2) var(--size-4-3); border-left: 3px solid var(--text-warning); background: var(--background-secondary); display: flex; flex-wrap: wrap; align-items: center; gap: var(--size-4-2); }
-.graph-note-draft p { margin: 0; flex: 1 1 100%; }
+.graph-note-pane {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-4-2);
+  height: 100%;
+}
+.graph-note-pane button,
+.graph-note-pane select {
+  min-height: 44px;
+  min-width: 44px;
+}
+.graph-note-pane-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-4-2);
+}
+.graph-note-pane-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-4-1);
+  margin-left: auto;
+}
+.graph-note-pane-tools button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--size-4-1);
+}
+.graph-note-tabs {
+  display: flex;
+  gap: var(--size-4-1);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+.graph-note-tabs button[aria-selected='true'] {
+  border-bottom: 2px solid var(--interactive-accent);
+  font-weight: 600;
+}
+.graph-note-pane-drawing {
+  min-height: 120px;
+}
+.graph-note-pane-drawing .graph-note-viewport {
+  height: 40vh;
+}
+.graph-note-draft {
+  padding: var(--size-4-2) var(--size-4-3);
+  border-left: 3px solid var(--text-warning);
+  background: var(--background-secondary);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-4-2);
+}
+.graph-note-draft p {
+  margin: 0;
+  flex: 1 1 100%;
+}
 
 /* The text: a plain field over a coloured picture of it. The field's text is transparent and its caret shows; both use one font,
    one size and no wrapping, so every character of the picture sits under its own. */
-.graph-note-editor { position: relative; min-height: 12em; border: 1px solid var(--background-modifier-border); border-radius: var(--radius-s); background: var(--code-background, var(--background-secondary)); }
-.graph-note-overlay, .graph-note-text { margin: 0; padding: var(--size-4-2) var(--size-4-3); font-family: var(--font-monospace); font-size: var(--code-size, 0.9em); line-height: 1.5; white-space: pre; overflow: auto; tab-size: 4; box-sizing: border-box; }
-.graph-note-overlay { position: absolute; inset: 0; pointer-events: none; color: var(--code-normal, var(--text-normal)); background: transparent; border: 0; }
-.graph-note-text { position: relative; display: block; width: 100%; min-height: 8em; resize: none; overflow-y: hidden; color: transparent; caret-color: var(--text-normal); background: transparent; border: 0; outline: none; }
-.graph-note-text::selection { background: var(--text-selection); color: transparent; }
-.graph-note-editor:focus-within { outline: 2px solid var(--interactive-accent); outline-offset: 1px; }
-.graph-note-problem { text-decoration: underline wavy; text-decoration-skip-ink: none; text-underline-offset: 3px; }
-.graph-note-problem.is-error { text-decoration-color: var(--text-error); }
-.graph-note-problem.is-warning { text-decoration-color: var(--text-warning); }
-.graph-note-line-sign { color: var(--text-warning); }
-.graph-note-readback { color: var(--text-faint); font-family: var(--font-interface); font-style: italic; }
-.graph-note-fixbar { display: flex; flex-direction: column; gap: var(--size-4-1); padding: var(--size-4-2); border-left: 3px solid var(--text-warning); background: var(--background-secondary); }
-.graph-note-fixbar > div { display: flex; flex-wrap: wrap; align-items: center; gap: var(--size-4-2); }
-.graph-note-fixbar .is-error { border-color: var(--text-error); }
-.graph-note-suggestions { display: flex; flex-wrap: wrap; gap: var(--size-4-1); }
-.graph-note-suggestions button { font-family: var(--font-monospace); }
-.graph-note-pane-problems ul { margin: 0; padding-left: var(--size-4-6); }
-.graph-note-pane-problems li.is-error::marker { content: '✖ '; color: var(--text-error); }
-.graph-note-pane-problems li.is-warning::marker { content: '⚠ '; color: var(--text-warning); }
-.graph-note-fix, .graph-note-quiet { color: var(--text-muted); }
-.graph-note-sheet { position: sticky; bottom: 0; max-height: 40vh; overflow: auto; padding: var(--size-4-2) var(--size-4-3) max(var(--size-4-2), env(safe-area-inset-bottom)); background: var(--background-primary); border-top: 1px solid var(--background-modifier-border); border-radius: var(--radius-l) var(--radius-l) 0 0; box-shadow: var(--shadow-s); }
+.graph-note-editor {
+  position: relative;
+  min-height: 12em;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  background: var(--code-background, var(--background-secondary));
+}
+.graph-note-overlay,
+.graph-note-text {
+  margin: 0;
+  padding: var(--size-4-2) var(--size-4-3);
+  font-family: var(--font-monospace);
+  font-size: var(--code-size, 0.9em);
+  line-height: 1.5;
+  white-space: pre;
+  overflow: auto;
+  tab-size: 4;
+  box-sizing: border-box;
+}
+.graph-note-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  color: var(--code-normal, var(--text-normal));
+  background: transparent;
+  border: 0;
+}
+.graph-note-text {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: 8em;
+  resize: none;
+  overflow-y: hidden;
+  color: transparent;
+  caret-color: var(--text-normal);
+  background: transparent;
+  border: 0;
+  outline: none;
+}
+.graph-note-text::selection {
+  background: var(--text-selection);
+  color: transparent;
+}
+.graph-note-editor:focus-within {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 1px;
+}
+.graph-note-problem {
+  text-decoration: underline wavy;
+  text-decoration-skip-ink: none;
+  text-underline-offset: 3px;
+}
+.graph-note-problem.is-error {
+  text-decoration-color: var(--text-error);
+}
+.graph-note-problem.is-warning {
+  text-decoration-color: var(--text-warning);
+}
+.graph-note-line-sign {
+  color: var(--text-warning);
+}
+.graph-note-readback {
+  color: var(--text-faint);
+  font-family: var(--font-interface);
+  font-style: italic;
+}
+.graph-note-fixbar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-4-1);
+  padding: var(--size-4-2);
+  border-left: 3px solid var(--text-warning);
+  background: var(--background-secondary);
+}
+.graph-note-fixbar > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-4-2);
+}
+.graph-note-fixbar .is-error {
+  border-color: var(--text-error);
+}
+.graph-note-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-4-1);
+}
+.graph-note-suggestions button {
+  font-family: var(--font-monospace);
+}
+.graph-note-pane-problems ul {
+  margin: 0;
+  padding-left: var(--size-4-6);
+}
+.graph-note-pane-problems li.is-error::marker {
+  content: '✖ ';
+  color: var(--text-error);
+}
+.graph-note-pane-problems li.is-warning::marker {
+  content: '⚠ ';
+  color: var(--text-warning);
+}
+.graph-note-fix,
+.graph-note-quiet {
+  color: var(--text-muted);
+}
+.graph-note-sheet {
+  position: sticky;
+  bottom: 0;
+  max-height: 40vh;
+  overflow: auto;
+  padding: var(--size-4-2) var(--size-4-3) max(var(--size-4-2), env(safe-area-inset-bottom));
+  background: var(--background-primary);
+  border-top: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-l) var(--radius-l) 0 0;
+  box-shadow: var(--shadow-s);
+}
 
 /* GQL text, coloured by token class as the gql-highlight plugin colours it, from the theme's own code colours. */
-.gql-kw      { color: var(--code-keyword, #c678dd); }
-.gql-type    { color: var(--code-keyword, #c678dd); font-style: italic; }
-.gql-label   { color: var(--code-function, #61afef); }
-.gql-edge    { color: var(--code-important, #e5c07b); font-weight: 600; }
-.gql-prop    { color: var(--code-property, #e06c75); }
-.gql-string  { color: var(--code-string, #98c379); }
-.gql-value   { color: var(--code-value, #d19a66); }
-.gql-comment { color: var(--code-comment, #7f848e); font-style: italic; }
-.gql-fn      { color: var(--code-tag, #56b6c2); }
-.gql-param   { color: var(--code-important, #e5c07b); }
-.gql-var     { color: var(--code-normal, inherit); }
-.gql-arrow   { color: var(--code-operator, #56b6c2); font-weight: 600; }
-.gql-op      { color: var(--code-operator, #56b6c2); }
-.gql-punct   { color: var(--code-punctuation, #abb2bf); }
+.gql-kw {
+  color: var(--code-keyword);
+}
+.gql-type {
+  color: var(--code-keyword);
+  font-style: italic;
+}
+.gql-label {
+  color: var(--code-function);
+}
+.gql-edge {
+  color: var(--code-important);
+  font-weight: 600;
+}
+.gql-prop {
+  color: var(--code-property);
+}
+.gql-string {
+  color: var(--code-string);
+}
+.gql-value {
+  color: var(--code-value);
+}
+.gql-comment {
+  color: var(--code-comment);
+  font-style: italic;
+}
+.gql-fn {
+  color: var(--code-tag);
+}
+.gql-param {
+  color: var(--code-important);
+}
+.gql-var {
+  color: var(--code-normal, inherit);
+}
+.gql-arrow {
+  color: var(--code-operator);
+  font-weight: 600;
+}
+.gql-op {
+  color: var(--code-operator);
+}
+.gql-punct {
+  color: var(--code-punctuation);
+}
