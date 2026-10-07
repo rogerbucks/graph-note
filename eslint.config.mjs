@@ -8,7 +8,7 @@ import { defineConfig } from 'eslint/config';
 import obsidianmd from 'eslint-plugin-obsidianmd';
 
 export default defineConfig([
-  { ignores: ['main.js', '**/node_modules/', '**/dist/', 'test/', 'scripts/', 'python/', '.venv/', 'packages/*/esbuild.config.mjs', 'packages/*/test/', 'packages/*/bin/', 'packages/graph-spec/src/'] },
+  { ignores: ['main.js', '**/node_modules/', '**/dist/', 'test/', 'scripts/', 'python/', '.venv/', 'packages/*/esbuild.config.mjs', 'packages/*/test/', 'packages/*/bin/', 'packages/graph-spec/src/', 'spikes/'] },
   ...obsidianmd.configs.recommended,
   {
     languageOptions: {

@@ -6,3 +6,6 @@ dist/
 .venv/
 __pycache__/
 .DS_Store
+
+# The phone spike is built locally, never committed.
+spikes/*/main.js
