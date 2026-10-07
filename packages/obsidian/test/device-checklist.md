@@ -49,6 +49,11 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 - [ ] Editing the same block in the note while typing in the pane: the pane reloads the block, says what was typed is
       kept as a draft, and Restore draft brings it back.
 - [ ] Undo and Redo take back and put back each change in the note.
+- [ ] Typing ( to start the next pattern on a new line adds the comma to the line before; typing ] after a link type
+      written without its colon, such as -[favours, adds the colon and the type as the graph spells it, [:FAVOURS]. One
+      undo takes either back. Both work in the pane, in place and in the note itself.
+- [ ] A link type left without its colon is drawn as that type, with a ⚠ whose fix writes the colon. A new type written
+      without its colon is an error that says to write it.
 - [ ] A draft graph offers Lock the graph. Locking writes its schema as a new block after the graph.
 - [ ] Lock a graph built over two blocks, from its first block: the schema declares every kind and relationship of
       both blocks, and the graph then shows no problems.

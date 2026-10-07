@@ -7,6 +7,7 @@ import { Component, Notice, Platform, TFile, setIcon } from 'obsidian';
 import type { App } from 'obsidian';
 import {
   PaneSession,
+  colonFor,
   commaFor,
   namesSharedSchema,
   completions,
@@ -288,7 +289,7 @@ export class BlockEditor extends Component {
         this.accept(first);
         return;
       }
-      this.undoComma(e);
+      this.undoForYou(e);
     });
 
     this.analyse();
@@ -337,7 +338,7 @@ export class BlockEditor extends Component {
     const el = this.el,
       s = this.session;
     if (!el || !s) return;
-    this.addComma(s.text);
+    this.addForYou(s.text);
     s.type(el.text.value);
     this.analyse();
     this.announce();
@@ -345,42 +346,62 @@ export class BlockEditor extends Component {
     this.schedule();
   }
 
-  /** The comma just added for you, and the text it left, so the very next undo takes back only it (spec §4). */
-  private autoComma: { at: number; value: string } | null = null;
+  /**
+   * The change just made for you — a comma, or a colon — the text it left, and how to take it back, so the very next
+   * undo takes back only it (spec §4).
+   */
+  private autoEdit: { value: string; undo: { from: number; to: number; text: string }; caret: number } | null = null;
 
   /**
-   * The comma added for you (spec §4): when the ( just typed starts the next pattern on a new line, and the line before is
-   * otherwise valid, the comma goes at the end of that line. The very next undo takes it back, and only it.
+   * What is added for you as you type (spec §4): the comma, when the ( just typed starts the next pattern on a new line
+   * and the line before is otherwise valid; the colon, when the ] just typed closes a link type written without one that
+   * matches one type of the graph. The very next undo takes it back, and only it.
    */
-  private addComma(before: string): void {
+  private addForYou(before: string): void {
     const t = this.el?.text;
-    this.autoComma = null;
+    this.autoEdit = null;
     if (!t) return;
     const v = t.value,
       caret = t.selectionStart ?? v.length;
     if (v.length !== before.length + 1 || v.slice(0, caret - 1) + v.slice(caret) !== before) return;
     const at = commaFor(v, caret);
-    if (at === null) return;
-    t.value = v.slice(0, at) + ',' + v.slice(at);
-    t.setSelectionRange(caret + 1, caret + 1);
-    this.autoComma = { at, value: t.value };
+    if (at !== null) {
+      t.value = v.slice(0, at) + ',' + v.slice(at);
+      t.setSelectionRange(caret + 1, caret + 1);
+      this.autoEdit = { value: t.value, undo: { from: at, to: at + 1, text: '' }, caret };
+      return;
+    }
+    const line = this.session?.ref.line ?? 0;
+    const earlier = gqlSpans(this.note)
+      .filter((x) => x.open < line)
+      .map((x) => x.text);
+    const colon = colonFor(v, caret, earlier);
+    if (!colon) return;
+    const was = v.slice(colon.from, colon.to);
+    t.value = v.slice(0, colon.from) + colon.text + v.slice(colon.to);
+    const moved = caret + colon.text.length - was.length;
+    t.setSelectionRange(moved, moved);
+    this.autoEdit = {
+      value: t.value,
+      undo: { from: colon.from, to: colon.from + colon.text.length, text: was },
+      caret,
+    };
   }
 
-  /** Undo straight after a comma was added for you: takes back the comma alone. */
-  private undoComma(e: KeyboardEvent): void {
+  /** Undo straight after a comma or a colon was added for you: takes back that alone. */
+  private undoForYou(e: KeyboardEvent): void {
     const t = this.el?.text,
-      c = this.autoComma;
+      c = this.autoEdit;
     if (!t || !c || e.key.toLowerCase() !== 'z' || e.shiftKey || !(e.metaKey || e.ctrlKey) || t.value !== c.value)
       return;
     e.preventDefault();
-    const caret = (t.selectionStart ?? t.value.length) - 1;
-    t.value = t.value.slice(0, c.at) + t.value.slice(c.at + 1);
-    t.setSelectionRange(caret, caret);
-    this.autoComma = null;
+    t.value = t.value.slice(0, c.undo.from) + c.undo.text + t.value.slice(c.undo.to);
+    t.setSelectionRange(c.caret, c.caret);
+    this.autoEdit = null;
     this.typedAgain();
   }
 
-  /** What was typed, analysed and written, without asking for another comma. */
+  /** What was typed, analysed and written, without asking for another comma or colon. */
   private typedAgain(): void {
     const el = this.el,
       s = this.session;

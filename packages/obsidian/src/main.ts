@@ -5,7 +5,7 @@ import { gqlBlocks, isSharedSchema, loadEngine } from '@graph-note/core';
 import type { Engine } from '@graph-note/core';
 import { renderBlock } from './block';
 import { GraphPane, PANE } from './pane';
-import { addCommas } from './editor';
+import { addForYou } from './editor';
 import { BlockEditor } from './block-editor';
 
 /** Where Edit was pressed: the note, the line of the block's opening fence (0-based), and the graph it draws. */
@@ -32,7 +32,7 @@ export default class GraphNotePlugin extends Plugin {
   override async onload(): Promise<void> {
     this.saved = ((await this.loadData()) as Saved | null) ?? {};
     this.registerView(PANE, (leaf) => new GraphPane(leaf, this));
-    this.registerEditorExtension(addCommas);
+    this.registerEditorExtension(addForYou);
     try {
       this.registerMarkdownCodeBlockProcessor(
         'gql',
