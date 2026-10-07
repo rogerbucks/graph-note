@@ -112,3 +112,34 @@ describe('speed', () => {
     assert.ok(ms < 500, `${ms.toFixed(0)} ms`);
   });
 });
+
+describe('what tapping a link shows', () => {
+  const block = `// graph: reader
+(q:Question {title: 'Which device?'}), (large:Option {name: 'Large reader'}), (notes:Source {title: 'Trial notes'}),
+(large)-[:ANSWERS]->(q),
+(large)-[:CITES {where: 'day 2', checked: TRUE, on: DATE '2026-10-01'}]->(notes)`;
+
+  test('its type and reading, the things at either end, and its properties', async () => {
+    const { linkDetails } = await import('../src/render.ts');
+    assert.deepEqual(linkDetails(readNote([block]), 'reader', 1), {
+      index: 1, type: 'CITES', reading: 'cites',
+      from: { key: 'large', text: 'Large reader' }, to: { key: 'notes', text: 'Trial notes' },
+      properties: [['checked', 'true'], ['on', '2026-10-01'], ['where', 'day 2']],
+      problems: [],
+    });
+    assert.deepEqual(linkDetails(readNote([block]), 'reader', 0).properties, []);
+  });
+
+  test('a problem on its line is shown with it', async () => {
+    const { linkDetails } = await import('../src/render.ts');
+    const r = readNote([block + ',\n(large)-[:CITES]->(nowhere)']);
+    assert.equal(linkDetails(r, 'reader', 1).problems.length, 0, 'not another link’s problem');
+    const bad = readNote([block.replace("(large)-[:ANSWERS]->(q)", "(large)-[:ANSWERS]->(q), (large)-[:ANSWERS]->(nowhere)")]);
+    assert.equal(linkDetails(bad, 'reader', 0).problems.length, 1);
+  });
+
+  test('a link that is not there has no details', async () => {
+    const { linkDetails } = await import('../src/render.ts');
+    assert.equal(linkDetails(readNote([block]), 'reader', 9), null);
+  });
+});

@@ -68,3 +68,34 @@ export function details(reading: NoteReading, graph: string, key: string): Detai
     problems: reading.problems.filter((p) => p.graph === graph && names(reading.texts[p.block]?.split('\n')[p.line - 1] ?? '', key)),
   };
 }
+
+/** What tapping a link shows: its type and reading, the things at either end, its properties, and its problems. */
+export interface LinkDetails {
+  index: number;
+  type: string;
+  reading: string;
+  from: { key: string; text: string };
+  to: { key: string; text: string };
+  /** Each property as [name, value in words], by name. */
+  properties: [string, string][];
+  problems: Problem[];
+}
+
+const said = (v: unknown): string => (v && typeof v === 'object' && 's' in v ? String(v.s) : String(v));
+
+/** The details of the drawing's `index`-th link (in the order written), or null when there is none. */
+export function linkDetails(reading: NoteReading, graph: string, index: number): LinkDetails | null {
+  const d = reading.graphs.get(graph), l = d?.links[index], g = reading.world[graph];
+  if (!d || !l || !g) return null;
+  const drawn = new Set(d.boxes.map((b) => b.key)), textOf = (k: string) => d.boxes.find((b) => b.key === k)?.text ?? k;
+  const props = g.edges.filter(([s, , t]) => drawn.has(s) && drawn.has(t))[index]?.[3] ?? {};
+  return {
+    index, type: l.type, reading: l.reading,
+    from: { key: l.from, text: textOf(l.from) }, to: { key: l.to, text: textOf(l.to) },
+    properties: Object.entries(props).sort(([a], [b]) => (a < b ? -1 : 1)).map(([k, v]) => [k, said(v)]),
+    problems: reading.problems.filter((p) => {
+      const line = reading.texts[p.block]?.split('\n')[p.line - 1] ?? '';
+      return p.graph === graph && names(line, l.from) && names(line, l.to) && names(line, l.type);
+    }),
+  };
+}
