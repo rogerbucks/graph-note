@@ -1,0 +1,308 @@
+{
+  "packages/core/test/drawing.test.js": {
+    "a missing comma > when the next line is not otherwise valid, it is left out, and the problem still says the comma is missing": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit 5d3a442)"
+    },
+    "a schema whose types its GraphMeta does not declare > a draft, or a schema that declares each type, has no such warning": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit 0822ead)"
+    }
+  },
+  "packages/core/test/estimates.test.js": {
+    "how near (decided 7 Oct 2026): one letter under eight characters, two from eight, ignoring case and underscores > a name shorter than three characters is never estimated": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit 50e99cb)"
+    },
+    "how near (decided 7 Oct 2026): one letter under eight characters, two from eight, ignoring case and underscores > a name of three characters may be estimated, one letter away": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit 50e99cb)"
+    },
+    "how near (decided 7 Oct 2026): one letter under eight characters, two from eight, ignoring case and underscores > from eight characters, two letters away is near": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit 50e99cb)"
+    }
+  },
+  "packages/core/test/help.test.js": {
+    "suggestions while typing > after the name of a thing already in the graph, no kinds: it is a reference, not a new thing": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit 86a7c50)"
+    }
+  },
+  "packages/core/test/imports.test.js": {
+    "there is core source to check": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the core modules imported no host before this test named it (commit 52cfcf6)"
+    },
+    "drawing.ts imports no host": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the core modules imported no host before this test named it (commit 52cfcf6)"
+    },
+    "index.ts imports no host": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the core modules imported no host before this test named it (commit 52cfcf6)"
+    },
+    "layout.ts imports no host": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the core modules imported no host before this test named it (commit 52cfcf6)"
+    },
+    "render.ts imports no host": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the core modules imported no host before this test named it (commit 52cfcf6)"
+    },
+    "theme.ts imports no host": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the core modules imported no host before this test named it (commit 52cfcf6)"
+    },
+    "tokens.ts imports no host": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the core modules imported no host before this test named it (commit 52cfcf6)"
+    },
+    "zoom.ts imports no host": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the core modules imported no host before this test named it (commit 52cfcf6)"
+    }
+  },
+  "packages/core/test/render.test.js": {
+    "speed > a graph of 50 things is read and drawn in under half a second (spec §11; the phone is checked on the device)": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: a guard on a speed the drawing already had (commit c96b0ad)"
+    }
+  },
+  "packages/graph-spec/test/commas.test.mjs": {
+    "patterns on one line with no comma are still refused: only a line break stands for the comma": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit 5d3a442)"
+    },
+    "a line that is not otherwise valid is refused as before": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit 5d3a442)"
+    },
+    "a missing comma before SET, or after MATCH’s list, is not guessed at": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit 5d3a442)"
+    }
+  },
+  "packages/graph-spec/test/graph-spec-check-declares.test.mjs": {
+    "a schema whose GraphMeta declares each type passes §5": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit 522b41d)"
+    }
+  },
+  "packages/graph-spec/test/lint-parity.test.mjs": {
+    "the linter finds the same traps on the same lines as Python, on hand-picked edges": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: proves the rewrite changed no answer, so it passes before and after by design (commit 7db2ca8)"
+    },
+    "the linter finds the same traps on the same lines as Python, on 4000 random texts": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: proves the rewrite changed no answer, so it passes before and after by design (commit 7db2ca8)"
+    }
+  },
+  "packages/obsidian/test/accessibility.test.js": {
+    "contrast in both themes > light theme, blue: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the contrast of the locked style the drawing already used (commit 3ff0c19)"
+    },
+    "contrast in both themes > light theme, purple: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the contrast of the locked style the drawing already used (commit 3ff0c19)"
+    },
+    "contrast in both themes > light theme, orange: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the contrast of the locked style the drawing already used (commit 3ff0c19)"
+    },
+    "contrast in both themes > light theme, cyan: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the contrast of the locked style the drawing already used (commit 3ff0c19)"
+    },
+    "contrast in both themes > light theme, pink: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the contrast of the locked style the drawing already used (commit 3ff0c19)"
+    },
+    "contrast in both themes > light theme, yellow: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the contrast of the locked style the drawing already used (commit 3ff0c19)"
+    },
+    "contrast in both themes > light theme, green: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the contrast of the locked style the drawing already used (commit 3ff0c19)"
+    },
+    "contrast in both themes > light theme, red: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the contrast of the locked style the drawing already used (commit 3ff0c19)"
+    },
+    "contrast in both themes > light theme: links drawn in the muted edge colour, and estimated links, keep 3:1": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the contrast of the locked style the drawing already used (commit 3ff0c19)"
+    },
+    "contrast in both themes > dark theme, blue: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the contrast of the locked style the drawing already used (commit 3ff0c19)"
+    },
+    "contrast in both themes > dark theme, purple: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the contrast of the locked style the drawing already used (commit 3ff0c19)"
+    },
+    "contrast in both themes > dark theme, orange: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the contrast of the locked style the drawing already used (commit 3ff0c19)"
+    },
+    "contrast in both themes > dark theme, cyan: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the contrast of the locked style the drawing already used (commit 3ff0c19)"
+    },
+    "contrast in both themes > dark theme, pink: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the contrast of the locked style the drawing already used (commit 3ff0c19)"
+    },
+    "contrast in both themes > dark theme, yellow: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the contrast of the locked style the drawing already used (commit 3ff0c19)"
+    },
+    "contrast in both themes > dark theme, green: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the contrast of the locked style the drawing already used (commit 3ff0c19)"
+    },
+    "contrast in both themes > dark theme, red: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the contrast of the locked style the drawing already used (commit 3ff0c19)"
+    },
+    "contrast in both themes > dark theme: links drawn in the muted edge colour, and estimated links, keep 3:1": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the contrast of the locked style the drawing already used (commit 3ff0c19)"
+    },
+    "one colour mapping > the plugin names no colour of its own: the drawing’s colours come from the style, through the core’s one table": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the contrast of the locked style the drawing already used (commit 3ff0c19)"
+    },
+    "one colour mapping > styles.css colours only with the theme’s variables": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the contrast of the locked style the drawing already used (commit 3ff0c19)"
+    }
+  },
+  "packages/obsidian/test/build.test.mjs": {
+    "the files the plugin is installed from are at the repository root": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the build already wrote its files at the repository root (commit c834d60)"
+    }
+  },
+  "packages/obsidian/test/inline.test.js": {
+    "the inspector, in edit mode > outside edit mode, a box’s details are for reading only": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit 0cea41d)"
+    }
+  },
+  "packages/obsidian/test/pane.test.js": {
+    "shared schemas > a graph that names no shared schema never reads the vault for one": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit 20916fa)"
+    },
+    "the comma added for you > a line that is not otherwise valid gets no comma": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit a6620f9)"
+    },
+    "the colon added for you > a first use gets no colon: it is not guessed": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit b4a4e6d)"
+    },
+    "a note nobody is editing > is drawn with a missing comma read in, and offered the fix, but never rewritten": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: written after its code, to prove a spec rule the code already met (commit 40d335e)"
+    }
+  },
+  "packages/obsidian/test/view.test.js": {
+    "older phones > where CSS color-mix is supported, the drawing keeps the locked style’s blends": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit 22e2237)"
+    }
+  },
+  "python/graph_spec/tests/test_graph_rules_declares.py": {
+    "Declares.test_declared_by_the_graphmeta_passes": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit 522b41d)"
+    }
+  },
+  "python/graph_spec/tests/test_graph_spec_declares.py": {
+    "Declares.test_declared_by_the_graphmeta_passes": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit 522b41d)"
+    }
+  },
+  "test/classification.test.js": {
+    "built from general patterns only > a list of names, as strings or as a pattern’s alternatives, is found": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the check held no list already; its detector is proved on planted lists (commit 8d5a0a3)"
+    },
+    "built from general patterns only > the check holds none: only patterns and checksums": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the check held no list already; its detector is proved on planted lists (commit 8d5a0a3)"
+    }
+  },
+  "test/conventions.test.js": {
+    "one code style > the linter runs in CI with no warnings allowed": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: a convention the code already met when the conventions were written down (commit 54908e4)"
+    },
+    "naming conventions > files are kebab-case; Python files are snake_case": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: a convention the code already met when the conventions were written down (commit 54908e4)"
+    },
+    "the code’s layout > each package keeps its code in src/ and its tests in test/; the Python library in src/ and tests/": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: a convention the code already met when the conventions were written down (commit 54908e4)"
+    },
+    "the code’s layout > each module says first what it is for: one module, one purpose": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: a convention the code already met when the conventions were written down (commit 54908e4)"
+    },
+    "Obsidian’s guidelines, beyond the linter > the linter is the plugin store’s own, sentence case in the interface among its rules": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: a convention the code already met when the conventions were written down (commit 54908e4)"
+    },
+    "Obsidian’s guidelines, beyond the linter > no inline styles and no HTML strings: classes and the DOM helpers": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: a convention the code already met when the conventions were written down (commit 54908e4)"
+    },
+    "Obsidian’s guidelines, beyond the linter > every listener on the app, window or document is registered, so it goes when the plugin does": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: a convention the code already met when the conventions were written down (commit 54908e4)"
+    },
+    "Obsidian’s guidelines, beyond the linter > the vault is changed only through its API, atomically, and the app is never the global one": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: a convention the code already met when the conventions were written down (commit 54908e4)"
+    }
+  },
+  "test/offline.test.js": {
+    "the Graphviz engine starts and draws without reaching for the network": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the engine already made no network request; this proves it (commit 74b796c)"
+    },
+    "the trap records an attempt": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: the engine already made no network request; this proves it (commit 74b796c)"
+    }
+  },
+  "test/policy.test.js": {
+    "GitHub Actions > every library the plugin bundles is linted with the Obsidian review rules": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: CI already linted the library when this check of it was added (commit 5933c98)"
+    },
+    "GitHub Actions > CI runs the Python library tests from its locked environment": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: CI already ran the Python tests from the locked environment (commit 90ed1a9)"
+    },
+    "the supply chain > every override is pinned to an exact version or to a direct dependency": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: every override was already pinned when this check was added (commit 44bc037)"
+    },
+    "its own repository > the source is a Git repository whose remote is on GitHub": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: written after its code, to prove a spec rule the code already met (commit 40d335e)"
+    },
+    "its own repository > it sits inside no Obsidian vault: no folder above it holds one": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: written after its code, to prove a spec rule the code already met (commit 40d335e)"
+    }
+  }
+}
