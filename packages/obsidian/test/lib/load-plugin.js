@@ -1,0 +1,44 @@
+// Loads the built plugin (main.js) in Node against fresh stand-ins for Obsidian and the DOM, as its tests need it.
+import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
+import { fakeDocument, installGlobals } from './fake-dom.js';
+import { fakeObsidian } from './fake-obsidian.js';
+
+const require = createRequire(import.meta.url);
+export const root = fileURLToPath(new URL('../../../../', import.meta.url));
+
+export function build() {
+  const r = spawnSync(process.execPath, ['esbuild.config.mjs'], { cwd: `${root}packages/obsidian`, encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr);
+}
+
+/** Loads main.js — CommonJS, as Obsidian loads it — with the stand-ins; returns the plugin, the stand-ins' record, the document and the app. */
+export async function load(options = {}) {
+  const doc = fakeDocument(options.width ?? 700), uninstall = installGlobals(doc);
+  const state = { taken: options.taken, mobile: options.mobile, files: new Map(Object.entries(options.files ?? {})), data: options.data ?? null };
+  const obsidian = fakeObsidian(state);
+  const Module = require('node:module'), real = Module._load, file = `${root}main.js`;
+  Module._load = (req, ...rest) => (req === 'obsidian' ? obsidian : real(req, ...rest));
+  let Plugin;
+  try {
+    const m = new Module(file);
+    m.filename = file; m.paths = Module._nodeModulePaths(root);
+    m._compile(readFileSync(file, 'utf8'), file);
+    Plugin = m.exports.default;
+  } finally { Module._load = real; }
+  const plugin = new Plugin(obsidian.app, { id: 'graph-note' });
+  if (options.engine) plugin.loadEngine = options.engine;
+  await plugin.onload();
+  return { plugin, state, doc, app: obsidian.app, uninstall };
+}
+
+export const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/** Waits until `ready()` is true, or fails after `ms`: for what the engine draws, which takes as long as it takes to start. */
+export async function until(ready, ms = 3000) {
+  const t0 = Date.now();
+  while (!ready()) { if (Date.now() - t0 > ms) throw new Error('timed out waiting'); await wait(10); }
+}

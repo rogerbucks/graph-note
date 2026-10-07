@@ -38,8 +38,43 @@ export class Component {
 }
 export class MarkdownRenderChild extends Component { constructor(el) { super(); this.containerEl = el; } }
 export const processors = new Map();
+export const views = new Map();
+export class TFile { constructor(path) { this.path = path; this.name = path; this.extension = 'md'; } }
+// One note in memory, as the vault; changes are reported as Obsidian reports them.
+export const files = new Map();
+const listeners = [];
+const vault = {
+  getFileByPath: (p) => (files.has(p) ? new TFile(p) : null),
+  read: async (f) => files.get(f.path),
+  process: async (f, fn) => { const next = fn(files.get(f.path)); if (next !== files.get(f.path)) { files.set(f.path, next); listeners.forEach((l) => l(new TFile(f.path))); } return next; },
+  modify: async (f, t) => { files.set(f.path, t); listeners.forEach((l) => l(new TFile(f.path))); },
+  on: (name, cb) => { if (name === 'modify') listeners.push(cb); return { cb }; },
+};
+const leaves = [];
+class WorkspaceLeaf {
+  constructor() { this.view = null; }
+  async setViewState({ type, state }) {
+    if (!this.view) { this.view = views.get(type)(this); document.getElementById('pane').appendChild(this.view.containerEl); this.view.load(); await this.view.onOpen?.(); }
+    await this.view.setState?.(state, {});
+  }
+}
+const workspace = {
+  getLeavesOfType: (t) => leaves.filter((l) => l.view?.getViewType() === t),
+  getLeaf: () => { const l = new WorkspaceLeaf(); leaves.push(l); return l; },
+  revealLeaf: async () => {},
+};
+export const app = { vault, workspace };
+export class ItemView extends Component {
+  constructor(leaf) { super(); this.leaf = leaf; this.app = app; this.containerEl = document.createElement('div'); this.containerEl.createDiv({ cls: 'view-header' }); this.contentEl = this.containerEl.createDiv({ cls: 'view-content' }); }
+  registerEvent() {}
+  async setState() {}
+}
 export class Plugin extends Component {
+  constructor() { super(); this.app = app; }
   registerMarkdownCodeBlockProcessor(lang, fn) { processors.set(lang, fn); }
+  registerView(type, f) { views.set(type, f); }
+  async loadData() { return null; }
+  async saveData() {}
 }
 export class Notice { constructor(m) { console.log('Notice:', m); const n = document.body.createDiv({ cls: 'harness-notice', text: m }); setTimeout(() => n.remove(), 4000); } }
 const GLYPH = { 'zoom-in': '+', 'zoom-out': '−', maximize: '⤢', expand: '⛶', minimize: '⤡', pencil: '✎', 'alert-triangle': '⚠', 'check-circle': '✓', x: '✕', copy: '⧉' };

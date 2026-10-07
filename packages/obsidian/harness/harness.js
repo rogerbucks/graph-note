@@ -1,8 +1,9 @@
 // Draws every gql block of the sample note with the real plugin bundle, as Obsidian's reading view would.
 import Plugin from '../src/main.ts';
-import { processors } from 'obsidian';
+import { processors, files } from 'obsidian';
 import note from './sample.md';
 
+files.set('Sample.md', note);
 const plugin = new Plugin();
 await plugin.onload();
 const lines = note.split('\n'), out = document.getElementById('note');
@@ -16,4 +17,5 @@ for (let i = 0; i < lines.length; i++) {
   });
   i = j;
 }
+await plugin.openEditor({ path: 'Sample.md', line: 14, graph: 'reader' });
 document.body.dataset.ready = 'yes';

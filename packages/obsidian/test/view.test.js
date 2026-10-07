@@ -147,8 +147,8 @@ describe('a graph with problems is still drawn', () => {
     assert.equal(badge.getAttribute('aria-expanded'), 'true');
     const items = list.querySelectorAll('li').map((li) => li.textContent);
     assert.equal(items.length, 2);
-    assert.match(items[0], /^Line 9: .*nowhere/);
-    assert.match(items[1], /^Line 10: /);
+    assert.match(items[0], /^✖ Error — Line 9: .*nowhere/);
+    assert.match(items[1], /^✖ Error — Line 10: /);
   });
 
   test('a block nothing can be read from shows its text and its problems, never a blank', async () => {
@@ -346,5 +346,48 @@ describe('estimated links', () => {
     assert.match(guess.getAttribute('aria-label'), /^Estimated link: Easy on the eyes favours Tablet/);
     guess.dispatch('keydown', { key: 'Enter' });
     assert.match(el.querySelector('.graph-note-details').textContent, /taken to mean tablet/);
+  });
+});
+
+describe('help behind the badge', () => {
+  let env; before(async () => { env = await load(); }); after(() => env.uninstall());
+
+  test('the completeness report is behind the badge: covered, deferred and missing, with a fix for each gap', async () => {
+    const rule = GRAPH + ",\n(every_option_answers:Cardinality {kind: 'Option', relationship: 'ANSWERS', direction: 'out', min: 1, says: 'every option answers the question'}),\n(spare:Option {name: 'Spare'})";
+    const { el } = await show(env, fence(rule));
+    const badge = labelled(el, '1 gap');
+    assert.ok(badge, 'the badge counts the gap');
+    badge.click();
+    const panel = el.querySelector('.graph-note-problems');
+    assert.match(panel.textContent, /Completeness/);
+    assert.match(panel.textContent, /every option answers the question: 2 of 3 covered, 1 missing/);
+    assert.match(panel.textContent, /Spare: add a ANSWERS link/);
+  });
+
+  test('many problems are grouped by kind, the worst first', async () => {
+    const many = GRAPH + ',\n' + Array.from({ length: 6 }, (_, i) => `(eyes)-[:FAVOURS]->(gone_${i})`).join(',\n') + ',\n' + Array.from({ length: 4 }, (_, i) => `(x${i}:T {v: })`).join(',\n') + ',\n(eyes)-[:FAVOURS]->(tablett)';
+    const { el } = await show(env, fence(many));
+    const groups = el.querySelectorAll('.graph-note-problems details');
+    assert.ok(groups.length >= 2, 'grouped');
+    const titles = groups.map((g) => g.querySelector('summary').textContent);
+    assert.match(titles[0], /^Error/);
+    assert.match(titles[titles.length - 1], /^Warning/);
+    assert.match(titles.join('|'), /6 × .*not in the graph/);
+  });
+
+  test('a few problems are listed one by one, each with a sign as well as its words', async () => {
+    const { el } = await show(env, fence(GRAPH + ',\n(eyes)-[:FAVOURS]->(nowhere),\n(eyes)-[:FAVOURS]->(tablett)'));
+    const items = el.querySelectorAll('.graph-note-problems li');
+    assert.equal(items.length, 2);
+    assert.ok(items.every((li) => /^(✖ Error|⚠ Warning)/.test(li.textContent)), items.map((li) => li.textContent).join('|'));
+  });
+
+  test('the drawing has a text version for screen readers: every thing and every link, in sentences', async () => {
+    const { el } = await show(env, fence(GRAPH));
+    const vp = el.querySelector('.graph-note-viewport');
+    const sr = el.querySelector(`#${vp.getAttribute('aria-describedby')}`);
+    assert.ok(sr.classList.contains('graph-note-sr'));
+    assert.match(sr.textContent, /Graph reader: 4 things, 4 links\./);
+    assert.match(sr.textContent, /Easy on the eyes favours Large reader\./);
   });
 });

@@ -22,6 +22,7 @@
 .graph-note-fullscreen .graph-note-viewport { flex: 1; height: auto; }
 
 /* Problems, details and the banner: words and an icon, never colour alone. */
+.graph-note-problems summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
 .graph-note-problems ul, .graph-note-details ul { margin: var(--size-4-1) 0; padding-left: var(--size-4-6); }
 .graph-note-details { margin-top: var(--size-4-2); padding: var(--size-4-2) var(--size-4-3); border: 1px solid var(--background-modifier-border); border-radius: var(--radius-m); }
 .graph-note-details-head { display: flex; align-items: center; gap: var(--size-4-2); }
@@ -31,6 +32,49 @@
 .graph-note-banner { padding: var(--size-4-2) var(--size-4-3); border-left: 3px solid var(--text-error); background: var(--background-secondary); margin-bottom: var(--size-4-2); }
 .graph-note-empty { padding: var(--size-4-3); border: 1px dashed var(--background-modifier-border); border-radius: var(--radius-m); }
 .graph-note-empty button { min-height: 44px; }
+
+/* Text for screen readers only: off the screen, never display:none, so it is still read. */
+.graph-note-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+
+/* Hidden means hidden, whatever display a rule gives the element. */
+.graph-note-pane [hidden], .graph-note [hidden] { display: none !important; }
+
+/* The edit pane: drawing above, text below; on a phone, two tabs and a bottom sheet. Every control at least 44 points. */
+.graph-note-pane { display: flex; flex-direction: column; gap: var(--size-4-2); height: 100%; }
+.graph-note-pane button, .graph-note-pane select { min-height: 44px; min-width: 44px; }
+.graph-note-pane-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--size-4-2); }
+.graph-note-pane-tools { display: flex; flex-wrap: wrap; gap: var(--size-4-1); margin-left: auto; }
+.graph-note-pane-tools button { display: inline-flex; align-items: center; gap: var(--size-4-1); }
+.graph-note-tabs { display: flex; gap: var(--size-4-1); border-bottom: 1px solid var(--background-modifier-border); }
+.graph-note-tabs button[aria-selected="true"] { border-bottom: 2px solid var(--interactive-accent); font-weight: 600; }
+.graph-note-pane-drawing { min-height: 120px; }
+.graph-note-pane-drawing .graph-note-viewport { height: 40vh; }
+.graph-note-draft { padding: var(--size-4-2) var(--size-4-3); border-left: 3px solid var(--text-warning); background: var(--background-secondary); display: flex; flex-wrap: wrap; align-items: center; gap: var(--size-4-2); }
+.graph-note-draft p { margin: 0; flex: 1 1 100%; }
+
+/* The text: a plain field over a coloured picture of it. The field's text is transparent and its caret shows; both use one font,
+   one size and no wrapping, so every character of the picture sits under its own. */
+.graph-note-editor { position: relative; min-height: 12em; border: 1px solid var(--background-modifier-border); border-radius: var(--radius-s); background: var(--code-background, var(--background-secondary)); }
+.graph-note-overlay, .graph-note-text { margin: 0; padding: var(--size-4-2) var(--size-4-3); font-family: var(--font-monospace); font-size: var(--code-size, 0.9em); line-height: 1.5; white-space: pre; overflow: auto; tab-size: 4; box-sizing: border-box; }
+.graph-note-overlay { position: absolute; inset: 0; pointer-events: none; color: var(--code-normal, var(--text-normal)); background: transparent; border: 0; }
+.graph-note-text { position: relative; display: block; width: 100%; min-height: 8em; resize: none; overflow-y: hidden; color: transparent; caret-color: var(--text-normal); background: transparent; border: 0; outline: none; }
+.graph-note-text::selection { background: var(--text-selection); color: transparent; }
+.graph-note-editor:focus-within { outline: 2px solid var(--interactive-accent); outline-offset: 1px; }
+.graph-note-problem { text-decoration: underline wavy; text-decoration-skip-ink: none; text-underline-offset: 3px; }
+.graph-note-problem.is-error { text-decoration-color: var(--text-error); }
+.graph-note-problem.is-warning { text-decoration-color: var(--text-warning); }
+.graph-note-line-sign { color: var(--text-warning); }
+.graph-note-readback { color: var(--text-faint); font-family: var(--font-interface); font-style: italic; }
+.graph-note-fixbar { display: flex; flex-direction: column; gap: var(--size-4-1); padding: var(--size-4-2); border-left: 3px solid var(--text-warning); background: var(--background-secondary); }
+.graph-note-fixbar > div { display: flex; flex-wrap: wrap; align-items: center; gap: var(--size-4-2); }
+.graph-note-fixbar .is-error { border-color: var(--text-error); }
+.graph-note-suggestions { display: flex; flex-wrap: wrap; gap: var(--size-4-1); }
+.graph-note-suggestions button { font-family: var(--font-monospace); }
+.graph-note-pane-problems ul { margin: 0; padding-left: var(--size-4-6); }
+.graph-note-pane-problems li.is-error::marker { content: '✖ '; color: var(--text-error); }
+.graph-note-pane-problems li.is-warning::marker { content: '⚠ '; color: var(--text-warning); }
+.graph-note-fix, .graph-note-quiet { color: var(--text-muted); }
+.graph-note-sheet { position: sticky; bottom: 0; max-height: 40vh; overflow: auto; padding: var(--size-4-2) var(--size-4-3) max(var(--size-4-2), env(safe-area-inset-bottom)); background: var(--background-primary); border-top: 1px solid var(--background-modifier-border); border-radius: var(--radius-l) var(--radius-l) 0 0; box-shadow: var(--shadow-s); }
 
 /* GQL text, coloured by token class as the gql-highlight plugin colours it, from the theme's own code colours. */
 .gql-kw      { color: var(--code-keyword, #c678dd); }

@@ -2,7 +2,7 @@
 // shown as coloured code. A graph is never blank: what can be read is drawn and the rest is listed; when nothing can be
 // read, or the engine cannot start, the text is shown with its problems or a banner.
 import type { MarkdownPostProcessorContext } from 'obsidian';
-import { draw, gqlBlocks, graphOfBlock, readNote } from '@graph-note/core';
+import { completenessReport, draw, gqlBlocks, graphOfBlock, readNote } from '@graph-note/core';
 import type { Block, Drawn, Problem } from '@graph-note/core';
 import type GraphNotePlugin from './main';
 import { renderCode } from './code';
@@ -36,7 +36,7 @@ export async function renderBlock(plugin: GraphNotePlugin, source: string, el: H
     const empty = root.createDiv({ cls: 'graph-note-empty' });
     empty.createEl('p', { text: `Graph ${graph} has nothing in it yet. Start with a thing: write (name:Kind {name: 'Its text'}) below the graph line, or press Edit.` });
     const edit = empty.createEl('button', { text: 'Edit', attr: { 'aria-label': 'Edit', type: 'button' } });
-    edit.addEventListener('click', () => plugin.openEditor(target));
+    edit.addEventListener('click', () => { void plugin.openEditor(target); });
     return;
   }
 
@@ -55,7 +55,8 @@ export async function renderBlock(plugin: GraphNotePlugin, source: string, el: H
   }
   ctx.addChild(new GraphView(root, {
     reading, graph, drawn, problems, mode: 'note',
+    completeness: completenessReport(reading, graph, new Date().toISOString().slice(0, 10)),
     lineOf: (at) => (blocks[at.block]?.line ?? 0) + at.line,
-    onEdit: () => plugin.openEditor(target),
+    onEdit: () => { void plugin.openEditor(target); },
   }));
 }

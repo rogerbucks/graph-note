@@ -19,6 +19,12 @@ export class FakeElement {
   get id() { return this.attributes.get('id') ?? ''; }
   get textContent() { return this.text + this.children.map((c) => c.textContent).join(''); }
   set textContent(t) { this.children = []; this.text = String(t); }
+  // form fields: a value, and a selection in a text field
+  get value() { if (this.localName === 'select') { const o = this.querySelectorAll('option').find((x) => x.hasAttribute('selected')) ?? this.querySelector('option'); return this._value ?? o?.getAttribute('value') ?? ''; } return this._value ?? this.getAttribute('value') ?? ''; }
+  set value(v) { this._value = String(v); if (this.selectionStart === undefined || this.selectionStart > this._value.length) { this.selectionStart = this.selectionEnd = this._value.length; } }
+  setSelectionRange(a, b) { this.selectionStart = a; this.selectionEnd = b; }
+  get disabled() { return this.attributes.has('disabled'); }
+  set disabled(v) { if (v) this.attributes.set('disabled', ''); else this.attributes.delete('disabled'); }
   get hidden() { return this.attributes.has('hidden'); }
   set hidden(v) { if (v) this.attributes.set('hidden', ''); else this.attributes.delete('hidden'); }
   get clientWidth() { return this.ownerDocument.width; }
@@ -37,7 +43,7 @@ export class FakeElement {
   contains(o) { for (let e = o; e; e = e.parentElement) if (e === this) return true; return false; }
   cloneNode() { throw new Error('not in the fake DOM'); }
   get isConnected() { let e = this; while (e.parentElement) e = e.parentElement; return e === this.ownerDocument.body || e === this.ownerDocument.documentElement; }
-  matches(sel) { return sel.split(',').some((one) => matchOne(this, one.trim())); }
+  matches(sel) { return sel.split(',').some((one) => matchChain(this, one.trim().split(/\s+(?![^[]*\])/))); }
   closest(sel) { for (let e = this; e; e = e.parentElement) if (e.matches?.(sel)) return e; return null; }
   querySelectorAll(sel) { const out = []; const walk = (e) => { for (const c of e.children) { if (c.matches(sel)) out.push(c); walk(c); } }; walk(this); return out; }
   querySelector(sel) { return this.querySelectorAll(sel)[0] ?? null; }
@@ -83,12 +89,21 @@ function applyInfo(e, o) {
   if (o.type) e.setAttribute('type', o.type);
 }
 
+/** A selector of parts joined by spaces: the last matches the element, each earlier one some ancestor, in order. */
+function matchChain(e, parts) {
+  if (!matchOne(e, parts[parts.length - 1])) return false;
+  let rest = parts.slice(0, -1);
+  for (let a = e.parentElement; a && rest.length; a = a.parentElement) if (matchOne(a, rest[rest.length - 1])) rest = rest.slice(0, -1);
+  return rest.length === 0;
+}
+
 function matchOne(e, sel) {
   if (e.tagName === '#TEXT') return false;
-  const m = /^([a-zA-Z0-9-]*)((?:\.[\w-]+)*)((?:\[[^\]]+\])*)$/.exec(sel);
+  const m = /^([a-zA-Z0-9-]*)(#[\w-]+)?((?:\.[\w-]+)*)((?:\[[^\]]+\])*)$/.exec(sel);
   if (!m) throw new Error(`the fake DOM cannot match ${sel}`);
-  const [, tag, classes, attrs] = m;
+  const [, tag, id, classes, attrs] = m;
   if (tag && e.localName !== tag) return false;
+  if (id && e.getAttribute('id') !== id.slice(1)) return false;
   for (const c of classes.split('.').filter(Boolean)) if (!e.classList.contains(c)) return false;
   for (const a of attrs.match(/\[[^\]]+\]/g) ?? []) {
     const [, n, v] = /^\[([\w-]+)(?:="([^"]*)")?\]$/.exec(a);
@@ -134,6 +149,7 @@ export function installGlobals(doc) {
   set('activeDocument', doc);
   set('document', doc);
   set('activeWindow', doc.defaultView);
+  set('window', doc.defaultView);
   set('DOMParser', class { parseFromString(t) { const el = parseXml(t, doc); return { documentElement: el, querySelector: (s) => (el.matches(s) ? el : el.querySelector(s)) }; } });
   set('ResizeObserver', class { constructor(cb) { this.cb = cb; } observe() { doc.observers = (doc.observers ?? []).concat(this); } disconnect() {} unobserve() {} });
   set('HTMLElement', FakeElement);

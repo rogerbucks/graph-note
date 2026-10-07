@@ -15,13 +15,63 @@ export function fakeObsidian(state = {}) {
     registerInterval(id) { return id; }
   }
   class MarkdownRenderChild extends Component { constructor(containerEl) { super(); this.containerEl = containerEl; } }
+  // A vault of notes by path, which reports changes as Obsidian's does; and a workspace whose leaves hold views.
+  const files = state.files ?? (state.files = new Map());
+  const listeners = [];
+  class TFile { constructor(path) { this.path = path; this.name = path.split('/').pop(); this.extension = 'md'; } }
+  const file = (path) => (files.has(path) ? new TFile(path) : null);
+  const vault = {
+    getFileByPath: file,
+    getAbstractFileByPath: file,
+    read: async (f) => files.get(f.path),
+    cachedRead: async (f) => files.get(f.path),
+    process: async (f, fn) => { const next = fn(files.get(f.path)); if (next !== files.get(f.path)) { files.set(f.path, next); (state.writes ??= []).push(f.path); listeners.forEach((l) => l(file(f.path))); } return next; },
+    modify: async (f, text) => { files.set(f.path, text); listeners.forEach((l) => l(file(f.path))); },
+    on: (name, cb) => { if (name === 'modify') listeners.push(cb); return { name, cb }; },
+    offref: (ref) => { const i = listeners.indexOf(ref.cb); if (i >= 0) listeners.splice(i, 1); },
+  };
+  const leaves = [];
+  const workspace = {
+    leaves,
+    getLeaf: (how) => { const leaf = new WorkspaceLeaf(app, how); leaves.push(leaf); return leaf; },
+    getLeavesOfType: (type) => leaves.filter((l) => l.view?.getViewType() === type),
+    revealLeaf: async (leaf) => { state.revealed = leaf; },
+    detachLeavesOfType: (type) => { for (const l of leaves.filter((x) => x.view?.getViewType() === type)) l.detach(); },
+    on: () => ({}), offref: () => {},
+  };
+  const app = { vault, workspace };
+  class WorkspaceLeaf {
+    constructor(app_, how) { this.app = app_; this.how = how; this.view = null; }
+    async setViewState({ type, state: viewState }) {
+      const factory = state.views.get(type);
+      if (!factory) throw new Error(`no view ${type}`);
+      if (!this.view || this.view.getViewType() !== type) { this.view = factory(this); this.view.load(); await this.view.onOpen?.(); }
+      await this.view.setState?.(viewState ?? {}, {});
+    }
+    getViewState() { return { type: this.view?.getViewType(), state: this.view?.getState?.() }; }
+    detach() { this.view?.onClose?.(); this.view?.unload(); const i = leaves.indexOf(this); if (i >= 0) leaves.splice(i, 1); this.view = null; }
+  }
+  class ItemView extends Component {
+    constructor(leaf) {
+      super(); this.leaf = leaf; this.app = leaf.app;
+      this.containerEl = globalThis.activeDocument.createElement('div');
+      this.containerEl.createDiv({ cls: 'view-header' });
+      this.contentEl = this.containerEl.createDiv({ cls: 'view-content' });
+    }
+    getState() { return {}; }
+    async setState() {}
+    addAction(icon, title, cb) { const b = this.containerEl.children[0].createEl('button', { attr: { 'aria-label': title } }); b.addEventListener('click', cb); return b; }
+  }
+  state.views = new Map(); state.data = state.data ?? null;
   class Plugin extends Component {
-    constructor(app, manifest) { super(); this.app = app ?? { workspace: {} }; this.manifest = manifest ?? { id: 'graph-note' }; }
+    constructor(app_, manifest) { super(); this.app = app_ ?? app; this.manifest = manifest ?? { id: 'graph-note' }; }
+    registerView(type, factory) { state.views.set(type, factory); }
+    async loadData() { return state.data === null ? null : JSON.parse(JSON.stringify(state.data)); }
+    async saveData(d) { state.data = JSON.parse(JSON.stringify(d)); }
     registerMarkdownCodeBlockProcessor(lang, fn) {
       if (state.taken.has(lang) || state.processors.has(lang)) throw new Error(`Code block postprocessor for language ${lang} is already registered`);
       state.processors.set(lang, fn);
     }
-    registerView() {}
     addCommand(c) { (state.commands ??= []).push(c); return c; }
     registerEditorExtension() {}
   }
@@ -29,7 +79,7 @@ export function fakeObsidian(state = {}) {
   const setIcon = (el, icon) => { el.setAttribute('data-icon', icon); state.icons.push(icon); };
   const setTooltip = (el, tip) => el.setAttribute('data-tooltip', tip);
   const Platform = { isMobile: !!state.mobile, isPhone: !!state.mobile, isDesktop: !state.mobile, isDesktopApp: !state.mobile };
-  return { Component, MarkdownRenderChild, Plugin, Notice, setIcon, setTooltip, Platform };
+  return { Component, MarkdownRenderChild, Plugin, ItemView, WorkspaceLeaf, TFile, Notice, setIcon, setTooltip, Platform, app };
 }
 
 /** What Obsidian hands a code block processor: the note text and the lines of this block, and a place for children. */

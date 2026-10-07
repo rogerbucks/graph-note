@@ -2,8 +2,8 @@
 // zooms and pans by button, gesture and key (the core's Zoom decides; this passes the events in and shows the view), opens
 // full screen, and shows a box's details when it is tapped or opened from the keyboard.
 import { MarkdownRenderChild, setIcon } from 'obsidian';
-import { Zoom, details } from '@graph-note/core';
-import type { Drawn, Estimate, Mode, NoteReading, Problem, View, ZoomEvent } from '@graph-note/core';
+import { Zoom, details, textVersion } from '@graph-note/core';
+import type { CompletenessReport, Drawn, Estimate, Mode, NoteReading, Problem, View, ZoomEvent } from '@graph-note/core';
 
 /** A problem, with the note line it is on. */
 export interface ShownProblem extends Problem {
@@ -21,6 +21,8 @@ export interface ViewOptions {
   onEdit: () => void;
   /** In full screen: leaves it. */
   onClose?: () => void;
+  /** The completeness report shown behind the badge (spec §8). */
+  completeness?: CompletenessReport;
 }
 
 /** What a tap or a key can land on: a box, by its id, or an estimated link, by its place in the drawing's estimates. */
@@ -28,15 +30,52 @@ type Target = { key: string } | { estimate: number };
 
 const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? '' : 's'}`;
 const problemText = (p: ShownProblem) => `Line ${p.noteLine}: ${p.message} — ${p.fix}`;
+const sign = (p: Problem) => (p.severity === 'warning' ? '⚠ Warning' : '✖ Error');
+/** More problems than this do not fit a screen, so they are grouped (spec §8). */
+const GROUP_OVER = 8;
 
-/** The list of problems, shown or behind the badge. */
-export function renderProblems(parent: HTMLElement, problems: ShownProblem[], hidden: boolean): HTMLElement {
+/** The kind of a problem, for grouping many: what sort of thing went wrong, in words. */
+function kindOf(p: Problem): string {
+  if (/no thing called|is not in graph/.test(p.message)) return 'links to things not in the graph';
+  if (/is not a relationship/.test(p.message)) return 'relationship types not in the graph';
+  if (/not a value|expected|cannot be read|not one word/i.test(p.message)) return 'lines that cannot be read';
+  return 'other problems';
+}
+
+/** The problems — one by one, or grouped by kind with the worst first when there are many — and the completeness report. */
+export function renderProblems(parent: HTMLElement, problems: ShownProblem[], hidden: boolean, completeness?: CompletenessReport): HTMLElement {
   const box = parent.createDiv({ cls: 'graph-note-problems' });
   box.hidden = hidden;
-  const list = box.createEl('ul');
-  for (const p of problems) list.createEl('li', { text: problemText(p) });
+  const item = (ul: HTMLElement, p: ShownProblem) => ul.createEl('li', { cls: p.severity === 'warning' ? 'is-warning' : 'is-error', text: `${sign(p)} — ${problemText(p)}` });
+  if (problems.length > GROUP_OVER) {
+    const groups = new Map<string, ShownProblem[]>();
+    for (const p of problems) { const k = `${p.severity}|${kindOf(p)}`; groups.set(k, [...(groups.get(k) ?? []), p]); }
+    const order = [...groups].sort(([a, x], [b, y]) => (a.startsWith('error') === b.startsWith('error') ? y.length - x.length : a.startsWith('error') ? -1 : 1));
+    for (const [k, ps] of order) {
+      const d = box.createEl('details');
+      d.createEl('summary', { text: `${k.startsWith('warning') ? 'Warning' : 'Error'}: ${ps.length} × ${k.split('|')[1]}` });
+      const ul = d.createEl('ul');
+      for (const p of ps) item(ul, p);
+    }
+  } else if (problems.length) {
+    const ul = box.createEl('ul');
+    for (const p of problems) item(ul, p);
+  }
+  if (completeness?.rules.length) {
+    box.createEl('h4', { text: 'Completeness' });
+    const ul = box.createEl('ul');
+    for (const r of completeness.rules) {
+      const li = ul.createEl('li', { text: `${r.says || r.rule}: ${r.malformed || r.summary}` });
+      const sub = li.createEl('ul');
+      for (const m of r.missing) sub.createEl('li', { cls: 'is-error', text: `✖ Missing — ${m.at}: ${m.fix}` });
+      for (const x of r.overdue) sub.createEl('li', { cls: 'is-warning', text: `⚠ Overdue — ${x}` });
+      for (const x of r.deferred) sub.createEl('li', { text: `◌ Deferred — ${x}` });
+    }
+  }
   return box;
 }
+
+let described = 0;
 
 function button(parent: HTMLElement, label: string, icon: string, onClick: () => void, text?: string): HTMLButtonElement {
   const b = parent.createEl('button', { cls: 'clickable-icon', attr: { 'aria-label': label, type: 'button' } });
@@ -65,8 +104,9 @@ export class GraphView extends MarkdownRenderChild {
     root.addClass('graph-note-view', `is-${mode}`);
 
     const bar = root.createDiv({ cls: 'graph-note-bar', attr: { role: 'toolbar', 'aria-label': `Graph ${this.o.graph}` } });
-    const label = problems.length ? plural(problems.length, 'problem') : 'No problems';
-    const badge = button(bar, label, problems.length ? 'alert-triangle' : 'check-circle', () => {
+    const gaps = this.o.completeness?.gaps ?? 0;
+    const label = [problems.length ? plural(problems.length, 'problem') : '', gaps ? plural(gaps, 'gap') : ''].filter(Boolean).join(', ') || 'No problems';
+    const badge = button(bar, label, problems.length || gaps ? 'alert-triangle' : 'check-circle', () => {
       list.hidden = !list.hidden;
       badge.setAttribute('aria-expanded', String(!list.hidden));
     }, label);
@@ -77,14 +117,22 @@ export class GraphView extends MarkdownRenderChild {
     button(bar, 'Zoom in', 'zoom-in', () => this.zoom.zoomIn());
     if (mode === 'full') button(bar, 'Close full screen', 'minimize', () => this.o.onClose?.());
     else button(bar, 'Full screen', 'expand', () => this.openFullscreen());
-    button(bar, 'Edit', 'pencil', () => this.o.onEdit());
+    if (mode !== 'pane') button(bar, 'Edit', 'pencil', () => this.o.onEdit());
 
-    const list = renderProblems(root, problems, true);
+    const list = renderProblems(root, problems, true, this.o.completeness);
     this.viewport = root.createDiv({
       cls: 'graph-note-viewport',
       attr: { tabindex: '0', role: 'group', 'aria-label': `Drawing of graph ${this.o.graph}: ${plural(this.o.drawn.width ? this.boxes().length : 0, 'thing')}. Plus, minus and zero zoom; Escape leaves full screen.` },
     });
     this.svg = this.insertSvg();
+    // the drawing as sentences, for screen readers (spec §11)
+    const d = this.drawing();
+    if (d) {
+      const sr = root.createDiv({ cls: 'graph-note-sr', attr: { id: `graph-note-sr-${++described}` } });
+      const ul = sr.createEl('ul');
+      for (const line of textVersion(d)) ul.createEl('li', { text: line });
+      this.viewport.setAttribute('aria-describedby', sr.getAttribute('id') ?? '');
+    }
     this.detailsEl = root.createDiv({ cls: 'graph-note-details', attr: { role: 'region', 'aria-live': 'polite' } });
     this.detailsEl.hidden = true;
 

@@ -19,7 +19,11 @@
     --color-purple: #a882ff; --color-purple-rgb: 168, 130, 255; --color-orange: #e9973f; --color-orange-rgb: 233, 151, 63; --color-cyan: #53dfdd; --color-cyan-rgb: 83, 223, 221;
     --color-pink: #fa99cd; --color-pink-rgb: 250, 153, 205; --color-yellow: #e0de71; --color-yellow-rgb: 224, 222, 113; }
   body { margin: 0; font: 16px/1.5 -apple-system, system-ui, sans-serif; color: var(--text-normal); background: var(--background-primary); }
-  #note { max-width: 700px; margin: 0 auto; padding: 16px; }
+  #page { display: flex; gap: 24px; align-items: flex-start; }
+  #note { flex: 1; max-width: 700px; padding: 16px; }
+  #pane { flex: 1; position: sticky; top: 0; height: 100vh; overflow: auto; padding: 16px; border-left: 1px solid var(--background-modifier-border); }
+  textarea, select { color: inherit; }
+  :root { --font-monospace: Menlo, monospace; --font-interface: -apple-system, system-ui, sans-serif; --text-faint: #999; --text-warning: #c87a00; --text-selection: rgba(120,100,220,.25); }
   button { font: inherit; color: inherit; background: var(--background-secondary); border: 1px solid var(--background-modifier-border); border-radius: var(--radius-s); }
   .harness-icon { font-size: 18px; line-height: 1; }
   .harness-notice { position: fixed; right: 16px; bottom: 16px; padding: 8px 12px; background: var(--background-secondary); border: 1px solid var(--background-modifier-border); }
@@ -27,7 +31,7 @@
 </style>
 </head>
 <body>
-<div id="note"></div>
+<div id="page"><div id="note"></div><div id="pane"></div></div>
 <script type="module" src="harness.js"></script>
 </body>
 </html>
