@@ -418,3 +418,32 @@ describe('older phones', () => {
     } finally { delete globalThis.CSS; env.uninstall(); }
   });
 });
+
+describe('one frame: the bar and the details belong to their drawing', () => {
+  let env; before(async () => { env = await load(); }); after(() => env.uninstall());
+
+  test('the bar, the drawing and the details sit in one framed card, the bar as its header strip', async () => {
+    const { el } = await show(env, fence(GRAPH));
+    const card = el.querySelector('.graph-note-view');
+    for (const part of ['.graph-note-bar', '.graph-note-viewport', '.graph-note-details', '.graph-note-problems']) assert.ok(card.querySelector(part), part);
+    assert.equal(card.children[0].className, 'graph-note-bar', 'the bar comes first, at the top edge');
+    assert.match(styles, /\.graph-note-view\s*\{[^}]*border:\s*1px solid var\(--background-modifier-border\);[^}]*border-radius:/);
+    assert.match(styles, /\.graph-note-view > \.graph-note-bar\s*\{[^}]*background:\s*var\(--background-secondary\);[^}]*border-bottom:/);
+  });
+
+  test('the box whose details are open is marked as selected, by a heavier outline as well as for screen readers', async () => {
+    const { el } = await show(env, fence(GRAPH));
+    const [first, second] = el.querySelectorAll('g.node');
+    first.dispatch('keydown', { key: 'Enter' });
+    assert.ok(first.classList.contains('is-selected'));
+    assert.equal(first.getAttribute('aria-pressed'), 'true');
+    second.dispatch('keydown', { key: 'Enter' });
+    assert.ok(!first.classList.contains('is-selected'), 'one at a time');
+    assert.ok(second.classList.contains('is-selected'));
+    const panel = el.querySelector('.graph-note-details');
+    assert.equal(panel.getAttribute('aria-label'), 'Details of Large reader');
+    labelled(panel, 'Close details').click();
+    assert.ok(!second.classList.contains('is-selected'), 'closing the details clears the mark');
+    assert.match(styles, /\.graph-note-svg g\.is-selected > :is\(path, polygon\)\s*\{[^}]*stroke-width:\s*3;/);
+  });
+});

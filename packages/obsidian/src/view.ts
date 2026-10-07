@@ -176,6 +176,7 @@ export class GraphView extends MarkdownRenderChild {
       g.setAttribute('role', 'button');
       g.setAttribute('aria-label', box.kind ? `${box.kind}: ${box.text}` : box.text);
       g.setAttribute('data-key', box.key);
+      g.setAttribute('aria-pressed', 'false');
     }
     // links: each written link in order, then the estimated ones added to the drawing (spec §3)
     const d = this.drawing(), written = d?.links.length ?? 0, named = (d?.estimates ?? []).filter((e) => e.kind === 'name');
@@ -262,20 +263,31 @@ export class GraphView extends MarkdownRenderChild {
     });
   }
 
+  /** Marks the box whose details are open — a heavier outline, and pressed for screen readers — and only that one. */
+  private select(key: string | null): void {
+    for (const g of Array.from(this.svg.querySelectorAll('g.node'))) {
+      const on = g.getAttribute('data-key') === key;
+      g.classList.toggle('is-selected', on);
+      if (g.hasAttribute('data-key')) g.setAttribute('aria-pressed', String(on));
+    }
+  }
+
   /** The details panel, emptied and shown, with a heading and a close button. */
   private panel(title: string, kind?: string): HTMLElement {
     const el = this.detailsEl;
     el.empty();
     el.hidden = false;
+    el.setAttribute('aria-label', `Details of ${title}`);
     const head = el.createDiv({ cls: 'graph-note-details-head' });
     head.createEl('strong', { text: title });
     if (kind) head.createSpan({ cls: 'graph-note-kind', text: kind });
-    button(head, 'Close details', 'x', () => { el.hidden = true; this.viewport.focus(); });
+    button(head, 'Close details', 'x', () => { el.hidden = true; this.select(null); this.viewport.focus(); });
     return el;
   }
 
   /** What tapping an estimated link shows: in a sentence, what was written, what it was taken to mean, and the fix. */
   private showEstimate(e: Estimate): void {
+    this.select(null);
     const el = this.panel('⚠ Estimated link', 'a guess, not written');
     el.createEl('p', { text: e.explain.replace(/^Line \d+/, `Line ${this.o.lineOf(e)}`) });
   }
@@ -284,6 +296,7 @@ export class GraphView extends MarkdownRenderChild {
   private showDetails(key: string): void {
     const d = details(this.o.reading, this.o.graph, key);
     if (!d) return;
+    this.select(key);
     const el = this.panel(d.text, d.kind);
     const links = (title: string, items: string[]) => {
       if (!items.length) return;

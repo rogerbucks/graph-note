@@ -1,5 +1,13 @@
 /* Graph Note — styles for the drawing and the edit pane. Colours come from the theme, so light and dark both work. */
 
+/* One frame: the bar, the drawing, its problems and its details sit in one card, the bar as its header strip — so it is
+   plain which bar and which details belong to which drawing. */
+.graph-note-view { border: 1px solid var(--background-modifier-border); border-radius: var(--radius-m); overflow: hidden; background: var(--background-primary); }
+.graph-note-view > .graph-note-bar { background: var(--background-secondary); border-bottom: 1px solid var(--background-modifier-border); margin: 0; padding: var(--size-4-1) var(--size-4-2); }
+.graph-note-view > .graph-note-problems, .graph-note-view > .graph-note-details { margin: 0; border: 0; border-radius: 0; border-top: 1px solid var(--background-modifier-border); padding: var(--size-4-2) var(--size-4-3); }
+.graph-note-view > .graph-note-problems { border-top: 0; border-bottom: 1px solid var(--background-modifier-border); background: var(--background-secondary); }
+.graph-note-svg g.is-selected > :is(path, polygon) { stroke-width: 3; }
+
 /* The bar: every control at least 44 points, as touch needs (spec §5), and none that only shows on hover. */
 .graph-note-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--size-4-1); margin-bottom: var(--size-4-1); }
 .graph-note-bar button { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: var(--size-4-1); }
