@@ -1153,7 +1153,7 @@ both on every case and requires the same answers. SHA-256 is computed here, sync
     return out;
   }
 
-  const api = { SPEC_SCHEMA, SPEC_NODES, SPEC_MARKERS, SPEC_EDGES, types, views,mermaidGraph, legend, readings, schemaFor, mermaidPath, sha256hex, jcs, hash16, basisHash, GTime, ProfileError, header, tokens, checkSyntax, Store, read, worldFromStore, canon, Graph,
+  const api = { SPEC_SCHEMA, SPEC_NODES, SPEC_MARKERS, SPEC_EDGES, SCHEMA_LABELS, types, views,mermaidGraph, legend, readings, word, schemaFor, mermaidPath, sha256hex, jcs, hash16, basisHash, GTime, ProfileError, header, tokens, checkSyntax, Store, read, worldFromStore, canon, Graph,
     typed, untyped, project, rebuild, projectsBack, section20, pathsRules, viewAt, below, lensBuckets, review, whyLayer, judgementsRules, servedRules,
     check, completeness, lint, changesetHeader, checkChangeset, parseDoc, union, merge3, finish, configFrom, joinDocs, pyrepr };
   if (typeof module === 'object' && module && module.exports) module.exports = api; else root.GraphSpecCheck = api;

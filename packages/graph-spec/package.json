@@ -5,5 +5,6 @@
   "description": "Reads graph blocks in the document profile and checks them against the graph spec's rules, in plain JavaScript with no dependencies.",
   "license": "MIT",
   "type": "commonjs",
-  "main": "src/graph-spec-check.js"
+  "main": "src/graph-spec-check.js",
+  "types": "src/graph-spec.d.ts"
 }
