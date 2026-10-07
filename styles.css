@@ -4,6 +4,9 @@
 .graph-note-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--size-4-1); margin-bottom: var(--size-4-1); }
 .graph-note-bar button { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: var(--size-4-1); }
 .graph-note-badge { margin-right: auto; }
+/* In Live Preview, Obsidian puts its own edit-block button at a code block's top right, shown on hover; leave it room, as
+   Obsidian does for its PDF toolbar, so it never covers the bar's last button. */
+.cm-embed-block .graph-note-bar { padding-inline-end: var(--size-4-9); }
 .graph-note-badge-text { font-size: var(--font-ui-small); }
 
 /* The drawing: resized to zoom, never stretched, so its text stays sharp; moved, not scrolled, to pan. */

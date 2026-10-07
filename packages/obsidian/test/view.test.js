@@ -117,6 +117,10 @@ describe('the bar', () => {
     assert.match(labelled(el, 'No problems').textContent, /No problems/, 'the badge says its count in words');
   });
 
+  test('in Live Preview the bar leaves room for Obsidian’s own edit-block button, which appears at the block’s top right on hover', () => {
+    assert.match(styles, /\.cm-embed-block \.graph-note-bar\s*\{\s*padding-inline-end:\s*var\(--size-4-9\);/);
+  });
+
   test('touch targets are at least 44 points', () => {
     assert.match(styles, /\.graph-note-bar button\s*\{[^}]*min-width:\s*44px;[^}]*min-height:\s*44px;/);
   });
