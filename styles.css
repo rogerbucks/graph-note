@@ -1,1 +1,17 @@
 /* Graph Note — styles for the drawing and the edit pane. */
+
+/* GQL text, coloured by token class as the gql-highlight plugin colours it, from the theme's own code colours. */
+.gql-kw      { color: var(--code-keyword, #c678dd); }
+.gql-type    { color: var(--code-keyword, #c678dd); font-style: italic; }
+.gql-label   { color: var(--code-function, #61afef); }
+.gql-edge    { color: var(--code-important, #e5c07b); font-weight: 600; }
+.gql-prop    { color: var(--code-property, #e06c75); }
+.gql-string  { color: var(--code-string, #98c379); }
+.gql-value   { color: var(--code-value, #d19a66); }
+.gql-comment { color: var(--code-comment, #7f848e); font-style: italic; }
+.gql-fn      { color: var(--code-tag, #56b6c2); }
+.gql-param   { color: var(--code-important, #e5c07b); }
+.gql-var     { color: var(--code-normal, inherit); }
+.gql-arrow   { color: var(--code-operator, #56b6c2); font-weight: 600; }
+.gql-op      { color: var(--code-operator, #56b6c2); }
+.gql-punct   { color: var(--code-punctuation, #abb2bf); }
