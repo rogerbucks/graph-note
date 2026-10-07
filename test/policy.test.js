@@ -280,8 +280,12 @@ describe('GitHub Actions', () => {
   });
 
   test('every library the plugin bundles is linted with the Obsidian review rules', () => {
-    const plugin = readJSON('packages/obsidian/package.json');
-    const bundled = Object.keys(plugin.dependencies ?? {}).filter((d) => d.startsWith('@graph-note/'));
+    const deps = (name) => Object.keys(readJSON(`packages/${name.split('/')[1]}/package.json`).dependencies ?? {}).filter((d) => d.startsWith('@graph-note/'));
+    const bundled = new Set();
+    for (const todo = deps('@graph-note/obsidian'); todo.length;) {
+      const name = todo.pop();
+      if (!bundled.has(name)) { bundled.add(name); todo.push(...deps(name)); }
+    }
     const ignores = /ignores:\s*\[([^\]]*)\]/.exec(read('eslint.config.mjs'))[1];
     for (const name of bundled) {
       const dir = `packages/${name.split('/')[1]}/src`;

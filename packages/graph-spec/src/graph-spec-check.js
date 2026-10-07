@@ -11,6 +11,7 @@ One plain file — no packages, no build step, nothing Node-specific — so a br
 can load it. It follows gql_profile.py and graph_rules.py (python/graph_spec) function for function; the conformance suite runs
 both on every case and requires the same answers. SHA-256 is computed here, synchronously, so no platform crypto is needed.
 */
+/* global module -- the export for Node, beside the page global below */
 (function (root) {
   'use strict';
 
@@ -72,7 +73,7 @@ both on every case and requires the same answers. SHA-256 is computed here, sync
   // ── the document profile reader (gql_profile.py) ───────────────────────────────────────────────
   class ProfileError extends Error { constructor(line, message, fix) { super(`line ${line}: ${message} — ${fix}`); this.line = line; this.msg = message; this.fix = fix; } }
   const KEYWORDS = new Set(['INSERT', 'MATCH', 'SET', 'DATE', 'DATETIME', 'TRUE', 'FALSE']);
-  const TOKEN = /\s*(?:('(?:[^'\\]|\\.)*')|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|([A-Za-z_][A-Za-z0-9_]*)|(->)|([()\[\]{}:,.=-]))/y;
+  const TOKEN = /\s*(?:('(?:[^'\\]|\\.)*')|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|([A-Za-z_][A-Za-z0-9_]*)|(->)|([()[\]{}:,.=-]))/y;
   function header(block) {
     const first = (block.split('\n').find(l => l.trim()) || '');
     if (/^\s*\/\/\s*excerpt\b/i.test(first)) return [null, 'excerpt'];   // an illustration, said to be one (§3)
@@ -397,7 +398,7 @@ both on every case and requires the same answers. SHA-256 is computed here, sync
     const tally = new Map();
     for (const [x, c, , w] of last.values()) { const key = jcs([x, w]), [n, k] = tally.get(key) || [0, 0]; tally.set(key, [n + 1, k + (S.get(c)[0] ? 1 : 0)]); }
     const out = new Map();
-    for (const [key, [n, k]] of tally) { const [x, w] = JSON.parse(key); out.set(key, { settled: n, came_true: k, range: wilson(k, n), verdict: verdict(wilson(k, n), RANGE[w]) }); }
+    for (const [key, [n, k]] of tally) { const [, w] = JSON.parse(key); out.set(key, { settled: n, came_true: k, range: wilson(k, n), verdict: verdict(wilson(k, n), RANGE[w]) }); }
     return out;
   }
   function reliability(g) {
@@ -488,7 +489,7 @@ both on every case and requires the same answers. SHA-256 is computed here, sync
       return true;
     };
     try { const out = {}; for (const i of g.labelled(label)) { const hit = arms.find(([c]) => test(c, g.p(i))); out[i] = hit ? hit[1] : other; } return out; }
-    catch (e) { return null; }
+    catch { return null; }
   }
 
   // §23 judgements
@@ -583,10 +584,23 @@ both on every case and requires the same answers. SHA-256 is computed here, sync
 
   // ── §24 H1 the dialect linter, and change sets ──────────────────────────────────────────────────
   const blank = text => text.replace(/\/\/[^\n]*/g, m => ' '.repeat(m.length)).replace(/'(?:[^'\\]|\\.)*'/g, m => "'" + ' '.repeat(m.length - 2) + "'");
+  // Each [ that opens a list rather than a relationship or an index — not straight after a word, -, ], >, ) or ' — with the
+  // whitespace before it, as graph_spec.lint finds them; written without a regex lookbehind, which iOS before 16.4 cannot run.
+  function listStarts(src) {
+    const out = [], after = new Set(['-', ']', '>', ')', "'"]), word = c => /\w/.test(c), space = c => /\s/.test(c);
+    let from = 0;
+    for (let i = src.indexOf('[', from); i !== -1; i = src.indexOf('[', from)) {
+      let p = i; while (p > from && space(src[p - 1])) p--;
+      const ok = q => q === 0 || !(word(src[q - 1]) || after.has(src[q - 1]));
+      const start = ok(p) ? p : p < i ? p + 1 : -1;
+      if (start !== -1) { out.push({ index: start, 0: src.slice(start, i + 1) }); from = i + 1; } else from = i + 1;
+    }
+    return out;
+  }
   function closeAt(src, i) { let depth = 0; for (let j = i; j < src.length; j++) { depth += src[j] === '(' ? 1 : src[j] === ')' ? -1 : 0; if (depth === 0) return j; } return src.length - 1; }
   function lint(text) {
     const src = blank(text), out = [], add = (trap, pos) => out.push({ trap, line: src.slice(0, pos).split('\n').length });
-    for (const m of src.matchAll(/(?:(?<=[:.({,])|(?<=[:.({,]\s))\s*([A-Za-z_]\w*)\b/g)) {
+    for (const m of src.matchAll(/[:.({,]\s*([A-Za-z_]\w*)\b/g)) {   // a word after : . ( { or , — the punctuation is matched, not looked behind at, for iOS before 16.4
       const w = m[1], end = m.index + m[0].length;
       if (['for', 'groups', 'group'].includes(w.toLowerCase()) && !/^\s*BY\b/i.test(src.slice(end))) add('reserved word', m.index + m[0].indexOf(w));
     }
@@ -598,14 +612,14 @@ both on every case and requires the same answers. SHA-256 is computed here, sync
       if ((right && right[2].includes('.')) || (left && left[1].includes('.'))) add('aggregate mixed with a value', m.index);
     }
     for (const m of src.matchAll(/\bMATCH\b([\s\S]*?)(?=\b(?:WHERE|RETURN|WITH|INSERT|SET|MATCH|OPTIONAL|ORDER|DELETE|CALL|LIMIT)\b|$)/gi)) {
-      for (const chain of m[1].split(/,(?![^()\[\]{}]*[)\]}])/)) { const names = [...chain.matchAll(/\(\s*([A-Za-z_]\w*)/g)].map(x => x[1]); if (names.length !== new Set(names).size) add('pattern returns to a bound variable', m.index + 5); }
+      for (const chain of m[1].split(/,(?![^()[\]{}]*[)\]}])/)) { const names = [...chain.matchAll(/\(\s*([A-Za-z_]\w*)/g)].map(x => x[1]); if (names.length !== new Set(names).size) add('pattern returns to a bound variable', m.index + 5); }
     }
     for (const m of src.matchAll(/\bSET\b/gi)) if (/\bINSERT\b/i.test(src.slice(m.index + m[0].length))) add('SET before INSERT', m.index);
-    for (const m of src.matchAll(/(?<![\w\-\]>)'])\s*\[/g)) {
+    for (const m of listStarts(src)) {
       const end = src.indexOf(']', m.index + m[0].length), body = src.slice(m.index + m[0].length, end).replace(/\{[^{}]*\}/g, '');
       if (/[A-Za-z_]\w*\.(?!id\b)[A-Za-z_]/.test(body) && !body.trimStart().startsWith(':')) add('list literal with values that may be null', m.index);
     }
-    for (const m of src.matchAll(/(?<!\w)[Xx]'/g)) add('byte literal', m.index);
+    for (const m of src.matchAll(/[Xx]'/g)) if (!m.index || !/\w/.test(src[m.index - 1])) add('byte literal', m.index);   // not straight after a word
     if (/^\s*\/\/\s*graph:/.test(text)) { const e = checkSyntax(text); if (e) out.push({ trap: 'outside the document profile', line: e.line }); }
     return out.sort(byKey(f => f.line));
   }
@@ -667,7 +681,7 @@ both on every case and requires the same answers. SHA-256 is computed here, sync
   function pystrQ(s) {
     const q = s.includes("'") && !s.includes('"') ? '"' : "'";
     return q + s.replace(/\\/g, '\\\\').replace(new RegExp(q, 'g'), '\\' + q).replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t')
-      .replace(/[\x00-\x1f\x7f]/g, c => '\\x' + c.charCodeAt(0).toString(16).padStart(2, '0')) + q;
+      .replace(/[^ -~\u0080-￿]/g, c => '\\x' + c.charCodeAt(0).toString(16).padStart(2, '0')) + q;
   }
   function pynum(v) { if (Number.isInteger(v)) return String(v); const r = String(v), m = /^(-?[\d.]+)e([+-])(\d+)$/.exec(r); return m ? `${m[1]}e${m[2]}${m[3].padStart(2, '0')}` : r; }
   function pyrepr(v) {
@@ -1143,4 +1157,4 @@ both on every case and requires the same answers. SHA-256 is computed here, sync
     typed, untyped, project, rebuild, projectsBack, section20, pathsRules, viewAt, below, lensBuckets, review, whyLayer, judgementsRules, servedRules,
     check, completeness, lint, changesetHeader, checkChangeset, parseDoc, union, merge3, finish, configFrom, joinDocs, pyrepr };
   if (typeof module === 'object' && module && module.exports) module.exports = api; else root.GraphSpecCheck = api;
-})(typeof globalThis !== 'undefined' ? globalThis : this);
+})(typeof self !== 'undefined' ? self : this);

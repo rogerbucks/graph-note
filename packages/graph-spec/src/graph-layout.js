@@ -12,6 +12,7 @@ nodes: [[key, kind, text]]; edges: [[source key, reading, target key]]; style: t
 Returns [source, kinds, readings], as dot_source does. The parts Python lends it — textwrap, zlib.crc32, html.escape and
 round — are ported here exactly, each proved against Python by the layout tests. Nothing Node-specific.
 */
+/* global module -- the export for Node, beside the page global below */
 (function (root) {
   'use strict';
 
@@ -49,8 +50,8 @@ round — are ported here exactly, each proved against Python by the layout test
       else if (ch === '\n' || ch === '\r') { expanded += ch; col = 0; }
       else { expanded += ch; col++; }
     }
-    const spaced = expanded.replace(/[\t\n\x0b\x0c\r]/g, ' ');
-    const chunks = spaced.split(/([\t\n\x0b\x0c\r ]+)/).filter(c => c).reverse();
+    const spaced = expanded.replace(/[\t\n\v\f\r]/g, ' ');
+    const chunks = spaced.split(/([\t\n\v\f\r ]+)/).filter(c => c).reverse();
     const blank = s => !s.trim();
     const lines = [];
     while (chunks.length) {
@@ -142,4 +143,4 @@ round — are ported here exactly, each proved against Python by the layout test
 
   const api = { dotSource, pick, wrap, crc32, escape, roundHalfEven };
   if (typeof module === 'object' && module && module.exports) module.exports = api; else root.GraphLayout = api;
-})(typeof globalThis !== 'undefined' ? globalThis : this);
+})(typeof self !== 'undefined' ? self : this);
