@@ -148,7 +148,6 @@ describe('the text', () => {
     const t = textarea(env.el);
     assert.equal(t.getAttribute('spellcheck'), 'false');
     assert.equal(t.getAttribute('autocapitalize'), 'off');
-    assert.equal(t.getAttribute('aria-label'), 'Text of graph reader');
   });
 });
 

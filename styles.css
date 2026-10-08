@@ -331,11 +331,25 @@
   min-height: 8em;
   resize: none;
   overflow-y: hidden;
-  color: transparent;
   caret-color: var(--text-normal);
+}
+/* Obsidian styles every textarea, and at hover and focus its textarea:hover (0,1,1) would paint the field grey over the
+   picture. So the field's own look carries more weight than any of those, in every state, and matches the picture exactly. */
+.graph-note-editor textarea.graph-note-text,
+.graph-note-editor textarea.graph-note-text:hover,
+.graph-note-editor textarea.graph-note-text:focus,
+.graph-note-editor textarea.graph-note-text:focus-visible,
+.graph-note-editor textarea.graph-note-text:active {
+  color: transparent;
   background: transparent;
   border: 0;
+  border-radius: 0;
+  box-shadow: none;
   outline: none;
+  padding: var(--size-4-2) var(--size-4-3);
+  font-family: var(--font-monospace);
+  font-size: var(--code-size, 0.9em);
+  line-height: 1.5;
 }
 .graph-note-text::selection {
   background: var(--text-selection);

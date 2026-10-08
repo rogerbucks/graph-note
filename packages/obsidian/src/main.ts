@@ -93,6 +93,19 @@ export default class GraphNotePlugin extends Plugin {
   /** The editors open in place, in drawings' cards: they outlive each redraw of their block. */
   private readonly inline = new Set<BlockEditor>();
 
+  /** Who to tell when an editor in place opens or closes: each card's edit button. */
+  private readonly inlineWatchers = new Set<() => void>();
+
+  /** Tells `changed` each time an editor in place opens or closes; returns how to stop. */
+  watchInline(changed: () => void): () => void {
+    this.inlineWatchers.add(changed);
+    return () => this.inlineWatchers.delete(changed);
+  }
+
+  private inlineChanged(): void {
+    for (const changed of this.inlineWatchers) changed();
+  }
+
   /** The editor open in place on a note's block, by the line of its opening fence, if there is one. */
   inlineFor(path: string, line: number): BlockEditor | undefined {
     return [...this.inline].find((e) => e.path === path && e.session?.ref.line === line);
@@ -107,12 +120,14 @@ export default class GraphNotePlugin extends Plugin {
         this.inline.delete(e);
         e.detach();
         this.removeChild(e);
+        this.inlineChanged();
       };
       this.inline.add(e);
       this.addChild(e);
       e.mount(slot);
       await e.open(target.path, target.line);
       editor = e;
+      this.inlineChanged();
     } else editor.mount(slot);
     editor.focus();
   }

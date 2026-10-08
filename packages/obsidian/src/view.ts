@@ -44,6 +44,10 @@ export interface ViewOptions {
   completeness?: CompletenessReport;
   /** Edit here: opens the text in place, inside this card (spec §4). */
   onEditHere?: () => void;
+  /** While the card is edited, its edit button closes the editor, as its Done does (spec §4). */
+  onDoneEditing?: () => void;
+  /** Tells the card each time an editor in place opens or closes; returns how to stop. */
+  watchEditing?: (changed: () => void) => () => void;
   /** Called once the card is built, with the place in it where the editor in place sits. */
   onReady?: (slot: HTMLElement) => void;
   /** The editor open in place on this card, if any: then the details are the inspector (spec §14). */
@@ -141,6 +145,7 @@ export class GraphView extends MarkdownRenderChild {
   private detailsEl!: HTMLElement;
   private fullscreen: { view: GraphView; overlay: HTMLElement } | null = null;
   private boxDown: { id: number; x: number; y: number; target: Target } | null = null;
+  private editButton: HTMLButtonElement | null = null;
 
   constructor(containerEl: HTMLElement, options: ViewOptions) {
     super(containerEl);
@@ -178,7 +183,13 @@ export class GraphView extends MarkdownRenderChild {
     button(bar, 'Zoom in', 'zoom-in', () => this.zoom.zoomIn());
     if (mode === 'full') button(bar, 'Close full screen', 'minimize', () => this.o.onClose?.());
     else button(bar, 'Full screen', 'expand', () => this.openFullscreen());
-    if (mode !== 'pane' && this.o.onEditHere) button(bar, 'Edit here', 'pencil', () => this.o.onEditHere?.());
+    if (mode !== 'pane' && this.o.onEditHere) {
+      this.editButton = button(bar, 'Edit here', 'pencil', () =>
+        this.o.editing?.()?.session ? this.o.onDoneEditing?.() : this.o.onEditHere?.(),
+      );
+      this.showEditing();
+      if (this.o.watchEditing) this.register(this.o.watchEditing(() => this.showEditing()));
+    }
     if (mode !== 'pane') button(bar, 'Edit in pane', 'panel-right-open', () => this.o.onEdit());
 
     const list = renderProblems(root, problems, true, this.o.completeness);
@@ -215,6 +226,16 @@ export class GraphView extends MarkdownRenderChild {
     if (slot) this.o.onReady?.(slot);
     const reopen = this.o.editing?.()?.selected;
     if (reopen) this.open(reopen);
+  }
+
+  /** The edit button as the card stands: a pencil to edit here, or, while edited, a view icon to finish (spec §4). */
+  private showEditing(): void {
+    const b = this.editButton;
+    if (!b) return;
+    const on = !!this.o.editing?.()?.session;
+    b.empty();
+    setIcon(b, on ? 'book-open' : 'pencil');
+    b.setAttribute('aria-label', on ? 'Done editing' : 'Edit here');
   }
 
   override onunload(): void {
