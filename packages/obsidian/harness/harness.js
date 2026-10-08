@@ -11,6 +11,10 @@ await plugin.onload();
 const out = document.getElementById('note');
 // ?live draws a changed block as Live Preview does, off the page first; otherwise as reading view
 const live = new URLSearchParams(location.search).has('live');
+// ?twice draws a changed block twice, some 20 ms apart, as Obsidian's reading view does
+const twice = new URLSearchParams(location.search).has('twice');
+// ?reattach takes a redrawn card off the page and puts it back as it was, as reading view does
+const reattach = new URLSearchParams(location.search).has('reattach');
 
 /** The gql blocks of a note's text, each with its fence line and its text. */
 function blocksOf(text) {
@@ -54,29 +58,45 @@ for (let i = 0; i < lines.length; i++) {
     out.createEl(lines[i].startsWith('#') ? 'h2' : 'p', { text: lines[i].replace(/^#+\s*/, '') });
 }
 
+/** Draws block i again, the old card leaving the page first: on the page, as reading view; off it, as Live Preview. */
+function redraw(was, block, text) {
+  const old = was.el;
+  was.children.forEach((c) => c.unload());
+  const el = document.createElement('div');
+  el.className = 'block-language-gql';
+  Object.assign(was, { el, source: block.source, children: [] });
+  if (live) {
+    // as Live Preview: the old card leaves, and the new one is drawn off the page and put there after
+    const mark = document.createComment('block');
+    old.replaceWith(mark);
+    void draw(el, block, text).then((children) => {
+      was.children = children;
+      mark.replaceWith(el);
+    });
+  } else {
+    old.replaceWith(el); // as reading view: the old card leaves the page before the new one is drawn
+    void draw(el, block, text).then((children) => (was.children = children));
+  }
+}
+
 plugin.app.vault.on('modify', () => {
   const text = files.get('Sample.md'),
     now = blocksOf(text);
   now.forEach((block, i) => {
     const was = shown[i];
     if (!was || was.source === block.source) return;
-    const old = was.el;
-    was.children.forEach((c) => c.unload());
-    const el = document.createElement('div');
-    el.className = 'block-language-gql';
-    Object.assign(was, { el, source: block.source, children: [] });
-    if (live) {
-      // as Live Preview: the old card leaves, and the new one is drawn off the page and put there after
-      const mark = document.createComment('block');
-      old.replaceWith(mark);
-      void draw(el, block, text).then((children) => {
-        was.children = children;
-        mark.replaceWith(el);
-      });
-    } else {
-      old.replaceWith(el); // as reading view: the old card leaves the page before the new one is drawn
-      void draw(el, block, text).then((children) => (was.children = children));
-    }
+    redraw(was, block, text);
+    // as Obsidian's reading view does after a write (seen on Roger's Mac, 9 Oct 2026): the block drawn a second time,
+    // some 20 ms after the first
+    if (twice) setTimeout(() => redraw(was, block, text), 20);
+    // as reading view also does (seen on Roger's Mac, 9 Oct 2026): the new card taken off the page and put back as it
+    // was, some 20 ms after it is drawn, with no drawing in between
+    if (reattach)
+      setTimeout(() => {
+        const mark = document.createComment('again');
+        was.el.replaceWith(mark);
+        setTimeout(() => mark.replaceWith(was.el), 8);
+      }, 60);
   });
 });
 
