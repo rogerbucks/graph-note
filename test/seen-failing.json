@@ -316,5 +316,11 @@
       "seen_failing_first": false,
       "evidence": "pins behaviour that already existed: written after its code, to prove a spec rule the code already met (commit 40d335e)"
     }
+  },
+  "python/graph_spec/tests/test_gql_profile_drawn.py": {
+    "CheckingStaysWhole.test_apply_still_refuses_both_shapes": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: it holds that drawing in part never reaches checking or loading, so Store.apply refuses both shapes before and after by design (commit e4d6652)"
+    }
   }
 }
