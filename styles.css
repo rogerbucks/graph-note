@@ -1,16 +1,17 @@
 /* Graph Note — styles for the drawing and the edit pane. Colours come from the theme, so light and dark both work. */
 
 /* One frame: the bar, the drawing, its problems and its details sit in one card, the bar as its header strip — so it is
-   plain which bar and which details belong to which drawing. */
+   plain which bar and which details belong to which drawing. The card and the bar's rule take the theme's focus border:
+   its ordinary border is too faint to tie a bar to its drawing (Roger's choice A, 8 Oct 2026). */
 .graph-note-view {
-  border: 1px solid var(--background-modifier-border);
+  border: 1px solid var(--background-modifier-border-focus);
   border-radius: var(--radius-m);
   overflow: hidden;
   background: var(--background-primary);
 }
 .graph-note-view > .graph-note-bar {
   background: var(--background-secondary);
-  border-bottom: 1px solid var(--background-modifier-border);
+  border-bottom: 1px solid var(--background-modifier-border-focus);
   margin: 0;
   padding: var(--size-4-1) var(--size-4-2);
 }
