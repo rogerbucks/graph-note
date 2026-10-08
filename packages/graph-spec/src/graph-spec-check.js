@@ -476,7 +476,30 @@ both on every case and requires the same answers. SHA-256 is computed here, sync
       for (const [k, n] of this.graph(g).nodes) if (n.props.id === id) return k;
       return null;
     }
+    /** Applies a data block whole, or not at all: a block that cannot be read leaves the store as it was, however far
+     * its reading got (req:3.engine-gets-corrected). */
     apply(block) {
+      const copy = (graph) => ({
+        nodes: new Map([...graph.nodes].map(([k, n]) => [k, { labels: new Set(n.labels), props: { ...n.props } }])),
+        edges: graph.edges.slice(),
+      });
+      const kept = {
+        graphs: Object.fromEntries(Object.entries(this.graphs).map(([g, graph]) => [g, copy(graph)])),
+        k: this.k,
+        schemas: { ...this.schemas },
+        named: { ...this.named },
+        commas: this.commas.slice(),
+        bares: this.bares.slice(),
+      };
+      try {
+        return this.applyWhole(block);
+      } catch (e) {
+        Object.assign(this, kept);
+        throw e;
+      }
+    }
+
+    applyWhole(block) {
       let [g, kind] = header(block);
       if (kind === 'query')
         throw new ProfileError(1, 'this is a query block', 'queries ask questions of a graph; they are not data');
