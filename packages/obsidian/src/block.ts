@@ -88,6 +88,10 @@ export async function renderBlock(
       onEditHere: () => {
         if (slot) void plugin.editHere(target, slot);
       },
+      onDoneEditing: () => {
+        void plugin.inlineFor(target.path, target.line)?.done();
+      },
+      watchEditing: (changed) => plugin.watchInline(changed),
       onReady: (at) => {
         slot = at;
         plugin.inlineFor(target.path, target.line)?.mount(at);

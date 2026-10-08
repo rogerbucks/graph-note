@@ -171,6 +171,12 @@ export class BlockEditor extends Component {
     this.typedAgain();
   }
 
+  /** Done, in place: writes what is left, then closes. */
+  async done(): Promise<void> {
+    await this.flush();
+    this.onDone?.();
+  }
+
   /** Takes the editor off the page, as Done does in place. */
   detach(): void {
     this.el?.root.remove();
@@ -318,7 +324,7 @@ export class BlockEditor extends Component {
         'Done',
         'check',
         () => {
-          void this.flush().then(() => this.onDone?.());
+          void this.done();
         },
         'Done',
       );

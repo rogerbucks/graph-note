@@ -113,6 +113,60 @@ describe('edit here, in the card', () => {
     }
   });
 
+  // edit_button_toggles (spec §4, 8 Oct 2026): while the card is being edited its edit button shows a view icon, and
+  // pressing it closes the edit box exactly as Done does
+  test('while the card is edited, its edit button shows a view icon; pressing it writes and closes, as Done does', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      const el = await show(env);
+      assert.equal(labelled(el, 'Edit here').getAttribute('data-icon'), 'pencil');
+      labelled(el, 'Edit here').click();
+      await until(() => !!el.querySelector('textarea') && !!labelled(el, 'Done editing'));
+      assert.equal(labelled(el, 'Edit here'), undefined);
+      assert.equal(labelled(el, 'Done editing').getAttribute('data-icon'), 'book-open');
+      const t = el.querySelector('textarea');
+      t.value = READER + ",\n(x:Option {name: 'X'})";
+      t.dispatch('input');
+      labelled(el, 'Done editing').click();
+      await until(() => env.state.files.get(PATH).includes("name: 'X'"), 2000);
+      await wait(20);
+      assert.equal(el.querySelector('textarea'), null);
+      assert.equal((await show(env)).querySelector('textarea'), null);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('closing with nothing typed, by either button, gives the card back its edit button', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      const el = await show(env);
+      for (const close of ['Done editing', 'Done']) {
+        labelled(el, 'Edit here').click();
+        await until(() => !!labelled(el, 'Done editing'));
+        labelled(el, close).click();
+        await until(() => !el.querySelector('textarea'));
+        assert.equal(labelled(el, 'Edit here')?.getAttribute('data-icon'), 'pencil', `after ${close}`);
+        assert.equal(labelled(el, 'Done editing'), undefined);
+      }
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a card redrawn while its block is edited shows the view icon', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      const el = await show(env);
+      labelled(el, 'Edit here').click();
+      await until(() => !!el.querySelector('textarea'));
+      const again = await show(env);
+      assert.equal(labelled(again, 'Done editing')?.getAttribute('data-icon'), 'book-open');
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('a block changed in the note meanwhile is never overwritten in place either: what was typed is kept as a draft', async () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {
