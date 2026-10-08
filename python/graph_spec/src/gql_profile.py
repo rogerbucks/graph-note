@@ -729,7 +729,32 @@ def _data_kind(text):
     except ProfileError as e:
         if not re.match(r"\s*//\s*graph:", _first_line(text)):
             return None
-        return {"graph": None, "block": -1, "line": e.line, "message": e.message, "fix": e.fix}
+        return {
+            "graph": None,
+            "block": -1,
+            "line": e.line,
+            "severity": "error",
+            "message": e.message,
+            "fix": e.fix,
+        }
+
+
+def _dangling_comma(text):
+    """A comma with nothing after it at a block's end, but blank lines and comments: the commonest
+    state while the next pattern is being typed, so never a failure of the block (8 Oct 2026). The
+    block as read without it, and one warning whose fix removes it; None when there is none."""
+    every = _items(text)
+    if not every or every[-1][2] == -1:
+        return None
+    at = every[-1][2]
+    before = text[:at].split("\n")
+    return text[:at] + " " + text[at + 1 :], {
+        "line": len(before),
+        "severity": "warning",
+        "message": "a comma with nothing after it; it is read as if it were not there",
+        "fix": "remove the comma, or write the next pattern after it",
+        "character": len(before[-1]),
+    }
 
 
 def read_for_drawing(blocks, shared=()):
@@ -737,9 +762,10 @@ def read_for_drawing(blocks, shared=()):
 
     Each block is applied in order to a fresh store, after the shared schemas; when one fails, the
     item at the failing line is blanked and the whole read starts again, so a block that cannot
-    be read is drawn in part. Each problem is {graph, block, line, message, fix, dropped}: dropped
-    is the text left out. Drawing only — Store.apply, which checks and loads, still refuses the
-    block whole."""
+    be read is drawn in part. Each problem is {graph, block, line, severity, message, fix} and,
+    for an error, dropped: the text left out. A comma with nothing after it at a block's end is a
+    warning, with the character it is at on its line, and is read as if it were not there.
+    Drawing only — Store.apply, which checks and loads, still refuses the block whole."""
     clean = list(blocks)
     problems, skip = [], set()
     for i, text in enumerate(blocks):
@@ -749,6 +775,11 @@ def read_for_drawing(blocks, shared=()):
         elif isinstance(kind, dict):
             skip.add(i)
             problems.append({**kind, "block": i, "graph": _graph_of(text)})
+        else:
+            dangling = _dangling_comma(text)
+            if dangling:
+                clean[i] = dangling[0]
+                problems.append({**dangling[1], "block": i, "graph": _graph_of(text)})
     attempt = 0
     while True:
         store = Store()
@@ -776,6 +807,7 @@ def read_for_drawing(blocks, shared=()):
             "graph": _graph_of(text),
             "block": block,
             "line": line,
+            "severity": "error",
             "message": pe.message if pe else "this could not be read",
             "fix": pe.fix if pe else "check the line against the guide to writing a graph note",
         }

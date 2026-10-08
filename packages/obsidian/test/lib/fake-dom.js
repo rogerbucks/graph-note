@@ -218,7 +218,8 @@ export class FakeElement {
     return this.dispatch('click');
   }
   focus() {
-    this.ownerDocument.activeElement = this;
+    // as in a browser: an element that is not on the page cannot take the focus
+    if (this.isConnected) this.ownerDocument.activeElement = this;
   }
   blur() {
     if (this.ownerDocument.activeElement === this) this.ownerDocument.activeElement = null;

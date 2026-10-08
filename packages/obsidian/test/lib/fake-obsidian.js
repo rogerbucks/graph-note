@@ -141,7 +141,8 @@ export function fakeObsidian(state = {}) {
       super();
       this.leaf = leaf;
       this.app = leaf.app;
-      this.containerEl = globalThis.activeDocument.createElement('div');
+      // a view is on the page, as a workspace leaf is
+      this.containerEl = globalThis.activeDocument.body.createDiv();
       this.containerEl.createDiv({ cls: 'view-header' });
       this.contentEl = this.containerEl.createDiv({ cls: 'view-content' });
     }

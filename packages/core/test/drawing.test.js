@@ -226,6 +226,39 @@ describe('which blocks are graphs', () => {
   });
 });
 
+describe('a comma with nothing after it', () => {
+  // Roger's try-out, 8 Oct 2026: "adding a comma on the last line also causes the whole diagram to error". A comma waiting
+  // for its next pattern is the commonest state while typing; a missing comma is never a failure of the block (7 Oct), and
+  // a block that cannot be read is drawn in part (8 Oct). So it is drawn whole, with one quiet warning whose fix removes it.
+  const block = "// graph: g\n(a:T {name: 'A'}),\n(b:T {name: 'B'}),\n(a)-[:R]->(b)";
+  for (const tail of [',', ',\n', ',\n\n// the next pattern goes here\n']) {
+    test(`everything before it is drawn, with one warning whose fix removes it: ${JSON.stringify(tail)}`, () => {
+      const { graphs, problems } = readNote([block + tail]);
+      assert.deepEqual(
+        graphs.get('g').boxes.map((b) => b.key),
+        ['a', 'b'],
+      );
+      assert.deepEqual(
+        graphs.get('g').links.map((l) => [l.from, l.to]),
+        [['a', 'b']],
+      );
+      assert.equal(problems.length, 1);
+      const [p] = problems;
+      assert.equal(p.severity, 'warning');
+      assert.equal(p.line, 4);
+      assert.match(p.message, /comma with nothing after it/);
+      assert.deepEqual(p.replace, { written: ',', with: [''] });
+      assert.deepEqual(p.span, { line: 3, character: '(a)-[:R]->(b)'.length, end: '(a)-[:R]->(b)'.length + 1 });
+      assert.equal(p.fixTitle, 'Remove the comma');
+    });
+  }
+
+  test('a comma inside a string at the block’s end is not taken for it', () => {
+    const { problems } = readNote(["// graph: g\n(a:T {name: 'A, then,'})"]);
+    assert.deepEqual(problems, []);
+  });
+});
+
 describe('a missing comma', () => {
   const block = "// graph: g\n(a:T {name: 'A'}),\n(b:T {name: 'B'})\n(c:T {name: 'C'}),\n(a)-[:R]->(b)";
 

@@ -1,6 +1,6 @@
 // Draws every gql block of the sample note with the real plugin bundle, as Obsidian's reading view would; and, as
 // Obsidian does, draws a block again when its text in the note changes: the old card leaves the page first, and the new
-// one is built after.
+// one is built after — on the page, as reading view does, or with ?live off it and put there once drawn, as Live Preview.
 import Plugin from '../src/main.ts';
 import { processors, files } from 'obsidian';
 import note from './sample.md';
@@ -9,6 +9,8 @@ files.set('Sample.md', note);
 const plugin = new Plugin();
 await plugin.onload();
 const out = document.getElementById('note');
+// ?live draws a changed block as Live Preview does, off the page first; otherwise as reading view
+const live = new URLSearchParams(location.search).has('live');
 
 /** The gql blocks of a note's text, each with its fence line and its text. */
 function blocksOf(text) {
@@ -58,12 +60,23 @@ plugin.app.vault.on('modify', () => {
   now.forEach((block, i) => {
     const was = shown[i];
     if (!was || was.source === block.source) return;
+    const old = was.el;
     was.children.forEach((c) => c.unload());
     const el = document.createElement('div');
     el.className = 'block-language-gql';
-    was.el.replaceWith(el); // the old card leaves the page before the new one is drawn
     Object.assign(was, { el, source: block.source, children: [] });
-    void draw(el, block, text).then((children) => (was.children = children));
+    if (live) {
+      // as Live Preview: the old card leaves, and the new one is drawn off the page and put there after
+      const mark = document.createComment('block');
+      old.replaceWith(mark);
+      void draw(el, block, text).then((children) => {
+        was.children = children;
+        mark.replaceWith(el);
+      });
+    } else {
+      old.replaceWith(el); // as reading view: the old card leaves the page before the new one is drawn
+      void draw(el, block, text).then((children) => (was.children = children));
+    }
   });
 });
 

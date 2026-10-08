@@ -11,6 +11,10 @@
     "a kind or link type the locked graph’s schema does not declare > a draft has no schema to declare anything, so nothing is said; and what the schema declares is never reported": {
       "seen_failing_first": false,
       "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit dcffbbe)"
+    },
+    "a comma with nothing after it > a comma inside a string at the block’s end is not taken for it": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: a comma inside a string was never read as one, so it passes before and after by design (commit d000d29)"
     }
   },
   "packages/core/test/estimates.test.js": {
@@ -337,6 +341,14 @@
     "CheckingStaysWhole.test_apply_still_refuses_both_shapes": {
       "seen_failing_first": false,
       "evidence": "a control case, written with the change beside it: it holds that drawing in part never reaches checking or loading, so Store.apply refuses both shapes before and after by design (commit e4d6652)"
+    },
+    "ADanglingComma.test_checking_and_loading_may_still_refuse_it": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: Store.apply refused a dangling comma before and still does, as checking and loading stay all-or-nothing (commit d000d29)"
+    },
+    "ADanglingComma.test_everything_before_it_is_drawn_with_one_warning_on_its_line": {
+      "seen_failing_first": false,
+      "evidence": "not seen failing by the replay, though it was seen failing by hand against the code before d000d29 (unittest: FAILED (failures=3), one for each ending): its first version used subTest, whose failures unittest files under each sub-test's name, so the replay read the test itself as passing. Rewritten as a plain loop in 4f25653"
     }
   }
 }
