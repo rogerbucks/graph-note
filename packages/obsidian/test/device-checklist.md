@@ -2,7 +2,8 @@
 
 The scripted check run by a person in Obsidian on a desktop and on a phone, for what the automated tests cannot see:
 how it looks, how the gestures feel, and that it works offline on a real device. Run it on each slice's build, on the
-desktop and on the phone, and note the build, the device, the date and anything that failed.
+desktop and on the phone, and note the build, the device, the date and anything that failed. An item that has passed on
+one device so far carries that device's mark, and is ticked once it passes on both.
 
 Use a note that holds the graph guide's example: a graph built in steps over several blocks, a query block, and a
 schema written last. Add one link with a misspelt name, and one empty graph block.
@@ -38,8 +39,9 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 - [ ] Full screen covers the window, inside the phone's notch and home bar. Escape or Close leaves it. In full screen the
       wheel alone zooms.
 - [ ] Double-clicking the drawing to zoom, or dragging across it, never highlights the words of its boxes and links.
+      iPhone ✓ 5cfeac6, 8 Oct 2026.
 - [ ] In a locked graph, a kind or link type its schema does not declare shows a ⚠ on its line. A link type with no
-      reading of its own reads back as an arrow (Drive —HOPE→ …), not as a guess at words.
+      reading of its own reads back as an arrow (Drive —HOPE→ …), not as a guess at words. iPhone ✓ 5cfeac6, 8 Oct 2026.
 - [ ] Only one set of zoom controls appears: the Mermaid Zoom plugin does not add its own to a graph drawing.
 
 ## The edit pane — spec §4, §5, §9
@@ -72,6 +74,7 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 - [ ] Edit here opens the text inside the drawing's card, and typing there redraws the drawing without losing the place.
 - [ ] In the card, the text box is as tall as the text and one more line: no empty area below it for the caret to land
       in. Each read-back sits on its own line's right, never wrapping under it, and typing lands where the text shows.
+      iPhone ✓ 5cfeac6, 8 Oct 2026.
 - [ ] Desktop: hovering the mouse over the box in the card, and clicking into it, never turns it grey or hides its
       coloured text, and no tooltip appears over it.
 - [ ] While the card is being edited, its pencil shows as a book (view) icon. Pressing it writes what was typed and
