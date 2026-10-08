@@ -280,6 +280,59 @@ describe('edit here, in the card', () => {
     }
   });
 
+  // Roger's Mac, 9 Oct 2026, traced in the app: after a write, reading view draws the block, then takes that same card off
+  // the page and puts it back some 20 ms later, with nothing drawn in between and so no hand-over: the box lost its focus
+  // the second time and never had it back
+  test('a card taken off the page and put back as it was, any number of times, still gives the box its focus back', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      let el = await show(env);
+      labelled(el, 'Edit here').click();
+      await until(() => !!el.querySelector('textarea'));
+      const t = el.querySelector('textarea');
+      t.value = READER + ',';
+      t.setSelectionRange(READER.length + 1, READER.length + 1);
+      t.dispatch('input');
+      await until(() => env.state.files.get(PATH).includes(READER + ','), 2000);
+      el.remove();
+      el = await show(env);
+      for (let n = 1; n <= 3; n++) {
+        el.remove(); // the same card, off the page and back, as reading view does
+        await wait(10);
+        env.doc.body.appendChild(el);
+        await until(() => env.doc.activeElement === t, 500).catch(() => {});
+        assert.ok(env.doc.activeElement === t, `focused again after return ${n}`);
+        assert.deepEqual([t.selectionStart, t.selectionEnd], [READER.length + 1, READER.length + 1]);
+      }
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('once the person has moved to something else, a card coming back never takes the focus from it', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      let el = await show(env);
+      labelled(el, 'Edit here').click();
+      await until(() => !!el.querySelector('textarea'));
+      const t = el.querySelector('textarea');
+      t.value = READER + ',';
+      t.dispatch('input');
+      await until(() => env.state.files.get(PATH).includes(READER + ','), 2000);
+      el.remove();
+      el = await show(env);
+      const elsewhere = env.doc.body.createEl('button', { text: 'Elsewhere' });
+      elsewhere.focus();
+      el.remove();
+      await wait(10);
+      env.doc.body.appendChild(el);
+      await wait(150);
+      assert.ok(env.doc.activeElement === elsewhere, 'the focus stays where the person put it');
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('a box left on purpose stays left: a redraw after it gives no focus back', async () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {
