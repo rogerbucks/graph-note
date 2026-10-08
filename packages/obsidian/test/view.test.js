@@ -653,7 +653,7 @@ describe('one frame: the bar and the details belong to their drawing', () => {
     assert.equal(card.children[0].className, 'graph-note-bar', 'the bar comes first, at the top edge');
     assert.match(
       styles,
-      /\.graph-note-view\s*\{[^}]*border:\s*1px solid var\(--background-modifier-border\);[^}]*border-radius:/,
+      /\.graph-note-view\s*\{[^}]*border:\s*1px solid var\(--background-modifier-border(-focus)?\);[^}]*border-radius:/,
     );
     assert.match(
       styles,
