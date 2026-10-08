@@ -129,7 +129,10 @@ describe('the text', () => {
 
   test('each line is read back in plain English beside it', () => {
     const backs = env.el.querySelectorAll('.graph-note-readback').map((s) => s.textContent);
-    assert.ok(backs.includes(' — Easy on the eyes favours Large reader'));
+    assert.ok(
+      backs.includes(' — Easy on the eyes —FAVOURS→ Large reader'),
+      'a draft’s type shows itself until it has words',
+    );
     assert.ok(backs.includes(' — Which device? is a Question'));
   });
 
@@ -695,6 +698,32 @@ describe('a note nobody is editing', () => {
       assert.match(el.querySelector('.graph-note-problems').textContent, /a comma is missing at the end of this line/);
       await wait(400);
       assert.equal(env.state.files.get(PATH), note, 'the note is as it was');
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
+describe('an empty graph block', () => {
+  // Roger's try-out, 8 Oct 2026: an empty block ended up holding only "(", its graph line gone
+  const EMPTY = '// graph: empty_trial · SOURCE';
+  const EMPTY_NOTE = ['# Trial', '', fence(EMPTY), ''].join('\n');
+
+  test('typing the first thing, and taking a suggestion, keeps the graph line', async () => {
+    const env = await load({ files: { [PATH]: EMPTY_NOTE } });
+    try {
+      await env.plugin.openEditor({ path: PATH, line: 2, graph: 'empty_trial' });
+      const el = env.app.workspace.getLeavesOfType('graph-note-pane')[0].view.contentEl;
+      assert.equal(textarea(el).value, EMPTY);
+      for (const typed of [EMPTY + '\n(', EMPTY + '\n(a', EMPTY + '\n(a:']) {
+        type(el, typed);
+        textarea(el).dispatch('keydown', { key: 'Tab' });
+        const chip = el.querySelector('.graph-note-suggestions button');
+        if (chip) chip.click();
+        assert.match(textarea(el).value, /^\/\/ graph: empty_trial · SOURCE\n\(/, typed);
+      }
+      await wait(400);
+      assert.match(note(env), /```gql\n\/\/ graph: empty_trial · SOURCE\n\(/);
     } finally {
       env.uninstall();
     }

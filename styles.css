@@ -86,6 +86,9 @@
   top: 0;
   max-width: none;
   transform: translate(var(--graph-note-x, 0), var(--graph-note-y, 0));
+  /* the drawing's words are not text to select: a double click zooms, it never highlights them */
+  -webkit-user-select: none;
+  user-select: none;
 }
 .graph-note-svg g.node {
   cursor: pointer;
@@ -225,8 +228,13 @@
   border-top: 1px solid var(--background-modifier-border);
   padding: var(--size-4-2) var(--size-4-3);
 }
-.graph-note-inline {
+/* In the card, the text is as tall as its text and one more line to type on: no height of its own, no empty area. */
+.graph-note-pane.graph-note-inline {
   height: auto;
+}
+.graph-note-inline .graph-note-editor,
+.graph-note-inline .graph-note-text {
+  min-height: 0;
 }
 
 /* The edit pane: drawing above, text below; on a phone, two tabs and a bottom sheet. Every control at least 44 points. */

@@ -296,10 +296,17 @@ export function readBack(reading: NoteReading, graph: string, text: string): Map
   const d = reading.graphs.get(graph),
     out = new Map<number, string>();
   const textOf = (k: string) => d?.boxes.find((b) => b.key === k)?.text ?? `${k} (not in the graph)`;
-  const words = (t: string) =>
-    d?.links.find((l) => l.type === t)?.reading ??
-    d?.estimates.find((e) => e.type === t)?.reading ??
-    t.replace(/_/g, ' ').toLowerCase();
+  // a link reads in its type's own words, from its schema; a type with none — a draft's, or one the schema does not
+  // declare — shows itself, as an arrow, rather than a guess at words that may read badly ("Drive hope Sydney")
+  const whole = reading.whole[graph] ?? reading.world[graph];
+  const own = whole
+    ? gs.readings(whole, whole.labelled('ElementType').length ? undefined : gs.schemaFor(reading.whole, graph)[1])
+    : new Map<string, [string | undefined, string | undefined]>();
+  const wordsOf = (t: string) => own.get(t)?.[0];
+  const words = (t: string) => {
+    const taken = d?.estimates.find((e) => e.kind === 'type' && e.written === t)?.type;
+    return wordsOf(t) ?? (taken ? wordsOf(taken) : undefined) ?? `—${t}→`;
+  };
   for (const it of blockItems(text)) {
     let said: string | null = null;
     const set = /^SET\s+(\w+)\.(\w+)\s*=\s*([\s\S]+)$/i.exec(it.text.trim());
