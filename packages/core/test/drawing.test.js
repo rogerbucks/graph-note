@@ -370,3 +370,57 @@ describe('a schema whose types its GraphMeta does not declare', () => {
     assert.deepEqual(readNote([DATA]).problems, []);
   });
 });
+
+describe('a kind or link type the locked graph’s schema does not declare', () => {
+  // the try-out of 8 Oct 2026: a graph locked from its first block, then given HOPE, Reason and FAVOURS the schema never
+  // declared, showed "No problems" on its cards
+  const STEP1 = [
+    '// graph: trip · SOURCE',
+    "(trip_question:Question {title: 'How should we get to Sydney?'}),",
+    "(drive:Option {name: 'Drive'}),",
+    "(fly:Option   {name: 'Fly'}),",
+    '(drive)-[:ANSWERS {weight: 0.6}]->(trip_question),',
+    '(fly)-[:ANSWERS]->(trip_question),',
+    '(drive)-[:HOPE]->(trip_question)',
+  ].join('\n');
+  const STEP2 = [
+    '// graph: trip · SOURCE',
+    "(cheaper:Reason {title: 'Driving costs less for two people'}),",
+    "(faster:Reason  {title: 'Flying takes a morning, not two days'}),",
+    '(cheaper)-[:FAVOURS]->(drive),',
+    '(faster)-[:FAVOURS]->(fly)',
+  ].join('\n');
+  const SCHEMA = [
+    '// graph: trip · SOURCE',
+    "(trip_schema:GraphMeta {graph: 'trip', schema: 'trip@1'}),",
+    "(kind_option:Meta:ElementType {name: 'Option', kind: 'node', origin: 'source'}),",
+    "(kind_question:Meta:ElementType {name: 'Question', kind: 'node', origin: 'source'}),",
+    "(link_answers:Meta:ElementType {name: 'ANSWERS', kind: 'edge', origin: 'source', reading: 'answers', reverse_name: 'is answered by'}),",
+    '(trip_schema)-[:DECLARES]->(kind_option), (trip_schema)-[:DECLARES]->(kind_question), (trip_schema)-[:DECLARES]->(link_answers)',
+  ].join('\n');
+  const blocks = [STEP1, STEP2, SCHEMA];
+  const on = (r, block) => r.problems.filter((p) => p.block === block).map((p) => [p.line, p.severity, p.message]);
+
+  test('each card says so for what its own block uses: a warning on the line, saying where to declare it', () => {
+    assert.deepEqual(on(readNote(blocks, 0), 0), [
+      [
+        7,
+        'warning',
+        'HOPE is not a relationship type the schema of graph trip declares: declare it there, or use one it does',
+      ],
+    ]);
+    assert.deepEqual(on(readNote(blocks, 1), 1), [
+      [2, 'warning', 'Reason is not a kind the schema of graph trip declares: declare it there, or use one it does'],
+      [
+        4,
+        'warning',
+        'FAVOURS is not a relationship type the schema of graph trip declares: declare it there, or use one it does',
+      ],
+    ]);
+  });
+
+  test('a draft has no schema to declare anything, so nothing is said; and what the schema declares is never reported', () => {
+    assert.deepEqual(readNote([STEP1, STEP2]).problems, []);
+    assert.deepEqual(on(readNote(blocks), 2), []);
+  });
+});

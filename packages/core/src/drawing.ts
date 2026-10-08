@@ -183,6 +183,50 @@ function undeclared(whole: World, texts: string[]): Problem[] {
 }
 
 /**
+ * In a locked graph, each kind and link type a block uses that the graph's schema does not declare (§5): a warning on the
+ * line where the block first uses it — unless it is already drawn as an estimate of one the schema does declare.
+ */
+function undeclaredUse(whole: World, texts: string[], problems: Problem[]): Problem[] {
+  const out: Problem[] = [];
+  const hidden = new Set<string>(gs.SCHEMA_LABELS);
+  texts.forEach((text, block) => {
+    const graph = graphOfBlock(text),
+      g = graph ? whole[graph] : undefined;
+    if (!graph || !g) return;
+    const schema = g.labelled('ElementType').length ? g : gs.schemaFor(whole, graph)[1];
+    const types = schema ? schema.labelled('ElementType').map((i) => schema.p(i)) : [];
+    if (!types.length) return; // a draft: there is no schema to declare anything
+    const named = (kind: string) => new Set(types.filter((t) => t.kind === kind).map((t) => t.name));
+    const kinds = named('node'),
+      edges = named('edge');
+    const blanked = blankText(text),
+      seen = new Set<string>();
+    const report = (name: string, what: string, at: number) => {
+      if (seen.has(`${what} ${name}`)) return;
+      seen.add(`${what} ${name}`);
+      const line = blanked.slice(0, at).split('\n').length;
+      if (problems.some((p) => p.block === block && p.line === line && p.replace?.written === name)) return;
+      out.push({
+        graph,
+        block,
+        line,
+        severity: 'warning',
+        message: `${name} is not ${what} the schema of graph ${graph} declares: declare it there, or use one it does`,
+        fix: `declare ${name} in graph ${graph}'s schema`,
+      });
+    };
+    for (const m of blanked.matchAll(/\(\s*[A-Za-z_]\w*\s*((?::\s*[A-Za-z_]\w*\s*)+)/g))
+      for (const label of (m[1] ?? '').split(':').map((l) => l.trim()))
+        if (label && !hidden.has(label) && !kinds.has(label)) report(label, 'a kind', m.index);
+    for (const m of blanked.matchAll(/-\[\s*:\s*([A-Za-z_]\w*)/g)) {
+      const type = m[1] ?? '';
+      if (type !== 'DECLARES' && !edges.has(type)) report(type, 'a relationship type', m.index);
+    }
+  });
+  return out;
+}
+
+/**
  * Where each link type written without its colon is in a block, in the order the reader reads them: its line, and the
  * characters its name spans. Strings and comments are blanked first, so words in them are never taken for one.
  */
@@ -475,6 +519,7 @@ export function readNote(blocks: string[], upTo = blocks.length - 1, shared: str
     d.estimates = estimate(world[name] as Graph, name, d, shared, problems, upto);
     graphs.set(name, d);
   }
-  problems.push(...undeclared(whole, upto));
+  problems.push(...undeclared(whole, upto), ...undeclaredUse(whole, upto, problems));
+  problems.sort((a, b) => a.block - b.block || a.line - b.line);
   return { graphs, problems, world, whole, texts: upto };
 }

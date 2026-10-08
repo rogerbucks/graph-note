@@ -222,8 +222,12 @@ describe('read back in plain English', () => {
     const lines = readBack(readNote([BLOCK]), 'reader', BLOCK);
     assert.equal(lines.get(0), undefined, 'the graph line needs no reading');
     assert.equal(lines.get(1), 'Which device? is a Question');
-    assert.equal(lines.get(8), 'Easy on the eyes favours Large reader');
-    assert.equal(lines.get(6), 'Small reader answers Which device?');
+    assert.equal(
+      lines.get(8),
+      'Easy on the eyes —FAVOURS→ Large reader',
+      'a draft’s types have no words of their own yet',
+    );
+    assert.equal(lines.get(6), 'Small reader —ANSWERS→ Which device?');
   });
 
   test('a line with several links reads each, and a SET says what it sets', () => {
@@ -231,7 +235,7 @@ describe('read back in plain English', () => {
       BLOCK +
       ",\n(eyes)-[:FAVOURS]->(small_reader), (price)-[:FAVOURS]->(large_reader)\nSET large_reader.status = 'bought'";
     const lines = readBack(readNote([text]), 'reader', text);
-    assert.equal(lines.get(10), 'Easy on the eyes favours Small reader; Costs less favours Large reader');
+    assert.equal(lines.get(10), 'Easy on the eyes —FAVOURS→ Small reader; Costs less —FAVOURS→ Large reader');
     assert.equal(lines.get(11), 'Large reader: status is bought');
   });
 
@@ -239,7 +243,7 @@ describe('read back in plain English', () => {
     const text = BLOCK + ',\n(eyes)-[:FAVOURS]->(small_reeder)';
     assert.equal(
       readBack(readNote([text]), 'reader', text).get(10),
-      'Easy on the eyes favours small_reeder (not in the graph)',
+      'Easy on the eyes —FAVOURS→ small_reeder (not in the graph)',
     );
   });
 });
@@ -294,5 +298,22 @@ describe('a relationship type written without its colon', () => {
     const [fix] = d.data.fixes;
     assert.equal(fix.title, 'Write the colon: [:FAVOURS]');
     assert.deepEqual(fix.edit.changes['note.md'], [{ range: d.range, newText: ':FAVOURS' }]);
+  });
+});
+
+describe('reading back a link whose type has no reading of its own', () => {
+  // the try-out: "Drive hope How should we get to Sydney?" read badly; a type with no reading shows itself, as an arrow
+  test('is shown by its type, as an arrow, until the type is given a reading', () => {
+    const text =
+      "// graph: g\n(drive:Option {name: 'Drive'}),\n(q:Question {title: 'Where to?'}),\n(drive)-[:HOPE]->(q)";
+    assert.equal(readBack(readNote([text]), 'g', text).get(3), 'Drive —HOPE→ Where to?');
+  });
+
+  test('a type its schema gives a reading is read in those words', () => {
+    const text =
+      "// graph: g\n(drive:Option {name: 'Drive'}),\n(q:Question {title: 'Where to?'}),\n(drive)-[:HOPE]->(q)";
+    const schema =
+      "// graph: g\n(t:ElementType {name: 'HOPE', kind: 'edge', reading: 'is hoped for by', reverse_name: 'hopes for'})";
+    assert.equal(readBack(readNote([text, schema], 0), 'g', text).get(3), 'Drive is hoped for by Where to?');
   });
 });

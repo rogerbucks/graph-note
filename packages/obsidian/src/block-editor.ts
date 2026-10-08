@@ -244,7 +244,8 @@ export class BlockEditor extends Component {
     }
 
     const editor = textEl.createDiv({ cls: 'graph-note-editor' });
-    const overlay = editor.createEl('pre', { cls: 'graph-note-overlay', attr: { 'aria-hidden': 'true' } });
+    // a div, not a pre: inside a note, Obsidian's own code-block styles would wrap and pad it out of step with the field
+    const overlay = editor.createDiv({ cls: 'graph-note-overlay', attr: { 'aria-hidden': 'true' } });
     const text = editor.createEl('textarea', {
       cls: 'graph-note-text',
       attr: {

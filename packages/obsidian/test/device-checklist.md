@@ -37,6 +37,9 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 - [ ] Zoom stops at a quarter and at four times natural size, and text stays sharp at every level.
 - [ ] Full screen covers the window, inside the phone's notch and home bar. Escape or Close leaves it. In full screen the
       wheel alone zooms.
+- [ ] Double-clicking the drawing to zoom, or dragging across it, never highlights the words of its boxes and links.
+- [ ] In a locked graph, a kind or link type its schema does not declare shows a ⚠ on its line. A link type with no
+      reading of its own reads back as an arrow (Drive —HOPE→ …), not as a guess at words.
 - [ ] Only one set of zoom controls appears: the Mermaid Zoom plugin does not add its own to a graph drawing.
 
 ## The edit pane — spec §4, §5, §9
@@ -67,6 +70,8 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 ## Editing in place and the inspector — spec §4, §14
 
 - [ ] Edit here opens the text inside the drawing's card, and typing there redraws the drawing without losing the place.
+- [ ] In the card, the text box is as tall as the text and one more line: no empty area below it for the caret to land
+      in. Each read-back sits on its own line's right, never wrapping under it, and typing lands where the text shows.
 - [ ] In edit mode, tapping a box or a link shows its properties, looking as a note's Properties panel looks in this
       theme: the same rows, icons, spacing, type and colours, in both the light and dark themes.
 - [ ] A number has a number field, a date opens the date picker, and true or false is a checkbox.

@@ -7,6 +7,10 @@
     "a schema whose types its GraphMeta does not declare > a draft, or a schema that declares each type, has no such warning": {
       "seen_failing_first": false,
       "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit 0822ead)"
+    },
+    "a kind or link type the locked graph’s schema does not declare > a draft has no schema to declare anything, so nothing is said; and what the schema declares is never reported": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit dcffbbe)"
     }
   },
   "packages/core/test/estimates.test.js": {
@@ -27,6 +31,10 @@
     "suggestions while typing > after the name of a thing already in the graph, no kinds: it is a reference, not a new thing": {
       "seen_failing_first": false,
       "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit 86a7c50)"
+    },
+    "reading back a link whose type has no reading of its own > a type its schema gives a reading is read in those words": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit dcffbbe)"
     }
   },
   "packages/core/test/imports.test.js": {
@@ -209,6 +217,10 @@
     "a note nobody is editing > is drawn with a missing comma read in, and offered the fix, but never rewritten": {
       "seen_failing_first": false,
       "evidence": "pins behaviour that already existed: written after its code, to prove a spec rule the code already met (commit 40d335e)"
+    },
+    "an empty graph block > typing the first thing, and taking a suggestion, keeps the graph line": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: a probe of the try-out’s empty block; the editor already kept its graph line (commit dcffbbe)"
     }
   },
   "packages/obsidian/test/view.test.js": {

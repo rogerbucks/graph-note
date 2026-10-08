@@ -5,6 +5,7 @@ import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until, wait } from './lib/load-plugin.js';
 import { fakeContext } from './lib/fake-obsidian.js';
+import { readFileSync } from 'node:fs';
 
 before(() => build());
 
@@ -140,6 +141,32 @@ describe('edit here, in the card', () => {
     } finally {
       env.uninstall();
     }
+  });
+});
+
+describe('the text in the card fits its text', () => {
+  // the try-out of 8 Oct 2026: the box in the card had a tall empty area under the text that the caret could land in, and
+  // the note's own code styles wrapped the coloured picture of the text out of step with the field under it
+  test('the coloured picture is not a code block, so the note’s own code styles never reach it', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      const el = await show(env);
+      labelled(el, 'Edit here').click();
+      await until(() => !!el.querySelector('textarea'));
+      assert.notEqual(el.querySelector('.graph-note-overlay').tagName, 'PRE');
+      assert.equal(el.querySelector('textarea').getAttribute('rows'), String(READER.split('\n').length + 1));
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('in the card the box keeps no height of its own: as tall as its text, and one line to type on', () => {
+    const css = readFileSync(new URL('../../../styles.css', import.meta.url), 'utf8');
+    assert.match(css, /\.graph-note-pane\.graph-note-inline\s*\{[^}]*height:\s*auto;/);
+    assert.match(
+      css,
+      /\.graph-note-inline \.graph-note-editor,\s*\.graph-note-inline \.graph-note-text\s*\{[^}]*min-height:\s*0;/,
+    );
   });
 });
 

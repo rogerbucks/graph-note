@@ -633,3 +633,10 @@ describe('details of a link', () => {
     assert.match(el.querySelector('.graph-note-details').textContent, /answers/);
   });
 });
+
+describe('the drawing’s words are not text to select', () => {
+  // the try-out: the labels of the boxes and links sat on the theme's selection colour after a double click to zoom
+  test('the drawing cannot be selected as text, so a double click zooms without highlighting its words', () => {
+    assert.match(styles, /\.graph-note-svg\s*\{[^}]*-webkit-user-select:\s*none;[^}]*user-select:\s*none;/);
+  });
+});
