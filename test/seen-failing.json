@@ -199,6 +199,10 @@
     "the inspector, in edit mode > outside edit mode, a box’s details are for reading only": {
       "seen_failing_first": false,
       "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit 0cea41d)"
+    },
+    "edit here, in the card > a box left on purpose stays left: a redraw after it gives no focus back": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: it holds that keeping the focus through a redraw never gives it back to a box left on purpose, so it passes before and after by design (commit e0fd9d2)"
     }
   },
   "packages/obsidian/test/pane.test.js": {
@@ -221,6 +225,10 @@
     "an empty graph block > typing the first thing, and taking a suggestion, keeps the graph line": {
       "seen_failing_first": false,
       "evidence": "pins behaviour that already existed: a probe of the try-out’s empty block; the editor already kept its graph line (commit dcffbbe)"
+    },
+    "typing keeps the field > in the pane, each write redraws the drawing and the same field keeps the focus and the caret": {
+      "seen_failing_first": false,
+      "evidence": "a control case for typing_keeps_focus: the pane is never redrawn by Obsidian, so it already kept the focus; it pins that beside the card's fix (commit e0fd9d2)"
     }
   },
   "packages/obsidian/test/view.test.js": {

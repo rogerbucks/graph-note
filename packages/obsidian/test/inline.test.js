@@ -113,6 +113,124 @@ describe('edit here, in the card', () => {
     }
   });
 
+  // typing_keeps_focus (spec §4, 8 Oct 2026; Roger's try-out of d601110: "when I add a character, focus is lost with the
+  // redraw"): Obsidian takes the old card off the page before it builds the new one, so the field is off the page, and has
+  // lost the focus and its scroll, by the time the new card asks for the editor
+  test('typing in the card keeps the same box through each redraw: focused, with its caret, selection and scroll', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      let el = await show(env);
+      labelled(el, 'Edit here').click();
+      await until(() => !!el.querySelector('textarea'));
+      const t = el.querySelector('textarea');
+      for (const [i, typed] of [
+        READER + ",\n(s:Option {name: 'S'})",
+        READER + ",\n(s:Option {name: 'Sm'})",
+      ].entries()) {
+        t.value = typed;
+        t.setSelectionRange(typed.length - 3, typed.length - 1 + i);
+        t.scrollLeft = 40 + i;
+        t.scrollTop = 0;
+        t.dispatch('input');
+        t.dispatch('scroll');
+        await until(() => env.state.files.get(PATH).includes(typed), 2000);
+        el.remove(); // Obsidian takes the old card away first
+        el = await show(env);
+        // compared by identity: a failing equal on two fake elements would print the whole page
+        assert.ok(el.querySelector('textarea') === t, 'the same field, so its undo history goes with it');
+        assert.ok(env.doc.activeElement === t, 'still focused');
+        assert.deepEqual([t.selectionStart, t.selectionEnd], [typed.length - 3, typed.length - 1 + i]);
+        assert.equal(t.scrollLeft, 40 + i);
+      }
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a text that cannot be drawn, or nothing at all, still keeps the box in its card, focused, with its problems', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      let el = await show(env);
+      labelled(el, 'Edit here').click();
+      await until(() => !!el.querySelector('textarea'));
+      const t = el.querySelector('textarea');
+      // a comma typed at a line's end, before the next pattern: for that moment, nothing in the block can be read
+      for (const typed of [READER + ',', '// graph: reader\n', READER]) {
+        t.value = typed;
+        t.setSelectionRange(typed.length, typed.length);
+        t.dispatch('input');
+        await until(() => env.state.files.get(PATH).includes('```gql\n' + typed + '\n```'), 2000);
+        el.remove();
+        el = await show(env);
+        assert.ok(el.querySelector('textarea') === t, `the same field, for ${JSON.stringify(typed.slice(-12))}`);
+        assert.ok(env.doc.activeElement === t, 'still focused');
+        assert.deepEqual([t.selectionStart, t.selectionEnd], [typed.length, typed.length]);
+        if (typed.endsWith(',')) assert.ok(el.querySelector('.graph-note-problems'), 'and why it cannot be drawn');
+      }
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // Chromium empties a field's own undo history when the field leaves the page (seen in the browser on 8 Oct 2026), so
+  // undo and redo come from the editor's own history, by key, by the Edit menu and by a phone's undo gesture
+  test('undo and redo still work after each redraw: a run of typing at a time, by key or by the platform’s undo', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      let el = await show(env);
+      labelled(el, 'Edit here').click();
+      await until(() => !!el.querySelector('textarea'));
+      const t = el.querySelector('textarea');
+      t.setSelectionRange(READER.length, READER.length);
+      const typeOne = (ch) => {
+        const c = t.selectionStart;
+        t.value = t.value.slice(0, c) + ch + t.value.slice(c);
+        t.setSelectionRange(c + 1, c + 1);
+        t.dispatch('input');
+      };
+      for (const ch of ",\n(s:Option {name: 'S'})") typeOne(ch);
+      const typed = t.value;
+      await until(() => env.state.files.get(PATH).includes(typed), 2000);
+      el.remove();
+      el = await show(env);
+      assert.ok(t.dispatch('keydown', { key: 'z', metaKey: true }).defaultPrevented);
+      assert.equal(t.value, READER + ',\n', 'the run of typing on the new line');
+      assert.equal(t.selectionStart, READER.length + 2);
+      assert.ok(t.dispatch('beforeinput', { inputType: 'historyUndo' }).defaultPrevented);
+      assert.equal(t.value, READER, 'then the comma and the new line');
+      assert.ok(t.dispatch('keydown', { key: 'z', metaKey: true, shiftKey: true }).defaultPrevented);
+      assert.equal(t.value, READER + ',\n');
+      assert.ok(t.dispatch('keydown', { key: 'y', ctrlKey: true }).defaultPrevented);
+      assert.equal(t.value, typed, 'redone, by Ctrl+Y as on Windows');
+      t.dispatch('beforeinput', { inputType: 'historyUndo' });
+      await until(() => !env.state.files.get(PATH).includes("name: 'S'"), 2000);
+      assert.equal(env.state.files.get(PATH), NOTE.replace(READER, READER + ',\n'), 'and what is undone is written');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a box left on purpose stays left: a redraw after it gives no focus back', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      let el = await show(env);
+      labelled(el, 'Edit here').click();
+      await until(() => !!el.querySelector('textarea'));
+      const t = el.querySelector('textarea');
+      t.value = READER + ",\n(s:Option {name: 'S'})";
+      t.dispatch('input');
+      t.blur();
+      t.dispatch('blur');
+      await until(() => env.state.files.get(PATH).includes("name: 'S'"), 2000);
+      el.remove();
+      el = await show(env);
+      assert.ok(el.querySelector('textarea') === t, 'the same field');
+      assert.ok(env.doc.activeElement !== t, 'not focused');
+    } finally {
+      env.uninstall();
+    }
+  });
+
   // edit_button_toggles (spec §4, 8 Oct 2026): while the card is being edited its edit button shows a view icon, and
   // pressing it closes the edit box exactly as Done does
   test('while the card is edited, its edit button shows a view icon; pressing it writes and closes, as Done does', async () => {

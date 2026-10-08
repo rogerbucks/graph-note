@@ -75,6 +75,9 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 - [ ] In the card, the text box is as tall as the text and one more line: no empty area below it for the caret to land
       in. Each read-back sits on its own line's right, never wrapping under it, and typing lands where the text shows.
       iPhone ✓ 5cfeac6, 8 Oct 2026.
+- [ ] Typing in the card, character by character, redraws the drawing and never takes the focus from the box: the caret,
+      the selection and where it is scrolled stay put. Typing a comma at a line's end keeps the box in its card.
+      Undo (⌘Z, or Edit → Undo, or the phone's undo gesture) takes back a run of typing at a time, even after redraws.
 - [x] Desktop: hovering the mouse over the box in the card, and clicking into it, never turns it grey or hides its
       coloured text, and no tooltip appears over it. Mac ✓ d601110, 8 Oct 2026.
 - [ ] While the card is being edited, its pencil shows as a book (view) icon. Pressing it writes what was typed and

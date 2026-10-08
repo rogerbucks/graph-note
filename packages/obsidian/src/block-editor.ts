@@ -7,6 +7,7 @@ import { Component, Notice, Platform, TFile, setIcon } from 'obsidian';
 import type { App } from 'obsidian';
 import {
   PaneSession,
+  TextHistory,
   colonFor,
   commaFor,
   namesSharedSchema,
@@ -21,7 +22,7 @@ import {
   readBack,
   tokenize,
 } from '@graph-note/core';
-import type { CompletionItem, Diagnostic, NoteReading } from '@graph-note/core';
+import type { Change, CompletionItem, Diagnostic, NoteReading, TextState } from '@graph-note/core';
 import type GraphNotePlugin from './main';
 import { GraphView } from './view';
 
@@ -66,6 +67,13 @@ export class BlockEditor extends Component {
   private problems: Diagnostic[] = [];
   private suggestions: { from: number; items: CompletionItem[] } = { from: 0, items: [] };
   private writeTimer: number | null = null;
+  /**
+   * Whether the field is being typed in, and where it was scrolled to. Kept here, not read from the page, because
+   * Obsidian takes the old card off the page before the new one asks for the editor: by then the field has lost both.
+   */
+  private kept = { focused: false, top: 0, left: 0 };
+  /** The text's own undo history, which, unlike the field's, survives the field leaving the page (spec §4). */
+  private undoes: TextHistory | null = null;
   private drawTimer: number | null = null;
   private drawing: GraphView | null = null;
   private el: {
@@ -133,13 +141,21 @@ export class BlockEditor extends Component {
     const root = this.el?.root;
     if (root && this.container) {
       const t = this.el?.text,
-        focused = t && activeDocument.activeElement === t,
+        overlay = this.el?.overlay,
+        focused = this.kept.focused || (t && activeDocument.activeElement === t),
         a = t?.selectionStart ?? 0,
         b = t?.selectionEnd ?? 0;
       container.appendChild(root);
       this.container = container;
-      if (t && focused) {
-        t.focus();
+      if (!t) return;
+      t.scrollTop = this.kept.top;
+      t.scrollLeft = this.kept.left;
+      if (overlay) {
+        overlay.scrollTop = this.kept.top;
+        overlay.scrollLeft = this.kept.left;
+      }
+      if (focused) {
+        t.focus({ preventScroll: true });
         t.setSelectionRange(a, b);
       }
       return;
@@ -158,6 +174,7 @@ export class BlockEditor extends Component {
 
   focus(): void {
     this.el?.text.focus();
+    if (this.el) this.kept.focused = true;
   }
 
   /** What the card's details were open on, so its inspector reopens on it after each redraw. */
@@ -270,6 +287,7 @@ export class BlockEditor extends Component {
       },
     });
     text.value = s.text;
+    this.undoes = new TextHistory({ text: s.text, start: s.text.length, end: s.text.length });
     const fixbar = textEl.createDiv({ cls: 'graph-note-fixbar', attr: { role: 'status', 'aria-live': 'polite' } });
     fixbar.hidden = true;
     const suggest = textEl.createDiv({
@@ -294,6 +312,16 @@ export class BlockEditor extends Component {
     this.registerDomEvent(text, 'scroll', () => {
       overlay.scrollTop = text.scrollTop;
       overlay.scrollLeft = text.scrollLeft;
+      this.kept.top = text.scrollTop;
+      this.kept.left = text.scrollLeft;
+    });
+    this.registerDomEvent(text, 'focus', () => (this.kept.focused = true));
+    // left on purpose only if, once things settle, the field is still on the page without the focus: a field taken off
+    // the page by a redraw is still being typed in
+    this.registerDomEvent(text, 'blur', () => {
+      window.setTimeout(() => {
+        if (text.isConnected && activeDocument.activeElement !== text) this.kept.focused = false;
+      }, 0);
     });
     this.registerDomEvent(text, 'keydown', (e: KeyboardEvent) => {
       const first = this.suggestions.items[0];
@@ -302,7 +330,15 @@ export class BlockEditor extends Component {
         this.accept(first);
         return;
       }
-      this.undoForYou(e);
+      const key = e.key.toLowerCase(),
+        mod = e.metaKey || e.ctrlKey;
+      if (mod && key === 'z') this.step(e, e.shiftKey ? 'redo' : 'undo');
+      else if (e.ctrlKey && !e.metaKey && key === 'y') this.step(e, 'redo');
+    });
+    // the Edit menu's Undo and Redo, and a phone's undo gesture, arrive as these
+    this.registerDomEvent(text, 'beforeinput', (e: InputEvent) => {
+      if (e.inputType === 'historyUndo') this.step(e, 'undo');
+      else if (e.inputType === 'historyRedo') this.step(e, 'redo');
     });
 
     this.analyse();
@@ -347,11 +383,13 @@ export class BlockEditor extends Component {
   }
 
   // ── typing ──────────────────────────────────────────────────────────────────────────────────────
-  private typed(): void {
+  private typed(change: Change = 'typing'): void {
     const el = this.el,
       s = this.session;
     if (!el || !s) return;
-    this.addForYou(s.text);
+    this.undoes?.record(this.state(), change);
+    // what is added for you is a step of its own, so the very next undo takes back only it (spec §4)
+    if (this.addForYou(s.text)) this.undoes?.record(this.state(), 'other');
     s.type(el.text.value);
     this.analyse();
     this.announce();
@@ -360,62 +398,67 @@ export class BlockEditor extends Component {
   }
 
   /**
-   * The change just made for you — a comma, or a colon — the text it left, and how to take it back, so the very next
-   * undo takes back only it (spec §4).
-   */
-  private autoEdit: { value: string; undo: { from: number; to: number; text: string }; caret: number } | null = null;
-
-  /**
    * What is added for you as you type (spec §4): the comma, when the ( just typed starts the next pattern on a new line
    * and the line before is otherwise valid; the colon, when the ] just typed closes a link type written without one that
-   * matches one type of the graph. The very next undo takes it back, and only it.
+   * matches one type of the graph. Says whether it added one.
    */
-  private addForYou(before: string): void {
+  private addForYou(before: string): boolean {
     const t = this.el?.text;
-    this.autoEdit = null;
-    if (!t) return;
+    if (!t) return false;
     const v = t.value,
       caret = t.selectionStart ?? v.length;
-    if (v.length !== before.length + 1 || v.slice(0, caret - 1) + v.slice(caret) !== before) return;
+    if (v.length !== before.length + 1 || v.slice(0, caret - 1) + v.slice(caret) !== before) return false;
     const at = commaFor(v, caret);
     if (at !== null) {
       t.value = v.slice(0, at) + ',' + v.slice(at);
       t.setSelectionRange(caret + 1, caret + 1);
-      this.autoEdit = { value: t.value, undo: { from: at, to: at + 1, text: '' }, caret };
-      return;
+      return true;
     }
     const line = this.session?.ref.line ?? 0;
     const earlier = gqlSpans(this.note)
       .filter((x) => x.open < line)
       .map((x) => x.text);
     const colon = colonFor(v, caret, earlier);
-    if (!colon) return;
+    if (!colon) return false;
     const was = v.slice(colon.from, colon.to);
     t.value = v.slice(0, colon.from) + colon.text + v.slice(colon.to);
     const moved = caret + colon.text.length - was.length;
     t.setSelectionRange(moved, moved);
-    this.autoEdit = {
-      value: t.value,
-      undo: { from: colon.from, to: colon.from + colon.text.length, text: was },
-      caret,
-    };
+    return true;
   }
 
-  /** Undo straight after a comma or a colon was added for you: takes back that alone. */
-  private undoForYou(e: KeyboardEvent): void {
+  /** A text reloaded from the note, or changed there by Undo or Redo, starts the history again. */
+  private restart(): void {
+    this.undoes?.reset(this.state());
+  }
+
+  /** The field's text and selection, as the history keeps them. */
+  private state(): TextState {
     const t = this.el?.text,
-      c = this.autoEdit;
-    if (!t || !c || e.key.toLowerCase() !== 'z' || e.shiftKey || !(e.metaKey || e.ctrlKey) || t.value !== c.value)
-      return;
-    e.preventDefault();
-    t.value = t.value.slice(0, c.undo.from) + c.undo.text + t.value.slice(c.undo.to);
-    t.setSelectionRange(c.caret, c.caret);
-    this.autoEdit = null;
-    this.typedAgain();
+      text = t?.value ?? '';
+    return { text, start: t?.selectionStart ?? text.length, end: t?.selectionEnd ?? text.length };
   }
 
-  /** What was typed, analysed and written, without asking for another comma or colon. */
+  /** Undo or redo from the editor's own history, in place of the field's. */
+  private step(e: Event, which: 'undo' | 'redo'): void {
+    const t = this.el?.text;
+    if (!t || !this.undoes) return;
+    e.preventDefault();
+    const to = which === 'undo' ? this.undoes.undo() : this.undoes.redo();
+    if (!to) return;
+    t.value = to.text;
+    t.setSelectionRange(to.start, to.end);
+    this.changed();
+  }
+
+  /** A change made for the person, such as one from the inspector: recorded as a step, analysed and written. */
   private typedAgain(): void {
+    this.undoes?.record(this.state(), 'other');
+    this.changed();
+  }
+
+  /** What the field now holds, analysed and written, without asking for another comma or colon. */
+  private changed(): void {
     const el = this.el,
       s = this.session;
     if (!el || !s) return;
@@ -580,7 +623,7 @@ export class BlockEditor extends Component {
     for (const e of edits) v = v.slice(0, offset(e.range.start)) + e.newText + v.slice(offset(e.range.end));
     el.text.value = v;
     el.text.focus();
-    this.typed();
+    this.typed('other');
   }
 
   /** Names, kinds and relationships already in the graph, offered where the caret is. */
@@ -607,7 +650,7 @@ export class BlockEditor extends Component {
     el.text.value = el.text.value.slice(0, from) + text + el.text.value.slice(caret);
     el.text.setSelectionRange(from + text.length, from + text.length);
     el.text.focus();
-    this.typed();
+    this.typed('other');
   }
 
   private redraw(): void {
@@ -684,6 +727,7 @@ export class BlockEditor extends Component {
     data[this.key()] = { text: draft, kept: new Date().toISOString() };
     await this.plugin.saveDrafts(data);
     if (this.el && this.session) this.el.text.value = this.session.text;
+    this.restart();
     this.analyse();
     this.paint();
     this.redraw();
@@ -709,7 +753,7 @@ export class BlockEditor extends Component {
       () => {
         el.text.value = kept.text;
         void this.forget();
-        this.typed();
+        this.typed('other');
       },
       'Restore draft',
     );
@@ -739,6 +783,7 @@ export class BlockEditor extends Component {
     const outcome = this.session.noteChanged(text);
     if (outcome === 'reloaded' && this.el) {
       this.el.text.value = this.session.text;
+      this.restart();
       this.analyse();
       this.paint();
       this.redraw();
@@ -774,6 +819,7 @@ export class BlockEditor extends Component {
       return;
     }
     if (this.el) this.el.text.value = s.text;
+    this.restart();
     this.analyse();
     this.paint();
     this.redraw();
