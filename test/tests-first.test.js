@@ -8,7 +8,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
-import { replay, unexplained } from '../scripts/tests-first.mjs';
+import { replay, unexplained, record, update } from '../scripts/tests-first.mjs';
 import { path, readJSON, walk } from './lib/repo.js';
 
 /** A small repository: each commit a set of files, written then committed; returns the folder and the commit ids. */
@@ -127,6 +127,29 @@ describe('replaying a commit against its parent’s code', () => {
       const [file] = replay(r.dir, r.ids[1]).files;
       assert.equal(file.file, 'py/tests/test_twice.py');
       assert.deepEqual(file.failedFirst, ['Twice.test_doubles']);
+    } finally {
+      r.done();
+    }
+  });
+});
+
+describe('keeping the record', () => {
+  test('updating a record with the commits since its head gives what recording them all would', () => {
+    const r = repository([
+      { 'src/twice.js': 'export const twice = (x) => x;\n', 'test/twice.test.js': JS_TEST("test('one', () => {});") },
+      {
+        'src/twice.js': 'export const twice = (x) => x * 2;\n',
+        'test/twice.test.js': JS_TEST("test('one', () => {});\ntest('doubles', () => assert.equal(twice(2), 4));"),
+      },
+    ]);
+    try {
+      mkdirSync(join(r.dir, 'test'), { recursive: true });
+      writeFileSync(join(r.dir, 'test', 'seen-failing.json'), '{}\n');
+      const whole = record(r.dir);
+      execFileSync('git', ['reset', '-q', '--hard', r.ids[0]], { cwd: r.dir });
+      const early = record(r.dir);
+      execFileSync('git', ['reset', '-q', '--hard', r.ids[1]], { cwd: r.dir });
+      assert.deepEqual(update(r.dir, early), whole);
     } finally {
       r.done();
     }
