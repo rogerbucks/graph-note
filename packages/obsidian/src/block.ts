@@ -41,6 +41,14 @@ export async function renderBlock(
   const root = el.createDiv({ cls: 'graph-note' });
 
   if (!drawing || !drawing.boxes.length) {
+    // while the block is edited in place, the editor keeps its place in the card through every redraw, even when
+    // nothing can be drawn for a moment, such as just after a comma at a line's end (typing_keeps_focus, spec §4)
+    const editing = plugin.inlineFor(target.path, target.line);
+    if (editing) {
+      if (problems.length) renderProblems(root, problems, false);
+      editing.mount(root.createDiv({ cls: 'graph-note-edit-slot' }));
+      return;
+    }
     if (problems.length) {
       // nothing could be read: the text, and why
       renderProblems(root, problems, false);

@@ -143,11 +143,20 @@ export class FakeElement {
     this.append(...cs);
   }
   remove() {
+    // as in a browser: an element taken off the page loses the focus, and does not have it back when put back
+    if (this.contains(this.ownerDocument.activeElement)) this.ownerDocument.activeElement = null;
     const p = this.parentElement;
     if (p) {
       p.children = p.children.filter((x) => x !== this);
       this.parentElement = null;
     }
+    // and, as in a browser, what leaves the page loses its scroll
+    const lose = (e) => {
+      if (e.scrollTop) e.scrollTop = 0;
+      if (e.scrollLeft) e.scrollLeft = 0;
+      e.children.forEach(lose);
+    };
+    lose(this);
   }
   contains(o) {
     for (let e = o; e; e = e.parentElement) if (e === this) return true;
@@ -249,6 +258,8 @@ export class FakeElement {
     this.textContent = t;
   }
   empty() {
+    const a = this.ownerDocument.activeElement;
+    if (a && a !== this && this.contains(a)) this.ownerDocument.activeElement = null;
     this.children = [];
     this.text = '';
   }

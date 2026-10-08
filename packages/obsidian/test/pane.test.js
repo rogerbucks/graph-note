@@ -151,6 +151,28 @@ describe('the text', () => {
   });
 });
 
+describe('typing keeps the field', () => {
+  // typing_keeps_focus (spec §4, 8 Oct 2026): the pane is never redrawn by Obsidian, so its field keeps the focus, the caret
+  // and the undo history while each write redraws the drawing; a control beside the card's tests in inline.test.js
+  test('in the pane, each write redraws the drawing and the same field keeps the focus and the caret', async () => {
+    const env = await open();
+    try {
+      const t = textarea(env.el);
+      t.focus();
+      for (const tail of [",\n(s:Option {name: 'S'})", ",\n(s:Option {name: 'Sm'})"]) {
+        type(env.el, READER + tail, READER.length + 4);
+        await until(() => note(env).includes(READER + tail), 2000);
+        await wait(300);
+        assert.ok(textarea(env.el) === t, 'the same field');
+        assert.ok(env.doc.activeElement === t, 'still focused');
+        assert.equal(t.selectionStart, READER.length + 4);
+      }
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
 describe('problems, in place', () => {
   test('a problem is marked where it is, and its fix is offered on that line', async () => {
     const env = await open();
@@ -468,11 +490,9 @@ describe('the comma added for you', () => {
       assert.ok(ev.defaultPrevented);
       assert.equal(t.value, READER + '\n(');
       assert.equal(t.selectionStart, t.value.length);
-      assert.equal(
-        t.dispatch('keydown', { key: 'z', metaKey: true }).defaultPrevented,
-        false,
-        'the next undo is the platform’s own',
-      );
+      // the editor keeps its own history (typing_keeps_focus): the next undo takes back what was typed before it
+      assert.ok(t.dispatch('keydown', { key: 'z', metaKey: true }).defaultPrevented);
+      assert.equal(t.value, before, 'the next undo takes back the ( typed');
     } finally {
       env.uninstall();
     }
