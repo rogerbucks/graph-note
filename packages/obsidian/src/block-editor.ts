@@ -35,6 +35,8 @@ export type Layout = 'pane' | 'inline';
  */
 const WRITE_AFTER_MS: Record<Layout, number> = { pane: 150, inline: 700 };
 const DRAW_AFTER_MS = 250;
+/** How long a field taken off the page, while typed in, is waited for to come back: a safety stop, not the rule. */
+const REFOCUS_FOR_MS = 30_000;
 
 let ids = 0;
 /** An id no other editor on the page uses, for a label its field points at. */
@@ -72,6 +74,7 @@ export class BlockEditor extends Component {
    * Obsidian takes the old card off the page before the new one asks for the editor: by then the field has lost both.
    */
   private kept = { focused: false, top: 0, left: 0 };
+  private refocusTimer: number | null = null;
   /** The text's own undo history, which, unlike the field's, survives the field leaving the page (spec §4). */
   private undoes: TextHistory | null = null;
   private drawTimer: number | null = null;
@@ -114,7 +117,8 @@ export class BlockEditor extends Component {
     // no timer outlives the editor: what was waiting to be written is written now, and the redraw is not needed
     if (this.writeTimer !== null) window.clearTimeout(this.writeTimer);
     if (this.drawTimer !== null) window.clearTimeout(this.drawTimer);
-    this.writeTimer = this.drawTimer = null;
+    if (this.refocusTimer !== null) window.clearTimeout(this.refocusTimer);
+    this.writeTimer = this.drawTimer = this.refocusTimer = null;
     if (this.session?.dirty) void this.write();
   }
 
@@ -166,15 +170,25 @@ export class BlockEditor extends Component {
    * only after, and nothing off the page can take the focus: so it waits for the field to be on the page, a couple of
    * seconds at most, and gives it back only if nothing else has taken the focus meanwhile.
    */
-  private refocus(t: HTMLTextAreaElement, a: number, b: number, tries = 120): void {
-    if (t.isConnected) {
-      const now = activeDocument.activeElement;
-      if (now && now !== activeDocument.body && now !== t) return;
-      t.focus({ preventScroll: true });
-      t.setSelectionRange(a, b);
-      return;
-    }
-    if (tries > 0) window.setTimeout(() => this.refocus(t, a, b, tries - 1), 16);
+  private refocus(t: HTMLTextAreaElement, a: number, b: number): void {
+    if (this.refocusTimer !== null) window.clearTimeout(this.refocusTimer);
+    this.refocusTimer = null;
+    const started = Date.now();
+    const attempt = () => {
+      this.refocusTimer = null;
+      if (!this.kept.focused || this.el?.text !== t) return;
+      if (t.isConnected) {
+        const doc = t.ownerDocument,
+          now = doc.activeElement;
+        if (now && now !== doc.body && now !== t) return;
+        t.focus({ preventScroll: true });
+        t.setSelectionRange(a, b);
+        return;
+      }
+      // a field that never comes back, such as one whose note was closed, stops being waited for
+      if (Date.now() - started < REFOCUS_FOR_MS) this.refocusTimer = window.setTimeout(attempt, 16);
+    };
+    attempt();
   }
 
   async flush(): Promise<void> {
@@ -209,6 +223,7 @@ export class BlockEditor extends Component {
 
   /** Takes the editor off the page, as Done does in place. */
   detach(): void {
+    this.kept.focused = false;
     this.el?.root.remove();
     this.el = null;
     this.container = null;
@@ -329,12 +344,24 @@ export class BlockEditor extends Component {
       this.kept.left = text.scrollLeft;
     });
     this.registerDomEvent(text, 'focus', () => (this.kept.focused = true));
-    // left on purpose only if, once things settle, the field is still on the page without the focus: a field taken off
-    // the page by a redraw is still being typed in
+    // Left on purpose only if, once things settle, the field is still on the page without the focus. A field taken off
+    // the page is still being typed in, however it comes back: in a new card handed the editor, or in the same card put
+    // back as it was, as reading view does with no drawing in between (Roger's Mac, 9 Oct 2026); so its focus is given
+    // back whenever it is on the page again, until the person goes elsewhere.
+    // Chromium says blur while the field is still on the page, then takes it off: so it is judged a moment later, once
+    // the taking off is done but before anything is drawn or put back.
     this.registerDomEvent(text, 'blur', () => {
-      window.setTimeout(() => {
-        if (text.isConnected && activeDocument.activeElement !== text) this.kept.focused = false;
-      }, 0);
+      const a = text.selectionStart,
+        b = text.selectionEnd;
+      queueMicrotask(() => {
+        if (!text.isConnected) {
+          if (this.kept.focused) this.refocus(text, a, b);
+        } else if (text.ownerDocument.activeElement !== text) this.kept.focused = false;
+      });
+    });
+    // the person going to anything else ends it
+    this.registerDomEvent(activeDocument, 'focusin', (e: FocusEvent) => {
+      if (e.target !== text) this.kept.focused = false;
     });
     this.registerDomEvent(text, 'keydown', (e: KeyboardEvent) => {
       const first = this.suggestions.items[0];

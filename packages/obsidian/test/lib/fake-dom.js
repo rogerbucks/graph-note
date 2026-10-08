@@ -143,8 +143,14 @@ export class FakeElement {
     this.append(...cs);
   }
   remove() {
-    // as in a browser: an element taken off the page loses the focus, and does not have it back when put back
-    if (this.contains(this.ownerDocument.activeElement)) this.ownerDocument.activeElement = null;
+    // as in Chromium (seen 9 Oct 2026): an element taken off the page loses the focus, saying so while still on it, and
+    // does not have it back when put back
+    const lost = this.ownerDocument.activeElement;
+    if (this.contains(lost)) {
+      this.ownerDocument.activeElement = null;
+      lost.dispatch('blur');
+      lost.dispatch('focusout');
+    }
     const p = this.parentElement;
     if (p) {
       p.children = p.children.filter((x) => x !== this);
@@ -212,17 +218,33 @@ export class FakeElement {
       ...init,
     };
     for (let e = ev.target; e; e = e.parentElement) for (const fn of e.listeners.get(type) ?? []) fn.call(e, ev);
+    // and on to the document, from anything on the page
+    const doc = this.ownerDocument;
+    if (ev.target.isConnected) for (const fn of doc.listeners?.get(type) ?? []) fn.call(doc, ev);
     return ev;
   }
   click() {
     return this.dispatch('click');
   }
   focus() {
-    // as in a browser: an element that is not on the page cannot take the focus
-    if (this.isConnected) this.ownerDocument.activeElement = this;
+    // as in a browser: an element that is not on the page cannot take the focus; one that does says so, as does the one
+    // that had it
+    const doc = this.ownerDocument,
+      had = doc.activeElement;
+    if (!this.isConnected || had === this) return;
+    doc.activeElement = this;
+    if (had) {
+      had.dispatch('blur');
+      had.dispatch('focusout');
+    }
+    this.dispatch('focus');
+    this.dispatch('focusin');
   }
   blur() {
-    if (this.ownerDocument.activeElement === this) this.ownerDocument.activeElement = null;
+    if (this.ownerDocument.activeElement !== this) return;
+    this.ownerDocument.activeElement = null;
+    this.dispatch('blur');
+    this.dispatch('focusout');
   }
   setPointerCapture(id) {
     this.captured.add(id);
@@ -365,8 +387,13 @@ export function fakeDocument(width = 700) {
   doc.createElementNS = (_ns, t) => new FakeElement(t, doc);
   doc.importNode = (n) => n;
   doc.adoptNode = (n) => n;
-  doc.addEventListener = () => {};
-  doc.removeEventListener = () => {};
+  doc.listeners = new Map();
+  doc.addEventListener = (type, fn) => (doc.listeners.get(type) ?? doc.listeners.set(type, []).get(type)).push(fn);
+  doc.removeEventListener = (type, fn) =>
+    doc.listeners.set(
+      type,
+      (doc.listeners.get(type) ?? []).filter((f) => f !== fn),
+    );
   doc.defaultView = {
     setTimeout,
     clearTimeout,
