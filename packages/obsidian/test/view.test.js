@@ -401,6 +401,60 @@ describe('details on demand', () => {
   });
 });
 
+describe('each bar and its details belong to their own drawing', () => {
+  // bar_and_details_belong (spec §3, slice 1; Roger, 7 Oct 2026: "the tool strip is not visibly connected to the graphic,
+  // which makes it less than obvious which tool strip belongs to which diagram. Also, the same applies to the info
+  // window."): with several drawings in one note, each bar and each details card sit inside their own drawing's card. How
+  // plain that is in a theme is the device check's to judge.
+  const rule = (sel) =>
+    new RegExp(`(^|\\n)${sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\{([^}]*)\\}`).exec(styles)?.[2] ?? '';
+  let env;
+  before(async () => {
+    env = await load();
+  });
+  after(() => env.uninstall());
+
+  test('with two drawings in a note, each bar and each details card sit inside their own drawing’s card', async () => {
+    const OTHER = "// graph: trip\n(home:Place {name: 'Home'}), (walk:Leg {name: 'Walk'}), (walk)-[:STARTS_AT]->(home)";
+    const note = [fence(GRAPH), 'Between the two.', fence(OTHER)].join('\n\n');
+    const cards = [(await show(env, note, 0)).el, (await show(env, note, 1)).el];
+    const box = cards[1].querySelectorAll('g.node')[0];
+    const vp = cards[1].querySelector('.graph-note-viewport');
+    vp.dispatch('pointerdown', { target: box, pointerId: 4, pointerType: 'touch', clientX: 5, clientY: 5, button: 0 });
+    vp.dispatch('pointerup', { target: box, pointerId: 4, pointerType: 'touch', clientX: 5, clientY: 5, button: 0 });
+    cards.forEach((el, i) => {
+      const card = el.querySelector('.graph-note-view');
+      assert.equal(el.querySelectorAll('.graph-note-view').length, 1, `one card for drawing ${i + 1}`);
+      // compared by identity: a failing equal on two fake elements would print the whole page
+      assert.ok(card.children[0]?.classList.contains('graph-note-bar'), 'the bar is the card’s header');
+      assert.ok(el.querySelector('.graph-note-bar').closest('.graph-note-view') === card, 'the bar is inside the card');
+      const details = el.querySelector('.graph-note-details');
+      assert.ok(details.closest('.graph-note-view') === card, 'the details are inside the card');
+      const order = card.children.map((c) => c.getAttribute('class') ?? '');
+      assert.ok(
+        order.findIndex((c) => c.includes('graph-note-details')) >
+          order.findIndex((c) => c.includes('graph-note-viewport')),
+        'the details sit under the drawing',
+      );
+      assert.equal(details.hidden, i === 0, i === 0 ? 'the other drawing shows no details' : 'the tapped one does');
+    });
+  });
+
+  test('the card has its own border round the bar, the drawing and the details, with the bar as a header strip', () => {
+    const card = rule('.graph-note-view');
+    assert.match(card, /border:\s*1px solid var\(--background-modifier-border\)/);
+    assert.match(card, /border-radius:/);
+    assert.match(card, /overflow:\s*hidden/);
+    const bar = rule('.graph-note-view > .graph-note-bar');
+    assert.match(bar, /background:\s*var\(--background-secondary\)/);
+    assert.match(bar, /border-bottom:\s*1px solid/);
+    assert.match(
+      rule('.graph-note-view > .graph-note-problems,\n.graph-note-view > .graph-note-details'),
+      /border-top:\s*1px solid/,
+    );
+  });
+});
+
 describe('estimated links', () => {
   let env;
   before(async () => {
