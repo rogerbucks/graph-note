@@ -35,6 +35,10 @@ export type Layout = 'pane' | 'inline';
 const WRITE_AFTER_MS: Record<Layout, number> = { pane: 150, inline: 700 };
 const DRAW_AFTER_MS = 250;
 
+let ids = 0;
+/** An id no other editor on the page uses, for a label its field points at. */
+const nextId = (): string => `graph-note-text-${++ids}`;
+
 function button(
   parent: HTMLElement,
   label: string,
@@ -246,6 +250,7 @@ export class BlockEditor extends Component {
     const editor = textEl.createDiv({ cls: 'graph-note-editor' });
     // a div, not a pre: inside a note, Obsidian's own code-block styles would wrap and pad it out of step with the field
     const overlay = editor.createDiv({ cls: 'graph-note-overlay', attr: { 'aria-hidden': 'true' } });
+    const name = editor.createSpan({ cls: 'graph-note-sr', text: `Text of graph ${s.graph}`, attr: { id: nextId() } });
     const text = editor.createEl('textarea', {
       cls: 'graph-note-text',
       attr: {
@@ -254,7 +259,8 @@ export class BlockEditor extends Component {
         autocomplete: 'off',
         autocorrect: 'off',
         wrap: 'off',
-        'aria-label': `Text of graph ${s.graph}`,
+        // named by a hidden label, not aria-label: Obsidian shows a tooltip for every aria-label
+        'aria-labelledby': name.id,
       },
     });
     text.value = s.text;

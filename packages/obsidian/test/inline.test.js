@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { build, load, until, wait } from './lib/load-plugin.js';
 import { fakeContext } from './lib/fake-obsidian.js';
 import { readFileSync } from 'node:fs';
+import { rules, winner } from './lib/cascade.js';
 
 before(() => build());
 
@@ -526,4 +527,81 @@ describe('the inspector, in edit mode', () => {
       }
     }
   });
+});
+
+describe('the box in the card, untouched by the theme', () => {
+  // inline_untouched_by_theme (spec §4, 8 Oct 2026): the in-place box looks the same whether hovered, focused or neither,
+  // and its accessible name raises no tooltip.
+  const styles = readFileSync(new URL('../../../styles.css', import.meta.url), 'utf8');
+
+  // the try-out of 8 Oct 2026: Obsidian shows a tooltip for any aria-label, so hovering the field showed "Text of graph trip"
+  test('the field is named for a screen reader by a hidden label, so no tooltip shows on hover', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      const el = await show(env);
+      labelled(el, 'Edit here').click();
+      await until(() => !!el.querySelector('textarea'));
+      const t = el.querySelector('textarea');
+      assert.equal(t.getAttribute('aria-label'), null);
+      const label = el.querySelector(`#${t.getAttribute('aria-labelledby')}`);
+      assert.equal(label?.textContent, 'Text of graph reader');
+      assert.ok(label.classList.contains('graph-note-sr'));
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // the try-out of 8 Oct 2026: on mouse hover the box went flat grey and hid the coloured text under it. Obsidian's app.css
+  // styles every textarea, and textarea:hover (0,1,1) outweighed .graph-note-text (0,1,0). These are the rules it gives
+  // every textarea, as shipped in the Mac app on 8 Oct 2026, cut to the properties that would show.
+  const OBSIDIAN = `
+    textarea { background: var(--background-modifier-form-field); border: var(--input-border-width) solid var(--background-modifier-border);
+      color: var(--text-normal); font-family: inherit; padding: var(--input-padding); font-size: var(--font-ui-small);
+      border-radius: var(--input-radius); outline: none; }
+    @media (hover: hover) {
+      textarea:hover { background-color: var(--background-modifier-form-field-hover); border-color: var(--background-modifier-border-hover); }
+    }
+    textarea:active, textarea:focus { border-color: var(--background-modifier-border-focus); }
+    textarea:active, textarea:focus, textarea:focus-visible { box-shadow: 0 0 0 var(--input-border-width-focus) var(--background-modifier-border-focus); }
+    textarea { line-height: var(--line-height-tight); border-radius: var(--textarea-radius, var(--input-radius)); padding: var(--textarea-padding, var(--input-padding)); }
+  `;
+  const all = [...rules(OBSIDIAN, 'obsidian'), ...rules(styles, 'graph-note')];
+  const field = (states, inline) => ({
+    tag: 'textarea',
+    classes: ['graph-note-text'],
+    states,
+    ancestors: [
+      { tag: 'div', classes: ['graph-note-editor'] },
+      { tag: 'div', classes: ['graph-note-pane-text'] },
+      { tag: 'div', classes: inline ? ['graph-note-pane', 'graph-note-inline'] : ['graph-note-pane'] },
+      { tag: 'div', classes: ['markdown-rendered'] },
+    ],
+  });
+  const LOOK = [
+    'background-color',
+    'border-color',
+    'border-width',
+    'border-radius',
+    'box-shadow',
+    'outline',
+    'color',
+    'padding',
+    'font-family',
+    'font-size',
+    'line-height',
+  ];
+
+  for (const states of [[], ['hover'], ['focus'], ['active'], ['focus', 'focus-visible'], ['hover', 'focus']]) {
+    test(`the field keeps the plugin’s look: ${states.join(' and ') || 'at rest'}`, () => {
+      for (const inline of [false, true]) {
+        const el = field(states, inline);
+        for (const property of LOOK) {
+          const won = winner(all, el, property);
+          assert.equal(won?.source, 'graph-note', `${property} comes from ${won?.selector} (${won?.source})`);
+        }
+        assert.equal(winner(all, el, 'background-color').value, 'transparent');
+        assert.equal(winner(all, el, 'color').value, 'transparent');
+      }
+    });
+  }
 });
