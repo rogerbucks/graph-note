@@ -76,6 +76,18 @@ describe('the plugin-store files', () => {
     for (const p of jsPackages()) assert.equal(readJSON(`${p}/package.json`).version, version, p);
   });
 
+  // found on the 0.2.0 bump: a sibling asked for at the old version is looked for on the npm registry, and npm ci fails
+  test('each package asks for its siblings at their own version, in the package and in the lockfile', () => {
+    const own = new Map(jsPackages().map((p) => [readJSON(`${p}/package.json`).name, readJSON(`${p}/package.json`)]));
+    const lock = readJSON('package-lock.json').packages;
+    for (const p of jsPackages()) {
+      const { name } = readJSON(`${p}/package.json`);
+      for (const deps of [readJSON(`${p}/package.json`), lock[p]])
+        for (const [dep, wanted] of Object.entries({ ...deps?.dependencies, ...deps?.devDependencies }))
+          if (own.has(dep)) assert.equal(wanted, own.get(dep).version, `${name} asks for ${dep}`);
+    }
+  });
+
   test('README.md, LICENSE and styles.css are present', () => {
     for (const f of ['README.md', 'LICENSE', 'styles.css']) {
       assert.ok(exists(f), `${f} exists`);
