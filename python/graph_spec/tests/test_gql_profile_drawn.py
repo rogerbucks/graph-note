@@ -136,7 +136,7 @@ class ADanglingComma(unittest.TestCase):
     BLOCK = "// graph: g\n(a:T {name: 'A'}),\n(b:T {name: 'B'}),\n(a)-[:R]->(b)"
 
     def test_everything_before_it_is_drawn_with_one_warning_on_its_line(self):
-        # a plain loop, not subTest: the record of tests seen failing reads each test by its own name
+        # a plain loop, not subTest: the record of tests seen failing reads each test by name
         for tail in (",", ",\n", ",\n\n// the next pattern goes here\n"):
             store, problems = gp.read_for_drawing([self.BLOCK + tail])
             self.assertEqual(
