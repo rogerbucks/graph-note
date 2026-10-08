@@ -75,10 +75,10 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 - [ ] In the card, the text box is as tall as the text and one more line: no empty area below it for the caret to land
       in. Each read-back sits on its own line's right, never wrapping under it, and typing lands where the text shows.
       iPhone ✓ 5cfeac6, 8 Oct 2026.
-- [ ] Desktop: hovering the mouse over the box in the card, and clicking into it, never turns it grey or hides its
-      coloured text, and no tooltip appears over it.
+- [x] Desktop: hovering the mouse over the box in the card, and clicking into it, never turns it grey or hides its
+      coloured text, and no tooltip appears over it. Mac ✓ d601110, 8 Oct 2026.
 - [ ] While the card is being edited, its pencil shows as a book (view) icon. Pressing it writes what was typed and
-      closes the box, as Done does, and the pencil comes back.
+      closes the box, as Done does, and the pencil comes back. Mac ✓ d601110, 8 Oct 2026.
 - [ ] In edit mode, tapping a box or a link shows its properties, looking as a note's Properties panel looks in this
       theme: the same rows, icons, spacing, type and colours, in both the light and dark themes.
 - [ ] A number has a number field, a date opens the date picker, and true or false is a checkbox.
