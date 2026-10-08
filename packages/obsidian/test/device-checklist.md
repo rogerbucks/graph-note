@@ -78,6 +78,7 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 - [ ] Typing in the card, character by character, redraws the drawing and never takes the focus from the box: the caret,
       the selection and where it is scrolled stay put. Typing a comma at a line's end keeps the box in its card.
       Undo (⌘Z, or Edit → Undo, or the phone's undo gesture) takes back a run of typing at a time, even after redraws.
+      Mac ✓ 3d34e0d, reading view, 9 Oct 2026 (traced in the app); Live Preview and the phone to come.
 - [x] Desktop: hovering the mouse over the box in the card, and clicking into it, never turns it grey or hides its
       coloured text, and no tooltip appears over it. Mac ✓ d601110, 8 Oct 2026.
 - [ ] While the card is being edited, its pencil shows as a book (view) icon. Pressing it writes what was typed and
