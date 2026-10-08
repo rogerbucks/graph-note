@@ -17,15 +17,11 @@ import gql_profile as gp, graph_rules as gr, graph_svg
 out = []
 for note in json.load(sys.stdin):
     blocks = re.findall(r"\`\`\`gql\\n(.*?)\\n\`\`\`", note, re.S)
-    store = gp.Store()
-    for b in blocks:
-        try: g, kind = gp.header(b)
-        except gp.ProfileError: continue
-        if kind in ('excerpt', 'query', 'changeset', 'schema'): continue
-        store.apply(b)
+    # what can be read of every block, as the core reads it: a block that cannot be read is drawn in part (8 Oct 2026)
+    store, _ = gp.read_for_drawing(blocks)
     w = gr.World.from_store(store)
     res = {}
-    for name in sorted(w.graphs):
+    for name in sorted(n for n in w.graphs if not n.startswith('schema ')):
         g = w[name]
         ids = [i for i, (l, _) in g.nodes.items() if not l & gr.SCHEMA_LABELS]; R = gr.readings(g, None)
         def text(i):
@@ -84,17 +80,51 @@ SET large_reader.status = 'bought'`),
   ].join('\n'),
 };
 
-test('the core writes the same layout source as graph_svg.py, for every graph and in both directions', () => {
-  const names = Object.keys(NOTES);
-  const r = spawnSync('python3', ['-c', PYTHON], { input: JSON.stringify(Object.values(NOTES)), encoding: 'utf8' });
+/** Holds the core's layout source for each note to graph_svg.py's, for every graph and in both directions. */
+function same(notes) {
+  const names = Object.keys(notes);
+  const r = spawnSync('python3', ['-c', PYTHON], { input: JSON.stringify(Object.values(notes)), encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr);
   const python = JSON.parse(r.stdout);
   names.forEach((name, n) => {
-    const reading = readNote(gqlBlocks(NOTES[name]).map((b) => b.text));
+    const reading = readNote(gqlBlocks(notes[name]).map((b) => b.text));
     assert.deepEqual([...reading.graphs.keys()].sort(), Object.keys(python[n]), name);
     for (const [graph, drawing] of reading.graphs) {
       for (const rd of ['LR', 'TB'])
         assert.equal(layoutSource(drawing, rd).source, python[n][graph][rd], `${name}: ${graph} ${rd}`);
     }
   });
+}
+
+test('the core writes the same layout source as graph_svg.py, for every graph and in both directions', () => {
+  same(NOTES);
+});
+
+const PARTIAL = {
+  // a block that cannot be read is drawn in part, by every reader (decided with Roger, 8 Oct 2026): what the vault's
+  // layout check found Python dropping whole while the plugin drew the rest
+  'a block opening with a MATCH for a thing not in the graph, then new things and links': [
+    fence("// graph: trip\n(home:Place {name: 'Home'})"),
+    fence(`// graph: trip
+MATCH (gone:Place {id: 'station'})
+INSERT (walk:Leg {name: 'Walk'}),
+(bus:Leg {name: 'Bus'}),
+(walk)-[:STARTS_AT]->(home),
+(walk)-[:ENDS_AT]->(gone),
+(bus)-[:FOLLOWS]->(walk)`),
+  ].join('\n'),
+  'a second block writing again an id the graph has, then new things and links': [
+    fence("// graph: trip\n(home:Place {name: 'Home'}),\n(walk:Leg {name: 'Walk'})"),
+    fence(`// graph: trip
+(walk:Leg {name: 'Walk again'}),
+(bus:Leg {name: 'Bus'}),
+(train:Leg {name: 'Train'}),
+(bus)-[:FOLLOWS]->(walk),
+(train)-[:FOLLOWS]->(bus),
+(train)-[:ENDS_AT]->(home)`),
+  ].join('\n'),
+};
+
+test('a block that cannot be read is drawn in part, the same by both readers, byte for byte', () => {
+  same(PARTIAL);
 });
