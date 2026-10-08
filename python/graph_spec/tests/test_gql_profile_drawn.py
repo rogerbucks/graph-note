@@ -129,6 +129,27 @@ class DrawnInPart(unittest.TestCase):
         self.assertEqual([(p["block"], p["line"]) for p in problems], [(0, 1)])
 
 
+class ADanglingComma(unittest.TestCase):
+    """A comma with nothing after it, at a block's end: the commonest state while typing, so drawn
+    whole, with one quiet warning whose fix removes it (Roger's try-out, 8 Oct 2026)."""
+
+    BLOCK = "// graph: g\n(a:T {name: 'A'}),\n(b:T {name: 'B'}),\n(a)-[:R]->(b)"
+
+    def test_everything_before_it_is_drawn_with_one_warning_on_its_line(self):
+        for tail in (",", ",\n", ",\n\n// the next pattern goes here\n"):
+            with self.subTest(tail=tail):
+                store, problems = gp.read_for_drawing([self.BLOCK + tail])
+                self.assertEqual(drawn(store, "g"), ([("a", "A"), ("b", "B")], [("a", "R", "b")]))
+                self.assertEqual(
+                    [(p["block"], p["line"], p["severity"]) for p in problems], [(0, 4, "warning")]
+                )
+                self.assertIn("comma with nothing after it", problems[0]["message"])
+
+    def test_checking_and_loading_may_still_refuse_it(self):
+        with self.assertRaises(gp.ProfileError):
+            gp.Store().apply(self.BLOCK + ",")
+
+
 class CheckingStaysWhole(unittest.TestCase):
     """Drawing in part never reaches checking or loading: a block that cannot be read is
     refused."""

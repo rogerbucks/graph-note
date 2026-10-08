@@ -101,6 +101,10 @@ test('the core writes the same layout source as graph_svg.py, for every graph an
 });
 
 const PARTIAL = {
+  // a comma with nothing after it, as a block is while its next pattern is being typed (8 Oct 2026)
+  'a block ending in a comma with nothing after it': [
+    fence("// graph: trip\n(home:Place {name: 'Home'}),\n(walk:Leg {name: 'Walk'}),\n(walk)-[:STARTS_AT]->(home),"),
+  ].join('\n'),
   // a block that cannot be read is drawn in part, by every reader (decided with Roger, 8 Oct 2026): what the vault's
   // layout check found Python dropping whole while the plugin drew the rest
   'a block opening with a MATCH for a thing not in the graph, then new things and links': [

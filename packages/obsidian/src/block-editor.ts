@@ -154,14 +154,27 @@ export class BlockEditor extends Component {
         overlay.scrollTop = this.kept.top;
         overlay.scrollLeft = this.kept.left;
       }
-      if (focused) {
-        t.focus({ preventScroll: true });
-        t.setSelectionRange(a, b);
-      }
+      if (focused) this.refocus(t, a, b);
       return;
     }
     this.container = container;
     this.render();
+  }
+
+  /**
+   * Gives the field back its focus and selection. In Live Preview Obsidian draws a block into a card that goes on the page
+   * only after, and nothing off the page can take the focus: so it waits for the field to be on the page, a couple of
+   * seconds at most, and gives it back only if nothing else has taken the focus meanwhile.
+   */
+  private refocus(t: HTMLTextAreaElement, a: number, b: number, tries = 120): void {
+    if (t.isConnected) {
+      const now = activeDocument.activeElement;
+      if (now && now !== activeDocument.body && now !== t) return;
+      t.focus({ preventScroll: true });
+      t.setSelectionRange(a, b);
+      return;
+    }
+    if (tries > 0) window.setTimeout(() => this.refocus(t, a, b, tries - 1), 16);
   }
 
   async flush(): Promise<void> {

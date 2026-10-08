@@ -342,6 +342,32 @@ export function graphOfBlock(text: string): string | null {
 }
 
 /**
+ * A comma with nothing after it at a block's end, but blank lines and comments: the commonest state while the next
+ * pattern is being typed, so never a failure of the block (8 Oct 2026). The block as read without it, and one warning
+ * whose fix removes it; null when there is none.
+ */
+function danglingComma(text: string): { text: string; problem: Omit<Problem, 'block' | 'graph'> } | null {
+  const last = items(text).pop();
+  if (!last || last.comma === -1) return null;
+  const at = last.comma,
+    before = text.slice(0, at).split('\n'),
+    line = before.length,
+    character = (before[before.length - 1] ?? '').length;
+  return {
+    text: text.slice(0, at) + ' ' + text.slice(at + 1),
+    problem: {
+      line,
+      severity: 'warning',
+      message: 'a comma with nothing after it; it is read as if it were not there',
+      fix: 'remove the comma, or write the next pattern after it',
+      replace: { written: ',', with: [''] },
+      fixTitle: 'Remove the comma',
+      span: { line: line - 1, character, end: character + 1 },
+    },
+  };
+}
+
+/**
  * Reads a note's data blocks, leaving out what cannot be read. Returns the blocks as read and the problems.
  * Each block is applied in order to a fresh store; when one fails, the item at the failing line is blanked and the
  * whole read starts again, so a half-applied block never leaves part of a bad path behind.
@@ -356,6 +382,12 @@ function readBlocks(texts: string[], shared: string[]): { store: gs.Store; probl
     else if (typeof k === 'object') {
       skip.add(i);
       problems.push({ ...k, block: i, graph: graphOf(t) });
+    } else {
+      const dangling = danglingComma(t);
+      if (dangling) {
+        clean[i] = dangling.text;
+        problems.push({ ...dangling.problem, block: i, graph: graphOf(t) });
+      }
     }
   });
   for (let attempt = 0; ; attempt++) {

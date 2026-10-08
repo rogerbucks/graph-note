@@ -32,6 +32,19 @@ async function show(env) {
   return el;
 }
 
+/** Draws the block as Live Preview does: into a card that goes on the page only once the drawing is done. */
+async function showOffPage(env) {
+  const note = env.state.files.get(PATH),
+    lines = note.split('\n'),
+    open = lines.findIndex((l) => l.startsWith('```gql'));
+  let end = open + 1;
+  while (!/^```\s*$/.test(lines[end])) end++;
+  const el = env.doc.createElement('div');
+  await env.state.processors.get('gql')(lines.slice(open + 1, end).join('\n'), el, fakeContext(note, open));
+  env.doc.body.appendChild(el);
+  return el;
+}
+
 describe('edit here, in the card', () => {
   test('the bar offers both: Edit here, and Edit in pane', async () => {
     const env = await load({ files: { [PATH]: NOTE } });
@@ -205,6 +218,63 @@ describe('edit here, in the card', () => {
       t.dispatch('beforeinput', { inputType: 'historyUndo' });
       await until(() => !env.state.files.get(PATH).includes("name: 'S'"), 2000);
       assert.equal(env.state.files.get(PATH), NOTE.replace(READER, READER + ',\n'), 'and what is undone is written');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // Roger's try-out, 8 Oct 2026: "if I type a comma on the last line then the image refresh loses focus again". In Live
+  // Preview Obsidian draws a block into a card that is not on the page yet, and puts it there after; a block that cannot
+  // be drawn, or an empty one, took the editor at once, while its card was still off the page, where nothing takes focus
+  test('in Live Preview, where the new card goes on the page only after it is drawn, the box still keeps the focus', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      let el = await show(env);
+      labelled(el, 'Edit here').click();
+      await until(() => !!el.querySelector('textarea'));
+      const t = el.querySelector('textarea');
+      for (const typed of [READER + ',', '// graph: reader\n', READER]) {
+        t.value = typed;
+        t.setSelectionRange(typed.length, typed.length);
+        t.dispatch('input');
+        await until(() => env.state.files.get(PATH).includes('```gql\n' + typed + '\n```'), 2000);
+        el.remove();
+        el = await showOffPage(env);
+        await until(() => env.doc.activeElement === t, 500).catch(() => {});
+        assert.ok(el.querySelector('textarea') === t, `the same field, for ${JSON.stringify(typed.slice(-12))}`);
+        assert.ok(env.doc.activeElement === t, `still focused, for ${JSON.stringify(typed.slice(-12))}`);
+        assert.deepEqual([t.selectionStart, t.selectionEnd], [typed.length, typed.length]);
+      }
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a comma typed at the end of the last line keeps the drawing and the box; undo takes it back, still focused', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      let el = await show(env);
+      labelled(el, 'Edit here').click();
+      await until(() => !!el.querySelector('textarea'));
+      const t = el.querySelector('textarea');
+      t.setSelectionRange(READER.length, READER.length);
+      t.value = READER + ',';
+      t.setSelectionRange(READER.length + 1, READER.length + 1);
+      t.dispatch('input');
+      await until(() => env.state.files.get(PATH).includes(READER + ','), 2000);
+      el.remove();
+      el = await showOffPage(env);
+      await until(() => env.doc.activeElement === t, 500).catch(() => {});
+      assert.ok(env.doc.activeElement === t, 'still focused');
+      assert.equal(el.querySelectorAll('g.node').length, 2, 'and the drawing is all there');
+      assert.ok(t.dispatch('keydown', { key: 'z', metaKey: true }).defaultPrevented);
+      assert.equal(t.value, READER);
+      await until(() => !env.state.files.get(PATH).includes(READER + ','), 2000);
+      el.remove();
+      el = await showOffPage(env);
+      await until(() => env.doc.activeElement === t, 500).catch(() => {});
+      assert.ok(env.doc.activeElement === t, 'still focused after the undo');
+      assert.equal(t.selectionStart, READER.length);
     } finally {
       env.uninstall();
     }
