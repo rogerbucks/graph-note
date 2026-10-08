@@ -41,5 +41,7 @@ export {
   linkInBlock,
 } from './inspector.ts';
 export { hitAreas, nearby, TapCycle } from './hits.ts';
+export { TextHistory } from './history.ts';
+export type { Change, TextState } from './history.ts';
 export type { HitAreas, Shape } from './hits.ts';
 export type { PropType, Property, Target, Edit, Parsed } from './inspector.ts';
