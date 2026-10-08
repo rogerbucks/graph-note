@@ -136,14 +136,18 @@ class ADanglingComma(unittest.TestCase):
     BLOCK = "// graph: g\n(a:T {name: 'A'}),\n(b:T {name: 'B'}),\n(a)-[:R]->(b)"
 
     def test_everything_before_it_is_drawn_with_one_warning_on_its_line(self):
+        # a plain loop, not subTest: the record of tests seen failing reads each test by its own name
         for tail in (",", ",\n", ",\n\n// the next pattern goes here\n"):
-            with self.subTest(tail=tail):
-                store, problems = gp.read_for_drawing([self.BLOCK + tail])
-                self.assertEqual(drawn(store, "g"), ([("a", "A"), ("b", "B")], [("a", "R", "b")]))
-                self.assertEqual(
-                    [(p["block"], p["line"], p["severity"]) for p in problems], [(0, 4, "warning")]
-                )
-                self.assertIn("comma with nothing after it", problems[0]["message"])
+            store, problems = gp.read_for_drawing([self.BLOCK + tail])
+            self.assertEqual(
+                drawn(store, "g"), ([("a", "A"), ("b", "B")], [("a", "R", "b")]), repr(tail)
+            )
+            self.assertEqual(
+                [(p["block"], p["line"], p["severity"]) for p in problems],
+                [(0, 4, "warning")],
+                repr(tail),
+            )
+            self.assertIn("comma with nothing after it", problems[0]["message"])
 
     def test_checking_and_loading_may_still_refuse_it(self):
         with self.assertRaises(gp.ProfileError):
