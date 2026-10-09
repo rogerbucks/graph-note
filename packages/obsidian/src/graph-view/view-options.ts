@@ -1,6 +1,7 @@
 // What a drawn graph is given (spec §3, §4, §14): the reading and the graph, its drawn SVG and its problems, where it is
 // shown, what its buttons do, and the editor open in place on its card, if any, which its inspector writes through.
 import type { CompletenessReport, Drawn, Mode, NoteReading } from '@graph-note/core';
+import type { DeclaredList } from '../properties/list-row';
 import type { ShownProblem } from './problems-list';
 
 /** The editor open in place on this card, as the inspector needs it: the block's text as typed, and a way to replace it. */
@@ -9,6 +10,8 @@ export interface Editing {
   replace(text: string): void;
   /** What the details were open on, so the inspector reopens on it in the redrawn card. */
   selected: { key: string } | { link: number } | null;
+  /** The lists made while the editor is open, which the inspector shows even before they hold a value. */
+  lists?: DeclaredList[];
 }
 
 /** What a drawing needs: the reading, the graph, its drawn SVG and problems, where it is shown, and what its buttons do. */

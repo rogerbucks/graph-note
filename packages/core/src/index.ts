@@ -35,6 +35,8 @@ export {
   spanOf,
   linkInBlock,
 } from './inspector.ts';
+export { listValues, makeList, addToList, removeFromList, linkedValues, listsOf } from './linked-list.ts';
+export type { ListShape, ListValue, ListEdit } from './linked-list.ts';
 export { hitAreas, nearby, TapCycle } from './hits.ts';
 export { TextHistory } from './history.ts';
 export type { Change, TextState } from './history.ts';

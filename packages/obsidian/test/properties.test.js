@@ -181,17 +181,16 @@ describe('the inspector, in edit mode', () => {
     }
   });
 
-  test('List is offered, as in Obsidian, but refused until lists come as linked things, saying so', async () => {
+  test('List is offered, as in Obsidian, and asks for a kind and a relationship rather than refusing', async () => {
     const env = await load({ files: { [PATH]: NOTE2 } });
     try {
       const el = await editing(env);
       tap(el, 1);
       pick(env, el.querySelector('.graph-note-details'), 'name', 'List');
-      assert.match(
-        el.querySelector('.graph-note-details [role="alert"]').textContent,
-        /name: lists are coming, as linked things; until then, write one property for each value/,
-      );
-      assert.equal(text(el), PRICED);
+      assert.ok(field(el.querySelector('.graph-note-details'), 'Kind of the linked things'));
+      assert.ok(field(el.querySelector('.graph-note-details'), 'Relationship from this thing'));
+      assert.ok(el.querySelector('.graph-note-details [role="alert"]').hidden, 'nothing refused');
+      assert.equal(text(el), PRICED, 'and nothing written until they are given');
     } finally {
       env.uninstall();
     }

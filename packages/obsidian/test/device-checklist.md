@@ -98,6 +98,16 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 - [ ] A value is written when its field is left; a value that does not fit its type says why, and nothing changes.
 - [ ] Tapping a property's icon opens a menu to change its type or remove it. Add property adds a row in place, its
       name suggested from the names already used.
+- [ ] A text property with several values (`tags: 'quiet, cheap'`): the icon's menu lists List after Text. Choosing it
+      shows two fields, a kind and a relationship, filled in from the property's name and offering the kinds and
+      relationships the graph already uses; Make list turns each value into a thing of that kind, linked from this one,
+      and the property row becomes a row of chips. Cancel puts the field back. Undo (⌘Z, or the phone's gesture) takes
+      the whole change back in one step. A thing with the same name that already exists is linked, not written again.
+- [ ] A list's chips look as a note's list property looks in the Properties panel in this theme, light and dark. The x
+      on a chip removes it: the link goes, and the thing too when nothing else links to it, and a line under the rows
+      says which. The add field adds a value on Enter, or when it is left; an empty value, or one already there, says
+      why and writes nothing. Phone: the chips, their x and the add field are easy to hit in the sheet, and the keyboard
+      does not cover the field being typed in.
 - [ ] While editing, in the card or the pane, choosing a box selects the pattern that writes it in the text, and
       choosing a link selects its brackets and arrow (slice 2).
 - [ ] Phone: the properties open as a sheet at the bottom of the screen, and every field and icon is easy to hit.
