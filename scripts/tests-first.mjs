@@ -218,18 +218,34 @@ export function replay(repo, commit) {
       ];
       const old = sources.flatMap((f) => before_(f));
       const fresh = now.passed.filter((n) => !old.includes(n));
-      const then = run(before.dir, file, repo);
-      out.files.push({
-        file,
-        failedFirst: fresh.filter((n) => !then.passed.includes(n)),
-        passedFirst: fresh.filter((n) => then.passed.includes(n)),
-      });
+      out.files.push(judged(file, fresh, run(before.dir, file, repo)));
     }
   } finally {
     at.done();
     before.done();
   }
   return out;
+}
+
+/**
+ * What a file's run against the parent's code shows of its new tests (`fresh`): each failed first, or passed first. A run
+ * that did not finish — stopped at the time limit, or crashed before its report — shows nothing: every test in it would
+ * look failed. The file is then not replayed, and its new tests are named, so a reason may still be kept for one.
+ */
+export function judged(file, fresh, then) {
+  if (!then.ran)
+    return {
+      file,
+      failedFirst: [],
+      passedFirst: [],
+      notReplayed: 'its run against the code before it did not finish',
+      tests: fresh,
+    };
+  return {
+    file,
+    failedFirst: fresh.filter((n) => !then.passed.includes(n)),
+    passedFirst: fresh.filter((n) => then.passed.includes(n)),
+  };
 }
 
 /** The new tests that passed against their parent's code with no reason recorded for them. */
@@ -273,7 +289,7 @@ function gather(repo, commits, files) {
       });
       if (f.notReplayed) {
         e.notReplayed++;
-        e.notReplayedCommits.push({ commit, reason: f.notReplayed });
+        e.notReplayedCommits.push({ commit, reason: f.notReplayed, ...(f.tests?.length ? { tests: f.tests } : {}) });
         continue;
       }
       e.replayed++;

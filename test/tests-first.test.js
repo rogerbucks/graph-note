@@ -8,7 +8,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
-import { replay, unexplained, record, update } from '../scripts/tests-first.mjs';
+import { judged, replay, unexplained, record, update } from '../scripts/tests-first.mjs';
 import { path, readJSON, walk } from './repository/repo.js';
 
 /** A small repository: each commit a set of files, written then committed; returns the folder and the commit ids. */
@@ -155,6 +155,23 @@ describe('replaying a commit against its parent’s code', () => {
   });
 });
 
+describe('a run against the code before that did not finish', () => {
+  // found at 7590e45 (10 Oct 2026): the parent's run of a test file hung to the time limit, and every new test in it was
+  // counted as seen failing, a guard that passes by design among them
+  test('proves nothing: the file is not replayed, no test is seen failing, and its new tests are named', () => {
+    const fresh = ['guards', 'fails first'];
+    const timedOut = judged('test/x.test.js', fresh, { ran: false, passed: [], failed: [] });
+    assert.deepEqual(timedOut.failedFirst, []);
+    assert.deepEqual(timedOut.passedFirst, []);
+    assert.match(timedOut.notReplayed, /did not finish/);
+    assert.deepEqual(timedOut.tests, fresh);
+    const finished = judged('test/x.test.js', fresh, { ran: true, passed: ['guards'], failed: ['fails first'] });
+    assert.deepEqual(finished.failedFirst, ['fails first']);
+    assert.deepEqual(finished.passedFirst, ['guards']);
+    assert.equal(finished.notReplayed, undefined);
+  });
+});
+
 describe('keeping the record', () => {
   test('updating a record with the commits since its head gives what recording them all would', () => {
     const r = repository([
@@ -203,13 +220,18 @@ describe('this repository’s records', () => {
     const excused = Object.entries(exceptions).flatMap(([file, names]) =>
       Object.keys(names).map((n) => `${file} :: ${n}`),
     );
+    // a test new in a commit whose run against the code before it did not finish was neither seen failing nor passing:
+    // a reason may be kept for it
+    const unproved = Object.entries(record.files).flatMap(([file, e]) =>
+      (e.notReplayedCommits ?? []).flatMap((c) => (c.tests ?? []).map((n) => `${file} :: ${n}`)),
+    );
     assert.deepEqual(
       passed.filter((p) => !excused.includes(p)),
       [],
       'unexplained',
     );
     assert.deepEqual(
-      excused.filter((x) => !passed.includes(x)),
+      excused.filter((x) => !passed.includes(x) && !unproved.includes(x)),
       [],
       'a reason for no such test',
     );

@@ -17,8 +17,11 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 
 - `blocks.ts` — where each gql block of a note is, and what its graph line says.
 - `block-items.ts` — a block's top-level items (paths, SET, MATCH), so a bad one can be left out.
-- `partial-read.ts` — reading the blocks as far as they can be read, with a problem for each part left out; past a budget
-  of re-reading, the rest of a badly broken block is left out at once, so reading never holds the page (spec §9).
+- `partial-read.ts` — reading the blocks as far as they can be read, with a problem for each part left out. A failed block
+  is read again on its own, and each line found from an index of the block's lines: the same reading as before, proved
+  against the old one kept in `test/partial-read.test.js`. Past a budget of reading again (`REREAD_BUDGET`, 4 million
+  UTF-16 units), the rest of a badly broken block is left out at once, so reading never holds the page (spec §9); the
+  Python reader (`graphspec/reader/drawing.py`) counts and cuts exactly so, so both still draw alike (drawn_in_part).
 - `written-things.ts` — the things written in a block, found by their parentheses: name, kinds, properties, where they are.
 - `name-gaps.ts` — the things of a block that lack a name or a text, with the suggestion and a fix that writes it. No name:
   a warning, and the thing is read as if the suggested name were there, in a copy, never in the note. No text: a hint
@@ -38,9 +41,11 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   dashed and labelled so in both.
 - `render.ts` — laying out with the bundled engine, and what a box's or link's details are.
 - `layout-limits.ts` — how large a graph may be before it is shown as text (spec §9, layout_contained), each limit with
-  its reason: the note's text, measured before it is read (`READ_LIMITS`, `textTooLarge`, which `readNote` applies); the
-  things, links, longest word and drawing instructions, before any layout (`LAYOUT_LIMITS`, `tooLarge`); and the tighter
-  ones on the page's own thread (`PAGE_LIMITS`).
+  its reason: the note's text, measured before it is read (`READ_LIMITS`, `textTooLarge`, which `readNote` applies to the
+  graph blocks and shared schemas, never to a query or an excerpt); the things, links, longest word and drawing
+  instructions, before any layout (`LAYOUT_LIMITS`, `tooLarge`); and the tighter ones on the page's own thread
+  (`PAGE_LIMITS`). `READ_LIMITS` are the plugin's alone, a known exception to drawing as the Python reader does
+  (drawn_in_part): over them the plugin reads and draws nothing, so there is nothing to compare.
 - `layout-worker.ts` — the layout kept apart from the interface: both sides of the talk with a worker, through a port the
   host gives it — the worker's (`serveLayouts`: its engine started at once, and "ready" said) and the page's
   (`LayoutRunner`: one worker reused; each layout timed from "ready"; a fresh worker after one overruns, none after three
@@ -58,6 +63,8 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `tokens.ts` — the gql-highlight tokenizer, for colouring.
 - `name-suggestions.ts` — a name from a text, in the style of the graph's names and never one of them or a reserved
   word; a text from a name; and the ASCII words and slug of a text (`nameWords`, `nameSlug`), as the graph reader's names allow.
+- `name-book.ts` — a graph's names kept up to date as names are added, its style and the names taken with them, so
+  naming thousands of things never freezes the page (spec §9); each name the one `nameFromText` gives.
 - `commas.ts` — the comma and the colon added for you.
 - `autocomplete.ts` — completing as you type: the one best inline match (a closer, keyword, kind, type, property name or
   value) and the closer stepped over; nothing is inserted unasked.

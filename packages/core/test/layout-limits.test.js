@@ -45,6 +45,28 @@ describe('the note’s text, measured before it is read', () => {
     assert.deepEqual(reading.problems, []);
   });
 
+  test('only what is read is measured: a large query or excerpt never stops the graphs beside it being drawn', () => {
+    const query = `// graph: g · QUERY\n${'MATCH (n) RETURN n\n'.repeat(40_000)}`;
+    const excerpt = `// excerpt\n${'(a:A)\n'.repeat(40_000)}`;
+    const reading = readNote([query, excerpt, "// graph: g\n(a:A {name: 'a'})"]);
+    assert.equal(reading.tooLarge, undefined);
+    assert.equal(reading.graphs.get('g').boxes.length, 1);
+  });
+
+  test('the shared schemas are read, so they are measured too', () => {
+    const schema = `// graph: s · SCHEMA s\n${"(k:Meta:ElementType {name: 'LINKS', kind: 'edge'}),\n".repeat(12_000)}`;
+    const reading = readNote(["// graph: g · schema s\n(a:A {name: 'a'})"], 0, [schema]);
+    assert.equal(reading.tooLarge?.limit, 'text-bytes');
+    assert.equal(reading.graphs.size, 0);
+  });
+
+  test('over the limits the plugin draws nothing, so there is nothing to hold to the Python reader (drawn_in_part)', () => {
+    const reading = readNote([`// graph: g\n${"(a:A {name: 'a'}),\n".repeat(30_000)}(b:B)`]);
+    assert.ok(reading.tooLarge);
+    assert.equal(reading.graphs.size, 0);
+    assert.deepEqual(reading.problems, []);
+  });
+
   test('a note under the limits is read as before, with no refusal', () => {
     const reading = readNote(["// graph: g\n(a:A {name: 'a'})"]);
     assert.equal(reading.tooLarge, undefined);

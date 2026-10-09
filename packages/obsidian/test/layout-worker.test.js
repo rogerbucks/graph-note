@@ -80,8 +80,9 @@ describe('a graph over a size limit is shown as its text, with a banner saying w
     });
   });
 
-  // 600 kB, not the core's 5 MB: so the replay against the code before the fix fails in seconds, rather than hanging
-  test('a block too large to read — 600 kB, each line broken — is its text and a banner at once, never read', async () => {
+  // one pattern of 12,000 lines, its ( never closed: one part to the reader, so the code before the limit read it quickly
+  // and showed it as text with its problem, not with this banner (the core's tests hold the many-broken-parts cases)
+  test('a block too large to read — 600 kB, one pattern left open — is its text and a banner at once, never read', async () => {
     await withPlugin(null, {}, async (env) => {
       const body = Array.from({ length: 12_000 }, (_, i) => `(n${i}:Thing {name: 'Thing number ${i} of many'},`);
       const t = performance.now();

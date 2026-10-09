@@ -60,30 +60,69 @@ function startsWithKind(name: string, kind: string): 'kind' | 'initial' | null {
  * not vote), the words they usually have, and a prefix from the kind where most names with a kind show one.
  */
 export function nameStyleOf(names: GraphNames): NameStyle {
-  const entries = entriesOf(names);
-  const votes = new Map<string, number>();
-  for (const [name] of entries) {
-    const casing = CASINGS.find(([, re]) => re.test(name.replace(/_?\d+$/, '')))?.[0];
-    if (casing) votes.set(casing, (votes.get(casing) ?? 0) + 1);
-  }
-  const casing = CASINGS.map(([c]) => c).reduce((best, c) => ((votes.get(c) ?? 0) > (votes.get(best) ?? 0) ? c : best));
-  const kinded = entries.filter(([, kind]) => kind);
-  const found = kinded.map(([name, kind]) => startsWithKind(name, kind ?? ''));
-  const count = (p: 'kind' | 'initial') => found.filter((f) => f === p).length;
+  const tally = emptyTally();
+  for (const [name, kind] of entriesOf(names)) tallyName(tally, name, kind, 1);
+  return styleOfTally(tally);
+}
+
+/** Of the names in one casing: how many, their words in all, and how many of those with a kind start with it, or its initial. */
+interface CasingTally {
+  names: number;
+  words: number;
+  kind: number;
+  initial: number;
+}
+
+/**
+ * What a style is found from, counted name by name, so it can be kept as names are added (name-book.ts) rather than
+ * counted again for each: the names in each casing, and those with a kind, and of them those that start with it.
+ */
+export interface NameTally {
+  casings: Record<NameStyle['casing'], CasingTally>;
+  kinded: number;
+  kind: number;
+  initial: number;
+}
+
+/** A tally of no names. */
+export function emptyTally(): NameTally {
+  const none = (): CasingTally => ({ names: 0, words: 0, kind: 0, initial: 0 });
+  return { casings: { snake: none(), camel: none(), pascal: none() }, kinded: 0, kind: 0, initial: 0 };
+}
+
+/** Counts a name, with its kind, into a tally (`sign` 1), or takes it out (-1). */
+export function tallyName(tally: NameTally, name: string, kind: string | undefined, sign: 1 | -1): void {
+  const found = kind ? startsWithKind(name, kind) : null;
+  if (kind) tally.kinded += sign;
+  if (found) tally[found] += sign;
+  // a name of one word shows no casing, so does not vote
+  const casing = CASINGS.find(([, re]) => re.test(name.replace(/_?\d+$/, '')))?.[0];
+  if (!casing) return;
+  const c = tally.casings[casing];
+  c.names += sign;
+  c.words += sign * wordsOfName(name).length;
+  if (found) c[found] += sign;
+}
+
+/**
+ * The style a tally shows: the casing most names show (a name of one word shows none, so does not vote), the words they
+ * usually have, and a prefix from the kind where most names with a kind show one.
+ */
+export function styleOfTally(tally: NameTally): NameStyle {
+  const casing = CASINGS.map(([c]) => c).reduce((best, c) =>
+    tally.casings[c].names > tally.casings[best].names ? c : best,
+  );
+  const { kinded, kind, initial } = tally;
   const prefix =
-    kinded.length >= 2 && count('kind') >= 2 && count('kind') >= kinded.length * 0.6
+    kinded >= 2 && kind >= 2 && kind >= kinded * 0.6
       ? 'kind'
-      : kinded.length >= 2 && count('initial') >= 2 && count('initial') >= kinded.length * 0.6
+      : kinded >= 2 && initial >= 2 && initial >= kinded * 0.6
         ? 'initial'
         : 'none';
-  const counts = entries.flatMap(([name], i) => {
-    if (!CASINGS.find(([c, re]) => c === casing && re.test(name.replace(/_?\d+$/, '')))) return [];
-    const own = prefix !== 'none' && found[kinded.indexOf(entries[i] as [string, string])] === prefix ? 1 : 0;
-    return [wordsOfName(name).length - own];
-  });
-  const words = counts.length
-    ? Math.min(4, Math.max(1, Math.ceil(counts.reduce((a, b) => a + b, 0) / counts.length - 0.5)))
-    : DEFAULT_WORDS;
+  // the words of each name in that casing, less one for a prefix from its kind when names have one
+  const c = tally.casings[casing];
+  const own = prefix === 'kind' ? c.kind : prefix === 'initial' ? c.initial : 0;
+  const words = c.names ? Math.min(4, Math.max(1, Math.ceil((c.words - own) / c.names - 0.5))) : DEFAULT_WORDS;
   return { casing, words, prefix };
 }
 
@@ -138,6 +177,21 @@ function joined(words: string[], casing: NameStyle['casing']): string {
 export function nameFromText(text: string, names: GraphNames, kind?: string, given?: NameStyle): string {
   const style = given ?? nameStyleOf(names),
     taken = new Set(entriesOf(names).map(([n]) => n.toLowerCase()));
+  return composeName(text, style, kind, (lower) => taken.has(lower)).name;
+}
+
+/**
+ * The name nameFromText gives, in a style already found, against names taken as `taken` says (lowercased): the name, the
+ * base it was made from, and its place among the base's numbered names (1 for the base itself). `from` is the first place
+ * worth trying, when every place before it is known to be taken (name-book.ts keeps it, so as not to count up again).
+ */
+export function composeName(
+  text: string,
+  style: NameStyle,
+  kind: string | undefined,
+  taken: (lower: string) => boolean,
+  from: (base: string) => number = () => 1,
+): { name: string; base: string; place: number } {
   let words = nameWords(text);
   const significant = words.filter((w) => !SMALL_WORDS.has(w));
   if (significant.length) words = significant;
@@ -149,10 +203,11 @@ export function nameFromText(text: string, names: GraphNames, kind?: string, giv
   const compose = (ws: string[]) => joined(lead ? [lead, ...ws] : ws, style.casing);
   while (words.length > 1 && compose(words).length > LONGEST) words.pop();
   const base = compose(words).slice(0, LONGEST);
-  const numbered = (n: number) => (style.casing === 'snake' ? `${base}_${n}` : `${base}${n}`);
-  let name = base;
-  for (let n = 2; taken.has(name.toLowerCase()) || RESERVED.has(name.toLowerCase()); n++) name = numbered(n);
-  return name;
+  const numbered = (n: number) => (n === 1 ? base : style.casing === 'snake' ? `${base}_${n}` : `${base}${n}`);
+  let place = from(base),
+    name = numbered(place);
+  while (taken(name.toLowerCase()) || RESERVED.has(name.toLowerCase())) name = numbered(++place);
+  return { name, base, place };
 }
 
 /**

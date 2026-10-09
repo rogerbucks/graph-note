@@ -12,10 +12,11 @@ export interface Item {
 
 /** The top-level items of a block — each path, SET or MATCH — with the text and the 0-based lines each starts and ends on. */
 export function blockItems(text: string): { text: string; line: number; end: number }[] {
+  const lineOf = lineIndex(text); // asked once for every item: never by slicing the block from its start (§9)
   return items(text).map((it) => ({
     text: text.slice(it.from, it.to),
-    line: lineAt(text, it.from) - 1,
-    end: lineAt(text, it.to - 1) - 1,
+    line: lineOf(it.from) - 1,
+    end: lineOf(it.to - 1) - 1,
   }));
 }
 
@@ -111,15 +112,15 @@ export function without(text: string, all: Item[], drop: Item[]): string {
   const blank = (from: number, to: number) => {
     for (let k = from; k < to; k++) if (chars[k] !== '\n') chars[k] = ' ';
   };
+  // where each item is, and which are dropped, found once: many dropped at a time never search the list for each (§9)
+  const place = new Map(all.map((it, k) => [it, k]));
+  const dropped = new Set(drop);
   for (const it of drop) {
     blank(it.from, it.to);
-    const prior = all[all.indexOf(it) - 1];
+    const prior = all[(place.get(it) ?? 0) - 1];
     // keep its comma when the one before it is missing: it is then all that parts what came before from what comes after
-    if (it.comma !== -1 && !(prior && prior.comma === -1 && !drop.includes(prior))) blank(it.comma, it.comma + 1);
-    else {
-      const before = all[all.indexOf(it) - 1];
-      if (before && before.comma !== -1 && !drop.includes(before)) blank(before.comma, before.comma + 1);
-    }
+    if (it.comma !== -1 && !(prior && prior.comma === -1 && !dropped.has(prior))) blank(it.comma, it.comma + 1);
+    else if (prior && prior.comma !== -1 && !dropped.has(prior)) blank(prior.comma, prior.comma + 1);
   }
   return chars.join('');
 }
