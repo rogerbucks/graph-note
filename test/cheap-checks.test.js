@@ -350,6 +350,10 @@ describe('a short guide for AI sessions', () => {
     for (const entry of ignored()) assert.ok(guide().includes(`\`${entry}\``), entry);
   });
 
+  test('CLAUDE.md holds only the line that points to AGENTS.md; anything more needs the owner’s own word', () => {
+    assert.equal(read('CLAUDE.md'), '@AGENTS.md\n');
+  });
+
   test('CONTRIBUTING.md lists this test and mentions the cheap commands', () => {
     const c = read('CONTRIBUTING.md');
     assert.match(c, /^- `test\/cheap-checks\.test\.js` — /m);

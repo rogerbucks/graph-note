@@ -25,6 +25,7 @@ const PY_TEST = /(^|\/)tests\/test_\w+\.py$/;
 /** Files whose tests do not carry their name: the test that checks each. */
 const OWNED = {
   'AGENTS.md': 'test/cheap-checks.test.js',
+  'CLAUDE.md': 'test/cheap-checks.test.js',
   '.ignore': 'test/cheap-checks.test.js',
   'scripts/quiet-reporter.mjs': 'test/cheap-checks.test.js',
   'scripts/quiet_unittest.py': 'test/cheap-checks.test.js',
