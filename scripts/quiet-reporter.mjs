@@ -26,7 +26,24 @@ export function shorten(text, max = CUT) {
   return one.length <= max ? one : `${one.slice(0, max)}…`;
 }
 
-const show = (value) => shorten(inspect(value, { depth: 4, breakLength: Infinity, compact: true }));
+const show = (value) =>
+  inspect(value, { depth: 4, breakLength: Infinity, compact: true, maxArrayLength: 2000 }).replace(/\s*\n\s*/g, ' ');
+
+/** How much of the text before the first difference is kept, so the difference is read in its place. */
+const LEAD = 40;
+
+/**
+ * Two texts cut to about `max` characters each, around where they first differ, so the difference stays in view. An
+ * ellipsis marks each end that was cut. Texts that both fit are given back whole.
+ */
+export function cutAround(a, b, max = CUT) {
+  if (a.length <= max && b.length <= max) return [a, b];
+  let at = 0;
+  while (at < a.length && at < b.length && a[at] === b[at]) at++;
+  const start = Math.max(0, at - LEAD);
+  const cut = (text) => `${start ? '…' : ''}${text.slice(start, start + max)}${text.length > start + max ? '…' : ''}`;
+  return [cut(a), cut(b)];
+}
 const firstLine = (text) => String(text ?? '').split('\n')[0];
 
 /** The roots a path may be under: the working folder as given, and as the file system really has it. */
@@ -72,7 +89,8 @@ export function describeFailure(error, cwd = process.cwd()) {
   if (cause?.code === 'ERR_ASSERTION' && cause.operator !== 'fail') {
     if (cause.generatedMessage === false && cause.message)
       lines.push(`  message: ${shorten(local(firstLine(cause.message), cwd))}`);
-    lines.push(`  expected: ${show(cause.expected)}`, `  actual:   ${show(cause.actual)}`);
+    const [expected, actual] = cutAround(show(cause.expected), show(cause.actual));
+    lines.push(`  expected: ${expected}`, `  actual:   ${actual}`);
   } else {
     const named = cause?.name && cause.name !== 'Error' ? `${cause.name}: ` : 'Error: ';
     lines.push(`  error: ${shorten(local(`${named}${firstLine(cause?.message ?? cause)}`, cwd))}`);
@@ -102,6 +120,7 @@ export default async function* quietReporter(source) {
   let total = 0;
   let failed = 0;
   let skipped = 0;
+  let todo = 0;
   for await (const { type, data } of source) {
     if (type === 'test:stderr') {
       stderr.set(data.file, [...(stderr.get(data.file) ?? []), data.message]);
@@ -111,11 +130,21 @@ export default async function* quietReporter(source) {
       names.set(data.file, running.slice(0, data.nesting + 1));
     } else if (type === 'test:pass' && data.details?.type !== 'suite') {
       total++;
-      if (data.skip !== undefined || data.todo !== undefined) skipped++;
+      if (data.skip !== undefined) skipped++;
+      else if (data.todo !== undefined) todo++;
     } else if (type === 'test:fail') {
       const error = data.details?.error;
-      if (data.details?.type === 'suite' && error?.failureType === 'subtestsFailed') continue;
+      // a suite, or a test with subtests, fails because a subtest did: that one is reported, not its parent
+      if (error?.failureType === 'subtestsFailed') {
+        if (data.details?.type !== 'suite') total++;
+        continue;
+      }
       total++;
+      // a failing test marked todo is expected to fail, and Node does not fail the run for it
+      if (data.todo !== undefined) {
+        todo++;
+        continue;
+      }
       failed++;
       const where = `${inRepository(data.file, cwd) ?? data.file}:${data.line}`;
       const broken = data.nesting === 0 && inRepository(data.file, cwd) === data.name;
@@ -128,5 +157,6 @@ export default async function* quietReporter(source) {
       yield `${where}  ${name || data.name}\n${detail.join('\n')}\n`;
     }
   }
-  yield failed ? `FAIL ${failed} of ${total} tests\n` : `ok ${total} tests${skipped ? `, ${skipped} skipped` : ''}\n`;
+  const extras = `${skipped ? `, ${skipped} skipped` : ''}${todo ? `, ${todo} todo` : ''}`;
+  yield failed ? `FAIL ${failed} of ${total} tests\n` : `ok ${total} tests${extras}\n`;
 }

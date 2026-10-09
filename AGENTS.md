@@ -10,6 +10,8 @@ Short on purpose. How to check your work cheaply, where things live, and what no
 - `npm run test:changed` — only the tests of the modules you changed (`zoom.ts` runs `zoom*.test.js`), quietly. It
   runs the whole suite and says why in one line when you changed something shared, such as `index.ts`, `package.json`
   or test support. `npm run test:changed -- --list` shows the plan without running it.
+- `test:changed` follows test naming inside a package: a core change can affect plugin tests, so run the full suite
+  before a merge.
 - `npm run test:ai:py` — the Python library's tests, quietly (needs `uv`). Add test file names to run only those.
 - One test file: `npm run test:ai -- path/to/file.test.js`. Add `-s` (`npm run -s test:ai`) to hide npm's own banner.
 
@@ -20,6 +22,15 @@ in `python/graph_spec` also `uv run --locked ruff check`, `ruff format --check` 
 `python -m unittest discover -s tests`. CI runs all of them, and the full suite is never skipped.
 
 On a CI failure, read only the failed job's log: `gh run view <id> --log-failed`. Not the whole run.
+
+## Guards
+
+A guard or hook that refuses a command means stop and ask the owner. Never reach the same result by another tool,
+wording or route. The one exception: when the refusal itself says how to do it allowably, do exactly that and say so.
+
+## The test vault
+
+`scripts/reset-test-vault.mjs` restores `test-vault/`; run it before and after any session in the test vault.
 
 ## Where things live
 
@@ -42,6 +53,6 @@ of tokens for nothing. Change them only by running the command that makes them.
 - `test/tests-first.json` — the record of tests seen failing first; `node scripts/tests-first.mjs --update` writes it.
 - `THIRD_PARTY_NOTICES.md` — made by `node scripts/notices.mjs` from `licences/bundled.json`.
 - `licences/texts/` — the licence texts those notices quote.
-- `test-vault/.obsidian/` — the test vault's settings and plugin copies, once the vault is in the repository.
+- `test-vault/.obsidian/` — the test vault's settings and plugin copies.
 
 Search one on purpose with `rg --no-ignore PATTERN path`.

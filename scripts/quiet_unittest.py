@@ -20,6 +20,7 @@ import contextlib
 import inspect
 import io
 import os
+import re
 import sys
 import traceback
 import unittest
@@ -74,6 +75,7 @@ class Quiet(unittest.TestResult):
         self.total = 0
         self.skipped_count = 0
         self.entries: list[str] = []
+        self.failed: set[str] = set()
 
     def startTest(self, test) -> None:  # noqa: N802 - the name unittest calls
         super().startTest(test)
@@ -83,19 +85,45 @@ class Quiet(unittest.TestResult):
         super().addSkip(test, reason)
         self.skipped_count += 1
 
-    def _note(self, test, err) -> None:
+    def _note_import_failure(self, value) -> None:
+        """A test file that could not be imported: the wrapped exception's last line and place."""
+        message = str(value)
+        module = re.search(r"Failed to import test module: (\S+)", message)
+        error = [line for line in message.splitlines() if line.strip()][-1]
+        frames = [
+            f"{relative(path)}:{number}"
+            for path, number in re.findall(r'File "([^"]+)", line (\d+)', message)
+            if inside_repository(path)
+        ]
+        lines = [f"{frames[0] if frames else '?'}  import {module.group(1) if module else '?'}"]
+        lines.append(f"  error: {shorten(error)}")
+        if len(frames) > 1 and frames[-1] != frames[0]:
+            lines.append(f"  at {frames[-1]}")
+        self.entries.append("\n".join(lines))
+
+    def _note(self, test, err, subtest=None) -> None:
+        self.failed.add(test.id())
         kind, value, tb = err
+        if type(test).__name__ == "_FailedTest" and isinstance(value, ImportError):
+            return self._note_import_failure(value)
         frame = first_frame(tb)
-        # a test file that could not be imported, or a setUpClass that failed, is not a test method
-        broken = type(test).__name__ == "_FailedTest" or not hasattr(test, "_testMethodName")
-        title = test.id() if broken else f"{type(test).__name__}.{test._testMethodName}"
-        lines = [f"{(frame or '?') if broken else where(test)}  {title}"]
-        lines.append(
-            f"  error: {shorten(traceback.format_exception_only(kind, value)[0].splitlines()[0])}"
-        )
+        if not hasattr(test, "_testMethodName"):  # a setUpClass that failed is not a test method
+            title, place = test.id(), frame or "?"
+        else:
+            title, place = f"{type(test).__name__}.{test._testMethodName}", where(test)
+            if subtest is not None:  # its parameters, as unittest names them: (i=2)
+                title += f" {subtest._subDescription()}"
+        lines = [f"{place}  {title}"]
+        error = traceback.format_exception_only(kind, value)[0].splitlines()[0]
+        lines.append(f"  error: {shorten(error)}")
         if frame:
             lines.append(f"  at {frame}")
         self.entries.append("\n".join(lines))
+
+    def addSubTest(self, test, subtest, err) -> None:  # noqa: N802 - the name unittest calls
+        super().addSubTest(test, subtest, err)
+        if err is not None:
+            self._note(test, err, subtest)
 
     def addError(self, test, err) -> None:  # noqa: N802 - the name unittest calls
         super().addError(test, err)
@@ -107,6 +135,7 @@ class Quiet(unittest.TestResult):
 
     def addUnexpectedSuccess(self, test) -> None:  # noqa: N802 - the name unittest calls
         super().addUnexpectedSuccess(test)
+        self.failed.add(test.id())
         self.entries.append(
             f"{where(test)}  {test.id().split('.', 1)[-1]}\n  error: unexpected success"
         )
@@ -134,7 +163,7 @@ def main(files: list[str]) -> int:
         load(files).run(result)
     for entry in result.entries:
         print(entry)
-    failed = len(result.entries)
+    failed = len(result.failed)
     if failed:
         print(f"FAIL {failed} of {result.total} tests")
         return 1

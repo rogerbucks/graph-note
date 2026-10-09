@@ -16,5 +16,5 @@ test/tests-first.json
 THIRD_PARTY_NOTICES.md
 licences/texts/
 
-# the test vault's Obsidian settings and plugin copies (the vault arrives with its own branch)
+# the test vault's Obsidian settings and plugin copies
 test-vault/.obsidian/

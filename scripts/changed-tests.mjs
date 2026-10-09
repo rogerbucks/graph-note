@@ -22,22 +22,28 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const JS_TEST = /\.test\.(js|mjs)$/;
 const PY_TEST = /(^|\/)tests\/test_\w+\.py$/;
 
-/** Files whose tests do not carry their name: the test that checks each. */
-const OWNED = {
-  'AGENTS.md': 'test/cheap-checks.test.js',
-  'CLAUDE.md': 'test/cheap-checks.test.js',
-  '.ignore': 'test/cheap-checks.test.js',
-  'scripts/quiet-reporter.mjs': 'test/cheap-checks.test.js',
-  'scripts/quiet_unittest.py': 'test/cheap-checks.test.js',
-  'scripts/changed-tests.mjs': 'test/cheap-checks.test.js',
-  'scripts/check-classification.mjs': 'test/classification.test.js',
-  'scripts/notices.mjs': 'test/licences.test.js',
-  'THIRD_PARTY_NOTICES.md': 'test/licences.test.js',
-  'test/seen-failing.json': 'test/tests-first.test.js',
-  'test/tests-first.json': 'test/tests-first.test.js',
-};
-/** Any other document is checked by the conventions test (CONTRIBUTING.md, the guides, the README). */
-const DOCUMENT_TEST = 'test/conventions.test.js';
+const CHEAP = 'test/cheap-checks.test.js';
+const CONVENTIONS = 'test/conventions.test.js';
+
+/**
+ * Files whose tests do not carry their name: the tests that read each. A file matched here needs only those tests.
+ * Each is what the test opens: conventions.test.js reads CONTRIBUTING.md, every GUIDE.md and the README;
+ * policy.test.js reads the README; test-vault.test.js reads test-vault/ and its reset script; requirements.test.js reads
+ * requirements/ and its check; cheap-checks.test.js reads AGENTS.md, CLAUDE.md, .ignore and its own three tools.
+ */
+const READERS = [
+  [
+    /^(AGENTS\.md|CLAUDE\.md|\.ignore|scripts\/(quiet-reporter|changed-tests)\.mjs|scripts\/quiet_unittest\.py)$/,
+    [CHEAP],
+  ],
+  [/^(CONTRIBUTING\.md|(packages|python)\/[^/]+\/GUIDE\.md)$/, [CONVENTIONS]],
+  [/^README\.md$/, [CONVENTIONS, 'test/policy.test.js']],
+  [/^(test-vault\/.*|scripts\/reset-test-vault\.mjs)$/, ['test/test-vault.test.js']],
+  [/^(requirements\/.*|scripts\/check-requirements\.mjs)$/, ['test/requirements.test.js']],
+  [/^(scripts\/check-classification\.mjs)$/, ['test/classification.test.js']],
+  [/^(scripts\/notices\.mjs|THIRD_PARTY_NOTICES\.md)$/, ['test/licences.test.js']],
+  [/^test\/(seen-failing|tests-first)\.json$/, ['test/tests-first.test.js']],
+];
 
 const base = (file) => file.slice(file.lastIndexOf('/') + 1);
 const stem = (file) => base(file).replace(/(\.d)?\.[^.]+$/, '');
@@ -58,8 +64,8 @@ export function testsForChanges(changed, tracked) {
   for (const path of changed) {
     let m;
     if (JS_TEST.test(path) || PY_TEST.test(path)) add([path]);
-    else if (OWNED[path]) add([OWNED[path]]);
-    else if ((m = /^(packages\/[^/]+)\/(?:src|bin|harness)\/.+\.(?:ts|js|mjs)$/.exec(path))) {
+    else if ((m = READERS.find(([pattern]) => pattern.test(path)))) add(m[1]);
+    else if ((m = /^(packages\/[^/]+)\/(?:src|bin)\/.+\.(?:ts|js|mjs)$/.exec(path))) {
       if (base(path) === 'index.ts') return shared(path, ': the package’s entry');
       const mirrored = tracked.filter(
         (f) =>
@@ -79,9 +85,10 @@ export function testsForChanges(changed, tracked) {
       );
       if (!mirrored.length) return shared(path, ': no test is named after it');
       add(mirrored);
-    } else if (/\.md$/.test(path)) add([DOCUMENT_TEST]);
-    else return shared(path);
+    } else return shared(path);
   }
+  // paths changed, yet no test left to run for any (a deleted test file, say): not safe to run nothing
+  if (changed.length && !files.size) return { all: true, reason: `${changed[0]} maps to no test` };
   return { all: false, files: [...files].sort() };
 }
 
@@ -93,13 +100,19 @@ const git = (...args) =>
     .split('\n')
     .filter(Boolean);
 
-/** The commit the change is measured from: where this branch left main, or HEAD when there is no main to compare with. */
+/**
+ * The commit the change is measured from: where this branch left main. On main itself there is no such point, so it is
+ * the commit before the last one (the last commit is the change). HEAD when there is no main to compare with.
+ */
 function baseCommit(ref) {
+  const branch = git('rev-parse', '--abbrev-ref', 'HEAD')[0];
   for (const candidate of ref ? [ref] : ['main', 'origin/main']) {
     try {
-      return git('merge-base', 'HEAD', candidate)[0];
+      const base = git('merge-base', 'HEAD', candidate)[0];
+      if (ref || branch !== candidate.replace(/^origin\//, '') || base !== git('rev-parse', 'HEAD')[0]) return base;
+      return git('rev-parse', 'HEAD~1')[0];
     } catch {
-      /* no such branch here: try the next */
+      /* no such branch here, or no commit before this one: try the next */
     }
   }
   return 'HEAD';
@@ -120,6 +133,10 @@ function main(argv) {
   const ref = at === -1 ? undefined : argv[at + 1];
   const given = argv.filter((a, i) => !a.startsWith('--') && (at === -1 || i !== at + 1));
   const changed = given.length ? given : changedPaths(ref);
+  if (!changed.length) {
+    process.stdout.write('nothing has changed, so no tests were chosen\n');
+    return 0;
+  }
   const plan = testsForChanges(changed, repositoryFiles());
   const python = changed.some((f) => f.startsWith('python/'));
   if (list) {
@@ -135,7 +152,6 @@ function main(argv) {
   }
   const js = plan.files.filter((f) => JS_TEST.test(f));
   const py = plan.files.filter((f) => PY_TEST.test(f));
-  if (!plan.files.length) process.stdout.write('no tests touched by this change\n');
   const jsStatus = js.length ? execute(process.execPath, ['--test', reporter, ...js]) : 0;
   const pyStatus = py.length ? execute('uv', [...pyRunner, ...py.map(base)]) : 0;
   return jsStatus || pyStatus;
