@@ -88,9 +88,9 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
       coloured text, and no tooltip appears over it. Mac ✓ d601110, 8 Oct 2026.
 - [ ] While the card is being edited, its pencil shows as a book (view) icon. Pressing it writes what was typed and
       closes the box, as Done does, and the pencil comes back. Mac ✓ d601110, 8 Oct 2026.
-- [ ] In edit mode, tapping a box or a link shows its properties, looking as a note's Properties panel looks in this
+- [x] In edit mode, tapping a box or a link shows its properties, looking as a note's Properties panel looks in this
       theme: the same rows, icons, spacing, type and colours, in both the light and dark themes.
-      Mac ✓ 0.3.0, 9 Oct 2026.
+      Mac ✓ 0.3.0, iPhone ✓ 0.3.0, 9 Oct 2026.
 - [ ] A number has a number field, a date opens the date picker, and true or false is a checkbox.
 - [ ] A value is written when its field is left; a value that does not fit its type says why, and nothing changes.
 - [ ] Tapping a property's icon opens a menu to change its type or remove it. Add property adds a row in place, its
