@@ -112,6 +112,22 @@ describe('what tapping a box shows', () => {
     assert.match(d.problems[0].message, /nowhere/);
   });
 
+  test('a box drawn under a suggested name shows the warning that suggests it, with its fix; others show none', () => {
+    const text = note[0] + ",\n(:Option {name: 'Small reader'})";
+    const reading = readNote([text]);
+    const d = details(reading, 'reader', 'small_reader');
+    assert.equal(d.text, 'Small reader');
+    assert.equal(d.suggested?.suggested, 'small_reader');
+    assert.equal(d.suggested?.fixTitle, 'Add the name small_reader');
+    assert.deepEqual(d.suggested?.insert, { line: 4, character: 1, text: 'small_reader' });
+    assert.deepEqual(
+      d.problems.map((p) => p.message),
+      ['this thing has no name; suggested: small_reader'],
+    );
+    assert.equal(details(reading, 'reader', 'large').suggested, undefined);
+    assert.deepEqual(details(reading, 'reader', 'large').problems, []);
+  });
+
   test('an id that is not in the graph has no details', () => {
     assert.equal(details(readNote(note), 'reader', 'missing'), null);
   });

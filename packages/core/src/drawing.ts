@@ -4,7 +4,7 @@
 import gs from '@graph-note/graph-spec';
 import type { Graph, World } from '@graph-note/graph-spec';
 import { estimate } from './estimates.ts';
-import type { GraphDrawing, NoteReading } from './note-reading.ts';
+import type { GraphDrawing, NoteReading, Problem } from './note-reading.ts';
 import { readBlocks } from './partial-read.ts';
 import { undeclared, undeclaredUse } from './schema-checks.ts';
 
@@ -20,23 +20,35 @@ function textOf(g: Graph, id: string): string {
 
 const byCode = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
-function drawingOf(world: World, name: string, own: Graph | undefined): GraphDrawing {
+function drawingOf(world: World, name: string, own: Graph | undefined, problems: Problem[]): GraphDrawing {
   const g = world[name] as Graph;
   const hidden = new Set(gs.SCHEMA_LABELS);
   const shared = g.labelled('ElementType').length ? undefined : (gs.schemaFor(world, name)[1] ?? own);
   const readings = gs.readings(g, shared);
   const ids = [...g.nodes.keys()].filter((i) => ![...(g.nodes.get(i)?.[0] ?? [])].some((l) => hidden.has(l)));
   const drawn = new Set(ids);
+  // a thing written without a name is drawn under the name suggested for it, and marked so until the name is written (§4)
+  const suggested = new Map(
+    problems.flatMap((p) =>
+      p.graph === name && p.suggested && p.insert
+        ? [[p.suggested, { block: p.block, line: p.insert.line, character: p.insert.character }] as const]
+        : [],
+    ),
+  );
   return {
     graph: name,
-    boxes: ids.map((key) => ({
-      key,
-      kind: [...(g.nodes.get(key)?.[0] ?? [])]
-        .filter((l) => !hidden.has(l))
-        .sort(byCode)
-        .join(' · '),
-      text: textOf(g, key),
-    })),
+    boxes: ids.map((key) => {
+      const place = suggested.get(key);
+      return {
+        key,
+        kind: [...(g.nodes.get(key)?.[0] ?? [])]
+          .filter((l) => !hidden.has(l))
+          .sort(byCode)
+          .join(' · '),
+        text: textOf(g, key),
+        ...(place ? { suggested: place } : {}),
+      };
+    }),
     links: g.edges
       .filter(([s, , d]) => drawn.has(s) && drawn.has(d))
       .map(([from, type, to]) => ({ from, type, reading: gs.word(readings, type), to })),
@@ -57,7 +69,7 @@ export function readNote(blocks: string[], upTo = blocks.length - 1, shared: str
   const graphs = new Map<string, GraphDrawing>();
   for (const name of Object.keys(world)) {
     const own = whole[name]?.labelled('ElementType').length ? whole[name] : undefined;
-    const d = drawingOf(world, name, own);
+    const d = drawingOf(world, name, own, problems);
     const shared = (world[name] as Graph).labelled('ElementType').length
       ? undefined
       : (gs.schemaFor(world, name)[1] ?? own);

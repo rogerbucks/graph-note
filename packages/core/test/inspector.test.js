@@ -185,6 +185,29 @@ describe('where an item is written in the block', () => {
     assert.equal(spanOf(text, { thing: 'a' })?.from, text.lastIndexOf('(a:T)'));
   });
 
+  test('a thing drawn under a suggested name: the pattern that writes it, found by where its ( is (unnamed_drawn_suggested)', () => {
+    const text =
+      "// graph: reader\n(q:Question {title: 'Which?'}),\n(:Option {name: 'Large reader'}) , (:Option {name: 'B'})";
+    const place = readNote([text])
+      .graphs.get('reader')
+      .boxes.find((b) => b.key === 'large_reader').suggested;
+    assert.equal(span(text, { thing: 'large_reader' }), null, 'its name is not written');
+    const s = spanOf(text, { thing: 'large_reader' }, place);
+    assert.equal(text.slice(s.from, s.to), "(:Option {name: 'Large reader'})");
+    assert.equal(spanOf(text, { thing: 'large_reader' }, { line: 1, character: 1 }), null, 'a ( with a name is not it');
+    assert.equal(
+      spanOf(text, { thing: 'large_reader' }, { line: 9, character: 1 }),
+      null,
+      'nor a place not in the block',
+    );
+    const named = text.replace("(:Option {name: 'Large", "(large_reader:Option {name: 'Large");
+    assert.equal(
+      span(named, { thing: 'large_reader' }),
+      "(large_reader:Option {name: 'Large reader'})",
+      'once written, it is found by its name',
+    );
+  });
+
   test('a drawn link, found in the block being edited: by its ends and type', () => {
     const r = readNote([BLOCK]);
     assert.equal(linkInBlock(r, 'reader', 1, BLOCK), 1);

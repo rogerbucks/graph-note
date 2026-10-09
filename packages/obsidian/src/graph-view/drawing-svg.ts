@@ -2,6 +2,7 @@
 // or estimated — made reachable from the keyboard and named for screen readers, and the drawing told as sentences.
 import { textVersion, withoutColorMix } from '@graph-note/core';
 import type { Drawn, GraphDrawing } from '@graph-note/core';
+import { boxLabel } from './suggested-name';
 
 let described = 0;
 
@@ -22,7 +23,7 @@ export function insertSvg(viewport: HTMLElement, drawn: Drawn, d: GraphDrawing |
     if (!box) continue;
     g.setAttribute('tabindex', '0');
     g.setAttribute('role', 'button');
-    g.setAttribute('aria-label', box.kind ? `${box.kind}: ${box.text}` : box.text);
+    g.setAttribute('aria-label', boxLabel(box));
     g.setAttribute('data-key', box.key);
     g.setAttribute('aria-pressed', 'false');
   }

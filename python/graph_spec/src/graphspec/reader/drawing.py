@@ -7,7 +7,9 @@ import re
 from collections.abc import Sequence
 from typing import Any
 
+from graphspec.reader.block_items import _items, _line_at, _without
 from graphspec.reader.lexer import COMMENT_FIX, COMMENT_RULE, ProfileError, header
+from graphspec.reader.name_gaps import suggested_names, with_names
 from graphspec.reader.store import Store
 
 
@@ -15,94 +17,8 @@ from graphspec.reader.store import Store
 # A block that cannot be read is drawn in part, by every reader (decided with Roger, 8 Oct 2026):
 # what can be read of it is drawn, exactly as packages/core/src/drawing.ts reads it, and the rest
 # is listed. Drawing only: Store.apply, and so checking and loading, stay all-or-nothing.
-
-
-def _items(text):
-    """A block's top-level items, as (start, end, comma at): split at commas outside brackets,
-    strings and comments, and before SET, MATCH and INSERT; comma at is -1 when none ends it."""
-    out = []
-    depth, start, last, i, n = 0, -1, -1, 0, len(text)
-
-    def end(comma):
-        nonlocal start
-        if start != -1:
-            out.append((start, last + 1, comma))
-        start = -1
-
-    while i < n:
-        c = text[i]
-        if c == "/" and text[i + 1 : i + 2] == "/":
-            while i < n and text[i] != "\n":
-                i += 1
-            i += 1
-            continue
-        if c.isspace():
-            i += 1
-            continue
-        if (
-            depth == 0
-            and re.match(r"[A-Za-z]", c)
-            and (i == 0 or not re.match(r"\w", text[i - 1], re.ASCII))
-        ):
-            w = re.match(r"[A-Za-z]+", text[i:]).group(0).upper()
-            if w in ("SET", "MATCH", "INSERT") and start != -1:
-                end(-1)
-        if c == "," and depth == 0:
-            end(i)
-            i += 1
-            continue
-        # a path closed at the end of one line and another opened on the next: a missing comma,
-        # so two items, for recovery
-        if (
-            c == "("
-            and depth == 0
-            and start != -1
-            and text[last] == ")"
-            and "\n" in text[last + 1 : i]
-        ):
-            end(-1)
-        if start == -1:
-            start = i
-        if c == "'":
-            i += 1
-            while i < n and text[i] != "'":
-                i += 2 if text[i] == "\\" else 1
-            i = min(i, n - 1)
-        elif c in "([{":
-            depth += 1
-        elif c in ")]}":
-            depth = max(0, depth - 1)
-        last = i
-        i += 1
-    end(-1)
-    return out
-
-
-def _line_at(text, pos):
-    return text[:pos].count("\n") + 1
-
-
-def _without(text, every, drop):
-    """The block with items blanked out (newlines kept, so every other line keeps its number),
-    with the comma beside each."""
-    chars = list(text)
-
-    def blank(a, b):
-        for k in range(a, b):
-            if chars[k] != "\n":
-                chars[k] = " "
-
-    for it in drop:
-        blank(it[0], it[1])
-        at = every.index(it)
-        prior = every[at - 1] if at > 0 else None
-        # keep its comma when the one before it is missing: it is then all that parts what came
-        # before from what comes after
-        if it[2] != -1 and not (prior and prior[2] == -1 and prior not in drop):
-            blank(it[2], it[2] + 1)
-        elif prior and prior[2] != -1 and prior not in drop:
-            blank(prior[2], prior[2] + 1)
-    return "".join(chars)
+# A thing written without a name is drawn under its suggested name (10 Oct 2026), read in from a
+# copy of its block; the note is never changed.
 
 
 def _first_line(text):
@@ -204,7 +120,10 @@ def read_for_drawing(
     item at the failing line is blanked and the whole read starts again, so a block that cannot
     be read is drawn in part. Each problem is {graph, block, line, severity, message, fix} and,
     for an error, dropped: the text left out. A comma with nothing after it at a block's end is a
-    warning, with the character it is at on its line, and is read as if it were not there.
+    warning, with the character it is at on its line, and is read as if it were not there. A
+    thing written with text and no name is read under the name suggested for it, from a copy of
+    its block, with a warning whose suggested is that name and whose character is the place after
+    its ( where the name would go (10 Oct 2026).
     Drawing only — Store.apply, which checks and loads, still refuses the block whole."""
     clean = list(blocks)
     problems, skip = [], set()
@@ -222,6 +141,25 @@ def read_for_drawing(
             if dangling:
                 clean[i] = dangling[0]
                 problems.append({**dangling[1], "block": i, "graph": _graph_of(text)})
+    # a thing given text but no name: a warning whose fix adds the name suggested; the name is
+    # only read in, in a copy, so that the thing is drawn — the note itself is never rewritten
+    named = suggested_names(
+        [("" if i in skip else t, _graph_of(blocks[i])) for i, t in enumerate(clean)]
+    )
+    for i, block_named in enumerate(named):
+        for n in block_named:
+            problems.append(
+                {
+                    "graph": _graph_of(blocks[i]),
+                    "block": i,
+                    "line": n["line"] + 1,
+                    "severity": "warning",
+                    "message": f"this thing has no name; suggested: {n['name']}",
+                    "fix": f"add the name {n['name']} after the (, or write one of your own",
+                    "character": n["character"],
+                    "suggested": n["name"],
+                }
+            )
     attempt = 0
     while True:
         store = Store()
@@ -235,7 +173,7 @@ def read_for_drawing(
             if i in skip:
                 continue
             try:
-                store.apply(text)
+                store.apply(with_names(text, named[i]))
             except Exception as e:  # as the core: anything that stops a block is a problem
                 failed = (i, e)
                 break

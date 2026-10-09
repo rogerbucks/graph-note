@@ -31,6 +31,8 @@ module that ties the parts together, named as the folder is.
 - `drawing-svg.ts` — the SVG put in the card, each box and link reachable by keyboard and named.
 - `taps.ts` — what a tap or a key lands on, and the nearest things to a tap.
 - `details-panel.ts` — the details of a box or link, and the inspector while the block is edited.
+- `suggested-name.ts` — a box drawn under a suggested name: what screen readers hear of it, where it is written in the
+  block being edited, and in its details its suggested name with the one-click fix that writes it.
 - `placement.ts` — where a card is: read-only in reading view; waiting for a card to be put on the page.
 - `view-options.ts` — what a drawing is given.
 

@@ -2,6 +2,9 @@
 // pattern of the names already in the graph, a text follows from a name, and a suggested name is never one already taken.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { nameFromText, nameSlug, nameStyleOf, nameWords, textFromName } from '../src/name-suggestions.ts';
 
 describe('a name from a text', () => {
@@ -157,5 +160,41 @@ describe('a text from a name', () => {
   test('nothing gives nothing', () => {
     assert.equal(textFromName(''), '');
     assert.equal(textFromName('_'), '');
+  });
+});
+
+describe('the table every reader shares', () => {
+  // unnamed_drawn_suggested (spec §4, Roger, 10 Oct 2026): a thing written without a name is drawn under its suggested
+  // name by every reader alike, so the Python library suggests the names the core does — the same words, casing,
+  // numbering and reserved words. Both are held to one table, python/graph_spec/tests/name_cases.json, which the Python
+  // tests read too.
+  const TABLE = JSON.parse(readFileSync(new URL('../../../python/graph_spec/tests/name_cases.json', import.meta.url)));
+  const PY_SRC = fileURLToPath(new URL('../../../python/graph_spec/src', import.meta.url));
+  const namesOf = (names) => (Array.isArray(names) ? names : new Map(Object.entries(names)));
+
+  test('the core and the Python library give every answer in the table', () => {
+    const core = {
+      from_text: TABLE.from_text.map((c) => nameFromText(c.text, namesOf(c.names), c.kind ?? undefined)),
+      styles: TABLE.styles.map((c) => nameStyleOf(namesOf(c.names))),
+      words: TABLE.words.map(([text]) => nameWords(text)),
+    };
+    const program = [
+      'import json, sys',
+      `sys.path.insert(0, ${JSON.stringify(PY_SRC)})`,
+      'import gql_profile as gp',
+      't = json.load(sys.stdin)',
+      "print(json.dumps({'from_text': [gp.name_from_text(c['text'], c['names'], c['kind']) for c in t['from_text']],",
+      "  'styles': [gp.name_style_of(c['names']) for c in t['styles']],",
+      "  'words': [gp.name_words(w) for w, _ in t['words']]}))",
+    ].join('\n');
+    const r = spawnSync('python3', ['-c', program], { input: JSON.stringify(TABLE), encoding: 'utf8' });
+    const expected = {
+      from_text: TABLE.from_text.map((c) => c.name),
+      styles: TABLE.styles.map((c) => c.style),
+      words: TABLE.words.map(([, w]) => w),
+    };
+    assert.deepEqual(core, expected, 'the core');
+    assert.equal(r.status, 0, r.stderr);
+    assert.deepEqual(JSON.parse(r.stdout), expected, 'the Python library');
   });
 });

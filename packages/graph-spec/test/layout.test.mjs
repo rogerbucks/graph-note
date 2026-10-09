@@ -70,18 +70,52 @@ const cases = {
     rankdir: 'LR',
   },
   'one thing, no links': { nodes: [['x', 'Thing', '']], edges: [], rankdir: 'LR' },
+  // unnamed_drawn_suggested (spec §4, 10 Oct 2026): a box drawn under a suggested name is dashed and labelled so
+  'boxes drawn under a suggested name, one with no kind': {
+    nodes: [
+      ['q', 'Question', 'Which?'],
+      ['large_reader', 'Option', 'Large reader'],
+      ['eyes', '', 'Easy on the eyes'],
+    ],
+    edges: [
+      ['large_reader', 'answers', 'q'],
+      ['eyes', 'favours', 'large_reader'],
+    ],
+    rankdir: 'TB',
+    suggested: ['large_reader', 'eyes'],
+  },
 };
 
 describe('the layout source', () => {
   const py = python(
-    "import graph_svg\nout = {}\nfor name, c in cases.items():\n    src, kinds, readings = graph_svg.dot_source([tuple(n) for n in c['nodes']], [tuple(e) for e in c['edges']], c['rankdir'])\n    out[name] = [src, kinds, readings]\nprint(json.dumps(out))",
+    "import graph_svg\nout = {}\nfor name, c in cases.items():\n    marked = {'suggested': c['suggested']} if 'suggested' in c else {}\n    src, kinds, readings = graph_svg.dot_source([tuple(n) for n in c['nodes']], [tuple(e) for e in c['edges']], c['rankdir'], **marked)\n    out[name] = [src, kinds, readings]\nprint(json.dumps(out))",
     cases,
   );
   for (const [name, c] of Object.entries(cases)) {
     test(`is byte-identical to Python's: ${name}`, () => {
-      assert.deepEqual(layout.dotSource(c.nodes, c.edges, c.rankdir, style), py[name]);
+      assert.deepEqual(layout.dotSource(c.nodes, c.edges, c.rankdir, style, c.suggested), py[name]);
     });
   }
+
+  test('a box drawn under a suggested name is dashed, and labelled so by a sign and in words, never by colour alone', () => {
+    const c = cases['boxes drawn under a suggested name, one with no kind'];
+    const lines = layout.dotSource(c.nodes, c.edges, c.rankdir, style, c.suggested)[0].split('\n');
+    const box = (key) => lines.find((l) => l.startsWith(`  "${key}" [label=`)) ?? '';
+    for (const key of ['large_reader', 'eyes']) {
+      assert.match(box(key), /, style="rounded,filled,dashed"\];$/, key);
+      assert.match(
+        box(key),
+        /<font point-size="9" color="#0000fe">✎ SUGGESTED NAME<\/font><\/td><\/tr><\/table>>/,
+        key,
+      );
+    }
+    assert.doesNotMatch(box('q'), /dashed|SUGGESTED/);
+    assert.deepEqual(
+      layout.dotSource(c.nodes, c.edges, c.rankdir, style, []),
+      layout.dotSource(c.nodes, c.edges, c.rankdir, style),
+      'with none suggested, the source is as before',
+    );
+  });
 
   test('the recorded cases still give their recorded source', () => {
     for (const [name, c] of Object.entries(recorded)) {

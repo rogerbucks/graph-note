@@ -127,6 +127,14 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 - [ ] While editing, in the card or the pane, choosing a box selects the pattern that writes it in the text, and
       choosing a link selects its brackets and arrow (slice 2).
 - [ ] Phone: the properties open as a sheet at the bottom of the screen, and every field and icon is easy to hit.
+- [ ] A thing written without a name (`(:Option {name: 'Small reader'})`), desktop and phone, light and dark: its box is
+      drawn under the suggested name, with a dashed outline and "✎ SUGGESTED NAME" under its text, readable and not
+      shown by colour alone. Tapping it opens its details like any box's: "✎ Suggested name: small_reader — not written
+      yet". Outside edit mode nothing can be written there; the note is unchanged. While editing, tapping it selects
+      `(:Option {name: 'Small reader'})` in the text, and the details offer "Add the name small_reader". Pressing it
+      writes the name after the `(`, the box is redrawn solid and unlabelled, and the warning leaves the problems list.
+      One undo (⌘Z, or the phone's gesture) takes the name back out, and the dashed box and the warning return. Phone:
+      the button is easy to hit in the sheet (slice 2, unnamed_drawn_suggested).
 
 ## Accessibility — spec §8, §11
 

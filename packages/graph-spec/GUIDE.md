@@ -43,7 +43,9 @@ and no module requires one that requires it back.
 
 ## Beside them
 
-- **`src/graph-layout.js`** — the Graphviz layout source, byte-identical to `graph_svg.py`. Still one UMD file.
+- **`src/graph-layout.js`** — the Graphviz layout source, byte-identical to `graph_svg.py`, with its optional
+  `suggested` keys: boxes drawn under a suggested name, dashed and labelled from the style's `suggested_style` and
+  `suggested_label`. Still one UMD file.
 - **`src/graph-spec.d.ts`**, **`src/graph-layout-types.d.ts`** — the types the TypeScript in `packages/core` uses.
 - **`bin/graph-spec-check-node.js`** — the Node adapter: one JSON request on stdin, one answer on stdout. The vault's
   conformance suite and the Python parity tests run the checker through it.

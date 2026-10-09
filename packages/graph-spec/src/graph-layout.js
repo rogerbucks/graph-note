@@ -8,7 +8,8 @@ Usage:
 
 Writes: nothing (library).
 
-nodes: [[key, kind, text]]; edges: [[source key, reading, target key]]; style: the locked style, graph_svg.style.json.
+nodes: [[key, kind, text]]; edges: [[source key, reading, target key]]; style: the locked style, graph_svg.style.json;
+suggested (optional): the keys of boxes drawn under a suggested name, dashed and labelled so, as dot_source's suggested.
 Returns [source, kinds, readings], as dot_source does. The parts Python lends it — textwrap, zlib.crc32, html.escape and
 round — are ported here exactly, each proved against Python by the layout tests. Nothing Node-specific.
 */
@@ -112,7 +113,7 @@ round — are ported here exactly, each proved against Python by the layout test
   const hex2 = (i) => i.toString(16).padStart(2, '0');
 
   // ── the layout source (graph_svg.dot_source) ─────────────────────────────────────────────────
-  function label(kind, text, style) {
+  function label(kind, text, style, suggested) {
     const lines = wrap(text, style.wrap_chars);
     const rowsOf = lines.length ? lines : [''];
     const extra = Math.max(0, roundHalfEven((style.line_height - 1.0) * style.font_size)),
@@ -123,11 +124,21 @@ round — are ported here exactly, each proved against Python by the layout test
       ? `<tr><td cellpadding="0"><font point-size="${num(style.kind_font_size)}" color="#0000fe">${escape(kind.toUpperCase())}</font></td></tr>` +
         `<tr><td cellpadding="0" height="${num(style.caption_gap)}"></td></tr>`
       : '';
-    return `<<table border="0" cellborder="0" cellspacing="${spacing}" cellpadding="0">${cap}${rows}</table>>`;
+    // a box drawn under a suggested name says so beneath its text, as the caption is written (10 Oct 2026)
+    const mark = suggested
+      ? `<tr><td cellpadding="0" height="${num(style.caption_gap)}"></td></tr>` +
+        `<tr><td cellpadding="0"><font point-size="${num(style.kind_font_size)}" color="#0000fe">${escape(style.suggested_label.toUpperCase())}</font></td></tr>`
+      : '';
+    return `<<table border="0" cellborder="0" cellspacing="${spacing}" cellpadding="0">${cap}${rows}${mark}</table>>`;
   }
 
-  /** [source, kinds, readings] for nodes [[key, kind, text]] and edges [[source key, reading, target key]], as graph_svg.dot_source. */
-  function dotSource(nodes, edges, rankdir, style) {
+  /**
+   * [source, kinds, readings] for nodes [[key, kind, text]] and edges [[source key, reading, target key]], as
+   * graph_svg.dot_source. suggested: the keys of boxes drawn under a suggested name, each outlined in the style's
+   * suggested_style and labelled with its suggested_label.
+   */
+  function dotSource(nodes, edges, rankdir, style, suggested = []) {
+    const marked = new Set(suggested);
     const kinds = [...new Set(nodes.map(([, k]) => k).filter((k) => k))]; // order of first appearance — colours depend on it
     const dir = rankdir || style.rankdir;
     if (!dir) throw new Error("KeyError: 'rankdir' — give a direction; the style sets none");
@@ -139,7 +150,10 @@ round — are ported here exactly, each proved against Python by the layout test
     ];
     for (const [key, kind, text] of nodes) {
       const i = kind ? kinds.indexOf(kind) : 99;
-      out.push(`  "${key}" [label=${label(kind, text, style)}, fillcolor="#0001${hex2(i)}", color="#0002${hex2(i)}"];`);
+      const dashed = marked.has(key) ? `, style="${style.suggested_style}"` : '';
+      out.push(
+        `  "${key}" [label=${label(kind, text, style, marked.has(key))}, fillcolor="#0001${hex2(i)}", color="#0002${hex2(i)}"${dashed}];`,
+      );
     }
     // one column per kind, when no link joins two things of that kind
     const of = new Map(nodes.map(([key, kind]) => [key, kind]));

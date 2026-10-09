@@ -14,6 +14,11 @@ export interface Box {
   key: string;
   kind: string;
   text: string;
+  /**
+   * Only for a thing written without a name, drawn under the name suggested for it (spec §4, unnamed_drawn_suggested):
+   * the block it is written in, and the 0-based line and character there, just after its (, where the name would go.
+   */
+  suggested?: { block: number; line: number; character: number };
 }
 
 /** One link to draw, read in its schema's words. */
@@ -53,6 +58,8 @@ export interface Problem {
   fixTitle?: string;
   /** Exactly where the word to change is: a 0-based line of the block, and the characters it spans on it. */
   span?: { line: number; character: number; end: number };
+  /** The name suggested for a thing written without one, which it is drawn under until its fix writes it. */
+  suggested?: string;
 }
 
 /** What a note's graph blocks say: each graph as drawn, the problems, and the graphs themselves, as written and joined. */

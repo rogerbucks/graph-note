@@ -1,0 +1,165 @@
+{
+ "about": "Names suggested for things written without one (editor spec §4, unnamed_drawn_suggested), as every reader suggests them: the core (packages/core/src/name-suggestions.ts and name-gaps.ts) and the Python library (graphspec/reader/name_suggestions.py and name_gaps.py) must each give every answer here, so a thing written without a name is drawn under the same name by both. names is a list of names, or an object of name to kind. A place is 0-based: the line of the block, and the character after the thing's (, counted in UTF-16 units, an emoji being two.",
+ "from_text": [
+  { "text": "Large e-ink reader, with a case", "names": [], "kind": null, "name": "large_eink_reader" },
+  { "text": "Don't panic!", "names": [], "kind": null, "name": "dont_panic" },
+  { "text": "The size of the screen", "names": [], "kind": null, "name": "size_screen" },
+  { "text": "To be or to be", "names": [], "kind": null, "name": "to_be_or" },
+  { "text": "of the", "names": [], "kind": null, "name": "of_the" },
+  { "text": "Costs much less", "names": ["small_reader", "large_reader"], "kind": null, "name": "costs_much" },
+  { "text": "Costs much less", "names": ["reader"], "kind": null, "name": "costs_much_less" },
+  { "text": "Costs much less today", "names": ["easy_on_the_eyes", "costs_less_today"], "kind": null, "name": "costs_much_less" },
+  { "text": "Costs much less", "names": ["smallReader", "largeReader"], "kind": null, "name": "costsMuch" },
+  { "text": "Costs much less", "names": ["SmallReader", "LargeReader"], "kind": null, "name": "CostsMuch" },
+  { "text": "Costs much", "names": ["small_reader", "large_reader", "eyes", "priceList", "question"], "kind": null, "name": "costs_much" },
+  { "text": "Costs much less", "names": { "o_small_reader": "Option", "o_large_reader": "Option", "r_eyes": "Reason" }, "kind": "Option", "name": "o_costs_much" },
+  { "text": "Costs much less", "names": { "o_small_reader": "Option", "o_large_reader": "Option", "r_eyes": "Reason" }, "kind": "Reason", "name": "r_costs_much" },
+  { "text": "Costs much less", "names": { "o_small_reader": "Option", "o_large_reader": "Option", "r_eyes": "Reason" }, "kind": null, "name": "costs_much" },
+  { "text": "Costs much less", "names": { "o_small_reader": "Option", "o_large_reader": "Option", "plain_name_here_now": "" }, "kind": "Option", "name": "o_costs_much_less" },
+  { "text": "Costs much", "names": { "optionSmallReader": "Option", "optionLargeReader": "Option" }, "kind": "Option", "name": "optionCostsMuch" },
+  { "text": "Tablet", "names": { "option_small": "Option", "option_large": "Option" }, "kind": "Option", "name": "option_tablet" },
+  { "text": "Large reader", "names": ["large_reader", "small_reader"], "kind": null, "name": "large_reader_2" },
+  { "text": "Large reader", "names": ["large_reader", "large_reader_2", "small_reader"], "kind": null, "name": "large_reader_3" },
+  { "text": "Large reader", "names": ["Large_Reader"], "kind": null, "name": "large_reader_2" },
+  { "text": "Large reader", "names": ["largeReader", "smallReader"], "kind": null, "name": "largeReader2" },
+  { "text": "Large reader", "names": ["LargeReader", "SmallReader"], "kind": null, "name": "LargeReader2" },
+  { "text": "Match", "names": [], "kind": null, "name": "match_2" },
+  { "text": "Return", "names": [], "kind": null, "name": "return_2" },
+  { "text": "Set", "names": [], "kind": null, "name": "set_2" },
+  { "text": "ID", "names": [], "kind": null, "name": "id_2" },
+  { "text": "東京駅", "names": [], "kind": "Tag", "name": "tag" },
+  { "text": "京都", "names": [], "kind": null, "name": "thing" },
+  { "text": "", "names": [], "kind": "Ünïcödé", "name": "ncd" },
+  { "text": "Café déjà vu", "names": [], "kind": null, "name": "cafe_deja_vu" },
+  { "text": "Grüße aus Köln", "names": [], "kind": null, "name": "gru_e_aus" },
+  { "text": "İstanbul trip", "names": [], "kind": null, "name": "istanbul_trip" },
+  { "text": "Rock’n’roll e-reader", "names": [], "kind": null, "name": "rocknroll_ereader" },
+  { "text": "🚌 Bus stop", "names": [], "kind": null, "name": "bus_stop" },
+  { "text": "Line one\nline two", "names": [], "kind": null, "name": "line_one_line" },
+  { "text": "2026 plan", "names": [], "kind": null, "name": "item_2026_plan" },
+  { "text": "1 item", "names": ["item_1", "item_2"], "kind": null, "name": "item_1_item" },
+  {
+   "text": "Supercalifragilisticexpialidocious and extraordinarily long words",
+   "names": [],
+   "kind": null,
+   "name": "supercalifragilisticexpialidocio"
+  }
+ ],
+ "styles": [
+  { "names": [], "style": { "casing": "snake", "words": 3, "prefix": "none" } },
+  {
+   "names": ["small_reader", "large_reader", "eyes", "priceList", "question"],
+   "style": { "casing": "snake", "words": 2, "prefix": "none" }
+  },
+  {
+   "names": { "o_small_reader": "Option", "o_large_reader": "Option", "r_eyes": "Reason" },
+   "style": { "casing": "snake", "words": 2, "prefix": "initial" }
+  }
+ ],
+ "words": [
+  ["Café — déjà vu!", ["cafe", "deja", "vu"]],
+  ["Don't stop-me", ["dont", "stopme"]],
+  ["東京 station", ["station"]]
+ ],
+ "blocks": [
+  {
+   "about": "a thing with text and no name, after things that show the graph's style",
+   "blocks": [
+    [
+     "// graph: reader\n(question:Question {title: 'Which device?'}),\n(small_reader:Option {name: 'Small reader'}),\n(:Option {name: 'Large reader'})",
+     "reader"
+    ]
+   ],
+   "named": [[{ "line": 3, "character": 1, "name": "large_reader" }]]
+  },
+  {
+   "about": "a thing with no kind, and one in a path",
+   "blocks": [["// graph: reader\n({name: 'Eyes'})-[:FAVOURS]->(:Option {name: 'Large reader'})", "reader"]],
+   "named": [
+    [
+     { "line": 1, "character": 1, "name": "eyes" },
+     { "line": 1, "character": 30, "name": "large_reader" }
+    ]
+   ]
+  },
+  {
+   "about": "never a name in the graph, in any of its blocks, nor one just suggested; another graph's names do not count",
+   "blocks": [
+    ["// graph: reader\n(large_reader:Option {name: 'Large reader'})", "reader"],
+    ["// graph: reader\n(:Option {name: 'Large reader'}),\n(:Option {name: 'Large reader'})", "reader"],
+    ["// graph: other\n(:Option {name: 'Large reader'})", "other"]
+   ],
+   "named": [
+    [],
+    [
+     { "line": 1, "character": 1, "name": "large_reader_2" },
+     { "line": 2, "character": 1, "name": "large_reader_3" }
+    ],
+    [{ "line": 1, "character": 1, "name": "large_reader" }]
+   ]
+  },
+  {
+   "about": "a name taken by a thing in a later block of the same graph",
+   "blocks": [
+    ["// graph: reader\n(:Option {name: 'Large reader'})", "reader"],
+    ["// graph: reader\n(large_reader:Option {name: 'Another'})", "reader"]
+   ],
+   "named": [[{ "line": 1, "character": 1, "name": "large_reader_2" }], []]
+  },
+  {
+   "about": "an emoji before the thing on its line counts as two",
+   "blocks": [["// graph: trip\n(home:Place {name: 'Home 🏠'}), (:Leg {name: 'Walk'})", "trip"]],
+   "named": [[{ "line": 1, "character": 33, "name": "walk" }]]
+  },
+  {
+   "about": "a thing in a MATCH, in a comment or in a string is not one written without a name",
+   "blocks": [
+    [
+     "// graph: reader\n// (:Option {name: 'In a comment'})\nMATCH (:Option {id: 'x'}),\n(:Option {id: 'y'})\nINSERT (a:Option {name: 'A (:Option {name: \"inside\"})'})",
+     "reader"
+    ]
+   ],
+   "named": [[]]
+  },
+  {
+   "about": "a thing across several lines is found where its ( is",
+   "blocks": [["// graph: reader\n(:Option {\n  name: 'Large reader'\n})", "reader"]],
+   "named": [[{ "line": 1, "character": 1, "name": "large_reader" }]]
+  },
+  {
+   "about": "a prefix made from the kind, and the length, followed from the graph's names",
+   "blocks": [
+    [
+     "// graph: reader\n(o_small:Option {name: 'Small'}),\n(o_large:Option {name: 'Large'}),\n(:Option {name: 'Tablet computer'})",
+     "reader"
+    ]
+   ],
+   "named": [[{ "line": 3, "character": 1, "name": "o_tablet" }]]
+  },
+  {
+   "about": "an id taken, as a name is",
+   "blocks": [["// graph: reader\n(a:T {id: 'large_reader', name: 'A'}),\n(:T {name: 'Large reader'})", "reader"]],
+   "named": [[{ "line": 2, "character": 1, "name": "large_reader_2" }]]
+  },
+  {
+   "about": "a reserved word is numbered; a schema's things, a thing with no text and one whose properties cannot be read are left alone",
+   "blocks": [
+    [
+     "// graph: reader\n(:Option {name: 'Match'}),\n(:ElementType {name: 'Option', kind: 'node'}),\n(:Option),\n(:Option {name: 'Broken', price: })",
+     "reader"
+    ]
+   ],
+   "named": [[{ "line": 1, "character": 1, "name": "match_2" }]]
+  },
+  {
+   "about": "camelCase names, and text under title",
+   "blocks": [
+    [
+     "// graph: g\n(smallReader:Option {name: 'Small reader'}),\n(largeReader:Option {name: 'Large reader'}),\n({title: 'Costs much less'})",
+     "g"
+    ]
+   ],
+   "named": [[{ "line": 3, "character": 1, "name": "costsMuch" }]]
+  }
+ ]
+}

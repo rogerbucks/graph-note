@@ -17,13 +17,17 @@ export interface LayoutSource {
   readings: string[];
 }
 
-/** The Graphviz source for a drawing, laid out across (LR) or down (TB). */
+/**
+ * The Graphviz source for a drawing, laid out across (LR) or down (TB). A box drawn under a suggested name (spec §4) is
+ * dashed and labelled as suggested here, as graph_svg.py marks it, so every reader draws it alike.
+ */
 export function layoutSource(d: GraphDrawing, rankdir: 'LR' | 'TB'): LayoutSource {
   const [source, kinds, readings] = GraphLayout.dotSource(
     d.boxes.map((b) => [b.key, b.kind, b.text]),
     d.links.map((l) => [l.from, l.reading, l.to]),
     rankdir,
     STYLE,
+    d.boxes.filter((b) => b.suggested).map((b) => b.key),
   );
   return { source, kinds, readings };
 }

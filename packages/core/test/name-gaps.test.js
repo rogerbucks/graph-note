@@ -4,6 +4,9 @@
 // text is drawn by its name, with a hint that offers the text.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { nameGaps, withNames } from '../src/name-gaps.ts';
 import { readNote } from '../src/drawing.ts';
 
@@ -27,6 +30,7 @@ describe('a thing given text but no name', () => {
         insert: { line: 3, character: 1, text: 'large_reader' },
         fixTitle: 'Add the name large_reader',
         span: { line: 3, character: 0, end: 32 },
+        suggested: 'large_reader',
       },
     ]);
     assert.deepEqual(named, [{ line: 3, character: 1, name: 'large_reader' }]);
@@ -260,5 +264,83 @@ describe('read with the suggestions shown', () => {
     ]);
     assert.equal(r.problems[0]?.message, 'this thing has no name; suggested: large_reader_2');
     assert.deepEqual([...r.graphs.get('reader').boxes.map((b) => b.key)].sort(), ['large_reader', 'large_reader_2']);
+  });
+});
+
+describe('drawn under its suggested name until the name is written', () => {
+  // unnamed_drawn_suggested (spec §4, Roger, 10 Oct 2026): a thing written without a name is drawn under its suggested
+  // name, marked as suggested, by every reader alike; nothing is written until its fix is accepted, and the problem stays
+  // listed until then
+  const UNNAMED = HEAD + "(:Option {name: 'Large reader'}),\n(small_reader)-[:ANSWERS]->(question)";
+  /** The block with a problem's fix made, as pressing it does. */
+  const fixed = (text, p) => {
+    const lines = text.split('\n'),
+      { line, character, text: added } = p.insert;
+    lines[line] = lines[line].slice(0, character) + added + lines[line].slice(character);
+    return lines.join('\n');
+  };
+
+  test('its box says it is drawn under a suggested name, and where its ( is; a box with a written name does not', () => {
+    const boxes = readNote(['Not a block', UNNAMED]).graphs.get('reader').boxes;
+    const large = boxes.find((b) => b.key === 'large_reader');
+    assert.deepEqual(large?.suggested, { block: 1, line: 3, character: 1 });
+    assert.deepEqual(
+      boxes.filter((b) => 'suggested' in b).map((b) => b.key),
+      ['large_reader'],
+    );
+  });
+
+  test('nothing is written until its fix is pressed: the text stays as written and the warning listed, read after read; once pressed, the box is drawn as written', () => {
+    for (let i = 0; i < 3; i++) {
+      const r = readNote([UNNAMED]);
+      assert.deepEqual(r.texts, [UNNAMED]);
+      assert.deepEqual(
+        r.problems.map((p) => p.suggested),
+        ['large_reader'],
+      );
+      assert.ok(r.graphs.get('reader').boxes.find((b) => b.key === 'large_reader')?.suggested);
+    }
+    // once the fix writes the name, the box is drawn as written, unmarked, and the warning is gone
+    const [p] = readNote([UNNAMED]).problems;
+    const written = fixed(UNNAMED, p);
+    assert.equal(written, UNNAMED.replace('(:Option', '(large_reader:Option'));
+    const r = readNote([written]);
+    assert.deepEqual(r.problems, []);
+    assert.deepEqual(
+      r.graphs.get('reader').boxes.find((b) => b.key === 'large_reader'),
+      {
+        key: 'large_reader',
+        kind: 'Option',
+        text: 'Large reader',
+      },
+    );
+  });
+
+  test('the core and the Python library suggest the table’s names, block for block, at the same places', () => {
+    const TABLE = JSON.parse(
+      readFileSync(new URL('../../../python/graph_spec/tests/name_cases.json', import.meta.url)),
+    );
+    const core = TABLE.blocks.map((c) =>
+      nameGaps(c.blocks.map(([text, graph]) => ({ text, graph }))).map((g) => g.named),
+    );
+    assert.deepEqual(
+      core,
+      TABLE.blocks.map((c) => c.named),
+      'the core',
+    );
+    const program = [
+      'import json, sys',
+      `sys.path.insert(0, ${JSON.stringify(fileURLToPath(new URL('../../../python/graph_spec/src', import.meta.url)))})`,
+      'import gql_profile as gp',
+      "out = [[[{k: n[k] for k in ('line', 'character', 'name')} for n in named] for named in gp.suggested_names([tuple(b) for b in c['blocks']])] for c in json.load(sys.stdin)['blocks']]",
+      'print(json.dumps(out))',
+    ].join('\n');
+    const r = spawnSync('python3', ['-c', program], { input: JSON.stringify(TABLE), encoding: 'utf8' });
+    assert.equal(r.status, 0, r.stderr);
+    assert.deepEqual(
+      JSON.parse(r.stdout),
+      TABLE.blocks.map((c) => c.named),
+      'the Python library',
+    );
   });
 });

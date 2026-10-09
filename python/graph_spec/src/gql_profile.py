@@ -75,6 +75,14 @@ from graphspec.reader.drawing import (
     _without,
     read_for_drawing,
 )
+from graphspec.reader.name_suggestions import (
+    name_from_text,
+    name_style_of,
+    name_words,
+)
+from graphspec.reader.name_gaps import (
+    suggested_names,
+)
 from graphspec.reader.canonical_hash import (
     _norm,
     canon,

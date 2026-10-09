@@ -56,6 +56,7 @@ function unnamed(text: string, w: Written, name: string): { gap: Gap; naming: Na
       insert: { line, character, text: name },
       fixTitle: `Add the name ${name}`,
       span: { line: start.line, character: start.character, end: start.character + closeAt - w.open },
+      suggested: name,
     },
   };
 }
