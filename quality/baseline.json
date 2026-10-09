@@ -14,14 +14,14 @@
     "audit_moderate": 0,
     "audit_low": 0,
     "secrets_found": 0,
-    "bundle_bytes": 1951347,
-    "bundle_bytes_without_viz": 350864,
-    "draw_ms": 24.6,
-    "suite_seconds": 23,
+    "bundle_bytes": 1958060,
+    "bundle_bytes_without_viz": 357577,
+    "draw_ms": 24.9,
+    "suite_seconds": 24.3,
     "flaky_tests": 0,
-    "quiet_run_bytes": 13,
+    "quiet_run_bytes": 14,
     "coverage_percent": 99.2,
-    "speed_index": 3.81
+    "speed_index": 3.86
   },
   "details": {
     "max_source_file": "packages/obsidian/src/block-editor/block-editor.ts",
@@ -35,7 +35,7 @@
       },
       {
         "name": "packages/core/src",
-        "bytes": 112250
+        "bytes": 113126
       },
       {
         "name": "packages/graph-spec/src/joins",
@@ -43,7 +43,7 @@
       },
       {
         "name": "packages/obsidian/src/block-editor",
-        "bytes": 40996
+        "bytes": 41075
       },
       {
         "name": "packages/graph-spec/src/rules",
@@ -51,7 +51,7 @@
       },
       {
         "name": "packages/obsidian/src/graph-view",
-        "bytes": 22448
+        "bytes": 25712
       },
       {
         "name": "packages/graph-spec/src/reader",
@@ -59,30 +59,30 @@
       },
       {
         "name": "packages/obsidian/src",
-        "bytes": 15933
+        "bytes": 16277
       },
       {
         "name": "packages/obsidian/src/properties",
-        "bytes": 15135
+        "bytes": 16141
       },
       {
         "name": "packages/graph-spec/src",
-        "bytes": 9981
+        "bytes": 10592
       },
       {
         "name": "packages/graph-spec/src/changesets",
         "bytes": 9194
       },
       {
-        "name": "packages/graph-spec/src/hashing",
-        "bytes": 3290
+        "name": "python/graph_spec/src",
+        "bytes": 3450
       }
     ],
-    "tests": 986,
+    "tests": 1028,
     "failing": [],
     "flaky": [],
     "coverage_files": 26,
-    "coverage_lines": 4071,
+    "coverage_lines": 4108,
     "second_run_passed": true
   }
 }
