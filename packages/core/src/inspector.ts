@@ -3,8 +3,8 @@
 // the block changes. A value is checked against its type before it is written, and written as the document profile writes
 // it; the names already used on things of the same kind are offered first.
 import type { Graph } from '@graph-note/graph-spec';
-import type { NoteReading } from './drawing.ts';
-import { blockItems } from './drawing.ts';
+import type { NoteReading } from './note-reading.ts';
+import { blockItems } from './block-items.ts';
 import { hops } from './estimates.ts';
 
 /** The kinds of value the document profile holds. It holds no lists. */

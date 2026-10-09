@@ -3,8 +3,8 @@
 // Obsidian pane shows them in place. Positions are 0-based lines and characters within the block being edited.
 import gs from '@graph-note/graph-spec';
 import type { Graph } from '@graph-note/graph-spec';
-import { blockItems } from './drawing.ts';
-import type { GraphDrawing, NoteReading, Problem } from './drawing.ts';
+import { blockItems } from './block-items.ts';
+import type { GraphDrawing, NoteReading, Problem } from './note-reading.ts';
 import { distance, hops } from './estimates.ts';
 import { tokenize } from './tokens.ts';
 

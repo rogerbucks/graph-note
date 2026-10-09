@@ -2,8 +2,9 @@
 // typed back into the note; refuses a write when the block changed meanwhile, keeping what was typed as a draft and
 // reloading the block as it now is; reloads a clean pane when the note changes under it; and undoes and redoes writes.
 // Host-free: the host reads and writes the note, and passes its text in.
-import { gqlSpans, graphOfBlock, readNote } from './drawing.ts';
-import type { NoteReading } from './drawing.ts';
+import { gqlSpans, graphOfBlock } from './blocks.ts';
+import { readNote } from './drawing.ts';
+import type { NoteReading } from './note-reading.ts';
 import { History, replaceBlock } from './store.ts';
 import type { BlockRef } from './store.ts';
 

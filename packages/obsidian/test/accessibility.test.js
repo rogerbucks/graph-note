@@ -5,7 +5,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
-import { root } from './lib/load-plugin.js';
+import { root } from './host/load-plugin.js';
 
 const STYLE = JSON.parse(readFileSync(`${root}python/graph_spec/src/graph_svg.style.json`, 'utf8'));
 
@@ -90,7 +90,7 @@ describe('contrast in both themes', () => {
 describe('one colour mapping', () => {
   test('the plugin names no colour of its own: the drawing’s colours come from the style, through the core’s one table', () => {
     const dir = `${root}packages/obsidian/src/`;
-    for (const f of readdirSync(dir).filter((x) => x.endsWith('.ts'))) {
+    for (const f of readdirSync(dir, { recursive: true }).filter((x) => x.endsWith('.ts'))) {
       const src = readFileSync(dir + f, 'utf8');
       assert.doesNotMatch(src, /#[0-9a-fA-F]{6}\b|rgba?\(|--color-[a-z]+/, f);
     }

@@ -3,7 +3,7 @@
 import GraphLayout from '@graph-note/graph-spec/src/graph-layout.js';
 // The locked style lives in the library beside graph_svg.py, its first reader: one file, read by both renderers.
 import STYLE from '../../../python/graph_spec/src/graph_svg.style.json' with { type: 'json' };
-import type { GraphDrawing } from './drawing.ts';
+import type { GraphDrawing } from './note-reading.ts';
 
 /** The drawing's style: the same settings file the Python library draws with. */
 export type Style = typeof STYLE;

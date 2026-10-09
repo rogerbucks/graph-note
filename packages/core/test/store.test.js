@@ -4,7 +4,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { replaceBlock, History } from '../src/store.ts';
-import { gqlBlocks } from '../src/drawing.ts';
+import { gqlBlocks } from '../src/blocks.ts';
 
 const NOTE =
   '# A note\n\nIntro.\n\n```gql\n// graph: g\n(a:T)\n```\n\nMiddle.\n\n```gql\n// graph: h\n(b:T)\n```\nEnd, with no newline';

@@ -12,7 +12,8 @@ Writes: nothing (prints to stdout).
 Each note is read whole, as graph-spec-draw.py reads it, with the vault's shared schemas applied first. The layout source is
 what graph_svg.py would lay out: estimated links are added only to what the editor draws, never to this.
 */
-import { gqlBlocks, readNote } from '../src/drawing.ts';
+import { gqlBlocks } from '../src/blocks.ts';
+import { readNote } from '../src/drawing.ts';
 import { layoutSource } from '../src/layout.ts';
 
 let input = '';

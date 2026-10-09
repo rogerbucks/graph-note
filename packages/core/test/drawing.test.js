@@ -2,7 +2,8 @@
 // a graph with problems still drawn — what can be read is drawn, and the rest is listed as problems.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { gqlBlocks, readNote } from '../src/drawing.ts';
+import { gqlBlocks } from '../src/blocks.ts';
+import { readNote } from '../src/drawing.ts';
 
 const fence = (body, info = 'gql') => '```' + info + '\n' + body + '\n```';
 
@@ -209,7 +210,7 @@ describe('a graph with problems is still drawn', () => {
 
 describe('which blocks are graphs', () => {
   test('a data block with a graph line draws its graph; anything else is code', async () => {
-    const { graphOfBlock } = await import('../src/drawing.ts');
+    const { graphOfBlock } = await import('../src/blocks.ts');
     assert.equal(graphOfBlock('// graph: reader · SOURCE\n(a:T)'), 'reader');
     assert.equal(graphOfBlock('\n\n// graph: g\n(a:T)'), 'g');
     for (const code of [
