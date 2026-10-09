@@ -1,0 +1,88 @@
+{
+  "about": "Measured by scripts/quality-metrics.mjs. quality/baseline.json is the committed copy of a run, the figures every release is held to by scripts/quality-check.mjs; a worse figure needs a reason in quality/accepted.json. To move the baseline, re-run the script with --out quality/baseline.json.",
+  "measured": "2026-10-09",
+  "node": "v26.9.0",
+  "machine": {
+    "os": "darwin",
+    "node_major": 26
+  },
+  "metrics": {
+    "max_source_lines": 390,
+    "max_test_lines": 598,
+    "audit_critical": 0,
+    "audit_high": 0,
+    "audit_moderate": 0,
+    "audit_low": 0,
+    "secrets_found": 0,
+    "bundle_bytes": 1958060,
+    "bundle_bytes_without_viz": 357577,
+    "draw_ms": 24.9,
+    "suite_seconds": 24.3,
+    "flaky_tests": 0,
+    "quiet_run_bytes": 14,
+    "coverage_percent": 99.2,
+    "speed_index": 3.86
+  },
+  "details": {
+    "max_source_file": "packages/obsidian/src/block-editor/block-editor.ts",
+    "max_test_file": "test/cheap-checks.test.js",
+    "secrets": [],
+    "audited_total": 0,
+    "bundle": [
+      {
+        "name": "@viz-js/viz",
+        "bytes": 1600483
+      },
+      {
+        "name": "packages/core/src",
+        "bytes": 113126
+      },
+      {
+        "name": "packages/graph-spec/src/joins",
+        "bytes": 46559
+      },
+      {
+        "name": "packages/obsidian/src/block-editor",
+        "bytes": 41075
+      },
+      {
+        "name": "packages/graph-spec/src/rules",
+        "bytes": 40635
+      },
+      {
+        "name": "packages/obsidian/src/graph-view",
+        "bytes": 25712
+      },
+      {
+        "name": "packages/graph-spec/src/reader",
+        "bytes": 19072
+      },
+      {
+        "name": "packages/obsidian/src",
+        "bytes": 16277
+      },
+      {
+        "name": "packages/obsidian/src/properties",
+        "bytes": 16141
+      },
+      {
+        "name": "packages/graph-spec/src",
+        "bytes": 10592
+      },
+      {
+        "name": "packages/graph-spec/src/changesets",
+        "bytes": 9194
+      },
+      {
+        "name": "python/graph_spec/src",
+        "bytes": 3450
+      }
+    ],
+    "tests": 1028,
+    "failing": [],
+    "flaky": [],
+    "coverage_files": 26,
+    "coverage_lines": 4108,
+    "second_run_passed": true
+  }
+}

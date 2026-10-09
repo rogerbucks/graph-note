@@ -1,0 +1,37 @@
+name: Engine advisories
+
+# Reads what is published, right now, against the Graphviz inside the layout engine (OSV and NVD) and against the package
+# that wraps it (OSV), and fails when it differs from the committed quality/advisories.json or any of it affects the
+# bundled versions (spec §13, engine_version_watched). It only reads: the failure says to run
+# node scripts/engine-version.mjs --refresh and open a pull request, and the new cache is uploaded as an artifact.
+# The release does its own live check in its quality job, and the plugin never asks.
+#
+# The weekly run is off until the owner decides at the public release. To switch it back on,
+# restore the schedule line below (a Monday morning) under "on:".
+on:
+  # schedule:
+  #   - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm audit signatures
+      - run: node scripts/engine-version.mjs --watch --write advisories-fresh.json
+      - if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: advisories-fresh
+          path: advisories-fresh.json
+          if-no-files-found: ignore

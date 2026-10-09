@@ -23,6 +23,12 @@ jobs:
       - run: npm ci
       - run: npm audit signatures
       - run: node scripts/check-classification.mjs --all
+      # the quick quality metrics (file sizes, secrets) against the baseline; the slow ones are the release's
+      - run: node scripts/quality-check.mjs --fast
+      # a baseline committed worse than the base's needs a reason in quality/accepted.json, as a measured run does
+      - env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: node scripts/quality-check.mjs --baseline-since "$BASE"
       - run: npm run typecheck
       - run: npm test
       - run: npm run build

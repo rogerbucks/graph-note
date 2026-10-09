@@ -23,7 +23,8 @@ const swapIn = {
   },
 };
 
-const options = {
+// Exported so scripts/quality-metrics.mjs measures the bundle this build makes, not a copy of its settings.
+export const options = {
   absWorkingDir: here,
   entryPoints: ['src/main.ts'],
   outfile: join(here, '..', '..', 'main.js'),
@@ -40,6 +41,8 @@ const options = {
   plugins: [swapIn],
 };
 
-// --watch (npm run dev): rebuild on every save, for installing into a test vault.
-if (process.argv.includes('--watch')) await (await esbuild.context(options)).watch();
-else await esbuild.build(options);
+// --watch (npm run dev): rebuild on every save, for installing into a test vault. Only when run, never when imported.
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  if (process.argv.includes('--watch')) await (await esbuild.context(options)).watch();
+  else await esbuild.build(options);
+}

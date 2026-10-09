@@ -5,6 +5,7 @@ dist/
 package-lock.json
 licences/
 requirements/
+quality/
 spikes/
 python/
 *.md
