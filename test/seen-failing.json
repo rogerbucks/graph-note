@@ -475,6 +475,10 @@
     "where Workers run > the worker’s code stands alone: every helper it calls is its own, never one of main.js’s, such as __name": {
       "seen_failing_first": false,
       "evidence": "a guard, asked for in review: the worker's code was already self-contained, so it passes before and after by design; it fails the day a build option such as keepNames makes the worker call one of main.js's helpers"
+    },
+    "a graph over a size limit is shown as its text, with a banner saying which limit and the numbers > a block too large to read — 600 kB, each line broken — is its text and a banner at once, never read": {
+      "seen_failing_first": false,
+      "evidence": "renamed from its 5 MB form, written first in commit 7590e45 against the code before the fix, where it held the replay for its whole ten minutes rather than failing; at 600 kB it is still over the 512 kB limit, and fails in seconds against that code"
     }
   }
 }
