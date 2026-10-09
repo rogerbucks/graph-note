@@ -21,7 +21,7 @@ import { BlockNote } from './block-note';
 import type { Refused } from './note-writing';
 import { reloadedMessage, showDraft } from './kept-draft';
 import { PaneDrawing } from './pane-drawing';
-import { watchKeys, watchTyping } from './typing-keys';
+import { fieldTyping, watchKeys, watchTyping } from './typing-keys';
 
 export type { Layout } from './editor-layout';
 
@@ -176,15 +176,12 @@ export class BlockEditor extends Component {
     });
     this.undoes.start(s.text);
     this.el = el;
-    const typing = {
-      typed: () => this.typed(),
+    const typing = fieldTyping(el, s, this.help, this.undoes, {
+      typed: (change) => this.typed(change),
       caretMoved: () => this.caretMoved(),
-      first: () => this.help.first(),
-      accept: (item: CompletionItem) => this.accept(item),
-      step: (e: Event, which: Step) => this.step(e, which),
-      takeInline: () => this.help.takeInline(el.text, () => this.typed('other')),
-      dismissInline: () => this.help.dismissInline(el, s),
-    };
+      accept: (item) => this.accept(item),
+      changed: () => this.changed(),
+    });
     watchTyping(this, el.text, typing);
     this.field.watch(el.text, el.overlay);
     watchKeys(this, el.text, typing);
@@ -223,14 +220,6 @@ export class BlockEditor extends Component {
     this.help.announce(el); // new problems said to screen readers, the focus left where it is
     this.paint();
     this.schedule();
-  }
-
-  /** Undo or redo from the editor's own history, in place of the field's. */
-  private step(e: Event, which: Step): void {
-    const t = this.el?.text;
-    if (!t || !this.undoes.started) return;
-    e.preventDefault();
-    if (this.undoes.step(t, which)) this.changed();
   }
 
   /** A change made for the person, such as one from the inspector: recorded as a step, analysed and written. */

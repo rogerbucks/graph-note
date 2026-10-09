@@ -1,9 +1,12 @@
 // What typing in the block editor's field does (spec §4): each change is read, the caret moving moves the help with it,
-// Tab takes the inline match or else the first suggestion, Enter takes the inline match, Escape puts it away, and undo and redo — by key, by the Edit menu or by a phone's gesture — step through the
-// editor's own history in place of the field's.
+// Tab takes the inline match or else the first suggestion, Enter takes the inline match, Escape puts it away, and undo
+// and redo — by key, by the Edit menu or by a phone's gesture — step through the editor's own history in place of the
+// field's.
 import type { Component } from 'obsidian';
-import type { CompletionItem } from '@graph-note/core';
-import type { Step } from './editor-history';
+import type { Change, CompletionItem, PaneSession } from '@graph-note/core';
+import type { FieldHistory, Step } from './editor-history';
+import type { EditorParts } from './editor-layout';
+import type { TextHelp } from './text-help';
 
 /** What the editor does for each thing done in the field. */
 export interface Typing {
@@ -17,6 +20,38 @@ export interface Typing {
   takeInline: () => boolean;
   /** Puts the inline match away, if one is shown; says whether it did. */
   dismissInline: () => boolean;
+}
+
+/** What the editor itself does when the field is typed in, a suggestion is taken, or the text is changed by a step. */
+export interface FieldActions {
+  typed: (change?: Change) => void;
+  caretMoved: () => void;
+  accept: (item: CompletionItem) => void;
+  /** The field's text was changed to another, by undo or redo. */
+  changed: () => void;
+}
+
+/** What is done in a block's field, put together from its help, its undo history and what the editor does for each. */
+export function fieldTyping(
+  el: EditorParts,
+  s: PaneSession,
+  help: TextHelp,
+  undoes: FieldHistory,
+  act: FieldActions,
+): Typing {
+  return {
+    typed: () => act.typed(),
+    caretMoved: act.caretMoved,
+    first: () => help.first(),
+    accept: act.accept,
+    step: (e, which) => {
+      if (!undoes.started) return;
+      e.preventDefault();
+      if (undoes.step(el.text, which)) act.changed();
+    },
+    takeInline: () => help.takeInline(el.text, () => act.typed('other')),
+    dismissInline: () => help.dismissInline(el, s),
+  };
 }
 
 /** The step a key asks for: Command or Control with Z undoes, with Shift as well redoes, and Control with Y redoes. */
