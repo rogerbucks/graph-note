@@ -354,5 +354,15 @@
       "seen_failing_first": false,
       "evidence": "not seen failing by the replay, though it was seen failing by hand against the code before d000d29 (unittest: FAILED (failures=3), one for each ending): its first version used subTest, whose failures unittest files under each sub-test's name, so the replay read the test itself as passing. Rewritten as a plain loop in 4f25653"
     }
+  },
+  "packages/obsidian/test/live-preview.test.js": {
+    "the editing view draws graph blocks with its own widget > in Source mode nothing is drawn: the text is the text": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: before the editing view had widgets of its own there were none in Source mode either, so it passes before and after by design (commit d6a8d95)"
+    },
+    "what is typed in place is written through the editor > with the note in reading view or closed, the pane still writes the file": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: the pane always wrote the file; it holds that it still does when no editor shows the note (commit d6a8d95)"
+    }
   }
 }
