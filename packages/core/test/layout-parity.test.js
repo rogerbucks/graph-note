@@ -167,3 +167,29 @@ test('a thing written without a name is drawn under the same suggested name, mar
   assert.equal(source.match(/style="rounded,filled,dashed"/g)?.length, 4, 'each drawn dashed');
   assert.equal(source.match(/✎ SUGGESTED NAME/g)?.length, 4, 'and labelled, by a sign and in words');
 });
+
+const REFERRED = {
+  // a link written to the name shown on the drawing links to the thing drawn under it, by both readers (review of
+  // 224929a): a name only referred to is not taken, so the suggestion does not move away from it
+  'a link to the suggested name, written before the name is': [
+    fence(`// graph: reader
+(:Option {name: 'Large reader'}),
+(q:Q {name: 'Q'}),
+(large_reader)-[:ANSWERS]->(q)`),
+  ].join('\n'),
+};
+
+test('a link written to a suggested name links to the thing drawn under it, the same by both readers', () => {
+  same(REFERRED);
+  const r = readNote(gqlBlocks(REFERRED[Object.keys(REFERRED)[0]]).map((b) => b.text));
+  const d = r.graphs.get('reader');
+  assert.deepEqual(
+    d.links.map((l) => [l.from, l.type, l.to]),
+    [['large_reader', 'ANSWERS', 'q']],
+  );
+  assert.deepEqual(d.estimates, []);
+  assert.deepEqual(
+    r.problems.map((p) => p.suggested),
+    ['large_reader'],
+  );
+});

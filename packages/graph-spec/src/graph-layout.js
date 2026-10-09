@@ -135,9 +135,12 @@ round — are ported here exactly, each proved against Python by the layout test
   /**
    * [source, kinds, readings] for nodes [[key, kind, text]] and edges [[source key, reading, target key]], as
    * graph_svg.dot_source. suggested: the keys of boxes drawn under a suggested name, each outlined in the style's
-   * suggested_style and labelled with its suggested_label.
+   * suggested_style and labelled with its suggested_label. One key given as a plain string is refused, as Python refuses
+   * it: read letter by letter, it would mark boxes whose keys are part of it.
    */
   function dotSource(nodes, edges, rankdir, style, suggested = []) {
+    if (typeof suggested === 'string')
+      throw new TypeError('suggested is a collection of keys, not one key as a string');
     const marked = new Set(suggested);
     const kinds = [...new Set(nodes.map(([, k]) => k).filter((k) => k))]; // order of first appearance — colours depend on it
     const dir = rankdir || style.rankdir;

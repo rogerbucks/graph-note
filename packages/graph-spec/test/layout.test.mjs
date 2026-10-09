@@ -123,6 +123,14 @@ describe('the layout source', () => {
     }
   });
 
+  test('one suggested key given as a plain string is refused, as Python refuses it, never read letter by letter', () => {
+    const nodes = [
+      ['large', 'Option', 'Large'],
+      ['large_reader', 'Option', 'Large reader'],
+    ];
+    assert.throws(() => layout.dotSource(nodes, [], 'LR', style, 'large_reader'), TypeError);
+  });
+
   test('with no direction, and none in the style, it refuses as Python does', () => {
     assert.throws(() => layout.dotSource([['a', 'A', 'a']], [], null, style), /rankdir/);
   });

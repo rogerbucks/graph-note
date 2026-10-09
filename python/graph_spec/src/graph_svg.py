@@ -129,7 +129,10 @@ def dot_source(
     """nodes: [(key, kind, text)]; edges: [(source key, reading, target key)]. Kind colours are
     placeholders #0001xx. suggested: the keys of boxes drawn under a suggested name — a thing
     written without one (10 Oct 2026) — each outlined in the style's suggested_style and labelled
-    with its suggested_label."""
+    with its suggested_label. One key given as a plain string is refused, with TypeError: read
+    letter by letter, it would mark boxes whose keys are part of it."""
+    if isinstance(suggested, str):
+        raise TypeError("suggested is a collection of keys, not one key as a string")
     # order of first appearance — colours depend on it
     kinds = list(dict.fromkeys(k for _, k, _ in nodes if k))
     style = STYLE
@@ -278,7 +281,9 @@ def render(
     wins, because a drawing shrunk to fit a narrow note is a drawing nobody can read — the text in
     its boxes becomes hard to read. A tall drawing is capped, so a long chain is not stood on
     end. suggested: the keys of boxes drawn under a suggested name, marked as dot_source marks
-    them."""
+    them, and refused as it refuses them."""
+    if isinstance(suggested, str):
+        raise TypeError("suggested is a collection of keys, not one key as a string")
     if not DOT:
         raise RuntimeError("Graphviz (dot) is not installed")
     target, best = STYLE["page_width"], None

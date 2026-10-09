@@ -107,6 +107,16 @@ class DrawnUnderItsSuggestedName(unittest.TestCase):
         self.assertEqual(problems, [])
         self.assertIn(("large_reader", "Large reader"), drawn(store, "reader")[0])
 
+    def test_a_link_to_the_suggested_name_links_to_the_thing_drawn_under_it(self):
+        store, problems = gp.read_for_drawing(
+            [
+                "// graph: reader\n(:Option {name: 'Large reader'}),\n(q:Q {name: 'Q'}),\n"
+                "(large_reader)-[:ANSWERS]->(q)"
+            ]
+        )
+        self.assertEqual(drawn(store, "reader")[1], [("large_reader", "ANSWERS", "q")])
+        self.assertEqual([p["severity"] for p in problems], ["warning"])
+
     def test_a_block_left_out_in_part_still_names_its_things(self):
         store, problems = gp.read_for_drawing(
             [HEAD + "(gone)-[:R]->(question),\n(:Option {name: 'Large reader'})"]

@@ -50,6 +50,13 @@ class SuggestedBoxes(unittest.TestCase):
             graph_svg.dot_source(NODES, EDGES, "TB"),
         )
 
+    def test_one_key_as_a_plain_string_is_refused_never_read_letter_by_letter(self):
+        nodes = [("large", "Option", "Large"), ("large_reader", "Option", "Large reader")]
+        with self.assertRaises(TypeError):
+            graph_svg.dot_source(nodes, [], "LR", suggested="large_reader")
+        with self.assertRaises(TypeError):
+            graph_svg.render(nodes, [], suggested="large_reader")
+
     def test_the_mark_comes_from_the_style_sidecar(self):
         self.assertEqual(graph_svg.STYLE["suggested_label"], "✎ suggested name")
         self.assertEqual(graph_svg.STYLE["suggested_style"], "rounded,filled,dashed")

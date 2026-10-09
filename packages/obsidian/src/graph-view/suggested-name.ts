@@ -42,11 +42,28 @@ export function showSuggested(
     row.createSpan({ cls: 'graph-note-fix', text: 'Edit the block to add it, or write a name of your own.' });
     return;
   }
+  const title = d.suggested?.fixTitle ?? `Add the name ${name}`;
+  const status = row.createSpan({ cls: 'graph-note-fix', attr: { role: 'status' } });
+  // the text as it is when pressed: the details are redrawn only once typing stops, so what was typed since is kept
+  button(row, title, 'pencil', () => status.setText(writeName(ed, d.key, name, place)), title);
+}
+
+/**
+ * Writes a suggested name after the thing's ( in the text being edited, as it is now; or, when the thing there has a name
+ * by now or is no longer there, writes nothing and says why.
+ */
+function writeName(ed: Editing, key: string, name: string, place: { line: number; character: number }): string {
+  const text = ed.session?.text;
+  if (text === undefined) return 'The block is no longer being edited: nothing was written.';
   const at =
     text
       .split('\n')
       .slice(0, place.line)
       .reduce((n, l) => n + l.length + 1, 0) + place.character;
-  const title = d.suggested?.fixTitle ?? `Add the name ${name}`;
-  button(row, title, 'pencil', () => ed.replace(text.slice(0, at) + name + text.slice(at)), title);
+  if (text[at - 1] === '(' && /[A-Za-z_]/.test(text[at] ?? ''))
+    return 'This thing already has a name: nothing was written.';
+  if (!spanOf(text, { thing: key }, place))
+    return 'This thing has moved in the text since: nothing was written. Try again once the drawing is redrawn.';
+  ed.replace(text.slice(0, at) + name + text.slice(at));
+  return '';
 }

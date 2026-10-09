@@ -109,4 +109,39 @@ describe('a box drawn under a suggested name', () => {
       env.uninstall();
     }
   });
+
+  test('its fix writes into the text as it is when pressed, not as it was when the details were drawn', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      const el = await editing(env);
+      const t = el.querySelector('textarea');
+      choose(el, 'small_reader');
+      const fix = labelled(details(el), 'Add the name small_reader');
+      // typed after the details were drawn, and pressed before the card is redrawn
+      t.value = BLOCK + ',\n(x:T)';
+      t.dispatch('input');
+      fix.click();
+      assert.equal(t.value, NAMED + ',\n(x:T)', 'what was typed is kept');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('when the thing has been given a name since, its fix writes nothing and says why', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      const el = await editing(env);
+      const t = el.querySelector('textarea');
+      choose(el, 'small_reader');
+      const fix = labelled(details(el), 'Add the name small_reader');
+      const own = BLOCK.replace('(:Option', '(mine:Option');
+      t.value = own;
+      t.dispatch('input');
+      fix.click();
+      assert.equal(t.value, own, 'nothing written');
+      assert.match(details(el).querySelector('[role="status"]')?.textContent ?? '', /already has a name/);
+    } finally {
+      env.uninstall();
+    }
+  });
 });

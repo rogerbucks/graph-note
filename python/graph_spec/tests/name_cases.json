@@ -107,6 +107,11 @@
    "named": [[{ "line": 1, "character": 1, "name": "large_reader_2" }], []]
   },
   {
+   "about": "a name only referred to, never written as a thing, is not taken: a link to the name shown on the drawing links to the thing drawn under it",
+   "blocks": [["// graph: reader\n(:Option {name: 'Large reader'}),\n(q:Q {name: 'Q'}),\n(large_reader)-[:ANSWERS]->(q)", "reader"]],
+   "named": [[{ "line": 1, "character": 1, "name": "large_reader" }]]
+  },
+  {
    "about": "an emoji before the thing on its line counts as two",
    "blocks": [["// graph: trip\n(home:Place {name: 'Home 🏠'}), (:Leg {name: 'Walk'})", "trip"]],
    "named": [[{ "line": 1, "character": 33, "name": "walk" }]]

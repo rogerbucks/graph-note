@@ -38,7 +38,9 @@ def suggested_names(blocks: Sequence[tuple[str, str | None]]) -> list[list[dict[
     for (_, graph), things in zip(blocks, written):
         taken = names.setdefault(graph or "", {})
         for w in things:
-            if w.variable:
+            # a name only referred to is not taken: a link to the name a thing is drawn under
+            # links to that thing
+            if w.variable and w.writes:
                 taken[w.variable[1]] = _kind_of(w) or ""
             if w.props.get("id"):
                 taken[w.props["id"]] = ""
