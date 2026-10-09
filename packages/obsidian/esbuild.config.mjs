@@ -27,8 +27,10 @@ const swapIn = {
 // WebAssembly inside it, and handed to the plugin as the body of one function, `layoutWorker`, from the module
 // 'graph-note:layout-worker'. main.js holds it once: the worker is started from the function's own text, and the page
 // calls the function where no worker can run (src/layout-worker/layout-worker.ts says why). Rebuilt with every build, and
-// watched with the rest in --watch.
-const layoutWorker = {
+// watched with the rest in --watch. The worker's last build is kept in `workerBuild`, so scripts/quality-metrics.mjs can
+// say what is inside that one function, the engine among it.
+export const workerBuild = { metafile: null };
+export const layoutWorker = {
   name: 'layout-worker',
   setup(build) {
     build.onResolve({ filter: /^graph-note:layout-worker$/ }, (a) => ({ path: a.path, namespace: 'layout-worker' }));
@@ -46,6 +48,7 @@ const layoutWorker = {
         metafile: true,
         logLevel: 'warning',
       });
+      workerBuild.metafile = inner.metafile;
       const code = inner.outputFiles[0].text;
       return {
         contents: `export function layoutWorker(scope) {\n${code}\nreturn graphNoteLayoutWorker;\n}\n`,

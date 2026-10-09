@@ -85,15 +85,28 @@ function owner(input) {
 }
 
 /** The plugin's bundle, built in memory with the build's own options: its size, without the engine, and what is in it. */
-async function measureBundle() {
+export async function measureBundle() {
   const { default: esbuild } = await import('esbuild');
-  const { options } = await import('../packages/obsidian/esbuild.config.mjs');
-  const built = await esbuild.build({ ...options, plugins: [], metafile: true, logLevel: 'silent', write: false });
+  const { options, layoutWorker, workerBuild } = await import('../packages/obsidian/esbuild.config.mjs');
+  // the layout worker's bundle is built with the plugin (spec §9); only the writing of main.js is left out
+  const built = await esbuild.build({
+    ...options,
+    plugins: [layoutWorker],
+    metafile: true,
+    logLevel: 'silent',
+    write: false,
+  });
   const total = built.outputFiles[0].contents.length;
   const bytes = new Map();
-  for (const out of Object.values(built.metafile.outputs))
-    for (const [input, { bytesInOutput }] of Object.entries(out.inputs))
-      bytes.set(owner(input), (bytes.get(owner(input)) ?? 0) + bytesInOutput);
+  const add = (metafile) => {
+    for (const out of Object.values(metafile.outputs))
+      for (const [input, { bytesInOutput }] of Object.entries(out.inputs))
+        if (!input.startsWith('layout-worker:'))
+          bytes.set(owner(input), (bytes.get(owner(input)) ?? 0) + bytesInOutput);
+  };
+  // the worker's function is counted by what is inside it, so the engine there is still the engine
+  add(built.metafile);
+  add(workerBuild.metafile);
   const viz = bytes.get('@viz-js/viz') ?? 0;
   return {
     metrics: { bundle_bytes: total, bundle_bytes_without_viz: total - viz },
