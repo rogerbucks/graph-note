@@ -5,7 +5,7 @@ import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until, wait } from './host/load-plugin.js';
 import { labelled } from './host/notes.js';
-import { PATH, READER, NOTE } from './host/card-notes.js';
+import { PATH, READER, NOTE, show } from './host/card-notes.js';
 import { editing, tapKey, field, enter } from './host/inspector-steps.js';
 
 before(() => build());
@@ -103,6 +103,47 @@ describe('the details after Done', () => {
       labelled(el, 'Done').click();
       await until(() => el.querySelector('textarea') === null);
       assert.ok(panel.hidden === true);
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
+describe('the details when editing starts again', () => {
+  test('after Done, pressing Edit here makes the open read-only details the editable inspector again, without a tap', async () => {
+    const env = await load({ files: { [PATH]: WITH_LIST } });
+    try {
+      const el = await editing(env);
+      tapKey(el, 'large');
+      const panel = el.querySelector('.graph-note-details');
+      labelled(el, 'Done').click();
+      await until(() => el.querySelector('textarea') === null);
+      assert.deepEqual(controls(panel), NONE);
+      labelled(el, 'Edit here').click();
+      await until(() => !!el.querySelector('textarea'));
+      assert.ok(panel.hidden === false, 'still open');
+      assert.equal(controls(panel).add, 1, 'Add property is back');
+      assert.equal(controls(panel).removes, 2, 'and the x on each chip');
+      assert.ok(field(panel, 'Value of price'), 'and the fields');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('details opened by a tap outside edit mode become the inspector when Edit here is pressed, and read-only again at Done', async () => {
+    const env = await load({ files: { [PATH]: WITH_LIST } });
+    try {
+      const el = await show(env);
+      tapKey(el, 'large');
+      const panel = el.querySelector('.graph-note-details');
+      assert.deepEqual(controls(panel), NONE, 'read-only to begin with');
+      labelled(el, 'Edit here').click();
+      await until(() => !!el.querySelector('textarea'));
+      assert.equal(controls(panel).add, 1);
+      assert.ok(field(panel, 'Value of price'));
+      labelled(el, 'Done').click();
+      await until(() => el.querySelector('textarea') === null);
+      assert.deepEqual(controls(panel), NONE);
     } finally {
       env.uninstall();
     }

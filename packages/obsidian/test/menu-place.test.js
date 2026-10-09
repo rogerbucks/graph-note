@@ -46,6 +46,25 @@ describe('where the property type menu is shown', () => {
     assert.ok(phone.at.y < 500, `a phone menu opens above: ${phone.at.y}`);
   });
 
+  test('from an icon in a popout window it is measured against that window and shown in that window’s document', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      const el = await editing(env);
+      tapKey(el, 'large');
+      const icon = row(el.querySelector('.graph-note-details'), 'name').querySelector('.metadata-property-icon');
+      const popout = { win: { innerHeight: 300 } };
+      Object.defineProperty(icon, 'doc', { value: popout });
+      Object.defineProperty(icon, 'win', { value: popout.win });
+      icon.getBoundingClientRect = () => ({ left: 24, right: 44, top: 100, bottom: 120, width: 20, height: 20 });
+      icon.click();
+      const menu = env.state.menus.at(-1);
+      assert.ok(menu.shownIn === popout, 'shown in the popout’s document, not the main window’s');
+      assert.ok(menu.shownAt.y < 120, `placed for a window 300 high, not 800: ${menu.shownAt.y}`);
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('with no room above or below it opens as low as the window allows, never off the top', async () => {
     const { at } = await opened({ top: 100, bottom: 120, height: 300 });
     assert.ok(at.y >= 0 && at.y < 120, `${at.y}`);

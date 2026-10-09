@@ -251,8 +251,9 @@ export function fakeObsidian(state = {}) {
       state.menus.push(this);
       return this;
     }
-    showAtPosition(position) {
+    showAtPosition(position, doc) {
       this.shownAt = position;
+      this.shownIn = doc;
       state.menus.push(this);
       return this;
     }

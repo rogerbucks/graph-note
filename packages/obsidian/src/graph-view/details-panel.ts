@@ -83,12 +83,13 @@ export class DetailsPanel {
   }
 
   /**
-   * Draws open details again once editing has ended: the inspector is for edit mode only (spec §14), so what stays open
-   * becomes the read-only view a tap shows. Details that are closed stay closed.
+   * Draws open details again when editing starts or ends: the inspector is for edit mode only (spec §14), so what is open
+   * becomes the editable inspector while the card is edited, and the read-only view a tap shows otherwise. Details that
+   * are closed stay closed.
    */
   refresh(): void {
     const shown = this.shown;
-    if (this.el.hidden || !shown || this.o.editing?.()?.session) return;
+    if (this.el.hidden || !shown) return;
     if ('key' in shown) this.showDetails(shown.key);
     else this.showLink(shown.link);
   }

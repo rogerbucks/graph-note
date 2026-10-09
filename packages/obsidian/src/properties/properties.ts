@@ -277,8 +277,14 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
     };
     const menu = () => {
       const m = new Menu();
+      // every row added is counted, so the menu's height is estimated from what it holds
+      let rows = 0;
+      const addItem = (build: Parameters<Menu['addItem']>[0]) => {
+        rows++;
+        m.addItem(build);
+      };
       for (const t of TYPES) {
-        m.addItem((item) =>
+        addItem((item) =>
           item
             .setTitle(t.title)
             .setIcon(t.icon)
@@ -295,10 +301,11 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
         );
         // List, after Text, as Obsidian orders it: held as linked things, so only a thing can have one
         if (t.type === 'text' && thing !== null)
-          m.addItem((item) => item.setTitle('List').setIcon('list').onClick(askList));
+          addItem((item) => item.setTitle('List').setIcon('list').onClick(askList));
       }
+      rows++; // the separator takes a row's room
       m.addSeparator();
-      m.addItem((item) =>
+      addItem((item) =>
         item
           .setTitle('Remove')
           .setIcon('trash-2')
@@ -309,9 +316,11 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
             el.remove();
           }),
       );
-      // the types, List when a thing can have one, the separator and Remove: placed where all of them stay on screen
-      const rows = TYPES.length + (thing === null ? 0 : 1) + 2;
-      m.showAtPosition(menuPosition(icon.getBoundingClientRect(), rows, icon.win.innerHeight, Platform.isPhone));
+      // placed where every row stays on screen, measured in the window the icon is in and shown in that window's document
+      m.showAtPosition(
+        menuPosition(icon.getBoundingClientRect(), rows, icon.win.innerHeight, Platform.isPhone),
+        icon.doc,
+      );
     };
     icon.addEventListener('click', menu);
     icon.addEventListener('keydown', (e: KeyboardEvent) => {
