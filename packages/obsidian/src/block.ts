@@ -6,7 +6,7 @@ import { completenessReport, draw, gqlBlocks, graphOfBlock, namesSharedSchema, r
 import type { Block, Drawn, Problem } from '@graph-note/core';
 import type GraphNotePlugin from './main';
 import { renderCode } from './code';
-import { GraphView, renderProblems } from './view';
+import { GraphView, readOnlyHere, renderProblems, whenPlaced } from './view';
 import type { ShownProblem } from './view';
 
 /** Draws one gql block where the note shows it (spec §3): its graph with the bar, or its problems, or a prompt when it is empty. */
@@ -46,7 +46,14 @@ export async function renderBlock(
     const editing = plugin.inlineFor(target.path, target.line);
     if (editing) {
       if (problems.length) renderProblems(root, problems, false);
-      editing.mount(root.createDiv({ cls: 'graph-note-edit-slot' }));
+      const slot = root.createDiv({ cls: 'graph-note-edit-slot' });
+      // reading view is read-only: there, the text and why, as when nothing is edited (spec §3)
+      whenPlaced(root, () => {
+        if (readOnlyHere(root)) {
+          slot.remove();
+          renderCode(root, source);
+        } else editing.mount(slot);
+      });
       return;
     }
     if (problems.length) {
@@ -62,6 +69,9 @@ export async function renderBlock(
     const edit = empty.createEl('button', { text: 'Edit', attr: { 'aria-label': 'Edit', type: 'button' } });
     edit.addEventListener('click', () => {
       void plugin.openEditor(target);
+    });
+    whenPlaced(root, () => {
+      if (readOnlyHere(root)) edit.remove(); // reading view is read-only (spec §3)
     });
     return;
   }
@@ -82,6 +92,7 @@ export async function renderBlock(
   let slot: HTMLElement | null = null;
   ctx.addChild(
     new GraphView(root, {
+      source,
       reading,
       graph,
       drawn,

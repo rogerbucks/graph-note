@@ -4,6 +4,7 @@
 import { MarkdownRenderChild, Platform, setIcon } from 'obsidian';
 import { Zoom, details, linkDetails, linkInBlock, textVersion, withoutColorMix } from '@graph-note/core';
 import { renderProperties } from './properties';
+import { renderCode } from './code';
 import type {
   CompletenessReport,
   Drawn,
@@ -30,6 +31,8 @@ export interface ShownProblem extends Problem {
 
 /** What a drawing needs: the reading, the graph, its drawn SVG and problems, where it is shown, and what its buttons do. */
 export interface ViewOptions {
+  /** The block's text, shown read-only by Source in reading view (spec §3). */
+  source?: string;
   reading: NoteReading;
   graph: string;
   drawn: Drawn;
@@ -58,6 +61,27 @@ export interface ViewOptions {
 type Target = { key: string } | { estimate: number } | { link: number };
 
 const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? '' : 's'}`;
+
+/**
+ * Whether a card is where the note is only read, not edited: reading view, a hover preview or an embed, as opposed to
+ * Live Preview or Source mode (spec §3, "Read-only in Reading view"; decided 9 Oct 2026).
+ */
+export const readOnlyHere = (el: HTMLElement): boolean =>
+  !!el.closest('.markdown-reading-view, .markdown-preview-view') && !el.closest('.markdown-source-view');
+
+/**
+ * Runs `then` once `el` is on the page, at once when it already is. Live Preview draws a block into a card that goes on
+ * the page only after, and where a card is decides what it offers. Gives up after a couple of seconds.
+ */
+export function whenPlaced(el: HTMLElement, then: () => void, giveUpMs = 2000): void {
+  if (el.isConnected) return then();
+  const started = Date.now();
+  const check = () => {
+    if (el.isConnected) then();
+    else if (Date.now() - started < giveUpMs) window.setTimeout(check, 16);
+  };
+  window.setTimeout(check, 16);
+}
 const problemText = (p: ShownProblem) => `Line ${p.noteLine}: ${p.message} — ${p.fix}`;
 const sign = (p: Problem) => (p.severity === 'warning' ? '⚠ Warning' : '✖ Error');
 /** More problems than this do not fit a screen, so they are grouped (spec §8). */
@@ -146,6 +170,7 @@ export class GraphView extends MarkdownRenderChild {
   private fullscreen: { view: GraphView; overlay: HTMLElement } | null = null;
   private boxDown: { id: number; x: number; y: number; target: Target } | null = null;
   private editButton: HTMLButtonElement | null = null;
+  private codeEl: HTMLElement | null = null;
 
   constructor(containerEl: HTMLElement, options: ViewOptions) {
     super(containerEl);
@@ -183,14 +208,18 @@ export class GraphView extends MarkdownRenderChild {
     button(bar, 'Zoom in', 'zoom-in', () => this.zoom.zoomIn());
     if (mode === 'full') button(bar, 'Close full screen', 'minimize', () => this.o.onClose?.());
     else button(bar, 'Full screen', 'expand', () => this.openFullscreen());
+    const editing: HTMLElement[] = [];
     if (mode !== 'pane' && this.o.onEditHere) {
       this.editButton = button(bar, 'Edit here', 'pencil', () =>
         this.o.editing?.()?.session ? this.o.onDoneEditing?.() : this.o.onEditHere?.(),
       );
+      editing.push(this.editButton);
       this.showEditing();
       if (this.o.watchEditing) this.register(this.o.watchEditing(() => this.showEditing()));
     }
-    if (mode !== 'pane') button(bar, 'Edit in pane', 'panel-right-open', () => this.o.onEdit());
+    if (mode !== 'pane') editing.push(button(bar, 'Edit in pane', 'panel-right-open', () => this.o.onEdit()));
+    const source: HTMLButtonElement | null =
+      mode === 'note' ? button(bar, 'Show source', 'code', () => source && this.toggleSource(source)) : null;
 
     const list = renderProblems(root, problems, true, this.o.completeness);
     this.viewport = root.createDiv({
@@ -223,9 +252,38 @@ export class GraphView extends MarkdownRenderChild {
     observer.observe(this.viewport);
     this.register(() => observer.disconnect());
     if (mode === 'full') this.viewport.focus();
-    if (slot) this.o.onReady?.(slot);
-    const reopen = this.o.editing?.()?.selected;
-    if (reopen) this.open(reopen);
+    // what the card offers depends on where it is: in reading view it is read-only, with Source in place of Edit
+    let gone = false;
+    this.register(() => (gone = true));
+    whenPlaced(root, () => {
+      if (gone) return;
+      if (mode === 'note' && readOnlyHere(root)) {
+        editing.forEach((b) => b.remove());
+        this.editButton = null;
+        slot?.remove();
+        return;
+      }
+      source?.remove();
+      if (slot) this.o.onReady?.(slot);
+      const reopen = this.o.editing?.()?.selected;
+      if (reopen) this.open(reopen);
+    });
+  }
+
+  /** Source, in reading view: the block's text, coloured and read-only, in place of the drawing; and back. */
+  private toggleSource(b: HTMLButtonElement): void {
+    const showing = !this.viewport.hidden;
+    if (!this.codeEl) {
+      this.codeEl = renderCode(this.containerEl, this.o.source ?? '');
+      this.containerEl.insertBefore(this.codeEl, this.detailsEl);
+      this.codeEl.hidden = true;
+    }
+    this.viewport.hidden = showing;
+    this.codeEl.hidden = !showing;
+    if (showing) this.detailsEl.hidden = true;
+    b.empty();
+    setIcon(b, showing ? 'network' : 'code');
+    b.setAttribute('aria-label', showing ? 'Show drawing' : 'Show source');
   }
 
   /** The edit button as the card stands: a pencil to edit here, or, while edited, a view icon to finish (spec §4). */
