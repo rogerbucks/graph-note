@@ -4,6 +4,8 @@ import type { EditorView } from '@codemirror/view';
 import type { MarkdownPostProcessorContext } from 'obsidian';
 import { gqlBlocks, isSharedSchema, loadEngine } from '@graph-note/core';
 import type { Engine } from '@graph-note/core';
+import type { DeclaredList } from './properties/list-row';
+import type { Editing } from './graph-view/view-options';
 import { renderBlock } from './block';
 import { GraphPane, PANE } from './pane';
 import { addForYou } from './editor';
@@ -103,6 +105,15 @@ export default class GraphNotePlugin extends Plugin {
     return null;
   }
 
+  /** The lists made in this session, by note and graph: kept here so they outlive each editor in place. */
+  private readonly declared = new Map<string, DeclaredList[]>();
+
+  /** The lists made in this session on a note's graph, shared by every editor opened on it. */
+  declaredLists(path: string, graph: string): DeclaredList[] {
+    const key = `${path}#${graph}`;
+    return this.declared.get(key) ?? this.declared.set(key, []).get(key)!;
+  }
+
   /** The editors open in place, in drawings' cards: they outlive each redraw of their block. */
   private readonly inline = new Set<BlockEditor>();
 
@@ -139,6 +150,8 @@ export default class GraphNotePlugin extends Plugin {
       this.addChild(e);
       e.mount(slot);
       await e.open(target.path, target.line);
+      // the lists made in this session outlive this editor: Done, then Edit here again, still offers them
+      (e as Editing).lists = this.declaredLists(target.path, e.session?.graph ?? '');
       editor = e;
       this.inlineChanged();
     } else editor.mount(slot);

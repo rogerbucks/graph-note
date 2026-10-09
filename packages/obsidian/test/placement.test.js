@@ -120,6 +120,20 @@ describe('a card placed late, in the note', () => {
     }
   });
 
+  test('Edit here leaves the page where it is: the focus moves into the editor without scrolling to it', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      const el = await show(env);
+      env.doc.scrolledToFocus = 0;
+      labelled(el, 'Edit here').click();
+      await until(() => !!el.querySelector('textarea'), 2000);
+      await until(() => env.doc.activeElement === el.querySelector('textarea'), 1000);
+      assert.equal(env.doc.scrolledToFocus, 0, 'no focus scrolled the page');
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('Edit here on a card that is not on the page says so, rather than doing nothing', async () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {
