@@ -73,10 +73,16 @@ export const readOnlyHere = (el: HTMLElement): boolean =>
  * Runs `then` once `el` is on the page, at once when it already is. Live Preview draws a block into a card that goes on
  * the page only after, and where a card is decides what it offers. Gives up after a couple of seconds.
  */
-export function whenPlaced(el: HTMLElement, then: () => void, giveUpMs = 2000): void {
+export function whenPlaced(
+  el: HTMLElement,
+  then: () => void,
+  wanted: () => boolean = () => true,
+  giveUpMs = 2000,
+): void {
   if (el.isConnected) return then();
   const started = Date.now();
   const check = () => {
+    if (!wanted()) return; // the card was unloaded before it was placed
     if (el.isConnected) then();
     else if (Date.now() - started < giveUpMs) window.setTimeout(check, 16);
   };
@@ -255,19 +261,22 @@ export class GraphView extends MarkdownRenderChild {
     // what the card offers depends on where it is: in reading view it is read-only, with Source in place of Edit
     let gone = false;
     this.register(() => (gone = true));
-    whenPlaced(root, () => {
-      if (gone) return;
-      if (mode === 'note' && readOnlyHere(root)) {
-        editing.forEach((b) => b.remove());
-        this.editButton = null;
-        slot?.remove();
-        return;
-      }
-      source?.remove();
-      if (slot) this.o.onReady?.(slot);
-      const reopen = this.o.editing?.()?.selected;
-      if (reopen) this.open(reopen);
-    });
+    whenPlaced(
+      root,
+      () => {
+        if (mode === 'note' && readOnlyHere(root)) {
+          editing.forEach((b) => b.remove());
+          this.editButton = null;
+          slot?.remove();
+          return;
+        }
+        source?.remove();
+        if (slot) this.o.onReady?.(slot);
+        const reopen = this.o.editing?.()?.selected;
+        if (reopen) this.open(reopen);
+      },
+      () => !gone,
+    );
   }
 
   /** Source, in reading view: the block's text, coloured and read-only, in place of the drawing; and back. */

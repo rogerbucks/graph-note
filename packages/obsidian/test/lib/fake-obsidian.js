@@ -1,5 +1,15 @@
 // A stand-in for the obsidian module, enough to load the built plugin in Node: a Plugin that records what it registers,
 // Components with the lifecycle and DOM events, Notices, icons and tooltips. Pair it with fake-dom.js.
+import { createRequire } from 'node:module';
+
+// the CommonJS copies of CodeMirror, as the built plugin requires them: one copy, so its fields and facets are known
+const require = createRequire(import.meta.url);
+const cmState = require('@codemirror/state');
+const cmView = require('@codemirror/view');
+/** Obsidian's own editor fields: whether an editor is in Live Preview, and which file it shows. */
+const editorLivePreviewField = cmState.StateField.define({ create: () => true, update: (v) => v });
+const editorInfoField = cmState.StateField.define({ create: () => ({ file: null }), update: (v) => v });
+export { cmState, cmView, editorLivePreviewField, editorInfoField };
 
 export function fakeObsidian(state = {}) {
   state.notices = [];
@@ -182,7 +192,9 @@ export function fakeObsidian(state = {}) {
       (state.commands ??= []).push(c);
       return c;
     }
-    registerEditorExtension() {}
+    registerEditorExtension(ext) {
+      (state.editorExtensions ??= []).push(ext);
+    }
   }
   class Notice {
     constructor(message) {
@@ -258,9 +270,47 @@ export function fakeObsidian(state = {}) {
     isDesktop: !state.mobile,
     isDesktopApp: !state.mobile,
   };
+  /** A note open in an editor: its mode, and an Editor over a text, as Obsidian's MarkdownView has. */
+  class MarkdownView {
+    constructor(file, text, mode = 'source') {
+      this.file = file;
+      this.mode = mode;
+      this.text = text;
+      this.transactions = [];
+      const view = this;
+      const pos = (offset) => {
+        const before = view.text.slice(0, offset).split('\n');
+        return { line: before.length - 1, ch: before[before.length - 1].length };
+      };
+      const offset = (p) =>
+        view.text
+          .split('\n')
+          .slice(0, p.line)
+          .reduce((a, l) => a + l.length + 1, 0) + p.ch;
+      this.editor = {
+        getValue: () => view.text,
+        offsetToPos: pos,
+        posToOffset: offset,
+        transaction: (tx) => {
+          view.transactions.push(tx);
+          for (const c of [...(tx.changes ?? [])].sort((a, b) => offset(b.from) - offset(a.from)))
+            view.text = view.text.slice(0, offset(c.from)) + c.text + view.text.slice(offset(c.to ?? c.from));
+        },
+      };
+    }
+    getViewType() {
+      return 'markdown';
+    }
+    getMode() {
+      return this.mode;
+    }
+  }
   return {
     Component,
     MarkdownRenderChild,
+    MarkdownView,
+    editorLivePreviewField,
+    editorInfoField,
     Plugin,
     ItemView,
     WorkspaceLeaf,
@@ -295,16 +345,15 @@ export function fakeContext(note, fenceLine, children = []) {
 /** Stand-ins for the CodeMirror modules Obsidian supplies at run time: enough to load the plugin and drive its editor hooks. */
 export function fakeCodeMirror(state = {}) {
   state.listeners = [];
-  const view = {
-    EditorView: {
-      updateListener: {
-        of: (fn) => {
-          state.listeners.push(fn);
-          return { listener: fn };
-        },
+  // the real modules, with the editor's update listener caught, so a test can drive what the plugin hears
+  class EditorView extends cmView.EditorView {}
+  Object.defineProperty(EditorView, 'updateListener', {
+    value: {
+      of: (fn) => {
+        state.listeners.push(fn);
+        return { listener: fn };
       },
     },
-  };
-  const cmState = { Transaction: { userEvent: { of: (v) => ({ userEvent: v }) } } };
-  return { '@codemirror/view': view, '@codemirror/state': cmState };
+  });
+  return { '@codemirror/view': { ...cmView, EditorView }, '@codemirror/state': cmState };
 }

@@ -5,7 +5,7 @@
 // userEvent "set"). For seeing in a browser what the editing view does to a card, and to the page, on each write.
 import { EditorState, StateField, Prec } from '@codemirror/state';
 import { Decoration, EditorView, WidgetType } from '@codemirror/view';
-import { processors, files, editorExtensions } from 'obsidian';
+import { processors, files, editorExtensions, editorInfoField, editorLivePreviewField } from 'obsidian';
 
 const PATH = 'Sample.md';
 
@@ -75,6 +75,8 @@ export function livePreview(parent, own) {
     state: EditorState.create({
       doc: files.get(PATH),
       extensions: [
+        editorLivePreviewField.init(() => true),
+        editorInfoField.init(() => ({ file: { path: PATH } })),
         obsidianBlocks,
         ...(own ? editorExtensions.map((e) => Prec.highest(e)) : []),
         EditorView.lineWrapping,

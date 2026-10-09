@@ -138,6 +138,7 @@ export class FakeElement {
     return c;
   }
   replaceChildren(...cs) {
+    for (const c of this.children) c.parentElement = null; // as in a browser, the old children leave the page
     this.children = [];
     this.text = '';
     this.append(...cs);
@@ -283,6 +284,7 @@ export class FakeElement {
   empty() {
     const a = this.ownerDocument.activeElement;
     if (a && a !== this && this.contains(a)) this.ownerDocument.activeElement = null;
+    for (const c of this.children) c.parentElement = null;
     this.children = [];
     this.text = '';
   }
@@ -399,6 +401,12 @@ export function fakeDocument(width = 700) {
     clearTimeout,
     requestAnimationFrame: (f) => setTimeout(f, 0),
     cancelAnimationFrame: clearTimeout,
+    // Obsidian's helpers on the window: an element not yet on the page
+    createDiv: (o = {}) => {
+      const e = new FakeElement('div', doc);
+      applyInfo(e, typeof o === 'string' ? { cls: o } : o);
+      return e;
+    },
   };
   return doc;
 }
@@ -414,6 +422,7 @@ export function installGlobals(doc) {
   set('document', doc);
   set('activeWindow', doc.defaultView);
   set('window', doc.defaultView);
+  set('createDiv', doc.defaultView.createDiv);
   set(
     'DOMParser',
     class {

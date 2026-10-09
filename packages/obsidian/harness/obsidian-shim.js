@@ -100,6 +100,14 @@ export class MarkdownRenderChild extends Component {
     this.containerEl = el;
   }
 }
+import { StateField } from '@codemirror/state';
+// Obsidian's global helper: an element not yet on the page
+globalThis.createDiv = (o = {}) => info(document.createElement('div'), o);
+/** Obsidian's own editor fields: whether an editor is in Live Preview, and which file it shows. */
+export const editorLivePreviewField = StateField.define({ create: () => true, update: (v) => v });
+export const editorInfoField = StateField.define({ create: () => ({ file: null }), update: (v) => v });
+/** No note is open in an Obsidian editor here: the plugin writes the file, and the stand-in editor follows it. */
+export class MarkdownView {}
 export const processors = new Map();
 // the editor extensions the plugin registers, for the stand-in Live Preview
 export const editorExtensions = [];

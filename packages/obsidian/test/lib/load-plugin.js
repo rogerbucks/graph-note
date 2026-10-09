@@ -44,7 +44,7 @@ export async function load(options = {}) {
   const plugin = new Plugin(obsidian.app, { id: 'graph-note' });
   if (options.engine) plugin.loadEngine = options.engine;
   await plugin.onload();
-  return { plugin, state, doc, app: obsidian.app, uninstall };
+  return { plugin, state, doc, app: obsidian.app, obsidian, uninstall };
 }
 
 export const wait = (ms) => new Promise((r) => setTimeout(r, ms));
