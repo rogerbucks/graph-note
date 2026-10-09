@@ -13,7 +13,7 @@ export const exists = (rel) => existsSync(path(rel));
 export const read = (rel) => readFileSync(path(rel), 'utf8');
 export const readJSON = (rel) => JSON.parse(read(rel));
 
-const SKIP = new Set(['node_modules', '.git', '.venv', 'dist', '__pycache__']);
+const SKIP = new Set(['.claude', 'node_modules', '.git', '.venv', 'dist', '__pycache__']);
 
 /** Every file under a folder, as repo-relative paths. */
 export function walk(rel) {

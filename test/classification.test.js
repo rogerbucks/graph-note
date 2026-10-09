@@ -13,7 +13,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { findProblems } from '../scripts/check-classification.mjs';
-import { ROOT, path } from './lib/repo.js';
+import { ROOT, path } from './repository/repo.js';
 
 // ── Samples, built from parts ──
 const classified = (level) => ['---', `${'classi'}${'fication'}: ${level}`, '---', '', '# A note'].join('\n');

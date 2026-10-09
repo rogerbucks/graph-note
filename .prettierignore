@@ -1,5 +1,6 @@
 # Built, generated or vendored: never formatted by hand or by Prettier.
 main.js
+.claude/
 dist/
 package-lock.json
 licences/

@@ -11,6 +11,7 @@ export default defineConfig([
   {
     ignores: [
       'main.js',
+      '.claude/',
       '**/node_modules/',
       '**/dist/',
       'test/',

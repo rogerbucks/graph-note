@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { basename } from 'node:path';
-import { exists, read, readJSON, path, walk, ROOT } from './lib/repo.js';
+import { exists, read, readJSON, path, walk, ROOT } from './repository/repo.js';
 
 const require = createRequire(import.meta.url);
 const ts = require('typescript');

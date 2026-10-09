@@ -5,8 +5,8 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { exists, read, readJSON, path, walk, jsPackages } from './lib/repo.js';
-import { licenceAllowed, bundledPackages, buildTools, carriesWasm } from './lib/licences.js';
+import { exists, read, readJSON, path, walk, jsPackages } from './repository/repo.js';
+import { licenceAllowed, bundledPackages, buildTools, carriesWasm } from './repository/licences.js';
 import { renderNotices } from '../scripts/notices.mjs';
 
 const record = () => readJSON('licences/bundled.json');
