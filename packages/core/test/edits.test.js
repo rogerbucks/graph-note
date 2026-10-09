@@ -124,7 +124,7 @@ describe('Lock the graph', () => {
     assert.equal(reverseGuess('decides'), 'is decided by');
     assert.equal(reverseGuess('counts against'), 'is counted against by');
     assert.equal(reverseGuess('relates to'), 'is related to by');
-    assert.equal(reverseGuess('is part of'), 'has part');
+    assert.equal(reverseGuess('is part of'), 'contains');
   });
 
   test('the schema block goes into the note after the graph’s last block, and nothing else changes', () => {

@@ -61,6 +61,10 @@ declare namespace GraphSpecCheck {
   function readings(g: Graph, shared?: Graph): Map<string, [string | undefined, string | undefined]>;
   /** A relationship type in words: its declared reading, else the type's own words. */
   function word(readings: Map<string, [string | undefined, string | undefined]>, type: string): string;
+  /** The readings guessed for a relationship type with none declared: [forward, reverse]. */
+  function guessReadings(type: string): [string, string];
+  /** The reverse of a forward reading: the active verb of a known passive, the passive of a verb, or a placeholder. */
+  function reverseReading(reading: string): string;
   /** The schema's own kinds, left out of drawings. */
   const SCHEMA_LABELS: string[];
   const SPEC_NODES: string[];

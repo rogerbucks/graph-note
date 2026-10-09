@@ -12,15 +12,9 @@ export function isDraft(reading: NoteReading, graph: string): boolean {
   return !g.labelled('ElementType').length && !named;
 }
 
-/** A guess at a reading the other way: "favours" is "is favoured by"; "is part of" is "has part". */
+/** A guess at a reading the other way, as the libraries guess it: "favours" is "is favoured by"; "is part of" is "contains". */
 export function reverseGuess(reading: string): string {
-  const of = /^is (\w+) of$/.exec(reading);
-  if (of) return `has ${of[1]}`;
-  const [verb = '', ...rest] = reading.split(' ');
-  if (!/s$/.test(verb) || verb.length < 3) return `inverse of ${reading}`;
-  const base = verb.slice(0, -1),
-    done = /e$/.test(base) ? `${base}d` : `${base}ed`;
-  return ['is', done, ...rest, 'by'].join(' ');
+  return gs.reverseReading(reading);
 }
 
 /** A line kept under 70 characters, as the guide asks: as one line if it fits, otherwise as the two given. */
@@ -55,7 +49,12 @@ export function lockBlock(reading: NoteReading, graph: string, today: string): s
     ...new Set([...g.nodes.values()].flatMap(([labels]) => [...labels].filter((l) => !hidden.has(l)))),
   ].sort(byCode);
   const readings = gs.readings(g);
-  const types = [...new Set(g.edges.map(([, t]) => t))].sort(byCode).map((t) => [t, gs.word(readings, t)] as const);
+  // a type the graph already words keeps its words; any other is guessed, as the libraries guess it
+  const types = [...new Set(g.edges.map(([, t]) => t))].sort(byCode).map((t): [string, string, string] => {
+    const [reading, reverse] = readings.get(t) ?? [];
+    const [r, back] = reading ? [reading, reverse ?? gs.reverseReading(reading)] : gs.guessReadings(t);
+    return [t, r, back];
+  });
   // a draft that has its GraphMeta already keeps it, and the types are declared from it
   const own = g.labelled('GraphMeta').find((m) => /^[A-Za-z_]\w*$/.test(m));
   const meta = own ?? id(`${graph}_schema`);
@@ -78,13 +77,13 @@ export function lockBlock(reading: NoteReading, graph: string, today: string): s
     ]),
     '',
     '// ── Relationship types, with their readings both ways ──',
-    ...types.flatMap(([t, r]) => [
+    ...types.flatMap(([t, r, back]) => [
       `(${declare(`link_${t.toLowerCase()}`)}:Meta:ElementType {`,
       `    name: ${q(t)}, kind: 'edge', origin: 'source',`,
       ...fit(
-        `    reading: ${q(r)}, reverse_name: ${q(reverseGuess(r))}}),`,
+        `    reading: ${q(r)}, reverse_name: ${q(back)}}),`,
         `    reading: ${q(r)},`,
-        `    reverse_name: ${q(reverseGuess(r))}}),`,
+        `    reverse_name: ${q(back)}}),`,
       ),
     ]),
     '',
