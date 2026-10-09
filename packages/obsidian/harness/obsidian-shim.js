@@ -101,6 +101,8 @@ export class MarkdownRenderChild extends Component {
   }
 }
 export const processors = new Map();
+// the editor extensions the plugin registers, for the stand-in Live Preview
+export const editorExtensions = [];
 export const views = new Map();
 export class TFile {
   constructor(path) {
@@ -180,7 +182,9 @@ export class Plugin extends Component {
   registerView(type, f) {
     views.set(type, f);
   }
-  registerEditorExtension() {}
+  registerEditorExtension(ext) {
+    editorExtensions.push(...(Array.isArray(ext) ? ext : [ext]));
+  }
   async loadData() {
     return null;
   }
