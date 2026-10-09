@@ -24,6 +24,8 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
       shows an icon.
 - [ ] The misspelt link is drawn dashed, labelled "⚠ … (estimated)". Tapping it explains it in one sentence.
 - [ ] Tapping a box shows its text, its kind, and its links in and out.
+- [ ] Tapping just beside a box or a link, not on it, still chooses it. Where several are near, tapping again in the same
+      place chooses the next, round to the first, and two quick taps near things never zoom (slice 2).
 - [ ] A 50-thing graph is drawn in under half a second on the phone (§11).
 - [ ] The drawing reads well in the light theme and in the dark theme. Dark, several drawings in a note, each card
       standing out: Mac ✓ 0.3.0, 9 Oct 2026 (relayed as the Mac). The light theme, and the phone, to come.
@@ -96,6 +98,8 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 - [ ] A value is written when its field is left; a value that does not fit its type says why, and nothing changes.
 - [ ] Tapping a property's icon opens a menu to change its type or remove it. Add property adds a row in place, its
       name suggested from the names already used.
+- [ ] While editing, in the card or the pane, choosing a box selects the pattern that writes it in the text, and
+      choosing a link selects its brackets and arrow (slice 2).
 - [ ] Phone: the properties open as a sheet at the bottom of the screen, and every field and icon is easy to hit.
 
 ## Accessibility — spec §8, §11

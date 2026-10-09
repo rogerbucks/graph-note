@@ -994,3 +994,58 @@ describe('reading view is read-only', () => {
     }
   });
 });
+
+describe('selecting in the drawing moves the text to it', () => {
+  // select_moves_text (spec §4, slice 2; Roger, 7 Oct 2026: "selecting an item in the graph should move the editor to
+  // the item in the text edit box if editing"): a box or a link chosen in the drawing selects where it is written
+  const choose = (el, selector, which) => el.querySelectorAll(selector)[which].dispatch('keydown', { key: 'Enter' });
+
+  test('in the card, choosing a box selects its pattern in the box being edited', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      const el = await show(env);
+      labelled(el, 'Edit here').click();
+      await until(() => !!el.querySelector('textarea'));
+      const t = el.querySelector('textarea');
+      const boxes = [...el.querySelectorAll('g.node')];
+      const large = boxes.findIndex((g) => g.getAttribute('data-key') === 'large');
+      choose(el, 'g.node', large);
+      const from = READER.indexOf("(large:Option {name: 'Large reader'})");
+      assert.deepEqual(
+        [t.selectionStart, t.selectionEnd],
+        [from, from + "(large:Option {name: 'Large reader'})".length],
+      );
+      assert.ok(env.doc.activeElement === t, 'the box takes the focus, so the selection shows');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('in the card, choosing a link selects the link where it is written', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      const el = await show(env);
+      labelled(el, 'Edit here').click();
+      await until(() => !!el.querySelector('textarea'));
+      const t = el.querySelector('textarea');
+      choose(el, 'g.edge[data-link]', 0);
+      // the link's own arrow, as the inspector edits it
+      assert.equal(t.value.slice(t.selectionStart, t.selectionEnd), '-[:ANSWERS]->');
+      assert.equal(t.selectionStart, READER.indexOf('-[:ANSWERS]->'));
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('when nothing is being edited, choosing a box changes no text and moves no focus', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      const el = await show(env);
+      choose(el, 'g.node', 0);
+      assert.ok(el.querySelector('textarea') === null);
+      assert.ok(!el.querySelector('.graph-note-details').hidden, 'its details show, as before');
+    } finally {
+      env.uninstall();
+    }
+  });
+});

@@ -116,6 +116,7 @@ export async function renderBlock(
         plugin.inlineFor(target.path, target.line)?.mount(at);
       },
       editing: () => plugin.inlineFor(target.path, target.line),
+      onSelect: (chosen) => plugin.inlineFor(target.path, target.line)?.reveal(chosen),
     }),
   );
 }

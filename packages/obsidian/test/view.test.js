@@ -485,6 +485,102 @@ describe('each bar and its details belong to their own drawing', () => {
   });
 });
 
+describe('a tap near things', () => {
+  // tap_cycles_near (spec §3, slice 2; Roger, 7 Oct 2026: "clicking location that's near to one or more objects should
+  // also cycle through those objects for selection"): a tap on or near boxes and links chooses the nearest, and a tap
+  // again in the same place the next. The places are found from the same drawing the plugin shows.
+  let env, areas, el, drawnAt;
+  before(async () => {
+    env = await load();
+    const { readNote } = await import('../../core/src/drawing.ts');
+    const { loadEngine, draw } = await import('../../core/src/render.ts');
+    const { hitAreas } = await import('../../core/src/hits.ts');
+    areas = hitAreas(draw(readNote([GRAPH]).graphs.get('reader'), await loadEngine()).svg);
+    el = (await show(env, fence(GRAPH))).el;
+    // a point in the drawing's own units, as the viewport's pixels
+    drawnAt = (x, y) => {
+      const svg = el.querySelector('svg.graph-note-svg'),
+        vp = el.querySelector('.graph-note-viewport'),
+        vb = areas.viewBox,
+        w = Number(svg.getAttribute('width')),
+        h = Number(svg.getAttribute('height'));
+      return {
+        clientX: parseFloat(vp.cssProps['--graph-note-x']) + ((x - vb.x) * w) / vb.width,
+        clientY: parseFloat(vp.cssProps['--graph-note-y']) + ((y - vb.y) * h) / vb.height,
+      };
+    };
+  });
+  after(() => env.uninstall());
+
+  const tapAt = (p) => {
+    const vp = el.querySelector('.graph-note-viewport');
+    vp.dispatch('pointerdown', { target: vp, pointerId: 7, pointerType: 'touch', button: 0, ...p });
+    vp.dispatch('pointerup', { target: vp, pointerId: 7, pointerType: 'touch', button: 0, ...p });
+  };
+  const selected = () => el.querySelector('g.is-selected')?.getAttribute('id');
+
+  test('a tap near a box, outside it, opens that box’s details', async () => {
+    const { nearby } = await import('../../core/src/hits.ts');
+    const box = areas.shapes.find((s) => s.kind === 'node');
+    const xs = box.polygons[0].map(([x]) => x),
+      ys = box.polygons[0].map(([, y]) => y);
+    const x = Math.max(...xs) + 2,
+      y = (Math.min(...ys) + Math.max(...ys)) / 2;
+    assert.equal(nearby(areas, x, y, 0).length, 0, 'the point is outside every box and link');
+    tapAt(drawnAt(x, y));
+    assert.equal(selected(), box.id);
+    assert.ok(!el.querySelector('.graph-note-details').hidden);
+  });
+
+  test('tapping again in the same place, where two are near, opens the next', async () => {
+    const { nearby } = await import('../../core/src/hits.ts');
+    const vb = areas.viewBox;
+    let spot = null;
+    for (let x = vb.x; x < vb.x + vb.width && !spot; x += 2)
+      for (let y = vb.y; y < vb.y + vb.height && !spot; y += 2) {
+        const ids = nearby(areas, x, y, 6);
+        if (ids.length >= 2) spot = { x, y, ids };
+      }
+    assert.ok(spot, 'somewhere near two things');
+    const p = drawnAt(spot.x, spot.y);
+    tapAt(p);
+    const first = selected();
+    tapAt(p);
+    const second = selected();
+    assert.notEqual(first, second, 'the next of them');
+    assert.ok(spot.ids.includes(first) && spot.ids.includes(second));
+    for (let n = 2; n < spot.ids.length; n++) tapAt(p);
+    tapAt(p);
+    assert.equal(selected(), first, 'round to the first');
+  });
+
+  test('two quick taps near things, not on them, never zoom: a tap near things is never half of a double tap', async () => {
+    const { nearby } = await import('../../core/src/hits.ts');
+    const box = areas.shapes.find((s) => s.kind === 'node');
+    const xs = box.polygons[0].map(([x]) => x),
+      ys = box.polygons[0].map(([, y]) => y);
+    const x = Math.max(...xs) + 2,
+      y = (Math.min(...ys) + Math.max(...ys)) / 2;
+    assert.equal(nearby(areas, x, y, 0).length, 0);
+    const svg = el.querySelector('svg.graph-note-svg'),
+      width = svg.getAttribute('width');
+    const p = drawnAt(x, y),
+      vp = el.querySelector('.graph-note-viewport');
+    for (const t of [1000, 1100]) {
+      vp.dispatch('pointerdown', { target: vp, pointerId: 8, pointerType: 'touch', button: 0, timeStamp: t, ...p });
+      vp.dispatch('pointerup', { target: vp, pointerId: 8, pointerType: 'touch', button: 0, timeStamp: t + 40, ...p });
+    }
+    assert.equal(svg.getAttribute('width'), width, 'the drawing is the size it was');
+  });
+
+  test('a tap far from everything opens nothing', () => {
+    el.querySelector('.graph-note-details').hidden = true;
+    const vb = areas.viewBox;
+    tapAt(drawnAt(vb.x + vb.width + 400, vb.y + vb.height + 400));
+    assert.ok(el.querySelector('.graph-note-details').hidden);
+  });
+});
+
 describe('estimated links', () => {
   let env;
   before(async () => {
