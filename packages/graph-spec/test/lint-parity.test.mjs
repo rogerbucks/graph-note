@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
@@ -105,7 +105,9 @@ test('the linter finds the same traps on the same lines as Python, on 4000 rando
 });
 
 test('the libraries use no regex lookbehind, which iOS before 16.4 cannot run', () => {
-  for (const f of ['graph-spec-check.js', 'graph-layout.js']) {
+  // every file of the library's source, its feature modules among them
+  const src = fileURLToPath(new URL('../src', import.meta.url));
+  for (const f of readdirSync(src, { recursive: true }).filter((x) => x.endsWith('.js'))) {
     assert.doesNotMatch(readFileSync(fileURLToPath(new URL(`../src/${f}`, import.meta.url)), 'utf8'), /\(\?<[=!]/, f);
   }
 });

@@ -37,4 +37,14 @@ export default defineConfig([
       },
     },
   },
+  {
+    // The graph-spec library is plain CommonJS modules, gathered by its entry point and bundled into one file for pages
+    // (packages/graph-spec/GUIDE.md); the plugin's esbuild bundles them too. require() is how its modules import.
+    // (graph-layout.js stays one UMD file, page global and module.exports, so it is left as it was.)
+    files: ['packages/graph-spec/src/**/*.js'],
+    ignores: ['packages/graph-spec/src/graph-layout.js'],
+    // sourceType gives each file Node's module globals; globalReturn gives it the module scope it has at run time
+    languageOptions: { sourceType: 'commonjs', parserOptions: { ecmaFeatures: { globalReturn: true } } },
+    rules: { '@typescript-eslint/no-require-imports': 'off' },
+  },
 ]);
