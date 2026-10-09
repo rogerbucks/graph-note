@@ -68,6 +68,17 @@ describe('choosing List for a property', () => {
     ]);
   });
 
+  test('all the values of one call are named in the style the graph had before it: a value does not depend on those before it', () => {
+    const rival = { rel: 'HAS_RIVAL', kind: 'Rival' };
+    // the graph's names have three words: the two-word ids made first must not pull the style down to two
+    const block = `// graph: shop\n(big_book_shop:Place {name: 'Big book shop', rivals: 'Reading tablet, Large reader, it\\'s 24/7'})`;
+    const text = ok(makeList(block, reading(block), 'shop', 'big_book_shop', 'rivals', rival));
+    assert.deepEqual(linked(text, 'big_book_shop', 'HAS_RIVAL'), ['reading_tablet', 'large_reader', 'its_24_7']);
+    const alone = block.replace('Reading tablet, Large reader, ', '');
+    const single = ok(makeList(alone, reading(alone), 'shop', 'big_book_shop', 'rivals', rival));
+    assert.deepEqual(linked(single, 'big_book_shop', 'HAS_RIVAL'), ['its_24_7'], 'the same id, made on its own');
+  });
+
   test('in a graph of snake_case names, Reading tablet is reading_tablet, with its words kept as the name', () => {
     const block = `// graph: shop\n(large_reader:Rival {name: 'Large reader'}),\n(book_shop:Place {name: 'Book shop', rivals: 'Reading tablet'})`;
     const text = ok(

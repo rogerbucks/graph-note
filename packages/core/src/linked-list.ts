@@ -7,7 +7,8 @@ import { blankText, blockItems, items } from './block-items.ts';
 import { readNote } from './drawing.ts';
 import { hops } from './estimates.ts';
 import { parseValue, propertiesOf, setProperty, spanOf } from './inspector.ts';
-import { nameFromText } from './name-suggestions.ts';
+import { nameFromText, nameStyleOf } from './name-suggestions.ts';
+import type { NameStyle } from './name-suggestions.ts';
 import type { NoteReading } from './note-reading.ts';
 
 /** The relationship and the kind a list's things are linked by and of. */
@@ -50,6 +51,8 @@ interface Known {
   taken: Set<string>;
   /** Every link, as a triple. */
   links: Set<string>;
+  /** The style of the graph's names as they were when this was read: every thing a call makes is named in it. */
+  style: NameStyle;
 }
 
 const PATTERN = /\(\s*([A-Za-z_]\w*)\s*((?::\s*\w+\s*)*)(\{[^{}]*\})?\s*\)/g;
@@ -82,7 +85,8 @@ function known(reading: NoteReading, graph: string, block: string): Known {
     });
   }
   for (const it of blockItems(block)) for (const [s, t, e] of hops(it.text)) links.add(triple(s, t, e));
-  return { things, taken, links };
+  const style = nameStyleOf(new Map([...taken].map((t) => [t, things.get(t)?.kinds[0] ?? ''])));
+  return { things, taken, links, style };
 }
 
 /** The thing of the kind that already has this name — an id equal to the value, or text equal to it whatever the case — else null. */
@@ -104,7 +108,13 @@ function itemsFor(
   const isNew = id === null;
   if (id === null) {
     // the id follows the style of the graph's own names, and is none of them; the value keeps its words as the name
-    id = nameFromText(value, new Map([...k.taken].map((t) => [t, k.things.get(t)?.kinds[0] ?? ''])), shape.kind);
+    // (the style was fixed when the graph was read, so a value is named the same whatever was named before it)
+    id = nameFromText(
+      value,
+      new Map([...k.taken].map((t) => [t, k.things.get(t)?.kinds[0] ?? ''])),
+      shape.kind,
+      k.style,
+    );
     k.taken.add(id);
     k.things.set(id, { kinds: [shape.kind], text: value });
     const name = id === value ? '' : ` {name: ${(parseValue('text', value) as { gql: string }).gql}}`;

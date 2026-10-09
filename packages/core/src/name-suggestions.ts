@@ -132,10 +132,11 @@ function joined(words: string[], casing: NameStyle['casing']): string {
  * already in the graph (its casing, its length, a prefix from the kind when `kind` is given and the names have one), and
  * never a name the graph already has — compared without regard to case; a number is added, in the same style, until it is
  * not. Never a word the language keeps for itself (match, set, true, id …), which is numbered in the same way. Always a
- * name the graph can read.
+ * name the graph can read. With `given`, that style is followed in place of the one `names` show (the names still keep a
+ * new name unique): for naming several things in one style, whatever is named among them.
  */
-export function nameFromText(text: string, names: GraphNames, kind?: string): string {
-  const style = nameStyleOf(names),
+export function nameFromText(text: string, names: GraphNames, kind?: string, given?: NameStyle): string {
+  const style = given ?? nameStyleOf(names),
     taken = new Set(entriesOf(names).map(([n]) => n.toLowerCase()));
   let words = nameWords(text);
   const significant = words.filter((w) => !SMALL_WORDS.has(w));

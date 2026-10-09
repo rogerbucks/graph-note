@@ -13,6 +13,19 @@ describe('a name from a text', () => {
     assert.equal(nameFromText("Don't panic!", []), 'dont_panic');
   });
 
+  test('a style given is followed in place of the one the names show, while the names still keep a new name unique', () => {
+    const names = ['small_reader', 'large_reader'];
+    assert.equal(nameFromText('Costs much less', names), 'costs_much');
+    assert.equal(
+      nameFromText('Costs much less', names, undefined, { casing: 'snake', words: 3, prefix: 'none' }),
+      'costs_much_less',
+    );
+    assert.equal(
+      nameFromText('Costs much less', [...names, 'costs_much_less'], undefined, nameStyleOf(['reader'])),
+      'costs_much_less_2',
+    );
+  });
+
   test('small words are left out, unless the text is nothing else', () => {
     assert.equal(nameFromText('The size of the screen', []), 'size_screen');
     assert.equal(nameFromText('To be or to be', []), 'to_be_or');
