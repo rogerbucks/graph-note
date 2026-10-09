@@ -8,8 +8,6 @@
 //   node scripts/quality-metrics.mjs                       measure everything, print the JSON
 //   node scripts/quality-metrics.mjs --out quality/metrics.json   write it to a file instead
 //   node scripts/quality-metrics.mjs --fast                only the quick metrics, from the files (no audit, build or suite)
-//   node scripts/quality-metrics.mjs --except <test file>  leave a known-failing test file out of the suite runs (repeatable);
-//                                                          the report says so, and quality-check refuses it for a release
 //
 // The audit reaches the npm registry, and the suite runs twice (a minute or so): this is the release's job, not CI's.
 import { spawnSync } from 'node:child_process';
@@ -44,9 +42,10 @@ export function measureFast() {
   const files = scannedFiles(ROOT);
   const source = largest(files, SOURCE),
     test = largest(files, TEST);
+  const secrets = scanRepo(ROOT); // file, line and kind only: what matched is never kept
   return {
-    metrics: { max_source_lines: source.lines, max_test_lines: test.lines, secrets_found: scanRepo(ROOT).length },
-    details: { max_source_file: source.file, max_test_file: test.file },
+    metrics: { max_source_lines: source.lines, max_test_lines: test.lines, secrets_found: secrets.length },
+    details: { max_source_file: source.file, max_test_file: test.file, secrets },
   };
 }
 
@@ -143,30 +142,18 @@ async function measureDraw() {
   return { metrics: { draw_ms: Math.round(median(times) * 10) / 10 }, details: {} };
 }
 
-/** The test files `node --test` runs, less any left out: the repository's own, and each package's. */
-export function suiteFiles(except = []) {
-  const all = scannedFiles(ROOT).filter((f) => /^(?:packages\/[^/]+\/)?test\/.+\.test\.(?:js|mjs)$/.test(f));
-  return all.filter((f) => !except.includes(f));
-}
-
-/**
- * Everything: the quick metrics, the audit, the bundle, the drawing, the machine's speed, and the suite (twice). With
- * `except`, those test files are left out of the suite, and the report says so: it is for a known failure that is being
- * waited on, and a release refuses such a report.
- */
-export async function measureAll(except = []) {
-  const suite = measureSuite(ROOT, except.length ? suiteFiles(except) : []);
-  const parts = [measureFast(), measureAudit(), await measureBundle(), await measureDraw(), suite];
+/** Everything: the quick metrics, the audit, the bundle, the drawing, the machine's speed, and the suite (twice). */
+export async function measureAll() {
+  const parts = [measureFast(), measureAudit(), await measureBundle(), await measureDraw(), measureSuite(ROOT)];
   const metrics = Object.assign({}, ...parts.map((p) => p.metrics), { speed_index: measureSpeed() });
-  const details = Object.assign({}, ...parts.map((p) => p.details), except.length && { left_out: except });
+  const details = Object.assign({}, ...parts.map((p) => p.details));
   return { metrics, details };
 }
 
 async function main(argv) {
   const fast = argv.includes('--fast');
   const out = argv.includes('--out') ? argv[argv.indexOf('--out') + 1] : null;
-  const except = argv.flatMap((a, i) => (a === '--except' ? [argv[i + 1]] : []));
-  const { metrics, details } = fast ? measureFast() : await measureAll(except);
+  const { metrics, details } = fast ? measureFast() : await measureAll();
   if (details.failing?.length) {
     console.error(`the suite fails, so its metrics mean nothing:\n${details.failing.join('\n')}`);
     return 1;
@@ -175,6 +162,8 @@ async function main(argv) {
     about: ABOUT,
     measured: new Date().toISOString().slice(0, 10),
     node: process.version,
+    // timings are only held against a baseline measured on the same operating system and Node major
+    machine: { os: process.platform, node_major: Number(process.versions.node.split('.')[0]) },
     metrics: Object.fromEntries(
       Object.keys(METRICS)
         .filter((k) => k in metrics)

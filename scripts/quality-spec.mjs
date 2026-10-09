@@ -5,7 +5,8 @@
  * Every metric: `better` is the direction that is an improvement; `tolerance` the share of the baseline a noisy metric may
  * worsen by with no reason recorded; `slack` an absolute amount it may worsen by, for a figure too small for a share to
  * mean anything; `scaled` marks a timing, whose baseline is stretched by how much slower this machine measured itself
- * than the baseline's did; `fast` marks the metrics that are measured in a moment, from the files alone.
+ * than the baseline's did; `fast` marks the metrics that are measured in a moment, from the files alone; `waivable: false`
+ * marks one no recorded reason can excuse.
  */
 export const METRICS = {
   max_source_lines: { better: 'lower', tolerance: 0, slack: 0, unit: 'lines', fast: true },
@@ -14,7 +15,7 @@ export const METRICS = {
   audit_high: { better: 'lower', tolerance: 0, slack: 0, unit: 'vulnerabilities' },
   audit_moderate: { better: 'lower', tolerance: 0, slack: 0, unit: 'vulnerabilities' },
   audit_low: { better: 'lower', tolerance: 0, slack: 0, unit: 'vulnerabilities' },
-  secrets_found: { better: 'lower', tolerance: 0, slack: 0, unit: 'secrets', fast: true },
+  secrets_found: { better: 'lower', tolerance: 0, slack: 0, unit: 'secrets', fast: true, waivable: false },
   bundle_bytes: { better: 'lower', tolerance: 0.03, slack: 0, unit: 'bytes' },
   bundle_bytes_without_viz: { better: 'lower', tolerance: 0.03, slack: 0, unit: 'bytes' },
   draw_ms: { better: 'lower', tolerance: 0.25, slack: 0, unit: 'ms', scaled: true },

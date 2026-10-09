@@ -39,9 +39,16 @@ export function parseJunit(xml, root) {
   return tests;
 }
 
-/** The tests whose result differs between two runs: the flaky ones, by name. */
-export function flakyBetween(first, second) {
-  return [...first].filter(([name, result]) => second.has(name) && second.get(name) !== result).map(([name]) => name);
+/**
+ * The tests whose result differs between two runs, or that ran in only one of them: the flaky ones, by name. A second
+ * run that failed (`secondPassed` false) with no test to blame is flaky too, as a line saying so.
+ */
+export function flakyBetween(first, second, secondPassed = true) {
+  const names = new Set([...first.keys(), ...second.keys()]);
+  const flaky = [...names].filter((name) => first.get(name) !== second.get(name));
+  if (!secondPassed && !flaky.length && ![...second.values()].includes('fail'))
+    flaky.push('(the second run failed with no test of its own failing)');
+  return flaky;
 }
 
 /** The line coverage of the files under a folder, from an lcov report: the files, their lines, those hit, and the share. */
@@ -76,10 +83,10 @@ function nodeTest(root, args) {
 /**
  * Measures the suite: `suite_seconds` and `quiet_run_bytes` from a plain run (the bytes are null if it did not pass:
  * a failing run's output is not the figure being kept down), `flaky_tests` from comparing it with a second run, and
- * `coverage_percent` for packages/core/src from that second run. `details` names the flaky and failing tests. With
- * `files`, only those test files run (the whole suite when it is empty).
+ * `coverage_percent` for packages/core/src from that second run. `details` names the flaky and failing tests. The runs
+ * are plain `node --test`, with the test discovery a developer's and CI's runs have.
  */
-export function measureSuite(root, files = []) {
+export function measureSuite(root) {
   const dir = mkdtempSync(join(tmpdir(), 'quality-suite-'));
   try {
     const quiet = join(dir, 'quiet.txt'),
@@ -91,7 +98,6 @@ export function measureSuite(root, files = []) {
       `--test-reporter-destination=${quiet}`,
       '--test-reporter=junit',
       `--test-reporter-destination=${one}`,
-      ...files,
     ]);
     const second = nodeTest(root, [
       '--experimental-test-coverage',
@@ -100,12 +106,12 @@ export function measureSuite(root, files = []) {
       `--test-reporter-destination=${two}`,
       '--test-reporter=lcov',
       `--test-reporter-destination=${lcov}`,
-      ...files,
     ]);
     const a = parseJunit(readFileSync(one, 'utf8'), root),
       b = parseJunit(readFileSync(two, 'utf8'), root);
     const failing = [...a].filter(([, r]) => r === 'fail').map(([name]) => name);
-    const flaky = flakyBetween(a, b);
+    if (!first.passed && !failing.length) failing.push('(the first run failed with no test of its own failing)');
+    const flaky = flakyBetween(a, b, second.passed);
     const coverage = parseLcov(readFileSync(lcov, 'utf8'), 'packages/core/src/');
     return {
       metrics: {

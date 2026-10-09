@@ -1,23 +1,24 @@
 name: Engine advisories
 
-# Once a week, reads what is published against the Graphviz inside the layout engine and against the package that wraps
-# it (OSV, with NVD behind it), and when the answer has changed opens a pull request with the new
-# quality/advisories.json (spec §13, engine_version_watched). Ordinary CI and the plugin never ask: they read that file.
+# Reads what is published, right now, against the Graphviz inside the layout engine (OSV and NVD) and against the package
+# that wraps it (OSV), and fails when it differs from the committed quality/advisories.json or any of it affects the
+# bundled versions (spec §13, engine_version_watched). It only reads: the failure says to run
+# node scripts/engine-version.mjs --refresh and open a pull request, and the new cache is uploaded as an artifact.
+# The release does its own live check in its quality job, and the plugin never asks.
+#
+# The weekly run is off until the owner decides at the public release. To switch it back on,
+# restore the schedule line below (a Monday morning) under "on:".
 on:
-  schedule:
-    - cron: '17 6 * * 1'
+  # schedule:
+  #   - cron: '17 6 * * 1'
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  # Writes only here: a branch for the new cache, and the pull request for it.
-  refresh:
+  watch:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -27,23 +28,10 @@ jobs:
           node-version: 24
       - run: npm ci
       - run: npm audit signatures
-      - run: node scripts/engine-version.mjs --refresh
-      - id: changed
-        name: Did the answer change
-        run: echo "files=$(git status --porcelain quality/advisories.json | wc -l)" >> "$GITHUB_OUTPUT"
-      - if: steps.changed.outputs.files != '0'
-        run: git switch --create advisory-refresh
-      - if: steps.changed.outputs.files != '0'
-        run: git add quality/advisories.json
-      - if: steps.changed.outputs.files != '0'
-        run: git -c "user.name=github-actions[bot]" -c "user.email=41898282+github-actions[bot]@users.noreply.github.com" commit --message "Refresh the advisories for the layout engine"
-      - if: steps.changed.outputs.files != '0'
-        name: Push the branch with this job's token
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: 'git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $(printf "x-access-token:%s" "$GH_TOKEN" | base64 | tr -d "\n")" push --force origin advisory-refresh'
-      - if: steps.changed.outputs.files != '0'
-        name: Open the pull request, unless one is open already
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh pr create --base main --head advisory-refresh --title "Refresh the advisories for the layout engine" --body "The published advisories for the Graphviz inside the layout engine, or for the package that wraps it, have changed. Read quality/advisories.json. An advisory that affects the bundled version fails the next release." || gh pr view advisory-refresh
+      - run: node scripts/engine-version.mjs --watch --write advisories-fresh.json
+      - if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: advisories-fresh
+          path: advisories-fresh.json
+          if-no-files-found: ignore

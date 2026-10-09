@@ -118,6 +118,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/offline.test.js` — the bundled engine makes no network request.
 - `test/policy.test.js` — the plugin-store files, supply-chain pins and least-privilege CI.
 - `test/quality-metrics.test.js` — the quality metrics are held to a committed baseline, and a worse one fails without a recorded reason.
+- `test/quality-baseline.test.js` — the baseline cannot be loosened without a reason, is whole, and says which machine measured it.
 - `test/requirements.test.js` — the generated requirements copy: started requirements proved, tests where they say.
 - `test/test-vault.test.js` — the test vault: dummy notes tied to requirements, nothing Obsidian writes committed, each session clean.
 - `test/tests-first.test.js` — every test is seen to fail before its code, replayed commit by commit.
@@ -133,7 +134,15 @@ These test behaviour across modules, or the repository itself, so they are named
   how fast the machine measured itself; counts carry none. The quick ones (file sizes, secrets) also run in CI and in
   `test/quality-metrics.test.js`.
 - **To move the baseline,** after a change is wanted, run the metrics script with `--out quality/baseline.json` on a
-  passing suite, and commit it.
+  passing suite, and commit it. The baseline is held against its own earlier copy (`quality-check.mjs --baseline-since
+  <ref>`, run in CI and in the release): a metric that got worse in it needs an entry in `accepted.json` too, a count of
+  secrets can never be waived, and a baseline with a metric missing or tests left out is refused.
+- **Timings are enforced only on the machine the baseline came from** (same operating system and Node major, recorded in
+  it). Elsewhere they warn. To get a baseline from the CI runner, run the "Quality baseline" workflow by hand, download
+  its `quality-metrics` artifact, and commit it as `quality/baseline.json` in a normal pull request.
 - **The Graphviz inside the engine is watched** (spec §13): `node scripts/engine-version.mjs` reads its version from the
-  engine, checks the notices name it, and checks `quality/advisories.json` offline. Only `--refresh` asks OSV (NVD behind
-  it); the release's quality job and a weekly workflow run it. The plugin never asks.
+  engine, checks the notices name it, and checks `quality/advisories.json` offline (it warns when the cache was last
+  checked over 14 days ago). Only `--refresh` and `--watch` ask: OSV and NVD for Graphviz, merged, and OSV for the
+  package that wraps it. The release's quality job refreshes and checks. The "Engine advisories" workflow, run by hand
+  (its weekly schedule is off until the public release), is read-only: it fails when the published advisories differ
+  from the committed cache, and then someone runs `--refresh` and opens a pull request. The plugin never asks.

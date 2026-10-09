@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { METRICS, compare, acceptedProblems } from '../scripts/quality-check.mjs';
 import { findSecrets, scanRepo, scannedFiles } from '../scripts/quality-secrets.mjs';
-import { measureFast, suiteFiles } from '../scripts/quality-metrics.mjs';
+import { measureFast } from '../scripts/quality-metrics.mjs';
 import { testsForChanges } from '../scripts/changed-tests.mjs';
 import { parseJunit, flakyBetween, parseLcov } from '../scripts/quality-suite.mjs';
 import { exists, read, readJSON, ROOT, block, jobs, runCommands } from './repository/repo.js';
@@ -301,13 +301,17 @@ describe('the commands', () => {
   });
 
   test('a run that left a test file out of the suite is no measure of a release, and is refused', () => {
-    const left = suiteFiles(['test/requirements.test.js']);
-    assert.ok(!left.includes('test/requirements.test.js'));
-    assert.ok(left.includes('test/quality-metrics.test.js') && left.includes('packages/core/test/zoom.test.js'));
-    assert.ok(suiteFiles().includes('test/requirements.test.js'));
     const r = run('scripts/quality-check.mjs', [metricsFile(baseline().metrics, { left_out: ['test/x.test.js'] })]);
     assert.equal(r.status, 1);
     assert.match(r.stderr, /left out.*test\/x\.test\.js/);
+  });
+
+  test('a secret that is found is named by file and line, and the text that matched is never printed', () => {
+    const secrets = [{ file: 'src/a.js', line: 7, rule: 'aws-key' }];
+    const r = run('scripts/quality-check.mjs', [metricsFile({ ...baseline().metrics, secrets_found: 1 }, { secrets })]);
+    assert.equal(r.status, 1);
+    assert.match(r.stderr, /src\/a\.js:7 \(aws-key\)/);
+    assert.deepEqual(measureFast().details.secrets, []);
   });
 
   test('the metrics script writes to a file with --out, and to the screen without it', () => {
@@ -414,6 +418,21 @@ describe('reading the suite’s reports', () => {
     assert.deepEqual(flakyBetween(a, a), []);
   });
 
+  test('a test missing from one of the runs is flaky too, and so is a second run that failed with no test to blame', () => {
+    const both = parseJunit(junit([['t/a.test.js', 's', 'steady', true]]), ROOT);
+    const extra = parseJunit(
+      junit([
+        ['t/a.test.js', 's', 'steady', true],
+        ['t/a.test.js', 's', 'sometimes there', true],
+      ]),
+      ROOT,
+    );
+    assert.deepEqual(flakyBetween(extra, both), ['t/a.test.js > s > sometimes there']);
+    assert.deepEqual(flakyBetween(both, extra), ['t/a.test.js > s > sometimes there']);
+    assert.equal(flakyBetween(both, both, false).length, 1, 'the run itself failed');
+    assert.deepEqual(flakyBetween(both, both, true), []);
+  });
+
   test('line coverage of the files under a folder, as a percentage of their lines', () => {
     const lcov = [
       'SF:packages/core/src/a.ts',
@@ -435,19 +454,26 @@ describe('reading the suite’s reports', () => {
 });
 
 describe('a change to the ratchet’s files', () => {
-  const tracked = ['test/quality-metrics.test.js', 'test/engine-version.test.js', 'test/policy.test.js'];
+  const tracked = [
+    'test/quality-metrics.test.js',
+    'test/quality-baseline.test.js',
+    'test/engine-version.test.js',
+    'test/policy.test.js',
+  ];
 
   test('runs only the tests that read them, not the whole suite', () => {
+    for (const changed of ['scripts/quality-secrets.mjs', 'scripts/quality-suite.mjs', 'scripts/quality-metrics.mjs'])
+      assert.deepEqual(testsForChanges([changed], tracked), { all: false, files: ['test/quality-metrics.test.js'] });
     for (const changed of [
       'scripts/quality-check.mjs',
-      'scripts/quality-secrets.mjs',
       'scripts/quality-spec.mjs',
-      'scripts/quality-suite.mjs',
-      'scripts/quality-metrics.mjs',
       'quality/baseline.json',
       'quality/accepted.json',
     ])
-      assert.deepEqual(testsForChanges([changed], tracked), { all: false, files: ['test/quality-metrics.test.js'] });
+      assert.deepEqual(testsForChanges([changed], tracked), {
+        all: false,
+        files: ['test/quality-baseline.test.js', 'test/quality-metrics.test.js'],
+      });
     for (const changed of ['scripts/engine-version.mjs', 'quality/advisories.json'])
       assert.deepEqual(testsForChanges([changed], tracked), { all: false, files: ['test/engine-version.test.js'] });
   });

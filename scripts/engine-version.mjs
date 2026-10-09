@@ -4,12 +4,14 @@
 // name, and no published advisory for Graphviz or for @viz-js/viz may affect it, or the release fails.
 //
 // The advisories are read from a committed cache, quality/advisories.json, so a check runs offline and never touches the
-// network; only --refresh asks OSV, and NVD where OSV cannot answer for Graphviz. It runs in the release's quality job
-// and in a weekly workflow that opens a pull request with the new cache. The plugin never asks anyone.
+// network. Only --refresh and --watch ask: OSV and NVD for Graphviz, answers merged, and OSV for the package that wraps
+// it. --refresh runs in the release's quality job; --watch, read-only, in a workflow that is run by hand and fails when
+// the published advisories differ from the cache, so someone refreshes it in a pull request. The plugin never asks.
 //
 // Usage:
 //   node scripts/engine-version.mjs                   check: the engine, the notices, the cache (offline); exit 1 on a flaw
-//   node scripts/engine-version.mjs --refresh         ask OSV (NVD behind it) about this engine and rewrite the cache
+//   node scripts/engine-version.mjs --refresh         ask about this engine and rewrite the cache
+//   node scripts/engine-version.mjs --watch [--write <file>]   ask, change nothing; exit 1 if the answer is not the cache
 //   node scripts/engine-version.mjs --notes <file>    also write the release notes' paragraph on the engine (offline)
 //   --cache <file>                                    read or write this cache instead of quality/advisories.json
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -77,14 +79,30 @@ export function checkEngine({ graphviz, wrapper, cache, notices }) {
       `${CACHE} was made for ${NAMES[name]} ${cache.queried?.[name] ?? 'nothing'}, but the engine has ${v}: ` +
         'run node scripts/engine-version.mjs --refresh',
     );
-  if (stale.length) return found;
-  for (const a of cache.advisories ?? [])
-    if (a.package in now && affects(a, now[a.package]))
-      found.push(
+  return stale.length ? found : [...found, ...flaws(cache, now)];
+}
+
+/** The advisories in a cache that affect these versions (by package name), each said in words. */
+function flaws(cache, now) {
+  return (cache.advisories ?? [])
+    .filter((a) => a.package in now && affects(a, now[a.package]))
+    .map(
+      (a) =>
         `${a.id} affects ${NAMES[a.package]} ${now[a.package]} (${a.source}): ${a.summary}. ` +
-          'A release cannot be made until the engine is updated past it.',
-      );
-  return found;
+        'A release cannot be made until the engine is updated past it.',
+    );
+}
+
+const STALE_DAYS = 14;
+
+/** A warning when the cache was last checked more than 14 days before `today` (YYYY-MM-DD), or never; else null. */
+export function staleness(cache, today = new Date().toISOString().slice(0, 10)) {
+  if (!cache?.checked)
+    return `${CACHE} says nothing of when it was checked: it was never checked, so run node scripts/engine-version.mjs --refresh`;
+  const days = Math.floor((Date.parse(today) - Date.parse(cache.checked)) / 864e5);
+  return days > STALE_DAYS
+    ? `${CACHE} was last checked ${days} days ago (${cache.checked}): run node scripts/engine-version.mjs --refresh`
+    : null;
 }
 
 /** The release notes' paragraph on the engine: what it is, and that the advisories for it were checked. */
@@ -107,10 +125,10 @@ const readJSON = (file) => {
   }
 };
 
-// ── Only below this line is the network reached, and only by --refresh ──
+// ── Only below this line is the network reached, and only by --refresh and --watch ──
 
 const ABOUT =
-  'What OSV (and NVD, where OSV could not answer for Graphviz) publishes against the Graphviz inside @viz-js/viz and against @viz-js/viz, for the versions in "queried". Written by node scripts/engine-version.mjs --refresh, never by hand; the weekly workflow and the release both run it. The check reads this file offline, and fails if it was made for another engine or lists a flaw that affects this one.';
+  'What OSV and NVD publish against the Graphviz inside @viz-js/viz (both are asked, and their answers merged), and what OSV publishes against @viz-js/viz, for the versions in "queried", as of "checked". Written by node scripts/engine-version.mjs --refresh, never by hand; the release runs it, and the Engine advisories workflow watches for a change. The check reads this file offline, and fails if it was made for another engine or lists a flaw that affects this one.';
 const GRAPHVIZ_REPO = 'https://gitlab.com/graphviz/graphviz.git';
 
 const flat = (text) =>
@@ -202,37 +220,90 @@ async function askNvd(fetch, version) {
 }
 
 /**
- * Asks about this engine and gives the new cache and whether it changed. Graphviz is asked of OSV by its repository, then
- * of NVD if OSV cannot answer; the wrapper is asked of OSV as an npm package. A question no service can answer is an
- * error, never an empty answer: a release is not made on advisories nobody could read. A result no different from
- * `previous` keeps its date, so a weekly refresh finds nothing to propose.
+ * Two entries for one flaw (the same id, or one the other names as an alias, for the same package) are one, from both
+ * services. If either named it with no version or range, the merged one has none, so it affects the version asked about.
+ */
+function merge(list) {
+  const out = [];
+  const open = (x) => !x.ranges?.length && !x.versions?.length;
+  const same = (x, y) =>
+    x.package === y.package && (x.id === y.id || x.aliases?.includes(y.id) || y.aliases?.includes(x.id));
+  for (const a of list) {
+    const at = out.findIndex((x) => same(x, a));
+    if (at < 0) {
+      out.push(a);
+      continue;
+    }
+    const had = out[at];
+    const { ranges: _r, versions: _v, ...rest } = had;
+    const joined = { ...rest, source: [...new Set([...had.source.split('+'), ...a.source.split('+')])].join('+') };
+    if (!open(had) && !open(a)) {
+      const union = (key) => [
+        ...new Map([...(had[key] ?? []), ...(a[key] ?? [])].map((v) => [JSON.stringify(v), v])).values(),
+      ];
+      if (union('ranges').length) joined.ranges = union('ranges');
+      if (union('versions').length) joined.versions = union('versions');
+    }
+    out[at] = joined;
+  }
+  return out;
+}
+
+/** What a service said when it could not answer, or null when it answered. */
+const failure = async (name, ask) => {
+  try {
+    return { found: await ask() };
+  } catch (e) {
+    return { error: `${name}: ${e.message}` };
+  }
+};
+
+/**
+ * Asks about this engine and gives the new cache and whether the answer changed from `previous` (its date apart). Graphviz
+ * is asked of OSV by its repository and of NVD, and the two answers merged; the wrapper is asked of OSV as an npm
+ * package. A question any service cannot answer is an error, never an empty answer: a release is not made on advisories
+ * nobody could read.
  */
 export async function refresh({ graphviz, wrapper, fetch = globalThis.fetch, today, previous }) {
-  const sources = {},
-    advisories = [];
-  try {
-    advisories.push(...(await askOsv(fetch, GRAPHVIZ_REPO, graphviz, 'GIT')));
-    sources.graphviz = 'osv';
-  } catch (osv) {
-    try {
-      advisories.push(...(await askNvd(fetch, graphviz)));
-      sources.graphviz = 'nvd';
-    } catch (nvd) {
-      throw new Error(
-        `could not read the advisories for Graphviz ${graphviz}: OSV: ${osv.message}; NVD: ${nvd.message}`,
-      );
-    }
-  }
-  try {
-    advisories.push(...(await askOsv(fetch, WRAPPER, wrapper, 'npm')));
-    sources[WRAPPER] = 'osv';
-  } catch (osv) {
-    throw new Error(`could not read the advisories for ${WRAPPER} ${wrapper}: OSV: ${osv.message}`);
-  }
-  const body = { queried: { graphviz, [WRAPPER]: wrapper }, sources, advisories };
+  const osv = await failure('OSV', () => askOsv(fetch, GRAPHVIZ_REPO, graphviz, 'GIT'));
+  const nvd = await failure('NVD', () => askNvd(fetch, graphviz));
+  const errors = [osv.error, nvd.error].filter(Boolean);
+  if (errors.length) throw new Error(`could not read the advisories for Graphviz ${graphviz}: ${errors.join('; ')}`);
+  const npm = await failure('OSV', () => askOsv(fetch, WRAPPER, wrapper, 'npm'));
+  if (npm.error) throw new Error(`could not read the advisories for ${WRAPPER} ${wrapper}: ${npm.error}`);
+  const body = {
+    queried: { graphviz, [WRAPPER]: wrapper },
+    sources: { graphviz: 'osv+nvd', [WRAPPER]: 'osv' },
+    advisories: [...merge([...osv.found, ...nvd.found]), ...npm.found],
+  };
   const kept = previous && { queried: previous.queried, sources: previous.sources, advisories: previous.advisories };
-  if (JSON.stringify(kept) === JSON.stringify(body)) return { cache: previous, changed: false };
-  return { cache: { about: ABOUT, changed: today ?? new Date().toISOString().slice(0, 10), ...body }, changed: true };
+  const checked = today ?? new Date().toISOString().slice(0, 10);
+  return { cache: { about: ABOUT, checked, ...body }, changed: JSON.stringify(kept) !== JSON.stringify(body) };
+}
+
+const ids = (cache) => new Set((cache?.advisories ?? []).map((a) => a.id));
+
+/**
+ * Asks the services as `refresh` does, and holds the answer against the committed cache, changing nothing. Gives the
+ * problems, in words (empty when the answer is the committed one and no advisory affects the engine), and the fresh cache.
+ */
+export async function watch({ graphviz, wrapper, fetch, previous, today }) {
+  const { cache: fresh, changed } = await refresh({ graphviz, wrapper, fetch, today, previous });
+  const problems = flaws(fresh, { graphviz, [WRAPPER]: wrapper });
+  if (changed) {
+    const [before, now] = [ids(previous), ids(fresh)];
+    const said = [
+      `added: ${[...now].filter((i) => !before.has(i)).join(', ') || 'none'}`,
+      `removed: ${[...before].filter((i) => !now.has(i)).join(', ') || 'none'}`,
+    ];
+    if (!previous || previous.queried?.graphviz !== graphviz || previous.queried?.[WRAPPER] !== wrapper)
+      said.push(`${CACHE} was made for another engine than this one`);
+    problems.push(
+      `The published advisories for the layout engine have changed since ${CACHE} was committed (${said.join('; ')}). ` +
+        `Run node scripts/engine-version.mjs --refresh and open a pull request with ${CACHE}.`,
+    );
+  }
+  return { problems, fresh };
 }
 
 async function main(argv) {
@@ -241,18 +312,32 @@ async function main(argv) {
   const engine = await engineVersion();
   if (argv.includes('--refresh')) {
     const { cache, changed } = await refresh({ ...engine, previous: readJSON(cacheFile) });
-    if (changed) writeFileSync(cacheFile, `${JSON.stringify(cache, null, 2)}\n`);
+    writeFileSync(cacheFile, `${JSON.stringify(cache, null, 2)}\n`);
     console.log(
-      `Graphviz ${engine.graphviz}: ${cache.advisories.length} advisories listed (${changed ? 'the cache changed' : 'no change'})`,
+      `Graphviz ${engine.graphviz}: ${cache.advisories.length} advisories listed (${changed ? 'the answer changed' : 'no change'})`,
     );
     return 0;
   }
+  if (argv.includes('--watch')) {
+    // read-only: the committed cache is never written; --write puts the fresh one elsewhere, to be uploaded
+    const { problems, fresh } = await watch({ ...engine, previous: readJSON(cacheFile) });
+    if (option('--write')) writeFileSync(resolve(option('--write')), `${JSON.stringify(fresh, null, 2)}\n`);
+    if (problems.length) {
+      console.error(problems.join('\n'));
+      return 1;
+    }
+    console.log(`Graphviz ${engine.graphviz}: the published advisories are the committed ones, and none affects it`);
+    return 0;
+  }
   const notices = readFileSync(join(ROOT, 'THIRD_PARTY_NOTICES.md'), 'utf8');
-  const problems = checkEngine({ ...engine, cache: readJSON(cacheFile), notices });
+  const cache = readJSON(cacheFile);
+  const problems = checkEngine({ ...engine, cache, notices });
   if (problems.length) {
     console.error(problems.join('\n'));
     return 1;
   }
+  const old = staleness(cache);
+  if (old) console.error(`warning: ${old}`);
   if (option('--notes')) writeFileSync(resolve(option('--notes')), releaseNotes(engine));
   console.log(
     `Graphviz ${engine.graphviz} (inside ${WRAPPER} ${engine.wrapper}): named in the notices; no advisory in the cache affects it`,

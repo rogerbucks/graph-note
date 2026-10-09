@@ -18,11 +18,15 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # the commit before the tagged one, to hold the baseline against its earlier copy
+          fetch-depth: 2
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
       - run: npm ci
       - run: npm audit signatures
+      - name: The baseline is no worse than the commit before, or every change has a reason
+        run: node scripts/quality-check.mjs --baseline-since HEAD~1
       - name: Read the published advisories for the Graphviz inside the engine, and for the package that wraps it
         run: node scripts/engine-version.mjs --refresh
       - name: The engine is the version the notices name, and no advisory affects it

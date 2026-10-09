@@ -1,12 +1,12 @@
 {
-  "about": "What OSV (and NVD, where OSV could not answer for Graphviz) publishes against the Graphviz inside @viz-js/viz and against @viz-js/viz, for the versions in \"queried\". Written by node scripts/engine-version.mjs --refresh, never by hand; the weekly workflow and the release both run it. The check reads this file offline, and fails if it was made for another engine or lists a flaw that affects this one.",
-  "changed": "2026-10-09",
+  "about": "What OSV and NVD publish against the Graphviz inside @viz-js/viz (both are asked, and their answers merged), and what OSV publishes against @viz-js/viz, for the versions in \"queried\", as of \"checked\". Written by node scripts/engine-version.mjs --refresh, never by hand; the release runs it, and the Engine advisories workflow watches for a change. The check reads this file offline, and fails if it was made for another engine or lists a flaw that affects this one.",
+  "checked": "2026-10-09",
   "queried": {
     "graphviz": "16.1.0",
     "@viz-js/viz": "3.31.0"
   },
   "sources": {
-    "graphviz": "osv",
+    "graphviz": "osv+nvd",
     "@viz-js/viz": "osv"
   },
   "advisories": []
