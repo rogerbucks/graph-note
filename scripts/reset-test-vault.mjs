@@ -4,8 +4,8 @@
 // plugin build at the repository root into .obsidian/plugins/graph-note/. Nothing outside test-vault/ is touched.
 //
 // Usage:
-//   node scripts/test-vault.mjs fresh                before and after every session in the vault
-//   node scripts/test-vault.mjs fresh --root DIR     the same, in the repository at DIR (the tests use this)
+//   node scripts/reset-test-vault.mjs               before and after every session in the vault
+//   node scripts/reset-test-vault.mjs --root DIR    the same, in the repository at DIR (the tests use this)
 //
 // Run `npm run build` first, so the links find a build.
 import { execFileSync } from 'node:child_process';
@@ -32,11 +32,10 @@ export function fresh(root) {
 }
 
 function main(args) {
-  const [command] = args;
   const at = args.indexOf('--root');
   const root = at >= 0 ? resolve(args[at + 1]) : join(dirname(fileURLToPath(import.meta.url)), '..');
-  if (command !== 'fresh') {
-    console.error('Usage: node scripts/test-vault.mjs fresh [--root DIR]');
+  if (args.length !== (at >= 0 ? 2 : 0) || (at >= 0 && !args[at + 1])) {
+    console.error('Usage: node scripts/reset-test-vault.mjs [--root DIR]');
     return 2;
   }
   fresh(root);

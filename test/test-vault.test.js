@@ -132,7 +132,7 @@ describe('each session in the vault starts and ends clean', () => {
       writeFileSync(join(dir, VAULT, 'A folder', 'note.md'), 'x');
       git(dir, 'add', join(VAULT, 'Untitled.md'));
 
-      const run = spawnSync(process.execPath, [path('scripts/test-vault.mjs'), 'fresh', '--root', dir], {
+      const run = spawnSync(process.execPath, [path('scripts/reset-test-vault.mjs'), '--root', dir], {
         encoding: 'utf8',
       });
       assert.equal(run.status, 0, run.stdout + run.stderr);
@@ -153,7 +153,7 @@ describe('each session in the vault starts and ends clean', () => {
     try {
       writeFileSync(join(dir, 'work in progress.txt'), 'kept');
       writeFileSync(join(dir, '.gitignore'), readFileSync(join(dir, '.gitignore'), 'utf8') + '# edited\n');
-      const run = spawnSync(process.execPath, [path('scripts/test-vault.mjs'), 'fresh', '--root', dir], {
+      const run = spawnSync(process.execPath, [path('scripts/reset-test-vault.mjs'), '--root', dir], {
         encoding: 'utf8',
       });
       assert.equal(run.status, 0, run.stdout + run.stderr);
@@ -165,8 +165,8 @@ describe('each session in the vault starts and ends clean', () => {
   });
 
   test('an unknown command says how to use it and changes nothing', () => {
-    const run = spawnSync(process.execPath, [path('scripts/test-vault.mjs'), 'tidy'], { encoding: 'utf8' });
+    const run = spawnSync(process.execPath, [path('scripts/reset-test-vault.mjs'), 'tidy'], { encoding: 'utf8' });
     assert.equal(run.status, 2);
-    assert.match(run.stderr, /fresh/);
+    assert.match(run.stderr, /reset-test-vault\.mjs \[--root DIR\]/);
   });
 });
