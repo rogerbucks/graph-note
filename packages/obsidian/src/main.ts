@@ -1,5 +1,6 @@
 // Graph Note: draws the graphs written in notes (spec §3), and edits them in a pane beside the note (spec §4).
-import { Notice, Plugin, TFile } from 'obsidian';
+import { Notice, Plugin, TFile, editorInfoField } from 'obsidian';
+import type { EditorView } from '@codemirror/view';
 import type { MarkdownPostProcessorContext } from 'obsidian';
 import { gqlBlocks, isSharedSchema, loadEngine } from '@graph-note/core';
 import type { Engine } from '@graph-note/core';
@@ -91,6 +92,15 @@ export default class GraphNotePlugin extends Plugin {
   graphviz(): Promise<Engine> {
     this.engine ??= this.loadEngine();
     return this.engine;
+  }
+
+  /** The editors (CodeMirror views) open on notes in the editing view, as the plugin's editor extension sees them. */
+  readonly editorViews = new Set<EditorView>();
+
+  /** An editor open on the note at `path`, if there is one: where a change to it is written. */
+  editorFor(path: string): EditorView | null {
+    for (const v of this.editorViews) if (v.state.field(editorInfoField, false)?.file?.path === path) return v;
+    return null;
   }
 
   /** The editors open in place, in drawings' cards: they outlive each redraw of their block. */

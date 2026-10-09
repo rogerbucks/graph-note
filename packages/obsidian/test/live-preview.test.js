@@ -165,40 +165,78 @@ describe('the editor in place, in the editing view’s own card', () => {
 });
 
 describe('what is typed in place is written through the editor', () => {
+  /** An editor open on the note, as the plugin's extension sees one: its text, and what is dispatched to it. */
+  function openEditor(env, text) {
+    const view = {
+      text,
+      dispatched: [],
+      state: {
+        doc: { toString: () => view.text },
+        field: (f) =>
+          f === editorInfoField ? { file: { path: PATH } } : f === editorLivePreviewField ? true : undefined,
+      },
+      dispatch(spec) {
+        view.dispatched.push(spec);
+        const c = spec.changes;
+        view.text = view.text.slice(0, c.from) + c.insert + view.text.slice(c.to);
+      },
+    };
+    env.plugin.editorViews.add(view);
+    return view;
+  }
+
+  /** Opens the block in place, in a card in the editing view, and types `typed` as its whole text. */
+  async function typeInPlace(env, typed) {
+    const card = env.doc.body.createDiv({ cls: 'markdown-source-view' }).createDiv();
+    await env.state.processors.get('gql')(READER, card, {
+      sourcePath: PATH,
+      getSectionInfo: () => ({ text: NOTE, lineStart: 2, lineEnd: 7 }),
+      addChild: (c) => c.load(),
+    });
+    card
+      .querySelectorAll('button')
+      .find((b) => b.getAttribute('aria-label') === 'Edit here')
+      .click();
+    await until(() => !!card.querySelector('textarea'));
+    const t = card.querySelector('textarea');
+    t.value = typed;
+    t.setSelectionRange(t.value.length, t.value.length);
+    t.dispatch('input');
+  }
+
   test('with the note open in the editing view, a change is one editor transaction, never a write to the file', async () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {
-      const view = new env.obsidian.MarkdownView({ path: PATH }, NOTE, 'source');
-      env.app.workspace.leaves.push({ view });
+      const view = openEditor(env, NOTE);
       let processed = 0;
       const process = env.app.vault.process;
       env.app.vault.process = async (...a) => {
         processed++;
         return process(...a);
       };
-      const el = env.doc.body.createDiv({ cls: 'markdown-source-view' });
-      const card = el.createDiv();
-      await env.state.processors.get('gql')(READER, card, {
-        sourcePath: PATH,
-        getSectionInfo: () => ({ text: NOTE, lineStart: 2, lineEnd: 7 }),
-        addChild: (c) => c.load(),
-      });
-      card
-        .querySelectorAll('button')
-        .find((b) => b.getAttribute('aria-label') === 'Edit here')
-        .click();
-      await until(() => !!card.querySelector('textarea'));
-      const t = card.querySelector('textarea');
-      t.value = READER + ',';
-      t.setSelectionRange(t.value.length, t.value.length);
-      t.dispatch('input');
-      await until(() => view.transactions.length > 0, 2000);
+      await typeInPlace(env, READER + ',');
+      await until(() => view.dispatched.length > 0, 2000);
       await wait(50);
       assert.equal(processed, 0, 'the file is never written behind the editor’s back');
       assert.equal(view.text, NOTE.replace(READER, READER + ','));
-      const [tx] = view.transactions;
-      assert.equal(tx.changes.length, 1, 'one change');
-      assert.deepEqual(tx.changes[0].text, ',', 'just what was typed');
+      assert.deepEqual(view.dispatched[0].changes.insert, ',', 'one change, just what was typed');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // Roger's test vault, 9 Oct 2026: written through Obsidian's Editor, the change scrolled the note to the editor's own
+  // cursor, which sat at the note's start, as the typing is in the card's box, not the editor
+  test('the change moves neither the editor’s own cursor nor its scroll', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      const view = openEditor(env, NOTE);
+      await typeInPlace(env, READER + ' ');
+      await until(() => view.dispatched.length > 0, 2000);
+      const [spec] = view.dispatched;
+      assert.equal(spec.scrollIntoView, undefined, 'no scrolling');
+      assert.equal(spec.selection, undefined, 'the cursor left where it is');
+      assert.equal(spec.effects, undefined);
     } finally {
       env.uninstall();
     }
@@ -207,15 +245,12 @@ describe('what is typed in place is written through the editor', () => {
   test('with the note in reading view or closed, the pane still writes the file', async () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {
-      const view = new env.obsidian.MarkdownView({ path: PATH }, NOTE, 'preview');
-      env.app.workspace.leaves.push({ view });
       await env.plugin.openEditor({ path: PATH, line: 2, graph: 'reader' });
       const pane = env.app.workspace.getLeavesOfType('graph-note-pane')[0].view.contentEl;
       const t = pane.querySelector('textarea');
       t.value = READER + ',';
       t.dispatch('input');
       await until(() => env.state.files.get(PATH).includes(READER + ','), 2000);
-      assert.equal(view.transactions.length, 0);
     } finally {
       env.uninstall();
     }
