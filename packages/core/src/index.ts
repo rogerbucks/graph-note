@@ -19,6 +19,8 @@ export { tokenize, TOKEN_CLASSES } from './tokens.ts';
 export type { Token, TokenClass } from './tokens.ts';
 export { diagnostics, completions, readBack, textVersion, SEVERITY, KIND } from './help.ts';
 export type { Diagnostic, CodeAction, CompletionItem, Range, Position, TextEdit } from './help.ts';
+export { inlineCompletion, stepOver } from './autocomplete.ts';
+export type { Inline, InlineKind } from './autocomplete.ts';
 export { isDraft, lockBlock, reverseGuess } from './lock.ts';
 export { PaneSession } from './pane.ts';
 export type { Choice, PaneWrite } from './pane.ts';

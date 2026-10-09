@@ -486,3 +486,12 @@
   display: flow-root;
   overflow-anchor: none;
 }
+/* The inline match (autocomplete): ghost text after the caret, in the picture. It takes no room, so the text after it
+   stays under the field's own; it is faint, and never part of the text until accepted. */
+.graph-note-ghost {
+  display: inline-block;
+  width: 0;
+  white-space: pre;
+  color: var(--text-faint);
+  font-style: normal;
+}

@@ -36,11 +36,13 @@ module that ties the parts together, named as the folder is.
 - `block-note.ts` — the note behind the editor and its session: opening, writing, undo, Lock, drafts.
 - `note-writing.ts` — writing safely, through the note's editor or the vault.
 - `kept-field.ts` — the field's focus and scroll, kept through each redraw.
-- `typing-keys.ts` — what typing does: Tab for a suggestion, undo and redo keys.
+- `typing-keys.ts` — what typing does: Tab and Enter for the inline match or a suggestion, Escape to put it away, undo and
+  redo keys.
+- `inline-completion.ts` — the inline match: the best completion for the caret, shown as ghost text, written only when taken.
 - `editor-history.ts` — the text's own undo history in the field.
-- `added-for-you.ts` — the comma and the colon added as you type.
+- `added-for-you.ts` — the comma and the colon added as you type, and a closer typed where it is already there stepped over.
 - `text-help.ts` — the help beside the text, from what was read.
-- `text-picture.ts` — the coloured picture under the field.
+- `text-picture.ts` — the coloured picture under the field, with the inline match as ghost text where the caret is.
 - `problem-help.ts` — the problems list, the fixes on the caret's line, the announcements.
 - `suggestions.ts` — the suggestions bar.
 - `kept-draft.ts` — the draft banner: what was typed, never lost.

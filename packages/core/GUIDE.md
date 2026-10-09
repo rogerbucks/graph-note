@@ -40,6 +40,8 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `help.ts` — diagnostics, fixes, completions and the read-back, in the shapes of the Language Server Protocol.
 - `tokens.ts` — the gql-highlight tokenizer, for colouring.
 - `commas.ts` — the comma and the colon added for you.
+- `autocomplete.ts` — completing as you type: the one best inline match (a closer, keyword, kind, type, property name or
+  value) and the closer stepped over; nothing is inserted unasked.
 - `inspector.ts` — properties of a thing or link, edited as text.
 - `lock.ts` — Lock the graph: a draft's schema written out.
 

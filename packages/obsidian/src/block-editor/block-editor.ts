@@ -25,8 +25,7 @@ import { watchKeys, watchTyping } from './typing-keys';
 
 export type { Layout } from './editor-layout';
 
-/** How long typing rests before it is written. In the pane, well inside the third of a second the spec asks for; in
- * place a little longer, since each write redraws the block the editor sits in. */
+/** How long typing rests before it is written: in the pane well inside the spec's third of a second; in place longer. */
 const WRITE_AFTER_MS: Record<Layout, number> = { pane: 150, inline: 700 };
 const DRAW_AFTER_MS = 250;
 
@@ -183,6 +182,8 @@ export class BlockEditor extends Component {
       first: () => this.help.first(),
       accept: (item: CompletionItem) => this.accept(item),
       step: (e: Event, which: Step) => this.step(e, which),
+      takeInline: () => this.help.takeInline(el.text, () => this.typed('other')),
+      dismissInline: () => this.help.dismissInline(el, s),
     };
     watchTyping(this, el.text, typing);
     this.field.watch(el.text, el.overlay);

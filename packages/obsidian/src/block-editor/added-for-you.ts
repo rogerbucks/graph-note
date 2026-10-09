@@ -1,6 +1,7 @@
 // What the block editor adds for you as you type (spec §4): the comma that parts one pattern from the next, and the colon
-// of a link type written without one. The note's own editor adds them the same way (editor.ts).
-import { colonFor, commaFor, gqlSpans } from '@graph-note/core';
+// of a link type written without one — the note's own editor adds them the same way (editor.ts) — and a closer typed
+// where it is already there, stepped over.
+import { colonFor, commaFor, gqlSpans, stepOver } from '@graph-note/core';
 
 /**
  * Adds the comma, when the ( just typed starts the next pattern on a new line and the line before is otherwise valid; or
@@ -12,6 +13,13 @@ export function addForYouInField(t: HTMLTextAreaElement, before: string, note: s
   const v = t.value,
     caret = t.selectionStart ?? v.length;
   if (v.length !== before.length + 1 || v.slice(0, caret - 1) + v.slice(caret) !== before) return false;
+  // a closer typed where it is already there is stepped over: the one that follows is taken away
+  const over = stepOver(before, v, caret);
+  if (over) {
+    t.value = v.slice(0, over.from) + v.slice(over.to);
+    t.setSelectionRange(caret, caret);
+    return true;
+  }
   const at = commaFor(v, caret);
   if (at !== null) {
     t.value = v.slice(0, at) + ',' + v.slice(at);
