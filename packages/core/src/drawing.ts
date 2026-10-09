@@ -286,7 +286,8 @@ const lineAt = (text: string, pos: number) => text.slice(0, pos).split('\n').len
 
 /** The block with an item blanked out (newlines kept, so every other line keeps its number), with the comma beside it. */
 function without(text: string, all: Item[], drop: Item[]): string {
-  const chars = [...text];
+  // UTF-16 units, as the places were counted: an emoji is two of them, and blanking by characters would slip (§3)
+  const chars = text.split('');
   const blank = (from: number, to: number) => {
     for (let k = from; k < to; k++) if (chars[k] !== '\n') chars[k] = ' ';
   };
@@ -342,6 +343,40 @@ export function graphOfBlock(text: string): string | null {
 }
 
 /**
+ * Each comment after code on its line (§3: comments are whole lines, as // also occurs inside identifiers): the block
+ * with them blanked, and for each a warning that names the rule, whose fix puts the comment on its own line.
+ */
+function lineEndComments(text: string): { text: string; problems: Omit<Problem, 'block' | 'graph'>[] } {
+  const problems: Omit<Problem, 'block' | 'graph'>[] = [];
+  const lines = text.split('\n').map((line, n) => {
+    if (line.trim().startsWith('//')) return line;
+    let quoted = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (quoted) {
+        if (c === '\\') i++;
+        else if (c === "'") quoted = false;
+      } else if (c === "'") quoted = true;
+      else if (c === '/' && line[i + 1] === '/' && line.slice(0, i).trim()) {
+        const from = line.slice(0, i).replace(/\s+$/, '').length;
+        problems.push({
+          line: n + 1,
+          severity: 'warning',
+          message: gs.COMMENT_RULE,
+          fix: gs.COMMENT_FIX,
+          replace: { written: line.slice(from, i), with: ['\n'] },
+          fixTitle: 'Put the comment on its own line',
+          span: { line: n, character: from, end: i },
+        });
+        return line.slice(0, i) + ' '.repeat(line.length - i);
+      }
+    }
+    return line;
+  });
+  return { text: lines.join('\n'), problems };
+}
+
+/**
  * A comma with nothing after it at a block's end, but blank lines and comments: the commonest state while the next
  * pattern is being typed, so never a failure of the block (8 Oct 2026). The block as read without it, and one warning
  * whose fix removes it; null when there is none.
@@ -383,7 +418,10 @@ function readBlocks(texts: string[], shared: string[]): { store: gs.Store; probl
       skip.add(i);
       problems.push({ ...k, block: i, graph: graphOf(t) });
     } else {
-      const dangling = danglingComma(t);
+      const comments = lineEndComments(t);
+      clean[i] = comments.text;
+      problems.push(...comments.problems.map((p) => ({ ...p, block: i, graph: graphOf(t) })));
+      const dangling = danglingComma(clean[i] ?? t);
       if (dangling) {
         clean[i] = dangling.text;
         problems.push({ ...dangling.problem, block: i, graph: graphOf(t) });

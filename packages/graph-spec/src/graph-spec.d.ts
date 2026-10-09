@@ -65,6 +65,9 @@ declare namespace GraphSpecCheck {
   function guessReadings(type: string): [string, string];
   /** The reverse of a forward reading: the active verb of a known passive, the passive of a verb, or a placeholder. */
   function reverseReading(reading: string): string;
+  /** The rule a comment after code breaks (§3), and its fix: the same words in the Python library. */
+  const COMMENT_RULE: string;
+  const COMMENT_FIX: string;
   /** The schema's own kinds, left out of drawings. */
   const SCHEMA_LABELS: string[];
   const SPEC_NODES: string[];

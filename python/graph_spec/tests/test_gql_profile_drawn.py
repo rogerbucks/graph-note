@@ -154,6 +154,57 @@ class ADanglingComma(unittest.TestCase):
             gp.Store().apply(self.BLOCK + ",")
 
 
+RULE = (
+    "a comment must be on a line of its own: // also occurs inside identifiers, such as ni:/// "
+    "hashes (§3)"
+)
+
+
+class ACommentAfterCode(unittest.TestCase):
+    """Spec §3: a comment is a whole line; checking refuses one after code, drawing leaves it out
+    with a problem that names the rule and whose fix puts it on its own line."""
+
+    BLOCK = (
+        "// graph: g\n(a:T {name: 'A'}), // the first\n(b:T {name: 'B // not a comment'}),\n"
+        "(a)-[:R]->(b)"
+    )
+
+    def test_the_code_before_it_is_drawn_with_one_warning_naming_the_rule(self):
+        store, problems = gp.read_for_drawing([self.BLOCK])
+        self.assertEqual(
+            drawn(store, "g"), ([("a", "A"), ("b", "B // not a comment")], [("a", "R", "b")])
+        )
+        self.assertEqual(
+            [(p["severity"], p["line"], p["message"], p["fix"]) for p in problems],
+            [("warning", 2, RULE, "put the comment on its own line")],
+        )
+        self.assertEqual(problems[0]["character"], len("(a:T {name: 'A'}),"))
+
+    def test_checking_refuses_it_naming_the_rule(self):
+        with self.assertRaises(gp.ProfileError) as e:
+            gp.Store().apply(self.BLOCK)
+        self.assertEqual((e.exception.line, e.exception.message), (2, RULE))
+        self.assertEqual(e.exception.fix, "put the comment on its own line")
+
+
+class AnEmojiBeforeWhatIsLeftOut(unittest.TestCase):
+    """Drawn in part byte for byte by both readers: an emoji before the item at fault on its line
+    changes nothing about what is left out."""
+
+    def test_the_item_at_fault_is_left_out_exactly(self):
+        block = (
+            "// graph: g\n(a:T {name: '\U0001f642 smile'}), (b:T {name: 'B'}), (gone)-[:R]->(a), "
+            "(b)-[:R]->(a)"
+        )
+        store, problems = gp.read_for_drawing([block])
+        self.assertEqual(drawn(store, "g")[1], [("b", "R", "a")])
+        self.assertEqual([p["dropped"] for p in problems], ["(gone)-[:R]->(a)"])
+
+    def test_a_place_on_a_line_counts_an_emoji_as_two_as_an_editor_does(self):
+        store, problems = gp.read_for_drawing(["// graph: g\n(a:T {name: '\U0001f642'}),"])
+        self.assertEqual(problems[0]["character"], len("(a:T {name: '") + 2 + len("'})"))
+
+
 class CheckingStaysWhole(unittest.TestCase):
     """Drawing in part never reaches checking or loading: a block that cannot be read is
     refused."""

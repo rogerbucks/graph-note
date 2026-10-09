@@ -259,6 +259,50 @@ describe('a comma with nothing after it', () => {
   });
 });
 
+describe('a comment after code on its line', () => {
+  // spec §3: "Comments are whole lines starting //. A comment must not follow code on the same line, because // also
+  // occurs inside identifiers such as ni:/// hashes." Checking refuses it; drawing leaves it out and draws the code,
+  // with a problem that names the rule and whose fix puts the comment on its own line (§4, "Problems in place")
+  const RULE = 'a comment must be on a line of its own: // also occurs inside identifiers, such as ni:/// hashes (§3)';
+  test('the code before it is drawn; one warning names the rule, and its fix puts the comment on its own line', () => {
+    const block = "// graph: g\n(a:T {name: 'A'}), // the first\n(b:T {name: 'B // not a comment'}),\n(a)-[:R]->(b)";
+    const { graphs, problems } = readNote([block]);
+    assert.deepEqual(
+      graphs.get('g').boxes.map((b) => b.key),
+      ['a', 'b'],
+    );
+    assert.equal(graphs.get('g').links.length, 1);
+    assert.equal(problems.length, 1);
+    const [p] = problems;
+    assert.deepEqual([p.severity, p.line, p.message, p.fix], ['warning', 2, RULE, 'put the comment on its own line']);
+    assert.equal(p.fixTitle, 'Put the comment on its own line');
+    const at = "(a:T {name: 'A'}),".length;
+    assert.deepEqual(p.span, { line: 1, character: at, end: at + 1 });
+    assert.deepEqual(p.replace, { written: ' ', with: ['\n'] });
+  });
+});
+
+describe('an emoji before what is left out', () => {
+  // drawn in part, byte for byte by both readers (8 Oct 2026): an emoji is two UTF-16 units but one character, and the
+  // core blanked text by characters at places it had counted in units, so whatever followed an emoji on the line slipped
+  test('the item at fault is left out exactly, whatever came before it on the line', () => {
+    const block = "// graph: g\n(a:T {name: '🙂 smile'}), (b:T {name: 'B'}), (gone)-[:R]->(a), (b)-[:R]->(a)";
+    const { graphs, problems } = readNote([block]);
+    assert.deepEqual(
+      graphs.get('g').boxes.map((b) => b.key),
+      ['a', 'b'],
+    );
+    assert.deepEqual(
+      graphs.get('g').links.map((l) => [l.from, l.to]),
+      [['b', 'a']],
+    );
+    assert.deepEqual(
+      problems.map((p) => p.dropped),
+      ['(gone)-[:R]->(a)'],
+    );
+  });
+});
+
 describe('a missing comma', () => {
   const block = "// graph: g\n(a:T {name: 'A'}),\n(b:T {name: 'B'})\n(c:T {name: 'C'}),\n(a)-[:R]->(b)";
 

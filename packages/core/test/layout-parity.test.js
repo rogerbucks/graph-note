@@ -101,6 +101,11 @@ test('the core writes the same layout source as graph_svg.py, for every graph an
 });
 
 const PARTIAL = {
+  // a comment after code on its line, and an emoji before an item left out (9 Oct 2026)
+  'a comment after code, and an emoji before an item left out': [
+    fence("// graph: trip\n(home:Place {name: 'Home 🏠'}), // where it starts\n(walk:Leg {name: 'Walk'}),"),
+    fence("// graph: trip\n(bus:Leg {name: '🚌 Bus'}), (gone)-[:R]->(home), (bus)-[:FOLLOWS]->(walk)"),
+  ].join('\n'),
   // a comma with nothing after it, as a block is while its next pattern is being typed (8 Oct 2026)
   'a block ending in a comma with nothing after it': [
     fence("// graph: trip\n(home:Place {name: 'Home'}),\n(walk:Leg {name: 'Walk'}),\n(walk)-[:STARTS_AT]->(home),"),

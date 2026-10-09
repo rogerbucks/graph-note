@@ -195,6 +195,25 @@ describe('problems, in place', () => {
     }
   });
 
+  // spec §3 and §4 (9 Oct 2026): a comment after code names the rule, and one click puts it on its own line
+  test('a comment after code on its line is offered one fix, which puts it on its own line', async () => {
+    const env = await open();
+    try {
+      const typed = READER + ', // the reader graph';
+      type(env.el, typed, typed.length);
+      await wait(400);
+      const here = env.el.querySelector('.graph-note-fixbar');
+      assert.ok(!here.hidden);
+      assert.match(here.textContent, /a comment must be on a line of its own/i);
+      labelled(here, 'Put the comment on its own line').click();
+      assert.equal(textarea(env.el).value, READER + ',\n// the reader graph');
+      await wait(400);
+      assert.equal(note(env), NOTE.replace(READER, READER + ',\n// the reader graph'));
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('every problem is listed with its line, and each line marked with a sign as well as a colour', async () => {
     const env = await open();
     try {
