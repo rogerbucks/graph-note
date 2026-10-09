@@ -13,6 +13,8 @@ const SHOP = `// graph: shop
 (sam)-[:RUNS]->(cafe)`;
 const TAG = { rel: 'HAS_TAG', kind: 'Tag' };
 const reading = (...blocks) => readNote(blocks);
+// what the badge counts: a hint (such as text suggested for a thing) is offered, never counted as a problem
+const problems = (r) => r.problems.filter((p) => p.severity !== 'hint');
 const graphOf = (...blocks) => reading(...blocks).world.shop;
 /** The ids a thing is linked to by a relationship, in the order written. */
 const linked = (text, id, rel = 'HAS_TAG') =>
@@ -107,7 +109,7 @@ describe('choosing List for a property', () => {
     assert.match(text, /\(sam\)-\[:RUNS\]->\(cafe\),\n\(quiet:Tag\),[\s\S]*->\(cheap\)\n\/\/ the cafe\nSET /);
     assert.deepEqual(linked(text, 'cafe'), ['quiet', 'cheap']);
     assert.equal(graphOf(text).p('sam').title, 'owner');
-    assert.equal(reading(text).problems.length, 0);
+    assert.equal(problems(reading(text)).length, 0);
   });
 
   test('a property with no words becomes an empty list; no key at all only declares one, and changes no text', () => {
@@ -180,7 +182,7 @@ describe('a value added to a list, or removed', () => {
   test('the last value in the block, and the whole list in turn, can be removed and the block still reads', () => {
     const text = ok(drop(ok(drop(LISTED, 'cheap')), 'quiet'));
     assert.equal(text, SHOP.replace(", tags: 'quiet, cheap'", ''));
-    assert.equal(reading(text).problems.length, 0);
+    assert.equal(problems(reading(text)).length, 0);
   });
 
   test('a thing something else links to stays, and the message says it was kept', () => {
@@ -252,14 +254,14 @@ describe('review fixes: values are never merged, comments never lost, and the ed
     const block = `// graph: shop\n(cafe:Place {name: 'C'}),\n(x:Tag),\n// the tag link\n(cafe)-[:HAS_TAG]->(x)`;
     const r = removeFromList(block, reading(block), 'shop', 'cafe', TAG, 'x');
     assert.equal(ok(r), `// graph: shop\n(cafe:Place {name: 'C'})\n// the tag link`);
-    assert.equal(reading(r.text).problems.length, 0);
+    assert.equal(problems(reading(r.text)).length, 0);
   });
 
   test('a comment above a removed item in the middle of the block stays too', () => {
     const block = `// graph: shop\n(cafe:Place {name: 'C'}),\n// about x\n(x:Tag),\n(cafe)-[:HAS_TAG]->(x),\n(sam:Person)`;
     const text = ok(removeFromList(block, reading(block), 'shop', 'cafe', TAG, 'x'));
     assert.equal(text, `// graph: shop\n(cafe:Place {name: 'C'}),\n// about x\n(sam:Person)`);
-    assert.equal(reading(text).problems.length, 0);
+    assert.equal(problems(reading(text)).length, 0);
   });
 
   test('a thing with properties of its own stays when its value is removed, and the message says why', () => {
@@ -282,7 +284,7 @@ describe('review fixes: values are never merged, comments never lost, and the ed
     const text = ok(makeList(block, reading(block), 'shop', 'cafe', 'tags', TAG));
     assert.match(text, /^INSERT \(cafe:Place \{name: 'C'\}\),\n\(x:Tag\)/m);
     assert.deepEqual(linked(text, 'cafe'), ['x', 'y']);
-    assert.equal(reading(text).problems.length, 0);
+    assert.equal(problems(reading(text)).length, 0);
   });
 
   test('a thing cannot be a value of its own list', () => {
