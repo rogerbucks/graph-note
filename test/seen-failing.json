@@ -428,5 +428,11 @@
       "seen_failing_first": false,
       "evidence": "a control case for a pure refactor (no_monolith_files, spec §13, 9 Oct 2026): it holds that a package's entry point keeps every name and import it had, so it passes before and after the split by design"
     }
+  },
+  "test/test-vault.test.js": {
+    "only the notes and two settings are committed > nothing committed in the vault is a workspace file, a plugin build or anything but a note or the two settings": {
+      "seen_failing_first": false,
+      "evidence": "a guard over what git tracks: it holds while nothing forbidden is committed, so it passes before and after by design; seen failing by hand with test-vault/.obsidian/workspace.json forced into the index, which it named"
+    }
   }
 }
