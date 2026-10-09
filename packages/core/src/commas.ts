@@ -2,7 +2,7 @@
 // before is otherwise valid, the comma that parts them is added at the end of that line. The reader would read the line
 // break as the comma anyway (format spec §3); adding it keeps the text plain GQL for every other reader.
 import gs from '@graph-note/graph-spec';
-import { gqlSpans, graphOfBlock } from './drawing.ts';
+import { gqlSpans, graphOfBlock } from './blocks.ts';
 
 /**
  * Where to add the comma after a ( was typed just before `caret` in a block's text — the index in the text, just after

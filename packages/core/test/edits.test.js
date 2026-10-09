@@ -4,7 +4,8 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import gs from '@graph-note/graph-spec';
-import { gqlBlocks, readNote } from '../src/drawing.ts';
+import { gqlBlocks } from '../src/blocks.ts';
+import { readNote } from '../src/drawing.ts';
 import { isDraft, lockBlock, reverseGuess } from '../src/lock.ts';
 import { insertBlockAfter, replaceBlock, History } from '../src/store.ts';
 

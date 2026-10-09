@@ -1,0 +1,136 @@
+// A drawing's details on demand (spec §3, §14): what tapping a box, a link or an estimated link shows — its words, the
+// things at either end or the links in and out, its properties and its problems — with the one shown marked as
+// selected; and, while the block is edited in place, the inspector, which changes its properties in the text.
+import { Platform } from 'obsidian';
+import { details, linkDetails, linkInBlock } from '@graph-note/core';
+import type { Estimate } from '@graph-note/core';
+import { renderProperties } from '../properties';
+import { problemText } from './problems-list';
+import { button } from './view-bar';
+import type { ViewOptions } from './view-options';
+
+/** The details of one drawing, shown in its card below the drawing. */
+export class DetailsPanel {
+  private readonly el: HTMLElement;
+  private readonly svg: SVGSVGElement;
+  private readonly viewport: HTMLElement;
+  private readonly o: ViewOptions;
+
+  /** For the details element of a card, its drawing, the viewport the focus goes back to, and the card's options. */
+  constructor(el: HTMLElement, svg: SVGSVGElement, viewport: HTMLElement, o: ViewOptions) {
+    this.el = el;
+    this.svg = svg;
+    this.viewport = viewport;
+    this.o = o;
+  }
+
+  /** Marks the box or link whose details are open — a heavier line, and pressed for screen readers — and only that one. */
+  private select(key: string | null, link: number | null = null): void {
+    for (const g of Array.from(this.svg.querySelectorAll('g.node, g.edge'))) {
+      const on =
+        (key !== null && g.getAttribute('data-key') === key) ||
+        (link !== null && g.getAttribute('data-link') === String(link));
+      g.classList.toggle('is-selected', on);
+      if (g.hasAttribute('aria-pressed')) g.setAttribute('aria-pressed', String(on));
+    }
+  }
+
+  /** What tapping a link shows: its reading, the things at either end, its properties, and any problem on it. */
+  showLink(index: number): void {
+    const d = linkDetails(this.o.reading, this.o.graph, index);
+    if (!d) return;
+    this.select(null, index);
+    const el = this.panel(`${d.from.text} ${d.reading} ${d.to.text}`, d.type);
+    const ul = el.createEl('ul');
+    ul.createEl('li', { text: `From: ${d.from.text}` });
+    ul.createEl('li', { text: `To: ${d.to.text}` });
+    if (d.properties.length && !this.o.editing?.()?.session) {
+      el.createEl('h4', { text: 'Properties' });
+      const props = el.createEl('ul');
+      for (const [k, v] of d.properties) props.createEl('li', { text: `${k}: ${v}` });
+    }
+    if (d.problems.length) {
+      el.createEl('h4', { text: 'Problems' });
+      const probs = el.createEl('ul');
+      for (const p of d.problems) probs.createEl('li', { text: problemText({ ...p, noteLine: this.o.lineOf(p) }) });
+    }
+    this.inspector(el, { link: index }, '');
+  }
+
+  /** The details panel, emptied and shown, with a heading and a close button. */
+  private panel(title: string, kind?: string): HTMLElement {
+    const el = this.el;
+    el.empty();
+    el.hidden = false;
+    el.setAttribute('aria-label', `Details of ${title}`);
+    el.toggleClass('is-sheet', Platform.isPhone && !!this.o.editing?.()?.session); // the inspector, on a phone: a bottom sheet (§14)
+    const head = el.createDiv({ cls: 'graph-note-details-head' });
+    head.createEl('strong', { text: title });
+    if (kind) head.createSpan({ cls: 'graph-note-kind', text: kind });
+    button(head, 'Close details', 'x', () => {
+      el.hidden = true;
+      this.select(null);
+      this.viewport.focus();
+      const ed = this.o.editing?.();
+      if (ed) ed.selected = null;
+    });
+    return el;
+  }
+
+  /** What tapping an estimated link shows: in a sentence, what was written, what it was taken to mean, and the fix. */
+  showEstimate(e: Estimate): void {
+    this.select(null);
+    const el = this.panel('⚠ Estimated link', 'a guess, not written');
+    el.createEl('p', { text: e.explain.replace(/^Line \d+/, `Line ${this.o.lineOf(e)}`) });
+  }
+
+  /** What tapping a box shows: its text, kind, links in and out, and any problem on it. */
+  showDetails(key: string): void {
+    const d = details(this.o.reading, this.o.graph, key);
+    if (!d) return;
+    this.select(key);
+    const el = this.panel(d.text, d.kind);
+    const links = (title: string, items: string[]) => {
+      if (!items.length) return;
+      el.createEl('h4', { text: title });
+      const ul = el.createEl('ul');
+      for (const i of items) ul.createEl('li', { text: i });
+    };
+    links(
+      'Links out',
+      d.out.map((l) => `${l.reading} → ${l.text}`),
+    );
+    links(
+      'Links in',
+      d.in.map((l) => `${l.text} ${l.reading} this`),
+    );
+    if (!d.out.length && !d.in.length) el.createEl('p', { text: 'No links in or out.' });
+    links(
+      'Problems',
+      d.problems.map((p) => problemText({ ...p, noteLine: this.o.lineOf(p) })),
+    );
+    this.inspector(el, { thing: key }, d.kind.split(' · ')[0] ?? '');
+  }
+
+  /**
+   * The inspector (spec §14): in edit mode, every property of the thing or link, each changed, added or removed — its value
+   * checked against its type first — written as text into the block being edited.
+   */
+  private inspector(el: HTMLElement, target: { thing: string } | { link: number }, kind: string): void {
+    const ed = this.o.editing?.();
+    if (!ed?.session) return;
+    ed.selected = 'thing' in target ? { key: target.thing } : { link: target.link };
+    const text = () => ed.session?.text ?? '';
+    renderProperties(el, {
+      reading: this.o.reading,
+      graph: this.o.graph,
+      target,
+      kind,
+      text,
+      // a link is edited in its own brackets, counted among the links written in the block being edited
+      inBlock: () =>
+        'thing' in target ? target : { link: linkInBlock(this.o.reading, this.o.graph, target.link, text()) },
+      replace: (t) => ed.replace(t),
+    });
+  }
+}

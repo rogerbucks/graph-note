@@ -7,7 +7,7 @@ import type { Engine } from '@graph-note/core';
 import { renderBlock } from './block';
 import { GraphPane, PANE } from './pane';
 import { addForYou } from './editor';
-import { BlockEditor } from './block-editor';
+import { BlockEditor } from './block-editor/block-editor';
 import { graphBlocks } from './live-preview';
 
 /** Where Edit was pressed: the note, the line of the block's opening fence (0-based), and the graph it draws. */

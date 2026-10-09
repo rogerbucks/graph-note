@@ -1,0 +1,100 @@
+// Writing the block editor's text into its note (spec §4, §9), safely: through the core's session, which never overwrites a
+// block changed meanwhile, either through the note's editor when it is open in the editing view or atomically through the
+// vault; undo and redo of the note's own changes; and Lock the graph, which writes its schema as a new block (spec §8).
+import { Notice } from 'obsidian';
+import type { TFile, Vault } from 'obsidian';
+import type { EditorView } from '@codemirror/view';
+import { gqlSpans, graphOfBlock, insertBlockAfter } from '@graph-note/core';
+import type { PaneSession } from '@graph-note/core';
+
+/** A write the note refused, because its block changed meanwhile: why, and what was typed, to keep as a draft. */
+export interface Refused {
+  reason: string;
+  draft: string;
+}
+
+/** Told the note's text as it stands after a write, or as it was found when the write was refused. */
+type Keep = (note: string) => void;
+
+/**
+ * Writes what is typed into a note open in the editing view, through its editor, as one change of just what differs, never
+ * behind its back: Obsidian would apply the file to the editor, and the page would move (§4). Straight through CodeMirror,
+ * so neither the editor's own cursor nor its scroll moves: Obsidian's Editor would scroll to that cursor.
+ */
+export function writeThroughEditor(cm: EditorView, s: PaneSession, keep: Keep): Refused | null {
+  const data = cm.state.doc.toString(),
+    r = s.write(data);
+  if (!r.ok) {
+    keep(data);
+    return { reason: r.reason, draft: r.draft };
+  }
+  let a = 0;
+  while (a < data.length && a < r.note.length && data[a] === r.note[a]) a++;
+  let b = 0;
+  while (b < data.length - a && b < r.note.length - a && data[data.length - 1 - b] === r.note[r.note.length - 1 - b])
+    b++;
+  cm.dispatch({
+    changes: { from: a, to: data.length - b, insert: r.note.slice(a, r.note.length - b) },
+    userEvent: 'input.graph-note',
+  });
+  keep(r.note);
+  return null;
+}
+
+/** Writes what is typed into a note through the vault, atomically against the note as it is now. */
+export async function writeThroughVault(
+  vault: Vault,
+  file: TFile,
+  s: PaneSession,
+  keep: Keep,
+): Promise<Refused | null> {
+  let refused: Refused | null = null;
+  await vault.process(file, (data) => {
+    const r = s.write(data);
+    if (r.ok) {
+      keep(r.note);
+      return r.note;
+    }
+    keep(data);
+    refused = { reason: r.reason, draft: r.draft };
+    return data;
+  });
+  return refused;
+}
+
+/** Undo or Redo of the session's changes to the note, through the vault. */
+export async function stepNote(
+  vault: Vault,
+  file: TFile,
+  s: PaneSession,
+  which: 'undo' | 'redo',
+  keep: Keep,
+): Promise<Refused | null> {
+  let refused: Refused | null = null;
+  await vault.process(file, (data) => {
+    const r = which === 'undo' ? s.undo(data) : s.redo(data);
+    if (r.ok) {
+      keep(r.note);
+      return r.note;
+    }
+    refused = { reason: r.reason, draft: r.draft };
+    return data;
+  });
+  return refused;
+}
+
+/** Lock the graph: writes its schema `block` after the graph's last block in the note, or says it could not. */
+export async function lockInNote(vault: Vault, file: TFile, graph: string, block: string, keep: Keep): Promise<void> {
+  await vault.process(file, (data) => {
+    const last = gqlSpans(data)
+      .filter((x) => graphOfBlock(x.text) === graph)
+      .pop();
+    const r = last ? insertBlockAfter(data, { line: last.open, text: last.text }, block) : null;
+    if (!r?.ok) {
+      new Notice('The graph could not be locked: its block changed. Try again.');
+      return data;
+    }
+    keep(r.note);
+    return r.note;
+  });
+}

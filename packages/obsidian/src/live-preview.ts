@@ -12,7 +12,7 @@ import type { MarkdownPostProcessorContext } from 'obsidian';
 import { gqlSpans, graphOfBlock } from '@graph-note/core';
 import type GraphNotePlugin from './main';
 import { renderBlock } from './block';
-import { settlePlacements } from './view';
+import { settlePlacements } from './graph-view/placement';
 
 /** The last height each card was seen at, by its note and line: what CodeMirror is told while the card is redrawn. */
 const heights = new Map<string, number>();

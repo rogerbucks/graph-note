@@ -2,7 +2,7 @@
 // themed, as graph_svg.render does; and what tapping a box shows. The engine is Graphviz compiled to WebAssembly, bundled,
 // so drawing needs no network on any device (spec §1).
 import { instance } from '@viz-js/viz';
-import type { GraphDrawing, NoteReading, Problem } from './drawing.ts';
+import type { GraphDrawing, NoteReading, Problem } from './note-reading.ts';
 import { drawingSource, layoutSource, STYLE } from './layout.ts';
 import { themed, sizeOf, choose } from './theme.ts';
 

@@ -4,7 +4,7 @@
 // from the pattern of the graph.
 import gs from '@graph-note/graph-spec';
 import type { Graph } from '@graph-note/graph-spec';
-import type { GraphDrawing, Problem } from './drawing.ts';
+import type { GraphDrawing, Problem } from './note-reading.ts';
 
 /** A guess the drawing makes for a near miss (spec §3): what was written, what it was taken to mean, and the fix. */
 export interface Estimate {

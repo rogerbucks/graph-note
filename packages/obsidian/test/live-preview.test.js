@@ -4,8 +4,8 @@
 // and the page stays still. What is typed in place is written as one editor transaction, never through the vault.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { build, load, until, wait } from './lib/load-plugin.js';
-import { cmState, cmView, editorLivePreviewField, editorInfoField } from './lib/fake-obsidian.js';
+import { build, load, until, wait } from './host/load-plugin.js';
+import { cmState, cmView, editorLivePreviewField, editorInfoField } from './host/fake-obsidian.js';
 
 before(() => build());
 
