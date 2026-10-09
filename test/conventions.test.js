@@ -90,7 +90,9 @@ describe('naming conventions', () => {
       const name = basename(f).replace(/(\.test)?(\.d)?\.(ts|js|mjs)$/, '');
       assert.match(name, KEBAB, f);
     }
-    for (const f of walk(PYTHON).filter((x) => x.endsWith('.py'))) assert.match(basename(f, '.py'), SNAKE, f);
+    // a package's __init__.py is the one name Python itself requires
+    for (const f of walk(PYTHON).filter((x) => x.endsWith('.py') && basename(x) !== '__init__.py'))
+      assert.match(basename(f, '.py'), SNAKE, f);
   });
 
   test('types and classes are PascalCase; functions, methods and variables camelCase; constants UPPER_SNAKE', () => {
