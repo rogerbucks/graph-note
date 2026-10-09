@@ -1,5 +1,6 @@
 // The core's entry (spec §10): src/index.ts is what the plugin imports, so its names hold while the modules behind it
-// change. These are the names it exported when drawing.ts was split into modules (9 Oct 2026), values and types alike.
+// change. These are the names it exported when drawing.ts was split into modules (9 Oct 2026), values and types alike,
+// with those added since: completing as you type (inlineCompletion, stepOver, Inline, InlineKind).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -42,6 +43,7 @@ const VALUES = [
   'graphOfBlock',
   'hitAreas',
   'hops',
+  'inlineCompletion',
   'insertBlockAfter',
   'isDraft',
   'isSharedSchema',
@@ -63,6 +65,7 @@ const VALUES = [
   'setProperty',
   'sizeOf',
   'spanOf',
+  'stepOver',
   'textVersion',
   'themed',
   'tokenize',
@@ -86,6 +89,8 @@ const TYPES = [
   'Estimate',
   'GraphDrawing',
   'HitAreas',
+  'Inline',
+  'InlineKind',
   'Link',
   'LinkDetail',
   'LinkDetails',
