@@ -42,9 +42,9 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
       iPhone ✓ 5cfeac6, 8 Oct 2026.
 - [ ] In a locked graph, a kind or link type its schema does not declare shows a ⚠ on its line. A link type with no
       reading of its own reads back as an arrow (Drive —HOPE→ …), not as a guess at words. iPhone ✓ 5cfeac6, 8 Oct 2026.
-- [ ] Reading view is read-only: the bar offers Source and no Edit. Source shows the block's text, coloured, in place of
+- [x] Reading view is read-only: the bar offers Source and no Edit. Source shows the block's text, coloured, in place of
       the drawing, and pressed again brings the drawing back. A hover preview or an embed is read-only too.
-      Mac ✓ c16c956, 9 Oct 2026.
+      Mac ✓ c16c956, iPhone ✓ c16c956, 9 Oct 2026.
 - [ ] Only one set of zoom controls appears: the Mermaid Zoom plugin does not add its own to a graph drawing.
 
 ## The edit pane — spec §4, §5, §9
@@ -78,6 +78,8 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 - [ ] In the card, the text box is as tall as the text and one more line: no empty area below it for the caret to land
       in. Each read-back sits on its own line's right, never wrapping under it, and typing lands where the text shows.
       iPhone ✓ 5cfeac6, 8 Oct 2026.
+- [ ] Live Preview: typing in a card, with the card's top above the view or the note scrolled to its end, never moves
+      the page: the box stays where it is on screen, and the note's other text with it.
 - [ ] Typing in the card, character by character, redraws the drawing and never takes the focus from the box: the caret,
       the selection and where it is scrolled stay put. Typing a comma at a line's end keeps the box in its card.
       Undo (⌘Z, or Edit → Undo, or the phone's undo gesture) takes back a run of typing at a time, even after redraws.

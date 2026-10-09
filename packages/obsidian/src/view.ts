@@ -69,18 +69,40 @@ const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? '' : 's'}`;
 export const readOnlyHere = (el: HTMLElement): boolean =>
   !!el.closest('.markdown-reading-view, .markdown-preview-view') && !el.closest('.markdown-source-view');
 
+/** The checks still waiting for their card to be put on the page. */
+const waiting = new Set<() => void>();
+
 /**
  * Runs `then` once `el` is on the page, at once when it already is. Live Preview draws a block into a card that goes on
  * the page only after, and where a card is decides what it offers. Gives up after a couple of seconds.
  */
-export function whenPlaced(el: HTMLElement, then: () => void, giveUpMs = 2000): void {
+export function whenPlaced(
+  el: HTMLElement,
+  then: () => void,
+  wanted: () => boolean = () => true,
+  giveUpMs = 2000,
+): void {
   if (el.isConnected) return then();
   const started = Date.now();
   const check = () => {
+    waiting.delete(check);
+    if (!wanted()) return; // the card was unloaded before it was placed
     if (el.isConnected) then();
-    else if (Date.now() - started < giveUpMs) window.setTimeout(check, 16);
+    else if (Date.now() - started < giveUpMs) {
+      waiting.add(check);
+      window.setTimeout(check, 16);
+    }
   };
+  waiting.add(check);
   window.setTimeout(check, 16);
+}
+
+/**
+ * Runs now the checks of cards just put on the page, rather than at their next look: the editing view's own card puts
+ * a new drawing in place and has its editor moved in at once, so the card is never seen without it (§4).
+ */
+export function settlePlacements(): void {
+  for (const check of [...waiting]) check();
 }
 const problemText = (p: ShownProblem) => `Line ${p.noteLine}: ${p.message} — ${p.fix}`;
 const sign = (p: Problem) => (p.severity === 'warning' ? '⚠ Warning' : '✖ Error');
@@ -255,19 +277,22 @@ export class GraphView extends MarkdownRenderChild {
     // what the card offers depends on where it is: in reading view it is read-only, with Source in place of Edit
     let gone = false;
     this.register(() => (gone = true));
-    whenPlaced(root, () => {
-      if (gone) return;
-      if (mode === 'note' && readOnlyHere(root)) {
-        editing.forEach((b) => b.remove());
-        this.editButton = null;
-        slot?.remove();
-        return;
-      }
-      source?.remove();
-      if (slot) this.o.onReady?.(slot);
-      const reopen = this.o.editing?.()?.selected;
-      if (reopen) this.open(reopen);
-    });
+    whenPlaced(
+      root,
+      () => {
+        if (mode === 'note' && readOnlyHere(root)) {
+          editing.forEach((b) => b.remove());
+          this.editButton = null;
+          slot?.remove();
+          return;
+        }
+        source?.remove();
+        if (slot) this.o.onReady?.(slot);
+        const reopen = this.o.editing?.()?.selected;
+        if (reopen) this.open(reopen);
+      },
+      () => !gone,
+    );
   }
 
   /** Source, in reading view: the block's text, coloured and read-only, in place of the drawing; and back. */

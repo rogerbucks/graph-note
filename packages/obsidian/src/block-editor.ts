@@ -3,8 +3,8 @@
 // comma added for you — and the safe writing behind it: what is typed is written through the core's session, which never
 // overwrites a block changed meanwhile and keeps what was typed as a draft; undo, redo and Lock the graph. Shared by the
 // edit pane and by the editor in place inside a drawing's card.
-import { Component, Notice, Platform, TFile, setIcon } from 'obsidian';
-import type { App } from 'obsidian';
+import { Component, MarkdownView, Notice, Platform, TFile, setIcon } from 'obsidian';
+import type { App, Editor } from 'obsidian';
 import {
   PaneSession,
   TextHistory,
@@ -744,11 +744,53 @@ export class BlockEditor extends Component {
   }
 
   /** Writes what is typed into the note; a refused write reloads the block and keeps what was typed as a draft. */
+  /** The editor the note is open in, in Live Preview or Source mode, if it is: where a change to it is written. */
+  private openEditor(): Editor | null {
+    for (const leaf of this.app.workspace.getLeavesOfType('markdown')) {
+      const v = leaf.view;
+      if (v instanceof MarkdownView && v.file?.path === this.path && v.getMode() === 'source') return v.editor;
+    }
+    return null;
+  }
+
   private async write(): Promise<void> {
     const s = this.session,
       file = this.file();
     if (!s || !file || !s.dirty) return;
     let refused: { reason: string; draft: string } | null = null;
+    // A note open in the editing view is changed through its editor, as one transaction of just what differs, never
+    // written behind the editor's back: Obsidian would apply the file to the editor, and the page would move (§4).
+    const editor = this.openEditor();
+    if (editor) {
+      const data = editor.getValue(),
+        r = s.write(data);
+      if (r.ok) {
+        let a = 0;
+        while (a < data.length && a < r.note.length && data[a] === r.note[a]) a++;
+        let b = 0;
+        while (
+          b < data.length - a &&
+          b < r.note.length - a &&
+          data[data.length - 1 - b] === r.note[r.note.length - 1 - b]
+        )
+          b++;
+        editor.transaction({
+          changes: [
+            {
+              from: editor.offsetToPos(a),
+              to: editor.offsetToPos(data.length - b),
+              text: r.note.slice(a, r.note.length - b),
+            },
+          ],
+        });
+        this.note = r.note;
+      } else {
+        this.note = data;
+        refused = { reason: r.reason, draft: r.draft };
+      }
+      if (refused) await this.keepDraft(refused);
+      return;
+    }
     await this.app.vault.process(file, (data) => {
       const r = s.write(data);
       if (r.ok) {

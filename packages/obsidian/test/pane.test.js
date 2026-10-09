@@ -591,7 +591,7 @@ describe('the comma added for you in the note itself', () => {
       assert.equal(dispatched.length, 1);
       assert.deepEqual(dispatched[0].changes, { from: note.indexOf('(a:T)') + 5, insert: ',' });
       assert.deepEqual(
-        dispatched[0].annotations,
+        { userEvent: dispatched[0].annotations.value },
         { userEvent: 'input.comma' },
         'its own step, so one undo takes it back',
       );
@@ -644,7 +644,7 @@ describe('the colon added for you in the note itself', () => {
       assert.equal(dispatched.length, 1);
       const at = note.indexOf('likes]');
       assert.deepEqual(dispatched[0].changes, { from: at, to: at + 5, insert: ':LIKES' });
-      assert.deepEqual(dispatched[0].annotations, { userEvent: 'input.colon' });
+      assert.deepEqual({ userEvent: dispatched[0].annotations.value }, { userEvent: 'input.colon' });
     } finally {
       env.uninstall();
     }

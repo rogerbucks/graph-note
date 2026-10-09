@@ -7,6 +7,7 @@ import { renderBlock } from './block';
 import { GraphPane, PANE } from './pane';
 import { addForYou } from './editor';
 import { BlockEditor } from './block-editor';
+import { graphBlocks } from './live-preview';
 
 /** Where Edit was pressed: the note, the line of the block's opening fence (0-based), and the graph it draws. */
 export interface EditTarget {
@@ -33,6 +34,8 @@ export default class GraphNotePlugin extends Plugin {
     this.saved = ((await this.loadData()) as Saved | null) ?? {};
     this.registerView(PANE, (leaf) => new GraphPane(leaf, this));
     this.registerEditorExtension(addForYou);
+    // in Live Preview the plugin draws graph blocks itself, so a card being typed in is never torn down (spec §4)
+    this.registerEditorExtension(graphBlocks(this));
     try {
       this.registerMarkdownCodeBlockProcessor(
         'gql',

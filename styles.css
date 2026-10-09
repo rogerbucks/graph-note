@@ -479,3 +479,10 @@
 .gql-punct {
   color: var(--code-punctuation);
 }
+
+/* The editing view's own card (spec §4): its children's margins stay inside it, so the height CodeMirror is told is the
+   height the card takes, and the editor has nothing to correct. */
+.graph-note-block {
+  display: flow-root;
+  overflow-anchor: none;
+}
