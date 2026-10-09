@@ -9,7 +9,9 @@ export interface ShownProblem extends Problem {
 
 /** A problem in words: its note line, what is wrong, and the fix. */
 export const problemText = (p: ShownProblem): string => `Line ${p.noteLine}: ${p.message} — ${p.fix}`;
-const sign = (p: Problem) => (p.severity === 'warning' ? '⚠ Warning' : '✖ Error');
+const sign = (p: Problem) => (p.severity === 'hint' ? 'ℹ Hint' : p.severity === 'warning' ? '⚠ Warning' : '✖ Error');
+/** Errors first, then warnings, then hints. */
+const RANK = { error: 0, warning: 1, hint: 2 };
 /** More problems than this do not fit a screen, so they are grouped (spec §8). */
 const GROUP_OVER = 8;
 
@@ -32,7 +34,7 @@ export function renderProblems(
   box.hidden = hidden;
   const item = (ul: HTMLElement, p: ShownProblem) =>
     ul.createEl('li', {
-      cls: p.severity === 'warning' ? 'is-warning' : 'is-error',
+      cls: `is-${p.severity}`,
       text: `${sign(p)} — ${problemText(p)}`,
     });
   if (problems.length > GROUP_OVER) {
@@ -41,13 +43,12 @@ export function renderProblems(
       const k = `${p.severity}|${kindOf(p)}`;
       groups.set(k, [...(groups.get(k) ?? []), p]);
     }
-    const order = [...groups].sort(([a, x], [b, y]) =>
-      a.startsWith('error') === b.startsWith('error') ? y.length - x.length : a.startsWith('error') ? -1 : 1,
-    );
+    const rank = (k: string) => RANK[k.split('|')[0] as Problem['severity']];
+    const order = [...groups].sort(([a, x], [b, y]) => rank(a) - rank(b) || y.length - x.length);
     for (const [k, ps] of order) {
       const d = box.createEl('details');
       d.createEl('summary', {
-        text: `${k.startsWith('warning') ? 'Warning' : 'Error'}: ${ps.length} × ${k.split('|')[1]}`,
+        text: `${k.startsWith('hint') ? 'Hint' : k.startsWith('warning') ? 'Warning' : 'Error'}: ${ps.length} × ${k.split('|')[1]}`,
       });
       const ul = d.createEl('ul');
       for (const p of ps) item(ul, p);

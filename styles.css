@@ -371,6 +371,10 @@
 .graph-note-problem.is-warning {
   text-decoration-color: var(--text-warning);
 }
+.graph-note-problem.is-hint {
+  text-decoration: underline dotted;
+  text-decoration-color: var(--text-faint);
+}
 .graph-note-line-sign {
   color: var(--text-warning);
 }
@@ -415,6 +419,10 @@
 .graph-note-pane-problems li.is-warning::marker {
   content: '⚠ ';
   color: var(--text-warning);
+}
+.graph-note-pane-problems li.is-hint::marker {
+  content: 'ℹ ';
+  color: var(--text-muted);
 }
 .graph-note-fix,
 .graph-note-quiet {

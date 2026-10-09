@@ -1,6 +1,7 @@
 // What a block's things are missing, and the fix that adds it (editor spec §4: name_from_text, text_from_name,
 // suggested_name_unique): a thing given text but no name, a thing given a name but no text. The suggestion is shown as a
-// warning with its fix and is never written unasked; the thing is drawn as if the suggestion were there.
+// warning with its fix and is never written unasked; the thing is drawn as if the suggestion were there. A thing with no
+// text is drawn by its name, with a hint that offers the text.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { nameGaps, withNames } from '../src/name-gaps.ts';
@@ -82,6 +83,22 @@ describe('a thing given text but no name', () => {
     assert.deepEqual(named, [{ line: 1, character: 1, name: 'large_reader' }]);
   });
 
+  test('the name is never a word the language keeps for itself', () => {
+    const { problems } = gapsOf("// graph: reader\n(:Option {name: 'Match'}),\n(:Option {name: 'Return'})");
+    assert.deepEqual(
+      problems.map((p) => p.insert.text),
+      ['match_2', 'return_2'],
+    );
+  });
+
+  test('a text with no ASCII letter in it is named from its kind, and from nothing without one', () => {
+    const { problems } = gapsOf("// graph: reader\n(:Tag {name: '東京駅'}),\n(:Tag {name: '大阪'}),\n({name: '京都'})");
+    assert.deepEqual(
+      problems.map((p) => p.insert.text),
+      ['tag', 'tag_2', 'thing'],
+    );
+  });
+
   test('a thing in a MATCH, in a comment or in a string is not one written without a name', () => {
     const text = [
       '// graph: reader',
@@ -106,12 +123,12 @@ describe('a thing given text but no name', () => {
 });
 
 describe('a thing given a name but no text', () => {
-  test('a warning on the name suggests the text from it, with a fix that adds {name: …} after its kind', () => {
+  test('a hint on the name suggests the text from it, with a fix that adds {name: …} after its kind', () => {
     const { problems, named } = gapsOf('// graph: reader\n(large_reader:Option)');
     assert.deepEqual(problems, [
       {
         line: 2,
-        severity: 'warning',
+        severity: 'hint',
         message: "the thing large_reader has no text; suggested: 'Large reader'",
         fix: "add {name: 'Large reader'} to it, or write other text",
         insert: { line: 1, character: 20, text: " {name: 'Large reader'}" },
@@ -147,6 +164,56 @@ describe('a thing given a name but no text', () => {
   });
 });
 
+describe('a thing given a name but no text, and what else says it has some', () => {
+  test('a thing given its text by a SET, in its block or in another, has it', () => {
+    assert.deepEqual(gapsOf("// graph: reader\n(a:T)\nSET a.name = 'Alpha'").problems, []);
+    const blocks = [
+      graphOf('// graph: reader\n(a:T)'),
+      graphOf("// graph: reader\nMATCH (a:T {id: 'a'})\nSET a.title = 'Alpha'"),
+    ];
+    assert.deepEqual(nameGaps(blocks)[0].problems, []);
+    assert.equal(
+      gapsOf('// graph: reader\n(a:T)\nSET a.price = 5').problems.length,
+      1,
+      'a SET of something else is no text',
+    );
+  });
+
+  test('a thing written again with its text, in another path or block of the graph, has it', () => {
+    const again = "// graph: reader\n(a:T),\n(b:T)-[:R]->(a {name: 'Alpha'})";
+    assert.deepEqual(
+      gapsOf(again).problems.map((p) => p.line),
+      [3],
+    );
+    const blocks = [graphOf('// graph: reader\n(a:T)'), graphOf("// graph: reader\n(a:T {name: 'Alpha'})")];
+    assert.deepEqual(nameGaps(blocks)[0].problems, []);
+  });
+
+  test('the fix writes the key the kind’s other things use for their text: title for a Question, else name', () => {
+    const lines = ["(q1:Question {title: 'One'}),", "(q2:Question {title: 'Two'}),", '(q3:Question),', '(o_1:Option)'];
+    const { problems } = gapsOf(['// graph: reader', ...lines].join('\n'));
+    assert.deepEqual(
+      problems.map((p) => p.insert.text),
+      [" {title: 'Q3'}", " {name: 'O 1'}"],
+    );
+    assert.equal(problems[0].fixTitle, "Add the text 'Q3'");
+    assert.equal(problems[0].fix, "add {title: 'Q3'} to it, or write other text");
+  });
+
+  test('the most used key wins, across the blocks of the graph, and a tie goes to the first of name, title, text, label', () => {
+    const blocks = [
+      graphOf(
+        "// graph: reader\n(q1:Question {text: 'One'}),\n(q2:Question {text: 'Two'}),\n(q3:Question {name: 'Three'})",
+      ),
+      graphOf('// graph: reader\n(q4:Question)'),
+      graphOf("// graph: reader\n(t1:Tie {title: 'One'}),\n(t2:Tie {label: 'Two'}),\n(t3:Tie)"),
+    ];
+    const gaps = nameGaps(blocks);
+    assert.equal(gaps[1].problems[0].insert.text, " {text: 'Q4'}");
+    assert.equal(gaps[2].problems[0].insert.text, " {title: 'T3'}");
+  });
+});
+
 describe('read with the suggestions shown', () => {
   test('a thing without a name is drawn as if it had the one suggested, the rest of the graph untouched, and the note not changed', () => {
     const text = HEAD + "(:Option {name: 'Large reader'}),\n(small_reader)-[:ANSWERS]->(question)";
@@ -173,10 +240,11 @@ describe('read with the suggestions shown', () => {
     );
   });
 
-  test('a thing with a name and no text is drawn by its name, with its warning', () => {
+  test('a thing with a name and no text is drawn by its name, with its hint', () => {
     const r = readNote(['// graph: reader\n(large_reader:Option)']);
     assert.deepEqual(r.graphs.get('reader').boxes, [{ key: 'large_reader', kind: 'Option', text: 'large_reader' }]);
     assert.equal(r.problems.length, 1);
+    assert.equal(r.problems[0]?.severity, 'hint');
     assert.equal(r.problems[0]?.message, "the thing large_reader has no text; suggested: 'Large reader'");
   });
 

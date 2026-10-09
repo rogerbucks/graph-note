@@ -16,6 +16,12 @@ export type GraphNames = Iterable<string> | ReadonlyMap<string, string>;
 
 const DEFAULT_WORDS = 3,
   LONGEST = 32,
+  RESERVED = new Set(
+    // the words the graph reader keeps, then others of GQL that a later engine might: none is ever suggested as a name
+    'insert match set date datetime true false null where return graph id create delete detach merge remove optional as from order by limit offset skip filter let for yield call select and or not xor in is exists node edge union case when then else end use asc desc distinct group having unknown'.split(
+      ' ',
+    ),
+  ),
   SMALL_WORDS = new Set(['a', 'an', 'the', 'of', 'to', 'be', 'or', 'and', 'for', 'in', 'on', 'at', 'by', 'with', 'is']);
 
 const CASINGS: [NameStyle['casing'], RegExp][] = [
@@ -81,8 +87,12 @@ export function nameStyleOf(names: GraphNames): NameStyle {
   return { casing, words, prefix };
 }
 
-/** The words of a text, lowercased and plain: accents dropped, apostrophes and hyphens closed up, other marks parting words. */
-function wordsOfText(text: string): string[] {
+/**
+ * The words of a text, lowercased and plain ASCII: accents taken off their letters, apostrophes and hyphens closed up,
+ * other marks parting words. The graph reader takes only A–Z, a–z, digits and _ in a name (reader/tokens.js, and
+ * lexer.py in the Python library), so a word in another script is left out, whole; small words are kept.
+ */
+export function nameWords(text: string): string[] {
   return text
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
@@ -90,6 +100,23 @@ function wordsOfText(text: string): string[] {
     .split(/\s+/)
     .flatMap((chunk) => chunk.replace(/['’-]/g, '').split(/[^a-z0-9]+/))
     .filter(Boolean);
+}
+
+/** A kind as one lowercase ASCII word, or '' when it has none. */
+const kindWord = (kind?: string) => (kind ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+/**
+ * A text as a name made of its words joined by _ (snake_case), cut at a word to 32 characters: the step a name takes
+ * before the graph's style and the names taken are applied. A text with no ASCII letter or digit left — such as one in
+ * another script — gives the kind, else `thing`; a first word that is a number gets `item` before it. Always a name the
+ * graph can read.
+ */
+export function nameSlug(text: string, kind?: string): string {
+  let words = nameWords(text);
+  if (!words.length) words = [kindWord(kind) || 'thing'];
+  if (/^\d/.test(words[0] ?? '')) words = ['item', ...words];
+  while (words.length > 1 && words.join('_').length > LONGEST) words.pop();
+  return words.join('_').slice(0, LONGEST);
 }
 
 const capital = (w: string) => w.charAt(0).toUpperCase() + w.slice(1);
@@ -104,17 +131,18 @@ function joined(words: string[], casing: NameStyle['casing']): string {
  * A name for a thing given text but no name, from the first few words of the text, following the style of the names
  * already in the graph (its casing, its length, a prefix from the kind when `kind` is given and the names have one), and
  * never a name the graph already has — compared without regard to case; a number is added, in the same style, until it is
- * not. Always a name the graph can read.
+ * not. Never a word the language keeps for itself (match, set, true, id …), which is numbered in the same way. Always a
+ * name the graph can read.
  */
 export function nameFromText(text: string, names: GraphNames, kind?: string): string {
   const style = nameStyleOf(names),
     taken = new Set(entriesOf(names).map(([n]) => n.toLowerCase()));
-  let words = wordsOfText(text);
+  let words = nameWords(text);
   const significant = words.filter((w) => !SMALL_WORDS.has(w));
   if (significant.length) words = significant;
-  if (!words.length) words = ['thing'];
-  const k = (kind ?? '').toLowerCase().replace(/[^a-z0-9]/g, ''),
-    lead = style.prefix === 'kind' && k ? k : style.prefix === 'initial' && k ? k.charAt(0) : '';
+  const k = kindWord(kind);
+  if (!words.length) words = [k || 'thing'];
+  const lead = style.prefix === 'kind' && k ? k : style.prefix === 'initial' && k ? k.charAt(0) : '';
   if (!lead && /^\d/.test(words[0] ?? '')) words = ['item', ...words];
   words = words.slice(0, style.words);
   const compose = (ws: string[]) => joined(lead ? [lead, ...ws] : ws, style.casing);
@@ -122,7 +150,7 @@ export function nameFromText(text: string, names: GraphNames, kind?: string): st
   const base = compose(words).slice(0, LONGEST);
   const numbered = (n: number) => (style.casing === 'snake' ? `${base}_${n}` : `${base}${n}`);
   let name = base;
-  for (let n = 2; taken.has(name.toLowerCase()); n++) name = numbered(n);
+  for (let n = 2; taken.has(name.toLowerCase()) || RESERVED.has(name.toLowerCase()); n++) name = numbered(n);
   return name;
 }
 

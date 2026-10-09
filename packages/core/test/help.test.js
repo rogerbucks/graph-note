@@ -353,10 +353,10 @@ describe('a name or a text suggested for a thing', () => {
     assert.ok(after.graphs.get('reader').boxes.some((b) => b.key === 'medium_reader'));
   });
 
-  test('a thing with a name and no text has a warning showing the text, whose fix adds it as the name property', () => {
+  test('a thing with a name and no text has a hint showing the text, whose fix adds it as the name property', () => {
     const text = BLOCK + ',\n(medium_reader:Option)';
     const [d] = diagnostics(readNote([text]), 'reader', 0, text, URI);
-    assert.equal(d.severity, SEVERITY.Warning);
+    assert.equal(d.severity, SEVERITY.Hint);
     assert.equal(d.message, "The thing medium_reader has no text; suggested: 'Medium reader'.");
     assert.deepEqual(d.range, { start: at(10, 1), end: at(10, 14) });
     assert.equal(d.data.fixes[0].title, "Add the text 'Medium reader'");

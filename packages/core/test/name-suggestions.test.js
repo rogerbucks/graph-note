@@ -2,7 +2,7 @@
 // pattern of the names already in the graph, a text follows from a name, and a suggested name is never one already taken.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { nameFromText, nameStyleOf, textFromName } from '../src/name-suggestions.ts';
+import { nameFromText, nameSlug, nameStyleOf, nameWords, textFromName } from '../src/name-suggestions.ts';
 
 describe('a name from a text', () => {
   test('in a graph with no names yet, it is snake_case from the first three words, lowercased, with punctuation dropped', () => {
@@ -88,6 +88,51 @@ describe('a name from a text', () => {
     for (const text of ['Ünïcödé ½ thing', '  ', '日本語', "it's 100% (really) — a-b/c", 'Set', '😀 smile', '42']) {
       assert.match(nameFromText(text, []), /^[A-Za-z_]\w*$/, text);
     }
+  });
+
+  test('a word the language keeps for itself is never the name: it is numbered like a name taken', () => {
+    for (const word of ['Match', 'Set', 'True', 'FALSE', 'null', 'Insert', 'where', 'Return', 'graph', 'Id', 'date']) {
+      assert.equal(nameFromText(word, []), `${word.toLowerCase()}_2`, word);
+    }
+    assert.equal(nameFromText('Set', ['setUp', 'tearDown'], undefined), 'set2', 'in the style of the names');
+    assert.equal(nameFromText('Set the table', []), 'set_table', 'a word among others is no trouble');
+  });
+});
+
+describe('the words of a text', () => {
+  // the graph reader accepts only A–Z, a–z, digits and _ in a name (tokens.js, and lexer.py in the Python library), so an
+  // accent is taken off its letter and a word in another script has no name to give
+  test('lowercase, plain ASCII, with accents taken off, hyphens and apostrophes closed up and other marks parting words', () => {
+    assert.deepEqual(nameWords('Café — crème brûlée!'), ['cafe', 'creme', 'brulee']);
+    assert.deepEqual(nameWords("Don't e-ink; a/b"), ['dont', 'eink', 'a', 'b']);
+  });
+
+  test('a word in another script is left out, and a text of nothing else has no words', () => {
+    assert.deepEqual(nameWords('東京駅 station'), ['station']);
+    assert.deepEqual(nameWords('東京駅'), []);
+    assert.equal(nameFromText('東京駅 station', []), 'station');
+  });
+
+  test('a text with no ASCII letter left is named from the kind, else thing, and numbered like any name taken', () => {
+    assert.equal(nameFromText('東京駅', [], 'Tag'), 'tag');
+    assert.equal(nameFromText('東京駅', ['tag'], 'Tag'), 'tag_2');
+    assert.equal(nameFromText('東京駅', []), 'thing');
+    assert.equal(nameFromText('?!', ['thing']), 'thing_2');
+  });
+
+  test('the slug of a text is its words joined by _, the same step the name takes, as one small function', () => {
+    assert.equal(nameSlug('Large e-ink reader'), 'large_eink_reader');
+    assert.equal(nameSlug('Café crème'), 'cafe_creme');
+    assert.equal(nameSlug('The size of it'), 'the_size_of_it');
+    assert.equal(nameSlug('3 big readers'), 'item_3_big_readers');
+    assert.equal(nameSlug('東京駅', 'Tag'), 'tag');
+    assert.equal(nameSlug('東京駅'), 'thing');
+    assert.equal(nameSlug('x'.repeat(80)).length, 32);
+    assert.match(nameSlug('東京駅 😀', 'My kind!'), /^[A-Za-z_]\w*$/);
+  });
+
+  test('small words are kept: the words are the text’s, and choosing among them is the name’s business', () => {
+    assert.deepEqual(nameWords('The size of it'), ['the', 'size', 'of', 'it']);
   });
 });
 

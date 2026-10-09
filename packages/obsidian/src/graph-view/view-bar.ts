@@ -51,14 +51,15 @@ export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): Ba
     attr: { role: 'toolbar', 'aria-label': `Graph ${o.graph}` },
   });
   const gaps = o.completeness?.gaps ?? 0;
+  // a hint only offers a fix, so it is listed behind the badge but never counted in it
+  const counted = problems.filter((p) => p.severity !== 'hint').length;
   const label =
-    [problems.length ? plural(problems.length, 'problem') : '', gaps ? plural(gaps, 'gap') : '']
-      .filter(Boolean)
-      .join(', ') || 'No problems';
+    [counted ? plural(counted, 'problem') : '', gaps ? plural(gaps, 'gap') : ''].filter(Boolean).join(', ') ||
+    'No problems';
   const badge = button(
     bar,
     label,
-    problems.length || gaps ? 'alert-triangle' : 'check-circle',
+    counted || gaps ? 'alert-triangle' : 'check-circle',
     () => on.toggleProblems(badge),
     label,
   );

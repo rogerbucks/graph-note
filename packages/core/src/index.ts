@@ -24,7 +24,7 @@ export { PaneSession } from './pane.ts';
 export type { Choice, PaneWrite } from './pane.ts';
 export { completenessReport } from './completeness.ts';
 export type { CompletenessReport, RuleReport } from './completeness.ts';
-export { nameFromText, nameStyleOf, textFromName } from './name-suggestions.ts';
+export { nameFromText, nameSlug, nameStyleOf, nameWords, textFromName } from './name-suggestions.ts';
 export type { GraphNames, NameStyle } from './name-suggestions.ts';
 export { commaFor, commaInNote, colonFor, colonInNote } from './commas.ts';
 export type { TextChange } from './commas.ts';

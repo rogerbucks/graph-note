@@ -1,6 +1,6 @@
 // The core's entry (spec §10): src/index.ts is what the plugin imports, so its names hold while the modules behind it
 // change. These are the names it exported when drawing.ts was split into modules (9 Oct 2026), values and types alike,
-// and since then the name suggestions (nameFromText, nameStyleOf, textFromName and their types), added deliberately.
+// and since then the name suggestions (nameFromText, nameSlug, nameStyleOf, nameWords, textFromName and their types), added deliberately.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -52,7 +52,9 @@ const VALUES = [
   'loadEngine',
   'lockBlock',
   'nameFromText',
+  'nameSlug',
   'nameStyleOf',
+  'nameWords',
   'namesSharedSchema',
   'nearby',
   'parseValue',
