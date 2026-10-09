@@ -120,6 +120,7 @@ export class FakeElement {
     if (c.parentElement) c.remove();
     c.parentElement = this;
     this.children.push(c);
+    childAdded(this);
     return c;
   }
   append(...cs) {
@@ -129,12 +130,14 @@ export class FakeElement {
     if (c.parentElement) c.remove();
     c.parentElement = this;
     this.children.unshift(c);
+    childAdded(this);
   }
   insertBefore(c, ref) {
     if (!ref) return this.appendChild(c);
     if (c.parentElement) c.remove();
     c.parentElement = this;
     this.children.splice(this.children.indexOf(ref), 0, c);
+    childAdded(this);
     return c;
   }
   replaceChildren(...cs) {
@@ -381,6 +384,21 @@ function parseXml(text, doc) {
   return root.children[0];
 }
 
+/**
+ * A child was put into `parent`: as a browser does, each MutationObserver watching the document hears of it once, on a
+ * microtask, however many children were put in meanwhile. Only what is on the page counts, as with observing the
+ * document's root with subtree.
+ */
+function childAdded(parent) {
+  const doc = parent.ownerDocument;
+  if (!doc.mutationObservers?.size || !parent.isConnected || doc.mutationPending) return;
+  doc.mutationPending = true;
+  queueMicrotask(() => {
+    doc.mutationPending = false;
+    for (const o of [...doc.mutationObservers]) o.callback([{ type: 'childList' }], o);
+  });
+}
+
 export function fakeDocument(width = 700) {
   const doc = { width, activeElement: null };
   doc.body = new FakeElement('body', doc);
@@ -443,6 +461,23 @@ export function installGlobals(doc) {
       }
       disconnect() {}
       unobserve() {}
+    },
+  );
+  set(
+    'MutationObserver',
+    class {
+      constructor(callback) {
+        this.callback = callback;
+      }
+      observe() {
+        (doc.mutationObservers ??= new Set()).add(this);
+      }
+      disconnect() {
+        doc.mutationObservers?.delete(this);
+      }
+      takeRecords() {
+        return [];
+      }
     },
   );
   set('HTMLElement', FakeElement);

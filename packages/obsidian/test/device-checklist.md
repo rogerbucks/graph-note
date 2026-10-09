@@ -91,6 +91,9 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 ## Editing in place and the inspector — spec §4, §14
 
 - [ ] Edit here opens the text inside the drawing's card, and typing there redraws the drawing without losing the place.
+- [ ] Straight after the app starts or reloads, and on a card far down a long note scrolled to only then: Edit here
+      opens the editor in that card, and Done closes it with what was typed in the note. Edit here never does nothing
+      without saying why.
 - [ ] In the card, the text box is as tall as the text and one more line: no empty area below it for the caret to land
       in. Each read-back sits on its own line's right, never wrapping under it, and typing lands where the text shows.
       iPhone ✓ 5cfeac6, 8 Oct 2026.

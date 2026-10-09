@@ -9,38 +9,52 @@
 export const readOnlyHere = (el: HTMLElement): boolean =>
   !!el.closest('.markdown-reading-view, .markdown-preview-view') && !el.closest('.markdown-source-view');
 
-/** The checks still waiting for their card to be put on the page. */
-const waiting = new Set<() => void>();
+/** The checks still waiting for their card to be put on the page, by the document the card is drawn in. */
+const waiting = new Map<Document, Set<() => void>>();
 
-/**
- * Runs `then` once `el` is on the page, at once when it already is. Live Preview draws a block into a card that goes on
- * the page only after, and where a card is decides what it offers. Gives up after a couple of seconds.
- */
-export function whenPlaced(
-  el: HTMLElement,
-  then: () => void,
-  wanted: () => boolean = () => true,
-  giveUpMs = 2000,
-): void {
-  if (el.isConnected) return then();
-  const started = Date.now();
-  const check = () => {
-    waiting.delete(check);
-    if (!wanted()) return; // the card was unloaded before it was placed
-    if (el.isConnected) then();
-    else if (Date.now() - started < giveUpMs) {
-      waiting.add(check);
-      window.setTimeout(check, 16);
-    }
-  };
-  waiting.add(check);
-  window.setTimeout(check, 16);
+/** One watcher for each document that has cards waiting, told whenever anything is put on its page. */
+const watchers = new Map<Document, MutationObserver>();
+
+/** Stops watching a document's page once no card in it waits. */
+function settle(doc: Document): void {
+  if (waiting.get(doc)?.size) return;
+  waiting.delete(doc);
+  watchers.get(doc)?.disconnect();
+  watchers.delete(doc);
 }
 
 /**
- * Runs now the checks of cards just put on the page, rather than at their next look: the editing view's own card puts
- * a new drawing in place and has its editor moved in at once, so the card is never seen without it (§4).
+ * Runs `then` once `el` is on the page, at once when it already is, and never when the card is no longer `wanted`.
+ * Live Preview draws a block into a card that goes on the page only after: at once when the block is in view, but only
+ * once it is scrolled to when it is not, and a card drawn while the layout engine starts waits for it. So the wait has
+ * no time limit; a card given up on would offer nothing, its Edit here doing nothing. It does no work while it waits:
+ * one watcher per document hears each change to the page, rather than every card polling on a timer.
+ */
+export function whenPlaced(el: HTMLElement, then: () => void, wanted: () => boolean = () => true): void {
+  if (el.isConnected) return then();
+  const doc = el.ownerDocument;
+  const checks = waiting.get(doc) ?? waiting.set(doc, new Set()).get(doc)!;
+  const check = () => {
+    if (wanted() && !el.isConnected) return;
+    checks.delete(check);
+    settle(doc);
+    if (wanted()) then(); // else the card was unloaded before it was placed
+  };
+  checks.add(check);
+  if (!watchers.has(doc)) {
+    const watcher = new MutationObserver(() => {
+      for (const c of [...(waiting.get(doc) ?? [])]) c();
+    });
+    watcher.observe(doc.documentElement, { childList: true, subtree: true });
+    watchers.set(doc, watcher);
+  }
+}
+
+/**
+ * Runs now the checks of cards just put on the page, rather than when the page next tells of a change: the editing
+ * view's own card puts a new drawing in place and has its editor moved in at once, so the card is never seen without it
+ * (§4); and Edit here pressed on a card acts on it at once.
  */
 export function settlePlacements(): void {
-  for (const check of [...waiting]) check();
+  for (const checks of [...waiting.values()]) for (const check of [...checks]) check();
 }
