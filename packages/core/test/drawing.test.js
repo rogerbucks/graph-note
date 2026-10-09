@@ -156,7 +156,7 @@ describe('a graph with problems is still drawn', () => {
   });
 
   test('a link to a thing that is not in the graph is left out and listed, with its line', () => {
-    const block = '// graph: g\n(a:T),\n(b:T),\n(a)-[:R]->(nowhere),\n(a)-[:R]->(b)';
+    const block = "// graph: g\n(a:T {name: 'A'}),\n(b:T {name: 'B'}),\n(a)-[:R]->(nowhere),\n(a)-[:R]->(b)";
     const { graphs, problems } = readNote([block]);
     assert.deepEqual(
       graphs.get('g').links.map((l) => l.to),
@@ -168,7 +168,10 @@ describe('a graph with problems is still drawn', () => {
   });
 
   test('a block whose graph line is wrong is listed, and the other blocks are drawn', () => {
-    const { graphs, problems } = readNote(['// graph: not-one-word\n(a:T)', '// graph: g\n(b:T)']);
+    const { graphs, problems } = readNote([
+      "// graph: not-one-word\n(a:T {name: 'A'})",
+      "// graph: g\n(b:T {name: 'B'})",
+    ]);
     assert.deepEqual([...graphs.keys()], ['g']);
     assert.deepEqual(
       problems.map((p) => [p.block, p.line]),
@@ -177,7 +180,7 @@ describe('a graph with problems is still drawn', () => {
   });
 
   test('every bad path in a block is listed, each once', () => {
-    const block = '// graph: g\n(a:T {x: }),\n(b:T),\n(c:T {y: }),\n(d:T)';
+    const block = "// graph: g\n(a:T {x: }),\n(b:T {name: 'B'}),\n(c:T {y: }),\n(d:T {name: 'D'})";
     const { graphs, problems } = readNote([block]);
     assert.deepEqual(
       graphs.get('g').boxes.map((b) => b.key),
@@ -190,7 +193,7 @@ describe('a graph with problems is still drawn', () => {
   });
 
   test('a problem in a block after the one drawn does not hide it', () => {
-    const { graphs, problems } = readNote(['// graph: g\n(a:T)', '// graph: g\n(b:T {oops'], 0);
+    const { graphs, problems } = readNote(["// graph: g\n(a:T {name: 'A'})", '// graph: g\n(b:T {oops'], 0);
     assert.equal(graphs.get('g').boxes.length, 1);
     assert.deepEqual(problems, []);
   });

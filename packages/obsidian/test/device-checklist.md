@@ -65,6 +65,10 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
       undo takes either back. Both work in the pane, in place and in the note itself.
 - [ ] In the note itself, with Obsidian's "Auto pair brackets" on (Settings → Editor), and again with it off: the comma
       comes when ( is typed, and the colon when ] is typed or stepped over.
+- [ ] A thing given text but no name, such as `(:Option {name: 'Large reader'})`, is drawn, and shows a ⚠ naming the
+      suggested name, in the style of the names already in the graph and not one of them. Its fix puts the name after the
+      (, and the ⚠ goes. A thing given a name but no text, such as `(large_reader:Option)`, shows a ⚠ with the text
+      suggested from the name; its fix adds `{name: 'Large reader'}`. Nothing is written until the fix is pressed.
 - [ ] A graph locked by an earlier build shows a ⚠ that its schema does not declare its types; its fix adds the
       DECLARES links, and the ⚠ goes.
 - [ ] A link type left without its colon is drawn as that type, with a ⚠ whose fix writes the colon. A new type written
