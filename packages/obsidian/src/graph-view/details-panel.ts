@@ -6,6 +6,7 @@ import { details, linkDetails, linkInBlock } from '@graph-note/core';
 import type { Estimate } from '@graph-note/core';
 import { renderProperties } from '../properties/properties';
 import { problemText } from './problems-list';
+import { showSuggested } from './suggested-name';
 import { button } from './view-bar';
 import type { ViewOptions } from './view-options';
 
@@ -109,6 +110,7 @@ export class DetailsPanel {
       'Problems',
       d.problems.map((p) => problemText({ ...p, noteLine: this.o.lineOf(p) })),
     );
+    showSuggested(el, this.o.reading, this.o.graph, d, this.o.editing?.());
     this.inspector(el, { thing: key }, d.kind.split(' · ')[0] ?? '');
   }
 

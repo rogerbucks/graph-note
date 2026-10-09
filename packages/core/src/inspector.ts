@@ -6,6 +6,7 @@ import type { Graph } from '@graph-note/graph-spec';
 import type { NoteReading } from './note-reading.ts';
 import { blockItems } from './block-items.ts';
 import { hops } from './estimates.ts';
+import { writtenIn } from './written-things.ts';
 
 /** The kinds of value the document profile holds. It holds no lists. */
 export type PropType = 'text' | 'number' | 'date' | 'datetime' | 'boolean';
@@ -129,14 +130,26 @@ const linkBrackets = (b: string) => [...b.matchAll(/-\[\s*:\s*\w+\s*(\{[^{}]*\})
 
 /**
  * Where an item is written in a block, as the editor shows it when the item is selected in the drawing: the pattern that
- * writes a thing (or, failing that, its first mention), or a link's brackets with its arrow. Null when it is not here.
+ * writes a thing (or, failing that, its first mention), or a link's brackets with its arrow. A thing drawn under a
+ * suggested name (spec §4) is not written by its name: `unnamed`, the box's place just after its (, finds the pattern
+ * there, if it is still one written without a name. Null when it is not here.
  */
-export function spanOf(block: string, t: Target): { from: number; to: number } | null {
+export function spanOf(
+  block: string,
+  t: Target,
+  unnamed?: { line: number; character: number },
+): { from: number; to: number } | null {
   const b = blank(block);
   if ('thing' in t) {
     const all = thingPatterns(b, t.thing),
       m = all.find((x) => x[1] || x[2]) ?? all[0];
-    return m?.index === undefined ? null : { from: m.index, to: m.index + m[0].length };
+    if (m?.index !== undefined) return { from: m.index, to: m.index + m[0].length };
+    if (!unnamed) return null;
+    const lines = block.split('\n');
+    if (unnamed.line >= lines.length) return null;
+    const at = lines.slice(0, unnamed.line).reduce((n, l) => n + l.length + 1, 0) + unnamed.character;
+    const w = writtenIn(block).find((x) => x.open === at - 1 && !x.variable);
+    return w ? { from: w.open, to: w.close + 1 } : null;
   }
   const m = linkBrackets(b)[t.link];
   if (m?.index === undefined) return null;

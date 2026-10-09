@@ -19,17 +19,19 @@ out = []
 for note in json.load(sys.stdin):
     blocks = re.findall(r"\`\`\`gql\\n(.*?)\\n\`\`\`", note, re.S)
     # what can be read of every block, as the core reads it: a block that cannot be read is drawn in part (8 Oct 2026)
-    store, _ = gp.read_for_drawing(blocks)
+    store, problems = gp.read_for_drawing(blocks)
     w = gr.World.from_store(store)
     res = {}
     for name in sorted(n for n in w.graphs if not n.startswith('schema ')):
+        # a thing written without a name is drawn under its suggested name, marked as suggested (10 Oct 2026)
+        suggested = {p['suggested'] for p in problems if p.get('suggested') and p['graph'] == name}
         g = w[name]
         ids = [i for i, (l, _) in g.nodes.items() if not l & gr.SCHEMA_LABELS]; R = gr.readings(g, None)
         def text(i):
             p = g.p(i); return next((p[k] for k in ('name', 'title', 'text', 'label') if isinstance(p.get(k), str) and p[k]), i)
         nodes = [(i, ' · '.join(sorted(l for l in g.nodes[i][0] if l not in gr.SCHEMA_LABELS)), text(i)) for i in ids]
         edges = [(s, gr._word(R, t), d) for s, t, d, _ in g.edges if s in ids and d in ids]
-        res[name] = {rd: graph_svg.dot_source(nodes, edges, rd)[0] for rd in ('LR', 'TB')}
+        res[name] = {rd: graph_svg.dot_source(nodes, edges, rd, suggested=suggested)[0] for rd in ('LR', 'TB')}
     out.append(res)
 print(json.dumps(out))
 `;
@@ -137,4 +139,57 @@ INSERT (walk:Leg {name: 'Walk'}),
 
 test('a block that cannot be read is drawn in part, the same by both readers, byte for byte', () => {
   same(PARTIAL);
+});
+
+const UNNAMED = {
+  // unnamed_drawn_suggested (spec §4, Roger, 10 Oct 2026): a thing written without a name is drawn under its suggested
+  // name, dashed and labelled as suggested, by every reader alike
+  'things written without a name, in two blocks of one graph, one after an emoji, one in a path': [
+    fence(`// graph: reader
+(question:Question {title: 'Which device?'}),
+(small_reader:Option {name: 'Small reader 📖'}), (:Option {name: 'Large reader'}),
+(small_reader)-[:ANSWERS]->(question)`),
+    fence(`// graph: reader
+({title: 'Costs nothing extra'})-[:FAVOURS]->(small_reader),
+(:Option {name: 'Large reader'}),
+(:Reason {title: 'Match'})`),
+  ].join('\n'),
+};
+
+test('a thing written without a name is drawn under the same suggested name, marked the same, by both readers', () => {
+  same(UNNAMED);
+  const d = readNote(gqlBlocks(UNNAMED[Object.keys(UNNAMED)[0]]).map((b) => b.text)).graphs.get('reader');
+  assert.deepEqual(
+    d.boxes.filter((b) => b.suggested).map((b) => b.key),
+    ['large_reader', 'costs_nothing', 'large_reader_2', 'match_2'],
+  );
+  const source = layoutSource(d, 'LR').source;
+  assert.equal(source.match(/style="rounded,filled,dashed"/g)?.length, 4, 'each drawn dashed');
+  assert.equal(source.match(/✎ SUGGESTED NAME/g)?.length, 4, 'and labelled, by a sign and in words');
+});
+
+const REFERRED = {
+  // a link written to the name shown on the drawing links to the thing drawn under it, by both readers (review of
+  // 224929a): a name only referred to is not taken, so the suggestion does not move away from it
+  'a link to the suggested name, written before the name is': [
+    fence(`// graph: reader
+(:Option {name: 'Large reader'}),
+(q:Q {name: 'Q'}),
+(large_reader)-[:ANSWERS]->(q)`),
+  ].join('\n'),
+};
+
+test('a link written to a suggested name links to the thing drawn under it, the same by both readers', () => {
+  same(REFERRED);
+  const r = readNote(gqlBlocks(REFERRED[Object.keys(REFERRED)[0]]).map((b) => b.text));
+  const d = r.graphs.get('reader');
+  assert.deepEqual(
+    d.links.map((l) => [l.from, l.type, l.to]),
+    [['large_reader', 'ANSWERS', 'q']],
+  );
+  assert.deepEqual(d.estimates, []);
+  assert.deepEqual(
+    r.problems.map((p) => p.suggested),
+    ['large_reader'],
+  );
 });

@@ -56,6 +56,7 @@ function unnamed(text: string, w: Written, name: string): { gap: Gap; naming: Na
       insert: { line, character, text: name },
       fixTitle: `Add the name ${name}`,
       span: { line: start.line, character: start.character, end: start.character + closeAt - w.open },
+      suggested: name,
     },
   };
 }
@@ -125,7 +126,8 @@ export function nameGaps(blocks: GapBlock[]): BlockGaps[] {
     for (const w of written[i] ?? []) {
       const kind = kindOf(w) ?? '',
         key = textKeyOf(w);
-      if (w.variable) facts.names.set(w.variable.name, kind);
+      // a name only referred to is not taken: a link to the name a thing is drawn under links to that thing
+      if (w.variable && w.writes) facts.names.set(w.variable.name, kind);
       const id = w.props.get('id');
       if (id) facts.names.set(id, '');
       if (w.matched || !key) continue;

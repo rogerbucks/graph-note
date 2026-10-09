@@ -27,6 +27,9 @@
     "favours": "green", "supports": "green", "confirms": "green",
     "counts against": "red", "contradicts": "red", "weakens": "red", "refutes": "red"
   },
+  "_suggested": "Added 10 Oct 2026 by Roger's decision unnamed_drawn_suggested (editor spec §4), reversing nothing: a thing written without a name is drawn under its suggested name, its box outlined in suggested_style and labelled with suggested_label beneath its text, in the kind caption's size and capitals — a sign and words, never colour alone.",
+  "suggested_label": "✎ suggested name",
+  "suggested_style": "rounded,filled,dashed",
   "page_width": 700,
   "directions": ["LR", "TB"],
   "max_height_ratio": 1.6

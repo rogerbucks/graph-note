@@ -22,6 +22,9 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `name-gaps.ts` — the things of a block that lack a name or a text, with the suggestion and a fix that writes it. No name:
   a warning, and the thing is read as if the suggested name were there, in a copy, never in the note. No text: a hint
   (severity `hint`: offered in place, never counted as a problem), unless a SET or the thing written elsewhere gives it text.
+  The warning carries the name (`suggested`), and the box drawn under it carries where its ( is (`Box.suggested`), so it
+  is drawn dashed and labelled as suggested, selected by `spanOf` and fixed from its details. The Python library suggests
+  the same names (`graphspec/reader/name_gaps.py`); `python/graph_spec/tests/name_cases.json` holds both to one table.
 - `schema-checks.ts` — the warnings for types a schema does not declare.
 - `note-reading.ts` — the types reading gives: `NoteReading`, `GraphDrawing`, `Problem`, `Block`, `Box`, `Link`.
 - `drawing.ts` — `readNote`: what a note's graph blocks draw, built from the modules above.
@@ -30,7 +33,8 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 
 **Drawing**
 
-- `layout.ts` — the Graphviz layout source, byte-identical to the Python library's.
+- `layout.ts` — the Graphviz layout source, byte-identical to the Python library's, a box drawn under a suggested name
+  dashed and labelled so in both.
 - `render.ts` — laying out with the bundled engine, and what a box's or link's details are.
 - `theme.ts` — the drawing's colours and size, from the theme.
 - `hits.ts` — what a tap lands on or near.

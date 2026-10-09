@@ -44,6 +44,7 @@ import shutil
 import subprocess
 import textwrap
 import zlib
+from collections.abc import Collection
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 STYLE = json.load(open(os.path.join(HERE, "graph_svg.style.json"), encoding="utf-8"))
@@ -83,12 +84,13 @@ def _hue(kind, kinds):
     return _pick(kinds, STYLE["kind_hues"], STYLE["kind_colours"])[kind]
 
 
-def _label(kind, text):
+def _label(kind, text, suggested=False):
     """A box's text as a table, one row per line, so line spacing can be set: Graphviz's own <br/>
     spacing is about 1.0x the font size. The extra space per line, (line_height - 1.0) x font size
     in whole points, is split between the cell's padding (twice, above and below) and the table's
     cell spacing (once), since Graphviz takes only whole points for both.
-    The kind's caption gets a gap of its own beneath it."""
+    The kind's caption gets a gap of its own beneath it. A box drawn under a suggested name says
+    so beneath its text, after the same gap, as the caption is written (10 Oct 2026)."""
     style = STYLE
     lines = textwrap.wrap(text, style["wrap_chars"], break_on_hyphens=False) or [""]
     extra = max(0, round((style["line_height"] - 1.0) * style["font_size"]))
@@ -103,9 +105,18 @@ def _label(kind, text):
         if kind
         else ""
     )
+    mark = (
+        (
+            f'<tr><td cellpadding="0" height="{style["caption_gap"]}"></td></tr>'
+            f'<tr><td cellpadding="0"><font point-size="{style["kind_font_size"]}" '
+            f'color="#0000fe">{html.escape(style["suggested_label"].upper())}</font></td></tr>'
+        )
+        if suggested
+        else ""
+    )
     return (
         f'<<table border="0" cellborder="0" cellspacing="{spacing}" cellpadding="0">'
-        f"{cap}{rows}</table>>"
+        f"{cap}{rows}{mark}</table>>"
     )
 
 
@@ -113,9 +124,15 @@ def dot_source(
     nodes: list[tuple[str, str, str]],
     edges: list[tuple[str, str, str]],
     rankdir: str | None = None,
+    suggested: Collection[str] = (),
 ) -> tuple[str, list[str], list[str]]:
     """nodes: [(key, kind, text)]; edges: [(source key, reading, target key)]. Kind colours are
-    placeholders #0001xx."""
+    placeholders #0001xx. suggested: the keys of boxes drawn under a suggested name — a thing
+    written without one (10 Oct 2026) — each outlined in the style's suggested_style and labelled
+    with its suggested_label. One key given as a plain string is refused, with TypeError: read
+    letter by letter, it would mark boxes whose keys are part of it."""
+    if isinstance(suggested, str):
+        raise TypeError("suggested is a collection of keys, not one key as a string")
     # order of first appearance — colours depend on it
     kinds = list(dict.fromkeys(k for _, k, _ in nodes if k))
     style = STYLE
@@ -131,9 +148,10 @@ def dot_source(
     ]
     for key, kind, text in nodes:
         i = kinds.index(kind) if kind else 99
+        dashed = f', style="{style["suggested_style"]}"' if key in suggested else ""
         out.append(
-            f'  "{key}" [label={_label(kind, text)}, '
-            f'fillcolor="#0001{i:02x}", color="#0002{i:02x}"];'
+            f'  "{key}" [label={_label(kind, text, key in suggested)}, '
+            f'fillcolor="#0001{i:02x}", color="#0002{i:02x}"{dashed}];'
         )
     # one column per kind, when no link joins two things of that kind
     of = {key: kind for key, kind, _ in nodes}
@@ -244,8 +262,8 @@ def _themed(svg, kinds, readings=()):
     return "\n".join(line.strip() for line in svg.splitlines() if line.strip())
 
 
-def _layout(nodes, edges, rankdir):
-    src, kinds, readings = dot_source(nodes, edges, rankdir)
+def _layout(nodes, edges, rankdir, suggested=()):
+    src, kinds, readings = dot_source(nodes, edges, rankdir, suggested)
     r = subprocess.run([DOT, "-Tsvg"], input=src, capture_output=True, text=True, timeout=60)
     if r.returncode:
         raise RuntimeError(f"Graphviz failed: {r.stderr.strip()[:300]}")
@@ -253,17 +271,24 @@ def _layout(nodes, edges, rankdir):
     return r.stdout, kinds, readings, float(m.group(1)) * 4 / 3, float(m.group(2)) * 4 / 3
 
 
-def render(nodes: list[tuple[str, str, str]], edges: list[tuple[str, str, str]]) -> str:
+def render(
+    nodes: list[tuple[str, str, str]],
+    edges: list[tuple[str, str, str]],
+    suggested: Collection[str] = (),
+) -> str:
     """The graph as one block of inline SVG. Raises RuntimeError if Graphviz is missing or fails.
     Laid out both left-to-right and top-to-bottom; the one that shrinks least to fit the page width
     wins, because a drawing shrunk to fit a narrow note is a drawing nobody can read — the text in
     its boxes becomes hard to read. A tall drawing is capped, so a long chain is not stood on
-    end."""
+    end. suggested: the keys of boxes drawn under a suggested name, marked as dot_source marks
+    them, and refused as it refuses them."""
+    if isinstance(suggested, str):
+        raise TypeError("suggested is a collection of keys, not one key as a string")
     if not DOT:
         raise RuntimeError("Graphviz (dot) is not installed")
     target, best = STYLE["page_width"], None
     for rd in STYLE["directions"]:
-        svg, kinds, readings, w, h = _layout(nodes, edges, rd)
+        svg, kinds, readings, w, h = _layout(nodes, edges, rd, suggested)
         fit = min(1.0, target / w) - (
             0.25 if h > STYLE["max_height_ratio"] * max(w, target) else 0
         )

@@ -9,6 +9,7 @@ import { announce, caretLine, heardKey, listProblems, showFixes } from './proble
 import type { FixChanges } from './problem-help';
 import { acceptSuggestion, showSuggestions } from './suggestions';
 import { InlineCompletion } from './inline-completion';
+import { unnamedPlace } from '../graph-view/suggested-name';
 
 /** The help for one editor: what it read last, and what it shows from that. */
 export class TextHelp {
@@ -111,7 +112,9 @@ export class TextHelp {
   ): { from: number; to: number } | null {
     const reading = this.reading;
     if (!reading) return null;
-    return spanOf(text, 'thing' in chosen ? chosen : { link: linkInBlock(reading, graph, chosen.link, text) });
+    // a thing drawn under a suggested name is found where its ( is, as its name is not written (§4)
+    if ('thing' in chosen) return spanOf(text, chosen, unnamedPlace(reading, graph, chosen.thing, text));
+    return spanOf(text, { link: linkInBlock(reading, graph, chosen.link, text) });
   }
 
   /** The first suggestion, which Tab takes. */

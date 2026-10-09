@@ -60,6 +60,8 @@ export interface Details {
   out: LinkDetail[];
   in: LinkDetail[];
   problems: Problem[];
+  /** For a thing written without a name and drawn under the one suggested (spec §4): the warning, whose fix writes it. */
+  suggested?: Problem;
 }
 
 const names = (line: string, key: string) =>
@@ -73,6 +75,10 @@ export function details(reading: NoteReading, graph: string, key: string): Detai
     box = d?.boxes.find((b) => b.key === key);
   if (!d || !box) return null;
   const textOf = (k: string) => d.boxes.find((b) => b.key === k)?.text ?? k;
+  // a thing drawn under a suggested name is not written by it: its warning is found by the name it suggests
+  const suggested = box.suggested
+    ? reading.problems.find((p) => p.graph === graph && p.suggested === key && p.block === box.suggested?.block)
+    : undefined;
   return {
     key,
     text: box.text,
@@ -80,8 +86,10 @@ export function details(reading: NoteReading, graph: string, key: string): Detai
     out: d.links.filter((l) => l.from === key).map((l) => ({ reading: l.reading, key: l.to, text: textOf(l.to) })),
     in: d.links.filter((l) => l.to === key).map((l) => ({ reading: l.reading, key: l.from, text: textOf(l.from) })),
     problems: reading.problems.filter(
-      (p) => p.graph === graph && names(reading.texts[p.block]?.split('\n')[p.line - 1] ?? '', key),
+      (p) =>
+        p === suggested || (p.graph === graph && names(reading.texts[p.block]?.split('\n')[p.line - 1] ?? '', key)),
     ),
+    ...(suggested ? { suggested } : {}),
   };
 }
 
