@@ -353,6 +353,10 @@
     "ADanglingComma.test_everything_before_it_is_drawn_with_one_warning_on_its_line": {
       "seen_failing_first": false,
       "evidence": "not seen failing by the replay, though it was seen failing by hand against the code before d000d29 (unittest: FAILED (failures=3), one for each ending): its first version used subTest, whose failures unittest files under each sub-test's name, so the replay read the test itself as passing. Rewritten as a plain loop in 4f25653"
+    },
+    "AnEmojiBeforeWhatIsLeftOut.test_the_item_at_fault_is_left_out_exactly": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed in Python: it counts places and blanks text in code points alike, so it was already right; the twin test in the core (drawing.test.js, an emoji before what is left out) failed first (commit de46773)"
     }
   },
   "packages/obsidian/test/live-preview.test.js": {
@@ -363,6 +367,12 @@
     "what is typed in place is written through the editor > with the note in reading view or closed, the pane still writes the file": {
       "seen_failing_first": false,
       "evidence": "a control case, written with the change beside it: the pane always wrote the file; it holds that it still does when no editor shows the note (commit d6a8d95)"
+    }
+  },
+  "packages/graph-spec/test/graph-spec-check-comments.test.mjs": {
+    "a // inside a string is text, not a comment": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: a // inside a string was always text, so it passes before and after by design (commit de46773)"
     }
   }
 }
