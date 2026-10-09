@@ -16,7 +16,12 @@ module that ties the parts together, named as the folder is.
 - `live-preview.ts` — the editing view's own cards, so the page stays still while a block is typed in.
 - `editor.ts` — the comma and the colon added for you in the note's own editor.
 - `pane.ts` — the edit pane, which holds a block editor.
-- `properties.ts` — the inspector's properties, as Obsidian's Properties panel.
+
+### `src/properties/` — the inspector's properties, as Obsidian's Properties panel
+
+- `properties.ts` — `renderProperties`: a row for each property, its type menu, and the rows of the lists a thing holds.
+- `list-form.ts` — the form that asks for a kind and a relationship when List is chosen.
+- `list-row.ts` — a list as chips: the things linked to this one, each removed with its x, and a field to add a value.
 
 ### `src/graph-view/` — a drawn graph
 
@@ -58,7 +63,7 @@ package, or all with `npm test` from the repository root. Each builds `main.js` 
 - `test/host/` — the stand-ins for the host and what the tests share: `fake-dom.js` (a small DOM), `fake-obsidian.js`
   (the obsidian module and CodeMirror), `load-plugin.js` (building and loading the plugin), `cascade.js` (the part of
   the CSS cascade a test needs), `notes.js` (a fenced block, a button by its label), and the notes each group of tests
-  opens: `card-notes.js`, `pane-notes.js`, `view-notes.js`.
+  opens: `card-notes.js`, `pane-notes.js`, `view-notes.js`, and `inspector-steps.js` (opening a box's details and driving the inspector's rows, menus and chips).
 - `test/device-checklist.md` — what is checked by hand on the devices.
 
 ## The harness, `harness/`

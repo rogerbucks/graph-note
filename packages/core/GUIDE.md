@@ -43,6 +43,7 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `autocomplete.ts` — completing as you type: the one best inline match (a closer, keyword, kind, type, property name or
   value) and the closer stepped over; nothing is inserted unasked.
 - `inspector.ts` — properties of a thing or link, edited as text.
+- `linked-list.ts` — a property held as things linked to this one: made, added to and removed from, as text edits.
 - `lock.ts` — Lock the graph: a draft's schema written out.
 
 ## Command-line tools, `bin/`
