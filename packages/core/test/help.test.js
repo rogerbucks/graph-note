@@ -317,3 +317,59 @@ describe('reading back a link whose type has no reading of its own', () => {
     assert.equal(readBack(readNote([text, schema], 0), 'g', text).get(3), 'Drive is hoped for by Where to?');
   });
 });
+
+describe('a name or a text suggested for a thing', () => {
+  // a thing with text and no name, and a thing with a name and no text (editor spec §4)
+  const apply = (text, action) => {
+    const lines = text.split('\n');
+    const { range, newText } = action.edit.changes[URI][0];
+    const line = lines[range.start.line];
+    lines[range.start.line] = line.slice(0, range.start.character) + newText + line.slice(range.end.character);
+    return lines.join('\n');
+  };
+  const UNNAMED = BLOCK + ",\n(:Option {name: 'Medium reader'})";
+
+  test('a thing with text and no name has a warning showing the name, whose fix writes it after the (', () => {
+    const [d] = diagnostics(readNote([UNNAMED]), 'reader', 0, UNNAMED, URI);
+    assert.equal(d.severity, SEVERITY.Warning);
+    assert.equal(d.message, 'This thing has no name; suggested: medium_reader.');
+    assert.deepEqual(d.range, { start: at(10, 0), end: at(10, 33) });
+    assert.deepEqual(d.data.fixes, [
+      {
+        title: 'Add the name medium_reader',
+        kind: 'quickfix',
+        isPreferred: true,
+        edit: { changes: { [URI]: [{ range: { start: at(10, 1), end: at(10, 1) }, newText: 'medium_reader' }] } },
+      },
+    ]);
+  });
+
+  test('after the fix is applied the thing has its name, and nothing is left to suggest', () => {
+    const [d] = diagnostics(readNote([UNNAMED]), 'reader', 0, UNNAMED, URI);
+    const fixed = apply(UNNAMED, d.data.fixes[0]);
+    assert.equal(fixed, BLOCK + ",\n(medium_reader:Option {name: 'Medium reader'})");
+    const after = readNote([fixed]);
+    assert.deepEqual(diagnostics(after, 'reader', 0, fixed, URI), []);
+    assert.ok(after.graphs.get('reader').boxes.some((b) => b.key === 'medium_reader'));
+  });
+
+  test('a thing with a name and no text has a hint showing the text, whose fix adds it as the name property', () => {
+    const text = BLOCK + ',\n(medium_reader:Option)';
+    const [d] = diagnostics(readNote([text]), 'reader', 0, text, URI);
+    assert.equal(d.severity, SEVERITY.Hint);
+    assert.equal(d.message, "The thing medium_reader has no text; suggested: 'Medium reader'.");
+    assert.deepEqual(d.range, { start: at(10, 1), end: at(10, 14) });
+    assert.equal(d.data.fixes[0].title, "Add the text 'Medium reader'");
+    const fixed = apply(text, d.data.fixes[0]);
+    assert.equal(fixed, BLOCK + ",\n(medium_reader:Option {name: 'Medium reader'})");
+    assert.deepEqual(diagnostics(readNote([fixed]), 'reader', 0, fixed, URI), []);
+  });
+
+  test('a suggestion is only ever offered: the text handed to the reading is never changed', () => {
+    const r = readNote([UNNAMED]);
+    assert.deepEqual(r.texts, [UNNAMED]);
+    const ds = diagnostics(r, 'reader', 0, UNNAMED, URI);
+    assert.equal(ds.length, 1);
+    assert.match(ds[0].message, /suggested: medium_reader/);
+  });
+});

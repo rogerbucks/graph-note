@@ -41,8 +41,8 @@ export interface Problem {
   line: number;
   message: string;
   fix: string;
-  /** An error leaves something out of the drawing; a warning draws it, as an estimate. */
-  severity: 'error' | 'warning';
+  /** An error leaves something out of the drawing; a warning draws it, as an estimate; a hint only offers a fix, and is no problem. */
+  severity: 'error' | 'warning' | 'hint';
   /** The text left out of the drawing, when a path or clause was. */
   dropped?: string;
   /** A word to change, and what it could be changed to — one fix each. */

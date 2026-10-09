@@ -77,7 +77,7 @@ export function paintText(
           d = cut(col + a, col + b);
         const cls = [
           p.c ? `gql-${p.c}` : '',
-          d ? `graph-note-problem is-${d.severity === 1 ? 'error' : 'warning'}` : '',
+          d ? `graph-note-problem is-${d.severity === 1 ? 'error' : d.severity === 4 ? 'hint' : 'warning'}` : '',
         ]
           .filter(Boolean)
           .join(' ');
@@ -86,7 +86,7 @@ export function paintText(
       }
       col += p.s.length;
     }
-    if (marks.length) overlay.createSpan({ cls: 'graph-note-line-sign', text: ' ⚠' });
+    if (marks.some((d) => d.severity !== 4)) overlay.createSpan({ cls: 'graph-note-line-sign', text: ' ⚠' });
     const said = parts.some((p) => p.ghost) ? undefined : back.get(n); // the ghost has the end of its line
     if (said) overlay.createSpan({ cls: 'graph-note-readback', text: ` — ${said}` });
     overlay.appendText('\n');

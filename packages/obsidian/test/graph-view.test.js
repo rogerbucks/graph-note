@@ -78,6 +78,24 @@ describe('a graph with problems is still drawn', () => {
     assert.match(items[1], /^✖ Error — Line 10: /);
   });
 
+  test('a graph whose only finding is a hint shows no problems count, and the hint is still listed, as a hint', async () => {
+    const { el } = await show(env, fence('// graph: g\n(large_reader:Option)'));
+    assert.equal(el.querySelectorAll('g.node').length, 1);
+    const badge = labelled(el, 'No problems');
+    assert.ok(badge, 'a hint is not a problem');
+    badge.click();
+    const items = el.querySelector('.graph-note-problems').querySelectorAll('li');
+    assert.equal(items.length, 1);
+    assert.match(items[0].textContent, /^ℹ Hint — Line 3:.*Large reader/);
+    assert.equal(items[0].className, 'is-hint');
+  });
+
+  test('a hint with an error is counted as the error alone', async () => {
+    const note = fence("// graph: g\n(large_reader:Option),\n(a:T {name: 'A'})-[:R]->(nowhere)");
+    const { el } = await show(env, note);
+    assert.ok(labelled(el, '1 problem'));
+  });
+
   test('a block nothing can be read from shows its text and its problems, never a blank', async () => {
     const { el } = await show(env, fence('// graph: g\n(a:T {name: })'));
     assert.equal(svgOf(el), null);

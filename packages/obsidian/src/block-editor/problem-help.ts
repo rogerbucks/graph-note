@@ -3,6 +3,10 @@
 import type { Diagnostic } from '@graph-note/core';
 import { button } from './editor-layout';
 
+/** LSP DiagnosticSeverity: 1 is an error, 4 a hint. */
+const HINT = 4;
+const classOf = (d: Diagnostic) => (d.severity === 1 ? 'is-error' : d.severity === HINT ? 'is-hint' : 'is-warning');
+
 /** The edits of a fix, by document, as a problem's fix gives them. */
 export type FixChanges = Record<string, { range: Diagnostic['range']; newText: string }[]>;
 
@@ -15,7 +19,7 @@ export function listProblems(list: HTMLElement, problems: Diagnostic[]): void {
   }
   const ul = list.createEl('ul');
   for (const d of problems) {
-    const li = ul.createEl('li', { cls: d.severity === 1 ? 'is-error' : 'is-warning' });
+    const li = ul.createEl('li', { cls: classOf(d) });
     li.createSpan({ text: `Line ${d.range.start.line + 1}: ${d.message} ` });
     li.createSpan({ cls: 'graph-note-fix', text: d.data.fix });
   }
@@ -37,8 +41,8 @@ export function showFixes(
   fixbar.empty();
   fixbar.hidden = !here.length;
   for (const d of here) {
-    const row = fixbar.createDiv({ cls: d.severity === 1 ? 'is-error' : 'is-warning' });
-    row.createSpan({ text: `⚠ ${d.message}` });
+    const row = fixbar.createDiv({ cls: classOf(d) });
+    row.createSpan({ text: `${d.severity === HINT ? 'ℹ' : '⚠'} ${d.message}` });
     for (const f of d.data.fixes) button(row, f.title, null, () => apply(f.edit.changes), f.title);
     if (!d.data.fixes.length) row.createSpan({ cls: 'graph-note-fix', text: ` ${d.data.fix}` });
   }
@@ -62,7 +66,7 @@ export const heardKey = (d: Diagnostic): string => `${d.range.start.line}|${d.me
 
 /** Says new problems to screen readers, without moving the focus; returns the problems now heard. */
 export function announce(el: HTMLElement, problems: Diagnostic[], heard: Set<string>): Set<string> {
-  const now = problems.map((d) => ({ key: heardKey(d), d }));
+  const now = problems.filter((d) => d.severity !== HINT).map((d) => ({ key: heardKey(d), d })); // a hint is not a problem
   const fresh = now.filter((x) => !heard.has(x.key));
   el.setText(
     fresh.length ? `${fresh.length} new problem${fresh.length === 1 ? '' : 's'}: ${fresh[0]?.d.message ?? ''}` : '',

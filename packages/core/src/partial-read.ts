@@ -1,10 +1,12 @@
 // Reading a note's data blocks for drawing, as far as they can be read (spec §3): a path that cannot be read is left out
 // and listed as a problem, and the rest of its block is read; a comment after code, a comma with nothing after it, a
-// missing comma and a link type without its colon are each read as meant, with a warning whose fix writes it so.
+// missing comma, a link type without its colon and a thing with text but no name are each read as meant, with a warning
+// whose fix writes it so.
 import gs from '@graph-note/graph-spec';
 import { bareNames, items, lineAt, without } from './block-items.ts';
 import type { Item } from './block-items.ts';
 import { dataKind, graphOf } from './blocks.ts';
+import { nameGaps, withNames } from './name-gaps.ts';
 import type { Problem } from './note-reading.ts';
 
 /**
@@ -93,6 +95,10 @@ export function readBlocks(texts: string[], shared: string[]): { store: gs.Store
       }
     }
   });
+  // a thing given text but no name, or a name but no text: a warning whose fix adds what is suggested; the suggested name
+  // is only read in, in a copy, so that the thing is drawn — the note itself is never rewritten unasked
+  const gaps = nameGaps(clean.map((text, i) => ({ text: skip.has(i) ? '' : text, graph: graphOf(texts[i] ?? '') })));
+  gaps.forEach((g, i) => problems.push(...g.problems.map((p) => ({ ...p, block: i, graph: graphOf(texts[i] ?? '') }))));
   for (let attempt = 0; ; attempt++) {
     const store = new gs.Store();
     for (const s of shared) {
@@ -109,7 +115,7 @@ export function readBlocks(texts: string[], shared: string[]): { store: gs.Store
       const before = store.commas.length;
       const bareBefore = store.bares.length;
       try {
-        store.apply(clean[i] ?? '');
+        store.apply(withNames(clean[i] ?? '', gaps[i]?.named ?? []));
       } catch (error) {
         failed = { block: i, error };
       }

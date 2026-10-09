@@ -73,6 +73,11 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
       too, but Enter never takes a closer, and with nothing to take it is a new line. After a bare ( the names are
       suggested and Tab takes the first, as before. On the phone, Enter on the keyboard takes a word (there is no Tab);
       confirm that the Enter ending an IME composition (e.g. Japanese keyboard) takes nothing.
+- [ ] A thing given text but no name, such as `(:Option {name: 'Large reader'})`, is drawn, and shows a ⚠ naming the
+      suggested name, in the style of the names already in the graph and not one of them. Its fix puts the name after the
+      (, and the ⚠ goes. A thing given a name but no text, such as `(large_reader:Option)`, shows an ℹ hint, not counted
+      on the badge, with the text suggested from the name; its fix adds `{name: 'Large reader'}`. Nothing is written
+      until the fix is pressed.
 - [ ] A graph locked by an earlier build shows a ⚠ that its schema does not declare its types; its fix adds the
       DECLARES links, and the ⚠ goes.
 - [ ] A link type left without its colon is drawn as that type, with a ⚠ whose fix writes the colon. A new type written
