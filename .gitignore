@@ -18,10 +18,13 @@ spikes/*/main.js
 .claude/worktrees/
 
 # The test vault: only its notes and two settings are committed. What Obsidian writes as it runs, and the plugin
-# build linked in by scripts/test-vault.mjs, never are.
+# build linked in by scripts/reset-test-vault.mjs, never are.
 /test-vault/*
 !/test-vault/*.md
 !/test-vault/.obsidian/
 /test-vault/.obsidian/*
 !/test-vault/.obsidian/app.json
 !/test-vault/.obsidian/community-plugins.json
+
+# A build interrupted before its rename into place.
+main.js.*.part
