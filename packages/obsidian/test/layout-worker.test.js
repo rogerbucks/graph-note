@@ -83,7 +83,7 @@ describe('a graph over a size limit is shown as its text, with a banner saying w
   // 600 kB, not the core's 5 MB: so the replay against the code before the fix fails in seconds, rather than hanging
   test('a block too large to read — 600 kB, each line broken — is its text and a banner at once, never read', async () => {
     await withPlugin(null, {}, async (env) => {
-      const body = Array.from({ length: 15_000 }, (_, i) => `(n${i}:Thing {name: 'Thing number ${i} of many'},`);
+      const body = Array.from({ length: 12_000 }, (_, i) => `(n${i}:Thing {name: 'Thing number ${i} of many'},`);
       const t = performance.now();
       const { el } = await show(env, fence(`// graph: g\n${body.join('\n')}`));
       const ms = performance.now() - t;
@@ -92,7 +92,7 @@ describe('a graph over a size limit is shown as its text, with a banner saying w
       assert.match(bannerOf(el).text, /too large to read/i);
       assert.match(bannerOf(el).text, /at most 512 kB/);
       assert.ok(bannerOf(el).icon, 'an icon beside the words');
-      assert.match(el.querySelector('code').textContent, /Thing number 14999 of many/, 'the text, whole');
+      assert.match(el.querySelector('code').textContent, /Thing number 11999 of many/, 'the text, whole');
     });
   });
 });
