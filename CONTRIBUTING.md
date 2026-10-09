@@ -70,6 +70,21 @@ of Obsidian's rules, sentence case in the interface among them. These are the gu
 - **One module, one purpose.** Each module opens with a comment saying what it is for, and which part of the spec.
 - **The public interface is documented where it is declared:** every export has its own comment, directly above it.
 - **The core is host-free:** it imports no Obsidian, editor or Node module, so it runs on a phone and, later, in VS Code.
+- **Small modules, one responsibility each, in folders named for their feature** (spec §13, "No monolith files"): no
+  source file over 400 lines, and no test file over 600, checked in CI. A split follows responsibilities, never line
+  counts.
+- **Named so a search by name finds it:** folders and files are named for the feature they hold, never `utils`, `misc`,
+  `helpers`, `common` or `lib`.
+- **Each package has a short `GUIDE.md`** saying where things live, naming every folder of its source, and it changes
+  in the same commit as the code it describes.
+- **Small, typed interfaces:** a module exports a few typed things, so it can be used without reading its inside. In
+  Python, every public function has its docstring and type hints.
+- **A package's entry points stay put:** the modules other code and the vault import (`gql_profile.py`,
+  `graph_rules.py`, `graph_spec.py`, `graph_svg.py`, `graph-spec-check.js`, the core's `index.ts`) re-export the smaller
+  modules, so a split never breaks a caller. The released `graph-spec-check.js` is built into one file and never edited
+  by hand.
+- **Tests mirror the code:** a module's tests sit in a file named after it, and each test file runs on its own in
+  seconds. A test moved between files keeps its name, so the tests-first record knows it is not new.
 
 ## Tests that span modules
 
@@ -80,7 +95,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `packages/core/test/imports.test.js` — the core imports no host.
 - `packages/obsidian/test/accessibility.test.js` — contrast in both themes, and a keyboard path for every action.
 - `packages/obsidian/test/build.test.mjs` — the build writes the files the plugin is installed from.
-- `packages/obsidian/test/inline.test.js` — editing in place in the drawing's card, and the inspector.
+- `packages/obsidian/test/inline.test.js` — editing in place in the drawing's card.
 - `packages/graph-spec/test/characterisation.test.mjs` — the library gives the answers recorded before it moved here.
 - `packages/graph-spec/test/commas.test.mjs` — both readers read a missing comma the same way.
 - `packages/graph-spec/test/layout.test.mjs` — the layout source is byte-identical to the Python library's.

@@ -5,7 +5,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { gqlBlocks, readNote } from '../src/drawing.ts';
+import { gqlBlocks } from '../src/blocks.ts';
+import { readNote } from '../src/drawing.ts';
 import { layoutSource } from '../src/layout.ts';
 
 const PY_SRC = fileURLToPath(new URL('../../../python/graph_spec/src', import.meta.url));

@@ -6,8 +6,10 @@ import { completenessReport, draw, gqlBlocks, graphOfBlock, namesSharedSchema, r
 import type { Block, Drawn, Problem } from '@graph-note/core';
 import type GraphNotePlugin from './main';
 import { renderCode } from './code';
-import { GraphView, readOnlyHere, renderProblems, whenPlaced } from './view';
-import type { ShownProblem } from './view';
+import { GraphView } from './graph-view/graph-view';
+import { readOnlyHere, whenPlaced } from './graph-view/placement';
+import { renderProblems } from './graph-view/problems-list';
+import type { ShownProblem } from './graph-view/problems-list';
 
 /** Draws one gql block where the note shows it (spec §3): its graph with the bar, or its problems, or a prompt when it is empty. */
 export async function renderBlock(

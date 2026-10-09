@@ -1,5 +1,6 @@
 // Types for graph-spec-check.js, for the TypeScript that uses it (packages/core). Only what the core calls is declared;
-// the library itself stays plain JavaScript, loaded unchanged by pages and by Node.
+// the library itself stays plain JavaScript: its entry point's API, gathered from the feature modules (GUIDE.md), and the
+// same API in the built file pages load.
 
 declare namespace GraphSpecCheck {
   /** A property value as the document profile reads it. */

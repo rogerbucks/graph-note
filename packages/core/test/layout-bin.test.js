@@ -8,7 +8,8 @@ import { fileURLToPath } from 'node:url';
 import { mkdtempSync, copyFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { gqlBlocks, readNote } from '../src/drawing.ts';
+import { gqlBlocks } from '../src/blocks.ts';
+import { readNote } from '../src/drawing.ts';
 import { layoutSource } from '../src/layout.ts';
 
 const BIN = fileURLToPath(new URL('../bin/layout-source-node.mjs', import.meta.url));

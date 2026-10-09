@@ -1,0 +1,82 @@
+// A drawing's bar (spec §3): the problems badge, Fit, zoom out, zoom in, Full screen, and where the note is edited, Edit
+// here and Edit in pane; in reading view, Source. Each control says what it is in words as well as by its icon.
+import { setIcon } from 'obsidian';
+import type { ViewOptions } from './view-options';
+
+/** A number of things, in words: "1 problem", "2 problems". */
+export const plural = (n: number, one: string): string => `${n} ${one}${n === 1 ? '' : 's'}`;
+
+/** An icon button named for screen readers, with words beside the icon when given. */
+export function button(
+  parent: HTMLElement,
+  label: string,
+  icon: string,
+  onClick: () => void,
+  text?: string,
+): HTMLButtonElement {
+  const b = parent.createEl('button', { cls: 'clickable-icon', attr: { 'aria-label': label, type: 'button' } });
+  setIcon(b, icon);
+  if (text) b.createSpan({ cls: 'graph-note-badge-text', text });
+  b.addEventListener('click', onClick);
+  return b;
+}
+
+/** What the bar's buttons do. */
+export interface BarActions {
+  /** The badge: shows or hides the problems behind it, and says which. */
+  toggleProblems: (badge: HTMLButtonElement) => void;
+  fit: () => void;
+  zoomOut: () => void;
+  zoomIn: () => void;
+  fullScreen: () => void;
+  editHere: () => void;
+  toggleSource: (b: HTMLButtonElement) => void;
+}
+
+/** The bar's buttons that depend on where the card is: the edit buttons, and Source. */
+export interface BarPlaced {
+  /** Edit here, which shows whether the card is being edited. */
+  editButton: HTMLButtonElement | null;
+  /** The buttons that edit, taken away in reading view. */
+  editing: HTMLElement[];
+  /** Source, taken away where the note is edited. */
+  source: HTMLButtonElement | null;
+}
+
+/** Builds the bar of a drawing at the top of its card. */
+export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): BarPlaced {
+  const { problems, mode } = o;
+  const bar = root.createDiv({
+    cls: 'graph-note-bar',
+    attr: { role: 'toolbar', 'aria-label': `Graph ${o.graph}` },
+  });
+  const gaps = o.completeness?.gaps ?? 0;
+  const label =
+    [problems.length ? plural(problems.length, 'problem') : '', gaps ? plural(gaps, 'gap') : '']
+      .filter(Boolean)
+      .join(', ') || 'No problems';
+  const badge = button(
+    bar,
+    label,
+    problems.length || gaps ? 'alert-triangle' : 'check-circle',
+    () => on.toggleProblems(badge),
+    label,
+  );
+  badge.addClass('graph-note-badge');
+  badge.setAttribute('aria-expanded', 'false');
+  button(bar, 'Fit', 'maximize', () => on.fit());
+  button(bar, 'Zoom out', 'zoom-out', () => on.zoomOut());
+  button(bar, 'Zoom in', 'zoom-in', () => on.zoomIn());
+  if (mode === 'full') button(bar, 'Close full screen', 'minimize', () => o.onClose?.());
+  else button(bar, 'Full screen', 'expand', () => on.fullScreen());
+  const editing: HTMLElement[] = [];
+  let editButton: HTMLButtonElement | null = null;
+  if (mode !== 'pane' && o.onEditHere) {
+    editButton = button(bar, 'Edit here', 'pencil', () => on.editHere());
+    editing.push(editButton);
+  }
+  if (mode !== 'pane') editing.push(button(bar, 'Edit in pane', 'panel-right-open', () => o.onEdit()));
+  const source: HTMLButtonElement | null =
+    mode === 'note' ? button(bar, 'Show source', 'code', () => source && on.toggleSource(source)) : null;
+  return { editButton, editing, source };
+}

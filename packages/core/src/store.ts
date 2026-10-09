@@ -2,8 +2,8 @@
 // replaces the block's own lines and keeps every other byte — line endings included. A block that changed since the pane
 // read it is never overwritten blind: the write is refused, with the block as it now is, so the pane can reload and keep
 // what was typed as a draft. Every write is recorded, so it can be undone back to the original bytes.
-import { gqlSpans } from './drawing.ts';
-import type { Block } from './drawing.ts';
+import { gqlSpans } from './blocks.ts';
+import type { Block } from './note-reading.ts';
 
 /** The block a pane is editing: the 0-based line of its opening fence, and its text as the pane last read or wrote it. */
 export interface BlockRef {

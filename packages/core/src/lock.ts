@@ -2,7 +2,7 @@
 // block written last, as the graph spec's §5 asks — with each relationship read both ways. The reverse readings are
 // guesses, and the block says so, for the writer to check.
 import gs from '@graph-note/graph-spec';
-import type { NoteReading } from './drawing.ts';
+import type { NoteReading } from './note-reading.ts';
 
 /** A graph with no schema of its own, none written later in its note, and none it names, is a draft (§5). */
 export function isDraft(reading: NoteReading, graph: string): boolean {

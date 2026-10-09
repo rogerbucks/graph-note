@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { basename } from 'node:path';
-import { exists, read, readJSON, path, walk, ROOT } from './lib/repo.js';
+import { exists, read, readJSON, path, walk, ROOT } from './repository/repo.js';
 
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
@@ -90,7 +90,9 @@ describe('naming conventions', () => {
       const name = basename(f).replace(/(\.test)?(\.d)?\.(ts|js|mjs)$/, '');
       assert.match(name, KEBAB, f);
     }
-    for (const f of walk(PYTHON).filter((x) => x.endsWith('.py'))) assert.match(basename(f, '.py'), SNAKE, f);
+    // a package's __init__.py is the one name Python itself requires
+    for (const f of walk(PYTHON).filter((x) => x.endsWith('.py') && basename(x) !== '__init__.py'))
+      assert.match(basename(f, '.py'), SNAKE, f);
   });
 
   test('types and classes are PascalCase; functions, methods and variables camelCase; constants UPPER_SNAKE', () => {
@@ -181,6 +183,95 @@ describe('the code’s layout', () => {
         }
       }
     }
+    assert.deepEqual(bare, []);
+  });
+});
+
+describe('small modules, easy to find and to work in', () => {
+  // no_monolith_files and "Easy for an AI to work in" (spec §13; Roger, 9 Oct 2026: "Structure the code as a senior dev
+  // would, rather than a monolith file"): small modules with one responsibility each, in folders named for their
+  // feature, each package with a guide to where things live; a package's entry points stay, re-exporting the modules
+  const SOURCE = [
+    ...PACKAGES.flatMap((p) => ['src', 'bin'].flatMap((d) => walk(`${p}/${d}`))).filter(
+      (f) => /\.(ts|js|mjs)$/.test(f) && !f.endsWith('.d.ts'),
+    ),
+    ...walk(`${PYTHON}/src`).filter((f) => f.endsWith('.py')),
+    ...walk('scripts').filter((f) => /\.(js|mjs)$/.test(f)),
+  ];
+  const TESTS = [
+    ...PACKAGES.flatMap((p) => walk(`${p}/test`)).filter((f) => /\.(js|mjs)$/.test(f)),
+    ...walk(`${PYTHON}/tests`).filter((f) => f.endsWith('.py')),
+    ...walk('test').filter((f) => /\.(js|mjs)$/.test(f)),
+  ];
+  const lines = (f) => read(f).split('\n').length;
+
+  test('no source file is over 400 lines, and no test file over 600', () => {
+    const over = [
+      ...SOURCE.filter((f) => lines(f) > 400).map((f) => `${f}: ${lines(f)}`),
+      ...TESTS.filter((f) => lines(f) > 600).map((f) => `${f}: ${lines(f)}`),
+    ];
+    assert.deepEqual(over, []);
+  });
+
+  test('folders and files are named for the feature they hold, never utils, misc, helpers, common or lib', () => {
+    const vague = /^(utils?|misc|helpers?|common|lib|stuff|shared)$/;
+    const loose = [...SOURCE, ...TESTS]
+      .flatMap((f) =>
+        f.split('/').map((part, i, all) => ({ f, part: i === all.length - 1 ? part.replace(/\..*$/, '') : part })),
+      )
+      .filter(({ part }) => vague.test(part))
+      .map(({ f }) => f);
+    assert.deepEqual([...new Set(loose)], []);
+  });
+
+  test('each package has a guide saying where things live, naming every folder of its source', () => {
+    const missing = [];
+    for (const p of [...PACKAGES, PYTHON]) {
+      const guide = `${p}/GUIDE.md`;
+      if (!exists(guide)) {
+        missing.push(guide);
+        continue;
+      }
+      const text = read(guide);
+      const folders = [
+        ...new Set(
+          walk(`${p}/src`)
+            .map((f) => f.slice(`${p}/`.length).split('/').slice(0, -1).join('/'))
+            .filter(Boolean),
+        ),
+      ];
+      for (const d of folders) if (!text.includes(`${d}/`)) missing.push(`${guide}: ${d}/`);
+    }
+    assert.deepEqual(missing, []);
+  });
+
+  test('every public Python function says what it does and is typed, so it is used without reading its inside', () => {
+    const bare = [];
+    const r = spawnSync(
+      'python3',
+      [
+        '-c',
+        `import ast, sys
+for f in sys.argv[1:]:
+    tree = ast.parse(open(f, encoding='utf-8').read())
+    for n in tree.body:
+        if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and not n.name.startswith('_'):
+            args = [a for a in n.args.args + n.args.kwonlyargs if a.arg not in ('self', 'cls')]
+            if not ast.get_docstring(n) or n.returns is None or any(a.annotation is None for a in args):
+                print(f"{f}: {n.name}")`,
+        ...walk(`${PYTHON}/src`)
+          .filter((f) => f.endsWith('.py'))
+          .map((f) => path(f)),
+      ],
+      { encoding: 'utf8' },
+    );
+    assert.equal(r.status, 0, r.stderr);
+    bare.push(
+      ...r.stdout
+        .split('\n')
+        .filter(Boolean)
+        .map((l) => l.replace(`${ROOT}/`, '')),
+    );
     assert.deepEqual(bare, []);
   });
 });
@@ -276,6 +367,11 @@ describe('the conventions, written down', () => {
       'vault.process',
       'theme variables',
       'sentence case',
+      '400 lines',
+      'test file over 600',
+      'GUIDE.md',
+      'type hints',
+      'never `utils`',
     ]) {
       assert.ok(c.includes(word), word);
     }

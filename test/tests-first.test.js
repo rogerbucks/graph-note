@@ -9,7 +9,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { replay, unexplained, record, update } from '../scripts/tests-first.mjs';
-import { path, readJSON, walk } from './lib/repo.js';
+import { path, readJSON, walk } from './repository/repo.js';
 
 /** A small repository: each commit a set of files, written then committed; returns the folder and the commit ids. */
 function repository(commits) {
@@ -48,6 +48,28 @@ describe('replaying a commit against its parent’s code', () => {
       assert.equal(file.file, 'test/twice.test.js');
       assert.deepEqual(file.failedFirst, ['doubles']);
       assert.deepEqual(file.passedFirst, []);
+    } finally {
+      r.done();
+    }
+  });
+
+  // no_monolith_files (spec §13, 9 Oct 2026): splitting a test file moves tests, and a moved test is not a new one
+  test('a test moved to another file in the same commit keeps its record: it is not new, so it is not replayed as new', () => {
+    const r = repository([
+      {
+        'src/twice.js': 'export const twice = (x) => x * 2;\n',
+        'test/twice.test.js': JS_TEST("test('one', () => {});\ntest('doubles', () => assert.equal(twice(2), 4));"),
+      },
+      {
+        'test/twice.test.js': JS_TEST("test('one', () => {});"),
+        'test/twice-doubling.test.js': JS_TEST("test('doubles', () => assert.equal(twice(2), 4));"),
+      },
+    ]);
+    try {
+      const moved = replay(r.dir, r.ids[1]).files.find((f) => f.file === 'test/twice-doubling.test.js');
+      assert.deepEqual(moved.failedFirst, []);
+      assert.deepEqual(moved.passedFirst, [], 'moved, not new');
+      assert.deepEqual(unexplained([replay(r.dir, r.ids[1])], {}), []);
     } finally {
       r.done();
     }

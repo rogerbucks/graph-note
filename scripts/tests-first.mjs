@@ -137,6 +137,9 @@ const run = (dir, file, repo) => (PY_TEST.test(file) ? runPy(dir, file, repo) : 
  * the parent's code, with the commit's test files and test support across. Those that fail there were seen failing
  * first; those that pass were not.
  */
+/** The test folder a test file sits in: a package's test/ or tests/, or the repository's own test/. */
+const testFolder = (f) => /^(.*?\/?(?:test|tests)\/)/.exec(f)?.[1] ?? '';
+
 export function replay(repo, commit) {
   const parent = git(repo, 'rev-list', '--parents', '-n', '1', commit).split(' ')[1];
   const changed = git(repo, 'diff-tree', '--no-commit-id', '--name-status', '-r', '-M', commit)
@@ -160,6 +163,24 @@ export function replay(repo, commit) {
   }
   const at = checkout(repo, commit),
     before = checkout(repo, parent);
+  // the tests a file held at the parent, run there; each file once
+  const held = new Map();
+  const before_ = (f) => {
+    if (!held.has(f)) {
+      let names = [];
+      if (spawnSync('git', ['cat-file', '-e', `${parent}:${f}`], { cwd: repo }).status === 0) {
+        const earlier = checkout(repo, parent);
+        try {
+          const r = run(earlier.dir, f, repo);
+          names = [...r.passed, ...r.failed];
+        } finally {
+          earlier.done();
+        }
+      }
+      held.set(f, names);
+    }
+    return held.get(f);
+  };
   try {
     // the commit's test files and test support go across; what it removed from them goes too
     for (const [status, a, b] of changed) {
@@ -184,18 +205,18 @@ export function replay(repo, commit) {
         });
         continue;
       }
-      // the tests the file held before: the parent's own version of it, run at the parent
-      let old = [];
+      // the tests the file held before: the parent's own version of it, and of every other test file the commit changed
+      // or removed in the same test folder, so a test moved between files is not taken for a new one (§13, 9 Oct 2026)
       const was = changed.find(([s, a, b]) => (b ?? a) === file && s.startsWith('R'))?.[1] ?? file;
-      if (spawnSync('git', ['cat-file', '-e', `${parent}:${was}`], { cwd: repo }).status === 0) {
-        const earlier = checkout(repo, parent);
-        try {
-          const r = run(earlier.dir, was, repo);
-          old = [...r.passed, ...r.failed];
-        } finally {
-          earlier.done();
-        }
-      }
+      const folder = testFolder(was);
+      const sources = [
+        was,
+        ...changed
+          .filter(([s]) => s === 'M' || s === 'D' || s.startsWith('R'))
+          .map(([, a]) => a ?? '')
+          .filter((f) => f !== was && (JS_TEST.test(f) || PY_TEST.test(f)) && testFolder(f) === folder),
+      ];
+      const old = sources.flatMap((f) => before_(f));
       const fresh = now.passed.filter((n) => !old.includes(n));
       const then = run(before.dir, file, repo);
       out.files.push({

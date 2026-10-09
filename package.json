@@ -12,7 +12,7 @@
     "node": ">=24"
   },
   "scripts": {
-    "build": "npm run build --workspace packages/obsidian",
+    "build": "npm run build --workspace packages/graph-spec && npm run build --workspace packages/obsidian",
     "dev": "npm run dev --workspace packages/obsidian",
     "typecheck": "tsc -p packages/core --noEmit && tsc -p packages/obsidian --noEmit && tsc -p packages/graph-spec --noEmit",
     "lint": "eslint . --max-warnings 0",

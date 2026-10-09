@@ -1,0 +1,68 @@
+// What reading a note's graph blocks gives (spec §3): each graph ready to draw — its boxes, its links, and the estimates
+// drawn where what was written was a near miss — and the problems, each with its block, its line and its fix.
+import type { World } from '@graph-note/graph-spec';
+import type { Estimate } from './estimates.ts';
+
+/** A gql block in a note: its text, and the note line (1-based) its opening fence is on. */
+export interface Block {
+  text: string;
+  line: number;
+}
+
+/** One thing to draw: its id, its kinds joined by a dot, and its text. */
+export interface Box {
+  key: string;
+  kind: string;
+  text: string;
+}
+
+/** One link to draw, read in its schema's words. */
+export interface Link {
+  from: string;
+  type: string;
+  reading: string;
+  to: string;
+}
+
+/** One graph, ready to draw: its boxes, its links, and the estimates added where what was written was a near miss. */
+export interface GraphDrawing {
+  graph: string;
+  boxes: Box[];
+  /** Every link as written, in order — what graph_svg.py draws. */
+  links: Link[];
+  /** Near misses drawn as guesses (spec §3): never written to the note. */
+  estimates: Estimate[];
+}
+
+/** Something that could not be read: its graph, the block (index in the note), the line in that block (1 = its graph line), what is wrong, and the fix. */
+export interface Problem {
+  graph: string | null;
+  block: number;
+  line: number;
+  message: string;
+  fix: string;
+  /** An error leaves something out of the drawing; a warning draws it, as an estimate. */
+  severity: 'error' | 'warning';
+  /** The text left out of the drawing, when a path or clause was. */
+  dropped?: string;
+  /** A word to change, and what it could be changed to — one fix each. */
+  replace?: { written: string; with: string[] };
+  /** Text to add, at a 0-based line and character of the block: the fix, as an edit. */
+  insert?: { line: number; character: number; text: string };
+  /** What the fix is called where it is offered, when "Change … to …" would not say it. */
+  fixTitle?: string;
+  /** Exactly where the word to change is: a 0-based line of the block, and the characters it spans on it. */
+  span?: { line: number; character: number; end: number };
+}
+
+/** What a note's graph blocks say: each graph as drawn, the problems, and the graphs themselves, as written and joined. */
+export interface NoteReading {
+  graphs: Map<string, GraphDrawing>;
+  problems: Problem[];
+  /** The blocks as written, up to the one drawn. */
+  texts: string[];
+  /** The world as read, for checks and details. */
+  world: World;
+  /** The whole note's world, whose schemas lock a graph even when written after the block drawn (§5). */
+  whole: World;
+}

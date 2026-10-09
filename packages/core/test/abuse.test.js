@@ -3,7 +3,8 @@
 // exception, and never nothing. The drawing engine is run on what is read, too, and must always return a picture.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readNote, gqlBlocks, graphOfBlock } from '../src/drawing.ts';
+import { readNote } from '../src/drawing.ts';
+import { gqlBlocks, graphOfBlock } from '../src/blocks.ts';
 import { loadEngine, draw } from '../src/render.ts';
 import { diagnostics, completions, readBack, textVersion } from '../src/help.ts';
 import { tokenize } from '../src/tokens.ts';

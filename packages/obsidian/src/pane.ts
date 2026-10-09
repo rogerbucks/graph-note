@@ -4,7 +4,7 @@ import { ItemView } from 'obsidian';
 import type { ViewStateResult, WorkspaceLeaf } from 'obsidian';
 import type GraphNotePlugin from './main';
 import type { EditTarget } from './main';
-import { BlockEditor } from './block-editor';
+import { BlockEditor } from './block-editor/block-editor';
 
 /** The edit pane's view type. */
 export const PANE = 'graph-note-pane';

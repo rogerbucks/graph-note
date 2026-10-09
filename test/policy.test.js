@@ -20,7 +20,7 @@ import {
   findsNetwork,
   findsHotkeys,
   forbiddenImports,
-} from './lib/repo.js';
+} from './repository/repo.js';
 
 const SEMVER = /^\d+\.\d+\.\d+$/;
 const EXACT = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
