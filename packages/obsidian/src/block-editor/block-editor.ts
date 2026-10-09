@@ -14,7 +14,7 @@ import { withFix } from './problem-help';
 import type { FixChanges } from './problem-help';
 import { TextHelp } from './text-help';
 import { KeptField } from './kept-field';
-import { addForYouInField } from './added-for-you';
+import { addForYouInField, stepOverInField } from './added-for-you';
 import { FieldHistory } from './editor-history';
 import type { Step } from './editor-history';
 import { BlockNote } from './block-note';
@@ -212,9 +212,10 @@ export class BlockEditor extends Component {
     const el = this.el,
       s = this.session;
     if (!el || !s) return;
+    const stepped = stepOverInField(el.text, s.text); // before the record: undo goes back to text that was on screen
     this.undoes.record(el.text, change);
     // what is added for you is a step of its own, so the very next undo takes back only it (spec §4)
-    if (addForYouInField(el.text, s.text, this.note.text, s.ref.line)) this.undoes.record(el.text, 'other');
+    if (addForYouInField(el.text, s.text, this.note.text, s.ref.line, stepped)) this.undoes.record(el.text, 'other');
     s.type(el.text.value);
     this.analyse();
     this.help.announce(el); // new problems said to screen readers, the focus left where it is

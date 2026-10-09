@@ -89,7 +89,7 @@ function owner(reading: NoteReading, graph: string, head: string, round: boolean
 /** The first of `names` that `typed` begins, not written already in the braces: its rest, with the colon that follows it. */
 function nameFor(names: string[], typed: string, written: string, next: string): Inline | null {
   const used = new Set([...blanked(written).matchAll(/(\w+)\s*:/g)].map((m) => m[1]));
-  const name = names.find((n) => n.toLowerCase().startsWith(typed.toLowerCase()) && !used.has(n));
+  const name = names.find((n) => n.startsWith(typed) && !used.has(n));
   if (!name) return null;
   const add = name.slice(typed.length) + (next.startsWith(':') ? '' : ': ');
   return add ? { add, kind: 'property', caretAfter: add.length } : null;
@@ -172,7 +172,9 @@ export function inlineCompletion(reading: NoteReading, graph: string, text: stri
   if (word) {
     const named = (re: RegExp, kind: 'kind' | 'type'): Inline | null => {
       const item = re.test(before)
-        ? completions(reading, graph, text, caret).items.find((i) => i.label.length > word.length)
+        ? completions(reading, graph, text, caret).items.find(
+            (i) => i.label.length > word.length && i.label.startsWith(word),
+          )
         : null;
       return item ? { add: item.label.slice(word.length), kind, caretAfter: item.label.length - word.length } : null;
     };
@@ -188,7 +190,7 @@ export function inlineCompletion(reading: NoteReading, graph: string, text: stri
     const words =
       (top?.ch === '{' && previous === ':') || (!top && previous === '=')
         ? VALUES
-        : !top && previous !== ':'
+        : !top && previous !== ':' && previous !== '.' // after a dot it is a property of something, never a keyword
           ? STATEMENTS
           : [];
     const add = word.length >= KEYWORD_FROM && !found ? wordFor(words, word) : null;

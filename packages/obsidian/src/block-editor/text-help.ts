@@ -89,9 +89,9 @@ export class TextHelp {
     this.fixbar(el);
   }
 
-  /** Takes the inline match into the field, then calls `then`; says whether there was a match to take. */
-  takeInline(t: HTMLTextAreaElement, then: () => void): boolean {
-    if (!this.inline.take(t)) return false;
+  /** Takes the inline match into the field (not a closer, if `wordsOnly`), then calls `then`; says whether it did. */
+  takeInline(t: HTMLTextAreaElement, then: () => void, wordsOnly: boolean): boolean {
+    if (!this.inline.take(t, wordsOnly)) return false;
     then();
     return true;
   }

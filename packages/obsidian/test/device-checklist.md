@@ -65,12 +65,14 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
       undo takes either back. Both work in the pane, in place and in the note itself.
 - [ ] In the note itself, with Obsidian's "Auto pair brackets" on (Settings → Editor), and again with it off: the comma
       comes when ( is typed, and the colon when ] is typed or stepped over.
-- [ ] Completing as you type, in the pane and in the card: typing ( shows a faint ) after the caret, and the text after it
-      does not move. Tab or Enter writes it with the caret left inside; Escape puts it away until the next typing; one
-      undo takes back what Tab or Enter wrote. Typing the closer yourself where one is already there steps over it.
-      Likewise a keyword (MA), a kind after (z:, a type after -[:, a property name after {, and a value already used
-      after name: '. Enter with nothing shown is still a new line. On the phone, Enter on the keyboard takes it
-      (there is no Tab), and the suggestions row still works.
+- [ ] Completing as you type, in the pane and in the card: typing { shows a faint } after the caret, and the text after
+      it does not move. Tab writes it with the caret left inside; Escape puts it away until the next typing; one undo
+      takes back what Tab wrote. Typing the closer yourself where one is already there steps over it (and a stepped-over
+      ] still gets its colon), and one undo goes back to the text as it was on screen. Likewise a keyword (MA), a kind
+      after (z:, a type after -[:, a property name after {, and a value already used after name: '; these Enter takes
+      too, but Enter never takes a closer, and with nothing to take it is a new line. After a bare ( the names are
+      suggested and Tab takes the first, as before. On the phone, Enter on the keyboard takes a word (there is no Tab);
+      confirm that the Enter ending an IME composition (e.g. Japanese keyboard) takes nothing.
 - [ ] A graph locked by an earlier build shows a ⚠ that its schema does not declare its types; its fix adds the
       DECLARES links, and the ⚠ goes.
 - [ ] A link type left without its colon is drawn as that type, with a ⚠ whose fix writes the colon. A new type written

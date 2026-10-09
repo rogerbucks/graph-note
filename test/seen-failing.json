@@ -428,5 +428,19 @@
       "seen_failing_first": false,
       "evidence": "a control case for a pure refactor (no_monolith_files, spec §13, 9 Oct 2026): it holds that a package's entry point keeps every name and import it had, so it passes before and after the split by design"
     }
+  },
+  "packages/obsidian/test/inline-completion.test.js": {
+    "the best match, shown inline > it is never written to the note unasked": {
+      "seen_failing_first": false,
+      "evidence": "a guard, written with the feature: the old code inserted nothing unasked either, so it passes before and after by design; it holds that the inline match never is (commit e935115)"
+    },
+    "accepting with Tab or Enter > with no match shown, Enter is a new line as before, and Shift-Tab, Control-Enter and a composing Enter leave it alone": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: with no match shown the keys did nothing special before, so it holds what must not change and passes before and after by design (commit e935115)"
+    },
+    "accepting with Tab or Enter > the suggestions row keeps working: Tab still takes a name, where the match would only close the bracket": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: Tab took the first suggestion before the inline match existed, so it holds what must not change and passes before and after by design (commit e935115)"
+    }
   }
 }

@@ -73,6 +73,11 @@ describe('keywords', () => {
     assert.deepEqual(offer('(x:Option {done: fa'), { add: 'lse', kind: 'keyword', caretAfter: 3 });
   });
 
+  test('no keyword is offered after a dot: it is a property of something', () => {
+    assert.equal(offer('a.se'), null);
+    assert.equal(offer('WHERE a.in'), null);
+  });
+
   test('a statement keyword is not offered inside a pattern, a string or a comment', () => {
     assert.notEqual(offer('(MA')?.kind, 'keyword');
     assert.equal(offer("(x:Option {name: 'MA"), null);
@@ -84,6 +89,14 @@ describe('kinds and relationship types', () => {
   test('after (name: a kind already in the graph is completed', () => {
     assert.deepEqual(offer('(z:Op'), { add: 'tion', kind: 'kind', caretAfter: 4 });
     assert.deepEqual(offer('(z:So'), { add: 'urce', kind: 'kind', caretAfter: 4 });
+  });
+
+  test('only what the typed letters begin exactly is offered: another case would write an undeclared spelling', () => {
+    assert.deepEqual(offer('(z:op'), { add: ')', kind: 'closer', caretAfter: 1 });
+    assert.deepEqual(offer('(large)-[:an'), { add: ']', kind: 'closer', caretAfter: 1 });
+    const schema = `// graph: reader
+(k1:Meta:ElementType {name: 'Reason', kind: 'node'})`;
+    assert.equal(offer('(z:re', readNote([BLOCK, schema]))?.kind, 'closer');
   });
 
   test('with no kind matching, the open bracket is closed instead', () => {
@@ -114,6 +127,7 @@ describe('property names and values already used', () => {
   test('after a comma inside the braces too, but never a name already written there', () => {
     assert.deepEqual(offer("(z:Option {name: 'a', pr"), { add: 'ice: ', kind: 'property', caretAfter: 5 });
     assert.notEqual(offer("(z:Option {name: 'a', na")?.kind, 'property');
+    assert.notEqual(offer('(z:Option {NA')?.kind, 'property', 'a name is case-sensitive: NA is not na');
   });
 
   test('a link’s properties are those used on links of that type', () => {

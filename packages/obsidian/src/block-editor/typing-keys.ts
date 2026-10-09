@@ -16,8 +16,8 @@ export interface Typing {
   first: () => CompletionItem | undefined;
   accept: (item: CompletionItem) => void;
   step: (e: Event, which: Step) => void;
-  /** Takes the inline match, if one is shown; says whether it did. */
-  takeInline: () => boolean;
+  /** Takes the inline match, if one is shown — a closer only for Tab, never for Enter; says whether it did. */
+  takeInline: (key: 'Tab' | 'Enter') => boolean;
   /** Puts the inline match away, if one is shown; says whether it did. */
   dismissInline: () => boolean;
 }
@@ -49,7 +49,7 @@ export function fieldTyping(
       e.preventDefault();
       if (undoes.step(el.text, which)) act.changed();
     },
-    takeInline: () => help.takeInline(el.text, () => act.typed('other')),
+    takeInline: (key) => help.takeInline(el.text, () => act.typed('other'), key === 'Enter'),
     dismissInline: () => help.dismissInline(el, s),
   };
 }
@@ -75,15 +75,24 @@ export function watchTyping(owner: Component, text: HTMLTextAreaElement, on: Typ
 
 /** Watches the keys and input events that take a suggestion or ask for undo or redo. */
 export function watchKeys(owner: Component, text: HTMLTextAreaElement, on: Typing): void {
+  // WebKit ends a composition, then sends the Enter that committed it with isComposing false: so a composition just
+  // ended counts as composing for the next key, and until the next tick
+  let composedJustNow = false;
+  owner.registerDomEvent(text, 'compositionend', () => {
+    composedJustNow = true;
+    window.setTimeout(() => (composedJustNow = false), 0);
+  });
   owner.registerDomEvent(text, 'keydown', (e: KeyboardEvent) => {
+    const composing = e.isComposing || composedJustNow;
+    composedJustNow = false;
     // the inline match first; with none shown, each key does what it did
     if (e.key === 'Escape' && on.dismissInline()) {
       e.preventDefault();
       e.stopPropagation();
       return;
     }
-    const plain = !(e.shiftKey || e.ctrlKey || e.metaKey || e.altKey || e.isComposing);
-    if ((e.key === 'Tab' || e.key === 'Enter') && plain && on.takeInline()) {
+    const plain = !(e.shiftKey || e.ctrlKey || e.metaKey || e.altKey || composing);
+    if ((e.key === 'Tab' || e.key === 'Enter') && plain && on.takeInline(e.key)) {
       e.preventDefault();
       return;
     }

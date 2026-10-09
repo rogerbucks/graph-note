@@ -23,8 +23,8 @@ export class InlineCompletion {
 
   /**
    * Looks for the match at the field's caret, and says whether what is shown changed. Nothing is offered unless the field
-   * has the focus and a caret alone; and the closer of something written in only when there is no name to suggest first
-   * (`suggested`) — the closer of a bracket just opened is always offered.
+   * has the focus and a caret alone, and a closer only when there is no name to suggest first (`suggested`), so Tab keeps
+   * taking the name after a bare (.
    */
   update(t: HTMLTextAreaElement, reading: NoteReading | null, graph: string, suggested: boolean): boolean {
     const was = this.offer,
@@ -34,7 +34,7 @@ export class InlineCompletion {
       reading && !mute && t.ownerDocument.activeElement === t && t.selectionEnd === caret
         ? inlineCompletion(reading, graph, t.value, caret)
         : null;
-    const match = wanted && !(wanted.kind === 'closer' && wanted.caretAfter > 0 && suggested) ? wanted : null;
+    const match = wanted && !(wanted.kind === 'closer' && suggested) ? wanted : null;
     this.offer = match ? { at: caret, match } : null;
     return was?.at !== this.offer?.at || was?.match.add !== this.offer?.match.add;
   }
@@ -47,10 +47,14 @@ export class InlineCompletion {
     return true;
   }
 
-  /** Writes the match into the field, with the caret where the match says; says whether there was one to take. */
-  take(t: HTMLTextAreaElement): boolean {
+  /**
+   * Writes the match into the field, with the caret where the match says; says whether there was one to take. With
+   * `wordsOnly` a closer is left: Enter takes a word, never a closer, since typing the closer is free (it is stepped over).
+   */
+  take(t: HTMLTextAreaElement, wordsOnly = false): boolean {
     const o = this.offer;
-    if (!o || t.selectionStart !== o.at || t.selectionEnd !== o.at) return false;
+    if (!o || (wordsOnly && o.match.kind === 'closer') || t.selectionStart !== o.at || t.selectionEnd !== o.at)
+      return false;
     t.value = t.value.slice(0, o.at) + o.match.add + t.value.slice(o.at);
     t.setSelectionRange(o.at + o.match.caretAfter, o.at + o.match.caretAfter);
     this.offer = null;

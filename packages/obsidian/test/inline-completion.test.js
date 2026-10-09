@@ -20,13 +20,16 @@ function typeFocused(el, value, caret = value.length) {
 }
 const key = (el, k, more = {}) => textarea(el).dispatch('keydown', { key: k, ...more });
 
+/** A brace just opened: the closer is the match, there is no name to suggest, and no word to complete. */
+const OPEN = '(z:Option {';
+
 describe('the best match, shown inline', () => {
   test('a bracket just typed shows its closer as ghost text after the caret, and the field holds only what was typed', async () => {
     const env = await open();
     try {
-      typeFocused(env.el, READER + ',\n(');
-      assert.equal(ghost(env.el), ')');
-      assert.equal(textarea(env.el).value, READER + ',\n(', 'never in the field until accepted');
+      typeFocused(env.el, READER + ',\n' + OPEN);
+      assert.equal(ghost(env.el), '}');
+      assert.equal(textarea(env.el).value, READER + ',\n' + OPEN, 'never in the field until accepted');
     } finally {
       env.uninstall();
     }
@@ -35,10 +38,18 @@ describe('the best match, shown inline', () => {
   test('it is never written to the note unasked', async () => {
     const env = await open();
     try {
-      typeFocused(env.el, READER + ',\n(');
+      typeFocused(env.el, READER + ',\n' + OPEN);
+      key(env.el, 'Enter'); // at a closer-only ghost, Enter is a new line, which the browser makes: it takes nothing
+      assert.equal(textarea(env.el).value, READER + ',\n' + OPEN);
       await wait(400);
-      assert.equal(note(env).includes('\n(\n'), true, 'the note has what was typed');
-      assert.equal(note(env).includes('()'), false);
+      assert.ok(note(env).includes(READER + ',\n' + OPEN + '\n```'), 'the note has what was typed');
+      assert.equal(note(env).includes('{}'), false);
+      typeFocused(env.el, READER + ',\n(z:Opt');
+      textarea(env.el).dispatch('compositionend');
+      key(env.el, 'Enter'); // the Enter that commits an IME composition on WebKit, not composing for the browser
+      assert.equal(textarea(env.el).value, READER + ',\n(z:Opt');
+      await wait(400);
+      assert.equal(note(env).includes('(z:Option'), false);
     } finally {
       env.uninstall();
     }
@@ -72,14 +83,14 @@ describe('the best match, shown inline', () => {
     const env = await open();
     try {
       const t = textarea(env.el),
-        typed = READER + ',\n(';
+        typed = READER + ',\n' + OPEN;
       t.value = typed;
       t.setSelectionRange(typed.length, typed.length);
       t.dispatch('input');
       assert.equal(ghost(env.el), null, 'no focus');
       t.focus();
       t.dispatch('keyup');
-      assert.equal(ghost(env.el), ')');
+      assert.equal(ghost(env.el), '}');
       t.setSelectionRange(typed.length - 3, typed.length);
       t.dispatch('keyup');
       assert.equal(ghost(env.el), null, 'a selection');
@@ -88,7 +99,7 @@ describe('the best match, shown inline', () => {
       assert.equal(ghost(env.el), null, 'text after the caret');
       t.setSelectionRange(typed.length, typed.length);
       t.dispatch('keyup');
-      assert.equal(ghost(env.el), ')', 'and back again');
+      assert.equal(ghost(env.el), '}', 'and back again');
     } finally {
       env.uninstall();
     }
@@ -99,10 +110,10 @@ describe('accepting with Tab or Enter', () => {
   test('Tab writes the match, and a closer just opened leaves the caret inside', async () => {
     const env = await open();
     try {
-      typeFocused(env.el, READER + ',\n(');
+      typeFocused(env.el, READER + ',\n' + OPEN);
       assert.ok(key(env.el, 'Tab').defaultPrevented);
-      assert.equal(textarea(env.el).value, READER + ',\n()');
-      assert.equal(textarea(env.el).selectionStart, (READER + ',\n(').length);
+      assert.equal(textarea(env.el).value, READER + ',\n' + OPEN + '}');
+      assert.equal(textarea(env.el).selectionStart, (READER + ',\n' + OPEN).length);
       assert.equal(ghost(env.el), null);
     } finally {
       env.uninstall();
@@ -127,11 +138,11 @@ describe('accepting with Tab or Enter', () => {
       typeFocused(env.el, READER + ',\n(z:Zzz)');
       assert.equal(ghost(env.el), null);
       assert.equal(key(env.el, 'Enter').defaultPrevented, false);
-      typeFocused(env.el, READER + ',\n(');
+      typeFocused(env.el, READER + ',\n(z:Opt');
       assert.equal(key(env.el, 'Tab', { shiftKey: true }).defaultPrevented, false);
       assert.equal(key(env.el, 'Enter', { ctrlKey: true }).defaultPrevented, false);
       assert.equal(key(env.el, 'Enter', { isComposing: true }).defaultPrevented, false);
-      assert.equal(textarea(env.el).value, READER + ',\n(');
+      assert.equal(textarea(env.el).value, READER + ',\n(z:Opt');
     } finally {
       env.uninstall();
     }
@@ -201,17 +212,126 @@ describe('one undo takes an accepted match back', () => {
 });
 
 describe('typing the closer that is already there', () => {
+  /** A `}` typed at the caret just before the one that closes the brace, as a person types it. */
+  async function typeStep(env) {
+    typeFocused(env.el, READER + ',\n' + OPEN);
+    key(env.el, 'Tab');
+    typeFocused(env.el, READER + ',\n' + OPEN + '}}', (READER + ',\n' + OPEN).length + 1);
+  }
+
   test('steps over it: the text keeps one, and the caret goes past it', async () => {
     const env = await open();
     try {
+      await typeStep(env);
       const t = textarea(env.el);
-      typeFocused(env.el, READER + ',\n(');
-      key(env.el, 'Tab');
-      typeFocused(env.el, READER + ',\n(a)', (READER + ',\n(a').length);
-      typeFocused(env.el, READER + ',\n(a))', (READER + ',\n(a)').length);
-      assert.equal(t.value, READER + ',\n(a)');
+      assert.equal(t.value, READER + ',\n' + OPEN + '}');
       assert.equal(t.selectionStart, t.value.length);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('one undo goes back to what was on screen before, never to a doubled closer that was not', async () => {
+    const env = await open();
+    try {
+      await typeStep(env);
+      const t = textarea(env.el);
+      assert.ok(key(env.el, 'z', { metaKey: true }).defaultPrevented);
+      assert.equal(t.value, READER + ',\n' + OPEN + '}', 'the text as it was before the closer was typed');
+      assert.equal(t.selectionStart, (READER + ',\n' + OPEN).length, 'with the caret where it was');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a ] stepped over still gets the colon added for you, and one undo takes back only the colon', async () => {
+    const env = await open();
+    try {
+      const t = textarea(env.el),
+        before = READER + ',\n(eyes)-[favours]->(question)';
+      const at = before.lastIndexOf(']');
+      typeFocused(env.el, before, at);
+      typeFocused(env.el, before.slice(0, at) + ']' + before.slice(at), at + 1);
+      assert.equal(t.value, READER + ',\n(eyes)-[:FAVOURS]->(question)');
+      assert.equal(t.selectionStart, (READER + ',\n(eyes)-[:FAVOURS]').length);
+      key(env.el, 'z', { metaKey: true });
+      assert.equal(t.value, before, 'the colon taken back, the closer still stepped over');
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
+describe('what Enter takes and what it leaves', () => {
+  test('Enter never takes a closer: it is a new line, and Tab still takes the closer', async () => {
+    const env = await open();
+    try {
+      typeFocused(env.el, READER + ',\n' + OPEN);
+      assert.equal(ghost(env.el), '}');
+      assert.equal(key(env.el, 'Enter').defaultPrevented, false);
+      assert.ok(key(env.el, 'Tab').defaultPrevented);
+      assert.equal(textarea(env.el).value, READER + ',\n' + OPEN + '}');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('the Enter that follows a composition ending, as WebKit sends it with isComposing false, takes nothing; the next does', async () => {
+    const env = await open();
+    try {
+      typeFocused(env.el, READER + ',\n(z:Opt');
+      textarea(env.el).dispatch('compositionend');
+      assert.equal(key(env.el, 'Enter').defaultPrevented, false);
+      assert.equal(textarea(env.el).value, READER + ',\n(z:Opt');
+      assert.ok(key(env.el, 'Enter').defaultPrevented, 'a later plain Enter takes the word again');
+      assert.equal(textarea(env.el).value, READER + ',\n(z:Option');
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
+describe('the case being typed', () => {
+  // a kind or type written in another case is replaced by the declared spelling, by the suggestions row, in one step;
+  // the inline match offers only what the typed letters begin exactly, so it never writes an undeclared spelling
+  test('a kind in another case is no inline match; Tab takes the declared kind in its place, and one undo takes it back', async () => {
+    const env = await open();
+    try {
+      const t = textarea(env.el);
+      typeFocused(env.el, READER + ',\n(z:op');
       assert.equal(ghost(env.el), null);
+      assert.ok(key(env.el, 'Tab').defaultPrevented);
+      assert.equal(t.value, READER + ',\n(z:Option');
+      key(env.el, 'z', { metaKey: true });
+      assert.equal(t.value, READER + ',\n(z:op');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a relationship type or a property name in another case is no inline match either', async () => {
+    const env = await open();
+    try {
+      typeFocused(env.el, READER + ',\n(large)-[:an');
+      assert.equal(ghost(env.el), null);
+      key(env.el, 'Tab');
+      assert.equal(textarea(env.el).value, READER + ',\n(large)-[:ANSWERS');
+      typeFocused(env.el, READER + ',\n(z:Option {NA');
+      assert.notEqual(ghost(env.el), 'me: ', 'NA is not na');
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
+describe('the suggestions row, as before', () => {
+  test('after a bare ( the names are suggested, no closer is shown, and Tab takes the first name', async () => {
+    const env = await open();
+    try {
+      typeFocused(env.el, READER + ',\n(');
+      assert.equal(ghost(env.el), null);
+      assert.ok(key(env.el, 'Tab').defaultPrevented);
+      assert.equal(textarea(env.el).value, READER + ',\n(eyes');
     } finally {
       env.uninstall();
     }
