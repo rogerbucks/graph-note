@@ -415,6 +415,7 @@ export function fakeDocument(width = 700) {
       (doc.listeners.get(type) ?? []).filter((f) => f !== fn),
     );
   doc.defaultView = {
+    innerHeight: 800,
     setTimeout,
     clearTimeout,
     requestAnimationFrame: (f) => setTimeout(f, 0),

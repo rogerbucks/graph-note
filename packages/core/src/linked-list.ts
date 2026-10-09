@@ -7,6 +7,7 @@ import { blankText, blockItems, items } from './block-items.ts';
 import { readNote } from './drawing.ts';
 import { hops } from './estimates.ts';
 import { parseValue, propertiesOf, setProperty, spanOf } from './inspector.ts';
+import { nameFromText } from './name-suggestions.ts';
 import type { NoteReading } from './note-reading.ts';
 
 /** The relationship and the kind a list's things are linked by and of. */
@@ -39,18 +40,6 @@ export function listValues(words: string): string[] {
     .split(/[,;\n]/)
     .map((v) => v.trim())
     .filter((v) => v !== '' && !seen.has(norm(v)) && !!seen.add(norm(v)));
-}
-
-/**
- * A thing's id made from its value and its kind: accents stripped, other runs of non-word characters joined by an
- * underscore, so the id is one ASCII word as the reader requires. A value with no ASCII letter takes its kind's name.
- * The id only names the thing — two values may make the same one, so it is never used to tell values apart.
- */
-export function idFromValue(value: string, kind: string): string {
-  const plain = value.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  const s = plain.replace(/[^A-Za-z0-9_]+/g, '_').replace(/^_+|_+$/g, '');
-  if (!/[A-Za-z]/.test(s)) return kind.toLowerCase();
-  return /^[A-Za-z_]/.test(s) ? s : `_${s}`;
 }
 
 /** What is known of the graph's things and links: from the reading, and from the block as it now stands. */
@@ -114,10 +103,8 @@ function itemsFor(
   const lines: string[] = [];
   const isNew = id === null;
   if (id === null) {
-    let n = 1;
-    const base = idFromValue(value, shape.kind);
-    id = base;
-    while (k.taken.has(id)) id = `${base}_${++n}`;
+    // the id follows the style of the graph's own names, and is none of them; the value keeps its words as the name
+    id = nameFromText(value, new Map([...k.taken].map((t) => [t, k.things.get(t)?.kinds[0] ?? ''])), shape.kind);
     k.taken.add(id);
     k.things.set(id, { kinds: [shape.kind], text: value });
     const name = id === value ? '' : ` {name: ${(parseValue('text', value) as { gql: string }).gql}}`;

@@ -8,6 +8,8 @@ import type { ListShape, ListValue, NoteReading } from '@graph-note/core';
 /** A list the inspector knows of though the graph may hold no value for it yet: whose thing, and its shape. */
 export interface DeclaredList extends ListShape {
   thing: string;
+  /** The name typed for the property when the list was made: shown beside the relationship while the editor stays open. */
+  label?: string;
 }
 
 /** What a list row needs of the inspector: the reading and the thing, the block's text and a way to replace it, and its messages. */
@@ -34,8 +36,17 @@ export interface ListRow {
   merge: (things: ListValue[]) => void;
 }
 
-/** Adds a list row to the inspector's rows: the name of the relationship, the chips of the things linked, and an add field. */
-export function listRow(parent: HTMLElement, c: ListContext, shape: ListShape, start: ListValue[]): ListRow {
+/**
+ * Adds a list row to the inspector's rows: the name of the relationship — with the name typed for the property before it,
+ * when there is one — the chips of the things linked, and an add field.
+ */
+export function listRow(
+  parent: HTMLElement,
+  c: ListContext,
+  shape: ListShape,
+  start: ListValue[],
+  label?: string,
+): ListRow {
   const values = [...start];
   const el = parent.createDiv({
     cls: 'metadata-property',
@@ -54,7 +65,7 @@ export function listRow(parent: HTMLElement, c: ListContext, shape: ListShape, s
   setIcon(icon, 'list');
   keyEl.createSpan({
     cls: 'metadata-property-key-input graph-note-list-key',
-    text: shape.rel,
+    text: label ? `${label} · ${shape.rel}` : shape.rel,
     attr: { title: `${shape.kind} things linked by ${shape.rel}` },
   });
   const box = el.createDiv({ cls: 'metadata-property-value' }).createDiv({ cls: 'multi-select-container' });

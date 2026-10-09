@@ -124,6 +124,16 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
       says which. The add field adds a value on Enter, or when it is left; an empty value, or one already there, says
       why and writes nothing. Phone: the chips, their x and the add field are easy to hit in the sheet, and the keyboard
       does not cover the field being typed in.
+- [ ] Tap a box so its properties show, then press Done (or the book icon). The properties stay open but read-only, as a
+      tap shows them outside edit mode: no fields, no Add property, no x on a chip and no add box. Pressing Edit here
+      again, and tapping the box, brings the editable properties back. Details closed before Done stay closed.
+- [ ] Add a property named `rivals` and choose List. The form says, in one sentence, that the values become things
+      linked by the relationship and that the row is named after it. After Make list the row reads `rivals · HAS_RIVAL`
+      for as long as the editor stays open, and `HAS_RIVAL` alone after Done and a reload. A value typed in as
+      `Reading tablet` is written as `reading_tablet` when the graph's names are snake case, with the words kept as its name.
+- [ ] Phone and desktop: with the properties lower down the screen, so the icon is near the bottom of the window, the
+      property type menu opens above the icon and shows every item down to Remove, Checkbox included; with room below
+      it opens under the icon as before. On the phone, where the rows are taller, it also fits.
 - [ ] While editing, in the card or the pane, choosing a box selects the pattern that writes it in the text, and
       choosing a link selects its brackets and arrow (slice 2).
 - [ ] Phone: the properties open as a sheet at the bottom of the screen, and every field and icon is easy to hit.

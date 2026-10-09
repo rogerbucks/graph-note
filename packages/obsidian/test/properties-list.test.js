@@ -222,7 +222,7 @@ describe('a list as chips in the inspector', () => {
       addChip(panel, 'HAS_TAG', 'Open late');
       assert.equal(
         text(el),
-        `${BLOCK_OF(LISTED)},\n(Open_late:Tag {name: 'Open late'}),\n(large)-[:HAS_TAG]->(Open_late)`,
+        `${BLOCK_OF(LISTED)},\n(open_late:Tag {name: 'Open late'}),\n(large)-[:HAS_TAG]->(open_late)`,
       );
       assert.deepEqual(chips(panel, 'HAS_TAG'), ['light', 'cheap', 'Open late']);
       assert.equal(
@@ -278,7 +278,7 @@ describe('a list as chips in the inspector', () => {
       assert.match(alert(el).textContent, /already in the list/);
       addChip(panel, 'HAS_TAG', 'Fast');
       assert.deepEqual(chips(panel, 'HAS_TAG'), ['light', 'cheap', 'Open late', 'Fast']);
-      assert.equal((text(el).match(/\(Open_late:Tag/g) ?? []).length, 1);
+      assert.equal((text(el).match(/\(open_late:Tag/g) ?? []).length, 1);
     } finally {
       env.uninstall();
     }
@@ -318,6 +318,92 @@ describe('a list as chips in the inspector', () => {
       assert.deepEqual(chips(panel, 'HAS_TOPIC'), []);
       addChip(panel, 'HAS_TOPIC', 'rain');
       assert.match(text(el), /\(rain:Topic\),\n\(large\)-\[:HAS_TOPIC\]->\(rain\)/);
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
+describe('the name typed for a list stays visible', () => {
+  const keyOf = (panel, rel) => row(panel, rel).querySelector('.graph-note-list-key').textContent;
+  /** Adds a property named `name` to the open details and chooses List for it, leaving the form open. */
+  const choosing = (env, panel, name) => {
+    panel.querySelector('.metadata-add-button').click();
+    enter(field(panel, 'New property name'), name);
+    pick(env, panel, '', 'List');
+  };
+
+  test('the form says, in one sentence, that the values become linked things and the row is named after the relationship', async () => {
+    const env = await load({ files: { [PATH]: NOTE3 } });
+    try {
+      const el = await editing(env);
+      tapKey(el, 'large');
+      const panel = el.querySelector('.graph-note-details');
+      choosing(env, panel, 'rivals');
+      assert.equal(field(panel, 'Kind of the linked things').value, 'Rival');
+      assert.equal(field(panel, 'Relationship from this thing').value, 'HAS_RIVAL');
+      const said = panel.querySelector('.graph-note-list-form .graph-note-list-note');
+      assert.equal(
+        said.textContent,
+        'Each value of rivals becomes a thing linked by the relationship, and the row is named after it.',
+      );
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('for the rest of the session the row is labelled with the typed name and the relationship', async () => {
+    const env = await load({ files: { [PATH]: NOTE3 } });
+    try {
+      const el = await editing(env);
+      tapKey(el, 'large');
+      const panel = el.querySelector('.graph-note-details');
+      choosing(env, panel, 'rivals');
+      labelled(panel, 'Make list').click();
+      assert.equal(keyOf(panel, 'HAS_RIVAL'), 'rivals · HAS_RIVAL');
+      addChip(panel, 'HAS_RIVAL', 'Reading tablet');
+      assert.match(
+        text(el),
+        /\(reading_tablet:Rival \{name: 'Reading tablet'\}\),\n\(large\)-\[:HAS_RIVAL\]->\(reading_tablet\)/,
+      );
+      // the details drawn again, on another thing and back, keep the label
+      tapKey(el, 'q');
+      tapKey(el, 'large');
+      assert.equal(keyOf(el.querySelector('.graph-note-details'), 'HAS_RIVAL'), 'rivals · HAS_RIVAL');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a property that had values is labelled with its name too', async () => {
+    const env = await load({ files: { [PATH]: NOTE3 } });
+    try {
+      const el = await editing(env);
+      tapKey(el, 'large');
+      const panel = el.querySelector('.graph-note-details');
+      makeList(env, panel, 'tags', 'Tag', 'HAS_TAG');
+      assert.equal(keyOf(panel, 'HAS_TAG'), 'tags · HAS_TAG');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('after a reload only the relationship shows: the typed name is recorded nowhere', async () => {
+    const env = await load({ files: { [PATH]: NOTE3 } });
+    try {
+      const el = await editing(env);
+      tapKey(el, 'large');
+      const panel = el.querySelector('.graph-note-details');
+      choosing(env, panel, 'rivals');
+      labelled(panel, 'Make list').click();
+      addChip(panel, 'HAS_RIVAL', 'Reading tablet');
+      labelled(el, 'Done').click();
+      await until(() => el.querySelector('textarea') === null);
+      await until(() => env.state.files.get(PATH).includes('(large)-[:HAS_RIVAL]->(reading_tablet)'), 2000);
+      assert.doesNotMatch(env.state.files.get(PATH), /rivals/, 'the note does not hold the typed name');
+      const again = await editing(env);
+      tapKey(again, 'large');
+      assert.equal(keyOf(again.querySelector('.graph-note-details'), 'HAS_RIVAL'), 'HAS_RIVAL');
     } finally {
       env.uninstall();
     }

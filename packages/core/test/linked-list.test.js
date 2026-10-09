@@ -51,21 +51,50 @@ describe('choosing List for a property', () => {
     );
   });
 
-  test('a thing is named from its value as a simple slug, and keeps the words it was given as its name', () => {
-    const block = SHOP.replace('quiet, cheap', "Fast Wi-Fi, it\\'s 24/7");
+  test('a thing is named from its value in the graph’s own style, and keeps the words it was given as its name', () => {
+    const block = SHOP.replace('quiet, cheap', "Fast Wi-Fi, it\\'s open");
     const r = made(block);
     const text = ok(r);
-    assert.deepEqual(linked(text, 'cafe'), ['Fast_Wi_Fi', 'it_s_24_7']);
-    assert.match(text, /\(Fast_Wi_Fi:Tag \{name: 'Fast Wi-Fi'\}\)/);
-    assert.match(text, /\(it_s_24_7:Tag \{name: 'it\\'s 24\/7'\}\)/);
+    assert.deepEqual(linked(text, 'cafe'), ['fast_wifi', 'its_open']);
+    assert.match(text, /\(fast_wifi:Tag \{name: 'Fast Wi-Fi'\}\)/);
+    assert.match(text, /\(its_open:Tag \{name: 'it\\'s open'\}\)/);
     const drawn = reading(text)
       .graphs.get('shop')
-      .boxes.find((b) => b.key === 'Fast_Wi_Fi');
+      .boxes.find((b) => b.key === 'fast_wifi');
     assert.equal(drawn.text, 'Fast Wi-Fi');
     assert.deepEqual(r.things, [
-      { thing: 'Fast_Wi_Fi', text: 'Fast Wi-Fi' },
-      { thing: 'it_s_24_7', text: "it's 24/7" },
+      { thing: 'fast_wifi', text: 'Fast Wi-Fi' },
+      { thing: 'its_open', text: "it's open" },
     ]);
+  });
+
+  test('in a graph of snake_case names, Reading tablet is reading_tablet, with its words kept as the name', () => {
+    const block = `// graph: shop\n(large_reader:Rival {name: 'Large reader'}),\n(book_shop:Place {name: 'Book shop', rivals: 'Reading tablet'})`;
+    const text = ok(
+      makeList(block, reading(block), 'shop', 'book_shop', 'rivals', { rel: 'HAS_RIVAL', kind: 'Rival' }),
+    );
+    assert.match(text, /\(reading_tablet:Rival \{name: 'Reading tablet'\}\)/);
+    assert.deepEqual(linked(text, 'book_shop', 'HAS_RIVAL'), ['reading_tablet']);
+  });
+
+  test('in a camelCase graph it is readingTablet, and in a PascalCase graph ReadingTablet', () => {
+    const camel = `// graph: shop\n(largeReader:Rival {name: 'Large reader'}),\n(bookShop:Place {name: 'Book shop', rivals: 'Reading tablet'}),\n(nightOwl:Person)`;
+    const rival = { rel: 'HAS_RIVAL', kind: 'Rival' };
+    const text = ok(makeList(camel, reading(camel), 'shop', 'bookShop', 'rivals', rival));
+    assert.match(text, /\(readingTablet:Rival \{name: 'Reading tablet'\}\)/);
+    const pascal = camel
+      .replace(/largeReader/g, 'LargeReader')
+      .replace(/bookShop/g, 'BookShop')
+      .replace(/nightOwl/g, 'NightOwl');
+    const upper = ok(makeList(pascal, reading(pascal), 'shop', 'BookShop', 'rivals', rival));
+    assert.match(upper, /\(ReadingTablet:Rival \{name: 'Reading tablet'\}\)/);
+  });
+
+  test('accents and other scripts behave as a name suggested from text does, and a reserved word is numbered', () => {
+    const text = ok(made(SHOP.replace('quiet, cheap', 'Zoë’s Café noir, 大阪, match')));
+    assert.deepEqual(linked(text, 'cafe'), ['zoes_cafe_noir', 'tag', 'match_2']);
+    assert.equal(graphOf(text).p('zoes_cafe_noir').name, 'Zoë’s Café noir');
+    assert.equal(problems(reading(text)).length, 0);
   });
 
   test('a thing of the kind that already has that name is reused, not written a second time', () => {
@@ -147,9 +176,9 @@ describe('a value added to a list, or removed', () => {
   test('a value added is a thing of the kind, linked, written at the end of the block', () => {
     const r = add(LISTED, 'Open late');
     const text = ok(r);
-    assert.equal(text, `${LISTED},\n(Open_late:Tag {name: 'Open late'}),\n(cafe)-[:HAS_TAG]->(Open_late)`);
-    assert.deepEqual(linked(text, 'cafe'), ['quiet', 'cheap', 'Open_late']);
-    assert.deepEqual(r.things, [{ thing: 'Open_late', text: 'Open late' }]);
+    assert.equal(text, `${LISTED},\n(open_late:Tag {name: 'Open late'}),\n(cafe)-[:HAS_TAG]->(open_late)`);
+    assert.deepEqual(linked(text, 'cafe'), ['quiet', 'cheap', 'open_late']);
+    assert.deepEqual(r.things, [{ thing: 'open_late', text: 'Open late' }]);
   });
 
   test('a value that names a thing already there is linked to it, not written again; one already in the list is refused', () => {
@@ -166,7 +195,7 @@ describe('a value added to a list, or removed', () => {
     const once = ok(addToList(LISTED, stale, 'shop', 'cafe', TAG, 'Open late'));
     assert.match(addToList(once, stale, 'shop', 'cafe', TAG, 'open late').reason, /already in the list/);
     const other = ok(addToList(once, stale, 'shop', 'cafe', TAG, 'open-late'));
-    assert.match(other, /\(open_late:Tag/, 'a different value, a different thing');
+    assert.match(other, /\(openlate:Tag/, 'a different value, a different thing');
     assert.equal(graphOf(other).labelled('Tag').length, 4);
   });
 
@@ -229,25 +258,25 @@ describe('review fixes: values are never merged, comments never lost, and the ed
     assert.equal(props(text, 'tag_2').name, '大阪');
   });
 
-  test('A-B and A B are two things, each keeping its words as its name', () => {
-    const text = ok(made(SHOP.replace('quiet, cheap', 'A-B, A B')));
-    assert.deepEqual(linked(text, 'cafe'), ['A_B', 'A_B_2']);
-    assert.deepEqual([props(text, 'A_B').name, props(text, 'A_B_2').name], ['A-B', 'A B']);
+  test('The Tree and A Tree are two things, each keeping its words as its name', () => {
+    const text = ok(made(SHOP.replace('quiet, cheap', 'The Tree, A Tree')));
+    assert.deepEqual(linked(text, 'cafe'), ['tree', 'tree_2']);
+    assert.deepEqual([props(text, 'tree').name, props(text, 'tree_2').name], ['The Tree', 'A Tree']);
   });
 
-  test('a value is never reused through its slug: Open-late is not Open_late, whatever the case', () => {
+  test('a value is never reused through its slug: Open late is not Open_late, whatever the case', () => {
     const block = LISTED_BLOCK.replace('(sam:Person', '(Open_late:Tag),\n(sam:Person');
-    const first = ok(addToList(block, reading(block), 'shop', 'cafe', TAG, 'Open-late'));
-    assert.match(first, /\(Open_late_2:Tag \{name: 'Open-late'\}\)/);
+    const first = ok(addToList(block, reading(block), 'shop', 'cafe', TAG, 'Open late'));
+    assert.match(first, /\(open_late_2:Tag \{name: 'Open late'\}\)/);
     const second = ok(addToList(block, reading(block), 'shop', 'cafe', TAG, 'open-late'));
-    assert.match(second, /\(open_late:Tag \{name: 'open-late'\}\)/);
+    assert.match(second, /\(openlate:Tag \{name: 'open-late'\}\)/);
   });
 
-  test('accents are stripped from an id and kept in the name: café is cafe, Müller is Muller', () => {
+  test('accents are stripped from an id and kept in the name: café is cafe, Müller is muller', () => {
     const text = ok(made(SHOP.replace('quiet, cheap', 'café, Müller')));
-    assert.deepEqual(linked(text, 'cafe'), ['cafe_2', 'Muller']);
+    assert.deepEqual(linked(text, 'cafe'), ['cafe_2', 'muller']);
     assert.equal(props(text, 'cafe_2').name, 'café');
-    assert.equal(props(text, 'Muller').name, 'Müller');
+    assert.equal(props(text, 'muller').name, 'Müller');
   });
 
   test('removing the last value takes its item and its comma, never a comment', () => {
