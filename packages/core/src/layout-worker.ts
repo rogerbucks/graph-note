@@ -312,6 +312,7 @@ export class LayoutRunner {
   }
 
   private drop(): void {
+    this.o.clock.clearTimeout(this.startTimer); // a worker put away before it was ready is not waited for
     this.port?.terminate();
     this.port = null;
     this.ready = false;

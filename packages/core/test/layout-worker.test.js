@@ -343,6 +343,23 @@ describe('a layout no longer wanted', () => {
     r.close();
     assert.deepEqual(await Promise.all(waiting), [null, null, null]);
   });
+
+  test('a worker put away before it was ready leaves no timer behind, to hold the page or the process', async () => {
+    const pending = new Set();
+    const clock = {
+      setTimeout: (run, ms) => {
+        const t = setTimeout(() => (pending.delete(t), run()), ms);
+        pending.add(t);
+        return t;
+      },
+      clearTimeout: (t) => (pending.delete(t), clearTimeout(t)),
+    };
+    const r = new LayoutRunner({ worker: served().spawn, page: served().spawn, clock });
+    const waiting = r.draw(drawingOf(READER));
+    r.close();
+    assert.equal(await waiting, null);
+    assert.equal(pending.size, 0, 'the start limit’s timer went with the worker');
+  });
 });
 
 describe('when the engine fails', () => {
