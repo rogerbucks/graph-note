@@ -375,6 +375,27 @@ describe('the name typed for a list stays visible', () => {
     }
   });
 
+  test('the label lasts the session: Done, then Edit here again, still shows the typed name', async () => {
+    const env = await load({ files: { [PATH]: NOTE3 } });
+    try {
+      const el = await editing(env);
+      tapKey(el, 'large');
+      const panel = el.querySelector('.graph-note-details');
+      choosing(env, panel, 'rivals');
+      labelled(panel, 'Make list').click();
+      addChip(panel, 'HAS_RIVAL', 'Reading tablet');
+      labelled(el, 'Done').click();
+      await until(() => !el.querySelector('textarea'), 2000);
+      labelled(el, 'Edit here').click();
+      await until(() => !!el.querySelector('textarea'), 2000);
+      // the details stay open through Done and Edit here, drawn again by a new editor
+      assert.ok(row(panel, 'HAS_RIVAL'), 'the list made in this session is still offered');
+      assert.equal(keyOf(panel, 'HAS_RIVAL'), 'rivals · HAS_RIVAL');
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('a property that had values is labelled with its name too', async () => {
     const env = await load({ files: { [PATH]: NOTE3 } });
     try {
@@ -400,10 +421,18 @@ describe('the name typed for a list stays visible', () => {
       labelled(el, 'Done').click();
       await until(() => el.querySelector('textarea') === null);
       await until(() => env.state.files.get(PATH).includes('(large)-[:HAS_RIVAL]->(reading_tablet)'), 2000);
-      assert.doesNotMatch(env.state.files.get(PATH), /rivals/, 'the note does not hold the typed name');
-      const again = await editing(env);
-      tapKey(again, 'large');
-      assert.equal(keyOf(again.querySelector('.graph-note-details'), 'HAS_RIVAL'), 'HAS_RIVAL');
+      const written = env.state.files.get(PATH);
+      assert.doesNotMatch(written, /rivals/, 'the note does not hold the typed name');
+      // a reload: the plugin loaded afresh on the note as written
+      env.uninstall();
+      const reloaded = await load({ files: { [PATH]: written } });
+      try {
+        const again = await editing(reloaded);
+        tapKey(again, 'large');
+        assert.equal(keyOf(again.querySelector('.graph-note-details'), 'HAS_RIVAL'), 'HAS_RIVAL');
+      } finally {
+        reloaded.uninstall();
+      }
     } finally {
       env.uninstall();
     }

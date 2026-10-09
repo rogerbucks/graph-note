@@ -230,12 +230,13 @@ export class FakeElement {
   click() {
     return this.dispatch('click');
   }
-  focus() {
+  focus(options) {
     // as in a browser: an element that is not on the page cannot take the focus; one that does says so, as does the one
-    // that had it
+    // that had it; and, unless told preventScroll, the page scrolls to show it (counted, as the fake has no layout)
     const doc = this.ownerDocument,
       had = doc.activeElement;
     if (!this.isConnected || had === this) return;
+    if (!options?.preventScroll) doc.scrolledToFocus = (doc.scrolledToFocus ?? 0) + 1;
     doc.activeElement = this;
     if (had) {
       had.dispatch('blur');

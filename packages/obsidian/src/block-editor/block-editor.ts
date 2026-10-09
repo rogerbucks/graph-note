@@ -116,7 +116,7 @@ export class BlockEditor extends Component {
   }
 
   focus(): void {
-    this.el?.text.focus();
+    this.el?.text.focus({ preventScroll: true });
     if (this.el) this.field.typedIn();
   }
 
@@ -277,7 +277,7 @@ export class BlockEditor extends Component {
     const el = this.el;
     if (!el) return;
     el.text.value = withFix(el.text.value, changes);
-    el.text.focus();
+    el.text.focus({ preventScroll: true });
     this.typed('other');
   }
 
@@ -295,7 +295,7 @@ export class BlockEditor extends Component {
       reading = this.help.reading;
     if (!el || !host || !s || !reading || host.hidden) return;
     this.drawing.redraw(host, reading, s, () => !this.el || this.el !== el, {
-      edit: () => el.text.focus(),
+      edit: () => el.text.focus({ preventScroll: true }),
       select: (chosen) => this.reveal(chosen),
     });
   }
