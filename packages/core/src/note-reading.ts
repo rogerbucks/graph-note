@@ -2,6 +2,7 @@
 // drawn where what was written was a near miss — and the problems, each with its block, its line and its fix.
 import type { World } from '@graph-note/graph-spec';
 import type { Estimate } from './estimates.ts';
+import type { Refusal } from './layout-limits.ts';
 
 /** A gql block in a note: its text, and the note line (1-based) its opening fence is on. */
 export interface Block {
@@ -72,4 +73,6 @@ export interface NoteReading {
   world: World;
   /** The whole note's world, whose schemas lock a graph even when written after the block drawn (§5). */
   whole: World;
+  /** Set when the graph blocks were too large to read (§9, layout_contained): nothing was read, and this says why. */
+  tooLarge?: Refusal;
 }

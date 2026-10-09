@@ -13,7 +13,7 @@ module that ties the parts together, named as the folder is.
   schemas; opens the editors.
 - `block.ts` — one gql block in a note: drawn, or shown as code, never blank; as text with a banner when it is over a
   size or time limit.
-- `code.ts` — a block that is not a graph, shown as coloured code.
+- `code.ts` — a block that is not a graph, shown as coloured code; a very long one plain.
 - `live-preview.ts` — the editing view's own cards, so the page stays still while a block is typed in.
 - `editor.ts` — the comma and the colon added for you in the note's own editor.
 - `pane.ts` — the edit pane, which holds a block editor.
@@ -21,11 +21,12 @@ module that ties the parts together, named as the folder is.
 ### `src/layout-worker/` — the layout kept apart from the interface (spec §9, layout_contained)
 
 - `layout-worker.ts` — `Layouts`: every graph laid out in one Web Worker, started from a Blob URL of main.js's own copy
-  of the worker's bundle; on the page's thread where no worker can run, said once in the console. Says why it is built so.
+  of the worker's bundle; on the page's thread, with lower limits, only where the first worker cannot start; each said
+  once in the console, as is drawing paused after three layouts in a row fail. Says why it is built so.
 - `worker-entry.ts` — what runs inside the worker. `esbuild.config.mjs` bundles it on its own, Graphviz and all, into the
   function `layoutWorker` of the module `graph-note:layout-worker` (typed in `bundled-worker.d.ts`).
-- `refusal-banner.ts` — the banner over a graph shown as text because it is over a size limit or took too long: an icon
-  and the limit and numbers in words.
+- `refusal-banner.ts` — the banner over a graph shown as text because it is too large to read or draw, took too long,
+  or drawing is paused: an icon, and the limit and numbers in words.
 
 ### `src/properties/` — the inspector's properties, as Obsidian's Properties panel
 

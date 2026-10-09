@@ -1,49 +1,31 @@
-// The layout engine kept apart from the interface (spec §9, layout_contained): the layout source is written and Graphviz
-// run in a worker, behind a time limit and a size limit, so a huge or hostile graph never freezes the page. The core holds
-// both sides of the talk — the worker's (serveLayouts) and the page's (LayoutRunner) — and is handed the port between them,
-// so it stays host-free: the plugin gives it a Web Worker, a test a fake or a thread. The worker draws with render.ts's
-// own steps, so a drawing is byte for byte the same wherever it is laid out (spec §12, layout_byte_identical).
+// The layout engine kept apart from the interface (spec §9, layout_contained): the drawing instructions are written and
+// Graphviz run in a worker, behind the limits of layout-limits.ts, so a huge or hostile graph never freezes the page. The
+// core holds both sides of the talk — the worker's (serveLayouts) and the page's (LayoutRunner) — and is handed the port
+// between them, so it stays host-free: the plugin gives it a Web Worker, a test a fake or a thread. The worker draws with
+// render.ts's own steps, so a drawing is byte for byte the same wherever it is laid out (spec §12, layout_byte_identical).
 import type { GraphDrawing } from './note-reading.ts';
 import { chosen, directions } from './render.ts';
-import type { Direction, Drawn, Engine } from './render.ts';
+import type { Drawn, Engine } from './render.ts';
+import { counted, LAYOUT_LIMITS, measured, PAGE_LIMITS } from './layout-limits.ts';
+import type { LayoutLimits, Refusal } from './layout-limits.ts';
 
-/** How much a graph may be before it is shown as text instead of drawn, and how long its layout may take. */
-export interface LayoutLimits {
-  things: number;
-  links: number;
-  /** The most bytes (UTF-8) of layout source handed to Graphviz for one direction. */
-  sourceBytes: number;
-  /** The most milliseconds a layout may take, from being handed to the worker, before the worker is stopped. */
-  ms: number;
-}
-
-/**
- * The limits, until a setting changes them. A note's graphs are tens of things; 2,000 things or 5,000 links is far past
- * anything readable as a drawing, and about the most that lays out in a few seconds on a phone, while a graph written by
- * a script to be hostile is caught. 1 MB of layout source is about 2,000 things written at 500 characters each: past it,
- * a graph is text, not a drawing. Five seconds is ten times the half second a 50-thing graph may take (spec §11).
- */
-export const LAYOUT_LIMITS: LayoutLimits = { things: 2000, links: 5000, sourceBytes: 1_000_000, ms: 5000 };
-
-/**
- * Why a graph is shown as text instead of drawn: which limit it is over, and the numbers; or how long it was given. A
- * source refused before it was written is counted from its texts alone (`atLeast`): the source would be longer still.
- */
-export type Refusal =
-  | { reason: 'too-large'; limit: 'things' | 'links'; count: number; most: number }
-  | { reason: 'too-large'; limit: 'source'; count: number; most: number; atLeast?: true }
-  | { reason: 'timed-out'; ms: number };
-
-/** What the page asks the worker: one drawing laid out, and the most layout source it may write for it. */
+/** What the page asks the worker: one drawing laid out, and the most drawing instructions it may write for it. */
 export interface LayoutRequest {
   id: number;
   drawing: GraphDrawing;
   sourceBytes: number;
 }
 
-/** What the worker answers: the drawing, the source limit it was over, or what went wrong. */
+/**
+ * What the worker says: once, as it starts, that its engine is ready or why it failed; then, to each request, the drawing,
+ * the source limit it was over, or what went wrong.
+ */
 export type LayoutReply =
-  { id: number; drawn: Drawn } | { id: number; refusal: Refusal } | { id: number; error: string };
+  | { ready: true }
+  | { ready: false; error: string }
+  | { id: number; drawn: Drawn }
+  | { id: number; refusal: Refusal }
+  | { id: number; error: string };
 
 /** The page's end of a worker, shaped as a browser's Worker is. */
 export interface LayoutPort {
@@ -65,65 +47,39 @@ export interface Clock {
   clearTimeout(timer: unknown): void;
 }
 
-/** Where to lay out when a worker cannot start at all, and who to tell, once, that it is used. */
-export interface Fallback {
-  spawn: () => LayoutPort;
-  told: (why: unknown) => void;
+/** What the runner says once, to be told to a person: that layouts moved to the page, or stopped. */
+export type Told = 'on-the-page' | 'stopped';
+
+/** How the runner is set up by its host. */
+export interface RunnerOptions {
+  /** Starts a worker. Absent, or throwing, where none can run. */
+  worker?: () => LayoutPort;
+  /** A port to the engine on the page's own thread, for where no worker can run. */
+  page: () => LayoutPort;
+  clock: Clock;
+  /** The limits in a worker, read for each drawing, so a setting can change them. */
+  limits?: () => LayoutLimits;
+  /** The limits on the page's own thread. */
+  pageLimits?: () => LayoutLimits;
+  /** Told once when the layout moves to the page, and once when layouts stop. */
+  told?: (what: Told, why?: unknown) => void;
 }
 
-/** The UTF-8 length of a text, in bytes, as Graphviz reads it; with `inked`, only its characters that are not spaces. */
-function bytesOf(text: string, inked = false): number {
-  let n = 0;
-  for (let i = 0; i < text.length; i++) {
-    const c = text.charCodeAt(i);
-    if (inked && (c === 0x20 || (c >= 0x09 && c <= 0x0d))) continue;
-    if (c < 0x80) n += 1;
-    else if (c < 0x800) n += 2;
-    else if (c >= 0xd800 && c < 0xdc00) {
-      n += 4; // a pair of surrogates: one character, four bytes
-      i++;
-    } else n += 3;
-  }
-  return n;
-}
-
-/** Over the things or links limit, or plainly over the source limit by the boxes' texts alone: all cheap, no source written. */
-function counted(drawing: GraphDrawing, limits: LayoutLimits): Refusal | null {
-  if (drawing.boxes.length > limits.things)
-    return { reason: 'too-large', limit: 'things', count: drawing.boxes.length, most: limits.things };
-  if (drawing.links.length > limits.links)
-    return { reason: 'too-large', limit: 'links', count: drawing.links.length, most: limits.links };
-  // every character of a box's text but its spaces is written into the source, escaped: the source is at least this
-  let inked = 0;
-  for (const b of drawing.boxes) inked += bytesOf(b.text, true);
-  return inked > limits.sourceBytes
-    ? { reason: 'too-large', limit: 'source', count: inked, most: limits.sourceBytes, atLeast: true }
-    : null;
-}
-
-/** Over the source limit, measured exactly on the source written for each direction. */
-function measured(laid: Direction[], sourceBytes: number): Refusal | null {
-  const count = Math.max(0, ...laid.map((d) => bytesOf(d.dot)));
-  return count > sourceBytes ? { reason: 'too-large', limit: 'source', count, most: sourceBytes } : null;
-}
-
-/** Whether a drawing is over a size limit, and which: things, then links, then layout source, before any layout. */
-export function tooLarge(drawing: GraphDrawing, limits: LayoutLimits): Refusal | null {
-  return counted(drawing, limits) ?? measured(directions(drawing), limits.sourceBytes);
-}
+/** How many layouts in a row may time out before no more workers are started. */
+export const TIMEOUTS_BEFORE_STOPPING = 3;
 
 /**
- * The worker's side: writes each drawing's layout source, refuses one over the source limit, and lays the rest out with
- * the engine `load` starts — started once, on the first layout.
+ * The worker's side: starts its engine at once and says when it is ready, or why it failed; then writes each drawing's
+ * instructions, refuses one over the source limit, and lays the rest out.
  */
 export function serveLayouts(scope: LayoutScope, load: () => Promise<Engine>): void {
-  let engine: Promise<Engine> | null = null;
+  const engine = Promise.resolve().then(load);
   scope.onmessage = ({ data: { id, drawing, sourceBytes } }) => {
     const answer = async (): Promise<LayoutReply> => {
       const laid = directions(drawing);
       const refusal = measured(laid, sourceBytes);
       if (refusal) return { id, refusal };
-      const e = await (engine ??= load());
+      const e = await engine;
       return {
         id,
         drawn: chosen(
@@ -134,10 +90,16 @@ export function serveLayouts(scope: LayoutScope, load: () => Promise<Engine>): v
     };
     void answer().then(
       (reply) => scope.postMessage(reply),
-      (e: unknown) => scope.postMessage({ id, error: e instanceof Error ? e.message : String(e) }),
+      (e: unknown) => scope.postMessage({ id, error: said(e) }),
     );
   };
+  engine.then(
+    () => scope.postMessage({ ready: true }),
+    (e: unknown) => scope.postMessage({ ready: false, error: said(e) }),
+  );
 }
+
+const said = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 /** A port to a worker served on this thread, for where no worker can run: the same talk, with no time limit possible. */
 export function inThreadPort(serve: (scope: LayoutScope) => void): LayoutPort {
@@ -159,113 +121,191 @@ export function inThreadPort(serve: (scope: LayoutScope) => void): LayoutPort {
 
 interface Job {
   drawing: GraphDrawing;
-  done: (result: Drawn | Refusal | Error) => void;
+  owner: object | undefined;
+  done: (result: Drawn | Refusal | Error | null) => void;
   id?: number;
   timer?: unknown;
 }
 
 /**
- * The page's side: lays drawings out in one worker, reused, one layout at a time, each given the time limit from when it
- * is handed over — so a layout waiting behind a stuck one is never charged for the wait. A worker past the limit is
- * terminated, and the next layout starts a fresh one.
+ * The page's side: lays drawings out in one worker, reused, one layout at a time. A worker says when its engine is ready,
+ * and only then is a layout handed to it, given the time limit from that moment, so neither a cold start nor a wait
+ * behind a stuck layout is charged to it. A worker past the limit is terminated, and the next layout starts a fresh one;
+ * after TIMEOUTS_BEFORE_STOPPING in a row, none is started again. Only when the first worker cannot start, or its engine
+ * fails, do layouts move to the page's own thread — never one already handed to a worker.
  */
 export class LayoutRunner {
-  private spawn: () => LayoutPort;
-  private readonly clock: Clock;
-  private readonly limits: () => LayoutLimits;
-  private fallback: Fallback | undefined;
+  private readonly o: RunnerOptions;
   private port: LayoutPort | null = null;
-  private answered = false;
+  private ready = false;
+  private startTimer: unknown = null;
+  private everReady = false;
+  private onPage = false;
+  /** Layouts in a row that timed out, or whose worker could not start: at TIMEOUTS_BEFORE_STOPPING, none is started. */
+  private failures = 0;
   private busy: Job | null = null;
   private readonly queue: Job[] = [];
   private next = 1;
 
-  constructor(spawn: () => LayoutPort, clock: Clock, limits?: () => LayoutLimits, fallback?: Fallback) {
-    this.spawn = spawn;
-    this.clock = clock;
-    this.limits = limits ?? (() => LAYOUT_LIMITS);
-    this.fallback = fallback;
+  constructor(options: RunnerOptions) {
+    this.o = options;
+    if (!options.worker) this.toPage(null);
   }
 
-  /** The drawing, laid out and themed; or why it is not drawn. Rejects when the engine cannot start or lay it out. */
-  draw(drawing: GraphDrawing): Promise<Drawn | Refusal> {
+  private limits(): LayoutLimits {
+    return this.onPage ? (this.o.pageLimits?.() ?? PAGE_LIMITS) : (this.o.limits?.() ?? LAYOUT_LIMITS);
+  }
+
+  /**
+   * The drawing, laid out and themed; or why it is not drawn; or null when it is no longer wanted — superseded by a newer
+   * drawing for the same `owner` before its layout started, or the runner closed. Rejects when the engine fails.
+   */
+  draw(drawing: GraphDrawing, owner?: object): Promise<Drawn | Refusal | null> {
+    if (owner)
+      for (const old of this.queue.filter((j) => j.owner === owner)) {
+        this.queue.splice(this.queue.indexOf(old), 1);
+        old.done(null);
+      }
     const over = counted(drawing, this.limits());
-    if (over) return Promise.resolve(over);
+    if (over) return Promise.resolve(this.paged(over));
+    if (this.isStopped()) return Promise.resolve(this.stopped());
     return new Promise((resolve, reject) => {
-      this.queue.push({ drawing, done: (r) => (r instanceof Error ? reject(r) : resolve(r)) });
+      this.queue.push({ drawing, owner, done: (r) => (r instanceof Error ? reject(r) : resolve(r)) });
       this.pump();
     });
   }
 
-  /** Stops the worker, and every layout waiting on it. */
+  /** Stops the worker, and answers every layout waiting on it with null: no longer wanted. */
   close(): void {
-    const closed = new Error('the layout worker was closed');
-    for (const job of this.queue.splice(0)) job.done(closed);
+    for (const job of this.queue.splice(0)) job.done(null);
     const busy = this.busy;
     this.busy = null;
     this.drop();
     if (busy) {
-      this.clock.clearTimeout(busy.timer);
-      busy.done(closed);
+      this.o.clock.clearTimeout(busy.timer);
+      busy.done(null);
     }
+  }
+
+  private isStopped(): boolean {
+    return !this.onPage && this.failures >= TIMEOUTS_BEFORE_STOPPING;
+  }
+
+  private stopped(): Refusal {
+    return { reason: 'stopped', failures: this.failures };
+  }
+
+  /** A size refusal, marked as the page's when the page's tighter limits applied. */
+  private paged(r: Refusal): Refusal {
+    return this.onPage && r.reason === 'too-large' ? { ...r, page: true } : r;
   }
 
   private pump(): void {
-    const job = this.busy ? undefined : this.queue.shift();
-    if (!job) return;
+    if (this.busy || !this.queue.length || this.isStopped()) return;
+    if (!this.port) this.start();
+    if (!this.port || !this.ready) return; // a job waits for the engine to be ready: a cold start is not its time
+    const job = this.queue.shift() as Job;
     this.busy = job;
-    let port: LayoutPort;
-    try {
-      port = this.port ?? this.started();
-    } catch (e) {
-      this.settle(job, e instanceof Error ? e : new Error(String(e)));
-      return;
-    }
     const { ms, sourceBytes } = this.limits();
     job.id = this.next++;
-    job.timer = this.clock.setTimeout(() => {
+    job.timer = this.o.clock.setTimeout(() => {
       this.drop(); // the worker may be stuck for ever: stop it, and start afresh for the next layout
-      this.settle(job, { reason: 'timed-out', ms });
+      this.failed(job, { reason: 'timed-out', ms });
     }, ms);
-    port.postMessage({ id: job.id, drawing: job.drawing, sourceBytes });
+    this.port.postMessage({ id: job.id, drawing: job.drawing, sourceBytes });
   }
 
-  private started(): LayoutPort {
-    const port = this.spawn();
+  /** Starts a worker, or the page's port; the first that cannot start sends layouts to the page from then on. */
+  private start(): void {
+    let port: LayoutPort;
+    try {
+      port = this.onPage || !this.o.worker ? this.o.page() : this.o.worker();
+    } catch (e) {
+      this.failedToStart(e);
+      return;
+    }
     this.port = port;
-    this.answered = false;
+    this.ready = false;
+    this.startTimer = this.o.clock.setTimeout(() => {
+      if (port === this.port && !this.ready) this.failedToStart(new Error('the layout engine took too long to start'));
+    }, this.limits().startMs);
     port.onmessage = ({ data }) => {
+      if (port !== this.port) return;
+      if ('ready' in data) {
+        this.o.clock.clearTimeout(this.startTimer);
+        if (data.ready) {
+          this.ready = this.everReady = true;
+          this.pump();
+        } else this.failedToStart(new Error(data.error));
+        return;
+      }
       const job = this.busy;
-      if (port !== this.port || !job || data.id !== job.id) return;
-      this.answered = true;
-      this.settle(job, 'drawn' in data ? data.drawn : 'refusal' in data ? data.refusal : new Error(data.error));
+      if (!job || data.id !== job.id) return;
+      this.failures = 0;
+      this.settle(
+        job,
+        'drawn' in data ? data.drawn : 'refusal' in data ? this.paged(data.refusal) : new Error(data.error),
+      );
     };
     port.onerror = (why) => {
       if (port !== this.port) return;
+      if (!this.ready) {
+        this.failedToStart(why);
+        return;
+      }
+      // a worker that fails while laying out: its layout fails, never retried anywhere, and the next starts a fresh one
       const job = this.busy;
-      const neverStarted = !this.answered;
       this.drop();
-      if (neverStarted && this.fallback) this.fallBack(why, job);
-      else if (job) this.settle(job, new Error(`the layout worker failed: ${String(why)}`));
+      if (job) this.settle(job, new Error(`the layout worker failed: ${said(why)}`));
+      else this.pump();
     };
-    return port;
   }
 
-  /** A worker that could not start at all: lays out with the fallback from now on, says so once, and retries the layout. */
-  private fallBack(why: unknown, job: Job | null): void {
-    const { spawn, told } = this.fallback as Fallback;
-    this.fallback = undefined;
-    this.spawn = spawn;
-    told(why);
-    if (!job) return;
-    this.clock.clearTimeout(job.timer);
-    this.busy = null;
-    this.queue.unshift(job);
-    this.pump();
+  /**
+   * A worker that could not start. The first ever sends layouts to the page from then on: none had been handed to it. A
+   * later one, replacing a worker that timed out, fails the layout waiting for it, and counts as a failure in a row; and
+   * on the page, the engine's own failure fails the layout waiting, as a loud fallback.
+   */
+  private failedToStart(why: unknown): void {
+    this.o.clock.clearTimeout(this.startTimer);
+    this.drop();
+    if (!this.everReady && !this.onPage) {
+      this.toPage(why);
+      this.pump();
+      return;
+    }
+    const job = this.queue.shift();
+    const error = new Error(`the layout engine could not start: ${said(why)}`);
+    if (this.onPage) {
+      if (job) this.settle(job, error);
+    } else if (job) this.failed(job, error);
+    else if (++this.failures === TIMEOUTS_BEFORE_STOPPING) this.o.told?.('stopped', this.failures);
   }
 
-  private settle(job: Job, result: Drawn | Refusal | Error): void {
-    this.clock.clearTimeout(job.timer);
+  private toPage(why: unknown): void {
+    this.onPage = true;
+    this.o.told?.('on-the-page', why);
+  }
+
+  /**
+   * A layout that timed out, or whose replacement worker could not start: one more failure in a row. At the last one
+   * allowed, no worker is started again, and every layout waiting is told so.
+   */
+  private failed(job: Job, result: Refusal | Error): void {
+    this.failures++;
+    if (!this.isStopped()) {
+      this.settle(job, result);
+      return;
+    }
+    this.o.clock.clearTimeout(job.timer);
+    if (this.busy === job) this.busy = null;
+    job.done(result);
+    this.o.told?.('stopped', this.failures);
+    for (const waiting of this.queue.splice(0)) waiting.done(this.stopped());
+  }
+
+  private settle(job: Job, result: Drawn | Refusal | Error | null): void {
+    this.o.clock.clearTimeout(job.timer);
     if (this.busy === job) this.busy = null;
     job.done(result);
     this.pump();
@@ -274,5 +314,6 @@ export class LayoutRunner {
   private drop(): void {
     this.port?.terminate();
     this.port = null;
+    this.ready = false;
   }
 }

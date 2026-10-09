@@ -84,6 +84,26 @@ export function items(text: string): Item[] {
 /** The 1-based line a character of the text is on. */
 export const lineAt = (text: string, pos: number): number => text.slice(0, pos).split('\n').length;
 
+/**
+ * The 1-based line of any character of a text, as lineAt gives it, found by a binary search of where the text's lines
+ * start, so asking for many never slices the text from its start again (spec §9: a broken block is read in time linear in
+ * its items, not in their square). It holds for any text with the same line breaks in the same places.
+ */
+export function lineIndex(text: string): (pos: number) => number {
+  const starts = [0];
+  for (let i = text.indexOf('\n'); i !== -1; i = text.indexOf('\n', i + 1)) starts.push(i + 1);
+  return (pos) => {
+    let lo = 0,
+      hi = starts.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if ((starts[mid] ?? 0) <= pos) lo = mid;
+      else hi = mid - 1;
+    }
+    return lo + 1;
+  };
+}
+
 /** The block with an item blanked out (newlines kept, so every other line keeps its number), with the comma beside it. */
 export function without(text: string, all: Item[], drop: Item[]): string {
   // UTF-16 units, as the places were counted: an emoji is two of them, and blanking by characters would slip (§3)

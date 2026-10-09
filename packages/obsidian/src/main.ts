@@ -104,20 +104,24 @@ export default class GraphNotePlugin extends Plugin {
   readonly layoutLimits: LayoutLimits = { ...LAYOUT_LIMITS };
 
   private layouts: Layouts | null = null;
+  private unloaded = false;
 
   /**
    * A graph laid out and themed apart from the interface, in one worker reused for every block (spec §9,
-   * layout_contained); or why it is shown as text. Rejects when the engine cannot start.
+   * layout_contained); or why it is shown as text; or null when it is no longer wanted — a newer drawing for the same
+   * `owner` (a card, an editor) asked for before it started, or the plugin unloaded. Rejects when the engine cannot start.
    */
-  layout(drawing: GraphDrawing): Promise<Drawn | Refusal> {
+  layout(drawing: GraphDrawing, owner?: object): Promise<Drawn | Refusal | null> {
+    if (this.unloaded) return Promise.resolve(null);
     this.layouts ??= new Layouts(
       () => this.layoutLimits,
       () => this.graphviz(),
     );
-    return this.layouts.draw(drawing);
+    return this.layouts.draw(drawing, owner);
   }
 
   override onunload(): void {
+    this.unloaded = true;
     this.layouts?.close();
     this.layouts = null;
   }

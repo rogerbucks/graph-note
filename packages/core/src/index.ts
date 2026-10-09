@@ -13,16 +13,17 @@ export type { Estimate } from './estimates.ts';
 export { themed, choose, sizeOf, fixed, withoutColorMix } from './theme.ts';
 export { loadEngine, draw, details, linkDetails } from './render.ts';
 export type { Engine, Drawn, Details, LinkDetail, LinkDetails } from './render.ts';
-export { LAYOUT_LIMITS, LayoutRunner, inThreadPort, serveLayouts, tooLarge } from './layout-worker.ts';
+export { LAYOUT_LIMITS, PAGE_LIMITS, READ_LIMITS, textTooLarge, tooLarge } from './layout-limits.ts';
+export type { LayoutLimits, ReadLimits, Refusal } from './layout-limits.ts';
+export { LayoutRunner, TIMEOUTS_BEFORE_STOPPING, inThreadPort, serveLayouts } from './layout-worker.ts';
 export type {
   Clock,
-  Fallback,
-  LayoutLimits,
   LayoutPort,
   LayoutReply,
   LayoutRequest,
   LayoutScope,
-  Refusal,
+  RunnerOptions,
+  Told,
 } from './layout-worker.ts';
 export { Zoom, MIN_SCALE, MAX_SCALE, STEP } from './zoom.ts';
 export type { Mode, Size, View, ZoomEvent } from './zoom.ts';

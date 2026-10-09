@@ -17,7 +17,7 @@ interface Choosing {
 /** Puts the session's graph, as laid out, into the pane's drawing; returns the view, or null when nothing is drawn. */
 function drawInPane(
   host: HTMLElement,
-  drawn: Drawn | Refusal | null,
+  drawn: Drawn | Refusal | undefined,
   reading: NoteReading,
   s: PaneSession,
   on: Choosing,
@@ -65,10 +65,15 @@ export class PaneDrawing extends Component {
   /** Draws the session's graph, as read, into `host` — unless, by the time it is laid out, `stale` says it is not wanted. */
   redraw(host: HTMLElement, reading: NoteReading, s: PaneSession, stale: () => boolean, on: Choosing): void {
     const d = reading.graphs.get(s.graph);
-    const laid = d && d.boxes.length ? this.plugin.layout(d) : Promise.resolve(null);
+    // too large to read, nothing was read (§9); and a layout this editor asked for before, not yet started, is dropped
+    const laid = reading.tooLarge
+      ? Promise.resolve(reading.tooLarge)
+      : d && d.boxes.length
+        ? this.plugin.layout(d, this)
+        : Promise.resolve(undefined);
     void laid
       .then((drawn) => {
-        if (stale()) return;
+        if (stale() || drawn === null) return;
         this.clear();
         const view = drawInPane(host, drawn, reading, s, on);
         if (!view) return;

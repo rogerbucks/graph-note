@@ -65,7 +65,9 @@ export class TextHelp {
 
   /** The coloured picture of the text, with each line read back and the inline match as ghost text where the caret is. */
   private picture(el: EditorParts, s: PaneSession): void {
-    if (this.reading)
+    // too large to read (§9): the picture is the text, plain, as colouring it would hold the page
+    if (this.reading?.tooLarge) el.overlay.setText(s.text);
+    else if (this.reading)
       paintText(el.overlay, s.text, this.problems, readBack(this.reading, s.graph, s.text), this.inline.ghost);
   }
 

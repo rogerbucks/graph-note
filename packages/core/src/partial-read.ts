@@ -3,7 +3,7 @@
 // missing comma, a link type without its colon and a thing with text but no name are each read as meant, with a warning
 // whose fix writes it so.
 import gs from '@graph-note/graph-spec';
-import { bareNames, items, lineAt, without } from './block-items.ts';
+import { bareNames, items, lineIndex, without } from './block-items.ts';
 import type { Item } from './block-items.ts';
 import { dataKind, graphOf } from './blocks.ts';
 import { nameGaps, withNames } from './name-gaps.ts';
@@ -70,6 +70,13 @@ function danglingComma(text: string): { text: string; problem: Omit<Problem, 'bl
 }
 
 /**
+ * How many characters of the note may be read again, in all, while parts that cannot be read are left out one by one:
+ * each is a read of every block anew. Five million is a few hundred retries of a large note, under a second on a
+ * desktop, and thousands of a note of ordinary size, so only a large and badly broken block is cut short (§9).
+ */
+const REREAD_BUDGET = 5_000_000;
+
+/**
  * Reads a note's data blocks, leaving out what cannot be read. Returns the blocks as read and the problems.
  * Each block is applied in order to a fresh store; when one fails, the item at the failing line is blanked and the
  * whole read starts again, so a half-applied block never leaves part of a bad path behind.
@@ -77,7 +84,9 @@ function danglingComma(text: string): { text: string; problem: Omit<Problem, 'bl
 export function readBlocks(texts: string[], shared: string[]): { store: gs.Store; problems: Problem[] } {
   const clean = texts.slice(),
     problems: Problem[] = [],
-    skip = new Set<number>();
+    skip = new Set<number>(),
+    lines: ((pos: number) => number)[] = [];
+  let reread = 0;
   texts.forEach((t, i) => {
     const k = dataKind(t);
     if (k === null) skip.add(i);
@@ -164,8 +173,10 @@ export function readBlocks(texts: string[], shared: string[]): { store: gs.Store
       fix: pe?.fix ?? 'check the line against the guide to writing a graph note',
     };
     const all = items(text);
+    // every change made to a block keeps its line breaks where they were, so its lines are indexed once
+    const lineAt = (lines[block] ??= lineIndex(texts[block] ?? ''));
     // "unexpected '('" straight after a path that ends its line with no comma: say so, and offer the comma
-    const opened = all.findIndex((it) => lineAt(text, it.from) === line),
+    const opened = all.findIndex((it) => lineAt(it.from) === line),
       prior = all[opened - 1];
     if (pe?.msg === "unexpected '('" && prior && prior.comma === -1 && text[prior.to - 1] === ')') {
       const at = text.slice(0, prior.to).split('\n'),
@@ -174,8 +185,8 @@ export function readBlocks(texts: string[], shared: string[]): { store: gs.Store
       problem.fix = `add a comma at the end of the line before, after ${lastLine}`;
       problem.insert = { line: at.length - 1, character: (at[at.length - 1] ?? '').length, text: ',' };
     }
-    const touching = all.filter((it) => lineAt(text, it.from) <= line && line <= lineAt(text, it.to - 1));
-    const before = all.filter((it) => lineAt(text, it.from) <= line).pop();
+    const touching = all.filter((it) => lineAt(it.from) <= line && line <= lineAt(it.to - 1));
+    const before = all.filter((it) => lineAt(it.from) <= line).pop();
     const drop = touching.length ? touching : before ? [before] : [];
     if (!drop.length || attempt > texts.length + all.length * 2) {
       skip.add(block);
@@ -199,7 +210,18 @@ export function readBlocks(texts: string[], shared: string[]): { store: gs.Store
       ].filter((x): x is Item => !!x);
       if (!chosen.length) chosen = drop;
     }
-    clean[block] = without(text, all, chosen);
+    // past the budget, the rest of the block is left out at once, rather than retried part by part (§9)
+    reread += clean.reduce((n, t, i) => n + (skip.has(i) ? 0 : t.length), 0);
+    let comma = -1;
+    if (reread > REREAD_BUDGET) {
+      const first = chosen[0]?.from ?? 0;
+      chosen = all.filter((it) => it.from >= first);
+      problem.message = `${problem.message} — too much of this block could not be read, so it is left out from this line on`;
+      // the comma before what is left out would end the block with nothing after it
+      comma = all.filter((it) => it.from < first).pop()?.comma ?? -1;
+    }
+    const cut = without(text, all, chosen);
+    clean[block] = comma === -1 ? cut : `${cut.slice(0, comma)} ${cut.slice(comma + 1)}`;
     problems.push({ ...problem, dropped: chosen.map((it) => text.slice(it.from, it.to)).join('\n') });
   }
 }

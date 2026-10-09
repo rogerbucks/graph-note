@@ -6,6 +6,7 @@ import type { Graph, World } from '@graph-note/graph-spec';
 import { estimate } from './estimates.ts';
 import type { GraphDrawing, NoteReading, Problem } from './note-reading.ts';
 import { readBlocks } from './partial-read.ts';
+import { textTooLarge } from './layout-limits.ts';
 import { undeclared, undeclaredUse } from './schema-checks.ts';
 
 /** A thing's text: its name, else its title, text or label, else its id — as graph-spec-draw.py chooses. */
@@ -63,6 +64,9 @@ function drawingOf(world: World, name: string, own: Graph | undefined, problems:
  */
 export function readNote(blocks: string[], upTo = blocks.length - 1, shared: string[] = []): NoteReading {
   const upto = blocks.slice(0, upTo + 1);
+  // measured before anything is read, so no block, however large or broken, holds the page while it is read (§9)
+  const tooLarge = textTooLarge(blocks);
+  if (tooLarge) return { graphs: new Map(), problems: [], world: {}, whole: {}, texts: upto, tooLarge };
   const { store, problems } = readBlocks(upto, shared);
   const world = gs.worldFromStore(store);
   const whole = upTo >= blocks.length - 1 ? world : gs.worldFromStore(readBlocks(blocks, shared).store);

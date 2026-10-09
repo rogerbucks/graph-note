@@ -17,7 +17,8 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 
 - `blocks.ts` — where each gql block of a note is, and what its graph line says.
 - `block-items.ts` — a block's top-level items (paths, SET, MATCH), so a bad one can be left out.
-- `partial-read.ts` — reading the blocks as far as they can be read, with a problem for each part left out.
+- `partial-read.ts` — reading the blocks as far as they can be read, with a problem for each part left out; past a budget
+  of re-reading, the rest of a badly broken block is left out at once, so reading never holds the page (spec §9).
 - `written-things.ts` — the things written in a block, found by their parentheses: name, kinds, properties, where they are.
 - `name-gaps.ts` — the things of a block that lack a name or a text, with the suggestion and a fix that writes it. No name:
   a warning, and the thing is read as if the suggested name were there, in a copy, never in the note. No text: a hint
@@ -36,10 +37,14 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `layout.ts` — the Graphviz layout source, byte-identical to the Python library's, a box drawn under a suggested name
   dashed and labelled so in both.
 - `render.ts` — laying out with the bundled engine, and what a box's or link's details are.
-- `layout-worker.ts` — the layout kept apart from the interface (spec §9, layout_contained): both sides of the talk with a
-  worker, through a port the host gives it — the worker's (`serveLayouts`) and the page's (`LayoutRunner`: one worker
-  reused, the size limits checked before any layout, the time limit, a fresh worker after one overruns). `LAYOUT_LIMITS`
-  holds the limits and why.
+- `layout-limits.ts` — how large a graph may be before it is shown as text (spec §9, layout_contained), each limit with
+  its reason: the note's text, measured before it is read (`READ_LIMITS`, `textTooLarge`, which `readNote` applies); the
+  things, links, longest word and drawing instructions, before any layout (`LAYOUT_LIMITS`, `tooLarge`); and the tighter
+  ones on the page's own thread (`PAGE_LIMITS`).
+- `layout-worker.ts` — the layout kept apart from the interface: both sides of the talk with a worker, through a port the
+  host gives it — the worker's (`serveLayouts`: its engine started at once, and "ready" said) and the page's
+  (`LayoutRunner`: one worker reused; each layout timed from "ready"; a fresh worker after one overruns, none after three
+  in a row; the page's thread only when the first worker cannot start; a layout superseded before it starts dropped).
 - `theme.ts` — the drawing's colours and size, from the theme.
 - `hits.ts` — what a tap lands on or near.
 - `zoom.ts` — zoom, pan and full screen.
