@@ -1,13 +1,14 @@
 // One gql block in a note (spec §3): a graph block is drawn, as built by the note's blocks up to it; anything else is
 // shown as coloured code. A graph is never blank: what can be read is drawn and the rest is listed; when nothing can be
 // read, or the engine cannot start, the text is shown with its problems or a banner.
+import { Notice } from 'obsidian';
 import type { MarkdownPostProcessorContext } from 'obsidian';
 import { completenessReport, draw, gqlBlocks, graphOfBlock, namesSharedSchema, readNote } from '@graph-note/core';
 import type { Block, Drawn, Problem } from '@graph-note/core';
 import type GraphNotePlugin from './main';
 import { renderCode } from './code';
 import { GraphView } from './graph-view/graph-view';
-import { readOnlyHere, whenPlaced } from './graph-view/placement';
+import { readOnlyHere, settlePlacements, whenPlaced } from './graph-view/placement';
 import { renderProblems } from './graph-view/problems-list';
 import type { ShownProblem } from './graph-view/problems-list';
 
@@ -106,8 +107,12 @@ export async function renderBlock(
         void plugin.openEditor(target);
       },
       // edit here: the editor in place sits in the card; one already open for this block moves into the redrawn card
+      // a card just put on the page is acted on at once; one not yet on it says so, rather than doing nothing
       onEditHere: () => {
+        if (!slot) settlePlacements();
         if (slot) void plugin.editHere(target, slot);
+        else
+          new Notice('This drawing is not on the page yet, so it cannot be edited here; edit it in the pane instead.');
       },
       onDoneEditing: () => {
         void plugin.inlineFor(target.path, target.line)?.done();
