@@ -16,3 +16,12 @@ spikes/*/main.js
 
 # Worktrees of agents working in parallel, made and removed by the tools.
 .claude/worktrees/
+
+# The test vault: only its notes and two settings are committed. What Obsidian writes as it runs, and the plugin
+# build linked in by scripts/test-vault.mjs, never are.
+/test-vault/*
+!/test-vault/*.md
+!/test-vault/.obsidian/
+/test-vault/.obsidian/*
+!/test-vault/.obsidian/app.json
+!/test-vault/.obsidian/community-plugins.json

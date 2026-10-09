@@ -95,6 +95,15 @@ describe('naming conventions', () => {
       assert.match(basename(f, '.py'), SNAKE, f);
   });
 
+  test('only a test is named like a test, so `node --test` never runs a script or a module as one', () => {
+    // Node's default test patterns: test.js, test-*.js, *.test.js, *-test.js, *_test.js, and anything in a test folder
+    const LIKE_A_TEST = /^(test|test-.+|.+[._-]test)\.(c|m)?js$/;
+    const named = walk('.').filter(
+      (f) => /\.(c|m)?js$/.test(f) && LIKE_A_TEST.test(basename(f)) && !/(^|\/)(test|tests)\//.test(f),
+    );
+    assert.deepEqual(named, []);
+  });
+
   test('types and classes are PascalCase; functions, methods and variables camelCase; constants UPPER_SNAKE', () => {
     const wrong = [];
     for (const f of PACKAGES.flatMap(sourceFiles)) {

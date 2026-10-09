@@ -110,4 +110,5 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/offline.test.js` — the bundled engine makes no network request.
 - `test/policy.test.js` — the plugin-store files, supply-chain pins and least-privilege CI.
 - `test/requirements.test.js` — the generated requirements copy: started requirements proved, tests where they say.
+- `test/test-vault.test.js` — the test vault: dummy notes tied to requirements, nothing Obsidian writes committed, each session clean.
 - `test/tests-first.test.js` — every test is seen to fail before its code, replayed commit by commit.
