@@ -95,7 +95,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `packages/core/test/imports.test.js` — the core imports no host.
 - `packages/obsidian/test/accessibility.test.js` — contrast in both themes, and a keyboard path for every action.
 - `packages/obsidian/test/build.test.mjs` — the build writes the files the plugin is installed from.
-- `packages/obsidian/test/inline.test.js` — editing in place in the drawing's card, and the inspector.
+- `packages/obsidian/test/inline.test.js` — editing in place in the drawing's card.
 - `packages/graph-spec/test/characterisation.test.mjs` — the library gives the answers recorded before it moved here.
 - `packages/graph-spec/test/commas.test.mjs` — both readers read a missing comma the same way.
 - `packages/graph-spec/test/layout.test.mjs` — the layout source is byte-identical to the Python library's.
