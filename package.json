@@ -1,6 +1,6 @@
 {
   "name": "graph-note",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "private": true,
   "description": "Draw the graphs written in notes, and edit them by typing or by dragging the drawing.",
   "license": "MIT",

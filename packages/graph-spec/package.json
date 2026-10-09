@@ -1,6 +1,6 @@
 {
   "name": "@graph-note/graph-spec",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "private": true,
   "description": "Reads graph blocks in the document profile and checks them against the graph spec's rules, in plain JavaScript with no dependencies.",
   "license": "MIT",
