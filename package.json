@@ -17,6 +17,9 @@
     "typecheck": "tsc -p packages/core --noEmit && tsc -p packages/obsidian --noEmit && tsc -p packages/graph-spec --noEmit",
     "lint": "eslint . --max-warnings 0",
     "test": "node --test",
+    "test:ai": "node --test --test-reporter=./scripts/quiet-reporter.mjs",
+    "test:ai:py": "uv run --locked --directory python/graph_spec python ../../scripts/quiet_unittest.py",
+    "test:changed": "node scripts/changed-tests.mjs",
     "build:layout": "node packages/core/esbuild.layout.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check ."

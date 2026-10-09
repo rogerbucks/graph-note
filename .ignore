@@ -1,0 +1,20 @@
+# Generated or bulky files, kept out of code searches. ripgrep and the tools built on it read this file; git, Prettier and
+# the linter do not, so nothing here is hidden from them. AGENTS.md says why each is here. Search one on purpose with
+# `rg --no-ignore PATTERN path`.
+
+# built: the checker bundle and the plugin
+packages/graph-spec/dist/
+dist/
+main.js
+
+# lock files
+package-lock.json
+python/graph_spec/uv.lock
+
+# generated records and copies: made by a script, never edited by hand
+test/tests-first.json
+THIRD_PARTY_NOTICES.md
+licences/texts/
+
+# the test vault's Obsidian settings and plugin copies (the vault arrives with its own branch)
+test-vault/.obsidian/
