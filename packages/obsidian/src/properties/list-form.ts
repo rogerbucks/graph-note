@@ -8,6 +8,8 @@ export interface ListFormOptions {
   rels: string[];
   /** The kind and the relationship suggested, from the property's name. */
   suggested: ListShape;
+  /** The name the user typed for the property, said in the form so it is not lost; empty when there is none. */
+  property?: string;
 }
 
 let forms = 0;
@@ -28,6 +30,11 @@ export function suggestShape(key: string): ListShape {
 export function listForm(parent: HTMLElement, o: ListFormOptions, done: (shape: ListShape | null) => boolean): void {
   const form = parent.createDiv({ cls: 'graph-note-list-form' });
   const id = ++forms;
+  const of = o.property ? ` of ${o.property}` : '';
+  form.createEl('p', {
+    cls: 'graph-note-list-note',
+    text: `Each value${of} becomes a thing linked by the relationship, and the row is named after it.`,
+  });
   const ask = (label: string, value: string, options: string[], name: string) => {
     const input = form.createEl('input', {
       cls: 'metadata-input metadata-input-text',

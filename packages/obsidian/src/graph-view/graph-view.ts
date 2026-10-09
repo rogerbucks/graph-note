@@ -58,7 +58,13 @@ export class GraphView extends MarkdownRenderChild {
     this.editButton = placed.editButton;
     if (this.editButton) {
       this.showEditing();
-      if (this.o.watchEditing) this.register(this.o.watchEditing(() => this.showEditing()));
+      if (this.o.watchEditing)
+        this.register(
+          this.o.watchEditing(() => {
+            this.showEditing();
+            this.details.refresh();
+          }),
+        );
     }
 
     list = renderProblems(root, problems, true, this.o.completeness);

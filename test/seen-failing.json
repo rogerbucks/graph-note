@@ -464,5 +464,11 @@
       "seen_failing_first": false,
       "evidence": "a control case, written with the change beside it: it holds what must not change (a card unloaded before it is placed is left alone), so it passes before and after by design"
     }
+  },
+  "packages/obsidian/test/menu-place.test.js": {
+    "where the property type menu is shown > with room below the icon it opens under it, at its left edge": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: with room below, the menu opened under the icon before the change and still does, so it passes before and after by design; the three cases near the bottom of the window are the tests that failed first"
+    }
   }
 }

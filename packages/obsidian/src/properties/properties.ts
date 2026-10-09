@@ -4,7 +4,7 @@
 // switch for true or false. It is built on Obsidian's own markup and classes, so it takes the theme for free. Each change is
 // checked against its type and written as text into the block being edited (§2, edits are text). A property chosen as a
 // List is held as things linked to this one, and shown as chips (list-row.ts), asked for in list-form.ts.
-import { Menu, setIcon } from 'obsidian';
+import { Menu, Platform, setIcon } from 'obsidian';
 import {
   linkedValues,
   listsOf,
@@ -17,6 +17,7 @@ import {
 } from '@graph-note/core';
 import type { ListShape, NoteReading, Property, PropType, Target } from '@graph-note/core';
 import { listForm, suggestShape } from './list-form';
+import { menuPosition } from './menu-place';
 import { listRow } from './list-row';
 import type { DeclaredList, ListRow } from './list-row';
 
@@ -134,11 +135,13 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
   const showList = (
     shape: ListShape,
     things = thing === null ? [] : linkedValues(o.reading, o.graph, thing, shape),
+    label = '',
   ) => {
     if (thing === null) return;
     const id = `${shape.rel}\u0000${shape.kind}`;
-    if (!o.lists.some((l) => l.thing === thing && l.rel === shape.rel && l.kind === shape.kind))
-      o.lists.push({ thing, ...shape });
+    // the name typed for the property is kept with the list for this editing session only: the note records no such name
+    let declared = o.lists.find((l) => l.thing === thing && l.rel === shape.rel && l.kind === shape.kind);
+    if (!declared) o.lists.push((declared = { thing, rel: shape.rel, kind: shape.kind, ...(label ? { label } : {}) }));
     const have = listRows.get(id);
     if (have) return have.merge(things);
     listRows.set(
@@ -160,6 +163,7 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
         },
         shape,
         things,
+        declared.label,
       ),
     );
   };
@@ -251,7 +255,7 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
       const g = o.reading.graphs.get(o.graph);
       const kinds = [...new Set((g?.boxes ?? []).flatMap((b) => b.kind.split(' · ').filter(Boolean)))].sort();
       const rels = [...new Set((g?.links ?? []).map((l) => l.type))].sort();
-      listForm(valueEl, { kinds, rels, suggested: suggestShape(state.key) }, (shape) => {
+      listForm(valueEl, { kinds, rels, suggested: suggestShape(state.key), property: state.key }, (shape) => {
         if (!shape) {
           alert.hidden = true;
           refield();
@@ -266,15 +270,21 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
         if (r.text !== o.text()) o.replace(r.text);
         keys.delete(state.key);
         el.remove();
-        showList(shape, r.things);
+        showList(shape, r.things, state.key);
         status.setText(`${shape.rel}: ${r.said}.`);
         return true;
       });
     };
     const menu = () => {
       const m = new Menu();
+      // every row added is counted, so the menu's height is estimated from what it holds
+      let rows = 0;
+      const addItem = (build: Parameters<Menu['addItem']>[0]) => {
+        rows++;
+        m.addItem(build);
+      };
       for (const t of TYPES) {
-        m.addItem((item) =>
+        addItem((item) =>
           item
             .setTitle(t.title)
             .setIcon(t.icon)
@@ -291,10 +301,11 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
         );
         // List, after Text, as Obsidian orders it: held as linked things, so only a thing can have one
         if (t.type === 'text' && thing !== null)
-          m.addItem((item) => item.setTitle('List').setIcon('list').onClick(askList));
+          addItem((item) => item.setTitle('List').setIcon('list').onClick(askList));
       }
+      rows++; // the separator takes a row's room
       m.addSeparator();
-      m.addItem((item) =>
+      addItem((item) =>
         item
           .setTitle('Remove')
           .setIcon('trash-2')
@@ -305,8 +316,11 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
             el.remove();
           }),
       );
-      const r = icon.getBoundingClientRect();
-      m.showAtPosition({ x: r.left, y: r.bottom });
+      // placed where every row stays on screen, measured in the window the icon is in and shown in that window's document
+      m.showAtPosition(
+        menuPosition(icon.getBoundingClientRect(), rows, icon.win.innerHeight, Platform.isPhone),
+        icon.doc,
+      );
     };
     icon.addEventListener('click', menu);
     icon.addEventListener('keydown', (e: KeyboardEvent) => {

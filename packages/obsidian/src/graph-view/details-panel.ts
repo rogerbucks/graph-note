@@ -16,6 +16,8 @@ export class DetailsPanel {
   private readonly svg: SVGSVGElement;
   private readonly viewport: HTMLElement;
   private readonly o: ViewOptions;
+  /** The box or link whose details are open, so they can be drawn again when editing ends. */
+  private shown: { key: string } | { link: number } | null = null;
 
   /** For the details element of a card, its drawing, the viewport the focus goes back to, and the card's options. */
   constructor(el: HTMLElement, svg: SVGSVGElement, viewport: HTMLElement, o: ViewOptions) {
@@ -41,6 +43,7 @@ export class DetailsPanel {
     const d = linkDetails(this.o.reading, this.o.graph, index);
     if (!d) return;
     this.select(null, index);
+    this.shown = { link: index };
     const el = this.panel(`${d.from.text} ${d.reading} ${d.to.text}`, d.type);
     const ul = el.createEl('ul');
     ul.createEl('li', { text: `From: ${d.from.text}` });
@@ -70,6 +73,7 @@ export class DetailsPanel {
     if (kind) head.createSpan({ cls: 'graph-note-kind', text: kind });
     button(head, 'Close details', 'x', () => {
       el.hidden = true;
+      this.shown = null;
       this.select(null);
       this.viewport.focus();
       const ed = this.o.editing?.();
@@ -78,9 +82,22 @@ export class DetailsPanel {
     return el;
   }
 
+  /**
+   * Draws open details again when editing starts or ends: the inspector is for edit mode only (spec §14), so what is open
+   * becomes the editable inspector while the card is edited, and the read-only view a tap shows otherwise. Details that
+   * are closed stay closed.
+   */
+  refresh(): void {
+    const shown = this.shown;
+    if (this.el.hidden || !shown) return;
+    if ('key' in shown) this.showDetails(shown.key);
+    else this.showLink(shown.link);
+  }
+
   /** What tapping an estimated link shows: in a sentence, what was written, what it was taken to mean, and the fix. */
   showEstimate(e: Estimate): void {
     this.select(null);
+    this.shown = null;
     const el = this.panel('⚠ Estimated link', 'a guess, not written');
     el.createEl('p', { text: e.explain.replace(/^Line \d+/, `Line ${this.o.lineOf(e)}`) });
   }
@@ -90,6 +107,7 @@ export class DetailsPanel {
     const d = details(this.o.reading, this.o.graph, key);
     if (!d) return;
     this.select(key);
+    this.shown = { key };
     const el = this.panel(d.text, d.kind);
     const links = (title: string, items: string[]) => {
       if (!items.length) return;
@@ -132,7 +150,10 @@ export class DetailsPanel {
       // a link is edited in its own brackets, counted among the links written in the block being edited
       inBlock: () =>
         'thing' in target ? target : { link: linkInBlock(this.o.reading, this.o.graph, target.link, text()) },
-      replace: (t) => ed.replace(t),
+      // only while this editor is still open on the card: a control left from before Done reaches nothing
+      replace: (t) => {
+        if (this.o.editing?.() === ed) ed.replace(t);
+      },
       lists: (ed.lists ??= []),
     });
   }
