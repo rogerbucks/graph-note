@@ -109,4 +109,5 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/licences.test.js` — licences through the whole build chain.
 - `test/offline.test.js` — the bundled engine makes no network request.
 - `test/policy.test.js` — the plugin-store files, supply-chain pins and least-privilege CI.
+- `test/requirements.test.js` — the generated requirements copy: started requirements proved, tests where they say.
 - `test/tests-first.test.js` — every test is seen to fail before its code, replayed commit by commit.

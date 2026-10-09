@@ -4,6 +4,7 @@ main.js
 dist/
 package-lock.json
 licences/
+requirements/
 spikes/
 python/
 *.md
