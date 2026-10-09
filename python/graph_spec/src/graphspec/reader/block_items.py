@@ -8,8 +8,8 @@ import re
 
 from graphspec.reader.whitespace import is_space
 
-# JavaScript's . — any character but a line break — which the core's patterns use
-_NOT_BREAK = "[^\n\r  ]"
+# any character but a line feed, the only line break, as the core's patterns write it: [^\n]
+_NOT_BREAK = "[^\n]"
 
 
 def _items(text):

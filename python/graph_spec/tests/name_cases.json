@@ -165,6 +165,21 @@
     ]
    ],
    "named": [[{ "line": 3, "character": 1, "name": "costsMuch" }]]
+  },
+  {
+   "about": "whitespace is what GQL names, as the graph reader reads it: U+001C and U+180E part a thing's kind and properties; U+FEFF does not, so what it is in is no thing",
+   "blocks": [
+    [
+     "// graph: ws\n(\u001c:Option᠎{name:\u001c'Large reader'}),\n(﻿:Option {name: 'Small reader'})",
+     "ws"
+    ]
+   ],
+   "named": [[{ "line": 1, "character": 1, "name": "large_reader" }]]
+  },
+  {
+   "about": "a string with an escaped line separator in it is blanked whole, as a line ends only at a line feed, so a thing after it is found",
+   "blocks": [["// graph: ws\n(a:T {name: 'one\\ two'}), (:T {name: 'Three'})", "ws"]],
+   "named": [[{ "line": 1, "character": 27, "name": "three" }]]
   }
  ]
 }

@@ -1,6 +1,7 @@
 // The things written in a block, found by their parentheses (editor spec §4): each with its name, kinds and properties and
 // where they are, so what a thing is missing can be told and fixed in place. Text inside strings and comments is never read.
 import { blankText, items } from './block-items.ts';
+import { isSpace, S, SPACE, trim, trimEnd } from './whitespace.ts';
 
 /** One thing as written in a block: where it is, its name, kinds and properties. */
 export interface Written {
@@ -22,10 +23,16 @@ export interface Written {
   broken: boolean;
 }
 
-const NODE = /^(\s*)([A-Za-z_]\w*)?\s*((?::\s*[A-Za-z_]\w*\s*)*)(\{[^}]*\})?\s*$/;
-const PROP = /\s*([A-Za-z_]\w*)\s*:\s*('(?:[^'\\]|\\.)*'|[^,}\s][^,}]*)\s*(,|$)/y;
+// whitespace as GQL names it (§3), and [^\n] for `.`, as the graph reader reads a block
+const NODE = new RegExp(`^(${S}*)([A-Za-z_]\\w*)?${S}*((?::${S}*[A-Za-z_]\\w*${S}*)*)(\\{[^}]*\\})?${S}*$`);
+const PROP = new RegExp(
+  `${S}*([A-Za-z_]\\w*)${S}*:${S}*('(?:[^'\\\\]|\\\\[^\\n])*'|[^,}${SPACE}][^,}]*)${S}*(,|$)`,
+  'y',
+);
+const BRACES_AND_SPACE = new RegExp(`[{}${SPACE}]`, 'g'),
+  SET_TEXT = new RegExp(`([A-Za-z_]\\w*)${S}*\\.${S}*([A-Za-z_]\\w*)${S}*=`, 'g');
 const unquote = (s: string) =>
-  s.slice(1, -1).replace(/\\(.)/g, (_, c: string) => (c === 'n' ? '\n' : c === 't' ? '\t' : c));
+  s.slice(1, -1).replace(/\\([^\n])/g, (_, c: string) => (c === 'n' ? '\n' : c === 't' ? '\t' : c));
 
 /** The properties that give a thing its text, in the order the drawing chooses among them. */
 export const TEXT_KEYS = ['name', 'title', 'text', 'label'];
@@ -75,9 +82,9 @@ function parse(text: string, blanked: string, open: number, close: number, match
   if (braces) {
     const body = text.slice(braces.open + 1, braces.close);
     PROP.lastIndex = 0;
-    while (body.slice(PROP.lastIndex).trim()) {
+    while (trim(body.slice(PROP.lastIndex))) {
       const p = PROP.exec(body);
-      if (!p || !p[1] || (!p[3] && body.slice(PROP.lastIndex).trim())) {
+      if (!p || !p[1] || (!p[3] && trim(body.slice(PROP.lastIndex)))) {
         broken = true;
         break;
       }
@@ -93,8 +100,8 @@ function parse(text: string, blanked: string, open: number, close: number, match
     labels,
     braces,
     props,
-    end: open + 1 + inner.trimEnd().length,
-    writes: !!(labels.length || (m[4] && m[4].replace(/[{}\s]/g, ''))),
+    end: open + 1 + trimEnd(inner).length,
+    writes: !!(labels.length || (m[4] && m[4].replace(BRACES_AND_SPACE, ''))),
     matched,
     broken,
   };
@@ -111,9 +118,9 @@ export function setTexts(text: string): Set<string> {
     if (word === 'SET') setting = true;
     else if (word === 'MATCH' || word === 'INSERT') setting = false;
     if (!setting) continue;
-    for (const m of here.matchAll(/([A-Za-z_]\w*)\s*\.\s*([A-Za-z_]\w*)\s*=/g)) {
+    for (const m of here.matchAll(SET_TEXT)) {
       let at = it.from + (m.index ?? 0) + m[0].length;
-      while (/\s/.test(text[at] ?? '')) at++;
+      while (isSpace(text[at] ?? '')) at++;
       if (TEXT_KEYS.includes(m[2] ?? '') && text[at] === "'" && text[at + 1] !== "'") out.add(m[1] ?? '');
     }
   }
