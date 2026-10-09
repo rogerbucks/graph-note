@@ -8,6 +8,8 @@ import type { App } from 'obsidian';
 import {
   PaneSession,
   TextHistory,
+  linkInBlock,
+  spanOf,
   colonFor,
   commaFor,
   namesSharedSchema,
@@ -213,6 +215,25 @@ export class BlockEditor extends Component {
     if (!t) return;
     t.value = text;
     this.typedAgain();
+  }
+
+  /**
+   * A box or a link chosen in the drawing: its pattern selected where it is written in the text being edited, with the
+   * focus in the text so the selection shows (select_moves_text, spec §4).
+   */
+  reveal(chosen: { thing: string } | { link: number }): void {
+    const el = this.el,
+      s = this.session;
+    if (!el || !s || !this.reading) return;
+    const text = el.text.value;
+    const where = spanOf(
+      text,
+      'thing' in chosen ? chosen : { link: linkInBlock(this.reading, s.graph, chosen.link, text) },
+    );
+    if (!where) return;
+    el.text.focus({ preventScroll: true });
+    el.text.setSelectionRange(where.from, where.to);
+    this.caretMoved();
   }
 
   /** Done, in place: writes what is left, then closes. */
@@ -722,6 +743,7 @@ export class BlockEditor extends Component {
             .map((p) => ({ ...p, noteLine: p.line })),
           lineOf: (at) => at.line,
           onEdit: () => el.text.focus(),
+          onSelect: (chosen) => this.reveal(chosen),
         });
         this.drawing = view;
         this.addChild(view);

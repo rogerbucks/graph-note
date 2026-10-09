@@ -2,7 +2,18 @@
 // zooms and pans by button, gesture and key (the core's Zoom decides; this passes the events in and shows the view), opens
 // full screen, and shows a box's details when it is tapped or opened from the keyboard.
 import { MarkdownRenderChild, Platform, setIcon } from 'obsidian';
-import { Zoom, details, linkDetails, linkInBlock, textVersion, withoutColorMix } from '@graph-note/core';
+import {
+  TapCycle,
+  Zoom,
+  details,
+  hitAreas,
+  linkDetails,
+  linkInBlock,
+  nearby,
+  textVersion,
+  withoutColorMix,
+} from '@graph-note/core';
+import type { HitAreas } from '@graph-note/core';
 import { renderProperties } from './properties';
 import { renderCode } from './code';
 import type {
@@ -53,12 +64,19 @@ export interface ViewOptions {
   watchEditing?: (changed: () => void) => () => void;
   /** Called once the card is built, with the place in it where the editor in place sits. */
   onReady?: (slot: HTMLElement) => void;
+  /** A box or a link chosen in the drawing: the editor of its block, if one is open, selects where it is written (§4). */
+  onSelect?: (target: { thing: string } | { link: number }) => void;
   /** The editor open in place on this card, if any: then the details are the inspector (spec §14). */
   editing?: () => Editing | undefined;
 }
 
 /** What a tap or a key can land on: a box, by its id, or an estimated link, by its place in the drawing's estimates. */
 type Target = { key: string } | { estimate: number } | { link: number };
+
+/** How far from a box or a link, in screen pixels, a tap still reaches it: a fingertip's width (tap_cycles_near, §3). */
+const REACH_PX = 22;
+/** How close, in screen pixels, two taps must be to count as the same place, so the second takes the next thing near. */
+const SAME_PLACE_PX = 12;
 
 const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? '' : 's'}`;
 
@@ -192,6 +210,8 @@ export class GraphView extends MarkdownRenderChild {
   private fullscreen: { view: GraphView; overlay: HTMLElement } | null = null;
   private boxDown: { id: number; x: number; y: number; target: Target } | null = null;
   private editButton: HTMLButtonElement | null = null;
+  private areas: HitAreas | null = null;
+  private readonly cycle = new TapCycle(SAME_PLACE_PX);
   private codeEl: HTMLElement | null = null;
 
   constructor(containerEl: HTMLElement, options: ViewOptions) {
@@ -406,6 +426,24 @@ export class GraphView extends MarkdownRenderChild {
     return { x: e.clientX - r.left, y: e.clientY - r.top };
   }
 
+  /**
+   * What a tap at a point in the viewport reaches, nearest first, by their ids in the drawing: what it lands on, then
+   * what is within a fingertip of it (tap_cycles_near, §3).
+   */
+  private near(p: { x: number; y: number }): string[] {
+    this.areas ??= hitAreas(this.o.drawn.svg);
+    const v = this.zoom.view(),
+      vb = this.areas.viewBox;
+    if (!v.width || !v.height || !vb.width || !vb.height) return [];
+    const per = vb.width / v.width;
+    return nearby(this.areas, vb.x + (p.x - v.x) * per, vb.y + ((p.y - v.y) * vb.height) / v.height, REACH_PX * per);
+  }
+
+  /** The box or link an id in the drawing names. */
+  private targetOf(id: string): Target | null {
+    return this.targetAt(this.svg.querySelector(`#${id}`) ?? null);
+  }
+
   private targetAt(target: EventTarget | null): Target | null {
     const el = target as Element | null;
     const key = el?.closest?.('g.node')?.getAttribute('data-key');
@@ -420,6 +458,9 @@ export class GraphView extends MarkdownRenderChild {
   private open(t: Target): void {
     if ('key' in t) this.showDetails(t.key);
     else if ('link' in t) this.showLink(t.link);
+    if ('key' in t) this.o.onSelect?.({ thing: t.key });
+    else if ('link' in t) this.o.onSelect?.({ link: t.link });
+    if ('key' in t || 'link' in t) return;
     else {
       const e = this.drawing()?.estimates[t.estimate];
       if (e) this.showEstimate(e);
@@ -437,10 +478,12 @@ export class GraphView extends MarkdownRenderChild {
     };
     this.registerDomEvent(vp, 'pointerdown', (e: PointerEvent) => {
       const target = this.targetAt(e.target),
-        p = this.point(e);
-      if (target) this.boxDown = { id: e.pointerId, ...p, target };
+        p = this.point(e),
+        near = this.near(p);
+      const first = near[0] ? this.targetOf(near[0]) : null;
+      if (target ?? first) this.boxDown = { id: e.pointerId, ...p, target: (target ?? first) as Target };
       const pointer = e.pointerType === 'touch' || e.pointerType === 'pen' ? e.pointerType : 'mouse';
-      if (use(e, { kind: 'down', id: e.pointerId, pointer, ...p, onBox: !!target })) {
+      if (use(e, { kind: 'down', id: e.pointerId, pointer, ...p, onBox: !!target, near: !target && near.length > 0 })) {
         vp.setPointerCapture(e.pointerId);
         vp.focus({ preventScroll: true });
       }
@@ -453,7 +496,11 @@ export class GraphView extends MarkdownRenderChild {
       use(e, { kind: 'up', id: e.pointerId, ...p, time: e.timeStamp ?? 0 });
       const down = this.boxDown;
       this.boxDown = null;
-      if (down && down.id === e.pointerId && Math.hypot(p.x - down.x, p.y - down.y) < 10) this.open(down.target);
+      if (!down || down.id !== e.pointerId || Math.hypot(p.x - down.x, p.y - down.y) >= 10) return;
+      // on or near several things, a tap in the same place again chooses the next of them (§3)
+      const ids = this.near(down);
+      const chosen = ids.length ? this.cycle.tap(down.x, down.y, ids) : null;
+      this.open((chosen ? this.targetOf(chosen) : null) ?? down.target);
     });
     this.registerDomEvent(vp, 'pointercancel', (e: PointerEvent) => {
       this.boxDown = null;

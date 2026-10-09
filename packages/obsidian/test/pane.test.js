@@ -229,6 +229,26 @@ describe('problems, in place', () => {
   });
 });
 
+describe('selecting in the pane’s drawing moves the text to it', () => {
+  // select_moves_text (spec §4, slice 2): the pane's own drawing does as the card's does
+  test('choosing a box in the pane’s drawing selects its pattern in the pane’s text', async () => {
+    const env = await open();
+    try {
+      await until(() => !!env.el.querySelector('.graph-note-pane-drawing g.node'), 3000);
+      const boxes = [...env.el.querySelectorAll('.graph-note-pane-drawing g.node')];
+      boxes.find((g) => g.getAttribute('data-key') === 'large').dispatch('keydown', { key: 'Enter' });
+      const t = textarea(env.el);
+      const from = READER.indexOf("(large:Option {name: 'Large reader'})");
+      assert.deepEqual(
+        [t.selectionStart, t.selectionEnd],
+        [from, from + "(large:Option {name: 'Large reader'})".length],
+      );
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
 describe('suggestions while typing', () => {
   test('names, kinds and relationships already in the graph are offered, and choosing one writes it in', async () => {
     const env = await open();
