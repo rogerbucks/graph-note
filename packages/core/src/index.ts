@@ -19,11 +19,15 @@ export { tokenize, TOKEN_CLASSES } from './tokens.ts';
 export type { Token, TokenClass } from './tokens.ts';
 export { diagnostics, completions, readBack, textVersion, SEVERITY, KIND } from './help.ts';
 export type { Diagnostic, CodeAction, CompletionItem, Range, Position, TextEdit } from './help.ts';
+export { inlineCompletion, stepOver } from './autocomplete.ts';
+export type { Inline, InlineKind } from './autocomplete.ts';
 export { isDraft, lockBlock, reverseGuess } from './lock.ts';
 export { PaneSession } from './pane.ts';
 export type { Choice, PaneWrite } from './pane.ts';
 export { completenessReport } from './completeness.ts';
 export type { CompletenessReport, RuleReport } from './completeness.ts';
+export { nameFromText, nameSlug, nameStyleOf, nameWords, textFromName } from './name-suggestions.ts';
+export type { GraphNames, NameStyle } from './name-suggestions.ts';
 export { commaFor, commaInNote, colonFor, colonInNote } from './commas.ts';
 export type { TextChange } from './commas.ts';
 export {
@@ -35,6 +39,8 @@ export {
   spanOf,
   linkInBlock,
 } from './inspector.ts';
+export { listValues, makeList, addToList, removeFromList, linkedValues, listsOf } from './linked-list.ts';
+export type { ListShape, ListValue, ListEdit } from './linked-list.ts';
 export { hitAreas, nearby, TapCycle } from './hits.ts';
 export { TextHistory } from './history.ts';
 export type { Change, TextState } from './history.ts';

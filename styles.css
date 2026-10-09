@@ -371,6 +371,10 @@
 .graph-note-problem.is-warning {
   text-decoration-color: var(--text-warning);
 }
+.graph-note-problem.is-hint {
+  text-decoration: underline dotted;
+  text-decoration-color: var(--text-faint);
+}
 .graph-note-line-sign {
   color: var(--text-warning);
 }
@@ -415,6 +419,10 @@
 .graph-note-pane-problems li.is-warning::marker {
   content: '⚠ ';
   color: var(--text-warning);
+}
+.graph-note-pane-problems li.is-hint::marker {
+  content: 'ℹ ';
+  color: var(--text-muted);
 }
 .graph-note-fix,
 .graph-note-quiet {
@@ -485,4 +493,13 @@
 .graph-note-block {
   display: flow-root;
   overflow-anchor: none;
+}
+/* The inline match (autocomplete): ghost text after the caret, in the picture. It takes no room, so the text after it
+   stays under the field's own; it is faint, and never part of the text until accepted. */
+.graph-note-ghost {
+  display: inline-block;
+  width: 0;
+  white-space: pre;
+  color: var(--text-faint);
+  font-style: normal;
 }

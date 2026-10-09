@@ -2,10 +2,23 @@
 // shown and edited as Obsidian's own Properties panel shows a note's — one row each, with its name, an icon for its type
 // that opens a menu to change the type or remove it, and a field suited to the type: a number field, a date picker, a
 // switch for true or false. It is built on Obsidian's own markup and classes, so it takes the theme for free. Each change is
-// checked against its type and written as text into the block being edited (§2, edits are text).
+// checked against its type and written as text into the block being edited (§2, edits are text). A property chosen as a
+// List is held as things linked to this one, and shown as chips (list-row.ts), asked for in list-form.ts.
 import { Menu, setIcon } from 'obsidian';
-import { parseValue, propertiesOf, propertyNames, renameProperty, setProperty } from '@graph-note/core';
-import type { NoteReading, Property, PropType, Target } from '@graph-note/core';
+import {
+  linkedValues,
+  listsOf,
+  makeList,
+  parseValue,
+  propertiesOf,
+  propertyNames,
+  renameProperty,
+  setProperty,
+} from '@graph-note/core';
+import type { ListShape, NoteReading, Property, PropType, Target } from '@graph-note/core';
+import { listForm, suggestShape } from './list-form';
+import { listRow } from './list-row';
+import type { DeclaredList, ListRow } from './list-row';
 
 /** What the properties need: the reading, the thing or link, and the block being edited, to read and to replace. */
 export interface PropertiesOptions {
@@ -20,6 +33,8 @@ export interface PropertiesOptions {
   /** The target as counted in the block being edited. */
   inBlock: () => Target;
   replace: (text: string) => void;
+  /** The lists made in this editing session, kept by the editor: a list with no value yet is no text, so the graph cannot show it. */
+  lists: DeclaredList[];
 }
 
 /** Each type the document profile holds, in the order and words Obsidian's menu uses, with its icon. List is apart. */
@@ -82,6 +97,7 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
   const rows = content.createDiv({ cls: 'metadata-properties' });
   const alert = box.createDiv({ cls: 'graph-note-alert', attr: { role: 'alert' } });
   alert.hidden = true;
+  const status = box.createDiv({ cls: 'graph-note-status', attr: { role: 'status' } });
   const listId = `graph-note-names-${++lists}`;
   const names = box.createEl('datalist', { attr: { id: listId } });
   for (const n of propertyNames(o.reading, o.graph, o.kind)) names.createEl('option', { attr: { value: n } });
@@ -109,6 +125,43 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
     alert.hidden = true;
     if (text !== o.text()) o.replace(text);
     return true;
+  };
+
+  /** The lists this thing holds, by relationship and kind: found in the graph, or made in this session. */
+  const listRows = new Map<string, ListRow>();
+  const thing = 'thing' in o.target ? o.target.thing : null;
+  /** Shows a list's row, or its values in the row it has; the list is remembered for the next time the inspector is drawn. */
+  const showList = (
+    shape: ListShape,
+    things = thing === null ? [] : linkedValues(o.reading, o.graph, thing, shape),
+  ) => {
+    if (thing === null) return;
+    const id = `${shape.rel}\u0000${shape.kind}`;
+    if (!o.lists.some((l) => l.thing === thing && l.rel === shape.rel && l.kind === shape.kind))
+      o.lists.push({ thing, ...shape });
+    const have = listRows.get(id);
+    if (have) return have.merge(things);
+    listRows.set(
+      id,
+      listRow(
+        rows,
+        {
+          reading: o.reading,
+          graph: o.graph,
+          thing,
+          text: o.text,
+          replace: o.replace,
+          refuse: (key, why) => {
+            status.setText('');
+            refuse(key, why);
+          },
+          clear: () => (alert.hidden = true),
+          say: (words) => status.setText(words),
+        },
+        shape,
+        things,
+      ),
+    );
   };
 
   /** The names the thing or link has now, as this panel knows them: none may be taken twice. */
@@ -191,6 +244,33 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
       state.key = next;
       show();
     });
+    /** Asks for the kind and the relationship where the field was, then holds the values as linked things. */
+    const askList = () => {
+      if (thing === null) return;
+      valueEl.empty();
+      const g = o.reading.graphs.get(o.graph);
+      const kinds = [...new Set((g?.boxes ?? []).flatMap((b) => b.kind.split(' · ').filter(Boolean)))].sort();
+      const rels = [...new Set((g?.links ?? []).map((l) => l.type))].sort();
+      listForm(valueEl, { kinds, rels, suggested: suggestShape(state.key) }, (shape) => {
+        if (!shape) {
+          alert.hidden = true;
+          refield();
+          return true;
+        }
+        const r = makeList(o.text(), o.reading, o.graph, thing, state.written ? state.key : null, shape);
+        if (!r.ok) {
+          refuse(state.key || 'new property', r.reason);
+          return false;
+        }
+        alert.hidden = true;
+        if (r.text !== o.text()) o.replace(r.text);
+        keys.delete(state.key);
+        el.remove();
+        showList(shape, r.things);
+        status.setText(`${shape.rel}: ${r.said}.`);
+        return true;
+      });
+    };
     const menu = () => {
       const m = new Menu();
       for (const t of TYPES) {
@@ -209,19 +289,9 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
               refield();
             }),
         );
-        // List, after Text, as Obsidian orders it: offered, and refused with the reason until a list is held as linked things
-        if (t.type === 'text')
-          m.addItem((item) =>
-            item
-              .setTitle('List')
-              .setIcon('list')
-              .onClick(() =>
-                refuse(
-                  state.key || 'new property',
-                  'lists are coming, as linked things; until then, write one property for each value',
-                ),
-              ),
-          );
+        // List, after Text, as Obsidian orders it: held as linked things, so only a thing can have one
+        if (t.type === 'text' && thing !== null)
+          m.addItem((item) => item.setTitle('List').setIcon('list').onClick(askList));
       }
       m.addSeparator();
       m.addItem((item) =>
@@ -249,6 +319,10 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
   };
 
   for (const p of propertiesOf(o.reading, o.graph, o.target)) row(p);
+  if (thing !== null) {
+    for (const shape of listsOf(o.reading, o.graph, thing)) showList(shape);
+    for (const l of [...o.lists]) if (l.thing === thing) showList(l);
+  }
   const add = content.createDiv({
     cls: 'metadata-add-button text-icon-button',
     attr: { role: 'button', tabindex: '0' },

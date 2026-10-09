@@ -14,19 +14,18 @@ import { withFix } from './problem-help';
 import type { FixChanges } from './problem-help';
 import { TextHelp } from './text-help';
 import { KeptField } from './kept-field';
-import { addForYouInField } from './added-for-you';
+import { addForYouInField, stepOverInField } from './added-for-you';
 import { FieldHistory } from './editor-history';
 import type { Step } from './editor-history';
 import { BlockNote } from './block-note';
 import type { Refused } from './note-writing';
 import { reloadedMessage, showDraft } from './kept-draft';
 import { PaneDrawing } from './pane-drawing';
-import { watchKeys, watchTyping } from './typing-keys';
+import { fieldTyping, watchKeys, watchTyping } from './typing-keys';
 
 export type { Layout } from './editor-layout';
 
-/** How long typing rests before it is written. In the pane, well inside the third of a second the spec asks for; in
- * place a little longer, since each write redraws the block the editor sits in. */
+/** How long typing rests before it is written: in the pane well inside the spec's third of a second; in place longer. */
 const WRITE_AFTER_MS: Record<Layout, number> = { pane: 150, inline: 700 };
 const DRAW_AFTER_MS = 250;
 
@@ -177,13 +176,12 @@ export class BlockEditor extends Component {
     });
     this.undoes.start(s.text);
     this.el = el;
-    const typing = {
-      typed: () => this.typed(),
+    const typing = fieldTyping(el, s, this.help, this.undoes, {
+      typed: (change) => this.typed(change),
       caretMoved: () => this.caretMoved(),
-      first: () => this.help.first(),
-      accept: (item: CompletionItem) => this.accept(item),
-      step: (e: Event, which: Step) => this.step(e, which),
-    };
+      accept: (item) => this.accept(item),
+      changed: () => this.changed(),
+    });
     watchTyping(this, el.text, typing);
     this.field.watch(el.text, el.overlay);
     watchKeys(this, el.text, typing);
@@ -214,22 +212,15 @@ export class BlockEditor extends Component {
     const el = this.el,
       s = this.session;
     if (!el || !s) return;
+    const stepped = stepOverInField(el.text, s.text); // before the record: undo goes back to text that was on screen
     this.undoes.record(el.text, change);
     // what is added for you is a step of its own, so the very next undo takes back only it (spec §4)
-    if (addForYouInField(el.text, s.text, this.note.text, s.ref.line)) this.undoes.record(el.text, 'other');
+    if (addForYouInField(el.text, s.text, this.note.text, s.ref.line, stepped)) this.undoes.record(el.text, 'other');
     s.type(el.text.value);
     this.analyse();
     this.help.announce(el); // new problems said to screen readers, the focus left where it is
     this.paint();
     this.schedule();
-  }
-
-  /** Undo or redo from the editor's own history, in place of the field's. */
-  private step(e: Event, which: Step): void {
-    const t = this.el?.text;
-    if (!t || !this.undoes.started) return;
-    e.preventDefault();
-    if (this.undoes.step(t, which)) this.changed();
   }
 
   /** A change made for the person, such as one from the inspector: recorded as a step, analysed and written. */

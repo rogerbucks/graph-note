@@ -65,6 +65,19 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
       undo takes either back. Both work in the pane, in place and in the note itself.
 - [ ] In the note itself, with Obsidian's "Auto pair brackets" on (Settings → Editor), and again with it off: the comma
       comes when ( is typed, and the colon when ] is typed or stepped over.
+- [ ] Completing as you type, in the pane and in the card: typing { shows a faint } after the caret, and the text after
+      it does not move. Tab writes it with the caret left inside; Escape puts it away until the next typing; one undo
+      takes back what Tab wrote. Typing the closer yourself where one is already there steps over it (and a stepped-over
+      ] still gets its colon), and one undo goes back to the text as it was on screen. Likewise a keyword (MA), a kind
+      after (z:, a type after -[:, a property name after {, and a value already used after name: '; these Enter takes
+      too, but Enter never takes a closer, and with nothing to take it is a new line. After a bare ( the names are
+      suggested and Tab takes the first, as before. On the phone, Enter on the keyboard takes a word (there is no Tab);
+      confirm that the Enter ending an IME composition (e.g. Japanese keyboard) takes nothing.
+- [ ] A thing given text but no name, such as `(:Option {name: 'Large reader'})`, is drawn, and shows a ⚠ naming the
+      suggested name, in the style of the names already in the graph and not one of them. Its fix puts the name after the
+      (, and the ⚠ goes. A thing given a name but no text, such as `(large_reader:Option)`, shows an ℹ hint, not counted
+      on the badge, with the text suggested from the name; its fix adds `{name: 'Large reader'}`. Nothing is written
+      until the fix is pressed.
 - [ ] A graph locked by an earlier build shows a ⚠ that its schema does not declare its types; its fix adds the
       DECLARES links, and the ⚠ goes.
 - [ ] A link type left without its colon is drawn as that type, with a ⚠ whose fix writes the colon. A new type written
@@ -98,6 +111,16 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 - [ ] A value is written when its field is left; a value that does not fit its type says why, and nothing changes.
 - [ ] Tapping a property's icon opens a menu to change its type or remove it. Add property adds a row in place, its
       name suggested from the names already used.
+- [ ] A text property with several values (`tags: 'quiet, cheap'`): the icon's menu lists List after Text. Choosing it
+      shows two fields, a kind and a relationship, filled in from the property's name and offering the kinds and
+      relationships the graph already uses; Make list turns each value into a thing of that kind, linked from this one,
+      and the property row becomes a row of chips. Cancel puts the field back. Undo (⌘Z, or the phone's gesture) takes
+      the whole change back in one step. A thing with the same name that already exists is linked, not written again.
+- [ ] A list's chips look as a note's list property looks in the Properties panel in this theme, light and dark. The x
+      on a chip removes it: the link goes, and the thing too when nothing else links to it, and a line under the rows
+      says which. The add field adds a value on Enter, or when it is left; an empty value, or one already there, says
+      why and writes nothing. Phone: the chips, their x and the add field are easy to hit in the sheet, and the keyboard
+      does not cover the field being typed in.
 - [ ] While editing, in the card or the pane, choosing a box selects the pattern that writes it in the text, and
       choosing a link selects its brackets and arrow (slice 2).
 - [ ] Phone: the properties open as a sheet at the bottom of the screen, and every field and icon is easy to hit.

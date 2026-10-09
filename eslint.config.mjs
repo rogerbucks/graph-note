@@ -10,6 +10,8 @@ export default defineConfig([
   {
     ignores: [
       'main.js',
+      // the test vault's own files, and the build linked into it
+      'test-vault/',
       '.claude/',
       '**/node_modules/',
       '**/dist/',

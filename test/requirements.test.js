@@ -124,7 +124,11 @@ describe('a tampered copy fails the check', () => {
 
   test('a copy the reader cannot read', () => {
     const text = replaced(real(), '(test_abuse:Test {proves:', '(test_abuse:Test {proves');
-    assert.deepEqual(kinds(auditRequirements(text, { exists }), 'unreadable'), ['line 281']);
+    const line =
+      real()
+        .split('\n')
+        .findIndex((l) => l.startsWith('(test_abuse:Test {proves:')) + 1;
+    assert.deepEqual(kinds(auditRequirements(text, { exists }), 'unreadable'), [`line ${line}`]);
   });
 });
 

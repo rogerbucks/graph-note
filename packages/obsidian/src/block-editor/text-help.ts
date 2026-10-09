@@ -8,6 +8,7 @@ import { paintText } from './text-picture';
 import { announce, caretLine, heardKey, listProblems, showFixes } from './problem-help';
 import type { FixChanges } from './problem-help';
 import { acceptSuggestion, showSuggestions } from './suggestions';
+import { InlineCompletion } from './inline-completion';
 
 /** The help for one editor: what it read last, and what it shows from that. */
 export class TextHelp {
@@ -15,6 +16,9 @@ export class TextHelp {
   reading: NoteReading | null = null;
   private problems: Diagnostic[] = [];
   private suggestions: { from: number; items: CompletionItem[] } = { from: 0, items: [] };
+  /** The best match for the caret, shown as ghost text in the picture; and whether the last look found a new one. */
+  private readonly inline = new InlineCompletion();
+  private moved = false;
   /** The problems already announced, so only new ones are (spec §8). */
   private heard = new Set<string>();
   private readonly on: { fix: (changes: FixChanges) => void; accept: (item: CompletionItem) => void };
@@ -52,10 +56,16 @@ export class TextHelp {
     if (!this.reading) return;
     const text = s.text;
     el.text.setAttribute('rows', String(text.split('\n').length + 1)); // grown to its text: it never scrolls apart from its colours
-    paintText(el.overlay, text, this.problems, readBack(this.reading, s.graph, text));
+    this.suggest(el, s);
+    this.picture(el, s);
     listProblems(el.list, this.problems);
     this.fixbar(el);
-    this.suggest(el, s);
+  }
+
+  /** The coloured picture of the text, with each line read back and the inline match as ghost text where the caret is. */
+  private picture(el: EditorParts, s: PaneSession): void {
+    if (this.reading)
+      paintText(el.overlay, s.text, this.problems, readBack(this.reading, s.graph, s.text), this.inline.ghost);
   }
 
   /** The problems on the caret's line, with their fixes. */
@@ -69,12 +79,28 @@ export class TextHelp {
     const caret = el.text.selectionStart ?? el.text.value.length;
     this.suggestions = completions(this.reading, s.graph, el.text.value, caret);
     showSuggestions(el.suggest, this.suggestions.items, (item) => this.on.accept(item));
+    this.moved = this.inline.update(el.text, this.reading, s.graph, this.suggestions.items.length > 0);
   }
 
-  /** Moves the help with the caret: the suggestions where it is, and the fixes on its line. */
+  /** Moves the help with the caret: the suggestions and the inline match where it is, and the fixes on its line. */
   caretMoved(el: EditorParts, s: PaneSession | null): void {
     if (s) this.suggest(el, s);
+    if (s && this.moved) this.picture(el, s);
     this.fixbar(el);
+  }
+
+  /** Takes the inline match into the field (not a closer, if `wordsOnly`), then calls `then`; says whether it did. */
+  takeInline(t: HTMLTextAreaElement, then: () => void, wordsOnly: boolean): boolean {
+    if (!this.inline.take(t, wordsOnly)) return false;
+    then();
+    return true;
+  }
+
+  /** Puts the inline match away, out of the picture; says whether there was one. */
+  dismissInline(el: EditorParts, s: PaneSession): boolean {
+    if (!this.inline.dismiss(el.text)) return false;
+    this.picture(el, s);
+    return true;
   }
 
   /** Where a box or a link chosen in the drawing is written in `text`, the block being edited, if it is. */

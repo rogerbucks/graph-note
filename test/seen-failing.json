@@ -434,5 +434,29 @@
       "seen_failing_first": false,
       "evidence": "a guard over what git tracks: it holds while nothing forbidden is committed, so it passes before and after by design; seen failing by hand with test-vault/.obsidian/workspace.json forced into the index, which it named"
     }
+  },
+  "packages/obsidian/test/inline-completion.test.js": {
+    "the best match, shown inline > it is never written to the note unasked": {
+      "seen_failing_first": false,
+      "evidence": "a guard, written with the feature: the old code inserted nothing unasked either, so it passes before and after by design; it holds that the inline match never is (commit e935115)"
+    },
+    "accepting with Tab or Enter > with no match shown, Enter is a new line as before, and Shift-Tab, Control-Enter and a composing Enter leave it alone": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: with no match shown the keys did nothing special before, so it holds what must not change and passes before and after by design (commit e935115)"
+    },
+    "accepting with Tab or Enter > the suggestions row keeps working: Tab still takes a name, where the match would only close the bracket": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: Tab took the first suggestion before the inline match existed, so it holds what must not change and passes before and after by design (commit e935115)"
+    }
+  },
+  "packages/core/test/linked-list.test.js": {
+    "review fixes: values are never merged, comments never lost, and the edit follows the block > a comment above a removed item in the middle of the block stays too": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the review fixes beside them: it holds what must not change (a comment above a removed middle item, whose separator is its own) so it passes before and after by design; the last-item case that lost a comment is the test that failed first"
+    },
+    "choosing List for a property > new items go before a SET, after the last path, and a comment on its own line stays where it was": {
+      "seen_failing_first": false,
+      "evidence": "the earlier test of the same behaviour with its fixture corrected (a comment at the end of a code line is refused by the reader, so it now sits on its own line); the code under test is unchanged, so it passes before and after by design"
+    }
   }
 }

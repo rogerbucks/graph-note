@@ -16,7 +16,12 @@ module that ties the parts together, named as the folder is.
 - `live-preview.ts` — the editing view's own cards, so the page stays still while a block is typed in.
 - `editor.ts` — the comma and the colon added for you in the note's own editor.
 - `pane.ts` — the edit pane, which holds a block editor.
-- `properties.ts` — the inspector's properties, as Obsidian's Properties panel.
+
+### `src/properties/` — the inspector's properties, as Obsidian's Properties panel
+
+- `properties.ts` — `renderProperties`: a row for each property, its type menu, and the rows of the lists a thing holds.
+- `list-form.ts` — the form that asks for a kind and a relationship when List is chosen.
+- `list-row.ts` — a list as chips: the things linked to this one, each removed with its x, and a field to add a value.
 
 ### `src/graph-view/` — a drawn graph
 
@@ -36,11 +41,13 @@ module that ties the parts together, named as the folder is.
 - `block-note.ts` — the note behind the editor and its session: opening, writing, undo, Lock, drafts.
 - `note-writing.ts` — writing safely, through the note's editor or the vault.
 - `kept-field.ts` — the field's focus and scroll, kept through each redraw.
-- `typing-keys.ts` — what typing does: Tab for a suggestion, undo and redo keys.
+- `typing-keys.ts` — what typing does: Tab and Enter for the inline match or a suggestion, Escape to put it away, undo and
+  redo keys.
+- `inline-completion.ts` — the inline match: the best completion for the caret, shown as ghost text, written only when taken.
 - `editor-history.ts` — the text's own undo history in the field.
-- `added-for-you.ts` — the comma and the colon added as you type.
+- `added-for-you.ts` — the comma and the colon added as you type, and a closer typed where it is already there stepped over.
 - `text-help.ts` — the help beside the text, from what was read.
-- `text-picture.ts` — the coloured picture under the field.
+- `text-picture.ts` — the coloured picture under the field, with the inline match as ghost text where the caret is.
 - `problem-help.ts` — the problems list, the fixes on the caret's line, the announcements.
 - `suggestions.ts` — the suggestions bar.
 - `kept-draft.ts` — the draft banner: what was typed, never lost.
@@ -56,7 +63,7 @@ package, or all with `npm test` from the repository root. Each builds `main.js` 
 - `test/host/` — the stand-ins for the host and what the tests share: `fake-dom.js` (a small DOM), `fake-obsidian.js`
   (the obsidian module and CodeMirror), `load-plugin.js` (building and loading the plugin), `cascade.js` (the part of
   the CSS cascade a test needs), `notes.js` (a fenced block, a button by its label), and the notes each group of tests
-  opens: `card-notes.js`, `pane-notes.js`, `view-notes.js`.
+  opens: `card-notes.js`, `pane-notes.js`, `view-notes.js`, and `inspector-steps.js` (opening a box's details and driving the inspector's rows, menus and chips).
 - `test/device-checklist.md` — what is checked by hand on the devices.
 
 ## The harness, `harness/`

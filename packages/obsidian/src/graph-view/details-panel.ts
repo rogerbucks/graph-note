@@ -4,7 +4,7 @@
 import { Platform } from 'obsidian';
 import { details, linkDetails, linkInBlock } from '@graph-note/core';
 import type { Estimate } from '@graph-note/core';
-import { renderProperties } from '../properties';
+import { renderProperties } from '../properties/properties';
 import { problemText } from './problems-list';
 import { button } from './view-bar';
 import type { ViewOptions } from './view-options';
@@ -131,6 +131,7 @@ export class DetailsPanel {
       inBlock: () =>
         'thing' in target ? target : { link: linkInBlock(this.o.reading, this.o.graph, target.link, text()) },
       replace: (t) => ed.replace(t),
+      lists: (ed.lists ??= []),
     });
   }
 }
