@@ -5,7 +5,7 @@
 // until the new one is ready, and CodeMirror told the card's last height, so it has nothing to correct.
 import { Prec, StateField } from '@codemirror/state';
 import type { EditorState, Extension, Range } from '@codemirror/state';
-import { Decoration, EditorView, WidgetType } from '@codemirror/view';
+import { Decoration, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 import type { DecorationSet } from '@codemirror/view';
 import { Component, editorInfoField, editorLivePreviewField } from 'obsidian';
 import type { MarkdownPostProcessorContext } from 'obsidian';
@@ -164,5 +164,10 @@ export function graphBlocks(plugin: GraphNotePlugin): Extension {
         : set,
     provide: (f) => EditorView.decorations.from(f),
   });
-  return Prec.highest(field);
+  // each editor open on a note, so what is typed in a card can be written through it, never behind its back
+  const editors = ViewPlugin.define((view) => {
+    plugin.editorViews.add(view);
+    return { destroy: () => plugin.editorViews.delete(view) };
+  });
+  return [Prec.highest(field), editors];
 }
