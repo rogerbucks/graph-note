@@ -163,6 +163,10 @@ both on every case and requires the same answers. SHA-256 is computed here, sync
       );
     return [m[1], kind];
   }
+  // §3: comments are whole lines; one after code on its line cannot be told from // inside an identifier
+  const COMMENT_RULE =
+    'a comment must be on a line of its own: // also occurs inside identifiers, such as ni:/// hashes (§3)';
+  const COMMENT_FIX = 'put the comment on its own line';
   function tokens(block) {
     const out = [];
     block.split('\n').forEach((raw, i) => {
@@ -173,6 +177,7 @@ both on every case and requires the same answers. SHA-256 is computed here, sync
         if (!raw.slice(pos).trim()) break;
         TOKEN.lastIndex = pos;
         const m = TOKEN.exec(raw);
+        if (!m && raw.slice(pos).trim().startsWith('//')) throw new ProfileError(n, COMMENT_RULE, COMMENT_FIX); // a comment after code on its line (§3)
         if (!m)
           throw new ProfileError(
             n,
@@ -3130,6 +3135,8 @@ both on every case and requires the same answers. SHA-256 is computed here, sync
     word,
     guessReadings,
     reverseReading,
+    COMMENT_RULE,
+    COMMENT_FIX,
     schemaFor,
     mermaidPath,
     sha256hex,

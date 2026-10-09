@@ -200,6 +200,15 @@ def header(block):
     return m.group(1), kind
 
 
+# §3: comments are whole lines; one after code on its line cannot be told from // inside an
+# identifier
+COMMENT_RULE = (
+    "a comment must be on a line of its own: // also occurs inside identifiers, such as ni:/// "
+    "hashes (§3)"
+)
+COMMENT_FIX = "put the comment on its own line"
+
+
 def tokens(block):
     """(kind, text, line) for every token, whole-line comments removed — '//' also occurs inside
     ni:/// ids."""
@@ -212,6 +221,8 @@ def tokens(block):
             if not raw[pos:].strip():
                 break
             m = TOKEN.match(raw, pos)
+            if not m and raw[pos:].strip().startswith("//"):
+                raise ProfileError(n, COMMENT_RULE, COMMENT_FIX)  # a comment after code (§3)
             if not m:
                 raise ProfileError(
                     n,
@@ -739,6 +750,50 @@ def _data_kind(text):
         }
 
 
+def _u16(s):
+    """A place on a line as an editor counts it: in UTF-16 units, an emoji being two."""
+    return len(s.encode("utf-16-le")) // 2
+
+
+def _line_end_comments(text):
+    """Each comment after code on its line (§3: comments are whole lines, as // also occurs inside
+    identifiers): the block with them blanked, and a warning for each that names the rule."""
+    problems, out = [], []
+    for n, line in enumerate(text.split("\n")):
+        if line.strip().startswith("//"):
+            out.append(line)
+            continue
+        quoted, i, cut = False, 0, None
+        while i < len(line):
+            c = line[i]
+            if quoted:
+                if c == "\\":
+                    i += 1
+                elif c == "'":
+                    quoted = False
+            elif c == "'":
+                quoted = True
+            elif line.startswith("//", i) and line[:i].strip():
+                cut = i
+                break
+            i += 1
+        if cut is None:
+            out.append(line)
+            continue
+        start = len(line[:cut].rstrip())
+        problems.append(
+            {
+                "line": n + 1,
+                "severity": "warning",
+                "message": COMMENT_RULE,
+                "fix": COMMENT_FIX,
+                "character": _u16(line[:start]),
+            }
+        )
+        out.append(line[:cut] + " " * (len(line) - cut))
+    return "\n".join(out), problems
+
+
 def _dangling_comma(text):
     """A comma with nothing after it at a block's end, but blank lines and comments: the commonest
     state while the next pattern is being typed, so never a failure of the block (8 Oct 2026). The
@@ -753,7 +808,7 @@ def _dangling_comma(text):
         "severity": "warning",
         "message": "a comma with nothing after it; it is read as if it were not there",
         "fix": "remove the comma, or write the next pattern after it",
-        "character": len(before[-1]),
+        "character": _u16(before[-1]),
     }
 
 
@@ -776,7 +831,9 @@ def read_for_drawing(blocks, shared=()):
             skip.add(i)
             problems.append({**kind, "block": i, "graph": _graph_of(text)})
         else:
-            dangling = _dangling_comma(text)
+            clean[i], comments = _line_end_comments(text)
+            problems += [{**p, "block": i, "graph": _graph_of(text)} for p in comments]
+            dangling = _dangling_comma(clean[i])
             if dangling:
                 clean[i] = dangling[0]
                 problems.append({**dangling[1], "block": i, "graph": _graph_of(text)})
