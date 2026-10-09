@@ -52,7 +52,9 @@ DOT = shutil.which("dot") or next(
 )
 
 
-def available():
+def available() -> bool:
+    """Whether Graphviz's dot is installed, so render() can draw; when it is not, the caller falls
+    back to Mermaid."""
     return DOT is not None
 
 
@@ -107,7 +109,11 @@ def _label(kind, text):
     )
 
 
-def dot_source(nodes, edges, rankdir=None):
+def dot_source(
+    nodes: list[tuple[str, str, str]],
+    edges: list[tuple[str, str, str]],
+    rankdir: str | None = None,
+) -> tuple[str, list[str], list[str]]:
     """nodes: [(key, kind, text)]; edges: [(source key, reading, target key)]. Kind colours are
     placeholders #0001xx."""
     # order of first appearance — colours depend on it
@@ -247,7 +253,7 @@ def _layout(nodes, edges, rankdir):
     return r.stdout, kinds, readings, float(m.group(1)) * 4 / 3, float(m.group(2)) * 4 / 3
 
 
-def render(nodes, edges):
+def render(nodes: list[tuple[str, str, str]], edges: list[tuple[str, str, str]]) -> str:
     """The graph as one block of inline SVG. Raises RuntimeError if Graphviz is missing or fails.
     Laid out both left-to-right and top-to-bottom; the one that shrinks least to fit the page width
     wins, because a drawing shrunk to fit a narrow note is a drawing nobody can read — the text in
