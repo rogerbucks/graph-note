@@ -100,13 +100,14 @@ describe('choosing List for a property', () => {
     assert.equal(graphOf(text).labelled('Tag').length, 2, 'cheap is one thing, linked from both');
   });
 
-  test('new items go before a SET, after the last path, and a trailing comment stays where it was', () => {
-    const block = `${SHOP} // the cafe\nSET sam.title = 'owner'`;
+  test('new items go before a SET, after the last path, and a comment on its own line stays where it was', () => {
+    const block = `${SHOP}\n// the cafe\nSET sam.title = 'owner'`;
     const text = ok(made(block));
     assert.ok(text.indexOf('(quiet:Tag)') < text.indexOf('SET sam.title'));
-    assert.match(text, /\(sam\)-\[:RUNS\]->\(cafe\), \/\/ the cafe\n\(quiet:Tag\),/);
+    assert.match(text, /\(sam\)-\[:RUNS\]->\(cafe\),\n\(quiet:Tag\),[\s\S]*->\(cheap\)\n\/\/ the cafe\nSET /);
     assert.deepEqual(linked(text, 'cafe'), ['quiet', 'cheap']);
     assert.equal(graphOf(text).p('sam').title, 'owner');
+    assert.equal(reading(text).problems.length, 0);
   });
 
   test('a property with no words becomes an empty list; no key at all only declares one, and changes no text', () => {
@@ -134,8 +135,10 @@ describe('choosing List for a property', () => {
   });
 });
 
+const LISTED_BLOCK = ok(made());
+
 describe('a value added to a list, or removed', () => {
-  const LISTED = ok(made());
+  const LISTED = LISTED_BLOCK;
   const add = (block, value, shape = TAG) => addToList(block, reading(block), 'shop', 'cafe', shape, value);
   const drop = (block, value, r = reading(block)) => removeFromList(block, r, 'shop', 'cafe', TAG, value);
 
@@ -211,5 +214,92 @@ describe('the lists a thing holds, as the inspector shows them', () => {
     assert.deepEqual(listsOf(reading(SHOP), 'shop', 'sam'), [], 'sam runs a cafe that has a name and links');
     const titled = SHOP.replace('(sam:Person', "(q:Tag {title: 'Which?'}),\n(sam:Person") + ',\n(cafe)-[:HAS_TAG]->(q)';
     assert.deepEqual(listsOf(reading(titled), 'shop', 'cafe'), []);
+  });
+});
+
+describe('review fixes: values are never merged, comments never lost, and the edit follows the block', () => {
+  const props = (text, id) => graphOf(text).p(id);
+
+  test('values that slug alike are different things: names with no ASCII letters take an id from the kind', () => {
+    const text = ok(made(SHOP.replace('quiet, cheap', '東京, 大阪')));
+    assert.deepEqual(linked(text, 'cafe'), ['tag', 'tag_2']);
+    assert.equal(props(text, 'tag').name, '東京');
+    assert.equal(props(text, 'tag_2').name, '大阪');
+  });
+
+  test('A-B and A B are two things, each keeping its words as its name', () => {
+    const text = ok(made(SHOP.replace('quiet, cheap', 'A-B, A B')));
+    assert.deepEqual(linked(text, 'cafe'), ['A_B', 'A_B_2']);
+    assert.deepEqual([props(text, 'A_B').name, props(text, 'A_B_2').name], ['A-B', 'A B']);
+  });
+
+  test('a value is never reused through its slug: Open-late is not Open_late, whatever the case', () => {
+    const block = LISTED_BLOCK.replace('(sam:Person', '(Open_late:Tag),\n(sam:Person');
+    const first = ok(addToList(block, reading(block), 'shop', 'cafe', TAG, 'Open-late'));
+    assert.match(first, /\(Open_late_2:Tag \{name: 'Open-late'\}\)/);
+    const second = ok(addToList(block, reading(block), 'shop', 'cafe', TAG, 'open-late'));
+    assert.match(second, /\(open_late:Tag \{name: 'open-late'\}\)/);
+  });
+
+  test('accents are stripped from an id and kept in the name: café is cafe, Müller is Muller', () => {
+    const text = ok(made(SHOP.replace('quiet, cheap', 'café, Müller')));
+    assert.deepEqual(linked(text, 'cafe'), ['cafe_2', 'Muller']);
+    assert.equal(props(text, 'cafe_2').name, 'café');
+    assert.equal(props(text, 'Muller').name, 'Müller');
+  });
+
+  test('removing the last value takes its item and its comma, never a comment', () => {
+    const block = `// graph: shop\n(cafe:Place {name: 'C'}),\n(x:Tag),\n// the tag link\n(cafe)-[:HAS_TAG]->(x)`;
+    const r = removeFromList(block, reading(block), 'shop', 'cafe', TAG, 'x');
+    assert.equal(ok(r), `// graph: shop\n(cafe:Place {name: 'C'})\n// the tag link`);
+    assert.equal(reading(r.text).problems.length, 0);
+  });
+
+  test('a comment above a removed item in the middle of the block stays too', () => {
+    const block = `// graph: shop\n(cafe:Place {name: 'C'}),\n// about x\n(x:Tag),\n(cafe)-[:HAS_TAG]->(x),\n(sam:Person)`;
+    const text = ok(removeFromList(block, reading(block), 'shop', 'cafe', TAG, 'x'));
+    assert.equal(text, `// graph: shop\n(cafe:Place {name: 'C'}),\n// about x\n(sam:Person)`);
+    assert.equal(reading(text).problems.length, 0);
+  });
+
+  test('a thing with properties of its own stays when its value is removed, and the message says why', () => {
+    const block = LISTED_BLOCK.replace('(quiet:Tag)', "(quiet:Tag {name: 'quiet', note: 'keep'})");
+    const r = removeFromList(block, reading(block), 'shop', 'cafe', TAG, 'quiet');
+    const text = ok(r);
+    assert.match(text, /\(quiet:Tag \{name: 'quiet', note: 'keep'\}\)/);
+    assert.doesNotMatch(text, /\(cafe\)-\[:HAS_TAG\]->\(quiet\)/);
+    assert.match(r.said, /quiet stays, as it has properties of its own/);
+  });
+
+  test('the values come from the block as it is now, not from an older reading', () => {
+    const old = reading(SHOP.replace('quiet, cheap', 'a'));
+    const text = ok(makeList(SHOP.replace('quiet, cheap', 'a, b, c'), old, 'shop', 'cafe', 'tags', TAG));
+    assert.deepEqual(linked(text, 'cafe'), ['a', 'b', 'c']);
+  });
+
+  test('a block that is an INSERT gets its new items after a comma', () => {
+    const block = "// graph: shop\nINSERT (cafe:Place {name: 'C', tags: 'x, y'})";
+    const text = ok(makeList(block, reading(block), 'shop', 'cafe', 'tags', TAG));
+    assert.match(text, /^INSERT \(cafe:Place \{name: 'C'\}\),\n\(x:Tag\)/m);
+    assert.deepEqual(linked(text, 'cafe'), ['x', 'y']);
+    assert.equal(reading(text).problems.length, 0);
+  });
+
+  test('a thing cannot be a value of its own list', () => {
+    const r = made(SHOP.replace('quiet, cheap', 'cafe'), 'tags', { rel: 'SEES', kind: 'Place' });
+    assert.match(r.reason, /cafe is this thing itself/);
+    assert.match(
+      addToList(SHOP, reading(SHOP), 'shop', 'cafe', { rel: 'SEES', kind: 'Place' }, 'cafe').reason,
+      /itself/,
+    );
+  });
+
+  test('after a reload, a list is a relationship and kind with at least two bare targets, or one named HAS_ and the kind', () => {
+    const owned = "// graph: shop\n(cafe:Place {name: 'C'}),\n(sam:Person {name: 'Sam'}),\n(cafe)-[:OWNED_BY]->(sam)";
+    assert.deepEqual(listsOf(reading(owned), 'shop', 'cafe'), [], 'one owner is a link, not a list');
+    const two = owned + ",\n(ann:Person {name: 'Ann'}),\n(cafe)-[:OWNED_BY]->(ann)";
+    assert.deepEqual(listsOf(reading(two), 'shop', 'cafe'), [{ rel: 'OWNED_BY', kind: 'Person' }]);
+    const has = owned.replace('OWNED_BY', 'HAS_PERSON');
+    assert.deepEqual(listsOf(reading(has), 'shop', 'cafe'), [{ rel: 'HAS_PERSON', kind: 'Person' }]);
   });
 });

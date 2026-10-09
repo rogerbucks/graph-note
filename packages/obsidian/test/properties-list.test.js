@@ -46,11 +46,12 @@ describe('choosing List in the inspector', () => {
       pick(env, panel, 'tags', 'List');
       assert.ok(field(panel, 'Kind of the linked things'));
       assert.ok(field(panel, 'Relationship from this thing'));
+      assert.ok(env.doc.activeElement === field(panel, 'Kind of the linked things'), 'the Kind field has the focus');
       assert.equal(field(panel, 'Kind of the linked things').value, 'Tag', 'a kind suggested from the name');
       assert.equal(field(panel, 'Relationship from this thing').value, 'HAS_TAG');
       assert.equal(text(el), BLOCK_OF(NOTE3), 'nothing written yet');
       labelled(panel, 'Cancel').click();
-      assert.equal(field(panel, 'Kind of the linked things'), undefined, 'the form goes');
+      assert.ok(field(panel, 'Kind of the linked things') === undefined, 'the form goes');
       assert.ok(field(panel, 'Value of tags'), 'the property is as it was');
       assert.equal(text(el), BLOCK_OF(NOTE3));
     } finally {
@@ -85,7 +86,7 @@ describe('choosing List in the inspector', () => {
       const panel = el.querySelector('.graph-note-details');
       makeList(env, panel, 'tags', 'Tag', 'HAS_TAG');
       assert.equal(text(el), BLOCK_OF(LISTED));
-      assert.equal(row(panel, 'tags'), null, 'the property row is gone');
+      assert.ok(row(panel, 'tags') === null, 'the property row is gone');
       assert.deepEqual(chips(panel, 'HAS_TAG'), ['light', 'cheap']);
       assert.equal(row(panel, 'HAS_TAG').getAttribute('data-property-type'), 'list');
       await until(() => env.state.files.get(PATH).includes('(large)-[:HAS_TAG]->(cheap)'), 2000);
@@ -172,6 +173,22 @@ describe('a list as chips in the inspector', () => {
       assert.deepEqual(chips(panel, 'HAS_TAG'), ['cheap']);
       assert.match(status(el).textContent, /removed the link and light, which nothing else linked to/);
       await until(() => !env.state.files.get(PATH).includes('light'), 2000);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('after a chip is removed the focus moves to the next chip’s x, or to the add field when none is left', async () => {
+    const env = await load({ files: { [PATH]: LISTED } });
+    try {
+      const el = await editing(env);
+      tapKey(el, 'large');
+      const panel = el.querySelector('.graph-note-details');
+      const xs = () => row(panel, 'HAS_TAG').querySelectorAll('.multi-select-pill-remove-button');
+      removeChip(panel, 'HAS_TAG', 'light');
+      assert.ok(env.doc.activeElement === xs()[0], 'the x of cheap, which took its place');
+      removeChip(panel, 'HAS_TAG', 'cheap');
+      assert.ok(env.doc.activeElement === field(panel, 'Add to HAS_TAG'), 'the add field, with no chip left');
     } finally {
       env.uninstall();
     }

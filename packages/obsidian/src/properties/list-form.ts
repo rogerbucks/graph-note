@@ -51,6 +51,7 @@ export function listForm(parent: HTMLElement, o: ListFormOptions, done: (shape: 
     form
       .createEl('button', { cls, text: label, attr: { type: 'button', 'aria-label': label } })
       .addEventListener('click', run);
+  kind.focus();
   button('Make list', make, 'mod-cta');
   button('Cancel', () => void done(null));
   for (const input of [kind, rel])

@@ -81,9 +81,13 @@ export function listRow(parent: HTMLElement, c: ListContext, shape: ListShape, s
       const drop = () => {
         const r = removeFromList(c.text(), c.reading, c.graph, c.thing, shape, v.thing);
         if (!r.ok) return c.refuse(shape.rel, r.reason);
-        values.splice(values.indexOf(v), 1);
+        const at = values.indexOf(v);
+        values.splice(at, 1);
         changed(r);
         draw();
+        // the chips were drawn again: the focus goes to the x of the chip that took its place, else to the add field
+        const next = box.querySelectorAll<HTMLElement>('.multi-select-pill-remove-button')[at];
+        (next ?? input).focus();
       };
       x.addEventListener('click', drop);
       x.addEventListener('keydown', (e: KeyboardEvent) => {

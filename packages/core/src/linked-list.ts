@@ -4,6 +4,7 @@
 // (spec §2), checked against the block as it now stands, so edits made before the note is read again never write a thing twice.
 import type { Item } from './block-items.ts';
 import { blankText, blockItems, items } from './block-items.ts';
+import { readNote } from './drawing.ts';
 import { hops } from './estimates.ts';
 import { parseValue, propertiesOf, setProperty, spanOf } from './inspector.ts';
 import type { NoteReading } from './note-reading.ts';
@@ -28,6 +29,7 @@ export type ListEdit = { ok: true; text: string; said: string; things: ListValue
 
 const WORD = /^[A-Za-z_]\w*$/;
 const norm = (s: string) => s.trim().toLowerCase();
+const itself = (v: string) => `${v} is this thing itself: a thing cannot be in its own list`;
 const triple = (from: string, type: string, to: string) => `${from}\u0000${type}\u0000${to}`;
 
 /** The values a property's words hold: split at commas, semicolons and new lines, trimmed, none empty and none twice. */
@@ -39,10 +41,16 @@ export function listValues(words: string): string[] {
     .filter((v) => v !== '' && !seen.has(norm(v)) && !!seen.add(norm(v)));
 }
 
-/** A thing's id made from its value: words joined by underscores, as one word of letters, digits and underscores. */
-function slug(value: string): string {
-  const s = value.replace(/[^A-Za-z0-9_]+/g, '_').replace(/^_+|_+$/g, '');
-  return s === '' ? 'item' : /^[A-Za-z_]/.test(s) ? s : `_${s}`;
+/**
+ * A thing's id made from its value and its kind: accents stripped, other runs of non-word characters joined by an
+ * underscore, so the id is one ASCII word as the reader requires. A value with no ASCII letter takes its kind's name.
+ * The id only names the thing — two values may make the same one, so it is never used to tell values apart.
+ */
+export function idFromValue(value: string, kind: string): string {
+  const plain = value.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const s = plain.replace(/[^A-Za-z0-9_]+/g, '_').replace(/^_+|_+$/g, '');
+  if (!/[A-Za-z]/.test(s)) return kind.toLowerCase();
+  return /^[A-Za-z_]/.test(s) ? s : `_${s}`;
 }
 
 /** What is known of the graph's things and links: from the reading, and from the block as it now stands. */
@@ -88,10 +96,10 @@ function known(reading: NoteReading, graph: string, block: string): Known {
   return { things, taken, links };
 }
 
-/** The thing of the kind that already has this name — by its id, or its text whatever the case — else null. */
+/** The thing of the kind that already has this name — an id equal to the value, or text equal to it whatever the case — else null. */
 function existing(k: Known, kind: string, value: string): string | null {
   for (const [id, t] of k.things)
-    if (t.kinds.includes(kind) && (id === value || id === slug(value) || norm(t.text) === norm(value))) return id;
+    if (t.kinds.includes(kind) && (id === value || norm(t.text) === norm(value))) return id;
   return null;
 }
 
@@ -107,7 +115,7 @@ function itemsFor(
   const isNew = id === null;
   if (id === null) {
     let n = 1;
-    const base = slug(value);
+    const base = idFromValue(value, shape.kind);
     id = base;
     while (k.taken.has(id)) id = `${base}_${++n}`;
     k.taken.add(id);
@@ -134,10 +142,10 @@ function notHere(block: string, reading: NoteReading, graph: string, thing: stri
     : `${thing} is not written in this block: edit it where it is written, in graph ${graph}`;
 }
 
-/** The block with new items added after its last path (before any SET), comma-separated, as the block writes its own. */
+/** The block with new items added after its last path or INSERT (before any SET), comma-separated, as the block writes its own. */
 function appended(block: string, lines: string[]): string {
   if (!lines.length) return block;
-  const paths = items(block).filter((it) => !/^(SET|MATCH|INSERT)\b/i.test(block.slice(it.from, it.to)));
+  const paths = items(block).filter((it) => !/^(SET|MATCH)\b/i.test(block.slice(it.from, it.to)));
   const last = paths.at(-1);
   if (!last) return `${block}${block === '' || block.endsWith('\n') ? '' : '\n'}${lines.join(',\n')}`;
   const lineStart = block.lastIndexOf('\n', last.from - 1) + 1;
@@ -174,13 +182,16 @@ export function makeList(
   const fault = shapeFault(shape) ?? notHere(block, reading, graph, thing);
   if (fault) return { ok: false, reason: fault };
   if (key === null) return { ok: true, text: block, said: 'a list with no values yet', things: [] };
-  const words = propertiesOf(reading, graph, { thing }).find((p) => p.key === key)?.value ?? '';
+  // the values are those the block says now: the reading may be older than the text
+  const wordsIn = (r: NoteReading) => propertiesOf(r, graph, { thing }).find((p) => p.key === key)?.value;
+  const words = wordsIn(readNote([block])) ?? wordsIn(reading) ?? '';
   const removed = setProperty(block, graph, { thing }, key, null);
   if (!removed.ok) return removed;
   const k = known(reading, graph, removed.text);
   const lines: string[] = [];
   const made: { id: string; isNew: boolean }[] = [];
   for (const v of listValues(words)) {
+    if (existing(k, shape.kind, v) === thing) return { ok: false, reason: itself(v) };
     const m = itemsFor(k, thing, shape, v);
     if (!made.some((x) => x.id === m.id)) {
       lines.push(...m.lines);
@@ -210,6 +221,7 @@ export function addToList(
   if (v === '') return { ok: false, reason: 'a value cannot be empty' };
   const k = known(reading, graph, block);
   const was = existing(k, shape.kind, v);
+  if (was === thing) return { ok: false, reason: itself(v) };
   if (was !== null && k.links.has(triple(thing, shape.rel, was)))
     return { ok: false, reason: `${v} is already in the list` };
   const m = itemsFor(k, thing, shape, v);
@@ -221,7 +233,7 @@ export function addToList(
   };
 }
 
-/** The block without one of its items, and the comma that parted it from its neighbour. */
+/** The block without one of its items, and the comma that parted it from its neighbour — and nothing else. */
 function withoutItem(text: string, all: Item[], it: Item): string {
   const lineStart = text.lastIndexOf('\n', it.from - 1) + 1;
   const alone = /^[ \t]*$/.test(text.slice(lineStart, it.from));
@@ -230,10 +242,10 @@ function withoutItem(text: string, all: Item[], it: Item): string {
     if (!alone) return text.slice(0, it.from) + text.slice(end).replace(/^[ \t]+/, '');
     return text.slice(0, lineStart) + text.slice(end + (/^[ \t]*\n/.exec(text.slice(end))?.[0].length ?? 0));
   }
+  // the last item: its own line goes, and the comma that parted it from the item before; comments and blank lines stay
   const before = all[all.indexOf(it) - 1];
-  return before && before.comma !== -1
-    ? text.slice(0, before.comma) + text.slice(it.to)
-    : text.slice(0, it.from) + text.slice(it.to);
+  const cut = text.slice(0, alone && lineStart > 0 ? lineStart - 1 : it.from) + text.slice(it.to);
+  return before && before.comma !== -1 ? cut.slice(0, before.comma) + cut.slice(before.comma + 1) : cut;
 }
 
 /**
@@ -280,11 +292,24 @@ export function removeFromList(
     ),
   );
   const label = k.things.get(value)?.text ?? value;
+  // bare as listsOf means it: no property but its name, written here or set elsewhere
+  const ownMap = own && /\{([^{}]*)\}/.exec(blankText(text.slice(own.from, own.to)))?.[1];
+  const keys = [...(ownMap ?? '').matchAll(/(?:^|,)\s*(\w+)\s*:/g)].map((m) => m[1]);
+  const rich =
+    keys.some((x) => x !== 'name') ||
+    Object.keys(reading.world[graph]?.p(value) ?? {}).some((x) => x !== 'id' && x !== 'name');
   if (stillThere || linkedElsewhere)
     return {
       ok: true,
       text,
       said: `removed the link; ${value} stays, as something else links to it`,
+      things: [{ thing: value, text: label }],
+    };
+  if (rich)
+    return {
+      ok: true,
+      text,
+      said: `removed the link; ${value} stays, as it has properties of its own`,
       things: [{ thing: value, text: label }],
     };
   if (!own || mentions !== 1)
@@ -322,20 +347,27 @@ export function linkedValues(reading: NoteReading, graph: string, thing: string,
 
 /**
  * The lists a thing holds, found in the graph: a relationship out of the thing to bare things of one kind — things with
- * no links out and no properties but a name, as this module writes them. A thing with a life of its own is no list item.
+ * no links out and no properties but a name, as this module writes them — at least two of them, or one by a relationship
+ * named HAS_ and the kind. A thing with a life of its own is no list item.
  */
 export function listsOf(reading: NoteReading, graph: string, thing: string): ListShape[] {
   const drawing = reading.graphs.get(graph),
     g = reading.world[graph];
-  const shapes: ListShape[] = [];
+  const found = new Map<string, { shape: ListShape; targets: Set<string> }>();
   for (const l of drawing?.links ?? []) {
     const box = drawing?.boxes.find((b) => b.key === l.to);
     if (l.from !== thing || !box || !g) continue;
     const bare =
       !drawing?.links.some((x) => x.from === l.to) && Object.keys(g.p(l.to)).every((p) => p === 'id' || p === 'name');
     if (!bare) continue;
-    for (const kind of box.kind.split(' · ').filter(Boolean))
-      if (!shapes.some((s) => s.rel === l.type && s.kind === kind)) shapes.push({ rel: l.type, kind });
+    for (const kind of box.kind.split(' · ').filter(Boolean)) {
+      const at = found.get(`${l.type}\u0000${kind}`) ?? { shape: { rel: l.type, kind }, targets: new Set<string>() };
+      at.targets.add(l.to);
+      found.set(`${l.type}\u0000${kind}`, at);
+    }
   }
-  return shapes;
+  // one bare target is a link, not a list, unless its relationship is named as a list's is: HAS_ and the kind
+  return [...found.values()]
+    .filter((f) => f.targets.size >= 2 || f.shape.rel === `HAS_${f.shape.kind.toUpperCase()}`)
+    .map((f) => f.shape);
 }
