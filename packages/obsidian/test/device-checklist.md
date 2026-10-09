@@ -25,7 +25,8 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 - [ ] The misspelt link is drawn dashed, labelled "⚠ … (estimated)". Tapping it explains it in one sentence.
 - [ ] Tapping a box shows its text, its kind, and its links in and out.
 - [ ] A 50-thing graph is drawn in under half a second on the phone (§11).
-- [ ] The drawing reads well in the light theme and in the dark theme.
+- [ ] The drawing reads well in the light theme and in the dark theme. Dark, several drawings in a note, each card
+      standing out: Mac ✓ 0.3.0, 9 Oct 2026 (relayed as the Mac). The light theme, and the phone, to come.
 
 ## Zoom — spec §3
 
