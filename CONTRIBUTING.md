@@ -14,6 +14,12 @@ CI. A change that breaks one fails before it is merged.
   was excused, and what could not be replayed.
 - **The gate before every commit:** `npm run format:check`, `npm run lint`, `npm run typecheck` and `npm test`, plus
   `ruff check` and `ruff format --check` when the Python library changed. CI runs them all again.
+- **Cheap checks while working.** `npm run test:ai` runs the suite quietly (one line when all pass, and for a failure
+  only its file and line, name, short expected and actual, and the first stack frame in our code); `npm run
+  test:changed` runs only the tests of the modules the change touches, found by the naming under "Tests mirror the
+  code", and the whole suite when something shared changed; `npm run test:ai:py` does the same for the Python library.
+  They are for working: `npm test` and the gate above still run in full before every merge, and in CI. `AGENTS.md` is
+  the short guide for AI sessions, and `.ignore` keeps generated and bulky files out of code searches.
 - **A large or risky change goes through a pull request**, and is merged only once CI passes on it. That means one that
   touches many files, changes a library both languages share, or changes the build, CI or dependencies. The biggest are
   reviewed before merging. A small, contained change may be committed straight to `main` once the gate passes.
@@ -104,6 +110,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `python/graph_spec/tests/test_licences.py` — every Python package carries an allowed licence.
 - `python/graph_spec/tests/test_parity.py` — the Python library gives the JavaScript library's answers.
 - `python/graph_spec/tests/test_settings.py` — what a host sets after importing the library.
+- `test/cheap-checks.test.js` — the quiet test run, running only a change's tests, the AI guide and the search ignore file.
 - `test/classification.test.js` — the content check refuses confidential or personal files.
 - `test/conventions.test.js` — the conventions on this page.
 - `test/licences.test.js` — licences through the whole build chain.
