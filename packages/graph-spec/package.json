@@ -7,6 +7,9 @@
   "type": "commonjs",
   "main": "src/graph-spec-check.js",
   "types": "src/graph-spec.d.ts",
+  "scripts": {
+    "build": "node esbuild.check.mjs"
+  },
   "exports": {
     ".": {
       "types": "./src/graph-spec.d.ts",
