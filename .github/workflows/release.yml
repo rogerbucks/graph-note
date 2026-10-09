@@ -9,7 +9,31 @@ permissions:
   contents: read
 
 jobs:
+  # Before anything is released (spec §12 and §13): the code's quality metrics are measured and held to the committed
+  # baseline, and the Graphviz inside the engine is checked against a fresh reading of the published advisories. It
+  # only reads; the release job waits for it. The advisories are asked of OSV here, and nowhere else but the weekly refresh.
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm audit signatures
+      - name: Read the published advisories for the Graphviz inside the engine, and for the package that wraps it
+        run: node scripts/engine-version.mjs --refresh
+      - name: The engine is the version the notices name, and no advisory affects it
+        run: node scripts/engine-version.mjs
+      - name: Measure the quality metrics
+        run: node scripts/quality-metrics.mjs --out quality/metrics.json
+      - name: No metric is worse than the baseline without a recorded reason
+        run: node scripts/quality-check.mjs quality/metrics.json
+
   release:
+    needs: quality
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -45,7 +69,9 @@ jobs:
             manifest.json
             styles.css
             graph-spec-libraries-*.tar.gz
+      - name: The Graphviz version inside the engine, for the release notes
+        run: node scripts/engine-version.mjs --notes engine-notes.md
       - name: Draft the release with the store assets
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$GITHUB_REF_NAME.tar.gz" SHA256SUMS --draft --verify-tag --title "$GITHUB_REF_NAME" --generate-notes
+        run: gh release create "$GITHUB_REF_NAME" main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$GITHUB_REF_NAME.tar.gz" SHA256SUMS --draft --verify-tag --title "$GITHUB_REF_NAME" --notes-file engine-notes.md --generate-notes

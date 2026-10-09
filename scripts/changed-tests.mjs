@@ -41,6 +41,11 @@ const READERS = [
   [/^(test-vault\/.*|scripts\/reset-test-vault\.mjs)$/, ['test/test-vault.test.js']],
   [/^(requirements\/.*|scripts\/check-requirements\.mjs)$/, ['test/requirements.test.js']],
   [/^(scripts\/check-classification\.mjs)$/, ['test/classification.test.js']],
+  [
+    /^(scripts\/quality-(check|secrets|spec|suite)\.mjs|quality\/(baseline|accepted)\.json)$/,
+    ['test/quality-metrics.test.js'],
+  ],
+  [/^quality\/advisories\.json$/, ['test/engine-version.test.js']],
   [/^(scripts\/notices\.mjs|THIRD_PARTY_NOTICES\.md)$/, ['test/licences.test.js']],
   [/^test\/(seen-failing|tests-first)\.json$/, ['test/tests-first.test.js']],
 ];

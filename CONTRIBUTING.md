@@ -113,9 +113,27 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/cheap-checks.test.js` — the quiet test run, running only a change's tests, the AI guide and the search ignore file.
 - `test/classification.test.js` — the content check refuses confidential or personal files.
 - `test/conventions.test.js` — the conventions on this page.
+- `test/engine-version.test.js` — the Graphviz version is read from the engine, named in the notices, and checked against published advisories.
 - `test/licences.test.js` — licences through the whole build chain.
 - `test/offline.test.js` — the bundled engine makes no network request.
 - `test/policy.test.js` — the plugin-store files, supply-chain pins and least-privilege CI.
+- `test/quality-metrics.test.js` — the quality metrics are held to a committed baseline, and a worse one fails without a recorded reason.
 - `test/requirements.test.js` — the generated requirements copy: started requirements proved, tests where they say.
 - `test/test-vault.test.js` — the test vault: dummy notes tied to requirements, nothing Obsidian writes committed, each session clean.
 - `test/tests-first.test.js` — every test is seen to fail before its code, replayed commit by commit.
+
+## The quality ratchet
+
+- **Every release measures the code** (spec §12): `node scripts/quality-metrics.mjs --out quality/metrics.json` writes
+  file sizes, an `npm audit` count, a secrets scan, the bundle's size, the time to draw 50 things, the suite's duration,
+  its flaky tests, the size of a passing quiet run and coverage. It runs the suite twice, so it is the release's job.
+- **`quality/baseline.json` is what each is held to,** by `node scripts/quality-check.mjs quality/metrics.json`. A metric
+  that got worse fails the release, unless `quality/accepted.json` gives a reason for that change: the metric, its
+  baseline value (`from`), the value it may reach (`to`), why, and the day. Timings carry a tolerance and are scaled by
+  how fast the machine measured itself; counts carry none. The quick ones (file sizes, secrets) also run in CI and in
+  `test/quality-metrics.test.js`.
+- **To move the baseline,** after a change is wanted, run the metrics script with `--out quality/baseline.json` on a
+  passing suite, and commit it.
+- **The Graphviz inside the engine is watched** (spec §13): `node scripts/engine-version.mjs` reads its version from the
+  engine, checks the notices name it, and checks `quality/advisories.json` offline. Only `--refresh` asks OSV (NVD behind
+  it); the release's quality job and a weekly workflow run it. The plugin never asks.

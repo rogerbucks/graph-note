@@ -1,0 +1,4 @@
+{
+  "about": "Recorded reasons for a quality metric that got worse than quality/baseline.json (spec §12). Each entry covers one change: the metric, its baseline value (from), the value it may reach or anything better (to), why, and the day. Without an entry, scripts/quality-check.mjs fails the release. When the baseline is re-measured, entries for the old values simply stop applying.",
+  "accepted": []
+}

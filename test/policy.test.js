@@ -229,16 +229,27 @@ describe('GitHub Actions', () => {
     }
   });
 
-  test('only the release job may write', () => {
+  // Two jobs may write: the release job, which makes the release; and the weekly refresh of the engine's advisory cache
+  // (spec §13, engine_version_watched), which opens a pull request and so needs contents and pull requests, and no more.
+  test('only the release job and the advisory refresh job may write, the refresh with exactly two permissions', () => {
+    const WRITERS = {
+      '.github/workflows/release.yml': 'release',
+      '.github/workflows/engine-advisories.yml': 'refresh',
+    };
     for (const f of workflowFiles()) {
       for (const [name, lines] of Object.entries(jobs(read(f)))) {
         const perms = block(lines, 'permissions', 4);
         if (!perms) continue;
         const writes = permissionValues(perms).some((v) => /write/.test(v));
-        if (writes) assert.ok(f.endsWith('release.yml') && name === 'release', `${f}: job ${name} writes`);
+        if (writes) assert.equal(WRITERS[f], name, `${f}: job ${name} writes`);
       }
       assert.doesNotMatch(read(f), /write-all/, f);
     }
+    const refresh = block(jobs(read('.github/workflows/engine-advisories.yml')).refresh, 'permissions', 4);
+    assert.deepEqual(
+      refresh.slice(1).map((l) => l.trim()),
+      ['contents: write', 'pull-requests: write'],
+    );
   });
 
   test('no workflow runs on pull_request_target', () => {

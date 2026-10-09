@@ -23,6 +23,8 @@ jobs:
       - run: npm ci
       - run: npm audit signatures
       - run: node scripts/check-classification.mjs --all
+      # the quick quality metrics (file sizes, secrets) against the baseline; the slow ones are the release's
+      - run: node scripts/quality-check.mjs --fast
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
