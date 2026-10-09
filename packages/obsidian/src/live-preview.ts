@@ -12,6 +12,7 @@ import type { MarkdownPostProcessorContext } from 'obsidian';
 import { gqlSpans, graphOfBlock } from '@graph-note/core';
 import type GraphNotePlugin from './main';
 import { renderBlock } from './block';
+import { settlePlacements } from './view';
 
 /** The last height each card was seen at, by its note and line: what CodeMirror is told while the card is redrawn. */
 const heights = new Map<string, number>();
@@ -118,6 +119,7 @@ class GraphBlock extends WidgetType {
         state.component?.unload();
         state.component = component;
         dom.replaceChildren(el);
+        settlePlacements(); // the editor in place moves into the new drawing now, never a moment later
         const h = dom.getBoundingClientRect().height;
         if (h > 0) this.measured(dom, h);
       },

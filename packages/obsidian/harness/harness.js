@@ -54,7 +54,9 @@ if (params.has('cm')) {
   document.body.dataset.ready = 'yes';
   if (params.has('check')) {
     const { pageStaysStill } = await import('./live-preview.js');
-    const result = await pageStaysStill();
+    // ?check=<card>:<pixels above the view, or end>
+    const [card, at] = (params.get('check') || '1:120').split(':');
+    const result = await pageStaysStill(Number(card), at === 'end' ? 'end' : Number(at));
     document.body.dataset.result = JSON.stringify(result);
   }
 } else {

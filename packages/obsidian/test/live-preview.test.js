@@ -128,6 +128,42 @@ describe('the editing view draws graph blocks with its own widget', () => {
   });
 });
 
+describe('the editor in place, in the editing view’s own card', () => {
+  // found in headless Chrome, 9 Oct 2026: the new drawing went in at once, but the box joined it only at the card's next
+  // look, 16 ms later; for that moment the card was the box's height shorter, and CodeMirror moved the page to suit
+  test('the box moves into the new drawing as it is put in place, so the card is never without it', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      const host = env.doc.body.createDiv({ cls: 'markdown-source-view' });
+      const state = editorState(env, NOTE);
+      const [first] = widgets(state);
+      const dom = first.widget.toDOM();
+      host.appendChild(dom);
+      await until(() => !!dom.querySelector('.graph-note-view'));
+      dom
+        .querySelectorAll('button')
+        .find((b) => b.getAttribute('aria-label') === 'Edit here')
+        .click();
+      await until(() => !!dom.querySelector('textarea'));
+      const seen = [];
+      const put = dom.replaceChildren.bind(dom);
+      dom.replaceChildren = (...cs) => {
+        put(...cs);
+        // once what put it in place has finished, before any later look
+        queueMicrotask(() => seen.push(!!dom.querySelector('textarea')));
+      };
+      const at = NOTE.indexOf('(large)-[:ANSWERS]->(q)');
+      const [second] = widgets(state.update({ changes: { from: at, insert: ' ' } }).state);
+      second.widget.updateDOM(dom);
+      await until(() => seen.length > 0, 3000);
+      assert.deepEqual(seen, [true]);
+      second.widget.destroy(dom);
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
 describe('what is typed in place is written through the editor', () => {
   test('with the note open in the editing view, a change is one editor transaction, never a write to the file', async () => {
     const env = await load({ files: { [PATH]: NOTE } });

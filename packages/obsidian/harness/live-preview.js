@@ -105,23 +105,29 @@ export function livePreview(parent, own) {
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /**
- * "The page stays still" (spec §4, decided 9 Oct 2026): with the second card edited in place and the editor scrolled so
- * the card's top is above the view, a comma typed at the end of its text is written and redrawn; the editor's scroll,
- * the box's place on screen and its focus must all be as they were. Returns what was seen.
+ * "The page stays still" (spec §4, decided 9 Oct 2026): with a card edited in place and the editor scrolled to a given
+ * place, a comma typed at the end of its text is written and redrawn; the editor's scroll, the box's place on screen and
+ * its focus must all be as they were. `card` is which graph card; `at` is how far the card's top is above the view, in
+ * pixels, or 'end' for the editor scrolled to its very end, where a correction sticks. Returns what was seen.
  */
-export async function pageStaysStill() {
+export async function pageStaysStill(card = 1, at = 120) {
   await pause(800);
   const sc = document.querySelector('.cm-editor .cm-scroller');
   const cards = [...document.querySelectorAll('.cm-editor .graph-note-view')];
-  [...cards[1].querySelectorAll('button')].find((b) => b.getAttribute('aria-label') === 'Edit here').click();
+  [...cards[card].querySelectorAll('button')].find((b) => b.getAttribute('aria-label') === 'Edit here').click();
   await pause(600);
   const t = document.querySelector('.cm-editor textarea.graph-note-text');
   t.focus();
   t.setSelectionRange(t.value.length, t.value.length);
-  const card = t.closest('.cm-embed-block, .graph-note-block');
-  sc.scrollTop += card.getBoundingClientRect().top - sc.getBoundingClientRect().top + 120;
+  const holder = t.closest('.cm-embed-block, .graph-note-block');
+  if (at === 'end') sc.scrollTop = sc.scrollHeight;
+  else sc.scrollTop += holder.getBoundingClientRect().top - sc.getBoundingClientRect().top + at;
   await pause(300);
-  const before = { scrollTop: Math.round(sc.scrollTop), boxTop: Math.round(t.getBoundingClientRect().top) };
+  const before = {
+    scrollTop: Math.round(sc.scrollTop),
+    boxTop: Math.round(t.getBoundingClientRect().top),
+    cardHeight: Math.round(holder.getBoundingClientRect().height),
+  };
   t.value += ',';
   t.setSelectionRange(t.value.length, t.value.length);
   t.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: ',' }));
@@ -137,5 +143,5 @@ export async function pageStaysStill() {
     Math.abs(after.scrollTop - before.scrollTop) <= 1 &&
     after.boxTop !== null &&
     Math.abs(after.boxTop - before.boxTop) <= 1;
-  return { still: still && after.focused && after.written, before, after };
+  return { card, at, still: still && after.focused && after.written, before, after };
 }
