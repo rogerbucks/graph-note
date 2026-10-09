@@ -1,15 +1,17 @@
 // One gql block in a note (spec §3): a graph block is drawn, as built by the note's blocks up to it; anything else is
 // shown as coloured code. A graph is never blank: what can be read is drawn and the rest is listed; when nothing can be
-// read, or the engine cannot start, the text is shown with its problems or a banner.
+// read, or the engine cannot start, or the graph is over a size or time limit (spec §9), the text is shown with its
+// problems or a banner.
 import { Notice } from 'obsidian';
 import type { MarkdownPostProcessorContext } from 'obsidian';
-import { completenessReport, draw, gqlBlocks, graphOfBlock, namesSharedSchema, readNote } from '@graph-note/core';
-import type { Block, Drawn, Problem } from '@graph-note/core';
+import { completenessReport, gqlBlocks, graphOfBlock, namesSharedSchema, readNote } from '@graph-note/core';
+import type { Block, Drawn, Problem, Refusal } from '@graph-note/core';
 import type GraphNotePlugin from './main';
 import { renderCode } from './code';
 import { GraphView } from './graph-view/graph-view';
 import { readOnlyHere, settlePlacements, whenPlaced } from './graph-view/placement';
 import { renderProblems } from './graph-view/problems-list';
+import { refusalBanner } from './layout-worker/refusal-banner';
 import type { ShownProblem } from './graph-view/problems-list';
 
 /** Draws one gql block where the note shows it (spec §3): its graph with the bar, or its problems, or a prompt when it is empty. */
@@ -79,9 +81,9 @@ export async function renderBlock(
     return;
   }
 
-  let drawn: Drawn;
+  let drawn: Drawn | Refusal;
   try {
-    drawn = draw(drawing, await plugin.graphviz());
+    drawn = await plugin.layout(drawing);
   } catch (e) {
     console.error('Graph Note could not draw', graph, e);
     root.createDiv({
@@ -90,6 +92,23 @@ export async function renderBlock(
       text: 'The drawing engine could not start, so this graph is shown as text. Any drawing generated earlier in this note may be stale.',
     });
     renderCode(root, source);
+    return;
+  }
+  if ('reason' in drawn) {
+    // over a size limit, or its layout stopped for taking too long (spec §9): the text, its problems, and why
+    refusalBanner(root, drawn);
+    if (problems.length) renderProblems(root, problems, false);
+    const editing = plugin.inlineFor(target.path, target.line);
+    if (editing) {
+      // an editor open in place keeps its place in the card, so the text can still be made small enough to draw
+      const at = root.createDiv({ cls: 'graph-note-edit-slot' });
+      whenPlaced(root, () => {
+        if (readOnlyHere(root)) {
+          at.remove();
+          renderCode(root, source);
+        } else editing.mount(at);
+      });
+    } else renderCode(root, source);
     return;
   }
   let slot: HTMLElement | null = null;

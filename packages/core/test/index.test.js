@@ -2,7 +2,7 @@
 // change. These are the names it exported when drawing.ts was split into modules (9 Oct 2026), values and types alike,
 // with those added deliberately since: completing as you type (inlineCompletion, stepOver, Inline, InlineKind), lists as
 // linked things (makeList and its kin), and name suggestions (nameFromText, nameSlug, nameStyleOf, nameWords,
-// textFromName and their types).
+// textFromName and their types), and the layout kept apart from the interface (LayoutRunner and its kin, 10 Oct 2026).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -15,6 +15,8 @@ const ENTRY = new URL('../src/index.ts', import.meta.url);
 const VALUES = [
   'History',
   'KIND',
+  'LAYOUT_LIMITS',
+  'LayoutRunner',
   'MAX_SCALE',
   'MIN_SCALE',
   'PaneSession',
@@ -46,6 +48,7 @@ const VALUES = [
   'graphOfBlock',
   'hitAreas',
   'hops',
+  'inThreadPort',
   'inlineCompletion',
   'insertBlockAfter',
   'isDraft',
@@ -74,6 +77,7 @@ const VALUES = [
   'renameProperty',
   'replaceBlock',
   'reverseGuess',
+  'serveLayouts',
   'setProperty',
   'sizeOf',
   'spanOf',
@@ -82,6 +86,7 @@ const VALUES = [
   'textVersion',
   'themed',
   'tokenize',
+  'tooLarge',
   'withoutColorMix',
 ];
 
@@ -91,6 +96,7 @@ const TYPES = [
   'Box',
   'Change',
   'Choice',
+  'Clock',
   'CodeAction',
   'CompletenessReport',
   'CompletionItem',
@@ -100,11 +106,17 @@ const TYPES = [
   'Edit',
   'Engine',
   'Estimate',
+  'Fallback',
   'GraphDrawing',
   'GraphNames',
   'HitAreas',
   'Inline',
   'InlineKind',
+  'LayoutLimits',
+  'LayoutPort',
+  'LayoutReply',
+  'LayoutRequest',
+  'LayoutScope',
   'Link',
   'LinkDetail',
   'LinkDetails',
@@ -121,6 +133,7 @@ const TYPES = [
   'PropType',
   'Property',
   'Range',
+  'Refusal',
   'RuleReport',
   'Shape',
   'Size',

@@ -36,6 +36,10 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `layout.ts` — the Graphviz layout source, byte-identical to the Python library's, a box drawn under a suggested name
   dashed and labelled so in both.
 - `render.ts` — laying out with the bundled engine, and what a box's or link's details are.
+- `layout-worker.ts` — the layout kept apart from the interface (spec §9, layout_contained): both sides of the talk with a
+  worker, through a port the host gives it — the worker's (`serveLayouts`) and the page's (`LayoutRunner`: one worker
+  reused, the size limits checked before any layout, the time limit, a fresh worker after one overruns). `LAYOUT_LIMITS`
+  holds the limits and why.
 - `theme.ts` — the drawing's colours and size, from the theme.
 - `hits.ts` — what a tap lands on or near.
 - `zoom.ts` — zoom, pan and full screen.

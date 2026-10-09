@@ -2,10 +2,11 @@
 import { Notice, Plugin, TFile, editorInfoField } from 'obsidian';
 import type { EditorView } from '@codemirror/view';
 import type { MarkdownPostProcessorContext } from 'obsidian';
-import { gqlBlocks, isSharedSchema, loadEngine } from '@graph-note/core';
-import type { Engine } from '@graph-note/core';
+import { gqlBlocks, isSharedSchema, LAYOUT_LIMITS } from '@graph-note/core';
+import type { Drawn, Engine, GraphDrawing, LayoutLimits, Refusal } from '@graph-note/core';
 import type { DeclaredList } from './properties/list-row';
 import type { Editing } from './graph-view/view-options';
+import { engineOnThePage, Layouts } from './layout-worker/layout-worker';
 import { renderBlock } from './block';
 import { GraphPane, PANE } from './pane';
 import { addForYou } from './editor';
@@ -85,15 +86,40 @@ export default class GraphNotePlugin extends Plugin {
     await this.saveData(this.saved);
   }
 
-  /** Starts the Graphviz engine. Kept separate so a test can stand in a failing one. */
+  /**
+   * Starts the Graphviz engine on the page's own thread, for where no worker can run. Kept separate so a test can stand
+   * in a failing one.
+   */
   loadEngine(): Promise<Engine> {
-    return loadEngine();
+    return engineOnThePage();
   }
 
-  /** The Graphviz engine, started once, the first time a graph is drawn. */
+  /** The Graphviz engine on the page's own thread, started once, the first time a graph is laid out there. */
   graphviz(): Promise<Engine> {
     this.engine ??= this.loadEngine();
     return this.engine;
+  }
+
+  /** How large a graph may be, and how long its layout may take, before it is shown as text (spec §9): a settings hook. */
+  readonly layoutLimits: LayoutLimits = { ...LAYOUT_LIMITS };
+
+  private layouts: Layouts | null = null;
+
+  /**
+   * A graph laid out and themed apart from the interface, in one worker reused for every block (spec §9,
+   * layout_contained); or why it is shown as text. Rejects when the engine cannot start.
+   */
+  layout(drawing: GraphDrawing): Promise<Drawn | Refusal> {
+    this.layouts ??= new Layouts(
+      () => this.layoutLimits,
+      () => this.graphviz(),
+    );
+    return this.layouts.draw(drawing);
+  }
+
+  override onunload(): void {
+    this.layouts?.close();
+    this.layouts = null;
   }
 
   /** The editors (CodeMirror views) open on notes in the editing view, as the plugin's editor extension sees them. */

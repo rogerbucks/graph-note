@@ -168,6 +168,17 @@
   background: var(--background-secondary);
   margin-bottom: var(--size-4-2);
 }
+/* A graph over a size or time limit, shown as text: the banner's icon beside its words (spec §9, layout_contained). */
+.graph-note-refusal {
+  display: flex;
+  gap: var(--size-4-2);
+  align-items: flex-start;
+}
+.graph-note-refusal-icon {
+  flex: none;
+  display: flex;
+  color: var(--text-error);
+}
 .graph-note-empty {
   padding: var(--size-4-3);
   border: 1px dashed var(--background-modifier-border);

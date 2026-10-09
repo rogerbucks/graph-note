@@ -11,11 +11,21 @@ module that ties the parts together, named as the folder is.
 
 - `main.ts` — the plugin: registers the block processor, the pane and the editor extension; keeps drafts and shared
   schemas; opens the editors.
-- `block.ts` — one gql block in a note: drawn, or shown as code, never blank.
+- `block.ts` — one gql block in a note: drawn, or shown as code, never blank; as text with a banner when it is over a
+  size or time limit.
 - `code.ts` — a block that is not a graph, shown as coloured code.
 - `live-preview.ts` — the editing view's own cards, so the page stays still while a block is typed in.
 - `editor.ts` — the comma and the colon added for you in the note's own editor.
 - `pane.ts` — the edit pane, which holds a block editor.
+
+### `src/layout-worker/` — the layout kept apart from the interface (spec §9, layout_contained)
+
+- `layout-worker.ts` — `Layouts`: every graph laid out in one Web Worker, started from a Blob URL of main.js's own copy
+  of the worker's bundle; on the page's thread where no worker can run, said once in the console. Says why it is built so.
+- `worker-entry.ts` — what runs inside the worker. `esbuild.config.mjs` bundles it on its own, Graphviz and all, into the
+  function `layoutWorker` of the module `graph-note:layout-worker` (typed in `bundled-worker.d.ts`).
+- `refusal-banner.ts` — the banner over a graph shown as text because it is over a size limit or took too long: an icon
+  and the limit and numbers in words.
 
 ### `src/properties/` — the inspector's properties, as Obsidian's Properties panel
 
@@ -66,6 +76,7 @@ package, or all with `npm test` from the repository root. Each builds `main.js` 
   (the obsidian module and CodeMirror), `load-plugin.js` (building and loading the plugin), `cascade.js` (the part of
   the CSS cascade a test needs), `notes.js` (a fenced block, a button by its label), and the notes each group of tests
   opens: `card-notes.js`, `pane-notes.js`, `view-notes.js`, and `inspector-steps.js` (opening a box's details and driving the inspector's rows, menus and chips).
+  `workers.js` stands in a browser's Worker: each runs the code main.js hands it, from its Blob URL, in a real thread.
 - `test/device-checklist.md` — what is checked by hand on the devices.
 
 ## The harness, `harness/`
