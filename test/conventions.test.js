@@ -365,6 +365,11 @@ describe('the conventions, written down', () => {
       'vault.process',
       'theme variables',
       'sentence case',
+      '400 lines',
+      'test file over 600',
+      'GUIDE.md',
+      'type hints',
+      'never `utils`',
     ]) {
       assert.ok(c.includes(word), word);
     }
