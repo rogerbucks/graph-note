@@ -3,6 +3,7 @@
 import type { CompletenessReport, Drawn, Indent, Mode, NoteReading, Parked } from '@graph-note/core';
 import type { DeclaredList } from '../properties/list-row';
 import type { ShownProblem } from './problems-list';
+import type { ViewShown } from './view-strip';
 
 /** The editor open in place on this card, as the inspector needs it: the block's text as typed, and a way to replace it. */
 export interface Editing {
@@ -34,6 +35,8 @@ export interface ViewOptions {
   parked?: Map<string, Parked>;
   /** How the editor indents a thing it writes, as the settings say (spec §21). */
   indent?: Indent;
+  /** Set when the drawing is a view (spec §7): what it shows, how, and how to write its style. */
+  view?: ViewShown;
   /** Edit here: opens the text in place, inside this card (spec §4). */
   onEditHere?: () => void;
   /** While the card is edited, its edit button closes the editor, as its Done does (spec §4). */

@@ -98,6 +98,7 @@ These test behaviour across modules, or the repository itself, so they are named
 
 - `packages/core/test/abuse.test.js` — no sequence of edits or text crashes the viewer (spec §12).
 - `packages/core/test/display.test.js` — styled views and paths change only what they choose, and keep the locked hues, contrast and legend (editor spec §7).
+- `packages/core/test/views-across.test.js` — a view saved as shown is written in the style graph, never the data, and reopens the same (editor spec §7).
 - `packages/core/test/edge-cases.test.js` — empty, broken and oversized inputs each give a stated result, never a blank or a crash (spec §9).
 - `packages/core/test/edits.test.js` — every edit from the pane round-trips; locking writes a schema the checks pass.
 - `packages/core/test/imports.test.js` — the core imports no host.

@@ -10,6 +10,7 @@ import { readOnlyHere, whenPlaced } from './placement';
 import { renderProblems } from './problems-list';
 import { listParked } from './parked';
 import { Walk } from './walk';
+import { markView, renderViewStrip } from './view-strip';
 import { plural, renderBar } from './view-bar';
 import { describeDrawing, insertSvg } from './drawing-svg';
 import { Taps, targetAt, targetOf } from './taps';
@@ -73,6 +74,8 @@ export class GraphView extends MarkdownRenderChild {
     list = renderProblems(root, problems, true, this.o.completeness);
     if (this.o.parked) listParked(list, this.o.parked, (k) => this.boxes().find((b) => b.key === k)?.text ?? k);
     this.walk = new Walk(root, this.o, () => this.svg); // walked paths: Play, and Record while edited (§7)
+    const view = this.o.view;
+    if (view) renderViewStrip(root, view, () => ({ view: this.zoom.view(), selected: this.details.selectedKey() }));
     this.viewport = root.createDiv({
       cls: 'graph-note-viewport',
       attr: {
@@ -82,6 +85,7 @@ export class GraphView extends MarkdownRenderChild {
       },
     });
     this.svg = insertSvg(this.viewport, this.o.drawn, this.drawing());
+    if (view) markView(this.svg, view); // a view: what is outside it faded, its looks drawn (§7)
     // the drawing as sentences, for screen readers (spec §11)
     const d = this.drawing();
     if (d) describeDrawing(root, this.viewport, d);
@@ -93,6 +97,9 @@ export class GraphView extends MarkdownRenderChild {
     this.zoom = new Zoom({ width: this.o.drawn.width, height: this.o.drawn.height }, this.viewportSize(), mode);
     this.zoom.onChange = (v) => this.apply(v);
     this.zoom.onExit = () => this.o.onClose?.();
+    // a view saved as shown is shown so again (§7)
+    const was = view?.shown;
+    if (was?.zoom !== undefined) this.zoom.restore(was.zoom, was.x ?? 0, was.y ?? 0);
     this.apply(this.zoom.view());
     this.bindEvents();
     const observer = new ResizeObserver(() => this.zoom.resize(this.viewportSize()));
@@ -113,7 +120,7 @@ export class GraphView extends MarkdownRenderChild {
         }
         source?.remove();
         if (slot) this.o.onReady?.(slot);
-        const reopen = this.o.editing?.()?.selected;
+        const reopen = this.o.editing?.()?.selected ?? (was?.selected ? { key: was.selected } : null);
         if (reopen) this.open(reopen);
       },
       () => !gone,

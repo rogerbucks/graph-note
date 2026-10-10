@@ -14,6 +14,7 @@ import {
   readNote,
   readStyle,
   styleOf,
+  viewsOf,
   underStrictness,
 } from '@graph-note/core';
 import type { Block, Drawn, Problem, Refusal } from '@graph-note/core';
@@ -21,6 +22,7 @@ import type GraphNotePlugin from './main';
 import type { EditTarget } from './main';
 import { renderCode } from './code';
 import { renderStyleBlock } from './style-block';
+import { renderViewBlock } from './view-block';
 import { GraphView } from './graph-view/graph-view';
 import { readOnlyHere, settlePlacements, whenPlaced } from './graph-view/placement';
 import { renderProblems } from './graph-view/problems-list';
@@ -95,6 +97,9 @@ export async function renderBlock(
   ctx: MarkdownPostProcessorContext,
   owner?: object,
 ): Promise<void> {
+  // a query block named as a view is drawn as the view (§7)
+  const view = viewsOf([source])[0];
+  if (view) return renderViewBlock(plugin, source, el, ctx, view, owner);
   const styled = styleOf(source);
   if (styled) {
     // a style block is never drawn as a graph: folded away until opened (§2)
