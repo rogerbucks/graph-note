@@ -35,6 +35,15 @@ test('bin/render.mjs draws SVG from DOT on its own, through node', () => {
   assert.match(JSON.parse(r.stdout)[0], /<svg /);
 });
 
+test('the repository is a marketplace listing the mod by its folder, so an install reads the working copy', () => {
+  const market = JSON.parse(readFileSync(`${pkg}../../.claude-plugin/marketplace.json`, 'utf8'));
+  const manifest = JSON.parse(readFileSync(`${pkg}mod/.claude-plugin/plugin.json`, 'utf8'));
+  assert.equal(market.name, 'graph-note', 'installed as graph-note@graph-note');
+  assert.deepEqual(market.plugins, [
+    { name: manifest.name, source: './packages/claude-code/mod', description: manifest.description },
+  ]);
+});
+
 test("the mod's test fixtures are the test vault's sample note and what Graphviz draws for it", async () => {
   const { NOTE, SVGS } = await import(`${pkg}mod/tests/fixtures.js`);
   assert.equal(NOTE, readFileSync(`${pkg}../../test-vault/Sample graph note.md`, 'utf8'));

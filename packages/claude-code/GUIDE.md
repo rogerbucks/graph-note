@@ -45,6 +45,13 @@ Built, never edited (gitignored): `mod/hooks/graph.js`, `mod/bin/render.mjs`, `m
 `mod/.claude-plugin/types/` when it loads the mod; `mod/tsconfig.json` extends it, so `tsc -p packages/claude-code/mod`
 type-checks the mod once it has been loaded.
 
+## Installing it for every session
+
+The repository is a marketplace (`.claude-plugin/marketplace.json` at its root) listing the mod by its folder, so an
+install reads the working copy itself, never a copy. Once, from a terminal in the checkout, after `npm run build`:
+`claude plugin marketplace add <checkout>` and `claude plugin install graph-note@graph-note --scope user`. It then loads
+in every new session, the desktop app's included. After a change: `npm run build`, then `/reload-plugins`.
+
 ## Build and tests
 
 - `npm run build --workspace packages/claude-code` (`esbuild.config.mjs`) builds the mod, and its test fixtures from
