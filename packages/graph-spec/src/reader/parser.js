@@ -9,10 +9,13 @@ class Parser {
   constructor(t) {
     this.t = t;
     this.i = 0;
+    // commas: [line, at] for each missing comma read in (§3): the line it is missing from, and where in the block the
+    // code on that line ends, which is where it is written in
     this.commas = [];
-  } // commas: the lines a missing comma was read after (§3)
+  }
   peek(k = 0) {
-    return this.t[this.i + k] || ['end', '', this.t.length ? this.t[this.t.length - 1][2] : 1, ''];
+    const last = this.t[this.t.length - 1];
+    return this.t[this.i + k] || ['end', '', last ? last[2] : 1, '', last ? last[4] : 0];
   }
   line() {
     return this.peek()[2];
@@ -107,12 +110,13 @@ class Parser {
       // (§3, req:3.bare-link-type)
       const bare = !this.at('p', ':');
       if (!bare) this.take('p', ':');
-      const line = this.line();
+      const [, , line, raw, end] = this.peek();
       const type = this.name();
       const props = this.props();
       this.take('p', ']');
       this.take('arrow');
-      rels.push({ type, props, bare, line });
+      // at: where the type begins in the block, where a bare one's colon is written in
+      rels.push({ type, props, bare, line, at: end - raw.length });
       nodes.push(this.node());
     }
     return [nodes, rels];
@@ -146,7 +150,7 @@ class Parser {
           const at = this.i;
           try {
             const p = this.path();
-            this.commas.push(prev[2]);
+            this.commas.push([prev[2], prev[4]]); // the token before ends its line's code: a comment after code is refused
             paths.push(p);
             continue;
           } catch (e) {

@@ -383,6 +383,63 @@ class BareLinkType(unittest.TestCase):
         self.assertEqual(parsed_bare(BARE_BLOCK, "grafeo"), want)
 
 
+# req:3.engine-gets-commas: a comma missing before the spaces that end a line, after a property map
+# written over two lines, and on the line of a link type written without its colon
+COMMA_HEAD = "// graph: g · document doc:one · schema s1 · as of 2026-10-01"
+MISSING_COMMA_BLOCKS = [
+    f"{COMMA_HEAD}\n(r:Reason {{id: 'r', title: 'Sun'}})   \n(o:Option {{id: 'o',\n"
+    "  name: 'Coast'})\n(r)-[:FAVOURS]->(o)",
+    f"{COMMA_HEAD}\n(r:Reason {{id: 'r', title: 'Sun'}})\n(o:Option {{id: 'o', name: 'Coast'}}),\n"
+    "(r)-[:FAVOURS]->(o),\n(q:Reason {id: 'q', title: 'Quiet'}),\n// quiet favours it\n"
+    "(q)-[favours]->(o)\n(p:Reason {id: 'p', title: 'Hills'})",
+]
+GRAPH_SPEC_CHECK = os.path.join(ROOT, "packages", "graph-spec", "src", "graph-spec-check.js")
+
+
+def js_corrected(block):
+    """The JavaScript reader's corrected text for a block, by Node, and the ids and link types it
+    reads."""
+    script = (
+        "const C = require(process.argv[1]); const s = new C.Store();"
+        " const g = s.graphs[s.apply(process.argv[2])];"
+        " process.stdout.write(JSON.stringify({corrected: s.corrected(process.argv[2]),"
+        " ids: [...g.nodes.values()].map((n) => n.props.id).sort(),"
+        " types: g.edges.map((e) => e[1]).sort()}))"
+    )
+    out = subprocess.run(
+        ["node", "-e", script, GRAPH_SPEC_CHECK, block], capture_output=True, text=True, check=True
+    ).stdout
+    return json.loads(out)
+
+
+def loaded(text):
+    """A text loaded into Grafeo (which reads it with the reader first): its ids and link types."""
+    db = gs.load(text)
+    rows = gs.Q(db, "MATCH (x) RETURN x.id AS i")
+    types = gs.Q(db, "MATCH ()-[r]->() RETURN type(r) AS t")
+    return {"ids": sorted(r["i"] for r in rows), "types": sorted(r["t"] for r in types)}
+
+
+class MissingComma(unittest.TestCase):
+    def test_the_js_and_python_readers_correct_a_missing_comma_to_the_same_text(self):
+        for block in MISSING_COMMA_BLOCKS:
+            js = js_corrected(block)
+            st = gp.Store()
+            st.apply(block)
+            ours = st.corrected(block)
+            self.assertEqual(js["corrected"], ours, block)
+            self.assertEqual(len(ours.split("\n")), len(block.split("\n")), block)
+            self.assertNotEqual(ours, block)
+
+    def test_the_js_and_python_corrected_texts_load_the_graph_both_readers_read(self):
+        for block in MISSING_COMMA_BLOCKS:
+            js = js_corrected(block)
+            want = {"ids": js["ids"], "types": js["types"]}
+            self.assertEqual(loaded(js["corrected"]), want, block)
+            self.assertEqual(parsed_bare(block, "grafeo"), want, block)
+            self.assertEqual(parsed_bare(block, "profile"), want, block)
+
+
 # Blocks the readers refuse, each in a document parse() can read the header of: the two halves of
 # req:3.id-once, and a block that is not one data statement, which Grafeo would take whole.
 DOC_HEAD = "// graph: g · document doc:one · schema s1 · as of 2026-10-01"
