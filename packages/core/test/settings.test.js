@@ -152,3 +152,74 @@ describe('formatting and drawing defaults', () => {
     );
   });
 });
+
+describe('the export options (editor spec §16)', () => {
+  const exports = ['exportTheme', 'companionNote', 'exportFolder', 'exportAsksAbove'];
+
+  // proves: export_fixed_theme
+  test('each is an option in the Export section, with a sentence, and a setting with a default', () => {
+    for (const key of exports) {
+      const o = OPTIONS.find((x) => x.key === key);
+      assert.equal(o?.section, 'Export', key);
+      assert.match(o.sentence, /^[A-Z].*\.$/, key);
+      assert.ok(key in DEFAULT_SETTINGS, key);
+    }
+    assert.deepEqual(
+      OPTIONS.filter((o) => o.section === 'Export').map((o) => o.key),
+      exports,
+    );
+  });
+
+  // proves: export_fixed_theme
+  test('the export theme is light or dark, light until chosen', () => {
+    assert.deepEqual(
+      OPTIONS.find((x) => x.key === 'exportTheme').choices.map((c) => c.value),
+      ['light', 'dark'],
+    );
+    assert.equal(DEFAULT_SETTINGS.exportTheme, 'light');
+    assert.equal(settingsFrom({ exportTheme: 'dark' }).exportTheme, 'dark');
+    assert.equal(settingsFrom({ exportTheme: 'sepia' }).exportTheme, 'light');
+  });
+
+  // proves: export_companion_note
+  test('a companion note is off until chosen, and the folder for exports is next to the note until set', () => {
+    assert.deepEqual(
+      OPTIONS.find((x) => x.key === 'companionNote').choices.map((c) => c.value),
+      ['off', 'on'],
+    );
+    assert.equal(DEFAULT_SETTINGS.companionNote, 'off');
+    assert.equal(DEFAULT_SETTINGS.exportFolder, '');
+    assert.equal(settingsFrom({ companionNote: 'on' }).companionNote, 'on');
+    assert.equal(settingsFrom({ companionNote: true }).companionNote, 'off');
+    assert.equal(settingsFrom({ exportFolder: 'Exports/Images' }).exportFolder, 'Exports/Images');
+  });
+
+  // proves: failed_export
+  test('a folder that is not inside the vault is read back as none, so exports stay next to the note', () => {
+    for (const odd of ['../x', 'a/../b', '/abs', '~/x', 'C:\\x', 'a\\b', 'a\u0000b', 7, null])
+      assert.equal(settingsFrom({ exportFolder: odd }).exportFolder, '', String(odd));
+    assert.equal(settingsFrom({ exportFolder: '  Exports//Images/ ' }).exportFolder, 'Exports/Images');
+  });
+
+  // proves: classified_export
+  test('an export asks above the lowest classification until a level is chosen', () => {
+    assert.equal(DEFAULT_SETTINGS.exportAsksAbove, DEFAULT_SETTINGS.classifications[0]);
+    assert.equal(settingsFrom({ exportAsksAbove: 'Confidential' }).exportAsksAbove, 'Confidential');
+  });
+
+  // proves: classified_export
+  test('the level is one of the classifications set; one that is not falls back to the lowest of them', () => {
+    assert.equal(settingsFrom({ exportAsksAbove: 'Top secret' }).exportAsksAbove, 'Public');
+    assert.equal(settingsFrom({ exportAsksAbove: 4 }).exportAsksAbove, 'Public');
+    const open = { classifications: ['Open', 'Closed'] };
+    assert.equal(settingsFrom({ ...open, exportAsksAbove: 'Closed' }).exportAsksAbove, 'Closed');
+    assert.equal(settingsFrom({ ...open, exportAsksAbove: 'Restricted' }).exportAsksAbove, 'Open');
+    assert.equal(settingsFrom(open).exportAsksAbove, 'Open');
+  });
+
+  // proves: export_fixed_theme
+  test('what was saved reads back the same', () => {
+    const saved = { exportTheme: 'dark', companionNote: 'on', exportFolder: 'Exports', exportAsksAbove: 'Internal' };
+    assert.deepEqual(settingsFrom(JSON.parse(JSON.stringify(saved))), { ...DEFAULT_SETTINGS, ...saved });
+  });
+});
