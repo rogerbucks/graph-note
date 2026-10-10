@@ -97,8 +97,10 @@ of Obsidian's rules, sentence case in the interface among them. These are the gu
 These test behaviour across modules, or the repository itself, so they are named after their subject:
 
 - `packages/core/test/abuse.test.js` — no sequence of edits or text crashes the viewer (spec §12).
+- `packages/core/test/edge-cases.test.js` — empty, broken and oversized inputs each give a stated result, never a blank or a crash (spec §9).
 - `packages/core/test/edits.test.js` — every edit from the pane round-trips; locking writes a schema the checks pass.
 - `packages/core/test/imports.test.js` — the core imports no host.
+- `packages/claude-code/test/build.test.mjs` — the build writes the mod's hooks bundle, with no WebAssembly engine, and a render script that draws.
 - `packages/obsidian/test/accessibility.test.js` — contrast in both themes, and a keyboard path for every action.
 - `packages/obsidian/test/build.test.mjs` — the build writes the files the plugin is installed from.
 - `packages/obsidian/test/inline.test.js` — editing in place in the drawing's card.

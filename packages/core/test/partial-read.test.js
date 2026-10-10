@@ -184,7 +184,9 @@ describe('the same reading as before, only faster', () => {
   const same = (texts, shared = []) => {
     const now = readBlocks(texts, shared, Infinity),
       then = oracle(texts, shared);
-    assert.deepEqual(now.problems, then.problems, texts.join('\n---\n'));
+    // the old reading named no departure from standard GQL: that was added after it, for strictness (spec §21)
+    const unnamed = (problems) => problems.map(({ departure: _, ...p }) => p);
+    assert.deepEqual(unnamed(now.problems), unnamed(then.problems), texts.join('\n---\n'));
     assert.equal(held(now.store), held(then.store), texts.join('\n---\n'));
     return now.problems.filter((p) => p.severity === 'error');
   };

@@ -1,10 +1,15 @@
 // A drawing's bar (spec §3): the problems badge, Fit, zoom out, zoom in, Full screen, and where the note is edited, Edit
 // here and Edit in pane; in reading view, Source. Each control says what it is in words as well as by its icon.
 import { setIcon } from 'obsidian';
+import { parkedCount } from '@graph-note/core';
 import type { ViewOptions } from './view-options';
 
 /** A number of things, in words: "1 problem", "2 problems". */
 export const plural = (n: number, one: string): string => `${n} ${one}${n === 1 ? '' : 's'}`;
+
+/** How the badge says what is parked for later (§8): ", 2 parked, 1 overdue", or nothing when nothing is. */
+const parkedWords = (count: { parked: number; overdue: number } | undefined): string =>
+  count?.parked ? `, ${count.parked} parked${count.overdue ? `, ${count.overdue} overdue` : ''}` : '';
 
 /** An icon button named for screen readers, with words beside the icon when given. */
 export function button(
@@ -53,9 +58,10 @@ export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): Ba
   const gaps = o.completeness?.gaps ?? 0;
   // a hint only offers a fix, so it is listed behind the badge but never counted in it
   const counted = problems.filter((p) => p.severity !== 'hint').length;
+  // things parked for later are counted apart from problems, and those past their revisit date as overdue (§8)
   const label =
-    [counted ? plural(counted, 'problem') : '', gaps ? plural(gaps, 'gap') : ''].filter(Boolean).join(', ') ||
-    'No problems';
+    ([counted ? plural(counted, 'problem') : '', gaps ? plural(gaps, 'gap') : ''].filter(Boolean).join(', ') ||
+      'No problems') + parkedWords(o.parked && parkedCount(o.parked));
   const badge = button(
     bar,
     label,

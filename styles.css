@@ -34,6 +34,59 @@
 .graph-note-svg g.edge[data-link] {
   cursor: pointer;
 }
+/* A thing parked for later (spec §5): dashed, with a later mark in words and a sign, never by colour alone. */
+.graph-note-parked path,
+.graph-note-parked polygon {
+  stroke-dasharray: 5 3;
+}
+.graph-note-svg .graph-note-later-mark {
+  font-size: 9pt;
+  fill: var(--text-muted);
+}
+.graph-note-svg .is-overdue .graph-note-later-mark {
+  fill: var(--text-error);
+  font-weight: var(--font-semibold);
+}
+/* Walked paths (spec §7): the strip below the bar; the step playing outlined heavier; each recorded step numbered. */
+.graph-note-walk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-4-2);
+  padding: var(--size-4-1) var(--size-4-2);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+.graph-note-walk button {
+  min-width: 44px;
+  min-height: 44px;
+}
+.graph-note-svg g.graph-note-step-current > :is(path, polygon) {
+  stroke-width: 4;
+}
+.graph-note-svg .graph-note-step-number {
+  font-size: 10pt;
+  font-weight: var(--font-bold);
+  fill: var(--text-normal);
+}
+.graph-note-park {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--size-4-2);
+}
+.graph-note-park label {
+  display: flex;
+  flex-direction: column;
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+.graph-note-park :is(button, input) {
+  min-width: 44px;
+  min-height: 44px;
+}
+.graph-note-walk input {
+  min-height: 44px;
+}
 
 /* The bar: every control at least 44 points, as touch needs (spec §5), and none that only shows on hover. */
 .graph-note-bar {
