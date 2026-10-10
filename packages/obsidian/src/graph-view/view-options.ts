@@ -1,6 +1,6 @@
 // What a drawn graph is given (spec §3, §4, §14): the reading and the graph, its drawn SVG and its problems, where it is
 // shown, what its buttons do, and the editor open in place on its card, if any, which its inspector writes through.
-import type { CompletenessReport, Drawn, Mode, NoteReading } from '@graph-note/core';
+import type { CompletenessReport, Drawn, Indent, Mode, NoteReading, Parked } from '@graph-note/core';
 import type { DeclaredList } from '../properties/list-row';
 import type { ShownProblem } from './problems-list';
 
@@ -30,6 +30,10 @@ export interface ViewOptions {
   onClose?: () => void;
   /** The completeness report shown behind the badge (spec §8). */
   completeness?: CompletenessReport;
+  /** The things parked for later, counted apart from problems behind the badge (spec §8). */
+  parked?: Map<string, Parked>;
+  /** How the editor indents a thing it writes, as the settings say (spec §21). */
+  indent?: Indent;
   /** Edit here: opens the text in place, inside this card (spec §4). */
   onEditHere?: () => void;
   /** While the card is edited, its edit button closes the editor, as its Done does (spec §4). */

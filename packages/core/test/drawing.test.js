@@ -386,6 +386,7 @@ describe('a relationship type written without its colon', () => {
       r.graphs.get('g').links.map((l) => l.type),
       ['FAVOURS', 'FAVOURS'],
     );
+    // a departure from standard GQL, said so for strictness (spec §21)
     assert.deepEqual(r.problems, [
       {
         graph: 'g',
@@ -397,6 +398,7 @@ describe('a relationship type written without its colon', () => {
         replace: { written: 'favours', with: [':FAVOURS'] },
         fixTitle: 'Write the colon: [:FAVOURS]',
         span: { line: 2, character: 5, end: 12 },
+        departure: 'bare-type',
       },
     ]);
   });
