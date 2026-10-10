@@ -25,19 +25,22 @@ def _blanked(block):
     )
 
 
-def _with_ids(block, names):
-    """The block with id: written into each named new node, where it is written, and nothing else
-    moved — or None when one cannot be found."""
+def _with_ids(block, nodes):
+    """The block with id: written into each of these new nodes, as the parser read them, where it
+    is written, and nothing else moved."""
     blanked = _blanked(block)
     edits = []
-    for name in dict.fromkeys(names):
+    for name, line in dict.fromkeys((n["var"], n["line"]) for n in nodes):
         written = re.finditer(
             rf"\({S}*{re.escape(name)}((?:{S}*:{S}*{NAME})*)({S}*)(\{{{S}*\}}|\{{|\))", blanked
         )
         # (name) alone names a node; it never writes one
         m = next((w for w in written if w.group(1) or w.group(3) != ")"), None)
         if not m:
-            return None
+            # the parser read it, so this is a fault here, never in the block: said, not hidden
+            raise ProfileError(
+                line, f"cannot find where {name} is written", "write it as (name:Kind {…})"
+            )
         given = f"id: {_gql_value(name)}"
         if m.group(3) == ")":
             edits.append((m.end(1), m.end(1), f" {{{given}}}"))
@@ -68,11 +71,9 @@ def _bare(block):
 
 def to_gql(block: str) -> str:
     """A block as standard GQL (§3): the data shortcut's INSERT put back and, where a name stands
-    for an id, the id: written on each new node and a MATCH added for each existing node named. A
-    block naming no existing node keeps its lines and comments, with only INSERT added and each
-    missing id: written into its node; one that names an existing node is rewritten whole,
-    comments dropped. A block that cannot be read is returned as it is, so the engine reports
-    it."""
+    for an id, the id: written into each new node and one MATCH line added for the existing nodes
+    named. Every other line and comment is kept as written. A block that cannot be read is
+    returned as it is, so the engine reports it."""
     lines = block.split("\n")
     i = next(
         (k for k, line in enumerate(lines) if strip(line) and not strip(line).startswith("//")),
@@ -94,6 +95,7 @@ def to_gql(block: str) -> str:
         matches, paths, sets = Parser(tokens(block)).statement()
     except ProfileError:
         matches = paths = sets = None
+    added = []
     if matches is not None:
         matched = {m["var"] for m in matches}
         written = {n["var"] for ns, _ in paths for n in ns if n["labels"] or n["props"]}
@@ -109,47 +111,20 @@ def to_gql(block: str) -> str:
             )
         )
         unnamed = [
-            n["var"]
+            n
             for ns, _ in paths
             for n in ns
             if (n["labels"] or n["props"]) and "id" not in n["props"]
         ]
-        given = None if refs else _with_ids(block, unnamed)
-        if given is not None:
-            # each id: written where its node is, so every line and comment stays (10 Oct 2026)
-            block, lines = given, given.split("\n")
-        elif refs or unnamed:
-
-            def node(n, new):
-                props = ({"id": n["var"]} if new and "id" not in n["props"] else {}) | n["props"]
-                body = ", ".join(f"{k}: {_gql_value(v)}" for k, v in props.items())
-                labels = "".join(":" + label for label in n["labels"])
-                return f"({n['var']}{labels}{' {' + body + '}' if body else ''})"
-
-            def rel(r):
-                body = ", ".join(f"{k}: {_gql_value(v)}" for k, v in r["props"].items())
-                return f"-[:{r['type']}{' {' + body + '}' if r['props'] else ''}]->"
-
-            def path(nodes, rels):
-                return node(nodes[0], bool(nodes[0]["labels"] or nodes[0]["props"])) + "".join(
-                    rel(r) + node(b, bool(b["labels"] or b["props"]))
-                    for r, b in zip(rels, nodes[1:])
-                )
-
-            out = lines[:i]
-            finds = [node(m, False) for m in matches] + [
-                f"({v} {{id: {_gql_value(v)}}})" for v in refs
-            ]
-            if finds:
-                out.append("MATCH " + ", ".join(finds))
-            if paths:
-                out += ["INSERT", ",\n".join(" " + path(*p) for p in paths)]
-            if sets:
-                out.append("SET " + ", ".join(f"{v}.{k} = {_gql_value(x)}" for v, k, x, _ in sets))
-            return "\n".join(out)
-    if not lstrip(lines[i]).startswith("("):
-        return block
-    return "\n".join(lines[:i] + ["INSERT"] + lines[i:])
+        # each id: written where its node is, and one MATCH line for the existing nodes named, so
+        # every line and comment stays (10 Oct 2026); Grafeo reads a second MATCH line as one MATCH
+        block = _with_ids(block, unnamed)
+        lines = block.split("\n")
+        if refs:
+            added.append("MATCH " + ", ".join(f"({v} {{id: {_gql_value(v)}}})" for v in refs))
+    if lstrip(lines[i]).startswith("("):
+        added.append("INSERT")
+    return "\n".join(lines[:i] + added + lines[i:])
 
 
 def _gql_value(v):
