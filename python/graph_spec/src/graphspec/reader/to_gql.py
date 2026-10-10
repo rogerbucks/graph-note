@@ -160,7 +160,7 @@ def to_gql(block: str) -> str:
         added.append("INSERT")
     # above the notes and //@ lines the first line of code owns, so they stay its own (§26, §27)
     at = i
-    while at and (NOTE.match(lstrip(lines[at - 1])) or TAG.match(lstrip(lines[at - 1]))):
+    while at and (NOTE.match(strip(lines[at - 1])) or TAG.match(lstrip(lines[at - 1]))):
         at -= 1
     return "\n".join(lines[:at] + added + lines[at:])
 

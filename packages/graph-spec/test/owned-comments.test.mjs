@@ -12,7 +12,12 @@ const { cases } = JSON.parse(readFileSync(new URL('./owned-comment-cases.json', 
 
 for (const c of cases)
   test(`owned comments: ${c.name}`, () => {
-    assert.deepEqual(C.ownedComments(c.block), { owned: c.owned, unowned: c.unowned, malformed: c.malformed });
+    if ('refused' in c)
+      assert.throws(
+        () => C.ownedComments(c.block),
+        (e) => e instanceof C.ProfileError && e.line === c.refused,
+      );
+    else assert.deepEqual(C.ownedComments(c.block), { owned: c.owned, unowned: c.unowned, malformed: c.malformed });
   });
 
 test('owned comments: a query block or an excerpt owns nothing, and is not refused', () => {

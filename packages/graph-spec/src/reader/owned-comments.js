@@ -4,7 +4,7 @@
 
 const { header, tokens } = require('./tokens.js');
 const { Parser } = require('./parser.js');
-const { trim, trimStart } = require('./whitespace.js');
+const { trim, trimStart, trimEnd } = require('./whitespace.js');
 
 // §26: exactly three slashes, then a space or the line's end; §27: //@, a space, a key, its colon and the value
 const NOTE = /^\/\/\/(?: |$)/,
@@ -21,12 +21,22 @@ function elementsByLine(block) {
   };
   const t = tokens(block);
   if (!t.length) return new Map();
+  // a line that begins inside an element written above it — within its brackets — holds more than one element
+  const inside = new Set();
+  let depth = 0,
+    last = 0;
+  for (const [kind, text, line] of t) {
+    if (line !== last && depth > 0) inside.add(line);
+    last = line;
+    if (kind === 'p' && '([{'.includes(text)) depth++;
+    else if (kind === 'p' && ')]}'.includes(text)) depth--;
+  }
   const [, paths] = new Parser(t).statement();
   for (const [nodes, rels] of paths) {
     for (const n of nodes) if (n.labels.length || Object.keys(n.props).length) add(n.line, { thing: n.v });
     rels.forEach((r, i) => add(r.line, { link: [nodes[i].v, r.type, nodes[i + 1].v] }));
   }
-  return new Map([...first].filter(([line]) => counts.get(line) === 1));
+  return new Map([...first].filter(([line]) => counts.get(line) === 1 && !inside.has(line)));
 }
 
 /** The notes and //@ lines a block's elements own (§26, §27): owned, in line order, each with its element's line, the
@@ -47,7 +57,8 @@ function ownedComments(block) {
   block.split('\n').forEach((raw, i) => {
     const line = i + 1,
       text = trimStart(raw);
-    if (NOTE.test(text)) run.push({ line, note: text.slice(4) });
+    // whitespace at a note line's end, a CR before its LF among it, is never its text (§3: GQL's whitespace)
+    if (NOTE.test(trimEnd(text))) run.push({ line, note: trimEnd(text).slice(4) });
     else if (text.startsWith('//@')) {
       const m = TAG.exec(text);
       if (m) run.push({ line, tag: [m[1], trim(m[2])] });

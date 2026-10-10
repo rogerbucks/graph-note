@@ -32,11 +32,16 @@ NONE = {"owned": [], "unowned": [], "malformed": []}
 class OwnedComments(unittest.TestCase):
     def test_every_case_in_the_shared_table_reads_as_the_table_says(self):
         for c in CASES:
-            with self.subTest(c["name"]):
-                self.assertEqual(
-                    gp.owned_comments(c["block"]),
-                    {"owned": c["owned"], "unowned": c["unowned"], "malformed": c["malformed"]},
-                )
+            if "refused" in c:
+                with self.assertRaises(gp.ProfileError, msg=c["id"]) as got:
+                    gp.owned_comments(c["block"])
+                self.assertEqual(got.exception.line, c["refused"], c["id"])
+                continue
+            self.assertEqual(
+                gp.owned_comments(c["block"]),
+                {"owned": c["owned"], "unowned": c["unowned"], "malformed": c["malformed"]},
+                c["id"],
+            )
 
     def test_a_query_block_or_an_excerpt_owns_nothing_and_is_not_refused(self):
         q = "// graph: g · QUERY\n//@ colour: orange\nMATCH (a) RETURN a"

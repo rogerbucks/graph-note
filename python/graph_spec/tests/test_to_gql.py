@@ -239,6 +239,9 @@ class ToGqlKeepsOwnedComments(unittest.TestCase):
     def test_comments_above_the_first_thing_stay_owned_when_a_match_line_is_added(self):
         self.kept(lines("// graph: g", "//@ weight: 2", "(a)-[:R]->(b)"))
 
+    def test_comments_above_the_first_thing_stay_owned_in_a_block_whose_lines_end_in_cr_lf(self):
+        self.kept("// graph: g\r\n/// a\r\n///\r\n//@ k: v\r\n(a:T {id: 'a'})\r\n")
+
     def test_comments_above_a_later_thing_keep_their_lines_as_written(self):
         block = lines("// graph: g", "(a:T {id: 'a'}),", "/// The second.", "//@ x: 1", "(b:T)")
         self.kept(block)

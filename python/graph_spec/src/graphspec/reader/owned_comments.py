@@ -9,7 +9,7 @@ from typing import Any
 
 from graphspec.reader.grammar import Parser
 from graphspec.reader.lexer import header, tokens
-from graphspec.reader.whitespace import lstrip, strip
+from graphspec.reader.whitespace import lstrip, rstrip, strip
 
 # §26: exactly three slashes, then a space or the line's end; §27: //@, a space, a key, its colon
 # and the value. ASCII names, as JavaScript's pattern reads them
@@ -30,6 +30,18 @@ def _elements_by_line(block: str) -> dict[int, dict[str, Any]]:
     toks = tokens(block)
     if not toks:
         return {}
+    # a line that begins inside an element written above it — within its brackets — holds more
+    # than one element
+    inside: set[int] = set()
+    depth = last = 0
+    for kind, text, line, *_ in toks:
+        if line != last and depth > 0:
+            inside.add(line)
+        last = line
+        if kind == "p" and text in "([{":
+            depth += 1
+        elif kind == "p" and text in ")]}":
+            depth -= 1
     _, paths, _ = Parser(toks).statement()
     for nodes, rels in paths:
         for n in nodes:
@@ -37,7 +49,7 @@ def _elements_by_line(block: str) -> dict[int, dict[str, Any]]:
                 add(n["line"], {"thing": n["var"]})
         for i, r in enumerate(rels):
             add(r["line"], {"link": [nodes[i]["var"], r["type"], nodes[i + 1]["var"]]})
-    return {line: e for line, e in first.items() if counts[line] == 1}
+    return {line: e for line, e in first.items() if counts[line] == 1 and line not in inside}
 
 
 def owned_comments(block: str) -> dict[str, list[Any]]:
@@ -61,8 +73,10 @@ def owned_comments(block: str) -> dict[str, list[Any]]:
     # a line ends at LF only, as the reader ends it — never str.splitlines()
     for i, raw in enumerate(block.split("\n")):
         line, text = i + 1, lstrip(raw)
-        if NOTE.match(text):
-            run.append({"line": line, "note": text[4:]})
+        # whitespace at a note line's end, a CR before its LF among it, is never its text (§3:
+        # GQL's whitespace)
+        if NOTE.match(rstrip(text)):
+            run.append({"line": line, "note": rstrip(text)[4:]})
         elif text.startswith("//@"):
             m = TAG.match(text)
             if m:
