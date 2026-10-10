@@ -9,6 +9,11 @@ import re
 from graphspec.reader.lexer import ProfileError, UTC, unquote
 
 
+class IdNotTextError(ProfileError):
+    """A node's id written as a value that is not text (§3, req:3.id-is-text): the missing comma's
+    retry keeps it, never taking it for a pattern that is not one."""
+
+
 class Parser:
     def __init__(self, toks):
         # commas: (line, at) for each missing comma read in (§3) — the line it is missing from,
@@ -92,7 +97,21 @@ class Parser:
             "no lists, no expressions",
         )
 
-    def props(self):
+    def text_id(self):
+        """Refuses a node's id written as a value that is not text — a number, TRUE, FALSE, DATE
+        '…' or DATETIME '…' — with the fix that quotes it (§3, req:3.id-is-text)."""
+        k, t, n, raw, _ = self.peek()
+        if k == "num" or (k == "kw" and t in ("TRUE", "FALSE")):
+            written, quoted = raw, f"'{raw}'"
+        elif k == "kw" and t in ("DATE", "DATETIME") and self.peek(1)[0] == "str":
+            written, quoted = f"{raw} {self.peek(1)[1]}", self.peek(1)[1]
+        else:
+            return
+        raise IdNotTextError(
+            n, f"id {written} is not text", f"write id: {quoted} — a node's id is always text (§3)"
+        )
+
+    def props(self, node=False):
         out = {}
         if not self.at("p", "{"):
             return out
@@ -100,6 +119,8 @@ class Parser:
         while not self.at("p", "}"):
             key = self.name()
             self.take("p", ":")
+            if node and key == "id":
+                self.text_id()
             out[key] = self.value()
             if not self.at("p", "}"):
                 self.take("p", ",")
@@ -113,7 +134,7 @@ class Parser:
         while self.at("p", ":"):
             self.take("p", ":")
             labels.append(self.name())
-        props = self.props()
+        props = self.props(node=True)
         self.take("p", ")")
         return {"var": var, "labels": labels, "props": props, "line": n}
 
@@ -166,6 +187,8 @@ class Parser:
                     at = self.i
                     try:
                         p = self.path()
+                    except IdNotTextError:
+                        raise  # its id refused, never hidden as "unexpected '('" (review of #49)
                     except ProfileError:
                         self.i = at
                     else:
@@ -181,6 +204,14 @@ class Parser:
                 var = self.name()
                 self.take("p", ".")
                 key = self.name()
+                if key == "id":
+                    # §3, req:3.set-keeps-id: whatever the value — a used id, a fresh one, or
+                    # the node's own
+                    raise ProfileError(
+                        n,
+                        f"SET would change {var}'s id, and a node's id never changes (§3)",
+                        f"write the right node, then link {var} to it or supersede it (§12)",
+                    )
                 self.take("p", "=")
                 sets.append((var, key, self.value(), n))
                 if not self.at("p", ","):

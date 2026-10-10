@@ -111,6 +111,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `python/graph_spec/tests/test_engine_gets_commas.py` — every route to the engine gives Grafeo the reader's corrected text with each missing comma written in, at the end of the code on its line, so a block missing one loads as the profile parser reads it, and no line is added (req:3.engine-gets-commas, req:3.engine-text-keeps-lines).
 - `python/graph_spec/tests/test_engine_text_comments.py` — every route to the engine gives Grafeo each whole-line comment as a `/* */` comment on its own line, a `*/` in its text broken up, and a line ends at LF only (req:3.engine-keeps-comments, req:3.engine-text-keeps-lines).
 - `python/graph_spec/tests/test_id_once_engine.py` — every route to the engine reads the block with the reader first, so no id reaches it twice in a graph (req:3.engine-reads-first, req:3.id-once).
+- `python/graph_spec/tests/test_ids_engine.py` — every route to the engine refuses a SET of a node's id and a node id that is not text, read by the reader first (req:3.set-keeps-id, req:3.id-is-text).
 - `python/graph_spec/tests/test_layout_source.py` — the Graphviz source is the one written before the move.
 - `python/graph_spec/tests/test_licences.py` — every Python package carries an allowed licence.
 - `python/graph_spec/tests/test_parity.py` — the Python library gives the JavaScript library's answers.

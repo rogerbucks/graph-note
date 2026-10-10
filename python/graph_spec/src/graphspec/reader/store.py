@@ -251,7 +251,7 @@ class Store:
                     f"SET names {var}, which is no thing in graph {g}",
                     "check the spelling — SET names a thing by its id",
                 )
+            # never an id: the parser refuses a SET of one (§3, req:3.set-keeps-id), so the index
+            # stays good
             graph["nodes"][bound[var]]["props"][key] = val
-            if key == "id":
-                ids = None  # an id set anew: indexed again when next asked
         return g

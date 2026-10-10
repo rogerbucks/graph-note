@@ -14,7 +14,6 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "src"))
 
-from graphspec.reader.lexer import ProfileError  # noqa: E402
 from graphspec.reader.store import Store  # noqa: E402
 
 
@@ -29,11 +28,6 @@ def seconds(block):
     start = time.process_time()
     Store().apply(block)
     return time.process_time() - start
-
-
-def props(store):
-    """Each node's properties in graph g, in the order written."""
-    return [n["props"] for n in store.graph("g")["nodes"].values()]
 
 
 class ManyThings(unittest.TestCase):
@@ -53,21 +47,6 @@ class ManyThings(unittest.TestCase):
             1.5 * len(large) / len(small),
             f"1,000 things took {t_small * 1000:.0f} ms, 4,000 took {t_large * 1000:.0f} ms",
         )
-
-
-class SetId(unittest.TestCase):
-    """A thing whose id is SET anew is found by its new id, and no longer by its old one, later
-    in the same block — as the JavaScript store finds it."""
-
-    def test_a_thing_is_found_by_the_id_set_earlier_in_its_block(self):
-        s = Store()
-        s.apply("// graph: g\n(a:T)")
-        s.apply("// graph: g\nSET a.id = 'z', z.k = 1")
-        self.assertEqual(props(s), [{"id": "z", "k": 1}])
-
-    def test_a_thing_is_not_found_by_the_id_it_had_before(self):
-        with self.assertRaisesRegex(ProfileError, "SET names old, which is no thing in graph g"):
-            Store().apply("// graph: g\n(p:T {id: 'old'})\nSET p.id = 'new', old.k = 1")
 
 
 if __name__ == "__main__":
