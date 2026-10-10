@@ -6,7 +6,7 @@ A host puts `src/` on `sys.path` and imports the four entry points by name. Each
 
 - `gql_profile.py` — reads data blocks in the document profile (§3) into a plain graph, with no database.
 - `graph_rules.py` — the spec's rules on that plain graph.
-- `graph_spec.py` — the rules through Grafeo, for the conformance suite; a setting a host assigns here is forwarded to `src/graphspec/engine/settings.py`.
+- `graph_spec.py` — the conformance suite's entry point: it reads, checks, runs processes, serves views and fills hashes from the reader's reading by default, and through Grafeo when a host sets `PARSER = 'grafeo'` (database work only); a setting a host assigns here is forwarded to `src/graphspec/engine/settings.py`.
 - `graph_svg.py` — lays a graph out with Graphviz as themed SVG; its style is `graph_svg.style.json` beside it. `dot_source` and `render` take the keys of boxes drawn under a suggested name (`suggested`, from the warnings `read_for_drawing` lists), dashed and labelled as the core draws them. Small enough to stay one module.
 
 ## The code, in `src/graphspec/` (namespace packages: folders, no `__init__.py`)

@@ -299,7 +299,11 @@ class Agreement(unittest.TestCase):
             base = [(graph_of(b), b) for b in blocks]
             for s in c.get("changesets") or []:
                 block = text(s)
-                res, h, after = gs.check_changeset(base, block, sw)
+                old, settings.PARSER = settings.PARSER, "grafeo"  # Grafeo's dry run, asked for
+                try:
+                    res, h, after = gs.check_changeset(base, block, sw)
+                finally:
+                    settings.PARSER = old
                 pres, ph, pafter = gr.check_changeset(base, block, self.matrix, gs.lint, sw)
                 gf = {label for label, ok, _ in res if not ok}
                 pf = {label for label, ok, _ in pres if not ok}
