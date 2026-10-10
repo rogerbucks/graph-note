@@ -141,9 +141,9 @@ class EnginePathsSkipTheReader(unittest.TestCase):
         with self.assertRaisesRegex(gp.ProfileError, "a is written twice"):
             parse_block(VAR_TWICE)
 
-    # GAP, open after PR #36 too: a block the reader cannot read is handed to Grafeo unchanged
-    # (to_gql.py:94-97), so parse() keeps one node of two with one id, and reports nothing.
-    @unittest.expectedFailure
+    # Was a GAP, open after PR #36 too: a block the reader cannot read was handed to Grafeo
+    # unchanged (to_gql.py:94-97), so parse() kept one node of two with one id, and reported
+    # nothing. parse now reads the block with the reader first (req:3.engine-reads-first).
     def test_parse_by_default_refuses_a_block_the_reader_cannot_read(self):
         with self.assertRaises(gp.ProfileError):
             parse_block(TWO_INSERTS)
@@ -207,7 +207,9 @@ class ValidateComesAfterGrafeo(unittest.TestCase):
 
     # GAP: by the time validate() runs (breaches.py:108), parse has keyed nodes by id
     # (reading.py:107) and the second node is gone; validate logs nothing, so the repeat is
-    # silently wrong data, not a reported problem.
+    # silently wrong data, not a reported problem. Since req:3.engine-reads-first, parse refuses
+    # this block with the reader before validate is reached, so it still fails here, by that
+    # refusal; validate itself is unchanged.
     @unittest.expectedFailure
     def test_validate_reports_an_id_repeated_in_one_document(self):
         log = []
