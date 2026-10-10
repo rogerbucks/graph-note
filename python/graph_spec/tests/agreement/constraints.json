@@ -1,0 +1,101 @@
+{
+  "cases": [
+    {
+      "name": "constraints: a process and a loan that break every rule written in GQL",
+      "blocks": [
+        [
+          "// graph: rules_broken",
+          "INSERT",
+          "(t_state:ElementType {id: 'type:State', name: 'State', kind: 'node'}),",
+          "(t_loan:ElementType {id: 'type:Loan', name: 'Loan', kind: 'node'}),",
+          "(t_repayment:ElementType {id: 'type:Repayment', name: 'Repayment', kind: 'node'}),",
+          "(t_transition:ElementType {id: 'type:TRANSITION', name: 'TRANSITION', kind: 'edge', reading: 'goes to', reverse_name: 'comes from'}),",
+          "(t_repays:ElementType {id: 'type:REPAYS', name: 'REPAYS', kind: 'edge', reading: 'repays', reverse_name: 'repaid by'}),",
+          "(meta:GraphMeta {id: 'meta:rules_broken', graph: 'rules_broken', schema: 'rules_broken@1'}),",
+          "(meta)-[:DECLARES]->(t_state),",
+          "(meta)-[:DECLARES]->(t_loan),",
+          "(meta)-[:DECLARES]->(t_repayment),",
+          "(meta)-[:DECLARES]->(t_transition),",
+          "(meta)-[:DECLARES]->(t_repays),",
+          "(waiting:State {flow: 'kettle', initial: TRUE}),",
+          "(heating:State {flow: 'kettle', initial: TRUE, final: TRUE}),",
+          "(boiled:State {flow: 'kettle', final: TRUE}),",
+          "(waiting)-[:TRANSITION]->(heating),",
+          "(heating)-[:TRANSITION]->(boiled),",
+          "(boiled)-[:TRANSITION]->(waiting),",
+          "(bike:Loan {drawn_at: '2026-03-01'}),",
+          "(early:Repayment {at: '2026-02-01'}),",
+          "(later:Repayment {at: '2026-04-01'}),",
+          "(early)-[:REPAYS]->(bike),",
+          "(later)-[:REPAYS]->(bike)"
+        ]
+      ],
+      "configuration": {
+        "constraints": [
+          {
+            "why": "a final state has no way out",
+            "gql": "MATCH (s:State)-[:TRANSITION]->(t) WHERE s.final = TRUE RETURN [[s.id, 'final']] AS slots, [{from: s.id, type: 'TRANSITION', to: t.id}] AS edges",
+            "reference": "final-is-final"
+          },
+          {
+            "why": "a repayment is never dated before its loan was drawn down",
+            "gql": "MATCH (r:Repayment)-[:REPAYS]->(l:Loan) WHERE r.at < l.drawn_at RETURN [[r.id, 'at'], [l.id, 'drawn_at']] AS slots",
+            "reference": "repaid-after-drawn"
+          },
+          {
+            "why": "a flow has one start state",
+            "gql": "MATCH (s:State) WHERE s.initial = TRUE WITH s.flow AS f, collect(s.id) AS xs WHERE size(xs) > 1 RETURN [x IN xs | [x, 'initial']] AS slots",
+            "reference": "one-start"
+          }
+        ]
+      }
+    },
+    {
+      "name": "constraints: a process and a loan that keep every rule written in GQL",
+      "blocks": [
+        [
+          "// graph: rules_kept",
+          "INSERT",
+          "(t_state:ElementType {id: 'type:State', name: 'State', kind: 'node'}),",
+          "(t_loan:ElementType {id: 'type:Loan', name: 'Loan', kind: 'node'}),",
+          "(t_repayment:ElementType {id: 'type:Repayment', name: 'Repayment', kind: 'node'}),",
+          "(t_transition:ElementType {id: 'type:TRANSITION', name: 'TRANSITION', kind: 'edge', reading: 'goes to', reverse_name: 'comes from'}),",
+          "(t_repays:ElementType {id: 'type:REPAYS', name: 'REPAYS', kind: 'edge', reading: 'repays', reverse_name: 'repaid by'}),",
+          "(meta:GraphMeta {id: 'meta:rules_kept', graph: 'rules_kept', schema: 'rules_kept@1'}),",
+          "(meta)-[:DECLARES]->(t_state),",
+          "(meta)-[:DECLARES]->(t_loan),",
+          "(meta)-[:DECLARES]->(t_repayment),",
+          "(meta)-[:DECLARES]->(t_transition),",
+          "(meta)-[:DECLARES]->(t_repays),",
+          "(waiting:State {flow: 'kettle', initial: TRUE}),",
+          "(heating:State {flow: 'kettle'}),",
+          "(boiled:State {flow: 'kettle', final: TRUE}),",
+          "(waiting)-[:TRANSITION]->(heating),",
+          "(heating)-[:TRANSITION]->(boiled),",
+          "(bike:Loan {drawn_at: '2026-03-01'}),",
+          "(later:Repayment {at: '2026-04-01'}),",
+          "(later)-[:REPAYS]->(bike)"
+        ]
+      ],
+      "configuration": {
+        "constraints": [
+          {
+            "why": "a final state has no way out",
+            "gql": "MATCH (s:State)-[:TRANSITION]->(t) WHERE s.final = TRUE RETURN [[s.id, 'final']] AS slots, [{from: s.id, type: 'TRANSITION', to: t.id}] AS edges",
+            "reference": "final-is-final"
+          },
+          {
+            "why": "a repayment is never dated before its loan was drawn down",
+            "gql": "MATCH (r:Repayment)-[:REPAYS]->(l:Loan) WHERE r.at < l.drawn_at RETURN [[r.id, 'at'], [l.id, 'drawn_at']] AS slots",
+            "reference": "repaid-after-drawn"
+          },
+          {
+            "why": "a flow has one start state",
+            "gql": "MATCH (s:State) WHERE s.initial = TRUE WITH s.flow AS f, collect(s.id) AS xs WHERE size(xs) > 1 RETURN [x IN xs | [x, 'initial']] AS slots",
+            "reference": "one-start"
+          }
+        ]
+      }
+    }
+  ]
+}
