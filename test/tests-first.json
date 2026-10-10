@@ -1239,11 +1239,20 @@
       "notReplayedCommits": []
     },
     "test/tests-first.test.js": {
-      "replayed": 6,
+      "replayed": 7,
       "notReplayed": 0,
-      "seenFailing": 12,
-      "excused": 0,
-      "passedFirst": [],
+      "seenFailing": 15,
+      "excused": 2,
+      "passedFirst": [
+        {
+          "commit": "0a1ea2d5e9eac8c005847b15dbc1e52df4dfd5dd",
+          "name": "replaying a commit against its parent’s code > a Python test whose subTests raise an error, not a failed assertion, has failed: it is seen failing first"
+        },
+        {
+          "commit": "0a1ea2d5e9eac8c005847b15dbc1e52df4dfd5dd",
+          "name": "replaying a commit against its parent’s code > a Python test with one subTest failing among others that pass has failed: it is seen failing first"
+        }
+      ],
       "notReplayedCommits": []
     },
     "test/whitespace.test.js": {
