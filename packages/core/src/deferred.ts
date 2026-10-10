@@ -6,7 +6,7 @@
 import gs from '@graph-note/graph-spec';
 import type { Graph } from '@graph-note/graph-spec';
 import { graphOf } from './blocks.ts';
-import { q } from './lock.ts';
+import { quoted as q } from './lock.ts';
 import type { NoteReading } from './note-reading.ts';
 import { readBlocks } from './partial-read.ts';
 import { S, isSpace, trim, trimEnd } from './whitespace.ts';

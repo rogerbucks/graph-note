@@ -22,8 +22,9 @@ export function reverseGuess(reading: string): string {
 /** A line kept under 70 characters, as the guide asks: as one line if it fits, otherwise as the two given. */
 const fit = (one: string, first: string, second: string) => (one.length < 70 ? [one] : [first, second]);
 
-/** A text as a GQL string: in single quotes, with a backslash or a quote escaped. Kept for the modules that write text. */
-export const q = (s: string) => `'${s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+/** A string quoted as GQL writes it: in single quotes, a backslash and a quote each led by a backslash. */
+export const quoted = (s: string) => `'${s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+const q = quoted;
 
 /**
  * The schema block that locks a draft: every kind and relationship type of the whole graph — across all its blocks in the
