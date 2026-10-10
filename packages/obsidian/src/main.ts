@@ -3,7 +3,19 @@ import { Notice, Plugin, TFile, editorInfoField } from 'obsidian';
 import type { EditorView } from '@codemirror/view';
 import type { MarkdownPostProcessorContext } from 'obsidian';
 import { gqlBlocks, isSharedSchema, LAYOUT_LIMITS, settingsFrom, standardBlocks, toStandard } from '@graph-note/core';
-import type { Converted, Drawn, Engine, GraphDrawing, LayoutLimits, Refusal, Settings } from '@graph-note/core';
+import type {
+  Converted,
+  Drawn,
+  Engine,
+  GraphDrawing,
+  LayoutLimits,
+  PngSize,
+  Refusal,
+  Settings,
+} from '@graph-note/core';
+import { exportGraph } from './export/export';
+import type { ExportAsk, ExportOutcome } from './export/export';
+import { rasterise } from './export/png';
 import { GraphNoteSettingTab } from './settings/settings';
 import type { DeclaredList } from './properties/list-row';
 import type { Editing } from './graph-view/view-options';
@@ -176,6 +188,16 @@ export default class GraphNotePlugin extends Plugin {
 
   /** How large a graph may be, and how long its layout may take, before it is shown as text (spec §9): a settings hook. */
   readonly layoutLimits: LayoutLimits = { ...LAYOUT_LIMITS };
+
+  /** Exports a graph or a view as an image (spec §16): see export/export.ts. */
+  exportGraph(ask: ExportAsk): Promise<ExportOutcome> {
+    return exportGraph(this, ask);
+  }
+
+  /** A PNG of an exported SVG at `size` (spec §16): kept apart so a test can stand in one, as it can the engine. */
+  rasterise(svg: string, size: PngSize): Promise<Uint8Array> {
+    return rasterise(svg, size);
+  }
 
   private layouts: Layouts | null = null;
   private unloaded = false;

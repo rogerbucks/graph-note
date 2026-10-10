@@ -98,6 +98,25 @@
   vertical-align: middle;
   background: var(--graph-note-swatch, var(--text-muted));
 }
+/* The Export form (spec §16): each choice with its words above it, every control a 44-point target. */
+.graph-note-export {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--size-4-2);
+  padding: var(--size-4-2);
+  border-top: 1px solid var(--background-modifier-border);
+}
+.graph-note-export label {
+  display: flex;
+  flex-direction: column;
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+.graph-note-export :is(button, select) {
+  min-width: 44px;
+  min-height: 44px;
+}
 /* A style block (spec §2): folded away until opened, its line in the muted colour, a 44-point target to open it. */
 details.graph-note-style > summary {
   min-height: 44px;

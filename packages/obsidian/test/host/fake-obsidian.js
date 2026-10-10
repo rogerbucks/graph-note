@@ -2,6 +2,7 @@
 // Components with the lifecycle and DOM events, Notices, icons and tooltips. Pair it with fake-dom.js.
 import { createRequire } from 'node:module';
 import { fakeSettings } from './fake-settings.js';
+import { addVaultWrites, fakeFileManager, fakeMetadataCache } from './fake-vault.js';
 
 // the CommonJS copies of CodeMirror, as the built plugin requires them: one copy, so its fields and facets are known
 const require = createRequire(import.meta.url);
@@ -69,7 +70,7 @@ export function fakeObsidian(state = {}) {
     constructor(path) {
       this.path = path;
       this.name = path.split('/').pop();
-      this.extension = 'md';
+      this.extension = path.split('.').pop() ?? 'md';
     }
   }
   const file = (path) => (files.has(path) ? new TFile(path) : null);
@@ -121,7 +122,8 @@ export function fakeObsidian(state = {}) {
   };
   // the note in front, by its path in state.active
   workspace.getActiveFile = () => file(state.active ?? '');
-  const app = { vault, workspace };
+  addVaultWrites(vault, state, file);
+  const app = { vault, workspace, metadataCache: fakeMetadataCache(state), fileManager: fakeFileManager(state) };
   const settings = fakeSettings(state, app);
   class WorkspaceLeaf {
     constructor(app_, how) {
