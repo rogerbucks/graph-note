@@ -4,6 +4,7 @@
 import type { ExportFormat, ExportTheme, ViewSpec } from '@graph-note/core';
 import { button } from '../graph-view/view-bar';
 import type { ExportAsk, ExportOutcome } from './export';
+// (ExportOutcome's share holds the tap's own action: see export.ts)
 
 /** What a drawing can export, and how: its note, graph and view, the default colours, and the export itself. */
 export interface Exporting {
@@ -23,8 +24,11 @@ const select = (el: HTMLElement, label: string, options: [string, string][], val
 
 /** Shows the Export form in `el`, or takes it away when it is shown; the focus goes to its first choice. */
 export function toggleExportForm(parent: HTMLElement, x: Exporting): void {
-  const was = parent.querySelector(':scope > .graph-note-export');
-  if (was) return void was.remove();
+  const was = Array.from(parent.children).find((c) => c.classList.contains('graph-note-export'));
+  if (was) {
+    was.remove();
+    return;
+  }
   const el = parent.createDiv({ cls: 'graph-note-export', attr: { role: 'group', 'aria-label': 'Export' } });
   const scopes: [string, string][] = x.view
     ? [
@@ -52,25 +56,52 @@ export function toggleExportForm(parent: HTMLElement, x: Exporting): void {
     ],
     x.theme,
   );
+  // what the form says beyond the notices: a question, or the image ready to share — never the same words twice
   const said = el.createDiv({ cls: 'graph-note-export-said', attr: { role: 'alert' } });
-  const go = async (confirmed: boolean) => {
+  // closed: the focus goes back to the bar's Export button, never lost to the page
+  const close = () => {
+    el.remove();
+    parent.querySelector<HTMLElement>('.graph-note-bar [aria-label="Export"]')?.focus();
+  };
+  let busy = false;
+  const show = (outcome: ExportOutcome) => {
     said.empty();
-    const scope = what.value;
-    const outcome = await x.run({
-      path: x.path,
-      graph: x.graph,
-      ...(scope !== 'whole' && x.view ? { view: x.view, context: scope === 'context' } : {}),
-      format: format.value as ExportFormat,
-      theme: theme.value as ExportTheme,
-      confirmed,
-    });
     if ('ask' in outcome) {
       said.createSpan({ text: outcome.ask });
-      button(said, 'Export anyway', 'check', () => void go(true), 'Export anyway');
-      button(said, 'Do not export', 'x', () => el.remove(), 'Do not export');
-    } else if ('done' in outcome) el.remove();
+      const anyway = button(said, 'Export anyway', 'check', () => void go(true), 'Export anyway');
+      button(said, 'Do not export', 'x', close, 'Do not export');
+      anyway.focus();
+    } else if ('share' in outcome) {
+      said.createSpan({ text: `${outcome.share.name} is ready.` });
+      // a phone opens its share sheet only from a tap of the person's own
+      const share = button(said, 'Share', 'share', () => void outcome.share.run().then(show), 'Share');
+      share.focus();
+    } else if ('done' in outcome) close();
     else said.setText(outcome.stopped);
   };
-  button(el, 'Export it', 'download', () => void go(false), 'Export it');
+  const go = async (confirmed: boolean) => {
+    if (busy) return; // one export at a time: a second press while it works does nothing
+    busy = true;
+    it.disabled = true;
+    el.setAttribute('aria-busy', 'true');
+    const scope = what.value;
+    try {
+      show(
+        await x.run({
+          path: x.path,
+          graph: x.graph,
+          ...(scope !== 'whole' && x.view ? { view: x.view, context: scope === 'context' } : {}),
+          format: format.value as ExportFormat,
+          theme: theme.value as ExportTheme,
+          confirmed,
+        }),
+      );
+    } finally {
+      busy = false;
+      it.disabled = false;
+      el.removeAttribute('aria-busy');
+    }
+  };
+  const it = button(el, 'Export it', 'download', () => void go(false), 'Export it');
   what.focus();
 }

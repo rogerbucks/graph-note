@@ -46,7 +46,12 @@ module that ties the parts together, named as the folder is.
   its companion note when set; on a phone, offered to the share sheet instead.
 - `export-form.ts` — the Export form on a drawing: the whole diagram, or a view with or without its faded context; SVG
   or PNG; light or dark; and Export anyway when the note's classification asks first.
-- `png.ts` — a PNG of the SVG drawn on a canvas at twice natural size or more.
+- `png.ts` — a PNG of the SVG drawn on a canvas at twice natural size or more; one larger than a phone's canvas holds is
+  refused, with the SVG suggested.
+- `classification.ts` — a note's classification however its front matter writes it (any key case, a word, a number, a
+  list's highest), and from its own text before the metadata cache has indexed it.
+- `vault-write.ts` — writing through the vault's API: a name of its own for each export, so none is overwritten; the
+  plugin's own temporary file deleted outright on a failure, never left in the vault or its trash.
 
 ### `src/settings/` — the settings page (spec §21)
 

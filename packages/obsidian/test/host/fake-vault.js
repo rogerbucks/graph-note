@@ -36,29 +36,57 @@ export function addVaultWrites(vault, state, file) {
       files.delete(f.path);
     },
     delete: async (f) => void files.delete(f.path),
+    // to the system's trash, outside the vault: gone from it, and in no trash the vault keeps
+    trash: async (f) => void files.delete(f.path),
     createFolder: async (path) => void state.folders.add(path),
     getFolderByPath: (path) => (path === '' || state.folders.has(path) ? { path } : null),
   });
 }
 
-/** The file manager: a file put in the trash is gone from the vault. */
+/** The file manager: a file put in the trash is gone from the vault, and kept in `state.trashed`. */
 export function fakeFileManager(state) {
-  return { trashFile: async (f) => void state.files.delete(f.path) };
+  return {
+    trashFile: async (f) => {
+      (state.trashed ??= []).push(f.path);
+      state.files.delete(f.path);
+    },
+  };
 }
 
-/** The metadata cache: a note's front matter, read from the lines between its opening and closing `---`. */
+/** The YAML a front matter holds, as far as the tests write it: `key: value` (a number read as one) and `key:` with `- item` lines. */
+export function parseYaml(yaml) {
+  const out = {};
+  let list = null;
+  for (const line of yaml.split('\n')) {
+    const item = /^\s+-\s*(.*)$/.exec(line);
+    if (item && list) {
+      list.push(item[1]);
+      continue;
+    }
+    const kv = /^([\w-]+):\s*(.*)$/.exec(line);
+    if (!kv) continue;
+    if (kv[2] === '') out[kv[1]] = list = [];
+    else {
+      list = null;
+      out[kv[1]] = /^-?\d+(\.\d+)?$/.test(kv[2]) ? Number(kv[2]) : kv[2];
+    }
+  }
+  return out;
+}
+
+/** Where a note's front matter is, as Obsidian's getFrontMatterInfo says it. */
+export function getFrontMatterInfo(content) {
+  const m = /^---\n([\s\S]*?)\n---/.exec(content);
+  return m ? { exists: true, frontmatter: m[1] } : { exists: false, frontmatter: '' };
+}
+
+/** The metadata cache: a note's front matter; with `state.noCache`, a note not yet indexed, which has none. */
 export function fakeMetadataCache(state) {
   return {
     getFileCache: (f) => {
-      const text = state.files.get(f.path) ?? '';
-      const m = /^---\n([\s\S]*?)\n---/.exec(text);
-      if (!m) return {};
-      const frontmatter = {};
-      for (const line of m[1].split('\n')) {
-        const kv = /^(\w+):\s*(.*)$/.exec(line);
-        if (kv) frontmatter[kv[1]] = kv[2];
-      }
-      return { frontmatter };
+      if (state.noCache) return null;
+      const info = getFrontMatterInfo(state.files.get(f.path) ?? '');
+      return info.exists ? { frontmatter: parseYaml(info.frontmatter) } : {};
     },
   };
 }

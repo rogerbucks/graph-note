@@ -208,7 +208,10 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 - [ ] Settings › Export › companion note on: a `.md` beside the image shows it and links the note
       (export_companion_note). A note with `classification:` above the setting's level: the form names it and writes
       nothing until Export anyway (classified_export).
-- [ ] iPhone: Export opens the share sheet with the image (slice 2, export_share_sheet).
+- [ ] iPhone: Export it, then Share: the share sheet opens with the image, PNG and SVG both (slice 2, export_share_sheet).
+      Close the sheet without sharing: "Not shared", and nothing is saved in the vault.
+- [ ] Android, if one is to hand: a phone that cannot share a file saves the export in the vault and says so.
+- [ ] Export the same graph twice on one day: the second is saved as `…-2.svg`, the first kept, and the notice says so.
 
 ## Settings — spec §21
 

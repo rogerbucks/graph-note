@@ -15,7 +15,7 @@ import type {
 } from '@graph-note/core';
 import { exportGraph } from './export/export';
 import type { ExportAsk, ExportOutcome } from './export/export';
-import { rasterise } from './export/png';
+import { PNG_PIXEL_LIMIT, rasterise } from './export/png';
 import { GraphNoteSettingTab } from './settings/settings';
 import type { DeclaredList } from './properties/list-row';
 import type { Editing } from './graph-view/view-options';
@@ -193,6 +193,9 @@ export default class GraphNotePlugin extends Plugin {
   exportGraph(ask: ExportAsk): Promise<ExportOutcome> {
     return exportGraph(this, ask);
   }
+
+  /** The most pixels a PNG export may have here: a larger one is refused, with the SVG suggested (spec §16). */
+  pngPixelLimit = PNG_PIXEL_LIMIT;
 
   /** A PNG of an exported SVG at `size` (spec §16): kept apart so a test can stand in one, as it can the engine. */
   rasterise(svg: string, size: PngSize): Promise<Uint8Array> {
