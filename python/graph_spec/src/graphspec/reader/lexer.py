@@ -67,6 +67,15 @@ COMMENT_RULE = (
 COMMENT_FIX = "put the comment on its own line"
 
 
+def _excerpt(s: str, n: int = 20) -> str:
+    """The start of a text, cut at n UTF-16 units as the JavaScript reader counts them, and never
+    inside an emoji: a cut that would split one moves back a unit."""
+    units = s.encode("utf-16-le", "surrogatepass")[: 2 * n]
+    if len(units) == 2 * n and 0xD800 <= int.from_bytes(units[-2:], "little") <= 0xDBFF:
+        units = units[:-2]
+    return units.decode("utf-16-le", "surrogatepass")
+
+
 def tokens(block: str) -> list[tuple[str, str, int, str]]:
     """(kind, text, line) for every token, whole-line comments removed — '//' also occurs inside
     ni:/// ids."""
@@ -84,7 +93,7 @@ def tokens(block: str) -> list[tuple[str, str, int, str]]:
             if not m:
                 raise ProfileError(
                     n,
-                    f"cannot read {raw[pos:].strip()[:20]!r}",
+                    f"cannot read {_excerpt(raw[pos:].strip())!r}",
                     "a data block holds only nodes, relationships and simple values",
                 )
             kind = m.lastgroup
