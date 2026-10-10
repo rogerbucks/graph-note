@@ -7,6 +7,8 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
 from graphspec.engine.optional_imports import grafeo
+from graphspec.engine.queries import for_grafeo
+from graphspec.reader.lexer import quote
 
 if TYPE_CHECKING:
     from grafeo import GrafeoDB
@@ -19,7 +21,7 @@ def structs_to_db(
     """Load a join's node and edge maps into a fresh graph, so a GQL rule can read them."""
 
     def q(s):
-        return "'" + str(s).replace("\\", "\\\\").replace("'", "\\'") + "'"
+        return quote(str(s))  # as the reader writes it (req:3.gql-escapes)
 
     def val(v):
         return (
@@ -51,7 +53,7 @@ def structs_to_db(
     db.execute(f"CREATE GRAPH {g}")
     db.set_graph(g)
     if lines:
-        db.execute("INSERT\n" + ",\n".join(lines))
+        db.execute(for_grafeo("INSERT\n" + ",\n".join(lines)))
     return db
 
 

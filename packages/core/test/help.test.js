@@ -50,6 +50,21 @@ describe('problems, in plain English, with their place and a fix', () => {
     );
   });
 
+  test('req:3.gql-escapes: an escape GQL does not name is an error, with the fix that doubles its backslash', () => {
+    const text = BLOCK + ",\n(other:Reason {title: 'C:\\data'})";
+    const [d] = diagnostics(readNote([text]), 'reader', 0, text, URI);
+    assert.equal(d.severity, SEVERITY.Error);
+    assert.equal(d.message, "'\\d' is not an escape GQL names.");
+    assert.deepEqual(d.data.fixes, [
+      {
+        title: 'Double the backslash',
+        kind: 'quickfix',
+        isPreferred: true,
+        edit: { changes: { [URI]: [{ range: { start: at(10, 25), end: at(10, 25) }, newText: '\\' }] } },
+      },
+    ]);
+  });
+
   test('a near-miss relationship type is a warning on the type, with its fix', () => {
     const text = BLOCK + ',\n(eyes)-[:FAVORS]->(question)';
     const [d] = diagnostics(readNote([text]), 'reader', 0, text, URI);

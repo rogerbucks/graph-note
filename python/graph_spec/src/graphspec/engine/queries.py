@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import datetime as dt
 import hashlib
+import re
 from typing import TYPE_CHECKING, Any
 
 from graphspec.engine.optional_imports import grafeo
@@ -39,14 +40,40 @@ def _block_comment(line: str) -> str:
     return f"{indent}/*{text.replace('*/', '* /')} */{after}"
 
 
+# The escapes GQL names that Grafeo 0.5.43 does not read, each written as one it does: \` \b \f
+# and \UXXXXXX (req:3.gql-escapes). \u it reads; a character past U+FFFF is written as itself.
+_QUOTED = re.compile(r"'(?:[^'\\]|\\[^\n])*'")
+_ESCAPE = re.compile(r"\\(U[0-9A-Fa-f]{6}|[^\n])")
+
+
+def _grafeo_escape(m: re.Match) -> str:
+    e = m.group(1)
+    if e[0] == "U":
+        cp = int(e[1:], 16)
+        return f"\\u{cp:04X}" if cp <= 0xFFFF else chr(cp)
+    return {"`": "`", "b": "\\u0008", "f": "\\u000C"}.get(e, m.group(0))
+
+
+def _for_grafeo(line: str) -> str:
+    """A line of code with each quoted text's escapes in forms Grafeo reads as GQL does."""
+    return _QUOTED.sub(lambda q: _ESCAPE.sub(_grafeo_escape, q.group(0)), line)
+
+
+def for_grafeo(text: str) -> str:
+    """GQL the engine wrote itself, made ready for Grafeo: each quoted text's escapes in forms
+    Grafeo reads as GQL does (req:3.gql-escapes)."""
+    return "\n".join(_for_grafeo(line) for line in text.split("\n"))
+
+
 def strip(s: str) -> str:
     """Comments given as /* */ comments, and the data shortcut's INSERT put back (§3) — what
     Grafeo reads. A line ends at LF only, as the reader ends it, never at U+2028 or the other
     breaks str.splitlines() takes; every line stays a line, so a line number still names the
-    block's own line (req:3.engine-text-keeps-lines)."""
+    block's own line (req:3.engine-text-keeps-lines). Each escape Grafeo does not read is
+    written as one it does (req:3.gql-escapes)."""
     # to_gql first: it finds the block's first line of code by the // that starts a comment
     return "\n".join(
-        _block_comment(line) if strip_ws(line).startswith("//") else line
+        _block_comment(line) if strip_ws(line).startswith("//") else _for_grafeo(line)
         for line in to_gql(s).split("\n")
     )
 

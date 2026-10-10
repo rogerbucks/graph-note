@@ -7,7 +7,7 @@ import datetime as dt
 import re
 
 from graphspec.reader.grammar import Parser
-from graphspec.reader.lexer import ProfileError, UTC, tokens
+from graphspec.reader.lexer import ProfileError, UTC, quote, tokens
 from graphspec.reader.owned_comments import NOTE, TAG
 from graphspec.reader.whitespace import S, lstrip, strip
 
@@ -175,12 +175,4 @@ def _gql_value(v):
         return f"DATETIME '{v.replace(tzinfo=UTC).isoformat()}'"
     if isinstance(v, dt.date):
         return f"DATE '{v.isoformat()}'"
-    return (
-        "'"
-        + str(v)
-        .replace("\\", "\\\\")
-        .replace("'", "\\'")
-        .replace("\n", "\\n")
-        .replace("\t", "\\t")
-        + "'"
-    )
+    return quote(str(v))

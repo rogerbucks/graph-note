@@ -43,12 +43,8 @@ NOTE = os.path.join(CASES_DIR, "classification.md")
 
 # Where the two are known to differ, each with its cause. Not agreements: findings, held here so
 # that any other difference fails, and so that putting one right fails until its entry goes.
-KNOWN_P1 = {
-    "whitespace inside a string is kept as written, line and paragraph separators too (§3) · "
-    "ws_strings": "a backslash before a character GQL names no escape for (here U+2028): the "
-    "reader drops the backslash, Grafeo keeps it; \\r, \\b and \\f differ the same way "
-    "(found 11 Oct 2026, with the spec owner)",
-}
+# (String escapes were one, found 11 Oct 2026: req:3.gql-escapes put them right.)
+KNOWN_P1 = {}
 KNOWN_GRAFEO_REFUSES = {
     "every whitespace character GQL names parts words and items, before keywords too (§3)": (
         "Grafeo 0.5.43 parts words only at ASCII whitespace, not at every character GQL names"
@@ -148,7 +144,9 @@ class Agreement(unittest.TestCase):
                 raise
             try:
                 db, graphs = in_grafeo(blocks)
-            except Exception as e:  # GrafeoError, which needs Grafeo to name
+            # any error, never narrowed: what is caught is held to KNOWN_GRAFEO_REFUSES exactly
+            # (test_every_case_grafeo_refuses_is_a_known_one), so nothing new passes unseen
+            except Exception as e:
                 cls.grafeo_refused[c["name"]] = str(e).splitlines()[0]
                 continue
             cls.cases.append(c)
