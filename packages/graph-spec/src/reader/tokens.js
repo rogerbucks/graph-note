@@ -47,10 +47,17 @@ const COMMENT_FIX = 'put the comment on its own line';
 function excerpt(s, n = 20) {
   return s.slice(0, s.length > n && /[\uD800-\uDBFF]/.test(s[n - 1]) ? n - 1 : n);
 }
+// [kind, text, line, raw, end] for every token, whole-line comments removed: raw is the token as written, end is where
+// it ends in the block
 function tokens(block) {
   const out = [];
+  // offsets count UTF-16 units, as JavaScript strings index; the Python reader counts code points. Each is used only on
+  // the text it was counted in (Store.corrected), so both write the same corrected text
+  let begins = 0; // where the line begins in the block
   block.split('\n').forEach((raw, i) => {
     const n = i + 1;
+    const lineBegins = begins;
+    begins += raw.length + 1;
     if (trim(raw).startsWith('//')) return;
     let pos = 0;
     while (pos < raw.length) {
@@ -84,7 +91,7 @@ function tokens(block) {
         kind = 'kw';
         text = text.toUpperCase();
       }
-      out.push([kind, text, n, rawText]);
+      out.push([kind, text, n, rawText, lineBegins + TOKEN.lastIndex]);
       pos = TOKEN.lastIndex;
     }
   });

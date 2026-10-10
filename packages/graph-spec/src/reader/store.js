@@ -15,11 +15,15 @@ class Store {
     this.k = 0;
     this.schemas = {};
     this.named = {};
+    // schema name -> its graph; data graph -> the schema its header names; commas: [{graph, line}] where a missing comma
+    // was read in (§3); commaPlaces: where each is written in, by block text
     this.commas = [];
+    this.commaPlaces = new Map();
     // bares: [{graph, line, written, type}] where a type written without its colon was read as the graph's one type
-    // of that name, ignoring case (§3)
+    // of that name, ignoring case (§3); fixes: [[at, written, type]], where each begins in its block, by block text
     this.bares = [];
-  } // commas: [{graph, line}] where a missing comma was read in (§3)   // schema name -> its graph; data graph -> the schema its header names
+    this.fixes = new Map();
+  }
   /** The relationship types graph g knows so far: written with their colon, declared by an ElementType, or in the
    * shared schema it names. */
   edgeTypes(g) {
@@ -35,7 +39,7 @@ class Store {
     return out;
   }
   /** A bare type read as the graph's one type of that name, ignoring case — or refused. */
-  resolve(g, r) {
+  resolve(g, r, block) {
     const written = r.type;
     const found = [...this.edgeTypes(g)].filter((t) => t.toLowerCase() === written.toLowerCase()).sort();
     if (!found.length)
@@ -51,7 +55,23 @@ class Store {
         `write the one meant with its colon, such as [:${found[0]}]`,
       );
     this.bares.push({ graph: g, line: r.line, written, type: found[0] });
+    if (!this.fixes.has(block)) this.fixes.set(block, []);
+    this.fixes.get(block).push([r.at, written, found[0]]);
     return found[0];
+  }
+  /** The block with each bare type this store read written with its colon, as its graph spells it, and each missing
+   * comma it read in written at the end of the code on its line — the text an engine may be given
+   * (req:3.engine-gets-corrected, req:3.engine-gets-commas), the same text the Python reader gives. No line is added
+   * (req:3.engine-text-keeps-lines). Each is put where the reader read it — a bare type where its token begins, a
+   * comma where the code on its line ends — never found by searching the text. */
+  corrected(block) {
+    const edits = [
+      ...(this.fixes.get(block) ?? []).map(([at, written, type]) => [at, written.length, ':' + type]),
+      ...(this.commaPlaces.get(block) ?? []).map((at) => [at, 0, ',']),
+    ].sort((a, b) => b[0] - a[0]);
+    let out = block;
+    for (const [at, cut, text] of edits) out = out.slice(0, at) + text + out.slice(at + cut);
+    return out;
   }
   graph(g) {
     return this.graphs[g] || (this.graphs[g] = { nodes: new Map(), edges: [] });
@@ -73,7 +93,9 @@ class Store {
       schemas: { ...this.schemas },
       named: { ...this.named },
       commas: this.commas.slice(),
+      commaPlaces: new Map(this.commaPlaces),
       bares: this.bares.slice(),
+      fixes: new Map(this.fixes),
     };
     try {
       return this.applyWhole(block);
@@ -104,7 +126,15 @@ class Store {
     if (!toks.length) return g;
     const parser = new Parser(toks),
       [matches, paths, sets] = parser.statement();
-    for (const line of parser.commas) this.commas.push({ graph: g, line });
+    for (const [line] of parser.commas) this.commas.push({ graph: g, line });
+    // kept only for a block that has some, so a store that reads many blocks (a block read again in part) keeps few
+    if (parser.commas.length)
+      this.commaPlaces.set(
+        block,
+        parser.commas.map(([, at]) => at),
+      );
+    else this.commaPlaces.delete(block);
+    this.fixes.delete(block); // made again as each bare type is resolved, below
     const graph = this.graph(g),
       bound = {};
     // each id's node, the first in order, as find() gives it: indexed once for the block, not searched for each thing,
@@ -169,7 +199,7 @@ class Store {
       rels.forEach((r, i) =>
         graph.edges.push([
           bound[nodes[i].v],
-          r.bare ? this.resolve(g, r) : r.type,
+          r.bare ? this.resolve(g, r, block) : r.type,
           bound[nodes[i + 1].v],
           Object.assign({}, r.props),
         ]),

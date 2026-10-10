@@ -28,7 +28,8 @@ and no module requires one that requires it back.
   `hash16`, `basisHash`).
 - **`src/reader/`** — the document profile reader (`gql_profile.py`): `profile-error.js`, `whitespace.js` (whitespace
   as GQL names it, the one set every reader uses), `tokens.js` (the header line and tokens), `parser.js` (one block's
-  statement), `syntax.js` (a block's syntax alone), `store.js` (the store, and `read`).
+  statement), `syntax.js` (a block's syntax alone), `store.js` (the store, its corrected text — the colons and commas the reader
+  read in, written where it read them, as `store.py` writes them — and `read`).
 - **`src/graph/`** — `graph.js`: the plain graph the rules run on, the world made from a store, and `canon`.
 - **`src/rules/`** — the spec's rules (`graph_rules.py`): `types.js` (§5), `projection.js` (§18), `certainty.js` (§20),
   `paths.js` (§22), `lenses.js` (§15), `judgements.js` (§23), `servings.js` (§24), `completeness.js` (§25),
