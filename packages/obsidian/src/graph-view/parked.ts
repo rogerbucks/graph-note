@@ -8,14 +8,14 @@ import { button } from './view-bar';
 
 const SVG = 'http://www.w3.org/2000/svg';
 
-/** The corners of a box as Graphviz drew it, from the numbers of its outline. */
-function cornerOf(g: Element): { right: number; top: number } | null {
+/** The edges of a box as Graphviz drew it, from the numbers of its outline: where a mark is put on it. */
+export function cornerOf(g: Element): { left: number; right: number; top: number } | null {
   const shape = g.querySelector('path, polygon');
   const nums = (shape?.getAttribute('d') ?? shape?.getAttribute('points') ?? '').match(/-?\d+(?:\.\d+)?/g);
   if (!nums || nums.length < 4) return null;
   const xs = nums.filter((_, i) => i % 2 === 0).map(Number),
     ys = nums.filter((_, i) => i % 2 === 1).map(Number);
-  return { right: Math.max(...xs), top: Math.min(...ys) };
+  return { left: Math.min(...xs), right: Math.max(...xs), top: Math.min(...ys) };
 }
 
 /** Marks each parked box of a drawing: dashed, a mark in words and a sign at its top right, and its name said so. */

@@ -159,6 +159,16 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 - [ ] Change its revisit_by to a day in the past: the mark says "⏳ overdue", the badge adds "1 overdue", and the list
       behind the badge names it with what is needed. VoiceOver reads the box as "parked for later, overdue".
 
+## Walked paths — spec §7
+
+- [ ] Edit here, press Record a path, tap three boxes: each shows its number at its top left as it is tapped (a box
+      tapped twice shows both). Undo step takes the last back. Give a title and Save path: a Path with STEP 1 to 3 is
+      written; the card redraws (slice 2, record_and_play, walked_path_is_data, steps_numbered).
+- [ ] Press Play <title>: "Step 1 of 3: …" is shown and read by VoiceOver, the box outlined heavier; Next and Previous
+      move one step, and stop at the ends; Stop playing clears it. Desktop and phone, light and dark.
+- [ ] Rename one stepped thing: the problem names the step and offers Remove the step; pressing it renumbers the later
+      steps (slice 2, path_missing_step). A Path with no STEP shows "the path … has no steps" and no Play (path_no_steps).
+
 ## Settings — spec §21
 
 - [ ] Settings › Graph Note, desktop and phone: one page, with Strictness, AI models, Formatting and Drawing, each option

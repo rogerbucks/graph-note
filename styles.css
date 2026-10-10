@@ -47,6 +47,27 @@
   fill: var(--text-error);
   font-weight: var(--font-semibold);
 }
+/* Walked paths (spec §7): the strip below the bar; the step playing outlined heavier; each recorded step numbered. */
+.graph-note-walk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-4-2);
+  padding: var(--size-4-1) var(--size-4-2);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+.graph-note-walk button {
+  min-width: 44px;
+  min-height: 44px;
+}
+.graph-note-svg g.graph-note-step-current > :is(path, polygon) {
+  stroke-width: 4;
+}
+.graph-note-svg .graph-note-step-number {
+  font-size: 10pt;
+  font-weight: var(--font-bold);
+  fill: var(--text-normal);
+}
 .graph-note-park {
   display: flex;
   flex-wrap: wrap;

@@ -9,6 +9,7 @@ import { renderCode } from '../code';
 import { readOnlyHere, whenPlaced } from './placement';
 import { renderProblems } from './problems-list';
 import { listParked } from './parked';
+import { Walk } from './walk';
 import { plural, renderBar } from './view-bar';
 import { describeDrawing, insertSvg } from './drawing-svg';
 import { Taps, targetAt, targetOf } from './taps';
@@ -24,6 +25,7 @@ export class GraphView extends MarkdownRenderChild {
   private svg!: SVGSVGElement;
   private detailsEl!: HTMLElement;
   private details!: DetailsPanel;
+  private walk: Walk | null = null;
   private fullscreen: { view: GraphView; overlay: HTMLElement } | null = null;
   private boxDown: { id: number; x: number; y: number; target: Target } | null = null;
   private editButton: HTMLButtonElement | null = null;
@@ -70,6 +72,7 @@ export class GraphView extends MarkdownRenderChild {
 
     list = renderProblems(root, problems, true, this.o.completeness);
     if (this.o.parked) listParked(list, this.o.parked, (k) => this.boxes().find((b) => b.key === k)?.text ?? k);
+    this.walk = new Walk(root, this.o, () => this.svg); // walked paths: Play, and Record while edited (§7)
     this.viewport = root.createDiv({
       cls: 'graph-note-viewport',
       attr: {
@@ -135,6 +138,7 @@ export class GraphView extends MarkdownRenderChild {
 
   /** The edit button as the card stands: a pencil to edit here, or, while edited, a view icon to finish (spec §4). */
   private showEditing(): void {
+    this.walk?.show(); // Record is offered only while the card is edited
     const b = this.editButton;
     if (!b) return;
     const on = !!this.o.editing?.()?.session;
@@ -186,6 +190,7 @@ export class GraphView extends MarkdownRenderChild {
   }
 
   private open(t: Target): void {
+    if ('key' in t && this.walk?.tap(t.key)) return; // while recording, a tap is the next step of the walk (§7)
     if ('key' in t) this.details.showDetails(t.key);
     else if ('link' in t) this.details.showLink(t.link);
     if ('key' in t) this.o.onSelect?.({ thing: t.key });

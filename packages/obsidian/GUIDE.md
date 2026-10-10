@@ -53,6 +53,9 @@ module that ties the parts together, named as the folder is.
 - `parked.ts` — things parked for later (§5, §8): each drawn dashed with a "⏳ later" or "⏳ overdue" mark on the SVG
   Graphviz drew, so the layout stays the Python library's; listed behind the badge, which counts them apart from
   problems; and Park for later in a box's details while the block is edited, writing the Deferred into its text.
+- `walk.ts` — walked paths (§7): the strip below the bar with Play for each path in the note, stepping one thing at a
+  time, marked and said; a path with no steps said to have none; and, while the block is edited, Record, which numbers
+  each box as it is tapped and writes the path into the text.
 - `suggested-name.ts` — a box drawn under a suggested name: what screen readers hear of it, where it is written in the
   block being edited, and in its details its suggested name with the one-click fix that writes it.
 - `placement.ts` — where a card is: read-only in reading view; waiting for a card to be put on the page.
