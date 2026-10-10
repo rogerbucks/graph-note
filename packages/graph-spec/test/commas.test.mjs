@@ -43,6 +43,34 @@ print(json.dumps(out))`;
   return JSON.parse(r.stdout);
 }
 
+/** The text each reader corrects a block to, the text an engine is given (req:3.engine-gets-commas), or null when the
+ * block is refused. */
+function jsCorrected(block) {
+  try {
+    const s = new C.Store();
+    s.apply(block);
+    return s.corrected(block);
+  } catch (e) {
+    if (e instanceof C.ProfileError) return null;
+    throw e;
+  }
+}
+
+function pythonCorrected(blocks) {
+  const prog = `import json, sys
+sys.path.insert(0, ${JSON.stringify(PY_SRC)})
+import gql_profile as gp
+out = []
+for b in json.load(sys.stdin):
+    try:
+        s = gp.Store(); s.apply(b); out.append(s.corrected(b))
+    except gp.ProfileError: out.append(None)
+print(json.dumps(out))`;
+  const r = spawnSync('python3', ['-c', prog], { input: JSON.stringify(blocks), encoding: 'utf8', maxBuffer: 1 << 26 });
+  assert.equal(r.status, 0, r.stderr);
+  return JSON.parse(r.stdout);
+}
+
 const WITH = "// graph: g\n(a:T {name: 'A'}),\n(b:T {name: 'B'}),\n(c:T {name: 'C'}),\n(a)-[:R]->(b)";
 
 test('a block missing a comma between two complete patterns on separate lines reads as if the comma were there', () => {
@@ -120,4 +148,40 @@ test('random blocks: the two readers agree', () => {
   });
   const py = python(blocks);
   blocks.forEach((b, i) => assert.deepEqual(js(b), py[i], JSON.stringify(b)));
+});
+
+test('the corrected text writes each missing comma at the end of the code on its line, as the Python reader does', () => {
+  const blocks = [
+    "// graph: g\n(a:T {id: 'a'})   \n(b:T {id: 'b',\n  n: 1})\t\n\n// the link, (a) to (b)\n(a)-[:R]->(b)",
+    "// graph: g\n(a:T {id: 'a'}),\n(b:T {id: 'b'}),\n(a)-[:R]->(b)\n(c:T {id: 'c'}),\n(c)-[r]->(b)\n(d:T {id: 'd'})",
+  ];
+  const want = [
+    "// graph: g\n(a:T {id: 'a'}),   \n(b:T {id: 'b',\n  n: 1}),\t\n\n// the link, (a) to (b)\n(a)-[:R]->(b)",
+    "// graph: g\n(a:T {id: 'a'}),\n(b:T {id: 'b'}),\n(a)-[:R]->(b),\n(c:T {id: 'c'}),\n(c)-[:R]->(b),\n(d:T {id: 'd'})",
+  ];
+  const ours = blocks.map(jsCorrected);
+  assert.deepEqual(ours, want, 'the comma after the last character of code on its line, and no line added');
+  assert.deepEqual(pythonCorrected(blocks), ours, 'the Python reader corrects each block to the same text');
+});
+
+test('random blocks: the two readers correct each to the same text, with no line added', () => {
+  const parts = ['(a:T)', "(b:T {name: 'x',\n n: 1})", '(a)-[:R]->(b)', '(b)-[r]->(a)', ',', '\n', ' ', '\n\n'];
+  let s = 7;
+  // the high bits of each step: the low bits of this generator repeat every few steps
+  const next = (n) => ((s = (s * 1103515245 + 12345) >>> 0) >>> 16) % n;
+  const blocks = Array.from({ length: 400 }, () => {
+    let b = '// graph: g\n';
+    for (let k = 0, many = 2 + next(8); k < many; k++) b += parts[next(parts.length)];
+    return b;
+  });
+  const py = pythonCorrected(blocks);
+  const ours = blocks.map(jsCorrected);
+  blocks.forEach((b, i) => {
+    assert.equal(ours[i], py[i], JSON.stringify(b));
+    if (ours[i] !== null) assert.equal(ours[i].split('\n').length, b.split('\n').length, JSON.stringify(b));
+  });
+  assert.ok(
+    blocks.some((b, i) => ours[i] !== null && ours[i] !== b),
+    'some blocks are corrected, so the comparison is not empty',
+  );
 });

@@ -85,11 +85,13 @@ def _excerpt(s: str, n: int = 20) -> str:
     return units.decode("utf-16-le", "surrogatepass")
 
 
-def tokens(block: str) -> list[tuple[str, str, int, str]]:
-    """(kind, text, line) for every token, whole-line comments removed — '//' also occurs inside
-    ni:/// ids."""
+def tokens(block: str) -> list[tuple[str, str, int, str, int]]:
+    """(kind, text, line, raw, end) for every token, whole-line comments removed — '//' also
+    occurs inside ni:/// ids. raw is the token as written; end is where it ends in the block."""
     out = []
+    begins = 0  # where line n begins in the block
     for n, raw in enumerate(block.split("\n"), 1):
+        line_begins, begins = begins, begins + len(raw) + 1
         if strip(raw).startswith("//"):
             continue
         pos = 0
@@ -111,7 +113,7 @@ def tokens(block: str) -> list[tuple[str, str, int, str]]:
             raw_text = text
             if kind == "id" and text.upper() in KEYWORDS:
                 kind, text = "kw", text.upper()
-            out.append((kind, text, n, raw_text))
+            out.append((kind, text, n, raw_text, line_begins + m.end()))
             pos = m.end()
     return out
 

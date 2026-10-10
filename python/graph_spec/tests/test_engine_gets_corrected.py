@@ -5,8 +5,8 @@ accepts and corrects, Grafeo is given corrected and accepts too. And req:3.engin
 MATCH line added — which the corrected text must keep: it changes only what the reader corrects.
 
 The slip the reader corrects and Store.corrected writes is a link type without its colon, such as
-[favours] for [:FAVOURS]. (A missing comma is read in too, but Store.corrected does not write it,
-so no route gives Grafeo one; it is left to a change of its own.)
+[favours] for [:FAVOURS]. (A missing comma is read in and written too: test_engine_gets_commas.py,
+req:3.engine-gets-commas.)
 
 Usage:
   cd python/graph_spec && uv run --locked python -m unittest tests.test_engine_gets_corrected

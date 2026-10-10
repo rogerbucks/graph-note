@@ -7,7 +7,6 @@ import re
 
 from graphspec.reader.grammar import Parser
 from graphspec.reader.lexer import ProfileError, header, tokens
-from graphspec.reader.to_gql import _bare_names
 from graphspec.reader.whitespace import N, S, strip
 
 SHARED = re.compile(rf"·{S}*SCHEMA{S}+({N}+)")
@@ -24,10 +23,13 @@ class Store:
         self.schemas = {}
         self.named = {}
         # schema name -> its graph; data graph -> the schema its header names; commas: [{graph,
-        # line}] where a missing comma was read in (§3)
+        # line}] where a missing comma was read in (§3); _commas: where each is written in, by
+        # block text
         self.commas = []
+        self._commas = {}
         # bares: [{graph, line, written, type}] where a type written without its colon was read as
-        # the graph's one type of that name, ignoring case (§3); _fixes: the same, by block text
+        # the graph's one type of that name, ignoring case (§3); _fixes: [(at, written, type)],
+        # where each begins in its block, by block text
         self.bares = []
         self._fixes = {}
 
@@ -74,26 +76,38 @@ class Store:
                 f"write the one meant with its colon, such as [:{found[0]}]",
             )
         self.bares.append({"graph": g, "line": r["line"], "written": written, "type": found[0]})
-        self._fixes.setdefault(block, []).append((r["line"], written, found[0]))
+        self._fixes.setdefault(block, []).append((r["at"], written, found[0]))
         return found[0]
 
     def corrected(self, block):
         """The block with each bare type this store read written with its colon, as its graph
-        spells it — the text an engine may be given (req:3.engine-gets-corrected). Each is found by
-        its place among the block's bare types, never by searching the text."""
+        spells it, and each missing comma it read in written at the end of the code on its line —
+        the text an engine may be given (req:3.engine-gets-corrected, req:3.engine-gets-commas).
+        No line is added (req:3.engine-text-keeps-lines). Each is put where the reader read it — a
+        bare type where its token begins, a comma where the code on its line ends — never found by
+        searching the text."""
+        edits = [
+            (at, len(written), ":" + typ) for at, written, typ in self._fixes.get(block, [])
+        ] + [(at, 0, ",") for at in self._commas.get(block, [])]
         out = block
-        places = _bare_names(block)
-        for (_, at, written), (_, _, typ) in reversed(
-            list(zip(places, self._fixes.get(block, [])))
-        ):
-            out = out[:at] + ":" + typ + out[at + len(written) :]
+        for at, cut, text in sorted(edits, reverse=True):
+            out = out[:at] + text + out[at + cut :]
         return out
 
     def apply(self, block):
         """Applies a data block whole, or not at all: a block that cannot be read leaves the store
         as it was, however far its reading got (req:3.engine-gets-corrected)."""
         kept = copy.deepcopy(
-            (self.graphs, self._k, self.schemas, self.named, self.commas, self.bares, self._fixes)
+            (
+                self.graphs,
+                self._k,
+                self.schemas,
+                self.named,
+                self.commas,
+                self._commas,
+                self.bares,
+                self._fixes,
+            )
         )
         try:
             return self._apply(block)
@@ -104,6 +118,7 @@ class Store:
                 self.schemas,
                 self.named,
                 self.commas,
+                self._commas,
                 self.bares,
                 self._fixes,
             ) = kept
@@ -134,7 +149,14 @@ class Store:
             return g
         parser = Parser(toks)
         matches, paths, sets = parser.statement()
-        self.commas.extend({"graph": g, "line": n} for n in parser.commas)
+        self.commas.extend({"graph": g, "line": n} for n, _ in parser.commas)
+        # kept only for a block that has some, so a store that reads many blocks (a block read
+        # again in part) keeps few, and copies few in apply
+        if parser.commas:
+            self._commas[block] = [at for _, at in parser.commas]
+        else:
+            self._commas.pop(block, None)
+        self._fixes.pop(block, None)  # made again as each bare type is resolved, below
         graph = self.graph(g)
         bound = {}
         for m in matches:
