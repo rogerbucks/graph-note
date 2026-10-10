@@ -86,7 +86,7 @@ export async function viewOf(
 /**
  * The pane's palette: the one that follows the system, carrying both the light and the dark colours and choosing by
  * prefers-color-scheme. The mod API says nothing of the desktop app's appearance, and Claude Code's theme setting is the
- * terminal's, which draws no picture: so nothing is guessed, and the drawing takes the light or dark the app shows.
+ * terminal's, which draws no picture: so nothing is guessed, and the drawing takes the scheme the app hands its pages.
  */
 export const PANE_PALETTE: Palette = PALETTES.system;
 

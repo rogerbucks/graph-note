@@ -7,7 +7,8 @@ reading, the layout source and theming run there, bundled; Graphviz, the core's 
 A pane draws the SVG as an isolated image, so its colours are the core's system palette (`palette.ts`, the one colour
 mapping): the fixed light and dark palettes both carried in the drawing's own style sheet, `prefers-color-scheme`
 choosing, with the page painted in. The mod API says nothing of the app's appearance, and Claude Code's theme setting is
-the terminal's, so the drawing follows the light or dark the app itself shows, and nothing is guessed.
+the terminal's, so nothing is guessed: the drawing follows the scheme the app hands its pages, which is the system's
+unless the app sets its own. Whether the desktop app does, and keeps the drawing's style sheet, is checked by eye.
 
 ## The source, `src/`
 

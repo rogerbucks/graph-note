@@ -54,7 +54,6 @@ test('the sample note is drawn as SVG in the light or dark the app shows, and as
 test('the layout is given the time the host package names, and node --version a short one', async ($, on) => {
   const timeouts: (number | undefined)[] = [];
   on('fs.read', async () => ({ value: NOTE }));
-  on('config.list', async () => ({ value: [] }) as never);
   on('process.run', async (_$, e) => {
     timeouts.push(e.init?.timeoutMs);
     return { deny: 'spawn node ENOENT' } as never;
@@ -66,7 +65,6 @@ test('the layout is given the time the host package names, and node --version a 
 
 test('when node is missing, the pane says so and shows the graph as text on every surface', async ($, on) => {
   on('fs.read', async () => ({ value: NOTE }));
-  on('config.list', async () => ({ value: [] }) as never);
   // the call rejects, as the host's does when node cannot start (a hook that throws is skipped, so it denies)
   on('process.run', async () => ({ deny: 'spawn node ENOENT' }) as never);
   on('ui.open', async () => ({ value: { isPlaced: true } }) as never);

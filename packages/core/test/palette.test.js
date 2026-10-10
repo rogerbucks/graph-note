@@ -64,6 +64,13 @@ describe('one table', () => {
     assert.equal(PALETTES.obsidian.style, undefined, "Obsidian's theme does this itself");
   });
 
+  test('the system entry refuses a hue or a blend its sheet does not define, as the fixed ones do, never drawing black', () => {
+    assert.throws(() => PALETTES.system.fill('teal'), /teal/);
+    assert.throws(() => PALETTES.system.blend('teal', STYLE.line_mix), /teal/);
+    assert.throws(() => PALETTES.system.blend('red', 33), /33/);
+    assert.throws(() => PALETTES.dark.fill('teal'), /teal/);
+  });
+
   test('Obsidian’s entry names the theme’s variables, as the style file does', () => {
     const p = PALETTES.obsidian;
     assert.deepEqual([p.text, p.muted, p.edge, p.page], [STYLE.text, STYLE.muted, STYLE.edge, undefined]);
