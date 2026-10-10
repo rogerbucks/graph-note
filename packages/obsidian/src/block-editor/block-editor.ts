@@ -229,8 +229,8 @@ export class BlockEditor extends Component {
     this.changed();
   }
 
-  /** What the field now holds, analysed and written, without asking for another comma or colon. */
-  private changed(): void {
+  /** What the field now holds, analysed and written, without asking for another comma or colon; as after a setting changed. */
+  changed(): void {
     const el = this.el,
       s = this.session;
     if (!el || !s) return;

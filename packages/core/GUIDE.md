@@ -77,7 +77,16 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   value) and the closer stepped over; nothing is inserted unasked.
 - `inspector.ts` — properties of a thing or link, edited as text.
 - `linked-list.ts` — a property held as things linked to this one: made, added to and removed from, as text edits.
-- `lock.ts` — Lock the graph: a draft's schema written out.
+- `lock.ts` — Lock the graph: a draft's schema written out, indented as the settings say.
+
+**Settings (spec §21)**
+
+- `strictness.ts` — the three departures from standard GQL the reader reads as meant (each problem says which, in
+  `Problem.departure`), what Standard, Forgiving and Simplified make of them, converting a note back to standard GQL,
+  checked before it is written, and the standard text an engine or an export is given whatever the level.
+- `settings.ts` — every option with its name, sentence, choices and default (`OPTIONS`, `DEFAULT_SETTINGS`), and saved
+  settings read back with anything unknown, out of range or secret left out (`settingsFrom`). An AI model keeps the
+  name of its key in the host's secret store (`keyName`), never the key.
 
 ## Command-line tools, `bin/`
 

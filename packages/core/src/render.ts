@@ -28,9 +28,13 @@ export interface Direction {
   src: LayoutSource;
 }
 
-/** What Graphviz is handed for a drawing: one source for each direction the style lists, in the style's order. */
+/**
+ * What Graphviz is handed for a drawing: one source for each direction the style lists, in the style's order — or only
+ * the drawing's own direction, when it was given one of those (spec §21, settings_formatting).
+ */
 export function directions(drawing: GraphDrawing): Direction[] {
-  return STYLE.directions.map((rankdir) => ({
+  const only = drawing.direction && STYLE.directions.includes(drawing.direction) ? [drawing.direction] : null;
+  return (only ?? STYLE.directions).map((rankdir) => ({
     rankdir,
     dot: drawingSource(drawing, rankdir as 'LR' | 'TB'),
     src: layoutSource(drawing, rankdir as 'LR' | 'TB'),

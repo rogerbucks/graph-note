@@ -3,8 +3,9 @@
 // with those added deliberately since: completing as you type (inlineCompletion, stepOver, Inline, InlineKind), lists as
 // linked things (makeList and its kin), and name suggestions (nameFromText, nameSlug, nameStyleOf, nameWords,
 // textFromName and their types), and the layout kept apart from the interface (LayoutRunner and its kin, 10 Oct 2026),
-// and the one colour mapping, with the steps around Graphviz for a host that lays out elsewhere (PALETTES, chosen and
-// their kin, for the Claude Code host, 11 Oct 2026).
+// the settings and strictness of §21 (OPTIONS, settingsFrom, toStandard and their kin, 11 Oct 2026), and the one colour
+// mapping, with the steps around Graphviz for a host that lays out elsewhere (PALETTES, chosen and their kin, for the
+// Claude Code host, 11 Oct 2026).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -15,12 +16,15 @@ const ts = require('typescript');
 const ENTRY = new URL('../src/index.ts', import.meta.url);
 
 const VALUES = [
+  'DEFAULT_SETTINGS',
+  'DEPARTURES',
   'History',
   'KIND',
   'LAYOUT_LIMITS',
   'LayoutRunner',
   'MAX_SCALE',
   'MIN_SCALE',
+  'OPTIONS',
   'PAGE_LIMITS',
   'PALETTES',
   'PaneSession',
@@ -35,6 +39,7 @@ const VALUES = [
   'TextHistory',
   'Zoom',
   'addToList',
+  'aiModel',
   'blockItems',
   'choose',
   'chosen',
@@ -59,6 +64,7 @@ const VALUES = [
   'hitAreas',
   'hops',
   'inThreadPort',
+  'indentText',
   'inlineCompletion',
   'insertBlockAfter',
   'isDraft',
@@ -89,19 +95,24 @@ const VALUES = [
   'reverseGuess',
   'serveLayouts',
   'setProperty',
+  'settingsFrom',
   'sizeOf',
   'spanOf',
+  'standardBlocks',
   'stepOver',
   'textFromName',
   'textTooLarge',
   'textVersion',
   'themed',
+  'toStandard',
   'tokenize',
   'tooLarge',
+  'underStrictness',
   'withoutColorMix',
 ];
 
 const TYPES = [
+  'AiModel',
   'Block',
   'BlockRef',
   'Box',
@@ -111,6 +122,8 @@ const TYPES = [
   'CodeAction',
   'CompletenessReport',
   'CompletionItem',
+  'Converted',
+  'Departure',
   'Details',
   'Diagnostic',
   'Direction',
@@ -121,6 +134,7 @@ const TYPES = [
   'GraphDrawing',
   'GraphNames',
   'HitAreas',
+  'Indent',
   'Inline',
   'InlineKind',
   'LayoutLimits',
@@ -137,6 +151,8 @@ const TYPES = [
   'Mode',
   'NameStyle',
   'NoteReading',
+  'Option',
+  'OptionChoice',
   'Palette',
   'PaneWrite',
   'Parsed',
@@ -149,9 +165,12 @@ const TYPES = [
   'Refusal',
   'RuleReport',
   'RunnerOptions',
+  'Settings',
   'Shape',
   'Size',
   'Span',
+  'Strictness',
+  'StrictnessSettings',
   'Target',
   'TextChange',
   'TextEdit',
