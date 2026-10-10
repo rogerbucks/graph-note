@@ -7,6 +7,7 @@ import re
 from collections.abc import Callable, Collection, Iterable
 from typing import TYPE_CHECKING, Any
 
+from graphspec.reader.whitespace import N, S
 from graphspec.reader.whitespace import strip as ws_strip
 from graphspec.rules.canonical_json import norm
 from graphspec.rules.certainty import claim_status, confidence_from_evidence, latest_assessment
@@ -50,9 +51,10 @@ def changeset_header(block: str) -> dict[str, str] | None:
     """A change set's first line read — '// graph: G · CHANGE SET <id> · against <state hash> · by
     <author id>' — as {graph, id, against, by}; None when it is not one."""
     first = next((line for line in block.split("\n") if ws_strip(line)), "")
+    # whitespace as GQL names it (S), as the reader reads the header, never the language's \s
     m = re.match(
-        r"\s*//\s*graph:\s*(\S+)\s*·\s*CHANGE SET\s+(\S+)"
-        r"\s*·\s*against\s+([0-9a-f]{16})\s*·\s*by\s+(\S+)",
+        rf"{S}*//{S}*graph:{S}*({N}+){S}*·{S}*CHANGE SET{S}+({N}+)"
+        rf"{S}*·{S}*against{S}+([0-9a-f]{{16}}){S}*·{S}*by{S}+({N}+)",
         first,
     )
     return dict(zip(("graph", "id", "against", "by"), m.groups())) if m else None

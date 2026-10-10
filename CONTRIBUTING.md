@@ -106,6 +106,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `packages/graph-spec/test/commas.test.mjs` — both readers read a missing comma the same way.
 - `packages/graph-spec/test/layout.test.mjs` — the layout source is byte-identical to the Python library's.
 - `packages/graph-spec/test/lint-parity.test.mjs` — the JavaScript dialect linter matches the Python one.
+- `python/graph_spec/tests/test_changeset_header.py` — a change set's first line is read as the reader reads a block's, in the engine's copy and the rules' (lines end at LF only, whitespace is GQL's set).
 - `python/graph_spec/tests/test_engine_gets_corrected.py` — every route to the engine gives Grafeo the reader's corrected text, so a link type without its colon is accepted by both parsers, and the text keeps the block's own lines (req:3.engine-gets-corrected, req:3.engine-text-keeps-lines).
 - `python/graph_spec/tests/test_engine_text_comments.py` — every route to the engine gives Grafeo each whole-line comment as a `/* */` comment on its own line, a `*/` in its text broken up, and a line ends at LF only (req:3.engine-keeps-comments, req:3.engine-text-keeps-lines).
 - `python/graph_spec/tests/test_id_once_engine.py` — every route to the engine reads the block with the reader first, so no id reaches it twice in a graph (req:3.engine-reads-first, req:3.id-once).

@@ -29,8 +29,12 @@ from test_engine_gets_corrected import (  # noqa: E402
     parser,
 )
 
+# built with chr(), so no editor or tool can read the source's own text as a line end
+LS, PS = chr(0x2028), chr(0x2029)  # line separator, paragraph separator
+
 # a block with its comments: indented, with no space after the slashes, empty, ending in a */ that
-# is not the comment's end, opening a /* inside, and holding U+2028 (not a line end here)
+# is not the comment's end, opening a /* inside, and (the last comment but one) holding a
+# U+2028, which is not a line end here
 WRITTEN = [
     "(r:Reason {id: 'r', title: 'Sun'}),",
     "// the option",
@@ -39,7 +43,7 @@ WRITTEN = [
     "//no space after the slashes",
     "//",
     "// it ends */ early? and /* opens",
-    "// a note that goes on",
+    "// a note" + LS + "that goes on",
     "(r)-[:FAVOURS]->(o)",
 ]
 # the same lines as Grafeo is to be given them, between the header and the end
@@ -51,7 +55,7 @@ GIVEN = [
     "/* no space after the slashes */",
     "/* */",
     "/* it ends * / early? and /* opens */",
-    "/* a note that goes on */",
+    "/* a note" + LS + "that goes on */",
     "(r)-[:FAVOURS]->(o)",
 ]
 COMMENTED = "\n".join(WRITTEN)
@@ -146,7 +150,8 @@ class ABlockWithCommentsGivesTheGraphOfTheBlockWithout(unittest.TestCase):
     def test_check_changeset_gives_the_same_results_with_comments_as_without(self):
         base_body = "(a:Person {id: 'a', name: 'A'}),\n(o:Option {id: 'o', name: 'Coast'})"
         change = "(q:Reason {id: 'q', title: 'Quiet'}),\n<note>(q)-[:FAVOURS]->(o)"
-        base, block = changeset_parts(base_body, change.replace("<note>", "// a */ note b\n"))
+        note = "// a */ note" + LS + "b\n"
+        base, block = changeset_parts(base_body, change.replace("<note>", note))
         _, plain_block = changeset_parts(base_body, change.replace("<note>", ""))
         results = gs.check_changeset(base, block)
         self.assertEqual(results, gs.check_changeset(base, plain_block))
@@ -176,19 +181,19 @@ class ALineEndsAtLfOnly(unittest.TestCase):
         self.assertEqual(edge_types(db), ["FAVOURS"])
 
     def test_u2028_in_a_value_is_the_same_value_to_grafeo_and_the_profile_reader(self):
-        self.assert_one_value(" ")
+        self.assert_one_value(LS)
 
     def test_u2029_in_a_value_is_the_same_value_to_grafeo_and_the_profile_reader(self):
-        self.assert_one_value(" ")
+        self.assert_one_value(PS)
 
     def test_u0085_in_a_value_is_the_same_value_to_grafeo_and_the_profile_reader(self):
-        self.assert_one_value("\u0085")
+        self.assert_one_value(chr(0x85))
 
     def test_a_form_feed_in_a_value_is_the_same_value_to_grafeo_and_the_profile_reader(self):
-        self.assert_one_value("\x0c")
+        self.assert_one_value(chr(0x0C))
 
     def test_grafeo_is_given_the_blocks_lines_and_no_extra_one_when_a_value_holds_u2028(self):
-        written = "// graph: joined\n" + self.body(" ")
+        written = "// graph: joined\n" + self.body(LS)
         with given_to_grafeo() as log:
             gs.load(written)
         # the block's own lines, and the one INSERT line the data shortcut needs
