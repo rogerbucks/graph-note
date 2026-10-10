@@ -5,9 +5,11 @@ import gs from '@graph-note/graph-spec';
 import type { Graph, World } from '@graph-note/graph-spec';
 import { estimate } from './estimates.ts';
 import type { GraphDrawing, NoteReading, Problem } from './note-reading.ts';
+import { mergePathProblems } from './paths.ts';
 import { readBlocks, REREAD_BUDGET } from './partial-read.ts';
 import { textTooLarge } from './layout-limits.ts';
 import { dataKind } from './blocks.ts';
+import { parkedIn } from './deferred.ts';
 import { undeclared, undeclaredUse } from './schema-checks.ts';
 
 /** A thing's text: its name, else its title, text or label, else its id — as graph-spec-draw.py chooses. */
@@ -22,8 +24,15 @@ function textOf(g: Graph, id: string): string {
 
 const byCode = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
-function drawingOf(world: World, name: string, own: Graph | undefined, problems: Problem[]): GraphDrawing {
+function drawingOf(
+  world: World,
+  name: string,
+  own: Graph | undefined,
+  problems: Problem[],
+  today: string,
+): GraphDrawing {
   const g = world[name] as Graph;
+  const later = parkedIn(g, today);
   const hidden = new Set(gs.SCHEMA_LABELS);
   const shared = g.labelled('ElementType').length ? undefined : (gs.schemaFor(world, name)[1] ?? own);
   const readings = gs.readings(g, shared);
@@ -40,7 +49,8 @@ function drawingOf(world: World, name: string, own: Graph | undefined, problems:
   return {
     graph: name,
     boxes: ids.map((key) => {
-      const place = suggested.get(key);
+      const place = suggested.get(key),
+        parked = later.get(key);
       return {
         key,
         kind: [...(g.nodes.get(key)?.[0] ?? [])]
@@ -49,6 +59,7 @@ function drawingOf(world: World, name: string, own: Graph | undefined, problems:
           .join(' · '),
         text: textOf(g, key),
         ...(place ? { suggested: place } : {}),
+        ...(parked ? { deferred: { overdue: parked.overdue, what: parked.what } } : {}),
       };
     }),
     links: g.edges
@@ -62,13 +73,15 @@ function drawingOf(world: World, name: string, own: Graph | undefined, problems:
  * What a note's graph blocks draw, as built by the blocks up to and including block `upTo` (default: all of them).
  * Readings come from each graph's own schema anywhere in the note — a schema is written last — else the shared schema
  * it names, from `shared` (the vault's SCHEMA blocks). Problems are listed for the blocks up to `upTo`. `budget` caps
- * reading a broken block again (partial-read.ts), as the Python reader's does.
+ * reading a broken block again (partial-read.ts), as the Python reader's does. `today` (YYYY-MM-DD, default the current
+ * day) decides which deferred things are overdue (deferred.ts), as the graph library's completeness check does.
  */
 export function readNote(
   blocks: string[],
   upTo = blocks.length - 1,
   shared: string[] = [],
   budget = REREAD_BUDGET,
+  today = new Date().toISOString().slice(0, 10),
 ): NoteReading {
   const upto = blocks.slice(0, upTo + 1);
   // measured before anything is read, so no block, however large or broken, holds the page while it is read (§9): the
@@ -82,7 +95,7 @@ export function readNote(
   const graphs = new Map<string, GraphDrawing>();
   for (const name of Object.keys(world)) {
     const own = whole[name]?.labelled('ElementType').length ? whole[name] : undefined;
-    const d = drawingOf(world, name, own, problems);
+    const d = drawingOf(world, name, own, problems, today);
     const shared = (world[name] as Graph).labelled('ElementType').length
       ? undefined
       : (gs.schemaFor(world, name)[1] ?? own);
@@ -90,6 +103,8 @@ export function readNote(
     graphs.set(name, d);
   }
   problems.push(...undeclared(whole, upto), ...undeclaredUse(whole, upto, problems));
-  problems.sort((a, b) => a.block - b.block || a.line - b.line);
-  return { graphs, problems, world, whole, texts: upto };
+  // a path's own problems (editor spec §7) say what the reader's reports of a step through nothing left unsaid
+  const all = mergePathProblems({ graphs, problems, world, whole, texts: upto });
+  all.sort((a, b) => a.block - b.block || a.line - b.line);
+  return { graphs, problems: all, world, whole, texts: upto };
 }

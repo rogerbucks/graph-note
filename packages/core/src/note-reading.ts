@@ -20,6 +20,12 @@ export interface Box {
    * the block it is written in, and the 0-based line and character there, just after its (, where the name would go.
    */
   suggested?: { block: number; line: number; character: number };
+  /**
+   * Only for a thing some Deferred defers (spec §5, deferred_drawn): what is needed before it is done, and whether every
+   * Deferred on it is past its revisit date. The core only says which boxes these are; the host draws the dashing and the
+   * later mark on the finished drawing, so the layout source stays byte-identical with the Python library's.
+   */
+  deferred?: { overdue: boolean; what: string };
 }
 
 /** One link to draw, read in its schema's words. */
@@ -38,6 +44,8 @@ export interface GraphDrawing {
   links: Link[];
   /** Near misses drawn as guesses (spec §3): never written to the note. */
   estimates: Estimate[];
+  /** The one direction to lay it out in, one the locked style lists (spec §21); unset, the best fit of them all. */
+  direction?: string;
 }
 
 /** Something that could not be read: its graph, the block (index in the note), the line in that block (1 = its graph line), what is wrong, and the fix. */
@@ -61,7 +69,14 @@ export interface Problem {
   span?: { line: number; character: number; end: number };
   /** The name suggested for a thing written without one, which it is drawn under until its fix writes it. */
   suggested?: string;
+  /** Further edits made with the `replace` fix, each at a 0-based line and characters of the block, as one change. */
+  also?: { span: { line: number; character: number; end: number }; text: string }[];
+  /** Set when what was written departs from standard GQL and was read as meant (spec §21): which departure it is. */
+  departure?: Departure;
 }
+
+/** A departure from standard GQL that the reader reads as meant (spec §21): what strictness acts on. */
+export type Departure = 'missing-comma' | 'trailing-comma' | 'bare-type';
 
 /** What a note's graph blocks say: each graph as drawn, the problems, and the graphs themselves, as written and joined. */
 export interface NoteReading {

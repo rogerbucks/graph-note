@@ -9,3 +9,8 @@ quality/
 spikes/
 python/
 *.md
+# the Claude Code mod's build (packages/claude-code/esbuild.config.mjs), and the API types Claude Code lays beside it
+packages/claude-code/mod/hooks/graph.js
+packages/claude-code/mod/bin/
+packages/claude-code/mod/tests/fixtures.js
+packages/claude-code/mod/.claude-plugin/types/

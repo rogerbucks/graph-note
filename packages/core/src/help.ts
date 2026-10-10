@@ -156,7 +156,21 @@ export function diagnostics(
         title: p.fixTitle ?? `Change ${p.replace?.written} to ${w}`,
         kind: 'quickfix',
         isPreferred: p.replace?.with.length === 1,
-        edit: { changes: { [uri]: [{ range, newText: w }] } },
+        // with any further edits the fix makes as one change, such as the later steps of a path numbered again
+        edit: {
+          changes: {
+            [uri]: [
+              { range, newText: w },
+              ...(p.also ?? []).map((e) => ({
+                range: {
+                  start: { line: e.span.line, character: e.span.character },
+                  end: { line: e.span.line, character: e.span.end },
+                },
+                newText: e.text,
+              })),
+            ],
+          },
+        },
       })),
     );
     out.push({
