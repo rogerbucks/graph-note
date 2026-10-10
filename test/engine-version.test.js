@@ -18,7 +18,7 @@ import {
   staleness,
   watch,
 } from '../scripts/engine-version.mjs';
-import { loadEngine } from '../packages/core/src/render.ts';
+import { loadEngine } from '../packages/core/src/engine.ts';
 import { exists, read, readJSON, ROOT, walk, block, jobs, runCommands, stripComment } from './repository/repo.js';
 
 const GRAPHVIZ_VERSION = /^\d+\.\d+\.\d+$/;

@@ -1,0 +1,4 @@
+# Made by build.mjs
+hooks/core.js
+bin/render.mjs
+tests/fixtures.js
