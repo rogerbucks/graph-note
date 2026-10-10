@@ -8,6 +8,7 @@ import re
 
 from graphspec.reader.grammar import Parser
 from graphspec.reader.lexer import ProfileError, UTC, tokens
+from graphspec.reader.owned_comments import NOTE, TAG
 from graphspec.reader.whitespace import S, lstrip, strip
 
 # a name as the lexer reads one: ASCII, as JavaScript's \w is
@@ -100,8 +101,9 @@ def _bare(block):
 def to_gql(block: str) -> str:
     """A block as standard GQL (§3): the data shortcut's INSERT put back and, where a name stands
     for an id, the id: written into each new node and one MATCH line added for the existing nodes
-    named. Every other line and comment is kept as written. A block that writes a variable or an
-    id twice is refused with the reader's own error, so no key is ever written twice. It sees
+    named, both above the notes and //@ lines the first line of code owns (§26, §27). Every
+    other line and comment is kept as written. A block that writes a variable or an id twice is
+    refused with the reader's own error, so no key is ever written twice. It sees
     one block only, and returns one it cannot read as it is: the gate is the reader, which every
     route to an engine runs first, on the block in its graph (req:3.engine-reads-first), so a
     repeat across blocks, or a block the reader cannot read, never reaches the engine."""
@@ -156,7 +158,11 @@ def to_gql(block: str) -> str:
             added.append("MATCH " + ", ".join(f"({v} {{id: {_gql_value(v)}}})" for v in refs))
     if lstrip(lines[i]).startswith("("):
         added.append("INSERT")
-    return "\n".join(lines[:i] + added + lines[i:])
+    # above the notes and //@ lines the first line of code owns, so they stay its own (§26, §27)
+    at = i
+    while at and (NOTE.match(strip(lines[at - 1])) or TAG.match(lstrip(lines[at - 1]))):
+        at -= 1
+    return "\n".join(lines[:at] + added + lines[at:])
 
 
 def _gql_value(v):

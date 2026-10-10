@@ -100,6 +100,19 @@ declare namespace GraphSpecCheck {
   /** A data block's shape against the profile, without applying it: the problem, or null. */
   function checkSyntax(block: string): ProfileError | null;
 
+  /** One element's notes and //@ lines (§26, §27): the element's line, the element, its tags as [key, value] in
+   * order, its note's lines ('' for a bare ///) and the note's first paragraph. */
+  interface OwnedComment {
+    line: number;
+    element: { thing: string } | { link: [string, string, string] };
+    tags: [string, string][];
+    note: string[];
+    summary: string;
+  }
+  /** The notes and //@ lines a block's elements own, the comment lines that own nothing, and the //@ lines with no
+   * key. Throws ProfileError where the reader does; a query or an excerpt owns nothing. */
+  function ownedComments(block: string): { owned: OwnedComment[]; unowned: number[]; malformed: number[] };
+
   /** The dialect linter: traps in a GQL text, each with its line. */
   function lint(text: string): { trap: string; line: number }[];
 }
