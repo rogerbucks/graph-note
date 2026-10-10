@@ -153,6 +153,25 @@ describe('replaying a commit against its parent’s code', () => {
       r.done();
     }
   });
+
+  // found at ff02d6d (10 Oct 2026): a parity case whose only failures were in subTests was read as passing first
+  test('a Python test whose only failure is inside a subTest has failed: it is seen failing first, not passing', () => {
+    const r = repository([
+      { 'py/src/twice.py': 'def twice(x):\n    return x\n', 'py/tests/test_twice.py': 'import unittest\n' },
+      {
+        'py/src/twice.py': 'def twice(x):\n    return x * 2\n',
+        'py/tests/test_twice.py':
+          'import os, sys, unittest\nsys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))\nfrom twice import twice\n\n\nclass Twice(unittest.TestCase):\n    def test_doubles(self):\n        for x in (1, 2):\n            with self.subTest(x=x):\n                self.assertEqual(twice(x), x * 2)\n',
+      },
+    ]);
+    try {
+      const [file] = replay(r.dir, r.ids[1]).files;
+      assert.deepEqual(file.failedFirst, ['Twice.test_doubles']);
+      assert.deepEqual(file.passedFirst, []);
+    } finally {
+      r.done();
+    }
+  });
 });
 
 describe('a run against the code before that did not finish', () => {

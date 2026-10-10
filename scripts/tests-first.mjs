@@ -110,7 +110,8 @@ walk(suite)
 result = unittest.TestResult()
 suite.run(result)
 name = lambda t: type(t).__name__ + "." + t._testMethodName
-bad = {id(t) for t, _ in result.failures + result.errors}
+# a failing subTest is reported as its own _SubTest; it is a failure of the test it belongs to
+bad = {id(getattr(t, "test_case", t)) for t, _ in result.failures + result.errors}
 skipped = {id(t) for t, _ in result.skipped}
 print(json.dumps({
     "passed": [name(t) for t in tests if id(t) not in bad and id(t) not in skipped and type(t).__name__ != "_FailedTest"],
