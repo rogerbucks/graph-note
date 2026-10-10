@@ -34,6 +34,24 @@
 .graph-note-svg g.edge[data-link] {
   cursor: pointer;
 }
+/* A thing parked for later (spec §5): dashed, with a later mark in words and a sign, never by colour alone. */
+.graph-note-parked path,
+.graph-note-parked polygon {
+  stroke-dasharray: 5 3;
+}
+.graph-note-svg .graph-note-later-mark {
+  font-size: 9pt;
+  fill: var(--text-muted);
+}
+.graph-note-svg .is-overdue .graph-note-later-mark {
+  fill: var(--text-error);
+  font-weight: var(--font-semibold);
+}
+.graph-note-park {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-4-2);
+}
 
 /* The bar: every control at least 44 points, as touch needs (spec §5), and none that only shows on hover. */
 .graph-note-bar {

@@ -8,6 +8,7 @@ import type { View, ZoomEvent } from '@graph-note/core';
 import { renderCode } from '../code';
 import { readOnlyHere, whenPlaced } from './placement';
 import { renderProblems } from './problems-list';
+import { listParked } from './parked';
 import { plural, renderBar } from './view-bar';
 import { describeDrawing, insertSvg } from './drawing-svg';
 import { Taps, targetAt, targetOf } from './taps';
@@ -68,6 +69,7 @@ export class GraphView extends MarkdownRenderChild {
     }
 
     list = renderProblems(root, problems, true, this.o.completeness);
+    if (this.o.parked) listParked(list, this.o.parked, (k) => this.boxes().find((b) => b.key === k)?.text ?? k);
     this.viewport = root.createDiv({
       cls: 'graph-note-viewport',
       attr: {

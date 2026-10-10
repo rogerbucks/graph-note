@@ -7,6 +7,7 @@ import type { Estimate } from '@graph-note/core';
 import { renderProperties } from '../properties/properties';
 import { problemText } from './problems-list';
 import { showSuggested } from './suggested-name';
+import { parkButton, parkedNote } from './parked';
 import { button } from './view-bar';
 import type { ViewOptions } from './view-options';
 
@@ -129,7 +130,23 @@ export class DetailsPanel {
       d.problems.map((p) => problemText({ ...p, noteLine: this.o.lineOf(p) })),
     );
     showSuggested(el, this.o.reading, this.o.graph, d, this.o.editing?.());
+    parkedNote(
+      el,
+      this.o.reading.graphs.get(this.o.graph)?.boxes.find((b) => b.key === key),
+    );
     this.inspector(el, { thing: key }, d.kind.split(' · ')[0] ?? '');
+    // Park for later writes into the text, so it is offered only while the block is edited (spec §5)
+    const ed = this.o.editing?.();
+    if (ed?.session)
+      parkButton(
+        el,
+        key,
+        () => ed.session?.text ?? '',
+        (t) => {
+          if (this.o.editing?.() === ed) ed.replace(t);
+        },
+        this.o.indent ?? 'four',
+      );
   }
 
   /**

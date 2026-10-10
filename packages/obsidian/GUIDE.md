@@ -50,6 +50,9 @@ module that ties the parts together, named as the folder is.
 - `drawing-svg.ts` — the SVG put in the card, each box and link reachable by keyboard and named.
 - `taps.ts` — what a tap or a key lands on, and the nearest things to a tap.
 - `details-panel.ts` — the details of a box or link, and the inspector while the block is edited.
+- `parked.ts` — things parked for later (§5, §8): each drawn dashed with a "⏳ later" or "⏳ overdue" mark on the SVG
+  Graphviz drew, so the layout stays the Python library's; listed behind the badge, which counts them apart from
+  problems; and Park for later in a box's details while the block is edited, writing the Deferred into its text.
 - `suggested-name.ts` — a box drawn under a suggested name: what screen readers hear of it, where it is written in the
   block being edited, and in its details its suggested name with the one-click fix that writes it.
 - `placement.ts` — where a card is: read-only in reading view; waiting for a card to be put on the page.

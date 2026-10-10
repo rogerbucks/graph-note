@@ -151,6 +151,14 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
       One undo (⌘Z, or the phone's gesture) takes the name back out, and the dashed box and the warning return. Phone:
       the button is easy to hit in the sheet (slice 2, unnamed_drawn_suggested).
 
+## Parked for later — spec §5, §8
+
+- [ ] Edit here on a card, tap a box, press Park for later, fill what is needed and why, press Park it: a Deferred is
+      written into the block; when the card redraws, the box is dashed with "⏳ later" at its top right, readable in light
+      and dark, and the badge says "No problems, 1 parked" (slice 2, park_for_later, deferred_drawn, parked_not_broken).
+- [ ] Change its revisit_by to a day in the past: the mark says "⏳ overdue", the badge adds "1 overdue", and the list
+      behind the badge names it with what is needed. VoiceOver reads the box as "parked for later, overdue".
+
 ## Settings — spec §21
 
 - [ ] Settings › Graph Note, desktop and phone: one page, with Strictness, AI models, Formatting and Drawing, each option

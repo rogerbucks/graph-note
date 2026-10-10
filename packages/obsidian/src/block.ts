@@ -9,6 +9,7 @@ import {
   gqlBlocks,
   graphOfBlock,
   namesSharedSchema,
+  parked,
   readNote,
   underStrictness,
 } from '@graph-note/core';
@@ -185,6 +186,8 @@ export async function renderBlock(
       problems,
       mode: 'note',
       completeness: completenessReport(reading, graph, new Date().toISOString().slice(0, 10)),
+      parked: parked(reading, graph, new Date().toISOString().slice(0, 10)),
+      indent: plugin.settings.indent,
       lineOf: (at) => (blocks[at.block]?.line ?? 0) + at.line,
       onEdit: () => {
         void plugin.openEditor(target);
