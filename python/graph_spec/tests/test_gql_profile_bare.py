@@ -90,7 +90,8 @@ class BareTypes(unittest.TestCase):
 
 
 class EngineGetsCorrected(unittest.TestCase):
-    """No route may give an engine a block that still holds a bare type.
+    """No route may give an engine a block that still holds a bare type: to_gql refuses one, and
+    each route gives Grafeo the reader's corrected text (tests/test_engine_gets_corrected.py).
 
     req:3.engine-gets-corrected.
     """
@@ -103,9 +104,10 @@ class EngineGetsCorrected(unittest.TestCase):
         self.assertIn("[favours] has no colon", str(e.exception))
         self.assertIn("[:FAVOURS]", str(e.exception))
 
-    def test_loading_into_grafeo_is_refused(self):
-        with self.assertRaises(gp.ProfileError):
-            gs.load(self.BARE)
+    def test_loading_into_grafeo_takes_the_bare_type_as_the_reader_read_it(self):
+        # the route reads the text with the reader first and gives Grafeo its corrected text
+        rows = gs.Q(gs.load(self.BARE), "MATCH ()-[r]->() RETURN type(r) AS t")
+        self.assertEqual(sorted(r["t"] for r in rows), ["FAVOURS", "FAVOURS"])
 
     def test_the_reader_s_corrected_text_loads(self):
         st = read(self.BARE)
@@ -144,7 +146,7 @@ class EngineGuardEdges(unittest.TestCase):
 
     def test_the_line_given_is_the_line_in_the_block(self):
         with self.assertRaises(gp.ProfileError) as e:
-            gs.load(
+            gp.to_gql(
                 "// graph: g\n// a comment\n" + FIRST.split("\n", 1)[1] + ",\n(r)-[favours]->(o)"
             )
         self.assertEqual(e.exception.line, 6)
