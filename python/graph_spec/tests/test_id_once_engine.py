@@ -149,13 +149,13 @@ class EnginePathsSkipTheReader(unittest.TestCase):
     # unchanged (to_gql.py:94-97), so parse() kept one node of two with one id, and reported
     # nothing. parse now reads the block with the reader first (req:3.engine-reads-first).
     def test_parse_by_default_refuses_a_block_the_reader_cannot_read(self):
-        with self.assertRaises(gp.ProfileError):
+        with self.assertRaisesRegex(gp.ProfileError, "^line 3: unexpected 'INSERT' — "):
             parse_block(TWO_INSERTS)
 
     # Was a GAP: load() (queries.py:79-85) ran no reader; Grafeo was given one id twice and kept
     # both. load now reads the text with the reader first (req:3.engine-reads-first).
     def test_load_refuses_an_id_repeated_in_one_text(self):
-        with self.assertRaises(gp.ProfileError):
+        with self.assertRaisesRegex(gp.ProfileError, "^line 3: unexpected 'INSERT' — "):
             gs.load("// graph: joined\n" + TWO_INSERTS)
 
     # Was a GAP, open after PR #36 too: compute() loaded each block of a recipe into its graph
@@ -167,7 +167,9 @@ class EnginePathsSkipTheReader(unittest.TestCase):
             "## A\n```gql\n// graph: g\n(a:Person {name: 'A'})\n```\n"
             "## B\n```gql\n// graph: g\n(b:Person {id: 'a', name: 'B'})\n```\n"
         )
-        with self.assertRaises(gp.ProfileError):
+        with self.assertRaisesRegex(
+            gp.ProfileError, "^line 2: id 'a' is already a node in graph g — "
+        ):
             compute({"load": ["#A", "#B"], "state_of": "g"}, text, ".", ".")
 
     def test_fill_check_reports_the_reader_s_refusal_as_it_reports_a_refused_recipe(self):
