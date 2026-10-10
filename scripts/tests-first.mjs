@@ -31,6 +31,8 @@ const JS_TEST = /(^|\/)(test|tests)\/.*\.test\.(js|mjs)$/;
 const PY_TEST = /(^|\/)tests\/test_\w+\.py$/;
 const SUPPORT = /(^|\/)(test|tests)\//;
 const RUN_MS = 10 * 60 * 1000;
+/** The time limit for each run of a test file: ten minutes, unless TESTS_FIRST_RUN_MS sets another (its tests do). */
+const runMs = () => Number(process.env.TESTS_FIRST_RUN_MS) || RUN_MS;
 
 const git = (repo, ...args) => execFileSync('git', args, { cwd: repo, encoding: 'utf8', maxBuffer: 1 << 28 }).trim();
 
@@ -76,7 +78,7 @@ function runJs(dir, file) {
     cwd: dir,
     env,
     encoding: 'utf8',
-    timeout: RUN_MS,
+    timeout: runMs(),
     maxBuffer: 1 << 28,
   });
   return fromJunit(r.stdout ?? '');
@@ -116,9 +118,9 @@ walk(suite)
 result = unittest.TestResult()
 suite.run(result)
 name = lambda t: type(t).__name__ + "." + t._testMethodName
-# a failing subTest is reported as its own _SubTest; it is a failure of the test it belongs to
+# a failing or skipped subTest is reported as its own _SubTest; it counts against the test it belongs to
 bad = {id(getattr(t, "test_case", t)) for t, _ in result.failures + result.errors}
-skipped = {id(t) for t, _ in result.skipped}
+skipped = {id(getattr(t, "test_case", t)) for t, _ in result.skipped}
 print(json.dumps({
     "passed": [name(t) for t in tests if id(t) not in bad and id(t) not in skipped and type(t).__name__ != "_FailedTest"],
     "failed": [name(t) for t in tests if id(t) in bad],
@@ -129,7 +131,7 @@ print(json.dumps({
 function runPy(dir, file, repo) {
   const venv = join(repo, 'python', 'graph_spec', '.venv', 'bin', 'python');
   const python = file.startsWith('python/graph_spec/') && existsSync(venv) ? venv : 'python3';
-  const r = spawnSync(python, ['-c', PY_RUNNER, join(dir, file)], { cwd: dir, encoding: 'utf8', timeout: RUN_MS });
+  const r = spawnSync(python, ['-c', PY_RUNNER, join(dir, file)], { cwd: dir, encoding: 'utf8', timeout: runMs() });
   try {
     return { ...JSON.parse(r.stdout.trim().split('\n').pop() ?? ''), ran: true };
   } catch {
@@ -170,21 +172,21 @@ export function replay(repo, commit) {
   }
   const at = checkout(repo, commit),
     before = checkout(repo, parent);
-  // the tests a file held at the parent, run there; each file once
+  // the tests a file held at the parent, run there, and whether that run finished; each file once
   const held = new Map();
   const before_ = (f) => {
     if (!held.has(f)) {
-      let names = [];
+      let found = { names: [], ran: true };
       if (spawnSync('git', ['cat-file', '-e', `${parent}:${f}`], { cwd: repo }).status === 0) {
         const earlier = checkout(repo, parent);
         try {
           const r = run(earlier.dir, f, repo);
-          names = [...r.passed, ...r.failed];
+          found = { names: [...r.passed, ...r.failed], ran: r.ran };
         } finally {
           earlier.done();
         }
       }
-      held.set(f, names);
+      held.set(f, found);
     }
     return held.get(f);
   };
@@ -223,8 +225,20 @@ export function replay(repo, commit) {
           .map(([, a]) => a ?? '')
           .filter((f) => f !== was && (JS_TEST.test(f) || PY_TEST.test(f)) && testFolder(f) === folder),
       ];
-      const old = sources.flatMap((f) => before_(f));
+      const earlier = sources.map((f) => before_(f));
+      const old = earlier.flatMap((e) => e.names);
       const fresh = now.passed.filter((n) => !old.includes(n));
+      // a run of the tests held before that did not finish holds only some of them, so which are new is not known
+      if (earlier.some((e) => !e.ran)) {
+        out.files.push({
+          file,
+          failedFirst: [],
+          passedFirst: [],
+          notReplayed: 'its run of the tests it held before did not finish, so which are new is not known',
+          tests: fresh,
+        });
+        continue;
+      }
       out.files.push(judged(file, fresh, run(before.dir, file, repo)));
     }
   } finally {

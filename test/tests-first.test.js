@@ -172,7 +172,65 @@ describe('replaying a commit against its parent’s code', () => {
       r.done();
     }
   });
+
+  /** A Python test file over py/src/twice.py: the class Twice, with these methods' bodies. */
+  const PY_TEST = (methods) =>
+    'import os, sys, unittest\nsys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))\nfrom twice import twice\n\n\nclass Twice(unittest.TestCase):\n' +
+    methods.map((m) => m.replace(/^/gm, '    ')).join('\n') +
+    '\n';
+  const SUBTESTS =
+    'def test_doubles(self):\n    for x in (1, 2, 3):\n        with self.subTest(x=x):\n            self.assertEqual(twice(x), x * 2)';
+  /** The replay of a commit that fixes twice, with the test file given, over the code before it. */
+  const replayedOver = (before, tests) => {
+    const r = repository([
+      { 'py/src/twice.py': before, 'py/tests/test_twice.py': 'import unittest\n' },
+      { 'py/src/twice.py': 'def twice(x):\n    return x * 2\n', 'py/tests/test_twice.py': tests },
+    ]);
+    try {
+      return replay(r.dir, r.ids[1]).files[0];
+    } finally {
+      r.done();
+    }
+  };
+
+  test('a Python test whose subTests raise an error, not a failed assertion, has failed: it is seen failing first', () => {
+    const file = replayedOver('def twice(x):\n    return None + x\n', PY_TEST([SUBTESTS]));
+    assert.deepEqual(file.failedFirst, ['Twice.test_doubles']);
+    assert.deepEqual(file.passedFirst, []);
+  });
+
+  test('a Python test with one subTest failing among others that pass has failed: it is seen failing first', () => {
+    const file = replayedOver('def twice(x):\n    return x * 2 if x < 3 else x\n', PY_TEST([SUBTESTS]));
+    assert.deepEqual(file.failedFirst, ['Twice.test_doubles']);
+    assert.deepEqual(file.passedFirst, []);
+  });
+
+  test('a Python test whose subTests are all skipped has not passed: it is not new, nor passed first', () => {
+    const skipped =
+      'def test_skipped(self):\n    for x in (1, 2):\n        with self.subTest(x=x):\n            self.skipTest("not here")';
+    const file = replayedOver(
+      'def twice(x):\n    return x\n',
+      PY_TEST(['def test_doubles(self):\n    self.assertEqual(twice(2), 4)', skipped]),
+    );
+    assert.deepEqual(file.failedFirst, ['Twice.test_doubles']);
+    assert.deepEqual(file.passedFirst, []);
+  });
 });
+
+/** Runs `fn` with the replay's time limit for each run of a test file set to `ms`. */
+function withRunLimit(ms, fn) {
+  const was = process.env.TESTS_FIRST_RUN_MS;
+  process.env.TESTS_FIRST_RUN_MS = String(ms);
+  try {
+    return fn();
+  } finally {
+    if (was === undefined) delete process.env.TESTS_FIRST_RUN_MS;
+    else process.env.TESTS_FIRST_RUN_MS = was;
+  }
+}
+
+// a test that waits this long holds a run past the time limit the tests below set; it ends by itself, so no run is left
+const HOLD = 'new Promise((done) => setTimeout(done, 20000))';
 
 describe('a run against the code before that did not finish', () => {
   // found at 7590e45 (10 Oct 2026): the parent's run of a test file hung to the time limit, and every new test in it was
@@ -197,6 +255,55 @@ describe('a run against the code before that did not finish', () => {
     assert.equal(fromJunit(cut).ran, false);
     const whole = `${cut}<testcase name="guards" time="0.1"/>\n</testsuites>\n`;
     assert.deepEqual(fromJunit(whole), { passed: ['guards'], failed: [], ran: true });
+  });
+
+  test('a run against the code before, stopped at the time limit, is recorded as not replayed, its new tests named', () => {
+    const r = repository([
+      { 'src/twice.js': 'export const twice = (x) => x;\n', 'test/twice.test.js': JS_TEST("test('one', () => {});") },
+      {
+        'src/twice.js': 'export const twice = (x) => x * 2;\n',
+        'test/twice.test.js': JS_TEST(
+          `test('one', () => {});\ntest('doubles', async () => { if (twice(2) !== 4) await ${HOLD}; });`,
+        ),
+      },
+    ]);
+    try {
+      writeFileSync(join(r.dir, 'test', 'seen-failing.json'), '{}\n');
+      const e = withRunLimit(3000, () => record(r.dir)).files['test/twice.test.js'];
+      assert.equal(e.seenFailing, 0);
+      assert.deepEqual(e.passedFirst, []);
+      assert.deepEqual(
+        e.notReplayedCommits.map((c) => [c.commit, c.tests]),
+        [[r.ids[1], ['doubles']]],
+      );
+      assert.match(e.notReplayedCommits[0].reason, /did not finish/);
+    } finally {
+      r.done();
+    }
+  });
+
+  // review of #33 (10 Oct 2026): the tests a file held before are read from the parent's own run of it; a run that did not
+  // finish holds none, so every test would look new, the old ones passing first among them
+  test('when the parent’s own run of a test file did not finish, which tests are new is not known: it is not replayed', () => {
+    const r = repository([
+      {
+        'src/twice.js': 'export const twice = (x) => x;\n',
+        'test/twice.test.js': JS_TEST(`test('one', () => {});\ntest('slow', () => ${HOLD});`),
+      },
+      {
+        'src/twice.js': 'export const twice = (x) => x * 2;\n',
+        'test/twice.test.js': JS_TEST("test('one', () => {});\ntest('doubles', () => assert.equal(twice(2), 4));"),
+      },
+    ]);
+    try {
+      const [file] = withRunLimit(3000, () => replay(r.dir, r.ids[1])).files;
+      assert.deepEqual(file.passedFirst, [], 'one is not new');
+      assert.deepEqual(file.failedFirst, []);
+      assert.match(file.notReplayed ?? '', /did not finish/);
+      assert.deepEqual(file.tests, ['one', 'doubles']);
+    } finally {
+      r.done();
+    }
   });
 });
 
