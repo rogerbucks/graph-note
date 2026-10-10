@@ -125,19 +125,18 @@ class EnginePathsSkipTheReader(unittest.TestCase):
     def test_the_default_parser_is_grafeo(self):
         self.assertEqual(settings.PARSER, "grafeo")
 
-    # GAP: parse() under the default PARSER ('grafeo', reading.py:95-101) runs no reader; on main
-    # to_gql does not refuse an id given twice, Grafeo stores two nodes, and parse keys its nodes
-    # by id (reading.py:107), so one is silently dropped. PR #36's to_gql refuses this case; once
-    # it merges this test passes and the decorator comes off.
-    @unittest.expectedFailure
+    # Was a GAP: parse() under the default PARSER ('grafeo', reading.py:95-101) ran no reader; on
+    # main to_gql did not refuse an id given twice, Grafeo stored two nodes, and parse keyed its
+    # nodes by id (reading.py:107), so one was silently dropped. PR #36's to_gql refuses this case,
+    # so on its base this test passes and its expectedFailure decorator is off.
     def test_parse_by_default_refuses_an_id_repeated_in_one_block(self):
         with self.assertRaisesRegex(gp.ProfileError, "id 'x' is already a node"):
             parse_block(ID_TWICE)
 
-    # GAP: the same path with a variable written twice: on main to_gql writes id: twice into the
-    # first node and none into the second, Grafeo makes a second node with no id, and parse fails
-    # with KeyError 'id' (reading.py:101) — a crash, not the reader's refusal. PR #36 refuses it.
-    @unittest.expectedFailure
+    # Was a GAP: the same path with a variable written twice: on main to_gql wrote id: twice into
+    # the first node and none into the second, Grafeo made a second node with no id, and parse
+    # failed with KeyError 'id' (reading.py:101) — a crash, not the reader's refusal. PR #36
+    # refuses it, so on its base this test passes and its expectedFailure decorator is off.
     def test_parse_by_default_refuses_a_variable_written_twice(self):
         with self.assertRaisesRegex(gp.ProfileError, "a is written twice"):
             parse_block(VAR_TWICE)
