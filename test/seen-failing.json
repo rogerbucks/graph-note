@@ -10,6 +10,10 @@
     }
   },
   "packages/obsidian/test/graph-view-parked.test.js": {
+    "Park for later, while the card is edited > a refusal for any other reason offers no declaration": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: a refusal for want of what is needed offered no declaration before the change, and offers none after, by design (commit 85f8002)"
+    },
     "the badge > with nothing parked, says nothing of parking": {
       "seen_failing_first": false,
       "evidence": "a control case, written with the change beside it: a badge with nothing parked reads as it always has, so it passes before and after by design (commit 1ce9135)"
