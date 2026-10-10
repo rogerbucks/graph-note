@@ -22,7 +22,7 @@ import type GraphNotePlugin from './main';
 import type { EditTarget } from './main';
 import { renderCode } from './code';
 import { renderStyleBlock } from './style-block';
-import { renderViewBlock } from './view-block';
+import { renderViewBlock, writeViewBlock } from './view-block';
 import { GraphView } from './graph-view/graph-view';
 import { readOnlyHere, settlePlacements, whenPlaced } from './graph-view/placement';
 import { renderProblems } from './graph-view/problems-list';
@@ -206,6 +206,7 @@ export async function renderBlock(
       mode: 'note',
       completeness: completenessReport(reading, graph, new Date().toISOString().slice(0, 10)),
       parked: parked(reading, graph, new Date().toISOString().slice(0, 10)),
+      writeView: (block) => writeViewBlock(plugin, target.path, graph, block),
       indent: plugin.settings.indent,
       lineOf: (at) => (blocks[at.block]?.line ?? 0) + at.line,
       onEdit: () => {

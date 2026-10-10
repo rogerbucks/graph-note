@@ -8,6 +8,9 @@ import type { MarkdownPostProcessorContext } from 'obsidian';
 import {
   evaluate,
   gqlBlocks,
+  gqlSpans,
+  graphOfBlock,
+  insertBlockAfter,
   legendOf,
   lookOf,
   nudgedDrawing,
@@ -36,6 +39,31 @@ async function writeStyle(plugin: GraphNotePlugin, path: string, graph: string, 
     return 'note' in r ? r.note : note;
   });
   if (refused) new Notice(`The style could not be written: ${refused}`);
+}
+
+/**
+ * Writes a view block made by tapping (views_by_tapping) after the last block of its graph in the note at `path`,
+ * against the note as it is when written; resolves to why it was not written, or null.
+ */
+export async function writeViewBlock(
+  plugin: GraphNotePlugin,
+  path: string,
+  graph: string,
+  block: string,
+): Promise<string | null> {
+  const file = plugin.app.vault.getAbstractFileByPath(path);
+  if (!(file instanceof TFile)) return 'the note is not there any more';
+  let refused: string | null = null;
+  await plugin.app.vault.process(file, (note) => {
+    const last = gqlSpans(note)
+      .filter((s) => graphOfBlock(s.text) === graph)
+      .pop();
+    const r = last ? insertBlockAfter(note, { line: last.open, text: last.text }, block) : null;
+    if (r?.ok) return r.note;
+    refused = r?.reason ?? `graph ${graph} is no longer in the note`;
+    return note;
+  });
+  return refused;
 }
 
 /** Opens the note at the view's line, for its query to be changed there. */

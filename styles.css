@@ -121,6 +121,18 @@ details.graph-note-style > summary {
   min-width: 44px;
   min-height: 44px;
 }
+/* Making a view by tapping (spec §7): laid out as the walk strip, every control a 44-point target. */
+.graph-note-view-maker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-4-2);
+  padding: var(--size-4-1) var(--size-4-2);
+}
+.graph-note-view-maker :is(button, select, input) {
+  min-width: 44px;
+  min-height: 44px;
+}
 .graph-note-svg g.graph-note-step-current > :is(path, polygon) {
   stroke-width: 4;
 }

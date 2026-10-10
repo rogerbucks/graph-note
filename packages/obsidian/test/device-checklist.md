@@ -173,6 +173,9 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
       Change the view, which opens the note at the view (empty_view).
 - [ ] A Look with a colour and its meaning: the thing is drawn in that hue, readable in light and dark, and the legend
       shows the swatch and the words (styled_paths_and_views, styling_keeps_locked_rules).
+- [ ] Edit here, Make a view: tap two boxes; the strip says "The view: A and B, picked by hand." Switch to Near a thing,
+      tap one, choose 2 steps; then How one reaches another, tap two; then Only some kinds, tap one. Name it and Write
+      the view: a view block appears after the graph, and draws (slice 2, views_by_tapping). Phone: every control easy to hit.
 - [ ] Zoom in, select a box, Save as shown: the style block gets a Shown; close and reopen the note: the view opens at
       that zoom with that box's details open (view_saved_as_shown).
 

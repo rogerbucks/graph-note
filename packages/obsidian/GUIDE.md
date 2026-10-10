@@ -58,6 +58,8 @@ module that ties the parts together, named as the folder is.
 - `parked.ts` — things parked for later (§5, §8): each drawn dashed with a "⏳ later" or "⏳ overdue" mark on the SVG
   Graphviz drew, so the layout stays the Python library's; listed behind the badge, which counts them apart from
   problems; and Park for later in a box's details while the block is edited, writing the Deferred into its text.
+- `view-maker.ts` — making a view by tapping (§7), while the block is edited: the kind of view, the boxes tapped, its
+  reading said as it is built, and Write the view, a view block after the graph's last block.
 - `view-strip.ts` — a view's card: its reading in plain English, Fade or Hide others, Save as shown, the legend, and what
   is outside it faded and its looks drawn on the drawing.
 - `walk.ts` — walked paths (§7): the strip below the bar with Play for each path in the note, stepping one thing at a

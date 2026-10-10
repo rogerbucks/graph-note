@@ -37,6 +37,8 @@ export interface ViewOptions {
   indent?: Indent;
   /** Set when the drawing is a view (spec §7): what it shows, how, and how to write its style. */
   view?: ViewShown;
+  /** Writes a view block after the graph's last block in the note (§7, views_by_tapping); resolves to why not, or null. */
+  writeView?: (block: string) => Promise<string | null>;
   /** Edit here: opens the text in place, inside this card (spec §4). */
   onEditHere?: () => void;
   /** While the card is edited, its edit button closes the editor, as its Done does (spec §4). */
