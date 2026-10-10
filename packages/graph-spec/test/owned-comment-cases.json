@@ -1,0 +1,230 @@
+{
+  "about": "The comments an element owns, read by both readers from the same text and held to one table (graph spec §26 notes, §27 tagged comments). A run of /// note lines and //@ key: value lines is owned by the element on the line directly below it; a blank line or any other comment ends the run, and a line holding more than one element owns nothing. A //@ line with no key is an ordinary comment. Each case gives the block and what is owned (line of the element, the element, its tags in order, its note lines and its summary), the comment lines that own nothing, and the //@ lines that are malformed. Roger, 11 Oct 2026: /// and //@ lines mix in one run, and a //@ line is never a note. Each case has a stable id, and names the requirements it proves (\"partial\" where it proves part).",
+  "cases": [
+    {
+      "id": "tag-above-thing",
+      "name": "a //@ line above a thing",
+      "proves": ["req:27.tool-hints", "req:27.two-readers"],
+      "block": "// graph: g\n//@ colour: orange\n(a:T {name: 'A'})",
+      "owned": [
+        {
+          "line": 3,
+          "element": {
+            "thing": "a"
+          },
+          "tags": [["colour", "orange"]],
+          "note": [],
+          "summary": ""
+        }
+      ],
+      "unowned": [],
+      "malformed": []
+    },
+    {
+      "id": "tag-above-link",
+      "name": "a //@ line above a link",
+      "proves": ["req:27.tool-hints", "req:27.two-readers", "req:26.owner"],
+      "block": "// graph: g\n(a:T),\n(b:T),\n//@ weight: 2\n(a)-[:R]->(b)",
+      "owned": [
+        {
+          "line": 5,
+          "element": {
+            "link": ["a", "R", "b"]
+          },
+          "tags": [["weight", "2"]],
+          "note": [],
+          "summary": ""
+        }
+      ],
+      "unowned": [],
+      "malformed": []
+    },
+    {
+      "id": "two-tags-in-order",
+      "name": "two //@ lines above a thing, kept in order, a value holding a colon whole",
+      "proves": ["req:27.tool-hints", "req:27.two-readers"],
+      "block": "// graph: g\n  //@ colour: orange\n//@ source:   https://example.org/a  \n(a:T {name: 'A'})",
+      "owned": [
+        {
+          "line": 4,
+          "element": {
+            "thing": "a"
+          },
+          "tags": [
+            ["colour", "orange"],
+            ["source", "https://example.org/a"]
+          ],
+          "note": [],
+          "summary": ""
+        }
+      ],
+      "unowned": [],
+      "malformed": []
+    },
+    {
+      "id": "tag-blank-line-breaks",
+      "name": "a blank line breaks ownership",
+      "proves": ["req:27.tool-hints", "req:27.two-readers", "req:26.owner"],
+      "block": "// graph: g\n//@ colour: orange\n\n(a:T {name: 'A'})",
+      "owned": [],
+      "unowned": [2],
+      "malformed": []
+    },
+    {
+      "id": "note-blank-line-breaks",
+      "name": "a blank line breaks a note",
+      "proves": ["req:26.owner", "req:26.two-readers"],
+      "block": "// graph: g\n/// A note.\n\n(a:T)",
+      "owned": [],
+      "unowned": [2],
+      "malformed": []
+    },
+    {
+      "id": "tag-plain-comment-breaks",
+      "name": "an ordinary comment breaks ownership",
+      "proves": ["req:27.tool-hints", "req:26.owner"],
+      "block": "// graph: g\n//@ colour: orange\n// a plain comment\n(a:T {name: 'A'})",
+      "owned": [],
+      "unowned": [2],
+      "malformed": []
+    },
+    {
+      "id": "tag-several-elements",
+      "name": "a //@ line above a line with several elements owns nothing",
+      "proves": ["req:27.tool-hints", "req:27.two-readers", "req:26.owner"],
+      "block": "// graph: g\n//@ colour: orange\n(a:T), (b:T)",
+      "owned": [],
+      "unowned": [2],
+      "malformed": []
+    },
+    {
+      "id": "note-several-elements",
+      "name": "a note above a line with several elements owns nothing",
+      "proves": ["req:26.owner", "req:26.two-readers"],
+      "block": "// graph: g\n/// A note.\n(a:T), (b:T)",
+      "owned": [],
+      "unowned": [2],
+      "malformed": []
+    },
+    {
+      "id": "tag-path-owns-nothing",
+      "name": "a //@ line above a path of two things and a link owns nothing",
+      "proves": ["req:27.tool-hints", "req:26.owner"],
+      "block": "// graph: g\n//@ colour: orange\n(a:T)-[:R]->(b:T)",
+      "owned": [],
+      "unowned": [2],
+      "malformed": []
+    },
+    {
+      "id": "mixed-run",
+      "name": "//@ mixed with /// notes above the same element",
+      "proves": ["req:26.mixed-run", "req:27.two-readers", "req:26.two-readers", "req:26.text partial"],
+      "block": "// graph: g\n/// The **large** reader suits A4 pages.\n//@ colour: orange\n///\n/// See [[Reader comparison]].\n(large_reader:Option {name: 'Large e-ink reader'}),\n(b:T)",
+      "owned": [
+        {
+          "line": 6,
+          "element": {
+            "thing": "large_reader"
+          },
+          "tags": [["colour", "orange"]],
+          "note": ["The **large** reader suits A4 pages.", "", "See [[Reader comparison]]."],
+          "summary": "The **large** reader suits A4 pages."
+        }
+      ],
+      "unowned": [],
+      "malformed": []
+    },
+    {
+      "id": "tag-no-key",
+      "name": "a malformed //@ line with no key is an ordinary comment and owns nothing",
+      "proves": ["req:26.mixed-run", "req:27.two-readers"],
+      "block": "// graph: g\n//@ : orange\n(a:T)",
+      "owned": [],
+      "unowned": [],
+      "malformed": [2]
+    },
+    {
+      "id": "tag-no-colon-breaks",
+      "name": "a malformed //@ line with no colon breaks the run above it",
+      "proves": ["req:26.mixed-run", "req:26.owner"],
+      "block": "// graph: g\n//@ colour: orange\n//@ orange\n(a:T)",
+      "owned": [],
+      "unowned": [2],
+      "malformed": [3]
+    },
+    {
+      "id": "tag-never-a-note",
+      "name": "a //@ line is never a note",
+      "proves": ["req:26.not-notes partial", "req:27.tool-hints"],
+      "block": "// graph: g\n//@ note: not for people\n(a:T)",
+      "owned": [
+        {
+          "line": 3,
+          "element": {
+            "thing": "a"
+          },
+          "tags": [["note", "not for people"]],
+          "note": [],
+          "summary": ""
+        }
+      ],
+      "unowned": [],
+      "malformed": []
+    },
+    {
+      "id": "note-four-slashes",
+      "name": "four slashes make an ordinary comment, not a note",
+      "proves": ["req:26.marker", "req:26.two-readers"],
+      "block": "// graph: g\n//// not a note\n(a:T)",
+      "owned": [],
+      "unowned": [],
+      "malformed": []
+    },
+    {
+      "id": "note-no-space",
+      "name": "three slashes followed by text with no space make an ordinary comment",
+      "proves": ["req:26.marker"],
+      "block": "// graph: g\n///not a note\n(a:T)",
+      "owned": [],
+      "unowned": [],
+      "malformed": []
+    },
+    {
+      "id": "note-summary",
+      "name": "a note's summary is its first paragraph, its lines joined",
+      "proves": ["req:26.text partial", "req:26.two-readers"],
+      "block": "// graph: g\n/// First line,\n/// second line.\n///\n/// More.\n(a:T)",
+      "owned": [
+        {
+          "line": 6,
+          "element": {
+            "thing": "a"
+          },
+          "tags": [],
+          "note": ["First line,", "second line.", "", "More."],
+          "summary": "First line,\nsecond line."
+        }
+      ],
+      "unowned": [],
+      "malformed": []
+    },
+    {
+      "id": "note-no-element-below",
+      "name": "a note above a MATCH line, or at the end of the block, owns nothing",
+      "proves": ["req:26.owner"],
+      "block": "// graph: g\n/// on a match\nMATCH (a:T {id: 'a'})\nINSERT (b:T)\n/// at the end",
+      "owned": [],
+      "unowned": [2, 5],
+      "malformed": []
+    },
+    {
+      "id": "note-header-not-a-note",
+      "name": "the header and other // lines are never notes",
+      "proves": ["req:26.not-notes partial"],
+      "block": "// graph: g\n// graph: h\n(a:T)",
+      "owned": [],
+      "unowned": [],
+      "malformed": []
+    }
+  ]
+}
