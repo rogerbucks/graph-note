@@ -8,6 +8,7 @@ from collections.abc import Iterable
 from typing import Any
 
 from graphspec.engine import settings
+from graphspec.reader.lexer import quote
 
 
 def emit(
@@ -21,7 +22,7 @@ def emit(
     findings."""
 
     def q(s):
-        return "'" + str(s).replace("'", "\\'") + "'"
+        return quote(str(s))  # as the reader writes it (req:3.gql-escapes)
 
     def val(v):
         return (

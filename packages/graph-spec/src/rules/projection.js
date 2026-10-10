@@ -5,6 +5,7 @@ const { isTime } = require('../values/times.js');
 const { byKey } = require('../values/order.js');
 const { jcs } = require('../hashing/canonical-json.js');
 const { Store } = require('../reader/store.js');
+const { quote } = require('../reader/tokens.js');
 const { worldFromStore, canon } = require('../graph/graph.js');
 
 // §18 the flat projection, rebuilt through the reader
@@ -57,7 +58,7 @@ function gqlValue(v) {
   if (typeof v === 'number') return String(v);
   if (typeof v === 'string' && /^\d{4}-\d\d-\d\dT[\d:]+[+-]\d\d:\d\d$/.test(v)) return `DATETIME '${v}'`;
   if (typeof v === 'string' && /^\d{4}-\d\d-\d\d$/.test(v)) return `DATE '${v}'`;
-  return "'" + String(v).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
+  return quote(String(v));
 }
 function rebuild(name, blocks, rels) {
   const keys = [

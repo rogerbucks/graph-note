@@ -9,6 +9,7 @@ import json
 import re
 from typing import TYPE_CHECKING, Any
 
+from graphspec.reader.lexer import quote
 from graphspec.rules.canonical_json import UTC, jcs
 from graphspec.rules.plain_graph import World
 
@@ -73,7 +74,7 @@ def _gql(v):
         return f"DATETIME '{v}'"
     if isinstance(v, str) and re.fullmatch(r"\d{4}-\d\d-\d\d", v):
         return f"DATE '{v}'"
-    return "'" + str(v).replace("\\", "\\\\").replace("'", "\\'") + "'"
+    return quote(str(v))
 
 
 def rebuild(name: str, blocks: dict[str, dict[str, Any]], rels: list[dict[str, Any]]) -> str:

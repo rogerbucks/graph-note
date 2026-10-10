@@ -172,6 +172,11 @@ function failure(block: number, text: string, error: unknown, all: Item[], lineA
     message: pe?.msg ?? 'this could not be read',
     fix: pe?.fix ?? 'check the line against the guide to writing a graph note',
   };
+  // an escape GQL does not name (req:3.gql-escapes): the reader says where its backslash is, and the fix doubles it
+  if (typeof pe?.at === 'number') {
+    problem.insert = { line: line - 1, character: pe.at, text: '\\' };
+    problem.fixTitle = 'Double the backslash';
+  }
   // "unexpected '('" straight after a path that ends its line with no comma: say so, and offer the comma
   const opened = all.findIndex((it) => lineAt(it.from) === line),
     prior = all[opened - 1];

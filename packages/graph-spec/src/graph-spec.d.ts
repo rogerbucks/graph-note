@@ -14,10 +14,12 @@ declare namespace GraphSpecCheck {
 
   /** A block that is outside the document profile: its line (1 = the block's first line), what is wrong, and the fix. */
   class ProfileError extends Error {
-    constructor(line: number, message: string, fix: string);
+    constructor(line: number, message: string, fix: string, at?: number);
     line: number;
     msg: string;
     fix: string;
+    /** Where the fix is one insertion: the character on the line it goes before (0-based). */
+    at?: number;
   }
 
   type BlockKind = 'data' | 'schema' | 'query' | 'excerpt' | 'changeset';
@@ -72,6 +74,8 @@ declare namespace GraphSpecCheck {
   /** The rule a comment after code breaks (§3), and its fix: the same words in the Python library. */
   const COMMENT_RULE: string;
   const COMMENT_FIX: string;
+  /** A text quoted as the profile writes it, each control character GQL has an escape for written as that escape. */
+  function quote(s: string): string;
   /** The schema's own kinds, left out of drawings. */
   const SCHEMA_LABELS: string[];
   const SPEC_NODES: string[];

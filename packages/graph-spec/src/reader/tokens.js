@@ -86,6 +86,15 @@ function tokens(block) {
                 ? 'arrow'
                 : 'p';
       const rawText = m[1] ?? m[2] ?? m[3] ?? m[4] ?? m[5];
+      const bad = kind === 'str' ? badEscape(rawText.slice(1, -1)) : null;
+      if (bad)
+        // req:3.gql-escapes: refused at its backslash, whose fix doubles it
+        throw new ProfileError(
+          n,
+          `'${bad[1]}' is not an escape GQL names`,
+          `double the backslash to write a backslash: \\${bad[1]}`,
+          TOKEN.lastIndex - rawText.length + 1 + bad[0],
+        );
       let text = rawText;
       if (kind === 'id' && KEYWORDS.has(text.toUpperCase())) {
         kind = 'kw';
@@ -97,7 +106,45 @@ function tokens(block) {
   });
   return out;
 }
-const unquote = (s) => s.slice(1, -1).replace(/\\([^\n])/g, (_, c) => (c === 'n' ? '\n' : c === 't' ? '\t' : c));
+// req:3.gql-escapes: the escapes ISO GQL names — each character after a backslash, and \uXXXX and \UXXXXXX for a
+// character by its code point
+const ESCAPES = { '\\': '\\', "'": "'", '"': '"', '`': '`', t: '\t', b: '\b', n: '\n', r: '\r', f: '\f' };
+const HEX = { u: 4, U: 6 };
+/** The character a \u or \U escape at s[i] names, or null when it names none. */
+function codePoint(s, i) {
+  const n = HEX[s[i + 1]],
+    digits = s.slice(i + 2, i + 2 + n);
+  if (digits.length !== n || !/^[0-9A-Fa-f]+$/.test(digits)) return null;
+  const cp = parseInt(digits, 16);
+  return cp > 0x10ffff || (cp >= 0xd800 && cp <= 0xdfff) ? null : cp;
+}
+/**
+ * The first escape GQL does not name in a quoted text (quotes off): where its backslash is, and the escape as written —
+ * for \u and \U, with the digits that follow. null when every escape is one GQL names.
+ */
+function badEscape(s) {
+  let i = s.indexOf('\\');
+  while (i !== -1) {
+    const c = s.slice(i + 1, i + 2);
+    if (c in HEX) {
+      if (codePoint(s, i) === null) return [i, s.slice(i, i + 2 + HEX[c])];
+      i = s.indexOf('\\', i + 2 + HEX[c]);
+    } else if (Object.hasOwn(ESCAPES, c)) i = s.indexOf('\\', i + 2);
+    else return [i, s.slice(i, i + 2)];
+  }
+  return null;
+}
+const WRITTEN = { '\\': '\\\\', "'": "\\'", '\n': '\\n', '\t': '\\t', '\r': '\\r', '\b': '\\b', '\f': '\\f' };
+// a text quoted as the profile writes it: a backslash, a quote and each control character GQL has an escape for written
+// as that escape, so the text reads back on one line, as itself
+const quote = (s) => "'" + [...s].map((c) => WRITTEN[c] ?? c).join('') + "'";
+// a quoted text's text, its escapes read as GQL reads them (tokens has refused any GQL does not name)
+const unquote = (s) =>
+  s
+    .slice(1, -1)
+    .replace(/\\(u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{6}|[^])/g, (_, e) =>
+      e[0] in HEX && e.length > 1 ? String.fromCodePoint(parseInt(e.slice(1), 16)) : ESCAPES[e],
+    );
 function utcNaive(s, line) {
   const m = /^(\d{4})-(\d\d)-(\d\d)[T ](\d\d):(\d\d)(?::(\d\d)(?:\.(\d{1,6}))?)?(Z|[+-]\d\d:?\d\d)?$/.exec(s);
   if (!m) throw new ProfileError(line, `'${s}' is not an instant`, "write DATETIME 'YYYY-MM-DDTHH:MM:SS+HH:MM'");
@@ -117,4 +164,4 @@ function utcNaive(s, line) {
   );
 }
 
-module.exports = { header, COMMENT_RULE, COMMENT_FIX, tokens, unquote, utcNaive };
+module.exports = { header, COMMENT_RULE, COMMENT_FIX, tokens, quote, unquote, utcNaive };

@@ -66,6 +66,8 @@ const NAMES = [
   'configFrom',
   'joinDocs',
   'pyrepr',
+  // added since, on purpose
+  'quote', // a text quoted as the profile writes it (req:3.gql-escapes, 11 Oct 2026)
 ];
 
 test('the entry point exports exactly the names the one file did, in its order', () => {

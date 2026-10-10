@@ -1,0 +1,29 @@
+{
+  "cases": [
+    {
+      "name": "escapes: every escape GQL names, read alike by the reader and Grafeo (req:3.gql-escapes)",
+      "blocks": [
+        [
+          "// graph: esc_all",
+          "INSERT",
+          "(t_text:ElementType {id: 'type:Text', name: 'Text', kind: 'node'}),",
+          "(meta:GraphMeta {id: 'meta:esc_all', graph: 'esc_all', schema: 'esc_all@1'}),",
+          "(meta)-[:DECLARES]->(t_text),",
+          "(backslash:Text {v: 'a\\\\b'}),",
+          "(quote:Text {v: 'it\\'s'}),",
+          "(double:Text {v: 'say \\\"hi\\\"'}),",
+          "(tick:Text {v: 'a \\` tick'}),",
+          "(tab:Text {v: 'a\\tb'}),",
+          "(back:Text {v: 'a\\bb'}),",
+          "(newline:Text {v: 'a\\nb'}),",
+          "(carriage:Text {v: 'a\\rb'}),",
+          "(feed:Text {v: 'a\\fb'}),",
+          "(four:Text {v: '\\u0041\\u00e9'}),",
+          "(six:Text {v: '\\U01F600 \\U000041'}),",
+          "(doubled:Text {v: '\\\\q and \\\\b'})"
+        ]
+      ],
+      "switches": []
+    }
+  ]
+}
