@@ -8,6 +8,7 @@ import { graphOfBlock } from './blocks.ts';
 import { quoted } from './lock.ts';
 import { nameFromText } from './name-suggestions.ts';
 import type { NoteReading, Problem } from './note-reading.ts';
+import { stepsAfter } from './path-edits.ts';
 import { S, trim } from './whitespace.ts';
 import { writtenIn } from './written-things.ts';
 import type { Written } from './written-things.ts';
@@ -270,7 +271,7 @@ export class PathPlayer {
 }
 
 /** The edit that takes a step out of its block, when the step sits on one line of it; nothing otherwise. */
-function removal(text: string, line: number, dropped: string): Pick<Problem, 'replace' | 'span' | 'fixTitle'> {
+function removal(text: string, line: number, dropped: string): Pick<Problem, 'replace' | 'span' | 'fixTitle' | 'also'> {
   const want = blankText(dropped),
     lineOf = lineIndex(text);
   const it = items(text).find(
@@ -284,6 +285,7 @@ function removal(text: string, line: number, dropped: string): Pick<Problem, 're
     replace: { written: text.slice(it.from, end), with: [''] },
     span: { line: lineOf(it.from) - 1, character: it.from - start, end: end - start },
     fixTitle: 'Remove the step',
+    also: stepsAfter(text, dropped), // the later steps numbered again: §22's steps 1 to n
   };
 }
 

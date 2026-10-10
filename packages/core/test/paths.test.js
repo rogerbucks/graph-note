@@ -30,7 +30,14 @@ const applied = (text, p) => {
     s = p.span;
   const line = lines[s.line];
   assert.equal(line.slice(s.character, s.end), p.replace.written, 'the span holds what the edit replaces');
-  lines[s.line] = line.slice(0, s.character) + p.replace.with[0] + line.slice(s.end);
+  // the edits made with it, such as the later steps numbered again, the last first so each place still holds
+  const edits = [{ span: s, text: p.replace.with[0] }, ...(p.also ?? [])].sort(
+    (a, b) => b.span.line - a.span.line || b.span.character - a.span.character,
+  );
+  for (const e of edits) {
+    const l = lines[e.span.line];
+    lines[e.span.line] = l.slice(0, e.span.character) + e.text + l.slice(e.span.end);
+  }
   return lines.join('\n');
 };
 
@@ -357,6 +364,15 @@ describe('a step through something removed', () => {
       pathsOf(readNote([fixed]), 'trip')[0].steps.map((s) => s.key),
       ['home', 'cafe'],
     );
+  });
+
+  // proves: path_missing_step
+  test('removing a step in the middle numbers the later steps again, so the path keeps §22’s steps 1 to n', () => {
+    const [p] = pathProblems(readNote([BROKEN]));
+    const fixed = applied(BROKEN, p);
+    assert.match(fixed, /\(tour\)-\[:STEP \{seq: 2\}\]->\(cafe\)/);
+    const g = worldOf(fixed).trip;
+    for (const [rule, ok] of gs.pathsRules(g)) assert.ok(ok, rule);
   });
 
   // proves: path_missing_step

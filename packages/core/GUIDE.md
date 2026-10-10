@@ -96,6 +96,8 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   STEP's own line with its fix and, where the step sits on one line, the edit that removes it, and a path with no steps;
   `mergePathProblems` is what `readNote` uses to put them in `NoteReading.problems`, replacing the reader's own report of
   the same STEP, so the badge counts each once.
+- `path-edits.ts` — a step taken out numbers the later steps of its path again (`stepsAfter`), carried as the removing
+  fix's further edits (`Problem.also`), so the path keeps §22's steps 1 to n.
 
 **Settings (spec §21)**
 

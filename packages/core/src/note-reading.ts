@@ -69,6 +69,8 @@ export interface Problem {
   span?: { line: number; character: number; end: number };
   /** The name suggested for a thing written without one, which it is drawn under until its fix writes it. */
   suggested?: string;
+  /** Further edits made with the `replace` fix, each at a 0-based line and characters of the block, as one change. */
+  also?: { span: { line: number; character: number; end: number }; text: string }[];
   /** Set when what was written departs from standard GQL and was read as meant (spec §21): which departure it is. */
   departure?: Departure;
 }
