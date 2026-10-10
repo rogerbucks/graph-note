@@ -26,6 +26,7 @@ A thing's name is its id (6 Oct 2026): a new node with no id: takes its name as 
 (name) — or SET name.key — not written in the block names the existing node with that id.
 to_gql(block) puts back what the shortcuts leave out — INSERT, the id: and a MATCH for each
 existing node named — the one conversion every route to a GQL engine goes through.
+owned_comments(block) reads the /// notes and //@ lines each element owns (§26, §27).
 Blocks marked '// graph: G · QUERY' are queries, not data, and are refused here.
 
 The reader lives in graphspec/reader/ (GUIDE.md); this module is its entry point and
@@ -86,6 +87,9 @@ from graphspec.reader.name_gaps import (
 from graphspec.reader.canonical_hash import (
     _norm,
     canon,
+)
+from graphspec.reader.owned_comments import (
+    owned_comments,
 )
 from graphspec.reader.syntax_check import (
     bind_order,

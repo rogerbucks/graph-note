@@ -4,6 +4,7 @@ import esbuild from 'esbuild';
 import { copyFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { layoutWorker } from '../esbuild.config.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url)),
   out = process.argv[2];
@@ -18,6 +19,8 @@ await esbuild.build({
   target: 'es2022',
   alias: { obsidian: join(here, 'obsidian-shim.js') },
   loader: { '.md': 'text' },
+  // the layout worker's own bundle, made as the plugin's build makes it (spec §9, layout_contained)
+  plugins: [layoutWorker],
   logLevel: 'warning',
 });
 copyFileSync(join(here, '..', '..', '..', 'styles.css'), join(out, 'styles.css'));

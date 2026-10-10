@@ -373,6 +373,10 @@
     "ToGqlRefusesWhatTheReaderRefuses.test_a_node_written_where_it_cannot_be_found_is_said_not_hidden": {
       "seen_failing_first": false,
       "evidence": "pins an error that already existed (to_gql.py: cannot find where {name} is written), untested until the review of PR #34: written after its code, and it passes before and after by design"
+    },
+    "ToGqlKeepsOwnedComments.test_comments_above_the_first_thing_stay_owned_in_a_block_whose_lines_end_in_cr_lf": {
+      "seen_failing_first": false,
+      "evidence": "seen failing in the review of #53 against the fixed owned_comments with to_gql unchanged (the INSERT line parted the CR LF note from its thing); against the parent commit both sides read the note alike as no note, so the replay cannot show it"
     }
   },
   "python/graph_spec/tests/test_changeset_header.py": {
@@ -717,6 +721,32 @@
     "replaying a commit against its parent’s code > a Python test with one subTest failing among others that pass has failed: it is seen failing first": {
       "seen_failing_first": false,
       "evidence": "asked for in review of PR #33, added after the subTest fix earlier in the same branch, so it passes against its parent. Replayed by hand with origin/main 42927dd's scripts/tests-first.mjs in a scratch worktree, it fails: that runner reads the fixture's test as passing first (10 Oct 2026)"
+    }
+  },
+  "packages/graph-spec/test/owned-comments.test.mjs": {
+    "owned comments: a note above a thing written over several lines is owned by it": {
+      "seen_failing_first": false,
+      "evidence": "coverage the review of #53 asked for, added with its fixes: it pins what the first commit of #53 already read correctly, so it passes before and after by design"
+    },
+    "owned comments: a //@ line above a link written without its colon is owned by it, its type as written": {
+      "seen_failing_first": false,
+      "evidence": "coverage the review of #53 asked for, added with its fixes: it pins what the first commit of #53 already read correctly, so it passes before and after by design"
+    },
+    "owned comments: a //@ line above a SET line owns nothing": {
+      "seen_failing_first": false,
+      "evidence": "coverage the review of #53 asked for, added with its fixes: it pins what the first commit of #53 already read correctly, so it passes before and after by design"
+    },
+    "owned comments: a marker indented with GQL whitespace other than a space is read, and the value is trimmed by GQL's set": {
+      "seen_failing_first": false,
+      "evidence": "coverage the review of #53 asked for, added with its fixes: it pins what the first commit of #53 already read correctly, so it passes before and after by design"
+    },
+    "owned comments: a block of only its header owns nothing": {
+      "seen_failing_first": false,
+      "evidence": "coverage the review of #53 asked for, added with its fixes: it pins what the first commit of #53 already read correctly, so it passes before and after by design"
+    },
+    "owned comments: a block the reader refuses is refused alike, at the same line": {
+      "seen_failing_first": false,
+      "evidence": "coverage the review of #53 asked for, added with its fixes: it pins what the first commit of #53 already read correctly, so it passes before and after by design"
     }
   }
 }
