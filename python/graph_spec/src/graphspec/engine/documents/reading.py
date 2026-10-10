@@ -75,16 +75,18 @@ def gql_block(path: str, straighten: bool = True) -> str:
 
 
 def parse(path: str, straighten: bool = True) -> dict[str, Any]:
-    """Lift the GQL block out of a document (§3) and read its header."""
+    """Lift the GQL block out of a document (§3) and read its header. The block is read with the
+    reader first, in its graph, whichever parser is set: a block the reader refuses raises its
+    ProfileError, and Grafeo is given nothing (req:3.engine-reads-first)."""
+    from graphspec.reader.store import Store
+
     block = require_graph_line(gql_block(path, straighten), path.rsplit("/", 1)[-1])
     m = re.search(
         r"document (\S+) · schema (\S+) · as of (\d{4}-\d\d-\d\d)(?: · revision of (\S+))?", block
     )
+    st = Store()
+    g = st.apply(block)
     if settings.PARSER == "profile":  # the portable reader — no database
-        from graphspec.reader.store import Store
-
-        st = Store()
-        g = st.apply(block)
         stored = st.graph(g)
         byk = {k: n["props"]["id"] for k, n in stored["nodes"].items()}
         node_rows = [

@@ -13,6 +13,7 @@ from graphspec.engine.documents.reading import graph_name, require_graph_line
 from graphspec.engine.judgements.basis import basis_hash, judgement_hash
 from graphspec.engine.optional_imports import grafeo, yaml
 from graphspec.engine.queries import Q, canon_graph, strip
+from graphspec.reader.store import Store
 
 
 # ── §24 H2: the hash and id filler ────────────────────────────────────────────────────────────
@@ -50,13 +51,18 @@ def _block_of(text, ref, std_dir):
 
 def compute(recipe: dict[str, Any], text: str, std_dir: str, vault_dir: str) -> str:
     """One recipe's value: basis (rule:basis-hash@1), judgement (rule:judgement-hash@1) or ni
-    (RFC 6920)."""
+    (RFC 6920). The recipe's blocks are read together with the reader first, each in its graph:
+    one the reader refuses raises its ProfileError, and Grafeo is given none of them
+    (req:3.engine-reads-first)."""
     if "ni" in recipe:
         return ni_uri(open(os.path.join(vault_dir, recipe["ni"]), "rb").read())
+    blocks = [require_graph_line(_block_of(text, ref, std_dir), ref) for ref in recipe["load"]]
+    st = Store()
+    for block in blocks:
+        st.apply(block)
     db = grafeo.GrafeoDB()
     made = set()
-    for ref in recipe["load"]:
-        block = require_graph_line(_block_of(text, ref, std_dir), ref)
+    for block in blocks:
         g = graph_name(block)
         if g not in made:
             db.execute(f"CREATE GRAPH {g}")

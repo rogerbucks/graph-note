@@ -306,6 +306,36 @@ class IdOnce(unittest.TestCase):
             self.assertIn(ours[0][2], ("variable twice", "id clash"), name)
             self.assertEqual(ours, [[b, ln, refusal_kind(m)] for b, ln, m in theirs], name)
 
+    def test_parse_refuses_what_the_core_refuses_before_grafeo_is_given_it(self):
+        # req:3.engine-reads-first: parse() under the default parser, Grafeo, reads the block with
+        # the reader first, so it refuses each block the core refuses, at the same line
+        self.assertEqual(gs.PARSER, "grafeo")
+        names = list(ENGINE_BLOCKS)
+        core = core_refusals([ENGINE_BLOCKS[n] for n in names])
+        # a plain loop, never subTest: the tests-first replay counts a test by its own result
+        for name, theirs in zip(names, core):
+            self.assertEqual(len(theirs), 1, name)
+            with tempfile.TemporaryDirectory() as d:
+                p = os.path.join(d, "doc.md")
+                with open(p, "w", encoding="utf-8") as f:
+                    f.write(f"```gql\n{ENGINE_BLOCKS[name]}\n```\n")
+                with self.assertRaises(gp.ProfileError, msg=name) as e:
+                    gs.parse(p)
+            ours = [e.exception.line, refusal_kind(e.exception.message)]
+            self.assertEqual(ours, [theirs[0][1], refusal_kind(theirs[0][2])], name)
+
+
+# Blocks the readers refuse, each in a document parse() can read the header of: the two halves of
+# req:3.id-once, and a block that is not one data statement, which Grafeo would take whole.
+DOC_HEAD = "// graph: g · document doc:one · schema s1 · as of 2026-10-01"
+ENGINE_BLOCKS = {
+    "a variable written twice in one block": f"{DOC_HEAD}\n(x:T {{n:1}}),\n(x:T {{m:2}})",
+    "an id that clashes with another node's name": f"{DOC_HEAD}\n(x:T {{id:'y'}}),\n(y:T {{n:1}})",
+    "one id given in two INSERT statements": (
+        f"{DOC_HEAD}\nINSERT (a:T {{id: 'x'}})\nINSERT (b:T {{id: 'x'}})"
+    ),
+}
+
 
 if __name__ == "__main__":
     unittest.main()
