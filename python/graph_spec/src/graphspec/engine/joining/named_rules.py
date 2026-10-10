@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from graphspec.engine.queries import Q
+from graphspec.rules.plain_graph import Graph
 
 if TYPE_CHECKING:
     from grafeo import GrafeoDB
@@ -189,9 +190,38 @@ RULES = {
 }
 
 
-def fig_loan_balance(db: GrafeoDB, loan: str) -> dict[str, Any]:
+def _plain_loan_balance(g: Graph, loan: str) -> dict[str, Any]:
+    """fig_loan_balance on the reader's plain graph (req:21.loan-balance-reads-plain)."""
+    repayments = [s for s, _, _, _ in g.inc(loan, "REPAYS") if g.has(s, "Repayment")]
+
+    def contested(about, props):
+        return {
+            c
+            for c, _, _, _ in g.inc(about, "ABOUT")
+            if g.has(c, "Claim")
+            and g.p(c).get("status") == "contested"
+            and g.p(c).get("claimed_property") in props
+        }
+
+    blocked = sorted(
+        contested(loan, ("currency", "principal_cents"))
+        | {c for r in repayments for c in contested(r, ("amount_cents",))}
+    )
+    if blocked:
+        return {"result": "incomplete", "depends_on": blocked}
+    p = g.p(loan)
+    return {
+        "result": "ok",
+        "value": p.get("principal_cents") - sum(g.p(r).get("amount_cents") for r in repayments),
+        "currency": p.get("currency"),
+    }
+
+
+def fig_loan_balance(db: Graph | GrafeoDB, loan: str) -> dict[str, Any]:
     """Principal less repayments — or 'incomplete', naming the contested claims it would depend on
-    (§21)."""
+    (§21) — from the reader's plain graph, or from a Grafeo database a host asks for."""
+    if isinstance(db, Graph):
+        return _plain_loan_balance(db, loan)
     blocked = sorted(
         {
             r["c"]

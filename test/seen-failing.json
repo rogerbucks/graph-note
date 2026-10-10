@@ -353,6 +353,12 @@
       "evidence": "a control case, written with the change beside it: the rule loader already escaped a backslash and quote, and gives Grafeo a tab and line break as themselves, so it passes before and after by design; it holds that req:3.gql-escapes' quote() keeps it so (11 Oct 2026)"
     }
   },
+  "python/graph_spec/tests/test_fill.py": {
+    "FillReadsPlain.test_each_recipe_s_value_from_the_reader_s_reading_is_grafeo_s": {
+      "seen_failing_first": false,
+      "evidence": "req:24.fill-reads-plain: against its parent, compute ignored the parser and asked Grafeo under both, so the two agree trivially and it passes; it holds the plain twin this commit adds to Grafeo's values, and pins the judgement hash to its sealed content_hash. Its companion, test_a_document_s_hashes_are_filled_with_grafeo_not_installed, was seen failing first (11 Oct 2026)"
+    }
+  },
   "python/graph_spec/tests/test_optional_imports.py": {
     "NoEngineInstalled.test_a_plain_install_reads_checks_joins_and_draws": {
       "seen_failing_first": false,

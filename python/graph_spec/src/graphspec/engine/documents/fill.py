@@ -13,7 +13,12 @@ from graphspec.engine.documents.reading import graph_name, require_graph_line
 from graphspec.engine.judgements.basis import basis_hash, judgement_hash
 from graphspec.engine.optional_imports import grafeo, yaml
 from graphspec.engine.queries import Q, canon_graph, strip
+from graphspec.engine import settings
+from graphspec.reader.canonical_hash import canon as plain_canon
 from graphspec.reader.store import Store
+from graphspec.rules.canonical_json import basis_hash as plain_basis_hash
+from graphspec.rules.judgements import judgement_hash as plain_judgement_hash
+from graphspec.rules.plain_graph import World
 
 
 # ── §24 H2: the hash and id filler ────────────────────────────────────────────────────────────
@@ -49,6 +54,28 @@ def _block_of(text, ref, std_dir):
     return re.search(r"```gql\n(.*?)\n```", t, re.S).group(1)
 
 
+def _compute_plain(recipe: dict[str, Any], st: Store) -> str:
+    """A recipe's value from the reader's reading of its blocks — what compute gives through
+    Grafeo, with no engine (req:24.fill-reads-plain)."""
+
+    w = World.from_store(st)
+    if "basis" in recipe:
+        g = w.graphs.get(recipe["graph"])
+        if g is None or recipe["basis"] not in g.nodes:
+            raise ValueError(
+                f"refused: {recipe['basis']} is not in graph {recipe['graph']} after loading "
+                f"{recipe['load']}"
+            )
+        return plain_basis_hash(g.p(recipe["basis"]), recipe["reads"])
+    if "judgement" in recipe:
+        return plain_judgement_hash(w, recipe["graph"], recipe["judgement"])
+    if "state_of" in recipe:
+        return plain_canon(st, recipe["state_of"])[0][:16]  # what a change set is made against
+    raise ValueError(
+        f"refused: a recipe must name basis, judgement, state_of or ni — got {sorted(recipe)}"
+    )
+
+
 def compute(recipe: dict[str, Any], text: str, std_dir: str, vault_dir: str) -> str:
     """One recipe's value: basis (rule:basis-hash@1), judgement (rule:judgement-hash@1) or ni
     (RFC 6920). The recipe's blocks are read together with the reader first, each in its graph:
@@ -61,6 +88,8 @@ def compute(recipe: dict[str, Any], text: str, std_dir: str, vault_dir: str) -> 
     st = Store()
     for block in blocks:
         st.apply(block)
+    if settings.PARSER == "profile":  # the reader's reading, no engine (req:24.fill-reads-plain)
+        return _compute_plain(recipe, st)
     db = grafeo.GrafeoDB()
     made = set()
     for block in blocks:
