@@ -2,21 +2,13 @@
 import { Notice, Plugin, TFile, editorInfoField } from 'obsidian';
 import type { EditorView } from '@codemirror/view';
 import type { MarkdownPostProcessorContext } from 'obsidian';
-import {
-  DEFAULT_SETTINGS,
-  gqlBlocks,
-  isSharedSchema,
-  LAYOUT_LIMITS,
-  settingsFrom,
-  standardBlocks,
-  toStandard,
-} from '@graph-note/core';
-import type { Drawn, Engine, GraphDrawing, LayoutLimits, Refusal, Settings } from '@graph-note/core';
+import { gqlBlocks, isSharedSchema, LAYOUT_LIMITS, settingsFrom, standardBlocks, toStandard } from '@graph-note/core';
+import type { Converted, Drawn, Engine, GraphDrawing, LayoutLimits, Refusal, Settings } from '@graph-note/core';
 import { GraphNoteSettingTab } from './settings/settings';
 import type { DeclaredList } from './properties/list-row';
 import type { Editing } from './graph-view/view-options';
 import { engineOnThePage, Layouts } from './layout-worker/layout-worker';
-import { renderBlock } from './block';
+import { renderShown } from './block';
 import { GraphPane, PANE } from './pane';
 import { addForYou } from './editor';
 import { BlockEditor } from './block-editor/block-editor';
@@ -60,7 +52,7 @@ export default class GraphNotePlugin extends Plugin {
     try {
       this.registerMarkdownCodeBlockProcessor(
         'gql',
-        (source: string, el: HTMLElement, ctx: MarkdownPostProcessorContext) => renderBlock(this, source, el, ctx),
+        (source: string, el: HTMLElement, ctx: MarkdownPostProcessorContext) => renderShown(this, source, el, ctx),
       );
     } catch (e) {
       // Only one plugin may draw a code block language. Say which setting to change, rather than fail quietly.
@@ -95,13 +87,28 @@ export default class GraphNotePlugin extends Plugin {
   }
 
   /** Every option the editor offers (spec §21), as set on the settings page. */
-  override settings: Settings = DEFAULT_SETTINGS;
+  override settings: Settings = settingsFrom(null);
 
-  /** Saves the settings, read back as the core reads them, so nothing out of range or secret is kept. */
+  /** Who to tell when a setting that changes how a graph is read or drawn has changed: each drawing and editor. */
+  private readonly settingsWatchers = new Set<() => void>();
+
+  /** Tells `changed` each time a setting that changes how a graph is read or drawn changes; returns how to stop. */
+  watchSettings(changed: () => void): () => void {
+    this.settingsWatchers.add(changed);
+    return () => this.settingsWatchers.delete(changed);
+  }
+
+  /**
+   * Saves the settings, read back as the core reads them, so nothing out of range or secret is kept; and when the
+   * strictness or the drawing direction changed, every drawing and editor already shown reads and draws again.
+   */
   async saveSettings(next: Settings): Promise<void> {
+    const was = this.settings;
     this.settings = settingsFrom(next);
     this.saved = { ...this.saved, settings: this.settings };
     await this.saveData(this.saved);
+    const shown = (s: Settings) => JSON.stringify([s.strictness, s.allowed, s.direction]);
+    if (shown(was) !== shown(this.settings)) for (const changed of [...this.settingsWatchers]) changed();
   }
 
   /** Converts the note in front back to standard GQL (spec §21), checked by the standard checker before it is written. */
@@ -120,20 +127,28 @@ export default class GraphNotePlugin extends Plugin {
       new Notice('This note is already standard GQL.');
       return;
     }
-    // written against the note as it is when written, and checked again there
+    // written against the note as it is when written, and checked again there: said only when it was written
+    let written: Converted = checked;
     await this.app.vault.process(file, (now) => {
-      const again = toStandard(now);
-      return again.ok ? again.note : now;
+      written = toStandard(now);
+      return written.ok ? written.note : now;
     });
-    new Notice(`Converted ${checked.changed} departure${checked.changed === 1 ? '' : 's'} to standard GQL.`);
+    const done = written as Converted;
+    if (!done.ok) new Notice(`Not converted: the note changed meanwhile, and ${done.reason}`);
+    else if (!done.changed) new Notice('This note is already standard GQL.');
+    else new Notice(`Converted ${done.changed} departure${done.changed === 1 ? '' : 's'} to standard GQL.`);
   }
 
-  /** What an engine or an export is given of a note's gql blocks (spec §21): standard GQL, whatever the strictness. */
+  /**
+   * What an engine or an export is given of a note's gql blocks (spec §21): standard GQL, whatever the strictness.
+   * Throws, naming the block, when one could not be made standard: it is never handed over as if it were.
+   */
   async standardGql(path: string): Promise<string[]> {
     const file = this.app.vault.getFileByPath(path);
     if (!file) return [];
-    const blocks = gqlBlocks(await this.app.vault.cachedRead(file)).map((b) => b.text);
-    return standardBlocks(blocks, this.settings);
+    const given = standardBlocks(gqlBlocks(await this.app.vault.cachedRead(file)).map((b) => b.text));
+    if (given.left.length) throw new Error(`block ${(given.left[0] ?? 0) + 1} could not be made standard GQL`);
+    return given.blocks;
   }
 
   drafts(): Drafts {
@@ -231,6 +246,8 @@ export default class GraphNotePlugin extends Plugin {
     let editor = this.inlineFor(target.path, target.line);
     if (!editor) {
       const e = new BlockEditor(this, 'inline');
+      // a setting that changes how the text is read or drawn: read again at once (spec §21)
+      e.register(this.watchSettings(() => e.changed()));
       e.onDone = () => {
         this.inline.delete(e);
         e.detach();

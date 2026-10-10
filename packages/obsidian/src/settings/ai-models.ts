@@ -27,7 +27,11 @@ export function aiModelList(app: App, owner: GraphNotePlugin, tab: SettingTab): 
     items: s.aiModels.map((m, i) => ({
       type: 'page',
       name: `Model ${i + 1}`,
-      desc: m.name ? `${m.name}: ${m.purpose || 'no purpose given'}, up to ${m.ceiling}` : 'Not named yet',
+      desc: [
+        m.name ? `${m.name}: ${m.purpose || 'no purpose given'}, up to ${m.ceiling}` : 'Not named yet',
+        // a ceiling no longer among the classifications is kept as written, and said, until it is chosen again
+        ...(s.classifications.includes(m.ceiling) ? [] : [`${m.ceiling} is no longer a classification: choose again`]),
+      ].join('. '),
       items: [
         {
           type: 'group',
@@ -42,7 +46,9 @@ export function aiModelList(app: App, owner: GraphNotePlugin, tab: SettingTab): 
               control: {
                 type: 'dropdown' as const,
                 key: `aiModels.${i}.ceiling`,
-                options: Object.fromEntries(s.classifications.map((c) => [c, c])),
+                options: Object.fromEntries(
+                  [...new Set([...s.classifications, m.ceiling])].filter(Boolean).map((c) => [c, c]),
+                ),
               },
             },
             {

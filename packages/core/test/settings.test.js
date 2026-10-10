@@ -88,9 +88,22 @@ describe('the AI models of §19', () => {
     assert.match(ceiling.sentence, /ceiling/);
   });
 
-  test('a ceiling that is not one of the classifications is the lowest one', () => {
-    const s = settingsFrom({ classifications: ['Public', 'Internal'], aiModels: [{ name: 'A', ceiling: 'Top' }] });
+  test('a ceiling no longer among the classifications is kept as written, so retyping a word never loses it', () => {
+    const s = settingsFrom({ classifications: ['Public', 'Interna'], aiModels: [{ name: 'A', ceiling: 'Internal' }] });
+    assert.equal(s.aiModels[0].ceiling, 'Internal');
+  });
+
+  test('a model given no ceiling gets the lowest classification', () => {
+    const s = settingsFrom({ classifications: ['Public', 'Internal'], aiModels: [{ name: 'A' }] });
     assert.equal(s.aiModels[0].ceiling, 'Public');
+  });
+
+  test('the defaults are never handed out to be changed', () => {
+    const s = settingsFrom(null);
+    s.allowed.push('missing-comma');
+    s.aiModels.push(aiModel({ name: 'A' }));
+    assert.deepEqual(settingsFrom(null), DEFAULT_SETTINGS);
+    assert.deepEqual(DEFAULT_SETTINGS.allowed, []);
   });
 
   test('a model keeps only the name of its key in the host’s secret store, never a key itself', () => {

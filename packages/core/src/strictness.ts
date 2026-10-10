@@ -83,11 +83,13 @@ function asStandard(blocks: string[]): { blocks: string[]; changed: number; left
 }
 
 /**
- * What an engine or an export is given (spec §21, engines_get_standard): each block as standard GQL, whatever the level
- * — the settings are taken only to say so. No line is added or taken away.
+ * What an engine or an export is given (spec §21, engines_get_standard): each block as standard GQL. The level is never
+ * asked: it decides only what is reported. No line is added or taken away. `left` names, by index, any block a
+ * departure could not be written out of, so a caller never hands one over as if it were standard.
  */
-export function standardBlocks(blocks: string[], _settings?: StrictnessSettings): string[] {
-  return asStandard(blocks).blocks;
+export function standardBlocks(blocks: string[]): { blocks: string[]; left: number[] } {
+  const { blocks: out, left } = asStandard(blocks);
+  return { blocks: out, left };
 }
 
 /** A note converted to standard GQL, and how many departures were written; or why it was not, the note left as it is. */
@@ -131,11 +133,16 @@ export function toStandard(note: string): Converted {
   if (graphsOf(next) !== graphsOf(blocks))
     return { ok: false, reason: 'the converted note would not read as the same graph' };
   let out = note;
-  spans.forEach((s, i) => {
+  for (const [i, s] of spans.entries()) {
     const text = next[i] ?? s.text;
-    if (text === s.text) return;
+    if (text === s.text) continue;
     const r = replaceBlock(out, { line: s.open, text: s.text }, text);
-    if (r.ok) out = r.note;
-  });
+    if (!r.ok) return { ok: false, reason: `block ${i + 1} could not be written: ${r.reason}` };
+    out = r.note;
+  }
+  // the note as it would be written, checked whole: its blocks are exactly those checked above
+  const written = gqlSpans(out).map((s) => s.text);
+  if (written.length !== next.length || written.some((t, i) => t !== next[i]))
+    return { ok: false, reason: 'the converted note would not hold the blocks that were checked' };
   return { ok: true, note: out, changed };
 }

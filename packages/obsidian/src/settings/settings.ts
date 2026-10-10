@@ -90,7 +90,8 @@ export class GraphNoteSettingTab extends PluginSettingTab {
     } else if (key.startsWith('aiModels.')) change = setModelValue(s, key, value);
     else change = { [key]: value };
     await this.owner.saveSettings({ ...s, ...change });
-    // a level's own sentence, and a model's ceilings, follow the choice
-    if (!key.startsWith('aiModels.') || key.endsWith('.ceiling')) this.update();
+    // a level's own sentence, and a model's ceiling, follow a choice; the page is never drawn again under typing
+    const typed = key === 'classifications' || (key.startsWith('aiModels.') && !key.endsWith('.ceiling'));
+    if (!typed) this.update();
   }
 }

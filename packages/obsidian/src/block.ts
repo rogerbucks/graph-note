@@ -2,8 +2,8 @@
 // shown as coloured code. A graph is never blank: what can be read is drawn and the rest is listed; when nothing can be
 // read, or the engine cannot start, or the graph is over a size or time limit (spec §9), the text is shown with its
 // problems or a banner.
-import { Notice } from 'obsidian';
-import type { MarkdownPostProcessorContext } from 'obsidian';
+import { MarkdownRenderChild, Notice } from 'obsidian';
+import type { Component, MarkdownPostProcessorContext } from 'obsidian';
 import {
   completenessReport,
   gqlBlocks,
@@ -48,6 +48,35 @@ function asText(
       renderCode(root, source);
     } else editing.mount(at);
   });
+}
+
+/**
+ * Draws one gql block where the note shows it, as `renderBlock` does, and draws it again in place whenever a setting
+ * that changes how it is read or drawn changes (spec §21), until it leaves the page: what the last drawing added is
+ * unloaded first, so nothing of it is left behind.
+ */
+export async function renderShown(
+  plugin: GraphNotePlugin,
+  source: string,
+  el: HTMLElement,
+  ctx: MarkdownPostProcessorContext,
+  owner?: object,
+): Promise<void> {
+  const mine: Component[] = [];
+  const local = Object.create(ctx) as MarkdownPostProcessorContext;
+  local.addChild = (child: Component) => {
+    mine.push(child);
+    ctx.addChild(child as MarkdownRenderChild);
+  };
+  const draw = async () => {
+    for (const child of mine.splice(0)) child.unload();
+    el.empty();
+    await renderBlock(plugin, source, el, local, owner);
+  };
+  const keeper = new MarkdownRenderChild(el);
+  keeper.register(plugin.watchSettings(() => void draw()));
+  ctx.addChild(keeper);
+  await draw();
 }
 
 /**

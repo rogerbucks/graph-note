@@ -4,7 +4,7 @@
 // formatting and drawing defaults.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { build, load, wait } from './host/load-plugin.js';
+import { build, load, until, wait } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
 import { show } from './host/view-notes.js';
 import { open, note } from './host/pane-notes.js';
@@ -120,6 +120,41 @@ describe('strictness', () => {
     }
   });
 
+  test('a level chosen on the page redraws a drawing already shown, without the note being opened again', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      const { el } = await show(env, NOTE);
+      const shown = () =>
+        el
+          .querySelectorAll('li')
+          .map((li) => li.className)
+          .filter((c) => /^is-/.test(c));
+      assert.deepEqual(shown(), ['is-warning']);
+      choose(row(page(env), 'Strictness'), 'standard');
+      await until(() => shown()[0] === 'is-error');
+      assert.deepEqual(shown(), ['is-error']);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a level chosen on the page reaches an edit pane already open', async () => {
+    const typed = "// graph: reader\n(x:T {text: 'X'})\n(y:T {text: 'Y'})";
+    const env = await open();
+    try {
+      const t = env.el.querySelector('textarea');
+      t.value = typed;
+      t.dispatch('input');
+      await wait(400);
+      const mark = () => env.el.querySelector('.graph-note-problems li, .graph-note-problem')?.className ?? '';
+      assert.match(mark(), /is-warning/);
+      choose(row(page(env), 'Strictness'), 'standard');
+      await until(() => /is-error/.test(mark()));
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('the edit pane reads by the same level', async () => {
     const typed = "// graph: reader\n(x:T {text: 'X'})\n(y:T {text: 'Y'})";
     const env = await open({ data: { settings: { strictness: 'standard' } } });
@@ -161,6 +196,37 @@ describe('back to standard GQL', () => {
       await command(env).callback();
       assert.equal(env.state.files.get(PATH), broken);
       assert.match(env.state.notices.at(-1), /cannot be made standard/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('the button on the settings page converts the note in front, as the command does', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      env.state.active = PATH;
+      labelled(row(page(env), 'Convert to standard GQL'), 'Convert to standard GQL').click();
+      await until(() => env.state.files.get(PATH) !== NOTE);
+      assert.equal(env.state.files.get(PATH), NOTE.replace("(a:T {text: 'A'})\n", "(a:T {text: 'A'}),\n"));
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a note that changes between the check and the write is not converted, and never said to be', async () => {
+    const broken = `# Broken\n\n${fence("// graph: g\n(a:T {text: 'A'})\n(b:T {text: })")}\n`;
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      env.state.active = PATH;
+      const process = env.app.vault.process;
+      env.app.vault.process = (f, fn) => {
+        env.state.files.set(PATH, broken); // written meanwhile, elsewhere
+        return process(f, fn);
+      };
+      await command(env).callback();
+      assert.equal(env.state.files.get(PATH), broken);
+      assert.match(env.state.notices.at(-1), /Not converted/);
+      assert.doesNotMatch(env.state.notices.join('\n'), /Converted/);
     } finally {
       env.uninstall();
     }
@@ -213,6 +279,26 @@ describe('the AI models of §19', () => {
         ],
         ['Drafts', 'Suggest links', 'Internal'],
       );
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('typing in the classifications keeps each ceiling, and the field, while a word is retyped', async () => {
+    const env = await load({
+      data: { settings: { classifications: ['Public', 'Internal'], aiModels: [{ name: 'A', ceiling: 'Internal' }] } },
+    });
+    try {
+      const el = page(env);
+      const field = row(el, 'Classifications').querySelector('textarea');
+      for (const v of ['Public\nInterna', 'Public\nIntern', 'Public\nInternal']) {
+        field.value = v;
+        field.dispatch('input');
+        await wait(5);
+      }
+      assert.ok(row(el, 'Classifications').querySelector('textarea') === field, 'the page is not drawn again under it');
+      assert.equal(env.state.data.settings.aiModels[0].ceiling, 'Internal');
+      assert.deepEqual(env.state.data.settings.classifications, ['Public', 'Internal']);
     } finally {
       env.uninstall();
     }

@@ -123,13 +123,25 @@ describe('converting a note back to standard GQL', () => {
 });
 
 describe('what an engine or an export is given', () => {
-  test('is standard GQL whatever the level, each block as converted, with no line added', () => {
+  // the level is never asked: it decides what is reported, and nothing of what is given
+  test('is standard GQL, each block as converted, with no line added, and nothing left departing', () => {
     const blocks = gqlBlocks(NOTE).map((b) => b.text);
     const want = gqlBlocks(toStandard(NOTE).note).map((b) => b.text);
-    for (const strictness of ['standard', 'forgiving', 'simplified']) {
-      const given = standardBlocks(blocks, { strictness, allowed: ['missing-comma', 'bare-type'] });
-      assert.deepEqual(given, want, strictness);
-      assert.equal(given[0].split('\n').length, blocks[0].split('\n').length);
-    }
+    const given = standardBlocks(blocks);
+    assert.deepEqual(given, { blocks: want, left: [] });
+    assert.equal(given.blocks[0].split('\n').length, blocks[0].split('\n').length);
+  });
+});
+
+describe('converting a note of several blocks', () => {
+  test('each block is converted in its own place, and the note as written is checked whole', () => {
+    const twice = `${fence(SLIPS)}\n\nBetween.\n\n${fence(SLIPS.replace('graph: g', 'graph: h'))}\n`;
+    const r = toStandard(twice);
+    assert.equal(r.ok, true, r.reason);
+    assert.equal(r.changed, 4);
+    assert.deepEqual(
+      problemsOf(r.note).filter((p) => p.departure),
+      [],
+    );
   });
 });

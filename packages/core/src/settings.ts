@@ -125,14 +125,17 @@ const text = (v: unknown, fallback = ''): string => (typeof v === 'string' ? v :
 const oneOf = <T extends string>(key: keyof Settings, v: unknown, fallback: T): T =>
   (OPTIONS.find((o) => o.key === key)?.choices ?? []).some((c) => c.value === v) ? (v as T) : fallback;
 
-/** An AI model from what was given, with only its own fields: whatever else was given, such as a key, is dropped. */
+/**
+ * An AI model from what was given, with only its own fields: whatever else was given, such as a key, is dropped. A
+ * model with no ceiling gets the lowest classification; one whose ceiling is no longer a classification keeps it as
+ * written, so a classification being retyped never loses it, and the settings page says so.
+ */
 export function aiModel(given: Partial<AiModel> & Record<string, unknown>, classifications?: string[]): AiModel {
   const levels = classifications ?? DEFAULT_SETTINGS.classifications;
-  const ceiling = text(given.ceiling);
   return {
     name: text(given.name),
     purpose: text(given.purpose),
-    ceiling: classifications && !levels.includes(ceiling) ? (levels[0] ?? '') : ceiling || (levels[0] ?? ''),
+    ceiling: text(given.ceiling) || (levels[0] ?? ''),
     endpoint: text(given.endpoint),
     model: text(given.model),
     keyName: text(given.keyName),
@@ -149,13 +152,14 @@ export function settingsFrom(saved: unknown): Settings {
   const classifications = levels.length && levels.length === given.length ? levels : d.classifications;
   return {
     strictness: oneOf<Strictness>('strictness', s.strictness, d.strictness),
-    allowed: Array.isArray(s.allowed) ? (s.allowed as unknown[]).filter(isDeparture) : d.allowed,
+    // copies, never the defaults themselves: a change to what is handed out never changes them
+    allowed: Array.isArray(s.allowed) ? (s.allowed as unknown[]).filter(isDeparture) : [...d.allowed],
     classifications: [...classifications],
     aiModels: Array.isArray(s.aiModels)
       ? s.aiModels
           .filter((m): m is Record<string, unknown> => !!m && typeof m === 'object')
           .map((m) => aiModel(m, classifications))
-      : d.aiModels,
+      : [],
     indent: oneOf<Indent>('indent', s.indent, d.indent),
     direction: oneOf('direction', s.direction, d.direction),
   };
