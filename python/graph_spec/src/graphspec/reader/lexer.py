@@ -27,6 +27,9 @@ TOKEN = re.compile(
     re.ASCII,  # \d and \b as JavaScript's: a digit or letter in another script is neither
 )
 KEYWORDS = {"INSERT", "MATCH", "SET", "DATE", "DATETIME", "TRUE", "FALSE"}
+# only whitespace from here to the line's end: matched in place, as slicing the rest of the line
+# before every token would make one long line quadratic to read (editor spec §9)
+BLANK_REST = re.compile(rf"{S}*\Z")
 EXCERPT = re.compile(rf"{S}*//{S}*excerpt\b", re.I | re.ASCII)
 GRAPH = re.compile(rf"{S}*//{S}*graph:{S}*({N}+)([^\n]*)$")
 SCHEMA = re.compile(rf"·{S}*SCHEMA{S}+{N}+")
@@ -99,7 +102,7 @@ def tokens(block: str) -> list[tuple[str, str, int, str, int]]:
             continue
         pos = 0
         while pos < len(raw):
-            if not strip(raw[pos:]):
+            if BLANK_REST.match(raw, pos):
                 break
             m = TOKEN.match(raw, pos)
             if not m and strip(raw[pos:]).startswith("//"):

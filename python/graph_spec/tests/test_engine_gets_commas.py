@@ -232,7 +232,9 @@ class CorrectedTextWritesTheComma(unittest.TestCase):
         log = []
         with mock.patch("graphspec.engine.queries.grafeo", SpyOnGrafeo(log)):
             gs.load("// graph: joined\n" + BOTH)
-        self.assertEqual(log[-1].split("\n"), ["", "INSERT"] + CORRECTED_BOTH.split("\n"))
+        # the header given as a /* */ comment on its own line (req:3.engine-keeps-comments)
+        want = ["/* graph: joined */", "INSERT"] + CORRECTED_BOTH.split("\n")
+        self.assertEqual(log[-1].split("\n"), want)
 
 
 if __name__ == "__main__":

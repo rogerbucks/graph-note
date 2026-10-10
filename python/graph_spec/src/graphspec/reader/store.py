@@ -159,6 +159,19 @@ class Store:
         self._fixes.pop(block, None)  # made again as each bare type is resolved, below
         graph = self.graph(g)
         bound = {}
+        # each id's node, the first in order, as find() gives it: indexed once for the block, not
+        # searched for each thing, so a block of thousands of things is read in time linear in
+        # them (editor spec §9: never freeze), as the JavaScript store reads it
+        ids = None
+
+        def found(nid):
+            nonlocal ids
+            if ids is None:
+                ids = {}
+                for k, node in graph["nodes"].items():
+                    ids.setdefault(node["props"].get("id"), k)
+            return ids.get(nid)
+
         for m in matches:
             if set(m["props"]) != {"id"}:
                 raise ProfileError(
@@ -166,7 +179,7 @@ class Store:
                     "MATCH must find a node by its id alone",
                     "write MATCH (v:Label {id: '…'})",
                 )
-            k = self.find(g, m["props"]["id"])
+            k = found(m["props"]["id"])
             if k is None or not set(m["labels"]) <= graph["nodes"][k]["labels"]:
                 raise ProfileError(
                     m["line"],
@@ -189,7 +202,7 @@ class Store:
                     if "id" not in n["props"]:
                         # a thing's name is its id (§3, 6 Oct 2026)
                         n["props"] = {"id": n["var"], **n["props"]}
-                    if self.find(g, n["props"]["id"]) is not None:
+                    if found(n["props"]["id"]) is not None:
                         raise ProfileError(
                             n["line"],
                             f"id {n['props']['id']!r} is already a node in graph {g}",
@@ -199,6 +212,8 @@ class Store:
                     self._k += 1
                     k = f"n{self._k}"
                     graph["nodes"][k] = {"labels": set(n["labels"]), "props": dict(n["props"])}
+                    if ids is not None:
+                        ids.setdefault(n["props"]["id"], k)
                     bound[n["var"]] = k
                 elif n["var"] not in bound:
                     later = any(
@@ -215,7 +230,7 @@ class Store:
                         )
                     # a bare name not written in this block names the existing node with that
                     # id (§3)
-                    k = self.find(g, n["var"])
+                    k = found(n["var"])
                     if k is None:
                         raise ProfileError(
                             n["line"],
@@ -228,8 +243,8 @@ class Store:
                 typ = self._resolve(g, r, block) if r.get("bare") else r["type"]
                 graph["edges"].append((bound[a["var"]], typ, bound[b["var"]], dict(r["props"])))
         for var, key, val, n in sets:
-            if var not in bound and self.find(g, var) is not None:
-                bound[var] = self.find(g, var)  # SET name.key names the node with that id (§3)
+            if var not in bound and found(var) is not None:
+                bound[var] = found(var)  # SET name.key names the node with that id (§3)
             if var not in bound:
                 raise ProfileError(
                     n,
@@ -237,4 +252,6 @@ class Store:
                     "check the spelling — SET names a thing by its id",
                 )
             graph["nodes"][bound[var]]["props"][key] = val
+            if key == "id":
+                ids = None  # an id set anew: indexed again when next asked
         return g
