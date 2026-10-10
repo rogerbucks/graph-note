@@ -2,9 +2,16 @@
 // shown as coloured code. A graph is never blank: what can be read is drawn and the rest is listed; when nothing can be
 // read, or the engine cannot start, or the graph is over a size or time limit (spec §9), the text is shown with its
 // problems or a banner.
-import { Notice } from 'obsidian';
-import type { MarkdownPostProcessorContext } from 'obsidian';
-import { completenessReport, gqlBlocks, graphOfBlock, namesSharedSchema, readNote } from '@graph-note/core';
+import { MarkdownRenderChild, Notice } from 'obsidian';
+import type { Component, MarkdownPostProcessorContext } from 'obsidian';
+import {
+  completenessReport,
+  gqlBlocks,
+  graphOfBlock,
+  namesSharedSchema,
+  readNote,
+  underStrictness,
+} from '@graph-note/core';
 import type { Block, Drawn, Problem, Refusal } from '@graph-note/core';
 import type GraphNotePlugin from './main';
 import type { EditTarget } from './main';
@@ -44,6 +51,35 @@ function asText(
 }
 
 /**
+ * Draws one gql block where the note shows it, as `renderBlock` does, and draws it again in place whenever a setting
+ * that changes how it is read or drawn changes (spec §21), until it leaves the page: what the last drawing added is
+ * unloaded first, so nothing of it is left behind.
+ */
+export async function renderShown(
+  plugin: GraphNotePlugin,
+  source: string,
+  el: HTMLElement,
+  ctx: MarkdownPostProcessorContext,
+  owner?: object,
+): Promise<void> {
+  const mine: Component[] = [];
+  const local = Object.create(ctx) as MarkdownPostProcessorContext;
+  local.addChild = (child: Component) => {
+    mine.push(child);
+    ctx.addChild(child as MarkdownRenderChild);
+  };
+  const draw = async () => {
+    for (const child of mine.splice(0)) child.unload();
+    el.empty();
+    await renderBlock(plugin, source, el, local, owner);
+  };
+  const keeper = new MarkdownRenderChild(el);
+  keeper.register(plugin.watchSettings(() => void draw()));
+  ctx.addChild(keeper);
+  await draw();
+}
+
+/**
  * Draws one gql block where the note shows it (spec §3): its graph with the bar, or its problems, or a prompt when it is
  * empty. `owner` is what the drawing is for, such as Live Preview's card: a newer drawing for it replaces one not yet laid out.
  */
@@ -70,7 +106,9 @@ export async function renderBlock(
   const texts = blocks.map((b, i) => (i === index ? source : b.text));
 
   const shared = texts.some(namesSharedSchema) ? await plugin.sharedSchemas() : [];
-  const reading = readNote(texts, index, shared);
+  const read = readNote(texts, index, shared);
+  // reported by the strictness set on the settings page (spec §21)
+  const reading = { ...read, problems: underStrictness(read.problems, plugin.settings) };
   const target = { path: ctx.sourcePath, line: info?.lineStart ?? 0, graph };
   if (reading.tooLarge) {
     // too large to read (spec §9): nothing was read, so the text is shown, and why

@@ -3,7 +3,7 @@
 // refused write held kept as a draft in the plugin's data, never lost.
 import { Notice } from 'obsidian';
 import type { TFile } from 'obsidian';
-import { PaneSession, gqlSpans, lockBlock, namesSharedSchema } from '@graph-note/core';
+import { PaneSession, gqlSpans, indentText, lockBlock, namesSharedSchema } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
 import type { KeptDraft } from './kept-draft';
 import { lockInNote, stepNote, writeThroughEditor, writeThroughVault } from './note-writing';
@@ -41,6 +41,8 @@ export class BlockNote {
     this.text = await this.plugin.app.vault.read(file);
     try {
       this.session = new PaneSession(this.text, line);
+      // read by the strictness set on the settings page (spec §21), as it is when each reading is made
+      this.session.strictness = () => this.plugin.settings;
     } catch (e) {
       this.session = null;
       new Notice(String((e as Error).message));
@@ -73,7 +75,8 @@ export class BlockNote {
     const s = this.session,
       file = this.file();
     if (!s || !file) return;
-    const block = lockBlock(s.reading(this.text), s.graph, new Date().toISOString().slice(0, 10));
+    const today = new Date().toISOString().slice(0, 10);
+    const block = lockBlock(s.reading(this.text), s.graph, today, indentText(this.plugin.settings.indent));
     await lockInNote(this.plugin.app.vault, file, s.graph, block, (note) => (this.text = note));
     s.noteChanged(this.text);
   }

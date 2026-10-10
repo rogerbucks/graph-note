@@ -27,9 +27,10 @@ const q = (s: string) => `'${s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
 /**
  * The schema block that locks a draft: every kind and relationship type of the whole graph — across all its blocks in the
  * note, whichever block it is locked from — each with its readings, dated, and each declared by the graph's GraphMeta.
- * Laid out as the guide lays a locked schema out: a long thing split over lines, a "// ──" line before each part.
+ * Laid out as the guide lays a locked schema out: a long thing split over lines, a "// ──" line before each part. A
+ * thing's later lines are indented by `indent`, the text the settings choose (spec §21, settings_formatting).
  */
-export function lockBlock(reading: NoteReading, graph: string, today: string): string {
+export function lockBlock(reading: NoteReading, graph: string, today: string, indent = '    '): string {
   const g = reading.whole[graph] ?? reading.world[graph];
   if (!g) throw new Error(`there is no graph ${graph} to lock`);
   // the graph line as written, read with whitespace as GQL names it (graph spec §3)
@@ -71,22 +72,22 @@ export function lockBlock(reading: NoteReading, graph: string, today: string): s
     header,
     `// ── The schema: locked ${today} from the data above ──`,
     '// The reverse readings are guesses — check each one.',
-    ...(own ? [] : [`(${meta}:GraphMeta {`, `    graph: ${q(graph)}, schema: ${q(`${graph}@1`)}}),`]),
+    ...(own ? [] : [`(${meta}:GraphMeta {`, `${indent}graph: ${q(graph)}, schema: ${q(`${graph}@1`)}}),`]),
     '',
     '// ── Kinds of thing ──',
     ...kinds.flatMap((k) => [
       `(${declare(`kind_${k.toLowerCase()}`)}:Meta:ElementType {`,
-      `    name: ${q(k)}, kind: 'node', origin: 'source'}),`,
+      `${indent}name: ${q(k)}, kind: 'node', origin: 'source'}),`,
     ]),
     '',
     '// ── Relationship types, with their readings both ways ──',
     ...types.flatMap(([t, r, back]) => [
       `(${declare(`link_${t.toLowerCase()}`)}:Meta:ElementType {`,
-      `    name: ${q(t)}, kind: 'edge', origin: 'source',`,
+      `${indent}name: ${q(t)}, kind: 'edge', origin: 'source',`,
       ...fit(
-        `    reading: ${q(r)}, reverse_name: ${q(back)}}),`,
-        `    reading: ${q(r)},`,
-        `    reverse_name: ${q(back)}}),`,
+        `${indent}reading: ${q(r)}, reverse_name: ${q(back)}}),`,
+        `${indent}reading: ${q(r)},`,
+        `${indent}reverse_name: ${q(back)}}),`,
       ),
     ]),
     '',

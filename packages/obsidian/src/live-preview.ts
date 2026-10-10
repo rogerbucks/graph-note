@@ -11,7 +11,7 @@ import { Component, editorInfoField, editorLivePreviewField } from 'obsidian';
 import type { MarkdownPostProcessorContext } from 'obsidian';
 import { gqlSpans, graphOfBlock } from '@graph-note/core';
 import type GraphNotePlugin from './main';
-import { renderBlock } from './block';
+import { renderShown } from './block';
 import { settlePlacements } from './graph-view/placement';
 
 /** The last height each card was seen at, by its note and line: what CodeMirror is told while the card is redrawn. */
@@ -110,7 +110,7 @@ class GraphBlock extends WidgetType {
       getSectionInfo: () => ({ text: this.note, lineStart: this.open, lineEnd: this.close }),
       addChild: (child: Component) => component.addChild(child),
     } as unknown as MarkdownPostProcessorContext;
-    void renderBlock(this.plugin, this.source, el, ctx, state).then(
+    void renderShown(this.plugin, this.source, el, ctx, state).then(
       () => {
         if (asked !== state.asked || !drawn.has(dom)) {
           component.unload(); // a later drawing was asked for meanwhile
