@@ -341,6 +341,48 @@
       "evidence": "pins an error that already existed (to_gql.py: cannot find where {name} is written), untested until the review of PR #34: written after its code, and it passes before and after by design"
     }
   },
+  "python/graph_spec/tests/test_changeset_header.py": {
+    "EngineChangesetHeader.test_a_plain_header_is_read": {
+      "seen_failing_first": false,
+      "evidence": "a control case, asked for in review of PR #45 beside the whitespace change: a plain header was read before and is read after, by design"
+    },
+    "EngineChangesetHeader.test_a_first_line_holding_only_u0085_is_the_header_line_so_there_is_no_header": {
+      "seen_failing_first": false,
+      "evidence": "written in review of PR #45 after the split on LF it tests (commit a9e6a17), so it passes against its direct parent; main before the PR (6399160) used splitlines, which ends a line at U+0085, so it would read the header there (by reading that code, not replayed)"
+    },
+    "RulesChangesetHeader.test_a_first_line_holding_only_u0085_is_the_header_line_so_there_is_no_header": {
+      "seen_failing_first": false,
+      "evidence": "written in review of PR #45 after the split on LF it tests (commit a9e6a17), so it passes against its direct parent; main before the PR (6399160) used splitlines, which ends a line at U+0085, so it would read the header there (by reading that code, not replayed)"
+    },
+    "EngineChangesetHeader.test_u2028_before_the_header_is_whitespace_and_the_header_is_read": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour PR #45 changed the way to without changing the result (splitlines then, a split on LF and the regex's \\s now): written after its code at review, it passes before and after by design"
+    },
+    "EngineChangesetHeader.test_a_no_break_space_before_the_header_is_whitespace_and_the_header_is_read": {
+      "seen_failing_first": false,
+      "evidence": "a control case, asked for in review of PR #45: a no-break space was whitespace to str.strip() and to the regex, and is to the reader's set, so it passes before and after by design"
+    },
+    "EngineChangesetHeader.test_a_first_line_holding_only_u2028_is_blank_and_the_next_line_is_the_header": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour PR #45 changed the way to without changing the result (splitlines ended the line at U+2028, the split on LF skips it as whitespace): written after its code at review, it passes before and after by design"
+    },
+    "RulesChangesetHeader.test_a_plain_header_is_read": {
+      "seen_failing_first": false,
+      "evidence": "a control case, asked for in review of PR #45 beside the whitespace change: a plain header was read before and is read after, by design"
+    },
+    "RulesChangesetHeader.test_u2028_before_the_header_is_whitespace_and_the_header_is_read": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour PR #45 changed the way to without changing the result (splitlines then, a split on LF and the regex's \\s now): written after its code at review, it passes before and after by design"
+    },
+    "RulesChangesetHeader.test_a_no_break_space_before_the_header_is_whitespace_and_the_header_is_read": {
+      "seen_failing_first": false,
+      "evidence": "a control case, asked for in review of PR #45: a no-break space was whitespace to str.strip() and to the regex, and is to the reader's set, so it passes before and after by design"
+    },
+    "RulesChangesetHeader.test_a_first_line_holding_only_u2028_is_blank_and_the_next_line_is_the_header": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour PR #45 changed the way to without changing the result (splitlines ended the line at U+2028, the split on LF skips it as whitespace): written after its code at review, it passes before and after by design"
+    }
+  },
   "python/graph_spec/tests/test_gql_profile_drawn.py": {
     "CheckingStaysWhole.test_apply_still_refuses_both_shapes": {
       "seen_failing_first": false,

@@ -220,13 +220,16 @@ class ChangeSetAgreesWithTheReader(unittest.TestCase):
 class CorrectedTextKeepsTheBlocksLines(unittest.TestCase):
     """req:3.engine-text-keeps-lines: the corrected text changes only what the reader corrects."""
 
-    def expected_given(self):
+    def expected_given(self, header):
         """The lines Grafeo is to be given for a block of BARE under a header line: the header
-        and every line that is only a comment emptied, as queries.strip empties them, so a line
-        number still names the block's own line; INSERT put back; the bare type written with its
-        colon; every other line as written."""
-        body = ["" if line.strip().startswith("//") else line for line in COLON.split("\n")]
-        return [""] + ["INSERT"] + body
+        and every line that is only a comment given as a /* */ comment on the same line
+        (req:3.engine-keeps-comments), so a line number still names the block's own line; INSERT
+        put back; the bare type written with its colon; every other line as written."""
+        body = [
+            "/* " + line.strip()[3:] + " */" if line.strip().startswith("//") else line
+            for line in COLON.split("\n")
+        ]
+        return ["/* " + header[3:] + " */"] + ["INSERT"] + body
 
     def last_given(self, log):
         self.assertTrue(log, "Grafeo was given nothing")
@@ -235,18 +238,18 @@ class CorrectedTextKeepsTheBlocksLines(unittest.TestCase):
     def test_parse_gives_grafeo_the_blocks_lines_and_comments_with_only_the_colon_written(self):
         with given_to_grafeo() as log:
             parse_text(BARE)
-        self.assertEqual(self.last_given(log), self.expected_given())
+        self.assertEqual(self.last_given(log), self.expected_given(HEAD))
 
     def test_load_gives_grafeo_the_blocks_lines_and_comments_with_only_the_colon_written(self):
         with given_to_grafeo() as log:
             gs.load("// graph: joined\n" + BARE)
-        self.assertEqual(self.last_given(log), self.expected_given())
+        self.assertEqual(self.last_given(log), self.expected_given("// graph: joined"))
 
     def test_compute_gives_grafeo_the_blocks_lines_and_comments_with_only_the_colon_written(self):
         text = f"## A\n```gql\n// graph: g\n{BARE}\n```\n"
         with given_to_grafeo() as log:
             compute({"load": ["#A"], "state_of": "g"}, text, ".", ".")
-        self.assertEqual(self.last_given(log), self.expected_given())
+        self.assertEqual(self.last_given(log), self.expected_given("// graph: g"))
 
     def test_check_changeset_gives_grafeo_the_blocks_lines_and_comments_with_the_colon_written(
         self,
@@ -260,11 +263,11 @@ class CorrectedTextKeepsTheBlocksLines(unittest.TestCase):
             gs.check_changeset(base, block)
         # o is named, not written, so the one MATCH line is added for it, before INSERT
         want = [
-            "",
+            "/* " + block.split("\n")[0][3:] + " */",
             "MATCH (o {id: 'o'})",
             "INSERT",
             "(q:Reason {id: 'q', title: 'Quiet'}),",
-            "",
+            "/* the link */",
             "(q)-[:FAVOURS]->(o)",
         ]
         self.assertEqual(self.last_given(log), want)
