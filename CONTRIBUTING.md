@@ -115,6 +115,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `python/graph_spec/tests/test_layout_source.py` — the Graphviz source is the one written before the move.
 - `python/graph_spec/tests/test_licences.py` — every Python package carries an allowed licence.
 - `python/graph_spec/tests/test_parity.py` — the Python library gives the JavaScript library's answers.
+- `python/graph_spec/tests/test_reader_agrees_with_grafeo.py` — the reader and its plain rules give Grafeo's answers, Grafeo being the reference engine and a test dependency only (req:17.engine-agreement).
 - `python/graph_spec/tests/test_settings.py` — what a host sets after importing the library.
 - `test/cheap-checks.test.js` — the quiet test run, running only a change's tests, the AI guide and the search ignore file.
 - `test/classification.test.js` — the content check refuses confidential or personal files.
