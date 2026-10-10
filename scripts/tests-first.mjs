@@ -11,9 +11,9 @@
 //
 // Only the commit's test files and test support (anything under a test/ or tests/ folder) go across to the parent, so
 // only the code differs. A commit that cannot be replayed is recorded as such, never counted either way. But a run at the
-// commit's own code that did not finish, or a new test failing there, is not known to be either: it fails the record
-// (and --check), naming the commit, the file and the test, and nothing is written. One run of one test file, and what it
-// shows, is scripts/tests-first-run.mjs.
+// commit's own code that did not finish, a new test failing there, or a commit whose replay fails, is not known to be
+// either: it fails the record, naming the commit, the file and the test, and nothing is written; --check warns of it.
+// One run of one test file, and what it shows, is scripts/tests-first-run.mjs.
 import { execFileSync, spawnSync } from 'node:child_process';
 import {
   existsSync,
@@ -28,9 +28,7 @@ import {
 import { tmpdir } from 'node:os';
 import { dirname, join, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { JS_TEST, PY_TEST, run, runMs } from './tests-first-run.mjs';
-
-export { fromJunit } from './tests-first-run.mjs';
+import { JS_TEST, PY_TEST, run } from './tests-first-run.mjs';
 
 const HERE = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SUPPORT = /(^|\/)(test|tests)\//;
@@ -129,11 +127,14 @@ export function replay(repo, commit) {
       const now = run(at.dir, file, repo);
       // a run starved or stopped by load is not a file whose tests do not run: nothing about it is known (10 Oct 2026)
       if (!now.ran) {
-        out.faults.push({
-          commit,
-          file,
-          problem: `its run at its own commit did not finish (stopped at the ${runMs() / 1000} s limit, killed, or crashed before its report); on a loaded machine, run again`,
-        });
+        const again = now.why?.includes('time limit') ? '; on a loaded machine, run again' : '';
+        out.faults.push({ commit, file, problem: `its run at its own commit did not finish: ${now.why}${again}` });
+        continue;
+      }
+      // a file with no test at its own commit has nothing to replay, so the parent's runs are not needed
+      const none = { file, failedFirst: [], passedFirst: [], notReplayed: 'no test in it passes at its own commit' };
+      if (!now.passed.length && !now.failed.length) {
+        out.files.push(none);
         continue;
       }
       // the tests the file held before: the parent's own version of it, and of every other test file the commit changed
@@ -150,18 +151,12 @@ export function replay(repo, commit) {
       const earlier = sources.map((f) => before_(f));
       const old = earlier.flatMap((e) => e.names);
       const fresh = now.passed.filter((n) => !old.includes(n));
-      // a new test failing at its own commit is neither seen failing first nor passing first: it would drop out unseen
-      const broken = now.failed.filter((n) => !old.includes(n));
-      for (const test of broken)
+      // a new test failing at its own commit is neither seen failing first nor passing first: it would drop out unseen.
+      // The file's other new tests are still judged, so one run shows every problem in it
+      for (const test of now.failed.filter((n) => !old.includes(n)))
         out.faults.push({ commit, file, problem: `"${test}" fails at its own commit, so it cannot be replayed` });
-      if (broken.length) continue;
       if (!now.passed.length) {
-        out.files.push({
-          file,
-          failedFirst: [],
-          passedFirst: [],
-          notReplayed: 'no test in it passes at its own commit',
-        });
+        out.files.push(none);
         continue;
       }
       // a run of the tests held before that did not finish holds only some of them, so which are new is not known
@@ -224,8 +219,11 @@ const testFiles = (repo) =>
       .filter((f) => JS_TEST.test(f) || PY_TEST.test(f)),
   );
 
-/** A fault as one line: the commit, the file, and what at the commit's own code cannot be trusted. */
-const faultLine = (f) => `${f.commit.slice(0, 7)} ${f.file}: ${f.problem}`;
+/** A fault as one line: the commit, the file when there is one, and what at the commit's own code cannot be trusted. */
+const faultLine = (f) => `${f.commit.slice(0, 7)}${f.file ? ` ${f.file}` : ''}: ${f.problem}`;
+
+/** The record cannot be trusted, so it is not written; the message names every fault. */
+class RecordFault extends Error {}
 
 /**
  * Each commit's replay, added into `files` by test file. Every commit is replayed even after a fault, so one run shows
@@ -239,8 +237,8 @@ function gather(repo, commits, files) {
     try {
       r = replay(repo, commit);
     } catch (e) {
-      r = { commit, files: [], faults: [] };
-      process.stderr.write(`  could not replay: ${String(e).split('\n')[0]}\n`);
+      // a commit missing from the record lowers every count it would have added, so it is a fault (review of #44)
+      r = { commit, files: [], faults: [{ commit, problem: `could not be replayed: ${String(e).split('\n')[0]}` }] };
     }
     for (const f of r.faults) process.stderr.write(`  fails the record: ${faultLine(f)}\n`);
     faults.push(...r.faults);
@@ -264,8 +262,8 @@ function gather(repo, commits, files) {
     }
   }
   if (faults.length)
-    throw new Error(
-      `the record is not written: ${faults.length} run(s) at a commit's own code cannot be trusted\n` +
+    throw new RecordFault(
+      `the record is not written: ${faults.length} fault(s) at a commit's own code\n` +
         faults.map((f) => `  ${faultLine(f)}`).join('\n'),
     );
   return files;
@@ -301,12 +299,13 @@ export function update(repo, prior) {
 if (process.argv[1] && basename(process.argv[1]) === 'tests-first.mjs') {
   const [mode, ...commits] = process.argv.slice(2);
   const file = join(HERE, 'test', 'tests-first.json');
-  /** Writes the record `make` gives; when a fault fails it, says why and writes nothing. */
+  /** Writes the record `make` gives; when a fault fails it, says why and writes nothing. Any other error is thrown. */
   const write = (make) => {
     try {
       writeFileSync(file, JSON.stringify(make(), null, 2) + '\n');
     } catch (e) {
-      console.error(e instanceof Error ? e.message : String(e));
+      if (!(e instanceof RecordFault)) throw e;
+      console.error(e.message);
       process.exitCode = 1;
     }
   };
@@ -323,8 +322,10 @@ if (process.argv[1] && basename(process.argv[1]) === 'tests-first.mjs') {
       console.error(
         `${b.commit.slice(0, 7)} ${b.file}: "${b.name}" passed against the code before it — write the test first, or give the reason in test/seen-failing.json`,
       );
-    for (const f of faults) console.error(faultLine(f));
-    process.exitCode = bad.length || faults.length ? 1 : 0;
+    // CI checks every commit of a branch, and a test may come a commit before its code, or run slow on a shared runner:
+    // a fault here is a warning, and fails only the record (Roger, 10 Oct 2026)
+    for (const f of faults) console.error(`warning: ${faultLine(f)}`);
+    process.exitCode = bad.length ? 1 : 0;
   } else {
     console.error('usage: tests-first.mjs --check <commit>… | --record | --update');
     process.exitCode = 2;

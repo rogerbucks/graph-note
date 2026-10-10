@@ -22,6 +22,16 @@ const unescape = (s) =>
     .replace(/&gt;/g, '>')
     .replace(/&amp;/g, '&');
 
+/** How a run with no report ended, from its spawnSync result: the time limit, a signal, an error, or its exit status. */
+const ended = (r) =>
+  r.error?.code === 'ETIMEDOUT'
+    ? `stopped at the ${runMs() / 1000} s time limit`
+    : r.signal
+      ? `killed by ${r.signal}`
+      : r.error
+        ? `could not run: ${r.error.code ?? r.error.message}`
+        : `ended with exit status ${r.status} and no report`;
+
 /** Runs one JS test file; each test by its suites and name, passed or failed. */
 function runJs(dir, file) {
   // a run inside another test run would report to it, not print its own report
@@ -33,7 +43,8 @@ function runJs(dir, file) {
     timeout: runMs(),
     maxBuffer: 1 << 28,
   });
-  return fromJunit(r.stdout ?? '');
+  const read = fromJunit(r.stdout ?? '');
+  return read.ran ? read : { ...read, why: ended(r) };
 }
 
 /** A JUnit report read: each test by its suites and name, passed or failed, and whether the run finished. */
@@ -90,9 +101,12 @@ function runPy(dir, file, repo) {
   try {
     return { ...JSON.parse(r.stdout.trim().split('\n').pop() ?? ''), ran: true };
   } catch {
-    return { passed: [], failed: [], ran: false };
+    return { passed: [], failed: [], ran: false, why: ended(r) };
   }
 }
 
-/** Runs one test file in the checkout `dir`: its tests passed and failed, and whether the run finished. */
+/**
+ * Runs one test file in the checkout `dir`: its tests passed and failed, whether the run finished, and when it did not,
+ * `why`.
+ */
 export const run = (dir, file, repo) => (PY_TEST.test(file) ? runPy(dir, file, repo) : runJs(dir, file));
