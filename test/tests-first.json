@@ -668,9 +668,9 @@
       "notReplayedCommits": []
     },
     "packages/obsidian/test/layout-worker.test.js": {
-      "replayed": 5,
-      "notReplayed": 0,
-      "seenFailing": 13,
+      "replayed": 4,
+      "notReplayed": 1,
+      "seenFailing": 7,
       "excused": 2,
       "passedFirst": [
         {
@@ -682,7 +682,20 @@
           "name": "a graph over a size limit is shown as its text, with a banner saying which limit and the numbers > a block too large to read — 600 kB, one pattern left open — is its text and a banner at once, never read"
         }
       ],
-      "notReplayedCommits": []
+      "notReplayedCommits": [
+        {
+          "commit": "7590e450b56d89c780d0bff6fe968d3c50799c7f",
+          "reason": "its run against the code before it did not finish",
+          "tests": [
+            "a graph over a size limit is shown as its text, with a banner saying which limit and the numbers > too many drawing instructions: the same, in bytes, in words a person reads",
+            "a graph over a size limit is shown as its text, with a banner saying which limit and the numbers > a block too large to read — 5 MB, each line broken — is its text and a banner at once, never read",
+            "where Workers run > the worker’s code stands alone: every helper it calls is its own, never one of main.js’s, such as __name",
+            "where Workers run > after 3 layouts in a row take too long, no worker is started again: the rest say so, with their text",
+            "where Workers run > on unload, a layout still waiting is dropped quietly, and none is started after",
+            "in the pane > a block typed or pasted past the size to read shows the banner in the drawing’s place, never read"
+          ]
+        }
+      ]
     },
     "packages/obsidian/test/live-preview.test.js": {
       "replayed": 4,
@@ -819,8 +832,8 @@
     "python/graph_spec/tests/test_gql_profile_drawn.py": {
       "replayed": 5,
       "notReplayed": 0,
-      "seenFailing": 8,
-      "excused": 4,
+      "seenFailing": 9,
+      "excused": 3,
       "passedFirst": [
         {
           "commit": "e4d665231a71c6c79a38f12d9800b90759e1bc0e",
@@ -829,10 +842,6 @@
         {
           "commit": "d000d29e7120b619c41fb5119e1eb3454cb8fd3a",
           "name": "ADanglingComma.test_checking_and_loading_may_still_refuse_it"
-        },
-        {
-          "commit": "d000d29e7120b619c41fb5119e1eb3454cb8fd3a",
-          "name": "ADanglingComma.test_everything_before_it_is_drawn_with_one_warning_on_its_line"
         },
         {
           "commit": "de4677302a9436821a92f9ea830bec527167a46f",
@@ -999,13 +1008,8 @@
       "replayed": 5,
       "notReplayed": 0,
       "seenFailing": 4,
-      "excused": 1,
-      "passedFirst": [
-        {
-          "commit": "ff02d6d112341c88fa6e375e99c887e1036dd7f4",
-          "name": "ReadingCut.test_past_the_budget_the_core_and_python_leave_out_the_same"
-        }
-      ],
+      "excused": 0,
+      "passedFirst": [],
       "notReplayedCommits": []
     },
     "python/graph_spec/tests/test_reading.py": {
@@ -1235,9 +1239,9 @@
       "notReplayedCommits": []
     },
     "test/tests-first.test.js": {
-      "replayed": 4,
+      "replayed": 6,
       "notReplayed": 0,
-      "seenFailing": 10,
+      "seenFailing": 12,
       "excused": 0,
       "passedFirst": [],
       "notReplayedCommits": []
