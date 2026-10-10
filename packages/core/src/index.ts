@@ -1,5 +1,5 @@
 // The host-free core of the graph note editor (spec §10). It imports no host: no obsidian, no vscode.
-export { gqlBlocks, gqlSpans, graphOfBlock, isSharedSchema, namesSharedSchema } from './blocks.ts';
+export { gqlBlocks, gqlSpans, graphOfBlock, isSharedSchema, namesSharedSchema, styleOf } from './blocks.ts';
 export { readNote } from './drawing.ts';
 export { blockItems } from './block-items.ts';
 export { hops } from './estimates.ts';
@@ -10,7 +10,32 @@ export type { Block, Box, Link, GraphDrawing, Problem, NoteReading } from './not
 export { layoutSource, drawingSource, STYLE } from './layout.ts';
 export { explain, distance } from './estimates.ts';
 export type { Estimate } from './estimates.ts';
-export { themed, choose, sizeOf, fixed, withoutColorMix } from './theme.ts';
+export { themed, choose, sizeOf, fixed, withoutColorMix, hueColour } from './theme.ts';
+export { readStyle, outsideOf, lookOf, legendOf } from './style.ts';
+export type { StyleReading } from './style.ts';
+export { FORMATS, LINES, NUDGE_WORDS, OUTSIDE, STYLE_HUES } from './style-graph.ts';
+export type {
+  Frame,
+  LegendEntry,
+  LineStyle,
+  LinkTarget,
+  Look,
+  Nudge,
+  NudgeWord,
+  Outside,
+  Show,
+  Shown,
+  StyleAt,
+  StyleGraph,
+  StyleScope,
+  StyleTarget,
+  TextFormat,
+  ThingLook,
+  ViewStyle,
+} from './style-graph.ts';
+export { nudgedSource, nudgedDrawing } from './style-source.ts';
+export { styleEdit } from './style-edit.ts';
+export type { LookWrite, NudgeWrite, ShownWrite, StyleChange, StyleEdit } from './style-edit.ts';
 export { draw, details, linkDetails } from './render.ts';
 export { loadEngine } from './engine.ts';
 export type { Engine, Drawn, Details, LinkDetail, LinkDetails } from './render.ts';

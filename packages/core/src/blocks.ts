@@ -2,7 +2,7 @@
 // whether it holds data or a schema, a shared schema or one that names a shared schema, or a graph line that cannot be read.
 import gs from '@graph-note/graph-spec';
 import type { Block, Problem } from './note-reading.ts';
-import { N, S, trim } from './whitespace.ts';
+import { N, S, SPACE, trim } from './whitespace.ts';
 
 const FENCE = /^ {0,3}(`{3,}|~{3,})\s*gql\s*$/i;
 
@@ -39,7 +39,15 @@ export function gqlBlocks(note: string): Block[] {
 const GRAPH_OF = new RegExp(`^${S}*//${S}*graph:${S}*(${N}+)`),
   GRAPH_LINE = new RegExp(`^${S}*//${S}*graph:`),
   SHARED = new RegExp(`^${S}*//${S}*graph:[^\\n]*·${S}*SCHEMA${S}+${N}+`),
-  NAMES_SHARED = new RegExp(`^${S}*//${S}*graph:[^\\n]*·${S}*schema${S}+${N}+`);
+  NAMES_SHARED = new RegExp(`^${S}*//${S}*graph:[^\\n]*·${S}*schema${S}+${N}+`),
+  STYLES = new RegExp(`^${S}*//${S}*graph:[^\\n]*·${S}*STYLE${S}+([^${SPACE}·]+)`),
+  STYLE_WORD = new RegExp(`^${S}*//${S}*graph:[^\\n]*·${S}*STYLE(?:${S}|·|$)`);
+
+/**
+ * The graph a style block styles (editor spec §2, style_block_in_note): its graph line says STYLE and the graph's name,
+ * `// graph: trip_style · STYLE trip`. Null for any other block. A style block is never data to draw (`dataKind`).
+ */
+export const styleOf = (text: string): string | null => STYLES.exec(firstLine(text))?.[1] ?? null;
 
 /** The graph a block names, or null. */
 export const graphOf = (text: string): string | null => GRAPH_OF.exec(firstLine(text))?.[1] ?? null;
@@ -57,8 +65,23 @@ function firstLine(text: string): string {
 
 const isGraphLine = (text: string) => GRAPH_LINE.test(firstLine(text));
 
-/** The kind of a block, or null when it holds no data to draw: a query, an excerpt, a change set, or no graph line. */
+/**
+ * The kind of a block, or null when it holds no data to draw: a query, an excerpt, a change set, a style block (read only
+ * by style.ts), or no graph line. A graph line that says STYLE but names no graph to style is a problem, never data.
+ */
 export function dataKind(text: string): 'data' | 'schema' | null | Problem {
+  if (styleOf(text) !== null) return null;
+  if (STYLE_WORD.test(firstLine(text))) {
+    const own = graphOf(text) ?? '<name>';
+    return {
+      graph: null,
+      block: -1,
+      severity: 'error',
+      line: 1,
+      message: 'this style block names no graph to style, so it is not read',
+      fix: `write the graph it styles after STYLE: '// graph: ${own} · STYLE <graph>'`,
+    };
+  }
   try {
     const [, kind] = gs.header(text);
     return kind === 'data' || kind === 'schema' ? kind : null;
