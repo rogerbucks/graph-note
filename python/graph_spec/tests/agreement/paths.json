@@ -1,0 +1,451 @@
+{
+  "cases": [
+    {
+      "name": "paths: a voyage told at four altitudes, folding to its facts",
+      "blocks": [
+        [
+          "// graph: path_voyage",
+          "INSERT",
+          "(t_path:ElementType {name: 'Path', kind: 'node'}),",
+          "(t_fact:ElementType {name: 'Fact', kind: 'node'}),",
+          "(t_step:ElementType {name: 'STEP', kind: 'edge', reading: 'steps to', reverse_name: 'is a step of'}),",
+          "(schema:GraphMeta {graph: 'path_voyage', schema: 'path_voyage@1'}),",
+          "(schema)-[:DECLARES]->(t_path),",
+          "(schema)-[:DECLARES]->(t_fact),",
+          "(schema)-[:DECLARES]->(t_step),",
+          "(f1:Fact {name: 'The ship left the harbour', stamp:1}),",
+          "(f2:Fact {name: 'A storm rose', stamp:2}),",
+          "(f3:Fact {name: 'The mast broke', stamp:3}),",
+          "(f4:Fact {name: 'The crew rowed ashore', stamp:4}),",
+          "(f5:Fact {name: 'They mended the sail', stamp:5}),",
+          "(f6:Fact {name: 'The wind turned', stamp:6}),",
+          "(f7:Fact {name: 'The ship reached the bay', stamp:7}),",
+          "(leg1:Path {name: 'Leaving', altitude: 1, ordered_by: 'stamp'}),",
+          "(leg2:Path {name: 'The storm', altitude: 1}),",
+          "(leg3:Path {name: 'Arriving', altitude: 1}),",
+          "(summary:Path {name: 'The short version', altitude: 2}),",
+          "(part2:Path {name: 'The repairs', altitude: 2}),",
+          "(part1:Path {name: 'The trouble', altitude: 3}),",
+          "(voyage:Path {name: 'The whole voyage', altitude: 4, ordered_by: 'stamp'}),",
+          "(leg1)-[:STEP {seq: 1}]->(f1),",
+          "(leg1)-[:STEP {seq: 2}]->(f2),",
+          "(leg2)-[:STEP {seq: 1}]->(f3),",
+          "(leg2)-[:STEP {seq: 2}]->(f4),",
+          "(leg3)-[:STEP {seq: 1}]->(f6),",
+          "(leg3)-[:STEP {seq: 2}]->(f7),",
+          "(summary)-[:STEP {seq: 1}]->(leg1),",
+          "(summary)-[:STEP {seq: 2}]->(f4),",
+          "(part2)-[:STEP {seq: 1}]->(f5),",
+          "(part2)-[:STEP {seq: 2}]->(leg3),",
+          "(part1)-[:STEP {seq: 1}]->(leg1),",
+          "(part1)-[:STEP {seq: 2}]->(leg2),",
+          "(voyage)-[:STEP {seq: 1}]->(part1),",
+          "(voyage)-[:STEP {seq: 2}]->(part2)"
+        ]
+      ],
+      "switches": []
+    },
+    {
+      "name": "paths: a recipe ordered by date, a path kept in order by its dates",
+      "blocks": [
+        [
+          "// graph: path_recipe",
+          "INSERT",
+          "(t_path:ElementType {name: 'Path', kind: 'node'}),",
+          "(t_fact:ElementType {name: 'Fact', kind: 'node'}),",
+          "(t_step:ElementType {name: 'STEP', kind: 'edge', reading: 'steps to', reverse_name: 'is a step of'}),",
+          "(schema:GraphMeta {graph: 'path_recipe', schema: 'path_recipe@1'}),",
+          "(schema)-[:DECLARES]->(t_path),",
+          "(schema)-[:DECLARES]->(t_fact),",
+          "(schema)-[:DECLARES]->(t_step),",
+          "(s1:Fact {name: 'Mix the dough', on: DATE '2026-03-01', rank: 10}),",
+          "(s2:Fact {name: 'Let it rise', on: DATE '2026-03-01', rank: 20}),",
+          "(s3:Fact {name: 'Shape the loaves', on: DATE '2026-03-02'}),",
+          "(s4:Fact {name: 'Bake', on: DATE '2026-03-03', rank: 40}),",
+          "(note:Fact {name: 'Serve warm'}),",
+          "(day1:Path {name: 'Day one', altitude: 1, ordered_by: 'on'}),",
+          "(bake:Path {name: 'The baking', altitude: 2, ordered_by: 'rank'}),",
+          "(recipe:Path {name: 'The whole recipe', altitude: 3, ordered_by: 'on'}),",
+          "(day1)-[:STEP {seq: 1}]->(s1),",
+          "(day1)-[:STEP {seq: 2}]->(s2),",
+          "(bake)-[:STEP {seq: 1}]->(s2),",
+          "(bake)-[:STEP {seq: 2}]->(note),",
+          "(bake)-[:STEP {seq: 3}]->(s4),",
+          "(recipe)-[:STEP {seq: 1}]->(day1),",
+          "(recipe)-[:STEP {seq: 2}]->(s3),",
+          "(recipe)-[:STEP {seq: 3}]->(s4),",
+          "(recipe)-[:STEP {seq: 4}]->(note)"
+        ]
+      ],
+      "switches": []
+    },
+    {
+      "name": "paths: a path that steps into itself (rule 1)",
+      "blocks": [
+        [
+          "// graph: path_selfloop",
+          "INSERT",
+          "(t_path:ElementType {name: 'Path', kind: 'node'}),",
+          "(t_fact:ElementType {name: 'Fact', kind: 'node'}),",
+          "(t_step:ElementType {name: 'STEP', kind: 'edge', reading: 'steps to', reverse_name: 'is a step of'}),",
+          "(schema:GraphMeta {graph: 'path_selfloop', schema: 'path_selfloop@1'}),",
+          "(schema)-[:DECLARES]->(t_path),",
+          "(schema)-[:DECLARES]->(t_fact),",
+          "(schema)-[:DECLARES]->(t_step),",
+          "(a:Fact {name: 'The kettle boiled'}),",
+          "(b:Fact {name: 'The tea brewed'}),",
+          "(round:Path {name: 'Another round', altitude: 2}),",
+          "(round)-[:STEP {seq: 1}]->(a),",
+          "(round)-[:STEP {seq: 2}]->(round),",
+          "(round)-[:STEP {seq: 3}]->(b)"
+        ]
+      ],
+      "switches": []
+    },
+    {
+      "name": "paths: two paths that contain each other (rule 1)",
+      "blocks": [
+        [
+          "// graph: path_cycle",
+          "INSERT",
+          "(t_path:ElementType {name: 'Path', kind: 'node'}),",
+          "(t_fact:ElementType {name: 'Fact', kind: 'node'}),",
+          "(t_step:ElementType {name: 'STEP', kind: 'edge', reading: 'steps to', reverse_name: 'is a step of'}),",
+          "(schema:GraphMeta {graph: 'path_cycle', schema: 'path_cycle@1'}),",
+          "(schema)-[:DECLARES]->(t_path),",
+          "(schema)-[:DECLARES]->(t_fact),",
+          "(schema)-[:DECLARES]->(t_step),",
+          "(a:Fact {name: 'The seed was sown'}),",
+          "(b:Fact {name: 'The harvest came'}),",
+          "(spring:Path {name: 'Spring', altitude: 2}),",
+          "(autumn:Path {name: 'Autumn', altitude: 3}),",
+          "(spring)-[:STEP {seq: 1}]->(a),",
+          "(spring)-[:STEP {seq: 2}]->(autumn),",
+          "(autumn)-[:STEP {seq: 1}]->(b),",
+          "(autumn)-[:STEP {seq: 2}]->(spring)"
+        ]
+      ],
+      "switches": []
+    },
+    {
+      "name": "paths: a path whose step is a higher path (rule 1)",
+      "blocks": [
+        [
+          "// graph: path_inverted",
+          "INSERT",
+          "(t_path:ElementType {name: 'Path', kind: 'node'}),",
+          "(t_fact:ElementType {name: 'Fact', kind: 'node'}),",
+          "(t_step:ElementType {name: 'STEP', kind: 'edge', reading: 'steps to', reverse_name: 'is a step of'}),",
+          "(schema:GraphMeta {graph: 'path_inverted', schema: 'path_inverted@1'}),",
+          "(schema)-[:DECLARES]->(t_path),",
+          "(schema)-[:DECLARES]->(t_fact),",
+          "(schema)-[:DECLARES]->(t_step),",
+          "(a:Fact {name: 'The gate opened'}),",
+          "(b:Fact {name: 'The garden bloomed'}),",
+          "(low:Path {name: 'The morning', altitude: 1}),",
+          "(high:Path {name: 'The year', altitude: 3}),",
+          "(low)-[:STEP {seq: 1}]->(a),",
+          "(low)-[:STEP {seq: 2}]->(high),",
+          "(high)-[:STEP {seq: 1}]->(b)"
+        ]
+      ],
+      "switches": []
+    },
+    {
+      "name": "paths: steps numbered with a gap and from zero (rule 2)",
+      "blocks": [
+        [
+          "// graph: path_numbering",
+          "INSERT",
+          "(t_path:ElementType {name: 'Path', kind: 'node'}),",
+          "(t_fact:ElementType {name: 'Fact', kind: 'node'}),",
+          "(t_step:ElementType {name: 'STEP', kind: 'edge', reading: 'steps to', reverse_name: 'is a step of'}),",
+          "(schema:GraphMeta {graph: 'path_numbering', schema: 'path_numbering@1'}),",
+          "(schema)-[:DECLARES]->(t_path),",
+          "(schema)-[:DECLARES]->(t_fact),",
+          "(schema)-[:DECLARES]->(t_step),",
+          "(a:Fact {name: 'First stop'}),",
+          "(b:Fact {name: 'Second stop'}),",
+          "(c:Fact {name: 'Third stop'}),",
+          "(gappy:Path {name: 'A walk with a gap', altitude: 1}),",
+          "(zero:Path {name: 'A walk counted from zero', altitude: 2}),",
+          "(fine:Path {name: 'A walk counted well', altitude: 3}),",
+          "(gappy)-[:STEP {seq: 1}]->(a),",
+          "(gappy)-[:STEP {seq: 3}]->(b),",
+          "(zero)-[:STEP {seq: 0}]->(a),",
+          "(zero)-[:STEP {seq: 1}]->(b),",
+          "(fine)-[:STEP {seq: 1}]->(b),",
+          "(fine)-[:STEP {seq: 2}]->(c)"
+        ]
+      ],
+      "switches": []
+    },
+    {
+      "name": "paths: two steps numbered alike (rule 2)",
+      "blocks": [
+        [
+          "// graph: path_tied",
+          "INSERT",
+          "(t_path:ElementType {name: 'Path', kind: 'node'}),",
+          "(t_fact:ElementType {name: 'Fact', kind: 'node'}),",
+          "(t_step:ElementType {name: 'STEP', kind: 'edge', reading: 'steps to', reverse_name: 'is a step of'}),",
+          "(schema:GraphMeta {graph: 'path_tied', schema: 'path_tied@1'}),",
+          "(schema)-[:DECLARES]->(t_path),",
+          "(schema)-[:DECLARES]->(t_fact),",
+          "(schema)-[:DECLARES]->(t_step),",
+          "(a:Fact {name: 'Pack the bag'}),",
+          "(b:Fact {name: 'Lock the door'}),",
+          "(c:Fact {name: 'Catch the train'}),",
+          "(trip:Path {name: 'Setting off', altitude: 1}),",
+          "(trip)-[:STEP {seq: 1}]->(a),",
+          "(trip)-[:STEP {seq: 1}]->(b),",
+          "(trip)-[:STEP {seq: 2}]->(c)"
+        ]
+      ],
+      "switches": []
+    },
+    {
+      "name": "paths: paths that do not ground out in facts (rule 3)",
+      "blocks": [
+        [
+          "// graph: path_ungrounded",
+          "INSERT",
+          "(t_path:ElementType {name: 'Path', kind: 'node'}),",
+          "(t_fact:ElementType {name: 'Fact', kind: 'node'}),",
+          "(t_concept:ElementType {name: 'Concept', kind: 'node'}),",
+          "(t_step:ElementType {name: 'STEP', kind: 'edge', reading: 'steps to', reverse_name: 'is a step of'}),",
+          "(schema:GraphMeta {graph: 'path_ungrounded', schema: 'path_ungrounded@1'}),",
+          "(schema)-[:DECLARES]->(t_path),",
+          "(schema)-[:DECLARES]->(t_fact),",
+          "(schema)-[:DECLARES]->(t_concept),",
+          "(schema)-[:DECLARES]->(t_step),",
+          "(a:Fact {name: 'The door creaked'}),",
+          "(idea:Concept {name: 'Suspense'}),",
+          "(with_idea:Path {name: 'A scene with an idea in it', altitude: 3}),",
+          "(empty:Path {name: 'A scene not yet written', altitude: 1}),",
+          "(flat:Path {name: 'A scene at ground level', altitude: 0}),",
+          "(holds_flat:Path {name: 'A chapter holding ground level', altitude: 1}),",
+          "(only_empty:Path {name: 'A chapter of one blank scene', altitude: 2}),",
+          "(grounded:Path {name: 'A scene with a fact', altitude: 2}),",
+          "(with_idea)-[:STEP {seq: 1}]->(a),",
+          "(with_idea)-[:STEP {seq: 2}]->(idea),",
+          "(flat)-[:STEP {seq: 1}]->(a),",
+          "(holds_flat)-[:STEP {seq: 1}]->(flat),",
+          "(only_empty)-[:STEP {seq: 1}]->(empty),",
+          "(grounded)-[:STEP {seq: 1}]->(a)"
+        ]
+      ],
+      "switches": []
+    },
+    {
+      "name": "paths: a path that declares an order and breaks it (rule 4)",
+      "blocks": [
+        [
+          "// graph: path_misordered",
+          "INSERT",
+          "(t_path:ElementType {name: 'Path', kind: 'node'}),",
+          "(t_fact:ElementType {name: 'Fact', kind: 'node'}),",
+          "(t_step:ElementType {name: 'STEP', kind: 'edge', reading: 'steps to', reverse_name: 'is a step of'}),",
+          "(schema:GraphMeta {graph: 'path_misordered', schema: 'path_misordered@1'}),",
+          "(schema)-[:DECLARES]->(t_path),",
+          "(schema)-[:DECLARES]->(t_fact),",
+          "(schema)-[:DECLARES]->(t_step),",
+          "(a:Fact {name: 'Alder', stamp:1}),",
+          "(b:Fact {name: 'Birch', stamp:2}),",
+          "(c:Fact {name: 'Cedar', stamp:3}),",
+          "(d:Fact {name: 'Dogwood'}),",
+          "(swapped:Path {name: 'Trees listed out of order', altitude: 1, ordered_by: 'stamp'}),",
+          "(inner:Path {name: 'A shuffled row', altitude: 2}),",
+          "(outer:Path {name: 'A row that hides the shuffle', altitude: 4, ordered_by: 'stamp'}),",
+          "(backwards:Path {name: 'Trees listed by name, backwards', altitude: 3, ordered_by: 'name'}),",
+          "(swapped)-[:STEP {seq: 1}]->(b),",
+          "(swapped)-[:STEP {seq: 2}]->(a),",
+          "(inner)-[:STEP {seq: 1}]->(c),",
+          "(inner)-[:STEP {seq: 2}]->(a),",
+          "(outer)-[:STEP {seq: 1}]->(b),",
+          "(outer)-[:STEP {seq: 2}]->(inner),",
+          "(backwards)-[:STEP {seq: 1}]->(c),",
+          "(backwards)-[:STEP {seq: 2}]->(d),",
+          "(backwards)-[:STEP {seq: 3}]->(a)"
+        ]
+      ],
+      "switches": []
+    },
+    {
+      "name": "paths: an order declared on a property no step has",
+      "blocks": [
+        [
+          "// graph: path_noprop",
+          "INSERT",
+          "(t_path:ElementType {name: 'Path', kind: 'node'}),",
+          "(t_fact:ElementType {name: 'Fact', kind: 'node'}),",
+          "(t_step:ElementType {name: 'STEP', kind: 'edge', reading: 'steps to', reverse_name: 'is a step of'}),",
+          "(schema:GraphMeta {graph: 'path_noprop', schema: 'path_noprop@1'}),",
+          "(schema)-[:DECLARES]->(t_path),",
+          "(schema)-[:DECLARES]->(t_fact),",
+          "(schema)-[:DECLARES]->(t_step),",
+          "(a:Fact {name: 'Plant the bulbs', month: 10}),",
+          "(b:Fact {name: 'Wait out the frost', month: 12}),",
+          "(plan:Path {name: 'The garden plan', altitude: 1, ordered_by: 'week'}),",
+          "(plan)-[:STEP {seq: 1}]->(a),",
+          "(plan)-[:STEP {seq: 2}]->(b)"
+        ]
+      ],
+      "switches": []
+    },
+    {
+      "name": "paths: a node with a property named type, which the flat projection cannot carry (§18)",
+      "blocks": [
+        [
+          "// graph: path_typeprop",
+          "INSERT",
+          "(t_path:ElementType {name: 'Path', kind: 'node'}),",
+          "(t_fact:ElementType {name: 'Fact', kind: 'node'}),",
+          "(t_step:ElementType {name: 'STEP', kind: 'edge', reading: 'steps to', reverse_name: 'is a step of'}),",
+          "(schema:GraphMeta {graph: 'path_typeprop', schema: 'path_typeprop@1'}),",
+          "(schema)-[:DECLARES]->(t_path),",
+          "(schema)-[:DECLARES]->(t_fact),",
+          "(schema)-[:DECLARES]->(t_step),",
+          "(a:Fact {name: 'Sourdough', type: 'bread'}),",
+          "(b:Fact {name: 'Shortbread', type: 'biscuit'}),",
+          "(menu:Path {name: 'Tea time', altitude: 1}),",
+          "(menu)-[:STEP {seq: 1}]->(a),",
+          "(menu)-[:STEP {seq: 2}]->(b)"
+        ]
+      ],
+      "switches": []
+    },
+    {
+      "name": "paths: text that reads as a date or an instant, which the flat projection would rebuild as one (§18)",
+      "blocks": [
+        [
+          "// graph: path_datelike",
+          "INSERT",
+          "(t_path:ElementType {name: 'Path', kind: 'node'}),",
+          "(t_fact:ElementType {name: 'Fact', kind: 'node'}),",
+          "(t_step:ElementType {name: 'STEP', kind: 'edge', reading: 'steps to', reverse_name: 'is a step of'}),",
+          "(schema:GraphMeta {graph: 'path_datelike', schema: 'path_datelike@1'}),",
+          "(schema)-[:DECLARES]->(t_path),",
+          "(schema)-[:DECLARES]->(t_fact),",
+          "(schema)-[:DECLARES]->(t_step),",
+          "(a:Fact {name: 'Opening night', label: '2026-03-01'}),",
+          "(b:Fact {name: 'Closing night', label: '2026-03-09T20:00:00+10:00'}),",
+          "(season:Path {name: 'The season', altitude: 1}),",
+          "(season)-[:STEP {seq: 1}]->(a),",
+          "(season)-[:STEP {seq: 2}]->(b)"
+        ]
+      ],
+      "switches": []
+    },
+    {
+      "name": "paths: a kind used but never declared (§5)",
+      "blocks": [
+        [
+          "// graph: path_undeclared",
+          "INSERT",
+          "(t_path:ElementType {name: 'Path', kind: 'node'}),",
+          "(t_fact:ElementType {name: 'Fact', kind: 'node'}),",
+          "(t_step:ElementType {name: 'STEP', kind: 'edge', reading: 'steps to', reverse_name: 'is a step of'}),",
+          "(schema:GraphMeta {graph: 'path_undeclared', schema: 'path_undeclared@1'}),",
+          "(schema)-[:DECLARES]->(t_path),",
+          "(schema)-[:DECLARES]->(t_fact),",
+          "(schema)-[:DECLARES]->(t_step),",
+          "(a:Fact {name: 'Wind the clock'}),",
+          "(gadget:Gadget {name: 'A clock key'}),",
+          "(chore:Path {name: 'Winding day', altitude: 1}),",
+          "(chore)-[:STEP {seq: 1}]->(a),",
+          "(chore)-[:STEP {seq: 2}]->(gadget)"
+        ]
+      ],
+      "switches": []
+    },
+    {
+      "name": "paths: a relationship type used but never declared (§5)",
+      "blocks": [
+        [
+          "// graph: path_undeclaredlink",
+          "INSERT",
+          "(t_path:ElementType {name: 'Path', kind: 'node'}),",
+          "(t_fact:ElementType {name: 'Fact', kind: 'node'}),",
+          "(t_step:ElementType {name: 'STEP', kind: 'edge', reading: 'steps to', reverse_name: 'is a step of'}),",
+          "(schema:GraphMeta {graph: 'path_undeclaredlink', schema: 'path_undeclaredlink@1'}),",
+          "(schema)-[:DECLARES]->(t_path),",
+          "(schema)-[:DECLARES]->(t_fact),",
+          "(schema)-[:DECLARES]->(t_step),",
+          "(a:Fact {name: 'Seed'}),",
+          "(b:Fact {name: 'Shoot'}),",
+          "(grow:Path {name: 'Growing', altitude: 1}),",
+          "(a)-[:BECAME]->(b),",
+          "(grow)-[:STEP {seq: 1}]->(a),",
+          "(grow)-[:STEP {seq: 2}]->(b)"
+        ]
+      ],
+      "switches": []
+    },
+    {
+      "name": "paths: a relationship type declared with one reading only (§5)",
+      "blocks": [
+        [
+          "// graph: path_halfreading",
+          "INSERT",
+          "(t_path:ElementType {name: 'Path', kind: 'node'}),",
+          "(t_fact:ElementType {name: 'Fact', kind: 'node'}),",
+          "(t_step:ElementType {name: 'STEP', kind: 'edge', reading: 'steps to'}),",
+          "(schema:GraphMeta {graph: 'path_halfreading', schema: 'path_halfreading@1'}),",
+          "(schema)-[:DECLARES]->(t_path),",
+          "(schema)-[:DECLARES]->(t_fact),",
+          "(schema)-[:DECLARES]->(t_step),",
+          "(a:Fact {name: 'Knead'}),",
+          "(b:Fact {name: 'Prove'}),",
+          "(bread:Path {name: 'Bread', altitude: 1}),",
+          "(bread)-[:STEP {seq: 1}]->(a),",
+          "(bread)-[:STEP {seq: 2}]->(b)"
+        ]
+      ],
+      "switches": []
+    },
+    {
+      "name": "paths: a draft with no schema, told at two altitudes",
+      "blocks": [
+        [
+          "// graph: path_draft",
+          "INSERT",
+          "(f1:Fact {name: 'The kite rose', stamp:1}),",
+          "(f2:Fact {name: 'The string snapped', stamp:2}),",
+          "(f3:Fact {name: 'The kite landed in a tree', stamp:3}),",
+          "(flight:Path {name: 'The flight', altitude: 1, ordered_by: 'stamp'}),",
+          "(afternoon:Path {name: 'The afternoon', altitude: 2}),",
+          "(flight)-[:STEP {seq: 1}]->(f1),",
+          "(flight)-[:STEP {seq: 2}]->(f2),",
+          "(afternoon)-[:STEP {seq: 1}]->(flight),",
+          "(afternoon)-[:STEP {seq: 2}]->(f3)"
+        ]
+      ],
+      "switches": []
+    },
+    {
+      "name": "paths: three paths at one altitude above one fact, lifted in id order",
+      "blocks": [
+        [
+          "// graph: path_ties",
+          "INSERT",
+          "(t_path:ElementType {name: 'Path', kind: 'node'}),",
+          "(t_fact:ElementType {name: 'Fact', kind: 'node'}),",
+          "(t_step:ElementType {name: 'STEP', kind: 'edge', reading: 'steps to', reverse_name: 'is a step of'}),",
+          "(schema:GraphMeta {graph: 'path_ties', schema: 'path_ties@1'}),",
+          "(schema)-[:DECLARES]->(t_path),",
+          "(schema)-[:DECLARES]->(t_fact),",
+          "(schema)-[:DECLARES]->(t_step),",
+          "(rain:Fact {name: 'It rained'}),",
+          "(zebra:Path {name: 'A walk to the zoo', altitude: 1}),",
+          "(apple:Path {name: 'A walk to the orchard', altitude: 1}),",
+          "(mill:Path {name: 'A walk to the mill', altitude: 1}),",
+          "(zebra)-[:STEP {seq: 1}]->(rain),",
+          "(apple)-[:STEP {seq: 1}]->(rain),",
+          "(mill)-[:STEP {seq: 1}]->(rain)"
+        ]
+      ],
+      "switches": []
+    }
+  ]
+}

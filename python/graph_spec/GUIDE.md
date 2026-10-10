@@ -23,4 +23,6 @@ A host puts `src/` on `sys.path` and imports the four entry points by name. Each
 
 ## Tests, in `tests/`
 
-Named after the module they test. `test_<entry point>_entry_point.py` hold each entry point to every name it had (`entry_points.json`) and to importing with only `src/` on the path.
+`test_reader_agrees_with_grafeo.py` holds the reader and its plain rules to Grafeo's answers (req:17.engine-agreement), on the shared cases and on generic cases in `tests/agreement/` (one JSON file per area, each block a list of lines; `classification.md` there is a generic destination matrix). Grafeo is the reference only: a test dependency, never one the readers need.
+
+Otherwise named after the module they test. `test_<entry point>_entry_point.py` hold each entry point to every name it had (`entry_points.json`) and to importing with only `src/` on the path.

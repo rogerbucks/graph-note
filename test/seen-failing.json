@@ -347,6 +347,56 @@
       "evidence": "pins behaviour that already existed: written after its code, to prove a spec rule the code already met (commit 40d335e)"
     }
   },
+  "python/graph_spec/tests/test_reader_agrees_with_grafeo.py": {
+    "Agreement.test_p1_the_reader_builds_grafeos_graphs": {
+      "seen_failing_first": false,
+      "evidence": "req:17.engine-agreement: proves a twin that already exists, with no code changed, so it passes against its parent by design. Seen failing against a planted fault: the reader's canon broken, it fails (scratch run, 11 Oct 2026)"
+    },
+    "Agreement.test_p2_the_plain_rules_give_grafeos_verdicts": {
+      "seen_failing_first": false,
+      "evidence": "req:17.engine-agreement: proves twins that already exist, with no code changed, so it passes against its parent by design. Seen failing against a planted fault: one verdict of graph_rules.check flipped, it fails (scratch run, 11 Oct 2026)"
+    },
+    "Agreement.test_p2_section20_values_agree": {
+      "seen_failing_first": false,
+      "evidence": "req:17.engine-agreement: proves twins that already exist, with no code changed, so it passes against its parent by design. Seen failing against a planted fault: the reader's latest_assessment dropping a claim, it fails (scratch run, 11 Oct 2026)"
+    },
+    "Agreement.test_p2_paths_agree": {
+      "seen_failing_first": false,
+      "evidence": "req:17.engine-agreement: proves twins that already exist, with no code changed, so it passes against its parent by design. Seen failing against a planted fault: the reader's lift reversed, it fails (scratch run, 11 Oct 2026)"
+    },
+    "Agreement.test_p2_judgements_agree": {
+      "seen_failing_first": false,
+      "evidence": "req:17.engine-agreement: proves twins that already exist, with no code changed, so it passes against its parent by design. Seen failing against a planted fault: the reader's judgement_hash altered, it fails (scratch run, 11 Oct 2026)"
+    },
+    "Agreement.test_p2_review_agrees": {
+      "seen_failing_first": false,
+      "evidence": "req:17.engine-agreement: proves a twin that already exists, with no code changed, so it passes against its parent by design. Seen failing against a planted fault: the reader's review giving no reasons, it fails (scratch run, 11 Oct 2026)"
+    },
+    "Agreement.test_p2_why_layer_agrees": {
+      "seen_failing_first": false,
+      "evidence": "req:17.engine-agreement: proves a twin that already exists, with no code changed, so it passes against its parent by design. Seen failing against a planted fault: the reader's why_layer always empty, it fails (scratch run, 11 Oct 2026)"
+    },
+    "Agreement.test_p2_a_change_sets_dry_run_reaches_grafeos_outcome": {
+      "seen_failing_first": false,
+      "evidence": "req:17.engine-agreement: proves a twin that already exists, with no code changed, so it passes against its parent by design. Seen failing against a planted fault: the reader's check_changeset passing every check, it fails (scratch run, 11 Oct 2026)"
+    },
+    "Agreement.test_a_gql_constraint_finds_what_its_reference_finds": {
+      "seen_failing_first": false,
+      "evidence": "req:17.engine-agreement: proves twins that already exist, with no code changed, so it passes against its parent by design. Seen failing against a planted fault: every named rule finding nothing, it fails (scratch run, 11 Oct 2026)"
+    },
+    "Agreement.test_every_rule_is_seen_holding_and_failing": {
+      "seen_failing_first": false,
+      "evidence": "req:17.engine-agreement: holds the new cases to their purpose, with no code changed, so it passes against its parent by design. Seen failing with only the shared cases from cases.mjs, before this test's own cases were written (11 Oct 2026)"
+    },
+    "Agreement.test_there_are_cases": {
+      "seen_failing_first": false,
+      "evidence": "req:17.engine-agreement: a control on the agreement test itself, with no code changed, so it passes against its parent by design (11 Oct 2026)"
+    },
+    "Agreement.test_every_case_grafeo_refuses_is_a_known_one": {
+      "seen_failing_first": false,
+      "evidence": "req:17.engine-agreement: a control on the agreement test itself, with no code changed, so it passes against its parent by design (11 Oct 2026)"
+    }
+  },
   "python/graph_spec/tests/test_to_gql.py": {
     "ToGqlRefusesWhatTheReaderRefuses.test_a_node_written_where_it_cannot_be_found_is_said_not_hidden": {
       "seen_failing_first": false,
