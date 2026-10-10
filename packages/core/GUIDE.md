@@ -50,7 +50,8 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   dashed and labelled so in both.
 - `engine.ts` — starting the bundled Graphviz engine, WebAssembly: the one module that imports it, and only the entry
   imports this one, so the rest of the core runs in a host with no WebAssembly, such as a Claude Code mod.
-- `render.ts` — laying out with the engine it is handed, and what a box's or link's details are.
+- `render.ts` — laying out with the engine it is handed, or around one run elsewhere (`directions`, then `chosen` with
+  the SVGs it drew), and what a box's or link's details are.
 - `layout-limits.ts` — how large a graph may be before it is shown as text (spec §9, layout_contained), each limit with
   its reason: the note's text, measured before it is read (`READ_LIMITS`, `textTooLarge`, which `readNote` applies to the
   graph blocks and shared schemas, never to a query or an excerpt); the things, links, longest word and drawing
@@ -61,7 +62,10 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   host gives it — the worker's (`serveLayouts`: its engine started at once, and "ready" said) and the page's
   (`LayoutRunner`: one worker reused; each layout timed from "ready"; a fresh worker after one overruns, none after three
   in a row; the page's thread only when the first worker cannot start; a layout superseded before it starts dropped).
-- `theme.ts` — the drawing's colours and size, from the theme.
+- `theme.ts` — the drawing's colours and size, from the theme, in the host's palette.
+- `palette.ts` — the one colour mapping (spec §10): how each host writes the style's colours. Obsidian's entry names
+  its theme variables; the fixed light and dark entries, for a host that draws the SVG as an isolated image (a Claude
+  Code pane), are worked out to hex and paint their own page, with the locked contrast held.
 - `hits.ts` — what a tap lands on or near.
 - `zoom.ts` — zoom, pan and full screen.
 

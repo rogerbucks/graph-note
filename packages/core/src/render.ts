@@ -5,6 +5,7 @@ import type { GraphDrawing, NoteReading, Problem } from './note-reading.ts';
 import { drawingSource, layoutSource, STYLE } from './layout.ts';
 import type { LayoutSource } from './layout.ts';
 import { themed, sizeOf, choose } from './theme.ts';
+import type { Palette } from './palette.ts';
 
 /** Graphviz: layout source in, SVG text out. Throws when it cannot lay the source out. */
 export interface Engine {
@@ -40,15 +41,18 @@ export function directions(drawing: GraphDrawing): Direction[] {
   }));
 }
 
-/** The drawing, from the SVG Graphviz drew for each direction (in the same order): the better fit, themed. */
-export function chosen(laidOut: Direction[], svgs: string[]): Drawn {
+/**
+ * The drawing, from the SVG Graphviz drew for each direction (in the same order): the better fit, themed in the host's
+ * palette from the one table (Obsidian's by default).
+ */
+export function chosen(laidOut: Direction[], svgs: string[], palette?: Palette): Drawn {
   const laid = laidOut.map(({ rankdir, src }, i) => {
     const svg = svgs[i] ?? '';
     return { rankdir, ...sizeOf(svg), svg, src };
   });
   const best = choose(laid);
   return {
-    svg: themed(best.svg, best.src.kinds, best.src.readings),
+    svg: themed(best.svg, best.src.kinds, best.src.readings, palette),
     rankdir: best.rankdir,
     width: best.width,
     height: best.height,
