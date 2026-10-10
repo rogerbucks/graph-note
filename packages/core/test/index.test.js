@@ -5,7 +5,8 @@
 // textFromName and their types), and the layout kept apart from the interface (LayoutRunner and its kin, 10 Oct 2026),
 // and the settings and strictness of §21 (OPTIONS, settingsFrom, toStandard and their kin, 11 Oct 2026), deferred
 // things (parkForLater, parked, parkedCount and their types) and walked paths (PathRecorder, PathPlayer, pathBlock,
-// pathsOf, pathProblems and their types, 11 Oct 2026).
+// pathsOf, pathProblems and their types, 11 Oct 2026), and views (viewsOf, parseView, viewQuery, viewBlock, readingOf,
+// evaluate and their types, 11 Oct 2026).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -37,6 +38,10 @@ const VALUES = [
   'TOKEN_CLASSES',
   'TapCycle',
   'TextHistory',
+  'VIEW_FORMS',
+  'VIEW_KINDS',
+  'VIEW_LIMITS',
+  'VIEW_NAMES',
   'Zoom',
   'addToList',
   'aiModel',
@@ -53,6 +58,7 @@ const VALUES = [
   'distance',
   'draw',
   'drawingSource',
+  'evaluate',
   'explain',
   'fixed',
   'gqlBlocks',
@@ -86,6 +92,7 @@ const VALUES = [
   'parked',
   'parkedCount',
   'parseValue',
+  'parseView',
   'pathBlock',
   'pathProblems',
   'pathsOf',
@@ -93,6 +100,7 @@ const VALUES = [
   'propertyNames',
   'readBack',
   'readNote',
+  'readingOf',
   'removeFromList',
   'renameProperty',
   'replaceBlock',
@@ -112,6 +120,9 @@ const VALUES = [
   'tokenize',
   'tooLarge',
   'underStrictness',
+  'viewBlock',
+  'viewQuery',
+  'viewsOf',
   'withoutColorMix',
 ];
 
@@ -153,6 +164,7 @@ const TYPES = [
   'ListValue',
   'Mode',
   'NameStyle',
+  'NamedView',
   'NoteReading',
   'Option',
   'OptionChoice',
@@ -187,6 +199,11 @@ const TYPES = [
   'TokenClass',
   'Told',
   'View',
+  'ViewArgs',
+  'ViewKind',
+  'ViewRefusal',
+  'ViewResult',
+  'ViewSpec',
   'WalkedPath',
   'WriteResult',
   'ZoomEvent',
