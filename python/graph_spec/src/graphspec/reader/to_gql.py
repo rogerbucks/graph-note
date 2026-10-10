@@ -71,7 +71,9 @@ def _with_ids(block, nodes):
         if m.group(3) == ")":
             edits.append((m.end(1), m.end(1), f" {{{given}}}"))
         elif m.group(3) == "{":
-            edits.append((m.end(3), m.end(3), given + ", "))
+            # before a line break the id: ends at its comma, so no space is left at a line's end
+            at_break = block[m.end(3) : m.end(3) + 1] in ("\n", "\r")
+            edits.append((m.end(3), m.end(3), given + ("," if at_break else ", ")))
         else:
             edits.append((m.start(3), m.end(3), "{" + given + "}"))
     for start, end, text in sorted(edits, reverse=True):

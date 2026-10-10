@@ -96,7 +96,7 @@ CASES = [
         lines(
             "// graph: g",
             "INSERT",
-            "(c:T {id: 'c', ",
+            "(c:T {id: 'c',",
             "  x: 1",
             "}),",
             "(e:T {id: 'e'}",
