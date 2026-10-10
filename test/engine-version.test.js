@@ -545,8 +545,8 @@ describe('the workflows', () => {
     const text = read(f);
     const on = block(text.split('\n'), 'on', 0).map(stripComment).join('\n');
     assert.match(on, /workflow_dispatch:/, 'it is run by hand');
-    assert.doesNotMatch(on, /schedule|cron|pull_request|push:/, 'the weekly run is off');
-    assert.match(text, /# .*off until the owner decides at the public release.*schedule line/s);
+    assert.match(on, /schedule:\n\s+- cron: '\d+ \d+ \* \* [0-6]'/, 'it runs weekly, on a set morning');
+    assert.doesNotMatch(on, /pull_request|push:/, 'never on a change: the release does its own live check');
     const job = jobs(text);
     assert.deepEqual(Object.keys(job), ['watch']);
     assert.equal(block(job.watch, 'permissions', 4), null, 'the job keeps the read-only default');
