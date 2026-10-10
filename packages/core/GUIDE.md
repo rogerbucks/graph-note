@@ -62,7 +62,8 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   host gives it — the worker's (`serveLayouts`: its engine started at once, and "ready" said) and the page's
   (`LayoutRunner`: one worker reused; each layout timed from "ready"; a fresh worker after one overruns, none after three
   in a row; the page's thread only when the first worker cannot start; a layout superseded before it starts dropped).
-- `theme.ts` — the drawing's colours and size, from the theme, in the host's palette.
+- `theme.ts` — the drawing's colours and size, from the theme, in the host's palette; `hueColour` is the one blend every
+  hue is drawn through, kinds, readings and the style graph's looks alike.
 - `palette.ts` — the one colour mapping (spec §10): how each host writes the style's colours. Obsidian's entry names
   its theme variables; the fixed light and dark entries, for a host that draws the SVG as an isolated image (a Claude
   Code pane), are worked out to hex and paint their own page, with the locked contrast held.
@@ -103,6 +104,35 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   the same STEP, so the badge counts each once.
 - `path-edits.ts` — a step taken out numbers the later steps of its path again (`stepsAfter`), carried as the removing
   fix's further edits (`Problem.also`), so the path keeps §22's steps 1 to n.
+
+**The style graph (spec §2, §6, §7)**
+
+A graph's nudges, the properties it shows and the styling of its views and paths are a graph of their own, written in a
+style block beside it: `// graph: trip_style · STYLE trip`. `blocks.ts` knows one by its graph line (`styleOf`), and
+`dataKind` never takes it for data, so `readNote` never reads or draws it and the data reads the same with or without
+it. A graph line that says STYLE but names no graph is a problem, never data.
+
+- `style-graph.ts` — what a style graph holds once read (`StyleGraph`: nudges, shows, looks, each view's fade or hide,
+  how each view was shown, the direction) and the words it allows: the four nudge words, the lines, the formats, fade or
+  hide, and the colours, which are only the locked style's hues by name (`STYLE_HUES`).
+- `style.ts` — `readStyle`: every style block of a graph read with the data's own reader (`readBlocks`, told which blocks
+  to read), so what cannot be read is a problem on its line and the rest is used; never a throw, and a style too large
+  to read is not read (the locked style is kept, and why is said). `lookOf` is the look of a thing or link in a view or
+  path (a named hue, a line, a format; the thing's own look over its kind's); `legendOf` every colour used there with
+  what it means; `outsideOf` a view's fade or hide, fade when none is written.
+- `style-checks.ts` — each style thing checked on its own: its kind, its words, its values, and every name it uses
+  (thing, other, from, to, selected, kind, relationship type, path, property) against the graph it styles, a name not
+  there given the nearest (`estimates.ts`'s `nearest`) as its fix. A view's name is not checked: views are query blocks.
+- `style-conflicts.ts` — the things checked against each other: two directions, beside and before on one pair, a thing
+  in two groups, a loop of befores, a view set to both fade and hide or saved twice, a colour given two meanings in one
+  view or path. The first written is kept, the later left out, each with a problem.
+- `style-source.ts` — nudges applied after the layout source is made (`nudgedSource`: beside a `rank=same` line, before
+  an invisible link after every drawn one, group a labelled cluster), and direction set on the drawing (`nudgedDrawing`).
+  With no nudges the source is returned unchanged, byte-identical to the Python library's.
+- `style-edit.ts` — `styleEdit`: a nudge, a look, a view's fade or hide, or how a view was shown, written as text into the
+  graph's style block (made after the graph's last block when there is none); a view's setting changed in place, never
+  written twice; never a data block touched. A styled hue is drawn with `theme.ts`'s `hueColour`, the same blends as a
+  kind's, so it meets the locked contrast.
 
 **Settings (spec §21)**
 

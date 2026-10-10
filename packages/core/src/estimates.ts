@@ -52,7 +52,10 @@ const plain = (s: string) => s.replace(/_/g, '').toLowerCase();
  * and two from eight, ignoring case and underscores, as the graph library counts near duplicates; a name under three
  * characters is never estimated. The one, or the several equally near, or none.
  */
-function nearest(name: string, among: Iterable<string>): { one: string; d: number } | { several: string[] } | null {
+export function nearest(
+  name: string,
+  among: Iterable<string>,
+): { one: string; d: number } | { several: string[] } | null {
   if (name.length < 3) return null;
   let best = Infinity,
     found: string[] = [];

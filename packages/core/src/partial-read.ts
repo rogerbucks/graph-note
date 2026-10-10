@@ -80,16 +80,20 @@ export interface Prepared {
   gaps: BlockGaps[];
 }
 
+/** Which blocks are read, and as what: `dataKind`, or, for the style graph (style.ts), its style blocks read as data. */
+export type KindOf = (text: string) => ReturnType<typeof dataKind>;
+
 /**
  * The blocks made ready to read: a block that is not data left out; a comment after code blanked and a comma with nothing
- * after it taken out, each with its warning; and the names suggested for things written without one.
+ * after it taken out, each with its warning; and the names suggested for things written without one. `kindOf` says which
+ * blocks are read: the data blocks, unless another reader, such as the style graph's, asks for its own.
  */
-export function prepare(texts: string[]): Prepared {
+export function prepare(texts: string[], kindOf: KindOf = dataKind): Prepared {
   const clean = texts.slice(),
     problems: Problem[] = [],
     skip = new Set<number>();
   texts.forEach((t, i) => {
-    const k = dataKind(t);
+    const k = kindOf(t);
     if (k === null) skip.add(i);
     else if (typeof k === 'object') {
       skip.add(i);
@@ -193,13 +197,15 @@ function failure(block: number, text: string, error: unknown, all: Item[], lineA
  * Each block is applied in order; when one fails, the store is as it was before it (a block is applied whole or not at
  * all), the item at the failing line is blanked, and that block is read again — what a fresh read of every block would
  * give, as the Python reader does it, without reading the blocks before it again. `budget` caps the re-reading (above).
+ * `kindOf` says which blocks are read (`prepare`): the data blocks by default.
  */
 export function readBlocks(
   texts: string[],
   shared: string[],
   budget = REREAD_BUDGET,
+  kindOf: KindOf = dataKind,
 ): { store: gs.Store; problems: Problem[] } {
-  const { clean, problems, skip, gaps } = prepare(texts);
+  const { clean, problems, skip, gaps } = prepare(texts, kindOf);
   const store = new gs.Store();
   for (const s of shared) {
     try {
