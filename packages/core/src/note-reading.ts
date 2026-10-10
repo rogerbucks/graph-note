@@ -38,6 +38,8 @@ export interface GraphDrawing {
   links: Link[];
   /** Near misses drawn as guesses (spec §3): never written to the note. */
   estimates: Estimate[];
+  /** The one direction to lay it out in, one the locked style lists (spec §21); unset, the best fit of them all. */
+  direction?: string;
 }
 
 /** Something that could not be read: its graph, the block (index in the note), the line in that block (1 = its graph line), what is wrong, and the fix. */
@@ -61,7 +63,12 @@ export interface Problem {
   span?: { line: number; character: number; end: number };
   /** The name suggested for a thing written without one, which it is drawn under until its fix writes it. */
   suggested?: string;
+  /** Set when what was written departs from standard GQL and was read as meant (spec §21): which departure it is. */
+  departure?: Departure;
 }
+
+/** A departure from standard GQL that the reader reads as meant (spec §21): what strictness acts on. */
+export type Departure = 'missing-comma' | 'trailing-comma' | 'bare-type';
 
 /** What a note's graph blocks say: each graph as drawn, the problems, and the graphs themselves, as written and joined. */
 export interface NoteReading {

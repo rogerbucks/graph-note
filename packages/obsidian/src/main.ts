@@ -2,8 +2,17 @@
 import { Notice, Plugin, TFile, editorInfoField } from 'obsidian';
 import type { EditorView } from '@codemirror/view';
 import type { MarkdownPostProcessorContext } from 'obsidian';
-import { gqlBlocks, isSharedSchema, LAYOUT_LIMITS } from '@graph-note/core';
-import type { Drawn, Engine, GraphDrawing, LayoutLimits, Refusal } from '@graph-note/core';
+import {
+  DEFAULT_SETTINGS,
+  gqlBlocks,
+  isSharedSchema,
+  LAYOUT_LIMITS,
+  settingsFrom,
+  standardBlocks,
+  toStandard,
+} from '@graph-note/core';
+import type { Drawn, Engine, GraphDrawing, LayoutLimits, Refusal, Settings } from '@graph-note/core';
+import { GraphNoteSettingTab } from './settings/settings';
 import type { DeclaredList } from './properties/list-row';
 import type { Editing } from './graph-view/view-options';
 import { engineOnThePage, Layouts } from './layout-worker/layout-worker';
@@ -25,6 +34,7 @@ export type Drafts = Record<string, { text: string; kept: string }>;
 
 interface Saved {
   drafts?: Drafts;
+  settings?: unknown;
 }
 
 /** The plugin: draws each graph block, opens the editors, and keeps the drafts and the shared schemas. */
@@ -36,6 +46,13 @@ export default class GraphNotePlugin extends Plugin {
 
   override async onload(): Promise<void> {
     this.saved = ((await this.loadData()) as Saved | null) ?? {};
+    this.settings = settingsFrom(this.saved.settings);
+    this.addSettingTab(new GraphNoteSettingTab(this.app, this));
+    this.addCommand({
+      id: 'convert-to-standard',
+      name: 'Convert this note to standard GQL',
+      callback: () => this.convertToStandard(),
+    });
     this.registerView(PANE, (leaf) => new GraphPane(leaf, this));
     this.registerEditorExtension(addForYou);
     // in Live Preview the plugin draws graph blocks itself, so a card being typed in is never torn down (spec §4)
@@ -75,6 +92,48 @@ export default class GraphNotePlugin extends Plugin {
       );
     }
     return [...this.schemas.values()].flat();
+  }
+
+  /** Every option the editor offers (spec §21), as set on the settings page. */
+  override settings: Settings = DEFAULT_SETTINGS;
+
+  /** Saves the settings, read back as the core reads them, so nothing out of range or secret is kept. */
+  async saveSettings(next: Settings): Promise<void> {
+    this.settings = settingsFrom(next);
+    this.saved = { ...this.saved, settings: this.settings };
+    await this.saveData(this.saved);
+  }
+
+  /** Converts the note in front back to standard GQL (spec §21), checked by the standard checker before it is written. */
+  async convertToStandard(): Promise<void> {
+    const file = this.app.workspace.getActiveFile();
+    if (!file) {
+      new Notice('Open a note to convert it to standard GQL.');
+      return;
+    }
+    const checked = toStandard(await this.app.vault.read(file));
+    if (!checked.ok) {
+      new Notice(`Not converted: ${checked.reason}`);
+      return;
+    }
+    if (!checked.changed) {
+      new Notice('This note is already standard GQL.');
+      return;
+    }
+    // written against the note as it is when written, and checked again there
+    await this.app.vault.process(file, (now) => {
+      const again = toStandard(now);
+      return again.ok ? again.note : now;
+    });
+    new Notice(`Converted ${checked.changed} departure${checked.changed === 1 ? '' : 's'} to standard GQL.`);
+  }
+
+  /** What an engine or an export is given of a note's gql blocks (spec §21): standard GQL, whatever the strictness. */
+  async standardGql(path: string): Promise<string[]> {
+    const file = this.app.vault.getFileByPath(path);
+    if (!file) return [];
+    const blocks = gqlBlocks(await this.app.vault.cachedRead(file)).map((b) => b.text);
+    return standardBlocks(blocks, this.settings);
   }
 
   drafts(): Drafts {
@@ -117,7 +176,9 @@ export default class GraphNotePlugin extends Plugin {
       () => this.layoutLimits,
       () => this.graphviz(),
     );
-    return this.layouts.draw(drawing, owner);
+    // the direction set on the settings page, one the locked style allows (spec §21); else the best fit
+    const { direction } = this.settings;
+    return this.layouts.draw(direction === 'best' ? drawing : { ...drawing, direction }, owner);
   }
 
   override onunload(): void {

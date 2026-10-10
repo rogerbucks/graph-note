@@ -1,6 +1,7 @@
 // A stand-in for the obsidian module, enough to load the built plugin in Node: a Plugin that records what it registers,
 // Components with the lifecycle and DOM events, Notices, icons and tooltips. Pair it with fake-dom.js.
 import { createRequire } from 'node:module';
+import { fakeSettings } from './fake-settings.js';
 
 // the CommonJS copies of CodeMirror, as the built plugin requires them: one copy, so its fields and facets are known
 const require = createRequire(import.meta.url);
@@ -118,7 +119,10 @@ export function fakeObsidian(state = {}) {
     on: () => ({}),
     offref: () => {},
   };
+  // the note in front, by its path in state.active
+  workspace.getActiveFile = () => file(state.active ?? '');
   const app = { vault, workspace };
+  const settings = fakeSettings(state, app);
   class WorkspaceLeaf {
     constructor(app_, how) {
       this.app = app_;
@@ -194,6 +198,9 @@ export function fakeObsidian(state = {}) {
     }
     registerEditorExtension(ext) {
       (state.editorExtensions ??= []).push(ext);
+    }
+    addSettingTab(tab) {
+      state.settingTabs.push(tab);
     }
   }
   class Notice {
@@ -323,6 +330,7 @@ export function fakeObsidian(state = {}) {
     setTooltip,
     Platform,
     app,
+    ...settings,
   };
 }
 

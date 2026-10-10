@@ -4,7 +4,14 @@
 // problems or a banner.
 import { Notice } from 'obsidian';
 import type { MarkdownPostProcessorContext } from 'obsidian';
-import { completenessReport, gqlBlocks, graphOfBlock, namesSharedSchema, readNote } from '@graph-note/core';
+import {
+  completenessReport,
+  gqlBlocks,
+  graphOfBlock,
+  namesSharedSchema,
+  readNote,
+  underStrictness,
+} from '@graph-note/core';
 import type { Block, Drawn, Problem, Refusal } from '@graph-note/core';
 import type GraphNotePlugin from './main';
 import type { EditTarget } from './main';
@@ -70,7 +77,9 @@ export async function renderBlock(
   const texts = blocks.map((b, i) => (i === index ? source : b.text));
 
   const shared = texts.some(namesSharedSchema) ? await plugin.sharedSchemas() : [];
-  const reading = readNote(texts, index, shared);
+  const read = readNote(texts, index, shared);
+  // reported by the strictness set on the settings page (spec §21)
+  const reading = { ...read, problems: underStrictness(read.problems, plugin.settings) };
   const target = { path: ctx.sourcePath, line: info?.lineStart ?? 0, graph };
   if (reading.tooLarge) {
     // too large to read (spec §9): nothing was read, so the text is shown, and why

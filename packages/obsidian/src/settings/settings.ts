@@ -1,0 +1,96 @@
+// The settings page (spec §21): one page in Obsidian's plugin settings, holding every option the editor offers, each
+// with its sentence, defined from the core's list of options so none can be left off, in Obsidian's declarative form
+// so each is found by the settings search. Each change is saved at once, read back as the core reads settings.
+import { PluginSettingTab } from 'obsidian';
+import type { App, SettingDefinition, SettingDefinitionItem } from 'obsidian';
+import { OPTIONS } from '@graph-note/core';
+import type { Option, Settings } from '@graph-note/core';
+import type GraphNotePlugin from '../main';
+import { aiModelList, getModelValue, setModelValue } from './ai-models';
+
+const SECTIONS = ['Strictness', 'AI models', 'Formatting', 'Drawing'] as const;
+
+/** The plugin's settings page. */
+export class GraphNoteSettingTab extends PluginSettingTab {
+  constructor(
+    app: App,
+    private readonly owner: GraphNotePlugin,
+  ) {
+    super(app, owner);
+  }
+
+  override getSettingDefinitions(): SettingDefinitionItem[] {
+    return SECTIONS.flatMap((heading): SettingDefinitionItem[] => [
+      {
+        type: 'group',
+        heading,
+        items: OPTIONS.filter((o) => o.section === heading).flatMap((o) => this.definitions(o)),
+      },
+      // a list stands on its own, after its part of the page
+      ...(heading === 'AI models' ? [aiModelList(this.app, this.owner, this)] : []),
+    ]);
+  }
+
+  /** The rows an option is shown in: one for most; for the departures, one each and the action that converts. */
+  private definitions(o: Option): SettingDefinition[] {
+    const s = this.owner.settings;
+    if (o.key === 'allowed')
+      return [
+        { name: o.name, desc: o.sentence },
+        ...(o.choices ?? []).map((c): SettingDefinition => ({
+          name: c.name,
+          desc: c.sentence ?? '',
+          control: { type: 'toggle', key: `allowed.${c.value}` },
+        })),
+        {
+          name: 'Convert to standard GQL',
+          desc: 'Writes the note in front back as standard GQL, once the standard checker passes it.',
+          action: () => void this.owner.convertToStandard(),
+        },
+      ];
+    if (o.key === 'classifications')
+      return [{ name: o.name, desc: o.sentence, control: { type: 'textarea', key: 'classifications' } }];
+    if (o.key === 'aiModels') return [{ name: o.name, desc: o.sentence }];
+    const chosen = o.choices?.find((c) => c.value === s[o.key]);
+    return [
+      {
+        name: o.name,
+        desc: chosen?.sentence ? `${o.sentence} ${chosen.sentence}` : o.sentence,
+        control: {
+          type: 'dropdown',
+          key: o.key,
+          options: Object.fromEntries((o.choices ?? []).map((c) => [c.value, c.name])),
+        },
+      },
+    ];
+  }
+
+  override getControlValue(key: string): unknown {
+    const s = this.owner.settings;
+    if (key.startsWith('allowed.')) return s.allowed.some((a) => `allowed.${a}` === key);
+    if (key === 'classifications') return s.classifications.join('\n');
+    if (key.startsWith('aiModels.')) return getModelValue(s, key);
+    return s[key as keyof Settings];
+  }
+
+  override async setControlValue(key: string, value: unknown): Promise<void> {
+    const s = this.owner.settings;
+    let change: Partial<Settings>;
+    if (key.startsWith('allowed.')) {
+      const id = key.slice('allowed.'.length);
+      const others = s.allowed.filter((a) => a !== id);
+      change = { allowed: value ? ([...others, id] as Settings['allowed']) : others };
+    } else if (key === 'classifications') {
+      const levels = String(value)
+        .split('\n')
+        .map((x) => x.trim())
+        .filter(Boolean);
+      if (!levels.length) return;
+      change = { classifications: levels };
+    } else if (key.startsWith('aiModels.')) change = setModelValue(s, key, value);
+    else change = { [key]: value };
+    await this.owner.saveSettings({ ...s, ...change });
+    // a level's own sentence, and a model's ceilings, follow the choice
+    if (!key.startsWith('aiModels.') || key.endsWith('.ceiling')) this.update();
+  }
+}

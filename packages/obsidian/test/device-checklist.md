@@ -151,6 +151,23 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
       One undo (⌘Z, or the phone's gesture) takes the name back out, and the dashed box and the warning return. Phone:
       the button is easy to hit in the sheet (slice 2, unnamed_drawn_suggested).
 
+## Settings — spec §21
+
+- [ ] Settings › Graph Note, desktop and phone: one page, with Strictness, AI models, Formatting and Drawing, each option
+      with a sentence saying what it does. Searching the settings for "strictness" finds it (slice 2, settings_page).
+- [ ] Strictness Standard: a block missing a comma at a line's end shows it as an error (✖) behind the badge, and is
+      still drawn. Forgiving (the default): a warning (⚠). Simplified with "A missing comma" on: no problem at all
+      (slice 2, strictness_levels).
+- [ ] With such a note in front, "Convert this note to standard GQL" from the command palette, and the button on the
+      page: the comma is written, a notice says how many were converted, and one undo takes it back. A note with a line
+      that cannot be read is left as it is, and the notice says why (slice 2, simplified_back_to_standard).
+- [ ] AI models: Add a model, open Model 1, fill its name and purpose, pick a ceiling, and choose a key with the app's
+      own key field. Close and reopen the page: all kept. The plugin's data.json in the vault holds the key's name, never
+      the key (slice 2, settings_ai_models).
+- [ ] Indent "Two spaces", then Lock the graph on a draft: the schema's later lines start with two spaces. Direction
+      "Top to bottom": every drawing runs top to bottom; "Best fit" restores the old choice (slice 2,
+      settings_formatting).
+
 ## Accessibility — spec §8, §11
 
 - [ ] Desktop, keyboard only: Tab reaches every button, the drawing, each box and each estimated link. Enter opens a

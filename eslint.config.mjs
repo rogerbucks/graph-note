@@ -39,6 +39,13 @@ export default defineConfig([
     },
   },
   {
+    // GQL is the name of the language the graphs are written in, an acronym like SQL: the interface says "standard GQL"
+    // (spec §21), so the word is kept as written. The rule's own settings otherwise, as the recommended set gives them.
+    rules: {
+      'obsidianmd/ui/sentence-case': ['warn', { enforceCamelCaseLower: true, ignoreWords: ['GQL'] }],
+    },
+  },
+  {
     // The graph-spec library is plain CommonJS modules, gathered by its entry point and bundled into one file for pages
     // (packages/graph-spec/GUIDE.md); the plugin's esbuild bundles them too. require() is how its modules import.
     // (graph-layout.js stays one UMD file, page global and module.exports, so it is left as it was.)

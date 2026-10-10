@@ -2,7 +2,8 @@
 // change. These are the names it exported when drawing.ts was split into modules (9 Oct 2026), values and types alike,
 // with those added deliberately since: completing as you type (inlineCompletion, stepOver, Inline, InlineKind), lists as
 // linked things (makeList and its kin), and name suggestions (nameFromText, nameSlug, nameStyleOf, nameWords,
-// textFromName and their types), and the layout kept apart from the interface (LayoutRunner and its kin, 10 Oct 2026).
+// textFromName and their types), and the layout kept apart from the interface (LayoutRunner and its kin, 10 Oct 2026),
+// and the settings and strictness of §21 (OPTIONS, settingsFrom, toStandard and their kin, 11 Oct 2026).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -13,12 +14,15 @@ const ts = require('typescript');
 const ENTRY = new URL('../src/index.ts', import.meta.url);
 
 const VALUES = [
+  'DEFAULT_SETTINGS',
+  'DEPARTURES',
   'History',
   'KIND',
   'LAYOUT_LIMITS',
   'LayoutRunner',
   'MAX_SCALE',
   'MIN_SCALE',
+  'OPTIONS',
   'PAGE_LIMITS',
   'PaneSession',
   'READ_LIMITS',
@@ -31,6 +35,7 @@ const VALUES = [
   'TextHistory',
   'Zoom',
   'addToList',
+  'aiModel',
   'blockItems',
   'choose',
   'colonFor',
@@ -52,6 +57,7 @@ const VALUES = [
   'hitAreas',
   'hops',
   'inThreadPort',
+  'indentText',
   'inlineCompletion',
   'insertBlockAfter',
   'isDraft',
@@ -82,19 +88,24 @@ const VALUES = [
   'reverseGuess',
   'serveLayouts',
   'setProperty',
+  'settingsFrom',
   'sizeOf',
   'spanOf',
+  'standardBlocks',
   'stepOver',
   'textFromName',
   'textTooLarge',
   'textVersion',
   'themed',
+  'toStandard',
   'tokenize',
   'tooLarge',
+  'underStrictness',
   'withoutColorMix',
 ];
 
 const TYPES = [
+  'AiModel',
   'Block',
   'BlockRef',
   'Box',
@@ -104,6 +115,8 @@ const TYPES = [
   'CodeAction',
   'CompletenessReport',
   'CompletionItem',
+  'Converted',
+  'Departure',
   'Details',
   'Diagnostic',
   'Drawn',
@@ -113,6 +126,7 @@ const TYPES = [
   'GraphDrawing',
   'GraphNames',
   'HitAreas',
+  'Indent',
   'Inline',
   'InlineKind',
   'LayoutLimits',
@@ -129,6 +143,8 @@ const TYPES = [
   'Mode',
   'NameStyle',
   'NoteReading',
+  'Option',
+  'OptionChoice',
   'PaneWrite',
   'Parsed',
   'Position',
@@ -140,9 +156,12 @@ const TYPES = [
   'Refusal',
   'RuleReport',
   'RunnerOptions',
+  'Settings',
   'Shape',
   'Size',
   'Span',
+  'Strictness',
+  'StrictnessSettings',
   'Target',
   'TextChange',
   'TextEdit',
