@@ -78,10 +78,11 @@ def one_line(n):
 
 
 def seconds(f, arg):
-    """How long f(arg) takes."""
-    start = time.perf_counter()
+    """The processor time f(arg) takes: time spent waiting for the processor, which a loaded
+    machine adds more of to a longer run, is not counted."""
+    start = time.process_time()
     f(arg)
-    return time.perf_counter() - start
+    return time.process_time() - start
 
 
 class OneLongLine(unittest.TestCase):
@@ -91,9 +92,9 @@ class OneLongLine(unittest.TestCase):
 
     def test_a_line_four_times_as_long_is_read_in_about_four_times_the_time(self):
         short, long = one_line(2000), one_line(8000)
-        # timed against each other in the same run, never against a fixed time, so a loaded
-        # machine slows both alike; the fastest of several runs, taken in turn, is the one least
-        # disturbed. Linear reading gives a ratio of about 4, quadratic about 16.
+        # timed against each other in the same run, never against a fixed time; processor time,
+        # so waiting on a loaded machine is not counted, and the fastest of several runs, taken in
+        # turn. Linear reading gives a ratio of about 4, quadratic about 16.
         t_short = t_long = float("inf")
         for _ in range(5):
             t_short = min(t_short, seconds(tokens, short))

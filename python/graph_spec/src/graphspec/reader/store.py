@@ -230,4 +230,6 @@ class Store:
                     "check the spelling — SET names a thing by its id",
                 )
             graph["nodes"][bound[var]]["props"][key] = val
+            if key == "id":
+                ids = None  # an id set anew: indexed again when next asked
         return g
