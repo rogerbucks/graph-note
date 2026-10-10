@@ -53,7 +53,8 @@ def compute(recipe: dict[str, Any], text: str, std_dir: str, vault_dir: str) -> 
     """One recipe's value: basis (rule:basis-hash@1), judgement (rule:judgement-hash@1) or ni
     (RFC 6920). The recipe's blocks are read together with the reader first, each in its graph:
     one the reader refuses raises its ProfileError, and Grafeo is given none of them
-    (req:3.engine-reads-first)."""
+    (req:3.engine-reads-first); Grafeo is given each block as the reader corrected it
+    (req:3.engine-gets-corrected)."""
     if "ni" in recipe:
         return ni_uri(open(os.path.join(vault_dir, recipe["ni"]), "rb").read())
     blocks = [require_graph_line(_block_of(text, ref, std_dir), ref) for ref in recipe["load"]]
@@ -68,7 +69,7 @@ def compute(recipe: dict[str, Any], text: str, std_dir: str, vault_dir: str) -> 
             db.execute(f"CREATE GRAPH {g}")
             made.add(g)
         db.set_graph(g)
-        db.execute(strip(block))
+        db.execute(strip(st.corrected(block)))
     db.set_graph(recipe.get("graph") or recipe.get("state_of"))
     if "basis" in recipe:
         hit = Q(db, f"MATCH (x {{id: '{recipe['basis']}'}}) RETURN properties(x) AS p")

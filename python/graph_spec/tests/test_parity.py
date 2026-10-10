@@ -325,6 +325,64 @@ class IdOnce(unittest.TestCase):
             self.assertEqual(ours, [theirs[0][1], refusal_kind(theirs[0][2])], name)
 
 
+# Spec §3, req:3.bare-link-type and req:3.engine-gets-corrected: a link type written without its
+# colon, which the graph already has once, is read as that type, and no parser refuses the block.
+# The JavaScript reader (the core's), the profile parser and the Grafeo parser all take it, and
+# give the same things and the same link types.
+BARE_BLOCK = (
+    "// graph: g · document doc:one · schema s1 · as of 2026-10-01\n"
+    "(r:Reason {id: 'r', title: 'Sun'}),\n(o:Option {id: 'o', name: 'Coast'}),\n"
+    "(r)-[:FAVOURS]->(o),\n(q:Reason {id: 'q', title: 'Quiet'}),\n"
+    "// quiet favours it\n(q)-[favours]->(o)"
+)
+
+
+def core_bare(block):
+    """The core's reading of a block, by Node: its errors, and the ids and link types it reads."""
+    script = (
+        "import(process.argv[1]).then((m) => {"
+        " const r = m.readBlocks([process.argv[2]], []);"
+        " const g = Object.values(r.store.graphs)[0];"
+        " process.stdout.write(JSON.stringify({"
+        "errors: r.problems.filter((p) => p.severity === 'error').map((p) => p.message),"
+        " ids: [...g.nodes.values()].map((n) => n.props.id).sort(),"
+        " types: g.edges.map((e) => e[1]).sort()})) })"
+    )
+    out = subprocess.run(
+        ["node", "-e", script, "file://" + CORE, block], capture_output=True, text=True, check=True
+    ).stdout
+    return json.loads(out)
+
+
+def parsed_bare(block, parser):
+    """parse() on a document holding the block, under the given parser: ids and link types."""
+    old = gs.PARSER
+    gs.PARSER = parser
+    try:
+        with tempfile.TemporaryDirectory() as d:
+            p = os.path.join(d, "doc.md")
+            with open(p, "w", encoding="utf-8") as f:
+                f.write(f"```gql\n{block}\n```\n")
+            doc = gs.parse(p)
+    finally:
+        gs.PARSER = old
+    return {
+        "ids": sorted(doc["nodes"]),
+        "types": sorted(e[1] for e in doc["raw_edges"]),
+    }
+
+
+class BareLinkType(unittest.TestCase):
+    def test_the_core_and_both_python_parsers_accept_a_bare_link_type_alike(self):
+        core = core_bare(BARE_BLOCK)
+        self.assertEqual(core["errors"], [])
+        self.assertEqual(core["types"], ["FAVOURS", "FAVOURS"])
+        want = {"ids": core["ids"], "types": core["types"]}
+        self.assertEqual(want["ids"], ["o", "q", "r"])
+        self.assertEqual(parsed_bare(BARE_BLOCK, "profile"), want)
+        self.assertEqual(parsed_bare(BARE_BLOCK, "grafeo"), want)
+
+
 # Blocks the readers refuse, each in a document parse() can read the header of: the two halves of
 # req:3.id-once, and a block that is not one data statement, which Grafeo would take whole.
 DOC_HEAD = "// graph: g · document doc:one · schema s1 · as of 2026-10-01"
