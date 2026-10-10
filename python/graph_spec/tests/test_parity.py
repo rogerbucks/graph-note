@@ -21,11 +21,13 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 JS_TEST = os.path.join(ROOT, "packages", "graph-spec", "test")
 sys.path.insert(0, os.path.join(HERE, "..", "src"))
+sys.path.insert(0, HERE)
 
 # the library's modules are flat files in src/, importable only once it is on sys.path
 import gql_profile as gp  # noqa: E402
 import graph_rules as gr  # noqa: E402
 import graph_spec as gs  # noqa: E402
+from engine_support import needs_engine  # noqa: E402
 
 AGAINST = "@@AGAINST@@"
 
@@ -377,6 +379,7 @@ def parsed_bare(block, parser):
 
 
 class BareLinkType(unittest.TestCase):
+    @needs_engine
     def test_the_core_and_both_python_parsers_accept_a_bare_link_type_alike(self):
         core = core_bare(BARE_BLOCK)
         self.assertEqual(core["errors"], [])
@@ -435,6 +438,7 @@ class MissingComma(unittest.TestCase):
             self.assertEqual(len(ours.split("\n")), len(block.split("\n")), block)
             self.assertNotEqual(ours, block)
 
+    @needs_engine
     def test_the_js_and_python_corrected_texts_load_the_graph_both_readers_read(self):
         for block in MISSING_COMMA_BLOCKS:
             js = js_corrected(block)

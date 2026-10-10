@@ -14,10 +14,12 @@ import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "src"))
+sys.path.insert(0, HERE)
 
 from graphspec.reader import lexer  # noqa: E402
 from graphspec.reader.lexer import ProfileError  # noqa: E402
 from graphspec.reader.store import Store  # noqa: E402
+from engine_support import needs_engine  # noqa: E402
 
 TABLE = os.path.join(HERE, "..", "..", "..", "packages", "graph-spec", "test", "escape-cases.json")
 with open(TABLE, encoding="utf-8") as f:
@@ -65,6 +67,7 @@ class Escapes(unittest.TestCase):
 TEXT = "C:\\data, a tab\there, two lines\nand a quote's end"
 
 
+@needs_engine
 class EngineWritesEscapes(unittest.TestCase):
     """What the engine writes for Grafeo quotes a text as the reader writes it, so the text reads
     back as itself — through the reader first, then Grafeo."""

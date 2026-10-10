@@ -30,11 +30,13 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 sys.path.insert(0, os.path.join(HERE, "..", "src"))
+sys.path.insert(0, HERE)
 
 import gql_profile as gp  # noqa: E402
 import graph_rules as gr  # noqa: E402
 import graph_spec as gs  # noqa: E402
 from graphspec.engine import settings  # noqa: E402
+from engine_support import needs_engine  # noqa: E402
 
 CASES_DIR = os.path.join(HERE, "agreement")
 # a generic destination matrix for §24 H3's served rules, in the classification note's shape
@@ -125,6 +127,7 @@ def grafeo_verdicts(db, g, graphs, switches, w):
     return out
 
 
+@needs_engine
 class Agreement(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

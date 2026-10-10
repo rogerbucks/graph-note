@@ -15,12 +15,14 @@ import sys
 import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src"))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # the library's modules are flat files in src/, importable only once it is on sys.path
 import gql_profile as gp  # noqa: E402
 import graph_spec as gs  # noqa: E402
 from graphspec.engine.optional_imports import grafeo  # noqa: E402
 from graphspec.reader import to_gql as to_gql_module  # noqa: E402
+from engine_support import needs_engine  # noqa: E402
 
 
 def lines(*rows):
@@ -204,6 +206,7 @@ class ToGqlKeepsTheBlock(unittest.TestCase):
             full.apply(gp.to_gql(block))
             self.assertEqual(full.graphs, short.graphs, what)
 
+    @needs_engine
     def test_a_name_for_an_existing_node_adds_one_match_line_and_keeps_the_rest(self):
         for what, block, want in NAMING:
             self.assertEqual(gp.to_gql(block), want, what)

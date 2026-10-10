@@ -21,15 +21,18 @@ from unittest import mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "src"))
+sys.path.insert(0, HERE)
 
 import graph_spec as gs  # noqa: E402
 from graphspec.engine import settings  # noqa: E402
 from graphspec.engine.documents.fill import compute, fill, fill_check  # noqa: E402
+from engine_support import module_needs_engine  # noqa: E402
 
 
 # These tests are of the route into the engine, which a host asks for: the reader is the default
-# parser (req:3.reader-default), so every test here runs under Grafeo's.
+# parser (req:3.reader-default), so every test here runs under Grafeo's, and needs it installed.
 def setUpModule():  # noqa: N802
+    module_needs_engine()
     global _DEFAULT
     _DEFAULT, settings.PARSER = settings.PARSER, "grafeo"
 
