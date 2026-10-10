@@ -179,10 +179,10 @@ class EnginePathsSkipTheReader(unittest.TestCase):
             problems,
         )
 
-    # GAP, open after PR #36 too: graph_spec.check_changeset is the engine's (changesets.py:141),
-    # loading each base text with no reader (:173). An id in two base blocks of one graph is never
-    # named; only §18's rebuild fails, with "see the rule in the graph spec model".
-    @unittest.expectedFailure
+    # Was a GAP, open after PR #36 too: graph_spec.check_changeset is the engine's
+    # (changesets.py:141), and loaded each base text with no reader (:173). An id in two base
+    # blocks of one graph was never named; only §18's rebuild failed, with "see the rule in the
+    # graph spec model". The base is now read with the reader first (req:3.engine-reads-first).
     def test_check_changeset_refuses_an_id_repeated_across_two_base_blocks(self):
         base = [
             ("g", "// graph: g\n(a:Person {name: 'A'})"),
@@ -191,10 +191,10 @@ class EnginePathsSkipTheReader(unittest.TestCase):
         block = f"// graph: g · CHANGE SET cs1 · against {state_hash(base)} · by a\n(c:Person)"
         self.assertTrue(names_the_id(gs.check_changeset(base, block)[0], "a"))
 
-    # GAP, open after PR #36 too: a change set that writes a new node with an id the base already
-    # holds (changesets.py:213) passes "it only adds", since _state keys nodes by id (:74-80);
-    # graph_rules.check_changeset, which runs the reader, refuses it as "id 'a' is already a node".
-    @unittest.expectedFailure
+    # Was a GAP, open after PR #36 too: a change set that writes a new node with an id the base
+    # already holds (changesets.py:213) passed "it only adds", since _state keys nodes by id
+    # (:74-80); graph_rules.check_changeset, which runs the reader, refuses it as "id 'a' is
+    # already a node". The engine's now reads the change set with the reader too, on its base.
     def test_check_changeset_refuses_a_change_set_reusing_a_base_id(self):
         base = [("g", "// graph: g\n(a:Person {name: 'A'})")]
         block = (

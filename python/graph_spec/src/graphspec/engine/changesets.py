@@ -24,6 +24,8 @@ from graphspec.engine.projection import projects_back
 from graphspec.engine.queries import Q, canon_graph, read, strip
 from graphspec.engine.schema import typed, untyped
 from graphspec.engine.serving.checks import served_rules
+from graphspec.reader.lexer import ProfileError
+from graphspec.reader.store import Store
 
 if TYPE_CHECKING:
     from grafeo import GrafeoDB
@@ -142,7 +144,9 @@ def check_changeset(
     base: Iterable[tuple[str, str]], block: str, switches: Collection[str] = frozenset()
 ) -> tuple[list[tuple[str, bool, str]], dict[str, Any] | None, str | None]:
     """A change set dry-run against its base — [(graph, text)] loaded in order. Writes nothing.
-    Returns (results [(label, ok, fix)], header, the state hash it would produce)."""
+    Returns (results [(label, ok, fix)], header, the state hash it would produce). The base and
+    the change set are each read with the reader before Grafeo is given them: one the reader
+    refuses is a failed result in the reader's words, and Grafeo is given nothing of it."""
     res = []
 
     def add(label, ok, fix=""):
@@ -163,6 +167,15 @@ def check_changeset(
         not found,
         "; ".join(f"line {x['line']}: {x['trap']} → {x['fix']}" for x in found),
     )
+    # the reader reads the base, then the change set, each in its graph, before Grafeo is given
+    # either; Grafeo is given nothing the reader refuses (req:3.engine-reads-first)
+    st = Store()
+    for _, text in base:
+        try:
+            st.apply(text)
+        except ProfileError as e:
+            add("its base loads", False, f"the reader could not read the base — {e}")
+            return res, h, None
     db = grafeo.GrafeoDB()
     made = []
     for g, text in base:
@@ -209,6 +222,11 @@ def check_changeset(
     )
     db.set_graph(h["graph"])
     before = _state(db, h["graph"])
+    try:
+        st.apply(block)
+    except ProfileError as e:
+        add("it loads", False, f"the reader could not read it — {e}")
+        return res, h, None
     try:
         db.execute(strip(block))
     except Exception as e:
