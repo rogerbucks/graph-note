@@ -7,6 +7,7 @@ import { lineIndex } from './block-items.ts';
 import { textFromName } from './name-suggestions.ts';
 import { NameBook } from './name-book.ts';
 import type { Problem } from './note-reading.ts';
+import { isSpace, trim } from './whitespace.ts';
 import { TEXT_KEYS, setTexts, textKeyOf, writtenIn } from './written-things.ts';
 import type { Written } from './written-things.ts';
 
@@ -78,9 +79,9 @@ function untexted(block: Indexed, w: Written, name: string, key: string, suggest
   const at = placeOf(block, braces ? braces.open + 1 : w.end);
   const written = !braces
     ? ` {${property}}`
-    : !inside.trim()
+    : !trim(inside)
       ? property
-      : /^\s/.test(inside)
+      : isSpace(inside[0] ?? '')
         ? `${property},`
         : `${property}, `;
   const start = placeOf(block, w.variable?.at ?? w.open);

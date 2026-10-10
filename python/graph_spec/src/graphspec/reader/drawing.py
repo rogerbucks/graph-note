@@ -11,6 +11,10 @@ from graphspec.reader.block_items import _items, _line_at, _without
 from graphspec.reader.lexer import COMMENT_FIX, COMMENT_RULE, ProfileError, header
 from graphspec.reader.name_gaps import suggested_names, with_names
 from graphspec.reader.store import Store
+from graphspec.reader.whitespace import N, S, rstrip, strip
+
+GRAPH_OF = re.compile(rf"{S}*//{S}*graph:{S}*({N}+)")
+GRAPH_LINE = re.compile(rf"{S}*//{S}*graph:")
 
 
 # ── Drawing in part ──────────────────────────────────────────────────────────────────────────────
@@ -25,11 +29,11 @@ from graphspec.reader.store import Store
 
 
 def _first_line(text):
-    return next((line for line in text.split("\n") if line.strip()), "")
+    return next((line for line in text.split("\n") if strip(line)), "")
 
 
 def _graph_of(text):
-    m = re.match(r"\s*//\s*graph:\s*(\S+)", _first_line(text))
+    m = GRAPH_OF.match(_first_line(text))
     return m.group(1) if m else None
 
 
@@ -40,7 +44,7 @@ def _data_kind(text):
         _, kind = header(text)
         return kind if kind in ("data", "schema") else None
     except ProfileError as e:
-        if not re.match(r"\s*//\s*graph:", _first_line(text)):
+        if not GRAPH_LINE.match(_first_line(text)):
             return None
         return {
             "graph": None,
@@ -62,7 +66,7 @@ def _line_end_comments(text):
     identifiers): the block with them blanked, and a warning for each that names the rule."""
     problems, out = [], []
     for n, line in enumerate(text.split("\n")):
-        if line.strip().startswith("//"):
+        if strip(line).startswith("//"):
             out.append(line)
             continue
         quoted, i, cut = False, 0, None
@@ -75,14 +79,14 @@ def _line_end_comments(text):
                     quoted = False
             elif c == "'":
                 quoted = True
-            elif line.startswith("//", i) and line[:i].strip():
+            elif line.startswith("//", i) and strip(line[:i]):
                 cut = i
                 break
             i += 1
         if cut is None:
             out.append(line)
             continue
-        start = len(line[:cut].rstrip())
+        start = len(rstrip(line[:cut]))
         problems.append(
             {
                 "line": n + 1,
@@ -217,7 +221,7 @@ def read_for_drawing(
             and prior[2] == -1
             and text[prior[1] - 1] == ")"
         ):
-            last_line = text[: prior[1]].split("\n")[-1].strip()
+            last_line = strip(text[: prior[1]].split("\n")[-1])
             problem["message"] = f"{pe.message} — a comma is missing at the end of the line before"
             problem["fix"] = f"add a comma at the end of the line before, after {last_line}"
         touching = [

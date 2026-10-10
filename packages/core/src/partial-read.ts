@@ -9,6 +9,7 @@ import { dataKind, graphOf } from './blocks.ts';
 import { nameGaps, withNames } from './name-gaps.ts';
 import type { BlockGaps } from './name-gaps.ts';
 import type { Problem } from './note-reading.ts';
+import { trim, trimEnd } from './whitespace.ts';
 
 /**
  * Each comment after code on its line (§3: comments are whole lines, as // also occurs inside identifiers): the block
@@ -17,7 +18,7 @@ import type { Problem } from './note-reading.ts';
 function lineEndComments(text: string): { text: string; problems: Omit<Problem, 'block' | 'graph'>[] } {
   const problems: Omit<Problem, 'block' | 'graph'>[] = [];
   const lines = text.split('\n').map((line, n) => {
-    if (line.trim().startsWith('//')) return line;
+    if (trim(line).startsWith('//')) return line;
     let quoted = false;
     for (let i = 0; i < line.length; i++) {
       const c = line[i];
@@ -25,8 +26,8 @@ function lineEndComments(text: string): { text: string; problems: Omit<Problem, 
         if (c === '\\') i++;
         else if (c === "'") quoted = false;
       } else if (c === "'") quoted = true;
-      else if (c === '/' && line[i + 1] === '/' && line.slice(0, i).trim()) {
-        const from = line.slice(0, i).replace(/\s+$/, '').length;
+      else if (c === '/' && line[i + 1] === '/' && trim(line.slice(0, i))) {
+        const from = trimEnd(line.slice(0, i)).length;
         problems.push({
           line: n + 1,
           severity: 'warning',
@@ -136,7 +137,7 @@ function readAsMeant(store: gs.Store, i: number, text: string, commasFrom: numbe
       severity: 'warning',
       message: 'a comma is missing at the end of this line; it is read as if it were there',
       fix: 'add a comma at the end of the line',
-      insert: { line: c.line - 1, character: code.trimEnd().length, text: ',' },
+      insert: { line: c.line - 1, character: trimEnd(code).length, text: ',' },
     });
   }
   // a type written without its colon, read as the graph's one type of that name (§3): a warning, whose fix writes the
@@ -176,7 +177,7 @@ function failure(block: number, text: string, error: unknown, all: Item[], lineA
     prior = all[opened - 1];
   if (pe?.msg === "unexpected '('" && prior && prior.comma === -1 && text[prior.to - 1] === ')') {
     const at = text.slice(0, prior.to).split('\n'),
-      lastLine = (at[at.length - 1] ?? '').trim();
+      lastLine = trim(at[at.length - 1] ?? '');
     problem.message = `${pe.msg} — a comma is missing at the end of the line before`;
     problem.fix = `add a comma at the end of the line before, after ${lastLine}`;
     problem.insert = { line: at.length - 1, character: (at[at.length - 1] ?? '').length, text: ',' };

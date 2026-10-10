@@ -1,6 +1,8 @@
 // The GQL tokenizer of the gql-highlight plugin (ISO/IEC 39075 GQL), so the text pane and drawn code blocks colour text
 // exactly as it does (spec §4, "colour"). Proved token for token against answers recorded from gql-highlight itself.
 // `--` is not a comment here: the standard allows it, but it collides with edge patterns, and graph notes write `//`.
+// Whitespace is GQL's (graph spec §3), as the reader reads it, not JavaScript's \s.
+import { S } from './whitespace.ts';
 
 const KEYWORDS = new Set(
   `
@@ -62,7 +64,7 @@ type Kind = 'ws' | 'comment' | 'string' | 'quoted' | 'param' | 'number' | 'word'
 
 // Ordered: the first pattern that matches at the cursor wins.
 const RULES: [Kind, RegExp][] = [
-  ['ws', /\s+/y],
+  ['ws', new RegExp(`${S}+`, 'y')],
   ['comment', /\/\/[^\n]*/y],
   ['comment', /\/\*[\s\S]*?(?:\*\/|$)/y],
   ['string', /'(?:[^'\\\n]|\\.|'')*(?:'|$)/my],
@@ -76,6 +78,8 @@ const RULES: [Kind, RegExp][] = [
   ['punct', /[()[\]{},;.:]/y],
   ['other', /[\s\S]/y],
 ];
+
+const PROP_NEXT = new RegExp(`^${S}*:`);
 
 /** Splits GQL text into tokens. Joining every token's text gives back the text exactly. */
 export function tokenize(src: string): Token[] {
@@ -119,7 +123,7 @@ export function tokenize(src: string): Token[] {
         const isCall = /^[ \t]*\(/.test(rest);
         if (labelMode && (top() === '(' || top() === '[' || stack.length === 0)) c = top() === '[' ? 'edge' : 'label';
         else if (prev && prev.s === '.') c = 'prop';
-        else if (top() === '{' && /^\s*:/.test(rest)) c = 'prop';
+        else if (top() === '{' && PROP_NEXT.test(rest)) c = 'prop';
         else if (kind === 'quoted') c = 'var';
         else if (VALUES.has(up)) c = 'value';
         else if (TYPES.has(up) && !isCall) c = 'type';

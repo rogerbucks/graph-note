@@ -4,7 +4,9 @@
 // from the pattern of the graph.
 import gs from '@graph-note/graph-spec';
 import type { Graph } from '@graph-note/graph-spec';
+import { graphOf } from './blocks.ts';
 import type { GraphDrawing, Problem } from './note-reading.ts';
+import { S } from './whitespace.ts';
 
 /** A guess the drawing makes for a near miss (spec §3): what was written, what it was taken to mean, and the fix. */
 export interface Estimate {
@@ -123,9 +125,9 @@ function whereType(texts: string[], graph: string, type: string, k: number): { b
   let seen = 0;
   for (let b = 0; b < texts.length; b++) {
     const t = texts[b] ?? '';
-    if ((/^\s*\/\/\s*graph:\s*(\S+)/.exec(t.split('\n').find((l) => l.trim()) ?? '')?.[1] ?? null) !== graph) continue;
+    if (graphOf(t) !== graph) continue;
     const blank = t.replace(/\/\/[^\n]*/g, (m) => ' '.repeat(m.length));
-    for (const m of blank.matchAll(new RegExp(`\\[\\s*:\\s*${type}\\b`, 'g'))) {
+    for (const m of blank.matchAll(new RegExp(`\\[${S}*:${S}*${type}\\b`, 'g'))) {
       if (seen++ === k) return { block: b, line: blank.slice(0, m.index).split('\n').length };
     }
   }
