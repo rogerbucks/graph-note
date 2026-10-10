@@ -89,6 +89,9 @@ def tokens(block: str) -> list[tuple[str, str, int, str, int]]:
     """(kind, text, line, raw, end) for every token, whole-line comments removed — '//' also
     occurs inside ni:/// ids. raw is the token as written; end is where it ends in the block."""
     out = []
+    # offsets count code points, as Python strings index; the JavaScript reader counts UTF-16
+    # units. Each is used only on the text it was counted in (Store.corrected), so both readers
+    # write the same text
     begins = 0  # where line n begins in the block
     for n, raw in enumerate(block.split("\n"), 1):
         line_begins, begins = begins, begins + len(raw) + 1
