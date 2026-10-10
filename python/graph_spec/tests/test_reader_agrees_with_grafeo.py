@@ -342,8 +342,8 @@ class Agreement(unittest.TestCase):
                 for s, t, d, p in G.edges
             }
             for rule in c["configuration"]["constraints"]:
-                # the GQL itself, in Grafeo, whichever parser is set: config_from runs the named
-                # twin in its place when the reader is the parser
+                # the GQL itself, in Grafeo: config_from runs the named twin in its place,
+                # whatever the parser (req:3.reader-default)
                 got = norm(gs.gql_rule(rule["gql"], cfg)(nodes, edges))
                 self.assertEqual(
                     got, norm(gs.RULES[rule["reference"]](nodes, edges)), f"{c['name']} {rule}"

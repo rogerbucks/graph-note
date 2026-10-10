@@ -75,6 +75,27 @@ class LoanBalanceReadsPlain(unittest.TestCase):
         )
 
     @needs_engine
+    def test_a_repayment_with_no_amount_fails_the_balance_as_grafeo_s_reading_does(self):
+        # the two may not differ silently (review of #59); what the figure should say of a
+        # repayment with no amount is a question for the spec
+        def outcome(source):
+            try:
+                return gs.fig_loan_balance(source, "loan:bike")
+            except Exception as e:
+                return type(e).__name__, str(e)
+
+        extra = ",\n(r4:Repayment {id: 'rep:4'}),\n(r4)-[:REPAYS]->(bike)"
+        st = gp.Store()
+        st.apply(LOANS + extra)
+        db = gs.grafeo.GrafeoDB()
+        db.execute("CREATE GRAPH lending")
+        db.set_graph("lending")
+        db.execute(gs.strip(LOANS + extra))
+        ours = outcome(gr.World.from_store(st)["lending"])
+        self.assertEqual(ours, outcome(db))
+        self.assertEqual(ours[0], "TypeError")
+
+    @needs_engine
     def test_the_balance_from_the_reader_s_reading_is_grafeo_s(self):
         for loan in ("loan:bike", "loan:boat"):
             self.assertEqual(
