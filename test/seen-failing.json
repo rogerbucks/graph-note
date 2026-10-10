@@ -1,4 +1,54 @@
 {
+  "packages/obsidian/test/settings.test.js": {
+    "strictness > Forgiving, the default: a slip is drawn, and reported as a warning": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: Forgiving is how a slip was always reported, so it passes before and after by design (commit cd1c849)"
+    },
+    "back to standard GQL > the button on the settings page converts the note in front, as the command does": {
+      "seen_failing_first": false,
+      "evidence": "written after its code, at the review of #50, to cover the page's button, which the earlier commit added untested (commit afff22a)"
+    }
+  },
+  "packages/obsidian/test/graph-view-parked.test.js": {
+    "the badge > with nothing parked, says nothing of parking": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: a badge with nothing parked reads as it always has, so it passes before and after by design (commit 1ce9135)"
+    },
+    "Park for later, while the card is edited > is offered only while the card is edited: reading a drawing never changes it": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: outside editing no Park for later is offered, before the change or after, by design (commit 1ce9135)"
+    }
+  },
+  "packages/core/test/deferred.test.js": {
+    "parking a thing for later (park_for_later) > a locked graph that declares them is parked in with no undeclared-type warning": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: a schema that declares Deferred and DEFERS was always parked in cleanly; the change refuses only one that does not (commit 1d8c615)"
+    }
+  },
+  "packages/core/test/paths.test.js": {
+    "a step through something removed > renumbering touches only the path the step was taken out of": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it at the review of step 8a: renumbering already kept to its own path, and this pins it (commit 1d8c615)"
+    }
+  },
+  "packages/obsidian/test/graph-view-walk.test.js": {
+    "Record, while the card is edited > is offered only while the card is edited": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: outside editing no Record is offered, before the change or after, by design (commit 8c7d5bf)"
+    }
+  },
+  "packages/core/test/settings.test.js": {
+    "the AI models of §19 > a model given no ceiling gets the lowest classification": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: what a model with no ceiling gets stays the same while a mistyped ceiling is now kept, so it passes before and after by design (commit afff22a)"
+    }
+  },
+  "packages/core/test/strictness.test.js": {
+    "converting a note of several blocks > each block is converted in its own place, and the note as written is checked whole": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: the whole-note check added at the review of #50 must not refuse a good conversion, so it passes before and after by design (commit afff22a)"
+    }
+  },
   "packages/core/test/drawing.test.js": {
     "a missing comma > when the next line is not otherwise valid, it is left out, and the problem still says the comma is missing": {
       "seen_failing_first": false,
@@ -128,6 +178,10 @@
     }
   },
   "packages/obsidian/test/accessibility.test.js": {
+    "one colour mapping > the core’s fixed palettes, for a host with no theme variables, are Obsidian’s default themes as read here": {
+      "seen_failing_first": false,
+      "evidence": "coverage the review of #54 asked for, added with its fixes: the core's table was copied from this test's own record of Obsidian's colours, so the check that they agree passes before and after by design; it guards against either drifting later"
+    },
     "contrast in both themes > light theme, blue: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1": {
       "seen_failing_first": false,
       "evidence": "pins behaviour that already existed: the contrast of the locked style the drawing already used (commit 3ff0c19)"
@@ -407,6 +461,10 @@
     "ToGqlRefusesWhatTheReaderRefuses.test_a_node_written_where_it_cannot_be_found_is_said_not_hidden": {
       "seen_failing_first": false,
       "evidence": "pins an error that already existed (to_gql.py: cannot find where {name} is written), untested until the review of PR #34: written after its code, and it passes before and after by design"
+    },
+    "ToGqlKeepsOwnedComments.test_comments_above_the_first_thing_stay_owned_in_a_block_whose_lines_end_in_cr_lf": {
+      "seen_failing_first": false,
+      "evidence": "seen failing in the review of #53 against the fixed owned_comments with to_gql unchanged (the INSERT line parted the CR LF note from its thing); against the parent commit both sides read the note alike as no note, so the replay cannot show it"
     }
   },
   "python/graph_spec/tests/test_changeset_header.py": {
@@ -751,6 +809,32 @@
     "replaying a commit against its parent’s code > a Python test with one subTest failing among others that pass has failed: it is seen failing first": {
       "seen_failing_first": false,
       "evidence": "asked for in review of PR #33, added after the subTest fix earlier in the same branch, so it passes against its parent. Replayed by hand with origin/main 42927dd's scripts/tests-first.mjs in a scratch worktree, it fails: that runner reads the fixture's test as passing first (10 Oct 2026)"
+    }
+  },
+  "packages/graph-spec/test/owned-comments.test.mjs": {
+    "owned comments: a note above a thing written over several lines is owned by it": {
+      "seen_failing_first": false,
+      "evidence": "coverage the review of #53 asked for, added with its fixes: it pins what the first commit of #53 already read correctly, so it passes before and after by design"
+    },
+    "owned comments: a //@ line above a link written without its colon is owned by it, its type as written": {
+      "seen_failing_first": false,
+      "evidence": "coverage the review of #53 asked for, added with its fixes: it pins what the first commit of #53 already read correctly, so it passes before and after by design"
+    },
+    "owned comments: a //@ line above a SET line owns nothing": {
+      "seen_failing_first": false,
+      "evidence": "coverage the review of #53 asked for, added with its fixes: it pins what the first commit of #53 already read correctly, so it passes before and after by design"
+    },
+    "owned comments: a marker indented with GQL whitespace other than a space is read, and the value is trimmed by GQL's set": {
+      "seen_failing_first": false,
+      "evidence": "coverage the review of #53 asked for, added with its fixes: it pins what the first commit of #53 already read correctly, so it passes before and after by design"
+    },
+    "owned comments: a block of only its header owns nothing": {
+      "seen_failing_first": false,
+      "evidence": "coverage the review of #53 asked for, added with its fixes: it pins what the first commit of #53 already read correctly, so it passes before and after by design"
+    },
+    "owned comments: a block the reader refuses is refused alike, at the same line": {
+      "seen_failing_first": false,
+      "evidence": "coverage the review of #53 asked for, added with its fixes: it pins what the first commit of #53 already read correctly, so it passes before and after by design"
     }
   }
 }

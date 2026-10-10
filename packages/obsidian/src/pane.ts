@@ -16,6 +16,8 @@ export class GraphPane extends ItemView {
   constructor(leaf: WorkspaceLeaf, plugin: GraphNotePlugin) {
     super(leaf);
     this.editor = new BlockEditor(plugin, 'pane');
+    // a setting that changes how the text is read or drawn: read again at once (spec §21)
+    this.register(plugin.watchSettings(() => this.editor.changed()));
   }
 
   getViewType(): string {

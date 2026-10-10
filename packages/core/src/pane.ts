@@ -7,6 +7,8 @@ import { readNote } from './drawing.ts';
 import type { NoteReading } from './note-reading.ts';
 import { History, replaceBlock } from './store.ts';
 import type { BlockRef } from './store.ts';
+import { underStrictness } from './strictness.ts';
+import type { StrictnessSettings } from './strictness.ts';
 
 /** One of a note's graph blocks, as the pane's picker offers it. */
 export interface Choice {
@@ -80,8 +82,12 @@ export class PaneSession {
     const at = spans.findIndex((s) => s.open === this.ref.line && s.text === this.ref.text);
     const index = at >= 0 ? at : spans.findIndex((s) => s.text === this.ref.text);
     const texts = spans.map((s, i) => (i === index ? this.text : s.text));
-    return index >= 0 ? readNote(texts, index, this.shared) : readNote([this.text], 0, this.shared);
+    const r = index >= 0 ? readNote(texts, index, this.shared) : readNote([this.text], 0, this.shared);
+    return { ...r, problems: underStrictness(r.problems, this.strictness()) };
   }
+
+  /** The strictness the note is read by (spec §21): the host's setting, asked each time; Forgiving unless set. */
+  strictness: () => StrictnessSettings = () => ({ strictness: 'forgiving', allowed: [] });
 
   /** Writes what is typed into the note, or refuses — keeping it as a draft and reloading the block as it now is. */
   write(note: string, record = true): PaneWrite {

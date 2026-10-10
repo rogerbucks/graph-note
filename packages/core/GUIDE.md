@@ -35,6 +35,14 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `drawing.ts` — `readNote`: what a note's graph blocks draw, built from the modules above.
 - `estimates.ts` — near misses drawn as guesses.
 - `completeness.ts` — the completeness report behind the problems badge.
+- `deferred.ts` — deferred things (§5, §8): `parkForLater` writes a Deferred (what, why, an optional revisit day and rule)
+  as a block's last items, with the comma GQL needs and a fresh `later_<thing>` id (fresh in the whole graph when the
+  note's reading of it is given), and refuses an empty what or why, a block ending with SET or MATCH, and a locked graph
+  whose schema does not declare Deferred and DEFERS (the graph library checks them like any type);
+  `parked` says which things some Deferred defers and which are overdue (every Deferred on the thing is past its
+  `revisit_by`, as `completeness.js` counts), and `parkedCount` how many of each, apart from the problems. `readNote`
+  sets `Box.deferred` on each such box (it takes the day as its fifth argument, the current day by default); the layout
+  source is untouched, so the host draws the dashing and the later mark on the finished drawing.
 
 **Drawing**
 
@@ -42,7 +50,8 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   dashed and labelled so in both.
 - `engine.ts` — starting the bundled Graphviz engine, WebAssembly: the one module that imports it, and only the entry
   imports this one, so the rest of the core runs in a host with no WebAssembly, such as a Claude Code mod.
-- `render.ts` — laying out with the engine it is handed, and what a box's or link's details are.
+- `render.ts` — laying out with the engine it is handed, or around one run elsewhere (`directions`, then `chosen` with
+  the SVGs it drew), and what a box's or link's details are.
 - `layout-limits.ts` — how large a graph may be before it is shown as text (spec §9, layout_contained), each limit with
   its reason: the note's text, measured before it is read (`READ_LIMITS`, `textTooLarge`, which `readNote` applies to the
   graph blocks and shared schemas, never to a query or an excerpt); the things, links, longest word and drawing
@@ -53,7 +62,10 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   host gives it — the worker's (`serveLayouts`: its engine started at once, and "ready" said) and the page's
   (`LayoutRunner`: one worker reused; each layout timed from "ready"; a fresh worker after one overruns, none after three
   in a row; the page's thread only when the first worker cannot start; a layout superseded before it starts dropped).
-- `theme.ts` — the drawing's colours and size, from the theme.
+- `theme.ts` — the drawing's colours and size, from the theme, in the host's palette.
+- `palette.ts` — the one colour mapping (spec §10): how each host writes the style's colours. Obsidian's entry names
+  its theme variables; the fixed light and dark entries, for a host that draws the SVG as an isolated image (a Claude
+  Code pane), are worked out to hex and paint their own page, with the locked contrast held.
 - `hits.ts` — what a tap lands on or near.
 - `zoom.ts` — zoom, pan and full screen.
 
@@ -73,7 +85,33 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   value) and the closer stepped over; nothing is inserted unasked.
 - `inspector.ts` — properties of a thing or link, edited as text.
 - `linked-list.ts` — a property held as things linked to this one: made, added to and removed from, as text edits.
-- `lock.ts` — Lock the graph: a draft's schema written out.
+- `lock.ts` — Lock the graph: a draft's schema written out, indented as the settings say.
+
+**Paths (spec §7; graph spec §22)**
+
+- `paths.ts` — walked paths. `PathRecorder` takes the boxes tapped in order (the last step tapped again is ignored; an
+  earlier one is added again, as a walk may revisit). `pathBlock` writes the walk at the end of a block as a `Path` node
+  with `STEP` edges numbered 1 to n, comma-joined, with a fresh id in the graph's style, and refuses with a reason when
+  there are no steps or no title, a step is not a fact in the graph, or a locked graph does not declare Path and STEP.
+  `pathsOf` gives each path as data: its steps in seq order, each marked `missing` when the thing is not in the graph
+  (the reader leaves such a STEP out and reports it; `paths.ts` finds it again in the problem's `dropped` text), and the
+  path marked `empty` when it has no steps. `PathPlayer` plays one path step by step with a screen-reader sentence for
+  each ("Step 2 of 5: …"); a missing step is stopped on and announced as missing, and a path with no steps is refused
+  (`PathPlayer.refusal`), never played as an empty story. `pathProblems` reports a STEP through something removed, on the
+  STEP's own line with its fix and, where the step sits on one line, the edit that removes it, and a path with no steps;
+  `mergePathProblems` is what `readNote` uses to put them in `NoteReading.problems`, replacing the reader's own report of
+  the same STEP, so the badge counts each once.
+- `path-edits.ts` — a step taken out numbers the later steps of its path again (`stepsAfter`), carried as the removing
+  fix's further edits (`Problem.also`), so the path keeps §22's steps 1 to n.
+
+**Settings (spec §21)**
+
+- `strictness.ts` — the three departures from standard GQL the reader reads as meant (each problem says which, in
+  `Problem.departure`), what Standard, Forgiving and Simplified make of them, converting a note back to standard GQL,
+  checked before it is written, and the standard text an engine or an export is given whatever the level.
+- `settings.ts` — every option with its name, sentence, choices and default (`OPTIONS`, `DEFAULT_SETTINGS`), and saved
+  settings read back with anything unknown, out of range or secret left out (`settingsFrom`). An AI model keeps the
+  name of its key in the host's secret store (`keyName`), never the key.
 
 ## Command-line tools, `bin/`
 

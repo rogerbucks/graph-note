@@ -6,6 +6,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { root } from './host/load-plugin.js';
+import { THEME_COLOURS } from '@graph-note/core';
 
 const STYLE = JSON.parse(readFileSync(`${root}python/graph_spec/src/graph_svg.style.json`, 'utf8'));
 
@@ -88,6 +89,10 @@ describe('contrast in both themes', () => {
 });
 
 describe('one colour mapping', () => {
+  test('the core’s fixed palettes, for a host with no theme variables, are Obsidian’s default themes as read here', () => {
+    assert.deepEqual(THEME_COLOURS, THEMES);
+  });
+
   test('the plugin names no colour of its own: the drawing’s colours come from the style, through the core’s one table', () => {
     const dir = `${root}packages/obsidian/src/`;
     for (const f of readdirSync(dir, { recursive: true }).filter((x) => x.endsWith('.ts'))) {

@@ -67,6 +67,7 @@ function danglingComma(text: string): { text: string; problem: Omit<Problem, 'bl
       replace: { written: ',', with: [''] },
       fixTitle: 'Remove the comma',
       span: { line: line - 1, character, end: character + 1 },
+      departure: 'trailing-comma',
     },
   };
 }
@@ -138,6 +139,7 @@ function readAsMeant(store: gs.Store, i: number, text: string, commasFrom: numbe
       message: 'a comma is missing at the end of this line; it is read as if it were there',
       fix: 'add a comma at the end of the line',
       insert: { line: c.line - 1, character: trimEnd(code).length, text: ',' },
+      departure: 'missing-comma',
     });
   }
   // a type written without its colon, read as the graph's one type of that name (§3): a warning, whose fix writes the
@@ -155,6 +157,7 @@ function readAsMeant(store: gs.Store, i: number, text: string, commasFrom: numbe
       replace: { written: b.written, with: [`:${b.type}`] },
       fixTitle: `Write the colon: [:${b.type}]`,
       ...(names[k] ? { span: names[k] } : {}),
+      departure: 'bare-type',
     });
   }
   return out;
