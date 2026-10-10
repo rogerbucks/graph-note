@@ -3,6 +3,22 @@
     "strictness > Forgiving, the default: a slip is drawn, and reported as a warning": {
       "seen_failing_first": false,
       "evidence": "a control case, written with the change beside it: Forgiving is how a slip was always reported, so it passes before and after by design (commit cd1c849)"
+    },
+    "back to standard GQL > the button on the settings page converts the note in front, as the command does": {
+      "seen_failing_first": false,
+      "evidence": "written after its code, at the review of #50, to cover the page's button, which the earlier commit added untested (commit afff22a)"
+    }
+  },
+  "packages/core/test/settings.test.js": {
+    "the AI models of §19 > a model given no ceiling gets the lowest classification": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: what a model with no ceiling gets stays the same while a mistyped ceiling is now kept, so it passes before and after by design (commit afff22a)"
+    }
+  },
+  "packages/core/test/strictness.test.js": {
+    "converting a note of several blocks > each block is converted in its own place, and the note as written is checked whole": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: the whole-note check added at the review of #50 must not refuse a good conversion, so it passes before and after by design (commit afff22a)"
     }
   },
   "packages/core/test/drawing.test.js": {
