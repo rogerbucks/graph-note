@@ -876,5 +876,23 @@
       "seen_failing_first": false,
       "evidence": "coverage the review of #53 asked for, added with its fixes: it pins what the first commit of #53 already read correctly, so it passes before and after by design"
     }
+  },
+  "test/slice-board.test.js": {
+    "the page > the light and both dark token sets define exactly the same custom properties": {
+      "seen_failing_first": false,
+      "evidence": "coverage the review of #66 asked for, added with its fixes: it pins what the first commit of #66 already did (one token list written into all three blocks), so it passes before and after by design (commit e40539c)"
+    },
+    "the page > a bar is to scale: the proved, part and open segments start and run in proportion": {
+      "seen_failing_first": false,
+      "evidence": "coverage the review of #66 asked for, added with its fixes: it pins the bar widths the first commit of #66 already drew, so it passes before and after by design (commit e40539c)"
+    },
+    "the page > escapes where a test is kept and the file text, never letting a tag through": {
+      "seen_failing_first": false,
+      "evidence": "coverage the review of #66 asked for, added with its fixes: it pins the escaping the first commit of #66 already did, so it passes before and after by design (commit e40539c)"
+    },
+    "the open pull requests panel > escapes an https url holding a quote or a tag, the branch name, and never breaks out of the attribute": {
+      "seen_failing_first": false,
+      "evidence": "coverage the review of #66 asked for, added with its fixes: it pins the escaping the first commit of #66 already did, so it passes before and after by design (commit e40539c)"
+    }
   }
 }
