@@ -13,6 +13,15 @@ import { LayoutRunner, TIMEOUTS_BEFORE_STOPPING, inThreadPort, serveLayouts } fr
 
 const CLOCK = { setTimeout: (run, ms) => setTimeout(run, ms), clearTimeout: (t) => clearTimeout(t) };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+/**
+ * The processor time this process has used, every thread of it, in ms. A step timed by it is not slowed while a busy
+ * machine runs something else, as one timed by the clock is: a whole-suite run with a load average of 176 on 10 cores
+ * slowed a refusal by the clock up to 20 times against a plain pass measured beside it (10 Oct 2026).
+ */
+const used = () => {
+  const { user, system } = process.cpuUsage();
+  return (user + system) / 1000;
+};
 const READER = `// graph: reader
 (q:Question {title: 'Which device?'}),
 (large:Option {name: 'Large reader'}), (small:Option {name: 'Small reader'}),
@@ -123,9 +132,27 @@ describe('the limits, checked before any layout', () => {
     const d = drawingOf(READER);
     // words, but very many: writing their source would itself hold the page
     const long = { ...d, boxes: d.boxes.map((b, i) => (i ? b : { ...b, text: 'é '.repeat(600_000) })) };
-    const t = performance.now();
-    const r = await runner([]).r.draw(long);
-    assert.ok(performance.now() - t < 200, 'refused at once');
+    // at once: in under 10 plain passes over the text (it takes 2 to 3), the least processor time of three of each, so
+    // the source was never written; never a fixed number of milliseconds, which a busy machine running the whole suite
+    // broke at 314 ms against 200 (10 Oct 2026)
+    const text = long.boxes[0].text;
+    const spaces = () => {
+      let n = 0;
+      for (let i = 0; i < text.length; i++) if (text.charCodeAt(i) === 0x20) n++;
+      return n;
+    };
+    let r,
+      took = Infinity,
+      pass = Infinity;
+    for (let k = 0; k < 3; k++) {
+      let t = used();
+      r = await runner([]).r.draw(long);
+      took = Math.min(took, used() - t);
+      t = used();
+      spaces();
+      pass = Math.min(pass, used() - t);
+    }
+    assert.ok(took < 10 * pass, `${took.toFixed(1)} ms, against ${pass.toFixed(1)} ms for one pass over the text`);
     assert.equal(r.limit, 'source');
     assert.ok(r.count > 1_200_000, `${r.count} bytes: each é is two, and the spaces are not counted`);
     assert.equal(r.atLeast, true, 'the source would be longer still');
@@ -298,9 +325,15 @@ describe('a normal graph', () => {
     const links = Array.from({ length: 70 }, (_, i) => `(n${i % 50})-[:LINKS]->(n${(i * 7 + 3) % 50})`);
     const d = drawingOf(`// graph: g\n${[...nodes, ...links].join(',\n')}`, 'g');
     await r.draw(d); // warm: the worker's engine starts on its first layout
-    const t = performance.now();
-    const drawn = await r.draw(d);
-    const ms = performance.now() - t;
+    // the spec's own half second, held to the least processor time of three draws, the worker's thread with the page's:
+    // the clock runs on while a busy machine runs something else (10 Oct 2026)
+    let drawn,
+      ms = Infinity;
+    for (let k = 0; k < 3; k++) {
+      const t = used();
+      drawn = await r.draw(d);
+      ms = Math.min(ms, used() - t);
+    }
     assert.match(drawn.svg, /^<svg/);
     assert.ok(ms < 500, `${ms.toFixed(0)} ms`);
   });

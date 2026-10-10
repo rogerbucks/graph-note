@@ -15,8 +15,15 @@ describe('writing to the note', () => {
     try {
       type(env.el, READER + ",\n(price:Reason {title: 'Costs more'})");
       const t0 = Date.now();
-      while (note(env) === NOTE && Date.now() - t0 < 1000) await wait(10);
-      assert.ok(Date.now() - t0 <= 350, `${Date.now() - t0} ms`);
+      // a timer of the pane's own wait before writing, 150 ms, set at the same moment: however late a busy machine runs
+      // timers, it runs this one as late, so the third of a second is held to that lateness, never to a fixed number of
+      // milliseconds alone (10 Oct 2026)
+      let timer = 0;
+      setTimeout(() => (timer = Date.now() - t0), 150);
+      while (note(env) === NOTE && Date.now() - t0 < 5000) await wait(10);
+      const took = Date.now() - t0;
+      while (!timer) await wait(10);
+      assert.ok(took <= 350 + (timer - 150), `${took} ms, with timers running ${timer - 150} ms late`);
       assert.equal(note(env), NOTE.replace(READER, READER + ",\n(price:Reason {title: 'Costs more'})"));
     } finally {
       env.uninstall();
