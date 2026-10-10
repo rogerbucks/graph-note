@@ -790,5 +790,15 @@
       "seen_failing_first": false,
       "evidence": "coverage the review of #53 asked for, added with its fixes: it pins what the first commit of #53 already read correctly, so it passes before and after by design"
     }
+  },
+  "packages/core/test/export-plan.test.js": {
+    "names that are not ASCII > each part is cut at a whole character, never in the middle of one": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the byte cut beside it (commit ed2b293): the earlier cut by characters never split a character either, so it passes before and after by design"
+    },
+    "names that are not ASCII > a short Japanese name is kept whole": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the byte cut beside it (commit ed2b293): a name well inside the limit was kept whole before, so it passes before and after by design"
+    }
   }
 }
