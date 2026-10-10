@@ -9,6 +9,22 @@
       "evidence": "written after its code, at the review of #50, to cover the page's button, which the earlier commit added untested (commit afff22a)"
     }
   },
+  "packages/obsidian/test/graph-view-parked.test.js": {
+    "the badge > with nothing parked, says nothing of parking": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: a badge with nothing parked reads as it always has, so it passes before and after by design (commit 1ce9135)"
+    },
+    "Park for later, while the card is edited > is offered only while the card is edited: reading a drawing never changes it": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: outside editing no Park for later is offered, before the change or after, by design (commit 1ce9135)"
+    }
+  },
+  "packages/obsidian/test/graph-view-walk.test.js": {
+    "Record, while the card is edited > is offered only while the card is edited": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: outside editing no Record is offered, before the change or after, by design (commit 8c7d5bf)"
+    }
+  },
   "packages/core/test/settings.test.js": {
     "the AI models of §19 > a model given no ceiling gets the lowest classification": {
       "seen_failing_first": false,
