@@ -25,6 +25,32 @@ def _blanked(block):
     )
 
 
+def _refuse_repeats(matches, paths):
+    """Raises what the reader raises (Store.apply) for a variable written for two nodes, or an id
+    given to two (req:3.id-once): an engine is never given a key twice, nor two nodes one id."""
+    bound = {m["var"] for m in matches}
+    ids = {m["props"]["id"] for m in matches if "id" in m["props"]}
+    for ns, _ in paths:
+        for n in ns:
+            if not (n["labels"] or n["props"]):
+                continue
+            if n["var"] in bound:
+                raise ProfileError(
+                    n["line"],
+                    f"{n['var']} is written twice",
+                    "give each new node its own variable",
+                )
+            bound.add(n["var"])
+            given = n["props"].get("id", n["var"])
+            if given in ids:
+                raise ProfileError(
+                    n["line"],
+                    f"id {given!r} is already a node",
+                    "an id names one node (§10) — MATCH it to add to it, or supersede it (§12)",
+                )
+            ids.add(given)
+
+
 def _with_ids(block, nodes):
     """The block with id: written into each of these new nodes, as the parser read them, where it
     is written, and nothing else moved."""
@@ -45,7 +71,9 @@ def _with_ids(block, nodes):
         if m.group(3) == ")":
             edits.append((m.end(1), m.end(1), f" {{{given}}}"))
         elif m.group(3) == "{":
-            edits.append((m.end(3), m.end(3), given + ", "))
+            # before a line break the id: ends at its comma, so no space is left at a line's end
+            at_break = block[m.end(3) : m.end(3) + 1] in ("\n", "\r")
+            edits.append((m.end(3), m.end(3), given + ("," if at_break else ", ")))
         else:
             edits.append((m.start(3), m.end(3), "{" + given + "}"))
     for start, end, text in sorted(edits, reverse=True):
@@ -72,8 +100,11 @@ def _bare(block):
 def to_gql(block: str) -> str:
     """A block as standard GQL (§3): the data shortcut's INSERT put back and, where a name stands
     for an id, the id: written into each new node and one MATCH line added for the existing nodes
-    named. Every other line and comment is kept as written. A block that cannot be read is
-    returned as it is, so the engine reports it."""
+    named. Every other line and comment is kept as written. A block that writes a variable or an
+    id twice is refused with the reader's own error, so no key is ever written twice. It sees
+    one block only, and returns one it cannot read as it is: the gate is the reader, which every
+    route to an engine runs first, on the block in its graph (req:3.engine-reads-first), so a
+    repeat across blocks, or a block the reader cannot read, never reaches the engine."""
     lines = block.split("\n")
     i = next(
         (k for k, line in enumerate(lines) if strip(line) and not strip(line).startswith("//")),
@@ -97,6 +128,7 @@ def to_gql(block: str) -> str:
         matches = paths = sets = None
     added = []
     if matches is not None:
+        _refuse_repeats(matches, paths)
         matched = {m["var"] for m in matches}
         written = {n["var"] for ns, _ in paths for n in ns if n["labels"] or n["props"]}
         refs = list(

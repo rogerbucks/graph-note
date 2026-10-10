@@ -20,6 +20,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 import gql_profile as gp  # noqa: E402
 import graph_spec as gs  # noqa: E402
 from graphspec.engine.optional_imports import grafeo  # noqa: E402
+from graphspec.reader import to_gql as to_gql_module  # noqa: E402
 
 
 def lines(*rows):
@@ -82,6 +83,26 @@ CASES = [
             "(d:Deferred {id: 'd', what: 'w'})",
         ),
     ),
+    (
+        "a node whose pattern runs over several lines",
+        lines(
+            "// graph: g",
+            "(c:T {",
+            "  x: 1",
+            "}),",
+            "(e:T",
+            "  )",
+        ),
+        lines(
+            "// graph: g",
+            "INSERT",
+            "(c:T {id: 'c',",
+            "  x: 1",
+            "}),",
+            "(e:T {id: 'e'}",
+            "  )",
+        ),
+    ),
 ]
 
 # a block written before the ones below, whose nodes they name
@@ -122,6 +143,36 @@ NAMING = [
             "MATCH (b:Thing {id: 'b'})",
             "// kept",
             "INSERT (b)-[:NEXT]->(a)",
+        ),
+    ),
+    (
+        "several names for existing nodes at once, in text order",
+        lines(
+            "// graph: g",
+            "(c:Thing)-[:NEXT]->(b),",
+            "(b)-[:NEXT]->(a)",
+        ),
+        lines(
+            "// graph: g",
+            "MATCH (b {id: 'b'}), (a {id: 'a'})",
+            "INSERT",
+            "(c:Thing {id: 'c'})-[:NEXT]->(b),",
+            "(b)-[:NEXT]->(a)",
+        ),
+    ),
+    (
+        "a name in a path together with a name in a SET",
+        lines(
+            "// graph: g",
+            "(c:Thing)-[:NEXT]->(a)",
+            "SET b.status = 'open'",
+        ),
+        lines(
+            "// graph: g",
+            "MATCH (a {id: 'a'}), (b {id: 'b'})",
+            "INSERT",
+            "(c:Thing {id: 'c'})-[:NEXT]->(a)",
+            "SET b.status = 'open'",
         ),
     ),
     (
@@ -167,6 +218,52 @@ class ToGqlKeepsTheBlock(unittest.TestCase):
             db.execute(gs.strip(EARLIER))
             db.execute(gs.strip(block))
             self.assertEqual(gs.canon_graph(db, "g"), gp.canon(st, "g"), what)
+
+
+class ToGqlRefusesWhatTheReaderRefuses(unittest.TestCase):
+    """A block the reader rejects is never given to an engine with an id written twice: to_gql
+    raises the ProfileError the reader raises, as it does for a bare relationship type."""
+
+    def refused(self, block, message, what):
+        with self.assertRaises(gp.ProfileError, msg=what) as got:
+            gp.to_gql(block)
+        self.assertIn(message, str(got.exception), what)
+        # the reader rejects the same block for the same reason
+        with self.assertRaises(gp.ProfileError, msg=what) as read:
+            gp.Store().apply(block)
+        self.assertIn(message, str(read.exception), what)
+
+    def test_a_variable_written_for_two_nodes_is_refused(self):
+        for what, block in [
+            ("two nodes on two lines", lines("// graph: g", "(x:T {n:1}),", "(x:T {m:2})")),
+            ("two nodes in one path", lines("// graph: g", "(x:T {n:1})-[:R]->(x:T {n:2})")),
+        ]:
+            self.refused(block, "x is written twice", what)
+
+    def test_an_id_given_to_two_nodes_is_refused(self):
+        """req:3.id-once (§3, id used once): to_gql raises the reader's ProfileError and never
+        writes the duplicate id."""
+        for what, block in [
+            (
+                "a given id, then a name",
+                lines("// graph: g", "(x:T {id:'y'}),", "(y:T {n:1})"),
+            ),
+            (
+                "a name, then a given id",
+                lines("// graph: g", "(y:T {n:1}),", "(x:T {id:'y'})"),
+            ),
+            (
+                "the same id given twice",
+                lines("// graph: g", "(x:T {id:'y'}),", "(z:T {id:'y'})"),
+            ),
+        ]:
+            self.refused(block, "id 'y' is already a node", what)
+
+    def test_a_node_written_where_it_cannot_be_found_is_said_not_hidden(self):
+        # the parser read a node the text search cannot find: a fault here, never in the block
+        with self.assertRaises(gp.ProfileError) as got:
+            to_gql_module._with_ids(lines("// graph: g", "(y)"), [{"var": "x", "line": 2}])
+        self.assertIn("cannot find where x is written", str(got.exception))
 
 
 if __name__ == "__main__":
