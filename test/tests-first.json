@@ -1005,9 +1005,9 @@
       "notReplayedCommits": []
     },
     "python/graph_spec/tests/test_parity.py": {
-      "replayed": 5,
+      "replayed": 6,
       "notReplayed": 0,
-      "seenFailing": 4,
+      "seenFailing": 5,
       "excused": 0,
       "passedFirst": [],
       "notReplayedCommits": []
@@ -1245,11 +1245,11 @@
       "excused": 2,
       "passedFirst": [
         {
-          "commit": "0a1ea2d5e9eac8c005847b15dbc1e52df4dfd5dd",
+          "commit": "900ad16d6a9e9d07719d06cc187762caef44e73d",
           "name": "replaying a commit against its parent’s code > a Python test whose subTests raise an error, not a failed assertion, has failed: it is seen failing first"
         },
         {
-          "commit": "0a1ea2d5e9eac8c005847b15dbc1e52df4dfd5dd",
+          "commit": "900ad16d6a9e9d07719d06cc187762caef44e73d",
           "name": "replaying a commit against its parent’s code > a Python test with one subTest failing among others that pass has failed: it is seen failing first"
         }
       ],
