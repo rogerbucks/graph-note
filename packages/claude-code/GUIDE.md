@@ -4,15 +4,18 @@ A Claude Code mod whose `/graph <note>` draws the note's first graph in a pane (
 core as the Obsidian plugin. A mod's hooks run in an environment of their own, with no DOM, no Node and no WebAssembly:
 reading, the layout source and theming run there, bundled; Graphviz, the core's own engine, runs as a process through
 `node`, DOT in and SVG out. When `node` is missing, the pane says so and shows the graph as text, never a blank drawing.
-A pane draws the SVG as an isolated image, so its colours are the core's fixed light or dark palette (`palette.ts`, the
-one colour mapping), chosen by Claude Code's theme setting, with the page painted in.
+A pane draws the SVG as an isolated image, so its colours are the core's system palette (`palette.ts`, the one colour
+mapping): the fixed light and dark palettes both carried in the drawing's own style sheet, `prefers-color-scheme`
+choosing, with the page painted in. The mod API says nothing of the app's appearance, and Claude Code's theme setting is
+the terminal's, so nothing is guessed: the drawing follows the scheme the app hands its pages, which is the system's
+unless the app sets its own. Whether the desktop app does, and keeps the drawing's style sheet, is checked by eye.
 
 ## The source, `src/`
 
 - `graph-view.ts` — `viewOf`: what the pane shows for a note. The first graph drawn in a palette, and always the same
   graph as lines of text, which stand in, with the reason, when it cannot be drawn: over the layout limits, over what a
   pane takes, or Graphviz not run. A note too large to read, a graph that could not be read (its errors, with their note
-  lines) and an empty graph each say so, never "no graph". Also `paletteFor` (the theme setting to a palette) and
+  lines) and an empty graph each say so, never "no graph". Also `PANE_PALETTE` (the system palette, and why) and
   `notePath` (/graph's argument).
 - `graphviz-process.ts` — `layOut`: the DOT sources handed to the render script through node, within the core's time
   limit (`LAYOUT_TIMEOUT_MS`), and the SVGs back. After a refused run, `node --version` is asked: a node that is not

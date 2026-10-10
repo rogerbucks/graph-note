@@ -3,33 +3,64 @@ sub-flows."""
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Any
+
 from graphspec.engine.joining.named_rules import nesting_loop
 from graphspec.engine.queries import Q_
+from graphspec.rules.plain_graph import Graph
+
+if TYPE_CHECKING:
+    from grafeo import GrafeoDB
+
+
+def process_rows(
+    source: Graph | GrafeoDB,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+    """A process graph's states, transitions and sub-flows as rows — from the reader's plain graph
+    (req:7.machine-reads-plain), or from a Grafeo database a host asks for."""
+    if isinstance(source, Graph):
+        g = source
+        states = [
+            {
+                "id": i,
+                "flow": g.p(i).get("flow"),
+                "i": g.p(i).get("initial"),
+                "f": g.p(i).get("final"),
+            }
+            for i in g.labelled("State")
+        ]
+        between = [e for e in g.edges if g.has(e[0], "State") and g.has(e[2], "State")]
+        moves = [
+            {"a": a, "b": b, "e": p.get("event"), "g": p.get("guard"), "d": p.get("do")}
+            for a, t, b, p in between
+            if t == "TRANSITION"
+        ]
+        details = [{"p": a, "c": b} for a, t, b, _ in between if t == "DETAILED_IN"]
+        return states, moves, details
+    return (
+        Q_(
+            source,
+            "MATCH (s:State) RETURN s.id AS id, s.flow AS flow, s.initial AS i, s.final AS f",
+        ),
+        Q_(
+            source,
+            "MATCH (a:State)-[t:TRANSITION]->(b:State) RETURN a.id AS a, b.id AS b, t.event AS e, t.guard AS g, t.do AS d",  # noqa: E501  # one literal: embedded_queries reads it whole
+        ),
+        Q_(source, "MATCH (p:State)-[:DETAILED_IN]->(c:State) RETURN p.id AS p, c.id AS c"),
+    )
 
 
 class Machine:
-    """The generic engine of §14, read from a process graph — flat or with sub-flows."""
+    """The generic engine of §14, read from a process graph — flat or with sub-flows — as the
+    reader reads it (a plain graph), or from a Grafeo database a host asks for."""
 
-    def __init__(self, db, restart_on_self=False, flow=None):
-        self.S = {
-            r["id"]: r
-            for r in Q_(
-                db,
-                "MATCH (s:State) RETURN s.id AS id, s.flow AS flow, s.initial AS i, s.final AS f",
-            )
-        }
+    def __init__(self, source, restart_on_self=False, flow=None):
+        states, moves, details = process_rows(source)
+        self.S = {r["id"]: r for r in states}
         self.T = {}
-        for r in Q_(
-            db,
-            "MATCH (a:State)-[t:TRANSITION]->(b:State) RETURN a.id AS a, b.id AS b, t.event AS e, t.guard AS g, t.do AS d",  # noqa: E501  # one literal: embedded_queries reads it whole
-        ):
+        for r in moves:
             self.T.setdefault((r["a"], r["e"]), []).append(r)
-        self.D = {
-            r["p"]: r["c"]
-            for r in Q_(
-                db, "MATCH (p:State)-[:DETAILED_IN]->(c:State) RETURN p.id AS p, c.id AS c"
-            )
-        }
+        self.D = {r["p"]: r["c"] for r in details}
         self.restart = restart_on_self
         loop = nesting_loop(
             {s: {"props": {"flow": r["flow"]}} for s, r in self.S.items()},

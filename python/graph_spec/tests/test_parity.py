@@ -21,11 +21,13 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 JS_TEST = os.path.join(ROOT, "packages", "graph-spec", "test")
 sys.path.insert(0, os.path.join(HERE, "..", "src"))
+sys.path.insert(0, HERE)
 
 # the library's modules are flat files in src/, importable only once it is on sys.path
 import gql_profile as gp  # noqa: E402
 import graph_rules as gr  # noqa: E402
 import graph_spec as gs  # noqa: E402
+from engine_support import needs_engine  # noqa: E402
 
 AGAINST = "@@AGAINST@@"
 
@@ -307,9 +309,9 @@ class IdOnce(unittest.TestCase):
             self.assertEqual(ours, [[b, ln, refusal_kind(m)] for b, ln, m in theirs], name)
 
     def test_parse_refuses_what_the_core_refuses_before_grafeo_is_given_it(self):
-        # req:3.engine-reads-first: parse() under the default parser, Grafeo, reads the block with
-        # the reader first, so it refuses each block the core refuses, at the same line
-        self.assertEqual(gs.PARSER, "grafeo")
+        # req:3.engine-reads-first: parse() under Grafeo's parser, which a host asks for, reads
+        # the block with the reader first, so it refuses each block the core refuses, at the
+        # same line
         names = list(ENGINE_BLOCKS)
         core = core_refusals([ENGINE_BLOCKS[n] for n in names])
         # a plain loop, never subTest: the tests-first replay counts a test by its own result
@@ -319,8 +321,12 @@ class IdOnce(unittest.TestCase):
                 p = os.path.join(d, "doc.md")
                 with open(p, "w", encoding="utf-8") as f:
                     f.write(f"```gql\n{ENGINE_BLOCKS[name]}\n```\n")
-                with self.assertRaises(gp.ProfileError, msg=name) as e:
-                    gs.parse(p)
+                old, gs.PARSER = gs.PARSER, "grafeo"
+                try:
+                    with self.assertRaises(gp.ProfileError, msg=name) as e:
+                        gs.parse(p)
+                finally:
+                    gs.PARSER = old
             ours = [e.exception.line, refusal_kind(e.exception.message)]
             self.assertEqual(ours, [theirs[0][1], refusal_kind(theirs[0][2])], name)
 
@@ -373,6 +379,7 @@ def parsed_bare(block, parser):
 
 
 class BareLinkType(unittest.TestCase):
+    @needs_engine
     def test_the_core_and_both_python_parsers_accept_a_bare_link_type_alike(self):
         core = core_bare(BARE_BLOCK)
         self.assertEqual(core["errors"], [])
@@ -431,6 +438,7 @@ class MissingComma(unittest.TestCase):
             self.assertEqual(len(ours.split("\n")), len(block.split("\n")), block)
             self.assertNotEqual(ours, block)
 
+    @needs_engine
     def test_the_js_and_python_corrected_texts_load_the_graph_both_readers_read(self):
         for block in MISSING_COMMA_BLOCKS:
             js = js_corrected(block)

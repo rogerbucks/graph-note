@@ -4,7 +4,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { gqlBlocks, readNote, loadEngine, PALETTES, LAYOUT_LIMITS, READ_LIMITS } from '@graph-note/core';
-import { viewOf, paletteFor, notePath, SVG_MAX, NO_GRAPH, EMPTY_GRAPH } from '../src/graph-view.ts';
+import { viewOf, PANE_PALETTE, notePath, SVG_MAX, NO_GRAPH, EMPTY_GRAPH } from '../src/graph-view.ts';
 import { NODE_MISSING } from '../src/graphviz-process.ts';
 
 const NOTE = readFileSync(new URL('../../../test-vault/Sample graph note.md', import.meta.url), 'utf8');
@@ -96,10 +96,13 @@ describe('never a blank pane', () => {
 });
 
 describe('the host around it', () => {
-  test("the palette follows Claude Code's theme setting: light themes take the light entry, every other the dark", () => {
-    for (const t of ['light', 'light-daltonized', 'light-ansi']) assert.equal(paletteFor(t), PALETTES.light, t);
-    for (const t of ['dark', 'dark-daltonized', 'dark-ansi', 'auto', undefined])
-      assert.equal(paletteFor(t), PALETTES.dark, t);
+  test("the pane's drawing follows the app's own light or dark, never a guess: the system entry", async () => {
+    // the mod API says nothing of the desktop app's appearance, and Claude Code's theme setting is the terminal's, which
+    // draws no picture: so the drawing carries both palettes and the scheme picks one, with nothing assumed when unknown
+    assert.equal(PANE_PALETTE, PALETTES.system);
+    const view = await viewOf(NOTE, graphviz, PANE_PALETTE);
+    assert.match(view.svg ?? '', /<style>[^<]*@media \(prefers-color-scheme: dark\)/);
+    assert.match(view.svg ?? '', /background:var\(--gn-page\)/);
   });
 
   test('the note named after /graph, quoted or not, since a note’s name often has spaces', () => {

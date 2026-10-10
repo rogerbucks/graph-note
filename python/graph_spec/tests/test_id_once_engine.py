@@ -19,11 +19,26 @@ import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "src"))
+sys.path.insert(0, HERE)
 
 import gql_profile as gp  # noqa: E402
 import graph_spec as gs  # noqa: E402
 from graphspec.engine import settings  # noqa: E402
 from graphspec.engine.documents.fill import compute  # noqa: E402
+from engine_support import module_needs_engine  # noqa: E402
+
+
+# These tests are of the route into the engine, which a host asks for: the reader is the default
+# parser (req:3.reader-default), so every test here runs under Grafeo's, and needs it installed.
+def setUpModule():  # noqa: N802
+    module_needs_engine()
+    global _DEFAULT
+    _DEFAULT, settings.PARSER = settings.PARSER, "grafeo"
+
+
+def tearDownModule():  # noqa: N802
+    settings.PARSER = _DEFAULT
+
 
 HEAD = "// graph: g · document {doc} · schema s1 · as of 2026-10-01"
 
@@ -126,8 +141,8 @@ class EnginePathsSkipTheReader(unittest.TestCase):
     read it with the reader first (req:3.engine-reads-first). The class keeps its name, so the
     tests-first record knows its tests."""
 
-    def test_the_default_parser_is_grafeo(self):
-        self.assertEqual(settings.PARSER, "grafeo")
+    # (test_the_default_parser_is_grafeo went with req:3.reader-default: the reader is the default
+    # now, held by test_settings_reader_default.py, and these tests ask for Grafeo in setUpModule)
 
     # Was a GAP: parse() under the default PARSER ('grafeo', reading.py:95-101) ran no reader; on
     # main to_gql did not refuse an id given twice, Grafeo stored two nodes, and parse keyed its

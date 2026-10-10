@@ -1,7 +1,8 @@
 // The one colour mapping (spec §10, one_colour_map): how each host writes the style's colours. Obsidian's entry names its
 // theme variables, so a drawing follows the theme. A host that draws the SVG as an isolated image, such as a Claude Code
-// pane, can resolve no variable and may not support color-mix: its entries are fixed colours, the blends worked out
-// here as CSS would work them, and the page painted into the drawing so the contrast holds on any background (§11).
+// pane, can resolve none of the host's variables and may not support color-mix: its entries are fixed colours, the
+// blends worked out here as CSS would work them, and the page painted into the drawing so the contrast holds on any
+// background (§11); or both fixed palettes at once, defined in the drawing's own style sheet and chosen by the scheme.
 import { STYLE } from './layout.ts';
 
 /** How one host writes the drawing's colours. */
@@ -18,6 +19,8 @@ export interface Palette {
   blend(hue: string, pct: number): string;
   /** The page painted behind the drawing; absent where the host's own page shows through. */
   page?: string;
+  /** A style sheet the drawing carries, defining the colours the others name; absent where the host defines them. */
+  style?: string;
 }
 
 /** A theme's colours, each as six hex digits: the page, the text, the muted text, and every hue the style names. */
@@ -88,8 +91,52 @@ export function fixedPalette(t: ThemeColours): Palette {
   };
 }
 
+/**
+ * A palette that follows the system's light or dark setting with no help from its host: the drawing carries its own
+ * style sheet, naming each colour of the light palette and, under prefers-color-scheme: dark, of the dark one, and its
+ * shapes name those. An isolated SVG image honours the scheme (proved in Chromium, 11 Oct 2026), so a host that cannot
+ * tell the drawing its theme, a Claude Code pane, gets the scheme the app hands its pages: the system's, unless the app
+ * sets its own.
+ */
+export function systemPalette(light: Palette, dark: Palette): Palette {
+  const hues = Object.keys(THEME_COLOURS.light).filter((k) => !['page', 'text', 'muted'].includes(k));
+  const mixes = [STYLE.line_mix, STYLE.label_mix];
+  const known = (h: string) => {
+    if (!hues.includes(h)) throw new Error(`the theme has no ${h}`);
+    return h;
+  };
+  const names = (p: Palette): [string, string][] => [
+    ['--gn-text', p.text],
+    ['--gn-muted', p.muted],
+    ['--gn-edge', p.edge],
+    ['--gn-page', p.page ?? 'transparent'],
+    ...hues.flatMap((h): [string, string][] => [
+      [`--gn-fill-${h}`, p.fill(h)],
+      ...mixes.map((pct): [string, string] => [`--gn-${h}-${pct}`, p.blend(h, pct)]),
+    ]),
+  ];
+  const sheet = (p: Palette) =>
+    `svg{${names(p)
+      .map(([n, v]) => `${n}:${v}`)
+      .join(';')}}`;
+  return {
+    text: 'var(--gn-text)',
+    muted: 'var(--gn-muted)',
+    edge: 'var(--gn-edge)',
+    page: 'var(--gn-page)',
+    // a name the sheet does not define would draw black: refused, as the fixed palettes refuse a hue they lack
+    fill: (h) => `var(--gn-fill-${known(h)})`,
+    blend: (h, pct) => {
+      known(h);
+      if (!mixes.includes(pct)) throw new Error(`the style blends at ${mixes.join(' and ')} only, not ${pct}`);
+      return `var(--gn-${h}-${pct})`;
+    },
+    style: `${sheet(light)}@media (prefers-color-scheme: dark){${sheet(dark)}}`,
+  };
+}
+
 /** The one table: each host's way of writing the colours, by name. */
-export const PALETTES: { obsidian: Palette; light: Palette; dark: Palette } = {
+export const PALETTES: { obsidian: Palette; light: Palette; dark: Palette; system: Palette } = {
   obsidian: {
     text: STYLE.text,
     muted: STYLE.muted,
@@ -99,4 +146,5 @@ export const PALETTES: { obsidian: Palette; light: Palette; dark: Palette } = {
   },
   light: fixedPalette(THEME_COLOURS.light),
   dark: fixedPalette(THEME_COLOURS.dark),
+  system: systemPalette(fixedPalette(THEME_COLOURS.light), fixedPalette(THEME_COLOURS.dark)),
 };

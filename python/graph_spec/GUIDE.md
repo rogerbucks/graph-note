@@ -6,7 +6,7 @@ A host puts `src/` on `sys.path` and imports the four entry points by name. Each
 
 - `gql_profile.py` — reads data blocks in the document profile (§3) into a plain graph, with no database.
 - `graph_rules.py` — the spec's rules on that plain graph.
-- `graph_spec.py` — the rules through Grafeo, for the conformance suite; a setting a host assigns here is forwarded to `src/graphspec/engine/settings.py`.
+- `graph_spec.py` — the conformance suite's entry point: it reads, checks, runs processes, serves views and fills hashes from the reader's reading by default, and through Grafeo when a host sets `PARSER = 'grafeo'` (database work only); a setting a host assigns here is forwarded to `src/graphspec/engine/settings.py`.
 - `graph_svg.py` — lays a graph out with Graphviz as themed SVG; its style is `graph_svg.style.json` beside it. `dot_source` and `render` take the keys of boxes drawn under a suggested name (`suggested`, from the warnings `read_for_drawing` lists), dashed and labelled as the core draws them. Small enough to stay one module.
 
 ## The code, in `src/graphspec/` (namespace packages: folders, no `__init__.py`)
@@ -24,5 +24,7 @@ A host puts `src/` on `sys.path` and imports the four entry points by name. Each
 ## Tests, in `tests/`
 
 `test_reader_agrees_with_grafeo.py` holds the reader and its plain rules to Grafeo's answers (req:17.engine-agreement), on the shared cases and on generic cases in `tests/agreement/` (one JSON file per area, each block a list of lines; `classification.md` there is a generic destination matrix). Grafeo is the reference only: a test dependency, never one the readers need.
+
+Grafeo is not installed by a plain install (req:14.no-engine-install): it is the `grafeo` extra, for database work, and the `reference` dependency group of a working copy. A test that needs it uses `engine_support.needs_engine` (or `module_needs_engine` in `setUpModule`): skipped without Grafeo, as CI's `python-no-engine` job runs (`uv sync --locked --no-default-groups`), but run and failed in CI's `python` job, which sets `GRAPH_SPEC_ENGINE=required`.
 
 Otherwise named after the module they test. `test_<entry point>_entry_point.py` hold each entry point to every name it had (`entry_points.json`) and to importing with only `src/` on the path.

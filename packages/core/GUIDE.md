@@ -74,7 +74,8 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `theme.ts` — the drawing's colours and size, from the theme, in the host's palette.
 - `palette.ts` — the one colour mapping (spec §10): how each host writes the style's colours. Obsidian's entry names
   its theme variables; the fixed light and dark entries, for a host that draws the SVG as an isolated image (a Claude
-  Code pane), are worked out to hex and paint their own page, with the locked contrast held.
+  Code pane), are worked out to hex and paint their own page, with the locked contrast held; the system entry carries
+  both in the drawing's own style sheet, `prefers-color-scheme` choosing, for a host that cannot say which it shows.
 - `hits.ts` — what a tap lands on or near.
 - `zoom.ts` — zoom, pan and full screen.
 

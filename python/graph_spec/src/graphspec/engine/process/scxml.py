@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any
 from graphspec.engine.optional_imports import etree
 from graphspec.engine.process.machine import Machine
 from graphspec.engine.queries import Q
+from graphspec.rules.plain_graph import Graph
 
 if TYPE_CHECKING:
     from grafeo import GrafeoDB
@@ -24,9 +25,10 @@ def ecma(g: str) -> str:
     return g.replace(" = ", " === ").replace(" and not ", " && !").replace(" and ", " && ")
 
 
-def to_scxml(db: GrafeoDB) -> str:
+def to_scxml(db: Graph | GrafeoDB) -> str:
     """The process graph as W3C SCXML text: the loan flow's states, each sub-flow nested in the
-    state it details, with their transitions and actions."""
+    state it details, with their transitions and actions — built from the reader's plain graph
+    (req:18.scxml-reads-plain), or from a Grafeo database a host asks for."""
     m = Machine(db)
 
     def name(s):
@@ -183,7 +185,11 @@ def process_events(
         {
             r["e"]
             for db in dbs
-            for r in Q(db, "MATCH ()-[t:TRANSITION]->() RETURN DISTINCT t.event AS e")
+            for r in (
+                [{"e": p.get("event")} for _, t, _, p in db.edges if t == "TRANSITION"]
+                if isinstance(db, Graph)  # the reader's plain graph (req:18.scxml-reads-plain)
+                else Q(db, "MATCH ()-[t:TRANSITION]->() RETURN DISTINCT t.event AS e")
+            )
             if r["e"] != "done"
         }
     )

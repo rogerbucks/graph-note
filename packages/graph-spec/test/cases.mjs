@@ -84,13 +84,13 @@ export const cases = {
         "(e:T {name: 'vowel\u{180e}separator'}),",
         "(f:T {name: 'file\x1cseparator'}),",
         "(g:T {name: 'next\x85line'}),",
-        "(h:T {name: 'escaped\\\u{2028}separator'})",
+        // req:3.gql-escapes: the line separator by its GQL escape — once written as a backslash before the character
+        "(h:T {name: 'escaped\\" + "u2028separator'})",
       ),
     ],
     graphs: ['ws_strings'],
     matrix: {},
   },
-
   'every whitespace character GQL names parts words and items, before keywords too (§3)': {
     blocks: [
       lines(
