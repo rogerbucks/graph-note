@@ -8,6 +8,7 @@ import { draw, details } from '../src/render.ts';
 import { loadEngine } from '../src/engine.ts';
 import { layoutSource } from '../src/layout.ts';
 import { themed, sizeOf, choose } from '../src/theme.ts';
+import { used } from './processor-time.js';
 
 const WIDE = `// graph: g
 (q:Question {title: 'Which device?'}),
@@ -145,10 +146,6 @@ describe('speed', () => {
     draw(readNote([block]).graphs.get('g'), engine); // warm: the first draw compiles the engine's code paths
     // the spec's own half second, held to the least processor time of three draws: the clock runs on while a busy
     // machine runs something else, which a whole-suite run on a loaded machine showed (10 Oct 2026)
-    const used = () => {
-      const { user, system } = process.cpuUsage();
-      return (user + system) / 1000;
-    };
     let drawn,
       ms = Infinity;
     for (let k = 0; k < 3; k++) {

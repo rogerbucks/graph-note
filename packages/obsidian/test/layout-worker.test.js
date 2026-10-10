@@ -87,9 +87,10 @@ describe('a graph over a size limit is shown as its text, with a banner saying w
       const body = Array.from({ length: 12_000 }, (_, i) => `(n${i}:Thing {name: 'Thing number ${i} of many'},`);
       const note = fence(`// graph: g\n${body.join('\n')}`);
       // at once: in under 20 plain passes over the note (it takes 5 or 6), the least processor time of three of each, so
-      // it was never read; never a fixed number of milliseconds, nor the clock, which runs on while a busy machine runs
-      // something else: a whole-suite run with a load average of 176 on 10 cores slowed this by the clock 60 times
-      // against a pass measured beside it (10 Oct 2026)
+      // it was never read; never the clock alone, which runs on while a busy machine runs something else: a whole-suite
+      // run with a load average of 176 on 10 cores slowed this by the clock 60 times against a pass measured beside it
+      // (10 Oct 2026). And under the old 3 s, now of processor time, as a backstop against a slowdown of both alike; and
+      // under 5 s by the clock, for a wait that uses no processor time (the review of #40)
       const used = () => {
         const { user, system } = process.cpuUsage();
         return (user + system) / 1000;
@@ -101,16 +102,23 @@ describe('a graph over a size limit is shown as its text, with a banner saying w
       };
       let el,
         took = Infinity,
+        clock = Infinity,
         pass = Infinity;
       for (let k = 0; k < 3; k++) {
         let t = used();
+        const c = performance.now();
         ({ el } = await show(env, note));
         took = Math.min(took, used() - t);
+        clock = Math.min(clock, performance.now() - c);
         t = used();
         spaces();
         pass = Math.min(pass, used() - t);
       }
       assert.ok(took < 20 * pass, `${took.toFixed(1)} ms, against ${pass.toFixed(1)} ms for one pass over the note`);
+      assert.ok(
+        took < 3000 && clock < 5000,
+        `${took.toFixed(0)} ms of processor time, ${clock.toFixed(0)} ms by the clock`,
+      );
       assert.equal(svgOf(el), null);
       assert.match(bannerOf(el).text, /too large to read/i);
       assert.match(bannerOf(el).text, /at most 512 kB/);

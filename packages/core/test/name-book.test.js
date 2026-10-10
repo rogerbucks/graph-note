@@ -5,6 +5,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { NameBook } from '../src/name-book.ts';
 import { nameFromText, nameStyleOf, nameWords } from '../src/name-suggestions.ts';
+import { timed } from './processor-time.js';
 
 // ── the oracle: nameStyleOf and nameFromText as they were before (10 Oct 2026), every name counted for each ──
 const CASINGS = [
@@ -122,35 +123,21 @@ describe('a book of names gives what the old reading of every name gave', () => 
 
   test('naming 5,000 things of the same text takes time linear in them', () => {
     // under 3 times what a quarter as many takes four times over, where linear is 1 and square 4; the two timed in turn
-    // by processor time, the least of five of each, so both last about as long and meet the same load. Never a fixed
-    // number of milliseconds, nor the clock, which runs on while a busy machine runs something else (10 Oct 2026)
+    // by processor time, the least of five of each, so both last about as long and meet the same load; and, as a
+    // backstop against a slowdown of both alike, the old second, now in processor time
     const naming = (n) => {
       const book = new NameBook();
       for (let i = 0; i < n; i++) book.set(book.name('Same text', 'Thing'), 'Thing');
       return book;
     };
-    const used = () => {
-      const { user, system } = process.cpuUsage();
-      return (user + system) / 1000;
-    };
-    const timed = (step) => {
-      const t = used();
-      step();
-      return used() - t;
-    };
     let whole = Infinity,
       quarters = Infinity;
     for (let k = 0; k < 5; k++) {
-      quarters = Math.min(
-        quarters,
-        timed(() => [0, 1, 2, 3].forEach(() => naming(1250))),
-      );
-      whole = Math.min(
-        whole,
-        timed(() => naming(5000)),
-      );
+      quarters = Math.min(quarters, timed(() => [0, 1, 2, 3].forEach(() => naming(1250))).ms);
+      whole = Math.min(whole, timed(() => naming(5000)).ms);
     }
     assert.ok(whole < 3 * quarters, `${whole.toFixed(0)} ms for 5,000, ${quarters.toFixed(0)} ms for four of 1,250`);
+    assert.ok(whole < 1000, `${whole.toFixed(0)} ms of processor time, over 1,000`);
     assert.equal(naming(5000).name('Same text', 'Thing'), 'same_text_5001');
   });
 });

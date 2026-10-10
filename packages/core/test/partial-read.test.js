@@ -12,6 +12,7 @@ import { graphOf } from '../src/blocks.ts';
 import { withNames } from '../src/name-gaps.ts';
 import { prepare, readBlocks, REREAD_BUDGET } from '../src/partial-read.ts';
 import { readBack } from '../src/help.ts';
+import { fastest, timed } from './processor-time.js';
 
 /**
  * The oracle: the reading as it was before (10 Oct 2026), every block read again from a fresh store after each failure,
@@ -224,39 +225,12 @@ const block = (n, broken, text = (i) => `Thing number ${i}`) =>
   `// graph: g\n(ok:Thing {name: 'Readable'}),\n${Array.from({ length: n }, (_, i) => `(n${i}:Thing {name${broken(i) ? '' : ':'} '${text(i)}'}),`).join('\n')}`;
 
 /**
- * The processor time one run of a step took, in ms, and what it gave. Processor time, not the clock: the clock runs on
- * while a busy machine runs something else, and a whole-suite run on a machine with a load average of 176 on 10 cores
- * slowed a step by the clock up to 20 times against a plain pass measured beside it (10 Oct 2026).
- */
-function timed(step) {
-  const used = () => {
-    const { user, system } = process.cpuUsage();
-    return (user + system) / 1000;
-  };
-  const t = used();
-  const out = step();
-  return { ms: used() - t, out };
-}
-
-/** The least processor time of `n` runs of one step, in ms, and what the last gave. */
-function fastest(n, step) {
-  let ms = Infinity,
-    out;
-  for (let k = 0; k < n; k++) {
-    const run = timed(step);
-    ms = Math.min(ms, run.ms);
-    out = run.out;
-  }
-  return { ms, out };
-}
-
-/**
  * Asserts a step takes time linear in its size `n`, not in its square: under 3 times what a quarter of the size takes
- * four times over, where linear is 1 and square 4; the two timed in turn, the least of three of each, so both last about
- * as long and meet the same load. Never a fixed number of milliseconds, which a busy machine running the whole suite
- * breaks (10 Oct 2026). Returns what the step gave at `n`.
+ * four times over, where linear is 1 and square 4; the two timed in turn by processor time, the least of three of each,
+ * so both last about as long and meet the same load. And, as a backstop against a slowdown of both alike, under `most`
+ * ms of processor time at `n`. Returns what the step gave at `n`.
  */
-function linear(n, step) {
+function linear(n, step, most) {
   let whole = Infinity,
     quarters = Infinity,
     out;
@@ -267,6 +241,7 @@ function linear(n, step) {
     out = run.out;
   }
   assert.ok(whole < 3 * quarters, `${whole.toFixed(0)} ms at ${n}, ${quarters.toFixed(0)} ms for four at ${n / 4}`);
+  assert.ok(whole < most, `${whole.toFixed(0)} ms of processor time at ${n}, over ${most}`);
   return out;
 }
 
@@ -274,8 +249,9 @@ function linear(n, step) {
  * Reads a broken block, and asserts it took no longer than the budget of reading again allows (spec §9,
  * reading_contained): the block read at most budget ÷ its length times again, and twice more, each priced by a whole
  * read of the block `mended`, the more of the least of three just before and just after; twice that, for what varies
- * between the timings. Never a fixed number of milliseconds, which a busy machine running the whole suite broke at 2.5 s
- * against a budget of 2 (10 Oct 2026).
+ * between the timings. The broken block is read once, as reading it is what is held: it takes 0.14 to 0.26 of what is
+ * allowed. And, as a backstop against a slowdown of reading itself, which would slow the price alike, under 2 s of
+ * processor time: the old limit, which by the clock a busy machine broke at 2.5 s (10 Oct 2026).
  */
 function inBudget(text, mended) {
   const oneRead = () => fastest(3, () => readNote([mended])).ms;
@@ -287,6 +263,7 @@ function inBudget(text, mended) {
     took < 2 * reads * read,
     `${took.toFixed(0)} ms, over twice ${reads.toFixed(0)} reads of ${read.toFixed(0)} ms`,
   );
+  assert.ok(took < 2000, `${took.toFixed(0)} ms of processor time, over 2,000`);
   return out;
 }
 
@@ -302,7 +279,7 @@ describe('the worst cases under the size limits are read in time (spec §9: abou
   test('9,000 things written without a name: each is named in time linear in them, not in their square', () => {
     const text = (n) =>
       `// graph: g\n${Array.from({ length: n }, (_, i) => `(:Thing {name: 'Thing number ${i}'}),`).join('\n')}`;
-    const r = linear(9000, (n) => readNote([text(n)]));
+    const r = linear(9000, (n) => readNote([text(n)]), 2000);
     assert.equal(r.graphs.get('g').boxes.length, 9000);
   });
 
@@ -333,11 +310,13 @@ describe('the worst cases under the size limits are read in time (spec §9: abou
     ]
       .join('\n')
       .replace(/,$/, '')}`;
-    // what is read back as each key is typed costs less than reading the note, which is already done for each key: the
-    // fastest of three of each, never a fixed number of milliseconds (10 Oct 2026)
+    // what is read back as each key is typed costs less than reading the note, which is already done for each key, the
+    // least processor time of three of each; and, as a backstop against a slowdown of both alike, the old limits, now
+    // in processor time: 2 s to read, half a second to read back
     const read = fastest(3, () => readNote([text])),
       back = fastest(3, () => readBack(read.out, 'g', text));
     assert.ok(back.ms < read.ms, `${back.ms.toFixed(0)} ms to read back, ${read.ms.toFixed(0)} ms to read`);
+    assert.ok(read.ms < 2000 && back.ms < 500, `${read.ms.toFixed(0)} and ${back.ms.toFixed(0)} ms of processor time`);
   });
 });
 

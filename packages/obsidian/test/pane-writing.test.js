@@ -13,13 +13,14 @@ describe('writing to the note', () => {
   test('what is typed reaches the note within about a third of a second', async () => {
     const env = await open();
     try {
-      type(env.el, READER + ",\n(price:Reason {title: 'Costs more'})");
+      // a timer of the pane's own wait before writing, 150 ms, set just before typing, so it runs just before the pane's:
+      // however late a busy machine runs timers, it runs this one as late, so the third of a second is held to that
+      // lateness, never to a fixed number of milliseconds alone. Set after typing, it ran after the pane's, and the
+      // writing's own work made it late too, so a slow write excused itself (the review of #40, 10 Oct 2026)
       const t0 = Date.now();
-      // a timer of the pane's own wait before writing, 150 ms, set at the same moment: however late a busy machine runs
-      // timers, it runs this one as late, so the third of a second is held to that lateness, never to a fixed number of
-      // milliseconds alone (10 Oct 2026)
       let timer = 0;
       setTimeout(() => (timer = Date.now() - t0), 150);
+      type(env.el, READER + ",\n(price:Reason {title: 'Costs more'})");
       while (note(env) === NOTE && Date.now() - t0 < 5000) await wait(10);
       const took = Date.now() - t0;
       while (!timer) await wait(10);
