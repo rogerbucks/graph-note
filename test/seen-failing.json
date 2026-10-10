@@ -563,6 +563,34 @@
     "IdOnce.test_both_readers_refuse_a_name_or_id_used_twice_alike": {
       "seen_failing_first": false,
       "evidence": "it pins agreement that already existed for req:3.id-once: both readers refused a variable written twice and an id clashing with another node's name before this test was written, so it passes at its parent by design"
+    },
+    "SetKeepsId.test_both_readers_read_a_set_of_another_key": {
+      "seen_failing_first": false,
+      "evidence": "a control case for req:3.set-keeps-id, written with the change beside it: a SET of a key other than id was read by both readers before and is read after, so it passes at its parent by design"
+    },
+    "IdIsText.test_both_readers_read_a_text_id": {
+      "seen_failing_first": false,
+      "evidence": "a control case for req:3.id-is-text, written with the change beside it: a text id was read by both readers before and is read after, so it passes at its parent by design"
+    }
+  },
+  "python/graph_spec/tests/test_store_ids.py": {
+    "SetKeepsId.test_a_set_of_any_other_key_is_still_read_in_the_same_block_and_a_later_one": {
+      "seen_failing_first": false,
+      "evidence": "a control case for req:3.set-keeps-id, written with the change beside it: a SET of a key other than id was read before and is read after, so it passes at its parent by design"
+    },
+    "IdIsText.test_a_text_id_is_read_and_a_number_among_the_other_properties_too": {
+      "seen_failing_first": false,
+      "evidence": "a control case for req:3.id-is-text, written with the change beside it: a text id, and a number in another property, were read before and are read after, so it passes at its parent by design"
+    }
+  },
+  "packages/graph-spec/test/store-ids.test.mjs": {
+    "req:3.set-keeps-id: SET never changes a node’s id > req:3.set-keeps-id: a SET of any other key is still read, in the same block and in a later one": {
+      "seen_failing_first": false,
+      "evidence": "a control case for req:3.set-keeps-id, written with the change beside it: a SET of a key other than id was read before and is read after, so it passes at its parent by design"
+    },
+    "req:3.id-is-text: a node’s id is always text > req:3.id-is-text: a text id is read, a number among the other properties too": {
+      "seen_failing_first": false,
+      "evidence": "a control case for req:3.id-is-text, written with the change beside it: a text id, and a number in another property, were read before and are read after, so it passes at its parent by design"
     }
   },
   "python/graph_spec/tests/test_id_once_engine.py": {

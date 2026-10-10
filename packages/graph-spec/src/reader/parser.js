@@ -75,13 +75,26 @@ class Parser {
       "use 'text', a number, TRUE, FALSE, DATE '…' or DATETIME '…' — no lists, no expressions",
     );
   }
-  props() {
+  /** Refuses a node's id written as a value that is not text — a number, TRUE, FALSE, DATE '…' or DATETIME '…' — with
+   * the fix that quotes it (§3, req:3.id-is-text). */
+  textId() {
+    const [k, t, n, raw] = this.peek(),
+      next = this.peek(1);
+    let written, quoted;
+    if (k === 'num' || (k === 'kw' && (t === 'TRUE' || t === 'FALSE'))) [written, quoted] = [raw, `'${raw}'`];
+    else if (k === 'kw' && (t === 'DATE' || t === 'DATETIME') && next[0] === 'str')
+      [written, quoted] = [`${raw} ${next[1]}`, next[1]];
+    else return;
+    throw new ProfileError(n, `id ${written} is not text`, `write id: ${quoted} — a node's id is always text (§3)`);
+  }
+  props(node = false) {
     const out = {};
     if (!this.at('p', '{')) return out;
     this.take('p', '{');
     while (!this.at('p', '}')) {
       const key = this.name();
       this.take('p', ':');
+      if (node && key === 'id') this.textId();
       out[key] = this.value();
       if (!this.at('p', '}')) this.take('p', ',');
     }
@@ -96,7 +109,7 @@ class Parser {
       this.take('p', ':');
       labels.push(this.name());
     }
-    const props = this.props();
+    const props = this.props(true);
     this.take('p', ')');
     return { v, labels, props, line: n };
   }
@@ -168,6 +181,13 @@ class Parser {
           v = this.name();
         this.take('p', '.');
         const key = this.name();
+        // §3, req:3.set-keeps-id: whatever the value — a used id, a fresh one, or the node's own
+        if (key === 'id')
+          throw new ProfileError(
+            n,
+            `SET would change ${v}'s id, and a node's id never changes`,
+            `write the right node, then link ${v} to it or supersede it (§12)`,
+          );
         this.take('p', '=');
         sets.push([v, key, this.value(), n]);
         if (!this.at('p', ',')) break;
