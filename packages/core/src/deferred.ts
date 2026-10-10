@@ -6,10 +6,11 @@
 import gs from '@graph-note/graph-spec';
 import type { Graph } from '@graph-note/graph-spec';
 import { blankText, items } from './block-items.ts';
-import { graphOf } from './blocks.ts';
-import { quoted as q } from './lock.ts';
+import { gqlSpans, graphOf, graphOfBlock, namesSharedSchema } from './blocks.ts';
+import { kindLines, quoted as q, typeLines } from './lock.ts';
 import type { NoteReading } from './note-reading.ts';
 import { readBlocks } from './partial-read.ts';
+import { replaceBlock } from './store.ts';
 import { S, isSpace, trim, trimEnd } from './whitespace.ts';
 
 /** What marking a thing for later says: what is needed and why it waits, and optionally the day to look again and the completeness rule parked. */
@@ -119,6 +120,42 @@ function undeclared(graphs: Graph[]): string[] {
   return [...(has('node', 'Deferred') ? [] : ['Deferred']), ...(has('edge', 'DEFERS') ? [] : ['DEFERS'])];
 }
 
+/**
+ * The refusal to park a thing in a locked graph whose schema does not declare Deferred and DEFERS (the graph library's
+ * §5 checks them like any type). It is told apart from the other refusals so a host can offer the fix, `declareDeferred`;
+ * its words are the same as ever.
+ */
+export class DeferredNotDeclared extends Error {
+  /** What a host tests for, rather than the words. */
+  readonly code = 'deferred-not-declared';
+  /** The locked graph. */
+  readonly graph: string;
+  /** What its schema lacks: `Deferred`, `DEFERS`, or both, in that order. */
+  readonly lacking: string[];
+
+  constructor(graph: string, lacking: string[]) {
+    super(
+      `graph ${graph} is locked and its schema does not declare ${lacking.join(' and ')}: declare them in the schema first`,
+    );
+    this.name = 'DeferredNotDeclared';
+    this.graph = graph;
+    this.lacking = lacking;
+  }
+}
+
+/** Whether a block ends with a SET, MATCH or INSERT, after which nothing can be added as another item. */
+function endsWithSet(block: string): boolean {
+  const last = items(block).at(-1);
+  return !!last && /^(SET|MATCH|INSERT)\b/i.test(blankText(block.slice(last.from, last.to)));
+}
+
+/** The block with a comma after its last item unless it ends in one (never two), a comment after the item kept and trailing blank lines dropped. */
+function commaAfterLast(block: string): string {
+  const text = trimEnd(block),
+    at = lastCode(text);
+  return at >= 0 && text[at] !== ',' ? `${text.slice(0, at + 1)},${text.slice(at + 1)}` : text;
+}
+
 /** Words as one line of text: each run of whitespace, line breaks included, becomes one space. */
 const oneLine = (s: string): string => trim(s.replace(new RegExp(`${S}+`, 'g'), ' '));
 
@@ -152,14 +189,9 @@ export function parkForLater(block: string, thing: string, park: Park, indent = 
   const own = gs.worldFromStore(readBlocks([block], []).store)[graph];
   const graphs = [own, whole].filter((x): x is Graph => !!x);
   if (!graphs.some((x) => x.nodes.has(thing))) throw new Error(`there is no ${thing} in graph ${graph} to park`);
-  const last = items(block).at(-1);
-  if (last && /^(SET|MATCH|INSERT)\b/i.test(blankText(block.slice(last.from, last.to))))
-    throw new Error('the block ends with a SET or MATCH: park it in a block of its own');
+  if (endsWithSet(block)) throw new Error('the block ends with a SET or MATCH: park it in a block of its own');
   const lacking = undeclared(graphs);
-  if (lacking.length)
-    throw new Error(
-      `graph ${graph} is locked and its schema does not declare ${lacking.join(' and ')}: declare them in the schema first`,
-    );
+  if (lacking.length) throw new DeferredNotDeclared(graph, lacking);
   let id = `later_${thing}`;
   for (let n = 2; graphs.some((x) => x.nodes.has(id)); n++) id = `later_${thing}_${n}`;
   const props = [
@@ -173,8 +205,80 @@ export function parkForLater(block: string, thing: string, park: Park, indent = 
     oneLined.length < 70
       ? [oneLined]
       : [`(${id}:Deferred {`, ...props.map((p, i) => `${indent}${p}${i < props.length - 1 ? ',' : '}),'}`)];
-  const text = trimEnd(block);
-  const at = lastCode(text);
-  const comma = at >= 0 && text[at] !== ',' ? `${text.slice(0, at + 1)},${text.slice(at + 1)}` : text;
-  return [comma, ...written, `(${id})-[:DEFERS]->(${thing})`].join('\n');
+  return [commaAfterLast(block), ...written, `(${id})-[:DEFERS]->(${thing})`].join('\n');
+}
+
+/** Where Deferred and DEFERS are declared: the index of the block in the note's blocks, and its text as it becomes. */
+export interface DeferredDeclared {
+  block: number;
+  text: string;
+}
+
+const PLAIN_ID = /^[A-Za-z_]\w*$/;
+
+/**
+ * The fix for `DeferredNotDeclared`, on the texts of a note's blocks: the block that holds the graph's GraphMeta with
+ * Deferred and DEFERS declared at its end, as Lock writes a declaration (a `Meta:ElementType`, and for DEFERS the
+ * readings `defers` and `is deferred by`, written here because the library's guess misspells the second, and
+ * `(<GraphMeta>)-[:DECLARES]->(…)`), only for what the schema lacks, with ids fresh across the graph's blocks and a
+ * comma where GQL needs one. The text is unchanged when nothing is lacking.
+ * `indent` is the settings' choice. Throws an Error saying why when the graph is not in the note, is a draft (no
+ * schema block), is typed by a shared schema (declare them there), has no GraphMeta to declare from, or the block ends
+ * with a SET or MATCH.
+ */
+export function declareDeferredBlock(blocks: string[], graph: string, indent = '    '): DeferredDeclared {
+  const own = blocks.flatMap((b, i) => (graphOfBlock(b) === graph ? [i] : []));
+  if (!own.length) throw new Error(`there is no graph ${graph} in the note to declare them in`);
+  const worlds = own.map((i) => gs.worldFromStore(readBlocks([blocks[i] ?? ''], []).store)[graph]);
+  const graphs = worlds.filter((g): g is Graph => !!g);
+  if (!graphs.some((g) => g.labelled('ElementType').length))
+    throw new Error(
+      own.some((i) => namesSharedSchema(blocks[i] ?? ''))
+        ? `graph ${graph} is typed by a shared schema, which declares its types: declare Deferred and DEFERS there`
+        : `graph ${graph} has no schema block in the note: lock the graph first`,
+    );
+  const metaIn = worlds.findIndex((g) => g?.labelled('GraphMeta').some((m) => PLAIN_ID.test(m)));
+  const at = own[Math.max(metaIn, 0)] ?? 0;
+  const lacking = undeclared(graphs);
+  const block = blocks[at] ?? '';
+  if (!lacking.length) return { block: at, text: block };
+  const meta = worlds[metaIn]?.labelled('GraphMeta').find((m) => PLAIN_ID.test(m));
+  if (!meta) throw new Error(`graph ${graph} has no GraphMeta to declare them from: add one to its schema first`);
+  if (endsWithSet(block))
+    throw new Error('the block that holds the schema ends with a SET or MATCH: end it with a thing of its own first');
+  const taken = new Set(graphs.flatMap((g) => [...g.nodes.keys()]));
+  const fresh = (want: string) => {
+    let id = want;
+    for (let n = 2; taken.has(id); n++) id = `${want}_${n}`;
+    taken.add(id);
+    return id;
+  };
+  const kind = lacking.includes('Deferred') ? fresh('kind_deferred') : '';
+  const link = lacking.includes('DEFERS') ? fresh('link_defers') : '';
+  const written = [
+    '// ── Deferred things, declared so one can be parked for later ──',
+    ...(kind ? kindLines(kind, 'Deferred', indent) : []),
+    ...(link ? typeLines(link, 'DEFERS', 'defers', 'is deferred by', indent) : []),
+    ...[kind, link].filter(Boolean).map((id) => `(${meta})-[:DECLARES]->(${id}),`),
+  ];
+  return { block: at, text: [commaAfterLast(block), ...written].join('\n').replace(/,$/, '') };
+}
+
+/**
+ * The note with Deferred and DEFERS declared in the schema of a locked graph (the fix for `DeferredNotDeclared`):
+ * `declareDeferredBlock` written into the block that holds the graph's GraphMeta, every other byte of the note kept,
+ * line endings included. The note itself when nothing is lacking. Throws what `declareDeferredBlock` throws.
+ */
+export function declareDeferred(note: string, graph: string, indent = '    '): string {
+  const spans = gqlSpans(note);
+  const { block, text } = declareDeferredBlock(
+    spans.map((s) => s.text),
+    graph,
+    indent,
+  );
+  const span = spans[block];
+  if (!span || text === span.text) return note;
+  const r = replaceBlock(note, { line: span.open, text: span.text }, text);
+  if (!r.ok) throw new Error(r.reason);
+  return r.note;
 }

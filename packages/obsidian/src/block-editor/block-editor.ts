@@ -1,11 +1,9 @@
 // The block editor (spec §4, §9): the text of one graph block, with everything that helps write it — a plain text field
-// over a coloured picture of it, problems marked with their fixes on the caret's line, suggestions, each line read back, the
-// comma added for you — and the safe writing behind it: what is typed is written through the core's session, which never
-// overwrites a block changed meanwhile and keeps what was typed as a draft; undo, redo and Lock the graph. Shared by the
-// edit pane and by the editor in place inside a drawing's card. This module ties together the parts in its folder.
+// over a coloured picture of it, problems with fixes, suggestions, each line read back, the comma added for you — and the
+// safe writing behind it (the core's session never overwrites a block changed meanwhile), undo, redo and Lock the graph.
 import { Component, TFile } from 'obsidian';
 import type { App } from 'obsidian';
-import { isDraft } from '@graph-note/core';
+import { indentText, isDraft } from '@graph-note/core';
 import type { Change, CompletionItem, NoteReading, PaneSession } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
 import { buildEditor, showTools } from './editor-layout';
@@ -122,6 +120,8 @@ export class BlockEditor extends Component {
 
   /** What the card's details were open on, so its inspector reopens on it after each redraw. */
   selected: { key: string } | { link: number } | null = null;
+  /** Park for later's fix: Deferred and DEFERS declared in the graph's schema, wherever it is written. */
+  declareDeferred = () => this.note.declareDeferred(indentText(this.plugin.settings.indent));
 
   /** Replaces the whole text, as an edit made from the inspector: shown, checked and written like typing. */
   replace(text: string): void {

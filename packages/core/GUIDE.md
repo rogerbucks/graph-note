@@ -38,8 +38,14 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `deferred.ts` — deferred things (§5, §8): `parkForLater` writes a Deferred (what, why, an optional revisit day and rule)
   as a block's last items, with the comma GQL needs and a fresh `later_<thing>` id (fresh in the whole graph when the
   note's reading of it is given), and refuses an empty what or why, a block ending with SET or MATCH, and a locked graph
-  whose schema does not declare Deferred and DEFERS (the graph library checks them like any type);
-  `parked` says which things some Deferred defers and which are overdue (every Deferred on the thing is past its
+  whose schema does not declare Deferred and DEFERS (the graph library checks them like any type), with a
+  `DeferredNotDeclared` (same words, a `code` and the `lacking` names) so a host can offer the fix;
+  `declareDeferred(note, graph, indent)` is that fix: the note with Deferred and DEFERS declared, as Lock writes a
+  declaration (readings `defers` and `is deferred by`; the library's guess misspells the second), in the block that holds
+  the graph's GraphMeta, only what is lacking, with fresh ids and the comma GQL needs, every other byte kept; it refuses
+  a draft, a graph typed by a shared schema, a schema with no GraphMeta, and a block ending with SET or MATCH.
+  `declareDeferredBlock(blocks, graph, indent)` is the same on the blocks' texts, giving the block's index and new
+  text, for a host that is editing that block itself; `parked` says which things some Deferred defers and which are overdue (every Deferred on the thing is past its
   `revisit_by`, as `completeness.js` counts), and `parkedCount` how many of each, apart from the problems. `readNote`
   sets `Box.deferred` on each such box (it takes the day as its fifth argument, the current day by default); the layout
   source is untouched, so the host draws the dashing and the later mark on the finished drawing.
@@ -71,7 +77,8 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 
 **Editing**
 
-- `pane.ts` — the edit session: what is typed, written back to the note safely.
+- `pane.ts` — the edit session: what is typed, written back to the note safely; `texts` gives the note's blocks with the
+  typed text in the edited block's place.
 - `store.ts` — replacing or inserting a block in a note, keeping every other byte.
 - `history.ts` — the text's own undo history.
 - `help.ts` — diagnostics, fixes, completions and the read-back, in the shapes of the Language Server Protocol.
@@ -85,7 +92,8 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   value) and the closer stepped over; nothing is inserted unasked.
 - `inspector.ts` — properties of a thing or link, edited as text.
 - `linked-list.ts` — a property held as things linked to this one: made, added to and removed from, as text edits.
-- `lock.ts` — Lock the graph: a draft's schema written out, indented as the settings say.
+- `lock.ts` — Lock the graph: a draft's schema written out, indented as the settings say; `kindLines` and `typeLines`
+  are the lines that declare one kind or relationship type, which `declareDeferred` writes the same way.
 
 **Paths (spec §7; graph spec §22)**
 

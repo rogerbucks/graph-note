@@ -47,8 +47,15 @@ export type { AiModel, Choice as OptionChoice, Indent, Option, Settings } from '
 export type { Choice, PaneWrite } from './pane.ts';
 export { completenessReport } from './completeness.ts';
 export type { CompletenessReport, RuleReport } from './completeness.ts';
-export { parkForLater, parked, parkedCount } from './deferred.ts';
-export type { Park, Parked, ParkedCount } from './deferred.ts';
+export {
+  DeferredNotDeclared,
+  declareDeferred,
+  declareDeferredBlock,
+  parkForLater,
+  parked,
+  parkedCount,
+} from './deferred.ts';
+export type { DeferredDeclared, Park, Parked, ParkedCount } from './deferred.ts';
 export { nameFromText, nameSlug, nameStyleOf, nameWords, textFromName } from './name-suggestions.ts';
 export type { GraphNames, NameStyle } from './name-suggestions.ts';
 export { commaFor, commaInNote, colonFor, colonInNote } from './commas.ts';

@@ -52,7 +52,10 @@ module that ties the parts together, named as the folder is.
 - `details-panel.ts` — the details of a box or link, and the inspector while the block is edited.
 - `parked.ts` — things parked for later (§5, §8): each drawn dashed with a "⏳ later" or "⏳ overdue" mark on the SVG
   Graphviz drew, so the layout stays the Python library's; listed behind the badge, which counts them apart from
-  problems; and Park for later in a box's details while the block is edited, writing the Deferred into its text.
+  problems; and Park for later in a box's details while the block is edited, writing the Deferred into its text. In a
+  locked graph whose schema lacks Deferred and DEFERS, the refusal offers "Declare Deferred and DEFERS in the schema",
+  which writes them (`BlockNote.declareDeferred`: into the text being edited when the schema is in that block, else
+  through `vault.process`) and then parks, with what was typed in the form kept.
 - `walk.ts` — walked paths (§7): the strip below the bar with Play for each path in the note, stepping one thing at a
   time, marked and said; a path with no steps said to have none; and, while the block is edited, Record, which numbers
   each box as it is tapped and writes the path into the text.

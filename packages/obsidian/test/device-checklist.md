@@ -158,6 +158,12 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
       and dark, and the badge says "No problems, 1 parked" (slice 2, park_for_later, deferred_drawn, parked_not_broken).
 - [ ] Change its revisit_by to a day in the past: the mark says "⏳ overdue", the badge adds "1 overdue", and the list
       behind the badge names it with what is needed. VoiceOver reads the box as "parked for later, overdue".
+- [ ] In a locked graph whose schema does not declare Deferred and DEFERS, Edit here, tap a box, press Park for later,
+      fill the form and press Park it: the message says to declare them, and a button "Declare Deferred and DEFERS in
+      the schema" appears below it, as big as the other buttons to touch and read by VoiceOver. Press it: the two
+      declarations are written at the end of the block that holds the schema (in the text being edited, or, when the
+      schema is in a later block, in that block of the note), the Deferred is written with what you typed in the form,
+      and the badge says "No problems, 1 parked" (park_for_later).
 
 ## Walked paths — spec §7
 

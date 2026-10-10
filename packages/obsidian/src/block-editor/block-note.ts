@@ -3,8 +3,17 @@
 // refused write held kept as a draft in the plugin's data, never lost.
 import { Notice } from 'obsidian';
 import type { TFile } from 'obsidian';
-import { PaneSession, gqlSpans, indentText, lockBlock, namesSharedSchema } from '@graph-note/core';
+import {
+  PaneSession,
+  declareDeferred,
+  declareDeferredBlock,
+  gqlSpans,
+  indentText,
+  lockBlock,
+  namesSharedSchema,
+} from '@graph-note/core';
 import type GraphNotePlugin from '../main';
+import type { DeclaredDeferred } from '../graph-view/view-options';
 import type { KeptDraft } from './kept-draft';
 import { lockInNote, stepNote, writeThroughEditor, writeThroughVault } from './note-writing';
 import type { Refused } from './note-writing';
@@ -79,6 +88,23 @@ export class BlockNote {
     const block = lockBlock(s.reading(this.text), s.graph, today, indentText(this.plugin.settings.indent));
     await lockInNote(this.plugin.app.vault, file, s.graph, block, (note) => (this.text = note));
     s.noteChanged(this.text);
+  }
+
+  /**
+   * Park for later's fix (spec §5): Deferred and DEFERS declared in the schema of the graph being edited. When the schema
+   * is written in the block being edited, the text to park into holds the declarations; when it is in another block, they
+   * are written into the note through the vault, atomically against the note as it is now. Rejects with why it cannot.
+   */
+  async declareDeferred(indent: string): Promise<DeclaredDeferred> {
+    const s = this.session,
+      file = this.file();
+    if (!s || !file) throw new Error('the note is not open');
+    const { texts, index } = s.texts(this.text);
+    const here = declareDeferredBlock(texts, s.graph, indent);
+    if (here.block === index) return { text: here.text, whole: s.reading(this.text).whole[s.graph] };
+    await this.plugin.app.vault.process(file, (data) => (this.text = declareDeferred(data, s.graph, indent)));
+    s.noteChanged(this.text);
+    return { text: s.text, whole: s.reading(this.text).whole[s.graph] };
   }
 
   /** The note's new text after `f` changed: what the session made of it, or null when `f` is another note or its text is the same. */
