@@ -20,6 +20,12 @@ export interface Box {
    * the block it is written in, and the 0-based line and character there, just after its (, where the name would go.
    */
   suggested?: { block: number; line: number; character: number };
+  /**
+   * Only for a thing some Deferred defers (spec §5, deferred_drawn): what is needed before it is done, and whether every
+   * Deferred on it is past its revisit date. The core only says which boxes these are; the host draws the dashing and the
+   * later mark on the finished drawing, so the layout source stays byte-identical with the Python library's.
+   */
+  deferred?: { overdue: boolean; what: string };
 }
 
 /** One link to draw, read in its schema's words. */

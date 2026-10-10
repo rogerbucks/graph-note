@@ -3,7 +3,8 @@
 // with those added deliberately since: completing as you type (inlineCompletion, stepOver, Inline, InlineKind), lists as
 // linked things (makeList and its kin), and name suggestions (nameFromText, nameSlug, nameStyleOf, nameWords,
 // textFromName and their types), and the layout kept apart from the interface (LayoutRunner and its kin, 10 Oct 2026),
-// and the settings and strictness of §21 (OPTIONS, settingsFrom, toStandard and their kin, 11 Oct 2026).
+// and the settings and strictness of §21 (OPTIONS, settingsFrom, toStandard and their kin, 11 Oct 2026), and deferred
+// things (parkForLater, parked, parkedCount and their types, 11 Oct 2026).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -77,6 +78,9 @@ const VALUES = [
   'nameWords',
   'namesSharedSchema',
   'nearby',
+  'parkForLater',
+  'parked',
+  'parkedCount',
   'parseValue',
   'propertiesOf',
   'propertyNames',
@@ -146,6 +150,9 @@ const TYPES = [
   'Option',
   'OptionChoice',
   'PaneWrite',
+  'Park',
+  'Parked',
+  'ParkedCount',
   'Parsed',
   'Position',
   'Problem',
