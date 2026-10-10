@@ -10,6 +10,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -17,7 +18,7 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 sys.path.insert(0, os.path.join(HERE, "..", "src"))
 
 import gql_profile as gp  # noqa: E402
-from graphspec.reader.lexer import header  # noqa: E402
+from graphspec.reader.lexer import header, tokens  # noqa: E402
 
 BLOCKS = [
     "// graph: g\n(a:T {n: \N{ARABIC-INDIC DIGIT THREE}})",
@@ -69,6 +70,40 @@ class AsciiAsJavaScriptReadsIt(unittest.TestCase):
 
     def test_a_letter_in_another_script_ends_no_keyword(self):
         self.assertEqual([header(h)[1] for h in HEADERS], self.js["headers"])
+
+
+def one_line(n):
+    """A data block of n things, all on its one line."""
+    return "// graph: g\n" + ", ".join(f"(n{i}:T {{name: 'x'}})" for i in range(n))
+
+
+def seconds(f, arg):
+    """How long f(arg) takes."""
+    start = time.perf_counter()
+    f(arg)
+    return time.perf_counter() - start
+
+
+class OneLongLine(unittest.TestCase):
+    """A broken block is re-read up to the shared budget (editor spec §9), so a slow read of one
+    long line is paid many times over: the reader's time must grow with the line's length, not
+    with its square."""
+
+    def test_a_line_four_times_as_long_is_read_in_about_four_times_the_time(self):
+        short, long = one_line(2000), one_line(8000)
+        # timed against each other in the same run, never against a fixed time, so a loaded
+        # machine slows both alike; the fastest of several runs, taken in turn, is the one least
+        # disturbed. Linear reading gives a ratio of about 4, quadratic about 16.
+        t_short = t_long = float("inf")
+        for _ in range(5):
+            t_short = min(t_short, seconds(tokens, short))
+            t_long = min(t_long, seconds(tokens, long))
+        self.assertLess(
+            t_long / t_short,
+            1.5 * len(long) / len(short),
+            f"{len(short)} characters took {t_short * 1000:.0f} ms, "
+            f"{len(long)} took {t_long * 1000:.0f} ms",
+        )
 
 
 if __name__ == "__main__":
