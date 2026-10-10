@@ -143,9 +143,9 @@ class Parity(unittest.TestCase):
             cls.expected = json.load(f)
 
     def test_every_case(self):
+        # a plain loop, never subTest: the tests-first replay counts a test by its own result
         for name, q in self.loaded["cases"].items():
-            with self.subTest(case=name):
-                self.assertEqual(answer(q), self.expected[slug(name)])
+            self.assertEqual(answer(q), self.expected[slug(name)], f"case {name}")
 
     def test_a_change_set_current_and_stale(self):
         st = gp.Store()
