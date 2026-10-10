@@ -9,22 +9,28 @@ import re
 from graphspec.reader.lexer import ProfileError, UTC, unquote
 
 
+class IdNotTextError(ProfileError):
+    """A node's id written as a value that is not text (§3, req:3.id-is-text): the missing comma's
+    retry keeps it, never taking it for a pattern that is not one."""
+
+
 class Parser:
     def __init__(self, toks):
-        # commas: the lines a missing comma was read after (§3)
+        # commas: (line, at) for each missing comma read in (§3) — the line it is missing from,
+        # and where in the block the code on that line ends, which is where it is written in
         self.t, self.i, self.commas = toks, 0, []
 
     def peek(self, k=0):
         return (
             self.t[self.i + k]
             if self.i + k < len(self.t)
-            else ("end", "", self.t[-1][2] if self.t else 1, "")
+            else ("end", "", self.t[-1][2] if self.t else 1, "", self.t[-1][4] if self.t else 0)
         )
 
     def name(self):
         """A label, type, key or variable — a keyword in a name's place is a name (Grafeo 0.5.43
         accepts date, to and on as names)."""
-        k, t, n, raw = self.peek()
+        k, t, n, raw, _ = self.peek()
         if k in ("id", "kw"):
             self.i += 1
             return raw
@@ -52,7 +58,7 @@ class Parser:
         return (not kind or tok[0] == kind) and (not text or tok[1] == text)
 
     def value(self):
-        k, t, n, _ = self.peek()
+        k, t, n, _, _ = self.peek()
         if k == "str":
             self.i += 1
             return unquote(t)
@@ -91,7 +97,21 @@ class Parser:
             "no lists, no expressions",
         )
 
-    def props(self):
+    def text_id(self):
+        """Refuses a node's id written as a value that is not text — a number, TRUE, FALSE, DATE
+        '…' or DATETIME '…' — with the fix that quotes it (§3, req:3.id-is-text)."""
+        k, t, n, raw, _ = self.peek()
+        if k == "num" or (k == "kw" and t in ("TRUE", "FALSE")):
+            written, quoted = raw, f"'{raw}'"
+        elif k == "kw" and t in ("DATE", "DATETIME") and self.peek(1)[0] == "str":
+            written, quoted = f"{raw} {self.peek(1)[1]}", self.peek(1)[1]
+        else:
+            return
+        raise IdNotTextError(
+            n, f"id {written} is not text", f"write id: {quoted} — a node's id is always text (§3)"
+        )
+
+    def props(self, node=False):
         out = {}
         if not self.at("p", "{"):
             return out
@@ -99,6 +119,8 @@ class Parser:
         while not self.at("p", "}"):
             key = self.name()
             self.take("p", ":")
+            if node and key == "id":
+                self.text_id()
             out[key] = self.value()
             if not self.at("p", "}"):
                 self.take("p", ",")
@@ -112,7 +134,7 @@ class Parser:
         while self.at("p", ":"):
             self.take("p", ":")
             labels.append(self.name())
-        props = self.props()
+        props = self.props(node=True)
         self.take("p", ")")
         return {"var": var, "labels": labels, "props": props, "line": n}
 
@@ -126,12 +148,15 @@ class Parser:
             bare = not self.at("p", ":")
             if not bare:
                 self.take("p", ":")
-            line = self.line()
+            _, _, line, raw, end = self.peek()
             typ = self.name()
             props = self.props()
             self.take("p", "]")
             self.take("arrow")
-            rels.append({"type": typ, "props": props, "bare": bare, "line": line})
+            # at: where the type begins in the block, where a bare one's colon is written in
+            rels.append(
+                {"type": typ, "props": props, "bare": bare, "line": line, "at": end - len(raw)}
+            )
             nodes.append(self.node())
         return nodes, rels
 
@@ -162,10 +187,13 @@ class Parser:
                     at = self.i
                     try:
                         p = self.path()
+                    except IdNotTextError:
+                        raise  # its id refused, never hidden as "unexpected '('" (review of #49)
                     except ProfileError:
                         self.i = at
                     else:
-                        self.commas.append(prev[2])
+                        # the token before ends its line's code: a comment after code is refused
+                        self.commas.append((prev[2], prev[4]))
                         paths.append(p)
                         continue
                 break
@@ -176,6 +204,14 @@ class Parser:
                 var = self.name()
                 self.take("p", ".")
                 key = self.name()
+                if key == "id":
+                    # §3, req:3.set-keeps-id: whatever the value — a used id, a fresh one, or
+                    # the node's own
+                    raise ProfileError(
+                        n,
+                        f"SET would change {var}'s id, and a node's id never changes (§3)",
+                        f"write the right node, then link {var} to it or supersede it (§12)",
+                    )
                 self.take("p", "=")
                 sets.append((var, key, self.value(), n))
                 if not self.at("p", ","):

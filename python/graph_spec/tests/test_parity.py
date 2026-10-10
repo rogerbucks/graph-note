@@ -383,6 +383,63 @@ class BareLinkType(unittest.TestCase):
         self.assertEqual(parsed_bare(BARE_BLOCK, "grafeo"), want)
 
 
+# req:3.engine-gets-commas: a comma missing before the spaces that end a line, after a property map
+# written over two lines, and on the line of a link type written without its colon
+COMMA_HEAD = "// graph: g · document doc:one · schema s1 · as of 2026-10-01"
+MISSING_COMMA_BLOCKS = [
+    f"{COMMA_HEAD}\n(r:Reason {{id: 'r', title: 'Sun'}})   \n(o:Option {{id: 'o',\n"
+    "  name: 'Coast'})\n(r)-[:FAVOURS]->(o)",
+    f"{COMMA_HEAD}\n(r:Reason {{id: 'r', title: 'Sun'}})\n(o:Option {{id: 'o', name: 'Coast'}}),\n"
+    "(r)-[:FAVOURS]->(o),\n(q:Reason {id: 'q', title: 'Quiet'}),\n// quiet favours it\n"
+    "(q)-[favours]->(o)\n(p:Reason {id: 'p', title: 'Hills'})",
+]
+GRAPH_SPEC_CHECK = os.path.join(ROOT, "packages", "graph-spec", "src", "graph-spec-check.js")
+
+
+def js_corrected(block):
+    """The JavaScript reader's corrected text for a block, by Node, and the ids and link types it
+    reads."""
+    script = (
+        "const C = require(process.argv[1]); const s = new C.Store();"
+        " const g = s.graphs[s.apply(process.argv[2])];"
+        " process.stdout.write(JSON.stringify({corrected: s.corrected(process.argv[2]),"
+        " ids: [...g.nodes.values()].map((n) => n.props.id).sort(),"
+        " types: g.edges.map((e) => e[1]).sort()}))"
+    )
+    out = subprocess.run(
+        ["node", "-e", script, GRAPH_SPEC_CHECK, block], capture_output=True, text=True, check=True
+    ).stdout
+    return json.loads(out)
+
+
+def loaded(text):
+    """A text loaded into Grafeo (which reads it with the reader first): its ids and link types."""
+    db = gs.load(text)
+    rows = gs.Q(db, "MATCH (x) RETURN x.id AS i")
+    types = gs.Q(db, "MATCH ()-[r]->() RETURN type(r) AS t")
+    return {"ids": sorted(r["i"] for r in rows), "types": sorted(r["t"] for r in types)}
+
+
+class MissingComma(unittest.TestCase):
+    def test_the_js_and_python_readers_correct_a_missing_comma_to_the_same_text(self):
+        for block in MISSING_COMMA_BLOCKS:
+            js = js_corrected(block)
+            st = gp.Store()
+            st.apply(block)
+            ours = st.corrected(block)
+            self.assertEqual(js["corrected"], ours, block)
+            self.assertEqual(len(ours.split("\n")), len(block.split("\n")), block)
+            self.assertNotEqual(ours, block)
+
+    def test_the_js_and_python_corrected_texts_load_the_graph_both_readers_read(self):
+        for block in MISSING_COMMA_BLOCKS:
+            js = js_corrected(block)
+            want = {"ids": js["ids"], "types": js["types"]}
+            self.assertEqual(loaded(js["corrected"]), want, block)
+            self.assertEqual(parsed_bare(block, "grafeo"), want, block)
+            self.assertEqual(parsed_bare(block, "profile"), want, block)
+
+
 # Blocks the readers refuse, each in a document parse() can read the header of: the two halves of
 # req:3.id-once, and a block that is not one data statement, which Grafeo would take whole.
 DOC_HEAD = "// graph: g · document doc:one · schema s1 · as of 2026-10-01"
@@ -393,6 +450,139 @@ ENGINE_BLOCKS = {
         f"{DOC_HEAD}\nINSERT (a:T {{id: 'x'}})\nINSERT (b:T {{id: 'x'}})"
     ),
 }
+
+
+def core_refusals_of(notes):
+    """The core's errors for each note, its blocks read together, by Node: block, line, message
+    and fix."""
+    script = (
+        "import(process.argv[1]).then((m) => process.stdout.write(JSON.stringify("
+        "JSON.parse(process.argv[2]).map((bs) => m.readBlocks(bs, []).problems"
+        ".filter((p) => p.severity === 'error')"
+        ".map((p) => [p.block, p.line, p.message, p.fix])))))"
+    )
+    out = subprocess.run(
+        ["node", "-e", script, "file://" + CORE, json.dumps(notes)],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
+    return json.loads(out)
+
+
+def id_kind(message):
+    """Which id rule a refusal is: the rule, then its section (§3)."""
+    if message.endswith("a node's id never changes (§3)"):
+        return "id set"
+    if message.endswith("is not text"):
+        return "id not text"
+    return message
+
+
+def both_refuse_alike(test, notes, kind):
+    """Both readers refuse each note once, at the same block and line, of the same kind, with the
+    same message and fix, word for word."""
+    names = list(notes)
+    core = core_refusals_of([notes[n] for n in names])
+    # a plain loop, never subTest: the tests-first replay counts a test by its own result
+    for name, theirs in zip(names, core):
+        _, problems = gp.read_for_drawing(notes[name])
+        ours = [
+            [p["block"], p["line"], p["message"], p["fix"]]
+            for p in problems
+            if p["severity"] == "error"
+        ]
+        test.assertEqual(len(ours), 1, name)
+        test.assertEqual(id_kind(ours[0][2]), kind, name)
+        test.assertEqual(ours, theirs, name)
+
+
+# req:3.set-keeps-id: a SET of id to a used id, a fresh id and the node's own id, in the same
+# block and in a later one, and a SET of another key, which both read
+TWO_NODES = "// graph: g\n(a:T {id: 'a'}),\n(b:T {id: 'b'})"
+SET_ID_NOTES = {
+    **{
+        f"SET b.id = {v} in the same block": [f"{TWO_NODES}\nSET b.id = {v}"]
+        for v in ("'a'", "'c'", "'b'")
+    },
+    **{
+        f"SET b.id = {v} in a later block": [TWO_NODES, f"// graph: g\nSET b.id = {v}"]
+        for v in ("'a'", "'c'", "'b'")
+    },
+    "SET of id on a node MATCH finds": [
+        TWO_NODES,
+        "// graph: g\nMATCH (x:T {id: 'b'})\nINSERT (c:T)\nSET x.id = 'c'",
+    ],
+}
+
+
+class SetKeepsId(unittest.TestCase):
+    def test_both_readers_refuse_a_set_of_id_alike(self):
+        # req:3.set-keeps-id, live: the JavaScript reader through Node, and the Python reader
+        both_refuse_alike(self, SET_ID_NOTES, "id set")
+
+    def test_both_readers_read_a_set_of_another_key(self):
+        # req:3.set-keeps-id: only id is kept
+        note = [TWO_NODES, "// graph: g\nSET b.name = 'Bee'"]
+        self.assertEqual(core_refusals_of([note]), [[]])
+        self.assertEqual([p for p in gp.read_for_drawing(note)[1] if p["severity"] == "error"], [])
+
+
+# req:3.id-is-text: each non-text id form, in INSERT, in the data shortcut and in MATCH
+NON_TEXT_IDS = [
+    "1",
+    "1.0",
+    "-2",
+    "TRUE",
+    "false",
+    "DATE '2026-10-01'",
+    "DATETIME '2026-10-01T09:00:00+01:00'",
+]
+ID_TEXT_NOTES = {
+    **{
+        f"id: {v} in INSERT": [f"// graph: g\nINSERT (a:T {{name: 'A'}}),\n(b:T {{id: {v}}})"]
+        for v in NON_TEXT_IDS
+    },
+    **{
+        f"id: {v} in MATCH": [TWO_NODES, f"// graph: g\nMATCH (x:T {{id: {v}}})\nINSERT (c:T)"]
+        for v in NON_TEXT_IDS
+    },
+    "id: 7 on the third line of a map": ["// graph: g\n(b:T {name: 'B',\n  size: 2,\n  id: 7})"],
+}
+
+
+class IdIsText(unittest.TestCase):
+    def test_both_readers_refuse_a_non_text_id_alike(self):
+        # req:3.id-is-text, live: the JavaScript reader through Node, and the Python reader
+        both_refuse_alike(self, ID_TEXT_NOTES, "id not text")
+
+    def test_both_readers_read_a_text_id(self):
+        # req:3.id-is-text
+        note = ["// graph: g\n(b:T {id: '1', size: 1})"]
+        self.assertEqual(core_refusals_of([note]), [[]])
+        self.assertEqual([p for p in gp.read_for_drawing(note)[1] if p["severity"] == "error"], [])
+
+
+# review of #49: a missing comma before a pattern hides neither id refusal — the comma's retry
+# keeps the refusal it meets, so both readers give it, not "unexpected '('"
+COMMA_ID_NOTES = {
+    "id: 1 after a missing comma": ["// graph: g\n(a:T {id: 'a'})\n(b:T {id: 1})"],
+    "id: TRUE in a path after a missing comma": [
+        "// graph: g\n(a:T {id: 'a'})\n(b:T {name: 'B'})-[:R]->(c:T {id: TRUE})"
+    ],
+}
+COMMA_SET_NOTES = {
+    "SET of id after a missing comma": [
+        "// graph: g\n(a:T {id: 'a'})\n(b:T {id: 'b'})\nSET b.id = 'c'"
+    ],
+}
+
+
+class MissingCommaHidesNoIdRefusal(unittest.TestCase):
+    def test_both_readers_give_each_id_refusal_after_a_missing_comma(self):
+        # req:3.id-is-text and req:3.set-keeps-id, live: neither is hidden by a missing comma
+        both_refuse_alike(self, COMMA_ID_NOTES, "id not text")
+        both_refuse_alike(self, COMMA_SET_NOTES, "id set")
 
 
 if __name__ == "__main__":

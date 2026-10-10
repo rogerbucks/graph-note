@@ -5,14 +5,21 @@ const { GTime } = require('../values/times.js');
 const { ProfileError } = require('./profile-error.js');
 const { unquote, utcNaive } = require('./tokens.js');
 
+/** A node's id written as a value that is not text (§3, req:3.id-is-text): the missing comma's retry keeps it, never
+ * taking it for a pattern that is not one. */
+class IdNotTextError extends ProfileError {}
+
 class Parser {
   constructor(t) {
     this.t = t;
     this.i = 0;
+    // commas: [line, at] for each missing comma read in (§3): the line it is missing from, and where in the block the
+    // code on that line ends, which is where it is written in
     this.commas = [];
-  } // commas: the lines a missing comma was read after (§3)
+  }
   peek(k = 0) {
-    return this.t[this.i + k] || ['end', '', this.t.length ? this.t[this.t.length - 1][2] : 1, ''];
+    const last = this.t[this.t.length - 1];
+    return this.t[this.i + k] || ['end', '', last ? last[2] : 1, '', last ? last[4] : 0];
   }
   line() {
     return this.peek()[2];
@@ -72,13 +79,26 @@ class Parser {
       "use 'text', a number, TRUE, FALSE, DATE '…' or DATETIME '…' — no lists, no expressions",
     );
   }
-  props() {
+  /** Refuses a node's id written as a value that is not text — a number, TRUE, FALSE, DATE '…' or DATETIME '…' — with
+   * the fix that quotes it (§3, req:3.id-is-text). */
+  textId() {
+    const [k, t, n, raw] = this.peek(),
+      next = this.peek(1);
+    let written, quoted;
+    if (k === 'num' || (k === 'kw' && (t === 'TRUE' || t === 'FALSE'))) [written, quoted] = [raw, `'${raw}'`];
+    else if (k === 'kw' && (t === 'DATE' || t === 'DATETIME') && next[0] === 'str')
+      [written, quoted] = [`${raw} ${next[1]}`, next[1]];
+    else return;
+    throw new IdNotTextError(n, `id ${written} is not text`, `write id: ${quoted} — a node's id is always text (§3)`);
+  }
+  props(node = false) {
     const out = {};
     if (!this.at('p', '{')) return out;
     this.take('p', '{');
     while (!this.at('p', '}')) {
       const key = this.name();
       this.take('p', ':');
+      if (node && key === 'id') this.textId();
       out[key] = this.value();
       if (!this.at('p', '}')) this.take('p', ',');
     }
@@ -93,7 +113,7 @@ class Parser {
       this.take('p', ':');
       labels.push(this.name());
     }
-    const props = this.props();
+    const props = this.props(true);
     this.take('p', ')');
     return { v, labels, props, line: n };
   }
@@ -107,12 +127,13 @@ class Parser {
       // (§3, req:3.bare-link-type)
       const bare = !this.at('p', ':');
       if (!bare) this.take('p', ':');
-      const line = this.line();
+      const [, , line, raw, end] = this.peek();
       const type = this.name();
       const props = this.props();
       this.take('p', ']');
       this.take('arrow');
-      rels.push({ type, props, bare, line });
+      // at: where the type begins in the block, where a bare one's colon is written in
+      rels.push({ type, props, bare, line, at: end - raw.length });
       nodes.push(this.node());
     }
     return [nodes, rels];
@@ -146,11 +167,12 @@ class Parser {
           const at = this.i;
           try {
             const p = this.path();
-            this.commas.push(prev[2]);
+            this.commas.push([prev[2], prev[4]]); // the token before ends its line's code: a comment after code is refused
             paths.push(p);
             continue;
           } catch (e) {
-            if (!(e instanceof ProfileError)) throw e;
+            // its id refused, never hidden as "unexpected '('" (review of #49)
+            if (!(e instanceof ProfileError) || e instanceof IdNotTextError) throw e;
             this.i = at;
           }
         }
@@ -164,6 +186,13 @@ class Parser {
           v = this.name();
         this.take('p', '.');
         const key = this.name();
+        // §3, req:3.set-keeps-id: whatever the value — a used id, a fresh one, or the node's own
+        if (key === 'id')
+          throw new ProfileError(
+            n,
+            `SET would change ${v}'s id, and a node's id never changes (§3)`,
+            `write the right node, then link ${v} to it or supersede it (§12)`,
+          );
         this.take('p', '=');
         sets.push([v, key, this.value(), n]);
         if (!this.at('p', ',')) break;

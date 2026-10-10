@@ -27,6 +27,9 @@ TOKEN = re.compile(
     re.ASCII,  # \d and \b as JavaScript's: a digit or letter in another script is neither
 )
 KEYWORDS = {"INSERT", "MATCH", "SET", "DATE", "DATETIME", "TRUE", "FALSE"}
+# only whitespace from here to the line's end: matched in place, as slicing the rest of the line
+# before every token would make one long line quadratic to read (editor spec §9)
+BLANK_REST = re.compile(rf"{S}*\Z")
 EXCERPT = re.compile(rf"{S}*//{S}*excerpt\b", re.I | re.ASCII)
 GRAPH = re.compile(rf"{S}*//{S}*graph:{S}*({N}+)([^\n]*)$")
 SCHEMA = re.compile(rf"·{S}*SCHEMA{S}+{N}+")
@@ -85,16 +88,21 @@ def _excerpt(s: str, n: int = 20) -> str:
     return units.decode("utf-16-le", "surrogatepass")
 
 
-def tokens(block: str) -> list[tuple[str, str, int, str]]:
-    """(kind, text, line) for every token, whole-line comments removed — '//' also occurs inside
-    ni:/// ids."""
+def tokens(block: str) -> list[tuple[str, str, int, str, int]]:
+    """(kind, text, line, raw, end) for every token, whole-line comments removed — '//' also
+    occurs inside ni:/// ids. raw is the token as written; end is where it ends in the block."""
     out = []
+    # offsets count code points, as Python strings index; the JavaScript reader counts UTF-16
+    # units. Each is used only on the text it was counted in (Store.corrected), so both readers
+    # write the same text
+    begins = 0  # where line n begins in the block
     for n, raw in enumerate(block.split("\n"), 1):
+        line_begins, begins = begins, begins + len(raw) + 1
         if strip(raw).startswith("//"):
             continue
         pos = 0
         while pos < len(raw):
-            if not strip(raw[pos:]):
+            if BLANK_REST.match(raw, pos):
                 break
             m = TOKEN.match(raw, pos)
             if not m and strip(raw[pos:]).startswith("//"):
@@ -111,7 +119,7 @@ def tokens(block: str) -> list[tuple[str, str, int, str]]:
             raw_text = text
             if kind == "id" and text.upper() in KEYWORDS:
                 kind, text = "kw", text.upper()
-            out.append((kind, text, n, raw_text))
+            out.append((kind, text, n, raw_text, line_begins + m.end()))
             pos = m.end()
     return out
 

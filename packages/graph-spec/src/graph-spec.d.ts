@@ -36,6 +36,9 @@ declare namespace GraphSpecCheck {
     bares: { graph: string; line: number; written: string; type: string }[];
     /** Applies one block, and returns the graph it wrote to. Throws ProfileError. */
     apply(block: string): string;
+    /** A block this store applied, with each bare type written with its colon and each missing comma written at the
+     * end of the code on its line, no line added: the text an engine may be given (req:3.engine-gets-commas). */
+    corrected(block: string): string;
   }
 
   /** An edge: [source id, type, target id, properties]. */
