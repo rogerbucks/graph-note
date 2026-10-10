@@ -3,7 +3,9 @@
 // with those added deliberately since: completing as you type (inlineCompletion, stepOver, Inline, InlineKind), lists as
 // linked things (makeList and its kin), and name suggestions (nameFromText, nameSlug, nameStyleOf, nameWords,
 // textFromName and their types), and the layout kept apart from the interface (LayoutRunner and its kin, 10 Oct 2026),
-// and the settings and strictness of §21 (OPTIONS, settingsFrom, toStandard and their kin, 11 Oct 2026).
+// the settings and strictness of §21 (OPTIONS, settingsFrom, toStandard and their kin, 11 Oct 2026), and the one colour
+// mapping, with the steps around Graphviz for a host that lays out elsewhere (PALETTES, chosen and their kin, for the
+// Claude Code host, 11 Oct 2026).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -24,11 +26,13 @@ const VALUES = [
   'MIN_SCALE',
   'OPTIONS',
   'PAGE_LIMITS',
+  'PALETTES',
   'PaneSession',
   'READ_LIMITS',
   'SEVERITY',
   'STEP',
   'STYLE',
+  'THEME_COLOURS',
   'TIMEOUTS_BEFORE_STOPPING',
   'TOKEN_CLASSES',
   'TapCycle',
@@ -38,6 +42,7 @@ const VALUES = [
   'aiModel',
   'blockItems',
   'choose',
+  'chosen',
   'colonFor',
   'colonInNote',
   'commaFor',
@@ -46,11 +51,13 @@ const VALUES = [
   'completions',
   'details',
   'diagnostics',
+  'directions',
   'distance',
   'draw',
   'drawingSource',
   'explain',
   'fixed',
+  'fixedPalette',
   'gqlBlocks',
   'gqlSpans',
   'graphOfBlock',
@@ -119,6 +126,7 @@ const TYPES = [
   'Departure',
   'Details',
   'Diagnostic',
+  'Direction',
   'Drawn',
   'Edit',
   'Engine',
@@ -145,6 +153,7 @@ const TYPES = [
   'NoteReading',
   'Option',
   'OptionChoice',
+  'Palette',
   'PaneWrite',
   'Parsed',
   'Position',
@@ -166,6 +175,7 @@ const TYPES = [
   'TextChange',
   'TextEdit',
   'TextState',
+  'ThemeColours',
   'Token',
   'TokenClass',
   'Told',

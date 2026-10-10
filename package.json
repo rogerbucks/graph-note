@@ -12,9 +12,9 @@
     "node": ">=24"
   },
   "scripts": {
-    "build": "npm run build --workspace packages/graph-spec && npm run build --workspace packages/obsidian",
+    "build": "npm run build --workspace packages/graph-spec && npm run build --workspace packages/obsidian && npm run build --workspace packages/claude-code",
     "dev": "npm run dev --workspace packages/obsidian",
-    "typecheck": "tsc -p packages/core --noEmit && tsc -p packages/obsidian --noEmit && tsc -p packages/graph-spec --noEmit",
+    "typecheck": "tsc -p packages/core --noEmit && tsc -p packages/obsidian --noEmit && tsc -p packages/graph-spec --noEmit && tsc -p packages/claude-code --noEmit",
     "lint": "eslint . --max-warnings 0",
     "test": "node --test",
     "test:ai": "node --test --test-reporter=./scripts/quiet-reporter.mjs",
