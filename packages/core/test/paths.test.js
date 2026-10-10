@@ -376,6 +376,44 @@ describe('a step through something removed', () => {
   });
 
   // proves: path_missing_step
+  test('removing the last step of its block leaves no comma with nothing after it', () => {
+    const last = `${TRIP},
+(tour:Path {title: 'Walk'}),
+(tour)-[:STEP {seq: 1}]->(home),
+(tour)-[:STEP {seq: 2}]->(zzzzzzz)`;
+    const [p] = pathProblems(readNote([last]));
+    const fixed = applied(last, p);
+    assert.deepEqual(readNote([fixed]).problems, []);
+    assert.match(fixed, /\(tour\)-\[:STEP \{seq: 1\}\]->\(home\)\s*$/);
+  });
+
+  // proves: path_missing_step
+  test('removing a path’s only step leaves it a path with no steps, reported as such, and nothing else wrong', () => {
+    const only = `${TRIP},
+(tour:Path {title: 'Walk'}),
+(tour)-[:STEP {seq: 1}]->(zzzzzzz)`;
+    const [p] = pathProblems(readNote([only]));
+    const fixed = applied(only, p);
+    assert.deepEqual(
+      readNote([fixed]).problems.map((x) => x.message),
+      ['the path Walk has no steps'],
+    );
+  });
+
+  // proves: path_missing_step
+  test('renumbering touches only the path the step was taken out of', () => {
+    const two = `${BROKEN},
+(back:Path {title: 'Back'}),
+(back)-[:STEP {seq: 1}]->(cafe),
+(back)-[:STEP {seq: 2}]->(park),
+(back)-[:STEP {seq: 3}]->(home)`;
+    const [p] = pathProblems(readNote([two]));
+    const fixed = applied(two, p);
+    assert.match(fixed, /\(back\)-\[:STEP \{seq: 3\}\]->\(home\)/);
+    for (const [rule, ok] of gs.pathsRules(worldOf(fixed).trip)) assert.ok(ok, rule);
+  });
+
+  // proves: path_missing_step
   test('is in what a note reads to, once, so the badge counts it: the reader’s own report is replaced, not doubled', () => {
     const reading = readNote([BROKEN]);
     assert.equal(reading.problems.length, 1);

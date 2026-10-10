@@ -146,6 +146,7 @@ export class DetailsPanel {
           if (this.o.editing?.() === ed) ed.replace(t);
         },
         this.o.indent ?? 'four',
+        this.o.reading.whole[this.o.graph], // a thing written in another block of the graph is found
       );
   }
 

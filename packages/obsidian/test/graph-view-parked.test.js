@@ -119,6 +119,53 @@ describe('Park for later, while the card is edited', () => {
     }
   });
 
+  test('the form takes the focus to its first field, and its fields and buttons are big enough to touch', async () => {
+    const env = await load({ files: { [PATH]: noteOf(PLAIN) } });
+    try {
+      const el = await show(env);
+      labelled(el, 'Edit here').click();
+      await until(() => !!el.querySelector('textarea'));
+      tapKey(el, 'small');
+      await until(() => !!labelled(el, 'Park for later'));
+      labelled(el, 'Park for later').click();
+      const first = el.querySelectorAll('input').find((x) => x.getAttribute('aria-label') === 'What is needed');
+      assert.ok(env.doc.activeElement === first);
+      assert.match(styles, /\.graph-note-park :is\(button, input\)\s*\{[^}]*min-height:\s*44px/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a thing written in another block of its graph is parked from this one', async () => {
+    const two = [
+      '# Reader',
+      '',
+      fence(PLAIN),
+      '',
+      fence("// graph: reader\n(tiny:Option {name: 'Tiny reader'})"),
+      '',
+    ].join('\n');
+    const env = await load({ files: { [PATH]: two } });
+    try {
+      // the second block, whose card draws the whole graph so far
+      const { show: showBlock } = await import('./host/view-notes.js');
+      const { el } = await showBlock(env, two, 1);
+      labelled(el, 'Edit here').click();
+      await until(() => !!el.querySelector('textarea'));
+      tapKey(el, 'small');
+      await until(() => !!labelled(el, 'Park for later'));
+      labelled(el, 'Park for later').click();
+      const input = (name) => el.querySelectorAll('input').find((x) => x.getAttribute('aria-label') === name);
+      input('What is needed').value = 'its price';
+      input('Why it waits').value = 'not said';
+      labelled(el, 'Park it').click();
+      await until(() => /:Deferred/.test(text(el)));
+      assert.match(text(el), /-\[:DEFERS\]->\(small\)/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('without what is needed and why, writes nothing and says what is missing', async () => {
     const env = await load({ files: { [PATH]: noteOf(PLAIN) } });
     try {

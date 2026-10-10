@@ -75,8 +75,7 @@ export function undeclared(whole: World, texts: string[]): Problem[] {
  */
 export function undeclaredUse(whole: World, texts: string[], problems: Problem[]): Problem[] {
   const out: Problem[] = [];
-  // the graph spec's own Deferred and DEFERS (§25) are built in, like DECLARES: parking a thing declares nothing
-  const hidden = new Set<string>([...gs.SCHEMA_LABELS, 'Deferred']);
+  const hidden = new Set<string>(gs.SCHEMA_LABELS);
   texts.forEach((text, block) => {
     const graph = graphOfBlock(text),
       g = graph ? whole[graph] : undefined;
@@ -108,7 +107,7 @@ export function undeclaredUse(whole: World, texts: string[], problems: Problem[]
         if (label && !hidden.has(label) && !kinds.has(label)) report(label, 'a kind', m.index);
     for (const m of blanked.matchAll(LINK_TYPE)) {
       const type = m[1] ?? '';
-      if (type !== 'DECLARES' && type !== 'DEFERS' && !edges.has(type)) report(type, 'a relationship type', m.index);
+      if (type !== 'DECLARES' && !edges.has(type)) report(type, 'a relationship type', m.index);
     }
   });
   return out;

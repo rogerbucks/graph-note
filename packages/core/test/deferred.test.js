@@ -166,9 +166,8 @@ describe('parking a thing for later (park_for_later)', () => {
       assert.throws(() => parkForLater(BLOCK, 'small', { ...PARK, revisitBy: bad }), /revisit/);
   });
 
-  test('in a locked graph, Deferred and DEFERS are built in: parking adds no undeclared-type warning', () => {
-    // park_for_later
-    const locked = `${BLOCK},
+  // the graph library's §5 (types.js, schema_types.py): a locked graph must declare Deferred and DEFERS like any type
+  const LOCKED = `${BLOCK},
 (reader_schema:GraphMeta {graph: 'reader', schema: 'reader@1'}),
 (kind_option:Meta:ElementType {name: 'Option', kind: 'node', origin: 'source'}),
 (kind_question:Meta:ElementType {name: 'Question', kind: 'node', origin: 'source'}),
@@ -176,8 +175,38 @@ describe('parking a thing for later (park_for_later)', () => {
 (reader_schema)-[:DECLARES]->(kind_option),
 (reader_schema)-[:DECLARES]->(kind_question),
 (reader_schema)-[:DECLARES]->(link_answers)`;
-    assert.deepEqual(problemsOf(locked), []);
-    assert.deepEqual(problemsOf(parkForLater(locked, 'small', PARK)), []);
+
+  test('a locked graph that does not declare Deferred and DEFERS is not parked in, and says to declare them', () => {
+    // park_for_later
+    assert.deepEqual(problemsOf(LOCKED), []);
+    assert.throws(() => parkForLater(LOCKED, 'small', PARK), /locked.*declare.*Deferred and DEFERS/);
+  });
+
+  test('a locked graph that declares them is parked in with no undeclared-type warning', () => {
+    // park_for_later
+    const declared = `${LOCKED},
+(kind_deferred:Meta:ElementType {name: 'Deferred', kind: 'node', origin: 'source'}),
+(link_defers:Meta:ElementType {name: 'DEFERS', kind: 'edge', origin: 'source', reading: 'defers', reverse_name: 'deferred by'}),
+(reader_schema)-[:DECLARES]->(kind_deferred),
+(reader_schema)-[:DECLARES]->(link_defers)`;
+    assert.deepEqual(problemsOf(parkForLater(declared, 'small', PARK)), []);
+  });
+
+  test('a thing written in another block of its graph is parked, given the graph as the note reads it', () => {
+    // park_for_later
+    const first = "// graph: reader\n(small:Option {name: 'Small'}),\n(later_small:Deferred {what: 'a', why: 'b'})";
+    const second = "// graph: reader\n(big:Option {name: 'Big'})";
+    const whole = readNote([first, second]).whole.reader;
+    assert.throws(() => parkForLater(second, 'small', PARK), /no small/);
+    const written = parkForLater(second, 'small', PARK, '    ', whole);
+    assert.match(written, /\(later_small_2:Deferred/, 'a fresh id, not one taken in another block');
+    assert.deepEqual(problemsOf(first, written), []);
+  });
+
+  test('a block that ends with a SET or MATCH is not parked in: the Deferred needs a block of its own', () => {
+    // park_for_later
+    const set = `${BLOCK},\nSET small.name = 'Little'`;
+    assert.throws(() => parkForLater(set, 'small', PARK), /SET or MATCH/);
   });
 });
 

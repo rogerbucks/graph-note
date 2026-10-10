@@ -36,12 +36,13 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `estimates.ts` — near misses drawn as guesses.
 - `completeness.ts` — the completeness report behind the problems badge.
 - `deferred.ts` — deferred things (§5, §8): `parkForLater` writes a Deferred (what, why, an optional revisit day and rule)
-  as a block's last items, with the comma GQL needs and a fresh `later_<thing>` id, and refuses an empty what or why;
+  as a block's last items, with the comma GQL needs and a fresh `later_<thing>` id (fresh in the whole graph when the
+  note's reading of it is given), and refuses an empty what or why, a block ending with SET or MATCH, and a locked graph
+  whose schema does not declare Deferred and DEFERS (the graph library checks them like any type);
   `parked` says which things some Deferred defers and which are overdue (every Deferred on the thing is past its
   `revisit_by`, as `completeness.js` counts), and `parkedCount` how many of each, apart from the problems. `readNote`
   sets `Box.deferred` on each such box (it takes the day as its fifth argument, the current day by default); the layout
-  source is untouched, so the host draws the dashing and the later mark on the finished drawing. `Deferred` and `DEFERS`
-  are built in, so a locked graph never warns that its schema does not declare them.
+  source is untouched, so the host draws the dashing and the later mark on the finished drawing.
 
 **Drawing**
 

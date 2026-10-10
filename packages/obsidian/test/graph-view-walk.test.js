@@ -47,6 +47,24 @@ describe('Play', () => {
     }
   });
 
+  test('the focus stays on Next as it is pressed, and one live region says each step', async () => {
+    const env = await load({ files: { [PATH]: noteOf(WALKED) } });
+    try {
+      const el = await show(env);
+      labelled(el, 'Play Sunday walk').click();
+      const live = strip(el).querySelector('[aria-live]');
+      const next = labelled(el, 'Next step');
+      next.focus();
+      next.click();
+      assert.ok(labelled(el, 'Next step') === next, 'the same button, never built again');
+      assert.ok(env.doc.activeElement === next, 'the focus is where it was');
+      assert.ok(strip(el).querySelector('[aria-live]') === live, 'one live region, its words changed');
+      assert.match(live.textContent, /^Step 2 of 3/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('at its last step, Next goes no further; at its first, Previous goes no further', async () => {
     const env = await load({ files: { [PATH]: noteOf(WALKED) } });
     try {
@@ -105,6 +123,61 @@ describe('Record, while the card is edited', () => {
     }
   });
 
+  test('a title typed before the taps is kept: tapping never clears it', async () => {
+    const env = await load({ files: { [PATH]: noteOf(TRIP) } });
+    try {
+      const el = await show(env);
+      labelled(el, 'Edit here').click();
+      await until(() => !!labelled(el, 'Record a path'));
+      labelled(el, 'Record a path').click();
+      const title = () => el.querySelectorAll('input').find((x) => x.getAttribute('aria-label') === 'Path title');
+      const typedIn = title();
+      typedIn.value = 'Coffee first';
+      tapKey(el, 'cafe');
+      tapKey(el, 'home');
+      assert.ok(title() === typedIn, 'the same field, never built again under a tap');
+      labelled(el, 'Save path').click();
+      await until(() => /:Path/.test(text(el)));
+      assert.match(text(el), /title: 'Coffee first'/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a path with no title is not written, and the strip says to give it one', async () => {
+    const env = await load({ files: { [PATH]: noteOf(TRIP) } });
+    try {
+      const el = await show(env);
+      labelled(el, 'Edit here').click();
+      await until(() => !!labelled(el, 'Record a path'));
+      labelled(el, 'Record a path').click();
+      tapKey(el, 'cafe');
+      labelled(el, 'Save path').click();
+      await wait(50);
+      assert.doesNotMatch(text(el), /:Path/);
+      assert.match(strip(el).querySelector('[role="alert"]').textContent, /title/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a recording ends when editing ends, and says so', async () => {
+    const env = await load({ files: { [PATH]: noteOf(TRIP) } });
+    try {
+      const el = await show(env);
+      labelled(el, 'Edit here').click();
+      await until(() => !!labelled(el, 'Record a path'));
+      labelled(el, 'Record a path').click();
+      tapKey(el, 'cafe');
+      labelled(el, 'Done editing').click();
+      await until(() => !el.querySelector('textarea'));
+      assert.equal(labelled(el, 'Save path'), undefined);
+      assert.match(strip(el).querySelector('[aria-live]').textContent, /recording ended/i);
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('Undo step takes the last tap back; Cancel writes nothing', async () => {
     const env = await load({ files: { [PATH]: noteOf(TRIP) } });
     try {
@@ -136,6 +209,7 @@ describe('Record, while the card is edited', () => {
       labelled(el, 'Edit here').click();
       await until(() => !!labelled(el, 'Record a path'));
       labelled(el, 'Record a path').click();
+      el.querySelectorAll('input').find((x) => x.getAttribute('aria-label') === 'Path title').value = 'Nowhere';
       labelled(el, 'Save path').click();
       await wait(50);
       assert.doesNotMatch(text(el), /:Path/);

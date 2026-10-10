@@ -3,12 +3,12 @@
 // through something removed, and a path with no steps. A path with no steps is never drawn or played as an empty story.
 import gs from '@graph-note/graph-spec';
 import type { Graph } from '@graph-note/graph-spec';
-import { blankText, items, lineAt, lineIndex } from './block-items.ts';
+import { blankText, items, lineAt } from './block-items.ts';
 import { graphOfBlock } from './blocks.ts';
 import { quoted } from './lock.ts';
 import { nameFromText } from './name-suggestions.ts';
 import type { NoteReading, Problem } from './note-reading.ts';
-import { stepsAfter } from './path-edits.ts';
+import { removal } from './path-edits.ts';
 import { S, trim } from './whitespace.ts';
 import { writtenIn } from './written-things.ts';
 import type { Written } from './written-things.ts';
@@ -268,25 +268,6 @@ export class PathPlayer {
     const step = this.path.steps[i] as PathStep;
     return `Step ${i + 1} of ${this.path.steps.length}: ${step.missing ? `missing. ${step.key} is not in the graph.` : step.text}`;
   }
-}
-
-/** The edit that takes a step out of its block, when the step sits on one line of it; nothing otherwise. */
-function removal(text: string, line: number, dropped: string): Pick<Problem, 'replace' | 'span' | 'fixTitle' | 'also'> {
-  const want = blankText(dropped),
-    lineOf = lineIndex(text);
-  const it = items(text).find(
-    (x) => lineOf(x.from) <= line && line <= lineOf(x.to - 1) && blankText(text.slice(x.from, x.to)) === want,
-  );
-  if (!it || lineOf(it.from) !== lineOf(it.to - 1)) return {};
-  // its own comma goes with it when that is on the same line; a comma left before it is read as a comma with nothing after
-  const end = it.comma !== -1 && lineOf(it.comma) === lineOf(it.from) ? it.comma + 1 : it.to;
-  const start = text.lastIndexOf('\n', it.from - 1) + 1;
-  return {
-    replace: { written: text.slice(it.from, end), with: [''] },
-    span: { line: lineOf(it.from) - 1, character: it.from - start, end: end - start },
-    fixTitle: 'Remove the step',
-    also: stepsAfter(text, dropped), // the later steps numbered again: §22's steps 1 to n
-  };
 }
 
 /** The problem for a step through something removed: the reader's own report, said in the path's words, with its fix. */

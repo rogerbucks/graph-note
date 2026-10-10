@@ -71,7 +71,21 @@
 .graph-note-park {
   display: flex;
   flex-wrap: wrap;
+  align-items: end;
   gap: var(--size-4-2);
+}
+.graph-note-park label {
+  display: flex;
+  flex-direction: column;
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+.graph-note-park :is(button, input) {
+  min-width: 44px;
+  min-height: 44px;
+}
+.graph-note-walk input {
+  min-height: 44px;
 }
 
 /* The bar: every control at least 44 points, as touch needs (spec §5), and none that only shows on hover. */

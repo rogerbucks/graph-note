@@ -5,6 +5,7 @@
 // `(d)-[:DEFERS]->(thing)`, and it is counted as completeness.js counts it.
 import gs from '@graph-note/graph-spec';
 import type { Graph } from '@graph-note/graph-spec';
+import { blankText, items } from './block-items.ts';
 import { graphOf } from './blocks.ts';
 import { quoted as q } from './lock.ts';
 import type { NoteReading } from './note-reading.ts';
@@ -110,6 +111,14 @@ function lastCode(text: string): number {
   return last;
 }
 
+/** What a locked graph lacks to hold a Deferred: Deferred and DEFERS, each unless its schema declares it. None when not locked. */
+function undeclared(graphs: Graph[]): string[] {
+  const types = graphs.flatMap((g) => g.labelled('ElementType').map((i) => g.p(i)));
+  if (!types.length) return [];
+  const has = (kind: string, name: string) => types.some((t) => t.kind === kind && t.name === name);
+  return [...(has('node', 'Deferred') ? [] : ['Deferred']), ...(has('edge', 'DEFERS') ? [] : ['DEFERS'])];
+}
+
 /** Words as one line of text: each run of whitespace, line breaks included, becomes one space. */
 const oneLine = (s: string): string => trim(s.replace(new RegExp(`${S}+`, 'g'), ' '));
 
@@ -125,10 +134,12 @@ function isDay(s: string): boolean {
  * block's graph. A comma is added after the block's last item unless it already ends in one (never two), and any comment
  * after it is kept. The words are quoted as locking quotes them, with each run of whitespace made one space so a string
  * never spans lines; a long Deferred is split over lines, indented by `indent` (the settings' choice). Throws an Error
- * saying why when `what` or `why` is empty, `revisitBy` is not a `YYYY-MM-DD` day, the block names no graph, or `thing` is
- * not in the block's graph. Only the block itself is read: a thing written in another block of the graph is not found.
+ * saying why when `what` or `why` is empty, `revisitBy` is not a `YYYY-MM-DD` day, the block names no graph, `thing` is
+ * not in the graph, the block ends with a SET or MATCH, or the graph is locked and its schema does not declare Deferred
+ * and DEFERS (the graph library's §5 checks them like any type). `whole` is the graph as the whole note reads it: given,
+ * a thing written in another block of the graph is found, and an id taken there is not used again.
  */
-export function parkForLater(block: string, thing: string, park: Park, indent = '    '): string {
+export function parkForLater(block: string, thing: string, park: Park, indent = '    ', whole?: Graph): string {
   const what = oneLine(park.what),
     why = oneLine(park.why),
     rule = oneLine(park.rule ?? ''),
@@ -138,10 +149,19 @@ export function parkForLater(block: string, thing: string, park: Park, indent = 
   if (day && !isDay(day)) throw new Error(`the revisit date must be a day like 2026-11-01, not ${day}`);
   const graph = graphOf(block);
   if (!graph) throw new Error('the block names no graph: start it with // graph: <name>');
-  const g = gs.worldFromStore(readBlocks([block], []).store)[graph];
-  if (!g?.nodes.has(thing)) throw new Error(`there is no ${thing} in graph ${graph} to park`);
+  const own = gs.worldFromStore(readBlocks([block], []).store)[graph];
+  const graphs = [own, whole].filter((x): x is Graph => !!x);
+  if (!graphs.some((x) => x.nodes.has(thing))) throw new Error(`there is no ${thing} in graph ${graph} to park`);
+  const last = items(block).at(-1);
+  if (last && /^(SET|MATCH|INSERT)\b/i.test(blankText(block.slice(last.from, last.to))))
+    throw new Error('the block ends with a SET or MATCH: park it in a block of its own');
+  const lacking = undeclared(graphs);
+  if (lacking.length)
+    throw new Error(
+      `graph ${graph} is locked and its schema does not declare ${lacking.join(' and ')}: declare them in the schema first`,
+    );
   let id = `later_${thing}`;
-  for (let n = 2; g.nodes.has(id); n++) id = `later_${thing}_${n}`;
+  for (let n = 2; graphs.some((x) => x.nodes.has(id)); n++) id = `later_${thing}_${n}`;
   const props = [
     `what: ${q(what)}`,
     `why: ${q(why)}`,

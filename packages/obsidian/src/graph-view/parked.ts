@@ -3,7 +3,10 @@
 // to screen readers; the parked things listed behind the badge; and, while the card is edited, Park for later in a
 // box's details, which writes a Deferred saying what is needed and why it waits.
 import { indentText, parkForLater } from '@graph-note/core';
-import type { Box, Indent, Parked } from '@graph-note/core';
+import type { Box, Indent, NoteReading, Parked } from '@graph-note/core';
+
+/** A graph as the whole note reads it. */
+type Graph = NoteReading['whole'][string];
 import { button } from './view-bar';
 
 const SVG = 'http://www.w3.org/2000/svg';
@@ -72,20 +75,23 @@ export function parkButton(
   text: () => string,
   replace: (next: string) => void,
   indent: Indent,
+  whole?: Graph,
 ): void {
   const holder = el.createDiv({ cls: 'graph-note-park' });
   button(holder, 'Park for later', 'clock', () => {
     holder.empty();
+    // each field with its words beside it, never a placeholder alone
     const input = (label: string, type = 'text') =>
-      holder.createEl('input', { attr: { type, 'aria-label': label, placeholder: label } });
+      holder.createEl('label', { text: label }).createEl('input', { attr: { type, 'aria-label': label } });
     const what = input('What is needed'),
       why = input('Why it waits'),
       by = input('Revisit by', 'date');
+    what.focus(); // the button pressed is gone: the focus goes to the first field, never nowhere
     const said = holder.createDiv({ attr: { role: 'alert' } });
     button(holder, 'Park it', 'check', () => {
       try {
         const park = { what: what.value, why: why.value, ...(by.value ? { revisitBy: by.value } : {}) };
-        replace(parkForLater(text(), key, park, indentText(indent)));
+        replace(parkForLater(text(), key, park, indentText(indent), whole));
       } catch (e) {
         said.setText(String((e as Error).message));
       }
