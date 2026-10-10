@@ -401,6 +401,42 @@
       "evidence": "pins behaviour that already existed: written after its code, to prove a spec rule the code already met (commit 40d335e)"
     }
   },
+  "python/graph_spec/tests/test_escapes.py": {
+    "EngineWritesEscapes.test_a_rule_reads_a_texts_backslash_and_line_breaks_as_written": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: the rule loader already escaped a backslash and quote, and gives Grafeo a tab and line break as themselves, so it passes before and after by design; it holds that req:3.gql-escapes' quote() keeps it so (11 Oct 2026)"
+    }
+  },
+  "python/graph_spec/tests/test_changesets.py": {
+    "ChecksReadPlain.test_the_reader_s_dry_run_reaches_the_engine_s_outcome": {
+      "seen_failing_first": false,
+      "evidence": "req:3.reader-default: against its parent, check_changeset ignored the parser and ran Grafeo under both, so the two agree trivially and it passes; it holds the reader's dry run this commit puts behind the default parser to Grafeo's outcome. Its companion, test_a_change_set_and_a_graph_are_checked_with_grafeo_not_installed, was seen failing first (11 Oct 2026)"
+    }
+  },
+  "python/graph_spec/tests/test_fill.py": {
+    "FillReadsPlain.test_each_recipe_s_value_from_the_reader_s_reading_is_grafeo_s": {
+      "seen_failing_first": false,
+      "evidence": "req:24.fill-reads-plain: against its parent, compute ignored the parser and asked Grafeo under both, so the two agree trivially and it passes; it holds the plain twin this commit adds to Grafeo's values, and pins the judgement hash to its sealed content_hash. Its companion, test_a_document_s_hashes_are_filled_with_grafeo_not_installed, was seen failing first (11 Oct 2026)"
+    }
+  },
+  "python/graph_spec/tests/test_named_rules.py": {
+    "LoanBalanceReadsPlain.test_a_repayment_with_no_amount_fails_the_balance_as_grafeo_s_reading_does": {
+      "seen_failing_first": false,
+      "evidence": "asked for in the review of #59: a control, so the reader's loan balance and Grafeo's cannot differ silently on a repayment with no amount; both already raise the same TypeError, so it passes against its parent by design (11 Oct 2026)"
+    }
+  },
+  "python/graph_spec/tests/test_optional_imports.py": {
+    "NoEngineInstalled.test_a_plain_install_reads_checks_joins_and_draws": {
+      "seen_failing_first": false,
+      "evidence": "req:14.no-engine-install: holds together, in one plain-install interpreter, what the commits before it made: reading needs no engine since req:3.reader-default (ef7ed86), whose test_a_document_is_read_with_grafeo_not_installed was seen failing first; checking, joining and drawing never needed one. So it passes against its parent by design (11 Oct 2026)"
+    }
+  },
+  "python/graph_spec/tests/test_settings_reader_default.py": {
+    "ReaderDefault.test_a_gql_constraint_with_no_twin_is_still_run_as_gql": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: a GQL constraint with no named twin is database work and was always run as GQL, so it passes before and after by design; it holds that req:3.reader-default's change to config_from runs only rules with a twin as the twin (11 Oct 2026)"
+    }
+  },
   "python/graph_spec/tests/test_reader_agrees_with_grafeo.py": {
     "Agreement.test_p1_the_reader_builds_grafeos_graphs": {
       "seen_failing_first": false,

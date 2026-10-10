@@ -13,9 +13,12 @@ UTC = dt.timezone.utc
 
 
 class ProfileError(ValueError):
-    def __init__(self, line, message, fix):
+    """A block outside the profile: its line, what is wrong, the fix — and, where the fix is one
+    insertion, `at`: the character on the line it goes before (0-based)."""
+
+    def __init__(self, line, message, fix, at=None):
         super().__init__(f"line {line}: {message} — {fix}")
-        self.line, self.message, self.fix = line, message, fix
+        self.line, self.message, self.fix, self.at = line, message, fix, at
 
 
 TOKEN = re.compile(
@@ -117,6 +120,14 @@ def tokens(block: str) -> list[tuple[str, str, int, str, int]]:
             kind = m.lastgroup
             text = m.group(kind)
             raw_text = text
+            bad = bad_escape(text[1:-1]) if kind == "str" else None
+            if bad:  # req:3.gql-escapes: refused at its backslash, whose fix doubles it
+                raise ProfileError(
+                    n,
+                    f"'{bad[1]}' is not an escape GQL names",
+                    f"double the backslash to write a backslash: \\{bad[1]}",
+                    m.start(kind) + 1 + bad[0],
+                )
             if kind == "id" and text.upper() in KEYWORDS:
                 kind, text = "kw", text.upper()
             out.append((kind, text, n, raw_text, line_begins + m.end()))
@@ -124,6 +135,66 @@ def tokens(block: str) -> list[tuple[str, str, int, str, int]]:
     return out
 
 
+# req:3.gql-escapes: the escapes ISO GQL names — each character after a backslash, and \uXXXX and
+# \UXXXXXX for a character by its code point
+ESCAPES = {
+    "\\": "\\",
+    "'": "'",
+    '"': '"',
+    "`": "`",
+    "t": "\t",
+    "b": "\b",
+    "n": "\n",
+    "r": "\r",
+    "f": "\f",
+}
+HEX = {"u": 4, "U": 6}
+
+
+def _code_point(s: str, i: int) -> int | None:
+    """The character a \\u or \\U escape at s[i] names, or None when it names none."""
+    digits = s[i + 2 : i + 2 + HEX[s[i + 1]]]
+    if len(digits) != HEX[s[i + 1]] or not re.fullmatch(r"[0-9A-Fa-f]+", digits):
+        return None
+    cp = int(digits, 16)
+    return None if cp > 0x10FFFF or 0xD800 <= cp <= 0xDFFF else cp
+
+
+def bad_escape(s: str) -> tuple[int, str] | None:
+    """The first escape GQL does not name in a quoted text (quotes off): where its backslash is,
+    and the escape as written — for \\u and \\U, with the digits that follow. None when every
+    escape is one GQL names."""
+    i = s.find("\\")
+    while i != -1:
+        c = s[i + 1 : i + 2]
+        if c in HEX:
+            if _code_point(s, i) is None:
+                return i, s[i : i + 2 + HEX[c]]
+            i = s.find("\\", i + 2 + HEX[c])
+        elif c in ESCAPES:
+            i = s.find("\\", i + 2)
+        else:
+            return i, s[i : i + 2]
+    return None
+
+
+# each character a writer escapes, and its escape: all GQL names but the double quote and backtick,
+# which a single-quoted text holds as themselves
+WRITTEN = {c: "\\" + e for e, c in ESCAPES.items() if e not in '"`'}
+
+
+def quote(s: str) -> str:
+    """A text quoted as the profile writes it: a backslash, a quote and each control character GQL
+    has an escape for written as that escape, so the text reads back on one line, as itself."""
+    return "'" + "".join(WRITTEN.get(c, c) for c in s) + "'"
+
+
 def unquote(s: str) -> str:
-    """A quoted profile string's text: its quotes taken off and its escapes read."""
-    return re.sub(r"\\(.)", lambda m: {"n": "\n", "t": "\t"}.get(m.group(1), m.group(1)), s[1:-1])
+    """A quoted profile string's text: its quotes taken off and its escapes read as GQL reads them
+    (req:3.gql-escapes; tokens() has refused any GQL does not name)."""
+
+    def one(m):
+        e = m.group(1)
+        return chr(int(e[1:], 16)) if e[0] in HEX else ESCAPES[e]
+
+    return re.sub(r"\\(u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{6}|.)", one, s[1:-1], flags=re.S)

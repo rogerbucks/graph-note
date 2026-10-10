@@ -10,7 +10,8 @@ from collections.abc import Collection, Iterable
 from typing import TYPE_CHECKING, Any
 
 from graphspec.engine.optional_imports import grafeo, yaml
-from graphspec.engine.queries import UTC, canon_graph, read
+from graphspec.engine.queries import UTC, canon_graph, for_grafeo, read
+from graphspec.reader.lexer import quote
 
 if TYPE_CHECKING:
     from grafeo import GrafeoDB
@@ -101,7 +102,7 @@ def rebuild(
     """GQL from projections alone."""
 
     def q(s):
-        return "'" + str(s).replace("\\", "\\\\").replace("'", "\\'") + "'"
+        return quote(str(s))  # as the reader writes it (req:3.gql-escapes)
 
     def val(v):
         if isinstance(v, bool):
@@ -145,10 +146,12 @@ def projects_back(db: GrafeoDB, g: str = "joined") -> bool:
     """§18: whether graph g's flat projection, written as YAML, read back and rebuilt in a fresh
     database, gives back the same graph."""
     blocks, rels = project(db, g)
+    # every character past ASCII written as a YAML escape: written as itself, U+0085 is read back
+    # as a line break, and so as a space
     text = yaml.safe_dump_all(
         list(blocks.values()) + rels,
         sort_keys=False,
-        allow_unicode=True,
+        allow_unicode=False,
         default_flow_style=None,
         width=200,
     )
@@ -161,7 +164,7 @@ def projects_back(db: GrafeoDB, g: str = "joined") -> bool:
     h = grafeo.GrafeoDB()
     h.execute(f"CREATE GRAPH {g}")
     h.set_graph(g)
-    h.execute(rebuild(nb, ek, rb))
+    h.execute(for_grafeo(rebuild(nb, ek, rb)))
     return canon_graph(h, g)[0] == canon_graph(db, g)[0]
 
 

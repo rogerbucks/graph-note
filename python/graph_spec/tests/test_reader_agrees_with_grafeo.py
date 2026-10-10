@@ -30,11 +30,13 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 sys.path.insert(0, os.path.join(HERE, "..", "src"))
+sys.path.insert(0, HERE)
 
 import gql_profile as gp  # noqa: E402
 import graph_rules as gr  # noqa: E402
 import graph_spec as gs  # noqa: E402
 from graphspec.engine import settings  # noqa: E402
+from engine_support import needs_engine  # noqa: E402
 
 CASES_DIR = os.path.join(HERE, "agreement")
 # a generic destination matrix for §24 H3's served rules, in the classification note's shape
@@ -43,12 +45,8 @@ NOTE = os.path.join(CASES_DIR, "classification.md")
 
 # Where the two are known to differ, each with its cause. Not agreements: findings, held here so
 # that any other difference fails, and so that putting one right fails until its entry goes.
-KNOWN_P1 = {
-    "whitespace inside a string is kept as written, line and paragraph separators too (§3) · "
-    "ws_strings": "a backslash before a character GQL names no escape for (here U+2028): the "
-    "reader drops the backslash, Grafeo keeps it; \\r, \\b and \\f differ the same way "
-    "(found 11 Oct 2026, with the spec owner)",
-}
+# (String escapes were one, found 11 Oct 2026: req:3.gql-escapes put them right.)
+KNOWN_P1 = {}
 KNOWN_GRAFEO_REFUSES = {
     "every whitespace character GQL names parts words and items, before keywords too (§3)": (
         "Grafeo 0.5.43 parts words only at ASCII whitespace, not at every character GQL names"
@@ -129,6 +127,7 @@ def grafeo_verdicts(db, g, graphs, switches, w):
     return out
 
 
+@needs_engine
 class Agreement(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -148,7 +147,9 @@ class Agreement(unittest.TestCase):
                 raise
             try:
                 db, graphs = in_grafeo(blocks)
-            except Exception as e:  # GrafeoError, which needs Grafeo to name
+            # any error, never narrowed: what is caught is held to KNOWN_GRAFEO_REFUSES exactly
+            # (test_every_case_grafeo_refuses_is_a_known_one), so nothing new passes unseen
+            except Exception as e:
                 cls.grafeo_refused[c["name"]] = str(e).splitlines()[0]
                 continue
             cls.cases.append(c)
@@ -298,7 +299,11 @@ class Agreement(unittest.TestCase):
             base = [(graph_of(b), b) for b in blocks]
             for s in c.get("changesets") or []:
                 block = text(s)
-                res, h, after = gs.check_changeset(base, block, sw)
+                old, settings.PARSER = settings.PARSER, "grafeo"  # Grafeo's dry run, asked for
+                try:
+                    res, h, after = gs.check_changeset(base, block, sw)
+                finally:
+                    settings.PARSER = old
                 pres, ph, pafter = gr.check_changeset(base, block, self.matrix, gs.lint, sw)
                 gf = {label for label, ok, _ in res if not ok}
                 pf = {label for label, ok, _ in pres if not ok}
@@ -337,8 +342,8 @@ class Agreement(unittest.TestCase):
                 for s, t, d, p in G.edges
             }
             for rule in c["configuration"]["constraints"]:
-                # the GQL itself, in Grafeo, whichever parser is set: config_from runs the named
-                # twin in its place when the reader is the parser
+                # the GQL itself, in Grafeo: config_from runs the named twin in its place,
+                # whatever the parser (req:3.reader-default)
                 got = norm(gs.gql_rule(rule["gql"], cfg)(nodes, edges))
                 self.assertEqual(
                     got, norm(gs.RULES[rule["reference"]](nodes, edges)), f"{c['name']} {rule}"

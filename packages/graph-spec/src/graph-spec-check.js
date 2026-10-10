@@ -19,7 +19,7 @@ const { GTime } = require('./values/times.js');
 const { sha256hex } = require('./hashing/sha256.js');
 const { jcs, hash16, basisHash } = require('./hashing/canonical-json.js');
 const { ProfileError } = require('./reader/profile-error.js');
-const { COMMENT_RULE, COMMENT_FIX, header, tokens } = require('./reader/tokens.js');
+const { COMMENT_RULE, COMMENT_FIX, header, tokens, quote } = require('./reader/tokens.js');
 const { checkSyntax } = require('./reader/syntax.js');
 const { Store, read } = require('./reader/store.js');
 const { ownedComments } = require('./reader/owned-comments.js');
@@ -106,4 +106,5 @@ module.exports = {
   joinDocs,
   pyrepr,
   ownedComments,
+  quote,
 };

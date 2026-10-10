@@ -1,0 +1,38 @@
+{
+  "about": "req:3.gql-escapes — a backslash in quoted text is read as ISO GQL reads it, and an escape GQL does not name is refused, with the fix that doubles the backslash. One table for the JavaScript and the Python reader, so they agree. Each text is what is written between the quotes. read: [written, the text it is read as]. refused: [written, where the backslash is (0-based, in the quoted text), the escape as the refusal shows it]. quoted: [a text, how a writer quotes it — a backslash, a quote and each control character with a GQL escape, so the text reads back on one line, as itself].",
+  "read": [
+    ["a\\\\b", "a\\b"],
+    ["it\\'s", "it's"],
+    ["say \\\"hi\\\"", "say \"hi\""],
+    ["a \\` tick", "a ` tick"],
+    ["a\\tb", "a\tb"],
+    ["a\\bb", "a\bb"],
+    ["a\\nb", "a\nb"],
+    ["a\\rb", "a\rb"],
+    ["a\\fb", "a\fb"],
+    ["\\u0041\\u00e9\\u00E9", "Aéé"],
+    ["\\U000041", "A"],
+    ["\\U01F600!", "😀!"],
+    ["\\\\q", "\\q"],
+    ["\\\\\\\\", "\\\\"],
+    ["no escape at all", "no escape at all"]
+  ],
+  "refused": [
+    ["a\\qb", 1, "\\q"],
+    ["escaped\\ separator", 7, "\\ "],
+    ["a\\\\\\q", 3, "\\q"],
+    ["\\u12", 0, "\\u12"],
+    ["\\u12g4", 0, "\\u12g4"],
+    ["\\U12345", 0, "\\U12345"],
+    ["\\U110000", 0, "\\U110000"],
+    ["\\uD800", 0, "\\uD800"],
+    ["x \\a", 2, "\\a"]
+  ],
+  "quoted": [
+    ["plain", "'plain'"],
+    ["it's", "'it\\'s'"],
+    ["a\\b", "'a\\\\b'"],
+    ["a\nb\tc\rd\be\ff", "'a\\nb\\tc\\rd\\be\\ff'"],
+    ["say \"hi\" `x` é 😀  ", "'say \"hi\" `x` é 😀  '"]
+  ]
+}

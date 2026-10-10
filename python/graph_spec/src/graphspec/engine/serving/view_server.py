@@ -11,6 +11,9 @@ from graphspec.engine.judgements.basis import basis_hash, hash16
 from graphspec.engine.paths import path_steps, view_at
 from graphspec.engine.projection import iso
 from graphspec.engine.queries import Q
+from graphspec.rules.paths import path_steps as plain_path_steps
+from graphspec.rules.paths import view_at as plain_view_at
+from graphspec.rules.plain_graph import World
 
 
 class ViewServer:
@@ -71,7 +74,66 @@ class ViewServer:
             )
         return cls
 
-    def _block(self, graph, nid):
+    # ── what is read: from the reader's plain graphs (req:24.view-server-reads-plain), or from a
+    # Grafeo database a host asks for ──
+    def _plain(self, graph):
+        return self.db[graph] if isinstance(self.db, World) else None
+
+    def _altitude(self, graph, top):
+        g = self._plain(graph)
+        if g is not None:
+            if not g.has(top, "Path"):
+                raise IndexError(f"{top} is not a path in graph {graph}")
+            return g.p(top).get("altitude")
+        self.db.set_graph(graph)
+        return Q(self.db, f"MATCH (p:Path {{id: '{top}'}}) RETURN p.altitude AS a")[0]["a"]
+
+    def _view_at(self, graph, top, level):
+        g = self._plain(graph)
+        if g is not None:
+            return plain_view_at(g, top, level)
+        self.db.set_graph(graph)
+        return view_at(self.db, top, level)
+
+    def _opened(self, graph, nid):
+        """What zooming into nid shows: a path's steps in order, or the node itself."""
+        g = self._plain(graph)
+        if g is not None:
+            return [r["id"] for r in plain_path_steps(g, nid)] if g.has(nid, "Path") else [nid]
+        self.db.set_graph(graph)
+        return (
+            [r["id"] for r in path_steps(self.db, nid)]
+            if Q(self.db, f"MATCH (p:Path {{id: '{nid}'}}) RETURN p")
+            else [nid]
+        )
+
+    def _refs(self, jg):
+        g = self._plain(jg)
+        if g is not None:
+            return set(g.labelled("Ref"))
+        self.db.set_graph(jg)
+        return {r["i"] for r in Q(self.db, "MATCH (r:Ref) RETURN r.id AS i")}
+
+    def _node(self, graph, nid):
+        """A node's labels, properties, links out (type, to, seq) and links in (type, from), and
+        the graph's reverse readings."""
+        g = self._plain(graph)
+        if g is None:
+            return self._node_in_grafeo(graph, nid)
+        if nid not in g.nodes:
+            raise KeyError(f"refused: {nid} is not in graph {graph}")
+        rev = {
+            g.p(t).get("name"): g.p(t).get("reverse_name")
+            for t in g.labelled("ElementType")
+            if g.p(t).get("kind") == "edge"
+        }
+        out = [{"t": t, "y": y, "q": p.get("seq")} for _, t, y, p in g.out(nid)]
+        inc = sorted(
+            ({"t": t, "y": y} for y, t, _, _ in g.inc(nid)), key=lambda r: (r["t"], r["y"])
+        )
+        return list(g.nodes[nid][0]), g.p(nid), out, inc, rev
+
+    def _node_in_grafeo(self, graph, nid):
         self.db.set_graph(graph)
         n = Q(self.db, f"MATCH (x {{id: '{nid}'}}) RETURN labels(x) AS l, properties(x) AS p")
         if not n:
@@ -83,19 +145,24 @@ class ViewServer:
                 "MATCH (t:ElementType {kind: 'edge'}) RETURN t.name AS n, t.reverse_name AS r",
             )
         }
-        b = {"id": nid, "type": sorted(n[0]["l"])}
-        props = {k: v for k, v in n[0]["p"].items() if k != "id" and v is not None}
-        b.update({k: iso(v) for k, v in sorted(props.items())})
         out = Q(
             self.db,
             f"MATCH (x {{id: '{nid}'}})-[e]->(y) RETURN type(e) AS t, y.id AS y, e.seq AS q",
         )
-        for r in sorted(out, key=lambda r: (r["t"], r["q"] if r["q"] is not None else 0, r["y"])):
-            b.setdefault(r["t"].lower(), []).append(r["y"])  # steps in their order
-        for r in Q(
+        inc = Q(
             self.db,
             f"MATCH (y)-[e]->(x {{id: '{nid}'}}) RETURN type(e) AS t, y.id AS y ORDER BY t, y",
-        ):
+        )
+        return n[0]["l"], n[0]["p"], out, inc, rev
+
+    def _block(self, graph, nid):
+        labels, p, out, inc, rev = self._node(graph, nid)
+        b = {"id": nid, "type": sorted(labels)}
+        props = {k: v for k, v in p.items() if k != "id" and v is not None}
+        b.update({k: iso(v) for k, v in sorted(props.items())})
+        for r in sorted(out, key=lambda r: (r["t"], r["q"] if r["q"] is not None else 0, r["y"])):
+            b.setdefault(r["t"].lower(), []).append(r["y"])  # steps in their order
+        for r in inc:
             b.setdefault(rev.get(r["t"]) or f"{r['t'].lower()} (reverse)", []).append(r["y"])
         return b, props
 
@@ -147,14 +214,14 @@ class ViewServer:
         """A path seen at an altitude within a budget in tokens (about four characters each);
         folded a level at a time until it fits."""
         cls = self._check(graph)
-        self.db.set_graph(graph)
-        top_alt = Q(self.db, f"MATCH (p:Path {{id: '{top}'}}) RETURN p.altitude AS a")[0]["a"]
+        top_alt = self._altitude(graph, top)
         for level in range(altitude, top_alt + 1):
             note = f"altitude {level}" + (
                 f" (asked {altitude}; folded to fit {budget} tokens)" if level != altitude else ""
             )
-            self.db.set_graph(graph)
-            out, text = self._emit(graph, cls, [top] + view_at(self.db, top, level), budget, note)
+            out, text = self._emit(
+                graph, cls, [top] + self._view_at(graph, top, level), budget, note
+            )
             if out:
                 return out
         raise ValueError(
@@ -170,13 +237,7 @@ class ViewServer:
             raise PermissionError(
                 f"refused: {nid} has not been shown in this serving — zoom from what was served"
             )
-        self.db.set_graph(graph)
-        ids = (
-            [r["id"] for r in path_steps(self.db, nid)]
-            if Q(self.db, f"MATCH (p:Path {{id: '{nid}'}}) RETURN p")
-            else [nid]
-        )
-        out, text = self._emit(graph, cls, ids, budget, f"zoom into {nid}")
+        out, text = self._emit(graph, cls, self._opened(graph, nid), budget, f"zoom into {nid}")
         if not out:
             raise ValueError(
                 f"refused: zooming into {nid} needs about {-(-len(text) // 4)} tokens, "
@@ -209,8 +270,7 @@ class ViewServer:
     def record_block(self, jg, proposal=None, cited=()):
         """The Serving, its SERVED edges and (optionally) a proposal's USED edge and pins, as one
         GQL statement for the judgement graph."""
-        self.db.set_graph(jg)
-        have = {r["i"] for r in Q(self.db, "MATCH (r:Ref) RETURN r.id AS i")}
+        have = self._refs(jg)
         var = {}
         matches, ins = [], []
 

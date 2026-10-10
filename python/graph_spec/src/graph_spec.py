@@ -9,8 +9,10 @@ Usage (imported by the conformance suite):
 Writes: nothing (library).
 
 The one implementation the spec's tests run against; the cases and their expected answers are data
-in the test documents (spec §17), not code here. Needs Grafeo 0.5.43 (the dialect the spec names,
-§3) and PyYAML, pinned in python/graph_spec.
+in the test documents (spec §17), not code here. It reads and checks with the reader by default
+(req:3.reader-default): a plain install needs no engine (req:14.no-engine-install). Grafeo 0.5.43,
+the dialect the spec names (§3), is the optional extra graph-spec[grafeo], for database work and
+for a host that sets PARSER = 'grafeo'; PyYAML is pinned in python/graph_spec.
 A host sets CLASSIFICATION_NOTE, OWNER_ENGINE and WRITTEN_BY after import (see
 graphspec/engine/settings.py); the defaults name no machine or person.
 
