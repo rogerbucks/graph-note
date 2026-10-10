@@ -6,9 +6,10 @@ from __future__ import annotations
 import json
 import re
 from collections import Counter
-from collections.abc import Collection, Iterable
+from collections.abc import Collection, Iterable, Mapping
 from typing import TYPE_CHECKING, Any
 
+from graphspec.engine import settings
 from graphspec.engine.certainty.caches import (
     claim_status,
     confidence_from_evidence,
@@ -16,6 +17,7 @@ from graphspec.engine.certainty.caches import (
 )
 from graphspec.engine.certainty.checks import section20
 from graphspec.engine.dialect_lint import lint
+from graphspec.engine.documents.classification import destination_matrix
 from graphspec.engine.judgements.basis import _norm
 from graphspec.engine.judgements.checks import judgements_rules
 from graphspec.engine.optional_imports import grafeo
@@ -28,6 +30,9 @@ from graphspec.reader.lexer import ProfileError, header
 from graphspec.reader.store import Store
 from graphspec.reader.whitespace import N, S
 from graphspec.reader.whitespace import strip as ws_strip
+from graphspec.rules.changesets import check_changeset as plain_check_changeset
+from graphspec.rules.graph_check import check
+from graphspec.rules.plain_graph import World
 
 if TYPE_CHECKING:
     from grafeo import GrafeoDB
@@ -118,9 +123,30 @@ def refresh_section20(db: GrafeoDB) -> list[tuple[str, str, Any, Any]]:
     return out
 
 
-def graph_rules(db: GrafeoDB, g: str, graphs: Iterable[str]) -> list[tuple[str, bool, str]]:
+class _MatrixWhenAsked(Mapping):
+    """The destination matrix, read from the classification note only when a rule asks for it —
+    as the engine's served rules read it — so a graph with no servings needs no note."""
+
+    def _m(self):
+        return destination_matrix()
+
+    def __getitem__(self, k):
+        return self._m()[k]
+
+    def __iter__(self):
+        return iter(self._m())
+
+    def __len__(self):
+        return len(self._m())
+
+
+def graph_rules(
+    db: World | GrafeoDB, g: str, graphs: Iterable[str]
+) -> list[tuple[str, bool, str]]:
     """The rules the suite runs on a graph, chosen by what the graph holds — for a change set's
-    result."""
+    result. Given the reader's reading (a World), the plain rules (req:3.reader-default)."""
+    if isinstance(db, World):
+        return check(db, g, _MatrixWhenAsked())
     db.set_graph(g)
     ul, ut, ur = untyped(db)
     out = [
@@ -150,7 +176,13 @@ def check_changeset(
     Returns (results [(label, ok, fix)], header, the state hash it would produce). The base and
     the change set are each read with the reader before Grafeo is given them: one the reader
     refuses is a failed result in the reader's words, and Grafeo is given nothing of it; so is a
-    base text whose first line names a graph other than the one its tuple gives."""
+    base text whose first line names a graph other than the one its tuple gives.
+
+    Under the default parser the dry run is the reader's (req:3.reader-default): no engine, and
+    never more lenient than Grafeo's — the reader may only refuse more, what is outside the
+    profile (tests/test_reader_agrees_with_grafeo.py)."""
+    if settings.PARSER == "profile":
+        return plain_check_changeset(base, block, _MatrixWhenAsked(), lint, switches)
     res = []
 
     def add(label, ok, fix=""):

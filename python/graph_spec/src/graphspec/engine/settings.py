@@ -7,9 +7,9 @@ and the code reads each setting from here when it runs, so a setting made after 
 
 from __future__ import annotations
 
-# how parse() reads a document's graph: 'grafeo', or 'profile' for the portable reader
-# (gql_profile)
-PARSER = "grafeo"
+# how parse() reads a document's graph: 'profile', the portable reader (gql_profile), unless the
+# host asks for the engine with 'grafeo' (req:3.reader-default)
+PARSER = "profile"
 
 NOTICES = []  # things a reader should know that are not failures — read and cleared by the runner
 

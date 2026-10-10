@@ -21,10 +21,25 @@ from unittest import mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "src"))
+sys.path.insert(0, HERE)
 
 import graph_spec as gs  # noqa: E402
 from graphspec.engine import settings  # noqa: E402
 from graphspec.engine.documents.fill import compute, fill, fill_check  # noqa: E402
+from engine_support import module_needs_engine  # noqa: E402
+
+
+# These tests are of the route into the engine, which a host asks for: the reader is the default
+# parser (req:3.reader-default), so every test here runs under Grafeo's, and needs it installed.
+def setUpModule():  # noqa: N802
+    module_needs_engine()
+    global _DEFAULT
+    _DEFAULT, settings.PARSER = settings.PARSER, "grafeo"
+
+
+def tearDownModule():  # noqa: N802
+    settings.PARSER = _DEFAULT
+
 
 HEAD = "// graph: g · document doc:one · schema s1 · as of 2026-10-01"
 
@@ -127,10 +142,11 @@ B_COLON = B_BARE.replace("[favours]", "[:FAVOURS]")
 
 
 class ParseAgreesWithTheReader(unittest.TestCase):
-    """parse() under the default parser, Grafeo, gives the graph the profile parser gives."""
+    """parse() under Grafeo's parser, which a host asks for, gives the graph the profile parser
+    gives."""
 
     def test_parse_by_default_accepts_a_bare_type_and_gives_the_profile_parser_s_graph(self):
-        self.assertEqual(settings.PARSER, "grafeo")
+        self.assertEqual(settings.PARSER, "grafeo")  # as setUpModule asks
         ours = parse_text(BARE)
         with parser("profile"):
             theirs = parse_text(BARE)
