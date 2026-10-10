@@ -53,6 +53,12 @@ describe('a style block in a note', () => {
     }
   });
 
+  test('keeps the browser’s own open and close marker, so it can be seen to open', async () => {
+    const { styles } = await import('./host/view-notes.js');
+    const rule = /details\.graph-note-style > summary\s*\{([^}]*)\}/.exec(styles)?.[1] ?? '';
+    assert.doesNotMatch(rule, /display:\s*flex/);
+  });
+
   test('says on its fold how many problems it has', async () => {
     const bad = STYLE.replace("'beside'", "'besides'");
     const { env, el } = await shown(noteOf(DATA, bad), 1);

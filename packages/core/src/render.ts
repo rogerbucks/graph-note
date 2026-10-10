@@ -145,7 +145,10 @@ export function linkDetails(reading: NoteReading, graph: string, index: number):
   if (!d || !l || !g) return null;
   const drawn = new Set(d.boxes.map((b) => b.key)),
     textOf = (k: string) => d.boxes.find((b) => b.key === k)?.text ?? k;
-  const props = g.edges.filter(([s, , t]) => drawn.has(s) && drawn.has(t))[index]?.[3] ?? {};
+  // a link that says which written link it is (a view's) has that link's properties; otherwise, by its place
+  const edge =
+    l.edge !== undefined ? g.edges[l.edge] : g.edges.filter(([s, , t]) => drawn.has(s) && drawn.has(t))[index];
+  const props = edge?.[3] ?? {};
   return {
     index,
     type: l.type,

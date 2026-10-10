@@ -21,6 +21,7 @@ import {
   readingOf,
   styleEdit,
   underStrictness,
+  viewsOf,
 } from '@graph-note/core';
 import type { GraphDrawing, NamedView, Outside, StyleChange, ThingLook } from '@graph-note/core';
 import type GraphNotePlugin from './main';
@@ -29,7 +30,13 @@ import { GraphView } from './graph-view/graph-view';
 import type { ViewShown } from './graph-view/view-strip';
 
 /** Writes a change to the style graph of `graph` into the note at `path`, against the note as it is when written. */
-async function writeStyle(plugin: GraphNotePlugin, path: string, graph: string, change: StyleChange): Promise<void> {
+async function writeStyle(
+  plugin: GraphNotePlugin,
+  path: string,
+  graph: string,
+  change: StyleChange,
+  done: string,
+): Promise<void> {
   const file = plugin.app.vault.getAbstractFileByPath(path);
   if (!(file instanceof TFile)) return;
   let refused = '';
@@ -38,7 +45,8 @@ async function writeStyle(plugin: GraphNotePlugin, path: string, graph: string, 
     if ('refused' in r) refused = r.refused;
     return 'note' in r ? r.note : note;
   });
-  if (refused) new Notice(`The style could not be written: ${refused}`);
+  // each write is confirmed in words, as is each refusal
+  new Notice(refused ? `The style could not be written: ${refused}` : done);
 }
 
 /**
@@ -54,10 +62,15 @@ export async function writeViewBlock(
   const file = plugin.app.vault.getAbstractFileByPath(path);
   if (!(file instanceof TFile)) return 'the note is not there any more';
   let refused: string | null = null;
+  const name = viewsOf([block])[0]?.name;
   await plugin.app.vault.process(file, (note) => {
-    const last = gqlSpans(note)
-      .filter((s) => graphOfBlock(s.text) === graph)
-      .pop();
+    const spans = gqlSpans(note);
+    // a name another view of the graph has is refused before anything is written
+    if (viewsOf(spans.map((s) => s.text)).some((v) => v.graph === graph && v.name === name)) {
+      refused = `graph ${graph} already has a view called ${name}: give this one another name`;
+      return note;
+    }
+    const last = spans.filter((s) => graphOfBlock(s.text) === graph).pop();
     const r = last ? insertBlockAfter(note, { line: last.open, text: last.text }, block) : null;
     if (r?.ok) return r.note;
     refused = r?.reason ?? `graph ${graph} is no longer in the note`;
@@ -118,26 +131,31 @@ export async function renderViewBlock(
   const outside = outsideOf(style, v.name);
   const things = new Set(result.things),
     links = new Set(result.links);
-  // hidden: the drawing holds only the view; faded: it holds the whole graph, and what is outside the view is faded
+  // hidden: the drawing holds only the view; faded: it holds the whole graph, and what is outside the view is faded.
+  // A link kept says which written link it is (`edge`), so its details are its own, never another's by position
+  const g = reading.world[v.graph];
+  const drawnKeys = new Set(base.boxes.map((b) => b.key));
+  const baseEdges = g?.edges.filter(([s, , t]) => drawnKeys.has(s) && drawnKeys.has(t)) ?? [];
   const drawing: GraphDrawing =
     outside === 'hide'
       ? {
           ...base,
           boxes: base.boxes.filter((b) => things.has(b.key)),
-          links: base.links.filter((_, i) => links.has(i)),
+          links: base.links.flatMap((l, i) =>
+            links.has(i) ? [{ ...l, edge: g?.edges.indexOf(baseEdges[i] as (typeof baseEdges)[number]) }] : [],
+          ),
           estimates: [],
         }
       : base;
   const shownReading = { ...reading, graphs: new Map(reading.graphs).set(v.graph, drawing) };
   const scope = { view: v.name };
-  const lookOfThing = (k: string): [string, ThingLook] => [k, lookOf(style, scope, { thing: k })];
+  // a look may be given to a thing, or to its kind
+  const lookOfThing = (b: { key: string; kind: string }): [string, ThingLook] => [
+    b.key,
+    lookOf(style, scope, { thing: b.key, kind: b.kind.split(' · ')[0] ?? '' }),
+  ];
   const looks = {
-    things: new Map(
-      drawing.boxes
-        .map((b) => b.key)
-        .map(lookOfThing)
-        .filter(([, l]) => Object.keys(l).length),
-    ),
+    things: new Map(drawing.boxes.map(lookOfThing).filter(([, l]) => Object.keys(l).length)),
     links: new Map(
       drawing.links
         .map((l, i): [number, ThingLook] => [
@@ -159,16 +177,42 @@ export async function renderViewBlock(
             links: base.links.flatMap((_, i) => (links.has(i) ? [] : [i])),
           },
     looks,
-    legend: legendOf(style, scope),
+    // only the colours drawn here are in the legend, each with what it means
+    legend: legendOf(style, scope).filter((e) =>
+      [...looks.things.values(), ...looks.links.values()].some((l) => l.hue === e.colour),
+    ),
     shown: style.shown.get(v.name),
     setOutside: (o: Outside) =>
-      void writeStyle(plugin, ctx.sourcePath, v.graph, { outside: { view: v.name, outside: o } }),
+      void writeStyle(
+        plugin,
+        ctx.sourcePath,
+        v.graph,
+        { outside: { view: v.name, outside: o } },
+        `View ${v.name} now ${o === 'hide' ? 'hides' : 'fades'} what is outside it.`,
+      ),
     saveShown: (z, selected) =>
-      void writeStyle(plugin, ctx.sourcePath, v.graph, {
-        shown: { view: v.name, zoom: z.scale, x: z.x, y: z.y, ...(selected ? { selected } : {}) },
-      }),
+      void writeStyle(
+        plugin,
+        ctx.sourcePath,
+        v.graph,
+        { shown: { view: v.name, zoom: z.scale, x: z.x, y: z.y, ...(selected ? { selected } : {}) } },
+        `Saved how view ${v.name} is shown.`,
+      ),
   };
-  const drawn = await plugin.layout({ ...nudgedDrawing(drawing, style), nudges: style.nudges }, owner);
+  let drawn;
+  try {
+    drawn = await plugin.layout({ ...nudgedDrawing(drawing, style), nudges: style.nudges }, owner);
+  } catch (e) {
+    // a view whose drawing cannot be laid out shows its text and why, never a blank card
+    console.error('Graph Note could not draw view', v.name, e);
+    root.createDiv({
+      cls: 'graph-note-banner',
+      attr: { role: 'alert' },
+      text: `View ${v.name} could not be drawn, so its query is shown.`,
+    });
+    renderCode(root, source);
+    return;
+  }
   if (!drawn || 'reason' in drawn) {
     renderCode(root, source);
     return;

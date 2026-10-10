@@ -68,14 +68,13 @@ describe('each nudge', () => {
       "(n3:Nudge {word: 'group', thing: 'park', group: 'Dry \"land\"'})",
     );
     const dot = layoutSource(drawing, 'TB').source;
-    const added = nudgedSource(dot, style.nudges, keys)
-      .slice(dot.length - 1, -1)
-      .split('\n')
-      .filter(Boolean);
+    const nudged = nudgedSource(dot, style.nudges, keys);
+    const added = nudged.split('\n').filter((l) => l.includes('subgraph'));
     const box = (n, label, members) =>
-      `  subgraph cluster_${n} {label="${label}"; fontname="Helvetica"; fontsize=9; fontcolor="#0000fe"; ` +
+      `  subgraph cluster_${n} {label=<${label}>; fontname="Helvetica"; fontsize=9; fontcolor="#0000fe"; ` +
       `color="#0000fe"; style="rounded"; ${members}}`;
     assert.deepEqual(added, [box(1, 'Dry &quot;land&quot;', '"home"; "park"; '), box(2, 'Water', '"lake"; ')]);
+    assert.match(nudged, /^digraph[^\n]*\{\n {2}newrank=true;/, 'groups lay out with newrank, so none is dropped');
   });
 
   // proves: four_nudge_words
@@ -111,5 +110,39 @@ describe('each nudge', () => {
     assert.equal(y('home'), y('lake'));
     assert.match(svg, /<g id="clust\d+" class="cluster">\s*<title>cluster_1<\/title>/);
     assert.equal([...svg.matchAll(/<g id="node\d+" class="node">/g)].length, drawing.boxes.length);
+  });
+
+  // proves: four_nudge_words
+  test('a group of things of one kind with no link between them is drawn in its box, never dropped', async () => {
+    const people = `// graph: team
+(ann:Person {name: 'Ann'}), (bob:Person {name: 'Bob'}), (cat:Person {name: 'Cat'}),
+(t1:Team {name: 'One'}), (t2:Team {name: 'Two'}),
+(ann)-[:IN]->(t1), (bob)-[:IN]->(t1), (cat)-[:IN]->(t2)`;
+    const texts = [
+      people,
+      "// graph: team_style · STYLE team\n(g1:Nudge {word: 'group', thing: 'ann', group: 'G'}),\n(g2:Nudge {word: 'group', thing: 'bob', group: 'G'})",
+    ];
+    const reading = readNote(texts);
+    const { style } = readStyle(texts, 'team', reading);
+    const drawing = reading.graphs.get('team');
+    const engine = await loadEngine();
+    const svg = engine.render(
+      nudgedSource(
+        layoutSource(drawing, 'TB').source,
+        style.nudges,
+        drawing.boxes.map((b) => b.key),
+      ),
+    );
+    assert.match(svg, /<title>cluster_1<\/title>/, 'the group’s box is drawn');
+  });
+
+  // proves: broken_style_block
+  test('a group label with a backslash or a quote is drawn as written, and never stops the drawing', async () => {
+    const { drawing, keys } = styled();
+    const nudges = [{ word: 'group', thing: 'cafe', group: 'C:\\ "inside"\\n', at: { block: 1, line: 2, id: 'g' } }];
+    const engine = await loadEngine();
+    const svg = engine.render(nudgedSource(layoutSource(drawing, 'TB').source, nudges, keys));
+    assert.match(svg, /<title>cluster_1<\/title>/);
+    assert.match(svg, /C:\\ &quot;inside&quot;\\n/);
   });
 });

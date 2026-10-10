@@ -90,6 +90,103 @@ describe('a view', () => {
   });
 });
 
+describe('what a view card says and shows', () => {
+  const WALKED = `${DATA},
+(tour:Path {title: 'Walk'}),
+(tour)-[:STEP {seq: 1}]->(home),
+(tour)-[:STEP {seq: 2}]->(park),
+(home)-[:LIKES {since: 2001}]->(park)`;
+  const PATHVIEW = "// graph: trip · QUERY view walk\nMATCH (p:Path {id: 'tour'})-[:STEP]->(n) RETURN p, n";
+  const HIDE = "// graph: trip_style · STYLE trip\n(o:ViewStyle {view: 'walk', outside: 'hide'})";
+
+  test('in a hidden view, a link tapped shows its own properties, never another link’s', async () => {
+    const { env, el } = await viewCard(noteOf(WALKED, PATHVIEW, HIDE), 1);
+    try {
+      for (const g of el.querySelectorAll('g.edge[data-link]')) {
+        g.dispatch('keydown', { key: 'Enter' });
+        const label = g.getAttribute('aria-label');
+        const details = el.querySelector('.graph-note-details').textContent;
+        if (/STEP|step/i.test(label) && /Home/.test(label)) assert.match(details, /seq: 1/, label);
+        if (/STEP|step/i.test(label) && /park/.test(label)) assert.match(details, /seq: 2/, label);
+        assert.doesNotMatch(details, /since/, `${label}: no other link's properties`);
+      }
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a look given to a kind is drawn on each thing of that kind, and the legend lists only looks drawn', async () => {
+    const style = [
+      '// graph: trip_style · STYLE trip',
+      "(a:Look {view: 'round_park', kind: 'Place', colour: 'purple', means: 'places'}),",
+      "(b:Look {view: 'other', thing: 'lake', colour: 'orange', means: 'elsewhere'})",
+    ].join('\n');
+    const { env, el } = await viewCard(noteOf(DATA, NEAR, style), 1);
+    try {
+      const park = el.querySelectorAll('g.node').find((g) => g.getAttribute('data-key') === 'park');
+      assert.ok(park.classList.contains('graph-note-look'));
+      assert.match(park.getAttribute('aria-label'), /places/, 'its meaning said, never colour alone');
+      assert.match(el.querySelector('.graph-note-legend').textContent, /places/);
+      assert.doesNotMatch(el.querySelector('.graph-note-legend').textContent, /elsewhere/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a thing outside the view is said to be outside it, never by its fading alone', async () => {
+    const { env, el } = await viewCard(noteOf(DATA, NEAR), 1);
+    try {
+      const lake = el.querySelectorAll('g.node').find((g) => g.getAttribute('data-key') === 'lake');
+      assert.match(lake.getAttribute('aria-label'), /outside the view/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a write from the card is confirmed in words', async () => {
+    const { env, el } = await viewCard(noteOf(DATA, NEAR), 1);
+    try {
+      labelled(el, 'Save as shown').click();
+      await until(() => /:Shown/.test(env.state.files.get(PATH)));
+      assert.match(env.state.notices.at(-1), /saved/i);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a view whose drawing cannot be laid out shows its text and why, never a blank card', async () => {
+    const env = await load({ files: { [PATH]: noteOf(DATA, NEAR) } });
+    try {
+      env.plugin.layout = () => Promise.reject(new Error('no engine'));
+      const { el } = await show(env, noteOf(DATA, NEAR), 1);
+      assert.ok(el.querySelector('[role="alert"]'));
+      assert.ok(el.querySelector('pre'));
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
+describe('a view in reading view', () => {
+  test('is read-only: it offers neither Fade or Hide others nor Save as shown', async () => {
+    const env = await load({ files: { [PATH]: noteOf(DATA, NEAR) } });
+    try {
+      const note = noteOf(DATA, NEAR);
+      const host = env.doc.body.createDiv({ cls: 'markdown-reading-view' });
+      const inner = host.createDiv({ cls: 'markdown-preview-view markdown-rendered' });
+      const el = inner.createDiv({ cls: 'block-language-gql' });
+      const { fakeContext } = await import('./host/fake-obsidian.js');
+      const fences = note.split('\n').flatMap((l, i) => (/^```gql/.test(l) ? [i] : []));
+      await env.state.processors.get('gql')(NEAR, el, fakeContext(note, fences[1]));
+      await until(() => !!el.querySelector('svg'));
+      assert.equal(labelled(el, 'Hide others'), undefined);
+      assert.equal(labelled(el, 'Save as shown'), undefined);
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
 describe('a view that cannot be drawn', () => {
   test('a query outside the view profile is refused, saying what is allowed, and its text shown', async () => {
     const bad = "// graph: trip · QUERY view odd\nMATCH (n) WHERE n.name STARTS WITH 'C' RETURN n";

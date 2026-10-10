@@ -30,50 +30,60 @@ export function renderViewStrip(
   root: HTMLElement,
   v: ViewShown,
   now: () => { view: View; selected: string | null },
-): void {
+): HTMLElement[] {
   const strip = root.createDiv({ cls: 'graph-note-view-strip' });
   strip.createSpan({ cls: 'graph-note-view-reading', text: `View ${v.name}: ${v.reading}` });
   const other: Outside = v.outside === 'fade' ? 'hide' : 'fade';
-  button(strip, other === 'hide' ? 'Hide others' : 'Fade others', other === 'hide' ? 'eye-off' : 'eye', () =>
-    v.setOutside(other),
-  );
-  button(strip, 'Save as shown', 'bookmark', () => {
-    const { view, selected } = now();
-    v.saveShown(view, selected);
-  });
-  if (!v.legend.length) return;
+  // the buttons that write the style graph, which a read-only place (reading view) takes away
+  const writes = [
+    button(strip, other === 'hide' ? 'Hide others' : 'Fade others', other === 'hide' ? 'eye-off' : 'eye', () =>
+      v.setOutside(other),
+    ),
+    button(strip, 'Save as shown', 'bookmark', () => {
+      const { view, selected } = now();
+      v.saveShown(view, selected);
+    }),
+  ];
+  if (!v.legend.length) return writes;
   const legend = root.createEl('ul', { cls: 'graph-note-legend', attr: { 'aria-label': 'Legend' } });
   for (const e of v.legend) {
     const li = legend.createEl('li');
     li.createSpan({ cls: 'graph-note-swatch' }).setCssProps({ '--graph-note-swatch': hueColour(e.colour, 'line') });
     li.createSpan({ text: e.means });
   }
+  return writes;
 }
 
-const lookClasses = (g: SVGElement, look: ThingLook | undefined) => {
+/** Adds words to what a screen reader hears of a box or link: never said by colour or fading alone. */
+const say = (g: SVGElement, words: string) => {
+  const label = g.getAttribute('aria-label');
+  if (label && words) g.setAttribute('aria-label', `${label}, ${words}`);
+};
+
+const lookClasses = (g: SVGElement, look: ThingLook | undefined, means: Map<string, string>) => {
   if (!look) return;
+  if (look.hue) say(g, means.get(look.hue) ?? '');
   g.classList.add('graph-note-look');
   if (look.line) g.classList.add(`graph-note-line-${look.line}`);
   if (look.format) g.classList.add(`graph-note-format-${look.format}`);
-  if (look.hue)
-    g.setCssProps({
-      '--graph-note-look-line': hueColour(look.hue, 'line'),
-      '--graph-note-look-label': hueColour(look.hue, 'label'),
-    });
+  if (look.hue) g.setCssProps({ '--graph-note-look-line': hueColour(look.hue, 'line') });
 };
 
 /** Marks the drawing as the view says: what is outside it faded, and each look drawn. */
 export function markView(svg: SVGSVGElement, v: ViewShown): void {
   const faded = new Set(v.faded.things),
-    fadedLinks = new Set(v.faded.links.map(String));
+    fadedLinks = new Set(v.faded.links.map(String)),
+    means = new Map(v.legend.map((e) => [e.colour, e.means]));
   for (const g of Array.from(svg.querySelectorAll<SVGGElement>('g.node'))) {
     const key = g.getAttribute('data-key') ?? '';
     g.classList.toggle('graph-note-faded', faded.has(key));
-    lookClasses(g, v.looks.things.get(key));
+    if (faded.has(key)) say(g, 'outside the view');
+    lookClasses(g, v.looks.things.get(key), means);
   }
   for (const g of Array.from(svg.querySelectorAll<SVGGElement>('g.edge[data-link]'))) {
     const n = g.getAttribute('data-link') ?? '';
     g.classList.toggle('graph-note-faded', fadedLinks.has(n));
-    lookClasses(g, v.looks.links.get(Number(n)));
+    if (fadedLinks.has(n)) say(g, 'outside the view');
+    lookClasses(g, v.looks.links.get(Number(n)), means);
   }
 }

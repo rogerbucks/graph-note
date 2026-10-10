@@ -35,6 +35,8 @@ export interface Link {
   type: string;
   reading: string;
   to: string;
+  /** Which written link this is, as an index into its graph's edges, where the drawing holds only some links (a view). */
+  edge?: number;
 }
 
 /** One graph, ready to draw: its boxes, its links, and the estimates added where what was written was a near miss. */

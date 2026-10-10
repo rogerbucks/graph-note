@@ -78,7 +78,9 @@ export class GraphView extends MarkdownRenderChild {
     this.walk = new Walk(root, this.o, () => this.svg); // walked paths: Play, and Record while edited (§7)
     if (this.o.writeView) this.maker = new ViewMaker(root, this.o); // a view made by tapping, while edited (§7)
     const view = this.o.view;
-    if (view) renderViewStrip(root, view, () => ({ view: this.zoom.view(), selected: this.details.selectedKey() }));
+    const writes = view
+      ? renderViewStrip(root, view, () => ({ view: this.zoom.view(), selected: this.details.selectedKey() }))
+      : [];
     this.viewport = root.createDiv({
       cls: 'graph-note-viewport',
       attr: {
@@ -116,9 +118,10 @@ export class GraphView extends MarkdownRenderChild {
       root,
       () => {
         if (mode === 'note' && readOnlyHere(root)) {
-          editing.forEach((b) => b.remove());
+          [...editing, ...writes].forEach((b) => b.remove());
           this.editButton = null;
           slot?.remove();
+          if (was?.selected) this.open({ key: was.selected }); // a view saved as shown opens with its selection here too
           return;
         }
         source?.remove();

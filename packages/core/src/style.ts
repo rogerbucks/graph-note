@@ -136,7 +136,23 @@ export function readStyle(
   raws.sort((a, b) => a.at.block - b.at.block || a.at.line - b.at.line);
   const checked = checkThings(raws, namesOf(reading, graph, g));
   const { style, problems: conflicts } = settle(checked, graph);
-  const all = [...problems, ...links(texts, blocks, graph), ...checked.problems, ...conflicts];
+  // a style block named as a data graph: a reader that does not know STYLE (the Python library) merges it into the data
+  const named = blocks.flatMap((block): Problem[] => {
+    const own = graphOf(texts[block] ?? '');
+    return own && own in reading.whole
+      ? [
+          {
+            graph,
+            block,
+            line: 1,
+            severity: 'warning',
+            message: `this style block takes the data graph ${own}'s name; it needs a name of its own, never a data graph's`,
+            fix: `name it ${graph}_style: // graph: ${graph}_style · STYLE ${graph}`,
+          },
+        ]
+      : [];
+  });
+  const all = [...named, ...problems, ...links(texts, blocks, graph), ...checked.problems, ...conflicts];
   return { style, problems: all.sort((a, b) => a.block - b.block || a.line - b.line) };
 }
 

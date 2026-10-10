@@ -109,6 +109,27 @@ describe('making a view by tapping', () => {
     }
   });
 
+  test('a name another view of the graph has is refused before anything is written, and said', async () => {
+    const taken = NOTE.replace(
+      'After.',
+      `${fence("// graph: trip · QUERY view ends\nMATCH (n) WHERE n.id IN ['home'] RETURN n")}\n\nAfter.`,
+    );
+    const env = await load({ files: { [PATH]: taken } });
+    try {
+      const el = await show(env);
+      labelled(el, 'Edit here').click();
+      await until(() => !!labelled(el, 'Make a view'));
+      labelled(el, 'Make a view').click();
+      tapKey(el, 'cafe');
+      nameIt(el, 'ends');
+      labelled(el, 'Write the view').click();
+      await until(() => /already/.test(strip(el).querySelector('[role="alert"]').textContent));
+      assert.equal((env.state.files.get(PATH).match(/QUERY view ends/g) ?? []).length, 1);
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('a tap while making a view chooses, and opens no details', async () => {
     const { env, el } = await making();
     try {

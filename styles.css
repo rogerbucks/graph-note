@@ -47,16 +47,14 @@
   fill: var(--text-error);
   font-weight: var(--font-semibold);
 }
-/* A view (spec §7): what is outside it faded, never hidden by colour alone; each look in its hue's locked blend; the
-   legend says what each colour means, a swatch beside the words. */
+/* A view (spec §7): what is outside it faded, and said so to screen readers; each look's hue on the outline only, in
+   the locked line blend, its text kept in the text colour so the locked contrast holds on any box; the legend says
+   what each colour means, a swatch beside the words. */
 .graph-note-svg .graph-note-faded {
   opacity: 0.35;
 }
 .graph-note-svg g.graph-note-look > :is(path, polygon) {
   stroke: var(--graph-note-look-line, var(--text-muted));
-}
-.graph-note-svg g.graph-note-look > text {
-  fill: var(--graph-note-look-label, var(--text-normal));
 }
 .graph-note-svg g.graph-note-line-bold > :is(path, polygon) {
   stroke-width: 3;
@@ -103,8 +101,7 @@
 /* A style block (spec §2): folded away until opened, its line in the muted colour, a 44-point target to open it. */
 details.graph-note-style > summary {
   min-height: 44px;
-  display: flex;
-  align-items: center;
+  padding-block: var(--size-4-3);
   color: var(--text-muted);
   cursor: pointer;
 }

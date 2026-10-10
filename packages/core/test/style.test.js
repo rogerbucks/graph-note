@@ -153,6 +153,16 @@ describe('a style block in a note', () => {
 });
 
 describe('the style graph is checked like any graph', () => {
+  // proves: style_is_a_graph
+  test('a style block that takes a data graph’s name as its own is a problem: a reader not knowing STYLE would merge it into that data', () => {
+    const own = "// graph: trip · STYLE trip\n(n1:Nudge {word: 'direction', direction: 'TB'})";
+    const { problems } = styleIn(TRIP, own);
+    assert.ok(
+      problems.some((p) => p.line === 1 && /name of its own/.test(p.message) && /trip_style/.test(p.fix)),
+      messages(problems).join(' | '),
+    );
+  });
+
   // proves: style_graph_checked
   test('a name that is not in the graph it styles is a problem on its line, with the nearest name as the fix', () => {
     const block = styleBlock(

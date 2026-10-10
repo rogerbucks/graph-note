@@ -28,16 +28,22 @@ export function nudgedSource(dot: string, nudges: readonly Nudge[], keys: Iterab
     else if (n.word === 'group' && n.group !== undefined)
       groups.set(n.group, [...(groups.get(n.group) ?? []), ...things]);
   }
+  // the label as an HTML-like label, entity-escaped as the boxes' own are: a backslash or a quote is drawn as written
   [...groups].forEach(([label, members], i) =>
     added.push(
-      `  subgraph cluster_${i + 1} {label="${GraphLayout.escape(label)}"; fontname="${STYLE.font}"; ` +
+      `  subgraph cluster_${i + 1} {label=<${GraphLayout.escape(label)}>; fontname="${STYLE.font}"; ` +
         `fontsize=${STYLE.kind_font_size}; fontcolor="#0000fe"; color="#0000fe"; style="rounded"; ` +
         `${members.map((k) => `${id(k)}; `).join('')}}`,
     ),
   );
   if (!added.length) return dot;
   const end = dot.lastIndexOf('}');
-  return `${dot.slice(0, end)}${added.join('\n')}\n${dot.slice(end)}`;
+  const nudged = `${dot.slice(0, end)}${added.join('\n')}\n${dot.slice(end)}`;
+  // the layout source puts unlinked things of one kind on one rank; without newrank, Graphviz takes such things out of
+  // a group's box without a word. Only when a group is written, so any other source stays the Python library's
+  if (!groups.size) return nudged;
+  const open = nudged.indexOf('{') + 1;
+  return `${nudged.slice(0, open)}\n  newrank=true;${nudged.slice(open)}`;
 }
 
 /** The drawing laid out in the direction its style's direction nudge sets; the same drawing when it sets none. */

@@ -137,7 +137,13 @@ export class ViewMaker {
     if (!/^\w+$/.test(name))
       return void this.alert?.setText('Give the view a name of one word: letters, digits and _.');
     const { kind: _, ...args } = spec;
-    const block = viewBlock(this.o.graph, name, viewQuery(spec.kind, args as never));
+    let block: string;
+    try {
+      block = viewBlock(this.o.graph, name, viewQuery(spec.kind, args as never));
+    } catch (e) {
+      // a graph or a kind whose name a view query cannot hold: said, and nothing written
+      return void this.alert?.setText(`This view cannot be written: ${(e as Error).message}`);
+    }
     const refused = await this.o.writeView?.(block);
     if (refused) return void this.alert?.setText(refused);
     this.making = false;
