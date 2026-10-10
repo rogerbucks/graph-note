@@ -295,7 +295,10 @@ const article = (k: string) => (/^[aeiou]/i.test(k) ? 'an' : 'a');
 export function readBack(reading: NoteReading, graph: string, text: string): Map<number, string> {
   const d = reading.graphs.get(graph),
     out = new Map<number, string>();
-  const textOf = (k: string) => d?.boxes.find((b) => b.key === k)?.text ?? `${k} (not in the graph)`;
+  // each box's text found by its key from a map, not by a search of every box for every line (§9: never freeze)
+  const texts = new Map<string, string>();
+  for (const b of d?.boxes ?? []) if (!texts.has(b.key)) texts.set(b.key, b.text);
+  const textOf = (k: string) => texts.get(k) ?? `${k} (not in the graph)`;
   // a link reads in its type's own words, from its schema; a type with none — a draft's, or one the schema does not
   // declare — shows itself, as an arrow, rather than a guess at words that may read badly ("Drive hope Sydney")
   const whole = reading.whole[graph] ?? reading.world[graph];

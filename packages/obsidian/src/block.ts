@@ -1,23 +1,58 @@
 // One gql block in a note (spec §3): a graph block is drawn, as built by the note's blocks up to it; anything else is
 // shown as coloured code. A graph is never blank: what can be read is drawn and the rest is listed; when nothing can be
-// read, or the engine cannot start, the text is shown with its problems or a banner.
+// read, or the engine cannot start, or the graph is over a size or time limit (spec §9), the text is shown with its
+// problems or a banner.
 import { Notice } from 'obsidian';
 import type { MarkdownPostProcessorContext } from 'obsidian';
-import { completenessReport, draw, gqlBlocks, graphOfBlock, namesSharedSchema, readNote } from '@graph-note/core';
-import type { Block, Drawn, Problem } from '@graph-note/core';
+import { completenessReport, gqlBlocks, graphOfBlock, namesSharedSchema, readNote } from '@graph-note/core';
+import type { Block, Drawn, Problem, Refusal } from '@graph-note/core';
 import type GraphNotePlugin from './main';
+import type { EditTarget } from './main';
 import { renderCode } from './code';
 import { GraphView } from './graph-view/graph-view';
 import { readOnlyHere, settlePlacements, whenPlaced } from './graph-view/placement';
 import { renderProblems } from './graph-view/problems-list';
+import { refusalBanner } from './layout-worker/refusal-banner';
 import type { ShownProblem } from './graph-view/problems-list';
 
-/** Draws one gql block where the note shows it (spec §3): its graph with the bar, or its problems, or a prompt when it is empty. */
+/**
+ * A graph shown as its text with a banner saying why it is not drawn (spec §9): too large, or its layout stopped. An
+ * editor open in place keeps its place in the card, so the text can still be made small enough to draw.
+ */
+function asText(
+  plugin: GraphNotePlugin,
+  root: HTMLElement,
+  source: string,
+  why: Refusal,
+  problems: ShownProblem[],
+  target: EditTarget,
+): void {
+  refusalBanner(root, why);
+  if (problems.length) renderProblems(root, problems, false);
+  const editing = plugin.inlineFor(target.path, target.line);
+  if (!editing) {
+    renderCode(root, source);
+    return;
+  }
+  const at = root.createDiv({ cls: 'graph-note-edit-slot' });
+  whenPlaced(root, () => {
+    if (readOnlyHere(root)) {
+      at.remove();
+      renderCode(root, source);
+    } else editing.mount(at);
+  });
+}
+
+/**
+ * Draws one gql block where the note shows it (spec §3): its graph with the bar, or its problems, or a prompt when it is
+ * empty. `owner` is what the drawing is for, such as Live Preview's card: a newer drawing for it replaces one not yet laid out.
+ */
 export async function renderBlock(
   plugin: GraphNotePlugin,
   source: string,
   el: HTMLElement,
   ctx: MarkdownPostProcessorContext,
+  owner?: object,
 ): Promise<void> {
   const graph = graphOfBlock(source);
   if (!graph) {
@@ -36,11 +71,16 @@ export async function renderBlock(
 
   const shared = texts.some(namesSharedSchema) ? await plugin.sharedSchemas() : [];
   const reading = readNote(texts, index, shared);
+  const target = { path: ctx.sourcePath, line: info?.lineStart ?? 0, graph };
+  if (reading.tooLarge) {
+    // too large to read (spec §9): nothing was read, so the text is shown, and why
+    asText(plugin, el.createDiv({ cls: 'graph-note' }), source, reading.tooLarge, [], target);
+    return;
+  }
   // a problem's line in the note: the block's fence line, plus its line in the block (1 = the line after the fence)
   const shown = (p: Problem): ShownProblem => ({ ...p, noteLine: (blocks[p.block]?.line ?? 0) + p.line });
   const problems = reading.problems.filter((p) => p.graph === graph).map(shown);
   const drawing = reading.graphs.get(graph);
-  const target = { path: ctx.sourcePath, line: info?.lineStart ?? 0, graph };
   const root = el.createDiv({ cls: 'graph-note' });
 
   if (!drawing || !drawing.boxes.length) {
@@ -79,9 +119,9 @@ export async function renderBlock(
     return;
   }
 
-  let drawn: Drawn;
+  let drawn: Drawn | Refusal | null;
   try {
-    drawn = draw(drawing, await plugin.graphviz());
+    drawn = await plugin.layout(drawing, owner);
   } catch (e) {
     console.error('Graph Note could not draw', graph, e);
     root.createDiv({
@@ -90,6 +130,11 @@ export async function renderBlock(
       text: 'The drawing engine could not start, so this graph is shown as text. Any drawing generated earlier in this note may be stale.',
     });
     renderCode(root, source);
+    return;
+  }
+  if (!drawn) return; // no longer wanted: a newer drawing of this card was asked for, or the plugin unloaded
+  if ('reason' in drawn) {
+    asText(plugin, root, source, drawn, problems, target);
     return;
   }
   let slot: HTMLElement | null = null;

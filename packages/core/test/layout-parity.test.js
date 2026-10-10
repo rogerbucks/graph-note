@@ -16,10 +16,12 @@ import json, re, sys
 sys.path.insert(0, ${JSON.stringify(PY_SRC)})
 import gql_profile as gp, graph_rules as gr, graph_svg
 out = []
-for note in json.load(sys.stdin):
+for item in json.load(sys.stdin):
+    # a note is its text, or its text and the budget of reading again both readers are given
+    note, budget = item if isinstance(item, list) else (item, None)
     blocks = re.findall(r"\`\`\`gql\\n(.*?)\\n\`\`\`", note, re.S)
     # what can be read of every block, as the core reads it: a block that cannot be read is drawn in part (8 Oct 2026)
-    store, problems = gp.read_for_drawing(blocks)
+    store, problems = gp.read_for_drawing(blocks, **({} if budget is None else {'budget': budget}))
     w = gr.World.from_store(store)
     res = {}
     for name in sorted(n for n in w.graphs if not n.startswith('schema ')):
@@ -90,7 +92,14 @@ function same(notes) {
   assert.equal(r.status, 0, r.stderr);
   const python = JSON.parse(r.stdout);
   names.forEach((name, n) => {
-    const reading = readNote(gqlBlocks(notes[name]).map((b) => b.text));
+    // a note is its text, or its text and the budget of reading again both readers are given
+    const [note, budget] = Array.isArray(notes[name]) ? notes[name] : [notes[name]];
+    const reading = readNote(
+      gqlBlocks(note).map((b) => b.text),
+      undefined,
+      [],
+      budget,
+    );
     assert.deepEqual([...reading.graphs.keys()].sort(), Object.keys(python[n]), name);
     for (const [graph, drawing] of reading.graphs) {
       for (const rd of ['LR', 'TB'])
@@ -137,8 +146,38 @@ INSERT (walk:Leg {name: 'Walk'}),
   ].join('\n'),
 };
 
+// never freeze (spec §9, 10 Oct 2026): past a budget of reading a broken block again, both readers leave the rest of it out
+// at once, from the failing line; each read again, and each trial of which part on a line is at fault, is charged its
+// length in UTF-16 units. A small budget, given to both, shows the cut on a note of a few lines.
+const LINES = `// graph: trip
+(home:Place {name: 'Home 🏠'}),
+(walk:Leg {name: 'Walk'}),
+(bus:Leg {name 'Bus'}),
+(train:Leg {name 'Train'}),
+(tram:Leg {name 'Tram'}),
+(walk)-[:STARTS_AT]->(home)`;
+const ONE_LINE = `// graph: trip
+(start:Place {name: 'Start'}),
+(home:Place {name: 'Home'}), (walk:Leg {name 'Walk'}), (bus:Leg {name: 'Bus'})
+(ferry:Leg {name: 'Ferry'})`;
+PARTIAL['past the budget, the rest of a block left out from the failing line'] = [fence(LINES), 2 * LINES.length];
+PARTIAL['past the budget while telling which part on a line is at fault'] = [fence(ONE_LINE), 2 * ONE_LINE.length];
+
 test('a block that cannot be read is drawn in part, the same by both readers, byte for byte', () => {
   same(PARTIAL);
+  const cut = readNote([LINES], 0, [], 2 * LINES.length);
+  assert.deepEqual(
+    cut.graphs.get('trip').boxes.map((b) => b.key),
+    ['home', 'walk'],
+    'the cut is made: bus and train left out alone, tram with the rest',
+  );
+  assert.deepEqual(
+    readNote([ONE_LINE], 0, [], 2 * ONE_LINE.length)
+      .graphs.get('trip')
+      .boxes.map((b) => b.key),
+    ['start'],
+    'the trials charged too: the line is left out from its start, with what follows',
+  );
 });
 
 const UNNAMED = {

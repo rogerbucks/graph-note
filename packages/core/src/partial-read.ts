@@ -3,10 +3,11 @@
 // missing comma, a link type without its colon and a thing with text but no name are each read as meant, with a warning
 // whose fix writes it so.
 import gs from '@graph-note/graph-spec';
-import { bareNames, items, lineAt, without } from './block-items.ts';
+import { bareNames, items, lineIndex, without } from './block-items.ts';
 import type { Item } from './block-items.ts';
 import { dataKind, graphOf } from './blocks.ts';
 import { nameGaps, withNames } from './name-gaps.ts';
+import type { BlockGaps } from './name-gaps.ts';
 import type { Problem } from './note-reading.ts';
 
 /**
@@ -69,12 +70,19 @@ function danglingComma(text: string): { text: string; problem: Omit<Problem, 'bl
   };
 }
 
+/** The blocks made ready to read: as they will be read, the problems found so far, those left out, and their gaps. */
+export interface Prepared {
+  clean: string[];
+  problems: Problem[];
+  skip: Set<number>;
+  gaps: BlockGaps[];
+}
+
 /**
- * Reads a note's data blocks, leaving out what cannot be read. Returns the blocks as read and the problems.
- * Each block is applied in order to a fresh store; when one fails, the item at the failing line is blanked and the
- * whole read starts again, so a half-applied block never leaves part of a bad path behind.
+ * The blocks made ready to read: a block that is not data left out; a comment after code blanked and a comma with nothing
+ * after it taken out, each with its warning; and the names suggested for things written without one.
  */
-export function readBlocks(texts: string[], shared: string[]): { store: gs.Store; problems: Problem[] } {
+export function prepare(texts: string[]): Prepared {
   const clean = texts.slice(),
     problems: Problem[] = [],
     skip = new Set<number>();
@@ -99,107 +107,170 @@ export function readBlocks(texts: string[], shared: string[]): { store: gs.Store
   // is only read in, in a copy, so that the thing is drawn — the note itself is never rewritten unasked
   const gaps = nameGaps(clean.map((text, i) => ({ text: skip.has(i) ? '' : text, graph: graphOf(texts[i] ?? '') })));
   gaps.forEach((g, i) => problems.push(...g.problems.map((p) => ({ ...p, block: i, graph: graphOf(texts[i] ?? '') }))));
-  for (let attempt = 0; ; attempt++) {
-    const store = new gs.Store();
-    for (const s of shared) {
-      try {
-        store.apply(s);
-      } catch {
-        /* a shared schema that cannot be read types nothing */
-      }
-    }
-    let failed: { block: number; error: unknown } | null = null;
-    const commas: Problem[] = [];
-    for (let i = 0; i < clean.length && !failed; i++) {
-      if (skip.has(i)) continue;
-      const before = store.commas.length;
-      const bareBefore = store.bares.length;
-      try {
-        store.apply(withNames(clean[i] ?? '', gaps[i]?.named ?? []));
-      } catch (error) {
-        failed = { block: i, error };
-      }
-      // a comma the reader read in (§3): a warning on its line, whose fix adds it — the note itself is never rewritten unasked
-      for (const c of store.commas.slice(before)) {
-        const code = (clean[i] ?? '').split('\n')[c.line - 1] ?? '';
-        commas.push({
-          graph: c.graph,
-          block: i,
-          line: c.line,
-          severity: 'warning',
-          message: 'a comma is missing at the end of this line; it is read as if it were there',
-          fix: 'add a comma at the end of the line',
-          insert: { line: c.line - 1, character: code.trimEnd().length, text: ',' },
-        });
-      }
-      // a type written without its colon, read as the graph's one type of that name (§3): a warning, whose fix writes
-      // the colon and the type as the graph spells it
-      const names = bareNames(clean[i] ?? '');
-      for (const [k, b] of store.bares.slice(bareBefore).entries()) {
-        commas.push({
-          graph: b.graph,
-          block: i,
-          line: b.line,
-          severity: 'warning',
-          message: `[${b.written}] has no colon; it is read as the relationship type ${b.type}`,
-          fix: `write it with its colon: [:${b.type}]`,
-          replace: { written: b.written, with: [`:${b.type}`] },
-          fixTitle: `Write the colon: [:${b.type}]`,
-          ...(names[k] ? { span: names[k] } : {}),
-        });
-      }
-    }
-    if (!failed)
-      return { store, problems: problems.concat(commas).sort((a, b) => a.block - b.block || a.line - b.line) };
-    const { block, error } = failed,
-      text = clean[block] ?? '';
-    const pe = error instanceof gs.ProfileError ? error : null;
-    const line = pe?.line ?? 1;
-    const problem: Problem = {
-      graph: graphOf(text),
-      block,
-      line,
-      severity: 'error',
-      message: pe?.msg ?? 'this could not be read',
-      fix: pe?.fix ?? 'check the line against the guide to writing a graph note',
-    };
-    const all = items(text);
-    // "unexpected '('" straight after a path that ends its line with no comma: say so, and offer the comma
-    const opened = all.findIndex((it) => lineAt(text, it.from) === line),
-      prior = all[opened - 1];
-    if (pe?.msg === "unexpected '('" && prior && prior.comma === -1 && text[prior.to - 1] === ')') {
-      const at = text.slice(0, prior.to).split('\n'),
-        lastLine = (at[at.length - 1] ?? '').trim();
-      problem.message = `${pe.msg} — a comma is missing at the end of the line before`;
-      problem.fix = `add a comma at the end of the line before, after ${lastLine}`;
-      problem.insert = { line: at.length - 1, character: (at[at.length - 1] ?? '').length, text: ',' };
-    }
-    const touching = all.filter((it) => lineAt(text, it.from) <= line && line <= lineAt(text, it.to - 1));
-    const before = all.filter((it) => lineAt(text, it.from) <= line).pop();
-    const drop = touching.length ? touching : before ? [before] : [];
-    if (!drop.length || attempt > texts.length + all.length * 2) {
-      skip.add(block);
-      problems.push(problem);
-      continue;
-    }
-    // Of several items on the failing line, leave out only the one at fault when that can be told.
-    let chosen = drop;
-    if (drop.length > 1) {
-      chosen = [
-        drop.find((it) => {
-          const trial = without(text, all, [it]);
-          try {
-            const s = new gs.Store();
-            s.apply(trial);
-            return true;
-          } catch (e) {
-            return !(e instanceof gs.ProfileError && e.line === line);
-          }
-        }) ?? drop[0],
-      ].filter((x): x is Item => !!x);
-      if (!chosen.length) chosen = drop;
-    }
-    clean[block] = without(text, all, chosen);
-    problems.push({ ...problem, dropped: chosen.map((it) => text.slice(it.from, it.to)).join('\n') });
+  return { clean, problems, skip, gaps };
+}
+
+/**
+ * How much may be read again, in UTF-16 units, while a block's parts that cannot be read are left out one by one: each
+ * is the block read again whole, and each trial to tell which of several parts on a line is at fault is too. Past it,
+ * the rest of the block from the failing line is left out at once (§9: never freeze). A million is under half a second
+ * of re-reading on a desktop; a note of ordinary size, with a few dozen problems, never comes near it. The Python
+ * reader (graphspec/reader/drawing.py) counts and cuts exactly so, so both draw the same (§12, drawn_in_part).
+ */
+export const REREAD_BUDGET = 4_000_000;
+
+/** The 0-based line of a character, by a block's line index. */
+type LineOf = (pos: number) => number;
+
+/** The warnings for what the reader read in as meant in block `i`: missing commas, and types without their colon. */
+function readAsMeant(store: gs.Store, i: number, text: string, commasFrom: number, baresFrom: number): Problem[] {
+  const out: Problem[] = [];
+  // a comma the reader read in (§3): a warning on its line, whose fix adds it — the note itself is never rewritten unasked
+  const lines = store.commas.length > commasFrom ? text.split('\n') : [];
+  for (const c of store.commas.slice(commasFrom)) {
+    const code = lines[c.line - 1] ?? '';
+    out.push({
+      graph: c.graph,
+      block: i,
+      line: c.line,
+      severity: 'warning',
+      message: 'a comma is missing at the end of this line; it is read as if it were there',
+      fix: 'add a comma at the end of the line',
+      insert: { line: c.line - 1, character: code.trimEnd().length, text: ',' },
+    });
   }
+  // a type written without its colon, read as the graph's one type of that name (§3): a warning, whose fix writes the
+  // colon and the type as the graph spells it
+  const bares = store.bares.slice(baresFrom);
+  const names = bares.length ? bareNames(text) : [];
+  for (const [k, b] of bares.entries()) {
+    out.push({
+      graph: b.graph,
+      block: i,
+      line: b.line,
+      severity: 'warning',
+      message: `[${b.written}] has no colon; it is read as the relationship type ${b.type}`,
+      fix: `write it with its colon: [:${b.type}]`,
+      replace: { written: b.written, with: [`:${b.type}`] },
+      fixTitle: `Write the colon: [:${b.type}]`,
+      ...(names[k] ? { span: names[k] } : {}),
+    });
+  }
+  return out;
+}
+
+/** What is said of a block that failed: the error, with "a comma is missing" said when that is why. */
+function failure(block: number, text: string, error: unknown, all: Item[], lineAt: LineOf): Problem {
+  const pe = error instanceof gs.ProfileError ? error : null;
+  const line = pe?.line ?? 1;
+  const problem: Problem = {
+    graph: graphOf(text),
+    block,
+    line,
+    severity: 'error',
+    message: pe?.msg ?? 'this could not be read',
+    fix: pe?.fix ?? 'check the line against the guide to writing a graph note',
+  };
+  // "unexpected '('" straight after a path that ends its line with no comma: say so, and offer the comma
+  const opened = all.findIndex((it) => lineAt(it.from) === line),
+    prior = all[opened - 1];
+  if (pe?.msg === "unexpected '('" && prior && prior.comma === -1 && text[prior.to - 1] === ')') {
+    const at = text.slice(0, prior.to).split('\n'),
+      lastLine = (at[at.length - 1] ?? '').trim();
+    problem.message = `${pe.msg} — a comma is missing at the end of the line before`;
+    problem.fix = `add a comma at the end of the line before, after ${lastLine}`;
+    problem.insert = { line: at.length - 1, character: (at[at.length - 1] ?? '').length, text: ',' };
+  }
+  return problem;
+}
+
+/**
+ * Reads a note's data blocks, leaving out what cannot be read. Returns the blocks as read and the problems.
+ * Each block is applied in order; when one fails, the store is as it was before it (a block is applied whole or not at
+ * all), the item at the failing line is blanked, and that block is read again — what a fresh read of every block would
+ * give, as the Python reader does it, without reading the blocks before it again. `budget` caps the re-reading (above).
+ */
+export function readBlocks(
+  texts: string[],
+  shared: string[],
+  budget = REREAD_BUDGET,
+): { store: gs.Store; problems: Problem[] } {
+  const { clean, problems, skip, gaps } = prepare(texts);
+  const store = new gs.Store();
+  for (const s of shared) {
+    try {
+      store.apply(s);
+    } catch {
+      /* a shared schema that cannot be read types nothing */
+    }
+  }
+  const meant: Problem[] = [];
+  let attempt = 0,
+    spent = 0;
+  for (let block = 0; block < clean.length; block++) {
+    if (skip.has(block)) continue;
+    // every change made to a block keeps its line breaks where they were, so its lines are indexed once
+    const lineAt = lineIndex(texts[block] ?? '');
+    for (;;) {
+      const text = clean[block] ?? '',
+        commasFrom = store.commas.length,
+        baresFrom = store.bares.length;
+      try {
+        store.apply(withNames(text, gaps[block]?.named ?? []));
+      } catch (error) {
+        const all = items(text);
+        const problem = failure(block, text, error, all, lineAt);
+        const line = problem.line;
+        const touching = all.filter((it) => lineAt(it.from) <= line && line <= lineAt(it.to - 1));
+        const before = all.filter((it) => lineAt(it.from) <= line).pop();
+        const drop = touching.length ? touching : before ? [before] : [];
+        const given = attempt++ > texts.length + all.length * 2; // a block that will not settle is left out whole
+        if (!drop.length || given) {
+          skip.add(block);
+          problems.push(problem);
+          break;
+        }
+        // each read again of the block, and each trial of it, is charged to the budget; past it, the rest is cut
+        const cost = text.length;
+        let over = false,
+          chosen = drop;
+        if (drop.length > 1) {
+          // of several items on the failing line, leave out only the one at fault when that can be told
+          let found: Item | undefined;
+          for (const it of drop) {
+            if (spent + cost > budget) {
+              over = true;
+              break;
+            }
+            spent += cost;
+            try {
+              new gs.Store().apply(without(text, all, [it]));
+              found = it;
+            } catch (e) {
+              if (!(e instanceof gs.ProfileError && e.line === line)) found = it;
+            }
+            if (found) break;
+          }
+          chosen = [found ?? (drop[0] as Item)];
+        }
+        if (!over && spent + cost > budget) over = true;
+        else if (!over) spent += cost;
+        let comma = -1;
+        if (over) {
+          const first = (drop[0] as Item).from;
+          chosen = all.filter((it) => it.from >= first);
+          problem.message = `${problem.message} — too much of this block could not be read, so it is left out from this line on`;
+          // the comma before what is left out would end the block with nothing after it
+          comma = all.filter((it) => it.from < first).pop()?.comma ?? -1;
+        }
+        const cut = without(text, all, chosen);
+        clean[block] = comma === -1 ? cut : `${cut.slice(0, comma)} ${cut.slice(comma + 1)}`;
+        problems.push({ ...problem, dropped: chosen.map((it) => text.slice(it.from, it.to)).join('\n') });
+        continue;
+      }
+      meant.push(...readAsMeant(store, block, text, commasFrom, baresFrom));
+      break;
+    }
+  }
+  return { store, problems: problems.concat(meant).sort((a, b) => a.block - b.block || a.line - b.line) };
 }

@@ -1,11 +1,12 @@
 // The drawing in the edit pane (spec §4): the graph as typed so far, drawn beside its text; choosing a box or a link in it
 // selects where it is written in the text, and its Edit puts the focus back in the text. In place, in a drawing's card,
-// the editor has none: the card's own drawing is its drawing.
+// the editor has none: the card's own drawing is its drawing. It is laid out apart from the interface, as every drawing
+// is (spec §9): a graph typed or pasted past a limit is not drawn, and a banner beside its text says why.
 import { Component } from 'obsidian';
-import { draw } from '@graph-note/core';
-import type { Engine, NoteReading, PaneSession } from '@graph-note/core';
+import type { Drawn, NoteReading, PaneSession, Refusal } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
 import { GraphView } from '../graph-view/graph-view';
+import { refusalBanner } from '../layout-worker/refusal-banner';
 
 /** What choosing in the drawing does: Edit, and a box or a link chosen. */
 interface Choosing {
@@ -13,19 +14,28 @@ interface Choosing {
   select: (chosen: { thing: string } | { link: number }) => void;
 }
 
-/** Draws the session's graph, as read, into the pane's drawing; returns the view, or null when there is nothing to draw yet. */
-function drawInPane(host: HTMLElement, engine: Engine, reading: NoteReading, s: PaneSession, on: Choosing) {
-  const d = reading.graphs.get(s.graph);
+/** Puts the session's graph, as laid out, into the pane's drawing; returns the view, or null when nothing is drawn. */
+function drawInPane(
+  host: HTMLElement,
+  drawn: Drawn | Refusal | undefined,
+  reading: NoteReading,
+  s: PaneSession,
+  on: Choosing,
+) {
   host.empty();
-  if (!d || !d.boxes.length) {
+  if (!drawn) {
     host.createEl('p', { cls: 'graph-note-quiet', text: 'Nothing to draw yet. Start with a thing.' });
+    return null;
+  }
+  if ('reason' in drawn) {
+    refusalBanner(host, drawn);
     return null;
   }
   const card = host.createDiv({ cls: 'graph-note' });
   return new GraphView(card, {
     reading,
     graph: s.graph,
-    drawn: draw(d, engine),
+    drawn,
     mode: 'pane',
     problems: reading.problems
       .filter((p) => p.graph === s.graph && reading.texts[p.block] === s.text)
@@ -36,7 +46,7 @@ function drawInPane(host: HTMLElement, engine: Engine, reading: NoteReading, s: 
   });
 }
 
-/** The pane's drawing, redrawn from what is typed, once the drawing engine has started. */
+/** The pane's drawing, redrawn from what is typed, once it is laid out. */
 export class PaneDrawing extends Component {
   private view: GraphView | null = null;
   private readonly plugin: GraphNotePlugin;
@@ -52,14 +62,20 @@ export class PaneDrawing extends Component {
     this.view = null;
   }
 
-  /** Draws the session's graph, as read, into `host` — unless, by the time the engine is ready, `stale` says it is not wanted. */
+  /** Draws the session's graph, as read, into `host` — unless, by the time it is laid out, `stale` says it is not wanted. */
   redraw(host: HTMLElement, reading: NoteReading, s: PaneSession, stale: () => boolean, on: Choosing): void {
-    void this.plugin
-      .graphviz()
-      .then((engine) => {
-        if (stale()) return;
+    const d = reading.graphs.get(s.graph);
+    // too large to read, nothing was read (§9); and a layout this editor asked for before, not yet started, is dropped
+    const laid = reading.tooLarge
+      ? Promise.resolve(reading.tooLarge)
+      : d && d.boxes.length
+        ? this.plugin.layout(d, this)
+        : Promise.resolve(undefined);
+    void laid
+      .then((drawn) => {
+        if (stale() || drawn === null) return;
         this.clear();
-        const view = drawInPane(host, engine, reading, s, on);
+        const view = drawInPane(host, drawn, reading, s, on);
         if (!view) return;
         this.view = view;
         this.addChild(view);

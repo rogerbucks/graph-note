@@ -103,11 +103,21 @@ class Store {
     for (const line of parser.commas) this.commas.push({ graph: g, line });
     const graph = this.graph(g),
       bound = {};
+    // each id's node, the first in order, as find() gives it: indexed once for the block, not searched for each thing,
+    // so a block of thousands of things is read in time linear in them (editor spec §9: never freeze)
+    let ids = null;
+    const found = (id) => {
+      if (!ids) {
+        ids = new Map();
+        for (const [k, n] of graph.nodes) if (!ids.has(n.props.id)) ids.set(n.props.id, k);
+      }
+      return ids.has(id) ? ids.get(id) : null;
+    };
     for (const m of matches) {
       const keys = Object.keys(m.props);
       if (keys.length !== 1 || keys[0] !== 'id')
         throw new ProfileError(m.line, 'MATCH must find a node by its id alone', "write MATCH (v:Label {id: '…'})");
-      const k = this.find(g, m.props.id);
+      const k = found(m.props.id);
       if (k === null || !m.labels.every((label) => graph.nodes.get(k).labels.has(label)))
         throw new ProfileError(
           m.line,
@@ -124,7 +134,7 @@ class Store {
           if (n.v in bound)
             throw new ProfileError(n.line, `${n.v} is written twice`, 'give each new node its own variable');
           if (!('id' in n.props)) n.props = Object.assign({ id: n.v }, n.props); // a thing's name is its id (§3, 6 Oct 2026)
-          if (this.find(g, n.props.id) !== null)
+          if (found(n.props.id) !== null)
             throw new ProfileError(
               n.line,
               `id '${n.props.id}' is already a node in graph ${g}`,
@@ -132,6 +142,7 @@ class Store {
             );
           const k = 'n' + ++this.k;
           graph.nodes.set(k, { labels: new Set(n.labels), props: Object.assign({}, n.props) });
+          if (ids && !ids.has(n.props.id)) ids.set(n.props.id, k);
           bound[n.v] = k;
         } else if (!(n.v in bound)) {
           const later = paths.some(([ns]) => ns.some((m) => m.v === n.v && writes(m)));
@@ -141,7 +152,7 @@ class Store {
               `${n.v} is used before it is written`,
               'write the node before any relationship that uses it — GQL binds a name only once its node is written (§3)',
             );
-          const k = this.find(g, n.v); // a bare name not written in this block names the existing node with that id (§3)
+          const k = found(n.v); // a bare name not written in this block names the existing node with that id (§3)
           if (k === null)
             throw new ProfileError(
               n.line,
@@ -161,7 +172,7 @@ class Store {
       );
     }
     for (const [v, key, val, n] of sets) {
-      if (!(v in bound) && this.find(g, v) !== null) bound[v] = this.find(g, v); // SET name.key names the node with that id (§3)
+      if (!(v in bound) && found(v) !== null) bound[v] = found(v); // SET name.key names the node with that id (§3)
       if (!(v in bound))
         throw new ProfileError(
           n,
@@ -169,6 +180,7 @@ class Store {
           'check the spelling — SET names a thing by its id',
         );
       graph.nodes.get(bound[v]).props[key] = val;
+      if (key === 'id') ids = null; // an id set anew: indexed again when next asked
     }
     return g;
   }

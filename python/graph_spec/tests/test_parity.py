@@ -156,5 +156,69 @@ class Parity(unittest.TestCase):
         self.assertEqual(answer(q), self.expected["a-change-set-current-and-stale"])
 
 
+CORE = os.path.join(ROOT, "packages", "core", "src", "partial-read.ts")
+
+# A broken block, read with a small budget of reading again (10 Oct 2026): past it, both readers
+# leave the rest out at once, from the failing line, each read again and each trial charged its
+# length in UTF-16 units — an emoji is two.
+CUT_BLOCKS = [
+    "// graph: trip\n(home:Place {name: 'Home 🏠'}),\n(walk:Leg {name: 'Walk'}),\n"
+    "(bus:Leg {name 'Bus'}),\n(train:Leg {name 'Train'}),\n(tram:Leg {name 'Tram'}),\n"
+    "(walk)-[:STARTS_AT]->(home)",
+    "// graph: trip\n(start:Place {name: 'Start'}),\n(stop:Place {name: 'Stop'}), "
+    "(gone:Leg {name 'Gone'}), (bus2:Leg {name: 'Bus'})\n(ferry:Leg {name: 'Ferry'})",
+]
+
+
+CUT_SAID = "left out from this line on"
+
+
+def core_read(blocks, budget):
+    """The core's reading of the blocks, by Node: each error's block, line, whether it says the
+    rest was cut, and what was left out; and the ids of each graph's things. (The parser's own
+    words quote a token each in its language's way, so they are not compared.)"""
+    script = (
+        "import(process.argv[1]).then((m) => {"
+        " const r = m.readBlocks(JSON.parse(process.argv[2]), [], Number(process.argv[3]));"
+        " process.stdout.write(JSON.stringify({errors: r.problems"
+        ".filter((p) => p.severity === 'error').map((p) => [p.block, p.line,"
+        f" p.message.endsWith('{CUT_SAID}'), p.dropped]),"
+        " ids: Object.fromEntries(Object.entries(r.store.graphs).map(([g, x]) =>"
+        " [g, [...x.nodes.values()].map((n) => n.props.id)]))})) })"
+    )
+    out = subprocess.run(
+        ["node", "-e", script, "file://" + CORE, json.dumps(blocks), str(budget)],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
+    return json.loads(out)
+
+
+class ReadingCut(unittest.TestCase):
+    def test_past_the_budget_the_core_and_python_leave_out_the_same(self):
+        # a plain loop, never subTest: the tests-first replay counts a test by its own result
+        for budget in (10**9, 2 * len(CUT_BLOCKS[0].encode("utf-16-le")) // 2, 700):
+            store, problems = gp.read_for_drawing(CUT_BLOCKS, budget=budget)
+            python = {
+                "errors": [
+                    [p["block"], p["line"], p["message"].endswith(CUT_SAID), p.get("dropped")]
+                    for p in problems
+                    if p["severity"] == "error"
+                ],
+                "ids": {
+                    g: [n["props"].get("id") for n in x["nodes"].values()]
+                    for g, x in store.graphs.items()
+                },
+            }
+            self.assertEqual(python, core_read(CUT_BLOCKS, budget), f"budget {budget}")
+
+    def test_a_small_budget_cuts_and_a_large_one_does_not(self):
+        _, cut = gp.read_for_drawing(CUT_BLOCKS, budget=700)
+        _, whole = gp.read_for_drawing(CUT_BLOCKS)
+        self.assertTrue(any(CUT_SAID in p["message"] for p in cut))
+        self.assertFalse(any(CUT_SAID in p["message"] for p in whole))
+
+
 if __name__ == "__main__":
     unittest.main()

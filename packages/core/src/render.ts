@@ -4,6 +4,7 @@
 import { instance } from '@viz-js/viz';
 import type { GraphDrawing, NoteReading, Problem } from './note-reading.ts';
 import { drawingSource, layoutSource, STYLE } from './layout.ts';
+import type { LayoutSource } from './layout.ts';
 import { themed, sizeOf, choose } from './theme.ts';
 
 /** Graphviz: layout source in, SVG text out. Throws when it cannot lay the source out. */
@@ -26,14 +27,26 @@ export interface Drawn {
   height: number;
 }
 
-/**
- * Lays a graph out in each direction the style lists and themes the one that fits the note best. Graphviz numbers the
- * boxes node1, node2… and the links edge1, edge2… in the drawing's order, so each can be found again by its place.
- */
-export function draw(drawing: GraphDrawing, engine: Engine): Drawn {
-  const laid = STYLE.directions.map((rankdir) => {
-    const src = layoutSource(drawing, rankdir as 'LR' | 'TB'),
-      svg = engine.render(drawingSource(drawing, rankdir as 'LR' | 'TB'));
+/** One direction to lay a drawing out in: the source handed to Graphviz, and the kinds and readings to theme it by. */
+export interface Direction {
+  rankdir: string;
+  dot: string;
+  src: LayoutSource;
+}
+
+/** What Graphviz is handed for a drawing: one source for each direction the style lists, in the style's order. */
+export function directions(drawing: GraphDrawing): Direction[] {
+  return STYLE.directions.map((rankdir) => ({
+    rankdir,
+    dot: drawingSource(drawing, rankdir as 'LR' | 'TB'),
+    src: layoutSource(drawing, rankdir as 'LR' | 'TB'),
+  }));
+}
+
+/** The drawing, from the SVG Graphviz drew for each direction (in the same order): the better fit, themed. */
+export function chosen(laidOut: Direction[], svgs: string[]): Drawn {
+  const laid = laidOut.map(({ rankdir, src }, i) => {
+    const svg = svgs[i] ?? '';
     return { rankdir, ...sizeOf(svg), svg, src };
   });
   const best = choose(laid);
@@ -43,6 +56,19 @@ export function draw(drawing: GraphDrawing, engine: Engine): Drawn {
     width: best.width,
     height: best.height,
   };
+}
+
+/**
+ * Lays a graph out in each direction the style lists and themes the one that fits the note best. Graphviz numbers the
+ * boxes node1, node2… and the links edge1, edge2… in the drawing's order, so each can be found again by its place.
+ * The layout worker (layout-worker.ts) draws through the same two steps, so a drawing is the same wherever it is laid out.
+ */
+export function draw(drawing: GraphDrawing, engine: Engine): Drawn {
+  const laid = directions(drawing);
+  return chosen(
+    laid,
+    laid.map((d) => engine.render(d.dot)),
+  );
 }
 
 /** One link in or out of a box, as its details list it. */

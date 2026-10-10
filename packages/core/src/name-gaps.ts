@@ -3,8 +3,9 @@
 // with a warning that shows the name and a fix that writes it. A thing with no text is drawn by its name, with a hint that
 // offers the text. Nothing is written to the note unasked.
 import gs from '@graph-note/graph-spec';
-import { lineAt } from './block-items.ts';
-import { nameFromText, textFromName } from './name-suggestions.ts';
+import { lineIndex } from './block-items.ts';
+import { textFromName } from './name-suggestions.ts';
+import { NameBook } from './name-book.ts';
 import type { Problem } from './note-reading.ts';
 import { TEXT_KEYS, setTexts, textKeyOf, writtenIn } from './written-things.ts';
 import type { Written } from './written-things.ts';
@@ -31,9 +32,15 @@ export interface GapBlock {
   graph: string | null;
 }
 
+/** A block's text, with the index of its lines: so finding a thing's line never slices the block from its start (§9). */
+interface Indexed {
+  text: string;
+  lineOf: (pos: number) => number;
+}
+
 /** The 0-based line of a block, and the character on it, that an offset in the text is at. */
-const placeOf = (text: string, at: number) => ({
-  line: lineAt(text, at) - 1,
+const placeOf = ({ text, lineOf }: Indexed, at: number) => ({
+  line: lineOf(at) - 1,
   character: at - (text.lastIndexOf('\n', at - 1) + 1),
 });
 
@@ -41,9 +48,10 @@ const kindOf = (w: Written) => w.labels.find((l) => !gs.SCHEMA_LABELS.includes(l
 const quoted = (s: string) => `'${s.replace(/[\\']/g, '\\$&')}'`;
 
 /** A thing with text and no name: the warning with the name suggested, and the place it goes. */
-function unnamed(text: string, w: Written, name: string): { gap: Gap; naming: Naming } {
-  const { line, character } = placeOf(text, w.open + 1),
-    start = placeOf(text, w.open),
+function unnamed(block: Indexed, w: Written, name: string): { gap: Gap; naming: Naming } {
+  const text = block.text;
+  const { line, character } = placeOf(block, w.open + 1),
+    start = placeOf(block, w.open),
     lineEnd = text.indexOf('\n', w.open),
     closeAt = Math.min(w.close + 1, lineEnd === -1 ? text.length : lineEnd);
   return {
@@ -62,11 +70,12 @@ function unnamed(text: string, w: Written, name: string): { gap: Gap; naming: Na
 }
 
 /** A thing with a name and no text: the hint with the text suggested, and the property that adds it. */
-function untexted(text: string, w: Written, name: string, key: string, suggested: string): Gap {
+function untexted(block: Indexed, w: Written, name: string, key: string, suggested: string): Gap {
+  const text = block.text;
   const property = `${key}: ${quoted(suggested)}`;
   const braces = w.braces,
     inside = braces ? text.slice(braces.open + 1, braces.close) : '';
-  const at = placeOf(text, braces ? braces.open + 1 : w.end);
+  const at = placeOf(block, braces ? braces.open + 1 : w.end);
   const written = !braces
     ? ` {${property}}`
     : !inside.trim()
@@ -74,7 +83,7 @@ function untexted(text: string, w: Written, name: string, key: string, suggested
       : /^\s/.test(inside)
         ? `${property},`
         : `${property}, `;
-  const start = placeOf(text, w.variable?.at ?? w.open);
+  const start = placeOf(block, w.variable?.at ?? w.open);
   return {
     line: start.line + 1,
     severity: 'hint',
@@ -88,7 +97,8 @@ function untexted(text: string, w: Written, name: string, key: string, suggested
 
 /** What a graph's blocks show of its things: every name taken, which things have text, and the key each kind keeps it in. */
 interface GraphFacts {
-  names: Map<string, string>;
+  /** Every name taken, with its kind: kept up to date as names are suggested, so naming many things never freezes (§9). */
+  names: NameBook;
   texted: Set<string>;
   keys: Map<string, Map<string, number>>;
 }
@@ -118,7 +128,7 @@ export function nameGaps(blocks: GapBlock[]): BlockGaps[] {
   const graphs = new Map<string, GraphFacts>();
   const factsOf = (graph: string | null) => {
     const key = graph ?? '';
-    return graphs.get(key) ?? graphs.set(key, { names: new Map(), texted: new Set(), keys: new Map() }).get(key)!;
+    return graphs.get(key) ?? graphs.set(key, { names: new NameBook(), texted: new Set(), keys: new Map() }).get(key)!;
   };
   blocks.forEach((b, i) => {
     const facts = factsOf(b.graph);
@@ -141,21 +151,23 @@ export function nameGaps(blocks: GapBlock[]): BlockGaps[] {
   return blocks.map((b, i) => {
     const out: BlockGaps = { problems: [], named: [] },
       facts = factsOf(b.graph);
+    let indexed: Indexed | null = null; // made only for a block with a gap
+    const block = () => (indexed ??= { text: b.text, lineOf: lineIndex(b.text) });
     for (const w of written[i] ?? []) {
       if (w.matched || w.broken || !w.writes || w.labels.some((l) => gs.SCHEMA_LABELS.includes(l))) continue;
       const text = textOf(w);
       if (!w.variable && text) {
         const kind = kindOf(w),
-          name = nameFromText(text, facts.names, kind);
+          name = facts.names.name(text, kind);
         facts.names.set(name, kind ?? '');
-        const { gap, naming } = unnamed(b.text, w, name);
+        const { gap, naming } = unnamed(block(), w, name);
         out.problems.push(gap);
         out.named.push(naming);
       } else if (w.variable && !text && !facts.texted.has(w.variable.name)) {
         const key = keyFor(facts, kindOf(w)),
           suggested = textFromName(w.variable.name);
         if (suggested && !TEXT_KEYS.some((k) => w.props.has(k)))
-          out.problems.push(untexted(b.text, w, w.variable.name, key, suggested));
+          out.problems.push(untexted(block(), w, w.variable.name, key, suggested));
       }
     }
     return out;

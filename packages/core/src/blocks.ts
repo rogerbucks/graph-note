@@ -35,10 +35,20 @@ export function gqlBlocks(note: string): Block[] {
 }
 
 /** The graph a block names, or null. */
-export const graphOf = (text: string): string | null =>
-  /^\s*\/\/\s*graph:\s*(\S+)/.exec(text.split('\n').find((l) => l.trim()) ?? '')?.[1] ?? null;
+export const graphOf = (text: string): string | null => /^\s*\/\/\s*graph:\s*(\S+)/.exec(firstLine(text))?.[1] ?? null;
 
-const isGraphLine = (text: string) => /^\s*\/\/\s*graph:/.test(text.split('\n').find((l) => l.trim()) ?? '');
+/** The first line of a text with anything on it, found line by line: a large block is never split whole to find it (§9). */
+function firstLine(text: string): string {
+  for (let at = 0; ;) {
+    const end = text.indexOf('\n', at),
+      line = end === -1 ? text.slice(at) : text.slice(at, end);
+    if (line.trim()) return line;
+    if (end === -1) return '';
+    at = end + 1;
+  }
+}
+
+const isGraphLine = (text: string) => /^\s*\/\/\s*graph:/.test(firstLine(text));
 
 /** The kind of a block, or null when it holds no data to draw: a query, an excerpt, a change set, or no graph line. */
 export function dataKind(text: string): 'data' | 'schema' | null | Problem {
@@ -58,8 +68,6 @@ export function dataKind(text: string): 'data' | 'schema' | null | Problem {
     };
   }
 }
-
-const firstLine = (text: string) => text.split('\n').find((l) => l.trim()) ?? '';
 
 /** Whether a block is a shared schema (§5): its graph line says SCHEMA and its name. */
 export const isSharedSchema = (text: string): boolean => /^\s*\/\/\s*graph:.*·\s*SCHEMA\s+\S+/.test(firstLine(text));

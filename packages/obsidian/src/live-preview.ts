@@ -110,7 +110,7 @@ class GraphBlock extends WidgetType {
       getSectionInfo: () => ({ text: this.note, lineStart: this.open, lineEnd: this.close }),
       addChild: (child: Component) => component.addChild(child),
     } as unknown as MarkdownPostProcessorContext;
-    void renderBlock(this.plugin, this.source, el, ctx).then(
+    void renderBlock(this.plugin, this.source, el, ctx, state).then(
       () => {
         if (asked !== state.asked || !drawn.has(dom)) {
           component.unload(); // a later drawing was asked for meanwhile
