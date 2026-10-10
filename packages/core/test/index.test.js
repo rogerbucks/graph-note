@@ -6,8 +6,9 @@
 // the settings and strictness of §21 (OPTIONS, settingsFrom, toStandard and their kin, 11 Oct 2026), the one colour
 // mapping, with the steps around Graphviz for a host that lays out elsewhere (PALETTES, chosen and their kin, for the
 // Claude Code host, 11 Oct 2026), deferred things (parkForLater, parked, parkedCount and their types), walked paths
-// (PathRecorder, PathPlayer, pathBlock, pathsOf, pathProblems and their types), and the style graph (readStyle, lookOf,
-// legendOf, nudgedSource, styleEdit, hueColour, the words a style may use and their types, 11 Oct 2026).
+// (PathRecorder, PathPlayer, pathBlock, pathsOf, pathProblems and their types), the style graph (readStyle, lookOf,
+// legendOf, nudgedSource, styleEdit, hueColour, the words a style may use and their types), and views (viewsOf,
+// parseView, viewQuery, viewBlock, readingOf, evaluate and their types, 11 Oct 2026).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -46,6 +47,10 @@ const VALUES = [
   'TOKEN_CLASSES',
   'TapCycle',
   'TextHistory',
+  'VIEW_FORMS',
+  'VIEW_KINDS',
+  'VIEW_LIMITS',
+  'VIEW_NAMES',
   'Zoom',
   'addToList',
   'aiModel',
@@ -64,6 +69,7 @@ const VALUES = [
   'distance',
   'draw',
   'drawingSource',
+  'evaluate',
   'explain',
   'fixed',
   'fixedPalette',
@@ -104,6 +110,7 @@ const VALUES = [
   'parked',
   'parkedCount',
   'parseValue',
+  'parseView',
   'pathBlock',
   'pathProblems',
   'pathsOf',
@@ -112,6 +119,7 @@ const VALUES = [
   'readBack',
   'readNote',
   'readStyle',
+  'readingOf',
   'removeFromList',
   'renameProperty',
   'replaceBlock',
@@ -133,6 +141,9 @@ const VALUES = [
   'tokenize',
   'tooLarge',
   'underStrictness',
+  'viewBlock',
+  'viewQuery',
+  'viewsOf',
   'withoutColorMix',
 ];
 
@@ -181,6 +192,7 @@ const TYPES = [
   'LookWrite',
   'Mode',
   'NameStyle',
+  'NamedView',
   'NoteReading',
   'Nudge',
   'NudgeWord',
@@ -233,6 +245,11 @@ const TYPES = [
   'TokenClass',
   'Told',
   'View',
+  'ViewArgs',
+  'ViewKind',
+  'ViewRefusal',
+  'ViewResult',
+  'ViewSpec',
   'ViewStyle',
   'WalkedPath',
   'WriteResult',

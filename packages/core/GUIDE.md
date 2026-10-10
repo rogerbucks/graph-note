@@ -134,6 +134,28 @@ it. A graph line that says STYLE but names no graph is a problem, never data.
   written twice; never a data block touched. A styled hue is drawn with `theme.ts`'s `hueColour`, the same blends as a
   kind's, so it meets the locked contrast.
 
+**Views (spec §2, §7)**
+
+A view is a named query block in the note: `// graph: <graph> · QUERY view <name>`, then the query. The reader already
+reads `· QUERY` as a query, and the core draws no query as data, so a view is never drawn as a graph of its own.
+
+- `views.ts` — `viewsOf` finds the views of a note (each with its graph, its block and its query text; a block meant as a
+  view with no name, a name that is not one word, or a name already used in its graph is listed with a `fault`, never
+  skipped), and `readingOf` says a view in plain English ("everything within 2 steps of Alice").
+- `view-profile.ts` — the view profile: `parseView` reads the five shapes of query (a hand-picked set, everything near a
+  thing, how one thing reaches another, only some kinds, a walked path) into a `ViewSpec`, and refuses anything else with
+  a message that names the five shapes in words and shows the nearest one's form (`VIEW_NAMES`, `VIEW_FORMS`). The
+  queries are ISO GQL that Grafeo runs as written. A thing is named by its `id` property, which the reader writes into
+  every node it gives Grafeo and the core's world keys every node by. Several kinds are written after `IS`
+  (`(n IS Person|Team)`), because Grafeo does not read `(n:Person|Team)`; a colon takes one kind.
+- `view-write.ts` — `viewQuery` writes the query for a view built by tapping, always one `parseView` reads back to the
+  same view (steps held to 1 to 3 near and 1 to 6 reaching; a long set of names goes over lines), and `viewBlock` writes
+  the whole block.
+- `view-evaluate.ts` — `evaluate` puts a view to a graph of a reading, never to a copy of it, and gives its things, its
+  links (indexes into the links the graph draws) and, when nothing matches, `empty` with a sentence saying so and what to
+  change. A route of up to k steps is a walk, as Grafeo takes it (a link may be used again), found by two breadth-first
+  searches. The things were compared with Grafeo's answers for the same queries on random graphs.
+
 **Settings (spec §21)**
 
 - `strictness.ts` — the three departures from standard GQL the reader reads as meant (each problem says which, in
