@@ -26,6 +26,7 @@ from graphspec.engine.schema import typed, untyped
 from graphspec.engine.serving.checks import served_rules
 from graphspec.reader.lexer import ProfileError, header
 from graphspec.reader.store import Store
+from graphspec.reader.whitespace import strip as ws_strip
 
 if TYPE_CHECKING:
     from grafeo import GrafeoDB
@@ -61,7 +62,7 @@ MODEL_MAY_LINK = {
 def changeset_header(block: str) -> dict[str, str] | None:
     """'// graph: G · CHANGE SET <id> · against <state hash> · by <author id>' — the first line of
     a change set."""
-    first = next((line for line in block.splitlines() if line.strip()), "")
+    first = next((line for line in block.split("\n") if ws_strip(line)), "")
     m = re.match(
         r"\s*//\s*graph:\s*(\S+)\s*·\s*CHANGE "
         r"SET\s+(\S+)\s*·\s*against\s+([0-9a-f]{16})\s*·\s*by\s+(\S+)",

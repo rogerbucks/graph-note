@@ -10,6 +10,8 @@ from typing import TYPE_CHECKING, Any
 from graphspec.engine.optional_imports import grafeo
 from graphspec.reader.store import Store
 from graphspec.reader.to_gql import to_gql
+from graphspec.reader.whitespace import is_space, lstrip, rstrip
+from graphspec.reader.whitespace import strip as strip_ws
 
 if TYPE_CHECKING:
     from grafeo import GrafeoDB
@@ -17,11 +19,35 @@ if TYPE_CHECKING:
 UTC = dt.timezone.utc
 
 
+def _block_comment(line: str) -> str:
+    """A whole-line // comment as the /* */ comment Grafeo reads (it reads no //), on the same
+    line: its indentation and any whitespace after it kept, its text unchanged but for a space
+    after the opening, and a */ inside it written * / (req:3.engine-keeps-comments).
+
+    Safe because the reader refuses a comment after code on a line (§3), so a comment is always
+    the whole line, and a comment's text can never be code. The line holds no LF, so the comment
+    cannot run over a line. Grafeo reads /* inside a comment as text, not as a nested opening,
+    and a space is put after /* so the text cannot make it /*/; the one thing in the text that
+    could end the comment early is */, which is broken up, and the closing */ is written last,
+    after a space, so a * at the end of the text cannot join it."""
+    code = lstrip(line)
+    indent = line[: len(line) - len(code)]
+    text = rstrip(code[2:])
+    after = code[len(rstrip(code)) :]
+    if text and not is_space(text[0]):
+        text = " " + text
+    return f"{indent}/*{text.replace('*/', '* /')} */{after}"
+
+
 def strip(s: str) -> str:
-    """Comments out, and the data shortcut's INSERT put back (§3) — what Grafeo reads."""
-    # a comment line is emptied, not dropped, so a line number still names the block's own line
-    return to_gql(
-        "\n".join("" if line.strip().startswith("//") else line for line in s.splitlines())
+    """Comments given as /* */ comments, and the data shortcut's INSERT put back (§3) — what
+    Grafeo reads. A line ends at LF only, as the reader ends it, never at U+2028 or the other
+    breaks str.splitlines() takes; every line stays a line, so a line number still names the
+    block's own line (req:3.engine-text-keeps-lines)."""
+    # to_gql first: it finds the block's first line of code by the // that starts a comment
+    return "\n".join(
+        _block_comment(line) if strip_ws(line).startswith("//") else line
+        for line in to_gql(s).split("\n")
     )
 
 

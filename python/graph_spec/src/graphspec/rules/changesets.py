@@ -7,6 +7,7 @@ import re
 from collections.abc import Callable, Collection, Iterable
 from typing import TYPE_CHECKING, Any
 
+from graphspec.reader.whitespace import strip as ws_strip
 from graphspec.rules.canonical_json import norm
 from graphspec.rules.certainty import claim_status, confidence_from_evidence, latest_assessment
 from graphspec.rules.graph_check import check
@@ -48,7 +49,7 @@ MODEL_MAY_LINK = {
 def changeset_header(block: str) -> dict[str, str] | None:
     """A change set's first line read — '// graph: G · CHANGE SET <id> · against <state hash> · by
     <author id>' — as {graph, id, against, by}; None when it is not one."""
-    first = next((line for line in block.splitlines() if line.strip()), "")
+    first = next((line for line in block.split("\n") if ws_strip(line)), "")
     m = re.match(
         r"\s*//\s*graph:\s*(\S+)\s*·\s*CHANGE SET\s+(\S+)"
         r"\s*·\s*against\s+([0-9a-f]{16})\s*·\s*by\s+(\S+)",
