@@ -12,7 +12,8 @@
 // Only the commit's test files and test support (anything under a test/ or tests/ folder) go across to the parent, so
 // only the code differs. A commit that cannot be replayed is recorded as such, never counted either way. But a run at the
 // commit's own code that did not finish, or a new test failing there, is not known to be either: it fails the record
-// (and --check), naming the commit, the file and the test, and nothing is written.
+// (and --check), naming the commit, the file and the test, and nothing is written. One run of one test file, and what it
+// shows, is scripts/tests-first-run.mjs.
 import { execFileSync, spawnSync } from 'node:child_process';
 import {
   existsSync,
@@ -27,14 +28,12 @@ import {
 import { tmpdir } from 'node:os';
 import { dirname, join, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { JS_TEST, PY_TEST, run, runMs } from './tests-first-run.mjs';
+
+export { fromJunit } from './tests-first-run.mjs';
 
 const HERE = join(dirname(fileURLToPath(import.meta.url)), '..');
-const JS_TEST = /(^|\/)(test|tests)\/.*\.test\.(js|mjs)$/;
-const PY_TEST = /(^|\/)tests\/test_\w+\.py$/;
 const SUPPORT = /(^|\/)(test|tests)\//;
-const RUN_MS = 10 * 60 * 1000;
-/** The time limit for each run of a test file: ten minutes, unless TESTS_FIRST_RUN_MS sets another (its tests do). */
-const runMs = () => Number(process.env.TESTS_FIRST_RUN_MS) || RUN_MS;
 
 const git = (repo, ...args) => execFileSync('git', args, { cwd: repo, encoding: 'utf8', maxBuffer: 1 << 28 }).trim();
 
@@ -62,86 +61,6 @@ function checkout(repo, commit) {
   }
   return { dir, done: () => git(repo, 'worktree', 'remove', '--force', dir) };
 }
-
-const unescape = (s) =>
-  s
-    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&');
-
-/** Runs one JS test file; each test by its suites and name, passed or failed. */
-function runJs(dir, file) {
-  // a run inside another test run would report to it, not print its own report
-  const { NODE_TEST_CONTEXT: _context, ...env } = process.env;
-  const r = spawnSync(process.execPath, ['--test', '--test-reporter=junit', file], {
-    cwd: dir,
-    env,
-    encoding: 'utf8',
-    timeout: runMs(),
-    maxBuffer: 1 << 28,
-  });
-  return fromJunit(r.stdout ?? '');
-}
-
-/** A JUnit report read: each test by its suites and name, passed or failed, and whether the run finished. */
-export function fromJunit(report) {
-  const passed = [],
-    failed = [],
-    suites = [];
-  for (const m of report.matchAll(/<(\/?)(testsuite|testcase)\b([^>]*?)(\/?)>/g)) {
-    const [, close, tag, attrs = '', selfClose] = m;
-    const name = unescape(/\bname="([^"]*)"/.exec(attrs)?.[1] ?? '');
-    if (tag === 'testsuite') {
-      if (close) suites.pop();
-      else if (!selfClose) suites.push(name);
-      continue;
-    }
-    if (close) continue;
-    (/\bfailure="/.test(attrs) ? failed : passed).push([...suites, name].join(' > '));
-  }
-  // the reporter writes <testsuites> at once; a run stopped at the time limit, or crashed, never closes it
-  return { passed, failed, ran: report.includes('</testsuites>') };
-}
-
-const PY_RUNNER = `
-import json, os, sys, unittest
-path = sys.argv[1]
-start = os.path.dirname(os.path.abspath(path))
-sys.path.insert(0, start)
-suite = unittest.defaultTestLoader.discover(start, pattern=os.path.basename(path), top_level_dir=start)
-tests = []
-def walk(s):
-    for t in s:
-        walk(t) if isinstance(t, unittest.TestSuite) else tests.append(t)
-walk(suite)
-result = unittest.TestResult()
-suite.run(result)
-name = lambda t: type(t).__name__ + "." + t._testMethodName
-# a failing or skipped subTest is reported as its own _SubTest; it counts against the test it belongs to
-bad = {id(getattr(t, "test_case", t)) for t, _ in result.failures + result.errors}
-skipped = {id(getattr(t, "test_case", t)) for t, _ in result.skipped}
-print(json.dumps({
-    "passed": [name(t) for t in tests if id(t) not in bad and id(t) not in skipped and type(t).__name__ != "_FailedTest"],
-    "failed": [name(t) for t in tests if id(t) in bad],
-}))
-`;
-
-/** Runs one Python test file, from the folder above its tests/ folder; each test by its class and name. */
-function runPy(dir, file, repo) {
-  const venv = join(repo, 'python', 'graph_spec', '.venv', 'bin', 'python');
-  const python = file.startsWith('python/graph_spec/') && existsSync(venv) ? venv : 'python3';
-  const r = spawnSync(python, ['-c', PY_RUNNER, join(dir, file)], { cwd: dir, encoding: 'utf8', timeout: runMs() });
-  try {
-    return { ...JSON.parse(r.stdout.trim().split('\n').pop() ?? ''), ran: true };
-  } catch {
-    return { passed: [], failed: [], ran: false };
-  }
-}
-
-const run = (dir, file, repo) => (PY_TEST.test(file) ? runPy(dir, file, repo) : runJs(dir, file));
 
 /**
  * Replays one commit: for each test file it adds or changes, the tests new in it — passing at the commit — run against
