@@ -106,6 +106,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `packages/graph-spec/test/commas.test.mjs` — both readers read a missing comma the same way.
 - `packages/graph-spec/test/layout.test.mjs` — the layout source is byte-identical to the Python library's.
 - `packages/graph-spec/test/lint-parity.test.mjs` — the JavaScript dialect linter matches the Python one.
+- `python/graph_spec/tests/test_id_once_engine.py` — every route to the engine reads the block with the reader first, so no id reaches it twice in a graph (req:3.engine-reads-first, req:3.id-once).
 - `python/graph_spec/tests/test_layout_source.py` — the Graphviz source is the one written before the move.
 - `python/graph_spec/tests/test_licences.py` — every Python package carries an allowed licence.
 - `python/graph_spec/tests/test_parity.py` — the Python library gives the JavaScript library's answers.
