@@ -25,6 +25,9 @@ export default defineConfig([
       'packages/*/bin/',
       'packages/*/harness/',
       'spikes/',
+      // the Claude Code mod runs in its own environment, typed by Claude Code's API: `claude plugin validate`, its own
+      // type check and `claude plugin test` check it (packages/claude-code/GUIDE.md)
+      'packages/claude-code/mod/',
     ],
   },
   ...obsidianmd.configs.recommended,
@@ -36,6 +39,13 @@ export default defineConfig([
         },
         tsconfigRootDir: import.meta.dirname,
       },
+    },
+  },
+  {
+    // GQL is the name of the language the graphs are written in, an acronym like SQL: the interface says "standard GQL"
+    // (spec §21), so the word is kept as written. The rule's own settings otherwise, as the recommended set gives them.
+    rules: {
+      'obsidianmd/ui/sentence-case': ['warn', { enforceCamelCaseLower: true, ignoreWords: ['GQL'] }],
     },
   },
   {

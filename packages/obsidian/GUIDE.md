@@ -9,8 +9,8 @@ package puts them on Obsidian's page. It is bundled by `esbuild.config.mjs` into
 Each module opens with a comment saying what it is for. A feature with several parts has a folder of its own, with one
 module that ties the parts together, named as the folder is.
 
-- `main.ts` — the plugin: registers the block processor, the pane and the editor extension; keeps drafts and shared
-  schemas; opens the editors.
+- `main.ts` — the plugin: registers the block processor, the pane, the editor extension, the settings page and the
+  command that converts a note to standard GQL; keeps the settings, drafts and shared schemas; opens the editors.
 - `block.ts` — one gql block in a note: drawn, or shown as code, never blank; as text with a banner when it is over a
   size or time limit.
 - `code.ts` — a block that is not a graph, shown as coloured code; a very long one plain.
@@ -34,6 +34,14 @@ module that ties the parts together, named as the folder is.
 - `list-form.ts` — the form that asks for a kind and a relationship when List is chosen.
 - `list-row.ts` — a list as chips: the things linked to this one, each removed with its x, and a field to add a value.
 
+### `src/settings/` — the settings page (spec §21)
+
+- `settings.ts` — `GraphNoteSettingTab`: one page in Obsidian's plugin settings, in its declarative form, built from the
+  core's `OPTIONS` so every option is on it with its sentence: strictness and the departures Simplified allows, with
+  the action that converts a note to standard GQL; the classifications; formatting; drawing.
+- `ai-models.ts` — the AI models of §19 as a list, a page for each: name, purpose, ceiling, model, endpoint, and its key
+  chosen in the app's own secret store by name, so only the name is saved.
+
 ### `src/graph-view/` — a drawn graph
 
 - `graph-view.ts` — `GraphView`: the card, its zoom and full screen; ties the rest together.
@@ -42,6 +50,12 @@ module that ties the parts together, named as the folder is.
 - `drawing-svg.ts` — the SVG put in the card, each box and link reachable by keyboard and named.
 - `taps.ts` — what a tap or a key lands on, and the nearest things to a tap.
 - `details-panel.ts` — the details of a box or link, and the inspector while the block is edited.
+- `parked.ts` — things parked for later (§5, §8): each drawn dashed with a "⏳ later" or "⏳ overdue" mark on the SVG
+  Graphviz drew, so the layout stays the Python library's; listed behind the badge, which counts them apart from
+  problems; and Park for later in a box's details while the block is edited, writing the Deferred into its text.
+- `walk.ts` — walked paths (§7): the strip below the bar with Play for each path in the note, stepping one thing at a
+  time, marked and said; a path with no steps said to have none; and, while the block is edited, Record, which numbers
+  each box as it is tapped and writes the path into the text.
 - `suggested-name.ts` — a box drawn under a suggested name: what screen readers hear of it, where it is written in the
   block being edited, and in its details its suggested name with the one-click fix that writes it.
 - `placement.ts` — where a card is: read-only in reading view; waiting for a card to be put on the page.
@@ -73,7 +87,8 @@ folder it tests — `graph-view-zoom.test.js` tests zooming in `src/graph-view/`
 pane — or, when it spans modules, is listed in `CONTRIBUTING.md`. Run one with `node --test test/<file>` from this
 package, or all with `npm test` from the repository root. Each builds `main.js` first.
 
-- `test/host/` — the stand-ins for the host and what the tests share: `fake-dom.js` (a small DOM), `fake-obsidian.js`
+- `test/host/` — the stand-ins for the host and what the tests share: `fake-dom.js` (a small DOM), `fake-settings.js` (the settings page, drawn from its definitions, and the secret
+  store), `fake-obsidian.js`
   (the obsidian module and CodeMirror), `load-plugin.js` (building and loading the plugin), `cascade.js` (the part of
   the CSS cascade a test needs), `notes.js` (a fenced block, a button by its label), and the notes each group of tests
   opens: `card-notes.js`, `pane-notes.js`, `view-notes.js`, and `inspector-steps.js` (opening a box's details and driving the inspector's rows, menus and chips).

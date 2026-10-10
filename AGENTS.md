@@ -37,7 +37,7 @@ wording or route. The one exception: when the refusal itself says how to do it a
 - [CONTRIBUTING.md](CONTRIBUTING.md) — how a change is made (spec, then test, then code), the conventions, the naming.
 - [packages/core/GUIDE.md](packages/core/GUIDE.md) — the host-free core: reading, drawing, edits.
 - [packages/graph-spec/GUIDE.md](packages/graph-spec/GUIDE.md) — the graph format library in plain JavaScript.
-- [packages/obsidian/GUIDE.md](packages/obsidian/GUIDE.md) — the Obsidian plugin.
+- [packages/obsidian/GUIDE.md](packages/obsidian/GUIDE.md), [packages/claude-code/GUIDE.md](packages/claude-code/GUIDE.md) — the hosts.
 - [python/graph_spec/GUIDE.md](python/graph_spec/GUIDE.md) — the Python library.
 - Tests mirror the code: `src/zoom.ts` is tested in `test/zoom.test.js`. Tests that span modules sit in the root `test/`.
 - `scripts/` — tools that run from the command line: the quiet runners, `tests-first.mjs`, `check-classification.mjs`.
@@ -49,6 +49,7 @@ of tokens for nothing. Change them only by running the command that makes them.
 
 - `packages/graph-spec/dist/` and `dist/` — the built checker and other build output; `npm run build` makes them.
 - `main.js` — the built plugin; CI builds it from a tag.
+- `packages/claude-code/mod/hooks/graph.js` and `packages/claude-code/mod/bin/` — the built mod; `npm run build`.
 - `package-lock.json` and `python/graph_spec/uv.lock` — lock files; `npm install` and `uv lock` write them.
 - `test/tests-first.json` — the record of tests seen failing first; `node scripts/tests-first.mjs --update` writes it.
 - `THIRD_PARTY_NOTICES.md` — made by `node scripts/notices.mjs` from `licences/bundled.json`.

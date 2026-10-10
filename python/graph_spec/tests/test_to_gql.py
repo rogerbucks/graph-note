@@ -223,6 +223,34 @@ class ToGqlKeepsTheBlock(unittest.TestCase):
             self.assertEqual(gs.canon_graph(db, "g"), gp.canon(st, "g"), what)
 
 
+class ToGqlKeepsOwnedComments(unittest.TestCase):
+    """§26 and §27 (req:26.plain, req:27.tool-hints): an export keeps notes and //@ lines where its
+    target has comments, and GQL has them, so each is still owned by its element in the text an
+    engine is given — never parted from it by the INSERT or MATCH line to_gql adds."""
+
+    def kept(self, block):
+        given = gp.owned_comments(block)["owned"]
+        got = gp.owned_comments(gp.to_gql(block))["owned"]
+        self.assertEqual(
+            [(o["element"], o["tags"], o["note"]) for o in got],
+            [(o["element"], o["tags"], o["note"]) for o in given],
+        )
+
+    def test_comments_above_the_first_thing_stay_owned_by_it_when_insert_is_put_back(self):
+        self.kept(lines("// graph: g", "/// The first.", "//@ colour: orange", "(a:T {id: 'a'})"))
+
+    def test_comments_above_the_first_thing_stay_owned_when_a_match_line_is_added(self):
+        self.kept(lines("// graph: g", "//@ weight: 2", "(a)-[:R]->(b)"))
+
+    def test_comments_above_the_first_thing_stay_owned_in_a_block_whose_lines_end_in_cr_lf(self):
+        self.kept("// graph: g\r\n/// a\r\n///\r\n//@ k: v\r\n(a:T {id: 'a'})\r\n")
+
+    def test_comments_above_a_later_thing_keep_their_lines_as_written(self):
+        block = lines("// graph: g", "(a:T {id: 'a'}),", "/// The second.", "//@ x: 1", "(b:T)")
+        self.kept(block)
+        self.assertIn("/// The second.\n//@ x: 1\n(b:T {id: 'b'})", gp.to_gql(block))
+
+
 class ToGqlRefusesWhatTheReaderRefuses(unittest.TestCase):
     """A block the reader rejects is never given to an engine with an id written twice: to_gql
     raises the ProfileError the reader raises, as it does for a bare relationship type."""
