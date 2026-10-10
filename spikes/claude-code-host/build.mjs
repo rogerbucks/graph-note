@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const common = { absWorkingDir: here, bundle: true, format: 'esm', legalComments: 'inline', logLevel: 'warning' };
-await esbuild.build({ ...common, entryPoints: ['src/core-entry.ts'], outfile: join(here, 'mod/hooks/core.js'), platform: 'neutral', alias: { '@viz-js/viz': './src/no-viz.ts' } });
+await esbuild.build({ ...common, entryPoints: ['src/core-entry.ts'], outfile: join(here, 'mod/hooks/core.js'), platform: 'neutral' });
 await esbuild.build({ ...common, entryPoints: ['src/render-node.ts'], outfile: join(here, 'mod/bin/render.mjs'), platform: 'node' });
 
 // The test's fixtures: the sample note, and what Graphviz draws for it, made by the same bundles the mod runs.

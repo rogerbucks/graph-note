@@ -1,7 +1,6 @@
 // Drawing a graph (spec §3): laid out by the Graphviz engine in each direction the style lists, the better fit chosen and
-// themed, as graph_svg.render does; and what tapping a box shows. The engine is Graphviz compiled to WebAssembly, bundled,
-// so drawing needs no network on any device (spec §1).
-import { instance } from '@viz-js/viz';
+// themed, as graph_svg.render does; and what tapping a box shows. The engine itself is started by engine.ts and handed in,
+// so these steps need no WebAssembly and run in any host (spec §10).
 import type { GraphDrawing, NoteReading, Problem } from './note-reading.ts';
 import { drawingSource, layoutSource, STYLE } from './layout.ts';
 import type { LayoutSource } from './layout.ts';
@@ -11,12 +10,6 @@ import { themed, sizeOf, choose } from './theme.ts';
 export interface Engine {
   version: string;
   render(source: string): string;
-}
-
-/** Starts the bundled Graphviz engine. */
-export async function loadEngine(): Promise<Engine> {
-  const viz = await instance();
-  return { version: viz.graphvizVersion, render: (source) => viz.renderString(source, { format: 'svg' }) };
 }
 
 /** A drawing ready to show: themed SVG text, the direction chosen, and its natural size in CSS pixels. */

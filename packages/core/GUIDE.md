@@ -39,7 +39,9 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 
 - `layout.ts` — the Graphviz layout source, byte-identical to the Python library's, a box drawn under a suggested name
   dashed and labelled so in both.
-- `render.ts` — laying out with the bundled engine, and what a box's or link's details are.
+- `engine.ts` — starting the bundled Graphviz engine, WebAssembly: the one module that imports it, and only the entry
+  imports this one, so the rest of the core runs in a host with no WebAssembly, such as a Claude Code mod.
+- `render.ts` — laying out with the engine it is handed, and what a box's or link's details are.
 - `layout-limits.ts` — how large a graph may be before it is shown as text (spec §9, layout_contained), each limit with
   its reason: the note's text, measured before it is read (`READ_LIMITS`, `textTooLarge`, which `readNote` applies to the
   graph blocks and shared schemas, never to a query or an excerpt); the things, links, longest word and drawing

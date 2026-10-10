@@ -1,6 +1,6 @@
 // Graphviz for the mod, run as a process of its own: the core's bundled engine, DOT sources in on stdin as a JSON list,
 // the SVG for each out on stdout as a JSON list.
-import { loadEngine } from '../../../packages/core/src/render.ts';
+import { loadEngine } from '../../../packages/core/src/engine.ts';
 
 let input = '';
 process.stdin.on('data', (d) => (input += d));

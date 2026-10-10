@@ -5,7 +5,8 @@ import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { Worker } from 'node:worker_threads';
 import { readNote } from '../src/drawing.ts';
-import { loadEngine, draw } from '../src/render.ts';
+import { draw } from '../src/render.ts';
+import { loadEngine } from '../src/engine.ts';
 import { drawingSource } from '../src/layout.ts';
 import { LAYOUT_LIMITS, PAGE_LIMITS, tooLarge } from '../src/layout-limits.ts';
 import { LayoutRunner, TIMEOUTS_BEFORE_STOPPING, inThreadPort, serveLayouts } from '../src/layout-worker.ts';
@@ -91,7 +92,7 @@ function thread(body) {
   return port;
 }
 const SERVING = `const { serveLayouts } = await import(core + 'layout-worker.ts');
-  const { loadEngine } = await import(core + 'render.ts');
+  const { loadEngine } = await import(core + 'engine.ts');
   serveLayouts(scope, loadEngine);`;
 const BUSY_FOREVER = `scope.postMessage({ ready: true }); scope.onmessage = () => { for (;;); };`;
 
