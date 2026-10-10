@@ -20,6 +20,18 @@ import graph_spec as gs  # noqa: E402
 from graphspec.engine import settings  # noqa: E402
 from graphspec.engine.documents.fill import compute  # noqa: E402
 
+
+# These tests are of the route into the engine, which a host asks for: the reader is the default
+# parser (req:3.reader-default), so every test here runs under Grafeo's.
+def setUpModule():  # noqa: N802
+    global _DEFAULT
+    _DEFAULT, settings.PARSER = settings.PARSER, "grafeo"
+
+
+def tearDownModule():  # noqa: N802
+    settings.PARSER = _DEFAULT
+
+
 HEAD = "// graph: g · document doc:one · schema s1 · as of 2026-10-01"
 TWO = "(a:T {id: 'a'}),\n(b:T {id: 'b'})"
 SET_ID = r"^line 4: SET would change b's id, and a node's id never changes \(§3\) — "
@@ -53,7 +65,7 @@ def refused(results, said):
 
 class RoutesRefuseASetOfId(unittest.TestCase):
     def test_parse_by_default_refuses_a_set_of_id_whatever_the_value(self):
-        # req:3.set-keeps-id, under the default parser, Grafeo
+        # req:3.set-keeps-id, under Grafeo's parser, as setUpModule asks
         self.assertEqual(settings.PARSER, "grafeo")
         for value in ("'a'", "'c'", "'b'"):
             with self.assertRaisesRegex(gp.ProfileError, SET_ID, msg=value):
@@ -90,7 +102,7 @@ class RoutesRefuseANonTextId(unittest.TestCase):
     ]
 
     def test_parse_by_default_refuses_each_non_text_id(self):
-        # req:3.id-is-text, under the default parser, Grafeo
+        # req:3.id-is-text, under Grafeo's parser, as setUpModule asks
         self.assertEqual(settings.PARSER, "grafeo")
         for written, quoted in self.FORMS:
             said = NOT_TEXT.format(line=2, written=written, quoted=quoted)

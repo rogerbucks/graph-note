@@ -27,6 +27,8 @@ from test_engine_gets_corrected import (  # noqa: E402
     given_to_grafeo,
     parse_text,
     parser,
+    setUpModule,  # noqa: F401  # the route into the engine, asked for: each test runs under Grafeo
+    tearDownModule,  # noqa: F401
 )
 
 # built with chr(), so no editor or tool can read the source's own text as a line end

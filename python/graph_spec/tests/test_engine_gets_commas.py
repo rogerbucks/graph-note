@@ -25,6 +25,18 @@ import graph_spec as gs  # noqa: E402
 from graphspec.engine import settings  # noqa: E402
 from graphspec.engine.documents.fill import compute, fill, fill_check  # noqa: E402
 
+
+# These tests are of the route into the engine, which a host asks for: the reader is the default
+# parser (req:3.reader-default), so every test here runs under Grafeo's.
+def setUpModule():  # noqa: N802
+    global _DEFAULT
+    _DEFAULT, settings.PARSER = settings.PARSER, "grafeo"
+
+
+def tearDownModule():  # noqa: N802
+    settings.PARSER = _DEFAULT
+
+
 HEAD = "// graph: g · document doc:one · schema s1 · as of 2026-10-01"
 
 # a comma missing after the first thing; every node has its id, so the engine's text adds only

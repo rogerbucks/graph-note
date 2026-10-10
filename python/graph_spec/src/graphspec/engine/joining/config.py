@@ -5,7 +5,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from graphspec.engine import settings
 from graphspec.engine.joining.gql_rules import gql_rule
 from graphspec.engine.joining.named_rules import RULES
 
@@ -71,12 +70,13 @@ def config_from(data: dict[str, Any] | None) -> dict[str, Any]:
         + [("edge", e, r) for e, r in ((d.get("types") or {}).get("edges") or {}).items()],
     )
     cfg = _c
-    # with no engine (PARSER 'profile'), a constraint written in GQL runs as its named twin — the
-    # suite proves the two agree (rule_agreement)
+    # a constraint written in GQL with a named twin runs as that twin, whatever the parser
+    # (req:3.reader-default) — tests/test_reader_agrees_with_grafeo.py proves the two agree; one
+    # with no twin is database work, run by the engine
     cfg["constraints"] = {
         c["why"]: (
             RULES[c["reference"]]
-            if "gql" in c and settings.PARSER == "profile" and "reference" in c
+            if "gql" in c and "reference" in c
             else gql_rule(c["gql"], cfg)
             if "gql" in c
             else RULES[c["rule"]]
