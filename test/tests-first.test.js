@@ -8,7 +8,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
-import { judged, replay, unexplained, record, update } from '../scripts/tests-first.mjs';
+import { fromJunit, judged, replay, unexplained, record, update } from '../scripts/tests-first.mjs';
 import { path, readJSON, walk } from './repository/repo.js';
 
 /** A small repository: each commit a set of files, written then committed; returns the folder and the commit ids. */
@@ -188,6 +188,15 @@ describe('a run against the code before that did not finish', () => {
     assert.deepEqual(finished.failedFirst, ['fails first']);
     assert.deepEqual(finished.passedFirst, ['guards']);
     assert.equal(finished.notReplayed, undefined);
+  });
+
+  // found at 7590e45 (10 Oct 2026): the JUnit reporter writes <testsuites> at once, so a run stopped at the time limit
+  // left that much, and was read as finished; its guard, never run, was counted as seen failing
+  test('a JUnit report cut off before </testsuites> did not finish, even though it began', () => {
+    const cut = '<?xml version="1.0" encoding="utf-8"?>\n<testsuites>\n';
+    assert.equal(fromJunit(cut).ran, false);
+    const whole = `${cut}<testcase name="guards" time="0.1"/>\n</testsuites>\n`;
+    assert.deepEqual(fromJunit(whole), { passed: ['guards'], failed: [], ran: true });
   });
 });
 

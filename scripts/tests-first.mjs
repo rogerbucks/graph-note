@@ -79,10 +79,15 @@ function runJs(dir, file) {
     timeout: RUN_MS,
     maxBuffer: 1 << 28,
   });
+  return fromJunit(r.stdout ?? '');
+}
+
+/** A JUnit report read: each test by its suites and name, passed or failed, and whether the run finished. */
+export function fromJunit(report) {
   const passed = [],
     failed = [],
     suites = [];
-  for (const m of (r.stdout ?? '').matchAll(/<(\/?)(testsuite|testcase)\b([^>]*?)(\/?)>/g)) {
+  for (const m of report.matchAll(/<(\/?)(testsuite|testcase)\b([^>]*?)(\/?)>/g)) {
     const [, close, tag, attrs = '', selfClose] = m;
     const name = unescape(/\bname="([^"]*)"/.exec(attrs)?.[1] ?? '');
     if (tag === 'testsuite') {
@@ -93,7 +98,8 @@ function runJs(dir, file) {
     if (close) continue;
     (/\bfailure="/.test(attrs) ? failed : passed).push([...suites, name].join(' > '));
   }
-  return { passed, failed, ran: (r.stdout ?? '').includes('<testsuites') };
+  // the reporter writes <testsuites> at once; a run stopped at the time limit, or crashed, never closes it
+  return { passed, failed, ran: report.includes('</testsuites>') };
 }
 
 const PY_RUNNER = `
