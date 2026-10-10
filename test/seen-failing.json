@@ -340,10 +340,6 @@
       "seen_failing_first": false,
       "evidence": "a control case, written with the change beside it: Store.apply refused a dangling comma before and still does, as checking and loading stay all-or-nothing (commit d000d29)"
     },
-    "ADanglingComma.test_everything_before_it_is_drawn_with_one_warning_on_its_line": {
-      "seen_failing_first": false,
-      "evidence": "not seen failing by the replay, though it was seen failing by hand against the code before d000d29 (unittest: FAILED (failures=3), one for each ending): its first version used subTest, whose failures unittest files under each sub-test's name, so the replay read the test itself as passing. Rewritten as a plain loop in 4f25653"
-    },
     "AnEmojiBeforeWhatIsLeftOut.test_the_item_at_fault_is_left_out_exactly": {
       "seen_failing_first": false,
       "evidence": "pins behaviour that already existed in Python: it counts places and blanks text in code points alike, so it was already right; the twin test in the core (drawing.test.js, an emoji before what is left out) failed first (commit de46773)"
@@ -472,25 +468,31 @@
     }
   },
   "packages/obsidian/test/layout-worker.test.js": {
+    "where Workers run > the worker’s code stands alone: every helper it calls is its own, never one of main.js’s, such as __name": {
+      "seen_failing_first": false,
+      "evidence": "a guard, asked for in review: the worker's code was already self-contained, so it passes before and after by design; it fails the day a build option such as keepNames makes the worker call one of main.js's helpers. Its file's run against 7590e45's parent was stopped at the time limit, so it is not replayed; run there by hand with only the 5 MB block skipped, it passed (10 Oct 2026)"
+    },
+    "in the pane > a block typed or pasted past the size to read shows the banner in the drawing’s place, never read": {
+      "seen_failing_first": false,
+      "evidence": "hangs at the parent (no size limit there), so it cannot be replayed; unproved either way. Hand run on 10 Oct 2026: at 7590e45's parent, with only the 5 MB block skipped, the tests before it finished and it never did, until the run was stopped at the 600 s limit"
+    },
+    "a graph over a size limit is shown as its text, with a banner saying which limit and the numbers > a block too large to read — 5 MB, each line broken — is its text and a banner at once, never read": {
+      "seen_failing_first": false,
+      "evidence": "not seen failing by the replay, though it was seen failing by hand: its file's run against 7590e45's parent was stopped at the 600 s limit by the pane case, which hangs there, so the file is not replayed. Run alone at that parent on 10 Oct 2026, it does not hang: it fails in 4 s (Cannot read properties of null (reading 'text'))"
+    },
     "a graph over a size limit is shown as its text, with a banner saying which limit and the numbers > a block too large to read — 600 kB, each line broken — is its text and a banner at once, never read": {
       "seen_failing_first": false,
       "evidence": "renamed in 6a50e41 from its 5 MB form of 7590e45, so it passed against its parent, which already holds the read limit. Its name was wrong (the block is one pattern left open, not a line of broken parts), and the claim then that it fails in seconds against the code before the limit was not verified; its successor's name and reason say what was"
     },
     "a graph over a size limit is shown as its text, with a banner saying which limit and the numbers > a block too large to read — 600 kB, one pattern left open — is its text and a banner at once, never read": {
       "seen_failing_first": false,
-      "evidence": "renamed in ff02d6d to what it holds, so it passes against its parent, which already holds the read limit. That it fails against the code before the limit (81951ea) is UNVERIFIED: checking that code out over the source to run it was refused by the session's permission classifier, and Roger chose to mark it unverified (10 Oct 2026)"
+      "evidence": "renamed in ff02d6d to what it holds, so it passes against its parent, which already holds the read limit. Against the code before the limit it fails: run alone on 10 Oct 2026 in a temporary worktree of 81951ea, with ff02d6d's packages/obsidian/test/, it failed in 1.1 s (Cannot read properties of null (reading 'text'))"
     }
   },
   "packages/core/test/layout-limits.test.js": {
     "the note’s text, measured before it is read > over the limits the plugin draws nothing, so there is nothing to hold to the Python reader (drawn_in_part)": {
       "seen_failing_first": false,
       "evidence": "a control case, asked for in review (ff02d6d): it documents the plugin's own exception to drawn_in_part, which 7590e45 already made, so it passes before and after by design"
-    }
-  },
-  "python/graph_spec/tests/test_parity.py": {
-    "ReadingCut.test_past_the_budget_the_core_and_python_leave_out_the_same": {
-      "seen_failing_first": false,
-      "evidence": "it does fail against its parent (a TypeError for each budget). At ff02d6d it was written with unittest subTest, which the replay reads as passing, so the record shows it as passed first; it is now a plain loop, and that commit's record cannot change."
     }
   },
   "python/graph_spec/tests/test_whitespace.py": {
@@ -511,6 +513,16 @@
     "the three copies hold the same 29 code points, the ones openGQL’s grammar names": {
       "seen_failing_first": false,
       "evidence": "a guard, asked for in review of PR #28: the three hand-written copies of the set already agreed when it was written, so it passes before and after by design; it fails as soon as one copy drifts. Its partner in the same file, that each copy cites openGQL's GQL.g4, was seen failing first."
+    }
+  },
+  "test/tests-first.test.js": {
+    "replaying a commit against its parent’s code > a Python test whose subTests raise an error, not a failed assertion, has failed: it is seen failing first": {
+      "seen_failing_first": false,
+      "evidence": "asked for in review of PR #33, added after the subTest fix earlier in the same branch, so it passes against its parent. Replayed by hand with origin/main 42927dd's scripts/tests-first.mjs in a scratch worktree, it fails: that runner reads the fixture's test as passing first (10 Oct 2026)"
+    },
+    "replaying a commit against its parent’s code > a Python test with one subTest failing among others that pass has failed: it is seen failing first": {
+      "seen_failing_first": false,
+      "evidence": "asked for in review of PR #33, added after the subTest fix earlier in the same branch, so it passes against its parent. Replayed by hand with origin/main 42927dd's scripts/tests-first.mjs in a scratch worktree, it fails: that runner reads the fixture's test as passing first (10 Oct 2026)"
     }
   }
 }
