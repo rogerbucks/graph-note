@@ -75,6 +75,21 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `linked-list.ts` — a property held as things linked to this one: made, added to and removed from, as text edits.
 - `lock.ts` — Lock the graph: a draft's schema written out, indented as the settings say.
 
+**Paths (spec §7; graph spec §22)**
+
+- `paths.ts` — walked paths. `PathRecorder` takes the boxes tapped in order (the last step tapped again is ignored; an
+  earlier one is added again, as a walk may revisit). `pathBlock` writes the walk at the end of a block as a `Path` node
+  with `STEP` edges numbered 1 to n, comma-joined, with a fresh id in the graph's style, and refuses with a reason when
+  there are no steps or no title, a step is not a fact in the graph, or a locked graph does not declare Path and STEP.
+  `pathsOf` gives each path as data: its steps in seq order, each marked `missing` when the thing is not in the graph
+  (the reader leaves such a STEP out and reports it; `paths.ts` finds it again in the problem's `dropped` text), and the
+  path marked `empty` when it has no steps. `PathPlayer` plays one path step by step with a screen-reader sentence for
+  each ("Step 2 of 5: …"); a missing step is stopped on and announced as missing, and a path with no steps is refused
+  (`PathPlayer.refusal`), never played as an empty story. `pathProblems` reports a STEP through something removed, on the
+  STEP's own line with its fix and, where the step sits on one line, the edit that removes it, and a path with no steps;
+  `mergePathProblems` is what `readNote` uses to put them in `NoteReading.problems`, replacing the reader's own report of
+  the same STEP, so the badge counts each once.
+
 **Settings (spec §21)**
 
 - `strictness.ts` — the three departures from standard GQL the reader reads as meant (each problem says which, in
