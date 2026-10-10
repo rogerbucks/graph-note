@@ -325,5 +325,63 @@
     "changesets": [],
     "lint": [],
     "error": "line 4: [favours] has no colon, and graph bare has no relationship type called favours — a relationship type is written with its colon: [:FAVOURS]"
+  },
+  "whitespace-inside-a-string-is-kept-as-written-line-and-paragraph-separators-too-3": {
+    "canon": { "ws_strings": "ab76be15c7c21a8614b8af9b3d639288960d712424cc3b553aa9505c7558f22a" },
+    "verdicts": {
+      "ws_strings": [
+        ["§5: a draft's kinds and relationship types hold no near-duplicates", true],
+        ["§18: the flat projection rebuilds the graph", true]
+      ]
+    },
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "views": {
+      "ws_strings": {
+        "projection": "{\"blocks\":{\"a\":{\"id\":\"a\",\"name\":\"no break\",\"type\":[\"T\"]},\"b\":{\"id\":\"b\",\"name\":\"line separator\",\"type\":[\"T\"]},\"c\":{\"id\":\"c\",\"name\":\"paragraph separator\",\"type\":[\"T\"]},\"d\":{\"id\":\"d\",\"name\":\"byte﻿order\",\"type\":[\"T\"]},\"e\":{\"id\":\"e\",\"name\":\"vowel᠎separator\",\"type\":[\"T\"]},\"f\":{\"id\":\"f\",\"name\":\"file\\u001cseparator\",\"type\":[\"T\"]},\"g\":{\"id\":\"g\",\"name\":\"next\u0085line\",\"type\":[\"T\"]},\"h\":{\"id\":\"h\",\"name\":\"escaped separator\",\"type\":[\"T\"]}},\"relationships\":[]}",
+        "relationships": "flowchart LR\n    n0[\"a<br/>no break\"]\n    n1[\"b<br/>line separator\"]\n    n2[\"c<br/>paragraph separator\"]\n    n3[\"d<br/>byte﻿order\"]\n    n4[\"e<br/>vowel᠎separator\"]\n    n5[\"f<br/>file\u001cseparator\"]\n    n6[\"g<br/>next\u0085line\"]\n    n7[\"h<br/>escaped separator\"]",
+        "legend": ""
+      }
+    }
+  },
+  "every-whitespace-character-gql-names-parts-words-and-items-before-keywords-too-3": {
+    "canon": { "ws_parts": "6de9949895fa650fd19392e962aeb187b784cf40fa5ee5b138dc5ca4b0886fd3" },
+    "verdicts": {
+      "ws_parts": [
+        ["§5: a draft's kinds and relationship types hold no near-duplicates", true],
+        ["§18: the flat projection rebuilds the graph", true]
+      ]
+    },
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "views": {
+      "ws_parts": {
+        "projection": "{\"blocks\":{\"n0\":{\"id\":\"n0\",\"name\":\"n0\",\"seen\":true,\"type\":[\"T\"]},\"n1\":{\"id\":\"n1\",\"name\":\"n1\",\"type\":[\"T\"]},\"n10\":{\"id\":\"n10\",\"name\":\"n10\",\"type\":[\"T\"]},\"n11\":{\"id\":\"n11\",\"name\":\"n11\",\"type\":[\"T\"]},\"n12\":{\"id\":\"n12\",\"name\":\"n12\",\"type\":[\"T\"]},\"n13\":{\"id\":\"n13\",\"name\":\"n13\",\"type\":[\"T\"]},\"n14\":{\"id\":\"n14\",\"name\":\"n14\",\"type\":[\"T\"]},\"n15\":{\"id\":\"n15\",\"name\":\"n15\",\"type\":[\"T\"]},\"n16\":{\"id\":\"n16\",\"name\":\"n16\",\"type\":[\"T\"]},\"n17\":{\"id\":\"n17\",\"name\":\"n17\",\"type\":[\"T\"]},\"n18\":{\"id\":\"n18\",\"name\":\"n18\",\"type\":[\"T\"]},\"n19\":{\"id\":\"n19\",\"name\":\"n19\",\"type\":[\"T\"]},\"n2\":{\"id\":\"n2\",\"name\":\"n2\",\"type\":[\"T\"]},\"n20\":{\"id\":\"n20\",\"name\":\"n20\",\"type\":[\"T\"]},\"n21\":{\"id\":\"n21\",\"name\":\"n21\",\"type\":[\"T\"]},\"n22\":{\"id\":\"n22\",\"name\":\"n22\",\"type\":[\"T\"]},\"n23\":{\"id\":\"n23\",\"name\":\"n23\",\"type\":[\"T\"]},\"n24\":{\"id\":\"n24\",\"name\":\"n24\",\"type\":[\"T\"]},\"n25\":{\"id\":\"n25\",\"name\":\"n25\",\"type\":[\"T\"]},\"n26\":{\"id\":\"n26\",\"name\":\"n26\",\"type\":[\"T\"]},\"n27\":{\"id\":\"n27\",\"name\":\"n27\",\"type\":[\"T\"]},\"n3\":{\"id\":\"n3\",\"name\":\"n3\",\"type\":[\"T\"]},\"n4\":{\"id\":\"n4\",\"name\":\"n4\",\"type\":[\"T\"]},\"n5\":{\"id\":\"n5\",\"name\":\"n5\",\"type\":[\"T\"]},\"n6\":{\"id\":\"n6\",\"name\":\"n6\",\"type\":[\"T\"]},\"n7\":{\"id\":\"n7\",\"name\":\"n7\",\"type\":[\"T\"]},\"n8\":{\"id\":\"n8\",\"name\":\"n8\",\"type\":[\"T\"]},\"n9\":{\"id\":\"n9\",\"name\":\"n9\",\"type\":[\"T\"]}},\"relationships\":[]}",
+        "relationships": "flowchart LR\n    n0[\"n0<br/>n0\"]\n    n1[\"n1<br/>n1\"]\n    n2[\"n10<br/>n10\"]\n    n3[\"n11<br/>n11\"]\n    n4[\"n12<br/>n12\"]\n    n5[\"n13<br/>n13\"]\n    n6[\"n14<br/>n14\"]\n    n7[\"n15<br/>n15\"]\n    n8[\"n16<br/>n16\"]\n    n9[\"n17<br/>n17\"]\n    n10[\"n18<br/>n18\"]\n    n11[\"n19<br/>n19\"]\n    n12[\"n2<br/>n2\"]\n    n13[\"n20<br/>n20\"]\n    n14[\"n21<br/>n21\"]\n    n15[\"n22<br/>n22\"]\n    n16[\"n23<br/>n23\"]\n    n17[\"n24<br/>n24\"]\n    n18[\"n25<br/>n25\"]\n    n19[\"n26<br/>n26\"]\n    n20[\"n27<br/>n27\"]\n    n21[\"n3<br/>n3\"]\n    n22[\"n4<br/>n4\"]\n    n23[\"n5<br/>n5\"]\n    n24[\"n6<br/>n6\"]\n    n25[\"n7<br/>n7\"]\n    n26[\"n8<br/>n8\"]\n    n27[\"n9<br/>n9\"]",
+        "legend": ""
+      }
+    }
+  },
+  "a-byte-order-mark-is-not-whitespace-before-match-it-is-refused-on-the-line-it-is-on-3": {
+    "canon": {},
+    "verdicts": {},
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "error": "line 3: cannot read '﻿MATCH (a:T {id: 'a'' — a data block holds only nodes, relationships and simple values"
+  },
+  "u-0085-is-not-whitespace-while-u-001c-is-3": {
+    "canon": {},
+    "verdicts": {},
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "error": "line 2: cannot read '\u0085(c:T {name: 'C'})' — a data block holds only nodes, relationships and simple values"
   }
 }

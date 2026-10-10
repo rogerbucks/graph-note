@@ -258,3 +258,38 @@ test('a line that cannot be read is quoted the same by both readers, cut at 20 U
     assert.deepEqual(cannotRead(python[n].map((message) => ({ message }))), core, c.name);
   });
 });
+
+// Whitespace is what GQL names, in every reader, never the language's own idea of it; a line ends at LF only
+// (decided 10 Oct 2026). U+0085 and U+FEFF are not whitespace, so an item they open is left out, by both readers alike.
+const WHITESPACE = {
+  'whitespace inside strings, between items and before keywords': [
+    fence(
+      "// graph: ws\n(home:Place {name: 'Home\xa0sweet\u{2028}home'}),\u{2029}" +
+        "(walk:Leg {name: 'twenty-two characters \u{feff} after'}),\u{180e}" +
+        "(bus:Leg {name: 'twenty-two characters \x1c after, \x85 and\u{3000}on'}),\n" +
+        '// a comment\u{2028}that a line separator does not end\n' +
+        '\u{3000}(walk)-[:STARTS_AT]->(home),\x1d(bus)-[:FOLLOWS]->(walk)',
+    ),
+    fence(
+      "//\u{180e}graph:\xa0ws\n\u{180e}MATCH\u{2000}(w:Leg {id: 'walk'})\n\x1fSET\u{205f}w.note\u{202f}=\u{1680}'checked'",
+    ),
+  ].join('\n'),
+  'a byte-order mark or U+0085 opening an item, which is left out': [
+    fence("// graph: ws\n(home:Place {name: 'Home'}),\n(walk:Leg {name: 'Walk'}),\u{feff}(walk)-[:STARTS_AT]->(home)"),
+    fence("// graph: ws\n(bus:Leg {name: 'Bus'}),\x85(bus)-[:FOLLOWS]->(walk),\n(train:Leg {name: 'Train'})"),
+  ].join('\n'),
+  'U+2029 and U+180E inside strings, NBSP and U+2028 between items, NBSP, U+2028 and U+2029 before keywords': [
+    fence(
+      "// graph: ws\n(home:Place {name: 'Home\u{2029}again'}),\xa0(walk:Leg {name: 'twenty-two characters\u{180e}after'})," +
+        '\u{2028}(walk)-[:STARTS_AT]->(home)',
+    ),
+    fence(
+      "// graph: ws\n\xa0MATCH (w:Leg {id: 'walk'})\n\u{2029}INSERT (bus:Leg {name: 'Bus'}),\n(bus)-[:FOLLOWS]->(w)\n" +
+        "\u{2028}SET w.note = 'checked'",
+    ),
+  ].join('\n'),
+};
+
+test('whitespace as GQL names it is read and drawn the same by both readers, byte for byte', () => {
+  same(WHITESPACE);
+});

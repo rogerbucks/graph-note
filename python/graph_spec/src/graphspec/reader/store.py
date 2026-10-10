@@ -8,6 +8,10 @@ import re
 from graphspec.reader.grammar import Parser
 from graphspec.reader.lexer import ProfileError, header, tokens
 from graphspec.reader.to_gql import _bare_names
+from graphspec.reader.whitespace import N, S, strip
+
+SHARED = re.compile(rf"·{S}*SCHEMA{S}+({N}+)")
+NAMES_SHARED = re.compile(rf"·{S}*schema{S}+({N}+)")
 
 
 class Store:
@@ -115,14 +119,14 @@ class Store:
             raise ProfileError(
                 1, "this is an excerpt", "an excerpt illustrates part of a graph; it is not data"
             )
-        first = next((line for line in block.splitlines() if line.strip()), "")
+        first = next((line for line in block.split("\n") if strip(line)), "")
         if kind == "schema":  # a shared schema (§5): kept apart from the data, under its own name
-            name = re.search(r"·\s*SCHEMA\s+(\S+)", first).group(1)
+            name = SHARED.search(first).group(1)
             g = "schema " + name
             self.schemas[name] = g
             self.graphs.pop(g, None)
         else:
-            m = re.search(r"·\s*schema\s+(\S+)", first)
+            m = NAMES_SHARED.search(first)
             if m:
                 self.named[g] = m.group(1)
         toks = tokens(block)

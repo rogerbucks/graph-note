@@ -2,8 +2,12 @@
 // a graph with problems still drawn — what can be read is drawn, and the rest is listed as problems.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { gqlBlocks } from '../src/blocks.ts';
 import { readNote } from '../src/drawing.ts';
+
+const PY_SRC = fileURLToPath(new URL('../../../python/graph_spec/src', import.meta.url));
 
 const fence = (body, info = 'gql') => '```' + info + '\n' + body + '\n```';
 
@@ -228,6 +232,25 @@ describe('which blocks are graphs', () => {
       assert.equal(graphOfBlock(code), null, code);
     }
   });
+
+  // whitespace as GQL names it (§3), U+180E among it, in every reader: the graph line is read alike by the core and the
+  // Python library, so a problem names the same graph in both (decided 10 Oct 2026)
+  test('a graph line spaced with U+180E names its graph, in the core as in the Python library', () => {
+    const block = "//\u{180e}graph:\u{180e}ws\n(:T {name: 'Large reader'})";
+    const core = readNote([block]).problems.map((p) => p.graph);
+    const py = spawnSync(
+      'python3',
+      [
+        '-c',
+        `import json, sys\nsys.path.insert(0, ${JSON.stringify(PY_SRC)})\nimport gql_profile as gp\n` +
+          'print(json.dumps([p["graph"] for p in gp.read_for_drawing([json.load(sys.stdin)])[1]]))',
+      ],
+      { input: JSON.stringify(block), encoding: 'utf8' },
+    );
+    assert.equal(py.status, 0, py.stderr);
+    assert.deepEqual(core, ['ws'], 'the core');
+    assert.deepEqual(JSON.parse(py.stdout), ['ws'], 'the Python library');
+  });
 });
 
 describe('a comma with nothing after it', () => {
@@ -450,6 +473,15 @@ describe('a schema whose types its GraphMeta does not declare', () => {
   test('a draft, or a schema that declares each type, has no such warning', () => {
     assert.deepEqual(readNote([DATA]).problems, []);
   });
+
+  // whitespace as GQL names it (graph spec §3), U+180E among it, as the reader reads the block (10 Oct 2026)
+  test('is found where the types are spaced with U+180E', () => {
+    const spaced = OLD.replaceAll('(kind_', '(\u{180e}kind_').replaceAll(':Meta:', '\u{180e}:\u{180e}Meta:');
+    assert.equal(
+      readNote([DATA, spaced]).problems[0]?.message,
+      'the schema does not declare Book and Person: its GraphMeta must DECLARE each type (§5)',
+    );
+  });
 });
 
 describe('a kind or link type the locked graph’s schema does not declare', () => {
@@ -503,5 +535,20 @@ describe('a kind or link type the locked graph’s schema does not declare', () 
   test('a draft has no schema to declare anything, so nothing is said; and what the schema declares is never reported', () => {
     assert.deepEqual(readNote([STEP1, STEP2]).problems, []);
     assert.deepEqual(on(readNote(blocks), 2), []);
+  });
+
+  // whitespace as GQL names it (graph spec §3), U+180E among it, as the reader reads the block (10 Oct 2026)
+  test('a kind and a link type spaced with U+180E are found, as the reader reads them', () => {
+    const spaced = STEP2.replace('(cheaper:Reason', '(\u{180e}cheaper\u{180e}:\u{180e}Reason').replace(
+      '(cheaper)-[:FAVOURS]',
+      '(cheaper)-[\u{180e}:\u{180e}FAVOURS]',
+    );
+    assert.deepEqual(
+      on(readNote([STEP1, spaced, SCHEMA], 1), 1).map(([line, , message]) => [line, message.split(' ')[0]]),
+      [
+        [2, 'Reason'],
+        [4, 'FAVOURS'],
+      ],
+    );
   });
 });

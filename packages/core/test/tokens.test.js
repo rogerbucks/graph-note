@@ -63,6 +63,13 @@ test('tokens join back into the text exactly, whatever the text', () => {
   }
 });
 
+// whitespace as GQL names it (graph spec §3), as the reader reads it: U+180E is whitespace, U+FEFF is not
+test('a kind after U+180E is coloured as a kind, and one after U+FEFF is not', () => {
+  const kind = (text) => tokenize(text).find((t) => t.s === 'Person')?.c;
+  assert.equal(kind('(a:\u{180e}Person)'), 'label');
+  assert.equal(kind('(a:\u{feff}Person)'), 'var');
+});
+
 test('every class has a colour rule in styles.css, named as gql-highlight names it', () => {
   const classes = new Set(
     Object.values(expected)

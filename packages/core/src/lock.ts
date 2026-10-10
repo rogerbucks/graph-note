@@ -2,7 +2,9 @@
 // block written last, as the graph spec's §5 asks — with each relationship read both ways. The reverse readings are
 // guesses, and the block says so, for the writer to check.
 import gs from '@graph-note/graph-spec';
+import { graphOf } from './blocks.ts';
 import type { NoteReading } from './note-reading.ts';
+import { trim } from './whitespace.ts';
 
 /** A graph with no schema of its own, none written later in its note, and none it names, is a draft (§5). */
 export function isDraft(reading: NoteReading, graph: string): boolean {
@@ -30,11 +32,12 @@ const q = (s: string) => `'${s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
 export function lockBlock(reading: NoteReading, graph: string, today: string): string {
   const g = reading.whole[graph] ?? reading.world[graph];
   if (!g) throw new Error(`there is no graph ${graph} to lock`);
+  // the graph line as written, read with whitespace as GQL names it (graph spec §3)
   const header =
     reading.texts
-      .map((t) => t.split('\n').find((l) => l.trim()) ?? '')
-      .find((l) => new RegExp(`^\\s*//\\s*graph:\\s*${graph}(\\s|$)`).test(l))
-      ?.trim() ?? `// graph: ${graph}`;
+      .map((t) => t.split('\n').find((l) => trim(l)) ?? '')
+      .map((l) => trim(l))
+      .find((l) => graphOf(l) === graph) ?? `// graph: ${graph}`;
   const taken = new Set([...(reading.whole[graph]?.nodes.keys() ?? []), ...(reading.world[graph]?.nodes.keys() ?? [])]);
   const id = (want: string) => {
     let v = want,

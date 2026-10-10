@@ -51,6 +51,14 @@ round — are ported here exactly, each proved against Python by the layout test
     return (c ^ 0xffffffff) >>> 0;
   }
 
+  /** What Python's str.isspace() is true for. */
+  const PY_SPACE = String.fromCodePoint(
+    ...[
+      0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x1c, 0x1d, 0x1e, 0x1f, 0x20, 0x85, 0xa0, 0x1680, 0x2000, 0x2001, 0x2002, 0x2003,
+      0x2004, 0x2005, 0x2006, 0x2007, 0x2008, 0x2009, 0x200a, 0x2028, 0x2029, 0x202f, 0x205f, 0x3000,
+    ],
+  );
+
   /** Python's textwrap.wrap(text, width, break_on_hyphens=False), with its other defaults. Lengths count code points, as Python does. */
   function wrap(text, width) {
     const len = (s) => [...s].length;
@@ -79,7 +87,9 @@ round — are ported here exactly, each proved against Python by the layout test
       .split(/([\t\n\v\f\r ]+)/)
       .filter((c) => c)
       .reverse();
-    const blank = (s) => !s.trim();
+    // a chunk Python's str.strip() empties, by its isspace(): unlike JavaScript's trim(), that takes in U+001C–U+001F and
+    // U+0085 and leaves out U+FEFF. Not the reader's whitespace, since this mirrors textwrap
+    const blank = (s) => [...s].every((c) => PY_SPACE.includes(c));
     const lines = [];
     while (chunks.length) {
       let cur = [],

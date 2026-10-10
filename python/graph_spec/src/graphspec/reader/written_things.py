@@ -3,9 +3,9 @@ kinds and properties and where it is — the core's written-things.ts, function 
 thing written without a name is found where the core finds it. Text inside strings and comments
 is never read.
 
-JavaScript's regular expressions are mirrored exactly: its \\s is the set below, its \\w is ASCII,
-its $ (with no m flag) is the end of the text, and its . stops at any line break. Places are
-counted in code points here; name_gaps.py turns them into an editor's UTF-16 units."""
+The core's regular expressions are mirrored exactly: whitespace is the reader's (whitespace.py),
+\\w is ASCII, $ (with no m flag) is the end of the text, and a line ends only at a line feed.
+Places are counted in code points here; name_gaps.py turns them into an editor's UTF-16 units."""
 
 from __future__ import annotations
 
@@ -13,18 +13,19 @@ import re
 from dataclasses import dataclass, field
 
 from graphspec.reader.block_items import _items, blank_text
+from graphspec.reader.whitespace import S as _S
+from graphspec.reader.whitespace import SPACE
 
-# JavaScript's white space (\s, and what String.trim removes): Python's own differs at the edges
-_JS_SPACE = "\t\n\v\f\r    -     　﻿"
-_S = f"[{_JS_SPACE}]"
+# whitespace as GQL names it (§3), as the graph reader reads a block, in both languages; and a
+# line that ends only at a line feed
 _W = "[A-Za-z0-9_]"
-_NOT_BREAK = "[^\n\r  ]"  # JavaScript's .
+_NOT_BREAK = "[^\n]"
 
 _NODE = re.compile(
     rf"({_S}*)([A-Za-z_]{_W}*)?{_S}*((?::{_S}*[A-Za-z_]{_W}*{_S}*)*)(\{{[^}}]*\}})?{_S}*"
 )
 _PROP = re.compile(
-    rf"{_S}*([A-Za-z_]{_W}*){_S}*:{_S}*('(?:[^'\\]|\\{_NOT_BREAK})*'|[^,}}{_JS_SPACE}][^,}}]*)"
+    rf"{_S}*([A-Za-z_]{_W}*){_S}*:{_S}*('(?:[^'\\]|\\{_NOT_BREAK})*'|[^,}}{SPACE}][^,}}]*)"
     rf"{_S}*(,|\Z)"
 )
 _ONLY_SPACE = re.compile(f"{_S}*")
@@ -85,7 +86,7 @@ def _parse(text: str, blanked: str, open_: int, close: int, matched: bool) -> Wr
             value = p.group(2)
             props[p.group(1)] = _unquote(value) if value.startswith("'") else None
     variable = (open_ + 1 + len(m.group(1)), m.group(2)) if m.group(2) else None
-    writes = bool(labels) or bool(m.group(4) and re.sub(f"[{{}}{_JS_SPACE}]", "", m.group(4)))
+    writes = bool(labels) or bool(m.group(4) and re.sub(f"[{{}}{SPACE}]", "", m.group(4)))
     return Written(open_, close, variable, labels, props, writes, matched, broken)
 
 

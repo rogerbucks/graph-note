@@ -9,7 +9,7 @@ import os
 import re
 from typing import Any
 
-from graphspec.engine.documents.reading import require_graph_line
+from graphspec.engine.documents.reading import graph_name, require_graph_line
 from graphspec.engine.judgements.basis import basis_hash, judgement_hash
 from graphspec.engine.optional_imports import grafeo, yaml
 from graphspec.engine.queries import Q, canon_graph, strip
@@ -57,7 +57,7 @@ def compute(recipe: dict[str, Any], text: str, std_dir: str, vault_dir: str) -> 
     made = set()
     for ref in recipe["load"]:
         block = require_graph_line(_block_of(text, ref, std_dir), ref)
-        g = re.match(r"\s*// graph: (\S+)", block).group(1)
+        g = graph_name(block)
         if g not in made:
             db.execute(f"CREATE GRAPH {g}")
             made.add(g)
