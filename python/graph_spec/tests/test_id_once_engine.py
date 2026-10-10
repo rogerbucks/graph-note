@@ -148,8 +148,8 @@ class EnginePathsSkipTheReader(unittest.TestCase):
         with self.assertRaises(gp.ProfileError):
             parse_block(TWO_INSERTS)
 
-    # GAP: load() (queries.py:79-85) runs no reader; Grafeo is given one id twice and keeps both.
-    @unittest.expectedFailure
+    # Was a GAP: load() (queries.py:79-85) ran no reader; Grafeo was given one id twice and kept
+    # both. load now reads the text with the reader first (req:3.engine-reads-first).
     def test_load_refuses_an_id_repeated_in_one_text(self):
         with self.assertRaises(gp.ProfileError):
             gs.load("// graph: joined\n" + TWO_INSERTS)

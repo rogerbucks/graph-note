@@ -8,6 +8,7 @@ import hashlib
 from typing import TYPE_CHECKING, Any
 
 from graphspec.engine.optional_imports import grafeo
+from graphspec.reader.store import Store
 from graphspec.reader.to_gql import to_gql
 
 if TYPE_CHECKING:
@@ -77,7 +78,10 @@ Q_ = _query_rows  # the short name the engine reads with
 
 
 def load(text: str) -> GrafeoDB:
-    """A joined graph's GQL loaded into a fresh Grafeo database, as graph 'joined'."""
+    """A joined graph's GQL loaded into a fresh Grafeo database, as graph 'joined'. The text is
+    read with the reader first, in the graph its first line names: a text the reader refuses
+    raises its ProfileError, and Grafeo is given nothing (req:3.engine-reads-first)."""
+    Store().apply(text)
     db = grafeo.GrafeoDB()
     db.execute("CREATE GRAPH joined")
     db.set_graph("joined")
