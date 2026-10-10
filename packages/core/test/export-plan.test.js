@@ -228,3 +228,74 @@ describe('asking first', () => {
       }
   });
 });
+
+describe('names that are not ASCII', () => {
+  const bytes = (s) => new TextEncoder().encode(s).length;
+  const japanese = (n) => '日本語のノートの名前'.repeat(n);
+
+  // proves: failed_export
+  test('a name is cut by its UTF-8 bytes, so the file name and its .part stay within 200 bytes', () => {
+    const long = { ...diagram, graph: japanese(20) };
+    const longView = { ...aroundContext, graph: japanese(20), view: 'ビュー'.repeat(60) };
+    const emoji = { ...diagram, graph: '🙂'.repeat(100) };
+    for (const scope of [diagram, long, longView, emoji])
+      for (const format of ['svg', 'png']) {
+        const { go } = plan({
+          scope,
+          format,
+          note: `Notes/${japanese(30)}.md`,
+          settings: SETTINGS({ companionNote: 'on' }),
+        });
+        for (const name of [go.fileName, go.companion.fileName]) {
+          assert.ok(bytes(name) + '.part'.length <= 200, `${bytes(name)} bytes`);
+          assert.doesNotMatch(name, /�/);
+          assert.match(name, /2026-10-11\.(svg|png|md)$/);
+        }
+      }
+  });
+
+  // proves: failed_export
+  test('each part is cut at a whole character, never in the middle of one', () => {
+    const { go } = plan({ note: `${japanese(30)}.md`, scope: { ...diagram, graph: japanese(20) } });
+    assert.ok([...go.fileName].every((c) => c === '-' || c === '.' || c === '日' || /[\p{L}\p{N}]/u.test(c)));
+    assert.ok(go.fileName.startsWith('日本語のノートの名前'));
+  });
+
+  // proves: failed_export
+  test('a short Japanese name is kept whole', () => {
+    assert.equal(plan({ note: 'Trips/京都.md' }).go.fileName, '京都-team-2026-10-11.svg');
+  });
+});
+
+describe('where the file goes', () => {
+  const folderOf = (note, exportFolder = '') =>
+    plan({ note, settings: { ...DEFAULT_SETTINGS, exportFolder } }).go.folder;
+
+  // proves: failed_export
+  test('a folder set for exports is not used if a part starts with a dot, so never the config folder', () => {
+    for (const odd of ['.obsidian', 'Exports/.obsidian', 'a/.git/b', '.'])
+      assert.equal(folderOf('Trips/N.md', odd), 'Trips', odd);
+  });
+
+  // proves: failed_export
+  test('a folder set for exports is not used if a part is a name Windows reserves, with or without an ending', () => {
+    for (const odd of ['con', 'PRN', 'a/aux', 'Nul', 'COM1', 'com9', 'a/lpt1', 'LPT9', 'nul.txt', 'a/com3.old'])
+      assert.equal(folderOf('Trips/N.md', odd), 'Trips', odd);
+    for (const fine of ['console', 'com10', 'lpt', 'communal/auxiliary', 'my.folder', 'a/b'])
+      assert.equal(folderOf('Trips/N.md', fine), fine, fine);
+  });
+
+  // proves: failed_export
+  test('a folder set for exports is not used if a part ends in a dot or a space', () => {
+    for (const odd of ['a.', 'a./b', 'a /b', 'a/b./c']) assert.equal(folderOf('Trips/N.md', odd), 'Trips', odd);
+  });
+
+  // proves: failed_export
+  test('with no folder set, the file goes in the note’s own folder exactly as given, whatever it is called', () => {
+    for (const dir of ['~notes', '.config/x', 'con', 'a /b', 'Trips/2026.', 'a:b']) {
+      const { go } = plan({ note: `${dir}/N.md` });
+      assert.equal(go.folder, dir, dir);
+      assert.equal(go.path, `${dir}/${go.fileName}`, dir);
+    }
+  });
+});

@@ -137,6 +137,38 @@ describe('the frame', () => {
   });
 
   // proves: export_self_explaining
+  test('wide characters, East Asian and emoji, count as about one em each, so titles and legends wrap in time', () => {
+    const lines = (svg, size) =>
+      [
+        ...svg.matchAll(new RegExp(`<text[^>]*font-size="${size}"[^>]*>((?:<tspan[^>]*>[^<]*</tspan>)+)</text>`, 'g')),
+      ].flatMap((m) => [...m[1].matchAll(/<tspan[^>]*>([^<]*)<\/tspan>/g)].map((t) => t[1]));
+    const wide = FRAME_MIN_WIDTH - 32;
+    for (const title of [
+      '京都の旅の計画と記録のまとめ'.repeat(4),
+      'ｆｕｌｌ－ｗｉｄｔｈ　ｔｅｘｔ'.repeat(4),
+      '🙂🌍🚀✨'.repeat(12),
+      '한국어로 쓴 제목입니다'.repeat(4),
+    ]) {
+      const f = framed(INNER, { ...TEXT, title }, PALETTES.light);
+      const said = lines(f.svg, px(STYLE.font_size));
+      assert.ok(said.length >= 2, title);
+      for (const line of said)
+        assert.ok(
+          [...line].length * ((STYLE.font_size * 4) / 3) <= wide,
+          `${line}: ${[...line].length} wide characters`,
+        );
+    }
+    // the legend wraps a long wide label too
+    const legend = [{ label: '京都の旅の計画と記録のまとめ'.repeat(3), fill: '#f8dfeb', stroke: '#a8336c' }];
+    const rows = lines(framed(INNER, { ...TEXT, legend }, PALETTES.light).svg, px(STYLE.edge_font_size));
+    assert.ok(rows.length >= 2);
+    for (const line of rows) assert.ok([...line].length * ((STYLE.edge_font_size * 4) / 3) <= wide - 20, line);
+    // plain letters are not made wider
+    const plain = framed(INNER, { ...TEXT, title: 'a'.repeat(30) }, PALETTES.light);
+    assert.equal(lines(plain.svg, px(STYLE.font_size)).length, 1);
+  });
+
+  // proves: export_self_explaining
   test('with no subtitle and no legend, there is no gap left for them', () => {
     const bare = framed(INNER, { title: 'trip', legend: [], footer: 'x' }, PALETTES.light);
     const full = framed(INNER, { ...TEXT, subtitle: 'a reading' }, PALETTES.light);

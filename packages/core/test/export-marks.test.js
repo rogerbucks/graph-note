@@ -5,6 +5,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { FADED_OPACITY, marked } from '../src/export-marks.ts';
 import { PALETTES } from '../src/palette.ts';
+import { STYLE_HUES } from '../src/style-graph.ts';
 import { hueColour } from '../src/theme.ts';
 
 const SVG = `<svg width="339" viewBox="0.00 0.00 254.00 163.00">
@@ -72,17 +73,42 @@ describe('a look', () => {
   const look = (things, links = new Map()) => ({ ...NONE, looks: { things: new Map(things), links } });
 
   // proves: styled_paths_and_views
-  test('draws a thing’s border and text in the locked blends of its hue, in the palette’s own colours', () => {
+  test('draws a thing’s outline in the locked line blend of its hue, in the palette’s own colours, and not its text', () => {
     for (const theme of ['light', 'dark']) {
       const p = PALETTES[theme];
       const out = marked(SVG, ['alice', 'bob', 'ten'], look([['alice', { hue: 'green' }]]), p);
       const g = group(out, 'node1');
       assert.ok(g.includes(`stroke:${hueColour('green', 'line', p)}`), theme);
-      assert.ok(g.includes(`fill:${hueColour('green', 'label', p)}`), theme);
-      // the box keeps its own fill
+      assert.ok(!g.includes(hueColour('green', 'label', p)), theme);
+      // the text and the box keep their own colours
+      assert.ok(g.includes('<text style="fill:#222222"'), theme);
       assert.ok(g.includes('fill:#f8dfeb'), theme);
       assert.doesNotMatch(out, /var\(--|color-mix\(/);
     }
+  });
+
+  // proves: styled_paths_and_views
+  test('keeps the locked 4.5:1 for the text on the box, whatever the look’s hue and the kind’s hue, in both themes', () => {
+    const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+    const lum = (hex) => {
+      const [r, g, b] = rgb(hex).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+    const contrast = (a, b) => (Math.max(lum(a), lum(b)) + 0.05) / (Math.min(lum(a), lum(b)) + 0.05);
+    let checked = 0;
+    for (const theme of ['light', 'dark']) {
+      const p = PALETTES[theme];
+      for (const kindHue of STYLE_HUES)
+        for (const lookHue of STYLE_HUES) {
+          const box = `<svg><g id="node1" class="node"><path style="fill:${hueColour(kindHue, 'fill', p)};stroke:${hueColour(kindHue, 'line', p)}" d="M1,1"/><text style="fill:${p.text}" x="1" y="1">A</text></g></svg>`;
+          const out = marked(box, ['a'], look([['a', { hue: lookHue, line: 'bold', format: 'bold' }]]), p);
+          const fill = /<path style="fill:(#[0-9a-f]{6})/.exec(out)[1];
+          const text = /<text style="fill:(#[0-9a-f]{6})/.exec(out)[1];
+          assert.ok(contrast(text, fill) >= 4.5, `${theme} ${lookHue} look on ${kindHue}: ${contrast(text, fill)}`);
+          checked++;
+        }
+    }
+    assert.equal(checked, 2 * STYLE_HUES.length ** 2);
   });
 
   // proves: styled_paths_and_views
@@ -108,14 +134,14 @@ describe('a look', () => {
   });
 
   // proves: styled_paths_and_views
-  test('draws a link in its hue, arrowhead included, and its label in the label blend', () => {
+  test('draws a link in its hue, arrowhead included, and leaves its label’s colour as it was', () => {
     const p = PALETTES.light;
     const out = marked(SVG, ['alice', 'bob', 'ten'], look([], new Map([[0, { hue: 'red', line: 'dashed' }]])), p);
     const g = group(out, 'edge1');
     const line = hueColour('red', 'line', p);
     assert.ok(g.includes(`<path style="stroke:${line};stroke-dasharray:6 4" fill="none"`), g);
     assert.ok(g.includes(`<polygon style="fill:${line};stroke:${line};stroke-dasharray:6 4"`), g);
-    assert.ok(g.includes(`fill:${hueColour('red', 'label', p)}`), g);
+    assert.ok(g.includes('<text style="fill:#874c11"'), g);
   });
 
   // proves: styled_paths_and_views
