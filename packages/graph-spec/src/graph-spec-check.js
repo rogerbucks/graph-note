@@ -22,6 +22,7 @@ const { ProfileError } = require('./reader/profile-error.js');
 const { COMMENT_RULE, COMMENT_FIX, header, tokens, quote } = require('./reader/tokens.js');
 const { checkSyntax } = require('./reader/syntax.js');
 const { Store, read } = require('./reader/store.js');
+const { ownedComments } = require('./reader/owned-comments.js');
 const { schemaFor, worldFromStore, canon, Graph } = require('./graph/graph.js');
 const { SPEC_SCHEMA, SPEC_NODES, SPEC_MARKERS, SPEC_EDGES, types, typed, untyped } = require('./rules/types.js');
 const { project, rebuild, projectsBack } = require('./rules/projection.js');
@@ -104,5 +105,6 @@ module.exports = {
   configFrom,
   joinDocs,
   pyrepr,
+  ownedComments,
   quote,
 };

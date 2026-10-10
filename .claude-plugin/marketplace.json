@@ -1,0 +1,12 @@
+{
+  "name": "graph-note",
+  "description": "Graph Note's Claude Code host, read from this repository's folder",
+  "owner": { "name": "rogerbucks", "url": "https://github.com/rogerbucks" },
+  "plugins": [
+    {
+      "name": "graph-note",
+      "source": "./packages/claude-code/mod",
+      "description": "/graph draws a graph note's first graph in a pane, with the Graph Note core"
+    }
+  ]
+}

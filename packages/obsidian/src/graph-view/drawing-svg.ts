@@ -3,6 +3,7 @@
 import { textVersion, withoutColorMix } from '@graph-note/core';
 import type { Drawn, GraphDrawing } from '@graph-note/core';
 import { boxLabel } from './suggested-name';
+import { markParked } from './parked';
 
 let described = 0;
 
@@ -50,6 +51,7 @@ export function insertSvg(viewport: HTMLElement, drawn: Drawn, d: GraphDrawing |
     g.setAttribute('role', 'button');
     g.setAttribute('aria-label', `Estimated link: ${textOf(e.from)} ${e.reading} ${textOf(e.to)}. Open it for why.`);
   }
+  markParked(svg, boxes); // things parked for later: dashed, with a later mark (spec §5)
   return svg;
 }
 

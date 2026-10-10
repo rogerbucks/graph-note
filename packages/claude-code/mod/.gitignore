@@ -1,0 +1,6 @@
+# Made by esbuild.config.mjs
+hooks/graph.js
+bin/render.mjs
+tests/fixtures.js
+# Written by Claude Code when it loads the mod
+.claude-plugin/types/
