@@ -172,6 +172,20 @@ describe('the counts', () => {
     );
     assert.deepEqual(summariseChecks(undefined), { passed: 0, failed: 0, running: 0 });
   });
+
+  test('an entry that is not an object is skipped, and one with neither status nor state is running', () => {
+    assert.deepEqual(summariseChecks([null, 'x', 4, undefined]), { passed: 0, failed: 0, running: 0 });
+    assert.deepEqual(summariseChecks([null, {}, { status: 'COMPLETED', conclusion: 'SUCCESS' }]), {
+      passed: 1,
+      failed: 0,
+      running: 1,
+    });
+  });
+
+  test('a rollup that is not a list is taken as empty', () => {
+    for (const rollup of [null, 'SUCCESS', 7, { status: 'COMPLETED', conclusion: 'SUCCESS' }])
+      assert.deepEqual(summariseChecks(rollup), { passed: 0, failed: 0, running: 0 });
+  });
 });
 
 describe('the page', () => {
@@ -325,6 +339,58 @@ describe('the page', () => {
     assert.doesNotMatch(outsideTokens, /#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i, 'a colour is written only as a token');
   });
 
+  test('the light and both dark token sets define exactly the same custom properties', () => {
+    const css = page().match(/<style>([\s\S]*?)<\/style>/)[1];
+    const names = (block) => [...block.matchAll(/(--[a-z0-9-]+):/g)].map((m) => m[1]).sort();
+    const light = names(/:root\s*\{([^}]*)\}/.exec(css)[1]);
+    const media = names(/:root:not\(\[data-theme="light"\]\)\s*\{([^}]*)\}/.exec(css)[1]);
+    const forced = names(/:root\[data-theme="dark"\]\s*\{([^}]*)\}/.exec(css)[1]);
+    assert.ok(light.length > 10);
+    assert.deepEqual(media, light);
+    assert.deepEqual(forced, light);
+  });
+
+  test('a bar is to scale: the proved, part and open segments start and run in proportion', () => {
+    const bar = /<svg class="bar"[^>]*>([\s\S]*?)<\/svg>/.exec(view(page(), 'overview'))[1];
+    const rects = [...bar.matchAll(/<rect class="seg-(\w+)" x="([\d.]+)" width="([\d.]+)"/g)].map((m) => m.slice(1));
+    assert.deepEqual(rects, [
+      ['proved', '0.000', '40.000'],
+      ['part', '40.000', '20.000'],
+      ['open', '60.000', '40.000'],
+    ]);
+  });
+
+  test('escapes where a test is kept and the file text, never letting a tag through', () => {
+    const text = FIXTURE.replace("where: 'outside the repo'", 'where: \'kept <u>away</u> & "far"\'').replace(
+      'test/three.test.js',
+      'test/<s>three</s>.test.js',
+    );
+    const html = renderBoard({ ...readBoard(text), slice: 2, date: DATE });
+    assert.doesNotMatch(html, /<u>|<s>/);
+    assert.match(html, /kept &lt;u&gt;away&lt;\/u&gt; &amp; &quot;far&quot;/);
+  });
+
+  test('a long rule, proof and file wrap or scroll rather than widen the page', () => {
+    const css = page().match(/<style>([\s\S]*?)<\/style>/)[1];
+    assert.match(css, /\.rule, \.proves \{[^}]*overflow-wrap:\s*anywhere/);
+    assert.match(css, /\.meta \{[^}]*font-variant-numeric:\s*tabular-nums/);
+  });
+
+  test('the altitude switch is a named group, with its labels for the radios', () => {
+    const html = page();
+    assert.match(html, /<div class="switch" role="group" aria-label="Altitude">/);
+    assert.match(html, /<label for="alt-working">Working<\/label>/);
+  });
+
+  test('a slice with no requirements says so on every altitude, and counts nothing as proved', () => {
+    const html = page({ slice: 9 });
+    for (const name of ['overview', 'working', 'full']) {
+      const v = view(html, name);
+      assert.match(v, /Slice 9 has no requirements/, name);
+      assert.doesNotMatch(v, /is proved|0 of 0 proved/, name);
+    }
+  });
+
   test('works at 400px: a 16px gutter, and nothing wider than the screen outside its own scroll box', () => {
     const css = page().match(/<style>([\s\S]*?)<\/style>/)[1];
     assert.match(css, /\.banner, \.board \{[^}]*padding:\s*0 16px/);
@@ -359,11 +425,39 @@ describe('the open pull requests panel', () => {
     assert.match(panel, /#72/);
   });
 
-  test('shows on Overview and on Working, and is hidden on Full, by CSS', () => {
+  test('shows on every altitude, Full included, by CSS', () => {
     const css = page({ prs: PRS }).match(/<style>([\s\S]*?)<\/style>/)[1];
     assert.match(css, /#alt-overview:checked ~ \.prs/);
     assert.match(css, /#alt-working:checked ~ \.prs/);
+    assert.match(css, /#alt-full:checked ~ \.prs/);
     assert.match(css, /\.prs\s*\{[^}]*display:\s*none/);
+  });
+
+  test('a pull request with no checks says "no checks yet", not three zero counts', () => {
+    const panel = /<section class="prs"[\s\S]*?<\/section>/.exec(page({ prs: PRS }))[0];
+    const second = panel.slice(panel.indexOf('#72'));
+    assert.match(second, /no checks yet/);
+    assert.doesNotMatch(second, /0 passed|0 failed|0 running/);
+    assert.doesNotMatch(panel.slice(0, panel.indexOf('#72')), /no checks yet/);
+    const bare = /<section class="prs"[\s\S]*?<\/section>/.exec(page({ prs: [{ number: 9, title: 't' }] }))[0];
+    assert.match(bare, /no checks yet/);
+  });
+
+  test('escapes an https url holding a quote or a tag, the branch name, and never breaks out of the attribute', () => {
+    const hostile = [
+      {
+        number: 5,
+        title: 'plain',
+        url: 'https://example.test/a"onmouseover="x<b>',
+        headRefName: 'feat/<i>"x"</i>',
+        mergeable: 'MERGEABLE',
+        statusCheckRollup: [],
+      },
+    ];
+    const panel = /<section class="prs"[\s\S]*?<\/section>/.exec(page({ prs: hostile }))[0];
+    assert.match(panel, /<a href="https:\/\/example\.test\/a&quot;onmouseover=&quot;x&lt;b&gt;">/);
+    assert.doesNotMatch(panel, /<i>|<b>|"onmouseover/);
+    assert.match(panel, /feat\/&lt;i&gt;&quot;x&quot;&lt;\/i&gt;/);
   });
 
   test('an empty list says there are none open', () => {

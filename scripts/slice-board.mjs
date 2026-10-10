@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Prints a self-contained HTML progress board for the slice being built (spec §12, requirements_checked_in_ci), read
 // from the generated requirements copy with the repo's own graph-spec reader. A requirement is proved when it names a
-// test and every one is written, part when some are, open otherwise. The page is CSS only: no script, font, image or
+// test and every one is written, part when some are, open otherwise. The board counts the requirements whose slice
+// equals N exactly, unlike check-requirements.mjs, which holds every slice up to the current one (<=). The page is CSS only: no script, font, image or
 // request, so it opens offline, and it switches between three altitudes (Overview, Working, Full) with radio inputs.
 //
 // Usage:
@@ -101,10 +102,19 @@ export function summariseBySection(requirements, sections, slice) {
   }));
 }
 
-/** A pull request's CI rollup as {passed, failed, running}, from check runs and from commit statuses. */
+/**
+ * A pull request's CI rollup as {passed, failed, running}, from check runs and from commit statuses. A rollup that is
+ * not a list counts nothing, an entry that is not an object is skipped, and one with neither status nor state is running.
+ */
 export function summariseChecks(rollup) {
   const counts = { passed: 0, failed: 0, running: 0 };
-  for (const c of rollup ?? []) {
+  if (!Array.isArray(rollup)) return counts;
+  for (const c of rollup) {
+    if (c === null || typeof c !== 'object') continue;
+    if (c.status === undefined && c.state === undefined) {
+      counts.running += 1;
+      continue;
+    }
     const done = c.status === undefined ? !/^(PENDING|EXPECTED)$/.test(c.state) : c.status === 'COMPLETED';
     if (!done) counts.running += 1;
     else if (/^(SUCCESS|NEUTRAL|SKIPPED)$/.test(c.conclusion || c.state)) counts.passed += 1;
@@ -159,12 +169,13 @@ h3 { margin: 24px 0 8px; font-size: 1rem; color: var(--muted); }
 .view { display: none; }
 .prs { display: none; margin: 0 0 24px; padding: 16px; border: 1px solid var(--border); border-radius: 10px;
   background: var(--surface); }
-#alt-overview:checked ~ .prs, #alt-working:checked ~ .prs { display: block; }
+#alt-overview:checked ~ .prs, #alt-working:checked ~ .prs, #alt-full:checked ~ .prs { display: block; }
 .prs ul { margin: 0; padding: 0; list-style: none; }
 .pr { padding: 8px 0; border-top: 1px solid var(--border); overflow-wrap: anywhere; }
 .pr:first-child { border-top: 0; }
 .pr a { color: var(--link); font-weight: 600; }
 .pr .meta { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+.meta { font-variant-numeric: tabular-nums; }
 .ci-passed { color: var(--proved-text); } .ci-failed { color: var(--open-text); } .ci-running { color: var(--part-text); }
 .big { font-size: 2rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 .counts, .section-counts { font-variant-numeric: tabular-nums; color: var(--muted); }
@@ -186,6 +197,7 @@ svg.bar { display: block; width: 100%; max-width: 100%; height: 14px; border-rad
 .req-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
 .id { font-weight: 700; overflow-wrap: anywhere; }
 .level { font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.rule, .proves { overflow-wrap: anywhere; }
 .rule { margin: 6px 0; }
 .tests { margin: 8px 0 0; padding: 0; list-style: none; font-size: 0.9rem; }
 .test { padding: 6px 0; border-top: 1px dashed var(--border); }
@@ -244,7 +256,12 @@ ${requirements
     )
     .join('\n');
 
+const emptySlice = (board, slice) => !board.requirements.some((r) => r.slice === slice);
+const noRequirements = (slice) => `<p class="none">Slice ${slice} has no requirements.</p>`;
+
 const overviewView = (board, slice) => {
+  if (emptySlice(board, slice))
+    return `<section class="view view-overview">\n<h2>Slice ${slice}</h2>\n${noRequirements(slice)}\n</section>`;
   const total = summarise(board.requirements, slice);
   const rows = summariseBySection(board.requirements, board.sections, slice).map(
     (s) => `<li class="section-row"><span class="section-name">${sectionLabel(s.num, s.title)}</span>${bar(s)}
@@ -260,14 +277,18 @@ const overviewView = (board, slice) => {
 
 const workingView = (board, slice) => {
   const left = board.requirements.filter((r) => r.status !== 'proved');
-  const body = left.some((r) => r.slice === slice)
-    ? grouped(left, board.sections, slice)
-    : `<p>Nothing left: every requirement of slice ${slice} is proved.</p>`;
+  let body = noRequirements(slice);
+  if (!emptySlice(board, slice))
+    body = left.some((r) => r.slice === slice)
+      ? grouped(left, board.sections, slice)
+      : `<p>Nothing left: every requirement of slice ${slice} is proved.</p>`;
   return `<section class="view view-working">\n<h2>Still to prove</h2>\n${body}\n</section>`;
 };
 
-const fullView = (board, slice) =>
-  `<section class="view view-full">\n<h2>Every requirement of slice ${slice}</h2>\n${grouped(board.requirements, board.sections, slice)}\n</section>`;
+const fullView = (board, slice) => {
+  const body = emptySlice(board, slice) ? noRequirements(slice) : grouped(board.requirements, board.sections, slice);
+  return `<section class="view view-full">\n<h2>Every requirement of slice ${slice}</h2>\n${body}\n</section>`;
+};
 
 const MERGE_CHIP = { mergeable: 'proved', conflicting: 'open' };
 
@@ -276,9 +297,14 @@ const prItem = (pr) => {
   const mergeable = String(pr.mergeable ?? 'unknown').toLowerCase();
   const heading = `#${esc(pr.number)} ${esc(pr.title)}`;
   const link = /^https?:\/\//i.test(String(pr.url)) ? `<a href="${esc(pr.url)}">${heading}</a>` : heading;
+  const chip = Object.hasOwn(MERGE_CHIP, mergeable) ? MERGE_CHIP[mergeable] : 'part';
+  const checks =
+    ci.passed + ci.failed + ci.running
+      ? `<span class="ci-passed">${ci.passed} passed</span><span class="ci-failed">${ci.failed} failed</span><span class="ci-running">${ci.running} running</span>`
+      : '<span class="ci-none">no checks yet</span>';
   return `<li class="pr">${link}
-<div class="meta"><span>${esc(pr.headRefName)}</span><span class="chip chip-${MERGE_CHIP[mergeable] ?? 'part'}">${esc(mergeable)}</span>
-<span class="ci-passed">${ci.passed} passed</span><span class="ci-failed">${ci.failed} failed</span><span class="ci-running">${ci.running} running</span></div></li>`;
+<div class="meta"><span>${esc(pr.headRefName)}</span><span class="chip chip-${chip}">${esc(mergeable)}</span>
+${checks}</div></li>`;
 };
 
 const prsPanel = (prs) => `<section class="prs">
@@ -302,9 +328,9 @@ export function renderBoard({ sections, requirements, slice, date, prs, standalo
   const content = `<p class="banner">${banner}</p>
 <div class="board">
 ${radios}
-<nav class="switch" aria-label="Altitude">
+<div class="switch" role="group" aria-label="Altitude">
 ${labels}
-</nav>
+</div>
 <ul class="legend" aria-label="Legend">
 ${legend}
 </ul>
