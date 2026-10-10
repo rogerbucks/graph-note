@@ -11,9 +11,14 @@ own metadata.
 import importlib.metadata as md
 import os
 import re
+import sys
 import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+
+from engine_support import needs_engine  # noqa: E402
+
 ALLOWED = {"MIT", "ISC", "BSD-2-Clause", "BSD-3-Clause", "Apache-2.0", "0BSD", "Zlib"}
 CLASSIFIERS = {
     "License :: OSI Approved :: MIT License": "MIT",
@@ -52,6 +57,9 @@ def licences(name):
     return found
 
 
+# every locked package, the engine and the dev tools among them: what a dev install has, as CI's
+# python job runs it; a plain install leaves them out
+@needs_engine
 class Licences(unittest.TestCase):
     def test_there_are_packages_to_check(self):
         self.assertGreater(len(locked_packages()), 0)

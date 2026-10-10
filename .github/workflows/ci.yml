@@ -71,7 +71,38 @@ jobs:
       - run: uv sync --locked
       - run: uv run --locked ruff check
       - run: uv run --locked ruff format --check
+      # a working copy has the reference engine, Grafeo: every test that needs it runs here, and fails if it is missing
       - run: uv run --locked python -m unittest discover -s tests
+        env:
+          GRAPH_SPEC_ENGINE: required
+
+  # A plain install, with Grafeo not installed (req:14.no-engine-install): reading, checking, joining and drawing pass
+  # without it; only the tests that need the engine are skipped.
+  python-no-engine:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python/graph_spec
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # The parity tests read the shared cases through Node, and run the core's reader, which needs the packages.
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - run: npm ci
+        working-directory: .
+      - run: npm audit signatures
+        working-directory: .
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: 0.12.17
+          enable-cache: false
+      - run: uv sync --locked --no-default-groups
+      - name: Grafeo is not installed
+        run: "! uv run --locked --no-default-groups python -c 'import grafeo'"
+      - run: uv run --locked --no-default-groups python -m unittest discover -s tests
 
   # Every test is seen to fail before its code (spec §12): each new commit is replayed, its tests run against its
   # parent's code, and a new test that passes there fails the build unless test/seen-failing.json gives the reason.

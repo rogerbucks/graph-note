@@ -16,10 +16,12 @@ import sys
 import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src"))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # the library's modules are flat files in src/, importable only once it is on sys.path
 import gql_profile as gp  # noqa: E402
 import graph_spec as gs  # noqa: E402
+from engine_support import needs_engine  # noqa: E402
 
 FIRST = "\n".join(
     [
@@ -89,6 +91,7 @@ class BareTypes(unittest.TestCase):
         self.assertEqual(read(FIRST).bares, [])
 
 
+@needs_engine
 class EngineGetsCorrected(unittest.TestCase):
     """No route may give an engine a block that still holds a bare type: to_gql refuses one, and
     each route gives Grafeo the reader's corrected text (tests/test_engine_gets_corrected.py).

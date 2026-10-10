@@ -25,4 +25,6 @@ A host puts `src/` on `sys.path` and imports the four entry points by name. Each
 
 `test_reader_agrees_with_grafeo.py` holds the reader and its plain rules to Grafeo's answers (req:17.engine-agreement), on the shared cases and on generic cases in `tests/agreement/` (one JSON file per area, each block a list of lines; `classification.md` there is a generic destination matrix). Grafeo is the reference only: a test dependency, never one the readers need.
 
+Grafeo is not installed by a plain install (req:14.no-engine-install): it is the `grafeo` extra, for database work, and the `reference` dependency group of a working copy. A test that needs it uses `engine_support.needs_engine` (or `module_needs_engine` in `setUpModule`): skipped without Grafeo, as CI's `python-no-engine` job runs (`uv sync --locked --no-default-groups`), but run and failed in CI's `python` job, which sets `GRAPH_SPEC_ENGINE=required`.
+
 Otherwise named after the module they test. `test_<entry point>_entry_point.py` hold each entry point to every name it had (`entry_points.json`) and to importing with only `src/` on the path.

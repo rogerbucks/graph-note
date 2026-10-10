@@ -14,10 +14,12 @@ from unittest import mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "src"))
+sys.path.insert(0, HERE)
 
 # the library's modules are flat files in src/, importable only once it is on sys.path
 import graph_spec as gs  # noqa: E402
 from graphspec.engine import settings  # noqa: E402
+from engine_support import needs_engine  # noqa: E402
 
 NOTE = """| | Unmoderated | Public | Private |
 |---|---|---|---|
@@ -51,6 +53,7 @@ class SettingsForwarded(unittest.TestCase):
             self.assertIs(getattr(settings, n), value, n)
             self.assertIs(getattr(gs, n), value, n)
 
+    @needs_engine
     def test_the_parser_a_host_names_is_the_one_used(self):
         gs.PARSER = "profile"
         self.assertIs(

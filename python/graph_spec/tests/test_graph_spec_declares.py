@@ -12,9 +12,11 @@ import sys
 import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src"))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # the library's modules are flat files in src/, importable only once it is on sys.path
 import graph_spec as gs  # noqa: E402
+from engine_support import needs_engine  # noqa: E402
 
 DATA = "(a:Book {title: 'A'}),\n(p:Person {name: 'P'}),\n(p)-[:WROTE]->(a),\n"
 SCHEMA = (
@@ -31,6 +33,7 @@ def loaded(declares, extra=""):
     return gs.load("// graph: g\n" + DATA + SCHEMA + links + extra)
 
 
+@needs_engine  # the declares rule as the engine checks it; graph_rules' twin needs none
 class Declares(unittest.TestCase):
     def test_declared_by_the_graphmeta_passes(self):
         self.assertTrue(gs.typed(loaded(["kind_book", "kind_person", "link_wrote"])))
