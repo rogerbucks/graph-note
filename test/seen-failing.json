@@ -472,13 +472,25 @@
     }
   },
   "packages/obsidian/test/layout-worker.test.js": {
-    "where Workers run > the worker’s code stands alone: every helper it calls is its own, never one of main.js’s, such as __name": {
-      "seen_failing_first": false,
-      "evidence": "a guard, asked for in review: the worker's code was already self-contained, so it passes before and after by design; it fails the day a build option such as keepNames makes the worker call one of main.js's helpers. Its file's run against the code before 7590e45 did not finish in the replay's ten minutes, so it was never seen either way"
-    },
     "a graph over a size limit is shown as its text, with a banner saying which limit and the numbers > a block too large to read — 600 kB, each line broken — is its text and a banner at once, never read": {
       "seen_failing_first": false,
       "evidence": "renamed in 6a50e41 from its 5 MB form of 7590e45, so it passed against its parent, which already holds the read limit. Its name was wrong (the block is one pattern left open, not a line of broken parts), and the claim then that it fails in seconds against the code before the limit was not verified; its successor's name and reason say what was"
+    },
+    "a graph over a size limit is shown as its text, with a banner saying which limit and the numbers > a block too large to read — 600 kB, one pattern left open — is its text and a banner at once, never read": {
+      "seen_failing_first": false,
+      "evidence": "renamed in ff02d6d to what it holds, so it passes against its parent, which already holds the read limit. That it fails against the code before the limit (81951ea) is UNVERIFIED: checking that code out over the source to run it was refused by the session's permission classifier, and Roger chose to mark it unverified (10 Oct 2026)"
+    }
+  },
+  "packages/core/test/layout-limits.test.js": {
+    "the note’s text, measured before it is read > over the limits the plugin draws nothing, so there is nothing to hold to the Python reader (drawn_in_part)": {
+      "seen_failing_first": false,
+      "evidence": "a control case, asked for in review (ff02d6d): it documents the plugin's own exception to drawn_in_part, which 7590e45 already made, so it passes before and after by design"
+    }
+  },
+  "python/graph_spec/tests/test_parity.py": {
+    "ReadingCut.test_past_the_budget_the_core_and_python_leave_out_the_same": {
+      "seen_failing_first": false,
+      "evidence": "it does fail against its parent, where read_for_drawing takes no budget (a TypeError in each subTest), but the replay's Python runner (scripts/tests-first.mjs PY_RUNNER) counts a test by its own result and not its subTests', so it was recorded as passing first; its sibling test_a_small_budget_cuts_and_a_large_one_does_not, with no subTests, was seen failing"
     }
   }
 }
