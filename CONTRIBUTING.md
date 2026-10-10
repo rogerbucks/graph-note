@@ -128,6 +128,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/requirements.test.js` — the generated requirements copy: started requirements proved, tests where they say.
 - `test/test-vault.test.js` — the test vault: dummy notes tied to requirements, nothing Obsidian writes committed, each session clean.
 - `test/tests-first.test.js` — every test is seen to fail before its code, replayed commit by commit.
+- `test/tests-first-run.test.js` — one run of one test file in that replay: what its report shows, and why it did not finish.
 - `test/whitespace.test.js` — the three copies of the one whitespace set are the same, and the set is openGQL's.
 
 ## The quality ratchet
