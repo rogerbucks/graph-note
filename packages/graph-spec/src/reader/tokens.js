@@ -43,6 +43,10 @@ function header(block) {
 const COMMENT_RULE =
   'a comment must be on a line of its own: // also occurs inside identifiers, such as ni:/// hashes (§3)';
 const COMMENT_FIX = 'put the comment on its own line';
+// the start of a text, cut at n UTF-16 units and never inside an emoji, as Python's reader cuts it too
+function excerpt(s, n = 20) {
+  return s.slice(0, s.length > n && /[\uD800-\uDBFF]/.test(s[n - 1]) ? n - 1 : n);
+}
 function tokens(block) {
   const out = [];
   block.split('\n').forEach((raw, i) => {
@@ -57,7 +61,7 @@ function tokens(block) {
       if (!m)
         throw new ProfileError(
           n,
-          `cannot read '${trim(raw.slice(pos)).slice(0, 20)}'`,
+          `cannot read '${excerpt(trim(raw.slice(pos)))}'`,
           'a data block holds only nodes, relationships and simple values',
         );
       let kind =

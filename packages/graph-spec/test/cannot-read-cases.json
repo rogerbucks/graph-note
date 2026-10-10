@@ -1,0 +1,20 @@
+{
+  "about": "A line neither reader can read is quoted from its start, cut at 20 UTF-16 units, never inside an emoji: a cut that would split one moves back a unit. Read by packages/core/test/layout-parity.test.js and python/graph_spec/tests/test_parity.py; each holds its reader to the excerpt here and to the other reader's message (10 Oct 2026).",
+  "cases": [
+    {
+      "name": "an emoji across the 20th unit, left out whole",
+      "block": "// graph: trip\n(home:Place {name: 'Home'}),\n@abcdefghijklmnopqr🏠 and more",
+      "excerpt": "@abcdefghijklmnopqr"
+    },
+    {
+      "name": "an emoji ending on the 20th unit, kept whole",
+      "block": "// graph: trip\n(home:Place {name: 'Home'}),\n@abcdefghijklmnopq🏠 and more",
+      "excerpt": "@abcdefghijklmnopq🏠"
+    },
+    {
+      "name": "a line of emoji, ten of them in 20 units",
+      "block": "// graph: trip\n(home:Place {name: 'Home'}),\n🚌🚌🚌🚌🚌🚌🚌🚌🚌🚌🚌",
+      "excerpt": "🚌🚌🚌🚌🚌🚌🚌🚌🚌🚌"
+    }
+  ]
+}

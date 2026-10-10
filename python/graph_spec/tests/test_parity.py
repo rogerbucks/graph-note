@@ -220,5 +220,42 @@ class ReadingCut(unittest.TestCase):
         self.assertFalse(any(CUT_SAID in p["message"] for p in whole))
 
 
+# A line neither reader can read is quoted cut at 20 UTF-16 units, never inside an emoji, by both
+# readers (review of PR #28): the cases are shared with packages/core/test/layout-parity.test.js.
+with open(os.path.join(JS_TEST, "cannot-read-cases.json"), encoding="utf-8") as f:
+    CANNOT_READ = json.load(f)["cases"]
+
+
+def cannot_read(messages):
+    return [m for m in messages if "cannot read" in m]
+
+
+def core_messages(blocks):
+    """The core's problem messages for each block, read alone, by Node."""
+    script = (
+        "import(process.argv[1]).then((m) => process.stdout.write(JSON.stringify("
+        "JSON.parse(process.argv[2]).map((b) => m.readBlocks([b], []).problems"
+        ".map((p) => p.message)))))"
+    )
+    out = subprocess.run(
+        ["node", "-e", script, "file://" + CORE, json.dumps(blocks)],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
+    return json.loads(out)
+
+
+class CannotRead(unittest.TestCase):
+    def test_a_line_that_cannot_be_read_is_quoted_the_same_by_both_readers(self):
+        core = core_messages([c["block"] for c in CANNOT_READ])
+        # a plain loop, never subTest: the tests-first replay counts a test by its own result
+        for c, theirs in zip(CANNOT_READ, core):
+            ours = cannot_read(p["message"] for p in gp.read_for_drawing([c["block"]])[1])
+            self.assertEqual(len(ours), 1, c["name"])
+            self.assertIn(f"cannot read '{c['excerpt']}'", ours[0], c["name"])
+            self.assertEqual(ours, cannot_read(theirs), c["name"])
+
+
 if __name__ == "__main__":
     unittest.main()

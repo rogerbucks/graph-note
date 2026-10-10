@@ -4,6 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { gqlBlocks } from '../src/blocks.ts';
 import { readNote } from '../src/drawing.ts';
@@ -231,6 +232,31 @@ test('a link written to a suggested name links to the thing drawn under it, the 
     r.problems.map((p) => p.suggested),
     ['large_reader'],
   );
+});
+
+// a line neither reader can read is quoted cut at 20 UTF-16 units, never inside an emoji, by both readers (review of
+// PR #28): the cases are shared with python/graph_spec/tests/test_parity.py
+const { cases: CANNOT_READ } = JSON.parse(
+  readFileSync(new URL('../../graph-spec/test/cannot-read-cases.json', import.meta.url), 'utf8'),
+);
+const cannotRead = (problems) => problems.map((p) => p.message).filter((m) => m.includes('cannot read'));
+
+test('a line that cannot be read is quoted the same by both readers, cut at 20 UTF-16 units, never inside an emoji', () => {
+  const prog =
+    `import json, sys\nsys.path.insert(0, ${JSON.stringify(PY_SRC)})\nimport gql_profile as gp\n` +
+    'print(json.dumps([[p["message"] for p in gp.read_for_drawing([b])[1]] for b in json.load(sys.stdin)]))';
+  const r = spawnSync('python3', ['-c', prog], {
+    input: JSON.stringify(CANNOT_READ.map((c) => c.block)),
+    encoding: 'utf8',
+  });
+  assert.equal(r.status, 0, r.stderr);
+  const python = JSON.parse(r.stdout);
+  CANNOT_READ.forEach((c, n) => {
+    const core = cannotRead(readNote([c.block]).problems);
+    assert.equal(core.length, 1, `${c.name}: one line cannot be read`);
+    assert.ok(core[0].includes(`cannot read '${c.excerpt}'`), `${c.name}: ${core[0]}`);
+    assert.deepEqual(cannotRead(python[n].map((message) => ({ message }))), core, c.name);
+  });
 });
 
 // Whitespace is what GQL names, in every reader, never the language's own idea of it; a line ends at LF only
