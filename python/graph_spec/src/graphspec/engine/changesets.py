@@ -169,7 +169,8 @@ def check_changeset(
         "; ".join(f"line {x['line']}: {x['trap']} → {x['fix']}" for x in found),
     )
     # the reader reads the base, then the change set, each in its graph, before Grafeo is given
-    # either; Grafeo is given nothing the reader refuses (req:3.engine-reads-first). Grafeo loads
+    # either; Grafeo is given nothing the reader refuses (req:3.engine-reads-first), and what it
+    # is given is the reader's corrected text (req:3.engine-gets-corrected). Grafeo loads
     # a base text into the graph its tuple gives, the reader into the one its first line names, so
     # the two must be one graph
     st = Store()
@@ -194,7 +195,7 @@ def check_changeset(
             db.execute(f"CREATE GRAPH {g}")
             made.append(g)
         db.set_graph(g)
-        db.execute(strip(text))
+        db.execute(strip(st.corrected(text)))
     if h["graph"] not in made:
         add(f"its graph {h['graph']} is one of the base's", False, f"the base holds {made}")
         return res, h, None
@@ -239,7 +240,7 @@ def check_changeset(
         add("it loads", False, f"the reader could not read it — {e}")
         return res, h, None
     try:
-        db.execute(strip(block))
+        db.execute(strip(st.corrected(block)))
     except Exception as e:
         add("it loads", False, f"Grafeo could not run it — {str(e).splitlines()[0][:200]}")
         return res, h, None

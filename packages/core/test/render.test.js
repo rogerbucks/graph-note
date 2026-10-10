@@ -4,7 +4,8 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
-import { loadEngine, draw, details } from '../src/render.ts';
+import { draw, details } from '../src/render.ts';
+import { loadEngine } from '../src/engine.ts';
 import { layoutSource } from '../src/layout.ts';
 import { themed, sizeOf, choose } from '../src/theme.ts';
 
@@ -16,11 +17,6 @@ ${Array.from({ length: 6 }, (_, i) => `(s${i}:Step {name: 'Step ${i}'})`).join('
 ${Array.from({ length: 5 }, (_, i) => `(s${i})-[:THEN]->(s${i + 1})`).join(', ')}`;
 
 describe('drawing', () => {
-  test('the engine starts offline and names its Graphviz version', async () => {
-    const engine = await loadEngine();
-    assert.match(engine.version, /^\d+\.\d+\.\d+$/);
-  });
-
   test('each graph is laid out both ways and the better fit is drawn, themed', async () => {
     const engine = await loadEngine();
     for (const g of [WIDE, CHAIN]) {

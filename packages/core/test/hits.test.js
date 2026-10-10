@@ -4,7 +4,8 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
-import { loadEngine, draw } from '../src/render.ts';
+import { draw } from '../src/render.ts';
+import { loadEngine } from '../src/engine.ts';
 import { hitAreas, nearby, TapCycle } from '../src/hits.ts';
 
 // As Graphviz writes it: a translate on the graph, rounded boxes as paths, a link as a curve, its arrowhead and its label

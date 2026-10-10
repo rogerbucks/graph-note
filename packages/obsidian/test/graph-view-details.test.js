@@ -59,7 +59,10 @@ describe('a tap near things', () => {
   before(async () => {
     env = await load();
     const { readNote } = await import('../../core/src/drawing.ts');
-    const { loadEngine, draw } = await import('../../core/src/render.ts');
+    const [{ loadEngine }, { draw }] = await Promise.all([
+      import('../../core/src/engine.ts'),
+      import('../../core/src/render.ts'),
+    ]);
     const { hitAreas } = await import('../../core/src/hits.ts');
     areas = hitAreas(draw(readNote([GRAPH]).graphs.get('reader'), await loadEngine()).svg);
     el = (await show(env, fence(GRAPH))).el;
