@@ -22,7 +22,7 @@ from graphspec.engine.documents.fill import compute  # noqa: E402
 
 HEAD = "// graph: g · document doc:one · schema s1 · as of 2026-10-01"
 TWO = "(a:T {id: 'a'}),\n(b:T {id: 'b'})"
-SET_ID = "^line 4: SET would change b's id, and a node's id never changes — "
+SET_ID = r"^line 4: SET would change b's id, and a node's id never changes \(§3\) — "
 NOT_TEXT = "^line {line}: id {written} is not text — write id: {quoted} — "
 
 
@@ -78,7 +78,7 @@ class RoutesRefuseASetOfId(unittest.TestCase):
         base = [("g", f"// graph: g\n{TWO}")]
         block = f"// graph: g · CHANGE SET cs1 · against {state_hash(base)} · by a\nSET b.id = 'c'"
         results = gs.check_changeset(base, block)[0]
-        self.assertTrue(refused(results, "a node's id never changes"), results)
+        self.assertTrue(refused(results, "a node's id never changes (§3)"), results)
 
 
 class RoutesRefuseANonTextId(unittest.TestCase):

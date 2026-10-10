@@ -37,7 +37,7 @@ describe('req:3.set-keeps-id: SET never changes a node’s id', () => {
       const r = refusal(`${TWO}\n${set}`);
       assert.ok(r, name);
       assert.equal(r[0], 4, name);
-      assert.equal(r[1], "SET would change b's id, and a node's id never changes", name);
+      assert.equal(r[1], "SET would change b's id, and a node's id never changes (§3)", name);
       assert.equal(r[2], 'write the right node, then link b to it or supersede it (§12)', name);
     }
   });
@@ -47,7 +47,7 @@ describe('req:3.set-keeps-id: SET never changes a node’s id', () => {
       const r = refusal(TWO, `// graph: g\n${set}`);
       assert.ok(r, name);
       assert.equal(r[0], 2, name);
-      assert.equal(r[1], "SET would change b's id, and a node's id never changes", name);
+      assert.equal(r[1], "SET would change b's id, and a node's id never changes (§3)", name);
     }
   });
 
@@ -55,7 +55,7 @@ describe('req:3.set-keeps-id: SET never changes a node’s id', () => {
     assert.equal(refusal(TWO, "// graph: g\nMATCH (x:T {id: 'b'})\nSET x.id = 'c'")[0], 3);
     assert.deepEqual(refusal(TWO, "// graph: g\nSET a.name = 'A',\n  b.id = 'c'").slice(0, 2), [
       3,
-      "SET would change b's id, and a node's id never changes",
+      "SET would change b's id, and a node's id never changes (§3)",
     ]);
   });
 
@@ -69,7 +69,7 @@ describe('req:3.set-keeps-id: SET never changes a node’s id', () => {
   test('req:3.set-keeps-id: the syntax check refuses a SET of id as the store does', () => {
     const e = gs.checkSyntax("// graph: g\nSET b.id = 'c'");
     assert.ok(e instanceof gs.ProfileError);
-    assert.deepEqual([e.line, e.msg], [2, "SET would change b's id, and a node's id never changes"]);
+    assert.deepEqual([e.line, e.msg], [2, "SET would change b's id, and a node's id never changes (§3)"]);
   });
 
   test('req:3.set-keeps-id: a SET of any other key is still read, in the same block and in a later one', () => {
@@ -119,6 +119,22 @@ describe('req:3.id-is-text: a node’s id is always text', () => {
     const e = gs.checkSyntax('// graph: g\n(b:T {id: 1})');
     assert.ok(e instanceof gs.ProfileError);
     assert.deepEqual([e.line, e.msg], [2, 'id 1 is not text']);
+  });
+
+  test('req:3.id-is-text and req:3.set-keeps-id: a missing comma hides neither id refusal', () => {
+    // the missing comma's retry keeps the refusal it meets, so neither is given as "unexpected '('" (review of #49)
+    const fix = "write id: '1' — a node's id is always text (§3)";
+    assert.deepEqual(refusal("// graph: g\n(a:T {id: 'a'})\n(b:T {id: 1})"), [3, 'id 1 is not text', fix]);
+    assert.deepEqual(refusal("// graph: g\n(a:T {id: 'a'})\n(b:T {name: 'B'})-[:R]->(c:T {id: TRUE})").slice(0, 2), [
+      3,
+      'id TRUE is not text',
+    ]);
+    const e = gs.checkSyntax("// graph: g\n(a:T {id: 'a'})\n(b:T {id: 1})");
+    assert.deepEqual([e.line, e.msg, e.fix], [3, 'id 1 is not text', fix]);
+    assert.deepEqual(refusal("// graph: g\n(a:T {id: 'a'})\n(b:T {id: 'b'})\nSET b.id = 'c'").slice(0, 2), [
+      4,
+      "SET would change b's id, and a node's id never changes (§3)",
+    ]);
   });
 
   test('req:3.id-is-text: a text id is read, a number among the other properties too', () => {

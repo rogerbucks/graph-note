@@ -19,7 +19,7 @@ from graphspec.reader.store import Store  # noqa: E402
 from graphspec.reader.syntax_check import check_syntax  # noqa: E402
 
 TWO = "// graph: g\n(a:T {id: 'a'}),\n(b:T {id: 'b'})"
-SET_ID = "SET would change b's id, and a node's id never changes"
+SET_ID = "SET would change b's id, and a node's id never changes (§3)"
 
 # SET b.id to an id another node has, to a fresh id, to the node's own id, and to a number
 SETS = ["SET b.id = 'a'", "SET b.id = 'c'", "SET b.id = 'b'", "SET b.id = 1"]
@@ -141,6 +141,24 @@ class IdIsText(unittest.TestCase):
         e = check_syntax("// graph: g\n(b:T {id: 1})")
         self.assertIsInstance(e, ProfileError)
         self.assertEqual((e.line, e.message), (2, "id 1 is not text"))
+
+    def test_a_missing_comma_hides_neither_id_refusal(self):
+        # req:3.id-is-text and req:3.set-keeps-id: the missing comma's retry keeps the refusal it
+        # meets, so neither is given as "unexpected '('" (review of #49)
+        fix = "write id: '1' — a node's id is always text (§3)"
+        self.assertEqual(
+            refusal("// graph: g\n(a:T {id: 'a'})\n(b:T {id: 1})"), (3, "id 1 is not text", fix)
+        )
+        self.assertEqual(
+            refusal("// graph: g\n(a:T {id: 'a'})\n(b:T {name: 'B'})-[:R]->(c:T {id: TRUE})")[:2],
+            (3, "id TRUE is not text"),
+        )
+        e = check_syntax("// graph: g\n(a:T {id: 'a'})\n(b:T {id: 1})")
+        self.assertEqual((e.line, e.message, e.fix), (3, "id 1 is not text", fix))
+        self.assertEqual(
+            refusal("// graph: g\n(a:T {id: 'a'})\n(b:T {id: 'b'})\nSET b.id = 'c'")[:2],
+            (4, SET_ID),
+        )
 
     def test_a_text_id_is_read_and_a_number_among_the_other_properties_too(self):
         # req:3.id-is-text

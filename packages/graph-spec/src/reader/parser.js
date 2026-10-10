@@ -5,6 +5,10 @@ const { GTime } = require('../values/times.js');
 const { ProfileError } = require('./profile-error.js');
 const { unquote, utcNaive } = require('./tokens.js');
 
+/** A node's id written as a value that is not text (§3, req:3.id-is-text): the missing comma's retry keeps it, never
+ * taking it for a pattern that is not one. */
+class IdNotTextError extends ProfileError {}
+
 class Parser {
   constructor(t) {
     this.t = t;
@@ -85,7 +89,7 @@ class Parser {
     else if (k === 'kw' && (t === 'DATE' || t === 'DATETIME') && next[0] === 'str')
       [written, quoted] = [`${raw} ${next[1]}`, next[1]];
     else return;
-    throw new ProfileError(n, `id ${written} is not text`, `write id: ${quoted} — a node's id is always text (§3)`);
+    throw new IdNotTextError(n, `id ${written} is not text`, `write id: ${quoted} — a node's id is always text (§3)`);
   }
   props(node = false) {
     const out = {};
@@ -167,7 +171,8 @@ class Parser {
             paths.push(p);
             continue;
           } catch (e) {
-            if (!(e instanceof ProfileError)) throw e;
+            // its id refused, never hidden as "unexpected '('" (review of #49)
+            if (!(e instanceof ProfileError) || e instanceof IdNotTextError) throw e;
             this.i = at;
           }
         }
@@ -185,7 +190,7 @@ class Parser {
         if (key === 'id')
           throw new ProfileError(
             n,
-            `SET would change ${v}'s id, and a node's id never changes`,
+            `SET would change ${v}'s id, and a node's id never changes (§3)`,
             `write the right node, then link ${v} to it or supersede it (§12)`,
           );
         this.take('p', '=');

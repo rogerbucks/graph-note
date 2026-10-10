@@ -453,12 +453,13 @@ ENGINE_BLOCKS = {
 
 
 def core_refusals_of(notes):
-    """The core's errors for each note, its blocks read together, by Node: block, line and
-    message."""
+    """The core's errors for each note, its blocks read together, by Node: block, line, message
+    and fix."""
     script = (
         "import(process.argv[1]).then((m) => process.stdout.write(JSON.stringify("
         "JSON.parse(process.argv[2]).map((bs) => m.readBlocks(bs, []).problems"
-        ".filter((p) => p.severity === 'error').map((p) => [p.block, p.line, p.message])))))"
+        ".filter((p) => p.severity === 'error')"
+        ".map((p) => [p.block, p.line, p.message, p.fix])))))"
     )
     out = subprocess.run(
         ["node", "-e", script, "file://" + CORE, json.dumps(notes)],
@@ -470,29 +471,30 @@ def core_refusals_of(notes):
 
 
 def id_kind(message):
-    """Which id rule a refusal is, whatever words each reader quotes it in."""
-    if "a node's id never changes" in message:
+    """Which id rule a refusal is: the rule, then its section (§3)."""
+    if message.endswith("a node's id never changes (§3)"):
         return "id set"
-    if "is not text" in message:
+    if message.endswith("is not text"):
         return "id not text"
     return message
 
 
 def both_refuse_alike(test, notes, kind):
-    """Both readers refuse each note once, at the same block and line, with the same kind."""
+    """Both readers refuse each note once, at the same block and line, of the same kind, with the
+    same message and fix, word for word."""
     names = list(notes)
     core = core_refusals_of([notes[n] for n in names])
     # a plain loop, never subTest: the tests-first replay counts a test by its own result
     for name, theirs in zip(names, core):
         _, problems = gp.read_for_drawing(notes[name])
         ours = [
-            [p["block"], p["line"], id_kind(p["message"])]
+            [p["block"], p["line"], p["message"], p["fix"]]
             for p in problems
             if p["severity"] == "error"
         ]
         test.assertEqual(len(ours), 1, name)
-        test.assertEqual(ours[0][2], kind, name)
-        test.assertEqual(ours, [[b, ln, id_kind(m)] for b, ln, m in theirs], name)
+        test.assertEqual(id_kind(ours[0][2]), kind, name)
+        test.assertEqual(ours, theirs, name)
 
 
 # req:3.set-keeps-id: a SET of id to a used id, a fresh id and the node's own id, in the same
@@ -559,6 +561,28 @@ class IdIsText(unittest.TestCase):
         note = ["// graph: g\n(b:T {id: '1', size: 1})"]
         self.assertEqual(core_refusals_of([note]), [[]])
         self.assertEqual([p for p in gp.read_for_drawing(note)[1] if p["severity"] == "error"], [])
+
+
+# review of #49: a missing comma before a pattern hides neither id refusal — the comma's retry
+# keeps the refusal it meets, so both readers give it, not "unexpected '('"
+COMMA_ID_NOTES = {
+    "id: 1 after a missing comma": ["// graph: g\n(a:T {id: 'a'})\n(b:T {id: 1})"],
+    "id: TRUE in a path after a missing comma": [
+        "// graph: g\n(a:T {id: 'a'})\n(b:T {name: 'B'})-[:R]->(c:T {id: TRUE})"
+    ],
+}
+COMMA_SET_NOTES = {
+    "SET of id after a missing comma": [
+        "// graph: g\n(a:T {id: 'a'})\n(b:T {id: 'b'})\nSET b.id = 'c'"
+    ],
+}
+
+
+class MissingCommaHidesNoIdRefusal(unittest.TestCase):
+    def test_both_readers_give_each_id_refusal_after_a_missing_comma(self):
+        # req:3.id-is-text and req:3.set-keeps-id, live: neither is hidden by a missing comma
+        both_refuse_alike(self, COMMA_ID_NOTES, "id not text")
+        both_refuse_alike(self, COMMA_SET_NOTES, "id set")
 
 
 if __name__ == "__main__":

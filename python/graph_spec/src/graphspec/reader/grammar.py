@@ -9,6 +9,11 @@ import re
 from graphspec.reader.lexer import ProfileError, UTC, unquote
 
 
+class IdNotTextError(ProfileError):
+    """A node's id written as a value that is not text (§3, req:3.id-is-text): the missing comma's
+    retry keeps it, never taking it for a pattern that is not one."""
+
+
 class Parser:
     def __init__(self, toks):
         # commas: (line, at) for each missing comma read in (§3) — the line it is missing from,
@@ -102,7 +107,7 @@ class Parser:
             written, quoted = f"{raw} {self.peek(1)[1]}", self.peek(1)[1]
         else:
             return
-        raise ProfileError(
+        raise IdNotTextError(
             n, f"id {written} is not text", f"write id: {quoted} — a node's id is always text (§3)"
         )
 
@@ -182,6 +187,8 @@ class Parser:
                     at = self.i
                     try:
                         p = self.path()
+                    except IdNotTextError:
+                        raise  # its id refused, never hidden as "unexpected '('" (review of #49)
                     except ProfileError:
                         self.i = at
                     else:
@@ -202,7 +209,7 @@ class Parser:
                     # the node's own
                     raise ProfileError(
                         n,
-                        f"SET would change {var}'s id, and a node's id never changes",
+                        f"SET would change {var}'s id, and a node's id never changes (§3)",
                         f"write the right node, then link {var} to it or supersede it (§12)",
                     )
                 self.take("p", "=")
