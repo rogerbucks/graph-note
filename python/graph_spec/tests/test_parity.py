@@ -257,5 +257,55 @@ class CannotRead(unittest.TestCase):
             self.assertEqual(ours, cannot_read(theirs), c["name"])
 
 
+# Spec §3, req:3.id-once: a variable is written once in a block, and an id names one node. Each
+# block here breaks one half, and both readers must refuse it at the same block and line.
+ID_ONCE_BLOCKS = {
+    "a variable written twice in one block": "// graph: g\n(x:T {n:1}),\n(x:T {m:2})",
+    "an id that clashes with another node's name": "// graph: g\n(x:T {id:'y'}),\n(y:T {n:1})",
+}
+
+
+def refusal_kind(message):
+    """Which half of the rule a refusal is, whatever words each reader quotes it in."""
+    if "written twice" in message:
+        return "variable twice"
+    if "is already a node" in message:
+        return "id clash"
+    return message
+
+
+def core_refusals(blocks):
+    """The core's errors for each block, read alone, by Node: block, line and message."""
+    script = (
+        "import(process.argv[1]).then((m) => process.stdout.write(JSON.stringify("
+        "JSON.parse(process.argv[2]).map((b) => m.readBlocks([b], []).problems"
+        ".filter((p) => p.severity === 'error').map((p) => [p.block, p.line, p.message])))))"
+    )
+    out = subprocess.run(
+        ["node", "-e", script, "file://" + CORE, json.dumps(blocks)],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
+    return json.loads(out)
+
+
+class IdOnce(unittest.TestCase):
+    def test_both_readers_refuse_a_name_or_id_used_twice_alike(self):
+        names = list(ID_ONCE_BLOCKS)
+        core = core_refusals([ID_ONCE_BLOCKS[n] for n in names])
+        # a plain loop, never subTest: the tests-first replay counts a test by its own result
+        for name, theirs in zip(names, core):
+            _, problems = gp.read_for_drawing([ID_ONCE_BLOCKS[name]])
+            ours = [
+                [p["block"], p["line"], refusal_kind(p["message"])]
+                for p in problems
+                if p["severity"] == "error"
+            ]
+            self.assertEqual(len(ours), 1, name)
+            self.assertIn(ours[0][2], ("variable twice", "id clash"), name)
+            self.assertEqual(ours, [[b, ln, refusal_kind(m)] for b, ln, m in theirs], name)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -494,6 +494,10 @@
     }
   },
   "python/graph_spec/tests/test_parity.py": {
+    "IdOnce.test_both_readers_refuse_a_name_or_id_used_twice_alike": {
+      "seen_failing_first": false,
+      "evidence": "it pins agreement that already existed for req:3.id-once: both readers refused a variable written twice and an id clashing with another node's name before this test was written, so it passes at its parent by design"
+    },
     "ReadingCut.test_past_the_budget_the_core_and_python_leave_out_the_same": {
       "seen_failing_first": false,
       "evidence": "it does fail against its parent (a TypeError for each budget). At ff02d6d it was written with unittest subTest, which the replay reads as passing, so the record shows it as passed first; it is now a plain loop, and that commit's record cannot change."
