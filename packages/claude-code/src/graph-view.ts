@@ -83,10 +83,12 @@ export async function viewOf(
   return { ...asText, svg };
 }
 
-/** The palette for Claude Code's theme setting: a light theme takes the light entry, every other the dark. */
-export function paletteFor(theme: string | undefined): Palette {
-  return theme?.startsWith('light') ? PALETTES.light : PALETTES.dark;
-}
+/**
+ * The pane's palette: the one that follows the system, carrying both the light and the dark colours and choosing by
+ * prefers-color-scheme. The mod API says nothing of the desktop app's appearance, and Claude Code's theme setting is the
+ * terminal's, which draws no picture: so nothing is guessed, and the drawing takes the scheme the app hands its pages.
+ */
+export const PANE_PALETTE: Palette = PALETTES.system;
 
 /** The note named after /graph, without the quotes a name with spaces may be given in. */
 export function notePath(args: string): string {

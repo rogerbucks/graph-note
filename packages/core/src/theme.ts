@@ -91,6 +91,8 @@ export function themed(svg: string, kinds: string[], readings: string[], palette
       m[0],
       `<svg width="${fixed((parseFloat(m[1] ?? '0') * 4) / 3, 0)}" style="max-width:100%;height:auto;filter:none${palette.page ? `;background:${palette.page}` : ''}"`,
     );
+  // a palette that carries its own colours puts its style sheet first inside the drawing, where every shape sees it
+  if (palette.style) svg = svg.replace(/(<svg\b[^>]*>)/, `$1\n<style>${palette.style}</style>`);
   // an HTML block in Markdown ends at a blank line, and an indented line can read as code — so neither may appear
   return svg
     .split(/\r\n|\r|\n/)
