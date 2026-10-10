@@ -24,7 +24,7 @@ from graphspec.engine.projection import projects_back
 from graphspec.engine.queries import Q, canon_graph, read, strip
 from graphspec.engine.schema import typed, untyped
 from graphspec.engine.serving.checks import served_rules
-from graphspec.reader.lexer import ProfileError
+from graphspec.reader.lexer import ProfileError, header
 from graphspec.reader.store import Store
 
 if TYPE_CHECKING:
@@ -146,7 +146,8 @@ def check_changeset(
     """A change set dry-run against its base — [(graph, text)] loaded in order. Writes nothing.
     Returns (results [(label, ok, fix)], header, the state hash it would produce). The base and
     the change set are each read with the reader before Grafeo is given them: one the reader
-    refuses is a failed result in the reader's words, and Grafeo is given nothing of it."""
+    refuses is a failed result in the reader's words, and Grafeo is given nothing of it; so is a
+    base text whose first line names a graph other than the one its tuple gives."""
     res = []
 
     def add(label, ok, fix=""):
@@ -168,10 +169,20 @@ def check_changeset(
         "; ".join(f"line {x['line']}: {x['trap']} → {x['fix']}" for x in found),
     )
     # the reader reads the base, then the change set, each in its graph, before Grafeo is given
-    # either; Grafeo is given nothing the reader refuses (req:3.engine-reads-first)
+    # either; Grafeo is given nothing the reader refuses (req:3.engine-reads-first). Grafeo loads
+    # a base text into the graph its tuple gives, the reader into the one its first line names, so
+    # the two must be one graph
     st = Store()
-    for _, text in base:
+    for g, text in base:
         try:
+            named, _ = header(text)
+            if named is not None and named != g:
+                raise ProfileError(
+                    1,
+                    f"the block names graph {named}, but the base gives it as graph {g}",
+                    f"give it as graph {named} — a block is loaded into the graph its first line "
+                    "names (§3)",
+                )
             st.apply(text)
         except ProfileError as e:
             add("its base loads", False, f"the reader could not read the base — {e}")

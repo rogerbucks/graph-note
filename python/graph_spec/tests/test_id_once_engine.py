@@ -207,6 +207,19 @@ class EnginePathsSkipTheReader(unittest.TestCase):
         )
         self.assertTrue(names_the_id(gs.check_changeset(base, block)[0], "a"))
 
+    # Review of #37: the reader reads a base text in the graph its own first line names, Grafeo
+    # in the graph its tuple gives, so a base text naming h given as g was read in a graph Grafeo
+    # never loaded it into: the reused id was not refused, and failed later as "changed ['a']".
+    def test_check_changeset_refuses_a_base_text_whose_first_line_names_another_graph(self):
+        base = [("g", "// graph: h\n(a:Person {name: 'A'})")]
+        block = (
+            f"// graph: g · CHANGE SET cs1 · against {state_hash(base)} · by a\n"
+            "(b:Person {id: 'a'})"
+        )
+        results = gs.check_changeset(base, block)[0]
+        said = "line 1: the block names graph h, but the base gives it as graph g"
+        self.assertTrue(any(not ok and said in fix for _, ok, fix in results), results)
+
     def test_the_reader_based_check_changeset_refuses_a_change_set_reusing_a_base_id(self):
         import graph_rules as gr
 
