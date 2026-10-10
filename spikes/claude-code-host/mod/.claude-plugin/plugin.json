@@ -1,0 +1,1 @@
+{ "name": "graph-view", "version": "0.1.0", "description": "Spike: /graph reads a graph note with the graph note core and draws it in a pane", "types": "./types/index.d.ts" }

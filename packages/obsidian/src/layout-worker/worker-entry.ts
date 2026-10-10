@@ -6,7 +6,7 @@
 // in the whole graph library, which is written as CommonJS, so it cannot be shaken out, and main.js would carry it twice.
 import { serveLayouts } from '../../../core/src/layout-worker.ts';
 import type { LayoutScope } from '../../../core/src/layout-worker.ts';
-import { loadEngine } from '../../../core/src/render.ts';
+import { loadEngine } from '../../../core/src/engine.ts';
 
 /** The worker's own scope, handed in by the function wrapped round this bundle: `self` in a worker; none on the page. */
 declare const scope: LayoutScope | undefined;

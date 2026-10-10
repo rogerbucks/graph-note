@@ -137,7 +137,10 @@ function measureSpeed() {
 /** The time to read and draw a graph of 50 things, 70 links, as the core's render path does it (render.test.js). */
 async function measureDraw() {
   const { readNote } = await import('../packages/core/src/drawing.ts');
-  const { loadEngine, draw } = await import('../packages/core/src/render.ts');
+  const [{ loadEngine }, { draw }] = await Promise.all([
+    import('../packages/core/src/engine.ts'),
+    import('../packages/core/src/render.ts'),
+  ]);
   const engine = await loadEngine();
   const kinds = ['Question', 'Option', 'Reason', 'Claim', 'Source'],
     types = ['ANSWERS', 'FAVOURS', 'CITES'];

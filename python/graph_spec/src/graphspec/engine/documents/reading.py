@@ -77,7 +77,9 @@ def gql_block(path: str, straighten: bool = True) -> str:
 def parse(path: str, straighten: bool = True) -> dict[str, Any]:
     """Lift the GQL block out of a document (§3) and read its header. The block is read with the
     reader first, in its graph, whichever parser is set: a block the reader refuses raises its
-    ProfileError, and Grafeo is given nothing (req:3.engine-reads-first)."""
+    ProfileError, and Grafeo is given nothing (req:3.engine-reads-first). Grafeo is given the
+    reader's corrected text, so it reads what the profile parser reads
+    (req:3.engine-gets-corrected)."""
     from graphspec.reader.store import Store
 
     block = require_graph_line(gql_block(path, straighten), path.rsplit("/", 1)[-1])
@@ -98,7 +100,7 @@ def parse(path: str, straighten: bool = True) -> dict[str, Any]:
         db = grafeo.GrafeoDB()
         db.execute("CREATE GRAPH notes")
         db.set_graph("notes")
-        db.execute(strip(block))
+        db.execute(strip(st.corrected(block)))
         node_rows, rel_rows = read(db, "notes")
         byk = {n["k"]: n["p"]["id"] for n in node_rows}
     return {
