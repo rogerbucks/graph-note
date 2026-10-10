@@ -244,6 +244,11 @@ describe('kept so, in CI and at every release', () => {
     const text = read(f);
     assert.match(block(text.split('\n'), 'on', 0).join('\n'), /pull_request:/);
     assert.ok(usesRefs(text).some((r) => r.startsWith('actions/dependency-review-action@')));
+    assert.match(
+      jobs(text)['dependency-review'].join('\n'),
+      /if: \$\{\{ !github\.event\.repository\.private \}\}/,
+      'waits until public',
+    );
     assert.match(text, /fail-on-severity: low/);
     assert.match(text, /comment-summary-in-pr: never/);
   });

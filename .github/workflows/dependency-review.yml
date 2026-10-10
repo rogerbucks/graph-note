@@ -2,6 +2,8 @@ name: Dependency review
 
 # Every pull request's dependency changes are read against the published advisories: a new or changed package with a
 # known vulnerability fails the check (spec §13, Delivery). It only reads, and posts nothing to the pull request.
+# GitHub gives the review to a public repository for nothing and to a private one only on a paid plan, so the job waits
+# until the repository is public; a skipped required check does not hold up a merge.
 on:
   pull_request:
 
@@ -10,6 +12,7 @@ permissions:
 
 jobs:
   dependency-review:
+    if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
