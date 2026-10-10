@@ -6,6 +6,12 @@ import type { World } from '@graph-note/graph-spec';
 import { blankText } from './block-items.ts';
 import { graphOfBlock } from './blocks.ts';
 import type { Problem } from './note-reading.ts';
+import { S, trim, trimEnd } from './whitespace.ts';
+
+// a thing and its kinds, and a link's type, read with whitespace as GQL names it (graph spec §3), as the reader reads them
+const THING = new RegExp(`\\(${S}*([A-Za-z_]\\w*)${S}*((?::${S}*[A-Za-z_]\\w*${S}*)+)`, 'g'),
+  ELEMENT_TYPE = new RegExp(`:${S}*ElementType\\b`),
+  LINK_TYPE = new RegExp(`-\\[${S}*:${S}*([A-Za-z_]\\w*)`, 'g');
 
 /** Words as a list: "a", "a and b", "a, b and c". */
 const listed = (xs: string[]) => (xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`);
@@ -24,8 +30,8 @@ export function undeclared(whole: World, texts: string[]): Problem[] {
     const metas = g.labelled('GraphMeta');
     const declared = new Set(g.edges.filter(([s, t]) => t === 'DECLARES' && metas.includes(s)).map((e) => e[2]));
     const blanked = blankText(text);
-    const missing = [...blanked.matchAll(/\(\s*([A-Za-z_]\w*)\s*((?::\s*[A-Za-z_]\w*\s*)+)/g)].filter(
-      (m) => /:\s*ElementType\b/.test(m[2] ?? '') && g.nodes.has(m[1] ?? '') && !declared.has(m[1] ?? ''),
+    const missing = [...blanked.matchAll(THING)].filter(
+      (m) => ELEMENT_TYPE.test(m[2] ?? '') && g.nodes.has(m[1] ?? '') && !declared.has(m[1] ?? ''),
     );
     const first = missing[0];
     if (!first) return;
@@ -36,7 +42,7 @@ export function undeclared(whole: World, texts: string[]): Problem[] {
     };
     const names = listed(missing.map((m) => nameOf(m[1] ?? '')));
     const lines = text.split('\n'),
-      last = lines.reduce((at, l, i) => (l.trim() && !l.trim().startsWith('//') ? i : at), 0);
+      last = lines.reduce((at, l, i) => (trim(l) && !trim(l).startsWith('//') ? i : at), 0);
     out.push({
       graph,
       block,
@@ -50,7 +56,7 @@ export function undeclared(whole: World, texts: string[]): Problem[] {
         ? {
             insert: {
               line: last,
-              character: (lines[last] ?? '').trimEnd().length,
+              character: trimEnd(lines[last] ?? '').length,
               text:
                 (metas.length ? '' : `,\n(${meta}:GraphMeta {graph: '${graph}', schema: '${graph}@1'})`) +
                 missing.map((m) => `,\n(${meta})-[:DECLARES]->(${m[1]})`).join(''),
@@ -96,10 +102,10 @@ export function undeclaredUse(whole: World, texts: string[], problems: Problem[]
         fix: `declare ${name} in graph ${graph}'s schema`,
       });
     };
-    for (const m of blanked.matchAll(/\(\s*[A-Za-z_]\w*\s*((?::\s*[A-Za-z_]\w*\s*)+)/g))
-      for (const label of (m[1] ?? '').split(':').map((l) => l.trim()))
+    for (const m of blanked.matchAll(THING))
+      for (const label of (m[2] ?? '').split(':').map((l) => trim(l)))
         if (label && !hidden.has(label) && !kinds.has(label)) report(label, 'a kind', m.index);
-    for (const m of blanked.matchAll(/-\[\s*:\s*([A-Za-z_]\w*)/g)) {
+    for (const m of blanked.matchAll(LINK_TYPE)) {
       const type = m[1] ?? '';
       if (type !== 'DECLARES' && !edges.has(type)) report(type, 'a relationship type', m.index);
     }

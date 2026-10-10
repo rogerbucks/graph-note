@@ -473,6 +473,15 @@ describe('a schema whose types its GraphMeta does not declare', () => {
   test('a draft, or a schema that declares each type, has no such warning', () => {
     assert.deepEqual(readNote([DATA]).problems, []);
   });
+
+  // whitespace as GQL names it (graph spec §3), U+180E among it, as the reader reads the block (10 Oct 2026)
+  test('is found where the types are spaced with U+180E', () => {
+    const spaced = OLD.replaceAll('(kind_', '(\u{180e}kind_').replaceAll(':Meta:', '\u{180e}:\u{180e}Meta:');
+    assert.equal(
+      readNote([DATA, spaced]).problems[0]?.message,
+      'the schema does not declare Book and Person: its GraphMeta must DECLARE each type (§5)',
+    );
+  });
 });
 
 describe('a kind or link type the locked graph’s schema does not declare', () => {
@@ -526,5 +535,20 @@ describe('a kind or link type the locked graph’s schema does not declare', () 
   test('a draft has no schema to declare anything, so nothing is said; and what the schema declares is never reported', () => {
     assert.deepEqual(readNote([STEP1, STEP2]).problems, []);
     assert.deepEqual(on(readNote(blocks), 2), []);
+  });
+
+  // whitespace as GQL names it (graph spec §3), U+180E among it, as the reader reads the block (10 Oct 2026)
+  test('a kind and a link type spaced with U+180E are found, as the reader reads them', () => {
+    const spaced = STEP2.replace('(cheaper:Reason', '(\u{180e}cheaper\u{180e}:\u{180e}Reason').replace(
+      '(cheaper)-[:FAVOURS]',
+      '(cheaper)-[\u{180e}:\u{180e}FAVOURS]',
+    );
+    assert.deepEqual(
+      on(readNote([STEP1, spaced, SCHEMA], 1), 1).map(([line, , message]) => [line, message.split(' ')[0]]),
+      [
+        [2, 'Reason'],
+        [4, 'FAVOURS'],
+      ],
+    );
   });
 });
