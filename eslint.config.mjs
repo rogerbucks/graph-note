@@ -25,6 +25,9 @@ export default defineConfig([
       'packages/*/bin/',
       'packages/*/harness/',
       'spikes/',
+      // the Claude Code mod runs in its own environment, typed by Claude Code's API: `claude plugin validate`, its own
+      // type check and `claude plugin test` check it (packages/claude-code/GUIDE.md)
+      'packages/claude-code/mod/',
     ],
   },
   ...obsidianmd.configs.recommended,

@@ -1,0 +1,10 @@
+{
+  "name": "graph-note",
+  "version": "0.3.0",
+  "description": "/graph draws a graph note's first graph in a pane, with the Graph Note core",
+  "author": {
+    "name": "rogerbucks",
+    "url": "https://github.com/rogerbucks"
+  },
+  "types": "./types/index.d.ts"
+}

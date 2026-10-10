@@ -6,6 +6,8 @@
 packages/graph-spec/dist/
 dist/
 main.js
+packages/claude-code/mod/hooks/graph.js
+packages/claude-code/mod/bin/
 
 # lock files
 package-lock.json

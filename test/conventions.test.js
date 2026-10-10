@@ -11,7 +11,7 @@ import { exists, read, readJSON, path, walk, ROOT } from './repository/repo.js';
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
 
-const PACKAGES = ['packages/core', 'packages/graph-spec', 'packages/obsidian'];
+const PACKAGES = ['packages/core', 'packages/graph-spec', 'packages/obsidian', 'packages/claude-code'];
 const PYTHON = 'python/graph_spec';
 const CODE = /\.(ts|js|mjs)$/;
 /** The code that ships or is built from: each package's own folders. */
@@ -177,7 +177,7 @@ describe('the code’s layout', () => {
 
   test('the public interface is documented where it is declared: every export has its comment', () => {
     const bare = [];
-    for (const f of ['packages/core', 'packages/obsidian'].flatMap(sourceFiles)) {
+    for (const f of ['packages/core', 'packages/obsidian', 'packages/claude-code'].flatMap(sourceFiles)) {
       const text = read(f),
         src = ts.createSourceFile(f, text, ts.ScriptTarget.Latest, true);
       for (const n of src.statements) {
