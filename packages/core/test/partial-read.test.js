@@ -232,9 +232,44 @@ function within(ms, step) {
   return out;
 }
 
+/** The median time of `n` runs of one step, in ms. */
+function median(n, step) {
+  const times = Array.from({ length: n }, () => {
+    const t = performance.now();
+    step();
+    return performance.now() - t;
+  }).sort((a, b) => a - b);
+  return times[Math.floor(n / 2)];
+}
+
+/**
+ * Reads a broken block, and asserts it took no longer than the budget of reading again allows (spec §9,
+ * reading_contained): the block read at most budget ÷ its length times again, and twice more, each priced by a whole
+ * read of the block `mended`, timed just before and just after so that a loaded machine slows both alike; twice that,
+ * for what varies between the timings. Never a fixed number of milliseconds, which a busy machine running the whole
+ * suite broke at 2.5 s against a budget of 2 (10 Oct 2026).
+ */
+function inBudget(text, mended) {
+  const oneRead = () => median(3, () => readNote([mended]));
+  const before = oneRead();
+  const t = performance.now();
+  const out = readNote([text]);
+  const took = performance.now() - t;
+  const read = Math.max(before, oneRead()),
+    reads = REREAD_BUDGET / text.length + 2;
+  assert.ok(
+    took < 2 * reads * read,
+    `${took.toFixed(0)} ms, over twice ${reads.toFixed(0)} reads of ${read.toFixed(0)} ms`,
+  );
+  return out;
+}
+
 describe('the worst cases under the size limits are read in time (spec §9: about half a second on a desktop)', () => {
   test('2,000 things, 1 in 40 missing a colon', () => {
-    const r = within(2000, () => readNote([block(2000, (i) => i % 40 === 39)]));
+    const r = inBudget(
+      block(2000, (i) => i % 40 === 39),
+      block(2000, () => false),
+    );
     assert.ok(r.graphs.get('g').boxes.length > 1000);
   });
 
@@ -246,14 +281,17 @@ describe('the worst cases under the size limits are read in time (spec §9: abou
 
   test('6,000 things on one line, the last broken: the part at fault is looked for within the budget', () => {
     const line = Array.from({ length: 6000 }, (_, i) => `(n${i}:T {name${i === 5999 ? '' : ':'} 'x'})`).join(', ');
-    within(2000, () => readNote([`// graph: g\n${line}`]));
+    const text = `// graph: g\n${line}`;
+    inBudget(text, text.replace("{name '", "{name: '"));
   });
 
   test('nearly 512 kB with every line broken: past the budget the rest is left out at once, and said so', () => {
     const everyLine = () => true,
       longText = (i) => `Thing number ${i} of many`;
-    const long = block(9800, everyLine, longText);
-    const r = within(2000, () => readNote([long]));
+    const r = inBudget(
+      block(9800, everyLine, longText),
+      block(9800, () => false, longText),
+    );
     assert.ok(
       r.graphs.get('g').boxes.some((b) => b.key === 'ok'),
       'what was read before is still drawn',
