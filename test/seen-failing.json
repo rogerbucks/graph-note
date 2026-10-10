@@ -493,6 +493,20 @@
       "evidence": "it does fail against its parent (a TypeError for each budget). At ff02d6d it was written with unittest subTest, which the replay reads as passing, so the record shows it as passed first; it is now a plain loop, and that commit's record cannot change."
     }
   },
+  "python/graph_spec/tests/test_whitespace.py": {
+    "InsideStrings.test_whitespace_and_what_is_not_whitespace_are_kept_as_written_inside_a_string": {
+      "seen_failing_first": false,
+      "evidence": "parity rows asked for in review of PR #28, added after the fix earlier in the same branch, so they pass against their parent. Run against origin/main 7a682f4 in a scratch worktree they fail: Python keeps none of U+2028, U+2029, U+0085 and U+001C in a string, and its graph differs from the JavaScript library's."
+    },
+    "BetweenItems.test_every_whitespace_character_parts_items_as_a_space_does": {
+      "seen_failing_first": false,
+      "evidence": "parity rows asked for in review of PR #28, added after the fix earlier in the same branch, so they pass against their parent. Run against origin/main 7a682f4 in a scratch worktree, 5 of its 29 rows fail (U+001C–U+001F and U+180E)."
+    },
+    "BeforeKeywords.test_whitespace_before_match_insert_and_set_parts_them_as_a_space_does": {
+      "seen_failing_first": false,
+      "evidence": "parity rows asked for in review of PR #28, added after the fix earlier in the same branch, so they pass against their parent. Run against origin/main 7a682f4 in a scratch worktree, 1 of its 4 rows fails (U+180E before MATCH, INSERT and SET)."
+    }
+  },
   "test/whitespace.test.js": {
     "the three copies hold the same 29 code points, the ones openGQL’s grammar names": {
       "seen_failing_first": false,

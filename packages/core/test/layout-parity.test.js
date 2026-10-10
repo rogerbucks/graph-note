@@ -252,6 +252,16 @@ const WHITESPACE = {
     fence("// graph: ws\n(home:Place {name: 'Home'}),\n(walk:Leg {name: 'Walk'}),\u{feff}(walk)-[:STARTS_AT]->(home)"),
     fence("// graph: ws\n(bus:Leg {name: 'Bus'}),\x85(bus)-[:FOLLOWS]->(walk),\n(train:Leg {name: 'Train'})"),
   ].join('\n'),
+  'U+2029 and U+180E inside strings, NBSP and U+2028 between items, NBSP, U+2028 and U+2029 before keywords': [
+    fence(
+      "// graph: ws\n(home:Place {name: 'Home\u{2029}again'}),\xa0(walk:Leg {name: 'twenty-two characters\u{180e}after'})," +
+        '\u{2028}(walk)-[:STARTS_AT]->(home)',
+    ),
+    fence(
+      "// graph: ws\n\xa0MATCH (w:Leg {id: 'walk'})\n\u{2029}INSERT (bus:Leg {name: 'Bus'}),\n(bus)-[:FOLLOWS]->(w)\n" +
+        "\u{2028}SET w.note = 'checked'",
+    ),
+  ].join('\n'),
 };
 
 test('whitespace as GQL names it is read and drawn the same by both readers, byte for byte', () => {
