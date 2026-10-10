@@ -15,6 +15,7 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 
 **Reading a note**
 
+- `whitespace.ts` — whitespace as GQL names it, the one set every reader uses, never JavaScript's `\s` or `trim()`.
 - `blocks.ts` — where each gql block of a note is, and what its graph line says.
 - `block-items.ts` — a block's top-level items (paths, SET, MATCH), so a bad one can be left out.
 - `partial-read.ts` — reading the blocks as far as they can be read, with a problem for each part left out. A failed block

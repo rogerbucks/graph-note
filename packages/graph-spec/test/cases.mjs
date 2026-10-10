@@ -70,6 +70,66 @@ export const cases = {
     matrix: {},
   },
 
+  // Whitespace is what GQL names (§3): TAB, LF, VT, FF, CR, U+001C–U+001F, the space, U+00A0, U+1680, U+180E,
+  // U+2000–U+200A, U+2028, U+2029, U+202F, U+205F and U+3000; never U+0085, U+FEFF or U+200B. A line ends at LF only.
+  // Every reader uses that one set, not its language's own idea of whitespace (decided 10 Oct 2026).
+  'whitespace inside a string is kept as written, line and paragraph separators too (§3)': {
+    blocks: [
+      lines(
+        '// graph: ws_strings',
+        "(a:T {name: 'no\xa0break'}),",
+        "(b:T {name: 'line\u{2028}separator'}),",
+        "(c:T {name: 'paragraph\u{2029}separator'}),",
+        "(d:T {name: 'byte\u{feff}order'}),",
+        "(e:T {name: 'vowel\u{180e}separator'}),",
+        "(f:T {name: 'file\x1cseparator'}),",
+        "(g:T {name: 'next\x85line'}),",
+        "(h:T {name: 'escaped\\\u{2028}separator'})",
+      ),
+    ],
+    graphs: ['ws_strings'],
+    matrix: {},
+  },
+
+  'every whitespace character GQL names parts words and items, before keywords too (§3)': {
+    blocks: [
+      lines(
+        '// graph: ws_parts',
+        [...'\t\v\f\r \x1c\x1d\x1e\x1f\xa0\u{1680}\u{180e}\u{2000}\u{2001}\u{2002}\u{2003}\u{2004}\u{2005}\u{2006}']
+          .concat([...'\u{2007}\u{2008}\u{2009}\u{200a}\u{2028}\u{2029}\u{202f}\u{205f}\u{3000}'])
+          .map((s, i) => `${s}(n${i}:T${s}{name:${s}'n${i}'})${s}`)
+          .join(','),
+      ),
+      lines(
+        '//\u{180e}graph:\u{3000}ws_parts',
+        "\u{180e}MATCH\u{3000}(m:T\xa0{id:\u{2028}'n0'})",
+        '\x1fSET\u{205f}m.seen\u{2009}=\u{200a}TRUE',
+      ),
+    ],
+    graphs: ['ws_parts'],
+    matrix: {},
+  },
+
+  'a byte-order mark is not whitespace: before MATCH it is refused, on the line it is on (§3)': {
+    blocks: [
+      lines('// graph: ws_bom', "(a:T {name: 'A'}),", "(b:T {name: 'B'})"),
+      lines(
+        '// graph: ws_bom',
+        '// a comment\u{2028}that a line separator does not end',
+        "\u{feff}MATCH (a:T {id: 'a'})",
+        'SET a.seen = TRUE',
+      ),
+    ],
+    graphs: ['ws_bom'],
+    matrix: {},
+  },
+
+  'U+0085 is not whitespace, while U+001C is (§3)': {
+    blocks: [lines('// graph: ws_nel', "(a:T {name: 'A'}),\x1c(b:T {name: 'B'}),\x85(c:T {name: 'C'})")],
+    graphs: ['ws_nel'],
+    matrix: {},
+  },
+
   'a draft with near-duplicate kinds and types': {
     blocks: [
       lines(

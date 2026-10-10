@@ -2,22 +2,32 @@
 'use strict';
 
 const { ProfileError } = require('./profile-error.js');
+const { S, N, trim } = require('./whitespace.js');
 
 const KEYWORDS = new Set(['INSERT', 'MATCH', 'SET', 'DATE', 'DATETIME', 'TRUE', 'FALSE']);
-const TOKEN =
-  /\s*(?:('(?:[^'\\]|\\.)*')|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|([A-Za-z_][A-Za-z0-9_]*)|(->)|([()[\]{}:,.=-]))/y;
+// [^\n] where Python's reader has `.`: JavaScript's `.` also stops at CR, U+2028 and U+2029
+const TOKEN = new RegExp(
+  `${S}*(?:('(?:[^'\\\\]|\\\\[^\\n])*')|(-?\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?)|([A-Za-z_][A-Za-z0-9_]*)|(->)|([()[\\]{}:,.=-]))`,
+  'y',
+);
+const EXCERPT = new RegExp(`^${S}*//${S}*excerpt\\b`, 'i'),
+  GRAPH = new RegExp(`^${S}*//${S}*graph:${S}*(${N}+)([^\\n]*)$`),
+  SCHEMA = new RegExp(`·${S}*SCHEMA${S}+${N}+`),
+  EXCERPT_OF = new RegExp(`·${S}*excerpt\\b`, 'i'),
+  QUERY = new RegExp(`·${S}*QUERY\\b`),
+  CHANGE_SET = new RegExp(`·${S}*CHANGE SET\\b`);
 function header(block) {
-  const first = block.split('\n').find((line) => line.trim()) || '';
-  if (/^\s*\/\/\s*excerpt\b/i.test(first)) return [null, 'excerpt']; // an illustration, said to be one (§3)
-  const m = /^\s*\/\/\s*graph:\s*(\S+)(.*)$/.exec(first);
+  const first = block.split('\n').find((line) => trim(line)) || '';
+  if (EXCERPT.test(first)) return [null, 'excerpt']; // an illustration, said to be one (§3)
+  const m = GRAPH.exec(first);
   if (!m) throw new ProfileError(1, 'the block names no graph', "start it with '// graph: <name>' (§3)");
-  const kind = /·\s*SCHEMA\s+\S+/.test(m[2])
+  const kind = SCHEMA.test(m[2])
     ? 'schema'
-    : /·\s*excerpt\b/i.test(m[2])
+    : EXCERPT_OF.test(m[2])
       ? 'excerpt'
-      : /·\s*QUERY\b/.test(m[2])
+      : QUERY.test(m[2])
         ? 'query'
-        : /·\s*CHANGE SET\b/.test(m[2])
+        : CHANGE_SET.test(m[2])
           ? 'changeset'
           : 'data';
   if (kind !== 'excerpt' && !/^[A-Za-z_][A-Za-z0-9_]*$/.test(m[1]))
@@ -33,21 +43,25 @@ function header(block) {
 const COMMENT_RULE =
   'a comment must be on a line of its own: // also occurs inside identifiers, such as ni:/// hashes (§3)';
 const COMMENT_FIX = 'put the comment on its own line';
+// the start of a text, cut at n UTF-16 units and never inside an emoji, as Python's reader cuts it too
+function excerpt(s, n = 20) {
+  return s.slice(0, s.length > n && /[\uD800-\uDBFF]/.test(s[n - 1]) ? n - 1 : n);
+}
 function tokens(block) {
   const out = [];
   block.split('\n').forEach((raw, i) => {
     const n = i + 1;
-    if (raw.trim().startsWith('//')) return;
+    if (trim(raw).startsWith('//')) return;
     let pos = 0;
     while (pos < raw.length) {
-      if (!raw.slice(pos).trim()) break;
+      if (!trim(raw.slice(pos))) break;
       TOKEN.lastIndex = pos;
       const m = TOKEN.exec(raw);
-      if (!m && raw.slice(pos).trim().startsWith('//')) throw new ProfileError(n, COMMENT_RULE, COMMENT_FIX); // a comment after code on its line (§3)
+      if (!m && trim(raw.slice(pos)).startsWith('//')) throw new ProfileError(n, COMMENT_RULE, COMMENT_FIX); // a comment after code on its line (§3)
       if (!m)
         throw new ProfileError(
           n,
-          `cannot read '${raw.slice(pos).trim().slice(0, 20)}'`,
+          `cannot read '${excerpt(trim(raw.slice(pos)))}'`,
           'a data block holds only nodes, relationships and simple values',
         );
       let kind =
@@ -72,7 +86,7 @@ function tokens(block) {
   });
   return out;
 }
-const unquote = (s) => s.slice(1, -1).replace(/\\(.)/g, (_, c) => (c === 'n' ? '\n' : c === 't' ? '\t' : c));
+const unquote = (s) => s.slice(1, -1).replace(/\\([^\n])/g, (_, c) => (c === 'n' ? '\n' : c === 't' ? '\t' : c));
 function utcNaive(s, line) {
   const m = /^(\d{4})-(\d\d)-(\d\d)[T ](\d\d):(\d\d)(?::(\d\d)(?:\.(\d{1,6}))?)?(Z|[+-]\d\d:?\d\d)?$/.exec(s);
   if (!m) throw new ProfileError(line, `'${s}' is not an instant`, "write DATETIME 'YYYY-MM-DDTHH:MM:SS+HH:MM'");

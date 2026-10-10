@@ -4,6 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { gqlBlocks } from '../src/blocks.ts';
 import { readNote } from '../src/drawing.ts';
@@ -231,4 +232,64 @@ test('a link written to a suggested name links to the thing drawn under it, the 
     r.problems.map((p) => p.suggested),
     ['large_reader'],
   );
+});
+
+// a line neither reader can read is quoted cut at 20 UTF-16 units, never inside an emoji, by both readers (review of
+// PR #28): the cases are shared with python/graph_spec/tests/test_parity.py
+const { cases: CANNOT_READ } = JSON.parse(
+  readFileSync(new URL('../../graph-spec/test/cannot-read-cases.json', import.meta.url), 'utf8'),
+);
+const cannotRead = (problems) => problems.map((p) => p.message).filter((m) => m.includes('cannot read'));
+
+test('a line that cannot be read is quoted the same by both readers, cut at 20 UTF-16 units, never inside an emoji', () => {
+  const prog =
+    `import json, sys\nsys.path.insert(0, ${JSON.stringify(PY_SRC)})\nimport gql_profile as gp\n` +
+    'print(json.dumps([[p["message"] for p in gp.read_for_drawing([b])[1]] for b in json.load(sys.stdin)]))';
+  const r = spawnSync('python3', ['-c', prog], {
+    input: JSON.stringify(CANNOT_READ.map((c) => c.block)),
+    encoding: 'utf8',
+  });
+  assert.equal(r.status, 0, r.stderr);
+  const python = JSON.parse(r.stdout);
+  CANNOT_READ.forEach((c, n) => {
+    const core = cannotRead(readNote([c.block]).problems);
+    assert.equal(core.length, 1, `${c.name}: one line cannot be read`);
+    assert.ok(core[0].includes(`cannot read '${c.excerpt}'`), `${c.name}: ${core[0]}`);
+    assert.deepEqual(cannotRead(python[n].map((message) => ({ message }))), core, c.name);
+  });
+});
+
+// Whitespace is what GQL names, in every reader, never the language's own idea of it; a line ends at LF only
+// (decided 10 Oct 2026). U+0085 and U+FEFF are not whitespace, so an item they open is left out, by both readers alike.
+const WHITESPACE = {
+  'whitespace inside strings, between items and before keywords': [
+    fence(
+      "// graph: ws\n(home:Place {name: 'Home\xa0sweet\u{2028}home'}),\u{2029}" +
+        "(walk:Leg {name: 'twenty-two characters \u{feff} after'}),\u{180e}" +
+        "(bus:Leg {name: 'twenty-two characters \x1c after, \x85 and\u{3000}on'}),\n" +
+        '// a comment\u{2028}that a line separator does not end\n' +
+        '\u{3000}(walk)-[:STARTS_AT]->(home),\x1d(bus)-[:FOLLOWS]->(walk)',
+    ),
+    fence(
+      "//\u{180e}graph:\xa0ws\n\u{180e}MATCH\u{2000}(w:Leg {id: 'walk'})\n\x1fSET\u{205f}w.note\u{202f}=\u{1680}'checked'",
+    ),
+  ].join('\n'),
+  'a byte-order mark or U+0085 opening an item, which is left out': [
+    fence("// graph: ws\n(home:Place {name: 'Home'}),\n(walk:Leg {name: 'Walk'}),\u{feff}(walk)-[:STARTS_AT]->(home)"),
+    fence("// graph: ws\n(bus:Leg {name: 'Bus'}),\x85(bus)-[:FOLLOWS]->(walk),\n(train:Leg {name: 'Train'})"),
+  ].join('\n'),
+  'U+2029 and U+180E inside strings, NBSP and U+2028 between items, NBSP, U+2028 and U+2029 before keywords': [
+    fence(
+      "// graph: ws\n(home:Place {name: 'Home\u{2029}again'}),\xa0(walk:Leg {name: 'twenty-two characters\u{180e}after'})," +
+        '\u{2028}(walk)-[:STARTS_AT]->(home)',
+    ),
+    fence(
+      "// graph: ws\n\xa0MATCH (w:Leg {id: 'walk'})\n\u{2029}INSERT (bus:Leg {name: 'Bus'}),\n(bus)-[:FOLLOWS]->(w)\n" +
+        "\u{2028}SET w.note = 'checked'",
+    ),
+  ].join('\n'),
+};
+
+test('whitespace as GQL names it is read and drawn the same by both readers, byte for byte', () => {
+  same(WHITESPACE);
 });

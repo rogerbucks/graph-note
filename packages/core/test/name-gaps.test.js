@@ -150,6 +150,13 @@ describe('a thing given a name but no text', () => {
     assert.deepEqual(at('(a_b:Option {})'), { line: 1, character: 13, text: "name: 'A b'" });
   });
 
+  // whitespace as GQL names it (graph spec §3), as the reader reads the braces: U+180E is whitespace
+  test('braces holding only U+180E are empty, and a property after U+180E is spaced from it', () => {
+    const at = (written) => gapsOf(`// graph: reader\n${written}`).problems[0]?.insert?.text;
+    assert.equal(at('(a_b:Option {\u{180e}})'), "name: 'A b'");
+    assert.equal(at('(a_b:Option {\u{180e}price: 5})'), "name: 'A b',");
+  });
+
   test('a thing with a kind and no braces, and one with two kinds, take the property at the end of the kinds', () => {
     const at = (written) => gapsOf(`// graph: reader\n${written}`).problems[0]?.insert?.character;
     assert.equal(at('(a_b:Option:Extra )'), 17);

@@ -19,6 +19,13 @@ const DRAFT = `// graph: reader · SOURCE
 const NOTE = `# Reader\n\n\`\`\`gql\n${DRAFT}\n\`\`\`\n\nAfter.\n`;
 
 describe('Lock the graph', () => {
+  // whitespace as GQL names it (graph spec §3), U+180E among it, as the reader reads the graph line (10 Oct 2026)
+  test('the schema block opens with the graph line as written, when it is spaced with U+180E', () => {
+    const line = '//\u{180e}graph:\u{180e}reader · SOURCE';
+    const draft = DRAFT.replace('// graph: reader · SOURCE', line);
+    assert.equal(lockBlock(readNote([draft]), 'reader', '2026-10-07').split('\n')[0], line);
+  });
+
   test('a graph with no schema is a draft, and one with a schema is not', () => {
     assert.equal(isDraft(readNote([DRAFT]), 'reader'), true);
     const locked = readNote([DRAFT, lockBlock(readNote([DRAFT]), 'reader', '2026-10-07')]);

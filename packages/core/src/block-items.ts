@@ -1,6 +1,7 @@
 // A block's top-level items (spec §3): each path, SET or MATCH by where it is in the text, so what cannot be read can be
 // left out of the drawing while the rest is drawn; the text with strings and comments blanked, so words in them never
 // match; and where each link type written without its colon is.
+import { isSpace, S } from './whitespace.ts';
 
 /** A top-level item of a block — one path, or one SET or MATCH clause — by its character span. */
 export interface Item {
@@ -23,8 +24,11 @@ export function blockItems(text: string): { text: string; line: number; end: num
 /** The text with strings and comments blanked to spaces, so positions hold and words in them never match. */
 export const blankText = (text: string): string =>
   text
-    .replace(/'(?:[^'\\\n]|\\.)*'?/g, (m) => ' '.repeat(m.length))
+    // [^\n] where the Python reader has `.`: JavaScript's `.` also stops at CR, U+2028 and U+2029
+    .replace(/'(?:[^'\\\n]|\\[^\n])*'?/g, (m) => ' '.repeat(m.length))
     .replace(/\/\/[^\n]*/g, (m) => ' '.repeat(m.length));
+
+const BARE = new RegExp(`-\\[${S}*([A-Za-z_]\\w*)(?=${S}*[\\]{])`, 'g');
 
 /**
  * Where each link type written without its colon is in a block, in the order the reader reads them: its line, and the
@@ -32,7 +36,7 @@ export const blankText = (text: string): string =>
  */
 export function bareNames(text: string): { line: number; character: number; end: number }[] {
   const blanked = blankText(text);
-  return [...blanked.matchAll(/-\[\s*([A-Za-z_]\w*)(?=\s*[\]{])/g)].map((m) => {
+  return [...blanked.matchAll(BARE)].map((m) => {
     const name = m[1] ?? '',
       at = (m.index ?? 0) + m[0].length - name.length,
       line = blanked.slice(0, at).split('\n').length - 1,
@@ -57,7 +61,7 @@ export function items(text: string): Item[] {
       while (i < text.length && text[i] !== '\n') i++;
       continue;
     }
-    if (/\s/.test(c)) continue;
+    if (isSpace(c)) continue;
     if (depth === 0 && /[A-Za-z]/.test(c) && (i === 0 || !/\w/.test(text[i - 1] ?? ''))) {
       const w = /^[A-Za-z]+/.exec(text.slice(i))?.[0].toUpperCase();
       if ((w === 'SET' || w === 'MATCH' || w === 'INSERT') && start !== -1) end(-1);

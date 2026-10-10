@@ -121,6 +121,15 @@ describe('a near miss of a relationship type', () => {
       ['FAVOURS'],
     );
   });
+
+  // whitespace as GQL names it (graph spec §3), U+180E among it, as the reader reads the block (10 Oct 2026)
+  test('the line of a near miss is found where the graph line and the link are spaced with U+180E', () => {
+    const r = readNote([
+      BASE.replace('// graph: reader', '//\u{180e}graph:\u{180e}reader') +
+        ',\n(eyes)-[\u{180e}:\u{180e}FAVORS]->(small_reader)',
+    ]);
+    assert.match(g(r).estimates[0]?.explain ?? '', /^Line 11 uses the relationship FAVORS/);
+  });
 });
 
 describe('estimates are only ever guesses', () => {
