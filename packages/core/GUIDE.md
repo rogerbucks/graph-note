@@ -43,9 +43,12 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   `declareDeferred(note, graph, indent)` is that fix: the note with Deferred and DEFERS declared, as Lock writes a
   declaration (readings `defers` and `is deferred by`; the library's guess misspells the second), in the block that holds
   the graph's GraphMeta, only what is lacking, with fresh ids and the comma GQL needs, every other byte kept; it refuses
-  a draft, a graph typed by a shared schema, a schema with no GraphMeta, and a block ending with SET or MATCH.
-  `declareDeferredBlock(blocks, graph, indent)` is the same on the blocks' texts, giving the block's index and new
-  text, for a host that is editing that block itself; `parked` says which things some Deferred defers and which are overdue (every Deferred on the thing is past its
+  a draft, a graph typed by a shared schema, a schema with no GraphMeta or one whose id is not a plain name (it says
+  what to rename it to), and a block ending with SET or MATCH. `declareDeferredBlock(blocks, graph, indent)` is the same
+  on the blocks' texts, giving the block's index and new text, for a host that is editing that block itself. The
+  declarations are a change of the schema, not of the parked thing: written into another block they are not undone
+  with the park; they stay until they are taken out by hand.
+  `parked` says which things some Deferred defers and which are overdue (every Deferred on the thing is past its
   `revisit_by`, as `completeness.js` counts), and `parkedCount` how many of each, apart from the problems. `readNote`
   sets `Box.deferred` on each such box (it takes the day as its fifth argument, the current day by default); the layout
   source is untouched, so the host draws the dashing and the later mark on the finished drawing.

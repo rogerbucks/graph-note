@@ -163,7 +163,10 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
       the schema" appears below it, as big as the other buttons to touch and read by VoiceOver. Press it: the two
       declarations are written at the end of the block that holds the schema (in the text being edited, or, when the
       schema is in a later block, in that block of the note), the Deferred is written with what you typed in the form,
-      and the badge says "No problems, 1 parked" (park_for_later).
+      and the badge says "No problems, 1 parked" (park_for_later). Pressing the button twice fast parks once. Blank
+      What is needed first and press it: nothing is declared, and the message says what is missing. Undo takes back the
+      park, and, when the schema is in the same block, the declarations with it; when the schema is in another block
+      the declarations are not undone with the park, and stay until removed by hand.
 
 ## Walked paths — spec §7
 

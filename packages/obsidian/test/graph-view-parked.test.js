@@ -300,6 +300,52 @@ describe('Park for later, in a locked graph whose schema does not declare Deferr
     }
   });
 
+  const split = ['# Reader', '', fence(PLAIN), '', fence(SCHEMA_BLOCK), ''].join('\n');
+
+  test('pressed twice at once, in either place, it parks once', async () => {
+    for (const note of [noteOf(LOCKED), split]) {
+      const env = await load({ files: { [PATH]: note } });
+      try {
+        const el = await show(env);
+        await parkIt(el);
+        // the vault takes its time, as it does: the second press comes while the first waits for it
+        const vault = env.plugin.app.vault,
+          process = vault.process.bind(vault);
+        vault.process = async (f, fn) => (await wait(40), process(f, fn));
+        const fix = labelled(el, DECLARE);
+        fix.click();
+        await wait(5);
+        fix.click();
+        await until(() => /later_small:Deferred/.test(text(el)));
+        await wait(150);
+        assert.doesNotMatch(text(el), /later_small_2/, 'parked once');
+        assert.equal(text(el).split('DEFERS]->(small)').length, 2, 'one DEFERS link to the thing');
+        const written = text(el) + env.state.files.get(PATH);
+        assert.equal(written.split("name: 'Deferred'").length, 2, 'declared once');
+      } finally {
+        env.uninstall();
+      }
+    }
+  });
+
+  test('checks the form first: blanked after the refusal, nothing is declared, and it says what is missing', async () => {
+    for (const note of [noteOf(LOCKED), split]) {
+      const env = await load({ files: { [PATH]: note } });
+      try {
+        const el = await show(env);
+        await parkIt(el);
+        input(el, 'What is needed').value = '';
+        labelled(el, DECLARE).click();
+        await wait(100);
+        assert.match(alertOf(el), /what is needed/i);
+        assert.doesNotMatch(text(el), /Deferred/, 'nothing parked');
+        assert.equal(env.state.files.get(PATH), note, 'and nothing declared: the note is as it was');
+      } finally {
+        env.uninstall();
+      }
+    }
+  });
+
   test('says why when the declarations cannot be written, and writes nothing', async () => {
     // a schema block that ends with a SET cannot take another item
     const schema = `${SCHEMA_BLOCK},\nSET kind_option.origin = 'edited'`;

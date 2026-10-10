@@ -95,30 +95,45 @@ export function parkButton(
     what.focus(); // the button pressed is gone: the focus goes to the first field, never nowhere
     const said = holder.createDiv({ attr: { role: 'alert' } });
     const fix = holder.createDiv();
-    const parkIn = (block: string, graph?: Graph) => {
+    // the block with the Deferred written into it, from the form as it is now; throws why it cannot
+    const parked = (block: string, graph?: Graph) => {
       const park = { what: what.value, why: why.value, ...(by.value ? { revisitBy: by.value } : {}) };
-      replace(parkForLater(block, key, park, indentText(indent), graph));
+      return parkForLater(block, key, park, indentText(indent), graph);
     };
     const refused = (e: unknown) => said.setText(String((e as Error).message));
     const parkIt = button(holder, 'Park it', 'check', () => {
       fix.empty();
       try {
-        parkIn(text(), whole);
+        replace(parked(text(), whole));
       } catch (e) {
         refused(e);
-        if (declare && e instanceof DeferredNotDeclared)
-          button(fix, DECLARE, 'check', () => void declareAndPark(declare), DECLARE);
+        if (declare && e instanceof DeferredNotDeclared) {
+          const again = button(fix, DECLARE, 'check', () => void declareAndPark(declare, again), DECLARE);
+        }
       }
     });
-    async function declareAndPark(declareIt: () => Promise<DeclaredDeferred>): Promise<void> {
+    let busy = false; // a second press, while the first is at work or after it parked, does nothing: parked once
+    async function declareAndPark(
+      declareIt: () => Promise<DeclaredDeferred>,
+      pressed: HTMLButtonElement,
+    ): Promise<void> {
+      if (busy) return;
+      busy = pressed.disabled = true;
       try {
-        const declared = await declareIt();
-        parkIn(declared.text, declared.whole);
+        // the form as it is now is checked first, so nothing is declared for a park that would fail
+        try {
+          replace(parked(text(), whole));
+        } catch (e) {
+          if (!(e instanceof DeferredNotDeclared)) throw e;
+          const declared = await declareIt();
+          replace(parked(declared.text, declared.whole));
+        }
         fix.empty();
         said.setText('');
         parkIt.focus(); // the button pressed is gone: the focus goes to the button before it, never nowhere
       } catch (e) {
         refused(e);
+        busy = pressed.disabled = false; // refused: pressed again, once the form is put right
       }
     }
   });

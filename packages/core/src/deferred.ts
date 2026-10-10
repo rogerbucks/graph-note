@@ -243,7 +243,16 @@ export function declareDeferredBlock(blocks: string[], graph: string, indent = '
   const block = blocks[at] ?? '';
   if (!lacking.length) return { block: at, text: block };
   const meta = worlds[metaIn]?.labelled('GraphMeta').find((m) => PLAIN_ID.test(m));
-  if (!meta) throw new Error(`graph ${graph} has no GraphMeta to declare them from: add one to its schema first`);
+  if (!meta) {
+    // a GraphMeta whose id is not a plain name (set by an `id` property) cannot be named in a link: say so, and what to use
+    const odd = graphs.flatMap((g) => g.labelled('GraphMeta'))[0];
+    if (odd === undefined)
+      throw new Error(`graph ${graph} has no GraphMeta to declare them from: add one to its schema first`);
+    const plain = odd.replace(/[^A-Za-z0-9_]/g, '_').replace(/^(\d)/, '_$1');
+    throw new Error(
+      `graph ${graph}'s GraphMeta has the id '${odd}', which is not a plain name (letters, digits and underscores, not starting with a digit): rename it to ${plain}`,
+    );
+  }
   if (endsWithSet(block))
     throw new Error('the block that holds the schema ends with a SET or MATCH: end it with a thing of its own first');
   const taken = new Set(graphs.flatMap((g) => [...g.nodes.keys()]));

@@ -360,6 +360,28 @@ describe('declaring Deferred and DEFERS in the schema (park_for_later)', () => {
     assert.throws(() => declareDeferred(noteOf(named), 'reader'), /shared schema/);
   });
 
+  test('refuses a GraphMeta whose id is not a plain name, saying so and what to rename it to', () => {
+    // park_for_later: a link can only name a node by a plain name, so DECLARES could not be written to it
+    for (const [id, rename] of [
+      ['Café', 'Caf_'],
+      ['9x', '_9x'],
+      ['m-1', 'm_1'],
+    ]) {
+      const schema = LOCKED.replaceAll('reader_schema', 'm').replace('(m:GraphMeta {', `(m:GraphMeta {id: '${id}', `);
+      assert.deepEqual(problemsOf(schema), [], `${id} reads`);
+      assert.throws(
+        () => declareDeferred(noteOf(schema), 'reader'),
+        (e) =>
+          /GraphMeta/.test(e.message) &&
+          e.message.includes(`'${id}'`) &&
+          /not a plain name/.test(e.message) &&
+          e.message.includes(`rename it to ${rename}`) &&
+          !/has no GraphMeta/.test(e.message),
+        id,
+      );
+    }
+  });
+
   test('refuses a schema with no graph meta to declare from, a graph that is not in the note, and a block ending in SET', () => {
     // park_for_later
     const noMeta = LOCKED.replace(/\(reader_schema:GraphMeta[^\n]*\n/, '').replace(/\(reader_schema\)[^\n]*\n?/g, '');
