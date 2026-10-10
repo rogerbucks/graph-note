@@ -1,0 +1,111 @@
+// What an export holds (editor spec §16, export_two_scopes, view_export_stays_view, empty_export): the whole diagram, or a
+// view. A view's export holds only the things in the view and the links between them, so nothing outside it can be read
+// from the image; with the faded context asked for it holds the whole graph and says what is outside the view, for the
+// image to fade. A graph or view with nothing in it is `empty`, with the reason, and is never drawn as a blank.
+import type { Estimate } from './estimates.ts';
+import type { GraphDrawing, NoteReading } from './note-reading.ts';
+import { evaluate } from './view-evaluate.ts';
+import type { ViewSpec } from './view-profile.ts';
+import { readingOf } from './views.ts';
+
+/** What is asked to be exported: a graph, whole, or one of its views, with or without the faded context. */
+export interface ExportRequest {
+  graph: string;
+  /** A view of the graph by its name and what it asks; without one, the whole diagram is exported. */
+  view?: { name: string; spec: ViewSpec };
+  /** For a view: also draw what is outside it, faded. It means nothing for the whole diagram. */
+  context?: boolean;
+}
+
+/** What an export holds, ready to be drawn. */
+export interface ExportScope {
+  kind: 'diagram' | 'view';
+  graph: string;
+  /** The view's name, for a view. */
+  view?: string;
+  /** The view in plain English, for a view. */
+  reading?: string;
+  /** Whether the faded context is drawn: only ever for a view. */
+  context: boolean;
+  /** What is laid out: the whole graph, or the view's things and the links between them. */
+  drawing: GraphDrawing;
+  /**
+   * What the image fades: the things outside the view by key, and the links outside it by edge number, counting the
+   * drawing's links in order and then its estimated links to a near-miss name. Empty unless the context is drawn.
+   */
+  faded: { things: string[]; links: number[] };
+  /** Set when there is nothing to export: `why` then says so and what to change. */
+  empty: boolean;
+  why?: string;
+}
+
+const noDrawing = (graph: string): GraphDrawing => ({ graph, boxes: [], links: [], estimates: [] });
+
+/** The estimates that are still true of the links kept: a guessed type at its new place, a guessed name with both ends kept. */
+function keptEstimates(estimates: Estimate[], things: ReadonlySet<string>, placed: ReadonlyMap<number, number>) {
+  return estimates.flatMap((e): Estimate[] => {
+    if (e.kind === 'name') return things.has(e.from) && things.has(e.to) ? [e] : [];
+    const at = e.index === undefined ? undefined : placed.get(e.index);
+    return at === undefined ? [] : [{ ...e, index: at }];
+  });
+}
+
+/**
+ * What an export of `request` holds, from the note as read. A view is put to the graph as `evaluate` puts it, so the image
+ * shows what the view shows. The links of a view keep their order in the graph, and a guess (an estimated link) inside the
+ * view stays a guess, so it is never drawn as a fact.
+ */
+export function exportScope(reading: NoteReading, request: ExportRequest): ExportScope {
+  const { graph, view } = request;
+  const base = reading.graphs.get(graph);
+  const empty = (why: string): ExportScope => ({
+    kind: view ? 'view' : 'diagram',
+    graph,
+    ...(view ? { view: view.name } : {}),
+    context: false,
+    drawing: noDrawing(graph),
+    faded: { things: [], links: [] },
+    empty: true,
+    why,
+  });
+  if (!view) {
+    if (!base || !base.boxes.length)
+      return empty(`Graph ${graph} has no things in this note: add some, or pick another graph`);
+    return { kind: 'diagram', graph, context: false, drawing: base, faded: { things: [], links: [] }, empty: false };
+  }
+  const result = evaluate(view.spec, reading, graph);
+  if (result.empty || !base) return empty(`View ${view.name} matches nothing: ${result.why ?? 'change the view'}`);
+  const things = new Set(result.things),
+    links = new Set(result.links),
+    text = new Map(base.boxes.map((b) => [b.key, b.text]));
+  const said = readingOf(view.spec, (id) => text.get(id) ?? id);
+  const scope = { kind: 'view' as const, graph, view: view.name, reading: said, empty: false };
+  if (request.context) {
+    const guessed = base.estimates.filter((e) => e.kind === 'name');
+    return {
+      ...scope,
+      context: true,
+      drawing: base,
+      faded: {
+        things: base.boxes.map((b) => b.key).filter((k) => !things.has(k)),
+        links: [
+          ...base.links.flatMap((_, i) => (links.has(i) ? [] : [i])),
+          ...guessed.flatMap((e, k) => (things.has(e.from) && things.has(e.to) ? [] : [base.links.length + k])),
+        ],
+      },
+    };
+  }
+  const kept = base.links.flatMap((_, i) => (links.has(i) ? [i] : []));
+  const placed = new Map(kept.map((old, now) => [old, now]));
+  return {
+    ...scope,
+    context: false,
+    drawing: {
+      ...base,
+      boxes: base.boxes.filter((b) => things.has(b.key)),
+      links: kept.flatMap((i) => base.links[i] ?? []),
+      estimates: keptEstimates(base.estimates, things, placed),
+    },
+    faded: { things: [], links: [] },
+  };
+}

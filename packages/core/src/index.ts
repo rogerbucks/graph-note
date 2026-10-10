@@ -75,7 +75,26 @@ export type { ViewResult } from './view-evaluate.ts';
 export { DEPARTURES, underStrictness, toStandard, standardBlocks } from './strictness.ts';
 export type { Converted, Departure, Strictness, StrictnessSettings } from './strictness.ts';
 export { OPTIONS, DEFAULT_SETTINGS, settingsFrom, indentText, aiModel } from './settings.ts';
-export type { AiModel, Choice as OptionChoice, Indent, Option, Settings } from './settings.ts';
+export type {
+  AiModel,
+  Choice as OptionChoice,
+  CompanionSetting,
+  ExportTheme,
+  Indent,
+  Option,
+  Settings,
+} from './settings.ts';
+export { exportScope } from './export-scope.ts';
+export type { ExportRequest, ExportScope } from './export-scope.ts';
+export { EXPORT_FORMATS, PNG_MIN_SCALE, exportSvg, pngSize } from './export.ts';
+export type { ExportFormat, ExportImage, ExportInfo, PngSize } from './export.ts';
+export { saidDate } from './export-frame.ts';
+export { exportPlan } from './export-plan.ts';
+export type { ExportDecision, ExportGo, ExportPlanInput } from './export-plan.ts';
+export { companionNote } from './export-note.ts';
+export type { CompanionInfo } from './export-note.ts';
+export { writeSafely } from './export-write.ts';
+export type { SafeWrite, WriteOps } from './export-write.ts';
 export type { Choice, PaneWrite } from './pane.ts';
 export { completenessReport } from './completeness.ts';
 export type { CompletenessReport, RuleReport } from './completeness.ts';

@@ -8,7 +8,8 @@
 // Claude Code host, 11 Oct 2026), deferred things (parkForLater, parked, parkedCount and their types), walked paths
 // (PathRecorder, PathPlayer, pathBlock, pathsOf, pathProblems and their types), the style graph (readStyle, lookOf,
 // legendOf, nudgedSource, styleEdit, hueColour, the words a style may use and their types), and views (viewsOf,
-// parseView, viewQuery, viewBlock, readingOf, evaluate and their types, 11 Oct 2026).
+// parseView, viewQuery, viewBlock, readingOf, evaluate and their types, 11 Oct 2026), and export (exportScope, exportSvg,
+// pngSize, exportPlan, companionNote, writeSafely, saidDate, EXPORT_FORMATS, PNG_MIN_SCALE and their types, 11 Oct 2026).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -21,6 +22,7 @@ const ENTRY = new URL('../src/index.ts', import.meta.url);
 const VALUES = [
   'DEFAULT_SETTINGS',
   'DEPARTURES',
+  'EXPORT_FORMATS',
   'FORMATS',
   'History',
   'KIND',
@@ -34,6 +36,7 @@ const VALUES = [
   'OUTSIDE',
   'PAGE_LIMITS',
   'PALETTES',
+  'PNG_MIN_SCALE',
   'PaneSession',
   'PathPlayer',
   'PathRecorder',
@@ -61,6 +64,7 @@ const VALUES = [
   'colonInNote',
   'commaFor',
   'commaInNote',
+  'companionNote',
   'completenessReport',
   'completions',
   'details',
@@ -71,6 +75,9 @@ const VALUES = [
   'drawingSource',
   'evaluate',
   'explain',
+  'exportPlan',
+  'exportScope',
+  'exportSvg',
   'fixed',
   'fixedPalette',
   'gqlBlocks',
@@ -114,6 +121,7 @@ const VALUES = [
   'pathBlock',
   'pathProblems',
   'pathsOf',
+  'pngSize',
   'propertiesOf',
   'propertyNames',
   'readBack',
@@ -124,6 +132,7 @@ const VALUES = [
   'renameProperty',
   'replaceBlock',
   'reverseGuess',
+  'saidDate',
   'serveLayouts',
   'setProperty',
   'settingsFrom',
@@ -145,6 +154,7 @@ const VALUES = [
   'viewQuery',
   'viewsOf',
   'withoutColorMix',
+  'writeSafely',
 ];
 
 const TYPES = [
@@ -156,6 +166,8 @@ const TYPES = [
   'Choice',
   'Clock',
   'CodeAction',
+  'CompanionInfo',
+  'CompanionSetting',
   'CompletenessReport',
   'CompletionItem',
   'Converted',
@@ -167,6 +179,15 @@ const TYPES = [
   'Edit',
   'Engine',
   'Estimate',
+  'ExportDecision',
+  'ExportFormat',
+  'ExportGo',
+  'ExportImage',
+  'ExportInfo',
+  'ExportPlanInput',
+  'ExportRequest',
+  'ExportScope',
+  'ExportTheme',
   'Frame',
   'GraphDrawing',
   'GraphNames',
@@ -209,6 +230,7 @@ const TYPES = [
   'PathBlock',
   'PathReading',
   'PathStep',
+  'PngSize',
   'Position',
   'Problem',
   'PropType',
@@ -218,6 +240,7 @@ const TYPES = [
   'Refusal',
   'RuleReport',
   'RunnerOptions',
+  'SafeWrite',
   'Settings',
   'Shape',
   'Show',
@@ -252,6 +275,7 @@ const TYPES = [
   'ViewSpec',
   'ViewStyle',
   'WalkedPath',
+  'WriteOps',
   'WriteResult',
   'ZoomEvent',
 ];
