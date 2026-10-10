@@ -358,7 +358,7 @@
 (test_inspector:Test {proves: 'every property of a thing or link can be seen, edited, added and removed, with types checked', file: 'packages/core/test/inspector.test.js, packages/core/test/linked-list.test.js', where: 'repo', status: 'written'}),
 (test_diagram_types:Test {proves: 'each diagram type is offered only when the data fits, and keeps the locked style', file: 'packages/core/test/types.test.js', where: 'repo', status: 'planned'}),
 (test_arrows:Test {proves: 'arrowheads hide and show for a graph, a view or a relationship type from the style graph, are drawn unless hidden, and leave each link reading and the text version unchanged', file: 'packages/core/test/arrows.test.js', where: 'repo', status: 'planned'}),
-(test_export:Test {proves: 'exports carry title, legend and source, and data exports read back identically', file: 'packages/core/test/export.test.js', where: 'repo', status: 'planned'}),
+(test_export:Test {proves: 'exports carry title, legend and source, and data exports read back identically', file: 'packages/core/test/export.test.js', where: 'repo', status: 'written'}),
 (test_proposals:Test {proves: 'a proposal is shown, each change accepted or rejected, nothing applied without a person', file: 'packages/core/test/proposals.test.js', where: 'repo', status: 'planned'}),
 (test_deferred:Test {proves: 'parking writes a Deferred, drawn dashed, counted apart from problems', file: 'packages/core/test/deferred.test.js', where: 'repo', status: 'written'}),
 (test_completeness_view:Test {proves: 'the completeness report is shown behind the badge in three states', file: 'packages/core/test/completeness.test.js, packages/obsidian/test/graph-view-bar.test.js (help behind the badge)', where: 'repo', status: 'written'}),
