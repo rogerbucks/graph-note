@@ -18,9 +18,10 @@ const mount = ($: any, surface: string) =>
     props: { title: 'Graph' },
   } as never);
 
-test('the sample note is drawn in the dark palette as SVG, and as text on the terminal', async ($, on) => {
+test('the sample note is drawn as SVG in the light or dark the app shows, and as text on the terminal', async ($, on) => {
   const argvs: string[][] = [];
   on('fs.read', async () => ({ value: NOTE }));
+  // the terminal's theme setting says dark: the drawing must not take it, since the desktop app may be light
   on('config.list', async () => ({ value: [{ key: 'theme', value: 'dark' }] }) as never);
   on('process.run', async (_$, e) => {
     argvs.push([...e.argv]);
@@ -38,8 +39,9 @@ test('the sample note is drawn in the dark palette as SVG, and as text on the te
     const ui = await mount($, surface);
     const svg = (await ui.drawn()) as unknown as { type: string; props: { source: string; alt: string } };
     expect(svg.type).toBe('Svg');
-    expect(svg.props.source).toMatch(/^<svg [^>]*background:#1e1e1e/);
-    expect(svg.props.source).not.toMatch(/var\(--/);
+    expect(svg.props.source).toMatch(/^<svg [^>]*background:var\(--gn-page\)/);
+    expect(svg.props.source).toMatch(/<style>[^<]*@media \(prefers-color-scheme: dark\)/);
+    expect(svg.props.source).not.toMatch(/var\(--(color|text)-/);
     expect(svg.props.alt).toBe(answer.text);
     await ui.unmount();
   }
@@ -52,7 +54,6 @@ test('the sample note is drawn in the dark palette as SVG, and as text on the te
 test('the layout is given the time the host package names, and node --version a short one', async ($, on) => {
   const timeouts: (number | undefined)[] = [];
   on('fs.read', async () => ({ value: NOTE }));
-  on('config.list', async () => ({ value: [] }) as never);
   on('process.run', async (_$, e) => {
     timeouts.push(e.init?.timeoutMs);
     return { deny: 'spawn node ENOENT' } as never;
@@ -64,7 +65,6 @@ test('the layout is given the time the host package names, and node --version a 
 
 test('when node is missing, the pane says so and shows the graph as text on every surface', async ($, on) => {
   on('fs.read', async () => ({ value: NOTE }));
-  on('config.list', async () => ({ value: [] }) as never);
   // the call rejects, as the host's does when node cannot start (a hook that throws is skipped, so it denies)
   on('process.run', async () => ({ deny: 'spawn node ENOENT' }) as never);
   on('ui.open', async () => ({ value: { isPlaced: true } }) as never);

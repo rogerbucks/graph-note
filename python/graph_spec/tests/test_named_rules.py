@@ -41,6 +41,20 @@ LOANS = """// graph: lending
 (c4)-[:ABOUT]->(bike)"""
 
 
+# req:21.incomplete-missing: a fact the figure reads that is not there — what is added to LOANS,
+# the loan, and what the figure names
+MISSING = [
+    (",\n(r4:Repayment {id: 'rep:4'}),\n(r4)-[:REPAYS]->(bike)", "loan:bike", ["rep:4"]),
+    (",\n(van:Loan {id: 'loan:van', currency: 'GBP'})", "loan:van", ["loan:van"]),
+    (",\n(cart:Loan {id: 'loan:cart', principal_cents: 100})", "loan:cart", ["loan:cart"]),
+    (
+        ",\n(r5:Repayment {id: 'rep:5'}),\n(r5)-[:REPAYS]->(boat)",
+        "loan:boat",
+        ["claim:amount", "claim:principal", "rep:5"],
+    ),
+]
+
+
 def plain():
     st = gp.Store()
     st.apply(LOANS)
@@ -75,25 +89,26 @@ class LoanBalanceReadsPlain(unittest.TestCase):
         )
 
     @needs_engine
-    def test_a_repayment_with_no_amount_fails_the_balance_as_grafeo_s_reading_does(self):
-        # the two may not differ silently (review of #59); what the figure should say of a
-        # repayment with no amount is a question for the spec
-        def outcome(source):
-            try:
-                return gs.fig_loan_balance(source, "loan:bike")
-            except Exception as e:
-                return type(e).__name__, str(e)
+    def test_a_figure_missing_a_fact_it_reads_says_it_is_incomplete_and_names_the_thing(self):
+        # req:21.incomplete-missing: never raises, never takes the missing value as zero — the
+        # reader's reading and Grafeo's alike
+        for extra, loan, names in MISSING:
+            st = gp.Store()
+            st.apply(LOANS + extra)
+            db = gs.grafeo.GrafeoDB()
+            db.execute("CREATE GRAPH lending")
+            db.set_graph("lending")
+            db.execute(gs.strip(LOANS + extra))
+            want = {"result": "incomplete", "depends_on": names}
+            self.assertEqual(gs.fig_loan_balance(gr.World.from_store(st)["lending"], loan), want)
+            self.assertEqual(gs.fig_loan_balance(db, loan), want, extra)
 
-        extra = ",\n(r4:Repayment {id: 'rep:4'}),\n(r4)-[:REPAYS]->(bike)"
-        st = gp.Store()
-        st.apply(LOANS + extra)
-        db = gs.grafeo.GrafeoDB()
-        db.execute("CREATE GRAPH lending")
-        db.set_graph("lending")
-        db.execute(gs.strip(LOANS + extra))
-        ours = outcome(gr.World.from_store(st)["lending"])
-        self.assertEqual(ours, outcome(db))
-        self.assertEqual(ours[0], "TypeError")
+    def test_the_reader_s_figure_missing_a_fact_says_it_is_incomplete_without_grafeo(self):
+        for extra, loan, names in MISSING:
+            st = gp.Store()
+            st.apply(LOANS + extra)
+            got = gs.fig_loan_balance(gr.World.from_store(st)["lending"], loan)
+            self.assertEqual(got, {"result": "incomplete", "depends_on": names}, extra)
 
     @needs_engine
     def test_the_balance_from_the_reader_s_reading_is_grafeo_s(self):
