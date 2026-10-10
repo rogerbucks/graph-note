@@ -99,8 +99,8 @@ These test behaviour across modules, or the repository itself, so they are named
 - `packages/core/test/abuse.test.js` — no sequence of edits or text crashes the viewer (spec §12).
 - `packages/core/test/edits.test.js` — every edit from the pane round-trips; locking writes a schema the checks pass.
 - `packages/core/test/imports.test.js` — the core imports no host.
-- `packages/obsidian/test/accessibility.test.js` — contrast in both themes, and a keyboard path for every action.
 - `packages/claude-code/test/build.test.mjs` — the build writes the mod's hooks bundle, with no WebAssembly engine, and a render script that draws.
+- `packages/obsidian/test/accessibility.test.js` — contrast in both themes, and a keyboard path for every action.
 - `packages/obsidian/test/build.test.mjs` — the build writes the files the plugin is installed from.
 - `packages/obsidian/test/inline.test.js` — editing in place in the drawing's card.
 - `packages/graph-spec/test/characterisation.test.mjs` — the library gives the answers recorded before it moved here.

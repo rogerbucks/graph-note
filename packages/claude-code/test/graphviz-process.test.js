@@ -4,7 +4,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { layOut, NODE_MISSING, RENDER_SCRIPT } from '../src/graphviz-process.ts';
+import { layOut, NODE_MISSING, RENDER_SCRIPT, LAYOUT_TIMEOUT_MS, VERSION_TIMEOUT_MS } from '../src/graphviz-process.ts';
 
 const DOT = 'digraph { a -> b }';
 const ok = (stdout) => ({ exitCode: 0, stdout, stderr: '' });
@@ -60,6 +60,32 @@ describe('when node is missing', () => {
     assert.deepEqual(await layOut([DOT], '/mod', async () => ({ exitCode: 127, stdout: '', stderr: '' })), {
       why: NODE_MISSING,
     });
+  });
+
+  test('a process the host will not run is not called a missing node: what the host said is shown', async () => {
+    const laid = await layOut([DOT], '/mod', async () => {
+      throw new Error('process.run was denied by a hook');
+    });
+    assert.notEqual(laid.why, NODE_MISSING);
+    assert.match(laid.why, /^Could not run node: process\.run was denied by a hook/);
+  });
+
+  test('the check that node starts is given a short time of its own', async () => {
+    const asked = [];
+    await layOut([DOT], '/mod', async (argv, _stdin, timeoutMs) => {
+      asked.push([argv[1], timeoutMs]);
+      throw new Error('spawn node ENOENT');
+    });
+    assert.deepEqual(asked, [
+      [`/mod/${RENDER_SCRIPT}`, LAYOUT_TIMEOUT_MS],
+      ['--version', VERSION_TIMEOUT_MS],
+    ]);
+    assert.ok(VERSION_TIMEOUT_MS <= 5000);
+  });
+
+  test('output cut short by the host is said so, not called a bad drawing', async () => {
+    const laid = await layOut([DOT], '/mod', async () => ({ ...ok('["<svg'), isStdoutTruncated: true }));
+    assert.match(laid.why, /too large to hand back/);
   });
 
   test('a node that starts but whose layout does not finish is not called missing', async () => {

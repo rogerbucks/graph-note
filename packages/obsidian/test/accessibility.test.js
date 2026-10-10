@@ -10,8 +10,35 @@ import { THEME_COLOURS } from '@graph-note/core';
 
 const STYLE = JSON.parse(readFileSync(`${root}python/graph_spec/src/graph_svg.style.json`, 'utf8'));
 
-// Obsidian's default themes, from the core's one colour table, where a host with fixed colours takes them too.
-const THEMES = THEME_COLOURS;
+// Obsidian's default themes, as its app stylesheet sets them (read from Obsidian 1.13, 7 Oct 2026).
+const THEMES = {
+  light: {
+    page: '#ffffff',
+    text: '#222222',
+    muted: '#5c5c5c',
+    red: '#e93147',
+    orange: '#ec7500',
+    yellow: '#e0ac00',
+    green: '#08b94e',
+    cyan: '#00bfbc',
+    blue: '#086ddd',
+    purple: '#7852ee',
+    pink: '#d53984',
+  },
+  dark: {
+    page: '#1e1e1e',
+    text: '#dadada',
+    muted: '#b3b3b3',
+    red: '#fb464c',
+    orange: '#e9973f',
+    yellow: '#e0de71',
+    green: '#44cf6e',
+    cyan: '#53dfdd',
+    blue: '#027aff',
+    purple: '#a882ff',
+    pink: '#fa99cd',
+  },
+};
 
 const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
 /** color-mix(in srgb, a p%, b): each channel mixed as it is stored. */
@@ -62,6 +89,10 @@ describe('contrast in both themes', () => {
 });
 
 describe('one colour mapping', () => {
+  test('the core’s fixed palettes, for a host with no theme variables, are Obsidian’s default themes as read here', () => {
+    assert.deepEqual(THEME_COLOURS, THEMES);
+  });
+
   test('the plugin names no colour of its own: the drawing’s colours come from the style, through the core’s one table', () => {
     const dir = `${root}packages/obsidian/src/`;
     for (const f of readdirSync(dir, { recursive: true }).filter((x) => x.endsWith('.ts'))) {

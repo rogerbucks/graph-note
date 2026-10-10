@@ -22,16 +22,26 @@ export const SVG_MAX = 131072;
 /** What the pane says for a note with no graph. */
 export const NO_GRAPH = 'No graph in this note.';
 
+/** What the pane says for a note whose graph blocks hold nothing yet. */
+export const EMPTY_GRAPH = 'The graph in this note has nothing in it yet.';
+
 const INSTEAD = 'It is shown as text instead.';
 
 /** Why a graph is over the layout limits, in words. */
 function refusalWords(r: Refusal): string {
   if (r.reason !== 'too-large') return `Not drawn. ${INSTEAD}`;
   const n = (x: number) => x.toLocaleString('en-GB');
+  if (r.limit === 'text-bytes' || r.limit === 'text-lines') {
+    const unit = r.limit === 'text-bytes' ? 'bytes' : 'lines';
+    return `Too large to read: the graph blocks here hold ${n(r.count)} ${unit}, and at most ${n(r.most)} are read.`;
+  }
   const what =
     r.limit === 'source' ? 'bytes of drawing instructions' : r.limit === 'word' ? 'characters in a word' : r.limit;
   return `Too large to draw: this graph has ${r.atLeast ? 'at least ' : ''}${n(r.count)} ${what}, and at most ${n(r.most)} are drawn. ${INSTEAD}`;
 }
+
+/** A count and its noun, in the singular for one. */
+const counted = (count: number, noun: string) => `${count} ${noun}${count === 1 ? '' : 's'}`;
 
 /** The view of a note's first graph, laid out by `lay` and themed in `palette`. */
 export async function viewOf(
@@ -39,10 +49,23 @@ export async function viewOf(
   lay: (dots: string[]) => Promise<Laid>,
   palette: Palette,
 ): Promise<GraphView> {
-  const [drawing] = readNote(gqlBlocks(note).map((b) => b.text)).graphs.values();
-  if (!drawing) return { title: 'No graph', alt: NO_GRAPH, lines: [NO_GRAPH] };
+  const blocks = gqlBlocks(note);
+  const reading = readNote(blocks.map((b) => b.text));
+  if (reading.tooLarge) {
+    const why = refusalWords(reading.tooLarge);
+    return { title: 'Too large', alt: why, lines: [why], why };
+  }
+  const [drawing] = reading.graphs.values();
+  if (!drawing) {
+    const errors = reading.problems.filter((p) => p.severity === 'error');
+    if (!errors.length && blocks.length) return { title: 'Empty', alt: EMPTY_GRAPH, lines: [EMPTY_GRAPH] };
+    if (!errors.length) return { title: 'No graph', alt: NO_GRAPH, lines: [NO_GRAPH] };
+    const alt = 'The graph could not be read.';
+    const at = (p: (typeof errors)[number]) => (blocks[p.block]?.line ?? 0) + p.line;
+    return { title: 'Not read', alt, lines: [alt, ...errors.map((p) => `Line ${at(p)}: ${p.message}`)] };
+  }
 
-  const alt = `${drawing.graph}: ${drawing.boxes.length} things, ${drawing.links.length} links`;
+  const alt = `${drawing.graph}: ${counted(drawing.boxes.length, 'thing')}, ${counted(drawing.links.length, 'link')}`;
   const asText = {
     title: drawing.graph,
     alt,

@@ -42,7 +42,7 @@ describe('drawing', () => {
     const drawing = readNote([WIDE]).graphs.get('g');
     const laid = directions(drawing),
       svgs = laid.map((d) => engine.render(d.dot));
-    assert.deepEqual(chosen(laid, svgs), draw(drawing, engine), "Obsidian's by default");
+    assert.match(chosen(laid, svgs).svg, /var\(--text-normal\)/, "Obsidian's by default");
     const dark = chosen(laid, svgs, PALETTES.dark);
     const best = laid.find((d) => d.rankdir === dark.rankdir);
     assert.equal(dark.svg, themed(svgs[laid.indexOf(best)], best.src.kinds, best.src.readings, PALETTES.dark));

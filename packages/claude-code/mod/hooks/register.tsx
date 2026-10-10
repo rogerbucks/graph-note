@@ -10,6 +10,7 @@ import { layOut, notePath, paletteFor, viewOf } from './graph.js';
 
 const PANE = 'graph';
 const USAGE = 'Name a note to draw: /graph <path to a note>, quoted if it has spaces.';
+const NO_PICTURES = 'This surface cannot draw pictures, so the graph is shown as text. The desktop app draws it.';
 const view = atom({ plugin: 'graph-note', key: 'view' } as const, null as GraphView | null);
 
 /** Claude Code's theme setting, so the drawing is painted to match it. */
@@ -27,7 +28,7 @@ async function viewAt($: EngineInterface, path: string): Promise<GraphView> {
     const why = `Could not read ${path}: ${err instanceof Error ? err.message : String(err)}`;
     return { title: path, alt: why, lines: [why] };
   }
-  const run = (argv: readonly string[], stdin: string) => $.process.run(argv, { stdin, timeoutMs: 20000 });
+  const run = (argv: readonly string[], stdin: string, timeoutMs: number) => $.process.run(argv, { stdin, timeoutMs });
   return viewOf(note, (dots) => layOut(dots, $.plugin.root, run), paletteFor(await theme($)));
 }
 
@@ -55,9 +56,11 @@ export const register: Register = (on) => {
     // the terminal draws no Svg (Image and Raster only), though `'Svg' in` its table holds: the text stands in there
     const Svg = e.surface !== 'terminal' && 'Svg' in elements ? elements.Svg : undefined;
     if (Svg && shown.svg) return <Svg source={shown.svg} alt={shown.alt} />;
+    // never text with no reason: a graph that could be drawn says why it is text here
+    const why = shown.why ?? (shown.svg ? NO_PICTURES : undefined);
     return (
       <Box flexDirection="column">
-        {shown.why ? <Text color="warning">⚠ {shown.why}</Text> : null}
+        {why ? <Text color="warning">⚠ {why}</Text> : null}
         {shown.lines.map((line, i) => (
           <Text key={`line-${i}`}>{line}</Text>
         ))}

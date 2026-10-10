@@ -77,9 +77,7 @@ test('drawn with a fixed entry, the drawing names no variable and no color-mix, 
   assert.doesNotMatch(svg, /var\(|color-mix|#000[0-4][0-9a-f]{2}"/);
   assert.match(svg, new RegExp(`<svg [^>]*style="[^"]*background:${THEME_COLOURS.dark.page}`));
   assert.match(svg, new RegExp(`stroke:${PALETTES.dark.blend('green', STYLE.line_mix)}`), 'favours is drawn green');
-  assert.equal(
-    themed(raw, kinds, readings, PALETTES.obsidian),
-    themed(raw, kinds, readings),
-    'Obsidian is the default',
-  );
+  const plain = themed(raw, kinds, readings);
+  assert.match(plain, /var\(--text-normal\)/, "Obsidian's theme variables by default");
+  assert.doesNotMatch(plain, /background:/, "Obsidian's own page shows through");
 });

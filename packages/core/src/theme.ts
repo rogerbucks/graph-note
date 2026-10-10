@@ -1,8 +1,8 @@
 // The drawing's colours and size, as graph_svg.py writes them (spec §3, "one style"; §11, "contrast"). Graphviz is given
 // placeholder colours; here they become the host's colours from the one table (palette.ts), Obsidian's theme colours by
-// default, written as inline styles, each hue blended with the
-// theme's text colour so labels reach 4.5:1 and lines 3:1 in both themes (the reasons are in the style file). A port of
-// graph_svg._themed and of the direction choice in graph_svg.render, proved against them by the theme tests.
+// default, written as inline styles, each hue blended with the theme's text colour so labels reach 4.5:1 and lines 3:1
+// in both themes (the reasons are in the style file). A port of graph_svg._themed and of the direction choice in
+// graph_svg.render, proved against them by the theme tests.
 import GraphLayout from '@graph-note/graph-spec/src/graph-layout.js';
 import { STYLE } from './layout.ts';
 import { PALETTES } from './palette.ts';

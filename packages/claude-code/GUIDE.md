@@ -11,10 +11,13 @@ one colour mapping), chosen by Claude Code's theme setting, with the page painte
 
 - `graph-view.ts` — `viewOf`: what the pane shows for a note. The first graph drawn in a palette, and always the same
   graph as lines of text, which stand in, with the reason, when it cannot be drawn: over the layout limits, over what a
-  pane takes, or Graphviz not run. Also `paletteFor` (the theme setting to a palette) and `notePath` (/graph's argument).
-- `graphviz-process.ts` — `layOut`: the DOT sources handed to the render script through node, and the SVGs back; a node
-  that cannot start (asked again with `node --version`), or exit code 127, is said as `NODE_MISSING`, in words with
-  what to do.
+  pane takes, or Graphviz not run. A note too large to read, a graph that could not be read (its errors, with their note
+  lines) and an empty graph each say so, never "no graph". Also `paletteFor` (the theme setting to a palette) and
+  `notePath` (/graph's argument).
+- `graphviz-process.ts` — `layOut`: the DOT sources handed to the render script through node, within the core's time
+  limit (`LAYOUT_TIMEOUT_MS`), and the SVGs back. After a refused run, `node --version` is asked: a node that is not
+  there (ENOENT, "not found") or exit code 127 is said as `NODE_MISSING`, in words with what to do; a host that runs no
+  process says its own words; a node that starts means the layout did not finish.
 - `mod-entry.ts` — what the hooks module takes from the two above; bundled into `mod/hooks/graph.js`.
 
 ## The process, `bin/`
@@ -25,7 +28,9 @@ one colour mapping), chosen by Claude Code's theme setting, with the page painte
 ## The mod, `mod/`
 
 The folder Claude Code loads (`--plugin-dir`). It is checked by Claude Code, not by the repository's linter: run
-`claude plugin validate packages/claude-code/mod` and `claude plugin test packages/claude-code/mod`.
+`claude plugin validate packages/claude-code/mod` and `claude plugin test packages/claude-code/mod` before a merge
+that touches it. CI has no Claude Code, so it runs neither: what the pane shows is decided in `src/`, which CI tests,
+and `register.tsx` stays thin.
 
 - `.claude-plugin/plugin.json` — the manifest, named `graph-note`.
 - `hooks/register.tsx` — the hooks module: registers `/graph`, reads the note with `$.fs.read`, runs Graphviz with

@@ -44,16 +44,29 @@ test('the sample note is drawn in the dark palette as SVG, and as text on the te
     await ui.unmount();
   }
   const ui = await mount($, 'terminal');
+  expect(await ui.find({ type: 'Text', text: /cannot draw pictures/ })).toBeDefined();
   expect(await ui.find({ type: 'Text', text: /large_reader —answers→ reader_question/i })).toBeDefined();
   await ui.unmount();
+});
+
+test('the layout is given the time the host package names, and node --version a short one', async ($, on) => {
+  const timeouts: (number | undefined)[] = [];
+  on('fs.read', async () => ({ value: NOTE }));
+  on('config.list', async () => ({ value: [] }) as never);
+  on('process.run', async (_$, e) => {
+    timeouts.push(e.init?.timeoutMs);
+    return { deny: 'spawn node ENOENT' } as never;
+  });
+  on('ui.open', async () => ({ value: { isPlaced: true } }) as never);
+  await $.command.run({ command: 'graph', args: 'test-vault/Sample graph note.md' } as never);
+  expect(timeouts).toEqual([15000, 5000]);
 });
 
 test('when node is missing, the pane says so and shows the graph as text on every surface', async ($, on) => {
   on('fs.read', async () => ({ value: NOTE }));
   on('config.list', async () => ({ value: [] }) as never);
-  on('process.run', async () => {
-    throw new Error('spawn node ENOENT');
-  });
+  // the call rejects, as the host's does when node cannot start (a hook that throws is skipped, so it denies)
+  on('process.run', async () => ({ deny: 'spawn node ENOENT' }) as never);
   on('ui.open', async () => ({ value: { isPlaced: true } }) as never);
 
   const answer = await $.command.run({ command: 'graph', args: 'test-vault/Sample graph note.md' } as never);

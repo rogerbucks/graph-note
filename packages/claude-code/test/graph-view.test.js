@@ -3,8 +3,8 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { gqlBlocks, readNote, loadEngine, PALETTES, LAYOUT_LIMITS } from '@graph-note/core';
-import { viewOf, paletteFor, notePath, SVG_MAX, NO_GRAPH } from '../src/graph-view.ts';
+import { gqlBlocks, readNote, loadEngine, PALETTES, LAYOUT_LIMITS, READ_LIMITS } from '@graph-note/core';
+import { viewOf, paletteFor, notePath, SVG_MAX, NO_GRAPH, EMPTY_GRAPH } from '../src/graph-view.ts';
 import { NODE_MISSING } from '../src/graphviz-process.ts';
 
 const NOTE = readFileSync(new URL('../../../test-vault/Sample graph note.md', import.meta.url), 'utf8');
@@ -63,6 +63,35 @@ describe('never a blank pane', () => {
   test('a note with no graph says so', async () => {
     const view = await viewOf('# Just words\n', graphviz, PALETTES.dark);
     assert.deepEqual(view, { title: 'No graph', alt: NO_GRAPH, lines: [NO_GRAPH] });
+  });
+
+  test('a note too large to read says so, with the limit, never "no graph"', async () => {
+    const huge = `\`\`\`gql\n// graph: huge\n${`(t:Thing {name: '${'x'.repeat(READ_LIMITS.bytes)}'})`}\n\`\`\``;
+    const view = await viewOf(huge, graphviz, PALETTES.dark);
+    assert.match(view.why ?? '', /too large to read/i);
+    assert.notEqual(view.alt, NO_GRAPH);
+  });
+
+  test('a graph that could not be read says why, with its first problem', async () => {
+    const view = await viewOf("```gql\n// graph: g\n(a:Thing {name: 'A'}\n```", graphviz, PALETTES.dark);
+    assert.match(view.alt, /could not be read/);
+    assert.equal(view.why, undefined, 'the reason is the view itself: there is no graph to show as text');
+    assert.ok(view.lines.length >= 2, 'the problem, with its line, follows');
+    assert.match(view.lines[1], /^Line \d+: /);
+  });
+
+  test('a graph block with nothing in it yet says so, not "no graph"', async () => {
+    const view = await viewOf('```gql\n// graph: g\n```', graphviz, PALETTES.dark);
+    assert.deepEqual(view, { title: 'Empty', alt: EMPTY_GRAPH, lines: [EMPTY_GRAPH] });
+  });
+
+  test('one thing and one link are counted in the singular', async () => {
+    const view = await viewOf(
+      "```gql\n// graph: g\n(a:Thing {name: 'A'}), (a)-[:KNOWS]->(a)\n```",
+      graphviz,
+      PALETTES.dark,
+    );
+    assert.equal(view.alt, 'g: 1 thing, 1 link');
   });
 });
 
