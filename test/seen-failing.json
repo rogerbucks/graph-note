@@ -490,7 +490,7 @@
   "python/graph_spec/tests/test_parity.py": {
     "ReadingCut.test_past_the_budget_the_core_and_python_leave_out_the_same": {
       "seen_failing_first": false,
-      "evidence": "it does fail against its parent, where read_for_drawing takes no budget (a TypeError in each subTest), but the replay's Python runner (scripts/tests-first.mjs PY_RUNNER) counts a test by its own result and not its subTests', so it was recorded as passing first; its sibling test_a_small_budget_cuts_and_a_large_one_does_not, with no subTests, was seen failing"
+      "evidence": "it does fail against its parent (a TypeError for each budget). At ff02d6d it was written with unittest subTest, which the replay reads as passing, so the record shows it as passed first; it is now a plain loop, and that commit's record cannot change."
     }
   }
 }

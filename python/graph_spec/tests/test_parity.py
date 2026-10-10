@@ -197,21 +197,21 @@ def core_read(blocks, budget):
 
 class ReadingCut(unittest.TestCase):
     def test_past_the_budget_the_core_and_python_leave_out_the_same(self):
+        # a plain loop, never subTest: the tests-first replay counts a test by its own result
         for budget in (10**9, 2 * len(CUT_BLOCKS[0].encode("utf-16-le")) // 2, 700):
-            with self.subTest(budget=budget):
-                store, problems = gp.read_for_drawing(CUT_BLOCKS, budget=budget)
-                python = {
-                    "errors": [
-                        [p["block"], p["line"], p["message"].endswith(CUT_SAID), p.get("dropped")]
-                        for p in problems
-                        if p["severity"] == "error"
-                    ],
-                    "ids": {
-                        g: [n["props"].get("id") for n in x["nodes"].values()]
-                        for g, x in store.graphs.items()
-                    },
-                }
-                self.assertEqual(python, core_read(CUT_BLOCKS, budget))
+            store, problems = gp.read_for_drawing(CUT_BLOCKS, budget=budget)
+            python = {
+                "errors": [
+                    [p["block"], p["line"], p["message"].endswith(CUT_SAID), p.get("dropped")]
+                    for p in problems
+                    if p["severity"] == "error"
+                ],
+                "ids": {
+                    g: [n["props"].get("id") for n in x["nodes"].values()]
+                    for g, x in store.graphs.items()
+                },
+            }
+            self.assertEqual(python, core_read(CUT_BLOCKS, budget), f"budget {budget}")
 
     def test_a_small_budget_cuts_and_a_large_one_does_not(self):
         _, cut = gp.read_for_drawing(CUT_BLOCKS, budget=700)

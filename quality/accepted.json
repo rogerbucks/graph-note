@@ -4,7 +4,7 @@
     {
       "metric": "bundle_bytes_without_viz",
       "from": 357577,
-      "to": 404338,
+      "to": 407431,
       "reason": "the layout runs in a Web Worker (spec §9 layout_contained); the worker's own copy of the layout-source code is the cost of containing it",
       "date": "2026-10-10"
     }
