@@ -353,6 +353,12 @@
       "evidence": "a control case, written with the change beside it: the rule loader already escaped a backslash and quote, and gives Grafeo a tab and line break as themselves, so it passes before and after by design; it holds that req:3.gql-escapes' quote() keeps it so (11 Oct 2026)"
     }
   },
+  "python/graph_spec/tests/test_settings_reader_default.py": {
+    "ReaderDefault.test_a_gql_constraint_with_no_twin_is_still_run_as_gql": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: a GQL constraint with no named twin is database work and was always run as GQL, so it passes before and after by design; it holds that req:3.reader-default's change to config_from runs only rules with a twin as the twin (11 Oct 2026)"
+    }
+  },
   "python/graph_spec/tests/test_reader_agrees_with_grafeo.py": {
     "Agreement.test_p1_the_reader_builds_grafeos_graphs": {
       "seen_failing_first": false,

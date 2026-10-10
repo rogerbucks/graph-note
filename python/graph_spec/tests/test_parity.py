@@ -307,9 +307,9 @@ class IdOnce(unittest.TestCase):
             self.assertEqual(ours, [[b, ln, refusal_kind(m)] for b, ln, m in theirs], name)
 
     def test_parse_refuses_what_the_core_refuses_before_grafeo_is_given_it(self):
-        # req:3.engine-reads-first: parse() under the default parser, Grafeo, reads the block with
-        # the reader first, so it refuses each block the core refuses, at the same line
-        self.assertEqual(gs.PARSER, "grafeo")
+        # req:3.engine-reads-first: parse() under Grafeo's parser, which a host asks for, reads
+        # the block with the reader first, so it refuses each block the core refuses, at the
+        # same line
         names = list(ENGINE_BLOCKS)
         core = core_refusals([ENGINE_BLOCKS[n] for n in names])
         # a plain loop, never subTest: the tests-first replay counts a test by its own result
@@ -319,8 +319,12 @@ class IdOnce(unittest.TestCase):
                 p = os.path.join(d, "doc.md")
                 with open(p, "w", encoding="utf-8") as f:
                     f.write(f"```gql\n{ENGINE_BLOCKS[name]}\n```\n")
-                with self.assertRaises(gp.ProfileError, msg=name) as e:
-                    gs.parse(p)
+                old, gs.PARSER = gs.PARSER, "grafeo"
+                try:
+                    with self.assertRaises(gp.ProfileError, msg=name) as e:
+                        gs.parse(p)
+                finally:
+                    gs.PARSER = old
             ours = [e.exception.line, refusal_kind(e.exception.message)]
             self.assertEqual(ours, [theirs[0][1], refusal_kind(theirs[0][2])], name)
 

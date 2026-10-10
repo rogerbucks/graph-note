@@ -10,6 +10,7 @@ import os
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "src"))
@@ -61,12 +62,13 @@ class SettingsForwarded(unittest.TestCase):
             with open(path, "w", encoding="utf-8") as f:
                 f.write(DOCUMENT)
             doc = gs.parse(path)
-        self.assertEqual((doc["id"], sorted(doc["nodes"])), ("doc:a", ["a"]))
-        gs.PARSER = "grafeo"
-        self.assertIsNot(
-            gs.config_from({"constraints": [A_RULE]})["constraints"]["one start"],
-            gs.RULES["one-start"],
-        )
+            self.assertEqual((doc["id"], sorted(doc["nodes"])), ("doc:a", ["a"]))
+            # a host that asks for the engine has its documents read by Grafeo
+            gs.PARSER = "grafeo"
+            with mock.patch("graphspec.engine.documents.reading.grafeo") as engine:
+                engine.GrafeoDB.side_effect = RuntimeError("Grafeo asked for")
+                with self.assertRaisesRegex(RuntimeError, "Grafeo asked for"):
+                    gs.parse(path)
 
     def test_notices_a_host_replaces_are_the_ones_written_to(self):
         fresh = []
