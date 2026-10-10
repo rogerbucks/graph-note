@@ -3,9 +3,10 @@
 // with those added deliberately since: completing as you type (inlineCompletion, stepOver, Inline, InlineKind), lists as
 // linked things (makeList and its kin), and name suggestions (nameFromText, nameSlug, nameStyleOf, nameWords,
 // textFromName and their types), and the layout kept apart from the interface (LayoutRunner and its kin, 10 Oct 2026),
-// the settings and strictness of §21 (OPTIONS, settingsFrom, toStandard and their kin, 11 Oct 2026), and the one colour
+// the settings and strictness of §21 (OPTIONS, settingsFrom, toStandard and their kin, 11 Oct 2026), the one colour
 // mapping, with the steps around Graphviz for a host that lays out elsewhere (PALETTES, chosen and their kin, for the
-// Claude Code host, 11 Oct 2026).
+// Claude Code host, 11 Oct 2026), and deferred things (parkForLater, parked, parkedCount and their types) and walked
+// paths (PathRecorder, PathPlayer, pathBlock, pathsOf, pathProblems and their types, 11 Oct 2026).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -28,6 +29,8 @@ const VALUES = [
   'PAGE_LIMITS',
   'PALETTES',
   'PaneSession',
+  'PathPlayer',
+  'PathRecorder',
   'READ_LIMITS',
   'SEVERITY',
   'STEP',
@@ -78,13 +81,20 @@ const VALUES = [
   'loadEngine',
   'lockBlock',
   'makeList',
+  'mergePathProblems',
   'nameFromText',
   'nameSlug',
   'nameStyleOf',
   'nameWords',
   'namesSharedSchema',
   'nearby',
+  'parkForLater',
+  'parked',
+  'parkedCount',
   'parseValue',
+  'pathBlock',
+  'pathProblems',
+  'pathsOf',
   'propertiesOf',
   'propertyNames',
   'readBack',
@@ -155,7 +165,13 @@ const TYPES = [
   'OptionChoice',
   'Palette',
   'PaneWrite',
+  'Park',
+  'Parked',
+  'ParkedCount',
   'Parsed',
+  'PathBlock',
+  'PathReading',
+  'PathStep',
   'Position',
   'Problem',
   'PropType',
@@ -180,6 +196,7 @@ const TYPES = [
   'TokenClass',
   'Told',
   'View',
+  'WalkedPath',
   'WriteResult',
   'ZoomEvent',
 ];

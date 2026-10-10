@@ -35,6 +35,14 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `drawing.ts` — `readNote`: what a note's graph blocks draw, built from the modules above.
 - `estimates.ts` — near misses drawn as guesses.
 - `completeness.ts` — the completeness report behind the problems badge.
+- `deferred.ts` — deferred things (§5, §8): `parkForLater` writes a Deferred (what, why, an optional revisit day and rule)
+  as a block's last items, with the comma GQL needs and a fresh `later_<thing>` id (fresh in the whole graph when the
+  note's reading of it is given), and refuses an empty what or why, a block ending with SET or MATCH, and a locked graph
+  whose schema does not declare Deferred and DEFERS (the graph library checks them like any type);
+  `parked` says which things some Deferred defers and which are overdue (every Deferred on the thing is past its
+  `revisit_by`, as `completeness.js` counts), and `parkedCount` how many of each, apart from the problems. `readNote`
+  sets `Box.deferred` on each such box (it takes the day as its fifth argument, the current day by default); the layout
+  source is untouched, so the host draws the dashing and the later mark on the finished drawing.
 
 **Drawing**
 
@@ -78,6 +86,23 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `inspector.ts` — properties of a thing or link, edited as text.
 - `linked-list.ts` — a property held as things linked to this one: made, added to and removed from, as text edits.
 - `lock.ts` — Lock the graph: a draft's schema written out, indented as the settings say.
+
+**Paths (spec §7; graph spec §22)**
+
+- `paths.ts` — walked paths. `PathRecorder` takes the boxes tapped in order (the last step tapped again is ignored; an
+  earlier one is added again, as a walk may revisit). `pathBlock` writes the walk at the end of a block as a `Path` node
+  with `STEP` edges numbered 1 to n, comma-joined, with a fresh id in the graph's style, and refuses with a reason when
+  there are no steps or no title, a step is not a fact in the graph, or a locked graph does not declare Path and STEP.
+  `pathsOf` gives each path as data: its steps in seq order, each marked `missing` when the thing is not in the graph
+  (the reader leaves such a STEP out and reports it; `paths.ts` finds it again in the problem's `dropped` text), and the
+  path marked `empty` when it has no steps. `PathPlayer` plays one path step by step with a screen-reader sentence for
+  each ("Step 2 of 5: …"); a missing step is stopped on and announced as missing, and a path with no steps is refused
+  (`PathPlayer.refusal`), never played as an empty story. `pathProblems` reports a STEP through something removed, on the
+  STEP's own line with its fix and, where the step sits on one line, the edit that removes it, and a path with no steps;
+  `mergePathProblems` is what `readNote` uses to put them in `NoteReading.problems`, replacing the reader's own report of
+  the same STEP, so the badge counts each once.
+- `path-edits.ts` — a step taken out numbers the later steps of its path again (`stepsAfter`), carried as the removing
+  fix's further edits (`Problem.also`), so the path keeps §22's steps 1 to n.
 
 **Settings (spec §21)**
 

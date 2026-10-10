@@ -20,6 +20,12 @@ export interface Box {
    * the block it is written in, and the 0-based line and character there, just after its (, where the name would go.
    */
   suggested?: { block: number; line: number; character: number };
+  /**
+   * Only for a thing some Deferred defers (spec §5, deferred_drawn): what is needed before it is done, and whether every
+   * Deferred on it is past its revisit date. The core only says which boxes these are; the host draws the dashing and the
+   * later mark on the finished drawing, so the layout source stays byte-identical with the Python library's.
+   */
+  deferred?: { overdue: boolean; what: string };
 }
 
 /** One link to draw, read in its schema's words. */
@@ -63,6 +69,8 @@ export interface Problem {
   span?: { line: number; character: number; end: number };
   /** The name suggested for a thing written without one, which it is drawn under until its fix writes it. */
   suggested?: string;
+  /** Further edits made with the `replace` fix, each at a 0-based line and characters of the block, as one change. */
+  also?: { span: { line: number; character: number; end: number }; text: string }[];
   /** Set when what was written departs from standard GQL and was read as meant (spec §21): which departure it is. */
   departure?: Departure;
 }

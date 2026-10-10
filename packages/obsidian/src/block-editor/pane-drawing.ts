@@ -3,6 +3,7 @@
 // the editor has none: the card's own drawing is its drawing. It is laid out apart from the interface, as every drawing
 // is (spec §9): a graph typed or pasted past a limit is not drawn, and a banner beside its text says why.
 import { Component } from 'obsidian';
+import { parked } from '@graph-note/core';
 import type { Drawn, NoteReading, PaneSession, Refusal } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
 import { GraphView } from '../graph-view/graph-view';
@@ -43,6 +44,8 @@ function drawInPane(
     lineOf: (at) => at.line,
     onEdit: on.edit,
     onSelect: on.select,
+    // the pane's badge counts things parked for later apart from problems, as a card's does (§8)
+    parked: parked(reading, s.graph, new Date().toISOString().slice(0, 10)),
   });
 }
 

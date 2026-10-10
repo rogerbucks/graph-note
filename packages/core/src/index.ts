@@ -38,6 +38,8 @@ export { inlineCompletion, stepOver } from './autocomplete.ts';
 export type { Inline, InlineKind } from './autocomplete.ts';
 export { isDraft, lockBlock, reverseGuess } from './lock.ts';
 export { PaneSession } from './pane.ts';
+export { PathPlayer, PathRecorder, mergePathProblems, pathBlock, pathProblems, pathsOf } from './paths.ts';
+export type { PathBlock, PathReading, PathStep, WalkedPath } from './paths.ts';
 export { DEPARTURES, underStrictness, toStandard, standardBlocks } from './strictness.ts';
 export type { Converted, Departure, Strictness, StrictnessSettings } from './strictness.ts';
 export { OPTIONS, DEFAULT_SETTINGS, settingsFrom, indentText, aiModel } from './settings.ts';
@@ -45,6 +47,8 @@ export type { AiModel, Choice as OptionChoice, Indent, Option, Settings } from '
 export type { Choice, PaneWrite } from './pane.ts';
 export { completenessReport } from './completeness.ts';
 export type { CompletenessReport, RuleReport } from './completeness.ts';
+export { parkForLater, parked, parkedCount } from './deferred.ts';
+export type { Park, Parked, ParkedCount } from './deferred.ts';
 export { nameFromText, nameSlug, nameStyleOf, nameWords, textFromName } from './name-suggestions.ts';
 export type { GraphNames, NameStyle } from './name-suggestions.ts';
 export { commaFor, commaInNote, colonFor, colonInNote } from './commas.ts';

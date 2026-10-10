@@ -9,6 +9,34 @@
       "evidence": "written after its code, at the review of #50, to cover the page's button, which the earlier commit added untested (commit afff22a)"
     }
   },
+  "packages/obsidian/test/graph-view-parked.test.js": {
+    "the badge > with nothing parked, says nothing of parking": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: a badge with nothing parked reads as it always has, so it passes before and after by design (commit 1ce9135)"
+    },
+    "Park for later, while the card is edited > is offered only while the card is edited: reading a drawing never changes it": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: outside editing no Park for later is offered, before the change or after, by design (commit 1ce9135)"
+    }
+  },
+  "packages/core/test/deferred.test.js": {
+    "parking a thing for later (park_for_later) > a locked graph that declares them is parked in with no undeclared-type warning": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: a schema that declares Deferred and DEFERS was always parked in cleanly; the change refuses only one that does not (commit 1d8c615)"
+    }
+  },
+  "packages/core/test/paths.test.js": {
+    "a step through something removed > renumbering touches only the path the step was taken out of": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it at the review of step 8a: renumbering already kept to its own path, and this pins it (commit 1d8c615)"
+    }
+  },
+  "packages/obsidian/test/graph-view-walk.test.js": {
+    "Record, while the card is edited > is offered only while the card is edited": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the change beside it: outside editing no Record is offered, before the change or after, by design (commit 8c7d5bf)"
+    }
+  },
   "packages/core/test/settings.test.js": {
     "the AI models of §19 > a model given no ceiling gets the lowest classification": {
       "seen_failing_first": false,
