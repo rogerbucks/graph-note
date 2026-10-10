@@ -8,7 +8,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
-import { fromJunit, judged, replay, unexplained, record, update } from '../scripts/tests-first.mjs';
+import { judged, replay, unexplained, record, update } from '../scripts/tests-first.mjs';
 import { path, readJSON, walk } from './repository/repo.js';
 
 /** A small repository: each commit a set of files, written then committed; returns the folder and the commit ids. */
@@ -248,15 +248,6 @@ describe('a run against the code before that did not finish', () => {
     assert.equal(finished.notReplayed, undefined);
   });
 
-  // found at 7590e45 (10 Oct 2026): the JUnit reporter writes <testsuites> at once, so a run stopped at the time limit
-  // left that much, and was read as finished; its guard, never run, was counted as seen failing
-  test('a JUnit report cut off before </testsuites> did not finish, even though it began', () => {
-    const cut = '<?xml version="1.0" encoding="utf-8"?>\n<testsuites>\n';
-    assert.equal(fromJunit(cut).ran, false);
-    const whole = `${cut}<testcase name="guards" time="0.1"/>\n</testsuites>\n`;
-    assert.deepEqual(fromJunit(whole), { passed: ['guards'], failed: [], ran: true });
-  });
-
   test('a run against the code before, stopped at the time limit, is recorded as not replayed, its new tests named', () => {
     const r = repository([
       { 'src/twice.js': 'export const twice = (x) => x;\n', 'test/twice.test.js': JS_TEST("test('one', () => {});") },
@@ -302,6 +293,101 @@ describe('a run against the code before that did not finish', () => {
       assert.match(file.notReplayed ?? '', /did not finish/);
       assert.deepEqual(file.tests, ['one', 'doubles']);
     } finally {
+      r.done();
+    }
+  });
+});
+
+describe('a run at the commit’s own code that cannot be trusted fails the record', () => {
+  // found at 522b41d (10 Oct 2026): on a machine under load, a whole commit's Python run at its own commit was starved,
+  // and recorded as its tests not running there; run alone, it passes
+  test('a run at its own commit that did not finish fails the record, naming the commit and file; a file with no tests does not', () => {
+    const slow = repository([
+      { 'README.md': 'x\n' },
+      {
+        'py/tests/test_slow.py':
+          'import time, unittest\n\n\nclass Slow(unittest.TestCase):\n    def test_waits(self):\n        time.sleep(20)\n',
+      },
+    ]);
+    // with no time limit set, so that load cannot stop it (review of #44)
+    const empty = repository([{ 'README.md': 'x\n' }, { 'py/tests/test_empty.py': 'import unittest\n' }]);
+    try {
+      for (const r of [slow, empty]) {
+        mkdirSync(join(r.dir, 'test'), { recursive: true });
+        writeFileSync(join(r.dir, 'test', 'seen-failing.json'), '{}\n');
+      }
+      assert.throws(
+        () => withRunLimit(3000, () => record(slow.dir)),
+        (e) => {
+          assert.match(e.message, new RegExp(`${slow.ids[1].slice(0, 7)} py/tests/test_slow\\.py: .*did not finish`));
+          return true;
+        },
+      );
+      assert.match(record(empty.dir).files['py/tests/test_empty.py'].notReplayedCommits[0].reason, /no test/);
+    } finally {
+      slow.done();
+      empty.done();
+    }
+  });
+
+  // found on 10 Oct 2026: time-budget tests failing at their own commit under load dropped out of the record unnoticed,
+  // and its count of tests seen failing first fell by one each (layout-worker 26 to 25, partial-read 14 to 13)
+  test('a new test failing at its own commit fails the record, naming the test and commit: it is never dropped', () => {
+    const r = repository([
+      { 'src/twice.js': 'export const twice = (x) => x;\n', 'test/twice.test.js': JS_TEST("test('one', () => {});") },
+      {
+        'src/twice.js': 'export const twice = (x) => x * 2;\n',
+        'test/twice.test.js': JS_TEST(
+          "test('one', () => {});\ntest('doubles', () => assert.equal(twice(2), 4));\ntest('in its budget', () => assert.ok(false, 'over its budget'));",
+        ),
+      },
+    ]);
+    try {
+      writeFileSync(join(r.dir, 'test', 'seen-failing.json'), '{}\n');
+      assert.throws(
+        () => record(r.dir),
+        (e) => {
+          assert.match(e.message, new RegExp(`${r.ids[1].slice(0, 7)} test/twice\\.test\\.js: "in its budget" fails`));
+          assert.doesNotMatch(e.message, /doubles|"one"/);
+          return true;
+        },
+      );
+      // the file's other new tests are still judged, so --check shows every problem in one run (review of #44)
+      const replayed = replay(r.dir, r.ids[1]);
+      assert.equal(replayed.faults.length, 1);
+      assert.deepEqual(replayed.files[0]?.failedFirst, ['doubles']);
+    } finally {
+      r.done();
+    }
+  });
+
+  // review of #44: a commit whose replay threw was logged in one line among hundreds, and the record written without it
+  test('a commit that cannot be replayed at all fails the record, naming the commit', () => {
+    const r = repository([
+      { 'README.md': 'x\n' },
+      {
+        'packages/p/package.json': 'not JSON\n',
+        'test/one.test.js': "import { test } from 'node:test';\ntest('one', () => {});\n",
+      },
+    ]);
+    try {
+      // installed packages make the checkout read each package's manifest, and this one cannot be read
+      mkdirSync(join(r.dir, 'node_modules', 'installed'), { recursive: true });
+      writeFileSync(join(r.dir, 'test', 'seen-failing.json'), '{}\n');
+      assert.throws(
+        () => record(r.dir),
+        (e) => {
+          assert.match(e.message, new RegExp(`${r.ids[1].slice(0, 7)}: could not be replayed`));
+          return true;
+        },
+      );
+    } finally {
+      // the checkout that failed half-way is left behind; take it away with the repository
+      const left = execFileSync('git', ['worktree', 'list', '--porcelain'], { cwd: r.dir, encoding: 'utf8' })
+        .split('\n')
+        .filter((l) => l.startsWith('worktree ') && l.includes('tests-first-wt-'))
+        .map((l) => l.slice('worktree '.length));
+      for (const dir of left) rmSync(dir, { recursive: true, force: true });
       r.done();
     }
   });
