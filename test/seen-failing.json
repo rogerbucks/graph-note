@@ -331,6 +331,12 @@
       "evidence": "pins behaviour that already existed: written after its code, to prove a spec rule the code already met (commit 40d335e)"
     }
   },
+  "python/graph_spec/tests/test_to_gql.py": {
+    "ToGqlRefusesWhatTheReaderRefuses.test_a_node_written_where_it_cannot_be_found_is_said_not_hidden": {
+      "seen_failing_first": false,
+      "evidence": "pins an error that already existed (to_gql.py: cannot find where {name} is written), untested until the review of PR #34: written after its code, and it passes before and after by design"
+    }
+  },
   "python/graph_spec/tests/test_gql_profile_drawn.py": {
     "CheckingStaysWhole.test_apply_still_refuses_both_shapes": {
       "seen_failing_first": false,
@@ -493,6 +499,12 @@
     "the note’s text, measured before it is read > over the limits the plugin draws nothing, so there is nothing to hold to the Python reader (drawn_in_part)": {
       "seen_failing_first": false,
       "evidence": "a control case, asked for in review (ff02d6d): it documents the plugin's own exception to drawn_in_part, which 7590e45 already made, so it passes before and after by design"
+    }
+  },
+  "python/graph_spec/tests/test_parity.py": {
+    "IdOnce.test_both_readers_refuse_a_name_or_id_used_twice_alike": {
+      "seen_failing_first": false,
+      "evidence": "it pins agreement that already existed for req:3.id-once: both readers refused a variable written twice and an id clashing with another node's name before this test was written, so it passes at its parent by design"
     }
   },
   "python/graph_spec/tests/test_whitespace.py": {
