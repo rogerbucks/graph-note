@@ -6,6 +6,8 @@ from __future__ import annotations
 
 import re
 
+from graphspec.reader.whitespace import is_space
+
 # JavaScript's . — any character but a line break — which the core's patterns use
 _NOT_BREAK = "[^\n\r  ]"
 
@@ -29,7 +31,7 @@ def _items(text):
                 i += 1
             i += 1
             continue
-        if c.isspace():
+        if is_space(c):
             i += 1
             continue
         if (

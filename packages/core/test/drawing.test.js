@@ -2,8 +2,12 @@
 // a graph with problems still drawn — what can be read is drawn, and the rest is listed as problems.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { gqlBlocks } from '../src/blocks.ts';
 import { readNote } from '../src/drawing.ts';
+
+const PY_SRC = fileURLToPath(new URL('../../../python/graph_spec/src', import.meta.url));
 
 const fence = (body, info = 'gql') => '```' + info + '\n' + body + '\n```';
 
@@ -227,6 +231,25 @@ describe('which blocks are graphs', () => {
     ]) {
       assert.equal(graphOfBlock(code), null, code);
     }
+  });
+
+  // whitespace as GQL names it (§3), U+180E among it, in every reader: the graph line is read alike by the core and the
+  // Python library, so a problem names the same graph in both (decided 10 Oct 2026)
+  test('a graph line spaced with U+180E names its graph, in the core as in the Python library', () => {
+    const block = "//\u{180e}graph:\u{180e}ws\n(:T {name: 'Large reader'})";
+    const core = readNote([block]).problems.map((p) => p.graph);
+    const py = spawnSync(
+      'python3',
+      [
+        '-c',
+        `import json, sys\nsys.path.insert(0, ${JSON.stringify(PY_SRC)})\nimport gql_profile as gp\n` +
+          'print(json.dumps([p["graph"] for p in gp.read_for_drawing([json.load(sys.stdin)])[1]]))',
+      ],
+      { input: JSON.stringify(block), encoding: 'utf8' },
+    );
+    assert.equal(py.status, 0, py.stderr);
+    assert.deepEqual(core, ['ws'], 'the core');
+    assert.deepEqual(JSON.parse(py.stdout), ['ws'], 'the Python library');
   });
 });
 

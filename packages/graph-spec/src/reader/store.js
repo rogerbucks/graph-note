@@ -4,6 +4,10 @@
 const { ProfileError } = require('./profile-error.js');
 const { header, tokens } = require('./tokens.js');
 const { Parser } = require('./parser.js');
+const { S, N, trim } = require('./whitespace.js');
+
+const SHARED = new RegExp(`·${S}*SCHEMA${S}+(${N}+)`),
+  NAMES_SHARED = new RegExp(`·${S}*schema${S}+(${N}+)`);
 
 class Store {
   constructor() {
@@ -85,15 +89,15 @@ class Store {
       throw new ProfileError(1, 'this is a query block', 'queries ask questions of a graph; they are not data');
     if (kind === 'excerpt')
       throw new ProfileError(1, 'this is an excerpt', 'an excerpt illustrates part of a graph; it is not data');
-    const first = block.split('\n').find((line) => line.trim()) || '';
+    const first = block.split('\n').find((line) => trim(line)) || '';
     if (kind === 'schema') {
-      const name = /·\s*SCHEMA\s+(\S+)/.exec(first)[1];
+      const name = SHARED.exec(first)[1];
       g = 'schema ' + name;
       this.schemas[name] = g;
       delete this.graphs[g];
     } // a shared schema (§5), kept apart under its own name
     else {
-      const sm = /·\s*schema\s+(\S+)/.exec(first);
+      const sm = NAMES_SHARED.exec(first);
       if (sm) this.named[g] = sm[1];
     }
     const toks = tokens(block);

@@ -8,6 +8,10 @@ import re
 
 from graphspec.reader.grammar import Parser
 from graphspec.reader.lexer import ProfileError, UTC, tokens
+from graphspec.reader.whitespace import S, lstrip, strip
+
+# a name as the lexer reads one: ASCII, as JavaScript's \w is
+BARE = re.compile(rf"-\[{S}*([A-Za-z_][A-Za-z0-9_]*)(?={S}*[\]{{])")
 
 
 def _bare_names(block):
@@ -20,7 +24,7 @@ def _bare_names(block):
     )
     return [
         (blanked.count("\n", 0, m.start(1)) + 1, m.start(1), m.group(1))
-        for m in re.finditer(r"-\[\s*([A-Za-z_]\w*)(?=\s*[\]{])", blanked)
+        for m in BARE.finditer(blanked)
     ]
 
 
@@ -38,7 +42,7 @@ def to_gql(block: str) -> str:
     is, so the engine reports it."""
     lines = block.split("\n")
     i = next(
-        (k for k, line in enumerate(lines) if line.strip() and not line.strip().startswith("//")),
+        (k for k, line in enumerate(lines) if strip(line) and not strip(line).startswith("//")),
         None,
     )
     if i is None:
@@ -102,7 +106,7 @@ def to_gql(block: str) -> str:
             if sets:
                 out.append("SET " + ", ".join(f"{v}.{k} = {_gql_value(x)}" for v, k, x, _ in sets))
             return "\n".join(out)
-    if not lines[i].lstrip().startswith("("):
+    if not lstrip(lines[i]).startswith("("):
         return block
     return "\n".join(lines[:i] + ["INSERT"] + lines[i:])
 
