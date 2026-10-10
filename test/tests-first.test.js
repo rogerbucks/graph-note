@@ -307,6 +307,62 @@ describe('a run against the code before that did not finish', () => {
   });
 });
 
+describe('a run at the commit’s own code that cannot be trusted fails the record', () => {
+  // found at 522b41d (10 Oct 2026): on a machine under load, a whole commit's Python run at its own commit was starved,
+  // and recorded as its tests not running there; run alone, it passes
+  test('a run at its own commit that did not finish fails the record, naming the commit and file; a file with no tests does not', () => {
+    const r = repository([
+      { 'README.md': 'x\n' },
+      {
+        'py/tests/test_slow.py':
+          'import time, unittest\n\n\nclass Slow(unittest.TestCase):\n    def test_waits(self):\n        time.sleep(20)\n',
+        'py/tests/test_empty.py': 'import unittest\n',
+      },
+    ]);
+    try {
+      mkdirSync(join(r.dir, 'test'), { recursive: true });
+      writeFileSync(join(r.dir, 'test', 'seen-failing.json'), '{}\n');
+      assert.throws(
+        () => withRunLimit(3000, () => record(r.dir)),
+        (e) => {
+          assert.match(e.message, new RegExp(`${r.ids[1].slice(0, 7)} py/tests/test_slow\\.py: .*did not finish`));
+          assert.doesNotMatch(e.message, /test_empty/);
+          return true;
+        },
+      );
+    } finally {
+      r.done();
+    }
+  });
+
+  // found on 10 Oct 2026: time-budget tests failing at their own commit under load dropped out of the record unnoticed,
+  // and its count of tests seen failing first fell by one each (layout-worker 26 to 25, partial-read 14 to 13)
+  test('a new test failing at its own commit fails the record, naming the test and commit: it is never dropped', () => {
+    const r = repository([
+      { 'src/twice.js': 'export const twice = (x) => x;\n', 'test/twice.test.js': JS_TEST("test('one', () => {});") },
+      {
+        'src/twice.js': 'export const twice = (x) => x * 2;\n',
+        'test/twice.test.js': JS_TEST(
+          "test('one', () => {});\ntest('doubles', () => assert.equal(twice(2), 4));\ntest('in its budget', () => assert.ok(false, 'over its budget'));",
+        ),
+      },
+    ]);
+    try {
+      writeFileSync(join(r.dir, 'test', 'seen-failing.json'), '{}\n');
+      assert.throws(
+        () => record(r.dir),
+        (e) => {
+          assert.match(e.message, new RegExp(`${r.ids[1].slice(0, 7)} test/twice\\.test\\.js: "in its budget" fails`));
+          assert.doesNotMatch(e.message, /doubles|"one"/);
+          return true;
+        },
+      );
+    } finally {
+      r.done();
+    }
+  });
+});
+
 describe('keeping the record', () => {
   test('updating a record with the commits since its head gives what recording them all would', () => {
     const r = repository([
