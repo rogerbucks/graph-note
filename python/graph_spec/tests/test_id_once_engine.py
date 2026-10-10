@@ -154,10 +154,10 @@ class EnginePathsSkipTheReader(unittest.TestCase):
         with self.assertRaises(gp.ProfileError):
             gs.load("// graph: joined\n" + TWO_INSERTS)
 
-    # GAP, open after PR #36 too: compute() loads each block of a recipe into its graph
-    # (fill.py:58-65) with no reader, so an id written in two blocks of one graph gives a state
-    # hash for a graph of two nodes with one id, and nothing is refused.
-    @unittest.expectedFailure
+    # Was a GAP, open after PR #36 too: compute() loaded each block of a recipe into its graph
+    # (fill.py:58-65) with no reader, so an id written in two blocks of one graph gave a state
+    # hash for a graph of two nodes with one id, and nothing was refused. compute now reads the
+    # recipe's blocks together with the reader first, in their graphs (req:3.engine-reads-first).
     def test_compute_refuses_an_id_repeated_across_two_blocks_of_one_graph(self):
         text = (
             "## A\n```gql\n// graph: g\n(a:Person {name: 'A'})\n```\n"
@@ -165,6 +165,19 @@ class EnginePathsSkipTheReader(unittest.TestCase):
         )
         with self.assertRaises(gp.ProfileError):
             compute({"load": ["#A", "#B"], "state_of": "g"}, text, ".", ".")
+
+    def test_fill_check_reports_the_reader_s_refusal_as_it_reports_a_refused_recipe(self):
+        text = (
+            "## A\n```gql\n// graph: g\n(a:Person {name: 'A'})\n```\n"
+            "## B\n```gql\n// graph: g\n(b:Person {id: 'a', name: 'B'})\n```\n"
+            "```yaml\n# fill\nSTATE: {load: ['#A', '#B'], state_of: g, value: 0123456789abcdef}\n"
+            "```\nmade against 0123456789abcdef\n"
+        )
+        problems = gs.fill_check(text, ".", ".")
+        self.assertTrue(
+            any(n == "*" and "id 'a' is already a node in graph g" in p for n, p in problems),
+            problems,
+        )
 
     # GAP, open after PR #36 too: graph_spec.check_changeset is the engine's (changesets.py:141),
     # loading each base text with no reader (:173). An id in two base blocks of one graph is never
