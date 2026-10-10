@@ -18,9 +18,10 @@ const mount = ($: any, surface: string) =>
     props: { title: 'Graph' },
   } as never);
 
-test('the sample note is drawn in the dark palette as SVG, and as text on the terminal', async ($, on) => {
+test('the sample note is drawn as SVG in the light or dark the app shows, and as text on the terminal', async ($, on) => {
   const argvs: string[][] = [];
   on('fs.read', async () => ({ value: NOTE }));
+  // the terminal's theme setting says dark: the drawing must not take it, since the desktop app may be light
   on('config.list', async () => ({ value: [{ key: 'theme', value: 'dark' }] }) as never);
   on('process.run', async (_$, e) => {
     argvs.push([...e.argv]);
@@ -38,8 +39,9 @@ test('the sample note is drawn in the dark palette as SVG, and as text on the te
     const ui = await mount($, surface);
     const svg = (await ui.drawn()) as unknown as { type: string; props: { source: string; alt: string } };
     expect(svg.type).toBe('Svg');
-    expect(svg.props.source).toMatch(/^<svg [^>]*background:#1e1e1e/);
-    expect(svg.props.source).not.toMatch(/var\(--/);
+    expect(svg.props.source).toMatch(/^<svg [^>]*background:var\(--gn-page\)/);
+    expect(svg.props.source).toMatch(/<style>[^<]*@media \(prefers-color-scheme: dark\)/);
+    expect(svg.props.source).not.toMatch(/var\(--(color|text)-/);
     expect(svg.props.alt).toBe(answer.text);
     await ui.unmount();
   }

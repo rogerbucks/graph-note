@@ -28,11 +28,7 @@ await esbuild.build({
 const graph = await import(`${join(mod, 'hooks/graph.js')}?${Date.now()}`);
 const note = readFileSync(join(here, '../../test-vault/Sample graph note.md'), 'utf8');
 const dots = [];
-await graph.viewOf(
-  note,
-  async (d) => (dots.push(...d), { why: 'only the sources were wanted' }),
-  graph.paletteFor('dark'),
-);
+await graph.viewOf(note, async (d) => (dots.push(...d), { why: 'only the sources were wanted' }), graph.PANE_PALETTE);
 const svgs = execFileSync('node', [join(mod, 'bin/render.mjs')], { input: JSON.stringify(dots), encoding: 'utf8' });
 writeFileSync(
   join(mod, 'tests/fixtures.js'),

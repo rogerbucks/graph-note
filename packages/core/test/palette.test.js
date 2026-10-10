@@ -34,8 +34,34 @@ const GRAPH = `// graph: g
 (o1)-[:ANSWERS]->(q), (r)-[:FAVOURS]->(o1), (r)-[:COUNTS_AGAINST]->(q)`;
 
 describe('one table', () => {
-  test('the table has Obsidian’s entry and a fixed light and dark one', () => {
-    assert.deepEqual(Object.keys(PALETTES).sort(), ['dark', 'light', 'obsidian']);
+  test('the table has Obsidian’s entry, a fixed light and dark one, and one that follows the system', () => {
+    assert.deepEqual(Object.keys(PALETTES).sort(), ['dark', 'light', 'obsidian', 'system']);
+  });
+
+  test('the system entry carries both fixed entries in the drawing, the dark one chosen by prefers-color-scheme', () => {
+    const p = PALETTES.system;
+    // the drawing's own style sheet: each name with its light value, then again under the dark scheme
+    const sheet = p.style ?? '';
+    const [light, dark] = sheet.split('@media (prefers-color-scheme: dark)');
+    const valuesIn = (part) => new Map([...part.matchAll(/(--gn-[\w-]+):\s*(#[0-9a-f]{6})/g)].map((m) => [m[1], m[2]]));
+    const resolve = (c, values) => c.replace(/^var\((--gn-[\w-]+)\)$/, (_, name) => values.get(name) ?? 'unset');
+    for (const [scheme, part] of [
+      ['light', light],
+      ['dark', dark],
+    ]) {
+      const values = valuesIn(part ?? ''),
+        fixed = PALETTES[scheme];
+      assert.equal(resolve(p.text, values), fixed.text, scheme);
+      assert.equal(resolve(p.muted, values), fixed.muted, scheme);
+      assert.equal(resolve(p.edge, values), fixed.edge, scheme);
+      assert.equal(resolve(p.page ?? '', values), fixed.page, scheme);
+      for (const h of HUES) {
+        assert.equal(resolve(p.fill(h), values), fixed.fill(h), `${scheme} ${h} fill`);
+        for (const pct of [STYLE.line_mix, STYLE.label_mix])
+          assert.equal(resolve(p.blend(h, pct), values), fixed.blend(h, pct), `${scheme} ${h} ${pct}`);
+      }
+    }
+    assert.equal(PALETTES.obsidian.style, undefined, "Obsidian's theme does this itself");
   });
 
   test('Obsidian’s entry names the theme’s variables, as the style file does', () => {
@@ -80,4 +106,15 @@ test('drawn with a fixed entry, the drawing names no variable and no color-mix, 
   const plain = themed(raw, kinds, readings);
   assert.match(plain, /var\(--text-normal\)/, "Obsidian's theme variables by default");
   assert.doesNotMatch(plain, /background:/, "Obsidian's own page shows through");
+});
+
+test('drawn with the system entry, the drawing holds its own style sheet and names only its own variables', async () => {
+  const viz = await instance();
+  const { source, kinds, readings } = layoutSource(readNote([GRAPH]).graphs.get('g'), 'LR');
+  const svg = themed(viz.renderString(source, { format: 'svg' }), kinds, readings, PALETTES.system);
+  assert.match(svg, /^<svg [^>]*>\n<style>[^<]*@media \(prefers-color-scheme: dark\)[^<]*<\/style>\n/);
+  assert.doesNotMatch(svg, /color-mix|--color-|--text-|#000[0-4][0-9a-f]{2}"/, 'no host variable, no placeholder');
+  for (const name of new Set([...svg.matchAll(/var\((--[\w-]+)\)/g)].map((m) => m[1])))
+    assert.match(PALETTES.system.style ?? '', new RegExp(`${name}:`), `${name} is defined in the drawing`);
+  assert.match(svg, /<svg [^>]*style="[^"]*background:var\(--gn-page\)/);
 });
