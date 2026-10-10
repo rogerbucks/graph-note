@@ -80,12 +80,14 @@ Q_ = _query_rows  # the short name the engine reads with
 def load(text: str) -> GrafeoDB:
     """A joined graph's GQL loaded into a fresh Grafeo database, as graph 'joined'. The text is
     read with the reader first, in the graph its first line names: a text the reader refuses
-    raises its ProfileError, and Grafeo is given nothing (req:3.engine-reads-first)."""
-    Store().apply(text)
+    raises its ProfileError, and Grafeo is given nothing (req:3.engine-reads-first); Grafeo is
+    given the reader's corrected text (req:3.engine-gets-corrected)."""
+    st = Store()
+    st.apply(text)
     db = grafeo.GrafeoDB()
     db.execute("CREATE GRAPH joined")
     db.set_graph("joined")
-    db.execute(strip(text))
+    db.execute(strip(st.corrected(text)))
     return db
 
 
