@@ -1,9 +1,12 @@
 // The drawing's colours and size, as graph_svg.py writes them (spec §3, "one style"; §11, "contrast"). Graphviz is given
-// placeholder colours; here they become Obsidian theme colours, written as inline styles, each hue blended with the
+// placeholder colours; here they become the host's colours from the one table (palette.ts), Obsidian's theme colours by
+// default, written as inline styles, each hue blended with the
 // theme's text colour so labels reach 4.5:1 and lines 3:1 in both themes (the reasons are in the style file). A port of
 // graph_svg._themed and of the direction choice in graph_svg.render, proved against them by the theme tests.
 import GraphLayout from '@graph-note/graph-spec/src/graph-layout.js';
 import { STYLE } from './layout.ts';
+import { PALETTES } from './palette.ts';
+import type { Palette } from './palette.ts';
 
 /**
  * A number with `digits` decimals, as Python's format() writes it: the exact binary value rounded, ties to even.
@@ -21,32 +24,34 @@ export function fixed(x: number, digits: number): string {
 }
 
 const hex2 = (i: number) => i.toString(16).padStart(2, '0');
-const blend = (hue: string, pct: number) => `color-mix(in srgb, var(--color-${hue}) ${pct}%, var(--text-normal))`;
 
 /** The placeholder colours of a layout, each with the theme colour that replaces it. */
-function colours(kinds: string[], readings: string[]): Map<string, string> {
+function colours(kinds: string[], readings: string[], p: Palette): Map<string, string> {
   const out = new Map<string, string>([
-    ['#0000fd', STYLE.text],
-    ['#0000fe', STYLE.muted],
-    ['#0000fc', STYLE.edge],
-    ['#000000', STYLE.edge],
+    ['#0000fd', p.text],
+    ['#0000fe', p.muted],
+    ['#0000fc', p.edge],
+    ['#000000', p.edge],
   ]);
   const kh = GraphLayout.pick(kinds, STYLE.kind_hues, STYLE.kind_colours);
   kinds.forEach((k, i) => {
-    out.set(`#0001${hex2(i)}`, `rgba(var(--color-${kh[k]}-rgb), ${STYLE.fill_opacity})`);
-    out.set(`#0002${hex2(i)}`, blend(kh[k] ?? '', STYLE.line_mix));
+    out.set(`#0001${hex2(i)}`, p.fill(kh[k] ?? ''));
+    out.set(`#0002${hex2(i)}`, p.blend(kh[k] ?? '', STYLE.line_mix));
   });
   const eh = GraphLayout.pick(readings, STYLE.edge_hues, STYLE.edge_colours);
   readings.forEach((r, i) => {
-    out.set(`#0003${hex2(i)}`, blend(eh[r] ?? '', STYLE.line_mix));
-    out.set(`#0004${hex2(i)}`, blend(eh[r] ?? '', STYLE.label_mix));
+    out.set(`#0003${hex2(i)}`, p.blend(eh[r] ?? '', STYLE.line_mix));
+    out.set(`#0004${hex2(i)}`, p.blend(eh[r] ?? '', STYLE.label_mix));
   });
   return out;
 }
 
-/** The SVG Graphviz drew, with theme colours, the kind captions tracked out, and sized to fit a note — as graph_svg._themed. */
-export function themed(svg: string, kinds: string[], readings: string[]): string {
-  const colour = colours(kinds, readings);
+/**
+ * The SVG Graphviz drew, with the host's colours (Obsidian's theme by default), the kind captions tracked out, and sized
+ * to fit a note — as graph_svg._themed. A palette with a page paints it behind the drawing.
+ */
+export function themed(svg: string, kinds: string[], readings: string[], palette: Palette = PALETTES.obsidian): string {
+  const colour = colours(kinds, readings, palette);
   const ls = STYLE.caption_letter_spacing * STYLE.kind_font_size;
   // the kind caption is in capitals: tracked out a little, as capitals need, and kept centred
   svg = svg.replace(/(<text[^>]*fill="#0000fe"[^>]*>)([^<]*)<\/text>/g, (_, open: string, caption: string) => {
@@ -73,7 +78,7 @@ export function themed(svg: string, kinds: string[], readings: string[]): string
   if (m)
     svg = svg.replace(
       m[0],
-      `<svg width="${fixed((parseFloat(m[1] ?? '0') * 4) / 3, 0)}" style="max-width:100%;height:auto;filter:none"`,
+      `<svg width="${fixed((parseFloat(m[1] ?? '0') * 4) / 3, 0)}" style="max-width:100%;height:auto;filter:none${palette.page ? `;background:${palette.page}` : ''}"`,
     );
   // an HTML block in Markdown ends at a blank line, and an indented line can read as code — so neither may appear
   return svg

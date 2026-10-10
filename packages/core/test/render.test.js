@@ -4,7 +4,8 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
-import { draw, details } from '../src/render.ts';
+import { draw, details, directions, chosen } from '../src/render.ts';
+import { PALETTES } from '../src/palette.ts';
 import { loadEngine } from '../src/engine.ts';
 import { layoutSource } from '../src/layout.ts';
 import { themed, sizeOf, choose } from '../src/theme.ts';
@@ -34,6 +35,17 @@ describe('drawing', () => {
       assert.equal(drawn.width, best.width);
       assert.equal(drawn.height, best.height);
     }
+  });
+
+  test('a host that lays out elsewhere, as a Claude Code pane does, is themed in its own palette from the one table', async () => {
+    const engine = await loadEngine();
+    const drawing = readNote([WIDE]).graphs.get('g');
+    const laid = directions(drawing),
+      svgs = laid.map((d) => engine.render(d.dot));
+    assert.deepEqual(chosen(laid, svgs), draw(drawing, engine), "Obsidian's by default");
+    const dark = chosen(laid, svgs, PALETTES.dark);
+    const best = laid.find((d) => d.rankdir === dark.rankdir);
+    assert.equal(dark.svg, themed(svgs[laid.indexOf(best)], best.src.kinds, best.src.readings, PALETTES.dark));
   });
 
   test('a graph with no things is drawn empty, not refused', async () => {
