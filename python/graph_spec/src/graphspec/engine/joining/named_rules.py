@@ -190,6 +190,11 @@ RULES = {
 }
 
 
+def _missing(thing: str, *facts: Any) -> set[str]:
+    """The thing, when a fact the figure reads of it is not there (req:21.incomplete-missing)."""
+    return {thing} if any(f is None for f in facts) else set()
+
+
 def _plain_loan_balance(g: Graph, loan: str) -> dict[str, Any]:
     """fig_loan_balance on the reader's plain graph (req:21.loan-balance-reads-plain)."""
     repayments = [s for s, _, _, _ in g.inc(loan, "REPAYS") if g.has(s, "Repayment")]
@@ -203,13 +208,15 @@ def _plain_loan_balance(g: Graph, loan: str) -> dict[str, Any]:
             and g.p(c).get("claimed_property") in props
         }
 
+    p = g.p(loan)
     blocked = sorted(
         contested(loan, ("currency", "principal_cents"))
         | {c for r in repayments for c in contested(r, ("amount_cents",))}
+        | _missing(loan, p.get("principal_cents"), p.get("currency"))
+        | {r for r in repayments if g.p(r).get("amount_cents") is None}
     )
     if blocked:
         return {"result": "incomplete", "depends_on": blocked}
-    p = g.p(loan)
     return {
         "result": "ok",
         "value": p.get("principal_cents") - sum(g.p(r).get("amount_cents") for r in repayments),
@@ -219,11 +226,21 @@ def _plain_loan_balance(g: Graph, loan: str) -> dict[str, Any]:
 
 def fig_loan_balance(db: Graph | GrafeoDB, loan: str) -> dict[str, Any]:
     """Principal less repayments — or 'incomplete', naming the contested claims it would depend on
-    (§21) — from the reader's plain graph, or from a Grafeo database a host asks for."""
+    (§21) and each thing lacking a fact it reads (req:21.incomplete-missing) — from the reader's
+    plain graph, or from a Grafeo database a host asks for."""
     if isinstance(db, Graph):
         return _plain_loan_balance(db, loan)
+    loan_row = Q(
+        db, f"MATCH (l:Loan {{id: '{loan}'}}) RETURN l.principal_cents AS p, l.currency AS c"
+    )[0]
+    paid = Q(
+        db,
+        f"MATCH (r:Repayment)-[:REPAYS]->(:Loan {{id: '{loan}'}}) RETURN r.id AS r, r.amount_cents AS a",  # noqa: E501  # one literal: embedded_queries reads it whole
+    )
     blocked = sorted(
-        {
+        _missing(loan, loan_row["p"], loan_row["c"])
+        | {r["r"] for r in paid if r["a"] is None}
+        | {
             r["c"]
             for r in Q(
                 db,
@@ -242,19 +259,9 @@ def fig_loan_balance(db: Graph | GrafeoDB, loan: str) -> dict[str, Any]:
     )
     if blocked:
         return {"result": "incomplete", "depends_on": blocked}
-    loan_row = Q(
-        db, f"MATCH (l:Loan {{id: '{loan}'}}) RETURN l.principal_cents AS p, l.currency AS c"
-    )[0]
     return {
         "result": "ok",
-        "value": loan_row["p"]
-        - sum(
-            r["a"]
-            for r in Q(
-                db,
-                f"MATCH (r:Repayment)-[:REPAYS]->(:Loan {{id: '{loan}'}}) RETURN r.amount_cents AS a",  # noqa: E501  # one literal: embedded_queries reads it whole
-            )
-        ),
+        "value": loan_row["p"] - sum(r["a"] for r in paid),
         "currency": loan_row["c"],
     }
 
