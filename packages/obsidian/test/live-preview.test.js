@@ -45,6 +45,22 @@ function widgets(state) {
   return out;
 }
 
+describe('views and style blocks in the editing view', () => {
+  // a view and a style block are drawn from the other blocks too: their own widget redraws them when any block changes
+  test('a view block and a style block each get the plugin’s own widget, so they redraw when the data or style changes', async () => {
+    const view = '// graph: reader · QUERY view options\nMATCH (n IS Option) RETURN n';
+    const style = "// graph: reader_style · STYLE reader\n(o:ViewStyle {view: 'options', outside: 'hide'})";
+    const note = ['# Reader', '', fence(READER), '', fence(view), '', fence(style), '', fence(QUERY), ''].join('\n');
+    const env = await load({ files: { [PATH]: note } });
+    try {
+      const ws = widgets(editorState(env, note));
+      assert.equal(ws.length, 3, 'the graph, the view and the style; a plain query is left to Obsidian');
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
 describe('the editing view draws graph blocks with its own widget', () => {
   test('in Live Preview each graph block is one block widget over its fences; a query is left to Obsidian', async () => {
     const env = await load({ files: { [PATH]: NOTE } });

@@ -192,8 +192,10 @@ export default class GraphNotePlugin extends Plugin {
       () => this.graphviz(),
     );
     // the direction set on the settings page, one the locked style allows (spec §21); else the best fit
+    // a direction the graph's own style sets (§6) comes before the settings' default
     const { direction } = this.settings;
-    return this.layouts.draw(direction === 'best' ? drawing : { ...drawing, direction }, owner);
+    const keep = direction === 'best' || !!drawing.direction;
+    return this.layouts.draw(keep ? drawing : { ...drawing, direction }, owner);
   }
 
   override onunload(): void {

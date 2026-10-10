@@ -9,7 +9,7 @@ import { Decoration, EditorView, ViewPlugin, WidgetType } from '@codemirror/view
 import type { DecorationSet } from '@codemirror/view';
 import { Component, editorInfoField, editorLivePreviewField } from 'obsidian';
 import type { MarkdownPostProcessorContext } from 'obsidian';
-import { gqlSpans, graphOfBlock } from '@graph-note/core';
+import { gqlSpans, graphOfBlock, styleOf, viewsOf } from '@graph-note/core';
 import type GraphNotePlugin from './main';
 import { renderShown } from './block';
 import { settlePlacements } from './graph-view/placement';
@@ -141,7 +141,10 @@ function cards(plugin: GraphNotePlugin, state: EditorState): DecorationSet {
     blocks = spans.map((s) => s.text).join('\u0000'),
     out: Range<Decoration>[] = [];
   for (const s of spans) {
-    if (!graphOfBlock(s.text) || s.close >= state.doc.lines) continue; // a query, a schema, or a block not yet closed
+    // a graph, a view and a style block are drawn from the other blocks too, so each gets a card that redraws with them;
+    // a plain query, a schema, or a block not yet closed is left to Obsidian
+    const drawnFromOthers = !!graphOfBlock(s.text) || !!styleOf(s.text) || viewsOf([s.text]).length > 0;
+    if (!drawnFromOthers || s.close >= state.doc.lines) continue;
     const widget = new GraphBlock(plugin, path, s.open, s.close, s.text, blocks, note);
     out.push(
       Decoration.replace({ widget, block: true }).range(

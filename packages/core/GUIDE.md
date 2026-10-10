@@ -62,7 +62,8 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   host gives it — the worker's (`serveLayouts`: its engine started at once, and "ready" said) and the page's
   (`LayoutRunner`: one worker reused; each layout timed from "ready"; a fresh worker after one overruns, none after three
   in a row; the page's thread only when the first worker cannot start; a layout superseded before it starts dropped).
-- `theme.ts` — the drawing's colours and size, from the theme, in the host's palette.
+- `theme.ts` — the drawing's colours and size, from the theme, in the host's palette; `hueColour` is the one blend every
+  hue is drawn through, kinds, readings and the style graph's looks alike.
 - `palette.ts` — the one colour mapping (spec §10): how each host writes the style's colours. Obsidian's entry names
   its theme variables; the fixed light and dark entries, for a host that draws the SVG as an isolated image (a Claude
   Code pane), are worked out to hex and paint their own page, with the locked contrast held; the system entry carries
@@ -104,6 +105,57 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   the same STEP, so the badge counts each once.
 - `path-edits.ts` — a step taken out numbers the later steps of its path again (`stepsAfter`), carried as the removing
   fix's further edits (`Problem.also`), so the path keeps §22's steps 1 to n.
+
+**The style graph (spec §2, §6, §7)**
+
+A graph's nudges, the properties it shows and the styling of its views and paths are a graph of their own, written in a
+style block beside it: `// graph: trip_style · STYLE trip`. `blocks.ts` knows one by its graph line (`styleOf`), and
+`dataKind` never takes it for data, so `readNote` never reads or draws it and the data reads the same with or without
+it. A graph line that says STYLE but names no graph is a problem, never data.
+
+- `style-graph.ts` — what a style graph holds once read (`StyleGraph`: nudges, shows, looks, each view's fade or hide,
+  how each view was shown, the direction) and the words it allows: the four nudge words, the lines, the formats, fade or
+  hide, and the colours, which are only the locked style's hues by name (`STYLE_HUES`).
+- `style.ts` — `readStyle`: every style block of a graph read with the data's own reader (`readBlocks`, told which blocks
+  to read), so what cannot be read is a problem on its line and the rest is used; never a throw, and a style too large
+  to read is not read (the locked style is kept, and why is said). `lookOf` is the look of a thing or link in a view or
+  path (a named hue, a line, a format; the thing's own look over its kind's); `legendOf` every colour used there with
+  what it means; `outsideOf` a view's fade or hide, fade when none is written.
+- `style-checks.ts` — each style thing checked on its own: its kind, its words, its values, and every name it uses
+  (thing, other, from, to, selected, kind, relationship type, path, property) against the graph it styles, a name not
+  there given the nearest (`estimates.ts`'s `nearest`) as its fix. A view's name is not checked: views are query blocks.
+- `style-conflicts.ts` — the things checked against each other: two directions, beside and before on one pair, a thing
+  in two groups, a loop of befores, a view set to both fade and hide or saved twice, a colour given two meanings in one
+  view or path. The first written is kept, the later left out, each with a problem.
+- `style-source.ts` — nudges applied after the layout source is made (`nudgedSource`: beside a `rank=same` line, before
+  an invisible link after every drawn one, group a labelled cluster), and direction set on the drawing (`nudgedDrawing`).
+  With no nudges the source is returned unchanged, byte-identical to the Python library's.
+- `style-edit.ts` — `styleEdit`: a nudge, a look, a view's fade or hide, or how a view was shown, written as text into the
+  graph's style block (made after the graph's last block when there is none); a view's setting changed in place, never
+  written twice; never a data block touched. A styled hue is drawn with `theme.ts`'s `hueColour`, the same blends as a
+  kind's, so it meets the locked contrast.
+
+**Views (spec §2, §7)**
+
+A view is a named query block in the note: `// graph: <graph> · QUERY view <name>`, then the query. The reader already
+reads `· QUERY` as a query, and the core draws no query as data, so a view is never drawn as a graph of its own.
+
+- `views.ts` — `viewsOf` finds the views of a note (each with its graph, its block and its query text; a block meant as a
+  view with no name, a name that is not one word, or a name already used in its graph is listed with a `fault`, never
+  skipped), and `readingOf` says a view in plain English ("everything within 2 steps of Alice").
+- `view-profile.ts` — the view profile: `parseView` reads the five shapes of query (a hand-picked set, everything near a
+  thing, how one thing reaches another, only some kinds, a walked path) into a `ViewSpec`, and refuses anything else with
+  a message that names the five shapes in words and shows the nearest one's form (`VIEW_NAMES`, `VIEW_FORMS`). The
+  queries are ISO GQL that Grafeo runs as written. A thing is named by its `id` property, which the reader writes into
+  every node it gives Grafeo and the core's world keys every node by. Several kinds are written after `IS`
+  (`(n IS Person|Team)`), because Grafeo does not read `(n:Person|Team)`; a colon takes one kind.
+- `view-write.ts` — `viewQuery` writes the query for a view built by tapping, always one `parseView` reads back to the
+  same view (steps held to 1 to 3 near and 1 to 6 reaching; a long set of names goes over lines), and `viewBlock` writes
+  the whole block.
+- `view-evaluate.ts` — `evaluate` puts a view to a graph of a reading, never to a copy of it, and gives its things, its
+  links (indexes into the links the graph draws) and, when nothing matches, `empty` with a sentence saying so and what to
+  change. A route of up to k steps is a walk, as Grafeo takes it (a link may be used again), found by two breadth-first
+  searches. The things were compared with Grafeo's answers for the same queries on random graphs.
 
 **Settings (spec §21)**
 
