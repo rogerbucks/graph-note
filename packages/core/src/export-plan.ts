@@ -40,14 +40,33 @@ export type ExportDecision = { nothing: string } | { ask: string } | { go: Expor
 
 // characters no platform lets a file be named with, and the marks that would break a link to it
 const UNSAFE_IN_A_NAME = '/\\:*?"<>|#^[]';
-// a name is cut to this many characters a part, so with the day and the ending it stays well within a file system's limit
-const MOST = { note: 60, graph: 40, view: 40 };
+// Each part of a name is cut to this many UTF-8 bytes, as file systems count: with the day (10), `with-context` (12), four
+// hyphens and the ending (4) the whole is at most 194 bytes, so it and its `.part` stay within 200.
+const MOST = { note: 80, graph: 44, view: 40, date: 10 };
+
+/** The bytes of one character in UTF-8. */
+const bytesOf = (c: string) => {
+  const code = c.codePointAt(0) ?? 0;
+  return code < 0x80 ? 1 : code < 0x800 ? 2 : code < 0x10000 ? 3 : 4;
+};
+
+/** The start of `text` that fits in `most` UTF-8 bytes, cut between characters. */
+function cut(text: string, most: number): string {
+  let used = 0,
+    out = '';
+  for (const c of text) {
+    used += bytesOf(c);
+    if (used > most) break;
+    out += c;
+  }
+  return out;
+}
 
 /** One part of a file name: unsafe characters and spaces made hyphens, no leading or trailing dot or hyphen, cut short. */
 function part(text: string, most: number): string {
   const tidy = (s: string) => s.replace(/-{2,}/g, '-').replace(/^[-.]+|[-.]+$/g, '');
   const safe = [...text].map((c) => (c.charCodeAt(0) < 32 || UNSAFE_IN_A_NAME.includes(c) || /\s/.test(c) ? '-' : c));
-  return tidy(tidy(safe.join('')).slice(0, most));
+  return tidy(cut(tidy(safe.join('')), most));
 }
 
 const lowerFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
@@ -88,12 +107,13 @@ export function exportPlan(input: ExportPlanInput): ExportDecision {
     part(scope.graph, MOST.graph),
     part(scope.view ?? '', MOST.view),
     scope.context ? 'with-context' : '',
-    part(input.date, 10),
+    part(input.date, MOST.date),
   ]
     .filter(Boolean)
     .join('-');
+  // the folder set for exports if it can be used; else the note's own, exactly as given: it is where the note already is
   const folder = settings.exportFolder ? (vaultFolder(settings.exportFolder) ?? '') : '';
-  const where = folder || (vaultFolder(parts.join('/')) ?? '');
+  const where = folder || parts.join('/');
   const at = (file: string) => (where ? `${where}/${file}` : file);
   const companion =
     settings.companionNote === 'on' && input.toVault !== false

@@ -201,6 +201,26 @@ describe('the export options (editor spec §16)', () => {
     assert.equal(settingsFrom({ exportFolder: '  Exports//Images/ ' }).exportFolder, 'Exports/Images');
   });
 
+  // proves: failed_export
+  test('a folder with a part that starts with a dot, such as the config folder, is read back as none', () => {
+    for (const odd of ['.obsidian', 'Exports/.obsidian', 'a/.git/b', '.hidden', '.'])
+      assert.equal(settingsFrom({ exportFolder: odd }).exportFolder, '', odd);
+  });
+
+  // proves: failed_export
+  test('a folder with a part Windows reserves, with or without an ending, is read back as none; near misses are kept', () => {
+    for (const odd of ['con', 'PRN', 'a/aux', 'Nul', 'COM1', 'com9', 'a/lpt1', 'LPT9', 'nul.txt', 'a/com3.old'])
+      assert.equal(settingsFrom({ exportFolder: odd }).exportFolder, '', odd);
+    for (const fine of ['console', 'com10', 'lpt', 'communal/auxiliary', 'my.folder'])
+      assert.equal(settingsFrom({ exportFolder: fine }).exportFolder, fine, fine);
+  });
+
+  // proves: failed_export
+  test('a folder with a part that ends in a dot or a space is read back as none', () => {
+    for (const odd of ['a.', 'a./b', 'a /b', 'a/b./c', 'a/ /b'])
+      assert.equal(settingsFrom({ exportFolder: odd }).exportFolder, '', JSON.stringify(odd));
+  });
+
   // proves: classified_export
   test('an export asks above the lowest classification until a level is chosen', () => {
     assert.equal(DEFAULT_SETTINGS.exportAsksAbove, DEFAULT_SETTINGS.classifications[0]);

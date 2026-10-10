@@ -55,8 +55,29 @@ const escaped = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
 const num = (x: number) => String(Math.round(x * 100) / 100);
 
-/** The width of `text` at `size`, estimated: Helvetica's average letter is about 0.56 em, bold about 0.6. */
-const widthOf = (text: string, size: number, bold = false) => [...text].length * size * (bold ? 0.6 : 0.56);
+/** Whether a character is drawn about one em wide: East Asian wide and full-width characters, and emoji and symbols. */
+function isWide(c: string): boolean {
+  const code = c.codePointAt(0) ?? 0;
+  return (
+    (code >= 0x1100 && code <= 0x115f) || // Hangul Jamo
+    (code >= 0x2600 && code <= 0x27bf) || // symbols and dingbats, mostly drawn as emoji
+    (code >= 0x2e80 && code <= 0xa4cf) || // CJK radicals, kana, ideographs, Yi
+    (code >= 0xac00 && code <= 0xd7a3) || // Hangul syllables
+    (code >= 0xf900 && code <= 0xfaff) || // CJK compatibility ideographs
+    (code >= 0xfe30 && code <= 0xfe6f) || // CJK compatibility forms
+    (code >= 0xff00 && code <= 0xff60) || // full-width forms
+    (code >= 0xffe0 && code <= 0xffe6) ||
+    (code >= 0x1f000 && code <= 0x1faff) || // emoji
+    (code >= 0x20000 && code <= 0x3fffd) // CJK extensions
+  );
+}
+
+/**
+ * The width of `text` at `size`, estimated: Helvetica's average letter is about 0.56 em, bold about 0.6, and a wide
+ * character (East Asian, full-width, emoji) about 1 em, as it is drawn in the font that has it.
+ */
+const widthOf = (text: string, size: number, bold = false) =>
+  [...text].reduce((sum, c) => sum + size * (isWide(c) ? 1 : bold ? 0.6 : 0.56), 0);
 
 /** `text` broken into lines of at most `most` pixels, at spaces where it can be and inside a word where it cannot. */
 function wrapped(text: string, most: number, size: number, bold = false): string[] {
