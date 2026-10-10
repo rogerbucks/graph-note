@@ -10,17 +10,29 @@ from typing import Any
 from graphspec.engine import settings
 from graphspec.engine.optional_imports import grafeo
 from graphspec.engine.queries import read, strip
+from graphspec.reader.whitespace import N, S
+from graphspec.reader.whitespace import strip as ws_strip
 
 
 # ── reading and restating ─────────────────────────────────────────────────
 QUOTES = {"\u2018": "'", "\u2019": "'", "\u201c": '"', "\u201d": '"'}
 
 
+GRAPH_LINE = re.compile(rf"{S}*//{S}*graph:{S}*({N}+)")
+
+
+def graph_name(block: str) -> str | None:
+    """The graph a block's first line names (§3), read with whitespace as GQL names it, as the
+    graph reader reads it; None when that line names none."""
+    first = next((line for line in block.split("\n") if ws_strip(line)), "")
+    m = GRAPH_LINE.match(first)
+    return m.group(1) if m else None
+
+
 def require_graph_line(block: str, where: str) -> str:
     """§3: a block's first line names its graph. A block that does not is refused, with the
     reason."""
-    first = next((line for line in block.splitlines() if line.strip()), "")
-    if not re.match(r"\s*//\s*graph:\s*\S+", first):
+    if graph_name(block) is None:
         raise ValueError(
             f"refused: the block in {where} names no graph — §3 requires '// graph: "
             "<name>' as its first line"

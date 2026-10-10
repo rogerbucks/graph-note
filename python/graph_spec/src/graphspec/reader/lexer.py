@@ -23,15 +23,16 @@ TOKEN = re.compile(
     r"""|(?P<num>-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)"""
     r"""|(?P<id>[A-Za-z_][A-Za-z0-9_]*)"""
     r"""|(?P<arrow>->)"""
-    r"""|(?P<p>[()\[\]{}:,.=-]))"""
+    r"""|(?P<p>[()\[\]{}:,.=-]))""",
+    re.ASCII,  # \d and \b as JavaScript's: a digit or letter in another script is neither
 )
 KEYWORDS = {"INSERT", "MATCH", "SET", "DATE", "DATETIME", "TRUE", "FALSE"}
-EXCERPT = re.compile(rf"{S}*//{S}*excerpt\b", re.I)
+EXCERPT = re.compile(rf"{S}*//{S}*excerpt\b", re.I | re.ASCII)
 GRAPH = re.compile(rf"{S}*//{S}*graph:{S}*({N}+)([^\n]*)$")
 SCHEMA = re.compile(rf"·{S}*SCHEMA{S}+{N}+")
-EXCERPT_OF = re.compile(rf"·{S}*excerpt\b", re.I)
-QUERY = re.compile(rf"·{S}*QUERY\b")
-CHANGE_SET = re.compile(rf"·{S}*CHANGE SET\b")
+EXCERPT_OF = re.compile(rf"·{S}*excerpt\b", re.I | re.ASCII)
+QUERY = re.compile(rf"·{S}*QUERY\b", re.ASCII)
+CHANGE_SET = re.compile(rf"·{S}*CHANGE SET\b", re.ASCII)
 
 
 def header(block: str) -> tuple[str | None, str]:
