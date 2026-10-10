@@ -1,6 +1,10 @@
-// Whitespace as GQL names it (§3), the one set every reader uses, never the language's own idea of it: JavaScript's \s
-// and trim() take in U+FEFF, Python's isspace() takes in U+0085, and each leaves out what GQL counts. A line ends at LF
-// only. The same code points are in python/graph_spec/src/graphspec/reader/whitespace.py (decided 10 Oct 2026).
+// Whitespace as GQL names it (graph spec §3), the one set every reader uses, never the language's own idea of it. The
+// set's source is openGQL's grammar, https://raw.githubusercontent.com/opengql/grammar/main/GQL.g4, rule WHITESPACE and
+// its fragments (the published grammar, not the paywalled text of ISO/IEC 39075): 29 code points, neither U+0085 nor
+// U+FEFF. JavaScript's \s and trim() take in U+FEFF, Python's isspace() takes in U+0085, and each leaves out what GQL
+// counts. A line ends at LF only. The same code points are in packages/core/src/whitespace.ts and
+// python/graph_spec/src/graphspec/reader/whitespace.py, and test/whitespace.test.js holds the three copies to them
+// (decided 10 Oct 2026).
 'use strict';
 
 const CODES = [

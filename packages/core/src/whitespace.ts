@@ -1,6 +1,9 @@
-// Whitespace as GQL names it (§3), the one set every reader uses, never the language's own idea of it: JavaScript's \s
-// and trim() take in U+FEFF, and leave out U+001C–U+001F and U+180E. A line ends at LF only. The same code points are
-// in packages/graph-spec/src/reader/whitespace.js and the Python library's reader (decided 10 Oct 2026).
+// Whitespace as GQL names it (graph spec §3), the one set every reader uses, never the language's own idea of it. The
+// set's source is openGQL's grammar, https://raw.githubusercontent.com/opengql/grammar/main/GQL.g4, rule WHITESPACE and
+// its fragments (the published grammar, not the paywalled text of ISO/IEC 39075): 29 code points, neither U+0085 nor
+// U+FEFF. JavaScript's \s and trim() take in U+FEFF, and leave out U+001C–U+001F and U+180E. A line ends at LF only.
+// The same code points are in packages/graph-spec/src/reader/whitespace.js and the Python library's reader, and
+// test/whitespace.test.js holds the three copies to them (decided 10 Oct 2026).
 
 const CODES = [
   0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x1c, 0x1d, 0x1e, 0x1f, 0x20, 0xa0, 0x1680, 0x180e, 0x2000, 0x2001, 0x2002, 0x2003,
