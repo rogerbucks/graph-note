@@ -1,10 +1,12 @@
 """req:3.id-once — "every node has an id, used once in its graph" — on the library's paths that
 hand GQL to Grafeo without the portable reader (graphspec/reader/store.py Store.apply) first.
 
-An investigation, not a fix: each test marked expectedFailure demonstrates a gap, named in its
-comment, so the suite stays green while the gap stands. The tests that pass record what Grafeo
-does with a repeat, that the reader refuses one, and that a join treats one id in two documents
-as one thing (§21) — the intended case, kept apart from the repeats.
+Begun as an investigation: each test marked expectedFailure demonstrated a gap, named in its
+comment, so the suite stayed green while the gap stood. req:3.engine-reads-first closed the gaps
+on the four routes to Grafeo (parse, load, compute and the engine's check_changeset), and their
+decorators came off in the commits that closed them; the one left marks validate. The other
+tests record what Grafeo does with a repeat, that the reader refuses one, and that a join treats
+one id in two documents as one thing (§21) — the intended case, kept apart from the repeats.
 
 Usage:
   cd python/graph_spec && uv run --locked python -m unittest tests.test_id_once_engine
@@ -120,7 +122,9 @@ class TheReaderRefusesARepeat(unittest.TestCase):
 
 
 class EnginePathsSkipTheReader(unittest.TestCase):
-    """Questions 1 and 2: the paths that hand a block to Grafeo with no reader first."""
+    """Questions 1 and 2: the paths that handed a block to Grafeo with no reader first, and now
+    read it with the reader first (req:3.engine-reads-first). The class keeps its name, so the
+    tests-first record knows its tests."""
 
     def test_the_default_parser_is_grafeo(self):
         self.assertEqual(settings.PARSER, "grafeo")

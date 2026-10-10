@@ -100,9 +100,11 @@ def _bare(block):
 def to_gql(block: str) -> str:
     """A block as standard GQL (§3): the data shortcut's INSERT put back and, where a name stands
     for an id, the id: written into each new node and one MATCH line added for the existing nodes
-    named. Every other line and comment is kept as written. A block that cannot be read is
-    returned as it is, so the engine reports it; one that writes a variable or an id twice is
-    refused with the reader's own error, so no key is ever written twice."""
+    named. Every other line and comment is kept as written. A block that writes a variable or an
+    id twice is refused with the reader's own error, so no key is ever written twice. It sees
+    one block only, and returns one it cannot read as it is: the gate is the reader, which every
+    route to an engine runs first, on the block in its graph (req:3.engine-reads-first), so a
+    repeat across blocks, or a block the reader cannot read, never reaches the engine."""
     lines = block.split("\n")
     i = next(
         (k for k, line in enumerate(lines) if strip(line) and not strip(line).startswith("//")),
