@@ -8,6 +8,7 @@ import { draw, details } from '../src/render.ts';
 import { loadEngine } from '../src/engine.ts';
 import { layoutSource } from '../src/layout.ts';
 import { themed, sizeOf, choose } from '../src/theme.ts';
+import { used } from './processor-time.js';
 
 const WIDE = `// graph: g
 (q:Question {title: 'Which device?'}),
@@ -143,9 +144,15 @@ describe('speed', () => {
     );
     const block = `// graph: g\n${[...nodes, ...links].join(',\n')}`;
     draw(readNote([block]).graphs.get('g'), engine); // warm: the first draw compiles the engine's code paths
-    const t = performance.now();
-    const drawn = draw(readNote([block]).graphs.get('g'), engine);
-    const ms = performance.now() - t;
+    // the spec's own half second, held to the least processor time of three draws: the clock runs on while a busy
+    // machine runs something else, which a whole-suite run on a loaded machine showed (10 Oct 2026)
+    let drawn,
+      ms = Infinity;
+    for (let k = 0; k < 3; k++) {
+      const t = used();
+      drawn = draw(readNote([block]).graphs.get('g'), engine);
+      ms = Math.min(ms, used() - t);
+    }
     assert.match(drawn.svg, /^<svg/);
     assert.ok(ms < 500, `${ms.toFixed(0)} ms`);
   });

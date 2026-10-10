@@ -5,6 +5,20 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
 import { LAYOUT_LIMITS, PAGE_LIMITS, READ_LIMITS, textTooLarge, tooLarge } from '../src/layout-limits.ts';
+import { fastest, onePass } from './processor-time.js';
+
+/**
+ * Asserts a refusal that only measures a text came at once: in under 10 plain passes over the text (it takes 1 to 3),
+ * the least processor time of three of each, so it neither read nor wrote what it measured; and, as a backstop against
+ * a slowdown of both alike, under `most` ms of processor time, the test's old limit. Returns what the step gave.
+ */
+function atOnce(text, step, most) {
+  const { ms: took, out } = fastest(3, step),
+    pass = onePass(text);
+  assert.ok(took < 10 * pass, `${took.toFixed(1)} ms, against ${pass.toFixed(1)} ms for one pass over the text`);
+  assert.ok(took < most, `${took.toFixed(0)} ms of processor time, over ${most}`);
+  return out;
+}
 
 describe('the note’s text, measured before it is read', () => {
   test('the defaults: 512 kB and 10,000 lines of graph blocks', () => {
@@ -36,10 +50,7 @@ describe('the note’s text, measured before it is read', () => {
   test('a large broken block — 5 MB, 100,000 lines each missing its ) — is refused at once, unread, never hanging', () => {
     const block = `// graph: g\n${Array.from({ length: 100_000 }, (_, i) => `(n${i}:Thing {name: 'Thing number ${i} of many'},`).join('\n')}`;
     assert.ok(block.length > 4_000_000);
-    const t = performance.now();
-    const reading = readNote([block]);
-    const ms = performance.now() - t;
-    assert.ok(ms < 1000, `${ms.toFixed(0)} ms`);
+    const reading = atOnce(block, () => readNote([block]), 1000);
     assert.equal(reading.tooLarge?.limit, 'text-bytes');
     assert.equal(reading.graphs.size, 0, 'nothing drawn');
     assert.deepEqual(reading.problems, []);
@@ -88,9 +99,7 @@ describe('on the page’s own thread, where a layout cannot be stopped, the limi
 
   test('a word of 999,000 characters, which would hold the page while its drawing instructions are written, is refused unwritten', () => {
     const d = drawing([box(0, 'x'.repeat(999_000)), box(1)]);
-    const t = performance.now();
-    const r = tooLarge(d, PAGE_LIMITS);
-    assert.ok(performance.now() - t < 200, 'at once');
+    const r = atOnce(d.boxes[0].text, () => tooLarge(d, PAGE_LIMITS), 200);
     assert.deepEqual(r, { reason: 'too-large', limit: 'word', count: 999_000, most: 1_000 });
   });
 

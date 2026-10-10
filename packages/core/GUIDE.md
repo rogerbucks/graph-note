@@ -85,3 +85,7 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 Each test file is named after the module it tests (`zoom.test.js` tests `zoom.ts`; `layout-parity.test.js` tests
 `layout.ts`), or, when it spans modules, is listed in `CONTRIBUTING.md`. Run one with `node --test test/<file>`, or all
 with `npm test` from the repository root.
+
+A speed test times by processor time with `test/processor-time.js`, never by the clock, which runs on while a busy
+machine runs something else. It holds a step to a baseline measured beside it in the same run, and to its old number of
+milliseconds, now in processor time, as a backstop.

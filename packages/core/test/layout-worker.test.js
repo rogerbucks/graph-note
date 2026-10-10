@@ -10,6 +10,7 @@ import { loadEngine } from '../src/engine.ts';
 import { drawingSource } from '../src/layout.ts';
 import { LAYOUT_LIMITS, PAGE_LIMITS, tooLarge } from '../src/layout-limits.ts';
 import { LayoutRunner, TIMEOUTS_BEFORE_STOPPING, inThreadPort, serveLayouts } from '../src/layout-worker.ts';
+import { onePass, used } from './processor-time.js';
 
 const CLOCK = { setTimeout: (run, ms) => setTimeout(run, ms), clearTimeout: (t) => clearTimeout(t) };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -123,9 +124,26 @@ describe('the limits, checked before any layout', () => {
     const d = drawingOf(READER);
     // words, but very many: writing their source would itself hold the page
     const long = { ...d, boxes: d.boxes.map((b, i) => (i ? b : { ...b, text: 'é '.repeat(600_000) })) };
-    const t = performance.now();
-    const r = await runner([]).r.draw(long);
-    assert.ok(performance.now() - t < 200, 'refused at once');
+    // at once: in under 10 plain passes over the text (it takes 2 to 3), the least processor time of three, so the source
+    // was never written; never the clock alone, which a busy machine running the whole suite broke at 314 ms against 200
+    // (10 Oct 2026). And under the old 200 ms, now of processor time, as a backstop against a slowdown of both alike; and
+    // under 5 s by the clock, for a wait that uses no processor time
+    let r,
+      took = Infinity,
+      clock = Infinity;
+    for (let k = 0; k < 3; k++) {
+      const t = used(),
+        c = performance.now();
+      r = await runner([]).r.draw(long);
+      took = Math.min(took, used() - t);
+      clock = Math.min(clock, performance.now() - c);
+    }
+    const pass = onePass(long.boxes[0].text);
+    assert.ok(took < 10 * pass, `${took.toFixed(1)} ms, against ${pass.toFixed(1)} ms for one pass over the text`);
+    assert.ok(
+      took < 200 && clock < 5000,
+      `${took.toFixed(0)} ms of processor time, ${clock.toFixed(0)} ms by the clock`,
+    );
     assert.equal(r.limit, 'source');
     assert.ok(r.count > 1_200_000, `${r.count} bytes: each é is two, and the spaces are not counted`);
     assert.equal(r.atLeast, true, 'the source would be longer still');
@@ -298,11 +316,22 @@ describe('a normal graph', () => {
     const links = Array.from({ length: 70 }, (_, i) => `(n${i % 50})-[:LINKS]->(n${(i * 7 + 3) % 50})`);
     const d = drawingOf(`// graph: g\n${[...nodes, ...links].join(',\n')}`, 'g');
     await r.draw(d); // warm: the worker's engine starts on its first layout
-    const t = performance.now();
-    const drawn = await r.draw(d);
-    const ms = performance.now() - t;
+    // the spec's own half second, held to the least processor time of three draws, the worker's thread with the page's:
+    // the clock runs on while a busy machine runs something else (10 Oct 2026). Processor time cannot see a wait, a timer
+    // or a queue, so the least by the clock is held to 5 s as well, a backstop a busy machine does not reach
+    let drawn,
+      ms = Infinity,
+      clock = Infinity;
+    for (let k = 0; k < 3; k++) {
+      const t = used(),
+        c = performance.now();
+      drawn = await r.draw(d);
+      ms = Math.min(ms, used() - t);
+      clock = Math.min(clock, performance.now() - c);
+    }
     assert.match(drawn.svg, /^<svg/);
     assert.ok(ms < 500, `${ms.toFixed(0)} ms`);
+    assert.ok(clock < 5000, `${clock.toFixed(0)} ms by the clock`);
   });
 });
 

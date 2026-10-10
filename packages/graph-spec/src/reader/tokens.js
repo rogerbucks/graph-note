@@ -2,7 +2,7 @@
 'use strict';
 
 const { ProfileError } = require('./profile-error.js');
-const { S, N, trim } = require('./whitespace.js');
+const { S, N, isSpace, trim } = require('./whitespace.js');
 
 const KEYWORDS = new Set(['INSERT', 'MATCH', 'SET', 'DATE', 'DATETIME', 'TRUE', 'FALSE']);
 // [^\n] where Python's reader has `.`: JavaScript's `.` also stops at CR, U+2028 and U+2029
@@ -61,7 +61,11 @@ function tokens(block) {
     if (trim(raw).startsWith('//')) return;
     let pos = 0;
     while (pos < raw.length) {
-      if (!trim(raw.slice(pos))) break;
+      // whether only whitespace is left, told without cutting the rest of the line out and trimming it before every
+      // token: that cost a 137 kB line 20% of its reading time (10 Oct 2026)
+      let at = pos;
+      while (at < raw.length && isSpace(raw[at])) at++;
+      if (at === raw.length) break;
       TOKEN.lastIndex = pos;
       const m = TOKEN.exec(raw);
       if (!m && trim(raw.slice(pos)).startsWith('//')) throw new ProfileError(n, COMMENT_RULE, COMMENT_FIX); // a comment after code on its line (§3)
