@@ -6,11 +6,10 @@ name: Engine advisories
 # node scripts/engine-version.mjs --refresh and open a pull request, and the new cache is uploaded as an artifact.
 # The release does its own live check in its quality job, and the plugin never asks.
 #
-# The weekly run is off until the owner decides at the public release. To switch it back on,
-# restore the schedule line below (a Monday morning) under "on:".
+# It runs every Monday morning, and by hand.
 on:
-  # schedule:
-  #   - cron: '17 6 * * 1'
+  schedule:
+    - cron: '17 6 * * 1'
   workflow_dispatch:
 
 permissions:

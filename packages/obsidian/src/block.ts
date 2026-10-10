@@ -9,14 +9,20 @@ import {
   gqlBlocks,
   graphOfBlock,
   namesSharedSchema,
+  nudgedDrawing,
   parked,
   readNote,
+  readStyle,
+  styleOf,
+  viewsOf,
   underStrictness,
 } from '@graph-note/core';
 import type { Block, Drawn, Problem, Refusal } from '@graph-note/core';
 import type GraphNotePlugin from './main';
 import type { EditTarget } from './main';
 import { renderCode } from './code';
+import { renderStyleBlock } from './style-block';
+import { renderViewBlock, writeViewBlock } from './view-block';
 import { GraphView } from './graph-view/graph-view';
 import { readOnlyHere, settlePlacements, whenPlaced } from './graph-view/placement';
 import { renderProblems } from './graph-view/problems-list';
@@ -91,6 +97,16 @@ export async function renderBlock(
   ctx: MarkdownPostProcessorContext,
   owner?: object,
 ): Promise<void> {
+  // a query block named as a view is drawn as the view (§7)
+  const view = viewsOf([source])[0];
+  if (view) return renderViewBlock(plugin, source, el, ctx, view, owner);
+  const styled = styleOf(source);
+  if (styled) {
+    // a style block is never drawn as a graph: folded away until opened (§2)
+    const all = gqlBlocks(ctx.getSectionInfo(el)?.text ?? '').map((b) => b.text);
+    renderStyleBlock(el, source, styled, all.includes(source) ? all : [...all, source]);
+    return;
+  }
   const graph = graphOfBlock(source);
   if (!graph) {
     renderCode(el, source);
@@ -118,8 +134,11 @@ export async function renderBlock(
   }
   // a problem's line in the note: the block's fence line, plus its line in the block (1 = the line after the fence)
   const shown = (p: Problem): ShownProblem => ({ ...p, noteLine: (blocks[p.block]?.line ?? 0) + p.line });
-  const problems = reading.problems.filter((p) => p.graph === graph).map(shown);
-  const drawing = reading.graphs.get(graph);
+  // its style graph (§2): what is wrong in it listed with the graph's problems; what is sound, its nudges (§6), drawn
+  const styling = readStyle(texts, graph, reading);
+  const problems = [...reading.problems, ...styling.problems].filter((p) => p.graph === graph).map(shown);
+  const plain = reading.graphs.get(graph);
+  const drawing = plain && { ...nudgedDrawing(plain, styling.style), nudges: styling.style.nudges };
   const root = el.createDiv({ cls: 'graph-note' });
 
   if (!drawing || !drawing.boxes.length) {
@@ -187,6 +206,7 @@ export async function renderBlock(
       mode: 'note',
       completeness: completenessReport(reading, graph, new Date().toISOString().slice(0, 10)),
       parked: parked(reading, graph, new Date().toISOString().slice(0, 10)),
+      writeView: (block) => writeViewBlock(plugin, target.path, graph, block),
       indent: plugin.settings.indent,
       lineOf: (at) => (blocks[at.block]?.line ?? 0) + at.line,
       onEdit: () => {

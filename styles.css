@@ -47,6 +47,64 @@
   fill: var(--text-error);
   font-weight: var(--font-semibold);
 }
+/* A view (spec §7): what is outside it faded, and said so to screen readers; each look's hue on the outline only, in
+   the locked line blend, its text kept in the text colour so the locked contrast holds on any box; the legend says
+   what each colour means, a swatch beside the words. */
+.graph-note-svg .graph-note-faded {
+  opacity: 0.35;
+}
+.graph-note-svg g.graph-note-look > :is(path, polygon) {
+  stroke: var(--graph-note-look-line, var(--text-muted));
+}
+.graph-note-svg g.graph-note-line-bold > :is(path, polygon) {
+  stroke-width: 3;
+}
+.graph-note-svg g.graph-note-line-dashed > :is(path, polygon) {
+  stroke-dasharray: 6 4;
+}
+.graph-note-svg g.graph-note-line-dotted > :is(path, polygon) {
+  stroke-dasharray: 2 3;
+}
+.graph-note-svg g.graph-note-format-bold > text {
+  font-weight: var(--font-bold);
+}
+.graph-note-svg g.graph-note-format-italic > text {
+  font-style: italic;
+}
+.graph-note-view-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-4-2);
+  padding: var(--size-4-1) var(--size-4-2);
+}
+.graph-note-view-strip button {
+  min-width: 44px;
+  min-height: 44px;
+}
+.graph-note-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-4-3);
+  margin: 0;
+  padding: var(--size-4-1) var(--size-4-2);
+  list-style: none;
+}
+.graph-note-swatch {
+  display: inline-block;
+  width: 1em;
+  height: 0.25em;
+  margin-inline-end: var(--size-4-1);
+  vertical-align: middle;
+  background: var(--graph-note-swatch, var(--text-muted));
+}
+/* A style block (spec §2): folded away until opened, its line in the muted colour, a 44-point target to open it. */
+details.graph-note-style > summary {
+  min-height: 44px;
+  padding-block: var(--size-4-3);
+  color: var(--text-muted);
+  cursor: pointer;
+}
 /* Walked paths (spec §7): the strip below the bar; the step playing outlined heavier; each recorded step numbered. */
 .graph-note-walk {
   display: flex;
@@ -57,6 +115,18 @@
   border-bottom: 1px solid var(--background-modifier-border);
 }
 .graph-note-walk button {
+  min-width: 44px;
+  min-height: 44px;
+}
+/* Making a view by tapping (spec §7): laid out as the walk strip, every control a 44-point target. */
+.graph-note-view-maker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-4-2);
+  padding: var(--size-4-1) var(--size-4-2);
+}
+.graph-note-view-maker :is(button, select, input) {
   min-width: 44px;
   min-height: 44px;
 }

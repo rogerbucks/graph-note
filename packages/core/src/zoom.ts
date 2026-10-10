@@ -154,6 +154,11 @@ export class Zoom {
     this.place(s, px - (px - this.x) * r, py - (py - this.y) * r);
   }
 
+  /** Shows the drawing at a scale and position saved before (a view saved as shown, spec §7), within the limits. */
+  restore(scale: number, x: number, y: number): void {
+    this.place(clamp(scale, MIN_SCALE, MAX_SCALE), x, y);
+  }
+
   panBy(dx: number, dy: number): void {
     this.place(this.scale, this.x + dx, this.y + dy);
   }
