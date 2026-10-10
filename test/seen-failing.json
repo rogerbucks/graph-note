@@ -73,6 +73,10 @@
     "zoom.ts imports no host": {
       "seen_failing_first": false,
       "evidence": "pins behaviour that already existed: the core modules imported no host before this test named it (commit 52cfcf6)"
+    },
+    "within the core, only the entry imports engine.ts": {
+      "seen_failing_first": false,
+      "evidence": "renamed from 'only the entry imports engine.ts', seen failing first in commit 0cc19d6, to say it checks the core's own modules only (review of #35); the check is unchanged"
     }
   },
   "packages/core/test/render.test.js": {
