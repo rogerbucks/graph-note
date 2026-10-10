@@ -13,6 +13,8 @@ module that ties the parts together, named as the folder is.
   command that converts a note to standard GQL; keeps the settings, drafts and shared schemas; opens the editors.
 - `block.ts` — one gql block in a note: drawn, or shown as code, never blank; as text with a banner when it is over a
   size or time limit.
+- `style-block.ts` — a style block (§2): never drawn, folded away until opened, saying whose style it is, what it holds
+  and how many problems it has. The graph it styles is drawn with its nudges, and its problems listed, by `block.ts`.
 - `code.ts` — a block that is not a graph, shown as coloured code; a very long one plain.
 - `live-preview.ts` — the editing view's own cards, so the page stays still while a block is typed in.
 - `editor.ts` — the comma and the colon added for you in the note's own editor.

@@ -151,6 +151,16 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
       One undo (⌘Z, or the phone's gesture) takes the name back out, and the dashed box and the warning return. Phone:
       the button is easy to hit in the sheet (slice 2, unnamed_drawn_suggested).
 
+## The style graph — spec §2, §6
+
+- [ ] A note with a graph and its style block (`// graph: reader_style · STYLE reader`, with a direction nudge TB and
+      a beside nudge): the style block shows as one folded line, "Style of graph reader: 2 nudges", opening to its
+      text; the graph runs top to bottom with the two things side by side (slice 2, style_block_in_note,
+      style_is_a_graph).
+- [ ] Change a nudge's word to `besides`: the fold says "⚠ 1 problem"; the graph's badge lists "a nudge must be one of
+      four words…" and the graph is still drawn (four_nudge_words, nudge_problems). Break the block's text: the graph
+      is drawn in the locked style and the problem listed (broken_style_block).
+
 ## Parked for later — spec §5, §8
 
 - [ ] Edit here on a card, tap a box, press Park for later, fill what is needed and why, press Park it: a Deferred is

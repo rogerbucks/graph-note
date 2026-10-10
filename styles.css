@@ -47,6 +47,14 @@
   fill: var(--text-error);
   font-weight: var(--font-semibold);
 }
+/* A style block (spec §2): folded away until opened, its line in the muted colour, a 44-point target to open it. */
+details.graph-note-style > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+  cursor: pointer;
+}
 /* Walked paths (spec §7): the strip below the bar; the step playing outlined heavier; each recorded step numbered. */
 .graph-note-walk {
   display: flex;

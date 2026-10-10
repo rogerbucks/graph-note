@@ -6,6 +6,7 @@ import { drawingSource, layoutSource, STYLE } from './layout.ts';
 import type { LayoutSource } from './layout.ts';
 import { themed, sizeOf, choose } from './theme.ts';
 import type { Palette } from './palette.ts';
+import { nudgedSource } from './style-source.ts';
 
 /** Graphviz: layout source in, SVG text out. Throws when it cannot lay the source out. */
 export interface Engine {
@@ -34,9 +35,11 @@ export interface Direction {
  */
 export function directions(drawing: GraphDrawing): Direction[] {
   const only = drawing.direction && STYLE.directions.includes(drawing.direction) ? [drawing.direction] : null;
+  const keys = drawing.boxes.map((b) => b.key);
   return (only ?? STYLE.directions).map((rankdir) => ({
     rankdir,
-    dot: drawingSource(drawing, rankdir as 'LR' | 'TB'),
+    // the style graph's nudges written in (§6); with none, the source the Python library gives, byte for byte
+    dot: nudgedSource(drawingSource(drawing, rankdir as 'LR' | 'TB'), drawing.nudges ?? [], keys),
     src: layoutSource(drawing, rankdir as 'LR' | 'TB'),
   }));
 }
