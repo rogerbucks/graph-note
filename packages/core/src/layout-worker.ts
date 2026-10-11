@@ -4,16 +4,22 @@
 // between them, so it stays host-free: the plugin gives it a Web Worker, a test a fake or a thread. The worker draws with
 // render.ts's own steps, so a drawing is byte for byte the same wherever it is laid out (spec §12, layout_byte_identical).
 import type { GraphDrawing } from './note-reading.ts';
+import { PALETTES } from './palette.ts';
 import { chosen, directions } from './render.ts';
 import type { Drawn, Engine } from './render.ts';
 import { counted, LAYOUT_LIMITS, measured, PAGE_LIMITS } from './layout-limits.ts';
 import type { LayoutLimits, Refusal } from './layout-limits.ts';
+import type { ExportTheme } from './settings.ts';
 
-/** What the page asks the worker: one drawing laid out, and the most drawing instructions it may write for it. */
+/**
+ * What the page asks the worker: one drawing laid out, and the most drawing instructions it may write for it. With a
+ * `theme` it is themed in that fixed palette, as an export is; without, in the host's own.
+ */
 export interface LayoutRequest {
   id: number;
   drawing: GraphDrawing;
   sourceBytes: number;
+  theme?: ExportTheme;
 }
 
 /**
@@ -74,7 +80,7 @@ export const TIMEOUTS_BEFORE_STOPPING = 3;
  */
 export function serveLayouts(scope: LayoutScope, load: () => Promise<Engine>): void {
   const engine = Promise.resolve().then(load);
-  scope.onmessage = ({ data: { id, drawing, sourceBytes } }) => {
+  scope.onmessage = ({ data: { id, drawing, sourceBytes, theme } }) => {
     const answer = async (): Promise<LayoutReply> => {
       const laid = directions(drawing);
       const refusal = measured(laid, sourceBytes);
@@ -85,6 +91,7 @@ export function serveLayouts(scope: LayoutScope, load: () => Promise<Engine>): v
         drawn: chosen(
           laid,
           laid.map((d) => e.render(d.dot)),
+          theme && PALETTES[theme],
         ),
       };
     };
@@ -122,6 +129,7 @@ export function inThreadPort(serve: (scope: LayoutScope) => void): LayoutPort {
 interface Job {
   drawing: GraphDrawing;
   owner: object | undefined;
+  theme: ExportTheme | undefined;
   done: (result: Drawn | Refusal | Error | null) => void;
   id?: number;
   timer?: unknown;
@@ -132,7 +140,8 @@ interface Job {
  * and only then is a layout handed to it, given the time limit from that moment, so neither a cold start nor a wait
  * behind a stuck layout is charged to it. A worker past the limit is terminated, and the next layout starts a fresh one;
  * after TIMEOUTS_BEFORE_STOPPING in a row, none is started again. Only when the first worker cannot start, or its engine
- * fails, do layouts move to the page's own thread — never one already handed to a worker.
+ * fails, do layouts move to the page's own thread — never one already handed to a worker — and those queued by then are
+ * held again to the page's lower limits, as the ones asked for afterwards are.
  */
 export class LayoutRunner {
   private readonly o: RunnerOptions;
@@ -158,9 +167,10 @@ export class LayoutRunner {
 
   /**
    * The drawing, laid out and themed; or why it is not drawn; or null when it is no longer wanted — superseded by a newer
-   * drawing for the same `owner` before its layout started, or the runner closed. Rejects when the engine fails.
+   * drawing for the same `owner` before its layout started, or the runner closed. Rejects when the engine fails. With a
+   * `theme` it is themed in that fixed palette, as an export is, under the same limits and in the same worker.
    */
-  draw(drawing: GraphDrawing, owner?: object): Promise<Drawn | Refusal | null> {
+  draw(drawing: GraphDrawing, owner?: object, theme?: ExportTheme): Promise<Drawn | Refusal | null> {
     if (owner)
       for (const old of this.queue.filter((j) => j.owner === owner)) {
         this.queue.splice(this.queue.indexOf(old), 1);
@@ -170,7 +180,7 @@ export class LayoutRunner {
     if (over) return Promise.resolve(this.paged(over));
     if (this.isStopped()) return Promise.resolve(this.stopped());
     return new Promise((resolve, reject) => {
-      this.queue.push({ drawing, owner, done: (r) => (r instanceof Error ? reject(r) : resolve(r)) });
+      this.queue.push({ drawing, owner, theme, done: (r) => (r instanceof Error ? reject(r) : resolve(r)) });
       this.pump();
     });
   }
@@ -212,7 +222,9 @@ export class LayoutRunner {
       this.drop(); // the worker may be stuck for ever: stop it, and start afresh for the next layout
       this.failed(job, { reason: 'timed-out', ms });
     }, ms);
-    this.port.postMessage({ id: job.id, drawing: job.drawing, sourceBytes });
+    const request: LayoutRequest = { id: job.id, drawing: job.drawing, sourceBytes };
+    if (job.theme) request.theme = job.theme;
+    this.port.postMessage(request);
   }
 
   /** Starts a worker, or the page's port; the first that cannot start sends layouts to the page from then on. */
@@ -282,9 +294,21 @@ export class LayoutRunner {
     else if (++this.failures === TIMEOUTS_BEFORE_STOPPING) this.o.told?.('stopped', this.failures);
   }
 
+  /**
+   * From now on layouts run on the page's own thread, where nothing can stop one. Those already queued were checked
+   * against the worker's limits when they were asked for, so they are checked again against the page's, and the ones
+   * over are refused: a layout gets the limits of the thread it runs on.
+   */
   private toPage(why: unknown): void {
     this.onPage = true;
     this.o.told?.('on-the-page', why);
+    const limits = this.limits();
+    for (const job of [...this.queue]) {
+      const over = counted(job.drawing, limits);
+      if (!over) continue;
+      this.queue.splice(this.queue.indexOf(job), 1);
+      job.done(this.paged(over));
+    }
   }
 
   /**

@@ -114,6 +114,13 @@ export async function renderViewBlock(
     return;
   }
   const read = readNote(texts);
+  if (read.tooLarge) {
+    // too large to read (spec §9, layout_contained): nothing was read, so there is no graph for the view to match
+    // nothing in — the query, and why, as a graph's text is shown
+    refusalBanner(root, read.tooLarge);
+    renderCode(root, source);
+    return;
+  }
   const reading = { ...read, problems: underStrictness(read.problems, plugin.settings) };
   const base = reading.graphs.get(v.graph);
   const result = evaluate(spec, reading, v.graph);

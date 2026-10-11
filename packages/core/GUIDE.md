@@ -70,7 +70,9 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `layout-worker.ts` — the layout kept apart from the interface: both sides of the talk with a worker, through a port the
   host gives it — the worker's (`serveLayouts`: its engine started at once, and "ready" said) and the page's
   (`LayoutRunner`: one worker reused; each layout timed from "ready"; a fresh worker after one overruns, none after three
-  in a row; the page's thread only when the first worker cannot start; a layout superseded before it starts dropped).
+  in a row; the page's thread only when the first worker cannot start, where every layout already queued is held again to
+  the page's lower limits; a layout superseded before it starts dropped). A layout may ask for a fixed theme (`light` or
+  `dark`), which the worker themes it in: that is how an export is laid out, in the same worker and under the same limits.
 - `theme.ts` — the drawing's colours and size, from the theme, in the host's palette; `hueColour` is the one blend every
   hue is drawn through, kinds, readings and the style graph's looks alike.
 - `palette.ts` — the one colour mapping (spec §10): how each host writes the style's colours. Obsidian's entry names
@@ -196,10 +198,15 @@ SVG or PNG (`EXPORT_FORMATS`), of the whole diagram or of a view, in the fixed l
 - `export-frame.ts` — the frame (`framed`): the image's own background, a title, the reading of a view, the legend, and a
   footer with the note and the day (`saidDate`, `11 Oct 2026`), in the locked style's font and sizes and the palette's
   fixed colours. The drawing is nested inside at natural size. Text widths are estimated, so long lines wrap early.
-- `export.ts` — `exportSvg`: lays the scope out with the engine it is handed, in `PALETTES.light` or `dark`, marks it,
-  frames it, and gives `{ svg, width, height }` with no theme variable or `color-mix` in a colour (it throws if one is left).
-  An empty scope is refused; an engine failure is raised. `pngSize` is the PNG's pixel size, never under `PNG_MIN_SCALE`
-  (twice natural size) and rounded up. A view's looks are drawn and put in the legend with what they mean.
+- `export.ts` — `exportWithLayout`: lays the scope out through the layout the host hands in (`ExportLayout`: the one its
+  drawings use, apart from the interface and under the same size and time limits, so a huge or hostile graph never
+  holds the page for an export), in `PALETTES.light` or `dark`, marks it, frames it, and gives `{ svg, width, height }`
+  with no theme variable or `color-mix` in a colour (it throws if one is left). A layout over a limit, or timed out, is
+  given back whole as its `Refusal`, for the host to say why and write nothing; null when it is no longer wanted. An
+  empty scope is refused before any layout is asked for; an engine failure is raised. `exportSvg` is the same with an
+  engine run on the calling thread under no limit: for tests and tools, never a host that draws apart from its interface.
+  `pngSize` is the PNG's pixel size, never under `PNG_MIN_SCALE` (twice natural size) and rounded up. A view's looks are
+  drawn and put in the legend with what they mean.
 - `export-plan.ts` — `exportPlan`, the one decision before anything is written: `{ nothing }` for an empty scope,
   `{ ask }` for a note classified above the configured level (naming both; a classification not in the list counts as
   above every level; the host asks again with `confirmed` once the user says yes), or `{ go }` with the file's name and

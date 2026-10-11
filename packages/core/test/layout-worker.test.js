@@ -5,7 +5,8 @@ import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { Worker } from 'node:worker_threads';
 import { readNote } from '../src/drawing.ts';
-import { draw } from '../src/render.ts';
+import { chosen, directions, draw } from '../src/render.ts';
+import { PALETTES } from '../src/palette.ts';
 import { loadEngine } from '../src/engine.ts';
 import { drawingSource } from '../src/layout.ts';
 import { LAYOUT_LIMITS, PAGE_LIMITS, tooLarge } from '../src/layout-limits.ts';
@@ -279,6 +280,34 @@ describe('the page’s own thread, only when the first worker cannot start', () 
     assert.equal(page.made.length, 0, 'the page never saw either');
   });
 
+  // a layout is checked against the limits when it is asked for, before it is known whether a worker can start: one
+  // queued before the first worker fails is laid out on the page, so it is held to the page's limits and time then
+  test('a layout queued before the first worker fails is held to the page’s limits and time, as one asked for after is', async () => {
+    const queued = runner([silent({ fail: 'blocked' })]);
+    const big = huge(301, 0);
+    assert.equal(tooLarge(big, LAYOUT_LIMITS), null, 'under the worker’s limits, so queued for the worker');
+    const [over, fits] = await Promise.all([queued.r.draw(big), queued.r.draw(drawingOf(READER))]);
+    assert.deepEqual(over, { reason: 'too-large', limit: 'things', count: 301, most: 300, page: true });
+    assert.match(fits.svg, /^<svg/, 'one that fits the page’s limits is still drawn there');
+    assert.deepEqual(queued.told, ['on-the-page']);
+
+    const long = { ...drawingOf(READER) };
+    long.boxes = long.boxes.map((b, i) => (i ? b : { ...b, text: 'x'.repeat(PAGE_LIMITS.word + 1) }));
+    const word = runner([silent({ fail: 'blocked' })]);
+    assert.equal((await word.r.draw(long)).limit, 'word');
+    assert.equal(word.page.made.length, 0, 'never laid out on the page');
+
+    // and the page’s time limit, not the worker’s: a layout that overruns it is stopped there
+    const timed = new LayoutRunner({
+      worker: () => silent({ fail: 'blocked' }),
+      page: () => silent(),
+      clock: CLOCK,
+      limits: () => ({ ...LAYOUT_LIMITS, ms: 60_000 }),
+      pageLimits: () => ({ ...PAGE_LIMITS, ms: 60 }),
+    });
+    assert.deepEqual(await timed.draw(drawingOf(READER)), { reason: 'timed-out', ms: 60 });
+  });
+
   test('on the page, the tighter limits apply: a graph under the worker’s limits but over the page’s is refused there', async () => {
     const r = new LayoutRunner({ page: served().spawn, clock: CLOCK });
     const d = huge(301, 0);
@@ -300,6 +329,25 @@ describe('a normal graph', () => {
       const d = readNote([block]).graphs.values().next().value;
       assert.deepEqual(await r.draw(d), draw(d, engine));
     }
+  });
+
+  // an export is laid out by the same worker, under the same limits, and themed in the fixed colours it chose
+  test('asked for in a fixed theme, it is themed in that palette, in a thread and on the page alike, with no theme variable', async () => {
+    const engine = await loadEngine();
+    const d = drawingOf(READER);
+    const laid = directions(d);
+    const page = runner([], { rest: served().spawn });
+    for (const theme of ['light', 'dark']) {
+      const want = chosen(
+        laid,
+        laid.map((x) => engine.render(x.dot)),
+        PALETTES[theme],
+      );
+      assert.deepEqual(await r.draw(d, undefined, theme), want, `${theme} in a thread`);
+      assert.deepEqual(await page.r.draw(d, undefined, theme), want, `${theme} on the page`);
+      assert.doesNotMatch(want.svg, /var\(--|color-mix\(/);
+    }
+    assert.deepEqual(await r.draw(d), draw(d, engine), 'with none asked for, the host’s own theme, as before');
   });
 
   test('one worker is reused for every layout', async () => {

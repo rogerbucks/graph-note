@@ -66,6 +66,34 @@ describe('a view', () => {
     }
   });
 
+  // layout_contained: a note whose graph blocks are over the text limit is never read, so a view in it is shown as its
+  // query under the same banner a graph gets, and never as a view that "matches nothing"
+  for (const [limit, pad, said] of [
+    ['10,000 lines', '// padding\n'.repeat(10_000), /holds? 10,0\d\d lines, and at most 10,000 are read/],
+    [
+      '512,000 bytes',
+      `// ${'x'.repeat(1000)}\n`.repeat(520),
+      /hold 5\d\d(\.\d)? kB of text, and at most 512 kB is read/,
+    ],
+  ])
+    test(`in a note over the text limit of ${limit}, is its query under the “too large to read” banner, never “matches nothing”`, async () => {
+      const { env, el } = await viewCard(noteOf(`${DATA}\n${pad}`, NEAR), 1);
+      try {
+        const banner = el.querySelector('.graph-note-banner');
+        assert.ok(banner, 'a banner');
+        assert.match(banner.textContent, /too large to read/i);
+        assert.match(banner.textContent, said);
+        assert.ok(banner.querySelector('[data-icon]'), 'an icon beside the words, never colour alone');
+        assert.equal(banner.getAttribute('role'), 'alert');
+        assert.match(el.querySelector('code').textContent, /round_park/, 'the query, as text');
+        assert.doesNotMatch(el.textContent, /matches nothing/);
+        assert.equal(el.querySelectorAll('g.node').length, 0);
+      } finally {
+        env.plugin.onunload();
+        env.uninstall();
+      }
+    });
+
   test('hides the things outside it when its style says hide', async () => {
     const style = "// graph: trip_style · STYLE trip\n(o:ViewStyle {view: 'round_park', outside: 'hide'})";
     const { env, el } = await viewCard(noteOf(DATA, NEAR, style), 1);
