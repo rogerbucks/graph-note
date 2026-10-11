@@ -33,13 +33,16 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `suggested-names.ts` — `acceptNameFirst`: why an edit naming a thing drawn only under a suggested name must wait ("accept its
   name first", saying which text and which name), so nothing writes the name before its fix is accepted
   (unnamed_drawn_suggested). `pathBlock`, `makeList` and `addToList` (the thing, or a value that reuses one) ask it
-  themselves; `parkForLater` and `styleEdit` (a nudge, a look or a view's selection naming one) ask it when given the
-  drawing's reading, which a host that writes from a drawing gives; a host asks it for a view's picked things. Property
-  edits are refused too (`setProperty` finds no pattern for a name that is not written), the host saying why in these words.
+  themselves; so do `parkForLater` and `styleEdit` (a nudge, a look or a view's selection naming one) and `makeView`
+  (view-write.ts, the one way a host makes a view). The first two find such a thing in the drawing's reading when given
+  it, else in their own blocks (`unnamedIn`), so no caller can leave the check out. Property edits are refused too
+  (`setProperty` finds no pattern for a name that is not written), the host saying why in these words. A name only
+  suggested is also left out of the names completed while typing and of the near misses guessed (`help.ts`, `estimates.ts`).
 - `schema-checks.ts` — the warnings for types a schema does not declare.
 - `note-reading.ts` — the types reading gives: `NoteReading`, `GraphDrawing`, `Problem`, `Block`, `Box`, `Link`.
 - `drawing.ts` — `readNote`: what a note's graph blocks draw, built from the modules above.
-- `estimates.ts` — near misses drawn as guesses.
+- `estimates.ts` — near misses drawn as guesses; never a guess of a thing drawn under a suggested name, whose name nobody
+  has written (a fix changing a word to it would write it unaccepted).
 - `completeness.ts` — the completeness report behind the problems badge.
 - `deferred.ts` — deferred things (§5, §8): `parkForLater` writes a Deferred (what, why, an optional revisit day and rule)
   as a block's last items, with the comma GQL needs and a fresh `later_<thing>` id (fresh in the whole graph when the
@@ -104,7 +107,8 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   names (the note as read and the block as typed, written or only mentioned), in their style and never one of them;
   `addThing` writes the thing after the block's last item, `(name:Kind {name: 'text'})` under the key the kind's other
   things use, and refuses with the reason when there is no text (it is asked for first), the name is not one word, is
-  kept by the language or is taken, the kind is not declared by a locked schema, or the block holds only a SET or MATCH.
+  kept by the language or is taken (an `id` typed in the block counts), the kind is a schema label or is not declared by
+  a locked schema, or the block holds only a SET or MATCH.
 - `commas.ts` — the comma and the colon added for you.
 - `autocomplete.ts` — completing as you type: the one best inline match (a closer, keyword, kind, type, property name or
   value) and the closer stepped over; nothing is inserted unasked.
@@ -195,7 +199,8 @@ reads `· QUERY` as a query, and the core draws no query as data, so a view is n
   only that GQL keeps the word, and suggests another.
 - `view-write.ts` — `viewQuery` writes the query for a view built by tapping, always one `parseView` reads back to the
   same view (steps held to 1 to 3 near and 1 to 6 reaching; a long set of names goes over lines), and `viewBlock` writes
-  the whole block.
+  the whole block. `makeView` is the one way a host makes a view (the entry exports it, not those two): it refuses a view
+  of a thing drawn only under a suggested name ("accept its name first") and says in words what no query can say.
 - `view-evaluate.ts` — `evaluate` puts a view to a graph of a reading, never to a copy of it, and gives its things, its
   links (indexes into the links the graph draws) and, when nothing matches, `empty` with a sentence saying so and what to
   change. A route of up to k steps is a walk, as Grafeo takes it (a link may be used again), found by two breadth-first

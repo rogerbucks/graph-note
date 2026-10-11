@@ -2,8 +2,10 @@
 // whole block it is stored as in the note. What is written is always a query that `parseView` (view-profile.ts) reads back
 // to the same view.
 import { isRefusedKind, kindRefusal } from './reserved-words.ts';
+import { acceptNameFirst } from './suggested-names.ts';
+import type { SuggestedReading } from './suggested-names.ts';
 import { VIEW_LIMITS } from './view-profile.ts';
-import type { ViewArgs, ViewKind } from './view-profile.ts';
+import type { ViewArgs, ViewKind, ViewSpec } from './view-profile.ts';
 
 const ESCAPED: Record<string, string> = { '\\': '\\\\', "'": "\\'", '\n': '\\n', '\r': '\\r', '\t': '\\t' };
 
@@ -85,4 +87,42 @@ export function viewBlock(graph: string, name: string, query: string): string {
     if (!/^\w+$/.test(word))
       throw new RangeError(`the ${what} name '${word}' is not one word: use letters, digits and underscores`);
   return `// graph: ${graph} · QUERY view ${name}\n${query}`;
+}
+
+/** The things a view names by their ids: what its query would write into the note by name. */
+function named(spec: ViewSpec): string[] {
+  switch (spec.kind) {
+    case 'picked':
+      return spec.ids;
+    case 'near':
+      return [spec.id];
+    case 'reaches':
+      return [spec.from, spec.to];
+    case 'path':
+      return [spec.path];
+    case 'kinds':
+      return [];
+  }
+}
+
+/**
+ * The block for a view of `spec` in `graph`, or why it cannot be made: the one way a host writes a view, so none can leave
+ * a check out. A view of a thing drawn only under a suggested name is refused, since its query would write that name
+ * without the thing's fix (§4): accept its name first. What no query can say is refused in words ("This view cannot be
+ * written: …"). A view of kinds names no thing.
+ */
+export function makeView(
+  reading: SuggestedReading,
+  graph: string,
+  name: string,
+  spec: ViewSpec,
+): { block: string } | { refused: string } {
+  const first = acceptNameFirst(reading, graph, named(spec));
+  if (first) return { refused: first };
+  try {
+    const { kind, ...args } = spec;
+    return { block: viewBlock(graph, name, viewQuery(kind, args as never)) };
+  } catch (e) {
+    return { refused: `This view cannot be written: ${(e as Error).message}` };
+  }
 }

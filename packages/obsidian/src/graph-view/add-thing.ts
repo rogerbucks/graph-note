@@ -92,7 +92,7 @@ export class AddThing {
       own = name.value.trim() !== '';
       suggest();
     });
-    button(el, 'Add the thing', 'check', () => {
+    const submit = () => {
       const ed = this.o.editing?.(),
         block = ed?.session?.text;
       if (!ed || block === undefined)
@@ -109,12 +109,25 @@ export class AddThing {
       this.show();
       this.said.setText(`Added ${text.value.trim()} as ${r.name}.`);
       this.controls.querySelector('button')?.focus();
-    });
-    button(el, 'Cancel adding', 'x', () => {
+    };
+    const cancel = () => {
       this.open = false;
       this.said.setText('');
       this.show();
       this.controls.querySelector('button')?.focus();
-    });
+    };
+    // Enter adds and Escape cancels, from any field; the Enter that ends an IME composition is the keyboard's, not ours
+    for (const field of [text, name, kind])
+      field.addEventListener('keydown', (e: KeyboardEvent) => {
+        if (e.key === 'Enter' && !e.isComposing) {
+          e.preventDefault();
+          submit();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          cancel();
+        }
+      });
+    button(el, 'Add the thing', 'check', submit);
+    button(el, 'Cancel adding', 'x', cancel);
   }
 }

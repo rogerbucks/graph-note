@@ -8,8 +8,8 @@
 // Claude Code host, 11 Oct 2026), deferred things (parkForLater, parked, parkedCount and their types, and the fix for a
 // refusal to park: declareDeferred, declareDeferredBlock, DeferredNotDeclared), walked paths (PathRecorder, PathPlayer,
 // pathBlock, pathsOf, pathProblems and their types), the style graph (readStyle, lookOf, legendOf, nudgedSource,
-// styleEdit, hueColour, the words a style may use and their types), and views (viewsOf, parseView, viewQuery, viewBlock,
-// readingOf, evaluate and their types, 11 Oct 2026), and export (exportScope, exportSvg, exportWithLayout, pngSize, exportPlan,
+// styleEdit, hueColour, the words a style may use and their types), and views (viewsOf, parseView, makeView, which
+// refuses a view of a name only suggested, in place of viewQuery and viewBlock, readingOf, evaluate and their types, 11 Oct 2026), and export (exportScope, exportSvg, exportWithLayout, pngSize, exportPlan,
 // companionNote, writeSafely, saidDate, EXPORT_FORMATS, PNG_MIN_SCALE and their types, 11 Oct 2026), and the refusal to
 // write a name only suggested (acceptNameFirst, 11 Oct 2026), and adding a thing (addThing, suggestName and their types,
 // 11 Oct 2026).
@@ -112,6 +112,7 @@ const VALUES = [
   'lockBlock',
   'lookOf',
   'makeList',
+  'makeView',
   'mergePathProblems',
   'nameFromText',
   'nameSlug',
@@ -160,8 +161,6 @@ const VALUES = [
   'tokenize',
   'tooLarge',
   'underStrictness',
-  'viewBlock',
-  'viewQuery',
   'viewsOf',
   'withoutColorMix',
   'writeSafely',

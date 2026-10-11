@@ -17,6 +17,7 @@ const alert = (el) => strip(el).querySelector('[role="alert"]');
 const nameField = (el) => field(strip(el), 'Name of the new thing');
 const nameRow = (el) => strip(el).querySelector('.graph-note-add-name');
 const textField = (el) => field(strip(el), 'Text of the new thing');
+const kindField = (el) => field(strip(el), 'Kind of the new thing');
 const type = (el, input, value) => {
   input.value = value;
   input.dispatch('input');
@@ -155,6 +156,53 @@ describe('Add a thing, while the card is edited', () => {
       assert.ok(textField(el), 'the form stays, so it can be put right');
     } finally {
       env.uninstall();
+    }
+  });
+
+  test('Enter in any field adds the thing, as the button does; Enter ending an IME composition adds nothing', async () => {
+    for (const field of [textField, nameField, (el) => kindField(el)]) {
+      const { env, el } = await adding();
+      try {
+        type(el, textField(el), 'Small reader');
+        type(el, kindField(el), 'Option');
+        const composing = field(el).dispatch('keydown', { key: 'Enter', isComposing: true });
+        assert.equal(composing.defaultPrevented, false, 'a composition’s Enter is left alone');
+        assert.equal(text(el), READER, 'and writes nothing');
+        const entered = field(el).dispatch('keydown', { key: 'Enter' });
+        assert.ok(entered.defaultPrevented);
+        assert.equal(text(el), `${READER},\n(small_reader:Option {name: 'Small reader'})`);
+        assert.equal(textField(el), undefined, 'the form is closed');
+      } finally {
+        env.uninstall();
+      }
+    }
+  });
+
+  test('Enter with no text says so in words, as the button does, and the form stays', async () => {
+    const { env, el } = await adding();
+    try {
+      textField(el).dispatch('keydown', { key: 'Enter' });
+      assert.match(alert(el).textContent, /give the thing its text first/);
+      assert.equal(text(el), READER);
+      assert.ok(textField(el));
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('Escape in any field cancels, writes nothing, and puts the focus on Add a thing', async () => {
+    for (const field of [textField, nameField, (el) => kindField(el)]) {
+      const { env, el } = await adding();
+      try {
+        type(el, textField(el), 'Small reader');
+        const escaped = field(el).dispatch('keydown', { key: 'Escape' });
+        assert.ok(escaped.defaultPrevented);
+        assert.equal(textField(el), undefined, 'the form is closed');
+        assert.equal(text(el), READER, 'nothing is written');
+        assert.ok(env.doc.activeElement === labelled(el, 'Add a thing'), 'the focus is where the form was opened from');
+      } finally {
+        env.uninstall();
+      }
     }
   });
 

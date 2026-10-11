@@ -24,10 +24,11 @@
 6. Press undo once. Check the line goes.
 7. Add a thing again, type a name of your own such as tiny, and change the text. Check the name stays tiny.
 8. Press Add the thing with no text, then with the name large_reader, then with two words, then with the name match. Check each is refused in words and the text is unchanged.
-9. On the phone, check every field and button is easy to hit.
+9. Type the kind ElementType and press Add the thing: check it is refused in words. Then press Enter in a field with a text and a kind Option: check it adds the thing; add a thing again and press Escape: check the form closes and nothing is written.
+10. On the phone, check every field and button is easy to hit.
 
 **Checklist line:**
 
-> **I-20** Edit here on a card, press Add a thing: it asks for the thing's text first, with the focus in it. Type some (such as "Small reader"): the name suggested from it appears, in the style of the names already in the graph and not one of them, small_reader, and the text of the block is unchanged. Give the kind Option and press Add the thing: `(small_reader:Option {name: 'Small reader'})` is written after the block's last item, the name shown is the name written, and one undo takes it back out. A name typed in its own field is kept as the text changes. No text, a name the graph has, more than one word, or a word the language keeps is refused in words and nothing is written. Desktop and phone: every field and button is easy to hit.
+> **I-20** Edit here on a card, press Add a thing: it asks for the thing's text first, with the focus in it. Type some (such as "Small reader"): the name suggested from it appears, in the style of the names already in the graph and not one of them, small_reader, and the text of the block is unchanged. Give the kind Option and press Add the thing: `(small_reader:Option {name: 'Small reader'})` is written after the block's last item, the name shown is the name written, and one undo takes it back out. A name typed in its own field is kept as the text changes. No text, a name the graph has, more than one word, a word the language keeps, or a kind the graph keeps for its schema is refused in words and nothing is written. Enter in a field adds the thing and Escape cancels. Desktop and phone: every field and button is easy to hit.
 
 **Back to the checklist:** [I-20 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-20 in its list.

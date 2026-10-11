@@ -34,8 +34,12 @@ function namesOf(reading: NoteReading, graph: string, block?: string): NameBook 
   const book = new NameBook();
   for (const w of [reading.world[graph], reading.whole[graph]])
     for (const [key, [labels]] of w?.nodes ?? []) book.set(key, [...(labels ?? [])].find((l) => !HIDDEN.has(l)) ?? '');
-  for (const w of block === undefined ? [] : writtenIn(block))
+  for (const w of block === undefined ? [] : writtenIn(block)) {
     if (w.variable) book.set(w.variable.name, w.labels.find((l) => !HIDDEN.has(l)) ?? '');
+    // a thing typed with an id of its own is that id to the graph, as name-gaps takes it
+    const id = w.props.get('id');
+    if (id) book.set(id, '');
+  }
   return book;
 }
 
@@ -84,6 +88,8 @@ export function addThing(reading: NoteReading, graph: string, block: string, thi
   if (graphOfBlock(block) !== graph)
     return { refused: `this block is not in graph ${graph}: add the thing where it is` };
   if (kind && !WORD.test(kind)) return { refused: 'the kind must be one word: letters, digits and underscores' };
+  // a schema label makes a thing the graph keeps out of its drawing, so it would be "added" and never seen
+  if (HIDDEN.has(kind)) return { refused: `${kind} is a label the graph keeps for its schema: choose another kind` };
   const why = undeclared(reading, graph, kind);
   if (why) return { refused: why };
   const book = namesOf(reading, graph, block);

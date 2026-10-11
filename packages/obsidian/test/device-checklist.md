@@ -172,7 +172,8 @@ holds the two together).
       one of them, small_reader, and the text of the block is unchanged. Give the kind Option and press Add the thing:
       `(small_reader:Option {name: 'Small reader'})` is written after the block's last item, the name shown is the name
       written, and one undo takes it back out. A name typed in its own field is kept as the text changes. No text, a name
-      the graph has, more than one word, or a word the language keeps is refused in words and nothing is written.
+      the graph has, more than one word, a word the language keeps, or a kind the graph keeps for its schema is refused
+      in words and nothing is written. Enter in a field adds the thing and Escape cancels.
       Desktop and phone: every field and button is easy to hit (slice 2, add_thing).
 
 ## The style graph — spec §2, §6

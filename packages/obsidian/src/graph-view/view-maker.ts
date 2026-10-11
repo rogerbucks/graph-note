@@ -2,7 +2,7 @@
 // kinds of view; the boxes tapped choose what it shows — picked by hand, the thing it is near, where a route starts and
 // ends, the kinds — and its reading is said in plain English as it is built; Write the view writes its query as a view
 // block of its own after the graph's last block. The strip is built once; only its words change as it goes.
-import { acceptNameFirst, pathsOf, readingOf, viewBlock, viewQuery } from '@graph-note/core';
+import { makeView, pathsOf, readingOf } from '@graph-note/core';
 import type { ViewKind, ViewSpec } from '@graph-note/core';
 import { button } from './view-bar';
 import type { ViewOptions } from './view-options';
@@ -136,20 +136,11 @@ export class ViewMaker {
     if (!spec) return void this.alert?.setText('Tap the things the view shows first.');
     if (!/^\w+$/.test(name))
       return void this.alert?.setText('Give the view a name of one word: letters, digits and _.');
-    // a box drawn under a suggested name would be written into the query by that name, without its fix (§4); a view of
-    // kinds names kinds, not boxes
-    const named = spec.kind === 'kinds' ? [] : this.picked;
-    const first = acceptNameFirst(this.o.reading, this.o.graph, named);
-    if (first) return void this.alert?.setText(first);
-    const { kind: _, ...args } = spec;
-    let block: string;
-    try {
-      block = viewBlock(this.o.graph, name, viewQuery(spec.kind, args as never));
-    } catch (e) {
-      // a graph or a kind whose name a view query cannot hold: said, and nothing written
-      return void this.alert?.setText(`This view cannot be written: ${(e as Error).message}`);
-    }
-    const refused = await this.o.writeView?.(block);
+    // the core makes the block, or says why not: a box drawn under a suggested name (§4), or a graph or a kind whose name
+    // a view query cannot hold; nothing is then written
+    const made = makeView(this.o.reading, this.o.graph, name, spec);
+    if ('refused' in made) return void this.alert?.setText(made.refused);
+    const refused = await this.o.writeView?.(made.block);
     if (refused) return void this.alert?.setText(refused);
     this.making = false;
     this.show();

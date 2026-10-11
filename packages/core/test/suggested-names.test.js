@@ -10,6 +10,7 @@ import { pathBlock } from '../src/paths.ts';
 import { addToList, makeList } from '../src/linked-list.ts';
 import { parkForLater } from '../src/deferred.ts';
 import { styleEdit } from '../src/style-edit.ts';
+import { makeView } from '../src/view-write.ts';
 
 const BLOCK = `// graph: reader
 (q:Question {title: 'Which device?'}),
@@ -114,12 +115,54 @@ describe('a thing drawn under a suggested name parked for later', () => {
     );
   });
 
+  test('is refused without the reading too: the block itself says which things are only suggested', () => {
+    assert.throws(
+      () => parkForLater(BLOCK, 'small_reader', park),
+      (e) => /^accept its name first: Small reader is only drawn.*small_reader/.test(e.message),
+    );
+    assert.match(parkForLater(BLOCK, 'large', park, '    '), /DEFERS\]->\(large\)/);
+  });
+
   test('is parked once the name is written, and a written thing is parked as ever', () => {
     assert.match(
       parkForLater(NAMED, 'small_reader', park, '    ', named.whole.reader, named),
       /DEFERS\]->\(small_reader\)/,
     );
     assert.match(parkForLater(BLOCK, 'large', park, '    ', reading.whole.reader, reading), /DEFERS\]->\(large\)/);
+  });
+});
+
+describe('a view made of a thing drawn under a suggested name', () => {
+  const specs = {
+    picked: { kind: 'picked', ids: ['large', 'small_reader'] },
+    near: { kind: 'near', id: 'small_reader', depth: 1 },
+    reaches: { kind: 'reaches', from: 'large', to: 'small_reader', steps: 3, directed: true },
+    path: { kind: 'path', path: 'small_reader' },
+  };
+
+  for (const [kind, spec] of Object.entries(specs))
+    test(`a view of kind ${kind} is refused, and no block is made`, () => {
+      const r = makeView(reading, 'reader', 'mine', spec);
+      assert.ok('refused' in r, 'refused');
+      refusedFirst(r.refused);
+    });
+
+  test('a view of kinds names no box, and a view of written things is made, once the name is or was never needed', () => {
+    const kinds = makeView(reading, 'reader', 'mine', { kind: 'kinds', kinds: ['Option'] });
+    assert.equal(kinds.block, '// graph: reader · QUERY view mine\nMATCH (n IS Option) RETURN n');
+    const picked = makeView(named, 'reader', 'mine', specs.picked);
+    assert.match(
+      picked.block,
+      /^\/\/ graph: reader · QUERY view mine\nMATCH \(n\) WHERE n\.id IN \['large', 'small_reader'\]/,
+    );
+    assert.ok('block' in makeView(reading, 'reader', 'mine', { kind: 'picked', ids: ['large', 'q'] }));
+  });
+
+  test('what no query can say is refused in words, as it was thrown before', () => {
+    const r = makeView(reading, 'reader', 'two words', { kind: 'picked', ids: ['large'] });
+    assert.match(r.refused, /^This view cannot be written: the view name 'two words' is not one word/);
+    const bad = makeView(reading, 'reader', 'mine', { kind: 'kinds', kinds: [] });
+    assert.match(bad.refused, /^This view cannot be written: a view of kinds needs at least one kind/);
   });
 });
 
@@ -145,6 +188,15 @@ describe('a style written for a thing drawn under a suggested name', () => {
 
   test('a view saved as shown with it selected is refused', () => {
     refused({ shown: { view: 'near', zoom: 1, x: 0, y: 0, selected: 'small_reader' } });
+  });
+
+  test('is refused without the reading too: the note itself says which things are only suggested', () => {
+    const r = styleEdit(note, 'reader', { nudge: { word: 'beside', thing: 'small_reader', other: 'large' } });
+    assert.ok('refused' in r, 'refused');
+    refusedFirst(r.refused);
+    assert.match(r.refused, /Small reader is only drawn/, 'in the same words');
+    const selected = styleEdit(note, 'reader', { shown: { view: 'v', zoom: 1, x: 0, y: 0, selected: 'small_reader' } });
+    assert.ok('refused' in selected);
   });
 
   test('what names only written things is written, with or without the reading', () => {

@@ -110,6 +110,59 @@ describe('suggestions while typing', () => {
   });
 });
 
+// editor spec §4, unnamed_drawn_suggested: nothing is written until a thing's own fix is accepted, so a name only
+// suggested is neither offered to be typed nor named in a fix for a near miss
+describe('a name only suggested', () => {
+  const UNNAMED = READER + ",\n(:Option {name: 'Small reader'})";
+
+  test('is not offered while typing, though the names already written are', async () => {
+    const env = await open();
+    try {
+      type(env.el, UNNAMED + ',\n(eyes)-[:FAVOURS]->(sm');
+      const offered = env.el
+        .querySelector('.graph-note-suggestions')
+        .querySelectorAll('button')
+        .map((b) => b.getAttribute('aria-label'));
+      assert.ok(!offered.some((l) => /small_reader/.test(l)), offered.join(' | '));
+      type(env.el, UNNAMED + ',\n(eyes)-[:FAVOURS]->(la');
+      assert.deepEqual(
+        env.el
+          .querySelector('.graph-note-suggestions')
+          .querySelectorAll('button')
+          .map((b) => b.getAttribute('aria-label')),
+        ['large — Option: Large reader'],
+      );
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('is not the fix of a near miss: the fix bar and the problem list say only that there is no such thing', async () => {
+    const env = await open();
+    try {
+      type(env.el, UNNAMED + ',\n(eyes)-[:FAVOURS]->(smal_reader)');
+      await wait(400);
+      const here = env.el.querySelector('.graph-note-fixbar');
+      assert.ok(!here.hidden, 'the caret is on that line, so its problem is there');
+      assert.match(here.textContent, /No thing called smal_reader in graph reader/);
+      assert.ok(!/small_reader/.test(here.textContent), here.textContent);
+      assert.equal(labelled(here, 'Change smal_reader to small_reader'), undefined, 'no fix that writes it');
+      const items = env.el.querySelectorAll('.graph-note-pane-problems li').map((li) => li.textContent);
+      assert.ok(
+        items.some((t) => /smal_reader/.test(t)),
+        items.join(' | '),
+      );
+      assert.ok(
+        !items.some((t) => /smal_reader/.test(t) && /small_reader/.test(t)),
+        'the list names no estimate of it: ' + items.join(' | '),
+      );
+      assert.equal(env.el.querySelectorAll('.graph-note-pane-problems li').length, 2, 'it and the unnamed thing');
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
 describe('problems announced', () => {
   test('a new problem is announced to screen readers, and the focus stays in the text', async () => {
     const env = await open();

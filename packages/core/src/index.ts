@@ -68,7 +68,7 @@ export type { PathBlock, PathReading, PathStep, WalkedPath } from './paths.ts';
 export { viewsOf, readingOf } from './views.ts';
 export type { NamedView } from './views.ts';
 export { VIEW_FORMS, VIEW_KINDS, VIEW_LIMITS, VIEW_NAMES, parseView } from './view-profile.ts';
-export { viewBlock, viewQuery } from './view-write.ts';
+export { makeView } from './view-write.ts';
 export type { ViewArgs, ViewKind, ViewRefusal, ViewSpec } from './view-profile.ts';
 export { evaluate } from './view-evaluate.ts';
 export type { ViewResult } from './view-evaluate.ts';

@@ -3,6 +3,7 @@
 // after the block's last item, and nothing else in the block changes. A name of the user's own is held to the same rules.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import gs from '@graph-note/graph-spec';
 import { addThing, suggestName } from '../src/add-thing.ts';
 import { readNote } from '../src/drawing.ts';
 import { nameFromText } from '../src/name-suggestions.ts';
@@ -127,5 +128,34 @@ describe('adding a thing', () => {
       /graph reader is locked and its schema does not declare Tag: declare it in the schema first/,
     );
     assert.ok(!('refused' in addThing(r, 'reader', locked, { text: 'Small reader', kind: 'Option' })));
+  });
+
+  test('a label the graph keeps for its schema is no kind: the thing would never be drawn', () => {
+    for (const kind of gs.SCHEMA_LABELS) {
+      const r = addThing(reading, 'reader', BLOCK, { text: 'Small reader', kind });
+      assert.match(
+        r.refused,
+        new RegExp(`${kind} is a label the graph keeps for its schema: choose another kind`),
+        kind,
+      );
+    }
+    assert.ok(gs.SCHEMA_LABELS.includes('ElementType') && gs.SCHEMA_LABELS.includes('GraphMeta'));
+  });
+});
+
+describe('an id typed in the block', () => {
+  const typed = `${BLOCK},\n(z:Option {id: 'q', name: 'Zed'})`;
+
+  test('is a name the graph has: the suggestion is never it', () => {
+    assert.equal(suggestName(reading, 'reader', 'Q', undefined, typed), 'q_2');
+    assert.equal(suggestName(reading, 'reader', 'Q', undefined, BLOCK), 'q', 'but free when it is not typed');
+  });
+
+  test('is taken for a name of the user’s own too, and the thing is refused', () => {
+    assert.match(
+      addThing(reading, 'reader', typed, { text: 'Q', name: 'q' }).refused,
+      /already a name in graph reader/,
+    );
+    assert.equal(added(addThing(reading, 'reader', typed, { text: 'Q' })).name, 'q_2');
   });
 });

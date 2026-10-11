@@ -286,8 +286,9 @@ export function completions(
   }
   if ((m = /\(\s*(\w*)$/.exec(before))) {
     const p = m[1] ?? '';
+    // a thing drawn under a suggested name is not offered: taking it would write the name without its fix (§4)
     const names: CompletionItem[] = d.boxes
-      .filter((b) => starts(p)(b.key))
+      .filter((b) => starts(p)(b.key) && !b.suggested)
       .sort((a, b) => (a.key < b.key ? -1 : 1))
       .map((b) => ({ label: b.key, kind: KIND.Variable, detail: b.kind ? `${b.kind}: ${b.text}` : b.text }));
     // a kind brings its colon (spec §4): after a new thing's name, the kinds are offered as :Kind, added after the name —

@@ -2,10 +2,41 @@
 // under the name suggested for it, and "nothing is written until its fix is accepted". Any edit that would write that name
 // into the text — a path through the thing, a link to it, a Deferred for it, a nudge or a look naming it — would write it
 // without its fix, so each asks here first, and is refused with the same words: accept its name first.
-import type { NoteReading } from './note-reading.ts';
+import { dataKind, graphOfBlock } from './blocks.ts';
+import { nameGaps } from './name-gaps.ts';
+import type { Box, NoteReading } from './note-reading.ts';
+import { textKeyOf, writtenIn } from './written-things.ts';
 
 /** What these checks read of a note: the graphs as drawn, whose boxes say which are drawn under a suggested name. */
 export type SuggestedReading = Pick<NoteReading, 'graphs'>;
+
+/**
+ * The things of one graph that these blocks write without a name, as boxes drawn under their suggested names: for an edit
+ * that is given no drawing to ask (`parkForLater`, `styleEdit`), so that none can write a suggested name by leaving the
+ * drawing out. Found as the reader finds them, from the blocks alone.
+ */
+export function unnamedIn(texts: readonly string[], graph: string): SuggestedReading {
+  const blocks = texts.map((t) => ({ text: typeof dataKind(t) === 'string' ? t : '', graph: graphOfBlock(t) }));
+  const gaps = nameGaps(blocks);
+  const boxes: Box[] = [];
+  blocks.forEach((b, i) => {
+    if (b.graph !== graph) return;
+    const lines = b.text.split('\n'),
+      written = writtenIn(b.text);
+    for (const n of gaps[i]?.named ?? []) {
+      const at = lines.slice(0, n.line).reduce((sum, l) => sum + l.length + 1, 0) + n.character - 1;
+      const w = written.find((x) => x.open === at),
+        key = w && textKeyOf(w);
+      boxes.push({
+        key: n.name,
+        kind: '',
+        text: (w && key && w.props.get(key)) || n.name,
+        suggested: { block: i, line: n.line, character: n.character },
+      });
+    }
+  });
+  return { graphs: new Map([[graph, { graph, boxes, links: [], estimates: [] }]]) };
+}
 
 /** The keys, of those given, that are drawn under a name only suggested, in the order given and each once. */
 export function suggestedAmong(reading: SuggestedReading, graph: string, keys: readonly string[]): string[] {
