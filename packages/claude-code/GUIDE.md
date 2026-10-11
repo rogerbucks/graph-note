@@ -39,10 +39,12 @@ and `register.tsx` stays thin.
 - `hooks/register.tsx` — the hooks module: registers `/graph`, reads the note with `$.fs.read`, runs Graphviz with
   `$.process.run`, keeps the view in `$.state`, and draws the pane: `Svg` on the desktop, VS Code and mobile; the
   reason and the text on the terminal (which draws no `Svg`) or wherever no drawing could be made.
+- `hooks/hooks.json` — names `register.tsx` as the mod's one hooks module.
 - `hooks/graph.d.ts` — the types of the bundle, its source's own.
 - `types/index.d.ts` — the mod's state contract, self-contained as Claude Code requires.
 - `tests/graph.test.tsx` — the mod in its own environment, with `claude plugin test`: the test vault's sample note drawn
   on each surface, and node missing.
+- `tests/fixtures.d.ts` — the types of the built `tests/fixtures.js`: the sample note and the SVG drawn for it.
 
 Built, never edited (gitignored): `mod/hooks/graph.js`, `mod/bin/render.mjs`, `mod/tests/fixtures.js`. Claude Code writes
 `mod/.claude-plugin/types/` when it loads the mod; `mod/tsconfig.json` extends it, so `tsc -p packages/claude-code/mod`
