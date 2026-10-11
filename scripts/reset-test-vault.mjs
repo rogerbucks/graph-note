@@ -5,7 +5,7 @@
 // touched.
 //
 // The vault is synced to a phone with Obsidian Sync, so the reset is Sync-friendly: it never removes Sync's own files in
-// .obsidian/ (SYNC_KEEP), it copies the build rather than linking it (Sync may not upload links), and it changes only
+// .obsidian/ (KEEP), it copies the build rather than linking it (Sync may not upload links), and it changes only
 // what differs: git restores only changed tracked files, and a plugin file is written only when its bytes differ.
 //
 // Usage:
@@ -24,11 +24,14 @@ export const PLUGIN_FILES = ['main.js', 'manifest.json', 'styles.css'];
 const PLUGIN_DIR = join(VAULT, '.obsidian', 'plugins', 'graph-note');
 
 /**
- * Obsidian Sync's own state in the vault's .obsidian/, which a reset never removes, or every reset would disconnect the
- * vault from Sync. Patterns for `git clean -e`, relative to .obsidian/: any file or folder whose name starts with `sync`
- * (for example sync.json). Extend this list once it is clear which other files Sync writes there.
+ * Files in the vault's .obsidian/ that a reset never removes, or every reset would switch Obsidian Sync off. Patterns for
+ * `git clean -e`, relative to .obsidian/:
+ * - `sync*`: Sync's own state, any file or folder whose name starts with `sync` (for example sync.json).
+ * - `core-plugins.json`: lists the enabled core plugins, and holds `"sync": true`, which turns the Sync core plugin
+ *   on. It is not tracked, so without this entry the reset deletes it and Sync is off on every device.
+ * Extend this list once it is clear which other files Sync needs there.
  */
-export const SYNC_KEEP = ['sync*'];
+export const KEEP = ['sync*', 'core-plugins.json'];
 
 /** True when the file at path is a regular file (not a link) holding exactly the bytes of the file at source. */
 function sameFile(path, source) {
@@ -50,10 +53,7 @@ export function fresh(root) {
   const changed = git('diff', '--name-only', '-z', '--', VAULT).toString().split('\0').filter(Boolean);
   if (changed.length) git('restore', '--worktree', '--', ...changed);
   // the installed build stays too, so an unchanged file is not deleted and copied again
-  const kept = [
-    ...SYNC_KEEP.map((p) => `.obsidian/${p}`),
-    ...PLUGIN_FILES.map((f) => `.obsidian/plugins/graph-note/${f}`),
-  ];
+  const kept = [...KEEP.map((p) => `.obsidian/${p}`), ...PLUGIN_FILES.map((f) => `.obsidian/plugins/graph-note/${f}`)];
   const keep = kept.flatMap((p) => ['-e', `/${VAULT}/${p}`]);
   git('clean', '-fdxq', ...keep, '--', VAULT);
   const dir = join(root, PLUGIN_DIR);
