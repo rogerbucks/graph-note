@@ -6,9 +6,12 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { gqlBlocks } from '../src/blocks.ts';
+import { gqlBlocks, styleOf } from '../src/blocks.ts';
 import { readNote } from '../src/drawing.ts';
 import { layoutSource } from '../src/layout.ts';
+import { directions } from '../src/render.ts';
+import { readStyle } from '../src/style.ts';
+import { nudgedDrawing } from '../src/style-source.ts';
 
 const PY_SRC = fileURLToPath(new URL('../../../python/graph_spec/src', import.meta.url));
 
@@ -292,4 +295,63 @@ const WHITESPACE = {
 
 test('whitespace as GQL names it is read and drawn the same by both readers, byte for byte', () => {
   same(WHITESPACE);
+});
+
+// python_honours_nudges (editor spec §6): a graph's style block nudges its layout, and graph_svg.py draws it as the core
+// does — the same problems reading each style, and the source of each direction laid out, nudges written in, byte for
+// byte. The cases are shared with python/graph_spec/tests/test_graph_svg_nudges.py, which holds the same from Python.
+const { cases: NUDGED } = JSON.parse(
+  readFileSync(new URL('../../../python/graph_spec/tests/nudge_cases.json', import.meta.url), 'utf8'),
+);
+
+const PYTHON_NUDGED = `
+import json, sys
+sys.path.insert(0, ${JSON.stringify(PY_SRC)})
+import gql_profile as gp, graph_rules as gr, graph_svg
+out = []
+for texts in json.load(sys.stdin):
+    store, problems = gp.read_for_drawing(texts)
+    w = gr.World.from_store(store)
+    styles, drawn = {}, {}
+    for t in texts:
+        g = gp.style_of(t)
+        if g is not None and g not in styles:
+            styles[g] = [[p[k] for k in ('block', 'line', 'severity', 'message', 'fix')] for p in gp.read_style(texts, g, w)[1]]
+    for name in (n for n in w.graphs if not n.startswith('schema ')):
+        suggested = {p['suggested'] for p in problems if p.get('suggested') and p['graph'] == name}
+        g = w[name]
+        ids = [i for i, (l, _) in g.nodes.items() if not l & gr.SCHEMA_LABELS]; R = gr.readings(g, None)
+        def text(i):
+            p = g.p(i); return next((p[k] for k in ('name', 'title', 'text', 'label') if isinstance(p.get(k), str) and p[k]), i)
+        nodes = [(i, ' · '.join(sorted(l for l in g.nodes[i][0] if l not in gr.SCHEMA_LABELS)), text(i)) for i in ids]
+        edges = [(s, gr._word(R, t), d) for s, t, d, _ in g.edges if s in ids and d in ids]
+        style = gp.read_style(texts, name, w)[0]
+        drawn[name] = {rd: graph_svg.nudged_source(graph_svg.dot_source(nodes, edges, rd, suggested)[0], style['nudges'], ids)
+                       for rd in graph_svg.directions(style['direction'])}
+    out.append({'styles': styles, 'drawn': drawn})
+print(json.dumps(out))
+`;
+
+test('a graph with nudges is drawn the same by both, its style read alike, byte for byte', () => {
+  const texts = NUDGED.map((c) => c.blocks.map((lines) => lines.join('\n')));
+  const r = spawnSync('python3', ['-c', PYTHON_NUDGED], { input: JSON.stringify(texts), encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr);
+  const python = JSON.parse(r.stdout);
+  const row = (p) => [p.block, p.line, p.severity, p.message, p.fix];
+  NUDGED.forEach((c, n) => {
+    const reading = readNote(texts[n]),
+      styles = {},
+      drawn = {};
+    for (const t of texts[n]) {
+      const g = styleOf(t);
+      if (g !== null && !(g in styles)) styles[g] = readStyle(texts[n], g, reading).problems.map(row);
+    }
+    for (const [graph, drawing] of reading.graphs) {
+      // as the plugin draws a graph (packages/obsidian/src/block.ts): its direction set, its nudges written in
+      const { style } = readStyle(texts[n], graph, reading);
+      const laid = directions({ ...nudgedDrawing(drawing, style), nudges: style.nudges });
+      drawn[graph] = Object.fromEntries(laid.map((d) => [d.rankdir, d.dot]));
+    }
+    assert.deepEqual(python[n], { styles, drawn }, c.name);
+  });
 });

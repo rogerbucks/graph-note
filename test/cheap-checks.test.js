@@ -116,10 +116,10 @@ describe('a quiet test run', () => {
     assert.match(r.stdout, /^ok \d+ tests\n$/);
   });
 
-  test('npm test stays the plain run that CI uses, and test:ai is the quiet one', () => {
+  test('npm test is the plain run that CI uses, and test:ai the quiet one, both under the ceiling', () => {
     const scripts = readJSON('package.json').scripts;
-    assert.equal(scripts.test, 'node --test');
-    assert.equal(scripts['test:ai'], 'node --test --test-reporter=./scripts/quiet-reporter.mjs');
+    assert.equal(scripts.test, 'node scripts/run-ceiling.mjs node --test --test-timeout=300000');
+    assert.equal(scripts['test:ai'], `${scripts.test} --test-reporter=./scripts/quiet-reporter.mjs`);
     assert.ok(read('.github/workflows/ci.yml').includes('run: npm test\n'));
   });
 });
@@ -435,7 +435,7 @@ describe('running only the tests a change touches', () => {
     );
     const all = run(process.execPath, ['scripts/changed-tests.mjs', '--list', 'package.json'], path('.'));
     assert.match(all.stdout, /^whole suite: package\.json is shared\n$/);
-    assert.equal(readJSON('package.json').scripts['test:changed'], 'node scripts/changed-tests.mjs');
+    assert.match(readJSON('package.json').scripts['test:changed'], / scripts\/changed-tests\.mjs$/);
   });
 });
 

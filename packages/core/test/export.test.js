@@ -7,10 +7,12 @@ import assert from 'node:assert/strict';
 import GraphLayout from '@graph-note/graph-spec/src/graph-layout.js';
 import { loadEngine } from '../src/engine.ts';
 import { readNote } from '../src/drawing.ts';
-import { EXPORT_FORMATS, PNG_MIN_SCALE, exportSvg, pngSize } from '../src/export.ts';
+import { EXPORT_FORMATS, PNG_MIN_SCALE, exportSvg, exportWithLayout, pngSize } from '../src/export.ts';
 import { exportScope } from '../src/export-scope.ts';
 import { FADED_OPACITY } from '../src/export-marks.ts';
 import { STYLE } from '../src/layout.ts';
+import { PAGE_LIMITS } from '../src/layout-limits.ts';
+import { LayoutRunner, inThreadPort, serveLayouts } from '../src/layout-worker.ts';
 import { PALETTES } from '../src/palette.ts';
 import { readStyle } from '../src/style.ts';
 import { hueColour } from '../src/theme.ts';
@@ -236,5 +238,81 @@ describe('nothing to export, and an engine that fails', () => {
       },
     };
     assert.throws(() => exportSvg(exportScope(reading, { graph: 'team' }), broken, INFO), /out of memory/);
+  });
+});
+
+// layout_contained: an export is laid out where a drawing is, apart from the interface and under the same limits, so the
+// host hands in the layout (its worker's runner), never an engine to run on the page's own thread
+describe('laid out by the host’s layout, under its limits', () => {
+  const CLOCK = { setTimeout: (run, ms) => setTimeout(run, ms), clearTimeout: (t) => clearTimeout(t) };
+  const runner = (limits) =>
+    new LayoutRunner({
+      page: () => inThreadPort((s) => serveLayouts(s, async () => engine)),
+      clock: CLOCK,
+      ...(limits ? { pageLimits: () => ({ ...PAGE_LIMITS, ...limits }) } : {}),
+    });
+  const through = (r) => (drawing, theme) => r.draw(drawing, undefined, theme);
+  const whole = exportScope(reading, { graph: 'team' });
+  const VIEWS = [
+    whole,
+    exportScope(reading, { graph: 'team', view: AROUND }),
+    exportScope(reading, { graph: 'team', view: AROUND, context: true }),
+  ];
+
+  // proves: layout_contained
+  test('gives the very image exportSvg gives, whole diagram, view and view with its context, in either theme', async () => {
+    const r = runner();
+    for (const s of VIEWS)
+      for (const theme of ['light', 'dark']) {
+        const info = { ...INFO, theme };
+        assert.deepEqual(await exportWithLayout(s, through(r), info), exportSvg(s, engine, info));
+      }
+    r.close();
+  });
+
+  // proves: layout_contained
+  test('hands the layout the drawing with the style’s nudges, and the theme chosen', async () => {
+    const asked = [];
+    const nudged = { ...style, nudges: [{ word: 'beside', thing: 'alice', other: 'bob', at: {} }], direction: 'TB' };
+    const spy = (d, theme) => (asked.push({ d, theme }), Promise.resolve(null));
+    await exportWithLayout(whole, spy, { ...INFO, theme: 'dark', style: nudged });
+    assert.equal(asked.length, 1);
+    assert.equal(asked[0].theme, 'dark');
+    assert.deepEqual(asked[0].d.nudges, nudged.nudges);
+    assert.equal(asked[0].d.direction, 'TB', 'the style’s direction');
+    assert.equal(asked[0].d.boxes.length, whole.drawing.boxes.length);
+  });
+
+  // proves: layout_contained, failed_export
+  test('a graph over a limit is the limit’s refusal, handed back whole, and nothing is laid out', async () => {
+    const r = runner({ things: 3 });
+    const out = await exportWithLayout(whole, through(r), INFO);
+    assert.deepEqual(out, { reason: 'too-large', limit: 'things', count: 6, most: 3, page: true });
+    r.close();
+  });
+
+  // proves: layout_contained, failed_export
+  test('a layout that is stopped is the refusal, one no longer wanted is null, and a failed engine is raised', async () => {
+    const stopped = { reason: 'timed-out', ms: 5000 };
+    assert.deepEqual(await exportWithLayout(whole, async () => stopped, INFO), stopped);
+    assert.equal(await exportWithLayout(whole, async () => null, INFO), null);
+    await assert.rejects(
+      exportWithLayout(whole, () => Promise.reject(new Error('out of memory')), INFO),
+      /out of memory/,
+    );
+  });
+
+  // proves: empty_export
+  test('an empty scope is refused before any layout is asked for', async () => {
+    const none = exportScope(reading, {
+      graph: 'team',
+      view: { name: 'robots', spec: { kind: 'kinds', kinds: ['Robot'] } },
+    });
+    let asked = 0;
+    await assert.rejects(
+      exportWithLayout(none, () => (asked++, Promise.resolve(null)), INFO),
+      /nothing to export/,
+    );
+    assert.equal(asked, 0);
   });
 });

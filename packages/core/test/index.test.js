@@ -9,7 +9,7 @@
 // refusal to park: declareDeferred, declareDeferredBlock, DeferredNotDeclared), walked paths (PathRecorder, PathPlayer,
 // pathBlock, pathsOf, pathProblems and their types), the style graph (readStyle, lookOf, legendOf, nudgedSource,
 // styleEdit, hueColour, the words a style may use and their types), and views (viewsOf, parseView, viewQuery, viewBlock,
-// readingOf, evaluate and their types, 11 Oct 2026), and export (exportScope, exportSvg, pngSize, exportPlan,
+// readingOf, evaluate and their types, 11 Oct 2026), and export (exportScope, exportSvg, exportWithLayout, pngSize, exportPlan,
 // companionNote, writeSafely, saidDate, EXPORT_FORMATS, PNG_MIN_SCALE and their types, 11 Oct 2026), and the refusal to
 // write a name only suggested (acceptNameFirst, 11 Oct 2026), and adding a thing (addThing, suggestName and their types,
 // 11 Oct 2026).
@@ -86,6 +86,7 @@ const VALUES = [
   'exportPlan',
   'exportScope',
   'exportSvg',
+  'exportWithLayout',
   'fixed',
   'fixedPalette',
   'gqlBlocks',
@@ -194,6 +195,7 @@ const TYPES = [
   'ExportGo',
   'ExportImage',
   'ExportInfo',
+  'ExportLayout',
   'ExportPlanInput',
   'ExportRequest',
   'ExportScope',

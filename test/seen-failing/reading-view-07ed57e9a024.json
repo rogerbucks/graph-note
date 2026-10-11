@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/reading-view.test.js",
+  "test": "a command that would rewrite a note refuses while it is shown in reading view > a note in Live Preview or Source mode still converts",
+  "seen_failing_first": false,
+  "evidence": "Pins behaviour that already held: a note in Live Preview or Source mode converts, as before. The requirement asks that it still does once the refusal in reading view is in place."
+}

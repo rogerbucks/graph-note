@@ -42,6 +42,27 @@ export async function showLate(env, ms) {
   return { el, placed };
 }
 
+/**
+ * Draws the note's first graph block where Obsidian's reading view would put it (`view` 'reading'), or where the editing
+ * view would ('live'); on the page, or put there only after it is drawn (`offPage`). `note` is the note's text, the file
+ * by default; the card's components are pushed onto `children`, so a test can reach the card itself.
+ */
+export async function showIn(env, view, { offPage = false, note, children } = {}) {
+  const text = note ?? env.state.files.get(PATH),
+    lines = text.split('\n'),
+    open = lines.findIndex((l) => l.startsWith('```gql'));
+  let end = open + 1;
+  while (!/^```\s*$/.test(lines[end])) end++;
+  const host = env.doc.createElement('div');
+  host.addClass(view === 'reading' ? 'markdown-reading-view' : 'markdown-source-view');
+  const inner = host.createDiv({ cls: view === 'reading' ? 'markdown-preview-view markdown-rendered' : 'cm-editor' });
+  const el = inner.createDiv({ cls: 'block-language-gql' });
+  if (!offPage) env.doc.body.appendChild(host);
+  await env.state.processors.get('gql')(lines.slice(open + 1, end).join('\n'), el, fakeContext(text, open, children));
+  if (offPage) env.doc.body.appendChild(host);
+  return el;
+}
+
 /** Draws the block as Live Preview does: into a card that goes on the page only once the drawing is done. */
 export async function showOffPage(env) {
   const note = env.state.files.get(PATH),

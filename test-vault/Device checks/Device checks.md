@@ -115,6 +115,7 @@ One note for each check in the device checklist ([the checklist, on GitHub](http
 - [[Device checks/10 Settings/C-04 AI models|C-04 AI models]]
 - [[Device checks/10 Settings/C-05 Indent and direction|C-05 Indent and direction]]
 - [[Device checks/10 Settings/C-06 Convert refused for unreadable line|C-06 Convert refused for unreadable line]]
+- [[Device checks/10 Settings/C-07 Convert refused in reading view|C-07 Convert refused in reading view]]
 
 ## 11 Accessibility
 
