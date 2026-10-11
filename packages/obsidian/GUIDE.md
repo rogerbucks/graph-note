@@ -39,6 +39,20 @@ module that ties the parts together, named as the folder is.
 - `list-form.ts` — the form that asks for a kind and a relationship when List is chosen.
 - `list-row.ts` — a list as chips: the things linked to this one, each removed with its x, and a field to add a value.
 
+### `src/export/` — export (spec §16)
+
+- `export.ts` — `exportGraph`: the scope read from the note as it is now, the core's plan (nothing to export, a
+  question first, or go), the image in fixed colours with its frame, written safely into the vault through its API with
+  its companion note when set; on a phone, offered to the share sheet instead.
+- `export-form.ts` — the Export form on a drawing: the whole diagram, or a view with or without its faded context; SVG
+  or PNG; light or dark; and Export anyway when the note's classification asks first.
+- `png.ts` — a PNG of the SVG drawn on a canvas at twice natural size or more; one larger than a phone's canvas holds is
+  refused, with the SVG suggested.
+- `classification.ts` — a note's classification however its front matter writes it (any key case, a word, a number, a
+  list's highest), and from its own text before the metadata cache has indexed it.
+- `vault-write.ts` — writing through the vault's API: a name of its own for each export, so none is overwritten; the
+  plugin's own temporary file deleted outright on a failure, never left in the vault or its trash.
+
 ### `src/settings/` — the settings page (spec §21)
 
 - `settings.ts` — `GraphNoteSettingTab`: one page in Obsidian's plugin settings, in its declarative form, built from the

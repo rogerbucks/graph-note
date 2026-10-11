@@ -207,6 +207,12 @@ export async function renderBlock(
       completeness: completenessReport(reading, graph, new Date().toISOString().slice(0, 10)),
       parked: parked(reading, graph, new Date().toISOString().slice(0, 10)),
       writeView: (block) => writeViewBlock(plugin, target.path, graph, block),
+      exporting: {
+        path: target.path,
+        graph,
+        theme: plugin.settings.exportTheme,
+        run: (ask) => plugin.exportGraph(ask),
+      },
       indent: plugin.settings.indent,
       lineOf: (at) => (blocks[at.block]?.line ?? 0) + at.line,
       onEdit: () => {

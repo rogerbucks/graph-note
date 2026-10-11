@@ -4,6 +4,7 @@ import type { CompletenessReport, Drawn, Indent, Mode, NoteReading, Parked } fro
 import type { DeclaredList } from '../properties/list-row';
 import type { ShownProblem } from './problems-list';
 import type { ViewShown } from './view-strip';
+import type { Exporting } from '../export/export-form';
 
 /** The editor open in place on this card, as the inspector needs it: the block's text as typed, and a way to replace it. */
 export interface Editing {
@@ -37,6 +38,8 @@ export interface ViewOptions {
   indent?: Indent;
   /** Set when the drawing is a view (spec §7): what it shows, how, and how to write its style. */
   view?: ViewShown;
+  /** What the drawing can export, and how (§16); without it, no Export is offered. */
+  exporting?: Exporting;
   /** Writes a view block after the graph's last block in the note (§7, views_by_tapping); resolves to why not, or null. */
   writeView?: (block: string) => Promise<string | null>;
   /** Edit here: opens the text in place, inside this card (spec §4). */

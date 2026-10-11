@@ -1,8 +1,13 @@
 // Edge cases (editor spec §9 and §7): empty, broken and oversized inputs each give a stated result, never a blank or a
-// crash. One section for each kind of input: paths, and the empty view; later work adds the empty export to it.
+// crash. One section for each kind of input: paths, the empty view, and the empty export.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
+import { exportPlan } from '../src/export-plan.ts';
+import { exportScope } from '../src/export-scope.ts';
+import { exportSvg } from '../src/export.ts';
+import { writeSafely } from '../src/export-write.ts';
+import { DEFAULT_SETTINGS } from '../src/settings.ts';
 import { PathPlayer, pathBlock, pathProblems, pathsOf } from '../src/paths.ts';
 import { evaluate } from '../src/view-evaluate.ts';
 
@@ -197,5 +202,101 @@ describe('views: nothing matches', () => {
       assert.equal(typeof r.why === 'string' && r.why.length > 0, r.empty, JSON.stringify(view));
       if (r.empty) assert.deepEqual(r.links, []);
     }
+  });
+});
+
+describe('exports: nothing to export', () => {
+  const GROUP = `// graph: group · SOURCE
+(ann:Person {name: 'Ann'}),
+(ben:Person {name: 'Ben'}),
+(solo:Person {name: 'Solo'}),
+(ann)-[:KNOWS]->(ben)`;
+  const reading = readNote([GROUP]);
+  // a note with no classification, so nothing here is asked about
+  const unclassified = { noteClassification: null };
+  const plan = (scope) =>
+    exportPlan({
+      scope,
+      format: 'svg',
+      note: 'Group.md',
+      date: '2026-10-11',
+      settings: DEFAULT_SETTINGS,
+      ...unclassified,
+    });
+  const emptyViews = [
+    { name: 'robots', spec: { kind: 'kinds', kinds: ['Robot'] } },
+    { name: 'nobody', spec: { kind: 'picked', ids: [] } },
+    { name: 'gone', spec: { kind: 'near', id: 'zed', depth: 2 } },
+    { name: 'alone', spec: { kind: 'near', id: 'solo', depth: 1 } },
+    { name: 'apart', spec: { kind: 'reaches', from: 'ann', to: 'solo', steps: 3, directed: true } },
+    { name: 'tour', spec: { kind: 'path', path: 'tour' } },
+  ];
+
+  // proves: empty_export
+  test('a note with nothing in it, a graph that is not there, and a block that cannot be read each say so', () => {
+    for (const [r, graph] of [
+      [readNote([]), 'group'],
+      [readNote(['']), 'group'],
+      [reading, 'elsewhere'],
+      [readNote(['// graph: void · SOURCE\n']), 'void'],
+      [readNote(['// graph: broken · SOURCE\n(((']), 'broken'],
+    ]) {
+      const d = plan(exportScope(r, { graph }));
+      assert.deepEqual(Object.keys(d), ['nothing'], graph);
+      assert.match(d.nothing, new RegExp(`^There is nothing to export: graph ${graph} has no things in this note`));
+    }
+  });
+
+  // proves: empty_export
+  test('a view that matches nothing says so, with the reason the view gives, whether or not the context is asked for', () => {
+    for (const view of emptyViews)
+      for (const context of [false, true]) {
+        const d = plan(exportScope(reading, { graph: 'group', view, context }));
+        assert.deepEqual(Object.keys(d), ['nothing'], `${view.name} ${context}`);
+        assert.ok(d.nothing.startsWith(`There is nothing to export: view ${view.name} matches nothing`), d.nothing);
+        assert.match(d.nothing, /change the view/);
+      }
+  });
+
+  // proves: empty_export
+  test('whatever the scope, either there is something to export or nothing is said, never both or neither', () => {
+    const ids = ['ann', 'ben', 'solo', 'zed'];
+    const views = [
+      ...ids.map((id) => ({ name: `near_${id}`, spec: { kind: 'near', id, depth: 1 } })),
+      ...ids.map((id) => ({ name: `pick_${id}`, spec: { kind: 'picked', ids: [id] } })),
+      ...emptyViews,
+    ];
+    for (const view of [undefined, ...views])
+      for (const graph of ['group', 'elsewhere']) {
+        const scope = exportScope(reading, { graph, ...(view ? { view } : {}) });
+        const d = plan(scope);
+        assert.equal('nothing' in d, scope.empty, `${graph} ${view?.name}`);
+        assert.equal('go' in d, !scope.empty, `${graph} ${view?.name}`);
+        assert.equal(scope.drawing.boxes.length === 0, scope.empty);
+      }
+  });
+
+  // proves: empty_export
+  test('no image is drawn and no file is touched for an empty export', async () => {
+    const scope = exportScope(reading, { graph: 'group', view: emptyViews[0] });
+    const engine = {
+      version: '0',
+      render() {
+        throw new Error('the engine must not be asked');
+      },
+    };
+    assert.throws(
+      () => exportSvg(scope, engine, { note: 'Group.md', date: '2026-10-11', theme: 'light' }),
+      /nothing to export/,
+    );
+    const touched = [];
+    const ops = {
+      write: async (p) => touched.push(p),
+      rename: async (p) => touched.push(p),
+      remove: async (p) => touched.push(p),
+    };
+    const r = await writeSafely('Group.svg', '', ops);
+    assert.equal(r.ok, false);
+    assert.deepEqual(touched, []);
   });
 });

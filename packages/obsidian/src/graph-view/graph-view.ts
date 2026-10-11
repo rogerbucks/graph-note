@@ -11,6 +11,7 @@ import { renderProblems } from './problems-list';
 import { listParked } from './parked';
 import { Walk } from './walk';
 import { ViewMaker } from './view-maker';
+import { toggleExportForm } from '../export/export-form';
 import { markView, renderViewStrip } from './view-strip';
 import { plural, renderBar } from './view-bar';
 import { describeDrawing, insertSvg } from './drawing-svg';
@@ -59,6 +60,7 @@ export class GraphView extends MarkdownRenderChild {
       fullScreen: () => this.openFullscreen(),
       editHere: () => (this.o.editing?.()?.session ? this.o.onDoneEditing?.() : this.o.onEditHere?.()),
       toggleSource: (b) => this.toggleSource(b),
+      export: () => this.o.exporting && toggleExportForm(root, this.o.exporting),
     });
     const { editing, source } = placed;
     this.editButton = placed.editButton;
