@@ -51,16 +51,18 @@ export interface FrameFault {
 
 const FOUR = "frame must be four numbers, 'x,y,width,height'";
 const EXAMPLE = "write it as frame: '0,0,300,200'";
-/** A number as a frame writes one: an optional minus, digits, an optional decimal part and an optional exponent. */
-const NUMBER = /^-?\d+(\.\d+)?([eE][+-]?\d+)?$/;
+/**
+ * A number as a frame is written, by `styleEdit` or by hand: an optional sign, digits with an optional dot (`5.`) or a
+ * dot and digits (`.5`), and an optional exponent. Never hexadecimal (`0x10`), which `Number` would read.
+ */
+const NUMBER = /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/;
 
 /**
- * A frame, `x,y,width,height`, read from its text: four numbers (integers or decimals, negative allowed, an exponent as
- * `styleEdit` writes a very small or large one), joined by single commas, with no space and no comma at either end. Text
- * that is not text at all is a fault with no repair. Any
- * other text is a fault. Where the only fault is stray commas and spaces (an empty part, a space around a number), the
- * fault carries the list without them; if that is still not four numbers the fault says so, and the fix is still to
- * remove the strays. A part that is not a number cannot be repaired, so it carries no rewritten list.
+ * A frame, `x,y,width,height`, read from its text: four numbers (integers or decimals, signed, with an exponent as
+ * `styleEdit` writes a very small or large one), joined by single commas, with no space and no comma at either end. A
+ * frame that is not text, or has a part that is not a number, is a fault with no repair. Where the only fault is stray
+ * commas and spaces (an empty part, a space around a number), the fault carries the list without them; if that is still
+ * not four numbers the fault says so, and the fix is still to remove the strays.
  */
 export function readFrame(written: unknown): { frame: Frame } | FrameFault {
   if (typeof written !== 'string') return { message: FOUR, fix: EXAMPLE };

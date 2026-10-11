@@ -84,6 +84,33 @@ describe('a key the style graph does not know', () => {
     assert.equal(fixedBy(tie, 0, 0), tie.replace('kine', 'kind'));
     assert.equal(fixedBy(tie, 0, 1), tie.replace('kine', 'line'));
   });
+
+  // proves: style_words_checked
+  test('is the only thing said of a thing that lacks a key by it: no “add …” beside the rename', () => {
+    const block = styleBlock(
+      "(l1:Look {view: 'v', kind: 'Place', colur: 'green', means: 'm'}),",
+      "(n1:Nudge {wrd: 'direction', direction: 'TB'}),",
+      "(v1:ViewStyle {view: 'a', outsde: 'hide'}),",
+      "(w1:Shown {vew: 'a', zoom: 2}),",
+      "(s1:Show {proprty: 'name', kind: 'Place'}),",
+      "(l2:Look {view: 'v', kine: 'Place', colour: 'green'})",
+    );
+    const { problems } = styleIn(TRIP, block);
+    assert.deepEqual(
+      problems.map((p) => [p.line, p.message, p.replace?.with]),
+      [
+        [2, 'colur is not a key a Look uses', ['colour']],
+        [3, 'wrd is not a key a Nudge uses', ['word']],
+        [4, 'outsde is not a key a ViewStyle uses', ['outside']],
+        [5, 'vew is not a key a Shown uses', ['view']],
+        [6, 'proprty is not a key a Show uses', ['property']],
+        [7, 'kine is not a key a Look uses', ['kind', 'line']],
+      ],
+    );
+    // a value at fault is still said: only what is absent waits for the rename
+    const wrong = styleIn(TRIP, styleBlock("(w1:Shown {view: 'a', zom: 'big', zoom: 0})")).problems;
+    assert.deepEqual(messages(wrong), ['zom is not a key a Shown uses', 'zoom must be a number above 0']);
+  });
 });
 
 describe('a frame', () => {
@@ -133,9 +160,13 @@ describe('a frame', () => {
       '1 2,3,4',
       '1,2,3,4,5',
       '1,2,3',
-      '.5,0,1,1',
+      '0x10,0,1,1',
       '1e999,0,1,1',
       '--1,0,1,1',
+      '+-1,0,1,1',
+      '1.2.3,0,1,1',
+      '.,0,1,1',
+      '1e,0,1,1',
     ];
     for (const written of bad)
       assert.deepEqual(
@@ -149,6 +180,20 @@ describe('a frame', () => {
     const { style, problems } = styleIn(TRIP, styleBlock("(w1:Shown {view: 'v', frame: '-5.5,0,1e-7,120'})"));
     assert.deepEqual(problems, []);
     assert.deepEqual(style.shown.get('v').frame, { x: -5.5, y: 0, width: 1e-7, height: 120 });
+  });
+
+  // proves: style_words_checked
+  test('written by hand with a plus sign, or a dot with digits on one side only, is still read, as it always was', () => {
+    for (const [written, frame] of [
+      ['+1,0,1,1', { x: 1, y: 0, width: 1, height: 1 }],
+      ['.5,0,1,1', { x: 0.5, y: 0, width: 1, height: 1 }],
+      ['5.,0,1,1', { x: 5, y: 0, width: 1, height: 1 }],
+      ['+.5e1,-.5,5.e0,+7', { x: 5, y: -0.5, width: 5, height: 7 }],
+    ]) {
+      const { style, problems } = styleIn(TRIP, styleBlock(`(w1:Shown {view: 'v', frame: '${written}'})`));
+      assert.deepEqual(problems, [], written);
+      assert.deepEqual(style.shown.get('v').frame, frame, written);
+    }
   });
 });
 

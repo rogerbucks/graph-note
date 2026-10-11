@@ -27,6 +27,8 @@ export interface RawThing {
   span(key: string): Problem['span'];
   /** Where a property's key is written: its 0-based line in the block and the characters it spans. */
   keySpan(key: string): Problem['span'];
+  /** Set when the thing writes a key its kind does not know: what it lacks may be that key, misspelt, so is not yet said. */
+  misspelt?: boolean;
 }
 
 /** The names of the graph a style graph styles, which every name in the style must be one of. */
@@ -64,6 +66,10 @@ function reader(raw: RawThing, names: StyledNames, out: Problem[]) {
   const r = {
     report,
     edit,
+    /** A fault of something absent, said unless a misspelt key may be it: the rename comes first, then this is said. */
+    missing(message: string, fix: string) {
+      if (!raw.misspelt) report(message, fix);
+    },
     text(key: string): string | undefined {
       const v = raw.props[key];
       if (v === undefined || typeof v === 'string') return v;
@@ -112,7 +118,7 @@ function nudgeOf(raw: RawThing, names: StyledNames, out: Problem[]): Nudge | nul
   const r = reader(raw, names, out),
     before = out.length;
   if (raw.props.word === undefined) {
-    r.report(FOUR, `add word: ${orList(NUDGE_WORDS.map((w) => `'${w}'`))}`);
+    r.missing(FOUR, `add word: ${orList(NUDGE_WORDS.map((w) => `'${w}'`))}`);
     return null;
   }
   const word = r.word('word', NUDGE_WORDS, FOUR, true);
@@ -121,18 +127,18 @@ function nudgeOf(raw: RawThing, names: StyledNames, out: Problem[]): Nudge | nul
   const has = (k: string) => raw.props[k] !== undefined;
   if (word === 'beside' || word === 'before') {
     const missing = ['thing', 'other'].find((k) => !has(k));
-    if (missing) r.report(`a ${word} nudge names two things: thing and other`, `add ${missing}: '<id>'`);
+    if (missing) r.missing(`a ${word} nudge names two things: thing and other`, `add ${missing}: '<id>'`);
     else
       [n.thing, n.other] = [
         r.name('thing', names.things, 'a thing', 'the id of a thing'),
         r.name('other', names.things, 'a thing', 'the id of a thing'),
       ];
   } else if (word === 'group') {
-    if (!has('thing')) r.report('a group nudge names a thing and its group', "add thing: '<id>'");
-    else if (!has('group')) r.report('a group nudge names a thing and its group', "add group: '<the group's label>'");
+    if (!has('thing')) r.missing('a group nudge names a thing and its group', "add thing: '<id>'");
+    else if (!has('group')) r.missing('a group nudge names a thing and its group', "add group: '<the group's label>'");
     else [n.thing, n.group] = [r.name('thing', names.things, 'a thing', 'the id of a thing'), r.text('group')];
   } else if (!has('direction'))
-    r.report(
+    r.missing(
       'a direction nudge names its direction',
       `add direction: ${orList(STYLE.directions.map((d) => `'${d}'`))}`,
     );
@@ -145,13 +151,11 @@ function showOf(raw: RawThing, names: StyledNames, out: Problem[]): Show | null 
   const r = reader(raw, names, out),
     before = out.length;
   const has = (k: string) => raw.props[k] !== undefined;
-  if (!has('property')) r.report('a Show names the property to show', "add property: '<name>'");
-  else if (has('kind') === has('thing'))
-    r.report(
-      'a Show is for one kind or one thing',
-      has('kind') ? 'remove one of them' : "add kind: '<Kind>' or thing: '<id>'",
-    );
-  else {
+  if (!has('property')) r.missing('a Show names the property to show', "add property: '<name>'");
+  else if (has('kind') === has('thing')) {
+    if (has('kind')) r.report('a Show is for one kind or one thing', 'remove one of them');
+    else r.missing('a Show is for one kind or one thing', "add kind: '<Kind>' or thing: '<id>'");
+  } else {
     const kind = r.name('kind', names.kinds, 'a kind'),
       thing = r.name('thing', names.things, 'a thing', 'the id of a thing');
     const of = kind ? { kind } : thing ? { thing } : null;
@@ -170,7 +174,7 @@ function lookOf(raw: RawThing, names: StyledNames, out: Problem[]): Look | null 
   if (has('view') === has('path')) {
     if (has('view')) r.report('a look is for one view or one path, not both', 'remove one of them');
     else
-      r.report(
+      r.missing(
         "a look is for a view or a path: add view: '<name>' or path: '<id>'",
         "add view: '<name>' or path: '<id>'",
       );
@@ -179,11 +183,12 @@ function lookOf(raw: RawThing, names: StyledNames, out: Problem[]): Look | null 
   const targets = [has('thing'), has('kind'), has('from') && has('type') && has('to')].filter(Boolean).length;
   if (targets !== 1) {
     if (targets) r.report('a look styles one thing, kind or link, not more', 'remove all but one of them');
-    else r.report('a look styles one thing, kind or link: add thing, kind, or from, type and to', 'add what it styles');
+    else
+      r.missing('a look styles one thing, kind or link: add thing, kind, or from, type and to', 'add what it styles');
     return null;
   }
   if (!has('colour') && !has('line') && !has('format')) {
-    r.report(
+    r.missing(
       'a look changes a colour, a line or a format: add one',
       "add colour, line or format, such as line: 'dashed'",
     );
@@ -206,7 +211,7 @@ function lookOf(raw: RawThing, names: StyledNames, out: Problem[]): Look | null 
   const colour = r.word('colour', STYLE_HUES, '$ is not a colour of the locked style');
   const means = r.text('means');
   if (colour !== undefined && !means)
-    r.report(
+    r.missing(
       `${colour} has no meaning written, so the legend cannot say what it means`,
       `add means: '<what ${colour} means here>'`,
     );
@@ -223,9 +228,9 @@ function viewStyleOf(raw: RawThing, names: StyledNames, out: Problem[]): Checked
   const r = reader(raw, names, out);
   // a view's name cannot be checked against the graph: views are query blocks, read elsewhere, so any name is taken
   const view = r.text('view');
-  if (!view) r.report('a ViewStyle names its view', "add view: '<the view's name>'");
+  if (!view) r.missing('a ViewStyle names its view', "add view: '<the view's name>'");
   if (raw.props.outside === undefined) {
-    r.report('a ViewStyle says fade or hide', "add outside: 'fade' or 'hide'");
+    r.missing('a ViewStyle says fade or hide', "add outside: 'fade' or 'hide'");
     return null;
   }
   const outside = r.word('outside', OUTSIDE, `outside must be ${orList(OUTSIDE)}`);
@@ -237,7 +242,7 @@ function shownOf(raw: RawThing, names: StyledNames, out: Problem[]): Checked['sh
   const r = reader(raw, names, out);
   const view = r.text('view');
   if (!view) {
-    r.report('a Shown names its view', "add view: '<the view's name>'");
+    r.missing('a Shown names its view', "add view: '<the view's name>'");
     return null;
   }
   const shown: Checked['shown'][number] = { view, at: raw.at };
@@ -280,7 +285,7 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
     }
     const p = c.problems;
     // a key the style graph does not know: reported on the key; the thing may not mean what it says, so it is left out
-    // (all its other faults are still reported)
+    // (its values at fault are still reported, but not what it lacks, which may be that key: the rename comes first)
     const unknown = unknownKeys(
       kinds[0] as StyleKind,
       Object.keys(raw.props),
@@ -290,11 +295,12 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
     );
     p.push(...unknown);
     const kept = <T>(x: T | null): T | null => (unknown.length ? null : x);
-    if (kinds[0] === 'Nudge') push(c.nudges, kept(nudgeOf(raw, names, p)));
-    else if (kinds[0] === 'Show') push(c.shows, kept(showOf(raw, names, p)));
-    else if (kinds[0] === 'Look') push(c.looks, kept(lookOf(raw, names, p)));
-    else if (kinds[0] === 'ViewStyle') push(c.views, kept(viewStyleOf(raw, names, p)));
-    else push(c.shown, kept(shownOf(raw, names, p)));
+    const thing: RawThing = unknown.length ? { ...raw, misspelt: true } : raw;
+    if (kinds[0] === 'Nudge') push(c.nudges, kept(nudgeOf(thing, names, p)));
+    else if (kinds[0] === 'Show') push(c.shows, kept(showOf(thing, names, p)));
+    else if (kinds[0] === 'Look') push(c.looks, kept(lookOf(thing, names, p)));
+    else if (kinds[0] === 'ViewStyle') push(c.views, kept(viewStyleOf(thing, names, p)));
+    else push(c.shown, kept(shownOf(thing, names, p)));
   }
   return c;
 }
