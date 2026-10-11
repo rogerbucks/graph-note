@@ -75,6 +75,10 @@ from graphspec.reader.drawing import (
     _u16,
     _without,
     read_for_drawing,
+    style_of,
+)
+from graphspec.style.reading import (
+    read_style,
 )
 from graphspec.reader.name_suggestions import (
     name_from_text,
