@@ -42,8 +42,9 @@ export class GraphView extends MarkdownRenderChild {
     super(containerEl);
     // whether the card is where the note is only read: in reading view, or opened from a card that is (spec §3)
     this.readOnly = () => !!options.readOnly?.() || (options.mode === 'note' && readOnlyHere(containerEl));
-    // every write the card can make goes through that one check: none where the card is read-only
-    this.o = gateWrites(options, this.readOnly);
+    // every write the card can make goes through that one check: none where the card is read-only; and the card's parts
+    // are given the same check as `readOnly`, so a control that writes is not offered at all there
+    this.o = gateWrites({ ...options, readOnly: this.readOnly }, this.readOnly);
     this.taps = new Taps(options.drawn.svg);
   }
 

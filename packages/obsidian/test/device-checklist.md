@@ -49,11 +49,12 @@ holds the two together).
 ## Zoom — spec §3
 
 - [ ] **Z-01** Desktop: the mouse wheel alone scrolls the note. With Ctrl or Command it zooms about the pointer, and so does a
-      trackpad pinch.
+      trackpad pinch, a little quicker than the fingers move.
 - [ ] **Z-02** Desktop: dragging empty space pans once zoomed in. Plus, minus and zero work when the drawing has focus.
-- [ ] **Z-03** Phone: one finger on a fitted drawing scrolls the note. A pinch zooms about the fingers, and once zoomed in, one
-      finger pans.
-- [ ] **Z-04** Double-clicking or double-tapping empty space zooms in there. Fit returns to the whole drawing.
+- [ ] **Z-03** Phone: one finger on a fitted drawing scrolls the note. A pinch zooms about the fingers, a little quicker than
+      they move, and once zoomed in, one finger pans.
+- [ ] **Z-04** Double-clicking or double-tapping empty space zooms in there; on or near a box or a link it only chooses, and
+      never zooms. Fit returns to the whole drawing.
 - [ ] **Z-05** Zoom stops at a quarter and at four times natural size, and text stays sharp at every level.
 - [ ] **Z-06** Full screen covers the window, inside the phone's notch and home bar. Escape or Close leaves it. In full screen
       the wheel alone zooms.

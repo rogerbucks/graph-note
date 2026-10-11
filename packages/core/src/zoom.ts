@@ -14,13 +14,14 @@ const DOUBLE_TAP_MS = 300,
   TAP_SLOP = 10;
 /**
  * How much faster than the fingers a pinch zooms: each spread, as a factor, is raised to this power, so twice as far apart
- * is 2 ** 1.4 times the size. It was 1, following the fingers exactly (device check V-08, Roger, 11 Oct 2026: "pinch zoom
- * in and out should be a little quicker"). The limits still hold.
+ * is 2 ** 1.4 times the size. It was 1, following the fingers exactly (device checks Z-01 and Z-03; Roger, 11 Oct 2026:
+ * "pinch zoom in and out should be a little quicker"). The limits still hold.
  */
 const PINCH_RATE = 1.4;
 /**
- * How far one unit of wheel travel zooms: a mouse notch of 100 is about a quarter. A trackpad pinch sends small steps as
- * the wheel with Ctrl, so it is as much quicker as a pinch on touch.
+ * How far one unit of wheel travel zooms: a mouse notch of 100 is about a third (e ** 0.28, about 1.32). A trackpad pinch
+ * sends small steps as the wheel with Ctrl, so it is as much quicker as a pinch on touch; and so is the wheel itself,
+ * with Ctrl or Command in a note, and alone in full screen and the pane, which cannot be told from it.
  */
 const WHEEL_RATE = 0.002 * PINCH_RATE;
 

@@ -123,12 +123,13 @@ export class BlockEditor extends Component {
   /** Park for later's fix: Deferred and DEFERS declared in the graph's schema, wherever it is written. */
   declareDeferred = () => this.note.declareDeferred(indentText(this.plugin.settings.indent));
 
-  /** Replaces the whole text, as an edit made from the inspector: shown, checked and written like typing. */
-  replace(text: string): void {
+  /** Replaces the whole text, as an inspector's edit: shown, checked and written like typing. False with no field. */
+  replace(text: string): boolean {
     const t = this.el?.text;
-    if (!t) return;
+    if (!t) return false;
     t.value = text;
     this.typedAgain();
+    return true;
   }
 
   /** A box, link or estimate chosen in the drawing, selected where it is written, the focus in the text (§4). */

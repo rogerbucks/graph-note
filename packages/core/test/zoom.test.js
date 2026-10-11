@@ -162,7 +162,7 @@ describe('the mouse wheel and the trackpad', () => {
     }
   });
 
-  // device check V-08 (Roger, 11 Oct 2026): a trackpad pinch on a Mac arrives as the wheel with Ctrl, so it is quicker too
+  // device check Z-01 (Roger, 11 Oct 2026): a trackpad pinch on a Mac arrives as the wheel with Ctrl, so it is quicker too
   test('a trackpad pinch, or the wheel with Ctrl, zooms 1.4 times as fast: a notch of 100 is a factor of e ** 0.28', () => {
     const z = make();
     z.handle({ kind: 'wheel', x: 100, y: 100, dy: -100, ctrl: true });
@@ -245,7 +245,7 @@ describe('pinching', () => {
     close(ay, mid[1]);
   });
 
-  // device check V-08 (Roger, 11 Oct 2026): "pinch zoom in and out should be a little quicker" — 1.4 times the rate it
+  // device check Z-03 (Roger, 11 Oct 2026): "pinch zoom in and out should be a little quicker" — 1.4 times the rate it
   // was, which followed the fingers exactly: as a factor, each spread is raised to the power 1.4
   test('a pinch zooms 1.4 times as fast as the fingers move: twice apart is 2 ** 1.4 times the size, half as far 2 ** -1.4', () => {
     const z = make('pane', { width: 100, height: 100 }, { width: 400, height: 400 });

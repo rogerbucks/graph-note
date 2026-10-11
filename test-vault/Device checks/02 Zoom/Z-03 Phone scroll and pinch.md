@@ -29,6 +29,6 @@
 
 **Checklist line:**
 
-> **Z-03** Phone: one finger on a fitted drawing scrolls the note. A pinch zooms about the fingers, and once zoomed in, one finger pans.
+> **Z-03** Phone: one finger on a fitted drawing scrolls the note. A pinch zooms about the fingers, a little quicker than they move, and once zoomed in, one finger pans.
 
 **Back to the checklist:** [Z-03 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Z-03 in its list.

@@ -2,16 +2,17 @@
 // can't click on the estimated link to review it / edit it / fix it. Make that simple (quick fix or full edit options)"):
 // the quick fix, which accepts the estimate with its problem's own fix — the one the editor's fix bar offers, found by
 // the core's `estimateFix` — written into the text being edited, or else into the note; and Edit the link, which opens
-// the editor with the misspelt word selected, where the fix bar offers the same fix. Where the note is only read, neither.
+// the editor with the misspelt word selected, where the fix bar offers the same fix. Both write only through the card's
+// options, which read-only.ts gates; where the card is read-only neither is offered.
 import { estimateFix } from '@graph-note/core';
 import { withFix } from '../block-editor/problem-help';
-import { readOnlyHere } from './placement';
 import { button } from './view-bar';
 import type { ViewOptions } from './view-options';
 
 /** Under an estimated link's sentence in its details: the quick fix that accepts it, and Edit the link. */
 export function estimateActions(el: HTMLElement, index: number, o: ViewOptions): void {
-  if (readOnlyHere(el)) return;
+  // where the card is read-only (read-only.ts): reading view, and full screen opened from it, which sits outside it
+  if (o.readOnly?.()) return;
   const e = o.reading.graphs.get(o.graph)?.estimates[index],
     was = e ? o.reading.texts[e.block] : undefined;
   const found = was === undefined ? null : estimateFix(o.reading, o.graph, index, was, 'block');

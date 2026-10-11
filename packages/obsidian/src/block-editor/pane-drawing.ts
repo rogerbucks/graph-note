@@ -14,18 +14,18 @@ import type { Chosen } from '../graph-view/view-options';
 interface Choosing {
   edit: () => void;
   select: (chosen: Chosen) => void;
-  replace: (now: string) => void;
+  /** Says whether there was a field to replace the text in. */
+  replace: (now: string) => boolean;
 }
 
 /**
  * An estimated link's quick fix in the pane (§3): the session's text becomes `now`, as the fix bar's fix makes it, only
- * while it is still `was`, as drawn. Says why nothing was written, or null.
+ * while it is still `was`, as drawn, and the editor is still there. Says why nothing was written, or null.
  */
 function fixInPane(s: PaneSession, on: Choosing, was: string, now: string): string | null {
   if (s.text !== was)
     return 'The text being edited is not as drawn, so nothing was written. Try again once the drawing is redrawn.';
-  on.replace(now);
-  return null;
+  return on.replace(now) ? null : 'The editor is no longer open, so nothing was written.';
 }
 
 /** Puts the session's graph, as laid out, into the pane's drawing; returns the view, or null when nothing is drawn. */
