@@ -1,7 +1,7 @@
 {
   "id": "graph-note",
   "name": "Graph Note",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "minAppVersion": "1.13.0",
   "description": "Draw the graphs written in your notes, and edit them as text, in place or beside the note.",
   "author": "Roger Bucks",
