@@ -11,6 +11,8 @@ python/
 *.md
 # the tests-first records and the reasons kept beside them, written by scripts/tests-first.mjs
 test/tests-first/
+# Obsidian writes the test vault's settings files in its own layout; the test-vault tests still check their content
+test-vault/.obsidian/
 test/seen-failing/
 # the Claude Code mod's build (packages/claude-code/esbuild.config.mjs), and the API types Claude Code lays beside it
 packages/claude-code/mod/hooks/graph.js
