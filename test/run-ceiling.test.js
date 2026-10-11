@@ -69,12 +69,14 @@ test('grows without bound', async () => {
 });
 `;
 
-const SLEEPER = `import { test } from 'node:test';
-import { writeFileSync } from 'node:fs';
-test('sleeps past its time', async () => {
-  writeFileSync('pid', String(process.pid));
-  await new Promise((r) => setTimeout(r, 60000));
-});
+// Run directly, not under `node --test`, whose start-up under load can outlast a short ceiling: writes its own pid first
+// thing, starts a child of its own and writes that pid too, then sleeps.
+const SLEEPER = `const { spawn } = require('node:child_process');
+const { writeFileSync } = require('node:fs');
+writeFileSync('pid', String(process.pid));
+const child = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 60000)'], { stdio: 'ignore' });
+writeFileSync('child-pid', String(child.pid));
+setTimeout(() => {}, 60000);
 `;
 
 describe('a test run under the ceiling', () => {
@@ -92,23 +94,22 @@ describe('a test run under the ceiling', () => {
   });
 
   test('a run that goes on past the time ceiling is stopped, with one line and a failed exit', async () => {
-    const dir = scratch({ 'sleeper.test.js': SLEEPER });
+    const dir = scratch({ 'sleeper.js': SLEEPER });
     const started = Date.now();
-    // The ceiling counts from the spawn, and the fixture writes its pid only once `node --test` has started it, which
-    // takes seconds on a machine running a full suite: a ceiling of 1.8 s (0.03 minutes) could end the run before the
-    // fixture ever ran, and then there was no pid file. 6 s is clear of any start-up seen, still far short of the 60 s sleep.
-    const r = capped(dir, { GRAPH_NOTE_TEST_MINUTES: '0.1' }, '--test', 'sleeper.test.js');
+    // plain `node`, which starts in tens of milliseconds even under load: the pid files exist long before 1.8 s
+    const r = capped(dir, { GRAPH_NOTE_TEST_MINUTES: '0.03' }, 'sleeper.js');
     assert.ok(Date.now() - started < 30000, 'stopped long before the fixture wakes');
     assert.ok(
-      existsSync(join(dir, 'pid')),
-      'the fixture never started within the 6 s ceiling: the machine is overloaded',
+      existsSync(join(dir, 'child-pid')),
+      'the fixture never started within the 1.8 s ceiling: the machine is overloaded',
     );
     assert.notEqual(r.status, 0);
     const lines = r.stderr.split('\n').filter((l) => l.startsWith('run-ceiling:'));
     assert.equal(lines.length, 1, r.stderr);
-    assert.match(lines[0], /^run-ceiling: stopped the run after \d+(\.\d+)? s, over its 0\.1-minute time ceiling\. /);
+    assert.match(lines[0], /^run-ceiling: stopped the run after \d+(\.\d+)? s, over its 0\.03-minute time ceiling\. /);
     assert.match(lines[0], /GRAPH_NOTE_TEST_MINUTES/);
-    assert.ok(await gone(fixturePid(dir)), 'the test file’s own process, a grandchild, was stopped too');
+    assert.ok(await gone(fixturePid(dir)), 'the fixture, a child of the runner, was stopped');
+    assert.ok(await gone(Number(readFileSync(join(dir, 'child-pid'), 'utf8'))), 'its own child was stopped too');
   });
 
   test('a run within its ceilings passes through its output and its exit status unchanged', () => {
