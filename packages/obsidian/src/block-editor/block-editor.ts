@@ -69,8 +69,12 @@ export class BlockEditor extends Component {
     return this.note.session;
   }
 
+  /** Whether the editor is on the page, in a card or the pane. */
+  get onPage(): boolean {
+    return !!this.el?.root.isConnected;
+  }
+
   override onload(): void {
-    // the note changed, renamed or deleted under the editor: read again, followed, or what is typed kept as a draft
     this.note.watch(this, { changed: (outcome) => this.onModify(outcome), deleted: () => void this.write() });
   }
 

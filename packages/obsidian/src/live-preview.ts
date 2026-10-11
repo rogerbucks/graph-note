@@ -16,8 +16,17 @@ import type GraphNotePlugin from './main';
 import { renderShown } from './block';
 import { settlePlacements } from './graph-view/placement';
 
-/** The last height each card was seen at, by its identity: what CodeMirror is told while the card is redrawn. */
+/**
+ * The last height each card was seen at, by its note and the line its fence opens on: what CodeMirror is told while the
+ * card is drawn again, and when the note is opened again. Only the lines a note's blocks open on now are kept.
+ */
 const heights = new Map<string, number>();
+
+/** The heights kept for the note at `path`, but for the lines its blocks open on now, `opens`: none for a block gone. */
+function keepHeights(path: string, opens: readonly number[]): void {
+  for (const key of heights.keys())
+    if (key.startsWith(`${path}|`) && !opens.includes(Number(key.slice(path.length + 1)))) heights.delete(key);
+}
 
 /** A gql block of the note in an editor: where it is, and who it is, which no line added or taken away above it changes. */
 export interface KnownBlock extends Span {
@@ -117,13 +126,18 @@ class GraphBlock extends WidgetType {
     return true;
   }
 
-  /** The card's height, as last seen. */
+  /** Where the card is: its note and its fence's line, what its height is kept by. */
+  private get at(): string {
+    return `${this.path}|${this.open}`;
+  }
+
+  /** The card's height, as last seen, kept by where it is now. */
   measured(dom: HTMLElement, height: number): void {
-    heights.set(dom.getAttribute('data-card') ?? this.key, height);
+    heights.set(dom.getAttribute('data-at') ?? this.at, height);
   }
 
   override get estimatedHeight(): number {
-    return heights.get(this.key) ?? -1;
+    return heights.get(this.at) ?? -1;
   }
 
   /** Clicks, keys and typing in the card are the card's, not the editor's. */
@@ -131,7 +145,10 @@ class GraphBlock extends WidgetType {
     return true;
   }
 
-  /** The card is gone: its watcher stops, its drawing is unloaded, and one still being drawn is dropped when it is ready. */
+  /**
+   * The card is gone: its watcher stops, its drawing is unloaded, and one still being drawn is dropped when it is ready;
+   * an editor in place that was in it is released unless it is put in another card (inline-editors.ts).
+   */
   override destroy(dom: HTMLElement): void {
     const state = drawn.get(dom);
     drawn.delete(dom);
@@ -140,6 +157,7 @@ class GraphBlock extends WidgetType {
     state.observer?.disconnect();
     state.component?.unload();
     state.component = null;
+    this.plugin.inline.cardLeft();
   }
 
   /** Draws the block off the page, then puts it in place of the old drawing: the card never shrinks between. */
@@ -147,6 +165,7 @@ class GraphBlock extends WidgetType {
     const state = drawn.get(dom);
     if (!state) return;
     dom.setAttribute('data-card', this.key);
+    dom.setAttribute('data-at', this.at);
     const asked = ++state.asked;
     const component = new Component();
     component.load();
@@ -187,7 +206,9 @@ function cards(plugin: GraphNotePlugin, state: EditorState): DecorationSet {
   const note = state.doc.toString(),
     spans = blocksIn(state),
     blocks = spans.map((s) => s.text).join('\u0000'),
+    opens = spans.map((s) => s.open),
     out: Range<Decoration>[] = [];
+  keepHeights(path, opens);
   for (const s of spans) {
     // a graph, a view and a style block are drawn from the other blocks too, so each gets a card that redraws with them;
     // a plain query, a schema, or a block not yet closed is left to Obsidian

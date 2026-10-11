@@ -52,7 +52,10 @@ export function fakeObsidian(state = {}) {
       el.addEventListener(type, fn, opts);
       this._cleanups.push(() => el.removeEventListener(type, fn));
     }
-    registerEvent() {}
+    // released when the component unloads, as Obsidian's is: a listener left behind shows in state.listening()
+    registerEvent(ref) {
+      this._cleanups.push(() => ref?.e?.offref(ref));
+    }
     registerInterval(id) {
       return id;
     }
@@ -69,6 +72,8 @@ export function fakeObsidian(state = {}) {
   // who hears a note renamed (told the file at its new path, and its old path) or deleted, as Obsidian's vault tells them
   const heard = { rename: [], delete: [] };
   state.tell = (name, ...args) => [...heard[name]].forEach((l) => l(...args));
+  /** How many listeners the vault has: each one a loaded component registered, until it unloads. */
+  state.listening = () => listeners.length + heard.rename.length + heard.delete.length;
   class TFile {
     constructor(path) {
       this.path = path;
@@ -99,7 +104,7 @@ export function fakeObsidian(state = {}) {
     on: (name, cb) => {
       if (name === 'modify') listeners.push(cb);
       else heard[name]?.push(cb);
-      return { name, cb };
+      return { e: vault, name, cb };
     },
     offref: (ref) => {
       for (const l of [listeners, ...Object.values(heard)]) {

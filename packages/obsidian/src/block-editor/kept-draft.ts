@@ -3,6 +3,7 @@
 // discarded.
 import { button } from './editor-layout';
 import { NOTE_DELETED } from './note-writing';
+import { RECOVER_COMMAND } from '../drafts';
 
 /** A draft kept for a block: the text, and when it was kept. */
 export interface KeptDraft {
@@ -11,7 +12,7 @@ export interface KeptDraft {
 }
 
 /** What is said when the note being edited is deleted while what was typed is not yet written. */
-export const DELETED_MESSAGE = 'The note was deleted while you were typing. What you typed is kept as a draft.';
+export const DELETED_MESSAGE = `The note was deleted while you were typing. What you typed is kept as a draft: the command "${RECOVER_COMMAND.name}" writes it into a note.`;
 
 /** What the banner says when a write was refused: the block reloaded from the note, or the note deleted. */
 export const keptMessage = (reason: string): string =>

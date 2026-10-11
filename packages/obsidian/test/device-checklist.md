@@ -76,7 +76,7 @@ holds the two together).
 - [ ] **P-04** Names, kinds and relationships already in the graph are suggested while typing. On the desktop, Tab takes the first.
 - [ ] **P-05** What is typed reaches the note within about a third of a second, and the drawing follows. Renaming or moving the
       note while typing changes nothing: what is typed next still reaches it. Deleting the note while typing keeps what
-      was typed as a draft, and the pane says so.
+      was typed as a draft, and the pane says so; the command Recover kept drafts into a new note writes it into a note.
 - [ ] **P-06** Editing the same block in the note while typing in the pane: the pane reloads the block, says what was typed is
       kept as a draft, and Restore draft brings it back.
 - [ ] **P-07** Undo and Redo take back and put back each change in the note.

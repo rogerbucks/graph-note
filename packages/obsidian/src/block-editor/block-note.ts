@@ -1,7 +1,8 @@
 // The note behind a block editor (spec §4, §9): its text as last read or written, the session on the block being edited,
 // and every change made to it — what is typed, Undo and Redo, Lock the graph — made safely (note-writing.ts), with what a
 // refused write held kept as a draft in the plugin's data, never lost. The note is watched while it is edited: changed,
-// it is read again; renamed or moved, it is followed, its drafts with it; deleted, what is typed is kept as a draft.
+// it is read again; renamed or moved, it is followed; deleted, what is typed is kept as a draft. Each editor keeps its own
+// draft, so the pane and the card typed in at once never overwrite each other's.
 import { Notice, TFile } from 'obsidian';
 import type { Component } from 'obsidian';
 import {
@@ -14,6 +15,7 @@ import {
   namesSharedSchema,
 } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
+import type { Drafts } from '../main';
 import type { DeclaredDeferred } from '../graph-view/view-options';
 import { DELETED_MESSAGE } from './kept-draft';
 import type { KeptDraft } from './kept-draft';
@@ -137,7 +139,7 @@ export class BlockNote {
         if (f instanceof TFile) void this.reread(f).then((outcome) => outcome && on.changed(outcome));
       }),
     );
-    owner.registerEvent(vault.on('rename', (f, old) => void this.renamed(f.path, old)));
+    owner.registerEvent(vault.on('rename', (f, old) => this.renamed(f.path, old)));
     owner.registerEvent(
       vault.on('delete', (f) => {
         if (!this.isOrHolds(f.path)) return;
@@ -152,37 +154,53 @@ export class BlockNote {
     return !!this.path && (this.path === path || this.path.startsWith(`${path}/`));
   }
 
-  /** The note, or its folder, renamed or moved from `old` to `now`: followed there, with every draft kept for it. */
-  private async renamed(now: string, old: string): Promise<void> {
-    const was = this.path;
+  /**
+   * The note, or its folder, renamed or moved from `old` to `now`: followed there. Its drafts are moved by the plugin
+   * itself, whether or not the note is being edited (drafts.ts); this editor's own draft keeps its place among them.
+   */
+  private renamed(now: string, old: string): void {
     if (!this.isOrHolds(old)) return;
-    this.path = now + was.slice(old.length);
-    const data = this.plugin.drafts();
-    const moved = Object.entries(data).filter(([key]) => key.startsWith(`${was}#`));
-    if (!moved.length) return;
-    for (const [key, draft] of moved) {
-      delete data[key];
-      data[this.path + key.slice(was.length)] = draft;
-    }
-    await this.plugin.saveDrafts(data);
+    this.path = now + this.path.slice(old.length);
+    if (this.own) this.own = { ...this.own, key: this.key() };
+  }
+
+  /**
+   * Where this editor's own draft is kept, once it has kept one: its block's key then, and the mark beside it, such as
+   * " (2)" when another editor of the same block, the pane beside the card, had already kept a different one there.
+   */
+  private own: { key: string; beside: string } | null = null;
+
+  /** The key of the draft this editor offers: its own, once it has kept one; else the first kept for its block. */
+  private draftKey(data: Drafts): string {
+    const key = this.key();
+    if (this.own?.key === key) return key + this.own.beside;
+    return Object.keys(data).find((k) => k === key || k.startsWith(`${key} (`)) ?? key;
   }
 
   /** The draft kept for this block, if there is one. */
   draft(): KeptDraft | undefined {
-    return this.plugin.drafts()[this.key()];
+    const data = this.plugin.drafts();
+    return data[this.draftKey(data)];
   }
 
-  /** Keeps what was typed as this block's draft. */
+  /** Keeps what was typed as this editor's draft of its block, beside, never over, a different one another editor kept. */
   async keepDraft(text: string): Promise<void> {
-    const data = this.plugin.drafts();
-    data[this.key()] = { text, kept: new Date().toISOString() };
+    const data = this.plugin.drafts(),
+      key = this.key();
+    if (this.own?.key !== key) {
+      let beside = '';
+      for (let n = 2; data[key + beside] && data[key + beside]?.text !== text; n++) beside = ` (${n})`;
+      this.own = { key, beside };
+    }
+    data[key + this.own.beside] = { text, kept: new Date().toISOString() };
     await this.plugin.saveDrafts(data);
   }
 
-  /** Forgets this block's draft. */
+  /** Forgets the draft this editor offers. */
   async forget(): Promise<void> {
     const data = this.plugin.drafts();
-    delete data[this.key()];
+    delete data[this.draftKey(data)];
+    this.own = null;
     await this.plugin.saveDrafts(data);
   }
 }

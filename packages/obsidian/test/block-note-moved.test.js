@@ -89,6 +89,36 @@ describe('the pane, when its note is renamed or deleted', () => {
   });
 });
 
+describe('the pane and the editor in place on one block, when the note is deleted', () => {
+  // the review of #91, 11 Oct 2026: both wrote the same draft, and the last one written won
+  test('both typed in and not yet written: what each typed is kept, neither over the other', async () => {
+    const env = await load({ files: { [card.PATH]: card.NOTE } });
+    try {
+      await env.plugin.openEditor({ path: card.PATH, line: 2, graph: 'reader' });
+      const inPane = env.app.workspace.getLeavesOfType('graph-note-pane')[0].view.contentEl;
+      const el = await card.show(env);
+      labelled(el, 'Edit here').click();
+      await until(() => !!el.querySelector('textarea'));
+      type(inPane, card.READER + ',\n(fromPane:Option)');
+      const t = el.querySelector('textarea');
+      t.value = card.READER + ',\n(fromCard:Option)';
+      t.dispatch('input');
+      await remove(env, card.PATH);
+      const kept = () => Object.values(drafts(env)).map((d) => d.text);
+      await until(() => kept().length === 2, 2000);
+      assert.deepEqual(kept().sort(), [card.READER + ',\n(fromCard:Option)', card.READER + ',\n(fromPane:Option)']);
+      // each editor goes on keeping its own as it is typed
+      t.value = card.READER + ',\n(fromCard:Option),\n(more:Option)';
+      t.dispatch('input');
+      await until(() => kept().includes(t.value), 2000);
+      assert.equal(kept().length, 2);
+      assert.ok(kept().includes(card.READER + ',\n(fromPane:Option)'));
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
 describe('the editor in place, when its note is renamed or deleted', () => {
   /** Opens the editor in the note's card; returns its card and its field. */
   async function editHere(env) {
