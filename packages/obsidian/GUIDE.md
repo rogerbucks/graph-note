@@ -87,6 +87,10 @@ module that ties the parts together, named as the folder is.
 - `walk.ts` — walked paths (§7): the strip below the bar with Play for each path in the note, stepping one thing at a
   time, marked and said; a path with no steps said to have none; and, while the block is edited, Record, which numbers
   each box as it is tapped and writes the path into the text.
+- `add-thing.ts` — adding a thing (§5): while the card is edited, Add a thing asks for the text first and suggests the name
+  from it as it is typed (`suggestName`), shown before anything is written; Add the thing writes it into the text being
+  edited (`addThing`), as one edit an undo takes back. A name of its own is kept and held to the same rules. The pane's
+  drawing has no editor of its own, so offers none of the graphic edits: there the thing is typed in the text.
 - `suggested-name.ts` — a box drawn under a suggested name: what screen readers hear of it, where it is written in the
   block being edited, and in its details its suggested name with the one-click fix that writes it. Nothing else writes
   it: Park for later, Record a path, Make a view, a property changed or made a list and Save as shown with it

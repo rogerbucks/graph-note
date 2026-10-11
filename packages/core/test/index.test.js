@@ -11,7 +11,8 @@
 // styleEdit, hueColour, the words a style may use and their types), and views (viewsOf, parseView, viewQuery, viewBlock,
 // readingOf, evaluate and their types, 11 Oct 2026), and export (exportScope, exportSvg, pngSize, exportPlan,
 // companionNote, writeSafely, saidDate, EXPORT_FORMATS, PNG_MIN_SCALE and their types, 11 Oct 2026), and the refusal to
-// write a name only suggested (acceptNameFirst, 11 Oct 2026).
+// write a name only suggested (acceptNameFirst, 11 Oct 2026), and adding a thing (addThing, suggestName and their types,
+// 11 Oct 2026).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -59,6 +60,7 @@ const VALUES = [
   'VIEW_NAMES',
   'Zoom',
   'acceptNameFirst',
+  'addThing',
   'addToList',
   'aiModel',
   'blockItems',
@@ -148,6 +150,7 @@ const VALUES = [
   'stepOver',
   'styleEdit',
   'styleOf',
+  'suggestName',
   'textFromName',
   'textTooLarge',
   'textVersion',
@@ -221,6 +224,7 @@ const TYPES = [
   'Mode',
   'NameStyle',
   'NamedView',
+  'NewThing',
   'NoteReading',
   'Nudge',
   'NudgeWord',
@@ -270,6 +274,7 @@ const TYPES = [
   'TextFormat',
   'TextState',
   'ThemeColours',
+  'ThingAdded',
   'ThingLook',
   'Token',
   'TokenClass',

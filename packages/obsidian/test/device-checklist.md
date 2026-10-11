@@ -161,6 +161,13 @@ holds the two together).
       picking it), a property changed or made a list, and Save as shown with it selected are each refused with a message
       beginning "accept its name first", and the note is unchanged. Phone: the button is easy to hit in the sheet
       (slice 2, unnamed_drawn_suggested).
+- [ ] **I-20** Edit here on a card, press Add a thing: it asks for the thing's text first, with the focus in it. Type some
+      (such as "Small reader"): the name suggested from it appears, in the style of the names already in the graph and not
+      one of them, small_reader, and the text of the block is unchanged. Give the kind Option and press Add the thing:
+      `(small_reader:Option {name: 'Small reader'})` is written after the block's last item, the name shown is the name
+      written, and one undo takes it back out. A name typed in its own field is kept as the text changes. No text, a name
+      the graph has, more than one word, or a word the language keeps is refused in words and nothing is written.
+      Desktop and phone: every field and button is easy to hit (slice 2, add_thing).
 
 ## The style graph — spec §2, §6
 

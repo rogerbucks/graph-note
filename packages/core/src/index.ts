@@ -110,6 +110,8 @@ export type { DeferredDeclared, Park, Parked, ParkedCount } from './deferred.ts'
 export { nameFromText, nameSlug, nameStyleOf, nameWords, textFromName } from './name-suggestions.ts';
 export type { GraphNames, NameStyle } from './name-suggestions.ts';
 export { acceptNameFirst } from './suggested-names.ts';
+export { addThing, suggestName } from './add-thing.ts';
+export type { NewThing, ThingAdded } from './add-thing.ts';
 export { commaFor, commaInNote, colonFor, colonInNote } from './commas.ts';
 export type { TextChange } from './commas.ts';
 export {

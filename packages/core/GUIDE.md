@@ -98,11 +98,17 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   word; a text from a name; and the ASCII words and slug of a text (`nameWords`, `nameSlug`), as the graph reader's names allow.
 - `name-book.ts` — a graph's names kept up to date as names are added, its style and the names taken with them, so
   naming thousands of things never freezes the page (spec §9); each name the one `nameFromText` gives.
+- `add-thing.ts` — adding a thing (add_thing): `suggestName` gives the name for a text, from a `NameBook` of the graph's
+  names (the note as read and the block as typed, written or only mentioned), in their style and never one of them;
+  `addThing` writes the thing after the block's last item, `(name:Kind {name: 'text'})` under the key the kind's other
+  things use, and refuses with the reason when there is no text (it is asked for first), the name is not one word, is
+  kept by the language or is taken, the kind is not declared by a locked schema, or the block holds only a SET or MATCH.
 - `commas.ts` — the comma and the colon added for you.
 - `autocomplete.ts` — completing as you type: the one best inline match (a closer, keyword, kind, type, property name or
   value) and the closer stepped over; nothing is inserted unasked.
 - `inspector.ts` — properties of a thing or link, edited as text.
 - `linked-list.ts` — a property held as things linked to this one: made, added to and removed from, as text edits.
+- `lists-held.ts` — the lists a thing holds, read from a drawing (`listsOf`, `linkedValues`); `linked-list.ts` re-exports them.
 - `lock.ts` — Lock the graph: a draft's schema written out, indented as the settings say; `kindLines` and `typeLines`
   are the lines that declare one kind or relationship type, which `declareDeferred` writes the same way.
 
