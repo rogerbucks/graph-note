@@ -40,9 +40,11 @@ holds the two together).
 - [ ] **V-09** A 50-thing graph is drawn in under half a second on the phone (§11).
 - [ ] **V-10** A huge graph (over 2,000 things, made by a script) shows its text with a banner — an icon, and the limit and
       the numbers in words — and Obsidian stays responsive: the note scrolls and other blocks draw while it is checked. On
-      the desktop and on the phone (§9, layout_contained; the tests run the worker in a Node thread, not a web view).
+      the desktop and on the phone (§9, layout_contained; the tests run the worker in a Node thread, not a web view). The
+      text has no Export button: with no drawing there is nothing to export, and an export is held to the same limits.
 - [ ] **V-11** A graph whose layout runs past five seconds shows its text with the "took too long" banner and a clock icon, and
-      the next graph still draws. The console says nothing about the main thread: the layout ran in a worker (§9).
+      the next graph still draws. The console says nothing about the main thread: the layout ran in a worker (§9). The text
+      has no Export button either.
 - [ ] **V-12** The drawing reads well in the light theme and in the dark theme. Dark, several drawings in a note, each card
       standing out: Mac ✓ 0.3.0, 9 Oct 2026 (relayed as the Mac). The light theme, and the phone, to come.
 
@@ -226,7 +228,8 @@ holds the two together).
 - [ ] **X-01** Mac: Export on a card, The whole diagram, SVG, Light, Export it: a file `<note>-<graph>-<day>.svg` appears next to
       the note; opened outside Obsidian (Finder's Quick Look) it reads the same, with the graph's name, its legend,
       and "From <note>, exported <day>" (slice 2, export_two_scopes, export_formats, export_self_explaining,
-      export_fixed_theme). Dark: the same in dark colours.
+      export_fixed_theme). Dark: the same in dark colours. The console says nothing about the main thread: the export was laid
+      out in the worker, as a drawing is (§9, layout_contained).
 - [ ] **X-02** PNG: the file opens sharp at twice the drawing's size or more (export_png_sharp).
 - [ ] **X-03** On a view's card: the view alone, then with the rest faded (view_export_stays_view).
 - [ ] **X-04** Settings › Export › companion note on: a `.md` beside the image shows it and links the note

@@ -7,6 +7,7 @@ import type {
   Converted,
   Drawn,
   Engine,
+  ExportTheme,
   GraphDrawing,
   LayoutLimits,
   PngSize,
@@ -211,16 +212,29 @@ export default class GraphNotePlugin extends Plugin {
    * `owner` (a card, an editor) asked for before it started, or the plugin unloaded. Rejects when the engine cannot start.
    */
   layout(drawing: GraphDrawing, owner?: object): Promise<Drawn | Refusal | null> {
-    if (this.unloaded) return Promise.resolve(null);
-    this.layouts ??= new Layouts(
-      () => this.layoutLimits,
-      () => this.graphviz(),
-    );
     // the direction set on the settings page, one the locked style allows (spec §21); else the best fit
     // a direction the graph's own style sets (§6) comes before the settings' default
     const { direction } = this.settings;
     const keep = direction === 'best' || !!drawing.direction;
-    return this.layouts.draw(keep ? drawing : { ...drawing, direction }, owner);
+    return this.layoutsOf()?.draw(keep ? drawing : { ...drawing, direction }, owner) ?? Promise.resolve(null);
+  }
+
+  /**
+   * A graph laid out for an export, in the fixed colours of `theme` (spec §16): in the same worker, and under the same
+   * size and time limits, as a drawing, so an export never holds the page; the result is as `layout`'s.
+   */
+  layoutForExport(drawing: GraphDrawing, theme: ExportTheme): Promise<Drawn | Refusal | null> {
+    return this.layoutsOf()?.draw(drawing, undefined, theme) ?? Promise.resolve(null);
+  }
+
+  /** The plugin's layouts, started on first use; none once the plugin is unloaded. */
+  private layoutsOf(): Layouts | null {
+    if (this.unloaded) return null;
+    this.layouts ??= new Layouts(
+      () => this.layoutLimits,
+      () => this.graphviz(),
+    );
+    return this.layouts;
   }
 
   override onunload(): void {

@@ -88,8 +88,8 @@ export type {
 } from './settings.ts';
 export { exportScope } from './export-scope.ts';
 export type { ExportRequest, ExportScope } from './export-scope.ts';
-export { EXPORT_FORMATS, PNG_MIN_SCALE, exportSvg, pngSize } from './export.ts';
-export type { ExportFormat, ExportImage, ExportInfo, PngSize } from './export.ts';
+export { EXPORT_FORMATS, PNG_MIN_SCALE, exportSvg, exportWithLayout, pngSize } from './export.ts';
+export type { ExportFormat, ExportImage, ExportInfo, ExportLayout, PngSize } from './export.ts';
 export { saidDate } from './export-frame.ts';
 export { exportPlan } from './export-plan.ts';
 export type { ExportDecision, ExportGo, ExportPlanInput } from './export-plan.ts';
