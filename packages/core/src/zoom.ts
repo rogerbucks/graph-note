@@ -12,8 +12,17 @@ export const STEP = 1.25;
 const DOUBLE_TAP_MS = 300,
   DOUBLE_TAP_PX = 30,
   TAP_SLOP = 10;
-/** How far one unit of wheel travel zooms: a mouse notch of 100 is about a fifth; a trackpad pinch sends small steps. */
-const WHEEL_RATE = 0.002;
+/**
+ * How much faster than the fingers a pinch zooms: each spread, as a factor, is raised to this power, so twice as far apart
+ * is 2 ** 1.4 times the size. It was 1, following the fingers exactly (device check V-08, Roger, 11 Oct 2026: "pinch zoom
+ * in and out should be a little quicker"). The limits still hold.
+ */
+const PINCH_RATE = 1.4;
+/**
+ * How far one unit of wheel travel zooms: a mouse notch of 100 is about a quarter. A trackpad pinch sends small steps as
+ * the wheel with Ctrl, so it is as much quicker as a pinch on touch.
+ */
+const WHEEL_RATE = 0.002 * PINCH_RATE;
 
 /** Where the drawing is shown: in a note, full-screen, or in the edit pane. Only in a note does the wheel alone scroll. */
 export type Mode = 'note' | 'full' | 'pane';
@@ -54,9 +63,12 @@ export type ZoomEvent =
   | { kind: 'move'; id: number; x: number; y: number }
   | { kind: 'up'; id: number; x: number; y: number; time: number }
   | { kind: 'cancel'; id: number }
-  | { kind: 'dblclick'; x: number; y: number; onBox?: boolean };
+  | { kind: 'dblclick'; x: number; y: number; onBox?: boolean; near?: boolean };
 
-/** `near`: down near a box or link, so a tap there chooses between them (the host's), and is never half of a double tap. */
+/**
+ * `near`: down, or a double click, near a box or link, so a tap or click there chooses between them (the host's), and is
+ * never half of a double tap, nor a double click that zooms (tap_cycles_near, §3).
+ */
 interface Pointer {
   touch: boolean;
   x: number;
@@ -186,7 +198,7 @@ export class Zoom {
         return true;
       }
       case 'dblclick':
-        if (e.onBox) return false;
+        if (e.onBox || e.near) return false;
         this.zoomAt(2, e.x, e.y);
         return true;
       case 'down':
@@ -258,7 +270,8 @@ export class Zoom {
     if (this.pinch) {
       const [a, b] = [...this.pointers.values()].filter((q) => q.touch);
       if (!a || !b) return false;
-      const s = clamp(this.pinch.scale * (Math.hypot(a.x - b.x, a.y - b.y) / this.pinch.d), MIN_SCALE, MAX_SCALE);
+      const spread = Math.hypot(a.x - b.x, a.y - b.y) / this.pinch.d;
+      const s = clamp(this.pinch.scale * spread ** PINCH_RATE, MIN_SCALE, MAX_SCALE);
       const mx = (a.x + b.x) / 2,
         my = (a.y + b.y) / 2;
       this.place(s, mx - this.pinch.px * s, my - this.pinch.py * s);

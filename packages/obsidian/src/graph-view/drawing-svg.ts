@@ -49,6 +49,7 @@ export function insertSvg(viewport: HTMLElement, drawn: Drawn, d: GraphDrawing |
     g.setAttribute('data-estimate', String(d.estimates.indexOf(e)));
     g.setAttribute('tabindex', '0');
     g.setAttribute('role', 'button');
+    g.setAttribute('aria-pressed', 'false'); // selected as a written link is, when tapped
     g.setAttribute('aria-label', `Estimated link: ${textOf(e.from)} ${e.reading} ${textOf(e.to)}. Open it for why.`);
   }
   markParked(svg, boxes); // things parked for later: dashed, with a later mark (spec §5)

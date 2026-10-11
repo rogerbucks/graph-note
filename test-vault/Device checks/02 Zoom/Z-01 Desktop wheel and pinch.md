@@ -1,6 +1,6 @@
 # Z-01 Desktop wheel and pinch
 
-**You should see:** the mouse wheel alone scrolling the note, not the drawing. With Ctrl or Command held, the wheel zooms the drawing about the pointer, and a trackpad pinch does the same.
+**You should see:** the mouse wheel alone scrolling the note, not the drawing. With Ctrl or Command held, the wheel zooms the drawing about the pointer, and a trackpad pinch does the same. The pinch, and the wheel with Ctrl or Command, zoom a little quicker than they used to: about 1.4 times the old rate, so a small pinch makes a clear change, and zoom still stops at a quarter and at four times natural size.
 
 **Test diagram:**
 
@@ -29,7 +29,7 @@
 
 1. With the pointer over the drawing, turn the mouse wheel alone and watch the note scroll.
 2. Hold Ctrl or Command and turn the wheel over a box, and watch the drawing zoom about the pointer.
-3. On a trackpad, pinch over a box.
+3. On a trackpad, pinch over a box, in and out, and check it feels a little quicker than the fingers, not sluggish.
 
 **Checklist line:**
 

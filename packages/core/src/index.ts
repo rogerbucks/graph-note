@@ -10,6 +10,8 @@ export type { Block, Box, Link, GraphDrawing, Problem, NoteReading } from './not
 export { layoutSource, drawingSource, STYLE } from './layout.ts';
 export { explain, distance } from './estimates.ts';
 export type { Estimate } from './estimates.ts';
+export { estimateFix } from './estimate-fix.ts';
+export type { EstimateFix } from './estimate-fix.ts';
 export { themed, choose, sizeOf, fixed, withoutColorMix, hueColour } from './theme.ts';
 export { draw, directions, chosen, details, linkDetails } from './render.ts';
 export { PALETTES, THEME_COLOURS, fixedPalette } from './palette.ts';

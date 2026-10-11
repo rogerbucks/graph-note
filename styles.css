@@ -31,7 +31,8 @@
 .graph-note-svg g.is-selected > :is(path, polygon) {
   stroke-width: 3;
 }
-.graph-note-svg g.edge[data-link] {
+.graph-note-svg g.edge[data-link],
+.graph-note-svg g.edge[data-estimate] {
   cursor: pointer;
 }
 /* A thing parked for later (spec §5): dashed, with a later mark in words and a sign, never by colour alone. */

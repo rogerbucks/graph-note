@@ -25,6 +25,9 @@ export interface Editing {
   lists?: DeclaredList[];
 }
 
+/** A box, a link or an estimated link chosen in the drawing, as the editor finds where it is written (§3, §4). */
+export type Chosen = { thing: string } | { link: number } | { estimate: number };
+
 /** What a drawing needs: the reading, the graph, its drawn SVG and problems, where it is shown, and what its buttons do. */
 export interface ViewOptions {
   /** The block's text, shown read-only by Source in reading view (spec §3). */
@@ -51,8 +54,8 @@ export interface ViewOptions {
   exporting?: Exporting;
   /** Writes a view block after the graph's last block in the note (§7, views_by_tapping); resolves to why not, or null. */
   writeView?: (block: string) => Promise<string | null>;
-  /** Edit here: opens the text in place, inside this card (spec §4). */
-  onEditHere?: () => void;
+  /** Edit here: opens the text in place, inside this card (spec §4); given `at`, with where it is written selected. */
+  onEditHere?: (at?: Chosen) => void;
   /** While the card is edited, its edit button closes the editor, as its Done does (spec §4). */
   onDoneEditing?: () => void;
   /** Tells the card each time an editor in place opens or closes; returns how to stop. */
@@ -60,7 +63,12 @@ export interface ViewOptions {
   /** Called once the card is built, with the place in it where the editor in place sits. */
   onReady?: (slot: HTMLElement) => void;
   /** A box or a link chosen in the drawing: the editor of its block, if one is open, selects where it is written (§4). */
-  onSelect?: (target: { thing: string } | { link: number }) => void;
+  onSelect?: (target: Chosen) => void;
+  /**
+   * Writes block `block` of the note (its index) as `now`, only while it is still `was`, as drawn: an estimated link's
+   * quick fix (§3) when no editor holds the block. Resolves to why nothing was written, or null.
+   */
+  writeBlock?: (block: number, was: string, now: string) => Promise<string | null>;
   /** The editor open in place on this card, if any: then the details are the inspector (spec §14). */
   editing?: () => Editing | undefined;
 }

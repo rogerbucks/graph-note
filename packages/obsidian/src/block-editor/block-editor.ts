@@ -19,6 +19,7 @@ import { BlockNote } from './block-note';
 import type { Refused } from './note-writing';
 import { reloadedMessage, showDraft } from './kept-draft';
 import { PaneDrawing } from './pane-drawing';
+import type { Chosen } from '../graph-view/view-options';
 import { fieldTyping, watchKeys, watchTyping } from './typing-keys';
 
 export type { Layout } from './editor-layout';
@@ -132,10 +133,22 @@ export class BlockEditor extends Component {
   }
 
   /**
-   * A box or a link chosen in the drawing: its pattern selected where it is written in the text being edited, with the
-   * focus in the text so the selection shows (select_moves_text, spec §4).
+   * A fix made from outside the text, such as an estimated link's quick fix in the pane's drawing (§3): the text becomes
+   * `now`, as an edit from the inspector, only while it is still `was`, as drawn. Says why nothing was written, or null.
    */
-  reveal(chosen: { thing: string } | { link: number }): void {
+  replaceIf(was: string, now: string): string | null {
+    if (this.el?.text.value !== was)
+      return 'The text being edited is not as drawn, so nothing was written. Try again once the drawing is redrawn.';
+    this.replace(now);
+    return null;
+  }
+
+  /**
+   * A box, a link or an estimated link chosen in the drawing: where it is written selected in the text being edited — a
+   * pattern, a link's brackets and arrow, an estimate's misspelt word — with the focus in the text so the selection shows
+   * (select_moves_text, spec §4).
+   */
+  reveal(chosen: Chosen): void {
     const el = this.el,
       s = this.session,
       where = el && s ? this.help.whereIs(chosen, el.text.value, s.graph) : null;
@@ -297,6 +310,7 @@ export class BlockEditor extends Component {
     this.drawing.redraw(host, reading, s, () => !this.el || this.el !== el, {
       edit: () => el.text.focus({ preventScroll: true }),
       select: (chosen) => this.reveal(chosen),
+      replaceIf: (was, now) => this.replaceIf(was, now),
     });
   }
 

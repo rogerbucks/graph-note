@@ -8,11 +8,13 @@ import type { Drawn, NoteReading, PaneSession, Refusal } from '@graph-note/core'
 import type GraphNotePlugin from '../main';
 import { GraphView } from '../graph-view/graph-view';
 import { refusalBanner } from '../layout-worker/refusal-banner';
+import type { Chosen } from '../graph-view/view-options';
 
-/** What choosing in the drawing does: Edit, and a box or a link chosen. */
+/** What choosing in the drawing does: Edit, a box or a link chosen, and an estimated link's quick fix made in the text. */
 interface Choosing {
   edit: () => void;
-  select: (chosen: { thing: string } | { link: number }) => void;
+  select: (chosen: Chosen) => void;
+  replaceIf: (was: string, now: string) => string | null;
 }
 
 /** Puts the session's graph, as laid out, into the pane's drawing; returns the view, or null when nothing is drawn. */
@@ -44,6 +46,8 @@ function drawInPane(
     lineOf: (at) => at.line,
     onEdit: on.edit,
     onSelect: on.select,
+    // an estimated link's quick fix (§3), made in the pane's text, as its fix bar makes it
+    writeBlock: (_block, was, now) => Promise.resolve(on.replaceIf(was, now)),
     // the pane's badge counts things parked for later apart from problems, as a card's does (§8)
     parked: parked(reading, s.graph, new Date().toISOString().slice(0, 10)),
   });

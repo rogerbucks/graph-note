@@ -1,6 +1,6 @@
 # Z-04 Double click zooms in
 
-**You should see:** a double-click or double-tap on empty space zooming in at that spot. Fit then returns the whole drawing to view.
+**You should see:** a double-click or double-tap on empty space zooming in at that spot. Fit then returns the whole drawing to view. A double-click on or near a box or a link does not zoom: it only chooses it, and shows its details.
 
 **Test diagram:**
 
@@ -22,6 +22,7 @@
 1. Double-click (or double-tap) empty space in the drawing, away from any box.
 2. Check it zooms in there, about the spot you clicked.
 3. Press Fit in the bar.
+4. Double-click a box, then a link. Check each is chosen, with its details, and the drawing does not zoom.
 
 **Checklist line:**
 

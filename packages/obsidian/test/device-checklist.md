@@ -30,10 +30,13 @@ holds the two together).
 - [ ] **V-04** The empty block shows a prompt to start with a thing, and an Edit button.
 - [ ] **V-05** Each drawing has a bar: problems badge, Fit, Zoom out, Zoom in, Full screen, Edit. The badge counts in words and
       shows an icon.
-- [ ] **V-06** The misspelt link is drawn dashed, labelled "⚠ … (estimated)". Tapping it explains it in one sentence.
+- [ ] **V-06** The misspelt link is drawn dashed, labelled "⚠ … (estimated)". Tapping or clicking it selects it, drawn heavier,
+      and explains it in one sentence, with two buttons: the quick fix "Change … to …", which writes the name it was taken
+      to mean, and Edit the link, which opens the editor with the misspelt name selected.
 - [ ] **V-07** Tapping a box shows its text, its kind, and its links in and out.
 - [ ] **V-08** Tapping just beside a box or a link, not on it, still chooses it. Where several are near, tapping again in the same
-      place chooses the next, round to the first, and two quick taps near things never zoom (slice 2).
+      place chooses the next, round to the first, and two quick taps or a double-click on or near things only choose,
+      never zoom (slice 2).
 - [ ] **V-09** A 50-thing graph is drawn in under half a second on the phone (§11).
 - [ ] **V-10** A huge graph (over 2,000 things, made by a script) shows its text with a banner — an icon, and the limit and
       the numbers in words — and Obsidian stays responsive: the note scrolls and other blocks draw while it is checked. On

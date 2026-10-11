@@ -68,7 +68,12 @@ module that ties the parts together, named as the folder is.
 - `problems-list.ts` — the problems behind the badge, grouped when many, and the completeness report.
 - `drawing-svg.ts` — the SVG put in the card, each box and link reachable by keyboard and named.
 - `taps.ts` — what a tap or a key lands on, and the nearest things to a tap.
-- `details-panel.ts` — the details of a box or link, and the inspector while the block is edited.
+- `details-panel.ts` — the details of a box, a link or an estimated link, the one shown marked as selected, and the
+  inspector while the block is edited.
+- `estimate-actions.ts` — what an estimated link's details offer (§3): the quick fix, its problem's own fix (the core's
+  `estimateFix`), written into the text being edited, or else into the note while the block is still as drawn
+  (`ViewOptions.writeBlock`); and Edit the link, which opens the editor with the misspelt word selected. Neither in
+  reading view.
 - `parked.ts` — things parked for later (§5, §8): each drawn dashed with a "⏳ later" or "⏳ overdue" mark on the SVG
   Graphviz drew, so the layout stays the Python library's; listed behind the badge, which counts them apart from
   problems; and Park for later in a box's details while the block is edited, writing the Deferred into its text. In a
