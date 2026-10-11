@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/display.test.js",
+  "test": "styling keeps the locked rules > a look whose colour already means something else keeps the rest of it: its line or its format alone",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that already existed: the end-of-slice-2 review planted a fault in style-conflicts.ts (keeping a look with a refused colour only when it has a line, dropping one with a format alone), and no test failed; this test fails against that fault"
+}

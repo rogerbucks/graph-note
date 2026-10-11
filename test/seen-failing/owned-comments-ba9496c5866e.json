@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/owned-comments.test.mjs",
+  "test": "owned comments: a note inside a thing's brackets, one level in, owns nothing, though another thing begins on the line below",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that already existed: the end-of-slice-2 review planted a fault in owned-comments.js and owned_comments.py (a line counted as inside an element only two brackets deep), and no test in either language failed; this shared case fails against that fault in both"
+}

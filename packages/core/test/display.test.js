@@ -142,6 +142,19 @@ describe('styling keeps the locked rules', () => {
   });
 
   // proves: styling_keeps_locked_rules
+  test('a look whose colour already means something else keeps the rest of it: its line or its format alone', () => {
+    const { style, problems } = styleOfTrip(
+      "(l1:Look {view: 'v', thing: 'home', colour: 'blue', means: 'start'}),",
+      "(l2:Look {view: 'v', thing: 'cafe', colour: 'blue', means: 'end', format: 'bold'}),",
+      "(l3:Look {view: 'v', thing: 'park', colour: 'blue', means: 'end', line: 'dashed'})",
+    );
+    assert.equal(problems.length, 2);
+    assert.deepEqual(lookOf(style, { view: 'v' }, { thing: 'cafe', kind: 'Place' }), { format: 'bold' });
+    assert.deepEqual(lookOf(style, { view: 'v' }, { thing: 'park', kind: 'Place' }), { line: 'dashed' });
+    assert.deepEqual(legendOf(style, { view: 'v' }), [{ colour: 'blue', means: 'start' }]);
+  });
+
+  // proves: styling_keeps_locked_rules
   test("colours are only the locked style's hues, named, never raw values; another is a problem with the nearest", () => {
     assert.deepEqual(
       [...STYLE_HUES].sort(),

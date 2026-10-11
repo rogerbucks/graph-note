@@ -152,6 +152,17 @@ describe('a view', () => {
     // every link is outside the picked pair, and so is the guess drawn after them
     assert.deepEqual(s.faded.links, [...d.links.keys(), d.links.length]);
   });
+
+  // proves: view_export_stays_view
+  test('a guess at a name that starts in the view and ends outside it is faded with the context too', () => {
+    const view = { name: 'costs', spec: { kind: 'picked', ids: ['price', 'small_reader'] } };
+    const s = exportScope(reader, { graph: 'reader', view, context: true });
+    const d = reader.graphs.get('reader');
+    const guess = d.estimates.find((e) => e.kind === 'name');
+    assert.deepEqual([guess.from, guess.to], ['price', 'large_reader'], 'the guess starts at price, in the view');
+    assert.ok(s.faded.links.includes(d.links.length), 'its far end is outside, so it is faded');
+    assert.ok(!s.faded.links.includes(3), 'price to small_reader is inside the view, and not faded');
+  });
 });
 
 describe('nothing to export', () => {
