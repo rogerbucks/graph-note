@@ -210,7 +210,11 @@ describe('the settings on GitHub', () => {
   test("the default branch requires CI's jobs, this check among them, and the dependency review", () => {
     assert.deepEqual(wanted('default branch ruleset: required checks').want, REQUIRED_CHECKS);
     const ci = Object.keys(jobs(read('.github/workflows/ci.yml')));
-    for (const check of REQUIRED_CHECKS.filter((c) => c !== 'dependency-review')) assert.ok(ci.includes(check), check);
+    for (const job of ci) assert.ok(REQUIRED_CHECKS.includes(job), job);
+    assert.ok(REQUIRED_CHECKS.includes('public-readiness'));
+    assert.ok(REQUIRED_CHECKS.includes('dependency-review'));
+    assert.deepEqual(REQUIRED_CHECKS, [...REQUIRED_CHECKS].sort(), 'sorted, so a comparison is stable');
+    for (const c of REQUIRED_CHECKS) assert.match(c, /^[\w-]+$/, 'a job name, nothing else');
     assert.ok(Object.keys(jobs(read('.github/workflows/dependency-review.yml'))).includes('dependency-review'));
   });
 
