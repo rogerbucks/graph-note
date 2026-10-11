@@ -15,8 +15,8 @@ from graphspec.style.words import (
     DIRECTIONS,
     NUDGE_WORDS,
     STYLE_KINDS,
-    js_replace_first,
     or_list,
+    replace_first,
     style_problem,
     word_fix,
 )
@@ -47,7 +47,7 @@ class _Reader:
         v = self.text(key)
         if v is None or v in among:
             return v
-        self.report(js_replace_first(message, "$", v), word_fix(v, among, always)["fix"])
+        self.report(replace_first(message, "$", v), word_fix(v, among, always)["fix"])
         return None
 
     def name(self, key, among, what, fix_what=None):

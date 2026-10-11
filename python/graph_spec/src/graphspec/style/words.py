@@ -55,20 +55,12 @@ def style_problem(graph: str, at: dict, message: str, fix: str) -> dict:
     }
 
 
-def js_replace_first(s: str, pattern: str, replacement: str) -> str:
-    """s.replace(pattern, replacement) as JavaScript does it for a string pattern: the first
-    occurrence only, and the replacement read for $$, $&, $` and $' as JavaScript reads them, so
-    a message built so says exactly what the core's says."""
+def replace_first(s: str, pattern: str, replacement: str) -> str:
+    """The first occurrence of `pattern` in `s` replaced by `replacement` exactly as written, as
+    the core does it (`message.replace('$', () => v)`): a dollar sign followed by &, $, a backtick
+    or an apostrophe in the written word is the word's own, never one of JavaScript's replacement
+    patterns."""
     at = s.find(pattern)
     if at == -1:
         return s
-    out, i = [], 0
-    while i < len(replacement):
-        c, nxt = replacement[i], replacement[i + 1 : i + 2]
-        if c == "$" and nxt in ("$", "&", "`", "'"):
-            out.append({"$": "$", "&": pattern, "`": s[:at], "'": s[at + len(pattern) :]}[nxt])
-            i += 2
-        else:
-            out.append(c)
-            i += 1
-    return s[:at] + "".join(out) + s[at + len(pattern) :]
+    return s[:at] + replacement + s[at + len(pattern) :]

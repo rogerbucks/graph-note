@@ -136,7 +136,16 @@ it. A graph line that says STYLE but names no graph is a problem, never data.
   what it means; `outsideOf` a view's fade or hide, fade when none is written.
 - `style-checks.ts` — each style thing checked on its own: its kind, its words, its values, and every name it uses
   (thing, other, from, to, selected, kind, relationship type, path, property) against the graph it styles, a name not
-  there given the nearest (`estimates.ts`'s `nearest`) as its fix. A view's name is not checked: views are query blocks.
+  there given the nearest (`estimates.ts`'s `nearest`) as its fix. A view's name is not checked: views are query blocks,
+  and a name is the user's own (`style-words.test.js` holds that, however odd the name). A thing with a key its kind does
+  not know (`STYLE_KEYS`) is reported and left out; a message quotes a written word as written, `$` and all.
+- `style-words.ts` — the words of a style graph checked (style_words_checked): `unknownKeys`, a problem on each key the
+  kind does not know, fixed to the nearest key the thing does not already write (several equally near: each a fix; none
+  near: the keys to choose from, no edit), and `readFrame`, a frame as four numbers joined by single commas (an optional
+  sign, digits with a dot before or after them, an optional exponent; never hexadecimal; no space, no stray comma).
+  Stray commas and spaces are a problem whose fix is the list without them, even when that is not four numbers yet; a
+  part that is not a number has no edit. A thing with such a key is not also told what it lacks (`RawThing.misspelt`):
+  the rename comes first, then what is still absent is said.
 - `style-conflicts.ts` — the things checked against each other: two directions, beside and before on one pair, a thing
   in two groups, a loop of befores, a view set to both fade and hide or saved twice, a colour given two meanings in one
   view or path. The first written is kept, the later left out, each with a problem.

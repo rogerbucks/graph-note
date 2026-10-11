@@ -34,6 +34,20 @@ export const STYLE_HUES: readonly string[] = [...new Set([...STYLE.kind_hues, ..
 
 /** The kinds of thing a style graph holds, by label. */
 export const STYLE_KINDS = ['Nudge', 'Show', 'Look', 'ViewStyle', 'Shown'] as const;
+/** One of the kinds of thing a style graph holds. */
+export type StyleKind = (typeof STYLE_KINDS)[number];
+
+/**
+ * The keys each kind of style thing may have (§2, style_words_checked): the ones `styleEdit` writes and the checks read.
+ * A key of any other name is a problem, reported with the nearest of these as its fix. A thing's `id` is its name, not a key.
+ */
+export const STYLE_KEYS: Record<StyleKind, readonly string[]> = {
+  Nudge: ['word', 'thing', 'other', 'group', 'direction'],
+  Show: ['property', 'kind', 'thing'],
+  Look: ['view', 'path', 'thing', 'kind', 'from', 'type', 'to', 'colour', 'line', 'format', 'means'],
+  ViewStyle: ['view', 'outside'],
+  Shown: ['view', 'zoom', 'x', 'y', 'frame', 'selected'],
+};
 
 /** Where a thing of the style graph is written: its block (index in the note), its line there (1 = the graph line), its id. */
 export interface StyleAt {
