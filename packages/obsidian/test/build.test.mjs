@@ -36,25 +36,33 @@ test('the files the plugin is installed from are at the repository root', () => 
 });
 
 // Tests across the plugin rebuild main.js in parallel, and Obsidian reads it while `npm run dev` writes: a reader must
-// see the old build or the new one, never half of one. A file swapped in whole by a rename gets a new inode; one
-// rewritten in place keeps its old inode.
+// see the old build or the new one, never half of one. A file swapped in whole by a rename is a new file: a new inode,
+// or, when the file system hands a freed inode number straight back (ext4 does, under parallel builds), a newer
+// creation time. One rewritten in place keeps both.
+const identity = (file) => {
+  if (!existsSync(file)) return null;
+  const s = statSync(file);
+  return { ino: s.ino, born: s.birthtimeMs };
+};
+const replaced = (before, after) => !before || after.ino !== before.ino || after.born > before.born;
+
 test('a build swaps main.js in whole, so nothing ever reads half of it', () => {
   const main = `${root}main.js`;
-  const before = existsSync(main) ? statSync(main).ino : null;
+  const before = identity(main);
   const r = spawnSync(process.execPath, ['esbuild.config.mjs'], { cwd: `${root}packages/obsidian`, encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr);
-  assert.ok(statSync(main).ino !== before, 'main.js is a new file, renamed into place');
+  assert.ok(replaced(before, identity(main)), 'main.js is a new file, renamed into place');
   assert.match(readFileSync(main, 'utf8'), /\nmodule\.exports = /, 'the whole build is there');
 });
 
 test('in watch mode too, each build swaps main.js in whole', async (t) => {
   const main = `${root}main.js`;
-  const before = existsSync(main) ? statSync(main).ino : null;
+  const before = identity(main);
   const child = spawn(process.execPath, ['esbuild.config.mjs', '--watch'], {
     cwd: `${root}packages/obsidian`,
     stdio: 'ignore',
   });
   t.after(() => child.kill());
-  for (let i = 0; i < 100 && statSync(main).ino === before; i++) await sleep(100);
-  assert.ok(statSync(main).ino !== before, 'the watch build renamed a new main.js into place');
+  for (let i = 0; i < 100 && !replaced(before, identity(main)); i++) await sleep(100);
+  assert.ok(replaced(before, identity(main)), 'the watch build renamed a new main.js into place');
 });
