@@ -3,6 +3,8 @@
   "test": "generated and bulky files kept out of code searches > every entry that is a file in the repository exists, so none is a typing slip",
   "seen_failing_first": false,
   "fault": true,
-  "commit": "74b82c7a757b33d61e8e8b10f7bf332f223fd9b0",
+  "commits": [
+    "74b82c7a757b33d61e8e8b10f7bf332f223fd9b0"
+  ],
   "evidence": "At its own commit (74b82c7) the test needed the gitignored, built packages/claude-code/mod/hooks/graph.js, which a fresh replay checkout never has. Fixed in e556630, which makes it hold in an unbuilt checkout: an entry git ignores need not exist."
 }

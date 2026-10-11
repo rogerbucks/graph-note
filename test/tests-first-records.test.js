@@ -21,6 +21,7 @@ import {
   summary,
 } from '../scripts/tests-first-records.mjs';
 import { record, replay, unexplained, update } from '../scripts/tests-first.mjs';
+import { faultReasonsWithoutFault } from '../scripts/tests-first-faults.mjs';
 import { testsForChanges } from '../scripts/changed-tests.mjs';
 import { repository } from './repository/scratch-repository.js';
 import { path, exists, walk } from './repository/repo.js';
@@ -455,9 +456,7 @@ describe('this repository’s records', () => {
       e.passedFirst.map((p) => `${file} :: ${p.name}`),
     );
     // a reason with `fault` excuses a test recorded as failing at its own commit, which a reason for passing first does not
-    const faults = [...readRecords(path('.')).commits.values()].flatMap((r) =>
-      r.files.flatMap((f) => (f.faults ?? []).map((x) => `${f.file} :: ${x.test}`)),
-    );
+    assert.deepEqual(faultReasonsWithoutFault(path('.')), [], 'a fault reason for a commit that is no recorded fault');
     const named = (wanted) =>
       Object.entries(exceptions).flatMap(([file, names]) =>
         Object.entries(names)
@@ -465,11 +464,6 @@ describe('this repository’s records', () => {
           .map(([n]) => `${file} :: ${n}`),
       );
     const excused = named(false);
-    assert.deepEqual(
-      named(true).filter((x) => !faults.includes(x)),
-      [],
-      'a fault reason for no recorded fault',
-    );
     // a test new in a commit whose run against the code before it did not finish was neither seen failing nor passing:
     // a reason may be kept for it
     const unproved = Object.entries(proved.files).flatMap(([file, e]) =>

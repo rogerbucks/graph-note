@@ -42,6 +42,7 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, basename, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkout } from './tests-first-checkout.mjs';
+import { excuseFault } from './tests-first-faults.mjs';
 import { JS_TEST, PY_TEST, run } from './tests-first-run.mjs';
 import {
   RECORDS,
@@ -49,7 +50,6 @@ import {
   changes,
   exceptionsIn,
   excuse,
-  excuseFault,
   faultExcused,
   history,
   migrate,

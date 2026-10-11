@@ -7,6 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { EXCUSALS, excusalName, summary } from '../scripts/tests-first-records.mjs';
+import { faultReasonsWithoutFault } from '../scripts/tests-first-faults.mjs';
 import { repository } from './repository/scratch-repository.js';
 import { path } from './repository/repo.js';
 
@@ -55,7 +56,7 @@ test('--excuse --fault keeps the reason in its file, and --tally counts the faul
       test: BROKEN,
       seen_failing_first: false,
       fault: true,
-      commit: r.ids[2],
+      commits: [r.ids[2]],
       evidence: 'its code came a commit later',
     });
     const e = entry(r);
@@ -203,12 +204,53 @@ test('a test excused as a fault that then passes first is flagged by --check, no
   }
 });
 
+test('a test that faults at two commits is excused at both by one reason, naming both', () => {
+  const r = repository([
+    { 'src/twice.js': 'export const twice = (x) => x * 2;\n', [FILE]: TWICE("test('one', () => {});") },
+    { [FILE]: TWICE(`test('one', () => {});\ntest('${BROKEN}', () => assert.equal(twice(1), 3));`) },
+    {
+      [FILE]: TWICE(
+        `test('one', () => {});\ntest('${BROKEN}', () => assert.equal(twice(1), 3));\ntest('unrelated', () => {});`,
+      ),
+    },
+  ]);
+  try {
+    assert.equal(cli(r.dir, '--update').status, 0);
+    assert.equal(entry(r).notReplayed, 2, 'it faulted at both commits');
+    const kept = cli(r.dir, '--excuse', '--fault', FILE, BROKEN, 'its code came later');
+    assert.equal(kept.status, 0, kept.stderr);
+    assert.deepEqual(
+      JSON.parse(readFileSync(join(r.dir, kept.stdout.trim()), 'utf8')).commits,
+      [r.ids[1], r.ids[2]].sort(),
+    );
+    const e = entry(r);
+    assert.equal(e.notReplayed, 0);
+    assert.equal(e.faultsExcused, 2);
+    assert.deepEqual(faultReasonsWithoutFault(r.dir), []);
+  } finally {
+    r.done();
+  }
+});
+
+test('a fault reason naming a commit that is no recorded fault of that test is caught', () => {
+  const r = refaulted();
+  try {
+    assert.deepEqual(faultReasonsWithoutFault(r.dir), []);
+    const file = join(r.dir, EXCUSALS, excusalName(FILE, BROKEN));
+    const reason = JSON.parse(readFileSync(file, 'utf8'));
+    writeFileSync(file, JSON.stringify({ ...reason, commits: [...reason.commits, r.ids[0]] }));
+    assert.deepEqual(faultReasonsWithoutFault(r.dir), [`${FILE} :: ${BROKEN} @ ${r.ids[0]}`]);
+  } finally {
+    r.done();
+  }
+});
+
 test('a fault reason that is not the boolean true, or has no commit, is refused when read', () => {
   const r = refaulted();
   try {
     const file = join(r.dir, EXCUSALS, excusalName(FILE, BROKEN));
     const reason = JSON.parse(readFileSync(file, 'utf8'));
-    for (const bad of [{ fault: 'yes' }, { fault: 1 }, { commit: 'abc' }, { commit: undefined }]) {
+    for (const bad of [{ fault: 'yes' }, { fault: 1 }, { commits: ['abc'] }, { commits: [] }, { commits: undefined }]) {
       writeFileSync(file, JSON.stringify({ ...reason, ...bad }));
       const out = cli(r.dir, '--tally');
       assert.equal(out.status, 1, JSON.stringify(bad));
