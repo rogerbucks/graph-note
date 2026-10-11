@@ -94,13 +94,12 @@ describe('a test run under the ceiling', () => {
   test('a run that goes on past the time ceiling is stopped, with one line and a failed exit', async () => {
     const dir = scratch({ 'sleeper.test.js': SLEEPER });
     const started = Date.now();
-    // six seconds, not two: on a loaded machine the fixture may need seconds to start, and has to have written its id
-    const r = capped(dir, { GRAPH_NOTE_TEST_MINUTES: '0.1' }, '--test', 'sleeper.test.js');
+    const r = capped(dir, { GRAPH_NOTE_TEST_MINUTES: '0.03' }, '--test', 'sleeper.test.js');
     assert.ok(Date.now() - started < 30000, 'stopped long before the fixture wakes');
     assert.notEqual(r.status, 0);
     const lines = r.stderr.split('\n').filter((l) => l.startsWith('run-ceiling:'));
     assert.equal(lines.length, 1, r.stderr);
-    assert.match(lines[0], /^run-ceiling: stopped the run after \d+(\.\d+)? s, over its 0\.1-minute time ceiling\. /);
+    assert.match(lines[0], /^run-ceiling: stopped the run after \d+(\.\d+)? s, over its 0\.03-minute time ceiling\. /);
     assert.match(lines[0], /GRAPH_NOTE_TEST_MINUTES/);
     assert.ok(await gone(fixturePid(dir)), 'the test file’s own process, a grandchild, was stopped too');
   });
@@ -140,6 +139,8 @@ describe('a test run under the ceiling', () => {
 // the quality ratchet's own two full runs of the suite (scripts/quality-suite.mjs) are test runs too: a bare `node --test`
 // there is the uncapped run the requirement forbids (11 Oct 2026)
 describe('the quality ratchet’s runs of the suite run under the ceiling', () => {
+  // it does not look for the fixture's process: the ceiling stops the run at its time whether or not `node --test` has
+  // started the file yet, so the test does not depend on start-up time (the ceiling's own kill of the group is tested above)
   test('a run it starts that goes on past the time ceiling is stopped, with the ceiling’s line, and does not pass', async () => {
     const suite = await import('../scripts/quality-suite.mjs');
     const dir = scratch({ 'sleeper.test.js': SLEEPER.replace('60000', '30000') });
@@ -154,7 +155,6 @@ describe('the quality ratchet’s runs of the suite run under the ceiling', () =
       if (was === undefined) delete process.env.GRAPH_NOTE_TEST_MINUTES;
       else process.env.GRAPH_NOTE_TEST_MINUTES = was;
     }
-    assert.ok(await gone(fixturePid(dir)), 'the test file’s own process was stopped too');
   });
 });
 
