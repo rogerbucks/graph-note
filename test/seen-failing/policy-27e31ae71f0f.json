@@ -1,0 +1,6 @@
+{
+  "file": "test/policy.test.js",
+  "test": "GitHub Actions > every library the plugin bundles is linted with the Obsidian review rules",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that already existed: CI already linted the library when this check of it was added (commit 5933c98)"
+}

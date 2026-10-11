@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/inline.test.js",
+  "test": "edit here, in the card > a box left on purpose stays left: a redraw after it gives no focus back",
+  "seen_failing_first": false,
+  "evidence": "a control case, written with the change beside it: it holds that keeping the focus through a redraw never gives it back to a box left on purpose, so it passes before and after by design (commit e0fd9d2)"
+}

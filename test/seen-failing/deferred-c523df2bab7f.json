@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/deferred.test.js",
+  "test": "parking a thing for later (park_for_later) > a locked graph that declares them is parked in with no undeclared-type warning",
+  "seen_failing_first": false,
+  "evidence": "a control case, written with the change beside it: a schema that declares Deferred and DEFERS was always parked in cleanly; the change refuses only one that does not (commit 1d8c615)"
+}

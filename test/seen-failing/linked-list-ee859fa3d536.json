@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/linked-list.test.js",
+  "test": "choosing List for a property > new items go before a SET, after the last path, and a comment on its own line stays where it was",
+  "seen_failing_first": false,
+  "evidence": "the earlier test of the same behaviour with its fixture corrected (a comment at the end of a code line is refused by the reader, so it now sits on its own line); the code under test is unchanged, so it passes before and after by design"
+}

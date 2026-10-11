@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_view_parity.py",
+  "test": "GrafeoAgrees.test_grafeo_returns_the_things_each_view_returns",
+  "seen_failing_first": false,
+  "evidence": "views_agree_with_grafeo: proves Grafeo, the reference engine, returns the core's things for the shared view table; no code is changed for it, so it passes against its parent by design. Seen failing against a planted fault: core taken out of near_dan_three's things in the table, it fails (scratch run, 11 Oct 2026)"
+}

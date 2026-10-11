@@ -6,14 +6,14 @@ Short on purpose. How to check your work cheaply, where things live, and what no
 
 - `npm run test:ai` — the whole JavaScript suite, quietly. One line when all pass (`ok 693 tests`). For each failure:
   `file:line  name`, a short expected and actual (cut at 200 characters), and the first stack frame in our code. Tests'
-  own logging is dropped.
-- `npm run test:changed` — only the tests of the modules you changed (`zoom.ts` runs `zoom*.test.js`), quietly. It
-  runs the whole suite and says why in one line when you changed something shared, such as `index.ts`, `package.json`
-  or test support. `npm run test:changed -- --list` shows the plan without running it.
-- `test:changed` follows test naming inside a package: a core change can affect plugin tests, so run the full suite
-  before a merge.
+  own logging is dropped. One file: `npm run test:ai -- path/to/file.test.js`; `npm run -s` hides npm's banner.
+- `npm run test:changed` — only the tests of the modules you changed (`zoom.ts` runs `zoom*.test.js`), quietly. It runs
+  the whole suite and says why in one line when you changed something shared, such as `index.ts`, `package.json` or test
+  support. `npm run test:changed -- --list` shows the plan without running it. It follows test naming inside a package:
+  a core change can affect plugin tests, so run the full suite before a merge.
 - `npm run test:ai:py` — the Python library's tests, quietly (needs `uv`). Add test file names to run only those.
-- One test file: `npm run test:ai -- path/to/file.test.js`. Add `-s` (`npm run -s test:ai`) to hide npm's own banner.
+- Never run bare `node --test`: only these npm scripts and `npm test` are capped, by `scripts/run-ceiling.mjs`. Its
+  line `run-ceiling: stopped the run …` means a test runs away: fix the test; raise `GRAPH_NOTE_TEST_*` only if need be.
 
 ## Before a merge: the full commands
 
@@ -51,7 +51,7 @@ of tokens for nothing. Change them only by running the command that makes them.
 - `main.js` — the built plugin; CI builds it from a tag.
 - `packages/claude-code/mod/hooks/graph.js` and `packages/claude-code/mod/bin/` — the built mod; `npm run build`.
 - `package-lock.json` and `python/graph_spec/uv.lock` — lock files; `npm install` and `uv lock` write them.
-- `test/tests-first.json` — the record of tests seen failing first; `node scripts/tests-first.mjs --update` writes it.
+- `test/tests-first/` — the record of tests seen failing first, a file per commit; `node scripts/tests-first.mjs --update` writes it.
 - `THIRD_PARTY_NOTICES.md` — made by `node scripts/notices.mjs` from `licences/bundled.json`.
 - `licences/texts/` — the licence texts those notices quote.
 - `test-vault/.obsidian/` — the test vault's settings and plugin copies.

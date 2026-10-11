@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_whitespace.py",
+  "test": "InsideStrings.test_whitespace_and_what_is_not_whitespace_are_kept_as_written_inside_a_string",
+  "seen_failing_first": false,
+  "evidence": "parity rows asked for in review of PR #28, added after the fix earlier in the same branch, so they pass against their parent. Run against origin/main 7a682f4 in a scratch worktree they fail: Python keeps none of U+2028, U+2029, U+0085 and U+001C in a string, and its graph differs from the JavaScript library's."
+}

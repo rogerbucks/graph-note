@@ -11,7 +11,7 @@
 // the page able to run it only through eval, which the store's linter refuses.
 import { LayoutRunner, PAGE_LIMITS, inThreadPort, serveLayouts } from '@graph-note/core';
 import type { Drawn, Engine, GraphDrawing, LayoutLimits, LayoutPort, LayoutReply, Refusal } from '@graph-note/core';
-import type { Told } from '@graph-note/core';
+import type { ExportTheme, Told } from '@graph-note/core';
 import { layoutWorker } from 'graph-note:layout-worker';
 
 /** What is said once in the console, for each thing the runner tells. */
@@ -31,7 +31,10 @@ export function engineOnThePage(): Promise<Engine> {
   return layoutWorker(undefined).loadEngine();
 }
 
-/** The tighter of two sets of limits, field by field: a setting that lowers a limit lowers it on the page too. */
+/**
+ * The tighter of two sets of limits, field by field, so a setting that lowers a limit lowers it on the page too; but the
+ * longer of the two start times, as starting the engine is no layout to hold back.
+ */
 const tighter = (a: LayoutLimits, b: LayoutLimits): LayoutLimits => ({
   things: Math.min(a.things, b.things),
   links: Math.min(a.links, b.links),
@@ -65,10 +68,11 @@ export class Layouts {
 
   /**
    * The drawing laid out and themed, or why it is shown as text; null when it is no longer wanted, superseded by a newer
-   * drawing for the same `owner` or put away on unload. Rejects when the engine cannot start.
+   * drawing for the same `owner` or put away on unload. Rejects when the engine cannot start. With a `theme` it is themed
+   * in that fixed palette, as an export is: an export is laid out here too, under the same limits (spec §16).
    */
-  draw(drawing: GraphDrawing, owner?: object): Promise<Drawn | Refusal | null> {
-    return this.runner.draw(drawing, owner);
+  draw(drawing: GraphDrawing, owner?: object, theme?: ExportTheme): Promise<Drawn | Refusal | null> {
+    return this.runner.draw(drawing, owner, theme);
   }
 
   /** Stops the worker, answers what waits on it with null, and lets its source go. */

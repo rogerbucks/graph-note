@@ -4,15 +4,18 @@ A Claude Code mod whose `/graph <note>` draws the note's first graph in a pane (
 core as the Obsidian plugin. A mod's hooks run in an environment of their own, with no DOM, no Node and no WebAssembly:
 reading, the layout source and theming run there, bundled; Graphviz, the core's own engine, runs as a process through
 `node`, DOT in and SVG out. When `node` is missing, the pane says so and shows the graph as text, never a blank drawing.
-A pane draws the SVG as an isolated image, so its colours are the core's fixed light or dark palette (`palette.ts`, the
-one colour mapping), chosen by Claude Code's theme setting, with the page painted in.
+A pane draws the SVG as an isolated image, so its colours are the core's system palette (`palette.ts`, the one colour
+mapping): the fixed light and dark palettes both carried in the drawing's own style sheet, `prefers-color-scheme`
+choosing, with the page painted in. The mod API says nothing of the app's appearance, and Claude Code's theme setting is
+the terminal's, so nothing is guessed: the drawing follows the scheme the app hands its pages, which is the system's
+unless the app sets its own. Whether the desktop app does, and keeps the drawing's style sheet, is checked by eye.
 
 ## The source, `src/`
 
 - `graph-view.ts` — `viewOf`: what the pane shows for a note. The first graph drawn in a palette, and always the same
   graph as lines of text, which stand in, with the reason, when it cannot be drawn: over the layout limits, over what a
   pane takes, or Graphviz not run. A note too large to read, a graph that could not be read (its errors, with their note
-  lines) and an empty graph each say so, never "no graph". Also `paletteFor` (the theme setting to a palette) and
+  lines) and an empty graph each say so, never "no graph". Also `PANE_PALETTE` (the system palette, and why) and
   `notePath` (/graph's argument).
 - `graphviz-process.ts` — `layOut`: the DOT sources handed to the render script through node, within the core's time
   limit (`LAYOUT_TIMEOUT_MS`), and the SVGs back. After a refused run, `node --version` is asked: a node that is not
@@ -36,10 +39,12 @@ and `register.tsx` stays thin.
 - `hooks/register.tsx` — the hooks module: registers `/graph`, reads the note with `$.fs.read`, runs Graphviz with
   `$.process.run`, keeps the view in `$.state`, and draws the pane: `Svg` on the desktop, VS Code and mobile; the
   reason and the text on the terminal (which draws no `Svg`) or wherever no drawing could be made.
+- `hooks/hooks.json` — names `register.tsx` as the mod's one hooks module.
 - `hooks/graph.d.ts` — the types of the bundle, its source's own.
 - `types/index.d.ts` — the mod's state contract, self-contained as Claude Code requires.
 - `tests/graph.test.tsx` — the mod in its own environment, with `claude plugin test`: the test vault's sample note drawn
   on each surface, and node missing.
+- `tests/fixtures.d.ts` — the types of the built `tests/fixtures.js`: the sample note and the SVG drawn for it.
 
 Built, never edited (gitignored): `mod/hooks/graph.js`, `mod/bin/render.mjs`, `mod/tests/fixtures.js`. Claude Code writes
 `mod/.claude-plugin/types/` when it loads the mod; `mod/tsconfig.json` extends it, so `tsc -p packages/claude-code/mod`

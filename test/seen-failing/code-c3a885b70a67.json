@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/code.test.js",
+  "test": "the copy button beside Obsidian’s edit-block button > in reading view, where Obsidian shows no edit-block button, it stays where Obsidian puts it",
+  "seen_failing_first": false,
+  "evidence": "A guard that the fix is scoped to Live Preview: before the fix no rule moved the copy button anywhere, so reading view passed too. It would fail if the new rule lost its .cm-embed-block scope."
+}

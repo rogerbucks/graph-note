@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/drafts.test.js",
+  "test": "every kept draft can be recovered > a note already named Kept drafts is never replaced: the drafts go into Kept drafts-2",
+  "seen_failing_first": false,
+  "evidence": "Fills a test gap the re-review of #91 (11 Oct 2026) found: the recover command already took its note's name from freePath, which never replaces a file, but no test held it for this command. It passes first because the behaviour already held; it fails if the command writes over a note the person already has."
+}

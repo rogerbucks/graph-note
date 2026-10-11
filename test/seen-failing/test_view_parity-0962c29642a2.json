@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_view_parity.py",
+  "test": "ViewTable.test_the_reader_refuses_the_blocks_the_core_leaves_out",
+  "seen_failing_first": false,
+  "evidence": "views_agree_with_grafeo: pins the reader's Store.apply refusing a block that names a thing not in its graph, which already existed, on the shared view table, so it passes against its parent by design. Seen failing against a planted fault: the table's left_out key misspelt, it fails (scratch run, 11 Oct 2026)"
+}

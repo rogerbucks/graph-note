@@ -1,0 +1,6 @@
+{
+  "file": "test/policy.test.js",
+  "test": "its own repository > it sits inside no Obsidian vault: no folder above it holds one",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that already existed: written after its code, to prove a spec rule the code already met (commit 40d335e)"
+}

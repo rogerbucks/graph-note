@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/lint-parity.test.mjs",
+  "test": "the linter finds the same traps on the same lines as Python, on hand-picked edges",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that already existed: proves the rewrite changed no answer, so it passes before and after by design (commit 7db2ca8)"
+}

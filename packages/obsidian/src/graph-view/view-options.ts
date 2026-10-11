@@ -3,11 +3,22 @@
 import type { CompletenessReport, Drawn, Indent, Mode, NoteReading, Parked } from '@graph-note/core';
 import type { DeclaredList } from '../properties/list-row';
 import type { ShownProblem } from './problems-list';
+import type { ViewShown } from './view-strip';
+import type { Exporting } from '../export/export-form';
+
+/** What declaring Deferred and DEFERS in the graph's schema gave: the text to park into, and the graph as the note now reads it. */
+export interface DeclaredDeferred {
+  /** The block as typed, with the declarations when the schema is written in it. */
+  text: string;
+  whole: NoteReading['whole'][string] | undefined;
+}
 
 /** The editor open in place on this card, as the inspector needs it: the block's text as typed, and a way to replace it. */
 export interface Editing {
   session: { text: string } | null;
   replace(text: string): void;
+  /** Park for later's fix for a graph whose schema lacks Deferred and DEFERS: declares them, wherever the schema is written. Rejects with why not. */
+  declareDeferred(): Promise<DeclaredDeferred>;
   /** What the details were open on, so the inspector reopens on it in the redrawn card. */
   selected: { key: string } | { link: number } | null;
   /** The lists made while the editor is open, which the inspector shows even before they hold a value. */
@@ -34,6 +45,12 @@ export interface ViewOptions {
   parked?: Map<string, Parked>;
   /** How the editor indents a thing it writes, as the settings say (spec §21). */
   indent?: Indent;
+  /** Set when the drawing is a view (spec §7): what it shows, how, and how to write its style. */
+  view?: ViewShown;
+  /** What the drawing can export, and how (§16); without it, no Export is offered. */
+  exporting?: Exporting;
+  /** Writes a view block after the graph's last block in the note (§7, views_by_tapping); resolves to why not, or null. */
+  writeView?: (block: string) => Promise<string | null>;
   /** Edit here: opens the text in place, inside this card (spec §4). */
   onEditHere?: () => void;
   /** While the card is edited, its edit button closes the editor, as its Done does (spec §4). */
@@ -46,4 +63,6 @@ export interface ViewOptions {
   onSelect?: (target: { thing: string } | { link: number }) => void;
   /** The editor open in place on this card, if any: then the details are the inspector (spec §14). */
   editing?: () => Editing | undefined;
+  /** For a card opened from another, as full screen is: read-only whenever the card it was opened from is (spec §3). */
+  readOnly?: () => boolean;
 }

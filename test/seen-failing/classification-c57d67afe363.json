@@ -1,0 +1,6 @@
+{
+  "file": "test/classification.test.js",
+  "test": "built from general patterns only > a list of names, as strings or as a pattern’s alternatives, is found",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that already existed: the check held no list already; its detector is proved on planted lists (commit 8d5a0a3)"
+}

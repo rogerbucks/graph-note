@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/inline.test.js",
+  "test": "the inspector, in edit mode > outside edit mode, a box’s details are for reading only",
+  "seen_failing_first": false,
+  "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit 0cea41d)"
+}

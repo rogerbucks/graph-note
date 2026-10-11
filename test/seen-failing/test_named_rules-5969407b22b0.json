@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_named_rules.py",
+  "test": "LoanBalanceReadsPlain.test_a_repayment_with_no_amount_fails_the_balance_as_grafeo_s_reading_does",
+  "seen_failing_first": false,
+  "evidence": "asked for in the review of #59: a control, so the reader's loan balance and Grafeo's cannot differ silently on a repayment with no amount; both already raise the same TypeError, so it passes against its parent by design (11 Oct 2026)"
+}

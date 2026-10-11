@@ -17,6 +17,7 @@ import {
   jobs,
   usesRefs,
   runCommands,
+  stripComment,
   findsNetwork,
   findsHotkeys,
   forbiddenImports,
@@ -182,7 +183,7 @@ describe('the supply chain', () => {
         p,
       );
     }
-    assert.match(readJSON('package.json').scripts.test, /^node --test\b/);
+    assert.match(readJSON('package.json').scripts.test, /(^| )node --test\b/);
   });
 
   test('a Python package is pinned by a hashed lockfile', () => {
@@ -235,7 +236,15 @@ describe('GitHub Actions', () => {
         const perms = block(lines, 'permissions', 4);
         if (!perms) continue;
         const writes = permissionValues(perms).some((v) => /write/.test(v));
-        if (writes) assert.ok(f.endsWith('release.yml') && name === 'release', `${f}: job ${name} writes`);
+        if (!writes) continue;
+        // the one other writer locks pull request conversations, and may touch nothing else
+        const given = perms
+          .slice(1)
+          .map((l) => stripComment(l).trim())
+          .filter(Boolean);
+        const release = f.endsWith('release.yml') && name === 'release';
+        const lock = f.endsWith('lock-conversations.yml') && name === 'lock' && given.join() === 'pull-requests: write';
+        assert.ok(release || lock, `${f}: job ${name} writes`);
       }
       assert.doesNotMatch(read(f), /write-all/, f);
     }

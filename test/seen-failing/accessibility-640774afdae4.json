@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/accessibility.test.js",
+  "test": "one colour mapping > the plugin names no colour of its own: the drawing’s colours come from the style, through the core’s one table",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that already existed: the contrast of the locked style the drawing already used (commit 3ff0c19)"
+}

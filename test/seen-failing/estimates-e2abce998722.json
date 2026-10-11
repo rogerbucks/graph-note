@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/estimates.test.js",
+  "test": "how near (decided 7 Oct 2026): one letter under eight characters, two from eight, ignoring case and underscores > a name of three characters may be estimated, one letter away",
+  "seen_failing_first": false,
+  "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit 50e99cb)"
+}

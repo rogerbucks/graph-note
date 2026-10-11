@@ -113,6 +113,21 @@ describe('no blind overwrite, and nothing typed lost', () => {
   });
 });
 
+describe('the note as it reads with what is typed', () => {
+  test('gives every block of the note with the typed text in the edited block’s place, and which that is', () => {
+    const s = new PaneSession(NOTE, 12);
+    const typed = B + ",\n(mine:T {name: 'M'})";
+    s.type(typed);
+    assert.deepEqual(s.texts(NOTE), { texts: [A, Q, typed], index: 2 });
+  });
+
+  test('says the block is not there when the note no longer holds it, and keeps the texts as they are', () => {
+    const s = new PaneSession(NOTE, 12);
+    s.type(B + ',\n(mine:T)');
+    assert.deepEqual(s.texts(NOTE.replace(fence(B), '')), { texts: [A, Q], index: -1 });
+  });
+});
+
 describe('undo and redo', () => {
   test('each write can be undone and redone, back to the original note', () => {
     const s = new PaneSession(NOTE, 2);

@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/pane.test.js",
+  "test": "typing keeps the field > in the pane, each write redraws the drawing and the same field keeps the focus and the caret",
+  "seen_failing_first": false,
+  "evidence": "a control case for typing_keeps_focus: the pane is never redrawn by Obsidian, so it already kept the focus; it pins that beside the card's fix (commit e0fd9d2)"
+}

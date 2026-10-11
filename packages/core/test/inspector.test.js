@@ -34,6 +34,18 @@ describe('values, checked against their type before they are written', () => {
     assert.deepEqual(parseValue('boolean', 'true'), { ok: true, gql: 'TRUE' });
   });
 
+  test('text with a line break or a tab in it is written with its escape, so the thing stays on its line and reads', () => {
+    assert.deepEqual(parseValue('text', 'one\ntwo\tthree'), { ok: true, gql: "'one\\ntwo\\tthree'" });
+    const r = setProperty(BLOCK, 'reader', { thing: 'small' }, 'note', parseValue('text', 'one\ntwo').gql);
+    assert.equal(r.ok, true);
+    const read = readNote([r.text]);
+    assert.deepEqual(
+      read.problems.filter((p) => p.severity === 'error'),
+      [],
+    );
+    assert.equal(read.world.reader.p('small').note, 'one\ntwo');
+  });
+
   test('a value that is not of its type is refused, saying what was expected', () => {
     assert.match(parseValue('number', 'twelve').error, /a number/);
     assert.match(parseValue('date', '2026-13-40').error, /YYYY-MM-DD/);
@@ -66,6 +78,14 @@ describe('edits are text, in the block where the thing is written', () => {
   test('changing a value rewrites it in place, and nothing else', () => {
     const r = setProperty(BLOCK, 'reader', { thing: 'large' }, 'price', '320');
     assert.equal(r.text, BLOCK.replace('price: 300', 'price: 320'));
+  });
+
+  test('an id with a dot, a plus or a bracket in it is matched as written: never another thing, never a broken search', () => {
+    const block = "// graph: tools\n(node_js:Tool {name: 'Node'}),\n(n:Tool {id: 'node.js', name: 'Node.js'})";
+    const r = setProperty(block, 'tools', { thing: 'node.js' }, 'version', "'24'");
+    assert.ok(!r.ok || !r.text.includes("(node_js:Tool {name: 'Node', version: '24'})"), 'node_js is not node.js');
+    for (const id of ['c++', 'x(1', 'a[b', 'what?', '$1'])
+      assert.doesNotThrow(() => spanOf(`// graph: g\n(c:T {id: '${id}'})`, { thing: id }), id);
   });
 
   test('adding a property appends it to the thing’s map, or gives the thing a map', () => {

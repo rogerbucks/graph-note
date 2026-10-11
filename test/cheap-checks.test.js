@@ -116,10 +116,10 @@ describe('a quiet test run', () => {
     assert.match(r.stdout, /^ok \d+ tests\n$/);
   });
 
-  test('npm test stays the plain run that CI uses, and test:ai is the quiet one', () => {
+  test('npm test is the plain run that CI uses, and test:ai the quiet one, both under the ceiling', () => {
     const scripts = readJSON('package.json').scripts;
-    assert.equal(scripts.test, 'node --test');
-    assert.equal(scripts['test:ai'], 'node --test --test-reporter=./scripts/quiet-reporter.mjs');
+    assert.equal(scripts.test, 'node scripts/run-ceiling.mjs node --test --test-timeout=300000');
+    assert.equal(scripts['test:ai'], `${scripts.test} --test-reporter=./scripts/quiet-reporter.mjs`);
     assert.ok(read('.github/workflows/ci.yml').includes('run: npm test\n'));
   });
 });
@@ -435,7 +435,7 @@ describe('running only the tests a change touches', () => {
     );
     const all = run(process.execPath, ['scripts/changed-tests.mjs', '--list', 'package.json'], path('.'));
     assert.match(all.stdout, /^whole suite: package\.json is shared\n$/);
-    assert.equal(readJSON('package.json').scripts['test:changed'], 'node scripts/changed-tests.mjs');
+    assert.match(readJSON('package.json').scripts['test:changed'], / scripts\/changed-tests\.mjs$/);
   });
 });
 
@@ -573,7 +573,7 @@ describe('generated and bulky files kept out of code searches', () => {
       'python/graph_spec/uv.lock',
       'dist/',
       'main.js',
-      'test/tests-first.json',
+      'test/tests-first/',
       'THIRD_PARTY_NOTICES.md',
       'licences/texts/',
       'test-vault/.obsidian/',
@@ -589,7 +589,7 @@ describe('generated and bulky files kept out of code searches', () => {
     const r = run('rg', ['--files'], path('.'));
     if (r.error) return; // ripgrep is not installed here; the entries above are still checked
     const files = r.stdout.split('\n');
-    for (const f of ['package-lock.json', 'python/graph_spec/uv.lock', 'test/tests-first.json'])
+    for (const f of ['package-lock.json', 'python/graph_spec/uv.lock', 'test/tests-first/baseline.json'])
       assert.ok(!files.includes(f), f);
     assert.ok(files.includes('package.json'));
     assert.ok(files.includes('packages/core/src/index.ts'));

@@ -1,0 +1,6 @@
+{
+  "file": "test/tests-first-run.test.js",
+  "test": "a failure the report does not show > a run with a failed test read keeps it, though its exit status is not 0",
+  "seen_failing_first": false,
+  "evidence": "A guard against the new exit-status check misfiring: a run with a failed test read keeps it, as it did before the check, so it passes against the parent's code by design."
+}

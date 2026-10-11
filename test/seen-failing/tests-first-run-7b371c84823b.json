@@ -1,0 +1,6 @@
+{
+  "file": "test/tests-first-run.test.js",
+  "test": "a failure the report does not show > a run that passes exits 0 and is read as it was",
+  "seen_failing_first": false,
+  "evidence": "A guard against the new exit-status check misfiring: a run that passes exits 0, and was read as passed before the check too, so it passes against the parent's code by design."
+}

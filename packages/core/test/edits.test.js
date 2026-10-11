@@ -26,6 +26,14 @@ describe('Lock the graph', () => {
     assert.equal(lockBlock(readNote([draft]), 'reader', '2026-10-07').split('\n')[0], line);
   });
 
+  test('the schema block opens with the data’s graph line, never a view’s written before it, so it reads as a schema', () => {
+    const view = '// graph: reader · QUERY view options\nMATCH (o:Option) RETURN o';
+    const reading = readNote([view, DRAFT]);
+    const block = lockBlock(reading, 'reader', '2026-10-07');
+    assert.equal(block.split('\n')[0], '// graph: reader · SOURCE');
+    assert.equal(isDraft(readNote([view, DRAFT, block]), 'reader'), false);
+  });
+
   test('a graph with no schema is a draft, and one with a schema is not', () => {
     assert.equal(isDraft(readNote([DRAFT]), 'reader'), true);
     const locked = readNote([DRAFT, lockBlock(readNote([DRAFT]), 'reader', '2026-10-07')]);

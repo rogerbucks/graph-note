@@ -9,9 +9,32 @@ CI. A change that breaks one fails before it is merged.
   to fail, and only then is the code written. A commit message says which tests were seen failing first.
 - **CI proves it.** `scripts/tests-first.mjs` replays each new commit: its tests run against its parent's code, and
   every test new in the commit must fail there. A test written after its code, such as one that pins behaviour that
-  already existed, is listed in `test/seen-failing.json` with the reason, or the build fails. `test/tests-first.json`
-  records the replays (`node scripts/tests-first.mjs --record`): for each test file, what was seen failing first, what
-  was excused, and what could not be replayed.
+  already existed, has its reason in `test/seen-failing/`, or the build fails: one file for each test, written by `node
+  scripts/tests-first.mjs --excuse <test file> <test> <reason>` and named after the test file and a digest of the test.
+  A reason holds only `file`, `test`, `seen_failing_first` and `evidence`; `--excuse` never overwrites one without
+  `--force`. `test/tests-first/` records the replays (`node scripts/tests-first.mjs --update`): one file for each
+  replayed commit that changed a test, named after the commit, over `baseline.json`, the single record as it stood when
+  it was split (11 Oct 2026), frozen at its head. Together they give, for each test file, what was seen failing first,
+  what was excused, and what could not be replayed. CI fails a commit since the baseline that changed a test and has no
+  record (`--complete`), so each commit's record is written once, on the branch that made it. A test may come a commit
+  before its code: a new test failing at its own commit, and again when its file is run once more there, is recorded as
+  not replayed, naming it, and `--check` warns of it. One that passes the second time, or a run that did not finish,
+  fails the record, so it is run again; a fault that comes back on every run means the commit has to be rewritten
+  together with its code. A test that failed at the parent is never taken for one held before: it is judged in the
+  commit that makes it pass. `node scripts/tests-first.mjs --tally` is for a reader outside the repository: it writes
+  nothing and prints one JSON document, with the baseline's head, the counts for each test file (replayed, not
+  replayed, seen failing, excused, passed first) and every reason kept, with its file's path and its content; add
+  `--repo <dir>`, first, to read another repository.
+- **The records never conflict.** Two branches that replay different commits, or excuse different tests, write
+  different files, and no field is rewritten by every update, so any merge, GitHub's own among them, joins them with
+  nothing to resolve.
+- **Pull requests are merged with a merge commit only.** A squash or a rebase merge makes new commits, so the records
+  of the branch's own commits name commits main never holds, and the new ones have none.
+- **A branch begun before the split** merges main once. That merge conflicts in the two old files one last time: take
+  main's `test/tests-first/baseline.json` (`git checkout origin/main -- test/tests-first/baseline.json`), keep the
+  branch's own `test/seen-failing.json`, then run `node scripts/tests-first.mjs --migrate`, which moves its reasons into
+  `test/seen-failing/`, and `--update`, which records its commits. `--migrate` checks every reason before it writes
+  any, and leaves a reason main already keeps differently as it is, naming it, for a person to choose between the two.
 - **The gate before every commit:** `npm run format:check`, `npm run lint`, `npm run typecheck` and `npm test`, plus
   `ruff check` and `ruff format --check` when the Python library changed. CI runs them all again.
 - **Cheap checks while working.** `npm run test:ai` runs the suite quietly (one line when all pass, and for a failure
@@ -97,6 +120,9 @@ of Obsidian's rules, sentence case in the interface among them. These are the gu
 These test behaviour across modules, or the repository itself, so they are named after their subject:
 
 - `packages/core/test/abuse.test.js` — no sequence of edits or text crashes the viewer (spec §12).
+- `packages/core/test/display.test.js` — styled views and paths change only what they choose, and keep the locked hues, contrast and legend (editor spec §7).
+- `packages/core/test/view-parity.test.js` — every view of the shared table (`python/graph_spec/tests/view_cases.json`) is found in its note, read, and returns the things the table gives, and every query outside the view profile gets the table's refusal (editor spec §7, views_agree_with_grafeo).
+- `packages/core/test/views-across.test.js` — a view saved as shown is written in the style graph, never the data, and reopens the same (editor spec §7).
 - `packages/core/test/edge-cases.test.js` — empty, broken and oversized inputs each give a stated result, never a blank or a crash (spec §9).
 - `packages/core/test/edits.test.js` — every edit from the pane round-trips; locking writes a schema the checks pass.
 - `packages/core/test/imports.test.js` — the core imports no host.
@@ -120,19 +146,29 @@ These test behaviour across modules, or the repository itself, so they are named
 - `python/graph_spec/tests/test_licences.py` — every Python package carries an allowed licence.
 - `python/graph_spec/tests/test_parity.py` — the Python library gives the JavaScript library's answers.
 - `python/graph_spec/tests/test_reader_agrees_with_grafeo.py` — the reader and its plain rules give Grafeo's answers, Grafeo being the reference engine and a test dependency only (req:17.engine-agreement).
+- `python/graph_spec/tests/test_view_parity.py` — Grafeo, running each view of `view_cases.json` as written, returns the things the core returns, and, of a fixed list of GQL's and Cypher's words, refuses as a name and as a kind exactly the words the core keeps from them (editor spec §7, views_agree_with_grafeo).
 - `python/graph_spec/tests/test_settings.py` — what a host sets after importing the library.
 - `test/cheap-checks.test.js` — the quiet test run, running only a change's tests, the AI guide and the search ignore file.
 - `test/classification.test.js` — the content check refuses confidential or personal files.
 - `test/conventions.test.js` — the conventions on this page.
+- `test/device-check-notes.test.js` — the device checklist numbers every item, the test vault holds one note for each item after Before in `Device checks/`, the note's checklist line is the item's words, each note's graph blocks read as it says they do (the repository's reader and checker, and `parseView` for a view), and the index lists the notes in order (editor spec §3, tried first in a test vault).
+- `test/device-check-quotes.test.js` — what a device check note quotes from Obsidian's screen (a read-back, a label, the tap text of an estimate, a box's details, an export's footer and file name, the conversion notice) is computed from the note's own graph blocks with the real functions and matches exactly; the notes' generator scripts and filler set up the case they describe (editor spec §3).
 - `test/engine-version.test.js` — the Graphviz version is read from the engine, named in the notices, and checked against published advisories.
 - `test/licences.test.js` — licences through the whole build chain.
 - `test/offline.test.js` — the bundled engine makes no network request.
 - `test/policy.test.js` — the plugin-store files, supply-chain pins and least-privilege CI.
+- `test/public-readiness.test.js` — fit to be public and kept so: a clean history, a fresh clone set up from the README alone, and GitHub settings that let only a collaborator contribute.
 - `test/quality-metrics.test.js` — the quality metrics are held to a committed baseline, and a worse one fails without a recorded reason.
 - `test/quality-baseline.test.js` — the baseline cannot be loosened without a reason, is whole, and says which machine measured it.
+- `test/quiet-reporter.test.js` — the quiet test run when a failure's details cannot be passed on, as when an assertion holds a function: every failure still reported, the run failed, never crashed.
+- `test/run-ceiling.test.js` — every run of the npm test commands, in CI too, is stopped with one line at a memory or time ceiling, before a runaway test can exhaust the machine; a run within both passes through unchanged.
 - `test/requirements.test.js` — the generated requirements copy: started requirements proved, tests where they say.
+- `test/slice-board-style.test.js` — the slice board's stylesheet: colour tokens that agree in light and dark, the altitude switch by CSS alone, a layout that holds at 400px, and the source written one rule and one declaration to a line.
+- `test/slice-board.test.js` — the slice board: a CSS-only HTML page of how far the slice under way is proved, from the requirements copy and, optionally, the open pull requests.
 - `test/test-vault.test.js` — the test vault: dummy notes tied to requirements, nothing Obsidian writes committed, each session clean.
 - `test/tests-first.test.js` — every test is seen to fail before its code, replayed commit by commit.
+- `test/tests-first-command.test.js` — that replay's command line, run as CI and a person run it: `--check`, `--excuse`, `--migrate`, `--complete` and `--tally`.
+- `test/tests-first-records.test.js` — the records of that replay: a file for each commit and each reason, so two branches never conflict in them, and the old single files moved over whole.
 - `test/tests-first-run.test.js` — one run of one test file in that replay: what its report shows, and why it did not finish.
 - `test/whitespace.test.js` — the three copies of the one whitespace set are the same, and the set is openGQL's.
 

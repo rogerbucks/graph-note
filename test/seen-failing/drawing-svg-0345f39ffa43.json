@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/drawing-svg.test.js",
+  "test": "a link’s label in a drawing that runs down the page > it moves nothing in the SVG itself: the label keeps the x Graphviz gave it",
+  "seen_failing_first": false,
+  "evidence": "A guard that the gap is made by the stylesheet and not by editing the SVG, which keeps the themed SVG the Python library's: before the fix nothing edited the SVG, so this passed too. It would fail if a later change wrote a transform or moved x on the label."
+}

@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_graph_svg_nudges.py",
+  "test": "Nudges.test_the_cases_nudge_with_every_word_and_some_change_nothing",
+  "seen_failing_first": false,
+  "evidence": "a check of the shared table tests/nudge_cases.json against the core, which drew nudges before this change: it proves the cases write each of the four nudge words and that three of them leave the source unnudged, so it passes before the Python change by design; the Python change is proved by test_python_nudges and the tests beside it, which were seen failing first"
+}

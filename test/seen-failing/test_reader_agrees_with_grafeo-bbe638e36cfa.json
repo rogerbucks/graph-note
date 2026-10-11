@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_reader_agrees_with_grafeo.py",
+  "test": "Agreement.test_there_are_cases",
+  "seen_failing_first": false,
+  "evidence": "req:17.engine-agreement: a control on the agreement test itself, with no code changed, so it passes against its parent by design (11 Oct 2026)"
+}

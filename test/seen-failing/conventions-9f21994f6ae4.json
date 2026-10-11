@@ -1,0 +1,6 @@
+{
+  "file": "test/conventions.test.js",
+  "test": "Obsidian’s guidelines, beyond the linter > the linter is the plugin store’s own, sentence case in the interface among its rules",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that already existed: a convention the code already met when the conventions were written down (commit 54908e4)"
+}

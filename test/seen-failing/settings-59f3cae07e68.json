@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/settings.test.js",
+  "test": "back to standard GQL > the button on the settings page converts the note in front, as the command does",
+  "seen_failing_first": false,
+  "evidence": "written after its code, at the review of #50, to cover the page's button, which the earlier commit added untested (commit afff22a)"
+}

@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_parity.py",
+  "test": "IdOnce.test_both_readers_refuse_a_name_or_id_used_twice_alike",
+  "seen_failing_first": false,
+  "evidence": "it pins agreement that already existed for req:3.id-once: both readers refused a variable written twice and an id clashing with another node's name before this test was written, so it passes at its parent by design"
+}

@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/view-parity.test.js",
+  "test": "views are written in the note > a block the reader cannot read is left out, as it is before Grafeo is given the note",
+  "seen_failing_first": false,
+  "evidence": "views_agree_with_grafeo: pins readNote's reading in part, which already existed (partial-read.ts), on the shared view table's note with two unreadable blocks, so it passes against its parent by design. Seen failing against a planted fault: the table's left_out key misspelt, it fails (scratch run, 11 Oct 2026)"
+}

@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/placement-embeds.test.js",
+  "test": "a graph embedded in another note is read-only wherever it is shown > embedded in a note in reading view: Source and no Edit",
+  "seen_failing_first": false,
+  "evidence": "Pins behaviour that already held: an embed inside a note in reading view was read-only before, by the reading view around it. Written beside the Live Preview embed test, which was seen failing first, so both places an embed is shown are held."
+}

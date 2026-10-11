@@ -3,16 +3,32 @@ import { Notice, Plugin, TFile, editorInfoField } from 'obsidian';
 import type { EditorView } from '@codemirror/view';
 import type { MarkdownPostProcessorContext } from 'obsidian';
 import { gqlBlocks, isSharedSchema, LAYOUT_LIMITS, settingsFrom, standardBlocks, toStandard } from '@graph-note/core';
-import type { Converted, Drawn, Engine, GraphDrawing, LayoutLimits, Refusal, Settings } from '@graph-note/core';
+import type {
+  Converted,
+  Drawn,
+  Engine,
+  ExportTheme,
+  GraphDrawing,
+  LayoutLimits,
+  PngSize,
+  Refusal,
+  Settings,
+} from '@graph-note/core';
+import { exportGraph } from './export/export';
+import type { ExportAsk, ExportOutcome } from './export/export';
+import { PNG_PIXEL_LIMIT, rasterise } from './export/png';
 import { GraphNoteSettingTab } from './settings/settings';
 import type { DeclaredList } from './properties/list-row';
-import type { Editing } from './graph-view/view-options';
 import { engineOnThePage, Layouts } from './layout-worker/layout-worker';
 import { renderShown } from './block';
 import { GraphPane, PANE } from './pane';
 import { addForYou } from './editor';
-import { BlockEditor } from './block-editor/block-editor';
+import type { BlockEditor } from './block-editor/block-editor';
 import { graphBlocks } from './live-preview';
+import { InlineEditors } from './inline-editors';
+import { followRename, recoverDrafts, RECOVER_COMMAND, withIds } from './drafts';
+import type { KeptDraft } from './block-editor/kept-draft';
+import { noteToRewrite, stillToRewrite } from './reading-view';
 
 /** Where Edit was pressed: the note, the line of the block's opening fence (0-based), and the graph it draws. */
 export interface EditTarget {
@@ -22,7 +38,7 @@ export interface EditTarget {
 }
 
 /** What was typed in the pane and kept when the note changed under it, by note and graph: never lost (spec §9). */
-export type Drafts = Record<string, { text: string; kept: string }>;
+export type Drafts = Record<string, KeptDraft>;
 
 interface Saved {
   drafts?: Drafts;
@@ -38,6 +54,8 @@ export default class GraphNotePlugin extends Plugin {
 
   override async onload(): Promise<void> {
     this.saved = ((await this.loadData()) as Saved | null) ?? {};
+    // drafts kept before ids are given theirs, and saved at once, so each keeps the same id from one load to the next
+    if (Object.values(this.saved.drafts ?? {}).some((d) => !d.id)) await this.saveDrafts(this.drafts());
     this.settings = settingsFrom(this.saved.settings);
     this.addSettingTab(new GraphNoteSettingTab(this.app, this));
     this.addCommand({
@@ -45,6 +63,9 @@ export default class GraphNotePlugin extends Plugin {
       name: 'Convert this note to standard GQL',
       callback: () => this.convertToStandard(),
     });
+    // the drafts kept follow their note when it is renamed or moved, edited or not, and can all be recovered (spec §9)
+    this.registerEvent(this.app.vault.on('rename', (f, old) => void followRename(this, f.path, old)));
+    this.addCommand({ ...RECOVER_COMMAND, callback: () => recoverDrafts(this) });
     this.registerView(PANE, (leaf) => new GraphPane(leaf, this));
     this.registerEditorExtension(addForYou);
     // in Live Preview the plugin draws graph blocks itself, so a card being typed in is never torn down (spec §4)
@@ -113,11 +134,11 @@ export default class GraphNotePlugin extends Plugin {
 
   /** Converts the note in front back to standard GQL (spec §21), checked by the standard checker before it is written. */
   async convertToStandard(): Promise<void> {
-    const file = this.app.workspace.getActiveFile();
-    if (!file) {
-      new Notice('Open a note to convert it to standard GQL.');
-      return;
-    }
+    // the note in the pane in front, unless that pane is in reading view, which never changes a note (spec §3)
+    const to = 'to convert it to standard GQL';
+    const front = noteToRewrite(this.app.workspace, to);
+    if (!front) return;
+    const { file } = front;
     const checked = toStandard(await this.app.vault.read(file));
     if (!checked.ok) {
       new Notice(`Not converted: ${checked.reason}`);
@@ -127,6 +148,8 @@ export default class GraphNotePlugin extends Plugin {
       new Notice('This note is already standard GQL.');
       return;
     }
+    // the pane in front is asked again now, after the waiting: one switched to reading view meanwhile is not written
+    if (!stillToRewrite(this.app.workspace, front, to)) return;
     // written against the note as it is when written, and checked again there: said only when it was written
     let written: Converted = checked;
     await this.app.vault.process(file, (now) => {
@@ -151,8 +174,10 @@ export default class GraphNotePlugin extends Plugin {
     return given.blocks;
   }
 
+  /** The drafts kept, by note and graph; one kept before drafts had ids is given its id here, once (drafts.ts). */
   drafts(): Drafts {
-    return { ...(this.saved.drafts ?? {}) };
+    this.saved.drafts = withIds(this.saved.drafts ?? {});
+    return { ...this.saved.drafts };
   }
 
   async saveDrafts(drafts: Drafts): Promise<void> {
@@ -177,6 +202,19 @@ export default class GraphNotePlugin extends Plugin {
   /** How large a graph may be, and how long its layout may take, before it is shown as text (spec §9): a settings hook. */
   readonly layoutLimits: LayoutLimits = { ...LAYOUT_LIMITS };
 
+  /** Exports a graph or a view as an image (spec §16): see export/export.ts. */
+  exportGraph(ask: ExportAsk): Promise<ExportOutcome> {
+    return exportGraph(this, ask);
+  }
+
+  /** The most pixels a PNG export may have here: a larger one is refused, with the SVG suggested (spec §16). */
+  pngPixelLimit = PNG_PIXEL_LIMIT;
+
+  /** A PNG of an exported SVG at `size` (spec §16): kept apart so a test can stand in one, as it can the engine. */
+  rasterise(svg: string, size: PngSize): Promise<Uint8Array> {
+    return rasterise(svg, size);
+  }
+
   private layouts: Layouts | null = null;
   private unloaded = false;
 
@@ -186,14 +224,29 @@ export default class GraphNotePlugin extends Plugin {
    * `owner` (a card, an editor) asked for before it started, or the plugin unloaded. Rejects when the engine cannot start.
    */
   layout(drawing: GraphDrawing, owner?: object): Promise<Drawn | Refusal | null> {
-    if (this.unloaded) return Promise.resolve(null);
+    // the direction set on the settings page, one the locked style allows (spec §21); else the best fit
+    // a direction the graph's own style sets (§6) comes before the settings' default
+    const { direction } = this.settings;
+    const keep = direction === 'best' || !!drawing.direction;
+    return this.layoutsOf()?.draw(keep ? drawing : { ...drawing, direction }, owner) ?? Promise.resolve(null);
+  }
+
+  /**
+   * A graph laid out for an export, in the fixed colours of `theme` (spec §16): in the same worker, and under the same
+   * size and time limits, as a drawing, so an export never holds the page; the result is as `layout`'s.
+   */
+  layoutForExport(drawing: GraphDrawing, theme: ExportTheme): Promise<Drawn | Refusal | null> {
+    return this.layoutsOf()?.draw(drawing, undefined, theme) ?? Promise.resolve(null);
+  }
+
+  /** The plugin's layouts, started on first use; none once the plugin is unloaded. */
+  private layoutsOf(): Layouts | null {
+    if (this.unloaded) return null;
     this.layouts ??= new Layouts(
       () => this.layoutLimits,
       () => this.graphviz(),
     );
-    // the direction set on the settings page, one the locked style allows (spec §21); else the best fit
-    const { direction } = this.settings;
-    return this.layouts.draw(direction === 'best' ? drawing : { ...drawing, direction }, owner);
+    return this.layouts;
   }
 
   override onunload(): void {
@@ -220,50 +273,22 @@ export default class GraphNotePlugin extends Plugin {
     return this.declared.get(key) ?? this.declared.set(key, []).get(key)!;
   }
 
-  /** The editors open in place, in drawings' cards: they outlive each redraw of their block. */
-  private readonly inline = new Set<BlockEditor>();
-
-  /** Who to tell when an editor in place opens or closes: each card's edit button. */
-  private readonly inlineWatchers = new Set<() => void>();
+  /** The editors open in place, in drawings' cards: they outlive each redraw of their block (inline-editors.ts). */
+  readonly inline = this.addChild(new InlineEditors(this));
 
   /** Tells `changed` each time an editor in place opens or closes; returns how to stop. */
   watchInline(changed: () => void): () => void {
-    this.inlineWatchers.add(changed);
-    return () => this.inlineWatchers.delete(changed);
+    return this.inline.watch(changed);
   }
 
-  private inlineChanged(): void {
-    for (const changed of this.inlineWatchers) changed();
-  }
-
-  /** The editor open in place on a note's block, by the line of its opening fence, if there is one. */
+  /** The editor open in place on a note's block whose opening fence is on `line` now, if there is one. */
   inlineFor(path: string, line: number): BlockEditor | undefined {
-    return [...this.inline].find((e) => e.path === path && e.session?.ref.line === line);
+    return this.inline.find(path, line);
   }
 
   /** Edit here: opens the block's text in place, inside its drawing's card (spec §4), with the focus in it. */
-  async editHere(target: EditTarget, slot: HTMLElement): Promise<void> {
-    let editor = this.inlineFor(target.path, target.line);
-    if (!editor) {
-      const e = new BlockEditor(this, 'inline');
-      // a setting that changes how the text is read or drawn: read again at once (spec §21)
-      e.register(this.watchSettings(() => e.changed()));
-      e.onDone = () => {
-        this.inline.delete(e);
-        e.detach();
-        this.removeChild(e);
-        this.inlineChanged();
-      };
-      this.inline.add(e);
-      this.addChild(e);
-      e.mount(slot);
-      await e.open(target.path, target.line);
-      // the lists made in this session outlive this editor: Done, then Edit here again, still offers them
-      (e as Editing).lists = this.declaredLists(target.path, e.session?.graph ?? '');
-      editor = e;
-      this.inlineChanged();
-    } else editor.mount(slot);
-    editor.focus();
+  editHere(target: EditTarget, slot: HTMLElement): Promise<void> {
+    return this.inline.editHere(target, slot);
   }
 
   /** Opens the edit pane beside the note, on a block (spec §4); one pane, reused. */

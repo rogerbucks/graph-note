@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_gql_profile_drawn.py",
+  "test": "ADanglingComma.test_checking_and_loading_may_still_refuse_it",
+  "seen_failing_first": false,
+  "evidence": "a control case, written with the change beside it: Store.apply refused a dangling comma before and still does, as checking and loading stay all-or-nothing (commit d000d29)"
+}

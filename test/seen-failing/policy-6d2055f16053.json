@@ -1,0 +1,6 @@
+{
+  "file": "test/policy.test.js",
+  "test": "GitHub Actions > CI runs the Python library tests from its locked environment",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that already existed: CI already ran the Python tests from the locked environment (commit 90ed1a9)"
+}

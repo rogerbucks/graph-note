@@ -1,11 +1,8 @@
 // The block editor (spec §4, §9): the text of one graph block, with everything that helps write it — a plain text field
-// over a coloured picture of it, problems marked with their fixes on the caret's line, suggestions, each line read back, the
-// comma added for you — and the safe writing behind it: what is typed is written through the core's session, which never
-// overwrites a block changed meanwhile and keeps what was typed as a draft; undo, redo and Lock the graph. Shared by the
-// edit pane and by the editor in place inside a drawing's card. This module ties together the parts in its folder.
-import { Component, TFile } from 'obsidian';
-import type { App } from 'obsidian';
-import { isDraft } from '@graph-note/core';
+// over a coloured picture of it, problems with fixes, suggestions, each line read back, the comma added for you — and the
+// safe writing behind it (the core's session never overwrites a block changed meanwhile), undo, redo and Lock the graph.
+import { Component } from 'obsidian';
+import { indentText, isDraft } from '@graph-note/core';
 import type { Change, CompletionItem, NoteReading, PaneSession } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
 import { buildEditor, showTools } from './editor-layout';
@@ -18,8 +15,9 @@ import { addForYouInField, stepOverInField } from './added-for-you';
 import { FieldHistory } from './editor-history';
 import type { Step } from './editor-history';
 import { BlockNote } from './block-note';
+import type { Reread } from './block-note';
 import type { Refused } from './note-writing';
-import { reloadedMessage, showDraft } from './kept-draft';
+import { keptMessage, offerDraft } from './kept-draft';
 import { PaneDrawing } from './pane-drawing';
 import { fieldTyping, watchKeys, watchTyping } from './typing-keys';
 
@@ -33,7 +31,6 @@ const DRAW_AFTER_MS = 250;
 export class BlockEditor extends Component {
   readonly layout: Layout;
   private readonly plugin: GraphNotePlugin;
-  private readonly app: App;
   private container: HTMLElement | null = null;
   /** The note being edited, and the session on its block. */
   private readonly note: BlockNote;
@@ -56,7 +53,6 @@ export class BlockEditor extends Component {
   constructor(plugin: GraphNotePlugin, layout: Layout) {
     super();
     this.plugin = plugin;
-    this.app = plugin.app;
     this.layout = layout;
     this.note = new BlockNote(plugin);
     this.field = this.addChild(new KeptField(() => this.el?.text));
@@ -73,12 +69,13 @@ export class BlockEditor extends Component {
     return this.note.session;
   }
 
+  /** Whether the editor is on the page, in a card or the pane. */
+  get onPage(): boolean {
+    return !!this.el?.root.isConnected;
+  }
+
   override onload(): void {
-    this.registerEvent(
-      this.app.vault.on('modify', (f) => {
-        if (f instanceof TFile) void this.onModify(f);
-      }),
-    );
+    this.note.watch(this, { changed: (outcome) => this.onModify(outcome), deleted: () => void this.write() });
   }
 
   override onunload(): void {
@@ -122,6 +119,8 @@ export class BlockEditor extends Component {
 
   /** What the card's details were open on, so its inspector reopens on it after each redraw. */
   selected: { key: string } | { link: number } | null = null;
+  /** Park for later's fix: Deferred and DEFERS declared in the graph's schema, wherever it is written. */
+  declareDeferred = () => this.note.declareDeferred(indentText(this.plugin.settings.indent));
 
   /** Replaces the whole text, as an edit made from the inspector: shown, checked and written like typing. */
   replace(text: string): void {
@@ -314,9 +313,12 @@ export class BlockEditor extends Component {
 
   private async keepDraft({ reason, draft }: Refused): Promise<void> {
     await this.note.keepDraft(draft);
-    if (this.el && this.session) this.el.text.value = this.session.text;
-    this.reloaded();
-    this.showKeptDraft(reloadedMessage(reason));
+    // a deleted note has no block to reload: the text stays as typed, with its caret and its history
+    if (this.note.file()) {
+      if (this.el && this.session) this.el.text.value = this.session.text;
+      this.reloaded();
+    }
+    this.showKeptDraft(keptMessage(reason));
   }
 
   /** The text as the note now has it, shown with its history started again, its help and its drawing. */
@@ -327,32 +329,17 @@ export class BlockEditor extends Component {
     this.redraw();
   }
 
+  /** The draft banner: Restore and Discard act on the very draft it shows, by its id (kept-draft.ts). */
   private showKeptDraft(message?: string): void {
-    const el = this.el;
-    if (!el) return;
-    showDraft(el.draft, this.note.draft(), message, {
-      restore: (text) => {
-        el.text.value = text;
-        void this.forget();
-        this.typed('other');
-      },
-      discard: () => void this.forget(),
-    });
+    if (this.el) offerDraft(this.el, this.note, message, () => this.typed('other'));
   }
 
-  private async forget(): Promise<void> {
-    if (this.el) this.el.draft.hidden = true;
-    await this.note.forget();
-  }
-
-  private async onModify(f: TFile): Promise<void> {
-    const outcome = await this.note.reread(f);
-    if (outcome === null) return;
+  private onModify(outcome: Reread): void {
     if (outcome === 'reloaded' && this.el) {
       this.el.text.value = this.session?.text ?? '';
       this.reloaded();
       this.showTools();
-    } else if (outcome === 'conflict') await this.write();
+    } else if (outcome === 'conflict') void this.write();
     else {
       this.analyse();
       this.paint();

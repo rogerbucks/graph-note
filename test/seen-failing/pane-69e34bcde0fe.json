@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/pane.test.js",
+  "test": "the colon added for you > a first use gets no colon: it is not guessed",
+  "seen_failing_first": false,
+  "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit b4a4e6d)"
+}

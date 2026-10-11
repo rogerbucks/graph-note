@@ -34,6 +34,12 @@
 .graph-note-svg g.edge[data-link] {
   cursor: pointer;
 }
+/* In a drawing that runs down the page Graphviz sets a link's label beside its line with no room between, so the text
+   begins at the line. The label is moved a little right, in the drawing's own units, so it scales with zoom; the layout
+   source and the SVG are the Python library's byte for byte, and are left as they are (device check V-07, 11 Oct 2026). */
+.graph-note-svg.graph-note-down g.edge > text {
+  transform: translateX(4px);
+}
 /* A thing parked for later (spec §5): dashed, with a later mark in words and a sign, never by colour alone. */
 .graph-note-parked path,
 .graph-note-parked polygon {
@@ -47,6 +53,83 @@
   fill: var(--text-error);
   font-weight: var(--font-semibold);
 }
+/* A view (spec §7): what is outside it faded, and said so to screen readers; each look's hue on the outline only, in
+   the locked line blend, its text kept in the text colour so the locked contrast holds on any box; the legend says
+   what each colour means, a swatch beside the words. */
+.graph-note-svg .graph-note-faded {
+  opacity: 0.35;
+}
+.graph-note-svg g.graph-note-look > :is(path, polygon) {
+  stroke: var(--graph-note-look-line, var(--text-muted));
+}
+.graph-note-svg g.graph-note-line-bold > :is(path, polygon) {
+  stroke-width: 3;
+}
+.graph-note-svg g.graph-note-line-dashed > :is(path, polygon) {
+  stroke-dasharray: 6 4;
+}
+.graph-note-svg g.graph-note-line-dotted > :is(path, polygon) {
+  stroke-dasharray: 2 3;
+}
+.graph-note-svg g.graph-note-format-bold > text {
+  font-weight: var(--font-bold);
+}
+.graph-note-svg g.graph-note-format-italic > text {
+  font-style: italic;
+}
+.graph-note-view-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-4-2);
+  padding: var(--size-4-1) var(--size-4-2);
+}
+.graph-note-view-strip button {
+  min-width: 44px;
+  min-height: 44px;
+}
+.graph-note-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-4-3);
+  margin: 0;
+  padding: var(--size-4-1) var(--size-4-2);
+  list-style: none;
+}
+.graph-note-swatch {
+  display: inline-block;
+  width: 1em;
+  height: 0.25em;
+  margin-inline-end: var(--size-4-1);
+  vertical-align: middle;
+  background: var(--graph-note-swatch, var(--text-muted));
+}
+/* The Export form (spec §16): each choice with its words above it, every control a 44-point target. */
+.graph-note-export {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--size-4-2);
+  padding: var(--size-4-2);
+  border-top: 1px solid var(--background-modifier-border);
+}
+.graph-note-export label {
+  display: flex;
+  flex-direction: column;
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+.graph-note-export :is(button, select) {
+  min-width: 44px;
+  min-height: 44px;
+}
+/* A style block (spec §2): folded away until opened, its line in the muted colour, a 44-point target to open it. */
+details.graph-note-style > summary {
+  min-height: 44px;
+  padding-block: var(--size-4-3);
+  color: var(--text-muted);
+  cursor: pointer;
+}
 /* Walked paths (spec §7): the strip below the bar; the step playing outlined heavier; each recorded step numbered. */
 .graph-note-walk {
   display: flex;
@@ -57,6 +140,18 @@
   border-bottom: 1px solid var(--background-modifier-border);
 }
 .graph-note-walk button {
+  min-width: 44px;
+  min-height: 44px;
+}
+/* Making a view by tapping (spec §7): laid out as the walk strip, every control a 44-point target. */
+.graph-note-view-maker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-4-2);
+  padding: var(--size-4-1) var(--size-4-2);
+}
+.graph-note-view-maker :is(button, select, input) {
   min-width: 44px;
   min-height: 44px;
 }
@@ -111,6 +206,13 @@
    Obsidian does for its PDF toolbar, so it never covers the bar's last button. */
 .cm-embed-block .graph-note-bar {
   padding-inline-end: var(--size-4-9);
+}
+/* The same button covers the copy button of a block shown as code, which Obsidian also puts at the block's top right: in
+   Live Preview the copy button steps in from the right edge by that room and a little more, so the two icons sit side by
+   side and neither covers the other (device check V-03, 11 Oct 2026). Only sizes, so the same in light and dark and at
+   any width; reading view has no edit-block button, so it keeps Obsidian's place. */
+.cm-embed-block pre.graph-note-code .copy-code-button {
+  inset-inline-end: calc(var(--size-4-9) + var(--size-2-2));
 }
 .graph-note-badge-text {
   font-size: var(--font-ui-small);

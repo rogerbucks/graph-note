@@ -6,18 +6,12 @@ import { atom, read, update } from 'claude-code';
 import type { EngineInterface, Register } from 'claude-code';
 
 import type { GraphView } from '../types';
-import { layOut, notePath, paletteFor, viewOf } from './graph.js';
+import { layOut, notePath, PANE_PALETTE, viewOf } from './graph.js';
 
 const PANE = 'graph';
 const USAGE = 'Name a note to draw: /graph <path to a note>, quoted if it has spaces.';
 const NO_PICTURES = 'This surface cannot draw pictures, so the graph is shown as text. The desktop app draws it.';
 const view = atom({ plugin: 'graph-note', key: 'view' } as const, null as GraphView | null);
-
-/** Claude Code's theme setting, so the drawing is painted to match it. */
-async function theme($: EngineInterface): Promise<string | undefined> {
-  const row = (await $.config.list()).find((r) => r.key === 'theme');
-  return typeof row?.value === 'string' ? row.value : undefined;
-}
 
 /** The view of the note at `path`, or of why it could not be read. */
 async function viewAt($: EngineInterface, path: string): Promise<GraphView> {
@@ -29,7 +23,8 @@ async function viewAt($: EngineInterface, path: string): Promise<GraphView> {
     return { title: path, alt: why, lines: [why] };
   }
   const run = (argv: readonly string[], stdin: string, timeoutMs: number) => $.process.run(argv, { stdin, timeoutMs });
-  return viewOf(note, (dots) => layOut(dots, $.plugin.root, run), paletteFor(await theme($)));
+  // the drawing carries light and dark and follows the app's own appearance (PANE_PALETTE says why)
+  return viewOf(note, (dots) => layOut(dots, $.plugin.root, run), PANE_PALETTE);
 }
 
 export const register: Register = (on) => {

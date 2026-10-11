@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_id_once_engine.py",
+  "test": "GrafeoTakesARepeat.test_grafeo_stores_two_nodes_for_two_insert_statements_in_one_text",
+  "seen_failing_first": false,
+  "evidence": "an investigation of req:3.id-once (commit 2ff1377, a test file and nothing else): it records what Grafeo 0.5.43 already did with a repeat, so it passes before and after by design"
+}

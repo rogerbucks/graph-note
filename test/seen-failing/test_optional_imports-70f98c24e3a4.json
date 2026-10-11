@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_optional_imports.py",
+  "test": "NoEngineInstalled.test_a_plain_install_reads_checks_joins_and_draws",
+  "seen_failing_first": false,
+  "evidence": "req:14.no-engine-install: holds together, in one plain-install interpreter, what the commits before it made: reading needs no engine since req:3.reader-default (ef7ed86), whose test_a_document_is_read_with_grafeo_not_installed was seen failing first; checking, joining and drawing never needed one. So it passes against its parent by design (11 Oct 2026)"
+}

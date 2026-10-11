@@ -1,0 +1,6 @@
+{
+  "file": "test/conventions.test.js",
+  "test": "the code’s layout > each module says first what it is for: one module, one purpose",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that already existed: a convention the code already met when the conventions were written down (commit 54908e4)"
+}

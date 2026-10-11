@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/inline-completion.test.js",
+  "test": "accepting with Tab or Enter > the suggestions row keeps working: Tab still takes a name, where the match would only close the bracket",
+  "seen_failing_first": false,
+  "evidence": "a control case, written with the change beside it: Tab took the first suggestion before the inline match existed, so it holds what must not change and passes before and after by design (commit e935115)"
+}

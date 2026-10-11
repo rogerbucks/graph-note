@@ -21,6 +21,13 @@ spikes/*/main.js
 # build linked in by scripts/reset-test-vault.mjs, never are.
 /test-vault/*
 !/test-vault/*.md
+# The device check notes, one folder of notes for each section of the device checklist.
+!/test-vault/Device checks/
+/test-vault/Device checks/*
+!/test-vault/Device checks/*.md
+!/test-vault/Device checks/*/
+/test-vault/Device checks/*/*
+!/test-vault/Device checks/*/*.md
 !/test-vault/.obsidian/
 /test-vault/.obsidian/*
 !/test-vault/.obsidian/app.json

@@ -9,14 +9,20 @@ import {
   gqlBlocks,
   graphOfBlock,
   namesSharedSchema,
+  nudgedDrawing,
   parked,
   readNote,
+  readStyle,
+  styleOf,
+  viewsOf,
   underStrictness,
 } from '@graph-note/core';
 import type { Block, Drawn, Problem, Refusal } from '@graph-note/core';
 import type GraphNotePlugin from './main';
 import type { EditTarget } from './main';
 import { renderCode } from './code';
+import { renderStyleBlock } from './style-block';
+import { renderViewBlock, writeViewBlock } from './view-block';
 import { GraphView } from './graph-view/graph-view';
 import { readOnlyHere, settlePlacements, whenPlaced } from './graph-view/placement';
 import { renderProblems } from './graph-view/problems-list';
@@ -34,6 +40,7 @@ function asText(
   why: Refusal,
   problems: ShownProblem[],
   target: EditTarget,
+  readOnly: (card: HTMLElement) => boolean,
 ): void {
   refusalBanner(root, why);
   if (problems.length) renderProblems(root, problems, false);
@@ -44,7 +51,7 @@ function asText(
   }
   const at = root.createDiv({ cls: 'graph-note-edit-slot' });
   whenPlaced(root, () => {
-    if (readOnlyHere(root)) {
+    if (readOnly(root)) {
       at.remove();
       renderCode(root, source);
     } else editing.mount(at);
@@ -91,6 +98,16 @@ export async function renderBlock(
   ctx: MarkdownPostProcessorContext,
   owner?: object,
 ): Promise<void> {
+  // a query block named as a view is drawn as the view (§7)
+  const view = viewsOf([source])[0];
+  if (view) return renderViewBlock(plugin, source, el, ctx, view, owner);
+  const styled = styleOf(source);
+  if (styled) {
+    // a style block is never drawn as a graph: folded away until opened (§2)
+    const all = gqlBlocks(ctx.getSectionInfo(el)?.text ?? '').map((b) => b.text);
+    renderStyleBlock(el, source, styled, all.includes(source) ? all : [...all, source]);
+    return;
+  }
   const graph = graphOfBlock(source);
   if (!graph) {
     renderCode(el, source);
@@ -98,6 +115,9 @@ export async function renderBlock(
   }
 
   const info = ctx.getSectionInfo(el);
+  // with no section info, as when another plugin renders the block, the card cannot know which line of which note it
+  // would write: it is read-only, as in reading view (spec §3)
+  const readOnly = (card: HTMLElement) => !info || readOnlyHere(card);
   let blocks: Block[] = info ? gqlBlocks(info.text) : [];
   let index = info ? blocks.findIndex((b) => b.line - 1 === info.lineStart) : -1;
   if (index < 0) {
@@ -113,13 +133,16 @@ export async function renderBlock(
   const target = { path: ctx.sourcePath, line: info?.lineStart ?? 0, graph };
   if (reading.tooLarge) {
     // too large to read (spec §9): nothing was read, so the text is shown, and why
-    asText(plugin, el.createDiv({ cls: 'graph-note' }), source, reading.tooLarge, [], target);
+    asText(plugin, el.createDiv({ cls: 'graph-note' }), source, reading.tooLarge, [], target, readOnly);
     return;
   }
   // a problem's line in the note: the block's fence line, plus its line in the block (1 = the line after the fence)
   const shown = (p: Problem): ShownProblem => ({ ...p, noteLine: (blocks[p.block]?.line ?? 0) + p.line });
-  const problems = reading.problems.filter((p) => p.graph === graph).map(shown);
-  const drawing = reading.graphs.get(graph);
+  // its style graph (§2): what is wrong in it listed with the graph's problems; what is sound, its nudges (§6), drawn
+  const styling = readStyle(texts, graph, reading);
+  const problems = [...reading.problems, ...styling.problems].filter((p) => p.graph === graph).map(shown);
+  const plain = reading.graphs.get(graph);
+  const drawing = plain && { ...nudgedDrawing(plain, styling.style), nudges: styling.style.nudges };
   const root = el.createDiv({ cls: 'graph-note' });
 
   if (!drawing || !drawing.boxes.length) {
@@ -131,7 +154,7 @@ export async function renderBlock(
       const slot = root.createDiv({ cls: 'graph-note-edit-slot' });
       // reading view is read-only: there, the text and why, as when nothing is edited (spec §3)
       whenPlaced(root, () => {
-        if (readOnlyHere(root)) {
+        if (readOnly(root)) {
           slot.remove();
           renderCode(root, source);
         } else editing.mount(slot);
@@ -153,7 +176,7 @@ export async function renderBlock(
       void plugin.openEditor(target);
     });
     whenPlaced(root, () => {
-      if (readOnlyHere(root)) edit.remove(); // reading view is read-only (spec §3)
+      if (readOnly(root)) edit.remove(); // reading view is read-only (spec §3)
     });
     return;
   }
@@ -173,7 +196,7 @@ export async function renderBlock(
   }
   if (!drawn) return; // no longer wanted: a newer drawing of this card was asked for, or the plugin unloaded
   if ('reason' in drawn) {
-    asText(plugin, root, source, drawn, problems, target);
+    asText(plugin, root, source, drawn, problems, target, readOnly);
     return;
   }
   let slot: HTMLElement | null = null;
@@ -187,6 +210,13 @@ export async function renderBlock(
       mode: 'note',
       completeness: completenessReport(reading, graph, new Date().toISOString().slice(0, 10)),
       parked: parked(reading, graph, new Date().toISOString().slice(0, 10)),
+      writeView: (block) => writeViewBlock(plugin, target.path, graph, block),
+      exporting: {
+        path: target.path,
+        graph,
+        theme: plugin.settings.exportTheme,
+        run: (ask) => plugin.exportGraph(ask),
+      },
       indent: plugin.settings.indent,
       lineOf: (at) => (blocks[at.block]?.line ?? 0) + at.line,
       onEdit: () => {
@@ -210,6 +240,7 @@ export async function renderBlock(
       },
       editing: () => plugin.inlineFor(target.path, target.line),
       onSelect: (chosen) => plugin.inlineFor(target.path, target.line)?.reveal(chosen),
+      ...(info ? {} : { readOnly: () => true }),
     }),
   );
 }

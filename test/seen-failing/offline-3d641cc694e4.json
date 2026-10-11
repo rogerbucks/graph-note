@@ -1,0 +1,6 @@
+{
+  "file": "test/offline.test.js",
+  "test": "the Graphviz engine starts and draws without reaching for the network",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that already existed: the engine already made no network request; this proves it (commit 74b796c)"
+}
