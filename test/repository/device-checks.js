@@ -14,9 +14,24 @@ const NUMBER = /^\*\*([A-Z]-\d\d)\*\*/;
 
 /**
  * What a device pass adds to an item, from a device's name and its tick to the end of the item ("Mac ✓ 0.3.0, 9 Oct 2026
- * ..."): left out when an item is compared, so ticking one off on a device never breaks its note.
+ * ..."): left out when an item is compared, so ticking one off on a device never breaks its note. An item that ran on to
+ * its mark with a colon ("each card standing out: Mac ✓ …") ends on a full stop instead, so it ends cleanly.
  */
-export const withoutMarks = (text) => text.replace(/\s*\b(Mac|iPhone|Android)\s✓.*$/s, '').trim();
+export const withoutMarks = (text) =>
+  text
+    .replace(/\s*\b(Mac|iPhone|Android)\s✓.*$/s, '')
+    .trim()
+    .replace(/[:;,]$/, '.');
+
+/**
+ * The ids of the requirements an item names in a bracket at its end ("(slice 2, park_for_later, deferred_drawn)"): left
+ * out when an item is compared, because a note stands on its own and its reader has no use for them.
+ */
+export const withoutIds = (text) =>
+  text.replace(/\s*\((?:slice \d+|(?:slice \d+, )?[a-z]+(?:_[a-z]+)+(?:, [a-z]+(?:_[a-z]+)+)*)\)/g, '');
+
+/** The words that quote a text a note's reader will see in Obsidian, each computed by the test with the real function. */
+export const QUOTED = ['readback', 'label', 'tap', 'detail', 'footer', 'export-file', 'notice'];
 
 /** Whitespace as one space, so a line wrapped in the checklist and one long line in a note are the same words. */
 export const words = (text) => text.replace(/\s+/g, ' ').trim();

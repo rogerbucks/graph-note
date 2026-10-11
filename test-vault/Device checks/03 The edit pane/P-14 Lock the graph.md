@@ -19,6 +19,7 @@
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. Press Edit and find Lock the graph.
 2. Press it.
 3. Check a new block with the schema is written after this one, and the graph shows no problems.

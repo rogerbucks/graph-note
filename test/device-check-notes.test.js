@@ -27,7 +27,9 @@ import {
   noteFiles,
   noted,
   partsOf,
+  QUOTED,
   unescaped,
+  withoutIds,
   withoutMarks,
   words,
 } from './repository/device-checks.js';
@@ -49,9 +51,10 @@ const notes = () => {
 /**
  * What a note may expect of its graph blocks, one `<!-- expect: … -->` line each: `clean`, or `problem "…"` for each
  * problem; `hint "…"`; `check "…"` for a rule of the graph spec the checker fails; `refused "…"` for a view the profile
- * refuses; `view-empty` for one that matches nothing; `parked N` and `overdue N` for the things drawn parked.
+ * refuses; `view-empty` for one that matches nothing; `parked N` and `overdue N` for the things drawn parked; and the
+ * words in QUOTED, for a text the note quotes (test/device-check-quotes.test.js computes each).
  */
-const KINDS = ['clean', 'problem', 'hint', 'check', 'refused', 'view-empty', 'parked', 'overdue'];
+const KINDS = ['clean', 'problem', 'hint', 'check', 'refused', 'view-empty', 'parked', 'overdue', ...QUOTED];
 
 describe('the checklist numbers every item', () => {
   test('each item has a number: its section’s letter, a dash and two digits', () => {
@@ -193,8 +196,26 @@ describe('what each note holds, in the order it is read', () => {
         .map((l) => l.replace(/^>\s?/, ''))
         .join(' ');
       const item = byNumber.get(numberOf(file));
-      assert.equal(words(withoutMarks(unescaped(quoted))), words(withoutMarks(item.text)), file);
+      const plain = (t) => words(withoutMarks(withoutIds(unescaped(t))));
+      assert.equal(plain(quoted), plain(item.text), file);
+      assert.equal(words(unescaped(quoted)), words(withoutIds(unescaped(quoted))), `${file}: no requirement ids`);
     }
+  });
+
+  test('a note whose words name a button only Live Preview has says to open the note in Live Preview, first', () => {
+    // reading view hides Edit, Edit here, Park, Record and Lock, and the rest that write into the block
+    const BUTTONS = /\b(Edit|Hide others|Save as shown|Make a view|Park|Record|Lock)\b/;
+    const reading = new Set(['Z-09']);
+    let named = 0;
+    for (const { file, text } of notes()) {
+      const { part } = partsOf(text);
+      if (!BUTTONS.test(part(0)) && !BUTTONS.test(part(2))) continue;
+      named++;
+      const first = part(2).split('\n').filter(Boolean)[1] ?? '';
+      const view = reading.has(numberOf(file)) ? 'reading view' : 'Live Preview';
+      assert.ok(first.startsWith(`0. Open this note in ${view}`), `${file}: step 0 is to open it in ${view}: ${first}`);
+    }
+    assert.ok(named > 30, 'the buttons are named in many notes');
   });
 
   test('the way back is a link to the checklist on GitHub, naming the item’s number to look for', () => {
@@ -397,11 +418,15 @@ describe('the notes are committed, and a clean session keeps them', () => {
 
 describe('a changed note or checklist runs these tests, and nothing else', () => {
   const THIS = 'test/device-check-notes.test.js';
-  const tracked = [THIS, 'test/test-vault.test.js'];
+  const QUOTES = 'test/device-check-quotes.test.js';
+  const tracked = [THIS, QUOTES, 'test/test-vault.test.js'];
 
-  test('the checklist runs only this test; a note in the vault runs this and the test vault’s', () => {
-    assert.deepEqual(testsForChanges([CHECKLIST], tracked), { all: false, files: [THIS] });
+  test('the checklist runs the two tests of the notes; a note in the vault runs those and the test vault’s', () => {
+    assert.deepEqual(testsForChanges([CHECKLIST], tracked), { all: false, files: [THIS, QUOTES] });
     for (const changed of [noteFiles()[0], INDEX, 'scripts/reset-test-vault.mjs'])
-      assert.deepEqual(testsForChanges([changed], tracked), { all: false, files: [THIS, 'test/test-vault.test.js'] });
+      assert.deepEqual(testsForChanges([changed], tracked), {
+        all: false,
+        files: [THIS, QUOTES, 'test/test-vault.test.js'],
+      });
   });
 });

@@ -17,6 +17,7 @@
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. Press Edit here and look below the last line of text: there should be one empty line, and no more.
 2. Tap in the space below the text and check the caret lands on the last line.
 3. Look at the read-backs on the right, especially on the longest line: none should wrap under its line.

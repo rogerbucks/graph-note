@@ -19,6 +19,7 @@
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. Press Edit here, then Make a view.
 2. Tap Home and The park. Read the strip: "The view: Home and The park, picked by hand."
 3. Switch to Near a thing, tap The park, choose 2 steps. Read the strip.
@@ -29,6 +30,6 @@
 
 **Checklist line:**
 
-> **W-04** Edit here, Make a view: tap two boxes; the strip says "The view: A and B, picked by hand." Switch to Near a thing, tap one, choose 2 steps; then How one reaches another, tap two; then Only some kinds, tap one. Name it and Write the view: a view block appears after the graph, and draws (slice 2, views_by_tapping). Phone: every control easy to hit.
+> **W-04** Edit here, Make a view: tap two boxes; the strip says "The view: A and B, picked by hand." Switch to Near a thing, tap one, choose 2 steps; then How one reaches another, tap two; then Only some kinds, tap one. Name it and Write the view: a view block appears after the graph, and draws. Phone: every control easy to hit.
 
 **Back to the checklist:** [W-04 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for W-04 in its list.

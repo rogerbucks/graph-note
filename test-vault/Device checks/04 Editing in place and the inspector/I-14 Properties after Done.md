@@ -19,6 +19,7 @@
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. Press Edit here and tap the Small reader box so its properties show with their fields.
 2. Press Done (or the book icon).
 3. Check the properties stay open but have no fields, no Add property, no x on the chip and no add box.

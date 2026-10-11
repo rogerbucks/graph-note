@@ -18,6 +18,7 @@
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. Press Edit here and tap the Small reader box. Tap the icon beside tags and choose List.
 2. Check the kind and relationship fields are filled in from the name (Tag, HAS_TAG) and offer the graph's own kinds and relationships.
 3. Press Cancel and check the field comes back. Open it again and press Make list.

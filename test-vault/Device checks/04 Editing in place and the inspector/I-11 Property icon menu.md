@@ -17,6 +17,7 @@
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. Press Edit here and tap the Small reader box.
 2. Tap the icon beside rating and check the menu offers to change its type and to remove it.
 3. Press Add property and check a new row appears with a name suggested from names used elsewhere (in_stock is used on the other option).

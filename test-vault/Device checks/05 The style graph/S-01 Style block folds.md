@@ -31,6 +31,6 @@ The style of the graph above, in its own block.
 
 **Checklist line:**
 
-> **S-01** A note with a graph and its style block (`// graph: reader_style · STYLE reader`, with a direction nudge TB and a beside nudge): the style block shows as one folded line, "Style of graph reader: 2 nudges", opening to its text; the graph runs top to bottom with the two things side by side (slice 2, style_block_in_note, style_is_a_graph).
+> **S-01** A note with a graph and its style block (`// graph: reader_style · STYLE reader`, with a direction nudge TB and a beside nudge): the style block shows as one folded line, "Style of graph reader: 2 nudges", opening to its text; the graph runs top to bottom with the two things side by side.
 
 **Back to the checklist:** [S-01 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for S-01 in its list.

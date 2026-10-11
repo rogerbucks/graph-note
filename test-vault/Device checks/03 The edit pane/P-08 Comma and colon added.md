@@ -17,6 +17,7 @@
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. In the pane, end the last line with no comma, press Enter, and type `(`. The comma should appear on the line before.
 2. Press undo once and check the comma goes.
 3. On a new line type `(eyes)-[favours` and then `]`. The text should become `[:FAVOURS]`. Press undo once.

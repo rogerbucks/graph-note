@@ -18,6 +18,7 @@
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. On the phone, press Edit.
 2. Switch between the Drawing tab and the Text tab.
 3. Open the problems sheet at the bottom and press its fix.

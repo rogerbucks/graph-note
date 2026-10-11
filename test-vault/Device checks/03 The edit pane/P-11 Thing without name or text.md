@@ -17,6 +17,7 @@
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. Press Edit and look at the line `(:Option {name: 'Small reader'})` for the warning, and read the name it suggests.
 2. Press its fix and check the name is written after the ( and the warning goes.
 3. Look at the line `(large_reader:Option)` for the hint, check the badge does not count it, and press its fix.

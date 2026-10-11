@@ -17,6 +17,7 @@
 
 **Do this:**
 
+0. Open this note in reading view (not Live Preview): reading view is the one that hides the Edit button.
 1. Switch to reading view and look at the bar: Source, and no Edit.
 2. Press Source, then press it again.
 3. Hover over a link to this note, or embed it in another note, and check the drawing there has no Edit.

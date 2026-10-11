@@ -100,6 +100,9 @@ function looksOf(scope: ExportScope, style: StyleGraph | undefined): Marks['look
   return looks;
 }
 
+/** The line at the foot of an exported image, saying which note it is from (its path in the vault) and the day (`YYYY-MM-DD`). */
+export const footerText = (note: string, date: string) => `From ${note}, exported ${saidDate(date)}`;
+
 /** The first letter capital, as a reading begins a sentence. */
 const sentence = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -135,7 +138,7 @@ export function exportSvg(scope: ExportScope, engine: Engine, info: ExportInfo):
       title: view ? `${scope.graph} · view ${scope.view}` : scope.graph,
       ...(subtitle ? { subtitle } : {}),
       legend: legendItems(scope, info.style, palette),
-      footer: `From ${info.note}, exported ${saidDate(info.date)}`,
+      footer: footerText(info.note, info.date),
     },
     palette,
   );

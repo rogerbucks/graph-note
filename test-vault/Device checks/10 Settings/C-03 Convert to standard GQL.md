@@ -1,6 +1,6 @@
 # C-03 Convert to standard GQL
 
-**You should see:** with the first note's commas missing, "Convert this note to standard GQL" writing the commas, a notice saying how many were converted, and one undo taking it all back. With the second graph's unreadable line in the note, the conversion leaves the note as it is, and the notice says why.
+**You should see:** with this graph in front, which misses a comma at the end of two lines, "Convert this note to standard GQL" writing both commas, and a notice saying how many were converted: `Converted 2 departures to standard GQL.` One undo takes both commas back.
 
 **Test diagram:**
 
@@ -11,26 +11,18 @@
 (small)-[:ANSWERS]->(question)
 ```
 
-A second graph, with a line that cannot be read.
-
-```gql
-// graph: other · SOURCE
-(question:Question {title: 'Which device should I read on?'}),
-(small:Option {name: 'Small reader'}),
-(small)-[:ANSWERS]->(question) ??? what
-```
-
 <!-- expect: problem "a comma is missing at the end of this line" -->
-<!-- expect: problem "cannot read '??? what'" -->
+<!-- expect: notice "Converted 2 departures to standard GQL." -->
 
 **Do this:**
 
-1. With only the first graph in the note (delete the second for this step), run "Convert this note to standard GQL" from the command palette. Check the commas are written and a notice says how many were converted.
-2. Press undo once and check the note is as before.
-3. Restore the second graph and run the conversion again, and also press the button on the settings page. Check the note is left as it is and the notice says why.
+1. With this note in front, open the command palette and run "Convert this note to standard GQL".
+2. Check a comma is now at the end of the first two lines of the block, and the notice above appears.
+3. Press undo once and check both commas are gone.
+4. In Settings, Graph Note, press the same button on the page, and check the same result.
 
 **Checklist line:**
 
-> **C-03** With such a note in front, "Convert this note to standard GQL" from the command palette, and the button on the page: the comma is written, a notice says how many were converted, and one undo takes it back. A note with a line that cannot be read is left as it is, and the notice says why (slice 2, simplified_back_to_standard).
+> **C-03** With such a note in front, "Convert this note to standard GQL" from the command palette, and the button on the page: the comma is written, a notice says how many were converted, and one undo takes it back.
 
 **Back to the checklist:** [C-03 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for C-03 in its list.

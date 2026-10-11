@@ -17,6 +17,7 @@
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. Press Edit to open the pane and type a new line at the end of the block in the pane.
 2. Without closing the pane, click in the block in the note and change the word 'Small' to 'Little'.
 3. Check the pane reloads the block and says what you typed is kept as a draft.

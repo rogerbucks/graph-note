@@ -26,6 +26,7 @@ A second graph, so there is something to pick between.
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. Press Edit on the second drawing (the trip).
 2. Check the pane opens beside the note on that block's text.
 3. Use the picker to switch to the first graph.

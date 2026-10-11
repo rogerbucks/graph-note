@@ -21,6 +21,7 @@ An empty graph.
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. Look at the block under "An empty graph".
 2. Read the prompt and press Edit.
 

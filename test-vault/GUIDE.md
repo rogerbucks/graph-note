@@ -24,5 +24,9 @@ never changes. Each note opens with its number, then **You should see**, the **T
 on), **Do this**, the checklist line word for word and a link back to the checklist on GitHub, where the number is found
 in the list. A line `<!-- expect: … -->` after the diagram says what the blocks read as (clean, or the problem they
 give), and `test/device-check-notes.test.js` holds each to it with the repository's own reader and checker, and the notes
-to the checklist, so a changed item fails there until its note follows. The notes carry no front matter and are Public;
+to the checklist, so a changed item fails there until its note follows. A text a note quotes from Obsidian's screen (a
+read-back, a label, tap text, a box's details, an export's footer, a notice) is marked in the same way, and
+`test/device-check-quotes.test.js` computes it with the real function and holds the note to it exactly. A note whose steps
+use a button that only Live Preview has (Edit, Edit here, Park, Record, Lock...) starts with step 0, to open it in Live
+Preview. The notes carry no front matter and are Public;
 a check that needs a classification (the export check, X-04) says to add one by hand and not to commit it.

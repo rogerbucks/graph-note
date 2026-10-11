@@ -17,6 +17,7 @@
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. Press Edit and put the cursor on a new line at the end of the block. Type `(z:` and check a kind such as Option is offered faintly.
 2. Type `{` and check a faint } follows the caret with the text after it unmoved. Press Tab, then undo once.
 3. Type `{` again, then press Escape, and check the faint } goes away until you type more.

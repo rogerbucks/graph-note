@@ -15,6 +15,7 @@
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. Press Edit here and tap the Small reader box.
 2. Check rating has a number field, released opens a date picker when pressed, and in_stock is a checkbox.
 3. Try each: change the rating, pick another date, and untick the box.

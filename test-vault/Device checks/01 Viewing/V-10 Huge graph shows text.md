@@ -1,6 +1,6 @@
 # V-10 Huge graph shows text
 
-**You should see:** once the graph has more than 2,000 things, its text shown in place of a drawing, under a banner with an icon that says the limit and the numbers in words. Obsidian stays responsive while it is checked: the note scrolls and the other block below it draws. The seed below is small and draws normally; it only becomes the huge case after step 2.
+**You should see:** once the graph has more than 2,000 things, its text shown in place of a drawing, under a banner with an icon that says the limit and the numbers in words. Obsidian stays responsive while it is checked: the note scrolls and the other block below it draws. The seed below is small and draws normally; it only becomes the huge case after step 3.
 
 **Test diagram:**
 
@@ -24,16 +24,16 @@ The block that must still draw while the huge one is checked.
 
 **Do this:**
 
-1. Run this in a terminal to print 2,100 extra things:
+1. Save this script as `make-huge.mjs`, in any folder outside the vault. It needs Node (version 18 or newer); in a terminal in that folder, run `node make-huge.mjs | pbcopy` on a Mac (on Linux, `node make-huge.mjs | xclip -selection clipboard`; on Windows, `node make-huge.mjs | clip`), which puts its output on the clipboard. It prints 2,100 things, one to a line, each ending in a comma:
 
    ```js
    for (let i = 1; i <= 2100; i++) console.log(`(t${i}:Thing {name: 'Thing ${i}'}),`);
    ```
 
-2. Paste the printed lines into the first block, after `(seed_1:Thing {name: 'Seed 1'}),`. This note is a copy in the vault; undo it, or reset the vault, when done.
+2. Open this note in edit (source) mode and paste the lines into the first block, straight after `(seed_1:Thing {name: 'Seed 1'}),`. This is your copy in the vault; undo, or reset the vault, when done.
 3. Look for the banner over the text, and read the limit and the numbers in it.
 4. While it is up, scroll the note and watch the second block draw.
-5. Repeat on the phone.
+5. For the phone, do the paste on the desktop and let the vault sync, then open the note on the phone.
 
 **Checklist line:**
 

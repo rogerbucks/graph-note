@@ -22,6 +22,7 @@
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. Press Edit here and tap the Small reader box; the tags show as chips (quiet, cheap).
 2. Compare their look with a list property in a note's Properties panel, light and dark.
 3. Press the x on cheap: its link and the Tag thing go (nothing else links to it). Undo, then press the x on quiet: only the link goes, because the Large reader links to it too. Read the line under the rows each time.

@@ -24,6 +24,6 @@
 
 **Checklist line:**
 
-> **X-05** iPhone: Export it, then Share: the share sheet opens with the image, PNG and SVG both (slice 2, export_share_sheet). Close the sheet without sharing: "Not shared", and nothing is saved in the vault.
+> **X-05** iPhone: Export it, then Share: the share sheet opens with the image, PNG and SVG both. Close the sheet without sharing: "Not shared", and nothing is saved in the vault.
 
 **Back to the checklist:** [X-05 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for X-05 in its list.
