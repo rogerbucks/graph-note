@@ -22,8 +22,8 @@ module that ties the parts together, named as the folder is.
 - `live-preview.ts` — the editing view's own cards, so the page stays still while a block is typed in.
 - `editor.ts` — the comma and the colon added for you in the note's own editor.
 - `pane.ts` — the edit pane, which holds a block editor.
-- `reading-view.ts` — a note shown in reading view is never changed: whether the note in front is, from its view's mode,
-  and the refusal, with its notice, that every command rewriting the note asks for first.
+- `reading-view.ts` — reading view never changes the note: `noteToRewrite`, which every command rewriting a note asks
+  first, gives the note in the pane in front, or refuses with a notice when that pane is in reading view or holds no note.
 
 ### `src/layout-worker/` — the layout kept apart from the interface (spec §9, layout_contained)
 

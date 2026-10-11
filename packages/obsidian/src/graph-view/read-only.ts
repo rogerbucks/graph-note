@@ -44,6 +44,19 @@ const plain = (v: unknown): v is Record<string, unknown> => {
 const builtIn = (v: object): boolean =>
   v instanceof Map || v instanceof Set || v instanceof Date || v instanceof RegExp || ArrayBuffer.isView(v);
 
+/** Whether a Map or a Set holds a function among its keys and values, however deep in objects and lists they hold it. */
+function holdsFunction(v: unknown, seen = new WeakSet<object>()): boolean {
+  if (typeof v === 'function') return true;
+  if (typeof v !== 'object' || v === null || seen.has(v)) return false;
+  seen.add(v);
+  const inside =
+    v instanceof Map ? [...v.keys(), ...v.values()] : v instanceof Set || Array.isArray(v) ? [...v] : Object.values(v);
+  return inside.some((x) => holdsFunction(x, seen));
+}
+
+/** The gated functions that were written `async`, so a gate over a gate still gives a promise. */
+const ASYNC = new WeakSet<Fn>();
+
 /** Whether an object has functions to call: its own, or its class's. */
 function hasMethods(v: object): boolean {
   for (let p: object | null = v; p && p !== Object.prototype; p = Object.getPrototypeOf(p) as object | null)
@@ -62,11 +75,13 @@ function hasMethods(v: object): boolean {
  */
 export function gateWrites(o: ViewOptions, readOnly: () => boolean): ViewOptions {
   const closed = (f: Fn): Fn => {
-    const isAsync = f.constructor.name === 'AsyncFunction';
-    return function gated(this: unknown, ...args: unknown[]): unknown {
+    const isAsync = f.constructor.name === 'AsyncFunction' || ASYNC.has(f);
+    const g = function gated(this: unknown, ...args: unknown[]): unknown {
       if (readOnly()) return isAsync ? Promise.resolve(undefined) : undefined;
       return f.apply(this, args);
     };
+    if (isAsync) ASYNC.add(g);
+    return g;
   };
   const copies = new WeakMap<object, unknown>();
   const gate = (v: unknown, path: string): unknown => {
@@ -86,6 +101,10 @@ export function gateWrites(o: ViewOptions, readOnly: () => boolean): ViewOptions
       for (const [k, x] of Object.entries(v)) copy[k] = gate(x, path ? `${path}.${k}` : k);
       return copy;
     }
+    if ((v instanceof Map || v instanceof Set) && holdsFunction(v))
+      throw new Error(
+        `Graph Note: the card's option ${path} holds functions in a Map or a Set, whose writes cannot be closed in reading view. Give them in a plain object, or name what only reads in READS (read-only.ts).`,
+      );
     if (!builtIn(v) && hasMethods(v))
       throw new Error(
         `Graph Note: the card's option ${path} holds an object of a class with methods, whose writes cannot be closed in reading view. Give it as a plain object, or name what only reads in READS (read-only.ts).`,

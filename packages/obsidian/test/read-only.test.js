@@ -450,4 +450,24 @@ describe('the one check', () => {
     const data = { graph: 'g', when: new Date(0), looks: { things: new Map([['a', 1]]) }, reading: new Writer() };
     assert.doesNotThrow(() => gateWrites(data, () => true), 'dates, maps and the data the card shows pass as they are');
   });
+
+  test('a Map or a Set holding functions is refused when the card is made, as a class’s object is', async () => {
+    const { gateWrites } = await import('../src/graph-view/read-only.ts');
+    const write = () => 'written';
+    assert.throws(() => gateWrites({ graph: 'g', byName: new Map([['save', write]]) }, () => true), /byName/);
+    assert.throws(() => gateWrites({ graph: 'g', deep: { all: new Set([write]) } }, () => true), /deep\.all/);
+    assert.throws(() => gateWrites({ graph: 'g', nested: new Map([['a', { write }]]) }, () => true), /nested/);
+  });
+
+  test('an async function gated twice, as full screen gates the card’s gated options again, still gives a promise', async () => {
+    const { gateWrites } = await import('../src/graph-view/read-only.ts');
+    let readOnly = true;
+    const once = gateWrites({ graph: 'g', save: async () => 'saved' }, () => readOnly);
+    const twice = gateWrites({ ...once, mode: 'full' }, () => readOnly);
+    const p = twice.save();
+    assert.ok(p instanceof Promise, 'a promise, so .then and await work on it');
+    assert.equal(await p, undefined);
+    readOnly = false;
+    assert.equal(await twice.save(), 'saved');
+  });
 });

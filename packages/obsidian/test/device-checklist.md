@@ -63,7 +63,8 @@ holds the two together).
       inside a note in Live Preview. Properties are shown but never added or changed: no Add property, no field, no type
       menu, no x or add field on a list. There is no Park for later, no fix that writes a suggested name, no Record a path
       or Make a view, no Fade or Hide others or Save as shown, and no Edit here or Edit in pane, even while the block is
-      edited in Live Preview, and in full screen opened from reading view too.
+      edited in Live Preview, and in full screen opened from reading view too. A Graph Note pane already open on the block
+      keeps saving while another pane shows the note in reading view.
 - [ ] **Z-10** Only one set of zoom controls appears: the Mermaid Zoom plugin does not add its own to a graph drawing.
 
 ## The edit pane — spec §4, §5, §9
@@ -252,9 +253,11 @@ holds the two together).
       settings_formatting).
 - [ ] **C-06** A note with a line that cannot be read, in front, and "Convert this note to standard GQL" from the command
       palette: the note is left as it is, and the notice says why (slice 2, simplified_back_to_standard).
-- [ ] **C-07** A note shown in reading view, in front, and "Convert this note to standard GQL" from the command palette, and
-      the button on the page: the note is left as it is, and the notice says it is shown in reading view and to switch to
-      Live Preview or Source mode. In Live Preview it converts.
+- [ ] **C-07** With the pane in front showing a note in reading view, "Convert this note to standard GQL" from the command
+      palette, and the button on the page: the note is left as it is, and the notice says why. With no note in the pane in
+      front (the Graph Note pane, a canvas, a PDF, an empty tab), nothing is converted, and the notice says the pane holds
+      no note. The pane in front decides: in Live Preview it converts, even while another pane shows the note in reading
+      view.
 
 ## Accessibility — spec §8, §11
 

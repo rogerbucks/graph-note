@@ -25,7 +25,7 @@ import { GraphPane, PANE } from './pane';
 import { addForYou } from './editor';
 import { BlockEditor } from './block-editor/block-editor';
 import { graphBlocks } from './live-preview';
-import { refusedInReadingView } from './reading-view';
+import { noteToRewrite } from './reading-view';
 
 /** Where Edit was pressed: the note, the line of the block's opening fence (0-based), and the graph it draws. */
 export interface EditTarget {
@@ -126,12 +126,9 @@ export default class GraphNotePlugin extends Plugin {
 
   /** Converts the note in front back to standard GQL (spec §21), checked by the standard checker before it is written. */
   async convertToStandard(): Promise<void> {
-    const file = this.app.workspace.getActiveFile();
-    if (!file) {
-      new Notice('Open a note to convert it to standard GQL.');
-      return;
-    }
-    if (refusedInReadingView(this.app.workspace, 'to convert it')) return; // reading view never changes a note (spec §3)
+    // the note in the pane in front, unless that pane is in reading view, which never changes a note (spec §3)
+    const file = noteToRewrite(this.app.workspace, 'to convert it to standard GQL');
+    if (!file) return;
     const checked = toStandard(await this.app.vault.read(file));
     if (!checked.ok) {
       new Notice(`Not converted: ${checked.reason}`);
