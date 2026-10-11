@@ -2,14 +2,17 @@
 // drawn dashed with a later mark — on the drawing Graphviz drew, so its layout stays the Python library's — and said so
 // to screen readers; the parked things listed behind the badge; and, while the card is edited, Park for later in a
 // box's details, which writes a Deferred saying what is needed and why it waits.
-import { indentText, parkForLater } from '@graph-note/core';
+import { DeferredNotDeclared, indentText, parkForLater } from '@graph-note/core';
 import type { Box, Indent, NoteReading, Parked } from '@graph-note/core';
 
 /** A graph as the whole note reads it. */
 type Graph = NoteReading['whole'][string];
+import type { DeclaredDeferred } from './view-options';
 import { button } from './view-bar';
 
 const SVG = 'http://www.w3.org/2000/svg';
+/** The button that writes Deferred and DEFERS into the schema when Park it was refused for lacking them. */
+const DECLARE = 'Declare Deferred and DEFERS in the schema';
 
 /** The edges of a box as Graphviz drew it, from the numbers of its outline: where a mark is put on it. */
 export function cornerOf(g: Element): { left: number; right: number; top: number } | null {
@@ -67,7 +70,9 @@ export function parkedNote(el: HTMLElement, box: Box | undefined): void {
 
 /**
  * Park for later, in a box's details while its block is edited: a button that opens a small form — what is needed, why
- * it waits, and when to look again — which writes the Deferred into the text being edited, or says what is missing.
+ * it waits, and when to look again — which writes the Deferred into the text being edited, or says what is missing. In
+ * a locked graph whose schema lacks Deferred and DEFERS, the refusal comes with a button that `declare`s them in the
+ * schema and then parks, with what was typed in the form kept.
  */
 export function parkButton(
   el: HTMLElement,
@@ -76,6 +81,7 @@ export function parkButton(
   replace: (next: string) => void,
   indent: Indent,
   whole?: Graph,
+  declare?: () => Promise<DeclaredDeferred>,
 ): void {
   const holder = el.createDiv({ cls: 'graph-note-park' });
   button(holder, 'Park for later', 'clock', () => {
@@ -88,13 +94,47 @@ export function parkButton(
       by = input('Revisit by', 'date');
     what.focus(); // the button pressed is gone: the focus goes to the first field, never nowhere
     const said = holder.createDiv({ attr: { role: 'alert' } });
-    button(holder, 'Park it', 'check', () => {
+    const fix = holder.createDiv();
+    // the block with the Deferred written into it, from the form as it is now; throws why it cannot
+    const parked = (block: string, graph?: Graph) => {
+      const park = { what: what.value, why: why.value, ...(by.value ? { revisitBy: by.value } : {}) };
+      return parkForLater(block, key, park, indentText(indent), graph);
+    };
+    const refused = (e: unknown) => said.setText(String((e as Error).message));
+    const parkIt = button(holder, 'Park it', 'check', () => {
+      fix.empty();
       try {
-        const park = { what: what.value, why: why.value, ...(by.value ? { revisitBy: by.value } : {}) };
-        replace(parkForLater(text(), key, park, indentText(indent), whole));
+        replace(parked(text(), whole));
       } catch (e) {
-        said.setText(String((e as Error).message));
+        refused(e);
+        if (declare && e instanceof DeferredNotDeclared) {
+          const again = button(fix, DECLARE, 'check', () => void declareAndPark(declare, again), DECLARE);
+        }
       }
     });
+    let busy = false; // a second press, while the first is at work or after it parked, does nothing: parked once
+    async function declareAndPark(
+      declareIt: () => Promise<DeclaredDeferred>,
+      pressed: HTMLButtonElement,
+    ): Promise<void> {
+      if (busy) return;
+      busy = pressed.disabled = true;
+      try {
+        // the form as it is now is checked first, so nothing is declared for a park that would fail
+        try {
+          replace(parked(text(), whole));
+        } catch (e) {
+          if (!(e instanceof DeferredNotDeclared)) throw e;
+          const declared = await declareIt();
+          replace(parked(declared.text, declared.whole));
+        }
+        fix.empty();
+        said.setText('');
+        parkIt.focus(); // the button pressed is gone: the focus goes to the button before it, never nowhere
+      } catch (e) {
+        refused(e);
+        busy = pressed.disabled = false; // refused: pressed again, once the form is put right
+      }
+    }
   });
 }

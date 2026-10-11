@@ -6,10 +6,19 @@ import type { ShownProblem } from './problems-list';
 import type { ViewShown } from './view-strip';
 import type { Exporting } from '../export/export-form';
 
+/** What declaring Deferred and DEFERS in the graph's schema gave: the text to park into, and the graph as the note now reads it. */
+export interface DeclaredDeferred {
+  /** The block as typed, with the declarations when the schema is written in it. */
+  text: string;
+  whole: NoteReading['whole'][string] | undefined;
+}
+
 /** The editor open in place on this card, as the inspector needs it: the block's text as typed, and a way to replace it. */
 export interface Editing {
   session: { text: string } | null;
   replace(text: string): void;
+  /** Park for later's fix for a graph whose schema lacks Deferred and DEFERS: declares them, wherever the schema is written. Rejects with why not. */
+  declareDeferred(): Promise<DeclaredDeferred>;
   /** What the details were open on, so the inspector reopens on it in the redrawn card. */
   selected: { key: string } | { link: number } | null;
   /** The lists made while the editor is open, which the inspector shows even before they hold a value. */

@@ -76,12 +76,20 @@ export class PaneSession {
     this.dirty = text !== this.ref.text;
   }
 
-  /** The note as it would read with what is typed — for the pane's own drawing, problems and suggestions. */
-  reading(note: string): NoteReading {
+  /**
+   * The texts of the note's gql blocks with what is typed in the edited block's place, and that block's index among them;
+   * -1, with the texts as they are, when the note no longer holds the block.
+   */
+  texts(note: string): { texts: string[]; index: number } {
     const spans = gqlSpans(note);
     const at = spans.findIndex((s) => s.open === this.ref.line && s.text === this.ref.text);
     const index = at >= 0 ? at : spans.findIndex((s) => s.text === this.ref.text);
-    const texts = spans.map((s, i) => (i === index ? this.text : s.text));
+    return { texts: spans.map((s, i) => (i === index ? this.text : s.text)), index };
+  }
+
+  /** The note as it would read with what is typed — for the pane's own drawing, problems and suggestions. */
+  reading(note: string): NoteReading {
+    const { texts, index } = this.texts(note);
     const r = index >= 0 ? readNote(texts, index, this.shared) : readNote([this.text], 0, this.shared);
     return { ...r, problems: underStrictness(r.problems, this.strictness()) };
   }

@@ -5,11 +5,12 @@
 // textFromName and their types), and the layout kept apart from the interface (LayoutRunner and its kin, 10 Oct 2026),
 // the settings and strictness of §21 (OPTIONS, settingsFrom, toStandard and their kin, 11 Oct 2026), the one colour
 // mapping, with the steps around Graphviz for a host that lays out elsewhere (PALETTES, chosen and their kin, for the
-// Claude Code host, 11 Oct 2026), deferred things (parkForLater, parked, parkedCount and their types), walked paths
-// (PathRecorder, PathPlayer, pathBlock, pathsOf, pathProblems and their types), the style graph (readStyle, lookOf,
-// legendOf, nudgedSource, styleEdit, hueColour, the words a style may use and their types), and views (viewsOf,
-// parseView, viewQuery, viewBlock, readingOf, evaluate and their types, 11 Oct 2026), and export (exportScope, exportSvg,
-// pngSize, exportPlan, companionNote, writeSafely, saidDate, EXPORT_FORMATS, PNG_MIN_SCALE and their types, 11 Oct 2026).
+// Claude Code host, 11 Oct 2026), deferred things (parkForLater, parked, parkedCount and their types, and the fix for a
+// refusal to park: declareDeferred, declareDeferredBlock, DeferredNotDeclared), walked paths (PathRecorder, PathPlayer,
+// pathBlock, pathsOf, pathProblems and their types), the style graph (readStyle, lookOf, legendOf, nudgedSource,
+// styleEdit, hueColour, the words a style may use and their types), and views (viewsOf, parseView, viewQuery, viewBlock,
+// readingOf, evaluate and their types, 11 Oct 2026), and export (exportScope, exportSvg, pngSize, exportPlan,
+// companionNote, writeSafely, saidDate, EXPORT_FORMATS, PNG_MIN_SCALE and their types, 11 Oct 2026).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -22,6 +23,7 @@ const ENTRY = new URL('../src/index.ts', import.meta.url);
 const VALUES = [
   'DEFAULT_SETTINGS',
   'DEPARTURES',
+  'DeferredNotDeclared',
   'EXPORT_FORMATS',
   'FORMATS',
   'History',
@@ -67,6 +69,8 @@ const VALUES = [
   'companionNote',
   'completenessReport',
   'completions',
+  'declareDeferred',
+  'declareDeferredBlock',
   'details',
   'diagnostics',
   'directions',
@@ -171,6 +175,7 @@ const TYPES = [
   'CompletenessReport',
   'CompletionItem',
   'Converted',
+  'DeferredDeclared',
   'Departure',
   'Details',
   'Diagnostic',

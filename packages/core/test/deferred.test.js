@@ -4,9 +4,18 @@
 // overdue (parked_not_broken).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import gs from '@graph-note/graph-spec';
+import { gqlBlocks } from '../src/blocks.ts';
 import { readNote } from '../src/drawing.ts';
 import { layoutSource } from '../src/layout.ts';
-import { parkForLater, parked, parkedCount } from '../src/deferred.ts';
+import {
+  DeferredNotDeclared,
+  declareDeferred,
+  declareDeferredBlock,
+  parkForLater,
+  parked,
+  parkedCount,
+} from '../src/deferred.ts';
 
 const BLOCK = `// graph: reader
 (q:Question {title: 'Which device?'}),
@@ -16,6 +25,21 @@ const BLOCK = `// graph: reader
 
 const TODAY = '2026-10-07';
 const PARK = { what: 'say what the small reader answers', why: 'waiting for the trial' };
+
+// the graph library's §5 (types.js, schema_types.py): a locked graph must declare Deferred and DEFERS like any type
+const LOCKED = `${BLOCK},
+(reader_schema:GraphMeta {graph: 'reader', schema: 'reader@1'}),
+(kind_option:Meta:ElementType {name: 'Option', kind: 'node', origin: 'source'}),
+(kind_question:Meta:ElementType {name: 'Question', kind: 'node', origin: 'source'}),
+(link_answers:Meta:ElementType {name: 'ANSWERS', kind: 'edge', origin: 'source', reading: 'answers', reverse_name: 'answered by'}),
+(reader_schema)-[:DECLARES]->(kind_option),
+(reader_schema)-[:DECLARES]->(kind_question),
+(reader_schema)-[:DECLARES]->(link_answers)`;
+const KIND_DEFERRED = `(kind_deferred:Meta:ElementType {name: 'Deferred', kind: 'node', origin: 'source'}),
+(reader_schema)-[:DECLARES]->(kind_deferred)`;
+const LINK_DEFERS = `(link_defers:Meta:ElementType {name: 'DEFERS', kind: 'edge', origin: 'source', reading: 'defers', reverse_name: 'deferred by'}),
+(reader_schema)-[:DECLARES]->(link_defers)`;
+const DECLARED = `${LOCKED},\n${KIND_DEFERRED},\n${LINK_DEFERS}`;
 
 /** The messages of the problems a block reads with: a hint only offers a fix, and is no problem (note-reading.ts). */
 const problemsOf = (...blocks) =>
@@ -166,16 +190,6 @@ describe('parking a thing for later (park_for_later)', () => {
       assert.throws(() => parkForLater(BLOCK, 'small', { ...PARK, revisitBy: bad }), /revisit/);
   });
 
-  // the graph library's §5 (types.js, schema_types.py): a locked graph must declare Deferred and DEFERS like any type
-  const LOCKED = `${BLOCK},
-(reader_schema:GraphMeta {graph: 'reader', schema: 'reader@1'}),
-(kind_option:Meta:ElementType {name: 'Option', kind: 'node', origin: 'source'}),
-(kind_question:Meta:ElementType {name: 'Question', kind: 'node', origin: 'source'}),
-(link_answers:Meta:ElementType {name: 'ANSWERS', kind: 'edge', origin: 'source', reading: 'answers', reverse_name: 'answered by'}),
-(reader_schema)-[:DECLARES]->(kind_option),
-(reader_schema)-[:DECLARES]->(kind_question),
-(reader_schema)-[:DECLARES]->(link_answers)`;
-
   test('a locked graph that does not declare Deferred and DEFERS is not parked in, and says to declare them', () => {
     // park_for_later
     assert.deepEqual(problemsOf(LOCKED), []);
@@ -184,12 +198,7 @@ describe('parking a thing for later (park_for_later)', () => {
 
   test('a locked graph that declares them is parked in with no undeclared-type warning', () => {
     // park_for_later
-    const declared = `${LOCKED},
-(kind_deferred:Meta:ElementType {name: 'Deferred', kind: 'node', origin: 'source'}),
-(link_defers:Meta:ElementType {name: 'DEFERS', kind: 'edge', origin: 'source', reading: 'defers', reverse_name: 'deferred by'}),
-(reader_schema)-[:DECLARES]->(kind_deferred),
-(reader_schema)-[:DECLARES]->(link_defers)`;
-    assert.deepEqual(problemsOf(parkForLater(declared, 'small', PARK)), []);
+    assert.deepEqual(problemsOf(parkForLater(DECLARED, 'small', PARK)), []);
   });
 
   test('a thing written in another block of its graph is parked, given the graph as the note reads it', () => {
@@ -207,6 +216,206 @@ describe('parking a thing for later (park_for_later)', () => {
     // park_for_later
     const set = `${BLOCK},\nSET small.name = 'Little'`;
     assert.throws(() => parkForLater(set, 'small', PARK), /SET or MATCH/);
+  });
+});
+
+// Roger, 11 Oct 2026: in a locked graph, parking is refused unless the schema declares Deferred and DEFERS, and the
+// refusal offers the fix: the two declarations, written into the schema as Lock writes them (park_for_later)
+describe('declaring Deferred and DEFERS in the schema (park_for_later)', () => {
+  const SCHEMA = `// graph: reader\n${LOCKED.slice(BLOCK.length + 2)}`;
+  const noteOf = (...blocks) =>
+    ['# Reader', '', ...blocks.flatMap((b) => ['```gql', b, '```', '']), 'After.', ''].join('\n');
+  const blocksOf = (note) => gqlBlocks(note).map((b) => b.text);
+  const wholeOf = (...blocks) => readNote(blocks).whole.reader;
+  const untypedIn = (...blocks) => gs.untyped(wholeOf(...blocks));
+  // what is written, laid out as Lock lays out a schema: a long thing split over lines, a comment line before the part
+  const TAIL = `// ── Deferred things, declared so one can be parked for later ──
+(kind_deferred:Meta:ElementType {
+    name: 'Deferred', kind: 'node', origin: 'source'}),
+(link_defers:Meta:ElementType {
+    name: 'DEFERS', kind: 'edge', origin: 'source',
+    reading: 'defers', reverse_name: 'is deferred by'}),
+(reader_schema)-[:DECLARES]->(kind_deferred),
+(reader_schema)-[:DECLARES]->(link_defers)`;
+
+  test('writes the two declarations as Lock writes them, last in the block that holds the graph meta', () => {
+    // park_for_later
+    assert.equal(declareDeferred(noteOf(LOCKED), 'reader'), noteOf(`${LOCKED},\n${TAIL}`));
+  });
+
+  test('after it, parking in the same block works, the note reads with no new problem and nothing is untyped', () => {
+    // park_for_later
+    const [block] = blocksOf(declareDeferred(noteOf(LOCKED), 'reader'));
+    const parkedBlock = parkForLater(block, 'small', PARK);
+    assert.deepEqual(problemsOf(parkedBlock), problemsOf(LOCKED));
+    assert.deepEqual(untypedIn(parkedBlock), [[], [], []]);
+    // the check bites: the same Deferred parked without the declarations leaves both untyped
+    const bare = `${LOCKED}${deferral('later_small', 'small', "what: 'x', why: 'y'")}`;
+    assert.deepEqual(untypedIn(bare), [['Deferred'], ['DEFERS'], []]);
+  });
+
+  test('a schema written in a later block gets the declarations there, and the data block is left whole', () => {
+    // park_for_later
+    const note = noteOf(BLOCK, SCHEMA);
+    const out = declareDeferred(note, 'reader');
+    const [data, schema] = blocksOf(out);
+    assert.equal(data, BLOCK);
+    assert.equal(schema, `${SCHEMA},\n${TAIL}`);
+    assert.equal(out, noteOf(BLOCK, `${SCHEMA},\n${TAIL}`), 'every other byte of the note is kept');
+    // parking in the data block works once the graph is read with its new schema, and was refused before
+    const before = wholeOf(BLOCK, SCHEMA);
+    assert.throws(() => parkForLater(BLOCK, 'small', PARK, '    ', before), /declare.*Deferred and DEFERS/);
+    const parkedBlock = parkForLater(data, 'small', PARK, '    ', wholeOf(data, schema));
+    assert.deepEqual(problemsOf(parkedBlock, schema), problemsOf(BLOCK, SCHEMA));
+    assert.deepEqual(untypedIn(parkedBlock, schema), [[], [], []]);
+  });
+
+  test('keeps the note’s line endings and every byte outside the schema block', () => {
+    // park_for_later
+    const crlf = noteOf(BLOCK, SCHEMA).replace(/\n/g, '\r\n');
+    const out = declareDeferred(crlf, 'reader');
+    assert.equal(out, declareDeferred(noteOf(BLOCK, SCHEMA), 'reader').replace(/\n/g, '\r\n'));
+    assert.ok(!/[^\r]\n/.test(out), 'no bare line feed in a note written with CRLF');
+    assert.ok(out.startsWith('# Reader\r\n\r\n```gql\r\n// graph: reader\r\n(q:Question'));
+    assert.ok(out.endsWith('```\r\n\r\nAfter.\r\n'));
+  });
+
+  test('declares only what is missing: a schema with Deferred but not DEFERS gets DEFERS alone', () => {
+    // park_for_later
+    const some = `${LOCKED},\n${KIND_DEFERRED}`;
+    const out = declareDeferred(noteOf(some), 'reader');
+    const [block] = blocksOf(out);
+    assert.equal(block.split("name: 'Deferred'").length, 2, 'Deferred is declared once');
+    assert.ok(block.includes("name: 'DEFERS', kind: 'edge'"));
+    assert.ok(block.endsWith('(reader_schema)-[:DECLARES]->(link_defers)'));
+    assert.ok(!block.includes('kind_deferred_2'));
+    assert.deepEqual(untypedIn(parkForLater(block, 'small', PARK)), [[], [], []]);
+    // and the other way round
+    const edge = declareDeferred(noteOf(`${LOCKED},\n${LINK_DEFERS}`), 'reader');
+    assert.ok(
+      blocksOf(edge)[0].endsWith(
+        "name: 'Deferred', kind: 'node', origin: 'source'}),\n(reader_schema)-[:DECLARES]->(kind_deferred)",
+      ),
+    );
+  });
+
+  test('a schema that declares both already is returned as it was', () => {
+    // park_for_later
+    assert.equal(declareDeferred(noteOf(DECLARED), 'reader'), noteOf(DECLARED));
+    const split = noteOf(BLOCK, `${SCHEMA},\n${KIND_DEFERRED},\n${LINK_DEFERS}`);
+    assert.equal(declareDeferred(split, 'reader'), split);
+  });
+
+  test('takes fresh ids, also against the graph’s other blocks', () => {
+    // park_for_later
+    const data = BLOCK.replace('(tablet:', '(link_defers:');
+    const out = declareDeferred(noteOf(data, SCHEMA), 'reader');
+    const [, schema] = blocksOf(out);
+    assert.match(schema, /\(link_defers_2:Meta:ElementType/);
+    assert.match(schema, /\(reader_schema\)-\[:DECLARES\]->\(link_defers_2\)/);
+    assert.match(schema, /\(kind_deferred:Meta:ElementType/, 'an id not taken keeps its own name');
+    assert.deepEqual(problemsOf(data, schema), problemsOf(data, SCHEMA));
+    assert.deepEqual(untypedIn(parkForLater(data, 'small', PARK, '    ', wholeOf(data, schema)), schema), [[], [], []]);
+  });
+
+  test('puts a comma where GQL needs one, never two, and keeps a comment at the end of the block', () => {
+    // park_for_later
+    for (const end of [',', '\n// the end of the schema', '\n\n  \n', ' // not decided', ',\n// the end']) {
+      const schema = LOCKED + end;
+      const [block] = blocksOf(declareDeferred(noteOf(schema), 'reader'));
+      assert.ok(!/,\s*,/.test(block), `never two commas in a row after ${JSON.stringify(end)}`);
+      assert.ok(block.includes(end.trim().split('\n').at(-1) ?? ''), 'the comment is kept');
+      assert.deepEqual(untypedIn(parkForLater(block, 'small', PARK)), [[], [], []]);
+      const was = problemsOf(schema);
+      assert.ok(
+        problemsOf(block).every((m) => was.includes(m)),
+        'nothing new is wrong',
+      );
+    }
+  });
+
+  test('lays a long thing out indented as the settings say', () => {
+    // park_for_later
+    const [block] = blocksOf(declareDeferred(noteOf(LOCKED), 'reader', '\t'));
+    assert.ok(block.includes("(kind_deferred:Meta:ElementType {\n\tname: 'Deferred'"));
+    assert.ok(block.includes("origin: 'source',\n\treading: 'defers', reverse_name: 'is deferred by'}),"));
+  });
+
+  test('names the block and what to write, for a host that writes the block itself', () => {
+    // park_for_later
+    const blocks = [BLOCK, SCHEMA];
+    assert.deepEqual(declareDeferredBlock(blocks, 'reader'), { block: 1, text: `${SCHEMA},\n${TAIL}` });
+    assert.deepEqual(declareDeferredBlock([LOCKED], 'reader'), { block: 0, text: `${LOCKED},\n${TAIL}` });
+    assert.deepEqual(declareDeferredBlock([DECLARED], 'reader'), { block: 0, text: DECLARED });
+  });
+
+  test('refuses a draft: there is no schema block to write into', () => {
+    // park_for_later
+    assert.throws(() => declareDeferred(noteOf(BLOCK), 'reader'), /no schema/);
+  });
+
+  test('refuses a graph typed by a shared schema, which is declared there', () => {
+    // park_for_later
+    const named = BLOCK.replace('// graph: reader', '// graph: reader · schema house');
+    assert.throws(() => declareDeferred(noteOf(named), 'reader'), /shared schema/);
+  });
+
+  test('refuses a GraphMeta whose id is not a plain name, saying so and what to rename it to', () => {
+    // park_for_later: a link can only name a node by a plain name, so DECLARES could not be written to it
+    for (const [id, rename] of [
+      ['Café', 'Caf_'],
+      ['9x', '_9x'],
+      ['m-1', 'm_1'],
+    ]) {
+      const schema = LOCKED.replaceAll('reader_schema', 'm').replace('(m:GraphMeta {', `(m:GraphMeta {id: '${id}', `);
+      assert.deepEqual(problemsOf(schema), [], `${id} reads`);
+      assert.throws(
+        () => declareDeferred(noteOf(schema), 'reader'),
+        (e) =>
+          /GraphMeta/.test(e.message) &&
+          e.message.includes(`'${id}'`) &&
+          /not a plain name/.test(e.message) &&
+          e.message.includes(`rename it to ${rename}`) &&
+          !/has no GraphMeta/.test(e.message),
+        id,
+      );
+    }
+  });
+
+  test('refuses a schema with no graph meta to declare from, a graph that is not in the note, and a block ending in SET', () => {
+    // park_for_later
+    const noMeta = LOCKED.replace(/\(reader_schema:GraphMeta[^\n]*\n/, '').replace(/\(reader_schema\)[^\n]*\n?/g, '');
+    assert.throws(() => declareDeferred(noteOf(noMeta), 'reader'), /GraphMeta/);
+    assert.throws(() => declareDeferred(noteOf(LOCKED), 'nobody'), /nobody/);
+    assert.throws(() => declareDeferred(noteOf(`${LOCKED},\nSET small.name = 'Little'`), 'reader'), /SET or MATCH/);
+  });
+});
+
+describe('the refusal that has a fix (park_for_later)', () => {
+  test('a locked graph without the declarations is refused in a way a host can tell, in the same words', () => {
+    // park_for_later
+    assert.throws(
+      () => parkForLater(LOCKED, 'small', PARK),
+      (e) =>
+        e instanceof DeferredNotDeclared &&
+        e.code === 'deferred-not-declared' &&
+        e.graph === 'reader' &&
+        e.lacking.join() === 'Deferred,DEFERS' &&
+        e.message ===
+          'graph reader is locked and its schema does not declare Deferred and DEFERS: declare them in the schema first',
+    );
+    const some = parkForLater.bind(null, `${LOCKED},\n${KIND_DEFERRED}`, 'small', PARK);
+    assert.throws(some, (e) => e instanceof DeferredNotDeclared && e.lacking.join() === 'DEFERS');
+  });
+
+  test('every other refusal stays a plain error', () => {
+    // park_for_later
+    for (const refuse of [
+      () => parkForLater(BLOCK, 'small', { what: '', why: 'x' }),
+      () => parkForLater(BLOCK, 'nobody', PARK),
+      () => parkForLater('(a:T)', 'a', PARK),
+    ])
+      assert.throws(refuse, (e) => e instanceof Error && !(e instanceof DeferredNotDeclared) && !('code' in e));
   });
 });
 

@@ -26,6 +26,23 @@ const fit = (one: string, first: string, second: string) => (one.length < 70 ? [
 export const quoted = (s: string) => `'${s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
 const q = quoted;
 
+/** The lines that declare a kind of thing as Lock writes it, ending `}),` for the line after to follow; later lines indented by `indent`. */
+export const kindLines = (id: string, name: string, indent: string): string[] => [
+  `(${id}:Meta:ElementType {`,
+  `${indent}name: ${q(name)}, kind: 'node', origin: 'source'}),`,
+];
+
+/** The lines that declare a relationship type as Lock writes it, with its reading both ways, ending `}),` for the line after to follow. */
+export const typeLines = (id: string, name: string, reading: string, reverse: string, indent: string): string[] => [
+  `(${id}:Meta:ElementType {`,
+  `${indent}name: ${q(name)}, kind: 'edge', origin: 'source',`,
+  ...fit(
+    `${indent}reading: ${q(reading)}, reverse_name: ${q(reverse)}}),`,
+    `${indent}reading: ${q(reading)},`,
+    `${indent}reverse_name: ${q(reverse)}}),`,
+  ),
+];
+
 /**
  * The schema block that locks a draft: every kind and relationship type of the whole graph — across all its blocks in the
  * note, whichever block it is locked from — each with its readings, dated, and each declared by the graph's GraphMeta.
@@ -77,21 +94,10 @@ export function lockBlock(reading: NoteReading, graph: string, today: string, in
     ...(own ? [] : [`(${meta}:GraphMeta {`, `${indent}graph: ${q(graph)}, schema: ${q(`${graph}@1`)}}),`]),
     '',
     '// ── Kinds of thing ──',
-    ...kinds.flatMap((k) => [
-      `(${declare(`kind_${k.toLowerCase()}`)}:Meta:ElementType {`,
-      `${indent}name: ${q(k)}, kind: 'node', origin: 'source'}),`,
-    ]),
+    ...kinds.flatMap((k) => kindLines(declare(`kind_${k.toLowerCase()}`), k, indent)),
     '',
     '// ── Relationship types, with their readings both ways ──',
-    ...types.flatMap(([t, r, back]) => [
-      `(${declare(`link_${t.toLowerCase()}`)}:Meta:ElementType {`,
-      `${indent}name: ${q(t)}, kind: 'edge', origin: 'source',`,
-      ...fit(
-        `${indent}reading: ${q(r)}, reverse_name: ${q(back)}}),`,
-        `${indent}reading: ${q(r)},`,
-        `${indent}reverse_name: ${q(back)}}),`,
-      ),
-    ]),
+    ...types.flatMap(([t, r, back]) => typeLines(declare(`link_${t.toLowerCase()}`), t, r, back, indent)),
     '',
     '// ── The graph declares each one ──',
     ...declared.map((d) => `(${meta})-[:DECLARES]->(${d}),`),
