@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/read-only.test.js",
+  "test": "a card in reading view shows its details and offers nothing that writes, while its block is edited elsewhere > a card drawn off the page, as reading view draws it, takes back Record a path and Make a view once it is placed",
+  "seen_failing_first": false,
+  "evidence": "Pins the showEditing() call #86 added at placement (graph-view.ts), which had no test of its own: the review of #86 asked for one. Seen failing with that call commented out, on 11 Oct 2026; it asserts first that the card offered Record a path before it was placed, so the case is exercised."
+}

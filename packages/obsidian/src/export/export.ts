@@ -7,15 +7,16 @@ import {
   companionNote,
   exportPlan,
   exportScope,
-  exportSvg,
+  exportWithLayout,
   gqlBlocks,
   pngSize,
   readNote,
   readStyle,
   writeSafely,
 } from '@graph-note/core';
-import type { ExportFormat, ExportTheme, ViewSpec } from '@graph-note/core';
+import type { ExportFormat, ExportLayout, ExportTheme, ViewSpec } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
+import { exportFailureWords, exportRefusalWords } from '../layout-worker/refusal-words';
 import { classificationOf } from './classification';
 import { freePath, vaultOps } from './vault-write';
 
@@ -73,6 +74,8 @@ async function exporting(plugin: GraphNotePlugin, ask: ExportAsk): Promise<Expor
   const text = await plugin.app.vault.read(file);
   const texts = gqlBlocks(text).map((b) => b.text);
   const reading = readNote(texts);
+  // a note over the text limit is never read (layout_contained), so there is nothing to draw: say why, never "nothing to export"
+  if (reading.tooLarge) return said({ stopped: exportRefusalWords(reading.tooLarge) });
   const scope = exportScope(reading, {
     graph: ask.graph,
     ...(ask.view ? { view: ask.view } : {}),
@@ -97,7 +100,28 @@ async function exporting(plugin: GraphNotePlugin, ask: ExportAsk): Promise<Expor
   if ('ask' in plan) return { ask: plan.ask };
   const { go } = plan;
   const style = readStyle(texts, ask.graph, reading).style;
-  const image = exportSvg(scope, await plugin.graphviz(), { note: ask.path, date, theme: ask.theme, style });
+  // laid out where a drawing is, apart from the interface and under the same limits (layout_contained): one over a limit
+  // writes nothing, and says why
+  let layoutFailed = false;
+  const layout: ExportLayout = (d, theme) =>
+    plugin.layoutForExport(d, theme).catch((e: unknown) => {
+      layoutFailed = true;
+      throw e;
+    });
+  let image;
+  try {
+    image = await exportWithLayout(scope, layout, { note: ask.path, date, theme: ask.theme, style });
+  } catch (e) {
+    // the layout worker or its engine failed: told as a limit is, with what to do; any other failure is the caller's
+    if (!layoutFailed) throw e;
+    return said({ stopped: exportFailureWords(e) });
+  }
+  if (!image)
+    return said({
+      stopped:
+        'The export was stopped: Graph Note was unloaded before the layout finished. Nothing was saved. Try again once Graph Note is enabled again.',
+    });
+  if ('reason' in image) return said({ stopped: exportRefusalWords(image) });
   let bytes: Uint8Array | string = image.svg;
   if (ask.format === 'png') {
     const size = pngSize(image.width, image.height);

@@ -14,7 +14,8 @@ module that ties the parts together, named as the folder is.
 - `block.ts` — one gql block in a note: drawn, or shown as code, never blank; as text with a banner when it is over a
   size or time limit.
 - `view-block.ts` — a view (§7): a query block named as a view, drawn as what it picks out of its graph; refused, saying
-  what is allowed, outside the view profile; saying so, with Change the view, when it matches nothing; faded or hidden
+  what is allowed, outside the view profile; shown as its query under the banner when its note is too large to read;
+  saying so, with Change the view, when it matches nothing; faded or hidden
   outside it as its style says; its looks and legend; Save as shown and Fade or Hide others written in the style graph.
 - `style-block.ts` — a style block (§2): never drawn, folded away until opened, saying whose style it is, what it holds
   and how many problems it has. The graph it styles is drawn with its nudges, and its problems listed, by `block.ts`.
@@ -22,16 +23,22 @@ module that ties the parts together, named as the folder is.
 - `live-preview.ts` — the editing view's own cards, so the page stays still while a block is typed in.
 - `editor.ts` — the comma and the colon added for you in the note's own editor.
 - `pane.ts` — the edit pane, which holds a block editor.
+- `reading-view.ts` — reading view never changes the note: `noteToRewrite`, which every command rewriting a note asks
+  first, gives the note in the pane in front, or refuses with a notice when that pane is in reading view or holds no note;
+  `stillToRewrite`, asked again just before the write, refuses the same way when that pane changed while the note was read.
 
 ### `src/layout-worker/` — the layout kept apart from the interface (spec §9, layout_contained)
 
-- `layout-worker.ts` — `Layouts`: every graph laid out in one Web Worker, started from a Blob URL of main.js's own copy
+- `layout-worker.ts` — `Layouts`: every graph, and every export, laid out in one Web Worker, started from a Blob URL of main.js's own copy
   of the worker's bundle; on the page's thread, with lower limits, only where the first worker cannot start; each said
   once in the console, as is drawing paused after three layouts in a row fail. Says why it is built so.
 - `worker-entry.ts` — what runs inside the worker. `esbuild.config.mjs` bundles it on its own, Graphviz and all, into the
   function `layoutWorker` of the module `graph-note:layout-worker` (typed in `bundled-worker.d.ts`).
 - `refusal-banner.ts` — the banner over a graph shown as text because it is too large to read or draw, took too long,
   or drawing is paused: an icon, and the limit and numbers in words.
+- `refusal-words.ts` — those words, with no Obsidian in them, in two voices: the banner's, and the notice of an export
+  stopped for the same reason ("what happened: why. Nothing was saved. What to do."), and for a layout that failed (the
+  worker or its engine raised an error: its reason is put in brackets).
 
 ### `src/properties/` — the inspector's properties, as Obsidian's Properties panel
 
@@ -43,7 +50,8 @@ module that ties the parts together, named as the folder is.
 ### `src/export/` — export (spec §16)
 
 - `export.ts` — `exportGraph`: the scope read from the note as it is now, the core's plan (nothing to export, a
-  question first, or go), the image in fixed colours with its frame, written safely into the vault through its API with
+  question first, or go), the image laid out in the layout worker under its limits (one over a limit, or a note too
+  large to read, writes nothing and says why), in fixed colours with its frame, written safely into the vault through its API with
   its companion note when set; on a phone, offered to the share sheet instead.
 - `export-form.ts` — the Export form on a drawing: the whole diagram, or a view with or without its faded context; SVG
   or PNG; light or dark; and Export anyway when the note's classification asks first.
@@ -71,7 +79,8 @@ module that ties the parts together, named as the folder is.
   down the page is marked `graph-note-down`, which `styles.css` uses to give a link's label a gap from its line, so the
   layout source and the SVG stay the Python library's.
 - `taps.ts` — what a tap or a key lands on, and the nearest things to a tap.
-- `details-panel.ts` — the details of a box or link, and the inspector while the block is edited.
+- `details-panel.ts` — the details of a box or link, its properties to read, and the inspector while the block is
+  edited.
 - `parked.ts` — things parked for later (§5, §8): each drawn dashed with a "⏳ later" or "⏳ overdue" mark on the SVG
   Graphviz drew, so the layout stays the Python library's; listed behind the badge, which counts them apart from
   problems; and Park for later in a box's details while the block is edited, writing the Deferred into its text. In a
@@ -89,7 +98,11 @@ module that ties the parts together, named as the folder is.
   each box as it is tapped and writes the path into the text.
 - `suggested-name.ts` — a box drawn under a suggested name: what screen readers hear of it, where it is written in the
   block being edited, and in its details its suggested name with the one-click fix that writes it.
-- `placement.ts` — where a card is: read-only in reading view; waiting for a card to be put on the page.
+- `placement.ts` — where a card is: read-only in reading view, a hover preview and an embed of another note (in Live
+  Preview too); waiting for a card to be put on the page.
+- `read-only.ts` — the one check every write from a card passes: each function in its options, at any depth, is closed
+  where the card is read-only (reading view, an embed, and full screen opened from them), but those named as only
+  reading, so a new control that writes is read-only there by default; an option it cannot reach is refused, loudly.
 - `view-options.ts` — what a drawing is given.
 
 ### `src/block-editor/` — the text of one graph block, in the pane or in place

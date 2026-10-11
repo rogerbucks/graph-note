@@ -1,0 +1,287 @@
+{
+  "about": "Graphs with nudges (editor spec §6: four_nudge_words, nudge_problems, python_honours_nudges; §2: broken_style_block), drawn the same by the plugin's core and by graph_svg.py. Each case is a note's gql blocks, each block a list of lines: data blocks, and style blocks that nudge them. For every case both readers give the same problems reading the data, the same problems reading each style, and, for every graph drawn, the same Graphviz source in each direction laid out, nudges written in, byte for byte. The expected answers are the core's, run live: packages/core/test/layout-parity.test.js holds graph_svg.py to the core on these cases, and tests/test_graph_svg_nudges.py does the same from the Python side. Style blocks here hold nudges only: Show, Look, ViewStyle and Shown are drawn by the plugin alone, so graph_svg.py does not read them.",
+  "cases": [
+    {
+      "name": "beside: two things put on one rank",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'The park'}),",
+          "(cafe:Cafe {name: 'Cafe'}),",
+          "(lake:Place {name: 'The lake'}),",
+          "(home)-[:NEAR]->(park),",
+          "(park)-[:NEAR]->(lake)"
+        ],
+        ["// graph: trip_style · STYLE trip", "(n1:Nudge {word: 'beside', thing: 'home', other: 'cafe'})"]
+      ]
+    },
+    {
+      "name": "before: things put in order by links never drawn, after every drawn link",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'The park'}),",
+          "(cafe:Cafe {name: 'Cafe'}),",
+          "(lake:Place {name: 'The lake'}),",
+          "(home)-[:NEAR]->(park),",
+          "(park)-[:NEAR]->(lake)"
+        ],
+        [
+          "// graph: trip_style · STYLE trip",
+          "(n1:Nudge {word: 'before', thing: 'cafe', other: 'lake'}),",
+          "(n2:Nudge {word: 'before', thing: 'lake', other: 'home'})"
+        ]
+      ]
+    },
+    {
+      "name": "group: a labelled box for each group, things of one kind with no link between them kept in it, a label escaped as a box's text is",
+      "blocks": [
+        [
+          "// graph: team",
+          "(ann:Person {name: 'Ann'}), (bob:Person {name: 'Bob'}), (cat:Person {name: 'Cat'}),",
+          "(t1:Team {name: 'One'}), (t2:Team {name: 'Two'}),",
+          "(ann)-[:IN]->(t1), (bob)-[:IN]->(t1), (cat)-[:IN]->(t2)"
+        ],
+        [
+          "// graph: team_style · STYLE team",
+          "(g1:Nudge {word: 'group', thing: 'ann', group: 'Ann & \"Bob\" <early> 🌅'}),",
+          "(g2:Nudge {word: 'group', thing: 'cat', group: 'Late'}),",
+          "(g3:Nudge {word: 'group', thing: 'bob', group: 'Ann & \"Bob\" <early> 🌅'})"
+        ]
+      ]
+    },
+    {
+      "name": "direction: laid out only in the direction it sets",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'The park'}),",
+          "(cafe:Cafe {name: 'Cafe'}),",
+          "(lake:Place {name: 'The lake'}),",
+          "(home)-[:NEAR]->(park),",
+          "(park)-[:NEAR]->(lake)"
+        ],
+        ["// graph: trip_style · STYLE trip", "(d:Nudge {word: 'direction', direction: 'TB'})"]
+      ]
+    },
+    {
+      "name": "beside with before, on different pairs, in two style blocks",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'The park'}),",
+          "(cafe:Cafe {name: 'Cafe'}),",
+          "(lake:Place {name: 'The lake'}),",
+          "(home)-[:NEAR]->(park),",
+          "(park)-[:NEAR]->(lake)"
+        ],
+        [
+          "// graph: trip_style · STYLE trip",
+          "(n1:Nudge {word: 'beside', thing: 'home', other: 'cafe'}),",
+          "(n2:Nudge {word: 'before', thing: 'cafe', other: 'lake'})"
+        ],
+        [
+          "// graph: trip_more · STYLE trip",
+          "(n3:Nudge {word: 'beside', thing: 'park', other: 'lake'}),",
+          "(n4:Nudge {word: 'before', thing: 'home', other: 'park'})"
+        ]
+      ]
+    },
+    {
+      "name": "groups written as if nested: a thing put in a second group stays in its first, with a problem",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'The park'}),",
+          "(cafe:Cafe {name: 'Cafe'}),",
+          "(lake:Place {name: 'The lake'}),",
+          "(home)-[:NEAR]->(park),",
+          "(park)-[:NEAR]->(lake)"
+        ],
+        [
+          "// graph: trip_style · STYLE trip",
+          "(g1:Nudge {word: 'group', thing: 'home', group: 'Town'}),",
+          "(g2:Nudge {word: 'group', thing: 'park', group: 'Town'}),",
+          "(g3:Nudge {word: 'group', thing: 'home', group: 'Old town'}),",
+          "(g4:Nudge {word: 'group', thing: 'home', group: 'Town'}),",
+          "(g5:Nudge {word: 'group', thing: 'lake', group: 'Water'})"
+        ]
+      ]
+    },
+    {
+      "name": "a direction with groups and beside",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'The park'}),",
+          "(cafe:Cafe {name: 'Cafe'}),",
+          "(lake:Place {name: 'The lake'}),",
+          "(home)-[:NEAR]->(park),",
+          "(park)-[:NEAR]->(lake)"
+        ],
+        [
+          "// graph: trip_style · STYLE trip",
+          "(d:Nudge {word: 'direction', direction: 'LR'}),",
+          "(g1:Nudge {word: 'group', thing: 'cafe', group: 'Indoors'}),",
+          "(g2:Nudge {word: 'group', thing: 'home', group: 'Indoors'}),",
+          "(b1:Nudge {word: 'beside', thing: 'park', other: 'lake'})"
+        ]
+      ]
+    },
+    {
+      "name": "nudges that conflict: beside and before on one pair, a loop of befores, two directions; the first kept",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'The park'}),",
+          "(cafe:Cafe {name: 'Cafe'}),",
+          "(lake:Place {name: 'The lake'}),",
+          "(home)-[:NEAR]->(park),",
+          "(park)-[:NEAR]->(lake)"
+        ],
+        [
+          "// graph: trip_style · STYLE trip",
+          "(n1:Nudge {word: 'beside', thing: 'home', other: 'cafe'}),",
+          "(n2:Nudge {word: 'before', thing: 'cafe', other: 'home'}),",
+          "(n3:Nudge {word: 'before', thing: 'park', other: 'lake'}),",
+          "(n4:Nudge {word: 'before', thing: 'lake', other: 'cafe'}),",
+          "(n5:Nudge {word: 'before', thing: 'cafe', other: 'park'}),",
+          "(d1:Nudge {word: 'direction', direction: 'TB'}),",
+          "(d2:Nudge {word: 'direction', direction: 'LR'}),",
+          "(d3:Nudge {word: 'direction', direction: 'TB'})"
+        ]
+      ]
+    },
+    {
+      "name": "nudges naming things the graph does not have, and nudges written wrong: each the same problem, the rest used",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'The park'}),",
+          "(cafe:Cafe {name: 'Cafe'}),",
+          "(lake:Place {name: 'The lake'}),",
+          "(home)-[:NEAR]->(park),",
+          "(park)-[:NEAR]->(lake)"
+        ],
+        [
+          "// graph: trip_style · STYLE trip",
+          "(n1:Nudge {word: 'beside', thing: 'hom', other: 'cafe'}),",
+          "(n2:Nudge {word: 'before', thing: 'cafe', other: 'station'}),",
+          "(n3:Nudge {word: 'group', thing: 'lake'}),",
+          "(n4:Nudge {word: 'besdie', thing: 'home', other: 'park'}),",
+          "(n5:Nudge {thing: 'home', other: 'park'}),",
+          "(n6:Nudge {word: 'beside', thing: 'park'}),",
+          "(n7:Nudge {word: 'direction', direction: 'RL'}),",
+          "(n8:Nudge {word: 'direction'}),",
+          "(n9:Nudge {word: 'beside', thing: 'park', other: 2}),",
+          "(x1:Pin {word: 'beside', thing: 'home', other: 'park'}),",
+          "(x2:Nudge:Pin {word: 'beside', thing: 'home', other: 'park'}),",
+          "(x3 {word: 'beside', thing: 'home', other: 'park'}),",
+          "(n10:Nudge {word: 'beside', thing: 'park', other: 'cafe'}),",
+          "(n11:Nudge {word: 'before', thing: 'hom🏠', other: 'park'}),",
+          "(n12:Nudge {word: 'direction', direction: 'sideways'}),",
+          "(n13:Nudge {word: 'Group', thing: 'lake', group: 'Water'}),",
+          "(n14:Nudge {word: 'direction', direction: 'U$&P'}),",
+          "(n15:Nudge {word: 'group', thing: 'lake', group: TRUE}),",
+          "(n16:Nudge {word: 'direction', direction: 'tb'})"
+        ]
+      ]
+    },
+    {
+      "name": "a group label with a quote and a backslash, drawn as written, and a nudge naming a thing two names are near",
+      "blocks": [
+        [
+          "// graph: walk",
+          "(home:Place {name: 'Home'}),",
+          "(park_a:Park {name: 'North park'}),",
+          "(park_b:Park {name: 'South park'}),",
+          "(lake:Place {name: 'The lake'}),",
+          "(home)-[:NEAR]->(park_a),",
+          "(park_a)-[:NEAR]->(park_b)"
+        ],
+        [
+          "// graph: walk_style · STYLE walk",
+          "(g1:Nudge {word: 'group', thing: 'home', group: 'O\\'Brien\\'s \\\\ back \"yard\"'}),",
+          "(g2:Nudge {word: 'group', thing: 'lake', group: 'O\\'Brien\\'s \\\\ back \"yard\"'}),",
+          "(n1:Nudge {word: 'beside', thing: 'parkc', other: 'lake'}),",
+          "(n2:Nudge {word: 'before', thing: 'park_a', other: 'park_b'})"
+        ]
+      ]
+    },
+    {
+      "name": "a style block that cannot be read: the graph drawn in the locked style, and the problem listed",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'The park'}),",
+          "(cafe:Cafe {name: 'Cafe'}),",
+          "(lake:Place {name: 'The lake'}),",
+          "(home)-[:NEAR]->(park),",
+          "(park)-[:NEAR]->(lake)"
+        ],
+        ["// graph: trip_style · STYLE trip", "(n1:Nudge {word: 'beside' thing: 'home', other: 'cafe'})"]
+      ]
+    },
+    {
+      "name": "a style block read in part, with a link in it: what can be read is used",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'The park'}),",
+          "(cafe:Cafe {name: 'Cafe'}),",
+          "(lake:Place {name: 'The lake'}),",
+          "(home)-[:NEAR]->(park),",
+          "(park)-[:NEAR]->(lake)"
+        ],
+        [
+          "// graph: trip_style · STYLE trip",
+          "(n1:Nudge {word: 'beside', thing: home, other: 'cafe'}),",
+          "(n2:Nudge {word: 'before', thing: 'home', other: 'lake'}),",
+          "(n3:Nudge {word: 'beside', thing: 'cafe', other: 'park'}),",
+          "(n2)-[:THEN]->(n3)"
+        ]
+      ]
+    },
+    {
+      "name": "a style block named as its data graph, and a style for a graph the note does not have",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'The park'}),",
+          "(cafe:Cafe {name: 'Cafe'}),",
+          "(lake:Place {name: 'The lake'}),",
+          "(home)-[:NEAR]->(park),",
+          "(park)-[:NEAR]->(lake)"
+        ],
+        ["// graph: trip · STYLE trip", "(n1:Nudge {word: 'beside', thing: 'home', other: 'cafe'})"],
+        ["// graph: gone_style · STYLE gone", "(n1:Nudge {word: 'beside', thing: 'home', other: 'cafe'})"]
+      ]
+    },
+    {
+      "name": "a style block that names no graph to style: not read, and never drawn as data",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'The park'}),",
+          "(cafe:Cafe {name: 'Cafe'}),",
+          "(lake:Place {name: 'The lake'}),",
+          "(home)-[:NEAR]->(park),",
+          "(park)-[:NEAR]->(lake)"
+        ],
+        ["// graph: trip_style · STYLE", "(n1:Nudge {word: 'beside', thing: 'home', other: 'cafe'})"]
+      ]
+    }
+  ]
+}

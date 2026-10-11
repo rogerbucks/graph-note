@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/block-no-section.test.js",
+  "test": "a graph shown as text, or with nothing drawable while edited, is read-only with no section info > with nothing to draw while it is edited, the block is its text, and the editor does not take its place",
+  "seen_failing_first": false,
+  "evidence": "Passed against the code before this commit, because the code already held: the nothing-drawable slot in block.ts shows the text, not the editor, where the card is read-only. Written after the code to pin it, as the review of PR #89 found it unpinned; seen failing with the readOnly guard on that slot planted out (if false), then reverted."
+}

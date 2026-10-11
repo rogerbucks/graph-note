@@ -371,6 +371,22 @@ describe('nudges', () => {
   });
 
   // proves: nudge_problems
+  test('a direction written in the wrong case is fixed to the direction it means, never to the other', () => {
+    const block = styleBlock(
+      "(n1:Nudge {word: 'direction', direction: 'tb'}),",
+      "(n2:Nudge {word: 'direction', direction: 'Lr'})",
+    );
+    const { problems } = styleIn(TRIP, block);
+    assert.deepEqual(
+      problems.map((p) => [p.line, p.message, p.fix, p.replace?.with]),
+      [
+        [2, 'tb is not a direction the locked style lays out in', 'change tb to TB', ['TB']],
+        [3, 'Lr is not a direction the locked style lays out in', 'change Lr to LR', ['LR']],
+      ],
+    );
+  });
+
+  // proves: nudge_problems
   test('nudges that conflict are each a problem with a fix; the first is kept and the later left out', () => {
     const block = styleBlock(
       "(n1:Nudge {word: 'direction', direction: 'TB'}),",
