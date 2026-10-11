@@ -152,7 +152,17 @@ describe('a baseline committed worse than its parent’s', () => {
     assert.ok(runCommands(ci).includes('node scripts/quality-check.mjs --baseline-since "$BASE"'));
     const quality = jobs(read('.github/workflows/release.yml')).quality.join('\n');
     assert.ok(runCommands(quality).includes('node scripts/quality-check.mjs --baseline-since HEAD~1'));
-    assert.match(quality, /fetch-depth: 2/);
+    assert.match(quality, /fetch-depth: 0/);
+  });
+
+  test('every release job that runs the suite checks out the full history, as the tests-first records need it', () => {
+    const all = jobs(read('.github/workflows/release.yml'));
+    const runsSuite = (text) => runCommands(text).some((r) => /quality-metrics\.mjs|npm test\b/.test(r));
+    const suiteJobs = Object.keys(all).filter((name) => runsSuite(all[name].join('\n')));
+    assert.deepEqual(suiteJobs.sort(), ['quality', 'release']);
+    for (const name of suiteJobs) {
+      assert.match(all[name].join('\n'), /fetch-depth: 0/, `the ${name} job checks out with fetch-depth: 0`);
+    }
   });
 });
 
