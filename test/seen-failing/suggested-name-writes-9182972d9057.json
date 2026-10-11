@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/suggested-name-writes.test.js",
+  "test": "the details of a box drawn under a suggested name, while the card is edited > once its name is written, the same property is changed",
+  "seen_failing_first": false,
+  "evidence": "A control: a thing whose name is written has its property changed as ever. It passed before the guard because only a thing drawn under a suggested name is refused; it pins that the guard does not over-refuse."
+}

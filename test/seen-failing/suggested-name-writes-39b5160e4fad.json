@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/suggested-name-writes.test.js",
+  "test": "making a view of a box drawn under a suggested name > a view of only some kinds names no box, so it is written",
+  "seen_failing_first": false,
+  "evidence": "A control: a view of kinds names no box, so the guard leaves it alone. It passed before the guard because the view was never refused; it pins that the guard does not over-refuse."
+}
