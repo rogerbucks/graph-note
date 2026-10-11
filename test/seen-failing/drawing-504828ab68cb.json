@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/drawing.test.js",
+  "test": "a kind or link type the locked graph’s schema does not declare > a draft has no schema to declare anything, so nothing is said; and what the schema declares is never reported",
+  "seen_failing_first": false,
+  "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit dcffbbe)"
+}

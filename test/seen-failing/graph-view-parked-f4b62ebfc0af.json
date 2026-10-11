@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/graph-view-parked.test.js",
+  "test": "Park for later, while the card is edited > is offered only while the card is edited: reading a drawing never changes it",
+  "seen_failing_first": false,
+  "evidence": "a control case, written with the change beside it: outside editing no Park for later is offered, before the change or after, by design (commit 1ce9135)"
+}

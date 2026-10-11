@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_to_gql.py",
+  "test": "ToGqlRefusesWhatTheReaderRefuses.test_a_node_written_where_it_cannot_be_found_is_said_not_hidden",
+  "seen_failing_first": false,
+  "evidence": "pins an error that already existed (to_gql.py: cannot find where {name} is written), untested until the review of PR #34: written after its code, and it passes before and after by design"
+}

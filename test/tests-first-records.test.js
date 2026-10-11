@@ -1,0 +1,297 @@
+// The records of the tests-first replay (spec §12, tests_first), kept so that two branches never conflict in them: one
+// file for each replayed commit in test/tests-first/, over the frozen baseline.json, and one file for each reason a
+// test passed before its code in test/seen-failing/. Proved here on small repositories made for the purpose, merged by
+// git's own merge with no merge driver, as GitHub merges; then on this repository's records, moved over from the two
+// single files they were kept in until 11 Oct 2026.
+import { test, describe } from 'node:test';
+import assert from 'node:assert/strict';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import {
+  BASELINE,
+  EXCUSALS,
+  RECORDS,
+  exceptionsIn,
+  excusalName,
+  excuse,
+  migrate,
+  readRecords,
+} from '../scripts/tests-first-records.mjs';
+import { record, replay, summary, unexplained, update } from '../scripts/tests-first.mjs';
+import { testsForChanges } from '../scripts/changed-tests.mjs';
+import { repository } from './repository/scratch-repository.js';
+import { path, exists } from './repository/repo.js';
+
+const TWICE = (body) =>
+  `import { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { twice } from '../src/twice.js';\n${body}\n`;
+const HALF = (body) =>
+  `import { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { half } from '../src/half.js';\n${body}\n`;
+
+/** The files in a repository's folder of records, sorted. */
+const recordFiles = (dir) => (existsSync(join(dir, RECORDS)) ? readdirSync(join(dir, RECORDS)).sort() : []);
+
+describe('a record for each replayed commit', () => {
+  test('each replayed commit that changed a test is kept in a file of its own, named after it; one that changed none has none', () => {
+    const r = repository([
+      { 'README.md': 'the first commit\n' },
+      { 'src/twice.js': 'export const twice = (x) => x;\n', 'test/twice.test.js': TWICE("test('one', () => {});") },
+      { 'README.md': 'no test here\n' },
+      {
+        'src/twice.js': 'export const twice = (x) => x * 2;\n',
+        'test/twice.test.js': TWICE("test('one', () => {});\ntest('doubles', () => assert.equal(twice(2), 4));"),
+      },
+    ]);
+    try {
+      record(r.dir);
+      assert.deepEqual(recordFiles(r.dir), [`${r.ids[1]}.json`, `${r.ids[3]}.json`].sort());
+      const kept = JSON.parse(readFileSync(join(r.dir, RECORDS, `${r.ids[3]}.json`), 'utf8'));
+      assert.equal(kept.commit, r.ids[3]);
+      assert.deepEqual(kept.files[0].failedFirst, ['doubles']);
+      assert.equal(kept.head, undefined, 'no field that every update rewrites');
+      // 'one', whose code did not exist before it, and 'doubles'
+      assert.equal(summary(r.dir).files['test/twice.test.js'].seenFailing, 2);
+    } finally {
+      r.done();
+    }
+  });
+
+  test('the record of a commit no longer in the history is removed at the next update, and the new commit’s added', () => {
+    const r = repository([
+      { 'README.md': 'the first commit\n' },
+      { 'src/twice.js': 'export const twice = (x) => x;\n', 'test/twice.test.js': TWICE("test('one', () => {});") },
+      {
+        'src/twice.js': 'export const twice = (x) => x * 2;\n',
+        'test/twice.test.js': TWICE("test('one', () => {});\ntest('doubles', () => assert.equal(twice(2), 4));"),
+      },
+    ]);
+    try {
+      record(r.dir);
+      assert.ok(readRecords(r.dir).commits.has(r.ids[2]));
+      // the branch is rewritten: its last commit is made again, differently
+      r.git('reset', '-q', '--hard', r.ids[1]);
+      const again = r.commit(
+        {
+          'src/twice.js': 'export const twice = (x) => x + x;\n',
+          'test/twice.test.js': TWICE("test('one', () => {});\ntest('adds', () => assert.equal(twice(3), 6));"),
+        },
+        'made again',
+      );
+      update(r.dir);
+      assert.deepEqual([...readRecords(r.dir).commits.keys()].sort(), [r.ids[1], again].sort());
+      const e = summary(r.dir).files['test/twice.test.js'];
+      assert.deepEqual([e.replayed, e.seenFailing], [2, 2], "'one', then 'adds', never 'doubles'");
+    } finally {
+      r.done();
+    }
+  });
+
+  test('a file in the records folder that is not the record of the commit it is named after fails loudly, naming it', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'tests-first-'));
+    try {
+      mkdirSync(join(dir, RECORDS), { recursive: true });
+      writeFileSync(join(dir, RECORDS, 'notes.json'), '{}\n');
+      assert.throws(() => readRecords(dir), /notes\.json/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('a reason for each test that passed before its code', () => {
+  test('a reason is kept in a file of its own, named after its test file and its test, and excuses that test alone', () => {
+    const r = repository([
+      { 'src/twice.js': 'export const twice = (x) => x * 2;\n', 'test/twice.test.js': TWICE("test('one', () => {});") },
+      { 'test/twice.test.js': TWICE("test('one', () => {});\ntest('already true', () => assert.equal(twice(1), 2));") },
+    ]);
+    try {
+      const replays = [replay(r.dir, r.ids[1])];
+      assert.equal(unexplained(replays, exceptionsIn(r.dir)).length, 1);
+      // the same name in another test file excuses nothing here
+      excuse(r.dir, 'test/other.test.js', 'already true', 'a reason for another file’s test');
+      assert.equal(unexplained(replays, exceptionsIn(r.dir)).length, 1);
+      const kept = excuse(r.dir, 'test/twice.test.js', 'already true', 'pins behaviour that already existed');
+      assert.equal(kept, `${EXCUSALS}/${excusalName('test/twice.test.js', 'already true')}`);
+      assert.match(kept, /\/twice-[0-9a-f]{12}\.json$/);
+      assert.deepEqual(unexplained(replays, exceptionsIn(r.dir)), []);
+      assert.deepEqual(exceptionsIn(r.dir)['test/twice.test.js'], {
+        'already true': { seen_failing_first: false, evidence: 'pins behaviour that already existed' },
+      });
+      assert.notEqual(excusalName('test/twice.test.js', 'one'), excusalName('test/twice.test.js', 'already true'));
+    } finally {
+      r.done();
+    }
+  });
+
+  test('a reason in a file not named for its test fails loudly, naming the file and the name it should have', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'tests-first-'));
+    try {
+      mkdirSync(join(dir, EXCUSALS), { recursive: true });
+      const reason = { file: 'test/x.test.js', test: 'a', seen_failing_first: false, evidence: 'a control case here' };
+      writeFileSync(join(dir, EXCUSALS, 'mine.json'), JSON.stringify(reason));
+      assert.throws(
+        () => exceptionsIn(dir),
+        (e) => e.message.includes('mine.json') && e.message.includes(excusalName('test/x.test.js', 'a')),
+      );
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('a change to a record or a reason runs the tests of the tests-first replay', () => {
+    const tracked = ['test/tests-first.test.js', 'test/tests-first-records.test.js', 'test/tests-first-run.test.js'];
+    for (const changed of [`${RECORDS}/${'0'.repeat(40)}.json`, `${RECORDS}/${BASELINE}`, `${EXCUSALS}/x-0123.json`])
+      assert.deepEqual(testsForChanges([changed], tracked), {
+        all: false,
+        files: ['test/tests-first-records.test.js', 'test/tests-first.test.js'],
+      });
+  });
+});
+
+describe('two branches merged', () => {
+  // GitHub merges on its server with git's own merge, reading no merge driver: a design that needs one does not hold there
+  test('branches that record different commits and excuse different tests merge with nothing to resolve, and need no new record', () => {
+    const r = repository([
+      { 'README.md': 'the first commit\n' },
+      { 'src/twice.js': 'export const twice = (x) => x;\n', 'test/twice.test.js': TWICE("test('one', () => {});") },
+    ]);
+    try {
+      record(r.dir);
+      r.commit({}, 'record main');
+      const branch = (name, files, file, excused) => {
+        r.git('checkout', '-q', '-b', name, 'main');
+        r.commit(files, `${name}: a test and its code`);
+        excuse(r.dir, file, excused, `a reason kept on branch ${name}`);
+        update(r.dir);
+        r.commit({}, `${name}: record it`);
+      };
+      branch(
+        'a',
+        {
+          'src/twice.js': 'export const twice = (x) => x * 2;\n',
+          'test/twice.test.js': TWICE("test('one', () => {});\ntest('doubles', () => assert.equal(twice(2), 4));"),
+        },
+        'test/twice.test.js',
+        'one',
+      );
+      branch(
+        'b',
+        {
+          'src/half.js': 'export const half = (x) => x / 2;\n',
+          'test/half.test.js': HALF("test('halves', () => assert.equal(half(4), 2));"),
+        },
+        'test/half.test.js',
+        'halves',
+      );
+      const merged = spawnSync('git', ['merge-tree', '--write-tree', 'a', 'b'], { cwd: r.dir, encoding: 'utf8' });
+      assert.equal(merged.status, 0, merged.stdout);
+      // merged, the records hold both branches' commits: nothing is left to replay or write
+      r.git('checkout', '-q', 'a');
+      r.git('merge', '-q', '--no-edit', 'b');
+      update(r.dir);
+      assert.equal(r.git('status', '--porcelain'), '');
+      const files = summary(r.dir).files;
+      assert.equal(files['test/twice.test.js'].seenFailing, 2, "main's 'one' and branch a's 'doubles'");
+      assert.equal(files['test/half.test.js'].seenFailing, 1, "branch b's 'halves'");
+    } finally {
+      r.done();
+    }
+  });
+});
+
+describe('moving the old single files over', () => {
+  const OLD_RECORD = {
+    note: 'the old record',
+    head: 'a'.repeat(40),
+    files: {
+      'test/twice.test.js': {
+        replayed: 2,
+        notReplayed: 1,
+        seenFailing: 3,
+        excused: 1,
+        passedFirst: [{ commit: 'b'.repeat(40), name: 'already true' }],
+        notReplayedCommits: [{ commit: 'c'.repeat(40), reason: 'the first commit has no parent' }],
+      },
+    },
+  };
+  const OLD_REASONS = {
+    'test/twice.test.js': { 'already true': { seen_failing_first: false, evidence: 'pins behaviour already there' } },
+    'py/tests/test_half.py': {
+      'Half.test_one': { seen_failing_first: false, evidence: 'a control case, by design' },
+      'Half.test_two': { seen_failing_first: false, evidence: 'another control case, by design' },
+    },
+  };
+  /** A folder holding the two old files, and a baseline already there when `baseline` is given. */
+  const old = (baseline) => {
+    const dir = mkdtempSync(join(tmpdir(), 'tests-first-'));
+    mkdirSync(join(dir, 'test'), { recursive: true });
+    writeFileSync(join(dir, 'test', 'tests-first.json'), JSON.stringify(OLD_RECORD));
+    writeFileSync(join(dir, 'test', 'seen-failing.json'), JSON.stringify(OLD_REASONS));
+    if (baseline) {
+      mkdirSync(join(dir, RECORDS), { recursive: true });
+      writeFileSync(join(dir, RECORDS, BASELINE), JSON.stringify(baseline));
+    }
+    return dir;
+  };
+
+  test('every entry of the old record goes whole into the baseline, every reason into its own file, and the old files go', () => {
+    const dir = old();
+    try {
+      migrate(dir);
+      assert.ok(!existsSync(join(dir, 'test', 'tests-first.json')));
+      assert.ok(!existsSync(join(dir, 'test', 'seen-failing.json')));
+      assert.deepEqual(readRecords(dir).baseline, { head: OLD_RECORD.head, files: OLD_RECORD.files });
+      assert.deepEqual(exceptionsIn(dir), OLD_REASONS);
+      assert.equal(readdirSync(join(dir, EXCUSALS)).length, 3);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('a branch’s own old record never overwrites a baseline already there: it is dropped, for --update to replay', () => {
+    const baseline = { note: 'main’s', head: 'd'.repeat(40), files: {} };
+    const dir = old(baseline);
+    try {
+      const said = migrate(dir).join('\n');
+      assert.ok(!existsSync(join(dir, 'test', 'tests-first.json')));
+      assert.deepEqual(readRecords(dir).baseline, { head: baseline.head, files: {} });
+      assert.match(said, /--update/);
+      assert.deepEqual(exceptionsIn(dir), OLD_REASONS);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('this repository’s records', () => {
+  // main as it stood just before the records were split, holding the two single files (11 Oct 2026)
+  const BEFORE_SPLIT = '391645a59e85b93a398961fef4965df72cbb5e7d';
+  const before = (file) =>
+    JSON.parse(execFileSync('git', ['show', `${BEFORE_SPLIT}:${file}`], { cwd: path('.'), encoding: 'utf8' }));
+
+  test('the migrated records hold every entry the old files held', () => {
+    const was = before('test/tests-first.json');
+    assert.deepEqual(readRecords(path('.')).baseline, { head: was.head, files: was.files });
+    const reasons = exceptionsIn(path('.'));
+    let held = 0;
+    // a reason for a test file since removed goes with it, as the record's own test asks
+    for (const [file, names] of Object.entries(before('test/seen-failing.json')).filter(([f]) => exists(f)))
+      for (const [name, reason] of Object.entries(names)) {
+        assert.deepEqual(reasons[file]?.[name], reason, `${file} :: ${name}`);
+        held++;
+      }
+    assert.ok(held > 100, `${held} reasons held`);
+  });
+
+  test('every record is named after a commit in the history since the baseline, and every reason after its test', () => {
+    const { baseline, commits } = readRecords(path('.'));
+    const isAncestor = (a, b) =>
+      spawnSync('git', ['merge-base', '--is-ancestor', a, b], { cwd: path('.') }).status === 0;
+    for (const commit of commits.keys()) {
+      assert.ok(isAncestor(commit, 'HEAD'), `${commit} is in the history`);
+      assert.ok(!isAncestor(commit, baseline.head), `${commit} is not already in the baseline`);
+    }
+    assert.doesNotThrow(() => exceptionsIn(path('.')));
+  });
+});

@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/layout-worker.test.js",
+  "test": "in the pane > a block typed or pasted past the size to read shows the banner in the drawing’s place, never read",
+  "seen_failing_first": false,
+  "evidence": "hangs at the parent (no size limit there), so it cannot be replayed; unproved either way. Hand run on 10 Oct 2026: at 7590e45's parent, with only the 5 MB block skipped, the tests before it finished and it never did, until the run was stopped at the 600 s limit"
+}

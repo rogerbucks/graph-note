@@ -51,7 +51,7 @@ of tokens for nothing. Change them only by running the command that makes them.
 - `main.js` — the built plugin; CI builds it from a tag.
 - `packages/claude-code/mod/hooks/graph.js` and `packages/claude-code/mod/bin/` — the built mod; `npm run build`.
 - `package-lock.json` and `python/graph_spec/uv.lock` — lock files; `npm install` and `uv lock` write them.
-- `test/tests-first.json` — the record of tests seen failing first; `node scripts/tests-first.mjs --update` writes it.
+- `test/tests-first/` — the record of tests seen failing first, a file per commit; `node scripts/tests-first.mjs --update` writes it.
 - `THIRD_PARTY_NOTICES.md` — made by `node scripts/notices.mjs` from `licences/bundled.json`.
 - `licences/texts/` — the licence texts those notices quote.
 - `test-vault/.obsidian/` — the test vault's settings and plugin copies.

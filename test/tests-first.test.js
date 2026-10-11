@@ -1,35 +1,17 @@
 // Every test is seen to fail before its code (spec §12, tests_first). scripts/tests-first.mjs proves it mechanically: it
 // replays a commit, running the commit's tests against its parent's code, and every test new in the commit must fail
-// there. A test that passes against the old code was not written first, unless it is recorded, with its reason, in
-// test/seen-failing.json. Proved here on small repositories made for the purpose, then on this one's records.
+// there. A test that passes against the old code was not written first, unless its reason is kept in
+// test/seen-failing/. Proved here on small repositories made for the purpose, then on this one's records. How the
+// records are kept is tests-first-records.test.js.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join, dirname } from 'node:path';
-import { judged, replay, unexplained, record, update } from '../scripts/tests-first.mjs';
-import { path, readJSON, walk } from './repository/repo.js';
-
-/** A small repository: each commit a set of files, written then committed; returns the folder and the commit ids. */
-function repository(commits) {
-  const dir = mkdtempSync(join(tmpdir(), 'tests-first-'));
-  const git = (...args) => execFileSync('git', args, { cwd: dir, encoding: 'utf8' }).trim();
-  git('init', '-q');
-  git('config', 'user.email', 'test@example.com');
-  git('config', 'user.name', 'Test');
-  git('config', 'commit.gpgsign', 'false');
-  const ids = commits.map((files, i) => {
-    for (const [file, text] of Object.entries(files)) {
-      mkdirSync(dirname(join(dir, file)), { recursive: true });
-      writeFileSync(join(dir, file), text);
-    }
-    git('add', '-A');
-    git('commit', '-q', '-m', `commit ${i}`);
-    return git('rev-parse', 'HEAD');
-  });
-  return { dir, ids, done: () => rmSync(dir, { recursive: true, force: true }) };
-}
+import { mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
+import { judged, replay, unexplained, record, update, summary } from '../scripts/tests-first.mjs';
+import { RECORDS, exceptionsIn, readRecords } from '../scripts/tests-first-records.mjs';
+import { path, walk } from './repository/repo.js';
+import { repository } from './repository/scratch-repository.js';
 
 const JS_TEST = (body) =>
   `import { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { twice } from '../src/twice.js';\n${body}\n`;
@@ -259,7 +241,6 @@ describe('a run against the code before that did not finish', () => {
       },
     ]);
     try {
-      writeFileSync(join(r.dir, 'test', 'seen-failing.json'), '{}\n');
       const e = withRunLimit(3000, () => record(r.dir)).files['test/twice.test.js'];
       assert.equal(e.seenFailing, 0);
       assert.deepEqual(e.passedFirst, []);
@@ -312,10 +293,6 @@ describe('a run at the commit’s own code that cannot be trusted fails the reco
     // with no time limit set, so that load cannot stop it (review of #44)
     const empty = repository([{ 'README.md': 'x\n' }, { 'py/tests/test_empty.py': 'import unittest\n' }]);
     try {
-      for (const r of [slow, empty]) {
-        mkdirSync(join(r.dir, 'test'), { recursive: true });
-        writeFileSync(join(r.dir, 'test', 'seen-failing.json'), '{}\n');
-      }
       assert.throws(
         () => withRunLimit(3000, () => record(slow.dir)),
         (e) => {
@@ -343,7 +320,6 @@ describe('a run at the commit’s own code that cannot be trusted fails the reco
       },
     ]);
     try {
-      writeFileSync(join(r.dir, 'test', 'seen-failing.json'), '{}\n');
       assert.throws(
         () => record(r.dir),
         (e) => {
@@ -373,7 +349,6 @@ describe('a run at the commit’s own code that cannot be trusted fails the reco
     try {
       // installed packages make the checkout read each package's manifest, and this one cannot be read
       mkdirSync(join(r.dir, 'node_modules', 'installed'), { recursive: true });
-      writeFileSync(join(r.dir, 'test', 'seen-failing.json'), '{}\n');
       assert.throws(
         () => record(r.dir),
         (e) => {
@@ -394,8 +369,9 @@ describe('a run at the commit’s own code that cannot be trusted fails the reco
 });
 
 describe('keeping the record', () => {
-  test('updating a record with the commits since its head gives what recording them all would', () => {
+  test('updating the record replays only the commits it does not hold, and gives what recording them all would', () => {
     const r = repository([
+      { 'README.md': 'the first commit\n' },
       { 'src/twice.js': 'export const twice = (x) => x;\n', 'test/twice.test.js': JS_TEST("test('one', () => {});") },
       {
         'src/twice.js': 'export const twice = (x) => x * 2;\n',
@@ -403,13 +379,16 @@ describe('keeping the record', () => {
       },
     ]);
     try {
-      mkdirSync(join(r.dir, 'test'), { recursive: true });
-      writeFileSync(join(r.dir, 'test', 'seen-failing.json'), '{}\n');
       const whole = record(r.dir);
-      execFileSync('git', ['reset', '-q', '--hard', r.ids[0]], { cwd: r.dir });
-      const early = record(r.dir);
       execFileSync('git', ['reset', '-q', '--hard', r.ids[1]], { cwd: r.dir });
-      assert.deepEqual(update(r.dir, early), whole);
+      record(r.dir);
+      assert.deepEqual([...readRecords(r.dir).commits.keys()], [r.ids[1]]);
+      const held = join(r.dir, RECORDS, `${r.ids[1]}.json`);
+      // a record that says what no replay would: kept as it is, as the commit it records is not replayed again
+      writeFileSync(held, readFileSync(held, 'utf8').replace('"files"', '"untouched": true,\n  "files"'));
+      execFileSync('git', ['reset', '-q', '--hard', r.ids[2]], { cwd: r.dir });
+      assert.deepEqual(update(r.dir), whole);
+      assert.match(readFileSync(held, 'utf8'), /"untouched": true/, 'the commit held already is not replayed');
     } finally {
       r.done();
     }
@@ -417,15 +396,16 @@ describe('keeping the record', () => {
 });
 
 describe('this repository’s records', () => {
-  const record = readJSON('test/tests-first.json'),
-    exceptions = readJSON('test/seen-failing.json');
+  const record = summary(path('.')),
+    exceptions = exceptionsIn(path('.'));
 
   test('every test file in the repository has its entry, with what was proved, excused and not replayed kept apart', () => {
     const files = [
       ...walk('.').filter((f) => /(^|\/)(test|tests)\/.*\.test\.(js|mjs)$|(^|\/)tests\/test_\w+\.py$/.test(f)),
     ].filter((f) => !f.startsWith('spikes/'));
-    // a file added since the record was made has none yet: CI replays it as it comes
-    const known = (f) => spawnSync('git', ['cat-file', '-e', `${record.head}:${f}`], { cwd: path('.') }).status === 0;
+    // a file added since the baseline has its entry once a commit that changed it is replayed: CI replays it as it comes
+    const known = (f) =>
+      spawnSync('git', ['cat-file', '-e', `${record.baseline}:${f}`], { cwd: path('.') }).status === 0;
     for (const f of files.filter(known)) {
       const e = record.files[f];
       assert.ok(e, `${f} has an entry`);

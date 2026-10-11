@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_fill.py",
+  "test": "FillReadsPlain.test_each_recipe_s_value_from_the_reader_s_reading_is_grafeo_s",
+  "seen_failing_first": false,
+  "evidence": "req:24.fill-reads-plain: against its parent, compute ignored the parser and asked Grafeo under both, so the two agree trivially and it passes; it holds the plain twin this commit adds to Grafeo's values, and pins the judgement hash to its sealed content_hash. Its companion, test_a_document_s_hashes_are_filled_with_grafeo_not_installed, was seen failing first (11 Oct 2026)"
+}

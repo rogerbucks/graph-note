@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_parity.py",
+  "test": "IdIsText.test_both_readers_read_a_text_id",
+  "seen_failing_first": false,
+  "evidence": "a control case for req:3.id-is-text, written with the change beside it: a text id was read by both readers before and is read after, so it passes at its parent by design"
+}

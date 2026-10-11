@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/pane.test.js",
+  "test": "the comma added for you > a line that is not otherwise valid gets no comma",
+  "seen_failing_first": false,
+  "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit a6620f9)"
+}

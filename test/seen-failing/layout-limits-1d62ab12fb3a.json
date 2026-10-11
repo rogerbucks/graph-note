@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/layout-limits.test.js",
+  "test": "the note’s text, measured before it is read > over the limits the plugin draws nothing, so there is nothing to hold to the Python reader (drawn_in_part)",
+  "seen_failing_first": false,
+  "evidence": "a control case, asked for in review (ff02d6d): it documents the plugin's own exception to drawn_in_part, which 7590e45 already made, so it passes before and after by design"
+}

@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_id_once_engine.py",
+  "test": "OneIdInTwoDocumentsOfAJoin.test_one_id_in_two_documents_joins_as_one_thing_stated_in_both",
+  "seen_failing_first": false,
+  "evidence": "an investigation of req:3.id-once (commit 2ff1377, a test file and nothing else): a control case for §21's join, which already merged one id across documents, so it passes before and after by design"
+}

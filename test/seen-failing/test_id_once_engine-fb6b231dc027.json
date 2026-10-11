@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_id_once_engine.py",
+  "test": "ValidateComesAfterGrafeo.test_validate_reports_an_id_repeated_in_one_document",
+  "seen_failing_first": false,
+  "evidence": "written in an investigation (commit 2ff1377, a test file and nothing else) as an expectedFailure naming a gap, which the replay reads as passing; it stays one, outside the engine-reads-first change"
+}

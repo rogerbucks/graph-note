@@ -1,0 +1,6 @@
+{
+  "file": "test/conventions.test.js",
+  "test": "one code style > the linter runs in CI with no warnings allowed",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that already existed: a convention the code already met when the conventions were written down (commit 54908e4)"
+}

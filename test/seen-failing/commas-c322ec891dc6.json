@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/commas.test.mjs",
+  "test": "a line that is not otherwise valid is refused as before",
+  "seen_failing_first": false,
+  "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit 5d3a442)"
+}

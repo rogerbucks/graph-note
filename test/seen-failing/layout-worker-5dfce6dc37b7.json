@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/layout-worker.test.js",
+  "test": "a graph over a size limit is shown as its text, with a banner saying which limit and the numbers > a block too large to read — 600 kB, one pattern left open — is its text and a banner at once, never read",
+  "seen_failing_first": false,
+  "evidence": "renamed in ff02d6d to what it holds, so it passes against its parent, which already holds the read limit. Against the code before the limit it fails: run alone on 10 Oct 2026 in a temporary worktree of 81951ea, with ff02d6d's packages/obsidian/test/, it failed in 1.1 s (Cannot read properties of null (reading 'text'))"
+}

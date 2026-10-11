@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/inline-completion.test.js",
+  "test": "accepting with Tab or Enter > with no match shown, Enter is a new line as before, and Shift-Tab, Control-Enter and a composing Enter leave it alone",
+  "seen_failing_first": false,
+  "evidence": "a control case, written with the change beside it: with no match shown the keys did nothing special before, so it holds what must not change and passes before and after by design (commit e935115)"
+}

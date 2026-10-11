@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/layout-worker.test.js",
+  "test": "a graph over a size limit is shown as its text, with a banner saying which limit and the numbers > a block too large to read — 5 MB, each line broken — is its text and a banner at once, never read",
+  "seen_failing_first": false,
+  "evidence": "not seen failing by the replay, though it was seen failing by hand: its file's run against 7590e45's parent was stopped at the 600 s limit by the pane case, which hangs there, so the file is not replayed. Run alone at that parent on 10 Oct 2026, it does not hang: it fails in 4 s (Cannot read properties of null (reading 'text'))"
+}

@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/build.test.mjs",
+  "test": "the files the plugin is installed from are at the repository root",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that already existed: the build already wrote its files at the repository root (commit c834d60)"
+}
