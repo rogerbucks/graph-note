@@ -18,11 +18,12 @@ import {
   excuse,
   migrate,
   readRecords,
+  summary,
 } from '../scripts/tests-first-records.mjs';
-import { record, replay, summary, unexplained, update } from '../scripts/tests-first.mjs';
+import { record, replay, unexplained, update } from '../scripts/tests-first.mjs';
 import { testsForChanges } from '../scripts/changed-tests.mjs';
 import { repository } from './repository/scratch-repository.js';
-import { path, exists } from './repository/repo.js';
+import { path, exists, walk } from './repository/repo.js';
 
 const TWICE = (body) =>
   `import { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { twice } from '../src/twice.js';\n${body}\n`;
@@ -388,5 +389,53 @@ describe('this repository’s records', () => {
       assert.ok(!isAncestor(commit, baseline.head), `${commit} is not already in the baseline`);
     }
     assert.doesNotThrow(() => exceptionsIn(path('.')));
+  });
+
+  // moved here from tests-first.test.js with summary(), which they read, on 11 Oct 2026
+  const proved = summary(path('.')),
+    exceptions = exceptionsIn(path('.'));
+
+  test('every test file in the repository has its entry, with what was proved, excused and not replayed kept apart', () => {
+    const files = [
+      ...walk('.').filter((f) => /(^|\/)(test|tests)\/.*\.test\.(js|mjs)$|(^|\/)tests\/test_\w+\.py$/.test(f)),
+    ].filter((f) => !f.startsWith('spikes/'));
+    // a file added since the baseline has its entry once a commit that changed it is replayed: CI replays it as it comes
+    const known = (f) =>
+      spawnSync('git', ['cat-file', '-e', `${proved.baseline}:${f}`], { cwd: path('.') }).status === 0;
+    for (const f of files.filter(known)) {
+      const e = proved.files[f];
+      assert.ok(e, `${f} has an entry`);
+      for (const key of ['replayed', 'notReplayed', 'seenFailing', 'excused'])
+        assert.equal(typeof e[key], 'number', `${f}: ${key}`);
+    }
+  });
+
+  test('every test that passed against its parent has its reason, and every reason names such a test', () => {
+    const passed = Object.entries(proved.files).flatMap(([file, e]) =>
+      e.passedFirst.map((p) => `${file} :: ${p.name}`),
+    );
+    const excused = Object.entries(exceptions).flatMap(([file, names]) =>
+      Object.keys(names).map((n) => `${file} :: ${n}`),
+    );
+    // a test new in a commit whose run against the code before it did not finish was neither seen failing nor passing:
+    // a reason may be kept for it
+    const unproved = Object.entries(proved.files).flatMap(([file, e]) =>
+      (e.notReplayedCommits ?? []).flatMap((c) => (c.tests ?? []).map((n) => `${file} :: ${n}`)),
+    );
+    assert.deepEqual(
+      passed.filter((p) => !excused.includes(p)),
+      [],
+      'unexplained',
+    );
+    assert.deepEqual(
+      excused.filter((x) => !passed.includes(x) && !unproved.includes(x)),
+      [],
+      'a reason for no such test',
+    );
+    for (const names of Object.values(exceptions))
+      for (const reason of Object.values(names)) {
+        assert.equal(reason.seen_failing_first, false);
+        assert.ok(typeof reason.evidence === 'string' && reason.evidence.length > 10);
+      }
   });
 });

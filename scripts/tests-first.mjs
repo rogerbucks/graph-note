@@ -43,13 +43,17 @@ import { JS_TEST, PY_TEST, run } from './tests-first-run.mjs';
 import {
   RECORDS,
   RecordsError,
+  changes,
   exceptionsIn,
   excuse,
   excused,
+  history,
   migrate,
   readRecords,
   removeRecord,
-  tally,
+  summary,
+  testsIn,
+  unrecorded,
   writeRecord,
 } from './tests-first-records.mjs';
 
@@ -83,28 +87,14 @@ function checkout(repo, commit) {
   return { dir, done: () => git(repo, 'worktree', 'remove', '--force', dir) };
 }
 
+/** The test folder a test file sits in: a package's test/ or tests/, or the repository's own test/. */
+const testFolder = (f) => /^(.*?\/?(?:test|tests)\/)/.exec(f)?.[1] ?? '';
+
 /**
  * Replays one commit: for each test file it adds or changes, the tests new in it — passing at the commit — run against
  * the parent's code, with the commit's test files and test support across. Those that fail there were seen failing
  * first; those that pass were not.
  */
-/** The test folder a test file sits in: a package's test/ or tests/, or the repository's own test/. */
-const testFolder = (f) => /^(.*?\/?(?:test|tests)\/)/.exec(f)?.[1] ?? '';
-
-/** What a commit changed: a status and its path, or a rename's two paths, for each file. A first commit shows none. */
-const changes = (repo, commit) =>
-  git(repo, 'diff-tree', '--no-commit-id', '--name-status', '-r', '-M', commit)
-    .split('\n')
-    .filter(Boolean)
-    .map((l) => l.split('\t'));
-
-/** The test files among `changed` that the commit added or changed: those its replay runs. */
-const testsIn = (changed) =>
-  changed
-    .filter(([s]) => s !== 'D')
-    .map((x) => x.at(-1) ?? '')
-    .filter((f) => JS_TEST.test(f) || PY_TEST.test(f));
-
 export function replay(repo, commit) {
   const parent = git(repo, 'rev-list', '--parents', '-n', '1', commit).split(' ')[1];
   const changed = changes(repo, commit);
@@ -242,14 +232,6 @@ export function unexplained(replays, exceptions) {
   );
 }
 
-/** The test files the repository holds now. */
-const testFiles = (repo) =>
-  new Set(
-    git(repo, 'ls-files')
-      .split('\n')
-      .filter((f) => JS_TEST.test(f) || PY_TEST.test(f)),
-  );
-
 /** A fault as one line: the commit, the file when there is one, and what at the commit's own code cannot be trusted. */
 const faultLine = (f) => `${f.commit.slice(0, 7)}${f.file ? ` ${f.file}` : ''}: ${f.problem}`;
 
@@ -284,22 +266,6 @@ function gather(repo, commits) {
   return replays;
 }
 
-/** The commits since the baseline (every commit, when there is none), oldest first, merges left out. */
-const history = (repo, baseline) =>
-  git(repo, 'rev-list', '--reverse', '--no-merges', 'HEAD', ...(baseline ? [`^${baseline.head}`] : []))
-    .split('\n')
-    .filter(Boolean);
-
-/**
- * What the records prove now: `files`, by each test file the repository holds, the commits replayed and not, the tests
- * seen failing first, those that passed first and how many of those are excused; `baseline`, the baseline's head.
- */
-export function summary(repo) {
-  const { baseline, commits } = readRecords(repo);
-  const replays = history(repo, baseline).flatMap((c) => commits.get(c) ?? []);
-  return { baseline: baseline?.head ?? null, files: tally(baseline, replays, exceptionsIn(repo), testFiles(repo)) };
-}
-
 /** Every commit since the baseline replayed afresh, its records rewritten; gives the summary. */
 export function record(repo) {
   const replays = gather(repo, history(repo, readRecords(repo).baseline));
@@ -321,15 +287,6 @@ export function update(repo) {
   for (const commit of commits.keys()) if (!held.has(commit)) removeRecord(repo, commit);
   for (const r of replays) writeRecord(repo, r);
   return summary(repo);
-}
-
-/**
- * The commits since the baseline that changed a test and have no record: each is recorded by --update on the branch
- * that made it, so no other branch replays it again, perhaps differently (review of #69).
- */
-export function unrecorded(repo) {
-  const { baseline, commits } = readRecords(repo);
-  return history(repo, baseline).filter((c) => !commits.has(c) && testsIn(changes(repo, c)).length > 0);
 }
 
 if (process.argv[1] && basename(process.argv[1]) === 'tests-first.mjs') {

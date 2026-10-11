@@ -5,10 +5,15 @@
 // test/tests-first/ holds one file for each replayed commit that changed a test, named after the commit, over
 // baseline.json: the single record as it stood when it was split (11 Oct 2026), frozen at its head. test/seen-failing/
 // holds one file for each test excused for passing before its code, named after its test file and a digest of the test.
-// No field is rewritten by every update, as the single record's head was. Replaying a commit is scripts/tests-first.mjs.
+// No field is rewritten by every update, as the single record's head was. Read against the history, the records give
+// what they prove (summary) and which commits they still lack (unrecorded). Replaying a commit is scripts/tests-first.mjs.
+import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
+import { JS_TEST, PY_TEST } from './tests-first-run.mjs';
+
+const git = (repo, ...args) => execFileSync('git', args, { cwd: repo, encoding: 'utf8', maxBuffer: 1 << 28 }).trim();
 
 /** The folder of replay records, from the repository's root: a file for each commit, and the baseline. */
 export const RECORDS = 'test/tests-first';
@@ -174,6 +179,53 @@ export function tally(baseline, replays, exceptions, current) {
       .filter(([f]) => current.has(f))
       .sort(([a], [b]) => (a < b ? -1 : 1)),
   );
+}
+
+/** What a commit changed: a status and its path, or a rename's two paths, for each file. A first commit shows none. */
+export const changes = (repo, commit) =>
+  git(repo, 'diff-tree', '--no-commit-id', '--name-status', '-r', '-M', commit)
+    .split('\n')
+    .filter(Boolean)
+    .map((l) => l.split('\t'));
+
+/** The test files among `changed` that the commit added or changed: those its replay runs. */
+export const testsIn = (changed) =>
+  changed
+    .filter(([s]) => s !== 'D')
+    .map((x) => x.at(-1) ?? '')
+    .filter((f) => JS_TEST.test(f) || PY_TEST.test(f));
+
+/** The commits since the baseline (every commit, when there is none), oldest first, merges left out. */
+export const history = (repo, baseline) =>
+  git(repo, 'rev-list', '--reverse', '--no-merges', 'HEAD', ...(baseline ? [`^${baseline.head}`] : []))
+    .split('\n')
+    .filter(Boolean);
+
+/** The test files the repository holds now. */
+const testFiles = (repo) =>
+  new Set(
+    git(repo, 'ls-files')
+      .split('\n')
+      .filter((f) => JS_TEST.test(f) || PY_TEST.test(f)),
+  );
+
+/**
+ * What the records prove now: `files`, by each test file the repository holds, the commits replayed and not, the tests
+ * seen failing first, those that passed first and how many of those are excused; `baseline`, the baseline's head.
+ */
+export function summary(repo) {
+  const { baseline, commits } = readRecords(repo);
+  const replays = history(repo, baseline).flatMap((c) => commits.get(c) ?? []);
+  return { baseline: baseline?.head ?? null, files: tally(baseline, replays, exceptionsIn(repo), testFiles(repo)) };
+}
+
+/**
+ * The commits since the baseline that changed a test and have no record: each is recorded by --update on the branch
+ * that made it, so no other branch replays it again, perhaps differently (review of #69).
+ */
+export function unrecorded(repo) {
+  const { baseline, commits } = readRecords(repo);
+  return history(repo, baseline).filter((c) => !commits.has(c) && testsIn(changes(repo, c)).length > 0);
 }
 
 /**

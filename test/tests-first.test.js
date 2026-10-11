@@ -1,16 +1,15 @@
 // Every test is seen to fail before its code (spec §12, tests_first). scripts/tests-first.mjs proves it mechanically: it
 // replays a commit, running the commit's tests against its parent's code, and every test new in the commit must fail
 // there. A test that passes against the old code was not written first, unless its reason is kept in
-// test/seen-failing/. Proved here on small repositories made for the purpose, then on this one's records. How the
-// records are kept is tests-first-records.test.js.
+// test/seen-failing/. Proved here on small repositories made for the purpose. How the records are kept, and what this
+// repository's own records hold, is tests-first-records.test.js.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync, spawnSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
-import { judged, replay, unexplained, record, update, summary } from '../scripts/tests-first.mjs';
-import { RECORDS, exceptionsIn, readRecords } from '../scripts/tests-first-records.mjs';
-import { path, walk } from './repository/repo.js';
+import { judged, replay, unexplained, record, update } from '../scripts/tests-first.mjs';
+import { RECORDS, readRecords } from '../scripts/tests-first-records.mjs';
 import { repository } from './repository/scratch-repository.js';
 
 const JS_TEST = (body) =>
@@ -413,54 +412,5 @@ describe('keeping the record', () => {
     } finally {
       r.done();
     }
-  });
-});
-
-describe('this repository’s records', () => {
-  const record = summary(path('.')),
-    exceptions = exceptionsIn(path('.'));
-
-  test('every test file in the repository has its entry, with what was proved, excused and not replayed kept apart', () => {
-    const files = [
-      ...walk('.').filter((f) => /(^|\/)(test|tests)\/.*\.test\.(js|mjs)$|(^|\/)tests\/test_\w+\.py$/.test(f)),
-    ].filter((f) => !f.startsWith('spikes/'));
-    // a file added since the baseline has its entry once a commit that changed it is replayed: CI replays it as it comes
-    const known = (f) =>
-      spawnSync('git', ['cat-file', '-e', `${record.baseline}:${f}`], { cwd: path('.') }).status === 0;
-    for (const f of files.filter(known)) {
-      const e = record.files[f];
-      assert.ok(e, `${f} has an entry`);
-      for (const key of ['replayed', 'notReplayed', 'seenFailing', 'excused'])
-        assert.equal(typeof e[key], 'number', `${f}: ${key}`);
-    }
-  });
-
-  test('every test that passed against its parent has its reason, and every reason names such a test', () => {
-    const passed = Object.entries(record.files).flatMap(([file, e]) =>
-      e.passedFirst.map((p) => `${file} :: ${p.name}`),
-    );
-    const excused = Object.entries(exceptions).flatMap(([file, names]) =>
-      Object.keys(names).map((n) => `${file} :: ${n}`),
-    );
-    // a test new in a commit whose run against the code before it did not finish was neither seen failing nor passing:
-    // a reason may be kept for it
-    const unproved = Object.entries(record.files).flatMap(([file, e]) =>
-      (e.notReplayedCommits ?? []).flatMap((c) => (c.tests ?? []).map((n) => `${file} :: ${n}`)),
-    );
-    assert.deepEqual(
-      passed.filter((p) => !excused.includes(p)),
-      [],
-      'unexplained',
-    );
-    assert.deepEqual(
-      excused.filter((x) => !passed.includes(x) && !unproved.includes(x)),
-      [],
-      'a reason for no such test',
-    );
-    for (const names of Object.values(exceptions))
-      for (const reason of Object.values(names)) {
-        assert.equal(reason.seen_failing_first, false);
-        assert.ok(typeof reason.evidence === 'string' && reason.evidence.length > 10);
-      }
   });
 });
