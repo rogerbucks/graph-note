@@ -16,19 +16,17 @@ export const runMs = () => Number(process.env.TESTS_FIRST_RUN_MS) || RUN_MS;
 const ENTITIES = { lt: '<', gt: '>', amp: '&', quot: '"', apos: "'" };
 
 /**
- * An attribute value's entities, decoded in one pass, so `&amp;lt;` is the text `&lt;`. Node's reporter writes `"` and `'`
- * as `&amp;quot;` and `&amp;apos;` (it escapes `&` again after them), so those read as the character; a name that spelt
- * out `&quot;` itself cannot be told from a `"`, which the report does not let us.
+ * An attribute value's entities, decoded in one pass, so `&amp;lt;` is the text `&lt;`. Node's reporter writes `"` as
+ * `&amp;quot;` (it escapes `&` again after `&quot;`), so that reads as the character; a name that spelt out `&quot;`
+ * itself cannot be told from a `"`, which the report does not let us. It writes `'` as it is, so `&amp;apos;` is a name
+ * that spelt out `&apos;`, and reads as that text.
  */
 const unescape = (s) =>
-  s.replace(
-    /&(?:amp;(quot|apos)|#(\d+)|#x([0-9a-fA-F]+)|(lt|gt|amp|quot|apos));/g,
-    (whole, reporter, dec, hex, named) => {
-      if (reporter || named) return ENTITIES[reporter ?? named];
-      const code = dec ? Number(dec) : parseInt(hex, 16);
-      return code <= 0x10ffff ? String.fromCodePoint(code) : whole;
-    },
-  );
+  s.replace(/&(?:amp;(quot)|#(\d+)|#x([0-9a-fA-F]+)|(lt|gt|amp|quot|apos));/g, (whole, reporter, dec, hex, named) => {
+    if (reporter || named) return ENTITIES[reporter ?? named];
+    const code = dec ? Number(dec) : parseInt(hex, 16);
+    return code <= 0x10ffff ? String.fromCodePoint(code) : whole;
+  });
 
 // a name, `=`, and a value in double or single quotes; a quoted value may hold `>`, which the reporter leaves bare
 const ATTR = String.raw`[\w:.-]+\s*=\s*(?:"[^"]*"|'[^']*')`;
@@ -65,16 +63,30 @@ function runJs(dir, file) {
     maxBuffer: 1 << 28,
   });
   const read = fromJunit(r.stdout ?? '');
-  return read.ran ? read : { ...read, why: ended(r) };
+  if (!read.ran) return { why: ended(r), ...read };
+  // a parent test that fails after its subtests pass is a <testsuite> with no failure: only the exit status shows it
+  if (r.status !== 0 && read.failed.length === 0) {
+    const why = r.status === null ? ended(r) : `ended with exit status ${r.status} though no failed test was read`;
+    return { ...read, ran: false, why };
+  }
+  return read;
 }
 
-/** A JUnit report read: each test by its suites and name, passed or failed, and whether the run finished. */
-export function fromJunit(report) {
+/**
+ * A JUnit report read: each test by its suites and name, passed or failed, and whether the run finished. A report with a
+ * testsuite or testcase tag that could not be read did not finish being read, and says how many (`why`): a test lost
+ * without a word would be a test the check never saw.
+ */
+export function fromJunit(whole) {
+  // the reporter writes t.diagnostic() text as comments, and turns `--` inside one into `&#45;&#45;`, so none ends early
+  const report = whole.replace(/<!--[\s\S]*?-->/g, '');
   const passed = [],
     failed = [],
-    suites = [];
+    suites = [],
+    opened = { testsuite: 0, testcase: 0 };
   for (const m of report.matchAll(TAG)) {
     const [, close, tag, text = '', selfClose] = m;
+    if (!close) opened[tag]++;
     const attrs = attributes(text);
     const name = attrs.get('name') ?? '';
     if (tag === 'testsuite') {
@@ -86,7 +98,12 @@ export function fromJunit(report) {
     (attrs.has('failure') ? failed : passed).push([...suites, name].join(' > '));
   }
   // the reporter writes <testsuites> at once; a run stopped at the time limit, or crashed, never closes it
-  return { passed, failed, ran: report.includes('</testsuites>') };
+  if (!report.includes('</testsuites>')) return { passed, failed, ran: false };
+  for (const tag of ['testsuite', 'testcase']) {
+    const n = (report.match(new RegExp(String.raw`<${tag}\b`, 'g'))?.length ?? 0) - opened[tag];
+    if (n > 0) return { passed, failed, ran: false, why: `${n} ${tag} tag${n === 1 ? '' : 's'} could not be read` };
+  }
+  return { passed, failed, ran: true };
 }
 
 const PY_RUNNER = `
@@ -106,9 +123,13 @@ name = lambda t: type(t).__name__ + "." + t._testMethodName
 # a failing or skipped subTest is reported as its own _SubTest; it counts against the test it belongs to
 bad = {id(getattr(t, "test_case", t)) for t, _ in result.failures + result.errors}
 skipped = {id(getattr(t, "test_case", t)) for t, _ in result.skipped}
+# a failure that belongs to no listed test, such as a setUpClass that raised, hides the tests it kept from running
+known = {id(t) for t in tests}
+unmatched = [str(t) for t, _ in result.failures + result.errors if id(getattr(t, "test_case", t)) not in known]
 print(json.dumps({
     "passed": [name(t) for t in tests if id(t) not in bad and id(t) not in skipped and type(t).__name__ != "_FailedTest"],
     "failed": [name(t) for t in tests if id(t) in bad],
+    "unmatched": unmatched,
 }))
 `;
 
@@ -120,11 +141,21 @@ function runPy(dir, file, repo) {
   const venv = join(repo, 'python', 'graph_spec', '.venv', 'bin', 'python');
   const python = file.startsWith('python/graph_spec/') && existsSync(venv) ? venv : 'python3';
   const r = spawnSync(python, ['-c', PY_RUNNER, join(dir, file)], { cwd: dir, encoding: 'utf8', timeout: runMs() });
+  let read;
   try {
-    return { ...JSON.parse(r.stdout.trim().split('\n').pop() ?? ''), ran: true };
+    read = JSON.parse(r.stdout.trim().split('\n').pop() ?? '');
   } catch {
     return { passed: [], failed: [], ran: false, why: ended(r) };
   }
+  const { unmatched = [], ...tests } = read;
+  if (unmatched.length === 0) return { ...tests, ran: true };
+  const n = unmatched.length;
+  return {
+    passed: [],
+    failed: [],
+    ran: false,
+    why: `${n} failure${n === 1 ? '' : 's'} could not be matched to a test: ${unmatched.join(', ')}`,
+  };
 }
 
 /**
