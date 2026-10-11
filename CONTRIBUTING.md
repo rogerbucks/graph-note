@@ -11,9 +11,11 @@ CI. A change that breaks one fails before it is merged.
   every test new in the commit must fail there. A test written after its code, such as one that pins behaviour that
   already existed, has its reason in `test/seen-failing/`, or the build fails: one file for each test, written by `node
   scripts/tests-first.mjs --excuse <test file> <test> <reason>` and named after the test file and a digest of the test.
-  A reason holds only `file`, `test`, `seen_failing_first`, `evidence` and, for a fault, `fault`; `--excuse` never
-  overwrites one without `--force`. `--excuse --fault` keeps the reason a recorded fault (a test that failed at its own
-  commit) is accepted, and which commit fixed it; `--tally` and `summary` then count it as `faultsExcused`, not as
+  A reason holds only `file`, `test`, `seen_failing_first`, `evidence` and, for a fault, `fault` (true) and `commit`; `--excuse` never
+  overwrites one without `--force`, and its flags come before its arguments. `--excuse --fault` keeps the reason a
+  recorded fault (a test that failed at its own commit) is accepted, and which commit fixed it; it names the commit
+  that faulted, so a later fault of the same test is not excused, and it refuses a fault in a file none of whose tests
+  could run, which the replay did not replay at all; `--tally` and `summary` then count it as `faultsExcused`, not as
   not replayed, leaving `excused` for the passed-first reasons. `test/tests-first/` records the replays (`node scripts/tests-first.mjs --update`): one file for each
   replayed commit that changed a test, named after the commit, over `baseline.json`, the single record as it stood when
   it was split (11 Oct 2026), frozen at its head. Together they give, for each test file, what was seen failing first,

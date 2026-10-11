@@ -34,7 +34,7 @@ const BASELINE_NOTE =
 // names that would reach every object, were a reason looked up by them as a property (review of #69)
 const REFUSED_NAMES = new Set(['__proto__', 'constructor', 'prototype']);
 // what a reason holds beside its file and test
-const REASON_FIELDS = new Set(['seen_failing_first', 'evidence', 'fault']);
+const REASON_FIELDS = new Set(['seen_failing_first', 'evidence', 'fault', 'commit']);
 
 /** The records or reasons kept cannot be read as they are; the message names the file and why. */
 export class RecordsError extends Error {}
@@ -65,7 +65,12 @@ function refusal(file, test, reason) {
   const refused = [file, test].find((n) => REFUSED_NAMES.has(n));
   if (refused) return `names "${refused}", which no test file or test may be called`;
   const extra = Object.keys(reason).filter((k) => !REASON_FIELDS.has(k));
-  if (extra.length) return `holds ${extra.join(', ')}; a reason holds only file, test, seen_failing_first and evidence`;
+  if (extra.length)
+    return `holds ${extra.join(', ')}; a reason holds only file, test, seen_failing_first and evidence, and for a fault, fault and commit`;
+  if ('fault' in reason && reason.fault !== true) return 'fault must be true when given';
+  const named = typeof reason.commit === 'string' && /^[0-9a-f]{40}$/.test(reason.commit);
+  if (reason.fault === true && !named) return 'a fault reason names the 40-character commit at which the test failed';
+  if (reason.fault !== true && 'commit' in reason) return 'commit belongs to a fault reason only';
   return null;
 }
 
@@ -91,27 +96,43 @@ export function excuse(repo, file, test, evidence, force = false) {
 
 /**
  * Keeps the reason `test`, in the test file `file`, failed at its own commit and so could not be replayed (`evidence`
- * says why, and which commit fixed it); gives the file's path from the root. Only a test the records hold as a fault
- * is excused; a reason for any other is refused. A reason kept already is replaced only when `force` is given.
+ * says why, and which commit fixed it); gives the file's path from the root. The reason names the commit at which the
+ * records hold the fault, so a later fault of the same test is not excused by it. Only a fault of a file that was
+ * replayed is excused: where no test of a file passed at its own commit the file was not replayed at all, and a reason
+ * would not make it so. A reason for any other test, or one that faulted at several commits, is refused. A reason kept
+ * already is replaced only when `force` is given.
  */
 export function excuseFault(repo, file, test, evidence, force = false) {
-  const held = [...readRecords(repo).commits.values()].some((r) =>
-    r.files.some((f) => f.file === file && (f.faults ?? []).some((x) => x.test === test)),
-  );
-  if (!held)
-    throw new RecordsError(`${EXCUSALS}/${excusalName(file, test)}: the records hold no fault of "${test}" in ${file}`);
-  return keep(repo, file, test, { seen_failing_first: false, fault: true, evidence }, force);
+  const rel = `${EXCUSALS}/${excusalName(file, test)}`;
+  const at = [],
+    entries = [...readRecords(repo).commits.values()].flatMap((r) =>
+      r.files.filter((f) => f.file === file && (f.faults ?? []).some((x) => x.test === test)).map((f) => [r.commit, f]),
+    );
+  for (const [commit, f] of entries) if (!f.notReplayed) at.push(commit);
+  if (entries.length && !at.length)
+    throw new RecordsError(
+      `${rel}: no test in ${file} passes at its own commit, so the file was not replayed, and a reason would not make it so`,
+    );
+  if (!at.length) throw new RecordsError(`${rel}: the records hold no fault of "${test}" in ${file}`);
+  if (at.length > 1)
+    throw new RecordsError(`${rel}: "${test}" in ${file} faulted at ${at.length} commits, and a reason names one`);
+  return keep(repo, file, test, { seen_failing_first: false, fault: true, commit: at[0], evidence }, force);
 }
 
-/** Whether `exceptions` keeps a reason that `test` in `file` failed at its own commit. */
-export const faultExcused = (exceptions, file, test) =>
-  excused(exceptions, file, test) && exceptions[file][test].fault === true;
+/** Whether `exceptions` keeps a reason for `test` in `file` that is not for a fault: one for a test that passed first. */
+export const plainExcused = (exceptions, file, test) =>
+  excused(exceptions, file, test) && exceptions[file][test].fault !== true;
+
+/** Whether `exceptions` keeps a reason that `test` in `file` failed at its own commit `commit`, and at no other. */
+export const faultExcused = (exceptions, file, test, commit) =>
+  excused(exceptions, file, test) && exceptions[file][test].fault === true && exceptions[file][test].commit === commit;
 
 /**
- * Every reason kept, by test file and test: `{ [file]: { [test]: { seen_failing_first, evidence } } }`, both levels
- * objects with no prototype, so no key reaches another object. Only `.json` files are read. A file that is not JSON,
- * names no test or one called `__proto__`, `constructor` or `prototype`, holds more than a reason's four fields, or is
- * not named for the test it names, fails, naming the file.
+ * Every reason kept, by test file and test: `{ [file]: { [test]: { seen_failing_first, evidence } } }` (a fault's also
+ * holds `fault: true` and its `commit`), both levels objects with no prototype, so no key reaches another object. Only
+ * `.json` files are read. A file that is not JSON, names no test or one called `__proto__`, `constructor` or
+ * `prototype`, holds a field no reason has, a `fault` that is not true or with no commit, or is not named for the test
+ * it names, fails, naming the file.
  */
 export function exceptionsIn(repo) {
   const dir = join(repo, EXCUSALS);
@@ -199,7 +220,8 @@ export function tally(baseline, replays, exceptions, current) {
       }
       // its other new tests are judged and counted; the commit is counted once, as not replayed when a test in it was not
       // a fault with a reason kept (--excuse --fault) is excused, and the commit counts as replayed
-      if (faulted.length && !faulted.every((x) => faultExcused(exceptions, f.file, x.test))) unreplayed(why.join('; '));
+      if (faulted.length && !faulted.every((x) => faultExcused(exceptions, f.file, x.test, commit)))
+        unreplayed(why.join('; '));
       else {
         e.replayed++;
         faultsExcused.set(f.file, (faultsExcused.get(f.file) ?? 0) + faulted.length);
@@ -209,9 +231,7 @@ export function tally(baseline, replays, exceptions, current) {
     }
   for (const [file, e] of Object.entries(files)) {
     // `excused` counts the passed-first tests with a reason only; `faultsExcused` the faults with one, kept apart
-    e.excused = e.passedFirst.filter(
-      (p) => excused(exceptions, file, p.name) && !faultExcused(exceptions, file, p.name),
-    ).length;
+    e.excused = e.passedFirst.filter((p) => plainExcused(exceptions, file, p.name)).length;
     e.faultsExcused = faultsExcused.get(file) ?? 0;
   }
   return Object.fromEntries(

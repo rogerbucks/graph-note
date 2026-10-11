@@ -20,6 +20,9 @@ function gitIgnores(root, entry) {
     return true;
   } catch (e) {
     if (e.status === 1) return false;
+    // 128: not a git checkout (or no git at all): which entries are build output cannot be told
+    if (e.status === 128 || e.code === 'ENOENT')
+      throw new Error(`${root} is not a git checkout, so which .ignore entries are build output cannot be told`);
     throw e;
   }
 }

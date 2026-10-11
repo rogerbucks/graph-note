@@ -50,10 +50,10 @@ import {
   exceptionsIn,
   excuse,
   excuseFault,
-  excused,
   faultExcused,
   history,
   migrate,
+  plainExcused,
   readRecords,
   removeRecord,
   summary,
@@ -228,7 +228,7 @@ export function unexplained(replays, exceptions) {
   return replays.flatMap((r) =>
     r.files.flatMap((f) =>
       f.passedFirst
-        .filter((name) => !excused(exceptions, f.file, name))
+        .filter((name) => !plainExcused(exceptions, f.file, name))
         .map((name) => ({ commit: r.commit, file: f.file, name })),
     ),
   );
@@ -299,11 +299,20 @@ if (process.argv[1] && basename(process.argv[1]) === 'tests-first.mjs') {
   const given = process.argv.slice(2);
   const repo = given[0] === '--repo' ? resolve(given[1] ?? '') : HERE;
   const [mode, ...rest] = given[0] === '--repo' ? given.slice(2) : given;
-  // --excuse takes --force and --fault, in either order, before its three arguments
-  const flags = mode === '--excuse' ? rest.slice(0, 2).filter((a) => a === '--force' || a === '--fault') : [];
+  // --excuse takes --force and --fault, in either order, and only before its three arguments: one after them is not
+  // a flag but an argument, and the usage is printed
+  const isFlag = (a) => a === '--force' || a === '--fault';
+  const lead = mode === '--excuse' ? rest.findIndex((a) => !isFlag(a)) : 0;
+  const flags = mode === '--excuse' ? rest.slice(0, lead < 0 ? rest.length : lead) : [];
   const args = rest.slice(flags.length);
   try {
-    main(repo, mode, args, flags.includes('--force'), flags.includes('--fault'));
+    main(
+      repo,
+      mode,
+      mode === '--excuse' && args.some(isFlag) ? [] : args,
+      flags.includes('--force'),
+      flags.includes('--fault'),
+    );
   } catch (e) {
     // a record that cannot be trusted, or records that cannot be read: say why, and write nothing
     if (!(e instanceof RecordFault || e instanceof RecordsError)) throw e;
@@ -332,7 +341,7 @@ function main(repo, mode, args, force, fault = false) {
     // a fault whose reason is kept (--excuse --fault) is no longer warned of
     const faults = replays
       .flatMap((r) => r.faults)
-      .filter((f) => !faultExcused(exceptions, f.file ?? '', f.test ?? ''));
+      .filter((f) => !faultExcused(exceptions, f.file ?? '', f.test ?? '', f.commit));
     for (const b of bad)
       console.error(
         `${b.commit.slice(0, 7)} ${b.file}: "${b.name}" passed against the code before it — write the test first, or keep the reason: node scripts/tests-first.mjs --excuse <test file> <test> <reason>`,

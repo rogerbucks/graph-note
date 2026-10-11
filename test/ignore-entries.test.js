@@ -25,6 +25,19 @@ test('in an unbuilt checkout an ignored build output may be missing, a misspelt 
   assert.deepEqual(missingIgnoreEntries(folder), ['kept.jsn']);
 });
 
+test('outside a git checkout it says so in one line, as it cannot tell which entries are build output', () => {
+  const bare = mkdtempSync(join(tmpdir(), 'ignore-entries-bare-'));
+  try {
+    writeFileSync(join(bare, '.ignore'), 'something.js\n');
+    assert.throws(
+      () => missingIgnoreEntries(bare),
+      (e) => /^.+ is not a git checkout, so which \.ignore entries are build output cannot be told$/.test(e.message),
+    );
+  } finally {
+    rmSync(bare, { recursive: true, force: true });
+  }
+});
+
 test('built, the answer is the same; and a file that is not build output is missing once it is gone', () => {
   put('built.js', 'x\n');
   assert.deepEqual(missingIgnoreEntries(folder), ['kept.jsn']);
