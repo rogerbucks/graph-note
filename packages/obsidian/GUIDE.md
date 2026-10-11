@@ -14,10 +14,12 @@ module that ties the parts together, named as the folder is.
 - `inline-editors.ts` — the editors open in place: each found by its block's identity, never by another block that comes
   to its line, even one of the same graph; one to a block, however often Edit here is pressed; released, its typing
   written, when it is off the page and its note is closed, whether a card left or the editing view closed; never kept
-  when there is nothing to open, the note gone, unreadable or without a graph block.
-- `drafts.ts` — the drafts kept in the plugin's data: moved with their note when it is renamed, edited or not, each
-  beside, never over, a different draft kept under the new name; and Recover kept drafts into a new note, the command
-  that writes every one, a deleted note's among them, into a note, and says so when that note cannot be written.
+  when its opening fails, for any reason, logged and said, or finds nothing, the note gone or without a graph block.
+- `drafts.ts` — the drafts kept in the plugin's data, each with an id given once and never again, by which every change
+  finds it; its key, note and graph, only says whose it is. Drafts kept before ids are given one when read. They move
+  with their note when it is renamed, edited or not, ids unchanged, beside, never over, a draft kept under the new name;
+  and Recover kept drafts into a new note, the command that writes every one, once, a deleted note's among them, into a
+  note, and says so when that note cannot be written.
 - `block.ts` — one gql block in a note: drawn, or shown as code, never blank; as text with a banner when it is over a
   size or time limit.
 - `view-block.ts` — a view (§7): a query block named as a view, drawn as what it picks out of its graph; refused, saying
@@ -119,7 +121,8 @@ module that ties the parts together, named as the folder is.
 - `block-editor.ts` — `BlockEditor`: ties the parts together; the field and what typing in it does.
 - `editor-layout.ts` — the editor's parts on the page, built once for each block.
 - `block-note.ts` — the note behind the editor and its session: opening, writing, undo, Lock, drafts; the note followed
-  when it is renamed or moved, and what is typed kept as a draft when it is deleted, each editor's beside another's.
+  when it is renamed or moved, and what is typed kept as a draft when it is deleted; each editor's own draft known by
+  its id, beside another's.
 - `note-writing.ts` — writing safely, through the note's editor or the vault.
 - `kept-field.ts` — the field's focus and scroll, kept through each redraw.
 - `typing-keys.ts` — what typing does: Tab and Enter for the inline match or a suggestion, Escape to put it away, undo and
@@ -131,7 +134,8 @@ module that ties the parts together, named as the folder is.
 - `text-picture.ts` — the coloured picture under the field, with the inline match as ghost text where the caret is.
 - `problem-help.ts` — the problems list, the fixes on the caret's line, the announcements.
 - `suggestions.ts` — the suggestions bar.
-- `kept-draft.ts` — the draft banner: what was typed, never lost.
+- `kept-draft.ts` — the draft banner: what was typed, never lost; Restore and Discard act on the very draft shown, by its
+  id, and on no other when it is gone.
 - `pane-drawing.ts` — the pane's own drawing of what is typed.
 
 ## Tests, `test/`

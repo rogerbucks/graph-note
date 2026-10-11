@@ -17,7 +17,7 @@ import type { Step } from './editor-history';
 import { BlockNote } from './block-note';
 import type { Reread } from './block-note';
 import type { Refused } from './note-writing';
-import { keptMessage, showDraft } from './kept-draft';
+import { keptMessage, offerDraft } from './kept-draft';
 import { PaneDrawing } from './pane-drawing';
 import { fieldTyping, watchKeys, watchTyping } from './typing-keys';
 
@@ -329,22 +329,9 @@ export class BlockEditor extends Component {
     this.redraw();
   }
 
+  /** The draft banner: Restore and Discard act on the very draft it shows, by its id (kept-draft.ts). */
   private showKeptDraft(message?: string): void {
-    const el = this.el;
-    if (!el) return;
-    showDraft(el.draft, this.note.draft(), message, {
-      restore: (text) => {
-        el.text.value = text;
-        void this.forget();
-        this.typed('other');
-      },
-      discard: () => void this.forget(),
-    });
-  }
-
-  private async forget(): Promise<void> {
-    if (this.el) this.el.draft.hidden = true;
-    await this.note.forget();
+    if (this.el) offerDraft(this.el, this.note, message, () => this.typed('other'));
   }
 
   private onModify(outcome: Reread): void {

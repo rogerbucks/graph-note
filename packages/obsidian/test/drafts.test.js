@@ -85,6 +85,64 @@ describe('drafts follow their note, never over another', () => {
   });
 });
 
+// Roger's choice A, 11 Oct 2026: each draft has an id from the moment it is kept, which no rename changes; and drafts
+// kept before ids were kept with them are given one when first read, so none is lost or left without one
+describe('each draft keeps its id', () => {
+  test('a draft kept by an editor has an id, and keeps it when its note, and then its folder, are renamed', async () => {
+    const env = await pane.open();
+    try {
+      pane.type(env.el, pane.READER + ',\n(mine:Reason)');
+      const theirs = pane.NOTE.replace(pane.READER, pane.READER + ',\n(theirs:Reason)');
+      await env.app.vault.modify({ path: pane.PATH }, theirs);
+      await until(() => !!drafts(env)[`${pane.PATH}#reader`], 2000);
+      const { id } = drafts(env)[`${pane.PATH}#reader`];
+      assert.equal(typeof id, 'string');
+      assert.ok(id.length > 0, 'an id');
+      await env.app.vault.rename(env.app.vault.getFileByPath(pane.PATH), 'Notes/Reader.md');
+      await until(() => !!drafts(env)['Notes/Reader.md#reader'], 2000);
+      assert.equal(drafts(env)['Notes/Reader.md#reader'].id, id, 'the same id after the note is renamed');
+      env.state.tell('rename', { path: 'Moved' }, 'Notes');
+      await until(() => !!drafts(env)['Moved/Reader.md#reader'], 2000);
+      assert.equal(drafts(env)['Moved/Reader.md#reader'].id, id, 'and after its folder is');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('drafts kept before ids were kept are each given one when read, and act as any draft does', async () => {
+    const old = (text) => ({ text, kept: '2026-10-09T08:00:00.000Z' });
+    const data = { drafts: { [`${PATH}#reader`]: old('first'), 'Other.md#reader': old('second') } };
+    const env = await load({ files: { [PATH]: NOTE }, data });
+    try {
+      const ids = Object.values(env.plugin.drafts()).map((d) => d.id);
+      assert.equal(ids.length, 2);
+      assert.ok(
+        ids.every((id) => typeof id === 'string' && id.length > 0),
+        'each has an id',
+      );
+      assert.notEqual(ids[0], ids[1], 'its own');
+      assert.deepEqual(
+        Object.values(env.plugin.drafts()).map((d) => d.id),
+        ids,
+        'the same each time they are read',
+      );
+      // offered and discarded as any draft is: by that id, the other left kept
+      const el = await show(env);
+      labelled(el, 'Edit here').click();
+      await until(() => !!el.querySelector('textarea') && !el.querySelector('.graph-note-draft').hidden);
+      labelled(el.querySelector('.graph-note-draft'), 'Discard draft').click();
+      await until(() => !drafts(env)[`${PATH}#reader`], 2000);
+      assert.deepEqual(Object.keys(drafts(env)), ['Other.md#reader']);
+      assert.equal(drafts(env)['Other.md#reader'].id, ids[1]);
+      // recovered once, named by its id
+      await command(env, 'recover-drafts').callback();
+      assert.equal(env.state.files.get('Kept drafts.md').split(ids[1]).length - 1, 1);
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
 describe('every kept draft can be recovered', () => {
   test('a deleted note’s draft: the notice names the command, which writes it into a new note', async () => {
     const env = await pane.open();

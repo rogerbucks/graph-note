@@ -107,16 +107,18 @@ export class InlineEditors extends Component {
       this.open.set(e, at);
       this.plugin.addChild(e);
       e.mount(slot);
-      // an opening that fails, as when the note cannot be read, settles all the same, so a later press never waits on it
-      const failed = { why: '' };
+      // an opening that fails for any reason, reading the note, its shared schemas or drawing the editor, settles all the
+      // same, so a later press never waits on it; and its error is logged, never swallowed
+      const failed: { why: string | null } = { why: null };
       at.opening = e.open(target.path, target.line).catch((err: unknown) => {
+        console.error('Graph Note could not open the block to edit it here', err);
         failed.why = err instanceof Error ? err.message : String(err);
       });
       await at.opening;
-      if (!e.session) {
-        // nothing to edit: the note could not be read, is not there any more, or has no graph block, as the card then
-        // says; never kept
-        if (failed.why) new Notice(`This note could not be read, so it cannot be edited here: ${failed.why}.`);
+      if (failed.why !== null || !e.session) {
+        // nothing to edit, half open or not at all: never kept. The note could not be opened, is not there any more, or
+        // has no graph block, as the card then says
+        if (failed.why !== null) new Notice(`This block could not be opened to edit it here: ${failed.why}.`);
         else if (!e.path) new Notice(GONE_MESSAGE);
         e.onDone?.();
         return;

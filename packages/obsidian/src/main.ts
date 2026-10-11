@@ -26,7 +26,8 @@ import { addForYou } from './editor';
 import type { BlockEditor } from './block-editor/block-editor';
 import { graphBlocks } from './live-preview';
 import { InlineEditors } from './inline-editors';
-import { followRename, recoverDrafts, RECOVER_COMMAND } from './drafts';
+import { followRename, recoverDrafts, RECOVER_COMMAND, withIds } from './drafts';
+import type { KeptDraft } from './block-editor/kept-draft';
 import { noteToRewrite, stillToRewrite } from './reading-view';
 
 /** Where Edit was pressed: the note, the line of the block's opening fence (0-based), and the graph it draws. */
@@ -37,7 +38,7 @@ export interface EditTarget {
 }
 
 /** What was typed in the pane and kept when the note changed under it, by note and graph: never lost (spec §9). */
-export type Drafts = Record<string, { text: string; kept: string }>;
+export type Drafts = Record<string, KeptDraft>;
 
 interface Saved {
   drafts?: Drafts;
@@ -171,8 +172,10 @@ export default class GraphNotePlugin extends Plugin {
     return given.blocks;
   }
 
+  /** The drafts kept, by note and graph; one kept before drafts had ids is given its id here, once (drafts.ts). */
   drafts(): Drafts {
-    return { ...(this.saved.drafts ?? {}) };
+    this.saved.drafts = withIds(this.saved.drafts ?? {});
+    return { ...this.saved.drafts };
   }
 
   async saveDrafts(drafts: Drafts): Promise<void> {

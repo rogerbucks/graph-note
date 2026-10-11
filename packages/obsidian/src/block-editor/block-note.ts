@@ -2,7 +2,7 @@
 // and every change made to it — what is typed, Undo and Redo, Lock the graph — made safely (note-writing.ts), with what a
 // refused write held kept as a draft in the plugin's data, never lost. The note is watched while it is edited: changed,
 // it is read again; renamed or moved, it is followed; deleted, what is typed is kept as a draft. Each editor keeps its own
-// draft, so the pane and the card typed in at once never overwrite each other's.
+// draft, known by its id, so the pane and the card typed in at once never overwrite or forget each other's.
 import { Notice, TFile } from 'obsidian';
 import type { Component } from 'obsidian';
 import {
@@ -15,9 +15,8 @@ import {
   namesSharedSchema,
 } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
-import type { Drafts } from '../main';
 import type { DeclaredDeferred } from '../graph-view/view-options';
-import { keyBeside } from '../drafts';
+import { keyBeside, keyOf, newDraftId } from '../drafts';
 import { DELETED_MESSAGE } from './kept-draft';
 import type { KeptDraft } from './kept-draft';
 import { NOTE_DELETED, lockInNote, stepNote, writeThroughEditor, writeThroughVault } from './note-writing';
@@ -157,8 +156,7 @@ export class BlockNote {
 
   /**
    * The note, or its folder, renamed or moved from `old` to `now`: followed there. Its drafts are moved by the plugin
-   * itself, whether or not the note is being edited, each beside any other kept under the new name (drafts.ts); this
-   * editor's own is found again there by its text, whatever mark it now has.
+   * itself, whether or not the note is being edited, their ids unchanged (drafts.ts), so this editor's own is still its.
    */
   private renamed(now: string, old: string): void {
     if (!this.isOrHolds(old)) return;
@@ -166,50 +164,47 @@ export class BlockNote {
   }
 
   /**
-   * The text of this editor's own draft, once it has kept one: what tells it apart from another editor's draft of the
-   * same block, such as the pane's beside the card's, under whatever mark (" (2)") the draft is kept, before and after
-   * a rename moves it.
+   * The id of this editor's own draft, once it has kept one: never another editor's, even one with the same text, and
+   * the same under whatever key a rename moves it to.
    */
   private own: string | null = null;
 
-  /** The keys the drafts of this editor's block may be kept under: its note and graph, alone or with a mark beside. */
-  private ofBlock(data: Drafts): string[] {
-    const key = this.key();
-    return Object.keys(data).filter((k) => k === key || k.startsWith(`${key} (`));
-  }
-
-  /** Where this editor's own draft is kept, if it has kept one that is still there. */
-  private ownKey(data: Drafts): string | undefined {
-    return this.own === null ? undefined : this.ofBlock(data).find((k) => data[k]?.text === this.own);
-  }
-
-  /** The key of the draft this editor offers: its own, once it has kept one; else the first kept for its block. */
-  private draftKey(data: Drafts): string {
-    return this.ownKey(data) ?? this.ofBlock(data)[0] ?? this.key();
-  }
-
-  /** The draft kept for this block, if there is one. */
+  /** The draft to offer: this editor's own, once it has kept one; else the first kept for its block, to show only. */
   draft(): KeptDraft | undefined {
-    const data = this.plugin.drafts();
-    return data[this.draftKey(data)];
+    const data = this.plugin.drafts(),
+      key = this.key(),
+      mine = this.own === null ? undefined : keyOf(data, this.own),
+      first = Object.keys(data).find((k) => k === key || k.startsWith(`${key} (`));
+    return data[mine ?? first ?? key];
+  }
+
+  /** The draft kept with `id`, if it is still kept. */
+  draftById(id: string): KeptDraft | undefined {
+    const data = this.plugin.drafts(),
+      key = keyOf(data, id);
+    return key === undefined ? undefined : data[key];
   }
 
   /**
-   * Keeps what was typed as this editor's draft of its block: where its own is, so no stale copy is left beside it;
-   * else beside, never over, a different one another editor kept.
+   * Keeps what was typed as this editor's own draft of its block: its own draft changed in place, so no stale copy is
+   * left beside it; else a new draft, with a new id, beside, never over, any other kept for the block.
    */
   async keepDraft(text: string): Promise<void> {
-    const data = this.plugin.drafts();
-    data[this.ownKey(data) ?? keyBeside(data, this.key(), text)] = { text, kept: new Date().toISOString() };
-    this.own = text;
+    const data = this.plugin.drafts(),
+      mine = this.own === null ? undefined : keyOf(data, this.own),
+      id = mine !== undefined && this.own !== null ? this.own : newDraftId();
+    data[mine ?? keyBeside(data, this.key())] = { text, kept: new Date().toISOString(), id };
+    this.own = id;
     await this.plugin.saveDrafts(data);
   }
 
-  /** Forgets the draft this editor offers. */
-  async forget(): Promise<void> {
-    const data = this.plugin.drafts();
-    delete data[this.draftKey(data)];
-    this.own = null;
+  /** Forgets the draft kept with `id`, the one a banner showed; nothing at all when it is no longer kept. */
+  async forget(id: string): Promise<void> {
+    if (this.own === id) this.own = null;
+    const data = this.plugin.drafts(),
+      key = keyOf(data, id);
+    if (key === undefined) return;
+    delete data[key];
     await this.plugin.saveDrafts(data);
   }
 }

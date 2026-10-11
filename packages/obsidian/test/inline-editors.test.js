@@ -160,6 +160,38 @@ describe('an editor in place that outlives its note is released', () => {
     }
   });
 
+  // the fourth review of #91, 11 Oct 2026: an error after the opening had its session, as from the shared schemas, was
+  // swallowed, and the editor kept, half open; and no error was ever logged
+  test('an opening that fails after it has read the note: logged, said, and no editor kept', async () => {
+    const uses = fence("// graph: view · schema seeing@1\n(a:Thing {name: 'A'})");
+    const env = await load({ files: { 'View.md': uses } });
+    const logged = [],
+      log = console.error;
+    console.error = (...a) => logged.push(a.map(String).join(' '));
+    try {
+      const listening = env.state.listening();
+      env.plugin.sharedSchemas = async () => {
+        throw new Error('the shared schemas could not be read');
+      };
+      const slot = env.doc.body.createDiv({ cls: 'markdown-source-view' });
+      await env.plugin.editHere({ path: 'View.md', line: 0, graph: 'view' }, slot);
+      assert.equal(env.plugin.inline.size, 0, 'no editor kept');
+      assert.equal(env.state.listening(), listening, 'and no listener left on the vault');
+      assert.ok(
+        env.state.notices.some((n) => /shared schemas could not be read/.test(n)),
+        'it says why',
+      );
+      assert.ok(
+        logged.some((l) => /shared schemas could not be read/.test(l)),
+        'and the error is logged',
+      );
+    } finally {
+      console.error = log;
+      await closeAll(env);
+      env.uninstall();
+    }
+  });
+
   test('the note open in two editing views: one closed, the editor stays for the other', async () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {
