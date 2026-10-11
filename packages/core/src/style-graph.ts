@@ -181,12 +181,13 @@ export const orList = (xs: readonly string[]): string =>
 /**
  * The fix for a word that is not one of `among`: the nearest by edit distance — always, when `always` is set (a nudge's
  * word, §6); otherwise only when it is close (within two letters, or half the word) — else the list to choose from.
+ * Case is ignored on both sides, so 'tb' is fixed to TB, the direction it means.
  */
 export function wordFix(written: string, among: readonly string[], always = false): { fix: string; nearest?: string } {
   let best = Infinity,
     nearest: string | undefined;
   for (const w of among) {
-    const d = distance(written.toLowerCase(), w);
+    const d = distance(written.toLowerCase(), w.toLowerCase());
     if (d < best) [best, nearest] = [d, w];
   }
   if (nearest !== undefined && (always || best <= Math.max(2, Math.floor(written.length / 2))))
