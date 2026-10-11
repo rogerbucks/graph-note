@@ -89,6 +89,87 @@ describe('the pane, when its note is renamed or deleted', () => {
   });
 });
 
+// the third review of #91, 11 Oct 2026: after a rename, an editor took the block's first draft for its own, so Restore
+// and Discard deleted another's draft, and its next refused write kept a stale copy beside its own
+describe('an editor’s own draft, after its note is renamed', () => {
+  const OLD = { text: READER + ',\n(old:Reason)', kept: '2026-10-10T08:00:00.000Z' };
+  /** The pane on a note that already keeps the draft "old"; "new" typed and refused, so kept beside it; then renamed. */
+  async function keptThenRenamed() {
+    const env = await open({ data: { drafts: { [`${PATH}#reader`]: OLD } } });
+    type(env.el, READER + ',\n(new:Reason)');
+    await env.app.vault.modify({ path: PATH }, NOTE.replace(READER, READER + ',\n(theirs:Reason)'));
+    await until(() => Object.keys(drafts(env)).length === 2, 2000);
+    await rename(env, PATH, MOVED);
+    await until(() => Object.keys(drafts(env)).every((k) => k.startsWith(MOVED)), 2000);
+    return env;
+  }
+  const texts = (env) => Object.values(drafts(env)).map((d) => d.text);
+
+  test('Restore brings back its own draft, and leaves the other kept', async () => {
+    const env = await keptThenRenamed();
+    try {
+      const banner = env.el.querySelector('.graph-note-draft');
+      labelled(banner, 'Restore draft').click();
+      assert.equal(textarea(env.el).value, READER + ',\n(new:Reason)');
+      await until(() => Object.keys(drafts(env)).length === 1, 2000);
+      assert.deepEqual(texts(env), [OLD.text], 'the other draft is still kept');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('Discard forgets only its own draft', async () => {
+    const env = await keptThenRenamed();
+    try {
+      labelled(env.el.querySelector('.graph-note-draft'), 'Discard draft').click();
+      await until(() => Object.keys(drafts(env)).length === 1, 2000);
+      assert.deepEqual(texts(env), [OLD.text]);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('its next refused write keeps its draft where it was, with no stale copy beside it', async () => {
+    const env = await keptThenRenamed();
+    try {
+      type(env.el, textarea(env.el).value + ',\n(newer:Reason)');
+      const now = env.state.files.get(MOVED);
+      await env.app.vault.modify({ path: MOVED }, now.replace('(theirs:Reason)', '(theirs:Reason),\n(again:Reason)'));
+      await until(() => texts(env).some((t) => t.includes('(newer:Reason)')), 2000);
+      assert.equal(Object.keys(drafts(env)).length, 2, 'the other draft and its own, no third');
+      assert.ok(texts(env).includes(OLD.text));
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('the pane and the card, each with its draft: after the rename, the card’s Discard forgets only the card’s', async () => {
+    const env = await load({ files: { [card.PATH]: card.NOTE } });
+    try {
+      await env.plugin.openEditor({ path: card.PATH, line: 2, graph: 'reader' });
+      const inPane = env.app.workspace.getLeavesOfType('graph-note-pane')[0].view.contentEl;
+      const el = await card.show(env);
+      labelled(el, 'Edit here').click();
+      await until(() => !!el.querySelector('textarea'));
+      type(inPane, card.READER + ',\n(fromPane:Option)');
+      const t = el.querySelector('textarea');
+      t.value = card.READER + ',\n(fromCard:Option)';
+      t.dispatch('input');
+      const theirs = card.NOTE.replace(card.READER, card.READER + ',\n(theirs:Option)');
+      await env.app.vault.modify({ path: card.PATH }, theirs);
+      await until(() => Object.keys(drafts(env)).length === 2, 2000);
+      await rename(env, card.PATH, 'Renamed.md');
+      await until(() => Object.keys(drafts(env)).every((k) => k.startsWith('Renamed.md')), 2000);
+      await until(() => !el.querySelector('.graph-note-draft').hidden, 2000);
+      labelled(el.querySelector('.graph-note-draft'), 'Discard draft').click();
+      await until(() => Object.keys(drafts(env)).length === 1, 2000);
+      assert.deepEqual(texts(env), [card.READER + ',\n(fromPane:Option)'], 'the pane’s draft is still kept');
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
 describe('the pane and the editor in place on one block, when the note is deleted', () => {
   // the review of #91, 11 Oct 2026: both wrote the same draft, and the last one written won
   test('both typed in and not yet written: what each typed is kept, neither over the other', async () => {

@@ -14,7 +14,7 @@ module that ties the parts together, named as the folder is.
 - `inline-editors.ts` — the editors open in place: each found by its block's identity, never by another block that comes
   to its line, even one of the same graph; one to a block, however often Edit here is pressed; released, its typing
   written, when it is off the page and its note is closed, whether a card left or the editing view closed; never kept
-  when there is nothing to open, the note gone or without a graph block.
+  when there is nothing to open, the note gone, unreadable or without a graph block.
 - `drafts.ts` — the drafts kept in the plugin's data: moved with their note when it is renamed, edited or not, each
   beside, never over, a different draft kept under the new name; and Recover kept drafts into a new note, the command
   that writes every one, a deleted note's among them, into a note, and says so when that note cannot be written.

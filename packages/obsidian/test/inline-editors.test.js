@@ -133,6 +133,54 @@ describe('an editor in place that outlives its note is released', () => {
     }
   });
 
+  // the third review of #91, 11 Oct 2026: an opening whose read failed was never released, and every later press waited
+  // on it, so Edit here on the block did nothing until Obsidian was reloaded
+  test('Edit here when the note cannot be read: it says so, keeps no editor, and a later press opens one', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      const el = await show(env);
+      const listening = env.state.listening();
+      const read = env.app.vault.read;
+      let failing = true;
+      env.app.vault.read = async (f) => {
+        if (failing) throw new Error('the disk could not be read');
+        return read(f);
+      };
+      labelled(el, 'Edit here').click();
+      await until(() => env.state.notices.some((n) => /could not be read/.test(n)), 2000);
+      await until(() => env.plugin.inline.size === 0, 2000);
+      assert.equal(env.state.listening(), listening, 'no listener left on the vault');
+      failing = false;
+      labelled(el, 'Edit here').click();
+      await until(() => !!el.querySelector('textarea'), 3000);
+      assert.equal(el.querySelector('textarea').value, READER);
+    } finally {
+      await closeAll(env);
+      env.uninstall();
+    }
+  });
+
+  test('the note open in two editing views: one closed, the editor stays for the other', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      const one = openNote(env, NOTE, PATH);
+      openNote(env, NOTE, PATH);
+      const [card] = cardsOf(one.state);
+      const dom = await place(env, card.widget, until);
+      labelled(dom, 'Edit here').click();
+      await until(() => !!dom.querySelector('textarea'));
+      // the first view closed, with its card
+      one.close();
+      card.widget.destroy(dom);
+      dom.remove();
+      await wait(1300);
+      assert.equal(env.plugin.inline.size, 1, 'kept, its note still open in the other view');
+    } finally {
+      await closeAll(env);
+      env.uninstall();
+    }
+  });
+
   test('Edit here on a note with no graph block: no editor is left behind', async () => {
     const env = await load({ files: { 'Plain.md': '# Plain\n\nNo graph here.\n' } });
     try {
@@ -232,7 +280,7 @@ describe('Edit here pressed again while the editor opens', () => {
       await Promise.all([opening, again]);
       assert.equal(env.plugin.inline.size, 1, 'one editor');
       assert.ok(second.querySelector('textarea'), 'in the newer card');
-      assert.equal(first.querySelector('textarea'), null, 'and not left in the first');
+      assert.ok(first.querySelector('textarea') === null, 'and not left in the first');
       assert.ok(env.doc.activeElement === second.querySelector('textarea'), 'with the focus');
       assert.doesNotMatch(second.textContent, /no graph block/);
     } finally {

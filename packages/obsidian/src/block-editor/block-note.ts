@@ -157,26 +157,35 @@ export class BlockNote {
 
   /**
    * The note, or its folder, renamed or moved from `old` to `now`: followed there. Its drafts are moved by the plugin
-   * itself, whether or not the note is being edited, each beside any other kept under the new name (drafts.ts); so this
-   * editor's next draft finds its own place again, never taking another's.
+   * itself, whether or not the note is being edited, each beside any other kept under the new name (drafts.ts); this
+   * editor's own is found again there by its text, whatever mark it now has.
    */
   private renamed(now: string, old: string): void {
     if (!this.isOrHolds(old)) return;
     this.path = now + this.path.slice(old.length);
-    this.own = null;
   }
 
   /**
-   * Where this editor's own draft is kept, once it has kept one: its block's key then, and the mark beside it, such as
-   * " (2)" when another editor of the same block, the pane beside the card, had already kept a different one there.
+   * The text of this editor's own draft, once it has kept one: what tells it apart from another editor's draft of the
+   * same block, such as the pane's beside the card's, under whatever mark (" (2)") the draft is kept, before and after
+   * a rename moves it.
    */
-  private own: { key: string; beside: string } | null = null;
+  private own: string | null = null;
+
+  /** The keys the drafts of this editor's block may be kept under: its note and graph, alone or with a mark beside. */
+  private ofBlock(data: Drafts): string[] {
+    const key = this.key();
+    return Object.keys(data).filter((k) => k === key || k.startsWith(`${key} (`));
+  }
+
+  /** Where this editor's own draft is kept, if it has kept one that is still there. */
+  private ownKey(data: Drafts): string | undefined {
+    return this.own === null ? undefined : this.ofBlock(data).find((k) => data[k]?.text === this.own);
+  }
 
   /** The key of the draft this editor offers: its own, once it has kept one; else the first kept for its block. */
   private draftKey(data: Drafts): string {
-    const key = this.key();
-    if (this.own?.key === key) return key + this.own.beside;
-    return Object.keys(data).find((k) => k === key || k.startsWith(`${key} (`)) ?? key;
+    return this.ownKey(data) ?? this.ofBlock(data)[0] ?? this.key();
   }
 
   /** The draft kept for this block, if there is one. */
@@ -185,12 +194,14 @@ export class BlockNote {
     return data[this.draftKey(data)];
   }
 
-  /** Keeps what was typed as this editor's draft of its block, beside, never over, a different one another editor kept. */
+  /**
+   * Keeps what was typed as this editor's draft of its block: where its own is, so no stale copy is left beside it;
+   * else beside, never over, a different one another editor kept.
+   */
   async keepDraft(text: string): Promise<void> {
-    const data = this.plugin.drafts(),
-      key = this.key();
-    if (this.own?.key !== key) this.own = { key, beside: keyBeside(data, key, text).slice(key.length) };
-    data[key + this.own.beside] = { text, kept: new Date().toISOString() };
+    const data = this.plugin.drafts();
+    data[this.ownKey(data) ?? keyBeside(data, this.key(), text)] = { text, kept: new Date().toISOString() };
+    this.own = text;
     await this.plugin.saveDrafts(data);
   }
 
