@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/inline-editors.test.js",
+  "test": "an editor in place is released with its card > a card that leaves while its note stays open keeps its editor, to come back in the card drawn next",
+  "seen_failing_first": false,
+  "evidence": "Pins what held before this commit added releasing: nothing released an editor in place, so one whose card left kept it. The test holds the new release (review of #91, 11 Oct 2026) to closing an editor only once its note is closed, never for a card scrolled away or a block cut to be pasted."
+}
