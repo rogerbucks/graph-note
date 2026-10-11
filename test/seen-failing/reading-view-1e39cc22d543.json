@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/reading-view.test.js",
+  "test": "the pane in front decides > open in two panes, the one in front decides: Live Preview converts, reading view refuses",
+  "seen_failing_first": false,
+  "evidence": "Pins behaviour that already held: the refusal already read the mode of the view in front, so the pane in front decided. Roger's rewording of reading_view_whole_note (11 Oct 2026) makes that the rule, against the review's suggestion that any pane in reading view should refuse."
+}
