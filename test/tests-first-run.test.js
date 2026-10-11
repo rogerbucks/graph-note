@@ -280,6 +280,52 @@ describe('a Python failure outside any test', () => {
   });
 });
 
+describe('a replay under the run ceiling', () => {
+  // spec §13, capped_test_run: the replay ran bare `node --test`, so a runaway test in a replayed commit had no ceiling
+  const withCeiling = (mb, fn) => {
+    const before = process.env.GRAPH_NOTE_TEST_MEMORY_MB;
+    process.env.GRAPH_NOTE_TEST_MEMORY_MB = mb;
+    try {
+      return fn();
+    } finally {
+      if (before === undefined) delete process.env.GRAPH_NOTE_TEST_MEMORY_MB;
+      else process.env.GRAPH_NOTE_TEST_MEMORY_MB = before;
+    }
+  };
+
+  test('a runaway file is stopped with the ceiling line, did not finish, and is not recorded as failing', () => {
+    const r = withCeiling('300', () =>
+      runSource(
+        [
+          `import { test } from 'node:test';`,
+          `test('grows without bound', async () => {`,
+          `  const kept = [];`,
+          `  while (kept.length < 384) {`,
+          `    kept.push(Buffer.alloc(4 * 2 ** 20, 1));`,
+          `    await new Promise((r) => setTimeout(r, 10));`,
+          `  }`,
+          `  await new Promise((r) => setTimeout(r, 5000));`,
+          `});`,
+        ].join('\n'),
+      ),
+    );
+    assert.equal(r.ran, false);
+    assert.deepEqual(r.failed, []);
+    assert.match(r.why ?? '', /^run-ceiling: stopped the run at \d+ MB of memory, over its 300 MB ceiling\./);
+    assert.match(r.why ?? '', /GRAPH_NOTE_TEST_MEMORY_MB/);
+    assert.doesNotMatch(r.why ?? '', /\n/);
+  });
+
+  test('a run within the ceilings is read as it was, passed and failed', () => {
+    const r = withCeiling('4096', () =>
+      runSource(
+        `import { test } from 'node:test';\ntest('a', () => {});\ntest('b', () => { throw new Error('b'); });\n`,
+      ),
+    );
+    assert.deepEqual(r, { passed: ['a'], failed: ['b'], ran: true });
+  });
+});
+
 describe('why a run did not finish', () => {
   // review of #44: every run with no report was blamed on load, so a run that fails the same way each time was retried
   test('a run that exits with no report says how it ended, and does not blame the time limit', () => {
