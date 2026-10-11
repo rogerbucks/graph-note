@@ -1,6 +1,7 @@
-// Exporting a drawing as an image (editor spec §16): an SVG laid out by the engine the host hands in, in the fixed colours
-// of the light or the dark theme as chosen, inside a frame that gives its title, its legend, and the note and day it came
-// from (export_self_explaining, export_fixed_theme). The host draws the SVG onto a canvas for a PNG, at the size `pngSize`
+// Exporting a drawing as an image (editor spec §16): an SVG laid out by the layout the host hands in — the one its drawings
+// go through, apart from the interface and under its limits (layout_contained) — in the fixed colours of the light or the
+// dark theme as chosen, inside a frame that gives its title, its legend, and the note and day it came from
+// (export_self_explaining, export_fixed_theme). The host draws the SVG onto a canvas for a PNG, at the size `pngSize`
 // gives (export_png_sharp), and writes the file; what to export is in export-scope.ts, whether to is in export-plan.ts.
 import GraphLayout from '@graph-note/graph-spec/src/graph-layout.js';
 import { marked } from './export-marks.ts';
@@ -9,10 +10,12 @@ import { framed, saidDate } from './export-frame.ts';
 import type { LegendItem } from './export-frame.ts';
 import type { ExportScope } from './export-scope.ts';
 import { layoutSource, STYLE } from './layout.ts';
+import type { Refusal } from './layout-limits.ts';
+import type { GraphDrawing } from './note-reading.ts';
 import { PALETTES } from './palette.ts';
 import type { Palette } from './palette.ts';
 import { chosen, directions } from './render.ts';
-import type { Engine } from './render.ts';
+import type { Drawn, Engine } from './render.ts';
 import type { ExportTheme } from './settings.ts';
 import { legendOf, lookOf } from './style.ts';
 import type { StyleGraph, ThingLook } from './style-graph.ts';
@@ -107,21 +110,58 @@ export const footerText = (note: string, date: string) => `From ${note}, exporte
 const sentence = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /**
+ * A host's layout, the one it draws with: the drawing laid out and themed in the fixed palette of `theme`; or why it is
+ * not laid out (over a size limit, or took too long); or null when it is no longer wanted. Rejects when the engine fails.
+ */
+export type ExportLayout = (drawing: GraphDrawing, theme: ExportTheme) => Promise<Drawn | Refusal | null>;
+
+const refuseEmpty = (scope: ExportScope): void => {
+  if (scope.empty) throw new Error(`There is nothing to export: ${scope.why ?? 'the scope is empty'}`);
+};
+
+/** The drawing an export lays out: the scope's, with the style's nudges and direction when it has a style. */
+const laidOutDrawing = (scope: ExportScope, info: ExportInfo): GraphDrawing =>
+  info.style ? { ...nudgedDrawing(scope.drawing, info.style), nudges: info.style.nudges } : scope.drawing;
+
+/**
  * The image of `scope`, laid out by `engine` and drawn in the fixed colours of `info.theme`, in its frame. Refuses an empty
- * scope, which has nothing to draw; an engine that fails raises its failure, so nothing is written (failed_export).
+ * scope, which has nothing to draw; an engine that fails raises its failure, so nothing is written (failed_export). It
+ * lays out on the thread it is called on, under no limit: a host that draws apart from its interface uses
+ * `exportWithLayout`, which lays the export out where its drawings are.
  */
 export function exportSvg(scope: ExportScope, engine: Engine, info: ExportInfo): ExportImage {
-  if (scope.empty) throw new Error(`There is nothing to export: ${scope.why ?? 'the scope is empty'}`);
-  const palette = info.theme === 'dark' ? PALETTES.dark : PALETTES.light;
-  const drawing = info.style
-    ? { ...nudgedDrawing(scope.drawing, info.style), nudges: info.style.nudges }
-    : scope.drawing;
+  refuseEmpty(scope);
+  const drawing = laidOutDrawing(scope, info);
   const laid = directions(drawing);
   const drawn = chosen(
     laid,
     laid.map((d) => engine.render(d.dot)),
-    palette,
+    info.theme === 'dark' ? PALETTES.dark : PALETTES.light,
   );
+  return framedImage(scope, drawing, drawn, info);
+}
+
+/**
+ * The image of `scope` as `exportSvg` gives it, laid out by the host's `layout` — the one its drawings go through, apart
+ * from the interface and under the same size and time limits (layout_contained) — so a huge or hostile graph never holds
+ * the page for an export. The limit's refusal is given back whole, for the host to say why and write nothing
+ * (failed_export); null when the layout is no longer wanted; an engine that fails raises its failure. Refuses an empty
+ * scope before any layout is asked for.
+ */
+export async function exportWithLayout(
+  scope: ExportScope,
+  layout: ExportLayout,
+  info: ExportInfo,
+): Promise<ExportImage | Refusal | null> {
+  refuseEmpty(scope);
+  const drawing = laidOutDrawing(scope, info);
+  const drawn = await layout(drawing, info.theme === 'dark' ? 'dark' : 'light');
+  return !drawn || 'reason' in drawn ? drawn : framedImage(scope, drawing, drawn, info);
+}
+
+/** The drawn graph marked, in its frame, in the fixed colours of `info.theme`. */
+function framedImage(scope: ExportScope, drawing: GraphDrawing, drawn: Drawn, info: ExportInfo): ExportImage {
+  const palette = info.theme === 'dark' ? PALETTES.dark : PALETTES.light;
   const body = marked(
     drawn.svg,
     drawing.boxes.map((b) => b.key),

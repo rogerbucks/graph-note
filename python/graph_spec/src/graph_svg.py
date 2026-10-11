@@ -44,7 +44,7 @@ import shutil
 import subprocess
 import textwrap
 import zlib
-from collections.abc import Collection
+from collections.abc import Collection, Iterable, Mapping, Sequence
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 STYLE = json.load(open(os.path.join(HERE, "graph_svg.style.json"), encoding="utf-8"))
@@ -190,6 +190,60 @@ def dot_source(
     return "\n".join(out), kinds, readings
 
 
+def nudged_source(dot: str, nudges: Sequence[Mapping], keys: Iterable[str]) -> str:
+    """The Graphviz source `dot` (from dot_source) with a graph's nudges (editor spec §6) written
+    in before its last line, as the plugin's core writes them (style-source.ts, nudgedSource), so
+    a nudged graph is laid out the same by both, byte for byte (python_honours_nudges): each
+    beside a {rank=same; …} line and each before an invisible link, in the order written, after
+    every link drawn — so Graphviz numbers the drawn links as before — then one box (a cluster)
+    for each group label, in the order first written, its label in the kind caption's size and
+    colour. nudges: as gql_profile.read_style gives them, each {word, thing, other, group}. A
+    nudge naming a thing not among `keys` (the boxes drawn) is left out. With nothing to add, `dot`
+    is returned unchanged: with no nudges, the layout source is drawn as it is."""
+    drawn, added, groups = set(keys), [], {}
+    for n in nudges:
+        things = [k for k in (n.get("thing"), n.get("other")) if k is not None]
+        if not things or not all(k in drawn for k in things):
+            continue
+        if n["word"] == "beside":
+            added.append("  {rank=same; " + "; ".join(f'"{k}"' for k in things) + ";}")
+        elif n["word"] == "before":
+            other = things[1] if len(things) > 1 else ""
+            added.append(f'  "{things[0]}" -> "{other}" [style=invis];')
+        elif n["word"] == "group" and n.get("group") is not None:
+            groups.setdefault(n["group"], []).extend(things)
+    # the label as an HTML-like label, entity-escaped as the boxes' own are: a backslash or a quote
+    # is drawn as written
+    for i, (label, members) in enumerate(groups.items()):
+        added.append(
+            f"  subgraph cluster_{i + 1} {{label=<{html.escape(label)}>; "
+            f'fontname="{STYLE["font"]}"; fontsize={STYLE["kind_font_size"]}; '
+            'fontcolor="#0000fe"; color="#0000fe"; style="rounded"; '
+            + "".join(f'"{k}"; ' for k in members)
+            + "}"
+        )
+    if not added:
+        return dot
+    end = dot.rfind("}")
+    nudged = dot[:end] + "\n".join(added) + "\n" + dot[end:]
+    # the layout source puts unlinked things of one kind on one rank; without newrank, Graphviz
+    # takes such things out of a group's box without a word. Only when a group is written, so any
+    # other source stays the plugin's
+    if not groups:
+        return nudged
+    at = nudged.find("{") + 1
+    return nudged[:at] + "\n  newrank=true;" + nudged[at:]
+
+
+def directions(direction: str | None = None) -> list[str]:
+    """The directions a drawing is laid out in: only `direction`, when a direction nudge sets one
+    the style lists (read_style gives it), else every direction the style lists, in its order —
+    as the plugin's core chooses them (render.ts, directions)."""
+    if direction and direction in STYLE["directions"]:
+        return [direction]
+    return list(STYLE["directions"])
+
+
 def _themed(svg, kinds, readings=()):
     """Swap the placeholder colours for Obsidian theme variables, as inline styles, and make the
     SVG fit a note."""
@@ -262,8 +316,9 @@ def _themed(svg, kinds, readings=()):
     return "\n".join(line.strip() for line in svg.splitlines() if line.strip())
 
 
-def _layout(nodes, edges, rankdir, suggested=()):
+def _layout(nodes, edges, rankdir, suggested=(), nudges=()):
     src, kinds, readings = dot_source(nodes, edges, rankdir, suggested)
+    src = nudged_source(src, nudges, [key for key, _, _ in nodes])
     r = subprocess.run([DOT, "-Tsvg"], input=src, capture_output=True, text=True, timeout=60)
     if r.returncode:
         raise RuntimeError(f"Graphviz failed: {r.stderr.strip()[:300]}")
@@ -275,20 +330,24 @@ def render(
     nodes: list[tuple[str, str, str]],
     edges: list[tuple[str, str, str]],
     suggested: Collection[str] = (),
+    nudges: Sequence[Mapping] = (),
+    direction: str | None = None,
 ) -> str:
     """The graph as one block of inline SVG. Raises RuntimeError if Graphviz is missing or fails.
     Laid out both left-to-right and top-to-bottom; the one that shrinks least to fit the page width
     wins, because a drawing shrunk to fit a narrow note is a drawing nobody can read — the text in
     its boxes becomes hard to read. A tall drawing is capped, so a long chain is not stood on
     end. suggested: the keys of boxes drawn under a suggested name, marked as dot_source marks
-    them, and refused as it refuses them."""
+    them, and refused as it refuses them. nudges and direction: the graph's style, as
+    gql_profile.read_style gives it (editor spec §6): the nudges written into each source
+    (nudged_source), and only the direction a direction nudge sets laid out (directions)."""
     if isinstance(suggested, str):
         raise TypeError("suggested is a collection of keys, not one key as a string")
     if not DOT:
         raise RuntimeError("Graphviz (dot) is not installed")
     target, best = STYLE["page_width"], None
-    for rd in STYLE["directions"]:
-        svg, kinds, readings, w, h = _layout(nodes, edges, rd, suggested)
+    for rd in directions(direction):
+        svg, kinds, readings, w, h = _layout(nodes, edges, rd, suggested, nudges)
         fit = min(1.0, target / w) - (
             0.25 if h > STYLE["max_height_ratio"] * max(w, target) else 0
         )

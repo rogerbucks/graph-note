@@ -41,22 +41,40 @@ function namesOf(reading: Pick<NoteReading, 'whole'>, graph: string, g: Graph): 
   };
 }
 
-/** Where a property's quoted text is in a thing as written: its 0-based line in the block, and the characters it spans. */
-function valueSpan(text: string, blanked: string, w: Written, key: string): Problem['span'] {
+/** Where a key is in a thing as written: where it starts, and where the text after its colon starts. */
+function keyAt(blanked: string, w: Written, key: string): { start: number; after: number } | undefined {
   if (!w.braces) return undefined;
   // the key and its colon are found where strings are blanked, so a word inside a string is never taken for one
-  const found = new RegExp(`(?:^|[{,${S.slice(1, -1)}])${key}${S}*:`, 'g');
+  const found = new RegExp(`(^|[{,${S.slice(1, -1)}])(${key.replace(/[^A-Za-z0-9_]/g, '\\$&')})${S}*:`, 'g');
   found.lastIndex = w.braces.open;
   const m = found.exec(blanked);
   if (!m || m.index > w.braces.close) return undefined;
-  let quote = m.index + m[0].length;
+  return { start: m.index + (m[1] ?? '').length, after: m.index + m[0].length };
+}
+
+/** A stretch of a block's text as a 0-based line and the characters it spans there. */
+function spanOf(text: string, from: number, to: number): NonNullable<Problem['span']> {
+  const start = text.lastIndexOf('\n', from - 1) + 1;
+  return { line: text.slice(0, from).split('\n').length - 1, character: from - start, end: to - start };
+}
+
+/** Where a key is in a thing as written: its 0-based line in the block, and the characters it spans. */
+function keySpan(text: string, blanked: string, w: Written, key: string): Problem['span'] {
+  const at = keyAt(blanked, w, key);
+  return at && spanOf(text, at.start, at.start + key.length);
+}
+
+/** Where a property's quoted text is in a thing as written: its 0-based line in the block, and the characters it spans. */
+function valueSpan(text: string, blanked: string, w: Written, key: string): Problem['span'] {
+  const at = keyAt(blanked, w, key);
+  if (!at) return undefined;
+  let quote = at.after;
   while (isSpace(text[quote] ?? '')) quote++;
   if (text[quote] !== "'") return undefined;
   const from = quote + 1;
   let end = from;
   while (end < text.length && text[end] !== "'" && text[end] !== '\n') end += text[end] === '\\' ? 2 : 1;
-  const start = text.lastIndexOf('\n', from - 1) + 1;
-  return { line: text.slice(0, from).split('\n').length - 1, character: from - start, end: end - start };
+  return spanOf(text, from, end);
 }
 
 /** Each link written in a style block: a problem on its line, as a link means nothing in a style graph. */
@@ -131,12 +149,15 @@ export function readStyle(
         props: styleGraph.p(id),
         at: at ? { block: at.block, line: at.text.slice(0, at.w.open).split('\n').length, id } : { ...first, id },
         span: (key) => (at ? valueSpan(at.text, at.blanked, at.w, key) : undefined),
+        keySpan: (key) => (at ? keySpan(at.text, at.blanked, at.w, key) : undefined),
       });
     }
   raws.sort((a, b) => a.at.block - b.at.block || a.at.line - b.at.line);
   const checked = checkThings(raws, namesOf(reading, graph, g));
   const { style, problems: conflicts } = settle(checked, graph);
-  // a style block named as a data graph: a reader that does not know STYLE (the Python library) merges it into the data
+  // a style block named as a data graph: a reader that does not know STYLE merges it into the data, as the graph
+  // libraries' own Store does in both languages; only the drawing readers (blocks.ts, and the Python library's
+  // reader/drawing.py) leave a style block out
   const named = blocks.flatMap((block): Problem[] => {
     const own = graphOf(texts[block] ?? '');
     return own && own in reading.whole

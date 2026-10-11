@@ -14,7 +14,8 @@ module that ties the parts together, named as the folder is.
 - `block.ts` — one gql block in a note: drawn, or shown as code, never blank; as text with a banner when it is over a
   size or time limit.
 - `view-block.ts` — a view (§7): a query block named as a view, drawn as what it picks out of its graph; refused, saying
-  what is allowed, outside the view profile; saying so, with Change the view, when it matches nothing; faded or hidden
+  what is allowed, outside the view profile; shown as its query under the banner when its note is too large to read;
+  saying so, with Change the view, when it matches nothing; faded or hidden
   outside it as its style says; its looks and legend; Save as shown and Fade or Hide others written in the style graph.
 - `style-block.ts` — a style block (§2): never drawn, folded away until opened, saying whose style it is, what it holds
   and how many problems it has. The graph it styles is drawn with its nudges, and its problems listed, by `block.ts`.
@@ -26,13 +27,16 @@ module that ties the parts together, named as the folder is.
 
 ### `src/layout-worker/` — the layout kept apart from the interface (spec §9, layout_contained)
 
-- `layout-worker.ts` — `Layouts`: every graph laid out in one Web Worker, started from a Blob URL of main.js's own copy
+- `layout-worker.ts` — `Layouts`: every graph, and every export, laid out in one Web Worker, started from a Blob URL of main.js's own copy
   of the worker's bundle; on the page's thread, with lower limits, only where the first worker cannot start; each said
   once in the console, as is drawing paused after three layouts in a row fail. Says why it is built so.
 - `worker-entry.ts` — what runs inside the worker. `esbuild.config.mjs` bundles it on its own, Graphviz and all, into the
   function `layoutWorker` of the module `graph-note:layout-worker` (typed in `bundled-worker.d.ts`).
 - `refusal-banner.ts` — the banner over a graph shown as text because it is too large to read or draw, took too long,
   or drawing is paused: an icon, and the limit and numbers in words.
+- `refusal-words.ts` — those words, with no Obsidian in them, in two voices: the banner's, and the notice of an export
+  stopped for the same reason ("what happened: why. Nothing was saved. What to do."), and for a layout that failed (the
+  worker or its engine raised an error: its reason is put in brackets).
 
 ### `src/properties/` — the inspector's properties, as Obsidian's Properties panel
 
@@ -44,7 +48,8 @@ module that ties the parts together, named as the folder is.
 ### `src/export/` — export (spec §16)
 
 - `export.ts` — `exportGraph`: the scope read from the note as it is now, the core's plan (nothing to export, a
-  question first, or go), the image in fixed colours with its frame, written safely into the vault through its API with
+  question first, or go), the image laid out in the layout worker under its limits (one over a limit, or a note too
+  large to read, writes nothing and says why), in fixed colours with its frame, written safely into the vault through its API with
   its companion note when set; on a phone, offered to the share sheet instead.
 - `export-form.ts` — the Export form on a drawing: the whole diagram, or a view with or without its faded context; SVG
   or PNG; light or dark; and Export anyway when the note's classification asks first.
