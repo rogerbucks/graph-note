@@ -30,6 +30,12 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   The warning carries the name (`suggested`), and the box drawn under it carries where its ( is (`Box.suggested`), so it
   is drawn dashed and labelled as suggested, selected by `spanOf` and fixed from its details. The Python library suggests
   the same names (`graphspec/reader/name_gaps.py`); `python/graph_spec/tests/name_cases.json` holds both to one table.
+- `suggested-names.ts` — `acceptNameFirst`: why an edit naming a thing drawn only under a suggested name must wait ("accept its
+  name first", saying which text and which name), so nothing writes the name before its fix is accepted
+  (unnamed_drawn_suggested). `pathBlock`, `makeList` and `addToList` (the thing, or a value that reuses one) ask it
+  themselves; `parkForLater` and `styleEdit` (a nudge, a look or a view's selection naming one) ask it when given the
+  drawing's reading, which a host that writes from a drawing gives; a host asks it for a view's picked things. Property
+  edits are refused too (`setProperty` finds no pattern for a name that is not written), the host saying why in these words.
 - `schema-checks.ts` — the warnings for types a schema does not declare.
 - `note-reading.ts` — the types reading gives: `NoteReading`, `GraphDrawing`, `Problem`, `Block`, `Box`, `Link`.
 - `drawing.ts` — `readNote`: what a note's graph blocks draw, built from the modules above.

@@ -6,6 +6,7 @@
 // List is held as things linked to this one, and shown as chips (list-row.ts), asked for in list-form.ts.
 import { Menu, Platform, setIcon } from 'obsidian';
 import {
+  acceptNameFirst,
   linkedValues,
   listsOf,
   makeList,
@@ -107,8 +108,15 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
     alert.hidden = false;
     alert.setText(`${key}: ${why}.`);
   };
+  /** Why nothing can be changed yet: the thing is drawn under a suggested name, which a change would have to write (§4). */
+  const unnamed = () => ('thing' in o.target ? acceptNameFirst(o.reading, o.graph, [o.target.thing]) : null);
   /** Writes the edits in turn, each to the text the last one left; nothing is written if any is refused. */
   const write = (key: string, edits: { key: string; type: PropType | null; words: string }[]): boolean => {
+    const first = unnamed();
+    if (first) {
+      refuse(key, first);
+      return false;
+    }
     let text = o.text();
     for (const e of edits) {
       const parsed = e.type === null ? null : parseValue(e.type, e.words);
@@ -233,9 +241,12 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
         return;
       }
       // renamed in place: only the name changes, its value kept exactly as written
-      const r = keys.has(next)
-        ? ({ ok: false, reason: `it already has a property called ${next}` } as const)
-        : renameProperty(o.text(), o.graph, o.inBlock(), state.key, next);
+      const first = unnamed();
+      const r = first
+        ? ({ ok: false, reason: first } as const)
+        : keys.has(next)
+          ? ({ ok: false, reason: `it already has a property called ${next}` } as const)
+          : renameProperty(o.text(), o.graph, o.inBlock(), state.key, next);
       if (!r.ok) {
         refuse(state.key, r.reason);
         name.value = state.key;

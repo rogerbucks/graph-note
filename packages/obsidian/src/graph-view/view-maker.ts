@@ -2,7 +2,7 @@
 // kinds of view; the boxes tapped choose what it shows — picked by hand, the thing it is near, where a route starts and
 // ends, the kinds — and its reading is said in plain English as it is built; Write the view writes its query as a view
 // block of its own after the graph's last block. The strip is built once; only its words change as it goes.
-import { pathsOf, readingOf, viewBlock, viewQuery } from '@graph-note/core';
+import { acceptNameFirst, pathsOf, readingOf, viewBlock, viewQuery } from '@graph-note/core';
 import type { ViewKind, ViewSpec } from '@graph-note/core';
 import { button } from './view-bar';
 import type { ViewOptions } from './view-options';
@@ -136,6 +136,11 @@ export class ViewMaker {
     if (!spec) return void this.alert?.setText('Tap the things the view shows first.');
     if (!/^\w+$/.test(name))
       return void this.alert?.setText('Give the view a name of one word: letters, digits and _.');
+    // a box drawn under a suggested name would be written into the query by that name, without its fix (§4); a view of
+    // kinds names kinds, not boxes
+    const named = spec.kind === 'kinds' ? [] : this.picked;
+    const first = acceptNameFirst(this.o.reading, this.o.graph, named);
+    if (first) return void this.alert?.setText(first);
     const { kind: _, ...args } = spec;
     let block: string;
     try {

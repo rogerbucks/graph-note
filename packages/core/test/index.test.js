@@ -10,7 +10,8 @@
 // pathBlock, pathsOf, pathProblems and their types), the style graph (readStyle, lookOf, legendOf, nudgedSource,
 // styleEdit, hueColour, the words a style may use and their types), and views (viewsOf, parseView, viewQuery, viewBlock,
 // readingOf, evaluate and their types, 11 Oct 2026), and export (exportScope, exportSvg, pngSize, exportPlan,
-// companionNote, writeSafely, saidDate, EXPORT_FORMATS, PNG_MIN_SCALE and their types, 11 Oct 2026).
+// companionNote, writeSafely, saidDate, EXPORT_FORMATS, PNG_MIN_SCALE and their types, 11 Oct 2026), and the refusal to
+// write a name only suggested (acceptNameFirst, 11 Oct 2026).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -57,6 +58,7 @@ const VALUES = [
   'VIEW_LIMITS',
   'VIEW_NAMES',
   'Zoom',
+  'acceptNameFirst',
   'addToList',
   'aiModel',
   'blockItems',

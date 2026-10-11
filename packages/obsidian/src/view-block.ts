@@ -23,7 +23,7 @@ import {
   underStrictness,
   viewsOf,
 } from '@graph-note/core';
-import type { GraphDrawing, NamedView, Outside, StyleChange, ThingLook } from '@graph-note/core';
+import type { GraphDrawing, NamedView, NoteReading, Outside, StyleChange, ThingLook } from '@graph-note/core';
 import type GraphNotePlugin from './main';
 import { renderCode } from './code';
 import { GraphView } from './graph-view/graph-view';
@@ -37,12 +37,14 @@ async function writeStyle(
   graph: string,
   change: StyleChange,
   done: string,
+  reading: NoteReading,
 ): Promise<void> {
   const file = plugin.app.vault.getAbstractFileByPath(path);
   if (!(file instanceof TFile)) return;
   let refused = '';
   await plugin.app.vault.process(file, (note) => {
-    const r = styleEdit(note, graph, change);
+    // given the drawing, a thing drawn under a suggested name is not styled until its name is written (§4)
+    const r = styleEdit(note, graph, change, reading);
     if ('refused' in r) refused = r.refused;
     return 'note' in r ? r.note : note;
   });
@@ -190,6 +192,7 @@ export async function renderViewBlock(
         v.graph,
         { outside: { view: v.name, outside: o } },
         `View ${v.name} now ${o === 'hide' ? 'hides' : 'fades'} what is outside it.`,
+        reading,
       ),
     saveShown: (z, selected) =>
       void writeStyle(
@@ -198,6 +201,7 @@ export async function renderViewBlock(
         v.graph,
         { shown: { view: v.name, zoom: z.scale, x: z.x, y: z.y, ...(selected ? { selected } : {}) } },
         `Saved how view ${v.name} is shown.`,
+        reading,
       ),
   };
   let drawn;

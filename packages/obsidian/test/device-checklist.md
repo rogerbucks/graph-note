@@ -156,8 +156,11 @@ holds the two together).
       yet". Outside edit mode nothing can be written there; the note is unchanged. While editing, tapping it selects
       `(:Option {name: 'Small reader'})` in the text, and the details offer "Add the name small_reader". Pressing it
       writes the name after the `(`, the box is redrawn solid and unlabelled, and the warning leaves the problems list.
-      One undo (⌘Z, or the phone's gesture) takes the name back out, and the dashed box and the warning return. Phone:
-      the button is easy to hit in the sheet (slice 2, unnamed_drawn_suggested).
+      One undo (⌘Z, or the phone's gesture) takes the name back out, and the dashed box and the warning return. While
+      the name is not written, nothing else writes it: Park it, Save path (a path through it), Write the view (a view
+      picking it), a property changed or made a list, and Save as shown with it selected are each refused with a message
+      beginning "accept its name first", and the note is unchanged. Phone: the button is easy to hit in the sheet
+      (slice 2, unnamed_drawn_suggested).
 
 ## The style graph — spec §2, §6
 
@@ -191,7 +194,8 @@ holds the two together).
 
 - [ ] **D-01** Edit here on a card, tap a box, press Park for later, fill what is needed and why, press Park it: a Deferred is
       written into the block; when the card redraws, the box is dashed with "⏳ later" at its top right, readable in light
-      and dark, and the badge says "No problems, 1 parked" (slice 2, park_for_later, deferred_drawn, parked_not_broken).
+      and dark, and the badge says "No problems, 1 parked". On a box drawn under a suggested name (I-19), Park it is refused
+      with "accept its name first", and nothing is written (slice 2, park_for_later, deferred_drawn, parked_not_broken).
 - [ ] **D-02** Change its revisit_by to a day in the past: the mark says "⏳ overdue", the badge adds "1 overdue", and the list
       behind the badge names it with what is needed. VoiceOver reads the box as "parked for later, overdue".
 - [ ] **D-03** In a locked graph whose schema does not declare Deferred and DEFERS, Edit here, tap a box, press Park for later,
@@ -208,7 +212,8 @@ holds the two together).
 
 - [ ] **T-01** Edit here, press Record a path, tap three boxes: each shows its number at its top left as it is tapped (a box
       tapped twice shows both). Undo step takes the last back. Give a title and Save path: a Path with STEP 1 to 3 is
-      written; the card redraws (slice 2, record_and_play, walked_path_is_data, steps_numbered).
+      written; the card redraws. A path through a box drawn under a suggested name (I-19) is refused with "accept its name
+      first", and nothing is written (slice 2, record_and_play, walked_path_is_data, steps_numbered).
 - [ ] **T-02** Press Play <title>: "Step 1 of 3: …" is shown and read by VoiceOver, the box outlined heavier; Next and Previous
       move one step, and stop at the ends; Stop playing clears it. Desktop and phone, light and dark.
 - [ ] **T-03** Rename one stepped thing: the problem names the step and offers Remove the step; pressing it renumbers the later

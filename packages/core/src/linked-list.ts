@@ -10,6 +10,7 @@ import { literally, parseValue, propertiesOf, setProperty, spanOf } from './insp
 import { nameFromText, nameStyleOf } from './name-suggestions.ts';
 import type { NameStyle } from './name-suggestions.ts';
 import type { NoteReading } from './note-reading.ts';
+import { acceptNameFirst } from './suggested-names.ts';
 
 /** The relationship and the kind a list's things are linked by and of. */
 export interface ListShape {
@@ -139,6 +140,18 @@ function notHere(block: string, reading: NoteReading, graph: string, thing: stri
     : `${thing} is not written in this block: edit it where it is written, in graph ${graph}`;
 }
 
+/**
+ * Why a list cannot be written for this thing: it is drawn under a suggested name, which the link would write by name
+ * without its fix (§4). The same for a value that reuses such a thing.
+ */
+function unwritten(reading: NoteReading, graph: string, ...keys: (string | null)[]): string | null {
+  return acceptNameFirst(
+    reading,
+    graph,
+    keys.filter((k): k is string => k !== null),
+  );
+}
+
 /** The block with new items added after its last path or INSERT (before any SET), comma-separated, as the block writes its own. */
 function appended(block: string, lines: string[]): string {
   if (!lines.length) return block;
@@ -176,7 +189,7 @@ export function makeList(
   key: string | null,
   shape: ListShape,
 ): ListEdit {
-  const fault = shapeFault(shape) ?? notHere(block, reading, graph, thing);
+  const fault = shapeFault(shape) ?? unwritten(reading, graph, thing) ?? notHere(block, reading, graph, thing);
   if (fault) return { ok: false, reason: fault };
   if (key === null) return { ok: true, text: block, said: 'a list with no values yet', things: [] };
   // the values are those the block says now: the reading may be older than the text
@@ -188,7 +201,10 @@ export function makeList(
   const lines: string[] = [];
   const made: { id: string; isNew: boolean }[] = [];
   for (const v of listValues(words)) {
-    if (existing(k, shape.kind, v) === thing) return { ok: false, reason: itself(v) };
+    const was = existing(k, shape.kind, v);
+    if (was === thing) return { ok: false, reason: itself(v) };
+    const first = unwritten(reading, graph, was);
+    if (first) return { ok: false, reason: first };
     const m = itemsFor(k, thing, shape, v);
     if (!made.some((x) => x.id === m.id)) {
       lines.push(...m.lines);
@@ -212,13 +228,15 @@ export function addToList(
   shape: ListShape,
   value: string,
 ): ListEdit {
-  const fault = shapeFault(shape) ?? notHere(block, reading, graph, thing);
+  const fault = shapeFault(shape) ?? unwritten(reading, graph, thing) ?? notHere(block, reading, graph, thing);
   if (fault) return { ok: false, reason: fault };
   const v = value.trim();
   if (v === '') return { ok: false, reason: 'a value cannot be empty' };
   const k = known(reading, graph, block);
   const was = existing(k, shape.kind, v);
   if (was === thing) return { ok: false, reason: itself(v) };
+  const first = unwritten(reading, graph, was);
+  if (first) return { ok: false, reason: first };
   if (was !== null && k.links.has(triple(thing, shape.rel, was)))
     return { ok: false, reason: `${v} is already in the list` };
   const m = itemsFor(k, thing, shape, v);

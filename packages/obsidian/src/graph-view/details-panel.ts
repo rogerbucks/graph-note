@@ -153,6 +153,7 @@ export class DetailsPanel {
         this.o.indent ?? 'four',
         this.o.reading.whole[this.o.graph], // a thing written in another block of the graph is found
         () => ed.declareDeferred(), // the fix for a locked graph whose schema lacks Deferred and DEFERS
+        this.o.reading, // a thing drawn under a suggested name is not parked until its name is written (§4)
       );
   }
 
