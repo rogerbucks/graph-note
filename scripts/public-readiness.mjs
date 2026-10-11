@@ -200,10 +200,12 @@ const checksRule = (ruleset) => ruleset.rules.find((r) => r.type === 'required_s
  * `always`, or `public` for what GitHub gives only a public repository (or a paid security plan).
  */
 export const WANTED = [
-  // Who can contribute: a collaborator opens a pull request or an issue; nothing else is open to anyone.
+  // Who can contribute: a collaborator opens a pull request or an issue; nothing else is open to anyone. Issues stay on,
+  // with creation set to collaborators only by hand in the repository's settings: that setting has no API field (as of
+  // 11 Oct 2026), so it is the one thing here the script cannot read or set.
   repoField('pull_request_creation_policy', 'collaborators_only'),
   repoField('has_pull_requests', true),
-  repoField('has_issues', false),
+  repoField('has_issues', true),
   repoField('has_projects', false),
   repoField('has_wiki', false),
   repoField('has_discussions', false),
