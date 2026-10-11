@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/drawing-svg.test.js",
+  "test": "a link’s label in a drawing that runs down the page > only a link’s label moves: not a box’s text, and not a label in a drawing that runs across",
+  "seen_failing_first": false,
+  "evidence": "A guard that the gap is scoped to a link's label in a drawing marked graph-note-down: before the fix no rule moved any text, so a box's text and an unmarked drawing's label passed too. It would fail if the new rule lost its scope."
+}
