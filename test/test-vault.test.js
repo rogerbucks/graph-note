@@ -13,6 +13,8 @@ import { exists, read, readJSON, path, notIgnored, ROOT } from './repository/rep
 
 const VAULT = 'test-vault';
 const GUIDE = `${VAULT}/GUIDE.md`;
+/** The device check notes' folder (test/device-check-notes.test.js holds them to the device checklist). */
+const DEVICE_CHECKS = `${VAULT}/Device checks/`;
 const KEPT = [`${VAULT}/.obsidian/app.json`, `${VAULT}/.obsidian/community-plugins.json`];
 const PLUGIN_FILES = ['main.js', 'manifest.json', 'styles.css'];
 
@@ -56,7 +58,7 @@ describe('the test vault holds dummy notes, each tied to what it exercises', () 
       encoding: 'utf8',
     })
       .split('\n')
-      .filter((f) => f.endsWith('.md') && f !== GUIDE);
+      .filter((f) => f.endsWith('.md') && f !== GUIDE && !f.startsWith(DEVICE_CHECKS));
     const listed = guideMap();
     for (const f of notes) {
       assert.ok(listed.has(f.slice(VAULT.length + 1)), `${f} is in the guide`);
@@ -72,7 +74,14 @@ describe('only the notes and two settings are committed', () => {
   });
 
   test('the notes and the two settings can be committed; what Obsidian writes, and the plugin build, cannot', () => {
-    for (const f of ['Sample graph note.md', 'Long note.md', 'GUIDE.md']) assert.ok(notIgnored(`${VAULT}/${f}`), f);
+    for (const f of [
+      'Sample graph note.md',
+      'Long note.md',
+      'GUIDE.md',
+      'Device checks/Device checks.md',
+      'Device checks/01 Viewing/V-01 Every graph is drawn.md',
+    ])
+      assert.ok(notIgnored(`${VAULT}/${f}`), f);
     for (const f of KEPT) assert.ok(notIgnored(f), f);
     for (const f of [
       '.obsidian/workspace.json',
@@ -84,6 +93,9 @@ describe('only the notes and two settings are committed', () => {
       '.obsidian/plugins/another-plugin/main.js',
       'A folder/A note typed in a session.md',
       'pasted image.png',
+      'Device checks/pasted image.png',
+      'Device checks/01 Viewing/pasted image.png',
+      'Device checks/01 Viewing/.obsidian/workspace.json',
     ])
       assert.ok(!notIgnored(`${VAULT}/${f}`), `${f} is ignored`);
   });
@@ -92,7 +104,10 @@ describe('only the notes and two settings are committed', () => {
     const tracked = execFileSync('git', ['ls-files', VAULT], { cwd: ROOT, encoding: 'utf8' })
       .split('\n')
       .filter(Boolean);
-    const allowed = (f) => KEPT.includes(f) || /^test-vault\/[^/]+\.md$/.test(f);
+    const allowed = (f) =>
+      KEPT.includes(f) ||
+      /^test-vault\/[^/]+\.md$/.test(f) ||
+      /^test-vault\/Device checks\/([^/]+\/)?[^/]+\.md$/.test(f);
     assert.deepEqual(
       tracked.filter((f) => !allowed(f)),
       [],

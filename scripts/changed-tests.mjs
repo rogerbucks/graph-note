@@ -24,11 +24,13 @@ const PY_TEST = /(^|\/)tests\/test_\w+\.py$/;
 
 const CHEAP = 'test/cheap-checks.test.js';
 const CONVENTIONS = 'test/conventions.test.js';
+const DEVICE_NOTES = 'test/device-check-notes.test.js';
 
 /**
  * Files whose tests do not carry their name: the tests that read each. A file matched here needs only those tests.
  * Each is what the test opens: conventions.test.js reads CONTRIBUTING.md, every GUIDE.md and the README;
- * policy.test.js reads the README; test-vault.test.js reads test-vault/ and its reset script; requirements.test.js reads
+ * policy.test.js reads the README; test-vault.test.js reads test-vault/ and its reset script, and
+ * device-check-notes.test.js its Device checks notes and the device checklist; requirements.test.js reads
  * requirements/ and its check; cheap-checks.test.js reads AGENTS.md, CLAUDE.md, .ignore and its own three tools.
  */
 const READERS = [
@@ -38,7 +40,8 @@ const READERS = [
   ],
   [/^(CONTRIBUTING\.md|(packages|python)\/[^/]+\/GUIDE\.md)$/, [CONVENTIONS]],
   [/^README\.md$/, [CONVENTIONS, 'test/policy.test.js']],
-  [/^(test-vault\/.*|scripts\/reset-test-vault\.mjs)$/, ['test/test-vault.test.js']],
+  [/^(test-vault\/.*|scripts\/reset-test-vault\.mjs)$/, ['test/test-vault.test.js', DEVICE_NOTES]],
+  [/^packages\/obsidian\/test\/device-checklist\.md$/, [DEVICE_NOTES]],
   [/^(requirements\/.*|scripts\/check-requirements\.mjs)$/, ['test/requirements.test.js']],
   [/^(scripts\/check-classification\.mjs)$/, ['test/classification.test.js']],
   [/^scripts\/quality-(secrets|suite)\.mjs$/, ['test/quality-metrics.test.js']],

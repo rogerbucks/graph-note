@@ -121,7 +121,9 @@ package, or all with `npm test` from the repository root. Each builds `main.js` 
   the CSS cascade a test needs), `notes.js` (a fenced block, a button by its label), and the notes each group of tests
   opens: `card-notes.js`, `pane-notes.js`, `view-notes.js`, and `inspector-steps.js` (opening a box's details and driving the inspector's rows, menus and chips).
   `workers.js` stands in a browser's Worker: each runs the code main.js hands it, from its Blob URL, in a real thread.
-- `test/device-checklist.md` — what is checked by hand on the devices.
+- `test/device-checklist.md` — what is checked by hand on the devices. Every item has a number that never changes
+  (`V-03`: its section's letter and two digits), and each item after Before has a note in `test-vault/Device checks/`
+  that shows the case on a graph to try it on; `test/device-check-notes.test.js` (repository root) holds the two together.
 
 ## The harness, `harness/`
 
