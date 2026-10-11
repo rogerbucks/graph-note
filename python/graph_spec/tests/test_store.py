@@ -6,6 +6,7 @@ Usage:
   cd python/graph_spec && uv run --locked python -m unittest discover -s tests
 """
 
+import copy
 import os
 import sys
 import time
@@ -20,6 +21,27 @@ from graphspec.reader.store import Store  # noqa: E402
 GOOD = "// graph: g\n(a:T {name: 'A'})"
 # an instant whose time in UTC falls before year 1, which Python's datetime cannot hold
 BEFORE_YEAR_ONE = "// graph: g\n(b:T {at: DATETIME '0001-01-01T00:30:00+01:00'})"
+# a block that changes every part of the store a block can: a thing, a link, a type written without
+# its colon (bares and their fixes), a missing comma (commas and their places), the schema it names
+CHANGES_EVERYTHING = "// graph: g · schema shared\n(c:T {name: 'C'})\n(a)-[r]->(c)"
+
+
+def broken_after(error):
+    """A store holding graph g, whose next block is read whole and then fails with `error`."""
+
+    class Breaks(Store):
+        breaking = False
+
+        def _apply(self, block):
+            out = super()._apply(block)
+            if self.breaking:
+                raise error
+            return out
+
+    store = Breaks()
+    store.apply("// graph: g\n(a:T {name: 'A'}),\n(b:T {name: 'B'}),\n(a)-[:R]->(b)")
+    store.breaking = True
+    return store
 
 
 def many_lines(n):
@@ -59,16 +81,18 @@ class Whole(unittest.TestCase):
     applies it."""
 
     def test_a_block_that_fails_in_any_way_leaves_the_store_as_it_was(self):
-        class Breaks(Store):
-            def _apply(self, block):
-                super()._apply(block)
-                raise RuntimeError("broke after reading")
-
-        store = Breaks()
-        before = (dict(store.graphs), dict(store.schemas), dict(store.named))
+        store = broken_after(RuntimeError("broke after reading"))
+        before = copy.deepcopy(vars(store))
         with self.assertRaises(RuntimeError):
-            store.apply(GOOD)
-        self.assertEqual((store.graphs, store.schemas, store.named), before)
+            store.apply(CHANGES_EVERYTHING)
+        self.assertEqual(vars(store), before)
+
+    def test_an_interrupt_part_way_through_a_block_leaves_the_store_as_it_was(self):
+        store = broken_after(KeyboardInterrupt())
+        before = copy.deepcopy(vars(store))
+        with self.assertRaises(KeyboardInterrupt):
+            store.apply(CHANGES_EVERYTHING)
+        self.assertEqual(vars(store), before)
 
     def test_an_instant_before_year_one_in_utc_is_refused_as_unreadable_at_its_line(self):
         store = Store()

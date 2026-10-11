@@ -96,8 +96,8 @@ class Store:
 
     def apply(self, block):
         """Applies a data block whole, or not at all: a block that cannot be read, or whose reading
-        fails in any other way, leaves the store as it was, however far its reading got, as the
-        JavaScript store does (req:3.engine-gets-corrected)."""
+        fails in any other way, an interrupt among them, leaves the store as it was, however far
+        its reading got, as the JavaScript store does (req:3.engine-gets-corrected)."""
         kept = copy.deepcopy(
             (
                 self.graphs,
@@ -112,7 +112,7 @@ class Store:
         )
         try:
             return self._apply(block)
-        except Exception:
+        except BaseException:  # an interrupt too: the store is restored, and it is raised again
             (
                 self.graphs,
                 self._k,
