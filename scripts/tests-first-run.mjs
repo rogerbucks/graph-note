@@ -13,14 +13,35 @@ const RUN_MS = 10 * 60 * 1000;
 /** The time limit for each run of a test file: ten minutes, unless TESTS_FIRST_RUN_MS sets another (its tests do). */
 export const runMs = () => Number(process.env.TESTS_FIRST_RUN_MS) || RUN_MS;
 
+const ENTITIES = { lt: '<', gt: '>', amp: '&', quot: '"', apos: "'" };
+
+/**
+ * An attribute value's entities, decoded in one pass, so `&amp;lt;` is the text `&lt;`. Node's reporter writes `"` and `'`
+ * as `&amp;quot;` and `&amp;apos;` (it escapes `&` again after them), so those read as the character; a name that spelt
+ * out `&quot;` itself cannot be told from a `"`, which the report does not let us.
+ */
 const unescape = (s) =>
-  s
-    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&');
+  s.replace(
+    /&(?:amp;(quot|apos)|#(\d+)|#x([0-9a-fA-F]+)|(lt|gt|amp|quot|apos));/g,
+    (whole, reporter, dec, hex, named) => {
+      if (reporter || named) return ENTITIES[reporter ?? named];
+      const code = dec ? Number(dec) : parseInt(hex, 16);
+      return code <= 0x10ffff ? String.fromCodePoint(code) : whole;
+    },
+  );
+
+// a name, `=`, and a value in double or single quotes; a quoted value may hold `>`, which the reporter leaves bare
+const ATTR = String.raw`[\w:.-]+\s*=\s*(?:"[^"]*"|'[^']*')`;
+const TAG = new RegExp(String.raw`<(\/?)(testsuite|testcase)\b((?:\s+${ATTR})*)\s*(\/?)>`, 'g');
+
+/** The attributes of one tag, each by name, entities decoded. */
+function attributes(text) {
+  const attrs = new Map();
+  for (const [, name, double, single] of text.matchAll(/([\w:.-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g)) {
+    attrs.set(name, unescape(double ?? single));
+  }
+  return attrs;
+}
 
 /** How a run with no report ended, from its spawnSync result: the time limit, a signal, an error, or its exit status. */
 const ended = (r) =>
@@ -52,16 +73,17 @@ export function fromJunit(report) {
   const passed = [],
     failed = [],
     suites = [];
-  for (const m of report.matchAll(/<(\/?)(testsuite|testcase)\b([^>]*?)(\/?)>/g)) {
-    const [, close, tag, attrs = '', selfClose] = m;
-    const name = unescape(/\bname="([^"]*)"/.exec(attrs)?.[1] ?? '');
+  for (const m of report.matchAll(TAG)) {
+    const [, close, tag, text = '', selfClose] = m;
+    const attrs = attributes(text);
+    const name = attrs.get('name') ?? '';
     if (tag === 'testsuite') {
       if (close) suites.pop();
       else if (!selfClose) suites.push(name);
       continue;
     }
     if (close) continue;
-    (/\bfailure="/.test(attrs) ? failed : passed).push([...suites, name].join(' > '));
+    (attrs.has('failure') ? failed : passed).push([...suites, name].join(' > '));
   }
   // the reporter writes <testsuites> at once; a run stopped at the time limit, or crashed, never closes it
   return { passed, failed, ran: report.includes('</testsuites>') };
