@@ -21,7 +21,10 @@ CI. A change that breaks one fails before it is merged.
   not replayed, naming it, and `--check` warns of it. One that passes the second time, or a run that did not finish,
   fails the record, so it is run again; a fault that comes back on every run means the commit has to be rewritten
   together with its code. A test that failed at the parent is never taken for one held before: it is judged in the
-  commit that makes it pass.
+  commit that makes it pass. `node scripts/tests-first.mjs --tally` is for a reader outside the repository: it writes
+  nothing and prints one JSON document, with the baseline's head, the counts for each test file (replayed, not
+  replayed, seen failing, excused, passed first) and every reason kept, with its file's path and its content; add
+  `--repo <dir>`, first, to read another repository.
 - **The records never conflict.** Two branches that replay different commits, or excuse different tests, write
   different files, and no field is rewritten by every update, so any merge, GitHub's own among them, joins them with
   nothing to resolve.
@@ -158,7 +161,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/slice-board.test.js` — the slice board: a CSS-only HTML page of how far the slice under way is proved, from the requirements copy and, optionally, the open pull requests.
 - `test/test-vault.test.js` — the test vault: dummy notes tied to requirements, nothing Obsidian writes committed, each session clean.
 - `test/tests-first.test.js` — every test is seen to fail before its code, replayed commit by commit.
-- `test/tests-first-command.test.js` — that replay's command line, run as CI and a person run it: `--check`, `--excuse`, `--migrate` and `--complete`.
+- `test/tests-first-command.test.js` — that replay's command line, run as CI and a person run it: `--check`, `--excuse`, `--migrate`, `--complete` and `--tally`.
 - `test/tests-first-records.test.js` — the records of that replay: a file for each commit and each reason, so two branches never conflict in them, and the old single files moved over whole.
 - `test/tests-first-run.test.js` — one run of one test file in that replay: what its report shows, and why it did not finish.
 - `test/whitespace.test.js` — the three copies of the one whitespace set are the same, and the set is openGQL's.

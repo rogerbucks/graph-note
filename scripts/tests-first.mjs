@@ -16,6 +16,13 @@
 //                                                    kept already is replaced only with --force
 //   node scripts/tests-first.mjs --migrate           move the old single files, test/tests-first.json and
 //                                                    test/seen-failing.json, over into those folders
+//   node scripts/tests-first.mjs --tally             print what the records prove as one JSON document on stdout, for a
+//                                                    reader outside the repository, and write nothing: `baseline`, the
+//                                                    baseline's head; `files`, for each test file the counts replayed,
+//                                                    notReplayed, seenFailing, excused and passedFirst, and the
+//                                                    notReplayedCommits; `excused`, each reason kept by test file and
+//                                                    test, with its `reasonFile` and `reason` as kept. Keys are sorted;
+//                                                    records that cannot be read fail with exit 1 and the usual message
 // Each runs on this repository, or on the one `--repo <dir>`, given first, names.
 //
 // How the records are kept, so that two branches never conflict in them, is scripts/tests-first-records.mjs.
@@ -54,6 +61,7 @@ import {
   readRecords,
   removeRecord,
   summary,
+  tallyReport,
   testsIn,
   unrecorded,
   writeRecord,
@@ -363,10 +371,12 @@ function main(repo, mode, args, force) {
     console.log(excuse(repo, file, test, evidence, force));
   } else if (mode === '--migrate') {
     for (const line of migrate(repo)) console.log(line);
+  } else if (mode === '--tally') {
+    process.stdout.write(tallyReport(repo));
   } else {
     console.error(
       'usage: tests-first.mjs [--repo <dir>] --check <commit>… | --update | --record | --complete | ' +
-        '--excuse [--force] <test file> <test> <reason> | --migrate',
+        '--excuse [--force] <test file> <test> <reason> | --migrate | --tally',
     );
     process.exitCode = 2;
   }
