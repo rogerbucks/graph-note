@@ -1,0 +1,6 @@
+{
+  "file": "test/whitespace.test.js",
+  "test": "the three copies hold the same 29 code points, the ones openGQL’s grammar names",
+  "seen_failing_first": false,
+  "evidence": "a guard, asked for in review of PR #28: the three hand-written copies of the set already agreed when it was written, so it passes before and after by design; it fails as soon as one copy drifts. Its partner in the same file, that each copy cites openGQL's GQL.g4, was seen failing first."
+}

@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/views-across.test.js",
+  "test": "a view saved as shown > is written in the style graph, and the data is left exactly as it was",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that already existed: styleEdit's shown change was built test-first in commit f3db25f (style-edit.test.js); this file, which the requirements copy names for view_saved_as_shown, proves it again from the view's side (commit dd93730)"
+}

@@ -1,35 +1,17 @@
 // Every test is seen to fail before its code (spec §12, tests_first). scripts/tests-first.mjs proves it mechanically: it
 // replays a commit, running the commit's tests against its parent's code, and every test new in the commit must fail
-// there. A test that passes against the old code was not written first, unless it is recorded, with its reason, in
-// test/seen-failing.json. Proved here on small repositories made for the purpose, then on this one's records.
+// there. A test that passes against the old code was not written first, unless its reason is kept in
+// test/seen-failing/. Proved here on small repositories made for the purpose. How the records are kept, and what this
+// repository's own records hold, is tests-first-records.test.js.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, dirname } from 'node:path';
+import { join } from 'node:path';
 import { judged, replay, unexplained, record, update } from '../scripts/tests-first.mjs';
-import { path, readJSON, walk } from './repository/repo.js';
-
-/** A small repository: each commit a set of files, written then committed; returns the folder and the commit ids. */
-function repository(commits) {
-  const dir = mkdtempSync(join(tmpdir(), 'tests-first-'));
-  const git = (...args) => execFileSync('git', args, { cwd: dir, encoding: 'utf8' }).trim();
-  git('init', '-q');
-  git('config', 'user.email', 'test@example.com');
-  git('config', 'user.name', 'Test');
-  git('config', 'commit.gpgsign', 'false');
-  const ids = commits.map((files, i) => {
-    for (const [file, text] of Object.entries(files)) {
-      mkdirSync(dirname(join(dir, file)), { recursive: true });
-      writeFileSync(join(dir, file), text);
-    }
-    git('add', '-A');
-    git('commit', '-q', '-m', `commit ${i}`);
-    return git('rev-parse', 'HEAD');
-  });
-  return { dir, ids, done: () => rmSync(dir, { recursive: true, force: true }) };
-}
+import { RECORDS, readRecords } from '../scripts/tests-first-records.mjs';
+import { repository } from './repository/scratch-repository.js';
 
 const JS_TEST = (body) =>
   `import { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { twice } from '../src/twice.js';\n${body}\n`;
@@ -96,6 +78,62 @@ describe('replaying a commit against its parent’s code', () => {
         unexplained([replay(r.dir, r.ids[1])], { 'test/twice.test.js': { 'already true': reason } }),
         [],
       );
+    } finally {
+      r.done();
+    }
+  });
+
+  // review of #69: a reason was looked up as a property, so a test named after one every object has counted as excused
+  test('a new test named like a property every object has, such as toString or constructor, is not excused by it', () => {
+    const r = repository([
+      {
+        'src/twice.js': 'export const twice = (x) => x * 2;\n',
+        'test/twice.test.js': JS_TEST("test('one', () => {});"),
+      },
+      {
+        'test/twice.test.js': JS_TEST(
+          "test('one', () => {});\ntest('toString', () => assert.equal(twice(1), 2));\ntest('constructor', () => {});",
+        ),
+      },
+    ]);
+    try {
+      const flagged = unexplained([replay(r.dir, r.ids[1])], { 'test/twice.test.js': {} }).map((u) => u.name);
+      assert.deepEqual(flagged.sort(), ['constructor', 'toString']);
+    } finally {
+      r.done();
+    }
+  });
+
+  // review of #69: a test that failed at the parent was taken for one held before, so a test wrong at its own commit and
+  // corrected later, with no change to the code, was never judged
+  test('a test wrong at its own commit and corrected later, with the code unchanged, is judged when corrected: it passed first', () => {
+    const r = repository([
+      { 'src/twice.js': 'export const twice = (x) => x * 2;\n' },
+      { 'test/twice.test.js': JS_TEST("test('doubles', () => assert.equal(twice(2), 5));") },
+      { 'test/twice.test.js': JS_TEST("test('doubles', () => assert.equal(twice(2), 4));") },
+    ]);
+    try {
+      assert.deepEqual(unexplained([replay(r.dir, r.ids[2])], {}), [
+        { commit: r.ids[2], file: 'test/twice.test.js', name: 'doubles' },
+      ]);
+    } finally {
+      r.done();
+    }
+  });
+
+  test('a test that came a commit before its code is judged with the commit that brings its code: it failed first', () => {
+    const r = repository([
+      { 'src/twice.js': 'export const twice = (x) => x;\n' },
+      { 'test/twice.test.js': JS_TEST("test('doubles', () => assert.equal(twice(2), 4));") },
+      {
+        'src/twice.js': 'export const twice = (x) => x * 2;\n',
+        'test/twice.test.js': JS_TEST("// its code comes now\ntest('doubles', () => assert.equal(twice(2), 4));"),
+      },
+    ]);
+    try {
+      const [file] = replay(r.dir, r.ids[2]).files;
+      assert.deepEqual(file.failedFirst, ['doubles']);
+      assert.deepEqual(file.passedFirst, []);
     } finally {
       r.done();
     }
@@ -259,7 +297,6 @@ describe('a run against the code before that did not finish', () => {
       },
     ]);
     try {
-      writeFileSync(join(r.dir, 'test', 'seen-failing.json'), '{}\n');
       const e = withRunLimit(3000, () => record(r.dir)).files['test/twice.test.js'];
       assert.equal(e.seenFailing, 0);
       assert.deepEqual(e.passedFirst, []);
@@ -312,10 +349,6 @@ describe('a run at the commit’s own code that cannot be trusted fails the reco
     // with no time limit set, so that load cannot stop it (review of #44)
     const empty = repository([{ 'README.md': 'x\n' }, { 'py/tests/test_empty.py': 'import unittest\n' }]);
     try {
-      for (const r of [slow, empty]) {
-        mkdirSync(join(r.dir, 'test'), { recursive: true });
-        writeFileSync(join(r.dir, 'test', 'seen-failing.json'), '{}\n');
-      }
       assert.throws(
         () => withRunLimit(3000, () => record(slow.dir)),
         (e) => {
@@ -327,37 +360,6 @@ describe('a run at the commit’s own code that cannot be trusted fails the reco
     } finally {
       slow.done();
       empty.done();
-    }
-  });
-
-  // found on 10 Oct 2026: time-budget tests failing at their own commit under load dropped out of the record unnoticed,
-  // and its count of tests seen failing first fell by one each (layout-worker 26 to 25, partial-read 14 to 13)
-  test('a new test failing at its own commit fails the record, naming the test and commit: it is never dropped', () => {
-    const r = repository([
-      { 'src/twice.js': 'export const twice = (x) => x;\n', 'test/twice.test.js': JS_TEST("test('one', () => {});") },
-      {
-        'src/twice.js': 'export const twice = (x) => x * 2;\n',
-        'test/twice.test.js': JS_TEST(
-          "test('one', () => {});\ntest('doubles', () => assert.equal(twice(2), 4));\ntest('in its budget', () => assert.ok(false, 'over its budget'));",
-        ),
-      },
-    ]);
-    try {
-      writeFileSync(join(r.dir, 'test', 'seen-failing.json'), '{}\n');
-      assert.throws(
-        () => record(r.dir),
-        (e) => {
-          assert.match(e.message, new RegExp(`${r.ids[1].slice(0, 7)} test/twice\\.test\\.js: "in its budget" fails`));
-          assert.doesNotMatch(e.message, /doubles|"one"/);
-          return true;
-        },
-      );
-      // the file's other new tests are still judged, so --check shows every problem in one run (review of #44)
-      const replayed = replay(r.dir, r.ids[1]);
-      assert.equal(replayed.faults.length, 1);
-      assert.deepEqual(replayed.files[0]?.failedFirst, ['doubles']);
-    } finally {
-      r.done();
     }
   });
 
@@ -373,7 +375,6 @@ describe('a run at the commit’s own code that cannot be trusted fails the reco
     try {
       // installed packages make the checkout read each package's manifest, and this one cannot be read
       mkdirSync(join(r.dir, 'node_modules', 'installed'), { recursive: true });
-      writeFileSync(join(r.dir, 'test', 'seen-failing.json'), '{}\n');
       assert.throws(
         () => record(r.dir),
         (e) => {
@@ -393,9 +394,80 @@ describe('a run at the commit’s own code that cannot be trusted fails the reco
   });
 });
 
-describe('keeping the record', () => {
-  test('updating a record with the commits since its head gives what recording them all would', () => {
+describe('a new test failing at its own commit', () => {
+  // found on 10 Oct 2026: time-budget tests failing at their own commit under load dropped out of the record unnoticed,
+  // and its count of tests seen failing first fell by one each (layout-worker 26 to 25, partial-read 14 to 13). Since the
+  // review of #69 the commit is recorded with the fault kept, as not replayed: a test may come a commit before its code
+  // (Roger, 10 Oct 2026), and CI asks that every commit that changed a test have its record
+  test('is kept in the record as not replayed, naming the test and commit: it is never dropped', () => {
     const r = repository([
+      { 'src/twice.js': 'export const twice = (x) => x;\n', 'test/twice.test.js': JS_TEST("test('one', () => {});") },
+      {
+        'src/twice.js': 'export const twice = (x) => x * 2;\n',
+        'test/twice.test.js': JS_TEST(
+          "test('one', () => {});\ntest('doubles', () => assert.equal(twice(2), 4));\ntest('in its budget', () => assert.ok(false, 'over its budget'));",
+        ),
+      },
+    ]);
+    try {
+      const e = record(r.dir).files['test/twice.test.js'];
+      // the file's other new tests are still judged: 'doubles' was seen failing first
+      assert.equal(e.seenFailing, 1);
+      const kept = e.notReplayedCommits.filter((c) => c.commit === r.ids[1]);
+      assert.deepEqual(
+        kept.map((c) => c.tests),
+        [['in its budget']],
+      );
+      assert.match(kept[0].reason, /"in its budget" fails at its own commit/);
+      // one commit, counted once: not replayed, as a test in it was not (review of #69)
+      assert.deepEqual([e.replayed, e.notReplayed], [0, 1]);
+      // and --check still shows every problem in one run, the fault among them (review of #44)
+      const replayed = replay(r.dir, r.ids[1]);
+      assert.equal(replayed.faults.length, 1);
+      assert.deepEqual(replayed.files[0]?.failedFirst, ['doubles']);
+    } finally {
+      r.done();
+    }
+  });
+
+  // review of #69: the time-budget guard of 10 Oct 2026, kept: a test that failed only under load must be run again,
+  // never kept as a fault for good
+  test('one that fails at its own commit once, and passes run again, fails the record, so it is run again: never kept', () => {
+    const markers = mkdtempSync(join(tmpdir(), 'tests-first-marker-'));
+    const marker = JSON.stringify(join(markers, 'ran-once'));
+    const once = `if (!existsSync(${marker})) { writeFileSync(${marker}, ''); assert.fail('over its budget, once'); }`;
+    const r = repository([
+      { 'README.md': 'the first commit\n' },
+      { 'src/twice.js': 'export const twice = (x) => x;\n', 'test/twice.test.js': JS_TEST("test('one', () => {});") },
+      {
+        'test/twice.test.js': JS_TEST(
+          `import { existsSync, writeFileSync } from 'node:fs';\ntest('one', () => {});\ntest('in its budget', () => { ${once} });`,
+        ),
+      },
+    ]);
+    try {
+      assert.throws(
+        () => record(r.dir),
+        (e) => {
+          assert.match(e.message, new RegExp(`${r.ids[2].slice(0, 7)} test/twice\\.test\\.js: "in its budget" failed`));
+          assert.match(e.message, /passed when run again/);
+          // a fault that comes back on every run cannot be recorded: the commit is rewritten with its code
+          assert.match(e.message, /rewritten together with its code/);
+          return true;
+        },
+      );
+      assert.equal(readRecords(r.dir).commits.size, 0, 'nothing is written');
+    } finally {
+      rmSync(markers, { recursive: true, force: true });
+      r.done();
+    }
+  });
+});
+
+describe('keeping the record', () => {
+  test('updating the record replays only the commits it does not hold, and gives what recording them all would', () => {
+    const r = repository([
+      { 'README.md': 'the first commit\n' },
       { 'src/twice.js': 'export const twice = (x) => x;\n', 'test/twice.test.js': JS_TEST("test('one', () => {});") },
       {
         'src/twice.js': 'export const twice = (x) => x * 2;\n',
@@ -403,63 +475,18 @@ describe('keeping the record', () => {
       },
     ]);
     try {
-      mkdirSync(join(r.dir, 'test'), { recursive: true });
-      writeFileSync(join(r.dir, 'test', 'seen-failing.json'), '{}\n');
       const whole = record(r.dir);
-      execFileSync('git', ['reset', '-q', '--hard', r.ids[0]], { cwd: r.dir });
-      const early = record(r.dir);
       execFileSync('git', ['reset', '-q', '--hard', r.ids[1]], { cwd: r.dir });
-      assert.deepEqual(update(r.dir, early), whole);
+      record(r.dir);
+      assert.deepEqual([...readRecords(r.dir).commits.keys()], [r.ids[1]]);
+      const held = join(r.dir, RECORDS, `${r.ids[1]}.json`);
+      // a record that says what no replay would: kept as it is, as the commit it records is not replayed again
+      writeFileSync(held, readFileSync(held, 'utf8').replace('"files"', '"untouched": true,\n  "files"'));
+      execFileSync('git', ['reset', '-q', '--hard', r.ids[2]], { cwd: r.dir });
+      assert.deepEqual(update(r.dir), whole);
+      assert.match(readFileSync(held, 'utf8'), /"untouched": true/, 'the commit held already is not replayed');
     } finally {
       r.done();
     }
-  });
-});
-
-describe('this repository’s records', () => {
-  const record = readJSON('test/tests-first.json'),
-    exceptions = readJSON('test/seen-failing.json');
-
-  test('every test file in the repository has its entry, with what was proved, excused and not replayed kept apart', () => {
-    const files = [
-      ...walk('.').filter((f) => /(^|\/)(test|tests)\/.*\.test\.(js|mjs)$|(^|\/)tests\/test_\w+\.py$/.test(f)),
-    ].filter((f) => !f.startsWith('spikes/'));
-    // a file added since the record was made has none yet: CI replays it as it comes
-    const known = (f) => spawnSync('git', ['cat-file', '-e', `${record.head}:${f}`], { cwd: path('.') }).status === 0;
-    for (const f of files.filter(known)) {
-      const e = record.files[f];
-      assert.ok(e, `${f} has an entry`);
-      for (const key of ['replayed', 'notReplayed', 'seenFailing', 'excused'])
-        assert.equal(typeof e[key], 'number', `${f}: ${key}`);
-    }
-  });
-
-  test('every test that passed against its parent has its reason, and every reason names such a test', () => {
-    const passed = Object.entries(record.files).flatMap(([file, e]) =>
-      e.passedFirst.map((p) => `${file} :: ${p.name}`),
-    );
-    const excused = Object.entries(exceptions).flatMap(([file, names]) =>
-      Object.keys(names).map((n) => `${file} :: ${n}`),
-    );
-    // a test new in a commit whose run against the code before it did not finish was neither seen failing nor passing:
-    // a reason may be kept for it
-    const unproved = Object.entries(record.files).flatMap(([file, e]) =>
-      (e.notReplayedCommits ?? []).flatMap((c) => (c.tests ?? []).map((n) => `${file} :: ${n}`)),
-    );
-    assert.deepEqual(
-      passed.filter((p) => !excused.includes(p)),
-      [],
-      'unexplained',
-    );
-    assert.deepEqual(
-      excused.filter((x) => !passed.includes(x) && !unproved.includes(x)),
-      [],
-      'a reason for no such test',
-    );
-    for (const names of Object.values(exceptions))
-      for (const reason of Object.values(names)) {
-        assert.equal(reason.seen_failing_first, false);
-        assert.ok(typeof reason.evidence === 'string' && reason.evidence.length > 10);
-      }
   });
 });

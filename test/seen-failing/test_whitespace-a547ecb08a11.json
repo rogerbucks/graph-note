@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_whitespace.py",
+  "test": "BeforeKeywords.test_whitespace_before_match_insert_and_set_parts_them_as_a_space_does",
+  "seen_failing_first": false,
+  "evidence": "parity rows asked for in review of PR #28, added after the fix earlier in the same branch, so they pass against their parent. Run against origin/main 7a682f4 in a scratch worktree, 1 of its 4 rows fails (U+180E before MATCH, INSERT and SET)."
+}

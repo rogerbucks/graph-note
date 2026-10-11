@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/accessibility.test.js",
+  "test": "contrast in both themes > light theme, blue: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that already existed: the contrast of the locked style the drawing already used (commit 3ff0c19)"
+}

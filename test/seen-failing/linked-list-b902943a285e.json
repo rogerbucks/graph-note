@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/linked-list.test.js",
+  "test": "review fixes: values are never merged, comments never lost, and the edit follows the block > a comment above a removed item in the middle of the block stays too",
+  "seen_failing_first": false,
+  "evidence": "a control case, written with the review fixes beside them: it holds what must not change (a comment above a removed middle item, whose separator is its own) so it passes before and after by design; the last-item case that lost a comment is the test that failed first"
+}

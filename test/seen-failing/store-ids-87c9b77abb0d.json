@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/store-ids.test.mjs",
+  "test": "req:3.id-is-text: a node’s id is always text > req:3.id-is-text: a text id is read, a number among the other properties too",
+  "seen_failing_first": false,
+  "evidence": "a control case for req:3.id-is-text, written with the change beside it: a text id, and a number in another property, were read before and are read after, so it passes at its parent by design"
+}

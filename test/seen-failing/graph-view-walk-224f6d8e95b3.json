@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/graph-view-walk.test.js",
+  "test": "Record, while the card is edited > is offered only while the card is edited",
+  "seen_failing_first": false,
+  "evidence": "a control case, written with the change beside it: outside editing no Record is offered, before the change or after, by design (commit 8c7d5bf)"
+}

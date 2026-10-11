@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_changesets.py",
+  "test": "ChecksReadPlain.test_the_reader_s_dry_run_reaches_the_engine_s_outcome",
+  "seen_failing_first": false,
+  "evidence": "req:3.reader-default: against its parent, check_changeset ignored the parser and ran Grafeo under both, so the two agree trivially and it passes; it holds the reader's dry run this commit puts behind the default parser to Grafeo's outcome. Its companion, test_a_change_set_and_a_graph_are_checked_with_grafeo_not_installed, was seen failing first (11 Oct 2026)"
+}

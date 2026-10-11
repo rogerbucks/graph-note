@@ -1,0 +1,6 @@
+{
+  "file": "test/slice-board.test.js",
+  "test": "the open pull requests panel > escapes an https url holding a quote or a tag, the branch name, and never breaks out of the attribute",
+  "seen_failing_first": false,
+  "evidence": "coverage the review of #66 asked for, added with its fixes: it pins the escaping the first commit of #66 already did, so it passes before and after by design (commit e40539c)"
+}

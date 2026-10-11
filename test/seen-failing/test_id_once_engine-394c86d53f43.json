@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_id_once_engine.py",
+  "test": "EnginePathsSkipTheReader.test_parse_by_default_refuses_a_variable_written_twice",
+  "seen_failing_first": false,
+  "evidence": "written in an investigation (commit 2ff1377, a test file and nothing else) as an expectedFailure, which the replay reads as passing, against main's code; that commit sits on PR #36, whose to_gql already refuses the case, so it passes there and its decorator comes off in the next commit. It failed on main (KeyError 'id'), as the investigation recorded"
+}

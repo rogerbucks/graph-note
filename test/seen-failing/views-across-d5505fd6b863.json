@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/views-across.test.js",
+  "test": "a view saved as shown > saved again, replaces what was saved before rather than adding to it",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that already existed: styleEdit replaces a view's Shown in place, built test-first in commit f3db25f (style-edit.test.js); proved again here from the view's side (commit dd93730)"
+}

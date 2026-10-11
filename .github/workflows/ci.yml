@@ -105,7 +105,8 @@ jobs:
       - run: uv run --locked --no-default-groups python -m unittest discover -s tests
 
   # Every test is seen to fail before its code (spec §12): each new commit is replayed, its tests run against its
-  # parent's code, and a new test that passes there fails the build unless test/seen-failing.json gives the reason.
+  # parent's code, and a new test that passes there fails the build unless its reason is kept in test/seen-failing/.
+  # It reads only that folder, never the record in test/tests-first/, so the record cannot weaken it.
   tests-first:
     runs-on: ubuntu-latest
     steps:
@@ -131,6 +132,9 @@ jobs:
         run: |
           commits=$(git rev-list --no-merges "$BASE..$HEAD")
           if [ -n "$commits" ]; then node scripts/tests-first.mjs --check $commits; fi
+      # every commit since the baseline that changed a test has its record, written on its own branch
+      - name: Every commit that changed a test is recorded
+        run: node scripts/tests-first.mjs --complete
 
   # Fit to be public, and kept so (spec §13): no secret and nothing confidential or personal in any commit of any
   # branch, every commit from a no-reply address, and a stranger's fresh clone sets up and builds from the README's

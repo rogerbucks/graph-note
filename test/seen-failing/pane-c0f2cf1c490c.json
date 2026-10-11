@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/pane.test.js",
+  "test": "an empty graph block > typing the first thing, and taking a suggestion, keeps the graph line",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that already existed: a probe of the try-out’s empty block; the editor already kept its graph line (commit dcffbbe)"
+}

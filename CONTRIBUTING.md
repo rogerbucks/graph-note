@@ -9,9 +9,29 @@ CI. A change that breaks one fails before it is merged.
   to fail, and only then is the code written. A commit message says which tests were seen failing first.
 - **CI proves it.** `scripts/tests-first.mjs` replays each new commit: its tests run against its parent's code, and
   every test new in the commit must fail there. A test written after its code, such as one that pins behaviour that
-  already existed, is listed in `test/seen-failing.json` with the reason, or the build fails. `test/tests-first.json`
-  records the replays (`node scripts/tests-first.mjs --record`): for each test file, what was seen failing first, what
-  was excused, and what could not be replayed.
+  already existed, has its reason in `test/seen-failing/`, or the build fails: one file for each test, written by `node
+  scripts/tests-first.mjs --excuse <test file> <test> <reason>` and named after the test file and a digest of the test.
+  A reason holds only `file`, `test`, `seen_failing_first` and `evidence`; `--excuse` never overwrites one without
+  `--force`. `test/tests-first/` records the replays (`node scripts/tests-first.mjs --update`): one file for each
+  replayed commit that changed a test, named after the commit, over `baseline.json`, the single record as it stood when
+  it was split (11 Oct 2026), frozen at its head. Together they give, for each test file, what was seen failing first,
+  what was excused, and what could not be replayed. CI fails a commit since the baseline that changed a test and has no
+  record (`--complete`), so each commit's record is written once, on the branch that made it. A test may come a commit
+  before its code: a new test failing at its own commit, and again when its file is run once more there, is recorded as
+  not replayed, naming it, and `--check` warns of it. One that passes the second time, or a run that did not finish,
+  fails the record, so it is run again; a fault that comes back on every run means the commit has to be rewritten
+  together with its code. A test that failed at the parent is never taken for one held before: it is judged in the
+  commit that makes it pass.
+- **The records never conflict.** Two branches that replay different commits, or excuse different tests, write
+  different files, and no field is rewritten by every update, so any merge, GitHub's own among them, joins them with
+  nothing to resolve.
+- **Pull requests are merged with a merge commit only.** A squash or a rebase merge makes new commits, so the records
+  of the branch's own commits name commits main never holds, and the new ones have none.
+- **A branch begun before the split** merges main once. That merge conflicts in the two old files one last time: take
+  main's `test/tests-first/baseline.json` (`git checkout origin/main -- test/tests-first/baseline.json`), keep the
+  branch's own `test/seen-failing.json`, then run `node scripts/tests-first.mjs --migrate`, which moves its reasons into
+  `test/seen-failing/`, and `--update`, which records its commits. `--migrate` checks every reason before it writes
+  any, and leaves a reason main already keeps differently as it is, naming it, for a person to choose between the two.
 - **The gate before every commit:** `npm run format:check`, `npm run lint`, `npm run typecheck` and `npm test`, plus
   `ruff check` and `ruff format --check` when the Python library changed. CI runs them all again.
 - **Cheap checks while working.** `npm run test:ai` runs the suite quietly (one line when all pass, and for a failure
@@ -138,6 +158,8 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/slice-board.test.js` — the slice board: a CSS-only HTML page of how far the slice under way is proved, from the requirements copy and, optionally, the open pull requests.
 - `test/test-vault.test.js` — the test vault: dummy notes tied to requirements, nothing Obsidian writes committed, each session clean.
 - `test/tests-first.test.js` — every test is seen to fail before its code, replayed commit by commit.
+- `test/tests-first-command.test.js` — that replay's command line, run as CI and a person run it: `--check`, `--excuse`, `--migrate` and `--complete`.
+- `test/tests-first-records.test.js` — the records of that replay: a file for each commit and each reason, so two branches never conflict in them, and the old single files moved over whole.
 - `test/tests-first-run.test.js` — one run of one test file in that replay: what its report shows, and why it did not finish.
 - `test/whitespace.test.js` — the three copies of the one whitespace set are the same, and the set is openGQL's.
 

@@ -1,0 +1,6 @@
+{
+  "file": "test/policy.test.js",
+  "test": "the supply chain > every override is pinned to an exact version or to a direct dependency",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that already existed: every override was already pinned when this check was added (commit 44bc037)"
+}

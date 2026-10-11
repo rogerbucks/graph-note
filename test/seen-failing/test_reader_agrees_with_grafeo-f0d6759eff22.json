@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_reader_agrees_with_grafeo.py",
+  "test": "Agreement.test_every_rule_is_seen_holding_and_failing",
+  "seen_failing_first": false,
+  "evidence": "req:17.engine-agreement: holds the new cases to their purpose, with no code changed, so it passes against its parent by design. Seen failing with only the shared cases from cases.mjs, before this test's own cases were written (11 Oct 2026)"
+}

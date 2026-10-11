@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/store-ids.test.mjs",
+  "test": "req:3.set-keeps-id: SET never changes a node’s id > req:3.set-keeps-id: a SET of any other key is still read, in the same block and in a later one",
+  "seen_failing_first": false,
+  "evidence": "a control case for req:3.set-keeps-id, written with the change beside it: a SET of a key other than id was read before and is read after, so it passes at its parent by design"
+}

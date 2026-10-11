@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/commas.test.mjs",
+  "test": "a CRLF line: the comma goes before its \\r, as the Python reader writes it",
+  "seen_failing_first": false,
+  "evidence": "added at review of #46 to pin behaviour its commit a33a9e5 wrote and saw failing first (the corrected text writes in a missing comma, in both readers): the code under test is unchanged, so it passes before and after by design"
+}

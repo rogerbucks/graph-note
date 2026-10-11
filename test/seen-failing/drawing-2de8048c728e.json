@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/drawing.test.js",
+  "test": "a comma with nothing after it > a comma inside a string at the block’s end is not taken for it",
+  "seen_failing_first": false,
+  "evidence": "a control case, written with the change beside it: a comma inside a string was never read as one, so it passes before and after by design (commit d000d29)"
+}

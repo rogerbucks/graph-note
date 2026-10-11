@@ -1,0 +1,6 @@
+{
+  "file": "test/tests-first.test.js",
+  "test": "replaying a commit against its parent’s code > a Python test with one subTest failing among others that pass has failed: it is seen failing first",
+  "seen_failing_first": false,
+  "evidence": "asked for in review of PR #33, added after the subTest fix earlier in the same branch, so it passes against its parent. Replayed by hand with origin/main 42927dd's scripts/tests-first.mjs in a scratch worktree, it fails: that runner reads the fixture's test as passing first (10 Oct 2026)"
+}

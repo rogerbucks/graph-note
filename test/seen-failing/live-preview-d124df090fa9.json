@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/live-preview.test.js",
+  "test": "what is typed in place is written through the editor > with the note in reading view or closed, the pane still writes the file",
+  "seen_failing_first": false,
+  "evidence": "a control case, written with the change beside it: the pane always wrote the file; it holds that it still does when no editor shows the note (commit d6a8d95)"
+}

@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/drawing.test.js",
+  "test": "a missing comma > when the next line is not otherwise valid, it is left out, and the problem still says the comma is missing",
+  "seen_failing_first": false,
+  "evidence": "a control case, written with the change beside it: it holds what must not change, so it passes before and after by design (commit 5d3a442)"
+}
