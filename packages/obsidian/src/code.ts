@@ -20,7 +20,11 @@ export function renderCode(parent: HTMLElement, source: string): HTMLElement {
   const copy = pre.createEl('button', { cls: 'copy-code-button', attr: { 'aria-label': 'Copy', type: 'button' } });
   setIcon(copy, 'copy');
   copy.addEventListener('click', () => {
-    void navigator.clipboard.writeText(source).then(() => new Notice('Copied'));
+    // a device may refuse the clipboard, as a phone can: that is said, never left to fail without a word
+    void navigator.clipboard.writeText(source).then(
+      () => new Notice('Copied'),
+      () => new Notice('Could not copy: the device did not allow it. Select the text and copy it instead.'),
+    );
   });
   return pre;
 }

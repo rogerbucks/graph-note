@@ -48,6 +48,24 @@ describe('a view', () => {
     }
   });
 
+  // layout_contained: a graph over a limit is shown as its text "with a banner saying why", a view's as a graph's
+  test('over a size limit, is shown as its query with a banner saying which limit, never as bare code', async () => {
+    const note = noteOf(DATA, NEAR);
+    const env = await load({ files: { [PATH]: note } });
+    Object.assign(env.plugin.layoutLimits, { things: 2 });
+    try {
+      const { el } = await show(env, note, 1);
+      const banner = el.querySelector('.graph-note-banner');
+      assert.ok(banner, 'a banner');
+      assert.match(banner.textContent, /too large/i);
+      assert.match(banner.textContent, /at most 2/);
+      assert.match(el.querySelector('code').textContent, /round_park/);
+    } finally {
+      env.plugin.onunload();
+      env.uninstall();
+    }
+  });
+
   test('hides the things outside it when its style says hide', async () => {
     const style = "// graph: trip_style · STYLE trip\n(o:ViewStyle {view: 'round_park', outside: 'hide'})";
     const { env, el } = await viewCard(noteOf(DATA, NEAR, style), 1);
