@@ -12,6 +12,7 @@ import { renderProblems } from './problems-list';
 import { listParked } from './parked';
 import { Walk } from './walk';
 import { ViewMaker } from './view-maker';
+import { AddThing } from './add-thing';
 import { toggleExportForm } from '../export/export-form';
 import { markView, renderViewStrip } from './view-strip';
 import { plural, renderBar } from './view-bar';
@@ -31,6 +32,7 @@ export class GraphView extends MarkdownRenderChild {
   private details!: DetailsPanel;
   private walk: Walk | null = null;
   private maker: ViewMaker | null = null;
+  private adder: AddThing | null = null;
   private fullscreen: { view: GraphView; overlay: HTMLElement } | null = null;
   private boxDown: { id: number; x: number; y: number; target: Target } | null = null;
   private editButton: HTMLButtonElement | null = null;
@@ -85,6 +87,7 @@ export class GraphView extends MarkdownRenderChild {
     if (this.o.parked) listParked(list, this.o.parked, (k) => this.boxes().find((b) => b.key === k)?.text ?? k);
     this.walk = new Walk(root, this.o, () => this.svg); // walked paths: Play, and Record while edited (§7)
     if (this.o.writeView) this.maker = new ViewMaker(root, this.o); // a view made by tapping, while edited (§7)
+    if (this.o.editing) this.adder = new AddThing(root, this.o); // a thing added from its text, while edited (§5)
     const view = this.o.view;
     const writes = view
       ? renderViewStrip(root, view, () => ({ view: this.zoom.view(), selected: this.details.selectedKey() }))
@@ -162,6 +165,7 @@ export class GraphView extends MarkdownRenderChild {
   private showEditing(): void {
     this.walk?.show(); // Record and Make a view are offered only while the card is edited
     this.maker?.show();
+    this.adder?.show();
     const b = this.editButton;
     if (!b) return;
     const on = !!this.o.editing?.()?.session;

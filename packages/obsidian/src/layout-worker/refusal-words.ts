@@ -29,7 +29,7 @@ function overWhat(r: TooLarge, counted: 'drawn' | 'laid out'): string {
     case 'source':
       return `this graph's drawing instructions are ${least}${size(r.count)}, and at most ${size(r.most)} are laid out`;
     case 'word':
-      return `a word in this graph is ${count(r.count)} characters long, and at most ${count(r.most)} are drawn`;
+      return `a word in this graph is ${count(r.count)} characters long, and at most ${count(r.most)} are ${counted}`;
     default:
       return `this graph has ${count(r.count)} ${r.limit}, and at most ${count(r.most)} are ${counted}`;
   }
@@ -66,6 +66,20 @@ export function exportRefusalWords(r: Refusal): string {
     return `${made} the last ${r.failures} layouts took too long or failed, so no more are started until the plugin is reloaded. Nothing was saved. Reload the plugin, then try again.`;
   const todo = ofText(r)
     ? 'Move some of the graphs to another note.'
-    : 'Export a smaller view of the graph, or split it into smaller graphs.';
+    : r.limit === 'word'
+      ? 'Shorten the long name or text.'
+      : 'Export a smaller view of the graph, or split it into smaller graphs.';
   return `${made} ${overWhat(r, 'laid out')}.${r.page ? ` ${PAGE}` : ''} Nothing was saved. ${todo}`;
+}
+
+/**
+ * The notice of an export whose layout failed: the layout worker or its engine raised `error`. Its reason is put in
+ * brackets, as the runner words it ("the layout worker failed: boom" becomes "the layout worker failed (boom)"), then
+ * that nothing was saved and what to do.
+ */
+export function exportFailureWords(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  const told = /^(the layout (?:worker failed|engine could not start)): ([\s\S]*)$/.exec(message);
+  const why = told ? `${told[1]} (${told[2]})` : `the layout worker failed (${message})`;
+  return `The export could not be made: ${why}. Nothing was saved. Try again; if it keeps failing, reload the plugin.`;
 }

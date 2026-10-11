@@ -109,6 +109,50 @@ describe('the details after Done', () => {
   });
 });
 
+describe('Park for later after Done', () => {
+  // a locked graph whose schema, in a later block, does not declare Deferred and DEFERS: declaring them writes that
+  // block through the vault, apart from the text being edited (graph-view-parked.test.js)
+  const PLAIN = `// graph: reader
+(q:Question {title: 'Which device?'}),
+(small:Option {name: 'Small reader'}),
+(small)-[:ANSWERS]->(q)`;
+  const SCHEMA = `// graph: reader
+(reader_schema:GraphMeta {graph: 'reader', schema: 'reader@1'}),
+(kind_option:Meta:ElementType {name: 'Option', kind: 'node', origin: 'source'}),
+(kind_question:Meta:ElementType {name: 'Question', kind: 'node', origin: 'source'}),
+(link_answers:Meta:ElementType {name: 'ANSWERS', kind: 'edge', origin: 'source', reading: 'answers', reverse_name: 'is answered by'}),
+(reader_schema)-[:DECLARES]->(kind_option),
+(reader_schema)-[:DECLARES]->(kind_question),
+(reader_schema)-[:DECLARES]->(link_answers)`;
+  const LOCKED = ['# Reader', '', '```gql', PLAIN, '```', '', '```gql', SCHEMA, '```', ''].join('\n');
+  const DECLARE = 'Declare Deferred and DEFERS in the schema';
+
+  test('a Declare Deferred and DEFERS button kept from before Done declares nothing', async () => {
+    const env = await load({ files: { [PATH]: LOCKED } });
+    try {
+      const el = await editing(env);
+      tapKey(el, 'small');
+      labelled(el, 'Park for later').click();
+      const panel = el.querySelector('.graph-note-details');
+      enter(field(panel, 'What is needed'), 'its price');
+      enter(field(panel, 'Why it waits'), 'the shop has not said');
+      labelled(el, 'Park it').click();
+      await until(() => !!labelled(el, DECLARE));
+      const declare = labelled(el, DECLARE);
+      labelled(el, 'Done').click();
+      await until(() => el.querySelector('textarea') === null);
+      await wait(400);
+      const settled = env.state.files.get(PATH);
+      declare.click();
+      await wait(400);
+      assert.equal(env.state.files.get(PATH), settled, 'the schema is as Done left it');
+      assert.doesNotMatch(env.state.files.get(PATH), /kind_deferred/);
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
 describe('the details when editing starts again', () => {
   test('after Done, pressing Edit here makes the open read-only details the editable inspector again, without a tap', async () => {
     const env = await load({ files: { [PATH]: WITH_LIST } });

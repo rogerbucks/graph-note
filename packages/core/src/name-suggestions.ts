@@ -24,6 +24,9 @@ const DEFAULT_WORDS = 3,
   ),
   SMALL_WORDS = new Set(['a', 'an', 'the', 'of', 'to', 'be', 'or', 'and', 'for', 'in', 'on', 'at', 'by', 'with', 'is']);
 
+/** Whether a name is a word the graph reader keeps, which is never given to a thing, whatever its case. */
+export const keptWord = (name: string): boolean => RESERVED.has(name.toLowerCase());
+
 const CASINGS: [NameStyle['casing'], RegExp][] = [
   ['snake', /^[a-z0-9]+(_[a-z0-9]+)+$/],
   ['camel', /^[a-z][a-z0-9]*([A-Z][a-z0-9]*)+$/],

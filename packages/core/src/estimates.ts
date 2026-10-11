@@ -175,6 +175,10 @@ export function estimate(
 ): Estimate[] {
   const out: Estimate[] = [],
     ids = new Set(g.nodes.keys()),
+    // a thing drawn under a suggested name is a name nobody wrote: a near miss is never changed to it, which would write
+    // it without its fix (§4); a link naming it exactly still links to it
+    unnamed = new Set(d.boxes.filter((b) => b.suggested).map((b) => b.key)),
+    guessable = new Set([...ids].filter((i) => !unnamed.has(i))),
     readings = gs.readings(g, shared);
   const reading = (t: string) => gs.word(readings, t);
   const placesOf = new Map<number, BlockPlaces>(); // each block's items, found once
@@ -184,7 +188,7 @@ export function estimate(
     if (p.graph !== graph || !p.dropped) continue;
     const missing = /^no thing called (\S+) in graph /.exec(p.message)?.[1];
     if (!missing) continue;
-    const near = nearest(missing, ids);
+    const near = nearest(missing, guessable);
     if (!near) continue;
     if ('several' in near) {
       p.message = `no thing called ${missing} in graph ${graph}; ${either(near.several)} are equally close, so it is not drawn`;
@@ -196,7 +200,7 @@ export function estimate(
       ids.has(n)
         ? { id: n, d: 0, guessed: false }
         : (() => {
-            const x = nearest(n, ids);
+            const x = nearest(n, guessable);
             return x && 'one' in x ? { id: x.one, d: x.d, guessed: true } : null;
           })();
     const drawn = hops(p.dropped).map(([s, t, e]) => [resolve(s), t, resolve(e), s, e] as const);

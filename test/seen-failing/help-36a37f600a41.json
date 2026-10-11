@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/help.test.js",
+  "test": "a name only suggested is never offered as a word to write > an inline completion never finishes a name to the suggested one",
+  "seen_failing_first": false,
+  "evidence": "A control: an inline completion finishes kinds, link types, keywords, property names, values and closers, but never a thing's name in the brackets of a thing, so it never offered the suggested one. It pins that this holds."
+}

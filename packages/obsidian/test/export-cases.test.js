@@ -5,6 +5,10 @@
 // form taking one press at a time, its focus where the person is (accessibility).
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
+import GraphLayout from '@graph-note/graph-spec/src/graph-layout.js';
+import { STYLE } from '../../core/src/layout.ts';
+import { PALETTES } from '../../core/src/palette.ts';
+import { hueColour } from '../../core/src/theme.ts';
 import { build, load, until, wait } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
 import { show } from './host/view-notes.js';
@@ -218,6 +222,15 @@ describe('laid out like a drawing, under the same limits', () => {
         assert.doesNotMatch(a + b, /var\(--|color-mix\(/);
         assert.ok(a.includes('#ffffff') && !a.includes('#1e1e1e'), 'light');
         assert.ok(b.includes('#1e1e1e') && !b.includes('#ffffff'), 'dark');
+        // the drawing's own body, which the worker themes, not only the frame the export puts round it: a node's fill is
+        // its kind's hue in the palette chosen, so a layout themed in the wrong palette fails here
+        const hue = GraphLayout.pick(['Place'], STYLE.kind_hues, STYLE.kind_colours).Place;
+        const fill = (theme) => hueColour(hue, 'fill', PALETTES[theme]);
+        const node = (svg) => /<g id="node\d+" class="node">[\s\S]*?<\/g>/.exec(svg)?.[0] ?? '';
+        assert.notEqual(fill('light'), fill('dark'));
+        assert.ok(node(a).includes(`fill:${fill('light')}`), `a node in light: ${node(a)}`);
+        assert.ok(node(b).includes(`fill:${fill('dark')}`), `a node in dark: ${node(b)}`);
+        assert.ok(!node(b).includes(fill('light')) && !node(a).includes(fill('dark')), 'each in its own palette only');
       },
       { engine: noPageEngine },
     );
@@ -307,11 +320,68 @@ describe('laid out like a drawing, under the same limits', () => {
       await wait(50);
       env.plugin.onunload();
       const out = await pending;
-      assert.match(
+      assert.equal(
         out.stopped,
-        /^The export was stopped: Graph Note was unloaded before the layout finished\. Nothing was saved\./,
+        'The export was stopped: Graph Note was unloaded before the layout finished. Nothing was saved. Try again once Graph Note is enabled again.',
       );
       assert.deepEqual(saved(env), []);
+    });
+  });
+
+  // what happened, why, that nothing was saved, and what to do: a failure of the layout is told like a limit
+  const TRY_AGAIN = 'Nothing was saved. Try again; if it keeps failing, reload the plugin.';
+  for (const [how, strike] of [
+    ['replies with an error', (w, m) => w.onmessage({ data: { id: m.id, error: 'boom' } })],
+    ['fails in the middle of the layout', (w) => w.onerror(new Error('boom'))],
+  ])
+    test(`a layout worker that ${how} stops the export with the reason in brackets and what to do, and writes nothing`, async () => {
+      const at = {};
+      const swallow = (m) => {
+        setTimeout(() => strike(at.workers.made[0], m), 0);
+        return true;
+      };
+      await exporting(NOTE, { swallow }, {}, async (env, workers) => {
+        at.workers = workers;
+        const out = await env.plugin.exportGraph(ASK);
+        assert.equal(out.stopped, `The export could not be made: the layout worker failed (boom). ${TRY_AGAIN}`);
+        assert.deepEqual(env.state.notices, [out.stopped], 'said once');
+        assert.deepEqual(saved(env), [], 'no file, and no temporary one');
+      });
+    });
+
+  test('an engine that cannot start is told the same way, with its reason in brackets', async () => {
+    await exporting(
+      NOTE,
+      null,
+      {},
+      async (env) => {
+        const out = await env.plugin.exportGraph(ASK);
+        assert.equal(
+          out.stopped,
+          `The export could not be made: the layout engine could not start (no WebAssembly). ${TRY_AGAIN}`,
+        );
+        assert.deepEqual(saved(env), []);
+      },
+      { engine: () => Promise.reject(new Error('no WebAssembly')) },
+    );
+  });
+
+  test('a word over the limit has advice of its own, and an export says it is laid out where a card says it is drawn', async () => {
+    const long = `// graph: trip\n(a:Thing {name: '${'x'.repeat(2000)}'})`;
+    await exporting(noteOf(long), {}, { word: 1000 }, async (env, workers) => {
+      const out = await env.plugin.exportGraph(ASK);
+      assert.equal(
+        out.stopped,
+        'The export could not be made: a word in this graph is 2,000 characters long, and at most 1,000 are laid out. Nothing was saved. Shorten the long name or text.',
+      );
+      assert.deepEqual(saved(env), []);
+      assert.equal(workers.made.length, 0, 'no layout was attempted');
+      const { el } = await show(env, noteOf(long), 0);
+      assert.match(
+        el.querySelector('.graph-note-banner').textContent,
+        /a word in this graph is 2,000 characters long, and at most 1,000 are drawn\./,
+        'the card’s banner keeps its words',
+      );
     });
   });
 });

@@ -23,6 +23,9 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   against the old one kept in `test/partial-read.test.js`. Past a budget of reading again (`REREAD_BUDGET`, 4 million
   UTF-16 units), the rest of a badly broken block is left out at once, so reading never holds the page (spec §9); the
   Python reader (`graphspec/reader/drawing.py`) counts and cuts exactly so, so both still draw alike (drawn_in_part).
+  A card is read from the blocks up to its own (`upTo`), but names are suggested against every block, so the card, the
+  whole note and every edit agree on a thing's suggested name, and its fix never writes a name a later block has
+  (suggested_name_unique).
 - `written-things.ts` — the things written in a block, found by their parentheses: name, kinds, properties, where they are.
 - `name-gaps.ts` — the things of a block that lack a name or a text, with the suggestion and a fix that writes it. No name:
   a warning, and the thing is read as if the suggested name were there, in a copy, never in the note. No text: a hint
@@ -30,10 +33,24 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   The warning carries the name (`suggested`), and the box drawn under it carries where its ( is (`Box.suggested`), so it
   is drawn dashed and labelled as suggested, selected by `spanOf` and fixed from its details. The Python library suggests
   the same names (`graphspec/reader/name_gaps.py`); `python/graph_spec/tests/name_cases.json` holds both to one table.
+- `suggested-names.ts` — `acceptNameFirst`: why an edit naming a thing drawn only under a suggested name must wait ("accept its
+  name first", saying which text and which name), so nothing writes the name before its fix is accepted
+  (unnamed_drawn_suggested). `pathBlock`, `makeList` and `addToList` (the thing, or a value that reuses one) ask it
+  themselves; so do `parkForLater` and `styleEdit` (a nudge, a look or a view's selection naming one) and `addView`
+  (view-write.ts, the one way a host writes a view into a note). Each checks the note it writes into as it is then,
+  never an older drawing: `styleEdit` and `addView` read the note itself with `unnamedIn`, which uses the reader's own
+  `prepare` and its rule for a box drawn suggested (`suggestedPlaces`, which drawing.ts uses too), so the two cannot
+  differ; the edits into one block (`parkForLater`, which requires it, `pathBlock`, `makeList`, `addToList`) take the
+  reading of the note as it is now with the block as typed, which a host gives (`PaneSession.current()`), for a quick
+  answer; the check that counts is made as such an edit is written, against the note written into (`edit-check.ts`).
+  So no caller can leave the check out. Property edits are refused too
+  (`setProperty` finds no pattern for a name that is not written), the host saying why in these words. A name only
+  suggested is also left out of the names completed while typing and of the near misses guessed (`help.ts`, `estimates.ts`).
 - `schema-checks.ts` — the warnings for types a schema does not declare.
 - `note-reading.ts` — the types reading gives: `NoteReading`, `GraphDrawing`, `Problem`, `Block`, `Box`, `Link`.
 - `drawing.ts` — `readNote`: what a note's graph blocks draw, built from the modules above.
-- `estimates.ts` — near misses drawn as guesses.
+- `estimates.ts` — near misses drawn as guesses; never a guess of a thing drawn under a suggested name, whose name nobody
+  has written (a fix changing a word to it would write it unaccepted).
 - `estimate-places.ts` — where an estimated name is written in its block (`BlockPlaces`): at the path's own reference
   to it, never the same word in a text or another link on its line. `estimates.ts` gives the problem and the estimate
   that `span`, and a type's problem the place in its brackets, so the fix bar, the quick fix and Edit the link all land
@@ -92,7 +109,12 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 **Editing**
 
 - `pane.ts` — the edit session: what is typed, written back to the note safely; `texts` gives the note's blocks with the
-  typed text in the edited block's place.
+  typed text in the edited block's place, and `current()` the note as last seen, read so. `edit` is an edit made from
+  the drawing: the names it newly writes are checked as it is written, and a refusal reloads the block and keeps the
+  edit as a draft (`edit: true`).
+- `edit-check.ts` — that check (§4): `editRefusal` refuses a name the note written into draws only under a suggested
+  name (accept its name first), or a name the edit gives a thing that another block of the graph gives too (already a
+  name); `newNames` finds the names an edit newly writes.
 - `store.ts` — replacing or inserting a block in a note, keeping every other byte.
 - `history.ts` — the text's own undo history.
 - `help.ts` — diagnostics, fixes, completions and the read-back, in the shapes of the Language Server Protocol.
@@ -101,11 +123,18 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   word; a text from a name; and the ASCII words and slug of a text (`nameWords`, `nameSlug`), as the graph reader's names allow.
 - `name-book.ts` — a graph's names kept up to date as names are added, its style and the names taken with them, so
   naming thousands of things never freezes the page (spec §9); each name the one `nameFromText` gives.
+- `add-thing.ts` — adding a thing (add_thing): `suggestName` gives the name for a text, from a `NameBook` of the graph's
+  names (the note as read and the block as typed, written or only mentioned), in their style and never one of them;
+  `addThing` writes the thing after the block's last item, `(name:Kind {name: 'text'})` under the key the kind's other
+  things use, and refuses with the reason when there is no text (it is asked for first), the name is not one word, is
+  kept by the language or is taken (an `id` typed in the block counts), the kind is a schema label or is not declared by
+  a locked schema, or the block holds only a SET or MATCH.
 - `commas.ts` — the comma and the colon added for you.
 - `autocomplete.ts` — completing as you type: the one best inline match (a closer, keyword, kind, type, property name or
   value) and the closer stepped over; nothing is inserted unasked.
 - `inspector.ts` — properties of a thing or link, edited as text.
 - `linked-list.ts` — a property held as things linked to this one: made, added to and removed from, as text edits.
+- `lists-held.ts` — the lists a thing holds, read from a drawing (`listsOf`, `linkedValues`); `linked-list.ts` re-exports them.
 - `lock.ts` — Lock the graph: a draft's schema written out, indented as the settings say; `kindLines` and `typeLines`
   are the lines that declare one kind or relationship type, which `declareDeferred` writes the same way.
 
@@ -143,7 +172,16 @@ it. A graph line that says STYLE but names no graph is a problem, never data.
   what it means; `outsideOf` a view's fade or hide, fade when none is written.
 - `style-checks.ts` — each style thing checked on its own: its kind, its words, its values, and every name it uses
   (thing, other, from, to, selected, kind, relationship type, path, property) against the graph it styles, a name not
-  there given the nearest (`estimates.ts`'s `nearest`) as its fix. A view's name is not checked: views are query blocks.
+  there given the nearest (`estimates.ts`'s `nearest`) as its fix. A view's name is not checked: views are query blocks,
+  and a name is the user's own (`style-words.test.js` holds that, however odd the name). A thing with a key its kind does
+  not know (`STYLE_KEYS`) is reported and left out; a message quotes a written word as written, `$` and all.
+- `style-words.ts` — the words of a style graph checked (style_words_checked): `unknownKeys`, a problem on each key the
+  kind does not know, fixed to the nearest key the thing does not already write (several equally near: each a fix; none
+  near: the keys to choose from, no edit), and `readFrame`, a frame as four numbers joined by single commas (an optional
+  sign, digits with a dot before or after them, an optional exponent; never hexadecimal; no space, no stray comma).
+  Stray commas and spaces are a problem whose fix is the list without them, even when that is not four numbers yet; a
+  part that is not a number has no edit. A thing with such a key is not also told what it lacks (`RawThing.misspelt`):
+  the rename comes first, then what is still absent is said.
 - `style-conflicts.ts` — the things checked against each other: two directions, beside and before on one pair, a thing
   in two groups, a loop of befores, a view set to both fade and hide or saved twice, a colour given two meanings in one
   view or path. The first written is kept, the later left out, each with a problem.
@@ -181,7 +219,9 @@ reads `· QUERY` as a query, and the core draws no query as data, so a view is n
   only that GQL keeps the word, and suggests another.
 - `view-write.ts` — `viewQuery` writes the query for a view built by tapping, always one `parseView` reads back to the
   same view (steps held to 1 to 3 near and 1 to 6 reaching; a long set of names goes over lines), and `viewBlock` writes
-  the whole block.
+  the whole block. `makeView` makes a view's block (the entry exports it, not those two) and says in words what no query
+  can say; `addView` is the one way a host writes one into a note, after its graph's last block, against the note as it
+  is then: it refuses a view of a thing only suggested there ("accept its name first") and a name another view has.
 - `view-evaluate.ts` — `evaluate` puts a view to a graph of a reading, never to a copy of it, and gives its things, its
   links (indexes into the links the graph draws) and, when nothing matches, `empty` with a sentence saying so and what to
   change. A route of up to k steps is a walk, as Grafeo takes it (a link may be used again), found by two breadth-first

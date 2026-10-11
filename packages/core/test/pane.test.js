@@ -4,6 +4,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { PaneSession } from '../src/pane.ts';
+import { pathBlock } from '../src/paths.ts';
 
 const fence = (t) => '```gql\n' + t + '\n```';
 const A = "// graph: alpha\n(a:T {name: 'A'})";
@@ -152,5 +153,88 @@ describe('undo and redo', () => {
     const note = s.undo(NOTE).note;
     assert.equal(note, NOTE);
     assert.equal(s.redo(note).note, NOTE.replace(A, A + ',\n(c:T)'));
+  });
+});
+
+// Review, 11 Oct 2026: an edit written into the block is checked against the note as it is now, never an older drawing
+describe('the note as it is now', () => {
+  test('is read with what is typed in the block’s place, and follows the note as it changes', () => {
+    const other = "// graph: alpha\n(small_reader:T {name: 'Other'})";
+    const typed = `${A},\n(:T {name: 'Small reader'})`;
+    const suggested = (s) => {
+      const boxes = s.current().graphs.get('alpha')?.boxes ?? [];
+      return boxes.filter((b) => b.suggested).map((b) => b.key);
+    };
+    const before = ['# Note', '', fence(other), '', fence(A), ''].join('\n');
+    const s = new PaneSession(before, 7);
+    assert.equal(s.text, A, 'the block after the other');
+    s.type(typed);
+    assert.deepEqual(suggested(s), ['small_reader_2'], 'the other block writes small_reader');
+    assert.equal(s.noteChanged(before.replace(other, other.replaceAll('small_reader', 'other'))), 'unchanged');
+    assert.deepEqual(suggested(s), ['small_reader'], 'read again as the note now is');
+  });
+
+  test('suggests a name against the blocks after the edited one too, as the whole note does', () => {
+    const later = "// graph: alpha\n(small_reader:T {name: 'Other'})";
+    const note = ['# Note', '', fence(`${A},\n(:T {name: 'Small reader'})`), '', fence(later), ''].join('\n');
+    const s = new PaneSession(note, 2);
+    const boxes = s.current().graphs.get('alpha')?.boxes ?? [];
+    assert.deepEqual(
+      boxes.filter((b) => b.suggested).map((b) => b.key),
+      ['small_reader_2'],
+    );
+    const r = pathBlock(s.current(), 'alpha', s.text, 'Walk', ['a', 'small_reader_2']);
+    assert.match(
+      r.refused,
+      /^accept its name first: Small reader is only drawn under the suggested name small_reader_2,/,
+    );
+  });
+});
+
+// Review, 11 Oct 2026: the check made before an edit can be against a note older than the one written into; so an edit
+// made for the person is checked again as it is written, against that note, for the names it newly writes
+describe('an edit made for the person, as it is written', () => {
+  const other = (id) => `// graph: alpha\n(${id}:T {name: 'Other'})`;
+  const unnamed = `${A},\n(:T {name: 'Small reader'})`;
+  const noteOf = (first) => ['# Note', '', fence(first), '', fence(unnamed), ''].join('\n');
+  const edited = (s, text) => {
+    s.edit(text);
+    assert.equal(s.text, text);
+    assert.ok(s.dirty);
+  };
+
+  test('naming a thing only suggested in the note written into is refused, the block reloaded and the edit kept', () => {
+    const s = new PaneSession(noteOf(other('small_reader')), 7);
+    assert.equal(s.text, unnamed);
+    const text = `${unnamed},\n(a)-[:SEES]->(small_reader)`;
+    edited(s, text);
+    // the other block's thing was renamed meanwhile, and the session had not heard: small_reader is now only suggested
+    const w = s.write(noteOf(other('elsewhere')));
+    assert.equal(w.ok, false);
+    assert.match(w.reason, /^accept its name first: Small reader is only drawn under the suggested name small_reader,/);
+    assert.deepEqual([w.draft, w.edit, s.text, s.dirty], [text, true, unnamed, false]);
+  });
+
+  test('a name it gives that another block has written meanwhile is refused', () => {
+    for (const [given, text] of [
+      ['small_reader', `${A},\n(small_reader:T {name: 'Small reader'})`],
+      ['tablet', `${unnamed},\n(tablet:T {name: 'Tablet'})`],
+    ]) {
+      const s = new PaneSession(noteOf(other('elsewhere')), 7);
+      edited(s, text);
+      const w = s.write(noteOf(other(given)));
+      assert.equal(w.ok, false, given);
+      assert.equal(w.reason, `${given} is already a name in graph alpha: choose another`);
+      assert.equal(s.text, unnamed);
+    }
+  });
+
+  test('is written when the note written into agrees, and typing is not held to it', () => {
+    const s = new PaneSession(noteOf(other('small_reader')), 7);
+    edited(s, `${unnamed},\n(a)-[:SEES]->(small_reader)`);
+    assert.equal(s.write(noteOf(other('small_reader'))).ok, true);
+    const typed = new PaneSession(noteOf(other('small_reader')), 7);
+    typed.type(`${unnamed},\n(a)-[:SEES]->(small_reader)`);
+    assert.equal(typed.write(noteOf(other('elsewhere'))).ok, true, 'what the person types is theirs to write');
   });
 });

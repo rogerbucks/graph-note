@@ -65,11 +65,12 @@ holds the two together).
 - [ ] **Z-08** In a locked graph, a kind or link type its schema does not declare shows a ⚠ on its line. A link type with no
       reading of its own reads back as an arrow (Drive —HOPE→ …), not as a guess at words. iPhone ✓ 5cfeac6, 8 Oct 2026.
 - [ ] **Z-09** Reading view is read-only: the bar offers Source and no Edit. Source shows the block's text, coloured, in place of
-      the drawing, and pressed again brings the drawing back. A hover preview or an embed is read-only too. Properties are
-      shown but never added or changed: no Add property, no field, no type menu, no x or add field on a list. There is no
-      Park for later, no fix that writes a suggested name, no Record a path or Make a view, no Fade or Hide others or Save
-      as shown, and no Edit here or Edit in pane, even while the block is edited in Live Preview, and in full screen opened
-      from reading view too.
+      the drawing, and pressed again brings the drawing back. A hover preview or an embed is read-only too, an embed even
+      inside a note in Live Preview. Properties are shown but never added or changed: no Add property, no field, no type
+      menu, no x or add field on a list. There is no Park for later, no fix that writes a suggested name, no Record a path
+      or Make a view, no Fade or Hide others or Save as shown, and no Edit here or Edit in pane, even while the block is
+      edited in Live Preview, and in full screen opened from reading view too. A Graph Note pane already open on the block
+      keeps saving while another pane shows the note in reading view.
 - [ ] **Z-10** Only one set of zoom controls appears: the Mermaid Zoom plugin does not add its own to a graph drawing.
 
 ## The edit pane — spec §4, §5, §9
@@ -78,7 +79,9 @@ holds the two together).
 - [ ] **P-02** The text is coloured as gql-highlight colours it, and each line is read back in plain English beside it.
 - [ ] **P-03** Typing a misspelt name underlines it with a ⚠. Its fix is offered on that line, and pressing it fixes the text.
 - [ ] **P-04** Names, kinds and relationships already in the graph are suggested while typing. On the desktop, Tab takes the first.
-- [ ] **P-05** What is typed reaches the note within about a third of a second, and the drawing follows.
+- [ ] **P-05** What is typed reaches the note within about a third of a second, and the drawing follows. Renaming or moving the
+      note while typing changes nothing: what is typed next still reaches it. Deleting the note while typing keeps what
+      was typed as a draft, and the pane says so; the command Recover kept drafts into a new note writes it into a note.
 - [ ] **P-06** Editing the same block in the note while typing in the pane: the pane reloads the block, says what was typed is
       kept as a draft, and Restore draft brings it back.
 - [ ] **P-07** Undo and Redo take back and put back each change in the note.
@@ -115,7 +118,7 @@ holds the two together).
 - [ ] **I-01** Edit here opens the text inside the drawing's card, and typing there redraws the drawing without losing the place.
 - [ ] **I-02** Straight after the app starts or reloads, and on a card far down a long note scrolled to only then: Edit here
       opens the editor in that card, and Done closes it with what was typed in the note. Edit here never does nothing
-      without saying why.
+      without saying why. Pressed twice quickly, it opens one editor, with the focus in it, never two.
 - [ ] **I-03** In the card, the text box is as tall as the text and one more line: no empty area below it for the caret to land
       in. Each read-back sits on its own line's right, never wrapping under it, and typing lands where the text shows.
       iPhone ✓ 5cfeac6, 8 Oct 2026.
@@ -124,7 +127,8 @@ holds the two together).
 - [ ] **I-05** Typing in the card, character by character, redraws the drawing and never takes the focus from the box: the caret,
       the selection and where it is scrolled stay put. Typing a comma at a line's end keeps the box in its card.
       Undo (⌘Z, or Edit → Undo, or the phone's undo gesture) takes back a run of typing at a time, even after redraws.
-      Mac ✓ 3d34e0d, reading view, 9 Oct 2026 (traced in the app); Live Preview and the phone to come.
+      A line added above the block, or taken away, while the card is edited keeps the box in its card, with its selection
+      and its undo history. Mac ✓ 3d34e0d, reading view, 9 Oct 2026 (traced in the app); Live Preview and the phone to come.
 - [x] **I-06** Desktop: hovering the mouse over the box in the card, and clicking into it, never turns it grey or hides its
       coloured text, and no tooltip appears over it. Mac ✓ d601110, 8 Oct 2026.
 - [ ] **I-07** While the card is being edited, its pencil shows as a book (view) icon. Pressing it writes what was typed and
@@ -165,8 +169,19 @@ holds the two together).
       yet". Outside edit mode nothing can be written there; the note is unchanged. While editing, tapping it selects
       `(:Option {name: 'Small reader'})` in the text, and the details offer "Add the name small_reader". Pressing it
       writes the name after the `(`, the box is redrawn solid and unlabelled, and the warning leaves the problems list.
-      One undo (⌘Z, or the phone's gesture) takes the name back out, and the dashed box and the warning return. Phone:
-      the button is easy to hit in the sheet (slice 2, unnamed_drawn_suggested).
+      One undo (⌘Z, or the phone's gesture) takes the name back out, and the dashed box and the warning return. While
+      the name is not written, nothing else writes it: Park it, Save path (a path through it), Write the view (a view
+      picking it), a property changed or made a list, and Save as shown with it selected are each refused with a message
+      beginning "accept its name first", and the note is unchanged. Phone: the button is easy to hit in the sheet
+      (slice 2, unnamed_drawn_suggested).
+- [ ] **I-20** Edit here on a card, press Add a thing: it asks for the thing's text first, with the focus in it. Type some
+      (such as "Small reader"): the name suggested from it appears, in the style of the names already in the graph and not
+      one of them, small_reader, and the text of the block is unchanged. Give the kind Option and press Add the thing:
+      `(small_reader:Option {name: 'Small reader'})` is written after the block's last item, the name shown is the name
+      written, and one undo takes it back out. A name typed in its own field is kept as the text changes. No text, a name
+      the graph has, more than one word, a word the language keeps, or a kind the graph keeps for its schema is refused
+      in words and nothing is written. Enter in a field adds the thing and Escape cancels.
+      Desktop and phone: every field and button is easy to hit (slice 2, add_thing).
 
 ## The style graph — spec §2, §6
 
@@ -200,7 +215,8 @@ holds the two together).
 
 - [ ] **D-01** Edit here on a card, tap a box, press Park for later, fill what is needed and why, press Park it: a Deferred is
       written into the block; when the card redraws, the box is dashed with "⏳ later" at its top right, readable in light
-      and dark, and the badge says "No problems, 1 parked" (slice 2, park_for_later, deferred_drawn, parked_not_broken).
+      and dark, and the badge says "No problems, 1 parked". On a box drawn under a suggested name (I-19), Park it is refused
+      with "accept its name first", and nothing is written (slice 2, park_for_later, deferred_drawn, parked_not_broken).
 - [ ] **D-02** Change its revisit_by to a day in the past: the mark says "⏳ overdue", the badge adds "1 overdue", and the list
       behind the badge names it with what is needed. VoiceOver reads the box as "parked for later, overdue".
 - [ ] **D-03** In a locked graph whose schema does not declare Deferred and DEFERS, Edit here, tap a box, press Park for later,
@@ -217,7 +233,8 @@ holds the two together).
 
 - [ ] **T-01** Edit here, press Record a path, tap three boxes: each shows its number at its top left as it is tapped (a box
       tapped twice shows both). Undo step takes the last back. Give a title and Save path: a Path with STEP 1 to 3 is
-      written; the card redraws (slice 2, record_and_play, walked_path_is_data, steps_numbered).
+      written; the card redraws. A path through a box drawn under a suggested name (I-19) is refused with "accept its name
+      first", and nothing is written (slice 2, record_and_play, walked_path_is_data, steps_numbered).
 - [ ] **T-02** Press Play <title>: "Step 1 of 3: …" is shown and read by VoiceOver, the box outlined heavier; Next and Previous
       move one step, and stop at the ends; Stop playing clears it. Desktop and phone, light and dark.
 - [ ] **T-03** Rename one stepped thing: the problem names the step and offers Remove the step; pressing it renumbers the later
@@ -259,6 +276,11 @@ holds the two together).
       settings_formatting).
 - [ ] **C-06** A note with a line that cannot be read, in front, and "Convert this note to standard GQL" from the command
       palette: the note is left as it is, and the notice says why (slice 2, simplified_back_to_standard).
+- [ ] **C-07** With the pane in front showing a note in reading view, "Convert this note to standard GQL" from the command
+      palette, and the button on the page: the note is left as it is, and the notice says why. With no note in the pane in
+      front (the Graph Note pane, a canvas, a PDF, an empty tab), nothing is converted, and the notice says the pane holds
+      no note. The pane in front decides: in Live Preview it converts, even while another pane shows the note in reading
+      view.
 
 ## Accessibility — spec §8, §11
 

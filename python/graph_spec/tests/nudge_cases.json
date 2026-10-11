@@ -190,7 +190,29 @@
           "(n12:Nudge {word: 'direction', direction: 'sideways'}),",
           "(n13:Nudge {word: 'Group', thing: 'lake', group: 'Water'}),",
           "(n14:Nudge {word: 'direction', direction: 'U$&P'}),",
-          "(n15:Nudge {word: 'group', thing: 'lake', group: TRUE})"
+          "(n15:Nudge {word: 'group', thing: 'lake', group: TRUE}),",
+          "(n16:Nudge {word: 'direction', direction: 'tb'})"
+        ]
+      ]
+    },
+    {
+      "name": "a group label with a quote and a backslash, drawn as written, and a nudge naming a thing two names are near",
+      "blocks": [
+        [
+          "// graph: walk",
+          "(home:Place {name: 'Home'}),",
+          "(park_a:Park {name: 'North park'}),",
+          "(park_b:Park {name: 'South park'}),",
+          "(lake:Place {name: 'The lake'}),",
+          "(home)-[:NEAR]->(park_a),",
+          "(park_a)-[:NEAR]->(park_b)"
+        ],
+        [
+          "// graph: walk_style · STYLE walk",
+          "(g1:Nudge {word: 'group', thing: 'home', group: 'O\\'Brien\\'s \\\\ back \"yard\"'}),",
+          "(g2:Nudge {word: 'group', thing: 'lake', group: 'O\\'Brien\\'s \\\\ back \"yard\"'}),",
+          "(n1:Nudge {word: 'beside', thing: 'parkc', other: 'lake'}),",
+          "(n2:Nudge {word: 'before', thing: 'park_a', other: 'park_b'})"
         ]
       ]
     },

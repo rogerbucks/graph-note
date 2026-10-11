@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/suggested-name-writes.test.js",
+  "test": "a view saved as shown > with a written box selected is saved, as ever",
+  "seen_failing_first": false,
+  "evidence": "A control: a view saved as shown with a written box selected is saved as ever. It passed before the guard because only a box drawn under a suggested name is refused; it pins that the guard does not over-refuse."
+}

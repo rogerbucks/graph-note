@@ -42,10 +42,11 @@ const { readNote } = await import(`${src}/drawing.ts`);
 const { readStyle } = await import(`${src}/style.ts`);
 const { styleOf } = await import(`${src}/blocks.ts`);
 const { directions } = await import(`${src}/render.ts`);
-const { nudgedDrawing } = await import(`${src}/style-source.ts`);
+const { nudgedDrawing, nudgedSource } = await import(`${src}/style-source.ts`);
+const { layoutSource } = await import(`${src}/layout.ts`);
 const row = (p) => [p.block, p.line, p.severity, p.message, p.fix];
 process.stdout.write(JSON.stringify(notes.map((texts) => {
-  const reading = readNote(texts), styles = {}, drawn = {};
+  const reading = readNote(texts), styles = {}, drawn = {}, without = {};
   for (const t of texts) {
     const g = styleOf(t);
     if (g !== null && !(g in styles)) styles[g] = readStyle(texts, g, reading).problems.map(row);
@@ -54,8 +55,11 @@ process.stdout.write(JSON.stringify(notes.map((texts) => {
     const { style } = readStyle(texts, graph, reading);
     const laid = directions({ ...nudgedDrawing(drawing, style), nudges: style.nudges });
     drawn[graph] = Object.fromEntries(laid.map((d) => [d.rankdir, d.dot]));
+    // as in a view that leaves a box out: the LR source with each box's key left out in turn
+    const keys = drawing.boxes.map((b) => b.key), dot = layoutSource(drawing, 'LR').source;
+    without[graph] = keys.map((k) => nudgedSource(dot, style.nudges, keys.filter((x) => x !== k)));
   }
-  return { reading: reading.problems.map(row), styles, drawn };
+  return { reading: reading.problems.map(row), styles, drawn, without };
 })));
 """
 
@@ -106,7 +110,7 @@ def python_answer(texts):
     """The Python library's answer for a note, in the shape of the core's."""
     store, problems = gp.read_for_drawing(texts)
     world = gr.World.from_store(store)
-    styles, drawn = {}, {}
+    styles, drawn, without = {}, {}, {}
     for t in texts:
         g = gp.style_of(t)
         if g is not None and g not in styles:
@@ -121,7 +125,17 @@ def python_answer(texts):
             )
             for rd in graph_svg.directions(style["direction"])
         }
-    return {"reading": [row(p) for p in problems], "styles": styles, "drawn": drawn}
+        dot = graph_svg.dot_source(nodes, edges, "LR", suggested)[0]
+        without[name] = [
+            graph_svg.nudged_source(dot, style["nudges"], [x for x in keys if x != k])
+            for k in keys
+        ]
+    return {
+        "reading": [row(p) for p in problems],
+        "styles": styles,
+        "drawn": drawn,
+        "without": without,
+    }
 
 
 class Nudges(unittest.TestCase):
@@ -132,13 +146,36 @@ class Nudges(unittest.TestCase):
     def test_python_nudges(self):
         # python_honours_nudges: every graph drawn, in every direction laid out, byte for byte
         # (a plain loop, never subTest: the tests-first replay counts a test by its own result)
-        for case, theirs in zip(CASES, self.core):
+        for case, theirs in zip(CASES, self.core, strict=True):
             self.assertEqual(python_answer(texts_of(case))["drawn"], theirs["drawn"], case["name"])
+
+    def test_a_nudge_naming_a_box_not_drawn_is_left_out_as_the_core_leaves_it_out(self):
+        # as in a view that leaves a box out: a nudge naming a key not among those drawn adds
+        # nothing, in the core and in graph_svg alike, each box of each graph left out in turn
+        dot = graph_svg.dot_source([("a", "Place", "A")], [], "LR")[0]
+        lone = [{"word": "beside", "thing": "a", "other": "zz"}]
+        self.assertEqual(graph_svg.nudged_source(dot, lone, ["a"]), dot)
+        for case, theirs in zip(CASES, self.core, strict=True):
+            ours = python_answer(texts_of(case))["without"]
+            self.assertEqual(ours, theirs["without"], case["name"])
+
+    def test_a_direction_in_the_wrong_case_is_fixed_to_the_one_it_means(self):
+        # nudge_problems: both sides of the comparison lower-cased, as the core compares them
+        texts = [
+            "// graph: g\n(a:Place {name: 'A'})",
+            "// graph: g_style · STYLE g\n(n1:Nudge {word: 'direction', direction: 'tb'}),\n"
+            "(n2:Nudge {word: 'direction', direction: 'Lr'})",
+        ]
+        world = gr.World.from_store(gp.read_for_drawing(texts)[0])
+        self.assertEqual(
+            [p["fix"] for p in gp.read_style(texts, "g", world)[1]],
+            ["change tb to TB", "change Lr to LR"],
+        )
 
     def test_each_nudge_and_each_style_block_gives_the_cores_problems(self):
         # nudge_problems, broken_style_block: the same problems, at the same block and line, with
         # the same words and fix
-        for case, theirs in zip(CASES, self.core):
+        for case, theirs in zip(CASES, self.core, strict=True):
             ours = python_answer(texts_of(case))
             self.assertEqual(ours["styles"], theirs["styles"], case["name"])
             self.assertEqual(ours["reading"], theirs["reading"], case["name"])

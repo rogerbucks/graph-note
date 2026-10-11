@@ -16,7 +16,7 @@
 
 **Do this:**
 
-1. With this note in front, open the command palette and run "Convert this note to standard GQL".
+1. With this note in front in Live Preview or Source mode (reading view never changes a note: see C-07), open the command palette and run "Convert this note to standard GQL".
 2. Check a comma is now at the end of the first two lines of the block, and the notice above appears.
 3. Press undo once and check both commas are gone.
 4. In Settings, Graph Note, press the same button on the page, and check the same result.

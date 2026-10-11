@@ -123,6 +123,7 @@ describe('--tally', () => {
       assert.deepEqual(out.excused, {});
       assert.deepEqual(Object.keys(out.files['test/twice.test.js']), [
         'excused',
+        'faultsExcused',
         'notReplayed',
         'notReplayedCommits',
         'passedFirst',
@@ -131,6 +132,7 @@ describe('--tally', () => {
       ]);
       assert.deepEqual(out.files['test/twice.test.js'], {
         excused: 0,
+        faultsExcused: 0,
         notReplayed: 0,
         notReplayedCommits: [],
         passedFirst: 1,

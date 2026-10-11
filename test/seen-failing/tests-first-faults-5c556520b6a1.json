@@ -1,0 +1,6 @@
+{
+  "file": "test/tests-first-faults.test.js",
+  "test": "--excuse without --fault is unchanged: it keeps no fault field, and does not excuse a fault",
+  "seen_failing_first": false,
+  "evidence": "Pins behaviour that already held: a plain --excuse keeps no fault field and excuses no fault. It guards the change from altering it."
+}

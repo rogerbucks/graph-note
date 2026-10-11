@@ -174,11 +174,16 @@ describe('strictness', () => {
 
 describe('back to standard GQL', () => {
   const command = (env) => env.state.commands.find((c) => c.id === 'convert-to-standard');
+  /** The note in front, in a Markdown view in Live Preview or Source mode, as a person converts it. */
+  const inFront = (env) => {
+    env.state.active = PATH;
+    env.state.activeView = new env.obsidian.MarkdownView(env.app.vault.getAbstractFileByPath(PATH), '', 'source');
+  };
 
   test('one action converts the note in front back to standard GQL', async () => {
     const env = await load({ files: { [PATH]: NOTE }, data: { settings: { strictness: 'simplified' } } });
     try {
-      env.state.active = PATH;
+      inFront(env);
       assert.match(command(env).name, /standard GQL/);
       await command(env).callback();
       assert.equal(env.state.files.get(PATH), NOTE.replace("(a:T {text: 'A'})\n", "(a:T {text: 'A'}),\n"));
@@ -192,7 +197,7 @@ describe('back to standard GQL', () => {
     const broken = `# Broken\n\n${fence("// graph: g\n(a:T {text: 'A'})\n(b:T {text: })")}\n`;
     const env = await load({ files: { [PATH]: broken } });
     try {
-      env.state.active = PATH;
+      inFront(env);
       await command(env).callback();
       assert.equal(env.state.files.get(PATH), broken);
       assert.match(env.state.notices.at(-1), /cannot be made standard/);
@@ -204,7 +209,7 @@ describe('back to standard GQL', () => {
   test('the button on the settings page converts the note in front, as the command does', async () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {
-      env.state.active = PATH;
+      inFront(env);
       labelled(row(page(env), 'Convert to standard GQL'), 'Convert to standard GQL').click();
       await until(() => env.state.files.get(PATH) !== NOTE);
       assert.equal(env.state.files.get(PATH), NOTE.replace("(a:T {text: 'A'})\n", "(a:T {text: 'A'}),\n"));
@@ -217,7 +222,7 @@ describe('back to standard GQL', () => {
     const broken = `# Broken\n\n${fence("// graph: g\n(a:T {text: 'A'})\n(b:T {text: })")}\n`;
     const env = await load({ files: { [PATH]: NOTE } });
     try {
-      env.state.active = PATH;
+      inFront(env);
       const process = env.app.vault.process;
       env.app.vault.process = (f, fn) => {
         env.state.files.set(PATH, broken); // written meanwhile, elsewhere

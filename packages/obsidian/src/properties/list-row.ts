@@ -15,6 +15,8 @@ export interface DeclaredList extends ListShape {
 /** What a list row needs of the inspector: the reading and the thing, the block's text and a way to replace it, and its messages. */
 export interface ListContext {
   reading: NoteReading;
+  /** The note as it is now, with what is typed: what an addition is checked against (§4), never the older drawing. */
+  now: () => NoteReading;
   graph: string;
   /** The thing that holds the list. */
   thing: string;
@@ -114,7 +116,7 @@ export function listRow(
     draw();
   };
   const add = () => {
-    const r = addToList(c.text(), c.reading, c.graph, c.thing, shape, input.value);
+    const r = addToList(c.text(), c.now(), c.graph, c.thing, shape, input.value);
     if (!r.ok) return c.refuse(shape.rel, r.reason);
     input.value = '';
     merge(r.things);

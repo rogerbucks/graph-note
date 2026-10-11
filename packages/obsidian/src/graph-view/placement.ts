@@ -4,10 +4,14 @@
 
 /**
  * Whether a card is where the note is only read, not edited: reading view, a hover preview or an embed, as opposed to
- * Live Preview or Source mode (spec §3, "Read-only in Reading view"; decided 9 Oct 2026).
+ * Live Preview or Source mode (spec §3, "Read-only in Reading view"; decided 9 Oct 2026). A graph in an embed of another
+ * note (`![[Other note]]`, which Obsidian draws in an `.internal-embed.markdown-embed`) is read-only wherever it is shown,
+ * inside a note in Live Preview too (reading_view_whole_note, 11 Oct 2026): only the note's own block, where the note is
+ * edited, is editable.
  */
 export const readOnlyHere = (el: HTMLElement): boolean =>
-  !!el.closest('.markdown-reading-view, .markdown-preview-view') && !el.closest('.markdown-source-view');
+  !!el.closest('.markdown-embed, .internal-embed') ||
+  (!!el.closest('.markdown-reading-view, .markdown-preview-view') && !el.closest('.markdown-source-view'));
 
 /** The checks still waiting for their card to be put on the page, by the document the card is drawn in. */
 const waiting = new Map<Document, Set<() => void>>();

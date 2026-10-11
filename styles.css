@@ -156,6 +156,25 @@ details.graph-note-style > summary {
   min-width: 44px;
   min-height: 44px;
 }
+/* Adding a thing (spec §5): laid out as the view-making strip, every control a 44-point target. */
+.graph-note-add-thing,
+.graph-note-add-thing-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--size-4-2);
+  padding: var(--size-4-1) var(--size-4-2);
+}
+.graph-note-add-thing label {
+  display: flex;
+  flex-direction: column;
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+.graph-note-add-thing :is(button, input) {
+  min-width: 44px;
+  min-height: 44px;
+}
 .graph-note-svg g.graph-note-step-current > :is(path, polygon) {
   stroke-width: 4;
 }

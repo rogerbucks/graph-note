@@ -30,10 +30,12 @@ def or_list(xs: Sequence[str]) -> str:
 def word_fix(written: str, among: Sequence[str], always: bool = False) -> dict:
     """The fix for a word that is not one of `among`: the nearest by edit distance — always, when
     `always` is set (a nudge's word, §6); otherwise only when it is close (within two letters, or
-    half the word) — else the list to choose from. {'fix': …, 'nearest': … or None}."""
+    half the word) — else the list to choose from. {'fix': …, 'nearest': … or None}. Case is
+    ignored on both sides, as the core ignores it, so 'tb' is fixed to TB, the direction it
+    means."""
     best, near = None, None
     for w in among:
-        d = distance(written.lower(), w)
+        d = distance(written.lower(), w.lower())
         if best is None or d < best:
             best, near = d, w
     if near is not None and (always or best <= max(2, len(utf16_units(written)) // 2)):
@@ -55,20 +57,12 @@ def style_problem(graph: str, at: dict, message: str, fix: str) -> dict:
     }
 
 
-def js_replace_first(s: str, pattern: str, replacement: str) -> str:
-    """s.replace(pattern, replacement) as JavaScript does it for a string pattern: the first
-    occurrence only, and the replacement read for $$, $&, $` and $' as JavaScript reads them, so
-    a message built so says exactly what the core's says."""
+def replace_first(s: str, pattern: str, replacement: str) -> str:
+    """The first occurrence of `pattern` in `s` replaced by `replacement` exactly as written, as
+    the core does it (`message.replace('$', () => v)`): a dollar sign followed by &, $, a backtick
+    or an apostrophe in the written word is the word's own, never one of JavaScript's replacement
+    patterns."""
     at = s.find(pattern)
     if at == -1:
         return s
-    out, i = [], 0
-    while i < len(replacement):
-        c, nxt = replacement[i], replacement[i + 1 : i + 2]
-        if c == "$" and nxt in ("$", "&", "`", "'"):
-            out.append({"$": "$", "&": pattern, "`": s[:at], "'": s[at + len(pattern) :]}[nxt])
-            i += 2
-        else:
-            out.append(c)
-            i += 1
-    return s[:at] + "".join(out) + s[at + len(pattern) :]
+    return s[:at] + replacement + s[at + len(pattern) :]

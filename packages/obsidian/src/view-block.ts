@@ -6,11 +6,9 @@
 import { Notice, TFile } from 'obsidian';
 import type { MarkdownPostProcessorContext } from 'obsidian';
 import {
+  addView,
   evaluate,
   gqlBlocks,
-  gqlSpans,
-  graphOfBlock,
-  insertBlockAfter,
   legendOf,
   lookOf,
   nudgedDrawing,
@@ -21,7 +19,6 @@ import {
   readingOf,
   styleEdit,
   underStrictness,
-  viewsOf,
 } from '@graph-note/core';
 import type { GraphDrawing, NamedView, Outside, StyleChange, ThingLook } from '@graph-note/core';
 import type GraphNotePlugin from './main';
@@ -42,6 +39,7 @@ async function writeStyle(
   if (!(file instanceof TFile)) return;
   let refused = '';
   await plugin.app.vault.process(file, (note) => {
+    // a thing only suggested in the note as it is now is not styled until its name is written (§4)
     const r = styleEdit(note, graph, change);
     if ('refused' in r) refused = r.refused;
     return 'note' in r ? r.note : note;
@@ -63,18 +61,11 @@ export async function writeViewBlock(
   const file = plugin.app.vault.getAbstractFileByPath(path);
   if (!(file instanceof TFile)) return 'the note is not there any more';
   let refused: string | null = null;
-  const name = viewsOf([block])[0]?.name;
   await plugin.app.vault.process(file, (note) => {
-    const spans = gqlSpans(note);
-    // a name another view of the graph has is refused before anything is written
-    if (viewsOf(spans.map((s) => s.text)).some((v) => v.graph === graph && v.name === name)) {
-      refused = `graph ${graph} already has a view called ${name}: give this one another name`;
-      return note;
-    }
-    const last = spans.filter((s) => graphOfBlock(s.text) === graph).pop();
-    const r = last ? insertBlockAfter(note, { line: last.open, text: last.text }, block) : null;
-    if (r?.ok) return r.note;
-    refused = r?.reason ?? `graph ${graph} is no longer in the note`;
+    // checked against the note as it is now: a name another view has, or a thing only suggested in it (§4), is refused
+    const r = addView(note, graph, block);
+    if ('note' in r) return r.note;
+    refused = r.refused;
     return note;
   });
   return refused;

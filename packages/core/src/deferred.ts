@@ -11,6 +11,8 @@ import { kindLines, quoted as q, typeLines } from './lock.ts';
 import type { NoteReading } from './note-reading.ts';
 import { readBlocks } from './partial-read.ts';
 import { replaceBlock } from './store.ts';
+import { acceptNameFirst } from './suggested-names.ts';
+import type { SuggestedReading } from './suggested-names.ts';
 import { S, isSpace, trim, trimEnd } from './whitespace.ts';
 
 /** What marking a thing for later says: what is needed and why it waits, and optionally the day to look again and the completeness rule parked. */
@@ -174,9 +176,20 @@ function isDay(s: string): boolean {
  * saying why when `what` or `why` is empty, `revisitBy` is not a `YYYY-MM-DD` day, the block names no graph, `thing` is
  * not in the graph, the block ends with a SET or MATCH, or the graph is locked and its schema does not declare Deferred
  * and DEFERS (the graph library's §5 checks them like any type). `whole` is the graph as the whole note reads it: given,
- * a thing written in another block of the graph is found, and an id taken there is not used again.
+ * a thing written in another block of the graph is found, and an id taken there is not used again. A thing drawn
+ * under a suggested name is not parked, which would write that name without its fix (§4): it throws "accept its name
+ * first". It is found in `reading`, which is required: the reader suggests names across every block of a graph, so the
+ * block alone cannot say which they are, and no caller can leave the check out. A host gives the reading of the note as
+ * it is now, with `block` as typed in its place, never an older drawing.
  */
-export function parkForLater(block: string, thing: string, park: Park, indent = '    ', whole?: Graph): string {
+export function parkForLater(
+  block: string,
+  thing: string,
+  park: Park,
+  reading: SuggestedReading,
+  indent = '    ',
+  whole?: Graph,
+): string {
   const what = oneLine(park.what),
     why = oneLine(park.why),
     rule = oneLine(park.rule ?? ''),
@@ -186,6 +199,8 @@ export function parkForLater(block: string, thing: string, park: Park, indent = 
   if (day && !isDay(day)) throw new Error(`the revisit date must be a day like 2026-11-01, not ${day}`);
   const graph = graphOf(block);
   if (!graph) throw new Error('the block names no graph: start it with // graph: <name>');
+  const first = acceptNameFirst(reading, graph, [thing]);
+  if (first) throw new Error(first);
   const own = gs.worldFromStore(readBlocks([block], []).store)[graph];
   const graphs = [own, whole].filter((x): x is Graph => !!x);
   if (!graphs.some((x) => x.nodes.has(thing))) throw new Error(`there is no ${thing} in graph ${graph} to park`);

@@ -15,7 +15,11 @@ export interface DeclaredDeferred {
 
 /** The editor open in place on this card, as the inspector needs it: the block's text as typed, and a way to replace it. */
 export interface Editing {
-  session: { text: string } | null;
+  /**
+   * The block as typed, and `current()`: the note as last seen, with what is typed in the block's place, which an edit
+   * written into the block is checked against (§4), never the card's drawing, which can be older than the note.
+   */
+  session: { text: string; current(): NoteReading } | null;
   replace(text: string): void;
   /** Park for later's fix for a graph whose schema lacks Deferred and DEFERS: declares them, wherever the schema is written. Rejects with why not. */
   declareDeferred(): Promise<DeclaredDeferred>;

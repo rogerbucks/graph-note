@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/read-only.test.js",
+  "test": "a card in reading view shows its details and offers nothing that writes, while its block is edited elsewhere > Export, which never writes the note, still exports from reading view: each time to a new file of its own",
+  "seen_failing_first": false,
+  "evidence": "Pins behaviour that already held: Export writes a new file at a free name and never the note, so it stays open in reading view. The review of #86 asked for proof of that, now that only exporting.run is exempt from the gate."
+}
