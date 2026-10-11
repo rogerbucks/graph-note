@@ -29,6 +29,9 @@ const TWICE = (body) =>
 const HALF = (body) =>
   `import { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { half } from '../src/half.js';\n${body}\n`;
 
+/** The reasons kept, as plain objects: they are read into objects with no prototype, so no key reaches another. */
+const plain = (value) => JSON.parse(JSON.stringify(value));
+
 /** The files in a repository's folder of records, sorted. */
 const recordFiles = (dir) => (existsSync(join(dir, RECORDS)) ? readdirSync(join(dir, RECORDS)).sort() : []);
 
@@ -115,7 +118,7 @@ describe('a reason for each test that passed before its code', () => {
       assert.equal(kept, `${EXCUSALS}/${excusalName('test/twice.test.js', 'already true')}`);
       assert.match(kept, /\/twice-[0-9a-f]{12}\.json$/);
       assert.deepEqual(unexplained(replays, exceptionsIn(r.dir)), []);
-      assert.deepEqual(exceptionsIn(r.dir)['test/twice.test.js'], {
+      assert.deepEqual(plain(exceptionsIn(r.dir)['test/twice.test.js']), {
         'already true': { seen_failing_first: false, evidence: 'pins behaviour that already existed' },
       });
       assert.notEqual(excusalName('test/twice.test.js', 'one'), excusalName('test/twice.test.js', 'already true'));
@@ -134,6 +137,92 @@ describe('a reason for each test that passed before its code', () => {
         () => exceptionsIn(dir),
         (e) => e.message.includes('mine.json') && e.message.includes(excusalName('test/x.test.js', 'a')),
       );
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  // review of #69: a reason naming __proto__ passed the name check, reached every object through Object.prototype, and
+  // excused a test that main would flag
+  test('a reason that names __proto__ is refused, naming its file, and reaches no other object: it excuses nothing', () => {
+    const r = repository([
+      { 'README.md': 'the first commit\n' },
+      { 'test/new.test.js': "import { test } from 'node:test';\ntest('already passes', () => {});\n" },
+    ]);
+    const key = 'test/new.test.js';
+    const slipped = { seen_failing_first: false, evidence: 'slipped in through the prototype' };
+    try {
+      const name = '__proto__-37357c2c1b86.json';
+      assert.equal(excusalName('__proto__', key), name, 'the name check alone lets it through');
+      mkdirSync(join(r.dir, EXCUSALS), { recursive: true });
+      writeFileSync(
+        join(r.dir, EXCUSALS, name),
+        JSON.stringify({ file: '__proto__', test: key, 'already passes': slipped }),
+      );
+      assert.throws(
+        () => exceptionsIn(r.dir),
+        (e) => e.message.includes(name),
+      );
+      assert.equal(Object.hasOwn(Object.prototype, key), false, 'Object.prototype is untouched');
+      // and a reason only inherited, never a test file's or a test's own, excuses nothing
+      const inherited = Object.create({ [key]: { 'already passes': slipped } });
+      assert.deepEqual(
+        unexplained([replay(r.dir, r.ids[1])], inherited).map((u) => u.name),
+        ['already passes'],
+      );
+    } finally {
+      delete Object.prototype[key];
+      r.done();
+    }
+  });
+
+  test('a reason naming constructor or prototype, or holding more than its four fields, is refused, naming its file', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'tests-first-'));
+    const reason = { seen_failing_first: false, evidence: 'a control case here' };
+    const cases = [
+      { file: 'test/x.test.js', test: 'constructor', ...reason },
+      { file: 'prototype', test: 'a', ...reason },
+      { file: 'test/x.test.js', test: 'a', ...reason, note: 'one field too many' },
+    ];
+    try {
+      mkdirSync(join(dir, EXCUSALS), { recursive: true });
+      for (const kept of cases) {
+        const name = excusalName(kept.file, kept.test);
+        writeFileSync(join(dir, EXCUSALS, name), JSON.stringify(kept));
+        assert.throws(
+          () => exceptionsIn(dir),
+          (e) => e.message.includes(name),
+          JSON.stringify(kept),
+        );
+        rmSync(join(dir, EXCUSALS, name));
+      }
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('only .json files are read as reasons, and one that is not JSON fails, naming it', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'tests-first-'));
+    try {
+      mkdirSync(join(dir, EXCUSALS), { recursive: true });
+      writeFileSync(join(dir, EXCUSALS, '.DS_Store'), 'not a reason');
+      excuse(dir, 'test/x.test.js', 'a', 'a control case here');
+      assert.deepEqual(Object.keys(exceptionsIn(dir)), ['test/x.test.js']);
+      writeFileSync(join(dir, EXCUSALS, 'broken.json'), '{ not JSON');
+      assert.throws(() => exceptionsIn(dir), /broken\.json/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('a reason already kept is never overwritten, unless forced', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'tests-first-'));
+    try {
+      excuse(dir, 'test/x.test.js', 'a', 'the first reason given');
+      assert.throws(() => excuse(dir, 'test/x.test.js', 'a', 'a second reason'), /--force/);
+      assert.equal(exceptionsIn(dir)['test/x.test.js'].a.evidence, 'the first reason given');
+      excuse(dir, 'test/x.test.js', 'a', 'a second reason', true);
+      assert.equal(exceptionsIn(dir)['test/x.test.js'].a.evidence, 'a second reason');
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -242,7 +331,7 @@ describe('moving the old single files over', () => {
       assert.ok(!existsSync(join(dir, 'test', 'tests-first.json')));
       assert.ok(!existsSync(join(dir, 'test', 'seen-failing.json')));
       assert.deepEqual(readRecords(dir).baseline, { head: OLD_RECORD.head, files: OLD_RECORD.files });
-      assert.deepEqual(exceptionsIn(dir), OLD_REASONS);
+      assert.deepEqual(plain(exceptionsIn(dir)), OLD_REASONS);
       assert.equal(readdirSync(join(dir, EXCUSALS)).length, 3);
     } finally {
       rmSync(dir, { recursive: true, force: true });
@@ -257,7 +346,7 @@ describe('moving the old single files over', () => {
       assert.ok(!existsSync(join(dir, 'test', 'tests-first.json')));
       assert.deepEqual(readRecords(dir).baseline, { head: baseline.head, files: {} });
       assert.match(said, /--update/);
-      assert.deepEqual(exceptionsIn(dir), OLD_REASONS);
+      assert.deepEqual(plain(exceptionsIn(dir)), OLD_REASONS);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -289,7 +378,13 @@ describe('this repository’s records', () => {
     const isAncestor = (a, b) =>
       spawnSync('git', ['merge-base', '--is-ancestor', a, b], { cwd: path('.') }).status === 0;
     for (const commit of commits.keys()) {
-      assert.ok(isAncestor(commit, 'HEAD'), `${commit} is in the history`);
+      // review of #69: a squash or a rebase merge makes new commits, and leaves the records of the old ones behind
+      assert.ok(
+        isAncestor(commit, 'HEAD'),
+        `${RECORDS}/${commit}.json records a commit not in the history: most likely its branch was merged by squash or ` +
+          'rebase, which makes new commits; merge pull requests with a merge commit only, then run ' +
+          'node scripts/tests-first.mjs --update to record the commits that are there',
+      );
       assert.ok(!isAncestor(commit, baseline.head), `${commit} is not already in the baseline`);
     }
     assert.doesNotThrow(() => exceptionsIn(path('.')));

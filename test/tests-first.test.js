@@ -83,6 +83,27 @@ describe('replaying a commit against its parent’s code', () => {
     }
   });
 
+  // review of #69: a reason was looked up as a property, so a test named after one every object has counted as excused
+  test('a new test named like a property every object has, such as toString or constructor, is not excused by it', () => {
+    const r = repository([
+      {
+        'src/twice.js': 'export const twice = (x) => x * 2;\n',
+        'test/twice.test.js': JS_TEST("test('one', () => {});"),
+      },
+      {
+        'test/twice.test.js': JS_TEST(
+          "test('one', () => {});\ntest('toString', () => assert.equal(twice(1), 2));\ntest('constructor', () => {});",
+        ),
+      },
+    ]);
+    try {
+      const flagged = unexplained([replay(r.dir, r.ids[1])], { 'test/twice.test.js': {} }).map((u) => u.name);
+      assert.deepEqual(flagged.sort(), ['constructor', 'toString']);
+    } finally {
+      r.done();
+    }
+  });
+
   test('a new test file whose code does not exist yet fails to load, and so is seen failing', () => {
     const r = repository([
       { 'README.md': 'x\n' },

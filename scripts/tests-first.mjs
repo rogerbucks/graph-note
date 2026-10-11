@@ -9,10 +9,14 @@
 //   node scripts/tests-first.mjs --update            replay each commit since the baseline not yet recorded, keep each
 //                                                    in test/tests-first/, and drop those no longer in the history
 //   node scripts/tests-first.mjs --record            replay every commit since the baseline afresh
-//   node scripts/tests-first.mjs --excuse <test file> <test> <reason>
-//                                                    keep the reason a test passed first, in test/seen-failing/
+//   node scripts/tests-first.mjs --complete          exit 1 on a commit since the baseline that changed a test and has
+//                                                    no record (CI), so each is recorded on its own branch
+//   node scripts/tests-first.mjs --excuse [--force] <test file> <test> <reason>
+//                                                    keep the reason a test passed first, in test/seen-failing/; one
+//                                                    kept already is replaced only with --force
 //   node scripts/tests-first.mjs --migrate           move the old single files, test/tests-first.json and
 //                                                    test/seen-failing.json, over into those folders
+// Each runs on this repository, or on the one `--repo <dir>`, given first, names.
 //
 // How the records are kept, so that two branches never conflict in them, is scripts/tests-first-records.mjs.
 //
@@ -33,12 +37,15 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, basename } from 'node:path';
+import { dirname, join, basename, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { JS_TEST, PY_TEST, run } from './tests-first-run.mjs';
 import {
+  RECORDS,
+  RecordsError,
   exceptionsIn,
   excuse,
+  excused,
   migrate,
   readRecords,
   removeRecord,
@@ -84,16 +91,24 @@ function checkout(repo, commit) {
 /** The test folder a test file sits in: a package's test/ or tests/, or the repository's own test/. */
 const testFolder = (f) => /^(.*?\/?(?:test|tests)\/)/.exec(f)?.[1] ?? '';
 
-export function replay(repo, commit) {
-  const parent = git(repo, 'rev-list', '--parents', '-n', '1', commit).split(' ')[1];
-  const changed = git(repo, 'diff-tree', '--no-commit-id', '--name-status', '-r', '-M', commit)
+/** What a commit changed: a status and its path, or a rename's two paths, for each file. A first commit shows none. */
+const changes = (repo, commit) =>
+  git(repo, 'diff-tree', '--no-commit-id', '--name-status', '-r', '-M', commit)
     .split('\n')
     .filter(Boolean)
     .map((l) => l.split('\t'));
-  const tests = changed
+
+/** The test files among `changed` that the commit added or changed: those its replay runs. */
+const testsIn = (changed) =>
+  changed
     .filter(([s]) => s !== 'D')
     .map((x) => x.at(-1) ?? '')
     .filter((f) => JS_TEST.test(f) || PY_TEST.test(f));
+
+export function replay(repo, commit) {
+  const parent = git(repo, 'rev-list', '--parents', '-n', '1', commit).split(' ')[1];
+  const changed = changes(repo, commit);
+  const tests = testsIn(changed);
   // `faults`: what at the commit's own code cannot be trusted, which fails the record rather than being kept in it
   const out = { commit, files: [], faults: [] };
   if (!tests.length) return out;
@@ -221,7 +236,7 @@ export function unexplained(replays, exceptions) {
   return replays.flatMap((r) =>
     r.files.flatMap((f) =>
       f.passedFirst
-        .filter((name) => !exceptions[f.file]?.[name])
+        .filter((name) => !excused(exceptions, f.file, name))
         .map((name) => ({ commit: r.commit, file: f.file, name })),
     ),
   );
@@ -300,33 +315,56 @@ export function record(repo) {
 export function update(repo) {
   const { baseline, commits } = readRecords(repo);
   const since = history(repo, baseline);
-  const unrecorded = since.filter((c) => !commits.has(c));
-  const replays = gather(repo, unrecorded);
+  const fresh = since.filter((c) => !commits.has(c));
+  const replays = gather(repo, fresh);
   const held = new Set(since);
   for (const commit of commits.keys()) if (!held.has(commit)) removeRecord(repo, commit);
   for (const r of replays) writeRecord(repo, r);
   return summary(repo);
 }
 
+/**
+ * The commits since the baseline that changed a test and have no record: each is recorded by --update on the branch
+ * that made it, so no other branch replays it again, perhaps differently (review of #69).
+ */
+export function unrecorded(repo) {
+  const { baseline, commits } = readRecords(repo);
+  return history(repo, baseline).filter((c) => !commits.has(c) && testsIn(changes(repo, c)).length > 0);
+}
+
 if (process.argv[1] && basename(process.argv[1]) === 'tests-first.mjs') {
-  const [mode, ...args] = process.argv.slice(2);
-  /** Brings the records up to date with `make`; when a fault fails it, says why and writes nothing. */
-  const keep = (make) => {
-    try {
-      make();
-    } catch (e) {
-      if (!(e instanceof RecordFault)) throw e;
-      console.error(e.message);
-      process.exitCode = 1;
-    }
-  };
+  // the repository is this one, or the one --repo names, as the tests of this command line give
+  const given = process.argv.slice(2);
+  const repo = given[0] === '--repo' ? resolve(given[1] ?? '') : HERE;
+  const [mode, ...rest] = given[0] === '--repo' ? given.slice(2) : given;
+  const force = mode === '--excuse' && rest[0] === '--force';
+  const args = force ? rest.slice(1) : rest;
+  try {
+    main(repo, mode, args, force);
+  } catch (e) {
+    // a record that cannot be trusted, or records that cannot be read: say why, and write nothing
+    if (!(e instanceof RecordFault || e instanceof RecordsError)) throw e;
+    console.error(e.message);
+    process.exitCode = 1;
+  }
+}
+
+/** Runs one mode of the command line on `repo`. */
+function main(repo, mode, args, force) {
   if (mode === '--record') {
-    keep(() => record(HERE));
+    record(repo);
   } else if (mode === '--update') {
-    keep(() => update(HERE));
+    update(repo);
+  } else if (mode === '--complete') {
+    const missing = unrecorded(repo);
+    for (const c of missing)
+      console.error(
+        `${c.slice(0, 7)} changed a test and has no record in ${RECORDS}/: run node scripts/tests-first.mjs --update, and commit what it writes`,
+      );
+    process.exitCode = missing.length ? 1 : 0;
   } else if (mode === '--check') {
-    const exceptions = exceptionsIn(HERE);
-    const replays = args.map((c) => replay(HERE, c));
+    const exceptions = exceptionsIn(repo);
+    const replays = args.map((c) => replay(repo, c));
     const bad = unexplained(replays, exceptions);
     const faults = replays.flatMap((r) => r.faults);
     for (const b of bad)
@@ -339,12 +377,13 @@ if (process.argv[1] && basename(process.argv[1]) === 'tests-first.mjs') {
     process.exitCode = bad.length ? 1 : 0;
   } else if (mode === '--excuse' && args.length === 3 && args.every(Boolean)) {
     const [file, test, evidence] = args;
-    console.log(excuse(HERE, file, test, evidence));
+    console.log(excuse(repo, file, test, evidence, force));
   } else if (mode === '--migrate') {
-    for (const line of migrate(HERE)) console.log(line);
+    for (const line of migrate(repo)) console.log(line);
   } else {
     console.error(
-      'usage: tests-first.mjs --check <commit>… | --update | --record | --excuse <test file> <test> <reason> | --migrate',
+      'usage: tests-first.mjs [--repo <dir>] --check <commit>… | --update | --record | --complete | ' +
+        '--excuse [--force] <test file> <test> <reason> | --migrate',
     );
     process.exitCode = 2;
   }
