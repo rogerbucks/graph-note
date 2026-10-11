@@ -47,6 +47,13 @@ describe('one code style', () => {
     assert.match(ci(), /run: npm run format:check/);
   });
 
+  test('the test vault settings, which Obsidian rewrites in its own layout, are not format-checked', () => {
+    for (const f of ['test-vault/.obsidian/app.json', 'test-vault/.obsidian/community-plugins.json']) {
+      const r = spawnSync(path('node_modules/.bin/prettier'), ['--file-info', f], { cwd: ROOT, encoding: 'utf8' });
+      assert.equal(JSON.parse(r.stdout).ignored, true, f);
+    }
+  });
+
   test('the linter runs in CI with no warnings allowed', () => {
     assert.equal(readJSON('package.json').scripts.lint, 'eslint . --max-warnings 0');
     assert.match(ci(), /run: npm run lint/);
