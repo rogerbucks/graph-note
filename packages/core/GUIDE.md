@@ -147,7 +147,9 @@ it. A graph line that says STYLE but names no graph is a problem, never data.
   view or path. The first written is kept, the later left out, each with a problem.
 - `style-source.ts` — nudges applied after the layout source is made (`nudgedSource`: beside a `rank=same` line, before
   an invisible link after every drawn one, group a labelled cluster), and direction set on the drawing (`nudgedDrawing`).
-  With no nudges the source is returned unchanged, byte-identical to the Python library's.
+  With no nudges the source is returned unchanged, byte-identical to the Python library's. The Python library honours
+  nudges the same way (`graph_svg.nudged_source`, its style read by `gql_profile.read_style`), held to the core byte for
+  byte on `python/graph_spec/tests/nudge_cases.json` by `test/layout-parity.test.js` (python_honours_nudges).
 - `style-edit.ts` — `styleEdit`: a nudge, a look, a view's fade or hide, or how a view was shown, written as text into the
   graph's style block (made after the graph's last block when there is none); a view's setting changed in place, never
   written twice; never a data block touched. A styled hue is drawn with `theme.ts`'s `hueColour`, the same blends as a
