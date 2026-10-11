@@ -878,6 +878,10 @@
     }
   },
   "test/slice-board.test.js": {
+    "the page > the light and both dark token sets define exactly the same custom properties": {
+      "seen_failing_first": false,
+      "evidence": "coverage the review of #66 asked for, added with its fixes: it pins what the first commit of #66 already did (one token list written into all three blocks), so it passes before and after by design (commit e40539c); the test later moved to test/slice-board-style.test.js"
+    },
     "the page > a bar is to scale: the proved, part and open segments start and run in proportion": {
       "seen_failing_first": false,
       "evidence": "coverage the review of #66 asked for, added with its fixes: it pins the bar widths the first commit of #66 already drew, so it passes before and after by design (commit e40539c)"
