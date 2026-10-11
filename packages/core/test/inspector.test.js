@@ -34,6 +34,18 @@ describe('values, checked against their type before they are written', () => {
     assert.deepEqual(parseValue('boolean', 'true'), { ok: true, gql: 'TRUE' });
   });
 
+  test('text with a line break or a tab in it is written with its escape, so the thing stays on its line and reads', () => {
+    assert.deepEqual(parseValue('text', 'one\ntwo\tthree'), { ok: true, gql: "'one\\ntwo\\tthree'" });
+    const r = setProperty(BLOCK, 'reader', { thing: 'small' }, 'note', parseValue('text', 'one\ntwo').gql);
+    assert.equal(r.ok, true);
+    const read = readNote([r.text]);
+    assert.deepEqual(
+      read.problems.filter((p) => p.severity === 'error'),
+      [],
+    );
+    assert.equal(read.world.reader.p('small').note, 'one\ntwo');
+  });
+
   test('a value that is not of its type is refused, saying what was expected', () => {
     assert.match(parseValue('number', 'twelve').error, /a number/);
     assert.match(parseValue('date', '2026-13-40').error, /YYYY-MM-DD/);

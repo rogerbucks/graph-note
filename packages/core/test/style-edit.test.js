@@ -105,6 +105,28 @@ describe('a note with a style block', () => {
     assert.deepEqual(data(note), data(NOTE));
   });
 
+  // proves: style_is_a_graph
+  test('text with a line break or a tab in it is written as its escape, on one line, and reads back as given', () => {
+    let note = written(
+      styleEdit(NOTE, 'trip', {
+        look: { view: 'v', thing: 'home', colour: 'orange', means: 'line one\nline two' },
+      }),
+    );
+    note = written(styleEdit(note, 'trip', { nudge: { word: 'group', thing: 'park', group: 'A\tB\r\nC' } }));
+    const style = gqlSpans(note).find((s) => styleOf(s.text) === 'trip').text;
+    assert.deepEqual(style.split('\n').slice(2), [
+      "(look_1:Look {view: 'v', thing: 'home', colour: 'orange', means: 'line one\\nline two'}),",
+      "(nudge_1:Nudge {word: 'group', thing: 'park', group: 'A\\tB\\r\\nC'})",
+    ]);
+    const read = styleIn(note);
+    assert.deepEqual(
+      read.problems.filter((p) => p.severity === 'error'),
+      [],
+    );
+    assert.equal(read.style.nudges[0].group, 'A\tB\r\nC');
+    assert.deepEqual(data(note), data(NOTE));
+  });
+
   // proves: fade_or_hide_in_style
   test('a view set to fade or hide again has its one setting changed, never a second added', () => {
     let note = written(styleEdit(NOTE, 'trip', { outside: { view: 'outdoors', outside: 'hide' } }));

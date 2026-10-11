@@ -2,7 +2,7 @@
 // block written last, as the graph spec's §5 asks — with each relationship read both ways. The reverse readings are
 // guesses, and the block says so, for the writer to check.
 import gs from '@graph-note/graph-spec';
-import { graphOf } from './blocks.ts';
+import { dataKind, graphOf } from './blocks.ts';
 import type { NoteReading } from './note-reading.ts';
 import { trim } from './whitespace.ts';
 
@@ -22,8 +22,11 @@ export function reverseGuess(reading: string): string {
 /** A line kept under 70 characters, as the guide asks: as one line if it fits, otherwise as the two given. */
 const fit = (one: string, first: string, second: string) => (one.length < 70 ? [one] : [first, second]);
 
-/** A string quoted as GQL writes it: in single quotes, a backslash and a quote each led by a backslash. */
-export const quoted = (s: string) => `'${s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+/**
+ * A string quoted as GQL writes it, by the graph library's own quoting: in single quotes, a backslash and a quote each
+ * led by a backslash, and a line break, tab or other control character written as its escape, so it stays on its line.
+ */
+export const quoted = (s: string): string => gs.quote(s);
 const q = quoted;
 
 /** The lines that declare a kind of thing as Lock writes it, ending `}),` for the line after to follow; later lines indented by `indent`. */
@@ -52,9 +55,11 @@ export const typeLines = (id: string, name: string, reading: string, reverse: st
 export function lockBlock(reading: NoteReading, graph: string, today: string, indent = '    '): string {
   const g = reading.whole[graph] ?? reading.world[graph];
   if (!g) throw new Error(`there is no graph ${graph} to lock`);
-  // the graph line as written, read with whitespace as GQL names it (graph spec §3)
+  // the graph line of a block of the graph's data or schema as written, read with whitespace as GQL names it (graph spec
+  // §3): never a view's, which would make the schema a second view
   const header =
     reading.texts
+      .filter((t) => typeof dataKind(t) === 'string')
       .map((t) => t.split('\n').find((l) => trim(l)) ?? '')
       .map((l) => trim(l))
       .find((l) => graphOf(l) === graph) ?? `// graph: ${graph}`;

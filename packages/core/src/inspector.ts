@@ -6,6 +6,7 @@ import type { Graph } from '@graph-note/graph-spec';
 import type { NoteReading } from './note-reading.ts';
 import { blockItems } from './block-items.ts';
 import { hops } from './estimates.ts';
+import { quoted } from './lock.ts';
 import { writtenIn } from './written-things.ts';
 
 /** The kinds of value the document profile holds. It holds no lists. */
@@ -19,7 +20,7 @@ export function parseValue(type: PropType | 'list', input: string): Parsed {
   const v = input.trim();
   switch (type) {
     case 'text':
-      return { ok: true, gql: `'${input.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'` };
+      return { ok: true, gql: quoted(input) };
     case 'number':
       return /^-?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(v)
         ? { ok: true, gql: v }
