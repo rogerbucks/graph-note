@@ -68,6 +68,14 @@ describe('edits are text, in the block where the thing is written', () => {
     assert.equal(r.text, BLOCK.replace('price: 300', 'price: 320'));
   });
 
+  test('an id with a dot, a plus or a bracket in it is matched as written: never another thing, never a broken search', () => {
+    const block = "// graph: tools\n(node_js:Tool {name: 'Node'}),\n(n:Tool {id: 'node.js', name: 'Node.js'})";
+    const r = setProperty(block, 'tools', { thing: 'node.js' }, 'version', "'24'");
+    assert.ok(!r.ok || !r.text.includes("(node_js:Tool {name: 'Node', version: '24'})"), 'node_js is not node.js');
+    for (const id of ['c++', 'x(1', 'a[b', 'what?', '$1'])
+      assert.doesNotThrow(() => spanOf(`// graph: g\n(c:T {id: '${id}'})`, { thing: id }), id);
+  });
+
   test('adding a property appends it to the thing’s map, or gives the thing a map', () => {
     assert.equal(
       setProperty(BLOCK, 'reader', { thing: 'large' }, 'colour', "'grey'").text,

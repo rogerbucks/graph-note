@@ -6,7 +6,7 @@ import type { Item } from './block-items.ts';
 import { blankText, blockItems, items } from './block-items.ts';
 import { readNote } from './drawing.ts';
 import { hops } from './estimates.ts';
-import { parseValue, propertiesOf, setProperty, spanOf } from './inspector.ts';
+import { literally, parseValue, propertiesOf, setProperty, spanOf } from './inspector.ts';
 import { nameFromText, nameStyleOf } from './name-suggestions.ts';
 import type { NameStyle } from './name-suggestions.ts';
 import type { NoteReading } from './note-reading.ts';
@@ -264,8 +264,10 @@ export function removeFromList(
   const link = triple(thing, shape.rel, value);
   if (!k.links.has(link)) return { ok: false, reason: `${value} is not in the list` };
   const all = items(block);
+  // the names as written, each character as itself, so an id such as c++ is matched, never read as a pattern
+  const [th, rel, va] = [thing, shape.rel, value].map(literally);
   const bare = new RegExp(
-    `^\\(\\s*${thing}\\s*\\)\\s*-\\[\\s*:\\s*${shape.rel}\\s*(\\{[^{}]*\\})?\\s*\\]\\s*->\\s*\\(\\s*${value}\\s*\\)$|^\\(\\s*${value}\\s*\\)\\s*<-\\[\\s*:\\s*${shape.rel}\\s*(\\{[^{}]*\\})?\\s*\\]\\s*-\\s*\\(\\s*${thing}\\s*\\)$`,
+    `^\\(\\s*${th}\\s*\\)\\s*-\\[\\s*:\\s*${rel}\\s*(\\{[^{}]*\\})?\\s*\\]\\s*->\\s*\\(\\s*${va}\\s*\\)$|^\\(\\s*${va}\\s*\\)\\s*<-\\[\\s*:\\s*${rel}\\s*(\\{[^{}]*\\})?\\s*\\]\\s*-\\s*\\(\\s*${th}\\s*\\)$`,
   );
   const written = all.filter((it) => hops(block.slice(it.from, it.to)).some(([s, t, e]) => triple(s, t, e) === link));
   const item = written.find((it) => bare.test(blankText(block.slice(it.from, it.to)).trim()));
@@ -281,10 +283,10 @@ export function removeFromList(
   const linkedElsewhere = [...k.links].some(
     (l) => l !== link && l.split('\u0000').some((end, i) => i !== 1 && end === value),
   );
-  const mentions = [...blankText(text).matchAll(new RegExp(`\\b${value}\\b`, 'g'))].length;
+  const mentions = [...blankText(text).matchAll(new RegExp(`\\b${va}\\b`, 'g'))].length;
   const left = items(text);
   const own = left.find((it) =>
-    new RegExp(`^\\(\\s*${value}\\s*(?::\\s*\\w+\\s*)*(\\{[^{}]*\\})?\\s*\\)$`).test(
+    new RegExp(`^\\(\\s*${va}\\s*(?::\\s*\\w+\\s*)*(\\{[^{}]*\\})?\\s*\\)$`).test(
       blankText(text.slice(it.from, it.to)).trim(),
     ),
   );
