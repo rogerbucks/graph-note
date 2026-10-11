@@ -24,7 +24,8 @@ module that ties the parts together, named as the folder is.
 - `editor.ts` — the comma and the colon added for you in the note's own editor.
 - `pane.ts` — the edit pane, which holds a block editor.
 - `reading-view.ts` — reading view never changes the note: `noteToRewrite`, which every command rewriting a note asks
-  first, gives the note in the pane in front, or refuses with a notice when that pane is in reading view or holds no note.
+  first, gives the note in the pane in front, or refuses with a notice when that pane is in reading view or holds no note;
+  `stillToRewrite`, asked again just before the write, refuses the same way when that pane changed while the note was read.
 
 ### `src/layout-worker/` — the layout kept apart from the interface (spec §9, layout_contained)
 

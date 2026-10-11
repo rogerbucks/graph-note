@@ -44,11 +44,15 @@ const plain = (v: unknown): v is Record<string, unknown> => {
 const builtIn = (v: object): boolean =>
   v instanceof Map || v instanceof Set || v instanceof Date || v instanceof RegExp || ArrayBuffer.isView(v);
 
-/** Whether a Map or a Set holds a function among its keys and values, however deep in objects and lists they hold it. */
+/**
+ * Whether a Map or a Set holds something that writes among its keys and values, however deep in objects and lists they
+ * hold it: a function, or an object of a class with methods.
+ */
 function holdsFunction(v: unknown, seen = new WeakSet<object>()): boolean {
   if (typeof v === 'function') return true;
   if (typeof v !== 'object' || v === null || seen.has(v)) return false;
   seen.add(v);
+  if (!Array.isArray(v) && !plain(v) && !builtIn(v) && hasMethods(v)) return true;
   const inside =
     v instanceof Map ? [...v.keys(), ...v.values()] : v instanceof Set || Array.isArray(v) ? [...v] : Object.values(v);
   return inside.some((x) => holdsFunction(x, seen));
@@ -103,7 +107,7 @@ export function gateWrites(o: ViewOptions, readOnly: () => boolean): ViewOptions
     }
     if ((v instanceof Map || v instanceof Set) && holdsFunction(v))
       throw new Error(
-        `Graph Note: the card's option ${path} holds functions in a Map or a Set, whose writes cannot be closed in reading view. Give them in a plain object, or name what only reads in READS (read-only.ts).`,
+        `Graph Note: the card's option ${path} holds functions, or objects of a class with methods, in a Map or a Set, whose writes cannot be closed in reading view. Give them in a plain object, or name what only reads in READS (read-only.ts).`,
       );
     if (!builtIn(v) && hasMethods(v))
       throw new Error(
