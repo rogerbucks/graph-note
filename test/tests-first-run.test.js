@@ -2,6 +2,7 @@
 // report shows, whether the run finished, and when it did not, why.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -323,6 +324,55 @@ describe('a replay under the run ceiling', () => {
       ),
     );
     assert.deepEqual(r, { passed: ['a'], failed: ['b'], ran: true });
+  });
+});
+
+describe('a Python replay under the run ceiling', () => {
+  // spec §13, capped_test_run: runPy had only a time limit, so a runaway Python test in a replayed commit grew unchecked
+  const withCeiling = (mb, fn) => {
+    const before = process.env.GRAPH_NOTE_TEST_MEMORY_MB;
+    process.env.GRAPH_NOTE_TEST_MEMORY_MB = mb;
+    try {
+      return fn();
+    } finally {
+      if (before === undefined) delete process.env.GRAPH_NOTE_TEST_MEMORY_MB;
+      else process.env.GRAPH_NOTE_TEST_MEMORY_MB = before;
+    }
+  };
+  const python = spawnSync('python3', ['--version']).status === 0 ? false : 'no python3 is available';
+
+  test('a runaway file is stopped with the ceiling line and did not finish', { skip: python }, () => {
+    const r = withCeiling('300', () =>
+      runPython('runaway', [
+        'import time, unittest',
+        'class A(unittest.TestCase):',
+        '    def test_grows(self):',
+        '        kept = []',
+        '        for _ in range(384):',
+        '            kept.append(bytearray(b"\\x01" * (4 * 2**20)))',
+        '            time.sleep(0.01)',
+        '        time.sleep(5)',
+      ]),
+    );
+    assert.equal(r.ran, false);
+    assert.deepEqual([r.passed, r.failed], [[], []]);
+    assert.match(r.why ?? '', /^run-ceiling: stopped the run at \d+ MB of memory, over its 300 MB ceiling\./);
+    assert.match(r.why ?? '', /GRAPH_NOTE_TEST_MEMORY_MB/);
+    assert.doesNotMatch(r.why ?? '', /\n/);
+  });
+
+  test('a run within the ceilings is read as it was, passed and failed', { skip: python }, () => {
+    const r = withCeiling('4096', () =>
+      runPython('within', [
+        'import unittest',
+        'class A(unittest.TestCase):',
+        '    def test_a(self):',
+        '        pass',
+        '    def test_b(self):',
+        '        self.fail("b")',
+      ]),
+    );
+    assert.deepEqual(r, { passed: ['A.test_a'], failed: ['A.test_b'], ran: true });
   });
 });
 

@@ -156,6 +156,17 @@ describe('the npm test commands run under the ceiling', () => {
     assert.equal(scripts()['test:changed'], 'node scripts/run-ceiling.mjs node scripts/changed-tests.mjs');
   });
 
+  test('test:ai:py goes through the runner', () => {
+    assert.match(scripts()['test:ai:py'], /^node scripts\/run-ceiling\.mjs uv run .*scripts\/quiet_unittest\.py$/);
+  });
+
+  test('the Python test steps in CI go through the runner, in the same folder and environment', () => {
+    const ci = read('.github/workflows/ci.yml');
+    const steps = ci.split('\n').filter((line) => /python -m unittest/.test(line));
+    assert.equal(steps.length, 2, 'both Python jobs run unittest');
+    for (const line of steps) assert.match(line, /run: node \.\.\/\.\.\/scripts\/run-ceiling\.mjs uv run /);
+  });
+
   test('the runs test:changed starts carry the same per-test time limit', () => {
     assert.ok(read('scripts/changed-tests.mjs').includes("'--test-timeout=300000'"));
   });

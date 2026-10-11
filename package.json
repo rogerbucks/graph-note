@@ -18,7 +18,7 @@
     "lint": "eslint . --max-warnings 0",
     "test": "node scripts/run-ceiling.mjs node --test --test-timeout=300000",
     "test:ai": "node scripts/run-ceiling.mjs node --test --test-timeout=300000 --test-reporter=./scripts/quiet-reporter.mjs",
-    "test:ai:py": "uv run --locked --directory python/graph_spec python ../../scripts/quiet_unittest.py",
+    "test:ai:py": "node scripts/run-ceiling.mjs uv run --locked --directory python/graph_spec python ../../scripts/quiet_unittest.py",
     "test:changed": "node scripts/run-ceiling.mjs node scripts/changed-tests.mjs",
     "build:layout": "node packages/core/esbuild.layout.mjs",
     "format": "prettier --write .",
