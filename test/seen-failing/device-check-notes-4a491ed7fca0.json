@@ -1,0 +1,6 @@
+{
+  "file": "test/device-check-notes.test.js",
+  "test": "the checklist numbers every item > a section has one letter of its own, and its numbers run upward",
+  "seen_failing_first": false,
+  "evidence": "The checklist is a file under a test folder, so the replay ran this commit's numbered checklist, not the parent's. Seen failing first by hand: run against the parent's checklist (git checkout HEAD~1 -- packages/obsidian/test/device-checklist.md) it fails, its items having no numbers."
+}
