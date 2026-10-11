@@ -1,0 +1,667 @@
+{
+  "about": "Every view returns the same things in the core as in Grafeo (editor spec §7: views_agree_with_grafeo). Small notes, each a graph's data blocks and its views, every view a named query block of the note; for each view, the view its query is read as (spec), the things it returns (things, sorted by id), and, as the core draws them, the links shown with them (from TYPE to, in the core's order), the names asked for that are not there (missing) and a walked path's steps in order (walk). left_out names the blocks the reader refuses, which the core leaves out of its drawing and Grafeo is never given. Then queries outside the view profile, each with the reason the core gives and the shape it is nearest to. Held to the core by packages/core/test/view-parity.test.js, and to Grafeo by tests/test_view_parity.py.",
+  "allowed": "A view query has one of five shapes: a hand-picked set of things, everything near a thing, how one thing reaches another, only some kinds, a walked path",
+  "notes": [
+    {
+      "name": "a team: people who know each other, a team, someone with no links, and a thing whose id needs escapes",
+      "graph": "team",
+      "blocks": [
+        [
+          "// graph: team",
+          "(alice:Person {name: 'Alice'}),",
+          "(bob:Person {name: 'Bob'}),",
+          "(carol:Person {name: 'Carol'}),",
+          "(dan:Person {name: 'Dan'}),",
+          "(zoe:Person {name: 'Zoe'}),",
+          "(eve:Person:Admin {name: 'Eve'}),",
+          "(core:Team {name: 'Core'}),",
+          "(odd:Thing {id: 'o\\'neil', name: 'O Neil'}),",
+          "(alice)-[:KNOWS]->(bob),",
+          "(bob)-[:KNOWS]->(carol),",
+          "(carol)-[:KNOWS]->(dan),",
+          "(alice)-[:MEMBER_OF]->(core),",
+          "(bob)-[:MEMBER_OF]->(core),",
+          "(eve)-[:MEMBER_OF]->(core),",
+          "(odd)-[:KNOWS]->(eve)"
+        ]
+      ],
+      "views": [
+        {
+          "block": ["// graph: team · QUERY view picked_two", "MATCH (n) WHERE n.id IN ['core', 'alice'] RETURN n"],
+          "spec": { "kind": "picked", "ids": ["core", "alice"] },
+          "things": ["alice", "core"],
+          "links": ["alice MEMBER_OF core"]
+        },
+        {
+          "block": [
+            "// graph: team · QUERY view picked_again_and_missing",
+            "MATCH (n) WHERE n.id IN ['bob', 'zed', 'bob', 'alice'] RETURN n"
+          ],
+          "spec": { "kind": "picked", "ids": ["bob", "zed", "bob", "alice"] },
+          "things": ["alice", "bob"],
+          "links": ["alice KNOWS bob"],
+          "missing": ["zed"]
+        },
+        {
+          "block": [
+            "// graph: team · QUERY view picked_escaped",
+            "MATCH (n) WHERE n.id IN ['o\\'neil', '\\u0065ve'] RETURN n"
+          ],
+          "spec": { "kind": "picked", "ids": ["o'neil", "eve"] },
+          "things": ["eve", "o'neil"],
+          "links": ["o'neil KNOWS eve"]
+        },
+        {
+          "block": [
+            "// graph: team · QUERY view picked_written_freely",
+            "// the people I work with",
+            "match (n)",
+            "\twhere n.id",
+            "  in [ 'carol' ,",
+            "    'dan' ]",
+            "return n ;"
+          ],
+          "spec": { "kind": "picked", "ids": ["carol", "dan"] },
+          "things": ["carol", "dan"],
+          "links": ["carol KNOWS dan"]
+        },
+        {
+          "block": ["// graph: team · QUERY view picked_nothing", "MATCH (n) WHERE n.id IN [] RETURN n"],
+          "spec": { "kind": "picked", "ids": [] },
+          "things": [],
+          "links": []
+        },
+        {
+          "block": ["// graph: team · QUERY view picked_none_there", "MATCH (n) WHERE n.id IN ['zed', 'yan'] RETURN n"],
+          "spec": { "kind": "picked", "ids": ["zed", "yan"] },
+          "things": [],
+          "links": []
+        },
+        {
+          "block": ["// graph: team · QUERY view near_alice_one", "MATCH (n {id: 'alice'})-[]-{1,1}(m) RETURN n, m"],
+          "spec": { "kind": "near", "id": "alice", "depth": 1 },
+          "things": ["alice", "bob", "core"],
+          "links": ["alice KNOWS bob", "alice MEMBER_OF core", "bob MEMBER_OF core"]
+        },
+        {
+          "block": ["// graph: team · QUERY view near_alice_two", "MATCH (n {id: 'alice'})-[]-{1,2}(m) RETURN n, m"],
+          "spec": { "kind": "near", "id": "alice", "depth": 2 },
+          "things": ["alice", "bob", "carol", "core", "eve"],
+          "links": [
+            "alice KNOWS bob",
+            "bob KNOWS carol",
+            "alice MEMBER_OF core",
+            "bob MEMBER_OF core",
+            "eve MEMBER_OF core"
+          ]
+        },
+        {
+          "block": ["// graph: team · QUERY view near_dan_three", "MATCH (x {id: 'dan'})-[]-{1,3}(y) RETURN x, y"],
+          "spec": { "kind": "near", "id": "dan", "depth": 3 },
+          "things": ["alice", "bob", "carol", "core", "dan"],
+          "links": [
+            "alice KNOWS bob",
+            "bob KNOWS carol",
+            "carol KNOWS dan",
+            "alice MEMBER_OF core",
+            "bob MEMBER_OF core"
+          ]
+        },
+        {
+          "block": ["// graph: team · QUERY view near_zoe", "MATCH (n {id: 'zoe'})-[]-{1,3}(m) RETURN n, m"],
+          "spec": { "kind": "near", "id": "zoe", "depth": 3 },
+          "things": [],
+          "links": []
+        },
+        {
+          "block": ["// graph: team · QUERY view near_nobody", "MATCH (n {id: 'zed'})-[]-{1,1}(m) RETURN n, m"],
+          "spec": { "kind": "near", "id": "zed", "depth": 1 },
+          "things": [],
+          "links": []
+        },
+        {
+          "block": ["// graph: team · QUERY view near_escaped", "MATCH (n {id: 'o\\'neil'})-[]-{1,1}(m) RETURN n, m"],
+          "spec": { "kind": "near", "id": "o'neil", "depth": 1 },
+          "things": ["eve", "o'neil"],
+          "links": ["o'neil KNOWS eve"]
+        },
+        {
+          "block": [
+            "// graph: team · QUERY view reaches_alice_dan",
+            "MATCH p = (a {id: 'alice'})-[]->{1,6}(b {id: 'dan'}) RETURN p"
+          ],
+          "spec": { "kind": "reaches", "from": "alice", "to": "dan", "steps": 6, "directed": true },
+          "things": ["alice", "bob", "carol", "dan"],
+          "links": ["alice KNOWS bob", "bob KNOWS carol", "carol KNOWS dan"]
+        },
+        {
+          "block": [
+            "// graph: team · QUERY view reaches_alice_dan_exactly",
+            "MATCH p = (a {id: 'alice'})-[]->{1,3}(b {id: 'dan'}) RETURN p"
+          ],
+          "spec": { "kind": "reaches", "from": "alice", "to": "dan", "steps": 3, "directed": true },
+          "things": ["alice", "bob", "carol", "dan"],
+          "links": ["alice KNOWS bob", "bob KNOWS carol", "carol KNOWS dan"]
+        },
+        {
+          "block": [
+            "// graph: team · QUERY view reaches_alice_dan_short",
+            "MATCH p = (a {id: 'alice'})-[]->{1,2}(b {id: 'dan'}) RETURN p"
+          ],
+          "spec": { "kind": "reaches", "from": "alice", "to": "dan", "steps": 2, "directed": true },
+          "things": [],
+          "links": []
+        },
+        {
+          "block": [
+            "// graph: team · QUERY view reaches_against_the_arrows",
+            "MATCH p = (a {id: 'dan'})-[]->{1,6}(b {id: 'alice'}) RETURN p"
+          ],
+          "spec": { "kind": "reaches", "from": "dan", "to": "alice", "steps": 6, "directed": true },
+          "things": [],
+          "links": []
+        },
+        {
+          "block": [
+            "// graph: team · QUERY view reaches_either_way",
+            "MATCH p = (a {id: 'dan'})-[]-{1,3}(b {id: 'alice'}) RETURN p"
+          ],
+          "spec": { "kind": "reaches", "from": "dan", "to": "alice", "steps": 3, "directed": false },
+          "things": ["alice", "bob", "carol", "dan"],
+          "links": ["alice KNOWS bob", "bob KNOWS carol", "carol KNOWS dan"]
+        },
+        {
+          "block": [
+            "// graph: team · QUERY view reaches_either_way_further",
+            "MATCH route = (s {id: 'alice'})-[]-{1,6}(t {id: 'dan'}) RETURN route"
+          ],
+          "spec": { "kind": "reaches", "from": "alice", "to": "dan", "steps": 6, "directed": false },
+          "things": ["alice", "bob", "carol", "core", "dan", "eve"],
+          "links": [
+            "alice KNOWS bob",
+            "bob KNOWS carol",
+            "carol KNOWS dan",
+            "alice MEMBER_OF core",
+            "bob MEMBER_OF core",
+            "eve MEMBER_OF core"
+          ]
+        },
+        {
+          "block": [
+            "// graph: team · QUERY view reaches_round_trip",
+            "MATCH p = (a {id: 'alice'})-[]-{1,2}(b {id: 'alice'}) RETURN p"
+          ],
+          "spec": { "kind": "reaches", "from": "alice", "to": "alice", "steps": 2, "directed": false },
+          "things": ["alice", "bob", "core"],
+          "links": ["alice KNOWS bob", "alice MEMBER_OF core"]
+        },
+        {
+          "block": [
+            "// graph: team · QUERY view reaches_no_round_trip",
+            "MATCH p = (a {id: 'alice'})-[]->{1,6}(b {id: 'alice'}) RETURN p"
+          ],
+          "spec": { "kind": "reaches", "from": "alice", "to": "alice", "steps": 6, "directed": true },
+          "things": [],
+          "links": []
+        },
+        {
+          "block": [
+            "// graph: team · QUERY view reaches_nobody",
+            "MATCH p = (a {id: 'zed'})-[]->{1,6}(b {id: 'dan'}) RETURN p"
+          ],
+          "spec": { "kind": "reaches", "from": "zed", "to": "dan", "steps": 6, "directed": true },
+          "things": [],
+          "links": []
+        },
+        {
+          "block": ["// graph: team · QUERY view kinds_person", "MATCH (n:Person) RETURN n"],
+          "spec": { "kind": "kinds", "kinds": ["Person"] },
+          "things": ["alice", "bob", "carol", "dan", "eve", "zoe"],
+          "links": ["alice KNOWS bob", "bob KNOWS carol", "carol KNOWS dan"]
+        },
+        {
+          "block": ["// graph: team · QUERY view kinds_admin_or_none", "MATCH (n IS Admin|Nothing) RETURN n"],
+          "spec": { "kind": "kinds", "kinds": ["Admin", "Nothing"] },
+          "things": ["eve"],
+          "links": []
+        },
+        {
+          "block": ["// graph: team · QUERY view kinds_written_freely", "match (n is Team | Thing) return n"],
+          "spec": { "kind": "kinds", "kinds": ["Team", "Thing"] },
+          "things": ["core", "o'neil"],
+          "links": []
+        },
+        {
+          "block": ["// graph: team · QUERY view kinds_in_lower_case", "MATCH (n:person) RETURN n"],
+          "spec": { "kind": "kinds", "kinds": ["person"] },
+          "things": [],
+          "links": []
+        },
+        {
+          "block": ["// graph: team · QUERY view kinds_none_there", "MATCH (n IS Nothing|Zilch) RETURN n"],
+          "spec": { "kind": "kinds", "kinds": ["Nothing", "Zilch"] },
+          "things": [],
+          "links": []
+        }
+      ]
+    },
+    {
+      "name": "a chain of eight stops, for the limits: near at 3 steps, one thing reaching another at 6",
+      "graph": "chain",
+      "blocks": [
+        [
+          "// graph: chain",
+          "(c1:Stop {name: 'One'}),",
+          "(c2:Stop {name: 'Two'}),",
+          "(c3:Stop {name: 'Three'}),",
+          "(c4:Stop {name: 'Four'}),",
+          "(c5:Stop {name: 'Five'}),",
+          "(c6:Stop {name: 'Six'}),",
+          "(c7:Stop {name: 'Seven'}),",
+          "(c8:Stop {name: 'Eight'}),",
+          "(c1)-[:NEXT]->(c2),",
+          "(c2)-[:NEXT]->(c3),",
+          "(c3)-[:NEXT]->(c4),",
+          "(c4)-[:NEXT]->(c5),",
+          "(c5)-[:NEXT]->(c6),",
+          "(c6)-[:NEXT]->(c7),",
+          "(c7)-[:NEXT]->(c8)"
+        ]
+      ],
+      "views": [
+        {
+          "block": ["// graph: chain · QUERY view near_three", "MATCH (n {id: 'c1'})-[]-{1,3}(m) RETURN n, m"],
+          "spec": { "kind": "near", "id": "c1", "depth": 3 },
+          "things": ["c1", "c2", "c3", "c4"],
+          "links": ["c1 NEXT c2", "c2 NEXT c3", "c3 NEXT c4"]
+        },
+        {
+          "block": [
+            "// graph: chain · QUERY view reaches_in_six",
+            "MATCH p = (a {id: 'c1'})-[]->{1,6}(b {id: 'c7'}) RETURN p"
+          ],
+          "spec": { "kind": "reaches", "from": "c1", "to": "c7", "steps": 6, "directed": true },
+          "things": ["c1", "c2", "c3", "c4", "c5", "c6", "c7"],
+          "links": ["c1 NEXT c2", "c2 NEXT c3", "c3 NEXT c4", "c4 NEXT c5", "c5 NEXT c6", "c6 NEXT c7"]
+        },
+        {
+          "block": [
+            "// graph: chain · QUERY view reaches_seven_needed",
+            "MATCH p = (a {id: 'c1'})-[]->{1,6}(b {id: 'c8'}) RETURN p"
+          ],
+          "spec": { "kind": "reaches", "from": "c1", "to": "c8", "steps": 6, "directed": true },
+          "things": [],
+          "links": []
+        },
+        {
+          "block": [
+            "// graph: chain · QUERY view reaches_back_in_six",
+            "MATCH p = (a {id: 'c7'})-[]-{1,6}(b {id: 'c1'}) RETURN p"
+          ],
+          "spec": { "kind": "reaches", "from": "c7", "to": "c1", "steps": 6, "directed": false },
+          "things": ["c1", "c2", "c3", "c4", "c5", "c6", "c7"],
+          "links": ["c1 NEXT c2", "c2 NEXT c3", "c3 NEXT c4", "c4 NEXT c5", "c5 NEXT c6", "c6 NEXT c7"]
+        },
+        {
+          "block": [
+            "// graph: chain · QUERY view reaches_back_against_the_arrows",
+            "MATCH p = (a {id: 'c7'})-[]->{1,6}(b {id: 'c1'}) RETURN p"
+          ],
+          "spec": { "kind": "reaches", "from": "c7", "to": "c1", "steps": 6, "directed": true },
+          "things": [],
+          "links": []
+        }
+      ]
+    },
+    {
+      "name": "loops: a route may go round a loop and use a link again, as Grafeo walks it, and a thing may link to itself",
+      "graph": "loops",
+      "blocks": [
+        [
+          "// graph: loops",
+          "(a:Spot {name: 'A'}),",
+          "(x:Spot {name: 'X'}),",
+          "(y:Spot {name: 'Y'}),",
+          "(b:Spot {name: 'B'}),",
+          "(s:Spot {name: 'S'}),",
+          "(a)-[:GOES]->(x),",
+          "(x)-[:GOES]->(y),",
+          "(y)-[:GOES]->(x),",
+          "(x)-[:GOES]->(b),",
+          "(s)-[:GOES]->(s)"
+        ]
+      ],
+      "views": [
+        {
+          "block": [
+            "// graph: loops · QUERY view reaches_past_the_loop",
+            "MATCH p = (a {id: 'a'})-[]->{1,3}(b {id: 'b'}) RETURN p"
+          ],
+          "spec": { "kind": "reaches", "from": "a", "to": "b", "steps": 3, "directed": true },
+          "things": ["a", "b", "x"],
+          "links": ["a GOES x", "x GOES b"]
+        },
+        {
+          "block": [
+            "// graph: loops · QUERY view reaches_round_the_loop",
+            "MATCH p = (a {id: 'a'})-[]->{1,4}(b {id: 'b'}) RETURN p"
+          ],
+          "spec": { "kind": "reaches", "from": "a", "to": "b", "steps": 4, "directed": true },
+          "things": ["a", "b", "x", "y"],
+          "links": ["a GOES x", "x GOES y", "y GOES x", "x GOES b"]
+        },
+        {
+          "block": [
+            "// graph: loops · QUERY view reaches_itself_too_soon",
+            "MATCH p = (a {id: 'x'})-[]->{1,1}(b {id: 'x'}) RETURN p"
+          ],
+          "spec": { "kind": "reaches", "from": "x", "to": "x", "steps": 1, "directed": true },
+          "things": [],
+          "links": []
+        },
+        {
+          "block": [
+            "// graph: loops · QUERY view reaches_itself_round_the_loop",
+            "MATCH p = (a {id: 'x'})-[]->{1,2}(b {id: 'x'}) RETURN p"
+          ],
+          "spec": { "kind": "reaches", "from": "x", "to": "x", "steps": 2, "directed": true },
+          "things": ["x", "y"],
+          "links": ["x GOES y", "y GOES x"]
+        },
+        {
+          "block": [
+            "// graph: loops · QUERY view reaches_itself_by_its_own_link",
+            "MATCH p = (a {id: 's'})-[]->{1,1}(b {id: 's'}) RETURN p"
+          ],
+          "spec": { "kind": "reaches", "from": "s", "to": "s", "steps": 1, "directed": true },
+          "things": ["s"],
+          "links": ["s GOES s"]
+        },
+        {
+          "block": ["// graph: loops · QUERY view near_its_own_link", "MATCH (n {id: 's'})-[]-{1,1}(m) RETURN n, m"],
+          "spec": { "kind": "near", "id": "s", "depth": 1 },
+          "things": ["s"],
+          "links": ["s GOES s"]
+        }
+      ]
+    },
+    {
+      "name": "walks: a walked path out of order and back again, with a step through something removed; a path with no steps; a path whose every step is gone",
+      "graph": "walks",
+      "blocks": [
+        [
+          "// graph: walks",
+          "(home:Place {name: 'Home'}),",
+          "(shop:Place {name: 'Shop'}),",
+          "(park:Place {name: 'Park'}),",
+          "(home)-[:ROAD]->(shop),",
+          "(tour:Path {title: 'Tour'}),",
+          "(tour)-[:STEP {seq: 2}]->(shop),",
+          "(tour)-[:STEP {seq: 1}]->(home),",
+          "(tour)-[:STEP {seq: 3}]->(home),",
+          "(blank:Path {title: 'Blank'}),",
+          "(lost:Path {title: 'Lost'})"
+        ],
+        ["// graph: walks", "(tour)-[:STEP {seq: 4}]->(gone)"],
+        ["// graph: walks", "(lost)-[:STEP {seq: 1}]->(long_gone)"]
+      ],
+      "left_out": [1, 2],
+      "views": [
+        {
+          "block": ["// graph: walks · QUERY view path_tour", "MATCH (p:Path {id: 'tour'})-[:STEP]->(n) RETURN p, n"],
+          "spec": { "kind": "path", "path": "tour" },
+          "things": ["home", "shop", "tour"],
+          "links": ["tour STEP home", "tour STEP shop", "tour STEP home"],
+          "walk": ["home", "shop", "home"]
+        },
+        {
+          "block": [
+            "// graph: walks · QUERY view path_with_no_steps",
+            "MATCH (p:Path {id: 'blank'})-[:STEP]->(n) RETURN p, n"
+          ],
+          "spec": { "kind": "path", "path": "blank" },
+          "things": [],
+          "links": []
+        },
+        {
+          "block": [
+            "// graph: walks · QUERY view path_every_step_gone",
+            "MATCH (p:Path {id: 'lost'})-[:STEP]->(n) RETURN p, n"
+          ],
+          "spec": { "kind": "path", "path": "lost" },
+          "things": [],
+          "links": []
+        },
+        {
+          "block": [
+            "// graph: walks · QUERY view path_not_a_path",
+            "MATCH (p:Path {id: 'home'})-[:STEP]->(n) RETURN p, n"
+          ],
+          "spec": { "kind": "path", "path": "home" },
+          "things": [],
+          "links": []
+        },
+        {
+          "block": [
+            "// graph: walks · QUERY view path_nowhere",
+            "MATCH (trip:Path {id: 'nowhere'})-[:STEP]->(stop) RETURN trip, stop"
+          ],
+          "spec": { "kind": "path", "path": "nowhere" },
+          "things": [],
+          "links": []
+        },
+        {
+          "block": ["// graph: walks · QUERY view near_home", "MATCH (n {id: 'home'})-[]-{1,1}(m) RETURN n, m"],
+          "spec": { "kind": "near", "id": "home", "depth": 1 },
+          "things": ["home", "shop", "tour"],
+          "links": ["home ROAD shop", "tour STEP shop", "tour STEP home", "tour STEP home"]
+        },
+        {
+          "block": ["// graph: walks · QUERY view near_park", "MATCH (n {id: 'park'})-[]-{1,2}(m) RETURN n, m"],
+          "spec": { "kind": "near", "id": "park", "depth": 2 },
+          "things": [],
+          "links": []
+        },
+        {
+          "block": ["// graph: walks · QUERY view kinds_paths", "MATCH (n:Path) RETURN n"],
+          "spec": { "kind": "kinds", "kinds": ["Path"] },
+          "things": ["blank", "lost", "tour"],
+          "links": []
+        }
+      ]
+    }
+  ],
+  "refused": [
+    { "query": "", "nearest": "picked", "reason": "The view has no query" },
+    { "query": "// only a comment", "nearest": "picked", "reason": "The view has no query" },
+    { "query": "RETURN 1", "nearest": "picked", "reason": "A view starts with MATCH, not \"RETURN\"" },
+    { "query": "MATCH (n) RETURN n", "nearest": "picked", "reason": "Expected WHERE, found \"RETURN\"" },
+    {
+      "query": "MATCH (n) DETACH DELETE n",
+      "nearest": "picked",
+      "reason": "Expected WHERE, found \"DETACH\""
+    },
+    {
+      "query": "MATCH (n) WHERE n.name IN ['alice'] RETURN n",
+      "nearest": "picked",
+      "reason": "A view finds things by their id: write n.id; found \"name\""
+    },
+    {
+      "query": "MATCH (n) WHERE n.id = 'alice' RETURN n",
+      "nearest": "picked",
+      "reason": "Expected IN, found \"=\""
+    },
+    {
+      "query": "MATCH (n) WHERE m.id IN ['alice'] RETURN n",
+      "nearest": "picked",
+      "reason": "The thing is called n here, so write n, not m"
+    },
+    {
+      "query": "MATCH (n) WHERE n.id IN ['alice',] RETURN n",
+      "nearest": "picked",
+      "reason": "Expected a thing name in single quotes, found \"]\""
+    },
+    {
+      "query": "MATCH (n) WHERE n.id IN [1] RETURN n",
+      "nearest": "picked",
+      "reason": "Expected a thing name in single quotes, found \"1\""
+    },
+    {
+      "query": "MATCH (n) WHERE n.id IN ['alice'] RETURN n LIMIT 5",
+      "nearest": "picked",
+      "reason": "Nothing may follow the view's RETURN, found \"LIMIT\""
+    },
+    {
+      "query": "MATCH (n) WHERE n.id IN [\"alice\"] RETURN n",
+      "nearest": "picked",
+      "reason": "\"\"\" is not allowed in a view: text goes in single quotes, and the only symbols are ()[]{}:,.=|-"
+    },
+    {
+      "query": "MATCH (n) WHERE n.id IN ['alice'] RETURN n // and me",
+      "nearest": "picked",
+      "reason": "\"/\" is not allowed in a view: text goes in single quotes, and the only symbols are ()[]{}:,.=|-"
+    },
+    {
+      "query": "MATCH (n) WHERE n.id IN ['alice] RETURN n",
+      "nearest": "picked",
+      "reason": "The text that starts at 'alice] RETU is never closed: end it with a single quote"
+    },
+    {
+      "query": "MATCH (n) WHERE n.id IN ['\\q'] RETURN n",
+      "nearest": "picked",
+      "reason": "The text '\\q' has an escape, \\q, that is not known"
+    },
+    {
+      "query": "MATCH (n {id: 'alice'})-[]-{1,4}(m) RETURN n, m",
+      "nearest": "near",
+      "reason": "At most 3 steps are allowed here, not 4"
+    },
+    {
+      "query": "MATCH (n {id: 'alice'})-[]-{1,0}(m) RETURN n, m",
+      "nearest": "near",
+      "reason": "At most 3 steps are allowed here, not 0"
+    },
+    {
+      "query": "MATCH (n {id: 'alice'})-[]-{2,3}(m) RETURN n, m",
+      "nearest": "near",
+      "reason": "Steps are counted from 1: write {1,3}"
+    },
+    {
+      "query": "MATCH (n {id: 'alice'})-[]->{1,2}(m) RETURN n, m",
+      "nearest": "near",
+      "reason": "Everything near a thing ignores direction: write -[]- with no arrow"
+    },
+    {
+      "query": "MATCH (n {id: 'alice'})-[]-{1,2}(n) RETURN n, n",
+      "nearest": "near",
+      "reason": "n names two things: give each its own name"
+    },
+    {
+      "query": "MATCH (n {id: 'alice'})-[]-{1,2}(m) RETURN n",
+      "nearest": "near",
+      "reason": "The query ends where \",\" should be"
+    },
+    {
+      "query": "MATCH (n {id: 'alice'})-[]-{1,2}(m) RETURN n, m, n",
+      "nearest": "near",
+      "reason": "Nothing may follow the view's RETURN, found \",\""
+    },
+    {
+      "query": "MATCH (n {name: 'alice'})-[]-{1,2}(m) RETURN n, m",
+      "nearest": "near",
+      "reason": "A view finds a thing by its id: write {id: 'name'}; found \"name\""
+    },
+    {
+      "query": "MATCH (n {id: alice})-[]-{1,2}(m) RETURN n, m",
+      "nearest": "near",
+      "reason": "Expected the thing's name in single quotes, found \"alice\""
+    },
+    {
+      "query": "MATCH p = (a {id: 'alice'})-[]->{1,7}(b {id: 'dan'}) RETURN p",
+      "nearest": "reaches",
+      "reason": "At most 6 steps are allowed here, not 7"
+    },
+    {
+      "query": "MATCH p = (a {id: 'alice'})-[]->{1,x}(b {id: 'dan'}) RETURN p",
+      "nearest": "reaches",
+      "reason": "Expected the most steps, found \"x\""
+    },
+    {
+      "query": "MATCH p = (a {id: 'alice'})-[:KNOWS]->{1,2}(b {id: 'dan'}) RETURN p",
+      "nearest": "reaches",
+      "reason": "Expected \"]\", found \":\""
+    },
+    {
+      "query": "MATCH p = (a {id: 'alice'})<-[]-{1,2}(b {id: 'dan'}) RETURN p",
+      "nearest": "reaches",
+      "reason": "\"<\" is not allowed in a view: text goes in single quotes, and the only symbols are ()[]{}:,.=|-"
+    },
+    {
+      "query": "MATCH p = (a {id: 'alice'})-[]->{1,2}(b {id: 'dan'}) RETURN a",
+      "nearest": "reaches",
+      "reason": "The thing is called p here, so write p, not a"
+    },
+    {
+      "query": "MATCH p = (a {id: 'alice'})-[]->{1,2}(a {id: 'dan'}) RETURN p",
+      "nearest": "reaches",
+      "reason": "a names two things: give each its own name"
+    },
+    {
+      "query": "MATCH (n:Person|Team) RETURN n",
+      "nearest": "kinds",
+      "reason": "Grafeo reads several kinds only after IS, not after a colon: write (n IS Person|Team)"
+    },
+    { "query": "MATCH (n IS Person|) RETURN n", "nearest": "kinds", "reason": "Expected a kind, found \")\"" },
+    { "query": "MATCH (n:) RETURN n", "nearest": "kinds", "reason": "Expected a kind, found \")\"" },
+    {
+      "query": "MATCH (p:Path {id: 'tour'})-[:NEXT]->(n) RETURN p, n",
+      "nearest": "path",
+      "reason": "A walked path's steps are STEPs; found \"NEXT\""
+    },
+    {
+      "query": "MATCH (p:Route {id: 'tour'})-[:STEP]->(n) RETURN p, n",
+      "nearest": "path",
+      "reason": "A walked path is a Path; found \"Route\""
+    },
+    {
+      "query": "MATCH (p:Path {id: 'tour'})<-[:STEP]-(n) RETURN p, n",
+      "nearest": "path",
+      "reason": "\"<\" is not allowed in a view: text goes in single quotes, and the only symbols are ()[]{}:,.=|-"
+    },
+    {
+      "query": "MATCH (p:Path {id: 'tour'})-[:STEP]->(p) RETURN p, p",
+      "nearest": "path",
+      "reason": "p names two things: give each its own name"
+    },
+    {
+      "query": "MATCH (p:Path {id: 'tour'})-[:STEP]->(n) RETURN p",
+      "nearest": "path",
+      "reason": "The query ends where \",\" should be"
+    },
+    {
+      "query": "MATCH (walk:Path {id: 'nowhere'})-[:STEP]->(stop) RETURN walk, stop",
+      "nearest": "path",
+      "reason": "walk is a word GQL or Grafeo keeps for itself, so it cannot be a name in a view: write another, such as walk_1"
+    },
+    {
+      "query": "MATCH (Return) WHERE Return.id IN ['alice'] RETURN Return",
+      "nearest": "picked",
+      "reason": "Return is a word GQL or Grafeo keeps for itself, so it cannot be a name in a view: write another, such as Return_1"
+    },
+    {
+      "query": "MATCH (n {id: 'alice'})-[]-{1,2}(on) RETURN n, on",
+      "nearest": "near",
+      "reason": "on is a word GQL or Grafeo keeps for itself, so it cannot be a name in a view: write another, such as on_1"
+    },
+    {
+      "query": "MATCH unwind = (a {id: 'alice'})-[]->{1,6}(b {id: 'dan'}) RETURN unwind",
+      "nearest": "reaches",
+      "reason": "unwind is a word GQL or Grafeo keeps for itself, so it cannot be a name in a view: write another, such as unwind_1"
+    },
+    {
+      "query": "MATCH (TRAIL IS Person) RETURN TRAIL",
+      "nearest": "kinds",
+      "reason": "TRAIL is a word GQL or Grafeo keeps for itself, so it cannot be a name in a view: write another, such as TRAIL_1"
+    }
+  ]
+}

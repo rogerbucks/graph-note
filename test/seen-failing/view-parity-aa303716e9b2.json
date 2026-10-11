@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/view-parity.test.js",
+  "test": "the five kinds of view > each view returns the things the table gives, which Grafeo returns for the same query",
+  "seen_failing_first": false,
+  "evidence": "views_agree_with_grafeo: pins evaluate, which already existed (view-evaluate.ts, built test-first in view-evaluate.test.js), on the shared view table that test_view_parity.py holds Grafeo to, so it passes against its parent by design. Seen failing against a planted fault: core taken out of near_dan_three's things in the table, it fails (scratch run, 11 Oct 2026)"
+}

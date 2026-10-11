@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/view-parity.test.js",
+  "test": "the five kinds of view > the table has every kind returning things and returning nothing, and each at the limit of its steps",
+  "seen_failing_first": false,
+  "evidence": "five_view_kinds: checks the shared view table's own coverage, not new behaviour, so it passes against its parent by design. Seen failing against a planted fault: the table's left_out key misspelt, so no path is walked in part, it fails (scratch run, 11 Oct 2026)"
+}

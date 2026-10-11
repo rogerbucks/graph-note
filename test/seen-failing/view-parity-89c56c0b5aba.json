@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/view-parity.test.js",
+  "test": "the five kinds of view > each view query is read as the view the table gives",
+  "seen_failing_first": false,
+  "evidence": "five_view_kinds, view_profile: pins parseView, which already existed (view-profile.ts, built test-first in view-profile.test.js), on the shared view table's 45 views, so it passes against its parent by design. Seen failing against a planted fault: parseView reading every near view at depth 1, it fails (scratch run, 11 Oct 2026)"
+}

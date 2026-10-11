@@ -118,6 +118,7 @@ These test behaviour across modules, or the repository itself, so they are named
 
 - `packages/core/test/abuse.test.js` — no sequence of edits or text crashes the viewer (spec §12).
 - `packages/core/test/display.test.js` — styled views and paths change only what they choose, and keep the locked hues, contrast and legend (editor spec §7).
+- `packages/core/test/view-parity.test.js` — every view of the shared table (`python/graph_spec/tests/view_cases.json`) is found in its note, read, and returns the things the table gives, and every query outside the view profile gets the table's refusal (editor spec §7, views_agree_with_grafeo).
 - `packages/core/test/views-across.test.js` — a view saved as shown is written in the style graph, never the data, and reopens the same (editor spec §7).
 - `packages/core/test/edge-cases.test.js` — empty, broken and oversized inputs each give a stated result, never a blank or a crash (spec §9).
 - `packages/core/test/edits.test.js` — every edit from the pane round-trips; locking writes a schema the checks pass.
@@ -142,6 +143,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `python/graph_spec/tests/test_licences.py` — every Python package carries an allowed licence.
 - `python/graph_spec/tests/test_parity.py` — the Python library gives the JavaScript library's answers.
 - `python/graph_spec/tests/test_reader_agrees_with_grafeo.py` — the reader and its plain rules give Grafeo's answers, Grafeo being the reference engine and a test dependency only (req:17.engine-agreement).
+- `python/graph_spec/tests/test_view_parity.py` — Grafeo, running each view of `view_cases.json` as written, returns the things the core returns, and refuses as a name only the words the core keeps from names (editor spec §7, views_agree_with_grafeo).
 - `python/graph_spec/tests/test_settings.py` — what a host sets after importing the library.
 - `test/cheap-checks.test.js` — the quiet test run, running only a change's tests, the AI guide and the search ignore file.
 - `test/classification.test.js` — the content check refuses confidential or personal files.

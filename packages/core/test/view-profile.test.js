@@ -112,6 +112,16 @@ describe('what is refused, and what the refusal says', () => {
     ["MATCH (p:Route {id: 't'})-[:STEP]->(n) RETURN p, n", 'path', /is a Path/],
     ["MATCH (p:Path {id: 't'})<-[:STEP]-(n) RETURN p, n", 'path', /"<" is not allowed in a view/],
     ["MATCH (p:Path {id: 't'})-[:STEP]->(p) RETURN p, p", 'path', /names two things/],
+    // a word GQL keeps, or Grafeo refuses, is no name: GQL's reserved, its pre-reserved, Grafeo's own (views_agree_with_grafeo)
+    [
+      "MATCH (walk:Path {id: 't'})-[:STEP]->(stop) RETURN walk, stop",
+      'path',
+      /^walk is a word GQL or Grafeo keeps for itself, so it cannot be a name in a view: write another, such as walk_1\./,
+    ],
+    ["MATCH (n {id: 'a'})-[]-{1,2}(Match) RETURN n, Match", 'near', /^Match is a word GQL .*such as Match_1\./],
+    ["MATCH (on) WHERE on.id IN ['a'] RETURN on", 'picked', /^on is a word GQL .*such as on_1\./],
+    ["MATCH UNWIND = (a {id: 'a'})-[]->{1,2}(b {id: 'b'}) RETURN UNWIND", 'reaches', /^UNWIND is a word GQL /],
+    ['MATCH (type IS Person) RETURN type', 'kinds', /^type is a word GQL .*such as type_1\./],
   ];
 
   for (const [written, nearest, reason] of CASES) {
@@ -124,6 +134,32 @@ describe('what is refused, and what the refusal says', () => {
       assert.ok(r.refused.includes(`The nearest is ${VIEW_NAMES[nearest]}: ${VIEW_FORMS[nearest]}`), r.refused);
     });
   }
+
+  // proves: view_profile
+  test('where a fixed word belongs, the refusal says once what it found instead', () => {
+    const reason = (q) => parseView(q).refused.split('. A view query')[0];
+    assert.equal(
+      reason("MATCH (p:Route {id: 't'})-[:STEP]->(n) RETURN p, n"),
+      'A walked path is a Path; found "Route"',
+    );
+    assert.equal(
+      reason("MATCH (p:Path {id: 't'})-[:NEXT]->(n) RETURN p, n"),
+      'A walked path\'s steps are STEPs; found "NEXT"',
+    );
+    assert.equal(
+      reason("MATCH (n) WHERE n.name IN ['a'] RETURN n"),
+      'A view finds things by their id: write n.id; found "name"',
+    );
+    assert.equal(
+      reason("MATCH (n {name: 'a'})-[]-{1,2}(m) RETURN n, m"),
+      'A view finds a thing by its id: write {id: \'name\'}; found "name"',
+    );
+  });
+
+  // proves: view_profile
+  test('a kind is not a name: it may be a word GQL keeps, as Path is', () => {
+    assert.deepEqual(parseView('MATCH (n:Path) RETURN n'), { kind: 'kinds', kinds: ['Path'] });
+  });
 
   // proves: view_profile
   test('whatever is written, the answer is a view or a refusal, never an exception', () => {
