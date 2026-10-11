@@ -68,7 +68,7 @@ export type { PathBlock, PathReading, PathStep, WalkedPath } from './paths.ts';
 export { viewsOf, readingOf } from './views.ts';
 export type { NamedView } from './views.ts';
 export { VIEW_FORMS, VIEW_KINDS, VIEW_LIMITS, VIEW_NAMES, parseView } from './view-profile.ts';
-export { viewBlock, viewQuery } from './view-write.ts';
+export { addView, makeView } from './view-write.ts';
 export type { ViewArgs, ViewKind, ViewRefusal, ViewSpec } from './view-profile.ts';
 export { evaluate } from './view-evaluate.ts';
 export type { ViewResult } from './view-evaluate.ts';
@@ -109,6 +109,9 @@ export {
 export type { DeferredDeclared, Park, Parked, ParkedCount } from './deferred.ts';
 export { nameFromText, nameSlug, nameStyleOf, nameWords, textFromName } from './name-suggestions.ts';
 export type { GraphNames, NameStyle } from './name-suggestions.ts';
+export { acceptNameFirst } from './suggested-names.ts';
+export { addThing, suggestName } from './add-thing.ts';
+export type { NewThing, ThingAdded } from './add-thing.ts';
 export { commaFor, commaInNote, colonFor, colonInNote } from './commas.ts';
 export type { TextChange } from './commas.ts';
 export {

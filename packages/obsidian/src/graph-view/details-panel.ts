@@ -162,13 +162,15 @@ export class DetailsPanel {
           if (this.o.editing?.() === ed) ed.replace(t);
         },
         this.o.indent ?? 'four',
-        this.o.reading.whole[this.o.graph], // a thing written in another block of the graph is found
+        this.o.graph,
         // the fix for a locked graph whose schema lacks Deferred and DEFERS: only while this editor is still open on the
         // card, as for every write here, so a control left from before Done declares nothing
         () =>
           this.o.editing?.() === ed
             ? ed.declareDeferred()
             : Promise.reject(new Error('The block is no longer being edited, so nothing was declared.')),
+        // the note as it is now: a thing written in another block is found, and one only suggested is not parked (§4)
+        () => ed.session?.current() ?? this.o.reading,
       );
   }
 
@@ -183,6 +185,7 @@ export class DetailsPanel {
     const text = () => ed.session?.text ?? '';
     renderProperties(el, {
       reading: this.o.reading,
+      now: () => ed.session?.current() ?? this.o.reading,
       graph: this.o.graph,
       target,
       kind,

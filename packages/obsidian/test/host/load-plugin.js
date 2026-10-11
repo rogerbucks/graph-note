@@ -43,9 +43,10 @@ export async function load(options = {}) {
   }
   const plugin = new Plugin(obsidian.app, { id: 'graph-note' });
   if (options.engine) plugin.loadEngine = options.engine;
-  await plugin.onload();
-  // loaded, as Obsidian's own load leaves it: what it adds from now on, such as an editor in place, is loaded with it
+  // loaded as Obsidian loads it, marked loaded before its onload runs and left so: what it adds, in onload or after, such
+  // as an editor in place that listens for the note changing, is loaded with it
   plugin._loaded = true;
+  await plugin.onload();
   return { plugin, state, doc, app: obsidian.app, obsidian, uninstall };
 }
 

@@ -122,12 +122,17 @@ export class BlockEditor extends Component {
   /** Park for later's fix: Deferred and DEFERS declared in the graph's schema, wherever it is written. */
   declareDeferred = () => this.note.declareDeferred(indentText(this.plugin.settings.indent));
 
-  /** Replaces the whole text, as an edit made from the inspector: shown, checked and written like typing. */
+  /**
+   * Replaces the whole text, as an edit made from the drawing: a step of its own, shown, checked and written like typing,
+   * and the names it newly writes checked again against the note as it is written (§4).
+   */
   replace(text: string): void {
     const t = this.el?.text;
     if (!t) return;
+    this.session?.edit(text);
     t.value = text;
-    this.typedAgain();
+    this.undoes.record(t, 'other');
+    this.changed();
   }
 
   /**
@@ -222,12 +227,6 @@ export class BlockEditor extends Component {
     this.schedule();
   }
 
-  /** A change made for the person, such as one from the inspector: recorded as a step, analysed and written. */
-  private typedAgain(): void {
-    this.undoes.record(this.el?.text, 'other');
-    this.changed();
-  }
-
   /** What the field now holds, analysed and written, without asking for another comma or colon; as after a setting changed. */
   changed(): void {
     const el = this.el,
@@ -311,14 +310,15 @@ export class BlockEditor extends Component {
     if (refused) await this.keepDraft(refused);
   }
 
-  private async keepDraft({ reason, draft }: Refused): Promise<void> {
+  private async keepDraft({ reason, draft, edit }: Refused): Promise<void> {
     await this.note.keepDraft(draft);
     // a deleted note has no block to reload: the text stays as typed, with its caret and its history
     if (this.note.file()) {
       if (this.el && this.session) this.el.text.value = this.session.text;
       this.reloaded();
     }
-    this.showKeptDraft(keptMessage(reason));
+    // an edit the note refused (§4) is kept as this editor's own draft, by its id, and the banner offers that draft
+    this.showKeptDraft(keptMessage(reason, edit));
   }
 
   /** The text as the note now has it, shown with its history started again, its help and its drawing. */

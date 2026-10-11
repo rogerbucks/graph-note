@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/read-only.test.js",
+  "test": "a card in reading view shows its details and offers nothing that writes, while its block is edited elsewhere > no Add a thing, and no form that adds one, in reading view or its full screen",
+  "seen_failing_first": false,
+  "evidence": "The one check in read-only.ts gates every function in the card's options, so the Add a thing strip, which writes only through the editing option, was already closed in reading view and its full screen. This pins it for the new control."
+}

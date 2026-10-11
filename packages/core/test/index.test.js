@@ -8,9 +8,12 @@
 // Claude Code host, 11 Oct 2026), deferred things (parkForLater, parked, parkedCount and their types, and the fix for a
 // refusal to park: declareDeferred, declareDeferredBlock, DeferredNotDeclared), walked paths (PathRecorder, PathPlayer,
 // pathBlock, pathsOf, pathProblems and their types), the style graph (readStyle, lookOf, legendOf, nudgedSource,
-// styleEdit, hueColour, the words a style may use and their types), and views (viewsOf, parseView, viewQuery, viewBlock,
+// styleEdit, hueColour, the words a style may use and their types), and views (viewsOf, parseView, makeView in place of
+// viewQuery and viewBlock, addView, which writes a view into a note and refuses one of a name only suggested there,
 // readingOf, evaluate and their types, 11 Oct 2026), and export (exportScope, exportSvg, exportWithLayout, pngSize, exportPlan,
-// companionNote, writeSafely, saidDate, EXPORT_FORMATS, PNG_MIN_SCALE and their types, 11 Oct 2026).
+// companionNote, writeSafely, saidDate, EXPORT_FORMATS, PNG_MIN_SCALE and their types, 11 Oct 2026), and the refusal to
+// write a name only suggested (acceptNameFirst, 11 Oct 2026), and adding a thing (addThing, suggestName and their types,
+// 11 Oct 2026).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -57,7 +60,10 @@ const VALUES = [
   'VIEW_LIMITS',
   'VIEW_NAMES',
   'Zoom',
+  'acceptNameFirst',
+  'addThing',
   'addToList',
+  'addView',
   'aiModel',
   'blockItems',
   'choose',
@@ -108,6 +114,7 @@ const VALUES = [
   'lockBlock',
   'lookOf',
   'makeList',
+  'makeView',
   'mergePathProblems',
   'nameFromText',
   'nameSlug',
@@ -147,6 +154,7 @@ const VALUES = [
   'stepOver',
   'styleEdit',
   'styleOf',
+  'suggestName',
   'textFromName',
   'textTooLarge',
   'textVersion',
@@ -155,8 +163,6 @@ const VALUES = [
   'tokenize',
   'tooLarge',
   'underStrictness',
-  'viewBlock',
-  'viewQuery',
   'viewsOf',
   'withoutColorMix',
   'writeSafely',
@@ -221,6 +227,7 @@ const TYPES = [
   'Mode',
   'NameStyle',
   'NamedView',
+  'NewThing',
   'NoteReading',
   'Nudge',
   'NudgeWord',
@@ -270,6 +277,7 @@ const TYPES = [
   'TextFormat',
   'TextState',
   'ThemeColours',
+  'ThingAdded',
   'ThingLook',
   'Token',
   'TokenClass',

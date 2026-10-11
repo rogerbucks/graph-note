@@ -2,7 +2,7 @@
 // kinds of view; the boxes tapped choose what it shows — picked by hand, the thing it is near, where a route starts and
 // ends, the kinds — and its reading is said in plain English as it is built; Write the view writes its query as a view
 // block of its own after the graph's last block. The strip is built once; only its words change as it goes.
-import { pathsOf, readingOf, viewBlock, viewQuery } from '@graph-note/core';
+import { makeView, pathsOf, readingOf } from '@graph-note/core';
 import type { ViewKind, ViewSpec } from '@graph-note/core';
 import { button } from './view-bar';
 import type { ViewOptions } from './view-options';
@@ -136,15 +136,11 @@ export class ViewMaker {
     if (!spec) return void this.alert?.setText('Tap the things the view shows first.');
     if (!/^\w+$/.test(name))
       return void this.alert?.setText('Give the view a name of one word: letters, digits and _.');
-    const { kind: _, ...args } = spec;
-    let block: string;
-    try {
-      block = viewBlock(this.o.graph, name, viewQuery(spec.kind, args as never));
-    } catch (e) {
-      // a graph or a kind whose name a view query cannot hold: said, and nothing written
-      return void this.alert?.setText(`This view cannot be written: ${(e as Error).message}`);
-    }
-    const refused = await this.o.writeView?.(block);
+    // the core makes the block, or says why not: a graph or a kind whose name a view query cannot hold; nothing is then
+    // written. Writing it checks it against the note as it is then: a thing only suggested there is refused (§4)
+    const made = makeView(this.o.graph, name, spec);
+    if ('refused' in made) return void this.alert?.setText(made.refused);
+    const refused = await this.o.writeView?.(made.block);
     if (refused) return void this.alert?.setText(refused);
     this.making = false;
     this.show();

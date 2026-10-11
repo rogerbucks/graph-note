@@ -1,7 +1,7 @@
 // The draft banner of the block editor (spec §9): what was typed is never lost. When a write is refused because the block
-// changed in the note meanwhile, or the note was deleted, what was typed is kept as a draft, offered to be restored or
-// discarded. The banner holds the id of the very draft it shows: Restore and Discard act on that draft only, and on no
-// other when it is gone (Roger's choice A, 11 Oct 2026).
+// changed in the note meanwhile, the note was deleted, or the note refused an edit made from the drawing (§4), what was
+// typed is kept as a draft, offered to be restored or discarded. The banner holds the id of the very draft it shows:
+// Restore and Discard act on that draft only, and on no other when it is gone (Roger's choice A, 11 Oct 2026).
 import { Notice } from 'obsidian';
 import { button } from './editor-layout';
 import { NOTE_DELETED } from './note-writing';
@@ -21,11 +21,16 @@ export const DELETED_MESSAGE = `The note was deleted while you were typing. What
 const GONE_MESSAGE =
   'That draft is no longer kept: it was restored or discarded elsewhere, so nothing was changed. Any other draft is offered when the block is opened again.';
 
-/** What the banner says when a write was refused: the block reloaded from the note, or the note deleted. */
-export const keptMessage = (reason: string): string =>
-  reason === NOTE_DELETED
-    ? DELETED_MESSAGE
-    : `The block changed in the note while you were typing (${reason}), so it was reloaded. What you typed is kept as a draft.`;
+/**
+ * What the banner says when a write was refused: the block reloaded from the note, or the note deleted; or, for an `edit`
+ * made from the drawing that the note as written refused (§4), why in the core's words, with the block reloaded.
+ */
+export const keptMessage = (reason: string, edit = false): string =>
+  edit
+    ? `The edit was not written: ${reason}. The block is as the note has it, and the edit is kept as a draft.`
+    : reason === NOTE_DELETED
+      ? DELETED_MESSAGE
+      : `The block changed in the note while you were typing (${reason}), so it was reloaded. What you typed is kept as a draft.`;
 
 /** The drafts an editor's banner offers and acts on: the one to show, and each by its id. */
 export interface DraftsOf {

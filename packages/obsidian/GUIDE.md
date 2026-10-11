@@ -108,8 +108,19 @@ module that ties the parts together, named as the folder is.
 - `walk.ts` — walked paths (§7): the strip below the bar with Play for each path in the note, stepping one thing at a
   time, marked and said; a path with no steps said to have none; and, while the block is edited, Record, which numbers
   each box as it is tapped and writes the path into the text.
+- `add-thing.ts` — adding a thing (§5): while the card is edited, Add a thing asks for the text first and suggests the name
+  from it as it is typed (`suggestName`), shown before anything is written; Add the thing writes it into the text being
+  edited (`addThing`), as one edit an undo takes back. A name of its own is kept and held to the same rules. The pane's
+  drawing has no editor of its own, so offers none of the graphic edits: there the thing is typed in the text.
 - `suggested-name.ts` — a box drawn under a suggested name: what screen readers hear of it, where it is written in the
-  block being edited, and in its details its suggested name with the one-click fix that writes it.
+  block being edited, and in its details its suggested name with the one-click fix that writes it. Nothing else writes
+  it: Park for later, Record a path, Make a view, a property changed or made a list and Save as shown with it
+  selected are each refused, in the core's words ("accept its name first"), by `acceptNameFirst`. Each is checked
+  against the note as it is when written, never the card's drawing, which can be older: an edit into the block with the
+  editor session's `current()` (the note as last seen, with what is typed), a view or a style inside `vault.process`.
+  The fix itself, Add the name, writes the name the note suggests now, and Add a thing suggests and checks its name the
+  same way. An edit into the block (the editor's `replace`) is checked again as it is written (`PaneSession.edit`); a
+  refusal reloads the block and says so in the draft banner, with the edit kept as a draft.
 - `placement.ts` — where a card is: read-only in reading view, a hover preview and an embed of another note (in Live
   Preview too); waiting for a card to be put on the page.
 - `read-only.ts` — the one check every write from a card passes: each function in its options, at any depth, is closed

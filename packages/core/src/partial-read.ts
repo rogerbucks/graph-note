@@ -202,13 +202,16 @@ function failure(block: number, text: string, error: unknown, all: Item[], lineA
  * Each block is applied in order; when one fails, the store is as it was before it (a block is applied whole or not at
  * all), the item at the failing line is blanked, and that block is read again — what a fresh read of every block would
  * give, as the Python reader does it, without reading the blocks before it again. `budget` caps the re-reading (above).
- * `kindOf` says which blocks are read (`prepare`): the data blocks by default.
+ * `kindOf` says which blocks are read (`prepare`): the data blocks by default. Only the blocks up to `upTo` are read and
+ * have their problems listed, as for a card drawn from the blocks up to its own; but names are suggested against every
+ * block, so a card, the whole note and every edit agree on a thing's suggested name (suggested_name_unique).
  */
 export function readBlocks(
   texts: string[],
   shared: string[],
   budget = REREAD_BUDGET,
   kindOf: KindOf = dataKind,
+  upTo = texts.length - 1,
 ): { store: gs.Store; problems: Problem[] } {
   const { clean, problems, skip, gaps } = prepare(texts, kindOf);
   const store = new gs.Store();
@@ -222,7 +225,7 @@ export function readBlocks(
   const meant: Problem[] = [];
   let attempt = 0,
     spent = 0;
-  for (let block = 0; block < clean.length; block++) {
+  for (let block = 0; block < Math.min(clean.length, upTo + 1); block++) {
     if (skip.has(block)) continue;
     // every change made to a block keeps its line breaks where they were, so its lines are indexed once
     const lineAt = lineIndex(texts[block] ?? '');
@@ -287,5 +290,6 @@ export function readBlocks(
       break;
     }
   }
-  return { store, problems: problems.concat(meant).sort((a, b) => a.block - b.block || a.line - b.line) };
+  const listed = problems.concat(meant).filter((p) => p.block <= upTo);
+  return { store, problems: listed.sort((a, b) => a.block - b.block || a.line - b.line) };
 }

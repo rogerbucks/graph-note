@@ -23,6 +23,9 @@ const BLOCK = `// graph: reader
 (tablet:Option {name: 'Tablet'}),
 (small)-[:ANSWERS]->(q)`;
 
+/** The drawing of BLOCK: parking is given it, to know which things are drawn only under a suggested name (§4). */
+const DRAWN = readNote([BLOCK]);
+
 const TODAY = '2026-10-07';
 const PARK = { what: 'say what the small reader answers', why: 'waiting for the trial' };
 
@@ -53,7 +56,7 @@ const deferral = (id, thing, props) => `,\n(${id}:Deferred {${props}}),\n(${id})
 describe('parking a thing for later (park_for_later)', () => {
   test('writes a Deferred that says what is needed and why it waits, linked to the thing', () => {
     // park_for_later
-    const out = parkForLater(BLOCK, 'small', PARK);
+    const out = parkForLater(BLOCK, 'small', PARK, DRAWN);
     const g = readNote([out]).world.reader;
     const [d] = g.labelled('Deferred');
     assert.equal(g.p(d).what, PARK.what);
@@ -66,15 +69,15 @@ describe('parking a thing for later (park_for_later)', () => {
 
   test('reads with no new problem, and leaves everything already written as it was', () => {
     // park_for_later
-    const out = parkForLater(BLOCK, 'small', PARK);
+    const out = parkForLater(BLOCK, 'small', PARK, DRAWN);
     assert.deepEqual(problemsOf(out), problemsOf(BLOCK));
     assert.ok(out.startsWith(BLOCK), 'the block is kept whole, with only a comma added after its last item');
   });
 
   test('writes the revisit date only when one is given, as a DATE', () => {
     // park_for_later
-    assert.ok(!parkForLater(BLOCK, 'small', PARK).includes('revisit_by'));
-    const out = parkForLater(BLOCK, 'small', { ...PARK, revisitBy: '2026-11-01' });
+    assert.ok(!parkForLater(BLOCK, 'small', PARK, DRAWN).includes('revisit_by'));
+    const out = parkForLater(BLOCK, 'small', { ...PARK, revisitBy: '2026-11-01' }, DRAWN);
     assert.ok(out.includes("revisit_by: DATE '2026-11-01'"));
     assert.deepEqual(problemsOf(out), problemsOf(BLOCK));
     assert.equal(parked(readNote([out]), 'reader', TODAY).get('small')?.revisitBy, '2026-11-01');
@@ -82,7 +85,7 @@ describe('parking a thing for later (park_for_later)', () => {
 
   test('writes the rule it parks when one is given', () => {
     // park_for_later
-    const out = parkForLater(BLOCK, 'small', { ...PARK, rule: 'every_option_answers' });
+    const out = parkForLater(BLOCK, 'small', { ...PARK, rule: 'every_option_answers' }, DRAWN);
     const g = readNote([out]).world.reader;
     assert.equal(g.p(g.labelled('Deferred')[0]).rule, 'every_option_answers');
   });
@@ -90,14 +93,15 @@ describe('parking a thing for later (park_for_later)', () => {
   test('quotes and escapes the words as locking does, so any words read back as written', () => {
     // park_for_later
     const what = "ask Ann's team about a \\ and 'quotes'";
-    const out = parkForLater(BLOCK, 'small', { what, why: 'no reply yet' });
+    const out = parkForLater(BLOCK, 'small', { what, why: 'no reply yet' }, DRAWN);
     assert.equal(parked(readNote([out]), 'reader', TODAY).get('small')?.what, what);
     assert.deepEqual(problemsOf(out), problemsOf(BLOCK));
   });
 
   test('a line break in the words becomes a space, so a string never spans lines', () => {
     // park_for_later
-    const out = parkForLater(BLOCK, 'small', { what: 'say what\nit answers  ', why: '  waiting\r\nfor the trial' });
+    const park = { what: 'say what\nit answers  ', why: '  waiting\r\nfor the trial' };
+    const out = parkForLater(BLOCK, 'small', park, DRAWN);
     const p = parked(readNote([out]), 'reader', TODAY).get('small');
     assert.deepEqual([p?.what, p?.why], ['say what it answers', 'waiting for the trial']);
   });
@@ -105,7 +109,7 @@ describe('parking a thing for later (park_for_later)', () => {
   test('a block that already ends with a comma gets no second one', () => {
     // park_for_later
     const withComma = BLOCK + ',';
-    const out = parkForLater(withComma, 'small', PARK);
+    const out = parkForLater(withComma, 'small', PARK, readNote([withComma]));
     assert.ok(!/,\s*,/.test(out), 'never two commas in a row');
     assert.ok(problemsOf(withComma).length > 0, 'the comma at the end was itself a problem');
     assert.deepEqual(problemsOf(out), [], 'and parking makes it a separator');
@@ -114,7 +118,7 @@ describe('parking a thing for later (park_for_later)', () => {
 
   test('a block that ends with a comment line keeps it, and the comma goes after the last item', () => {
     // park_for_later
-    const out = parkForLater(BLOCK + '\n// the end of the block', 'small', PARK);
+    const out = parkForLater(BLOCK + '\n// the end of the block', 'small', PARK, DRAWN);
     assert.ok(out.includes('(small)-[:ANSWERS]->(q),\n// the end of the block\n'));
     assert.deepEqual(problemsOf(out), problemsOf(BLOCK));
     assert.equal(parked(readNote([out]), 'reader', TODAY).size, 1);
@@ -123,7 +127,7 @@ describe('parking a thing for later (park_for_later)', () => {
   test('a comment after the last item on its own line is kept, with the comma before it', () => {
     // park_for_later
     const commented = BLOCK + ' // not decided';
-    const out = parkForLater(commented, 'small', PARK);
+    const out = parkForLater(commented, 'small', PARK, readNote([commented]));
     assert.ok(out.includes('(small)-[:ANSWERS]->(q), // not decided\n'));
     assert.deepEqual(problemsOf(out), problemsOf(commented), 'nothing new beyond what the comment already was');
   });
@@ -131,32 +135,33 @@ describe('parking a thing for later (park_for_later)', () => {
   test('a // inside the last words is not a comment', () => {
     // park_for_later
     const block = "// graph: g\n(a:T {name: 'see http://x.example'})";
-    const out = parkForLater(block, 'a', PARK);
+    const out = parkForLater(block, 'a', PARK, readNote([block]));
     assert.ok(out.includes("'see http://x.example'}),\n"));
     assert.deepEqual(problemsOf(out), []);
   });
 
   test('a block ending with blank lines is not left with a gap before the new items', () => {
     // park_for_later
-    const out = parkForLater(BLOCK + '\n\n  \n', 'small', PARK);
+    const out = parkForLater(BLOCK + '\n\n  \n', 'small', PARK, DRAWN);
     assert.ok(out.includes('(small)-[:ANSWERS]->(q),\n(later_small:Deferred'));
     assert.deepEqual(problemsOf(out), problemsOf(BLOCK));
   });
 
   test('takes a fresh id: later_<thing>, then _2, _3 when it is taken', () => {
     // park_for_later
-    const once = parkForLater(BLOCK, 'small', PARK);
+    const once = parkForLater(BLOCK, 'small', PARK, DRAWN);
     assert.deepEqual(readNote([once]).world.reader.labelled('Deferred'), ['later_small']);
-    const twice = parkForLater(once, 'small', { what: 'again', why: 'still waiting' });
+    const twice = parkForLater(once, 'small', { what: 'again', why: 'still waiting' }, readNote([once]));
     assert.deepEqual(readNote([twice]).world.reader.labelled('Deferred'), ['later_small', 'later_small_2']);
-    const thrice = parkForLater(twice, 'tablet', { what: 'and this', why: 'later' });
+    const thrice = parkForLater(twice, 'tablet', { what: 'and this', why: 'later' }, readNote([twice]));
     assert.deepEqual(readNote([thrice]).world.reader.labelled('Deferred'), [
       'later_small',
       'later_small_2',
       'later_tablet',
     ]);
     // a thing already called later_small, written for another reason, is not reused
-    const taken = parkForLater(BLOCK.replace('(tablet:', '(later_small:'), 'small', PARK);
+    const takenBlock = BLOCK.replace('(tablet:', '(later_small:');
+    const taken = parkForLater(takenBlock, 'small', PARK, readNote([takenBlock]));
     assert.deepEqual(readNote([taken]).world.reader.labelled('Deferred'), ['later_small_2']);
     assert.deepEqual(problemsOf(thrice), problemsOf(BLOCK));
   });
@@ -164,7 +169,8 @@ describe('parking a thing for later (park_for_later)', () => {
   test('long words are split over lines, indented as the settings say', () => {
     // park_for_later
     const what = 'say what the small reader answers once the three week trial is over and written up';
-    const out = parkForLater(BLOCK, 'small', { what, why: 'waiting for the trial', revisitBy: '2026-11-01' }, '  ');
+    const park = { what, why: 'waiting for the trial', revisitBy: '2026-11-01' };
+    const out = parkForLater(BLOCK, 'small', park, DRAWN, '  ');
     assert.ok(out.includes(`(later_small:Deferred {\n  what: '${what}',\n  why: 'waiting for the trial',\n`));
     assert.equal(parked(readNote([out]), 'reader', TODAY).get('small')?.what, what);
     assert.deepEqual(problemsOf(out), problemsOf(BLOCK));
@@ -172,42 +178,45 @@ describe('parking a thing for later (park_for_later)', () => {
 
   test('refuses when it does not say what is needed, or why it waits', () => {
     // park_for_later
-    assert.throws(() => parkForLater(BLOCK, 'small', { what: '', why: 'later' }), /what/);
-    assert.throws(() => parkForLater(BLOCK, 'small', { what: 'x', why: '' }), /why/);
-    assert.throws(() => parkForLater(BLOCK, 'small', { what: '   ', why: 'later' }), /what/);
-    assert.throws(() => parkForLater(BLOCK, 'small', { what: 'x', why: '\n\t' }), /why/);
+    assert.throws(() => parkForLater(BLOCK, 'small', { what: '', why: 'later' }, DRAWN), /what/);
+    assert.throws(() => parkForLater(BLOCK, 'small', { what: 'x', why: '' }, DRAWN), /why/);
+    assert.throws(() => parkForLater(BLOCK, 'small', { what: '   ', why: 'later' }, DRAWN), /what/);
+    assert.throws(() => parkForLater(BLOCK, 'small', { what: 'x', why: '\n\t' }, DRAWN), /why/);
   });
 
   test('refuses a thing the block does not have, and a block with no graph', () => {
     // park_for_later
-    assert.throws(() => parkForLater(BLOCK, 'nobody', PARK), /nobody/);
-    assert.throws(() => parkForLater('(a:T)', 'a', PARK), /graph/);
+    assert.throws(() => parkForLater(BLOCK, 'nobody', PARK, DRAWN), /nobody/);
+    assert.throws(() => parkForLater('(a:T)', 'a', PARK, readNote(['(a:T)'])), /graph/);
   });
 
   test('refuses a revisit date that is not a day, so nothing odd is written', () => {
     // park_for_later
     for (const bad of ['next week', '2026-13-01', '2026-02-30', "2026-11-01'}), (x"])
-      assert.throws(() => parkForLater(BLOCK, 'small', { ...PARK, revisitBy: bad }), /revisit/);
+      assert.throws(() => parkForLater(BLOCK, 'small', { ...PARK, revisitBy: bad }, DRAWN), /revisit/);
   });
 
   test('a locked graph that does not declare Deferred and DEFERS is not parked in, and says to declare them', () => {
     // park_for_later
     assert.deepEqual(problemsOf(LOCKED), []);
-    assert.throws(() => parkForLater(LOCKED, 'small', PARK), /locked.*declare.*Deferred and DEFERS/);
+    assert.throws(
+      () => parkForLater(LOCKED, 'small', PARK, readNote([LOCKED])),
+      /locked.*declare.*Deferred and DEFERS/,
+    );
   });
 
   test('a locked graph that declares them is parked in with no undeclared-type warning', () => {
     // park_for_later
-    assert.deepEqual(problemsOf(parkForLater(DECLARED, 'small', PARK)), []);
+    assert.deepEqual(problemsOf(parkForLater(DECLARED, 'small', PARK, readNote([DECLARED]))), []);
   });
 
   test('a thing written in another block of its graph is parked, given the graph as the note reads it', () => {
     // park_for_later
     const first = "// graph: reader\n(small:Option {name: 'Small'}),\n(later_small:Deferred {what: 'a', why: 'b'})";
     const second = "// graph: reader\n(big:Option {name: 'Big'})";
-    const whole = readNote([first, second]).whole.reader;
-    assert.throws(() => parkForLater(second, 'small', PARK), /no small/);
-    const written = parkForLater(second, 'small', PARK, '    ', whole);
+    const note = readNote([first, second]);
+    assert.throws(() => parkForLater(second, 'small', PARK, note), /no small/);
+    const written = parkForLater(second, 'small', PARK, note, '    ', note.whole.reader);
     assert.match(written, /\(later_small_2:Deferred/, 'a fresh id, not one taken in another block');
     assert.deepEqual(problemsOf(first, written), []);
   });
@@ -215,7 +224,7 @@ describe('parking a thing for later (park_for_later)', () => {
   test('a block that ends with a SET or MATCH is not parked in: the Deferred needs a block of its own', () => {
     // park_for_later
     const set = `${BLOCK},\nSET small.name = 'Little'`;
-    assert.throws(() => parkForLater(set, 'small', PARK), /SET or MATCH/);
+    assert.throws(() => parkForLater(set, 'small', PARK, readNote([set])), /SET or MATCH/);
   });
 });
 
@@ -246,7 +255,7 @@ describe('declaring Deferred and DEFERS in the schema (park_for_later)', () => {
   test('after it, parking in the same block works, the note reads with no new problem and nothing is untyped', () => {
     // park_for_later
     const [block] = blocksOf(declareDeferred(noteOf(LOCKED), 'reader'));
-    const parkedBlock = parkForLater(block, 'small', PARK);
+    const parkedBlock = parkForLater(block, 'small', PARK, readNote([block]));
     assert.deepEqual(problemsOf(parkedBlock), problemsOf(LOCKED));
     assert.deepEqual(untypedIn(parkedBlock), [[], [], []]);
     // the check bites: the same Deferred parked without the declarations leaves both untyped
@@ -263,9 +272,13 @@ describe('declaring Deferred and DEFERS in the schema (park_for_later)', () => {
     assert.equal(schema, `${SCHEMA},\n${TAIL}`);
     assert.equal(out, noteOf(BLOCK, `${SCHEMA},\n${TAIL}`), 'every other byte of the note is kept');
     // parking in the data block works once the graph is read with its new schema, and was refused before
-    const before = wholeOf(BLOCK, SCHEMA);
-    assert.throws(() => parkForLater(BLOCK, 'small', PARK, '    ', before), /declare.*Deferred and DEFERS/);
-    const parkedBlock = parkForLater(data, 'small', PARK, '    ', wholeOf(data, schema));
+    const before = readNote([BLOCK, SCHEMA]);
+    assert.throws(
+      () => parkForLater(BLOCK, 'small', PARK, before, '    ', before.whole.reader),
+      /declare.*Deferred and DEFERS/,
+    );
+    const after = readNote([data, schema]);
+    const parkedBlock = parkForLater(data, 'small', PARK, after, '    ', after.whole.reader);
     assert.deepEqual(problemsOf(parkedBlock, schema), problemsOf(BLOCK, SCHEMA));
     assert.deepEqual(untypedIn(parkedBlock, schema), [[], [], []]);
   });
@@ -289,7 +302,7 @@ describe('declaring Deferred and DEFERS in the schema (park_for_later)', () => {
     assert.ok(block.includes("name: 'DEFERS', kind: 'edge'"));
     assert.ok(block.endsWith('(reader_schema)-[:DECLARES]->(link_defers)'));
     assert.ok(!block.includes('kind_deferred_2'));
-    assert.deepEqual(untypedIn(parkForLater(block, 'small', PARK)), [[], [], []]);
+    assert.deepEqual(untypedIn(parkForLater(block, 'small', PARK, readNote([block]))), [[], [], []]);
     // and the other way round
     const edge = declareDeferred(noteOf(`${LOCKED},\n${LINK_DEFERS}`), 'reader');
     assert.ok(
@@ -315,7 +328,9 @@ describe('declaring Deferred and DEFERS in the schema (park_for_later)', () => {
     assert.match(schema, /\(reader_schema\)-\[:DECLARES\]->\(link_defers_2\)/);
     assert.match(schema, /\(kind_deferred:Meta:ElementType/, 'an id not taken keeps its own name');
     assert.deepEqual(problemsOf(data, schema), problemsOf(data, SCHEMA));
-    assert.deepEqual(untypedIn(parkForLater(data, 'small', PARK, '    ', wholeOf(data, schema)), schema), [[], [], []]);
+    const note = readNote([data, schema]);
+    const parkedBlock = parkForLater(data, 'small', PARK, note, '    ', note.whole.reader);
+    assert.deepEqual(untypedIn(parkedBlock, schema), [[], [], []]);
   });
 
   test('puts a comma where GQL needs one, never two, and keeps a comment at the end of the block', () => {
@@ -325,7 +340,7 @@ describe('declaring Deferred and DEFERS in the schema (park_for_later)', () => {
       const [block] = blocksOf(declareDeferred(noteOf(schema), 'reader'));
       assert.ok(!/,\s*,/.test(block), `never two commas in a row after ${JSON.stringify(end)}`);
       assert.ok(block.includes(end.trim().split('\n').at(-1) ?? ''), 'the comment is kept');
-      assert.deepEqual(untypedIn(parkForLater(block, 'small', PARK)), [[], [], []]);
+      assert.deepEqual(untypedIn(parkForLater(block, 'small', PARK, readNote([block]))), [[], [], []]);
       const was = problemsOf(schema);
       assert.ok(
         problemsOf(block).every((m) => was.includes(m)),
@@ -395,7 +410,7 @@ describe('the refusal that has a fix (park_for_later)', () => {
   test('a locked graph without the declarations is refused in a way a host can tell, in the same words', () => {
     // park_for_later
     assert.throws(
-      () => parkForLater(LOCKED, 'small', PARK),
+      () => parkForLater(LOCKED, 'small', PARK, readNote([LOCKED])),
       (e) =>
         e instanceof DeferredNotDeclared &&
         e.code === 'deferred-not-declared' &&
@@ -404,16 +419,17 @@ describe('the refusal that has a fix (park_for_later)', () => {
         e.message ===
           'graph reader is locked and its schema does not declare Deferred and DEFERS: declare them in the schema first',
     );
-    const some = parkForLater.bind(null, `${LOCKED},\n${KIND_DEFERRED}`, 'small', PARK);
+    const kindOnly = `${LOCKED},\n${KIND_DEFERRED}`;
+    const some = parkForLater.bind(null, kindOnly, 'small', PARK, readNote([kindOnly]));
     assert.throws(some, (e) => e instanceof DeferredNotDeclared && e.lacking.join() === 'DEFERS');
   });
 
   test('every other refusal stays a plain error', () => {
     // park_for_later
     for (const refuse of [
-      () => parkForLater(BLOCK, 'small', { what: '', why: 'x' }),
-      () => parkForLater(BLOCK, 'nobody', PARK),
-      () => parkForLater('(a:T)', 'a', PARK),
+      () => parkForLater(BLOCK, 'small', { what: '', why: 'x' }, DRAWN),
+      () => parkForLater(BLOCK, 'nobody', PARK, DRAWN),
+      () => parkForLater('(a:T)', 'a', PARK, readNote(['(a:T)'])),
     ])
       assert.throws(refuse, (e) => e instanceof Error && !(e instanceof DeferredNotDeclared) && !('code' in e));
   });
@@ -522,7 +538,7 @@ describe('what is parked, and what is overdue (parked_not_broken)', () => {
   test('a thing parked by the pane reads back as parked', () => {
     // parked_not_broken
     const map = parked(
-      readNote([parkForLater(BLOCK, 'tablet', { ...PARK, revisitBy: '2026-10-01' })]),
+      readNote([parkForLater(BLOCK, 'tablet', { ...PARK, revisitBy: '2026-10-01' }, DRAWN)]),
       'reader',
       TODAY,
     );

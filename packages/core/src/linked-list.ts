@@ -10,6 +10,7 @@ import { literally, parseValue, propertiesOf, setProperty, spanOf } from './insp
 import { nameFromText, nameStyleOf } from './name-suggestions.ts';
 import type { NameStyle } from './name-suggestions.ts';
 import type { NoteReading } from './note-reading.ts';
+import { acceptNameFirst } from './suggested-names.ts';
 
 /** The relationship and the kind a list's things are linked by and of. */
 export interface ListShape {
@@ -139,8 +140,20 @@ function notHere(block: string, reading: NoteReading, graph: string, thing: stri
     : `${thing} is not written in this block: edit it where it is written, in graph ${graph}`;
 }
 
+/**
+ * Why a list cannot be written for this thing: it is drawn under a suggested name, which the link would write by name
+ * without its fix (§4). The same for a value that reuses such a thing.
+ */
+function unwritten(reading: NoteReading, graph: string, ...keys: (string | null)[]): string | null {
+  return acceptNameFirst(
+    reading,
+    graph,
+    keys.filter((k): k is string => k !== null),
+  );
+}
+
 /** The block with new items added after its last path or INSERT (before any SET), comma-separated, as the block writes its own. */
-function appended(block: string, lines: string[]): string {
+export function appended(block: string, lines: string[]): string {
   if (!lines.length) return block;
   const paths = items(block).filter((it) => !/^(SET|MATCH)\b/i.test(block.slice(it.from, it.to)));
   const last = paths.at(-1);
@@ -176,7 +189,7 @@ export function makeList(
   key: string | null,
   shape: ListShape,
 ): ListEdit {
-  const fault = shapeFault(shape) ?? notHere(block, reading, graph, thing);
+  const fault = shapeFault(shape) ?? unwritten(reading, graph, thing) ?? notHere(block, reading, graph, thing);
   if (fault) return { ok: false, reason: fault };
   if (key === null) return { ok: true, text: block, said: 'a list with no values yet', things: [] };
   // the values are those the block says now: the reading may be older than the text
@@ -188,7 +201,10 @@ export function makeList(
   const lines: string[] = [];
   const made: { id: string; isNew: boolean }[] = [];
   for (const v of listValues(words)) {
-    if (existing(k, shape.kind, v) === thing) return { ok: false, reason: itself(v) };
+    const was = existing(k, shape.kind, v);
+    if (was === thing) return { ok: false, reason: itself(v) };
+    const first = unwritten(reading, graph, was);
+    if (first) return { ok: false, reason: first };
     const m = itemsFor(k, thing, shape, v);
     if (!made.some((x) => x.id === m.id)) {
       lines.push(...m.lines);
@@ -212,13 +228,15 @@ export function addToList(
   shape: ListShape,
   value: string,
 ): ListEdit {
-  const fault = shapeFault(shape) ?? notHere(block, reading, graph, thing);
+  const fault = shapeFault(shape) ?? unwritten(reading, graph, thing) ?? notHere(block, reading, graph, thing);
   if (fault) return { ok: false, reason: fault };
   const v = value.trim();
   if (v === '') return { ok: false, reason: 'a value cannot be empty' };
   const k = known(reading, graph, block);
   const was = existing(k, shape.kind, v);
   if (was === thing) return { ok: false, reason: itself(v) };
+  const first = unwritten(reading, graph, was);
+  if (first) return { ok: false, reason: first };
   if (was !== null && k.links.has(triple(thing, shape.rel, was)))
     return { ok: false, reason: `${v} is already in the list` };
   const m = itemsFor(k, thing, shape, v);
@@ -327,46 +345,5 @@ export function removeFromList(
   };
 }
 
-/** The things a thing is linked to by a list's relationship, of its kind, in the order they were written. */
-export function linkedValues(reading: NoteReading, graph: string, thing: string, shape: ListShape): ListValue[] {
-  const drawing = reading.graphs.get(graph);
-  const out: ListValue[] = [];
-  for (const l of drawing?.links ?? []) {
-    const box = drawing?.boxes.find((b) => b.key === l.to);
-    if (
-      l.from === thing &&
-      l.type === shape.rel &&
-      box?.kind.split(' · ').includes(shape.kind) &&
-      !out.some((o) => o.thing === l.to)
-    )
-      out.push({ thing: l.to, text: box.text });
-  }
-  return out;
-}
-
-/**
- * The lists a thing holds, found in the graph: a relationship out of the thing to bare things of one kind — things with
- * no links out and no properties but a name, as this module writes them — at least two of them, or one by a relationship
- * named HAS_ and the kind. A thing with a life of its own is no list item.
- */
-export function listsOf(reading: NoteReading, graph: string, thing: string): ListShape[] {
-  const drawing = reading.graphs.get(graph),
-    g = reading.world[graph];
-  const found = new Map<string, { shape: ListShape; targets: Set<string> }>();
-  for (const l of drawing?.links ?? []) {
-    const box = drawing?.boxes.find((b) => b.key === l.to);
-    if (l.from !== thing || !box || !g) continue;
-    const bare =
-      !drawing?.links.some((x) => x.from === l.to) && Object.keys(g.p(l.to)).every((p) => p === 'id' || p === 'name');
-    if (!bare) continue;
-    for (const kind of box.kind.split(' · ').filter(Boolean)) {
-      const at = found.get(`${l.type}\u0000${kind}`) ?? { shape: { rel: l.type, kind }, targets: new Set<string>() };
-      at.targets.add(l.to);
-      found.set(`${l.type}\u0000${kind}`, at);
-    }
-  }
-  // one bare target is a link, not a list, unless its relationship is named as a list's is: HAS_ and the kind
-  return [...found.values()]
-    .filter((f) => f.targets.size >= 2 || f.shape.rel === `HAS_${f.shape.kind.toUpperCase()}`)
-    .map((f) => f.shape);
-}
+// reading the lists a thing holds is its own module; re-exported, so what imports this one is unchanged
+export { linkedValues, listsOf } from './lists-held.ts';

@@ -11,6 +11,7 @@ import { textTooLarge } from './layout-limits.ts';
 import { dataKind } from './blocks.ts';
 import { parkedIn } from './deferred.ts';
 import { undeclared, undeclaredUse } from './schema-checks.ts';
+import { suggestedPlaces } from './suggested-names.ts';
 
 /** A thing's text: its name, else its title, text or label, else its id — as graph-spec-draw.py chooses. */
 function textOf(g: Graph, id: string): string {
@@ -39,13 +40,7 @@ function drawingOf(
   const ids = [...g.nodes.keys()].filter((i) => ![...(g.nodes.get(i)?.[0] ?? [])].some((l) => hidden.has(l)));
   const drawn = new Set(ids);
   // a thing written without a name is drawn under the name suggested for it, and marked so until the name is written (§4)
-  const suggested = new Map(
-    problems.flatMap((p) =>
-      p.graph === name && p.suggested && p.insert
-        ? [[p.suggested, { block: p.block, line: p.insert.line, character: p.insert.character }] as const]
-        : [],
-    ),
-  );
+  const suggested = suggestedPlaces(problems, name);
   return {
     graph: name,
     boxes: ids.map((key) => {
@@ -89,7 +84,8 @@ export function readNote(
   // exception to drawing as the Python reader does (drawn_in_part): over the limits it draws nothing at all.
   const tooLarge = textTooLarge([...blocks.filter((b) => typeof dataKind(b) === 'string'), ...shared]);
   if (tooLarge) return { graphs: new Map(), problems: [], world: {}, whole: {}, texts: upto, tooLarge };
-  const { store, problems } = readBlocks(upto, shared, budget);
+  // drawn from the blocks up to `upTo`, with names suggested against every block, as the whole note suggests them
+  const { store, problems } = readBlocks(blocks, shared, budget, dataKind, upTo);
   const world = gs.worldFromStore(store);
   const whole = upTo >= blocks.length - 1 ? world : gs.worldFromStore(readBlocks(blocks, shared, budget).store);
   const graphs = new Map<string, GraphDrawing>();
