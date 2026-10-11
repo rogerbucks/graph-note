@@ -128,6 +128,25 @@ test('random text, of every kind, never crashes the viewer', async () => {
   }
 });
 
+test('a graph or thing named as JavaScript names its own objects’ parts is drawn as any other, never a crash', async () => {
+  const engine = await loadEngine();
+  for (const word of ['constructor', 'toString', 'valueOf', 'hasOwnProperty', '__proto__']) {
+    const text = `// graph: ${word}\n(a:T {name: 'A'}),\n(${word}:T {name: 'W'}),\n(a)-[:R]->(${word})`;
+    everything(text, engine);
+    const reading = readNote([text]);
+    assert.deepEqual(
+      reading.graphs.get(word)?.boxes.map((b) => b.key),
+      ['a', word],
+      word,
+    );
+    assert.deepEqual(
+      reading.problems.filter((p) => p.severity === 'error'),
+      [],
+      word,
+    );
+  }
+});
+
 test('a note of random blocks is always read: its blocks found, its graphs read', () => {
   for (let i = 0; i < 200; i++) {
     let note = '';

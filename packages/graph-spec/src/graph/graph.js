@@ -36,8 +36,10 @@ class Graph {
     return (this._in.get(i) || []).filter((e) => t === undefined || e[1] === t);
   }
 }
+/** The world of a store: each graph by its name, in a table holding nothing but its graphs, so a graph called
+ * `constructor` or `toString` is found as any other, and a name no graph has finds nothing. */
 function worldFromStore(store) {
-  const out = {};
+  const out = Object.create(null);
   for (const [g, stored] of Object.entries(store.graphs)) {
     const byk = new Map([...stored.nodes].map(([k, n]) => [k, n.props.id]));
     out[g] = new Graph(
@@ -45,19 +47,24 @@ function worldFromStore(store) {
       stored.edges.map(([s, t, d, p]) => [byk.get(s), t, byk.get(d), Object.assign({}, p)]),
     );
   }
-  const schemas = {}; // shared schemas (§5) travel with the world but are not graphs in it — kept out of every listing
+  const schemas = Object.create(null); // shared schemas (§5) travel with the world but are not graphs in it — kept out of every listing
   for (const [name, g] of Object.entries(store.schemas || {}))
     if (g in out) {
       schemas[name] = out[g];
       delete out[g];
     }
   Object.defineProperty(out, '__schemas', { value: schemas, enumerable: false });
-  Object.defineProperty(out, '__named', { value: Object.assign({}, store.named || {}), enumerable: false });
+  Object.defineProperty(out, '__named', {
+    value: Object.assign(Object.create(null), store.named || {}),
+    enumerable: false,
+  });
   return out;
 }
+/** Graph g's shared schema (§5): the name its header gives, and the schema of that name; undefined for each it lacks. */
 const schemaFor = (w, g) => {
-  const name = (w.__named || {})[g];
-  return [name, name ? (w.__schemas || {})[name] : undefined];
+  const own = (table, key) => (table && Object.hasOwn(table, key) ? table[key] : undefined);
+  const name = own(w.__named, g);
+  return [name, name ? own(w.__schemas, name) : undefined];
 };
 function canon(g) {
   const pr = (p) => {
