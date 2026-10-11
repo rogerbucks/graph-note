@@ -71,4 +71,6 @@ export interface ViewOptions {
   writeBlock?: (block: number, was: string, now: string) => Promise<string | null>;
   /** The editor open in place on this card, if any: then the details are the inspector (spec §14). */
   editing?: () => Editing | undefined;
+  /** For a card opened from another, as full screen is: read-only whenever the card it was opened from is (spec §3). */
+  readOnly?: () => boolean;
 }

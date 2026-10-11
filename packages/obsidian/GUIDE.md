@@ -71,12 +71,12 @@ module that ties the parts together, named as the folder is.
   down the page is marked `graph-note-down`, which `styles.css` uses to give a link's label a gap from its line, so the
   layout source and the SVG stay the Python library's.
 - `taps.ts` — what a tap or a key lands on, and the nearest things to a tap.
-- `details-panel.ts` — the details of a box, a link or an estimated link, the one shown marked as selected, and the
-  inspector while the block is edited.
+- `details-panel.ts` — the details of a box, a link or an estimated link, the one shown marked as selected, its
+  properties to read, and the inspector while the block is edited.
 - `estimate-actions.ts` — what an estimated link's details offer (§3): the quick fix, its problem's own fix (the core's
   `estimateFix`), written into the text being edited, or else into the note while the block is still as drawn
-  (`ViewOptions.writeBlock`); and Edit the link, which opens the editor with the misspelt word selected. Neither in
-  reading view.
+  (`ViewOptions.writeBlock`); and Edit the link, which opens the editor with the misspelt word selected. Neither where
+  `read-only.ts`'s gate has closed the writes: reading view, and full screen opened from it.
 - `parked.ts` — things parked for later (§5, §8): each drawn dashed with a "⏳ later" or "⏳ overdue" mark on the SVG
   Graphviz drew, so the layout stays the Python library's; listed behind the badge, which counts them apart from
   problems; and Park for later in a box's details while the block is edited, writing the Deferred into its text. In a
@@ -95,6 +95,9 @@ module that ties the parts together, named as the folder is.
 - `suggested-name.ts` — a box drawn under a suggested name: what screen readers hear of it, where it is written in the
   block being edited, and in its details its suggested name with the one-click fix that writes it.
 - `placement.ts` — where a card is: read-only in reading view; waiting for a card to be put on the page.
+- `read-only.ts` — the one check every write from a card passes: each function in its options is closed where the card
+  is read-only (reading view, and full screen opened from it), but those named as only reading, so a new control that
+  writes is read-only there by default.
 - `view-options.ts` — what a drawing is given.
 
 ### `src/block-editor/` — the text of one graph block, in the pane or in place

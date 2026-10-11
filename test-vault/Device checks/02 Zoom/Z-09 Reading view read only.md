@@ -1,19 +1,24 @@
 # Z-09 Reading view read only
 
-**You should see:** in reading view, a bar that offers Source and no Edit. Source swaps the drawing for the block's text, coloured, in the same place, and pressing it again brings the drawing back. A hover preview of this note, or an embed of it in another, is read-only in the same way.
+**You should see:** in reading view, a bar that offers Source and no Edit. Source swaps the drawing for the block's text, coloured, in the same place, and pressing it again brings the drawing back. A hover preview of this note, or an embed of it in another, is read-only in the same way. Properties can be seen but never added or changed in reading view: tapping Large reader shows "name: Large reader" and "weight: 180" under Properties, and tapping its ANSWERS link shows "since: 2024", each as plain words. Nothing there can be typed in or pressed to change them: no Add property, no type icon or its menu (no Text, List or Remove), no value or name field, no x on a list's things and no field to add one, no Park for later, no Add the name for Pocket reader, written without a name on purpose (its one problem on the badge), no Record a path, no Make a view. The only button in the details is Close. All of this holds while the same block is being edited in place in Live Preview in another pane, and in full screen opened from reading view, which offers no Edit here and no Edit in pane either.
 
 **Test diagram:**
 
 ```gql
 // graph: reader · SOURCE
 (question:Question {title: 'Which device should I read on?'}),
-(large:Option {name: 'Large reader'}),
+(large:Option {name: 'Large reader', weight: 180}),
 (small:Option {name: 'Small reader'}),
-(large)-[:ANSWERS]->(question),
-(small)-[:ANSWERS]->(question)
+(large)-[:ANSWERS {since: 2024}]->(question),
+(small)-[:ANSWERS]->(question),
+(light:Tag {name: 'Light'}),
+(large)-[:HAS_TAG]->(light),
+(cheap:Tag {name: 'Cheap'}),
+(large)-[:HAS_TAG]->(cheap),
+(:Option {name: 'Pocket reader'})
 ```
 
-<!-- expect: clean -->
+<!-- expect: problem "this thing has no name; suggested: pocket_reader" -->
 
 **Do this:**
 
@@ -21,6 +26,12 @@
 1. Switch to reading view and look at the bar: Source, and no Edit.
 2. Press Source, then press it again.
 3. Hover over a link to this note, or embed it in another note, and check the drawing there has no Edit.
+4. Tap Large reader. Check its properties are listed, and that nothing in its details can be typed in, pressed or right-clicked to change them: no Add property, no type icon, no field, no x on Light or Cheap, no Park for later.
+5. Tap the link from Large reader to the question. Check "since: 2024" is listed, with nothing to change it.
+6. Tap Pocket reader. Its suggested name is said, with no button to add it.
+7. With a box selected, press Enter, Space, Delete and Command-Z (Ctrl-Z on Windows): nothing in the note changes.
+8. Open the note in a second pane in Live Preview and press Edit here on its drawing. Back in the reading view pane, repeat steps 4 to 7, and check there is no Record a path and no Make a view. The text being edited in Live Preview must not change, and its selection must not move when you tap a box in reading view.
+9. Press Full screen in reading view. Check there is no Edit here and no Edit in pane, and repeat step 4 there.
 
 **Checklist line:**
 

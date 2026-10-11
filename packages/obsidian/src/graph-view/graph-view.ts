@@ -7,6 +7,7 @@ import { Zoom } from '@graph-note/core';
 import type { View, ZoomEvent } from '@graph-note/core';
 import { renderCode } from '../code';
 import { readOnlyHere, whenPlaced } from './placement';
+import { gateWrites } from './read-only';
 import { renderProblems } from './problems-list';
 import { listParked } from './parked';
 import { Walk } from './walk';
@@ -35,10 +36,14 @@ export class GraphView extends MarkdownRenderChild {
   private editButton: HTMLButtonElement | null = null;
   private readonly taps: Taps;
   private codeEl: HTMLElement | null = null;
+  private readonly readOnly: () => boolean;
 
   constructor(containerEl: HTMLElement, options: ViewOptions) {
     super(containerEl);
-    this.o = options;
+    // whether the card is where the note is only read: in reading view, or opened from a card that is (spec §3)
+    this.readOnly = () => !!options.readOnly?.() || (options.mode === 'note' && readOnlyHere(containerEl));
+    // every write the card can make goes through that one check: none where the card is read-only
+    this.o = gateWrites(options, this.readOnly);
     this.taps = new Taps(options.drawn.svg);
   }
 
@@ -119,10 +124,11 @@ export class GraphView extends MarkdownRenderChild {
     whenPlaced(
       root,
       () => {
-        if (mode === 'note' && readOnlyHere(root)) {
+        if (this.readOnly()) {
           [...editing, ...writes].forEach((b) => b.remove());
           this.editButton = null;
           slot?.remove();
+          this.showEditing(); // Record and Make a view, built before the card was placed, offered no more
           if (was?.selected) this.open({ key: was.selected }); // a view saved as shown opens with its selection here too
           return;
         }
@@ -292,6 +298,7 @@ export class GraphView extends MarkdownRenderChild {
       ...this.o,
       mode: 'full',
       onClose: () => this.closeFullscreen(),
+      readOnly: this.readOnly, // full screen opened in reading view is read-only too
     });
     this.fullscreen = { view, overlay };
     this.addChild(view);

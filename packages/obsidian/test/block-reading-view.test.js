@@ -3,9 +3,8 @@
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until, wait } from './host/load-plugin.js';
-import { fakeContext } from './host/fake-obsidian.js';
 import { fence, labelled } from './host/notes.js';
-import { PATH, READER, NOTE } from './host/card-notes.js';
+import { PATH, READER, NOTE, showIn } from './host/card-notes.js';
 
 before(() => build());
 
@@ -13,23 +12,6 @@ describe('reading view is read-only', () => {
   // Decided by Roger, 9 Oct 2026 (spec §3 "Read-only in Reading view", §4 "In the editing view only"): a graph is edited
   // only where the note is edited, in Live Preview or Source mode, or in the pane. In reading view the bar offers Source
   // in place of Edit: the block's text, coloured and read-only, in place of the drawing, and back.
-  /** Draws the block where Obsidian's reading view would put it, or its editor; on the page, or put there after. */
-  async function showIn(env, view, { offPage = false, note } = {}) {
-    const text = note ?? env.state.files.get(PATH),
-      lines = text.split('\n'),
-      open = lines.findIndex((l) => l.startsWith('```gql'));
-    let end = open + 1;
-    while (!/^```\s*$/.test(lines[end])) end++;
-    const host = env.doc.createElement('div');
-    host.addClass(view === 'reading' ? 'markdown-reading-view' : 'markdown-source-view');
-    const inner = host.createDiv({ cls: view === 'reading' ? 'markdown-preview-view markdown-rendered' : 'cm-editor' });
-    const el = inner.createDiv({ cls: 'block-language-gql' });
-    if (!offPage) env.doc.body.appendChild(host);
-    await env.state.processors.get('gql')(lines.slice(open + 1, end).join('\n'), el, fakeContext(text, open));
-    if (offPage) env.doc.body.appendChild(host);
-    return el;
-  }
-
   test('in reading view the bar offers Source, and neither Edit here nor Edit in pane', async () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {

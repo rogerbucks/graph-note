@@ -2,7 +2,7 @@
 // things at either end or the links in and out, its properties and its problems — with the one shown marked as
 // selected; and, while the block is edited in place, the inspector, which changes its properties in the text.
 import { Platform } from 'obsidian';
-import { details, linkDetails, linkInBlock } from '@graph-note/core';
+import { details, linkDetails, linkInBlock, propertiesOf } from '@graph-note/core';
 import type { Estimate } from '@graph-note/core';
 import { renderProperties } from '../properties/properties';
 import { problemText } from './problems-list';
@@ -59,17 +59,24 @@ export class DetailsPanel {
     const ul = el.createEl('ul');
     ul.createEl('li', { text: `From: ${d.from.text}` });
     ul.createEl('li', { text: `To: ${d.to.text}` });
-    if (d.properties.length && !this.o.editing?.()?.session) {
-      el.createEl('h4', { text: 'Properties' });
-      const props = el.createEl('ul');
-      for (const [k, v] of d.properties) props.createEl('li', { text: `${k}: ${v}` });
-    }
+    this.readOnlyProperties(el, d.properties);
     if (d.problems.length) {
       el.createEl('h4', { text: 'Problems' });
       const probs = el.createEl('ul');
       for (const p of d.problems) probs.createEl('li', { text: problemText({ ...p, noteLine: this.o.lineOf(p) }) });
     }
     this.inspector(el, { link: index }, '');
+  }
+
+  /**
+   * A thing's or link's properties, shown to be read, each as name: value, where the inspector is not open to change
+   * them: outside edit mode, and in reading view, which shows them and never changes them (spec §3, §14).
+   */
+  private readOnlyProperties(el: HTMLElement, properties: [string, string][]): void {
+    if (!properties.length || this.o.editing?.()?.session) return;
+    el.createEl('h4', { text: 'Properties' });
+    const ul = el.createEl('ul');
+    for (const [k, v] of properties) ul.createEl('li', { text: `${k}: ${v}` });
   }
 
   /** The details panel, emptied and shown, with a heading and a close button. */
@@ -139,6 +146,10 @@ export class DetailsPanel {
       d.in.map((l) => `${l.text} ${l.reading} this`),
     );
     if (!d.out.length && !d.in.length) el.createEl('p', { text: 'No links in or out.' });
+    this.readOnlyProperties(
+      el,
+      propertiesOf(this.o.reading, this.o.graph, { thing: key }).map((p) => [p.key, p.value]),
+    );
     links(
       'Problems',
       d.problems.map((p) => problemText({ ...p, noteLine: this.o.lineOf(p) })),
