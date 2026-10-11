@@ -50,6 +50,41 @@ describe('drafts follow their note', () => {
   });
 });
 
+describe('drafts follow their note, never over another', () => {
+  const kept = (text) => ({ text, kept: '2026-10-11T08:00:00.000Z' });
+
+  // the re-review of #91, 11 Oct 2026: a note renamed onto the name of a deleted note whose draft is kept
+  test('a note renamed to where a deleted note’s draft is kept: both drafts kept, the one moved beside the other', async () => {
+    const data = {
+      drafts: { 'B.md#reader': kept('deleted B'), 'A.md#reader': kept('A'), 'A.md#reader (2)': kept('A, the pane') },
+    };
+    const env = await load({ files: { 'A.md': NOTE }, data });
+    try {
+      await env.app.vault.rename(env.app.vault.getFileByPath('A.md'), 'B.md');
+      await until(() => !Object.keys(drafts(env)).some((k) => k.startsWith('A.md')), 2000);
+      const byText = Object.fromEntries(Object.entries(drafts(env)).map(([k, d]) => [d.text, k]));
+      assert.deepEqual(Object.keys(byText).sort(), ['A', 'A, the pane', 'deleted B'], 'none lost');
+      assert.equal(byText['deleted B'], 'B.md#reader', 'the deleted note’s left where it was');
+      for (const text of ['A', 'A, the pane']) assert.match(byText[text], /^B\.md#reader \(\d+\)$/, text);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a folder renamed: the drafts of the notes in it go with them, and no other note’s', async () => {
+    const data = { drafts: { 'Folder/A.md#reader': kept('in the folder'), 'Folder.md#reader': kept('beside it') } };
+    const env = await load({ files: { 'Folder/A.md': NOTE, 'Folder.md': NOTE }, data });
+    try {
+      // Obsidian tells a folder's rename as the folder, at its new path, and the path it had
+      env.state.tell('rename', { path: 'Moved' }, 'Folder');
+      await until(() => !!drafts(env)['Moved/A.md#reader'], 2000);
+      assert.deepEqual(Object.keys(drafts(env)).sort(), ['Folder.md#reader', 'Moved/A.md#reader']);
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
 describe('every kept draft can be recovered', () => {
   test('a deleted note’s draft: the notice names the command, which writes it into a new note', async () => {
     const env = await pane.open();
@@ -71,6 +106,38 @@ describe('every kept draft can be recovered', () => {
       assert.doesNotMatch(note, /```gql/, 'as plain text, never drawn as a graph');
       assert.ok(env.state.notices.some((n) => /1 kept draft written into Kept drafts\.md/.test(n)));
       assert.ok(drafts(env)[`${pane.PATH}#reader`], 'and the draft stays kept');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a note already named Kept drafts is never replaced: the drafts go into Kept drafts-2', async () => {
+    const data = { drafts: { [`${PATH}#reader`]: { text: 'mine', kept: '2026-10-11T08:00:00.000Z' } } };
+    const env = await load({ files: { [PATH]: NOTE, 'Kept drafts.md': 'my own note' }, data });
+    try {
+      await command(env, 'recover-drafts').callback();
+      assert.equal(env.state.files.get('Kept drafts.md'), 'my own note');
+      assert.ok(env.state.files.get('Kept drafts-2.md')?.includes('mine'));
+      assert.ok(env.state.notices.some((n) => n.includes('Kept drafts-2.md')));
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // on a Mac a note named only in another case, such as kept drafts.md, is the same file, and creating it fails
+  test('when the note cannot be written, it says so, and the drafts stay kept', async () => {
+    const data = { drafts: { [`${PATH}#reader`]: { text: 'mine', kept: '2026-10-11T08:00:00.000Z' } } };
+    const env = await load({ files: { [PATH]: NOTE }, data });
+    try {
+      env.app.vault.create = async () => {
+        throw new Error('File already exists.');
+      };
+      await command(env, 'recover-drafts').callback();
+      assert.ok(
+        env.state.notices.some((n) => /could not be written.*File already exists/.test(n)),
+        'it says why',
+      );
+      assert.ok(drafts(env)[`${PATH}#reader`]);
     } finally {
       env.uninstall();
     }

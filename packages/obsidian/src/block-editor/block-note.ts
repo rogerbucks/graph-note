@@ -17,6 +17,7 @@ import {
 import type GraphNotePlugin from '../main';
 import type { Drafts } from '../main';
 import type { DeclaredDeferred } from '../graph-view/view-options';
+import { keyBeside } from '../drafts';
 import { DELETED_MESSAGE } from './kept-draft';
 import type { KeptDraft } from './kept-draft';
 import { NOTE_DELETED, lockInNote, stepNote, writeThroughEditor, writeThroughVault } from './note-writing';
@@ -156,12 +157,13 @@ export class BlockNote {
 
   /**
    * The note, or its folder, renamed or moved from `old` to `now`: followed there. Its drafts are moved by the plugin
-   * itself, whether or not the note is being edited (drafts.ts); this editor's own draft keeps its place among them.
+   * itself, whether or not the note is being edited, each beside any other kept under the new name (drafts.ts); so this
+   * editor's next draft finds its own place again, never taking another's.
    */
   private renamed(now: string, old: string): void {
     if (!this.isOrHolds(old)) return;
     this.path = now + this.path.slice(old.length);
-    if (this.own) this.own = { ...this.own, key: this.key() };
+    this.own = null;
   }
 
   /**
@@ -187,11 +189,7 @@ export class BlockNote {
   async keepDraft(text: string): Promise<void> {
     const data = this.plugin.drafts(),
       key = this.key();
-    if (this.own?.key !== key) {
-      let beside = '';
-      for (let n = 2; data[key + beside] && data[key + beside]?.text !== text; n++) beside = ` (${n})`;
-      this.own = { key, beside };
-    }
+    if (this.own?.key !== key) this.own = { key, beside: keyBeside(data, key, text).slice(key.length) };
     data[key + this.own.beside] = { text, kept: new Date().toISOString() };
     await this.plugin.saveDrafts(data);
   }

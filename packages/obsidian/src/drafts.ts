@@ -4,6 +4,7 @@
 // deleted is never out of reach.
 import { Notice } from 'obsidian';
 import type GraphNotePlugin from './main';
+import type { Drafts } from './main';
 import { freePath } from './export/vault-write';
 
 /** The command that recovers every kept draft into a new note. */
@@ -15,7 +16,20 @@ function whose(key: string): { path: string; graph: string } {
   return { path: key.slice(0, at), graph: key.slice(at + 1) };
 }
 
-/** The drafts kept for the note at `old`, or for a note in the folder at `old`, moved to where it now is, under `now`. */
+/**
+ * `key`, or, when a different draft is kept there, the first of `key (2)`, `key (3)`… that is free or already holds
+ * `text`: where a draft is kept beside, never over, another kept for the same note and graph.
+ */
+export function keyBeside(data: Drafts, key: string, text: string): string {
+  let at = key;
+  for (let n = 2; data[at] && data[at]?.text !== text; n++) at = `${key} (${n})`;
+  return at;
+}
+
+/**
+ * The drafts kept for the note at `old`, or for a note in the folder at `old`, moved to where it now is, under `now`:
+ * each beside, never over, a different draft already kept there, as a deleted note's at the name the note now takes.
+ */
 export async function followRename(plugin: GraphNotePlugin, now: string, old: string): Promise<void> {
   const data = plugin.drafts();
   let moved = false;
@@ -23,7 +37,7 @@ export async function followRename(plugin: GraphNotePlugin, now: string, old: st
     const { path } = whose(key);
     if (path !== old && !path.startsWith(`${old}/`)) continue;
     delete data[key];
-    data[now + key.slice(old.length)] = draft;
+    data[keyBeside(data, (now + key.slice(old.length)).replace(/ \(\d+\)$/, ''), draft.text)] = draft;
     moved = true;
   }
   if (moved) await plugin.saveDrafts(data);
@@ -48,6 +62,12 @@ export async function recoverDrafts(plugin: GraphNotePlugin): Promise<void> {
   });
   const intro = 'What was typed in a graph and could not be written, as Graph Note kept it.';
   const path = freePath(plugin, 'Kept drafts.md');
-  await plugin.app.vault.create(path, `# Kept drafts\n\n${intro}\n${parts.join('\n')}\n`);
+  try {
+    await plugin.app.vault.create(path, `# Kept drafts\n\n${intro}\n${parts.join('\n')}\n`);
+  } catch (e) {
+    // as on a Mac, where a note named only in another case is the same file: said, and the drafts stay kept
+    new Notice(`The kept drafts could not be written into ${path}: ${(e as Error).message} They stay kept.`);
+    return;
+  }
   new Notice(`${kept.length} kept draft${kept.length === 1 ? '' : 's'} written into ${path}.`);
 }

@@ -1,7 +1,9 @@
 // The editors open in place (spec §4, typing_keeps_focus; the review of #91, 11 Oct 2026): an editor whose card's block
 // is cut never goes to the block that comes to sit on its line, and comes back to its own block when it is pasted and
-// saved; an editor is released, its typing written, when its note is closed, and leaves no listener behind, as it does
-// after Done; and Edit here pressed again while the editor opens moves it into the newer card only once it is made.
+// saved, even when the block that comes is another of the same graph; an editor is released, its typing written, when
+// its note is closed, whether its card was on the page or scrolled away, and an editor with nothing to open is never
+// kept, each leaving no listener behind, as after Done; and Edit here pressed again while the editor opens moves it into
+// the newer card only once it is made.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until, wait } from './host/load-plugin.js';
@@ -10,6 +12,14 @@ import { PATH, READER, NOTE, show } from './host/card-notes.js';
 import { cardsOf, openNote, place } from './host/editing-view.js';
 
 before(() => build());
+
+/**
+ * Closes every editor in place, as Done does, so that a field left off the page stops waiting to be given the focus
+ * again before the test's page is taken down, whether the test passed or not.
+ */
+async function closeAll(env) {
+  for (const e of [...env.plugin.inline.open.keys()]) await e.done();
+}
 
 const OTHER = "// graph: other\n(x:Thing {name: 'X'})";
 /** `# Reader`, then block A, the reader graph, then block B, another graph. */
@@ -33,17 +43,105 @@ describe('an editor whose block is cut', () => {
       a.widget.destroy(dom);
       dom.remove();
       assert.equal(cardsOf(view.state)[0].line, 2, 'B is on line 2 now');
-      assert.equal(env.plugin.inlineFor(PATH, 2), undefined, 'B’s card has no editor');
+      assert.ok(env.plugin.inlineFor(PATH, 2) === undefined, 'B’s card has no editor');
       // A pasted at the end, and the note saved
       view.dispatch({ changes: { from: view.state.doc.length, insert: '\n' + fence(READER) + '\n' } });
       const pasted = cardsOf(view.state).find((c) => c.line !== 2);
       await env.app.vault.modify({ path: PATH }, view.state.doc.toString());
       await until(() => editor.session.ref.line === pasted.line, 2000);
-      assert.equal(env.plugin.inlineFor(PATH, 2), undefined, 'B’s card still has none');
+      assert.ok(env.plugin.inlineFor(PATH, 2) === undefined, 'B’s card still has none');
       assert.ok(env.plugin.inlineFor(PATH, pasted.line) === editor, 'A’s card has A’s editor');
       const back = await place(env, pasted.widget, until);
       await until(() => back.querySelector('textarea') === t, 3000);
       assert.equal(t.value, READER);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // the re-review of #91, 11 Oct 2026: a graph written over two blocks, so the block that comes to the line is the same graph
+  test('of a graph written over two blocks, never goes to the graph’s other block when that comes to its line', async () => {
+    const more = "// graph: reader\n(small:Option {name: 'Small reader'}),\n(small)-[:ANSWERS]->(q)";
+    const note = ['# Reader', '', fence(READER), '', fence(more), ''].join('\n');
+    const env = await load({ files: { [PATH]: note } });
+    try {
+      const view = openNote(env, note, PATH);
+      const [a1] = cardsOf(view.state);
+      const dom = await place(env, a1.widget, until);
+      labelled(dom, 'Edit here').click();
+      await until(() => !!dom.querySelector('textarea'));
+      const editor = env.plugin.inlineFor(PATH, 2);
+      const cut = fence(READER) + '\n\n';
+      view.dispatch({ changes: { from: note.indexOf(cut), to: note.indexOf(cut) + cut.length } });
+      a1.widget.destroy(dom);
+      dom.remove();
+      // compared by identity: a failing equal on an editor would print the whole plugin and page
+      assert.ok(env.plugin.inlineFor(PATH, 2) === undefined, 'A2, now on A1’s line, has no editor');
+      view.dispatch({ changes: { from: view.state.doc.length, insert: '\n' + fence(READER) + '\n' } });
+      const pasted = cardsOf(view.state).find((c) => c.line !== 2);
+      await env.app.vault.modify({ path: PATH }, view.state.doc.toString());
+      await until(() => editor.session.ref.line === pasted.line, 2000);
+      assert.ok(env.plugin.inlineFor(PATH, 2) === undefined, 'A2 still has none');
+      assert.ok(env.plugin.inlineFor(PATH, pasted.line) === editor, 'A1, pasted and saved, has its editor');
+    } finally {
+      await closeAll(env);
+      env.uninstall();
+    }
+  });
+});
+
+describe('an editor in place that outlives its note is released', () => {
+  test('its card scrolled away, then its note closed: the editor goes, with every listener it had', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      const listening = env.state.listening(),
+        watching = env.plugin.settingsWatchers.size;
+      const view = openNote(env, NOTE, PATH);
+      const [card] = cardsOf(view.state);
+      const dom = await place(env, card.widget, until);
+      labelled(dom, 'Edit here').click();
+      await until(() => !!dom.querySelector('textarea'));
+      // scrolled far away: the card is taken down, while the note stays open
+      card.widget.destroy(dom);
+      dom.remove();
+      await wait(1200);
+      assert.equal(env.plugin.inline.size, 1, 'kept while the note is open');
+      // the note closed: its editor goes, and no card is left on the page to go with it
+      view.close();
+      await until(() => env.plugin.inline.size === 0, 3000);
+      assert.equal(env.state.listening(), listening, 'no listener left on the vault');
+      assert.equal(env.plugin.settingsWatchers.size, watching, 'nor on the settings');
+    } finally {
+      await closeAll(env);
+      env.uninstall();
+    }
+  });
+
+  test('Edit here on a card drawn before its note was renamed: no editor is left behind, and it says why', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      const el = await show(env);
+      await env.app.vault.rename(env.app.vault.getFileByPath(PATH), 'Renamed.md');
+      const listening = env.state.listening();
+      labelled(el, 'Edit here').click();
+      await until(() => env.state.notices.some((n) => /not there any more/.test(n)), 2000);
+      assert.equal(env.plugin.inline.size, 0, 'no editor kept');
+      assert.ok(env.plugin.inlineFor(PATH, 2) === undefined, 'and no editor is found for the card');
+      assert.equal(env.state.listening(), listening, 'and no listener left on the vault');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('Edit here on a note with no graph block: no editor is left behind', async () => {
+    const env = await load({ files: { 'Plain.md': '# Plain\n\nNo graph here.\n' } });
+    try {
+      const listening = env.state.listening();
+      const slot = env.doc.body.createDiv({ cls: 'markdown-source-view' });
+      await env.plugin.editHere({ path: 'Plain.md', line: 0, graph: 'reader' }, slot);
+      assert.equal(env.plugin.inline.size, 0, 'no editor kept');
+      assert.equal(env.state.listening(), listening, 'and no listener left on the vault');
+      assert.match(slot.textContent, /no graph block to edit/, 'and the card says why');
     } finally {
       env.uninstall();
     }

@@ -12,10 +12,12 @@ module that ties the parts together, named as the folder is.
 - `main.ts` — the plugin: registers the block processor, the pane, the editor extension, the settings page and the
   command that converts a note to standard GQL; keeps the settings, drafts and shared schemas; opens the editors.
 - `inline-editors.ts` — the editors open in place: each found by its block's identity, never by another block that comes
-  to its line; one to a block, however often Edit here is pressed; released, its typing written, when its card has left
-  the page and its note is closed.
-- `drafts.ts` — the drafts kept in the plugin's data: moved with their note when it is renamed, edited or not; and
-  Recover kept drafts into a new note, the command that writes every one, a deleted note's among them, into a note.
+  to its line, even one of the same graph; one to a block, however often Edit here is pressed; released, its typing
+  written, when it is off the page and its note is closed, whether a card left or the editing view closed; never kept
+  when there is nothing to open, the note gone or without a graph block.
+- `drafts.ts` — the drafts kept in the plugin's data: moved with their note when it is renamed, edited or not, each
+  beside, never over, a different draft kept under the new name; and Recover kept drafts into a new note, the command
+  that writes every one, a deleted note's among them, into a note, and says so when that note cannot be written.
 - `block.ts` — one gql block in a note: drawn, or shown as code, never blank; as text with a banner when it is over a
   size or time limit.
 - `view-block.ts` — a view (§7): a query block named as a view, drawn as what it picks out of its graph; refused, saying
@@ -144,8 +146,8 @@ package, or all with `npm test` from the repository root. Each builds `main.js` 
   (the obsidian module and CodeMirror), `load-plugin.js` (building and loading the plugin), `cascade.js` (the part of
   the CSS cascade a test needs), `notes.js` (a fenced block, a button by its label), and the notes each group of tests
   opens: `card-notes.js`, `pane-notes.js`, `view-notes.js`, and `inspector-steps.js` (opening a box's details and driving the inspector's rows, menus and chips).
-  `editing-view.js` opens a note in the editing view, in Live Preview, with the plugin's own extension, and gives the
-  cards it would draw. A component's `registerEvent` is released when it unloads, and `state.listening()` counts the
+  `editing-view.js` opens a note in the editing view, in Live Preview, with the plugin's own extension and view plugins,
+  closes it as Obsidian closes an editor, and gives the cards it would draw. A component's `registerEvent` is released when it unloads, and `state.listening()` counts the
   vault's listeners, so one left behind shows.
   `workers.js` stands in a browser's Worker: each runs the code main.js hands it, from its Blob URL, in a real thread.
   `fake-vault.js` stands in the vault's ways of making files (create, modify, rename, delete, a folder), one of which

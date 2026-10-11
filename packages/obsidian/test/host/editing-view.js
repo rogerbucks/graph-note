@@ -2,7 +2,22 @@
 // place's cards need it: a real CodeMirror state that moves on as it is changed, and the cards it would draw.
 import { cmState, cmView, editorLivePreviewField, editorInfoField } from './fake-obsidian.js';
 
-/** Opens `text` as the note at `path` in the editing view; the plugin sees the editor, and writes through it. */
+/** The plugin's own view plugins, among the editor extensions it registered, however deep they are nested. */
+function viewPlugins(env) {
+  const found = [];
+  const walk = (e) => {
+    if (Array.isArray(e)) e.forEach(walk);
+    else if (e instanceof cmView.ViewPlugin) found.push(e);
+  };
+  walk(env.state.editorExtensions ?? []);
+  return found;
+}
+
+/**
+ * Opens `text` as the note at `path` in the editing view; the plugin sees the editor, through its own view plugins as
+ * Obsidian's editor makes them, and writes through it. `view.close()` closes the note as Obsidian closes an editor: its
+ * view plugins are destroyed, and the cards drawn at the time are left to the test.
+ */
 export function openNote(env, text, path) {
   const view = {
     state: cmState.EditorState.create({
@@ -17,7 +32,8 @@ export function openNote(env, text, path) {
       view.state = view.state.update(spec).state;
     },
   };
-  env.plugin.editorViews.add(view);
+  const made = viewPlugins(env).map((p) => p.create(view));
+  view.close = () => made.forEach((m) => m.destroy?.());
   return view;
 }
 

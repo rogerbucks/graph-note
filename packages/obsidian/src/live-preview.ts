@@ -157,7 +157,7 @@ class GraphBlock extends WidgetType {
     state.observer?.disconnect();
     state.component?.unload();
     state.component = null;
-    this.plugin.inline.cardLeft();
+    this.plugin.inline.releaseUnseen();
   }
 
   /** Draws the block off the page, then puts it in place of the old drawing: the card never shrinks between. */
@@ -237,9 +237,15 @@ export function graphBlocks(plugin: GraphNotePlugin): Extension {
     provide: (f) => EditorView.decorations.from(f),
   });
   // each editor open on a note, so what is typed in a card can be written through it, never behind its back
+  // an editor closed takes down only the cards drawn at the time: an editor in place whose card was scrolled away goes too
   const editors = ViewPlugin.define((view) => {
     plugin.editorViews.add(view);
-    return { destroy: () => plugin.editorViews.delete(view) };
+    return {
+      destroy: () => {
+        plugin.editorViews.delete(view);
+        plugin.inline.releaseUnseen();
+      },
+    };
   });
   return [knownBlocks, Prec.highest(field), editors];
 }

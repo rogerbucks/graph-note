@@ -2,8 +2,7 @@
 // editing view, so a line added or taken away above the block never loses it, and never taken by another block that comes
 // to sit on its line; one to a block, however often Edit here is pressed; and released, with what was typed written,
 // once its card has left the page and its note is no longer open, so no editor nobody can see keeps listening to the vault.
-import { Component } from 'obsidian';
-import { graphOfBlock } from '@graph-note/core';
+import { Component, Notice } from 'obsidian';
 import type GraphNotePlugin from './main';
 import type { EditTarget } from './main';
 import type { Editing } from './graph-view/view-options';
@@ -12,6 +11,10 @@ import { blocksIn } from './live-preview';
 
 /** How long an editor whose card has left the page is waited for in another card before it is released. */
 const RELEASE_AFTER_MS = 1000;
+
+/** What is said when Edit here is pressed on a card whose note is no longer where the card was drawn from. */
+const GONE_MESSAGE =
+  'This note is not there any more: it was renamed, moved or deleted. Open it again to edit it here.';
 
 /** Where an editor in place was opened: the note's path then, its block's fence line, its card's identity, its opening. */
 interface Placed {
@@ -59,7 +62,7 @@ export class InlineEditors extends Component {
    * The editor open in place on a note's block whose opening fence is on `line` now, if there is one. In the editing view
    * a block is known by its card's identity, which no line added or taken away above it changes. Once that identity is
    * gone, as when the block is cut, and elsewhere, it is found where the editor last found its block, or, still opening,
-   * where it was opened; and only when the block there is the same graph, so another block never takes the editor.
+   * where it was opened; and only when the block there is the one it read, so another block never takes the editor.
    */
   find(path: string, line: number): BlockEditor | undefined {
     const cm = this.plugin.editorFor(path),
@@ -73,8 +76,10 @@ export class InlineEditors extends Component {
         if (at.card === here) return e;
         continue;
       }
-      const sameGraph = !block || !e.session || graphOfBlock(block.text) === e.session.graph;
-      if ((e.session?.ref.line ?? at.line) === line && sameGraph) {
+      // the block on the line is the editor's own only when its text is the one the editor last read or wrote there: the
+      // same graph is not enough, as a graph written over several blocks has another block of it come to the line
+      const same = !block || !e.session || block.text === e.session.ref.text;
+      if ((e.session?.ref.line ?? at.line) === line && same) {
         at.card = here;
         return e;
       }
@@ -103,13 +108,20 @@ export class InlineEditors extends Component {
       this.plugin.addChild(e);
       e.mount(slot);
       await (at.opening = e.open(target.path, target.line));
+      if (!e.session) {
+        // nothing to edit: the note is not there any more, or has no graph block, as the card then says; never kept
+        if (!e.path) new Notice(GONE_MESSAGE);
+        e.onDone?.();
+        return;
+      }
       // the lists made in this session outlive this editor: Done, then Edit here again, still offers them
-      (e as Editing).lists = this.plugin.declaredLists(target.path, e.session?.graph ?? '');
+      (e as Editing).lists = this.plugin.declaredLists(target.path, e.session.graph);
       editor = e;
       this.changed();
     } else {
       // pressed again while it opens: it is moved only once it has opened, so the card never shows it half made
       await this.open.get(editor)?.opening;
+      if (!this.open.has(editor)) return;
       editor.mount(slot);
     }
     editor.focus();
@@ -122,11 +134,12 @@ export class InlineEditors extends Component {
   }
 
   /**
-   * A card has left the page, as when its note is closed: an editor in place that a moment later is neither on the page
-   * nor on a note still open in the editing view, where a card drawn again would take it back, is closed as Done closes
-   * it, what was typed written first. A card scrolled away, or a block cut to be pasted, keeps its editor.
+   * A card has left the page, or an editing view has closed, which takes down only the cards drawn at the time: an
+   * editor in place that a moment later is neither on the page nor on a note still open in the editing view, where a
+   * card drawn again would take it back, is closed as Done closes it, what was typed written first. A card scrolled
+   * away, or a block cut to be pasted, keeps its editor while its note is open.
    */
-  cardLeft(): void {
+  releaseUnseen(): void {
     if (!this.open.size) return;
     if (this.releaseTimer !== null) window.clearTimeout(this.releaseTimer);
     this.releaseTimer = window.setTimeout(() => {
