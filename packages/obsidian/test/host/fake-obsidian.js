@@ -122,6 +122,8 @@ export function fakeObsidian(state = {}) {
   };
   // the note in front, by its path in state.active
   workspace.getActiveFile = () => file(state.active ?? '');
+  // the view in front, a MarkdownView in its mode ('source' or 'preview') when a test sets state.activeView
+  workspace.getActiveViewOfType = (type) => (state.activeView instanceof type ? state.activeView : null);
   addVaultWrites(vault, state, file);
   const app = { vault, workspace, metadataCache: fakeMetadataCache(state), fileManager: fakeFileManager(state) };
   const settings = fakeSettings(state, app);

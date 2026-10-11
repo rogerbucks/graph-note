@@ -59,11 +59,11 @@ holds the two together).
 - [ ] **Z-08** In a locked graph, a kind or link type its schema does not declare shows a ⚠ on its line. A link type with no
       reading of its own reads back as an arrow (Drive —HOPE→ …), not as a guess at words. iPhone ✓ 5cfeac6, 8 Oct 2026.
 - [ ] **Z-09** Reading view is read-only: the bar offers Source and no Edit. Source shows the block's text, coloured, in place of
-      the drawing, and pressed again brings the drawing back. A hover preview or an embed is read-only too. Properties are
-      shown but never added or changed: no Add property, no field, no type menu, no x or add field on a list. There is no
-      Park for later, no fix that writes a suggested name, no Record a path or Make a view, no Fade or Hide others or Save
-      as shown, and no Edit here or Edit in pane, even while the block is edited in Live Preview, and in full screen opened
-      from reading view too.
+      the drawing, and pressed again brings the drawing back. A hover preview or an embed is read-only too, an embed even
+      inside a note in Live Preview. Properties are shown but never added or changed: no Add property, no field, no type
+      menu, no x or add field on a list. There is no Park for later, no fix that writes a suggested name, no Record a path
+      or Make a view, no Fade or Hide others or Save as shown, and no Edit here or Edit in pane, even while the block is
+      edited in Live Preview, and in full screen opened from reading view too.
 - [ ] **Z-10** Only one set of zoom controls appears: the Mermaid Zoom plugin does not add its own to a graph drawing.
 
 ## The edit pane — spec §4, §5, §9
@@ -252,6 +252,9 @@ holds the two together).
       settings_formatting).
 - [ ] **C-06** A note with a line that cannot be read, in front, and "Convert this note to standard GQL" from the command
       palette: the note is left as it is, and the notice says why (slice 2, simplified_back_to_standard).
+- [ ] **C-07** A note shown in reading view, in front, and "Convert this note to standard GQL" from the command palette, and
+      the button on the page: the note is left as it is, and the notice says it is shown in reading view and to switch to
+      Live Preview or Source mode. In Live Preview it converts.
 
 ## Accessibility — spec §8, §11
 
