@@ -65,3 +65,66 @@ describe('a graph with no section info is read-only', () => {
     }
   });
 });
+
+// The paths that show a block as text, or hold its place for an editor, are read-only with no section info too: where
+// the block is edited at the line the card names (line 0, as no section info gives), the editor still never mounts.
+describe('a graph shown as text, or with nothing drawable while edited, is read-only with no section info', () => {
+  const AT_TOP = `${fence(GRAPH)}\n`;
+
+  /** The plugin with the block at line 0 of the note open in an editor in place, as when it is edited in Live Preview. */
+  async function editedAtTop() {
+    const env = await load({ files: { [PATH]: AT_TOP } });
+    await env.plugin.editHere({ path: PATH, line: 0, graph: 'reader' }, env.doc.body.createDiv());
+    assert.ok(env.plugin.inlineFor(PATH, 0), 'the editor is open on the block the card names');
+    return env;
+  }
+
+  /** What read-only means here: the text, no editor, no Edit, nothing written, no pane. */
+  function assertReadOnly(env, el, why) {
+    assert.ok(el.querySelector('pre.graph-note-code'), `${why}: its text is shown`);
+    assert.equal(el.querySelector('textarea'), null, `${why}: no editor in the card`);
+    assert.equal(el.querySelector('.graph-note-edit-slot'), null, `${why}: no place held for an editor`);
+    assert.ok(!labelled(el, 'Edit here') && !labelled(el, 'Edit in pane') && !labelled(el, 'Edit'), `${why}: no Edit`);
+    assert.equal(env.state.files.get(PATH), AT_TOP, `${why}: nothing written`);
+    assert.equal(env.app.workspace.leaves.length, 0, `${why}: no pane was opened`);
+  }
+
+  test('a block too large to read is its text under the banner, with no editor and no Edit', async () => {
+    const env = await editedAtTop();
+    try {
+      const el = await drawnWithNoSection(env, `${GRAPH}\n${'// padding\n'.repeat(10_000)}`);
+      await wait(50);
+      assert.match(el.querySelector('.graph-note-banner')?.textContent ?? '', /too large to read/i);
+      assertReadOnly(env, el, 'too large');
+    } finally {
+      env.plugin.onunload();
+      env.uninstall();
+    }
+  });
+
+  test('a block whose layout is refused is its text under the banner, with no editor and no Edit', async () => {
+    const env = await editedAtTop();
+    Object.assign(env.plugin.layoutLimits, { things: 1 });
+    try {
+      const el = await drawnWithNoSection(env, GRAPH);
+      await until(() => !!el.querySelector('.graph-note-banner'));
+      assert.match(el.querySelector('.graph-note-banner')?.textContent ?? '', /too large/i);
+      assertReadOnly(env, el, 'layout refused');
+    } finally {
+      env.plugin.onunload();
+      env.uninstall();
+    }
+  });
+
+  test('with nothing to draw while it is edited, the block is its text, and the editor does not take its place', async () => {
+    const env = await editedAtTop();
+    try {
+      const el = await drawnWithNoSection(env, '// graph: reader\n(q');
+      await wait(50);
+      assertReadOnly(env, el, 'nothing drawable');
+    } finally {
+      env.plugin.onunload();
+      env.uninstall();
+    }
+  });
+});

@@ -89,6 +89,48 @@ describe('a command that would rewrite a note refuses while it is shown in readi
   });
 });
 
+describe('the pane in front is checked again just before the write', () => {
+  /** Converts with the pane in front changed once the note has been read, before it is written. */
+  async function convertWhile(env, change) {
+    const read = env.app.vault.read;
+    env.app.vault.read = async (f) => {
+      const text = await read(f);
+      change();
+      return text;
+    };
+    await convert(env).callback();
+  }
+
+  test('a pane switched to reading view after the note was read is not written, and the notice says why', async () => {
+    const env = await loaded();
+    try {
+      const front = pane(env, 'source', { front: true });
+      await convertWhile(env, () => (front.view.mode = 'preview'));
+      assert.equal(env.state.files.get(PATH), NOTE);
+      assert.equal(env.state.notices.at(-1), REFUSED);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a different pane in front by then, or none holding a note, is not written either', async () => {
+    for (const [change, notice] of [
+      [(env) => (env.state.activeView = null), NO_NOTE],
+      [(env) => pane(env, 'source', { front: true }), /pane in front changed/],
+    ]) {
+      const env = await loaded();
+      try {
+        pane(env, 'source', { front: true });
+        await convertWhile(env, () => change(env));
+        assert.equal(env.state.files.get(PATH), NOTE);
+        assert.match(env.state.notices.at(-1) ?? '', notice instanceof RegExp ? notice : new RegExp(notice));
+      } finally {
+        env.uninstall();
+      }
+    }
+  });
+});
+
 describe('the pane in front decides', () => {
   test('open in two panes, the one in front decides: Live Preview converts, reading view refuses', async () => {
     for (const [behind, front, expected, notice] of [
