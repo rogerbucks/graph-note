@@ -9,12 +9,17 @@ const { S, N, trim } = require('./whitespace.js');
 const SHARED = new RegExp(`·${S}*SCHEMA${S}+(${N}+)`),
   NAMES_SHARED = new RegExp(`·${S}*schema${S}+(${N}+)`);
 
+/** A table keyed by names the writer chooses, with nothing in it but what is put there: no `constructor`, `toString` or
+ * `__proto__` from JavaScript's own objects, so a graph, schema or thing of that name is read as any other (§3). Copies
+ * `from`'s own entries, if given. */
+const names = (from) => Object.assign(Object.create(null), from);
+
 class Store {
   constructor() {
-    this.graphs = {};
+    this.graphs = names();
     this.k = 0;
-    this.schemas = {};
-    this.named = {};
+    this.schemas = names();
+    this.named = names();
     // schema name -> its graph; data graph -> the schema its header names; commas: [{graph, line}] where a missing comma
     // was read in (§3); commaPlaces: where each is written in, by block text
     this.commas = [];
@@ -88,10 +93,10 @@ class Store {
       edges: graph.edges.slice(),
     });
     const kept = {
-      graphs: Object.fromEntries(Object.entries(this.graphs).map(([g, graph]) => [g, copy(graph)])),
+      graphs: names(Object.fromEntries(Object.entries(this.graphs).map(([g, graph]) => [g, copy(graph)]))),
       k: this.k,
-      schemas: { ...this.schemas },
-      named: { ...this.named },
+      schemas: names(this.schemas),
+      named: names(this.named),
       commas: this.commas.slice(),
       commaPlaces: new Map(this.commaPlaces),
       bares: this.bares.slice(),
@@ -136,7 +141,7 @@ class Store {
     else this.commaPlaces.delete(block);
     this.fixes.delete(block); // made again as each bare type is resolved, below
     const graph = this.graph(g),
-      bound = {};
+      bound = names();
     // each id's node, the first in order, as find() gives it: indexed once for the block, not searched for each thing,
     // so a block of thousands of things is read in time linear in them (editor spec §9: never freeze)
     let ids = null;
