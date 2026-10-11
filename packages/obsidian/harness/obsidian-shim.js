@@ -170,7 +170,9 @@ const workspace = {
   // the plugin writes the note, and the stand-in editor follows it: no note is open in an Obsidian editor
   getActiveFile: () => null,
 };
-export const app = { vault, workspace };
+// nothing is indexed here, so a note's front matter is read from its text
+const metadataCache = { getFileCache: () => null };
+export const app = { vault, workspace, metadataCache };
 export class ItemView extends Component {
   constructor(leaf) {
     super();
@@ -305,5 +307,40 @@ export function setIcon(el, icon) {
 }
 export function setTooltip(el, t) {
   el.title = t;
+}
+/** Where a note's front matter is, as Obsidian finds it: the text between a first line of --- and the next. */
+export function getFrontMatterInfo(text) {
+  const m = /^---\r?\n([\s\S]*?)\r?\n?---(?:\r?\n|$)/.exec(text);
+  return m
+    ? { exists: true, frontmatter: m[1], from: 4, to: 4 + m[1].length, contentStart: m[0].length }
+    : { exists: false, frontmatter: '', from: 0, to: 0, contentStart: 0 };
+}
+/** Enough of YAML for a note's front matter here: `key: value`, `key: [a, b]`, and a key over `- item` lines. */
+export function parseYaml(text) {
+  const out = {};
+  let list = null;
+  const scalar = (v) => {
+    const t = v.trim().replace(/^(['"])(.*)\1$/, '$2');
+    return t === '' ? null : /^-?\d+(\.\d+)?$/.test(t) ? Number(t) : t;
+  };
+  for (const line of text.split(/\r?\n/)) {
+    if (!line.trim() || line.trim().startsWith('#')) continue;
+    const item = /^\s+-\s*(.*)$/.exec(line) ?? /^-\s*(.*)$/.exec(line);
+    if (item && list) list.push(scalar(item[1]));
+    else {
+      const kv = /^([^:#]+):\s*(.*)$/.exec(line);
+      if (!kv) throw new Error(`cannot read the front matter line: ${line}`);
+      const [, key, value] = kv;
+      const flow = /^\[(.*)\]$/.exec(value.trim());
+      list = value.trim() === '' ? (out[key.trim()] = []) : null;
+      if (flow)
+        out[key.trim()] = flow[1]
+          .split(',')
+          .map(scalar)
+          .filter((x) => x !== null);
+      else if (!list) out[key.trim()] = scalar(value);
+    }
+  }
+  return out;
 }
 export const Platform = { isMobile: false, isDesktop: true };
