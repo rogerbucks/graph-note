@@ -177,10 +177,11 @@ export function tally(baseline, replays, exceptions, current) {
         unreplayed([f.notReplayed, ...why].join('; '));
         continue;
       }
-      e.replayed++;
+      // its other new tests are judged and counted; the commit is counted once, as not replayed when a test in it was not
+      if (faulted.length) unreplayed(why.join('; '));
+      else e.replayed++;
       e.seenFailing += f.failedFirst.length;
       for (const name of f.passedFirst) e.passedFirst.push({ commit, name });
-      if (faulted.length) unreplayed(why.join('; '));
     }
   for (const [file, e] of Object.entries(files))
     e.excused = e.passedFirst.filter((p) => excused(exceptions, file, p.name)).length;
@@ -276,7 +277,10 @@ export function migrate(repo) {
     for (const { file, test, reason, rel, there } of reasons) {
       if (!there) keep(repo, file, test, reason, false);
       else if (!isDeepStrictEqual(there, { file, test, ...reason }))
-        left.push(`${rel}: kept as it is; the branch's own reason for "${test}" in ${file} differs, so choose one`);
+        left.push(
+          `${rel}: kept as it is; the branch's own reason for "${test}" in ${file} differs, so choose one. ` +
+            `The branch's own evidence: ${JSON.stringify(reason.evidence)}`,
+        );
     }
     rmSync(join(repo, OLD_EXCUSALS));
     const moved = reasons.filter((r) => !r.there).length;

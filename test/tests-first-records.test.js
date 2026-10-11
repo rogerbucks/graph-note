@@ -365,6 +365,8 @@ describe('moving the old single files over', () => {
       const kept = exceptionsIn(dir);
       assert.equal(kept['test/twice.test.js']['already true'].evidence, 'main’s newer evidence, written since');
       assert.ok(said.includes(newer), said);
+      // the branch's own words are said too, so a person can choose between the two and nothing is lost
+      assert.ok(said.includes(OLD_REASONS['test/twice.test.js']['already true'].evidence), said);
       assert.ok(!said.includes(excusalName('py/tests/test_half.py', 'Half.test_one')), said);
       // a reason main does not keep yet is moved as before
       assert.equal(kept['py/tests/test_half.py']['Half.test_two'].evidence, 'another control case, by design');

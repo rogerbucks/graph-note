@@ -17,8 +17,11 @@ CI. A change that breaks one fails before it is merged.
   it was split (11 Oct 2026), frozen at its head. Together they give, for each test file, what was seen failing first,
   what was excused, and what could not be replayed. CI fails a commit since the baseline that changed a test and has no
   record (`--complete`), so each commit's record is written once, on the branch that made it. A test may come a commit
-  before its code: a new test failing at its own commit is recorded as not replayed, naming it, and `--check` warns of
-  it. A run that did not finish still fails the record, so it is run again.
+  before its code: a new test failing at its own commit, and again when its file is run once more there, is recorded as
+  not replayed, naming it, and `--check` warns of it. One that passes the second time, or a run that did not finish,
+  fails the record, so it is run again; a fault that comes back on every run means the commit has to be rewritten
+  together with its code. A test that failed at the parent is never taken for one held before: it is judged in the
+  commit that makes it pass.
 - **The records never conflict.** Two branches that replay different commits, or excuse different tests, write
   different files, and no field is rewritten by every update, so any merge, GitHub's own among them, joins them with
   nothing to resolve.

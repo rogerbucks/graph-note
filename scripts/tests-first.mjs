@@ -22,9 +22,10 @@
 //
 // Only the commit's test files and test support (anything under a test/ or tests/ folder) go across to the parent, so
 // only the code differs. A commit that cannot be replayed is recorded as such, never counted either way. A new test
-// failing at its own commit is kept in the record as not replayed, naming it: a test may come a commit before its code
-// (Roger, 10 Oct 2026). But a run at the commit's own code that did not finish, or a commit whose replay fails, is not
-// known to be either: it fails the record, naming the commit and the file, and nothing is written. --check warns of all.
+// failing at its own commit, and again when its file is run once more there, is kept in the record as not replayed,
+// naming it: a test may come a commit before its code (Roger, 10 Oct 2026). But one that passes the second time, a run
+// at the commit's own code that did not finish, or a commit whose replay fails, is not known to be either: it fails the
+// record, naming the commit and the file, and nothing is written. --check warns of all.
 // One run of one test file, and what it shows, is scripts/tests-first-run.mjs.
 import { execFileSync, spawnSync } from 'node:child_process';
 import {
@@ -115,7 +116,9 @@ export function replay(repo, commit) {
   }
   const at = checkout(repo, commit),
     before = checkout(repo, parent);
-  // the tests a file held at the parent, run there, and whether that run finished; each file once
+  // the tests a file held at the parent and that passed there, run there, and whether that run finished; each file once.
+  // A test that failed at the parent is not one held before: it is judged in the commit that makes it pass, so a test
+  // wrong at its own commit and corrected later is judged when corrected (review of #69)
   const held = new Map();
   const before_ = (f) => {
     if (!held.has(f)) {
@@ -124,7 +127,7 @@ export function replay(repo, commit) {
         const earlier = checkout(repo, parent);
         try {
           const r = run(earlier.dir, f, repo);
-          found = { names: [...r.passed, ...r.failed], ran: r.ran };
+          found = { names: r.passed, ran: r.ran };
         } finally {
           earlier.done();
         }
@@ -179,11 +182,23 @@ export function replay(repo, commit) {
       // known, the fault is kept in the record, the test not replayed: a test may come a commit before its code (Roger,
       // 10 Oct 2026; review of #69). When it is not known, it fails the record, as a run that did not finish does
       const known = earlier.every((e) => e.ran);
-      const failing = now.failed
-        .filter((n) => !old.includes(n))
-        .map((test) => ({ test, problem: `"${test}" fails at its own commit, so it cannot be replayed` }));
-      for (const f of failing) out.faults.push({ commit, file, ...f, kept: known });
-      const withFaults = (entry) => (known && failing.length ? { ...entry, faults: failing } : entry);
+      const failedNow = now.failed.filter((n) => !old.includes(n));
+      // a test failing only under load is run again, never kept for good: the file runs once more at its own commit, and
+      // only a test that fails both times is kept (the time-budget guard of 10 Oct 2026, kept in the review of #69)
+      const second = known && failedNow.length ? run(at.dir, file, repo) : null;
+      const failing = [];
+      for (const test of failedNow) {
+        const twice = Boolean(second?.ran && second.failed.includes(test));
+        const problem =
+          !second || twice
+            ? `"${test}" fails at its own commit, so it cannot be replayed`
+            : second.ran
+              ? `"${test}" failed at its own commit, then passed when run again: under load, perhaps`
+              : `"${test}" failed at its own commit, and its run again did not finish`;
+        out.faults.push({ commit, file, test, problem, kept: twice });
+        if (twice) failing.push({ test, problem });
+      }
+      const withFaults = (entry) => (failing.length ? { ...entry, faults: failing } : entry);
       if (!now.passed.length) {
         out.files.push(withFaults(none));
         continue;
@@ -270,7 +285,9 @@ function gather(repo, commits) {
   if (faults.length)
     throw new RecordFault(
       `the record is not written: ${faults.length} fault(s) at a commit's own code\n` +
-        faults.map((f) => `  ${faultLine(f)}`).join('\n'),
+        faults.map((f) => `  ${faultLine(f)}`).join('\n') +
+        '\nRun --update again. A fault that comes back on every run cannot be recorded: --update will refuse it ' +
+        'again, so the commit has to be rewritten together with its code.',
     );
   return replays;
 }
