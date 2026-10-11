@@ -136,7 +136,9 @@ export function readStyle(
   raws.sort((a, b) => a.at.block - b.at.block || a.at.line - b.at.line);
   const checked = checkThings(raws, namesOf(reading, graph, g));
   const { style, problems: conflicts } = settle(checked, graph);
-  // a style block named as a data graph: a reader that does not know STYLE (the Python library) merges it into the data
+  // a style block named as a data graph: a reader that does not know STYLE merges it into the data, as the graph
+  // libraries' own Store does in both languages; only the drawing readers (blocks.ts, and the Python library's
+  // reader/drawing.py) leave a style block out
   const named = blocks.flatMap((block): Problem[] => {
     const own = graphOf(texts[block] ?? '');
     return own && own in reading.whole

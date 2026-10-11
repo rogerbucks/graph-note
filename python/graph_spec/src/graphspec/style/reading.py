@@ -57,8 +57,11 @@ def read_style(
     (`world`, from read_for_drawing's store). Returns ({nudges, direction}, problems): each nudge
     {word, thing, other, group, direction as written, at: {block, line, id}}, only those sound and
     in no conflict; the direction a direction nudge sets, or None; and each problem {graph, block,
-    line, severity, message, fix}, the block's index in `texts` and its line, as the core gives
-    them. Nothing is ever written to the data."""
+    line, severity, message, fix}, the block's index in `texts` and its line. The problems are the
+    core's, word for word, for everything but a Show, Look, ViewStyle or Shown: those are taken as
+    style things and not checked further (graphspec/style/checks.py), so the core's problems with
+    them are not given here; nor are the core's edits (replace, span). Nothing is ever written to
+    the data."""
     blocks = [i for i, t in enumerate(texts) if style_of(t) == graph]
     first = {"block": blocks[0] if blocks else 0, "line": 1, "id": ""}
     style: dict[str, Any] = {"nudges": [], "direction": None}
