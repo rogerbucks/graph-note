@@ -54,6 +54,8 @@ export default class GraphNotePlugin extends Plugin {
 
   override async onload(): Promise<void> {
     this.saved = ((await this.loadData()) as Saved | null) ?? {};
+    // drafts kept before ids are given theirs, and saved at once, so each keeps the same id from one load to the next
+    if (Object.values(this.saved.drafts ?? {}).some((d) => !d.id)) await this.saveDrafts(this.drafts());
     this.settings = settingsFrom(this.saved.settings);
     this.addSettingTab(new GraphNoteSettingTab(this.app, this));
     this.addCommand({

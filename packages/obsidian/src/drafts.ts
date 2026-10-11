@@ -13,9 +13,17 @@ import { freePath } from './export/vault-write';
 /** The command that recovers every kept draft into a new note. */
 export const RECOVER_COMMAND = { id: 'recover-drafts', name: 'Recover kept drafts into a new note' };
 
-/** A new draft's id: never one given before. */
+/**
+ * A new draft's id, a random version-4 UUID: never one given before. Where the web view has no crypto.randomUUID, as on
+ * some phones or outside a secure context, it is made from crypto.getRandomValues, its version and variant bits set.
+ */
 export function newDraftId(): string {
-  return crypto.randomUUID();
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  const b = crypto.getRandomValues(new Uint8Array(16));
+  b[6] = ((b[6] ?? 0) & 0x0f) | 0x40;
+  b[8] = ((b[8] ?? 0) & 0x3f) | 0x80;
+  const h = [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 
 /** `data` with an id given to each draft kept before drafts had one; a draft that has one keeps it. */

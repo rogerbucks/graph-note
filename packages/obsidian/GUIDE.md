@@ -16,7 +16,8 @@ module that ties the parts together, named as the folder is.
   written, when it is off the page and its note is closed, whether a card left or the editing view closed; never kept
   when its opening fails, for any reason, logged and said, or finds nothing, the note gone or without a graph block.
 - `drafts.ts` — the drafts kept in the plugin's data, each with an id given once and never again, by which every change
-  finds it; its key, note and graph, only says whose it is. Drafts kept before ids are given one when read. They move
+  finds it, a random UUID however old the web view; its key, note and graph, only says whose it is. Drafts kept before
+  ids are given one when the plugin loads, saved at once, so they keep it from one load to the next. They move
   with their note when it is renamed, edited or not, ids unchanged, beside, never over, a draft kept under the new name;
   and Recover kept drafts into a new note, the command that writes every one, once, a deleted note's among them, into a
   note, and says so when that note cannot be written.

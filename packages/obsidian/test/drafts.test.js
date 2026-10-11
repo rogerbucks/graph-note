@@ -143,6 +143,68 @@ describe('each draft keeps its id', () => {
   });
 });
 
+// the final review of #91, 11 Oct 2026: crypto.randomUUID is missing on some phones' web views, and a draft must be kept
+// all the same; and an id given to an old draft must be saved, or it changes at each reload
+describe('a draft’s id, wherever the plugin runs', () => {
+  const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+
+  /** Runs `f` where the web view has no crypto.randomUUID, only crypto.getRandomValues. */
+  async function withoutRandomUuid(f) {
+    const was = Object.getOwnPropertyDescriptor(globalThis, 'crypto'),
+      real = globalThis.crypto;
+    const bare = { getRandomValues: (a) => real.getRandomValues(a) };
+    Object.defineProperty(globalThis, 'crypto', { value: bare, configurable: true, writable: true });
+    try {
+      await f();
+    } finally {
+      Object.defineProperty(globalThis, 'crypto', was);
+    }
+  }
+
+  test('with no crypto.randomUUID, a refused write still keeps its draft, and old drafts still get ids, well formed', async () => {
+    await withoutRandomUuid(async () => {
+      const env = await pane.open({
+        data: { drafts: { 'Old.md#reader': { text: 'old', kept: '2026-10-09T08:00:00.000Z' } } },
+      });
+      try {
+        assert.match(env.plugin.drafts()['Old.md#reader'].id, UUID, 'the old draft’s id');
+        const typed = pane.READER + ',\n(mine:Reason)';
+        pane.type(env.el, typed);
+        const theirs = pane.NOTE.replace(pane.READER, pane.READER + ',\n(theirs:Reason)');
+        await env.app.vault.modify({ path: pane.PATH }, theirs);
+        await until(() => drafts(env)[`${pane.PATH}#reader`]?.text === typed, 2000);
+        assert.match(drafts(env)[`${pane.PATH}#reader`].id, UUID, 'the new draft’s id');
+      } finally {
+        env.uninstall();
+      }
+    });
+  });
+
+  test('the ids given to old drafts are saved at once, so the drafts keep them when the plugin loads again', async () => {
+    const old = (text) => ({ text, kept: '2026-10-09T08:00:00.000Z' });
+    const data = { drafts: { 'A.md#reader': old('a'), 'B.md#g': old('b') } };
+    const first = await load({ files: { [PATH]: NOTE }, data });
+    const saved = first.state.data;
+    first.uninstall();
+    const ids = Object.values(saved?.drafts ?? {}).map((d) => d.id);
+    assert.equal(ids.length, 2);
+    assert.ok(
+      ids.every((id) => typeof id === 'string' && id.length > 0),
+      'saved with their ids',
+    );
+    const again = await load({ files: { [PATH]: NOTE }, data: saved });
+    try {
+      assert.deepEqual(
+        Object.values(again.plugin.drafts()).map((d) => d.id),
+        ids,
+        'the same ids after a reload',
+      );
+    } finally {
+      again.uninstall();
+    }
+  });
+});
+
 describe('every kept draft can be recovered', () => {
   test('a deleted note’s draft: the notice names the command, which writes it into a new note', async () => {
     const env = await pane.open();
