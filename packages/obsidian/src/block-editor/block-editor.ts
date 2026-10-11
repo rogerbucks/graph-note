@@ -124,22 +124,20 @@ export class BlockEditor extends Component {
 
   /**
    * Replaces the whole text, as an edit made from the drawing: a step of its own, shown, checked and written like typing,
-   * and the names it newly writes checked again against the note as it is written (§4).
+   * and the names it newly writes checked again against the note as it is written (§4). False with no field.
    */
-  replace(text: string): void {
+  replace(text: string): boolean {
     const t = this.el?.text;
-    if (!t) return;
+    if (!t) return false;
     this.session?.edit(text);
     t.value = text;
     this.undoes.record(t, 'other');
     this.changed();
+    return true;
   }
 
-  /**
-   * A box or a link chosen in the drawing: its pattern selected where it is written in the text being edited, with the
-   * focus in the text so the selection shows (select_moves_text, spec §4).
-   */
-  reveal(chosen: { thing: string } | { link: number }): void {
+  /** A box, link or estimate chosen in the drawing, selected where it is written, the focus in the text (§4). */
+  reveal(chosen: Parameters<TextHelp['whereIs']>[0]): void {
     const el = this.el,
       s = this.session,
       where = el && s ? this.help.whereIs(chosen, el.text.value, s.graph) : null;
@@ -295,6 +293,7 @@ export class BlockEditor extends Component {
     this.drawing.redraw(host, reading, s, () => !this.el || this.el !== el, {
       edit: () => el.text.focus({ preventScroll: true }),
       select: (chosen) => this.reveal(chosen),
+      replace: (now) => this.replace(now),
     });
   }
 

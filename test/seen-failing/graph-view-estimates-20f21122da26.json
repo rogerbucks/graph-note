@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/graph-view-estimates.test.js",
+  "test": "an estimated link, tapped > while edited in place, a fix pressed after typing writes nothing over what was typed, and says so",
+  "seen_failing_first": false,
+  "evidence": "Added in review of #85 to pin a check the code already had (estimate-actions.ts refuses when the text being edited is not as drawn): removing that check broke no test. Seen failing with the check removed by hand, 11 Oct 2026."
+}

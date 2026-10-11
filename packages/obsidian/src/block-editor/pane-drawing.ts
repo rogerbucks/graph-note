@@ -8,11 +8,24 @@ import type { Drawn, NoteReading, PaneSession, Refusal } from '@graph-note/core'
 import type GraphNotePlugin from '../main';
 import { GraphView } from '../graph-view/graph-view';
 import { refusalBanner } from '../layout-worker/refusal-banner';
+import type { Chosen } from '../graph-view/view-options';
 
-/** What choosing in the drawing does: Edit, and a box or a link chosen. */
+/** What choosing in the drawing does: Edit, a box or a link chosen, and the text replaced, as by an estimate's quick fix. */
 interface Choosing {
   edit: () => void;
-  select: (chosen: { thing: string } | { link: number }) => void;
+  select: (chosen: Chosen) => void;
+  /** Says whether there was a field to replace the text in. */
+  replace: (now: string) => boolean;
+}
+
+/**
+ * An estimated link's quick fix in the pane (§3): the session's text becomes `now`, as the fix bar's fix makes it, only
+ * while it is still `was`, as drawn, and the editor is still there. Says why nothing was written, or null.
+ */
+function fixInPane(s: PaneSession, on: Choosing, was: string, now: string): string | null {
+  if (s.text !== was)
+    return 'The text being edited is not as drawn, so nothing was written. Try again once the drawing is redrawn.';
+  return on.replace(now) ? null : 'The editor is no longer open, so nothing was written.';
 }
 
 /** Puts the session's graph, as laid out, into the pane's drawing; returns the view, or null when nothing is drawn. */
@@ -44,6 +57,8 @@ function drawInPane(
     lineOf: (at) => at.line,
     onEdit: on.edit,
     onSelect: on.select,
+    // an estimated link's quick fix (§3), made in the pane's text, as its fix bar makes it
+    writeBlock: (_block, was, now) => Promise.resolve(fixInPane(s, on, was, now)),
     // the pane's badge counts things parked for later apart from problems, as a card's does (§8)
     parked: parked(reading, s.graph, new Date().toISOString().slice(0, 10)),
   });

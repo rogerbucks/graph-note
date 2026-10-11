@@ -1,6 +1,6 @@
 # Z-03 Phone scroll and pinch
 
-**You should see:** one finger on a fitted drawing scrolling the note, not the drawing. A two-finger pinch zooms about the point between the fingers. Once zoomed in, one finger pans the drawing.
+**You should see:** one finger on a fitted drawing scrolling the note, not the drawing. A two-finger pinch zooms about the point between the fingers, a little ahead of them: spreading the fingers to twice as far apart makes the drawing about 2.6 times the size, not twice, within the quarter and four times limits. Once zoomed in, one finger pans the drawing.
 
 **Test diagram:**
 
@@ -24,11 +24,11 @@
 **Do this:**
 
 1. On the phone, drag one finger up the drawing and watch the note scroll.
-2. Pinch on a box and watch the drawing zoom about your fingers.
+2. Pinch on a box, out and in, and watch the drawing zoom about your fingers, a little quicker than they move.
 3. Now drag one finger on the zoomed drawing and watch it pan.
 
 **Checklist line:**
 
-> **Z-03** Phone: one finger on a fitted drawing scrolls the note. A pinch zooms about the fingers, and once zoomed in, one finger pans.
+> **Z-03** Phone: one finger on a fitted drawing scrolls the note. A pinch zooms about the fingers, a little quicker than they move, and once zoomed in, one finger pans.
 
 **Back to the checklist:** [Z-03 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Z-03 in its list.

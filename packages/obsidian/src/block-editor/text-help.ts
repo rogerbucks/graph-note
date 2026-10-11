@@ -1,7 +1,7 @@
 // The help beside the block editor's text (spec §4, §8): what is typed, read; then the coloured picture with each line
 // read back, the problems listed, their fixes offered on the caret's line, suggestions offered where the caret is, and
 // new problems said to screen readers. It keeps what it read, so each of them shows the same reading.
-import { completions, diagnostics, gqlSpans, linkInBlock, readBack, spanOf } from '@graph-note/core';
+import { completions, diagnostics, estimateFix, gqlSpans, linkInBlock, readBack, spanOf } from '@graph-note/core';
 import type { CompletionItem, Diagnostic, NoteReading, PaneSession } from '@graph-note/core';
 import type { EditorParts } from './editor-layout';
 import { paintText } from './text-picture';
@@ -10,6 +10,7 @@ import type { FixChanges } from './problem-help';
 import { acceptSuggestion, showSuggestions } from './suggestions';
 import { InlineCompletion } from './inline-completion';
 import { unnamedPlace } from '../graph-view/suggested-name';
+import type { Chosen } from '../graph-view/view-options';
 
 /** The help for one editor: what it read last, and what it shows from that. */
 export class TextHelp {
@@ -106,14 +107,18 @@ export class TextHelp {
     return true;
   }
 
-  /** Where a box or a link chosen in the drawing is written in `text`, the block being edited, if it is. */
-  whereIs(
-    chosen: { thing: string } | { link: number },
-    text: string,
-    graph: string,
-  ): { from: number; to: number } | null {
+  /** Where a box, a link or an estimated link chosen in the drawing is written in `text`, the block being edited, if it is. */
+  whereIs(chosen: Chosen, text: string, graph: string): { from: number; to: number } | null {
     const reading = this.reading;
     if (!reading) return null;
+    if ('estimate' in chosen) {
+      // an estimated link, at its misspelt word, on the line the fix bar offers its fix (§3)
+      const at = estimateFix(reading, graph, chosen.estimate, text, '')?.range,
+        lines = text.split('\n');
+      const offset = (p: { line: number; character: number }) =>
+        lines.slice(0, p.line).reduce((n, l) => n + l.length + 1, 0) + p.character;
+      return at ? { from: offset(at.start), to: offset(at.end) } : null;
+    }
     // a thing drawn under a suggested name is found where its ( is, as its name is not written (§4)
     if ('thing' in chosen) return spanOf(text, chosen, unnamedPlace(reading, graph, chosen.thing, text));
     return spanOf(text, { link: linkInBlock(reading, graph, chosen.link, text) });

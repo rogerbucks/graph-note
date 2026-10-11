@@ -162,6 +162,15 @@ describe('the mouse wheel and the trackpad', () => {
     }
   });
 
+  // device check Z-01 (Roger, 11 Oct 2026): a trackpad pinch on a Mac arrives as the wheel with Ctrl, so it is quicker too
+  test('a trackpad pinch, or the wheel with Ctrl, zooms 1.4 times as fast: a notch of 100 is a factor of e ** 0.28', () => {
+    const z = make();
+    z.handle({ kind: 'wheel', x: 100, y: 100, dy: -100, ctrl: true });
+    close(z.view().scale, 0.5 * Math.exp(0.28), 'in');
+    z.handle({ kind: 'wheel', x: 100, y: 100, dy: 100, ctrl: true });
+    close(z.view().scale, 0.5, 'and out again');
+  });
+
   test('in full-screen and in the edit pane the wheel alone zooms', () => {
     for (const mode of ['full', 'pane']) {
       const z = make(mode);
@@ -230,10 +239,27 @@ describe('pinching', () => {
     assert.equal(z.handle({ kind: 'down', id: 2, pointer: 'touch', x: 200, y: 100 }), true);
     z.handle({ kind: 'move', id: 1, x: 50, y: 100 });
     z.handle({ kind: 'move', id: 2, x: 250, y: 100 });
-    close(z.view().scale, 1, 'twice the distance, twice the size');
+    close(z.view().scale, 0.5 * 2 ** 1.4, 'twice the distance, a little more than twice the size');
     const [ax, ay] = at(z, ...before);
     close(ax, mid[0]);
     close(ay, mid[1]);
+  });
+
+  // device check Z-03 (Roger, 11 Oct 2026): "pinch zoom in and out should be a little quicker" — 1.4 times the rate it
+  // was, which followed the fingers exactly: as a factor, each spread is raised to the power 1.4
+  test('a pinch zooms 1.4 times as fast as the fingers move: twice apart is 2 ** 1.4 times the size, half as far 2 ** -1.4', () => {
+    const z = make('pane', { width: 100, height: 100 }, { width: 400, height: 400 });
+    close(z.view().scale, 4, 'fitted to the pane, at the upper limit');
+    z.zoomAt(1 / 4, 200, 200);
+    close(z.view().scale, 1);
+    z.handle({ kind: 'down', id: 1, pointer: 'touch', x: 150, y: 200 });
+    z.handle({ kind: 'down', id: 2, pointer: 'touch', x: 250, y: 200 });
+    z.handle({ kind: 'move', id: 1, x: 175, y: 200 });
+    z.handle({ kind: 'move', id: 2, x: 225, y: 200 });
+    close(z.view().scale, 2 ** -1.4, 'pinched in to half the distance');
+    z.handle({ kind: 'move', id: 1, x: 100, y: 200 });
+    z.handle({ kind: 'move', id: 2, x: 300, y: 200 });
+    close(z.view().scale, 2 ** 1.4, 'spread to twice the distance');
   });
 
   test('moving both fingers together pans as it pinches', () => {
@@ -274,6 +300,14 @@ describe('double tap', () => {
   test('double-clicking a box is left to the host', () => {
     const z = make();
     assert.equal(z.handle({ kind: 'dblclick', x: 100, y: 50, onBox: true }), false);
+    close(z.view().scale, 0.5);
+  });
+
+  // device check V-08 (Roger, 11 Oct 2026): "selecting by double-click also zooms" — a click near a box or a link chooses
+  // it (tap_cycles_near), so a double click there only chooses, as a double tap there does
+  test('double-clicking near a box or link, not on it, is left to the host: it selects, and never zooms', () => {
+    const z = make();
+    assert.equal(z.handle({ kind: 'dblclick', x: 100, y: 50, near: true }), false);
     close(z.view().scale, 0.5);
   });
 

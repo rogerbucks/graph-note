@@ -1,6 +1,6 @@
 # Z-06 Full screen
 
-**You should see:** Full screen covering the whole window, and on a phone staying inside the notch and the home bar. Escape or Close leaves it. While it is on, the mouse wheel alone zooms the drawing rather than scrolling the note.
+**You should see:** Full screen covering the whole window, and on a phone staying inside the notch and the home bar. Escape or Close leaves it. While it is on, the mouse wheel alone zooms the drawing rather than scrolling the note, about a third for each notch: a little quicker than before, as a trackpad pinch is.
 
 **Test diagram:**
 

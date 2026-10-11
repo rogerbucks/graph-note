@@ -44,8 +44,9 @@ export class GraphView extends MarkdownRenderChild {
     super(containerEl);
     // whether the card is where the note is only read: in reading view, or opened from a card that is (spec §3)
     this.readOnly = () => !!options.readOnly?.() || (options.mode === 'note' && readOnlyHere(containerEl));
-    // every write the card can make goes through that one check: none where the card is read-only
-    this.o = gateWrites(options, this.readOnly);
+    // every write the card can make goes through that one check: none where the card is read-only; and the card's parts
+    // are given the same check as `readOnly`, so a control that writes is not offered at all there
+    this.o = gateWrites({ ...options, readOnly: this.readOnly }, this.readOnly);
     this.taps = new Taps(options.drawn.svg);
   }
 
@@ -220,13 +221,12 @@ export class GraphView extends MarkdownRenderChild {
     if ('key' in t && (this.walk?.tap(t.key) || this.maker?.tap(t.key))) return;
     if ('key' in t) this.details.showDetails(t.key);
     else if ('link' in t) this.details.showLink(t.link);
-    if ('key' in t) this.o.onSelect?.({ thing: t.key });
-    else if ('link' in t) this.o.onSelect?.({ link: t.link });
-    if ('key' in t || 'link' in t) return;
     else {
       const e = this.drawing()?.estimates[t.estimate];
-      if (e) this.details.showEstimate(e);
+      if (e) this.details.showEstimate(e, t.estimate);
     }
+    // while the block is edited, where it is written is selected in the text — an estimate's misspelt word too (§4)
+    this.o.onSelect?.('key' in t ? { thing: t.key } : t);
   }
 
   private bindEvents(): void {
@@ -276,8 +276,11 @@ export class GraphView extends MarkdownRenderChild {
       },
       { passive: false },
     );
+    // a double click on or near a box or link only selects it, as its two clicks did; only empty space zooms (§3)
     this.registerDomEvent(vp, 'dblclick', (e: MouseEvent) => {
-      use(e, { kind: 'dblclick', ...this.point(e), onBox: !!targetAt(e.target) });
+      const p = this.point(e),
+        onBox = !!targetAt(e.target);
+      use(e, { kind: 'dblclick', ...p, onBox, near: !onBox && this.near(p).length > 0 });
     });
     this.registerDomEvent(vp, 'keydown', (e: KeyboardEvent) => {
       const target = targetAt(e.target);

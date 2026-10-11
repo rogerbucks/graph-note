@@ -51,6 +51,13 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `drawing.ts` — `readNote`: what a note's graph blocks draw, built from the modules above.
 - `estimates.ts` — near misses drawn as guesses; never a guess of a thing drawn under a suggested name, whose name nobody
   has written (a fix changing a word to it would write it unaccepted).
+- `estimate-places.ts` — where an estimated name is written in its block (`BlockPlaces`): at the path's own reference
+  to it, never the same word in a text or another link on its line. `estimates.ts` gives the problem and the estimate
+  that `span`, and a type's problem the place in its brackets, so the fix bar, the quick fix and Edit the link all land
+  on the word; with both ends misspelt, one fix changes both (`also`), as the sentence says.
+- `estimate-fix.ts` — `estimateFix`: accepting an estimate is its problem's own fix, the one `help.ts`'s `diagnostics`
+  offers in the fix bar, found at the estimate's `span` (so an editor can select the word there); none for a text that
+  is not that block as read, so a fix never writes blind.
 - `completeness.ts` — the completeness report behind the problems badge.
 - `deferred.ts` — deferred things (§5, §8): `parkForLater` writes a Deferred (what, why, an optional revisit day and rule)
   as a block's last items, with the comma GQL needs and a fresh `later_<thing>` id (fresh in the whole graph when the

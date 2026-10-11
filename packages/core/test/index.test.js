@@ -13,7 +13,7 @@
 // readingOf, evaluate and their types, 11 Oct 2026), and export (exportScope, exportSvg, exportWithLayout, pngSize, exportPlan,
 // companionNote, writeSafely, saidDate, EXPORT_FORMATS, PNG_MIN_SCALE and their types, 11 Oct 2026), and the refusal to
 // write a name only suggested (acceptNameFirst, 11 Oct 2026), and adding a thing (addThing, suggestName and their types,
-// 11 Oct 2026).
+// 11 Oct 2026), and an estimated link's fix (estimateFix, EstimateFix, 11 Oct 2026).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -83,6 +83,7 @@ const VALUES = [
   'distance',
   'draw',
   'drawingSource',
+  'estimateFix',
   'evaluate',
   'explain',
   'exportPlan',
@@ -191,6 +192,7 @@ const TYPES = [
   'Edit',
   'Engine',
   'Estimate',
+  'EstimateFix',
   'ExportDecision',
   'ExportFormat',
   'ExportGo',
