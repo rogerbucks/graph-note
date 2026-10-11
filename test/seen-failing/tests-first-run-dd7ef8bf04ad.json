@@ -1,0 +1,6 @@
+{
+  "file": "test/tests-first-run.test.js",
+  "test": "a replay under the run ceiling > a run within the ceilings is read as it was, passed and failed",
+  "seen_failing_first": false,
+  "evidence": "Pins that a replay within the ceilings reads exactly as before the run ceiling was added; it held already, and guards the pass-through."
+}
