@@ -31,7 +31,8 @@ def word_fix(written: str, among: Sequence[str], always: bool = False) -> dict:
     """The fix for a word that is not one of `among`: the nearest by edit distance — always, when
     `always` is set (a nudge's word, §6); otherwise only when it is close (within two letters, or
     half the word) — else the list to choose from. {'fix': …, 'nearest': … or None}. Case is
-    ignored on both sides, as the core ignores it, so 'tb' is fixed to TB, the direction it means."""
+    ignored on both sides, as the core ignores it, so 'tb' is fixed to TB, the direction it
+    means."""
     best, near = None, None
     for w in among:
         d = distance(written.lower(), w.lower())
