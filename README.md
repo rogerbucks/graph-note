@@ -37,7 +37,7 @@ This is a one-person project and takes no outside contributions: pull requests a
 
 ### Testing in Obsidian, on desktop and phone
 
-The plugin is tested from installed files, not from the plugin store: `npm run build` (once) or `npm run dev` (on every save) writes `main.js`, and with `manifest.json` and `styles.css` at the repository root these are the three files a test vault installs into `.obsidian/plugins/graph-note/`. Obsidian Sync carries them to a phone when it syncs installed community plugins. Reload the plugin in Obsidian after each build. Releases are still built only by CI, from a tag.
+The plugin is tested from installed files, not from the plugin store: `npm run build` (once) or `npm run dev` (on every save) writes `main.js`, and with `manifest.json` and `styles.css` at the repository root these are the three files a test vault installs into `.obsidian/plugins/graph-note/`: `node scripts/reset-test-vault.mjs` copies them in as real files, and Obsidian Sync carries them to a phone when it syncs installed community plugins. A new build reaches the vault only when that reset is run again. Reload the plugin in Obsidian after each build. Releases are still built only by CI, from a tag.
 
 To look at the drawing and try its controls in an ordinary browser first, `node packages/obsidian/harness/build.mjs <folder>` builds a page that draws a sample note with the real plugin and a small stand-in for Obsidian; serve the folder and open it.
 

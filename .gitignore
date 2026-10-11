@@ -18,7 +18,7 @@ spikes/*/main.js
 .claude/worktrees/
 
 # The test vault: only its notes and two settings are committed. What Obsidian writes as it runs, and the plugin
-# build linked in by scripts/reset-test-vault.mjs, never are.
+# build copied in by scripts/reset-test-vault.mjs, never are.
 /test-vault/*
 !/test-vault/*.md
 # The device check notes, one folder of notes for each section of the device checklist.

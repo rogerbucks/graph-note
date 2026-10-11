@@ -1,15 +1,21 @@
 #!/usr/bin/env node
 // Readies the test vault, test-vault/, for a session in Obsidian, and clears it after: restores its notes and settings
-// to what is committed, removes everything a session added (notes typed, workspace files, other plugins), and links the
-// plugin build at the repository root into .obsidian/plugins/graph-note/. Nothing outside test-vault/ is touched.
+// to what is committed, removes everything a session added (notes typed, workspace files, other plugins), and copies the
+// plugin build at the repository root into .obsidian/plugins/graph-note/ as real files. Nothing outside test-vault/ is
+// touched.
+//
+// The vault is synced to a phone with Obsidian Sync, so the reset is Sync-friendly: it never removes Sync's own files in
+// .obsidian/ (SYNC_KEEP), it copies the build rather than linking it (Sync may not upload links), and it changes only
+// what differs: git restores only changed tracked files, and a plugin file is written only when its bytes differ.
 //
 // Usage:
 //   node scripts/reset-test-vault.mjs               before and after every session in the vault
 //   node scripts/reset-test-vault.mjs --root DIR    the same, in the repository at DIR (the tests use this)
 //
-// Run `npm run build` first, so the links find a build.
+// Run `npm run build` first. The vault holds copies, not links, so a new build reaches it only when this reset is run
+// again: build, then reset, then reload the plugin in Obsidian.
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, rmSync, symlinkSync } from 'node:fs';
+import { copyFileSync, existsSync, lstatSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -17,17 +23,46 @@ export const VAULT = 'test-vault';
 export const PLUGIN_FILES = ['main.js', 'manifest.json', 'styles.css'];
 const PLUGIN_DIR = join(VAULT, '.obsidian', 'plugins', 'graph-note');
 
-/** Restores the vault in the repository at root to what is committed, then links the plugin build into it. */
+/**
+ * Obsidian Sync's own state in the vault's .obsidian/, which a reset never removes, or every reset would disconnect the
+ * vault from Sync. Patterns for `git clean -e`, relative to .obsidian/: any file or folder whose name starts with `sync`
+ * (for example sync.json). Extend this list once it is clear which other files Sync writes there.
+ */
+export const SYNC_KEEP = ['sync*'];
+
+/** True when the file at path is a regular file (not a link) holding exactly the bytes of the file at source. */
+function sameFile(path, source) {
+  try {
+    return lstatSync(path).isFile() && readFileSync(path).equals(readFileSync(source));
+  } catch {
+    return false;
+  }
+}
+
+/** Restores the vault in the repository at root to what is committed, then copies the plugin build into it. */
 export function fresh(root) {
+  for (const f of PLUGIN_FILES)
+    if (!existsSync(join(root, f))) throw new Error(`${f} is not built: run \`npm run build\` first`);
   const git = (...args) => execFileSync('git', args, { cwd: root, stdio: ['ignore', 'pipe', 'inherit'] });
-  git('restore', '--source=HEAD', '--staged', '--worktree', '--', VAULT);
-  git('clean', '-fdxq', '--', VAULT);
+  // `git restore --worktree` rewrites every file it is given, changed or not, so it is given only the tracked files
+  // that differ; the index is reset first (it holds no file content to rewrite), so a staged change counts as a change
+  git('restore', '--source=HEAD', '--staged', '--', VAULT);
+  const changed = git('diff', '--name-only', '-z', '--', VAULT).toString().split('\0').filter(Boolean);
+  if (changed.length) git('restore', '--worktree', '--', ...changed);
+  // the installed build stays too, so an unchanged file is not deleted and copied again
+  const kept = [
+    ...SYNC_KEEP.map((p) => `.obsidian/${p}`),
+    ...PLUGIN_FILES.map((f) => `.obsidian/plugins/graph-note/${f}`),
+  ];
+  const keep = kept.flatMap((p) => ['-e', `/${VAULT}/${p}`]);
+  git('clean', '-fdxq', ...keep, '--', VAULT);
   const dir = join(root, PLUGIN_DIR);
   mkdirSync(dir, { recursive: true });
   for (const f of PLUGIN_FILES) {
-    rmSync(join(dir, f), { force: true });
-    // relative, so the link holds wherever the repository is
-    symlinkSync(join('..', '..', '..', '..', f), join(dir, f));
+    const target = join(dir, f);
+    if (sameFile(target, join(root, f))) continue;
+    rmSync(target, { force: true }); // an old link is replaced, never written through
+    copyFileSync(join(root, f), target);
   }
 }
 
@@ -38,8 +73,13 @@ function main(args) {
     console.error('Usage: node scripts/reset-test-vault.mjs [--root DIR]');
     return 2;
   }
-  fresh(root);
-  console.log(`${VAULT}/ is as committed, with the plugin build linked in`);
+  try {
+    fresh(root);
+  } catch (e) {
+    console.error(e.message);
+    return 1;
+  }
+  console.log(`${VAULT}/ is as committed, with the plugin build copied in and Obsidian Sync's files kept`);
   return 0;
 }
 
