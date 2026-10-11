@@ -3,6 +3,7 @@
 import type { World } from '@graph-note/graph-spec';
 import type { Estimate } from './estimates.ts';
 import type { Refusal } from './layout-limits.ts';
+import type { Nudge } from './style-graph.ts';
 
 /** A gql block in a note: its text, and the note line (1-based) its opening fence is on. */
 export interface Block {
@@ -34,6 +35,8 @@ export interface Link {
   type: string;
   reading: string;
   to: string;
+  /** Which written link this is, as an index into its graph's edges, where the drawing holds only some links (a view). */
+  edge?: number;
 }
 
 /** One graph, ready to draw: its boxes, its links, and the estimates added where what was written was a near miss. */
@@ -46,6 +49,8 @@ export interface GraphDrawing {
   estimates: Estimate[];
   /** The one direction to lay it out in, one the locked style lists (spec §21); unset, the best fit of them all. */
   direction?: string;
+  /** The nudges of its style graph (spec §6), written into the layout; none, the layout the Python library gives. */
+  nudges?: Nudge[];
 }
 
 /** Something that could not be read: its graph, the block (index in the note), the line in that block (1 = its graph line), what is wrong, and the fix. */

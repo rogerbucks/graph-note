@@ -6,6 +6,7 @@ import { drawingSource, layoutSource, STYLE } from './layout.ts';
 import type { LayoutSource } from './layout.ts';
 import { themed, sizeOf, choose } from './theme.ts';
 import type { Palette } from './palette.ts';
+import { nudgedSource } from './style-source.ts';
 
 /** Graphviz: layout source in, SVG text out. Throws when it cannot lay the source out. */
 export interface Engine {
@@ -34,9 +35,11 @@ export interface Direction {
  */
 export function directions(drawing: GraphDrawing): Direction[] {
   const only = drawing.direction && STYLE.directions.includes(drawing.direction) ? [drawing.direction] : null;
+  const keys = drawing.boxes.map((b) => b.key);
   return (only ?? STYLE.directions).map((rankdir) => ({
     rankdir,
-    dot: drawingSource(drawing, rankdir as 'LR' | 'TB'),
+    // the style graph's nudges written in (§6); with none, the source the Python library gives, byte for byte
+    dot: nudgedSource(drawingSource(drawing, rankdir as 'LR' | 'TB'), drawing.nudges ?? [], keys),
     src: layoutSource(drawing, rankdir as 'LR' | 'TB'),
   }));
 }
@@ -142,7 +145,10 @@ export function linkDetails(reading: NoteReading, graph: string, index: number):
   if (!d || !l || !g) return null;
   const drawn = new Set(d.boxes.map((b) => b.key)),
     textOf = (k: string) => d.boxes.find((b) => b.key === k)?.text ?? k;
-  const props = g.edges.filter(([s, , t]) => drawn.has(s) && drawn.has(t))[index]?.[3] ?? {};
+  // a link that says which written link it is (a view's) has that link's properties; otherwise, by its place
+  const edge =
+    l.edge !== undefined ? g.edges[l.edge] : g.edges.filter(([s, , t]) => drawn.has(s) && drawn.has(t))[index];
+  const props = edge?.[3] ?? {};
   return {
     index,
     type: l.type,

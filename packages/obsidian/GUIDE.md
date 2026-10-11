@@ -13,6 +13,11 @@ module that ties the parts together, named as the folder is.
   command that converts a note to standard GQL; keeps the settings, drafts and shared schemas; opens the editors.
 - `block.ts` — one gql block in a note: drawn, or shown as code, never blank; as text with a banner when it is over a
   size or time limit.
+- `view-block.ts` — a view (§7): a query block named as a view, drawn as what it picks out of its graph; refused, saying
+  what is allowed, outside the view profile; saying so, with Change the view, when it matches nothing; faded or hidden
+  outside it as its style says; its looks and legend; Save as shown and Fade or Hide others written in the style graph.
+- `style-block.ts` — a style block (§2): never drawn, folded away until opened, saying whose style it is, what it holds
+  and how many problems it has. The graph it styles is drawn with its nudges, and its problems listed, by `block.ts`.
 - `code.ts` — a block that is not a graph, shown as coloured code; a very long one plain.
 - `live-preview.ts` — the editing view's own cards, so the page stays still while a block is typed in.
 - `editor.ts` — the comma and the colon added for you in the note's own editor.
@@ -58,6 +63,10 @@ module that ties the parts together, named as the folder is.
   through `vault.process`) and then parks, with what was typed in the form kept. The form is checked first, so nothing
   is declared for a park that would fail, and a second press does nothing. Declarations written into another block are
   not undone with the park.
+- `view-maker.ts` — making a view by tapping (§7), while the block is edited: the kind of view, the boxes tapped, its
+  reading said as it is built, and Write the view, a view block after the graph's last block.
+- `view-strip.ts` — a view's card: its reading in plain English, Fade or Hide others, Save as shown, the legend, and what
+  is outside it faded and its looks drawn on the drawing.
 - `walk.ts` — walked paths (§7): the strip below the bar with Play for each path in the note, stepping one thing at a
   time, marked and said; a path with no steps said to have none; and, while the block is edited, Record, which numbers
   each box as it is tapped and writes the path into the text.

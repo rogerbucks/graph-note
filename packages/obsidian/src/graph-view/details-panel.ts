@@ -20,6 +20,11 @@ export class DetailsPanel {
   /** The box or link whose details are open, so they can be drawn again when editing ends. */
   private shown: { key: string } | { link: number } | null = null;
 
+  /** The thing whose details are open, if a thing's are: what a view saved as shown keeps as selected (§7). */
+  selectedKey(): string | null {
+    return this.shown && 'key' in this.shown ? this.shown.key : null;
+  }
+
   /** For the details element of a card, its drawing, the viewport the focus goes back to, and the card's options. */
   constructor(el: HTMLElement, svg: SVGSVGElement, viewport: HTMLElement, o: ViewOptions) {
     this.el = el;

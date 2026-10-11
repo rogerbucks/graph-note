@@ -151,6 +151,34 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
       One undo (⌘Z, or the phone's gesture) takes the name back out, and the dashed box and the warning return. Phone:
       the button is easy to hit in the sheet (slice 2, unnamed_drawn_suggested).
 
+## The style graph — spec §2, §6
+
+- [ ] A note with a graph and its style block (`// graph: reader_style · STYLE reader`, with a direction nudge TB and
+      a beside nudge): the style block shows as one folded line, "Style of graph reader: 2 nudges", opening to its
+      text; the graph runs top to bottom with the two things side by side (slice 2, style_block_in_note,
+      style_is_a_graph).
+- [ ] Change a nudge's word to `besides`: the fold says "⚠ 1 problem"; the graph's badge lists "a nudge must be one of
+      four words…" and the graph is still drawn (four_nudge_words, nudge_problems). Break the block's text: the graph
+      is drawn in the locked style and the problem listed (broken_style_block).
+
+## Views — spec §2, §7
+
+- [ ] A view block (`// graph: trip · QUERY view round_park` with `MATCH (n {id: 'park'})-[]-{1,1}(m) RETURN n, m`):
+      its card says "View round_park: everything within 1 step of The park"; the things outside it are faded. Hide
+      others writes `outside: 'hide'` into the style block and the card redraws with only the view (slice 2,
+      views_in_the_note, view_is_query, fade_or_hide_in_style).
+- [ ] Each of the five kinds draws: picked by hand, near a thing, how one reaches another, only some kinds
+      (`MATCH (n IS Place|Person) RETURN n`), a walked path (five_view_kinds). A query of another shape is refused, the
+      card naming the five shapes (view_profile). A view of a thing not in the graph says it matches nothing, with
+      Change the view, which opens the note at the view (empty_view).
+- [ ] A Look with a colour and its meaning: the thing is drawn in that hue, readable in light and dark, and the legend
+      shows the swatch and the words (styled_paths_and_views, styling_keeps_locked_rules).
+- [ ] Edit here, Make a view: tap two boxes; the strip says "The view: A and B, picked by hand." Switch to Near a thing,
+      tap one, choose 2 steps; then How one reaches another, tap two; then Only some kinds, tap one. Name it and Write
+      the view: a view block appears after the graph, and draws (slice 2, views_by_tapping). Phone: every control easy to hit.
+- [ ] Zoom in, select a box, Save as shown: the style block gets a Shown; close and reopen the note: the view opens at
+      that zoom with that box's details open (view_saved_as_shown).
+
 ## Parked for later — spec §5, §8
 
 - [ ] Edit here on a card, tap a box, press Park for later, fill what is needed and why, press Park it: a Deferred is

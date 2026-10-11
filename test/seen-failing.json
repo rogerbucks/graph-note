@@ -35,6 +35,16 @@
       "evidence": "a control case, written with the change beside it at the review of step 8a: renumbering already kept to its own path, and this pins it (commit 1d8c615)"
     }
   },
+  "packages/core/test/views-across.test.js": {
+    "a view saved as shown > is written in the style graph, and the data is left exactly as it was": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: styleEdit's shown change was built test-first in commit f3db25f (style-edit.test.js); this file, which the requirements copy names for view_saved_as_shown, proves it again from the view's side (commit dd93730)"
+    },
+    "a view saved as shown > saved again, replaces what was saved before rather than adding to it": {
+      "seen_failing_first": false,
+      "evidence": "pins behaviour that already existed: styleEdit replaces a view's Shown in place, built test-first in commit f3db25f (style-edit.test.js); proved again here from the view's side (commit dd93730)"
+    }
+  },
   "packages/obsidian/test/graph-view-walk.test.js": {
     "Record, while the card is edited > is offered only while the card is edited": {
       "seen_failing_first": false,

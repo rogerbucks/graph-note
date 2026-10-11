@@ -10,6 +10,8 @@ import { readOnlyHere, whenPlaced } from './placement';
 import { renderProblems } from './problems-list';
 import { listParked } from './parked';
 import { Walk } from './walk';
+import { ViewMaker } from './view-maker';
+import { markView, renderViewStrip } from './view-strip';
 import { plural, renderBar } from './view-bar';
 import { describeDrawing, insertSvg } from './drawing-svg';
 import { Taps, targetAt, targetOf } from './taps';
@@ -26,6 +28,7 @@ export class GraphView extends MarkdownRenderChild {
   private detailsEl!: HTMLElement;
   private details!: DetailsPanel;
   private walk: Walk | null = null;
+  private maker: ViewMaker | null = null;
   private fullscreen: { view: GraphView; overlay: HTMLElement } | null = null;
   private boxDown: { id: number; x: number; y: number; target: Target } | null = null;
   private editButton: HTMLButtonElement | null = null;
@@ -73,6 +76,11 @@ export class GraphView extends MarkdownRenderChild {
     list = renderProblems(root, problems, true, this.o.completeness);
     if (this.o.parked) listParked(list, this.o.parked, (k) => this.boxes().find((b) => b.key === k)?.text ?? k);
     this.walk = new Walk(root, this.o, () => this.svg); // walked paths: Play, and Record while edited (§7)
+    if (this.o.writeView) this.maker = new ViewMaker(root, this.o); // a view made by tapping, while edited (§7)
+    const view = this.o.view;
+    const writes = view
+      ? renderViewStrip(root, view, () => ({ view: this.zoom.view(), selected: this.details.selectedKey() }))
+      : [];
     this.viewport = root.createDiv({
       cls: 'graph-note-viewport',
       attr: {
@@ -82,6 +90,7 @@ export class GraphView extends MarkdownRenderChild {
       },
     });
     this.svg = insertSvg(this.viewport, this.o.drawn, this.drawing());
+    if (view) markView(this.svg, view); // a view: what is outside it faded, its looks drawn (§7)
     // the drawing as sentences, for screen readers (spec §11)
     const d = this.drawing();
     if (d) describeDrawing(root, this.viewport, d);
@@ -93,6 +102,9 @@ export class GraphView extends MarkdownRenderChild {
     this.zoom = new Zoom({ width: this.o.drawn.width, height: this.o.drawn.height }, this.viewportSize(), mode);
     this.zoom.onChange = (v) => this.apply(v);
     this.zoom.onExit = () => this.o.onClose?.();
+    // a view saved as shown is shown so again (§7)
+    const was = view?.shown;
+    if (was?.zoom !== undefined) this.zoom.restore(was.zoom, was.x ?? 0, was.y ?? 0);
     this.apply(this.zoom.view());
     this.bindEvents();
     const observer = new ResizeObserver(() => this.zoom.resize(this.viewportSize()));
@@ -106,14 +118,15 @@ export class GraphView extends MarkdownRenderChild {
       root,
       () => {
         if (mode === 'note' && readOnlyHere(root)) {
-          editing.forEach((b) => b.remove());
+          [...editing, ...writes].forEach((b) => b.remove());
           this.editButton = null;
           slot?.remove();
+          if (was?.selected) this.open({ key: was.selected }); // a view saved as shown opens with its selection here too
           return;
         }
         source?.remove();
         if (slot) this.o.onReady?.(slot);
-        const reopen = this.o.editing?.()?.selected;
+        const reopen = this.o.editing?.()?.selected ?? (was?.selected ? { key: was.selected } : null);
         if (reopen) this.open(reopen);
       },
       () => !gone,
@@ -138,7 +151,8 @@ export class GraphView extends MarkdownRenderChild {
 
   /** The edit button as the card stands: a pencil to edit here, or, while edited, a view icon to finish (spec §4). */
   private showEditing(): void {
-    this.walk?.show(); // Record is offered only while the card is edited
+    this.walk?.show(); // Record and Make a view are offered only while the card is edited
+    this.maker?.show();
     const b = this.editButton;
     if (!b) return;
     const on = !!this.o.editing?.()?.session;
@@ -190,7 +204,8 @@ export class GraphView extends MarkdownRenderChild {
   }
 
   private open(t: Target): void {
-    if ('key' in t && this.walk?.tap(t.key)) return; // while recording, a tap is the next step of the walk (§7)
+    // while recording a walk, or making a view, a tap chooses rather than opening details (§7)
+    if ('key' in t && (this.walk?.tap(t.key) || this.maker?.tap(t.key))) return;
     if ('key' in t) this.details.showDetails(t.key);
     else if ('link' in t) this.details.showLink(t.link);
     if ('key' in t) this.o.onSelect?.({ thing: t.key });
