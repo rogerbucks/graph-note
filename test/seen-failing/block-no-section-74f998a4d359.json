@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/block-no-section.test.js",
+  "test": "a block whose layout is refused is its text under the banner, with no editor and no Edit",
+  "seen_failing_first": false,
+  "evidence": "Passed against the code before this commit, because the code already held: the layout-refusal path of block.ts (asText) mounts no editor where the card is read-only. Written after the code to pin it, as the review of PR #89 found it unpinned; seen failing with the readOnly guard in asText planted out (if false), then reverted."
+}
