@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/store-names.test.mjs",
+  "test": "a name JavaScript gives every object > a graph naming a shared schema called constructor, which the note lacks, reads its own links alone",
+  "seen_failing_first": false,
+  "evidence": "pins the fix made earlier on this branch (ff33a85): review of #76 planted this.schemas = {} in store.js and no test failed; this test fails against that fault, the world gaining a graph named 'function Object() { [native code] }'"
+}

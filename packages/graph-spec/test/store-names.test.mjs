@@ -51,4 +51,29 @@ describe('a name JavaScript gives every object', () => {
     assert.deepEqual(schema.labelled('GraphMeta'), ['m']);
     assert.deepEqual(gs.schemaFor(world, 'constructor'), [undefined, undefined]);
   });
+
+  test('after a block that cannot be read is undone, a graph called toString is still read as any other', () => {
+    // the undoing copies the store's tables: a copy that is a plain object again would find toString before it is written
+    const store = new gs.Store();
+    store.apply("// graph: g\n(a:T {name: 'A'})");
+    assert.throws(() => store.apply('// graph: g\n(nobody)-[:R]->(a)'), gs.ProfileError);
+    assert.doesNotThrow(() => store.apply("// graph: toString\n(b:T {name: 'B'})"));
+    const world = gs.worldFromStore(store);
+    assert.deepEqual(Object.keys(world).sort(), ['g', 'toString']);
+    assert.deepEqual(world.g.labelled('T'), ['a']);
+    assert.deepEqual(world.toString.labelled('T'), ['b']);
+  });
+
+  test('a graph naming a shared schema called constructor, which the note lacks, reads its own links alone', () => {
+    // a type without its colon is looked for in the shared schema the graph names: one not written is no graph at all
+    const store = gs.read([
+      "// graph: g · schema constructor\n(a:T {name: 'A'}),\n(b:T {name: 'B'}),\n(a)-[:R]->(b),\n(a)-[r]->(b)",
+    ]);
+    const world = gs.worldFromStore(store);
+    assert.deepEqual(Object.keys(world), ['g']);
+    assert.deepEqual(
+      world.g.out('a').map((e) => e[1]),
+      ['R', 'R'],
+    );
+  });
 });
