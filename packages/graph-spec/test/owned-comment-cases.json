@@ -274,6 +274,15 @@
       "malformed": []
     },
     {
+      "id": "note-inside-parens",
+      "name": "a note inside a thing's brackets, one level in, owns nothing, though another thing begins on the line below",
+      "proves": ["req:26.owner"],
+      "block": "// graph: g\n(a:T\n/// inside\n), (b:T {id: 'b'})",
+      "owned": [],
+      "unowned": [3],
+      "malformed": []
+    },
+    {
       "id": "note-multi-line-thing",
       "name": "a note above a thing written over several lines is owned by it",
       "proves": ["req:26.owner"],

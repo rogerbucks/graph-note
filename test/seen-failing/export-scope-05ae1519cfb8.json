@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/export-scope.test.js",
+  "test": "a view > a guess at a name that starts in the view and ends outside it is faded with the context too",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that already existed: the end-of-slice-2 review planted a fault in export-scope.ts (fading a guessed name link only when its start was outside the view), and no test failed; this test fails against that fault"
+}
