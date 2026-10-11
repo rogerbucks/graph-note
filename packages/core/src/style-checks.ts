@@ -15,7 +15,8 @@ import {
   styleProblem,
   wordFix,
 } from './style-graph.ts';
-import type { Frame, Look, Nudge, Show, Shown, StyleAt, ViewStyle } from './style-graph.ts';
+import type { Look, Nudge, Show, Shown, StyleAt, StyleKind, ViewStyle } from './style-graph.ts';
+import { readFrame, unknownKeys } from './style-words.ts';
 
 /** One thing of a style graph as read: its kinds, its properties, where it is, and where each property's text is. */
 export interface RawThing {
@@ -24,6 +25,8 @@ export interface RawThing {
   at: StyleAt;
   /** Where a property's quoted text is written: its 0-based line in the block and the characters it spans. */
   span(key: string): Problem['span'];
+  /** Where a property's key is written: its 0-based line in the block and the characters it spans. */
+  keySpan(key: string): Problem['span'];
 }
 
 /** The names of the graph a style graph styles, which every name in the style must be one of. */
@@ -60,6 +63,7 @@ function reader(raw: RawThing, names: StyledNames, out: Problem[]) {
   };
   const r = {
     report,
+    edit,
     text(key: string): string | undefined {
       const v = raw.props[key];
       if (v === undefined || typeof v === 'string') return v;
@@ -77,7 +81,11 @@ function reader(raw: RawThing, names: StyledNames, out: Problem[]) {
       const v = r.text(key);
       if (v === undefined || (among as readonly string[]).includes(v)) return v as T | undefined;
       const { fix, nearest: near } = wordFix(v, among, always);
-      report(message.replace('$', v), fix, edit(key, v, near ? [near] : []));
+      report(
+        message.replace('$', () => v),
+        fix,
+        edit(key, v, near ? [near] : []),
+      );
       return undefined;
     },
     /** A name of the styled graph, or undefined and a problem whose fix is the nearest name. */
@@ -242,11 +250,14 @@ function shownOf(raw: RawThing, names: StyledNames, out: Problem[]): Checked['sh
     if (v !== undefined) shown[k] = v;
   }
   if (raw.props.frame !== undefined) {
-    const parts = typeof raw.props.frame === 'string' ? raw.props.frame.split(',').map(Number) : [];
-    if (parts.length === 4 && parts.every(Number.isFinite)) {
-      const [x = 0, y = 0, width = 0, height = 0] = parts;
-      shown.frame = { x, y, width, height } satisfies Frame;
-    } else r.report("frame must be four numbers, 'x,y,width,height'", "write it as frame: '0,0,300,200'");
+    const read = readFrame(raw.props.frame);
+    if ('frame' in read) shown.frame = read.frame;
+    else
+      r.report(
+        read.message,
+        read.fix,
+        r.edit('frame', String(raw.props.frame), read.clean === undefined ? [] : [read.clean]),
+      );
   }
   const selected = r.name('selected', names.things, 'a thing', 'the id of a thing');
   if (selected !== undefined) shown.selected = selected;
@@ -267,11 +278,16 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
       continue;
     }
     const p = c.problems;
-    if (kinds[0] === 'Nudge') push(c.nudges, nudgeOf(raw, names, p));
-    else if (kinds[0] === 'Show') push(c.shows, showOf(raw, names, p));
-    else if (kinds[0] === 'Look') push(c.looks, lookOf(raw, names, p));
-    else if (kinds[0] === 'ViewStyle') push(c.views, viewStyleOf(raw, names, p));
-    else push(c.shown, shownOf(raw, names, p));
+    // a key the style graph does not know: reported on the key; the thing may not mean what it says, so it is left out
+    // (all its other faults are still reported)
+    const unknown = unknownKeys(kinds[0] as StyleKind, Object.keys(raw.props), raw.keySpan, names.graph, raw.at);
+    p.push(...unknown);
+    const kept = <T>(x: T | null): T | null => (unknown.length ? null : x);
+    if (kinds[0] === 'Nudge') push(c.nudges, kept(nudgeOf(raw, names, p)));
+    else if (kinds[0] === 'Show') push(c.shows, kept(showOf(raw, names, p)));
+    else if (kinds[0] === 'Look') push(c.looks, kept(lookOf(raw, names, p)));
+    else if (kinds[0] === 'ViewStyle') push(c.views, kept(viewStyleOf(raw, names, p)));
+    else push(c.shown, kept(shownOf(raw, names, p)));
   }
   return c;
 }
