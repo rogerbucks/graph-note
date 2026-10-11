@@ -161,6 +161,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/quality-metrics.test.js` — the quality metrics are held to a committed baseline, and a worse one fails without a recorded reason.
 - `test/quality-baseline.test.js` — the baseline cannot be loosened without a reason, is whole, and says which machine measured it.
 - `test/quiet-reporter.test.js` — the quiet test run when a failure's details cannot be passed on, as when an assertion holds a function: every failure still reported, the run failed, never crashed.
+- `test/run-ceiling.test.js` — every run of the npm test commands, in CI too, is stopped with one line at a memory or time ceiling, before a runaway test can exhaust the machine; a run within both passes through unchanged.
 - `test/requirements.test.js` — the generated requirements copy: started requirements proved, tests where they say.
 - `test/slice-board-style.test.js` — the slice board's stylesheet: colour tokens that agree in light and dark, the altitude switch by CSS alone, a layout that holds at 400px, and the source written one rule and one declaration to a line.
 - `test/slice-board.test.js` — the slice board: a CSS-only HTML page of how far the slice under way is proved, from the requirements copy and, optionally, the open pull requests.

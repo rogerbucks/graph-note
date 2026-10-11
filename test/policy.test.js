@@ -183,7 +183,7 @@ describe('the supply chain', () => {
         p,
       );
     }
-    assert.match(readJSON('package.json').scripts.test, /^node --test\b/);
+    assert.match(readJSON('package.json').scripts.test, /(^| )node --test\b/);
   });
 
   test('a Python package is pinned by a hashed lockfile', () => {
