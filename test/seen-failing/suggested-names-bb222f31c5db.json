@@ -1,6 +1,0 @@
-{
-  "file": "packages/core/test/suggested-names.test.js",
-  "test": "a style written for a thing drawn under a suggested name > what names only written things is written",
-  "seen_failing_first": false,
-  "evidence": "Renamed from '… is written, with or without the reading': styleEdit takes no reading now, checking the note it writes into, so the test drops the reading and keeps what it pinned, that a style naming only written things is written. It held before, as it did under its old name."
-}
