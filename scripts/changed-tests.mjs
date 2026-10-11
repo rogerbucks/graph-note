@@ -35,7 +35,7 @@ const DEVICE_QUOTES = 'test/device-check-quotes.test.js';
  * policy.test.js reads the README; test-vault.test.js reads test-vault/ and its reset script, and
  * device-check-notes.test.js its Device checks notes and the device checklist; requirements.test.js reads
  * requirements/ and its check; cheap-checks.test.js reads AGENTS.md, CLAUDE.md, .ignore and its own three tools, and
- * run-ceiling.test.js reads AGENTS.md and changed-tests.mjs as well as its own runner.
+ * run-ceiling.test.js reads AGENTS.md and changed-tests.mjs as well as its own runner, and runs quality-suite.mjs.
  */
 const READERS = [
   [/^(AGENTS\.md|scripts\/changed-tests\.mjs)$/, [CHEAP, CEILING]],
@@ -46,14 +46,18 @@ const READERS = [
   [/^packages\/obsidian\/test\/device-checklist\.md$/, [DEVICE_NOTES, DEVICE_QUOTES]],
   [/^(requirements\/.*|scripts\/check-requirements\.mjs)$/, ['test/requirements.test.js']],
   [/^(scripts\/check-classification\.mjs)$/, ['test/classification.test.js']],
-  [/^scripts\/quality-(secrets|suite)\.mjs$/, ['test/quality-metrics.test.js']],
+  [/^scripts\/quality-secrets\.mjs$/, ['test/quality-metrics.test.js']],
+  [/^scripts\/quality-suite\.mjs$/, ['test/quality-metrics.test.js', CEILING]],
   [
     /^(scripts\/quality-(check|spec)\.mjs|quality\/(baseline|accepted)\.json)$/,
     ['test/quality-baseline.test.js', 'test/quality-metrics.test.js'],
   ],
   [/^quality\/advisories\.json$/, ['test/engine-version.test.js']],
   [/^(scripts\/notices\.mjs|THIRD_PARTY_NOTICES\.md)$/, ['test/licences.test.js']],
-  [/^test\/(seen-failing|tests-first)\//, ['test/tests-first.test.js', 'test/tests-first-records.test.js']],
+  [
+    /^test\/(seen-failing|tests-first)\//,
+    ['test/tests-first.test.js', 'test/tests-first-records.test.js', 'test/tests-first-records-history.test.js'],
+  ],
 ];
 
 const base = (file) => file.slice(file.lastIndexOf('/') + 1);

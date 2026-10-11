@@ -144,6 +144,28 @@ describe('a test run under the ceiling', () => {
   });
 });
 
+// the quality ratchet's own two full runs of the suite (scripts/quality-suite.mjs) are test runs too: a bare `node --test`
+// there is the uncapped run the requirement forbids (11 Oct 2026)
+describe('the quality ratchet’s runs of the suite run under the ceiling', () => {
+  // it does not look for the fixture's process: the ceiling stops the run at its time whether or not `node --test` has
+  // started the file yet, so the test does not depend on start-up time (the ceiling's own kill of the group is tested above)
+  test('a run it starts that goes on past the time ceiling is stopped, with the ceiling’s line, and does not pass', async () => {
+    const suite = await import('../scripts/quality-suite.mjs');
+    const dir = scratch({ 'sleeper.test.js': SLEEPER.replace('60000', '30000') });
+    const was = process.env.GRAPH_NOTE_TEST_MINUTES;
+    process.env.GRAPH_NOTE_TEST_MINUTES = '0.1';
+    try {
+      const run = suite.nodeTest(dir, []);
+      assert.equal(run.passed, false);
+      assert.match(run.stderr, /run-ceiling: stopped the run after \d+(\.\d+)? s, over its 0\.1-minute time ceiling/);
+      assert.ok(run.seconds < 25, `stopped before the fixture ends by itself: ${run.seconds} s`);
+    } finally {
+      if (was === undefined) delete process.env.GRAPH_NOTE_TEST_MINUTES;
+      else process.env.GRAPH_NOTE_TEST_MINUTES = was;
+    }
+  });
+});
+
 describe('the npm test commands run under the ceiling', () => {
   const scripts = () => readJSON('package.json').scripts;
 
