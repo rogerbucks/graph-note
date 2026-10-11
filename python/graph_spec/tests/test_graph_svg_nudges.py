@@ -159,6 +159,19 @@ class Nudges(unittest.TestCase):
             ours = python_answer(texts_of(case))["without"]
             self.assertEqual(ours, theirs["without"], case["name"])
 
+    def test_a_direction_in_the_wrong_case_is_fixed_to_the_one_it_means(self):
+        # nudge_problems: both sides of the comparison lower-cased, as the core compares them
+        texts = [
+            "// graph: g\n(a:Place {name: 'A'})",
+            "// graph: g_style · STYLE g\n(n1:Nudge {word: 'direction', direction: 'tb'}),\n"
+            "(n2:Nudge {word: 'direction', direction: 'Lr'})",
+        ]
+        world = gr.World.from_store(gp.read_for_drawing(texts)[0])
+        self.assertEqual(
+            [p["fix"] for p in gp.read_style(texts, "g", world)[1]],
+            ["change tb to TB", "change Lr to LR"],
+        )
+
     def test_each_nudge_and_each_style_block_gives_the_cores_problems(self):
         # nudge_problems, broken_style_block: the same problems, at the same block and line, with
         # the same words and fix

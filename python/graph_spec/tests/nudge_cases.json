@@ -190,7 +190,8 @@
           "(n12:Nudge {word: 'direction', direction: 'sideways'}),",
           "(n13:Nudge {word: 'Group', thing: 'lake', group: 'Water'}),",
           "(n14:Nudge {word: 'direction', direction: 'U$&P'}),",
-          "(n15:Nudge {word: 'group', thing: 'lake', group: TRUE})"
+          "(n15:Nudge {word: 'group', thing: 'lake', group: TRUE}),",
+          "(n16:Nudge {word: 'direction', direction: 'tb'})"
         ]
       ]
     },
