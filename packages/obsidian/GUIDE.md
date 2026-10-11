@@ -34,7 +34,8 @@ module that ties the parts together, named as the folder is.
 - `refusal-banner.ts` — the banner over a graph shown as text because it is too large to read or draw, took too long,
   or drawing is paused: an icon, and the limit and numbers in words.
 - `refusal-words.ts` — those words, with no Obsidian in them, in two voices: the banner's, and the notice of an export
-  stopped for the same reason ("what happened: why. Nothing was saved. What to do.").
+  stopped for the same reason ("what happened: why. Nothing was saved. What to do."), and for a layout that failed (the
+  worker or its engine raised an error: its reason is put in brackets).
 
 ### `src/properties/` — the inspector's properties, as Obsidian's Properties panel
 
