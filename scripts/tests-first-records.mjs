@@ -230,6 +230,43 @@ export function summary(repo) {
   return { baseline: baseline?.head ?? null, files: tally(baseline, replays, exceptionsIn(repo), testFiles(repo)) };
 }
 
+/** `value` with the keys of every object in it sorted, so what is printed of it is stable. */
+const sorted = (value) =>
+  Array.isArray(value)
+    ? value.map(sorted)
+    : value && typeof value === 'object'
+      ? Object.fromEntries(
+          Object.entries(value)
+            .sort(([a], [b]) => (a < b ? -1 : 1))
+            .map(([k, v]) => [k, sorted(v)]),
+        )
+      : value;
+
+/**
+ * What the records prove, for a reader outside the repository (--tally): `summary`, with the tests that passed first
+ * counted, and `excused`, each reason kept by test file and test, with its file's path from the root and its content as
+ * kept. Read with the readers above, so a reason file that is malformed or names `__proto__` fails, naming it. Every
+ * object has its keys sorted. Gives the JSON text, and writes nothing.
+ */
+export function tallyReport(repo) {
+  const { baseline, files } = summary(repo);
+  const counted = Object.fromEntries(
+    Object.entries(files).map(([file, e]) => [file, { ...e, passedFirst: e.passedFirst.length }]),
+  );
+  const excused = Object.fromEntries(
+    Object.entries(exceptionsIn(repo)).map(([file, tests]) => [
+      file,
+      Object.fromEntries(
+        Object.entries(tests).map(([test, reason]) => [
+          test,
+          { reasonFile: `${EXCUSALS}/${excusalName(file, test)}`, reason: { file, test, ...reason } },
+        ]),
+      ),
+    ]),
+  );
+  return json(sorted({ baseline, files: counted, excused }));
+}
+
 /**
  * The commits since the baseline that changed a test and have no record: each is recorded by --update on the branch
  * that made it, so no other branch replays it again, perhaps differently (review of #69).

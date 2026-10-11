@@ -1,6 +1,7 @@
 // The tests-first replay's command line (spec §12, tests_first), run as CI and a person run it, on small repositories
 // made for the purpose: --check reads the reasons kept in test/seen-failing/, --excuse keeps one, --migrate moves the
-// old single files over, and --complete fails a commit that changed a test and has no record.
+// old single files over, --complete fails a commit that changed a test and has no record, and --tally prints what the
+// records prove as JSON, writing nothing.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -98,6 +99,112 @@ describe('--migrate', () => {
       assert.ok(existsSync(join(dir, EXCUSALS, excusalName('test/x.test.js', 'a'))));
     } finally {
       rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+// an outside reader runs --tally and reads the records as JSON; it writes nothing
+describe('--tally', () => {
+  /** The repository of `passingFirst`, its commits recorded; gives it. */
+  const recorded = () => {
+    const r = passingFirst();
+    assert.equal(cli(r.dir, '--update').status, 0);
+    return r;
+  };
+
+  test('--tally prints the counts for each test file and the baseline as JSON, keys sorted, and exits 0', () => {
+    const r = recorded();
+    try {
+      const tallied = cli(r.dir, '--tally');
+      assert.equal(tallied.status, 0, tallied.stderr);
+      const out = JSON.parse(tallied.stdout);
+      assert.deepEqual(Object.keys(out), ['baseline', 'excused', 'files']);
+      assert.equal(out.baseline, null);
+      assert.deepEqual(out.excused, {});
+      assert.deepEqual(Object.keys(out.files['test/twice.test.js']), [
+        'excused',
+        'notReplayed',
+        'notReplayedCommits',
+        'passedFirst',
+        'replayed',
+        'seenFailing',
+      ]);
+      assert.deepEqual(out.files['test/twice.test.js'], {
+        excused: 0,
+        notReplayed: 0,
+        notReplayedCommits: [],
+        passedFirst: 1,
+        replayed: 2,
+        seenFailing: 1,
+      });
+      assert.equal(cli(r.dir, '--tally').stdout, tallied.stdout, 'the same records give the same output');
+    } finally {
+      r.done();
+    }
+  });
+
+  test('--tally gives an excused test its reason file and the reason exactly as kept', () => {
+    const r = recorded();
+    try {
+      assert.equal(cli(r.dir, '--excuse', 'test/twice.test.js', 'already true', 'pins what already held').status, 0);
+      const out = JSON.parse(cli(r.dir, '--tally').stdout);
+      const name = excusalName('test/twice.test.js', 'already true');
+      const kept = JSON.parse(readFileSync(join(r.dir, EXCUSALS, name), 'utf8'));
+      assert.deepEqual(out.excused, {
+        'test/twice.test.js': { 'already true': { reasonFile: `${EXCUSALS}/${name}`, reason: kept } },
+      });
+      assert.equal(out.files['test/twice.test.js'].excused, 1);
+    } finally {
+      r.done();
+    }
+  });
+
+  test('--tally writes nothing: the working tree is as clean afterwards as before', () => {
+    const r = recorded();
+    try {
+      assert.equal(cli(r.dir, '--excuse', 'test/twice.test.js', 'already true', 'pins what already held').status, 0);
+      r.git('add', '-A');
+      r.git('commit', '-q', '-m', 'the records');
+      assert.equal(r.git('status', '--porcelain'), '');
+      assert.equal(cli(r.dir, '--tally').status, 0);
+      assert.equal(r.git('status', '--porcelain', '--ignored'), '');
+    } finally {
+      r.done();
+    }
+  });
+
+  test('--tally exits non-zero with the error and no JSON when a reason file is malformed', () => {
+    const r = recorded();
+    try {
+      mkdirSync(join(r.dir, EXCUSALS), { recursive: true });
+      writeFileSync(join(r.dir, EXCUSALS, 'broken.json'), '{ not json');
+      const tallied = cli(r.dir, '--tally');
+      assert.equal(tallied.status, 1);
+      assert.match(tallied.stderr, new RegExp(`${EXCUSALS}/broken\\.json: not JSON`));
+      assert.equal(tallied.stdout, '');
+      writeFileSync(join(r.dir, EXCUSALS, 'broken.json'), JSON.stringify({ file: '__proto__', test: 'x' }));
+      const refused = cli(r.dir, '--tally');
+      assert.equal(refused.status, 1);
+      assert.match(refused.stderr, /broken\.json: names "__proto__"/);
+    } finally {
+      r.done();
+    }
+  });
+
+  test('--tally reads the repository --repo names, wherever it is run from', () => {
+    const r = recorded();
+    const other = repository([{ 'README.md': 'no test here\n' }]);
+    try {
+      const from = (dir) =>
+        spawnSync(process.execPath, [path('scripts/tests-first.mjs'), '--repo', dir, '--tally'], {
+          cwd: other.dir,
+          encoding: 'utf8',
+        });
+      assert.deepEqual(Object.keys(JSON.parse(from(r.dir).stdout).files), ['test/twice.test.js']);
+      assert.deepEqual(JSON.parse(from(other.dir).stdout).files, {});
+    } finally {
+      r.done();
+      other.done();
     }
   });
 });
