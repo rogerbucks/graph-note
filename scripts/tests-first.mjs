@@ -36,21 +36,12 @@
 // naming it: a test may come a commit before its code (Roger, 10 Oct 2026). But one that passes the second time, a run
 // at the commit's own code that did not finish, or a commit whose replay fails, is not known to be either: it fails the
 // record, naming the commit and the file, and nothing is written. --check warns of all.
-// One run of one test file, and what it shows, is scripts/tests-first-run.mjs.
+// One run of one test file, and what it shows, is scripts/tests-first-run.mjs; a commit's checkout, tests-first-checkout.mjs.
 import { execFileSync, spawnSync } from 'node:child_process';
-import {
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  symlinkSync,
-  writeFileSync,
-} from 'node:fs';
-import { tmpdir } from 'node:os';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, basename, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { checkout } from './tests-first-checkout.mjs';
 import { JS_TEST, PY_TEST, run } from './tests-first-run.mjs';
 import {
   RECORDS,
@@ -76,31 +67,6 @@ const HERE = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SUPPORT = /(^|\/)(test|tests)\//;
 
 const git = (repo, ...args) => execFileSync('git', args, { cwd: repo, encoding: 'utf8', maxBuffer: 1 << 28 }).trim();
-
-/** A detached checkout of a commit, wired to the repository's installed packages, with its own workspace links. */
-function checkout(repo, commit) {
-  const dir = mkdtempSync(join(tmpdir(), 'tests-first-wt-'));
-  rmSync(dir, { recursive: true, force: true });
-  git(repo, 'worktree', 'add', '-q', '--detach', dir, commit);
-  const modules = join(repo, 'node_modules');
-  if (existsSync(modules)) {
-    // the installed packages, but this checkout's own workspace packages, so its code is what runs
-    mkdirSync(join(dir, 'node_modules'));
-    for (const name of readdirSync(modules))
-      if (name !== '@graph-note') symlinkSync(join(modules, name), join(dir, 'node_modules', name));
-    mkdirSync(join(dir, 'node_modules', '@graph-note'));
-    const packages = join(dir, 'packages');
-    for (const p of existsSync(packages) ? readdirSync(packages) : []) {
-      const manifest = join(packages, p, 'package.json');
-      if (!existsSync(manifest)) continue;
-      const name = JSON.parse(readFileSync(manifest, 'utf8')).name ?? '';
-      if (name.startsWith('@graph-note/')) symlinkSync(join(packages, p), join(dir, 'node_modules', name));
-      const own = join(repo, 'packages', p, 'node_modules');
-      if (existsSync(own)) symlinkSync(own, join(packages, p, 'node_modules'));
-    }
-  }
-  return { dir, done: () => git(repo, 'worktree', 'remove', '--force', dir) };
-}
 
 /** The test folder a test file sits in: a package's test/ or tests/, or the repository's own test/. */
 const testFolder = (f) => /^(.*?\/?(?:test|tests)\/)/.exec(f)?.[1] ?? '';

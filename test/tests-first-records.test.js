@@ -454,8 +454,21 @@ describe('this repository’s records', () => {
     const passed = Object.entries(proved.files).flatMap(([file, e]) =>
       e.passedFirst.map((p) => `${file} :: ${p.name}`),
     );
-    const excused = Object.entries(exceptions).flatMap(([file, names]) =>
-      Object.keys(names).map((n) => `${file} :: ${n}`),
+    // a reason with `fault` excuses a test recorded as failing at its own commit, which a reason for passing first does not
+    const faults = [...readRecords(path('.')).commits.values()].flatMap((r) =>
+      r.files.flatMap((f) => (f.faults ?? []).map((x) => `${f.file} :: ${x.test}`)),
+    );
+    const named = (wanted) =>
+      Object.entries(exceptions).flatMap(([file, names]) =>
+        Object.entries(names)
+          .filter(([, reason]) => Boolean(reason.fault) === wanted)
+          .map(([n]) => `${file} :: ${n}`),
+      );
+    const excused = named(false);
+    assert.deepEqual(
+      named(true).filter((x) => !faults.includes(x)),
+      [],
+      'a fault reason for no recorded fault',
     );
     // a test new in a commit whose run against the code before it did not finish was neither seen failing nor passing:
     // a reason may be kept for it
