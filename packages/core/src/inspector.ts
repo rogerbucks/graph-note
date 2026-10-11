@@ -122,9 +122,12 @@ function blank(text: string): string {
     .replace(/'(?:[^'\\]|\\.)*'/g, (m) => `'${' '.repeat(m.length - 2)}'`);
 }
 
+/** An id as a regular expression matches it: each character as itself, so `node.js` never matches `node_js`. */
+export const literally = (id: string): string => id.replace(/[.*+?^${}()|[\]\\/-]/g, '\\$&');
+
 /** Each pattern of the (blanked) text that writes or mentions the thing: its labels in [1], its map in [2]. */
 const thingPatterns = (b: string, id: string) => [
-  ...b.matchAll(new RegExp(`\\(\\s*${id}\\s*((?::\\s*\\w+\\s*)*)(\\{[^{}]*\\})?\\s*\\)`, 'g')),
+  ...b.matchAll(new RegExp(`\\(\\s*${literally(id)}\\s*((?::\\s*\\w+\\s*)*)(\\{[^{}]*\\})?\\s*\\)`, 'g')),
 ];
 /** Each link's brackets in the (blanked) text, in order: its map in [1]. */
 const linkBrackets = (b: string) => [...b.matchAll(/-\[\s*:\s*\w+\s*(\{[^{}]*\})?\s*\]/g)];

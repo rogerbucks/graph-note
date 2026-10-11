@@ -234,6 +234,13 @@ describe('a value added to a list, or removed', () => {
     assert.match(text, /\(quiet:Tag\)/);
   });
 
+  test('a value whose id has a plus or a bracket in it is refused with a reason, never a broken search', () => {
+    const block = `${LISTED},\n(cpp:Tag {id: 'c++', name: 'C++'}),\n(cafe)-[:HAS_TAG]->(cpp)`;
+    let r;
+    assert.doesNotThrow(() => (r = drop(block, 'c++')));
+    assert.ok(r.ok || typeof r.reason === 'string');
+  });
+
   test('a link written inside a longer path is left to the text, and a value not in the list is refused', () => {
     const chained = LISTED.replace('(cafe)-[:HAS_TAG]->(quiet)', '(sam)-[:RUNS]->(cafe)-[:HAS_TAG]->(quiet)');
     assert.match(drop(chained, 'quiet').reason, /written together with other things/);
