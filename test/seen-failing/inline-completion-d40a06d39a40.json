@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/inline-completion.test.js",
+  "test": "the best match, shown inline > it is never written to the note unasked",
+  "seen_failing_first": false,
+  "evidence": "a guard, written with the feature: the old code inserted nothing unasked either, so it passes before and after by design; it holds that the inline match never is (commit e935115)"
+}

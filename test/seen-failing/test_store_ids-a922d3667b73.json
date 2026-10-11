@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_store_ids.py",
+  "test": "IdIsText.test_a_text_id_is_read_and_a_number_among_the_other_properties_too",
+  "seen_failing_first": false,
+  "evidence": "a control case for req:3.id-is-text, written with the change beside it: a text id, and a number in another property, were read before and are read after, so it passes at its parent by design"
+}

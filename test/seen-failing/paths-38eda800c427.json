@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/paths.test.js",
+  "test": "a step through something removed > renumbering touches only the path the step was taken out of",
+  "seen_failing_first": false,
+  "evidence": "a control case, written with the change beside it at the review of step 8a: renumbering already kept to its own path, and this pins it (commit 1d8c615)"
+}

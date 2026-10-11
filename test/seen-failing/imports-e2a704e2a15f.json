@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/imports.test.js",
+  "test": "drawing.ts imports no host",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that already existed: the core modules imported no host before this test named it (commit 52cfcf6)"
+}

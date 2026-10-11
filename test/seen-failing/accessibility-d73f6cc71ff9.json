@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/accessibility.test.js",
+  "test": "contrast in both themes > dark theme: links drawn in the muted edge colour, and estimated links, keep 3:1",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that already existed: the contrast of the locked style the drawing already used (commit 3ff0c19)"
+}

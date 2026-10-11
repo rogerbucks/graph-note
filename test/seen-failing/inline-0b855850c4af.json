@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/inline.test.js",
+  "test": "selecting in the drawing moves the text to it > when nothing is being edited, choosing a box changes no text and moves no focus",
+  "seen_failing_first": false,
+  "evidence": "a control case, written with the change beside it: with no editor open, choosing a box only ever showed its details, before and after by design (commit d56d2fe)"
+}

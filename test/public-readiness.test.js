@@ -175,8 +175,8 @@ describe('the settings on GitHub', () => {
   test('only a collaborator can open a pull request or an issue; nothing else is open to anyone', () => {
     assert.equal(wanted('pull_request_creation_policy').want, 'collaborators_only');
     assert.equal(wanted('has_pull_requests').want, true);
-    for (const f of ['has_issues', 'has_projects', 'has_wiki', 'has_discussions'])
-      assert.equal(wanted(f).want, false, f);
+    assert.equal(wanted('has_issues').want, true, 'issues stay on; collaborators-only creation is set by hand');
+    for (const f of ['has_projects', 'has_wiki', 'has_discussions']) assert.equal(wanted(f).want, false, f);
   });
 
   test('secrets are scanned and refused at the gate, once the repository is public', () => {
@@ -210,7 +210,11 @@ describe('the settings on GitHub', () => {
   test("the default branch requires CI's jobs, this check among them, and the dependency review", () => {
     assert.deepEqual(wanted('default branch ruleset: required checks').want, REQUIRED_CHECKS);
     const ci = Object.keys(jobs(read('.github/workflows/ci.yml')));
-    for (const check of REQUIRED_CHECKS.filter((c) => c !== 'dependency-review')) assert.ok(ci.includes(check), check);
+    for (const job of ci) assert.ok(REQUIRED_CHECKS.includes(job), job);
+    assert.ok(REQUIRED_CHECKS.includes('public-readiness'));
+    assert.ok(REQUIRED_CHECKS.includes('dependency-review'));
+    assert.deepEqual(REQUIRED_CHECKS, [...REQUIRED_CHECKS].sort(), 'sorted, so a comparison is stable');
+    for (const c of REQUIRED_CHECKS) assert.match(c, /^[\w-]+$/, 'a job name, nothing else');
     assert.ok(Object.keys(jobs(read('.github/workflows/dependency-review.yml'))).includes('dependency-review'));
   });
 

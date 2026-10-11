@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_parity.py",
+  "test": "SetKeepsId.test_both_readers_read_a_set_of_another_key",
+  "seen_failing_first": false,
+  "evidence": "a control case for req:3.set-keeps-id, written with the change beside it: a SET of a key other than id was read by both readers before and is read after, so it passes at its parent by design"
+}

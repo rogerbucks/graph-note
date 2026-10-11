@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/accessibility.test.js",
+  "test": "one colour mapping > the core’s fixed palettes, for a host with no theme variables, are Obsidian’s default themes as read here",
+  "seen_failing_first": false,
+  "evidence": "coverage the review of #54 asked for, added with its fixes: the core's table was copied from this test's own record of Obsidian's colours, so the check that they agree passes before and after by design; it guards against either drifting later"
+}

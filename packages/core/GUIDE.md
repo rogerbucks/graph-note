@@ -168,6 +168,36 @@ reads `· QUERY` as a query, and the core draws no query as data, so a view is n
   change. A route of up to k steps is a walk, as Grafeo takes it (a link may be used again), found by two breadth-first
   searches. The things were compared with Grafeo's answers for the same queries on random graphs.
 
+**Export (spec §16)**
+
+The host does what needs a canvas, the file system or a dialog; the core decides everything else. An image is exported as
+SVG or PNG (`EXPORT_FORMATS`), of the whole diagram or of a view, in the fixed light or dark colours chosen.
+
+- `export-scope.ts` — `exportScope`: what an export holds. The whole diagram is the graph as drawn. A view is put to the
+  graph as `evaluate` puts it and holds only its things and the links between them, in the graph's order, with a guess (an
+  estimated link) still a guess at its new place; with the faded context asked for it holds the whole graph and lists what
+  is outside the view (`faded`: things by key, links by edge number). An empty graph or view is `empty`, with `why`.
+- `export-marks.ts` — fading and looks written into the SVG (`marked`): an opacity in the style attribute of the group of
+  each faded thing and link (the pane's 0.35), and each look's border, text, line and format as style declarations in the
+  locked blend of its hue, as the pane's stylesheet draws them, because an image cannot take the stylesheet. Groups are
+  found by Graphviz's numbering (`node1`, `edge1`…) in a single pass.
+- `export-frame.ts` — the frame (`framed`): the image's own background, a title, the reading of a view, the legend, and a
+  footer with the note and the day (`saidDate`, `11 Oct 2026`), in the locked style's font and sizes and the palette's
+  fixed colours. The drawing is nested inside at natural size. Text widths are estimated, so long lines wrap early.
+- `export.ts` — `exportSvg`: lays the scope out with the engine it is handed, in `PALETTES.light` or `dark`, marks it,
+  frames it, and gives `{ svg, width, height }` with no theme variable or `color-mix` in a colour (it throws if one is left).
+  An empty scope is refused; an engine failure is raised. `pngSize` is the PNG's pixel size, never under `PNG_MIN_SCALE`
+  (twice natural size) and rounded up. A view's looks are drawn and put in the legend with what they mean.
+- `export-plan.ts` — `exportPlan`, the one decision before anything is written: `{ nothing }` for an empty scope,
+  `{ ask }` for a note classified above the configured level (naming both; a classification not in the list counts as
+  above every level; the host asks again with `confirmed` once the user says yes), or `{ go }` with the file's name and
+  place and, as configured, the companion note's. A name is made from the note, the graph or view and the day, safe on
+  every platform; a folder setting that could leave the vault is not used.
+- `export-note.ts` — `companionNote`: the Markdown that links the image and the source note and names the graph or view,
+  the day and the scope, with nothing of the data beyond what the image shows.
+- `export-write.ts` — `writeSafely`: the bytes go to a temporary file given by the host's `write`, then `rename` into place;
+  on any failure the temporary file is `remove`d, the target is never touched, and the result says why in a sentence.
+
 **Settings (spec §21)**
 
 - `strictness.ts` — the three departures from standard GQL the reader reads as meant (each problem says which, in
@@ -175,7 +205,10 @@ reads `· QUERY` as a query, and the core draws no query as data, so a view is n
   checked before it is written, and the standard text an engine or an export is given whatever the level.
 - `settings.ts` — every option with its name, sentence, choices and default (`OPTIONS`, `DEFAULT_SETTINGS`), and saved
   settings read back with anything unknown, out of range or secret left out (`settingsFrom`). An AI model keeps the
-  name of its key in the host's secret store (`keyName`), never the key.
+  name of its key in the host's secret store (`keyName`), never the key. The Export section holds the export theme (light
+  or dark), whether an export saved in the vault gets a companion note, the folder exports go to (`vaultFolder` keeps it
+  inside the vault; empty is next to the note) and the classification above which an export asks first (one of
+  `classifications`, the lowest until chosen).
 
 ## Command-line tools, `bin/`
 

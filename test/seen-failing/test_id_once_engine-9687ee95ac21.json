@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_id_once_engine.py",
+  "test": "TheReaderRefusesARepeat.test_parse_under_the_profile_setting_refuses_an_id_repeated_in_one_block",
+  "seen_failing_first": false,
+  "evidence": "an investigation of req:3.id-once (commit 2ff1377, a test file and nothing else): it pins the reader's refusal, which already existed, so it passes before and after by design"
+}

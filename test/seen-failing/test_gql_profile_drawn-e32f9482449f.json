@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_gql_profile_drawn.py",
+  "test": "AnEmojiBeforeWhatIsLeftOut.test_the_item_at_fault_is_left_out_exactly",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that already existed in Python: it counts places and blanks text in code points alike, so it was already right; the twin test in the core (drawing.test.js, an emoji before what is left out) failed first (commit de46773)"
+}

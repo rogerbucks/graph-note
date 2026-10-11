@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_changeset_header.py",
+  "test": "EngineChangesetHeader.test_a_first_line_holding_only_u2028_is_blank_and_the_next_line_is_the_header",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour PR #45 changed the way to without changing the result (splitlines ended the line at U+2028, the split on LF skips it as whitespace): written after its code at review, it passes before and after by design"
+}

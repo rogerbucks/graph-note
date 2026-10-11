@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_changeset_header.py",
+  "test": "RulesChangesetHeader.test_a_no_break_space_before_the_header_is_whitespace_and_the_header_is_read",
+  "seen_failing_first": false,
+  "evidence": "a control case, asked for in review of PR #45: a no-break space was whitespace to str.strip() and to the regex, and is to the reader's set, so it passes before and after by design"
+}

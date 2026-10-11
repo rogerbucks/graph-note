@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_reader_agrees_with_grafeo.py",
+  "test": "Agreement.test_p1_the_reader_builds_grafeos_graphs",
+  "seen_failing_first": false,
+  "evidence": "req:17.engine-agreement: proves a twin that already exists, with no code changed, so it passes against its parent by design. Seen failing against a planted fault: the reader's canon broken, it fails (scratch run, 11 Oct 2026)"
+}

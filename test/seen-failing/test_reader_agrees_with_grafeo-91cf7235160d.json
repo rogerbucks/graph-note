@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_reader_agrees_with_grafeo.py",
+  "test": "Agreement.test_p2_paths_agree",
+  "seen_failing_first": false,
+  "evidence": "req:17.engine-agreement: proves twins that already exist, with no code changed, so it passes against its parent by design. Seen failing against a planted fault: the reader's lift reversed, it fails (scratch run, 11 Oct 2026)"
+}

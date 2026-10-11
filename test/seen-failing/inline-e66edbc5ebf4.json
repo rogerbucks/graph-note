@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/inline.test.js",
+  "test": "edit here, in the card > once the person has moved to something else, a card coming back never takes the focus from it",
+  "seen_failing_first": false,
+  "evidence": "a control case, written with the change beside it: it holds that giving the focus back never takes it from where the person put it, so it passes before and after by design (commit e52fbf7)"
+}

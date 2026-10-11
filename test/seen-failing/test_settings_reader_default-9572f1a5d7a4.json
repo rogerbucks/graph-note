@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_settings_reader_default.py",
+  "test": "ReaderDefault.test_a_gql_constraint_with_no_twin_is_still_run_as_gql",
+  "seen_failing_first": false,
+  "evidence": "a control case, written with the change beside it: a GQL constraint with no named twin is database work and was always run as GQL, so it passes before and after by design; it holds that req:3.reader-default's change to config_from runs only rules with a twin as the twin (11 Oct 2026)"
+}

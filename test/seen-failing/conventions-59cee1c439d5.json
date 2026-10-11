@@ -1,0 +1,6 @@
+{
+  "file": "test/conventions.test.js",
+  "test": "Obsidian’s guidelines, beyond the linter > every listener on the app, window or document is registered, so it goes when the plugin does",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that already existed: a convention the code already met when the conventions were written down (commit 54908e4)"
+}

@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_to_gql.py",
+  "test": "ToGqlKeepsOwnedComments.test_comments_above_the_first_thing_stay_owned_in_a_block_whose_lines_end_in_cr_lf",
+  "seen_failing_first": false,
+  "evidence": "seen failing in the review of #53 against the fixed owned_comments with to_gql unchanged (the INSERT line parted the CR LF note from its thing); against the parent commit both sides read the note alike as no note, so the replay cannot show it"
+}

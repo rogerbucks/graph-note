@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/render.test.js",
+  "test": "speed > a graph of 50 things is read and drawn in under half a second (spec §11; the phone is checked on the device)",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that already existed: a guard on a speed the drawing already had (commit c96b0ad)"
+}

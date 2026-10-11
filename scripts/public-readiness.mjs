@@ -185,14 +185,25 @@ const endpoint = (name, phase, path, want, keys) => ({
   write: (repo) => gh(['-X', 'PUT', `repos/${repo}/${path}`], want),
 });
 
-/** The checks a change to the default branch must pass: CI's jobs, this script's among them, and the dependency review. */
-export const REQUIRED_CHECKS = ['dependency-review', 'lint', 'public-readiness', 'python', 'test', 'tests-first'];
+/** The jobs of the CI workflow, by name, read from the file so a job added there is required here too. */
+export function ciJobs(root = ROOT) {
+  const lines = readFileSync(join(root, '.github/workflows/ci.yml'), 'utf8').split('\n');
+  return lines
+    .slice(lines.indexOf('jobs:') + 1)
+    .map((l) => /^ {2}([\w-]+):\s*$/.exec(l)?.[1])
+    .filter(Boolean);
+}
+/** The checks a change to the default branch must pass: every CI job, this script's among them, and the dependency review. */
+export const REQUIRED_CHECKS = [...ciJobs(), 'dependency-review'].sort();
 
 // the list gives each ruleset without its rules; the one on the default branch is read whole
 const defaultRuleset = (repo) => {
   const found = gh([`repos/${repo}/rulesets`]).find((r) => r.target === 'branch' && r.enforcement === 'active');
   return found && gh([`repos/${repo}/rulesets/${found.id}`]);
 };
+// a member of a language group, read as the group it is set by
+const asGroup = (l) => (l === 'javascript' || l === 'typescript' ? 'javascript-typescript' : l);
+
 const checksRule = (ruleset) => ruleset.rules.find((r) => r.type === 'required_status_checks');
 
 /**
@@ -200,10 +211,12 @@ const checksRule = (ruleset) => ruleset.rules.find((r) => r.type === 'required_s
  * `always`, or `public` for what GitHub gives only a public repository (or a paid security plan).
  */
 export const WANTED = [
-  // Who can contribute: a collaborator opens a pull request or an issue; nothing else is open to anyone.
+  // Who can contribute: a collaborator opens a pull request or an issue; nothing else is open to anyone. Issues stay on,
+  // with creation set to collaborators only by hand in the repository's settings: that setting has no API field (as of
+  // 11 Oct 2026), so it is the one thing here the script cannot read or set.
   repoField('pull_request_creation_policy', 'collaborators_only'),
   repoField('has_pull_requests', true),
-  repoField('has_issues', false),
+  repoField('has_issues', true),
   repoField('has_projects', false),
   repoField('has_wiki', false),
   repoField('has_discussions', false),
@@ -254,13 +267,17 @@ export const WANTED = [
       quiet(() => pick(gh([`repos/${repo}/private-vulnerability-reporting`]), ['enabled'])) ?? { enabled: false },
     write: (repo) => gh(['-X', 'PUT', `repos/${repo}/private-vulnerability-reporting`]),
   },
+  // GitHub reports a language group as its members too (javascript-typescript as javascript and typescript)
   {
     name: 'code scanning: CodeQL default setup',
     phase: 'public',
     want: { state: 'configured', languages: ['actions', 'javascript-typescript', 'python'] },
     read: (repo) => {
       const setup = quiet(() => gh([`repos/${repo}/code-scanning/default-setup`]));
-      return { state: setup?.state ?? 'not-configured', languages: [...(setup?.languages ?? [])].sort() };
+      return {
+        state: setup?.state ?? 'not-configured',
+        languages: [...new Set((setup?.languages ?? []).map(asGroup))].sort(),
+      };
     },
     write: (repo) =>
       gh(['-X', 'PATCH', `repos/${repo}/code-scanning/default-setup`], {
