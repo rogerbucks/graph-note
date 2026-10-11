@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/estimate-places.test.js",
+  "test": "a misspelt name is fixed where the path names it > a path over two lines with the name in a text on the first: the text is untouched",
+  "seen_failing_first": false,
+  "evidence": "Pins a rule already in estimate-places.ts (references found in blanked text), untested until the re-review of #85. Seen failing with blankText removed by hand: the name inside the text was changed. Reverted, 11 Oct 2026."
+}
