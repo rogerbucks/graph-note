@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/reading-view.test.js",
+  "test": "the pane in front decides > an edit pane keeps saving while another pane shows the note in reading view",
+  "seen_failing_first": false,
+  "evidence": "Pins behaviour that already held, by Roger's decision of 11 Oct 2026 (reading_view_whole_note): an edit pane keeps saving while another pane shows the note in reading view."
+}
