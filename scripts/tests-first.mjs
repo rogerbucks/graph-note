@@ -11,9 +11,12 @@
 //   node scripts/tests-first.mjs --record            replay every commit since the baseline afresh
 //   node scripts/tests-first.mjs --complete          exit 1 on a commit since the baseline that changed a test and has
 //                                                    no record (CI), so each is recorded on its own branch
-//   node scripts/tests-first.mjs --excuse [--force] <test file> <test> <reason>
+//   node scripts/tests-first.mjs --excuse [--force] [--fault] <test file> <test> <reason>
 //                                                    keep the reason a test passed first, in test/seen-failing/; one
-//                                                    kept already is replaced only with --force
+//                                                    kept already is replaced only with --force. With --fault, the
+//                                                    reason a test failed at its own commit, so was not replayed (and
+//                                                    which commit fixed it): only for a test the records hold as a
+//                                                    fault. --tally counts it excused, and --check does not warn of it
 //   node scripts/tests-first.mjs --migrate           move the old single files, test/tests-first.json and
 //                                                    test/seen-failing.json, over into those folders
 //   node scripts/tests-first.mjs --tally             print what the records prove as one JSON document on stdout, for a
@@ -55,7 +58,9 @@ import {
   changes,
   exceptionsIn,
   excuse,
+  excuseFault,
   excused,
+  faultExcused,
   history,
   migrate,
   readRecords,
@@ -328,10 +333,11 @@ if (process.argv[1] && basename(process.argv[1]) === 'tests-first.mjs') {
   const given = process.argv.slice(2);
   const repo = given[0] === '--repo' ? resolve(given[1] ?? '') : HERE;
   const [mode, ...rest] = given[0] === '--repo' ? given.slice(2) : given;
-  const force = mode === '--excuse' && rest[0] === '--force';
-  const args = force ? rest.slice(1) : rest;
+  // --excuse takes --force and --fault, in either order, before its three arguments
+  const flags = mode === '--excuse' ? rest.slice(0, 2).filter((a) => a === '--force' || a === '--fault') : [];
+  const args = rest.slice(flags.length);
   try {
-    main(repo, mode, args, force);
+    main(repo, mode, args, flags.includes('--force'), flags.includes('--fault'));
   } catch (e) {
     // a record that cannot be trusted, or records that cannot be read: say why, and write nothing
     if (!(e instanceof RecordFault || e instanceof RecordsError)) throw e;
@@ -341,7 +347,7 @@ if (process.argv[1] && basename(process.argv[1]) === 'tests-first.mjs') {
 }
 
 /** Runs one mode of the command line on `repo`. */
-function main(repo, mode, args, force) {
+function main(repo, mode, args, force, fault = false) {
   if (mode === '--record') {
     record(repo);
   } else if (mode === '--update') {
@@ -357,7 +363,10 @@ function main(repo, mode, args, force) {
     const exceptions = exceptionsIn(repo);
     const replays = args.map((c) => replay(repo, c));
     const bad = unexplained(replays, exceptions);
-    const faults = replays.flatMap((r) => r.faults);
+    // a fault whose reason is kept (--excuse --fault) is no longer warned of
+    const faults = replays
+      .flatMap((r) => r.faults)
+      .filter((f) => !faultExcused(exceptions, f.file ?? '', f.test ?? ''));
     for (const b of bad)
       console.error(
         `${b.commit.slice(0, 7)} ${b.file}: "${b.name}" passed against the code before it — write the test first, or keep the reason: node scripts/tests-first.mjs --excuse <test file> <test> <reason>`,
@@ -368,7 +377,7 @@ function main(repo, mode, args, force) {
     process.exitCode = bad.length ? 1 : 0;
   } else if (mode === '--excuse' && args.length === 3 && args.every(Boolean)) {
     const [file, test, evidence] = args;
-    console.log(excuse(repo, file, test, evidence, force));
+    console.log((fault ? excuseFault : excuse)(repo, file, test, evidence, force));
   } else if (mode === '--migrate') {
     for (const line of migrate(repo)) console.log(line);
   } else if (mode === '--tally') {
@@ -376,7 +385,7 @@ function main(repo, mode, args, force) {
   } else {
     console.error(
       'usage: tests-first.mjs [--repo <dir>] --check <commit>… | --update | --record | --complete | ' +
-        '--excuse [--force] <test file> <test> <reason> | --migrate | --tally',
+        '--excuse [--force] [--fault] <test file> <test> <reason> | --migrate | --tally',
     );
     process.exitCode = 2;
   }

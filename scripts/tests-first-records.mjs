@@ -34,7 +34,7 @@ const BASELINE_NOTE =
 // names that would reach every object, were a reason looked up by them as a property (review of #69)
 const REFUSED_NAMES = new Set(['__proto__', 'constructor', 'prototype']);
 // what a reason holds beside its file and test
-const REASON_FIELDS = new Set(['seen_failing_first', 'evidence']);
+const REASON_FIELDS = new Set(['seen_failing_first', 'evidence', 'fault']);
 
 /** The records or reasons kept cannot be read as they are; the message names the file and why. */
 export class RecordsError extends Error {}
@@ -88,6 +88,24 @@ function keep(repo, file, test, reason, force) {
 export function excuse(repo, file, test, evidence, force = false) {
   return keep(repo, file, test, { seen_failing_first: false, evidence }, force);
 }
+
+/**
+ * Keeps the reason `test`, in the test file `file`, failed at its own commit and so could not be replayed (`evidence`
+ * says why, and which commit fixed it); gives the file's path from the root. Only a test the records hold as a fault
+ * is excused; a reason for any other is refused. A reason kept already is replaced only when `force` is given.
+ */
+export function excuseFault(repo, file, test, evidence, force = false) {
+  const held = [...readRecords(repo).commits.values()].some((r) =>
+    r.files.some((f) => f.file === file && (f.faults ?? []).some((x) => x.test === test)),
+  );
+  if (!held)
+    throw new RecordsError(`${EXCUSALS}/${excusalName(file, test)}: the records hold no fault of "${test}" in ${file}`);
+  return keep(repo, file, test, { seen_failing_first: false, fault: true, evidence }, force);
+}
+
+/** Whether `exceptions` keeps a reason that `test` in `file` failed at its own commit. */
+export const faultExcused = (exceptions, file, test) =>
+  excused(exceptions, file, test) && exceptions[file][test].fault === true;
 
 /**
  * Every reason kept, by test file and test: `{ [file]: { [test]: { seen_failing_first, evidence } } }`, both levels
@@ -150,11 +168,13 @@ export function removeRecord(repo, commit) {
 /**
  * What the records prove, by test file: the baseline's entries, then each replay in `replays`, oldest first, added in.
  * Each entry: the commits replayed and those that could not be (a new test failing at its own commit among them), the
- * new tests seen failing first, those that passed first, and how many of those have a reason in `exceptions`. Only the
+ * new tests seen failing first, those that passed first, and how many of those have a reason in `exceptions` (`excused`).
+ * A fault with a reason there (--excuse --fault) is not counted as not replayed, but as `faultsExcused`. Only the
  * test files in `current` are kept, sorted.
  */
 export function tally(baseline, replays, exceptions, current) {
   const files = structuredClone(baseline?.files ?? {});
+  const faultsExcused = new Map();
   for (const { commit, files: replayed } of replays)
     for (const f of replayed) {
       const e = (files[f.file] ??= {
@@ -178,13 +198,22 @@ export function tally(baseline, replays, exceptions, current) {
         continue;
       }
       // its other new tests are judged and counted; the commit is counted once, as not replayed when a test in it was not
-      if (faulted.length) unreplayed(why.join('; '));
-      else e.replayed++;
+      // a fault with a reason kept (--excuse --fault) is excused, and the commit counts as replayed
+      if (faulted.length && !faulted.every((x) => faultExcused(exceptions, f.file, x.test))) unreplayed(why.join('; '));
+      else {
+        e.replayed++;
+        faultsExcused.set(f.file, (faultsExcused.get(f.file) ?? 0) + faulted.length);
+      }
       e.seenFailing += f.failedFirst.length;
       for (const name of f.passedFirst) e.passedFirst.push({ commit, name });
     }
-  for (const [file, e] of Object.entries(files))
-    e.excused = e.passedFirst.filter((p) => excused(exceptions, file, p.name)).length;
+  for (const [file, e] of Object.entries(files)) {
+    // `excused` counts the passed-first tests with a reason only; `faultsExcused` the faults with one, kept apart
+    e.excused = e.passedFirst.filter(
+      (p) => excused(exceptions, file, p.name) && !faultExcused(exceptions, file, p.name),
+    ).length;
+    e.faultsExcused = faultsExcused.get(file) ?? 0;
+  }
   return Object.fromEntries(
     Object.entries(files)
       .filter(([f]) => current.has(f))

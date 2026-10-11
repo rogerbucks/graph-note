@@ -11,8 +11,10 @@ CI. A change that breaks one fails before it is merged.
   every test new in the commit must fail there. A test written after its code, such as one that pins behaviour that
   already existed, has its reason in `test/seen-failing/`, or the build fails: one file for each test, written by `node
   scripts/tests-first.mjs --excuse <test file> <test> <reason>` and named after the test file and a digest of the test.
-  A reason holds only `file`, `test`, `seen_failing_first` and `evidence`; `--excuse` never overwrites one without
-  `--force`. `test/tests-first/` records the replays (`node scripts/tests-first.mjs --update`): one file for each
+  A reason holds only `file`, `test`, `seen_failing_first`, `evidence` and, for a fault, `fault`; `--excuse` never
+  overwrites one without `--force`. `--excuse --fault` keeps the reason a recorded fault (a test that failed at its own
+  commit) is accepted, and which commit fixed it; `--tally` and `summary` then count it as `faultsExcused`, not as
+  not replayed, leaving `excused` for the passed-first reasons. `test/tests-first/` records the replays (`node scripts/tests-first.mjs --update`): one file for each
   replayed commit that changed a test, named after the commit, over `baseline.json`, the single record as it stood when
   it was split (11 Oct 2026), frozen at its head. Together they give, for each test file, what was seen failing first,
   what was excused, and what could not be replayed. CI fails a commit since the baseline that changed a test and has no
@@ -168,6 +170,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/slice-board.test.js` — the slice board: a CSS-only HTML page of how far the slice under way is proved, from the requirements copy and, optionally, the open pull requests.
 - `test/test-vault.test.js` — the test vault: dummy notes tied to requirements, nothing Obsidian writes committed, each session clean.
 - `test/tests-first.test.js` — every test is seen to fail before its code, replayed commit by commit.
+- `test/tests-first-faults.test.js` — `--excuse --fault` keeps the reason a test failed at its own commit, only for a test the records hold as a fault; `--tally` and `summary` count it as `faultsExcused`, not as not replayed, and `--check` does not warn of it.
 - `test/tests-first-command.test.js` — that replay's command line, run as CI and a person run it: `--check`, `--excuse`, `--migrate`, `--complete` and `--tally`.
 - `test/tests-first-records.test.js` — the records of that replay: a file for each commit and each reason, so two branches never conflict in them, and the old single files moved over whole.
 - `test/tests-first-run.test.js` — one run of one test file in that replay: what its report shows, and why it did not finish.
