@@ -4,6 +4,10 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { STOPPED } from './run-ceiling.mjs';
+
+const CEILING = fileURLToPath(new URL('./run-ceiling.mjs', import.meta.url));
 
 /** A JavaScript test file: under a test/ or tests/ folder, named `*.test.js` or `*.test.mjs`. */
 export const JS_TEST = /(^|\/)(test|tests)\/.*\.test\.(js|mjs)$/;
@@ -55,13 +59,17 @@ const ended = (r) =>
 function runJs(dir, file) {
   // a run inside another test run would report to it, not print its own report
   const { NODE_TEST_CONTEXT: _context, ...env } = process.env;
-  const r = spawnSync(process.execPath, ['--test', '--test-reporter=junit', file], {
+  // under the run ceiling (spec §13, capped_test_run), which passes the report and the exit status through unchanged
+  const r = spawnSync(process.execPath, [CEILING, process.execPath, '--test', '--test-reporter=junit', file], {
     cwd: dir,
     env,
     encoding: 'utf8',
     timeout: runMs(),
     maxBuffer: 1 << 28,
   });
+  // a run stopped at a ceiling is an error with the ceiling's own line, never a run that was seen failing
+  const stopped = (r.stderr ?? '').split('\n').find((line) => line.startsWith(STOPPED));
+  if (stopped) return { passed: [], failed: [], ran: false, why: stopped };
   const read = fromJunit(r.stdout ?? '');
   if (!read.ran) return { why: ended(r), ...read };
   // a parent test that fails after its subtests pass is a <testsuite> with no failure: only the exit status shows it. The
