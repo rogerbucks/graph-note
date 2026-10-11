@@ -80,10 +80,10 @@ export function parkButton(
   text: () => string,
   replace: (next: string) => void,
   indent: Indent,
-  whole?: Graph,
-  declare?: () => Promise<DeclaredDeferred>,
+  whole: Graph | undefined,
+  declare: (() => Promise<DeclaredDeferred>) | undefined,
   /** The drawing: a thing drawn under a suggested name is not parked until its name is written (§4). */
-  reading?: NoteReading,
+  reading: NoteReading,
 ): void {
   const holder = el.createDiv({ cls: 'graph-note-park' });
   button(holder, 'Park for later', 'clock', () => {
@@ -100,7 +100,7 @@ export function parkButton(
     // the block with the Deferred written into it, from the form as it is now; throws why it cannot
     const parked = (block: string, graph?: Graph) => {
       const park = { what: what.value, why: why.value, ...(by.value ? { revisitBy: by.value } : {}) };
-      return parkForLater(block, key, park, indentText(indent), graph, reading);
+      return parkForLater(block, key, park, reading, indentText(indent), graph);
     };
     const refused = (e: unknown) => said.setText(String((e as Error).message));
     const parkIt = button(holder, 'Park it', 'check', () => {

@@ -12,8 +12,9 @@ export type SuggestedReading = Pick<NoteReading, 'graphs'>;
 
 /**
  * The things of one graph that these blocks write without a name, as boxes drawn under their suggested names: for an edit
- * that is given no drawing to ask (`parkForLater`, `styleEdit`), so that none can write a suggested name by leaving the
- * drawing out. Found as the reader finds them, from the blocks alone.
+ * that is given no drawing to ask (`styleEdit`, which has the whole note), so that none can write a suggested name by
+ * leaving the drawing out. Found as the reader finds them, from the blocks given: so only every block of the note gives
+ * the reader's names, the reader suggesting each name against all of them.
  */
 export function unnamedIn(texts: readonly string[], graph: string): SuggestedReading {
   const blocks = texts.map((t) => ({ text: typeof dataKind(t) === 'string' ? t : '', graph: graphOfBlock(t) }));

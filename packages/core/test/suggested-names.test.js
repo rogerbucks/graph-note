@@ -110,25 +110,33 @@ describe('a thing drawn under a suggested name parked for later', () => {
 
   test('is refused, saying to accept its name first, and nothing is written', () => {
     assert.throws(
-      () => parkForLater(BLOCK, 'small_reader', park, '    ', reading.whole.reader, reading),
+      () => parkForLater(BLOCK, 'small_reader', park, reading, '    ', reading.whole.reader),
       (e) => /^accept its name first: .*small_reader/.test(e.message),
     );
   });
 
-  test('is refused without the reading too: the block itself says which things are only suggested', () => {
+  test('is found as the reader finds it, across every block of the graph: the suggested name is refused, the written one parked', () => {
+    // the reader suggests a name against every block, so the thing in A is drawn as small_reader_2, B's being written
+    const a = "// graph: g\n(a:X {name: 'A'}),\n(:X {name: 'Small reader'})";
+    const b = "// graph: g\n(small_reader:X {name: 'Other'})";
+    const r = readNote([a, b]);
+    assert.deepEqual(suggestedAmong(r, 'g', ['small_reader', 'small_reader_2']), ['small_reader_2']);
     assert.throws(
-      () => parkForLater(BLOCK, 'small_reader', park),
-      (e) => /^accept its name first: Small reader is only drawn.*small_reader/.test(e.message),
+      () => parkForLater(a, 'small_reader_2', park, r, '    ', r.whole.g),
+      (e) => /^accept its name first: Small reader is only drawn.*small_reader_2/.test(e.message),
     );
-    assert.match(parkForLater(BLOCK, 'large', park, '    '), /DEFERS\]->\(large\)/);
+    assert.match(
+      parkForLater(a, 'small_reader', park, r, '    ', r.whole.g),
+      /\(later_small_reader\)-\[:DEFERS\]->\(small_reader\)$/,
+    );
   });
 
   test('is parked once the name is written, and a written thing is parked as ever', () => {
     assert.match(
-      parkForLater(NAMED, 'small_reader', park, '    ', named.whole.reader, named),
+      parkForLater(NAMED, 'small_reader', park, named, '    ', named.whole.reader),
       /DEFERS\]->\(small_reader\)/,
     );
-    assert.match(parkForLater(BLOCK, 'large', park, '    ', reading.whole.reader, reading), /DEFERS\]->\(large\)/);
+    assert.match(parkForLater(BLOCK, 'large', park, reading, '    ', reading.whole.reader), /DEFERS\]->\(large\)/);
   });
 });
 

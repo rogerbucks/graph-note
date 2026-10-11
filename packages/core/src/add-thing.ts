@@ -27,6 +27,8 @@ export type ThingAdded = { text: string; name: string } | { refused: string };
 
 const WORD = /^[A-Za-z_]\w*$/;
 const HIDDEN = new Set<string>(gs.SCHEMA_LABELS);
+const PATH_KIND =
+  'Path is the kind a recorded path takes, and a path needs its steps: record a path, or choose another kind';
 const oneLine = (s: string) => trim(s.replace(new RegExp(`${S}+`, 'g'), ' '));
 
 /** Every name the graph has, with its kind, as the note was read and as the block is now typed: written or only mentioned. */
@@ -77,7 +79,8 @@ function undeclared(reading: NoteReading, graph: string, kind: string): string |
  * The block with a thing written after its last item: `(name:Kind {name: 'text'})`, comma-joined as the block writes its
  * own, nothing else changed, before any SET. The text comes first and is required; the name is the one given, else the one
  * suggested from the text. Refused, with the reason and nothing written, when the text is empty, the name is not one word,
- * is a word the language keeps or is taken, the kind is not one word, the block is not of the graph, a locked graph's
+ * is a word the language keeps or is taken, the kind is not one word, is a schema label or is Path (a path is recorded
+ * with its steps, and a thing of it with none reads as broken), the block is not of the graph, a locked graph's
  * schema does not declare the kind, or the block holds nothing but a SET or MATCH.
  */
 export function addThing(reading: NoteReading, graph: string, block: string, thing: NewThing): ThingAdded {
@@ -90,6 +93,8 @@ export function addThing(reading: NoteReading, graph: string, block: string, thi
   if (kind && !WORD.test(kind)) return { refused: 'the kind must be one word: letters, digits and underscores' };
   // a schema label makes a thing the graph keeps out of its drawing, so it would be "added" and never seen
   if (HIDDEN.has(kind)) return { refused: `${kind} is a label the graph keeps for its schema: choose another kind` };
+  // a Path is read as a recorded path, and one with no steps reads back as broken
+  if (kind === 'Path') return { refused: PATH_KIND };
   const why = undeclared(reading, graph, kind);
   if (why) return { refused: why };
   const book = namesOf(reading, graph, block);

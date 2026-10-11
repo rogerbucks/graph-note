@@ -141,6 +141,17 @@ describe('adding a thing', () => {
     }
     assert.ok(gs.SCHEMA_LABELS.includes('ElementType') && gs.SCHEMA_LABELS.includes('GraphMeta'));
   });
+
+  test('Path is no kind for a new thing: a path is recorded with its steps, and one with none reads as broken', () => {
+    const block = "// graph: g\n(a:X {name: 'A'})";
+    assert.deepEqual(addThing(readNote([block]), 'g', block, { text: 'Fast', kind: 'Path' }), {
+      refused:
+        'Path is the kind a recorded path takes, and a path needs its steps: record a path, or choose another kind',
+    });
+    // Deferred, also a kind the graph reads in its own way, reads back clean, so it is still allowed
+    const deferred = added(addThing(readNote([block]), 'g', block, { text: 'Later', kind: 'Deferred' }));
+    assert.deepEqual(readNote([deferred.text]).problems, []);
+  });
 });
 
 describe('an id typed in the block', () => {

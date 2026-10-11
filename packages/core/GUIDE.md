@@ -34,8 +34,10 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   name first", saying which text and which name), so nothing writes the name before its fix is accepted
   (unnamed_drawn_suggested). `pathBlock`, `makeList` and `addToList` (the thing, or a value that reuses one) ask it
   themselves; so do `parkForLater` and `styleEdit` (a nudge, a look or a view's selection naming one) and `makeView`
-  (view-write.ts, the one way a host makes a view). The first two find such a thing in the drawing's reading when given
-  it, else in their own blocks (`unnamedIn`), so no caller can leave the check out. Property edits are refused too
+  (view-write.ts, the one way a host makes a view). `parkForLater` requires the drawing's reading, since the reader
+  suggests names across every block of a graph and one block alone cannot say which they are; `styleEdit` finds such a
+  thing in the reading when given it, else in every block of the note it writes into (`unnamedIn`), which gives the
+  reader's answer. So no caller can leave the check out. Property edits are refused too
   (`setProperty` finds no pattern for a name that is not written), the host saying why in these words. A name only
   suggested is also left out of the names completed while typing and of the near misses guessed (`help.ts`, `estimates.ts`).
 - `schema-checks.ts` — the warnings for types a schema does not declare.
