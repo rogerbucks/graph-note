@@ -94,12 +94,19 @@ describe('a test run under the ceiling', () => {
   test('a run that goes on past the time ceiling is stopped, with one line and a failed exit', async () => {
     const dir = scratch({ 'sleeper.test.js': SLEEPER });
     const started = Date.now();
-    const r = capped(dir, { GRAPH_NOTE_TEST_MINUTES: '0.03' }, '--test', 'sleeper.test.js');
+    // The ceiling counts from the spawn, and the fixture writes its pid only once `node --test` has started it, which
+    // takes seconds on a machine running a full suite: a ceiling of 1.8 s (0.03 minutes) could end the run before the
+    // fixture ever ran, and then there was no pid file. 6 s is clear of any start-up seen, still far short of the 60 s sleep.
+    const r = capped(dir, { GRAPH_NOTE_TEST_MINUTES: '0.1' }, '--test', 'sleeper.test.js');
     assert.ok(Date.now() - started < 30000, 'stopped long before the fixture wakes');
+    assert.ok(
+      existsSync(join(dir, 'pid')),
+      'the fixture never started within the 6 s ceiling: the machine is overloaded',
+    );
     assert.notEqual(r.status, 0);
     const lines = r.stderr.split('\n').filter((l) => l.startsWith('run-ceiling:'));
     assert.equal(lines.length, 1, r.stderr);
-    assert.match(lines[0], /^run-ceiling: stopped the run after \d+(\.\d+)? s, over its 0\.03-minute time ceiling\. /);
+    assert.match(lines[0], /^run-ceiling: stopped the run after \d+(\.\d+)? s, over its 0\.1-minute time ceiling\. /);
     assert.match(lines[0], /GRAPH_NOTE_TEST_MINUTES/);
     assert.ok(await gone(fixturePid(dir)), 'the test file’s own process, a grandchild, was stopped too');
   });
