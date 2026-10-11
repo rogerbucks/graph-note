@@ -153,22 +153,18 @@ const CSS = `:root {
 :root[data-theme="dark"] {
   ${DARK.replace(/\n {2}/g, '\n')}
 }
-body { margin: 0; padding: 16px 0 48px; background: var(--bg); color: var(--text); line-height: 1.5;
-  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif; }
+body { margin: 0; padding: 16px 0 48px; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif; }
 .banner, .board { max-width: 72rem; margin: 0 auto; padding: 0 16px; box-sizing: border-box; }
 .banner { margin-bottom: 16px; color: var(--muted); font-size: 0.85rem; overflow-wrap: anywhere; }
 .alt { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .switch { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
-.switch label { min-height: 44px; box-sizing: border-box; padding: 10px 18px; border: 2px solid var(--text);
-  border-radius: 8px; font-weight: 600; cursor: pointer; }
+.switch label { min-height: 44px; box-sizing: border-box; padding: 10px 18px; border: 2px solid var(--text); border-radius: 8px; font-weight: 600; cursor: pointer; }
 ${altitudeCss}
 h2 { margin: 0 0 12px; font-size: 1.25rem; }
 h3 { margin: 24px 0 8px; font-size: 1rem; color: var(--muted); }
-.legend { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 0 0 20px; padding: 0; list-style: none;
-  font-size: 0.85rem; color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 0 0 20px; padding: 0; list-style: none; font-size: 0.85rem; color: var(--muted); }
 .view { display: none; }
-.prs { display: none; margin: 0 0 24px; padding: 16px; border: 1px solid var(--border); border-radius: 10px;
-  background: var(--surface); }
+.prs { display: none; margin: 0 0 24px; padding: 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
 #alt-overview:checked ~ .prs, #alt-working:checked ~ .prs, #alt-full:checked ~ .prs { display: block; }
 .prs ul { margin: 0; padding: 0; list-style: none; }
 .pr { padding: 8px 0; border-top: 1px solid var(--border); overflow-wrap: anywhere; }
@@ -183,17 +179,13 @@ svg.bar { display: block; width: 100%; max-width: 100%; height: 14px; border-rad
 .slice-bar svg.bar { height: 28px; border-radius: 14px; }
 .seg-proved { fill: var(--proved); } .seg-part { fill: var(--part); } .seg-open { fill: var(--open); }
 .section-rows { margin: 24px 0 0; padding: 0; list-style: none; }
-.section-row { display: grid; grid-template-columns: minmax(0, 18rem) minmax(0, 1fr) minmax(0, 14rem); gap: 4px 16px;
-  align-items: center; padding: 10px 0; border-top: 1px solid var(--border); }
-.chip { display: inline-block; padding: 0 8px; border: 1px solid currentColor; border-radius: 999px;
-  font-size: 0.78rem; font-weight: 700; line-height: 1.6; }
+.section-row { display: grid; grid-template-columns: minmax(0, 18rem) minmax(0, 1fr) minmax(0, 14rem); gap: 4px 16px; align-items: center; padding: 10px 0; border-top: 1px solid var(--border); }
+.chip { display: inline-block; padding: 0 8px; border: 1px solid currentColor; border-radius: 999px; font-size: 0.78rem; font-weight: 700; line-height: 1.6; }
 .chip-proved, .chip-written { background: var(--proved-bg); color: var(--proved-text); }
 .chip-part { background: var(--part-bg); color: var(--part-text); }
 .chip-open, .chip-planned { background: var(--open-bg); color: var(--open-text); }
-.req { margin: 0 0 12px; padding: 12px 14px; border: 1px solid var(--border); border-left-width: 6px;
-  border-radius: 8px; background: var(--surface); }
-.req-proved { border-left-color: var(--proved); } .req-part { border-left-color: var(--part); }
-.req-open { border-left-color: var(--open); }
+.req { margin: 0 0 12px; padding: 12px 14px; border: 1px solid var(--border); border-left-width: 6px; border-radius: 8px; background: var(--surface); }
+.req-proved { border-left-color: var(--proved); } .req-part { border-left-color: var(--part); } .req-open { border-left-color: var(--open); }
 .req-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
 .id { font-weight: 700; overflow-wrap: anywhere; }
 .level { font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
