@@ -1,8 +1,7 @@
 // The block editor (spec §4, §9): the text of one graph block, with everything that helps write it — a plain text field
 // over a coloured picture of it, problems with fixes, suggestions, each line read back, the comma added for you — and the
 // safe writing behind it (the core's session never overwrites a block changed meanwhile), undo, redo and Lock the graph.
-import { Component, TFile } from 'obsidian';
-import type { App } from 'obsidian';
+import { Component } from 'obsidian';
 import { indentText, isDraft } from '@graph-note/core';
 import type { Change, CompletionItem, NoteReading, PaneSession } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
@@ -16,8 +15,9 @@ import { addForYouInField, stepOverInField } from './added-for-you';
 import { FieldHistory } from './editor-history';
 import type { Step } from './editor-history';
 import { BlockNote } from './block-note';
+import type { Reread } from './block-note';
 import type { Refused } from './note-writing';
-import { reloadedMessage, showDraft } from './kept-draft';
+import { keptMessage, showDraft } from './kept-draft';
 import { PaneDrawing } from './pane-drawing';
 import { fieldTyping, watchKeys, watchTyping } from './typing-keys';
 
@@ -31,7 +31,6 @@ const DRAW_AFTER_MS = 250;
 export class BlockEditor extends Component {
   readonly layout: Layout;
   private readonly plugin: GraphNotePlugin;
-  private readonly app: App;
   private container: HTMLElement | null = null;
   /** The note being edited, and the session on its block. */
   private readonly note: BlockNote;
@@ -54,7 +53,6 @@ export class BlockEditor extends Component {
   constructor(plugin: GraphNotePlugin, layout: Layout) {
     super();
     this.plugin = plugin;
-    this.app = plugin.app;
     this.layout = layout;
     this.note = new BlockNote(plugin);
     this.field = this.addChild(new KeptField(() => this.el?.text));
@@ -72,11 +70,8 @@ export class BlockEditor extends Component {
   }
 
   override onload(): void {
-    this.registerEvent(
-      this.app.vault.on('modify', (f) => {
-        if (f instanceof TFile) void this.onModify(f);
-      }),
-    );
+    // the note changed, renamed or deleted under the editor: read again, followed, or what is typed kept as a draft
+    this.note.watch(this, { changed: (outcome) => this.onModify(outcome), deleted: () => void this.write() });
   }
 
   override onunload(): void {
@@ -314,9 +309,12 @@ export class BlockEditor extends Component {
 
   private async keepDraft({ reason, draft }: Refused): Promise<void> {
     await this.note.keepDraft(draft);
-    if (this.el && this.session) this.el.text.value = this.session.text;
-    this.reloaded();
-    this.showKeptDraft(reloadedMessage(reason));
+    // a deleted note has no block to reload: the text stays as typed, with its caret and its history
+    if (this.note.file()) {
+      if (this.el && this.session) this.el.text.value = this.session.text;
+      this.reloaded();
+    }
+    this.showKeptDraft(keptMessage(reason));
   }
 
   /** The text as the note now has it, shown with its history started again, its help and its drawing. */
@@ -345,14 +343,12 @@ export class BlockEditor extends Component {
     await this.note.forget();
   }
 
-  private async onModify(f: TFile): Promise<void> {
-    const outcome = await this.note.reread(f);
-    if (outcome === null) return;
+  private onModify(outcome: Reread): void {
     if (outcome === 'reloaded' && this.el) {
       this.el.text.value = this.session?.text ?? '';
       this.reloaded();
       this.showTools();
-    } else if (outcome === 'conflict') await this.write();
+    } else if (outcome === 'conflict') void this.write();
     else {
       this.analyse();
       this.paint();

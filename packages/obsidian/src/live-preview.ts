@@ -2,20 +2,53 @@
 // block in Live Preview with a widget it builds again whenever the block's text changes, so a card being typed in was
 // torn down and drawn again on every write, and CodeMirror, finding it a different height meanwhile, moved the page.
 // Here the plugin draws each graph block with a widget of its own: redrawn in place, the old drawing kept on the page
-// until the new one is ready, and CodeMirror told the card's last height, so it has nothing to correct.
+// until the new one is ready, and CodeMirror told the card's last height, so it has nothing to correct. Each block keeps
+// its identity however lines move above it, so its card, and an editor open in it, survive the move (typing_keeps_focus).
 import { Prec, StateField } from '@codemirror/state';
-import type { EditorState, Extension, Range } from '@codemirror/state';
+import type { ChangeDesc, EditorState, Extension, Range, Text } from '@codemirror/state';
 import { Decoration, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 import type { DecorationSet } from '@codemirror/view';
 import { Component, editorInfoField, editorLivePreviewField } from 'obsidian';
 import type { MarkdownPostProcessorContext } from 'obsidian';
 import { gqlSpans, graphOfBlock, styleOf, viewsOf } from '@graph-note/core';
+import type { Span } from '@graph-note/core';
 import type GraphNotePlugin from './main';
 import { renderShown } from './block';
 import { settlePlacements } from './graph-view/placement';
 
-/** The last height each card was seen at, by its note and line: what CodeMirror is told while the card is redrawn. */
+/** The last height each card was seen at, by its identity: what CodeMirror is told while the card is redrawn. */
 const heights = new Map<string, number>();
+
+/** A gql block of the note in an editor: where it is, and who it is, which no line added or taken away above it changes. */
+export interface KnownBlock extends Span {
+  id: number;
+  /** Where its opening fence's line starts in the document. */
+  from: number;
+}
+
+/** The last identity given to a block: each new block gets the next, so none is ever given twice. */
+let lastId = 0;
+
+/** The note's blocks, each keeping the identity it had before `changes` when its fence is where they moved it. */
+function identify(doc: Text, was: readonly KnownBlock[], changes: ChangeDesc | null): KnownBlock[] {
+  // a fence with text put just before it moves on with it, so a line added above keeps the block it is above
+  const ids = new Map(was.map((b) => [changes ? changes.mapPos(b.from, 1) : b.from, b.id]));
+  return gqlSpans(doc.toString()).map((s) => {
+    const from = doc.line(s.open + 1).from;
+    return { ...s, id: ids.get(from) ?? ++lastId, from };
+  });
+}
+
+/** Each gql block of an editor's note, with its identity, mapped through every change to the note. */
+const knownBlocks = StateField.define<readonly KnownBlock[]>({
+  create: (state) => identify(state.doc, [], null),
+  update: (was, tr) => (tr.docChanged ? identify(tr.state.doc, was, tr.changes) : was),
+});
+
+/** The gql blocks of the note an editor shows, each with its identity and its fence's line now; none outside one. */
+export function blocksIn(state: EditorState): readonly KnownBlock[] {
+  return state.field(knownBlocks, false) ?? [];
+}
 
 /** What each card on the page has: the drawing's lifecycle, its watcher, and the latest drawing asked for. */
 interface Drawn {
@@ -30,6 +63,8 @@ class GraphBlock extends WidgetType {
   constructor(
     private readonly plugin: GraphNotePlugin,
     private readonly path: string,
+    /** The block's identity, which no line added or taken away above it changes. */
+    private readonly id: number,
     private readonly open: number,
     private readonly close: number,
     private readonly source: string,
@@ -40,14 +75,23 @@ class GraphBlock extends WidgetType {
     super();
   }
 
-  /** Which card this is: its note and the line its fence opens on. */
+  /** Which card this is: its block's identity, so a block moved by lines above it keeps its card. */
   get key(): string {
-    return `${this.path}|${this.open}`;
+    return `card ${this.id}`;
   }
 
-  /** The same drawing: same card, same text and same blocks around it. Prose typed elsewhere changes nothing. */
+  /**
+   * The same drawing: same card, at the same place in the same note, with the same text and the same blocks around it.
+   * Prose typed elsewhere changes nothing; a block moved, or its note renamed, is redrawn in place in the same card.
+   */
   override eq(other: WidgetType): boolean {
-    return other instanceof GraphBlock && other.key === this.key && other.blocks === this.blocks;
+    return (
+      other instanceof GraphBlock &&
+      other.key === this.key &&
+      other.path === this.path &&
+      other.open === this.open &&
+      other.blocks === this.blocks
+    );
   }
 
   override toDOM(): HTMLElement {
@@ -141,7 +185,7 @@ function cards(plugin: GraphNotePlugin, state: EditorState): DecorationSet {
   const path = state.field(editorInfoField, false)?.file?.path;
   if (!path) return Decoration.none;
   const note = state.doc.toString(),
-    spans = gqlSpans(note),
+    spans = blocksIn(state),
     blocks = spans.map((s) => s.text).join('\u0000'),
     out: Range<Decoration>[] = [];
   for (const s of spans) {
@@ -149,7 +193,7 @@ function cards(plugin: GraphNotePlugin, state: EditorState): DecorationSet {
     // a plain query, a schema, or a block not yet closed is left to Obsidian
     const drawnFromOthers = !!graphOfBlock(s.text) || !!styleOf(s.text) || viewsOf([s.text]).length > 0;
     if (!drawnFromOthers || s.close >= state.doc.lines) continue;
-    const widget = new GraphBlock(plugin, path, s.open, s.close, s.text, blocks, note);
+    const widget = new GraphBlock(plugin, path, s.id, s.open, s.close, s.text, blocks, note);
     out.push(
       Decoration.replace({ widget, block: true }).range(
         state.doc.line(s.open + 1).from,
@@ -176,5 +220,5 @@ export function graphBlocks(plugin: GraphNotePlugin): Extension {
     plugin.editorViews.add(view);
     return { destroy: () => plugin.editorViews.delete(view) };
   });
-  return [Prec.highest(field), editors];
+  return [knownBlocks, Prec.highest(field), editors];
 }

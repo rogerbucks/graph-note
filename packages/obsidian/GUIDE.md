@@ -19,7 +19,8 @@ module that ties the parts together, named as the folder is.
 - `style-block.ts` — a style block (§2): never drawn, folded away until opened, saying whose style it is, what it holds
   and how many problems it has. The graph it styles is drawn with its nudges, and its problems listed, by `block.ts`.
 - `code.ts` — a block that is not a graph, shown as coloured code; a very long one plain.
-- `live-preview.ts` — the editing view's own cards, so the page stays still while a block is typed in.
+- `live-preview.ts` — the editing view's own cards, so the page stays still while a block is typed in; each block keeps
+  its identity however lines move above it, so its card, and the editor in place in it, survive the move.
 - `editor.ts` — the comma and the colon added for you in the note's own editor.
 - `pane.ts` — the edit pane, which holds a block editor.
 
@@ -100,7 +101,8 @@ module that ties the parts together, named as the folder is.
 
 - `block-editor.ts` — `BlockEditor`: ties the parts together; the field and what typing in it does.
 - `editor-layout.ts` — the editor's parts on the page, built once for each block.
-- `block-note.ts` — the note behind the editor and its session: opening, writing, undo, Lock, drafts.
+- `block-note.ts` — the note behind the editor and its session: opening, writing, undo, Lock, drafts; the note followed
+  when it is renamed or moved, and what is typed kept as a draft when it is deleted.
 - `note-writing.ts` — writing safely, through the note's editor or the vault.
 - `kept-field.ts` — the field's focus and scroll, kept through each redraw.
 - `typing-keys.ts` — what typing does: Tab and Enter for the inline match or a suggestion, Escape to put it away, undo and
@@ -129,7 +131,8 @@ package, or all with `npm test` from the repository root. Each builds `main.js` 
   opens: `card-notes.js`, `pane-notes.js`, `view-notes.js`, and `inspector-steps.js` (opening a box's details and driving the inspector's rows, menus and chips).
   `workers.js` stands in a browser's Worker: each runs the code main.js hands it, from its Blob URL, in a real thread.
   `fake-vault.js` stands in the vault's ways of making files (create, modify, rename, delete, a folder), one of which
-  can be made to fail as a full disk would, and the metadata cache's front matter.
+  can be made to fail as a full disk would, a rename and a deletion told to whoever listens, and the metadata cache's
+  front matter.
 - `test/device-checklist.md` — what is checked by hand on the devices. Every item has a number that never changes
   (`V-03`: its section's letter and two digits), and each item after Before has a note in `test-vault/Device checks/`
   that shows the case on a graph to try it on; `test/device-check-notes.test.js` (repository root) holds the two together.

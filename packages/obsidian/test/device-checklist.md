@@ -72,7 +72,9 @@ holds the two together).
 - [ ] **P-02** The text is coloured as gql-highlight colours it, and each line is read back in plain English beside it.
 - [ ] **P-03** Typing a misspelt name underlines it with a ⚠. Its fix is offered on that line, and pressing it fixes the text.
 - [ ] **P-04** Names, kinds and relationships already in the graph are suggested while typing. On the desktop, Tab takes the first.
-- [ ] **P-05** What is typed reaches the note within about a third of a second, and the drawing follows.
+- [ ] **P-05** What is typed reaches the note within about a third of a second, and the drawing follows. Renaming or moving the
+      note while typing changes nothing: what is typed next still reaches it. Deleting the note while typing keeps what
+      was typed as a draft, and the pane says so.
 - [ ] **P-06** Editing the same block in the note while typing in the pane: the pane reloads the block, says what was typed is
       kept as a draft, and Restore draft brings it back.
 - [ ] **P-07** Undo and Redo take back and put back each change in the note.
@@ -109,7 +111,7 @@ holds the two together).
 - [ ] **I-01** Edit here opens the text inside the drawing's card, and typing there redraws the drawing without losing the place.
 - [ ] **I-02** Straight after the app starts or reloads, and on a card far down a long note scrolled to only then: Edit here
       opens the editor in that card, and Done closes it with what was typed in the note. Edit here never does nothing
-      without saying why.
+      without saying why. Pressed twice quickly, it opens one editor, with the focus in it, never two.
 - [ ] **I-03** In the card, the text box is as tall as the text and one more line: no empty area below it for the caret to land
       in. Each read-back sits on its own line's right, never wrapping under it, and typing lands where the text shows.
       iPhone ✓ 5cfeac6, 8 Oct 2026.
@@ -118,7 +120,8 @@ holds the two together).
 - [ ] **I-05** Typing in the card, character by character, redraws the drawing and never takes the focus from the box: the caret,
       the selection and where it is scrolled stay put. Typing a comma at a line's end keeps the box in its card.
       Undo (⌘Z, or Edit → Undo, or the phone's undo gesture) takes back a run of typing at a time, even after redraws.
-      Mac ✓ 3d34e0d, reading view, 9 Oct 2026 (traced in the app); Live Preview and the phone to come.
+      A line added above the block, or taken away, while the card is edited keeps the box in its card, with its selection
+      and its undo history. Mac ✓ 3d34e0d, reading view, 9 Oct 2026 (traced in the app); Live Preview and the phone to come.
 - [x] **I-06** Desktop: hovering the mouse over the box in the card, and clicking into it, never turns it grey or hides its
       coloured text, and no tooltip appears over it. Mac ✓ d601110, 8 Oct 2026.
 - [ ] **I-07** While the card is being edited, its pencil shows as a book (view) icon. Pressing it writes what was typed and

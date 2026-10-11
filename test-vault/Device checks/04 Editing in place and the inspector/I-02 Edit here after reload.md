@@ -1,6 +1,6 @@
 # I-02 Edit here after reload
 
-**You should see:** straight after the app starts or reloads, and on a card far down this note that you scroll to only then, Edit here opening the editor in that card. Done closes it with what was typed kept in the note. Edit here never does nothing without saying why.
+**You should see:** straight after the app starts or reloads, and on a card far down this note that you scroll to only then, Edit here opening the editor in that card. Done closes it with what was typed kept in the note. Edit here never does nothing without saying why. Pressed twice quickly, Edit here opens one editor, with the focus in it, never two.
 
 **Test diagram:**
 
@@ -144,9 +144,10 @@ Filler line 60, so the card below starts below the fold.
 2. Press Edit here at once and check the editor opens in the card.
 3. Type a word into the text and press Done. Check what you typed is in the note.
 4. If Edit here did nothing, check it said why.
+5. Reload the app again, scroll to the card, and press Edit here twice quickly (a double click, or two taps). Check one editor opens, with the caret in it, and that one Done closes it.
 
 **Checklist line:**
 
-> **I-02** Straight after the app starts or reloads, and on a card far down a long note scrolled to only then: Edit here opens the editor in that card, and Done closes it with what was typed in the note. Edit here never does nothing without saying why.
+> **I-02** Straight after the app starts or reloads, and on a card far down a long note scrolled to only then: Edit here opens the editor in that card, and Done closes it with what was typed in the note. Edit here never does nothing without saying why. Pressed twice quickly, it opens one editor, with the focus in it, never two.
 
 **Back to the checklist:** [I-02 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-02 in its list.

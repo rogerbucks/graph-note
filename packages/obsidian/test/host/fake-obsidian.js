@@ -66,6 +66,9 @@ export function fakeObsidian(state = {}) {
   // A vault of notes by path, which reports changes as Obsidian's does; and a workspace whose leaves hold views.
   const files = state.files ?? (state.files = new Map());
   const listeners = [];
+  // who hears a note renamed (told the file at its new path, and its old path) or deleted, as Obsidian's vault tells them
+  const heard = { rename: [], delete: [] };
+  state.tell = (name, ...args) => [...heard[name]].forEach((l) => l(...args));
   class TFile {
     constructor(path) {
       this.path = path;
@@ -95,11 +98,14 @@ export function fakeObsidian(state = {}) {
     },
     on: (name, cb) => {
       if (name === 'modify') listeners.push(cb);
+      else heard[name]?.push(cb);
       return { name, cb };
     },
     offref: (ref) => {
-      const i = listeners.indexOf(ref.cb);
-      if (i >= 0) listeners.splice(i, 1);
+      for (const l of [listeners, ...Object.values(heard)]) {
+        const i = l.indexOf(ref.cb);
+        if (i >= 0) l.splice(i, 1);
+      }
     },
   };
   const leaves = [];

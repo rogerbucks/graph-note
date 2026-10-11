@@ -24,7 +24,7 @@ import { renderShown } from './block';
 import { GraphPane, PANE } from './pane';
 import { addForYou } from './editor';
 import { BlockEditor } from './block-editor/block-editor';
-import { graphBlocks } from './live-preview';
+import { blocksIn, graphBlocks } from './live-preview';
 
 /** Where Edit was pressed: the note, the line of the block's opening fence (0-based), and the graph it draws. */
 export interface EditTarget {
@@ -39,6 +39,14 @@ export type Drafts = Record<string, { text: string; kept: string }>;
 interface Saved {
   drafts?: Drafts;
   settings?: unknown;
+}
+
+/** Where an editor in place was opened: the note's path then, its block's fence line, its card's identity, its opening. */
+interface Placed {
+  path: string;
+  line: number;
+  card: number | undefined;
+  opening?: Promise<void>;
 }
 
 /** The plugin: draws each graph block, opens the editors, and keeps the drafts and the shared schemas. */
@@ -247,8 +255,8 @@ export default class GraphNotePlugin extends Plugin {
     return this.declared.get(key) ?? this.declared.set(key, []).get(key)!;
   }
 
-  /** The editors open in place, in drawings' cards: they outlive each redraw of their block. */
-  private readonly inline = new Set<BlockEditor>();
+  /** The editors open in place, in drawings' cards, each with where it was opened: they outlive each redraw of their block. */
+  private readonly inline = new Map<BlockEditor, Placed>();
 
   /** Who to tell when an editor in place opens or closes: each card's edit button. */
   private readonly inlineWatchers = new Set<() => void>();
@@ -263,12 +271,31 @@ export default class GraphNotePlugin extends Plugin {
     for (const changed of this.inlineWatchers) changed();
   }
 
-  /** The editor open in place on a note's block, by the line of its opening fence, if there is one. */
+  /**
+   * The editor open in place on a note's block whose opening fence is on `line` now, if there is one (typing_keeps_focus,
+   * spec §4). In the editing view a block is known by its card's identity, which no line added or taken away above it
+   * changes; elsewhere, by where the editor last found it, or, while it is still opening, where it was opened.
+   */
   inlineFor(path: string, line: number): BlockEditor | undefined {
-    return [...this.inline].find((e) => e.path === path && e.session?.ref.line === line);
+    const cm = this.editorFor(path),
+      blocks = cm ? blocksIn(cm.state) : [],
+      here = blocks.find((b) => b.open === line)?.id;
+    for (const [e, at] of this.inline) {
+      // a card drawn before its note was renamed still knows it by the name it had, which no note now has
+      if (e.path !== path && (at.path !== path || this.app.vault.getFileByPath(path))) continue;
+      const known = blocks.some((b) => b.id === at.card);
+      if (known ? at.card === here : (e.session?.ref.line ?? at.line) === line) {
+        at.card = here;
+        return e;
+      }
+    }
+    return undefined;
   }
 
-  /** Edit here: opens the block's text in place, inside its drawing's card (spec §4), with the focus in it. */
+  /**
+   * Edit here: opens the block's text in place, inside its drawing's card (spec §4), with the focus in it. Pressed again,
+   * even before the first press has opened it, it focuses the editor already open: a block has one editor in place.
+   */
   async editHere(target: EditTarget, slot: HTMLElement): Promise<void> {
     let editor = this.inlineFor(target.path, target.line);
     if (!editor) {
@@ -281,16 +308,26 @@ export default class GraphNotePlugin extends Plugin {
         this.removeChild(e);
         this.inlineChanged();
       };
-      this.inline.add(e);
+      const at: Placed = { path: target.path, line: target.line, card: this.cardAt(target.path, target.line) };
+      this.inline.set(e, at);
       this.addChild(e);
       e.mount(slot);
-      await e.open(target.path, target.line);
+      await (at.opening = e.open(target.path, target.line));
       // the lists made in this session outlive this editor: Done, then Edit here again, still offers them
       (e as Editing).lists = this.declaredLists(target.path, e.session?.graph ?? '');
       editor = e;
       this.inlineChanged();
-    } else editor.mount(slot);
+    } else {
+      await this.inline.get(editor)?.opening;
+      editor.mount(slot);
+    }
     editor.focus();
+  }
+
+  /** The identity of the card for the block whose fence is on `line` in the note open in the editing view, if it is. */
+  private cardAt(path: string, line: number): number | undefined {
+    const cm = this.editorFor(path);
+    return cm ? blocksIn(cm.state).find((b) => b.open === line)?.id : undefined;
   }
 
   /** Opens the edit pane beside the note, on a block (spec §4); one pane, reused. */
