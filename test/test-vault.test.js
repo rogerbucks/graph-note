@@ -175,7 +175,24 @@ describe('each session in the vault starts and ends clean', () => {
       for (const gone of [OBSIDIAN(dir, 'workspace.json'), OBSIDIAN(dir, 'plugins', 'another-plugin')])
         assert.ok(!existsSync(gone), `${gone} is removed`);
       assert.ok(!existsSync(join(dir, VAULT, 'Untitled.md')));
-      assert.deepEqual(resetScript.SYNC_KEEP, ['sync*'], 'the keep-list is one named, exported constant');
+      assert.deepEqual(
+        resetScript.KEEP,
+        ['sync*', 'core-plugins.json'],
+        'the keep-list is one named, exported constant',
+      );
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('core-plugins.json survives a reset, so the Sync core plugin stays on; workspace.json is still removed', () => {
+    const dir = scratchRepo();
+    try {
+      writeFileSync(OBSIDIAN(dir, 'core-plugins.json'), '{"sync":true}');
+      writeFileSync(OBSIDIAN(dir, 'workspace.json'), '{}');
+      reset(dir);
+      assert.equal(readFileSync(OBSIDIAN(dir, 'core-plugins.json'), 'utf8'), '{"sync":true}');
+      assert.ok(!existsSync(OBSIDIAN(dir, 'workspace.json')), 'workspace.json is removed');
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

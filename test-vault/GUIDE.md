@@ -12,7 +12,8 @@ never committed: only the notes at this folder's root, the notes in `Device chec
 **This vault is synced to the phone with Obsidian Sync,** as its own remote vault, and the reset is built for that:
 
 - **Sync's own files are kept.** Anything in `.obsidian/` whose name starts with `sync` (such as `sync.json`) is never
-  removed, so a reset does not disconnect Sync. The list is `SYNC_KEEP` in the script; extend it if Sync writes other files.
+  removed, nor is `core-plugins.json`, which holds `"sync": true` and so switches the Sync core plugin on. A reset
+  therefore does not disconnect Sync. The list is `KEEP` in the script; extend it if Sync needs other files.
 - **The build is copied, not linked,** because Sync may not upload links. A copy is a new build's way in only when the
   reset runs again: **build, then reset,** then reload the plugin in Obsidian.
 - **Only what differs is written,** so Sync moves only what changed: changed tracked notes are restored, a plugin file is
