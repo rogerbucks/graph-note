@@ -1,0 +1,99 @@
+// The drafts kept in the plugin's data (spec §9, nothing_typed_lost): what was typed in a graph and could not be written.
+// Each draft has an id, given once when it is first kept and never again, and every change to a draft, deleting or
+// restoring it among them, finds it by that id (Roger's choice A, 11 Oct 2026). Its key, `<note>#<graph>` with a mark
+// such as ` (2)` beside it, only says whose draft it is: for display and for offering it when its block is edited. The
+// drafts follow their note when it is renamed or moved, edited or not, their ids unchanged; drafts kept before ids were
+// are given one when first read; and one command writes every draft, once each, into a new note, so a draft whose note
+// was deleted is never out of reach.
+import { Notice } from 'obsidian';
+import type GraphNotePlugin from './main';
+import type { Drafts } from './main';
+import { freePath } from './export/vault-write';
+
+/** The command that recovers every kept draft into a new note. */
+export const RECOVER_COMMAND = { id: 'recover-drafts', name: 'Recover kept drafts into a new note' };
+
+/**
+ * A new draft's id, a random version-4 UUID: never one given before. Where the web view has no crypto.randomUUID, as on
+ * some phones or outside a secure context, it is made from crypto.getRandomValues, its version and variant bits set.
+ */
+export function newDraftId(): string {
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  const b = crypto.getRandomValues(new Uint8Array(16));
+  b[6] = ((b[6] ?? 0) & 0x0f) | 0x40;
+  b[8] = ((b[8] ?? 0) & 0x3f) | 0x80;
+  const h = [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+
+/** `data` with an id given to each draft kept before drafts had one; a draft that has one keeps it. */
+export function withIds(data: Drafts): Drafts {
+  const out: Drafts = {};
+  for (const [key, d] of Object.entries(data)) out[key] = d.id ? d : { ...d, id: newDraftId() };
+  return out;
+}
+
+/** The key the draft with `id` is kept under, if it is still kept. */
+export function keyOf(data: Drafts, id: string): string | undefined {
+  return Object.keys(data).find((k) => data[k]?.id === id);
+}
+
+/** The note and the graph a draft is kept for, from its key: `<note>#<graph>`, with a mark such as ` (2)` beside it. */
+function whose(key: string): { path: string; graph: string } {
+  const at = key.lastIndexOf('#');
+  return { path: key.slice(0, at), graph: key.slice(at + 1) };
+}
+
+/** `key`, or, when a draft is kept there, the first of `key (2)`, `key (3)`… that is free: never another's place. */
+export function keyBeside(data: Drafts, key: string): string {
+  let at = key;
+  for (let n = 2; data[at]; n++) at = `${key} (${n})`;
+  return at;
+}
+
+/**
+ * The drafts kept for the note at `old`, or for a note in the folder at `old`, moved to where it now is, under `now`,
+ * each with its id: beside, never over, a draft already kept there, as a deleted note's at the name the note now takes.
+ */
+export async function followRename(plugin: GraphNotePlugin, now: string, old: string): Promise<void> {
+  const data = plugin.drafts();
+  let moved = false;
+  for (const [key, draft] of Object.entries(data)) {
+    const { path } = whose(key);
+    if (path !== old && !path.startsWith(`${old}/`)) continue;
+    delete data[key];
+    data[keyBeside(data, (now + key.slice(old.length)).replace(/ \(\d+\)$/, ''))] = draft;
+    moved = true;
+  }
+  if (moved) await plugin.saveDrafts(data);
+}
+
+/**
+ * Writes every kept draft into a new note, once each, by its id, under its note and graph and when it was kept, as plain
+ * text so none is drawn or read as part of a graph; and says where. The drafts stay kept, still offered in their editors.
+ */
+export async function recoverDrafts(plugin: GraphNotePlugin): Promise<void> {
+  const byId = new Map(Object.entries(plugin.drafts()).map(([key, d]) => [d.id, [key, d] as const]));
+  const kept = [...byId.values()];
+  if (!kept.length) {
+    new Notice('No drafts are kept.');
+    return;
+  }
+  const parts = kept.map(([key, d]) => {
+    const { path, graph } = whose(key),
+      when = d.kept.slice(0, 16).replace('T', ' '),
+      // a fence longer than any run of backticks in the draft, so the draft is never cut short
+      fence = '`'.repeat(Math.max(3, ...(d.text.match(/`+/g) ?? []).map((m) => m.length + 1)));
+    return `\n## ${path}, graph ${graph}\n\nKept ${when}, as draft ${d.id}.\n\n${fence}\n${d.text}\n${fence}`;
+  });
+  const intro = 'What was typed in a graph and could not be written, as Graph Note kept it.';
+  const path = freePath(plugin, 'Kept drafts.md');
+  try {
+    await plugin.app.vault.create(path, `# Kept drafts\n\n${intro}\n${parts.join('\n')}\n`);
+  } catch (e) {
+    // as on a Mac, where a note named only in another case is the same file: said, and the drafts stay kept
+    new Notice(`The kept drafts could not be written into ${path}: ${(e as Error).message} They stay kept.`);
+    return;
+  }
+  new Notice(`${kept.length} kept draft${kept.length === 1 ? '' : 's'} written into ${path}.`);
+}

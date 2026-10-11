@@ -35,6 +35,8 @@ export const DEFAULT_MINUTES = 20;
 export const HEAP_MB = 3072;
 const POLL_MS = 500;
 const SAY = 'run-ceiling:';
+/** How the one line begins when a run is stopped at a ceiling, for a caller that reads it from the run's stderr. */
+export const STOPPED = `${SAY} stopped the run`;
 
 /**
  * The ceilings from the environment: `{ memoryMb, minutes }`, or `{ error }`, one line, when a setting is not a
@@ -114,7 +116,7 @@ function main(argv) {
     if (seconds > limits.minutes * 60) {
       const ceiling = `${limits.minutes}-minute`;
       return stop(
-        `${SAY} stopped the run after ${seconds.toFixed(1)} s, over its ${ceiling} time ceiling. ` +
+        `${STOPPED} after ${seconds.toFixed(1)} s, over its ${ceiling} time ceiling. ` +
           `If it really needs longer, set GRAPH_NOTE_TEST_MINUTES (default ${DEFAULT_MINUTES}).`,
       );
     }
@@ -124,7 +126,7 @@ function main(argv) {
       const mb = Math.round(groupMemoryKb(out, child.pid) / 1024);
       if (mb > limits.memoryMb)
         stop(
-          `${SAY} stopped the run at ${mb} MB of memory, over its ${limits.memoryMb} MB ceiling. ` +
+          `${STOPPED} at ${mb} MB of memory, over its ${limits.memoryMb} MB ceiling. ` +
             `A test is probably growing without bound; if the run really needs more, set GRAPH_NOTE_TEST_MEMORY_MB ` +
             `(default ${DEFAULT_MEMORY_MB}).`,
         );

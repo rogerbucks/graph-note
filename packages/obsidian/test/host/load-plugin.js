@@ -47,6 +47,8 @@ export async function load(options = {}) {
   // that listens for the note changing
   plugin._loaded = true;
   await plugin.onload();
+  // loaded, as Obsidian's own load leaves it: what it adds from now on, such as an editor in place, is loaded with it
+  plugin._loaded = true;
   return { plugin, state, doc, app: obsidian.app, obsidian, uninstall };
 }
 

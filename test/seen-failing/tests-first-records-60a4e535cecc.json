@@ -1,0 +1,6 @@
+{
+  "file": "test/tests-first-records.test.js",
+  "test": "this repository’s records > every test that passed against its parent has its reason, and every reason names such a test",
+  "seen_failing_first": false,
+  "evidence": "The test's old version failed at the parent, because the parent already kept a fault reason (--excuse --fault) that the old check rejected. The new version allows a fault reason and passes. This commit changes the test's expectation, not the code it runs against, so the new version passes against the parent's code too; a test that failed at the parent is judged in the commit that makes it pass."
+}

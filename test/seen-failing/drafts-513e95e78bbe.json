@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/drafts.test.js",
+  "test": "drafts follow their note, never over another > a folder renamed: the drafts of the notes in it go with them, and no other note’s",
+  "seen_failing_first": false,
+  "evidence": "Fills a test gap the re-review of #91 (11 Oct 2026) found: followRename already moved the drafts of every note in a renamed folder, written with that case in its first version, but no test held it. It passes first because the behaviour already held; it fails if the folder case is dropped, or if a note merely named like the folder (Folder.md) is moved with it."
+}
