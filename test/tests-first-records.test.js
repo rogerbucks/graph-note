@@ -352,6 +352,44 @@ describe('moving the old single files over', () => {
       rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  // review of #69: a branch's copy of a reason, made before main changed it, silently put main's older words back
+  test('a reason main already keeps differently is never overwritten by the branch’s copy: it is skipped and named', () => {
+    const dir = old();
+    try {
+      const newer = excuse(dir, 'test/twice.test.js', 'already true', 'main’s newer evidence, written since');
+      // a copy the same as main's is simply there already, and needs no choice
+      const same = OLD_REASONS['py/tests/test_half.py']['Half.test_one'];
+      excuse(dir, 'py/tests/test_half.py', 'Half.test_one', same.evidence);
+      const said = migrate(dir).join('\n');
+      const kept = exceptionsIn(dir);
+      assert.equal(kept['test/twice.test.js']['already true'].evidence, 'main’s newer evidence, written since');
+      assert.ok(said.includes(newer), said);
+      assert.ok(!said.includes(excusalName('py/tests/test_half.py', 'Half.test_one')), said);
+      // a reason main does not keep yet is moved as before
+      assert.equal(kept['py/tests/test_half.py']['Half.test_two'].evidence, 'another control case, by design');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('a migration that would refuse any reason writes none, and leaves the old files where they are', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'tests-first-'));
+    const reason = { seen_failing_first: false, evidence: 'a control case, by design' };
+    try {
+      mkdirSync(join(dir, 'test'), { recursive: true });
+      const reasons = { 'test/a.test.js': { 'a fine test': reason, constructor: reason } };
+      writeFileSync(join(dir, 'test', 'seen-failing.json'), JSON.stringify(reasons));
+      writeFileSync(join(dir, 'test', 'tests-first.json'), JSON.stringify(OLD_RECORD));
+      assert.throws(() => migrate(dir), /constructor/);
+      assert.ok(!existsSync(join(dir, EXCUSALS)), 'no reason was written');
+      assert.ok(!existsSync(join(dir, RECORDS)), 'nor the baseline');
+      assert.ok(existsSync(join(dir, 'test', 'seen-failing.json')));
+      assert.ok(existsSync(join(dir, 'test', 'tests-first.json')));
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe('this repository’s records', () => {

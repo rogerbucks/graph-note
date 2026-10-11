@@ -327,36 +327,6 @@ describe('a run at the commit’s own code that cannot be trusted fails the reco
     }
   });
 
-  // found on 10 Oct 2026: time-budget tests failing at their own commit under load dropped out of the record unnoticed,
-  // and its count of tests seen failing first fell by one each (layout-worker 26 to 25, partial-read 14 to 13)
-  test('a new test failing at its own commit fails the record, naming the test and commit: it is never dropped', () => {
-    const r = repository([
-      { 'src/twice.js': 'export const twice = (x) => x;\n', 'test/twice.test.js': JS_TEST("test('one', () => {});") },
-      {
-        'src/twice.js': 'export const twice = (x) => x * 2;\n',
-        'test/twice.test.js': JS_TEST(
-          "test('one', () => {});\ntest('doubles', () => assert.equal(twice(2), 4));\ntest('in its budget', () => assert.ok(false, 'over its budget'));",
-        ),
-      },
-    ]);
-    try {
-      assert.throws(
-        () => record(r.dir),
-        (e) => {
-          assert.match(e.message, new RegExp(`${r.ids[1].slice(0, 7)} test/twice\\.test\\.js: "in its budget" fails`));
-          assert.doesNotMatch(e.message, /doubles|"one"/);
-          return true;
-        },
-      );
-      // the file's other new tests are still judged, so --check shows every problem in one run (review of #44)
-      const replayed = replay(r.dir, r.ids[1]);
-      assert.equal(replayed.faults.length, 1);
-      assert.deepEqual(replayed.files[0]?.failedFirst, ['doubles']);
-    } finally {
-      r.done();
-    }
-  });
-
   // review of #44: a commit whose replay threw was logged in one line among hundreds, and the record written without it
   test('a commit that cannot be replayed at all fails the record, naming the commit', () => {
     const r = repository([
@@ -383,6 +353,41 @@ describe('a run at the commit’s own code that cannot be trusted fails the reco
         .filter((l) => l.startsWith('worktree ') && l.includes('tests-first-wt-'))
         .map((l) => l.slice('worktree '.length));
       for (const dir of left) rmSync(dir, { recursive: true, force: true });
+      r.done();
+    }
+  });
+});
+
+describe('a new test failing at its own commit', () => {
+  // found on 10 Oct 2026: time-budget tests failing at their own commit under load dropped out of the record unnoticed,
+  // and its count of tests seen failing first fell by one each (layout-worker 26 to 25, partial-read 14 to 13). Since the
+  // review of #69 the commit is recorded with the fault kept, as not replayed: a test may come a commit before its code
+  // (Roger, 10 Oct 2026), and CI asks that every commit that changed a test have its record
+  test('is kept in the record as not replayed, naming the test and commit: it is never dropped', () => {
+    const r = repository([
+      { 'src/twice.js': 'export const twice = (x) => x;\n', 'test/twice.test.js': JS_TEST("test('one', () => {});") },
+      {
+        'src/twice.js': 'export const twice = (x) => x * 2;\n',
+        'test/twice.test.js': JS_TEST(
+          "test('one', () => {});\ntest('doubles', () => assert.equal(twice(2), 4));\ntest('in its budget', () => assert.ok(false, 'over its budget'));",
+        ),
+      },
+    ]);
+    try {
+      const e = record(r.dir).files['test/twice.test.js'];
+      // the file's other new tests are still judged: 'doubles' was seen failing first
+      assert.equal(e.seenFailing, 1);
+      const kept = e.notReplayedCommits.filter((c) => c.commit === r.ids[1]);
+      assert.deepEqual(
+        kept.map((c) => c.tests),
+        [['in its budget']],
+      );
+      assert.match(kept[0].reason, /"in its budget" fails at its own commit/);
+      // and --check still shows every problem in one run, the fault among them (review of #44)
+      const replayed = replay(r.dir, r.ids[1]);
+      assert.equal(replayed.faults.length, 1);
+      assert.deepEqual(replayed.files[0]?.failedFirst, ['doubles']);
+    } finally {
       r.done();
     }
   });

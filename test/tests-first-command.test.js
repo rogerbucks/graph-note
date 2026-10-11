@@ -122,4 +122,27 @@ describe('--complete', () => {
       r.done();
     }
   });
+
+  // review of #69: a test may come a commit before its code (Roger, 10 Oct 2026); --update wrote nothing for that
+  // commit, and --complete then failed CI with advice that could not succeed
+  test('a test that comes a commit before its code: --update records the fault, --complete passes, --check only warns', () => {
+    const r = repository([
+      { 'src/twice.js': 'export const twice = (x) => x;\n' },
+      { 'test/twice.test.js': TWICE("test('doubles', () => assert.equal(twice(2), 4));") },
+      { 'src/twice.js': 'export const twice = (x) => x * 2;\n' },
+    ]);
+    try {
+      const updated = cli(r.dir, '--update');
+      assert.equal(updated.status, 0, updated.stderr);
+      const kept = JSON.parse(readFileSync(join(r.dir, RECORDS, `${r.ids[1]}.json`), 'utf8'));
+      assert.match(JSON.stringify(kept.files), /"doubles\\" fails at its own commit/);
+      const complete = cli(r.dir, '--complete');
+      assert.equal(complete.status, 0, complete.stderr);
+      const checked = cli(r.dir, '--check', r.ids[1], r.ids[2]);
+      assert.equal(checked.status, 0, checked.stderr);
+      assert.match(checked.stderr, /warning: .*"doubles" fails at its own commit/);
+    } finally {
+      r.done();
+    }
+  });
 });

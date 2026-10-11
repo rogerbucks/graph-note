@@ -21,9 +21,10 @@
 // How the records are kept, so that two branches never conflict in them, is scripts/tests-first-records.mjs.
 //
 // Only the commit's test files and test support (anything under a test/ or tests/ folder) go across to the parent, so
-// only the code differs. A commit that cannot be replayed is recorded as such, never counted either way. But a run at the
-// commit's own code that did not finish, a new test failing there, or a commit whose replay fails, is not known to be
-// either: it fails the record, naming the commit, the file and the test, and nothing is written; --check warns of it.
+// only the code differs. A commit that cannot be replayed is recorded as such, never counted either way. A new test
+// failing at its own commit is kept in the record as not replayed, naming it: a test may come a commit before its code
+// (Roger, 10 Oct 2026). But a run at the commit's own code that did not finish, or a commit whose replay fails, is not
+// known to be either: it fails the record, naming the commit and the file, and nothing is written. --check warns of all.
 // One run of one test file, and what it shows, is scripts/tests-first-run.mjs.
 import { execFileSync, spawnSync } from 'node:child_process';
 import {
@@ -99,7 +100,8 @@ export function replay(repo, commit) {
   const parent = git(repo, 'rev-list', '--parents', '-n', '1', commit).split(' ')[1];
   const changed = changes(repo, commit);
   const tests = testsIn(changed);
-  // `faults`: what at the commit's own code cannot be trusted, which fails the record rather than being kept in it
+  // `faults`: what at the commit's own code cannot be trusted. Each fails the record rather than being kept in it,
+  // unless it is `kept`: a new test failing there, kept with its file's entry as not replayed
   const out = { commit, files: [], faults: [] };
   if (!tests.length) return out;
   if (!parent) {
@@ -173,15 +175,21 @@ export function replay(repo, commit) {
       const old = earlier.flatMap((e) => e.names);
       const fresh = now.passed.filter((n) => !old.includes(n));
       // a new test failing at its own commit is neither seen failing first nor passing first: it would drop out unseen.
-      // The file's other new tests are still judged, so one run shows every problem in it
-      for (const test of now.failed.filter((n) => !old.includes(n)))
-        out.faults.push({ commit, file, problem: `"${test}" fails at its own commit, so it cannot be replayed` });
+      // The file's other new tests are still judged, so one run shows every problem in it. When which tests are new is
+      // known, the fault is kept in the record, the test not replayed: a test may come a commit before its code (Roger,
+      // 10 Oct 2026; review of #69). When it is not known, it fails the record, as a run that did not finish does
+      const known = earlier.every((e) => e.ran);
+      const failing = now.failed
+        .filter((n) => !old.includes(n))
+        .map((test) => ({ test, problem: `"${test}" fails at its own commit, so it cannot be replayed` }));
+      for (const f of failing) out.faults.push({ commit, file, ...f, kept: known });
+      const withFaults = (entry) => (known && failing.length ? { ...entry, faults: failing } : entry);
       if (!now.passed.length) {
-        out.files.push(none);
+        out.files.push(withFaults(none));
         continue;
       }
       // a run of the tests held before that did not finish holds only some of them, so which are new is not known
-      if (earlier.some((e) => !e.ran)) {
+      if (!known) {
         out.files.push({
           file,
           failedFirst: [],
@@ -191,7 +199,7 @@ export function replay(repo, commit) {
         });
         continue;
       }
-      out.files.push(judged(file, fresh, run(before.dir, file, repo)));
+      out.files.push(withFaults(judged(file, fresh, run(before.dir, file, repo))));
     }
   } finally {
     at.done();
@@ -254,8 +262,9 @@ function gather(repo, commits) {
       // a commit missing from the record lowers every count it would have added, so it is a fault (review of #44)
       r = { commit, files: [], faults: [{ commit, problem: `could not be replayed: ${String(e).split('\n')[0]}` }] };
     }
-    for (const f of r.faults) process.stderr.write(`  fails the record: ${faultLine(f)}\n`);
-    faults.push(...r.faults);
+    for (const f of r.faults)
+      process.stderr.write(`  ${f.kept ? 'kept in the record, not replayed' : 'fails the record'}: ${faultLine(f)}\n`);
+    faults.push(...r.faults.filter((f) => !f.kept));
     if (r.files.length) replays.push({ commit, files: r.files });
   }
   if (faults.length)

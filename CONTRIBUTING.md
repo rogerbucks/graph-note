@@ -16,7 +16,9 @@ CI. A change that breaks one fails before it is merged.
   replayed commit that changed a test, named after the commit, over `baseline.json`, the single record as it stood when
   it was split (11 Oct 2026), frozen at its head. Together they give, for each test file, what was seen failing first,
   what was excused, and what could not be replayed. CI fails a commit since the baseline that changed a test and has no
-  record (`--complete`), so each commit's record is written once, on the branch that made it.
+  record (`--complete`), so each commit's record is written once, on the branch that made it. A test may come a commit
+  before its code: a new test failing at its own commit is recorded as not replayed, naming it, and `--check` warns of
+  it. A run that did not finish still fails the record, so it is run again.
 - **The records never conflict.** Two branches that replay different commits, or excuse different tests, write
   different files, and no field is rewritten by every update, so any merge, GitHub's own among them, joins them with
   nothing to resolve.
@@ -25,7 +27,8 @@ CI. A change that breaks one fails before it is merged.
 - **A branch begun before the split** merges main once. That merge conflicts in the two old files one last time: take
   main's `test/tests-first/baseline.json` (`git checkout origin/main -- test/tests-first/baseline.json`), keep the
   branch's own `test/seen-failing.json`, then run `node scripts/tests-first.mjs --migrate`, which moves its reasons into
-  `test/seen-failing/`, and `--update`, which records its commits.
+  `test/seen-failing/`, and `--update`, which records its commits. `--migrate` checks every reason before it writes
+  any, and leaves a reason main already keeps differently as it is, naming it, for a person to choose between the two.
 - **The gate before every commit:** `npm run format:check`, `npm run lint`, `npm run typecheck` and `npm test`, plus
   `ruff check` and `ruff format --check` when the Python library changed. CI runs them all again.
 - **Cheap checks while working.** `npm run test:ai` runs the suite quietly (one line when all pass, and for a failure

@@ -11,6 +11,7 @@ import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 import { JS_TEST, PY_TEST } from './tests-first-run.mjs';
 
 const git = (repo, ...args) => execFileSync('git', args, { cwd: repo, encoding: 'utf8', maxBuffer: 1 << 28 }).trim();
@@ -148,8 +149,9 @@ export function removeRecord(repo, commit) {
 
 /**
  * What the records prove, by test file: the baseline's entries, then each replay in `replays`, oldest first, added in.
- * Each entry: the commits replayed and those that could not be, the new tests seen failing first, those that passed
- * first, and how many of those have a reason in `exceptions`. Only the test files in `current` are kept, sorted.
+ * Each entry: the commits replayed and those that could not be (a new test failing at its own commit among them), the
+ * new tests seen failing first, those that passed first, and how many of those have a reason in `exceptions`. Only the
+ * test files in `current` are kept, sorted.
  */
 export function tally(baseline, replays, exceptions, current) {
   const files = structuredClone(baseline?.files ?? {});
@@ -163,14 +165,22 @@ export function tally(baseline, replays, exceptions, current) {
         passedFirst: [],
         notReplayedCommits: [],
       });
-      if (f.notReplayed) {
+      // a new test failing at its own commit is kept with its file as a fault, and counts as not replayed (review of #69)
+      const faulted = f.faults ?? [];
+      const why = faulted.map((x) => x.problem);
+      const named = [...(f.tests ?? []), ...faulted.map((x) => x.test)];
+      const unreplayed = (reason) => {
         e.notReplayed++;
-        e.notReplayedCommits.push({ commit, reason: f.notReplayed, ...(f.tests?.length ? { tests: f.tests } : {}) });
+        e.notReplayedCommits.push({ commit, reason, ...(named.length ? { tests: named } : {}) });
+      };
+      if (f.notReplayed) {
+        unreplayed([f.notReplayed, ...why].join('; '));
         continue;
       }
       e.replayed++;
       e.seenFailing += f.failedFirst.length;
       for (const name of f.passedFirst) e.passedFirst.push({ commit, name });
+      if (faulted.length) unreplayed(why.join('; '));
     }
   for (const [file, e] of Object.entries(files))
     e.excused = e.passedFirst.filter((p) => excused(exceptions, file, p.name)).length;
@@ -228,37 +238,59 @@ export function unrecorded(repo) {
   return history(repo, baseline).filter((c) => !commits.has(c) && testsIn(changes(repo, c)).length > 0);
 }
 
+/** Each reason in the old single file, if there is one, with the reason already kept for its test, if there is one. */
+function oldReasons(repo) {
+  const oldExcusals = join(repo, OLD_EXCUSALS);
+  if (!existsSync(oldExcusals)) return null;
+  return Object.entries(readJSON(oldExcusals, OLD_EXCUSALS)).flatMap(([file, names]) =>
+    Object.entries(names).map(([test, reason]) => {
+      const rel = `${EXCUSALS}/${excusalName(file, test)}`;
+      const there = existsSync(join(repo, rel)) ? readJSON(join(repo, rel), rel) : null;
+      return { file, test, reason, rel, there };
+    }),
+  );
+}
+
 /**
  * Moves records kept in the old single files over, and removes the old files: every reason into a file of its own, and
  * the old record whole into the baseline when there is none yet. When there is one, a branch's own old record is
- * dropped, never written over it: `--update` replays the commits it held since the baseline. Gives a line for each.
+ * dropped, never written over it: `--update` replays the commits it held since the baseline. Everything is read and
+ * checked before anything is written, so a reason that would be refused leaves both folders and both old files as they
+ * were (review of #69). A reason kept already, differently, is left as it is and named, for a person to choose: main
+ * may have changed it since the branch began. Gives a line for each thing done or left.
  */
 export function migrate(repo) {
-  const said = [];
-  const oldExcusals = join(repo, OLD_EXCUSALS);
-  if (existsSync(oldExcusals)) {
-    let moved = 0;
-    // a branch's old file holds main's reasons too, as they were when it began: its own copy of each is the one kept
-    for (const [file, names] of Object.entries(readJSON(oldExcusals, OLD_EXCUSALS)))
-      for (const [test, reason] of Object.entries(names)) {
-        keep(repo, file, test, reason, true);
-        moved++;
-      }
-    rmSync(oldExcusals);
-    said.push(`${OLD_EXCUSALS}: ${moved} reason(s) moved, each into a file of its own in ${EXCUSALS}/`);
-  }
+  const reasons = oldReasons(repo);
+  const refused = (reasons ?? []).flatMap((r) => {
+    const why = refusal(r.file, r.test, r.reason);
+    return why ? [`${r.rel}: ${why}`] : [];
+  });
+  if (refused.length)
+    throw new RecordsError(`${OLD_EXCUSALS}: nothing is moved, as a reason cannot be kept:\n  ${refused.join('\n  ')}`);
   const oldRecord = join(repo, OLD_RECORD);
+  const baseline = join(repo, RECORDS, BASELINE);
+  const record = existsSync(oldRecord) && !existsSync(baseline) ? readJSON(oldRecord, OLD_RECORD) : null;
+  const said = [];
+  if (reasons) {
+    const left = [];
+    for (const { file, test, reason, rel, there } of reasons) {
+      if (!there) keep(repo, file, test, reason, false);
+      else if (!isDeepStrictEqual(there, { file, test, ...reason }))
+        left.push(`${rel}: kept as it is; the branch's own reason for "${test}" in ${file} differs, so choose one`);
+    }
+    rmSync(join(repo, OLD_EXCUSALS));
+    const moved = reasons.filter((r) => !r.there).length;
+    said.push(`${OLD_EXCUSALS}: ${moved} reason(s) moved, each into a file of its own in ${EXCUSALS}/`, ...left);
+  }
   if (existsSync(oldRecord)) {
-    const baseline = join(repo, RECORDS, BASELINE);
-    if (existsSync(baseline)) {
+    if (record) {
+      mkdirSync(join(repo, RECORDS), { recursive: true });
+      writeFileSync(baseline, json({ note: BASELINE_NOTE, head: record.head, files: record.files }));
+      said.push(`${OLD_RECORD}: moved whole into ${RECORDS}/${BASELINE}, frozen at ${record.head.slice(0, 7)}`);
+    } else {
       said.push(
         `${OLD_RECORD}: dropped, as ${RECORDS}/${BASELINE} is there; run --update to replay the commits since it`,
       );
-    } else {
-      const { head, files } = readJSON(oldRecord, OLD_RECORD);
-      mkdirSync(join(repo, RECORDS), { recursive: true });
-      writeFileSync(baseline, json({ note: BASELINE_NOTE, head, files }));
-      said.push(`${OLD_RECORD}: moved whole into ${RECORDS}/${BASELINE}, frozen at ${head.slice(0, 7)}`);
     }
     rmSync(oldRecord);
   }
