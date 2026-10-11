@@ -14,9 +14,9 @@ import {
   readStyle,
   writeSafely,
 } from '@graph-note/core';
-import type { ExportFormat, ExportTheme, ViewSpec } from '@graph-note/core';
+import type { ExportFormat, ExportLayout, ExportTheme, ViewSpec } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
-import { exportRefusalWords } from '../layout-worker/refusal-words';
+import { exportFailureWords, exportRefusalWords } from '../layout-worker/refusal-words';
 import { classificationOf } from './classification';
 import { freePath, vaultOps } from './vault-write';
 
@@ -102,16 +102,24 @@ async function exporting(plugin: GraphNotePlugin, ask: ExportAsk): Promise<Expor
   const style = readStyle(texts, ask.graph, reading).style;
   // laid out where a drawing is, apart from the interface and under the same limits (layout_contained): one over a limit
   // writes nothing, and says why
-  const image = await exportWithLayout(scope, (d, theme) => plugin.layoutForExport(d, theme), {
-    note: ask.path,
-    date,
-    theme: ask.theme,
-    style,
-  });
+  let layoutFailed = false;
+  const layout: ExportLayout = (d, theme) =>
+    plugin.layoutForExport(d, theme).catch((e: unknown) => {
+      layoutFailed = true;
+      throw e;
+    });
+  let image;
+  try {
+    image = await exportWithLayout(scope, layout, { note: ask.path, date, theme: ask.theme, style });
+  } catch (e) {
+    // the layout worker or its engine failed: told as a limit is, with what to do; any other failure is the caller's
+    if (!layoutFailed) throw e;
+    return said({ stopped: exportFailureWords(e) });
+  }
   if (!image)
     return said({
       stopped:
-        'The export was stopped: Graph Note was unloaded before the layout finished. Nothing was saved. Try again once it is back.',
+        'The export was stopped: Graph Note was unloaded before the layout finished. Nothing was saved. Try again once Graph Note is enabled again.',
     });
   if ('reason' in image) return said({ stopped: exportRefusalWords(image) });
   let bytes: Uint8Array | string = image.svg;
