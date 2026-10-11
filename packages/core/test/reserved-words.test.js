@@ -1,6 +1,7 @@
-// The words a view may not use as a name (editor spec §7: view_profile, views_agree_with_grafeo; engines_get_standard):
-// GQL's reserved and pre-reserved words, the words it reads as values, and the further words Grafeo 0.5.43 refuses as a
-// name. Python's tests/test_view_parity.py holds the Grafeo list to Grafeo itself.
+// The words a view may not use as a name, and those it may not ask for as a kind (editor spec §7: view_profile,
+// views_agree_with_grafeo; engines_get_standard): GQL's reserved and pre-reserved words, the words it reads as values,
+// and the further words Grafeo 0.5.43 refuses as a name; and the words Grafeo refuses as a label. Python's
+// tests/test_view_parity.py holds both Grafeo lists to Grafeo itself.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -9,10 +10,12 @@ import {
   GQL_RESERVED,
   GQL_VALUES,
   GRAFEO_REFUSED,
+  GRAFEO_REFUSED_KINDS,
+  isRefusedKind,
   isReservedName,
 } from '../src/reserved-words.ts';
 
-const LISTS = { GQL_RESERVED, GQL_PRE_RESERVED, GQL_VALUES, GQL_NON_RESERVED, GRAFEO_REFUSED };
+const LISTS = { GQL_RESERVED, GQL_PRE_RESERVED, GQL_VALUES, GQL_NON_RESERVED, GRAFEO_REFUSED, GRAFEO_REFUSED_KINDS };
 
 describe('the reserved words', () => {
   // proves: view_profile
@@ -35,7 +38,9 @@ describe('the reserved words', () => {
       'DIFFERENT',
       'ENDS',
       'GROUPS',
+      'INF',
       'MERGE',
+      'NAN',
       'ORDINALITY',
       'REPEATABLE',
       'SHORTEST',
@@ -61,6 +66,7 @@ describe('the reserved words', () => {
       for (const w of words) assert.match(w, /^[A-Z][A-Z0-9_]*$/, name);
     }
     assert.deepEqual(GRAFEO_REFUSED, [...GRAFEO_REFUSED].sort());
+    assert.deepEqual(GRAFEO_REFUSED_KINDS, [...GRAFEO_REFUSED_KINDS].sort());
   });
 
   // proves: view_profile
@@ -69,5 +75,38 @@ describe('the reserved words', () => {
       assert.equal(isReservedName(w), true, w);
     for (const w of ['n', 'm', 'p', 'walker', 'walk_1', 'matches', 'node', 'graph', 'step', 'id', 'trip', 'stop'])
       assert.equal(isReservedName(w), false, w);
+  });
+
+  // proves: view_profile
+  test('NaN and Inf are no names, as Grafeo reads them as numbers', () => {
+    for (const w of ['nan', 'NaN', 'NAN', 'inf', 'Inf', 'INF']) assert.equal(isReservedName(w), true, w);
+    for (const w of ['nana', 'info', 'infinite']) assert.equal(isReservedName(w), false, w);
+  });
+
+  // proves: views_agree_with_grafeo
+  test('hold the words Grafeo 0.5.43 refuses as a kind, whatever their case, and no other', () => {
+    assert.deepEqual(GRAFEO_REFUSED_KINDS, [
+      'ACYCLIC',
+      'CAST',
+      'EXCEPT',
+      'FOR',
+      'GROUP',
+      'GROUPS',
+      'INTERSECT',
+      'OFFSET',
+      'ORDINALITY',
+      'OTHERWISE',
+      'REMOVE',
+      'SHORTEST',
+      'SIMPLE',
+      'TRAIL',
+      'UNION',
+      'WALK',
+      'XOR',
+    ]);
+    for (const w of ['Walk', 'walk', 'GROUP', 'Group', 'xor', 'Union']) assert.equal(isRefusedKind(w), true, w);
+    // GQL keeps these too, but a kind may be them: Grafeo reads each as a label
+    for (const w of ['Path', 'Nothing', 'Match', 'Person', 'Walker', 'Type', 'Nan'])
+      assert.equal(isRefusedKind(w), false, w);
   });
 });

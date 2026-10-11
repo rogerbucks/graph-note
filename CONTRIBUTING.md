@@ -143,7 +143,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `python/graph_spec/tests/test_licences.py` — every Python package carries an allowed licence.
 - `python/graph_spec/tests/test_parity.py` — the Python library gives the JavaScript library's answers.
 - `python/graph_spec/tests/test_reader_agrees_with_grafeo.py` — the reader and its plain rules give Grafeo's answers, Grafeo being the reference engine and a test dependency only (req:17.engine-agreement).
-- `python/graph_spec/tests/test_view_parity.py` — Grafeo, running each view of `view_cases.json` as written, returns the things the core returns, and refuses as a name only the words the core keeps from names (editor spec §7, views_agree_with_grafeo).
+- `python/graph_spec/tests/test_view_parity.py` — Grafeo, running each view of `view_cases.json` as written, returns the things the core returns, and, of a fixed list of GQL's and Cypher's words, refuses as a name and as a kind exactly the words the core keeps from them (editor spec §7, views_agree_with_grafeo).
 - `python/graph_spec/tests/test_settings.py` — what a host sets after importing the library.
 - `test/cheap-checks.test.js` — the quiet test run, running only a change's tests, the AI guide and the search ignore file.
 - `test/classification.test.js` — the content check refuses confidential or personal files.

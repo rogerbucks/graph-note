@@ -27,6 +27,6 @@ A host puts `src/` on `sys.path` and imports the four entry points by name. Each
 
 Grafeo is not installed by a plain install (req:14.no-engine-install): it is the `grafeo` extra, for database work, and the `reference` dependency group of a working copy. A test that needs it uses `engine_support.needs_engine` (or `module_needs_engine` in `setUpModule`): skipped without Grafeo, as CI's `python-no-engine` job runs (`uv sync --locked --no-default-groups`), but run and failed in CI's `python` job, which sets `GRAPH_SPEC_ENGINE=required`.
 
-`test_view_parity.py` holds Grafeo to `tests/view_cases.json`, the table of views the core's `view-parity.test.js` holds the core to: each view's query, run in Grafeo as written, returns the things the core returns (views_agree_with_grafeo), and Grafeo refuses as a name only the words the core keeps from names.
+`test_view_parity.py` holds Grafeo to `tests/view_cases.json`, the table of views the core's `view-parity.test.js` holds the core to: each view's query, run in Grafeo as written, returns the things the core returns (views_agree_with_grafeo), and, of a fixed list of GQL's and Cypher's words kept in the test (never the lists it tests), Grafeo refuses as a name and as a kind exactly the words the core keeps from them.
 
 Otherwise named after the module they test. `test_<entry point>_entry_point.py` hold each entry point to every name it had (`entry_points.json`) and to importing with only `src/` on the path.

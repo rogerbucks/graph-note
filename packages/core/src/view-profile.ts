@@ -7,7 +7,7 @@
 // writes `id: '<name>'` into every node it hands the engine (to_gql.py `_with_ids`; the engine reads nodes back by
 // `properties(n).id`, queries.py `read`), and the world the core holds keys every node by that same property
 // (`Store` `n.props.id`, `Graph.nodes`), so `n.id` is the name on both sides.
-import { isReservedName } from './reserved-words.ts';
+import { isRefusedKind, isReservedName, kindRefusal, nameRefusal } from './reserved-words.ts';
 import { isSpace, trimStart } from './whitespace.ts';
 
 /** The five kinds of view (spec §7): a hand-picked set, everything near a thing, how one thing reaches another, only some kinds, a walked path. */
@@ -184,11 +184,14 @@ class Cursor {
   /** A name the query gives a thing or a route: never a word GQL keeps, or Grafeo refuses, as a name (reserved-words.ts). */
   name(what: string): string {
     const n = this.ident(what);
-    if (isReservedName(n))
-      this.fail(
-        `${n} is a word GQL or Grafeo keeps for itself, so it cannot be a name in a view: write another, such as ${n}_1`,
-      );
+    if (isReservedName(n)) this.fail(nameRefusal(n));
     return n;
+  }
+  /** A kind the query asks for: a label, so never one Grafeo refuses as a label (reserved-words.ts). */
+  kind(): string {
+    const k = this.ident('a kind');
+    if (isRefusedKind(k)) this.fail(kindRefusal(k));
+    return k;
   }
   /** The name the query already gave a thing, written again. */
   again(name: string): void {
@@ -295,12 +298,12 @@ const shapes: Record<ViewKind, (c: Cursor) => ViewSpec> = {
     const n = c.name('a name for the things, such as n');
     const kinds: string[] = [];
     if (c.take(':')) {
-      kinds.push(c.ident('a kind'));
+      kinds.push(c.kind());
       // Grafeo reads a choice of kinds after IS only, so a query with a colon and a bar would not run there
       if (c.is('|')) c.fail('Grafeo reads several kinds only after IS, not after a colon: write (n IS Person|Team)');
     } else {
       c.word('IS');
-      do kinds.push(c.ident('a kind'));
+      do kinds.push(c.kind());
       while (c.take('|'));
     }
     c.sym(')');
@@ -361,7 +364,8 @@ function refusal(reason: string, shape: ViewKind): ViewRefusal {
 /**
  * A view query read into the view it describes: one of the five shapes (spec §7), written as GQL with whitespace and line
  * breaks free, keywords in any case, the names of the things in the pattern as the author likes (but never a word GQL
- * keeps, or Grafeo refuses, as a name: reserved-words.ts), whole-line // comments ignored, text in single quotes. Anything else is refused (view_profile) with a message that says what was wrong, names
+ * keeps, or Grafeo refuses, as a name, nor a kind Grafeo refuses as a label: reserved-words.ts), whole-line // comments
+ * ignored, text in single quotes. Anything else is refused (view_profile) with a message that says what was wrong, names
  * the five shapes in words and shows the form of the nearest.
  */
 export function parseView(query: string): ViewSpec | ViewRefusal {

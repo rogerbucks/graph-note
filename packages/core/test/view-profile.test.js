@@ -66,9 +66,9 @@ describe('the five shapes', () => {
   // proves: five_view_kinds
   test('only some kinds takes one kind after a colon, or one or more after IS', () => {
     assert.deepEqual(parseView('MATCH (n:Person) RETURN n'), { kind: 'kinds', kinds: ['Person'] });
-    assert.deepEqual(parseView('MATCH (n IS Person|Team|Group) RETURN n'), {
+    assert.deepEqual(parseView('MATCH (n IS Person|Team|Club) RETURN n'), {
       kind: 'kinds',
-      kinds: ['Person', 'Team', 'Group'],
+      kinds: ['Person', 'Team', 'Club'],
     });
     assert.deepEqual(parseView('match (n is Person | Team) return n'), { kind: 'kinds', kinds: ['Person', 'Team'] });
   });
@@ -116,12 +116,21 @@ describe('what is refused, and what the refusal says', () => {
     [
       "MATCH (walk:Path {id: 't'})-[:STEP]->(stop) RETURN walk, stop",
       'path',
-      /^walk is a word GQL or Grafeo keeps for itself, so it cannot be a name in a view: write another, such as walk_1\./,
+      /^walk is a word GQL keeps for itself, so it cannot be a name in a view: write another, such as walk_1\./,
     ],
     ["MATCH (n {id: 'a'})-[]-{1,2}(Match) RETURN n, Match", 'near', /^Match is a word GQL .*such as Match_1\./],
     ["MATCH (on) WHERE on.id IN ['a'] RETURN on", 'picked', /^on is a word GQL .*such as on_1\./],
     ["MATCH UNWIND = (a {id: 'a'})-[]->{1,2}(b {id: 'b'}) RETURN UNWIND", 'reaches', /^UNWIND is a word GQL /],
     ['MATCH (type IS Person) RETURN type', 'kinds', /^type is a word GQL .*such as type_1\./],
+    ["MATCH (nan) WHERE nan.id IN ['a'] RETURN nan", 'picked', /^nan is a word GQL keeps .*such as nan_1\./],
+    // nor a kind Grafeo refuses as a label, whichever way the kind is written
+    [
+      'MATCH (n:Walk) RETURN n',
+      'kinds',
+      /^Walk is a word GQL keeps for itself, so a view cannot ask for it as a kind: give the kind another name, such as Walk_1\./,
+    ],
+    ['MATCH (n IS Group) RETURN n', 'kinds', /^Group is a word GQL keeps .*as a kind.*such as Group_1\./],
+    ['MATCH (n IS Person|union) RETURN n', 'kinds', /^union is a word GQL keeps .*as a kind/],
   ];
 
   for (const [written, nearest, reason] of CASES) {
@@ -159,6 +168,10 @@ describe('what is refused, and what the refusal says', () => {
   // proves: view_profile
   test('a kind is not a name: it may be a word GQL keeps, as Path is', () => {
     assert.deepEqual(parseView('MATCH (n:Path) RETURN n'), { kind: 'kinds', kinds: ['Path'] });
+    assert.deepEqual(parseView('MATCH (n IS Nothing|Match|Type) RETURN n'), {
+      kind: 'kinds',
+      kinds: ['Nothing', 'Match', 'Type'],
+    });
   });
 
   // proves: view_profile

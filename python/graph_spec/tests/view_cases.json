@@ -467,6 +467,12 @@
           "spec": { "kind": "kinds", "kinds": ["Path"] },
           "things": ["blank", "lost", "tour"],
           "links": []
+        },
+        {
+          "block": ["// graph: walks · QUERY view kinds_gql_keeps_but_labels_may_be", "MATCH (n IS Match|Path|Nothing) RETURN n"],
+          "spec": { "kind": "kinds", "kinds": ["Match", "Path", "Nothing"] },
+          "things": ["blank", "lost", "tour"],
+          "links": []
         }
       ]
     }
@@ -641,27 +647,47 @@
     {
       "query": "MATCH (walk:Path {id: 'nowhere'})-[:STEP]->(stop) RETURN walk, stop",
       "nearest": "path",
-      "reason": "walk is a word GQL or Grafeo keeps for itself, so it cannot be a name in a view: write another, such as walk_1"
+      "reason": "walk is a word GQL keeps for itself, so it cannot be a name in a view: write another, such as walk_1"
     },
     {
       "query": "MATCH (Return) WHERE Return.id IN ['alice'] RETURN Return",
       "nearest": "picked",
-      "reason": "Return is a word GQL or Grafeo keeps for itself, so it cannot be a name in a view: write another, such as Return_1"
+      "reason": "Return is a word GQL keeps for itself, so it cannot be a name in a view: write another, such as Return_1"
+    },
+    {
+      "query": "MATCH (nan) WHERE nan.id IN ['home'] RETURN nan",
+      "nearest": "picked",
+      "reason": "nan is a word GQL keeps for itself, so it cannot be a name in a view: write another, such as nan_1"
     },
     {
       "query": "MATCH (n {id: 'alice'})-[]-{1,2}(on) RETURN n, on",
       "nearest": "near",
-      "reason": "on is a word GQL or Grafeo keeps for itself, so it cannot be a name in a view: write another, such as on_1"
+      "reason": "on is a word GQL keeps for itself, so it cannot be a name in a view: write another, such as on_1"
     },
     {
       "query": "MATCH unwind = (a {id: 'alice'})-[]->{1,6}(b {id: 'dan'}) RETURN unwind",
       "nearest": "reaches",
-      "reason": "unwind is a word GQL or Grafeo keeps for itself, so it cannot be a name in a view: write another, such as unwind_1"
+      "reason": "unwind is a word GQL keeps for itself, so it cannot be a name in a view: write another, such as unwind_1"
     },
     {
       "query": "MATCH (TRAIL IS Person) RETURN TRAIL",
       "nearest": "kinds",
-      "reason": "TRAIL is a word GQL or Grafeo keeps for itself, so it cannot be a name in a view: write another, such as TRAIL_1"
+      "reason": "TRAIL is a word GQL keeps for itself, so it cannot be a name in a view: write another, such as TRAIL_1"
+    },
+    {
+      "query": "MATCH (n:Walk) RETURN n",
+      "nearest": "kinds",
+      "reason": "Walk is a word GQL keeps for itself, so a view cannot ask for it as a kind: give the kind another name, such as Walk_1"
+    },
+    {
+      "query": "MATCH (n IS Group) RETURN n",
+      "nearest": "kinds",
+      "reason": "Group is a word GQL keeps for itself, so a view cannot ask for it as a kind: give the kind another name, such as Group_1"
+    },
+    {
+      "query": "MATCH (n IS Place|xor) RETURN n",
+      "nearest": "kinds",
+      "reason": "xor is a word GQL keeps for itself, so a view cannot ask for it as a kind: give the kind another name, such as xor_1"
     }
   ]
 }

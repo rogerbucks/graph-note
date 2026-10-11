@@ -15,9 +15,11 @@ things, and for how one thing reaches another with the routes' links too; a walk
 its steps, a thing once for every time the walk reaches it.
 
 A view never names a thing or a route by a word GQL keeps for itself, or one Grafeo refuses as a
-name: the core refuses such a view (packages/core/src/reserved-words.ts). Here Grafeo is asked
-every word GQL leaves free, and the core's list of the ones Grafeo refuses, in every place a view
-names something, so a view the core reads never has a name Grafeo refuses.
+name, nor asks for a kind Grafeo refuses as a label: the core refuses such a view
+(packages/core/src/reserved-words.ts). Here Grafeo is asked a fixed list of words, never taken
+from the lists it tests (GQL's, Cypher's, and the numbers NaN and Inf), in every place a view
+names something and every way it asks for a kind, and what it refuses must be exactly the core's
+lists, so a view the core reads never has a name or a kind Grafeo refuses.
 
 Grafeo is a test dependency only: without it (CI's python-no-engine job) the comparisons are
 skipped, and the table's own checks still run.
@@ -140,11 +142,12 @@ def grafeos_answer(db, graph, query):
 
 def core_words():
     """The core's word lists (packages/core/src/reserved-words.ts), read through Node: the words
-    GQL keeps (reserved, pre-reserved, values), those it leaves free, and Grafeo's own refusals."""
+    GQL keeps (reserved, pre-reserved, values), those it leaves free, and the words Grafeo refuses
+    as a name and as a kind."""
     script = (
         "import(process.argv[1]).then(m => process.stdout.write(JSON.stringify({"
         "kept: [...m.GQL_RESERVED, ...m.GQL_PRE_RESERVED, ...m.GQL_VALUES],"
-        "free: m.GQL_NON_RESERVED, grafeo: m.GRAFEO_REFUSED})))"
+        "free: m.GQL_NON_RESERVED, grafeo: m.GRAFEO_REFUSED, kinds: m.GRAFEO_REFUSED_KINDS})))"
     )
     url = "file://" + os.path.join(ROOT, "packages", "core", "src", "reserved-words.ts")
     out = subprocess.run(["node", "-e", script, url], capture_output=True, text=True, check=True)
@@ -165,11 +168,68 @@ NAMED = (
 )
 
 
-def refused_as_name(db, word):
-    """Whether Grafeo refuses the word, in any case, in any place a view names something."""
+# every way a view asks for a kind: after a colon, and first or later in a choice after IS
+KINDED = (
+    "MATCH (n:{w}) RETURN n",
+    "MATCH (n IS {w}|Place) RETURN n",
+    "MATCH (n IS Place|{w}) RETURN n",
+)
+
+# The words Grafeo is asked, fixed here and never taken from the lists they test: GQL's reserved,
+# pre-reserved and non-reserved words (ISO/IEC 39075:2024 §21.3, as the openGQL grammar GQL.g4
+# lists them) and its truth values (§21.2), Cypher's keywords (Neo4j's, with the older ones), and
+# the numbers Grafeo reads as words.
+GQL_KEPT = """ABS ACOS ALL ALL_DIFFERENT AND ANY ARRAY AS ASC ASCENDING ASIN AT ATAN AVG BIG
+BIGINT BINARY BOOL BOOLEAN BOTH BTRIM BY BYTE_LENGTH BYTES CALL CARDINALITY CASE CAST CEIL
+CEILING CHAR CHAR_LENGTH CHARACTER_LENGTH CHARACTERISTICS CLOSE COALESCE COLLECT_LIST COMMIT
+COPY COS COSH COT COUNT CREATE CURRENT_DATE CURRENT_GRAPH CURRENT_PROPERTY_GRAPH
+CURRENT_SCHEMA CURRENT_TIME CURRENT_TIMESTAMP DATE DATETIME DAY DEC DECIMAL DEGREES DELETE
+DESC DESCENDING DETACH DISTINCT DOUBLE DROP DURATION DURATION_BETWEEN ELEMENT_ID ELSE END
+EXCEPT EXISTS EXP FILTER FINISH FLOAT FLOAT16 FLOAT32 FLOAT64 FLOAT128 FLOAT256 FLOOR FOR
+FROM GROUP HAVING HOME_GRAPH HOME_PROPERTY_GRAPH HOME_SCHEMA HOUR IF IN INSERT INT INTEGER
+INT8 INTEGER8 INT16 INTEGER16 INT32 INTEGER32 INT64 INTEGER64 INT128 INTEGER128 INT256
+INTEGER256 INTERSECT INTERVAL IS LEADING LEFT LET LIKE LIMIT LIST LN LOCAL LOCAL_DATETIME
+LOCAL_TIME LOCAL_TIMESTAMP LOG LOG10 LOWER LTRIM MATCH MAX MIN MINUTE MOD MONTH NEXT
+NODETACH NORMALIZE NOT NOTHING NULL NULLS NULLIF OCTET_LENGTH OF OFFSET OPTIONAL OR ORDER
+OTHERWISE PARAMETER PARAMETERS PATH PATH_LENGTH PATHS PERCENTILE_CONT PERCENTILE_DISC POWER
+PRECISION PROPERTY_EXISTS RADIANS REAL RECORD REMOVE REPLACE RESET RETURN RIGHT ROLLBACK
+RTRIM SAME SCHEMA SECOND SELECT SESSION SESSION_USER SET SIGNED SIN SINH SIZE SKIP SMALL
+SMALLINT SQRT START STDDEV_POP STDDEV_SAMP STRING SUM TAN TANH THEN TIME TIMESTAMP TRAILING
+TRIM TYPED UBIGINT UINT UINT8 UINT16 UINT32 UINT64 UINT128 UINT256 UNION UNSIGNED UPPER USE
+USMALLINT VALUE VARBINARY VARCHAR VARIABLE WHEN WHERE WITH XOR YEAR YIELD ZONED
+ZONED_DATETIME ZONED_TIME
+ABSTRACT AGGREGATE AGGREGATES ALTER CATALOG CLEAR CLONE CONSTRAINT CURRENT_ROLE CURRENT_USER
+DATA DIRECTORY DRYRUN EXACT EXISTING FUNCTION GQLSTATUS GRANT INSTANT INFINITY NUMBER
+NUMERIC ON OPEN PARTITION PROCEDURE PRODUCT PROJECT QUERY RECORDS REFERENCE RENAME REVOKE
+SUBSTRING SYSTEM_USER TEMPORAL UNIQUE UNIT VALUES
+FALSE TRUE UNKNOWN""".split()
+GQL_FREE = """ACYCLIC BINDING BINDINGS CONNECTING DESTINATION DIFFERENT DIRECTED EDGE EDGES
+ELEMENT ELEMENTS FIRST GRAPH GROUPS KEEP LABEL LABELED LABELS LAST NFC NFD NFKC NFKD NO NODE
+NORMALIZED ONLY ORDINALITY PROPERTY READ RELATIONSHIP RELATIONSHIPS REPEATABLE SHORTEST
+SIMPLE SOURCE TABLE TO TRAIL TRANSACTION TYPE UNDIRECTED VERTEX WALK WITHOUT WRITE
+ZONE""".split()
+CYPHER = """ACCESS ACTIVE ADMIN ADMINISTRATOR ALIAS ALIASES ALL_SHORTEST_PATHS ALLSHORTESTPATHS
+ASSERT ASSIGN AUTH BOOSTED BREAK BRIEF BTREE BUILT CASCADE CHANGE CIDR COLLECT COMMAND
+COMMANDS COMPOSITE CONCURRENT CONSTRAINTS CONTAINS CONTINUE CSV CURRENT CYPHER DATABASE
+DATABASES DBMS DEALLOCATE DEFAULT DEFINED DENY DESTROY DRIVER DUMP EACH ENABLE ENCRYPTED
+ENDS ERROR EXECUTABLE EXECUTE EXIST EXISTENCE EXPLAIN FAIL FIELDTERMINATOR FOREACH FULLTEXT
+FUNCTIONS GRAPHS HEADERS HOME ID IMMUTABLE IMPERSONATE INDEX INDEXES JOIN KEY LOAD LOOKUP
+MANAGEMENT MAP MERGE NAME NAMES NEW NODES NONE NOWAIT OPTION OPTIONS OUTPUT PASSWORD
+PASSWORDS PERIODIC PLAINTEXT POINT POPULATED PRIMARIES PRIMARY PRIVILEGE PRIVILEGES
+PROCEDURES PROFILE PROPERTIES PROVIDER PROVIDERS RANGE REALLOCATE REDUCE REL REPORT REQUIRE
+REQUIRED RESTRICT ROLE ROLES ROW ROWS SCAN SEC SECONDARIES SECONDARY SECONDS SEEK SERVER
+SERVERS SETTING SETTINGS SHORTEST_PATH SHORTESTPATH SHOW SINGLE STARTS STATUS STOP SUPPORTED
+SUSPENDED TARGET TERMINATE TEXT TIMEZONE TOPOLOGY TRANSACTIONS TRAVERSE TYPES UNIQUENESS
+UNWIND URL USER USERS USING VECTOR WAIT""".split()
+NUMBERS = ["NAN", "INF"]
+CANDIDATES = list(dict.fromkeys(GQL_KEPT + GQL_FREE + CYPHER + NUMBERS))
+
+
+def refused_in(db, word, shapes):
+    """Whether Grafeo refuses the word, in any case, in any of these shapes of view."""
     db.set_graph("walks")
     for written in (word.lower(), word, word.capitalize()):
-        for shape in NAMED:
+        for shape in shapes:
             try:
                 list(db.execute(shape.format(w=written)))
             # any error, never narrowed: Grafeo says a refusal only as a GrafeoError's text
@@ -190,6 +250,11 @@ class ViewTable(unittest.TestCase):
     def test_the_reader_refuses_the_blocks_the_core_leaves_out(self):
         for note in TABLE["notes"]:
             self.assertEqual(refused_blocks(note), note.get("left_out", []), note["name"])
+
+    def test_the_core_lists_gqls_words_as_the_standard_does(self):
+        words = core_words()
+        self.assertEqual(sorted(words["kept"]), sorted(GQL_KEPT))
+        self.assertEqual(sorted(words["free"]), sorted(GQL_FREE))
 
 
 @needs_engine
@@ -230,16 +295,21 @@ class GrafeoAgrees(unittest.TestCase):
             compared += bool(steps)
         self.assertGreater(compared, 0, "no path has steps, so none is compared")
 
+    def walks(self):
+        return self.dbs[next(n for n in TABLE["notes"] if n["graph"] == "walks")["name"]]
+
     def test_grafeo_refuses_as_a_name_only_the_words_the_core_keeps_from_names(self):
-        # of the words GQL leaves free, and of those Grafeo is listed as refusing, Grafeo refuses
-        # exactly the listed ones: no view the core reads has a name Grafeo refuses
-        words = core_words()
-        walks = next(n for n in TABLE["notes"] if n["graph"] == "walks")
-        db = self.dbs[walks["name"]]
-        asked = sorted(set(words["free"]) | set(words["grafeo"]))
-        refused = [w for w in asked if refused_as_name(db, w)]
-        self.assertEqual(refused, words["grafeo"])
-        self.assertEqual(set(words["grafeo"]) & set(words["kept"]), set())
+        # of every word asked, those Grafeo refuses as a name beyond the ones GQL keeps are exactly
+        # the core's list: no view the core reads has a name Grafeo refuses, and none is kept from
+        # names for nothing
+        refused = {w for w in CANDIDATES if refused_in(self.walks(), w, NAMED)}
+        self.assertEqual(sorted(refused - set(GQL_KEPT)), core_words()["grafeo"])
+
+    def test_grafeo_refuses_as_a_kind_exactly_the_words_the_core_refuses_as_kinds(self):
+        # a kind is a label, which Grafeo refuses for fewer words than a name; of every word asked,
+        # it refuses exactly the core's list, whichever way the kind is written
+        refused = [w for w in CANDIDATES if refused_in(self.walks(), w, KINDED)]
+        self.assertEqual(sorted(refused), core_words()["kinds"])
 
 
 if __name__ == "__main__":
