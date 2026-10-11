@@ -11,6 +11,16 @@ module that ties the parts together, named as the folder is.
 
 - `main.ts` — the plugin: registers the block processor, the pane, the editor extension, the settings page and the
   command that converts a note to standard GQL; keeps the settings, drafts and shared schemas; opens the editors.
+- `inline-editors.ts` — the editors open in place: each found by its block's identity, never by another block that comes
+  to its line, even one of the same graph; one to a block, however often Edit here is pressed; released, its typing
+  written, when it is off the page and its note is closed, whether a card left or the editing view closed; never kept
+  when its opening fails, for any reason, logged and said, or finds nothing, the note gone or without a graph block.
+- `drafts.ts` — the drafts kept in the plugin's data, each with an id given once and never again, by which every change
+  finds it, a random UUID however old the web view; its key, note and graph, only says whose it is. Drafts kept before
+  ids are given one when the plugin loads, saved at once, so they keep it from one load to the next. They move
+  with their note when it is renamed, edited or not, ids unchanged, beside, never over, a draft kept under the new name;
+  and Recover kept drafts into a new note, the command that writes every one, once, a deleted note's among them, into a
+  note, and says so when that note cannot be written.
 - `block.ts` — one gql block in a note: drawn, or shown as code, never blank; as text with a banner when it is over a
   size or time limit.
 - `view-block.ts` — a view (§7): a query block named as a view, drawn as what it picks out of its graph; refused, saying
@@ -20,7 +30,9 @@ module that ties the parts together, named as the folder is.
 - `style-block.ts` — a style block (§2): never drawn, folded away until opened, saying whose style it is, what it holds
   and how many problems it has. The graph it styles is drawn with its nudges, and its problems listed, by `block.ts`.
 - `code.ts` — a block that is not a graph, shown as coloured code; a very long one plain.
-- `live-preview.ts` — the editing view's own cards, so the page stays still while a block is typed in.
+- `live-preview.ts` — the editing view's own cards, so the page stays still while a block is typed in; each block keeps
+  its identity however lines move above it, so its card, and the editor in place in it, survive the move; each card's
+  last height kept by its note and line, for the blocks the note has now.
 - `editor.ts` — the comma and the colon added for you in the note's own editor.
 - `pane.ts` — the edit pane, which holds a block editor.
 - `reading-view.ts` — reading view never changes the note: `noteToRewrite`, which every command rewriting a note asks
@@ -109,7 +121,9 @@ module that ties the parts together, named as the folder is.
 
 - `block-editor.ts` — `BlockEditor`: ties the parts together; the field and what typing in it does.
 - `editor-layout.ts` — the editor's parts on the page, built once for each block.
-- `block-note.ts` — the note behind the editor and its session: opening, writing, undo, Lock, drafts.
+- `block-note.ts` — the note behind the editor and its session: opening, writing, undo, Lock, drafts; the note followed
+  when it is renamed or moved, and what is typed kept as a draft when it is deleted; each editor's own draft known by
+  its id, beside another's.
 - `note-writing.ts` — writing safely, through the note's editor or the vault.
 - `kept-field.ts` — the field's focus and scroll, kept through each redraw.
 - `typing-keys.ts` — what typing does: Tab and Enter for the inline match or a suggestion, Escape to put it away, undo and
@@ -121,7 +135,8 @@ module that ties the parts together, named as the folder is.
 - `text-picture.ts` — the coloured picture under the field, with the inline match as ghost text where the caret is.
 - `problem-help.ts` — the problems list, the fixes on the caret's line, the announcements.
 - `suggestions.ts` — the suggestions bar.
-- `kept-draft.ts` — the draft banner: what was typed, never lost.
+- `kept-draft.ts` — the draft banner: what was typed, never lost; Restore and Discard act on the very draft shown, by its
+  id, and on no other when it is gone.
 - `pane-drawing.ts` — the pane's own drawing of what is typed.
 
 ## Tests, `test/`
@@ -136,9 +151,13 @@ package, or all with `npm test` from the repository root. Each builds `main.js` 
   (the obsidian module and CodeMirror), `load-plugin.js` (building and loading the plugin), `cascade.js` (the part of
   the CSS cascade a test needs), `notes.js` (a fenced block, a button by its label), and the notes each group of tests
   opens: `card-notes.js`, `pane-notes.js`, `view-notes.js`, and `inspector-steps.js` (opening a box's details and driving the inspector's rows, menus and chips).
+  `editing-view.js` opens a note in the editing view, in Live Preview, with the plugin's own extension and view plugins,
+  closes it as Obsidian closes an editor, and gives the cards it would draw. A component's `registerEvent` is released when it unloads, and `state.listening()` counts the
+  vault's listeners, so one left behind shows.
   `workers.js` stands in a browser's Worker: each runs the code main.js hands it, from its Blob URL, in a real thread.
   `fake-vault.js` stands in the vault's ways of making files (create, modify, rename, delete, a folder), one of which
-  can be made to fail as a full disk would, and the metadata cache's front matter.
+  can be made to fail as a full disk would, a rename and a deletion told to whoever listens, and the metadata cache's
+  front matter.
 - `test/device-checklist.md` — what is checked by hand on the devices. Every item has a number that never changes
   (`V-03`: its section's letter and two digits), and each item after Before has a note in `test-vault/Device checks/`
   that shows the case on a graph to try it on; `test/device-check-notes.test.js` (repository root) holds the two together.

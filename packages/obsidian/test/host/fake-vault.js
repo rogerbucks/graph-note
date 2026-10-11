@@ -1,6 +1,7 @@
 // Stand-ins for the vault's own ways of making files (spec §16, export): create, create binary, modify, rename, delete
-// and make a folder, each kept in `state.files` by path, with a way to make one fail as a full disk would; and the
-// metadata cache's front matter, read from a note's text.
+// and make a folder, each kept in `state.files` by path, with a way to make one fail as a full disk would; a rename and a
+// deletion told to whoever listens, as Obsidian's vault tells them (spec §9); and the metadata cache's front matter, read
+// from a note's text.
 
 /** Adds the vault's file-making operations to `vault`; `state.failWrite` names a path whose writes fail with ENOSPC. */
 export function addVaultWrites(vault, state, file) {
@@ -34,13 +35,20 @@ export function addVaultWrites(vault, state, file) {
       fail(to);
       files.set(to, files.get(f.path));
       files.delete(f.path);
+      state.tell?.('rename', file(to), f.path);
     },
-    delete: async (f) => void files.delete(f.path),
+    delete: async (f) => gone(state, f),
     // to the system's trash, outside the vault: gone from it, and in no trash the vault keeps
-    trash: async (f) => void files.delete(f.path),
+    trash: async (f) => gone(state, f),
     createFolder: async (path) => void state.folders.add(path),
     getFolderByPath: (path) => (path === '' || state.folders.has(path) ? { path } : null),
   });
+}
+
+/** A file gone from the vault, and the deletion told, as Obsidian tells it once the file is gone. */
+function gone(state, f) {
+  state.files.delete(f.path);
+  state.tell?.('delete', f);
 }
 
 /** The file manager: a file put in the trash is gone from the vault, and kept in `state.trashed`. */
@@ -48,7 +56,7 @@ export function fakeFileManager(state) {
   return {
     trashFile: async (f) => {
       (state.trashed ??= []).push(f.path);
-      state.files.delete(f.path);
+      gone(state, f);
     },
   };
 }

@@ -13,6 +13,9 @@ export interface Refused {
   draft: string;
 }
 
+/** Why a write found no note to write into: it was deleted while its block was edited (spec §9). */
+export const NOTE_DELETED = 'the note was deleted';
+
 /** Told the note's text as it stands after a write, or as it was found when the write was refused. */
 type Keep = (note: string) => void;
 
