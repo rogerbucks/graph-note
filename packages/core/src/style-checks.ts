@@ -250,13 +250,14 @@ function shownOf(raw: RawThing, names: StyledNames, out: Problem[]): Checked['sh
     if (v !== undefined) shown[k] = v;
   }
   if (raw.props.frame !== undefined) {
-    const read = readFrame(raw.props.frame);
+    const written = raw.props.frame,
+      read = readFrame(written);
     if ('frame' in read) shown.frame = read.frame;
     else
       r.report(
         read.message,
         read.fix,
-        r.edit('frame', String(raw.props.frame), read.clean === undefined ? [] : [read.clean]),
+        typeof written === 'string' && read.clean !== undefined ? r.edit('frame', written, [read.clean]) : {},
       );
   }
   const selected = r.name('selected', names.things, 'a thing', 'the id of a thing');
@@ -280,7 +281,13 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
     const p = c.problems;
     // a key the style graph does not know: reported on the key; the thing may not mean what it says, so it is left out
     // (all its other faults are still reported)
-    const unknown = unknownKeys(kinds[0] as StyleKind, Object.keys(raw.props), raw.keySpan, names.graph, raw.at);
+    const unknown = unknownKeys(
+      kinds[0] as StyleKind,
+      Object.keys(raw.props),
+      (key) => raw.keySpan(key),
+      names.graph,
+      raw.at,
+    );
     p.push(...unknown);
     const kept = <T>(x: T | null): T | null => (unknown.length ? null : x);
     if (kinds[0] === 'Nudge') push(c.nudges, kept(nudgeOf(raw, names, p)));
