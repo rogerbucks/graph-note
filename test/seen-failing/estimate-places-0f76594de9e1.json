@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/estimate-places.test.js",
+  "test": "a misspelt type is fixed in its own brackets > the same type written in a text before it is untouched",
+  "seen_failing_first": false,
+  "evidence": "Pins a rule already in estimates.ts (whereType blanks strings as well as comments), untested until the re-review of #85. Seen failing with only comments blanked, by hand: the type inside the text was changed and the real one left. Reverted, 11 Oct 2026."
+}

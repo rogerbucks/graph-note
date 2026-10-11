@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/inline-editors.test.js",
+  "test": "an editor in place that outlives its note is released > the note open in two editing views: one closed, the editor stays for the other",
+  "seen_failing_first": false,
+  "evidence": "The optional test the third review of #91 (11 Oct 2026) asked for: releaseUnseen already kept an editor whose note is still open in any editing view (editorFor), from the commit that added it. It passes first because that held; it fails if closing one of two views of a note closes the editor its other view still shows."
+}

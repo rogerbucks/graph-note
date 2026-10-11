@@ -185,6 +185,23 @@ describe('a card in reading view shows its details and offers nothing that write
     }
   });
 
+  test('no Add a thing, and no form that adds one, in reading view or its full screen', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      const shown = await readingWhileEdited(env);
+      assert.ok(!labelled(shown.reading, 'Add a thing'), 'no Add a thing');
+      assert.ok(shown.reading.querySelector('.graph-note-add-thing')?.hidden ?? true, 'and the strip is hidden');
+      labelled(shown.reading, 'Full screen').click();
+      const full = env.doc.body.querySelector('.graph-note-fullscreen');
+      assert.ok(full, 'full screen is open');
+      assert.ok(!labelled(full, 'Add a thing'), 'no Add a thing in full screen');
+      assert.ok(!full.querySelector('input'), 'no field to type a thing in');
+      await unchanged(env, shown);
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('a card drawn off the page, as reading view draws it, takes back Record a path and Make a view once it is placed', async () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {
@@ -206,6 +223,7 @@ describe('a card in reading view shows its details and offers nothing that write
       await until(() => !labelled(el, 'Edit in pane'), 1000);
       assert.ok(!labelled(el, 'Record a path'), 'no Record a path once it is in reading view');
       assert.ok(!labelled(el, 'Make a view'), 'no Make a view');
+      assert.ok(!labelled(el, 'Add a thing'), 'no Add a thing');
       await unchanged(env, { live, box, typed: box.value });
     } finally {
       env.uninstall();

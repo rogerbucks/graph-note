@@ -146,7 +146,7 @@ describe('naming conventions', () => {
     const loose = [];
     const named = (mods, n) => mods.some((m) => n === m || n.startsWith(`${m}-`) || n.startsWith(`${m}_`));
     for (const p of PACKAGES) {
-      const mods = ['src', 'bin']
+      const mods = ['src', 'bin', 'harness']
         .flatMap((d) => walk(`${p}/${d}`))
         .map((f) => basename(f).replace(/(\.d)?\.(ts|js|mjs)$/, ''));
       for (const f of walk(`${p}/test`).filter((x) => /\.test\.(js|mjs)$/.test(x)))

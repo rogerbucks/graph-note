@@ -9,8 +9,9 @@ quality/
 spikes/
 python/
 *.md
-# the tests-first records, written by scripts/tests-first.mjs
+# the tests-first records and the reasons kept beside them, written by scripts/tests-first.mjs
 test/tests-first/
+test/seen-failing/
 # the Claude Code mod's build (packages/claude-code/esbuild.config.mjs), and the API types Claude Code lays beside it
 packages/claude-code/mod/hooks/graph.js
 packages/claude-code/mod/bin/

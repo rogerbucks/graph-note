@@ -30,10 +30,13 @@ holds the two together).
 - [ ] **V-04** The empty block shows a prompt to start with a thing, and an Edit button.
 - [ ] **V-05** Each drawing has a bar: problems badge, Fit, Zoom out, Zoom in, Full screen, Edit. The badge counts in words and
       shows an icon.
-- [ ] **V-06** The misspelt link is drawn dashed, labelled "⚠ … (estimated)". Tapping it explains it in one sentence.
+- [ ] **V-06** The misspelt link is drawn dashed, labelled "⚠ … (estimated)". Tapping or clicking it selects it, drawn heavier,
+      and explains it in one sentence, with two buttons: the quick fix "Change … to …", which writes the name it was taken
+      to mean, and Edit the link, which opens the editor with the misspelt name selected.
 - [ ] **V-07** Tapping a box shows its text, its kind, and its links in and out.
 - [ ] **V-08** Tapping just beside a box or a link, not on it, still chooses it. Where several are near, tapping again in the same
-      place chooses the next, round to the first, and two quick taps near things never zoom (slice 2).
+      place chooses the next, round to the first, and two quick taps or a double-click on or near things only choose,
+      never zoom (slice 2).
 - [ ] **V-09** A 50-thing graph is drawn in under half a second on the phone (§11).
 - [ ] **V-10** A huge graph (over 2,000 things, made by a script) shows its text with a banner — an icon, and the limit and
       the numbers in words — and Obsidian stays responsive: the note scrolls and other blocks draw while it is checked. On
@@ -48,11 +51,12 @@ holds the two together).
 ## Zoom — spec §3
 
 - [ ] **Z-01** Desktop: the mouse wheel alone scrolls the note. With Ctrl or Command it zooms about the pointer, and so does a
-      trackpad pinch.
+      trackpad pinch, a little quicker than the fingers move.
 - [ ] **Z-02** Desktop: dragging empty space pans once zoomed in. Plus, minus and zero work when the drawing has focus.
-- [ ] **Z-03** Phone: one finger on a fitted drawing scrolls the note. A pinch zooms about the fingers, and once zoomed in, one
-      finger pans.
-- [ ] **Z-04** Double-clicking or double-tapping empty space zooms in there. Fit returns to the whole drawing.
+- [ ] **Z-03** Phone: one finger on a fitted drawing scrolls the note. A pinch zooms about the fingers, a little quicker than
+      they move, and once zoomed in, one finger pans.
+- [ ] **Z-04** Double-clicking or double-tapping empty space zooms in there; on or near a box or a link it only chooses, and
+      never zooms. Fit returns to the whole drawing.
 - [ ] **Z-05** Zoom stops at a quarter and at four times natural size, and text stays sharp at every level.
 - [ ] **Z-06** Full screen covers the window, inside the phone's notch and home bar. Escape or Close leaves it. In full screen
       the wheel alone zooms.
@@ -75,7 +79,9 @@ holds the two together).
 - [ ] **P-02** The text is coloured as gql-highlight colours it, and each line is read back in plain English beside it.
 - [ ] **P-03** Typing a misspelt name underlines it with a ⚠. Its fix is offered on that line, and pressing it fixes the text.
 - [ ] **P-04** Names, kinds and relationships already in the graph are suggested while typing. On the desktop, Tab takes the first.
-- [ ] **P-05** What is typed reaches the note within about a third of a second, and the drawing follows.
+- [ ] **P-05** What is typed reaches the note within about a third of a second, and the drawing follows. Renaming or moving the
+      note while typing changes nothing: what is typed next still reaches it. Deleting the note while typing keeps what
+      was typed as a draft, and the pane says so; the command Recover kept drafts into a new note writes it into a note.
 - [ ] **P-06** Editing the same block in the note while typing in the pane: the pane reloads the block, says what was typed is
       kept as a draft, and Restore draft brings it back.
 - [ ] **P-07** Undo and Redo take back and put back each change in the note.
@@ -112,7 +118,7 @@ holds the two together).
 - [ ] **I-01** Edit here opens the text inside the drawing's card, and typing there redraws the drawing without losing the place.
 - [ ] **I-02** Straight after the app starts or reloads, and on a card far down a long note scrolled to only then: Edit here
       opens the editor in that card, and Done closes it with what was typed in the note. Edit here never does nothing
-      without saying why.
+      without saying why. Pressed twice quickly, it opens one editor, with the focus in it, never two.
 - [ ] **I-03** In the card, the text box is as tall as the text and one more line: no empty area below it for the caret to land
       in. Each read-back sits on its own line's right, never wrapping under it, and typing lands where the text shows.
       iPhone ✓ 5cfeac6, 8 Oct 2026.
@@ -121,7 +127,8 @@ holds the two together).
 - [ ] **I-05** Typing in the card, character by character, redraws the drawing and never takes the focus from the box: the caret,
       the selection and where it is scrolled stay put. Typing a comma at a line's end keeps the box in its card.
       Undo (⌘Z, or Edit → Undo, or the phone's undo gesture) takes back a run of typing at a time, even after redraws.
-      Mac ✓ 3d34e0d, reading view, 9 Oct 2026 (traced in the app); Live Preview and the phone to come.
+      A line added above the block, or taken away, while the card is edited keeps the box in its card, with its selection
+      and its undo history. Mac ✓ 3d34e0d, reading view, 9 Oct 2026 (traced in the app); Live Preview and the phone to come.
 - [x] **I-06** Desktop: hovering the mouse over the box in the card, and clicking into it, never turns it grey or hides its
       coloured text, and no tooltip appears over it. Mac ✓ d601110, 8 Oct 2026.
 - [ ] **I-07** While the card is being edited, its pencil shows as a book (view) icon. Pressing it writes what was typed and
@@ -162,8 +169,19 @@ holds the two together).
       yet". Outside edit mode nothing can be written there; the note is unchanged. While editing, tapping it selects
       `(:Option {name: 'Small reader'})` in the text, and the details offer "Add the name small_reader". Pressing it
       writes the name after the `(`, the box is redrawn solid and unlabelled, and the warning leaves the problems list.
-      One undo (⌘Z, or the phone's gesture) takes the name back out, and the dashed box and the warning return. Phone:
-      the button is easy to hit in the sheet (slice 2, unnamed_drawn_suggested).
+      One undo (⌘Z, or the phone's gesture) takes the name back out, and the dashed box and the warning return. While
+      the name is not written, nothing else writes it: Park it, Save path (a path through it), Write the view (a view
+      picking it), a property changed or made a list, and Save as shown with it selected are each refused with a message
+      beginning "accept its name first", and the note is unchanged. Phone: the button is easy to hit in the sheet
+      (slice 2, unnamed_drawn_suggested).
+- [ ] **I-20** Edit here on a card, press Add a thing: it asks for the thing's text first, with the focus in it. Type some
+      (such as "Small reader"): the name suggested from it appears, in the style of the names already in the graph and not
+      one of them, small_reader, and the text of the block is unchanged. Give the kind Option and press Add the thing:
+      `(small_reader:Option {name: 'Small reader'})` is written after the block's last item, the name shown is the name
+      written, and one undo takes it back out. A name typed in its own field is kept as the text changes. No text, a name
+      the graph has, more than one word, a word the language keeps, or a kind the graph keeps for its schema is refused
+      in words and nothing is written. Enter in a field adds the thing and Escape cancels.
+      Desktop and phone: every field and button is easy to hit (slice 2, add_thing).
 
 ## The style graph — spec §2, §6
 
@@ -197,7 +215,8 @@ holds the two together).
 
 - [ ] **D-01** Edit here on a card, tap a box, press Park for later, fill what is needed and why, press Park it: a Deferred is
       written into the block; when the card redraws, the box is dashed with "⏳ later" at its top right, readable in light
-      and dark, and the badge says "No problems, 1 parked" (slice 2, park_for_later, deferred_drawn, parked_not_broken).
+      and dark, and the badge says "No problems, 1 parked". On a box drawn under a suggested name (I-19), Park it is refused
+      with "accept its name first", and nothing is written (slice 2, park_for_later, deferred_drawn, parked_not_broken).
 - [ ] **D-02** Change its revisit_by to a day in the past: the mark says "⏳ overdue", the badge adds "1 overdue", and the list
       behind the badge names it with what is needed. VoiceOver reads the box as "parked for later, overdue".
 - [ ] **D-03** In a locked graph whose schema does not declare Deferred and DEFERS, Edit here, tap a box, press Park for later,
@@ -214,7 +233,8 @@ holds the two together).
 
 - [ ] **T-01** Edit here, press Record a path, tap three boxes: each shows its number at its top left as it is tapped (a box
       tapped twice shows both). Undo step takes the last back. Give a title and Save path: a Path with STEP 1 to 3 is
-      written; the card redraws (slice 2, record_and_play, walked_path_is_data, steps_numbered).
+      written; the card redraws. A path through a box drawn under a suggested name (I-19) is refused with "accept its name
+      first", and nothing is written (slice 2, record_and_play, walked_path_is_data, steps_numbered).
 - [ ] **T-02** Press Play <title>: "Step 1 of 3: …" is shown and read by VoiceOver, the box outlined heavier; Next and Previous
       move one step, and stop at the ends; Stop playing clears it. Desktop and phone, light and dark.
 - [ ] **T-03** Rename one stepped thing: the problem names the step and offers Remove the step; pressing it renumbers the later

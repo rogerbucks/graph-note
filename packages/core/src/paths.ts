@@ -9,6 +9,7 @@ import { quoted } from './lock.ts';
 import { nameFromText } from './name-suggestions.ts';
 import type { NoteReading, Problem } from './note-reading.ts';
 import { removal } from './path-edits.ts';
+import { acceptNameFirst } from './suggested-names.ts';
 import { S, trim } from './whitespace.ts';
 import { writtenIn } from './written-things.ts';
 import type { Written } from './written-things.ts';
@@ -85,6 +86,9 @@ function refusal(reading: PathReading, graph: string, g: Graph, title: string, s
     if (bar)
       return `${key} is a ${bar}, which a step cannot be: a path's steps are facts (graph spec §22 rules 1 and 3)`;
   }
+  // a step drawn under a suggested name would write that name without its fix (§4, unnamed_drawn_suggested)
+  const first = acceptNameFirst(reading, graph, steps);
+  if (first) return first;
   // a locked graph takes only the kinds and types its schema declares (§5)
   const schema = g.labelled('ElementType').length ? g : gs.schemaFor(reading.whole, graph)[1];
   const types = schema ? schema.labelled('ElementType').map((i) => schema.p(i)) : [];
@@ -101,7 +105,8 @@ function refusal(reading: PathReading, graph: string, g: Graph, title: string, s
  * n in the order given (a walk may revisit, so a thing may be stepped to twice), comma-joined as the other patterns are,
  * the block's own text kept as it was. The id is fresh, in the style of the graph's names. A long title goes over two
  * lines, the second indented by `indent` (spec §21). Refused, with the reason, when there is no title, no step, a step
- * that is not a fact in the graph, or a locked graph that does not declare Path and STEP; nothing is then written.
+ * that is not a fact in the graph, one drawn only under a suggested name (accept its name first), or a locked graph that
+ * does not declare Path and STEP; nothing is then written.
  */
 export function pathBlock(
   reading: PathReading,

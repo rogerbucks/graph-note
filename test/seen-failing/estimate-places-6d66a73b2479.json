@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/estimate-places.test.js",
+  "test": "a misspelt name is fixed where the path names it > a path naming the misspelt name twice: one press fixes both, as the sentence says",
+  "seen_failing_first": false,
+  "evidence": "Pins a rule already in estimate-places.ts (!place keeps the first reference as the fix's place, the rest as also), untested until the re-review of #85. Seen failing with !place removed by hand: only the second reference was fixed. Reverted, 11 Oct 2026."
+}

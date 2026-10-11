@@ -2,7 +2,7 @@
 // shown as coloured code. A graph is never blank: what can be read is drawn and the rest is listed; when nothing can be
 // read, or the engine cannot start, or the graph is over a size or time limit (spec §9), the text is shown with its
 // problems or a banner.
-import { MarkdownRenderChild, Notice } from 'obsidian';
+import { MarkdownRenderChild, Notice, TFile } from 'obsidian';
 import type { Component, MarkdownPostProcessorContext } from 'obsidian';
 import {
   completenessReport,
@@ -13,6 +13,7 @@ import {
   parked,
   readNote,
   readStyle,
+  replaceBlock,
   styleOf,
   viewsOf,
   underStrictness,
@@ -56,6 +57,30 @@ function asText(
       renderCode(root, source);
     } else editing.mount(at);
   });
+}
+
+/**
+ * Writes one block of the note at `path`, whose fence is on 1-based line `fence` (a `Block`'s line), as `now`, through
+ * the vault and against the note as it is then, only while the block is still `was`: an estimated link's quick fix
+ * (§3). Resolves to why nothing was written, or null.
+ */
+async function writeBlock(
+  plugin: GraphNotePlugin,
+  path: string,
+  fence: number,
+  was: string,
+  now: string,
+): Promise<string | null> {
+  const file = plugin.app.vault.getAbstractFileByPath(path);
+  if (!(file instanceof TFile)) return 'The note is not there any more, so nothing was written.';
+  let refused: string | null = null;
+  await plugin.app.vault.process(file, (note) => {
+    const r = replaceBlock(note, { line: fence - 1, text: was }, now);
+    if (r.ok) return r.note;
+    refused = 'The block has changed since it was drawn, so nothing was written.';
+    return note;
+  });
+  return refused;
 }
 
 /**
@@ -224,9 +249,13 @@ export async function renderBlock(
       },
       // edit here: the editor in place sits in the card; one already open for this block moves into the redrawn card
       // a card just put on the page is acted on at once; one not yet on it says so, rather than doing nothing
-      onEditHere: () => {
+      // given `at`, such as an estimated link's Edit the link (§3), the editor opens with where it is written selected
+      onEditHere: (at) => {
         if (!slot) settlePlacements();
-        if (slot) void plugin.editHere(target, slot);
+        if (slot)
+          void plugin.editHere(target, slot).then(() => {
+            if (at) plugin.inlineFor(target.path, target.line)?.reveal(at);
+          });
         else
           new Notice('This drawing is not on the page yet, so it cannot be edited here; edit it in the pane instead.');
       },
@@ -240,6 +269,7 @@ export async function renderBlock(
       },
       editing: () => plugin.inlineFor(target.path, target.line),
       onSelect: (chosen) => plugin.inlineFor(target.path, target.line)?.reveal(chosen),
+      writeBlock: (n, was, now) => writeBlock(plugin, target.path, blocks[n]?.line ?? 0, was, now),
       ...(info ? {} : { readOnly: () => true }),
     }),
   );

@@ -388,3 +388,41 @@ describe('a name or a text suggested for a thing', () => {
     assert.match(ds[0].message, /suggested: medium_reader/);
   });
 });
+
+// editor spec §4, unnamed_drawn_suggested: nothing is written until the thing's own fix is accepted, so a name only
+// suggested is never offered to be typed into the note, nor named in a fix for something else
+describe('a name only suggested is never offered as a word to write', () => {
+  const TEXT = "// graph: g\n(a:X {name: 'A'}),\n(:X {name: 'Small reader'}),\n(a)-[:R]->(a)";
+  const labels = (text, caret = text.length) =>
+    completions(readNote([text]), 'g', text, caret).items.map((i) => i.insertText ?? i.label);
+
+  test('the names offered after a ( leave out a thing drawn under a suggested name', () => {
+    assert.deepEqual(labels(TEXT + ',\n(a)-[:R]->(sm'), [':X'], 'only the kind a new thing could take');
+    assert.deepEqual(labels(TEXT + ',\n(a)-[:R]->('), ['a']);
+    assert.ok(!labels(TEXT + ',\n(a)-[:R]->(sm').includes('small_reader'));
+  });
+
+  test('once the name is written it is offered, as any name is', () => {
+    const named = TEXT.replace('(:X', '(small_reader:X');
+    assert.deepEqual(labels(named + ',\n(a)-[:R]->(sm'), ['small_reader']);
+  });
+
+  test('an inline completion never finishes a name to the suggested one', async () => {
+    const { inlineCompletion } = await import('../src/autocomplete.ts');
+    const text = TEXT + ',\n(a)-[:R]->(sm';
+    const found = inlineCompletion(readNote([text]), 'g', text, text.length);
+    assert.ok(!found || !found.add.includes('all_reader'), JSON.stringify(found));
+  });
+
+  test('a near miss of the name is no estimate, so no fix changes a word to it', () => {
+    const text = TEXT.replace(',\n(a)-[:R]->(a)', ',\n(a)-[:R]->(smal_reader)');
+    const r = readNote([text]);
+    assert.deepEqual(r.graphs.get('g').estimates, []);
+    const [p] = r.problems.filter((x) => x.message.includes('smal_reader') && !x.suggested);
+    assert.match(p.message, /^no thing called smal_reader in graph g/);
+    assert.equal(p.replace, undefined, 'no word to change');
+    assert.ok(!r.problems.some((x) => /small_reader/.test(x.fix) && x.suggested === undefined), 'no fix names it');
+    const fixes = diagnostics(r, 'g', 0, text, URI).flatMap((d) => d.data.fixes.map((f) => f.title));
+    assert.ok(!fixes.some((t) => t.includes('small_reader') && !t.startsWith('Add the name')), fixes.join(' | '));
+  });
+});

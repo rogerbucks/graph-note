@@ -8,6 +8,7 @@ import { renderProperties } from '../properties/properties';
 import { problemText } from './problems-list';
 import { showSuggested } from './suggested-name';
 import { parkButton, parkedNote } from './parked';
+import { estimateActions } from './estimate-actions';
 import { button } from './view-bar';
 import type { ViewOptions } from './view-options';
 
@@ -33,12 +34,16 @@ export class DetailsPanel {
     this.o = o;
   }
 
-  /** Marks the box or link whose details are open — a heavier line, and pressed for screen readers — and only that one. */
-  private select(key: string | null, link: number | null = null): void {
+  /**
+   * Marks the box, link or estimated link whose details are open — a heavier line, and pressed for screen readers — and
+   * only that one.
+   */
+  private select(key: string | null, link: number | null = null, estimate: number | null = null): void {
     for (const g of Array.from(this.svg.querySelectorAll('g.node, g.edge'))) {
       const on =
         (key !== null && g.getAttribute('data-key') === key) ||
-        (link !== null && g.getAttribute('data-link') === String(link));
+        (link !== null && g.getAttribute('data-link') === String(link)) ||
+        (estimate !== null && g.getAttribute('data-estimate') === String(estimate));
       g.classList.toggle('is-selected', on);
       if (g.hasAttribute('aria-pressed')) g.setAttribute('aria-pressed', String(on));
     }
@@ -107,12 +112,16 @@ export class DetailsPanel {
     else this.showLink(shown.link);
   }
 
-  /** What tapping an estimated link shows: in a sentence, what was written, what it was taken to mean, and the fix. */
-  showEstimate(e: Estimate): void {
-    this.select(null);
+  /**
+   * What tapping estimated link `index` shows, selected as any link is: in a sentence, what was written, what it was
+   * taken to mean, and the fix; then the quick fix that accepts it, and Edit the link.
+   */
+  showEstimate(e: Estimate, index: number): void {
+    this.select(null, null, index);
     this.shown = null;
     const el = this.panel('⚠ Estimated link', 'a guess, not written');
     el.createEl('p', { text: e.explain.replace(/^Line \d+/, `Line ${this.o.lineOf(e)}`) });
+    estimateActions(el, index, this.o);
   }
 
   /** What tapping a box shows: its text, kind, links in and out, and any problem on it. */
@@ -162,13 +171,15 @@ export class DetailsPanel {
           if (this.o.editing?.() === ed) ed.replace(t);
         },
         this.o.indent ?? 'four',
-        this.o.reading.whole[this.o.graph], // a thing written in another block of the graph is found
+        this.o.graph,
         // the fix for a locked graph whose schema lacks Deferred and DEFERS: only while this editor is still open on the
         // card, as for every write here, so a control left from before Done declares nothing
         () =>
           this.o.editing?.() === ed
             ? ed.declareDeferred()
             : Promise.reject(new Error('The block is no longer being edited, so nothing was declared.')),
+        // the note as it is now: a thing written in another block is found, and one only suggested is not parked (§4)
+        () => ed.session?.current() ?? this.o.reading,
       );
   }
 
@@ -183,6 +194,7 @@ export class DetailsPanel {
     const text = () => ed.session?.text ?? '';
     renderProperties(el, {
       reading: this.o.reading,
+      now: () => ed.session?.current() ?? this.o.reading,
       graph: this.o.graph,
       target,
       kind,

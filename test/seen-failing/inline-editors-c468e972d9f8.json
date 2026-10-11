@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/inline-editors.test.js",
+  "test": "an editor in place is released with its card > after Done, the editor listens to the vault no more: a rename then changes nothing of it",
+  "seen_failing_first": false,
+  "evidence": "The code already released an editor's vault listeners on Done, through registerEvent; it was the test host that could not show a leak, as its registerEvent did nothing (review of #91, 11 Oct 2026). Fixed in the same commit, the host now releases on unload and counts the vault's listeners, so this test pins the release and would fail on a listener left behind."
+}

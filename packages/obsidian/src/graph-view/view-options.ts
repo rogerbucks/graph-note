@@ -15,7 +15,11 @@ export interface DeclaredDeferred {
 
 /** The editor open in place on this card, as the inspector needs it: the block's text as typed, and a way to replace it. */
 export interface Editing {
-  session: { text: string } | null;
+  /**
+   * The block as typed, and `current()`: the note as last seen, with what is typed in the block's place, which an edit
+   * written into the block is checked against (§4), never the card's drawing, which can be older than the note.
+   */
+  session: { text: string; current(): NoteReading } | null;
   replace(text: string): void;
   /** Park for later's fix for a graph whose schema lacks Deferred and DEFERS: declares them, wherever the schema is written. Rejects with why not. */
   declareDeferred(): Promise<DeclaredDeferred>;
@@ -24,6 +28,9 @@ export interface Editing {
   /** The lists made while the editor is open, which the inspector shows even before they hold a value. */
   lists?: DeclaredList[];
 }
+
+/** A box, a link or an estimated link chosen in the drawing, as the editor finds where it is written (§3, §4). */
+export type Chosen = { thing: string } | { link: number } | { estimate: number };
 
 /** What a drawing needs: the reading, the graph, its drawn SVG and problems, where it is shown, and what its buttons do. */
 export interface ViewOptions {
@@ -51,8 +58,8 @@ export interface ViewOptions {
   exporting?: Exporting;
   /** Writes a view block after the graph's last block in the note (§7, views_by_tapping); resolves to why not, or null. */
   writeView?: (block: string) => Promise<string | null>;
-  /** Edit here: opens the text in place, inside this card (spec §4). */
-  onEditHere?: () => void;
+  /** Edit here: opens the text in place, inside this card (spec §4); given `at`, with where it is written selected. */
+  onEditHere?: (at?: Chosen) => void;
   /** While the card is edited, its edit button closes the editor, as its Done does (spec §4). */
   onDoneEditing?: () => void;
   /** Tells the card each time an editor in place opens or closes; returns how to stop. */
@@ -60,7 +67,12 @@ export interface ViewOptions {
   /** Called once the card is built, with the place in it where the editor in place sits. */
   onReady?: (slot: HTMLElement) => void;
   /** A box or a link chosen in the drawing: the editor of its block, if one is open, selects where it is written (§4). */
-  onSelect?: (target: { thing: string } | { link: number }) => void;
+  onSelect?: (target: Chosen) => void;
+  /**
+   * Writes block `block` of the note (its index) as `now`, only while it is still `was`, as drawn: an estimated link's
+   * quick fix (§3) when no editor holds the block. Resolves to why nothing was written, or null.
+   */
+  writeBlock?: (block: number, was: string, now: string) => Promise<string | null>;
   /** The editor open in place on this card, if any: then the details are the inspector (spec §14). */
   editing?: () => Editing | undefined;
   /** For a card opened from another, as full screen is: read-only whenever the card it was opened from is (spec §3). */

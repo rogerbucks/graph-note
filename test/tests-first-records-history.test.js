@@ -5,6 +5,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { RECORDS, exceptionsIn, readRecords, summary } from '../scripts/tests-first-records.mjs';
+import { faultReasonsWithoutFault } from '../scripts/tests-first-faults.mjs';
 import { path, exists, walk } from './repository/repo.js';
 
 describe('this repository’s records', () => {
@@ -67,9 +68,15 @@ describe('this repository’s records', () => {
     const passed = Object.entries(proved.files).flatMap(([file, e]) =>
       e.passedFirst.map((p) => `${file} :: ${p.name}`),
     );
-    const excused = Object.entries(exceptions).flatMap(([file, names]) =>
-      Object.keys(names).map((n) => `${file} :: ${n}`),
-    );
+    // a reason with `fault` excuses a test recorded as failing at its own commit, which a reason for passing first does not
+    assert.deepEqual(faultReasonsWithoutFault(path('.')), [], 'a fault reason for a commit that is no recorded fault');
+    const named = (wanted) =>
+      Object.entries(exceptions).flatMap(([file, names]) =>
+        Object.entries(names)
+          .filter(([, reason]) => Boolean(reason.fault) === wanted)
+          .map(([n]) => `${file} :: ${n}`),
+      );
+    const excused = named(false);
     // a test new in a commit whose run against the code before it did not finish was neither seen failing nor passing:
     // a reason may be kept for it
     const unproved = Object.entries(proved.files).flatMap(([file, e]) =>

@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/inline-editors.test.js",
+  "test": "Edit here pressed again while the editor opens > into a newer card: the editor goes there once it is made, never half made, and has the focus",
+  "seen_failing_first": false,
+  "evidence": "Pins the wait for the opening that #91's first commit added, which the review of #91 (11 Oct 2026) asked to see tested. Seen failing with the wait taken out of inline-editors.ts: the newer card showed 'This note has no graph block to edit.' while the editor was still opening."
+}

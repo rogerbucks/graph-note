@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/estimate-places.test.js",
+  "test": "a misspelt name is fixed where the path names it > two paths written alike on one line: the second estimate fixes the second, each item taken once",
+  "seen_failing_first": false,
+  "evidence": "Pins a rule already in estimate-places.ts (the used set), untested until the re-review of #85. Seen failing with !this.used.has(i) removed by hand: the second estimate fixed the first word. Reverted, 11 Oct 2026."
+}

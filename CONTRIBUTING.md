@@ -11,8 +11,12 @@ CI. A change that breaks one fails before it is merged.
   every test new in the commit must fail there. A test written after its code, such as one that pins behaviour that
   already existed, has its reason in `test/seen-failing/`, or the build fails: one file for each test, written by `node
   scripts/tests-first.mjs --excuse <test file> <test> <reason>` and named after the test file and a digest of the test.
-  A reason holds only `file`, `test`, `seen_failing_first` and `evidence`; `--excuse` never overwrites one without
-  `--force`. `test/tests-first/` records the replays (`node scripts/tests-first.mjs --update`): one file for each
+  A reason holds only `file`, `test`, `seen_failing_first`, `evidence` and, for a fault, `fault` (true) and `commits`; `--excuse` never
+  overwrites one without `--force`, and its flags come before its arguments. `--excuse --fault` keeps the reason a
+  recorded fault (a test that failed at its own commit) is accepted, and which commit fixed it; it names every commit
+  at which the records hold the fault, so a later fault of the same test is not excused, and it refuses a fault in a file none of whose tests
+  could run, which the replay did not replay at all; `--tally` and `summary` then count it as `faultsExcused`, not as
+  not replayed, leaving `excused` for the passed-first reasons. `test/tests-first/` records the replays (`node scripts/tests-first.mjs --update`): one file for each
   replayed commit that changed a test, named after the commit, over `baseline.json`, the single record as it stood when
   it was split (11 Oct 2026), frozen at its head. Together they give, for each test file, what was seen failing first,
   what was excused, and what could not be replayed. CI fails a commit since the baseline that changed a test and has no
@@ -154,6 +158,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/device-check-notes.test.js` — the device checklist numbers every item, the test vault holds one note for each item after Before in `Device checks/`, the note's checklist line is the item's words, each note's graph blocks read as it says they do (the repository's reader and checker, and `parseView` for a view), and the index lists the notes in order (editor spec §3, tried first in a test vault).
 - `test/device-check-quotes.test.js` — what a device check note quotes from Obsidian's screen (a read-back, a label, the tap text of an estimate, a box's details, an export's footer and file name, the conversion notice) is computed from the note's own graph blocks with the real functions and matches exactly; the notes' generator scripts and filler set up the case they describe (editor spec §3).
 - `test/engine-version.test.js` — the Graphviz version is read from the engine, named in the notices, and checked against published advisories.
+- `test/ignore-entries.test.js` — an entry of `.ignore` that git ignores as build output may be missing in a fresh checkout, and any other entry that names a file must exist, so a misspelt path is caught.
 - `test/licences.test.js` — licences through the whole build chain.
 - `test/offline.test.js` — the bundled engine makes no network request.
 - `test/policy.test.js` — the plugin-store files, supply-chain pins and least-privilege CI.
@@ -170,7 +175,8 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/tests-first-command.test.js` — that replay's command line, run as CI and a person run it: `--check`, `--excuse` and `--migrate`.
 - `test/tests-first-complete.test.js` — that command line's `--complete`: a commit that changed a test and has no record fails, until `--update` records it.
 - `test/tests-first-failing.test.js` — that replay when a new test fails at its own commit: kept in the record as not replayed, or, when it passes run again, a failure of the record.
-- `test/tests-first-faults.test.js` — that replay when something at the commit's own code cannot be trusted: a commit that cannot be replayed, a record updated over what it holds.
+- `test/tests-first-faults.test.js` — `--excuse --fault` keeps the reason a test failed at its own commit, only for a test the records hold as a fault; `--tally` and `summary` count it as `faultsExcused`, not as not replayed, and `--check` does not warn of it.
+- `test/tests-first-keeping.test.js` — that replay when something at the commit's own code cannot be trusted: a commit that cannot be replayed, a record updated over what it holds.
 - `test/tests-first-later.test.js` — that replay when the test and its code do not come together: a test corrected later, one that comes before its code, a new file whose code is not there yet, test support changed with it.
 - `test/tests-first-passed.test.js` — that replay when a new test passes against the code before it: reported, unless a reason is kept, and never excused by a name every object has.
 - `test/tests-first-python.test.js` — that replay over a Python test, and a failure inside a subTest read as a failure.

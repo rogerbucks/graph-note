@@ -6,7 +6,7 @@
 // suite runs them side by side: each makes git repositories and runs Node over them, a second or two a test, and the
 // tests of one file run one after the other (11 Oct 2026). This file holds how a replay judges a new test that fails
 // first, or moves; the rest are tests-first-passed (a test that passes first), tests-first-later (code that comes
-// later), tests-first-python, tests-first-unfinished, tests-first-faults and tests-first-failing.
+// later), tests-first-python, tests-first-unfinished, tests-first-keeping and tests-first-failing.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { replay, unexplained } from '../scripts/tests-first.mjs';

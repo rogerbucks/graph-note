@@ -80,8 +80,13 @@ export function parkButton(
   text: () => string,
   replace: (next: string) => void,
   indent: Indent,
-  whole?: Graph,
-  declare?: () => Promise<DeclaredDeferred>,
+  graph: string,
+  declare: (() => Promise<DeclaredDeferred>) | undefined,
+  /**
+   * The note as it is now, with what is typed: the thing is found in it, and one only suggested in it is not parked until
+   * its name is written (§4). Never the card's drawing, which can be older than the note.
+   */
+  now: () => NoteReading,
 ): void {
   const holder = el.createDiv({ cls: 'graph-note-park' });
   button(holder, 'Park for later', 'clock', () => {
@@ -96,15 +101,16 @@ export function parkButton(
     const said = holder.createDiv({ attr: { role: 'alert' } });
     const fix = holder.createDiv();
     // the block with the Deferred written into it, from the form as it is now; throws why it cannot
-    const parked = (block: string, graph?: Graph) => {
+    const parked = (block: string, whole?: Graph) => {
       const park = { what: what.value, why: why.value, ...(by.value ? { revisitBy: by.value } : {}) };
-      return parkForLater(block, key, park, indentText(indent), graph);
+      const reading = now();
+      return parkForLater(block, key, park, reading, indentText(indent), whole ?? reading.whole[graph]);
     };
     const refused = (e: unknown) => said.setText(String((e as Error).message));
     const parkIt = button(holder, 'Park it', 'check', () => {
       fix.empty();
       try {
-        replace(parked(text(), whole));
+        replace(parked(text()));
       } catch (e) {
         refused(e);
         if (declare && e instanceof DeferredNotDeclared) {
@@ -122,7 +128,7 @@ export function parkButton(
       try {
         // the form as it is now is checked first, so nothing is declared for a park that would fail
         try {
-          replace(parked(text(), whole));
+          replace(parked(text()));
         } catch (e) {
           if (!(e instanceof DeferredNotDeclared)) throw e;
           const declared = await declareIt();

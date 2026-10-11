@@ -10,6 +10,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { exists, path, read, readJSON, walk } from './repository/repo.js';
 import { testsForChanges } from '../scripts/changed-tests.mjs';
+import { ignoreEntries, missingIgnoreEntries } from '../scripts/ignore-entries.mjs';
 
 // a run inside another test run would report to it, not print its own report
 const { NODE_TEST_CONTEXT: _context, ...CLEAN_ENV } = process.env;
@@ -243,7 +244,10 @@ describe('a quiet Python run', () => {
 
   test('npm run test:ai:py runs it inside the Python library’s environment', () => {
     const script = readJSON('package.json').scripts['test:ai:py'];
-    assert.match(script, /^uv run .*--directory python\/graph_spec .*scripts\/quiet_unittest\.py$/);
+    assert.match(
+      script,
+      /^node scripts\/run-ceiling\.mjs uv run .*--directory python\/graph_spec .*scripts\/quiet_unittest\.py$/,
+    );
     assert.ok(exists('scripts/quiet_unittest.py'));
   });
 
@@ -523,7 +527,7 @@ describe('a short guide for AI sessions', () => {
 
   test('it says which files never to read, and names each file the search ignores', () => {
     assert.match(guide(), /never to read/i);
-    for (const entry of ignored()) assert.ok(guide().includes(`\`${entry}\``), entry);
+    for (const entry of ignoreEntries(path('.'))) assert.ok(guide().includes(`\`${entry}\``), entry);
   });
 
   test('it tells a session to stop and ask when a guard or hook refuses, with the one exception', () => {
@@ -556,17 +560,9 @@ describe('a short guide for AI sessions', () => {
   });
 });
 
-/** The paths .ignore lists, comments and blank lines left out. */
-function ignored() {
-  return read('.ignore')
-    .split('\n')
-    .map((l) => l.trim())
-    .filter((l) => l && !l.startsWith('#'));
-}
-
 describe('generated and bulky files kept out of code searches', () => {
   test('.ignore holds the built checker, the lock files, the build output and the generated records', () => {
-    const entries = ignored();
+    const entries = ignoreEntries(path('.'));
     for (const e of [
       'packages/graph-spec/dist/',
       'package-lock.json',
@@ -582,7 +578,7 @@ describe('generated and bulky files kept out of code searches', () => {
   });
 
   test('every entry that is a file in the repository exists, so none is a typing slip', () => {
-    for (const e of ignored().filter((x) => !x.endsWith('/') && x !== 'main.js')) assert.ok(exists(e), e);
+    assert.deepEqual(missingIgnoreEntries(path('.')), []);
   });
 
   test('a code search no longer lists the lock file or the record, and still lists the code', () => {

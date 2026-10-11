@@ -1,5 +1,5 @@
 // The replay of a commit (tests-first.test.js) when a new test fails at its own commit: it is kept in the record as not
-// replayed, or, when it passes run again, fails the record. Split from tests-first-faults.test.js on 11 Oct 2026, so the
+// replayed, or, when it passes run again, fails the record. Split from tests-first-keeping.test.js on 11 Oct 2026, so the
 // suite runs them side by side.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

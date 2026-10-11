@@ -11,9 +11,12 @@
 //   node scripts/tests-first.mjs --record            replay every commit since the baseline afresh
 //   node scripts/tests-first.mjs --complete          exit 1 on a commit since the baseline that changed a test and has
 //                                                    no record (CI), so each is recorded on its own branch
-//   node scripts/tests-first.mjs --excuse [--force] <test file> <test> <reason>
+//   node scripts/tests-first.mjs --excuse [--force] [--fault] <test file> <test> <reason>
 //                                                    keep the reason a test passed first, in test/seen-failing/; one
-//                                                    kept already is replaced only with --force
+//                                                    kept already is replaced only with --force. With --fault, the
+//                                                    reason a test failed at its own commit, so was not replayed (and
+//                                                    which commit fixed it): only for a test the records hold as a
+//                                                    fault. --tally counts it excused, and --check does not warn of it
 //   node scripts/tests-first.mjs --migrate           move the old single files, test/tests-first.json and
 //                                                    test/seen-failing.json, over into those folders
 //   node scripts/tests-first.mjs --tally             print what the records prove as one JSON document on stdout, for a
@@ -33,21 +36,13 @@
 // naming it: a test may come a commit before its code (Roger, 10 Oct 2026). But one that passes the second time, a run
 // at the commit's own code that did not finish, or a commit whose replay fails, is not known to be either: it fails the
 // record, naming the commit and the file, and nothing is written. --check warns of all.
-// One run of one test file, and what it shows, is scripts/tests-first-run.mjs.
+// One run of one test file, and what it shows, is scripts/tests-first-run.mjs; a commit's checkout, tests-first-checkout.mjs.
 import { execFileSync, spawnSync } from 'node:child_process';
-import {
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  symlinkSync,
-  writeFileSync,
-} from 'node:fs';
-import { tmpdir } from 'node:os';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, basename, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { checkout } from './tests-first-checkout.mjs';
+import { excuseFault } from './tests-first-faults.mjs';
 import { JS_TEST, PY_TEST, run } from './tests-first-run.mjs';
 import {
   RECORDS,
@@ -55,9 +50,10 @@ import {
   changes,
   exceptionsIn,
   excuse,
-  excused,
+  faultExcused,
   history,
   migrate,
+  plainExcused,
   readRecords,
   removeRecord,
   summary,
@@ -71,31 +67,6 @@ const HERE = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SUPPORT = /(^|\/)(test|tests)\//;
 
 const git = (repo, ...args) => execFileSync('git', args, { cwd: repo, encoding: 'utf8', maxBuffer: 1 << 28 }).trim();
-
-/** A detached checkout of a commit, wired to the repository's installed packages, with its own workspace links. */
-function checkout(repo, commit) {
-  const dir = mkdtempSync(join(tmpdir(), 'tests-first-wt-'));
-  rmSync(dir, { recursive: true, force: true });
-  git(repo, 'worktree', 'add', '-q', '--detach', dir, commit);
-  const modules = join(repo, 'node_modules');
-  if (existsSync(modules)) {
-    // the installed packages, but this checkout's own workspace packages, so its code is what runs
-    mkdirSync(join(dir, 'node_modules'));
-    for (const name of readdirSync(modules))
-      if (name !== '@graph-note') symlinkSync(join(modules, name), join(dir, 'node_modules', name));
-    mkdirSync(join(dir, 'node_modules', '@graph-note'));
-    const packages = join(dir, 'packages');
-    for (const p of existsSync(packages) ? readdirSync(packages) : []) {
-      const manifest = join(packages, p, 'package.json');
-      if (!existsSync(manifest)) continue;
-      const name = JSON.parse(readFileSync(manifest, 'utf8')).name ?? '';
-      if (name.startsWith('@graph-note/')) symlinkSync(join(packages, p), join(dir, 'node_modules', name));
-      const own = join(repo, 'packages', p, 'node_modules');
-      if (existsSync(own)) symlinkSync(own, join(packages, p, 'node_modules'));
-    }
-  }
-  return { dir, done: () => git(repo, 'worktree', 'remove', '--force', dir) };
-}
 
 /** The test folder a test file sits in: a package's test/ or tests/, or the repository's own test/. */
 const testFolder = (f) => /^(.*?\/?(?:test|tests)\/)/.exec(f)?.[1] ?? '';
@@ -257,7 +228,7 @@ export function unexplained(replays, exceptions) {
   return replays.flatMap((r) =>
     r.files.flatMap((f) =>
       f.passedFirst
-        .filter((name) => !excused(exceptions, f.file, name))
+        .filter((name) => !plainExcused(exceptions, f.file, name))
         .map((name) => ({ commit: r.commit, file: f.file, name })),
     ),
   );
@@ -328,10 +299,20 @@ if (process.argv[1] && basename(process.argv[1]) === 'tests-first.mjs') {
   const given = process.argv.slice(2);
   const repo = given[0] === '--repo' ? resolve(given[1] ?? '') : HERE;
   const [mode, ...rest] = given[0] === '--repo' ? given.slice(2) : given;
-  const force = mode === '--excuse' && rest[0] === '--force';
-  const args = force ? rest.slice(1) : rest;
+  // --excuse takes --force and --fault, in either order, and only before its three arguments: one after them is not
+  // a flag but an argument, and the usage is printed
+  const isFlag = (a) => a === '--force' || a === '--fault';
+  const lead = mode === '--excuse' ? rest.findIndex((a) => !isFlag(a)) : 0;
+  const flags = mode === '--excuse' ? rest.slice(0, lead < 0 ? rest.length : lead) : [];
+  const args = rest.slice(flags.length);
   try {
-    main(repo, mode, args, force);
+    main(
+      repo,
+      mode,
+      mode === '--excuse' && args.some(isFlag) ? [] : args,
+      flags.includes('--force'),
+      flags.includes('--fault'),
+    );
   } catch (e) {
     // a record that cannot be trusted, or records that cannot be read: say why, and write nothing
     if (!(e instanceof RecordFault || e instanceof RecordsError)) throw e;
@@ -341,7 +322,7 @@ if (process.argv[1] && basename(process.argv[1]) === 'tests-first.mjs') {
 }
 
 /** Runs one mode of the command line on `repo`. */
-function main(repo, mode, args, force) {
+function main(repo, mode, args, force, fault = false) {
   if (mode === '--record') {
     record(repo);
   } else if (mode === '--update') {
@@ -357,7 +338,10 @@ function main(repo, mode, args, force) {
     const exceptions = exceptionsIn(repo);
     const replays = args.map((c) => replay(repo, c));
     const bad = unexplained(replays, exceptions);
-    const faults = replays.flatMap((r) => r.faults);
+    // a fault whose reason is kept (--excuse --fault) is no longer warned of
+    const faults = replays
+      .flatMap((r) => r.faults)
+      .filter((f) => !faultExcused(exceptions, f.file ?? '', f.test ?? '', f.commit));
     for (const b of bad)
       console.error(
         `${b.commit.slice(0, 7)} ${b.file}: "${b.name}" passed against the code before it — write the test first, or keep the reason: node scripts/tests-first.mjs --excuse <test file> <test> <reason>`,
@@ -368,7 +352,7 @@ function main(repo, mode, args, force) {
     process.exitCode = bad.length ? 1 : 0;
   } else if (mode === '--excuse' && args.length === 3 && args.every(Boolean)) {
     const [file, test, evidence] = args;
-    console.log(excuse(repo, file, test, evidence, force));
+    console.log((fault ? excuseFault : excuse)(repo, file, test, evidence, force));
   } else if (mode === '--migrate') {
     for (const line of migrate(repo)) console.log(line);
   } else if (mode === '--tally') {
@@ -376,7 +360,7 @@ function main(repo, mode, args, force) {
   } else {
     console.error(
       'usage: tests-first.mjs [--repo <dir>] --check <commit>… | --update | --record | --complete | ' +
-        '--excuse [--force] <test file> <test> <reason> | --migrate | --tally',
+        '--excuse [--force] [--fault] <test file> <test> <reason> | --migrate | --tally',
     );
     process.exitCode = 2;
   }

@@ -4,7 +4,7 @@ import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
-import { load, GRAPH, show } from './host/view-notes.js';
+import { load, GRAPH, show, styles } from './host/view-notes.js';
 
 before(() => build());
 
@@ -142,6 +142,29 @@ describe('a tap near things', () => {
     assert.equal(svg.getAttribute('width'), width, 'the drawing is the size it was');
   });
 
+  // device check V-08 (Roger, 11 Oct 2026): "selecting by double-click also zooms" — a link is thin, so a click "on" it is
+  // nearly always a click near it, and the mouse's double click was judged only by the element under the pointer
+  test('a double click near a box or link, not on it, selects it and never zooms', async () => {
+    const { nearby } = await import('../../core/src/hits.ts');
+    const box = areas.shapes.find((s) => s.kind === 'node');
+    const xs = box.polygons[0].map(([x]) => x),
+      ys = box.polygons[0].map(([, y]) => y);
+    const x = Math.max(...xs) + 2,
+      y = (Math.min(...ys) + Math.max(...ys)) / 2;
+    assert.equal(nearby(areas, x, y, 0).length, 0);
+    const svg = el.querySelector('svg.graph-note-svg'),
+      width = svg.getAttribute('width'),
+      vp = el.querySelector('.graph-note-viewport'),
+      p = drawnAt(x, y);
+    for (const id of [10, 11]) {
+      vp.dispatch('pointerdown', { target: vp, pointerId: id, pointerType: 'mouse', button: 0, ...p });
+      vp.dispatch('pointerup', { target: vp, pointerId: id, pointerType: 'mouse', button: 0, ...p });
+    }
+    vp.dispatch('dblclick', { target: vp, button: 0, ...p });
+    assert.equal(svg.getAttribute('width'), width, 'the drawing is the size it was');
+    assert.ok(selected(), 'and what is near is selected');
+  });
+
   test('a tap far from everything opens nothing', () => {
     el.querySelector('.graph-note-details').hidden = true;
     const vb = areas.viewBox;
@@ -200,6 +223,35 @@ describe('estimated links', () => {
         ),
       true,
     );
+  });
+
+  // device check V-06 (Roger, 11 Oct 2026): "I can't click on the estimated link" — it is chosen as any link is
+  test('tapping an estimated link selects it as any link is selected: marked, pressed, and only it', async () => {
+    const { el } = await show(env, TYPO);
+    const edges = el.querySelectorAll('g.edge'),
+      guess = edges[4],
+      vp = el.querySelector('.graph-note-viewport');
+    assert.equal(guess.getAttribute('aria-pressed'), 'false', 'a button that can be pressed, before it is');
+    edges[0].dispatch('keydown', { key: 'Enter' });
+    const at = { target: guess, pointerId: 6, pointerType: 'mouse', clientX: 9, clientY: 9, button: 0 };
+    vp.dispatch('pointerdown', at);
+    vp.dispatch('pointerup', at);
+    assert.ok(guess.classList.contains('is-selected'), 'drawn heavier, as a selected link is');
+    assert.equal(guess.getAttribute('aria-pressed'), 'true');
+    assert.deepEqual(
+      el.querySelectorAll('g.is-selected').map((g) => g.getAttribute('id')),
+      [guess.getAttribute('id')],
+      'the link selected before is not any more',
+    );
+  });
+
+  test('the pointer shows an estimated link can be clicked, as it shows a written one can', async () => {
+    const { rules, winner } = await import('./host/cascade.js');
+    const all = rules(styles, 'styles.css');
+    const svg = { tag: 'svg', classes: ['graph-note-svg'] };
+    const edge = (attrs) => ({ tag: 'g', classes: ['edge'], attrs, ancestors: [svg] });
+    assert.equal(winner(all, edge({ 'data-link': '0' }), 'cursor')?.value, 'pointer');
+    assert.equal(winner(all, edge({ 'data-estimate': '0' }), 'cursor')?.value, 'pointer');
   });
 
   test('an estimated link can be reached and explained from the keyboard', async () => {

@@ -36,6 +36,7 @@ describe('a near miss of a name', () => {
         taken: 'small_reader',
         explain:
           'Line 11 links to small_reeder, which is not in graph reader. It was taken to mean small_reader, one letter away. To fix it, change small_reeder to small_reader.',
+        span: { line: 10, character: 20, end: 32 }, // where the link names it: its fix acts there (review of #85)
       },
     ]);
   });

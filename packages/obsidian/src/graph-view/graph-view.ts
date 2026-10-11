@@ -12,6 +12,7 @@ import { renderProblems } from './problems-list';
 import { listParked } from './parked';
 import { Walk } from './walk';
 import { ViewMaker } from './view-maker';
+import { AddThing } from './add-thing';
 import { toggleExportForm } from '../export/export-form';
 import { markView, renderViewStrip } from './view-strip';
 import { plural, renderBar } from './view-bar';
@@ -31,6 +32,7 @@ export class GraphView extends MarkdownRenderChild {
   private details!: DetailsPanel;
   private walk: Walk | null = null;
   private maker: ViewMaker | null = null;
+  private adder: AddThing | null = null;
   private fullscreen: { view: GraphView; overlay: HTMLElement } | null = null;
   private boxDown: { id: number; x: number; y: number; target: Target } | null = null;
   private editButton: HTMLButtonElement | null = null;
@@ -42,8 +44,9 @@ export class GraphView extends MarkdownRenderChild {
     super(containerEl);
     // whether the card is where the note is only read: in reading view, or opened from a card that is (spec §3)
     this.readOnly = () => !!options.readOnly?.() || (options.mode === 'note' && readOnlyHere(containerEl));
-    // every write the card can make goes through that one check: none where the card is read-only
-    this.o = gateWrites(options, this.readOnly);
+    // every write the card can make goes through that one check: none where the card is read-only; and the card's parts
+    // are given the same check as `readOnly`, so a control that writes is not offered at all there
+    this.o = gateWrites({ ...options, readOnly: this.readOnly }, this.readOnly);
     this.taps = new Taps(options.drawn.svg);
   }
 
@@ -84,6 +87,7 @@ export class GraphView extends MarkdownRenderChild {
     if (this.o.parked) listParked(list, this.o.parked, (k) => this.boxes().find((b) => b.key === k)?.text ?? k);
     this.walk = new Walk(root, this.o, () => this.svg); // walked paths: Play, and Record while edited (§7)
     if (this.o.writeView) this.maker = new ViewMaker(root, this.o); // a view made by tapping, while edited (§7)
+    if (this.o.editing) this.adder = new AddThing(root, this.o); // a thing added from its text, while edited (§5)
     const view = this.o.view;
     const writes = view
       ? renderViewStrip(root, view, () => ({ view: this.zoom.view(), selected: this.details.selectedKey() }))
@@ -161,6 +165,7 @@ export class GraphView extends MarkdownRenderChild {
   private showEditing(): void {
     this.walk?.show(); // Record and Make a view are offered only while the card is edited
     this.maker?.show();
+    this.adder?.show();
     const b = this.editButton;
     if (!b) return;
     const on = !!this.o.editing?.()?.session;
@@ -216,13 +221,12 @@ export class GraphView extends MarkdownRenderChild {
     if ('key' in t && (this.walk?.tap(t.key) || this.maker?.tap(t.key))) return;
     if ('key' in t) this.details.showDetails(t.key);
     else if ('link' in t) this.details.showLink(t.link);
-    if ('key' in t) this.o.onSelect?.({ thing: t.key });
-    else if ('link' in t) this.o.onSelect?.({ link: t.link });
-    if ('key' in t || 'link' in t) return;
     else {
       const e = this.drawing()?.estimates[t.estimate];
-      if (e) this.details.showEstimate(e);
+      if (e) this.details.showEstimate(e, t.estimate);
     }
+    // while the block is edited, where it is written is selected in the text — an estimate's misspelt word too (§4)
+    this.o.onSelect?.('key' in t ? { thing: t.key } : t);
   }
 
   private bindEvents(): void {
@@ -272,8 +276,11 @@ export class GraphView extends MarkdownRenderChild {
       },
       { passive: false },
     );
+    // a double click on or near a box or link only selects it, as its two clicks did; only empty space zooms (§3)
     this.registerDomEvent(vp, 'dblclick', (e: MouseEvent) => {
-      use(e, { kind: 'dblclick', ...this.point(e), onBox: !!targetAt(e.target) });
+      const p = this.point(e),
+        onBox = !!targetAt(e.target);
+      use(e, { kind: 'dblclick', ...p, onBox, near: !onBox && this.near(p).length > 0 });
     });
     this.registerDomEvent(vp, 'keydown', (e: KeyboardEvent) => {
       const target = targetAt(e.target);

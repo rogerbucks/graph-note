@@ -1,6 +1,6 @@
 # Z-01 Desktop wheel and pinch
 
-**You should see:** the mouse wheel alone scrolling the note, not the drawing. With Ctrl or Command held, the wheel zooms the drawing about the pointer, and a trackpad pinch does the same.
+**You should see:** the mouse wheel alone scrolling the note, not the drawing. With Ctrl or Command held, the wheel zooms the drawing about the pointer, and a trackpad pinch does the same. The pinch, and the wheel with Ctrl or Command, zoom a little quicker than they used to: about 1.4 times the old rate, so a small pinch makes a clear change, and one notch of the wheel zooms by about a third. The wheel alone in full screen and in the edit pane is quicker by the same amount, as it cannot be told from a pinch. Zoom still stops at a quarter and at four times natural size.
 
 **Test diagram:**
 
@@ -29,10 +29,10 @@
 
 1. With the pointer over the drawing, turn the mouse wheel alone and watch the note scroll.
 2. Hold Ctrl or Command and turn the wheel over a box, and watch the drawing zoom about the pointer.
-3. On a trackpad, pinch over a box.
+3. On a trackpad, pinch over a box, in and out, and check it feels a little quicker than the fingers, not sluggish.
 
 **Checklist line:**
 
-> **Z-01** Desktop: the mouse wheel alone scrolls the note. With Ctrl or Command it zooms about the pointer, and so does a trackpad pinch.
+> **Z-01** Desktop: the mouse wheel alone scrolls the note. With Ctrl or Command it zooms about the pointer, and so does a trackpad pinch, a little quicker than the fingers move.
 
 **Back to the checklist:** [Z-01 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Z-01 in its list.
