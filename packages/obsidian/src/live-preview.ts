@@ -87,11 +87,15 @@ class GraphBlock extends WidgetType {
     return true;
   }
 
+  /** The card is gone: its watcher stops, its drawing is unloaded, and one still being drawn is dropped when it is ready. */
   override destroy(dom: HTMLElement): void {
     const state = drawn.get(dom);
-    state?.observer?.disconnect();
-    state?.component?.unload();
-    if (state) state.component = null;
+    drawn.delete(dom);
+    if (!state) return;
+    state.asked++;
+    state.observer?.disconnect();
+    state.component?.unload();
+    state.component = null;
   }
 
   /** Draws the block off the page, then puts it in place of the old drawing: the card never shrinks between. */

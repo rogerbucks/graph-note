@@ -3,7 +3,7 @@
 // what is there and what each control does. Here: what is drawn, and what is shown when it cannot be.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { build } from './host/load-plugin.js';
+import { build, until } from './host/load-plugin.js';
 import { fakeContext } from './host/fake-obsidian.js';
 import { fence, labelled } from './host/notes.js';
 import { load, styles, GRAPH, show, svgOf } from './host/view-notes.js';
@@ -141,6 +141,19 @@ describe('code that is not a graph', () => {
     labelled(el, 'Copy').click();
     await new Promise((r) => setTimeout(r, 0));
     assert.equal(env.doc.clipboard, 'MATCH (n) RETURN n');
+  });
+
+  test('a copy the device refuses says so in a notice, never fails without a word', async () => {
+    const { el } = await show(env, fence('MATCH (n) RETURN n'));
+    const clipboard = globalThis.navigator.clipboard,
+      writeText = clipboard.writeText;
+    clipboard.writeText = () => Promise.reject(new Error('not allowed'));
+    try {
+      labelled(el, 'Copy').click();
+      await until(() => env.state.notices.some((n) => /could not copy/i.test(n)));
+    } finally {
+      clipboard.writeText = writeText;
+    }
   });
 });
 
