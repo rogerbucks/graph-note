@@ -165,9 +165,20 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/slice-board-style.test.js` — the slice board's stylesheet: colour tokens that agree in light and dark, the altitude switch by CSS alone, a layout that holds at 400px, and the source written one rule and one declaration to a line.
 - `test/slice-board.test.js` — the slice board: a CSS-only HTML page of how far the slice under way is proved, from the requirements copy and, optionally, the open pull requests.
 - `test/test-vault.test.js` — the test vault: dummy notes tied to requirements, nothing Obsidian writes committed, each session clean.
-- `test/tests-first.test.js` — every test is seen to fail before its code, replayed commit by commit.
-- `test/tests-first-command.test.js` — that replay's command line, run as CI and a person run it: `--check`, `--excuse`, `--migrate`, `--complete` and `--tally`.
-- `test/tests-first-records.test.js` — the records of that replay: a file for each commit and each reason, so two branches never conflict in them, and the old single files moved over whole.
+- `test/tests-first.test.js` — every test is seen to fail before its code, replayed commit by commit: how a replay judges a new test.
+- `test/tests-first-command.test.js` — that replay's command line, run as CI and a person run it: `--check`, `--excuse` and `--migrate`.
+- `test/tests-first-complete.test.js` — that command line's `--complete`: a commit that changed a test and has no record fails, until `--update` records it.
+- `test/tests-first-failing.test.js` — that replay when a new test fails at its own commit: kept in the record as not replayed, or, when it passes run again, a failure of the record.
+- `test/tests-first-faults.test.js` — that replay when something at the commit's own code cannot be trusted: a commit that cannot be replayed, a record updated over what it holds.
+- `test/tests-first-later.test.js` — that replay when the test and its code do not come together: a test corrected later, one that comes before its code, a new file whose code is not there yet, test support changed with it.
+- `test/tests-first-passed.test.js` — that replay when a new test passes against the code before it: reported, unless a reason is kept, and never excused by a name every object has.
+- `test/tests-first-python.test.js` — that replay over a Python test, and a failure inside a subTest read as a failure.
+- `test/tests-first-records.test.js` — the records of that replay: a file for each commit, so two branches never conflict in them.
+- `test/tests-first-records-history.test.js` — this repository's own records: the old single files' entries all held, each record named after a commit in the history, every test file with its entry.
+- `test/tests-first-records-merged.test.js` — those records when branches meet: two branches merged with nothing to resolve, and the old single files moved over whole.
+- `test/tests-first-records-reasons.test.js` — the reasons kept for a test that passed before its code: a file for each, named after its test file and its test.
+- `test/tests-first-tally.test.js` — that replay's `--tally`: what the records prove as JSON, and writes nothing.
+- `test/tests-first-unfinished.test.js` — that replay when a run of a test file does not finish: stopped at the time limit, it proves nothing.
 - `test/tests-first-run.test.js` — one run of one test file in that replay: what its report shows, and why it did not finish.
 - `test/whitespace.test.js` — the three copies of the one whitespace set are the same, and the set is openGQL's.
 

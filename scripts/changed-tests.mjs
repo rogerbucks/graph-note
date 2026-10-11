@@ -52,7 +52,10 @@ const READERS = [
   ],
   [/^quality\/advisories\.json$/, ['test/engine-version.test.js']],
   [/^(scripts\/notices\.mjs|THIRD_PARTY_NOTICES\.md)$/, ['test/licences.test.js']],
-  [/^test\/(seen-failing|tests-first)\//, ['test/tests-first.test.js', 'test/tests-first-records.test.js']],
+  [
+    /^test\/(seen-failing|tests-first)\//,
+    ['test/tests-first.test.js', 'test/tests-first-records.test.js', 'test/tests-first-records-history.test.js'],
+  ],
 ];
 
 const base = (file) => file.slice(file.lastIndexOf('/') + 1);
