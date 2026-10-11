@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/suggested-name-writes.test.js",
+  "test": "a card drawn before another block of its graph was changed > an edit the note refuses as written is kept as its own draft, by id, and Discard takes only that one",
+  "seen_failing_first": false,
+  "evidence": "Pins the resolution of the merge with origin/main (#91's drafts kept by id), made in that merge commit: the refused edit goes through #91's id-based keepDraft and its banner offers that draft. The merge as resolved already did this, so the test passed against it; it holds the two designs together from here on."
+}

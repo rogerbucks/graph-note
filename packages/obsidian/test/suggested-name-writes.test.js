@@ -272,6 +272,42 @@ describe('a card drawn before another block of its graph was changed', () => {
     }
   });
 
+  // the merge with #91: an edit the note refuses as it is written is kept through the drafts kept by id, as typing is
+  test('an edit the note refuses as written is kept as its own draft, by id, and Discard takes only that one', async () => {
+    const theirs = { text: 'another editor’s draft', kept: '2026-10-10T08:00:00.000Z', id: 'theirs' };
+    const note = noteOf(RENAMED, A);
+    const env = await load({ files: { [PATH]: note }, data: { drafts: { [`${PATH}#reader`]: theirs } } });
+    try {
+      const el = env.doc.body.createDiv();
+      await env.state.processors.get('gql')(A, el, fakeContext(note, note.split('\n').lastIndexOf('```gql')));
+      labelled(el, 'Edit here').click();
+      await until(() => !!el.querySelector('textarea'));
+      tapKey(el, 'small_reader');
+      await until(() => !!labelled(details(el), 'Add the name small_reader'));
+      labelled(details(el), 'Add the name small_reader').click();
+      const named = A.replace('(:Option', '(small_reader:Option');
+      assert.equal(text(el), named);
+      // before it is written, another block takes the name: the note refuses the edit as it is written
+      await env.app.vault.modify(env.app.vault.getAbstractFileByPath(PATH), noteOf(B, A));
+      const said = () => el.querySelectorAll('p').find((p) => /^The edit was not written/.test(p.textContent));
+      await until(() => !!said());
+      assert.match(said().textContent, /small_reader is already a name in graph reader: choose another/);
+      assert.equal(text(el), A, 'the block as the note has it');
+      assert.equal(env.state.files.get(PATH), noteOf(B, A), 'nothing was written');
+      const mine = Object.values(env.state.data.drafts).find((d) => d.text === named);
+      assert.ok(mine?.id && mine.id !== 'theirs', 'kept as its own draft, with an id of its own');
+      labelled(el, 'Discard draft').click();
+      await until(() => !Object.values(env.state.data.drafts).some((d) => d.id === mine.id));
+      assert.deepEqual(
+        Object.values(env.state.data.drafts).map((d) => d.id),
+        ['theirs'],
+        'the other draft is kept',
+      );
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('Add a thing suggests, and writes, a name no block of the note has now', async () => {
     const TABLET = B.replaceAll('small_reader', 'tablet');
     const { env, el } = await staleCard(RENAMED, TABLET);
