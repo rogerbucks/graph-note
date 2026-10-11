@@ -1,6 +1,6 @@
 # Z-09 Reading view read only
 
-**You should see:** in reading view, a bar that offers Source and no Edit. Source swaps the drawing for the block's text, coloured, in the same place, and pressing it again brings the drawing back. A hover preview of this note, or an embed of it in another, is read-only in the same way. Properties can be seen but never added or changed in reading view: tapping Large reader shows "name: Large reader" and "weight: 180" under Properties, and tapping its ANSWERS link shows "since: 2024", each as plain words. Nothing there can be typed in or pressed to change them: no Add property, no type icon or its menu (no Text, List or Remove), no value or name field, no x on a list's things and no field to add one, no Park for later, no Add the name for Pocket reader, written without a name on purpose (its one problem on the badge), no Record a path, no Make a view. The only button in the details is Close. All of this holds while the same block is being edited in place in Live Preview in another pane, and in full screen opened from reading view, which offers no Edit here and no Edit in pane either.
+**You should see:** in reading view, a bar that offers Source and no Edit. Source swaps the drawing for the block's text, coloured, in the same place, and pressing it again brings the drawing back. A hover preview of this note, or an embed of it in another, is read-only in the same way. Properties can be seen but never added or changed in reading view: tapping Large reader shows "name: Large reader" and "weight: 180" under Properties, and tapping its ANSWERS link shows "since: 2024", each as plain words. Nothing there can be typed in or pressed to change them: no Add property, no type icon or its menu (no Text, List or Remove), no value or name field, no x on a list's things and no field to add one, no Park for later, no Add the name for Pocket reader, written without a name on purpose (its one problem on the badge), no Record a path, no Make a view. The only button in the details is Close. The view of the answers below the graph shows its reading in words, with no Fade others or Hide others and no Save as shown. All of this holds while the same block is being edited in place in Live Preview in another pane, and in full screen opened from reading view, which offers no Edit here and no Edit in pane either.
 
 **Test diagram:**
 
@@ -18,6 +18,11 @@
 (:Option {name: 'Pocket reader'})
 ```
 
+```gql
+// graph: reader · QUERY view answers
+MATCH (n {id: 'question'})-[]-{1,1}(m) RETURN n, m
+```
+
 <!-- expect: problem "this thing has no name; suggested: pocket_reader" -->
 
 **Do this:**
@@ -32,9 +37,10 @@
 7. With a box selected, press Enter, Space, Delete and Command-Z (Ctrl-Z on Windows): nothing in the note changes.
 8. Open the note in a second pane in Live Preview and press Edit here on its drawing. Back in the reading view pane, repeat steps 4 to 7, and check there is no Record a path and no Make a view. The text being edited in Live Preview must not change, and its selection must not move when you tap a box in reading view.
 9. Press Full screen in reading view. Check there is no Edit here and no Edit in pane, and repeat step 4 there.
+10. On the view of the answers, check there is no Fade others, Hide others or Save as shown, on the card and in its full screen.
 
 **Checklist line:**
 
-> **Z-09** Reading view is read-only: the bar offers Source and no Edit. Source shows the block's text, coloured, in place of the drawing, and pressed again brings the drawing back. A hover preview or an embed is read-only too.
+> **Z-09** Reading view is read-only: the bar offers Source and no Edit. Source shows the block's text, coloured, in place of the drawing, and pressed again brings the drawing back. A hover preview or an embed is read-only too. Properties are shown but never added or changed: no Add property, no field, no type menu, no x or add field on a list. There is no Park for later, no fix that writes a suggested name, no Record a path or Make a view, no Fade or Hide others or Save as shown, and no Edit here or Edit in pane, even while the block is edited in Live Preview, and in full screen opened from reading view too.
 
 **Back to the checklist:** [Z-09 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Z-09 in its list.
