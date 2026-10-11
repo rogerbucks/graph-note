@@ -1,13 +1,13 @@
 {
   "name": "@graph-note/core",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "The host-free core of the graph note editor: what to draw, problems and fixes, zoom, edits and undo. No Obsidian, no VS Code.",
   "license": "MIT",
   "type": "module",
   "exports": "./src/index.ts",
   "dependencies": {
-    "@graph-note/graph-spec": "0.3.0",
+    "@graph-note/graph-spec": "0.4.0",
     "@viz-js/viz": "3.31.0"
   }
 }
