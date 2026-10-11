@@ -64,7 +64,8 @@ function runJs(dir, file) {
   });
   const read = fromJunit(r.stdout ?? '');
   if (!read.ran) return { why: ended(r), ...read };
-  // a parent test that fails after its subtests pass is a <testsuite> with no failure: only the exit status shows it
+  // a parent test that fails after its subtests pass is a <testsuite> with no failure: only the exit status shows it. The
+  // report does not name that parent, so the failure cannot be narrowed to it: the whole file is unjudged, not just it
   if (r.status !== 0 && read.failed.length === 0) {
     const why = r.status === null ? ended(r) : `ended with exit status ${r.status} though no failed test was read`;
     return { ...read, ran: false, why };
@@ -107,7 +108,7 @@ export function fromJunit(whole) {
 }
 
 const PY_RUNNER = `
-import json, os, sys, unittest
+import json, os, re, sys, unittest
 path = sys.argv[1]
 start = os.path.dirname(os.path.abspath(path))
 sys.path.insert(0, start)
@@ -123,12 +124,31 @@ name = lambda t: type(t).__name__ + "." + t._testMethodName
 # a failing or skipped subTest is reported as its own _SubTest; it counts against the test it belongs to
 bad = {id(getattr(t, "test_case", t)) for t, _ in result.failures + result.errors}
 skipped = {id(getattr(t, "test_case", t)) for t, _ in result.skipped}
-# a failure that belongs to no listed test, such as a setUpClass that raised, hides the tests it kept from running
+# a failure that belongs to no listed test is a class or module hook that raised, and is read by its scope: a set-up that
+# raised kept every test under it from running, so each is failed; a tear-down ran after the tests, which keep their own
+# results, so it is a failure of its own, by name; one that matches no scope is unmatched, and the run is not read
 known = {id(t) for t in tests}
-unmatched = [str(t) for t, _ in result.failures + result.errors if id(getattr(t, "test_case", t)) not in known]
+hooks = re.compile(r"(setUpClass|tearDownClass|setUpModule|tearDownModule) \\((.+)\\)$")
+extra, unmatched = [], []
+for t, _ in result.failures + result.errors:
+    if id(getattr(t, "test_case", t)) in known:
+        continue
+    found = hooks.match(str(t))
+    kind, where = found.groups() if found else (None, None)
+    if kind in ("tearDownClass", "tearDownModule"):
+        extra.append(str(t))
+        continue
+    scoped = []
+    if kind == "setUpClass":
+        scoped = [x for x in tests if type(x).__module__ + "." + type(x).__qualname__ == where]
+    elif kind == "setUpModule":
+        scoped = [x for x in tests if type(x).__module__ == where]
+    bad.update(id(x) for x in scoped)
+    if not scoped:
+        unmatched.append(str(t))
 print(json.dumps({
     "passed": [name(t) for t in tests if id(t) not in bad and id(t) not in skipped and type(t).__name__ != "_FailedTest"],
-    "failed": [name(t) for t in tests if id(t) in bad],
+    "failed": [name(t) for t in tests if id(t) in bad] + extra,
     "unmatched": unmatched,
 }))
 `;

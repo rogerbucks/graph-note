@@ -186,29 +186,97 @@ describe('a failure the report does not show', () => {
     );
     assert.deepEqual(r, { passed: ['a'], failed: ['b'], ran: true });
   });
+});
 
-  test('a Python class whose setUpClass fails makes the run unreadable, not its tests passed', () => {
-    const dir = mkdtempSync(join(tmpdir(), 'tests-first-run-'));
-    try {
-      mkdirSync(join(dir, 'py', 'tests'), { recursive: true });
-      const source = [
-        'import unittest',
-        'class Broken(unittest.TestCase):',
-        '    @classmethod',
-        '    def setUpClass(cls):',
-        '        raise RuntimeError("setup")',
-        '    def test_never_ran(self):',
-        '        pass',
-        '',
-      ].join('\n');
-      writeFileSync(join(dir, 'py', 'tests', 'test_broken.py'), source);
-      const r = run(dir, 'py/tests/test_broken.py', dir);
-      assert.equal(r.ran, false);
-      assert.deepEqual(r.passed, []);
-      assert.match(r.why ?? '', /1 failure could not be matched to a test/);
-    } finally {
-      rmSync(dir, { recursive: true, force: true });
-    }
+/** Runs `source` as the Python test file `tests/test_<stem>.py` in a fresh folder. */
+function runPython(stem, source) {
+  const dir = mkdtempSync(join(tmpdir(), 'tests-first-run-'));
+  try {
+    mkdirSync(join(dir, 'py', 'tests'), { recursive: true });
+    writeFileSync(join(dir, 'py', 'tests', `test_${stem}.py`), source.join('\n') + '\n');
+    return run(dir, `py/tests/test_${stem}.py`, dir);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+describe('a Python failure outside any test', () => {
+  // review of #74 (11 Oct 2026): a class that failed to set up left its tests listed as run and passed, and giving up on
+  // the whole file for it lost the results of every other class in the file
+  const pair = ['    def test_fails(self):', '        self.fail("no")', '    def test_passes(self):', '        pass'];
+
+  test('a setUpClass that raised fails every test of its class, and only those', () => {
+    const r = runPython('setup', [
+      'import unittest',
+      'class A(unittest.TestCase):',
+      '    @classmethod',
+      '    def setUpClass(cls):',
+      '        raise RuntimeError("setup")',
+      '    def test_a1(self):',
+      '        pass',
+      '    def test_a2(self):',
+      '        pass',
+      'class B(unittest.TestCase):',
+      ...pair,
+    ]);
+    assert.deepEqual(r, { passed: ['B.test_passes'], failed: ['A.test_a1', 'A.test_a2', 'B.test_fails'], ran: true });
+  });
+
+  test('a tearDownClass that raised keeps the tests own results, and is a failure of its own, by name', () => {
+    const r = runPython('teardown', [
+      'import unittest',
+      'class A(unittest.TestCase):',
+      '    @classmethod',
+      '    def tearDownClass(cls):',
+      '        raise RuntimeError("teardown")',
+      ...pair,
+    ]);
+    assert.deepEqual(r, {
+      passed: ['A.test_passes'],
+      failed: ['A.test_fails', 'tearDownClass (test_teardown.A)'],
+      ran: true,
+    });
+  });
+
+  test('a setUpModule that raised fails every test of its module', () => {
+    const r = runPython('modsetup', [
+      'import unittest',
+      'def setUpModule():',
+      '    raise RuntimeError("setup")',
+      'class A(unittest.TestCase):',
+      ...pair,
+    ]);
+    assert.deepEqual(r, { passed: [], failed: ['A.test_fails', 'A.test_passes'], ran: true });
+  });
+
+  test('a tearDownModule that raised keeps the tests own results, and is a failure of its own, by name', () => {
+    const r = runPython('modteardown', [
+      'import unittest',
+      'def tearDownModule():',
+      '    raise RuntimeError("teardown")',
+      'class A(unittest.TestCase):',
+      ...pair,
+    ]);
+    assert.deepEqual(r, {
+      passed: ['A.test_passes'],
+      failed: ['A.test_fails', 'tearDownModule (test_modteardown)'],
+      ran: true,
+    });
+  });
+
+  test('a failure that belongs to no listed test and matches no scope makes the run unreadable, and says so', () => {
+    const r = runPython('stray', [
+      'import sys, unittest',
+      'class A(unittest.TestCase):',
+      '    def test_a(self):',
+      '        try:',
+      '            raise RuntimeError("stray")',
+      '        except RuntimeError:',
+      '            self._outcome.result.addError(unittest.FunctionTestCase(lambda: None), sys.exc_info())',
+    ]);
+    assert.equal(r.ran, false);
+    assert.deepEqual([r.passed, r.failed], [[], []]);
+    assert.match(r.why ?? '', /1 failure could not be matched to a test/);
   });
 });
 
