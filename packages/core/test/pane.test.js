@@ -237,4 +237,37 @@ describe('an edit made for the person, as it is written', () => {
     typed.type(`${unnamed},\n(a)-[:SEES]->(small_reader)`);
     assert.equal(typed.write(noteOf(other('elsewhere'))).ok, true, 'what the person types is theirs to write');
   });
+
+  // Review, 11 Oct 2026, low gaps: each reference an edit adds is owed, and a thing is named once
+  test('another reference to a name the block already mentions is checked too', () => {
+    const c2 = "// graph: alpha\n(c:T {name: 'C'}),\n(:T {name: 'Small reader'}),\n(c)-[:SEE]->(small_reader)";
+    const noteWith = (first) => ['# Note', '', fence(first), '', fence(c2), ''].join('\n');
+    const s = new PaneSession(noteWith(other('small_reader')), 7);
+    assert.equal(s.text, c2);
+    const text = `${c2},\n(c)-[:AGAIN]->(small_reader)`;
+    edited(s, text);
+    const w = s.write(noteWith(other('elsewhere')));
+    assert.equal(w.ok, false);
+    assert.match(w.reason, /^accept its name first: .* is only drawn under the suggested name small_reader,/);
+    assert.equal(s.text, c2);
+  });
+
+  test('a pattern in a MATCH of another block gives no name, so a correct reference is not refused', () => {
+    const a = "// graph: g\n(small:X {name: 'Small'}),\n(large:X {name: 'Large'}),\n(large)-[:SEE]->(small)";
+    const m = "// graph: g\nMATCH (s:X {id: 'small'})\nINSERT (s)-[:NEAR]->(t:X {name: 'T'})";
+    const note = ['# Note', '', fence(a), '', fence(m), ''].join('\n');
+    const s = new PaneSession(note, 3);
+    assert.equal(s.text, a);
+    const p = pathBlock(s.current(), 'g', s.text, 'Walk', ['large', 'small']);
+    assert.ok(p.text, 'the path is drawn');
+    edited(s, p.text);
+    assert.equal(s.write(note).ok, true);
+  });
+
+  test('a thing whose id equals its variable is named once, not twice', () => {
+    const note = ['# Note', '', fence(A), ''].join('\n');
+    const s = new PaneSession(note, 3);
+    edited(s, `${A},\n(x:X {id: 'x', name: 'Ex'})`);
+    assert.equal(s.write(note).ok, true);
+  });
 });

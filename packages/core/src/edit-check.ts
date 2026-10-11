@@ -18,17 +18,30 @@ export function namesIn(text: string): Set<string> {
   return out;
 }
 
-/** The names an edit newly writes or names: in the text after it, and not in the text before. */
-export function newNames(before: string, after: string): string[] {
-  const had = namesIn(before);
-  return [...namesIn(after)].filter((n) => !had.has(n));
+/** How often a block's text writes or names each name: a name is named once by a pattern, whether by variable or id. */
+function mentions(text: string): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const w of writtenIn(text)) {
+    const id = w.props.get('id');
+    for (const n of new Set([...(w.variable ? [w.variable.name] : []), ...(id ? [id] : [])])) {
+      out.set(n, (out.get(n) ?? 0) + 1);
+    }
+  }
+  return out;
 }
 
-/** The names a block gives its things, as often as it gives them: each thing it writes by name, and an id property. */
+/** The names an edit newly writes or names: those the text after it mentions more often than the text before. */
+export function newNames(before: string, after: string): string[] {
+  const had = mentions(before);
+  return [...mentions(after)].filter(([n, count]) => count > (had.get(n) ?? 0)).map(([n]) => n);
+}
+
+/** The names a block gives its things, as often as it gives them: one per pattern, of the variable written and the id. */
 function given(text: string): string[] {
   return writtenIn(text).flatMap((w) => {
+    if (w.matched) return []; // a MATCH finds a thing, it never names one
     const id = w.props.get('id');
-    return [...(w.writes && w.variable ? [w.variable.name] : []), ...(id ? [id] : [])];
+    return [...new Set([...(w.writes && w.variable ? [w.variable.name] : []), ...(id ? [id] : [])])];
   });
 }
 
