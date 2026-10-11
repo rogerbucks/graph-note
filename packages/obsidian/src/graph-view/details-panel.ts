@@ -163,7 +163,12 @@ export class DetailsPanel {
         },
         this.o.indent ?? 'four',
         this.o.reading.whole[this.o.graph], // a thing written in another block of the graph is found
-        () => ed.declareDeferred(), // the fix for a locked graph whose schema lacks Deferred and DEFERS
+        // the fix for a locked graph whose schema lacks Deferred and DEFERS: only while this editor is still open on the
+        // card, as for every write here, so a control left from before Done declares nothing
+        () =>
+          this.o.editing?.() === ed
+            ? ed.declareDeferred()
+            : Promise.reject(new Error('The block is no longer being edited, so nothing was declared.')),
       );
   }
 

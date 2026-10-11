@@ -9,7 +9,8 @@
 // under test/ or tests/ that are not tests themselves), workflows, and any file this script does not know.
 //
 // Usage:
-//   node scripts/changed-tests.mjs                 run the tests of what changed since main (npm run test:changed)
+//   node scripts/changed-tests.mjs                 run the tests of what changed since main (npm run test:changed,
+//                                                  which runs it under the ceiling of scripts/run-ceiling.mjs)
 //   node scripts/changed-tests.mjs --list          only print the plan: the test files, or `whole suite: <why>`
 //   node scripts/changed-tests.mjs --base <ref>    compare with this commit instead of main's
 //   node scripts/changed-tests.mjs [--list] <path>…   plan for these paths, instead of asking git
@@ -23,6 +24,7 @@ const JS_TEST = /\.test\.(js|mjs)$/;
 const PY_TEST = /(^|\/)tests\/test_\w+\.py$/;
 
 const CHEAP = 'test/cheap-checks.test.js';
+const CEILING = 'test/run-ceiling.test.js';
 const CONVENTIONS = 'test/conventions.test.js';
 const DEVICE_NOTES = 'test/device-check-notes.test.js';
 const DEVICE_QUOTES = 'test/device-check-quotes.test.js';
@@ -32,13 +34,12 @@ const DEVICE_QUOTES = 'test/device-check-quotes.test.js';
  * Each is what the test opens: conventions.test.js reads CONTRIBUTING.md, every GUIDE.md and the README;
  * policy.test.js reads the README; test-vault.test.js reads test-vault/ and its reset script, and
  * device-check-notes.test.js its Device checks notes and the device checklist; requirements.test.js reads
- * requirements/ and its check; cheap-checks.test.js reads AGENTS.md, CLAUDE.md, .ignore and its own three tools.
+ * requirements/ and its check; cheap-checks.test.js reads AGENTS.md, CLAUDE.md, .ignore and its own three tools, and
+ * run-ceiling.test.js reads AGENTS.md and changed-tests.mjs as well as its own runner.
  */
 const READERS = [
-  [
-    /^(AGENTS\.md|CLAUDE\.md|\.ignore|scripts\/(quiet-reporter|changed-tests)\.mjs|scripts\/quiet_unittest\.py)$/,
-    [CHEAP],
-  ],
+  [/^(AGENTS\.md|scripts\/changed-tests\.mjs)$/, [CHEAP, CEILING]],
+  [/^(CLAUDE\.md|\.ignore|scripts\/quiet-reporter\.mjs|scripts\/quiet_unittest\.py)$/, [CHEAP]],
   [/^(CONTRIBUTING\.md|(packages|python)\/[^/]+\/GUIDE\.md)$/, [CONVENTIONS]],
   [/^README\.md$/, [CONVENTIONS, 'test/policy.test.js']],
   [/^(test-vault\/.*|scripts\/reset-test-vault\.mjs)$/, ['test/test-vault.test.js', DEVICE_NOTES, DEVICE_QUOTES]],
@@ -154,15 +155,17 @@ function main(argv) {
     return 0;
   }
   const reporter = '--test-reporter=./scripts/quiet-reporter.mjs';
+  // each test's own time limit, as npm test sets it; the run as a whole is under scripts/run-ceiling.mjs
+  const timeout = '--test-timeout=300000';
   const pyRunner = ['run', '--locked', '--directory', 'python/graph_spec', 'python', '../../scripts/quiet_unittest.py'];
   if (plan.all) {
     process.stdout.write(`whole suite: ${plan.reason}\n`);
-    const js = execute(process.execPath, ['--test', reporter]);
+    const js = execute(process.execPath, ['--test', timeout, reporter]);
     return (python ? execute('uv', pyRunner) : 0) || js;
   }
   const js = plan.files.filter((f) => JS_TEST.test(f));
   const py = plan.files.filter((f) => PY_TEST.test(f));
-  const jsStatus = js.length ? execute(process.execPath, ['--test', reporter, ...js]) : 0;
+  const jsStatus = js.length ? execute(process.execPath, ['--test', timeout, reporter, ...js]) : 0;
   const pyStatus = py.length ? execute('uv', [...pyRunner, ...py.map(base)]) : 0;
   return jsStatus || pyStatus;
 }

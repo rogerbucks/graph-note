@@ -30,6 +30,9 @@ module that ties the parts together, named as the folder is.
   last height kept by its note and line, for the blocks the note has now.
 - `editor.ts` — the comma and the colon added for you in the note's own editor.
 - `pane.ts` — the edit pane, which holds a block editor.
+- `reading-view.ts` — reading view never changes the note: `noteToRewrite`, which every command rewriting a note asks
+  first, gives the note in the pane in front, or refuses with a notice when that pane is in reading view or holds no note;
+  `stillToRewrite`, asked again just before the write, refuses the same way when that pane changed while the note was read.
 
 ### `src/layout-worker/` — the layout kept apart from the interface (spec §9, layout_contained)
 
@@ -102,10 +105,11 @@ module that ties the parts together, named as the folder is.
   each box as it is tapped and writes the path into the text.
 - `suggested-name.ts` — a box drawn under a suggested name: what screen readers hear of it, where it is written in the
   block being edited, and in its details its suggested name with the one-click fix that writes it.
-- `placement.ts` — where a card is: read-only in reading view; waiting for a card to be put on the page.
-- `read-only.ts` — the one check every write from a card passes: each function in its options is closed where the card
-  is read-only (reading view, and full screen opened from it), but those named as only reading, so a new control that
-  writes is read-only there by default.
+- `placement.ts` — where a card is: read-only in reading view, a hover preview and an embed of another note (in Live
+  Preview too); waiting for a card to be put on the page.
+- `read-only.ts` — the one check every write from a card passes: each function in its options, at any depth, is closed
+  where the card is read-only (reading view, an embed, and full screen opened from them), but those named as only
+  reading, so a new control that writes is read-only there by default; an option it cannot reach is refused, loudly.
 - `view-options.ts` — what a drawing is given.
 
 ### `src/block-editor/` — the text of one graph block, in the pane or in place
