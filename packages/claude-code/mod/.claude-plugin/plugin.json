@@ -1,6 +1,6 @@
 {
   "name": "graph-note",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "/graph draws a graph note's first graph in a pane, with the Graph Note core",
   "author": {
     "name": "rogerbucks",

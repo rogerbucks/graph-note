@@ -1,6 +1,6 @@
 [project]
 name = "graph-spec"
-version = "0.4.0"
+version = "0.4.1"
 description = "Reads graph blocks in the document profile, checks them against the graph spec's rules, and lays them out with Graphviz."
 license = "MIT"
 requires-python = ">=3.12"
