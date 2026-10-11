@@ -4,10 +4,19 @@ Each build is tried here, in Obsidian on the Mac, before it is promoted: open th
 dummies, written to exercise the editor, and hold nothing else.
 
 **Start and end every session clean:** `node scripts/reset-test-vault.mjs` restores the notes and settings to what is
-committed, removes everything a session added, and links the plugin build (`main.js`, `manifest.json`, `styles.css` at
-the repository root) into `.obsidian/plugins/graph-note/`. Run `npm run build` first. What is typed here is never
-committed: only the notes at this folder's root, the notes in `Device checks/` (below), `.obsidian/app.json` and
+committed, removes everything a session added, and copies the plugin build (`main.js`, `manifest.json`, `styles.css` at
+the repository root) into `.obsidian/plugins/graph-note/` as real files. Run `npm run build` first. What is typed here is
+never committed: only the notes at this folder's root, the notes in `Device checks/` (below), `.obsidian/app.json` and
 `.obsidian/community-plugins.json` are.
+
+**This vault is synced to the phone with Obsidian Sync,** as its own remote vault, and the reset is built for that:
+
+- **Sync's own files are kept.** Anything in `.obsidian/` whose name starts with `sync` (such as `sync.json`) is never
+  removed, so a reset does not disconnect Sync. The list is `SYNC_KEEP` in the script; extend it if Sync writes other files.
+- **The build is copied, not linked,** because Sync may not upload links. A copy is a new build's way in only when the
+  reset runs again: **build, then reset,** then reload the plugin in Obsidian.
+- **Only what differs is written,** so Sync moves only what changed: changed tracked notes are restored, a plugin file is
+  written only when its bytes differ, and an unchanged vault is left untouched.
 
 ## The notes, and what each exercises
 

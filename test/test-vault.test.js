@@ -5,9 +5,21 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readlinkSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  cpSync,
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  utimesSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import * as resetScript from '../scripts/reset-test-vault.mjs';
 import { auditRequirements, REQUIREMENTS } from '../scripts/check-requirements.mjs';
 import { exists, read, readJSON, path, notIgnored, ROOT } from './repository/repo.js';
 
@@ -132,10 +144,104 @@ describe('each session in the vault starts and ends clean', () => {
     for (const f of KEPT) cpSync(path(f), join(dir, f));
     git(dir, 'add', '-A');
     git(dir, 'commit', '-q', '-m', 'vault');
+    // the plugin build at the repository root, as `npm run build` leaves it
+    for (const p of PLUGIN_FILES) writeFileSync(join(dir, p), `build of ${p}\n`);
     return dir;
   }
 
-  test('fresh restores the notes, removes what a session added, and links the plugin build into the vault', () => {
+  const reset = (dir) => {
+    const run = spawnSync(process.execPath, [path('scripts/reset-test-vault.mjs'), '--root', dir], {
+      encoding: 'utf8',
+    });
+    assert.equal(run.status, 0, run.stdout + run.stderr);
+    return run;
+  };
+  const OBSIDIAN = (dir, ...rest) => join(dir, VAULT, '.obsidian', ...rest);
+  const OLD = new Date('2001-02-03T04:05:06Z');
+
+  test('Obsidian Sync files in .obsidian survive a reset; workspace files and other plugins do not', () => {
+    const dir = scratchRepo();
+    try {
+      writeFileSync(OBSIDIAN(dir, 'sync.json'), '{"vault":"x"}');
+      mkdirSync(OBSIDIAN(dir, 'sync'));
+      writeFileSync(OBSIDIAN(dir, 'sync', 'state.json'), 'state');
+      writeFileSync(OBSIDIAN(dir, 'workspace.json'), '{}');
+      mkdirSync(OBSIDIAN(dir, 'plugins', 'another-plugin'), { recursive: true });
+      writeFileSync(OBSIDIAN(dir, 'plugins', 'another-plugin', 'main.js'), 'x');
+      writeFileSync(join(dir, VAULT, 'Untitled.md'), 'new');
+      reset(dir);
+      assert.equal(readFileSync(OBSIDIAN(dir, 'sync.json'), 'utf8'), '{"vault":"x"}');
+      assert.equal(readFileSync(OBSIDIAN(dir, 'sync', 'state.json'), 'utf8'), 'state');
+      for (const gone of [OBSIDIAN(dir, 'workspace.json'), OBSIDIAN(dir, 'plugins', 'another-plugin')])
+        assert.ok(!existsSync(gone), `${gone} is removed`);
+      assert.ok(!existsSync(join(dir, VAULT, 'Untitled.md')));
+      assert.deepEqual(resetScript.SYNC_KEEP, ['sync*'], 'the keep-list is one named, exported constant');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('the plugin files are regular files with the build bytes, and an old link is replaced', () => {
+    const dir = scratchRepo();
+    try {
+      const target = OBSIDIAN(dir, 'plugins', 'graph-note');
+      mkdirSync(target, { recursive: true });
+      symlinkSync(join('..', '..', '..', '..', 'main.js'), join(target, 'main.js'));
+      reset(dir);
+      for (const p of PLUGIN_FILES) {
+        const stat = lstatSync(join(target, p));
+        assert.ok(stat.isFile() && !stat.isSymbolicLink(), `${p} is a regular file`);
+        assert.equal(readFileSync(join(target, p), 'utf8'), `build of ${p}\n`);
+      }
+      assert.equal(lstatSync(join(dir, 'main.js')).isFile(), true, 'the build itself is untouched');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('a second reset with nothing changed rewrites no file; a changed build is copied', () => {
+    const dir = scratchRepo();
+    try {
+      reset(dir);
+      const files = [
+        ...PLUGIN_FILES.map((p) => OBSIDIAN(dir, 'plugins', 'graph-note', p)),
+        join(dir, VAULT, 'Long note.md'),
+        OBSIDIAN(dir, 'app.json'),
+      ];
+      writeFileSync(OBSIDIAN(dir, 'sync.json'), '{}');
+      files.push(OBSIDIAN(dir, 'sync.json'));
+      for (const f of files) utimesSync(f, OLD, OLD);
+      const before = files.map((f) => lstatSync(f));
+      reset(dir);
+      files.forEach((f, i) => {
+        const now = lstatSync(f);
+        assert.equal(now.mtimeMs, OLD.getTime(), `${f} is not rewritten`);
+        assert.equal(now.ino, before[i].ino, `${f} is the same file`);
+        assert.equal(now.ctimeMs, before[i].ctimeMs, `${f} is not touched`);
+      });
+      writeFileSync(join(dir, 'styles.css'), 'a new build\n');
+      reset(dir);
+      assert.equal(readFileSync(OBSIDIAN(dir, 'plugins', 'graph-note', 'styles.css'), 'utf8'), 'a new build\n');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('a missing build stops the reset and says to build first', () => {
+    const dir = scratchRepo();
+    try {
+      rmSync(join(dir, 'main.js'));
+      const run = spawnSync(process.execPath, [path('scripts/reset-test-vault.mjs'), '--root', dir], {
+        encoding: 'utf8',
+      });
+      assert.equal(run.status, 1);
+      assert.match(run.stderr, /npm run build/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('fresh restores the notes and removes what a session added, leaving the vault as committed', () => {
     const dir = scratchRepo();
     try {
       const note = join(dir, VAULT, 'Long note.md');
@@ -155,9 +261,7 @@ describe('each session in the vault starts and ends clean', () => {
       assert.equal(readFileSync(note, 'utf8'), before);
       for (const gone of ['Untitled.md', '.obsidian/workspace.json', 'A folder'])
         assert.ok(!existsSync(join(dir, VAULT, gone)), `${gone} is removed`);
-      assert.equal(git(dir, 'status', '--porcelain'), '');
-      for (const p of PLUGIN_FILES)
-        assert.equal(readlinkSync(join(dir, VAULT, '.obsidian', 'plugins', 'graph-note', p)), `../../../../${p}`);
+      assert.equal(git(dir, 'status', '--porcelain', '--', VAULT), '');
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

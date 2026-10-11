@@ -1,0 +1,6 @@
+{
+  "file": "test/test-vault.test.js",
+  "test": "each session in the vault starts and ends clean > fresh restores the notes and removes what a session added, leaving the vault as committed",
+  "seen_failing_first": false,
+  "evidence": "it pins what the reset already did before this change, restoring edited notes and removing added ones, so the Sync-friendly rewrite keeps it"
+}

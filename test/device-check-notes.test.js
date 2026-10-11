@@ -397,6 +397,7 @@ describe('the notes are committed, and a clean session keeps them', () => {
     try {
       const [note] = noteFiles();
       const at = (f) => join(repo.dir, f);
+      for (const f of ['main.js', 'manifest.json', 'styles.css']) writeFileSync(at(f), 'build\n'); // the reset copies the build in
       writeFileSync(at(note), `${files[note]}\nTyped in a session.\n`);
       writeFileSync(at(`${FOLDER}/Untitled.md`), 'new');
       mkdirSync(at(`${FOLDER}/A folder`));
