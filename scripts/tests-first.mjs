@@ -358,7 +358,9 @@ function main(repo, mode, args, force) {
   } else if (mode === '--complete') {
     const missing = unrecorded(repo);
     for (const c of missing)
-      console.error(`${c.slice(0, 7)} changed a test and has no record in ${RECORDS}/: run --update and commit it`);
+      console.error(
+        `${c.slice(0, 7)} changed a test and has no record in ${RECORDS}/: run node scripts/tests-first.mjs --update, and commit what it writes`,
+      );
     process.exitCode = missing.length ? 1 : 0;
   } else if (mode === '--check') {
     const exceptions = exceptionsIn(repo);
@@ -374,7 +376,8 @@ function main(repo, mode, args, force) {
     for (const f of faults) console.error(`warning: ${faultLine(f)}`);
     process.exitCode = bad.length ? 1 : 0;
   } else if (mode === '--excuse' && args.length === 3 && args.every(Boolean)) {
-    console.log(excuse(repo, args[0], args[1], args[2], force));
+    const [file, test, evidence] = args;
+    console.log(excuse(repo, file, test, evidence, force));
   } else if (mode === '--migrate') {
     for (const line of migrate(repo)) console.log(line);
   } else {
