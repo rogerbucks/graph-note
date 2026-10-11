@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_view_parity.py",
+  "test": "ViewTable.test_the_core_lists_gqls_words_as_the_standard_does",
+  "seen_failing_first": false,
+  "evidence": "view_profile: cross-checks the core's GQL word lists, which already existed (reserved-words.ts, built test-first in 8b208c9), against the test's own fixed copy, so it passes against its parent by design. Seen failing against a planted fault: CAST taken out of the core's GQL_RESERVED, it fails (scratch run, 11 Oct 2026)"
+}

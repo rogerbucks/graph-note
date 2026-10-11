@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/view-parity.test.js",
+  "test": "views are written in the note > each view is a query block of the note whose graph line names it a view, found in the order written",
+  "seen_failing_first": false,
+  "evidence": "views_in_the_note, view_is_query: pins viewsOf, which already existed (views.ts, built test-first in views.test.js), on the shared view table, so it passes against its parent by design. Seen failing against a planted fault: viewsOf giving each view's block one too far on, it fails (scratch run, 11 Oct 2026)"
+}

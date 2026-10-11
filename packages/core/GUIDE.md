@@ -159,14 +159,24 @@ reads `· QUERY` as a query, and the core draws no query as data, so a view is n
   a message that names the five shapes in words and shows the nearest one's form (`VIEW_NAMES`, `VIEW_FORMS`). The
   queries are ISO GQL that Grafeo runs as written. A thing is named by its `id` property, which the reader writes into
   every node it gives Grafeo and the core's world keys every node by. Several kinds are written after `IS`
-  (`(n IS Person|Team)`), because Grafeo does not read `(n:Person|Team)`; a colon takes one kind.
+  (`(n IS Person|Team)`), because Grafeo does not read `(n:Person|Team)`; a colon takes one kind. A name the query gives
+  a thing or a route is never a word `reserved-words.ts` keeps from names, and a kind is never one it keeps from kinds;
+  `viewQuery` refuses such a kind with a RangeError that says why.
+- `reserved-words.ts` — the words a view may not use, in any case. As a name: GQL's reserved and pre-reserved words
+  (ISO/IEC 39075:2024 §21.3) and its truth values (§21.2), as the openGQL grammar lists them, and the words GQL leaves
+  free that Grafeo 0.5.43 refuses as a name, NaN and Inf among them (`GRAFEO_REFUSED`). As a kind, which is a label: only
+  the fewer words Grafeo refuses as a label (`GRAFEO_REFUSED_KINDS`), so Path, Match and Nothing may still be kinds. The
+  Python library's `test_view_parity.py` holds both Grafeo lists to Grafeo, from a word list of its own. A refusal says
+  only that GQL keeps the word, and suggests another.
 - `view-write.ts` — `viewQuery` writes the query for a view built by tapping, always one `parseView` reads back to the
   same view (steps held to 1 to 3 near and 1 to 6 reaching; a long set of names goes over lines), and `viewBlock` writes
   the whole block.
 - `view-evaluate.ts` — `evaluate` puts a view to a graph of a reading, never to a copy of it, and gives its things, its
   links (indexes into the links the graph draws) and, when nothing matches, `empty` with a sentence saying so and what to
   change. A route of up to k steps is a walk, as Grafeo takes it (a link may be used again), found by two breadth-first
-  searches. The things were compared with Grafeo's answers for the same queries on random graphs.
+  searches. The things were compared with Grafeo's answers for the same queries on random graphs, and are held to them
+  by one table, `python/graph_spec/tests/view_cases.json`, which `test/view-parity.test.js` holds the core to and the
+  Python library's `test_view_parity.py` holds Grafeo to.
 
 **Export (spec §16)**
 

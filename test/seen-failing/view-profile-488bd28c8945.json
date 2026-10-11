@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/view-profile.test.js",
+  "test": "what is refused, and what the refusal says > a kind is not a name: it may be a word GQL keeps, as Path is",
+  "seen_failing_first": false,
+  "evidence": "view_profile: pins that a kind was never held to the reserved words, which the new name check (reserved-words.ts) must not change, so it passes against its parent by design. Seen failing against a planted fault: the kinds shape reading its first kind as a name, it fails (scratch run, 11 Oct 2026)"
+}

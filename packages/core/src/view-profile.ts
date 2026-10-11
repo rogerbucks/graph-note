@@ -7,6 +7,7 @@
 // writes `id: '<name>'` into every node it hands the engine (to_gql.py `_with_ids`; the engine reads nodes back by
 // `properties(n).id`, queries.py `read`), and the world the core holds keys every node by that same property
 // (`Store` `n.props.id`, `Graph.nodes`), so `n.id` is the name on both sides.
+import { isRefusedKind, isReservedName, kindRefusal, nameRefusal } from './reserved-words.ts';
 import { isSpace, trimStart } from './whitespace.ts';
 
 /** The five kinds of view (spec §7): a hand-picked set, everything near a thing, how one thing reaches another, only some kinds, a walked path. */
@@ -151,9 +152,10 @@ class Cursor {
     const t = this.next(w);
     if (t.kind !== 'word' || t.text.toUpperCase() !== w.toUpperCase()) this.fail(`Expected ${w}, found ${found(t)}`);
   }
+  /** The word `w` exactly as written, or a refusal: `why` ends with "found", and what was found follows it. */
   exact(w: string, why: string): void {
     const t = this.next(w);
-    if (t.kind !== 'word' || t.text !== w) this.fail(`${why}, found ${found(t)}`);
+    if (t.kind !== 'word' || t.text !== w) this.fail(`${why} ${found(t)}`);
   }
   ident(what: string): string {
     const t = this.next(what);
@@ -179,6 +181,18 @@ class Cursor {
     if (yes) this.at++;
     return yes;
   }
+  /** A name the query gives a thing or a route: never a word GQL keeps, or Grafeo refuses, as a name (reserved-words.ts). */
+  name(what: string): string {
+    const n = this.ident(what);
+    if (isReservedName(n)) this.fail(nameRefusal(n));
+    return n;
+  }
+  /** A kind the query asks for: a label, so never one Grafeo refuses as a label (reserved-words.ts). */
+  kind(): string {
+    const k = this.ident('a kind');
+    if (isRefusedKind(k)) this.fail(kindRefusal(k));
+    return k;
+  }
   /** The name the query already gave a thing, written again. */
   again(name: string): void {
     const t = this.ident(name);
@@ -186,7 +200,7 @@ class Cursor {
   }
   /** A new name, not one already used. */
   fresh(what: string, used: string[]): string {
-    const n = this.ident(what);
+    const n = this.name(what);
     if (used.includes(n)) this.fail(`${n} names two things: give each its own name`);
     return n;
   }
@@ -227,7 +241,7 @@ function hops(c: Cursor, most: number, arrow: boolean): { steps: number; directe
 const shapes: Record<ViewKind, (c: Cursor) => ViewSpec> = {
   picked(c) {
     c.sym('(');
-    const n = c.ident('a name for the things, such as n');
+    const n = c.name('a name for the things, such as n');
     c.sym(')');
     c.word('WHERE');
     c.again(n);
@@ -248,7 +262,7 @@ const shapes: Record<ViewKind, (c: Cursor) => ViewSpec> = {
   },
   near(c) {
     c.sym('(');
-    const n = c.ident('a name for the thing, such as n');
+    const n = c.name('a name for the thing, such as n');
     const id = named(c);
     c.sym(')');
     const { steps } = hops(c, VIEW_LIMITS.near, false);
@@ -263,10 +277,10 @@ const shapes: Record<ViewKind, (c: Cursor) => ViewSpec> = {
     return { kind: 'near', id, depth: steps };
   },
   reaches(c) {
-    const p = c.ident('a name for the path, such as p');
+    const p = c.name('a name for the path, such as p');
     c.sym('=');
     c.sym('(');
-    const a = c.ident('a name for where it starts, such as a');
+    const a = c.name('a name for where it starts, such as a');
     const from = named(c);
     c.sym(')');
     const { steps, directed } = hops(c, VIEW_LIMITS.steps, true);
@@ -281,15 +295,15 @@ const shapes: Record<ViewKind, (c: Cursor) => ViewSpec> = {
   },
   kinds(c) {
     c.sym('(');
-    const n = c.ident('a name for the things, such as n');
+    const n = c.name('a name for the things, such as n');
     const kinds: string[] = [];
     if (c.take(':')) {
-      kinds.push(c.ident('a kind'));
+      kinds.push(c.kind());
       // Grafeo reads a choice of kinds after IS only, so a query with a colon and a bar would not run there
       if (c.is('|')) c.fail('Grafeo reads several kinds only after IS, not after a colon: write (n IS Person|Team)');
     } else {
       c.word('IS');
-      do kinds.push(c.ident('a kind'));
+      do kinds.push(c.kind());
       while (c.take('|'));
     }
     c.sym(')');
@@ -300,7 +314,7 @@ const shapes: Record<ViewKind, (c: Cursor) => ViewSpec> = {
   },
   path(c) {
     c.sym('(');
-    const p = c.ident('a name for the path, such as p');
+    const p = c.name('a name for the path, such as p');
     c.sym(':');
     c.exact('Path', 'A walked path is a Path; found');
     const path = named(c);
@@ -349,7 +363,8 @@ function refusal(reason: string, shape: ViewKind): ViewRefusal {
 
 /**
  * A view query read into the view it describes: one of the five shapes (spec §7), written as GQL with whitespace and line
- * breaks free, keywords in any case, the names of the things in the pattern as the author likes, whole-line // comments
+ * breaks free, keywords in any case, the names of the things in the pattern as the author likes (but never a word GQL
+ * keeps, or Grafeo refuses, as a name, nor a kind Grafeo refuses as a label: reserved-words.ts), whole-line // comments
  * ignored, text in single quotes. Anything else is refused (view_profile) with a message that says what was wrong, names
  * the five shapes in words and shows the form of the nearest.
  */
