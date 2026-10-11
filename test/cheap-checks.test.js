@@ -244,7 +244,10 @@ describe('a quiet Python run', () => {
 
   test('npm run test:ai:py runs it inside the Python library’s environment', () => {
     const script = readJSON('package.json').scripts['test:ai:py'];
-    assert.match(script, /^uv run .*--directory python\/graph_spec .*scripts\/quiet_unittest\.py$/);
+    assert.match(
+      script,
+      /^node scripts\/run-ceiling\.mjs uv run .*--directory python\/graph_spec .*scripts\/quiet_unittest\.py$/,
+    );
     assert.ok(exists('scripts/quiet_unittest.py'));
   });
 

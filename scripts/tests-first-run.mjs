@@ -55,6 +55,12 @@ const ended = (r) =>
         ? `could not run: ${r.error.code ?? r.error.message}`
         : `ended with exit status ${r.status} and no report`;
 
+/** A run stopped at a ceiling, as the result of a replay: not finished, with the ceiling's own line; else undefined. */
+function stoppedLine(r) {
+  const why = (r.stderr ?? '').split('\n').find((line) => line.startsWith(STOPPED));
+  return why ? { passed: [], failed: [], ran: false, why } : undefined;
+}
+
 /** Runs one JS test file; each test by its suites and name, passed or failed. */
 function runJs(dir, file) {
   // a run inside another test run would report to it, not print its own report
@@ -68,8 +74,8 @@ function runJs(dir, file) {
     maxBuffer: 1 << 28,
   });
   // a run stopped at a ceiling is an error with the ceiling's own line, never a run that was seen failing
-  const stopped = (r.stderr ?? '').split('\n').find((line) => line.startsWith(STOPPED));
-  if (stopped) return { passed: [], failed: [], ran: false, why: stopped };
+  const stopped = stoppedLine(r);
+  if (stopped) return stopped;
   const read = fromJunit(r.stdout ?? '');
   if (!read.ran) return { why: ended(r), ...read };
   // a parent test that fails after its subtests pass is a <testsuite> with no failure: only the exit status shows it. The
@@ -168,7 +174,14 @@ print(json.dumps({
 function runPy(dir, file, repo) {
   const venv = join(repo, 'python', 'graph_spec', '.venv', 'bin', 'python');
   const python = file.startsWith('python/graph_spec/') && existsSync(venv) ? venv : 'python3';
-  const r = spawnSync(python, ['-c', PY_RUNNER, join(dir, file)], { cwd: dir, encoding: 'utf8', timeout: runMs() });
+  // under the run ceiling (spec §13, capped_test_run), as runJs is: the report and exit status pass through unchanged
+  const r = spawnSync(process.execPath, [CEILING, python, '-c', PY_RUNNER, join(dir, file)], {
+    cwd: dir,
+    encoding: 'utf8',
+    timeout: runMs(),
+  });
+  const stopped = stoppedLine(r);
+  if (stopped) return stopped;
   let read;
   try {
     read = JSON.parse(r.stdout.trim().split('\n').pop() ?? '');

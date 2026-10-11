@@ -72,7 +72,7 @@ jobs:
       - run: uv run --locked ruff check
       - run: uv run --locked ruff format --check
       # a working copy has the reference engine, Grafeo: every test that needs it runs here, and fails if it is missing
-      - run: uv run --locked python -m unittest discover -s tests
+      - run: node ../../scripts/run-ceiling.mjs uv run --locked python -m unittest discover -s tests
         env:
           GRAPH_SPEC_ENGINE: required
 
@@ -102,7 +102,7 @@ jobs:
       - run: uv sync --locked --no-default-groups
       - name: Grafeo is not installed
         run: "! uv run --locked --no-default-groups python -c 'import grafeo'"
-      - run: uv run --locked --no-default-groups python -m unittest discover -s tests
+      - run: node ../../scripts/run-ceiling.mjs uv run --locked --no-default-groups python -m unittest discover -s tests
 
   # Every test is seen to fail before its code (spec §12): each new commit is replayed, its tests run against its
   # parent's code, and a new test that passes there fails the build unless its reason is kept in test/seen-failing/.
