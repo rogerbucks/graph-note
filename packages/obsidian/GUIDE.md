@@ -106,6 +106,9 @@ module that ties the parts together, named as the folder is.
   selected are each refused, in the core's words ("accept its name first"), by `acceptNameFirst`. Each is checked
   against the note as it is when written, never the card's drawing, which can be older: an edit into the block with the
   editor session's `current()` (the note as last seen, with what is typed), a view or a style inside `vault.process`.
+  The fix itself, Add the name, writes the name the note suggests now, and Add a thing suggests and checks its name the
+  same way. An edit into the block (the editor's `replace`) is checked again as it is written (`PaneSession.edit`); a
+  refusal reloads the block and says so in the draft banner, with the edit kept as a draft.
 - `placement.ts` — where a card is: read-only in reading view, a hover preview and an embed of another note (in Live
   Preview too); waiting for a card to be put on the page.
 - `read-only.ts` — the one check every write from a card passes: each function in its options, at any depth, is closed

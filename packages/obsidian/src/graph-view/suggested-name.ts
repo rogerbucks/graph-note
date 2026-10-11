@@ -17,6 +17,22 @@ export function unnamedPlace(
   return box?.suggested && reading.texts[box.suggested.block] === text ? box.suggested : undefined;
 }
 
+/**
+ * The name the thing just after `place`'s ( in the block as typed is suggested now, in the note as it is now (§4): another
+ * block can have changed it since the card was drawn. Undefined when the thing there is no longer without a name.
+ */
+function nameNow(now: NoteReading, graph: string, place: { line: number; character: number }, text: string) {
+  const box = now.graphs
+    .get(graph)
+    ?.boxes.find(
+      (b) =>
+        b.suggested?.line === place.line &&
+        b.suggested.character === place.character &&
+        now.texts[b.suggested.block] === text,
+    );
+  return box?.key;
+}
+
 /** What screen readers hear of a box: its kind and text, and that its name is only suggested, when it is. */
 export const boxLabel = (box: { key: string; kind: string; text: string; suggested?: object }): string =>
   `${box.kind ? `${box.kind}: ${box.text}` : box.text}${box.suggested ? ` (suggested name ${box.key}, not yet written)` : ''}`;
@@ -32,29 +48,33 @@ export function showSuggested(
   d: Details,
   ed: Editing | undefined,
 ): void {
-  const name = d.suggested?.suggested;
-  if (!name) return;
-  const row = el.createDiv({ cls: 'graph-note-suggested' });
-  row.createSpan({ text: `✎ Suggested name: ${name} — not written yet. ` });
+  const drawn = d.suggested?.suggested;
+  if (!drawn) return;
   const text = ed?.session?.text;
   const place = text === undefined ? undefined : unnamedPlace(reading, graph, d.key, text);
-  if (!ed || text === undefined || !place || !spanOf(text, { thing: d.key }, place)) {
+  // the name as the note suggests it now, never as the card drew it: another block can have taken that name since (§4)
+  const name =
+    ed?.session && place && text !== undefined ? nameNow(ed.session.current(), graph, place, text) : undefined;
+  const row = el.createDiv({ cls: 'graph-note-suggested' });
+  row.createSpan({ text: `✎ Suggested name: ${name ?? drawn} — not written yet. ` });
+  if (!ed || text === undefined || !place || !name || !spanOf(text, { thing: name }, place)) {
     row.createSpan({ cls: 'graph-note-fix', text: 'Edit the block to add it, or write a name of your own.' });
     return;
   }
-  const title = d.suggested?.fixTitle ?? `Add the name ${name}`;
+  const title = `Add the name ${name}`;
   const status = row.createSpan({ cls: 'graph-note-fix', attr: { role: 'status' } });
   // the text as it is when pressed: the details are redrawn only once typing stops, so what was typed since is kept
-  button(row, title, 'pencil', () => status.setText(writeName(ed, d.key, name, place)), title);
+  button(row, title, 'pencil', () => status.setText(writeName(ed, graph, name, place)), title);
 }
 
 /**
  * Writes a suggested name after the thing's ( in the text being edited, as it is now; or, when the thing there has a name
- * by now or is no longer there, writes nothing and says why.
+ * by now, is no longer there, or is suggested another name by now, writes nothing and says why. The note checks the name
+ * again as it is written (§4).
  */
-function writeName(ed: Editing, key: string, name: string, place: { line: number; character: number }): string {
+function writeName(ed: Editing, graph: string, name: string, place: { line: number; character: number }): string {
   const text = ed.session?.text;
-  if (text === undefined) return 'The block is no longer being edited: nothing was written.';
+  if (!ed.session || text === undefined) return 'The block is no longer being edited: nothing was written.';
   const at =
     text
       .split('\n')
@@ -62,8 +82,11 @@ function writeName(ed: Editing, key: string, name: string, place: { line: number
       .reduce((n, l) => n + l.length + 1, 0) + place.character;
   if (text[at - 1] === '(' && /[A-Za-z_]/.test(text[at] ?? ''))
     return 'This thing already has a name: nothing was written.';
-  if (!spanOf(text, { thing: key }, place))
+  if (!spanOf(text, { thing: name }, place))
     return 'This thing has moved in the text since: nothing was written. Try again once the drawing is redrawn.';
+  const now = nameNow(ed.session.current(), graph, place, text);
+  if (now !== name)
+    return `The name suggested is ${now ?? 'another'} by now: nothing was written. Open its details again.`;
   ed.replace(text.slice(0, at) + name + text.slice(at));
   return '';
 }

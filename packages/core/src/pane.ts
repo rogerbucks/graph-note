@@ -4,6 +4,7 @@
 // Host-free: the host reads and writes the note, and passes its text in.
 import { gqlSpans, graphOfBlock } from './blocks.ts';
 import { readNote } from './drawing.ts';
+import { editRefusal, newNames } from './edit-check.ts';
 import type { NoteReading } from './note-reading.ts';
 import { History, replaceBlock } from './store.ts';
 import type { BlockRef } from './store.ts';
@@ -18,8 +19,12 @@ export interface Choice {
   label: string;
 }
 
-/** What writing the pane's text into the note did: the new note, or why not and the draft kept. */
-export type PaneWrite = { ok: true; note: string; unchanged?: true } | { ok: false; reason: string; draft: string };
+/**
+ * What writing the pane's text into the note did: the new note, or why not and the draft kept. `edit` marks an edit made
+ * for the person that the note written into refused (§4), rather than a block changed meanwhile.
+ */
+export type PaneWrite =
+  { ok: true; note: string; unchanged?: true } | { ok: false; reason: string; draft: string; edit?: true };
 
 /** The note's graph blocks, each with its fence line and its graph. */
 function graphBlocks(note: string) {
@@ -41,6 +46,8 @@ export class PaneSession {
   shared: string[] = [];
   private readonly history = new History();
   private lastNote = '';
+  /** The names edits made for the person newly wrote, owed the check made as they are written. */
+  private readonly owed = new Set<string>();
 
   constructor(note: string, line: number) {
     const blocks = graphBlocks(note);
@@ -105,10 +112,27 @@ export class PaneSession {
   /** The strictness the note is read by (spec §21): the host's setting, asked each time; Forgiving unless set. */
   strictness: () => StrictnessSettings = () => ({ strictness: 'forgiving', allowed: [] });
 
-  /** Writes what is typed into the note, or refuses — keeping it as a draft and reloading the block as it now is. */
+  /**
+   * An edit made for the person, as from the drawing, never typed: the text, with the names it newly writes owed the
+   * check made as it is written (`write`), against the note written into (§4).
+   */
+  edit(text: string): void {
+    for (const n of newNames(this.text, text)) this.owed.add(n);
+    this.type(text);
+  }
+
+  /**
+   * Writes what is typed into the note, or refuses — keeping it as a draft and reloading the block as it now is: when the
+   * block changed meanwhile, and when an edit made for the person names a thing the note draws only under a suggested
+   * name, or gives a name another thing has (`editRefusal`), checked here against this note, whatever was checked before.
+   */
   write(note: string, record = true): PaneWrite {
     this.lastNote = note;
+    const owed = [...this.owed];
+    this.owed.clear();
     if (!this.dirty) return { ok: true, note, unchanged: true };
+    const refused = this.refusedEdit(note, owed);
+    if (refused) return refused;
     const r = replaceBlock(note, this.ref, this.text);
     if (r.ok) {
       if (record) this.history.record(this.ref.text, this.text);
@@ -124,6 +148,20 @@ export class PaneSession {
     }
     this.dirty = false;
     return { ok: false, reason: r.reason, draft };
+  }
+
+  /** The refusal of an edit's owed names by the note written into, with the block reloaded as it is there; or null. */
+  private refusedEdit(note: string, owed: string[]): PaneWrite | null {
+    if (!owed.length) return null;
+    const { texts, index } = this.texts(note);
+    const block = gqlSpans(note)[index];
+    const reason = block ? editRefusal(texts, index, this.graph, owed) : null;
+    if (!block || !reason) return null;
+    const draft = this.text;
+    this.ref = { line: block.open, text: block.text };
+    this.text = block.text;
+    this.dirty = false;
+    return { ok: false, reason, draft, edit: true };
   }
 
   /** The note changed outside the pane: nothing to do, the block reloaded into a clean pane, or a conflict with what is typed. */

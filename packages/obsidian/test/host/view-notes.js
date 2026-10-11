@@ -34,6 +34,8 @@ export async function load(options = {}) {
   }
   const plugin = new Plugin();
   if (options.engine) plugin.loadEngine = options.engine;
+  // loaded as Obsidian loads it (load-plugin.js): marked loaded before its onload runs, so its children load with it
+  plugin._loaded = true;
   await plugin.onload();
   return { plugin, state, doc, uninstall };
 }

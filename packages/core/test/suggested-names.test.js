@@ -280,4 +280,33 @@ describe('a thing only suggested in the note as it is when written', () => {
       refused: 'graph g already has a view called mine: give this one another name',
     });
   });
+
+  // Review, 11 Oct 2026: a card is drawn from the blocks up to its own, but its names are suggested against every block
+  test('a card, the whole note and unnamedIn agree on the name, a later block writing the plain one', () => {
+    const keys = (r) =>
+      (r.graphs.get('g')?.boxes ?? [])
+        .filter((b) => b.suggested)
+        .map((b) => b.key)
+        .sort();
+    const card = readNote([A, B], 0);
+    assert.deepEqual(keys(card), ['small_reader_2'], 'the card, drawn from A alone');
+    assert.deepEqual(keys(readNote([A, B])), ['small_reader_2'], 'the whole note');
+    assert.deepEqual(keys(unnamedIn([A, B], 'g')), ['small_reader_2'], 'unnamedIn');
+    assert.deepEqual(
+      card.problems.map((p) => p.block),
+      [0],
+      'the card lists only its own blocks’ problems',
+    );
+    // suggested_name_unique: the card's own fix writes a name no other block has
+    const fix = card.problems.find((p) => p.suggested);
+    const lines = A.split('\n'),
+      { line, character, text } = fix.insert;
+    lines[line] = lines[line].slice(0, character) + text + lines[line].slice(character);
+    const named = lines.join('\n');
+    assert.match(named, /\(small_reader_2:X/);
+    assert.deepEqual(
+      readNote([named, B]).problems.filter((p) => p.severity === 'error'),
+      [],
+    );
+  });
 });

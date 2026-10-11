@@ -65,6 +65,8 @@ export class AddThing {
     for (const k of [...new Set(boxes.flatMap((b) => b.kind.split(' · ').filter(Boolean)))].sort())
       kinds.createEl('option', { attr: { value: k } });
     const alert = el.createDiv({ attr: { role: 'alert' } });
+    // the names the note has now, with what is typed: never the card's drawing, which can be older (§4)
+    const now = () => this.o.editing?.()?.session?.current() ?? this.o.reading;
     // a name the user typed is kept as the text changes; cleared, the suggested one comes back
     let own = false;
     const suggest = () => {
@@ -74,7 +76,7 @@ export class AddThing {
       if (!words) return this.said.setText('');
       if (!own)
         name.value = suggestName(
-          this.o.reading,
+          now(),
           this.o.graph,
           words,
           kind.value.trim() || undefined,
@@ -98,7 +100,7 @@ export class AddThing {
       if (!ed || block === undefined)
         return alert.setText('The block is no longer being edited, so nothing was written.');
       // the name written is the name shown: a name taken since is refused, never swapped for another unseen
-      const r = addThing(this.o.reading, this.o.graph, block, {
+      const r = addThing(now(), this.o.graph, block, {
         text: text.value,
         name: name.value,
         kind: kind.value,

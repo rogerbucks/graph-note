@@ -198,17 +198,15 @@ describe('a card drawn before another block of its graph was changed', () => {
   const A = "// graph: reader\n(large:Option {name: 'Large reader'}),\n(:Option {name: 'Small reader'})";
   const NOW = /accept its name first: Small reader is only drawn under the suggested name small_reader,/;
 
-  /** A's card, drawn while B wrote small_reader and opened for editing; then B's thing is renamed elsewhere. */
-  async function staleCard() {
-    const note = noteOf(B, A);
+  /** A's card, drawn while the block before it was `before`, and opened for editing; then that block becomes `after`. */
+  async function staleCard(before = B, after = RENAMED) {
+    const note = noteOf(before, A);
     const env = await load({ files: { [PATH]: note } });
-    // loaded, as Obsidian loads a plugin, so the editor it opens hears the note change
-    env.plugin._loaded = true;
     const el = env.doc.body.createDiv();
     await env.state.processors.get('gql')(A, el, fakeContext(note, note.split('\n').lastIndexOf('```gql')));
     labelled(el, 'Edit here').click();
     await until(() => !!el.querySelector('textarea'));
-    await env.app.vault.modify(env.app.vault.getAbstractFileByPath(PATH), noteOf(RENAMED, A));
+    await env.app.vault.modify(env.app.vault.getAbstractFileByPath(PATH), noteOf(after, A));
     await wait(50);
     return { env, el };
   }
@@ -256,6 +254,36 @@ describe('a card drawn before another block of its graph was changed', () => {
       addChip(panel, 'HAS_TAG', 'thin');
       assert.match(panel.querySelector('[role="alert"]').textContent, NOW);
       written(env, el);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('Add the name writes the name the note now suggests, never the one the card drew', async () => {
+    // drawn while A's thing was small_reader; then B writes small_reader, so A's thing is small_reader_2
+    const { env, el } = await staleCard(RENAMED, B);
+    try {
+      tapKey(el, 'small_reader');
+      await until(() => !!labelled(details(el), 'Add the name small_reader_2'));
+      labelled(details(el), 'Add the name small_reader_2').click();
+      assert.equal(text(el), A.replace('(:Option', '(small_reader_2:Option'));
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('Add a thing suggests, and writes, a name no block of the note has now', async () => {
+    const TABLET = B.replaceAll('small_reader', 'tablet');
+    const { env, el } = await staleCard(RENAMED, TABLET);
+    try {
+      await until(() => !!labelled(el, 'Add a thing'));
+      labelled(el, 'Add a thing').click();
+      const words = field(el, 'Text of the new thing');
+      words.value = 'Tablet';
+      words.dispatch('input');
+      assert.equal(field(el, 'Name of the new thing').value, 'tablet_2');
+      labelled(el, 'Add the thing').click();
+      assert.equal(text(el), `${A},\n(tablet_2 {name: 'Tablet'})`);
     } finally {
       env.uninstall();
     }

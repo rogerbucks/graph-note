@@ -84,7 +84,8 @@ export function readNote(
   // exception to drawing as the Python reader does (drawn_in_part): over the limits it draws nothing at all.
   const tooLarge = textTooLarge([...blocks.filter((b) => typeof dataKind(b) === 'string'), ...shared]);
   if (tooLarge) return { graphs: new Map(), problems: [], world: {}, whole: {}, texts: upto, tooLarge };
-  const { store, problems } = readBlocks(upto, shared, budget);
+  // drawn from the blocks up to `upTo`, with names suggested against every block, as the whole note suggests them
+  const { store, problems } = readBlocks(blocks, shared, budget, dataKind, upTo);
   const world = gs.worldFromStore(store);
   const whole = upTo >= blocks.length - 1 ? world : gs.worldFromStore(readBlocks(blocks, shared, budget).store);
   const graphs = new Map<string, GraphDrawing>();

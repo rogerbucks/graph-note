@@ -23,6 +23,9 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   against the old one kept in `test/partial-read.test.js`. Past a budget of reading again (`REREAD_BUDGET`, 4 million
   UTF-16 units), the rest of a badly broken block is left out at once, so reading never holds the page (spec §9); the
   Python reader (`graphspec/reader/drawing.py`) counts and cuts exactly so, so both still draw alike (drawn_in_part).
+  A card is read from the blocks up to its own (`upTo`), but names are suggested against every block, so the card, the
+  whole note and every edit agree on a thing's suggested name, and its fix never writes a name a later block has
+  (suggested_name_unique).
 - `written-things.ts` — the things written in a block, found by their parentheses: name, kinds, properties, where they are.
 - `name-gaps.ts` — the things of a block that lack a name or a text, with the suggestion and a fix that writes it. No name:
   a warning, and the thing is read as if the suggested name were there, in a copy, never in the note. No text: a hint
@@ -38,7 +41,8 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   never an older drawing: `styleEdit` and `addView` read the note itself with `unnamedIn`, which uses the reader's own
   `prepare` and its rule for a box drawn suggested (`suggestedPlaces`, which drawing.ts uses too), so the two cannot
   differ; the edits into one block (`parkForLater`, which requires it, `pathBlock`, `makeList`, `addToList`) take the
-  reading of the note as it is now with the block as typed, which a host gives (`PaneSession.current()`).
+  reading of the note as it is now with the block as typed, which a host gives (`PaneSession.current()`), for a quick
+  answer; the check that counts is made as such an edit is written, against the note written into (`edit-check.ts`).
   So no caller can leave the check out. Property edits are refused too
   (`setProperty` finds no pattern for a name that is not written), the host saying why in these words. A name only
   suggested is also left out of the names completed while typing and of the near misses guessed (`help.ts`, `estimates.ts`).
@@ -98,7 +102,12 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 **Editing**
 
 - `pane.ts` — the edit session: what is typed, written back to the note safely; `texts` gives the note's blocks with the
-  typed text in the edited block's place.
+  typed text in the edited block's place, and `current()` the note as last seen, read so. `edit` is an edit made from
+  the drawing: the names it newly writes are checked as it is written, and a refusal reloads the block and keeps the
+  edit as a draft (`edit: true`).
+- `edit-check.ts` — that check (§4): `editRefusal` refuses a name the note written into draws only under a suggested
+  name (accept its name first), or a name the edit gives a thing that another block of the graph gives too (already a
+  name); `newNames` finds the names an edit newly writes.
 - `store.ts` — replacing or inserting a block in a note, keeping every other byte.
 - `history.ts` — the text's own undo history.
 - `help.ts` — diagnostics, fixes, completions and the read-back, in the shapes of the Language Server Protocol.
