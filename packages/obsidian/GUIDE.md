@@ -66,7 +66,9 @@ module that ties the parts together, named as the folder is.
 - `graph-view.ts` — `GraphView`: the card, its zoom and full screen; ties the rest together.
 - `view-bar.ts` — the bar: problems badge, Fit, zoom, Full screen, Edit here, Edit in pane, Source.
 - `problems-list.ts` — the problems behind the badge, grouped when many, and the completeness report.
-- `drawing-svg.ts` — the SVG put in the card, each box and link reachable by keyboard and named.
+- `drawing-svg.ts` — the SVG put in the card, each box and link reachable by keyboard and named; a drawing that runs
+  down the page is marked `graph-note-down`, which `styles.css` uses to give a link's label a gap from its line, so the
+  layout source and the SVG stay the Python library's.
 - `taps.ts` — what a tap or a key lands on, and the nearest things to a tap.
 - `details-panel.ts` — the details of a box or link, and the inspector while the block is edited.
 - `parked.ts` — things parked for later (§5, §8): each drawn dashed with a "⏳ later" or "⏳ overdue" mark on the SVG

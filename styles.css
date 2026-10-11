@@ -34,6 +34,12 @@
 .graph-note-svg g.edge[data-link] {
   cursor: pointer;
 }
+/* In a drawing that runs down the page Graphviz sets a link's label beside its line with no room between, so the text
+   begins at the line. The label is moved a little right, in the drawing's own units, so it scales with zoom; the layout
+   source and the SVG are the Python library's byte for byte, and are left as they are (device check V-07, 11 Oct 2026). */
+.graph-note-svg.graph-note-down g.edge > text {
+  transform: translateX(4px);
+}
 /* A thing parked for later (spec §5): dashed, with a later mark in words and a sign, never by colour alone. */
 .graph-note-parked path,
 .graph-note-parked polygon {
@@ -200,6 +206,13 @@ details.graph-note-style > summary {
    Obsidian does for its PDF toolbar, so it never covers the bar's last button. */
 .cm-embed-block .graph-note-bar {
   padding-inline-end: var(--size-4-9);
+}
+/* The same button covers the copy button of a block shown as code, which Obsidian also puts at the block's top right: in
+   Live Preview the copy button steps in from the right edge by that room and a little more, so the two icons sit side by
+   side and neither covers the other (device check V-03, 11 Oct 2026). Only sizes, so the same in light and dark and at
+   any width; reading view has no edit-block button, so it keeps Obsidian's place. */
+.cm-embed-block pre.graph-note-code .copy-code-button {
+  inset-inline-end: calc(var(--size-4-9) + var(--size-2-2));
 }
 .graph-note-badge-text {
   font-size: var(--font-ui-small);
