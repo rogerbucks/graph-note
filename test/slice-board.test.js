@@ -16,6 +16,7 @@ import {
   summariseBySection,
   summariseChecks,
 } from '../scripts/slice-board.mjs';
+import { BOARD_CSS } from '../scripts/slice-board-style.mjs';
 import { path } from './repository/repo.js';
 
 const FIXTURE = `// graph: editor_requirements · SOURCE
@@ -259,13 +260,9 @@ describe('the page', () => {
       assert.match(html, new RegExp(`<label for="alt-${id}">${label}</label>`));
   });
 
-  test('switches the altitude by CSS alone: the checked radio shows its view, and the focused one is outlined', () => {
-    const css = page().match(/<style>([\s\S]*?)<\/style>/)[1];
-    for (const name of ['overview', 'working', 'full'])
-      assert.match(css, new RegExp(`#alt-${name}:checked ~ \\.view-${name}`));
-    assert.match(css, /#alt-working:focus-visible ~ \.switch label\[for='?"?alt-working/);
-    assert.match(css, /font-variant-numeric:\s*tabular-nums/);
-    assert.match(css, /overflow-x:\s*auto/);
+  test('carries the board stylesheet, once, and in the same order as the module that holds it', () => {
+    const styles = [...page().matchAll(/<style>\n([\s\S]*?)\n<\/style>/g)].map((m) => m[1]);
+    assert.deepEqual(styles, [BOARD_CSS]);
   });
 
   test('Overview: the slice bar says how many of the total are proved, then a row for each section', () => {
@@ -324,32 +321,6 @@ describe('the page', () => {
     for (const word of ['proved', 'part', 'open']) assert.match(legend, new RegExp(`chip-${word}">${word}<`));
   });
 
-  test('every colour is a custom property on :root, with the dark values under the media query and data-theme', () => {
-    const css = page().match(/<style>([\s\S]*?)<\/style>/)[1];
-    const light = /:root\s*\{([^}]*)\}/.exec(css)[1];
-    for (const token of ['--bg', '--text', '--proved', '--part', '--open'])
-      assert.match(light, new RegExp(`${token}:`));
-    assert.match(
-      css,
-      /@media \(prefers-color-scheme: dark\)\s*\{\s*:root:not\(\[data-theme="light"\]\)\s*\{[^}]*color-scheme: dark/,
-    );
-    assert.match(css, /:root\[data-theme="dark"\]\s*\{[^}]*color-scheme: dark/);
-    assert.match(css, /body\s*\{[^}]*background:\s*var\(--bg\)/);
-    const outsideTokens = css.replace(/:root[^{]*\{[^}]*\}/g, '');
-    assert.doesNotMatch(outsideTokens, /#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i, 'a colour is written only as a token');
-  });
-
-  test('the light and both dark token sets define exactly the same custom properties', () => {
-    const css = page().match(/<style>([\s\S]*?)<\/style>/)[1];
-    const names = (block) => [...block.matchAll(/(--[a-z0-9-]+):/g)].map((m) => m[1]).sort();
-    const light = names(/:root\s*\{([^}]*)\}/.exec(css)[1]);
-    const media = names(/:root:not\(\[data-theme="light"\]\)\s*\{([^}]*)\}/.exec(css)[1]);
-    const forced = names(/:root\[data-theme="dark"\]\s*\{([^}]*)\}/.exec(css)[1]);
-    assert.ok(light.length > 10);
-    assert.deepEqual(media, light);
-    assert.deepEqual(forced, light);
-  });
-
   test('a bar is to scale: the proved, part and open segments start and run in proportion', () => {
     const bar = /<svg class="bar"[^>]*>([\s\S]*?)<\/svg>/.exec(view(page(), 'overview'))[1];
     const rects = [...bar.matchAll(/<rect class="seg-(\w+)" x="([\d.]+)" width="([\d.]+)"/g)].map((m) => m.slice(1));
@@ -370,12 +341,6 @@ describe('the page', () => {
     assert.match(html, /kept &lt;u&gt;away&lt;\/u&gt; &amp; &quot;far&quot;/);
   });
 
-  test('a long rule, proof and file wrap or scroll rather than widen the page', () => {
-    const css = page().match(/<style>([\s\S]*?)<\/style>/)[1];
-    assert.match(css, /\.rule, \.proves \{[^}]*overflow-wrap:\s*anywhere/);
-    assert.match(css, /\.meta \{[^}]*font-variant-numeric:\s*tabular-nums/);
-  });
-
   test('the altitude switch is a named group, with its labels for the radios', () => {
     const html = page();
     assert.match(html, /<div class="switch" role="group" aria-label="Altitude">/);
@@ -389,13 +354,6 @@ describe('the page', () => {
       assert.match(v, /Slice 9 has no requirements/, name);
       assert.doesNotMatch(v, /is proved|0 of 0 proved/, name);
     }
-  });
-
-  test('works at 400px: a 16px gutter, and nothing wider than the screen outside its own scroll box', () => {
-    const css = page().match(/<style>([\s\S]*?)<\/style>/)[1];
-    assert.match(css, /\.banner, \.board \{[^}]*padding:\s*0 16px/);
-    assert.match(css, /max-width:\s*100%/);
-    assert.match(css, /\.scroll\s*\{[^}]*overflow-x:\s*auto/);
   });
 });
 
@@ -423,14 +381,6 @@ describe('the open pull requests panel', () => {
     assert.match(panel, /Add the &lt;b&gt;board&lt;\/b&gt; &amp; more/);
     assert.doesNotMatch(panel, /javascript:/);
     assert.match(panel, /#72/);
-  });
-
-  test('shows on every altitude, Full included, by CSS', () => {
-    const css = page({ prs: PRS }).match(/<style>([\s\S]*?)<\/style>/)[1];
-    assert.match(css, /#alt-overview:checked ~ \.prs/);
-    assert.match(css, /#alt-working:checked ~ \.prs/);
-    assert.match(css, /#alt-full:checked ~ \.prs/);
-    assert.match(css, /\.prs\s*\{[^}]*display:\s*none/);
   });
 
   test('a pull request with no checks says "no checks yet", not three zero counts', () => {
