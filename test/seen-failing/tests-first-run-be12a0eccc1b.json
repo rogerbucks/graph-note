@@ -1,0 +1,6 @@
+{
+  "file": "test/tests-first-run.test.js",
+  "test": "no test vanishes without a word > a report cut off in the middle of a tag says nothing of tags: it did not finish",
+  "seen_failing_first": false,
+  "evidence": "A guard on the new tag count: a report cut off before </testsuites> did not finish before the count was added, and must not gain a why from it, so it passes against the parent's code by design."
+}

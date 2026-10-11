@@ -1,0 +1,6 @@
+{
+  "file": "test/tests-first-run.test.js",
+  "test": "a Python failure outside any test > a failure that belongs to no listed test and matches no scope makes the run unreadable, and says so",
+  "seen_failing_first": false,
+  "evidence": "Pins behaviour the parent already had: every failure belonging to no listed test made the run unreadable. It is a guard that this stays so for a failure matching no scope, now that hooks matching a scope are read, so it passes against the parent's code by design."
+}
