@@ -31,7 +31,10 @@ export function engineOnThePage(): Promise<Engine> {
   return layoutWorker(undefined).loadEngine();
 }
 
-/** The tighter of two sets of limits, field by field: a setting that lowers a limit lowers it on the page too. */
+/**
+ * The tighter of two sets of limits, field by field, so a setting that lowers a limit lowers it on the page too; but the
+ * longer of the two start times, as starting the engine is no layout to hold back.
+ */
 const tighter = (a: LayoutLimits, b: LayoutLimits): LayoutLimits => ({
   things: Math.min(a.things, b.things),
   links: Math.min(a.links, b.links),

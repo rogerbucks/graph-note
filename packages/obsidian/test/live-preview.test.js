@@ -142,6 +142,30 @@ describe('the editing view draws graph blocks with its own widget', () => {
       env.uninstall();
     }
   });
+
+  test('a card taken away before its drawing is ready is never filled, and leaves nothing watching the settings', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      const watchers = () => env.plugin.settingsWatchers.size;
+      const before = watchers();
+      const [card] = widgets(editorState(env, NOTE));
+      const dom = card.widget.toDOM();
+      env.doc.body.appendChild(dom);
+      card.widget.destroy(dom);
+      dom.remove();
+      // a card drawn after it, and shown, is the sign the drawing taken away has had its time to settle
+      const [next] = widgets(editorState(env, NOTE));
+      const shown = next.widget.toDOM();
+      env.doc.body.appendChild(shown);
+      await until(() => !!shown.querySelector('.graph-note-view'), 3000);
+      await wait(300);
+      assert.ok(!dom.querySelector('.graph-note-view'), 'the card taken away is not filled');
+      next.widget.destroy(shown);
+      assert.equal(watchers(), before, 'and nothing of it is left watching the settings');
+    } finally {
+      env.uninstall();
+    }
+  });
 });
 
 describe('the editor in place, in the editing view’s own card', () => {

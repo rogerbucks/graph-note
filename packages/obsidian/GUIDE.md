@@ -38,6 +38,7 @@ module that ties the parts together, named as the folder is.
 - `properties.ts` — `renderProperties`: a row for each property, its type menu, and the rows of the lists a thing holds.
 - `list-form.ts` — the form that asks for a kind and a relationship when List is chosen.
 - `list-row.ts` — a list as chips: the things linked to this one, each removed with its x, and a field to add a value.
+- `menu-place.ts` — where a property's type menu is shown: under its icon, or above it when the window has no room below.
 
 ### `src/export/` — export (spec §16)
 
@@ -64,9 +65,11 @@ module that ties the parts together, named as the folder is.
 ### `src/graph-view/` — a drawn graph
 
 - `graph-view.ts` — `GraphView`: the card, its zoom and full screen; ties the rest together.
-- `view-bar.ts` — the bar: problems badge, Fit, zoom, Full screen, Edit here, Edit in pane, Source.
+- `view-bar.ts` — the bar: problems badge, Fit, zoom, Full screen, Export, Edit here, Edit in pane, Source.
 - `problems-list.ts` — the problems behind the badge, grouped when many, and the completeness report.
-- `drawing-svg.ts` — the SVG put in the card, each box and link reachable by keyboard and named.
+- `drawing-svg.ts` — the SVG put in the card, each box and link reachable by keyboard and named; a drawing that runs
+  down the page is marked `graph-note-down`, which `styles.css` uses to give a link's label a gap from its line, so the
+  layout source and the SVG stay the Python library's.
 - `taps.ts` — what a tap or a key lands on, and the nearest things to a tap.
 - `details-panel.ts` — the details of a box, a link or an estimated link, the one shown marked as selected, and the
   inspector while the block is edited.
@@ -126,6 +129,8 @@ package, or all with `npm test` from the repository root. Each builds `main.js` 
   the CSS cascade a test needs), `notes.js` (a fenced block, a button by its label), and the notes each group of tests
   opens: `card-notes.js`, `pane-notes.js`, `view-notes.js`, and `inspector-steps.js` (opening a box's details and driving the inspector's rows, menus and chips).
   `workers.js` stands in a browser's Worker: each runs the code main.js hands it, from its Blob URL, in a real thread.
+  `fake-vault.js` stands in the vault's ways of making files (create, modify, rename, delete, a folder), one of which
+  can be made to fail as a full disk would, and the metadata cache's front matter.
 - `test/device-checklist.md` — what is checked by hand on the devices. Every item has a number that never changes
   (`V-03`: its section's letter and two digits), and each item after Before has a note in `test-vault/Device checks/`
   that shows the case on a graph to try it on; `test/device-check-notes.test.js` (repository root) holds the two together.

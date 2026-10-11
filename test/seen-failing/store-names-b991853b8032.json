@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/store-names.test.mjs",
+  "test": "a name JavaScript gives every object > after a block that cannot be read is undone, a graph called toString is still read as any other",
+  "seen_failing_first": false,
+  "evidence": "pins the fix made earlier on this branch (ff33a85): review of #76 planted a fault in store.js's rollback copy (Object.fromEntries without the prototype-free table) and no test failed; this test fails against that fault with 'graph.nodes is not iterable'"
+}

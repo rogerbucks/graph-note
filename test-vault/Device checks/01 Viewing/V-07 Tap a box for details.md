@@ -1,6 +1,6 @@
 # V-07 Tap a box for details
 
-**You should see:** after tapping the Large reader box, a panel headed by its text, `Large reader`, with its kind, `Option`. Under the heading Links out, one line for the link going out: `Links out: answers → Which device should I read on?`. Under the heading Links in, one line for the link coming in: `Links in: A4 pages need a big screen favours this`.
+**You should see:** first, the graph drawn down the page, Reason above Option above Question, with the link words `favours` and `answers` each beside their line and a small gap between the line and the first letter, never touching it. Then, after tapping the Large reader box, a panel headed by its text, `Large reader`, with its kind, `Option`. Under the heading Links out, one line for the link going out: `Links out: answers → Which device should I read on?`. Under the heading Links in, one line for the link coming in: `Links in: A4 pages need a big screen favours this`.
 
 **Test diagram:**
 
@@ -19,9 +19,10 @@
 
 **Do this:**
 
-1. Tap the Large reader box.
-2. Read the panel: its text, its kind, and its links out and in as above.
-3. Tap the question box and check the panel changes: it has links in only.
+1. Look at the drawing before you tap: the words `favours` and `answers` start a little way to the right of their lines, not on them. Zoom in to see the gap.
+2. Tap the Large reader box.
+3. Read the panel: its text, its kind, and its links out and in as above.
+4. Tap the question box and check the panel changes: it has links in only.
 
 **Checklist line:**
 

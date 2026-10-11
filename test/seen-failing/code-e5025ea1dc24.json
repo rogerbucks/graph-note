@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/code.test.js",
+  "test": "a query block shown as code > is a code block holding one copy button, named for a screen reader and drawn with an icon",
+  "seen_failing_first": false,
+  "evidence": "Pins the structure the fix relies on, which already existed: renderCode in code.ts has always made one pre.graph-note-code holding one labelled copy button with an icon. Seen passing at the parent, as it should: the fix changes no markup there."
+}

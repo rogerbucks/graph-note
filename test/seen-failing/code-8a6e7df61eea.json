@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/code.test.js",
+  "test": "the copy button beside Obsidian’s edit-block button > the edit-block button is left to Obsidian: the plugin styles nothing of its own for it",
+  "seen_failing_first": false,
+  "evidence": "A guard that the fix does not restyle Obsidian's own edit-block button: before the fix the stylesheet named it in no rule, so this passed too. It would fail if a later change styled that button."
+}

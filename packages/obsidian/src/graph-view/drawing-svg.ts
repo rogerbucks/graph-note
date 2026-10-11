@@ -18,6 +18,7 @@ export function insertSvg(viewport: HTMLElement, drawn: Drawn, d: GraphDrawing |
   const svg = viewport.appendChild(activeDocument.importNode(parsed, true)) as unknown as SVGSVGElement;
   svg.removeAttribute('style');
   svg.classList.add('graph-note-svg');
+  if (drawn.rankdir === 'TB') svg.classList.add('graph-note-down'); // labels sit beside their lines, so they are given a gap
   const boxes = d?.boxes ?? [];
   for (const g of Array.from(svg.querySelectorAll('g.node'))) {
     const box = boxes[Number(/^node(\d+)$/.exec(g.getAttribute('id') ?? '')?.[1]) - 1];

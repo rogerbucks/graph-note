@@ -44,7 +44,19 @@ export function cutAround(a, b, max = CUT) {
   const cut = (text) => `${start ? '…' : ''}${text.slice(start, start + max)}${text.length > start + max ? '…' : ''}`;
   return [cut(a), cut(b)];
 }
-const firstLine = (text) => String(text ?? '').split('\n')[0];
+/**
+ * A value as text. A failure the test runner could not copy from the process that ran it, as when an assertion's values
+ * hold a function or a DOM node, arrives as an empty object with no prototype, which String cannot make text: it is said
+ * in words, so the run goes on to report the rest.
+ */
+const asText = (value) => {
+  try {
+    return String(value ?? '');
+  } catch {
+    return 'a failure whose details the test runner could not pass on (its values could not be copied)';
+  }
+};
+const firstLine = (text) => asText(text).split('\n')[0];
 
 /** The roots a path may be under: the working folder as given, and as the file system really has it. */
 function roots(cwd) {
