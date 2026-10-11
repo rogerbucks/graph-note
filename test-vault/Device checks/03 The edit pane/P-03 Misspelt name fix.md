@@ -17,6 +17,7 @@
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. Press Edit to open the pane.
 2. Find the underline on small_reeder and the warning beside it.
 3. Press the fix offered on that line.

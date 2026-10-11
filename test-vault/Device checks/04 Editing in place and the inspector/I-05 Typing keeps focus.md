@@ -17,6 +17,7 @@
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. Press Edit here, select a word and type over it; check the caret stays in the box.
 2. Scroll the box a little, type, and check it stays scrolled.
 3. Type a comma at the end of a line and check the box is still in its card.

@@ -23,6 +23,6 @@
 
 **Checklist line:**
 
-> **X-04** Settings › Export › companion note on: a `.md` beside the image shows it and links the note (export_companion_note). A note with `classification:` above the setting's level: the form names it and writes nothing until Export anyway (classified_export).
+> **X-04** Settings › Export › companion note on: a `.md` beside the image shows it and links the note. A note with `classification:` above the setting's level: the form names it and writes nothing until Export anyway.
 
 **Back to the checklist:** [X-04 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for X-04 in its list.

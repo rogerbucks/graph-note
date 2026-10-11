@@ -26,6 +26,7 @@ The reasons, in a second block of the same graph.
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. Press Edit on the first drawing (not the second).
 2. Press Lock the graph.
 3. Read the schema that is written: it should declare Question, Option, Reason, ANSWERS and FAVOURS.

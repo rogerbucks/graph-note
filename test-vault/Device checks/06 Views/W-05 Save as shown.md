@@ -24,6 +24,7 @@ MATCH (n {id: 'park'})-[]-{1,1}(m) RETURN n, m
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. Zoom in on the round_park card, and tap The park so its details open.
 2. Press Save as shown.
 3. Open the note's text: a style block with a Shown thing (zoom, position, selected: 'park') should be there.
@@ -31,6 +32,6 @@ MATCH (n {id: 'park'})-[]-{1,1}(m) RETURN n, m
 
 **Checklist line:**
 
-> **W-05** Zoom in, select a box, Save as shown: the style block gets a Shown; close and reopen the note: the view opens at that zoom with that box's details open (view_saved_as_shown).
+> **W-05** Zoom in, select a box, Save as shown: the style block gets a Shown; close and reopen the note: the view opens at that zoom with that box's details open.
 
 **Back to the checklist:** [W-05 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for W-05 in its list.

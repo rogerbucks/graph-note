@@ -1,6 +1,6 @@
 # Device checks
 
-One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md)): 84 checks in 11 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
+One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md)): 85 checks in 11 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
 
 ## 01 Viewing
 
@@ -113,6 +113,7 @@ One note for each check in the device checklist ([the checklist, on GitHub](http
 - [[Device checks/10 Settings/C-03 Convert to standard GQL|C-03 Convert to standard GQL]]
 - [[Device checks/10 Settings/C-04 AI models|C-04 AI models]]
 - [[Device checks/10 Settings/C-05 Indent and direction|C-05 Indent and direction]]
+- [[Device checks/10 Settings/C-06 Convert refused for unreadable line|C-06 Convert refused for unreadable line]]
 
 ## 11 Accessibility
 

@@ -15,6 +15,7 @@
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. Press Edit and make three changes in the pane, such as renaming the option, adding a reason and adding a link.
 2. Press Undo three times and watch the note's block return to this text, step by step.
 3. Press Redo three times and watch the changes come back.

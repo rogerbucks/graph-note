@@ -18,6 +18,8 @@
 <!-- expect: overdue 1 -->
 <!-- expect: hint "the thing later_small has no text" -->
 
+An ℹ hint on `later_small`, "the thing later_small has no text", is expected here: it is only offered, it is not counted as a problem, and the badge ignores it.
+
 **Do this:**
 
 1. Look at the Small reader box: dashed, marked "⏳ overdue".

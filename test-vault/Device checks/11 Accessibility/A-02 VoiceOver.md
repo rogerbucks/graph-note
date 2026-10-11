@@ -17,6 +17,7 @@
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. Switch VoiceOver on and move to the drawing: listen to it described as a list of sentences.
 2. Press Edit to open the pane and type a misspelt name, for example `(large)-[:ANSWERS]->(questoin)`.
 3. Listen for the new problem to be announced, and check the focus stayed in the text.

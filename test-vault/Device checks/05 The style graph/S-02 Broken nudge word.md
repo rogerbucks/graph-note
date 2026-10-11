@@ -30,6 +30,6 @@
 
 **Checklist line:**
 
-> **S-02** Change a nudge's word to `besides`: the fold says "⚠ 1 problem"; the graph's badge lists "a nudge must be one of four words…" and the graph is still drawn (four_nudge_words, nudge_problems). Break the block's text: the graph is drawn in the locked style and the problem listed (broken_style_block).
+> **S-02** Change a nudge's word to `besides`: the fold says "⚠ 1 problem"; the graph's badge lists "a nudge must be one of four words…" and the graph is still drawn. Break the block's text: the graph is drawn in the locked style and the problem listed.
 
 **Back to the checklist:** [S-02 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for S-02 in its list.

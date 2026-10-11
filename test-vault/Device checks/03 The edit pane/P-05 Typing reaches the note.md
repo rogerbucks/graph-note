@@ -15,6 +15,7 @@
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. Press Edit and, in the pane, change the name 'Large reader' to 'Large e-ink reader'.
 2. Watch the block in the note: its text should change within about a third of a second, and its drawing follow.
 

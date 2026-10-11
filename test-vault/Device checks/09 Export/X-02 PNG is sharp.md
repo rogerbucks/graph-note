@@ -23,6 +23,6 @@
 
 **Checklist line:**
 
-> **X-02** PNG: the file opens sharp at twice the drawing's size or more (export_png_sharp).
+> **X-02** PNG: the file opens sharp at twice the drawing's size or more.
 
 **Back to the checklist:** [X-02 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for X-02 in its list.

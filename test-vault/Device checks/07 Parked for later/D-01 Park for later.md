@@ -17,6 +17,7 @@
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. Press Edit here and tap the Small reader box.
 2. Press Park for later. In the form, type "say what the small reader answers" for what is needed and "waiting for the trial" for why.
 3. Press Park it.
@@ -25,6 +26,6 @@
 
 **Checklist line:**
 
-> **D-01** Edit here on a card, tap a box, press Park for later, fill what is needed and why, press Park it: a Deferred is written into the block; when the card redraws, the box is dashed with "⏳ later" at its top right, readable in light and dark, and the badge says "No problems, 1 parked" (slice 2, park_for_later, deferred_drawn, parked_not_broken).
+> **D-01** Edit here on a card, tap a box, press Park for later, fill what is needed and why, press Park it: a Deferred is written into the block; when the card redraws, the box is dashed with "⏳ later" at its top right, readable in light and dark, and the badge says "No problems, 1 parked".
 
 **Back to the checklist:** [D-01 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for D-01 in its list.

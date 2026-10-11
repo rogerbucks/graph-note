@@ -1,6 +1,6 @@
 # V-07 Tap a box for details
 
-**You should see:** after tapping the Large reader box, its text ("Large reader"), its kind (Option), and its links: one going out (answers the question) and one coming in (favoured by the reason).
+**You should see:** after tapping the Large reader box, a panel headed by its text, `Large reader`, with its kind, `Option`. Under the heading Links out, one line for the link going out: `Links out: answers → Which device should I read on?`. Under the heading Links in, one line for the link coming in: `Links in: A4 pages need a big screen favours this`.
 
 **Test diagram:**
 
@@ -14,12 +14,14 @@
 ```
 
 <!-- expect: clean -->
+<!-- expect: detail "large | Links out: answers → Which device should I read on?" -->
+<!-- expect: detail "large | Links in: A4 pages need a big screen favours this" -->
 
 **Do this:**
 
 1. Tap the Large reader box.
-2. Read its text, kind and links in and out.
-3. Tap another box and check the details change.
+2. Read the panel: its text, its kind, and its links out and in as above.
+3. Tap the question box and check the panel changes: it has links in only.
 
 **Checklist line:**
 

@@ -15,6 +15,7 @@
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. Press Edit here on the desktop.
 2. Move the mouse over the box and rest it there for a few seconds.
 3. Click into the box.

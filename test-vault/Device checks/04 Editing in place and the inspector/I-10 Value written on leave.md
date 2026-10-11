@@ -15,6 +15,7 @@
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. Press Edit here, tap the Small reader box, and change rating to 5. Leave the field, and check the note's text now says `rating: 5`.
 2. Type the word `high` in rating and leave the field.
 3. Check a message says the value is not a number, and the note still says `rating: 5`.

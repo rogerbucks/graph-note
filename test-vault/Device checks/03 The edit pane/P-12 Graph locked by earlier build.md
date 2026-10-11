@@ -1,6 +1,6 @@
 # P-12 Graph locked by earlier build
 
-**You should see:** a warning that the schema does not declare its types (Option, Question and ANSWERS), because the schema's GraphMeta has no DECLARES links, as a graph locked by an earlier build would be. Its fix adds the DECLARES links and the warning goes.
+**You should see:** a warning that the schema does not declare its types (Option, Question and ANSWERS), because the schema's GraphMeta has no DECLARES links, as a graph locked by an earlier build would be. Its fix adds the DECLARES links and the warning goes. The new DECLARES lines read back in the pane with the schema's names marked "(not in the graph)", because the schema's things are not drawn: that is expected.
 
 **Test diagram:**
 

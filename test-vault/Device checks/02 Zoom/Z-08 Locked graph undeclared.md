@@ -1,6 +1,6 @@
 # Z-08 Locked graph undeclared
 
-**You should see:** in this locked graph, a warning sign on the line of the kind Spare and on the line of the link type WANT, because its schema declares neither. HOPE is declared but has no reading of its own, so it reads back as an arrow (Drive —HOPE→ Plan), not as a guess at words.
+**You should see:** in this locked graph, a warning sign on the line of the kind Spare and on the line of the link type WANT, because its schema declares neither. HOPE is declared but has no reading of its own, so its line reads back as an arrow, `Drive —HOPE→ Plan`, not as a guess at words. The schema's own lines read back too, as `wishes_schema (not in the graph) —DECLARES→ kind_wish (not in the graph)`: that is expected, because the schema's things are not drawn.
 
 **Test diagram:**
 
@@ -21,12 +21,16 @@
 <!-- expect: problem "Spare is not a kind the schema of graph wishes declares" -->
 <!-- expect: problem "WANT is not a relationship type the schema of graph wishes declares" -->
 <!-- expect: check "§5" -->
+<!-- expect: readback "Drive —HOPE→ Plan" -->
+<!-- expect: readback "wishes_schema (not in the graph) —DECLARES→ kind_wish (not in the graph)" -->
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. Press Edit to open the text.
 2. Find the warning sign on the `(spare:Spare …)` line and on the `WANT` line.
-3. Read the line that explains the HOPE link: it should show an arrow, not words.
+3. Read the line beside the HOPE link: it should show the arrow, not words.
+4. Read the lines beside the schema's DECLARES links: they name `wishes_schema (not in the graph)`, which is expected.
 
 **Checklist line:**
 

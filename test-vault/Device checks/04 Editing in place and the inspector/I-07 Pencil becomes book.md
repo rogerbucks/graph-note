@@ -15,6 +15,7 @@
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. Press Edit here and look at the icon in the card's corner: it should be a book.
 2. Type a word into the text, then press the book.
 3. Check what you typed is in the note, the box is closed, and the pencil is back.

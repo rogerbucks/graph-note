@@ -15,6 +15,7 @@
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. On the phone, press Edit here and tap the Small reader box.
 2. Check the properties open as a sheet at the bottom of the screen.
 3. Touch each field, icon and the Add property button, and check each is easy to hit.

@@ -25,6 +25,7 @@ const PY_TEST = /(^|\/)tests\/test_\w+\.py$/;
 const CHEAP = 'test/cheap-checks.test.js';
 const CONVENTIONS = 'test/conventions.test.js';
 const DEVICE_NOTES = 'test/device-check-notes.test.js';
+const DEVICE_QUOTES = 'test/device-check-quotes.test.js';
 
 /**
  * Files whose tests do not carry their name: the tests that read each. A file matched here needs only those tests.
@@ -40,8 +41,8 @@ const READERS = [
   ],
   [/^(CONTRIBUTING\.md|(packages|python)\/[^/]+\/GUIDE\.md)$/, [CONVENTIONS]],
   [/^README\.md$/, [CONVENTIONS, 'test/policy.test.js']],
-  [/^(test-vault\/.*|scripts\/reset-test-vault\.mjs)$/, ['test/test-vault.test.js', DEVICE_NOTES]],
-  [/^packages\/obsidian\/test\/device-checklist\.md$/, [DEVICE_NOTES]],
+  [/^(test-vault\/.*|scripts\/reset-test-vault\.mjs)$/, ['test/test-vault.test.js', DEVICE_NOTES, DEVICE_QUOTES]],
+  [/^packages\/obsidian\/test\/device-checklist\.md$/, [DEVICE_NOTES, DEVICE_QUOTES]],
   [/^(requirements\/.*|scripts\/check-requirements\.mjs)$/, ['test/requirements.test.js']],
   [/^(scripts\/check-classification\.mjs)$/, ['test/classification.test.js']],
   [/^scripts\/quality-(secrets|suite)\.mjs$/, ['test/quality-metrics.test.js']],

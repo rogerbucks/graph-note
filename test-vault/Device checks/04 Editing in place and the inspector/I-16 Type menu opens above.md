@@ -15,6 +15,7 @@
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. Press Edit here and tap the Small reader box.
 2. Scroll the note until the properties are at the bottom of the window, and tap the icon of the last property. Check the menu opens above the icon and every item, down to Remove and Checkbox, is visible.
 3. Scroll so there is room below and open the menu again: it should open under the icon.

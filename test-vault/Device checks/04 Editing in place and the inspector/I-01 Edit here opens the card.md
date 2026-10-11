@@ -17,6 +17,7 @@
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. Press Edit here on the drawing.
 2. Type a new option, for example change 'Small reader' to 'Pocket reader'.
 3. Watch the drawing redraw as you type, and check the caret has not moved.

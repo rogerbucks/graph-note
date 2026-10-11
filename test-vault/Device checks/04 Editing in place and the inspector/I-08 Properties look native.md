@@ -1,6 +1,6 @@
 # I-08 Properties look native
 
-**You should see:** in edit mode, tapping the Small reader box showing its properties, its name, rating, stock and tags, looking as a note's Properties panel looks in this theme: the same rows, icons, spacing, type and colours, in both light and dark.
+**You should see:** in edit mode, tapping the Small reader box showing its four properties, name, rating, in_stock and released, looking as a note's Properties panel looks in this theme: the same rows, icons, spacing, type and colours, in both light and dark. Tapping a link shows its properties the same way.
 
 **Test diagram:**
 
@@ -15,10 +15,22 @@
 
 **Do this:**
 
-1. Press Edit here, then tap the Small reader box.
-2. Put a note's own Properties panel beside it (open any note with properties) and compare rows, icons, spacing, type and colours.
-3. Switch between the light and dark themes and compare again.
-4. Tap a link and check its properties look the same.
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
+1. To have a Properties panel to compare with, add this front matter at the very top of this note (do not commit it; the vault reset removes it):
+
+   ```yaml
+   ---
+   name: Small reader
+   rating: 4
+   in_stock: true
+   released: 2026-03-01
+   ---
+   ```
+
+2. Press Edit here, then tap the Small reader box. Its four properties should show as rows.
+3. Put the note's own Properties panel beside them and compare rows, icons, spacing, type and colours.
+4. Switch between the light and dark themes and compare again.
+5. Tap the link from Small reader to the question and check its properties look the same.
 
 **Checklist line:**
 

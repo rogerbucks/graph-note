@@ -17,6 +17,7 @@
 
 **Do this:**
 
+0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
 1. Press Edit here and tap the Small reader box. Press Add property and name it `rivals`.
 2. Choose List from its menu and read the sentence in the form.
 3. Type `Reading tablet` as a value and press Make list.

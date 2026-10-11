@@ -239,14 +239,16 @@ holds the two together).
       still drawn. Forgiving (the default): a warning (⚠). Simplified with "A missing comma" on: no problem at all
       (slice 2, strictness_levels).
 - [ ] **C-03** With such a note in front, "Convert this note to standard GQL" from the command palette, and the button on the
-      page: the comma is written, a notice says how many were converted, and one undo takes it back. A note with a line
-      that cannot be read is left as it is, and the notice says why (slice 2, simplified_back_to_standard).
+      page: the comma is written, a notice says how many were converted, and one undo takes it back (slice 2,
+      simplified_back_to_standard).
 - [ ] **C-04** AI models: Add a model, open Model 1, fill its name and purpose, pick a ceiling, and choose a key with the app's
       own key field. Close and reopen the page: all kept. The plugin's data.json in the vault holds the key's name, never
       the key (slice 2, settings_ai_models).
 - [ ] **C-05** Indent "Two spaces", then Lock the graph on a draft: the schema's later lines start with two spaces. Direction
       "Top to bottom": every drawing runs top to bottom; "Best fit" restores the old choice (slice 2,
       settings_formatting).
+- [ ] **C-06** A note with a line that cannot be read, in front, and "Convert this note to standard GQL" from the command
+      palette: the note is left as it is, and the notice says why (slice 2, simplified_back_to_standard).
 
 ## Accessibility — spec §8, §11
 

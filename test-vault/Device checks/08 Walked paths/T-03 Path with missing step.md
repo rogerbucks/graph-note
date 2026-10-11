@@ -34,6 +34,6 @@ The second graph, with a path that has no steps.
 
 **Checklist line:**
 
-> **T-03** Rename one stepped thing: the problem names the step and offers Remove the step; pressing it renumbers the later steps (slice 2, path_missing_step). A Path with no STEP shows "the path … has no steps" and no Play (path_no_steps).
+> **T-03** Rename one stepped thing: the problem names the step and offers Remove the step; pressing it renumbers the later steps. A Path with no STEP shows "the path … has no steps" and no Play.
 
 **Back to the checklist:** [T-03 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for T-03 in its list.
