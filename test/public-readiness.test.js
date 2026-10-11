@@ -175,8 +175,8 @@ describe('the settings on GitHub', () => {
   test('only a collaborator can open a pull request or an issue; nothing else is open to anyone', () => {
     assert.equal(wanted('pull_request_creation_policy').want, 'collaborators_only');
     assert.equal(wanted('has_pull_requests').want, true);
-    for (const f of ['has_issues', 'has_projects', 'has_wiki', 'has_discussions'])
-      assert.equal(wanted(f).want, false, f);
+    assert.equal(wanted('has_issues').want, true, 'issues stay on; collaborators-only creation is set by hand');
+    for (const f of ['has_projects', 'has_wiki', 'has_discussions']) assert.equal(wanted(f).want, false, f);
   });
 
   test('secrets are scanned and refused at the gate, once the repository is public', () => {

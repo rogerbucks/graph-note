@@ -228,6 +228,13 @@ export async function renderViewBlock(
       lineOf: (at) => (blocks[at.block]?.line ?? 0) + at.line,
       onEdit: () => changeView(plugin, ctx.sourcePath, line),
       view,
+      exporting: {
+        path: ctx.sourcePath,
+        graph: v.graph,
+        view: { name: v.name, spec },
+        theme: plugin.settings.exportTheme,
+        run: (ask) => plugin.exportGraph(ask),
+      },
     }),
   );
 }

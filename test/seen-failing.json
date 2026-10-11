@@ -1,4 +1,10 @@
 {
+  "packages/obsidian/test/export-cases.test.js": {
+    "the form > takes one press at a time: a second press while it works writes nothing more": {
+      "seen_failing_first": false,
+      "evidence": "passed before its code only by accident: a second export then overwrote the first under the same name, so one file was left; with each export now given a name of its own, the guard is what keeps it to one (commit 763c2c8)"
+    }
+  },
   "packages/obsidian/test/settings.test.js": {
     "strictness > Forgiving, the default: a slip is drawn, and reported as a warning": {
       "seen_failing_first": false,
@@ -893,6 +899,16 @@
     "the open pull requests panel > escapes an https url holding a quote or a tag, the branch name, and never breaks out of the attribute": {
       "seen_failing_first": false,
       "evidence": "coverage the review of #66 asked for, added with its fixes: it pins the escaping the first commit of #66 already did, so it passes before and after by design (commit e40539c)"
+    }
+  },
+  "packages/core/test/export-plan.test.js": {
+    "names that are not ASCII > each part is cut at a whole character, never in the middle of one": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the byte cut beside it (commit ed2b293): the earlier cut by characters never split a character either, so it passes before and after by design"
+    },
+    "names that are not ASCII > a short Japanese name is kept whole": {
+      "seen_failing_first": false,
+      "evidence": "a control case, written with the byte cut beside it (commit ed2b293): a name well inside the limit was kept whole before, so it passes before and after by design"
     }
   }
 }

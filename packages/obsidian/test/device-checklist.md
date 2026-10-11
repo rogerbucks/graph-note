@@ -197,6 +197,22 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 - [ ] Rename one stepped thing: the problem names the step and offers Remove the step; pressing it renumbers the later
       steps (slice 2, path_missing_step). A Path with no STEP shows "the path … has no steps" and no Play (path_no_steps).
 
+## Export — spec §16
+
+- [ ] Mac: Export on a card, The whole diagram, SVG, Light, Export it: a file `<note>-<graph>-<day>.svg` appears next to
+      the note; opened outside Obsidian (Finder's Quick Look) it reads the same, with the graph's name, its legend,
+      and "From <note>, exported <day>" (slice 2, export_two_scopes, export_formats, export_self_explaining,
+      export_fixed_theme). Dark: the same in dark colours.
+- [ ] PNG: the file opens sharp at twice the drawing's size or more (export_png_sharp).
+- [ ] On a view's card: the view alone, then with the rest faded (view_export_stays_view).
+- [ ] Settings › Export › companion note on: a `.md` beside the image shows it and links the note
+      (export_companion_note). A note with `classification:` above the setting's level: the form names it and writes
+      nothing until Export anyway (classified_export).
+- [ ] iPhone: Export it, then Share: the share sheet opens with the image, PNG and SVG both (slice 2, export_share_sheet).
+      Close the sheet without sharing: "Not shared", and nothing is saved in the vault.
+- [ ] Android, if one is to hand: a phone that cannot share a file saves the export in the vault and says so.
+- [ ] Export the same graph twice on one day: the second is saved as `…-2.svg`, the first kept, and the notice says so.
+
 ## Settings — spec §21
 
 - [ ] Settings › Graph Note, desktop and phone: one page, with Strictness, AI models, Formatting and Drawing, each option

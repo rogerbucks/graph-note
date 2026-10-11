@@ -20,6 +20,12 @@ export interface AiModel {
 /** How a line the editor writes is indented. */
 export type Indent = 'two' | 'four' | 'tab';
 
+/** The theme an exported image is drawn in, its colours fixed so it reads the same outside Obsidian (§16). */
+export type ExportTheme = 'light' | 'dark';
+
+/** Whether an export saved into the vault also gets a companion note (§16). */
+export type CompanionSetting = 'off' | 'on';
+
 /** Every option the editor offers. */
 export interface Settings extends StrictnessSettings {
   /** The classifications a note may carry, lowest first: the ceilings an AI model may be given. */
@@ -28,16 +34,31 @@ export interface Settings extends StrictnessSettings {
   indent: Indent;
   /** The best fit of the locked style's directions, or one of them. */
   direction: string;
+  /** The colours exported images are drawn in. */
+  exportTheme: ExportTheme;
+  /** Whether an export saved in the vault gets a companion note. */
+  companionNote: CompanionSetting;
+  /** The vault folder exports are saved in, without a leading or trailing slash; empty is next to the note. */
+  exportFolder: string;
+  /** The classification above which an export asks first: one of `classifications`. */
+  exportAsksAbove: string;
 }
+
+const CLASSIFICATIONS = ['Public', 'Internal', 'Confidential', 'Restricted'];
 
 /** The settings before any is changed. */
 export const DEFAULT_SETTINGS: Settings = {
   strictness: 'forgiving',
   allowed: [],
-  classifications: ['Public', 'Internal', 'Confidential', 'Restricted'],
+  classifications: CLASSIFICATIONS,
   aiModels: [],
   indent: 'four',
   direction: 'best',
+  exportTheme: 'light',
+  companionNote: 'off',
+  exportFolder: '',
+  // the lowest, so anything above it asks
+  exportAsksAbove: CLASSIFICATIONS[0] ?? '',
 };
 
 /** One choice of an option: its value, its name, and, where it needs one, a sentence. */
@@ -50,7 +71,7 @@ export interface Choice {
 /** One option on the settings page: the setting it sets, its part of the page, its name, its sentence, its choices. */
 export interface Option {
   key: keyof Settings;
-  section: 'Strictness' | 'AI models' | 'Formatting' | 'Drawing';
+  section: 'Strictness' | 'AI models' | 'Formatting' | 'Drawing' | 'Export';
   name: string;
   sentence: string;
   choices?: Choice[];
@@ -119,6 +140,39 @@ export const OPTIONS: Option[] = [
       ...STYLE.directions.map((d) => ({ value: d, name: d === 'LR' ? 'Left to right' : 'Top to bottom' })),
     ],
   },
+  {
+    key: 'exportTheme',
+    section: 'Export',
+    name: 'Export theme',
+    sentence: 'The colours an exported image is drawn in, fixed so it reads the same outside Obsidian.',
+    choices: [
+      { value: 'light', name: 'Light' },
+      { value: 'dark', name: 'Dark' },
+    ],
+  },
+  {
+    key: 'companionNote',
+    section: 'Export',
+    name: 'Companion note',
+    sentence: 'Whether an export saved into the vault also gets a short note linking the image to its source.',
+    choices: [
+      { value: 'off', name: 'No companion note' },
+      { value: 'on', name: 'Write a companion note' },
+    ],
+  },
+  {
+    key: 'exportFolder',
+    section: 'Export',
+    name: 'Export folder',
+    sentence: 'The vault folder exports are saved in; left empty, an export is saved next to its note.',
+  },
+  {
+    key: 'exportAsksAbove',
+    section: 'Export',
+    name: 'Ask before exporting above',
+    sentence:
+      'The classification above which an export asks first, naming the classification; one of the classifications set above.',
+  },
 ];
 
 const text = (v: unknown, fallback = ''): string => (typeof v === 'string' ? v : fallback);
@@ -142,6 +196,35 @@ export function aiModel(given: Partial<AiModel> & Record<string, unknown>, class
   };
 }
 
+const UNSAFE_IN_A_FOLDER = '\\:*?"<>|';
+
+/**
+ * A folder inside the vault as the settings keep it: trimmed, with empty parts dropped (`a//b/` is `a/b`), or null when it
+ * could reach outside the vault, reach the config folder, or cannot be a folder name on every platform — a leading `/` or
+ * `~`, a part that starts with a dot (so `.`, `..` and `.obsidian`), a part that ends in a dot or a space, a name Windows
+ * reserves (con, prn, aux, nul, com1–9, lpt1–9), a backslash, a colon, any of `*?"<>|`, or a control character. Empty is
+ * next to the note.
+ */
+export function vaultFolder(given: unknown): string | null {
+  const folder = typeof given === 'string' ? given.trim() : '';
+  if (!folder) return '';
+  if (folder.startsWith('/') || folder.startsWith('~')) return null;
+  if ([...folder].some((c) => c.charCodeAt(0) < 32 || UNSAFE_IN_A_FOLDER.includes(c))) return null;
+  const parts = folder.split('/').filter((p) => p !== '');
+  return parts.some(unusablePart) ? null : parts.join('/');
+}
+
+// names Windows keeps for devices, whatever follows a dot: con.txt is con
+const RESERVED = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i;
+
+/**
+ * Whether a folder name cannot be used for exports: it starts with a dot (so `.`, `..` and the config folder are out),
+ * ends in a dot or a space, or is a name Windows reserves.
+ */
+function unusablePart(part: string): boolean {
+  return part.startsWith('.') || part.endsWith('.') || part.endsWith(' ') || RESERVED.test(part.split('.')[0] ?? '');
+}
+
 /** Settings read back from what was saved: each known one kept when it is in range, else its default. */
 export function settingsFrom(saved: unknown): Settings {
   const s = saved && typeof saved === 'object' ? (saved as Record<string, unknown>) : {};
@@ -162,6 +245,14 @@ export function settingsFrom(saved: unknown): Settings {
       : [],
     indent: oneOf<Indent>('indent', s.indent, d.indent),
     direction: oneOf('direction', s.direction, d.direction),
+    exportTheme: oneOf<ExportTheme>('exportTheme', s.exportTheme, d.exportTheme),
+    companionNote: oneOf<CompanionSetting>('companionNote', s.companionNote, d.companionNote),
+    exportFolder: vaultFolder(s.exportFolder) ?? d.exportFolder,
+    // one of the classifications set, else the lowest of them, so a level being retyped never leaves exports unasked
+    exportAsksAbove:
+      typeof s.exportAsksAbove === 'string' && classifications.includes(s.exportAsksAbove)
+        ? s.exportAsksAbove
+        : (classifications[0] ?? ''),
   };
 }
 

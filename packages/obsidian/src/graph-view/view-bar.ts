@@ -36,6 +36,8 @@ export interface BarActions {
   fullScreen: () => void;
   editHere: () => void;
   toggleSource: (b: HTMLButtonElement) => void;
+  /** Export: shows or hides the Export form. */
+  export: () => void;
 }
 
 /** The bar's buttons that depend on where the card is: the edit buttons, and Source. */
@@ -76,6 +78,8 @@ export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): Ba
   button(bar, 'Zoom in', 'zoom-in', () => on.zoomIn());
   if (mode === 'full') button(bar, 'Close full screen', 'minimize', () => o.onClose?.());
   else button(bar, 'Full screen', 'expand', () => on.fullScreen());
+  // Export writes a new file, never the note, so it is offered wherever the drawing is (spec §16)
+  if (o.exporting) button(bar, 'Export', 'download', () => on.export());
   const editing: HTMLElement[] = [];
   let editButton: HTMLButtonElement | null = null;
   if (mode !== 'pane' && o.onEditHere) {
