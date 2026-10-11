@@ -26,7 +26,7 @@ import { GraphPane, PANE } from './pane';
 import { addForYou } from './editor';
 import { BlockEditor } from './block-editor/block-editor';
 import { graphBlocks } from './live-preview';
-import { noteToRewrite } from './reading-view';
+import { noteToRewrite, stillToRewrite } from './reading-view';
 
 /** Where Edit was pressed: the note, the line of the block's opening fence (0-based), and the graph it draws. */
 export interface EditTarget {
@@ -128,8 +128,10 @@ export default class GraphNotePlugin extends Plugin {
   /** Converts the note in front back to standard GQL (spec §21), checked by the standard checker before it is written. */
   async convertToStandard(): Promise<void> {
     // the note in the pane in front, unless that pane is in reading view, which never changes a note (spec §3)
-    const file = noteToRewrite(this.app.workspace, 'to convert it to standard GQL');
-    if (!file) return;
+    const to = 'to convert it to standard GQL';
+    const front = noteToRewrite(this.app.workspace, to);
+    if (!front) return;
+    const { file } = front;
     const checked = toStandard(await this.app.vault.read(file));
     if (!checked.ok) {
       new Notice(`Not converted: ${checked.reason}`);
@@ -139,6 +141,8 @@ export default class GraphNotePlugin extends Plugin {
       new Notice('This note is already standard GQL.');
       return;
     }
+    // the pane in front is asked again now, after the waiting: one switched to reading view meanwhile is not written
+    if (!stillToRewrite(this.app.workspace, front, to)) return;
     // written against the note as it is when written, and checked again there: said only when it was written
     let written: Converted = checked;
     await this.app.vault.process(file, (now) => {

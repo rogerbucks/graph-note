@@ -459,6 +459,24 @@ describe('the one check', () => {
     assert.throws(() => gateWrites({ graph: 'g', nested: new Map([['a', { write }]]) }, () => true), /nested/);
   });
 
+  test('a Map or a Set holding an object of a class with methods is refused too, as its writes could not be closed', async () => {
+    const { gateWrites } = await import('../src/graph-view/read-only.ts');
+    class Writer {
+      write() {
+        return 'written';
+      }
+    }
+    assert.throws(
+      () => gateWrites({ graph: 'g', view: { byName: new Map([['w', new Writer()]]) } }, () => true),
+      /byName/,
+    );
+    assert.throws(() => gateWrites({ graph: 'g', all: new Set([new Writer()]) }, () => true), /all/);
+    assert.throws(() => gateWrites({ graph: 'g', keyed: new Map([[new Writer(), 1]]) }, () => true), /keyed/);
+    assert.throws(() => gateWrites({ graph: 'g', deep: new Map([['a', [{ w: new Writer() }]]]) }, () => true), /deep/);
+    const data = { graph: 'g', things: new Map([['a', new Date(0)]]), more: new Set([new Map([['b', 1]])]) };
+    assert.doesNotThrow(() => gateWrites(data, () => true), 'a Map or a Set of data still passes as it is');
+  });
+
   test('an async function gated twice, as full screen gates the card’s gated options again, still gives a promise', async () => {
     const { gateWrites } = await import('../src/graph-view/read-only.ts');
     let readOnly = true;
