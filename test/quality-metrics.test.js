@@ -459,11 +459,17 @@ describe('a change to the ratchet’s files', () => {
     'test/quality-baseline.test.js',
     'test/engine-version.test.js',
     'test/policy.test.js',
+    'test/run-ceiling.test.js',
   ];
 
   test('runs only the tests that read them, not the whole suite', () => {
-    for (const changed of ['scripts/quality-secrets.mjs', 'scripts/quality-suite.mjs', 'scripts/quality-metrics.mjs'])
+    for (const changed of ['scripts/quality-secrets.mjs', 'scripts/quality-metrics.mjs'])
       assert.deepEqual(testsForChanges([changed], tracked), { all: false, files: ['test/quality-metrics.test.js'] });
+    // the suite's two runs go through the ceiling's runner, and its test shows they do
+    assert.deepEqual(testsForChanges(['scripts/quality-suite.mjs'], tracked), {
+      all: false,
+      files: ['test/quality-metrics.test.js', 'test/run-ceiling.test.js'],
+    });
     for (const changed of [
       'scripts/quality-check.mjs',
       'scripts/quality-spec.mjs',
