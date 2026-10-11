@@ -114,11 +114,12 @@ export function explain(kind: 'name' | 'type', graph: string, fixes: Correction[
   return `Line ${line} ${what}. ${many ? 'They were' : 'It was'} taken to mean ${taken}. To fix it, change ${and(fixes.map((f) => `${f.written} to ${f.taken}`))}.`;
 }
 
-/** The hops of a path as written: [from name, type, to name], each turned the way its arrow points. */
+/**
+ * The hops of a path as written: [from name, type, to name], each turned the way its arrow points. Strings are blanked
+ * before comments, as the reader reads them, so a // inside a text (a web address) never hides the rest of the path.
+ */
 export function hops(text: string): [string, string, string][] {
-  const src = text
-    .replace(/\/\/[^\n]*/g, (m) => ' '.repeat(m.length))
-    .replace(/'(?:[^'\\]|\\.)*'/g, (m) => `'${' '.repeat(m.length - 2)}'`);
+  const src = blankText(text);
   const out: [string, string, string][] = [];
   const re = /\(\s*([A-Za-z_]\w*)[^()]*\)|(<?)-\[\s*:\s*([A-Za-z_]\w*)[^\]]*\]-(>?)/g;
   let last: string | null = null,
