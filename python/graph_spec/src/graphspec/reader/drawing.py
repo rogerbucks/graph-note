@@ -4,17 +4,21 @@ listed as problems (decided 8 Oct 2026)."""
 from __future__ import annotations
 
 import re
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import Any
 
 from graphspec.reader.block_items import _items, _line_at, _without
 from graphspec.reader.lexer import COMMENT_FIX, COMMENT_RULE, ProfileError, header
 from graphspec.reader.name_gaps import suggested_names, with_names
 from graphspec.reader.store import Store
-from graphspec.reader.whitespace import N, S, rstrip, strip
+from graphspec.reader.whitespace import SPACE, N, S, rstrip, strip
 
 GRAPH_OF = re.compile(rf"{S}*//{S}*graph:{S}*({N}+)")
 GRAPH_LINE = re.compile(rf"{S}*//{S}*graph:")
+# a style block (editor spec §2): its graph line says STYLE and the graph it styles, as the core's
+# blocks.ts reads it — `// graph: trip_style · STYLE trip`
+STYLES = re.compile(rf"{S}*//{S}*graph:[^\n]*·{S}*STYLE{S}+([^{SPACE}·]+)")
+STYLE_WORD = re.compile(rf"{S}*//{S}*graph:[^\n]*·{S}*STYLE(?:{S}|·|\Z)")
 
 
 # ── Drawing in part ──────────────────────────────────────────────────────────────────────────────
@@ -37,9 +41,30 @@ def _graph_of(text):
     return m.group(1) if m else None
 
 
+def style_of(text: str) -> str | None:
+    """The graph a style block styles (editor spec §2): its graph line says STYLE and the graph's
+    name, `// graph: trip_style · STYLE trip`. None for any other block. A style block is never
+    data to draw; graphspec/style/reading.py reads it."""
+    m = STYLES.match(_first_line(text))
+    return m.group(1) if m else None
+
+
 def _data_kind(text):
-    """'data' or 'schema' for a block to draw; None for a query, excerpt, change set or plain
-    code; or the problem with a graph line that cannot be read."""
+    """'data' or 'schema' for a block to draw; None for a query, excerpt, change set, style block
+    or plain code; or the problem with a graph line that cannot be read, or with a style block
+    that names no graph to style."""
+    if style_of(text) is not None:
+        return None
+    if STYLE_WORD.match(_first_line(text)):
+        own = _graph_of(text) or "<name>"
+        return {
+            "graph": None,
+            "block": -1,
+            "line": 1,
+            "severity": "error",
+            "message": "this style block names no graph to style, so it is not read",
+            "fix": f"write the graph it styles after STYLE: '// graph: {own} · STYLE <graph>'",
+        }
     try:
         _, kind = header(text)
         return kind if kind in ("data", "schema") else None
@@ -130,7 +155,10 @@ _CUT = " — too much of this block could not be read, so it is left out from th
 
 
 def read_for_drawing(
-    blocks: Sequence[str], shared: Sequence[str] = (), budget: int = REREAD_BUDGET
+    blocks: Sequence[str],
+    shared: Sequence[str] = (),
+    budget: int = REREAD_BUDGET,
+    kind_of: Callable[[str], Any] | None = None,
 ) -> tuple[Store, list[dict[str, Any]]]:
     """Reads a note's blocks for drawing, as the plugin's core does, and returns (store, problems).
 
@@ -142,12 +170,14 @@ def read_for_drawing(
     thing written with text and no name is read under the name suggested for it, from a copy of
     its block, with a warning whose suggested is that name and whose character is the place after
     its ( where the name would go (10 Oct 2026). Reading again is capped by `budget`, in UTF-16
-    units, as the core caps it (REREAD_BUDGET above).
+    units, as the core caps it (REREAD_BUDGET above). `kind_of` says which blocks are read, as
+    the core's readBlocks is told: the data blocks by default (_data_kind), or a graph's style
+    blocks for its style (graphspec/style/reading.py).
     Drawing only — Store.apply, which checks and loads, still refuses the block whole."""
     clean = list(blocks)
     problems, skip = [], set()
     for i, text in enumerate(blocks):
-        kind = _data_kind(text)
+        kind = (kind_of or _data_kind)(text)
         if kind is None:
             skip.add(i)
         elif isinstance(kind, dict):
