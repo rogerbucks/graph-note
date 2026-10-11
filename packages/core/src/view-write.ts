@@ -1,10 +1,12 @@
 // Writing a view (editor spec §7: views_by_tapping, §2: views_in_the_note): the query for a view built by tapping, and the
 // whole block it is stored as in the note. What is written is always a query that `parseView` (view-profile.ts) reads back
 // to the same view.
+import { gqlSpans, graphOfBlock } from './blocks.ts';
 import { isRefusedKind, kindRefusal } from './reserved-words.ts';
-import { acceptNameFirst } from './suggested-names.ts';
-import type { SuggestedReading } from './suggested-names.ts';
-import { VIEW_LIMITS } from './view-profile.ts';
+import { insertBlockAfter } from './store.ts';
+import { acceptNameFirst, unnamedIn } from './suggested-names.ts';
+import { VIEW_LIMITS, parseView } from './view-profile.ts';
+import { viewsOf } from './views.ts';
 import type { ViewArgs, ViewKind, ViewSpec } from './view-profile.ts';
 
 const ESCAPED: Record<string, string> = { '\\': '\\\\', "'": "\\'", '\n': '\\n', '\r': '\\r', '\t': '\\t' };
@@ -106,23 +108,37 @@ function named(spec: ViewSpec): string[] {
 }
 
 /**
- * The block for a view of `spec` in `graph`, or why it cannot be made: the one way a host writes a view, so none can leave
- * a check out. A view of a thing drawn only under a suggested name is refused, since its query would write that name
- * without the thing's fix (§4): accept its name first. What no query can say is refused in words ("This view cannot be
- * written: …"). A view of kinds names no thing.
+ * The block for a view of `spec` in `graph`, or why it cannot be made: what no query can say is refused in words ("This
+ * view cannot be written: …"). It is written into a note by `addView`, which checks it against that note.
  */
-export function makeView(
-  reading: SuggestedReading,
-  graph: string,
-  name: string,
-  spec: ViewSpec,
-): { block: string } | { refused: string } {
-  const first = acceptNameFirst(reading, graph, named(spec));
-  if (first) return { refused: first };
+export function makeView(graph: string, name: string, spec: ViewSpec): { block: string } | { refused: string } {
   try {
     const { kind, ...args } = spec;
     return { block: viewBlock(graph, name, viewQuery(kind, args as never)) };
   } catch (e) {
     return { refused: `This view cannot be written: ${(e as Error).message}` };
   }
+}
+
+/**
+ * The note with a view block of `graph` written after the graph's last block, every other byte kept: the one way a host
+ * writes a view into a note, against the note as it is when written, so none can leave a check out. Refused, with the
+ * reason and nothing written, for a block that is not a view of the graph, a view named as another of the graph's is,
+ * a graph the note no longer holds — and a view naming a thing the note writes only without a name, which its query
+ * would name without the thing's fix (§4): accept its name first. That is found in this note, as the reader reads it,
+ * never in a drawing, which can be older. A view of kinds names no thing.
+ */
+export function addView(note: string, graph: string, block: string): { note: string } | { refused: string } {
+  const view = viewsOf([block])[0];
+  const spec = view && !view.fault && view.graph === graph ? parseView(view.query) : null;
+  if (!view || !spec || 'refused' in spec) return { refused: `This view cannot be written: it is no view of ${graph}` };
+  const spans = gqlSpans(note),
+    texts = spans.map((s) => s.text);
+  const first = acceptNameFirst(unnamedIn(texts, graph), graph, named(spec));
+  if (first) return { refused: first };
+  if (viewsOf(texts).some((v) => v.graph === graph && v.name === view.name))
+    return { refused: `graph ${graph} already has a view called ${view.name}: give this one another name` };
+  const last = spans.filter((s) => graphOfBlock(s.text) === graph).pop();
+  const r = last ? insertBlockAfter(note, { line: last.open, text: last.text }, block) : null;
+  return r?.ok ? { note: r.note } : { refused: r?.reason ?? `graph ${graph} is no longer in the note` };
 }

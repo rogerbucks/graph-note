@@ -103,7 +103,9 @@ module that ties the parts together, named as the folder is.
 - `suggested-name.ts` — a box drawn under a suggested name: what screen readers hear of it, where it is written in the
   block being edited, and in its details its suggested name with the one-click fix that writes it. Nothing else writes
   it: Park for later, Record a path, Make a view, a property changed or made a list and Save as shown with it
-  selected are each refused, in the core's words ("accept its name first"), by `acceptNameFirst`.
+  selected are each refused, in the core's words ("accept its name first"), by `acceptNameFirst`. Each is checked
+  against the note as it is when written, never the card's drawing, which can be older: an edit into the block with the
+  editor session's `current()` (the note as last seen, with what is typed), a view or a style inside `vault.process`.
 - `placement.ts` — where a card is: read-only in reading view, a hover preview and an embed of another note (in Live
   Preview too); waiting for a card to be put on the page.
 - `read-only.ts` — the one check every write from a card passes: each function in its options, at any depth, is closed

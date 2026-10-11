@@ -136,9 +136,9 @@ export class ViewMaker {
     if (!spec) return void this.alert?.setText('Tap the things the view shows first.');
     if (!/^\w+$/.test(name))
       return void this.alert?.setText('Give the view a name of one word: letters, digits and _.');
-    // the core makes the block, or says why not: a box drawn under a suggested name (§4), or a graph or a kind whose name
-    // a view query cannot hold; nothing is then written
-    const made = makeView(this.o.reading, this.o.graph, name, spec);
+    // the core makes the block, or says why not: a graph or a kind whose name a view query cannot hold; nothing is then
+    // written. Writing it checks it against the note as it is then: a thing only suggested there is refused (§4)
+    const made = makeView(this.o.graph, name, spec);
     if ('refused' in made) return void this.alert?.setText(made.refused);
     const refused = await this.o.writeView?.(made.block);
     if (refused) return void this.alert?.setText(refused);

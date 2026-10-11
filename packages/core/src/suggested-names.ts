@@ -2,40 +2,49 @@
 // under the name suggested for it, and "nothing is written until its fix is accepted". Any edit that would write that name
 // into the text — a path through the thing, a link to it, a Deferred for it, a nudge or a look naming it — would write it
 // without its fix, so each asks here first, and is refused with the same words: accept its name first.
-import { dataKind, graphOfBlock } from './blocks.ts';
-import { nameGaps } from './name-gaps.ts';
-import type { Box, NoteReading } from './note-reading.ts';
+import type { Box, NoteReading, Problem } from './note-reading.ts';
+import { prepare } from './partial-read.ts';
 import { textKeyOf, writtenIn } from './written-things.ts';
 
 /** What these checks read of a note: the graphs as drawn, whose boxes say which are drawn under a suggested name. */
 export type SuggestedReading = Pick<NoteReading, 'graphs'>;
 
+/** Where a thing written without a name is: its block, and the place after its ( where the name would go. */
+type Place = NonNullable<Box['suggested']>;
+
 /**
- * The things of one graph that these blocks write without a name, as boxes drawn under their suggested names: for an edit
- * that is given no drawing to ask (`styleEdit`, which has the whole note), so that none can write a suggested name by
- * leaving the drawing out. Found as the reader finds them, from the blocks given: so only every block of the note gives
- * the reader's names, the reader suggesting each name against all of them.
+ * Each thing of `graph` written without a name, by the name suggested for it, and where it is: from the problems the
+ * reader found, each a warning whose fix inserts the name. The reader's own rule, by which it marks a box suggested
+ * (drawing.ts), so this and the drawing never differ.
+ */
+export function suggestedPlaces(problems: readonly Problem[], graph: string): Map<string, Place> {
+  return new Map(
+    problems.flatMap((p) =>
+      p.graph === graph && p.suggested && p.insert
+        ? [[p.suggested, { block: p.block, line: p.insert.line, character: p.insert.character }] as const]
+        : [],
+    ),
+  );
+}
+
+/**
+ * The things of one graph that a note's blocks write without a name, as boxes drawn under their suggested names: what an
+ * edit written into the note is checked against, read from the note as it is when written, never from a drawing, which
+ * can be older (§4). Found as the reader finds them, with its own `prepare` and rule, so they are the ones the reader
+ * draws under a suggested name from these blocks: give every block of the note, since the reader suggests each name
+ * against all of them, a schema block among them.
  */
 export function unnamedIn(texts: readonly string[], graph: string): SuggestedReading {
-  const blocks = texts.map((t) => ({ text: typeof dataKind(t) === 'string' ? t : '', graph: graphOfBlock(t) }));
-  const gaps = nameGaps(blocks);
+  const { clean, problems } = prepare([...texts]);
   const boxes: Box[] = [];
-  blocks.forEach((b, i) => {
-    if (b.graph !== graph) return;
-    const lines = b.text.split('\n'),
-      written = writtenIn(b.text);
-    for (const n of gaps[i]?.named ?? []) {
-      const at = lines.slice(0, n.line).reduce((sum, l) => sum + l.length + 1, 0) + n.character - 1;
-      const w = written.find((x) => x.open === at),
-        key = w && textKeyOf(w);
-      boxes.push({
-        key: n.name,
-        kind: '',
-        text: (w && key && w.props.get(key)) || n.name,
-        suggested: { block: i, line: n.line, character: n.character },
-      });
-    }
-  });
+  for (const [name, place] of suggestedPlaces(problems, graph)) {
+    const text = clean[place.block] ?? '',
+      lines = text.split('\n');
+    const at = lines.slice(0, place.line).reduce((sum, l) => sum + l.length + 1, 0) + place.character - 1;
+    const w = writtenIn(text).find((x) => x.open === at),
+      key = w && textKeyOf(w);
+    boxes.push({ key: name, kind: '', text: (w && key && w.props.get(key)) || name, suggested: place });
+  }
   return { graphs: new Map([[graph, { graph, boxes, links: [], estimates: [] }]]) };
 }
 

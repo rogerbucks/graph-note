@@ -154,3 +154,22 @@ describe('undo and redo', () => {
     assert.equal(s.redo(note).note, NOTE.replace(A, A + ',\n(c:T)'));
   });
 });
+
+// Review, 11 Oct 2026: an edit written into the block is checked against the note as it is now, never an older drawing
+describe('the note as it is now', () => {
+  test('is read with what is typed in the block’s place, and follows the note as it changes', () => {
+    const other = "// graph: alpha\n(small_reader:T {name: 'Other'})";
+    const typed = `${A},\n(:T {name: 'Small reader'})`;
+    const suggested = (s) => {
+      const boxes = s.current().graphs.get('alpha')?.boxes ?? [];
+      return boxes.filter((b) => b.suggested).map((b) => b.key);
+    };
+    const before = ['# Note', '', fence(other), '', fence(A), ''].join('\n');
+    const s = new PaneSession(before, 7);
+    assert.equal(s.text, A, 'the block after the other');
+    s.type(typed);
+    assert.deepEqual(suggested(s), ['small_reader_2'], 'the other block writes small_reader');
+    assert.equal(s.noteChanged(before.replace(other, other.replaceAll('small_reader', 'other'))), 'unchanged');
+    assert.deepEqual(suggested(s), ['small_reader'], 'read again as the note now is');
+  });
+});

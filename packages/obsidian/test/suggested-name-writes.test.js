@@ -5,7 +5,8 @@
 // and leaves the box's own fix, Add the name, where it was; once the name is written, the same edit goes through.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { build, load, until } from './host/load-plugin.js';
+import { build, load, until, wait } from './host/load-plugin.js';
+import { fakeContext } from './host/fake-obsidian.js';
 import { fence, labelled } from './host/notes.js';
 import { PATH } from './host/card-notes.js';
 import { show as showView } from './host/view-notes.js';
@@ -87,7 +88,8 @@ describe('making a view of a box drawn under a suggested name', () => {
       const { env, el } = await open();
       try {
         const strip = await make(el, kind, ...keys);
-        assert.match(strip.querySelector('[role="alert"]').textContent, FIRST);
+        // refused as it is written, against the note as it is then
+        await until(() => FIRST.test(strip.querySelector('[role="alert"]').textContent));
         unwritten(env, el);
         assert.doesNotMatch(env.state.files.get(PATH), /QUERY view/);
       } finally {
@@ -181,6 +183,79 @@ describe('the details of a box drawn under a suggested name, while the card is e
       tapKey(el, 'small_reader');
       enter(field(details(el), 'Value of name'), 'Little reader');
       assert.match(text(el), /\(small_reader:Option \{name: 'Little reader'/);
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
+// Review, 11 Oct 2026: a card's drawing can be older than the note, as when another block of its graph is changed and the
+// card is not drawn again. An edit written into the block is checked against the note as it is now, with what is typed.
+describe('a card drawn before another block of its graph was changed', () => {
+  // B writes small_reader, so A's thing was drawn as small_reader_2; once B's thing is renamed, A's is small_reader
+  const B = "// graph: reader\n(small_reader:Option {name: 'Other'}),\n(small_reader)-[:HAS_TAG]->(light:Tag)";
+  const RENAMED = B.replaceAll('small_reader', 'other');
+  const A = "// graph: reader\n(large:Option {name: 'Large reader'}),\n(:Option {name: 'Small reader'})";
+  const NOW = /accept its name first: Small reader is only drawn under the suggested name small_reader,/;
+
+  /** A's card, drawn while B wrote small_reader and opened for editing; then B's thing is renamed elsewhere. */
+  async function staleCard() {
+    const note = noteOf(B, A);
+    const env = await load({ files: { [PATH]: note } });
+    // loaded, as Obsidian loads a plugin, so the editor it opens hears the note change
+    env.plugin._loaded = true;
+    const el = env.doc.body.createDiv();
+    await env.state.processors.get('gql')(A, el, fakeContext(note, note.split('\n').lastIndexOf('```gql')));
+    labelled(el, 'Edit here').click();
+    await until(() => !!el.querySelector('textarea'));
+    await env.app.vault.modify(env.app.vault.getAbstractFileByPath(PATH), noteOf(RENAMED, A));
+    await wait(50);
+    return { env, el };
+  }
+  const written = (env, el) => {
+    assert.equal(text(el), A, 'the text is as it was');
+    assert.equal(env.state.files.get(PATH), noteOf(RENAMED, A), 'the note is as it was');
+  };
+
+  test('Park for later is refused for the thing now only suggested, and nothing is written', async () => {
+    const { env, el } = await staleCard();
+    try {
+      tapKey(el, 'small_reader');
+      await until(() => !!labelled(el, 'Park for later'));
+      labelled(el, 'Park for later').click();
+      field(el, 'What is needed').value = 'its price';
+      field(el, 'Why it waits').value = 'the shop has not said';
+      labelled(el, 'Park it').click();
+      assert.match(el.querySelector('.graph-note-park [role="alert"]').textContent, NOW);
+      written(env, el);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a path through it is refused, and nothing is written', async () => {
+    const { env, el } = await staleCard();
+    try {
+      await until(() => !!labelled(el, 'Record a path'));
+      labelled(el, 'Record a path').click();
+      for (const k of ['large', 'small_reader']) tapKey(el, k);
+      field(el, 'Path title').value = 'Coffee first';
+      labelled(el, 'Save path').click();
+      assert.match(el.querySelector('.graph-note-walk [role="alert"]').textContent, NOW);
+      written(env, el);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a value added to a list it holds is refused, and nothing is written', async () => {
+    const { env, el } = await staleCard();
+    try {
+      tapKey(el, 'small_reader');
+      const panel = details(el);
+      addChip(panel, 'HAS_TAG', 'thin');
+      assert.match(panel.querySelector('[role="alert"]').textContent, NOW);
+      written(env, el);
     } finally {
       env.uninstall();
     }

@@ -178,8 +178,9 @@ function isDay(s: string): boolean {
  * and DEFERS (the graph library's §5 checks them like any type). `whole` is the graph as the whole note reads it: given,
  * a thing written in another block of the graph is found, and an id taken there is not used again. A thing drawn
  * under a suggested name is not parked, which would write that name without its fix (§4): it throws "accept its name
- * first". It is found in `reading`, the drawing of the whole note, which is required: the reader suggests names across
- * every block of a graph, so the block alone cannot say which they are, and no caller can leave the check out.
+ * first". It is found in `reading`, which is required: the reader suggests names across every block of a graph, so the
+ * block alone cannot say which they are, and no caller can leave the check out. A host gives the reading of the note as
+ * it is now, with `block` as typed in its place, never an older drawing.
  */
 export function parkForLater(
   block: string,

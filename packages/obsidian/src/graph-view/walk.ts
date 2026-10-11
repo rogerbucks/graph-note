@@ -155,7 +155,8 @@ export class Walk {
       return;
     }
     const indent = indentText(this.o.indent ?? 'four');
-    const r = pathBlock(this.o.reading, this.o.graph, block, title, [...rec.steps], indent);
+    // checked against the note as it is now, with what is typed, never the drawing, which can be older (§4)
+    const r = pathBlock(ed.session?.current() ?? this.o.reading, this.o.graph, block, title, [...rec.steps], indent);
     if ('refused' in r) {
       alert?.setText(r.refused);
       return;

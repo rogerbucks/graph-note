@@ -33,11 +33,13 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `suggested-names.ts` — `acceptNameFirst`: why an edit naming a thing drawn only under a suggested name must wait ("accept its
   name first", saying which text and which name), so nothing writes the name before its fix is accepted
   (unnamed_drawn_suggested). `pathBlock`, `makeList` and `addToList` (the thing, or a value that reuses one) ask it
-  themselves; so do `parkForLater` and `styleEdit` (a nudge, a look or a view's selection naming one) and `makeView`
-  (view-write.ts, the one way a host makes a view). `parkForLater` requires the drawing's reading, since the reader
-  suggests names across every block of a graph and one block alone cannot say which they are; `styleEdit` finds such a
-  thing in the reading when given it, else in every block of the note it writes into (`unnamedIn`), which gives the
-  reader's answer. So no caller can leave the check out. Property edits are refused too
+  themselves; so do `parkForLater` and `styleEdit` (a nudge, a look or a view's selection naming one) and `addView`
+  (view-write.ts, the one way a host writes a view into a note). Each checks the note it writes into as it is then,
+  never an older drawing: `styleEdit` and `addView` read the note itself with `unnamedIn`, which uses the reader's own
+  `prepare` and its rule for a box drawn suggested (`suggestedPlaces`, which drawing.ts uses too), so the two cannot
+  differ; the edits into one block (`parkForLater`, which requires it, `pathBlock`, `makeList`, `addToList`) take the
+  reading of the note as it is now with the block as typed, which a host gives (`PaneSession.current()`).
+  So no caller can leave the check out. Property edits are refused too
   (`setProperty` finds no pattern for a name that is not written), the host saying why in these words. A name only
   suggested is also left out of the names completed while typing and of the near misses guessed (`help.ts`, `estimates.ts`).
 - `schema-checks.ts` — the warnings for types a schema does not declare.
@@ -201,8 +203,9 @@ reads `· QUERY` as a query, and the core draws no query as data, so a view is n
   only that GQL keeps the word, and suggests another.
 - `view-write.ts` — `viewQuery` writes the query for a view built by tapping, always one `parseView` reads back to the
   same view (steps held to 1 to 3 near and 1 to 6 reaching; a long set of names goes over lines), and `viewBlock` writes
-  the whole block. `makeView` is the one way a host makes a view (the entry exports it, not those two): it refuses a view
-  of a thing drawn only under a suggested name ("accept its name first") and says in words what no query can say.
+  the whole block. `makeView` makes a view's block (the entry exports it, not those two) and says in words what no query
+  can say; `addView` is the one way a host writes one into a note, after its graph's last block, against the note as it
+  is then: it refuses a view of a thing only suggested there ("accept its name first") and a name another view has.
 - `view-evaluate.ts` — `evaluate` puts a view to a graph of a reading, never to a copy of it, and gives its things, its
   links (indexes into the links the graph draws) and, when nothing matches, `empty` with a sentence saying so and what to
   change. A route of up to k steps is a walk, as Grafeo takes it (a link may be used again), found by two breadth-first

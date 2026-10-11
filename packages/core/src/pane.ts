@@ -94,6 +94,14 @@ export class PaneSession {
     return { ...r, problems: underStrictness(r.problems, this.strictness()) };
   }
 
+  /**
+   * The note as last seen — opened, written or changed under the pane — read with what is typed in the block's place:
+   * what an edit written into the block is checked against (§4), never a drawing made before the note last changed.
+   */
+  current(): NoteReading {
+    return this.reading(this.lastNote);
+  }
+
   /** The strictness the note is read by (spec §21): the host's setting, asked each time; Forgiving unless set. */
   strictness: () => StrictnessSettings = () => ({ strictness: 'forgiving', allowed: [] });
 

@@ -25,6 +25,8 @@ import type { DeclaredList, ListRow } from './list-row';
 /** What the properties need: the reading, the thing or link, and the block being edited, to read and to replace. */
 export interface PropertiesOptions {
   reading: NoteReading;
+  /** The note as it is now, with what is typed: what a write is checked against (§4), never the older drawing. */
+  now: () => NoteReading;
   graph: string;
   /** The thing or link, as the drawing counts it. */
   target: Target;
@@ -109,7 +111,7 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
     alert.setText(`${key}: ${why}.`);
   };
   /** Why nothing can be changed yet: the thing is drawn under a suggested name, which a change would have to write (§4). */
-  const unnamed = () => ('thing' in o.target ? acceptNameFirst(o.reading, o.graph, [o.target.thing]) : null);
+  const unnamed = () => ('thing' in o.target ? acceptNameFirst(o.now(), o.graph, [o.target.thing]) : null);
   /** Writes the edits in turn, each to the text the last one left; nothing is written if any is refused. */
   const write = (key: string, edits: { key: string; type: PropType | null; words: string }[]): boolean => {
     const first = unnamed();
@@ -158,6 +160,7 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
         rows,
         {
           reading: o.reading,
+          now: o.now,
           graph: o.graph,
           thing,
           text: o.text,
@@ -272,7 +275,7 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
           refield();
           return true;
         }
-        const r = makeList(o.text(), o.reading, o.graph, thing, state.written ? state.key : null, shape);
+        const r = makeList(o.text(), o.now(), o.graph, thing, state.written ? state.key : null, shape);
         if (!r.ok) {
           refuse(state.key || 'new property', r.reason);
           return false;

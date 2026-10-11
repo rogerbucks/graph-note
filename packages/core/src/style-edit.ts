@@ -11,7 +11,6 @@ import { insertBlockAfter, replaceBlock } from './store.ts';
 import { FORMATS, LINES, NUDGE_WORDS, OUTSIDE, STYLE_HUES, orList } from './style-graph.ts';
 import type { Frame, LinkTarget } from './style-graph.ts';
 import { acceptNameFirst, unnamedIn } from './suggested-names.ts';
-import type { SuggestedReading } from './suggested-names.ts';
 import { writtenIn } from './written-things.ts';
 
 /** A nudge to write: its word, and the parts that word needs. */
@@ -186,17 +185,17 @@ function appended(block: string, thing: string): string {
  * <graph>` and a comment saying whose style it is. Ids are fresh (`nudge_1`, `look_2`). No data block is ever touched.
  * Refused, with the reason, for a graph the note lacks or a change the style graph would not accept — and for one that
  * names a thing drawn only under a suggested name, which it would write without the thing's fix (§4): accept its name
- * first. Such a thing is found in `reading`, the drawing, when given, else in the note's blocks, so no caller can leave
- * the check out.
+ * first. Such a thing is found in the note being written, as the reader reads it (`unnamedIn`), never in a drawing,
+ * which can be older than the note.
  */
-export function styleEdit(note: string, graph: string, change: StyleChange, reading?: SuggestedReading): StyleEdit {
+export function styleEdit(note: string, graph: string, change: StyleChange): StyleEdit {
   const spans = gqlSpans(note);
   const own = spans.filter((s) => graphOf(s.text) === graph && typeof dataKind(s.text) === 'string');
   if (!own.length) return { refused: `there is no graph ${graph} in this note to style` };
   const thing = thingFor(change);
   if ('refused' in thing) return thing;
   const blocks = spans.map((s) => s.text);
-  const first = acceptNameFirst(reading ?? unnamedIn(blocks, graph), graph, namedBy(change));
+  const first = acceptNameFirst(unnamedIn(blocks, graph), graph, namedBy(change));
   if (first) return { refused: first };
   const styles = spans.filter((s) => styleOf(s.text) === graph);
   const written = styles.flatMap((s) => writtenIn(s.text).map((w) => ({ s, w })));
