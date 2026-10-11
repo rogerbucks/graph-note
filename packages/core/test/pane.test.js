@@ -252,6 +252,18 @@ describe('an edit made for the person, as it is written', () => {
     assert.equal(s.text, c2);
   });
 
+  test('a pattern in a MATCH of another block gives no name, so a correct reference is not refused', () => {
+    const a = "// graph: g\n(small:X {name: 'Small'}),\n(large:X {name: 'Large'}),\n(large)-[:SEE]->(small)";
+    const m = "// graph: g\nMATCH (s:X {id: 'small'})\nINSERT (s)-[:NEAR]->(t:X {name: 'T'})";
+    const note = ['# Note', '', fence(a), '', fence(m), ''].join('\n');
+    const s = new PaneSession(note, 3);
+    assert.equal(s.text, a);
+    const p = pathBlock(s.current(), 'g', s.text, 'Walk', ['large', 'small']);
+    assert.ok(p.text, 'the path is drawn');
+    edited(s, p.text);
+    assert.equal(s.write(note).ok, true);
+  });
+
   test('a thing whose id equals its variable is named once, not twice', () => {
     const note = ['# Note', '', fence(A), ''].join('\n');
     const s = new PaneSession(note, 3);

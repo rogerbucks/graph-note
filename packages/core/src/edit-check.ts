@@ -39,6 +39,7 @@ export function newNames(before: string, after: string): string[] {
 /** The names a block gives its things, as often as it gives them: one per pattern, of the variable written and the id. */
 function given(text: string): string[] {
   return writtenIn(text).flatMap((w) => {
+    if (w.matched) return []; // a MATCH finds a thing, it never names one
     const id = w.props.get('id');
     return [...new Set([...(w.writes && w.variable ? [w.variable.name] : []), ...(id ? [id] : [])])];
   });
