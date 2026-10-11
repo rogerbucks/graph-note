@@ -88,8 +88,16 @@ class Parser:
                 raise ProfileError(
                     n, f"{s!r} has no offset", "an instant carries its offset (§9, principle 11)"
                 )
-            # an instant as its UTC time, exactly as Grafeo returns it
-            return v.astimezone(UTC).replace(tzinfo=None)
+            # an instant as its UTC time, exactly as Grafeo returns it; one whose UTC time is
+            # before year 1 or after 9999 cannot be held, and is refused as any unreadable value is
+            try:
+                return v.astimezone(UTC).replace(tzinfo=None)
+            except OverflowError:
+                raise ProfileError(
+                    n,
+                    f"{s!r} is not an instant: in UTC it falls outside years 1 to 9999",
+                    "write DATETIME 'YYYY-MM-DDTHH:MM:SS+HH:MM' within years 1 to 9999",
+                )
         raise ProfileError(
             n,
             f"{t or 'nothing'!r} is not a value in the profile",

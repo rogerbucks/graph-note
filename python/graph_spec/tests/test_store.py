@@ -14,7 +14,12 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "src"))
 
+from graphspec.reader.lexer import ProfileError  # noqa: E402
 from graphspec.reader.store import Store  # noqa: E402
+
+GOOD = "// graph: g\n(a:T {name: 'A'})"
+# an instant whose time in UTC falls before year 1, which Python's datetime cannot hold
+BEFORE_YEAR_ONE = "// graph: g\n(b:T {at: DATETIME '0001-01-01T00:30:00+01:00'})"
 
 
 def many_lines(n):
@@ -47,6 +52,32 @@ class ManyThings(unittest.TestCase):
             1.5 * len(large) / len(small),
             f"1,000 things took {t_small * 1000:.0f} ms, 4,000 took {t_large * 1000:.0f} ms",
         )
+
+
+class Whole(unittest.TestCase):
+    """A block is applied whole or not at all, whatever stops its reading, as the JavaScript store
+    applies it."""
+
+    def test_a_block_that_fails_in_any_way_leaves_the_store_as_it_was(self):
+        class Breaks(Store):
+            def _apply(self, block):
+                super()._apply(block)
+                raise RuntimeError("broke after reading")
+
+        store = Breaks()
+        before = (dict(store.graphs), dict(store.schemas), dict(store.named))
+        with self.assertRaises(RuntimeError):
+            store.apply(GOOD)
+        self.assertEqual((store.graphs, store.schemas, store.named), before)
+
+    def test_an_instant_before_year_one_in_utc_is_refused_as_unreadable_at_its_line(self):
+        store = Store()
+        store.apply(GOOD)
+        with self.assertRaises(ProfileError) as refused:
+            store.apply(BEFORE_YEAR_ONE)
+        self.assertEqual(refused.exception.line, 2)
+        self.assertIn("0001-01-01T00:30:00+01:00", refused.exception.message)
+        self.assertEqual([n["props"]["id"] for n in store.graphs["g"]["nodes"].values()], ["a"])
 
 
 if __name__ == "__main__":
