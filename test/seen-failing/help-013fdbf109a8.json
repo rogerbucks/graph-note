@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/help.test.js",
+  "test": "a name only suggested is never offered as a word to write > once the name is written it is offered, as any name is",
+  "seen_failing_first": false,
+  "evidence": "A control: a name that is written is still offered as a completion. It passed before because only a name drawn under a suggestion is left out; it pins that the filter does not over-refuse."
+}
