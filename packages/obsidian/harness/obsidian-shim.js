@@ -1,5 +1,5 @@
 // A browser stand-in for the obsidian module, for looking at the plugin in an ordinary page (build.mjs). It adds
-// Obsidian's element helpers to the DOM and draws icons as their names. Not Obsidian: no vault, no workspace.
+// Obsidian's element helpers to the DOM and draws icons as their names. Not Obsidian: one note in memory as the vault, and no settings page or command palette.
 const P = HTMLElement.prototype,
   S = SVGElement.prototype;
 function info(e, o = {}) {
@@ -133,6 +133,8 @@ const vault = {
     }
     return next;
   },
+  cachedRead: async (f) => files.get(f.path),
+  getMarkdownFiles: () => [...files.keys()].map((p) => new TFile(p)),
   modify: async (f, t) => {
     files.set(f.path, t);
     listeners.forEach((l) => l(new TFile(f.path)));
@@ -165,6 +167,8 @@ const workspace = {
     return l;
   },
   revealLeaf: async () => {},
+  // the plugin writes the note, and the stand-in editor follows it: no note is open in an Obsidian editor
+  getActiveFile: () => null,
 };
 export const app = { vault, workspace };
 export class ItemView extends Component {
@@ -193,10 +197,37 @@ export class Plugin extends Component {
   registerEditorExtension(ext) {
     editorExtensions.push(...(Array.isArray(ext) ? ext : [ext]));
   }
+  // the browser view has no settings page and no command palette
+  addSettingTab() {}
+  addCommand(c) {
+    return c;
+  }
   async loadData() {
     return null;
   }
   async saveData() {}
+}
+/** A settings tab: the browser view has no settings page, so it is never shown. */
+export class PluginSettingTab {
+  constructor(a, plugin) {
+    this.app = a;
+    this.plugin = plugin;
+    this.containerEl = document.createElement('div');
+  }
+  display() {}
+  hide() {}
+}
+/** A field for a secret: the browser view keeps none. */
+export class SecretComponent {
+  constructor(_a, el) {
+    this.inputEl = el.createEl('input', { type: 'password' });
+  }
+  setValue() {
+    return this;
+  }
+  onChange() {
+    return this;
+  }
 }
 export class Notice {
   constructor(m) {
