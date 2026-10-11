@@ -1,0 +1,32 @@
+name: Lock conversations
+
+# Only a collaborator contributes here, and a pull request's conversation is part of that: each one is locked as soon
+# as it opens, so no one without write access can comment or review on it (a collaborator still can). The hourly run
+# covers a pull request Dependabot opened, whose own run of this workflow has a read-only token. The job checks nothing
+# out and runs no code from the pull request.
+on:
+  pull_request:
+    types: [opened, reopened]
+  schedule:
+    - cron: '7 * * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  lock:
+    # Dependabot's token cannot lock; the next hourly run does it
+    if: github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Lock every open pull request that is not locked yet
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          for n in $(gh api "repos/$REPO/pulls?state=open&per_page=100" --paginate --jq '.[] | select(.locked | not) | .number'); do
+            gh api -X PUT "repos/$REPO/issues/$n/lock" --silent
+            echo "locked #$n"
+          done
