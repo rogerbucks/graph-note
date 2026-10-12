@@ -6,17 +6,12 @@ import assert from 'node:assert/strict';
 import { build, load, wait } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
 import { READER, NOTE, PATH, open, textarea, type, note } from './host/pane-notes.js';
+import { onThisMachine, processorTime as used } from '../../../scripts/speed-index.mjs';
 
 before(() => build());
 
 /** Lets every promise already settled run its callbacks: the write the pane starts from its timer. */
 const flush = () => new Promise((r) => setImmediate(r));
-
-/** The processor time this process has used so far, every thread of it, in ms. */
-function used() {
-  const { user, system } = process.cpuUsage();
-  return (user + system) / 1000;
-}
 
 describe('writing to the note', () => {
   test('what is typed reaches the note within about a third of a second', async (t) => {
@@ -27,7 +22,9 @@ describe('writing to the note', () => {
       // clock takes no real time, so the processor time from typing to the note changing is the work alone, however
       // slowly a busy machine runs it. Timed by the wall clock, even against a timer set beside the pane's, a loaded run
       // of the whole suite failed it now and then (12 Oct 2026); on the fake clock alone, a slow write passed (the
-      // review of #109)
+      // review of #109). The third of a second is a person's at a desktop, so the work is held to what is left of it
+      // after the pane's wait, scaled to this machine (scripts/speed-index.mjs): a shared runner, or a run that
+      // coverage slows, is given proportionally longer for the same work
       t.mock.timers.enable({ apis: ['setTimeout'] });
       Object.assign(env.doc.defaultView, { setTimeout, clearTimeout });
       const typed = READER + ",\n(price:Reason {title: 'Costs more'})";
@@ -39,7 +36,11 @@ describe('writing to the note', () => {
         await flush();
       }
       const work = used() - started;
-      assert.ok(ms + work <= 350, `${ms} ms of the pane's own wait, and ${work.toFixed(0)} ms of processor time`);
+      const left = onThisMachine(350 - ms);
+      assert.ok(
+        work <= left,
+        `${ms} ms of the pane's own wait, and ${work.toFixed(0)} ms of processor time, over ${left.toFixed(0)}`,
+      );
       assert.equal(note(env), NOTE.replace(READER, typed));
     } finally {
       env.uninstall();

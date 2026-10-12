@@ -288,5 +288,8 @@ Each test file is named after the module it tests (`zoom.test.js` tests `zoom.ts
 with `npm test` from the repository root.
 
 A speed test times by processor time with `test/processor-time.js`, never by the clock, which runs on while a busy
-machine runs something else. It holds a step to a baseline measured beside it in the same run, and to its old number of
-milliseconds, now in processor time, as a backstop.
+machine runs something else. It holds a step to a baseline of the same kind of work measured beside it in the same run,
+and to its old number of milliseconds on the desktop, in processor time, scaled to the machine running it
+(`onThisMachine`, from `scripts/speed-index.mjs`), as a backstop. Where what is held is really work, such as a text
+never read, a block read again only within its budget or drawing instructions never written, it counts the work with
+`test/reader-work.js` instead: a count is the same on every machine, under load and under coverage.

@@ -5,18 +5,21 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
 import { LAYOUT_LIMITS, PAGE_LIMITS, READ_LIMITS, textTooLarge, tooLarge } from '../src/layout-limits.ts';
-import { fastest, onePass } from './processor-time.js';
+import { fastest, onThisMachine } from './processor-time.js';
+import { readerWork, watchedBox } from './reader-work.js';
 
 /**
- * Asserts a refusal that only measures a text came at once: in under 10 plain passes over the text (it takes 1 to 3),
- * the least processor time of three of each, so it neither read nor wrote what it measured; and, as a backstop against
- * a slowdown of both alike, under `most` ms of processor time, the test's old limit. Returns what the step gave.
+ * Asserts a refusal that only measures came at once, by what it did not do (the test's own count of the work); and, as
+ * a backstop against a measurement grown slow, in under `most` ms of processor time on the desktop, the test's old
+ * limit, scaled to this machine, the least of three. Never against a plain pass timed in the test: under coverage, as
+ * the release's second run of the suite has it, the core's code slows and the test's own does not, so a refusal took 8
+ * passes where it takes 2, and on the release's runner more than the 10 it was allowed (0.4.2, 12 Oct 2026). Returns
+ * what the step gave.
  */
-function atOnce(text, step, most) {
-  const { ms: took, out } = fastest(3, step),
-    pass = onePass(text);
-  assert.ok(took < 10 * pass, `${took.toFixed(1)} ms, against ${pass.toFixed(1)} ms for one pass over the text`);
-  assert.ok(took < most, `${took.toFixed(0)} ms of processor time, over ${most}`);
+function atOnce(step, most) {
+  const { ms, out } = fastest(3, step),
+    allowed = onThisMachine(most);
+  assert.ok(ms < allowed, `${ms.toFixed(0)} ms of processor time, over ${allowed.toFixed(0)}: ${most} on the desktop`);
   return out;
 }
 
@@ -50,7 +53,8 @@ describe('the note’s text, measured before it is read', () => {
   test('a large broken block — 5 MB, 100,000 lines each missing its ) — is refused at once, unread, never hanging', () => {
     const block = `// graph: g\n${Array.from({ length: 100_000 }, (_, i) => `(n${i}:Thing {name: 'Thing number ${i} of many'},`).join('\n')}`;
     assert.ok(block.length > 4_000_000);
-    const reading = atOnce(block, () => readNote([block]), 1000);
+    const { out: reading, calls } = atOnce(() => readerWork(() => readNote([block])), 1000);
+    assert.equal(calls, 0, 'unread: never handed to the reader');
     assert.equal(reading.tooLarge?.limit, 'text-bytes');
     assert.equal(reading.graphs.size, 0, 'nothing drawn');
     assert.deepEqual(reading.problems, []);
@@ -98,9 +102,14 @@ describe('on the page’s own thread, where a layout cannot be stopped, the limi
   });
 
   test('a word of 999,000 characters, which would hold the page while its drawing instructions are written, is refused unwritten', () => {
-    const d = drawing([box(0, 'x'.repeat(999_000)), box(1)]);
-    const r = atOnce(d.boxes[0].text, () => tooLarge(d, PAGE_LIMITS), 200);
+    const reads = {};
+    const d = drawing([watchedBox(box(0, 'x'.repeat(999_000)), reads), box(1)]);
+    const r = atOnce(() => tooLarge(d, PAGE_LIMITS), 200);
     assert.deepEqual(r, { reason: 'too-large', limit: 'word', count: 999_000, most: 1_000 });
+    // unwritten: a drawing instruction names its box by its key, and the word's text was only measured, at most two
+    // passes each time (its longest word, its bytes), never wrapped or written
+    assert.equal(reads.key, undefined, 'no drawing instruction was written for the box');
+    assert.ok(reads.text <= 2 * 3, `the text read ${reads.text} times in three refusals`);
   });
 
   test('a graph under the worker’s limits but over the page’s is refused there', () => {

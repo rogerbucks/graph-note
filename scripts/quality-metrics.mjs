@@ -17,6 +17,7 @@ import { fileURLToPath } from 'node:url';
 import { METRICS } from './quality-spec.mjs';
 import { scanRepo, scannedFiles } from './quality-secrets.mjs';
 import { measureSuite } from './quality-suite.mjs';
+import { speedIndex } from './speed-index.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const ABOUT =
@@ -122,18 +123,6 @@ export async function measureBundle() {
 
 const median = (xs) => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)];
 
-/** How long a fixed piece of plain work takes here, in ms: what the timings are scaled by when machines differ. */
-function measureSpeed() {
-  const runs = Array.from({ length: 7 }, () => {
-    const t = performance.now();
-    let h = 0;
-    for (let i = 0; i < 3e6; i++) h = (Math.imul(h ^ i, 16777619) + (i >> 3)) | 0;
-    if (h === 1) console.log(h); // the result is used, so the loop is not removed
-    return performance.now() - t;
-  });
-  return Math.round(Math.min(...runs) * 100) / 100;
-}
-
 /** The time to read and draw a graph of 50 things, 70 links, as the core's render path does it (render.test.js). */
 async function measureDraw() {
   const { readNote } = await import('../packages/core/src/drawing.ts');
@@ -158,10 +147,13 @@ async function measureDraw() {
   return { metrics: { draw_ms: Math.round(median(times) * 10) / 10 }, details: {} };
 }
 
-/** Everything: the quick metrics, the audit, the bundle, the drawing, the machine's speed, and the suite (twice). */
+/**
+ * Everything: the quick metrics, the audit, the bundle, the drawing, the machine's speed (by the wall clock, as the
+ * timings are), and the suite (twice).
+ */
 export async function measureAll() {
   const parts = [measureFast(), measureAudit(), await measureBundle(), await measureDraw(), measureSuite(ROOT)];
-  const metrics = Object.assign({}, ...parts.map((p) => p.metrics), { speed_index: measureSpeed() });
+  const metrics = Object.assign({}, ...parts.map((p) => p.metrics), { speed_index: speedIndex() });
   const details = Object.assign({}, ...parts.map((p) => p.details));
   return { metrics, details };
 }

@@ -170,6 +170,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/requirements.test.js` — the generated requirements copy: started requirements proved, tests where they say.
 - `test/slice-board-style.test.js` — the slice board's stylesheet: colour tokens that agree in light and dark, the altitude switch by CSS alone, a layout that holds at 400px, and the source written one rule and one declaration to a line.
 - `test/slice-board.test.js` — the slice board: a CSS-only HTML page of how far the slice under way is proved, from the requirements copy and, optionally, the open pull requests.
+- `test/speed-index.test.js` — the one measure of a machine's speed, which the quality metrics record and the speed tests scale a desktop budget by: fixed plain work, the least of seven runs, in processor time for the tests.
 - `test/test-vault.test.js` — the test vault: dummy notes tied to requirements, nothing Obsidian writes committed, each session clean.
 - `test/tests-first.test.js` — every test is seen to fail before its code, replayed commit by commit: how a replay judges a new test.
 - `test/tests-first-command.test.js` — that replay's command line, run as CI and a person run it: `--check`, `--excuse` and `--migrate`.
@@ -203,6 +204,11 @@ These test behaviour across modules, or the repository itself, so they are named
   passing suite, and commit it. The baseline is held against its own earlier copy (`quality-check.mjs --baseline-since
   <ref>`, run in CI and in the release): a metric that got worse in it needs an entry in `accepted.json` too, a count of
   secrets can never be waived, and a baseline with a metric missing or tests left out is refused.
+- **A speed test holds work, or a desktop's time scaled.** The suite's second run has coverage on, which slows the
+  core's code and not the test's, on a runner slower than a desktop. So a speed test counts the work where the
+  requirement is work (a text never read, a block read again only within its budget), compares like with like, and
+  holds a budget stated for a desktop to that budget scaled by the machine's speed index (`scripts/speed-index.mjs`),
+  in processor time, never a number widened.
 - **Timings are enforced only on the machine the baseline came from** (same operating system and Node major, recorded in
   it). Elsewhere they warn. To get a baseline from the CI runner, run the "Quality baseline" workflow by hand, download
   its `quality-metrics` artifact, and commit it as `quality/baseline.json` in a normal pull request.
