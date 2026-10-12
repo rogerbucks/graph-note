@@ -55,9 +55,12 @@ const gone = async (pid) => {
 /** The id the fixture wrote, once it has run; the fixture runs as a grandchild of the runner, inside `node --test`. */
 const fixturePid = (dir) => Number(readFileSync(join(dir, 'pid'), 'utf8'));
 
-// Grows by 4 MB every 10 ms, as a test that allocates without bound does; stops itself at 1.5 GB, writes `grown`, and then
-// waits. Before it grows, it writes its own pid, starts a child of its own and writes that pid too: the memory ceiling
-// can only be reached after both exist, so the stopping of the whole group is seen however slowly the fixture starts.
+// Grows by 4 MB every 40 ms, as a test that allocates without bound does; stops itself at 1.5 GB, about 15 s on, writes
+// `grown`, and then waits. It reaches the 300 MB ceiling about 3 s on, and the runner looks every 500 ms, so it is
+// stopped some 12 s before it could write `grown`, inside the run's 60 s limit; at 10 ms a step it grew to 1.5 GB in
+// 4 s, too near the ceiling's look for a loaded machine (the review of #109). Before it grows, it writes its own pid,
+// starts a child of its own and writes that pid too: the memory ceiling can only be reached after both exist, so the
+// stopping of the whole group is seen however slowly the fixture starts.
 const RUNAWAY = `import { test } from 'node:test';
 import { spawn } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
@@ -68,7 +71,7 @@ test('grows without bound', async () => {
   const kept = [];
   while (kept.length < 384) {
     kept.push(Buffer.alloc(4 * 2 ** 20, 1));
-    await new Promise((r) => setTimeout(r, 10));
+    await new Promise((r) => setTimeout(r, 40));
   }
   writeFileSync('grown', '');
   await new Promise((r) => setTimeout(r, 60000));
@@ -81,7 +84,7 @@ test('grows without bound', async () => {
 // whether the fixture had started by the ceiling, which a loaded machine's start-up decides: a start-up slower than the
 // 1.8 s ceiling failed the test though the ceiling worked, and a run under load took longer by the clock alike (12 Oct
 // 2026). The stopping of a started fixture and its own child is seen at the memory ceiling, which only a started fixture
-// can reach.
+// can reach; both ceilings stop a run through the runner's one `stop`, which kills the whole group.
 const SLEEPER = `const { writeFileSync } = require('node:fs');
 setTimeout(() => writeFileSync('woke', ''), 30000);
 `;
