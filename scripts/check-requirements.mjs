@@ -27,8 +27,10 @@ export const BANNER = [
 ];
 // A test whose file the repository holds, alone or as well as somewhere else.
 const IN_REPO = new Set(['repo', 'both']);
-// A path in a test's file list: a list may carry notes in brackets, and a path may follow a repository's name.
-const FILE_PATH = /(?:^|[\s:,])((?:\.?[\w-]+\/)*[\w.-]+\.(?:js|mjs|ts|md|yml|yaml|json|py))(?=$|[\s,)])/g;
+// A path in a test's file list: a list may carry notes in brackets, and a path may follow a repository's name. A path
+// ending in a slash names a folder of tests, such as scripts/benchmarks/.
+const FILE_PATH =
+  /(?:^|[\s:,])((?:\.?[\w-]+\/)*[\w.-]+\.(?:js|mjs|ts|md|yml|yaml|json|py)|(?:\.?[\w-]+\/)+)(?=$|[\s,)])/g;
 
 /** The repository paths a test's file field names. */
 export const filesOf = (field) => [...String(field ?? '').matchAll(FILE_PATH)].map((m) => m[1]);
