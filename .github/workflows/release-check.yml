@@ -12,7 +12,9 @@ permissions:
 
 jobs:
   quality:
-    runs-on: ubuntu-latest
+    # pinned, as the instruction counts are held only to counts from the same machine; and bounded, as Cachegrind is slow
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -33,7 +35,7 @@ jobs:
         run: node scripts/engine-version.mjs
       # Valgrind (GPL-3.0) is installed in this job alone and never shipped: licences/bundled.json, ciOnlyTools
       - name: Install Valgrind, whose Cachegrind counts the benchmarks' instructions
-        run: sudo apt-get update && sudo apt-get install -y valgrind
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends valgrind
       - name: Measure the quality metrics
         run: node scripts/quality-metrics.mjs --out quality/metrics.json
       - name: No metric is worse than the baseline without a recorded reason

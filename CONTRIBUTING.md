@@ -209,18 +209,29 @@ These test behaviour across modules, or the repository itself, so they are named
   second's instructions on a phone), the worst reads at the size limits (`reading_limits`, within the budget of reading
   again), the refusals of `layout_contained` (`layout_refusals`), naming thousands of things linearly (`naming`), and a
   keystroke reaching the note (`keystroke`, read-back costing less than reading). A claim between two sizes or two
-  cases is a ratio of instruction counts, so it is exact on every run. `node scripts/instruction-counts.mjs` runs each
-  case, and its setup alone, in a process of its own under Valgrind's Cachegrind (`--cache-sim=no`), with Node pinned
-  to one thread, a fixed collector schedule and one random seed, and keeps each case less its setup. It runs on Linux
-  only, in the release, its dry run and the "Quality baseline" workflow, which install Valgrind; it does not run on
-  Apple-silicon Macs. Where Valgrind is missing it says so in one line and counts nothing: on any machine but Linux that
-  only warns, and the fast check never asks. A count may grow by 5% before it fails (`INSTRUCTION_TOLERANCE`), held
-  only against counts from the same machine (operating system, processor and Node major); a claim that does not hold
-  always fails, and no reason can waive it. Until the baseline holds the counts, a run that counts them prints them,
-  with the machine, for a follow-up pull request to commit, and fails only on the other metrics.
+  cases is a ratio of instruction counts, so it is exact on every run. Each setup first runs its cases' code once,
+  small, so a first compile is never inside a ratio. `node scripts/instruction-counts.mjs` runs each case, and its
+  setup alone, in a process of its own under Valgrind's Cachegrind (`--cache-sim=no`), as many at once as there are
+  cores, with Node pinned to one thread, V8's predictable mode, a fixed collector schedule and one random seed, and
+  keeps each case less its setup; a case that counts nothing beyond its setup fails the run. It runs on Linux only, in
+  the release, its dry run and the "Quality baseline" workflow, on `ubuntu-24.04`, which install Valgrind; it does not
+  run on Apple-silicon Macs. Where Valgrind is missing it says so in one line and counts nothing: on any machine but
+  Linux that only warns, and the fast check never asks. A count may grow by 5% before it fails
+  (`INSTRUCTION_TOLERANCE`), held only against counts from the same machine (operating system, processor, Node major
+  and Valgrind, the full Node version and the CPU said with them); a claim that does not hold always fails, and no
+  reason can waive it. Until the baseline holds the counts, a run that counts them prints them, with the machine, for a
+  follow-up pull request to commit: outside CI it passes on them; in CI (`GITHUB_ACTIONS`) it fails after printing
+  them, and fails too when the baseline's were counted on another machine, as its job then is only to print them.
+- **Counting on your own machine:** `npm run bench:local` (Docker running) builds `docker/benchmarks.Dockerfile`, a
+  Linux image with Node 24 and Valgrind, its base pinned by digest, and runs `scripts/instruction-counts.mjs` in it with
+  any of its arguments (`-- --only naming`, `-- --runs 3`). It is for counts before and after a change on one machine,
+  as Valgrind cannot run on Apple-silicon macOS. The repository is mounted, not copied, and `node_modules` is the
+  container's own volume, so the host's is untouched. On a Mac it counts ARM Linux's instructions: they are never
+  compared with CI's x86-64 baseline. A full count takes about two and a half minutes on a 10-core Mac.
 - **Valgrind is GPL-3.0, allowed as a tool run in CI alone and never shipped** (spec §13, build_tool_licences):
   `licences/bundled.json`'s `ciOnlyTools` names it, and `test/licences.test.js` holds that nothing bundled, nothing
-  inside what is bundled and nothing in `node_modules` can be on that list, and that only the jobs it names install it.
+  inside what is bundled and nothing in `node_modules` can be on that list, and that only the jobs and the
+  developer-only image it names install it, each with `--no-install-recommends`.
 - **To move the baseline,** after a change is wanted, run the metrics script with `--out quality/baseline.json` on a
   passing suite, and commit it. The baseline is held against its own earlier copy (`quality-check.mjs --baseline-since
   <ref>`, run in CI and in the release): a metric that got worse in it needs an entry in `accepted.json` too, a count of

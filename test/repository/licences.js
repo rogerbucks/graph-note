@@ -109,11 +109,20 @@ export function ciOnlyProblems(record, locked) {
   });
 }
 
-/** Each package a workflow's job installs with apt-get, as `<file> <job>` against the packages' names. */
+/**
+ * Each package a workflow's job installs with apt or apt-get, as `<file> <job>` against the package's name and whether
+ * its line asks for no recommended packages: `apt install x`, `apt-get -y install a b`, flags anywhere among the names.
+ */
 export function aptInstalls(file, jobLines) {
   const out = [];
   for (const [job, lines] of Object.entries(jobLines))
-    for (const m of lines.join('\n').matchAll(/apt-get install\s+((?:-\S+\s+)*)([^\n&|;]+)/g))
-      for (const name of m[2].trim().split(/\s+/)) out.push({ job: `${file} ${job}`, name });
+    for (const m of lines.join('\n').matchAll(/\bapt(?:-get)?((?:\s+-\S+)*)\s+install\b([^\n&|;]*)/g)) {
+      const words = `${m[1]} ${m[2]}`.trim().split(/\s+/);
+      const bare = words.includes('--no-install-recommends');
+      // a package, pinned to a version or not (`valgrind=1:3.24.0-3`); a line's continuation (`\`) is no package
+      const packages = m[2].trim().split(/\s+/);
+      for (const word of packages.filter((w) => /^[a-z0-9][a-z0-9.+-]*(=\S+)?$/.test(w)))
+        out.push({ job: `${file} ${job}`, name: word.split('=')[0], bare });
+    }
   return out;
 }

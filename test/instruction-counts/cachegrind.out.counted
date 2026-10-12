@@ -1,10 +1,39 @@
-cmd: /opt/hostedtoolcache/node/24.9.0/x64/bin/node --single-threaded --predictable-gc-schedule --random-seed=1 --disable-wasm-trap-handler /tmp/instruction-counts-k3Lq9x/bundle/one-case.mjs naming setup
+cmd: /bin/true
 events: Ir
-fl=???
-fn=0x000000000f7c1e40
-0 1493017342
-fl=/usr/src/node/deps/v8/src/heap/heap.cc
-fn=v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags)
-1801 120
-1804 4538
-summary: 1493022000
+fl=./csu/../csu/libc-start.c
+fn=__libc_start_main@@GLIBC_2.34
+128 3
+134 2
+135 7
+138 1
+139 1
+142 3
+143 3
+144 9
+145 5
+242 12
+311 2
+312 3
+337 5
+340 1
+343 3
+350 2
+352 1
+360 4
+fl=./csu/../sysdeps/nptl/libc_start_call_main.h
+fn=(below main)
+29 12
+44 3
+46 1
+48 1
+51 3
+52 1
+fn=__aarch64_ldadd4_relax
+0 18
+fn=__aarch64_swp4_rel
+0 35
+fn=call_weak_fn
+0 4
+fn=init_have_lse_atomics
+0 22
+summary: 125571

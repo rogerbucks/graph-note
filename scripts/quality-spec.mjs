@@ -6,10 +6,11 @@ export const BENCHMARK_NAMES = ['draw_fifty', 'reading_limits', 'layout_refusals
 
 /**
  * How much an instruction count may grow with no reason recorded: 5%. Cachegrind counts the same code alike from run to
- * run; what varies is the little a JIT and a collector do differently. Until the release's runner has measured its own
- * spread (the "Quality baseline" workflow counts three runs), this rests on a proxy: the same processes, with the same
- * flags, counted three times by Apple silicon's hardware counter, which also counts the kernel's share, moved a metric
- * (each case less its setup) by at most 3.3% (12 Oct 2026).
+ * run; what varies is the little a JIT and a collector do differently. Counted three times under Cachegrind on ARM Linux
+ * (npm run bench:local, 12 Oct 2026), a metric (each case less its setup) moved by at most 1.9% (draw_fifty, where the
+ * engine's WebAssembly is), the others by 0.001% or less. That is not the release's x86-64 runner: once the "Quality
+ * baseline" workflow has counted
+ * three runs there, this may come down to a few times the spread it finds.
  */
 export const INSTRUCTION_TOLERANCE = 0.05;
 

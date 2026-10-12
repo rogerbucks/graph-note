@@ -1,10 +1,17 @@
-desc: I1 cache:         32768 B, 64 B, 8-way associative
-desc: D1 cache:         32768 B, 64 B, 8-way associative
-desc: LL cache:         33554432 B, 64 B, 16-way associative
-cmd: ./a.out
+desc: I1 cache:         16384 B, 64 B, 4-way associative
+desc: D1 cache:         16384 B, 64 B, 4-way associative
+desc: LL cache:         262144 B, 64 B, 8-way associative
+cmd: /bin/true
 events: Ir I1mr ILmr Dr D1mr DLmr Dw D1mw DLmw
-fl=/usr/src/example/a.c
-fn=main
-3 1 1 1 0 0 0 1 0 0
-4 3 0 0 1 1 1 1 0 0
-summary: 151520 1003 958 35631 1489 1150 16592 838 752
+fl=./csu/../csu/libc-start.c
+fn=__libc_start_main@@GLIBC_2.34
+128 3 1 1 2 0 0 0 0 0
+134 2 0 0 1 1 0 0 0 0
+135 7 0 0 2 1 0 0 0 0
+138 1 0 0 1 1 0 0 0 0
+139 1 0 0 0 0 0 0 0 0
+142 3 0 0 2 0 0 0 0 0
+143 3 1 1 2 0 0 0 0 0
+144 9 1 1 0 0 0 0 0 0
+145 5 0 0 1 1 0 0 0 0
+summary: 125571 963 872 34222 1643 1063 16598 355 315

@@ -11,11 +11,12 @@
 //   node scripts/instruction-counts.mjs --only naming      count one benchmark
 //   node scripts/instruction-counts.mjs --runs 3           count each process three times: the least is kept, and the
 //                                                          spread between runs reported (what the tolerance rests on)
+//   node scripts/instruction-counts.mjs --parallel 2       count two processes at once (every core, by default)
 //   node scripts/instruction-counts.mjs --out <file>       write the JSON to a file instead
 // Exits 1 when a benchmark's claim does not hold.
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { arch, platform, tmpdir } from 'node:os';
+import { arch, availableParallelism, cpus, platform, tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -24,13 +25,16 @@ const CASE_MS = 15 * 60 * 1000;
 
 /**
  * Node's flags for a count, each to take a source of difference between runs away: V8 runs no background thread
- * (`--single-threaded`: no concurrent compiling, marking or sweeping, whose share of the work depends on timing), its
- * collector grows the heap on a fixed schedule rather than by measured speed (`--predictable-gc-schedule`), its random
- * numbers start from one seed (`--random-seed=1`), and WebAssembly checks its bounds in code instead of by catching
- * faults in reserved memory (`--disable-wasm-trap-handler`), which Valgrind follows plainly.
+ * (`--single-threaded`: no concurrent compiling, marking or sweeping, whose share of the work depends on timing), makes
+ * no decision by the clock (`--predictable`), its collector grows the heap on a fixed schedule rather than by measured
+ * speed (`--predictable-gc-schedule`), its random numbers start from one seed (`--random-seed=1`), and WebAssembly
+ * checks its bounds in code instead of by catching faults in reserved memory (`--disable-wasm-trap-handler`), which
+ * Valgrind follows plainly. Counted three times under Cachegrind (ARM Linux in Docker, 12 Oct 2026), without
+ * `--predictable` a metric moved by up to 8.9% between runs; with it, by at most 1.9% (draw_fifty), the rest 0.001%.
  */
 export const NODE_FLAGS = [
   '--single-threaded',
+  '--predictable',
   '--predictable-gc-schedule',
   '--random-seed=1',
   '--disable-wasm-trap-handler',
@@ -38,7 +42,8 @@ export const NODE_FLAGS = [
 
 /**
  * Cachegrind counting instructions only (`--cache-sim=no`), and translating again any code that is rewritten, as V8's
- * compiled code is (`--smc-check=all`).
+ * compiled code is (`--smc-check=all`). `all-non-file` was 15% quicker, but counted reading_limits 0.13% apart from
+ * `all`, where three runs of either agreed to 0.0001%: so every write to code is watched, at the cost of the time.
  */
 export const VALGRIND_FLAGS = ['--tool=cachegrind', '--cache-sim=no', '--smc-check=all'];
 
@@ -100,6 +105,13 @@ export function notMeasured(names, why = NOT_MEASURED) {
 export function instructionMetrics(benchmarks, counts) {
   const metrics = {},
     claims = [];
+  // a case that counts nothing beyond its setup did no work, or the setup did more than the case: never a count
+  const empty = benchmarks.flatMap((b) =>
+    Object.entries(counts[b.name])
+      .filter(([, n]) => !(n > 0))
+      .map(([c, n]) => `${b.name} ${c}: ${n}`),
+  );
+  if (empty.length) throw new Error(`a case counted no work beyond its setup, so nothing is kept: ${empty.join('; ')}`);
   for (const b of benchmarks) {
     metrics[metricOf(b.name)] = b.counted.reduce((sum, c) => sum + counts[b.name][c], 0);
     for (const claim of b.claims) {
@@ -137,7 +149,10 @@ export async function bundleBenchmarks(dir) {
   return join(dir, 'one-case.mjs');
 }
 
-/** Counts processes under Cachegrind: one case of one benchmark at a time, its output file in a folder of its own. */
+/**
+ * Counts processes under Cachegrind: each case of each benchmark in a process of its own, its output file in a folder
+ * of its own, so as many can run at once as the machine has cores; a count is the process's alone.
+ */
 async function cachegrind() {
   const dir = mkdtempSync(join(tmpdir(), 'instruction-counts-'));
   const script = await bundleBenchmarks(join(dir, 'bundle'));
@@ -148,55 +163,104 @@ async function cachegrind() {
     count(benchmark, which) {
       const out = join(dir, `cachegrind.out.${n++}`);
       const args = [...VALGRIND_FLAGS, `--cachegrind-out-file=${out}`, process.execPath, ...NODE_FLAGS];
-      const r = spawnSync('valgrind', [...args, script, benchmark, which], {
-        env,
-        encoding: 'utf8',
-        timeout: CASE_MS,
-        maxBuffer: 1 << 26,
+      return new Promise((counted, failed) => {
+        const child = spawn('valgrind', [...args, script, benchmark, which], {
+          env,
+          stdio: ['ignore', 'ignore', 'pipe'],
+        });
+        let said = '';
+        child.stderr.on('data', (d) => (said = (said + d).slice(-4000)));
+        const timer = setTimeout(() => child.kill('SIGKILL'), CASE_MS);
+        child.on('error', (e) => (clearTimeout(timer), failed(e)));
+        child.on('close', (code, signal) => {
+          clearTimeout(timer);
+          const last = said.trim().split('\n').slice(-5).join('\n');
+          if (code !== 0)
+            failed(new Error(`${benchmark} ${which} failed under Cachegrind (${signal ?? code}):\n${last}`));
+          else {
+            try {
+              counted(parseCachegrind(readFileSync(out, 'utf8')).totals.Ir);
+            } catch (e) {
+              failed(e);
+            }
+          }
+        });
       });
-      if (r.status !== 0) {
-        const said = (r.stderr ?? '').trim().split('\n').slice(-5).join('\n');
-        throw new Error(`${benchmark} ${which} failed under Cachegrind (${r.error?.message ?? r.status}):\n${said}`);
-      }
-      return parseCachegrind(readFileSync(out, 'utf8')).totals.Ir;
     },
     done: () => rmSync(dir, { recursive: true, force: true }),
   };
 }
 
 /**
+ * Runs `tasks` (functions giving a promise or a value), at most `width` at once, and gives their results in order. On a
+ * failure no further task starts; the ones running are waited for, and the first failure is thrown.
+ */
+async function inParallel(tasks, width) {
+  const results = new Array(tasks.length);
+  let next = 0,
+    failure = null;
+  const lane = async () => {
+    while (!failure && next < tasks.length) {
+      const i = next++;
+      try {
+        results[i] = await tasks[i]();
+      } catch (e) {
+        failure ??= e;
+      }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.max(1, Math.min(width, tasks.length)) }, lane));
+  if (failure) throw failure;
+  return results;
+}
+
+/**
  * Counts every case of `benchmarks` (all of them by default) and its setup, `runs` times each, keeping the least, and
  * gives the metrics and details as quality-metrics.mjs reports them. Without Valgrind (`version` gives null), it counts
- * nothing and says so. `counter` is what counts a process: Cachegrind, unless a test hands in another.
+ * nothing and says so. `counter` is what counts a process: Cachegrind, unless a test hands in another. `parallel` is how
+ * many processes are counted at once: as many as the machine has cores, by default.
  */
 export async function measureInstructions(options = {}) {
-  const { runs = 1, version = valgrindVersion, counter = cachegrind } = options;
+  const { runs = 1, version = valgrindVersion, counter = cachegrind, parallel = availableParallelism() } = options;
   const benchmarks = options.benchmarks ?? (await import('./benchmarks/index.mjs')).BENCHMARKS;
   const tool = version();
   if (!tool) return notMeasured(benchmarks.map((b) => b.name));
   const counting = await counter();
   try {
+    const jobs = benchmarks.flatMap((b) =>
+      ['setup', ...Object.keys(b.cases)].flatMap((which) =>
+        Array.from({ length: runs }, () => ({ name: b.name, which })),
+      ),
+    );
+    const got = await inParallel(
+      jobs.map((j) => () => counting.count(j.name, j.which)),
+      parallel,
+    );
     const counts = {},
       ranges = {},
       reported = [];
     for (const b of benchmarks) {
       const least = {},
-        range = {};
+        range = {},
+        seen = {};
       for (const which of ['setup', ...Object.keys(b.cases)]) {
-        const got = Array.from({ length: runs }, () => counting.count(b.name, which));
-        least[which] = Math.min(...got);
-        range[which] = Math.max(...got) - least[which];
+        seen[which] = got.filter((_, i) => jobs[i].name === b.name && jobs[i].which === which);
+        least[which] = Math.min(...seen[which]);
+        range[which] = Math.max(...seen[which]) - least[which];
       }
       counts[b.name] = Object.fromEntries(Object.keys(b.cases).map((c) => [c, least[c] - least.setup]));
       ranges[b.name] = range;
       reported.push({ name: b.name, spec: b.spec, proves: b.proves, setup: least.setup, cases: counts[b.name] });
+      // every process's own count, when there are several, so how they differ can be seen
+      if (runs > 1) reported.at(-1).seen = seen;
     }
     const { metrics, claims } = instructionMetrics(benchmarks, counts);
     if (runs > 1) reported.forEach((r, i) => (r.spread = metricSpread(benchmarks[i], ranges[r.name], metrics)));
     const machine = { os: platform(), arch: arch(), node_major: Number(process.versions.node.split('.')[0]) };
     const instructions = {
       measured: true,
-      machine: { ...machine, node: process.version, valgrind: tool },
+      // held the same: os, arch, node_major and valgrind; the full Node version and the processor are said with them
+      machine: { ...machine, node: process.version, valgrind: tool, cpu: cpus()[0]?.model?.trim() ?? 'unknown' },
       flags: { node: NODE_FLAGS, valgrind: VALGRIND_FLAGS },
       runs,
       benchmarks: reported,
@@ -218,7 +282,8 @@ async function main(argv) {
     console.error(`no benchmark ${only}: ${BENCHMARKS.map((b) => b.name).join(', ')}`);
     return 2;
   }
-  const result = await measureInstructions({ benchmarks, runs: Number(value('--runs') ?? 1) });
+  const parallel = value('--parallel') === undefined ? undefined : Number(value('--parallel'));
+  const result = await measureInstructions({ benchmarks, runs: Number(value('--runs') ?? 1), parallel });
   const { instructions } = result.details;
   if (!instructions.measured) console.error(`instruction counts: ${instructions.why}`);
   const text = `${JSON.stringify(result, null, 2)}\n`;

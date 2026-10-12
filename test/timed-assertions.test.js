@@ -88,6 +88,34 @@ test('t', () => {
 });`;
     assert.deepEqual(linesIn(body), [5, 6, 7]);
   });
+
+  test('a reading handed to any call and the result compared: the subject’s helper, unseen, or test support’s, followed', () => {
+    const span = `import { elapsedSince } from '../src/elapsed.js';
+test('t', () => {
+  const t0 = performance.now();
+  assert.ok(elapsedSince(t0) < 5);
+  assert.ok(Math.round(elapsedSince(performance.now())) >= 0);
+  assert.equal(elapsedSince(t0), 0);
+});`;
+    const helper = 'export const elapsedSince = (t) => performance.now() - t;';
+    assert.deepEqual(linesIn(span, { 'pkg/src/elapsed.js': helper }), [4, 5], 'compared, whatever the call is');
+    assert.deepEqual(linesIn(span.replace('../src/', './'), { 'pkg/test/elapsed.js': helper }), [4, 5, 6]);
+  });
+
+  test('new Date() less a reading, process.uptime(), and a bigint from hrtime held in a variable', () => {
+    const body = `test('t', () => {
+  const t = new Date();
+  assert.ok(new Date() - t < 500);
+  const up = process.uptime();
+  assert.ok(process.uptime() - up < 1);
+  const b = process.hrtime.bigint();
+  const took = process.hrtime.bigint() - b;
+  assert.ok(took < 5_000_000n);
+});`;
+    assert.deepEqual(linesIn(body), [3, 5, 8]);
+    const mocked = `test('t', (t) => {\n  t.mock.timers.enable({ apis: ['Date'] });\n${body.split('\n').slice(1, 3).join('\n')}\n});`;
+    assert.deepEqual(linesIn(mocked), [], 'new Date() with Date mocked takes no real time');
+  });
 });
 
 describe('it allows', () => {
@@ -122,7 +150,7 @@ describe('it allows', () => {
     assert.deepEqual(linesIn(mocked.replace(/Date\.now\(\)/g, 'performance.now()')), [5]);
   });
 
-  test('a clock handed to the code tested, and a helper of the subject’s, which is never taken for the test’s', () => {
+  test('a clock handed to the code tested, which is never taken for the test’s own timing', () => {
     const body = `import { speedIndex } from '../src/speed.js';
 test('t', () => {
   let calls = 0;
@@ -132,15 +160,6 @@ test('t', () => {
     const subject =
       'export const speedIndex = (clock = () => performance.now()) => { const t = clock(); return clock() - t; };';
     assert.deepEqual(linesIn(body, { 'pkg/src/speed.js': subject }), []);
-    // a helper that gives a span: not followed into the subject, followed into test support
-    const span = `import { elapsedSince } from '../src/elapsed.js';
-test('t', () => {
-  const t0 = performance.now();
-  assert.ok(elapsedSince(t0) < 5);
-});`;
-    const helper = 'export const elapsedSince = (t) => performance.now() - t;';
-    assert.deepEqual(linesIn(span, { 'pkg/src/elapsed.js': helper }), []);
-    assert.deepEqual(linesIn(span.replace('../src/', './'), { 'pkg/test/elapsed.js': helper }), [4]);
   });
 
   test('names alike in different scopes are told apart', () => {

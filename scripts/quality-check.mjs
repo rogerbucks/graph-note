@@ -11,9 +11,10 @@
 //
 // Exits 1 and names each metric that is worse, with the baseline value, the new one and what would let it through. Test
 // duration only warns: a test asserts the work done, never the time taken. The benchmarks' instruction counts are held
-// only against counts from the same machine (operating system, processor and Node major) and otherwise warn; where
-// Valgrind cannot run they are not measured, which warns everywhere but Linux; and while the baseline holds none, a run
-// that counts them prints them, to be committed by a follow-up pull request, and passes on them.
+// only against counts from the same machine (operating system, processor, Node major and Valgrind) and otherwise warn;
+// where Valgrind cannot run they are not measured, which warns everywhere but Linux; and while the baseline holds none,
+// a run that counts them prints them, to be committed by a follow-up pull request, and passes on them. In CI
+// (GITHUB_ACTIONS set), no baseline for them, or one counted on another machine, fails, after the figures are printed.
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -50,7 +51,9 @@ export function acceptedProblems(accepted) {
 
 /** The machine that counted a run's instructions, as its details record it. */
 const counter = (run) => run.details?.instructions?.machine;
-const sameCounter = (a, b) => Boolean(a && b && a.os === b.os && a.arch === b.arch && a.node_major === b.node_major);
+/** Counts are held to counts from the same machine: its operating system, processor, Node major and Valgrind. */
+const sameCounter = (a, b) =>
+  Boolean(a && b) && ['os', 'arch', 'node_major', 'valgrind'].every((key) => a[key] === b[key]);
 
 /**
  * What is wrong with a baseline as a baseline: a metric missing, tests left out, or no word of the machine. The
@@ -78,8 +81,18 @@ export function baselineProblems(baseline) {
   return found;
 }
 
-const where = (m) => (m ? `${m.os}${m.arch ? ` ${m.arch}` : ''}, Node ${m.node_major}` : 'an unknown machine');
+/** A counting machine in words: what is held the same, and the processor it ran on. */
+const where = (m) =>
+  m
+    ? [`${m.os}${m.arch ? ` ${m.arch}` : ''}`, `Node ${m.node ?? m.node_major}`, m.valgrind, m.cpu]
+        .filter(Boolean)
+        .join(', ')
+    : 'an unknown machine';
 const NOT_COUNTED = 'not measured: Cachegrind counts instructions on Linux only';
+/** Why a run in CI fails on instruction counts the baseline cannot hold it to, after printing them. */
+export const CI_RECORDS =
+  'in CI this fails: this run’s job is to print the figures above, for a follow-up pull request to commit to ' +
+  'quality/baseline.json; once they are committed, the counts are held to them';
 
 /**
  * Holds `current` against `baseline`. Gives `{ failures, warnings, accepted, improved, toRecord }`, each metric by name:
@@ -90,9 +103,11 @@ const NOT_COUNTED = 'not measured: Cachegrind counts instructions on Linux only'
  * reason covers a change from the baseline's value to the figure it names, or anything no worse than that; for a timing
  * that figure is scaled with the baseline, to the speed of the machine measuring. With `partial`, a metric the run left
  * out is skipped, but one it measured as nothing still fails. With `baselines`, two baselines are compared: instruction
- * counts neither holds are passed over, and one the earlier held and the later dropped fails.
+ * counts neither holds are passed over, and one the earlier held and the later dropped fails. With `ci` (a run in GitHub
+ * Actions), counts the baseline cannot hold the run to fail rather than pass: none in it yet, or counted on another
+ * machine; every count is still given in `toRecord`, to be printed first.
  */
-export function compare(baseline, current, accepted = [], { partial = false, baselines = false } = {}) {
+export function compare(baseline, current, accepted = [], { partial = false, baselines = false, ci = false } = {}) {
   const out = { failures: [], warnings: [], accepted: [], improved: [], toRecord: [] };
   const speed =
     has(baseline.metrics.speed_index) && has(current.metrics.speed_index)
@@ -146,7 +161,12 @@ export function compare(baseline, current, accepted = [], { partial = false, bas
     const reason = valid.find((x) => x.metric === name && x.from === base && !worse(spec, x.to * scale, value));
     const way = spec.better === 'lower' ? 'higher' : 'lower';
     const said = `${name} got worse: ${value} ${spec.unit}, ${way} than the baseline's ${base}`;
-    const detail = spec.scaled && scale !== 1 ? ` (${wanted.toFixed(1)} on this machine)` : '';
+    const detail =
+      spec.scaled && scale !== 1
+        ? ` (${wanted.toFixed(1)} on this machine)`
+        : spec.instructions
+          ? ` (counted on ${where(b)})`
+          : '';
     if (reason) out.accepted.push({ metric: name, baseline: base, value, reason: reason.reason });
     else if (spec.warnOnly)
       out.warnings.push({ metric: name, baseline: base, value, message: `${said}${detail}: reported, never enforced` });
@@ -167,7 +187,25 @@ export function compare(baseline, current, accepted = [], { partial = false, bas
           `{ "metric": "${name}", "from": ${base}, "to": ${value}, "reason": "…", "date": "YYYY-MM-DD" }`,
       });
   }
+  if (ci && !baselines) holdInCi(out, current, a, b);
   return out;
+}
+
+/**
+ * In CI, the instruction counts must be held: with none in the baseline yet, or the baseline's counted on another
+ * machine, the run fails, once, saying why, with every count it made to record.
+ */
+function holdInCi(out, current, a, b) {
+  const counts = Object.keys(METRICS).filter((n) => METRICS[n].instructions && has(current.metrics[n]));
+  if (!counts.length) return;
+  let why = null;
+  if (out.toRecord.length) why = `there is no instruction baseline yet, ${CI_RECORDS}`;
+  else if (!sameCounter(a, b))
+    why = `the baseline's counts were made on ${where(a)}, these on ${where(b)}: ${CI_RECORDS}`;
+  if (!why) return;
+  out.toRecord = counts.map((metric) => ({ metric, value: current.metrics[metric] }));
+  out.warnings = out.warnings.filter((w) => !METRICS[w.metric]?.instructions);
+  out.failures.push({ metric: 'instructions', message: `instruction counts not held: ${why}` });
 }
 
 const readJSON = (file) => JSON.parse(readFileSync(resolve(ROOT, file), 'utf8'));
@@ -205,7 +243,8 @@ export function toRecordText(toRecord, details) {
   const figures = JSON.stringify(Object.fromEntries(toRecord.map((t) => [t.metric, t.value])), null, 2);
   const machine = JSON.stringify({ instructions: { machine: details?.instructions?.machine ?? null } }, null, 2);
   return (
-    `quality: no baseline yet for ${toRecord.map((t) => t.metric).join(', ')}: these are recorded, not held. ` +
+    `quality: the baseline cannot hold ${toRecord.map((t) => t.metric).join(', ')} yet (no baseline yet for them, ` +
+    `or one counted on another machine): these are recorded, not held. ` +
     `Commit them to ${BASELINE} in a follow-up pull request, the figures under "metrics":\n${figures}\n` +
     `and the machine that counted them under "details":\n${machine}`
   );
@@ -268,7 +307,8 @@ async function main(argv) {
     console.error(`the suite was run with test files left out (${current.details.left_out.join(', ')}): not a measure`);
     return 1;
   }
-  const r = compare(baseline, current, accepted, { partial: fast });
+  // in GitHub Actions, counts the baseline cannot hold fail the run, after they are printed
+  const r = compare(baseline, current, accepted, { partial: fast, ci: Boolean(process.env.GITHUB_ACTIONS) });
   const passed = `quality: ${fast ? 'the quick metrics are' : 'every metric is'} no worse than the baseline of ${baseline.measured}`;
   return report(r, current.details, passed) ? 0 : 1;
 }

@@ -1,15 +1,23 @@
 #!/usr/bin/env node
 // The guard that a test asserts the work done, never the time taken (spec §12, quality_ratchet, 12 Oct 2026): it reads
 // every JavaScript test file, and its test support, and finds an assertion that holds a span of elapsed time. A span is
-// one clock reading less another: performance.now(), Date.now(), process.hrtime(), process.cpuUsage() or
-// process.resourceUsage(), read directly, kept in a variable, or returned by a helper (the test's own, or one imported
-// from test support). It is followed through variables, objects and helpers that carry it, each by its own scope. An
-// assertion holds it when its arguments use it, or when it, or a throw, runs only under a condition that does.
+// one clock reading less another: performance.now(), Date.now(), new Date(), process.hrtime() and its bigint,
+// process.cpuUsage(), process.resourceUsage() or process.uptime(), read directly, kept in a variable, or returned by a
+// helper (the test's own, or one imported from test support). It is followed through variables, objects and helpers
+// that carry it, each by its own scope. A number compared with what any call makes of a reading it is handed, such as
+// `elapsed(t0) < 500`, is taken for a span too, whatever the call is. An assertion holds a span when its arguments use
+// it, or when it, or a throw, runs only under a condition that does.
 //
-// Allowed: a clock reading that is not a span (a file's time compared with when the test began); Date.now() where the
-// file runs Node's mock timers with Date mocked, which take no real time; and a deadline for polling, a condition on a
-// span inside a loop that awaits, giving up on waiting rather than asserting how long the work took. JavaScript only:
-// the Python library's tests are outside the suite the quality job runs twice.
+// Allowed: a clock reading that is not a span (a file's time compared with when the test began); Date.now() and
+// new Date() where the file runs Node's mock timers with Date mocked, which take no real time; and a deadline for
+// polling, a condition on a span inside a loop that awaits, giving up on waiting rather than asserting how long the work
+// took. JavaScript only: the Python library's tests are outside the suite the quality job runs twice.
+//
+// Known limits, each a way a span could still be asserted unseen (the review of #113): a reading kept in an array, a Map
+// or a class's field and read back from it; one passed through a callback's parameter, a promise's value or an event;
+// a helper imported from anywhere but test support, or required, or imported dynamically; a span measured in another
+// process and handed back as text; performance.mark() and measure(), console.time(), and timing by counting timers that
+// fire; a comparison made by a matcher other than `assert` and `expect`; and the Python library's tests.
 //
 // Usage: node scripts/timed-assertions.mjs    lists each assertion found, by file and line; exits 1 if there is one
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
@@ -28,6 +36,13 @@ const CLOCKS = new Set([
   'process.hrtime.bigint',
   'process.cpuUsage',
   'process.resourceUsage',
+  'process.uptime',
+]);
+const COMPARISONS = new Set([
+  ts.SyntaxKind.LessThanToken,
+  ts.SyntaxKind.LessThanEqualsToken,
+  ts.SyntaxKind.GreaterThanToken,
+  ts.SyntaxKind.GreaterThanEqualsToken,
 ]);
 // these give a span themselves when handed an earlier reading
 const SPAN_FROM = new Set(['process.hrtime', 'process.cpuUsage']);
@@ -102,6 +117,13 @@ function analyse(src, checker, imported) {
       if ((ts.isPropertyAccessExpression(p) || ts.isPropertyAssignment(p)) && p.name === n) return NONE;
       return values.get(sym(n)) ?? NONE;
     }
+    // `new Date()`, a reading as a date, unless Date is mocked
+    if (ts.isNewExpression(n) && n.expression.getText(src) === 'Date' && !n.arguments?.length)
+      return mockedDate ? NONE : READING;
+    // a number compared with what any call makes of a reading it is handed, `elapsed(t0) < 500`: what the call does
+    // with it cannot be seen, and a reading handed on to be compared is a span by another name
+    if (ts.isBinaryExpression(n) && COMPARISONS.has(n.operatorToken.kind) && (handed(n.left) || handed(n.right)))
+      return SPAN;
     if (ts.isBinaryExpression(n) && n.operatorToken.kind === ts.SyntaxKind.MinusToken) {
       const [l, r] = [kind(n.left), kind(n.right)];
       // a reading less a parameter is a helper's span since a reading it is handed: `(t) => performance.now() - t`
@@ -112,6 +134,15 @@ function analyse(src, checker, imported) {
     let most = NONE;
     n.forEachChild((c) => (most = Math.max(most, kind(c))));
     return most;
+  };
+  // whether an operand holds a call handed a clock reading, not counting the functions inside it
+  const handed = (n) => {
+    if (functionLike(n)) return false;
+    if (ts.isCallExpression(n) && !CLOCKS.has(n.expression.getText(src)) && n.arguments.some((a) => kind(a) >= READING))
+      return true;
+    let found = false;
+    n.forEachChild((c) => (found ||= handed(c)));
+    return found;
   };
   const returned = (fn) => {
     if (ts.isArrowFunction(fn) && !ts.isBlock(fn.body)) return kind(fn.body);

@@ -419,6 +419,25 @@ describe('a layout no longer wanted', () => {
     assert.equal(await waiting, null);
     assert.equal(pending.size, 0, 'the start limit’s timer went with the worker');
   });
+
+  test('a draw through the runner, its port served in this process, resolves on a clock that never runs, and leaves no timer set', async () => {
+    // the mock clock keeps each timer and never runs one: the draw_fifty benchmark counts this route, which must answer
+    // with no timer firing and leave none to hold the process
+    const set = new Set();
+    const clock = {
+      setTimeout: (run, ms) => (set.add({ run, ms }), [...set].at(-1)),
+      clearTimeout: (t) => set.delete(t),
+    };
+    const r = new LayoutRunner({ worker: served().spawn, page: served().spawn, clock });
+    const drawn = await r.draw(drawingOf(READER));
+    assert.match(drawn.svg, /^<svg/);
+    assert.deepEqual(
+      [...set].map((t) => t.ms),
+      [],
+      'every timer the draw set was cleared',
+    );
+    r.close();
+  });
 });
 
 describe('when the engine fails', () => {

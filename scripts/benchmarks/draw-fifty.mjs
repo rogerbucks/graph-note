@@ -1,6 +1,7 @@
 // The instruction-count benchmark of drawing a graph of 50 things (spec §11, fifty_in_half_second): read and drawn by
 // the engine on the calling thread, as render.test.js drew it, and through the core's layout runner, as the plugin draws
-// it apart from its interface (layout-worker.test.js). Each is one draw after a warm one, as the tests had it; the
+// it apart from its interface (layout-worker.test.js), its port served in this process, as the plugin's page port is,
+// so no second thread, with its own start and its own timing, is in the count. Each is one draw after a warm one; the
 // engine's start and the warm draw are the setup, counted alone and taken off. Run by scripts/instruction-counts.mjs.
 import { readNote } from '../../packages/core/src/drawing.ts';
 import { draw } from '../../packages/core/src/render.ts';
@@ -8,10 +9,10 @@ import { LAYOUT_LIMITS } from '../../packages/core/src/layout-limits.ts';
 import { LayoutRunner, inThreadPort, serveLayouts } from '../../packages/core/src/layout-worker.ts';
 
 /**
- * Half a second at four instructions a nanosecond: a cautious figure for a phone's core, which runs at several GHz and
- * retires several instructions a cycle, so a count under it is inside the spec's half second there. The phone itself is
- * checked on the device (test_device); this holds the work to it on every release. Measured on Apple silicon by its
- * hardware counter, one draw was about 590 million (12 Oct 2026).
+ * Half a second on a mid-range phone's big core, about 4 instructions a nanosecond: the ceiling for now. The phone itself
+ * is checked on the device (test_device); this holds the work to it on every release. Measured on Apple silicon by its
+ * hardware counter, one draw was about 590 million (12 Oct 2026). To be checked again against the first count on the
+ * CI runner (x86-64, under Cachegrind), whose instructions are not the phone's ARM ones.
  */
 export const HALF_SECOND = 2_000_000_000;
 
@@ -57,9 +58,12 @@ export const BENCHMARK = {
   },
   counted: ['draw', 'through-runner'],
   claims: [
-    { says: 'read and drawn in under half a second', of: (n) => [n.draw, HALF_SECOND] },
     {
-      says: 'read and drawn through the layout runner in under half a second',
+      says: 'read and drawn in under half a second on a mid-range phone’s big core, about 4 instructions a nanosecond',
+      of: (n) => [n.draw, HALF_SECOND],
+    },
+    {
+      says: 'read and drawn through the layout runner in under half a second on a mid-range phone’s big core, about 4 instructions a nanosecond',
       of: (n) => [n['through-runner'], HALF_SECOND],
     },
   ],

@@ -46,7 +46,15 @@ export const BENCHMARK = {
   name: 'reading_limits',
   spec: '§9, reading_contained',
   proves: 'the worst broken blocks under the size limits are read within the one budget of reading again',
-  setup: () => texts(),
+  setup() {
+    // warm: each case's code path once, on a small block of its own shape, so the compiling a first read does is in
+    // the setup, taken off every case alike, and never inside a ratio
+    const line = Array.from({ length: 60 }, (_, i) => `(n${i}:T {name${i === 59 ? '' : ':'} 'x'})`).join(', ');
+    const long = (i) => `Thing number ${i} of many`;
+    const smalls = [block(80, (i) => i % 40 === 39), block(80, () => false), `// graph: g\n${line}`];
+    for (const small of [...smalls, block(100, () => true, long)]) read(small);
+    return texts();
+  },
   cases: Object.fromEntries(Object.keys(texts()).map((name) => [name, (inputs) => read(inputs[name])])),
   counted: ['broken-2000', 'one-line-broken', 'every-line-broken'],
   claims: [

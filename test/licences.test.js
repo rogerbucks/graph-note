@@ -194,6 +194,37 @@ describe('a GPL tool, allowed only where it runs in CI alone and is never shippe
     }
   });
 
+  test('an install is found in every form apt takes, every package on its line, flags anywhere among them', () => {
+    const planted = {
+      a: ['      - run: sudo apt install valgrind'],
+      b: ['      - run: sudo apt-get -y install valgrind gdb && echo done'],
+      c: ['      - run: apt-get install --no-install-recommends -y valgrind'],
+    };
+    assert.deepEqual(
+      aptInstalls('x.yml', planted).map((i) => `${i.job} ${i.name} ${i.bare}`),
+      ['x.yml a valgrind false', 'x.yml b valgrind false', 'x.yml b gdb false', 'x.yml c valgrind true'],
+    );
+  });
+
+  test('the developer-only image installs only what the allowance names for it, and asks for no recommended packages', () => {
+    const images = walk('docker').filter((f) => f.endsWith('.Dockerfile'));
+    assert.deepEqual(images, ['docker/benchmarks.Dockerfile']);
+    for (const image of images) {
+      const found = aptInstalls(image, { image: read(image).split('\n') });
+      assert.ok(found.length > 0, `the control: ${image}'s installs are found`);
+      for (const { name, bare } of found) {
+        assert.ok(tools()[name]?.images?.includes(image), `${image} installs ${name}, not on the allowance for it`);
+        assert.ok(bare, `${image} installs ${name} with --no-install-recommends`);
+      }
+    }
+  });
+
+  test('every install asks for no recommended packages, so nothing else GPL comes in unlisted', () => {
+    const found = installs();
+    assert.ok(found.length > 0, 'the control: the installs are found');
+    for (const i of found) assert.ok(i.bare, `${i.job} installs ${i.name} with --no-install-recommends`);
+  });
+
   test('never in a job that builds, tests or releases what ships, nor in ordinary CI', () => {
     const installing = new Set(installs().map((i) => i.job));
     assert.ok(installing.size > 0, 'the control: the installs are found');

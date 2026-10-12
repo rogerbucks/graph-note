@@ -32,7 +32,13 @@ export const BENCHMARK = {
   name: 'naming',
   spec: '§9, naming thousands of things never freezes the page',
   proves: 'naming thousands of things, by the name book or as suggested names, takes work linear in their number',
-  setup: () => ({ whole: unnamed(9000), quarter: unnamed(2250) }),
+  setup() {
+    // warm: each case's code path once, small, so the compiling the first naming does is in the setup, taken off both
+    // sizes alike, and never inside the ratio, where it would hide a square
+    naming(200);
+    read(unnamed(200), 200);
+    return { whole: unnamed(9000), quarter: unnamed(2250) };
+  },
   cases: {
     'book-5000': () => naming(5000),
     'book-quarters': () => [0, 1, 2, 3].forEach(() => naming(1250)),

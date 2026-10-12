@@ -19,28 +19,33 @@ import {
 } from '../scripts/instruction-counts.mjs';
 import { BENCHMARK_NAMES } from '../scripts/quality-spec.mjs';
 import { BENCHMARKS } from '../scripts/benchmarks/index.mjs';
-import { read, ROOT } from './repository/repo.js';
+import { DOCKERFILE, MODULES_VOLUME, imageTag, runArgs } from '../scripts/bench-local.mjs';
+import { read, readJSON, ROOT } from './repository/repo.js';
 
 const fixture = (name) => read(`test/instruction-counts/cachegrind.out.${name}`);
 
+// The fixtures are real Cachegrind 3.24.0 output, of /bin/true in the benchmarks' image (ARM Linux, 12 Oct 2026): its
+// header, the first and last of its cost lines, and its summary, cut in the middle (the whole is 3,199 lines), with the
+// cache simulated (`.simulated`) and not (`.counted`).
 describe('reading Cachegrind’s output', () => {
   test('the instructions counted, from its summary, and the command that was counted', () => {
     const r = parseCachegrind(fixture('counted'));
     assert.deepEqual(r.events, ['Ir']);
-    assert.equal(r.totals.Ir, 1_493_022_000);
-    assert.match(r.command, /node --single-threaded .*one-case\.mjs naming setup$/);
+    assert.equal(r.totals.Ir, 125_571);
+    assert.equal(r.command, '/bin/true');
   });
 
   test('the instructions among the cache events, by their place in the events line', () => {
     const r = parseCachegrind(fixture('simulated'));
-    assert.equal(r.totals.Ir, 151_520);
-    assert.equal(r.totals.Dr, 35_631);
-    assert.equal(r.totals.DLmw, 752);
+    assert.equal(r.totals.Ir, 125_571);
+    assert.equal(r.totals.Dr, 34_222);
+    assert.equal(r.totals.DLmw, 315);
+    assert.equal(r.events.length, 9, 'the events line’s trailing space is no event');
   });
 
   test('without a summary line, the sum of the cost lines, each a line number and then its counts', () => {
     const bare = fixture('counted').replace(/^summary: .*\n/m, '');
-    assert.equal(parseCachegrind(bare).totals.Ir, 1_493_022_000);
+    assert.equal(parseCachegrind(bare).totals.Ir, 167, 'the cost lines kept in the fixture');
   });
 
   test('a file that counts no instructions, or whose totals cannot be read, is refused, never read as nothing', () => {
@@ -125,6 +130,34 @@ describe('counting the benchmarks', () => {
     assert.equal(r.details.instructions.largest_spread, 30 / 400);
   });
 
+  test('a case that counts no work beyond its setup, or less, fails the run, naming it, never kept as a count', async () => {
+    for (const whole of [1000, 900]) {
+      const fake = fakeCounter({ setup: 1000, whole, quarters: 1200 });
+      const counting = measureInstructions({ benchmarks: [LINEAR], version: HERE, counter: fake.counter });
+      await assert.rejects(counting, new RegExp(`counted no work beyond its setup.*linear whole: ${whole - 1000}`));
+    }
+  });
+
+  test('processes are counted at once, as many as asked, each count still its own case’s, and the machine named', async () => {
+    let running = 0,
+      most = 0;
+    const counts = { setup: 1000, whole: 1400, quarters: 1200 };
+    const counter = async () => ({
+      count: async (_name, which) => {
+        most = Math.max(most, ++running);
+        await new Promise((r) => setImmediate(r));
+        running--;
+        return counts[which];
+      },
+      done: () => {},
+    });
+    const r = await measureInstructions({ benchmarks: [LINEAR], runs: 3, parallel: 2, version: HERE, counter });
+    assert.equal(most, 2, 'two at once, never more');
+    assert.deepEqual(r.details.instructions.benchmarks[0].cases, { whole: 400, quarters: 200 });
+    assert.equal(typeof r.details.instructions.machine.cpu, 'string');
+    assert.ok(r.details.instructions.machine.cpu.length > 0);
+  });
+
   test('a process Cachegrind cannot count fails the run, and the counter is still put away', async () => {
     const asked = [];
     const counter = async () => ({
@@ -141,7 +174,13 @@ describe('counting the benchmarks', () => {
   test('each process runs under Cachegrind counting instructions alone, with Node’s flags pinned for the same count each run', () => {
     const valgrind = ['--tool=cachegrind', '--cache-sim=no', '--smc-check=all'];
     for (const flag of valgrind) assert.ok(VALGRIND_FLAGS.includes(flag), flag);
-    const pinned = ['--single-threaded', '--predictable-gc-schedule', '--random-seed=1', '--disable-wasm-trap-handler'];
+    const pinned = [
+      '--single-threaded',
+      '--predictable',
+      '--predictable-gc-schedule',
+      '--random-seed=1',
+      '--disable-wasm-trap-handler',
+    ];
     for (const flag of pinned) assert.ok(NODE_FLAGS.includes(flag), flag);
     const random = () =>
       spawnSync(process.execPath, [...NODE_FLAGS, '-e', 'process.stdout.write(String(Math.random()))'], {
@@ -166,6 +205,44 @@ describe('counting the benchmarks', () => {
       assert.deepEqual(JSON.parse(r.stdout).metrics, { instructions_naming: null, [CLAIMS_METRIC]: null });
     },
   );
+});
+
+describe('counting on one’s own machine, in a container', () => {
+  const dockerfile = () => read(DOCKERFILE);
+
+  test('the image’s base is pinned by its digest, published over 7 days before it was pinned, and nothing is copied in', () => {
+    const from = dockerfile()
+      .split('\n')
+      .filter((l) => /^FROM\s/.test(l));
+    assert.equal(from.length, 1);
+    assert.match(from[0], /^FROM node:24\.[\d.]+-[a-z]+-slim@sha256:[0-9a-f]{64}$/);
+    const dated = /published (\d+ \w+ \d{4}), pinned by its digest on (\d+ \w+ \d{4})/.exec(dockerfile());
+    assert.ok(dated, 'the image says when it was published and when it was pinned');
+    const days = (Date.parse(dated[2]) - Date.parse(dated[1])) / 86_400_000;
+    assert.ok(days >= 7, `${days} days between publishing and pinning`);
+    assert.doesNotMatch(dockerfile(), /^(COPY|ADD)\s/m, 'the repository is mounted, never copied');
+  });
+
+  test('npm run bench:local builds it when needed and counts in it, the repository mounted and node_modules its own', () => {
+    assert.equal(readJSON('package.json').scripts['bench:local'], 'node scripts/bench-local.mjs');
+    assert.match(imageTag(), /^graph-note-benchmarks:[0-9a-f]{12}$/);
+    const args = runArgs('graph-note-benchmarks:x', ['--only', 'naming'], '/here');
+    assert.ok(args.includes('type=bind,source=/here,target=/repo'));
+    assert.ok(args.includes(`type=volume,source=${MODULES_VOLUME},target=/repo/node_modules`), 'not the host’s');
+    assert.deepEqual(args.slice(-2), ['--only', 'naming'], 'the counts’ own arguments, passed through');
+    assert.match(args.join(' '), /npm ci .*node scripts\/instruction-counts\.mjs "\$@"/);
+  });
+
+  test('without Docker, it says so in one line, and counts nothing', () => {
+    const r = spawnSync(process.execPath, ['scripts/bench-local.mjs'], {
+      cwd: ROOT,
+      encoding: 'utf8',
+      env: { ...process.env, DOCKER: join(tmpdir(), 'no-such-docker') },
+    });
+    assert.equal(r.status, 1);
+    assert.equal(r.stderr.trim().split('\n').length, 1);
+    assert.match(r.stderr, /^bench:local: Docker is not running here/);
+  });
 });
 
 describe('the benchmarks', () => {
