@@ -9,7 +9,7 @@ import { mkdtempSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { METRICS, compare, acceptedProblems, baselineProblems, compareWithRef } from '../scripts/quality-check.mjs';
-import { read, readJSON, ROOT, jobs, runCommands } from './repository/repo.js';
+import { block, read, readJSON, ROOT, jobs, permissionValues, runCommands, stripComment } from './repository/repo.js';
 
 const baseline = () => readJSON('quality/baseline.json');
 const changed = (changes, machine) => {
@@ -172,6 +172,7 @@ describe('a baseline committed worse than its parent’s', () => {
     assert.deepEqual(suiteJobs.sort(), [
       'ci.yml test',
       'quality-baseline.yml measure',
+      'release-check.yml quality',
       'release.yml quality',
       'release.yml release',
     ]);
@@ -252,5 +253,28 @@ describe('a baseline measured on the CI runner', () => {
     assert.match(text, /actions\/upload-artifact@[0-9a-f]{40} # v\d+\.\d+\.\d+/);
     assert.match(text, /path: quality\/metrics\.json/);
     assert.match(text, /node-version: 24/);
+  });
+});
+
+describe('the release check, run by hand before a release is tagged', () => {
+  const f = '.github/workflows/release-check.yml';
+  const steps = (lines) => lines.map(stripComment).filter((l) => l.trim());
+
+  test('runs every check the release waits on, step for step as release.yml has them, so a failure costs no version', () => {
+    const release = jobs(read('.github/workflows/release.yml')),
+      dry = jobs(read(f));
+    const waited = block(release.release, 'needs', 4).join('\n');
+    const checks = Object.keys(release).filter((name) => name !== 'release');
+    for (const name of checks) assert.match(waited, new RegExp(`\\b${name}\\b`), `the release waits on ${name}`);
+    assert.deepEqual(Object.keys(dry), checks);
+    for (const name of checks) assert.deepEqual(steps(dry[name]), steps(release[name]), name);
+  });
+
+  test('is named so, run only by hand, releases nothing and only reads', () => {
+    const text = read(f);
+    assert.match(text, /^name: Release check \(dry run\)$/m);
+    assert.deepEqual(block(text.split('\n'), 'on', 0).map(stripComment), ['on:', '  workflow_dispatch:']);
+    assert.doesNotMatch(text, /:\s*write\b|gh release|git push|git tag/);
+    assert.deepEqual(permissionValues(block(text.split('\n'), 'permissions', 0)), ['read']);
   });
 });

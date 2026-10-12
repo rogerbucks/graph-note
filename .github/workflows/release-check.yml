@@ -1,0 +1,53 @@
+name: Release check (dry run)
+
+# Run by hand, on main, before a release is tagged. It runs the checks the release waits on, step for step, as
+# release.yml has them (test/quality-baseline.test.js holds the two the same): the quality metrics measured and held to
+# the committed baseline, the engine's advisories, and the history and a fresh clone fit to be public. So a check that
+# would fail the release fails here first, and never costs a version number. It releases nothing, and only reads.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # the full history: the suite the metrics run needs it to find each tests-first record's commit, and the
+          # baseline check needs the commit before the one checked (HEAD~1) to hold the baseline against its earlier copy
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm audit signatures
+      - name: The baseline is no worse than the commit before, or every change has a reason
+        run: node scripts/quality-check.mjs --baseline-since HEAD~1
+      - name: Read the published advisories for the Graphviz inside the engine, and for the package that wraps it
+        run: node scripts/engine-version.mjs --refresh
+      - name: The engine is the version the notices name, and no advisory affects it
+        run: node scripts/engine-version.mjs
+      - name: Measure the quality metrics
+        run: node scripts/quality-metrics.mjs --out quality/metrics.json
+      - name: No metric is worse than the baseline without a recorded reason
+        run: node scripts/quality-check.mjs quality/metrics.json
+
+  public-readiness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: 0.12.17
+          enable-cache: false
+      - run: node scripts/public-readiness.mjs --history --setup

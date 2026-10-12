@@ -204,6 +204,10 @@ These test behaviour across modules, or the repository itself, so they are named
   passing suite, and commit it. The baseline is held against its own earlier copy (`quality-check.mjs --baseline-since
   <ref>`, run in CI and in the release): a metric that got worse in it needs an entry in `accepted.json` too, a count of
   secrets can never be waived, and a baseline with a metric missing or tests left out is refused.
+- **Check before tagging.** Run the "Release check (dry run)" workflow by hand on main before a release is tagged: it
+  runs the jobs the release waits on (the quality job and public readiness), step for step as `release.yml` has them,
+  and releases nothing, so a failure there costs no version number. `test/quality-baseline.test.js` holds the two the
+  same.
 - **A speed test holds work, or a desktop's time scaled.** The suite's second run has coverage on, which slows the
   core's code and not the test's, on a runner slower than a desktop. So a speed test counts the work where the
   requirement is work (a text never read, a block read again only within its budget), compares like with like, and

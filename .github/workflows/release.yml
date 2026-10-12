@@ -11,7 +11,9 @@ permissions:
 jobs:
   # Before anything is released (spec §12 and §13): the code's quality metrics are measured and held to the committed
   # baseline, and the Graphviz inside the engine is checked against a fresh reading of the published advisories. It
-  # only reads; the release job waits for it. The advisories are asked of OSV here, and nowhere else but the weekly refresh.
+  # only reads; the release job waits for it. The advisories are asked of OSV here, and nowhere else but the weekly refresh
+  # and this job's dry run. The "Release check (dry run)" workflow (release-check.yml) runs this job and public-readiness,
+  # step for step, by hand on main before a tag, so a failure there costs no version number.
   quality:
     runs-on: ubuntu-latest
     steps:
