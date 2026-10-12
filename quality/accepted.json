@@ -18,9 +18,9 @@
     {
       "metric": "bundle_bytes_without_viz",
       "from": 357577,
-      "to": 596661,
-      "reason": "Slice 2's views, style graph and export (core src 113 kB → 246 kB); accepted by Roger, 11 Oct 2026, at the end-of-slice review.",
-      "date": "2026-10-11"
+      "to": 632893,
+      "reason": "Slice 2's views, style graph and export (core src 113 kB → 246 kB); accepted by Roger, 11 Oct 2026, at the end-of-slice review; raised to the final slice 2 size after #85, #91, #93 and #101; accepted by Roger, 12 Oct 2026.",
+      "date": "2026-10-12"
     }
   ]
 }
