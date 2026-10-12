@@ -1,0 +1,6 @@
+{
+  "file": "test/quality-baseline.test.js",
+  "test": "the release check, run by hand before a release is tagged > has every workflow-wide setting release.yml has, such as its env, defaults, concurrency and permissions, and no other",
+  "seen_failing_first": false,
+  "evidence": "Asked for in the review of #112: it holds release-check.yml, already written to match, to every top-level setting of release.yml beside the jobs, so it passes at its parent by design. It was shown to bite by adding a concurrency block to release.yml only, which failed it, then restored."
+}

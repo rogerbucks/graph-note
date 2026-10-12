@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/partial-read.test.js",
+  "test": "the budget of reading again > is held by counting what the reader is handed, and the count sees a small note read: a reader it missed would fail",
+  "seen_failing_first": false,
+  "evidence": "A positive control for the reader spy in test/reader-work.js, added in the review of #112: it checks the counter sees a read that the code already did, so it passes at its parent by design. It was shown to bite by routing readBlocks' apply around Store.prototype.apply (a read the spy cannot see), which failed it, then restored."
+}
