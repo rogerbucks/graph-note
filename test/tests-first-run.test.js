@@ -392,3 +392,42 @@ describe('why a run did not finish', () => {
     }
   });
 });
+
+describe('a replay does not see where it runs', () => {
+  // review of #114 (13 Oct 2026): GITHUB_ACTIONS leaked into the replayed tests on CI, so a test that passed on a Mac
+  // failed in the parent's run there, and the record depended on where it was made
+  const withCi = (fn) => {
+    const was = process.env.GITHUB_ACTIONS;
+    process.env.GITHUB_ACTIONS = 'true';
+    try {
+      return fn();
+    } finally {
+      if (was === undefined) delete process.env.GITHUB_ACTIONS;
+      else process.env.GITHUB_ACTIONS = was;
+    }
+  };
+
+  test('a JavaScript test is run with no GITHUB_ACTIONS, though the replay itself has it', () => {
+    const source = [
+      `import { test } from 'node:test';`,
+      `import assert from 'node:assert/strict';`,
+      `test('outside CI', () => assert.equal(process.env.GITHUB_ACTIONS, undefined));`,
+    ].join('\n');
+    assert.deepEqual(
+      withCi(() => runSource(source)),
+      { passed: ['outside CI'], failed: [], ran: true },
+    );
+  });
+
+  test('a Python test is run with no GITHUB_ACTIONS, though the replay itself has it', () => {
+    const r = withCi(() =>
+      runPython('ci', [
+        'import os, unittest',
+        'class A(unittest.TestCase):',
+        '    def test_outside_ci(self):',
+        '        self.assertNotIn("GITHUB_ACTIONS", os.environ)',
+      ]),
+    );
+    assert.deepEqual(r, { passed: ['A.test_outside_ci'], failed: [], ran: true });
+  });
+});

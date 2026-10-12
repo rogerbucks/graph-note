@@ -1,6 +1,0 @@
-{
-  "file": "test/quality-metrics.test.js",
-  "test": "the commands > the baseline itself passes as a metrics file",
-  "seen_failing_first": false,
-  "evidence": "the commit sets GITHUB_ACTIONS explicitly for the spawned check, a change to the test's environment only; the code it tests is unchanged, so the test passes against its parent outside CI by design; it failed only when CI's own GITHUB_ACTIONS leaked in."
-}
