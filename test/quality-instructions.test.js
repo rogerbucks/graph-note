@@ -39,10 +39,17 @@ function check(metrics, ci = false) {
 
 /** The committed baseline, as a run on `machine` measured it: every count as given, the rest as committed. */
 function run(counts = {}, { os = 'linux', counter = RUNNER, why } = {}) {
-  const b = structuredClone(readJSON('quality/baseline.json'));
+  const b = structuredClone(noCounts());
   Object.assign(b.metrics, counts);
   b.machine = { ...b.machine, os };
   b.details = { ...b.details, instructions: why ? { measured: false, why } : { measured: true, machine: counter } };
+  return b;
+}
+/** The committed baseline as it was before it held counts: every metric but the instruction ones, no machine for them. */
+function noCounts() {
+  const b = structuredClone(readJSON('quality/baseline.json'));
+  for (const n of [...COUNTS, CLAIMS]) delete b.metrics[n];
+  delete b.details.instructions;
   return b;
 }
 const counted = (scale = 1, extra = {}) => ({
@@ -101,7 +108,7 @@ describe('no baseline yet', () => {
   test('the counts are recorded, not held, and every other metric is still held', () => {
     const current = run(counted());
     current.metrics.bundle_bytes *= 2;
-    const r = compare(readJSON('quality/baseline.json'), current, []);
+    const r = compare(noCounts(), current, []);
     assert.deepEqual(failed(r), ['bundle_bytes']);
     assert.deepEqual(
       r.toRecord.map((t) => t.metric),
@@ -111,7 +118,7 @@ describe('no baseline yet', () => {
   });
 
   test('they are printed as they go into the baseline, with the machine that counted them, for a follow-up pull request', () => {
-    const r = compare(readJSON('quality/baseline.json'), run(counted()), []);
+    const r = compare(noCounts(), run(counted()), []);
     const text = toRecordText(r.toRecord, run(counted()).details);
     assert.match(text, /no baseline yet for them/);
     assert.match(text, /follow-up pull request/);
@@ -121,18 +128,16 @@ describe('no baseline yet', () => {
   });
 
   test('a claim that does not hold fails, with no baseline to hold it to, and no reason can waive it', () => {
-    const r = compare(readJSON('quality/baseline.json'), run(counted(1, { [CLAIMS]: 1 })), []);
+    const r = compare(noCounts(), run(counted(1, { [CLAIMS]: 1 })), []);
     assert.deepEqual(failed(r), [CLAIMS]);
     const waiver = { metric: CLAIMS, from: 0, to: 1, reason: 'x', date: '2026-10-12' };
     assert.match(acceptedProblems([waiver])[0], /cannot be waived/);
   });
 
-  test('the command prints them, and passes on them', () => {
-    const r = check(run(counted()));
+  test('counted on another machine than the baseline’s, the command passes, warning that they are not held', () => {
+    const r = check(run(counted(), { counter: { ...RUNNER, valgrind: 'valgrind-3.23.0' } }));
     assert.equal(r.status, 0, r.stderr);
-    assert.match(r.stdout, /no baseline yet for them/);
-    assert.match(r.stdout, /cannot hold instructions_draw_fifty/);
-    assert.match(r.stdout, /"instructions_keystroke": 500000000/);
+    assert.match(r.stderr + r.stdout, /a different machine/);
   });
 
   test('the command fails on a claim that does not hold, naming it, with what was counted and what is allowed', () => {
@@ -184,7 +189,7 @@ describe('in CI, the counts must be held', () => {
   const base = () => run(counted());
 
   test('with no instruction baseline, the run fails once, after the figures, saying its job is to print them', () => {
-    const r = compare(readJSON('quality/baseline.json'), run(counted()), [], { ci: true });
+    const r = compare(noCounts(), run(counted()), [], { ci: true });
     assert.deepEqual(failed(r), ['instructions']);
     assert.match(r.failures[0].message, /no instruction baseline yet, in CI this fails: this run’s job is to print/);
     assert.equal(r.toRecord.length, COUNTS.length + 1, 'every count, to record');
@@ -203,21 +208,21 @@ describe('in CI, the counts must be held', () => {
   test('on the same machine, counts held to the baseline pass; the fast check and the baselines’ check never ask', () => {
     assert.deepEqual(compare(base(), run(counted()), [], { ci: true }).failures, []);
     const fast = { ...run(), metrics: { max_source_lines: 1, max_test_lines: 1, secrets_found: 0 } };
-    assert.deepEqual(compare(readJSON('quality/baseline.json'), fast, [], { ci: true, partial: true }).failures, []);
-    const none = readJSON('quality/baseline.json');
+    assert.deepEqual(compare(noCounts(), fast, [], { ci: true, partial: true }).failures, []);
+    const none = noCounts();
     assert.deepEqual(compare(none, base(), [], { ci: true, baselines: true }).failures, []);
   });
 
-  test('the command, in GitHub Actions, prints the figures to paste and the machine, then fails saying why', () => {
-    const r = check(run(counted()), true);
+  test('the command, in GitHub Actions, on another machine, prints the figures to paste and the machine, then fails saying why', () => {
+    const r = check(run(counted(), { counter: { ...RUNNER, valgrind: 'valgrind-3.23.0' } }), true);
     assert.equal(r.status, 1);
     assert.match(r.stdout, /"instructions_draw_fifty": 100000000/);
-    assert.match(r.stdout, /"valgrind": "valgrind-3\.22\.0"/);
-    assert.match(r.stderr, /this run’s job is to print the figures above, for a follow-up pull request/);
+    assert.match(r.stdout, /"valgrind": "valgrind-3\.23\.0"/);
+    assert.match(r.stderr, /the baseline's counts were made on .* these on /);
   });
 
   test('a baseline holds every count of one run or none, with the machine that counted them', () => {
-    assert.deepEqual(baselineProblems(readJSON('quality/baseline.json')), [], 'none yet: allowed');
+    assert.deepEqual(baselineProblems(noCounts()), [], 'none yet: allowed');
     assert.deepEqual(baselineProblems(base()), []);
     const part = base();
     delete part.metrics[COUNTS[0]];
@@ -228,11 +233,30 @@ describe('in CI, the counts must be held', () => {
   });
 
   test('a baseline that drops its counts fails against the one before; one that adds them passes', () => {
-    const none = readJSON('quality/baseline.json');
+    const none = noCounts();
     assert.deepEqual(failed(compare(base(), none, [], { baselines: true })), [...COUNTS, CLAIMS]);
     const added = compare(none, base(), [], { baselines: true });
     assert.deepEqual([added.failures, added.toRecord], [[], []]);
     assert.deepEqual(compare(none, none, [], { baselines: true }).failures, []);
+  });
+});
+
+describe('the committed baseline holds the counts', () => {
+  test('every count of one run, with the Linux runner that counted them, and none of them broken', () => {
+    const b = readJSON('quality/baseline.json');
+    assert.deepEqual(baselineProblems(b), []);
+    for (const n of COUNTS) assert.ok(b.metrics[n] > 0, n);
+    assert.equal(b.metrics[CLAIMS], 0);
+    assert.equal(b.details.instructions.machine.os, 'linux');
+    assert.match(b.details.instructions.machine.valgrind, /^valgrind-/);
+  });
+
+  test('in CI on the same machine its own counts pass, and a count 10% worse fails', () => {
+    const b = readJSON('quality/baseline.json');
+    assert.deepEqual(compare(b, structuredClone(b), [], { ci: true }).failures, []);
+    const worse = structuredClone(b);
+    worse.metrics[COUNTS[0]] = Math.round(b.metrics[COUNTS[0]] * 1.1);
+    assert.deepEqual(failed(compare(b, worse, [], { ci: true })), [COUNTS[0]]);
   });
 });
 

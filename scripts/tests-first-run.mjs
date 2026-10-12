@@ -64,7 +64,8 @@ function stoppedLine(r) {
 /** Runs one JS test file; each test by its suites and name, passed or failed. */
 function runJs(dir, file) {
   // a run inside another test run would report to it, not print its own report
-  const { NODE_TEST_CONTEXT: _context, ...env } = process.env;
+  // and where it runs is not told to the tests: a replay on GitHub sees what one on a Mac sees (review of #114)
+  const { NODE_TEST_CONTEXT: _context, GITHUB_ACTIONS: _ci, ...env } = process.env;
   // under the run ceiling (spec §13, capped_test_run), which passes the report and the exit status through unchanged
   const r = spawnSync(process.execPath, [CEILING, process.execPath, '--test', '--test-reporter=junit', file], {
     cwd: dir,
@@ -175,8 +176,10 @@ function runPy(dir, file, repo) {
   const venv = join(repo, 'python', 'graph_spec', '.venv', 'bin', 'python');
   const python = file.startsWith('python/graph_spec/') && existsSync(venv) ? venv : 'python3';
   // under the run ceiling (spec §13, capped_test_run), as runJs is: the report and exit status pass through unchanged
+  const { GITHUB_ACTIONS: _ci, ...env } = process.env;
   const r = spawnSync(process.execPath, [CEILING, python, '-c', PY_RUNNER, join(dir, file)], {
     cwd: dir,
+    env,
     encoding: 'utf8',
     timeout: runMs(),
   });

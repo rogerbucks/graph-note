@@ -15,6 +15,11 @@ import { testsForChanges } from '../scripts/changed-tests.mjs';
 import { parseJunit, flakyBetween, parseLcov } from '../scripts/quality-suite.mjs';
 import { exists, read, readJSON, ROOT, block, jobs, runCommands } from './repository/repo.js';
 
+/** The environment of a spawned check outside CI: whatever runs this test, GITHUB_ACTIONS is not set for the child. */
+const outsideCi = () => {
+  const { GITHUB_ACTIONS: _ci, ...env } = process.env;
+  return env;
+};
 const baseline = () => readJSON('quality/baseline.json');
 /** The baseline with one metric changed (and any other given). */
 const changed = (changes) => {
@@ -275,7 +280,8 @@ describe('a recorded reason lets exactly that change through', () => {
 });
 
 describe('the commands', () => {
-  const run = (script, args) => spawnSync(process.execPath, [script, ...args], { cwd: ROOT, encoding: 'utf8' });
+  const run = (script, args) =>
+    spawnSync(process.execPath, [script, ...args], { cwd: ROOT, encoding: 'utf8', env: outsideCi() });
   const metricsFile = (metrics, details = {}) => {
     const file = join(mkdtempSync(join(tmpdir(), 'quality-')), 'metrics.json');
     writeFileSync(file, JSON.stringify({ ...baseline(), metrics, details }));

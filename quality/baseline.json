@@ -20,9 +20,25 @@
     "flaky_tests": 0,
     "quiet_run_bytes": 14,
     "coverage_percent": 99.2,
-    "speed_index": 3.86
+    "speed_index": 3.86,
+    "instructions_draw_fifty": 1813973517,
+    "instructions_reading_limits": 24565799907,
+    "instructions_layout_refusals": 652270897,
+    "instructions_naming": 2779056924,
+    "instructions_keystroke": 388764840,
+    "instruction_claims_broken": 0
   },
   "details": {
+    "instructions": {
+      "machine": {
+        "os": "linux",
+        "arch": "x64",
+        "node_major": 24,
+        "node": "v24.20.0",
+        "valgrind": "valgrind-3.22.0",
+        "cpu": "AMD EPYC 7763 64-Core Processor"
+      }
+    },
     "max_source_file": "packages/obsidian/src/block-editor/block-editor.ts",
     "max_test_file": "test/cheap-checks.test.js",
     "secrets": [],
