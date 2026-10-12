@@ -166,6 +166,9 @@ function report(r, details, passed) {
     console.error(r.failures.map((f) => f.message).join('\n'));
     for (const s of r.failures.some((f) => f.metric === 'secrets_found') ? (details?.secrets ?? []) : [])
       console.error(`  ${s.file}:${s.line} (${s.rule})`);
+    // the flaky tests by name, as the suite's two runs found them: the count alone leaves a release no way to fix them
+    for (const name of r.failures.some((f) => f.metric === 'flaky_tests') ? (details?.flaky ?? []) : [])
+      console.error(`  ${name}`);
     return false;
   }
   console.log(passed);
