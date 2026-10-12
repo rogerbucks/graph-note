@@ -270,6 +270,21 @@ describe('the release check, run by hand before a release is tagged', () => {
     for (const name of checks) assert.deepEqual(steps(dry[name]), steps(release[name]), name);
   });
 
+  test('has every workflow-wide setting release.yml has, such as its env, defaults, concurrency and permissions, and no other', () => {
+    // every top-level block but the name, the trigger and the jobs (held above), each as its lines without comments
+    const settings = (file) => {
+      const lines = read(file).split('\n');
+      const keys = lines
+        .map(stripComment)
+        .map((l) => /^([\w-]+):/.exec(l)?.[1])
+        .filter((k) => k && !['name', 'on', 'jobs'].includes(k));
+      return Object.fromEntries(keys.map((k) => [k, steps(block(lines, k, 0))]));
+    };
+    const release = settings('.github/workflows/release.yml');
+    assert.ok('permissions' in release, 'the control: the release’s own settings are found');
+    assert.deepEqual(settings(f), release);
+  });
+
   test('is named so, run only by hand, releases nothing and only reads', () => {
     const text = read(f);
     assert.match(text, /^name: Release check \(dry run\)$/m);

@@ -12,7 +12,7 @@ import { graphOf } from '../src/blocks.ts';
 import { withNames } from '../src/name-gaps.ts';
 import { prepare, readBlocks, REREAD_BUDGET } from '../src/partial-read.ts';
 import { readBack } from '../src/help.ts';
-import { fastest, onThisMachine, timed } from './processor-time.js';
+import { fastest, timed } from './processor-time.js';
 import { readerWork } from './reader-work.js';
 
 /**
@@ -230,10 +230,10 @@ const block = (n, broken, text = (i) => `Thing number ${i}`) =>
 /**
  * Asserts a step takes time linear in its size `n`, not in its square: under 3 times what a quarter of the size takes
  * four times over, where linear is 1 and square 4; the two timed in turn by processor time, the least of three of each,
- * so both last about as long and meet the same load. And, as a backstop against a slowdown of both alike, under `most`
- * ms of processor time at `n` on the desktop, scaled to this machine. Returns what the step gave at `n`.
+ * so both last about as long and meet the same load. A ratio of the same work, never a number of milliseconds (spec §12,
+ * quality_ratchet, 12 Oct 2026); it moves to the instruction-count benchmarks. Returns what the step gave at `n`.
  */
-function linear(n, step, most) {
+function linear(n, step) {
   let whole = Infinity,
     quarters = Infinity,
     out;
@@ -244,43 +244,40 @@ function linear(n, step, most) {
     out = run.out;
   }
   assert.ok(whole < 3 * quarters, `${whole.toFixed(0)} ms at ${n}, ${quarters.toFixed(0)} ms for four at ${n / 4}`);
-  const allowed = onThisMachine(most);
-  assert.ok(
-    whole < allowed,
-    `${whole.toFixed(0)} ms of processor time at ${n}, over ${allowed.toFixed(0)}: ${most} on the desktop`,
-  );
   return out;
 }
 
 /**
  * Reads a broken block, and asserts it kept to the budget of reading again (spec §9, reading_contained). By the work,
- * which is what the budget holds: the reader handed the block once, then at most the budget's units again, each read
- * again and each trial charged its length, then once more; counted, so the same on every machine and under any load.
- * By the time, so no other work grows unseen: under twice that many whole reads of the block `mended`, each the more of
- * the least of three just before and just after (the broken block is read once, as reading it is what is held: it takes
- * 0.14 to 0.31 of what is allowed); and, as a backstop against a slowdown of reading itself, which would slow the price
- * alike, under 2 s of processor time on the desktop, scaled to this machine. Unscaled, the release's second run of the
- * suite, with coverage, on a shared runner, broke it (0.4.2, 12 Oct 2026); by the clock, a busy machine broke it at
- * 2.5 s (10 Oct 2026).
+ * which is what the budget holds: the reader handed the block once as written, then at most the budget's units again,
+ * each read again and each trial charged its length, then once more, so no more than the budget and two of the block's
+ * length; counted, so the same on every machine, under any load and under coverage. With controls, so a reader the
+ * counter cannot see fails rather than passes: the broken block was seen read at least twice, once whole, and the
+ * `mended` block is seen read whole. And by a ratio of the same work, so nothing else grows unseen: under twice that
+ * many whole reads of `mended`, each the more of the least of three just before and just after (it takes 0.14 to 0.31
+ * of what is allowed). Never a number of milliseconds (spec §12, quality_ratchet, 12 Oct 2026): unscaled, the release's
+ * second run of the suite, with coverage, broke the old 2 s (0.4.2, 12 Oct 2026). The ratio moves to the
+ * instruction-count benchmarks.
  */
 function inBudget(text, mended) {
   const oneRead = () => fastest(3, () => readNote([mended])).ms;
   const before = oneRead();
   const { ms: took, out: work } = timed(() => readerWork(() => readNote([text])));
+  assert.ok(work.calls >= 2, `the control: ${work.calls} reads seen, where a broken block is read at least twice`);
+  assert.ok(work.longest >= text.length, `the control: the block as written, ${text.length} units, seen read whole`);
   assert.ok(
-    work.units <= REREAD_BUDGET + 2 * work.longest,
-    `${work.units} units handed to the reader in ${work.calls} reads, over the budget and two reads of ${work.longest}`,
+    readerWork(() => readNote([mended])).units >= mended.length,
+    'the control: the mended block seen read whole',
+  );
+  assert.ok(
+    work.units <= REREAD_BUDGET + 2 * text.length,
+    `${work.units} units handed to the reader in ${work.calls} reads, over the budget and two reads of ${text.length}`,
   );
   const read = Math.max(before, oneRead()),
     reads = REREAD_BUDGET / text.length + 2;
   assert.ok(
     took < 2 * reads * read,
     `${took.toFixed(0)} ms, over twice ${reads.toFixed(0)} reads of ${read.toFixed(0)} ms`,
-  );
-  const allowed = onThisMachine(2000);
-  assert.ok(
-    took < allowed,
-    `${took.toFixed(0)} ms of processor time, over ${allowed.toFixed(0)}: 2,000 on the desktop`,
   );
   return work.out;
 }
@@ -297,7 +294,7 @@ describe('the worst cases under the size limits are read in time (spec §9: abou
   test('9,000 things written without a name: each is named in time linear in them, not in their square', () => {
     const text = (n) =>
       `// graph: g\n${Array.from({ length: n }, (_, i) => `(:Thing {name: 'Thing number ${i}'}),`).join('\n')}`;
-    const r = linear(9000, (n) => readNote([text(n)]), 2000);
+    const r = linear(9000, (n) => readNote([text(n)]));
     assert.equal(r.graphs.get('g').boxes.length, 9000);
   });
 
@@ -329,21 +326,25 @@ describe('the worst cases under the size limits are read in time (spec §9: abou
       .join('\n')
       .replace(/,$/, '')}`;
     // what is read back as each key is typed costs less than reading the note, which is already done for each key, the
-    // least processor time of three of each; and, as a backstop against a slowdown of both alike, the old limits, now
-    // in processor time on the desktop, scaled to this machine: 2 s to read, half a second to read back
+    // least processor time of three of each: a ratio, never a number of milliseconds (spec §12, quality_ratchet, 12 Oct
+    // 2026); it moves to the instruction-count benchmarks
     const read = fastest(3, () => readNote([text])),
       back = fastest(3, () => readBack(read.out, 'g', text));
     assert.ok(back.ms < read.ms, `${back.ms.toFixed(0)} ms to read back, ${read.ms.toFixed(0)} ms to read`);
-    assert.ok(
-      read.ms < onThisMachine(2000) && back.ms < onThisMachine(500),
-      `${read.ms.toFixed(0)} and ${back.ms.toFixed(0)} ms of processor time, over ${onThisMachine(2000).toFixed(0)} or ${onThisMachine(500).toFixed(0)}`,
-    );
   });
 });
 
 describe('the budget of reading again', () => {
   test('is four million UTF-16 units, the Python reader’s too', () => {
     assert.equal(REREAD_BUDGET, 4_000_000);
+  });
+
+  test('is held by counting what the reader is handed, and the count sees a small note read: a reader it missed would fail', () => {
+    const small = "// graph: g\n(a:A {name: 'a'}), (b:B {name: 'b'}), (a)-[:R]->(b)";
+    const work = readerWork(() => readNote([small]));
+    assert.equal(work.out.graphs.get('g').boxes.length, 2);
+    assert.ok(work.calls >= 1, 'a read is seen');
+    assert.ok(work.longest >= small.length - '// graph: g\n'.length, 'the block seen whole');
   });
 
   test('a note of ordinary size, with dozens of problems, never comes near it: each part is left out alone', () => {

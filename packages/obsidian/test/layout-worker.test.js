@@ -12,7 +12,6 @@ import { fence } from './host/notes.js';
 import { load, GRAPH, show, svgOf } from './host/view-notes.js';
 import { open, READER, type } from './host/pane-notes.js';
 import { installWorkers } from './host/workers.js';
-import { onThisMachine, processorTime as used } from '../../../scripts/speed-index.mjs';
 
 before(() => build());
 
@@ -30,6 +29,12 @@ function bannerOf(el) {
       role: b.getAttribute('role'),
     }
   );
+}
+
+/** The processor time this process has used so far, every thread of it, in ms. */
+function used() {
+  const { user, system } = process.cpuUsage();
+  return (user + system) / 1000;
 }
 
 /**
@@ -109,28 +114,20 @@ describe('a graph over a size limit is shown as its text, with a banner saying w
       // reading, the same kind of work, so a machine slower at one is slower at both, and the test's own setting up is
       // left out of both.
       // Against a plain pass over the note's characters, a different kind of work, Linux on CI took 20 to 28 passes where
-      // macOS took 5 or 6, and failed the old limit of 20 (CI, 11 Oct 2026). Never the clock alone, which runs on while a
-      // busy machine runs something else (10 Oct 2026). And under the old 3 s, now of processor time on the desktop,
-      // scaled to this machine (scripts/speed-index.mjs), as a backstop against a slowdown of both alike; and under 5 s by
-      // the clock, for a wait that uses no processor time, where refusing takes a few ms (the review of #40)
+      // macOS took 5 or 6, and failed the old limit of 20 (CI, 11 Oct 2026). Never the clock, which runs on while a busy
+      // machine runs something else (10 Oct 2026), and never a number of milliseconds: a test asserts the work done, never
+      // the time taken (spec §12, quality_ratchet, 12 Oct 2026). The ratio moves to the instruction-count benchmarks
       let el,
         read,
         took = Infinity,
-        clock = Infinity,
         reading = Infinity;
       for (let k = 0; k < 3; k++) {
-        const c = performance.now();
         const whole = await card(env, note);
-        clock = Math.min(clock, performance.now() - c);
         const part = await card(env, tenth);
         [el, took, read, reading] = [whole.el, Math.min(took, whole.ms), part.el, Math.min(reading, part.ms)];
       }
       assert.equal(bannerOf(read), null, 'the tenth is read, not refused');
       assert.ok(took < reading, `${took.toFixed(1)} ms, against ${reading.toFixed(1)} ms to read a tenth of the note`);
-      assert.ok(
-        took < onThisMachine(3000) && clock < 5000,
-        `${took.toFixed(0)} ms of processor time (3,000 on the desktop), ${clock.toFixed(0)} ms by the clock`,
-      );
       assert.equal(svgOf(el), null);
       assert.match(bannerOf(el).text, /too large to read/i);
       assert.match(bannerOf(el).text, /at most 512 kB/);

@@ -11,7 +11,7 @@ import { loadEngine } from '../src/engine.ts';
 import { drawingSource } from '../src/layout.ts';
 import { LAYOUT_LIMITS, PAGE_LIMITS, tooLarge } from '../src/layout-limits.ts';
 import { LayoutRunner, TIMEOUTS_BEFORE_STOPPING, inThreadPort, serveLayouts } from '../src/layout-worker.ts';
-import { onThisMachine, used } from './processor-time.js';
+import { used } from './processor-time.js';
 import { watchedBox } from './reader-work.js';
 
 const CLOCK = { setTimeout: (run, ms) => setTimeout(run, ms), clearTimeout: (t) => clearTimeout(t) };
@@ -130,27 +130,22 @@ describe('the limits, checked before any layout', () => {
       ...d,
       boxes: d.boxes.map((b, i) => (i ? b : watchedBox({ ...b, text: 'é '.repeat(600_000) }, reads))),
     };
-    // at once, by the work, which is the same on every machine and under any load: the source was never written, as a
-    // drawing instruction names its box by its key, and the text was only measured, two passes each time; no worker and
-    // no engine on the page was started; and the answer came before the event loop turned, so it waited on nothing.
-    // Never against a plain pass timed in the test, which coverage leaves fast while it slows the core (0.4.2, 12 Oct
-    // 2026); never the clock alone, which a busy machine running the whole suite broke at 314 ms against 200 (10 Oct
-    // 2026). And under the old 200 ms, now of processor time on the desktop, scaled to this machine, the least of three,
-    // as a backstop against a measurement grown slow
-    let r,
-      took = Infinity;
-    for (let k = 0; k < 3; k++) {
-      const { r: runs, page } = runner([]);
-      const t = used();
-      const answer = runs.draw(long);
-      r = await Promise.race([answer, new Promise((done) => setImmediate(() => done('waited')))]);
-      took = Math.min(took, used() - t);
-      assert.equal(page.made.length, 0, 'no engine was started');
-    }
+    // at once, by the work done, never the time taken (spec §12, quality_ratchet, 12 Oct 2026): the source was never
+    // written, as a drawing instruction names its box by its key, and the text was only measured, at most two passes; no
+    // worker and no engine on the page was started; and the answer came before the event loop turned, so it waited on
+    // nothing. Against a plain pass timed in the test, coverage, which slows the core and not the test, broke it (0.4.2,
+    // 12 Oct 2026); by the clock, a busy machine running the whole suite broke it at 314 ms against 200 (10 Oct 2026)
+    const { r: runs, page } = runner([]);
+    const r = await Promise.race([runs.draw(long), new Promise((done) => setImmediate(() => done('waited')))]);
     assert.notEqual(r, 'waited', 'answered before the event loop turned');
+    assert.equal(page.made.length, 0, 'no engine was started');
     assert.equal(reads.key, undefined, 'no drawing instruction was written for the box');
-    assert.ok(reads.text <= 2 * 3, `the text read ${reads.text} times in three refusals`);
-    assert.ok(took < onThisMachine(200), `${took.toFixed(0)} ms of processor time, 200 on the desktop`);
+    assert.ok(reads.text <= 2, `the text read ${reads.text} times`);
+    // the control: a box under the limits is laid out, and its key is seen read
+    const seen = {};
+    const control = runner([], { rest: served().spawn });
+    await control.r.draw({ ...d, boxes: d.boxes.map((b, i) => (i ? b : watchedBox(b, seen))) });
+    assert.ok(seen.key >= 1, 'a box laid out is seen by its key');
     assert.equal(r.limit, 'source');
     assert.ok(r.count > 1_200_000, `${r.count} bytes: each é is two, and the spaces are not counted`);
     assert.equal(r.atLeast, true, 'the source would be longer still');
