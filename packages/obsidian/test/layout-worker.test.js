@@ -7,6 +7,7 @@ import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { resolveObjectURL } from 'node:buffer';
 import { build, until } from './host/load-plugin.js';
+import { fakeContext } from './host/fake-obsidian.js';
 import { fence } from './host/notes.js';
 import { load, GRAPH, show, svgOf } from './host/view-notes.js';
 import { open, READER, type } from './host/pane-notes.js';
@@ -30,7 +31,26 @@ function bannerOf(el) {
   );
 }
 
-/** Runs `fn` with the plugin loaded, Workers as `workers` installs them (none when null), and its limits changed. */
+/** The processor time this process has used so far, every thread of it, in ms. */
+function used() {
+  const { user, system } = process.cpuUsage();
+  return (user + system) / 1000;
+}
+
+/**
+ * The card the plugin makes of a note holding one graph block, as Obsidian asks for it, and the processor time the
+ * plugin took to make it, in ms: the test's own setting up, such as finding the block in the note, is not counted.
+ */
+async function card(env, note) {
+  const el = env.doc.body.createDiv({ cls: 'block-language-gql' }),
+    ctx = fakeContext(note, 0),
+    source = note.slice(note.indexOf('\n') + 1, note.lastIndexOf('\n'));
+  const t = used();
+  await env.state.processors.get('gql')(source, el, ctx);
+  return { el, ms: used() - t };
+}
+
+/** Runs `fn` with the plugin loaded,Workers as `workers` installs them (none when null), and its limits changed. */
 async function withPlugin(workers, limits, fn) {
   const installed = workers && installWorkers(workers);
   const env = await load();
@@ -84,37 +104,34 @@ describe('a graph over a size limit is shown as its text, with a banner saying w
   // and showed it as text with its problem, not with this banner (the core's tests hold the many-broken-parts cases)
   test('a block too large to read — 600 kB, one pattern left open — is its text and a banner at once, never read', async () => {
     await withPlugin(null, {}, async (env) => {
-      const body = Array.from({ length: 12_000 }, (_, i) => `(n${i}:Thing {name: 'Thing number ${i} of many'},`);
-      const note = fence(`// graph: g\n${body.join('\n')}`);
-      // at once: in under 20 plain passes over the note (it takes 5 or 6), the least processor time of three of each, so
-      // it was never read; never the clock alone, which runs on while a busy machine runs something else: a whole-suite
-      // run with a load average of 176 on 10 cores slowed this by the clock 60 times against a pass measured beside it
-      // (10 Oct 2026). And under the old 3 s, now of processor time, as a backstop against a slowdown of both alike; and
-      // under 5 s by the clock, for a wait that uses no processor time (the review of #40)
-      const used = () => {
-        const { user, system } = process.cpuUsage();
-        return (user + system) / 1000;
-      };
-      const spaces = () => {
-        let n = 0;
-        for (let i = 0; i < note.length; i++) if (note.charCodeAt(i) === 0x20) n++;
-        return n;
-      };
+      const lines = (n) => Array.from({ length: n }, (_, i) => `(n${i}:Thing {name: 'Thing number ${i} of many'},`);
+      const note = fence(`// graph: g\n${lines(12_000).join('\n')}`);
+      // a tenth of it, 1,200 lines, which is under the limits and so is read: what reading costs, on this machine
+      const tenth = fence(`// graph: g\n${lines(1_200).join('\n')}`);
+      // at once: refusing the whole note costs less processor time than reading a tenth of it, the least of three of
+      // each, so it was never read: reading the whole costs several times the tenth (3 times, read before refusing, on
+      // 12 Oct 2026), and refusing it a twelfth of the tenth. The plugin's card is priced against the plugin's own
+      // reading, the same kind of work, so a machine slower at one is slower at both, and the test's own setting up is
+      // left out of both.
+      // Against a plain pass over the note's characters, a different kind of work, Linux on CI took 20 to 28 passes where
+      // macOS took 5 or 6, and failed the old limit of 20 (CI, 11 Oct 2026). Never the clock alone, which runs on while a
+      // busy machine runs something else (10 Oct 2026). And under the old 3 s, now of processor time, as a backstop
+      // against a slowdown of both alike; and under 5 s by the clock, for a wait that uses no processor time (the review
+      // of #40)
       let el,
+        read,
         took = Infinity,
         clock = Infinity,
-        pass = Infinity;
+        reading = Infinity;
       for (let k = 0; k < 3; k++) {
-        let t = used();
         const c = performance.now();
-        ({ el } = await show(env, note));
-        took = Math.min(took, used() - t);
+        const whole = await card(env, note);
         clock = Math.min(clock, performance.now() - c);
-        t = used();
-        spaces();
-        pass = Math.min(pass, used() - t);
+        const part = await card(env, tenth);
+        [el, took, read, reading] = [whole.el, Math.min(took, whole.ms), part.el, Math.min(reading, part.ms)];
       }
-      assert.ok(took < 20 * pass, `${took.toFixed(1)} ms, against ${pass.toFixed(1)} ms for one pass over the note`);
+      assert.equal(bannerOf(read), null, 'the tenth is read, not refused');
+      assert.ok(took < reading, `${took.toFixed(1)} ms, against ${reading.toFixed(1)} ms to read a tenth of the note`);
       assert.ok(
         took < 3000 && clock < 5000,
         `${took.toFixed(0)} ms of processor time, ${clock.toFixed(0)} ms by the clock`,
