@@ -1,0 +1,6 @@
+{
+  "file": "test/quality-instructions.test.js",
+  "test": "in CI, the counts must be held > a baseline holds every count of one run or none, with the machine that counted them",
+  "seen_failing_first": false,
+  "evidence": "Moved, unchanged, by the edit that added the CI describe above it: it was held before as 'held to a baseline that holds them > a baseline holds every count of one run or none, with the machine that counted them', seen failing first in 6890eaa."
+}

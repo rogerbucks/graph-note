@@ -1,0 +1,6 @@
+{
+  "file": "test/timed-assertions.test.js",
+  "test": "it allows > a clock handed to the code tested, which is never taken for the test’s own timing",
+  "seen_failing_first": false,
+  "evidence": "Split, unchanged in what it allows, from the earlier 'a clock handed to the code tested, and a helper of the subject’s, which is never taken for the test’s' (seen failing first in 6890eaa); the subject's helper part moved to 'it catches', as the review of #113 asked a compared reading to be caught."
+}

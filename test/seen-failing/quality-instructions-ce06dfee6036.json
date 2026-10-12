@@ -1,0 +1,6 @@
+{
+  "file": "test/quality-instructions.test.js",
+  "test": "in CI, the counts must be held > a baseline that drops its counts fails against the one before; one that adds them passes",
+  "seen_failing_first": false,
+  "evidence": "Moved, unchanged, by the edit that added the CI describe above it: it was held before as 'held to a baseline that holds them > a baseline that drops its counts fails against the one before; one that adds them passes', seen failing first in 6890eaa."
+}

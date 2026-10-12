@@ -1,0 +1,6 @@
+{
+  "file": "test/quality-instructions.test.js",
+  "test": "in CI, the counts must be held > on the same machine, counts held to the baseline pass; the fast check and the baselines’ check never ask",
+  "seen_failing_first": false,
+  "evidence": "A control for the CI tests beside it: that the new CI rule fails nothing it should pass. At the parent, without the rule, nothing fails either, so it passes by design; the CI tests it controls were seen failing first."
+}

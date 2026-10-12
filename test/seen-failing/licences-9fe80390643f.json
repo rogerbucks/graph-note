@@ -1,0 +1,6 @@
+{
+  "file": "test/licences.test.js",
+  "test": "a GPL tool, allowed only where it runs in CI alone and is never shipped (build_tool_licences) > an install is found in every form apt takes, every package on its line, flags anywhere among them",
+  "seen_failing_first": false,
+  "evidence": "Its subject, aptInstalls, is test support, which the replay takes across to the parent, so it passes there by design. The widened reader is shown by the planted lines in the test itself; the repository-level tests that use it were seen failing first."
+}
