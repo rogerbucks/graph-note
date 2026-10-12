@@ -55,61 +55,63 @@ const gone = async (pid) => {
 /** The id the fixture wrote, once it has run; the fixture runs as a grandchild of the runner, inside `node --test`. */
 const fixturePid = (dir) => Number(readFileSync(join(dir, 'pid'), 'utf8'));
 
-// Grows by 4 MB every 10 ms, as a test that allocates without bound does; stops itself at 1.5 GB, and then waits.
+// Grows by 4 MB every 40 ms, as a test that allocates without bound does; stops itself at 1.5 GB, about 15 s on, writes
+// `grown`, and then waits. It reaches the 300 MB ceiling about 3 s on, and the runner looks every 500 ms, so it is
+// stopped some 12 s before it could write `grown`, inside the run's 60 s limit; at 10 ms a step it grew to 1.5 GB in
+// 4 s, too near the ceiling's look for a loaded machine (the review of #109). Before it grows, it writes its own pid,
+// starts a child of its own and writes that pid too: the memory ceiling can only be reached after both exist, so the
+// stopping of the whole group is seen however slowly the fixture starts.
 const RUNAWAY = `import { test } from 'node:test';
+import { spawn } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 test('grows without bound', async () => {
   writeFileSync('pid', String(process.pid));
+  const child = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 60000)'], { stdio: 'ignore' });
+  writeFileSync('child-pid', String(child.pid));
   const kept = [];
   while (kept.length < 384) {
     kept.push(Buffer.alloc(4 * 2 ** 20, 1));
-    await new Promise((r) => setTimeout(r, 10));
+    await new Promise((r) => setTimeout(r, 40));
   }
+  writeFileSync('grown', '');
   await new Promise((r) => setTimeout(r, 60000));
 });
 `;
 
-// Run directly, not under `node --test`, whose start-up under load can outlast a short ceiling: writes its own pid first
-// thing, starts a child of its own and writes that pid too, then sleeps.
-const SLEEPER = `const { spawn } = require('node:child_process');
-const { writeFileSync } = require('node:fs');
-writeFileSync('pid', String(process.pid));
-const child = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 60000)'], { stdio: 'ignore' });
-writeFileSync('child-pid', String(child.pid));
-setTimeout(() => {}, 60000);
+// Sleeps 30 s, then writes `woke`. Whether a run was stopped at its time ceiling is read from that file: a stopped run's
+// whole group is killed, so the fixture never wakes, and a run that was not stopped lasts the 30 s and leaves the file
+// (the run's output is the fixture's too, so the run does not end before it). Never from how long the run took, nor from
+// whether the fixture had started by the ceiling, which a loaded machine's start-up decides: a start-up slower than the
+// 1.8 s ceiling failed the test though the ceiling worked, and a run under load took longer by the clock alike (12 Oct
+// 2026). The stopping of a started fixture and its own child is seen at the memory ceiling, which only a started fixture
+// can reach; both ceilings stop a run through the runner's one `stop`, which kills the whole group.
+const SLEEPER = `const { writeFileSync } = require('node:fs');
+setTimeout(() => writeFileSync('woke', ''), 30000);
 `;
 
 describe('a test run under the ceiling', () => {
   test('a run that allocates without bound is stopped at the memory ceiling, with one line and a failed exit', async () => {
     const dir = scratch({ 'runaway.test.js': RUNAWAY });
-    const started = Date.now();
     const r = capped(dir, { GRAPH_NOTE_TEST_MEMORY_MB: '300' }, '--test', 'runaway.test.js');
-    assert.ok(Date.now() - started < 30000, 'stopped long before the fixture stops itself');
+    assert.ok(!existsSync(join(dir, 'grown')), 'stopped before the fixture stops itself');
     assert.notEqual(r.status, 0);
     const lines = r.stderr.split('\n').filter((l) => l.startsWith('run-ceiling:'));
     assert.equal(lines.length, 1, r.stderr);
     assert.match(lines[0], /^run-ceiling: stopped the run at \d+ MB of memory, over its 300 MB ceiling\. /);
     assert.match(lines[0], /GRAPH_NOTE_TEST_MEMORY_MB/);
     assert.ok(await gone(fixturePid(dir)), 'the test file’s own process, a grandchild, was stopped too');
+    assert.ok(await gone(Number(readFileSync(join(dir, 'child-pid'), 'utf8'))), 'and its own child');
   });
 
-  test('a run that goes on past the time ceiling is stopped, with one line and a failed exit', async () => {
+  test('a run that goes on past the time ceiling is stopped, with one line and a failed exit', () => {
     const dir = scratch({ 'sleeper.js': SLEEPER });
-    const started = Date.now();
-    // plain `node`, which starts in tens of milliseconds even under load: the pid files exist long before 1.8 s
     const r = capped(dir, { GRAPH_NOTE_TEST_MINUTES: '0.03' }, 'sleeper.js');
-    assert.ok(Date.now() - started < 30000, 'stopped long before the fixture wakes');
-    assert.ok(
-      existsSync(join(dir, 'child-pid')),
-      'the fixture never started within the 1.8 s ceiling: the machine is overloaded',
-    );
     assert.notEqual(r.status, 0);
     const lines = r.stderr.split('\n').filter((l) => l.startsWith('run-ceiling:'));
     assert.equal(lines.length, 1, r.stderr);
     assert.match(lines[0], /^run-ceiling: stopped the run after \d+(\.\d+)? s, over its 0\.03-minute time ceiling\. /);
     assert.match(lines[0], /GRAPH_NOTE_TEST_MINUTES/);
-    assert.ok(await gone(fixturePid(dir)), 'the fixture, a child of the runner, was stopped');
-    assert.ok(await gone(Number(readFileSync(join(dir, 'child-pid'), 'utf8'))), 'its own child was stopped too');
+    assert.ok(!existsSync(join(dir, 'woke')), 'stopped before the fixture woke');
   });
 
   test('a run within its ceilings passes through its output and its exit status unchanged', () => {
@@ -151,14 +153,14 @@ describe('the quality ratchet’s runs of the suite run under the ceiling', () =
   // started the file yet, so the test does not depend on start-up time (the ceiling's own kill of the group is tested above)
   test('a run it starts that goes on past the time ceiling is stopped, with the ceiling’s line, and does not pass', async () => {
     const suite = await import('../scripts/quality-suite.mjs');
-    const dir = scratch({ 'sleeper.test.js': SLEEPER.replace('60000', '30000') });
+    const dir = scratch({ 'sleeper.test.js': SLEEPER });
     const was = process.env.GRAPH_NOTE_TEST_MINUTES;
     process.env.GRAPH_NOTE_TEST_MINUTES = '0.1';
     try {
       const run = suite.nodeTest(dir, []);
       assert.equal(run.passed, false);
       assert.match(run.stderr, /run-ceiling: stopped the run after \d+(\.\d+)? s, over its 0\.1-minute time ceiling/);
-      assert.ok(run.seconds < 25, `stopped before the fixture ends by itself: ${run.seconds} s`);
+      assert.ok(!existsSync(join(dir, 'woke')), 'stopped before the fixture ends by itself');
     } finally {
       if (was === undefined) delete process.env.GRAPH_NOTE_TEST_MINUTES;
       else process.env.GRAPH_NOTE_TEST_MINUTES = was;

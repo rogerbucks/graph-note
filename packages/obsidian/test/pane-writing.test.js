@@ -9,23 +9,38 @@ import { READER, NOTE, PATH, open, textarea, type, note } from './host/pane-note
 
 before(() => build());
 
+/** Lets every promise already settled run its callbacks: the write the pane starts from its timer. */
+const flush = () => new Promise((r) => setImmediate(r));
+
+/** The processor time this process has used so far, every thread of it, in ms. */
+function used() {
+  const { user, system } = process.cpuUsage();
+  return (user + system) / 1000;
+}
+
 describe('writing to the note', () => {
-  test('what is typed reaches the note within about a third of a second', async () => {
+  test('what is typed reaches the note within about a third of a second', async (t) => {
     const env = await open();
     try {
-      // a timer of the pane's own wait before writing, 150 ms, set just before typing, so it runs just before the pane's:
-      // however late a busy machine runs timers, it runs this one as late, so the third of a second is held to that
-      // lateness, never to a fixed number of milliseconds alone. Set after typing, it ran after the pane's, and the
-      // writing's own work made it late too, so a slow write excused itself (the review of #40, 10 Oct 2026)
-      const t0 = Date.now();
-      let timer = 0;
-      setTimeout(() => (timer = Date.now() - t0), 150);
-      type(env.el, READER + ",\n(price:Reason {title: 'Costs more'})");
-      while (note(env) === NOTE && Date.now() - t0 < 5000) await wait(10);
-      const took = Date.now() - t0;
-      while (!timer) await wait(10);
-      assert.ok(took <= 350 + (timer - 150), `${took} ms, with timers running ${timer - 150} ms late`);
-      assert.equal(note(env), NOTE.replace(READER, READER + ",\n(price:Reason {title: 'Costs more'})"));
+      // the wait the pane sets itself, counted on the test's own clock, plus the work of typing and writing, counted in
+      // processor time: what a person waits for is both, so both together are held to the third of a second. The fake
+      // clock takes no real time, so the processor time from typing to the note changing is the work alone, however
+      // slowly a busy machine runs it. Timed by the wall clock, even against a timer set beside the pane's, a loaded run
+      // of the whole suite failed it now and then (12 Oct 2026); on the fake clock alone, a slow write passed (the
+      // review of #109)
+      t.mock.timers.enable({ apis: ['setTimeout'] });
+      Object.assign(env.doc.defaultView, { setTimeout, clearTimeout });
+      const typed = READER + ",\n(price:Reason {title: 'Costs more'})";
+      const started = used();
+      type(env.el, typed);
+      let ms = 0;
+      for (; note(env) === NOTE && ms < 1000; ms++) {
+        t.mock.timers.tick(1);
+        await flush();
+      }
+      const work = used() - started;
+      assert.ok(ms + work <= 350, `${ms} ms of the pane's own wait, and ${work.toFixed(0)} ms of processor time`);
+      assert.equal(note(env), NOTE.replace(READER, typed));
     } finally {
       env.uninstall();
     }

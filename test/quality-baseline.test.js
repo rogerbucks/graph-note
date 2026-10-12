@@ -5,7 +5,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { METRICS, compare, acceptedProblems, baselineProblems, compareWithRef } from '../scripts/quality-check.mjs';
@@ -155,14 +155,26 @@ describe('a baseline committed worse than its parent’s', () => {
     assert.match(quality, /fetch-depth: 0/);
   });
 
-  test('every release job that runs the suite checks out the full history, as the tests-first records need it', () => {
-    const all = jobs(read('.github/workflows/release.yml'));
+  test('every workflow job that runs the suite checks out the full history, as the tests-first records need it', () => {
     const runsSuite = (text) => runCommands(text).some((r) => /quality-metrics\.mjs|npm test\b/.test(r));
-    const suiteJobs = Object.keys(all).filter((name) => runsSuite(all[name].join('\n')));
-    assert.deepEqual(suiteJobs.sort(), ['quality', 'release']);
-    for (const name of suiteJobs) {
-      assert.match(all[name].join('\n'), /fetch-depth: 0/, `the ${name} job checks out with fetch-depth: 0`);
+    const suiteJobs = [];
+    for (const file of readdirSync(join(ROOT, '.github/workflows')).filter((f) => /\.ya?ml$/.test(f))) {
+      const all = jobs(read(`.github/workflows/${file}`));
+      for (const name of Object.keys(all).filter((n) => runsSuite(all[n].join('\n')))) {
+        suiteJobs.push(`${file} ${name}`);
+        assert.match(
+          all[name].join('\n'),
+          /fetch-depth: 0/,
+          `the ${name} job of ${file} checks out with fetch-depth: 0`,
+        );
+      }
     }
+    assert.deepEqual(suiteJobs.sort(), [
+      'ci.yml test',
+      'quality-baseline.yml measure',
+      'release.yml quality',
+      'release.yml release',
+    ]);
   });
 });
 

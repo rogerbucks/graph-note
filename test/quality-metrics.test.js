@@ -314,6 +314,14 @@ describe('the commands', () => {
     assert.deepEqual(measureFast().details.secrets, []);
   });
 
+  test('a flaky test that is found is named, so the release that fails on it says which test to fix', () => {
+    const flaky = ['test/a.test.js > a run > waits its turn', 'test/b.test.js > keeps time'];
+    const r = run('scripts/quality-check.mjs', [metricsFile({ ...baseline().metrics, flaky_tests: 2 }, { flaky })]);
+    assert.equal(r.status, 1);
+    assert.match(r.stderr, /flaky_tests/);
+    for (const name of flaky) assert.ok(r.stderr.includes(`  ${name}\n`), r.stderr);
+  });
+
   test('the metrics script writes to a file with --out, and to the screen without it', () => {
     const src = read('scripts/quality-metrics.mjs');
     assert.match(src, /--out/);
