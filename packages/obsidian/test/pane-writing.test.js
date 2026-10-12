@@ -19,9 +19,9 @@ describe('writing to the note', () => {
       // the wait the pane schedules itself, counted on the test's own mock clock, which takes no real time and so is the
       // same on every machine: the note changes within 350 ms of it. A test asserts the work done, never the time taken
       // (spec §12, quality_ratchet, 12 Oct 2026), so what the typing and the write cost is not held here: the cost of a
-      // keystroke reaching the note moves to the instruction-count benchmarks. By the wall clock a loaded run of the
-      // whole suite failed it now and then (12 Oct 2026); in processor time it could still fail under coverage (the
-      // review of #112)
+      // keystroke reaching the note is counted in instructions (scripts/benchmarks/keystroke.mjs). By the wall clock a
+      // loaded run of the whole suite failed it now and then (12 Oct 2026); in processor time it could still fail under
+      // coverage (the review of #112)
       t.mock.timers.enable({ apis: ['setTimeout'] });
       Object.assign(env.doc.defaultView, { setTimeout, clearTimeout });
       const typed = READER + ",\n(price:Reason {title: 'Costs more'})";

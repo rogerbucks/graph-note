@@ -1,0 +1,6 @@
+{
+  "file": "test/quality-instructions.test.js",
+  "test": "the workflows that count them > no workflow clears or sets GITHUB_ACTIONS, so the check always knows it runs in CI; the release checks last",
+  "seen_failing_first": false,
+  "evidence": "A guard against a future change (re-review of #113): no workflow has ever set GITHUB_ACTIONS, so it passes at its parent by design. Shown to bite by its planted forms (env at the top, the job and the step, a prefix, unset, env -u), and on a real file: GITHUB_ACTIONS: '' added to quality-baseline.yml's env fails it."
+}

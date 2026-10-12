@@ -38,3 +38,4 @@ main.js.*.part
 
 # A release's measured quality metrics; only the baseline they are held to, quality/baseline.json, is committed.
 quality/metrics.json
+quality/instruction-spread.json

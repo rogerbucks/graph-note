@@ -1,0 +1,39 @@
+cmd: /bin/true
+events: Ir
+fl=./csu/../csu/libc-start.c
+fn=__libc_start_main@@GLIBC_2.34
+128 3
+134 2
+135 7
+138 1
+139 1
+142 3
+143 3
+144 9
+145 5
+242 12
+311 2
+312 3
+337 5
+340 1
+343 3
+350 2
+352 1
+360 4
+fl=./csu/../sysdeps/nptl/libc_start_call_main.h
+fn=(below main)
+29 12
+44 3
+46 1
+48 1
+51 3
+52 1
+fn=__aarch64_ldadd4_relax
+0 18
+fn=__aarch64_swp4_rel
+0 35
+fn=call_weak_fn
+0 4
+fn=init_have_lse_atomics
+0 22
+summary: 125571

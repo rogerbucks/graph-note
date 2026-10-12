@@ -11,7 +11,6 @@ import { loadEngine } from '../src/engine.ts';
 import { drawingSource } from '../src/layout.ts';
 import { LAYOUT_LIMITS, PAGE_LIMITS, tooLarge } from '../src/layout-limits.ts';
 import { LayoutRunner, TIMEOUTS_BEFORE_STOPPING, inThreadPort, serveLayouts } from '../src/layout-worker.ts';
-import { used } from './processor-time.js';
 import { watchedBox } from './reader-work.js';
 
 const CLOCK = { setTimeout: (run, ms) => setTimeout(run, ms), clearTimeout: (t) => clearTimeout(t) };
@@ -360,28 +359,9 @@ describe('a normal graph', () => {
     assert.equal(workers.made.length, 1);
   });
 
-  test('a graph of 50 things is drawn through the worker in under half a second (spec §11)', async () => {
-    const nodes = Array.from({ length: 50 }, (_, i) => `(n${i}:Thing {name: 'Thing ${i}, a few words long'})`);
-    const links = Array.from({ length: 70 }, (_, i) => `(n${i % 50})-[:LINKS]->(n${(i * 7 + 3) % 50})`);
-    const d = drawingOf(`// graph: g\n${[...nodes, ...links].join(',\n')}`, 'g');
-    await r.draw(d); // warm: the worker's engine starts on its first layout
-    // the spec's own half second, held to the least processor time of three draws, the worker's thread with the page's:
-    // the clock runs on while a busy machine runs something else (10 Oct 2026). Processor time cannot see a wait, a timer
-    // or a queue, so the least by the clock is held to 5 s as well, a backstop a busy machine does not reach
-    let drawn,
-      ms = Infinity,
-      clock = Infinity;
-    for (let k = 0; k < 3; k++) {
-      const t = used(),
-        c = performance.now();
-      drawn = await r.draw(d);
-      ms = Math.min(ms, used() - t);
-      clock = Math.min(clock, performance.now() - c);
-    }
-    assert.match(drawn.svg, /^<svg/);
-    assert.ok(ms < 500, `${ms.toFixed(0)} ms`);
-    assert.ok(clock < 5000, `${clock.toFixed(0)} ms by the clock`);
-  });
+  // how fast a graph of 50 things is drawn through the runner (spec §11) is not asserted here: a test asserts the work
+  // done, never the time taken (spec §12, quality_ratchet, 12 Oct 2026). Its instructions are counted by the draw_fifty
+  // benchmark (scripts/benchmarks/draw-fifty.mjs), through this runner, on every release
 });
 
 describe('a layout no longer wanted', () => {
@@ -438,6 +418,25 @@ describe('a layout no longer wanted', () => {
     r.close();
     assert.equal(await waiting, null);
     assert.equal(pending.size, 0, 'the start limit’s timer went with the worker');
+  });
+
+  test('a draw through the runner, its port served in this process, resolves on a clock that never runs, and leaves no timer set', async () => {
+    // the mock clock keeps each timer and never runs one: the draw_fifty benchmark counts this route, which must answer
+    // with no timer firing and leave none to hold the process
+    const set = new Set();
+    const clock = {
+      setTimeout: (run, ms) => (set.add({ run, ms }), [...set].at(-1)),
+      clearTimeout: (t) => set.delete(t),
+    };
+    const r = new LayoutRunner({ worker: served().spawn, page: served().spawn, clock });
+    const drawn = await r.draw(drawingOf(READER));
+    assert.match(drawn.svg, /^<svg/);
+    assert.deepEqual(
+      [...set].map((t) => t.ms),
+      [],
+      'every timer the draw set was cleared',
+    );
+    r.close();
   });
 });
 

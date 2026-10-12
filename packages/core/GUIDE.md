@@ -290,6 +290,8 @@ with `npm test` from the repository root.
 A test asserts the work done, never the time taken (spec §12, quality_ratchet, 12 Oct 2026). Where what is held is
 work, such as a text never read, a block read again only within its budget or drawing instructions never written, the
 test counts it with `test/reader-work.js`, paired with a control that shows the same count sees the work when it is
-done: a count is the same on every machine, under load and under coverage. A step still held to a step of the same
-kind beside it, as a ratio of processor time (`test/processor-time.js`), never to a number of milliseconds, is
-waiting to move to the instruction-count benchmarks.
+done: a count is the same on every machine, under load and under coverage. What the core's work costs — 50 things
+drawn, the worst reads at the size limits, the refusals, naming thousands of things, a keystroke reaching the note, and
+each ratio between two sizes or two cases of the same work — is counted in CPU instructions by the benchmarks in
+`scripts/benchmarks/`, run under Cachegrind on every release (`scripts/instruction-counts.mjs`), never timed in a test.
+`scripts/timed-assertions.mjs` finds any assertion on elapsed time, and `test/timed-assertions.test.js` fails on one.

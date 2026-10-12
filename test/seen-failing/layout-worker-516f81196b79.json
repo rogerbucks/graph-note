@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/layout-worker.test.js",
+  "test": "a layout no longer wanted > a draw through the runner, its port served in this process, resolves on a clock that never runs, and leaves no timer set",
+  "seen_failing_first": false,
+  "evidence": "Pins behaviour the runner already had, which the draw_fifty benchmark relies on (review of #113, item 5). Shown to bite: removing settle's clearTimeout of the layout's timer fails it, with the 5,000 ms timer left set."
+}

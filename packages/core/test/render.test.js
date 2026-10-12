@@ -9,7 +9,6 @@ import { PALETTES } from '../src/palette.ts';
 import { loadEngine } from '../src/engine.ts';
 import { layoutSource } from '../src/layout.ts';
 import { themed, sizeOf, choose } from '../src/theme.ts';
-import { used } from './processor-time.js';
 
 const WIDE = `// graph: g
 (q:Question {title: 'Which device?'}),
@@ -142,33 +141,9 @@ describe('what tapping a box shows', () => {
   });
 });
 
-describe('speed', () => {
-  test('a graph of 50 things is read and drawn in under half a second (spec §11; the phone is checked on the device)', async () => {
-    const engine = await loadEngine();
-    const nodes = Array.from(
-      { length: 50 },
-      (_, i) =>
-        `(n${i}:${['Question', 'Option', 'Reason', 'Claim', 'Source'][i % 5]} {name: 'Thing ${i}, a few words long'})`,
-    );
-    const links = Array.from(
-      { length: 70 },
-      (_, i) => `(n${i % 50})-[:${['ANSWERS', 'FAVOURS', 'CITES'][i % 3]}]->(n${(i * 7 + 3) % 50})`,
-    );
-    const block = `// graph: g\n${[...nodes, ...links].join(',\n')}`;
-    draw(readNote([block]).graphs.get('g'), engine); // warm: the first draw compiles the engine's code paths
-    // the spec's own half second, held to the least processor time of three draws: the clock runs on while a busy
-    // machine runs something else, which a whole-suite run on a loaded machine showed (10 Oct 2026)
-    let drawn,
-      ms = Infinity;
-    for (let k = 0; k < 3; k++) {
-      const t = used();
-      drawn = draw(readNote([block]).graphs.get('g'), engine);
-      ms = Math.min(ms, used() - t);
-    }
-    assert.match(drawn.svg, /^<svg/);
-    assert.ok(ms < 500, `${ms.toFixed(0)} ms`);
-  });
-});
+// How fast a graph of 50 things is read and drawn (spec §11, fifty_in_half_second) is not asserted here: a test asserts
+// the work done, never the time taken (spec §12, quality_ratchet, 12 Oct 2026). Its instructions are counted by the
+// draw_fifty benchmark (scripts/benchmarks/draw-fifty.mjs), on every release, and the phone is checked on the device.
 
 describe('what tapping a link shows', () => {
   const block = `// graph: reader

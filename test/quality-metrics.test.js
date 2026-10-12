@@ -43,8 +43,10 @@ describe('the metrics the requirement names', () => {
     'a dependency vulnerability scan': ['audit_critical', 'audit_high', 'audit_moderate', 'audit_low'],
     'a secrets scan': ['secrets_found'],
     'bundle size': ['bundle_bytes', 'bundle_bytes_without_viz'],
-    'drawing time': ['draw_ms'],
-    'test duration': ['suite_seconds'],
+    'the work a fixed set of benchmarks takes, counted in CPU instructions': Object.keys(METRICS).filter(
+      (n) => METRICS[n].instructions,
+    ),
+    'test duration, reported as a warning only': ['suite_seconds'],
     'flaky tests': ['flaky_tests'],
     'the size of a passing quiet test run': ['quiet_run_bytes'],
     coverage: ['coverage_percent'],
@@ -59,12 +61,12 @@ describe('the metrics the requirement names', () => {
         assert.ok(m.tolerance >= 0 && m.tolerance < 1, `${name} has a tolerance`);
       }
     assert.equal(METRICS.coverage_percent.better, 'higher');
-    assert.equal(METRICS.draw_ms.better, 'lower');
+    assert.equal(METRICS.instructions_draw_fifty.better, 'lower');
   });
 
   test('the noisy timings carry a tolerance; the exact counts carry none', () => {
-    assert.ok(METRICS.draw_ms.tolerance >= 0.25);
     assert.ok(METRICS.suite_seconds.tolerance >= 0.25);
+    assert.ok(METRICS.instructions_draw_fifty.tolerance > 0, 'instruction counts move a little between runs');
     for (const name of ['max_source_lines', 'max_test_lines', 'audit_high', 'secrets_found', 'flaky_tests'])
       assert.equal(METRICS[name].tolerance, 0, name);
   });
@@ -73,8 +75,10 @@ describe('the metrics the requirement names', () => {
     const b = baseline();
     assert.match(b.measured, /^\d{4}-\d{2}-\d{2}$/);
     assert.match(b.about, /scripts\/quality-metrics\.mjs/);
+    // the instruction counts are recorded by the first run that counts them, then committed (quality-instructions.test.js)
     for (const names of Object.values(NAMED))
-      for (const name of names) assert.equal(typeof b.metrics[name], 'number', `${name} is in the baseline`);
+      for (const name of names.filter((n) => !METRICS[n].instructions))
+        assert.equal(typeof b.metrics[name], 'number', `${name} is in the baseline`);
     assert.equal(
       typeof b.metrics.speed_index,
       'number',
@@ -147,7 +151,10 @@ describe('a metric that got worse fails, naming it', () => {
   });
 
   test('every metric, one at a time, fails on its own', () => {
-    for (const name of Object.keys(METRICS).filter((n) => !METRICS[n].informational)) {
+    // test duration only warns, and the instruction counts the baseline does not hold yet are recorded: both held in
+    // quality-instructions.test.js
+    const held = (n) => !METRICS[n].informational && !METRICS[n].warnOnly && n in baseline().metrics;
+    for (const name of Object.keys(METRICS).filter(held)) {
       const r = compare(baseline(), changed({ [name]: worse(name, 3) }), []);
       assert.deepEqual(failed(r), [name]);
     }
@@ -174,10 +181,10 @@ describe('a metric that got worse fails, naming it', () => {
   test('a metric the run did not measure fails, unless only the quick ones were asked for', () => {
     const current = structuredClone(baseline());
     delete current.metrics.coverage_percent;
-    current.metrics.draw_ms = null;
-    assert.deepEqual(failed(compare(baseline(), current, [])), ['draw_ms', 'coverage_percent']);
+    current.metrics.audit_low = null;
+    assert.deepEqual(failed(compare(baseline(), current, [])), ['audit_low', 'coverage_percent']);
     const r = compare(baseline(), current, [], { partial: true });
-    assert.deepEqual(failed(r), ['draw_ms'], 'a metric measured as nothing is a failure even in a partial run');
+    assert.deepEqual(failed(r), ['audit_low'], 'a metric measured as nothing is a failure even in a partial run');
   });
 });
 
@@ -203,22 +210,14 @@ describe('higher is better, for coverage', () => {
 });
 
 describe('timings carry a tolerance, and a machine’s speed', () => {
-  const draw = () => baseline().metrics.draw_ms;
-
-  test('a drawing a fifth slower passes; twice as slow fails', () => {
-    assert.deepEqual(compare(baseline(), changed({ draw_ms: draw() * 1.2 }), []).failures, []);
-    assert.deepEqual(failed(compare(baseline(), changed({ draw_ms: draw() * 2 }), [])), ['draw_ms']);
-  });
-
   test('on a machine half as fast, the baseline is stretched to match: nothing fails for the machine alone', () => {
     const slow = changed({
       speed_index: baseline().metrics.speed_index * 2,
-      draw_ms: draw() * 1.9,
       suite_seconds: baseline().metrics.suite_seconds * 1.9,
     });
-    assert.deepEqual(compare(baseline(), slow, []).failures, []);
-    const slower = changed({ speed_index: baseline().metrics.speed_index * 2, draw_ms: draw() * 3 });
-    assert.deepEqual(failed(compare(baseline(), slower, [])), ['draw_ms']);
+    const r = compare(baseline(), slow, []);
+    assert.deepEqual(r.failures, []);
+    assert.ok(!r.warnings.some((w) => w.metric === 'suite_seconds'), 'not even a warning: the machine is slower');
   });
 
   test('a count is never stretched by the machine', () => {

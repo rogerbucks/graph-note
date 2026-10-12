@@ -1,12 +1,21 @@
 // Licences through the whole build chain. Spec §13, Licence: the plugin is MIT;
 // every library bundled into a release, and everything compiled inside one,
 // carries a licence on the allow-list; the notices name them all and ship with
-// every release; build tools should be on the allow-list too.
+// every release; build tools should be on the allow-list too, and a GPL tool is
+// allowed only where it runs in CI alone and is never shipped (build_tool_licences).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { exists, read, readJSON, path, walk, jsPackages } from './repository/repo.js';
-import { licenceAllowed, bundledPackages, buildTools, carriesWasm } from './repository/licences.js';
+import { exists, read, readJSON, path, walk, jsPackages, jobs, runCommands, workflowFiles } from './repository/repo.js';
+import {
+  aptInstalls,
+  buildTools,
+  bundledPackages,
+  carriesWasm,
+  ciOnlyProblems,
+  licenceAllowed,
+  lockedNames,
+} from './repository/licences.js';
 import { renderNotices } from '../scripts/notices.mjs';
 
 const record = () => readJSON('licences/bundled.json');
@@ -144,5 +153,88 @@ describe('build tools, which are not shipped', () => {
   test('no exception is left over once its tool is gone', () => {
     const names = new Set(buildTools().map((t) => t.name));
     for (const name of Object.keys(record().buildToolExceptions)) assert.ok(names.has(name), name);
+  });
+});
+
+describe('a GPL tool, allowed only where it runs in CI alone and is never shipped (build_tool_licences)', () => {
+  const tools = () => record().ciOnlyTools.tools;
+  const installs = () =>
+    workflowFiles().flatMap((f) => aptInstalls(f.replace('.github/workflows/', ''), jobs(read(f))));
+
+  test('the allowance is named and documented, and Valgrind, GPL-3.0 by its manual, is its one entry', () => {
+    assert.match(record().ciOnlyTools.about, /GPL tool is allowed only where it runs in CI alone and is never shipped/);
+    assert.deepEqual(Object.keys(tools()), ['valgrind']);
+    assert.equal(tools().valgrind.licence, 'GPL-3.0');
+    assert.equal(tools().valgrind.licenceSource, 'https://valgrind.org/docs/manual/manual-intro.html');
+    assert.deepEqual(ciOnlyProblems(record(), lockedNames()), []);
+    assert.equal(licenceAllowed('GPL-3.0'), false, 'the allow-list itself is unchanged: GPL is not on it');
+  });
+
+  test('cannot cover anything bundled, inside what is bundled, or in node_modules, dev or not', () => {
+    const planted = structuredClone(record());
+    const entry = { ...tools().valgrind };
+    for (const name of ['@viz-js/viz', 'Graphviz', 'esbuild', 'ESLint', 'valgrind'])
+      planted.ciOnlyTools.tools[name] = entry;
+    const said = ciOnlyProblems(planted, lockedNames()).join('\n');
+    assert.match(said, /^@viz-js\/viz: bundled/m, 'the bundled engine');
+    assert.match(said, /^Graphviz: bundled/m, 'what the engine carries inside');
+    assert.match(said, /^esbuild: in the lockfile/m, 'a dev package in node_modules');
+    assert.match(said, /^ESLint: in the lockfile/m, 'in any case');
+    assert.doesNotMatch(said, /^valgrind/m, 'the real entry stays allowed');
+    planted.ciOnlyTools.tools.valgrind = { ...entry, licence: 'MIT', jobs: [] };
+    assert.equal(ciOnlyProblems(planted, lockedNames()).filter((p) => p.startsWith('valgrind')).length, 2);
+  });
+
+  test('every package a workflow installs with apt-get is on the allowance, in exactly the jobs it names', () => {
+    const found = installs();
+    for (const { job, name } of found) assert.ok(tools()[name], `${job} installs ${name}, not on the allowance`);
+    for (const [name, t] of Object.entries(tools())) {
+      const where = found.filter((i) => i.name === name).map((i) => i.job);
+      assert.deepEqual(where.sort(), [...t.jobs].sort(), name);
+    }
+  });
+
+  test('an install is found in every form apt takes, every package on its line, flags anywhere among them', () => {
+    const planted = {
+      a: ['      - run: sudo apt install valgrind'],
+      b: ['      - run: sudo apt-get -y install valgrind gdb && echo done'],
+      c: ['      - run: apt-get install --no-install-recommends -y valgrind'],
+    };
+    assert.deepEqual(
+      aptInstalls('x.yml', planted).map((i) => `${i.job} ${i.name} ${i.bare}`),
+      ['x.yml a valgrind false', 'x.yml b valgrind false', 'x.yml b gdb false', 'x.yml c valgrind true'],
+    );
+  });
+
+  test('the developer-only image installs only what the allowance names for it, and asks for no recommended packages', () => {
+    const images = walk('docker').filter((f) => f.endsWith('.Dockerfile'));
+    assert.deepEqual(images, ['docker/benchmarks.Dockerfile']);
+    for (const image of images) {
+      const found = aptInstalls(image, { image: read(image).split('\n') });
+      assert.ok(found.length > 0, `the control: ${image}'s installs are found`);
+      for (const { name, bare } of found) {
+        assert.ok(tools()[name]?.images?.includes(image), `${image} installs ${name}, not on the allowance for it`);
+        assert.ok(bare, `${image} installs ${name} with --no-install-recommends`);
+      }
+    }
+  });
+
+  test('every install asks for no recommended packages, so nothing else GPL comes in unlisted', () => {
+    const found = installs();
+    assert.ok(found.length > 0, 'the control: the installs are found');
+    for (const i of found) assert.ok(i.bare, `${i.job} installs ${i.name} with --no-install-recommends`);
+  });
+
+  test('never in a job that builds, tests or releases what ships, nor in ordinary CI', () => {
+    const installing = new Set(installs().map((i) => i.job));
+    assert.ok(installing.size > 0, 'the control: the installs are found');
+    for (const f of workflowFiles()) {
+      const file = f.replace('.github/workflows/', '');
+      for (const [job, lines] of Object.entries(jobs(read(f)))) {
+        const SHIPS = /npm run build|npm test|gh release|git archive/;
+        const builds = runCommands(lines.join('\n')).some((r) => SHIPS.test(r));
+        if (builds || file === 'ci.yml') assert.ok(!installing.has(`${file} ${job}`), `${file} ${job}`);
+      }
+    }
   });
 });

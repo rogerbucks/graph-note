@@ -88,6 +88,13 @@ describe('a tampered copy fails the check', () => {
     ]);
   });
 
+  test('a test may name a folder, ending in a slash, as the benchmarks are; it must be there too', () => {
+    assert.ok(real().includes("file: 'scripts/benchmarks/'"), 'the copy names a folder');
+    const gone = auditRequirements(real(), { exists: (rel) => rel !== 'scripts/benchmarks/' && exists(rel) });
+    assert.deepEqual(kinds(gone, 'missing-file'), ['test_benchmarks']);
+    assert.match(gone.find((p) => p.kind === 'missing-file').message, /scripts\/benchmarks\//);
+  });
+
   test('a test kept outside the repository names no file here, and is not looked for', () => {
     const problems = auditRequirements(real(), { exists: (rel) => exists(rel) });
     assert.deepEqual(kinds(problems, 'missing-file'), []);

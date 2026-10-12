@@ -49,5 +49,18 @@
       "licence": "MPL-2.0",
       "reason": "Weak copyleft at the file level, applying only to its own files if modified and distributed. Part of the Obsidian review rules; run at lint time, never bundled or modified."
     }
+  },
+  "ciOnlyTools": {
+    "about": "The one allowance for a GPL tool (spec §13, build_tool_licences): a build tool that is not shipped should carry a licence on the allow-list, and a GPL tool is allowed only where it runs in CI alone and is never shipped. Each is installed by the CI runner's package manager in the jobs named, and in the developer-only images named (a container for counting on one's own machine, never shipped or published), never by npm, never in node_modules, and never in the job that builds what a release ships; test/licences.test.js holds that.",
+    "tools": {
+      "valgrind": {
+        "licence": "GPL-3.0",
+        "licenceSource": "https://valgrind.org/docs/manual/manual-intro.html",
+        "installedBy": "sudo apt-get install -y --no-install-recommends valgrind",
+        "jobs": ["quality-baseline.yml measure", "release-check.yml quality", "release.yml quality"],
+        "images": ["docker/benchmarks.Dockerfile"],
+        "reason": "Its Cachegrind counts the instructions the benchmarks take (scripts/instruction-counts.mjs). Running a GPL program is unrestricted (GPLv3 §2), the counts it writes are not a work covered by it, and nothing of it is copied, linked or shipped."
+      }
+    }
   }
 }
