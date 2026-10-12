@@ -11,6 +11,11 @@ import { join } from 'node:path';
 import { METRICS, compare, acceptedProblems, baselineProblems, compareWithRef } from '../scripts/quality-check.mjs';
 import { block, read, readJSON, ROOT, jobs, permissionValues, runCommands, stripComment } from './repository/repo.js';
 
+/** The environment of a spawned check outside CI: whatever runs this test, GITHUB_ACTIONS is not set for the child. */
+const outsideCi = () => {
+  const { GITHUB_ACTIONS: _ci, ...env } = process.env;
+  return env;
+};
 const baseline = () => readJSON('quality/baseline.json');
 const changed = (changes, machine) => {
   const copy = structuredClone(baseline());
@@ -141,6 +146,7 @@ describe('a baseline committed worse than its parent’s', () => {
     const r = spawnSync(process.execPath, ['scripts/quality-check.mjs', '--baseline-since', 'HEAD'], {
       cwd: ROOT,
       encoding: 'utf8',
+      env: outsideCi(),
     });
     assert.equal(r.status, 0, r.stdout + r.stderr);
     assert.match(r.stdout, /baseline is no worse than HEAD\b/);
@@ -189,7 +195,11 @@ describe('timings on another machine than the baseline’s', () => {
     const machine = { ...baseline().machine, node_major: baseline().machine.node_major + 1 };
     const slow = changed({ suite_seconds: base().suite_seconds * 3 }, machine);
     writeFileSync(file, JSON.stringify({ ...slow, details: {} }));
-    const r = spawnSync(process.execPath, ['scripts/quality-check.mjs', file], { cwd: ROOT, encoding: 'utf8' });
+    const r = spawnSync(process.execPath, ['scripts/quality-check.mjs', file], {
+      cwd: ROOT,
+      encoding: 'utf8',
+      env: outsideCi(),
+    });
     assert.equal(r.status, 0, r.stderr);
     assert.match(r.stderr, /warning: suite_seconds/);
   });
