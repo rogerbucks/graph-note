@@ -50,7 +50,7 @@ async function card(env, note) {
   return { el, ms: used() - t };
 }
 
-/** Runs `fn` with the plugin loaded,Workers as `workers` installs them (none when null), and its limits changed. */
+/** Runs `fn` with the plugin loaded, Workers as `workers` installs them (none when null), and its limits changed. */
 async function withPlugin(workers, limits, fn) {
   const installed = workers && installWorkers(workers);
   const env = await load();
