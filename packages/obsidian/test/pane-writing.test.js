@@ -12,24 +12,34 @@ before(() => build());
 /** Lets every promise already settled run its callbacks: the write the pane starts from its timer. */
 const flush = () => new Promise((r) => setImmediate(r));
 
+/** The processor time this process has used so far, every thread of it, in ms. */
+function used() {
+  const { user, system } = process.cpuUsage();
+  return (user + system) / 1000;
+}
+
 describe('writing to the note', () => {
   test('what is typed reaches the note within about a third of a second', async (t) => {
     const env = await open();
     try {
-      // counted on the test's own clock, never the machine's: the window's timers are the test's fake ones, and the clock
-      // is moved on a millisecond at a time, so the third of a second is the wait the pane sets itself before writing,
-      // however slowly a busy machine runs. Timed by the wall clock, even against a timer set beside the pane's, a loaded
-      // run of the whole suite failed it now and then (the 0.4.1 release's quality run, 11 Oct 2026)
+      // the wait the pane sets itself, counted on the test's own clock, plus the work of typing and writing, counted in
+      // processor time: what a person waits for is both, so both together are held to the third of a second. The fake
+      // clock takes no real time, so the processor time from typing to the note changing is the work alone, however
+      // slowly a busy machine runs it. Timed by the wall clock, even against a timer set beside the pane's, a loaded run
+      // of the whole suite failed it now and then (12 Oct 2026); on the fake clock alone, a slow write passed (the
+      // review of #109)
       t.mock.timers.enable({ apis: ['setTimeout'] });
       Object.assign(env.doc.defaultView, { setTimeout, clearTimeout });
       const typed = READER + ",\n(price:Reason {title: 'Costs more'})";
+      const started = used();
       type(env.el, typed);
       let ms = 0;
       for (; note(env) === NOTE && ms < 1000; ms++) {
         t.mock.timers.tick(1);
         await flush();
       }
-      assert.ok(ms <= 350, `reached the note after ${ms} ms of the pane's own timers`);
+      const work = used() - started;
+      assert.ok(ms + work <= 350, `${ms} ms of the pane's own wait, and ${work.toFixed(0)} ms of processor time`);
       assert.equal(note(env), NOTE.replace(READER, typed));
     } finally {
       env.uninstall();
