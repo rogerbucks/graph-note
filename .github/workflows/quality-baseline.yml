@@ -1,8 +1,9 @@
 name: Quality baseline
 
 # Run by hand. Measures the quality metrics on the CI runner (Linux, Node 24) and uploads the result, so it can be
-# committed as quality/baseline.json by a normal pull request. Timings are only held against a baseline measured on the
-# same operating system and Node major; until then they warn. The job only reads.
+# committed as quality/baseline.json by a normal pull request. The benchmarks' instruction counts are held only against
+# counts from the same machine; until then they warn. It also counts the benchmarks three times over, so the spread
+# between runs, which the instruction counts' tolerance must be wider than, is measured where they are. The job only reads.
 on:
   workflow_dispatch:
 
@@ -23,8 +24,15 @@ jobs:
           node-version: 24
       - run: npm ci
       - run: npm audit signatures
+      # Valgrind (GPL-3.0) is installed in this job alone and never shipped: licences/bundled.json, ciOnlyTools
+      - name: Install Valgrind, whose Cachegrind counts the benchmarks' instructions
+        run: sudo apt-get update && sudo apt-get install -y valgrind
       - run: node scripts/quality-metrics.mjs --out quality/metrics.json
+      - name: Count the benchmarks three times, for the spread between runs
+        run: node scripts/instruction-counts.mjs --runs 3 --out quality/instruction-spread.json
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: quality-metrics
-          path: quality/metrics.json
+          path: |
+            quality/metrics.json
+            quality/instruction-spread.json

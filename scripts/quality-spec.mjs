@@ -1,12 +1,34 @@
 // The quality metrics, declared (spec §12, quality_ratchet): each one's name, which way is better, and how much noise it
 // tolerates before a worse figure counts. Measured by quality-metrics.mjs, compared by quality-check.mjs.
 
+/** The instruction-count benchmarks, by name (scripts/benchmarks/index.mjs; a test holds the two lists the same). */
+export const BENCHMARK_NAMES = ['draw_fifty', 'reading_limits', 'layout_refusals', 'naming', 'keystroke'];
+
+/**
+ * How much an instruction count may grow with no reason recorded: 5%. Cachegrind counts the same code alike from run to
+ * run; what varies is the little a JIT and a collector do differently. Until the release's runner has measured its own
+ * spread (the "Quality baseline" workflow counts three runs), this rests on a proxy: the same processes, with the same
+ * flags, counted three times by Apple silicon's hardware counter, which also counts the kernel's share, moved a metric
+ * (each case less its setup) by at most 3.3% (12 Oct 2026).
+ */
+export const INSTRUCTION_TOLERANCE = 0.05;
+
+const instructionMetric = {
+  better: 'lower',
+  tolerance: INSTRUCTION_TOLERANCE,
+  slack: 0,
+  unit: 'instructions',
+  instructions: true,
+};
+
 /**
  * Every metric: `better` is the direction that is an improvement; `tolerance` the share of the baseline a noisy metric may
  * worsen by with no reason recorded; `slack` an absolute amount it may worsen by, for a figure too small for a share to
  * mean anything; `scaled` marks a timing, whose baseline is stretched by how much slower this machine measured itself
- * than the baseline's did; `fast` marks the metrics that are measured in a moment, from the files alone; `waivable: false`
- * marks one no recorded reason can excuse.
+ * than the baseline's did; `warnOnly` one that is reported when worse, never failed on; `instructions` a count of the
+ * benchmarks' instructions, measured only where Valgrind runs and held only against a baseline counted on the same
+ * machine; `most` a figure no metric may pass, baseline or none; `fast` marks the metrics that are measured in a moment,
+ * from the files alone; `waivable: false` marks one no recorded reason can excuse.
  */
 export const METRICS = {
   max_source_lines: { better: 'lower', tolerance: 0, slack: 0, unit: 'lines', fast: true },
@@ -18,8 +40,11 @@ export const METRICS = {
   secrets_found: { better: 'lower', tolerance: 0, slack: 0, unit: 'secrets', fast: true, waivable: false },
   bundle_bytes: { better: 'lower', tolerance: 0.03, slack: 0, unit: 'bytes' },
   bundle_bytes_without_viz: { better: 'lower', tolerance: 0.03, slack: 0, unit: 'bytes' },
-  draw_ms: { better: 'lower', tolerance: 0.25, slack: 0, unit: 'ms', scaled: true },
-  suite_seconds: { better: 'lower', tolerance: 0.3, slack: 0, unit: 's', scaled: true },
+  ...Object.fromEntries(BENCHMARK_NAMES.map((name) => [`instructions_${name}`, instructionMetric])),
+  // a benchmark's claim, such as linear and not square, that does not hold: never, whatever the baseline says
+  instruction_claims_broken: { ...instructionMetric, tolerance: 0, unit: 'claims', most: 0, waivable: false },
+  // test duration is reported, never enforced (Roger, 12 Oct 2026): a test asserts the work done, never the time taken
+  suite_seconds: { better: 'lower', tolerance: 0.3, slack: 0, unit: 's', scaled: true, warnOnly: true },
   flaky_tests: { better: 'lower', tolerance: 0, slack: 0, unit: 'tests' },
   quiet_run_bytes: { better: 'lower', tolerance: 0, slack: 20, unit: 'bytes' },
   coverage_percent: { better: 'higher', tolerance: 0, slack: 1, unit: '%' },

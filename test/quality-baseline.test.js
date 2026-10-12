@@ -27,7 +27,6 @@ const entry = (name, from, to, extra = {}) => ({
   date: '2026-10-10',
   ...extra,
 });
-const LINUX_24 = { os: 'linux', node_major: 24 };
 
 describe('the committed baseline', () => {
   test('is whole: every metric, no test left out, and the machine it was measured on', () => {
@@ -64,7 +63,8 @@ describe('the committed baseline', () => {
   });
 
   test('every metric but the machine’s speed must be in it, as the spec declares them', () => {
-    const declared = Object.keys(METRICS).filter((n) => !METRICS[n].informational);
+    // the instruction counts all, or none until the first run that counts them is committed (quality-instructions.test.js)
+    const declared = Object.keys(METRICS).filter((n) => !METRICS[n].informational && !METRICS[n].instructions);
     for (const name of declared) assert.equal(typeof baseline().metrics[name], 'number', name);
   });
 });
@@ -179,63 +179,19 @@ describe('a baseline committed worse than its parent’s', () => {
   });
 });
 
+// No timing is enforced on any machine: test duration only warns, and the work is held by the benchmarks' instruction
+// counts, which are held only against counts from the same machine (quality-instructions.test.js).
 describe('timings on another machine than the baseline’s', () => {
   const base = () => baseline().metrics;
 
-  test('only warn, when the operating system or the Node major differs; a count still fails', () => {
-    const other = baseline().machine.os === 'linux' ? 'darwin' : 'linux';
-    for (const machine of [
-      { ...baseline().machine, os: other },
-      { ...baseline().machine, node_major: baseline().machine.node_major + 1 },
-    ]) {
-      const slow = changed({ draw_ms: base().draw_ms * 3, suite_seconds: base().suite_seconds * 3 }, machine);
-      const r = compare(baseline(), slow, []);
-      assert.deepEqual(r.failures, []);
-      assert.deepEqual(
-        r.warnings.map((w) => w.metric),
-        ['draw_ms', 'suite_seconds'],
-      );
-      assert.match(r.warnings[0].message, /different machine|another machine/);
-      const bigger = changed({ draw_ms: base().draw_ms * 3, bundle_bytes: base().bundle_bytes * 2 }, machine);
-      assert.deepEqual(failed(compare(baseline(), bigger, [])), ['bundle_bytes']);
-    }
-  });
-
-  test('fail once the machine is the same', () => {
-    const slow = changed({ draw_ms: base().draw_ms * 3 }, baseline().machine);
-    assert.deepEqual(failed(compare(baseline(), slow, [])), ['draw_ms']);
-    assert.deepEqual(compare(baseline(), slow, []).warnings, []);
-  });
-
-  test('a run on the CI runner against a baseline from one: Linux and Node 24 enforce', () => {
-    const ci = { ...structuredClone(baseline()), machine: LINUX_24 };
-    const slow = changed({ draw_ms: base().draw_ms * 3 }, LINUX_24);
-    assert.deepEqual(failed(compare(ci, slow, [])), ['draw_ms']);
-  });
-
-  test('a reason’s figure for a timing is scaled with the baseline, to the speed of the machine measuring', () => {
-    const speedy = { speed_index: base().speed_index * 2 };
-    const value = base().draw_ms * 3.1;
-    const accepted = [entry('draw_ms', base().draw_ms, base().draw_ms * 1.5)];
-    assert.deepEqual(compare(baseline(), changed({ ...speedy, draw_ms: value }), accepted).failures, []);
-    assert.deepEqual(failed(compare(baseline(), changed({ ...speedy, draw_ms: base().draw_ms * 4 }), accepted)), [
-      'draw_ms',
-    ]);
-  });
-
   test('the command warns on stderr and exits 0, naming the timing', () => {
-    const other = baseline().machine.os === 'linux' ? 'darwin' : 'linux';
     const file = join(mkdtempSync(join(tmpdir(), 'quality-')), 'metrics.json');
-    writeFileSync(
-      file,
-      JSON.stringify({
-        ...changed({ draw_ms: base().draw_ms * 3 }, { ...baseline().machine, os: other }),
-        details: {},
-      }),
-    );
+    const machine = { ...baseline().machine, node_major: baseline().machine.node_major + 1 };
+    const slow = changed({ suite_seconds: base().suite_seconds * 3 }, machine);
+    writeFileSync(file, JSON.stringify({ ...slow, details: {} }));
     const r = spawnSync(process.execPath, ['scripts/quality-check.mjs', file], { cwd: ROOT, encoding: 'utf8' });
     assert.equal(r.status, 0, r.stderr);
-    assert.match(r.stderr, /warning: draw_ms/);
+    assert.match(r.stderr, /warning: suite_seconds/);
   });
 });
 
@@ -251,7 +207,7 @@ describe('a baseline measured on the CI runner', () => {
     assert.ok(runs.includes('node scripts/quality-metrics.mjs --out quality/metrics.json'));
     assert.ok(runs.includes('npm ci') && runs.includes('npm audit signatures'));
     assert.match(text, /actions\/upload-artifact@[0-9a-f]{40} # v\d+\.\d+\.\d+/);
-    assert.match(text, /path: quality\/metrics\.json/);
+    assert.match(text, /path: \|\n\s+quality\/metrics\.json\n/);
     assert.match(text, /node-version: 24/);
   });
 });

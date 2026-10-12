@@ -31,23 +31,13 @@ function bannerOf(el) {
   );
 }
 
-/** The processor time this process has used so far, every thread of it, in ms. */
-function used() {
-  const { user, system } = process.cpuUsage();
-  return (user + system) / 1000;
-}
-
-/**
- * The card the plugin makes of a note holding one graph block, as Obsidian asks for it, and the processor time the
- * plugin took to make it, in ms: the test's own setting up, such as finding the block in the note, is not counted.
- */
+/** The card the plugin makes of a note holding one graph block, as Obsidian asks for it. */
 async function card(env, note) {
   const el = env.doc.body.createDiv({ cls: 'block-language-gql' }),
     ctx = fakeContext(note, 0),
     source = note.slice(note.indexOf('\n') + 1, note.lastIndexOf('\n'));
-  const t = used();
   await env.state.processors.get('gql')(source, el, ctx);
-  return { el, ms: used() - t };
+  return el;
 }
 
 /** Runs `fn` with the plugin loaded, Workers as `workers` installs them (none when null), and its limits changed. */
@@ -106,28 +96,14 @@ describe('a graph over a size limit is shown as its text, with a banner saying w
     await withPlugin(null, {}, async (env) => {
       const lines = (n) => Array.from({ length: n }, (_, i) => `(n${i}:Thing {name: 'Thing number ${i} of many'},`);
       const note = fence(`// graph: g\n${lines(12_000).join('\n')}`);
-      // a tenth of it, 1,200 lines, which is under the limits and so is read: what reading costs, on this machine
+      // the control: a tenth of it, 1,200 lines, is under the limits and so is read, not refused
       const tenth = fence(`// graph: g\n${lines(1_200).join('\n')}`);
-      // at once: refusing the whole note costs less processor time than reading a tenth of it, the least of three of
-      // each, so it was never read: reading the whole costs several times the tenth (3 times, read before refusing, on
-      // 12 Oct 2026), and refusing it a twelfth of the tenth. The plugin's card is priced against the plugin's own
-      // reading, the same kind of work, so a machine slower at one is slower at both, and the test's own setting up is
-      // left out of both.
-      // Against a plain pass over the note's characters, a different kind of work, Linux on CI took 20 to 28 passes where
-      // macOS took 5 or 6, and failed the old limit of 20 (CI, 11 Oct 2026). Never the clock, which runs on while a busy
-      // machine runs something else (10 Oct 2026), and never a number of milliseconds: a test asserts the work done, never
-      // the time taken (spec §12, quality_ratchet, 12 Oct 2026). The ratio moves to the instruction-count benchmarks
-      let el,
-        read,
-        took = Infinity,
-        reading = Infinity;
-      for (let k = 0; k < 3; k++) {
-        const whole = await card(env, note);
-        const part = await card(env, tenth);
-        [el, took, read, reading] = [whole.el, Math.min(took, whole.ms), part.el, Math.min(reading, part.ms)];
-      }
-      assert.equal(bannerOf(read), null, 'the tenth is read, not refused');
-      assert.ok(took < reading, `${took.toFixed(1)} ms, against ${reading.toFixed(1)} ms to read a tenth of the note`);
+      // at once, refusing the whole note costing less than reading a tenth of it, is counted in instructions by the
+      // layout_refusals benchmark (scripts/benchmarks/layout-refusals.mjs), as the core reads a note for the card; that
+      // the core never hands a block over the limit to the reader is counted in layout-limits.test.js. A test asserts
+      // the work done, never the time taken (spec §12, quality_ratchet, 12 Oct 2026)
+      const el = await card(env, note);
+      assert.equal(bannerOf(await card(env, tenth)), null, 'the tenth is read, not refused');
       assert.equal(svgOf(el), null);
       assert.match(bannerOf(el).text, /too large to read/i);
       assert.match(bannerOf(el).text, /at most 512 kB/);

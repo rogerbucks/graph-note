@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Measures the code's quality metrics (spec §12, quality_ratchet and slice_end_review): file sizes, a dependency
-// vulnerability scan, a secrets scan, the plugin's bundle size, the time to draw a graph of 50 things, the test suite's
-// duration, its flaky tests and the size of a passing quiet run, and coverage. The result is the metrics JSON that
+// vulnerability scan, a secrets scan, the plugin's bundle size, the work a fixed set of benchmarks takes, counted in CPU
+// instructions (scripts/instruction-counts.mjs, on Linux with Valgrind), the test suite's duration (reported only), its
+// flaky tests and the size of a passing quiet run, and coverage. The result is the metrics JSON that
 // scripts/quality-check.mjs holds against quality/baseline.json, and that the slice-end review reads.
 //
 // Usage:
@@ -121,38 +122,23 @@ export async function measureBundle() {
   };
 }
 
-const median = (xs) => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)];
-
-/** The time to read and draw a graph of 50 things, 70 links, as the core's render path does it (render.test.js). */
-async function measureDraw() {
-  const { readNote } = await import('../packages/core/src/drawing.ts');
-  const [{ loadEngine }, { draw }] = await Promise.all([
-    import('../packages/core/src/engine.ts'),
-    import('../packages/core/src/render.ts'),
-  ]);
-  const engine = await loadEngine();
-  const kinds = ['Question', 'Option', 'Reason', 'Claim', 'Source'],
-    types = ['ANSWERS', 'FAVOURS', 'CITES'];
-  const nodes = Array.from({ length: 50 }, (_, i) => `(n${i}:${kinds[i % 5]} {name: 'Thing ${i}, a few words long'})`);
-  const links = Array.from({ length: 70 }, (_, i) => `(n${i % 50})-[:${types[i % 3]}]->(n${(i * 7 + 3) % 50})`);
-  const block = `// graph: g\n${[...nodes, ...links].join(',\n')}`;
-  const once = () => draw(readNote([block]).graphs.get('g'), engine);
-  once();
-  once(); // warm: the first draws compile the engine's code paths
-  const times = Array.from({ length: 9 }, () => {
-    const t = performance.now();
-    once();
-    return performance.now() - t;
-  });
-  return { metrics: { draw_ms: Math.round(median(times) * 10) / 10 }, details: {} };
+/**
+ * The benchmarks' work, counted in instructions by Cachegrind (scripts/instruction-counts.mjs), never timed; where
+ * Valgrind is not installed, nothing is counted, said in one line.
+ */
+async function measureWork() {
+  const { measureInstructions } = await import('./instruction-counts.mjs');
+  const counted = await measureInstructions();
+  if (!counted.details.instructions.measured) console.error(`instruction counts: ${counted.details.instructions.why}`);
+  return counted;
 }
 
 /**
- * Everything: the quick metrics, the audit, the bundle, the drawing, the machine's speed (by the wall clock, as the
- * timings are), and the suite (twice).
+ * Everything: the quick metrics, the audit, the bundle, the benchmarks' instructions, the machine's speed (by the wall
+ * clock, as the suite's duration is), and the suite (twice).
  */
 export async function measureAll() {
-  const parts = [measureFast(), measureAudit(), await measureBundle(), await measureDraw(), measureSuite(ROOT)];
+  const parts = [measureFast(), measureAudit(), await measureBundle(), await measureWork(), measureSuite(ROOT)];
   const metrics = Object.assign({}, ...parts.map((p) => p.metrics), { speed_index: speedIndex() });
   const details = Object.assign({}, ...parts.map((p) => p.details));
   return { metrics, details };
@@ -170,7 +156,7 @@ async function main(argv) {
     about: ABOUT,
     measured: new Date().toISOString().slice(0, 10),
     node: process.version,
-    // timings are only held against a baseline measured on the same operating system and Node major
+    // the machine measured on: instruction counts say their own, with its processor and Valgrind, in their details
     machine: { os: process.platform, node_major: Number(process.versions.node.split('.')[0]) },
     metrics: Object.fromEntries(
       Object.keys(METRICS)

@@ -158,19 +158,22 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/device-check-notes.test.js` — the device checklist numbers every item, the test vault holds one note for each item after Before in `Device checks/`, the note's checklist line is the item's words, each note's graph blocks read as it says they do (the repository's reader and checker, and `parseView` for a view), and the index lists the notes in order (editor spec §3, tried first in a test vault).
 - `test/device-check-quotes.test.js` — what a device check note quotes from Obsidian's screen (a read-back, a label, the tap text of an estimate, a box's details, an export's footer and file name, the conversion notice) is computed from the note's own graph blocks with the real functions and matches exactly; the notes' generator scripts and filler set up the case they describe (editor spec §3).
 - `test/engine-version.test.js` — the Graphviz version is read from the engine, named in the notices, and checked against published advisories.
+- `test/instruction-counts.test.js` — the benchmarks' work counted in CPU instructions: Cachegrind's output read, each case counted less its setup, the claims checked, nothing counted and said so where Valgrind is not installed, and every benchmark case still doing its work.
 - `test/ignore-entries.test.js` — an entry of `.ignore` that git ignores as build output may be missing in a fresh checkout, and any other entry that names a file must exist, so a misspelt path is caught.
-- `test/licences.test.js` — licences through the whole build chain.
+- `test/licences.test.js` — licences through the whole build chain, and the one allowance for a GPL tool run in CI alone and never shipped.
 - `test/offline.test.js` — the bundled engine makes no network request.
 - `test/policy.test.js` — the plugin-store files, supply-chain pins and least-privilege CI.
 - `test/public-readiness.test.js` — fit to be public and kept so: a clean history, a fresh clone set up from the README alone, and GitHub settings that let only a collaborator contribute.
 - `test/quality-metrics.test.js` — the quality metrics are held to a committed baseline, and a worse one fails without a recorded reason.
 - `test/quality-baseline.test.js` — the baseline cannot be loosened without a reason, is whole, and says which machine measured it.
+- `test/quality-instructions.test.js` — the instruction counts in the ratchet: one metric for each benchmark, with a small tolerance, held only against counts from the same machine; not measured where Valgrind cannot run, which fails only on Linux; recorded and printed until the baseline holds them; a claim that does not hold failing always; test duration only warning.
 - `test/quiet-reporter.test.js` — the quiet test run when a failure's details cannot be passed on, as when an assertion holds a function: every failure still reported, the run failed, never crashed.
 - `test/run-ceiling.test.js` — every run of the npm test commands, in CI too, is stopped with one line at a memory or time ceiling, before a runaway test can exhaust the machine; a run within both passes through unchanged.
 - `test/requirements.test.js` — the generated requirements copy: started requirements proved, tests where they say.
 - `test/slice-board-style.test.js` — the slice board's stylesheet: colour tokens that agree in light and dark, the altitude switch by CSS alone, a layout that holds at 400px, and the source written one rule and one declaration to a line.
 - `test/slice-board.test.js` — the slice board: a CSS-only HTML page of how far the slice under way is proved, from the requirements copy and, optionally, the open pull requests.
 - `test/speed-index.test.js` — the one measure of a machine's speed, which the quality metrics record and scale their timings by: fixed plain work, the least of seven runs.
+- `test/timed-assertions.test.js` — a test asserts the work done, never the time taken: no JavaScript test or its support asserts a span of elapsed time; a polling deadline, mock timers and a clock handed to the code tested are allowed.
 - `test/test-vault.test.js` — the test vault: dummy notes tied to requirements, nothing Obsidian writes committed, each session clean.
 - `test/tests-first.test.js` — every test is seen to fail before its code, replayed commit by commit: how a replay judges a new test.
 - `test/tests-first-command.test.js` — that replay's command line, run as CI and a person run it: `--check`, `--excuse` and `--migrate`.
@@ -193,13 +196,31 @@ These test behaviour across modules, or the repository itself, so they are named
 ## The quality ratchet
 
 - **Every release measures the code** (spec §12): `node scripts/quality-metrics.mjs --out quality/metrics.json` writes
-  file sizes, an `npm audit` count, a secrets scan, the bundle's size, the time to draw 50 things, the suite's duration,
-  its flaky tests, the size of a passing quiet run and coverage. It runs the suite twice, so it is the release's job.
+  file sizes, an `npm audit` count, a secrets scan, the bundle's size, the work a fixed set of benchmarks takes, counted
+  in CPU instructions and never in elapsed time, the suite's duration, its flaky tests, the size of a passing quiet run
+  and coverage. It runs the suite twice, so it is the release's job.
 - **`quality/baseline.json` is what each is held to,** by `node scripts/quality-check.mjs quality/metrics.json`. A metric
   that got worse fails the release, unless `quality/accepted.json` gives a reason for that change: the metric, its
-  baseline value (`from`), the value it may reach (`to`), why, and the day. Timings carry a tolerance and are scaled by
-  how fast the machine measured itself; counts carry none. The quick ones (file sizes, secrets) also run in CI and in
-  `test/quality-metrics.test.js`.
+  baseline value (`from`), the value it may reach (`to`), why, and the day. Counts of files, findings and bytes carry no
+  tolerance. Test duration is reported as a warning only, scaled by how fast the machine measured itself, never
+  enforced. The quick ones (file sizes, secrets) also run in CI and in `test/quality-metrics.test.js`.
+- **Speed is the work the benchmarks take, in instructions** (Roger, 12 Oct 2026). `scripts/benchmarks/` holds a small,
+  fixed set, each a deterministic piece of work with the claims it proves: 50 things drawn (`draw_fifty`, within half a
+  second's instructions on a phone), the worst reads at the size limits (`reading_limits`, within the budget of reading
+  again), the refusals of `layout_contained` (`layout_refusals`), naming thousands of things linearly (`naming`), and a
+  keystroke reaching the note (`keystroke`, read-back costing less than reading). A claim between two sizes or two
+  cases is a ratio of instruction counts, so it is exact on every run. `node scripts/instruction-counts.mjs` runs each
+  case, and its setup alone, in a process of its own under Valgrind's Cachegrind (`--cache-sim=no`), with Node pinned
+  to one thread, a fixed collector schedule and one random seed, and keeps each case less its setup. It runs on Linux
+  only, in the release, its dry run and the "Quality baseline" workflow, which install Valgrind; it does not run on
+  Apple-silicon Macs. Where Valgrind is missing it says so in one line and counts nothing: on any machine but Linux that
+  only warns, and the fast check never asks. A count may grow by 5% before it fails (`INSTRUCTION_TOLERANCE`), held
+  only against counts from the same machine (operating system, processor and Node major); a claim that does not hold
+  always fails, and no reason can waive it. Until the baseline holds the counts, a run that counts them prints them,
+  with the machine, for a follow-up pull request to commit, and fails only on the other metrics.
+- **Valgrind is GPL-3.0, allowed as a tool run in CI alone and never shipped** (spec §13, build_tool_licences):
+  `licences/bundled.json`'s `ciOnlyTools` names it, and `test/licences.test.js` holds that nothing bundled, nothing
+  inside what is bundled and nothing in `node_modules` can be on that list, and that only the jobs it names install it.
 - **To move the baseline,** after a change is wanted, run the metrics script with `--out quality/baseline.json` on a
   passing suite, and commit it. The baseline is held against its own earlier copy (`quality-check.mjs --baseline-since
   <ref>`, run in CI and in the release): a metric that got worse in it needs an entry in `accepted.json` too, a count of
@@ -211,11 +232,13 @@ These test behaviour across modules, or the repository itself, so they are named
 - **A test asserts the work done, never the time taken** (Roger, 12 Oct 2026). The suite's second run has coverage on,
   which slows the core's code unevenly, on a runner slower than a desktop, so no number of milliseconds holds there. A
   test counts the work where the requirement is work (a text never read, a block read again only within its budget),
-  with a control showing the count sees the work when it is done. Speed itself is measured by instruction counts in a
-  separate benchmark job; the ratios of processor time still in the tests move there.
-- **Timings are enforced only on the machine the baseline came from** (same operating system and Node major, recorded in
-  it). Elsewhere they warn. To get a baseline from the CI runner, run the "Quality baseline" workflow by hand, download
-  its `quality-metrics` artifact, and commit it as `quality/baseline.json` in a normal pull request.
+  with a control showing the count sees the work when it is done. Speed itself is the benchmarks' instruction counts;
+  `scripts/timed-assertions.mjs`, run by `test/timed-assertions.test.js`, fails any assertion on a span of elapsed time
+  (a polling deadline in a loop that awaits, and Node's mock timers, are allowed).
+- **A baseline from the CI runner:** run the "Quality baseline" workflow by hand, download its `quality-metrics`
+  artifact, and commit its `metrics.json` as `quality/baseline.json` in a normal pull request. The same artifact's
+  `instruction-spread.json` counts every benchmark three times: its `largest_spread` is how far a count moved between
+  runs there, which the tolerance must stay well above.
 - **The Graphviz inside the engine is watched** (spec §13): `node scripts/engine-version.mjs` reads its version from the
   engine, checks the notices name it, and checks `quality/advisories.json` offline (it warns when the cache was last
   checked over 14 days ago). Only `--refresh` and `--watch` ask: OSV and NVD for Graphviz, merged, and OSV for the
