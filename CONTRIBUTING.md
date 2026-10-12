@@ -214,7 +214,8 @@ These test behaviour across modules, or the repository itself, so they are named
   setup alone, in a process of its own under Valgrind's Cachegrind (`--cache-sim=no`), as many at once as there are
   cores, with Node pinned to one thread, V8's predictable mode, a fixed collector schedule and one random seed, and
   keeps each case less its setup; a case that counts nothing beyond its setup fails the run. It runs on Linux only, in
-  the release, its dry run and the "Quality baseline" workflow, on `ubuntu-24.04`, which install Valgrind; it does not
+  the release, its dry run and the "Quality baseline" workflow, on `ubuntu-24.04` with Node pinned exactly (a patch
+  can move the counts; none of them may set `GITHUB_ACTIONS`), which install Valgrind; it does not
   run on Apple-silicon Macs. Where Valgrind is missing it says so in one line and counts nothing: on any machine but
   Linux that only warns, and the fast check never asks. A count may grow by 5% before it fails
   (`INSTRUCTION_TOLERANCE`), held only against counts from the same machine (operating system, processor, Node major
@@ -225,8 +226,9 @@ These test behaviour across modules, or the repository itself, so they are named
 - **Counting on your own machine:** `npm run bench:local` (Docker running) builds `docker/benchmarks.Dockerfile`, a
   Linux image with Node 24 and Valgrind, its base pinned by digest, and runs `scripts/instruction-counts.mjs` in it with
   any of its arguments (`-- --only naming`, `-- --runs 3`). It is for counts before and after a change on one machine,
-  as Valgrind cannot run on Apple-silicon macOS. The repository is mounted, not copied, and `node_modules` is the
-  container's own volume, so the host's is untouched. On a Mac it counts ARM Linux's instructions: they are never
+  as Valgrind cannot run on Apple-silicon macOS. The repository is mounted, not copied, and `node_modules` is a
+  container volume of each checkout's own, so the host's is untouched and worktrees never share one. The base image's
+  age is its digest's own creation date, recorded in the Dockerfile and held to 7 days before it was pinned. On a Mac it counts ARM Linux's instructions: they are never
   compared with CI's x86-64 baseline. A full count takes about two and a half minutes on a 10-core Mac.
 - **Valgrind is GPL-3.0, allowed as a tool run in CI alone and never shipped** (spec §13, build_tool_licences):
   `licences/bundled.json`'s `ciOnlyTools` names it, and `test/licences.test.js` holds that nothing bundled, nothing

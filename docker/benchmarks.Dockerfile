@@ -4,7 +4,9 @@
 # ARM Linux, whose instructions are not CI's. The repository is mounted, never copied in, and node_modules is the
 # container's own volume, so the host's is never touched: scripts/bench-local.mjs (npm run bench:local) builds and runs it.
 #
-# node:24.20.0-trixie-slim, published 27 Aug 2026, pinned by its digest on 12 Oct 2026, over 7 days later.
+# node:24.20.0-trixie-slim, pinned by its digest on 2026-10-12. The digest's own images were created by
+# 2026-08-27T17:10:35Z (the latest of its platforms, read with `docker buildx imagetools inspect <image@digest>`), over
+# 7 days before it was pinned.
 FROM node:24.20.0-trixie-slim@sha256:50c3b2f6988dfc307b86e5301d69611af31f4789bdf232863b07d3b02fe55ae0
 
 # Valgrind, GPL-3.0, a tool run here alone and never shipped (licences/bundled.json, ciOnlyTools), at trixie's version

@@ -18,8 +18,13 @@ import { fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 /** The image's Dockerfile, from the repository's root. */
 export const DOCKERFILE = 'docker/benchmarks.Dockerfile';
-/** The volume the container's node_modules is kept in, apart from the host's. */
-export const MODULES_VOLUME = 'graph-note-benchmarks-node-modules';
+/**
+ * The volume the container's node_modules is kept in, apart from the host's: one for each checkout, named for a short
+ * digest of its root, so two worktrees on different lockfiles never install over each other.
+ */
+export function modulesVolume(root = ROOT) {
+  return `graph-note-benchmarks-node-modules-${createHash('sha256').update(root).digest('hex').slice(0, 12)}`;
+}
 
 /** The image's tag: named for what it is, and for its Dockerfile's content, so a changed Dockerfile builds afresh. */
 export function imageTag(root = ROOT) {
@@ -47,7 +52,7 @@ export function runArgs(tag, args, root = ROOT) {
     '--mount',
     `type=bind,source=${root},target=/repo`,
     '--mount',
-    `type=volume,source=${MODULES_VOLUME},target=/repo/node_modules`,
+    `type=volume,source=${modulesVolume(root)},target=/repo/node_modules`,
     '--workdir',
     '/repo',
     tag,

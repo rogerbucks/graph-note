@@ -11,7 +11,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { METRICS, acceptedProblems, baselineProblems, compare, toRecordText } from '../scripts/quality-check.mjs';
 import { BENCHMARK_NAMES, INSTRUCTION_TOLERANCE } from '../scripts/quality-spec.mjs';
-import { read, readJSON, ROOT, jobs, runCommands } from './repository/repo.js';
+import { read, readJSON, ROOT, jobs, runCommands, stripComment, workflowFiles } from './repository/repo.js';
 
 const COUNTS = BENCHMARK_NAMES.map((n) => `instructions_${n}`);
 const CLAIMS = 'instruction_claims_broken';
@@ -266,6 +266,38 @@ describe('the workflows that count them', () => {
       assert.match(lines, /^ {4}runs-on: ubuntu-24\.04$/m, `${file} ${job}`);
       assert.match(lines, /^ {4}timeout-minutes: \d+$/m, `${file} ${job}`);
     }
+  });
+
+  test('no workflow clears or sets GITHUB_ACTIONS, so the check always knows it runs in CI; the release checks last', () => {
+    // anywhere a workflow could set it: env at the top, the job or the step, or a command's own prefix or unset
+    const touches = (text) =>
+      text
+        .split('\n')
+        .map(stripComment)
+        .some((l) => /\bGITHUB_ACTIONS\b/.test(l));
+    for (const planted of [
+      'env:\n  GITHUB_ACTIONS: ""',
+      'jobs:\n  quality:\n    env:\n      GITHUB_ACTIONS: false',
+      '      - env:\n          GITHUB_ACTIONS: ""\n        run: node scripts/quality-check.mjs quality/metrics.json',
+      '        run: GITHUB_ACTIONS= node scripts/quality-check.mjs quality/metrics.json',
+      '        run: unset GITHUB_ACTIONS && node scripts/quality-check.mjs quality/metrics.json',
+      '        run: env -u GITHUB_ACTIONS node scripts/quality-check.mjs quality/metrics.json',
+    ])
+      assert.ok(touches(planted), planted);
+    assert.equal(touches('      # GITHUB_ACTIONS is set by the runner'), false, 'a comment sets nothing');
+    for (const f of workflowFiles()) assert.equal(touches(read(f)), false, `${f} touches GITHUB_ACTIONS`);
+    for (const file of ['release.yml', 'release-check.yml'])
+      assert.equal(commands(file, 'quality').at(-1), 'node scripts/quality-check.mjs quality/metrics.json', file);
+  });
+
+  test('every counting job pins Node exactly, one version for all, of the major the counts are held to', () => {
+    const versions = [
+      ['release.yml', 'quality'],
+      ['release-check.yml', 'quality'],
+      ['quality-baseline.yml', 'measure'],
+    ].map(([file, job]) => /node-version: (\S+)/.exec(jobs(read(`.github/workflows/${file}`))[job].join('\n'))?.[1]);
+    for (const v of versions) assert.match(v ?? '', /^24\.\d+\.\d+$/, 'an exact version, never 24 alone');
+    assert.equal(new Set(versions).size, 1, versions.join(', '));
   });
 
   test('the counts and their spread are uploaded whatever the steps before gave', () => {

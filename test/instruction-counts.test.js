@@ -19,7 +19,7 @@ import {
 } from '../scripts/instruction-counts.mjs';
 import { BENCHMARK_NAMES } from '../scripts/quality-spec.mjs';
 import { BENCHMARKS } from '../scripts/benchmarks/index.mjs';
-import { DOCKERFILE, MODULES_VOLUME, imageTag, runArgs } from '../scripts/bench-local.mjs';
+import { DOCKERFILE, imageTag, modulesVolume, runArgs } from '../scripts/bench-local.mjs';
 import { read, readJSON, ROOT } from './repository/repo.js';
 
 const fixture = (name) => read(`test/instruction-counts/cachegrind.out.${name}`);
@@ -207,6 +207,18 @@ describe('counting the benchmarks', () => {
   );
 });
 
+/**
+ * What is wrong with the age a Dockerfile records for its pinned base, or null: the creation of the digest's own
+ * images, as `docker buildx imagetools inspect` gives it, at least 7 days before the day it was pinned.
+ */
+function ageProblem(text) {
+  const created = /were created by\s*\n?#?\s*(\d{4}-\d\d-\d\dT[\d:]+Z)/.exec(text)?.[1];
+  const pinned = /pinned by its digest on (\d{4}-\d\d-\d\d)/.exec(text)?.[1];
+  if (!created || !pinned) return 'the image must record its digest’s creation and the day it was pinned';
+  const days = (Date.parse(`${pinned}T00:00:00Z`) - Date.parse(created)) / 86_400_000;
+  return days >= 7 ? null : `the digest was created ${days.toFixed(1)} days before it was pinned, under 7`;
+}
+
 describe('counting on one’s own machine, in a container', () => {
   const dockerfile = () => read(DOCKERFILE);
 
@@ -216,11 +228,17 @@ describe('counting on one’s own machine, in a container', () => {
       .filter((l) => /^FROM\s/.test(l));
     assert.equal(from.length, 1);
     assert.match(from[0], /^FROM node:24\.[\d.]+-[a-z]+-slim@sha256:[0-9a-f]{64}$/);
-    const dated = /published (\d+ \w+ \d{4}), pinned by its digest on (\d+ \w+ \d{4})/.exec(dockerfile());
-    assert.ok(dated, 'the image says when it was published and when it was pinned');
-    const days = (Date.parse(dated[2]) - Date.parse(dated[1])) / 86_400_000;
-    assert.ok(days >= 7, `${days} days between publishing and pinning`);
+    assert.ok(ageProblem(dockerfile()) === null, ageProblem(dockerfile()));
     assert.doesNotMatch(dockerfile(), /^(COPY|ADD)\s/m, 'the repository is mounted, never copied');
+  });
+
+  test('the age held is the pinned digest’s own images’ creation, never a tag’s release date', () => {
+    const at = (created, pinned) =>
+      `# node:24.20.0-trixie-slim, pinned by its digest on ${pinned}. The digest's own images were created by\n# ${created} (the latest of its platforms)`;
+    assert.equal(ageProblem(at('2026-08-27T17:10:35Z', '2026-10-12')), null);
+    assert.match(ageProblem(at('2026-10-06T05:40:00Z', '2026-10-12')), /5\.\d+ days/, 'a digest younger than 7 days');
+    const tagOnly = '# node:24.20.0-trixie-slim, published 27 Aug 2026, pinned by its digest on 12 Oct 2026';
+    assert.match(ageProblem(tagOnly), /creation/, 'a tag’s release date is not the digest’s age');
   });
 
   test('npm run bench:local builds it when needed and counts in it, the repository mounted and node_modules its own', () => {
@@ -228,9 +246,18 @@ describe('counting on one’s own machine, in a container', () => {
     assert.match(imageTag(), /^graph-note-benchmarks:[0-9a-f]{12}$/);
     const args = runArgs('graph-note-benchmarks:x', ['--only', 'naming'], '/here');
     assert.ok(args.includes('type=bind,source=/here,target=/repo'));
-    assert.ok(args.includes(`type=volume,source=${MODULES_VOLUME},target=/repo/node_modules`), 'not the host’s');
+    const volume = `type=volume,source=${modulesVolume('/here')},target=/repo/node_modules`;
+    assert.ok(args.includes(volume), 'not the host’s');
     assert.deepEqual(args.slice(-2), ['--only', 'naming'], 'the counts’ own arguments, passed through');
     assert.match(args.join(' '), /npm ci .*node scripts\/instruction-counts\.mjs "\$@"/);
+  });
+
+  test('each checkout keeps its node_modules in a volume of its own, so worktrees never install over each other', () => {
+    assert.match(modulesVolume('/a/graph-note'), /^graph-note-benchmarks-node-modules-[0-9a-f]{12}$/);
+    assert.equal(modulesVolume('/a/graph-note'), modulesVolume('/a/graph-note'), 'the same checkout, the same volume');
+    assert.notEqual(modulesVolume('/a/graph-note'), modulesVolume('/a/graph-note/.claude/worktrees/b'));
+    const mounted = (root) => runArgs('t', [], root).find((a) => a.startsWith('type=volume'));
+    assert.notEqual(mounted('/a/graph-note'), mounted('/a/other'));
   });
 
   test('without Docker, it says so in one line, and counts nothing', () => {
