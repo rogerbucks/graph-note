@@ -1,8 +1,9 @@
-// Timing for the core's speed tests (spec §9, §11): processor time, every thread of this process, never the clock. The
-// clock runs on while a busy machine runs something else: four whole suites at once, with a load average of 176 on 10
-// cores, slowed a step by the clock up to 60 times against a plain pass measured beside it (10 Oct 2026). Each speed
-// test holds a step to a baseline measured beside it, and to its old number of milliseconds, now in processor time, as
-// a backstop against a slowdown that would slow the baseline too (the review of #40).
+// Timing for the core's speed tests that compare like with like (spec §9, §11): processor time, every thread of this
+// process, never the clock, which runs on while a busy machine runs something else (10 Oct 2026). A test asserts the
+// work done, never the time taken (spec §12, quality_ratchet, 12 Oct 2026): where what is held is work, such as a text
+// never read or a block read again only within its budget, the work is counted (reader-work.js). What is left here is a
+// step held to a step of the same kind measured beside it in the same run, as a ratio, never to a number of
+// milliseconds; those ratios move to the instruction-count benchmarks.
 
 /** The processor time this process has used so far, every thread of it, in ms. */
 export function used() {
@@ -27,13 +28,4 @@ export function fastest(n, step) {
     out = run.out;
   }
   return { ms, out };
-}
-
-/** The least processor time of three plain passes over a text, in ms: the unit a refusal that only measures is priced in. */
-export function onePass(text) {
-  return fastest(3, () => {
-    let spaces = 0;
-    for (let i = 0; i < text.length; i++) if (text.charCodeAt(i) === 0x20) spaces++;
-    return spaces;
-  }).ms;
 }

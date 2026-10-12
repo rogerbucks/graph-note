@@ -5,20 +5,13 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
 import { LAYOUT_LIMITS, PAGE_LIMITS, READ_LIMITS, textTooLarge, tooLarge } from '../src/layout-limits.ts';
-import { fastest, onePass } from './processor-time.js';
+import { readerWork, watchedBox } from './reader-work.js';
 
-/**
- * Asserts a refusal that only measures a text came at once: in under 10 plain passes over the text (it takes 1 to 3),
- * the least processor time of three of each, so it neither read nor wrote what it measured; and, as a backstop against
- * a slowdown of both alike, under `most` ms of processor time, the test's old limit. Returns what the step gave.
- */
-function atOnce(text, step, most) {
-  const { ms: took, out } = fastest(3, step),
-    pass = onePass(text);
-  assert.ok(took < 10 * pass, `${took.toFixed(1)} ms, against ${pass.toFixed(1)} ms for one pass over the text`);
-  assert.ok(took < most, `${took.toFixed(0)} ms of processor time, over ${most}`);
-  return out;
-}
+// A refusal that only measures comes at once: that is held by the work it did not do, counted, never by the time it took
+// (spec §12, quality_ratchet, 12 Oct 2026). Timed against a plain pass in the test, it broke under coverage, as the
+// release's second run of the suite has it, which slows the core's code and not the test's own: a refusal took 8 passes
+// where it takes 2, and on the release's runner more than the 10 it was allowed (0.4.2, 12 Oct 2026). Each count is
+// paired with a control: the same counter, on a case that does the work, sees it.
 
 describe('the note’s text, measured before it is read', () => {
   test('the defaults: 512 kB and 10,000 lines of graph blocks', () => {
@@ -50,7 +43,10 @@ describe('the note’s text, measured before it is read', () => {
   test('a large broken block — 5 MB, 100,000 lines each missing its ) — is refused at once, unread, never hanging', () => {
     const block = `// graph: g\n${Array.from({ length: 100_000 }, (_, i) => `(n${i}:Thing {name: 'Thing number ${i} of many'},`).join('\n')}`;
     assert.ok(block.length > 4_000_000);
-    const reading = atOnce(block, () => readNote([block]), 1000);
+    const { out: reading, calls } = readerWork(() => readNote([block]));
+    assert.equal(calls, 0, 'unread: never handed to the reader');
+    const under = block.split('\n').slice(0, 100).join('\n');
+    assert.ok(readerWork(() => readNote([under])).calls >= 1, 'the control: a block under the limit is seen read');
     assert.equal(reading.tooLarge?.limit, 'text-bytes');
     assert.equal(reading.graphs.size, 0, 'nothing drawn');
     assert.deepEqual(reading.problems, []);
@@ -98,9 +94,18 @@ describe('on the page’s own thread, where a layout cannot be stopped, the limi
   });
 
   test('a word of 999,000 characters, which would hold the page while its drawing instructions are written, is refused unwritten', () => {
-    const d = drawing([box(0, 'x'.repeat(999_000)), box(1)]);
-    const r = atOnce(d.boxes[0].text, () => tooLarge(d, PAGE_LIMITS), 200);
+    const reads = {};
+    const d = drawing([watchedBox(box(0, 'x'.repeat(999_000)), reads), box(1)]);
+    const r = tooLarge(d, PAGE_LIMITS);
     assert.deepEqual(r, { reason: 'too-large', limit: 'word', count: 999_000, most: 1_000 });
+    // unwritten: a drawing instruction names its box by its key, and the word's text was only measured, at most two
+    // passes (its longest word, its bytes), never wrapped or written
+    assert.equal(reads.key, undefined, 'no drawing instruction was written for the box');
+    assert.ok(reads.text <= 2, `the text read ${reads.text} times`);
+    // the control: a box under the limits has its drawing instructions written, and its key is seen read
+    const written = {};
+    assert.equal(tooLarge(drawing([watchedBox(box(0), written), box(1)]), PAGE_LIMITS), null);
+    assert.ok(written.key >= 1, 'a box written is seen by its key');
   });
 
   test('a graph under the worker’s limits but over the page’s is refused there', () => {

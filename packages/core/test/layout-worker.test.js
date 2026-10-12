@@ -11,7 +11,8 @@ import { loadEngine } from '../src/engine.ts';
 import { drawingSource } from '../src/layout.ts';
 import { LAYOUT_LIMITS, PAGE_LIMITS, tooLarge } from '../src/layout-limits.ts';
 import { LayoutRunner, TIMEOUTS_BEFORE_STOPPING, inThreadPort, serveLayouts } from '../src/layout-worker.ts';
-import { onePass, used } from './processor-time.js';
+import { used } from './processor-time.js';
+import { watchedBox } from './reader-work.js';
 
 const CLOCK = { setTimeout: (run, ms) => setTimeout(run, ms), clearTimeout: (t) => clearTimeout(t) };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -124,27 +125,27 @@ describe('the limits, checked before any layout', () => {
   test('over the source limit by its texts alone — few things, one written at great length — refused unwritten', async () => {
     const d = drawingOf(READER);
     // words, but very many: writing their source would itself hold the page
-    const long = { ...d, boxes: d.boxes.map((b, i) => (i ? b : { ...b, text: 'é '.repeat(600_000) })) };
-    // at once: in under 10 plain passes over the text (it takes 2 to 3), the least processor time of three, so the source
-    // was never written; never the clock alone, which a busy machine running the whole suite broke at 314 ms against 200
-    // (10 Oct 2026). And under the old 200 ms, now of processor time, as a backstop against a slowdown of both alike; and
-    // under 5 s by the clock, for a wait that uses no processor time
-    let r,
-      took = Infinity,
-      clock = Infinity;
-    for (let k = 0; k < 3; k++) {
-      const t = used(),
-        c = performance.now();
-      r = await runner([]).r.draw(long);
-      took = Math.min(took, used() - t);
-      clock = Math.min(clock, performance.now() - c);
-    }
-    const pass = onePass(long.boxes[0].text);
-    assert.ok(took < 10 * pass, `${took.toFixed(1)} ms, against ${pass.toFixed(1)} ms for one pass over the text`);
-    assert.ok(
-      took < 200 && clock < 5000,
-      `${took.toFixed(0)} ms of processor time, ${clock.toFixed(0)} ms by the clock`,
-    );
+    const reads = {};
+    const long = {
+      ...d,
+      boxes: d.boxes.map((b, i) => (i ? b : watchedBox({ ...b, text: 'é '.repeat(600_000) }, reads))),
+    };
+    // at once, by the work done, never the time taken (spec §12, quality_ratchet, 12 Oct 2026): the source was never
+    // written, as a drawing instruction names its box by its key, and the text was only measured, at most two passes; no
+    // worker and no engine on the page was started; and the answer came before the event loop turned, so it waited on
+    // nothing. Against a plain pass timed in the test, coverage, which slows the core and not the test, broke it (0.4.2,
+    // 12 Oct 2026); by the clock, a busy machine running the whole suite broke it at 314 ms against 200 (10 Oct 2026)
+    const { r: runs, page } = runner([]);
+    const r = await Promise.race([runs.draw(long), new Promise((done) => setImmediate(() => done('waited')))]);
+    assert.notEqual(r, 'waited', 'answered before the event loop turned');
+    assert.equal(page.made.length, 0, 'no engine was started');
+    assert.equal(reads.key, undefined, 'no drawing instruction was written for the box');
+    assert.ok(reads.text <= 2, `the text read ${reads.text} times`);
+    // the control: a box under the limits is laid out, and its key is seen read
+    const seen = {};
+    const control = runner([], { rest: served().spawn });
+    await control.r.draw({ ...d, boxes: d.boxes.map((b, i) => (i ? b : watchedBox(b, seen))) });
+    assert.ok(seen.key >= 1, 'a box laid out is seen by its key');
     assert.equal(r.limit, 'source');
     assert.ok(r.count > 1_200_000, `${r.count} bytes: each é is two, and the spaces are not counted`);
     assert.equal(r.atLeast, true, 'the source would be longer still');
