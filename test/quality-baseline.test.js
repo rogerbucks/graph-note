@@ -46,7 +46,7 @@ describe('the committed baseline', () => {
 
   test('a baseline measured with test files left out, or without its machine, is refused', () => {
     assert.match(
-      baselineProblems({ ...baseline(), details: { left_out: ['test/x.test.js'] } })[0],
+      baselineProblems({ ...baseline(), details: { ...baseline().details, left_out: ['test/x.test.js'] } })[0],
       /left out.*test\/x\.test\.js/,
     );
     const { machine: _machine, ...bare } = baseline();
