@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/export-data.test.js",
+  "test": "links written twice > an exact duplicate, the same ends, type and properties, is exported twice and reads back twice",
+  "seen_failing_first": false,
+  "evidence": "Added at review to pin a case the export already handled: each format writes one line, row or edge for each link written, so an exact duplicate was already exported twice before this commit."
+}
