@@ -206,6 +206,13 @@ describe('GraphML', () => {
   });
 
   // proves: export_lossless
+  test('the test reader refuses a comment, which no export writes, rather than taking it out unread', () => {
+    assert.throws(() => xmlTree('<graphml><!-- a note --></graphml>'), /comment/);
+    assert.throws(() => xmlTree('<graphml><desc>a <!-- b --> c</desc></graphml>'), /comment/);
+    assert.doesNotMatch(text, /<!--/);
+  });
+
+  // proves: export_lossless
   test('XML’s marks, a carriage return and spaces at either end are written so XML reads them back as written', () => {
     assert.deepEqual(readGraphml(text), { graph: 'g', ...dataOf(readNote([block]).world.g), ...NONE_FADED });
   });

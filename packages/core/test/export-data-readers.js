@@ -164,9 +164,11 @@ function decoded(raw) {
 }
 
 /** An XML text's root element: `{ name, attrs, children }`, each child an element or a text, whitespace kept inside
- * the root. The declaration and comments are dropped; an attribute's line ends and tabs become spaces, as XML says. */
+ * the root. The declaration is dropped; an attribute's line ends and tabs become spaces, as XML says. A comment is
+ * refused, not taken out: no export writes one, and taking one out by a pattern could leave part of it read as XML. */
 export function xmlTree(text) {
-  const body = text.replace(/^<\?xml[^?]*\?>/, '').replace(/<!--[\s\S]*?-->/g, '');
+  if (text.includes('<!--')) throw new Error('a comment, which no export writes');
+  const body = text.replace(/^<\?xml[^?]*\?>/, '');
   const tag = /<(\/?)([\w:.-]+)((?:\s+[\w:.-]+\s*=\s*"[^"]*")*)\s*(\/?)>/g;
   const root = { children: [] },
     open = [root];

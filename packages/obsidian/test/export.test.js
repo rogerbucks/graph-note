@@ -277,7 +277,7 @@ describe('the data', () => {
       await until(() => written(env, '.md').length === 2);
       const [file] = written(env, '.gql');
       const companion = env.state.files.get(file.replace(/\.gql$/, '.md'));
-      assert.match(companion, new RegExp(`^- File: \\[\\[${file.replace(/[.]/g, '\\.')}\\]\\]$`, 'm'));
+      assert.ok(companion.split('\n').includes(`- File: [[${file}]]`), companion);
       assert.match(companion, /^- Holds: 4 things and 3 links$/m);
       assert.doesNotMatch(companion, /!\[\[/);
     } finally {
@@ -396,7 +396,7 @@ describe('a PNG too large for one sharp image', () => {
       const first = `Some-note-trip-${today()}-page-1-of-${sizes.length}.png`;
       assert.deepEqual(written(env, '.png'), [first], 'page 1 could not be taken away');
       assert.deepEqual(written(env, '.part'), [], 'page 2’s temporary file still was');
-      assert.match(env.state.notices.at(-1), new RegExp(first.replace(/[.]/g, '\\.')));
+      assert.ok(env.state.notices.at(-1).includes(first), env.state.notices.at(-1));
       assert.match(env.state.notices.at(-1), /delete it/);
     } finally {
       env.uninstall();
