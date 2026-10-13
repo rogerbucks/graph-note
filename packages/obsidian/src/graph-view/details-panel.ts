@@ -290,10 +290,13 @@ export class DetailsPanel {
       );
   }
 
-  /** What a thing's details offer to untangle the drawing (§25): its neighbourhood alone, and the shortest path to another thing. */
+  /**
+   * What a thing's details offer to untangle the drawing (§25): its neighbourhood alone, and the shortest path to another
+   * thing. A graph drawn as a table (§15) has nothing to hide or bring forward, so there neither is offered.
+   */
   private untangling(el: HTMLElement, key: string): void {
     const on = this.actions;
-    if (!on) return;
+    if (!on || this.o.diagram?.table) return;
     const row = el.createDiv({ cls: 'graph-note-untangle-offers' });
     row
       .createEl('button', { text: 'Show only this and its neighbours', attr: { type: 'button' } })

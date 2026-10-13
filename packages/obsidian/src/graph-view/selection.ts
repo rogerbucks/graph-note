@@ -270,7 +270,7 @@ export class Selection {
   focusOut(e: FocusEvent): void {
     this.hover.focus(null);
     const viewport = this.host.svg()?.closest('.graph-note-viewport') ?? this.host.viewport();
-    if (!viewport?.contains(e.relatedTarget as Node | null)) this.byPointer = false;
+    if (!viewport.contains(e.relatedTarget as Node | null)) this.byPointer = false;
   }
 
   /** A key was pressed: Escape clears the focus first, the arrows walk the links. True when used. */
@@ -287,13 +287,16 @@ export class Selection {
    */
   private goTo(key: string, walking: boolean): void {
     const svg = this.host.svg();
+    // the thing's box in a drawing; in a graph drawn as a table (§15), its row, which takes the focus as a box does
     const g = svg
       ? Array.from(svg.querySelectorAll<SVGGElement>('g.node')).find((n) => n.getAttribute('data-key') === key)
-      : undefined;
+      : Array.from(this.host.viewport().querySelectorAll<HTMLElement>('tr[data-key]')).find(
+          (r) => r.getAttribute('data-key') === key,
+        );
     // brought into view at once, clear of the details sheet, as it is selected; and so even when it answers a question
     // for a second thing, or is a step recorded, rather than the selection
     this.came('found', () => this.host.open({ key }, walking));
-    const box = g ? this.host.taps.bounds(g.getAttribute('id') ?? '') : null;
+    const box = svg && g ? this.host.taps.bounds(g.getAttribute('id') ?? '') : null;
     if (box) this.host.zoom().reveal(box);
     g?.focus({ preventScroll: true });
   }
