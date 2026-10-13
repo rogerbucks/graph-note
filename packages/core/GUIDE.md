@@ -226,7 +226,8 @@ A graph is drawn as a network unless its style graph chooses a type: `(d1:Diagra
   three things or more joined to the centre, the thing with the most links; lanes, every thing of one kind, two kinds or
   more; a timeline, every thing carrying a date; a table, any things. `suggestType` gives the best fit and why, never
   drawn unless chosen; `diagramFor` the type drawn: the chosen one while it fits, else a network, with why and
-  `nearestType` (type_stops_fitting), and the plan Graphviz lays it out by. `styledDrawing` puts that plan on the
+  `nearestType` (type_stops_fitting), and the plan Graphviz lays it out by; `diagramOffer` all three at once, for a
+  host's card, a tree judged along the relationship chosen for it. `styledDrawing` puts that plan on the
   drawing; render.ts writes it in first (graph-layout.js `typedSource`) and lays a tree out down and the other types
   across, unless a direction is set. The Python library judges and lays out alike (`graphspec/style/diagram_types.py`),
   held byte for byte on `python/graph_spec/tests/type_cases.json` by `test/layout-parity.test.js`.

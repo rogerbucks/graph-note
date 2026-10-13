@@ -15,7 +15,8 @@ import type { ViewOptions } from './view-options';
 /** The details of one drawing, shown in its card below the drawing. */
 export class DetailsPanel {
   private readonly el: HTMLElement;
-  private readonly svg: SVGSVGElement;
+  /** The drawing: Graphviz's SVG, or the table a graph drawn as one is (§15). */
+  private readonly svg: Element;
   private readonly viewport: HTMLElement;
   private readonly o: ViewOptions;
   /** The box or link whose details are open, so they can be drawn again when editing ends. */
@@ -27,7 +28,7 @@ export class DetailsPanel {
   }
 
   /** For the details element of a card, its drawing, the viewport the focus goes back to, and the card's options. */
-  constructor(el: HTMLElement, svg: SVGSVGElement, viewport: HTMLElement, o: ViewOptions) {
+  constructor(el: HTMLElement, svg: Element, viewport: HTMLElement, o: ViewOptions) {
     this.el = el;
     this.svg = svg;
     this.viewport = viewport;
@@ -39,7 +40,7 @@ export class DetailsPanel {
    * only that one.
    */
   private select(key: string | null, link: number | null = null, estimate: number | null = null): void {
-    for (const g of Array.from(this.svg.querySelectorAll('g.node, g.edge'))) {
+    for (const g of Array.from(this.svg.querySelectorAll('g.node, g.edge, tr[data-key], tr[data-link]'))) {
       const on =
         (key !== null && g.getAttribute('data-key') === key) ||
         (link !== null && g.getAttribute('data-link') === String(link)) ||

@@ -314,6 +314,34 @@ function planOf(fit: TypeFit, shape: GraphShape): DiagramPlan | undefined {
   return undefined;
 }
 
+/** What a host offers of the diagram types for a drawing: each type and whether it fits, the suggestion, the type drawn. */
+export interface DiagramOffer {
+  /** Whether each type fits, and why not; a tree judged along the relationship chosen for it, if any. */
+  fits: TypeFit[];
+  /** The data's best fit, whatever is chosen. */
+  suggested: Suggestion;
+  choice: DiagramChoice;
+}
+
+/**
+ * Everything a host offers of the diagram types for `drawing` in `view` (none: the whole graph), from one reading of its
+ * shape: whether each type fits and why not (type_only_when_fits), the suggestion (suggest_type), and the type drawn,
+ * with why and the nearest that fits when the chosen one has stopped fitting (type_stops_fitting).
+ */
+export function diagramOffer(
+  drawing: Pick<GraphDrawing, 'boxes' | 'links' | 'estimates'>,
+  style: Pick<StyleGraph, 'diagrams'>,
+  g?: Graph,
+  view?: string,
+): DiagramOffer {
+  const shape = shapeOf(drawing, g);
+  return {
+    fits: typeFits(shape, chosenDiagram(style, view)?.relationship),
+    suggested: suggestType(typeFits(shape), shape),
+    choice: diagramFor(drawing, style, g, view),
+  };
+}
+
 /**
  * The type `drawing` is drawn as in `view` (none: the whole graph), judged on what the drawing holds (§15): the type its
  * style graph chooses, while the data fits it; when it does not, a network — never the graph drawn wrongly — with why and

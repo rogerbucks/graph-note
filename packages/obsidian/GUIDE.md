@@ -28,7 +28,7 @@ module that ties the parts together, named as the folder is.
   saying so, with Change the view, when it matches nothing; faded or hidden
   outside it as its style says; its looks and legend; Save as shown and Fade or Hide others written in the style graph.
 - `style-block.ts` — a style block (§2): never drawn, folded away until opened, saying whose style it is, what it holds
-  and how many problems it has. The graph it styles is drawn with its nudges, and its problems listed, by `block.ts`.
+  (its diagram types among the rest) and how many problems it has. The graph it styles is drawn with its nudges, and its problems listed, by `block.ts`.
 - `code.ts` — a block that is not a graph, shown as coloured code; a very long one plain.
 - `live-preview.ts` — the editing view's own cards, so the page stays still while a block is typed in; each block keeps
   its identity however lines move above it, so its card, and the editor in place in it, survive the move; each card's
@@ -109,6 +109,16 @@ module that ties the parts together, named as the folder is.
   reading said as it is built, and Write the view, a view block after the graph's last block.
 - `view-strip.ts` — a view's card: its reading in plain English, Fade or Hide others, Save as shown, the legend, and what
   is outside it faded and its looks drawn on the drawing.
+- `type-strip.ts` — the diagram type (§15), on every card, a graph's or a view's: how it is drawn, and Diagram type,
+  listing the seven types, each that fits to choose (written into the style graph, for the graph or the view; a tree
+  along the relationship it fits best) and each that does not with why, the suggested one said and never drawn until
+  chosen; a chosen type that has stopped fitting said, the graph drawn as a network, and the nearest type that fits
+  offered; and the way in to a graph of more than 50 things, the table or a view. Reading view keeps the words and
+  drops the controls that write. The core decides all of it (`diagramOffer`).
+- `table-view.ts` — a graph drawn as a table: the plugin's own table, never Graphviz, a row for each thing (its kind and
+  properties) and each link, each row reached, named and opened as a box or a link is (`taps.ts` and the details take
+  a row as its thing or link), moved and scaled as a whole by the card's zoom. On a phone, a wide tree, flow or
+  timeline is fitted to its height and scrolled across only (`graph-view.ts`, the core's `Zoom` with `across`).
 - `walk.ts` — walked paths (§7): the strip below the bar with Play for each path in the note, stepping one thing at a
   time, marked and said; a path with no steps said to have none; and, while the block is edited, Record, which numbers
   each box as it is tapped and writes the path into the text.

@@ -143,6 +143,21 @@ describe('properties shown and arrowheads hidden (editor spec §14, §15)', () =
     }
   });
 
+  // proves: type_remembered
+  test('the fold counts the diagram types saved, for the graph and for its views', async () => {
+    const types =
+      "// graph: reader_style · STYLE reader\n(d1:Diagram {type: 'flow'}),\n(d2:Diagram {type: 'table', view: 'v'})";
+    const { env, el } = await shown(noteOf(DATA, types), 1);
+    try {
+      assert.equal(
+        el.querySelector('details.graph-note-style summary').textContent,
+        'Style of graph reader: 2 diagram types',
+      );
+    } finally {
+      env.uninstall();
+    }
+  });
+
   // proves: properties_switch, arrows_switchable
   test('the graph it styles is laid out with its properties shown and its arrowheads hidden', async () => {
     const { env, asked } = await shown(noteOf(DATA, CHOSEN), 0);

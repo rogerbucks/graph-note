@@ -23,8 +23,9 @@ import type GraphNotePlugin from './main';
 import type { EditTarget } from './main';
 import { renderCode } from './code';
 import { renderStyleBlock } from './style-block';
-import { renderViewBlock, writeViewBlock } from './view-block';
+import { renderViewBlock, writeStyle, writeViewBlock } from './view-block';
 import { GraphView } from './graph-view/graph-view';
+import { diagramShown, tableDrawn } from './graph-view/type-strip';
 import { readOnlyHere, settlePlacements, whenPlaced } from './graph-view/placement';
 import { renderProblems } from './graph-view/problems-list';
 import { refusalBanner } from './layout-worker/refusal-banner';
@@ -169,6 +170,12 @@ export async function renderBlock(
   const problems = [...reading.problems, ...styling.problems].filter((p) => p.graph === graph).map(shown);
   const plain = reading.graphs.get(graph);
   const drawing = plain && styledDrawing(plain, styling.style, reading.world[graph]);
+  // the diagram types (§15): which fit, the one suggested and the one drawn; choosing one writes it in the style graph
+  const diagram =
+    plain &&
+    diagramShown(plain, styling.style, reading.world[graph], undefined, (change, done) => {
+      void writeStyle(plugin, target.path, graph, { diagram: change }, done);
+    });
   const root = el.createDiv({ cls: 'graph-note' });
 
   if (!drawing || !drawing.boxes.length) {
@@ -209,7 +216,8 @@ export async function renderBlock(
 
   let drawn: Drawn | Refusal | null;
   try {
-    drawn = await plugin.layout(drawing, owner);
+    // a graph drawn as a table is the plugin's own table, never laid out (§15)
+    drawn = diagram?.table ? tableDrawn(diagram.table) : await plugin.layout(drawing, owner);
   } catch (e) {
     console.error('Graph Note could not draw', graph, e);
     root.createDiv({
@@ -234,6 +242,7 @@ export async function renderBlock(
       drawn,
       problems,
       mode: 'note',
+      ...(diagram ? { diagram } : {}),
       completeness: completenessReport(reading, graph, new Date().toISOString().slice(0, 10)),
       parked: parked(reading, graph, new Date().toISOString().slice(0, 10)),
       writeView: (block) => writeViewBlock(plugin, target.path, graph, block),

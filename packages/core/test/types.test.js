@@ -12,7 +12,16 @@ import { layoutSource } from '../src/layout.ts';
 import { directions, draw } from '../src/render.ts';
 import { readStyle } from '../src/style.ts';
 import { styledDrawing } from '../src/style-source.ts';
-import { DIAGRAM_TYPES, LARGE_GRAPH, diagramFor, nearestType, shapeOf, suggestType, typeFits } from '../src/types.ts';
+import {
+  DIAGRAM_TYPES,
+  LARGE_GRAPH,
+  diagramFor,
+  diagramOffer,
+  nearestType,
+  shapeOf,
+  suggestType,
+  typeFits,
+} from '../src/types.ts';
 import { scrollsOneWay, tableOf, wayIn } from '../src/types-table.ts';
 
 const ORG = `// graph: org
@@ -260,6 +269,22 @@ describe('a timeline', () => {
 (c:Event {name: 'Next', on: DATE '2026-09-02', noted: DATE '2020-01-01'})`;
     const { plain, style, g } = shown(mixed, "(d1:Diagram {type: 'timeline'})");
     assert.deepEqual(styledDrawing(plain, style, g).diagram.dates, [['b'], ['a'], ['c']]);
+  });
+});
+
+describe('what a host offers', () => {
+  // proves: type_only_when_fits, suggest_type, type_stops_fitting
+  test('every type with whether it fits, judged along the chosen tree’s relationship; the suggestion; the type drawn', () => {
+    const mixed = `${ORG},\n(dee)-[:ADVISES]->(cy),\n(bea)-[:ADVISES]->(cy)`;
+    const { plain, style, g } = shown(mixed, "(d1:Diagram {type: 'tree', relationship: 'ADVISES'})");
+    const offer = diagramOffer(plain, style, g);
+    assert.equal(offer.fits.find((f) => f.type === 'tree').why, 'along ADVISES, Cy has two parents, Dee and Bea');
+    // the suggestion is the data's best fit, whatever was chosen
+    assert.deepEqual(offer.suggested, { type: 'tree', because: 'each thing has at most one parent along MANAGES' });
+    assert.deepEqual(offer.choice, diagramFor(plain, style, g));
+    assert.equal(offer.choice.stopped.nearest, 'flow');
+    const none = shown(ORG);
+    assert.deepEqual(diagramOffer(none.plain, none.style, none.g).suggested.type, 'tree');
   });
 });
 

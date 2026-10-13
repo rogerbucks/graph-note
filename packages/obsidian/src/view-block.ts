@@ -24,11 +24,12 @@ import type { GraphDrawing, NamedView, Outside, StyleChange, ThingLook } from '@
 import type GraphNotePlugin from './main';
 import { renderCode } from './code';
 import { GraphView } from './graph-view/graph-view';
+import { diagramShown, tableDrawn } from './graph-view/type-strip';
 import type { ViewShown } from './graph-view/view-strip';
 import { refusalBanner } from './layout-worker/refusal-banner';
 
 /** Writes a change to the style graph of `graph` into the note at `path`, against the note as it is when written. */
-async function writeStyle(
+export async function writeStyle(
   plugin: GraphNotePlugin,
   path: string,
   graph: string,
@@ -198,10 +199,16 @@ export async function renderViewBlock(
         `Saved how view ${v.name} is shown.`,
       ),
   };
+  // the diagram types for this view (§15): choosing one writes it for the view alone
+  const diagram = diagramShown(drawing, style, g, v.name, (change, done) => {
+    void writeStyle(plugin, ctx.sourcePath, v.graph, { diagram: change }, done);
+  });
   let drawn;
   try {
-    // styled as this view: its nudges, and the properties and arrowheads chosen for it or for the whole graph (§14, §15)
-    drawn = await plugin.layout(styledDrawing(drawing, style, g, v.name), owner);
+    // styled as this view: its nudges, and the properties, arrowheads and type chosen for it or the whole graph (§14, §15)
+    drawn = diagram.table
+      ? tableDrawn(diagram.table)
+      : await plugin.layout(styledDrawing(drawing, style, g, v.name), owner);
   } catch (e) {
     // a view whose drawing cannot be laid out shows its text and why, never a blank card
     console.error('Graph Note could not draw view', v.name, e);
@@ -231,6 +238,7 @@ export async function renderViewBlock(
       lineOf: (at) => (blocks[at.block]?.line ?? 0) + at.line,
       onEdit: () => changeView(plugin, ctx.sourcePath, line),
       view,
+      diagram,
       exporting: {
         path: ctx.sourcePath,
         graph: v.graph,

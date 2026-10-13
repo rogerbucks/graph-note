@@ -12,12 +12,12 @@ const REACH_PX = 22;
 /** How close, in screen pixels, two taps must be to count as the same place, so the second takes the next thing near. */
 const SAME_PLACE_PX = 12;
 
-/** The box or link an element of the drawing belongs to, if any. */
+/** The box or link an element of the drawing belongs to, if any: a table's row is its thing's or its link's (§15). */
 export function targetAt(target: EventTarget | null): Target | null {
   const el = target as Element | null;
-  const key = el?.closest?.('g.node')?.getAttribute('data-key');
+  const key = el?.closest?.('g.node, tr[data-key]')?.getAttribute('data-key');
   if (key) return { key };
-  const edge = el?.closest?.('g.edge'),
+  const edge = el?.closest?.('g.edge, tr[data-link]'),
     estimate = edge?.getAttribute('data-estimate'),
     link = edge?.getAttribute('data-link');
   if (estimate) return { estimate: Number(estimate) };

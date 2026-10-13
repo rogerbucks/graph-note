@@ -15,8 +15,8 @@
 // write a name only suggested (acceptNameFirst, 11 Oct 2026), and adding a thing (addThing, suggestName and their types,
 // 11 Oct 2026), and an estimated link's fix (estimateFix, EstimateFix, 11 Oct 2026), and arrowheads hidden and properties
 // shown inline (styledDrawing, arrowsShown, ARROWHEADS, INLINE, INLINE_ROWS and their types, 13 Oct 2026), and the
-// diagram types (DIAGRAM_TYPES, LARGE_GRAPH, diagramFor, typeFits, shapeOf, suggestType, nearestType, tableOf, wayIn,
-// scrollsOneWay and their types, 14 Oct 2026).
+// diagram types (DIAGRAM_TYPES, LARGE_GRAPH, diagramFor, diagramOffer, typeFits, shapeOf, suggestType, nearestType,
+// tableOf, wayIn, scrollsOneWay and their types, 14 Oct 2026).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -89,6 +89,7 @@ const VALUES = [
   'details',
   'diagnostics',
   'diagramFor',
+  'diagramOffer',
   'directions',
   'distance',
   'draw',
@@ -210,6 +211,7 @@ const TYPES = [
   'Diagnostic',
   'Diagram',
   'DiagramChoice',
+  'DiagramOffer',
   'DiagramPlan',
   'DiagramTable',
   'DiagramType',
