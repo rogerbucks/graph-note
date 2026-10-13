@@ -115,6 +115,8 @@ module that ties the parts together, named as the folder is.
 ### `src/graph-view/` — a drawn graph
 
 - `graph-view.ts` — `GraphView`: the card, its zoom and full screen; ties the rest together.
+- `viewport-events.ts` — how the drawing is worked by pointer, wheel and keyboard: each event to the core's `Zoom`, a
+  tap opening what it lands on or clearing the selection, the highlight's pointer and focus, the sheet moved with the note.
 - `view-bar.ts` — the bar: problems badge, Fit, zoom, Find a thing, Filter by kind or link, Full screen, Export, Edit here,
   Edit in pane, Source.
 - `problems-list.ts` — the problems behind the badge, grouped when many, and the completeness report.

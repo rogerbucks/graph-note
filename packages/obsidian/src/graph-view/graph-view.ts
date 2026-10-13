@@ -4,7 +4,7 @@
 // parts in its folder: the bar, the drawing, taps, the details, and where the card is placed.
 import { MarkdownRenderChild, Platform, setIcon } from 'obsidian';
 import { AcrossZoom, Zoom, scrollsOneWay } from '@graph-note/core';
-import type { View, ZoomEvent } from '@graph-note/core';
+import type { View } from '@graph-note/core';
 import { renderCode } from '../code';
 import { readOnlyHere, whenPlaced } from './placement';
 import { gateWrites } from './read-only';
@@ -19,13 +19,13 @@ import { markProposal } from '../proposals/mark-proposal';
 import { renderProposalStrip } from '../proposals/proposal-strip';
 import { plural, renderBar } from './view-bar';
 import { describeDrawing, insertSvg } from './drawing-svg';
-import { Taps, targetAt, targetOf } from './taps';
+import { Taps } from './taps';
 import type { Target } from './taps';
 import { DetailsPanel } from './details-panel';
 import { Selection } from './selection';
-import { onPointer } from './selection-pointer';
 import { renderTypeStrip } from './type-strip';
 import { renderTable } from './table-view';
+import { bindViewportEvents } from './viewport-events';
 import type { ViewOptions } from './view-options';
 
 /** How much of the window's height a drawing scrolled across may take, at most (§15, wide_types_phone). */
@@ -47,9 +47,6 @@ export class GraphView extends MarkdownRenderChild {
   private maker: ViewMaker | null = null;
   private adder: AddThing | null = null;
   private fullscreen: { view: GraphView; overlay: HTMLElement } | null = null;
-  private boxDown: { id: number; x: number; y: number; target: Target; touch: boolean } | null = null;
-  /** A press on empty space: if it lifts where it came down, it is a tap there, which clears the focus (§25). */
-  private emptyDown: { id: number; x: number; y: number } | null = null;
   /** The selection and so the focus, the highlight, and untangling the drawing (§25). */
   private sel!: Selection;
   private editButton: HTMLButtonElement | null = null;
@@ -171,7 +168,8 @@ export class GraphView extends MarkdownRenderChild {
     const was = view?.shown;
     if (was?.zoom !== undefined) this.zoom.restore(was.zoom, was.x ?? 0, was.y ?? 0);
     this.apply(this.zoom.view());
-    this.bindEvents();
+    const { viewport, zoom, sel, details, taps, svg } = this;
+    bindViewportEvents({ card: this, viewport, zoom, sel, details, taps, svg, open: (t, x) => this.open(t, x) });
     const observer = new ResizeObserver(() => this.zoom.resize(this.viewportSize()));
     observer.observe(this.viewport);
     this.register(() => observer.disconnect());
@@ -269,16 +267,6 @@ export class GraphView extends MarkdownRenderChild {
     this.sel.viewChanged(); // the arrow to a selection out of view follows (§25)
   }
 
-  private point(e: { clientX: number; clientY: number }) {
-    const r = this.viewport.getBoundingClientRect();
-    return { x: e.clientX - r.left, y: e.clientY - r.top };
-  }
-
-  /** What a tap at a point in the viewport reaches, nearest first (tap_cycles_near, §3). */
-  private near(p: { x: number; y: number }): string[] {
-    return this.taps.near(p, this.zoom.view());
-  }
-
   /**
    * Opens a box or link; with `extend` (Shift), a second thing asks for the shortest path from the one selected (§25). An
    * arrow key's `walking` only moves the selection: it never answers a question for a second thing.
@@ -297,98 +285,6 @@ export class GraphView extends MarkdownRenderChild {
     this.sel.select(t);
     // while the block is edited, where it is written is selected in the text — an estimate's misspelt word too (§4)
     this.o.onSelect?.('key' in t ? { thing: t.key } : t);
-  }
-
-  private bindEvents(): void {
-    const vp = this.viewport;
-    const use = (e: Event, ev: ZoomEvent) => {
-      if (this.zoom.handle(ev)) {
-        // the wheel, a zoom key or a double click takes over from a move under way, which would fight it (§25)
-        if (ev.kind === 'wheel' || ev.kind === 'key' || ev.kind === 'dblclick') this.sel.stop();
-        e.preventDefault();
-        return true;
-      }
-      return false;
-    };
-    // the details sheet is placed again as the window changes size and the note scrolls (§25)
-    this.registerDomEvent(vp.win, 'resize', () => this.details.moved(true));
-    this.registerDomEvent(vp.doc, 'scroll', () => this.details.moved(false), { capture: true, passive: true });
-    this.registerDomEvent(vp, 'pointerdown', (e: PointerEvent) => {
-      if (onPointer(e.target)) return; // the arrow to the selection is a button of its own, never the drawing (§25)
-      const target = targetAt(e.target),
-        p = this.point(e),
-        near = this.near(p);
-      const first = near[0] && this.svg ? targetOf(this.svg, near[0]) : null;
-      const pointer = e.pointerType === 'touch' || e.pointerType === 'pen' ? e.pointerType : 'mouse';
-      this.sel.pressed();
-      if (target ?? first)
-        this.boxDown = { id: e.pointerId, ...p, target: (target ?? first) as Target, touch: pointer !== 'mouse' };
-      else this.emptyDown = { id: e.pointerId, ...p };
-      if (use(e, { kind: 'down', id: e.pointerId, pointer, ...p, onBox: !!target, near: !target && near.length > 0 })) {
-        vp.setPointerCapture(e.pointerId);
-        vp.focus({ preventScroll: true });
-      }
-    });
-    this.registerDomEvent(vp, 'pointermove', (e: PointerEvent) => {
-      use(e, { kind: 'move', id: e.pointerId, ...this.point(e) });
-    });
-    this.registerDomEvent(vp, 'pointerup', (e: PointerEvent) => {
-      if (onPointer(e.target)) return;
-      const p = this.point(e);
-      use(e, { kind: 'up', id: e.pointerId, ...p, time: e.timeStamp ?? 0 });
-      const down = this.boxDown,
-        empty = this.emptyDown;
-      this.boxDown = this.emptyDown = null;
-      // a tap on empty space clears the selection and the focus (§25); a drag across it only pans
-      if (empty && empty.id === e.pointerId && Math.hypot(p.x - empty.x, p.y - empty.y) < 10) this.sel.clear();
-      if (!down || down.id !== e.pointerId || Math.hypot(p.x - down.x, p.y - down.y) >= 10) return;
-      // on or near several things, a tap in the same place again chooses the next of them (§3)
-      const chosen = this.taps.choose(down, this.near(down));
-      this.open((chosen && this.svg ? targetOf(this.svg, chosen) : null) ?? down.target, e.shiftKey);
-      // on touch there is no hover: the tap that selects gives the highlight (§25)
-      this.sel.touched(down.touch);
-    });
-    this.registerDomEvent(vp, 'pointercancel', (e: PointerEvent) => {
-      this.boxDown = this.emptyDown = null;
-      this.zoom.handle({ kind: 'cancel', id: e.pointerId });
-    });
-    // the highlight under the pointer, for as long as it stays; a finger is not hovering (§25)
-    this.registerDomEvent(vp, 'pointerover', (e: PointerEvent) => this.sel.over(e));
-    this.registerDomEvent(vp, 'pointerout', (e: PointerEvent) => this.sel.out(e));
-    // and the same highlight with the keyboard focus, which a click's focus is not
-    this.registerDomEvent(vp, 'focusin', (e: FocusEvent) => this.sel.focusIn(e));
-    this.registerDomEvent(vp, 'focusout', (e: FocusEvent) => this.sel.focusOut(e));
-    this.registerDomEvent(
-      vp,
-      'wheel',
-      (e: WheelEvent) => {
-        const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
-        use(e, { kind: 'wheel', ...this.point(e), dy, ctrl: e.ctrlKey, meta: e.metaKey });
-      },
-      { passive: false },
-    );
-    // a double click on or near a box or link only selects it, as its two clicks did; only empty space zooms (§3)
-    this.registerDomEvent(vp, 'dblclick', (e: MouseEvent) => {
-      if (onPointer(e.target)) return;
-      const p = this.point(e),
-        onBox = !!targetAt(e.target);
-      use(e, { kind: 'dblclick', ...p, onBox, near: !onBox && this.near(p).length > 0 });
-    });
-    this.registerDomEvent(vp, 'keydown', (e: KeyboardEvent) => {
-      const target = targetAt(e.target);
-      // Escape clears the selection and the focus first; with a thing selected the arrow keys walk its links (§25)
-      const used = this.sel.key(e);
-      if (target && (e.key === 'Enter' || e.key === ' ')) {
-        e.preventDefault();
-        this.open(target);
-        return;
-      }
-      if (used) {
-        e.preventDefault();
-        return;
-      }
-      use(e, { kind: 'key', key: e.key, ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey });
-    });
   }
 
   private openFullscreen(): void {
