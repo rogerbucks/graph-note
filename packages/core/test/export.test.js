@@ -1,17 +1,22 @@
 // Exports carry title, legend and source (editor spec §16): an image of the whole diagram or of a view, as SVG or PNG, with
 // its theme colours fixed so it reads the same outside Obsidian, drawn at no less than twice natural size, and saying on
 // its face what it is, what its colours mean, and which note and day it came from. A view export holds only the view,
-// unless the faded context is asked for. The data exports (a GQL block, CSV, GraphML) are slice 3.
+// unless the faded context is asked for. An image too large for one sharp PNG is split across pages (big_export). The
+// data is exported as a GQL block, as CSV and as GraphML, and each reads back into the very things and links exported,
+// however large the graph (export_data_formats, export_lossless).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import GraphLayout from '@graph-note/graph-spec/src/graph-layout.js';
 import { loadEngine } from '../src/engine.ts';
 import { readNote } from '../src/drawing.ts';
 import { EXPORT_FORMATS, PNG_MIN_SCALE, exportSvg, exportWithLayout, pngSize } from '../src/export.ts';
+import { DATA_FORMATS, dataText, exportedData } from '../src/export-data.ts';
+import { PNG_MOST_PAGES, PNG_MOST_SIDE, PNG_PAGE_LEAST, pageSvg, pngPages } from '../src/export-pages.ts';
 import { exportScope } from '../src/export-scope.ts';
 import { FADED_OPACITY } from '../src/export-marks.ts';
 import { STYLE } from '../src/layout.ts';
-import { PAGE_LIMITS } from '../src/layout-limits.ts';
+import { LAYOUT_LIMITS, PAGE_LIMITS } from '../src/layout-limits.ts';
+import { dataOf, readBack, readFaded } from './export-data-readers.js';
 import { LayoutRunner, inThreadPort, serveLayouts } from '../src/layout-worker.ts';
 import { PALETTES } from '../src/palette.ts';
 import { readStyle } from '../src/style.ts';
@@ -314,5 +319,199 @@ describe('laid out by the host’s layout, under its limits', () => {
       /nothing to export/,
     );
     assert.equal(asked, 0);
+  });
+});
+
+const DATA_INFO = { note: 'Trips/Team.md', date: '2026-10-11' };
+/** The things and links of `graph` as read, kept to the things `keep` names and the links between them. */
+function readData(r, graph, keep = () => true) {
+  const { things, links } = dataOf(r.world[graph]);
+  const kept = things.filter(([id]) => keep(id));
+  const ids = new Set(kept.map(([id]) => id));
+  return { things: kept, links: links.filter(([from, , to]) => ids.has(from) && ids.has(to)) };
+}
+
+describe('the data exports', () => {
+  // proves: export_data_formats
+  test('the data is offered as a GQL block, as CSV and as GraphML', () => {
+    assert.deepEqual([...DATA_FORMATS], ['gql', 'csv', 'graphml']);
+  });
+
+  // proves: export_data_formats, export_lossless
+  test('the whole diagram’s data reads back, in each format, into the very things and links of the graph', () => {
+    const data = exportedData(reading, exportScope(reading, { graph: 'team' }));
+    const want = readData(reading, 'team');
+    assert.equal(want.things.length, 6);
+    assert.equal(want.links.length, 5);
+    for (const format of DATA_FORMATS)
+      assert.deepEqual(readBack(format, dataText(data, format, DATA_INFO)), want, format);
+  });
+
+  // proves: export_lossless, view_export_stays_view
+  test('a view’s data is the things in the view and the links between them, and nothing outside it', () => {
+    const inView = new Set(['alice', 'bob', 'carol', 'core']);
+    const want = readData(reading, 'team', (id) => inView.has(id));
+    assert.equal(want.links.length, 4);
+    const data = exportedData(reading, exportScope(reading, { graph: 'team', view: AROUND }));
+    for (const format of DATA_FORMATS)
+      assert.deepEqual(readBack(format, dataText(data, format, DATA_INFO)), want, format);
+  });
+
+  // proves: export_lossless, view_export_stays_view
+  test('with its faded context asked for, a view’s data holds the whole graph, what is outside the view marked so', () => {
+    const data = exportedData(reading, exportScope(reading, { graph: 'team', view: AROUND, context: true }));
+    const want = readData(reading, 'team');
+    // Dan and Zoe are outside the view, and so is the link from Carol to Dan, the third written
+    const outside = { things: ['dan', 'zoe'], links: [2] };
+    for (const format of DATA_FORMATS) {
+      const text = dataText(data, format, DATA_INFO);
+      assert.deepEqual(readBack(format, text), want, format);
+      assert.deepEqual(readFaded(format, text), outside, format);
+    }
+  });
+
+  // proves: export_lossless
+  test('every value the profile reads comes back as itself: texts, numbers, truth values, days and instants', () => {
+    const odd = readNote([
+      String.raw`// graph: odd
+(a:Note:Draft {title: 'It\'s "quoted", with a comma', body: 'two\nlines\r\nand a\ttab', formula: '=SUM(A1:A2)', minus: '-1', at: '@me', plus: '+44', lead: '\'quoted', blank: '', space: ' ', marks: 'a & b < c > d ]]>', unicode: 'café 🙂 é'}),
+(b:Note {id: 'not a name: has spaces', n: 3, neg: -2.5, big: 1e21, tiny: 1.5e-7, zero: 0, negzero: -0, yes: TRUE, no: FALSE, day: DATE '2026-10-11', at: DATETIME '2026-10-11T09:30:00+01:00', exact: DATETIME '2026-10-11T09:30:00.25Z'}),
+(match:Thing {name: 'A keyword for an id'}),
+(thing_1:Thing {name: 'Named like a made-up name'}),
+(c {id: 'kindless'}),
+(d:Mixed {size: 3}),
+(e:Mixed {size: 'large'}),
+(a)-[:SAYS {weight: 2, note: 'line\nbreak', since: DATE '2020-01-01'}]->(b),
+(b)-[:SAYS]->(a),
+(a)-[:SAYS]->(b),
+(a)-[:SAYS {weight: 'heavy'}]->(a),
+(c)-[:SAYS]->(match)`,
+    ]);
+    const want = readData(odd, 'odd');
+    assert.equal(want.things.length, 7);
+    assert.ok(Object.is(want.things[1][2].negzero, -0), 'the reader keeps -0');
+    const data = exportedData(odd, exportScope(odd, { graph: 'odd' }));
+    for (const format of DATA_FORMATS) {
+      const back = readBack(format, dataText(data, format, DATA_INFO));
+      assert.deepEqual(back, want, format);
+      assert.ok(Object.is(back.things[1][2].negzero, -0), `${format} keeps -0`);
+    }
+  });
+
+  // proves: export_lossless
+  test('a graph too large to draw still exports its data whole, and each format reads back the same', () => {
+    const n = LAYOUT_LIMITS.things + 1000;
+    const lines = Array.from({ length: n }, (_, i) => `(t${i}:Thing {name: 'Thing ${i}', n: ${i}})`);
+    for (let i = 0; i < n; i++) lines.push(`(t${i})-[:NEXT {step: ${i}}]->(t${(i + 1) % n})`);
+    for (let i = 0; i < n; i += 2) lines.push(`(t${i})-[:SKIP]->(t${(i + 7) % n})`);
+    const big = readNote([`// graph: big\n${lines.join(',\n')}`]);
+    assert.equal(big.tooLarge, undefined, 'within what a note may hold');
+    const want = readData(big, 'big');
+    assert.ok(want.things.length > LAYOUT_LIMITS.things, 'over the drawing limits');
+    assert.equal(want.links.length, n + n / 2);
+    const data = exportedData(big, exportScope(big, { graph: 'big' }));
+    for (const format of DATA_FORMATS)
+      assert.deepEqual(readBack(format, dataText(data, format, DATA_INFO)), want, format);
+  });
+});
+
+describe('an image too large for one sharp PNG', () => {
+  const MOST = 4_000_000;
+  const overlaps = (a, b) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+
+  // proves: big_export
+  test('is split across pages, each sharp and within the pixels allowed, together covering the image once', () => {
+    const pages = pngPages(3000, 1700, MOST);
+    assert.ok(pages.length > 1, 'more than one page');
+    let area = 0;
+    for (const p of pages) {
+      const s = pngSize(p.width, p.height);
+      assert.ok(s.scale >= PNG_MIN_SCALE, 'twice natural size or more');
+      assert.ok(s.width * s.height <= MOST, `${s.width} by ${s.height} is within the pixels allowed`);
+      assert.ok(p.x >= 0 && p.y >= 0 && p.x + p.width <= 3000 && p.y + p.height <= 1700, 'inside the image');
+      area += p.width * p.height;
+    }
+    assert.equal(area, 3000 * 1700, 'every part of the image is on a page');
+    for (const [i, a] of pages.entries())
+      for (const b of pages.slice(i + 1)) assert.ok(!overlaps(a, b), 'no part is on two pages');
+    // in reading order: along each row, then down
+    const order = pages.map((p) => [p.y, p.x]);
+    assert.deepEqual(
+      order,
+      [...order].sort((a, b) => a[0] - b[0] || a[1] - b[1]),
+    );
+  });
+
+  // proves: big_export
+  test('an image that fits is one page, the whole of it; a wide one is split into columns only, a tall one into rows', () => {
+    assert.deepEqual(pngPages(300, 200, 16_777_216), [{ x: 0, y: 0, width: 300, height: 200 }]);
+    const wide = pngPages(6000, 300, MOST);
+    assert.ok(wide.length > 1 && wide.every((p) => p.y === 0 && p.height === 300));
+    const tall = pngPages(300, 6000, MOST);
+    assert.ok(tall.length > 1 && tall.every((p) => p.x === 0 && p.width === 300));
+  });
+
+  // proves: big_export
+  test('an image of fractional size is covered to its edge, the last page of each row and column the rest', () => {
+    const pages = pngPages(2501.5, 1333.25, MOST);
+    const right = Math.max(...pages.map((p) => p.x + p.width)),
+      bottom = Math.max(...pages.map((p) => p.y + p.height));
+    assert.ok(Math.abs(right - 2501.5) < 1e-9 && Math.abs(bottom - 1333.25) < 1e-9);
+    for (const p of pages) assert.ok(pngSize(p.width, p.height).width * pngSize(p.width, p.height).height <= MOST);
+  });
+
+  // proves: big_export, export_png_sharp
+  test('pages too small to read, or too many of them, are no split at all: the image is refused as too large', () => {
+    assert.equal(pngPages(3000, 1700, 100), null);
+    assert.equal(pngPages(100_000, 100_000, MOST), null);
+  });
+
+  // proves: big_export
+  test('the pages of a row or column are even: never a whole page and a sliver', () => {
+    const pages = pngPages(2049, 2048, 16_777_216);
+    assert.equal(pages.length, 2);
+    const widest = Math.max(...pages.map((p) => p.width));
+    for (const p of pages) assert.ok(p.width >= widest / 2, `${p.width} is under half of ${widest}`);
+    assert.deepEqual(
+      pages.map((p) => p.width),
+      [1025, 1024],
+    );
+  });
+
+  // proves: big_export, export_png_sharp
+  test('no side of a page is over 32,767 device pixels, the most a canvas takes, however few pixels it has in all', () => {
+    assert.equal(PNG_MOST_SIDE, 32_767);
+    for (const most of [16_777_216, 1_000_000_000]) {
+      const pages = pngPages(100, 50_000, most);
+      assert.ok(pages.length > 1, `split, at most ${most}`);
+      for (const p of pages) {
+        const s = pngSize(p.width, p.height);
+        assert.ok(s.width <= PNG_MOST_SIDE && s.height <= PNG_MOST_SIDE, `${s.width} by ${s.height}`);
+      }
+    }
+    assert.equal(pngPages(100, 16_383, 1_000_000_000).length, 1, '32,766 device pixels tall is one page');
+  });
+
+  // proves: big_export
+  test('at the bounds: 36 pages are made, 37 are not; a page of exactly 200 pixels is read, of 199 not', () => {
+    // 160,000 pixels at twice natural size is a page of 200 by 200
+    assert.equal(pngPages(7200, 200, 160_000).length, PNG_MOST_PAGES);
+    assert.equal(pngPages(7400, 200, 160_000), null);
+    const square = pngPages(1200, 1200, 160_000);
+    assert.equal(square.length, 36);
+    assert.ok(square.every((p) => p.width === PNG_PAGE_LEAST && p.height === PNG_PAGE_LEAST));
+    assert.equal(pngPages(1200, 1200, 159_999), null, 'pages of 199 pixels');
+  });
+
+  // proves: big_export
+  test('each page is the image cut to its part: the same drawing, with its own size and view box', () => {
+    const image = exportSvg(exportScope(reading, { graph: 'team' }), engine, INFO);
+    const page = { x: 10, y: 20.5, width: 100, height: 50 };
+    const cut = pageSvg(image.svg, page);
+    const root = /^<svg\b[^>]*>/.exec(cut)[0];
+    assert.match(root, /\swidth="100"/);
+    assert.match(root, /\sheight="50"/);
+    assert.match(root, /\sviewBox="10 20\.5 100 50"/);
+    assert.equal(cut.slice(root.length), image.svg.slice(/^<svg\b[^>]*>/.exec(image.svg)[0].length));
   });
 });

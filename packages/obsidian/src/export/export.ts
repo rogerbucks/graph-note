@@ -1,39 +1,54 @@
 // Export (spec §16): what the Export form asks for, carried out — the scope read from the note as it is now, the plan
-// made (nothing to export, a question to ask first, or go), the image drawn in fixed colours with its frame, and then
-// either offered to a phone's share sheet by a tap of its own (export_share_sheet), or written safely into the vault
-// under a name of its own with its companion note when set. Each outcome is said once, in words.
+// made (nothing to export, a question to ask first, or go), then the files: the image drawn in fixed colours with its
+// frame (image.ts), on pages when one PNG cannot be sharp (big_export), or the data written as a GQL block, CSV or
+// GraphML (export_data_formats), with no layout asked for, so a graph too large to draw is still exported whole, and a
+// view's faded context marked as outside it when asked for (view_export_stays_view). Then either offered to a phone's
+// share sheet by a tap of its own (export_share_sheet), or written safely into the vault under names of their own, all
+// of them or none, with the companion note when set (export_companion_note). Each outcome is said once.
 import { Notice, Platform, TFile } from 'obsidian';
 import {
   companionNote,
+  dataText,
   exportPlan,
   exportScope,
-  exportWithLayout,
+  exportedData,
   gqlBlocks,
-  pngSize,
+  isDataFormat,
   readNote,
   readStyle,
   writeSafely,
 } from '@graph-note/core';
-import type { ExportFormat, ExportLayout, ExportTheme, ViewSpec } from '@graph-note/core';
+import type {
+  CompanionInfo,
+  DataFormat,
+  ExportFormat,
+  ExportScope,
+  ExportTheme,
+  ViewSpec,
+  WriteOps,
+} from '@graph-note/core';
 import type GraphNotePlugin from '../main';
-import { exportFailureWords, exportRefusalWords } from '../layout-worker/refusal-words';
+import { exportRefusalWords } from '../layout-worker/refusal-words';
 import { classificationOf } from './classification';
-import { freePath, vaultOps } from './vault-write';
+import { imageFiles } from './image';
+import type { ExportFile } from './image';
+import { freePaths, vaultOps } from './vault-write';
 
 /** What the Export form asks for: the note, the graph or view, whether with its faded context, the format and colours. */
 export interface ExportAsk {
   path: string;
   graph: string;
   view?: { name: string; spec: ViewSpec };
+  /** A view's faded context: drawn faded in an image, marked as outside the view in the data. */
   context?: boolean;
-  format: ExportFormat;
+  format: ExportFormat | DataFormat;
   theme: ExportTheme;
   /** Set once the person has said yes to the question asked. */
   confirmed?: boolean;
 }
 
 /**
- * How an export went: done or stopped (each said in a notice), a question to ask before it goes on, or an image ready
+ * How an export went: done or stopped (each said in a notice), a question to ask before it goes on, or files ready
  * to share, which the share sheet opens when the person taps Share — a phone allows it only from a tap of their own.
  */
 export type ExportOutcome =
@@ -44,12 +59,20 @@ export type ExportOutcome =
 
 type Sharing = Navigator & { canShare?: (d: ShareData) => boolean };
 
+/** The media type each format is shared as. */
+const TYPES: Record<ExportFormat | DataFormat, string> = {
+  svg: 'image/svg+xml',
+  png: 'image/png',
+  gql: 'text/plain',
+  csv: 'text/csv',
+  graphml: 'application/graphml+xml',
+};
+
 /** The phone's share sheet, when it can share a file of this kind; null when it cannot, and the vault is used instead. */
-function shareSheet(format: ExportFormat): Sharing | null {
+function shareSheet(format: ExportFormat | DataFormat): Sharing | null {
   const nav = activeWindow.navigator as Sharing | undefined;
   if (!Platform.isMobile || !nav || typeof nav.share !== 'function') return null;
-  const type = format === 'png' ? 'image/png' : 'image/svg+xml';
-  const probe = new File([''], `probe.${format}`, { type });
+  const probe = new File([''], `probe.${format}`, { type: TYPES[format] });
   return !nav.canShare || nav.canShare({ files: [probe] }) ? nav : null;
 }
 
@@ -86,59 +109,60 @@ async function exporting(plugin: GraphNotePlugin, ask: ExportAsk): Promise<Expor
     two = (n: number) => String(n).padStart(2, '0');
   const date = `${now.getFullYear()}-${two(now.getMonth() + 1)}-${two(now.getDate())}`;
   const sheet = shareSheet(ask.format);
-  const plan = exportPlan({
-    scope,
-    format: ask.format,
-    note: ask.path,
-    date,
-    noteClassification: classificationOf(plugin.app, file, text, plugin.settings.classifications),
-    settings: plugin.settings,
-    confirmed: !!ask.confirmed,
-    toVault: !sheet,
-  });
+  const planned = (pages?: number, confirmed = !!ask.confirmed) =>
+    exportPlan({
+      scope,
+      format: ask.format,
+      note: ask.path,
+      date,
+      noteClassification: classificationOf(plugin.app, file, text, plugin.settings.classifications),
+      settings: plugin.settings,
+      confirmed,
+      toVault: !sheet,
+      ...(pages ? { pages } : {}),
+    });
+  const plan = planned();
   if ('nothing' in plan) return said({ stopped: plan.nothing });
   if ('ask' in plan) return { ask: plan.ask };
   const { go } = plan;
-  const style = readStyle(texts, ask.graph, reading).style;
-  // laid out where a drawing is, apart from the interface and under the same limits (layout_contained): one over a limit
-  // writes nothing, and says why
-  let layoutFailed = false;
-  const layout: ExportLayout = (d, theme) =>
-    plugin.layoutForExport(d, theme).catch((e: unknown) => {
-      layoutFailed = true;
-      throw e;
+  let files: ExportFile[];
+  let held: CompanionInfo['data'] | undefined;
+  if (isDataFormat(ask.format)) {
+    const data = exportedData(reading, scope);
+    files = [{ name: go.fileName, path: go.path, bytes: dataText(data, ask.format, { note: ask.path, date }) }];
+    held = {
+      things: data.things.length,
+      links: data.links.length,
+      ...(data.faded ? { faded: { things: data.faded.things.length, links: data.faded.links.length } } : {}),
+    };
+  } else {
+    const made = await imageFiles(plugin, {
+      scope,
+      format: ask.format,
+      theme: ask.theme,
+      style: readStyle(texts, ask.graph, reading).style,
+      note: ask.path,
+      date,
+      go,
+      paged: (pages) => {
+        const again = planned(pages, true);
+        if (!('go' in again)) throw new Error('the plan changed while the pages were drawn');
+        return again.go;
+      },
     });
-  let image;
-  try {
-    image = await exportWithLayout(scope, layout, { note: ask.path, date, theme: ask.theme, style });
-  } catch (e) {
-    // the layout worker or its engine failed: told as a limit is, with what to do; any other failure is the caller's
-    if (!layoutFailed) throw e;
-    return said({ stopped: exportFailureWords(e) });
+    if ('stopped' in made) return said(made);
+    files = made.files;
   }
-  if (!image)
-    return said({
-      stopped:
-        'The export was stopped: Graph Note was unloaded before the layout finished. Nothing was saved. Try again once Graph Note is enabled again.',
-    });
-  if ('reason' in image) return said({ stopped: exportRefusalWords(image) });
-  let bytes: Uint8Array | string = image.svg;
-  if (ask.format === 'png') {
-    const size = pngSize(image.width, image.height);
-    if (size.width * size.height > plugin.pngPixelLimit)
-      return said({
-        stopped: `The drawing is too large to draw as a PNG on this device (${size.width} by ${size.height}); export it as SVG.`,
-      });
-    bytes = await plugin.rasterise(image.svg, size);
-  }
+  const name = files.length === 1 ? go.fileName : `${go.fileName} on ${files.length} pages`;
   if (sheet) {
-    const type = go.format === 'png' ? 'image/png' : 'image/svg+xml';
-    const data: BlobPart = typeof bytes === 'string' ? bytes : bytes.slice().buffer;
-    const shared = new File([data], go.fileName, { type });
+    const shared = files.map(
+      (f) =>
+        new File([typeof f.bytes === 'string' ? f.bytes : f.bytes.slice().buffer], f.name, { type: TYPES[go.format] }),
+    );
     const run = async (): Promise<ExportOutcome> => {
       try {
-        await sheet.share({ files: [shared], title: go.fileName });
-        return said({ done: `Shared ${go.fileName}.` });
+        await sheet.share({ files: shared, title: go.fileName });
+        return said({ done: `Shared ${name}.` });
       } catch (e) {
         const cancelled = e instanceof Error && e.name === 'AbortError';
         return said({
@@ -148,27 +172,87 @@ async function exporting(plugin: GraphNotePlugin, ask: ExportAsk): Promise<Expor
         });
       }
     };
-    return { share: { name: go.fileName, run } };
+    return { share: { name, run } };
   }
-  // a name of its own: an earlier export is never overwritten
-  const path = freePath(plugin, go.path);
-  const written = await writeSafely(path, bytes, vaultOps(plugin));
-  if (!written.ok) return said({ stopped: written.why });
-  const kept = path === go.path ? '' : ` An earlier export of that name was kept.`;
-  const where = Platform.isMobile ? ' in the vault, as this phone cannot share a file' : '';
-  if (go.companion) {
-    const notePath = path.replace(/\.[^./]+$/, '.md');
-    const note = await writeSafely(
-      freePath(plugin, notePath),
-      companionNote({ image: path, note: ask.path, date, scope }),
-      vaultOps(plugin),
-    );
-    if (!note.ok) {
-      const why = note.why.replace(/^The export could not be written: /, '').replace(/\. Nothing was saved\.$/, '');
-      return said({
-        done: `The image was saved at ${path}${where}, but its companion note could not be written: ${why}.`,
-      });
+  return said(
+    await intoVault(plugin, {
+      note: ask.path,
+      files,
+      scope,
+      date,
+      companion: go.companion?.path ?? null,
+      ...(held ? { data: held } : {}),
+    }),
+  );
+}
+
+/** What is written into the vault: the files, and what their companion note, when set, is made from. */
+interface VaultExport {
+  note: string;
+  files: ExportFile[];
+  scope: ExportScope;
+  date: string;
+  /** The companion note's path from the plan, or null when none is set. */
+  companion: string | null;
+  /** For the data: how much it holds, for the companion note to say. */
+  data?: CompanionInfo['data'];
+}
+
+/** Takes away the files `paths` written before a failure, carrying on past any that cannot be: those are named. */
+async function takenAway(ops: WriteOps, paths: string[]): Promise<string> {
+  const left: string[] = [];
+  for (const path of paths) {
+    try {
+      await ops.remove(path);
+    } catch {
+      left.push(path);
     }
   }
-  return said({ done: `Exported ${path}${where ? `, saved${where}` : ''}.${kept}` });
+  if (!left.length) return paths.length ? ' None of its pages was kept.' : ' Nothing was saved.';
+  const them = left.length === 1 ? 'it' : 'them';
+  return ` ${left.join(', ')} could not be taken away again: delete ${them} by hand.`;
+}
+
+/**
+ * The files written into the vault under names of their own, so no earlier export is overwritten; all of them or none:
+ * when one cannot be written, those written before it are taken away again, and any that cannot be is named. Then the
+ * companion note, when set: an image's shows it, the data's links it and says how much it holds.
+ */
+async function intoVault(plugin: GraphNotePlugin, x: VaultExport): Promise<ExportOutcome> {
+  const { files } = x;
+  const paths = freePaths(
+    plugin,
+    files.map((f) => f.path),
+  );
+  const ops = vaultOps(plugin);
+  for (const [i, f] of files.entries()) {
+    const written = await writeSafely(paths[i] ?? f.path, f.bytes, ops);
+    if (!written.ok) {
+      const before = written.why.replace(/ Nothing was saved\.$/, '');
+      return { stopped: `${before}${await takenAway(ops, paths.slice(0, i))}` };
+    }
+  }
+  const [first = ''] = paths;
+  const kept = first === files[0]?.path ? '' : ` An earlier export of that name was kept.`;
+  const where = Platform.isMobile ? ' in the vault, as this phone cannot share a file of this kind' : '';
+  const what = files.length === 1 ? first : `${files.length} pages, ${first} to ${paths.at(-1) ?? ''}`;
+  if (x.companion) {
+    // beside the file, under its name: a single file's own, as written; a paged image's, the name the pages share
+    const notePath = files.length === 1 ? first.replace(/\.[^./]+$/, '.md') : x.companion;
+    const text = companionNote({
+      image: first,
+      ...(files.length > 1 ? { pages: paths } : {}),
+      ...(x.data ? { data: x.data } : {}),
+      note: x.note,
+      date: x.date,
+      scope: x.scope,
+    });
+    const note = await writeSafely(freePaths(plugin, [notePath])[0] ?? notePath, text, ops);
+    if (!note.ok) {
+      const why = note.why.replace(/^The export could not be written: /, '').replace(/\. Nothing was saved\.$/, '');
+      const saved = x.data ? 'data was' : files.length === 1 ? 'image was' : 'pages were';
+      return { done: `The ${saved} saved at ${what}${where}, but its companion note could not be written: ${why}.` };
+    }
+  }
+  return { done: `Exported ${what}${where ? `, saved${where}` : ''}.${kept}` };
 }

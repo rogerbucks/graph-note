@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/export-data.test.js",
+  "test": "CSV > a text starting with a tab or a carriage return is guarded too, and read back as written",
+  "seen_failing_first": false,
+  "evidence": "Added at review to cover two guard characters the CSV writer already guarded since 0ac5b3c (its GUARDED pattern names tab and carriage return); it pins that behaviour, so it passed against the code before it."
+}

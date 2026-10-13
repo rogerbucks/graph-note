@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/export.test.js",
+  "test": "a PNG too large for one sharp image > on a phone, every page is offered to the share sheet at once, by a tap of its own, and none saved",
+  "seen_failing_first": false,
+  "evidence": "Asked for at review to cover sharing a paged PNG, which 0ac5b3c already did: export.ts shared every file of the export in one share call, so the test passed against the code before it."
+}

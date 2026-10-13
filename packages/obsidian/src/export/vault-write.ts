@@ -38,12 +38,22 @@ export function vaultOps(plugin: GraphNotePlugin): WriteOps {
   };
 }
 
-/** `path`, or, when a file is already there, the first of `<name>-2.<ext>`, `<name>-3.<ext>`… that is free. */
-export function freePath(plugin: GraphNotePlugin, path: string): string {
+/**
+ * `paths`, or, when a file is already at any of them, each as `<name>-2.<ext>`, or `-3`…, the first number free for all of
+ * them: the pages of one export keep one number between them.
+ */
+export function freePaths(plugin: GraphNotePlugin, paths: string[]): string[] {
   const taken = (p: string) => !!plugin.app.vault.getAbstractFileByPath(p);
-  if (!taken(path)) return path;
-  const dot = path.lastIndexOf('.'),
-    stem = path.slice(0, dot),
-    ext = path.slice(dot);
-  for (let n = 2; ; n++) if (!taken(`${stem}-${n}${ext}`)) return `${stem}-${n}${ext}`;
+  const numbered = (path: string, n: number) => {
+    const dot = path.lastIndexOf('.');
+    return `${path.slice(0, dot)}-${n}${path.slice(dot)}`;
+  };
+  if (!paths.some(taken)) return paths;
+  for (let n = 2; ; n++) {
+    const these = paths.map((p) => numbered(p, n));
+    if (!these.some(taken)) return these;
+  }
 }
+
+/** `path`, or, when a file is already there, the first of `<name>-2.<ext>`, `<name>-3.<ext>`… that is free. */
+export const freePath = (plugin: GraphNotePlugin, path: string): string => freePaths(plugin, [path])[0] ?? path;

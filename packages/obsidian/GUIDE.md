@@ -62,16 +62,26 @@ module that ties the parts together, named as the folder is.
 ### `src/export/` — export (spec §16)
 
 - `export.ts` — `exportGraph`: the scope read from the note as it is now, the core's plan (nothing to export, a
-  question first, or go), the image laid out in the layout worker under its limits (one over a limit, or a note too
-  large to read, writes nothing and says why), in fixed colours with its frame, written safely into the vault through its API with
-  its companion note when set; on a phone, offered to the share sheet instead.
-- `export-form.ts` — the Export form on a drawing: the whole diagram, or a view with or without its faded context; SVG
-  or PNG; light or dark; and Export anyway when the note's classification asks first.
-- `png.ts` — a PNG of the SVG drawn on a canvas at twice natural size or more; one larger than a phone's canvas holds is
-  refused, with the SVG suggested.
+  question first, or go), then the files: the image (`image.ts`), or the data as a GQL block, CSV or GraphML, written by
+  the core with no layout asked for, so a graph too large to draw is still exported (a view's data is the view's alone,
+  unless its faded context is asked for, which is then marked as outside the view); written safely into the vault
+  through its API under names of their own, all of a paged PNG's pages or none (a page that cannot be taken away again
+  is named, to delete by hand), with its companion note when set, the data's linking the file and saying how much it
+  holds; on a phone, offered to the share sheet instead, every page at once, or saved in the vault when the phone
+  cannot share a file of that kind.
+- `image.ts` — the image laid out in the layout worker under its limits (one over a limit, or a note too large to read,
+  writes nothing and says why), in fixed colours with its frame; a PNG too large for one sharp image drawn on pages
+  (`pngPages`), every page drawn before any is written, or refused when even pages cannot hold it.
+- `export-form.ts` — the Export form on a drawing: the whole diagram, or a view with or without its faded context; SVG,
+  PNG or the data as a GQL block, CSV or GraphML; light or dark, for an image only; and Export anyway when the note's
+  classification asks first. `dataExportBar` gives a graph or view shown as text, too large to draw, a bar with an
+  Export button for its data alone.
+- `png.ts` — a PNG of the SVG drawn on a canvas at twice natural size or more, at the size it is given: the whole image,
+  or one page of it; the canvas made nothing wide and nothing high once its PNG is made, so pages never pile up.
 - `classification.ts` — a note's classification however its front matter writes it (any key case, a word, a number, a
   list's highest), and from its own text before the metadata cache has indexed it.
-- `vault-write.ts` — writing through the vault's API: a name of its own for each export, so none is overwritten; the
+- `vault-write.ts` — writing through the vault's API: a name of its own for each export, so none is overwritten, and one
+  number shared by the pages of one export (`freePaths`); the
   plugin's own temporary file deleted outright on a failure, never left in the vault or its trash.
 
 ### `src/settings/` — the settings page (spec §21)

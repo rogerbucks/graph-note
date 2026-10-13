@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/export-data.test.js",
+  "test": "a view’s faded context, when it is asked for > without the context asked for, nothing is marked, and no format names a faded key or kind",
+  "seen_failing_first": false,
+  "evidence": "The control for the faded-context cases: a view exported without its context was already only the view, unmarked, before this commit, so it passed first; the three marked cases beside it failed first."
+}

@@ -11,7 +11,9 @@
 // styleEdit, hueColour, the words a style may use and their types), and views (viewsOf, parseView, makeView in place of
 // viewQuery and viewBlock, addView, which writes a view into a note and refuses one of a name only suggested there,
 // readingOf, evaluate and their types, 11 Oct 2026), and export (exportScope, exportSvg, exportWithLayout, pngSize, exportPlan,
-// companionNote, writeSafely, saidDate, EXPORT_FORMATS, PNG_MIN_SCALE and their types, 11 Oct 2026), and the refusal to
+// companionNote, writeSafely, saidDate, EXPORT_FORMATS, PNG_MIN_SCALE and their types, 11 Oct 2026; the data exports,
+// DATA_FORMATS, isDataFormat, exportedData and dataText, and an image across pages, pngPages and pageSvg, with their
+// types, 13 Oct 2026), and the refusal to
 // write a name only suggested (acceptNameFirst, 11 Oct 2026), and adding a thing (addThing, suggestName and their types,
 // 11 Oct 2026), and an estimated link's fix (estimateFix, EstimateFix, 11 Oct 2026).
 import { test, describe } from 'node:test';
@@ -24,6 +26,7 @@ const ts = require('typescript');
 const ENTRY = new URL('../src/index.ts', import.meta.url);
 
 const VALUES = [
+  'DATA_FORMATS',
   'DEFAULT_SETTINGS',
   'DEPARTURES',
   'DeferredNotDeclared',
@@ -75,6 +78,7 @@ const VALUES = [
   'companionNote',
   'completenessReport',
   'completions',
+  'dataText',
   'declareDeferred',
   'declareDeferredBlock',
   'details',
@@ -90,6 +94,7 @@ const VALUES = [
   'exportScope',
   'exportSvg',
   'exportWithLayout',
+  'exportedData',
   'fixed',
   'fixedPalette',
   'gqlBlocks',
@@ -102,6 +107,7 @@ const VALUES = [
   'indentText',
   'inlineCompletion',
   'insertBlockAfter',
+  'isDataFormat',
   'isDraft',
   'isSharedSchema',
   'layoutSource',
@@ -126,6 +132,7 @@ const VALUES = [
   'nudgedDrawing',
   'nudgedSource',
   'outsideOf',
+  'pageSvg',
   'parkForLater',
   'parked',
   'parkedCount',
@@ -134,6 +141,7 @@ const VALUES = [
   'pathBlock',
   'pathProblems',
   'pathsOf',
+  'pngPages',
   'pngSize',
   'propertiesOf',
   'propertyNames',
@@ -183,6 +191,8 @@ const TYPES = [
   'CompletenessReport',
   'CompletionItem',
   'Converted',
+  'DataFormat',
+  'DataInfo',
   'DeferredDeclared',
   'Departure',
   'Details',
@@ -203,6 +213,7 @@ const TYPES = [
   'ExportRequest',
   'ExportScope',
   'ExportTheme',
+  'ExportedData',
   'Frame',
   'GraphDrawing',
   'GraphNames',
@@ -246,6 +257,7 @@ const TYPES = [
   'PathBlock',
   'PathReading',
   'PathStep',
+  'PngPage',
   'PngSize',
   'Position',
   'Problem',

@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/export-data.test.js",
+  "test": "GraphML > the test reader refuses a comment, which no export writes, rather than taking it out unread",
+  "seen_failing_first": false,
+  "evidence": "It tests the test reader, export-data-readers.js, which changed in the same commit; the replay runs the commit's own test support against the parent's code, so it passes there. Run before the reader changed, it failed (Missing expected exception), as the commit message says; no product code is under test."
+}
