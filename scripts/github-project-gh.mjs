@@ -10,7 +10,7 @@ import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { REQUIREMENTS } from './check-requirements.mjs';
-import { PROJECT_TITLE, REMOVED_LABEL, adoptedId, labelStyle } from './github-project-desired.mjs';
+import { PROJECT_TITLE, REMOVED_LABEL, adoptedId, idOfBody, labelStyle } from './github-project-desired.mjs';
 import { planProject } from './github-project-plan.mjs';
 import { RETRY_DELAYS_MS, paced, retrying, waitFor } from './github-project-retry.mjs';
 
@@ -66,7 +66,11 @@ export function ghRunner(spawn = spawnSync) {
     const result = spawn('gh', args, { input, encoding: 'utf8', maxBuffer: 1 << 28, cwd: ROOT, env });
     if (result.error)
       throw new Error(`gh could not be run (${result.error.message}); is the GitHub CLI installed and on the path?`);
-    if (result.status !== 0) throw new Error(`gh ${args.join(' ')} failed: ${String(result.stderr).trim()}`);
+    if (result.status !== 0) {
+      const stderr = String(result.stderr).trim();
+      // gh's own words are kept apart, so a retry judges them and not the arguments of the call
+      throw Object.assign(new Error(`gh ${args.join(' ')} failed: ${stderr}`), { stderr });
+    }
     return result.stdout;
   };
 }
@@ -149,12 +153,33 @@ function whole(list, cap, what) {
   return list;
 }
 
-const findProject = (run, owner) =>
+/** The three lists the mirror reads, each refused when it hit its cap; readRemote and the look before a retried create share them. */
+const readLabels = (run, repo) =>
+  whole(
+    JSON.parse(run(inRepo(repo, ['label', 'list', '--limit', String(LABEL_CAP), '--json', 'name']))),
+    LABEL_CAP,
+    'labels',
+  ).map((l) => l.name);
+const readIssues = (run, repo) =>
+  whole(
+    JSON.parse(
+      run(
+        inRepo(repo, [
+          ...['issue', 'list', '--state', 'all', '--limit', String(ISSUE_CAP)],
+          ...['--json', 'number,title,body,state,labels,author,url'],
+        ]),
+      ),
+    ),
+    ISSUE_CAP,
+    'issues',
+  ).map((i) => ({ ...i, labels: i.labels.map((l) => l.name), author: i.author?.login }));
+const readProjects = (run, owner) =>
   whole(
     JSON.parse(run(['project', 'list', '--owner', owner, '--format', 'json', '--limit', String(PROJECT_CAP)])).projects,
     PROJECT_CAP,
     'projects',
-  ).find((p) => p.title === PROJECT_TITLE);
+  );
+const findProject = (run, owner) => readProjects(run, owner).find((p) => p.title === PROJECT_TITLE);
 
 /**
  * What GitHub holds now: {login, labelNames, issues, project}. `repo` is `owner/name`. The login is the one signed in,
@@ -164,33 +189,42 @@ const findProject = (run, owner) =>
  */
 export function readRemote(run, repo) {
   const login = JSON.parse(run(['api', 'user'])).login;
-  const labelNames = whole(
-    JSON.parse(run(inRepo(repo, ['label', 'list', '--limit', String(LABEL_CAP), '--json', 'name']))),
-    LABEL_CAP,
-    'labels',
-  ).map((l) => l.name);
-  const issues = whole(
-    JSON.parse(
-      run(
-        inRepo(repo, [
-          'issue',
-          'list',
-          '--state',
-          'all',
-          '--limit',
-          String(ISSUE_CAP),
-          '--json',
-          'number,title,body,state,labels,author,url',
-        ]),
-      ),
-    ),
-    ISSUE_CAP,
-    'issues',
-  ).map((i) => ({ ...i, labels: i.labels.map((l) => l.name), author: i.author?.login }));
+  const labelNames = readLabels(run, repo);
+  const issues = readIssues(run, repo);
   const found = findProject(run, ownerOf(repo));
   if (!found) return { login, labelNames, issues, project: null };
   const idByNumber = new Map(issues.flatMap((i) => (adoptedId(i, login) ? [[i.number, adoptedId(i, login)]] : [])));
   return { login, labelNames, issues, project: readProject(run, ownerOf(repo), found.number, idByNumber) };
+}
+
+/**
+ * For a call that changes something, how to find out after a transient failure whether it already went through (see
+ * paced): a function that re-reads what GitHub holds and gives {value}, what the call would have given, or undefined.
+ * A create has one. An issue is taken up only as readRemote would adopt it: by the requirement id in its marker, and
+ * only when the signed-in login wrote it, so somebody else's issue with the same title and body is never taken. A call
+ * that changes only to a state it is given (an edit, a close, a reopen, adding to a project, setting a value, replacing
+ * a field's options) has one that always says undefined, so it is simply tried again. A call a second try could repeat
+ * (a comment, a new field) gives null and is not tried again.
+ */
+function lookup(args, input, read) {
+  const [group, verb] = args;
+  const flag = (name) => args[args.indexOf(name) + 1];
+  if (group === 'issue' && verb === 'create')
+    return () => {
+      const login = JSON.parse(read(['api', 'user'])).login;
+      const id = idOfBody(input);
+      const made = readIssues(read, flag('--repo')).find((i) => id && adoptedId(i, login) === id);
+      return made && { value: `${made.url}\n` };
+    };
+  if (group === 'label' && verb === 'create')
+    return () => (readLabels(read, flag('--repo')).includes(args[2]) ? { value: '' } : undefined);
+  if (group === 'project' && verb === 'create')
+    return () => {
+      const made = readProjects(read, flag('--owner')).find((p) => p.title === flag('--title'));
+      return made && { value: JSON.stringify({ id: made.id, number: made.number }) };
+    };
+  const once = (group === 'issue' && verb === 'comment') || (group === 'api' && /createProjectV2Field/.test(input));
+  return once ? null : () => undefined;
 }
 
 const flags = (flag, values) => values.flatMap((v) => [flag, v]);
@@ -266,8 +300,7 @@ function doFields(act, project, remote, fieldPlans) {
  * `pauseMs`, `retryMs` and `delays`. Throws, with gh's words, at the first call that fails for good.
  */
 export function executePlan(run, repo, plan, opts = {}) {
-  const caps = { labels: LABEL_CAP, issues: ISSUE_CAP, projects: PROJECT_CAP };
-  const settings = { sleep: waitFor, pauseMs: PAUSE_MS, retryMs: RETRY_MS, delays: RETRY_DELAYS_MS, caps, ...opts };
+  const settings = { sleep: waitFor, pauseMs: PAUSE_MS, retryMs: RETRY_MS, delays: RETRY_DELAYS_MS, lookup, ...opts };
   const act = paced(run, settings);
   const read = retrying(run, settings);
   const owner = ownerOf(repo);

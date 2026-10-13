@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { readBoard } from '../scripts/slice-board.mjs';
 import { BANNER_START, desiredState, idOfBody, markerOf } from '../scripts/github-project-desired.mjs';
 import { buildPlan } from '../scripts/github-project-plan.mjs';
-import { executePlan, readRemote } from '../scripts/github-project-gh.mjs';
+import { executePlan, ghRunner, readRemote } from '../scripts/github-project-gh.mjs';
 import { mirror } from '../scripts/github-project.mjs';
 import { fakeGithub } from './repository/github-project-fake.js';
 import { FIXTURE, WORKSTREAMS } from './repository/github-project-fixture.js';
@@ -20,16 +20,17 @@ const BAD_GATEWAY = 'gh label create failed: non-200 OK status code: 502 Bad Gat
 const TIMEOUT = 'gh failed: Post "https://api.github.com/graphql": dial tcp 140.82.113.6:443: i/o timeout';
 
 /** A runner that fails the first `times` calls for which `when(args)` is true, with `message`; `after` says it still went through. */
-const flaky = (gh, when, times, message, { after = false } = {}) => {
+const flaky = (gh, when, times, message, { after = false, stderr } = {}) => {
   let left = times;
   const state = { failed: 0, calls: 0 };
   const run = (args, input) => {
-    if (!when(args) || left <= 0) return gh.run(args, input);
+    if (!when(args, input) || left <= 0) return gh.run(args, input);
     state.calls += 1;
     left -= 1;
     state.failed += 1;
     if (after) gh.run(args, input);
-    throw new Error(message);
+    // like ghRunner's error: gh's own words are kept apart from the command in the message
+    throw Object.assign(new Error(message), stderr === undefined ? {} : { stderr });
   };
   return { run, state };
 };
@@ -201,5 +202,134 @@ describe('what is not tried again', () => {
     assert.throws(() => executePlan(run, REPO, plan, { sleep: (ms) => sleeps.push(ms) }), /HTTP 403/);
     assert.equal(state.calls, 1);
     assert.ok(!sleeps.some((ms) => DELAYS.includes(ms)));
+  });
+
+  test('a new project field, which a second try could make twice, stops the run', () => {
+    const gh = fakeGithub();
+    const { run, state } = flaky(gh, (_, input) => /createProjectV2Field/.test(input ?? ''), 1, TIMEOUT);
+    const sleeps = [];
+    const plan = buildPlan(desired, readRemote(run, REPO));
+    assert.throws(() => executePlan(run, REPO, plan, { sleep: (ms) => sleeps.push(ms) }), /i\/o timeout/);
+    assert.equal(state.calls, 1, 'tried once');
+    assert.ok(!sleeps.some((ms) => DELAYS.includes(ms)));
+  });
+});
+
+describe('only gh’s own words say a failure is transient', () => {
+  test('a call that names 503 in its arguments but fails with a 404 is not tried again', () => {
+    const gh = fakeGithub();
+    apply(gh);
+    const next = structuredClone(desired);
+    next.issues[0].state = next.issues[0].state === 'closed' ? 'open' : 'closed';
+    const stderr = 'GraphQL: Could not resolve to an Issue with that number. (HTTP 404)';
+    const { run, state } = flaky(
+      gh,
+      (a) => a[0] === 'issue' && ['close', 'reopen'].includes(a[1]),
+      1,
+      `gh issue close 503 --reason completed failed: ${stderr}`,
+      { stderr },
+    );
+    const sleeps = [];
+    const plan = buildPlan(next, readRemote(run, REPO));
+    assert.equal(plan.issues.close.length + plan.issues.reopen.length, 1, 'one issue to close or reopen');
+    assert.throws(() => executePlan(run, REPO, plan, { sleep: (ms) => sleeps.push(ms) }), /HTTP 404/);
+    assert.equal(state.calls, 1);
+    assert.ok(!sleeps.some((ms) => DELAYS.includes(ms)));
+  });
+
+  test('the real runner keeps gh’s stderr apart on its error', () => {
+    const run = ghRunner(() => ({ status: 1, stdout: '', stderr: 'HTTP 502: Bad Gateway\n' }));
+    assert.throws(
+      () => run(['issue', 'close', '7']),
+      (e) => e.stderr === 'HTTP 502: Bad Gateway' && /gh issue close 7 failed/.test(e.message),
+    );
+  });
+
+  test('a title with “timeout” in it does not make a refusal transient', () => {
+    const gh = fakeGithub();
+    const stderr = 'HTTP 422: Validation Failed';
+    const { run, state } = flaky(
+      gh,
+      is('issue', 'create'),
+      1,
+      `gh issue create --title Viewing · timeout failed: ${stderr}`,
+      { stderr },
+    );
+    const sleeps = [];
+    const plan = buildPlan(desired, readRemote(run, REPO));
+    assert.throws(() => executePlan(run, REPO, plan, { sleep: (ms) => sleeps.push(ms) }), /HTTP 422/);
+    assert.equal(state.calls, 1);
+    assert.ok(!sleeps.some((ms) => DELAYS.includes(ms)));
+  });
+
+  test('“context deadline exceeded” and “timed out waiting” are transient', () => {
+    for (const stderr of [
+      'Get "https://api.github.com/user": context deadline exceeded',
+      'timed out waiting for the server',
+    ]) {
+      const gh = fakeGithub();
+      const { run } = flaky(gh, is('label', 'create'), 1, `gh label create failed: ${stderr}`, { stderr });
+      assert.deepEqual(apply(gh, run), [5000], stderr);
+    }
+  });
+});
+
+describe('looking again before a create is tried again', () => {
+  const planted = (gh, login) => {
+    let done = false;
+    return (args, input) => {
+      if (is('issue', 'create')(args) && !done) {
+        done = true;
+        gh.hub.issues.push({
+          number: gh.hub.issues.length + 1,
+          title: args[args.indexOf('--title') + 1],
+          body: input,
+          state: 'OPEN',
+          labels: [],
+          author: { login },
+          url: `https://github.com/o/r/issues/${gh.hub.issues.length + 1}`,
+        });
+        throw Object.assign(new Error(`gh issue create failed: ${TIMEOUT}`), { stderr: TIMEOUT });
+      }
+      return gh.run(args, input);
+    };
+  };
+
+  test('never takes up somebody else’s issue with the same title and body', () => {
+    const gh = fakeGithub();
+    apply(gh, planted(gh, 'stranger'));
+    const first = gh.hub.issues[0];
+    const same = gh.hub.issues.filter((i) => idOfBody(i.body) === idOfBody(first.body));
+    assert.equal(same.length, 2, 'the stranger’s issue stays, and our own is made');
+    assert.deepEqual(same.map((i) => i.author.login).sort(), ['rogerbucks', 'stranger']);
+  });
+
+  test('does take up an issue of the signed-in login', () => {
+    const gh = fakeGithub();
+    apply(gh, planted(gh, 'rogerbucks'));
+    assert.equal(gh.hub.issues.length, 5);
+  });
+
+  test('stops, and never creates again, when the look itself keeps failing', () => {
+    const gh = fakeGithub();
+    let armed = false;
+    let creates = 0;
+    const run = (args, input) => {
+      if (is('issue', 'create')(args)) {
+        creates += 1;
+        if (!armed) {
+          armed = true;
+          gh.run(args, input);
+          throw Object.assign(new Error(`gh issue create failed: ${TIMEOUT}`), { stderr: TIMEOUT });
+        }
+      }
+      if (armed && is('issue', 'list')(args))
+        throw Object.assign(new Error(`gh issue list failed: ${TIMEOUT}`), { stderr: TIMEOUT });
+      return gh.run(args, input);
+    };
+    const plan = buildPlan(desired, readRemote(run, REPO));
+    assert.throws(() => executePlan(run, REPO, plan, { sleep: () => {} }), /i\/o timeout/);
+    assert.equal(creates, 1, 'the create was not made again');
+    assert.equal(gh.hub.issues.length, 1);
   });
 });
