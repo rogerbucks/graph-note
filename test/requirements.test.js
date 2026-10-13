@@ -26,8 +26,8 @@ describe('the requirements copy', () => {
     assert.match(BANNER[1], /do not hand-edit; regenerate/);
   });
 
-  test('the slice under way is set in one place, and is slice 2', () => {
-    assert.equal(CURRENT_SLICE, 2);
+  test('the slice under way is set in one place, and is slice 3', () => {
+    assert.equal(CURRENT_SLICE, 3);
   });
 
   test('as committed, has nothing to report: every started requirement proved, every test where it says, and claimed', () => {
@@ -56,9 +56,12 @@ describe('a tampered copy fails the check', () => {
   });
 
   test('a requirement of a slice not yet started may wait for its test, until its slice starts', () => {
-    const text = without(real(), '(gql_file_source)-[:PROVED_BY]->(test_sources),');
+    // A made-up requirement one slice ahead of the current one, so the case holds at every later flip.
+    const next = CURRENT_SLICE + 1;
+    const waiting = `(not_yet_started:Requirement {section: '1', slice: ${next}, level: 'must', rule: 'A requirement of a later slice.'}),\n`;
+    const text = replaced(real(), '// ── Tests ──\n', `${waiting}// ── Tests ──\n`);
     assert.deepEqual(kinds(auditRequirements(text, { exists }), 'unproved'), []);
-    assert.deepEqual(kinds(auditRequirements(text, { exists, slice: 3 }), 'unproved'), ['gql_file_source']);
+    assert.deepEqual(kinds(auditRequirements(text, { exists, slice: next }), 'unproved'), ['not_yet_started']);
   });
 
   test('a written test whose file the repository does not hold', () => {

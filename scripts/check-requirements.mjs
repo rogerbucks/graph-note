@@ -20,7 +20,7 @@ const { read } = createRequire(import.meta.url)('../packages/graph-spec/src/grap
 
 export const REQUIREMENTS = 'requirements/editor-requirements.gql';
 // The slice being built: its requirements, and every earlier slice's, must each be proved by a named test.
-export const CURRENT_SLICE = 2;
+export const CURRENT_SLICE = 3;
 export const BANNER = [
   '// graph: editor_requirements · SOURCE',
   "// Generated from the editor's requirements graph by graph-note-requirements-export.py — do not hand-edit; regenerate.",

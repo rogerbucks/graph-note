@@ -2,7 +2,7 @@
 
 An Obsidian plugin that draws the graphs written in notes, and lets them be edited beside the note — by typing, or by tapping and dragging the drawing. It works on desktop and mobile, offline.
 
-**Status: in development.** Not yet in the community plugin directory. It is built in three slices; this repository holds the scaffolding for the first.
+**Status: in development.** Not yet in the community plugin directory. It is built in three slices: slices 1 and 2 are released, and slice 3 is in progress.
 
 ## What is here
 
