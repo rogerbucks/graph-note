@@ -117,6 +117,19 @@ declare namespace GraphSpecCheck {
    * key. Throws ProfileError where the reader does; a query or an excerpt owns nothing. */
   function ownedComments(block: string): { owned: OwnedComment[]; unowned: number[]; malformed: number[] };
 
+  /** A note on a thing or a link (§26; editor spec §24): its element's line, the element, its /// lines' numbers, its
+   * text (CommonMark, for the host to render) and its summary, the text's first paragraph. */
+  interface ElementNote {
+    line: number;
+    element: { thing: string } | { link: [string, string, string] };
+    lines: number[];
+    text: string;
+    summary: string;
+  }
+  /** A block's notes, and each line holding more than one element with a note's /// lines above it, which belongs to
+   * none of them. Throws ProfileError where the reader does; a query or an excerpt holds no notes. */
+  function notes(block: string): { notes: ElementNote[]; shared: { line: number; lines: number[] }[] };
+
   /** The dialect linter: traps in a GQL text, each with its line. */
   function lint(text: string): { trap: string; line: number }[];
 }

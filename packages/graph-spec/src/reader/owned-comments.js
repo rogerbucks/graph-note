@@ -10,8 +10,9 @@ const { trim, trimStart, trimEnd } = require('./whitespace.js');
 const NOTE = /^\/\/\/(?: |$)/,
   TAG = /^\/\/@ ([A-Za-z_][A-Za-z0-9_.-]*):([^\n]*)$/; // [^\n], as Python's .: JavaScript's . also stops at CR, U+2028 and U+2029
 
-/** The one element each line of code begins: [[line, element]] for every line that begins exactly one, a thing as
- * {thing: its name} and a link as {link: [from, type, to]}, by the names written. */
+/** The one element each line of code begins: one, [[line, element]] for every line that begins exactly one, a thing
+ * as {thing: its name} and a link as {link: [from, type, to]}, by the names written; and shared, the lines that begin
+ * more than one, none of them inside an element written above. */
 function elementsByLine(block) {
   const counts = new Map(),
     first = new Map();
@@ -20,7 +21,7 @@ function elementsByLine(block) {
     if (!first.has(line)) first.set(line, element);
   };
   const t = tokens(block);
-  if (!t.length) return new Map();
+  if (!t.length) return { one: new Map(), shared: new Set() };
   // a line that begins inside an element written above it — within its brackets — holds more than one element
   const inside = new Set();
   let depth = 0,
@@ -36,19 +37,19 @@ function elementsByLine(block) {
     for (const n of nodes) if (n.labels.length || Object.keys(n.props).length) add(n.line, { thing: n.v });
     rels.forEach((r, i) => add(r.line, { link: [nodes[i].v, r.type, nodes[i + 1].v] }));
   }
-  return new Map([...first].filter(([line]) => counts.get(line) === 1 && !inside.has(line)));
+  return {
+    one: new Map([...first].filter(([line]) => counts.get(line) === 1 && !inside.has(line))),
+    shared: new Set([...counts].filter(([line, n]) => n > 1 && !inside.has(line)).map(([line]) => line)),
+  };
 }
 
-/** The notes and //@ lines a block's elements own (§26, §27): owned, in line order, each with its element's line, the
- * element, its tags as [key, value] in order, its note's lines (a bare /// is an empty line, a paragraph break) and its
- * summary, the note's first paragraph; unowned, the lines of each run with no one element directly below it; and
- * malformed, each //@ line with no key, read as an ordinary comment. A //@ line is never a note. Refuses what the
- * reader refuses, with its ProfileError; a query or an excerpt owns nothing. */
-function ownedComments(block) {
-  const out = { owned: [], unowned: [], malformed: [] };
+/** What ownedComments gives, each owned entry also with its /// lines' numbers (lines), and shared: each line holding
+ * more than one element with a note's /// lines directly above it, as {line, lines}. The notes (notes.js) read it. */
+function scanComments(block) {
+  const out = { owned: [], unowned: [], malformed: [], shared: [] };
   const [, kind] = header(block);
   if (kind === 'query' || kind === 'excerpt') return out;
-  const elements = elementsByLine(block);
+  const { one: elements, shared } = elementsByLine(block);
   let run = [];
   const unowned = () => {
     out.unowned.push(...run.map((c) => c.line));
@@ -77,12 +78,27 @@ function ownedComments(block) {
         tags: run.filter((c) => 'tag' in c).map((c) => c.tag),
         note,
         summary: from < 0 ? '' : note.slice(from, to < 0 ? undefined : to).join('\n'),
+        lines: run.filter((c) => 'note' in c).map((c) => c.line),
       });
       run = [];
-    } else unowned();
+    } else {
+      const noted = run.filter((c) => 'note' in c).map((c) => c.line);
+      if (noted.length && shared.has(line)) out.shared.push({ line, lines: noted });
+      unowned();
+    }
   });
   unowned();
   return out;
 }
 
-module.exports = { ownedComments };
+/** The notes and //@ lines a block's elements own (§26, §27): owned, in line order, each with its element's line, the
+ * element, its tags as [key, value] in order, its note's lines (a bare /// is an empty line, a paragraph break) and its
+ * summary, the note's first paragraph; unowned, the lines of each run with no one element directly below it; and
+ * malformed, each //@ line with no key, read as an ordinary comment. A //@ line is never a note. Refuses what the
+ * reader refuses, with its ProfileError; a query or an excerpt owns nothing. */
+function ownedComments(block) {
+  const { owned, unowned, malformed } = scanComments(block);
+  return { owned: owned.map(({ lines: _lines, ...o }) => o), unowned, malformed };
+}
+
+module.exports = { ownedComments, scanComments };
