@@ -10,7 +10,8 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 
 **Numbers.** Every item has a number in its line: its section's letter, a dash and two digits, such as `V-03`, the
 third item of Viewing. The letters are B Before, V Viewing, Z Zoom, P The edit pane, I Editing in place and the
-inspector, S The style graph, W Views, D Parked for later, T Walked paths, X Export, C Settings, and A Accessibility.
+inspector, S The style graph, W Views, D Parked for later, T Walked paths, X Export, C Settings, A Accessibility, and
+E Diagram types.
 **A number never changes once given**, whatever happens to the item's words or its place; a removed item's number is
 never used again, and **a new item takes the next number in its section**. Each item after Before has a note in
 `test-vault/Device checks/` that shows the case in Obsidian, found by its number (`test/device-check-notes.test.js`
@@ -288,6 +289,25 @@ holds the two together).
       box's details or an estimate's reason.
 - [ ] **A-02** With VoiceOver: the drawing is described as a list of sentences, and a new problem typed in the pane is announced
       without the focus moving.
+
+## Diagram types — spec §15
+
+- [ ] **E-01** Diagram type on a card lists Network, Tree, Flow, Radial, Lanes, Timeline and Table: each that fits can be
+      pressed, each that does not is greyed with why beside it, and one says "suggested". The card says "Drawn as a
+      network" until a type is pressed. Press Tree: a Diagram is written into the style block, never the data, and the
+      card redraws top to bottom (slice 3, diagram_type_set, type_only_when_fits, suggest_type, type_remembered).
+- [ ] **E-02** Press each type in turn, in light and dark: every box keeps its kind's colour and every link its reading's,
+      the words are the same sizes, and all read as clearly as in the network; a table's rows read the same way
+      (type_one_look).
+- [ ] **E-03** In each type, the table among them: tap a box or a row for its details; Edit here, then change a property in
+      the inspector; zoom in and out with the buttons and a pinch, Fit, and Full screen. Each works as in the network
+      (type_one_way_to_work).
+- [ ] **E-04** On the tree, give a thing a second parent: the card says the graph no longer fits a tree and why, draws it as a
+      network, and offers Use flow; press it, and the style block now says flow (type_stops_fitting).
+- [ ] **E-05** Phone: a wide flow, a wide tree and a wide timeline each show at a readable size, fitted top to bottom; a finger
+      moves the drawing sideways only, and up and down still scroll the note (wide_types_phone).
+- [ ] **E-06** A graph of 51 things says it has too many to read in one drawing and offers Show as table and a view; Show as
+      table draws it as a table (large_way_in).
 
 ## Result
 
