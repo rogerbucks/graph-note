@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/ai-ceiling.test.js",
+  "test": "a name that only holds such a word inside another word is not one",
+  "seen_failing_first": false,
+  "evidence": "a guard on the new pattern, written with it: the old \\b-bounded pattern already found none of these names, so it passes on the code before too; it holds that widening the names to snake_case and to key, pin and token found no false ones (commit 5fe4b03)"
+}

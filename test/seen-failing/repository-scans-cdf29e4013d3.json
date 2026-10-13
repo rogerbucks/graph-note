@@ -1,0 +1,6 @@
+{
+  "file": "test/repository-scans.test.js",
+  "test": "the scans of the send module find it however it is reached, and every timer and event",
+  "seen_failing_first": false,
+  "evidence": "it tests test support, test/repository/repo.js, which the replay takes from the same commit, so it cannot fail on the code before; it was seen failing when first written, in test/policy.test.js, where it could not run because importedModules was not yet exported (commit 5fe4b03)"
+}
