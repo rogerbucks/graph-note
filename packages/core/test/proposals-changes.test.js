@@ -102,6 +102,27 @@ describe('making a proposal', () => {
   });
 });
 
+describe('the value of a change of a property', () => {
+  const refused = (value) => made({ changes: [{ op: 'set', thing: 'a', key: 'k', value }] }).refused;
+
+  test('is one value: a number, a truth, a date or a text, with brackets and commas in the text as it likes', () => {
+    for (const value of ['4', 'true', "DATE '2026-10-13'", "'a}), (b'", "'two, three'", "'[1, 2]'"])
+      assert.equal(refused(value), undefined, value);
+  });
+
+  test('is refused when it carries more than the property it is for, however it is written', () => {
+    for (const value of ['4, extra: true', "4}), (mallory:Option {name: 'Mallory'", '4, other.x = 5', '[1}), (m:T'])
+      assert.match(refused(value), /gives one value, and nothing else/, value);
+  });
+
+  // the document profile holds no list value (the reader: "'[' is not a value in the profile"), so a list literal is no
+  // value to write: refused here, rather than accepted and then refused when the change is written
+  test('is never a list literal, which the profile cannot hold, alone or with more', () => {
+    for (const value of ['[1, 2]', "['a', 'b']", '[1, 2], extra: 3'])
+      assert.match(refused(value), /gives one value, and nothing else/, value);
+  });
+});
+
 describe('the groups of a proposal', () => {
   test('are named for what the changes add, change or remove', () => {
     const g = (c) => groupOf(c);

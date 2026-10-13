@@ -410,6 +410,12 @@ describe('person_decides: the editor never applies a proposal without a person a
     assert.equal(you.accept(NOTE, ['c1'], { name: 'the reader' }, { at: NOW }).ok, true);
   });
 
+  test('a proposer is known by its raw name: one called the_reader is no stand-in for the person labelled "the reader"', () => {
+    const review = new ProposalReview(proposalOf({ by: { name: 'the_reader', kind: 'model' } }));
+    assert.equal(review.accept(NOTE, ['c1'], { name: 'the reader' }, { at: NOW }).ok, true);
+    assert.match(review.accept(NOTE, ['c2'], { name: 'The_Reader' }, { at: NOW }).reason, /is not a person/);
+  });
+
   test('an empty choice applies nothing', () => {
     const review = new ProposalReview(proposalOf());
     const r = accepted(review.accept(NOTE, [], ROGER, { at: NOW }));

@@ -137,8 +137,9 @@ export class ProposalReview {
     const name = typeof (by as Person | null)?.name === 'string' ? (by as Person).name.trim() : '';
     if (!name) return 'a person decides: say who is deciding';
     const { name: proposer, kind } = this.proposal.provenance.by;
-    // the same name in any case is the same proposer: a name is one word, so no person's label with a space is taken for it
-    const same = oneWord(name).toLowerCase() === oneWord(proposer).toLowerCase();
+    // the same name in any case is the same proposer, as written: a proposer's name is one word, so no label with a space
+    // is taken for it, and one called the_reader is none for the label "the reader"
+    const same = name.toLowerCase() === proposer.toLowerCase();
     return same && kind !== 'person' ? `${proposer} proposed this, and is not a person: a person decides` : null;
   }
 

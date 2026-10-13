@@ -221,6 +221,30 @@ describe('a person decides, a change at a time', () => {
     }
   });
 
+  test('a card whose change set was edited since it was drawn decides nothing, and is drawn again from the note', async () => {
+    const { note } = proposed();
+    const { env, el } = await card(note);
+    try {
+      const edited = note.replace("'Small reader'", "'Smaller reader'");
+      assert.notEqual(edited, note);
+      env.state.files.set(PATH, edited);
+      press(row(el, 'c1'), 'Reject');
+      await until(() => env.state.notices.length > 0);
+      assert.equal(noteNow(env), edited, 'nothing was written');
+      assert.match(
+        env.state.notices.at(-1),
+        /Nothing was decided: the change set has changed since this card was drawn/,
+      );
+      await until(() => /Smaller reader/.test(row(el, 'c1')?.querySelector('code')?.textContent ?? ''));
+      // the card drawn again is the note's: a decision on it is written
+      press(row(el, 'c1'), 'Accept');
+      await until(() => noteNow(env) !== edited);
+      assert.match(noteNow(env), /Smaller reader/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('Reject writes only the record in the change set: the graph block is the same bytes', async () => {
     const { note } = proposed();
     const { env, el } = await card(note);

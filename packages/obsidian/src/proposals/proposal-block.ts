@@ -5,7 +5,7 @@
 // in the change set (rejecting_recorded). Both go through the vault's API against the note as it is then, and can be undone.
 import { Notice, TFile } from 'obsidian';
 import type { MarkdownPostProcessorContext } from 'obsidian';
-import { ProposalReview, namesSharedSchema, nudgedDrawing, readStyle } from '@graph-note/core';
+import { ProposalReview, changeSetId, gqlSpans, namesSharedSchema, nudgedDrawing, readStyle } from '@graph-note/core';
 import type { Which } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
 import { renderCode } from '../code';
@@ -17,8 +17,9 @@ import type { ProposalCard } from './proposal-strip';
 
 /**
  * Who decides here. Obsidian says nothing of who is at the keyboard, so it is the reader: the change set records "the
- * reader", with the time, beside what was decided. A label with a space can never be a proposer's name, which is one
- * word, so a proposer called anything at all, "you" among it, never stands in this person's way.
+ * reader", with the time, beside what was decided. The core compares a person's name with the proposer's as they are
+ * written, in any case: a label with a space is never a proposer's name, which is one word, so a proposer called "you",
+ * or "the_reader", never stands in this person's way.
  */
 const PERSON = { name: 'the reader' };
 
@@ -38,6 +39,7 @@ export async function renderProposalBlock(
   el: HTMLElement,
   ctx: MarkdownPostProcessorContext,
   owner?: object,
+  held?: string,
 ): Promise<void> {
   const root = el.createDiv({ cls: 'graph-note' });
   const read = ProposalReview.fromChangeSet(source);
@@ -54,7 +56,8 @@ export async function renderProposalBlock(
   const path = ctx.sourcePath;
   // with no section info, as when another plugin renders the block, the card cannot know which note it would write: it
   // shows the proposal and writes nothing, as in reading view (spec §3)
-  const note = info?.text ?? source;
+  // `held` is the note as it is when the card is drawn again after the change set was found changed under it
+  const note = held ?? info?.text ?? source;
   const readOnly = () => !info || readOnlyHere(root);
   const review = plugin.reviewOf(path, read);
   review.shared = [...note.matchAll(/```gql\n([\s\S]*?)\n```/g)].some((m) => namesSharedSchema(m[1] ?? ''))
@@ -63,22 +66,40 @@ export async function renderProposalBlock(
   const { reading, ...shown } = review.show(note);
   const graph = review.proposal.graph;
 
+  // the card is drawn again from the note as it is, when the change set it was drawn from is not the note's any more
+  let view: GraphView | undefined;
+  const redraw = async (fresh: { block: string; note: string }) => {
+    view?.unload();
+    root.remove();
+    await renderProposalBlock(plugin, fresh.block, el, ctx, owner, fresh.note);
+  };
+  type Change =
+    { ok: true; note: string; said: string } | { ok: false; reason: string; again?: { block: string; note: string } };
   // a decision is written into the note against the note as it is then, and said in words
-  const write = async (
-    change: (now: string) => { ok: true; note: string; said: string } | { ok: false; reason: string },
-  ) => {
+  const write = async (change: (now: string) => Change) => {
     // reading view never changes a note, whatever is called: nothing is decided there
     if (readOnly()) return 'This note is only being read here, so nothing was decided.';
     const file = plugin.app.vault.getAbstractFileByPath(path);
     if (!(file instanceof TFile)) return 'The note is not there any more, so nothing was decided.';
     let said = '';
+    let again: { block: string; note: string } | undefined;
     await plugin.app.vault.process(file, (now) => {
       const r = change(now);
       said = r.ok ? r.said : `Nothing was decided: ${r.reason}`;
+      if (!r.ok) again = r.again;
       return r.ok ? r.note : now;
     });
     new Notice(said);
+    if (again) await redraw(again);
     return said;
+  };
+  /** The change set as the note holds it now, read again: what a decision is made on, never the card's own copy. */
+  const heldNow = (now: string): { block: string } | null => {
+    const span = gqlSpans(now).find((s) => {
+      const h = changeSetId(s.text);
+      return h?.id === review.proposal.id && h.graph === graph;
+    });
+    return span ? { block: span.text } : null;
   };
   const count = (n: number) => `${n} change${n === 1 ? '' : 's'}`;
   const card: ProposalCard = {
@@ -86,7 +107,18 @@ export async function renderProposalBlock(
     graph,
     shown,
     decide: (kind: 'accept' | 'reject', which: Which, staleSeen: boolean) =>
-      write((now) => {
+      write((now): Change => {
+        // the change set is read again from the note: a card drawn from one that was edited since decides nothing
+        const held = heldNow(now);
+        const current = held && ProposalReview.fromChangeSet(held.block);
+        if (!held || !current || 'refused' in current)
+          return { ok: false, reason: 'the change set is no longer in the note as this card was drawn' };
+        if (JSON.stringify(current.proposal) !== JSON.stringify(review.proposal))
+          return {
+            ok: false,
+            reason: 'the change set has changed since this card was drawn: it is drawn again from the note as it is',
+            again: { block: held.block, note: now },
+          };
         const r = review[kind](now, which, PERSON, { staleSeen });
         if (!r.ok) return r;
         return {
@@ -141,18 +173,17 @@ export async function renderProposalBlock(
     renderCode(root, source);
     return;
   }
-  ctx.addChild(
-    new GraphView(root, {
-      source,
-      reading: { ...reading, graphs: new Map(reading.graphs).set(graph, drawing) },
-      graph,
-      drawn,
-      problems: [],
-      mode: 'note',
-      lineOf: (at) => at.line + (info?.lineStart ?? 0),
-      onEdit: () => openAt(plugin, path, info?.lineStart ?? 0),
-      proposal: card,
-      ...(info ? {} : { readOnly: () => true }),
-    }),
-  );
+  view = new GraphView(root, {
+    source,
+    reading: { ...reading, graphs: new Map(reading.graphs).set(graph, drawing) },
+    graph,
+    drawn,
+    problems: [],
+    mode: 'note',
+    lineOf: (at) => at.line + (info?.lineStart ?? 0),
+    onEdit: () => openAt(plugin, path, info?.lineStart ?? 0),
+    proposal: card,
+    ...(info ? {} : { readOnly: () => true }),
+  });
+  ctx.addChild(view);
 }
