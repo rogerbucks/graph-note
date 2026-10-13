@@ -40,7 +40,13 @@ export class DetailsPanel {
   }
 
   /** For the details element of a card, its drawing, the viewport the focus goes back to, the card's options and what a thing's details offer. */
-  constructor(el: HTMLElement, svg: Element, viewport: HTMLElement, o: ViewOptions, actions?: ThingActions & NavActions) {
+  constructor(
+    el: HTMLElement,
+    svg: Element,
+    viewport: HTMLElement,
+    o: ViewOptions,
+    actions?: ThingActions & NavActions,
+  ) {
     this.el = el;
     this.svg = svg;
     this.viewport = viewport;
