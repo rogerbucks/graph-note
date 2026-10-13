@@ -9,6 +9,7 @@ import { inlineRows } from './inline-properties.ts';
 import { STYLE } from './layout.ts';
 import type { GraphDrawing } from './note-reading.ts';
 import type { Nudge, StyleGraph } from './style-graph.ts';
+import { diagramFor } from './types.ts';
 
 const id = (key: string) => `"${key}"`;
 
@@ -57,15 +58,18 @@ export function nudgedDrawing(drawing: GraphDrawing, style: Pick<StyleGraph, 'di
 /**
  * The drawing as its style graph draws it in `view` (none: the whole graph), as every host draws a graph, a view or an
  * export: in the direction its direction nudge sets, with its nudges (§6), the links it draws without their arrowheads
- * (§15) and the properties it shows inline (§14), their values from `g`, the graph as read (none: no property shown).
+ * (§15), the properties it shows inline (§14), their values from `g`, the graph as read (none: no property shown), and
+ * laid out as the diagram type it chooses while the data fits it (§15, types.ts); a network otherwise.
  */
 export function styledDrawing(drawing: GraphDrawing, style: StyleGraph, g?: Graph, view?: string): GraphDrawing {
   const arrowless = arrowlessLinks(drawing, style, view),
-    inline = g ? inlineRows(drawing, g, style, view) : undefined;
+    inline = g ? inlineRows(drawing, g, style, view) : undefined,
+    { plan } = diagramFor(drawing, style, g, view);
   return {
     ...nudgedDrawing(drawing, style),
     nudges: style.nudges,
     ...(arrowless.length ? { arrowless } : {}),
     ...(inline && (inline.boxes.length || inline.links.length) ? { inline } : {}),
+    ...(plan ? { diagram: plan } : {}),
   };
 }

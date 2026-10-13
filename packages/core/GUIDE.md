@@ -104,7 +104,8 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   Code pane), are worked out to hex and paint their own page, with the locked contrast held; the system entry carries
   both in the drawing's own style sheet, `prefers-color-scheme` choosing, for a host that cannot say which it shows.
 - `hits.ts` — what a tap lands on or near.
-- `zoom.ts` — zoom, pan and full screen.
+- `zoom.ts` — zoom, pan and full screen; `across`, a wide drawing fitted to its height and scrolled one way only (a
+  tree, flow or timeline on a phone, §15 wide_types_phone).
 
 **Editing**
 
@@ -163,7 +164,7 @@ style block beside it: `// graph: trip_style · STYLE trip`. `blocks.ts` knows o
 it. A graph line that says STYLE but names no graph is a problem, never data.
 
 - `style-graph.ts` — what a style graph holds once read (`StyleGraph`: nudges, shows, looks, each view's fade or hide,
-  how each view was shown, the direction, where arrowheads are hidden) and the words it allows: the four nudge words, the
+  how each view was shown, the direction, where arrowheads are hidden, the diagram types chosen) and the words it allows: the four nudge words, the
   lines, the formats, fade or hide, on or off (`INLINE`), show or hide (`ARROWHEADS`), and the colours, which are only
   the locked style's hues by name (`STYLE_HUES`). A Show switches a property on or off inline for a kind, a thing or a
   relationship type's links, in the whole graph or one view; an Arrows hides or shows arrowheads for every link or one
@@ -208,10 +209,30 @@ it. A graph line that says STYLE but names no graph is a problem, never data.
   Python library draws both the same way (`graphspec/style/arrows.py`, `inline.py`), held to the core byte for byte on
   `python/graph_spec/tests/style_cases.json` by `test/layout-parity.test.js` (arrows_both_renderers).
 - `style-edit.ts` — `styleEdit`: a nudge, a look, a view's fade or hide, how a view was shown, a property switched on or
-  off inline, or arrowheads hidden or shown, written as text into the graph's style block (made after the graph's last
-  block when there is none); a view's setting, or a choice of properties or arrowheads for one place, changed in place,
-  never written twice; never a data block touched. A styled hue is drawn with `theme.ts`'s `hueColour`, the same blends as a
+  off inline, arrowheads hidden or shown, or the diagram type chosen, written as text into the graph's style block
+  (made after the graph's last block when there is none); a view's setting, or a choice of properties, arrowheads or
+  diagram type for one place, changed in place, never written twice; never a data block touched. A styled hue is drawn with `theme.ts`'s `hueColour`, the same blends as a
   kind's, so it meets the locked contrast.
+
+**Diagram types (spec §15)**
+
+A graph is drawn as a network unless its style graph chooses a type: `(d1:Diagram {type: 'tree', relationship:
+'MANAGES'})`, for the whole graph or, with `view`, for one view (type_remembered). Style-graph.ts holds the seven
+`DIAGRAM_TYPES`; style-checks.ts and style-conflicts.ts check a Diagram's words and allow one type for each place.
+
+- `types.ts` — which types fit a drawing's shape (`shapeOf`: its things, kinds and first dates, and its links), and why
+  each that does not (`typeFits`): a network always; a tree along one relationship with at most one parent each and no
+  loop (none chosen: the relationship with the most links that makes one); a flow, links with no loop; a radial drawing,
+  three things or more joined to the centre, the thing with the most links; lanes, every thing of one kind, two kinds or
+  more; a timeline, every thing carrying a date; a table, any things. `suggestType` gives the best fit and why, never
+  drawn unless chosen; `diagramFor` the type drawn: the chosen one while it fits, else a network, with why and
+  `nearestType` (type_stops_fitting), and the plan Graphviz lays it out by. `styledDrawing` puts that plan on the
+  drawing; render.ts writes it in first (graph-layout.js `typedSource`) and lays a tree out down and the other types
+  across, unless a direction is set. The Python library judges and lays out alike (`graphspec/style/diagram_types.py`),
+  held byte for byte on `python/graph_spec/tests/type_cases.json` by `test/layout-parity.test.js`.
+- `types-table.ts` — the table, which the host draws as a plain table (`tableOf`: Thing, Kind and each property, and
+  each link); the way in to a graph of more than `LARGE_GRAPH` things (`wayIn`, large_way_in); and which types scroll
+  one way only on a phone (`scrollsOneWay`).
 
 **Views (spec §2, §7)**
 

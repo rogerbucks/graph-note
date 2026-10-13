@@ -15,6 +15,7 @@ from graphspec.reader.drawing import read_for_drawing
 from graphspec.rules.plain_graph import World
 from graphspec.rules.views import SCHEMA_LABELS, _word, readings
 from graphspec.style.arrows import arrowless
+from graphspec.style.diagram_types import diagram_for
 from graphspec.style.inline import inline_rows
 from graphspec.style.reading import read_style
 
@@ -57,7 +58,8 @@ def render_args(texts: Sequence[str], graph: str, view: str | None = None) -> di
     """The arguments graph_svg.render draws `graph` of a note's gql blocks (`texts`) with, as
     the plugin draws it in `view` (None: the whole graph): its boxes and links, the keys drawn
     under a suggested name, and its style — nudges, direction, the links drawn without their
-    arrowheads and the properties shown inline."""
+    arrowheads, the properties shown inline, and the plan of the diagram type it is drawn as, while
+    the data fits the one chosen (a network, with no plan, otherwise)."""
     store, problems = read_for_drawing(texts)
     world = World.from_store(store)
     parts = graph_parts(world, graph, problems)
@@ -70,4 +72,5 @@ def render_args(texts: Sequence[str], graph: str, view: str | None = None) -> di
         "direction": style["direction"],
         "arrowless": arrowless([t for t, _ in parts["links"]], style["arrows"], view),
         "inline": inline_rows(parts["boxes"], parts["links"], style["shows"], view),
+        "diagram": diagram_for(parts, style["diagrams"], view).get("plan"),
     }

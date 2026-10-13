@@ -46,8 +46,15 @@ export { arrowsShown } from './arrows.ts';
 export { INLINE_ROWS } from './inline-properties.ts';
 export type { InlineProperties, PropertyRow } from './inline-properties.ts';
 export { styleEdit } from './style-edit.ts';
+export { DIAGRAM_TYPES, LARGE_GRAPH, diagramFor, nearestType, shapeOf, suggestType, typeFits } from './types.ts';
+export type { DiagramChoice, DiagramType, GraphShape, Suggestion, TypeFit } from './types.ts';
+export { scrollsOneWay, tableOf, wayIn } from './types-table.ts';
+export type { DiagramTable } from './types-table.ts';
+export type { DiagramPlan } from './note-reading.ts';
+export type { Diagram } from './style-graph.ts';
 export type {
   ArrowsWrite,
+  DiagramWrite,
   LookWrite,
   NudgeWrite,
   ShowWrite,

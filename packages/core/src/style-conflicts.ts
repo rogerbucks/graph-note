@@ -1,12 +1,12 @@
 // The things of a style graph checked against each other (editor spec §6, nudge_problems; §7; §14; §15): nudges that
 // conflict — two directions, beside and before on one pair, a thing in two groups, a loop of befores — a view set both to
 // fade and to hide, a view saved as shown twice, a colour given two meanings in one view or path, a property switched both
-// on and off for one kind, thing or type in one view, and arrowheads both hidden and shown for the same links in one
-// view. Each is a problem with a fix; the first written is kept and the later left out, so what is kept never conflicts.
+// on and off for one kind, thing or type in one view, arrowheads both hidden and shown for the same links in one view,
+// and two diagram types for the whole graph or one view. Each is a problem with a fix; the first written is kept and the later left out, so what is kept never conflicts.
 import type { Problem } from './note-reading.ts';
 import type { Checked } from './style-checks.ts';
 import { emptyStyle, styleProblem } from './style-graph.ts';
-import type { Arrows, Look, Nudge, Show, StyleAt, StyleGraph } from './style-graph.ts';
+import type { Arrows, Diagram, Look, Nudge, Show, StyleAt, StyleGraph } from './style-graph.ts';
 
 const REMOVE = 'remove one of them';
 
@@ -153,6 +153,22 @@ const settleArrows = (arrows: Arrows[], graph: string, out: Problem[]): Arrows[]
     out,
   );
 
+/** A diagram type as a sentence says it: its type, and for a tree the relationship it follows. */
+const typeSaid = (d: Diagram) => `${d.type}${d.relationship === undefined ? '' : ` along ${d.relationship}`}`;
+
+/** The diagram types chosen, one for the whole graph and one for each view (§15). */
+const settleDiagrams = (diagrams: Diagram[], graph: string, out: Problem[]): Diagram[] =>
+  settleChoices(
+    diagrams,
+    (d) => d.view ?? '',
+    typeSaid,
+    (was, d) =>
+      `the diagram type of ${d.view === undefined ? 'the whole graph' : `view ${d.view}`} is set to both ` +
+      `${typeSaid(was)} (line ${was.at.line}) and ${typeSaid(d)}`,
+    graph,
+    out,
+  );
+
 /** The style a checked style graph gives, once its things are checked against each other, and the problems found. */
 export function settle(checked: Checked, graph: string): { style: StyleGraph; problems: Problem[] } {
   const problems: Problem[] = [],
@@ -162,6 +178,7 @@ export function settle(checked: Checked, graph: string): { style: StyleGraph; pr
   if (direction) style.direction = direction;
   style.shows = settleShows(checked.shows, graph, problems);
   style.arrows = settleArrows(checked.arrows, graph, problems);
+  style.diagrams = settleDiagrams(checked.diagrams, graph, problems);
   style.looks = settleLooks(checked.looks, graph, problems);
   const viewAt = new Map<string, number>();
   for (const { view, outside, at } of checked.views) {

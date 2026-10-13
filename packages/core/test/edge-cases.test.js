@@ -1,5 +1,5 @@
 // Edge cases (editor spec §9 and §7): empty, broken and oversized inputs each give a stated result, never a blank or a
-// crash. One section for each kind of input: paths, the empty view, and the empty export.
+// crash. One section for each kind of input: paths, the empty view, the empty export, and diagram types (§15).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
@@ -10,6 +10,8 @@ import { writeSafely } from '../src/export-write.ts';
 import { DEFAULT_SETTINGS } from '../src/settings.ts';
 import { PathPlayer, pathBlock, pathProblems, pathsOf } from '../src/paths.ts';
 import { evaluate } from '../src/view-evaluate.ts';
+import { DIAGRAM_TYPES, shapeOf, suggestType, typeFits } from '../src/types.ts';
+import { wayIn } from '../src/types-table.ts';
 
 const TRIP = `// graph: trip · SOURCE
 (home:Place {name: 'Home'}),
@@ -298,5 +300,37 @@ describe('exports: nothing to export', () => {
     const r = await writeSafely('Group.svg', '', ops);
     assert.equal(r.ok, false);
     assert.deepEqual(touched, []);
+  });
+});
+
+describe('diagram types: empty and oversized', () => {
+  const things = (n) =>
+    `// graph: big\n${Array.from({ length: n }, (_, i) => `(t${i}:Thing {name: 'Thing ${i}'})`).join(',\n')}`;
+
+  // proves: large_way_in
+  test('a graph of more than 50 things says so and offers the table or a view; one of 50 is drawn as it is', () => {
+    for (const n of [51, 400]) {
+      const plain = readNote([things(n)]).graphs.get('big');
+      const way = wayIn(plain.boxes.length);
+      assert.equal(way.count, n);
+      assert.match(way.say, /open it as a table, or make a view/);
+      const shape = shapeOf(plain);
+      assert.equal(suggestType(typeFits(shape), shape).type, 'table');
+    }
+    assert.equal(wayIn(readNote([things(50)]).graphs.get('big').boxes.length), null);
+  });
+
+  // proves: large_way_in
+  test('a graph with nothing in it is offered the network alone, each other type saying why, and no way in', () => {
+    const fits = typeFits({ things: [], links: [] });
+    assert.deepEqual(
+      fits.map((f) => [f.type, f.fits]),
+      DIAGRAM_TYPES.map((t) => [t, t === 'network']),
+    );
+    assert.equal(wayIn(0), null);
+    assert.deepEqual(suggestType(fits, { things: [], links: [] }), {
+      type: 'network',
+      because: 'a network fits any graph',
+    });
   });
 });

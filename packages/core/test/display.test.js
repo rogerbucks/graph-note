@@ -473,6 +473,57 @@ describe('a box crowded with properties', () => {
   });
 });
 
+// type_one_look (editor spec §15): every diagram type keeps the locked style. A graph of three kinds, with a date on each
+// thing, so every type Graphviz draws fits it; each is drawn, themed, beside the network it is a type of.
+const TYPED = `// graph: team · SOURCE
+(ada:Person {name: 'Ada', on: DATE '2026-01-01'}),
+(bea:Person {name: 'Bea', on: DATE '2026-02-01'}),
+(ops:Team {name: 'Ops', on: DATE '2026-03-01'}),
+(plan:Plan {name: 'The plan', on: DATE '2026-04-01'}),
+(ada)-[:LEADS]->(bea),
+(bea)-[:JOINS]->(ops),
+(ops)-[:OWNS]->(plan)`;
+/** Each box's shape as themed: its group (Graphviz numbers boxes in the order drawn), and its fill and stroke. */
+const boxLooks = (svg) =>
+  Object.fromEntries(
+    [...svg.matchAll(/<g id="(node\d+)" class="node">\s*<(?:path|polygon) style="([^"]*)"/g)].map(([, id, style]) => [
+      id,
+      style,
+    ]),
+  );
+
+describe('every diagram type keeps the locked style', () => {
+  // proves: type_one_look
+  test("each type's boxes and links keep their colours, its texts the locked sizes, and no colour is left unthemed", async () => {
+    const engine = await loadEngine();
+    const network = draw(shownIn(TYPED, undefined).drawing, engine).svg;
+    const sizes = new Set([STYLE.font_size, STYLE.kind_font_size, STYLE.edge_font_size]);
+    const lines = (svg) =>
+      svg
+        .split('class="edge"')
+        .slice(1)
+        .flatMap((e) => [...e.split('</g>')[0].matchAll(/<path style="(stroke:[^"]*)"/g)].map((m) => m[1]));
+    // a lane's box is outlined as a group's is, in the locked muted colour
+    const muted = (svg) => [...svg.matchAll(/class="cluster">\s*<path style="([^"]*)"/g)].map((m) => m[1]);
+    assert.deepEqual(Object.keys(boxLooks(network)), ['node1', 'node2', 'node3', 'node4'], 'every box is compared');
+    assert.equal(new Set(lines(network)).size, 3, 'every reading’s line is compared');
+    for (const type of ['tree', 'flow', 'radial', 'lanes', 'timeline']) {
+      const { drawing } = shownIn(TYPED, undefined, `(d1:Diagram {type: '${type}'})`);
+      assert.equal(drawing.diagram?.type, type, `${type} fits, and is drawn`);
+      const svg = draw(drawing, engine).svg;
+      // the same kind hues, blended to the locked contrast, on every box; the same reading hues on every link
+      assert.deepEqual(boxLooks(svg), boxLooks(network), `${type}: the boxes keep their colours`);
+      assert.deepEqual(new Set(lines(svg)), new Set(lines(network)), `${type}: the links keep their colours`);
+      for (const outline of muted(svg)) assert.equal(outline, 'stroke:var(--text-muted)', `${type}: a lane's outline`);
+      if (type === 'lanes') assert.equal(muted(svg).length, 3, 'a lane for each kind');
+      for (const [, size] of svg.matchAll(/<text[^>]*font-size="([\d.]+)"/g))
+        assert.ok(sizes.has(Number(size)), `${type}: a text at ${size}, a size of the locked style`);
+      assert.doesNotMatch(svg, /#000[0-4][0-9a-f]{2}/, `${type}: every placeholder colour themed`);
+      assert.equal(svg.includes('font-family="'), network.includes('font-family="'), `${type}: the locked font`);
+    }
+  });
+});
+
 describe('a link guessed from a near miss of its type', () => {
   // proves: properties_switch
   test('shows the properties chosen for the type it is taken for, as its arrowhead goes by that type', () => {

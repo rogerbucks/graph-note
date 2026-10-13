@@ -364,6 +364,61 @@ describe('double tap', () => {
   });
 });
 
+describe('a wide tree, flow or timeline on a phone scrolls one way only', () => {
+  /** A drawing 2000 × 400, scrolled across a phone's card 375 wide and as tall as the drawing fitted. */
+  const across = (content = { width: 2000, height: 400 }, viewport = { width: 375, height: 400 }) =>
+    new Zoom(content, viewport, 'note', true);
+  const drag = (z, dx, dy) => {
+    z.handle({ kind: 'down', id: 1, pointer: 'touch', x: 200, y: 200 });
+    const used = z.handle({ kind: 'move', id: 1, x: 200 + dx, y: 200 + dy });
+    z.handle({ kind: 'up', id: 1, x: 200 + dx, y: 200 + dy, time: 0 });
+    return used;
+  };
+
+  // proves: wide_types_phone
+  test('fitted to its height, from its start: the other way is fitted, and the browser keeps the page’s scroll', () => {
+    const z = across();
+    close(z.view().scale, 1);
+    assert.deepEqual([z.view().x, z.view().y], [0, 0], 'at its start, never in its middle');
+    assert.equal(z.touchAction(), 'pan-y', 'up and down still scroll the note');
+    const tall = across({ width: 2000, height: 800 });
+    close(tall.view().scale, 0.5, 'taller than the card: fitted to its height');
+    assert.equal(tall.view().x, 0);
+  });
+
+  // proves: wide_types_phone
+  test('one finger moves it across only, never up or down, and it stops at either end', () => {
+    const z = across();
+    assert.equal(drag(z, -300, -120), true, 'the drag is the drawing’s');
+    assert.deepEqual([z.view().x, z.view().y], [-300, 0]);
+    drag(z, -5000, 0);
+    assert.equal(z.view().x, 375 - 2000, 'stops at its end');
+    drag(z, 9000, 40);
+    assert.deepEqual([z.view().x, z.view().y], [0, 0], 'and at its start');
+    z.handle({ kind: 'down', id: 2, pointer: 'touch', x: 50, y: 50, onBox: true });
+    assert.equal(z.handle({ kind: 'move', id: 2, x: 10, y: 50 }), false, 'a drag from a box is the host’s, as ever');
+  });
+
+  // proves: wide_types_phone
+  test('zoomed in, it pans both ways as any drawing does; Fit brings back the one-way view', () => {
+    const z = across();
+    z.zoomIn();
+    assert.equal(z.touchAction(), 'none');
+    drag(z, -100, -60);
+    assert.ok(z.view().y < 0, 'up and down too, while zoomed in');
+    z.fit();
+    assert.deepEqual([z.view().x, z.view().y, z.view().scale], [0, 0, 1]);
+  });
+
+  // proves: wide_types_phone
+  test('a drawing that fits across is as it always was: centred, and the page scrolls both ways', () => {
+    const z = across({ width: 300, height: 400 });
+    assert.equal(z.view().x, 37.5);
+    assert.equal(z.touchAction(), 'pan-x pan-y');
+    assert.equal(drag(z, -50, 0), false);
+  });
+});
+
 describe('telling the host', () => {
   test('every change is reported, so the host redraws only when the view moved', () => {
     const z = make();

@@ -1,6 +1,6 @@
 // The style graph's shape (editor spec §2, §6, §7, §14, §15): what a style block holds once read — nudges, the properties
-// shown inline, looks for views and paths, whether a view fades or hides what is outside it, how a view was shown, and
-// where arrowheads are hidden — and the words each may use. A style graph is written in the same notation as the data, in
+// shown inline, looks for views and paths, whether a view fades or hides what is outside it, how a view was shown,
+// where arrowheads are hidden, and the diagram type chosen — and the words each may use. A style graph is written in the same notation as the data, in
 // its own block, and never in the data.
 import { distance } from './estimates.ts';
 import { STYLE } from './layout.ts';
@@ -43,8 +43,13 @@ export const ARROWHEADS = ['show', 'hide'] as const;
 /** Show or hide. */
 export type ArrowheadsChoice = (typeof ARROWHEADS)[number];
 
+/** The diagram types (§15, diagram_type_set): what fits each, and how each is drawn, is in types.ts. */
+export const DIAGRAM_TYPES = ['network', 'tree', 'flow', 'radial', 'lanes', 'timeline', 'table'] as const;
+/** One of the diagram types. */
+export type DiagramType = (typeof DIAGRAM_TYPES)[number];
+
 /** The kinds of thing a style graph holds, by label. */
-export const STYLE_KINDS = ['Nudge', 'Show', 'Look', 'ViewStyle', 'Shown', 'Arrows'] as const;
+export const STYLE_KINDS = ['Nudge', 'Show', 'Look', 'ViewStyle', 'Shown', 'Arrows', 'Diagram'] as const;
 /** One of the kinds of thing a style graph holds. */
 export type StyleKind = (typeof STYLE_KINDS)[number];
 
@@ -59,6 +64,7 @@ export const STYLE_KEYS: Record<StyleKind, readonly string[]> = {
   ViewStyle: ['view', 'outside'],
   Shown: ['view', 'zoom', 'x', 'y', 'frame', 'selected'],
   Arrows: ['arrowheads', 'view', 'type'],
+  Diagram: ['type', 'view', 'relationship'],
 };
 
 /** A word as a sentence says it before a kind's name: `an Arrows`, `a Show`. */
@@ -110,6 +116,19 @@ export interface Arrows {
   view?: string;
   /** The relationship type whose links it is for; none, every link. */
   type?: string;
+  at: StyleAt;
+}
+
+/**
+ * The diagram type chosen (§15, type_remembered): for the whole graph, or for one view; for a tree, the relationship it
+ * follows. Drawn only while the data fits it (types.ts, `diagramFor`).
+ */
+export interface Diagram {
+  type: DiagramType;
+  /** The view it is chosen for; none, the whole graph. */
+  view?: string;
+  /** For a tree: the relationship type whose links are its branches; none, the one that makes the best tree. */
+  relationship?: string;
   at: StyleAt;
 }
 
@@ -170,6 +189,8 @@ export interface StyleGraph {
   direction?: string;
   /** Where arrowheads are hidden or shown again, in the order written. */
   arrows: Arrows[];
+  /** The diagram types chosen, for the whole graph or a view, in the order written. */
+  diagrams: Diagram[];
 }
 
 /** Where styling applies: a view, or a path; with neither, the plain drawing, which keeps the locked style. */
@@ -196,7 +217,7 @@ export interface LegendEntry {
 
 /** A style graph with nothing in it: the locked style. */
 export function emptyStyle(): StyleGraph {
-  return { nudges: [], shows: [], looks: [], views: new Map(), shown: new Map(), arrows: [] };
+  return { nudges: [], shows: [], looks: [], views: new Map(), shown: new Map(), arrows: [], diagrams: [] };
 }
 
 /**

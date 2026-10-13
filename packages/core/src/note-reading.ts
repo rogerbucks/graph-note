@@ -59,7 +59,22 @@ export interface GraphDrawing {
   arrowless?: number[];
   /** The properties its style graph shows below the text of its boxes and links (spec §14); none, no property shown. */
   inline?: InlineProperties;
+  /** The diagram type it is laid out as (spec §15), when one is chosen and fits; none, a network. */
+  diagram?: DiagramPlan;
 }
+
+/**
+ * How Graphviz lays a diagram type out (spec §15; graph-layout.js, `typedSource`): a tree by its links (indexes in the
+ * order the layout source draws links), a radial drawing around its centre, lanes by kind (each lane's label and its
+ * things), a timeline by its things grouped by date, earliest first; a flow needs nothing more. A network and a table
+ * have none: a network is the layout source as it is, and a table is drawn by the host.
+ */
+export type DiagramPlan =
+  | { type: 'tree'; tree: number[] }
+  | { type: 'flow' }
+  | { type: 'radial'; centre: string }
+  | { type: 'lanes'; lanes: [string, string[]][] }
+  | { type: 'timeline'; dates: string[][] };
 
 /** Something that could not be read: its graph, the block (index in the note), the line in that block (1 = its graph line), what is wrong, and the fix. */
 export interface Problem {
