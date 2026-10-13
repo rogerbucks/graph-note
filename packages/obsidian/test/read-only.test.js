@@ -10,6 +10,7 @@ import { fence, labelled } from './host/notes.js';
 import { PATH, showIn } from './host/card-notes.js';
 import { tapKey } from './host/inspector-steps.js';
 import { fakeContext } from './host/fake-obsidian.js';
+import { pressTheRest } from './host/details-controls.js';
 
 before(() => build());
 
@@ -30,23 +31,18 @@ const VIEW = "// graph: reader · QUERY view answers\nMATCH (n {id: 'q'})-[]-{1,
 const VIEW_NOTE = ['# Reader', '', fence(RICH), '', fence(VIEW), ''].join('\n');
 
 /**
- * Every control in the card's details that can be pressed or typed in, by its name, its words, its class or its tag; but
- * those that only find the way round the drawing (§25), which choose a linked thing or link, step along the trail or
- * minimise the sheet, and so change the picture and never the note, as the untangling does.
- */
-const controls = (el) =>
-  el
-    .querySelectorAll(
-      '.graph-note-details button, .graph-note-details input, .graph-note-details select, .graph-note-details textarea, .graph-note-details [role="button"]',
-    )
-    .filter((c) => !c.closest('.graph-note-link-group, .graph-note-trail') && !c.hasClass('graph-note-sheet-toggle'))
-    .map((c) => c.getAttribute('aria-label') || c.textContent || c.getAttribute('class') || c.tagName);
-
-/**
  * What a thing's details offer beside closing, where the note is only read (§25): to show the drawing filtered to it, and
  * the shortest path to another thing. Both change the picture and nothing else, so reading view has them.
  */
 const UNTANGLING = ['Show only this and its neighbours', 'Shortest path to another thing'];
+const KEPT = ['Close details', ...UNTANGLING];
+
+/**
+ * The controls of the details beside closing and untangling — a linked thing or link chosen, a step of the trail, the
+ * sheet minimised (§25) — each pressed in turn, `reopen` opening the details again before each; the names of the rest.
+ * The test then checks the note is unchanged, so any of them that wrote would show.
+ */
+const pressed = (el, reopen) => pressTheRest(el, KEPT, reopen);
 
 const details = (el) => el.querySelector('.graph-note-details');
 
@@ -84,7 +80,10 @@ describe('a card in reading view shows its details and offers nothing that write
       assert.ok(items.includes('name: Large reader') && items.includes('weight: 180'), `its properties: ${items}`);
       assert.ok(!d.querySelector('.metadata-add-button'), 'no Add property');
       assert.ok(!d.textContent.includes('Add property'));
-      assert.deepEqual(controls(shown.reading), ['Close details', ...UNTANGLING]);
+      assert.deepEqual(
+        pressed(shown.reading, () => tapKey(shown.reading, 'large')),
+        KEPT,
+      );
       await unchanged(env, shown);
     } finally {
       env.uninstall();
@@ -126,7 +125,11 @@ describe('a card in reading view shows its details and offers nothing that write
       const d = details(shown.reading);
       assert.equal(d.querySelectorAll('input').length, 0, 'a link: no field');
       assert.ok(items().includes('since: 2024'), `a link’s property is shown: ${items()}`);
-      assert.deepEqual(controls(shown.reading), ['Close details']);
+      const link = shown.reading.querySelectorAll('g.edge').find((g) => g.getAttribute('data-link') === '0');
+      assert.deepEqual(
+        pressed(shown.reading, () => link.dispatch('keydown', { key: 'Enter' })),
+        ['Close details'],
+      );
       await unchanged(env, shown);
     } finally {
       env.uninstall();
@@ -167,7 +170,11 @@ describe('a card in reading view shows its details and offers nothing that write
     try {
       const shown = await readingWhileEdited(env);
       tapKey(shown.reading, 'small_reader');
-      assert.deepEqual(controls(shown.reading), ['Close details', ...UNTANGLING], 'no Add the name');
+      assert.deepEqual(
+        pressed(shown.reading, () => tapKey(shown.reading, 'small_reader')),
+        KEPT,
+        'no Add the name',
+      );
       assert.ok(details(shown.reading).textContent.includes('Suggested name: small_reader'), 'the name is said');
       await unchanged(env, shown);
     } finally {
@@ -259,7 +266,11 @@ describe('a card in reading view shows its details and offers nothing that write
       for (const key of ['Enter', ' ']) {
         box.dispatch('keydown', { key });
         assert.ok(!details(shown.reading).hidden, `${key === ' ' ? 'Space' : key} opens the details`);
-        assert.deepEqual(controls(shown.reading), ['Close details', ...UNTANGLING], 'and they hold nothing to change');
+        assert.deepEqual(
+          pressed(shown.reading, () => box.dispatch('keydown', { key })),
+          KEPT,
+          'and they hold nothing to change',
+        );
       }
       for (const key of ['Delete', 'Backspace', 'z', 'Enter'])
         for (const ctrl of [false, true]) box.dispatch('keydown', { key, ctrlKey: ctrl, metaKey: ctrl });
@@ -291,8 +302,10 @@ describe('a card in reading view shows its details and offers nothing that write
       assert.ok(full, 'full screen is open');
       for (const label of ['Edit here', 'Edit in pane', 'Record a path', 'Make a view'])
         assert.ok(!labelled(full, label), `no ${label}`);
-      tapKey(full, 'large');
-      assert.deepEqual(controls(full), ['Close details', ...UNTANGLING]);
+      assert.deepEqual(
+        pressed(full, () => tapKey(full, 'large')),
+        KEPT,
+      );
       assert.ok(details(full).textContent.includes('name: Large reader'), 'its properties are shown');
       await unchanged(env, shown);
     } finally {

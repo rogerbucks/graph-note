@@ -126,7 +126,8 @@ and nothing else (untangle_data_untouched). Nothing here is written to a note or
   legend), and `Untangle`, which holds all of it for one drawing and works it out into `layers`: what is kept and what is
   hidden.
 - `details-nav.ts` — finding your way from a thing's details: `linkGroups` (its links by relationship type and direction,
-  in words with a count: "is reported to by Bob and Cy (2)", the reverse reading the schema's or the library's guess),
+  in words with a count: "is reported to by Bob and Cy (2)", the reverse reading the schema's or the library's guess, a
+  thing linked twice the same way named once with each of its links),
   `Trail` (the things chosen from them, back and forward), `glideAt` and `MOVE_MS` (the brief eased move to a chosen
   thing), `READABLE_SCALE` (below it a thing's words are under 11 pixels, too small to read), `pointerTo` (the arrow at
   the view's edge pointing to a selection out of sight), and `sheetLimit` and `coverOf` (how tall the details sheet may

@@ -133,6 +133,26 @@ describe('a thing’s links are listed by relationship type and direction, in wo
     }
   });
 
+  test('two links of one type to the same thing name it once, with a button for each link', async () => {
+    const twice = `// graph: team · SOURCE
+(ann:Person {name: 'Ann'}),
+(bob:Person {name: 'Bob'}),
+(bob)-[:REPORTS_TO]->(ann),
+(bob)-[:REPORTS_TO {since: 2025}]->(ann)`;
+    const c = (await show(env, fence(twice))).el;
+    tapKey(c, 'ann');
+    assert.deepEqual(
+      groups(c).map((g) => g.textContent),
+      ['is reported to by Bob (2)'],
+    );
+    assert.deepEqual(
+      groups(c)[0]
+        .querySelectorAll('button')
+        .map((b) => b.textContent || b.getAttribute('aria-label')),
+      ['Bob', 'Link: Bob reports to Ann', 'Link: Bob reports to Ann'],
+    );
+  });
+
   test('the inspector lists them the same way while the block is edited', async () => {
     const card = await loadCard({ files: { [PATH]: NOTE } });
     try {
@@ -178,6 +198,21 @@ describe('choosing a linked thing or a link in the list', () => {
     // and an end of the link is a choice too
     choice(el, 'Tablet').click();
     assert.ok(thing(el, 'tablet').hasClass('is-selected'));
+  });
+
+  test('a link chosen while the legend hides its type shows the whole graph first, so it is chosen in sight', () => {
+    labelled(el, 'Fit').click();
+    labelled(el, 'Filter by kind or link').click();
+    const entry = (label) =>
+      el.querySelectorAll('.graph-note-filter button').find((b) => b.textContent.startsWith(label));
+    entry('favours').click();
+    entry('favours').click();
+    const link = el.querySelector('g.edge[data-link="2"]');
+    assert.ok(link.hasClass('graph-note-hidden'), 'hidden by the legend');
+    tapKey(el, 'eyes');
+    labelled(details(el), 'Link: Easy on the eyes favours Large reader').click();
+    assert.ok(!link.hasClass('graph-note-hidden'), 'shown again');
+    assert.ok(link.hasClass('is-selected'), 'and selected');
   });
 
   test('a thing too small to read is brought up to a scale where it can be read', () => {
@@ -231,6 +266,26 @@ describe('the move to a chosen thing', () => {
     assert.equal(details(el).getAttribute('aria-label'), `Details of ${NAMES[found.key]}`);
     assert.equal(details(el).getAttribute('aria-live'), 'polite', 'and said to screen readers');
     for (let t = 5000; held.length; t += MOVE_MS) held.shift()(t);
+  });
+
+  test('a wheel or a zoom key while it moves takes over: the move stops where the zoom left the view', () => {
+    const vp = el.querySelector('.graph-note-viewport');
+    for (const how of ['wheel', 'key']) {
+      zoomIn(el, 8);
+      motion(env, true);
+      found = outOfView(el);
+      assert.ok(found, how);
+      motion(env, false);
+      const held = frames(env);
+      found.b.click();
+      held.shift()(1000);
+      held.shift()(1000 + MOVE_MS / 4);
+      if (how === 'wheel') vp.dispatch('wheel', { target: vp, deltaY: -100, ctrlKey: true, clientX: 10, clientY: 10 });
+      else vp.dispatch('keydown', { target: vp, key: '-' });
+      const left = shown(el);
+      for (let t = 1000 + MOVE_MS / 2; held.length; t += MOVE_MS / 4) held.shift()(t);
+      assert.deepEqual(shown(el), left, `${how}: the move did not carry on against it`);
+    }
   });
 
   test('is instant when the system asks for reduced motion: there at once, and no frame asked for', () => {
@@ -362,6 +417,14 @@ describe('in view mode, details in a tall card show on screen without covering t
     // details, pinned to the foot of the screen, are half as tall as the drawing
     const sheet = high / 2;
     vp.getBoundingClientRect = () => ({ top: 800 - high, bottom: 800, left: 0, right: 700, width: 700, height: high });
+    el.querySelector('.graph-note-view').getBoundingClientRect = () => ({
+      top: 760 - high,
+      bottom: 900,
+      left: 0,
+      right: 700,
+      width: 700,
+      height: 140 + high,
+    });
     details(el).getBoundingClientRect = () => ({
       top: 800 - sheet,
       bottom: 800,

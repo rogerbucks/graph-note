@@ -64,6 +64,16 @@ export class DetailsPanel {
     return this.sheet.top();
   }
 
+  /** The window changed size (`resized`), or the note scrolled: the sheet, if open, is placed again. */
+  moved(resized: boolean): void {
+    this.sheet.moved(resized);
+  }
+
+  /** The card is going: the sheet's watchers stop. */
+  unload(): void {
+    this.sheet.closed();
+  }
+
   /** A thing or link chosen from the details: the next step of the trail, made the selection by the card. */
   private choose(step: TrailStep): void {
     if (this.trail.go(step)) this.step(step);

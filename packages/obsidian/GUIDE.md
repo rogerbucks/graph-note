@@ -116,7 +116,9 @@ module that ties the parts together, named as the folder is.
   `linkGroups`, the trail's buttons, the names of steps, and `Glide`, the brief eased move to what is chosen, a frame at
   a time, at once when the system asks for reduced motion.
 - `details-sheet.ts` — the details in view mode, in a note's card (§25): a sheet pinned to the foot of the part of the
-  screen the note is seen in, over the card, gone while the card is off the screen; its toggle minimises it to a bar or
+  screen the note is seen in, or of the card when the card ends above it, over the card, placed again as the window, the
+  card or the note's scroll moves, gone while the card is off the screen; in the card instead where the browser does not
+  lay it out where it was put (a transformed container), in a canvas card and in a hover preview; its toggle minimises it to a bar or
   restores it, the state remembered for the session; Escape in it closes it, never a key typed in the note; it says
   where its top is, so the card keeps the chosen thing clear above it.
 - `selection-pointer.ts` — the arrow at the edge of the drawing pointing to a selection out of view, named for it; tapped,

@@ -15,8 +15,12 @@ export interface LinkGroup {
   direction: 'out' | 'in';
   /** The reading this way: "reports to" out, "is reported to by" in. */
   reading: string;
-  /** The things at the other ends, in the order the links are written, each with its link's index in the drawing. */
-  things: { key: string; text: string; link: number }[];
+  /**
+   * The things at the other ends, each once, in the order their first links are written: `link` is the index of that
+   * first link in the drawing, `links` of every link to it of this type and way.
+   */
+  things: { key: string; text: string; link: number; links: number[] }[];
+  /** How many links the group holds. */
   count: number;
   /** The group in words: "reports to Ann", "is reported to by Bob and Cy (2)". */
   words: string;
@@ -66,8 +70,11 @@ export function linkGroups(reading: NoteReading, graph: string, key: string): Li
         before: '',
         after: '',
       };
-      group.things.push({ key: other, text: textOf(other), link });
-      group.count = group.things.length;
+      // a thing linked twice in the same way is named once, keeping each of its links
+      const was = group.things.find((t) => t.key === other);
+      if (was) was.links.push(link);
+      else group.things.push({ key: other, text: textOf(other), link, links: [link] });
+      group.count++;
       groups.set(id, group);
     });
   for (const g of groups.values()) {

@@ -119,8 +119,10 @@ export class Selection {
 
   /** A thing or link chosen from the details: the selection, its details shown, brought into view readable (§25). */
   private bring(step: TrailStep): void {
-    // one hidden by a filter would be chosen out of sight: the whole graph is shown first, as finding does
-    if ('key' in step && this.layers.hidden.things.has(step.key)) this.untangle.reset();
+    // one hidden by a filter or the legend would be chosen out of sight: the whole graph is shown first, as finding does;
+    // a link is numbered among the drawing's links as its edge is
+    const { hidden } = this.layers;
+    if ('key' in step ? hidden.things.has(step.key) : hidden.edges.has(step.link)) this.untangle.reset();
     this.came('chosen', () => this.host.open(step, true));
   }
 

@@ -110,6 +110,27 @@ describe('a thing’s links, grouped by relationship type and direction, in word
     assert.deepEqual([back.before, back.after], ['is reported to by ', ' (2)']);
   });
 
+  test('two links of one type to the same thing name it once, keeping each link, and count both', () => {
+    const r = readNote([
+      "// graph: g · SOURCE\n(ann:P {name: 'Ann'}),\n(bob:P {name: 'Bob'}),\n(cy:P {name: 'Cy'}),\n" +
+        '(bob)-[:REPORTS_TO]->(ann),\n(cy)-[:REPORTS_TO]->(ann),\n(bob)-[:REPORTS_TO {since: 2025}]->(ann)',
+    ]);
+    const [back] = linkGroups(r, 'g', 'ann');
+    assert.equal(back.words, 'is reported to by Bob and Cy (3)');
+    assert.deepEqual(
+      back.things.map((t) => [t.key, t.links]),
+      [
+        ['bob', [0, 2]],
+        ['cy', [1]],
+      ],
+    );
+    assert.deepEqual(
+      back.things.map((t) => t.link),
+      [0, 1],
+      'the first link to each',
+    );
+  });
+
   test('names are listed as a sentence lists them', () => {
     assert.equal(listed(['Ann']), 'Ann');
     assert.equal(listed(['Bob', 'Cy']), 'Bob and Cy');

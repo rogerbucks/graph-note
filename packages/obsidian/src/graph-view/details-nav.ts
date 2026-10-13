@@ -31,7 +31,7 @@ export function stepName(reading: NoteReading, graph: string, step: TrailStep): 
 
 /**
  * A thing's groups of links, one item each, read as the core words them: the words before the names, each name a button
- * that chooses the thing with a button beside it that chooses the link, and the words after, such as the count.
+ * that chooses the thing with a button beside it for each link that reaches it, and the words after, such as the count.
  */
 export function renderLinkGroups(
   el: HTMLElement,
@@ -46,7 +46,9 @@ export function renderLinkGroups(
     g.things.forEach((t, i) => {
       if (i > 0) li.appendText(i === g.things.length - 1 ? ' and ' : ', ');
       thingButton(li, t.text, () => choose({ key: t.key }));
-      button(li, linkName(t.link), 'link', () => choose({ link: t.link })).addClass('graph-note-link-choice');
+      // a thing linked twice in the same way is named once, with a button for each of its links
+      for (const n of t.links)
+        button(li, linkName(n), 'link', () => choose({ link: n })).addClass('graph-note-link-choice');
     });
     if (g.after) li.appendText(g.after);
   }

@@ -25,9 +25,23 @@ export interface SheetHost {
   moved: () => void;
 }
 
-/** Whether a key was pressed in a field being typed in, which is never taken from it. */
-const typing = (t: EventTarget | null): boolean =>
-  !!(t as Element | null)?.closest?.('input, textarea, select, [contenteditable="true"]');
+/**
+ * Whether a key was pressed in a field being typed in, which is never taken from it: a form field, or text the nearest
+ * contenteditable says is editable. In Live Preview the card is a widget CodeMirror marks not editable inside its
+ * editable content, so a key in the card is the card's.
+ */
+function typing(t: EventTarget | null): boolean {
+  const el = t as Element | null;
+  if (el?.closest?.('input, textarea, select')) return true;
+  const editable = el?.closest?.('[contenteditable]')?.getAttribute('contenteditable');
+  return editable === 'true' || editable === '' || editable === 'plaintext-only';
+}
+
+/** Where a sheet pinned to the screen would not be seen as the sheet: a canvas card, and a hover preview. */
+const ELSEWHERE = '.canvas-node, .hover-popover';
+
+/** How far, in pixels, the sheet may be laid out from where it was put before it is taken not to be pinned there. */
+const PLACED_WITHIN = 1;
 
 /** The sheet the details of one card are shown in, in view mode. */
 export class DetailsSheet {
@@ -36,6 +50,8 @@ export class DetailsSheet {
   private toggle: HTMLButtonElement | null = null;
   private body: HTMLElement | null = null;
   private watcher: IntersectionObserver | null = null;
+  /** Watches the card's size while the sheet is open, so the sheet is placed again when it changes. */
+  private sizer: ResizeObserver | null = null;
 
   /** For the details element of a card, which sits in the card. */
   constructor(el: HTMLElement, host: SheetHost) {
@@ -44,31 +60,58 @@ export class DetailsSheet {
     el.addEventListener('keydown', (e: KeyboardEvent) => this.key(e));
   }
 
+  /** Whether the details are to be the sheet: as the host says, but never in a canvas card or a hover preview. */
+  private wanted(): boolean {
+    return this.host.on() && !this.el.closest(ELSEWHERE);
+  }
+
   /** Puts the toggle in a new set of details' header, before its close button, when the details are the sheet. */
   head(head: HTMLElement): void {
     this.toggle = null;
-    if (!this.host.on()) return;
+    if (!this.wanted()) return;
     const t = head.createEl('button', { cls: ['clickable-icon', 'graph-note-sheet-toggle'], attr: { type: 'button' } });
     t.addEventListener('click', () => this.set(this.el.hasClass('is-minimised') ? 'restored' : 'minimised'));
     this.toggle = t;
   }
 
-  /** A new set of details is open, `body` below its header: as the sheet, pinned, sized and in the state last chosen. */
+  /**
+   * A new set of details is open, `body` below its header: as the sheet, pinned, sized and in the state last chosen; or,
+   * where it cannot be pinned, in the card.
+   */
   opened(body: HTMLElement): void {
     this.body = body;
-    const on = this.host.on();
+    const on = this.wanted();
     this.el.toggleClass('graph-note-sheet', on);
-    if (!on) return this.closed();
-    this.place();
+    if (!on || !this.place()) return this.inCard();
     this.apply(remembered);
     this.watch();
+  }
+
+  /**
+   * The window changed size (`resized`), or the note scrolled: the open sheet is placed again over its card, and, when its
+   * size may have changed, the card keeps the chosen thing clear above it.
+   */
+  moved(resized: boolean): void {
+    if (this.el.hidden || !this.el.hasClass('graph-note-sheet')) return;
+    if (!this.place()) return this.inCard();
+    if (resized) this.host.moved();
   }
 
   /** The details closed, or are no longer the sheet: nothing is pinned or watched. */
   closed(): void {
     this.watcher?.disconnect();
     this.watcher = null;
+    this.sizer?.disconnect();
+    this.sizer = null;
     this.el.removeClass('graph-note-sheet', 'is-minimised', 'is-away');
+  }
+
+  /** The details shown in the card, not as the sheet: no toggle, and the whole of them. */
+  private inCard(): void {
+    this.closed();
+    this.toggle?.remove();
+    this.toggle = null;
+    if (this.body) this.body.hidden = false;
   }
 
   /**
@@ -101,26 +144,48 @@ export class DetailsSheet {
     t.setAttribute('aria-expanded', String(!min));
   }
 
-  /** Pins the sheet over its card, as wide as it, at the foot of the part of the screen the note is seen in, and sizes it. */
-  private place(): void {
+  /**
+   * Pins the sheet over its card, as wide as it, at the foot of the part of the screen the note is seen in, or of the card
+   * when the card ends above that, so the note below the card, and its caret, are never covered; and sizes it. Then checks
+   * the browser laid it out there: inside a container that moves fixed things, as a transform does, it is not, and false
+   * says so.
+   */
+  private place(): boolean {
     const card = (this.el.parentElement ?? this.el).getBoundingClientRect(),
-      screen = screenOf(this.el);
+      screen = screenOf(this.el),
+      height = this.el.win.innerHeight,
+      below = Math.max(screen.below, height - Math.min(card.bottom, screen.bottom));
     this.el.setCssProps({
       '--graph-note-sheet-left': `${card.left}px`,
       '--graph-note-sheet-width': `${card.width}px`,
-      '--graph-note-sheet-bottom': `${screen.below}px`,
+      '--graph-note-sheet-bottom': `${below}px`,
       '--graph-note-sheet-max': `${sheetLimit(screen.bottom - screen.top)}px`,
     });
+    const laid = this.el.getBoundingClientRect();
+    return (
+      Math.abs(laid.left - card.left) <= PLACED_WITHIN &&
+      Math.abs(laid.width - card.width) <= PLACED_WITHIN &&
+      Math.abs(laid.bottom - (height - below)) <= PLACED_WITHIN
+    );
   }
 
-  /** Hides the sheet while its card is off the screen, and shows it again when the card comes back. */
+  /**
+   * Hides the sheet while its card is off the screen, and shows it again when the card comes back; and places it again,
+   * keeping the chosen thing clear, when the card changes size.
+   */
   private watch(): void {
     const card = this.el.parentElement;
-    if (this.watcher || !card || typeof IntersectionObserver === 'undefined') return;
-    this.watcher = new IntersectionObserver((seen) => {
-      this.el.toggleClass('is-away', !seen.some((s) => s.isIntersecting));
-    });
-    this.watcher.observe(card);
+    if (!card) return;
+    if (!this.watcher && typeof IntersectionObserver !== 'undefined') {
+      this.watcher = new IntersectionObserver((seen) => {
+        this.el.toggleClass('is-away', !seen.some((s) => s.isIntersecting));
+      });
+      this.watcher.observe(card);
+    }
+    if (!this.sizer && typeof ResizeObserver !== 'undefined') {
+      this.sizer = new ResizeObserver(() => this.moved(true));
+      this.sizer.observe(card);
+    }
   }
 
   /** Escape in the sheet closes it, but never in a field being typed in. */

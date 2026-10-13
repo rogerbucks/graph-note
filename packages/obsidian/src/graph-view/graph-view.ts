@@ -197,7 +197,9 @@ export class GraphView extends MarkdownRenderChild {
   }
 
   override onunload(): void {
-    this.sel.stop(); // a move under way ends with the card
+    // a move under way ends with the card, and the sheet's watchers with it; a card unloaded before it was built has none
+    (this.sel as Selection | undefined)?.stop();
+    (this.details as DetailsPanel | undefined)?.unload();
     this.fullscreen?.overlay.remove();
     this.fullscreen = null;
   }
@@ -264,11 +266,16 @@ export class GraphView extends MarkdownRenderChild {
     const vp = this.viewport;
     const use = (e: Event, ev: ZoomEvent) => {
       if (this.zoom.handle(ev)) {
+        // the wheel, a zoom key or a double click takes over from a move under way, which would fight it (§25)
+        if (ev.kind === 'wheel' || ev.kind === 'key' || ev.kind === 'dblclick') this.sel.stop();
         e.preventDefault();
         return true;
       }
       return false;
     };
+    // the details sheet is placed again as the window changes size and the note scrolls (§25)
+    this.registerDomEvent(vp.win, 'resize', () => this.details.moved(true));
+    this.registerDomEvent(vp.doc, 'scroll', () => this.details.moved(false), { capture: true, passive: true });
     this.registerDomEvent(vp, 'pointerdown', (e: PointerEvent) => {
       if (onPointer(e.target)) return; // the arrow to the selection is a button of its own, never the drawing (§25)
       const target = targetAt(e.target),
