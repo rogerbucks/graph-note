@@ -7,7 +7,7 @@
 // shows them the same way (`graphspec/style/inline.py`), held to this byte for byte.
 import GraphLayout from '@graph-note/graph-spec/src/graph-layout.js';
 import type { Graph } from '@graph-note/graph-spec';
-import { LINK_LINE } from './arrows.ts';
+import { LINK_LINE, linkTypes } from './arrows.ts';
 import { STYLE } from './layout.ts';
 import type { GraphDrawing } from './note-reading.ts';
 import type { Show, StyleGraph } from './style-graph.ts';
@@ -74,7 +74,7 @@ function linkProps(drawing: Pick<GraphDrawing, 'boxes' | 'links'>, g: Graph, ind
  * empty when its style graph switches none on.
  */
 export function inlineRows(
-  drawing: Pick<GraphDrawing, 'boxes' | 'links'>,
+  drawing: Pick<GraphDrawing, 'boxes' | 'links' | 'estimates'>,
   g: Graph,
   style: Pick<StyleGraph, 'shows'>,
   view?: string,
@@ -85,22 +85,35 @@ export function inlineRows(
     const rows = rowsFor(style.shows, view, { key: b.key, kinds: b.kind ? b.kind.split(' · ') : [] }, g.p(b.key));
     if (rows.length) out.boxes.push([b.key, rows]);
   }
-  drawing.links.forEach((l, i) => {
-    const rows = rowsFor(style.shows, view, { type: l.type }, linkProps(drawing, g, i));
+  // a link guessed from a near miss of its type goes by the type it is taken for, as its arrowhead does (arrows.ts)
+  linkTypes(drawing).forEach((type, i) => {
+    const rows = rowsFor(style.shows, view, { type }, linkProps(drawing, g, i));
     if (rows.length) out.links.push([i, rows]);
   });
   return out;
 }
 
 /**
+ * One property's lines, never more than fit with the row saying how many are hidden (`INLINE_ROWS` less one): a value too
+ * long for them is cut short at the last, which ends with an ellipsis, so it is shown in part rather than hidden. Its
+ * length is counted in code points, as the wrapping counts it.
+ */
+function cutShort(lines: string[]): string[] {
+  if (lines.length < INLINE_ROWS) return lines;
+  const kept = lines.slice(0, INLINE_ROWS - 1),
+    last = [...(kept.at(-1) ?? '')].slice(0, STYLE.wrap_chars - 1).join('');
+  return [...kept.slice(0, -1), `${last.replace(/ +$/, '')}…`];
+}
+
+/**
  * The table rows for a box's or link's properties: a gap as the kind caption has, then each property as `name: value`
- * wrapped as a box's text is; when they would take more than `INLINE_ROWS` rows, the whole properties that fit in one
+ * wrapped as a box's text is, a long one cut short; when they would take more than `INLINE_ROWS` rows, the whole properties that fit in one
  * fewer, then how many are hidden.
  */
 function tableRows(rows: PropertyRow[]): string {
   const wrapped = rows.map(([name, value]) => {
     const lines = GraphLayout.wrap(`${name}: ${value}`, STYLE.wrap_chars);
-    return lines.length ? lines : [''];
+    return cutShort(lines.length ? lines : ['']);
   });
   let lines = wrapped.flat();
   if (lines.length > INLINE_ROWS) {

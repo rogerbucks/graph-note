@@ -282,6 +282,23 @@
         ],
         ["// graph: trip_style · STYLE", "(n1:Nudge {word: 'beside', thing: 'home', other: 'cafe'})"]
       ]
+    },
+    {
+      "name": "a nudge with a key its kind does not know: the key is the problem, with the nearest as its fix, and the nudge is left out, not told what it lacks",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'The park'}),",
+          "(cafe:Cafe {name: 'Cafe'}),",
+          "(home)-[:NEAR]->(park)"
+        ],
+        [
+          "// graph: trip_style · STYLE trip",
+          "(n1:Nudge {word: 'beside', thing: 'home', othr: 'park'}),",
+          "(n2:Nudge {word: 'before', thing: 'cafe', other: 'home', note: 'why'})"
+        ]
+      ]
     }
   ]
 }

@@ -155,6 +155,34 @@ describe('arrowheads can be hidden or shown', () => {
   });
 
   // proves: arrows_switchable
+  test('a link drawn backwards keeps dir=back when its type is shown again over a whole-graph hide', () => {
+    // Tag first, so it is the main destination and Source, the other kind that only receives, is drawn backwards
+    const BACK = `// graph: back · SOURCE
+(home:Place {name: 'Home'}),
+(park:Place {name: 'The park'}),
+(green:Tag {name: 'Green'}),
+(guide:Source {name: 'The guide'}),
+(home)-[:NEAR]->(park),
+(park)-[:TAGGED]->(green),
+(home)-[:CITES]->(guide)`;
+    const texts = [
+      BACK,
+      "// graph: back_style · STYLE back\n(a1:Arrows {arrowheads: 'hide'}),\n(a2:Arrows {arrowheads: 'show', type: 'CITES'})",
+    ];
+    const reading = readNote(texts);
+    const { style, problems } = readStyle(texts, 'back', reading);
+    assert.deepEqual(problems, []);
+    const plain = reading.graphs.get('back');
+    const cites = (dot) => linkLines(dot).find((l) => l.startsWith('  "guide" -> "home"'));
+    assert.ok(cites(layoutSource(plain, 'LR').source)?.endsWith(', dir=back];'), 'drawn backwards');
+    for (const d of directions(styledDrawing(plain, style, reading.world.back))) {
+      assert.ok(cites(d.dot).endsWith(', dir=back];'), cites(d.dot));
+      assert.ok(!cites(d.dot).includes('dir=none'));
+      assert.deepEqual(headless(d.dot), [true, true, false]);
+    }
+  });
+
+  // proves: arrows_switchable
   test('the source changes only on the links chosen, and not at all when none is', () => {
     const dot = layoutSource(drawn(undefined).plain, 'LR').source;
     assert.equal(arrowlessSource(dot, []), dot);

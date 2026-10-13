@@ -108,6 +108,8 @@
           "(hall:Venue {name: 'Hall', a1: 'one', a2: 'two', a3: 'three', a4: 'four', a5: 'five'}),",
           "(room:Venue {name: 'Room', a1: 'one', note: 'a long note that wraps over more than one row of its box'}),",
           "(shed:Venue {name: 'Shed', a1: 'one', a2: 'two', note: 'a long note that wraps over more than one row of its box'}),",
+          "(barn:Venue {name: 'Barn', note: 'a story 🌧 so long that its last row is cut: it wraps over far more than three rows of its box'}),",
+          "(barn)-[:HAS {a: 'a value so long that it wraps over far more than the three rows a link holds, and on'}]->(hall),",
           "(hall)-[:HAS {a: 'one', b: 'two', c: 'three', d: 'four', e: 'five'}]->(room)"
         ],
         [

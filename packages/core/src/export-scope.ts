@@ -97,13 +97,22 @@ export function exportScope(reading: NoteReading, request: ExportRequest): Expor
   }
   const kept = base.links.flatMap((_, i) => (links.has(i) ? [i] : []));
   const placed = new Map(kept.map((old, now) => [old, now]));
+  // each link kept says which written link it is (`edge`), as a view's drawing does, so what is drawn with it — its
+  // properties shown inline — is its own, never the link's now at its place
+  const g = reading.world[graph],
+    drawnKeys = new Set(base.boxes.map((b) => b.key));
+  const written = g?.edges.flatMap((e, at) => (drawnKeys.has(e[0]) && drawnKeys.has(e[2]) ? [at] : [])) ?? [];
   return {
     ...scope,
     context: false,
     drawing: {
       ...base,
       boxes: base.boxes.filter((b) => things.has(b.key)),
-      links: kept.flatMap((i) => base.links[i] ?? []),
+      links: kept.flatMap((i) => {
+        const l = base.links[i],
+          edge = l?.edge ?? written[i];
+        return l ? [edge === undefined ? l : { ...l, edge }] : [];
+      }),
       estimates: keptEstimates(base.estimates, things, placed),
     },
     faded: { things: [], links: [] },

@@ -14,7 +14,7 @@ import {
   readStyle,
   writeSafely,
 } from '@graph-note/core';
-import type { ExportFormat, ExportLayout, ExportTheme, ViewSpec } from '@graph-note/core';
+import type { ExportFormat, ExportInfo, ExportLayout, ExportTheme, ViewSpec } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
 import { exportFailureWords, exportRefusalWords } from '../layout-worker/refusal-words';
 import { classificationOf } from './classification';
@@ -110,13 +110,11 @@ async function exporting(plugin: GraphNotePlugin, ask: ExportAsk): Promise<Expor
     });
   let image;
   try {
-    image = await exportWithLayout(scope, layout, {
-      note: ask.path,
-      date,
-      theme: ask.theme,
-      style,
-      data: reading.world[ask.graph],
-    });
+    // the style goes with the graph as read, whose values the properties it shows are drawn with
+    const data = reading.world[ask.graph],
+      basics = { note: ask.path, date, theme: ask.theme };
+    const info: ExportInfo = data ? { ...basics, style, data } : basics;
+    image = await exportWithLayout(scope, layout, info);
   } catch (e) {
     // the layout worker or its engine failed: told as a limit is, with what to do; any other failure is the caller's
     if (!layoutFailed) throw e;

@@ -49,6 +49,7 @@ from collections.abc import Collection, Iterable, Mapping, Sequence
 # arrowheads hidden (editor spec §15) and properties shown inline (§14), written into the source as
 # the plugin's core writes them; they live with the style graph that chooses them
 from graphspec.style.arrows import arrowless_source
+from graphspec.style.drawn import render_args  # noqa: F401 — re-exported: render(**render_args(…))
 from graphspec.style.inline import inline_source
 
 HERE = os.path.dirname(os.path.abspath(__file__))

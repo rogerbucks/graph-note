@@ -198,7 +198,8 @@ it. A graph line that says STYLE but names no graph is a problem, never data.
   or an export: its direction and nudges, the links it draws without arrowheads, and the properties it shows inline.
 - `arrows.ts` — arrowheads hidden or shown (§15): `arrowsShown` (the most particular choice — a view's over the whole
   graph's, then a type's over every link's — shown when none), `arrowlessLinks` (the links a drawing draws without them,
-  guesses included) and `arrowlessSource` (`dir=none` written on those links). Only the arrowhead changes, so each link
+  guesses included), `linkTypes` (the type each link is styled by: a guessed type's link by the type it is taken for,
+  for its arrowhead and its properties alike) and `arrowlessSource` (`dir=none` written on those links). Only the arrowhead changes, so each link
   keeps its reading when tapped and in the text version (direction_never_lost).
 - `inline-properties.ts` — properties shown inline (§14): `inlineRows` (each box's and link's rows, its most particular
   Show deciding — a view's over the whole graph's, then a thing's over its kind's), `valueText` (a value said as the
@@ -252,7 +253,8 @@ The host does what needs a canvas, the file system or a dialog; the core decides
 SVG or PNG (`EXPORT_FORMATS`), of the whole diagram or of a view, in the fixed light or dark colours chosen.
 
 - `export-scope.ts` — `exportScope`: what an export holds. The whole diagram is the graph as drawn. A view is put to the
-  graph as `evaluate` puts it and holds only its things and the links between them, in the graph's order, with a guess (an
+  graph as `evaluate` puts it and holds only its things and the links between them, in the graph's order, each saying
+  which written link it is (`edge`, so its properties are its own), with a guess (an
   estimated link) still a guess at its new place; with the faded context asked for it holds the whole graph and lists what
   is outside the view (`faded`: things by key, links by edge number). An empty graph or view is `empty`, with `why`.
 - `export-marks.ts` — fading and looks written into the SVG (`marked`): an opacity in the style attribute of the group of

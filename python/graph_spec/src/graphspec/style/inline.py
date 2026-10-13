@@ -115,12 +115,27 @@ def inline_rows(
     return out
 
 
+def _cut_short(lines):
+    """One property's lines, never more than fit with the row saying how many are hidden
+    (INLINE_ROWS less one): a value too long for them is cut short at the last, which ends with an
+    ellipsis, so it is shown in part rather than hidden. Counted in code points, as textwrap
+    counts."""
+    if len(lines) < INLINE_ROWS:
+        return lines
+    kept = lines[: INLINE_ROWS - 1]
+    last = kept[-1][: LOCKED["wrap_chars"] - 1].rstrip(" ")
+    return [*kept[:-1], f"{last}…"]
+
+
 def _table_rows(rows):
     """The table rows for a box's or link's properties: a gap as the kind caption has, then each
-    property as `name: value` wrapped as a box's text is; when they would take more than
-    INLINE_ROWS rows, the whole properties that fit in one fewer, then how many are hidden."""
+    property as `name: value` wrapped as a box's text is, a long one cut short; when they would
+    take more than INLINE_ROWS rows, the whole properties that fit in one fewer, then how many are
+    hidden."""
     wrapped = [
-        textwrap.wrap(f"{name}: {value}", LOCKED["wrap_chars"], break_on_hyphens=False) or [""]
+        _cut_short(
+            textwrap.wrap(f"{name}: {value}", LOCKED["wrap_chars"], break_on_hyphens=False) or [""]
+        )
         for name, value in rows
     ]
     lines = [line for w in wrapped for line in w]

@@ -434,4 +434,64 @@ describe('a box crowded with properties', () => {
     for (let i = 1; i < rows.length; i++)
       assert.ok(rows[i].y - rows[i - 1].y >= rows[i].size, `${rows[i].text} clears the row above`);
   });
+
+  // proves: crowded_properties
+  test('a single value too long for the rows is cut short with an ellipsis, never hidden', () => {
+    const LONG = `// graph: venue
+(hall:Venue {name: 'Hall', story: 'a story so long that it wraps over far more than three rows of its box, and on'})`;
+    const hall = directions(shownIn(LONG, undefined, ...show('story')).drawing)[0]
+      .dot.split('\n')
+      .find((l) => l.startsWith('  "hall" ['));
+    assert.ok(
+      hall.includes(
+        `${GAP}${row('story: a story so long')}${row('that it wraps over far')}${row('more than three rows…')}</table>>`,
+      ),
+      hall,
+    );
+    assert.ok(!hall.includes('hidden'));
+  });
+
+  // proves: crowded_properties
+  test("drawn, no two rows of a crowded link's label overlap", async () => {
+    const LINKED = `// graph: venue
+(hall:Venue {name: 'Hall'}), (room:Venue {name: 'Room'}),
+(hall)-[:HAS {a: 'one', b: 'two', c: 'three', d: 'four', e: 'five'}]->(room)`;
+    const { drawing } = shownIn(
+      LINKED,
+      undefined,
+      ...['a', 'b', 'c', 'd', 'e'].map(
+        (p, i, all) => `(s${i}:Show {property: '${p}', type: 'HAS'})${i < all.length - 1 ? ',' : ''}`,
+      ),
+    );
+    const rows = textsIn(groupOf(draw(drawing, await loadEngine()).svg, 'edge1'));
+    assert.deepEqual(
+      rows.map((r) => r.text),
+      ['has', 'a: one', 'b: two', 'c: three', '2 properties hidden'],
+    );
+    for (let i = 1; i < rows.length; i++)
+      assert.ok(rows[i].y - rows[i - 1].y >= rows[i].size, `${rows[i].text} clears the row above`);
+  });
+});
+
+describe('a link guessed from a near miss of its type', () => {
+  // proves: properties_switch
+  test('shows the properties chosen for the type it is taken for, as its arrowhead goes by that type', () => {
+    const NEAR = `// graph: trip · SOURCE
+(home:Place {name: 'Home'}),
+(park:Place {name: 'The park'}),
+(cafe:Cafe {name: 'Cafe'}),
+(home)-[:NEAR {miles: 1}]->(park),
+(park)-[:NEAR {miles: 2}]->(cafe),
+(cafe)-[:NEER {miles: 3}]->(home)`;
+    const { plain, drawing } = shownIn(NEAR, undefined, "(s1:Show {property: 'miles', type: 'NEAR'})");
+    assert.deepEqual(
+      plain.estimates.map((e) => [e.kind, e.written, e.taken, e.index]),
+      [['type', 'NEER', 'NEAR', 2]],
+    );
+    assert.deepEqual(rowsOf(drawing).links, {
+      0: [['miles', '1']],
+      1: [['miles', '2']],
+      2: [['miles', '3']],
+    });
+  });
 });

@@ -30,6 +30,7 @@ import gql_profile as gp  # noqa: E402
 import graph_rules as gr  # noqa: E402
 import graph_svg  # noqa: E402
 from graphspec.style.arrows import arrowless  # noqa: E402
+from graphspec.style.drawn import graph_parts  # noqa: E402
 from graphspec.style.inline import inline_rows, value_text  # noqa: E402
 
 with open(os.path.join(HERE, "style_cases.json"), encoding="utf-8") as f:
@@ -85,30 +86,6 @@ def row(p):
     return [p["block"], p["line"], p["severity"], p["message"], p["fix"]]
 
 
-def parts(world, name, problems):
-    """The boxes and links of a graph, as the vault's graph-spec-draw.py chooses them and the
-    core's layout-parity test mirrors it, each with its properties; and the keys drawn under a
-    suggested name."""
-    g = world[name]
-    ids = [i for i, (labels, _) in g.nodes.items() if not labels & gr.SCHEMA_LABELS]
-    words = gr.readings(g, None)
-
-    def text(i):
-        p = g.p(i)
-        keys = ("name", "title", "text", "label")
-        return next((p[k] for k in keys if isinstance(p.get(k), str) and p[k]), i)
-
-    def kind(i):
-        return " · ".join(sorted(x for x in g.nodes[i][0] if x not in gr.SCHEMA_LABELS))
-
-    nodes = [(i, kind(i), text(i)) for i in ids]
-    links = [(s, t, d, p) for s, t, d, p in g.edges if s in ids and d in ids]
-    edges = [(s, gr._word(words, t), d) for s, t, d, _ in links]
-    suggested = {p["suggested"] for p in problems if p.get("suggested") and p["graph"] == name}
-    boxes = [(i, kind(i), g.p(i)) for i in ids]
-    return nodes, edges, suggested, boxes, [(t, p) for _, t, _, p in links]
-
-
 def python_answer(texts, view):
     """The Python library's answer for a note drawn in `view`, in the shape of the core's."""
     store, problems = gp.read_for_drawing(texts)
@@ -119,11 +96,12 @@ def python_answer(texts, view):
         if g is not None and g not in styles:
             styles[g] = [row(p) for p in gp.read_style(texts, g, world)[1]]
     for name in (n for n in world.graphs if not n.startswith("schema ")):
-        nodes, edges, suggested, boxes, links = parts(world, name, problems)
+        parts = graph_parts(world, name, problems)
+        nodes, edges, suggested = parts["nodes"], parts["edges"], parts["suggested"]
         style = gp.read_style(texts, name, world)[0]
         keys = [key for key, _, _ in nodes]
-        hidden[name] = arrowless([t for t, _ in links], style["arrows"], view)
-        shown[name] = inline_rows(boxes, links, style["shows"], view)
+        hidden[name] = arrowless([t for t, _ in parts["links"]], style["arrows"], view)
+        shown[name] = inline_rows(parts["boxes"], parts["links"], style["shows"], view)
         drawn[name] = {
             rd: graph_svg.nudged_source(
                 graph_svg.inline_source(
@@ -228,6 +206,67 @@ class Styled(unittest.TestCase):
             ("text", "text"),
         ]
         self.assertEqual([(v, value_text(v)) for v, _ in cases], cases)
+
+    def test_graph_parts_gives_the_boxes_and_links_with_their_properties(self):
+        # the boxes and links a host hands graph_svg, as the core draws them: each box's key, kinds
+        # and text, each link's reading, and their properties for the rows shown inline
+        texts = [
+            "// graph: trip\n(home:Place:Start {name: 'Home', open: 'always'}),\n"
+            "(park:Place {title: 'The park'}),\n(home)-[:NEAR {miles: 2}]->(park)"
+        ]
+        store, problems = gp.read_for_drawing(texts)
+        parts = graph_parts(gr.World.from_store(store), "trip", problems)
+        self.assertEqual(
+            parts["nodes"], [("home", "Place · Start", "Home"), ("park", "Place", "The park")]
+        )
+        self.assertEqual(parts["edges"], [("home", "near", "park")])
+        self.assertEqual(parts["suggested"], set())
+        self.assertEqual(
+            parts["boxes"],
+            [
+                ("home", "Place · Start", {"id": "home", "name": "Home", "open": "always"}),
+                ("park", "Place", {"id": "park", "title": "The park"}),
+            ],
+        )
+        self.assertEqual(parts["links"], [("NEAR", {"miles": 2})])
+
+    def test_render_args_draws_every_case_as_the_core_does(self):
+        # parity for any caller: graph_svg.render(**render_args(texts, graph, view)) hands Graphviz
+        # the core's source in each direction, byte for byte, with nothing more to write
+        for case, theirs in zip(CASES, self.core, strict=True):
+            for name, sources in theirs["drawn"].items():
+                given = self._rendered(
+                    graph_svg.render_args(texts_of(case), name, case.get("view"))
+                )
+                self.assertEqual(given, list(sources.values()), f"{case['name']}: {name}")
+
+    def test_a_show_written_in_slice_2_now_draws(self):
+        # a Show as slice 2 wrote it — a property and a kind, nothing more — is on, and drawn
+        texts = [
+            "// graph: trip\n(home:Place {name: 'Home', open: 'always'}),\n"
+            "(park:Place {name: 'The park', open: 'dawn'}),\n(home)-[:NEAR]->(park)",
+            "// graph: trip_style · STYLE trip\n(s1:Show {property: 'open', kind: 'Place'})",
+        ]
+        given = self._rendered(graph_svg.render_args(texts, "trip"))
+        self.assertTrue(given)
+        for source in given:
+            self.assertIn('<font point-size="9">open: always</font>', source)
+            self.assertIn('<font point-size="9">open: dawn</font>', source)
+
+    def _rendered(self, args):
+        """The sources graph_svg.render hands Graphviz for `args`, one for each direction."""
+        given = []
+
+        def run(_args, input, **_kw):
+            given.append(input)
+            return mock.Mock(returncode=0, stdout='<svg width="300pt" height="100pt"></svg>')
+
+        with (
+            mock.patch.object(graph_svg, "DOT", "dot"),
+            mock.patch.object(graph_svg.subprocess, "run", run),
+        ):
+            graph_svg.render(**args)
+        return given
 
 
 if __name__ == "__main__":

@@ -48,19 +48,27 @@ export function pngSize(width: number, height: number, scale: number = PNG_MIN_S
   return { scale: s, width: Math.ceil(width * s), height: Math.ceil(height * s) };
 }
 
-/** What an image says about where it came from, and how it is drawn. */
-export interface ExportInfo {
+/**
+ * What an image says about where it came from, and how it is drawn. A style comes with the graph as read, so the
+ * properties it shows inline always have their values: one without the other is a type error, never a drawing that
+ * quietly leaves its properties out.
+ */
+export type ExportInfo = {
   /** The note's path in the vault, as the footer says it. */
   note: string;
   /** The day exported, `YYYY-MM-DD`. */
   date: string;
   /** The fixed colours it is drawn in. */
   theme: ExportTheme;
-  /** The graph's style, for a view's looks and legend and for the nudges that lay the drawing out; none is the locked style. */
-  style?: StyleGraph;
-  /** The graph as read (`reading.world[graph]`), for the values of the properties its style shows inline; none, none shown. */
-  data?: Graph;
-}
+} & (
+  | { style?: undefined; data?: undefined }
+  | {
+      /** The graph's style, for a view's looks and legend, the nudges, arrowheads and properties it draws with. */
+      style: StyleGraph;
+      /** The graph as read (`reading.world[graph]`), for the values of the properties its style shows inline. */
+      data: Graph;
+    }
+);
 
 /** An exported image: the SVG text, and its size in CSS pixels. */
 export interface ExportImage {

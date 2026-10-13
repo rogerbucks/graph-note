@@ -31,12 +31,17 @@ export function arrowlessLinks(
   style: Pick<StyleGraph, 'arrows'>,
   view?: string,
 ): number[] {
-  const taken = new Map(drawing.estimates.filter((e) => e.kind === 'type').map((e) => [e.index, e.type]));
-  const types = [
-    ...drawing.links.map((l, i) => taken.get(i) ?? l.type),
-    ...drawing.estimates.filter((e) => e.kind === 'name').map((e) => e.type),
-  ];
+  const types = [...linkTypes(drawing), ...drawing.estimates.filter((e) => e.kind === 'name').map((e) => e.type)];
   return types.flatMap((type, i) => (arrowsShown(style, view, type) ? [] : [i]));
+}
+
+/**
+ * The relationship type each of a drawing's links is styled by: its own, or, for a link guessed from a near miss of its
+ * type, the type it is taken for — so its arrowhead and the properties shown with it go by that type (inline-properties.ts).
+ */
+export function linkTypes(drawing: Pick<GraphDrawing, 'links' | 'estimates'>): string[] {
+  const taken = new Map(drawing.estimates.filter((e) => e.kind === 'type').map((e) => [e.index, e.type]));
+  return drawing.links.map((l, i) => taken.get(i) ?? l.type);
 }
 
 /** A line of a layout source that draws a link (never one of the nudges' invisible links). */
