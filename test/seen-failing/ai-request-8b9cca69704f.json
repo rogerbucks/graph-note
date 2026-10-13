@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/ai-request.test.js",
+  "test": "a reply refused by its status says the status and the service’s own message, cut short",
+  "seen_failing_first": false,
+  "evidence": "written after its code: ai-request.ts was made in commit 064d995 to pass ai.test.js, which reaches answers only through a send; this pins how a refused reply is said (commit 677b85c)"
+}
