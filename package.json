@@ -22,6 +22,7 @@
     "test:changed": "node scripts/run-ceiling.mjs node scripts/changed-tests.mjs",
     "build:layout": "node packages/core/esbuild.layout.mjs",
     "bench:local": "node scripts/bench-local.mjs",
+    "project:plan": "node scripts/github-project.mjs --dry-run",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

@@ -326,6 +326,7 @@ describe('running only the tests a change touches', () => {
     'test/cheap-checks.test.js',
     'test/policy.test.js',
     'test/requirements.test.js',
+    'test/github-project.test.js',
     'test/test-vault.test.js',
     'CONTRIBUTING.md',
     'README.md',
@@ -377,6 +378,7 @@ describe('running only the tests a change touches', () => {
       ['scripts/reset-test-vault.mjs', ['test/test-vault.test.js']],
       ['requirements/editor-requirements.gql', ['test/requirements.test.js']],
       ['scripts/check-requirements.mjs', ['test/requirements.test.js']],
+      ['requirements/workstreams.json', ['test/github-project.test.js']],
     ])
       only(changed, expected);
   });

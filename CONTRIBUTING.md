@@ -158,6 +158,11 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/device-check-notes.test.js` — the device checklist numbers every item, the test vault holds one note for each item after Before in `Device checks/`, the note's checklist line is the item's words, each note's graph blocks read as it says they do (the repository's reader and checker, and `parseView` for a view), and the index lists the notes in order (editor spec §3, tried first in a test vault).
 - `test/device-check-quotes.test.js` — what a device check note quotes from Obsidian's screen (a read-back, a label, the tap text of an estimate, a box's details, an export's footer and file name, the conversion notice) is computed from the note's own graph blocks with the real functions and matches exactly; the notes' generator scripts and filler set up the case they describe (editor spec §3).
 - `test/engine-version.test.js` — the Graphviz version is read from the engine, named in the notices, and checked against published advisories.
+- `test/github-project.test.js` — the GitHub mirror of the requirements as a person runs it: the real workstreams file puts every requirement of slices 3 and 4 in exactly one workstream and may name ids a later copy brings, and the command is a dry run by default, with no network call.
+- `test/github-project-desired.test.js` — that mirror's desired state: the first clause of a rule, each issue's title, body, labels and open or closed, the marker, the project's fields and options.
+- `test/github-project-gh.test.js` — that mirror applied through an in-memory stand-in for `gh`: a first apply, a second that changes nothing, drift put right, a removed requirement labelled and closed, and nothing ever deleted.
+- `test/github-project-gh-safety.test.js` — that mirror's care: every call names its repository or owner, gh must point at the origin's repository, mutating calls are paced and retried once on a secondary rate limit, and a list that hit its cap is refused.
+- `test/github-project-plan.test.js` — that mirror's plan: what differs between the desired state and what GitHub holds, for the issues, the labels and the project.
 - `test/instruction-counts.test.js` — the benchmarks' work counted in CPU instructions: Cachegrind's output read, each case counted less its setup, the claims checked, nothing counted and said so where Valgrind is not installed, and every benchmark case still doing its work.
 - `test/ignore-entries.test.js` — an entry of `.ignore` that git ignores as build output may be missing in a fresh checkout, and any other entry that names a file must exist, so a misspelt path is caught.
 - `test/licences.test.js` — licences through the whole build chain, and the one allowance for a GPL tool run in CI alone and never shipped.
@@ -192,6 +197,34 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/tests-first-unfinished.test.js` — that replay when a run of a test file does not finish: stopped at the time limit, it proves nothing.
 - `test/tests-first-run.test.js` — one run of one test file in that replay: what its report shows, and why it did not finish.
 - `test/whitespace.test.js` — the three copies of the one whitespace set are the same, and the set is openGQL's.
+
+## The requirements in a GitHub Project
+
+- **One way only.** `requirements/editor-requirements.gql` stays the only source. `scripts/github-project.mjs` mirrors it
+  into a GitHub Project titled "graph-note requirements", one issue for each requirement of the chosen slices
+  (`--slices 3,4` by default). The issues and project items are derivatives: regenerated, never edited by hand, and each
+  opens on its rule, then a do-not-edit banner. Its title is the requirement's section, a dot and the id's words.
+- **Where each requirement goes.** `requirements/workstreams.json` maps a workstream id to its title and its requirement
+  ids; a requirement it does not list falls to `S3`, and an id the current copy does not hold yet is fine. An issue
+  carries the labels `slice-N`, `workstream:<id>` and `status:open|part|proved`, and is closed when proved. Its status
+  is the one the slice board reads. The project's fields are Slice, Workstream and Proof (open, part, proved); its
+  built-in Status field is never touched.
+- **See the plan with `npm run project:plan`.** It is a dry run and makes no network call, so it compares with an empty
+  GitHub. `--check` reads GitHub and prints the real diff, changing nothing. `--apply` prints the same plan, then does
+  it with `gh`: it finds each issue by its hidden `<!-- requirement:<id> -->` marker, changes only what differs, and
+  never deletes (an issue whose requirement went is labelled `requirement:removed` and closed, with a comment). There
+  is no apply script and no workflow: applying needs a token with the `project` scope, which the owner adds by hand.
+- **Only what it made is its own.** An issue is adopted only when the signed-in login wrote it, its body has the
+  generated banner, and its marker is the last thing in it; a marker anyone else writes is warned of and ignored, and an
+  issue whose banner or closing marker was edited away is no longer ours, so a new one is made. `--apply` stops, unless
+  `--allow-removals` is given, when the requirements file holds no requirements or the plan removes more than 10 issues.
+- **It goes only where this checkout's origin says.** `gh` runs in the repository folder with `GH_REPO` and `GH_HOST`
+  removed, must point at the origin's repository or the run stops, and names the repository (`--repo`) or the owner
+  (`--owner`) on every call. Calls that change something are paced about a second apart and tried once more after a
+  secondary rate limit; a list that comes back as long as its cap is refused.
+- **The project is dedicated to the script.** Changing the options of Slice or Workstream replaces them in GitHub, which
+  clears the value on every item, and the script sets the values again on the items it manages. A value on an item the
+  script does not manage would be lost, so keep nothing else in this project.
 
 ## The quality ratchet
 
