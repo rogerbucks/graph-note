@@ -338,6 +338,38 @@ a GQL block, CSV or GraphML (`DATA_FORMATS`), each read back into the very thing
 - `export-write.ts` — `writeSafely`: the bytes go to a temporary file given by the host's `write`, then `rename` into place;
   on any failure the temporary file is `remove`d, the target is never touched, and the result says why in a sentence.
 
+**Proposals (spec §17)**
+
+A proposal is changes to a graph that somebody other than the person reading proposes: an AI's answer (§19), a graph
+step's output (§20), or anyone. It is data, whatever its source; nothing here knows where it came from. It is shown over
+the graph and never written until a person accepts a change, and then written as an ordinary edit.
+
+- `proposals.ts` — the data: `makeProposal` checks a proposal (who proposed it, the state of the graph it was made against,
+  at least one change, each change written as a block writes it) and gives each change an id (`c1`…) and a group; `Provenance`
+  (who, when, what it read, the basis); a change is an addition (one item of GQL), a change of a property (`set`) or a
+  removal of a thing or a link; `thingChange` and `linkChange` build additions from parts for a source whose answer is data;
+  `groupsOf` and `provenanceLines`; `BIG_PROPOSAL`, above which a proposal is reviewed in groups.
+- `proposals-basis.ts` — `basisOf`: the state of a graph as graph-spec's change sets name it (`against`), and `staleness`,
+  whether the graph has moved since.
+- `proposals-text.ts` — a proposal as graph-spec's change set (§24 H1), with what that has no line for as comments its readers
+  pass over (who proposed it, what it read, removals, ids, groups, reasons, and each decision a person made). `changeSetText`
+  writes it, `readChangeSet` reads it back whole; so the change set in the note is the record of what was decided.
+  `recordDecisions` records a decision by putting one line above the change (and the `// basis now:` line), keeping every
+  other byte of the block, an author's comments among them.
+- `proposals-apply.ts` — one change written as text on the blocks' texts (an addition after the graph's last block of data, a
+  property changed where it is written, a removal of the item that wrote the thing or link), `notTaken` (a change read back to
+  see it took effect) and `newProblems` (what a change leaves wrong that was not before). Not exported by the entry: only a
+  review writes a change.
+- `proposals-marks.ts` — which boxes and links each change adds, changes or removes (`MARK_WORDS` says it in words, never by
+  colour alone), and each change read back in plain English as the text pane reads a line (`readBack`).
+- `proposals-review.ts` — `ProposalReview`: `show` (the proposal laid over the graph, rows, groups, marks, provenance, whether
+  the graph has moved; writes nothing), `accept` and `reject` (a person, by name, one change, some, a group or all; accepted
+  changes are written through `PaneSession`, so they are checked as any edit is, then read back, and refused whole if one does
+  not take effect or leaves a new problem; a graph that has moved is refused until its notice is seen), and `undo`. It works
+  on the note's text and hands the new text back; the host writes it. The decision is recorded in the note's change set.
+- `proposals-shown.ts` — the shapes a review hands a host: `ProposalShown`, its `ChangeRow`s, who decides (`Person`), which
+  changes (`Which`) and what came of it (`Reviewed`).
+
 **Settings (spec §21)**
 
 - `strictness.ts` — the three departures from standard GQL the reader reads as meant (each problem says which, in

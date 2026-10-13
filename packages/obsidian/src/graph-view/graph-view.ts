@@ -15,6 +15,8 @@ import { ViewMaker } from './view-maker';
 import { AddThing } from './add-thing';
 import { toggleExportForm } from '../export/export-form';
 import { markView, renderViewStrip } from './view-strip';
+import { markProposal } from '../proposals/mark-proposal';
+import { renderProposalStrip } from '../proposals/proposal-strip';
 import { plural, renderBar } from './view-bar';
 import { describeDrawing, insertSvg } from './drawing-svg';
 import { Taps, targetAt, targetOf } from './taps';
@@ -106,9 +108,11 @@ export class GraphView extends MarkdownRenderChild {
     if (this.o.writeView) this.maker = new ViewMaker(root, this.o); // a view made by tapping, while edited (§7)
     if (this.o.editing) this.adder = new AddThing(root, this.o); // a thing added from its text, while edited (§5)
     const view = this.o.view;
-    const writes = view
+    const writes: HTMLElement[] = view
       ? renderViewStrip(root, view, () => ({ view: this.zoom.view(), selected: this.details.selectedKey() }))
       : [];
+    // a proposal laid over the graph (§17): who proposed it and the changes to accept or reject, which reading view takes away
+    if (this.o.proposal) writes.push(...renderProposalStrip(root, this.o.proposal));
     this.viewport = root.createDiv({
       cls: 'graph-note-viewport',
       attr: {
@@ -119,6 +123,7 @@ export class GraphView extends MarkdownRenderChild {
     });
     this.svg = insertSvg(this.viewport, this.o.drawn, this.drawing());
     if (view) markView(this.svg, view); // a view: what is outside it faded, its looks drawn (§7)
+    if (this.o.proposal) markProposal(this.svg, this.o.proposal.shown.marks); // a proposal: what it adds, changes, removes (§17)
     // the drawing as sentences, for screen readers (spec §11)
     const d = this.drawing();
     if (d) describeDrawing(root, this.viewport, d);

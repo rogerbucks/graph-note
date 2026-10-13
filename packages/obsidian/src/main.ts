@@ -11,6 +11,7 @@ import type {
   GraphDrawing,
   LayoutLimits,
   PngSize,
+  ProposalReview,
   Refusal,
   Settings,
 } from '@graph-note/core';
@@ -253,6 +254,18 @@ export default class GraphNotePlugin extends Plugin {
     this.unloaded = true;
     this.layouts?.close();
     this.layouts = null;
+  }
+
+  /** The reviews of proposals, by note and proposal: kept while the plugin runs, so a decision can be undone (spec §17). */
+  private readonly reviews = new Map<string, ProposalReview>();
+
+  /** The review of the proposal a note's change set holds: the one kept, while the proposal is the same, else `fresh`. */
+  reviewOf(path: string, fresh: ProposalReview): ProposalReview {
+    const key = `${path}#${fresh.proposal.id}`,
+      kept = this.reviews.get(key);
+    if (kept && JSON.stringify(kept.proposal) === JSON.stringify(fresh.proposal)) return kept;
+    this.reviews.set(key, fresh);
+    return fresh;
   }
 
   /** The editors (CodeMirror views) open on notes in the editing view, as the plugin's editor extension sees them. */

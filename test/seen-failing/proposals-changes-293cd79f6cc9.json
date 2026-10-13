@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/proposals-changes.test.js",
+  "test": "the value of a change of a property > is never a list literal, which the profile cannot hold, alone or with more",
+  "seen_failing_first": false,
+  "evidence": "Written after its code, on purpose: a list literal was already refused by the guard of the previous commit, f4d2aac, because the profile reads no list value (the reader says a [ is not a value in the profile). The test pins that refusal, which the review asked to be allowed, and the reason it is not."
+}

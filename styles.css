@@ -177,6 +177,111 @@
 .graph-note-filter button.is-hidden {
   text-decoration: line-through;
 }
+/* A proposal laid over the graph (spec §17): what it adds is drawn with a heavier outline, what it changes dashed, what it
+   removes dotted, each also marked in words and signed, and said to screen readers, so none is told by colour alone. */
+.graph-note-svg g.graph-note-proposed.is-add > :is(path, polygon),
+.graph-note-svg g.edge.graph-note-proposed.is-add > path {
+  stroke: var(--color-green);
+  stroke-width: 3;
+}
+.graph-note-svg g.graph-note-proposed.is-change > :is(path, polygon),
+.graph-note-svg g.edge.graph-note-proposed.is-change > path {
+  stroke: var(--color-orange);
+  stroke-dasharray: 6 3;
+}
+.graph-note-svg g.graph-note-proposed.is-remove > :is(path, polygon),
+.graph-note-svg g.edge.graph-note-proposed.is-remove > path {
+  stroke: var(--color-red);
+  stroke-dasharray: 2 3;
+}
+.graph-note-svg g.graph-note-proposed.is-remove > text:not(.graph-note-proposal-mark) {
+  text-decoration: line-through;
+}
+.graph-note-svg .graph-note-proposal-mark {
+  font-size: 9pt;
+  fill: var(--text-muted);
+}
+/* The proposal's list: one change to a row, its sentence and its Accept and Reject; on a phone, a sheet at the bottom of
+   the screen. Every control is at least 44 points. */
+.graph-note-proposal {
+  padding: var(--size-4-2) var(--size-4-3);
+  border-top: 1px solid var(--background-modifier-border);
+}
+.graph-note-proposal.is-sheet {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  max-height: 60vh;
+  overflow: auto;
+  background: var(--background-primary);
+  box-shadow: var(--shadow-s);
+  border-radius: var(--radius-l) var(--radius-l) 0 0;
+  padding-bottom: max(var(--size-4-2), env(safe-area-inset-bottom));
+}
+.graph-note-proposal-provenance {
+  margin: var(--size-4-1) 0;
+  padding-inline-start: var(--size-4-4);
+  color: var(--text-muted);
+}
+.graph-note-proposal-bulk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-4-2);
+  margin: var(--size-4-2) 0;
+}
+.graph-note-proposal button {
+  min-width: 44px;
+  min-height: 44px;
+}
+.graph-note-proposal-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.graph-note-proposal-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--size-4-2);
+  padding: var(--size-4-2) 0 var(--size-4-2) var(--size-4-2);
+  border-bottom: 1px solid var(--background-modifier-border);
+  border-inline-start: 3px solid var(--text-muted);
+}
+.graph-note-proposal-row.is-add {
+  border-inline-start-color: var(--color-green);
+}
+.graph-note-proposal-row.is-change {
+  border-inline-start-color: var(--color-orange);
+}
+.graph-note-proposal-row.is-remove {
+  border-inline-start-color: var(--color-red);
+}
+.graph-note-proposal-row.is-accepted,
+.graph-note-proposal-row.is-rejected {
+  color: var(--text-muted);
+}
+.graph-note-proposal-text {
+  flex: 1 1 14em;
+}
+.graph-note-proposal-code {
+  display: block;
+  margin-top: var(--size-4-1);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.graph-note-proposal-blocked {
+  color: var(--text-error);
+}
+.graph-note-proposal-decision {
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+.graph-note-proposal-actions {
+  display: flex;
+  gap: var(--size-4-2);
+}
 /* The Export form (spec §16): each choice with its words above it, every control a 44-point target. */
 .graph-note-export {
   display: flex;

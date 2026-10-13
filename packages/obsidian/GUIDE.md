@@ -86,6 +86,24 @@ module that ties the parts together, named as the folder is.
   number shared by the pages of one export (`freePaths`); the
   plugin's own temporary file deleted outright on a failure, never left in the vault or its trash.
 
+### `src/proposals/` — a proposal in a note (spec §17)
+
+- `proposal-block.ts` — `renderProposalBlock`: a block whose graph line says CHANGE SET is drawn over its graph by the core's
+  review (`ProposalReview.show`: the changes waiting laid over the graph, nothing written), as a card with the proposal's
+  strip. A decision goes through the vault's API against the note as it is then (`vault.process`): Accept writes the change
+  into the graph's block through the core's review, which has the pane's own session check it; Reject writes only the
+  record in the change set; Undo takes the last decision back. The reviews are kept by the plugin (`reviewOf`) while it
+  runs, so Undo is still there when the card is drawn again. The person is recorded as "you": Obsidian does not say who is
+  at the keyboard.
+- `proposal-strip.ts` — the card above the drawing: who proposed it, when and what it read; a notice, with a button to say it
+  has been read, when the graph has moved since (Accept stays off until then); the changes one to a row, each in plain
+  English and its exact text (the GQL, the SET line or the removal, in a code span, and in the buttons' names) with Accept
+  and Reject; Accept all and a group's Accept send the ids of what can be accepted now; in groups with Accept and Reject for the group when there are many; Accept all, Reject
+  all and Undo. On a phone it is a sheet at the bottom of the screen (`is-sheet`). Reading view takes the buttons away, and
+  the gate (`read-only.ts`) closes `decide` and `undo`.
+- `mark-proposal.ts` — the marks on the drawing: a class for the line (heavier for what is added, dashed for what is changed,
+  dotted for what is removed), a word and a sign on each box, and the name said so to screen readers.
+
 ### `src/settings/` — the settings page (spec §21)
 
 - `settings.ts` — `GraphNoteSettingTab`: one page in Obsidian's plugin settings, in its declarative form, built from the
