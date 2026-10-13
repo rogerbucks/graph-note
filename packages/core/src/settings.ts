@@ -20,6 +20,9 @@ export interface AiModel {
 /** How a line the editor writes is indented. */
 export type Indent = 'two' | 'four' | 'tab';
 
+/** How far focus reaches (§25): `one` step, the default, or `two`. */
+export type FocusDepthSetting = 'one' | 'two';
+
 /** The theme an exported image is drawn in, its colours fixed so it reads the same outside Obsidian (§16). */
 export type ExportTheme = 'light' | 'dark';
 
@@ -34,6 +37,8 @@ export interface Settings extends StrictnessSettings {
   indent: Indent;
   /** The best fit of the locked style's directions, or one of them. */
   direction: string;
+  /** How far focus reaches from a selected thing: one step, or two (§25). */
+  focusDepth: FocusDepthSetting;
   /** The colours exported images are drawn in. */
   exportTheme: ExportTheme;
   /** Whether an export saved in the vault gets a companion note. */
@@ -54,6 +59,7 @@ export const DEFAULT_SETTINGS: Settings = {
   aiModels: [],
   indent: 'four',
   direction: 'best',
+  focusDepth: 'one',
   exportTheme: 'light',
   companionNote: 'off',
   exportFolder: '',
@@ -138,6 +144,17 @@ export const OPTIONS: Option[] = [
     choices: [
       { value: 'best', name: 'Best fit' },
       ...STYLE.directions.map((d) => ({ value: d, name: d === 'LR' ? 'Left to right' : 'Top to bottom' })),
+    ],
+  },
+  {
+    key: 'focusDepth',
+    section: 'Drawing',
+    name: 'Focus reaches',
+    sentence:
+      'How far focus reaches from a selected thing: its own links, or those of the things at their other ends too.',
+    choices: [
+      { value: 'one', name: 'One step' },
+      { value: 'two', name: 'Two steps' },
     ],
   },
   {
@@ -245,6 +262,7 @@ export function settingsFrom(saved: unknown): Settings {
       : [],
     indent: oneOf<Indent>('indent', s.indent, d.indent),
     direction: oneOf('direction', s.direction, d.direction),
+    focusDepth: oneOf<FocusDepthSetting>('focusDepth', s.focusDepth, d.focusDepth),
     exportTheme: oneOf<ExportTheme>('exportTheme', s.exportTheme, d.exportTheme),
     companionNote: oneOf<CompanionSetting>('companionNote', s.companionNote, d.companionNote),
     exportFolder: vaultFolder(s.exportFolder) ?? d.exportFolder,

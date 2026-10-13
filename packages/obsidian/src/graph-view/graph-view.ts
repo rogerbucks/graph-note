@@ -20,6 +20,7 @@ import { describeDrawing, insertSvg } from './drawing-svg';
 import { Taps, targetAt, targetOf } from './taps';
 import type { Target } from './taps';
 import { DetailsPanel } from './details-panel';
+import { Selection } from './selection';
 import type { ViewOptions } from './view-options';
 
 /** A drawn graph with its bar, zoom, full screen, details and, in edit mode, the inspector. */
@@ -34,7 +35,11 @@ export class GraphView extends MarkdownRenderChild {
   private maker: ViewMaker | null = null;
   private adder: AddThing | null = null;
   private fullscreen: { view: GraphView; overlay: HTMLElement } | null = null;
-  private boxDown: { id: number; x: number; y: number; target: Target } | null = null;
+  private boxDown: { id: number; x: number; y: number; target: Target; touch: boolean } | null = null;
+  /** A press on empty space: if it lifts where it came down, it is a tap there, which clears the focus (§25). */
+  private emptyDown: { id: number; x: number; y: number } | null = null;
+  /** The selection and so the focus, the highlight, and untangling the drawing (§25). */
+  private sel!: Selection;
   private editButton: HTMLButtonElement | null = null;
   private readonly taps: Taps;
   private codeEl: HTMLElement | null = null;
@@ -65,6 +70,8 @@ export class GraphView extends MarkdownRenderChild {
       fit: () => this.zoom.fit(),
       zoomOut: () => this.zoom.zoomOut(),
       zoomIn: () => this.zoom.zoomIn(),
+      find: (b) => this.sel.untangle.toggleFind(b),
+      legend: (b) => this.sel.untangle.toggleLegend(b),
       fullScreen: () => this.openFullscreen(),
       editHere: () => (this.o.editing?.()?.session ? this.o.onDoneEditing?.() : this.o.onEditHere?.()),
       toggleSource: (b) => this.toggleSource(b),
@@ -82,6 +89,16 @@ export class GraphView extends MarkdownRenderChild {
           }),
         );
     }
+
+    // finding a thing, the legend and the banner of an untangled drawing sit under the bar (§25); they change the picture only
+    this.sel = new Selection(root, this.o, {
+      svg: () => this.svg,
+      zoom: () => this.zoom,
+      details: () => this.details,
+      open: (t) => this.open(t),
+      taps: this.taps,
+      drawing: () => this.drawing(),
+    });
 
     list = renderProblems(root, problems, true, this.o.completeness);
     if (this.o.parked) listParked(list, this.o.parked, (k) => this.boxes().find((b) => b.key === k)?.text ?? k);
@@ -107,7 +124,9 @@ export class GraphView extends MarkdownRenderChild {
     if (d) describeDrawing(root, this.viewport, d);
     this.detailsEl = root.createDiv({ cls: 'graph-note-details', attr: { role: 'region', 'aria-live': 'polite' } });
     this.detailsEl.hidden = true;
-    this.details = new DetailsPanel(this.detailsEl, this.svg, this.viewport, this.o);
+    this.details = new DetailsPanel(this.detailsEl, this.svg, this.viewport, this.o, this.sel.actions());
+    // closing the details, by button, Escape or a tap on empty space, clears the selection and the focus with them (§25)
+    this.details.onClosed = () => this.sel.closed();
     const slot = mode === 'note' ? root.createDiv({ cls: 'graph-note-edit-slot' }) : null;
 
     this.zoom = new Zoom({ width: this.o.drawn.width, height: this.o.drawn.height }, this.viewportSize(), mode);
@@ -216,15 +235,19 @@ export class GraphView extends MarkdownRenderChild {
     return this.taps.near(p, this.zoom.view());
   }
 
-  private open(t: Target): void {
+  /** Opens a box or link; with `extend` (Shift), a second thing asks for the shortest path from the one selected (§25). */
+  private open(t: Target, extend = false): void {
     // while recording a walk, or making a view, a tap chooses rather than opening details (§7)
     if ('key' in t && (this.walk?.tap(t.key) || this.maker?.tap(t.key))) return;
+    if ('key' in t && this.sel.second(t.key, extend)) return;
     if ('key' in t) this.details.showDetails(t.key);
     else if ('link' in t) this.details.showLink(t.link);
     else {
       const e = this.drawing()?.estimates[t.estimate];
       if (e) this.details.showEstimate(e, t.estimate);
     }
+    // the selection is the focus: it, its links and what is at their other ends stay at full strength (§25)
+    this.sel.select(t);
     // while the block is edited, where it is written is selected in the text — an estimate's misspelt word too (§4)
     this.o.onSelect?.('key' in t ? { thing: t.key } : t);
   }
@@ -243,8 +266,11 @@ export class GraphView extends MarkdownRenderChild {
         p = this.point(e),
         near = this.near(p);
       const first = near[0] ? targetOf(this.svg, near[0]) : null;
-      if (target ?? first) this.boxDown = { id: e.pointerId, ...p, target: (target ?? first) as Target };
       const pointer = e.pointerType === 'touch' || e.pointerType === 'pen' ? e.pointerType : 'mouse';
+      this.sel.pressed();
+      if (target ?? first)
+        this.boxDown = { id: e.pointerId, ...p, target: (target ?? first) as Target, touch: pointer !== 'mouse' };
+      else this.emptyDown = { id: e.pointerId, ...p };
       if (use(e, { kind: 'down', id: e.pointerId, pointer, ...p, onBox: !!target, near: !target && near.length > 0 })) {
         vp.setPointerCapture(e.pointerId);
         vp.focus({ preventScroll: true });
@@ -256,17 +282,28 @@ export class GraphView extends MarkdownRenderChild {
     this.registerDomEvent(vp, 'pointerup', (e: PointerEvent) => {
       const p = this.point(e);
       use(e, { kind: 'up', id: e.pointerId, ...p, time: e.timeStamp ?? 0 });
-      const down = this.boxDown;
-      this.boxDown = null;
+      const down = this.boxDown,
+        empty = this.emptyDown;
+      this.boxDown = this.emptyDown = null;
+      // a tap on empty space clears the selection and the focus (§25); a drag across it only pans
+      if (empty && empty.id === e.pointerId && Math.hypot(p.x - empty.x, p.y - empty.y) < 10) this.sel.clear();
       if (!down || down.id !== e.pointerId || Math.hypot(p.x - down.x, p.y - down.y) >= 10) return;
       // on or near several things, a tap in the same place again chooses the next of them (§3)
       const chosen = this.taps.choose(down, this.near(down));
-      this.open((chosen ? targetOf(this.svg, chosen) : null) ?? down.target);
+      this.open((chosen ? targetOf(this.svg, chosen) : null) ?? down.target, e.shiftKey);
+      // on touch there is no hover: the tap that selects gives the highlight (§25)
+      this.sel.touched(down.touch);
     });
     this.registerDomEvent(vp, 'pointercancel', (e: PointerEvent) => {
-      this.boxDown = null;
+      this.boxDown = this.emptyDown = null;
       this.zoom.handle({ kind: 'cancel', id: e.pointerId });
     });
+    // the highlight under the pointer, for as long as it stays; a finger is not hovering (§25)
+    this.registerDomEvent(vp, 'pointerover', (e: PointerEvent) => this.sel.over(e));
+    this.registerDomEvent(vp, 'pointerout', (e: PointerEvent) => this.sel.out(e));
+    // and the same highlight with the keyboard focus, which a click's focus is not
+    this.registerDomEvent(vp, 'focusin', (e: FocusEvent) => this.sel.focusIn(e));
+    this.registerDomEvent(vp, 'focusout', () => this.sel.focusOut());
     this.registerDomEvent(
       vp,
       'wheel',
@@ -284,9 +321,15 @@ export class GraphView extends MarkdownRenderChild {
     });
     this.registerDomEvent(vp, 'keydown', (e: KeyboardEvent) => {
       const target = targetAt(e.target);
+      // Escape clears the selection and the focus first; with a thing selected the arrow keys walk its links (§25)
+      const used = this.sel.key(e);
       if (target && (e.key === 'Enter' || e.key === ' ')) {
         e.preventDefault();
         this.open(target);
+        return;
+      }
+      if (used) {
+        e.preventDefault();
         return;
       }
       use(e, { kind: 'key', key: e.key, ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey });

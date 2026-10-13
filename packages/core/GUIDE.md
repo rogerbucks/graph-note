@@ -103,8 +103,26 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   its theme variables; the fixed light and dark entries, for a host that draws the SVG as an isolated image (a Claude
   Code pane), are worked out to hex and paint their own page, with the locked contrast held; the system entry carries
   both in the drawing's own style sheet, `prefers-color-scheme` choosing, for a host that cannot say which it shows.
-- `hits.ts` — what a tap lands on or near.
-- `zoom.ts` — zoom, pan and full screen.
+- `hits.ts` — what a tap lands on or near, and where a box is (`boundsOf`, as fractions of the drawing; `centres`).
+- `zoom.ts` — zoom, pan and full screen; `reveal` brings a box into view, centred, and leaves one already in view alone.
+
+**Finding your way round a large graph (spec §25)**
+
+Pure and host-free: each says only what to keep at full strength, hide or bring forward, so a host changes the drawing
+and nothing else (untangle_data_untouched). Nothing here is written to a note or saved.
+
+- `focus.ts` — focus on a selection: `focusOf` keeps a thing, its links and the things at their other ends (to two steps
+  by the setting), or a link and the two things it joins; `highlightOf` is what the pointer, keyboard focus or a touch's
+  tap marks; `FocusState` is the selection, cleared by an empty tap or Escape; `edgesOf` numbers the drawing's links as
+  its SVG does (written ones, then the estimates of a name), `estimateEdge` finds one. `FADE` and `KEPT` are how a faded
+  and a kept thing are drawn, by strength and outline, never by colour; `focus.test.js` holds `FADE.text` to 4.5:1 in
+  both themes, and the host's `styles.css` to these numbers.
+- `untangle.ts` — `neighbourhood` (a thing and what is within one or two steps, filtered to), `kindLegend` and
+  `LegendFilter` (choosing a kind or relationship type brings it forward, again hides it, once more puts it back),
+  `shortestPath` and `pathWords` (fewest links, either way; or that there is none), `find` (by name or property),
+  `nextAlong` (an arrow key walks to the neighbour in that direction), `emphasis` (a path over the selection over the
+  legend), and `Untangle`, which holds all of it for one drawing and works it out into `layers`: what is kept and what is
+  hidden.
 
 **Editing**
 
@@ -274,7 +292,8 @@ SVG or PNG (`EXPORT_FORMATS`), of the whole diagram or of a view, in the fixed l
   name of its key in the host's secret store (`keyName`), never the key. The Export section holds the export theme (light
   or dark), whether an export saved in the vault gets a companion note, the folder exports go to (`vaultFolder` keeps it
   inside the vault; empty is next to the note) and the classification above which an export asks first (one of
-  `classifications`, the lowest until chosen).
+  `classifications`, the lowest until chosen). The Drawing section also holds how far focus reaches from a selected
+  thing (`focusDepth`: `one`, the default, or `two`; `depthOf` reads it).
 
 ## Command-line tools, `bin/`
 

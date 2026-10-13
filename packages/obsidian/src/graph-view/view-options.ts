@@ -1,6 +1,6 @@
 // What a drawn graph is given (spec §3, §4, §14): the reading and the graph, its drawn SVG and its problems, where it is
 // shown, what its buttons do, and the editor open in place on its card, if any, which its inspector writes through.
-import type { CompletenessReport, Drawn, Indent, Mode, NoteReading, Parked } from '@graph-note/core';
+import type { CompletenessReport, Drawn, FocusDepth, Indent, Mode, NoteReading, Parked } from '@graph-note/core';
 import type { DeclaredList } from '../properties/list-row';
 import type { ShownProblem } from './problems-list';
 import type { ViewShown } from './view-strip';
@@ -52,6 +52,8 @@ export interface ViewOptions {
   parked?: Map<string, Parked>;
   /** How the editor indents a thing it writes, as the settings say (spec §21). */
   indent?: Indent;
+  /** How many steps along its links focus reaches from a selected thing, as the settings say (§25); one when not given. */
+  focusDepth?: FocusDepth;
   /** Set when the drawing is a view (spec §7): what it shows, how, and how to write its style. */
   view?: ViewShown;
   /** What the drawing can export, and how (§16); without it, no Export is offered. */

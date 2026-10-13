@@ -10,6 +10,7 @@ import { showSuggested } from './suggested-name';
 import { parkButton, parkedNote } from './parked';
 import { estimateActions } from './estimate-actions';
 import { button } from './view-bar';
+import type { ThingActions } from './untangle';
 import type { ViewOptions } from './view-options';
 
 /** The details of one drawing, shown in its card below the drawing. */
@@ -18,6 +19,7 @@ export class DetailsPanel {
   private readonly svg: SVGSVGElement;
   private readonly viewport: HTMLElement;
   private readonly o: ViewOptions;
+  private readonly actions: ThingActions | undefined;
   /** The box or link whose details are open, so they can be drawn again when editing ends. */
   private shown: { key: string } | { link: number } | null = null;
 
@@ -26,12 +28,13 @@ export class DetailsPanel {
     return this.shown && 'key' in this.shown ? this.shown.key : null;
   }
 
-  /** For the details element of a card, its drawing, the viewport the focus goes back to, and the card's options. */
-  constructor(el: HTMLElement, svg: SVGSVGElement, viewport: HTMLElement, o: ViewOptions) {
+  /** For the details element of a card, its drawing, the viewport the focus goes back to, the card's options and what a thing's details offer. */
+  constructor(el: HTMLElement, svg: SVGSVGElement, viewport: HTMLElement, o: ViewOptions, actions?: ThingActions) {
     this.el = el;
     this.svg = svg;
     this.viewport = viewport;
     this.o = o;
+    this.actions = actions;
   }
 
   /**
@@ -89,16 +92,23 @@ export class DetailsPanel {
     const head = el.createDiv({ cls: 'graph-note-details-head' });
     head.createEl('strong', { text: title });
     if (kind) head.createSpan({ cls: 'graph-note-kind', text: kind });
-    button(head, 'Close details', 'x', () => {
-      el.hidden = true;
-      this.shown = null;
-      this.select(null);
-      this.viewport.focus();
-      const ed = this.o.editing?.();
-      if (ed) ed.selected = null;
-    });
+    button(head, 'Close details', 'x', () => this.close());
     return el;
   }
+
+  /** Closes the details and clears what is selected, as the close button does, and tells the card (§25): the focus clears too. */
+  close(): void {
+    this.el.hidden = true;
+    this.shown = null;
+    this.select(null);
+    this.viewport.focus();
+    const ed = this.o.editing?.();
+    if (ed) ed.selected = null;
+    this.onClosed?.();
+  }
+
+  /** Called when the details are closed, by the button, Escape or a tap on empty space. */
+  onClosed?: () => void;
 
   /**
    * Draws open details again when editing starts or ends: the inspector is for edit mode only (spec §14), so what is open
@@ -146,6 +156,7 @@ export class DetailsPanel {
       d.in.map((l) => `${l.text} ${l.reading} this`),
     );
     if (!d.out.length && !d.in.length) el.createEl('p', { text: 'No links in or out.' });
+    this.untangling(el, key);
     this.readOnlyProperties(
       el,
       propertiesOf(this.o.reading, this.o.graph, { thing: key }).map((p) => [p.key, p.value]),
@@ -181,6 +192,19 @@ export class DetailsPanel {
         // the note as it is now: a thing written in another block is found, and one only suggested is not parked (§4)
         () => ed.session?.current() ?? this.o.reading,
       );
+  }
+
+  /** What a thing's details offer to untangle the drawing (§25): its neighbourhood alone, and the shortest path to another thing. */
+  private untangling(el: HTMLElement, key: string): void {
+    const on = this.actions;
+    if (!on) return;
+    const row = el.createDiv({ cls: 'graph-note-untangle-offers' });
+    row
+      .createEl('button', { text: 'Show only this and its neighbours', attr: { type: 'button' } })
+      .addEventListener('click', () => on.showOnly(key));
+    row
+      .createEl('button', { text: 'Shortest path to another thing', attr: { type: 'button' } })
+      .addEventListener('click', () => on.routeFrom(key));
   }
 
   /**

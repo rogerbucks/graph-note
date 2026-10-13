@@ -6,6 +6,7 @@ import { MarkdownRenderChild, Notice, TFile } from 'obsidian';
 import type { Component, MarkdownPostProcessorContext } from 'obsidian';
 import {
   completenessReport,
+  depthOf,
   gqlBlocks,
   graphOfBlock,
   namesSharedSchema,
@@ -243,6 +244,7 @@ export async function renderBlock(
         run: (ask) => plugin.exportGraph(ask),
       },
       indent: plugin.settings.indent,
+      focusDepth: depthOf(plugin.settings.focusDepth),
       lineOf: (at) => (blocks[at.block]?.line ?? 0) + at.line,
       onEdit: () => {
         void plugin.openEditor(target);

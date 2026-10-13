@@ -29,13 +29,19 @@ const NOTE = ['# Reader', '', fence(RICH), ''].join('\n');
 const VIEW = "// graph: reader · QUERY view answers\nMATCH (n {id: 'q'})-[]-{1,1}(m) RETURN n, m";
 const VIEW_NOTE = ['# Reader', '', fence(RICH), '', fence(VIEW), ''].join('\n');
 
-/** Every control in the card's details that can be pressed or typed in, by its name, its class or its tag. */
+/** Every control in the card's details that can be pressed or typed in, by its name, its words, its class or its tag. */
 const controls = (el) =>
   el
     .querySelectorAll(
       '.graph-note-details button, .graph-note-details input, .graph-note-details select, .graph-note-details textarea, .graph-note-details [role="button"]',
     )
-    .map((c) => c.getAttribute('aria-label') || c.getAttribute('class') || c.tagName);
+    .map((c) => c.getAttribute('aria-label') || c.textContent || c.getAttribute('class') || c.tagName);
+
+/**
+ * What a thing's details offer beside closing, where the note is only read (§25): to show the drawing filtered to it, and
+ * the shortest path to another thing. Both change the picture and nothing else, so reading view has them.
+ */
+const UNTANGLING = ['Show only this and its neighbours', 'Shortest path to another thing'];
 
 const details = (el) => el.querySelector('.graph-note-details');
 
@@ -73,7 +79,7 @@ describe('a card in reading view shows its details and offers nothing that write
       assert.ok(items.includes('name: Large reader') && items.includes('weight: 180'), `its properties: ${items}`);
       assert.ok(!d.querySelector('.metadata-add-button'), 'no Add property');
       assert.ok(!d.textContent.includes('Add property'));
-      assert.deepEqual(controls(shown.reading), ['Close details']);
+      assert.deepEqual(controls(shown.reading), ['Close details', ...UNTANGLING]);
       await unchanged(env, shown);
     } finally {
       env.uninstall();
@@ -155,7 +161,7 @@ describe('a card in reading view shows its details and offers nothing that write
     try {
       const shown = await readingWhileEdited(env);
       tapKey(shown.reading, 'small_reader');
-      assert.deepEqual(controls(shown.reading), ['Close details'], 'no Add the name');
+      assert.deepEqual(controls(shown.reading), ['Close details', ...UNTANGLING], 'no Add the name');
       assert.ok(details(shown.reading).textContent.includes('Suggested name: small_reader'), 'the name is said');
       await unchanged(env, shown);
     } finally {
@@ -195,7 +201,11 @@ describe('a card in reading view shows its details and offers nothing that write
       const full = env.doc.body.querySelector('.graph-note-fullscreen');
       assert.ok(full, 'full screen is open');
       assert.ok(!labelled(full, 'Add a thing'), 'no Add a thing in full screen');
-      assert.ok(!full.querySelector('input'), 'no field to type a thing in');
+      // the one field is the search box, which finds a thing and writes nothing (§25)
+      assert.ok(
+        full.querySelectorAll('input').every((i) => i.closest('.graph-note-find')),
+        'no field to type a thing in',
+      );
       await unchanged(env, shown);
     } finally {
       env.uninstall();
@@ -238,7 +248,7 @@ describe('a card in reading view shows its details and offers nothing that write
       for (const key of ['Enter', ' ']) {
         box.dispatch('keydown', { key });
         assert.ok(!details(shown.reading).hidden, `${key === ' ' ? 'Space' : key} opens the details`);
-        assert.deepEqual(controls(shown.reading), ['Close details'], 'and they hold nothing to change');
+        assert.deepEqual(controls(shown.reading), ['Close details', ...UNTANGLING], 'and they hold nothing to change');
       }
       for (const key of ['Delete', 'Backspace', 'z', 'Enter'])
         for (const ctrl of [false, true]) box.dispatch('keydown', { key, ctrlKey: ctrl, metaKey: ctrl });
@@ -271,7 +281,7 @@ describe('a card in reading view shows its details and offers nothing that write
       for (const label of ['Edit here', 'Edit in pane', 'Record a path', 'Make a view'])
         assert.ok(!labelled(full, label), `no ${label}`);
       tapKey(full, 'large');
-      assert.deepEqual(controls(full), ['Close details']);
+      assert.deepEqual(controls(full), ['Close details', ...UNTANGLING]);
       assert.ok(details(full).textContent.includes('name: Large reader'), 'its properties are shown');
       await unchanged(env, shown);
     } finally {

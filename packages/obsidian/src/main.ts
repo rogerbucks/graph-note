@@ -128,7 +128,7 @@ export default class GraphNotePlugin extends Plugin {
     this.settings = settingsFrom(next);
     this.saved = { ...this.saved, settings: this.settings };
     await this.saveData(this.saved);
-    const shown = (s: Settings) => JSON.stringify([s.strictness, s.allowed, s.direction]);
+    const shown = (s: Settings) => JSON.stringify([s.strictness, s.allowed, s.direction, s.focusDepth]);
     if (shown(was) !== shown(this.settings)) for (const changed of [...this.settingsWatchers]) changed();
   }
 

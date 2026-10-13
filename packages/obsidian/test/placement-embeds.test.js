@@ -43,13 +43,16 @@ async function showEmbedded(env, where) {
   return el;
 }
 
-/** Every control in the details that can be pressed or typed in, by its name or its tag. */
+/** Every control in the details that can be pressed or typed in, by its name, its words or its tag. */
 const controls = (el) =>
   el
     .querySelectorAll(
       '.graph-note-details button, .graph-note-details input, .graph-note-details textarea, .graph-note-details [role="button"]',
     )
-    .map((c) => c.getAttribute('aria-label') || c.tagName);
+    .map((c) => c.getAttribute('aria-label') || c.textContent || c.tagName);
+
+/** What a thing's details offer beside closing, where the note is only read (§25): both change the picture, never the note. */
+const UNTANGLING = ['Show only this and its neighbours', 'Shortest path to another thing'];
 
 describe('a graph embedded in another note is read-only wherever it is shown', () => {
   test('embedded in a note in Live Preview: Source and no Edit, and its details change nothing, while its own block is edited', async () => {
@@ -64,7 +67,7 @@ describe('a graph embedded in another note is read-only wherever it is shown', (
         assert.ok(!labelled(el, label), `no ${label}`);
       assert.ok(labelled(el, 'Show source'), 'Source is offered');
       tapKey(el, 'large');
-      assert.deepEqual(controls(el), ['Close details']);
+      assert.deepEqual(controls(el), ['Close details', ...UNTANGLING]);
       await wait(50);
       assert.equal(live.querySelector('textarea').value, typed);
       assert.equal(env.state.files.get(PATH), NOTE);
