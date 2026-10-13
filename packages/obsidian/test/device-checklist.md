@@ -10,7 +10,7 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 
 **Numbers.** Every item has a number in its line: its section's letter, a dash and two digits, such as `V-03`, the
 third item of Viewing. The letters are B Before, V Viewing, Z Zoom, P The edit pane, I Editing in place and the
-inspector, S The style graph, W Views, D Parked for later, T Walked paths, X Export, C Settings, and A Accessibility.
+inspector, S The style graph, W Views, D Parked for later, T Walked paths, X Export, C Settings, A Accessibility, and R Proposals.
 **A number never changes once given**, whatever happens to the item's words or its place; a removed item's number is
 never used again, and **a new item takes the next number in its section**. Each item after Before has a note in
 `test-vault/Device checks/` that shows the case in Obsidian, found by its number (`test/device-check-notes.test.js`
@@ -288,6 +288,16 @@ holds the two together).
       box's details or an estimate's reason.
 - [ ] **A-02** With VoiceOver: the drawing is described as a list of sentences, and a new problem typed in the pane is announced
       without the focus moving.
+
+## Proposals — spec §17
+
+- [ ] **R-01** Phone: a change set proposed against a graph (`// graph: reader · CHANGE SET …`), in Live Preview. The changes are
+      listed in a sheet at the bottom of the screen, one to a row, each in plain English with its own Accept and Reject,
+      and every button is easy to hit with a thumb. The drawing above marks what is added, changed and removed, in words
+      as well as in its outlines. Accept one change: only it is written into the graph, and its row says it was accepted.
+      Reject another: the graph block is the same, and the change set records it. Undo takes the last decision back. A
+      graph changed since the proposal was made shows a notice first, and Accept stays off until the notice is marked
+      read (slice 3, proposals_phone, proposal_provenance, person_decides).
 
 ## Result
 
