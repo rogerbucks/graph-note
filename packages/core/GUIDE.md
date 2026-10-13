@@ -296,14 +296,42 @@ the graph and never written until a person accepts a change, and then written as
 - `proposals-shown.ts` — the shapes a review hands a host: `ProposalShown`, its `ChangeRow`s, who decides (`Person`), which
   changes (`Which`) and what came of it (`Reviewed`).
 
+**Working with an AI (spec §19)**
+
+The core reaches no network: a send goes only through the transport a host hands in, and only once the user has seen
+exactly what goes and said yes to it. Its answer comes back as a proposal (§17), never an edit.
+
+- `ai.ts` — the send: `prepareSend` makes the exact request for what the user chose, or refuses (AI off, no such model,
+  an address that cannot be used, above the model's ceiling, at the highest classification, or holding a credential);
+  `confirmSend` is the user's yes to exactly that request, good for one send; `sendPrepared` sends it through the host's
+  `Transport`, putting the key from the host's secret store in its header only as it goes and taking it out of anything
+  said, and gives back a proposal or why there is none, with a `SendRecord` of the send either way.
+- `ai-choice.ts` — which AI may be asked: `aiReady` (off until `aiUse` is on and a model has a name, a model and a
+  usable address), `endpointProblem` (a model on this device by http, any other by https only, no user name or
+  password in it), and `modelChoices` (the host's own AI first, where it has one; then the models set up for the
+  purpose; then the rest; none while AI is off). `AI_PURPOSES` are the spec's purposes.
+- `ai-ceiling.ts` — `clearance`: a note above a model's ceiling is not sent to it, saying why and naming the models
+  cleared for it; nothing at the highest classification set goes to any model; an unknown classification counts above
+  every ceiling, and none is taken as the lowest. `credentialsIn` names the kinds of credential a text holds (a private
+  key, an access key, an API key, a token, a password, a card number, or a model's own key), never the text.
+- `ai-scope.ts` — `aiScope`: what is sent of a note, as the user chose (the whole graph, a view, or things by name),
+  written out again as GQL from the graph as read: each thing with its kinds and properties, and the links between the
+  things chosen. Nothing else of the note goes: no prose, no other graph, no comment.
+- `ai-request.ts` — the request body, in the chat completions shape local servers and most services take, with the
+  instructions that ask for changes as JSON (`INSTRUCTIONS`); `readReply` and `changesIn` read an answer back, the whole
+  answer refused if one change cannot be read.
+- `ai-answer.ts` — `proposalFrom`: the changes made into a proposal from the model, against the state of the graph that
+  was sent, naming the send's record; `noteWithProposal`: the note with its change set written after the graph's last
+  block, the graph untouched.
+
 **Settings (spec §21)**
 
 - `strictness.ts` — the three departures from standard GQL the reader reads as meant (each problem says which, in
   `Problem.departure`), what Standard, Forgiving and Simplified make of them, converting a note back to standard GQL,
   checked before it is written, and the standard text an engine or an export is given whatever the level.
 - `settings.ts` — every option with its name, sentence, choices and default (`OPTIONS`, `DEFAULT_SETTINGS`), and saved
-  settings read back with anything unknown, out of range or secret left out (`settingsFrom`). An AI model keeps the
-  name of its key in the host's secret store (`keyName`), never the key. The Export section holds the export theme (light
+  settings read back with anything unknown, out of range or secret left out (`settingsFrom`). AI is off until `aiUse`
+  is turned on. An AI model keeps the name of its key in the host's secret store (`keyName`), never the key. The Export section holds the export theme (light
   or dark), whether an export saved in the vault gets a companion note, the folder exports go to (`vaultFolder` keeps it
   inside the vault; empty is next to the note) and the classification above which an export asks first (one of
   `classifications`, the lowest until chosen).

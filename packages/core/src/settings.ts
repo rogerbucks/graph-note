@@ -26,8 +26,13 @@ export type ExportTheme = 'light' | 'dark';
 /** Whether an export saved into the vault also gets a companion note (§16). */
 export type CompanionSetting = 'off' | 'on';
 
+/** Whether AI is used at all (§19, ai_off_until_chosen): off until the user turns it on. */
+export type AiUse = 'off' | 'on';
+
 /** Every option the editor offers. */
 export interface Settings extends StrictnessSettings {
+  /** Whether the editor may send anything to an AI model: off until the user turns it on. */
+  aiUse: AiUse;
   /** The classifications a note may carry, lowest first: the ceilings an AI model may be given. */
   classifications: string[];
   aiModels: AiModel[];
@@ -50,6 +55,7 @@ const CLASSIFICATIONS = ['Public', 'Internal', 'Confidential', 'Restricted'];
 export const DEFAULT_SETTINGS: Settings = {
   strictness: 'forgiving',
   allowed: [],
+  aiUse: 'off',
   classifications: CLASSIFICATIONS,
   aiModels: [],
   indent: 'four',
@@ -109,6 +115,17 @@ export const OPTIONS: Option[] = [
     sentence:
       'The departures from standard GQL that Simplified allows as written; an engine or export still gets standard GQL.',
     choices: DEPARTURES.map((d) => ({ value: d.id, name: d.name, sentence: d.sentence })),
+  },
+  {
+    key: 'aiUse',
+    section: 'AI models',
+    name: 'Use AI models',
+    sentence:
+      'Whether the editor may send anything to an AI model. Even on, nothing is sent until you send it, and only to a model set up below, after you have seen exactly what will be sent.',
+    choices: [
+      { value: 'off', name: 'Off: nothing is ever sent' },
+      { value: 'on', name: 'On: send only when I say' },
+    ],
   },
   {
     key: 'classifications',
@@ -237,6 +254,7 @@ export function settingsFrom(saved: unknown): Settings {
     strictness: oneOf<Strictness>('strictness', s.strictness, d.strictness),
     // copies, never the defaults themselves: a change to what is handed out never changes them
     allowed: Array.isArray(s.allowed) ? (s.allowed as unknown[]).filter(isDeparture) : [...d.allowed],
+    aiUse: oneOf<AiUse>('aiUse', s.aiUse, d.aiUse),
     classifications: [...classifications],
     aiModels: Array.isArray(s.aiModels)
       ? s.aiModels

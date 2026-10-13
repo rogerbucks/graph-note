@@ -79,6 +79,7 @@ export type { Converted, Departure, Strictness, StrictnessSettings } from './str
 export { OPTIONS, DEFAULT_SETTINGS, settingsFrom, indentText, aiModel } from './settings.ts';
 export type {
   AiModel,
+  AiUse,
   Choice as OptionChoice,
   CompanionSetting,
   ExportTheme,
@@ -146,6 +147,23 @@ export type { ChangeMark, MarkKind, Marks } from './proposals-marks.ts';
 export { changeSetId } from './proposals-text.ts';
 export type { Decision } from './proposals-text.ts';
 export { ProposalReview } from './proposals-review.ts';
+export { aiReady, confirmSend, prepareSend, sendPrepared } from './ai.ts';
+export type {
+  Confirmation,
+  PreparedSend,
+  SendAsk,
+  SendDeps,
+  SendRecord,
+  SendRefused,
+  SendResult,
+  Transport,
+  TransportReply,
+  TransportRequest,
+} from './ai.ts';
+export { AI_PURPOSES, endpointProblem, modelChoices } from './ai-choice.ts';
+export type { HostAi, ModelChoice } from './ai-choice.ts';
+export type { ScopeChoice } from './ai-scope.ts';
+export { noteWithProposal } from './ai-answer.ts';
 export type { ChangeRow, DecideOptions, Person, ProposalShown, Reviewed, Which } from './proposals-shown.ts';
 export { hitAreas, nearby, TapCycle } from './hits.ts';
 export { TextHistory } from './history.ts';

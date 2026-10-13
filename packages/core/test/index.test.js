@@ -15,7 +15,9 @@
 // write a name only suggested (acceptNameFirst, 11 Oct 2026), and adding a thing (addThing, suggestName and their types,
 // 11 Oct 2026), and an estimated link's fix (estimateFix, EstimateFix, 11 Oct 2026), and proposals (makeProposal,
 // thingChange, linkChange, ProposalReview, basisOf and their types, 13 Oct 2026: nothing that writes a change without a
-// person deciding is exported).
+// person deciding is exported), and sending to an AI model (aiReady, modelChoices, endpointProblem, AI_PURPOSES,
+// prepareSend, confirmSend, sendPrepared, noteWithProposal and their types, 13 Oct 2026: the core reaches no network, so
+// a send goes only through the transport a host hands in).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -26,6 +28,7 @@ const ts = require('typescript');
 const ENTRY = new URL('../src/index.ts', import.meta.url);
 
 const VALUES = [
+  'AI_PURPOSES',
   'BIG_PROPOSAL',
   'DEFAULT_SETTINGS',
   'DEPARTURES',
@@ -71,6 +74,7 @@ const VALUES = [
   'addToList',
   'addView',
   'aiModel',
+  'aiReady',
   'basisOf',
   'blockItems',
   'changeSetId',
@@ -83,6 +87,7 @@ const VALUES = [
   'companionNote',
   'completenessReport',
   'completions',
+  'confirmSend',
   'declareDeferred',
   'declareDeferredBlock',
   'details',
@@ -91,6 +96,7 @@ const VALUES = [
   'distance',
   'draw',
   'drawingSource',
+  'endpointProblem',
   'estimateFix',
   'evaluate',
   'explain',
@@ -127,12 +133,14 @@ const VALUES = [
   'makeProposal',
   'makeView',
   'mergePathProblems',
+  'modelChoices',
   'nameFromText',
   'nameSlug',
   'nameStyleOf',
   'nameWords',
   'namesSharedSchema',
   'nearby',
+  'noteWithProposal',
   'nudgedDrawing',
   'nudgedSource',
   'outsideOf',
@@ -145,6 +153,7 @@ const VALUES = [
   'pathProblems',
   'pathsOf',
   'pngSize',
+  'prepareSend',
   'propertiesOf',
   'propertyNames',
   'provenanceLines',
@@ -157,6 +166,7 @@ const VALUES = [
   'replaceBlock',
   'reverseGuess',
   'saidDate',
+  'sendPrepared',
   'serveLayouts',
   'setProperty',
   'settingsFrom',
@@ -184,6 +194,7 @@ const VALUES = [
 
 const TYPES = [
   'AiModel',
+  'AiUse',
   'Block',
   'BlockRef',
   'Box',
@@ -200,6 +211,7 @@ const TYPES = [
   'CompanionSetting',
   'CompletenessReport',
   'CompletionItem',
+  'Confirmation',
   'Converted',
   'DecideOptions',
   'Decision',
@@ -227,6 +239,7 @@ const TYPES = [
   'GraphDrawing',
   'GraphNames',
   'HitAreas',
+  'HostAi',
   'Indent',
   'Inline',
   'InlineKind',
@@ -249,6 +262,7 @@ const TYPES = [
   'MarkKind',
   'Marks',
   'Mode',
+  'ModelChoice',
   'NameStyle',
   'NamedView',
   'NewThing',
@@ -271,6 +285,7 @@ const TYPES = [
   'Person',
   'PngSize',
   'Position',
+  'PreparedSend',
   'Problem',
   'PropType',
   'Property',
@@ -288,6 +303,12 @@ const TYPES = [
   'RuleReport',
   'RunnerOptions',
   'SafeWrite',
+  'ScopeChoice',
+  'SendAsk',
+  'SendDeps',
+  'SendRecord',
+  'SendRefused',
+  'SendResult',
   'Settings',
   'Shape',
   'Show',
@@ -316,6 +337,9 @@ const TYPES = [
   'Token',
   'TokenClass',
   'Told',
+  'Transport',
+  'TransportReply',
+  'TransportRequest',
   'View',
   'ViewArgs',
   'ViewKind',
