@@ -32,6 +32,8 @@ export interface ChangeRow {
   state: 'pending' | 'accepted' | 'rejected';
   /** The change read back in plain English, as the text pane reads a line. */
   said: string;
+  /** The change exactly as it would be written: its GQL, its SET line or its removal; what the sentence may say less of. */
+  text: string;
   /** Why accepting it would be refused now, or null. */
   blocked: string | null;
   decision?: Decision;

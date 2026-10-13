@@ -74,7 +74,12 @@ declare namespace GraphSpecCheck {
     switches?: Set<string>,
   ): {
     results: [string, boolean][];
-    header: { graph: string; id: string; against: string; by: string } | null;
+    /** The header, with `refreshes` — each §20 value the change set recomputes: the claim, the key, its value before and after. */
+    header:
+      | ({ graph: string; id: string; against: string; by: string } & {
+          refreshes?: [string, string, Value | null, Value][];
+        })
+      | null;
     after: string | null;
   };
   /** [the shared schema a graph names, that schema's graph if it was loaded]. */

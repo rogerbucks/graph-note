@@ -11,11 +11,11 @@ import { PaneSession } from './pane.ts';
 import { applyChange, namesOf, newProblems, notTaken } from './proposals-apply.ts';
 import { basisOf, staleness } from './proposals-basis.ts';
 import type { Stale } from './proposals-basis.ts';
-import { marksOf, markOf, saidOf } from './proposals-marks.ts';
+import { exactOf, marksOf, markOf, saidOf } from './proposals-marks.ts';
 import { BIG_PROPOSAL, groupsOf, provenanceLines } from './proposals.ts';
 import type { Proposal, ProposedChange } from './proposals.ts';
 import type { ChangeRow, DecideOptions, Person, ProposalShown, Reviewed, Which } from './proposals-shown.ts';
-import { changeSetId, changeSetText, oneWord, readChangeSet } from './proposals-text.ts';
+import { changeSetId, changeSetText, oneWord, readChangeSet, recordDecisions } from './proposals-text.ts';
 import type { Decision } from './proposals-text.ts';
 import type { NoteReading } from './note-reading.ts';
 import { replaceBlock } from './store.ts';
@@ -137,9 +137,9 @@ export class ProposalReview {
     const name = typeof (by as Person | null)?.name === 'string' ? (by as Person).name.trim() : '';
     if (!name) return 'a person decides: say who is deciding';
     const { name: proposer, kind } = this.proposal.provenance.by;
-    return name === proposer && kind !== 'person'
-      ? `${name} proposed this, and is not a person: a person decides`
-      : null;
+    // the same name in any case is the same proposer: a name is one word, so no person's label with a space is taken for it
+    const same = oneWord(name).toLowerCase() === oneWord(proposer).toLowerCase();
+    return same && kind !== 'person' ? `${proposer} proposed this, and is not a person: a person decides` : null;
   }
 
   /**
@@ -213,6 +213,7 @@ export class ProposalReview {
         mark: markOf(c),
         state: this.state(c.id),
         said: saidOf(c.op === 'remove-link' || c.op === 'remove-thing' ? baseReading : said, graph, c),
+        text: exactOf(c),
         blocked: blocked.get(c.id) ?? null,
         ...(d ? { decision: d } : {}),
         ...(c.reason ? { reason: c.reason } : {}),
@@ -237,7 +238,8 @@ export class ProposalReview {
   ): { note: string; before: string } | null {
     const home = this.home(note);
     if (!home) return null;
-    const text = changeSetText(this.proposal, decided, basisNow);
+    // only the lines that record the decisions are put in: the rest of the block is the author's, and kept as it is
+    const text = recordDecisions(home.text, this.proposal, decided, basisNow);
     const r = replaceBlock(note, { line: home.open, text: home.text }, text);
     return r.ok ? { note: r.note, before: home.text } : null;
   }
@@ -331,7 +333,8 @@ export class ProposalReview {
 
   /** Takes back the last accept or reject: the text written is undone by the sessions that wrote it, and the change set is as it was. */
   undo(note: string): Reviewed {
-    const step = this.steps.pop();
+    // the step stays until it has been taken back: an undo that cannot be made leaves it there to be made again
+    const step = this.steps.at(-1);
     if (!step) return refuse('nothing to undo');
     let out = note;
     const home = this.home(out);
@@ -340,11 +343,16 @@ export class ProposalReview {
       if (!r.ok) return refuse(r.reason);
       out = r.note;
     }
+    // every block written is asked first: one changed since is refused before any session is undone, so the step stays whole
+    const now = textsOf(out);
+    if (step.sessions.some((s) => !now.includes(s.ref.text)))
+      return refuse('the block has changed since the decision was made, so it cannot be undone');
     for (const session of [...step.sessions].reverse()) {
       const w = session.undo(out);
       if (!w.ok) return refuse(w.reason);
       out = w.note;
     }
+    this.steps.pop();
     const ids = [...this.decided.keys()].filter((id) => step.decided.get(id) === undefined);
     this.decided = step.decided;
     this.basisNow = step.basisNow;

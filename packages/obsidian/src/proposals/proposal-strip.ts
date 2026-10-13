@@ -67,6 +67,7 @@ export function renderProposalStrip(root: HTMLElement, card: ProposalCard): HTML
     const notice = strip.createDiv({ cls: 'graph-note-banner graph-note-proposal-stale', attr: { role: 'alert' } });
     notice.createEl('p', { text: shown.stale.message });
     const ok = notice.createEl('button', { text: 'I have read this', attr: { type: 'button' } });
+    writes.push(ok); // it only lets Accept on, so where nothing can be accepted it is taken away with the rest
     ok.addEventListener('click', () => {
       seen = true;
       ok.disabled = true;
@@ -78,11 +79,12 @@ export function renderProposalStrip(root: HTMLElement, card: ProposalCard): HTML
   const bulk = strip.createDiv({ cls: 'graph-note-proposal-bulk' });
   if (waiting.length) {
     const some = waiting.filter((r) => !r.blocked).length;
+    // the ones that can be accepted now, by id: a change that cannot be does not stop the others
     const all = decide(
       `Accept all (${some})`,
       `every change that can be accepted now, ${plural(some, 'change')}`,
       'accept',
-      { all: true },
+      waiting.filter((r) => !r.blocked).map((r) => r.id),
       bulk,
     );
     accepts.push({ b: all, blocked: some === 0 });
@@ -113,18 +115,23 @@ export function renderProposalStrip(root: HTMLElement, card: ProposalCard): HTML
       });
       const text = li.createDiv({ cls: 'graph-note-proposal-text' });
       text.createSpan({ cls: 'graph-note-proposal-said', text: row.said });
+      // what the change writes, exactly: the sentence can say less than this, and this is what is written
+      text.appendText(' ');
+      text.createEl('code', { cls: 'graph-note-proposal-code', text: row.text });
       if (row.reason) text.createSpan({ cls: 'graph-note-proposal-reason', text: ` — ${row.reason}` });
       if (row.blocked)
         text.createDiv({ cls: 'graph-note-proposal-blocked', text: `Cannot be accepted yet: ${row.blocked}` });
       if (row.decision)
         text.createDiv({
           cls: 'graph-note-proposal-decision',
-          text: `${row.decision.state === 'accepted' ? 'Accepted' : 'Rejected'} by ${row.decision.by} on ${day(row.decision.at)}`,
+          text: `${row.decision.state === 'accepted' ? 'Accepted' : 'Rejected'} by ${row.decision.by.replace(/_/g, ' ')} on ${day(row.decision.at)}`,
         });
       if (row.state !== 'pending') continue;
       const actions = li.createDiv({ cls: 'graph-note-proposal-actions' });
-      accepts.push({ b: decide('Accept', row.said, 'accept', [row.id], actions), blocked: !!row.blocked });
-      decide('Reject', row.said, 'reject', [row.id], actions);
+      // each button is named for the sentence and the text it acts on
+      const named = `${row.said} (${row.text})`;
+      accepts.push({ b: decide('Accept', named, 'accept', [row.id], actions), blocked: !!row.blocked });
+      decide('Reject', named, 'reject', [row.id], actions);
     }
   };
 
@@ -139,9 +146,17 @@ export function renderProposalStrip(root: HTMLElement, card: ProposalCard): HTML
       fold.createEl('summary', { text: `${g.name} — ${plural(g.ids.length, 'change')}, ${g.pending} waiting` });
       if (g.pending) {
         const actions = fold.createDiv({ cls: 'graph-note-proposal-bulk' });
+        // those of the group that can be accepted now, by id, so one that cannot be does not stop the rest
+        const ready = shown.rows.filter((r) => g.ids.includes(r.id) && r.state === 'pending' && !r.blocked);
         accepts.push({
-          b: decide(`Accept ${g.name}`, `the ${g.pending} waiting in ${g.name}`, 'accept', { group: g.name }, actions),
-          blocked: false,
+          b: decide(
+            `Accept ${g.name}`,
+            `the ${plural(ready.length, 'change')} in ${g.name} that can be accepted now`,
+            'accept',
+            ready.map((r) => r.id),
+            actions,
+          ),
+          blocked: ready.length === 0,
         });
         decide(`Reject ${g.name}`, `the ${g.pending} waiting in ${g.name}`, 'reject', { group: g.name }, actions);
       }

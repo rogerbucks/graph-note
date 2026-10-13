@@ -65,6 +65,16 @@ export function marksOf(reading: NoteReading, graph: string, changes: readonly P
 }
 
 /**
+ * What a change is, exactly, as it would be written: the GQL an addition adds, the SET line of a change of a property, or
+ * the removal as the change set writes it. The plain English of `saidOf` can say less than this; this never does.
+ */
+export function exactOf(c: ProposedChange): string {
+  if (c.op === 'add') return c.gql;
+  if (c.op === 'set') return `SET ${c.thing}.${c.key} = ${c.value}`;
+  return c.op === 'remove-thing' ? `remove thing ${c.thing}` : `remove link ${c.from} ${c.type} ${c.to}`;
+}
+
+/**
  * A change in plain English, as the text pane reads a line: "Added: Small reader is an Option", "Changed: Large reader:
  * price is 4", "Removed: Alice is a Person". Read in `reading`, the graph with the change laid over it where it adds or
  * changes, so the things it names are there to be called by their text.

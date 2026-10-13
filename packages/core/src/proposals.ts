@@ -5,6 +5,7 @@
 // as an ordinary edit. This module is the data: who proposed it, when, what it read and the state of the graph it was
 // made against (`provenance`), and its changes — each an addition, a change of a property or a removal — in groups.
 import { blankText, items } from './block-items.ts';
+import { readNote } from './drawing.ts';
 import { hops } from './estimates.ts';
 import { saidDate } from './export-frame.ts';
 import { parseValue } from './inspector.ts';
@@ -78,6 +79,18 @@ export function groupOf(c: ChangeOp): string {
   return link ? `New ${link[1]} links` : 'Additions';
 }
 
+/**
+ * Whether a value is one value: written as `(v:T {k: VALUE})` it reads as exactly one thing with exactly one property,
+ * `k`, and nothing wrong. A value that carries more — another property, another thing, a stray bracket — is not one,
+ * whatever it is dressed as, so a change of a property can write no more than it shows.
+ */
+function isOneValue(value: string): boolean {
+  const r = readNote([`// graph: v\n(v:T {k: ${value}})`]);
+  const g = r.world.v;
+  if (!g || r.tooLarge || r.problems.some((p) => p.severity !== 'hint')) return false;
+  return g.nodes.size === 1 && g.edges.length === 0 && Object.keys(g.p('v')).sort().join() === 'id,k';
+}
+
 /** Why one change cannot be part of a proposal, or null. */
 function faultIn(c: ChangeInput, n: number): string | null {
   const at = `change ${n}`;
@@ -90,6 +103,8 @@ function faultIn(c: ChangeInput, n: number): string | null {
     if (!WORD.test(c.thing) || !WORD.test(c.key) || c.key === 'id')
       return `${at}: a change of a property names a thing and a property (not its id), each one word`;
     if (!c.value.trim() || !oneLine(c.value)) return `${at}: a change of a property gives its value, on one line`;
+    if (!isOneValue(c.value))
+      return `${at}: a change of a property gives one value, and nothing else: ${c.value} reads as more, or as something wrong`;
   } else if (c.op === 'remove-thing') {
     if (!WORD.test(c.thing)) return `${at}: a removal names the thing, one word`;
   } else if (![c.from, c.type, c.to].every((w) => WORD.test(w))) {
@@ -199,17 +214,21 @@ export function linkChange(
 /** The sentences that say where a proposal came from: who, when and what it read; what is not known is said so. */
 export function provenanceLines(p: Proposal): string[] {
   const { by, at, read } = p.provenance;
-  const who = { model: ', a model', person: ', a person', step: ', a graph step', unknown: ', of a kind not stated' }[
-    by.kind
-  ];
+  // what the change set says, never as if the editor had checked it: who proposed it, when and what it read are its word
+  const who = {
+    model: ', a model',
+    person: ', a person',
+    step: ', a graph step',
+    unknown: ', of a kind it does not say',
+  }[by.kind];
   const day = /^(\d{4}-\d\d-\d\d)(?:T(\d\d:\d\d))?/.exec(at ?? '');
   const when = day
-    ? `Proposed on ${saidDate(day[1] ?? '')}${day[2] ? `, ${day[2]}${/(Z|[+-]00:?00)$/.test(at ?? '') ? ' UTC' : ''}` : ''}.`
-    : 'The time it was proposed was not recorded.';
+    ? `It says it was proposed on ${saidDate(day[1] ?? '')}${day[2] ? `, ${day[2]}${/(Z|[+-]00:?00)$/.test(at ?? '') ? ' UTC' : ''}` : ''}.`
+    : 'It does not say when it was proposed.';
   return [
-    `Proposed by ${by.name}${who}.`,
+    `The change set says it was proposed by ${by.name}${who}.`,
     when,
-    read.length ? `It read: ${read.join('; ')}.` : 'It did not say what it read.',
+    read.length ? `It says it read: ${read.join('; ')}.` : 'It does not say what it read.',
   ];
 }
 

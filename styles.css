@@ -193,6 +193,12 @@
 .graph-note-proposal-text {
   flex: 1 1 14em;
 }
+.graph-note-proposal-code {
+  display: block;
+  margin-top: var(--size-4-1);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 .graph-note-proposal-blocked {
   color: var(--text-error);
 }

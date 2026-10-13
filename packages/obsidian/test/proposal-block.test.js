@@ -122,7 +122,11 @@ describe('a change set in a note is a proposal, shown over its graph', () => {
     try {
       assert.deepEqual(
         el.querySelectorAll('.graph-note-proposal-provenance li').map((li) => li.textContent),
-        ['Proposed by ada, a model.', 'Proposed on 13 Oct 2026, 09:00 UTC.', 'It read: reader.'],
+        [
+          'The change set says it was proposed by ada, a model.',
+          'It says it was proposed on 13 Oct 2026, 09:00 UTC.',
+          'It says it read: reader.',
+        ],
       );
       assert.match(el.querySelector('.graph-note-proposal-head').textContent, /nothing is written until you accept/);
     } finally {
@@ -150,6 +154,22 @@ describe('a change set in a note is a proposal, shown over its graph', () => {
         assert.match(labels[0], /^Accept: /);
         assert.match(labels[1], /^Reject: /);
       }
+      // what each change writes is shown as it is written, in a code span, and is in the buttons' names
+      assert.deepEqual(
+        rows(el).map((r) => r.querySelector('code').textContent),
+        [
+          "(small_reader:Option {name: 'Small reader'})",
+          '(small_reader)-[:ANSWERS]->(question)',
+          'SET large_reader.price = 4',
+          'remove link large_reader ANSWERS question',
+          'remove thing alice',
+        ],
+      );
+      const accept = row(el, 'c3').querySelector('.graph-note-proposal-accept');
+      assert.equal(
+        accept.getAttribute('aria-label'),
+        'Accept: Changed: Large reader: price is 4 (SET large_reader.price = 4)',
+      );
     } finally {
       env.uninstall();
     }
@@ -182,7 +202,7 @@ describe('a person decides, a change at a time', () => {
       const now = noteNow(env);
       assert.match(now, /\(question:Question[^]*\(small_reader:Option \{name: 'Small reader'\}\)\n```/);
       assert.doesNotMatch(now.split('```gql')[1], /price: 4/);
-      assert.match(now, /\/\/@ accepted: you, \d{4}-\d\d-\d\dT[\d:.]+Z\n\(small_reader:Option/);
+      assert.match(now, /\/\/@ accepted: the_reader, \d{4}-\d\d-\d\dT[\d:.]+Z\n\(small_reader:Option/);
       assert.match(env.state.notices.at(-1), /Accepted 1 change: written into the graph\. Undo takes them back\./);
       const again = await show(env, now, 1);
       await until(() => !!again.el.querySelector('svg'));
@@ -192,7 +212,7 @@ describe('a person decides, a change at a time', () => {
       );
       assert.match(
         row(again.el, 'c1').querySelector('.graph-note-proposal-decision').textContent,
-        /Accepted by you on /,
+        /Accepted by the reader on /,
       );
       assert.equal(row(again.el, 'c1').querySelectorAll('button').length, 0);
       assert.equal(row(again.el, 'c2').querySelector('.graph-note-proposal-blocked'), null);
@@ -209,7 +229,7 @@ describe('a person decides, a change at a time', () => {
       await until(() => noteNow(env) !== note);
       const [, graph, set] = noteNow(env).split('```gql');
       assert.equal(graph.split('```')[0].trim(), GRAPH);
-      assert.match(set, /\/\/@ rejected: you, [^\n]*\nSET large_reader\.price = 4/);
+      assert.match(set, /\/\/@ rejected: the_reader, [^\n]*\nSET large_reader\.price = 4/);
       assert.match(env.state.notices.at(-1), /Rejected 1 change: the graph is unchanged/);
     } finally {
       env.uninstall();
@@ -249,6 +269,58 @@ describe('a person decides, a change at a time', () => {
     }
   });
 
+  test('Accept all, with a change that cannot be accepted among them, applies the rest and leaves that one waiting', async () => {
+    const { note } = proposed([{ op: 'add', gql: "(alice:Person {name: 'Alicia'})" }, ...CHANGES.slice(0, 1)]);
+    const { env, el } = await card(note);
+    try {
+      press(el, 'Accept all (1)');
+      await until(() => noteNow(env) !== note);
+      const graph = noteNow(env).split('```gql')[1].split('```')[0];
+      assert.match(graph, /small_reader:Option/);
+      assert.doesNotMatch(graph, /Alicia/);
+      assert.match(env.state.notices.at(-1), /Accepted 1 change/);
+      const again = await show(env, noteNow(env), 1);
+      await until(() => !!again.el.querySelector('svg'));
+      assert.deepEqual(
+        rows(again.el).map((r) => r.classList.contains('is-pending')),
+        [true, false],
+      );
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('Accept for a group does the same: what can be accepted in it, and not what cannot', async () => {
+    const changes = [
+      { op: 'add', gql: "(alice:Person {name: 'Alicia'})", group: 'People' },
+      thingChange('small_reader', 'Option', { name: 'Small reader' }, { group: 'People' }),
+      ...Array.from({ length: 8 }, (_, i) => thingChange(`o${i + 1}`, 'Option', { name: `Option ${i + 1}` })),
+    ];
+    const { note } = proposed(changes);
+    const { env, el } = await card(note);
+    try {
+      press(el, 'Accept People');
+      await until(() => noteNow(env) !== note);
+      const graph = noteNow(env).split('```gql')[1].split('```')[0];
+      assert.match(graph, /small_reader:Option/);
+      assert.doesNotMatch(graph, /Alicia|o1:Option/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a proposer that is not a person, and is called "you", does not stop the person at the keyboard', async () => {
+    const { note } = proposed(CHANGES, { by: { name: 'you', kind: 'model' } });
+    const { env, el } = await card(note);
+    try {
+      press(row(el, 'c1'), 'Accept');
+      await until(() => noteNow(env) !== note);
+      assert.match(noteNow(env), /small_reader:Option/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('Reject all records every change as rejected and leaves the graph alone', async () => {
     const { note } = proposed();
     const { env, el } = await card(note);
@@ -257,7 +329,7 @@ describe('a person decides, a change at a time', () => {
       await until(() => noteNow(env) !== note);
       const [, graph, set] = noteNow(env).split('```gql');
       assert.equal(graph.split('```')[0].trim(), GRAPH);
-      assert.equal(set.match(/\/\/@ rejected: you,/g).length, 5);
+      assert.equal(set.match(/\/\/@ rejected: the_reader,/g).length, 5);
     } finally {
       env.uninstall();
     }
@@ -370,6 +442,40 @@ describe('in reading view', () => {
       await env.state.processors.get('gql')(block, el, fakeContext(note, fences[1]));
       await until(() => !!el.querySelector('svg'));
       assert.equal(rows(el).length, 5);
+      assert.equal(el.querySelectorAll('.graph-note-proposal button').length, 0);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a proposal with nothing to draw it over is listed with no buttons too, and a decision is not written', async () => {
+    const { block } = proposed();
+    const note = noteOf(block);
+    const env = await load({ files: { [PATH]: note } });
+    try {
+      const host = env.doc.body.createDiv({ cls: 'markdown-reading-view' });
+      const inner = host.createDiv({ cls: 'markdown-preview-view markdown-rendered' });
+      const el = inner.createDiv({ cls: 'block-language-gql' });
+      const { fakeContext } = await import('./host/fake-obsidian.js');
+      await env.state.processors.get('gql')(block, el, fakeContext(note, 2));
+      await until(() => rows(el).length === 5);
+      assert.ok(el.querySelector('.graph-note-empty'), 'nothing to draw');
+      assert.equal(el.querySelectorAll('.graph-note-proposal button').length, 0);
+      assert.equal(noteNow(env), note);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a block drawn with no section information writes nothing: its proposal is shown, its buttons not offered', async () => {
+    const { block } = proposed();
+    const env = await load({ files: { [PATH]: noteOf(GRAPH, block) } });
+    try {
+      const el = env.doc.body.createDiv({ cls: 'block-language-gql' });
+      const { fakeContext } = await import('./host/fake-obsidian.js');
+      const ctx = { ...fakeContext('', 0), getSectionInfo: () => null };
+      await env.state.processors.get('gql')(block, el, ctx);
+      await until(() => rows(el).length === 5);
       assert.equal(el.querySelectorAll('.graph-note-proposal button').length, 0);
     } finally {
       env.uninstall();

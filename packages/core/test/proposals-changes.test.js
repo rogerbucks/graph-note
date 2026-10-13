@@ -76,6 +76,15 @@ describe('making a proposal', () => {
     assert.match(refused({ op: 'add', gql: 'nothing' }), /change 2: an addition/);
     assert.match(refused({ op: 'set', thing: 'a', key: 'id', value: "'x'" }), /change 2: a change of a property/);
     assert.match(refused({ op: 'set', thing: 'a', key: 'k', value: ' ' }), /gives its value/);
+    // a value is one value: never more than the property it is for, whatever it is dressed as
+    for (const value of ['4, extra: true', "4}), (mallory:Option {name: 'Mallory'", '4, other.x = 5'])
+      assert.match(
+        refused({ op: 'set', thing: 'a', key: 'k', value }),
+        /change 2: .*one value, and nothing else/,
+        value,
+      );
+    for (const value of ['4', "'two, three'", "'a}), (b'", "DATE '2026-10-13'", 'true'])
+      assert.equal(made({ changes: [{ op: 'set', thing: 'a', key: 'k', value }] }).refused, undefined, value);
     assert.match(refused({ op: 'remove-thing', thing: 'two words' }), /change 2: a removal names the thing/);
     assert.match(refused({ op: 'remove-link', from: 'a', type: 'R', to: '' }), /change 2: a removal of a link/);
     assert.match(refused({ ...CHANGES[0], id: 'a b' }), /change 2: an id/);
@@ -133,20 +142,26 @@ describe('the groups of a proposal', () => {
 describe('saying where a proposal came from', () => {
   test('names the proposer’s kind, the day, the time in UTC when it is, and what was read', () => {
     assert.deepEqual(provenanceLines(made({ by: { name: 'roger', kind: 'person' }, at: '2026-10-13', read: ['a'] })), [
-      'Proposed by roger, a person.',
-      'Proposed on 13 Oct 2026.',
-      'It read: a.',
+      'The change set says it was proposed by roger, a person.',
+      'It says it was proposed on 13 Oct 2026.',
+      'It says it read: a.',
     ]);
     assert.equal(
       provenanceLines(made({ by: { name: 's', kind: 'step' }, at: '2026-10-13T09:00:00+10:00' }))[1],
-      'Proposed on 13 Oct 2026, 09:00.',
+      'It says it was proposed on 13 Oct 2026, 09:00.',
     );
-    assert.equal(provenanceLines(made({ by: { name: 's', kind: 'step' } }))[0], 'Proposed by s, a graph step.');
+    assert.equal(
+      provenanceLines(made({ by: { name: 's', kind: 'step' } }))[0],
+      'The change set says it was proposed by s, a graph step.',
+    );
     assert.equal(
       provenanceLines(made({ by: { name: 's', kind: 'unknown' } }))[0],
-      'Proposed by s, of a kind not stated.',
+      'The change set says it was proposed by s, of a kind it does not say.',
     );
-    assert.equal(provenanceLines(made({ at: '2026-10-13T00:00:00Z' }))[1], 'Proposed on 13 Oct 2026, 00:00 UTC.');
+    assert.equal(
+      provenanceLines(made({ at: '2026-10-13T00:00:00Z' }))[1],
+      'It says it was proposed on 13 Oct 2026, 00:00 UTC.',
+    );
   });
 });
 

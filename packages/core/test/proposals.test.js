@@ -221,6 +221,17 @@ describe('accepting_is_an_edit: an accepted change is written as text, checked f
     assert.equal(review.canUndo(), false);
     assert.equal(review.undo(u.note).ok, false);
   });
+
+  test('an undo that cannot be made, as the block has changed since, leaves the decision there to be undone', () => {
+    const review = new ProposalReview(proposalOf());
+    const r = accepted(review.accept(NOTE, ['c3'], ROGER, { at: NOW }));
+    const changed = r.note.replace("name: 'Alice'", "name: 'Alicia'");
+    assert.equal(review.undo(changed).ok, false);
+    assert.equal(review.canUndo(), true);
+    assert.equal(review.state('c3'), 'accepted');
+    assert.equal(accepted(review.undo(r.note)).note, NOTE);
+    assert.equal(review.state('c3'), 'pending');
+  });
 });
 
 describe('rejecting_recorded: rejecting a change leaves the graph unchanged and records the rejection in the change set', () => {
@@ -241,6 +252,16 @@ describe('rejecting_recorded: rejecting a change leaves the graph unchanged and 
     const at = lines.findIndex((l) => l.startsWith('//@ rejected:'));
     assert.equal(lines[at], `//@ rejected: roger, ${NOW}`);
     assert.match(lines.slice(at).join('\n'), /^(\/\/@ [^\n]*\n)*SET large_reader\.price = 4/);
+  });
+
+  test('the record is one line added to the change set: the author’s own comments and every other byte of the note are kept', () => {
+    const { note, block } = noteWithChangeSet();
+    const authored = note.replace(block, block.replace('// read: reader\n', '// read: reader\n// checked by Bob\n'));
+    const r = accepted(new ProposalReview(proposalOf()).reject(authored, ['c3'], ROGER, { at: NOW }));
+    assert.equal(
+      r.note,
+      authored.replace('SET large_reader.price = 4', `//@ rejected: roger, ${NOW}\nSET large_reader.price = 4`),
+    );
   });
 
   test('it is still a change set after, against the same state and by the same author', () => {
@@ -282,18 +303,18 @@ describe('proposal_provenance: a proposal shows who proposed it, when and what i
   test('says who proposed it, when, and what it read', () => {
     const shown = new ProposalReview(proposalOf({ read: ['reader', 'Notes/Devices'] })).show(NOTE);
     assert.deepEqual(shown.provenance, [
-      'Proposed by ada, a model.',
-      'Proposed on 13 Oct 2026, 09:00 UTC.',
-      'It read: reader; Notes/Devices.',
+      'The change set says it was proposed by ada, a model.',
+      'It says it was proposed on 13 Oct 2026, 09:00 UTC.',
+      'It says it read: reader; Notes/Devices.',
     ]);
   });
 
   test('says so when it is not told when it was proposed or what it read, rather than leaving it out', () => {
     const shown = new ProposalReview(proposalOf({ at: null, read: [] })).show(NOTE);
     assert.deepEqual(shown.provenance, [
-      'Proposed by ada, a model.',
-      'The time it was proposed was not recorded.',
-      'It did not say what it read.',
+      'The change set says it was proposed by ada, a model.',
+      'It does not say when it was proposed.',
+      'It does not say what it read.',
     ]);
   });
 
@@ -372,6 +393,21 @@ describe('person_decides: the editor never applies a proposal without a person a
     assert.match(review.reject(NOTE, ['c1'], { name: 'ada' }, { at: NOW }).reason, /a person decides/);
     const own = new ProposalReview(proposalOf({ by: { name: 'roger', kind: 'person' } }));
     assert.equal(own.accept(NOTE, ['c1'], ROGER, { at: NOW }).ok, true);
+  });
+
+  test('the proposer is known by its name in any case, and no other name is taken for it', () => {
+    const named = new ProposalReview(proposalOf({ by: { name: 'Ada', kind: 'model' } }));
+    assert.match(
+      named.accept(NOTE, ['c1'], { name: 'aDA' }, { at: NOW }).reason,
+      /Ada proposed this, and is not a person/,
+    );
+    assert.match(
+      named.accept(NOTE, ['c1'], { name: ' ada ' }, { at: NOW }).reason,
+      /proposed this, and is not a person/,
+    );
+    // a person at the keyboard whose label is not the proposer's is never blocked, whatever the proposer is called
+    const you = new ProposalReview(proposalOf({ by: { name: 'you', kind: 'model' } }));
+    assert.equal(you.accept(NOTE, ['c1'], { name: 'the reader' }, { at: NOW }).ok, true);
   });
 
   test('an empty choice applies nothing', () => {
@@ -473,6 +509,13 @@ describe('proposals_read_back: each proposed change is read back in plain Englis
         'Removed: Large reader —ANSWERS→ Which device?',
         'Removed: Alice is a Person',
       ],
+    );
+  });
+
+  test('each row also holds the exact text of the change: the GQL it writes, the SET line, or the removal', () => {
+    assert.deepEqual(
+      new ProposalReview(proposalOf()).show(NOTE).rows.map((r) => r.text),
+      [SMALL, LINK, 'SET large_reader.price = 4', 'remove link large_reader ANSWERS question', 'remove thing alice'],
     );
   });
 

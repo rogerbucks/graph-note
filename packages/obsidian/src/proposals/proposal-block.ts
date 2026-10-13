@@ -10,15 +10,17 @@ import type { Which } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
 import { renderCode } from '../code';
 import { GraphView } from '../graph-view/graph-view';
+import { readOnlyHere, whenPlaced } from '../graph-view/placement';
 import { refusalBanner } from '../layout-worker/refusal-banner';
 import { renderProposalStrip } from './proposal-strip';
 import type { ProposalCard } from './proposal-strip';
 
 /**
- * Who decides here. Obsidian says nothing of who is at the keyboard, so it is the person at it: the change set records
- * "you", with the time, beside what was decided.
+ * Who decides here. Obsidian says nothing of who is at the keyboard, so it is the reader: the change set records "the
+ * reader", with the time, beside what was decided. A label with a space can never be a proposer's name, which is one
+ * word, so a proposer called anything at all, "you" among it, never stands in this person's way.
  */
-const PERSON = { name: 'you' };
+const PERSON = { name: 'the reader' };
 
 /** Opens the note at the change set's line, for its text to be read or changed there. */
 function openAt(plugin: GraphNotePlugin, path: string, line: number): void {
@@ -53,6 +55,7 @@ export async function renderProposalBlock(
   // with no section info, as when another plugin renders the block, the card cannot know which note it would write: it
   // shows the proposal and writes nothing, as in reading view (spec §3)
   const note = info?.text ?? source;
+  const readOnly = () => !info || readOnlyHere(root);
   const review = plugin.reviewOf(path, read);
   review.shared = [...note.matchAll(/```gql\n([\s\S]*?)\n```/g)].some((m) => namesSharedSchema(m[1] ?? ''))
     ? await plugin.sharedSchemas()
@@ -64,6 +67,8 @@ export async function renderProposalBlock(
   const write = async (
     change: (now: string) => { ok: true; note: string; said: string } | { ok: false; reason: string },
   ) => {
+    // reading view never changes a note, whatever is called: nothing is decided there
+    if (readOnly()) return 'This note is only being read here, so nothing was decided.';
     const file = plugin.app.vault.getAbstractFileByPath(path);
     if (!(file instanceof TFile)) return 'The note is not there any more, so nothing was decided.';
     let said = '';
@@ -103,7 +108,11 @@ export async function renderProposalBlock(
 
   const plain = reading.graphs.get(graph);
   if (!plain || !plain.boxes.length) {
-    renderProposalStrip(root, card);
+    // with no drawing there is no card to gate: the buttons are taken away where the note is only read
+    const writes = renderProposalStrip(root, card);
+    whenPlaced(root, () => {
+      if (readOnly()) writes.forEach((b) => b.remove());
+    });
     root.createDiv({
       cls: 'graph-note-empty',
       text: `Graph ${graph} has nothing to draw in this note, so the proposal is listed without a drawing.`,

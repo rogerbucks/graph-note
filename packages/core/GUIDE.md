@@ -280,6 +280,8 @@ the graph and never written until a person accepts a change, and then written as
 - `proposals-text.ts` — a proposal as graph-spec's change set (§24 H1), with what that has no line for as comments its readers
   pass over (who proposed it, what it read, removals, ids, groups, reasons, and each decision a person made). `changeSetText`
   writes it, `readChangeSet` reads it back whole; so the change set in the note is the record of what was decided.
+  `recordDecisions` records a decision by putting one line above the change (and the `// basis now:` line), keeping every
+  other byte of the block, an author's comments among them.
 - `proposals-apply.ts` — one change written as text on the blocks' texts (an addition after the graph's last block of data, a
   property changed where it is written, a removal of the item that wrote the thing or link), `notTaken` (a change read back to
   see it took effect) and `newProblems` (what a change leaves wrong that was not before). Not exported by the entry: only a
