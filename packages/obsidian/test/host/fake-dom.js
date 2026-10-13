@@ -418,6 +418,20 @@ export function fakeDocument(width = 700) {
     );
   doc.defaultView = {
     innerHeight: 800,
+    // the window's own listeners, such as resize: a test tells them with `tell`
+    listeners: new Map(),
+    addEventListener(type, fn) {
+      (this.listeners.get(type) ?? this.listeners.set(type, []).get(type)).push(fn);
+    },
+    removeEventListener(type, fn) {
+      this.listeners.set(
+        type,
+        (this.listeners.get(type) ?? []).filter((f) => f !== fn),
+      );
+    },
+    tell(type, init = {}) {
+      for (const fn of [...(this.listeners.get(type) ?? [])]) fn.call(this, { type, ...init });
+    },
     setTimeout,
     clearTimeout,
     requestAnimationFrame: (f) => setTimeout(f, 0),

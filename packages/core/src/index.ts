@@ -70,7 +70,9 @@ export type {
   Told,
 } from './layout-worker.ts';
 export { Zoom, MIN_SCALE, MAX_SCALE, STEP } from './zoom.ts';
-export type { Mode, Size, View, ZoomEvent } from './zoom.ts';
+export type { Mode, Place, Size, View, ZoomEvent } from './zoom.ts';
+export { MOVE_MS, READABLE_SCALE, Trail, coverOf, glideAt, linkGroups, pointerTo, sheetLimit } from './details-nav.ts';
+export type { LinkGroup, Pointing, TrailStep } from './details-nav.ts';
 export { tokenize, TOKEN_CLASSES } from './tokens.ts';
 export type { Token, TokenClass } from './tokens.ts';
 export { diagnostics, completions, readBack, textVersion, SEVERITY, KIND } from './help.ts';

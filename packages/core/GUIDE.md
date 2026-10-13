@@ -114,7 +114,9 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   Code pane), are worked out to hex and paint their own page, with the locked contrast held; the system entry carries
   both in the drawing's own style sheet, `prefers-color-scheme` choosing, for a host that cannot say which it shows.
 - `hits.ts` — what a tap lands on or near, and where a box is (`boundsOf`, as fractions of the drawing; `centres`).
-- `zoom.ts` — zoom, pan and full screen; `reveal` brings a box into view, centred, and leaves one already in view alone.
+- `zoom.ts` — zoom, pan and full screen; `reveal` brings a box into view, centred, and leaves one already in view alone;
+  `aim` says where the view would go to do so, keeping the zoom unless it is below a scale given (§25); `keepClear` keeps
+  a strip at the viewport's foot clear, as a sheet covers it, letting the drawing pan up into it by as much and no more.
 
 **Finding your way round a large graph (spec §25)**
 
@@ -133,6 +135,13 @@ and nothing else (untangle_data_untouched). Nothing here is written to a note or
   `nextAlong` (an arrow key walks to the neighbour in that direction), `emphasis` (a path over the selection over the
   legend), and `Untangle`, which holds all of it for one drawing and works it out into `layers`: what is kept and what is
   hidden.
+- `details-nav.ts` — finding your way from a thing's details: `linkGroups` (its links by relationship type and direction,
+  in words with a count: "is reported to by Bob and Cy (2)", the reverse reading the schema's or the library's guess, a
+  thing linked twice the same way named once with each of its links),
+  `Trail` (the things chosen from them, back and forward), `glideAt` and `MOVE_MS` (the brief eased move to a chosen
+  thing), `READABLE_SCALE` (below it a thing's words are under 11 pixels, too small to read), `pointerTo` (the arrow at
+  the view's edge pointing to a selection out of sight), and `sheetLimit` and `coverOf` (how tall the details sheet may
+  be, and how much of a viewport it covers).
 
 **Editing**
 

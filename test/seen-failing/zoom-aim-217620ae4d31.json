@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/zoom-aim.test.js",
+  "test": "the strip a sheet covers > with nothing covered, the drawing in a note cannot pan: it fills its viewport",
+  "seen_failing_first": false,
+  "evidence": "A control: it pins how a drawing in a note is clamped with nothing kept clear, which the strip kept clear must leave unchanged, so it passes before keepClear exists by design."
+}

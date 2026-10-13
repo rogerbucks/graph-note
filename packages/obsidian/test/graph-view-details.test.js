@@ -31,7 +31,8 @@ describe('details on demand', () => {
     const panel = el.querySelector('.graph-note-details');
     assert.ok(!panel.hidden);
     const text = panel.textContent;
-    for (const s of ['Large reader', 'Option', 'answers → Which device?', 'Easy on the eyes favours this'])
+    // its links read in words, grouped by type and direction (§25, details_links_listed)
+    for (const s of ['Large reader', 'Option', 'answers Which device?', 'is favoured by Easy on the eyes'])
       assert.ok(text.includes(s), s);
   });
 

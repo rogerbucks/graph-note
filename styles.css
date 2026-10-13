@@ -584,6 +584,102 @@ details.graph-note-style > summary {
   padding-bottom: max(var(--size-4-2), env(safe-area-inset-bottom));
 }
 
+/* The details in view mode (spec §25): a sheet pinned to the foot of the part of the screen the note is seen in, over its
+   card and as wide as it, so it stays in place while the note scrolls; never taller than its share of the screen, so the
+   chosen thing and some of the drawing stay in sight above it, its details scrolling within it. Minimised, its body is
+   hidden and it is a bar: the thing's name and kind, the toggle and the close button. Gone while its card is off the
+   screen. Sizes and places only, so the same in light and dark. */
+.graph-note-view > .graph-note-details.graph-note-sheet {
+  position: fixed;
+  left: var(--graph-note-sheet-left, 0);
+  width: var(--graph-note-sheet-width, 100%);
+  /* its border and padding inside that width, so it is laid out exactly where it was put, as the plugin checks */
+  box-sizing: border-box;
+  bottom: var(--graph-note-sheet-bottom, 0);
+  z-index: var(--layer-popover);
+  display: flex;
+  flex-direction: column;
+  max-height: min(45vh, var(--graph-note-sheet-max, 45vh));
+  margin: 0;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border-focus);
+  border-bottom: 0;
+  border-radius: var(--radius-l) var(--radius-l) 0 0;
+  box-shadow: var(--shadow-l);
+  padding: 0 var(--size-4-3) max(var(--size-4-2), env(safe-area-inset-bottom));
+}
+.graph-note-sheet > .graph-note-details-head {
+  flex: none;
+}
+.graph-note-sheet > .graph-note-details-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.graph-note-view > .graph-note-details.graph-note-sheet.is-away {
+  display: none;
+}
+
+/* A thing's links in words (spec §25): each name a choice, read as a link in the sentence, with the link's own small
+   button beside it; the trail's back and forward above them. On touch, every choice is 44 points. */
+.graph-note-details ul.graph-note-link-groups {
+  list-style: none;
+  padding-left: 0;
+}
+.graph-note-link-group {
+  margin: var(--size-2-1) 0;
+}
+.graph-note-link-group button.graph-note-link-thing {
+  display: inline;
+  height: auto;
+  padding: 0 var(--size-2-1);
+  background: none;
+  box-shadow: none;
+  color: var(--link-color);
+  text-decoration: underline;
+  font-size: inherit;
+  cursor: pointer;
+}
+.graph-note-link-group button.graph-note-link-choice {
+  --icon-size: var(--icon-xs);
+  display: inline-flex;
+  vertical-align: middle;
+  height: auto;
+  padding: var(--size-2-1);
+}
+.graph-note-trail {
+  display: flex;
+  gap: var(--size-4-2);
+  margin-top: var(--size-4-1);
+}
+.graph-note-trail button {
+  min-width: 44px;
+  min-height: 44px;
+}
+@media (pointer: coarse) {
+  .graph-note-link-group button.graph-note-link-thing,
+  .graph-note-link-group button.graph-note-link-choice {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* The arrow to a selection out of view (spec §25): at the edge of the drawing, turned to point at it, 44 points. */
+.graph-note-viewport > .graph-note-pointer {
+  position: absolute;
+  left: var(--graph-note-pointer-x, 50%);
+  top: var(--graph-note-pointer-y, 50%);
+  transform: translate(-50%, -50%) rotate(var(--graph-note-pointer-angle, 0deg));
+  z-index: 1;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 50%;
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  box-shadow: var(--shadow-s);
+}
+
 /* The editor in place sits inside the drawing's card, under the drawing, as part of it. */
 .graph-note-edit-slot:empty {
   display: none;

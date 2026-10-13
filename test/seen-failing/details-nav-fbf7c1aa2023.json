@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/details-nav.test.js",
+  "test": "an arrow to a selection out of view > none while the selection is in view",
+  "seen_failing_first": false,
+  "evidence": "A control: no arrow is shown while the selection is in view, which held before the arrow existed; the tests after it in the same describe show the arrow appearing and going."
+}

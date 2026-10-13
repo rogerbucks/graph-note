@@ -11,7 +11,7 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 **Numbers.** Every item has a number in its line: its section's letter, a dash and two digits, such as `V-03`, the
 third item of Viewing. The letters are B Before, V Viewing, Z Zoom, P The edit pane, I Editing in place and the
 inspector, S The style graph, W Views, D Parked for later, T Walked paths, X Export, C Settings, A Accessibility, F Focus
-and untangle, and R Proposals.
+and untangle, R Proposals, and G Details and the sheet.
 **A number never changes once given**, whatever happens to the item's words or its place; a removed item's number is
 never used again, and **a new item takes the next number in its section**. Each item after Before has a note in
 `test-vault/Device checks/` that shows the case in Obsidian, found by its number (`test/device-check-notes.test.js`
@@ -329,6 +329,33 @@ holds the two together).
       Reject another: the graph block is the same, and the change set records it. Undo takes the last decision back. A
       graph changed since the proposal was made shows a notice first, and Accept stays off until the notice is marked
       read (slice 3, proposals_phone, proposal_provenance, person_decides).
+
+## Details and the sheet — spec §25
+
+- [ ] **G-01** Tap a box with several links of one type: its details list them by type and way, in words, each group once
+      with a count where there are several, such as "is answered by Kindle and Tablet (2)". Each name is underlined; tap
+      one and it becomes the selection, its details open and the drawing glides to it at the same zoom. Zoomed far out,
+      it is brought up to a size that can be read (slice 3, details_links_listed, details_choose_moves).
+- [ ] **G-02** Settings › Accessibility › Reduce motion on the Mac, or Reduce Motion on the iPhone: choosing a linked thing
+      jumps straight to it, with no glide. With it off, the glide is brief, and the box is marked selected and named in
+      the details as the glide starts (slice 3, details_move_motion).
+- [ ] **G-03** Choose three things in turn from the details, then press Back twice and Forward once: each step returns to
+      the thing it names, and tapping a box in the drawing starts the trail again (slice 3, details_trail).
+- [ ] **G-04** Select a box, then zoom in until it is out of sight: a round arrow at the edge of the drawing points to it.
+      Tap the arrow: the box comes back into view and the arrow goes (slice 3, selection_pointer).
+- [ ] **G-05** iPhone, reading view and Live Preview, a card taller than the screen: tap a box near the foot of the screen.
+      The details open as a sheet at the foot of the screen, over the card and as wide as it, and the drawing moves up
+      so the box sits above the sheet. Scroll the note: the sheet stays where it is; scroll the card off the screen: the
+      sheet goes, and comes back with the card. Same on the Mac (slice 3, details_on_screen, sheet_pinned,
+      sheet_keeps_thing_clear).
+- [ ] **G-06** Press the arrow in the sheet's header: it shrinks to a bar with the box's name and kind, and the drawing
+      settles; press it again and the full details return, scrolling inside the sheet, which never covers more than
+      about half the screen. Minimise it, close it and tap another box, in this card or another: it opens minimised
+      (slice 3, sheet_min_max, sheet_state_remembered).
+- [ ] **G-07** Close the sheet with its x, with Escape, and by tapping empty space in the drawing: each closes it and clears
+      the selection. In Live Preview, with the sheet open, click into the note's text and type, Escape and the arrow
+      keys included: every key reaches the note. With VoiceOver, the arrow and the x are read as "Minimise details" and
+      "Close details", and Tab reaches both (slice 3, sheet_closed, sheet_reachable).
 
 ## Result
 

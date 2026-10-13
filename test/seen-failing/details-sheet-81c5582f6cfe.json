@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/details-sheet.test.js",
+  "test": "the sheet in Live Preview, inside the editor > a key typed in the note’s text, around the card, is never taken, and nothing listens for keys outside the card",
+  "seen_failing_first": false,
+  "evidence": "A control asked for at review in place of a hollow one: the plugin never listened for keys outside the card, so it held before; it now dispatches on CodeMirror's editable content around the card and checks no key listener is on the document or the window."
+}

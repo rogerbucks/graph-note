@@ -1,14 +1,21 @@
 // What is selected in a card and how it shows (editor spec §25, slice 3): the selection is the focus — the thing or link
 // chosen, its links and what is at their other ends stay at full strength — joined with the highlight under the pointer or
 // the keyboard focus, the untangling (filter, legend, path, search) and the arrow keys that walk the links. It marks the
-// drawing by class only, so nothing moves, and it never reaches the note.
-import { FocusState, estimateEdge, nextAlong } from '@graph-note/core';
-import type { FocusTarget, GraphDrawing, Kept, Layers, Zoom } from '@graph-note/core';
+// drawing by class only, so nothing moves, and it never reaches the note. What is chosen from the details is brought into
+// view, readable, by a brief move (details_choose_moves, details_move_motion); the selection is kept clear of the details
+// sheet (sheet_keeps_thing_clear), and pointed to by an arrow at the edge when it is out of view (selection_pointer).
+import { FocusState, READABLE_SCALE, coverOf, estimateEdge, nextAlong, pointerTo } from '@graph-note/core';
+import type { Bounds, FocusTarget, GraphDrawing, Kept, Layers, Size, TrailStep, Zoom } from '@graph-note/core';
 import type { DetailsPanel } from './details-panel';
+import { Glide, stepName } from './details-nav';
+import type { NavActions } from './details-nav';
 import { DrawingMarks, focusTargetOf, sameTarget } from './focus-marks';
 import { Highlight } from './hover';
+import { scrollNote } from './placement';
+import { SelectionPointer } from './selection-pointer';
 import type { Taps, Target } from './taps';
 import { UntangleView } from './untangle';
+import type { ThingActions } from './untangle';
 import type { ViewOptions } from './view-options';
 
 /** What the selection needs of its card, given late because the card builds them after it. */
@@ -20,7 +27,17 @@ export interface SelectionHost {
   open: (t: Target, walking?: boolean) => void;
   taps: Taps;
   drawing: () => GraphDrawing | undefined;
+  /** The drawing's viewport, and its size as the zoom has it. */
+  viewport: () => HTMLElement;
+  size: () => Size;
 }
+
+/**
+ * How the selection came, which decides how it is brought into view: a tap, moved only to keep it clear of the sheet;
+ * chosen from the details, brought into view readable; pointed to by the arrow, brought into view as it is; found or
+ * walked to, brought into view at once, as finding always has.
+ */
+type How = 'tap' | 'chosen' | 'shown' | 'found';
 
 /** The selection of one card: its focus, its untangling and its highlight. */
 export class Selection {
@@ -39,11 +56,21 @@ export class Selection {
   private places: Map<string, { x: number; y: number }> | null = null;
   /** Whether the focus last came by a pointer, so a click's focus is not a keyboard's highlight. */
   private byPointer = false;
+  /** What is selected, and where it is in the drawing, as fractions of it. */
+  private target: Target | null = null;
+  private box: Bounds | null = null;
+  /** How the selection came (`How`). */
+  private how: How = 'tap';
+  /** The pixels at the viewport's foot the details sheet covers, as last kept clear. */
+  private kept = 0;
+  private glide: Glide | null = null;
+  private readonly arrow: SelectionPointer;
 
   /** Builds the untangling's parts at the end of what `root` holds so far, and the highlight of its links. */
   constructor(root: HTMLElement, o: ViewOptions, host: SelectionHost) {
     this.o = o;
     this.host = host;
+    this.arrow = new SelectionPointer(host.viewport, () => this.came('shown', () => this.inSight()));
     this.untangle = new UntangleView(root, {
       drawing: host.drawing() ?? { graph: o.graph, boxes: [], links: [], estimates: [] },
       reading: o.reading,
@@ -56,25 +83,116 @@ export class Selection {
     this.hover = new Highlight(this.untangle.edges, () => this.hotChanged());
   }
 
-  /** What a card's details offer of a thing, to untangle the drawing. */
-  actions(): { showOnly: (key: string) => void; routeFrom: (key: string) => void } {
-    return { showOnly: (k) => this.untangle.showOnly(k), routeFrom: (k) => this.untangle.routeFrom(k) };
+  /** What a card's details offer: to untangle the drawing from a thing, and to choose what its links reach (§25). */
+  actions(): ThingActions & NavActions {
+    return {
+      showOnly: (k) => this.untangle.showOnly(k),
+      routeFrom: (k) => this.untangle.routeFrom(k),
+      choose: (step) => this.bring(step),
+      sheetMoved: () => this.inSight(),
+    };
   }
 
-  /** The details were closed, however: the selection and the focus clear with them. */
+  /** The details were closed, however: the selection and the focus clear with them, and the sheet's strip with them. */
   closed(): void {
     this.focus.clear();
     this.hover.tapped(null);
+    this.target = this.box = null;
+    this.glide?.stop();
+    this.kept = 0;
+    this.host.zoom().keepClear(0);
     this.refresh();
+    this.pointAt();
   }
 
-  /** A box or link was opened: it is the selection, and so the focus. */
+  /** A box or link was opened: it is the selection, and so the focus; and it is brought into view as it came (`How`). */
   select(t: Target): void {
     const d = this.host.drawing();
     this.focus.select(
       'key' in t ? { thing: t.key } : { edge: 'link' in t ? t.link : d ? estimateEdge(d, t.estimate) : -1 },
     );
+    this.target = t;
+    this.box = this.boundsOf(t);
     this.refresh();
+    this.inSight();
+  }
+
+  /** A thing or link chosen from the details: the selection, its details shown, brought into view readable (§25). */
+  private bring(step: TrailStep): void {
+    // one hidden by a filter or the legend would be chosen out of sight: the whole graph is shown first, as finding does;
+    // a link is numbered among the drawing's links as its edge is
+    const { hidden } = this.layers;
+    if ('key' in step ? hidden.things.has(step.key) : hidden.edges.has(step.link)) this.untangle.reset();
+    this.came('chosen', () => this.host.open(step, true));
+  }
+
+  /** Runs `then` with the selection coming as `how`, and back to a tap's after. */
+  private came(how: How, then: () => void): void {
+    this.how = how;
+    try {
+      then();
+    } finally {
+      this.how = 'tap';
+    }
+  }
+
+  /**
+   * Brings the selection into sight as it came (`How`), clear of the details sheet: the drawing pans up into the strip the
+   * sheet covers, never more; where the sheet covers the whole drawing the note scrolls instead. A tap moves the view only
+   * for the sheet; from the details the thing is also made readable; the move is brief, or at once (§25).
+   */
+  private inSight(): void {
+    const box = this.box,
+      zoom = this.host.zoom(),
+      top = this.host.details().sheetTop();
+    if (!box) return this.pointAt();
+    const r = this.host.viewport().getBoundingClientRect(),
+      cover = top === null ? 0 : coverOf(r, top);
+    this.kept = cover < r.height ? cover : 0;
+    zoom.keepClear(this.kept);
+    const to = this.how === 'tap' && !this.kept ? null : zoom.aim(box, this.how === 'chosen' ? READABLE_SCALE : 0);
+    if (to && this.how === 'found') zoom.restore(to.scale, to.x, to.y);
+    else if (to) (this.glide ??= new Glide(this.host.viewport())).to(zoom, to);
+    if (top !== null && this.kept === 0 && cover > 0) {
+      const v = zoom.view(),
+        scale = to?.scale ?? v.scale,
+        foot = r.top + (to?.y ?? v.y) + (box.y + box.height) * (v.height / v.scale) * scale;
+      if (foot > top) scrollNote(this.host.viewport(), foot - top + 8);
+    }
+    this.pointAt();
+  }
+
+  /** The view moved: the arrow to the selection follows, or goes. */
+  viewChanged(): void {
+    this.pointAt();
+  }
+
+  /** Stops a move under way, as a finger or the pointer takes over, or the card goes. */
+  stop(): void {
+    this.glide?.stop();
+  }
+
+  /** Shows the arrow at the edge pointing to the selection when it is out of view, or hides it (selection_pointer). */
+  private pointAt(): void {
+    const t = this.target,
+      at = t && this.box ? pointerTo(this.box, this.host.zoom().view(), this.host.size(), this.kept) : null;
+    const name = !t ? '' : 'estimate' in t ? 'the estimated link' : stepName(this.o.reading, this.o.graph, t);
+    this.arrow.show(at, name);
+  }
+
+  /** Where a box or link is in the drawing, as fractions of it. */
+  private boundsOf(t: Target): Bounds | null {
+    const [attr, value] =
+      'key' in t
+        ? ['data-key', t.key]
+        : 'link' in t
+          ? ['data-link', String(t.link)]
+          : ['data-estimate', `${t.estimate}`];
+    const g = Array.from(this.host.svg().querySelectorAll('g.node, g.edge')).find(
+        (n) => n.getAttribute(attr) === value,
+      ),
+      id = g?.getAttribute('id');
+    return id ? this.host.taps.bounds(id) : null;
   }
 
   /** A tap by touch selected what it did: there is no hover on touch, so the tap gives the highlight. */
@@ -122,9 +240,10 @@ export class Selection {
     return true;
   }
 
-  /** A finger or the pointer went down: the focus that follows is not the keyboard's. */
+  /** A finger or the pointer went down: the focus that follows is not the keyboard's, and a move under way stops. */
   pressed(): void {
     this.byPointer = true;
+    this.stop();
   }
 
   /** The pointer is over something, or has left it. */
@@ -165,7 +284,9 @@ export class Selection {
   private goTo(key: string, walking: boolean): void {
     const svg = this.host.svg();
     const g = Array.from(svg.querySelectorAll<SVGGElement>('g.node')).find((n) => n.getAttribute('data-key') === key);
-    this.host.open({ key }, walking);
+    // brought into view at once, clear of the details sheet, as it is selected; and so even when it answers a question
+    // for a second thing, or is a step recorded, rather than the selection
+    this.came('found', () => this.host.open({ key }, walking));
     const box = g ? this.host.taps.bounds(g.getAttribute('id') ?? '') : null;
     if (box) this.host.zoom().reveal(box);
     g?.focus({ preventScroll: true });
