@@ -61,6 +61,22 @@ declare namespace GraphSpecCheck {
   type World = Record<string, Graph>;
 
   function worldFromStore(store: Store): World;
+  /** A graph's canonical text, hashed: the state a change set is made against is its first sixteen digits. */
+  function canon(g: Graph): string;
+
+  /** A change set's first line (§24 H1): its graph, its id, the state it was made against and its author; null when it is not one. */
+  function changesetHeader(block: string): { graph: string; id: string; against: string; by: string } | null;
+  /** A change set checked against its base blocks: each check with whether it passed, its header and the graph's state after it. */
+  function checkChangeset(
+    base: string[],
+    block: string,
+    matrix?: unknown,
+    switches?: Set<string>,
+  ): {
+    results: [string, boolean][];
+    header: { graph: string; id: string; against: string; by: string } | null;
+    after: string | null;
+  };
   /** [the shared schema a graph names, that schema's graph if it was loaded]. */
   function schemaFor(world: World, graph: string): [string | undefined, Graph | undefined];
   /** {type: [reading, reverse reading]} from the graph's own schema, else the shared one given. */

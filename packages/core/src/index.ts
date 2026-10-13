@@ -127,6 +127,26 @@ export {
 } from './inspector.ts';
 export { listValues, makeList, addToList, removeFromList, linkedValues, listsOf } from './linked-list.ts';
 export type { ListShape, ListValue, ListEdit } from './linked-list.ts';
+export { BIG_PROPOSAL, linkChange, makeProposal, provenanceLines, thingChange, valueGql } from './proposals.ts';
+export type {
+  ChangeGroup,
+  ChangeInput,
+  ChangeOp,
+  Proposal,
+  ProposalInput,
+  ProposedChange,
+  Proposer,
+  ProposerKind,
+  Provenance,
+} from './proposals.ts';
+export { NO_BASIS, basisOf } from './proposals-basis.ts';
+export type { Stale } from './proposals-basis.ts';
+export { MARK_WORDS } from './proposals-marks.ts';
+export type { ChangeMark, MarkKind, Marks } from './proposals-marks.ts';
+export { changeSetId } from './proposals-text.ts';
+export type { Decision } from './proposals-text.ts';
+export { ProposalReview } from './proposals-review.ts';
+export type { ChangeRow, DecideOptions, Person, ProposalShown, Reviewed, Which } from './proposals-review.ts';
 export { hitAreas, nearby, TapCycle } from './hits.ts';
 export { TextHistory } from './history.ts';
 export type { Change, TextState } from './history.ts';

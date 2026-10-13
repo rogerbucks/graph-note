@@ -249,7 +249,7 @@ export function addToList(
 }
 
 /** The block without one of its items, and the comma that parted it from its neighbour — and nothing else. */
-function withoutItem(text: string, all: Item[], it: Item): string {
+export function withoutItem(text: string, all: Item[], it: Item): string {
   const lineStart = text.lastIndexOf('\n', it.from - 1) + 1;
   const alone = /^[ \t]*$/.test(text.slice(lineStart, it.from));
   if (it.comma !== -1) {
