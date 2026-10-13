@@ -86,6 +86,7 @@ export type {
   Told,
 } from './layout-worker.ts';
 export { Zoom, MIN_SCALE, MAX_SCALE, STEP } from './zoom.ts';
+export { AcrossZoom } from './zoom-across.ts';
 export type { Mode, Size, View, ZoomEvent } from './zoom.ts';
 export { tokenize, TOKEN_CLASSES } from './tokens.ts';
 export type { Token, TokenClass } from './tokens.ts';

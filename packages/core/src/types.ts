@@ -5,35 +5,14 @@
 // (graph-layout.js, `typedSource`). A table is drawn by the host, from types-table.ts. Host-free. The Python library
 // judges and plans the same way (`graphspec/style/diagram_types.py`), held to this byte for byte (type_both_renderers).
 import type { Graph } from '@graph-note/graph-spec';
-import { linkTypes } from './arrows.ts';
-import { valueText } from './inline-properties.ts';
 import type { DiagramPlan, GraphDrawing } from './note-reading.ts';
 import { DIAGRAM_TYPES } from './style-graph.ts';
 import type { Diagram, DiagramType, StyleGraph } from './style-graph.ts';
+import { centreOf, dayOf, loopIn, shapeOf } from './types-shape.ts';
+import type { GraphShape } from './types-shape.ts';
 
-export { DIAGRAM_TYPES };
-export type { DiagramType };
-
-/** A thing as a type judges it: its key, its text, its kinds, and the first date it carries, said as inline. */
-export interface ShapeThing {
-  key: string;
-  text: string;
-  kinds: string[];
-  date?: string;
-}
-
-/** A link as a type judges it: its two ends and the relationship type it is styled by. */
-export interface ShapeLink {
-  from: string;
-  type: string;
-  to: string;
-}
-
-/** What a type is judged on: the things drawn and their written links, in the order drawn. */
-export interface GraphShape {
-  things: ShapeThing[];
-  links: ShapeLink[];
-}
+export { DIAGRAM_TYPES, shapeOf };
+export type { DiagramType, GraphShape };
 
 /** Whether a type fits, and, when it does not, why, in words naming the things at fault. */
 export interface TypeFit {
@@ -83,81 +62,20 @@ const andList = (xs: readonly string[]): string =>
   xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`;
 const counted = (n: number) => (n === 2 ? 'two' : String(n));
 
-/** A date or an instant as the reader keeps it. */
-const isDate = (v: unknown): boolean =>
-  !!v && typeof v === 'object' && 'kind' in v && 's' in v && (v.kind === 'date' || v.kind === 'datetime');
+/** Two names in the order a sort by name puts them, as JavaScript compares them (UTF-16 code units). */
+const byName = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
 /**
- * The shape of a drawing: its boxes, with their kinds and the first date each carries (from `g`, the graph as read), and
- * its written links, each by the type it is styled by (a guessed type's link by the type it is taken for).
+ * Why the links of `type` make no tree — a thing with a second parent, or a loop — or null when they make one. A parent
+ * linked to a thing twice by the type is one parent.
  */
-export function shapeOf(drawing: Pick<GraphDrawing, 'boxes' | 'links' | 'estimates'>, g?: Graph): GraphShape {
-  const types = linkTypes(drawing);
-  return {
-    things: drawing.boxes.map((b) => {
-      const date = Object.values(g?.nodes.has(b.key) ? g.p(b.key) : {}).find(isDate);
-      return {
-        key: b.key,
-        text: b.text,
-        kinds: b.kind ? b.kind.split(' · ') : [],
-        ...(date === undefined ? {} : { date: valueText(date) }),
-      };
-    }),
-    links: drawing.links.map((l, i) => ({ from: l.from, type: types[i] ?? l.type, to: l.to })),
-  };
-}
-
-/** The first loop the links make, followed from each thing in turn: the things around it, back to where it starts. */
-function loopIn(things: readonly string[], links: readonly ShapeLink[]): string[] | null {
-  const out = new Map<string, string[]>();
-  for (const l of links) out.set(l.from, [...(out.get(l.from) ?? []), l.to]);
-  const state = new Map<string, 'open' | 'done'>();
-  for (const start of things) {
-    if (state.has(start)) continue;
-    const path = [start],
-      next = [0];
-    state.set(start, 'open');
-    while (path.length) {
-      const at = path.length - 1,
-        k = path[at] as string,
-        i = next[at] as number,
-        ends = out.get(k) ?? [];
-      if (i >= ends.length) {
-        state.set(k, 'done');
-        path.pop();
-        next.pop();
-        continue;
-      }
-      next[at] = i + 1;
-      const n = ends[i] as string;
-      if (state.get(n) === 'open') return [...path.slice(path.indexOf(n)), n];
-      if (!state.has(n)) {
-        state.set(n, 'open');
-        path.push(n);
-        next.push(0);
-      }
-    }
-  }
-  return null;
-}
-
-/** The thing with the most links, the first drawn when two have as many: a radial drawing's centre. */
-function centreOf(shape: GraphShape): string {
-  const degree = new Map<string, number>();
-  for (const l of shape.links) for (const k of [l.from, l.to]) degree.set(k, (degree.get(k) ?? 0) + 1);
-  let best = shape.things[0]?.key ?? '';
-  for (const t of shape.things) if ((degree.get(t.key) ?? 0) > (degree.get(best) ?? 0)) best = t.key;
-  return best;
-}
-
-/** Why the links of `type` make no tree — a thing with a second parent, or a loop — or null when they make one. */
 function treeAlong(shape: GraphShape, type: string, text: (k: string) => string): string | null {
   const links = shape.links.filter((l) => l.type === type);
   if (!links.length) return `there is no ${type} link here`;
-  const parents = new Map<string, string[]>();
-  for (const l of links) parents.set(l.to, [...(parents.get(l.to) ?? []), l.from]);
+  const parents = new Map<string, Set<string>>();
+  for (const l of links) parents.set(l.to, (parents.get(l.to) ?? new Set()).add(l.from));
   for (const t of shape.things) {
-    const ps = parents.get(t.key) ?? [];
+    const ps = [...(parents.get(t.key) ?? [])];
     if (ps.length > 1) return `${t.text} has ${counted(ps.length)} parents, ${andList(ps.map(text))}`;
   }
   const loop = loopIn(
@@ -170,7 +88,10 @@ function treeAlong(shape: GraphShape, type: string, text: (k: string) => string)
 const no = (type: DiagramType, why: string): TypeFit => ({ type, fits: false, why });
 const yes = (type: DiagramType): TypeFit => ({ type, fits: true });
 
-/** Whether a tree fits: along `relationship`, or, none chosen, along the type with the most links that makes one. */
+/**
+ * Whether a tree fits: along `relationship`, or, none chosen, along the type with the most links that makes one — of two
+ * with as many, the first by name, so the choice never hangs on the order written.
+ */
 function treeFit(shape: GraphShape, relationship: string | undefined, text: (k: string) => string): TypeFit {
   if (!shape.links.length) return no('tree', 'a tree needs links, and there are none');
   if (relationship !== undefined) {
@@ -178,16 +99,21 @@ function treeFit(shape: GraphShape, relationship: string | undefined, text: (k: 
     return why ? no('tree', `along ${relationship}, ${why}`) : { ...yes('tree'), relationship };
   }
   const count = (t: string) => shape.links.filter((l) => l.type === t).length;
-  const types = [...new Set(shape.links.map((l) => l.type))].sort((a, b) => count(b) - count(a));
+  const types = [...new Set(shape.links.map((l) => l.type))].sort((a, b) => count(b) - count(a) || byName(a, b));
   const best = types.find((t) => treeAlong(shape, t, text) === null);
   if (best !== undefined) return { ...yes('tree'), relationship: best };
   const most = types[0] as string;
   return no('tree', `no relationship makes a tree: along ${most}, ${treeAlong(shape, most, text)}`);
 }
 
-/** Whether a radial drawing fits: three things or more, every one joined to the centre, whichever way its links run. */
+/**
+ * Whether a radial drawing fits: three things or more, every one joined to the centre, whichever way its links run; and
+ * no group written, as Graphviz's radial layout cannot draw a group's box.
+ */
 function radialFit(shape: GraphShape, text: (k: string) => string): TypeFit {
   if (shape.things.length < 3) return no('radial', 'a radial drawing needs three things or more');
+  const group = shape.groups?.[0];
+  if (group) return no('radial', `a radial drawing cannot draw the box of group ${group[0]}`);
   const centre = centreOf(shape),
     near = new Map<string, string[]>();
   for (const l of shape.links) {
@@ -208,7 +134,7 @@ function radialFit(shape: GraphShape, text: (k: string) => string): TypeFit {
     : yes('radial');
 }
 
-/** Whether lanes fit: every thing of one kind, and two kinds or more. */
+/** Whether lanes fit: every thing of one kind, every group's things of one kind, so it sits in one lane, and two kinds. */
 function lanesFit(shape: GraphShape): TypeFit {
   for (const t of shape.things) {
     if (!t.kinds.length) return no('lanes', `${t.text} has no kind, so it has no lane`);
@@ -218,6 +144,10 @@ function lanesFit(shape: GraphShape): TypeFit {
         `${t.text} is of ${counted(t.kinds.length)} kinds, ${andList(t.kinds)}, so it cannot sit in one lane`,
       );
   }
+  const kindOf = new Map(shape.things.map((t) => [t.key, t.kinds[0]]));
+  for (const [label, keys] of shape.groups ?? [])
+    if (new Set(keys.map((k) => kindOf.get(k))).size > 1)
+      return no('lanes', `group ${label} holds things of two kinds`);
   return new Set(shape.things.map((t) => t.kinds[0])).size < 2
     ? no('lanes', 'lanes need things of two kinds or more')
     : yes('lanes');
@@ -305,14 +235,20 @@ function planOf(fit: TypeFit, shape: GraphShape): DiagramPlan | undefined {
   if (fit.type === 'lanes') {
     const lanes = new Map<string, string[]>();
     for (const t of shape.things) lanes.set(t.kinds[0] as string, [...(lanes.get(t.kinds[0] as string) ?? []), t.key]);
-    return { type: 'lanes', lanes: [...lanes] };
+    // each group is drawn inside its lane (graph-layout.js, typedSource), never as a box of its own
+    return { type: 'lanes', lanes: [...lanes], ...(shape.groups ? { groups: shape.groups } : {}) };
   }
   if (fit.type === 'timeline') {
-    const dates = [...new Set(shape.things.map((t) => t.date as string))].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
-    return { type: 'timeline', dates: dates.map((d) => shape.things.filter((t) => t.date === d).map((t) => t.key)) };
+    // a rank is a day: an instant shares the rank of a date on its day
+    const day = (t: GraphShape['things'][number]) => dayOf(t.date as string);
+    const days = [...new Set(shape.things.map(day))].sort(byName);
+    return { type: 'timeline', dates: days.map((d) => shape.things.filter((t) => day(t) === d).map((t) => t.key)) };
   }
   return undefined;
 }
+
+/** What of a style graph the diagram types read: the types chosen, and the nudges, whose groups some types cannot draw. */
+export type TypeStyle = Pick<StyleGraph, 'diagrams'> & Partial<Pick<StyleGraph, 'nudges'>>;
 
 /** What a host offers of the diagram types for a drawing: each type and whether it fits, the suggestion, the type drawn. */
 export interface DiagramOffer {
@@ -330,11 +266,11 @@ export interface DiagramOffer {
  */
 export function diagramOffer(
   drawing: Pick<GraphDrawing, 'boxes' | 'links' | 'estimates'>,
-  style: Pick<StyleGraph, 'diagrams'>,
+  style: TypeStyle,
   g?: Graph,
   view?: string,
 ): DiagramOffer {
-  const shape = shapeOf(drawing, g);
+  const shape = shapeOf(drawing, g, style.nudges);
   return {
     fits: typeFits(shape, chosenDiagram(style, view)?.relationship),
     suggested: suggestType(typeFits(shape), shape),
@@ -350,13 +286,13 @@ export function diagramOffer(
  */
 export function diagramFor(
   drawing: Pick<GraphDrawing, 'boxes' | 'links' | 'estimates'>,
-  style: Pick<StyleGraph, 'diagrams'>,
+  style: TypeStyle,
   g?: Graph,
   view?: string,
 ): DiagramChoice {
   const d = chosenDiagram(style, view);
   if (!d) return { drawn: 'network' };
-  const shape = shapeOf(drawing, g),
+  const shape = shapeOf(drawing, g, style.nudges),
     fits = typeFits(shape, d.relationship),
     fit = fits.find((f) => f.type === d.type) as TypeFit;
   if (!fit.fits)

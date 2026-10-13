@@ -450,7 +450,7 @@ test('every diagram type Graphviz draws is laid out from the same source by both
       const styled = styledDrawing(drawing, style, g, view ?? undefined);
       drawn[graph] = Object.fromEntries(directions(styled).map((d) => [d.rankdir, d.dot]));
       choice[graph] = diagramFor(drawing, style, g, view ?? undefined);
-      fits[graph] = typeFits(shapeOf(drawing, g));
+      fits[graph] = typeFits(shapeOf(drawing, g, style.nudges));
     }
     assert.deepEqual(python[n], { styles, drawn, choice, fits }, c.name);
   });

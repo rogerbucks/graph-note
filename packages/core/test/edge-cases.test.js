@@ -320,7 +320,7 @@ describe('diagram types: empty and oversized', () => {
     assert.equal(wayIn(readNote([things(50)]).graphs.get('big').boxes.length), null);
   });
 
-  // proves: large_way_in
+  // proves: type_only_when_fits
   test('a graph with nothing in it is offered the network alone, each other type saying why, and no way in', () => {
     const fits = typeFits({ things: [], links: [] });
     assert.deepEqual(

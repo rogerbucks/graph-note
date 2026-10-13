@@ -8,6 +8,7 @@ the type it is taken for: those estimates are the plugin's alone (layout.ts, dra
 
 from __future__ import annotations
 
+import sys
 from collections.abc import Iterable, Sequence
 from typing import Any
 
@@ -59,11 +60,19 @@ def render_args(texts: Sequence[str], graph: str, view: str | None = None) -> di
     the plugin draws it in `view` (None: the whole graph): its boxes and links, the keys drawn
     under a suggested name, and its style — nudges, direction, the links drawn without their
     arrowheads, the properties shown inline, and the plan of the diagram type it is drawn as, while
-    the data fits the one chosen (a network, with no plan, otherwise)."""
+    the data fits the one chosen (a network, with no plan, otherwise). A table chosen is drawn as a
+    network, as only the plugin draws a table, and a note on stderr says so."""
     store, problems = read_for_drawing(texts)
     world = World.from_store(store)
     parts = graph_parts(world, graph, problems)
     style = read_style(texts, graph, world)[0]
+    choice = diagram_for(parts, style["diagrams"], view, style["nudges"])
+    if choice["drawn"] == "table":
+        print(
+            f"graph_svg: graph {graph} is chosen to be drawn as a table, which only the plugin "
+            "draws; it is drawn here as a network",
+            file=sys.stderr,
+        )
     return {
         "nodes": parts["nodes"],
         "edges": parts["edges"],
@@ -72,5 +81,5 @@ def render_args(texts: Sequence[str], graph: str, view: str | None = None) -> di
         "direction": style["direction"],
         "arrowless": arrowless([t for t, _ in parts["links"]], style["arrows"], view),
         "inline": inline_rows(parts["boxes"], parts["links"], style["shows"], view),
-        "diagram": diagram_for(parts, style["diagrams"], view).get("plan"),
+        "diagram": choice.get("plan"),
     }

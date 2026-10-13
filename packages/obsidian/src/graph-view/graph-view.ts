@@ -3,7 +3,7 @@
 // full screen, and shows a box's details when it is tapped or opened from the keyboard. This module ties together the
 // parts in its folder: the bar, the drawing, taps, the details, and where the card is placed.
 import { MarkdownRenderChild, Platform, setIcon } from 'obsidian';
-import { Zoom, scrollsOneWay } from '@graph-note/core';
+import { AcrossZoom, Zoom, scrollsOneWay } from '@graph-note/core';
 import type { View, ZoomEvent } from '@graph-note/core';
 import { renderCode } from '../code';
 import { readOnlyHere, whenPlaced } from './placement';
@@ -129,7 +129,9 @@ export class GraphView extends MarkdownRenderChild {
     const type = this.o.diagram?.choice.drawn ?? 'network';
     this.across = mode === 'note' && scrollsOneWay(type, Platform.isPhone, this.o.drawn.width, room);
     const size = { width: this.o.drawn.width, height: this.o.drawn.height };
-    this.zoom = new Zoom(size, this.viewportSize(), mode, this.across);
+    this.zoom = this.across
+      ? new AcrossZoom(size, this.viewportSize(), mode)
+      : new Zoom(size, this.viewportSize(), mode);
     this.zoom.onChange = (v) => this.apply(v);
     this.zoom.onExit = () => this.o.onClose?.();
     // a view saved as shown is shown so again (§7)

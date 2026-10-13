@@ -55,6 +55,7 @@ export function directions(drawing: GraphDrawing): Direction[] {
       ),
       drawing.nudges ?? [],
       keys,
+      drawing.diagram,
     ),
     src: layoutSource(drawing, rankdir as 'LR' | 'TB'),
   }));

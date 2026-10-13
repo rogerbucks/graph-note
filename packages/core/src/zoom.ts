@@ -105,27 +105,15 @@ export class Zoom {
   private pinch: Pinch | null = null;
   private lastTap: { x: number; y: number; time: number } | null = null;
 
-  private readonly content: Size;
-  private viewport: Size;
-  private mode: Mode;
-  private readonly across: boolean;
+  protected readonly content: Size;
+  protected viewport: Size;
+  protected mode: Mode;
 
-  /**
-   * `across`: a wide drawing that scrolls one way only (§15, wide_types_phone, a tree, flow or timeline on a phone):
-   * fitted to the viewport's height and shown from its start, one finger moves it across and never up or down, and the
-   * browser keeps scrolling the page up and down. Zoomed in, it pans both ways, as any drawing does.
-   */
-  constructor(content: Size, viewport: Size, mode: Mode, across = false) {
+  constructor(content: Size, viewport: Size, mode: Mode) {
     this.content = content;
     this.viewport = viewport;
     this.mode = mode;
-    this.across = across;
     this.place(this.fitScale(), 0, 0, true);
-  }
-
-  /** Whether the drawing, wider than its viewport and not zoomed in, scrolls across only. */
-  private scrollsAcross(): boolean {
-    return this.across && !this.zoomedIn() && this.content.width * this.scale > this.viewport.width + EPS;
   }
 
   view(): View {
@@ -138,14 +126,11 @@ export class Zoom {
     };
   }
 
-  /**
-   * The scale that shows the whole drawing — or, scrolled across, its whole height: in a note never above natural size,
-   * as a note draws it; elsewhere up to the limit.
-   */
+  /** The scale that shows the whole drawing: in a note never above natural size, as a note draws it; elsewhere up to the limit. */
   fitScale(): number {
     const { width: cw, height: ch } = this.content,
       { width: vw, height: vh } = this.viewport;
-    const raw = cw > 0 && ch > 0 ? (this.across ? vh / ch : Math.min(vw / cw, vh / ch)) : 1;
+    const raw = cw > 0 && ch > 0 ? Math.min(vw / cw, vh / ch) : 1;
     return clamp(raw, MIN_SCALE, this.mode === 'note' ? 1 : MAX_SCALE);
   }
 
@@ -160,12 +145,9 @@ export class Zoom {
     return this.scale > this.fitScale() + EPS;
   }
 
-  /**
-   * The CSS touch-action the host sets: the browser scrolls the note with one finger unless the drawing is zoomed in;
-   * a drawing scrolled across leaves the browser only up and down.
-   */
+  /** The CSS touch-action the host sets: the browser scrolls the note with one finger unless the drawing is zoomed in. */
   touchAction(): 'pan-x pan-y' | 'pan-y' | 'none' {
-    return this.zoomedIn() ? 'none' : this.scrollsAcross() ? 'pan-y' : 'pan-x pan-y';
+    return this.zoomedIn() ? 'none' : 'pan-x pan-y';
   }
 
   fit(): void {
@@ -245,7 +227,7 @@ export class Zoom {
 
   private down(e: Extract<ZoomEvent, { kind: 'down' }>): boolean {
     const touch = e.pointer === 'touch';
-    const pans = !e.onBox && (!touch || this.zoomedIn() || this.scrollsAcross());
+    const pans = !e.onBox && (!touch || this.zoomedIn());
     this.pointers.set(e.id, {
       touch,
       x: e.x,
@@ -297,7 +279,7 @@ export class Zoom {
       return true;
     }
     if (!p.pans) return false;
-    this.panBy(dx, this.scrollsAcross() ? 0 : dy); // scrolled across, never up or down
+    this.panBy(dx, dy);
     return true;
   }
 
@@ -324,17 +306,14 @@ export class Zoom {
     return p.pans;
   }
 
-  /**
-   * Keeps the drawing in view: centred on an axis where it is smaller than the viewport, edge to edge where it is larger
-   * — and, scrolled across, from its start rather than its middle when fitted.
-   */
+  /** Keeps the drawing in view: centred on an axis where it is smaller than the viewport, edge to edge where it is larger. */
   private clampPan(scale: number, x: number, y: number, centre = false): [number, number] {
     const w = this.content.width * scale,
       h = this.content.height * scale,
       { width: vw, height: vh } = this.viewport;
-    const axis = (v: number, size: number, room: number, middle: boolean) =>
-      size <= room ? (room - size) / 2 : middle ? (room - size) / 2 : clamp(v, room - size, 0);
-    return [axis(x, w, vw, centre && !this.across), axis(y, h, vh, centre)];
+    const axis = (v: number, size: number, room: number) =>
+      size <= room ? (room - size) / 2 : centre ? (room - size) / 2 : clamp(v, room - size, 0);
+    return [axis(x, w, vw), axis(y, h, vh)];
   }
 
   private place(scale: number, x: number, y: number, centre = false): void {

@@ -4,6 +4,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { Zoom, MIN_SCALE, MAX_SCALE } from '../src/zoom.ts';
+import { AcrossZoom } from '../src/zoom-across.ts';
 
 const close = (a, b, msg) => assert.ok(Math.abs(a - b) < 1e-9, `${msg ?? ''} ${a} ≈ ${b}`);
 /** A drawing 1000 × 500 at natural size, in a viewport 500 wide and 250 high — fitted at half size. */
@@ -367,7 +368,7 @@ describe('double tap', () => {
 describe('a wide tree, flow or timeline on a phone scrolls one way only', () => {
   /** A drawing 2000 × 400, scrolled across a phone's card 375 wide and as tall as the drawing fitted. */
   const across = (content = { width: 2000, height: 400 }, viewport = { width: 375, height: 400 }) =>
-    new Zoom(content, viewport, 'note', true);
+    new AcrossZoom(content, viewport, 'note');
   const drag = (z, dx, dy) => {
     z.handle({ kind: 'down', id: 1, pointer: 'touch', x: 200, y: 200 });
     const used = z.handle({ kind: 'move', id: 1, x: 200 + dx, y: 200 + dy });
@@ -416,6 +417,31 @@ describe('a wide tree, flow or timeline on a phone scrolls one way only', () => 
     assert.equal(z.view().x, 37.5);
     assert.equal(z.touchAction(), 'pan-x pan-y');
     assert.equal(drag(z, -50, 0), false);
+  });
+
+  // proves: wide_types_phone
+  test('two fingers pinch it as any drawing, about the point between them; Fit then scrolls it across again', () => {
+    const z = across();
+    const mid = [150, 200],
+      before = [(mid[0] - z.view().x) / z.view().scale, (mid[1] - z.view().y) / z.view().scale];
+    z.handle({ kind: 'down', id: 1, pointer: 'touch', x: 100, y: 200 });
+    assert.equal(
+      z.handle({ kind: 'down', id: 2, pointer: 'touch', x: 200, y: 200 }),
+      true,
+      'the pinch is the drawing’s',
+    );
+    z.handle({ kind: 'move', id: 1, x: 50, y: 200 });
+    assert.equal(z.handle({ kind: 'move', id: 2, x: 250, y: 200 }), true);
+    close(z.view().scale, 2 ** 1.4, 'twice apart, 2 ** 1.4 times the size, as any pinch');
+    const [ax, ay] = at(z, ...before);
+    close(ax, mid[0], 'about the point between the fingers, across');
+    close(ay, mid[1], 'and down: zoomed in, it moves both ways');
+    z.handle({ kind: 'up', id: 1, x: 50, y: 200, time: 0 });
+    z.handle({ kind: 'up', id: 2, x: 250, y: 200, time: 0 });
+    assert.equal(z.touchAction(), 'none', 'zoomed in, every finger is the drawing’s');
+    z.fit();
+    assert.deepEqual([z.view().scale, z.view().x, z.view().y], [1, 0, 0]);
+    assert.equal(z.touchAction(), 'pan-y');
   });
 });
 

@@ -45,9 +45,11 @@ def _counted(n):
     return "two" if n == 2 else str(n)
 
 
-def shape_of(parts: Mapping[str, Any]) -> dict[str, list[dict]]:
+def shape_of(parts: Mapping[str, Any], nudges: Sequence[Mapping] = ()) -> dict[str, list]:
     """The shape a type is judged on, from graph_parts: each thing {key, text, kinds, date (the
-    first date it carries, said as inline, if any)}, and each written link {from, type, to}."""
+    first date it carries, said as inline, if any)}, each written link {from, type, to}, and, when
+    any are written, the groups `nudges` (read_style's) draw, [label, keys of things drawn], in
+    the order first written — the core's types-shape.ts shapeOf."""
     things = []
     for (key, kind, text), (_, _, props) in zip(parts["nodes"], parts["boxes"], strict=True):
         date = next((v for v in props.values() if isinstance(v, dt.date)), None)
@@ -57,7 +59,15 @@ def shape_of(parts: Mapping[str, Any]) -> dict[str, list[dict]]:
         {"from": s, "type": t, "to": d}
         for (s, _, d), (t, _) in zip(parts["edges"], parts["links"], strict=True)
     ]
-    return {"things": things, "links": links}
+    drawn, groups = {key for key, _, _ in parts["nodes"]}, {}
+    for n in nudges:
+        thing, group = n.get("thing"), n.get("group")
+        if n["word"] == "group" and group is not None and thing in drawn:
+            keys = groups.setdefault(group, [])
+            if thing not in keys:
+                keys.append(thing)
+    shape: dict[str, list] = {"things": things, "links": links}
+    return {**shape, "groups": [[g, keys] for g, keys in groups.items()]} if groups else shape
 
 
 def _loop_in(things, links):
@@ -106,13 +116,15 @@ def _centre_of(shape):
 
 def _tree_along(shape, type_, text):
     """Why the links of `type_` make no tree — a thing with a second parent, or a loop — or None
-    when they make one."""
+    when they make one. A parent linked to a thing twice by the type is one parent."""
     links = [link for link in shape["links"] if link["type"] == type_]
     if not links:
         return f"there is no {type_} link here"
     parents: dict[str, list[str]] = {}
     for link in links:
-        parents.setdefault(link["to"], []).append(link["from"])
+        ps = parents.setdefault(link["to"], [])
+        if link["from"] not in ps:
+            ps.append(link["from"])
     for t in shape["things"]:
         ps = parents.get(t["key"], [])
         if len(ps) > 1:
@@ -138,8 +150,15 @@ def _tree_fit(shape, relationship, text):
         if why:
             return _no("tree", f"along {relationship}, {why}")
         return {**_yes("tree"), "relationship": relationship}
+    # the most links first; of two with as many, the first by name, compared in UTF-16 code units
+    # as JavaScript compares them, so the choice never hangs on the order written
     types = list(dict.fromkeys(link["type"] for link in shape["links"]))
-    types.sort(key=lambda t: -sum(1 for link in shape["links"] if link["type"] == t))
+    types.sort(
+        key=lambda t: (
+            -sum(1 for link in shape["links"] if link["type"] == t),
+            t.encode("utf-16-be"),
+        )
+    )
     best = next((t for t in types if _tree_along(shape, t, text) is None), None)
     if best is not None:
         return {**_yes("tree"), "relationship": best}
@@ -150,6 +169,10 @@ def _tree_fit(shape, relationship, text):
 def _radial_fit(shape, text):
     if len(shape["things"]) < 3:
         return _no("radial", "a radial drawing needs three things or more")
+    if shape.get("groups"):
+        # Graphviz's radial layout cannot draw a group's box
+        label = shape["groups"][0][0]
+        return _no("radial", f"a radial drawing cannot draw the box of group {label}")
     centre, near = _centre_of(shape), {}
     for link in shape["links"]:
         near.setdefault(link["from"], []).append(link["to"])
@@ -174,6 +197,10 @@ def _lanes_fit(shape):
         if len(t["kinds"]) > 1:
             kinds = f"{_counted(len(t['kinds']))} kinds, {_and_list(t['kinds'])}"
             return _no("lanes", f"{t['text']} is of {kinds}, so it cannot sit in one lane")
+    kind_of = {t["key"]: t["kinds"][0] for t in shape["things"]}
+    for label, keys in shape.get("groups", ()):
+        if len({kind_of.get(k) for k in keys}) > 1:
+            return _no("lanes", f"group {label} holds things of two kinds")
     if len({t["kinds"][0] for t in shape["things"]}) < 2:
         return _no("lanes", "lanes need things of two kinds or more")
     return _yes("lanes")
@@ -243,26 +270,33 @@ def _plan_of(fit, shape):
         lanes: dict[str, list[str]] = {}
         for t in shape["things"]:
             lanes.setdefault(t["kinds"][0], []).append(t["key"])
-        return {"type": "lanes", "lanes": [[k, keys] for k, keys in lanes.items()]}
+        # each group is drawn inside its lane (typed_source), never as a box of its own
+        plan = {"type": "lanes", "lanes": [[k, keys] for k, keys in lanes.items()]}
+        return {**plan, "groups": shape["groups"]} if shape.get("groups") else plan
     if typ == "timeline":
-        dates = sorted(dict.fromkeys(t["date"] for t in shape["things"]))
+        # a rank is a day, the date's first ten characters: an instant shares a date's rank
+        days = sorted(dict.fromkeys(t["date"][:10] for t in shape["things"]))
         return {
             "type": "timeline",
-            "dates": [[t["key"] for t in shape["things"] if t["date"] == d] for d in dates],
+            "dates": [[t["key"] for t in shape["things"] if t["date"][:10] == d] for d in days],
         }
     return None
 
 
 def diagram_for(
-    parts: Mapping[str, Any], diagrams: Sequence[Mapping], view: str | None = None
+    parts: Mapping[str, Any],
+    diagrams: Sequence[Mapping],
+    view: str | None = None,
+    nudges: Sequence[Mapping] = (),
 ) -> dict[str, Any]:
-    """The type `parts` (graph_parts) is drawn as in `view` (None: the whole graph), as the
-    core's diagramFor gives it: {drawn} with none chosen; {chosen, drawn, plan (if any)} while the
-    chosen type fits; else {chosen, drawn: 'network', stopped: {type, why, nearest}}."""
+    """The type `parts` (graph_parts) is drawn as in `view` (None: the whole graph), its groups
+    those `nudges` draw, as the core's diagramFor gives it: {drawn} with none chosen; {chosen,
+    drawn, plan (if any)} while the chosen type fits; else {chosen, drawn: 'network', stopped:
+    {type, why, nearest}}."""
     d = chosen_diagram(diagrams, view)
     if d is None:
         return {"drawn": "network"}
-    shape = shape_of(parts)
+    shape = shape_of(parts, nudges)
     fits = type_fits(shape, d.get("relationship"))
     fit = next(f for f in fits if f["type"] == d["type"])
     if not fit["fits"]:
@@ -289,8 +323,8 @@ def typed_source(dot: str, plan: Mapping | None) -> str:
     graph-layout.js typedSource writes it: a radial drawing around its centre, by twopi; a tree, a
     flow, lanes and a timeline with every link laid out forward and no kind in a column of its own,
     a tree's other links and every link of a timeline never moving a thing; lanes a box for each
-    kind; a timeline each day's things on one rank, the days in order, joined by links never
-    drawn. With no plan, `dot` unchanged."""
+    kind, each group drawn inside its lane; a timeline each day's things on one rank, the days in
+    order, joined by links never drawn. With no plan, `dot` unchanged."""
     if not plan:
         return dot
     lines = dot.split("\n")
@@ -312,13 +346,12 @@ def typed_source(dot: str, plan: Mapping | None) -> str:
     added = []
     if plan["type"] == "lanes":
         for i, (label, keys) in enumerate(plan["lanes"]):
-            added.append(
-                f"  subgraph cluster_lane_{i + 1} {{label=<{html.escape(label)}>; "
-                f'fontname="{LOCKED["font"]}"; fontsize={LOCKED["kind_font_size"]}; '
-                'fontcolor="#0000fe"; color="#0000fe"; style="rounded"; '
-                + "".join(f'"{k}"; ' for k in keys)
-                + "}"
+            inner = [g for g in plan.get("groups", ()) if g[1][0] in keys]
+            nested = " ".join(
+                _box(f"cluster_lane_{i + 1}_{j + 1}", group, members)
+                for j, (group, members) in enumerate(inner)
             )
+            added.append("  " + _box(f"cluster_lane_{i + 1}", label, keys, nested))
     if plan["type"] == "timeline":
         for i, keys in enumerate(plan["dates"]):
             if len(keys) > 1:
@@ -326,4 +359,19 @@ def typed_source(dot: str, plan: Mapping | None) -> str:
             if i:
                 added.append(f'  "{plan["dates"][i - 1][0]}" -> "{keys[0]}" [style=invis];')
     out[-1:-1] = added
+    # groups inside lanes: without newrank, Graphviz may take a thing out of its box without a word
+    if plan["type"] == "lanes" and plan.get("groups"):
+        out.insert(1, "  newrank=true;")
     return "\n".join(out)
+
+
+def _box(name, label, keys, inside=""):
+    """A box labelled as a group's is (graph_svg.nudged_source): a lane, or a group inside one."""
+    return (
+        f"subgraph {name} {{label=<{html.escape(label)}>; "
+        f'fontname="{LOCKED["font"]}"; fontsize={LOCKED["kind_font_size"]}; '
+        'fontcolor="#0000fe"; color="#0000fe"; style="rounded"; '
+        + "".join(f'"{k}"; ' for k in keys)
+        + inside
+        + "}"
+    )

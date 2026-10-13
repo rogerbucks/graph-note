@@ -18,9 +18,16 @@ const id = (key: string) => `"${key}"`;
  * each beside a `{rank=same; …}` line and each before an invisible link, in the order written, after every link drawn —
  * so Graphviz numbers the drawn links as before — then one box (a cluster) for each group label, in the order first
  * written, its label in the kind caption's size and colour. A nudge naming a thing not among `keys` (the boxes drawn
- * here, as in a view that leaves it out) is left out. With nothing to add, `dot` is returned unchanged.
+ * here, as in a view that leaves it out) is left out; so is a group when the drawing is laid out as lanes (`diagram`, §15),
+ * which draw each group inside its lane already (graph-layout.js, typedSource). With nothing to add, `dot` is returned
+ * unchanged.
  */
-export function nudgedSource(dot: string, nudges: readonly Nudge[], keys: Iterable<string>): string {
+export function nudgedSource(
+  dot: string,
+  nudges: readonly Nudge[],
+  keys: Iterable<string>,
+  diagram?: { type: string },
+): string {
   const drawn = new Set(keys),
     added: string[] = [],
     groups = new Map<string, string[]>();
@@ -29,7 +36,7 @@ export function nudgedSource(dot: string, nudges: readonly Nudge[], keys: Iterab
     if (!things.length || !things.every((k) => drawn.has(k))) continue;
     if (n.word === 'beside') added.push(`  {rank=same; ${things.map(id).join('; ')};}`);
     else if (n.word === 'before') added.push(`  ${id(things[0] ?? '')} -> ${id(things[1] ?? '')} [style=invis];`);
-    else if (n.word === 'group' && n.group !== undefined)
+    else if (n.word === 'group' && n.group !== undefined && diagram?.type !== 'lanes')
       groups.set(n.group, [...(groups.get(n.group) ?? []), ...things]);
   }
   // the label as an HTML-like label, entity-escaped as the boxes' own are: a backslash or a quote is drawn as written

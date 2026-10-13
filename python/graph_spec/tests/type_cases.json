@@ -192,6 +192,78 @@
           "(n1:Nudge {word: 'beside', thing: 'bea', other: 'cy'})"
         ]
       ]
+    },
+    {
+      "name": "a parent linked twice by the same relationship is one parent: still a tree",
+      "blocks": [
+        [
+          "// graph: org",
+          "(ada:Person {name: 'Ada'}),",
+          "(bea:Person {name: 'Bea'}),",
+          "(cy:Person {name: 'Cy'}),",
+          "(ada)-[:MANAGES]->(bea),",
+          "(ada)-[:MANAGES]->(bea),",
+          "(ada)-[:MANAGES]->(cy)"
+        ],
+        ["// graph: org_style · STYLE org", "(d1:Diagram {type: 'tree', relationship: 'MANAGES'})"]
+      ]
+    },
+    {
+      "name": "two relationships with as many links, neither chosen: the tree follows the first by name, whatever the order written",
+      "blocks": [
+        [
+          "// graph: pair",
+          "(a:Thing {name: 'A'}),",
+          "(b:Thing {name: 'B'}),",
+          "(c:Thing {name: 'C'}),",
+          "(d:Thing {name: 'D'}),",
+          "(a)-[:BETA]->(b),",
+          "(c)-[:ALPHA]->(d)"
+        ],
+        ["// graph: pair_style · STYLE pair", "(d1:Diagram {type: 'tree'})"]
+      ]
+    },
+    {
+      "name": "lanes with a group of one kind: the group drawn inside its lane, and never as a box of its own",
+      "blocks": [
+        [
+          "// graph: teams",
+          "(ann:Person {name: 'Ann'}),",
+          "(bob:Person {name: 'Bob'}),",
+          "(cat:Person {name: 'Cat'}),",
+          "(ops:Team {name: 'Ops'}),",
+          "(ann)-[:IN]->(ops),",
+          "(bob)-[:IN]->(ops),",
+          "(cat)-[:ASKS]->(ann)"
+        ],
+        [
+          "// graph: teams_style · STYLE teams",
+          "(d1:Diagram {type: 'lanes'}),",
+          "(n1:Nudge {word: 'group', thing: 'ann', group: 'Front & back'}),",
+          "(n2:Nudge {word: 'group', thing: 'bob', group: 'Front & back'}),",
+          "(n3:Nudge {word: 'beside', thing: 'ann', other: 'cat'})"
+        ]
+      ]
+    },
+    {
+      "name": "lanes with a group of two kinds, and a radial drawing with any group: neither fits, each says why",
+      "blocks": [
+        [
+          "// graph: teams",
+          "(ann:Person {name: 'Ann'}),",
+          "(bob:Person {name: 'Bob'}),",
+          "(ops:Team {name: 'Ops'}),",
+          "(ann)-[:IN]->(ops),",
+          "(bob)-[:IN]->(ops)"
+        ],
+        [
+          "// graph: teams_style · STYLE teams",
+          "(d1:Diagram {type: 'lanes'}),",
+          "(d2:Diagram {type: 'radial', view: 'round'}),",
+          "(n1:Nudge {word: 'group', thing: 'ann', group: 'Desk'}),",
+          "(n2:Nudge {word: 'group', thing: 'ops', group: 'Desk'})"
+        ]
+      ]
     }
   ]
 }

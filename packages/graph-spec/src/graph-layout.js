@@ -253,20 +253,25 @@ round — are ported here exactly, each proved against Python by the layout test
       out.push(free ? `${forward.slice(0, -2)}, constraint=false];` : forward);
     }
     const added = [];
+    // a box labelled as a group's is (style-source.ts, nudgedSource): a lane, or a group drawn inside its lane
+    const box = (name, label, keys, inside = '') =>
+      `subgraph ${name} {label=<${escape(label)}>; fontname="${style.font}"; ` +
+      `fontsize=${num(style.kind_font_size)}; fontcolor="#0000fe"; color="#0000fe"; style="rounded"; ` +
+      `${keys.map((k) => `"${k}"; `).join('')}${inside}}`;
     if (plan.type === 'lanes')
-      plan.lanes.forEach(([label, keys], i) =>
-        added.push(
-          `  subgraph cluster_lane_${i + 1} {label=<${escape(label)}>; fontname="${style.font}"; ` +
-            `fontsize=${num(style.kind_font_size)}; fontcolor="#0000fe"; color="#0000fe"; style="rounded"; ` +
-            `${keys.map((k) => `"${k}"; `).join('')}}`,
-        ),
-      );
+      plan.lanes.forEach(([label, keys], i) => {
+        const inner = (plan.groups || []).filter(([, members]) => keys.includes(members[0]));
+        const nested = inner.map(([group, members], j) => box(`cluster_lane_${i + 1}_${j + 1}`, group, members));
+        added.push(`  ${box(`cluster_lane_${i + 1}`, label, keys, nested.join(' '))}`);
+      });
     if (plan.type === 'timeline')
       plan.dates.forEach((keys, i) => {
         if (keys.length > 1) added.push(`  {rank=same; ${keys.map((k) => `"${k}"`).join('; ')};}`);
         if (i) added.push(`  "${plan.dates[i - 1][0]}" -> "${keys[0]}" [style=invis];`);
       });
     out.splice(out.length - 1, 0, ...added);
+    // groups inside lanes: without newrank, Graphviz may take a thing out of its box without a word
+    if (plan.type === 'lanes' && plan.groups && plan.groups.length) out.splice(1, 0, '  newrank=true;');
     return out.join('\n');
   }
 

@@ -210,6 +210,37 @@ describe('a tree', () => {
   });
 
   // proves: tree_fits
+  test('a parent linked twice by the same relationship is still one parent', () => {
+    const twice = `${ORG},\n(ada)-[:MANAGES]->(bea)`;
+    assert.equal(fitsOf(twice, 'MANAGES').tree.fits, true);
+    assert.equal(fitsOf(twice).tree.relationship, 'MANAGES');
+    const two = `${twice},\n(cy)-[:MANAGES]->(bea)`;
+    assert.equal(fitsOf(two, 'MANAGES').tree.why, 'along MANAGES, Bea has two parents, Ada and Cy');
+  });
+
+  // proves: tree_fits
+  test('with none chosen and two relationships of as many links, the first by name is taken, whatever the order', () => {
+    const pair = (first, second) => `// graph: pair
+(a:Thing {name: 'A'}),
+(b:Thing {name: 'B'}),
+(c:Thing {name: 'C'}),
+(d:Thing {name: 'D'}),
+(a)-[:${first}]->(b),
+(c)-[:${second}]->(d)`;
+    assert.equal(fitsOf(pair('BETA', 'ALPHA')).tree.relationship, 'ALPHA');
+    assert.equal(fitsOf(pair('ALPHA', 'BETA')).tree.relationship, 'ALPHA');
+    const loops = (first, second) => `// graph: loops
+(a:Thing {name: 'A'}),
+(b:Thing {name: 'B'}),
+(a)-[:${first}]->(b),
+(b)-[:${first}]->(a),
+(a)-[:${second}]->(b),
+(b)-[:${second}]->(a)`;
+    assert.match(fitsOf(loops('BETA', 'ALPHA')).tree.why, /^no relationship makes a tree: along ALPHA,/);
+    assert.match(fitsOf(loops('ALPHA', 'BETA')).tree.why, /^no relationship makes a tree: along ALPHA,/);
+  });
+
+  // proves: tree_fits
   test('with none chosen and no relationship making a tree, says why of the one with the most links', () => {
     assert.equal(
       fitsOf(LOOP).tree.why,
@@ -262,13 +293,65 @@ describe('a timeline', () => {
   });
 
   // proves: timeline_fits
-  test('a date and an instant are both dates, ordered by when they are', () => {
+  test('a date and an instant are both dates: things of one day share its rank, whatever the hour, days in order', () => {
+    // a timeline's rank is a day (the first ten characters of the date as the reader keeps it, an instant's in UTC), so
+    // an instant shares the rank of a date on its day, the things in the order drawn; each thing's first date is its own
     const mixed = `// graph: day
 (a:Event {name: 'Late', at: DATETIME '2026-09-01T18:00:00Z'}),
 (b:Event {name: 'Early', on: DATE '2026-09-01'}),
-(c:Event {name: 'Next', on: DATE '2026-09-02', noted: DATE '2020-01-01'})`;
+(c:Event {name: 'Next', on: DATE '2026-09-02', noted: DATE '2020-01-01'}),
+(d:Event {name: 'Before', at: DATETIME '2026-08-31T23:30:00Z'})`;
     const { plain, style, g } = shown(mixed, "(d1:Diagram {type: 'timeline'})");
-    assert.deepEqual(styledDrawing(plain, style, g).diagram.dates, [['b'], ['a'], ['c']]);
+    const drawing = styledDrawing(plain, style, g);
+    assert.deepEqual(drawing.diagram.dates, [['d'], ['a', 'b'], ['c']]);
+    assert.ok(directions(drawing)[0].dot.includes('  {rank=same; "a"; "b";}'));
+  });
+});
+
+describe('groups written as nudges', () => {
+  const lanes = (...lines) => {
+    const { plain, style, g } = shown(TEAMS, "(d1:Diagram {type: 'lanes'}),", ...lines);
+    return { offer: diagramOffer(plain, style, g), drawing: styledDrawing(plain, style, g) };
+  };
+
+  // proves: type_only_when_fits
+  test('lanes are not offered when a group holds things of two kinds, and say which group', () => {
+    const { offer, drawing } = lanes(
+      "(n1:Nudge {word: 'group', thing: 'ann', group: 'Front desk'}),",
+      "(n2:Nudge {word: 'group', thing: 'ops', group: 'Front desk'})",
+    );
+    assert.equal(offer.fits.find((f) => f.type === 'lanes').why, 'group Front desk holds things of two kinds');
+    assert.equal(offer.choice.stopped.why, 'group Front desk holds things of two kinds');
+    assert.equal(drawing.diagram, undefined, 'drawn as a network, never wrongly');
+  });
+
+  // proves: diagram_type_set
+  test('a group of one kind is drawn inside its lane, and never again as a box of its own', () => {
+    const { drawing } = lanes(
+      "(n1:Nudge {word: 'group', thing: 'ann', group: 'Front desk'}),",
+      "(n2:Nudge {word: 'group', thing: 'bob', group: 'Front desk'})",
+    );
+    assert.deepEqual(drawing.diagram, {
+      type: 'lanes',
+      lanes: [
+        ['Person', ['ann', 'bob']],
+        ['Team', ['ops']],
+      ],
+      groups: [['Front desk', ['ann', 'bob']]],
+    });
+    const { dot } = directions(drawing)[0];
+    const lane = dot.split('\n').find((l) => l.includes('subgraph cluster_lane_1 '));
+    assert.match(lane, /"ann"; "bob"; subgraph cluster_lane_1_1 \{label=<Front desk>; .*"ann"; "bob"; \}\}$/);
+    assert.equal(dot.match(/subgraph /g).length, 3, 'two lanes and the group inside one: no group box of its own');
+    assert.match(dot, /^digraph G \{\n {2}newrank=true;/, 'ranks kept inside the boxes');
+  });
+
+  // proves: type_only_when_fits
+  test('a radial drawing is not offered while groups are written, as it cannot draw their boxes', () => {
+    const { plain, style, g } = shown(ORG, "(n1:Nudge {word: 'group', thing: 'ada', group: 'Leads'})");
+    const radial = diagramOffer(plain, style, g).fits.find((f) => f.type === 'radial');
+    assert.equal(radial.why, 'a radial drawing cannot draw the box of group Leads');
+    assert.equal(fitsOf(ORG).radial.fits, true, 'without the group, it fits');
   });
 });
 

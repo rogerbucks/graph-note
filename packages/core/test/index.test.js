@@ -16,7 +16,8 @@
 // 11 Oct 2026), and an estimated link's fix (estimateFix, EstimateFix, 11 Oct 2026), and arrowheads hidden and properties
 // shown inline (styledDrawing, arrowsShown, ARROWHEADS, INLINE, INLINE_ROWS and their types, 13 Oct 2026), and the
 // diagram types (DIAGRAM_TYPES, LARGE_GRAPH, diagramFor, diagramOffer, typeFits, shapeOf, suggestType, nearestType,
-// tableOf, wayIn, scrollsOneWay and their types, 14 Oct 2026).
+// tableOf, wayIn, scrollsOneWay and their types, 14 Oct 2026; AcrossZoom, the zoom of a drawing scrolled across only,
+// moved out of Zoom in the review of #126).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -28,6 +29,7 @@ const ENTRY = new URL('../src/index.ts', import.meta.url);
 
 const VALUES = [
   'ARROWHEADS',
+  'AcrossZoom',
   'DEFAULT_SETTINGS',
   'DEPARTURES',
   'DIAGRAM_TYPES',

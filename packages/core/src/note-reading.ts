@@ -66,14 +66,14 @@ export interface GraphDrawing {
 /**
  * How Graphviz lays a diagram type out (spec §15; graph-layout.js, `typedSource`): a tree by its links (indexes in the
  * order the layout source draws links), a radial drawing around its centre, lanes by kind (each lane's label and its
- * things), a timeline by its things grouped by date, earliest first; a flow needs nothing more. A network and a table
+ * things, and the groups drawn inside them), a timeline by its things grouped by day, earliest first; a flow needs nothing more. A network and a table
  * have none: a network is the layout source as it is, and a table is drawn by the host.
  */
 export type DiagramPlan =
   | { type: 'tree'; tree: number[] }
   | { type: 'flow' }
   | { type: 'radial'; centre: string }
-  | { type: 'lanes'; lanes: [string, string[]][] }
+  | { type: 'lanes'; lanes: [string, string[]][]; groups?: [string, string[]][] }
   | { type: 'timeline'; dates: string[][] };
 
 /** Something that could not be read: its graph, the block (index in the note), the line in that block (1 = its graph line), what is wrong, and the fix. */

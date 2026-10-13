@@ -13,6 +13,8 @@ direction laid out. The Python library must give the same, from gql_profile.read
 read_style, graphspec.style.diagram_types and graph_svg's sources.
 """
 
+import contextlib
+import io
 import json
 import os
 import subprocess
@@ -68,7 +70,7 @@ process.stdout.write(JSON.stringify(cases.map(([texts, view]) => {
     const styled = styledDrawing(drawing, style, g, view ?? undefined);
     drawn[graph] = Object.fromEntries(directions(styled).map((d) => [d.rankdir, d.dot]));
     choice[graph] = diagramFor(drawing, style, g, view ?? undefined);
-    fits[graph] = typeFits(shapeOf(drawing, g));
+    fits[graph] = typeFits(shapeOf(drawing, g, style.nudges));
   }
   return { styles, drawn, choice, fits };
 })));
@@ -112,7 +114,7 @@ def python_answer(texts, view):
         keys = [key for key, _, _ in nodes]
         hidden = arrowless([t for t, _ in parts["links"]], style["arrows"], view)
         shown = inline_rows(parts["boxes"], parts["links"], style["shows"], view)
-        choice[name] = diagram_for(parts, style["diagrams"], view)
+        choice[name] = diagram_for(parts, style["diagrams"], view, style["nudges"])
         plan = choice[name].get("plan")
         drawn[name] = {
             rd: graph_svg.nudged_source(
@@ -125,10 +127,11 @@ def python_answer(texts, view):
                 ),
                 style["nudges"],
                 keys,
+                plan,
             )
             for rd in directions(style["direction"], plan)
         }
-        fits[name] = type_fits(shape_of(parts))
+        fits[name] = type_fits(shape_of(parts, style["nudges"]))
     return {"styles": styles, "drawn": drawn, "choice": choice, "fits": fits}
 
 
@@ -167,6 +170,12 @@ class Types(unittest.TestCase):
         self.assertEqual(set(drawn), set(DIAGRAM_TYPES))
         self.assertIsNone(drawn["table"])
         self.assertTrue(any("stopped" in c for a in self.core for c in a["choice"].values()))
+        # and the groups: drawn inside lanes, refused by lanes when of two kinds, and by radial
+        plans = [c.get("plan") or {} for a in self.core for c in a["choice"].values()]
+        self.assertTrue(any(p.get("groups") for p in plans))
+        whys = [f.get("why", "") for a in self.core for fs in a["fits"].values() for f in fs]
+        self.assertTrue(any("holds things of two kinds" in w for w in whys))
+        self.assertTrue(any("cannot draw the box of group" in w for w in whys))
         self.assertTrue(any(p for a in self.core for ps in a["styles"].values() for p in ps))
 
     def test_render_lays_out_the_typed_source_in_the_types_direction(self):
@@ -188,6 +197,26 @@ class Types(unittest.TestCase):
         self.assertEqual(given, [typed_source(graph_svg.dot_source(nodes, edges, "TB")[0], plan)])
         self.assertEqual(graph_svg.directions(None, plan), ["TB"])
         self.assertEqual(graph_svg.directions("LR", plan), ["LR"])
+
+    def test_a_table_chosen_is_drawn_as_a_network_and_said_on_stderr(self):
+        # the table is the plugin's own: graph_svg draws a network in its place, and says so,
+        # never quietly
+        data = "// graph: trip\n(a:Place {name: 'A'}),\n(b:Place {name: 'B'}),\n(a)-[:NEAR]->(b)"
+        chosen = "// graph: trip_style · STYLE trip\n(d1:Diagram {type: '%s'})"
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            args = graph_svg.render_args([data, chosen % "table"], "trip")
+        self.assertIsNone(args["diagram"])
+        self.assertEqual(
+            err.getvalue(),
+            "graph_svg: graph trip is chosen to be drawn as a table, which only the plugin "
+            "draws; it is drawn here as a network\n",
+        )
+        quiet = io.StringIO()
+        with contextlib.redirect_stderr(quiet):
+            graph_svg.render_args([data, chosen % "flow"], "trip")
+            graph_svg.render_args([data], "trip")
+        self.assertEqual(quiet.getvalue(), "")
 
     def test_with_no_type_the_source_is_the_layout_source(self):
         # suggest_type: nothing is drawn as a type unless chosen

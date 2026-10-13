@@ -104,8 +104,10 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   Code pane), are worked out to hex and paint their own page, with the locked contrast held; the system entry carries
   both in the drawing's own style sheet, `prefers-color-scheme` choosing, for a host that cannot say which it shows.
 - `hits.ts` — what a tap lands on or near.
-- `zoom.ts` — zoom, pan and full screen; `across`, a wide drawing fitted to its height and scrolled one way only (a
-  tree, flow or timeline on a phone, §15 wide_types_phone).
+- `zoom.ts` — zoom, pan and full screen.
+- `zoom-across.ts` — `AcrossZoom`, a `Zoom` that only adds to it: a wide drawing fitted to its height, shown from its
+  start and moved across only by one finger, until it is zoomed in; a pinch as any drawing's (a tree, flow or timeline
+  on a phone, §15 wide_types_phone).
 
 **Editing**
 
@@ -220,11 +222,14 @@ A graph is drawn as a network unless its style graph chooses a type: `(d1:Diagra
 'MANAGES'})`, for the whole graph or, with `view`, for one view (type_remembered). Style-graph.ts holds the seven
 `DIAGRAM_TYPES`; style-checks.ts and style-conflicts.ts check a Diagram's words and allow one type for each place.
 
-- `types.ts` — which types fit a drawing's shape (`shapeOf`: its things, kinds and first dates, and its links), and why
-  each that does not (`typeFits`): a network always; a tree along one relationship with at most one parent each and no
-  loop (none chosen: the relationship with the most links that makes one); a flow, links with no loop; a radial drawing,
-  three things or more joined to the centre, the thing with the most links; lanes, every thing of one kind, two kinds or
-  more; a timeline, every thing carrying a date; a table, any things. `suggestType` gives the best fit and why, never
+- `types-shape.ts` — the shape a type is judged on (`shapeOf`: the things, their kinds and first dates, the links, and
+  the groups the nudges draw), with its first loop and its centre.
+- `types.ts` — which types fit a drawing's shape, and why each that does not (`typeFits`): a network always; a tree
+  along one relationship with at most one parent each (a parent linked twice is one) and no loop (none chosen: the
+  relationship with the most links that makes one, of two with as many the first by name); a flow, links with no loop;
+  a radial drawing, three things or more joined to the centre, the thing with the most links, and no group written; lanes,
+  every thing of one kind and every group of one kind, two kinds or more, each group drawn inside its lane and never by
+  the nudges again; a timeline, every thing carrying a date, a rank for each day; a table, any things. `suggestType` gives the best fit and why, never
   drawn unless chosen; `diagramFor` the type drawn: the chosen one while it fits, else a network, with why and
   `nearestType` (type_stops_fitting), and the plan Graphviz lays it out by; `diagramOffer` all three at once, for a
   host's card, a tree judged along the relationship chosen for it. `styledDrawing` puts that plan on the
