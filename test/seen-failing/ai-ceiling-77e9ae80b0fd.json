@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/ai-ceiling.test.js",
+  "test": "a card number is found by its checksum, alone or among words, and a number that fails it is not",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that already existed: written with the rewrite that matches the character before a card number instead of looking behind (a syntax error on iOS before 16.4), to hold that the rewrite finds the same numbers (commit 581d8ea)"
+}
