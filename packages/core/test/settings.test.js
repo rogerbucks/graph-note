@@ -70,6 +70,7 @@ describe('reading saved settings', () => {
       indent: 'two',
       direction: 'TB',
       classifications: ['Public', 'Internal'],
+      aiUnlabelled: 'Internal',
       aiModels: [
         aiModel({ name: 'Drafts', purpose: 'Suggest links', ceiling: 'Internal', model: 'm', endpoint: 'https://e' }),
       ],

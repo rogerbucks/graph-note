@@ -11,7 +11,7 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 **Numbers.** Every item has a number in its line: its section's letter, a dash and two digits, such as `V-03`, the
 third item of Viewing. The letters are B Before, V Viewing, Z Zoom, P The edit pane, I Editing in place and the
 inspector, S The style graph, W Views, D Parked for later, T Walked paths, X Export, C Settings, A Accessibility, F Focus
-and untangle, R Proposals, G Details and the sheet, and E Diagram types.
+and untangle, R Proposals, G Details and the sheet, E Diagram types, and U AI models.
 **A number never changes once given**, whatever happens to the item's words or its place; a removed item's number is
 never used again, and **a new item takes the next number in its section**. Each item after Before has a note in
 `test-vault/Device checks/` that shows the case in Obsidian, found by its number (`test/device-check-notes.test.js`
@@ -375,6 +375,40 @@ holds the two together).
       moves the drawing sideways only, and up and down still scroll the note (wide_types_phone).
 - [ ] **E-06** A graph of 51 things says it has too many to read in one drawing and offers Show as table and a view; Show as
       table draws it as a table (large_way_in).
+
+## AI models — spec §19
+
+Run these on the Mac and the phone with aeroplane mode off, and a model of your own to send to: a local one (Ollama or
+LM Studio on the Mac) is enough. Use a throwaway key, never a real one, and only the dummy notes of the test vault. A
+note with no classification counts as the most sensitive level and so, by default, goes to no model: give each note a
+classification of Public in its front matter first, and take it out again afterwards.
+
+- [ ] **U-01** With Use AI models off, as it is until you turn it on, run "Ask an AI model to propose changes" from the
+      command palette: a notice says AI is off, no dialog opens, and nothing is sent. Turn it on with no model set up: the
+      notice says to set one up. Obsidian has no AI of its own, so the dialog offers only the models you set up (slice 3,
+      ai_off_until_chosen, host_ai_first).
+- [ ] **U-02** Set up two models: one on this device by `http://localhost`, for Proposing changes, and one by `https://`, for
+      Research questions, its key chosen with the app's own key field. A remote address written with `http://` is said on
+      its model's row to need https. In the dialog the model for proposing changes is offered first, and data.json holds
+      the key's name, never the key (slice 3, user_models, models_by_purpose, keys_kept_secret).
+- [ ] **U-03** In the dialog, choose a model and press Show what will be sent: the exact request is shown, with the model, its
+      address, the headers (the key only by its name) and the note's classification, and Send stays off until then.
+      Change the question: Send goes off again until it is shown again. Press Send: exactly that goes, once, and the
+      answer arrives as a change set under the graph, each change waiting to be accepted or rejected; the graph block is
+      unchanged (slice 3, seen_before_sent, never_in_background, answers_are_proposals).
+- [ ] **U-04** Choose "A view of it", then "Only the things ticked" with two things ticked, pressing Show what will be sent
+      each time: what is shown holds only those things and the links between them, and none of the note's prose
+      (slice 3, user_chooses_what).
+- [ ] **U-05** Give the note a classification above the chosen model's ceiling: Show what will be sent says why, names a model
+      cleared for it, and Send stays off. At the highest classification set, nothing is sent to any model; nor is a note
+      holding a password property. With no classification the note counts as the most sensitive level, so it goes to no
+      model, and the dialog points to Unlabelled notes count as; set that to Internal, and it goes to a model cleared for
+      Internal and to none cleared only for Public (slice 3, model_ceiling, never_above_ceiling, never_credential,
+      unclassified_strictest).
+- [ ] **U-06** Stop the local model's server and send: a notice says the model could not be reached and that nothing was
+      changed, and the note is as it was. The plugin's data.json lists the last sends, failed ones too, each with a
+      digest and the size of what was sent, never its text, the model and the time, and never a key; "Clear the record
+      of sends to AI models" empties it (slice 3, ai_unreachable, record_every_send).
 
 ## Result
 

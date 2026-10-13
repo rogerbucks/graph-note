@@ -19,6 +19,9 @@ export interface ProposalCard {
 }
 
 const day = (at: string) => at.slice(0, 10);
+// A reason as its source gave it: the note keeps a model's reason with each Markdown mark escaped (§19), so it never
+// renders there; the card sets it as plain text, so the marks are shown as written, never read
+const plainReason = (reason: string) => reason.replace(/\\([\\`*_{}[\]()#+!|<>~&/@])/g, '$1');
 const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? '' : 's'}`;
 
 /** Draws the card under `root`; returns the buttons that write, which a read-only place takes away. */
@@ -118,7 +121,7 @@ export function renderProposalStrip(root: HTMLElement, card: ProposalCard): HTML
       // what the change writes, exactly: the sentence can say less than this, and this is what is written
       text.appendText(' ');
       text.createEl('code', { cls: 'graph-note-proposal-code', text: row.text });
-      if (row.reason) text.createSpan({ cls: 'graph-note-proposal-reason', text: ` — ${row.reason}` });
+      if (row.reason) text.createSpan({ cls: 'graph-note-proposal-reason', text: ` — ${plainReason(row.reason)}` });
       if (row.blocked)
         text.createDiv({ cls: 'graph-note-proposal-blocked', text: `Cannot be accepted yet: ${row.blocked}` });
       if (row.decision)

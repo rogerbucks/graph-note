@@ -117,19 +117,35 @@ export const runCommands = (text) =>
 
 // ── Source scanners ──
 
-const NETWORK = /\bfetch\s*\(|\bXMLHttpRequest\b|\bWebSocket\b|\brequestUrl\b|\bEventSource\b|\bsendBeacon\b/;
+// Obsidian's `request(` too, the older form of requestUrl: written as code writes a call, with no space, so a sentence
+// such as "refused the request (HTTP 503)" is not taken for one
+const NETWORK =
+  /\bfetch\s*\(|\bXMLHttpRequest\b|\bWebSocket\b|\brequestUrl\b|\brequest\(|\bEventSource\b|\bsendBeacon\b/;
 export const findsNetwork = (code) => NETWORK.test(code);
 
 export const findsHotkeys = (code) => /\bhotkeys\s*:/.test(code);
 
 const FORBIDDEN_MODULES = new Set([...builtinModules, ...builtinModules.map((m) => `node:${m}`), 'electron']);
-/** Modules a piece of source imports or requires that mobile does not have. */
-export function forbiddenImports(code) {
-  const specs = [
+/** Every module a piece of source reaches: imported, re-exported, imported for its effect, imported later, or required. */
+export function importedModules(code) {
+  return [
     ...code.matchAll(/\bfrom\s*['"]([^'"]+)['"]/g),
     ...code.matchAll(/\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g),
     ...code.matchAll(/\bimport\s+['"]([^'"]+)['"]/g),
     ...code.matchAll(/\brequire\s*\(\s*['"]([^'"]+)['"]\s*\)/g),
   ].map((m) => m[1]);
-  return specs.filter((s) => FORBIDDEN_MODULES.has(s) || FORBIDDEN_MODULES.has(s.split('/')[0]));
 }
+
+/** Modules a piece of source imports or requires that mobile does not have. */
+export function forbiddenImports(code) {
+  return importedModules(code).filter((s) => FORBIDDEN_MODULES.has(s) || FORBIDDEN_MODULES.has(s.split('/')[0]));
+}
+
+/** Whether a piece of source reaches the AI send module (spec §19), however it is imported: `./send`, `send.ts`… */
+export const reachesSendModule = (code) => importedModules(code).some((m) => /(^|\/)send(\.[cm]?[jt]s)?$/.test(m));
+
+// what runs without the user acting: a timer, a frame or idle callback, a microtask, or any event listened for
+const BACKGROUND =
+  /\b(setTimeout|setInterval|registerInterval|registerDomEvent|requestAnimationFrame|requestIdleCallback|registerEvent|queueMicrotask|addEventListener)\s*\(|\.on\s*\(/;
+/** Whether a piece of source sets a timer or listens for an event: what could send in the background. */
+export const findsBackground = (code) => BACKGROUND.test(code);

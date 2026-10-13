@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/ai-request.test.js",
+  "test": "an answer’s JSON is read whether or not it is fenced, each change as a proposal takes it",
+  "seen_failing_first": false,
+  "evidence": "written after its code: ai-request.ts was made in commit 064d995 to pass ai.test.js, which reaches answers only through a send; this pins how each kind of change is read (commit 677b85c)"
+}

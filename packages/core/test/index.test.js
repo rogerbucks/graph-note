@@ -24,7 +24,9 @@
 // coverOf, MOVE_MS, READABLE_SCALE, their types, and the zoom's Place, 13 Oct 2026), and the diagram types (DIAGRAM_TYPES,
 // LARGE_GRAPH, diagramFor, diagramOffer, typeFits, shapeOf, suggestType, nearestType, tableOf, wayIn, scrollsOneWay and
 // their types, 14 Oct 2026; AcrossZoom, the zoom of a drawing scrolled across only, moved out of Zoom in the review of
-// #126).
+// #126), and sending to an AI model (aiReady, modelChoices, endpointProblem, AI_PURPOSES, prepareSend, confirmSend,
+// sendPrepared, noteWithProposal and their types, 13 Oct 2026: the core reaches no network, so a send goes only through
+// the transport a host hands in).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -35,6 +37,7 @@ const ts = require('typescript');
 const ENTRY = new URL('../src/index.ts', import.meta.url);
 
 const VALUES = [
+  'AI_PURPOSES',
   'ARROWHEADS',
   'AcrossZoom',
   'BIG_PROPOSAL',
@@ -96,6 +99,7 @@ const VALUES = [
   'addToList',
   'addView',
   'aiModel',
+  'aiReady',
   'arrowsShown',
   'basisOf',
   'blockItems',
@@ -111,6 +115,7 @@ const VALUES = [
   'companionNote',
   'completenessReport',
   'completions',
+  'confirmSend',
   'coverOf',
   'dataText',
   'declareDeferred',
@@ -126,6 +131,7 @@ const VALUES = [
   'drawingSource',
   'edgesOf',
   'emphasis',
+  'endpointProblem',
   'estimateEdge',
   'estimateFix',
   'evaluate',
@@ -171,6 +177,7 @@ const VALUES = [
   'makeProposal',
   'makeView',
   'mergePathProblems',
+  'modelChoices',
   'nameFromText',
   'nameSlug',
   'nameStyleOf',
@@ -181,6 +188,7 @@ const VALUES = [
   'neighbourhood',
   'neighbourhoodWords',
   'nextAlong',
+  'noteWithProposal',
   'nudgedDrawing',
   'nudgedSource',
   'outsideOf',
@@ -197,6 +205,7 @@ const VALUES = [
   'pngPages',
   'pngSize',
   'pointerTo',
+  'prepareSend',
   'propertiesOf',
   'propertyNames',
   'provenanceLines',
@@ -210,6 +219,7 @@ const VALUES = [
   'reverseGuess',
   'saidDate',
   'scrollsOneWay',
+  'sendPrepared',
   'serveLayouts',
   'setProperty',
   'settingsFrom',
@@ -245,6 +255,7 @@ const VALUES = [
 
 const TYPES = [
   'AiModel',
+  'AiUse',
   'ArrowheadsChoice',
   'Arrows',
   'ArrowsWrite',
@@ -265,6 +276,7 @@ const TYPES = [
   'CompanionSetting',
   'CompletenessReport',
   'CompletionItem',
+  'Confirmation',
   'Converted',
   'DataFormat',
   'DataInfo',
@@ -308,6 +320,7 @@ const TYPES = [
   'GraphNames',
   'GraphShape',
   'HitAreas',
+  'HostAi',
   'Indent',
   'Inline',
   'InlineKind',
@@ -337,6 +350,7 @@ const TYPES = [
   'MarkKind',
   'Marks',
   'Mode',
+  'ModelChoice',
   'NameStyle',
   'NamedView',
   'NewThing',
@@ -363,6 +377,7 @@ const TYPES = [
   'PngSize',
   'Pointing',
   'Position',
+  'PreparedSend',
   'Problem',
   'PropType',
   'Property',
@@ -381,6 +396,12 @@ const TYPES = [
   'RuleReport',
   'RunnerOptions',
   'SafeWrite',
+  'ScopeChoice',
+  'SendAsk',
+  'SendDeps',
+  'SendRecord',
+  'SendRefused',
+  'SendResult',
   'Settings',
   'Shape',
   'Show',
@@ -413,6 +434,9 @@ const TYPES = [
   'TokenClass',
   'Told',
   'TrailStep',
+  'Transport',
+  'TransportReply',
+  'TransportRequest',
   'TypeFit',
   'View',
   'ViewArgs',

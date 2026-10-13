@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/ai-request.test.js",
+  "test": "one change that cannot be read refuses the whole answer, saying which and why",
+  "seen_failing_first": false,
+  "evidence": "written after its code: ai-request.ts was made in commit 064d995 to pass ai.test.js, which reaches answers only through a send; this pins each refusal of a change that cannot be read (commit 677b85c)"
+}

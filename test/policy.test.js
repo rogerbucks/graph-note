@@ -21,14 +21,17 @@ import {
   findsNetwork,
   findsHotkeys,
   forbiddenImports,
+  reachesSendModule,
+  findsBackground,
 } from './repository/repo.js';
 
 const SEMVER = /^\d+\.\d+\.\d+$/;
 const EXACT = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
 const RUNTIME_ALLOWED = new Set(['@viz-js/viz']);
 // The one place that may reach the network: sending to an AI the user has set
-// up, only when the user sends (spec §13 and §19). It does not exist until then.
+// up, only when the user sends (spec §13 and §19). Only the send dialog reaches it.
 const AI_SEND_MODULE = 'packages/obsidian/src/ai/send.ts';
+const AI_SEND_DIALOG = 'packages/obsidian/src/ai/send-dialog.ts';
 const TEST_FRAMEWORKS = ['jest', 'mocha', 'vitest', 'ava', 'tap', 'jasmine', 'uvu', 'chai'];
 
 const allDeps = (pkg) => ({
@@ -488,6 +491,26 @@ describe('the shipped source', () => {
   test('no source makes a network request, except the AI send module', () => {
     const offenders = sourceFiles().filter((f) => f !== AI_SEND_MODULE && findsNetwork(read(f)));
     assert.deepEqual(offenders, []);
+  });
+
+  // never_in_background (spec §19): the send module is reached from the send dialog alone, whose Send button is the
+  // user saying yes; nothing in the AI's folder runs on a timer or on an event, so nothing is ever sent unasked (the
+  // scans themselves are tested in test/repository-scans.test.js)
+  test('the AI send module is there, and only the send dialog reaches it', () => {
+    assert.ok(exists(AI_SEND_MODULE), AI_SEND_MODULE);
+    assert.deepEqual(
+      sourceFiles().filter((f) => f !== AI_SEND_MODULE && reachesSendModule(read(f))),
+      [AI_SEND_DIALOG],
+    );
+  });
+
+  test('nothing sends to an AI in the background: no timer and no event in the AI’s folder', () => {
+    const folder = sourceFiles().filter((f) => f.startsWith('packages/obsidian/src/ai/'));
+    assert.ok(folder.length > 1);
+    assert.deepEqual(
+      folder.filter((f) => findsBackground(read(f))),
+      [],
+    );
   });
 
   test('no command sets a default hotkey', () => {

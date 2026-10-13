@@ -53,15 +53,16 @@ export class GraphNoteSettingTab extends PluginSettingTab {
     if (o.key === 'aiModels') return [{ name: o.name, desc: o.sentence }];
     if (o.key === 'exportFolder')
       return [{ name: o.name, desc: o.sentence, control: { type: 'text', key: 'exportFolder' } }];
-    // the level an export asks above is one of the classifications as they are set now
-    if (o.key === 'exportAsksAbove')
+    // the level an export asks above, and the level an unlabelled note counts as for AI, are each one of the
+    // classifications as they are set now
+    if (o.key === 'exportAsksAbove' || o.key === 'aiUnlabelled')
       return [
         {
           name: o.name,
           desc: o.sentence,
           control: {
             type: 'dropdown',
-            key: 'exportAsksAbove',
+            key: o.key,
             options: Object.fromEntries(s.classifications.map((c) => [c, c])),
           },
         },

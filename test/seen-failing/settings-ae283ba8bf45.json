@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/settings.test.js",
+  "test": "the AI models of §19 > AI is off until it is turned on, the first choice of its part of the page",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that already existed: the page draws every core option from OPTIONS, so Use AI models, added to the core with its default off in commit 064d995, was already on it; this holds it there (commit b1c6b17)"
+}
