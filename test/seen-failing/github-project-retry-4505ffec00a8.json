@@ -1,0 +1,6 @@
+{
+  "file": "test/github-project-retry.test.js",
+  "test": "what is not tried again > a comment, which a second try could post twice, stops the run as before",
+  "seen_failing_first": false,
+  "evidence": "Guards behaviour kept from before: a comment was never retried, and the new code must keep it that way, so it passes against the old code."
+}

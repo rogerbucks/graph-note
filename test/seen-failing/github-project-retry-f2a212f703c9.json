@@ -1,0 +1,6 @@
+{
+  "file": "test/github-project-retry.test.js",
+  "test": "what is not tried again > a failure that is not transient still stops at once",
+  "seen_failing_first": false,
+  "evidence": "Guards behaviour kept from before: a non-transient failure (HTTP 403) already stopped the run at once, and must still, so it passes against the old code."
+}

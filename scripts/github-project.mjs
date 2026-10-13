@@ -27,6 +27,7 @@ import { readBoard } from './slice-board.mjs';
 import { desiredState, readWorkstreams } from './github-project-desired.mjs';
 import { buildPlan, formatPlan, guardProblem } from './github-project-plan.mjs';
 import { executePlan, ghRunner, pinRepo, readRemote, repoOfRemote } from './github-project-gh.mjs';
+import { retrying } from './github-project-retry.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const WORKSTREAMS = 'requirements/workstreams.json';
@@ -80,7 +81,8 @@ function originRepo() {
  * with. Throws, having changed nothing further, when gh points at another repository than the origin, or when apply is
  * stopped by the guard against removing too much and `allowRemovals` is not given.
  */
-export function mirror({ desired, mode, allowRemovals }, { run, originRepo: origin, write, sleep }) {
+export function mirror({ desired, mode, allowRemovals }, { run: raw, originRepo: origin, write, sleep }) {
+  const run = retrying(raw, sleep ? { sleep } : {});
   const repo = pinRepo(run, origin);
   const plan = buildPlan(desired, readRemote(run, repo));
   const slices = desired.fields.Slice.map((option) => Number(option.replace('Slice ', '')));
@@ -94,7 +96,7 @@ export function mirror({ desired, mode, allowRemovals }, { run, originRepo: orig
     return;
   }
   if (problem && !allowRemovals) throw new Error(problem);
-  executePlan(run, repo, plan, sleep ? { sleep } : {});
+  executePlan(raw, repo, plan, sleep ? { sleep } : {});
   write('github-project: applied\n');
 }
 

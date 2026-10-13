@@ -10,12 +10,12 @@ import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { REQUIREMENTS } from './check-requirements.mjs';
-import { PROJECT_TITLE, REMOVED_LABEL, adoptedId, labelStyle } from './github-project-desired.mjs';
+import { PROJECT_TITLE, REMOVED_LABEL, adoptedId, idOfBody, labelStyle } from './github-project-desired.mjs';
 import { planProject } from './github-project-plan.mjs';
+import { RETRY_DELAYS_MS, paced, retrying, waitFor } from './github-project-retry.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OPTION_COLOURS = { open: 'ORANGE', part: 'YELLOW', proved: 'GREEN' };
-const RATE_LIMITED = /secondary rate limit|submitted too quickly|abuse detection/i;
 
 /** The most labels, issues and projects a list is asked for; a list that comes back this long may be cut short. */
 export const LABEL_CAP = 1000;
@@ -66,7 +66,11 @@ export function ghRunner(spawn = spawnSync) {
     const result = spawn('gh', args, { input, encoding: 'utf8', maxBuffer: 1 << 28, cwd: ROOT, env });
     if (result.error)
       throw new Error(`gh could not be run (${result.error.message}); is the GitHub CLI installed and on the path?`);
-    if (result.status !== 0) throw new Error(`gh ${args.join(' ')} failed: ${String(result.stderr).trim()}`);
+    if (result.status !== 0) {
+      const stderr = String(result.stderr).trim();
+      // gh's own words are kept apart, so a retry judges them and not the arguments of the call
+      throw Object.assign(new Error(`gh ${args.join(' ')} failed: ${stderr}`), { stderr });
+    }
     return result.stdout;
   };
 }
@@ -108,28 +112,6 @@ export function pinRepo(run, expected) {
 const ownerOf = (repo) => repo.split('/')[0];
 /** A call's arguments with the repository named, as every issue and label call must. */
 const inRepo = (repo, args) => [...args, '--repo', repo];
-/** Waits, blocking, for the given milliseconds. */
-const waitFor = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
-
-/**
- * Wraps a runner for the calls that change something: a pause before each but the first, and, on a secondary rate limit,
- * one wait and one more try. Any other failure, and a second refusal, goes on up.
- */
-function paced(run, { sleep, pauseMs, retryMs }) {
-  let first = true;
-  return (args, input) => {
-    if (!first) sleep(pauseMs);
-    first = false;
-    try {
-      return run(args, input);
-    } catch (e) {
-      if (!RATE_LIMITED.test(String(e.message))) throw e;
-      sleep(retryMs);
-      return run(args, input);
-    }
-  };
-}
-
 function graphql(run, query, variables) {
   const answer = JSON.parse(run(['api', 'graphql', '--input', '-'], JSON.stringify({ query, variables })));
   if (answer.errors?.length) throw new Error(`GitHub refused: ${answer.errors.map((e) => e.message).join('; ')}`);
@@ -171,12 +153,33 @@ function whole(list, cap, what) {
   return list;
 }
 
-const findProject = (run, owner) =>
+/** The three lists the mirror reads, each refused when it hit its cap; readRemote and the look before a retried create share them. */
+const readLabels = (run, repo) =>
+  whole(
+    JSON.parse(run(inRepo(repo, ['label', 'list', '--limit', String(LABEL_CAP), '--json', 'name']))),
+    LABEL_CAP,
+    'labels',
+  ).map((l) => l.name);
+const readIssues = (run, repo) =>
+  whole(
+    JSON.parse(
+      run(
+        inRepo(repo, [
+          ...['issue', 'list', '--state', 'all', '--limit', String(ISSUE_CAP)],
+          ...['--json', 'number,title,body,state,labels,author,url'],
+        ]),
+      ),
+    ),
+    ISSUE_CAP,
+    'issues',
+  ).map((i) => ({ ...i, labels: i.labels.map((l) => l.name), author: i.author?.login }));
+const readProjects = (run, owner) =>
   whole(
     JSON.parse(run(['project', 'list', '--owner', owner, '--format', 'json', '--limit', String(PROJECT_CAP)])).projects,
     PROJECT_CAP,
     'projects',
-  ).find((p) => p.title === PROJECT_TITLE);
+  );
+const findProject = (run, owner) => readProjects(run, owner).find((p) => p.title === PROJECT_TITLE);
 
 /**
  * What GitHub holds now: {login, labelNames, issues, project}. `repo` is `owner/name`. The login is the one signed in,
@@ -186,33 +189,42 @@ const findProject = (run, owner) =>
  */
 export function readRemote(run, repo) {
   const login = JSON.parse(run(['api', 'user'])).login;
-  const labelNames = whole(
-    JSON.parse(run(inRepo(repo, ['label', 'list', '--limit', String(LABEL_CAP), '--json', 'name']))),
-    LABEL_CAP,
-    'labels',
-  ).map((l) => l.name);
-  const issues = whole(
-    JSON.parse(
-      run(
-        inRepo(repo, [
-          'issue',
-          'list',
-          '--state',
-          'all',
-          '--limit',
-          String(ISSUE_CAP),
-          '--json',
-          'number,title,body,state,labels,author,url',
-        ]),
-      ),
-    ),
-    ISSUE_CAP,
-    'issues',
-  ).map((i) => ({ ...i, labels: i.labels.map((l) => l.name), author: i.author?.login }));
+  const labelNames = readLabels(run, repo);
+  const issues = readIssues(run, repo);
   const found = findProject(run, ownerOf(repo));
   if (!found) return { login, labelNames, issues, project: null };
   const idByNumber = new Map(issues.flatMap((i) => (adoptedId(i, login) ? [[i.number, adoptedId(i, login)]] : [])));
   return { login, labelNames, issues, project: readProject(run, ownerOf(repo), found.number, idByNumber) };
+}
+
+/**
+ * For a call that changes something, how to find out after a transient failure whether it already went through (see
+ * paced): a function that re-reads what GitHub holds and gives {value}, what the call would have given, or undefined.
+ * A create has one. An issue is taken up only as readRemote would adopt it: by the requirement id in its marker, and
+ * only when the signed-in login wrote it, so somebody else's issue with the same title and body is never taken. A call
+ * that changes only to a state it is given (an edit, a close, a reopen, adding to a project, setting a value, replacing
+ * a field's options) has one that always says undefined, so it is simply tried again. A call a second try could repeat
+ * (a comment, a new field) gives null and is not tried again.
+ */
+function lookup(args, input, read) {
+  const [group, verb] = args;
+  const flag = (name) => args[args.indexOf(name) + 1];
+  if (group === 'issue' && verb === 'create')
+    return () => {
+      const login = JSON.parse(read(['api', 'user'])).login;
+      const id = idOfBody(input);
+      const made = readIssues(read, flag('--repo')).find((i) => id && adoptedId(i, login) === id);
+      return made && { value: `${made.url}\n` };
+    };
+  if (group === 'label' && verb === 'create')
+    return () => (readLabels(read, flag('--repo')).includes(args[2]) ? { value: '' } : undefined);
+  if (group === 'project' && verb === 'create')
+    return () => {
+      const made = readProjects(read, flag('--owner')).find((p) => p.title === flag('--title'));
+      return made && { value: JSON.stringify({ id: made.id, number: made.number }) };
+    };
+  const once = (group === 'issue' && verb === 'comment') || (group === 'api' && /createProjectV2Field/.test(input));
+  return once ? null : () => undefined;
 }
 
 const flags = (flag, values) => values.flatMap((v) => [flag, v]);
@@ -282,11 +294,15 @@ function doFields(act, project, remote, fieldPlans) {
  * again after its fields change, because replacing a field's options gives them new ids and clears the values set from
  * them, and its items and values are planned afresh from that — so a run stopped half way is finished by the next, which
  * changes only what is still different. Each call that changes something goes through a pause, and a retry once on a
- * secondary rate limit; `opts` may give another `sleep` (milliseconds, blocking), `pauseMs` and `retryMs`. Throws, with
- * gh's words, at the first call that fails.
+ * secondary rate limit; a call that fails in a transient way (a timeout, a reset connection, a 502, 503 or 504, "Bad
+ * Gateway", "something went wrong") is tried again up to three times after `delays`, and a create that may have half
+ * happened is looked for first, so it is never made twice. `opts` may give another `sleep` (milliseconds, blocking),
+ * `pauseMs`, `retryMs` and `delays`. Throws, with gh's words, at the first call that fails for good.
  */
 export function executePlan(run, repo, plan, opts = {}) {
-  const act = paced(run, { sleep: waitFor, pauseMs: PAUSE_MS, retryMs: RETRY_MS, ...opts });
+  const settings = { sleep: waitFor, pauseMs: PAUSE_MS, retryMs: RETRY_MS, delays: RETRY_DELAYS_MS, lookup, ...opts };
+  const act = paced(run, settings);
+  const read = retrying(run, settings);
   const owner = ownerOf(repo);
   for (const name of plan.labels) {
     const { color, description } = labelStyle(name);
@@ -304,11 +320,11 @@ export function executePlan(run, repo, plan, opts = {}) {
     ref = { id: created.id, number: created.number };
   }
   const { issues, fields } = plan.desired;
-  let remote = readProject(run, owner, ref.number, idByNumber);
+  let remote = readProject(read, owner, ref.number, idByNumber);
   let todo = planProject(issues, fields, remote);
   if (todo.fields.length) {
     doFields(act, ref, remote, todo.fields);
-    remote = readProject(run, owner, ref.number, idByNumber);
+    remote = readProject(read, owner, ref.number, idByNumber);
     todo = planProject(issues, fields, remote);
   }
   const itemIds = new Map(remote.items.map((i) => [i.id, i.itemId]));

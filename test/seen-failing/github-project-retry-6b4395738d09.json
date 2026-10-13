@@ -1,0 +1,6 @@
+{
+  "file": "test/github-project-retry.test.js",
+  "test": "looking again before a create is tried again > does take up an issue of the signed-in login",
+  "seen_failing_first": false,
+  "evidence": "Guards the other side of the ownership rule: the old look took up any issue with the same title and body, including the login's own, so this passes against the old code; it makes sure the stricter look still adopts our own issue."
+}
