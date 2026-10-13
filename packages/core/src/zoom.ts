@@ -43,6 +43,13 @@ export interface View {
   height: number;
 }
 
+/** A scale and the drawing's top-left corner in the viewport: where a view is, or is going (§25). */
+export interface Place {
+  scale: number;
+  x: number;
+  y: number;
+}
+
 interface Mods {
   ctrl?: boolean;
   meta?: boolean;
@@ -104,6 +111,8 @@ export class Zoom {
   private readonly pointers = new Map<number, Pointer>();
   private pinch: Pinch | null = null;
   private lastTap: { x: number; y: number; time: number } | null = null;
+  /** The strip at the foot of the viewport kept clear, in pixels: what a sheet over it covers (§25). */
+  private clear = 0;
 
   private readonly content: Size;
   private viewport: Size;
@@ -178,13 +187,41 @@ export class Zoom {
    * drawing's edges allow.
    */
   reveal(box: { x: number; y: number; width: number; height: number }): void {
+    const to = this.aim(box);
+    if (to) this.place(to.scale, to.x, to.y);
+  }
+
+  /**
+   * Where the view would go to bring a rectangle of the drawing (fractions of it) wholly into the part of the viewport not
+   * kept clear, without going there: null when it is already there at a scale of at least `minScale`. Otherwise the zoom
+   * is kept, or raised to `minScale` when it is below (a thing too small to read, §25), and the rectangle centred in that
+   * part, as far as the drawing's edges and the strip kept clear allow.
+   */
+  aim(box: { x: number; y: number; width: number; height: number }, minScale = 0): Place | null {
     const { width: cw, height: ch } = this.content,
-      { width: vw, height: vh } = this.viewport,
-      s = this.scale;
+      vw = this.viewport.width,
+      room = this.viewport.height - this.clear,
+      s = Math.max(this.scale, Math.min(minScale, MAX_SCALE));
     const left = this.x + box.x * cw * s,
       top = this.y + box.y * ch * s;
-    if (left >= 0 && top >= 0 && left + box.width * cw * s <= vw && top + box.height * ch * s <= vh) return;
-    this.place(s, vw / 2 - (box.x + box.width / 2) * cw * s, vh / 2 - (box.y + box.height / 2) * ch * s);
+    const inView = left >= 0 && top >= 0 && left + box.width * cw * s <= vw && top + box.height * ch * s <= room;
+    if (s === this.scale && inView) return null;
+    const [x, y] = this.clampPan(
+      s,
+      vw / 2 - (box.x + box.width / 2) * cw * s,
+      room / 2 - (box.y + box.height / 2) * ch * s,
+    );
+    return { scale: s, x, y };
+  }
+
+  /**
+   * Keeps a strip of `bottom` pixels at the foot of the viewport clear, as a sheet over it covers it (§25): the drawing
+   * may pan up into it, by as much and no further, so a thing near its bottom can be seen above the sheet. Zero, as at
+   * first, puts it back within its edges.
+   */
+  keepClear(bottom: number): void {
+    this.clear = clamp(bottom, 0, this.viewport.height);
+    this.place(this.scale, this.x, this.y);
   }
 
   panBy(dx: number, dy: number): void {
@@ -321,14 +358,23 @@ export class Zoom {
     return p.pans;
   }
 
-  /** Keeps the drawing in view: centred on an axis where it is smaller than the viewport, edge to edge where it is larger. */
+  /**
+   * Keeps the drawing in view: centred on an axis where it is smaller than the viewport, edge to edge where it is larger;
+   * up and down, it may also rise into the strip kept clear at the foot, by as much as the strip and no further.
+   */
   private clampPan(scale: number, x: number, y: number, centre = false): [number, number] {
     const w = this.content.width * scale,
       h = this.content.height * scale,
       { width: vw, height: vh } = this.viewport;
-    const axis = (v: number, size: number, room: number) =>
-      size <= room ? (room - size) / 2 : centre ? (room - size) / 2 : clamp(v, room - size, 0);
-    return [axis(x, w, vw), axis(y, h, vh)];
+    const range = (size: number, room: number): [number, number] =>
+      size <= room ? [(room - size) / 2, (room - size) / 2] : [room - size, 0];
+    const axis = (v: number, size: number, room: number) => {
+      const [lo, hi] = range(size, room);
+      return centre ? (room - size) / 2 : clamp(v, lo, hi);
+    };
+    if (centre || !this.clear) return [axis(x, w, vw), axis(y, h, vh)];
+    const [lo, hi] = range(h, vh);
+    return [axis(x, w, vw), clamp(y, Math.min(lo, vh - this.clear - h), hi)];
   }
 
   private place(scale: number, x: number, y: number, centre = false): void {
