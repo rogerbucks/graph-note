@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/details-sheet.test.js",
+  "test": "where the sheet cannot be pinned, the details stay in the card > a sheet put where it was meant to be stays the sheet",
+  "seen_failing_first": false,
+  "evidence": "A control for the transform check: a sheet laid out where it was put stays the sheet, which was so before the check existed; the test beside it, a sheet laid out elsewhere, failed first."
+}

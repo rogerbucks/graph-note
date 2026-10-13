@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/details-sheet.test.js",
+  "test": "where the sheet covers the whole drawing, the note scrolls the chosen thing up above it > the note scrolls by as much as the thing’s foot is below the sheet’s top, and a little more",
+  "seen_failing_first": false,
+  "evidence": "Written after its code, at review: the branch of selection.ts that scrolls the note when the sheet covers the whole drawing was built in the commit before but had no test, so this pins behaviour that already existed."
+}
