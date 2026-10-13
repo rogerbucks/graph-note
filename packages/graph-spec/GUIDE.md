@@ -29,7 +29,9 @@ and no module requires one that requires it back.
 - **`src/reader/`** — the document profile reader (`gql_profile.py`): `profile-error.js`, `whitespace.js` (whitespace
   as GQL names it, the one set every reader uses), `tokens.js` (the header line and tokens), `parser.js` (one block's
   statement), `syntax.js` (a block's syntax alone), `owned-comments.js` (the `///` notes and `//@` lines each element owns, §26 and §27, held with the Python reader to
-  `test/owned-comment-cases.json`), `store.js` (the store, its corrected text — the colons and commas the reader
+  `test/owned-comment-cases.json`), `notes.js` (each note's text and summary, and the lines holding more than one
+  element that a note above belongs to none of: editor spec §24, held with the Python reader to the same table),
+  `store.js` (the store, its corrected text — the colons and commas the reader
   read in, written where it read them, as `store.py` writes them — and `read`).
 - **`src/graph/`** — `graph.js`: the plain graph the rules run on, the world made from a store, and `canon`.
 - **`src/rules/`** — the spec's rules (`graph_rules.py`): `types.js` (§5), `projection.js` (§18), `certainty.js` (§20),
