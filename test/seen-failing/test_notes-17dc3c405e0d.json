@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_notes.py",
+  "test": "Notes.test_note_standard_the_standard_text_keeps_every_note_line_in_order",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour to_gql already had since #53: it keeps every /// line, adding its lines above the notes the first line of code owns"
+}

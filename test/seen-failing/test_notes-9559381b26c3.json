@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_notes.py",
+  "test": "Notes.test_note_standard_a_block_reads_the_same_with_its_notes_as_without",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour the Python reader already had: /// lines were whole-line comments to Store.apply and check_syntax before notes() was written"
+}

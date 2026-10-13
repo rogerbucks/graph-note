@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/notes.test.js",
+  "test": "note_standard: a note changes nothing drawn > the layout source is the same with the notes as without them",
+  "seen_failing_first": false,
+  "evidence": "a negative: before notes were read the layout source could not differ; it guards that Box.note and Link.note never reach the layout source, which stays byte-identical with the Python library's"
+}
