@@ -71,14 +71,27 @@ export function ghRunner(spawn = spawnSync) {
   };
 }
 
-/** The `owner/name` an origin remote url names, in any of the ways a remote is written. Throws for any other. */
-export function repoOfRemote(url) {
-  const text = String(url ?? '').trim();
+/** Remote text with any login or token before an `@` shown as `***@`, so no error repeats a credential. */
+export const redactRemote = (text) => String(text).replace(/[^\s/@]+@/g, '***@');
+
+/**
+ * The host and `owner/name` an origin remote url names, as {host, repo}, in any of the ways a remote is written. Throws
+ * for any other, and for a host that is not github.com; `hosts` replaces the allowed hosts (for a test). The remote is
+ * never echoed with its userinfo.
+ */
+export function repoOfRemote(url, { hosts = ['github.com'] } = {}) {
+  const text = redactRemote(String(url ?? '').trim());
+  const raw = String(url ?? '').trim();
   const m =
-    /^[a-z][\w+.-]*:\/\/[^/]+\/([^/\s]+)\/([^/\s]+?)(?:\.git)?\/?$/i.exec(text) ??
-    /^[^@\s/]+@[^:\s/]+:([^/\s]+)\/([^/\s]+?)(?:\.git)?\/?$/.exec(text);
+    /^[a-z][\w+.-]*:\/\/([^/]+)\/([^/\s]+)\/([^/\s]+?)(?:\.git)?\/?$/i.exec(raw) ??
+    /^[^@\s/]+@([^:\s/]+):([^/\s]+)\/([^/\s]+?)(?:\.git)?\/?$/.exec(raw);
   if (!m) throw new Error(`the origin remote (${text || 'none'}) does not name a repository as owner/name`);
-  return `${m[1]}/${m[2]}`;
+  const host = m[1].replace(/^.*@/, '').replace(/:\d*$/, '').toLowerCase();
+  if (!hosts.includes(host))
+    throw new Error(
+      `the origin remote (${text}) is on the host ${host}, which is not ${hosts.join(' or ')}; nothing was read or changed`,
+    );
+  return { host, repo: `${m[2]}/${m[3]}` };
 }
 
 /**
