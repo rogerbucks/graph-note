@@ -82,6 +82,7 @@ export type {
   Choice as OptionChoice,
   CompanionSetting,
   ExportTheme,
+  FocusDepthSetting,
   Indent,
   Option,
   Settings,
@@ -132,8 +133,24 @@ export {
 } from './inspector.ts';
 export { listValues, makeList, addToList, removeFromList, linkedValues, listsOf } from './linked-list.ts';
 export type { ListShape, ListValue, ListEdit } from './linked-list.ts';
-export { hitAreas, nearby, TapCycle } from './hits.ts';
+export { hitAreas, nearby, TapCycle, boundsOf, centres } from './hits.ts';
+export { FADE, KEPT, FocusState, depthOf, edgesOf, estimateEdge, focusOf, highlightOf } from './focus.ts';
+export type { FocusDepth, FocusEdge, FocusTarget, Kept } from './focus.ts';
+export {
+  FIND_LIMIT,
+  LegendFilter,
+  Untangle,
+  emphasis,
+  find,
+  kindLegend,
+  neighbourhood,
+  neighbourhoodWords,
+  nextAlong,
+  pathWords,
+  shortestPath,
+} from './untangle.ts';
+export type { Found, Layers, LegendItem, LegendState, PathFound } from './untangle.ts';
 export { TextHistory } from './history.ts';
 export type { Change, TextState } from './history.ts';
-export type { HitAreas, Shape } from './hits.ts';
+export type { Bounds, HitAreas, Shape } from './hits.ts';
 export type { PropType, Property, Target, Edit, Parsed } from './inspector.ts';

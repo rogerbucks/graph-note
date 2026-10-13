@@ -1,6 +1,6 @@
 # Device checks
 
-One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md)): 87 checks in 11 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
+One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md)): 96 checks in 12 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
 
 ## 01 Viewing
 
@@ -121,3 +121,15 @@ One note for each check in the device checklist ([the checklist, on GitHub](http
 
 - [[Device checks/11 Accessibility/A-01 Keyboard only|A-01 Keyboard only]]
 - [[Device checks/11 Accessibility/A-02 VoiceOver|A-02 VoiceOver]]
+
+## 12 Focus and untangle
+
+- [[Device checks/12 Focus and untangle/F-01 Focus on a thing|F-01 Focus on a thing]]
+- [[Device checks/12 Focus and untangle/F-02 Focus on a link and its reach|F-02 Focus on a link and its reach]]
+- [[Device checks/12 Focus and untangle/F-03 Hover highlight with a pointer|F-03 Hover highlight with a pointer]]
+- [[Device checks/12 Focus and untangle/F-04 Highlight by touch and keyboard|F-04 Highlight by touch and keyboard]]
+- [[Device checks/12 Focus and untangle/F-05 Show only a thing and its neighbours|F-05 Show only a thing and its neighbours]]
+- [[Device checks/12 Focus and untangle/F-06 Legend brings forward and hides|F-06 Legend brings forward and hides]]
+- [[Device checks/12 Focus and untangle/F-07 Shortest path|F-07 Shortest path]]
+- [[Device checks/12 Focus and untangle/F-08 Find a thing|F-08 Find a thing]]
+- [[Device checks/12 Focus and untangle/F-09 Walk the links by arrow key|F-09 Walk the links by arrow key]]

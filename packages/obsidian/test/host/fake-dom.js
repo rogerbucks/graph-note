@@ -238,12 +238,13 @@ export class FakeElement {
     if (!this.isConnected || had === this) return;
     if (!options?.preventScroll) doc.scrolledToFocus = (doc.scrolledToFocus ?? 0) + 1;
     doc.activeElement = this;
+    // and, as in a browser, each event names the element the focus is going to, or coming from, as its relatedTarget
     if (had) {
-      had.dispatch('blur');
-      had.dispatch('focusout');
+      had.dispatch('blur', { relatedTarget: this });
+      had.dispatch('focusout', { relatedTarget: this });
     }
-    this.dispatch('focus');
-    this.dispatch('focusin');
+    this.dispatch('focus', { relatedTarget: had });
+    this.dispatch('focusin', { relatedTarget: had });
   }
   blur() {
     if (this.ownerDocument.activeElement !== this) return;

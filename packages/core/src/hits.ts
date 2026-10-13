@@ -139,6 +139,47 @@ export function nearby(areas: HitAreas, x: number, y: number, radius: number): s
     .map(({ s }) => s.id);
 }
 
+/** A rectangle as fractions of the drawing's width and height, so it holds at any zoom. */
+export interface Bounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/** The corners of the box that holds every point of a shape: left, top, right, bottom. */
+function extent(s: Shape): [number, number, number, number] | null {
+  const points = [...s.polygons, ...s.lines].flat();
+  if (!points.length) return null;
+  const xs = points.map(([x]) => x),
+    ys = points.map(([, y]) => y);
+  return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+}
+
+/** Where a box or link is in the drawing, as fractions of its width and height; null when it is not drawn. */
+export function boundsOf(areas: HitAreas, id: string): Bounds | null {
+  const s = areas.shapes.find((x) => x.id === id),
+    box = s ? extent(s) : null,
+    vb = areas.viewBox;
+  if (!box || !vb.width || !vb.height) return null;
+  return {
+    x: (box[0] - vb.x) / vb.width,
+    y: (box[1] - vb.y) / vb.height,
+    width: (box[2] - box[0]) / vb.width,
+    height: (box[3] - box[1]) / vb.height,
+  };
+}
+
+/** The middle of each box, by its id, in the units of the drawing's viewBox: where the arrow keys walk between. */
+export function centres(areas: HitAreas): Map<string, { x: number; y: number }> {
+  const out = new Map<string, { x: number; y: number }>();
+  for (const s of areas.shapes) {
+    const box = s.kind === 'node' ? extent(s) : null;
+    if (box) out.set(s.id, { x: (box[0] + box[2]) / 2, y: (box[1] + box[3]) / 2 });
+  }
+  return out;
+}
+
 /** Tapping again in the same place, with the same things near, selects the next of them; anywhere else, the nearest. */
 export class TapCycle {
   private last: { x: number; y: number; ids: string; at: number } | null = null;

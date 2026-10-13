@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
 import { draw } from '../src/render.ts';
 import { loadEngine } from '../src/engine.ts';
-import { hitAreas, nearby, TapCycle } from '../src/hits.ts';
+import { hitAreas, nearby, TapCycle, boundsOf, centres } from '../src/hits.ts';
 
 // As Graphviz writes it: a translate on the graph, rounded boxes as paths, a link as a curve, its arrowhead and its label
 const SVG = `<svg width="221" viewBox="0.00 0.00 166.00 71.00" xmlns="http://www.w3.org/2000/svg">
@@ -105,5 +105,29 @@ describe('tapping again in the same place', () => {
     c.tap(10, 10, ['node1', 'edge1']);
     assert.equal(c.tap(10, 10, []), null);
     assert.equal(c.tap(10, 10, ['node1', 'edge1']), 'node1');
+  });
+});
+
+describe('where a thing is, for walking and finding (editor spec §25)', () => {
+  const close = (a, b) => assert.ok(Math.abs(a - b) < 1e-6, `${a} ≈ ${b}`);
+
+  test('its bounds are fractions of the drawing, so they hold at any zoom', () => {
+    const b = boundsOf(hitAreas(SVG), 'node1');
+    close(b.x, 7.2 / 166);
+    close(b.y, 7.2 / 71);
+    close(b.width, 54 / 166);
+    close(b.height, 56.4 / 71);
+  });
+
+  test('a thing that is not drawn has none', () => {
+    assert.equal(boundsOf(hitAreas(SVG), 'node9'), null);
+  });
+
+  test('the centre of each box is given by its id, in the drawing’s units; links are not boxes', () => {
+    const c = centres(hitAreas(SVG));
+    assert.deepEqual([...c.keys()], ['node1', 'node2']);
+    close(c.get('node1').x, 7.2 + 27);
+    close(c.get('node1').y, 63.6 - 28.2);
+    close(c.get('node2').x, 7.2 + 124.5);
   });
 });

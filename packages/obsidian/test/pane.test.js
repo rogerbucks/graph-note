@@ -163,6 +163,44 @@ describe('selecting in the pane’s drawing moves the text to it', () => {
   });
 });
 
+describe('how far focus reaches in the pane’s drawing (editor spec §25, focus_depth)', () => {
+  const keptIn = (env) =>
+    env.el
+      .querySelectorAll('.graph-note-pane-drawing g.node')
+      .filter((g) => g.hasClass('graph-note-kept'))
+      .map((g) => g.getAttribute('data-key'))
+      .sort();
+  const choose = async (env, key) => {
+    await until(() => !!env.el.querySelector('.graph-note-pane-drawing g.node'), 3000);
+    env.el
+      .querySelectorAll('.graph-note-pane-drawing g.node')
+      .find((g) => g.getAttribute('data-key') === key)
+      .dispatch('keydown', { key: 'Enter' });
+  };
+
+  test('one step by default', async () => {
+    const env = await open();
+    try {
+      await choose(env, 'question');
+      assert.deepEqual(keptIn(env), ['large', 'question']);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('two steps when the setting says so, as in a card', async () => {
+    const env = await open();
+    try {
+      await env.plugin.saveSettings({ ...env.plugin.settings, focusDepth: 'two' });
+      await env.plugin.openEditor({ path: PATH, line: 2, graph: 'reader' });
+      await choose(env, 'question');
+      assert.deepEqual(keptIn(env), ['eyes', 'large', 'question']);
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
 describe('on a phone', () => {
   test('Drawing and Text are two tabs, and problems sit in a bottom sheet', async () => {
     const env = await open({ mobile: true });

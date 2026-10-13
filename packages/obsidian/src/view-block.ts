@@ -7,6 +7,7 @@ import { Notice, TFile } from 'obsidian';
 import type { MarkdownPostProcessorContext } from 'obsidian';
 import {
   addView,
+  depthOf,
   evaluate,
   gqlBlocks,
   legendOf,
@@ -236,6 +237,7 @@ export async function renderViewBlock(
       drawn,
       problems: [],
       mode: 'note',
+      focusDepth: depthOf(plugin.settings.focusDepth),
       lineOf: (at) => (blocks[at.block]?.line ?? 0) + at.line,
       onEdit: () => changeView(plugin, ctx.sourcePath, line),
       view,

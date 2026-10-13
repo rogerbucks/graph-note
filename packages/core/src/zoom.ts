@@ -172,6 +172,21 @@ export class Zoom {
     this.place(clamp(scale, MIN_SCALE, MAX_SCALE), x, y);
   }
 
+  /**
+   * Brings a rectangle of the drawing into view (finding a thing, §25), given as fractions of the drawing's width and
+   * height. One already wholly in view is left where it is; any other is centred, at the same scale, as far as the
+   * drawing's edges allow.
+   */
+  reveal(box: { x: number; y: number; width: number; height: number }): void {
+    const { width: cw, height: ch } = this.content,
+      { width: vw, height: vh } = this.viewport,
+      s = this.scale;
+    const left = this.x + box.x * cw * s,
+      top = this.y + box.y * ch * s;
+    if (left >= 0 && top >= 0 && left + box.width * cw * s <= vw && top + box.height * ch * s <= vh) return;
+    this.place(s, vw / 2 - (box.x + box.width / 2) * cw * s, vh / 2 - (box.y + box.height / 2) * ch * s);
+  }
+
   panBy(dx: number, dy: number): void {
     this.place(this.scale, this.x + dx, this.y + dy);
   }

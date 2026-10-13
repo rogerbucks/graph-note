@@ -95,14 +95,30 @@ module that ties the parts together, named as the folder is.
 ### `src/graph-view/` — a drawn graph
 
 - `graph-view.ts` — `GraphView`: the card, its zoom and full screen; ties the rest together.
-- `view-bar.ts` — the bar: problems badge, Fit, zoom, Full screen, Export, Edit here, Edit in pane, Source.
+- `view-bar.ts` — the bar: problems badge, Fit, zoom, Find a thing, Filter by kind or link, Full screen, Export, Edit here,
+  Edit in pane, Source.
 - `problems-list.ts` — the problems behind the badge, grouped when many, and the completeness report.
 - `drawing-svg.ts` — the SVG put in the card, each box and link reachable by keyboard and named; a drawing that runs
   down the page is marked `graph-note-down`, which `styles.css` uses to give a link's label a gap from its line, so the
   layout source and the SVG stay the Python library's.
-- `taps.ts` — what a tap or a key lands on, and the nearest things to a tap.
+- `taps.ts` — what a tap or a key lands on, and the nearest things to a tap; where a box is, to bring it into view, and
+  the middle of each, for the arrow keys.
+- `selection.ts` — what is selected in a card and how it shows (spec §25): the selection is the focus, with the
+  highlight, the untangling and the arrow keys that walk the links. Ties the next four to the card; marks the drawing by
+  class only.
+- `focus-marks.ts` — what the core says is kept, hidden or highlighted, put on the drawing as classes
+  (`graph-note-kept`, `-dim`, `-hidden`, `-hot`); `styles.css` draws them by strength and outline, never by colour alone,
+  and never by moving or resizing anything, so a highlight lays nothing out again.
+- `hover.ts` — the highlight: under the pointer, with the keyboard focus, and on touch from the tap that selects, so
+  nothing depends on hover.
+- `untangle.ts` — filtering the drawing to a thing and its neighbours, the legend, the shortest path and the search
+  box, tied to the core's `Untangle`; the picture only, never the note, so reading view has them. Its parts:
+  `untangle-banner.ts` (what the drawing is filtered to, the path, the question, each with its way back),
+  `untangle-legend.ts` (a button for each kind and relationship type: in front, hidden, back) and `untangle-find.ts`
+  (the search row).
 - `details-panel.ts` — the details of a box, a link or an estimated link, the one shown marked as selected, its
-  properties to read, and the inspector while the block is edited.
+  properties to read, and the inspector while the block is edited; a thing's offers Show only this and its neighbours and
+  the shortest path to another thing (§25); closing it, by button, Escape or a tap on empty space, clears the focus.
 - `estimate-actions.ts` — what an estimated link's details offer (§3): the quick fix, its problem's own fix (the core's
   `estimateFix`), written into the text being edited, or else into the note while the block is still as drawn
   (`ViewOptions.writeBlock`); and Edit the link, which opens the editor with the misspelt word selected. Neither where

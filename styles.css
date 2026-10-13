@@ -28,6 +28,27 @@
   border-bottom: 1px solid var(--background-modifier-border);
   background: var(--background-secondary);
 }
+/* Focus (spec §25): what a selection keeps stands out by strength and outline, never by colour alone and never by moving
+   or hiding anything. A faded box has no fill and an outline no heavier than the drawing's ordinary line; its words and
+   lines keep their colour, so they keep the contrast of §11 (the words at 0.95, which the core's FADE holds to 4.5:1). A
+   kept box has the heavier outline. The outline rules are exactly as specific as the selected rule and a view's looks
+   below, and come before them, so the selected thing is the heaviest and a look keeps its line; only the fill, which
+   nothing below sets, is written more specifically. */
+.graph-note-svg g.node.graph-note-dim > :is(path, polygon) {
+  fill-opacity: 0;
+}
+.graph-note-svg g.graph-note-dim > :is(path, polygon) {
+  stroke-width: 1;
+}
+.graph-note-svg g.graph-note-dim > text {
+  fill-opacity: 0.95;
+}
+.graph-note-svg g.graph-note-kept > :is(path, polygon) {
+  stroke-width: 2;
+}
+.graph-note-svg g.graph-note-hidden {
+  display: none;
+}
 .graph-note-svg g.is-selected > :is(path, polygon) {
   stroke-width: 3;
 }
@@ -104,6 +125,57 @@
   margin-inline-end: var(--size-4-1);
   vertical-align: middle;
   background: var(--graph-note-swatch, var(--text-muted));
+}
+/* The highlight (spec §25): under the pointer, with the keyboard focus, or from a touch's tap — a glow round the outline and
+   an underline on the words, never a size, a place or a weight, so nothing moves; and over any focus, as the thing comes
+   forward from the fade while it is highlighted. */
+.graph-note-svg g.graph-note-hot {
+  filter: drop-shadow(0 0 3px var(--interactive-accent));
+}
+.graph-note-svg g.graph-note-hot > text {
+  text-decoration: underline;
+}
+/* Untangling (spec §25): the banner over a filtered drawing, the search row, the legend of kinds and links, and what a
+   thing's details offer. Every control is a 44-point target; what a legend line does is said in words as well as shown. */
+.graph-note-view > :is(.graph-note-untangle, .graph-note-find, .graph-note-filter) {
+  margin: 0;
+  border-top: 1px solid var(--background-modifier-border);
+  padding: var(--size-4-2) var(--size-4-3);
+}
+.graph-note-untangle-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-4-2);
+}
+.graph-note-untangle button,
+.graph-note-untangle-offers button,
+.graph-note-find button,
+.graph-note-filter button {
+  min-width: 44px;
+  min-height: 44px;
+}
+.graph-note-untangle-offers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-4-2);
+  margin-block: var(--size-4-2);
+}
+.graph-note-find input {
+  width: 100%;
+  min-height: 44px;
+}
+.graph-note-find-results,
+.graph-note-filter ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-4-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.graph-note-filter button.is-hidden {
+  text-decoration: line-through;
 }
 /* The Export form (spec §16): each choice with its words above it, every control a 44-point target. */
 .graph-note-export {

@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/hover.test.js",
+  "test": "nothing depends on hover > everything that can be pointed at can be reached from the keyboard",
+  "seen_failing_first": false,
+  "evidence": "Pins behaviour that already existed (slice 1, editor spec section 11: every box and every written link has tabindex 0 in drawing-svg.ts) which hover_not_alone relies on; written after that code, as a requirement of this slice, so there was nothing to see fail."
+}
