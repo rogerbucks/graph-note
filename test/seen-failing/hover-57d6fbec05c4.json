@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/hover.test.js",
+  "test": "pointing at a thing or a link > pointing at empty space highlights nothing",
+  "seen_failing_first": false,
+  "evidence": "Guards the new code against a wrong highlight: before the highlight existed nothing was ever marked, so 'nothing is highlighted' held vacuously; it fails only if the highlight wrongly marks something when the pointer is over empty space."
+}
