@@ -205,9 +205,11 @@ export class SendDialog extends Modal {
         : this.what === 'things'
           ? { graph: this.graph, what: 'things', things }
           : { graph: this.graph, what: 'graph' };
-    const model = this.plugin.settings.aiModels.find((m) => m.name === this.model);
-    // the key is read only to make sure it is not among what is sent; it is not kept
-    const key = model?.keyName ? this.app.secretStorage.getSecret(model.keyName) : null;
+    // every model's key is read only to make sure none is among what is sent, whichever model it goes to; none is kept
+    const secrets = this.plugin.settings.aiModels.flatMap((m) => {
+      const key = m.keyName ? this.app.secretStorage.getSecret(m.keyName) : null;
+      return key ? [key] : [];
+    });
     const p = prepareSend({
       settings: this.plugin.settings,
       model: this.model,
@@ -216,7 +218,7 @@ export class SendDialog extends Modal {
       level: this.level,
       choice,
       question: this.question,
-      secrets: key ? [key] : [],
+      secrets,
       shared: this.shared,
     });
     this.prepared = 'refused' in p ? null : p;

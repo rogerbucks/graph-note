@@ -2,6 +2,7 @@
 // back as proposals. Every send here goes through a fake transport handed in, so no test reaches the network.
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { aiReady, confirmSend, prepareSend, sendPrepared } from '../src/ai.ts';
 import { noteWithProposal } from '../src/ai-answer.ts';
 import { AI_PURPOSES, endpointProblem, modelChoices } from '../src/ai-choice.ts';
@@ -179,6 +180,20 @@ describe('a key is kept secret (keys_kept_secret)', () => {
     assert.match(result.failed, /the key/);
   });
 
+  test('the key is taken out of a reply before it is cut short, so no part of it is said', async () => {
+    const said = { status: 401, text: `${'x'.repeat(190)} ${KEY}` };
+    const { result } = await sent({ model: 'Remote' }, said, KEY);
+    assert.ok(!result.failed.includes(KEY.slice(0, 8)), result.failed);
+    const thrown = await sent(
+      { model: 'Remote' },
+      () => {
+        throw new Error(`refused with ${KEY}`);
+      },
+      KEY,
+    );
+    assert.ok(!JSON.stringify(thrown.result).includes(KEY.slice(0, 8)));
+  });
+
   test('a model whose key is not in the secret store is not sent to, and nothing is asked of the network', async () => {
     const p = prepared({ model: 'Remote' });
     const t = fake();
@@ -223,9 +238,11 @@ describe('each model carries a ceiling (model_ceiling, never_above_ceiling)', ()
     assert.match(prepareSend(ask({ settings: s, level: 'Public' })).refused, /choose it again/);
   });
 
-  test('a note with no classification is taken as the lowest, and that is said before sending', () => {
-    const p = prepared({ level: null });
-    assert.match(p.summary.join('\n'), /no classification.*Public/);
+  test('a note with no classification is not sent to any model: it is to be given one first', () => {
+    const r = prepareSend(ask({ level: null }));
+    assert.match(r.refused, /no classification/);
+    assert.match(r.refused, /give it one/);
+    assert.deepEqual(r.cleared, []);
   });
 });
 
@@ -251,6 +268,16 @@ describe('nothing credential-like is ever sent (never_credential)', () => {
     const r = prepareSend(ask({ note: `${fence(graph)}\n`, secrets: [KEY] }));
     assert.match(r.refused, /key/);
     assert.ok(!r.refused.includes(KEY));
+  });
+
+  test('nor to an address that carries a credential in it', () => {
+    const odd = {
+      ...REMOTE,
+      name: 'Odd',
+      endpoint: `https://api.example.com/${['s', 'k'].join('')}-${'Q'.repeat(24)}/v1`,
+    };
+    const s = settingsFrom({ aiUse: 'on', aiModels: [odd] });
+    assert.match(prepareSend(ask({ settings: s, model: 'Odd', level: 'Public' })).refused, /API key/);
   });
 
   test('nor a credential typed into the question', () => {
@@ -297,6 +324,20 @@ describe('the user sees exactly what is sent, and to which model, first (seen_be
     assert.equal(calls[0].url, p.to);
     assert.match(p.summary.join('\n'), /Local/);
     assert.ok(p.summary.join('\n').includes(LOCAL.endpoint));
+  });
+
+  test('what is shown stays as it was shown, whatever the settings do after, and names the key by its name', async () => {
+    const models = [{ ...LOCAL }, { ...REMOTE }];
+    const s = settingsFrom({ aiUse: 'on', aiModels: models });
+    const p = prepared({ settings: s, model: 'Remote' });
+    s.aiModels[1].endpoint = 'https://elsewhere.example.com/v1';
+    s.aiModels[1].keyName = 'another-key';
+    assert.equal(p.model.endpoint, REMOTE.endpoint);
+    assert.equal(p.model.keyName, 'graph-note-remote');
+    assert.match(p.summary.join('\n'), /key named graph-note-remote/);
+    const t = fake();
+    await sendPrepared(p, confirmSend(p), { transport: t.transport, key: KEY, now: CLOCK });
+    assert.equal(t.calls[0].url, REMOTE.endpoint);
   });
 
   test('nothing is sent without the user’s yes to exactly that', async () => {
@@ -366,15 +407,17 @@ describe('an answer comes back as a proposal (answers_are_proposals)', () => {
 });
 
 describe('every send is recorded (record_every_send)', () => {
-  test('what was sent, to which model and address, and when, with the proposal it gave', async () => {
+  test('a digest of what was sent, its size and scope, to which model and address, and when, and never the text', async () => {
     const { p, result } = await sent();
     const r = result.record;
     assert.equal(r.at, '2026-10-13T09:30:00Z');
     assert.equal(r.model, 'Local');
     assert.equal(r.to, LOCAL.endpoint);
-    assert.equal(r.sent, p.body);
-    assert.equal(r.note, 'Reader.md');
-    assert.equal(r.graph, 'reader');
+    assert.equal(r.digest, createHash('sha256').update(p.body, 'utf8').digest('hex'));
+    assert.equal(r.size, Buffer.byteLength(p.body, 'utf8'));
+    assert.deepEqual(r.scope, { kind: 'whole', things: 3, links: 2 });
+    assert.ok(!JSON.stringify(r).includes('Which device?'), 'nothing of the note is kept');
+    assert.deepEqual(Object.keys(r).sort(), ['at', 'digest', 'id', 'model', 'outcome', 'scope', 'size', 'to']);
     assert.equal(r.outcome, 'answered');
     assert.equal(result.proposal.id, r.id);
     assert.ok(
@@ -388,8 +431,16 @@ describe('every send is recorded (record_every_send)', () => {
       throw new Error('connect refused');
     });
     assert.equal(result.record.outcome, 'failed');
-    assert.equal(result.record.sent, p.body);
+    assert.equal(result.record.size, Buffer.byteLength(p.body, 'utf8'));
     assert.match(result.record.why, /could not be reached/);
+  });
+
+  test('the scope of a view or of ticked things is kept as its kind and counts, never their names', async () => {
+    const view = await sent({ choice: { graph: 'reader', what: 'view', view: 'picked_two' } });
+    assert.deepEqual(view.result.record.scope, { kind: 'view', things: 2, links: 1 });
+    const ticked = await sent({ choice: { graph: 'reader', what: 'things', things: ['alice', 'question'] } });
+    assert.deepEqual(ticked.result.record.scope, { kind: 'ticked', things: 2, links: 1 });
+    assert.ok(!JSON.stringify(ticked.result.record).includes('alice'));
   });
 });
 

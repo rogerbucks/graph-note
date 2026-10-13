@@ -70,7 +70,8 @@ module that ties the parts together, named as the folder is.
 - `png.ts` — a PNG of the SVG drawn on a canvas at twice natural size or more; one larger than a phone's canvas holds is
   refused, with the SVG suggested.
 - `classification.ts` — a note's classification however its front matter writes it (any key case, a word, a number, a
-  list's highest), and from its own text before the metadata cache has indexed it.
+  list's highest), and from its own text before the metadata cache has indexed it; `classificationInText` reads the
+  text alone, and `higherClassification` takes the higher of two readings (an unknown one counts highest).
 - `vault-write.ts` — writing through the vault's API: a name of its own for each export, so none is overwritten; the
   plugin's own temporary file deleted outright on a failure, never left in the vault or its trash.
 
@@ -95,13 +96,16 @@ module that ties the parts together, named as the folder is.
 ### `src/ai/` — asking an AI model to propose changes (spec §19)
 
 - `ai.ts` — the command, Ask an AI model to propose changes: only a notice while AI is off or no model is set up;
-  otherwise the send dialog on the note in front (never one in reading view), with its classification read as an export
-  reads it. Obsidian has no AI of its own to offer first, so only the models set up here are offered.
+  otherwise the send dialog on the note in front (never one in reading view), with its classification read from its
+  text as well as the metadata cache, the higher taken (`higherClassification`). Obsidian has no AI of its own to offer
+  first, so only the models set up here are offered. Also the command Clear the record of sends to AI models; the
+  plugin keeps the last `SENDS_KEPT` (200).
 - `send-dialog.ts` — `SendDialog`: what to send (the whole graph, a view, or the things ticked), the model (the one set
   up for proposing changes first) and the question; Show what will be sent puts the exact request on screen, with the
   model, its address, the headers (a key only by its name) and the note's classification, or why nothing may be sent;
   Send, pressed on exactly that, sends it once, and any change takes the yes away until it is shown again. The key is
-  read from the app's secret store as the request goes. Every send is recorded in the plugin's data (`recordAiSend`);
+  read from the app's secret store as the request goes; every model's key is read before, only to make sure none is in
+  what is sent. Every send is recorded in the plugin's data (`recordAiSend`);
   an answer is written into the note as a change set after the graph's blocks, through `vault.process`, and a failure is
   said in a notice, the note left as it was.
 - `send.ts` — the one module that reaches the network: the request, with Obsidian's `requestUrl`, never a vendor's

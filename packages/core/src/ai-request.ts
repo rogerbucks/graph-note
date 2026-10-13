@@ -19,9 +19,14 @@ export const INSTRUCTIONS = [
   'A name is one word of letters, digits and underscores. Nothing you propose is written until a person accepts it.',
 ].join('\n');
 
+/** The user's message, as written before it is put in the request: what was chosen, in words and as GQL, and the question. */
+export function askedText(scope: AiScope, question: string): string {
+  return `Graph ${scope.graph}, ${scope.said}:\n\n${scope.gql}\n\nQuestion: ${question.trim()}`;
+}
+
 /** The body of the request, as the exact text sent: the model, the instructions, and what was chosen with the question. */
 export function requestBody(model: AiModel, scope: AiScope, question: string): string {
-  const asked = `Graph ${scope.graph}, ${scope.said}:\n\n${scope.gql}\n\nQuestion: ${question.trim()}`;
+  const asked = askedText(scope, question);
   return JSON.stringify(
     {
       model: model.model,
@@ -89,11 +94,22 @@ function propertiesOf(v: unknown): Record<string, string | number | boolean> | n
   return out;
 }
 
+/**
+ * A model's words as plain text wherever they are rendered as Markdown (a `///` note is, from slice 4): each character
+ * Markdown or HTML gives a meaning to is escaped with a backslash, so no reason can become an image, a link, emphasis,
+ * a heading or HTML, and every word of it is still read.
+ */
+function plainText(s: string): string {
+  // the slash and the at sign too, so an address in it is never made a link by itself
+  return s.replace(/[\\`*_{}[\]()#+!|<>~&/@]/g, '\\$&');
+}
+
 /** One change the answer gives, as a proposal takes it; or why it is not one. */
 function changeOf(c: unknown, n: number): ChangeInput | string {
   const at = `change ${n}`;
   if (!isRecord(c)) return `${at} is not an object`;
-  const extra = typeof c.reason === 'string' && c.reason.trim() ? { reason: c.reason.trim().replace(/\s+/g, ' ') } : {};
+  const extra =
+    typeof c.reason === 'string' && c.reason.trim() ? { reason: plainText(c.reason.trim().replace(/\s+/g, ' ')) } : {};
   const props = propertiesOf(c.properties);
   if (props === null) return `${at}: its properties are not each a one-word name with a text, a number, true or false`;
   switch (c.op) {

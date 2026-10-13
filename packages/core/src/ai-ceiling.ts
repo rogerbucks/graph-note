@@ -9,7 +9,10 @@ const rank = (levels: string[], level: string) => levels.findIndex((l) => same(l
 
 /** Why a note of `level` (null: it has none) may not be sent to `model`, or null when it may. */
 function aboveCeiling(level: string | null, model: AiModel, levels: string[]): string | null {
-  const at = level === null ? 0 : rank(levels, level),
+  // the safe default (Roger may relax it): a note nobody has classified is not taken as the lowest
+  if (level === null || !level.trim())
+    return `This note has no classification, so nothing of it is sent to any model: give it one first (a classification property in its front matter, one of ${levels.join(', ')}).`;
+  const at = rank(levels, level),
     top = levels.length - 1;
   if (at === -1)
     return `This note is classified "${level}", which is not one of the classifications set (${levels.join(', ')}), so it counts as above every ceiling and is not sent.`;
@@ -28,16 +31,16 @@ export type Clearance = { cleared: true } | { refused: string; cleared: string[]
 
 /**
  * Whether a note of `level` may be sent to `model`, against the classifications set (lowest first) and the models that
- * may be asked. A note with no classification is taken as the lowest; one not among those set counts as above every
- * ceiling; one at the highest is never sent. When it may not, the refusal says why and names the models cleared for it.
+ * may be asked. A note with no classification is not sent until it is given one; one not among those set counts as
+ * above every ceiling; one at the highest is never sent. When it may not, the refusal says why and names the models cleared for it.
  */
 export function clearance(level: string | null, model: AiModel, levels: string[], models: AiModel[]): Clearance {
   const why = aboveCeiling(level, model, levels);
   if (!why) return { cleared: true };
   const others = models.filter((m) => m !== model && !aboveCeiling(level, m, levels)).map((m) => m.name);
-  const at = level === null ? levels[0] : level;
-  // only a level a ceiling can reach has a model to offer: the highest and an unknown one have none
-  const offer = /highest|not one of the classifications/.test(why)
+  const at = level ?? '';
+  // only a level a ceiling can reach has a model to offer: none, the highest and an unknown one have none
+  const offer = /highest|not one of the classifications|no classification/.test(why)
     ? ''
     : others.length
       ? ` ${others.join(', ')} ${others.length === 1 ? 'is' : 'are'} cleared for ${at}: send to ${others.length === 1 ? 'it' : 'one of them'} instead.`
@@ -72,7 +75,9 @@ const CREDENTIALS: { what: string; test: (line: string) => boolean }[] = [
   {
     what: 'a password or secret',
     test: (l) =>
-      /\b(?:pass(?:word|wd|phrase)?|pwd|secret|api[_-]?key|access[_-]?token|auth[_-]?token|private[_-]?key|client[_-]?secret|credentials?)\b["']?\s*[:=]\s*["'][^"'\s]{4,}/i.test(
+      // the name may end a longer one in snake_case (user_password, db_secret), so it is bounded by what is not a
+      // letter or digit, never by \b, for which an underscore is part of the word
+      /(?<![A-Za-z0-9])(?:pass(?:word|wd|phrase|code)?|pwd|pin|secret|token|key|credentials?)(?![A-Za-z0-9])["']?\s*[:=]\s*["'][^"'\s]{4,}/i.test(
         l,
       ),
   },

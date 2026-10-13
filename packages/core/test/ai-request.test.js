@@ -34,6 +34,14 @@ test('one change that cannot be read refuses the whole answer, saying which and 
   assert.match(changesIn('no json here').unread, /holds no JSON/);
 });
 
+test('a model’s reason is plain text: no Markdown in it can become an image, a link or HTML when notes are rendered', () => {
+  const reason = '![](https://example.com/x.png) see [here](https://example.com) <img src=x> **now** `code` # head';
+  const [change] = changesIn(JSON.stringify({ changes: [{ op: 'remove-thing', thing: 'alice', reason }] }));
+  assert.doesNotMatch(change.reason, /(?<!\\)!\[|(?<!\\)\[[^\]]*(?<!\\)\]\(|(?<!\\)<[a-z]|(?<!\\)\*\*|(?<!\\)`/);
+  // read as Markdown, every mark is a literal character again: the words are all still there
+  assert.equal(change.reason.replace(/\\(.)/g, '$1'), reason);
+});
+
 test('a reply refused by its status says the status and the service’s own message, cut short', () => {
   assert.deepEqual(readReply(429, JSON.stringify({ error: { message: 'slow down' } })), {
     refused: 'HTTP 429: slow down',

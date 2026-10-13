@@ -305,21 +305,30 @@ exactly what goes and said yes to it. Its answer comes back as a proposal (§17)
   an address that cannot be used, above the model's ceiling, at the highest classification, or holding a credential);
   `confirmSend` is the user's yes to exactly that request, good for one send; `sendPrepared` sends it through the host's
   `Transport`, putting the key from the host's secret store in its header only as it goes and taking it out of anything
-  said, and gives back a proposal or why there is none, with a `SendRecord` of the send either way.
+  said before it is cut short, and gives back a proposal or why there is none, with a `SendRecord` of the send either
+  way: never the text sent, only its SHA-256 digest and size, its scope (the kind of choice and the counts), the model's
+  name and address, the time and the outcome. The model is copied as it is prepared, so what is sent is what was shown.
+  The address and the whole message are looked over for credentials before they are put in the request.
+- `ai-digest.ts` — `sha256` and `utf8Size`, written here, as the core has no host's library.
 - `ai-choice.ts` — which AI may be asked: `aiReady` (off until `aiUse` is on and a model has a name, a model and a
-  usable address), `endpointProblem` (a model on this device by http, any other by https only, no user name or
-  password in it), and `modelChoices` (the host's own AI first, where it has one; then the models set up for the
-  purpose; then the rest; none while AI is off). `AI_PURPOSES` are the spec's purposes.
-- `ai-ceiling.ts` — `clearance`: a note above a model's ceiling is not sent to it, saying why and naming the models
-  cleared for it; nothing at the highest classification set goes to any model; an unknown classification counts above
-  every ceiling, and none is taken as the lowest. `credentialsIn` names the kinds of credential a text holds (a private
-  key, an access key, an API key, a token, a password, a card number, or a model's own key), never the text.
+  usable address), `endpointProblem` (a host written in letters, digits, dots, hyphens, colons and brackets only, so it
+  cannot be told apart from another; no user name, password, query string or fragment; plain http only to localhost,
+  127.x.x.x or [::1] exactly, read with the runtime's own URL; any other by https), and `modelChoices` (the host's own
+  AI first, where it has one; then the models set up for the purpose; then the rest; none while AI is off).
+  `AI_PURPOSES` are the spec's purposes.
+- `ai-ceiling.ts` — `clearance`: a note with no classification is not sent until it is given one; a note above a
+  model's ceiling is not sent to it, saying why and naming the models cleared for it; nothing at the highest
+  classification set goes to any model; an unknown classification counts above every ceiling. `credentialsIn` names, by
+  common patterns, the kinds of credential a text holds (a private key, an access key, an API key, a token, a password
+  or secret by its name, even at the end of a snake_case one, a card number, or the key of any model set up), never
+  the text.
 - `ai-scope.ts` — `aiScope`: what is sent of a note, as the user chose (the whole graph, a view, or things by name),
   written out again as GQL from the graph as read: each thing with its kinds and properties, and the links between the
   things chosen. Nothing else of the note goes: no prose, no other graph, no comment.
 - `ai-request.ts` — the request body, in the chat completions shape local servers and most services take, with the
   instructions that ask for changes as JSON (`INSTRUCTIONS`); `readReply` and `changesIn` read an answer back, the whole
-  answer refused if one change cannot be read.
+  answer refused if one change cannot be read. A model's reason is kept as plain text, each Markdown and HTML mark
+  escaped, so it never renders as an image, a link or HTML where `///` notes are rendered.
 - `ai-answer.ts` — `proposalFrom`: the changes made into a proposal from the model, against the state of the graph that
   was sent, naming the send's record; `noteWithProposal`: the note with its change set written after the graph's last
   block, the graph untouched.

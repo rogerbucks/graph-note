@@ -303,7 +303,9 @@ holds the two together).
 ## AI models — spec §19
 
 Run these on the Mac and the phone with aeroplane mode off, and a model of your own to send to: a local one (Ollama or
-LM Studio on the Mac) is enough. Use a throwaway key, never a real one, and only the dummy notes of the test vault.
+LM Studio on the Mac) is enough. Use a throwaway key, never a real one, and only the dummy notes of the test vault. A
+note with no classification is never sent, so give each note a classification of Public in its front matter first, and
+take it out again afterwards.
 
 - [ ] **U-01** With Use AI models off, as it is until you turn it on, run "Ask an AI model to propose changes" from the
       command palette: a notice says AI is off, no dialog opens, and nothing is sent. Turn it on with no model set up: the
@@ -322,11 +324,13 @@ LM Studio on the Mac) is enough. Use a throwaway key, never a real one, and only
       each time: what is shown holds only those things and the links between them, and none of the note's prose
       (slice 3, user_chooses_what).
 - [ ] **U-05** Give the note a classification above the chosen model's ceiling: Show what will be sent says why, names a model
-      cleared for it, and Send stays off. At the highest classification set, nothing is sent to any model; nor is a note
-      holding a password property (slice 3, model_ceiling, never_above_ceiling, never_credential).
+      cleared for it, and Send stays off. With no classification, or at the highest classification set, nothing is sent
+      to any model; nor is a note holding a password property (slice 3, model_ceiling, never_above_ceiling,
+      never_credential).
 - [ ] **U-06** Stop the local model's server and send: a notice says the model could not be reached and that nothing was
-      changed, and the note is as it was. The plugin's data.json lists every send, failed ones too, with what was sent,
-      the model and the time, and never a key (slice 3, ai_unreachable, record_every_send).
+      changed, and the note is as it was. The plugin's data.json lists the last sends, failed ones too, each with a
+      digest and the size of what was sent, never its text, the model and the time, and never a key; "Clear the record
+      of sends to AI models" empties it (slice 3, ai_unreachable, record_every_send).
 
 ## Result
 

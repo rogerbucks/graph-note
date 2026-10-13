@@ -9,7 +9,8 @@
 import { proposalFrom } from './ai-answer.ts';
 import { clearance, credentialsIn } from './ai-ceiling.ts';
 import { aiReady, endpointProblem } from './ai-choice.ts';
-import { changesIn, readReply, requestBody } from './ai-request.ts';
+import { sha256, utf8Size } from './ai-digest.ts';
+import { askedText, changesIn, readReply, requestBody } from './ai-request.ts';
 import { aiScope } from './ai-scope.ts';
 import type { ScopeChoice } from './ai-scope.ts';
 import { basisOf } from './proposals-basis.ts';
@@ -68,8 +69,17 @@ export interface PreparedSend {
   level: string | null;
   graph: string;
   said: string;
+  /** What was chosen, as the record keeps it: its kind and how many things and links, never their names. */
+  scope: SendScope;
   /** The state of the graph sent: a proposal from the answer is made against it. */
   basis: string;
+}
+
+/** What a send held, as its record keeps it: the kind of choice and the counts. */
+export interface SendScope {
+  kind: 'whole' | 'view' | 'ticked';
+  things: number;
+  links: number;
 }
 
 /** A send refused before anything went: why, and the models cleared for the note when the ceiling was the reason. */
@@ -78,18 +88,18 @@ export interface SendRefused {
   cleared?: string[];
 }
 
-/** The record of one send, kept by the host: what was sent, to which model and where, when, and what came of it. */
+/**
+ * The record of one send, kept by the host: never the text sent, only its SHA-256 digest and size, and its scope; the
+ * model's name and address, when, and what came of it. The proposal from it names its `id`.
+ */
 export interface SendRecord {
   id: string;
   at: string;
   model: string;
-  modelId: string;
   to: string;
-  note: string;
-  graph: string;
-  what: string;
-  level: string | null;
-  sent: string;
+  digest: string;
+  size: number;
+  scope: SendScope;
   outcome: 'answered' | 'failed';
   why?: string;
 }
@@ -112,8 +122,10 @@ export function prepareSend(ask: SendAsk): PreparedSend | SendRefused {
   const { settings } = ask;
   const ready = aiReady(settings);
   if ('off' in ready) return { refused: ready.off };
-  const model = settings.aiModels.find((m) => m.name === ask.model);
-  if (!model) return { refused: `No model named ${ask.model} is set up.` };
+  const found = settings.aiModels.find((m) => m.name === ask.model);
+  if (!found) return { refused: `No model named ${ask.model} is set up.` };
+  // a copy, so what is shown, said yes to and sent stays as it was shown whatever the settings do meanwhile
+  const model = { ...found };
   const address = endpointProblem(model.endpoint);
   if (address) return { refused: `${model.name} cannot be sent to: ${address}` };
   if (!model.model.trim()) return { refused: `${model.name} names no model: set it in the model’s settings.` };
@@ -121,16 +133,13 @@ export function prepareSend(ask: SendAsk): PreparedSend | SendRefused {
   if ('refused' in cleared) return cleared;
   const scope = aiScope(ask.note, ask.choice, ask.shared);
   if ('refused' in scope) return scope;
-  const found = credentialsIn(`${scope.gql}\n${ask.question}`, ask.secrets);
-  if (found.length)
+  // everything that goes is looked over as written, before it is put in the request: the address, and the whole
+  // message (the graph's name, what was chosen in words, its GQL and the question)
+  const held = credentialsIn(`${model.endpoint}\n${askedText(scope, ask.question)}`, ask.secrets);
+  if (held.length)
     return {
-      refused: `What would be sent holds what looks like ${found.join(' and ')}, so nothing is sent. Leave out what holds it, or take it out of the note.`,
+      refused: `What would be sent holds what looks like ${held.join(' and ')}, so nothing is sent. Leave out what holds it, or take it out of the note or the model’s address.`,
     };
-  const levels = settings.classifications;
-  const level =
-    ask.level === null
-      ? `It has no classification, so it is taken as ${levels[0]}, the lowest.`
-      : `It is classified ${ask.level}.`;
   return {
     model,
     to: model.endpoint.trim(),
@@ -141,13 +150,17 @@ export function prepareSend(ask: SendAsk): PreparedSend | SendRefused {
     },
     summary: [
       `To ${model.name} (${model.model}), at ${model.endpoint.trim()}, whose ceiling is ${model.ceiling}.`,
-      `From ${ask.notePath}. ${level}`,
+      model.keyName
+        ? `It is sent with the key named ${model.keyName} in the app’s secret store, put in only as the request goes.`
+        : 'No key is sent.',
+      `From ${ask.notePath}. It is classified ${ask.level}.`,
       `What is sent: ${scope.said}, and your question.`,
     ],
     note: ask.notePath,
     level: ask.level,
     graph: scope.graph,
     said: scope.said,
+    scope: { kind: scope.kind, things: scope.things.length, links: scope.links },
     basis: basisOf(ask.note, scope.graph, ask.shared),
   };
 }
@@ -199,13 +212,10 @@ export async function sendPrepared(
     id: `ai-${at.replace(/[-:]/g, '')}`,
     at,
     model: p.model.name,
-    modelId: p.model.model,
     to: p.to,
-    note: p.note,
-    graph: p.graph,
-    what: p.said,
-    level: p.level,
-    sent: p.body,
+    digest: sha256(p.body),
+    size: utf8Size(p.body),
+    scope: { ...p.scope },
     outcome: 'failed',
   };
   const failed = (why: string): SendResult => {
@@ -221,9 +231,13 @@ export async function sendPrepared(
       body: p.body,
     });
   } catch (e) {
-    return failed(`${p.model.name} could not be reached at ${p.to} (${e instanceof Error ? e.message : String(e)}).`);
+    // the key is taken out before the message is cut short, so no part of it is left to say
+    const said = hide(e instanceof Error ? e.message : String(e));
+    return failed(
+      `${p.model.name} could not be reached at ${p.to} (${said.length > 200 ? `${said.slice(0, 200)}…` : said}).`,
+    );
   }
-  const read = readReply(reply.status, reply.text);
+  const read = readReply(reply.status, hide(reply.text));
   if ('refused' in read) return failed(`${p.model.name} refused the request (${read.refused}).`);
   const changes = 'content' in read ? changesIn(read.content) : read;
   const cannot = (why: string) =>

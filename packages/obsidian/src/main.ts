@@ -16,7 +16,7 @@ import type {
   SendRecord,
   Settings,
 } from '@graph-note/core';
-import { AI_COMMAND, askAi } from './ai/ai';
+import { AI_COMMAND, CLEAR_SENDS_COMMAND, SENDS_KEPT, askAi, clearAiSends } from './ai/ai';
 import { exportGraph } from './export/export';
 import type { ExportAsk, ExportOutcome } from './export/export';
 import { PNG_PIXEL_LIMIT, rasterise } from './export/png';
@@ -73,6 +73,7 @@ export default class GraphNotePlugin extends Plugin {
     this.addCommand({ ...RECOVER_COMMAND, callback: () => recoverDrafts(this) });
     // nothing is sent unless the user opens this, chooses, sees exactly what goes and presses Send (§19)
     this.addCommand({ ...AI_COMMAND, callback: () => askAi(this) });
+    this.addCommand({ ...CLEAR_SENDS_COMMAND, callback: () => clearAiSends(this) });
     this.registerView(PANE, (leaf) => new GraphPane(leaf, this));
     this.registerEditorExtension(addForYou);
     // in Live Preview the plugin draws graph blocks itself, so a card being typed in is never torn down (spec §4)
@@ -192,10 +193,18 @@ export default class GraphNotePlugin extends Plugin {
     await this.saveData(this.saved);
   }
 
-  /** Keeps the record of one send to an AI model with every one before it (§19, record_every_send). */
+  /** Keeps the record of one send to an AI model with the last ones before it (§19, record_every_send). */
   async recordAiSend(record: SendRecord): Promise<void> {
-    this.saved = { ...this.saved, aiSends: [...(this.saved.aiSends ?? []), record] };
+    this.saved = { ...this.saved, aiSends: [...(this.saved.aiSends ?? []), record].slice(-SENDS_KEPT) };
     await this.saveData(this.saved);
+  }
+
+  /** Clears the record of sends to AI models; gives how many there were. */
+  async clearAiSends(): Promise<number> {
+    const n = this.saved.aiSends?.length ?? 0;
+    this.saved = { ...this.saved, aiSends: [] };
+    await this.saveData(this.saved);
+    return n;
   }
 
   /**

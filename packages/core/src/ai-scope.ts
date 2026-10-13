@@ -17,11 +17,14 @@ export type ScopeChoice =
   | { graph: string; what: 'view'; view: string }
   | { graph: string; what: 'things'; things: string[] };
 
-/** What is sent: the graph, what was chosen in words, the things in it, and the GQL that writes them. */
+/** What is sent: the graph, what was chosen in words, the things in it, how many links, and the GQL that writes them. */
 export interface AiScope {
   graph: string;
+  /** Which choice it was: the whole graph, a view, or things ticked. */
+  kind: 'whole' | 'view' | 'ticked';
   said: string;
   things: string[];
+  links: number;
   gql: string;
 }
 
@@ -124,5 +127,13 @@ export function aiScope(note: string, choice: ScopeChoice, shared: string[] = []
   const chosen = new Set(keys);
   const things = base.boxes.filter((b) => chosen.has(b.key));
   const lines = [...things.map((b) => thingText(b.key, g, b.kind, b.text)), ...linkTexts(links, g)];
-  return { graph, said, things: things.map((b) => b.key), gql: `// graph: ${graph}\n${lines.join(',\n')}` };
+  const kind = choice.what === 'graph' ? 'whole' : choice.what === 'view' ? 'view' : 'ticked';
+  return {
+    graph,
+    kind,
+    said,
+    things: things.map((b) => b.key),
+    links: links.length,
+    gql: `// graph: ${graph}\n${lines.join(',\n')}`,
+  };
 }

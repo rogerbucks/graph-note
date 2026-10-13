@@ -20,28 +20,46 @@ export interface ModelChoice {
   forPurpose: boolean;
 }
 
-const LOCAL_HOSTS = /^(localhost|.+\.localhost|127(?:\.\d{1,3}){3}|\[::1\])$/i;
+// The WHATWG URL every host this core runs in has (Obsidian on desktop and phone, Node), declared here because the core
+// is built without any host's library: only what is read of it.
+declare const URL: new (input: string) => { protocol: string; hostname: string };
+
+// this device, named exactly: never a name that only ends like one, such as evil.localhost
+const LOCAL_HOSTS = /^(localhost|127(?:\.\d{1,3}){3}|\[::1\])$/;
+// the characters a host and port are written in; anything else (a backslash, a space, %, a letter outside ASCII) could
+// make the request go somewhere other than the address seems to say
+const AUTHORITY = /^[A-Za-z0-9.:[\]-]+$/;
 
 /**
- * Why requests cannot go to `endpoint`, or null when they can: a model on this device by http or https, any other by
- * https only, so what is sent cannot be read on the way; and never an address holding a user name or a password, as a
- * key belongs in the secret store.
+ * Why requests cannot go to `endpoint`, or null when they can: an address whose host is written plainly, holding no user
+ * name, password, query string or fragment; a model on this device (localhost, 127.x.x.x or [::1], exactly) by http or
+ * https, any other by https only, so what is sent cannot be read on the way.
  */
 export function endpointProblem(endpoint: string): string | null {
   const given = endpoint.trim();
   const example = 'such as http://localhost:11434/v1/chat/completions for a model on this device';
   if (!given) return `No address is set: give the address requests go to, ${example}.`;
-  // read by hand, as the core has no URL of its own: a scheme, then the authority up to the path
-  const parts = /^([a-z][a-z0-9+.-]*):\/\/([^/?#\s]+)([/?#]\S*)?$/i.exec(given);
+  const parts = /^([a-z][a-z0-9+.-]*):\/\/(.*)$/is.exec(given);
   if (!parts) return `${given} is not an address: give the full address requests go to, ${example}.`;
   const scheme = (parts[1] ?? '').toLowerCase(),
-    authority = parts[2] ?? '';
+    rest = parts[2] ?? '';
   if (scheme !== 'https' && scheme !== 'http')
     return `An address starts with https://, or http:// for a model on this device; ${given} does not.`;
+  const authority = rest.split(/[/?#]/)[0] ?? '';
+  const unclear = `The host in ${given} cannot be told apart from another: write it with letters, digits, dots and hyphens only.`;
+  if (/[\\\s]/.test(authority)) return unclear;
   if (authority.includes('@'))
     return 'An address holds no user name or password: keep the key in the app’s secret store instead.';
-  const host = authority.startsWith('[') ? authority.slice(0, authority.indexOf(']') + 1) : authority.split(':')[0];
-  if (scheme === 'http' && !LOCAL_HOSTS.test(host ?? ''))
+  if (!authority || !AUTHORITY.test(authority)) return unclear;
+  if (/[?#]/.test(rest))
+    return 'An address holds no query string or fragment (the part after ? or #), as a key or anything else could ride in it: keep the key in the app’s secret store instead.';
+  let hostname: string;
+  try {
+    hostname = new URL(given).hostname;
+  } catch {
+    return `${given} is not an address: give the full address requests go to, ${example}.`;
+  }
+  if (scheme === 'http' && !LOCAL_HOSTS.test(hostname))
     return `A model on another machine is reached over https only, so what is sent cannot be read on the way: start ${given} with https://.`;
   return null;
 }

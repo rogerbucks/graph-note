@@ -21,6 +21,8 @@ import {
   findsNetwork,
   findsHotkeys,
   forbiddenImports,
+  reachesSendModule,
+  findsBackground,
 } from './repository/repo.js';
 
 const SEMVER = /^\d+\.\d+\.\d+$/;
@@ -492,13 +494,12 @@ describe('the shipped source', () => {
   });
 
   // never_in_background (spec §19): the send module is reached from the send dialog alone, whose Send button is the
-  // user saying yes; nothing in the AI's folder runs on a timer or on an event, so nothing is ever sent unasked
+  // user saying yes; nothing in the AI's folder runs on a timer or on an event, so nothing is ever sent unasked (the
+  // scans themselves are tested in test/repository-scans.test.js)
   test('the AI send module is there, and only the send dialog reaches it', () => {
     assert.ok(exists(AI_SEND_MODULE), AI_SEND_MODULE);
-    const importsSend = (f) =>
-      [...read(f).matchAll(/from\s+'([^']+)'/g)].some(([, m]) => /(^|\/)send$/.test(m) || /\/ai\/send$/.test(m));
     assert.deepEqual(
-      sourceFiles().filter((f) => f !== AI_SEND_MODULE && importsSend(f)),
+      sourceFiles().filter((f) => f !== AI_SEND_MODULE && reachesSendModule(read(f))),
       [AI_SEND_DIALOG],
     );
   });
@@ -506,10 +507,8 @@ describe('the shipped source', () => {
   test('nothing sends to an AI in the background: no timer and no event in the AI’s folder', () => {
     const folder = sourceFiles().filter((f) => f.startsWith('packages/obsidian/src/ai/'));
     assert.ok(folder.length > 1);
-    const background =
-      /\b(setTimeout|setInterval|registerInterval|requestAnimationFrame|requestIdleCallback|registerEvent|queueMicrotask)\s*\(|\.on\(\s*'/;
     assert.deepEqual(
-      folder.filter((f) => background.test(read(f))),
+      folder.filter((f) => findsBackground(read(f))),
       [],
     );
   });
@@ -550,6 +549,15 @@ describe('the AI use is disclosed', () => {
     assert.match(said, /only to (an )?AI models? (that )?you (have )?set up/i);
     assert.match(said, /only when you send it/i);
     assert.match(said, /off until you turn it on/i);
+  });
+
+  test('it says unclassified notes are refused, credentials are found by common patterns, and what Obsidian adds', () => {
+    const said = privacy();
+    assert.match(said, /no classification is not sent to any model/);
+    assert.match(said, /common patterns/);
+    assert.match(said, /Obsidian follows redirects; point a model only at an address you trust/);
+    assert.match(said, /adds headers of its own/);
+    assert.match(said, /without the text sent/);
   });
 
   test('it states the one exception to no network use, never that there are no requests at all', () => {

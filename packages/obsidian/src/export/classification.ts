@@ -32,6 +32,11 @@ function fromFrontMatter(front: Record<string, unknown> | null | undefined, leve
 export function classificationOf(host: App, file: TFile, text: string, levels: string[]): string | null {
   const cached = host.metadataCache.getFileCache(file);
   if (cached) return fromFrontMatter(cached.frontmatter, levels);
+  return classificationInText(text, levels);
+}
+
+/** The classification the note's own text gives in its front matter, whatever the metadata cache says. */
+export function classificationInText(text: string, levels: string[]): string | null {
   const info = getFrontMatterInfo(text);
   if (!info.exists) return null;
   try {
@@ -39,4 +44,17 @@ export function classificationOf(host: App, file: TFile, text: string, levels: s
   } catch {
     return UNREADABLE;
   }
+}
+
+/**
+ * The higher of two classifications read of one note (`levels` lowest first): one that is not among the levels counts
+ * above every one, and none counts below every one, so a disagreement is always settled the cautious way.
+ */
+export function higherClassification(a: string | null, b: string | null, levels: string[]): string | null {
+  const rank = (c: string | null) => {
+    if (c === null) return -1;
+    const i = levels.findIndex((l) => l.toLowerCase() === c.trim().toLowerCase());
+    return i === -1 ? levels.length : i;
+  };
+  return rank(b) > rank(a) ? b : a;
 }

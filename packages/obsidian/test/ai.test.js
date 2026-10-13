@@ -1,9 +1,10 @@
 // Asking an AI model from Obsidian (spec §19): off until turned on; the dialog where the user chooses what to send and a
 // model, sees exactly what will be sent, and sends it; the key from the app's secret store; the answer written into the
-// note as a change set beside the graph; every send recorded in the plugin's data. Obsidian's request function is the
-// fake host's, which never reaches the network.
+// note as a change set beside the graph; every send recorded in the plugin's data, by digest. Obsidian's request
+// function is the fake host's, which never reaches the network.
 import { before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { build, load, until } from './host/load-plugin.js';
 
 before(() => build());
@@ -17,7 +18,10 @@ const GRAPH = [
   '(large_reader)-[:ANSWERS]->(question),',
   '(alice)-[:ASKED]->(question)',
 ].join('\n');
-const NOTE = `# Reader\n\nProse that is never sent.\n\n\`\`\`gql\n${GRAPH}\n\`\`\`\n`;
+const BODY = `# Reader\n\nProse that is never sent.\n\n\`\`\`gql\n${GRAPH}\n\`\`\`\n`;
+/** The note with front matter giving it a classification; none for no front matter. */
+const noteAt = (level) => (level ? `---\n${'classification'}: ${level}\n---\n${BODY}` : BODY);
+const NOTE = noteAt('Public');
 const LOCAL = {
   name: 'Local',
   purpose: 'Proposing changes',
@@ -49,7 +53,7 @@ async function open(options = {}, note = NOTE) {
   return env;
 }
 
-const command = (env) => env.state.commands.find((c) => c.id === 'ask-ai-model');
+const command = (env, id = 'ask-ai-model') => env.state.commands.find((c) => c.id === id);
 const dialog = (env) => env.state.modals.at(-1);
 const row = (m, name) =>
   m.contentEl
@@ -130,7 +134,7 @@ describe('asking an AI model to propose changes (§19)', () => {
       assert.ok(note.startsWith(NOTE), 'the graph and everything before the change set are as they were');
       assert.match(note, /\(small_reader:Option \{name: 'Small'\}\)/);
       const [record] = env.state.data.aiSends;
-      assert.equal(record.sent, body);
+      assert.equal(record.digest, createHash('sha256').update(body, 'utf8').digest('hex'));
       assert.equal(record.model, 'Local');
       assert.equal(record.outcome, 'answered');
       assert.match(env.state.notices.at(-1), /Local proposed 1 change/);
@@ -141,18 +145,32 @@ describe('asking an AI model to propose changes (§19)', () => {
   });
 
   test('the key is taken from the app’s secret store as it is sent, and written nowhere', async () => {
-    const env = await open(ON, NOTE.replace('# Reader', '---\nclassification: Public\n---\n# Reader'));
+    const env = await open(ON);
     try {
       env.state.secrets.set('graph-note-remote', KEY);
       env.state.reply = reply([{ op: 'remove-thing', thing: 'alice' }]);
       const m = await shown(env, 'Remote');
       assert.ok(!said(m).includes(KEY));
+      assert.match(said(m), /key named graph-note-remote/);
       button(m, 'Send').click();
       await until(() => env.state.files.get(PATH).includes('CHANGE SET'));
       assert.equal(env.state.requests[0].headers.Authorization, `Bearer ${KEY}`);
       assert.ok(!JSON.stringify(env.state.data).includes(KEY), 'not in the plugin’s data');
       assert.ok(!env.state.files.get(PATH).includes(KEY), 'not in the note');
       assert.ok(!env.state.notices.join('\n').includes(KEY), 'not in a notice');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('the key of any model set up is never sent, even to a model that has no key', async () => {
+    const env = await open(ON, NOTE.replace("'Alice'", `'${KEY}'`));
+    try {
+      env.state.secrets.set('graph-note-remote', KEY);
+      const m = await shown(env, 'Local');
+      assert.equal(shownBody(m), null);
+      assert.match(said(m), /the key of a model set up here/);
+      assert.ok(!said(m).includes(KEY));
     } finally {
       env.uninstall();
     }
@@ -173,13 +191,59 @@ describe('asking an AI model to propose changes (§19)', () => {
   });
 
   test('a note above the model’s ceiling is not sent: the dialog says why and names the model cleared for it', async () => {
-    const env = await open(ON, NOTE.replace('# Reader', '---\nclassification: Internal\n---\n# Reader'));
+    const env = await open(ON, noteAt('Internal'));
     try {
       const m = await shown(env, 'Remote');
       assert.equal(shownBody(m), null);
       assert.match(said(m), /above Remote’s ceiling, Public/);
       assert.match(said(m), /Local is cleared for Internal/);
       assert.ok(button(m, 'Send').disabled);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a note with no classification is not sent: the dialog says to give it one', async () => {
+    const env = await open(ON, noteAt(null));
+    try {
+      const m = await shown(env, 'Local');
+      assert.equal(shownBody(m), null);
+      assert.match(said(m), /no classification.*give it one/);
+      assert.ok(button(m, 'Send').disabled);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('the classification is read from the note as it is sent too, and the higher taken when the cache is behind', async () => {
+    const env = await open(ON, noteAt('Internal'));
+    try {
+      // the metadata cache has not caught up with the note, and still says Public
+      env.app.metadataCache.getFileCache = () => ({ frontmatter: { classification: 'Public' } });
+      const m = await shown(env, 'Remote');
+      assert.equal(shownBody(m), null);
+      assert.match(said(m), /classified Internal, above Remote’s ceiling, Public/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('the record keeps no text sent, only the last 200 sends, and can be cleared', async () => {
+    const old = Array.from({ length: 200 }, (_, i) => ({ id: `ai-old-${i}`, outcome: 'failed' }));
+    const env = await open({ data: { ...ON.data, aiSends: old } });
+    try {
+      const m = await shown(env);
+      const body = shownBody(m);
+      button(m, 'Send').click();
+      await until(() => env.state.data.aiSends.at(-1)?.id !== 'ai-old-199');
+      const sends = env.state.data.aiSends;
+      assert.equal(sends.length, 200);
+      assert.equal(sends[0].id, 'ai-old-1', 'the oldest is let go');
+      assert.equal(sends.at(-1).size, Buffer.byteLength(body, 'utf8'));
+      assert.ok(!JSON.stringify(sends.at(-1)).includes('Which device?'), 'nothing of the note is kept');
+      await command(env, 'clear-ai-sends').callback();
+      assert.deepEqual(env.state.data.aiSends, []);
+      assert.match(env.state.notices.at(-1), /200 sends/);
     } finally {
       env.uninstall();
     }
