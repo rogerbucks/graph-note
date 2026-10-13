@@ -302,14 +302,18 @@ describe('where the file goes', () => {
 
 describe('the data, and an image across pages', () => {
   // proves: export_data_formats
-  test('the data is named as an image is, with its own ending, and gets no companion note: that links an image', () => {
+  test('the data is named as an image is, with its own ending, and gets its companion note as an image does', () => {
     const on = SETTINGS({ companionNote: 'on' });
     for (const format of ['gql', 'csv', 'graphml']) {
       const { go } = plan({ format, settings: on });
       assert.equal(go.fileName, `Lisbon-team-2026-10-11.${format}`);
       assert.equal(go.path, `Trips/Lisbon-team-2026-10-11.${format}`);
       assert.equal(go.format, format);
-      assert.equal(go.companion, null);
+      assert.deepEqual(go.companion, {
+        fileName: 'Lisbon-team-2026-10-11.md',
+        path: 'Trips/Lisbon-team-2026-10-11.md',
+      });
+      assert.equal(plan({ format }).go.companion, null, 'unless it is configured');
     }
   });
 

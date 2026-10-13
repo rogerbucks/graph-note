@@ -16,6 +16,11 @@ export interface ExportedData {
   view?: string;
   things: DataThing[];
   links: DataLink[];
+  /**
+   * Only for a view exported with its faded context (view_export_stays_view): what is outside the view, things by id
+   * and links by their place in `links`. Each format marks them so, and reads back the same things and links.
+   */
+  faded?: { things: string[]; links: number[] };
 }
 
 /** Where the data came from, as a format that can say so says it: the note's path and the day, `YYYY-MM-DD`. */

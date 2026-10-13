@@ -2,10 +2,9 @@
 // nothing to export; or the note is classified above the configured level, so the host asks first; or go, with the file's
 // name and place and, as configured, its companion note. Nothing is written here; the host writes only on a go, and only
 // by `writeSafely`. A file name is made from the note, the graph or view and the day, safe on every platform. The data
-// (export_data_formats) is named as an image is, with its own ending, and gets no companion note, which is an image's;
-// a PNG split across pages (big_export) names each page after the one name, in order.
+// (export_data_formats) is named as an image is, with its own ending, and gets its companion note as an image does; a
+// PNG split across pages (big_export) names each page after the one name, in order.
 import type { ExportFormat } from './export.ts';
-import { isDataFormat } from './export-data.ts';
 import type { DataFormat } from './export-data.ts';
 import type { ExportScope } from './export-scope.ts';
 import { vaultFolder } from './settings.ts';
@@ -129,7 +128,7 @@ export function exportPlan(input: ExportPlanInput): ExportDecision {
   const where = folder || parts.join('/');
   const at = (file: string) => (where ? `${where}/${file}` : file);
   const companion =
-    settings.companionNote === 'on' && input.toVault !== false && !isDataFormat(format)
+    settings.companionNote === 'on' && input.toVault !== false
       ? { fileName: `${name}.md`, path: at(`${name}.md`) }
       : null;
   const go: ExportGo = {

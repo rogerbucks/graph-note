@@ -1,10 +1,12 @@
 // The data as CSV (editor spec §16, export_data_formats, export_lossless): one table, as RFC 4180 writes it, records ending
 // at CRLF. Its header names six columns — kind, id, labels, from, type, to — then each property with the kind of its
 // values, `size:number`, a column for each kind a property's values come in. A row is a thing (its id and its kinds,
-// joined by `;`) or a link (its from, type and to), things first, each in the order written. So it reads back exactly:
+// joined by `;`) or a link (its from, type and to), things first, each in the order written; in a view exported with its
+// faded context, a row outside the view is of kind `faded thing` or `faded link`. So it reads back exactly:
 // - a property a row does not have is an empty cell; an empty text is `""`, quoted, so the two are told apart;
 // - a text a spreadsheet would run as a formula, one starting with =, +, -, @, a tab or a carriage return, is guarded by
-//   an apostrophe before it, as is one that starts with an apostrophe already; a reader takes one apostrophe off;
+//   an apostrophe before it, as is one that starts with an apostrophe already; a reader takes one apostrophe off, and
+//   a spreadsheet shows it;
 // - a number is written as it reads back, -0 too; a truth value as true or false; a day as YYYY-MM-DD; an instant in UTC.
 import type { Value } from '@graph-note/graph-spec';
 import { kindOf, numberText, timeText } from './export-data-model.ts';
@@ -41,19 +43,24 @@ export function csvText(data: ExportedData): string {
     if (!columns.has(name)) columns.set(name, { key, kind });
     return name;
   };
+  // a view's faded context: its rows are of kind `faded thing` and `faded link`
+  const fadedThings = new Set(data.faded?.things ?? []),
+    fadedLinks = new Set(data.faded?.links ?? []);
   const rows = [
     ...data.things.map(([id, kinds, props]) => ({
-      fixed: ['thing', textCell(id), kinds.join(';'), '', '', ''],
+      fixed: [fadedThings.has(id) ? 'faded thing' : 'thing', textCell(id), kinds.join(';'), '', '', ''],
       props,
+      thing: true,
     })),
-    ...data.links.map(([from, type, to, props]) => ({
-      fixed: ['link', '', '', textCell(from), type, textCell(to)],
+    ...data.links.map(([from, type, to, props], i) => ({
+      fixed: [fadedLinks.has(i) ? 'faded link' : 'link', '', '', textCell(from), type, textCell(to)],
       props,
+      thing: false,
     })),
-  ].map(({ fixed, props }) => {
+  ].map(({ fixed, props, thing }) => {
     const cells = new Map<string, string>();
     for (const [key, v] of Object.entries(props)) {
-      if (key === 'id' && fixed[0] === 'thing') continue; // the id has its own column
+      if (key === 'id' && thing) continue; // the id has its own column
       cells.set(columnOf(key, v), valueCell(v, kindOf(v)));
     }
     return { fixed, cells };

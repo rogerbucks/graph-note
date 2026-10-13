@@ -256,28 +256,38 @@ a GQL block, CSV or GraphML (`DATA_FORMATS`), each read back into the very thing
   `pngSize` is the PNG's pixel size, never under `PNG_MIN_SCALE` (twice natural size) and rounded up. A view's looks are
   drawn and put in the legend with what they mean.
 - `export-pages.ts` — `pngPages`: an image too large for one sharp PNG on the device, split into a grid of pages, each at
-  twice natural size or more and within the device's pixels, in reading order; null when the pages would be too small
-  (`PNG_PAGE_LEAST`) or too many (`PNG_MOST_PAGES`). `pageSvg` cuts the SVG to a page by its root's size and view box.
+  twice natural size or more, within the device's pixels and no side over `PNG_MOST_SIDE` (32,767 device pixels), as
+  few as the pixels allow and then evened out, so a row is never whole pages and a sliver, in reading order; null when
+  the pages would be too small (`PNG_PAGE_LEAST`) or too many (`PNG_MOST_PAGES`). `pageSvg` cuts the SVG to a page by
+  its root's size and view box.
 - `export-data.ts` — `exportedData`: the things a scope draws and the links written between them, with every kind and
-  property as read, never a schema's own thing or a guess, and a view's faded context never data (`ExportScope.linksAt`
-  finds a view's links as written); `dataText` writes it in one of `DATA_FORMATS`. No layout is asked for.
+  property as read, never a schema's own thing or a guess (`ExportScope.linksAt` finds a view's links as written). A
+  view holds only its own, unless its faded context is asked for: then the whole graph, with what is outside the view
+  in `faded`, which each format marks. `dataText` writes it in one of `DATA_FORMATS`. No layout is asked for.
 - `export-data-model.ts` — the data's types, and the five kinds of value the profile reads, each said so it reads back.
 - `export-data-gql.ts` — a GQL block: the graph line, a comment saying where it came from, a thing or link to a line; a
-  thing under its id, or, where its id cannot be a name, under `thing_<n>` with its id written in full.
-- `export-data-csv.ts` — CSV as RFC 4180 writes it: a header naming each property with the kind of its values, a row
-  for each thing then each link; an empty text quoted, so it is told from a missing one; a text a spreadsheet would run
-  as a formula guarded by an apostrophe.
-- `export-data-graphml.ts` — GraphML: a node named by its place, the thing's id, kinds and a link's type as data, a key
-  for each property and kind (a day or an instant marked by `gn:kind`), XML's marks escaped; a character XML cannot hold
-  refused, naming where it is.
+  thing under its id, or, where its id cannot be a name, under `thing_<n>` with its id written in full. A thing or link
+  of a view's faded context owns a `//@ faded: outside view <name>` line (§27), a comment to the reader.
+- `export-data-csv.ts` — CSV as RFC 4180 writes it, with no byte order mark, so a spreadsheet that assumes another
+  encoding without one may show non-ASCII text wrongly: a header naming each property with the kind of its values, a
+  row for each thing then each link, of kind `faded thing` or `faded link` outside a view; an empty text quoted, so it is
+  told from a missing one; a text a spreadsheet would run as a formula guarded by an apostrophe, which the readers take
+  off but a spreadsheet such as Excel shows.
+- `export-data-graphml.ts` — GraphML that keeps to its schema: a node named by its place, the thing's id, kinds and a
+  link's type as data, a key for each property and kind (a day or an instant said by the key's own description,
+  `gn:date` or `gn:datetime`), a view's faded context marked by `:faded`, XML's marks escaped; a character XML cannot
+  hold refused, naming where it is. No GraphML schema is on this machine to validate against, and none is downloaded:
+  the output was checked well-formed with xmllint, and it writes no attribute GraphML does not name.
 - `export-plan.ts` — `exportPlan`, the one decision before anything is written: `{ nothing }` for an empty scope,
   `{ ask }` for a note classified above the configured level (naming both; a classification not in the list counts as
   above every level; the host asks again with `confirmed` once the user says yes), or `{ go }` with the file's name and
   place and, as configured, the companion note's. A name is made from the note, the graph or view and the day, safe on
-  every platform; a folder setting that could leave the vault is not used. The data gets no companion note; a PNG on
-  pages gets each page's name (`pages`).
-- `export-note.ts` — `companionNote`: the Markdown that links the image and the source note and names the graph or view,
-  the day and the scope, with nothing of the data beyond what the image shows.
+  every platform; a folder setting that could leave the vault is not used. The data gets its companion note as an image
+  does; a PNG on pages gets each page's name (`pages`).
+- `export-note.ts` — `companionNote`: the Markdown that links the export and the source note and names the graph or
+  view, the day and the scope. An image's shows the image, or each page, with nothing of the data beyond what the image
+  shows; the data's links its file, shows nothing, and says how many things and links it holds, and how many of them
+  are a view's faded context.
 - `export-write.ts` — `writeSafely`: the bytes go to a temporary file given by the host's `write`, then `rename` into place;
   on any failure the temporary file is `remove`d, the target is never touched, and the result says why in a sentence.
 

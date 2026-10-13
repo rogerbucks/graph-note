@@ -11,12 +11,12 @@ import { loadEngine } from '../src/engine.ts';
 import { readNote } from '../src/drawing.ts';
 import { EXPORT_FORMATS, PNG_MIN_SCALE, exportSvg, exportWithLayout, pngSize } from '../src/export.ts';
 import { DATA_FORMATS, dataText, exportedData } from '../src/export-data.ts';
-import { pageSvg, pngPages } from '../src/export-pages.ts';
+import { PNG_MOST_PAGES, PNG_MOST_SIDE, PNG_PAGE_LEAST, pageSvg, pngPages } from '../src/export-pages.ts';
 import { exportScope } from '../src/export-scope.ts';
 import { FADED_OPACITY } from '../src/export-marks.ts';
 import { STYLE } from '../src/layout.ts';
 import { LAYOUT_LIMITS, PAGE_LIMITS } from '../src/layout-limits.ts';
-import { dataOf, readBack } from './export-data-readers.js';
+import { dataOf, readBack, readFaded } from './export-data-readers.js';
 import { LayoutRunner, inThreadPort, serveLayouts } from '../src/layout-worker.ts';
 import { PALETTES } from '../src/palette.ts';
 import { readStyle } from '../src/style.ts';
@@ -348,14 +348,25 @@ describe('the data exports', () => {
   });
 
   // proves: export_lossless, view_export_stays_view
-  test('a view’s data is the things in the view and the links between them, with or without its faded context', () => {
+  test('a view’s data is the things in the view and the links between them, and nothing outside it', () => {
     const inView = new Set(['alice', 'bob', 'carol', 'core']);
     const want = readData(reading, 'team', (id) => inView.has(id));
     assert.equal(want.links.length, 4);
-    for (const context of [false, true]) {
-      const data = exportedData(reading, exportScope(reading, { graph: 'team', view: AROUND, context }));
-      for (const format of DATA_FORMATS)
-        assert.deepEqual(readBack(format, dataText(data, format, DATA_INFO)), want, `${format}, context ${context}`);
+    const data = exportedData(reading, exportScope(reading, { graph: 'team', view: AROUND }));
+    for (const format of DATA_FORMATS)
+      assert.deepEqual(readBack(format, dataText(data, format, DATA_INFO)), want, format);
+  });
+
+  // proves: export_lossless, view_export_stays_view
+  test('with its faded context asked for, a view’s data holds the whole graph, what is outside the view marked so', () => {
+    const data = exportedData(reading, exportScope(reading, { graph: 'team', view: AROUND, context: true }));
+    const want = readData(reading, 'team');
+    // Dan and Zoe are outside the view, and so is the link from Carol to Dan, the third written
+    const outside = { things: ['dan', 'zoe'], links: [2] };
+    for (const format of DATA_FORMATS) {
+      const text = dataText(data, format, DATA_INFO);
+      assert.deepEqual(readBack(format, text), want, format);
+      assert.deepEqual(readFaded(format, text), outside, format);
     }
   });
 
@@ -453,6 +464,43 @@ describe('an image too large for one sharp PNG', () => {
   test('pages too small to read, or too many of them, are no split at all: the image is refused as too large', () => {
     assert.equal(pngPages(3000, 1700, 100), null);
     assert.equal(pngPages(100_000, 100_000, MOST), null);
+  });
+
+  // proves: big_export
+  test('the pages of a row or column are even: never a whole page and a sliver', () => {
+    const pages = pngPages(2049, 2048, 16_777_216);
+    assert.equal(pages.length, 2);
+    const widest = Math.max(...pages.map((p) => p.width));
+    for (const p of pages) assert.ok(p.width >= widest / 2, `${p.width} is under half of ${widest}`);
+    assert.deepEqual(
+      pages.map((p) => p.width),
+      [1025, 1024],
+    );
+  });
+
+  // proves: big_export, export_png_sharp
+  test('no side of a page is over 32,767 device pixels, the most a canvas takes, however few pixels it has in all', () => {
+    assert.equal(PNG_MOST_SIDE, 32_767);
+    for (const most of [16_777_216, 1_000_000_000]) {
+      const pages = pngPages(100, 50_000, most);
+      assert.ok(pages.length > 1, `split, at most ${most}`);
+      for (const p of pages) {
+        const s = pngSize(p.width, p.height);
+        assert.ok(s.width <= PNG_MOST_SIDE && s.height <= PNG_MOST_SIDE, `${s.width} by ${s.height}`);
+      }
+    }
+    assert.equal(pngPages(100, 16_383, 1_000_000_000).length, 1, '32,766 device pixels tall is one page');
+  });
+
+  // proves: big_export
+  test('at the bounds: 36 pages are made, 37 are not; a page of exactly 200 pixels is read, of 199 not', () => {
+    // 160,000 pixels at twice natural size is a page of 200 by 200
+    assert.equal(pngPages(7200, 200, 160_000).length, PNG_MOST_PAGES);
+    assert.equal(pngPages(7400, 200, 160_000), null);
+    const square = pngPages(1200, 1200, 160_000);
+    assert.equal(square.length, 36);
+    assert.ok(square.every((p) => p.width === PNG_PAGE_LEAST && p.height === PNG_PAGE_LEAST));
+    assert.equal(pngPages(1200, 1200, 159_999), null, 'pages of 199 pixels');
   });
 
   // proves: big_export

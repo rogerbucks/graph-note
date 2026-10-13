@@ -102,6 +102,7 @@ describe('on a phone', () => {
       await until(() => files(env, '.svg').length === 1);
       assert.equal(files(env, '.md').length, 2, 'the note and the companion note');
       assert.match(env.state.notices.at(-1), /saved in the vault/i);
+      assert.match(env.state.notices.at(-1), /this phone cannot share a file of this kind/);
     } finally {
       env.uninstall();
     }

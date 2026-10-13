@@ -9,7 +9,7 @@
 // is split across pages, all of them written or none (big_export).
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { dataOf, readBack } from '../../core/test/export-data-readers.js';
+import { dataOf, readBack, readFaded } from '../../core/test/export-data-readers.js';
 import { readNote } from '../../core/src/drawing.ts';
 import { build, load, until } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
@@ -222,13 +222,13 @@ describe('the data', () => {
         assert.deepEqual(readBack(format, env.state.files.get(path)), tripData(), format);
         assert.match(env.state.notices.at(-1), /Exported/);
       }
-      assert.deepEqual(written(env, '.md'), [PATH], 'no companion note: that is an image’s');
+      assert.deepEqual(written(env, '.md'), [PATH], 'no companion note unless the settings say so');
     } finally {
       env.uninstall();
     }
   });
 
-  test('of a view holds only the view’s things and the links between them, even with its faded context chosen', async () => {
+  test('of a view holds the view; with its faded context chosen, the rest too, marked as outside the view', async () => {
     const env = await loaded(noteOf(DATA, VIEW));
     try {
       for (const scope of ['view', 'context']) {
@@ -238,27 +238,90 @@ describe('the data', () => {
         go();
         await until(() => written(env, '.csv').length === (scope === 'view' ? 1 : 2));
       }
-      const want = tripData((id) => ['home', 'park', 'cafe'].includes(id));
-      for (const path of written(env, '.csv')) {
-        assert.doesNotMatch(path, /with-context/, 'the faded context is a picture’s, never data');
-        assert.deepEqual(readBack('csv', env.state.files.get(path)), want);
-      }
+      const [only, context] = [false, true].map((c) => written(env, '.csv').find((p) => /with-context/.test(p) === c));
+      assert.deepEqual(
+        readBack('csv', env.state.files.get(only)),
+        tripData((id) => id !== 'lake'),
+      );
+      assert.deepEqual(readFaded('csv', env.state.files.get(only)), { things: [], links: [] });
+      assert.deepEqual(readBack('csv', env.state.files.get(context)), tripData());
+      assert.deepEqual(readFaded('csv', env.state.files.get(context)), { things: ['lake'], links: [2] });
     } finally {
       env.uninstall();
     }
   });
 
-  test('of a graph too large to draw is still exported whole, with no layout asked for', async () => {
+  test('takes no theme: the theme is not offered for the data, and is again for an image', async () => {
+    const env = await loaded();
+    try {
+      const { form, choose } = await exporting(env);
+      const theme = form.querySelectorAll('select').find((s) => s.getAttribute('aria-label') === 'Theme');
+      assert.equal(theme.disabled, false);
+      for (const format of ['gql', 'csv', 'graphml']) {
+        choose('Format', format);
+        assert.equal(theme.disabled, true, format);
+      }
+      choose('Format', 'png');
+      assert.equal(theme.disabled, false);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('gets its companion note when the settings say so: the file linked, and how much it holds', async () => {
+    const env = await loaded(noteOf(DATA), { settings: { companionNote: 'on' } });
+    try {
+      const { choose, go } = await exporting(env);
+      choose('Format', 'gql');
+      go();
+      await until(() => written(env, '.md').length === 2);
+      const [file] = written(env, '.gql');
+      const companion = env.state.files.get(file.replace(/\.gql$/, '.md'));
+      assert.match(companion, new RegExp(`^- File: \\[\\[${file.replace(/[.]/g, '\\.')}\\]\\]$`, 'm'));
+      assert.match(companion, /^- Holds: 4 things and 3 links$/m);
+      assert.doesNotMatch(companion, /!\[\[/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('of a graph too large to draw is offered by an Export button of its own, for the data alone', async () => {
     const env = await loaded();
     try {
       Object.assign(env.plugin.layoutLimits, { things: 2 });
       env.plugin.layoutForExport = () => {
         throw new Error('data is never laid out');
       };
-      // a graph over the limits is shown as text, with no bar: the export is asked for as the form asks for it
-      const outcome = await env.plugin.exportGraph({ path: PATH, graph: 'trip', format: 'graphml', theme: 'light' });
-      assert.ok('done' in outcome, JSON.stringify(outcome));
+      const { el, form, choose, go } = await exporting(env);
+      assert.ok(el.querySelector('.graph-note-refusal'), 'shown as text, with the reason');
+      const formats = form
+        .querySelectorAll('select')
+        .find((s) => s.getAttribute('aria-label') === 'Format')
+        .querySelectorAll('option')
+        .map((o) => o.getAttribute('value'));
+      assert.deepEqual(formats, ['gql', 'csv', 'graphml'], 'no image: there is no drawing');
+      choose('Format', 'graphml');
+      go();
+      await until(() => written(env, '.graphml').length === 1);
       assert.deepEqual(readBack('graphml', env.state.files.get(written(env, '.graphml')[0])), tripData());
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('of a view too large to draw is offered the same way, the view and its context still to choose', async () => {
+    const env = await loaded(noteOf(DATA, VIEW));
+    try {
+      Object.assign(env.plugin.layoutLimits, { things: 2 });
+      const { choose, go } = await exporting(env, 1);
+      choose('What to export', 'view');
+      choose('Format', 'csv');
+      go();
+      await until(() => written(env, '.csv').length === 1);
+      assert.deepEqual(
+        readBack('csv', env.state.files.get(written(env, '.csv')[0])),
+        tripData((id) => id !== 'lake'),
+      );
     } finally {
       env.uninstall();
     }
@@ -266,7 +329,9 @@ describe('the data', () => {
 });
 
 describe('a PNG too large for one sharp image', () => {
-  const LIMIT = 180_000;
+  // the trip's image is about 711 by 206: at 250,000 pixels, three pages of about 237 by 206, each over the least a page
+  // may be once the row is evened out
+  const LIMIT = 250_000;
   const two = (n) => String(n).padStart(2, '0');
   const today = () => {
     const d = new Date();
@@ -314,6 +379,54 @@ describe('a PNG too large for one sharp image', () => {
       await until(() => /disk is full/.test(env.state.notices.at(-1) ?? ''));
       assert.deepEqual(written(env, '.png'), []);
       assert.deepEqual(written(env, '.part'), []);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a page that cannot be taken away again is named, and the others are still taken away', async () => {
+    const { env, sizes, go } = await paged();
+    try {
+      const trash = env.app.fileManager.trashFile;
+      env.app.fileManager.trashFile = (f) =>
+        /-page-1-of-/.test(f.path) ? Promise.reject(new Error('the file is locked')) : trash(f);
+      env.state.failWrite = `Some-note-trip-${today()}-page-2-`;
+      go();
+      await until(() => /disk is full/.test(env.state.notices.at(-1) ?? ''));
+      const first = `Some-note-trip-${today()}-page-1-of-${sizes.length}.png`;
+      assert.deepEqual(written(env, '.png'), [first], 'page 1 could not be taken away');
+      assert.deepEqual(written(env, '.part'), [], 'page 2’s temporary file still was');
+      assert.match(env.state.notices.at(-1), new RegExp(first.replace(/[.]/g, '\\.')));
+      assert.match(env.state.notices.at(-1), /delete it/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('on a phone, every page is offered to the share sheet at once, by a tap of its own, and none saved', async () => {
+    const env = await load({ files: { [PATH]: noteOf(DATA) }, mobile: true });
+    try {
+      const shared = [];
+      env.doc.defaultView.navigator = { canShare: () => true, share: async (d) => void shared.push(...d.files) };
+      env.plugin.pngPixelLimit = LIMIT;
+      let drawn = 0;
+      env.plugin.rasterise = async () => (drawn++, new Uint8Array([137, 80, 78, 71]));
+      const { form, choose, go } = await exporting(env);
+      choose('Format', 'png');
+      go();
+      await until(() => !!labelled(form, 'Share'));
+      assert.match(form.textContent, new RegExp(`on ${drawn} pages is ready`));
+      labelled(form, 'Share').click();
+      await until(() => shared.length === drawn);
+      assert.ok(drawn > 1);
+      assert.deepEqual(
+        shared.map((f) => [f.name, f.type]),
+        Array.from({ length: drawn }, (_, i) => [
+          `Some-note-trip-${today()}-page-${i + 1}-of-${drawn}.png`,
+          'image/png',
+        ]),
+      );
+      assert.deepEqual(written(env, '.png'), []);
     } finally {
       env.uninstall();
     }

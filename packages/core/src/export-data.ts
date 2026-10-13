@@ -23,18 +23,17 @@ export const isDataFormat = (format: string): format is DataFormat =>
 
 /**
  * The data `scope` holds, from the note as read: the things it draws, in the order written, and the links written
- * between them, in theirs, with every kind and property. A view holds its things and its links; with its faded context
- * asked for, still only those: the faded rest is a picture's aid, never data.
+ * between them, in theirs, with every kind and property. A view holds its things and its links, and nothing outside it
+ * (view_export_stays_view) unless its faded context is asked for: then the whole graph, with what is outside the view
+ * listed in `faded`, for each format to mark.
  */
 export function exportedData(reading: NoteReading, scope: ExportScope): ExportedData {
   const g: Graph | undefined = reading.world[scope.graph];
   const view = scope.view === undefined ? {} : { view: scope.view };
   if (!g || scope.empty) return { graph: scope.graph, ...view, things: [], links: [] };
-  const fadedThings = new Set(scope.faded.things),
-    fadedLinks = new Set(scope.faded.links);
   const things: DataThing[] = scope.drawing.boxes.flatMap(({ key }): DataThing[] => {
     const node = g.nodes.get(key);
-    return node && !fadedThings.has(key) ? [[key, [...node[0]], { ...node[1] }]] : [];
+    return node ? [[key, [...node[0]], { ...node[1] }]] : [];
   });
   // the links the whole drawing holds are the graph's links between things it draws, in order (drawing.ts); a view's
   // are some of them, by their number there
@@ -44,9 +43,17 @@ export function exportedData(reading: NoteReading, scope: ExportScope): Exported
   const numbers = scope.linksAt ?? written.map((_, i) => i);
   const links: DataLink[] = numbers.flatMap((i): DataLink[] => {
     const e = written[i];
-    return e && !fadedLinks.has(i) ? [[e[0], e[1], e[2], { ...e[3] }]] : [];
+    return e ? [[e[0], e[1], e[2], { ...e[3] }]] : [];
   });
-  return { graph: scope.graph, ...view, things, links };
+  if (!scope.context) return { graph: scope.graph, ...view, things, links };
+  // the context holds every link written, so a link's number in the scope's faded list is its place here; the numbers
+  // past them are the drawing's guesses, never data
+  const kept = new Set(things.map(([id]) => id));
+  const faded = {
+    things: scope.faded.things.filter((id) => kept.has(id)),
+    links: scope.faded.links.filter((i) => i < links.length),
+  };
+  return { graph: scope.graph, ...view, things, links, faded };
 }
 
 /** The data written in `format`: a GQL block, a CSV table or a GraphML document. Throws, saying why, where it cannot be. */

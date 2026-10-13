@@ -2,7 +2,8 @@
 // it came from, then each thing and each link on a line of its own, in the document profile, so the graph-spec reader
 // reads it back into the very things and links exported. A thing is written under its id where its id is a name the
 // profile reads as one; otherwise, as for an id with a space or a word the profile keeps, under a name of its own, with
-// its id written in full.
+// its id written in full. A view's faded context, when asked for, is marked by a `//@ faded:` line above each of its
+// things and links.
 import gs from '@graph-note/graph-spec';
 import type { GTime, Value } from '@graph-note/graph-spec';
 import { saidDate } from './export-frame.ts';
@@ -63,5 +64,15 @@ export function gqlBlock(data: ExportedData, info: DataInfo): string {
   const what = data.view === undefined ? `graph ${data.graph}` : `view ${data.view} of graph ${data.graph}`;
   const count = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
   const said = `// Exported from ${oneLine(info.note)}, ${oneLine(what)}, ${saidDate(info.date)}: ${count(data.things.length, 'thing')} and ${count(data.links.length, 'link')}.`;
-  return [`// graph: ${data.graph}`, said, [...things, ...links].join(',\n'), ''].join('\n');
+  // a view's faded context: each thing and link outside the view owns a //@ line saying so (§27), which is a comment to
+  // the reader, so the graph read back is the same, and a tag to the library's ownedComments, so it is told apart
+  const fadedThings = new Set(data.faded?.things ?? []),
+    fadedLinks = new Set(data.faded?.links ?? []);
+  const tag = `//@ faded: outside view ${oneLine(data.view ?? '')}`;
+  const outside = [...data.things.map(([id]) => fadedThings.has(id)), ...data.links.map((_, i) => fadedLinks.has(i))];
+  const code = [...things, ...links].map((line, i, all) => {
+    const written = i < all.length - 1 ? `${line},` : line;
+    return outside[i] ? `${tag}\n${written}` : written;
+  });
+  return [`// graph: ${data.graph}`, said, ...code, ''].join('\n');
 }
