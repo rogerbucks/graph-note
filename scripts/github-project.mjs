@@ -71,7 +71,7 @@ function originRepo() {
   const result = spawnSync('git', ['-C', ROOT, 'remote', 'get-url', 'origin'], { encoding: 'utf8' });
   if (result.error || result.status !== 0)
     throw new Error(`git could not read the origin remote: ${result.error?.message ?? String(result.stderr).trim()}`);
-  return repoOfRemote(result.stdout);
+  return repoOfRemote(result.stdout).repo;
 }
 
 /**

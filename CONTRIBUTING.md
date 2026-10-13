@@ -221,7 +221,10 @@ These test behaviour across modules, or the repository itself, so they are named
 - **It goes only where this checkout's origin says.** `gh` runs in the repository folder with `GH_REPO` and `GH_HOST`
   removed, must point at the origin's repository or the run stops, and names the repository (`--repo`) or the owner
   (`--owner`) on every call. Calls that change something are paced about a second apart and tried once more after a
-  secondary rate limit; a list that comes back as long as its cap is refused.
+  secondary rate limit; a list that comes back as long as its cap is refused. An origin on any host but github.com is
+  refused, and an error never repeats a login or token from the remote.
+- **Always apply as the same GitHub login.** Issues are adopted only when the signed-in login wrote them, so if the login
+  changes between runs, earlier issues are not adopted and the script would create duplicates.
 - **The project is dedicated to the script.** Changing the options of Slice or Workstream replaces them in GitHub, which
   clears the value on every item, and the script sets the values again on the items it manages. A value on an item the
   script does not manage would be lost, so keep nothing else in this project.

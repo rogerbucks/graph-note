@@ -90,16 +90,58 @@ describe('the repository gh points at', () => {
     for (const url of [
       'https://github.com/rogerbucks/graph-note.git',
       'https://github.com/rogerbucks/graph-note',
+      'https://GitHub.com/rogerbucks/graph-note.git\n',
+      'https://github.com:443/rogerbucks/graph-note.git',
+    ])
+      assert.deepEqual(repoOfRemote(url), { host: 'github.com', repo: 'rogerbucks/graph-note' }, url);
+  });
+
+  test('gives the host too, and takes another only when one is handed in', () => {
+    const only = { hosts: ['example.com'] };
+    for (const url of [
       'https://example.com/rogerbucks/graph-note.git\n',
       'git@example.com:rogerbucks/graph-note.git',
       'ssh://git@example.com/rogerbucks/graph-note.git',
     ])
-      assert.equal(repoOfRemote(url), 'rogerbucks/graph-note', url);
+      assert.deepEqual(repoOfRemote(url, only), { host: 'example.com', repo: 'rogerbucks/graph-note' }, url);
+  });
+
+  test('is refused when the host is not github.com, naming the host', () => {
+    for (const url of [
+      'https://example.com/rogerbucks/graph-note.git',
+      'git@example.com:rogerbucks/graph-note.git',
+      'ssh://git@example.com/rogerbucks/graph-note.git',
+      'https://github.com.example.net/rogerbucks/graph-note.git',
+    ])
+      assert.throws(() => repoOfRemote(url), /host.*not github\.com/s, url);
+    assert.throws(() => repoOfRemote('https://github.com/rogerbucks/graph-note', { hosts: ['example.com'] }), /host/);
   });
 
   test('is not guessed from a remote that names no repository', () => {
     for (const url of ['', 'not a url', 'https://github.com/only-owner', '/local/path/repo.git'])
       assert.throws(() => repoOfRemote(url), /origin/, url);
+  });
+
+  test('is never echoed with its login or token: userinfo shows as ***', () => {
+    const userinfo = 'zebra-quokka-17';
+    for (const url of [
+      `https://someone:${userinfo}@example.com/rogerbucks/graph-note.git`,
+      `https://${userinfo}@example.com/rogerbucks/graph-note.git`,
+      `ssh://git:${userinfo}@example.com/only-owner`,
+      `https://someone:${userinfo}@example.com/`,
+      `bad ${userinfo}@example.com`,
+    ]) {
+      let message = '';
+      try {
+        repoOfRemote(url);
+      } catch (e) {
+        message = e.message;
+      }
+      assert.ok(message, `refused: ${url}`);
+      assert.ok(!message.includes(userinfo), message);
+      assert.match(message, /\*\*\*@/, message);
+    }
+    assert.throws(() => repoOfRemote(`https://u:${userinfo}@example.com/o/n.git`), /https:\/\/\*\*\*@example\.com/);
   });
 });
 
