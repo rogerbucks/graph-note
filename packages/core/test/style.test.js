@@ -299,7 +299,10 @@ describe('the style graph is checked like any graph', () => {
     assert.deepEqual(
       problems.map((p) => [p.line, p.message]),
       [
-        [2, 'Colour is not a kind of thing a style graph holds: Nudge, Show, Look, ViewStyle, Shown or Arrows'],
+        [
+          2,
+          'Colour is not a kind of thing a style graph holds: Nudge, Show, Look, ViewStyle, Shown, Arrows or Diagram',
+        ],
         [5, 'a link means nothing in a style graph'],
         [6, 'zoom must be a number'],
       ],

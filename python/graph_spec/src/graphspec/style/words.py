@@ -1,5 +1,6 @@
 """The words a style graph may use for what graph_svg draws — its nudges (editor spec §6,
-four_nudge_words), the properties it shows inline (§14) and where it hides arrowheads (§15) — the
+four_nudge_words), the properties it shows inline (§14), where it hides arrowheads and the diagram
+type it chooses (§15) — the
 keys each kind of style thing may have, and how a problem with one is said: the core's
 style-graph.ts and style-words.ts, as far as these need them. The directions and sizes are the
 locked style's, from graph_svg.style.json, the one file both renderers read."""
@@ -23,8 +24,11 @@ NUDGE_WORDS = ("beside", "before", "group", "direction")
 INLINE = ("on", "off")
 # Whether links are drawn with their arrowheads (§15): shown, unless the style graph hides them.
 ARROWHEADS = ("show", "hide")
+# The diagram types (§15, diagram_type_set): what fits each, and how each is laid out, is in
+# graphspec/style/diagram_types.py.
+DIAGRAM_TYPES = ("network", "tree", "flow", "radial", "lanes", "timeline", "table")
 # The kinds of thing a style graph holds, by label.
-STYLE_KINDS = ("Nudge", "Show", "Look", "ViewStyle", "Shown", "Arrows")
+STYLE_KINDS = ("Nudge", "Show", "Look", "ViewStyle", "Shown", "Arrows", "Diagram")
 # The keys each kind of style thing may have (§2, style_words_checked); a thing's id is its name.
 STYLE_KEYS = {
     "Nudge": ("word", "thing", "other", "group", "direction"),
@@ -45,6 +49,7 @@ STYLE_KEYS = {
     "ViewStyle": ("view", "outside"),
     "Shown": ("view", "zoom", "x", "y", "frame", "selected"),
     "Arrows": ("arrowheads", "view", "type"),
+    "Diagram": ("type", "view", "relationship"),
 }
 
 

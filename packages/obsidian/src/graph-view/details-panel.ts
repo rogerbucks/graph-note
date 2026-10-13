@@ -21,7 +21,8 @@ import type { ViewOptions } from './view-options';
 /** The details of one drawing, shown in its card below the drawing, or in view mode as the sheet. */
 export class DetailsPanel {
   private readonly el: HTMLElement;
-  private readonly svg: SVGSVGElement;
+  /** The drawing: Graphviz's SVG, or the table a graph drawn as one is (§15). */
+  private readonly svg: Element;
   private readonly viewport: HTMLElement;
   private readonly o: ViewOptions;
   private readonly actions: (ThingActions & NavActions) | undefined;
@@ -39,13 +40,7 @@ export class DetailsPanel {
   }
 
   /** For the details element of a card, its drawing, the viewport the focus goes back to, the card's options and what a thing's details offer. */
-  constructor(
-    el: HTMLElement,
-    svg: SVGSVGElement,
-    viewport: HTMLElement,
-    o: ViewOptions,
-    actions?: ThingActions & NavActions,
-  ) {
+  constructor(el: HTMLElement, svg: Element, viewport: HTMLElement, o: ViewOptions, actions?: ThingActions & NavActions) {
     this.el = el;
     this.svg = svg;
     this.viewport = viewport;
@@ -106,7 +101,7 @@ export class DetailsPanel {
    * only that one.
    */
   private select(key: string | null, link: number | null = null, estimate: number | null = null): void {
-    for (const g of Array.from(this.svg.querySelectorAll('g.node, g.edge'))) {
+    for (const g of Array.from(this.svg.querySelectorAll('g.node, g.edge, tr[data-key], tr[data-link]'))) {
       const on =
         (key !== null && g.getAttribute('data-key') === key) ||
         (link !== null && g.getAttribute('data-link') === String(link)) ||

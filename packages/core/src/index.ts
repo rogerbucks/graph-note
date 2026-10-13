@@ -46,8 +46,24 @@ export { arrowsShown } from './arrows.ts';
 export { INLINE_ROWS } from './inline-properties.ts';
 export type { InlineProperties, PropertyRow } from './inline-properties.ts';
 export { styleEdit } from './style-edit.ts';
+export {
+  DIAGRAM_TYPES,
+  LARGE_GRAPH,
+  diagramFor,
+  diagramOffer,
+  nearestType,
+  shapeOf,
+  suggestType,
+  typeFits,
+} from './types.ts';
+export type { DiagramChoice, DiagramOffer, DiagramType, GraphShape, Suggestion, TypeFit } from './types.ts';
+export { scrollsOneWay, tableOf, wayIn } from './types-table.ts';
+export type { DiagramTable } from './types-table.ts';
+export type { DiagramPlan } from './note-reading.ts';
+export type { Diagram } from './style-graph.ts';
 export type {
   ArrowsWrite,
+  DiagramWrite,
   LookWrite,
   NudgeWrite,
   ShowWrite,
@@ -70,6 +86,7 @@ export type {
   Told,
 } from './layout-worker.ts';
 export { Zoom, MIN_SCALE, MAX_SCALE, STEP } from './zoom.ts';
+export { AcrossZoom } from './zoom-across.ts';
 export type { Mode, Place, Size, View, ZoomEvent } from './zoom.ts';
 export { MOVE_MS, READABLE_SCALE, Trail, coverOf, glideAt, linkGroups, pointerTo, sheetLimit } from './details-nav.ts';
 export type { LinkGroup, Pointing, TrailStep } from './details-nav.ts';

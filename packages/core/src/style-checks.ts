@@ -1,4 +1,5 @@
-// Checking each thing of a style graph (editor spec §2, style_graph_checked; §6; §7; §14; §15): its kind, its words, its values and
+// Checking each thing of a style graph (editor spec §2, style_graph_checked; §6; §7; §14; §15, the arrowheads and the
+// diagram type): its kind, its words, its values and
 // every name it uses, against the graph it styles. What is sound is kept; each fault is a problem on its line with its
 // fix, and the part at fault — or the whole thing, when nothing of it can be used — is left out of the style.
 import { nearest } from './estimates.ts';
@@ -6,6 +7,7 @@ import { STYLE } from './layout.ts';
 import type { Problem } from './note-reading.ts';
 import {
   ARROWHEADS,
+  DIAGRAM_TYPES,
   FORMATS,
   INLINE,
   LINES,
@@ -17,7 +19,7 @@ import {
   styleProblem,
   wordFix,
 } from './style-graph.ts';
-import type { Arrows, Look, Nudge, Show, Shown, StyleAt, StyleKind, ViewStyle } from './style-graph.ts';
+import type { Arrows, Diagram, Look, Nudge, Show, Shown, StyleAt, StyleKind, ViewStyle } from './style-graph.ts';
 import { readFrame, unknownKeys } from './style-words.ts';
 
 /** One thing of a style graph as read: its kinds, its properties, where it is, and where each property's text is. */
@@ -52,6 +54,7 @@ export interface Checked {
   views: (ViewStyle & { view: string; at: StyleAt })[];
   shown: (Shown & { view: string; at: StyleAt })[];
   arrows: Arrows[];
+  diagrams: Diagram[];
   problems: Problem[];
 }
 
@@ -204,6 +207,34 @@ function arrowsOf(raw: RawThing, names: StyledNames, out: Problem[]): Arrows | n
   return { arrowheads, ...(view === undefined ? {} : { view }), ...(type === undefined ? {} : { type }), at: raw.at };
 }
 
+/** What a Diagram's relationship is for (§15): the branches of a tree, and nothing else. */
+export const TREE_ONLY = 'a relationship is chosen only for a tree';
+
+/**
+ * The diagram type chosen, checked (§15, type_remembered): one of the types, in the whole graph or a view, whose name is
+ * the user's own; for a tree, a relationship type the graph has, which no other type takes.
+ */
+function diagramOf(raw: RawThing, names: StyledNames, out: Problem[]): Diagram | null {
+  const r = reader(raw, names, out),
+    before = out.length;
+  if (raw.props.type === undefined) {
+    r.missing('a Diagram names its type', `add type: ${orList(DIAGRAM_TYPES.map((w) => `'${w}'`))}`);
+    return null;
+  }
+  const type = r.word('type', DIAGRAM_TYPES, '$ is not a diagram type');
+  const relationship = r.name('relationship', names.types, 'a relationship type'),
+    view = r.text('view');
+  if (type && relationship !== undefined && type !== 'tree')
+    r.report(TREE_ONLY, "remove relationship, or make it type: 'tree'");
+  if (!type || out.length !== before) return null;
+  return {
+    type,
+    ...(view === undefined ? {} : { view }),
+    ...(relationship === undefined ? {} : { relationship }),
+    at: raw.at,
+  };
+}
+
 /** A look, checked: one view or path, one thing, kind or link, all in the graph, and at least one change that is sound. */
 function lookOf(raw: RawThing, names: StyledNames, out: Problem[]): Look | null {
   const r = reader(raw, names, out),
@@ -309,7 +340,7 @@ function shownOf(raw: RawThing, names: StyledNames, out: Problem[]): Checked['sh
 
 /** Each thing of a style graph checked on its own, in the order written: what it gives, and the problems found. */
 export function checkThings(raws: RawThing[], names: StyledNames): Checked {
-  const c: Checked = { nudges: [], shows: [], looks: [], views: [], shown: [], arrows: [], problems: [] };
+  const c: Checked = { nudges: [], shows: [], looks: [], views: [], shown: [], arrows: [], diagrams: [], problems: [] };
   for (const raw of raws) {
     const kinds = raw.labels.filter((l) => (STYLE_KINDS as readonly string[]).includes(l));
     if (kinds.length !== 1 || raw.labels.length !== 1) {
@@ -338,6 +369,7 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
     else if (kinds[0] === 'Look') push(c.looks, kept(lookOf(thing, names, p)));
     else if (kinds[0] === 'ViewStyle') push(c.views, kept(viewStyleOf(thing, names, p)));
     else if (kinds[0] === 'Arrows') push(c.arrows, kept(arrowsOf(thing, names, p)));
+    else if (kinds[0] === 'Diagram') push(c.diagrams, kept(diagramOf(thing, names, p)));
     else push(c.shown, kept(shownOf(thing, names, p)));
   }
   return c;

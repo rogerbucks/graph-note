@@ -1,7 +1,8 @@
 """The things of a style graph checked against each other (editor spec §6, nudge_problems; §14;
 §15): nudges that conflict — two directions, beside and before on one pair, a thing in two groups,
 a loop of befores — a property switched both on and off for one kind, thing or type in one view,
-and arrowheads both hidden and shown for the same links in one view. Each is a problem with a fix;
+arrowheads both hidden and shown for the same links in one view, and two diagram types for the
+whole graph or one view. Each is a problem with a fix;
 the first written is kept and the later left out, so what is kept never conflicts. The core's
 style-conflicts.ts, function for function, as far as what graph_svg draws goes."""
 
@@ -136,3 +137,24 @@ def settle_arrows(arrows: list[dict], graph: str) -> tuple[list[dict], list[dict
         )
 
     return _settle_choices(arrows, place, lambda a: a["arrowheads"], said, graph)
+
+
+def _type_said(d):
+    """A diagram type as a sentence says it: its type, and for a tree the relationship it
+    follows."""
+    along = "" if d.get("relationship") is None else f" along {d['relationship']}"
+    return f"{d['type']}{along}"
+
+
+def settle_diagrams(diagrams: list[dict], graph: str) -> tuple[list[dict], list[dict]]:
+    """The diagram types chosen, one for the whole graph and one for each view (§15); and a
+    problem for each one chosen otherwise for the same place."""
+
+    def said(was, d):
+        where = "the whole graph" if d.get("view") is None else f"view {d['view']}"
+        return (
+            f"the diagram type of {where} is set to both {_type_said(was)} "
+            f"(line {was['at']['line']}) and {_type_said(d)}"
+        )
+
+    return _settle_choices(diagrams, lambda d: d.get("view") or "", _type_said, said, graph)

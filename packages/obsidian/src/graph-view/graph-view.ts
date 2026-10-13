@@ -2,8 +2,8 @@
 // zooms and pans by button, gesture and key (the core's Zoom decides; this passes the events in and shows the view), opens
 // full screen, and shows a box's details when it is tapped or opened from the keyboard. This module ties together the
 // parts in its folder: the bar, the drawing, taps, the details, and where the card is placed.
-import { MarkdownRenderChild, setIcon } from 'obsidian';
-import { Zoom } from '@graph-note/core';
+import { MarkdownRenderChild, Platform, setIcon } from 'obsidian';
+import { AcrossZoom, Zoom, scrollsOneWay } from '@graph-note/core';
 import type { View, ZoomEvent } from '@graph-note/core';
 import { renderCode } from '../code';
 import { readOnlyHere, whenPlaced } from './placement';
@@ -24,14 +24,23 @@ import type { Target } from './taps';
 import { DetailsPanel } from './details-panel';
 import { Selection } from './selection';
 import { onPointer } from './selection-pointer';
+import { renderTypeStrip } from './type-strip';
+import { renderTable } from './table-view';
 import type { ViewOptions } from './view-options';
+
+/** How much of the window's height a drawing scrolled across may take, at most (§15, wide_types_phone). */
+const ACROSS_HEIGHT = 0.6;
 
 /** A drawn graph with its bar, zoom, full screen, details and, in edit mode, the inspector. */
 export class GraphView extends MarkdownRenderChild {
   private readonly o: ViewOptions;
   private zoom!: Zoom;
   private viewport!: HTMLElement;
-  private svg!: SVGSVGElement;
+  /** The drawing: Graphviz's SVG, or, for a graph drawn as a table (§15), the table. */
+  private svg: SVGSVGElement | null = null;
+  private table: HTMLElement | null = null;
+  /** Whether the drawing scrolls across only: a wide tree, flow or timeline on a phone (§15). */
+  private across = false;
   private detailsEl!: HTMLElement;
   private details!: DetailsPanel;
   private walk: Walk | null = null;
@@ -107,7 +116,7 @@ export class GraphView extends MarkdownRenderChild {
 
     list = renderProblems(root, problems, true, this.o.completeness);
     if (this.o.parked) listParked(list, this.o.parked, (k) => this.boxes().find((b) => b.key === k)?.text ?? k);
-    this.walk = new Walk(root, this.o, () => this.svg); // walked paths: Play, and Record while edited (§7)
+    this.walk = new Walk(root, this.o, () => this.svg ?? undefined); // walked paths: Play, and Record while edited (§7)
     if (this.o.writeView) this.maker = new ViewMaker(root, this.o); // a view made by tapping, while edited (§7)
     if (this.o.editing) this.adder = new AddThing(root, this.o); // a thing added from its text, while edited (§5)
     const view = this.o.view;
@@ -116,6 +125,8 @@ export class GraphView extends MarkdownRenderChild {
       : [];
     // a proposal laid over the graph (§17): who proposed it and the changes to accept or reject, which reading view takes away
     if (this.o.proposal) writes.push(...renderProposalStrip(root, this.o.proposal));
+    // how it is drawn, and the diagram types to choose from (§15)
+    if (this.o.diagram) writes.push(...renderTypeStrip(root, this.o.diagram));
     this.viewport = root.createDiv({
       cls: 'graph-note-viewport',
       attr: {
@@ -124,20 +135,36 @@ export class GraphView extends MarkdownRenderChild {
         'aria-label': `Drawing of graph ${this.o.graph}: ${plural(this.o.drawn.width ? this.boxes().length : 0, 'thing')}. Plus, minus and zero zoom; Escape leaves full screen.`,
       },
     });
-    this.svg = insertSvg(this.viewport, this.o.drawn, this.drawing());
-    if (view) markView(this.svg, view); // a view: what is outside it faded, its looks drawn (§7)
-    if (this.o.proposal) markProposal(this.svg, this.o.proposal.shown.marks); // a proposal: what it adds, changes, removes (§17)
+    // a graph drawn as a table is the plugin's own table; any other, the SVG Graphviz drew (§15)
+    const table = this.o.diagram?.table;
+    if (table) this.table = renderTable(this.viewport, table);
+    else this.svg = insertSvg(this.viewport, this.o.drawn, this.drawing());
+    if (view && this.svg) markView(this.svg, view); // a view: what is outside it faded, its looks drawn (§7)
+    if (this.o.proposal && this.svg) markProposal(this.svg, this.o.proposal.shown.marks); // a proposal: what it adds, changes, removes (§17)
     // the drawing as sentences, for screen readers (spec §11)
     const d = this.drawing();
     if (d) describeDrawing(root, this.viewport, d);
     this.detailsEl = root.createDiv({ cls: 'graph-note-details', attr: { role: 'region', 'aria-live': 'polite' } });
     this.detailsEl.hidden = true;
-    this.details = new DetailsPanel(this.detailsEl, this.svg, this.viewport, this.o, this.sel.actions());
+    this.details = new DetailsPanel(
+      this.detailsEl,
+      this.svg ?? this.table ?? this.viewport,
+      this.viewport,
+      this.o,
+      this.sel.actions(),
+    );
     // closing the details, by button, Escape or a tap on empty space, clears the selection and the focus with them (§25)
     this.details.onClosed = () => this.sel.closed();
     const slot = mode === 'note' ? root.createDiv({ cls: 'graph-note-edit-slot' }) : null;
 
-    this.zoom = new Zoom({ width: this.o.drawn.width, height: this.o.drawn.height }, this.viewportSize(), mode);
+    // on a phone, a wide tree, flow or timeline is fitted to its height and scrolled across only (wide_types_phone)
+    const room = Math.min(this.viewport.clientWidth || Infinity, activeWindow.innerWidth || Infinity);
+    const type = this.o.diagram?.choice.drawn ?? 'network';
+    this.across = mode === 'note' && scrollsOneWay(type, Platform.isPhone, this.o.drawn.width, room);
+    const size = { width: this.o.drawn.width, height: this.o.drawn.height };
+    this.zoom = this.across
+      ? new AcrossZoom(size, this.viewportSize(), mode)
+      : new Zoom(size, this.viewportSize(), mode);
     this.zoom.onChange = (v) => this.apply(v);
     this.zoom.onExit = () => this.o.onClose?.();
     // a view saved as shown is shown so again (§7)
@@ -217,16 +244,21 @@ export class GraphView extends MarkdownRenderChild {
     return this.o.reading.graphs.get(this.o.graph)?.boxes ?? [];
   }
 
-  /** The viewport's size. In a note it is as tall as the drawing fitted to its width, as a note sizes a drawing. */
+  /**
+   * The viewport's size. In a note it is as tall as the drawing fitted to its width, as a note sizes a drawing; scrolled
+   * across, as tall as the drawing, up to a part of the window.
+   */
   private viewportSize() {
     const width = this.viewport.clientWidth || this.o.drawn.width;
     if (this.o.mode !== 'note') return { width, height: this.viewport.clientHeight || this.o.drawn.height };
+    if (this.across) return { width, height: Math.min(this.o.drawn.height, activeWindow.innerHeight * ACROSS_HEIGHT) };
     return { width, height: this.o.drawn.height * Math.min(1, width / this.o.drawn.width) };
   }
 
   private apply(v: View): void {
-    this.svg.setAttribute('width', String(v.width));
-    this.svg.setAttribute('height', String(v.height));
+    this.svg?.setAttribute('width', String(v.width));
+    this.svg?.setAttribute('height', String(v.height));
+    this.table?.setCssProps({ '--graph-note-scale': String(v.scale) });
     this.viewport.setCssProps({
       '--graph-note-x': `${v.x}px`,
       '--graph-note-y': `${v.y}px`,
@@ -286,7 +318,7 @@ export class GraphView extends MarkdownRenderChild {
       const target = targetAt(e.target),
         p = this.point(e),
         near = this.near(p);
-      const first = near[0] ? targetOf(this.svg, near[0]) : null;
+      const first = near[0] && this.svg ? targetOf(this.svg, near[0]) : null;
       const pointer = e.pointerType === 'touch' || e.pointerType === 'pen' ? e.pointerType : 'mouse';
       this.sel.pressed();
       if (target ?? first)
@@ -312,7 +344,7 @@ export class GraphView extends MarkdownRenderChild {
       if (!down || down.id !== e.pointerId || Math.hypot(p.x - down.x, p.y - down.y) >= 10) return;
       // on or near several things, a tap in the same place again chooses the next of them (§3)
       const chosen = this.taps.choose(down, this.near(down));
-      this.open((chosen ? targetOf(this.svg, chosen) : null) ?? down.target, e.shiftKey);
+      this.open((chosen && this.svg ? targetOf(this.svg, chosen) : null) ?? down.target, e.shiftKey);
       // on touch there is no hover: the tap that selects gives the highlight (§25)
       this.sel.touched(down.touch);
     });

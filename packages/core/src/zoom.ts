@@ -114,9 +114,9 @@ export class Zoom {
   /** The strip at the foot of the viewport kept clear, in pixels: what a sheet over it covers (§25). */
   private clear = 0;
 
-  private readonly content: Size;
-  private viewport: Size;
-  private mode: Mode;
+  protected readonly content: Size;
+  protected viewport: Size;
+  protected mode: Mode;
 
   constructor(content: Size, viewport: Size, mode: Mode) {
     this.content = content;
@@ -155,7 +155,7 @@ export class Zoom {
   }
 
   /** The CSS touch-action the host sets: the browser scrolls the note with one finger unless the drawing is zoomed in. */
-  touchAction(): 'pan-x pan-y' | 'none' {
+  touchAction(): 'pan-x pan-y' | 'pan-y' | 'none' {
     return this.zoomedIn() ? 'none' : 'pan-x pan-y';
   }
 

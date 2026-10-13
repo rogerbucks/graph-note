@@ -226,9 +226,9 @@ export default class GraphNotePlugin extends Plugin {
    */
   layout(drawing: GraphDrawing, owner?: object): Promise<Drawn | Refusal | null> {
     // the direction set on the settings page, one the locked style allows (spec §21); else the best fit
-    // a direction the graph's own style sets (§6) comes before the settings' default
+    // a direction the graph's own style sets (§6), or its diagram type's (§15), comes before the settings' default
     const { direction } = this.settings;
-    const keep = direction === 'best' || !!drawing.direction;
+    const keep = direction === 'best' || !!drawing.direction || !!drawing.diagram;
     return this.layoutsOf()?.draw(keep ? drawing : { ...drawing, direction }, owner) ?? Promise.resolve(null);
   }
 

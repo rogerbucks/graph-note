@@ -1,5 +1,6 @@
 """Each thing of a style graph checked on its own (editor spec §2, style_graph_checked; §6; §14;
-§15): its kind, the keys it writes, and for a nudge, a Show or an Arrows its words, its values and
+§15): its kind, the keys it writes, and for a nudge, a Show, an Arrows or a Diagram its words, its
+values and
 every name it uses, against the graph it styles. The core's style-checks.ts, function for function,
 as far as what graph_svg draws goes: what is sound is kept, and each fault is a problem on its line
 with its fix, the same words as the core's.
@@ -14,6 +15,7 @@ from typing import Any
 from graphspec.style.near_names import nearest
 from graphspec.style.words import (
     ARROWHEADS,
+    DIAGRAM_TYPES,
     DIRECTIONS,
     INLINE,
     NUDGE_WORDS,
@@ -29,6 +31,8 @@ FOUR = "a nudge must be one of four words: beside, before, group or direction"
 KINDS = f"{', '.join(STYLE_KINDS[:-1])} or {STYLE_KINDS[-1]}"
 # What a Show is for: one kind, thing or relationship type (§14).
 SHOW_FOR = "a Show is for one kind, thing or relationship type"
+# What a Diagram's relationship is for (§15): the branches of a tree, and nothing else.
+TREE_ONLY = "a relationship is chosen only for a tree"
 
 
 class _Reader:
@@ -184,14 +188,54 @@ def _arrows_of(raw, names, out):
     }
 
 
+def _diagram_of(raw, names, out):
+    """The diagram type chosen, checked (§15, type_remembered): one of the types, in the whole
+    graph or a view, whose name is the user's own; for a tree, a relationship type the graph has,
+    which no other type takes."""
+    r, before, props = _Reader(raw, names, out), len(out), raw["props"]
+    if "type" not in props:
+        add = "add type: " + or_list([f"'{w}'" for w in DIAGRAM_TYPES])
+        r.missing("a Diagram names its type", add)
+        return None
+    typ = r.word("type", DIAGRAM_TYPES, "$ is not a diagram type")
+    relationship = r.name("relationship", names["types"], "a relationship type")
+    view = r.text("view")
+    if typ and relationship is not None and typ != "tree":
+        r.report(TREE_ONLY, "remove relationship, or make it type: 'tree'")
+    if not typ or len(out) != before:
+        return None
+    return {
+        "type": typ,
+        **({} if view is None else {"view": view}),
+        **({} if relationship is None else {"relationship": relationship}),
+        "at": raw["at"],
+    }
+
+
+# The kinds a style graph checks fully here, each with its check and where what it gives goes.
+_CHECKS = {
+    "Nudge": (_nudge_of, "nudges"),
+    "Show": (_show_of, "shows"),
+    "Arrows": (_arrows_of, "arrows"),
+    "Diagram": (_diagram_of, "diagrams"),
+}
+
+
 def check_things(raws: list[dict], names: dict) -> dict[str, list[dict]]:
-    """Each thing of a style graph checked on its own, in the order written: the nudges, Shows and
-    Arrows that are sound, and the problems found ({nudges, shows, arrows, problems}). A raw thing
+    """Each thing of a style graph checked on its own, in the order written: the nudges, Shows,
+    Arrows and Diagrams that are sound, and the problems found ({nudges, shows, arrows, diagrams,
+    problems}). A raw thing
     is {labels (in the order written), props, at: {block, line, id}}; names is {graph, things,
     kinds, types: names in the graph styled, properties(of): the property names of a kind's things,
     a thing or a type's links}. A thing that writes a key its kind does not know is reported on
     the key and left out, and what it lacks is not yet said: it may be that key, misspelt."""
-    c: dict[str, list[dict]] = {"nudges": [], "shows": [], "arrows": [], "problems": []}
+    c: dict[str, list[dict]] = {
+        "nudges": [],
+        "shows": [],
+        "arrows": [],
+        "diagrams": [],
+        "problems": [],
+    }
     problems = c["problems"]
     for raw in raws:
         kinds = [x for x in raw["labels"] if x in STYLE_KINDS]
@@ -208,8 +252,8 @@ def check_things(raws: list[dict], names: dict) -> dict[str, list[dict]]:
         unknown = unknown_keys(kinds[0], list(raw["props"]), names["graph"], raw["at"])
         problems.extend(unknown)
         thing = {**raw, "misspelt": True} if unknown else raw
-        check = {"Nudge": _nudge_of, "Show": _show_of, "Arrows": _arrows_of}.get(kinds[0])
+        check, into = _CHECKS.get(kinds[0], (None, None))
         kept = check(thing, names, problems) if check else None
         if kept and not unknown:
-            c[{"Nudge": "nudges", "Show": "shows", "Arrows": "arrows"}[kinds[0]]].append(kept)
+            c[into].append(kept)
     return c

@@ -282,6 +282,89 @@
   display: flex;
   gap: var(--size-4-2);
 }
+/* The diagram type (spec §15): how the graph is drawn, and the types to choose from, each that does not fit with why;
+   every control a 44-point target, and words beside each, never colour alone. */
+.graph-note-type-strip,
+.graph-note-way-in {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-4-2);
+  padding: var(--size-4-1) var(--size-4-2);
+}
+.graph-note-type-strip button,
+.graph-note-way-in button,
+.graph-note-type-stopped button,
+.graph-note-type-list button {
+  min-width: 44px;
+  min-height: 44px;
+}
+.graph-note-type-drawn,
+.graph-note-type-why {
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+.graph-note-type-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-4-1);
+  margin: 0;
+  padding: var(--size-4-1) var(--size-4-2);
+  list-style: none;
+}
+.graph-note-type-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-4-2);
+}
+.graph-note-type-list button[aria-pressed='true'] {
+  font-weight: var(--font-bold);
+  outline: 2px solid var(--interactive-accent);
+}
+.graph-note-type-stopped {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-4-2);
+}
+/* A graph drawn as a table: the plugin's own, moved and scaled as a whole by the card's zoom, as a drawing is. */
+.graph-note-table {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(var(--graph-note-x, 0), var(--graph-note-y, 0)) scale(var(--graph-note-scale, 1));
+  transform-origin: 0 0;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.graph-note-table table {
+  border-collapse: collapse;
+  margin-bottom: var(--size-4-3);
+  font-size: var(--font-ui-small);
+  color: var(--text-normal);
+}
+.graph-note-table th,
+.graph-note-table td {
+  padding: var(--size-4-1) var(--size-4-2);
+  border-bottom: 1px solid var(--background-modifier-border);
+  text-align: start;
+  white-space: nowrap;
+}
+.graph-note-table th {
+  color: var(--text-muted);
+}
+.graph-note-table tr[data-key],
+.graph-note-table tr[data-link] {
+  cursor: pointer;
+}
+.graph-note-table tr.is-selected {
+  background: var(--background-modifier-hover);
+  outline: 2px solid var(--interactive-accent);
+}
+.graph-note-table tr:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+}
 /* The Export form (spec §16): each choice with its words above it, every control a 44-point target. */
 .graph-note-export {
   display: flex;

@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/zoom.test.js",
+  "test": "a wide tree, flow or timeline on a phone scrolls one way only > a drawing that fits across is as it always was: centred, and the page scrolls both ways",
+  "seen_failing_first": false,
+  "evidence": "A control for the new across option: a drawing no wider than its card must behave exactly as before, so this pins the old fitting, centring and page scroll, which held already; it passed first by design, and the three across tests beside it failed first."
+}

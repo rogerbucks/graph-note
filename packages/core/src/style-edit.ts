@@ -1,17 +1,27 @@
 // Writing to the style graph (editor spec §2, §6, §7, §14, §15): a nudge, a look, whether a view fades or hides what is
-// outside it, how a view was shown, a property switched on or off inline, and arrowheads hidden or shown — each written
-// as text into the graph's style block, never into a data block. A note with no style block for the graph gets one, after
-// the graph's last block, with its graph line and a comment saying whose style it is. A view's setting, how it was shown,
-// and a choice of properties or arrowheads are each changed in place when already written for the same place, never
-// written twice.
+// outside it, how a view was shown, a property switched on or off inline, arrowheads hidden or shown, and the diagram
+// type chosen — each written as text into the graph's style block, never into a data block. A note with no style block
+// for the graph gets one, after the graph's last block, with its graph line and a comment saying whose style it is. A
+// view's setting, how it was shown, and a choice of properties, arrowheads or diagram type are each changed in place
+// when already written for the same place, never written twice.
 import { dataKind, gqlSpans, graphOf, styleOf } from './blocks.ts';
 import type { Span } from './blocks.ts';
 import { items } from './block-items.ts';
 import { STYLE } from './layout.ts';
 import { quoted } from './lock.ts';
 import { insertBlockAfter, replaceBlock } from './store.ts';
-import { SHOW_FOR } from './style-checks.ts';
-import { ARROWHEADS, FORMATS, INLINE, LINES, NUDGE_WORDS, OUTSIDE, STYLE_HUES, orList } from './style-graph.ts';
+import { SHOW_FOR, TREE_ONLY } from './style-checks.ts';
+import {
+  ARROWHEADS,
+  DIAGRAM_TYPES,
+  FORMATS,
+  INLINE,
+  LINES,
+  NUDGE_WORDS,
+  OUTSIDE,
+  STYLE_HUES,
+  orList,
+} from './style-graph.ts';
 import type { Frame, LinkTarget } from './style-graph.ts';
 import { acceptNameFirst, unnamedIn } from './suggested-names.ts';
 import { writtenIn } from './written-things.ts';
@@ -65,6 +75,13 @@ export interface ArrowsWrite {
   type?: string;
 }
 
+/** A diagram type to choose (§15): for the whole graph or a view, and for a tree, the relationship it follows. */
+export interface DiagramWrite {
+  type: string;
+  view?: string;
+  relationship?: string;
+}
+
 /** One change to a graph's style. */
 export type StyleChange =
   | { nudge: NudgeWrite }
@@ -72,7 +89,8 @@ export type StyleChange =
   | { outside: { view: string; outside: string } }
   | { shown: ShownWrite }
   | { show: ShowWrite }
-  | { arrows: ArrowsWrite };
+  | { arrows: ArrowsWrite }
+  | { diagram: DiagramWrite };
 
 /** What a style edit gives: the new note, or the reason nothing was written. */
 export type StyleEdit = { note: string } | { refused: string };
@@ -137,11 +155,36 @@ function arrowsRefusal(a: ArrowsWrite): string | null {
   return null;
 }
 
+/** Why a diagram type cannot be chosen so, or null. */
+function diagramRefusal(d: DiagramWrite): string | null {
+  if (!(DIAGRAM_TYPES as readonly string[]).includes(d.type)) return `type must be ${orList(DIAGRAM_TYPES)}`;
+  if (d.relationship !== undefined && d.type !== 'tree') return TREE_ONLY;
+  if (d.relationship === '') return 'a relationship type needs a name';
+  if (d.view === '') return 'a view needs a name';
+  return null;
+}
+
 /** A thing to write: its kind and properties, and the values that find one already written to change in place. */
 type ToWrite = { kind: string; props: [string, Value][]; match?: [string, string | undefined][] };
 
-/** A Show or an Arrows to write, changed in place where one is written for the same place, or why it cannot be. */
-function choiceFor(change: { show: ShowWrite } | { arrows: ArrowsWrite }): ToWrite | { refused: string } {
+/** A Show, an Arrows or a Diagram to write, changed in place where one is written for the same place, or why it cannot be. */
+function choiceFor(
+  change: { show: ShowWrite } | { arrows: ArrowsWrite } | { diagram: DiagramWrite },
+): ToWrite | { refused: string } {
+  if ('diagram' in change) {
+    const d = change.diagram,
+      why = diagramRefusal(d);
+    if (why) return { refused: why };
+    return {
+      kind: 'Diagram',
+      props: [
+        ['type', d.type],
+        ['view', d.view],
+        ['relationship', d.relationship],
+      ],
+      match: [['view', d.view]],
+    };
+  }
   if ('show' in change) {
     const s = change.show,
       why = showRefusal(s);
@@ -167,7 +210,7 @@ function choiceFor(change: { show: ShowWrite } | { arrows: ArrowsWrite }): ToWri
 
 /** The thing to write for a change, its kind, what finds one to change in place (if any), or why it cannot be written. */
 function thingFor(change: StyleChange): ToWrite | { refused: string } {
-  if ('show' in change || 'arrows' in change) return choiceFor(change);
+  if ('show' in change || 'arrows' in change || 'diagram' in change) return choiceFor(change);
   if ('nudge' in change) {
     const n = change.nudge,
       why = nudgeRefusal(n);
@@ -245,6 +288,7 @@ const PREFIX: Record<string, string> = {
   Shown: 'shown',
   Show: 'show',
   Arrows: 'arrows',
+  Diagram: 'diagram',
 };
 
 /** The block with a thing written after its last item, comma-joined, the rest of the block kept as it was. */

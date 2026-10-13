@@ -9,6 +9,7 @@ import { inlineRows } from './inline-properties.ts';
 import { STYLE } from './layout.ts';
 import type { GraphDrawing } from './note-reading.ts';
 import type { Nudge, StyleGraph } from './style-graph.ts';
+import { diagramFor } from './types.ts';
 
 const id = (key: string) => `"${key}"`;
 
@@ -17,9 +18,16 @@ const id = (key: string) => `"${key}"`;
  * each beside a `{rank=same; …}` line and each before an invisible link, in the order written, after every link drawn —
  * so Graphviz numbers the drawn links as before — then one box (a cluster) for each group label, in the order first
  * written, its label in the kind caption's size and colour. A nudge naming a thing not among `keys` (the boxes drawn
- * here, as in a view that leaves it out) is left out. With nothing to add, `dot` is returned unchanged.
+ * here, as in a view that leaves it out) is left out; so is a group when the drawing is laid out as lanes (`diagram`, §15),
+ * which draw each group inside its lane already (graph-layout.js, typedSource). With nothing to add, `dot` is returned
+ * unchanged.
  */
-export function nudgedSource(dot: string, nudges: readonly Nudge[], keys: Iterable<string>): string {
+export function nudgedSource(
+  dot: string,
+  nudges: readonly Nudge[],
+  keys: Iterable<string>,
+  diagram?: { type: string },
+): string {
   const drawn = new Set(keys),
     added: string[] = [],
     groups = new Map<string, string[]>();
@@ -28,7 +36,7 @@ export function nudgedSource(dot: string, nudges: readonly Nudge[], keys: Iterab
     if (!things.length || !things.every((k) => drawn.has(k))) continue;
     if (n.word === 'beside') added.push(`  {rank=same; ${things.map(id).join('; ')};}`);
     else if (n.word === 'before') added.push(`  ${id(things[0] ?? '')} -> ${id(things[1] ?? '')} [style=invis];`);
-    else if (n.word === 'group' && n.group !== undefined)
+    else if (n.word === 'group' && n.group !== undefined && diagram?.type !== 'lanes')
       groups.set(n.group, [...(groups.get(n.group) ?? []), ...things]);
   }
   // the label as an HTML-like label, entity-escaped as the boxes' own are: a backslash or a quote is drawn as written
@@ -57,15 +65,18 @@ export function nudgedDrawing(drawing: GraphDrawing, style: Pick<StyleGraph, 'di
 /**
  * The drawing as its style graph draws it in `view` (none: the whole graph), as every host draws a graph, a view or an
  * export: in the direction its direction nudge sets, with its nudges (§6), the links it draws without their arrowheads
- * (§15) and the properties it shows inline (§14), their values from `g`, the graph as read (none: no property shown).
+ * (§15), the properties it shows inline (§14), their values from `g`, the graph as read (none: no property shown), and
+ * laid out as the diagram type it chooses while the data fits it (§15, types.ts); a network otherwise.
  */
 export function styledDrawing(drawing: GraphDrawing, style: StyleGraph, g?: Graph, view?: string): GraphDrawing {
   const arrowless = arrowlessLinks(drawing, style, view),
-    inline = g ? inlineRows(drawing, g, style, view) : undefined;
+    inline = g ? inlineRows(drawing, g, style, view) : undefined,
+    { plan } = diagramFor(drawing, style, g, view);
   return {
     ...nudgedDrawing(drawing, style),
     nudges: style.nudges,
     ...(arrowless.length ? { arrowless } : {}),
     ...(inline && (inline.boxes.length || inline.links.length) ? { inline } : {}),
+    ...(plan ? { diagram: plan } : {}),
   };
 }

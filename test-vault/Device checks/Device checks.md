@@ -1,6 +1,6 @@
 # Device checks
 
-One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md)): 104 checks in 14 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
+One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md)): 110 checks in 15 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
 
 ## 01 Viewing
 
@@ -147,3 +147,12 @@ One note for each check in the device checklist ([the checklist, on GitHub](http
 - [[Device checks/14 Details and the sheet/G-05 Sheet pinned and clear|G-05 Sheet pinned and clear]]
 - [[Device checks/14 Details and the sheet/G-06 Sheet minimised and remembered|G-06 Sheet minimised and remembered]]
 - [[Device checks/14 Details and the sheet/G-07 Sheet closed and reached|G-07 Sheet closed and reached]]
+
+## 15 Diagram types
+
+- [[Device checks/15 Diagram types/E-01 Choose a diagram type|E-01 Choose a diagram type]]
+- [[Device checks/15 Diagram types/E-02 Same look in every type|E-02 Same look in every type]]
+- [[Device checks/15 Diagram types/E-03 One way to work in every type|E-03 One way to work in every type]]
+- [[Device checks/15 Diagram types/E-04 Tree stops fitting|E-04 Tree stops fitting]]
+- [[Device checks/15 Diagram types/E-05 Wide types on a phone|E-05 Wide types on a phone]]
+- [[Device checks/15 Diagram types/E-06 Large graph way in|E-06 Large graph way in]]

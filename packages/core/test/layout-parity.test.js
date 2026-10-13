@@ -12,6 +12,7 @@ import { layoutSource } from '../src/layout.ts';
 import { directions } from '../src/render.ts';
 import { readStyle } from '../src/style.ts';
 import { nudgedDrawing, styledDrawing } from '../src/style-source.ts';
+import { diagramFor, shapeOf, typeFits } from '../src/types.ts';
 
 const PY_SRC = fileURLToPath(new URL('../../../python/graph_spec/src', import.meta.url));
 
@@ -407,5 +408,56 @@ test('arrowheads hidden or shown, and properties shown inline, are drawn the sam
   assert.ok(
     sources.some((s) => s.includes('properties hidden')),
     'a crowded box says how many are hidden',
+  );
+});
+
+// type_both_renderers (editor spec §15): every diagram type drawn by Graphviz has the same layout source in the core as in
+// graph_svg.py — the same problems reading each style, the same answer for whether each type fits and why not, the same
+// type drawn (and, when the chosen one has stopped fitting, the same why and nearest type), and the source of each
+// direction laid out, byte for byte. The cases are shared with python/graph_spec/tests/test_graph_svg_types.py, whose
+// Python answer (python_answer) is run here.
+const { cases: TYPED } = JSON.parse(
+  readFileSync(new URL('../../../python/graph_spec/tests/type_cases.json', import.meta.url), 'utf8'),
+);
+const PYTHON_TYPED = `
+import json, sys
+sys.path.insert(0, ${JSON.stringify(PY_TESTS)})
+from test_graph_svg_types import python_answer
+print(json.dumps([python_answer(texts, view) for texts, view in json.load(sys.stdin)]))
+`;
+
+test('every diagram type Graphviz draws is laid out from the same source by both, and judged alike', () => {
+  const notes = TYPED.map((c) => [c.blocks.map((lines) => lines.join('\n')), c.view ?? null]);
+  const r = spawnSync('python3', ['-c', PYTHON_TYPED], { input: JSON.stringify(notes), encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr);
+  const python = JSON.parse(r.stdout);
+  const row = (p) => [p.block, p.line, p.severity, p.message, p.fix];
+  TYPED.forEach((c, n) => {
+    const [texts, view] = notes[n];
+    const reading = readNote(texts),
+      styles = {},
+      drawn = {},
+      choice = {},
+      fits = {};
+    for (const t of texts) {
+      const g = styleOf(t);
+      if (g !== null && !(g in styles)) styles[g] = readStyle(texts, g, reading).problems.map(row);
+    }
+    for (const [graph, drawing] of reading.graphs) {
+      // as the plugin draws a graph or a view (packages/obsidian/src/block.ts, view-block.ts): styled for its view
+      const { style } = readStyle(texts, graph, reading),
+        g = reading.world[graph];
+      const styled = styledDrawing(drawing, style, g, view ?? undefined);
+      drawn[graph] = Object.fromEntries(directions(styled).map((d) => [d.rankdir, d.dot]));
+      choice[graph] = diagramFor(drawing, style, g, view ?? undefined);
+      fits[graph] = typeFits(shapeOf(drawing, g, style.nudges));
+    }
+    assert.deepEqual(python[n], { styles, drawn, choice, fits }, c.name);
+  });
+  const drawnTypes = new Set(python.flatMap((p) => Object.values(p.choice).map((c) => c.drawn)));
+  assert.deepEqual([...drawnTypes].sort(), ['flow', 'lanes', 'network', 'radial', 'table', 'timeline', 'tree']);
+  assert.ok(
+    python.some((p) => Object.values(p.choice).some((c) => c.stopped)),
+    'a type that stopped fitting is drawn as a network',
   );
 });

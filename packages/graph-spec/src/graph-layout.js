@@ -10,7 +10,8 @@ Writes: nothing (library).
 
 nodes: [[key, kind, text]]; edges: [[source key, reading, target key]]; style: the locked style, graph_svg.style.json;
 suggested (optional): the keys of boxes drawn under a suggested name, dashed and labelled so, as dot_source's suggested.
-Returns [source, kinds, readings], as dot_source does. The parts Python lends it — textwrap, zlib.crc32, html.escape and
+Returns [source, kinds, readings], as dot_source does. typedSource(source, plan, style) lays that source out as a
+diagram type (editor spec §15), as graph_svg's diagram_types.typed_source does. The parts Python lends it — textwrap, zlib.crc32, html.escape and
 round — are ported here exactly, each proved against Python by the layout tests. Nothing Node-specific.
 */
 /* global module -- the export for Node, beside the page global below */
@@ -213,6 +214,67 @@ round — are ported here exactly, each proved against Python by the layout test
     return [out.join('\n'), kinds, readings];
   }
 
+  // ── a diagram type's source (editor spec §15; graph_svg's diagram_types.typed_source) ───────────────────
+  const KIND_COLUMN = /^ {2}\{ rank=same; /;
+  const LINK = /^ {2}"[^"]*" -> "[^"]*" \[label=/;
+  const BACK = /^ {2}("[^"]*") -> ("[^"]*") \[(.*), dir=back\];$/;
+  const TYPE_DIRECTION = { tree: 'TB', flow: 'LR', radial: 'LR', lanes: 'LR', timeline: 'LR' };
+
+  /** The one direction a diagram type is laid out in, when nothing else sets one: a tree down, the rest across. */
+  const typeDirection = (plan) => TYPE_DIRECTION[plan.type];
+
+  /**
+   * The layout source `dot` laid out as a diagram type, by its plan (the core's types.ts): a radial drawing around its
+   * centre, by Graphviz's twopi; a tree, a flow, lanes and a timeline with every link laid out forward and no kind put in
+   * a column of its own, a tree's other links and every link of a timeline never moving a thing (constraint=false);
+   * lanes a box for each kind, labelled as a group is; a timeline each day's things on one rank, the days in order,
+   * joined by links never drawn, after every link drawn, so Graphviz numbers the drawn links as before. No plan: `dot`.
+   */
+  function typedSource(dot, plan, style) {
+    if (!plan) return dot;
+    const lines = dot.split('\n');
+    if (plan.type === 'radial') {
+      lines.splice(2, 0, `  graph [layout=twopi, root="${plan.centre}", overlap=false];`);
+      return lines.join('\n');
+    }
+    const tree = new Set(plan.tree || []),
+      out = [];
+    let n = -1;
+    for (const line of lines) {
+      if (KIND_COLUMN.test(line)) continue;
+      if (!LINK.test(line)) {
+        out.push(line);
+        continue;
+      }
+      n++;
+      const back = BACK.exec(line);
+      const forward = back ? `  ${back[2]} -> ${back[1]} [${back[3]}];` : line;
+      const free = plan.type === 'timeline' || (plan.type === 'tree' && !tree.has(n));
+      out.push(free ? `${forward.slice(0, -2)}, constraint=false];` : forward);
+    }
+    const added = [];
+    // a box labelled as a group's is (style-source.ts, nudgedSource): a lane, or a group drawn inside its lane
+    const box = (name, label, keys, inside = '') =>
+      `subgraph ${name} {label=<${escape(label)}>; fontname="${style.font}"; ` +
+      `fontsize=${num(style.kind_font_size)}; fontcolor="#0000fe"; color="#0000fe"; style="rounded"; ` +
+      `${keys.map((k) => `"${k}"; `).join('')}${inside}}`;
+    if (plan.type === 'lanes')
+      plan.lanes.forEach(([label, keys], i) => {
+        const inner = (plan.groups || []).filter(([, members]) => keys.includes(members[0]));
+        const nested = inner.map(([group, members], j) => box(`cluster_lane_${i + 1}_${j + 1}`, group, members));
+        added.push(`  ${box(`cluster_lane_${i + 1}`, label, keys, nested.join(' '))}`);
+      });
+    if (plan.type === 'timeline')
+      plan.dates.forEach((keys, i) => {
+        if (keys.length > 1) added.push(`  {rank=same; ${keys.map((k) => `"${k}"`).join('; ')};}`);
+        if (i) added.push(`  "${plan.dates[i - 1][0]}" -> "${keys[0]}" [style=invis];`);
+      });
+    out.splice(out.length - 1, 0, ...added);
+    // groups inside lanes: without newrank, Graphviz may take a thing out of its box without a word
+    if (plan.type === 'lanes' && plan.groups && plan.groups.length) out.splice(1, 0, '  newrank=true;');
+    return out.join('\n');
+  }
+
   /** A colour per name, chosen from the name's CRC-32, as graph_svg._pick: a later name that clashes moves to the next free colour. */
   function pick(names, palette, pinned) {
     const out = {},
@@ -235,7 +297,7 @@ round — are ported here exactly, each proved against Python by the layout test
     return out;
   }
 
-  const api = { dotSource, pick, wrap, crc32, escape, roundHalfEven };
+  const api = { dotSource, typedSource, typeDirection, pick, wrap, crc32, escape, roundHalfEven };
   if (typeof module === 'object' && module && module.exports) module.exports = api;
   else root.GraphLayout = api;
 })(typeof self !== 'undefined' ? self : this);
