@@ -212,10 +212,13 @@ describe('accepting_is_an_edit: an accepted change is written as text, checked f
 
   test('undone, it gives the note back as it was, byte for byte, and the change is waiting again', () => {
     const review = new ProposalReview(proposalOf());
+    assert.equal(review.canUndo(), false);
     const r = accepted(review.accept(NOTE, ['c3'], ROGER, { at: NOW }));
+    assert.equal(review.canUndo(), true);
     const u = accepted(review.undo(r.note));
     assert.equal(u.note, NOTE);
     assert.equal(review.state('c3'), 'pending');
+    assert.equal(review.canUndo(), false);
     assert.equal(review.undo(u.note).ok, false);
   });
 });

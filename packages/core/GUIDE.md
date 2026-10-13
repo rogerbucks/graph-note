@@ -291,6 +291,8 @@ the graph and never written until a person accepts a change, and then written as
   changes are written through `PaneSession`, so they are checked as any edit is, then read back, and refused whole if one does
   not take effect or leaves a new problem; a graph that has moved is refused until its notice is seen), and `undo`. It works
   on the note's text and hands the new text back; the host writes it. The decision is recorded in the note's change set.
+- `proposals-shown.ts` — the shapes a review hands a host: `ProposalShown`, its `ChangeRow`s, who decides (`Person`), which
+  changes (`Which`) and what came of it (`Reviewed`).
 
 **Settings (spec §21)**
 

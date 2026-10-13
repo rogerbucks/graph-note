@@ -146,7 +146,7 @@ export type { ChangeMark, MarkKind, Marks } from './proposals-marks.ts';
 export { changeSetId } from './proposals-text.ts';
 export type { Decision } from './proposals-text.ts';
 export { ProposalReview } from './proposals-review.ts';
-export type { ChangeRow, DecideOptions, Person, ProposalShown, Reviewed, Which } from './proposals-review.ts';
+export type { ChangeRow, DecideOptions, Person, ProposalShown, Reviewed, Which } from './proposals-shown.ts';
 export { hitAreas, nearby, TapCycle } from './hits.ts';
 export { TextHistory } from './history.ts';
 export type { Change, TextState } from './history.ts';
