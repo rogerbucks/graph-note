@@ -12,10 +12,10 @@ import { fileURLToPath } from 'node:url';
 import { REQUIREMENTS } from './check-requirements.mjs';
 import { PROJECT_TITLE, REMOVED_LABEL, adoptedId, labelStyle } from './github-project-desired.mjs';
 import { planProject } from './github-project-plan.mjs';
+import { RETRY_DELAYS_MS, paced, retrying, waitFor } from './github-project-retry.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OPTION_COLOURS = { open: 'ORANGE', part: 'YELLOW', proved: 'GREEN' };
-const RATE_LIMITED = /secondary rate limit|submitted too quickly|abuse detection/i;
 
 /** The most labels, issues and projects a list is asked for; a list that comes back this long may be cut short. */
 export const LABEL_CAP = 1000;
@@ -108,28 +108,6 @@ export function pinRepo(run, expected) {
 const ownerOf = (repo) => repo.split('/')[0];
 /** A call's arguments with the repository named, as every issue and label call must. */
 const inRepo = (repo, args) => [...args, '--repo', repo];
-/** Waits, blocking, for the given milliseconds. */
-const waitFor = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
-
-/**
- * Wraps a runner for the calls that change something: a pause before each but the first, and, on a secondary rate limit,
- * one wait and one more try. Any other failure, and a second refusal, goes on up.
- */
-function paced(run, { sleep, pauseMs, retryMs }) {
-  let first = true;
-  return (args, input) => {
-    if (!first) sleep(pauseMs);
-    first = false;
-    try {
-      return run(args, input);
-    } catch (e) {
-      if (!RATE_LIMITED.test(String(e.message))) throw e;
-      sleep(retryMs);
-      return run(args, input);
-    }
-  };
-}
-
 function graphql(run, query, variables) {
   const answer = JSON.parse(run(['api', 'graphql', '--input', '-'], JSON.stringify({ query, variables })));
   if (answer.errors?.length) throw new Error(`GitHub refused: ${answer.errors.map((e) => e.message).join('; ')}`);
@@ -282,11 +260,16 @@ function doFields(act, project, remote, fieldPlans) {
  * again after its fields change, because replacing a field's options gives them new ids and clears the values set from
  * them, and its items and values are planned afresh from that — so a run stopped half way is finished by the next, which
  * changes only what is still different. Each call that changes something goes through a pause, and a retry once on a
- * secondary rate limit; `opts` may give another `sleep` (milliseconds, blocking), `pauseMs` and `retryMs`. Throws, with
- * gh's words, at the first call that fails.
+ * secondary rate limit; a call that fails in a transient way (a timeout, a reset connection, a 502, 503 or 504, "Bad
+ * Gateway", "something went wrong") is tried again up to three times after `delays`, and a create that may have half
+ * happened is looked for first, so it is never made twice. `opts` may give another `sleep` (milliseconds, blocking),
+ * `pauseMs`, `retryMs` and `delays`. Throws, with gh's words, at the first call that fails for good.
  */
 export function executePlan(run, repo, plan, opts = {}) {
-  const act = paced(run, { sleep: waitFor, pauseMs: PAUSE_MS, retryMs: RETRY_MS, ...opts });
+  const caps = { labels: LABEL_CAP, issues: ISSUE_CAP, projects: PROJECT_CAP };
+  const settings = { sleep: waitFor, pauseMs: PAUSE_MS, retryMs: RETRY_MS, delays: RETRY_DELAYS_MS, caps, ...opts };
+  const act = paced(run, settings);
+  const read = retrying(run, settings);
   const owner = ownerOf(repo);
   for (const name of plan.labels) {
     const { color, description } = labelStyle(name);
@@ -304,11 +287,11 @@ export function executePlan(run, repo, plan, opts = {}) {
     ref = { id: created.id, number: created.number };
   }
   const { issues, fields } = plan.desired;
-  let remote = readProject(run, owner, ref.number, idByNumber);
+  let remote = readProject(read, owner, ref.number, idByNumber);
   let todo = planProject(issues, fields, remote);
   if (todo.fields.length) {
     doFields(act, ref, remote, todo.fields);
-    remote = readProject(run, owner, ref.number, idByNumber);
+    remote = readProject(read, owner, ref.number, idByNumber);
     todo = planProject(issues, fields, remote);
   }
   const itemIds = new Map(remote.items.map((i) => [i.id, i.itemId]));
