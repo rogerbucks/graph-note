@@ -54,8 +54,9 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   below it (`Box.note`, `Link.note`: its CommonMark text, its summary, its block and its `///` lines). It reads the
   block as the reader read it (`readBlocks`' `read`: with the suggested names in, and with what could not be read left
   out), so a thing drawn under a suggested name keeps its note. A note above a line holding more than one thing belongs
-  to none of them, and is a warning whose fix says to put the thing on its own line; a note on what the reader left out
-  is a warning that it is not shown; a note on a thing already noted where it is first written is a hint naming it, the
+  to none of them, and is a warning whose fix says to put the thing on its own line; each note on what the reader left
+  out is a warning that it is not shown, found, when the block cannot be read whole, as each run of `///` lines directly
+  above a line where an item left out begins (`read`'s `dropped`; every item of a block left out whole); a note on a thing already noted where it is first written is a hint naming it, the
   first note kept. The layout source never reads a note.
 - `drawing.ts` — `readNote`: what a note's graph blocks draw, built from the modules above.
 - `estimates.ts` — near misses drawn as guesses; never a guess of a thing drawn under a suggested name, whose name nobody

@@ -82,12 +82,15 @@ export interface Prepared {
 
 /**
  * A block as read, every line where it was written: `named`, with what `prepare` read as meant and the suggested names
- * put in; `applied`, the same with whatever could not be read left out, as the store took it. Notes are read from these
- * (notes.ts), so a thing drawn under a suggested name keeps its note.
+ * put in; `applied`, the same with whatever could not be read left out, as the store took it, or null for a block left
+ * out whole; and `dropped`, the 1-based line each item left out begins on, every item of a block left out whole. Notes
+ * are read from these (notes.ts), so a thing drawn under a suggested name keeps its note, and a note on what was left out
+ * is said.
  */
 export interface ReadText {
   named: string;
-  applied: string;
+  applied: string | null;
+  dropped: number[];
 }
 
 /** Which blocks are read, and as what: `dataKind`, or, for the style graph (style.ts), its style blocks read as data. */
@@ -241,6 +244,9 @@ export function readBlocks(
     // every change made to a block keeps its line breaks where they were, so its lines are indexed once
     const lineAt = lineIndex(texts[block] ?? '');
     const named = withNames(clean[block] ?? '', gaps[block]?.named ?? []);
+    const dropped = new Set<number>();
+    const leaveOut = (cut: Item[]) => cut.forEach((it) => dropped.add(lineAt(it.from)));
+    const lines = () => [...dropped].sort((a, b) => a - b);
     for (;;) {
       const text = clean[block] ?? '',
         commasFrom = store.commas.length,
@@ -258,6 +264,8 @@ export function readBlocks(
         if (!drop.length || given) {
           skip.add(block);
           problems.push(problem);
+          leaveOut(all);
+          read.set(block, { named, applied: null, dropped: lines() });
           break;
         }
         // each read again of the block, and each trial of it, is charged to the budget; past it, the rest is cut
@@ -293,13 +301,14 @@ export function readBlocks(
           // the comma before what is left out would end the block with nothing after it
           comma = all.filter((it) => it.from < first).pop()?.comma ?? -1;
         }
+        leaveOut(chosen);
         const cut = without(text, all, chosen);
         clean[block] = comma === -1 ? cut : `${cut.slice(0, comma)} ${cut.slice(comma + 1)}`;
         problems.push({ ...problem, dropped: chosen.map((it) => text.slice(it.from, it.to)).join('\n') });
         continue;
       }
       meant.push(...readAsMeant(store, block, text, commasFrom, baresFrom));
-      read.set(block, { named, applied: withNames(text, gaps[block]?.named ?? []) });
+      read.set(block, { named, applied: withNames(text, gaps[block]?.named ?? []), dropped: lines() });
       break;
     }
   }

@@ -13,7 +13,8 @@ const SHARED = 'this note is above a line holding more than one thing, so it bel
   SHARED_FIX = 'put the thing the note is about on a line of its own, directly below the note',
   LOST = 'this note is not shown, as what it is on could not be read',
   LOST_FIX = 'fix the problem in this block, and the note is shown again',
-  NOTE = /^\/\/\/(?: |$)/;
+  NOTE = /^\/\/\/(?: |$)/,
+  TAG = /^\/\/@ [A-Za-z_][A-Za-z0-9_.-]*:/;
 const duplicate = (key: string) =>
     `this note is on ${key}, which already has a note where it is first written, so this one is not shown`,
   duplicateFix = (key: string) => `join the two notes into one, above ${key} where it is first written`;
@@ -39,8 +40,8 @@ function linkFor(links: Link[], from: string, type: string, to: string): Link | 
 type Read = ReturnType<typeof gs.notes>;
 
 /** A text's notes, or null where the reader refuses it. */
-function notesOf(text: string | undefined): Read | null {
-  if (text === undefined) return null;
+function notesOf(text: string | null | undefined): Read | null {
+  if (text === undefined || text === null) return null;
   try {
     return gs.notes(text);
   } catch (e) {
@@ -49,9 +50,27 @@ function notesOf(text: string | undefined): Read | null {
   }
 }
 
-/** The lines of a block (1-based) that are a note's: exactly three slashes, then a space or the line's end. */
-const noteLines = (text: string): number[] =>
-  text.split('\n').flatMap((line, i) => (NOTE.test(trimEnd(trimStart(line))) ? [i + 1] : []));
+/** The first /// line (1-based) of each run of note and //@ lines that sits directly above one of the `dropped` lines:
+ * the notes on what the reader left out, found without reading the block, which could not be read whole. */
+function notesAbove(text: string, dropped: readonly number[]): number[] {
+  const out: number[] = [],
+    at = new Set(dropped);
+  let first: number | null = null,
+    inRun = false;
+  text.split('\n').forEach((raw, i) => {
+    const line = trimEnd(trimStart(raw));
+    if (NOTE.test(line)) {
+      first ??= i + 1;
+      inRun = true;
+    } else if (TAG.test(line)) inRun = true;
+    else {
+      if (inRun && first !== null && at.has(i + 1)) out.push(first);
+      first = null;
+      inRun = false;
+    }
+  });
+  return out;
+}
 
 /** Puts each note the reading gives on the box or link drawn below it, the first note of a thing being its own. */
 function attach(d: GraphDrawing, notes: Read['notes'], id: (name: string) => string, block: number): void {
@@ -88,7 +107,7 @@ export function addNotes(graphs: Map<string, GraphDrawing>, texts: string[], rea
       applied = notesOf(r?.applied),
       meant = notesOf(r?.named);
     for (const s of applied?.shared ?? []) say(s.lines[0] ?? s.line, 'warning', SHARED, SHARED_FIX);
-    if (d && r && applied) attach(d, applied.notes, idsIn(r.applied), block);
+    if (d && r?.applied && applied) attach(d, applied.notes, idsIn(r.applied), block);
     const shown = new Set(applied?.notes.map((n) => n.line));
     if (r && meant) {
       // each note meant that the reading left out: on a thing already noted, a hint; on what was left out, a warning
@@ -99,11 +118,9 @@ export function addNotes(graphs: Map<string, GraphDrawing>, texts: string[], rea
           say(n.lines[0] ?? n.line, 'hint', duplicate(key), duplicateFix(key));
         else say(n.lines[0] ?? n.line, 'warning', LOST, LOST_FIX);
       }
-    } else {
-      // what was meant cannot be read whole: the first /// line the reading gave no note to, or said of
-      const given = new Set([...(applied?.notes ?? []), ...(applied?.shared ?? [])].flatMap((n) => n.lines));
-      const lost = noteLines(text).find((line) => !given.has(line));
-      if (lost !== undefined) say(lost, 'warning', LOST, LOST_FIX);
+    } else if (r) {
+      // what was meant cannot be read whole: each note directly above an item the reader left out
+      for (const line of notesAbove(text, r.dropped)) say(line, 'warning', LOST, LOST_FIX);
     }
   });
   return problems;

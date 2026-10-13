@@ -98,6 +98,34 @@ describe('note_comment and note_text: a note is on the box or link it is written
 
 describe('a note that cannot be shown is said', () => {
   const LOST = 'this note is not shown, as what it is on could not be read';
+  const lostLines = (reading, block = 0) =>
+    reading.problems.filter((p) => p.message === LOST && p.block === block).map((p) => p.line);
+
+  test('a note that belongs to nothing is not said to be lost when something else in its block is left out', () => {
+    const reading = readNote(["// graph: g\n/// orphan\n\n(a:T {name: 'A'}),\n/// On b.\n(b:T {name: 'it\\q'})"]);
+    assert.deepEqual(lostLines(reading), [5]);
+  });
+
+  test('each note on something left out of a block is said, on its own first line', () => {
+    const reading = readNote([
+      "// graph: g\n/// On a.\n(a:T {name: 'it\\q'}),\n/// On b.\n//@ k: v\n/// More on b.\n(b:T {name: 'so\\q'}),\n(c:T {name: 'C'})",
+    ]);
+    assert.deepEqual(lostLines(reading), [2, 4]);
+  });
+
+  test('a block the reader gives up on whole says each note in it is lost', () => {
+    const bad = Array.from({ length: 8 }, (_, i) => `(x${i}:T {name: 'it\\q'})`).join(',\n');
+    const reading = readNote([
+      `// graph: g\n${bad}`,
+      "// graph: g\n/// On c.\n(c:T {name: 'C'}),\n/// On d.\n(d:T {name: 'so\\q'})",
+    ]);
+    assert.equal(
+      reading.graphs.get('g')?.boxes.some((b) => b.key === 'c') ?? false,
+      false,
+      'block 1 is left out whole',
+    );
+    assert.deepEqual(lostLines(reading, 1), [2, 4]);
+  });
 
   test('in a block the reader cannot read whole, each note on what it reads is shown, and a note on what it leaves out is a warning', () => {
     const reading = readNote(["// graph: g\n/// On a.\n(a:T {name: 'A'}),\n/// On b.\n(b:T {name: 'it\\q'})"]);
