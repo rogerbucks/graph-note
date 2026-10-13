@@ -1,0 +1,6 @@
+{
+  "file": "test/github-project-retry.test.js",
+  "test": "what is not tried again > a new project field, which a second try could make twice, stops the run",
+  "seen_failing_first": false,
+  "evidence": "Guards behaviour kept from before: a new project field was never retried (the first version of the retry already left it out), so the test passes against the code before this review change; it was missing a test, not behaviour."
+}
