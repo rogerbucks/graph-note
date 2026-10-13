@@ -56,6 +56,45 @@ describe('the companion note', () => {
     assert.match(text, /^- From: \[\[Team\]\]$/m);
   });
 
+  // proves: export_companion_note, big_export
+  test('of an image split across pages, shows every page in order and says how many there are', () => {
+    const pages = ['T-page-1-of-3.png', 'T-page-2-of-3.png', 'T-page-3-of-3.png'];
+    const text = note(exportScope(reading, { graph: 'team' }), { image: pages[0], pages });
+    assert.deepEqual(
+      [...text.matchAll(/^!\[\[(.+)\]\]$/gm)].map((m) => m[1]),
+      pages,
+    );
+    assert.match(text, /^- Pages: 3, in reading order: along each row, then down$/m);
+  });
+
+  // proves: export_companion_note, export_data_formats
+  test('of the data, links the file, never shows it, and says how many things and links it holds', () => {
+    const text = note(exportScope(reading, { graph: 'team' }), {
+      image: 'Team-team-2026-10-11.csv',
+      data: { things: 3, links: 2 },
+    });
+    assert.doesNotMatch(text, /!\[\[/, 'no image');
+    assert.match(text, /^- File: \[\[Team-team-2026-10-11\.csv\]\]$/m);
+    assert.match(text, /^- Holds: 3 things and 2 links$/m);
+    assert.match(text, /^- From: \[\[Trips\/Team\]\]$/m);
+    const one = note(exportScope(reading, { graph: 'team' }), { image: 'T.gql', data: { things: 1, links: 1 } });
+    assert.match(one, /^- Holds: 1 thing and 1 link$/m);
+  });
+
+  // proves: export_companion_note, view_export_stays_view
+  test('of a view’s data with its faded context, says how much of it is the context, marked as outside the view', () => {
+    const scope = exportScope(reading, { graph: 'team', view: VIEW, context: true });
+    const text = note(scope, {
+      image: 'T.graphml',
+      data: { things: 3, links: 2, faded: { things: 1, links: 1 } },
+    });
+    assert.match(
+      text,
+      /^- Holds: 3 things and 2 links, 1 thing and 1 link of them outside the view, marked as faded$/m,
+    );
+    assert.match(text, /^- Scope: the view, with the rest of the graph as its faded context$/m);
+  });
+
   // proves: export_companion_note
   test('cannot be broken out of its links by a name with link marks in it', () => {
     const text = note(exportScope(reading, { graph: 'team' }), { image: 'a]]b|c.svg', note: 'x]]![[y.md' });

@@ -34,6 +34,11 @@ export interface ExportScope {
    * drawing's links in order and then its estimated links to a near-miss name. Empty unless the context is drawn.
    */
   faded: { things: string[]; links: number[] };
+  /**
+   * For a view drawn without its context: each link it holds, by its number among the whole drawing's links, so the
+   * data export finds the link as written (export-data.ts). Unset when the drawing holds every link of the graph.
+   */
+  linksAt?: number[];
   /** Set when there is nothing to export: `why` then says so and what to change. */
   empty: boolean;
   why?: string;
@@ -116,5 +121,6 @@ export function exportScope(reading: NoteReading, request: ExportRequest): Expor
       estimates: keptEstimates(base.estimates, things, placed),
     },
     faded: { things: [], links: [] },
+    linksAt: kept,
   };
 }

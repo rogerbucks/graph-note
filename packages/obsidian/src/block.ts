@@ -28,6 +28,7 @@ import { GraphView } from './graph-view/graph-view';
 import { readOnlyHere, settlePlacements, whenPlaced } from './graph-view/placement';
 import { renderProblems } from './graph-view/problems-list';
 import { refusalBanner } from './layout-worker/refusal-banner';
+import { dataExportBar } from './export/export-form';
 import type { ShownProblem } from './graph-view/problems-list';
 
 /**
@@ -222,6 +223,13 @@ export async function renderBlock(
   }
   if (!drawn) return; // no longer wanted: a newer drawing of this card was asked for, or the plugin unloaded
   if ('reason' in drawn) {
+    // too large to draw, but not to export: its data needs no layout (spec §16, export_data_formats)
+    dataExportBar(root, {
+      path: target.path,
+      graph,
+      theme: plugin.settings.exportTheme,
+      run: (ask) => plugin.exportGraph(ask),
+    });
     asText(plugin, root, source, drawn, problems, target, readOnly);
     return;
   }

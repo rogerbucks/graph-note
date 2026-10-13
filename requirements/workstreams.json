@@ -1,0 +1,197 @@
+{
+  "W0": { "title": "Slice switch and zoom", "requirements": ["zoom_out_to_fit", "zoom_fit_recomputed"] },
+  "W1": {
+    "title": "Focus, hover and untangle",
+    "requirements": [
+      "focus_neighbours",
+      "focus_link",
+      "focus_readable",
+      "focus_cleared",
+      "focus_depth",
+      "hover_highlight",
+      "hover_not_alone",
+      "hover_still",
+      "untangle_neighbourhood",
+      "untangle_legend",
+      "untangle_path",
+      "untangle_find",
+      "untangle_keyboard",
+      "untangle_data_untouched"
+    ]
+  },
+  "W2": {
+    "title": "Details navigation and sheet",
+    "requirements": [
+      "details_links_listed",
+      "details_choose_moves",
+      "details_move_motion",
+      "details_trail",
+      "selection_pointer",
+      "details_on_screen",
+      "sheet_pinned",
+      "sheet_keeps_thing_clear",
+      "sheet_min_max",
+      "sheet_state_remembered",
+      "sheet_closed",
+      "sheet_reachable"
+    ]
+  },
+  "W3": {
+    "title": "Folding, routing and the View menu",
+    "requirements": [
+      "untangle_labels",
+      "untangle_hubs",
+      "untangle_groups",
+      "untangle_merge",
+      "untangle_routing",
+      "view_switches",
+      "view_switch_defaults",
+      "view_switch_view_only"
+    ]
+  },
+  "W4": {
+    "title": "Arrows and inline properties",
+    "requirements": [
+      "arrows_switchable",
+      "arrows_shown_unless_hidden",
+      "direction_never_lost",
+      "arrows_both_renderers",
+      "properties_switch",
+      "properties_remembered",
+      "properties_readable",
+      "crowded_properties"
+    ]
+  },
+  "W5": {
+    "title": "Diagram types",
+    "requirements": [
+      "diagram_type_set",
+      "type_only_when_fits",
+      "tree_fits",
+      "timeline_fits",
+      "suggest_type",
+      "type_remembered",
+      "type_one_look",
+      "type_one_way_to_work",
+      "type_both_renderers",
+      "type_stops_fitting",
+      "large_way_in",
+      "wide_types_phone"
+    ]
+  },
+  "W6": { "title": "Data export", "requirements": ["export_data_formats", "export_lossless", "big_export"] },
+  "W7": {
+    "title": "Links, attachments and rich details",
+    "requirements": [
+      "links_shown",
+      "host_opens_links",
+      "attachments_at_a_glance",
+      "link_preview",
+      "back_where_you_were",
+      "broken_links_problems",
+      "renames_follow",
+      "safe_to_click",
+      "links_by_keyboard",
+      "rich_details",
+      "node_is_a_note",
+      "remote_images_asked"
+    ]
+  },
+  "W8": {
+    "title": "Proposals",
+    "requirements": [
+      "proposal_shown_not_applied",
+      "proposal_one_by_one",
+      "accepting_is_an_edit",
+      "rejecting_recorded",
+      "proposal_provenance",
+      "person_decides",
+      "big_proposal",
+      "proposals_phone",
+      "proposals_read_back"
+    ]
+  },
+  "W9": {
+    "title": "AI",
+    "requirements": [
+      "ai_off_until_chosen",
+      "host_ai_first",
+      "user_models",
+      "models_by_purpose",
+      "keys_kept_secret",
+      "model_ceiling",
+      "never_above_ceiling",
+      "never_credential",
+      "user_chooses_what",
+      "seen_before_sent",
+      "never_in_background",
+      "answers_are_proposals",
+      "record_every_send",
+      "ai_unreachable",
+      "ai_disclosed"
+    ]
+  },
+  "W10": {
+    "title": "Sources, steps and views across notes",
+    "requirements": [
+      "many_views_one_data",
+      "view_of_another_note",
+      "gql_file_source",
+      "gql_file_missing",
+      "db_import_on_request",
+      "settings_db_connections",
+      "graph_step_io",
+      "step_inputs_checked",
+      "run_declared_only",
+      "step_output_proposal"
+    ]
+  },
+  "W11": {
+    "title": "Link flow and path play",
+    "requirements": [
+      "links_show_flow",
+      "flow_in_style_graph",
+      "motion_not_alone",
+      "path_autoplay",
+      "path_animation_export",
+      "animation_export_fits",
+      "motion_reduced_respected"
+    ]
+  },
+  "W12": {
+    "title": "Animated images",
+    "requirements": [
+      "animated_image_shown",
+      "animation_pause_play",
+      "animated_image_limited",
+      "export_animation_stated"
+    ]
+  },
+  "W13": {
+    "title": "Notes reader parity",
+    "requirements": [
+      "note_comment",
+      "note_text",
+      "note_never_other_comments",
+      "note_one_owner",
+      "note_both_readers",
+      "note_standard"
+    ]
+  },
+  "W14": {
+    "title": "Notes in the editor",
+    "requirements": ["note_shown", "note_callouts", "note_kept_by_edits", "note_add"]
+  },
+  "W15": {
+    "title": "Viewer aids",
+    "requirements": [
+      "mini_map",
+      "mini_map_setting",
+      "details_always_visible",
+      "details_narrow",
+      "quick_info",
+      "quick_info_no_hover_only"
+    ]
+  },
+  "S3": { "title": "Slice end", "requirements": ["done_means_proved"] }
+}

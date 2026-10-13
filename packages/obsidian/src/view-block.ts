@@ -26,6 +26,7 @@ import { renderCode } from './code';
 import { GraphView } from './graph-view/graph-view';
 import type { ViewShown } from './graph-view/view-strip';
 import { refusalBanner } from './layout-worker/refusal-banner';
+import { dataExportBar } from './export/export-form';
 
 /** Writes a change to the style graph of `graph` into the note at `path`, against the note as it is when written. */
 async function writeStyle(
@@ -215,7 +216,15 @@ export async function renderViewBlock(
   }
   if (!drawn) return; // no longer wanted: a newer drawing of this card was asked for, or the plugin unloaded
   if ('reason' in drawn) {
-    // over a size or time limit: the query, with a banner saying which limit and the numbers, as a graph's text is
+    // over a size or time limit: the query, with a banner saying which limit and the numbers, as a graph's text is; and
+    // its data still offered for export, which needs no layout (spec §16, export_data_formats)
+    dataExportBar(root, {
+      path: ctx.sourcePath,
+      graph: v.graph,
+      view: { name: v.name, spec },
+      theme: plugin.settings.exportTheme,
+      run: (ask) => plugin.exportGraph(ask),
+    });
     refusalBanner(root, drawn);
     renderCode(root, source);
     return;

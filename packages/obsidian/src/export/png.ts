@@ -32,6 +32,8 @@ export function rasterise(svg: string, size: PngSize): Promise<Uint8Array> {
         if (!ctx) throw new Error('the image is too large for this device to draw as a PNG; export it as SVG');
         ctx.drawImage(img, 0, 0, size.width, size.height);
         canvas.toBlob((blob) => {
+          // the canvas let go at once, PNG or none, so page after page of a large image holds one canvas at a time
+          canvas.width = canvas.height = 0;
           if (!blob)
             return reject(new Error('the image is too large for this device to draw as a PNG; export it as SVG'));
           blob.arrayBuffer().then((b) => resolve(new Uint8Array(b)), reject);

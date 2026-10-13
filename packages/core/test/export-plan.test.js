@@ -299,3 +299,55 @@ describe('where the file goes', () => {
     }
   });
 });
+
+describe('the data, and an image across pages', () => {
+  // proves: export_data_formats
+  test('the data is named as an image is, with its own ending, and gets its companion note as an image does', () => {
+    const on = SETTINGS({ companionNote: 'on' });
+    for (const format of ['gql', 'csv', 'graphml']) {
+      const { go } = plan({ format, settings: on });
+      assert.equal(go.fileName, `Lisbon-team-2026-10-11.${format}`);
+      assert.equal(go.path, `Trips/Lisbon-team-2026-10-11.${format}`);
+      assert.equal(go.format, format);
+      assert.deepEqual(go.companion, {
+        fileName: 'Lisbon-team-2026-10-11.md',
+        path: 'Trips/Lisbon-team-2026-10-11.md',
+      });
+      assert.equal(plan({ format }).go.companion, null, 'unless it is configured');
+    }
+  });
+
+  // proves: big_export
+  test('a PNG split across pages names each page, in order, after the one name, and its companion note after that', () => {
+    const { go } = plan({ format: 'png', pages: 3, settings: SETTINGS({ companionNote: 'on' }) });
+    assert.deepEqual(go.pages, [
+      { fileName: 'Lisbon-team-2026-10-11-page-1-of-3.png', path: 'Trips/Lisbon-team-2026-10-11-page-1-of-3.png' },
+      { fileName: 'Lisbon-team-2026-10-11-page-2-of-3.png', path: 'Trips/Lisbon-team-2026-10-11-page-2-of-3.png' },
+      { fileName: 'Lisbon-team-2026-10-11-page-3-of-3.png', path: 'Trips/Lisbon-team-2026-10-11-page-3-of-3.png' },
+    ]);
+    assert.equal(go.companion.fileName, 'Lisbon-team-2026-10-11.md');
+    assert.equal(plan({ format: 'png' }).go.pages, undefined, 'one page is one file, named as before');
+    assert.equal(plan({ format: 'png', pages: 1 }).go.pages, undefined);
+  });
+
+  // proves: failed_export
+  test('a long name stays within 200 bytes with its .part, whatever its ending and however many pages', () => {
+    const bytes = (s) => new TextEncoder().encode(s).length;
+    // ASCII fills each part to its last byte; a name not in ASCII is cut at a whole character, so may fall short
+    const ascii = [{ ...aroundContext, graph: 'g'.repeat(100), view: 'v'.repeat(100) }, `Notes/${'n'.repeat(200)}.md`];
+    const wide = [
+      { ...aroundContext, graph: '日本語'.repeat(40), view: 'ビュー'.repeat(60) },
+      `Notes/${'名前'.repeat(80)}.md`,
+    ];
+    for (const [scope, note] of [ascii, wide])
+      for (const [format, pages] of [
+        ['graphml', undefined],
+        ['csv', undefined],
+        ['png', 36],
+      ]) {
+        const { go } = plan({ scope, format, pages, note });
+        for (const name of [go.fileName, ...(go.pages ?? []).map((p) => p.fileName)])
+          assert.ok(bytes(name) + '.part'.length <= 200, `${name}: ${bytes(name)} bytes`);
+      }
+  });
+});
