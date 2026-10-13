@@ -8,6 +8,8 @@ import type { ExportScope } from './export-scope.ts';
 export interface CompanionInfo {
   /** The image's file name, as the vault finds it. */
   image: string;
+  /** For an image split across pages (big_export): each page's file name, in reading order, shown in place of `image`. */
+  pages?: string[];
   /** The note it came from, by its path in the vault. */
   note: string;
   /** The day exported, `YYYY-MM-DD`. */
@@ -34,15 +36,17 @@ export function companionNote(info: CompanionInfo): string {
       ? 'the view, with the rest of the graph faded'
       : 'only the view'
     : 'the whole diagram';
+  const pages = info.pages && info.pages.length > 1 ? info.pages : null;
   return [
     `# Export of ${oneLine(scope.graph)}${view ? `, view ${oneLine(scope.view ?? '')}` : ''}`,
     '',
-    `![[${linked(info.image)}]]`,
+    ...(pages ?? [info.image]).map((image) => `![[${linked(image)}]]`),
     '',
     `- From: [[${linked(info.note.replace(/\.md$/i, ''))}]]`,
     `- Graph: ${oneLine(scope.graph)}`,
     ...(view ? [`- View: ${oneLine(scope.view ?? '')}, ${oneLine(scope.reading ?? '')}`] : []),
     `- Scope: ${shown}`,
+    ...(pages ? [`- Pages: ${pages.length}, in reading order: along each row, then down`] : []),
     `- Exported: ${saidDate(info.date)}`,
     '',
   ].join('\n');

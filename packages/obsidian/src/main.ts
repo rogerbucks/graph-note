@@ -202,12 +202,12 @@ export default class GraphNotePlugin extends Plugin {
   /** How large a graph may be, and how long its layout may take, before it is shown as text (spec §9): a settings hook. */
   readonly layoutLimits: LayoutLimits = { ...LAYOUT_LIMITS };
 
-  /** Exports a graph or a view as an image (spec §16): see export/export.ts. */
+  /** Exports a graph or a view as an image, or its data (spec §16): see export/export.ts. */
   exportGraph(ask: ExportAsk): Promise<ExportOutcome> {
     return exportGraph(this, ask);
   }
 
-  /** The most pixels a PNG export may have here: a larger one is refused, with the SVG suggested (spec §16). */
+  /** The most pixels a PNG export may have here: a larger one is drawn across pages, or refused, with the SVG suggested (spec §16). */
   pngPixelLimit = PNG_PIXEL_LIMIT;
 
   /** A PNG of an exported SVG at `size` (spec §16): kept apart so a test can stand in one, as it can the engine. */

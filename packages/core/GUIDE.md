@@ -232,7 +232,8 @@ reads `· QUERY` as a query, and the core draws no query as data, so a view is n
 **Export (spec §16)**
 
 The host does what needs a canvas, the file system or a dialog; the core decides everything else. An image is exported as
-SVG or PNG (`EXPORT_FORMATS`), of the whole diagram or of a view, in the fixed light or dark colours chosen.
+SVG or PNG (`EXPORT_FORMATS`), of the whole diagram or of a view, in the fixed light or dark colours chosen; the data as
+a GQL block, CSV or GraphML (`DATA_FORMATS`), each read back into the very things and links exported.
 
 - `export-scope.ts` — `exportScope`: what an export holds. The whole diagram is the graph as drawn. A view is put to the
   graph as `evaluate` puts it and holds only its things and the links between them, in the graph's order, with a guess (an
@@ -254,11 +255,27 @@ SVG or PNG (`EXPORT_FORMATS`), of the whole diagram or of a view, in the fixed l
   engine run on the calling thread under no limit: for tests and tools, never a host that draws apart from its interface.
   `pngSize` is the PNG's pixel size, never under `PNG_MIN_SCALE` (twice natural size) and rounded up. A view's looks are
   drawn and put in the legend with what they mean.
+- `export-pages.ts` — `pngPages`: an image too large for one sharp PNG on the device, split into a grid of pages, each at
+  twice natural size or more and within the device's pixels, in reading order; null when the pages would be too small
+  (`PNG_PAGE_LEAST`) or too many (`PNG_MOST_PAGES`). `pageSvg` cuts the SVG to a page by its root's size and view box.
+- `export-data.ts` — `exportedData`: the things a scope draws and the links written between them, with every kind and
+  property as read, never a schema's own thing or a guess, and a view's faded context never data (`ExportScope.linksAt`
+  finds a view's links as written); `dataText` writes it in one of `DATA_FORMATS`. No layout is asked for.
+- `export-data-model.ts` — the data's types, and the five kinds of value the profile reads, each said so it reads back.
+- `export-data-gql.ts` — a GQL block: the graph line, a comment saying where it came from, a thing or link to a line; a
+  thing under its id, or, where its id cannot be a name, under `thing_<n>` with its id written in full.
+- `export-data-csv.ts` — CSV as RFC 4180 writes it: a header naming each property with the kind of its values, a row
+  for each thing then each link; an empty text quoted, so it is told from a missing one; a text a spreadsheet would run
+  as a formula guarded by an apostrophe.
+- `export-data-graphml.ts` — GraphML: a node named by its place, the thing's id, kinds and a link's type as data, a key
+  for each property and kind (a day or an instant marked by `gn:kind`), XML's marks escaped; a character XML cannot hold
+  refused, naming where it is.
 - `export-plan.ts` — `exportPlan`, the one decision before anything is written: `{ nothing }` for an empty scope,
   `{ ask }` for a note classified above the configured level (naming both; a classification not in the list counts as
   above every level; the host asks again with `confirmed` once the user says yes), or `{ go }` with the file's name and
   place and, as configured, the companion note's. A name is made from the note, the graph or view and the day, safe on
-  every platform; a folder setting that could leave the vault is not used.
+  every platform; a folder setting that could leave the vault is not used. The data gets no companion note; a PNG on
+  pages gets each page's name (`pages`).
 - `export-note.ts` — `companionNote`: the Markdown that links the image and the source note and names the graph or view,
   the day and the scope, with nothing of the data beyond what the image shows.
 - `export-write.ts` — `writeSafely`: the bytes go to a temporary file given by the host's `write`, then `rename` into place;
@@ -295,3 +312,7 @@ drawn, the worst reads at the size limits, the refusals, naming thousands of thi
 each ratio between two sizes or two cases of the same work — is counted in CPU instructions by the benchmarks in
 `scripts/benchmarks/`, run under Cachegrind on every release (`scripts/instruction-counts.mjs`), never timed in a test.
 `scripts/timed-assertions.mjs` finds any assertion on elapsed time, and `test/timed-assertions.test.js` fails on one.
+
+A data export is proved by reading it back (export_lossless): `test/export-data-readers.js` reads a GQL block with the
+graph-spec reader, and CSV and GraphML with strict readers of its own, as RFC 4180 and XML read them, so an escape the
+writer leaves out shows. The Obsidian package's tests read its exports back with them too.

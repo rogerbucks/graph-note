@@ -1,7 +1,8 @@
 // The Export form on a drawing (spec §16): what to export — the whole diagram, or on a view the view or the view with its
-// faded context (export_two_scopes) — as SVG or PNG (export_formats), light or dark (export_fixed_theme); and, when the
-// note's classification is above the configured level, the question asked before anything is written (classified_export).
-import type { ExportFormat, ExportTheme, ViewSpec } from '@graph-note/core';
+// faded context (export_two_scopes) — as SVG or PNG (export_formats), light or dark (export_fixed_theme), or its data as
+// a GQL block, CSV or GraphML (export_data_formats); and, when the note's classification is above the configured level,
+// the question asked before anything is written (classified_export).
+import type { DataFormat, ExportFormat, ExportTheme, ViewSpec } from '@graph-note/core';
 import { button } from '../graph-view/view-bar';
 import type { ExportAsk, ExportOutcome } from './export';
 // (ExportOutcome's share holds the tap's own action: see export.ts)
@@ -38,12 +39,16 @@ export function toggleExportForm(parent: HTMLElement, x: Exporting): void {
       ]
     : [['whole', 'The whole diagram']];
   const what = select(el, 'What to export', scopes, scopes[0]?.[0] ?? 'whole');
+  // an image, or the data the image shows (export_data_formats)
   const format = select(
     el,
     'Format',
     [
       ['svg', 'SVG'],
       ['png', 'PNG'],
+      ['gql', 'Data as a GQL block'],
+      ['csv', 'Data as CSV'],
+      ['graphml', 'Data as GraphML'],
     ],
     'svg',
   );
@@ -91,7 +96,7 @@ export function toggleExportForm(parent: HTMLElement, x: Exporting): void {
           path: x.path,
           graph: x.graph,
           ...(scope !== 'whole' && x.view ? { view: x.view, context: scope === 'context' } : {}),
-          format: format.value as ExportFormat,
+          format: format.value as ExportFormat | DataFormat,
           theme: theme.value as ExportTheme,
           confirmed,
         }),

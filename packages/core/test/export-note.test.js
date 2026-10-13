@@ -56,6 +56,17 @@ describe('the companion note', () => {
     assert.match(text, /^- From: \[\[Team\]\]$/m);
   });
 
+  // proves: export_companion_note, big_export
+  test('of an image split across pages, shows every page in order and says how many there are', () => {
+    const pages = ['T-page-1-of-3.png', 'T-page-2-of-3.png', 'T-page-3-of-3.png'];
+    const text = note(exportScope(reading, { graph: 'team' }), { image: pages[0], pages });
+    assert.deepEqual(
+      [...text.matchAll(/^!\[\[(.+)\]\]$/gm)].map((m) => m[1]),
+      pages,
+    );
+    assert.match(text, /^- Pages: 3, in reading order: along each row, then down$/m);
+  });
+
   // proves: export_companion_note
   test('cannot be broken out of its links by a name with link marks in it', () => {
     const text = note(exportScope(reading, { graph: 'team' }), { image: 'a]]b|c.svg', note: 'x]]![[y.md' });
