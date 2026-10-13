@@ -92,6 +92,30 @@ describe('in Obsidian', () => {
     assert.match((await shown(later)).said, /classified Confidential, above Office’s ceiling, Internal/);
   });
 
+  test('a classification that changes between Show and Send sends nothing, and asks for it to be shown again', async () => {
+    // the cache says Old, the lowest classification for now, and the text Public: the note is Public, and may go
+    const levels = ['Old', 'Public', 'Internal', 'Confidential', 'Restricted'];
+    const e = await open({ ...ON, classifications: levels }, `${front('Public')}${BODY}`);
+    e.app.metadataCache.getFileCache = () => ({ frontmatter: { classification: 'Old' } });
+    const first = await shown(e);
+    assert.ok(first.body, first.said);
+    // Old stops being a classification before Send is pressed: the cache's Old now counts above every level
+    await e.plugin.saveSettings({ ...e.plugin.settings, classifications: levels.slice(1) });
+    e.state.reply = async () => ({ status: 200, text: '{}' });
+    const m = e.state.modals.at(-1);
+    m.contentEl
+      .querySelectorAll('button')
+      .find((b) => b.getAttribute('aria-label') === 'Send')
+      .click();
+    await until(() => /changed since/.test(m.contentEl.querySelector('.graph-note-ai-shown')?.textContent ?? ''));
+    const said = m.contentEl.querySelector('.graph-note-ai-shown').textContent;
+    assert.match(said, /Nothing was sent/);
+    assert.match(said, /Show what will be sent again/);
+    assert.deepEqual(e.state.requests, []);
+    assert.equal(m.contentEl.querySelector('.graph-note-ai-body'), null, 'what was shown is taken away');
+    assert.equal((e.state.data?.aiSends ?? []).length, 0, 'no send recorded');
+  });
+
   test('the classification is read again each time what will be sent is shown, against the classifications as they are then', async () => {
     // the text says Restricted; a stale cache still says Old, which is not a classification when the dialog opens
     const e = await open(ON, `${front('Restricted')}${BODY}`);

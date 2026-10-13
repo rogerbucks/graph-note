@@ -105,7 +105,8 @@ module that ties the parts together, named as the folder is.
 - `send-dialog.ts` — `SendDialog`: what to send (the whole graph, a view, or the things ticked), the model (the one set
   up for proposing changes first) and the question; Show what will be sent puts the exact request on screen, with the
   model, its address, the headers (a key only by its name) and the note's classification, or why nothing may be sent;
-  Send, pressed on exactly that, sends it once, and any change takes the yes away until it is shown again. The key is
+  Send, pressed on exactly that, sends it once, and any change takes the yes away until it is shown again; the note's
+  classification is read once more as Send is pressed, and if it has changed nothing goes until it is shown again. The key is
   read from the app's secret store as the request goes; every model's key is read before, only to make sure none is in
   what is sent. Every send is recorded in the plugin's data (`recordAiSend`);
   an answer is written into the note as a change set after the graph's blocks, through `vault.process`, and a failure is

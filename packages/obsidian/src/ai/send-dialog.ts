@@ -248,6 +248,17 @@ export class SendDialog extends Modal {
   private async send(): Promise<void> {
     const p = this.prepared;
     if (!p || this.sending) return;
+    // the note's classification read once more as Send is pressed: if it is not what was shown, what was shown is
+    // taken away and nothing goes, so a classification changed meanwhile is never sent under the old one
+    const now = this.levelOf();
+    if (now !== p.level) {
+      const was = p.level ?? 'none',
+        is = now ?? 'none';
+      this.prepared = null;
+      this.refusal = `The note’s classification has changed since what will be sent was shown (it was ${was}, it is now ${is}). Nothing was sent: press Show what will be sent again.`;
+      this.drawShown();
+      return;
+    }
     this.sending = true;
     this.drawShown();
     const key = p.model.keyName ? this.app.secretStorage.getSecret(p.model.keyName) : null;
