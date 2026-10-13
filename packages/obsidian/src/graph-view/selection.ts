@@ -20,7 +20,8 @@ import type { ViewOptions } from './view-options';
 
 /** What the selection needs of its card, given late because the card builds them after it. */
 export interface SelectionHost {
-  svg: () => SVGSVGElement;
+  /** The drawing's SVG; none for a graph drawn as a table (§15), which nothing here marks. */
+  svg: () => SVGSVGElement | null;
   zoom: () => Zoom;
   details: () => DetailsPanel;
   /** Opens a box or link as a tap does; `walking` when an arrow key does, which never answers a question for a second thing. */
@@ -188,9 +189,9 @@ export class Selection {
         : 'link' in t
           ? ['data-link', String(t.link)]
           : ['data-estimate', `${t.estimate}`];
-    const g = Array.from(this.host.svg().querySelectorAll('g.node, g.edge')).find(
-        (n) => n.getAttribute(attr) === value,
-      ),
+    const svg = this.host.svg();
+    if (!svg) return null;
+    const g = Array.from(svg.querySelectorAll('g.node, g.edge')).find((n) => n.getAttribute(attr) === value),
       id = g?.getAttribute('id');
     return id ? this.host.taps.bounds(id) : null;
   }
@@ -214,7 +215,7 @@ export class Selection {
     const kept = this.focus.kept(this.untangle.edges, this.o.focusDepth ?? 1);
     this.layers = this.untangle.layers(kept);
     this.shownHot = this.hover.hot();
-    this.drawn().all({ ...this.layers, hot: this.shownHot });
+    this.drawn()?.all({ ...this.layers, hot: this.shownHot });
   }
 
   /** Only the highlight changed: marks just the boxes and links it was on and is on now, over the layers as they stand. */
@@ -224,11 +225,14 @@ export class Selection {
     this.shownHot = now;
     const things = new Set([...(was?.things ?? []), ...(now?.things ?? [])]),
       links = new Set([...(was?.edges ?? []), ...(now?.edges ?? [])]);
-    this.drawn().some({ ...this.layers, hot: now }, things, links);
+    this.drawn()?.some({ ...this.layers, hot: now }, things, links);
   }
 
-  private drawn(): DrawingMarks {
-    this.marks ??= new DrawingMarks(this.host.svg());
+  /** The marks on the drawing's SVG; none for a table, which is marked by its own rows. */
+  private drawn(): DrawingMarks | null {
+    const svg = this.host.svg();
+    if (!svg) return null;
+    this.marks ??= new DrawingMarks(svg);
     return this.marks;
   }
 
@@ -265,7 +269,7 @@ export class Selection {
   /** Something lost the focus; when it left the drawing, what comes back to it is the keyboard's, not a click's. */
   focusOut(e: FocusEvent): void {
     this.hover.focus(null);
-    const viewport = this.host.svg().closest('.graph-note-viewport');
+    const viewport = this.host.svg()?.closest('.graph-note-viewport') ?? this.host.viewport();
     if (!viewport?.contains(e.relatedTarget as Node | null)) this.byPointer = false;
   }
 
@@ -283,7 +287,9 @@ export class Selection {
    */
   private goTo(key: string, walking: boolean): void {
     const svg = this.host.svg();
-    const g = Array.from(svg.querySelectorAll<SVGGElement>('g.node')).find((n) => n.getAttribute('data-key') === key);
+    const g = svg
+      ? Array.from(svg.querySelectorAll<SVGGElement>('g.node')).find((n) => n.getAttribute('data-key') === key)
+      : undefined;
     // brought into view at once, clear of the details sheet, as it is selected; and so even when it answers a question
     // for a second thing, or is a step recorded, rather than the selection
     this.came('found', () => this.host.open({ key }, walking));
@@ -295,8 +301,8 @@ export class Selection {
   /** Walks the selection along a link to the next thing in the direction of an arrow key; false when it cannot. */
   private walk(arrow: string): boolean {
     const selected = this.focus.target;
-    if (!selected || !('thing' in selected)) return false;
     const svg = this.host.svg();
+    if (!selected || !('thing' in selected) || !svg) return false;
     this.places ??= this.host.taps.places((id) => svg.querySelector(`#${id}`)?.getAttribute('data-key') ?? null);
     const { hidden } = this.layers;
     const shown = this.untangle.edges.filter((_e, i) => !hidden.edges.has(i));
