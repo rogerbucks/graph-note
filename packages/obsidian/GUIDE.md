@@ -71,7 +71,8 @@ module that ties the parts together, named as the folder is.
   refused, with the SVG suggested.
 - `classification.ts` — a note's classification however its front matter writes it (any key case, a word, a number, a
   list's highest), and from its own text before the metadata cache has indexed it; `classificationInText` reads the
-  text alone, and `higherClassification` takes the higher of two readings (an unknown one counts highest).
+  text alone, and `higherClassification` takes the higher of two readings (an unknown one counts highest; none counts
+  as the level set for unlabelled notes, and wins a tie with it).
 - `vault-write.ts` — writing through the vault's API: a name of its own for each export, so none is overwritten; the
   plugin's own temporary file deleted outright on a failure, never left in the vault or its trash.
 
@@ -118,7 +119,8 @@ module that ties the parts together, named as the folder is.
   the action that converts a note to standard GQL; the classifications; formatting; drawing.
 - `ai-models.ts` — the AI models of §19 as a list, a page for each: name, purpose (the spec's purposes suggested),
   ceiling, model, endpoint (said on the model's row when it cannot be used), and its key chosen in the app's own secret
-  store by name, so only the name is saved. Use AI models, off until turned on, heads the part of the page.
+  store by name, so only the name is saved. Use AI models, off until turned on, heads the part of the page;
+  Unlabelled notes count as, a choice among the classifications, the most sensitive until chosen, follows them.
 
 ### `src/graph-view/` — a drawn graph
 

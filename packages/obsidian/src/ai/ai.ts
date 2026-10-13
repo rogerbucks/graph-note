@@ -36,6 +36,7 @@ export async function askAi(plugin: GraphNotePlugin): Promise<void> {
     classificationOf(plugin.app, front.file, text, levels),
     classificationInText(text, levels),
     levels,
+    plugin.settings.aiUnlabelled,
   );
   new SendDialog(plugin, front.file, text, level, await plugin.sharedSchemas()).open();
 }

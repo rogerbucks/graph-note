@@ -237,13 +237,7 @@ describe('each model carries a ceiling (model_ceiling, never_above_ceiling)', ()
     const s = settingsFrom({ aiUse: 'on', aiModels: [{ ...LOCAL, ceiling: 'Old' }] });
     assert.match(prepareSend(ask({ settings: s, level: 'Public' })).refused, /choose it again/);
   });
-
-  test('a note with no classification is not sent to any model: it is to be given one first', () => {
-    const r = prepareSend(ask({ level: null }));
-    assert.match(r.refused, /no classification/);
-    assert.match(r.refused, /give it one/);
-    assert.deepEqual(r.cleared, []);
-  });
+  // a note with no classification: packages/core/test/ai-unlabelled.test.js (unclassified_strictest)
 });
 
 describe('nothing credential-like is ever sent (never_credential)', () => {

@@ -553,7 +553,8 @@ describe('the AI use is disclosed', () => {
 
   test('it says unclassified notes are refused, credentials are found by common patterns, and what Obsidian adds', () => {
     const said = privacy();
-    assert.match(said, /no classification is not sent to any model/);
+    assert.match(said, /no classification counts as the most sensitive level/);
+    assert.match(said, /Unlabelled notes count as/);
     assert.match(said, /common patterns/);
     assert.match(said, /Obsidian follows redirects; point a model only at an address you trust/);
     assert.match(said, /adds headers of its own/);

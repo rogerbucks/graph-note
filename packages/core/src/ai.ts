@@ -7,7 +7,7 @@
 // of it (record_every_send), says plainly when the model cannot be reached or refuses (ai_unreachable), and gives an
 // answer back as a proposal, never an edit (answers_are_proposals).
 import { proposalFrom } from './ai-answer.ts';
-import { clearance, credentialsIn } from './ai-ceiling.ts';
+import { clearance, credentialsIn, levelSaid } from './ai-ceiling.ts';
 import { aiReady, endpointProblem } from './ai-choice.ts';
 import { sha256, utf8Size } from './ai-digest.ts';
 import { askedText, changesIn, readReply, requestBody } from './ai-request.ts';
@@ -129,7 +129,7 @@ export function prepareSend(ask: SendAsk): PreparedSend | SendRefused {
   const address = endpointProblem(model.endpoint);
   if (address) return { refused: `${model.name} cannot be sent to: ${address}` };
   if (!model.model.trim()) return { refused: `${model.name} names no model: set it in the model’s settings.` };
-  const cleared = clearance(ask.level, model, settings.classifications, ready.ready);
+  const cleared = clearance(ask.level, model, settings.classifications, ready.ready, settings.aiUnlabelled);
   if ('refused' in cleared) return cleared;
   const scope = aiScope(ask.note, ask.choice, ask.shared);
   if ('refused' in scope) return scope;
@@ -153,7 +153,7 @@ export function prepareSend(ask: SendAsk): PreparedSend | SendRefused {
       model.keyName
         ? `It is sent with the key named ${model.keyName} in the app’s secret store, put in only as the request goes.`
         : 'No key is sent.',
-      `From ${ask.notePath}. It is classified ${ask.level}.`,
+      `From ${ask.notePath}. ${ask.level?.trim() ? levelSaid(ask.level, false) : levelSaid(settings.aiUnlabelled, true)}.`,
       `What is sent: ${scope.said}, and your question.`,
     ],
     note: ask.notePath,

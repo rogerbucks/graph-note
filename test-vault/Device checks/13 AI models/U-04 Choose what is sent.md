@@ -25,7 +25,7 @@ MATCH (n) WHERE n.id IN ['question', 'large_reader'] RETURN n
 **Do this:**
 
 0. Open this note in Live Preview (not reading view): the command writes its answer into the note, so it is refused in reading view.
-1. Give this note a classification of Public in its front matter (a note with none is never sent). Run "Ask an AI model to propose changes" and choose A view of it, with the view picked_two. Press Show what will be sent. Check the body holds Which device? and Large reader and their ANSWERS link, and not Alice.
+1. Give this note a classification of Public in its front matter (a note with none counts as the most sensitive level, and by default goes to no model). Run "Ask an AI model to propose changes" and choose A view of it, with the view picked_two. Press Show what will be sent. Check the body holds Which device? and Large reader and their ANSWERS link, and not Alice.
 2. Choose Only the things ticked, and tick Alice and Which device?. Press Show what will be sent. Check the body holds those two and their ASKED link, and not Large reader.
 3. Check the body never holds "This line of prose is never sent". Take the front matter out again.
 

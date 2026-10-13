@@ -317,7 +317,9 @@ exactly what goes and said yes to it. Its answer comes back as a proposal (§17)
   127.x.x.x or [::1] exactly, read with the runtime's own URL; any other by https), and `modelChoices` (the host's own
   AI first, where it has one; then the models set up for the purpose; then the rest; none while AI is off).
   `AI_PURPOSES` are the spec's purposes.
-- `ai-ceiling.ts` — `clearance`: a note with no classification is not sent until it is given one; a note above a
+- `ai-ceiling.ts` — `clearance`: a note with no classification counts as `aiUnlabelled`, the most sensitive level
+  until the user chooses another (unclassified_strictest), so by default it goes to no model, and the refusal says to
+  give it a classification or choose a lower level under Unlabelled notes count as; a note above a
   model's ceiling is not sent to it, saying why and naming the models cleared for it; nothing at the highest
   classification set goes to any model; an unknown classification counts above every ceiling. `credentialsIn` names, by
   common patterns, the kinds of credential a text holds (a private key, an access key, an API key, a token, a password
@@ -342,7 +344,8 @@ exactly what goes and said yes to it. Its answer comes back as a proposal (§17)
   checked before it is written, and the standard text an engine or an export is given whatever the level.
 - `settings.ts` — every option with its name, sentence, choices and default (`OPTIONS`, `DEFAULT_SETTINGS`), and saved
   settings read back with anything unknown, out of range or secret left out (`settingsFrom`). AI is off until `aiUse`
-  is turned on. An AI model keeps the name of its key in the host's secret store (`keyName`), never the key. The Export section holds the export theme (light
+  is turned on; `aiUnlabelled`, the level a note with no classification counts as, is one of `classifications`, the
+  most sensitive until chosen. An AI model keeps the name of its key in the host's secret store (`keyName`), never the key. The Export section holds the export theme (light
   or dark), whether an export saved in the vault gets a companion note, the folder exports go to (`vaultFolder` keeps it
   inside the vault; empty is next to the note) and the classification above which an export asks first (one of
   `classifications`, the lowest until chosen).

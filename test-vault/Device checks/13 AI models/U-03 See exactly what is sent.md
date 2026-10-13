@@ -18,7 +18,7 @@
 **Do this:**
 
 0. Open this note in Live Preview (not reading view): the command writes its answer into the note, so it is refused in reading view.
-1. Give this note a classification of Public in its front matter (a note with none is never sent). Run "Ask an AI model to propose changes", choose The whole graph and the local model. Check Send is off.
+1. Give this note a classification of Public in its front matter (a note with none counts as the most sensitive level, and by default goes to no model). Run "Ask an AI model to propose changes", choose The whole graph and the local model. Check Send is off.
 2. Press Show what will be sent. Check the model, its address and the note's classification are said, the headers show any key only by its name, and the body holds the graph's things and links and your question.
 3. Change the question. Check Send goes off and what was shown goes, until you press Show what will be sent again.
 4. Press Send once. Check a notice says how many changes the model proposed, and a change set block appears under the graph with each change listed to accept or reject.

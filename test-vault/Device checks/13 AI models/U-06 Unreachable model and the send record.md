@@ -16,7 +16,7 @@
 **Do this:**
 
 0. Open this note in Live Preview (not reading view): the command writes its answer into the note, so it is refused in reading view.
-1. Give this note a classification of Public in its front matter: a note with none is never sent. Stop the local model's server (quit Ollama or LM Studio).
+1. Give this note a classification of Public in its front matter: a note with none counts as the most sensitive level, and by default goes to no model. Stop the local model's server (quit Ollama or LM Studio).
 2. Run "Ask an AI model to propose changes", choose Local, press Show what will be sent, then Send.
 3. Check a notice says Local could not be reached at its address and that nothing was changed, and this note is exactly as it was.
 4. Open the plugin's `data.json` in the vault's plugin folder. Check `aiSends` lists this send as failed, with a digest and a size but not the text that was sent, the model, the address and the time, and that no key is anywhere in the file.

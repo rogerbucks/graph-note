@@ -204,17 +204,7 @@ describe('asking an AI model to propose changes (§19)', () => {
     }
   });
 
-  test('a note with no classification is not sent: the dialog says to give it one', async () => {
-    const env = await open(ON, noteAt(null));
-    try {
-      const m = await shown(env, 'Local');
-      assert.equal(shownBody(m), null);
-      assert.match(said(m), /no classification.*give it one/);
-      assert.ok(button(m, 'Send').disabled);
-    } finally {
-      env.uninstall();
-    }
-  });
+  // a note with no classification, and the setting for it: packages/core/test/ai-unlabelled.test.js
 
   test('the classification is read from the note as it is sent too, and the higher taken when the cache is behind', async () => {
     const env = await open(ON, noteAt('Internal'));

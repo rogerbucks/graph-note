@@ -1,28 +1,31 @@
 // What a model may be sent (editor spec §19, model_ceiling, never_above_ceiling, never_credential): each model carries a
 // ceiling, the highest classification of note it may be sent; a note above it is never sent to it, and the editor says
 // why and names the models cleared for it. Nothing at the highest classification set is sent to any model, and nothing
-// that looks like a credential, whatever the note's classification.
+// that looks like a credential, whatever the note's classification. A note with no classification counts as the level
+// set for unlabelled notes, the most sensitive until the user chooses (unclassified_strictest), so by default it goes
+// to no model.
 import type { AiModel } from './settings.ts';
 
 const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 const rank = (levels: string[], level: string) => levels.findIndex((l) => same(l, level));
 
-/** Why a note of `level` (null: it has none) may not be sent to `model`, or null when it may. */
-function aboveCeiling(level: string | null, model: AiModel, levels: string[]): string | null {
-  // the safe default (Roger may relax it): a note nobody has classified is not taken as the lowest
-  if (level === null || !level.trim())
-    return `This note has no classification, so nothing of it is sent to any model: give it one first (a classification property in its front matter, one of ${levels.join(', ')}).`;
+/** How a note's level is said: as classified, or, for a note with none, as the level it counts as. */
+export const levelSaid = (level: string, unlabelled: boolean): string =>
+  unlabelled ? `This note has no classification, so it counts as ${level}` : `This note is classified ${level}`;
+
+/** Why a note of `level` may not be sent to `model`, or null when it may; `unlabelled` when it counts as that level. */
+function aboveCeiling(level: string, unlabelled: boolean, model: AiModel, levels: string[]): string | null {
   const at = rank(levels, level),
     top = levels.length - 1;
   if (at === -1)
     return `This note is classified "${level}", which is not one of the classifications set (${levels.join(', ')}), so it counts as above every ceiling and is not sent.`;
   if (at === top)
-    return `This note is classified ${levels[top]}, the highest classification set: nothing at it is ever sent to any model.`;
+    return `${levelSaid(levels[top] ?? level, unlabelled)}, the highest classification set: nothing at it is ever sent to any model.`;
   const ceiling = rank(levels, model.ceiling);
   if (ceiling === -1)
     return `${model.name}’s ceiling, ${model.ceiling}, is no longer one of the classifications set: choose it again in the model’s settings before anything is sent to it.`;
   return at > ceiling
-    ? `This note is classified ${levels[at]}, above ${model.name}’s ceiling, ${levels[ceiling]}, so it is not sent to ${model.name}.`
+    ? `${levelSaid(levels[at] ?? level, unlabelled)}, above ${model.name}’s ceiling, ${levels[ceiling]}, so it is not sent to ${model.name}.`
     : null;
 }
 
@@ -31,21 +34,33 @@ export type Clearance = { cleared: true } | { refused: string; cleared: string[]
 
 /**
  * Whether a note of `level` may be sent to `model`, against the classifications set (lowest first) and the models that
- * may be asked. A note with no classification is not sent until it is given one; one not among those set counts as
- * above every ceiling; one at the highest is never sent. When it may not, the refusal says why and names the models cleared for it.
+ * may be asked. A note with no classification (null) counts as `unlabelled`, the level set for such notes, the most
+ * sensitive until the user chooses (unclassified_strictest); one not among those set counts as above every ceiling; one
+ * at the highest is never sent. When it may not, the refusal says why and names the models cleared for it, and for a
+ * note with no classification, what to change: give it one, or choose a lower level for unlabelled notes.
  */
-export function clearance(level: string | null, model: AiModel, levels: string[], models: AiModel[]): Clearance {
-  const why = aboveCeiling(level, model, levels);
+export function clearance(
+  level: string | null,
+  model: AiModel,
+  levels: string[],
+  models: AiModel[],
+  unlabelled: string,
+): Clearance {
+  const counted = level === null || !level.trim();
+  const as = counted ? unlabelled : level;
+  const why = aboveCeiling(as, counted, model, levels);
   if (!why) return { cleared: true };
-  const others = models.filter((m) => m !== model && !aboveCeiling(level, m, levels)).map((m) => m.name);
-  const at = level ?? '';
-  // only a level a ceiling can reach has a model to offer: none, the highest and an unknown one have none
-  const offer = /highest|not one of the classifications|no classification/.test(why)
+  const others = models.filter((m) => m !== model && !aboveCeiling(as, counted, m, levels)).map((m) => m.name);
+  // only a level a ceiling can reach has a model to offer: the highest and an unknown one have none
+  const offer = /highest|not one of the classifications/.test(why)
     ? ''
     : others.length
-      ? ` ${others.join(', ')} ${others.length === 1 ? 'is' : 'are'} cleared for ${at}: send to ${others.length === 1 ? 'it' : 'one of them'} instead.`
-      : ` No model set up is cleared for ${at}.`;
-  return { refused: `${why}${offer}`, cleared: offer ? others : [] };
+      ? ` ${others.join(', ')} ${others.length === 1 ? 'is' : 'are'} cleared for ${as}: send to ${others.length === 1 ? 'it' : 'one of them'} instead.`
+      : ` No model set up is cleared for ${as}.`;
+  const change = counted
+    ? ' Give the note a classification (a classification property in its front matter), or choose a lower level under Unlabelled notes count as, in the AI models settings.'
+    : '';
+  return { refused: `${why}${offer}${change}`, cleared: offer ? others : [] };
 }
 
 const luhn = (digits: string) => {
