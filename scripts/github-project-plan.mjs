@@ -3,9 +3,20 @@
 // what GitHub holds now (read by github-project-gh.mjs). Pure — two values in, a third out, no network — so the dry run
 // can print it and a test can prove it. A plan changes only what differs and never deletes: an issue whose requirement
 // went is labelled and closed, an issue outside the chosen slices is left alone, a label somebody else added stays.
-import { FIELD_NAMES, PROJECT_TITLE, REMOVED_LABEL, idOfBody, isManagedLabel } from './github-project-desired.mjs';
+import {
+  FIELD_NAMES,
+  FIXED_FIELDS,
+  PROJECT_TITLE,
+  REMOVED_LABEL,
+  adoptedId,
+  idOfBody,
+  isManagedLabel,
+} from './github-project-desired.mjs';
 
-const FIELD_KEYS = { Slice: 'slice', Workstream: 'workstream', Status: 'status' };
+/** The most issues a plan may remove (label and close) unless the person allows more. */
+export const MAX_REMOVALS = 10;
+
+const FIELD_KEYS = { Slice: 'slice', Workstream: 'workstream', Proof: 'status' };
 
 const lower = (name) => String(name).toLowerCase();
 const hasLabel = (labels, name) => labels.some((l) => lower(l) === lower(name));
@@ -19,19 +30,28 @@ const plain = (text) =>
 
 /**
  * What to do to the issues. `remote` is the issues GitHub holds, each {number, title, body, state ('OPEN' or 'CLOSED'),
- * labels (names), url}; `known` is every requirement id the copy holds. Gives {create, update, close, reopen, removed,
- * unchanged, outside, warnings, held}: the desired issues to make; for an existing issue what to change (`title`,
- * `body`, labels to add and take off); the ones to close and to reopen; the issues of requirements that went, with which
- * of label, comment and close each still needs; the ids with nothing to do; the ids of issues left alone because their
- * requirement is only outside the chosen slices; any warning; and the number and url of each issue held, by id. An issue
- * with no marker is somebody's own and is ignored; of two with one marker the lowest number counts.
+ * labels (names), author (login), url}; `known` is every requirement id the copy holds; `login` is the signed-in login.
+ * Gives {create, update, close, reopen, removed, unchanged, outside, warnings, held}: the desired issues to make; for an
+ * existing issue what to change (`title`, `body`, labels to add and take off); the ones to close and to reopen; the
+ * issues of requirements that went, with which of label, comment and close each still needs; the ids with nothing to
+ * do; the ids of issues left alone because their requirement is only outside the chosen slices; any warning; and the
+ * number and url of each issue held, by id. Only an issue this generator may adopt (written by `login`, with the
+ * generated banner and its marker at the end) counts: any other is somebody's own, ignored, and warned of when it
+ * carries a marker. Of two adopted with one marker the lowest number counts.
  */
-export function planIssues(desired, remote, known) {
+export function planIssues(desired, remote, known, login) {
   const plan = { create: [], update: [], close: [], reopen: [], removed: [], unchanged: [], outside: [], warnings: [] };
   const held = new Map();
   for (const issue of [...remote].sort((a, b) => a.number - b.number)) {
-    const id = idOfBody(issue.body);
-    if (id === null) continue;
+    const id = adoptedId(issue, login);
+    if (id === null) {
+      const marked = idOfBody(issue.body);
+      if (marked !== null)
+        plan.warnings.push(
+          `issue #${issue.number} carries the marker of ${marked} but is not adopted: it was not written by ${login ?? 'the signed-in login'}, or it lacks the generated banner or the marker at its end`,
+        );
+      continue;
+    }
     if (held.has(id))
       plan.warnings.push(
         `requirement ${id} has two issues, #${held.get(id).number} and #${issue.number}; #${issue.number} is left alone`,
@@ -93,6 +113,10 @@ export function planProject(desired, wantedFields, remote) {
   for (const name of FIELD_NAMES) {
     const have = remote?.fields?.[name];
     const add = have ? wantedFields[name].filter((o) => !have.options.some((x) => x.name === o)) : wantedFields[name];
+    if (have && add.length && FIXED_FIELDS.includes(name))
+      throw new Error(
+        `field ${name} lacks the option ${add.join(', ')}; the script never replaces the options of ${name}, so add it by hand`,
+      );
     if (!have || add.length) fields.push({ name, create: !have, add });
   }
   const items = new Map((remote?.items ?? []).map((i) => [i.id, i]));
@@ -112,7 +136,7 @@ export function planProject(desired, wantedFields, remote) {
  * project that exists.
  */
 export function buildPlan(desired, remote) {
-  const issues = planIssues(desired.issues, remote.issues, new Set(desired.known));
+  const issues = planIssues(desired.issues, remote.issues, new Set(desired.known), remote.login);
   const needed = desired.issues.flatMap((i) => i.labels);
   if (issues.removed.some((r) => r.label)) needed.push(REMOVED_LABEL);
   return {
@@ -123,6 +147,19 @@ export function buildPlan(desired, remote) {
     projectRef: remote.project ? { id: remote.project.id, number: remote.project.number } : null,
     warnings: issues.warnings,
   };
+}
+
+/**
+ * Why a plan should not be done without the person saying so, or null: the requirements file holds no requirements (so
+ * every issue would be removed, as when the file was read wrongly), or the plan removes more than MAX_REMOVALS issues.
+ */
+export function guardProblem(plan) {
+  if (plan.desired.known.length === 0)
+    return 'the requirements file holds no requirements, so every issue would be removed; pass --allow-removals if that is meant';
+  const removing = plan.issues.removed.length;
+  if (removing > MAX_REMOVALS)
+    return `the plan removes ${removing} issues, more than ${MAX_REMOVALS}; pass --allow-removals if that is meant`;
+  return null;
 }
 
 /** The counts of a plan, for its summary. */
@@ -168,7 +205,7 @@ export function formatPlan(plan) {
     `project: create ${c.projectCreate} · fields create ${c.fieldsCreate} · options add ${c.optionsAdd} · items add ${c.itemsAdd} · values set ${c.valuesSet}`,
     '',
     ...plan.labels.map((name) => `create label ${name}`),
-    ...issues.create.map((i) => `create issue ${i.title} (${i.state}; ${i.labels.join(', ')})`),
+    ...issues.create.map((i) => `create issue ${i.id} "${i.title}" (${i.state}; ${i.labels.join(', ')})`),
     ...issues.update.map((u) => `update issue #${u.number} ${u.id}: ${updateWhat(u)}`),
     ...issues.close.map((i) => `close issue #${i.number} ${i.id}`),
     ...issues.reopen.map((i) => `reopen issue #${i.number} ${i.id}`),

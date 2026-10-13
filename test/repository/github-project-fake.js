@@ -6,9 +6,22 @@ const flag = (args, name) => args[args.indexOf(name) + 1];
 const flagsOf = (args, name) => args.flatMap((a, i) => (a === name ? [args[i + 1]] : []));
 const json = (value) => `${JSON.stringify(value)}\n`;
 
-/** An empty GitHub for the repository o/r, owned by `owner`. `pageSize` makes the project’s item list page. */
-export function fakeGithub({ owner = 'rogerbucks', pageSize = 100 } = {}) {
-  const hub = { labels: [], issues: [], projects: [], calls: [], mutations: [], ids: 0 };
+/**
+ * An empty GitHub for the repository `owner/name`, with `login` signed in. `pageSize` makes the project’s item list
+ * page. Like gh, it refuses an issue or label call that names no repository or another one, and a project call that
+ * names no owner or another one: a call that would reach the wrong place throws instead.
+ */
+export function fakeGithub({ owner = 'rogerbucks', name = 'graph-note', login = owner, pageSize = 100 } = {}) {
+  const hub = {
+    repo: `${owner}/${name}`,
+    login,
+    labels: [],
+    issues: [],
+    projects: [],
+    calls: [],
+    mutations: [],
+    ids: 0,
+  };
   const nextId = (prefix) => `${prefix}_${(hub.ids += 1)}`;
   const mutate = (args) => hub.mutations.push(args.join(' '));
   const issue = (n) => hub.issues.find((i) => i.number === Number(n));
@@ -53,16 +66,16 @@ export function fakeGithub({ owner = 'rogerbucks', pageSize = 100 } = {}) {
   const graphql = (args, input) => {
     const { query, variables } = JSON.parse(input);
     if (/createProjectV2Field/.test(query)) {
-      mutate(args);
+      mutate([...args, 'createProjectV2Field', variables.name]);
       const p = hub.projects.find((x) => x.id === variables.project);
       const created = { id: nextId('fld'), name: variables.name, options: freshOptions(variables.options) };
       p.fields.push(created);
       return json({ data: { createProjectV2Field: { projectV2Field: created } } });
     }
     if (/updateProjectV2Field/.test(query)) {
-      mutate(args);
       const p = hub.projects.find((x) => x.fields.some((f) => f.id === variables.field));
       const f = p.fields.find((x) => x.id === variables.field);
+      mutate([...args, 'updateProjectV2Field', f.name]);
       f.options = freshOptions(variables.options);
       for (const item of p.items) delete item.values[f.name];
       return json({ data: { updateProjectV2Field: { projectV2Field: f } } });
@@ -73,7 +86,15 @@ export function fakeGithub({ owner = 'rogerbucks', pageSize = 100 } = {}) {
   const run = (args, input) => {
     hub.calls.push({ args, input });
     const [group, verb] = args;
-    if (group === 'repo' && verb === 'view') return json({ owner: { login: owner }, name: 'r' });
+    if (group === 'repo' && verb === 'view') return json({ nameWithOwner: hub.repo });
+    if (group === 'api' && verb === 'user') return json({ login: hub.login });
+    if (group === 'issue' || group === 'label') {
+      if (flag(args, '--repo') !== hub.repo)
+        throw new Error(`gh ${group} ${verb}: names no repository, or the wrong one`);
+    }
+    if (group === 'project' && ['list', 'create', 'item-add'].includes(verb)) {
+      if (flag(args, '--owner') !== owner) throw new Error(`gh project ${verb}: names no owner, or the wrong one`);
+    }
     if (group === 'label' && verb === 'list') return json(hub.labels);
     if (group === 'label' && verb === 'create') {
       mutate(args);
@@ -91,6 +112,7 @@ export function fakeGithub({ owner = 'rogerbucks', pageSize = 100 } = {}) {
         body: input,
         state: 'OPEN',
         labels,
+        author: { login: hub.login },
         url: `https://github.com/o/r/issues/${number}`,
       });
       return `https://github.com/o/r/issues/${number}\n`;

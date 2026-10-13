@@ -1,13 +1,29 @@
 // The thin layer between the GitHub mirror's plan and the gh command (spec §12, requirements_checked_in_ci): it reads
 // what GitHub holds, and does a plan with `gh issue`, `gh label`, `gh project` and `gh api graphql`. All the thinking is
 // in github-project-plan.mjs; this layer only asks and tells, through a runner handed in — run(args, input) gives gh's
-// output — so a test can hand in a stand-in and no network is touched. It never deletes anything.
+// output — so a test can hand in a stand-in and no network is touched. It never deletes anything. It is careful where it
+// goes (gh runs in this repository's folder, with no repository or host from the environment; the repository gh points
+// at must be the origin's; every issue and label call names the repository, and every project call the owner) and how
+// fast (a pause between calls that change something, one retry on a secondary rate limit, and a refusal of any list that
+// hit its cap and so may be only part of what GitHub holds).
 import { spawnSync } from 'node:child_process';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { REQUIREMENTS } from './check-requirements.mjs';
-import { PROJECT_TITLE, REMOVED_LABEL, idOfBody, labelStyle } from './github-project-desired.mjs';
+import { PROJECT_TITLE, REMOVED_LABEL, adoptedId, labelStyle } from './github-project-desired.mjs';
 import { planProject } from './github-project-plan.mjs';
 
-const STATUS_COLOURS = { open: 'ORANGE', part: 'YELLOW', proved: 'GREEN' };
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const OPTION_COLOURS = { open: 'ORANGE', part: 'YELLOW', proved: 'GREEN' };
+const RATE_LIMITED = /secondary rate limit|submitted too quickly|abuse detection/i;
+
+/** The most labels, issues and projects a list is asked for; a list that comes back this long may be cut short. */
+export const LABEL_CAP = 1000;
+export const ISSUE_CAP = 5000;
+export const PROJECT_CAP = 200;
+/** The pause before each call that changes something but the first, and the wait before a retry, in milliseconds. */
+export const PAUSE_MS = 1000;
+export const RETRY_MS = 60000;
 
 const PROJECT_FRAGMENT = `fragment P on ProjectV2 {
   id number title
@@ -44,8 +60,10 @@ const UPDATE_FIELD = `mutation($field: ID!, $options: [ProjectV2SingleSelectFiel
  * its output. Throws with gh's own words when gh fails or cannot be started. `spawn` is spawnSync, or a stand-in.
  */
 export function ghRunner(spawn = spawnSync) {
+  // GH_REPO and GH_HOST would send gh somewhere the checkout does not say, so gh never sees them.
+  const { GH_REPO: _repo, GH_HOST: _host, ...env } = process.env;
   return (args, input) => {
-    const result = spawn('gh', args, { input, encoding: 'utf8', maxBuffer: 1 << 28 });
+    const result = spawn('gh', args, { input, encoding: 'utf8', maxBuffer: 1 << 28, cwd: ROOT, env });
     if (result.error)
       throw new Error(`gh could not be run (${result.error.message}); is the GitHub CLI installed and on the path?`);
     if (result.status !== 0) throw new Error(`gh ${args.join(' ')} failed: ${String(result.stderr).trim()}`);
@@ -53,8 +71,51 @@ export function ghRunner(spawn = spawnSync) {
   };
 }
 
-/** The login of the owner of the repository gh is in. */
-export const repoOwner = (run) => JSON.parse(run(['repo', 'view', '--json', 'owner'])).owner.login;
+/** The `owner/name` an origin remote url names, in any of the ways a remote is written. Throws for any other. */
+export function repoOfRemote(url) {
+  const text = String(url ?? '').trim();
+  const m =
+    /^[a-z][\w+.-]*:\/\/[^/]+\/([^/\s]+)\/([^/\s]+?)(?:\.git)?\/?$/i.exec(text) ??
+    /^[^@\s/]+@[^:\s/]+:([^/\s]+)\/([^/\s]+?)(?:\.git)?\/?$/.exec(text);
+  if (!m) throw new Error(`the origin remote (${text || 'none'}) does not name a repository as owner/name`);
+  return `${m[1]}/${m[2]}`;
+}
+
+/**
+ * The repository gh points at, as `owner/name`, which must be `expected` (the checkout's origin; case does not matter).
+ * Throws, having asked nothing else, when it is another.
+ */
+export function pinRepo(run, expected) {
+  const actual = JSON.parse(run(['repo', 'view', '--json', 'nameWithOwner'])).nameWithOwner;
+  if (actual.toLowerCase() !== expected.toLowerCase())
+    throw new Error(`gh points at ${actual}, but this checkout's origin is ${expected}; nothing was read or changed`);
+  return actual;
+}
+
+const ownerOf = (repo) => repo.split('/')[0];
+/** A call's arguments with the repository named, as every issue and label call must. */
+const inRepo = (repo, args) => [...args, '--repo', repo];
+/** Waits, blocking, for the given milliseconds. */
+const waitFor = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+
+/**
+ * Wraps a runner for the calls that change something: a pause before each but the first, and, on a secondary rate limit,
+ * one wait and one more try. Any other failure, and a second refusal, goes on up.
+ */
+function paced(run, { sleep, pauseMs, retryMs }) {
+  let first = true;
+  return (args, input) => {
+    if (!first) sleep(pauseMs);
+    first = false;
+    try {
+      return run(args, input);
+    } catch (e) {
+      if (!RATE_LIMITED.test(String(e.message))) throw e;
+      sleep(retryMs);
+      return run(args, input);
+    }
+  };
+}
 
 function graphql(run, query, variables) {
   const answer = JSON.parse(run(['api', 'graphql', '--input', '-'], JSON.stringify({ query, variables })));
@@ -88,72 +149,106 @@ function readProject(run, owner, number, idByNumber) {
   return { id: project.id, number: project.number, fields, items };
 }
 
+/** A list read from GitHub, refused when it is as long as the cap it was asked for and so may be only a part. */
+function whole(list, cap, what) {
+  if (list.length >= cap)
+    throw new Error(
+      `GitHub returned ${list.length} ${what}, as many as the ${cap} asked for, so the list may be only part of them`,
+    );
+  return list;
+}
+
 const findProject = (run, owner) =>
-  JSON.parse(run(['project', 'list', '--owner', owner, '--format', 'json', '--limit', '200'])).projects.find(
-    (p) => p.title === PROJECT_TITLE,
-  );
+  whole(
+    JSON.parse(run(['project', 'list', '--owner', owner, '--format', 'json', '--limit', String(PROJECT_CAP)])).projects,
+    PROJECT_CAP,
+    'projects',
+  ).find((p) => p.title === PROJECT_TITLE);
 
 /**
- * What GitHub holds now: {labelNames, issues, project}. Each issue is {number, title, body, state, labels (names), url};
- * the project is null when none has the title, else as readProject gives it.
+ * What GitHub holds now: {login, labelNames, issues, project}. `repo` is `owner/name`. The login is the one signed in,
+ * whose issues alone may be adopted. Each issue is {number, title, body, state, labels (names), author (login), url};
+ * the project is null when none has the title, else as readProject gives it, with the items of adopted issues only.
+ * Throws for a list that hit its cap.
  */
-export function readRemote(run, owner) {
-  const labelNames = JSON.parse(run(['label', 'list', '--limit', '1000', '--json', 'name'])).map((l) => l.name);
-  const issues = JSON.parse(
-    run(['issue', 'list', '--state', 'all', '--limit', '5000', '--json', 'number,title,body,state,labels,url']),
-  ).map((i) => ({ ...i, labels: i.labels.map((l) => l.name) }));
-  const found = findProject(run, owner);
-  if (!found) return { labelNames, issues, project: null };
-  const idByNumber = new Map(issues.flatMap((i) => (idOfBody(i.body) ? [[i.number, idOfBody(i.body)]] : [])));
-  return { labelNames, issues, project: readProject(run, owner, found.number, idByNumber) };
+export function readRemote(run, repo) {
+  const login = JSON.parse(run(['api', 'user'])).login;
+  const labelNames = whole(
+    JSON.parse(run(inRepo(repo, ['label', 'list', '--limit', String(LABEL_CAP), '--json', 'name']))),
+    LABEL_CAP,
+    'labels',
+  ).map((l) => l.name);
+  const issues = whole(
+    JSON.parse(
+      run(
+        inRepo(repo, [
+          'issue',
+          'list',
+          '--state',
+          'all',
+          '--limit',
+          String(ISSUE_CAP),
+          '--json',
+          'number,title,body,state,labels,author,url',
+        ]),
+      ),
+    ),
+    ISSUE_CAP,
+    'issues',
+  ).map((i) => ({ ...i, labels: i.labels.map((l) => l.name), author: i.author?.login }));
+  const found = findProject(run, ownerOf(repo));
+  if (!found) return { login, labelNames, issues, project: null };
+  const idByNumber = new Map(issues.flatMap((i) => (adoptedId(i, login) ? [[i.number, adoptedId(i, login)]] : [])));
+  return { login, labelNames, issues, project: readProject(run, ownerOf(repo), found.number, idByNumber) };
 }
 
 const flags = (flag, values) => values.flatMap((v) => [flag, v]);
 
-function doIssues(run, plan) {
+function doIssues(act, repo, plan) {
   const made = {};
+  const issue = (...args) => inRepo(repo, ['issue', ...args]);
   for (const d of plan.issues.create) {
-    const url = run(
-      ['issue', 'create', '--title', d.title, '--body-file', '-', ...flags('--label', d.labels)],
+    const url = act(
+      issue('create', '--title', d.title, '--body-file', '-', ...flags('--label', d.labels)),
       d.body,
     ).trim();
     made[d.id] = { number: Number(url.split('/').at(-1)), url };
-    if (d.state === 'closed') run(['issue', 'close', String(made[d.id].number), '--reason', 'completed']);
+    if (d.state === 'closed') act(issue('close', String(made[d.id].number), '--reason', 'completed'));
   }
   for (const u of plan.issues.update) {
-    const args = ['issue', 'edit', String(u.number)];
+    const args = ['edit', String(u.number)];
     if (u.title) args.push('--title', u.issue.title);
     if (u.body) args.push('--body-file', '-');
-    run(
-      [...args, ...flags('--add-label', u.addLabels), ...flags('--remove-label', u.removeLabels)],
+    act(
+      issue(...args, ...flags('--add-label', u.addLabels), ...flags('--remove-label', u.removeLabels)),
       u.body ? u.issue.body : undefined,
     );
   }
-  for (const i of plan.issues.close) run(['issue', 'close', String(i.number), '--reason', 'completed']);
-  for (const i of plan.issues.reopen) run(['issue', 'reopen', String(i.number)]);
+  for (const i of plan.issues.close) act(issue('close', String(i.number), '--reason', 'completed'));
+  for (const i of plan.issues.reopen) act(issue('reopen', String(i.number)));
   for (const r of plan.issues.removed) {
     const number = String(r.number);
-    if (r.label) run(['issue', 'edit', number, '--add-label', REMOVED_LABEL]);
+    if (r.label) act(issue('edit', number, '--add-label', REMOVED_LABEL));
     if (r.comment)
-      run(
-        ['issue', 'comment', number, '--body-file', '-'],
+      act(
+        issue('comment', number, '--body-file', '-'),
         `Requirement \`${r.id}\` is no longer in \`${REQUIREMENTS}\`, so this issue is closed and labelled \`${REMOVED_LABEL}\`. It is kept, not deleted. Generated: do not edit.\n`,
       );
-    if (r.close) run(['issue', 'close', number, '--reason', 'not planned']);
+    if (r.close) act(issue('close', number, '--reason', 'not planned'));
   }
   return made;
 }
 
 const optionInput = (name, field, old) => ({
   name,
-  color: old?.color ?? (field === 'Status' ? (STATUS_COLOURS[name] ?? 'GRAY') : 'GRAY'),
+  color: old?.color ?? (field === 'Proof' ? (OPTION_COLOURS[name] ?? 'GRAY') : 'GRAY'),
   description: old?.description ?? '',
 });
 
-function doFields(run, project, remote, fieldPlans) {
+function doFields(act, project, remote, fieldPlans) {
   for (const f of fieldPlans) {
     if (f.create) {
-      graphql(run, CREATE_FIELD, {
+      graphql(act, CREATE_FIELD, {
         project: project.id,
         name: f.name,
         options: f.add.map((o) => optionInput(o, f.name)),
@@ -165,29 +260,33 @@ function doFields(run, project, remote, fieldPlans) {
       ...have.options.map((o) => optionInput(o.name, f.name, o)),
       ...f.add.map((o) => optionInput(o, f.name)),
     ];
-    graphql(run, UPDATE_FIELD, { field: have.id, options });
+    graphql(act, UPDATE_FIELD, { field: have.id, options });
   }
 }
 
 /**
- * Does a plan from buildPlan, in order: labels, issues, then the project. The project is read again after its fields
- * change, because replacing a field's options gives them new ids and clears the values set from them, and its items and
- * values are planned afresh from that — so a run stopped half way is finished by the next, which changes only what is
- * still different. Throws, with gh's words, at the first call that fails.
+ * Does a plan from buildPlan in `repo` (`owner/name`), in order: labels, issues, then the project. The project is read
+ * again after its fields change, because replacing a field's options gives them new ids and clears the values set from
+ * them, and its items and values are planned afresh from that — so a run stopped half way is finished by the next, which
+ * changes only what is still different. Each call that changes something goes through a pause, and a retry once on a
+ * secondary rate limit; `opts` may give another `sleep` (milliseconds, blocking), `pauseMs` and `retryMs`. Throws, with
+ * gh's words, at the first call that fails.
  */
-export function executePlan(run, owner, plan) {
+export function executePlan(run, repo, plan, opts = {}) {
+  const act = paced(run, { sleep: waitFor, pauseMs: PAUSE_MS, retryMs: RETRY_MS, ...opts });
+  const owner = ownerOf(repo);
   for (const name of plan.labels) {
     const { color, description } = labelStyle(name);
-    run(['label', 'create', name, '--color', color, '--description', description]);
+    act(inRepo(repo, ['label', 'create', name, '--color', color, '--description', description]));
   }
-  const made = doIssues(run, plan);
+  const made = doIssues(act, repo, plan);
   const known = { ...plan.issues.held, ...made };
   const idByNumber = new Map(Object.entries(known).map(([id, i]) => [i.number, id]));
 
   let ref = plan.projectRef;
   if (!ref) {
     const created = JSON.parse(
-      run(['project', 'create', '--owner', owner, '--title', PROJECT_TITLE, '--format', 'json']),
+      act(['project', 'create', '--owner', owner, '--title', PROJECT_TITLE, '--format', 'json']),
     );
     ref = { id: created.id, number: created.number };
   }
@@ -195,7 +294,7 @@ export function executePlan(run, owner, plan) {
   let remote = readProject(run, owner, ref.number, idByNumber);
   let todo = planProject(issues, fields, remote);
   if (todo.fields.length) {
-    doFields(run, ref, remote, todo.fields);
+    doFields(act, ref, remote, todo.fields);
     remote = readProject(run, owner, ref.number, idByNumber);
     todo = planProject(issues, fields, remote);
   }
@@ -203,13 +302,13 @@ export function executePlan(run, owner, plan) {
   for (const id of todo.itemsAdd) {
     if (!known[id]) throw new Error(`requirement ${id} has no issue to add to the project`);
     const added = JSON.parse(
-      run(['project', 'item-add', String(ref.number), '--owner', owner, '--url', known[id].url, '--format', 'json']),
+      act(['project', 'item-add', String(ref.number), '--owner', owner, '--url', known[id].url, '--format', 'json']),
     );
     itemIds.set(id, added.id);
   }
   for (const set of todo.sets) {
     const field = remote.fields[set.field];
-    run([
+    act([
       'project',
       'item-edit',
       '--id',

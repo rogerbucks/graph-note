@@ -14,16 +14,24 @@ export const CATCH_ALL = 'S3';
 export const PROJECT_TITLE = 'graph-note requirements';
 /** The label of an issue whose requirement is no longer in the requirements file. */
 export const REMOVED_LABEL = 'requirement:removed';
-/** The project's single-choice fields, in order. */
-export const FIELD_NAMES = ['Slice', 'Workstream', 'Status'];
+/**
+ * The project's single-choice fields, in order. The built-in Status field of a GitHub Project is never used: its options
+ * are Todo, In Progress and Done, and a person may use it, so the requirement's status goes in the Proof field instead.
+ */
+export const FIELD_NAMES = ['Slice', 'Workstream', 'Proof'];
+/** The fields whose options never change, so the script never replaces them: one that lacks an option is refused. */
+export const FIXED_FIELDS = ['Proof'];
 /** The statuses a requirement can have, as the slice board gives them. */
 export const STATUSES = ['open', 'part', 'proved'];
+/** The start of the banner line every generated issue carries; an issue without it is not one of ours. */
+export const BANNER_START = '> **Generated — do not edit.**';
 
-const MAX_CLAUSE = 80;
+const MAX_TITLE = 100;
+const TITLE_SEPARATOR = ' · ';
 const MANAGED_LABEL = /^(slice-\d+|workstream:.+|status:(open|part|proved)|requirement:removed)$/;
-// A clause ends at a comma, semicolon, colon or full stop that ends a word, or at a dash with spaces round it.
-const CLAUSE_END = /[;:,](?=\s|$)|\s[—–]\s|\.(?=\s|$)/;
 const MARKER = /<!-- requirement:([\w.-]+) -->/g;
+// An @name or @org/team, or a #number, that is not already inside a code span or a longer word.
+const MENTION = /(?<![\w`])(@[A-Za-z0-9][\w-]*(?:\/[\w-]+)?|#\d+)/g;
 
 /**
  * Reads the workstreams file: a map from a workstream id to {title, requirements: [ids]}. Throws, naming the
@@ -72,20 +80,34 @@ export function assignWorkstreams(requirements, workstreams) {
   return placed;
 }
 
-/**
- * The first clause of a rule, for an issue's title: the text up to the first comma, semicolon, colon, dash or full stop,
- * on one line. Never over `max` characters: a longer clause is cut at a word and ends with an ellipsis.
- */
-export function firstClause(rule, max = MAX_CLAUSE) {
-  const text = String(rule ?? '')
-    .replace(/\s+/g, ' ')
-    .trim();
-  const end = CLAUSE_END.exec(text);
-  const clause = (end ? text.slice(0, end.index).trim() : text) || text;
-  if (clause.length <= max) return clause;
-  const head = clause.slice(0, max - 1);
+const cutAtWord = (text, max) => {
+  const head = text.slice(0, max);
   const space = head.lastIndexOf(' ');
-  return `${(clause[max - 1] === ' ' || space < 1 ? head : head.slice(0, space)).trimEnd()}…`;
+  return (text[max] === ' ' || space < 1 ? head : head.slice(0, space)).trimEnd();
+};
+
+/**
+ * The title of an issue: the title of the requirement's section, a dot, and the requirement's id with its underscores as
+ * spaces. Never over 100 characters: a long section title gives way, cut at a word with an ellipsis, so the id's words
+ * always stay; with no section title the title is the id's words alone.
+ */
+export function titleOf(sectionTitle, id) {
+  const words = id.replaceAll('_', ' ');
+  const room = MAX_TITLE - TITLE_SEPARATOR.length - words.length;
+  if (!sectionTitle || room < 2) return words.length <= MAX_TITLE ? words : `${words.slice(0, MAX_TITLE - 1)}…`;
+  const section = sectionTitle.length <= room ? sectionTitle : `${cutAtWord(sectionTitle, room - 1)}…`;
+  return `${section}${TITLE_SEPARATOR}${words}`;
+}
+
+/**
+ * Wraps each @name, @org/team and #number of a text in backticks, so that GitHub neither notifies a person nor links an
+ * issue from a generated body. Text already inside backticks is left as it is.
+ */
+export function neutralise(text) {
+  return String(text ?? '')
+    .split(/(`[^`]*`)/)
+    .map((part, i) => (i % 2 ? part : part.replace(MENTION, '`$1`')))
+    .join('');
 }
 
 /** The hidden comment that ties an issue to its requirement. */
@@ -95,6 +117,28 @@ export const markerOf = (id) => `<!-- requirement:${id} -->`;
 export function idOfBody(body) {
   const found = [...String(body ?? '').matchAll(MARKER)];
   return found.length ? found.at(-1)[1] : null;
+}
+
+/**
+ * The requirement id of a body this generator made: one with the generated banner and its marker as the last thing in it.
+ * Anything else, such as a body that only quotes a marker, is null.
+ */
+export function generatedIdOf(body) {
+  const text = String(body ?? '')
+    .replaceAll('\r\n', '\n')
+    .trimEnd();
+  const id = idOfBody(text);
+  if (id === null || !text.endsWith(markerOf(id))) return null;
+  return text.split('\n').some((line) => line.startsWith(BANNER_START)) ? id : null;
+}
+
+/**
+ * The requirement id of an issue this generator may adopt, or null: it was written by the signed-in login, and its body
+ * is one this generator made. A marker alone proves nothing, since anybody can write one.
+ */
+export function adoptedId(issue, login) {
+  if (!login || !issue.author || issue.author.toLowerCase() !== login.toLowerCase()) return null;
+  return generatedIdOf(issue.body);
 }
 
 /** True for a label this generator owns, which it may add and take off; any other label is somebody's own. */
@@ -125,14 +169,15 @@ const testLine = (t) => {
   const where = t.where && t.where !== 'repo' ? t.where : '';
   const files = t.files.map((f) => `\`${f}\``).join(', ');
   const place = [files, where && (files ? `(${where})` : where)].filter(Boolean).join(' ') || 'no file yet';
-  return `- \`${t.id}\` (${t.status}): ${oneLine(t.proves)} — ${place}`;
+  return `- \`${t.id}\` (${t.status}): ${neutralise(oneLine(t.proves))} — ${place}`;
 };
 
+// The whole rule is the first line, as the title no longer holds it; the banner comes next.
 const bodyOf = (r, workstream) =>
   [
-    `> **Generated — do not edit.** Made by \`${SCRIPT}\` from \`${REQUIREMENTS}\`, the only source. Change the requirement there; an edit here is overwritten.`,
+    neutralise(oneLine(r.rule)),
     '',
-    `**Rule:** ${oneLine(r.rule)}`,
+    `${BANNER_START} Made by \`${SCRIPT}\` from \`${REQUIREMENTS}\`, the only source. Change the requirement there; an edit here is overwritten.`,
     '',
     `- **Strength:** ${r.level}`,
     `- **Slice:** ${r.slice}`,
@@ -163,7 +208,7 @@ export function desiredState(board, workstreams, slices) {
     const workstream = placed.get(r.id);
     return {
       id: r.id,
-      title: `${r.id}: ${firstClause(r.rule)}`,
+      title: titleOf(board.sections.find((s) => s.num === r.section)?.title, r.id),
       body: bodyOf(r, option(workstream)),
       labels: [`slice-${r.slice}`, `status:${r.status}`, `workstream:${workstream}`].sort(),
       state: r.status === 'proved' ? 'closed' : 'open',
@@ -177,7 +222,7 @@ export function desiredState(board, workstreams, slices) {
     fields: {
       Slice: chosen.map((s) => `Slice ${s}`),
       Workstream: Object.keys(workstreams).map(option),
-      Status: [...STATUSES],
+      Proof: [...STATUSES],
     },
     known: board.requirements.map((r) => r.id),
   };

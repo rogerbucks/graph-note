@@ -5,15 +5,18 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readBoard } from '../scripts/slice-board.mjs';
 import {
+  BANNER_START,
   CATCH_ALL,
   PROJECT_TITLE,
+  adoptedId,
   assignWorkstreams,
   desiredState,
-  firstClause,
+  generatedIdOf,
   idOfBody,
   isManagedLabel,
   labelStyle,
   markerOf,
+  neutralise,
   readWorkstreams,
 } from '../scripts/github-project-desired.mjs';
 import { FIXTURE, WORKSTREAMS } from './repository/github-project-fixture.js';
@@ -65,42 +68,72 @@ describe('the workstream of each requirement', () => {
   });
 });
 
-describe('the first clause of a rule', () => {
-  test('stops at a comma, semicolon, colon, dash or full stop', () => {
-    assert.equal(firstClause('Zoom out must fit, however large it is.'), 'Zoom out must fit');
-    assert.equal(firstClause('Dim all but the neighbours; keep the rest.'), 'Dim all but the neighbours');
-    assert.equal(firstClause('A setting: off by default.'), 'A setting');
-    assert.equal(firstClause('Tooltips must open — also by touch.'), 'Tooltips must open');
-    assert.equal(firstClause('Choosing a link must show it. It must say so.'), 'Choosing a link must show it');
+/** A board of one requirement, for the cases a title or a body needs a particular rule, section or test for. */
+const lone = (over = {}, sectionTitle = 'Viewing') => ({
+  sections: [{ num: '3', title: sectionTitle }],
+  requirements: [
+    {
+      id: 'zoom_out_to_fit',
+      section: '3',
+      slice: 3,
+      level: 'must',
+      rule: 'A rule.',
+      tests: [],
+      status: 'open',
+      ...over,
+    },
+  ],
+});
+const only = (b, workstreams = { S3: { title: 'Slice end', requirements: [] } }) =>
+  desiredState(b, workstreams, [3]).issues[0];
+
+describe('the title of an issue', () => {
+  test('is the title of the requirement’s section, a dot, and the id with its underscores as spaces', () => {
+    const { issues } = desiredState(board, WORKSTREAMS, [3, 4]);
+    assert.equal(byId(issues, 'zoom_out_to_fit').title, 'Viewing · zoom out to fit');
+    assert.equal(byId(issues, 'stray_new').title, 'Viewer aids · stray new');
+    assert.equal(byId(issues, 'focus_link').title, 'Viewing · focus link');
   });
 
-  test('keeps a whole rule that has no clause break, without its final full stop', () => {
-    assert.equal(firstClause('Choosing a link must show it.'), 'Choosing a link must show it');
-    assert.equal(firstClause('No stop at all'), 'No stop at all');
+  test('always says what the requirement is called: the id’s words are in every title', () => {
+    for (const issue of desiredState(board, WORKSTREAMS, [3, 4]).issues)
+      assert.ok(issue.title.includes(issue.id.replaceAll('_', ' ')), issue.title);
   });
 
-  test('does not break at a dot inside a word or a number', () => {
-    assert.equal(
-      firstClause('Version 1.2 must load e.g.json files fast.'),
-      'Version 1.2 must load e.g.json files fast',
-    );
+  test('is just the id’s words when the section has no title', () => {
+    assert.equal(only(lone({ section: '99' })).title, 'zoom out to fit');
   });
 
-  test('joins lines and runs of spaces into single spaces', () => {
-    assert.equal(firstClause('A  rule\n over   lines.'), 'A rule over lines');
+  test('is never over 100 characters, and a long section title gives way to the id’s words', () => {
+    const title = only(lone({}, 'A very long section title '.repeat(10))).title;
+    assert.ok(title.length <= 100, `${title.length}`);
+    assert.ok(title.endsWith(' · zoom out to fit'), title);
+    assert.match(title, /…/);
+    const huge = only(lone({ id: 'w'.repeat(150) })).title;
+    assert.ok(huge.length <= 100, `${huge.length}`);
+  });
+});
+
+describe('words in a body that would mention or link', () => {
+  test('are wrapped in backticks: an @name or a team, and a #number', () => {
+    assert.equal(neutralise('Ask @alice and @org/team about #12.'), 'Ask `@alice` and `@org/team` about `#12`.');
   });
 
-  test('is never over 80 characters: a longer clause is cut at a word and ends with an ellipsis', () => {
-    const long = `${'word '.repeat(30)}end.`;
-    const clause = firstClause(long);
-    assert.ok(clause.length <= 80, `${clause.length}`);
-    assert.match(clause, /word…$/);
-    assert.equal(firstClause('x'.repeat(200)).length, 80, 'one long word is cut where it stands');
-    assert.equal(firstClause('x'.repeat(80)), 'x'.repeat(80));
+  test('are left alone when they are not mentions, or already in code', () => {
+    assert.equal(neutralise('mail a@b.c, colour #fff, ref #x'), 'mail a@b.c, colour #fff, ref #x');
+    assert.equal(neutralise('already `@alice` and `#12 and @bob` here'), 'already `@alice` and `#12 and @bob` here');
   });
 
-  test('is empty for an empty rule', () => {
-    assert.equal(firstClause(''), '');
+  test('are wrapped in the rule and in the words a test proves, wherever the body shows them', () => {
+    const body = only(
+      lone({
+        rule: 'Tell @alice about #12.',
+        tests: [{ id: 't', proves: 'pings @bob, fixes #7', files: [], where: 'repo', status: 'written' }],
+      }),
+    ).body;
+    assert.equal(body.split('\n')[0], 'Tell `@alice` about `#12`.');
+    assert.ok(body.includes('pings `@bob`, fixes `#7`'));
+    assert.doesNotMatch(body.replaceAll(/`[^`]*`/g, ''), /[@#]\w/);
   });
 });
 
@@ -114,6 +147,32 @@ describe('the marker in an issue body', () => {
     assert.equal(idOfBody(`${markerOf('quoted')}\nmore\n${markerOf('real')}`), 'real');
     assert.equal(idOfBody('an issue somebody wrote by hand'), null);
     assert.equal(idOfBody(null), null);
+  });
+});
+
+describe('an issue this generator may adopt', () => {
+  const body = byId(desiredState(board, WORKSTREAMS, [3, 4]).issues, 'focus_link').body;
+  const issue = (over = {}) => ({ author: 'me', body, ...over });
+
+  test('has the generated banner and the marker at the end, and was written by the signed-in login', () => {
+    assert.equal(generatedIdOf(body), 'focus_link');
+    assert.equal(generatedIdOf(`${body.replaceAll('\n', '\r\n')}  \n`), 'focus_link');
+    assert.equal(adoptedId(issue(), 'me'), 'focus_link');
+    assert.equal(adoptedId(issue({ author: 'Me' }), 'me'), 'focus_link', 'logins are not case-sensitive');
+  });
+
+  test('is not adopted when somebody else wrote it, though it carries the marker', () => {
+    assert.equal(adoptedId(issue({ author: 'stranger' }), 'me'), null);
+    assert.equal(adoptedId(issue({ author: undefined }), 'me'), null);
+    assert.equal(adoptedId(issue(), undefined), null);
+  });
+
+  test('is not adopted without the banner, or when the marker is not at the end', () => {
+    assert.equal(generatedIdOf(markerOf('focus_link')), null);
+    assert.equal(generatedIdOf(`text\n\n${markerOf('focus_link')}\n`), null);
+    assert.equal(generatedIdOf(`${body}\nsomething added after`), null);
+    assert.equal(generatedIdOf(body.replace(BANNER_START, '> not the banner')), null);
+    assert.equal(generatedIdOf(null), null);
   });
 });
 
@@ -134,11 +193,6 @@ describe('the desired issues for chosen slices', () => {
         .sort(),
       ['focus_link', 'stray_new'],
     );
-  });
-
-  test('are titled with the id and the first clause of the rule', () => {
-    assert.equal(byId(issues, 'zoom_out_to_fit').title, 'zoom_out_to_fit: Zoom out must fit the drawing');
-    assert.equal(byId(issues, 'focus_link').title, 'focus_link: Choosing a link must show it');
   });
 
   test('carry the slice, workstream and status labels, sorted', () => {
@@ -163,11 +217,20 @@ describe('the desired issues for chosen slices', () => {
     );
   });
 
-  test('have a body that opens on a do-not-edit banner naming the source file', () => {
-    const body = byId(issues, 'zoom_out_to_fit').body;
-    assert.match(body.split('\n')[0], /do not edit/i);
-    assert.match(body.split('\n')[0], /requirements\/editor-requirements\.gql/);
-    assert.match(body.split('\n')[0], /scripts\/github-project\.mjs/);
+  test('have a body that opens on the whole rule, as the title no longer holds it', () => {
+    assert.equal(
+      byId(issues, 'focus_neighbours').body.split('\n')[0],
+      'Choosing a thing should dim all but its neighbours; the rest stays drawn.',
+    );
+  });
+
+  test('have a body with a do-not-edit banner naming the source file and the script', () => {
+    const banner = byId(issues, 'zoom_out_to_fit')
+      .body.split('\n')
+      .find((l) => l.startsWith(BANNER_START));
+    assert.match(banner, /do not edit/i);
+    assert.match(banner, /requirements\/editor-requirements\.gql/);
+    assert.match(banner, /scripts\/github-project\.mjs/);
   });
 
   test('have a body with the whole rule, the strength, the slice, the workstream and the status', () => {
@@ -208,10 +271,10 @@ describe('the desired issues for chosen slices', () => {
 describe('the project fields', () => {
   const { fields } = desiredState(board, WORKSTREAMS, [3, 4]);
 
-  test('are Slice, Workstream and Status, each a single choice from a fixed set of options', () => {
-    assert.deepEqual(Object.keys(fields), ['Slice', 'Workstream', 'Status']);
+  test('are Slice, Workstream and Proof, each a single choice; the built-in Status field is not used', () => {
+    assert.deepEqual(Object.keys(fields), ['Slice', 'Workstream', 'Proof']);
     assert.deepEqual(fields.Slice, ['Slice 3', 'Slice 4']);
-    assert.deepEqual(fields.Status, ['open', 'part', 'proved']);
+    assert.deepEqual(fields.Proof, ['open', 'part', 'proved']);
   });
 
   test('offer every workstream of the file, in the file’s order, with its title', () => {

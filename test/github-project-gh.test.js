@@ -5,19 +5,23 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readBoard } from '../scripts/slice-board.mjs';
-import { desiredState, idOfBody } from '../scripts/github-project-desired.mjs';
+import { BANNER_START, desiredState, idOfBody, markerOf } from '../scripts/github-project-desired.mjs';
 import { buildPlan } from '../scripts/github-project-plan.mjs';
-import { executePlan, ghRunner, readRemote, repoOwner } from '../scripts/github-project-gh.mjs';
+import { executePlan, ghRunner, readRemote } from '../scripts/github-project-gh.mjs';
 import { fakeGithub } from './repository/github-project-fake.js';
+import { path } from './repository/repo.js';
 import { FIXTURE, WORKSTREAMS } from './repository/github-project-fixture.js';
 
 const board = readBoard(FIXTURE);
 const desiredFor = (slices = [3, 4]) => desiredState(board, WORKSTREAMS, slices);
+const REPO = 'rogerbucks/graph-note';
+const noSleep = () => {};
+const generated = (id) => `an old rule\n\n${BANNER_START} old.\n\n${markerOf(id)}\n`;
 
 /** One whole apply: read GitHub, plan, do the plan. Gives the plan it did. */
 const apply = (gh, desired = desiredFor()) => {
-  const plan = buildPlan(desired, readRemote(gh.run, 'rogerbucks'));
-  executePlan(gh.run, 'rogerbucks', plan);
+  const plan = buildPlan(desired, readRemote(gh.run, REPO));
+  executePlan(gh.run, REPO, plan, { sleep: noSleep });
   return plan;
 };
 const issueOf = (gh, id) => gh.hub.issues.find((i) => idOfBody(i.body) === id);
@@ -61,13 +65,24 @@ describe('the first apply, against an empty GitHub', () => {
     assert.ok(gh.hub.mutations.slice(0, first).every((m) => m.startsWith('label create')));
   });
 
-  test('creates the project with its Slice, Workstream and Status fields, each a single choice', () => {
+  test('creates the project with its Slice, Workstream and Proof fields, each a single choice', () => {
     const [project] = gh.hub.projects;
     assert.equal(project.title, 'graph-note requirements');
     const options = (name) => project.fields.find((f) => f.name === name).options.map((o) => o.name);
     assert.deepEqual(options('Slice'), ['Slice 3', 'Slice 4']);
     assert.deepEqual(options('Workstream'), ['W0: Zoom', 'W1: Focus, hover and untangle', 'S3: Slice end']);
-    assert.deepEqual(options('Status'), ['Todo', 'In Progress', 'Done', 'open', 'part', 'proved']);
+    assert.deepEqual(options('Proof'), ['open', 'part', 'proved']);
+  });
+
+  test('leaves the built-in Status field as GitHub made it: its options kept, no value set', () => {
+    const [project] = gh.hub.projects;
+    const status = project.fields.find((f) => f.name === 'Status');
+    assert.deepEqual(
+      status.options.map((o) => o.name),
+      ['Todo', 'In Progress', 'Done'],
+    );
+    assert.ok(project.items.every((i) => !('Status' in i.values)));
+    assert.ok(gh.hub.mutations.every((m) => !/ProjectV2Field.* Status$/.test(m)));
   });
 
   test('adds every issue to the project, with its three field values', () => {
@@ -77,7 +92,7 @@ describe('the first apply, against an empty GitHub', () => {
     assert.deepEqual(project.items.find((i) => i.number === number).values, {
       Slice: 'Slice 3',
       Workstream: 'W1: Focus, hover and untangle',
-      Status: 'part',
+      Proof: 'part',
     });
   });
 
@@ -132,8 +147,8 @@ describe('an apply after a requirement’s proof changed', () => {
       ['issue close', 'issue edit', 'issue edit', 'issue reopen', 'project item-edit', 'project item-edit'].sort(),
     );
     const items = gh.hub.projects[0].items;
-    assert.equal(items.find((i) => i.number === a.number).values.Status, 'proved');
-    assert.equal(items.find((i) => i.number === b.number).values.Status, 'part');
+    assert.equal(items.find((i) => i.number === a.number).values.Proof, 'proved');
+    assert.equal(items.find((i) => i.number === b.number).values.Proof, 'part');
   });
 
   test('puts back a title or body somebody edited by hand', () => {
@@ -142,7 +157,7 @@ describe('an apply after a requirement’s proof changed', () => {
     const issue = issueOf(gh, 'focus_link');
     const { title, body } = issue;
     issue.title = 'my own title';
-    issue.body = `${body}\nsomething I added`;
+    issue.body = body.replace('Strength', 'Might');
     quiet(gh);
     apply(gh);
     assert.deepEqual([issue.title, issue.body], [title, body]);
@@ -154,35 +169,59 @@ describe('an apply when the project’s options had to change', () => {
   test('adds the options and sets the values again, though replacing options gives them new ids', () => {
     const gh = fakeGithub();
     apply(gh);
-    const status = gh.hub.projects[0].fields.find((f) => f.name === 'Status');
-    status.options = status.options.filter((o) => o.name !== 'proved');
-    for (const item of gh.hub.projects[0].items) if (item.values.Status === 'proved') delete item.values.Status;
+    const field = gh.hub.projects[0].fields.find((f) => f.name === 'Workstream');
+    field.options = field.options.filter((o) => o.name !== 'S3: Slice end');
+    for (const item of gh.hub.projects[0].items)
+      if (item.values.Workstream === 'S3: Slice end') delete item.values.Workstream;
     quiet(gh);
     apply(gh);
     assert.deepEqual(
-      status.options.map((o) => o.name),
-      ['Todo', 'In Progress', 'Done', 'open', 'part', 'proved'],
+      field.options.map((o) => o.name),
+      ['W0: Zoom', 'W1: Focus, hover and untangle', 'S3: Slice end'],
       'the options already there are kept, in order',
     );
-    const statuses = gh.hub.projects[0].items.map((i) => i.values.Status).sort();
-    assert.deepEqual(statuses, ['open', 'open', 'open', 'part', 'proved']);
+    const values = gh.hub.projects[0].items.map((i) => i.values.Workstream).sort();
+    assert.deepEqual(values, [
+      'S3: Slice end',
+      'S3: Slice end',
+      'W0: Zoom',
+      'W1: Focus, hover and untangle',
+      'W1: Focus, hover and untangle',
+    ]);
     quiet(gh);
     apply(gh);
     assert.deepEqual(gh.hub.mutations, []);
   });
+
+  test('does not touch the Proof field, and sets nothing on it again, when Workstream options changed', () => {
+    const gh = fakeGithub();
+    apply(gh);
+    const field = gh.hub.projects[0].fields.find((f) => f.name === 'Workstream');
+    field.options = field.options.filter((o) => o.name !== 'S3: Slice end');
+    quiet(gh);
+    apply(gh);
+    assert.ok(gh.hub.mutations.every((m) => !/ProjectV2Field.* Proof$/.test(m)));
+    assert.deepEqual(gh.hub.projects[0].items.map((i) => i.values.Proof).sort(), [
+      'open',
+      'open',
+      'open',
+      'part',
+      'proved',
+    ]);
+  });
 });
 
 describe('an apply when a requirement went', () => {
-  const marked = (id) => `an old rule\n\n<!-- requirement:${id} -->\n`;
   const withGone = () => {
     const gh = fakeGithub();
     apply(gh);
     gh.hub.issues.push({
       number: 70,
-      title: 'old_one: An old rule',
-      body: marked('old_one'),
+      title: 'Viewing · old one',
+      body: generated('old_one'),
       state: 'OPEN',
       labels: [{ name: 'slice-3' }],
+      author: { login: 'rogerbucks' },
       url: 'https://github.com/o/r/issues/70',
     });
     return gh;
@@ -215,10 +254,11 @@ describe('an apply when a requirement went', () => {
     apply(gh);
     gh.hub.issues.push({
       number: 71,
-      title: 'old_thing: x',
-      body: marked('old_thing'),
+      title: 'Viewing · old thing',
+      body: generated('old_thing'),
       state: 'OPEN',
       labels: [],
+      author: { login: 'rogerbucks' },
       url: 'https://github.com/o/r/issues/71',
     });
     quiet(gh);
@@ -232,7 +272,7 @@ describe('reading GitHub', () => {
     const gh = fakeGithub();
     apply(gh);
     gh.hub.projects.length = 0;
-    const remote = readRemote(gh.run, 'rogerbucks');
+    const remote = readRemote(gh.run, REPO);
     assert.ok(remote.labelNames.includes('slice-3'));
     assert.equal(remote.issues.length, 5);
     assert.deepEqual(remote.issues[0].labels, labelsOf(gh.hub.issues[0]).sort());
@@ -240,21 +280,40 @@ describe('reading GitHub', () => {
     assert.equal(remote.project, null);
   });
 
+  test('gives the signed-in login, and each issue’s author', () => {
+    const gh = fakeGithub({ login: 'the-owner' });
+    apply(gh);
+    const remote = readRemote(gh.run, REPO);
+    assert.equal(remote.login, 'the-owner');
+    assert.ok(remote.issues.every((i) => i.author === 'the-owner'));
+  });
+
   test('finds the project by its title and gives its fields, and its items by requirement id', () => {
     const gh = fakeGithub();
     apply(gh);
-    const { project } = readRemote(gh.run, 'rogerbucks');
+    const { project } = readRemote(gh.run, REPO);
     assert.equal(project.number, 1);
-    assert.deepEqual(Object.keys(project.fields).sort(), ['Slice', 'Status', 'Workstream']);
+    assert.deepEqual(Object.keys(project.fields).sort(), ['Proof', 'Slice', 'Status', 'Workstream']);
     assert.equal(project.items.length, 5);
     const item = project.items.find((i) => i.id === 'focus_link');
-    assert.deepEqual(item.values, { Slice: 'Slice 4', Workstream: 'W1: Focus, hover and untangle', Status: 'open' });
+    assert.deepEqual(item.values, { Slice: 'Slice 4', Workstream: 'W1: Focus, hover and untangle', Proof: 'open' });
   });
 
   test('ignores a project with another title', () => {
     const gh = fakeGithub();
     gh.run(['project', 'create', '--owner', 'rogerbucks', '--title', 'something else', '--format', 'json']);
-    assert.equal(readRemote(gh.run, 'rogerbucks').project, null);
+    assert.equal(readRemote(gh.run, REPO).project, null);
+  });
+
+  test('ignores the items of an issue it would not adopt, though the project holds them', () => {
+    const gh = fakeGithub();
+    apply(gh);
+    issueOf(gh, 'focus_link').author = { login: 'stranger' };
+    const { project } = readRemote(gh.run, REPO);
+    assert.equal(
+      project.items.some((i) => i.id === 'focus_link'),
+      false,
+    );
   });
 });
 
@@ -287,22 +346,34 @@ describe('the gh runner', () => {
     assert.throws(() => ghRunner(spawn)(['issue', 'list']), /ENOENT/);
   });
 
+  test('runs gh in the repository’s own folder, with no repository or host named by the environment', () => {
+    const before = { GH_REPO: process.env.GH_REPO, GH_HOST: process.env.GH_HOST };
+    process.env.GH_REPO = 'someone/else';
+    process.env.GH_HOST = 'github.example.com';
+    try {
+      const { seen, spawn } = spawned({ status: 0, stdout: '', stderr: '' });
+      ghRunner(spawn)(['issue', 'list']);
+      assert.equal(seen[0].options.cwd, path('.'));
+      assert.equal('GH_REPO' in seen[0].options.env, false);
+      assert.equal('GH_HOST' in seen[0].options.env, false);
+      assert.equal(seen[0].options.env.PATH, process.env.PATH, 'the rest of the environment is kept');
+    } finally {
+      for (const [name, value] of Object.entries(before))
+        if (value === undefined) delete process.env[name];
+        else process.env[name] = value;
+    }
+  });
+
   test('stops at the first failing call: nothing after it is done', () => {
     const gh = fakeGithub();
-    const plan = buildPlan(desiredFor(), readRemote(gh.run, 'rogerbucks'));
+    const plan = buildPlan(desiredFor(), readRemote(gh.run, REPO));
     let calls = 0;
     const failing = (args, input) => {
       calls += 1;
       if (calls === 3) throw new Error('boom');
       return gh.run(args, input);
     };
-    assert.throws(() => executePlan(failing, 'rogerbucks', plan), /boom/);
+    assert.throws(() => executePlan(failing, REPO, plan, { sleep: noSleep }), /boom/);
     assert.equal(calls, 3);
-  });
-});
-
-describe('the repository owner', () => {
-  test('is the login gh view gives', () => {
-    assert.equal(repoOwner(fakeGithub({ owner: 'someone' }).run), 'someone');
   });
 });

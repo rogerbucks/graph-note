@@ -4,10 +4,12 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readBoard } from '../scripts/slice-board.mjs';
-import { desiredState } from '../scripts/github-project-desired.mjs';
+import { BANNER_START, desiredState, idOfBody, markerOf } from '../scripts/github-project-desired.mjs';
 import {
+  MAX_REMOVALS,
   buildPlan,
   formatPlan,
+  guardProblem,
   planIssues,
   planLabels,
   planProject,
@@ -18,6 +20,7 @@ import { FIXTURE, WORKSTREAMS } from './repository/github-project-fixture.js';
 const board = readBoard(FIXTURE);
 const desired = desiredState(board, WORKSTREAMS, [3, 4]);
 const KNOWN = new Set(board.requirements.map((r) => r.id));
+const ME = 'me';
 
 /** The issues GitHub would hold had the desired ones been made: numbered in order, closed where desired closed. */
 const issuesHeld = () =>
@@ -28,11 +31,16 @@ const issuesHeld = () =>
     body: issue.body,
     state: issue.state === 'closed' ? 'CLOSED' : 'OPEN',
     labels: [...issue.labels],
+    author: ME,
   }));
-const held = (id) => issuesHeld().find((i) => i.title.startsWith(`${id}:`));
-const replaceIssue = (id, change) => issuesHeld().map((i) => (i.title.startsWith(`${id}:`) ? { ...i, ...change } : i));
-const plan = (remote) => planIssues(desired.issues, remote, KNOWN);
+const held = (id) => issuesHeld().find((i) => idOfBody(i.body) === id);
+const replaceIssue = (id, change) => issuesHeld().map((i) => (idOfBody(i.body) === id ? { ...i, ...change } : i));
+const plan = (remote) => planIssues(desired.issues, remote, KNOWN, ME);
 const ids = (list) => list.map((x) => x.id ?? x).sort();
+/** What GitHub holds, as readRemote gives it, for the signed-in login. */
+const remoteOf = (over = {}) => ({ login: ME, labelNames: [], issues: [], project: null, ...over });
+/** The body of an issue this generator made, for a requirement the file no longer holds. */
+const generated = (id) => `an old rule\n\n${BANNER_START} old.\n\n${markerOf(id)}\n`;
 
 describe('the issue plan against an empty GitHub', () => {
   const p = plan([]);
@@ -43,7 +51,7 @@ describe('the issue plan against an empty GitHub', () => {
   });
 
   test('counts how many of those are made closed, being proved', () => {
-    assert.equal(summarise(buildPlan(desired, { labelNames: [], issues: [], project: null })).createdClosed, 1);
+    assert.equal(summarise(buildPlan(desired, remoteOf())).createdClosed, 1);
   });
 });
 
@@ -67,10 +75,49 @@ describe('the issue plan against a GitHub that holds the desired issues', () => 
   test('leaves alone an issue somebody wrote with no marker', () => {
     const p = plan([
       ...issuesHeld(),
-      { number: 99, title: 'A question', body: 'hand written', state: 'OPEN', labels: [] },
+      { number: 99, title: 'A question', body: 'hand written', state: 'OPEN', labels: [], author: ME },
     ]);
     assert.equal(p.removed.length, 0);
     assert.equal(p.update.length, 0);
+    assert.deepEqual(p.warnings, []);
+  });
+});
+
+describe('the issue plan and an issue it may not trust', () => {
+  const foreign = (id, over = {}) => ({
+    number: 80,
+    title: 'x',
+    body: generated(id),
+    state: 'OPEN',
+    labels: [],
+    author: 'stranger',
+    ...over,
+  });
+
+  test('does not adopt an issue somebody else wrote, though it carries a requirement’s marker', () => {
+    const p = plan(replaceIssue('focus_link', { author: 'stranger' }));
+    assert.deepEqual(ids(p.create), ['focus_link'], 'the requirement still gets its own issue');
+    assert.deepEqual([p.update, p.close, p.reopen], [[], [], []], 'and the stranger’s is not edited or closed');
+    assert.match(p.warnings.join('\n'), /#\d+.*focus_link.*not adopted/);
+  });
+
+  test('does not label, comment on or close a stranger’s issue naming a requirement that went', () => {
+    const p = plan([...issuesHeld(), foreign('old_one')]);
+    assert.deepEqual(p.removed, []);
+    assert.match(p.warnings.join('\n'), /#80.*old_one.*not adopted/);
+  });
+
+  test('does not adopt an issue of the signed-in login that lost its banner or its closing marker', () => {
+    const bare = foreign('old_one', { author: ME, body: `no banner\n${markerOf('old_one')}` });
+    const moved = foreign('old_two', { number: 81, author: ME, body: `${generated('old_two')}\nadded later` });
+    const p = plan([...issuesHeld(), bare, moved]);
+    assert.deepEqual(p.removed, []);
+    assert.equal(p.warnings.length, 2);
+  });
+
+  test('adopts nothing when the login is not known', () => {
+    const p = planIssues(desired.issues, issuesHeld(), KNOWN, undefined);
+    assert.equal(p.create.length, desired.issues.length);
   });
 });
 
@@ -82,7 +129,7 @@ describe('the issue plan for an issue that drifted', () => {
   });
 
   test('updates a body edited by hand', () => {
-    const [u] = plan(replaceIssue('focus_link', { body: `${held('focus_link').body}\nan extra line` })).update;
+    const [u] = plan(replaceIssue('focus_link', { body: held('focus_link').body.replace('Strength', 'Might') })).update;
     assert.deepEqual([u.id, u.title, u.body], ['focus_link', false, true]);
   });
 
@@ -127,10 +174,11 @@ describe('the issue plan for an issue that drifted', () => {
 describe('the issue plan for a requirement that went', () => {
   const gone = (extra = {}) => ({
     number: 70,
-    title: 'old_one: Old rule',
-    body: 'rule\n\n<!-- requirement:old_one -->\n',
+    title: 'Viewing · old one',
+    body: generated('old_one'),
     state: 'OPEN',
     labels: ['slice-3'],
+    author: ME,
     ...extra,
   });
 
@@ -153,7 +201,7 @@ describe('the issue plan for a requirement that went', () => {
   });
 
   test('leaves alone an issue whose requirement is still in the file, in a slice not chosen', () => {
-    const outside = gone({ title: 'old_thing: An old rule', body: '<!-- requirement:old_thing -->' });
+    const outside = gone({ title: 'Viewing · old thing', body: generated('old_thing') });
     const p = plan([...issuesHeld(), outside]);
     assert.deepEqual(p.removed, []);
     assert.deepEqual(p.outside, ['old_thing']);
@@ -179,11 +227,11 @@ describe('the label plan', () => {
   });
 
   test('is part of the whole plan: the desired issues’ labels, and the removed label when one is needed', () => {
-    const remote = { labelNames: ['slice-3'], issues: [], project: null };
+    const remote = remoteOf({ labelNames: ['slice-3'] });
     assert.ok(buildPlan(desired, remote).labels.includes('workstream:W1'));
     assert.ok(!buildPlan(desired, remote).labels.includes('slice-3'));
     assert.ok(!buildPlan(desired, remote).labels.includes('requirement:removed'));
-    const gone = { number: 70, title: 't', body: '<!-- requirement:old_one -->', state: 'OPEN', labels: [] };
+    const gone = { number: 70, title: 't', body: generated('old_one'), state: 'OPEN', labels: [], author: ME };
     assert.ok(buildPlan(desired, { ...remote, issues: [gone] }).labels.includes('requirement:removed'));
   });
 });
@@ -201,7 +249,7 @@ const projectHeld = () => ({
   items: desired.issues.map((i) => ({
     itemId: `I_${i.id}`,
     id: i.id,
-    values: { Slice: i.slice, Workstream: i.workstream, Status: i.status },
+    values: { Slice: i.slice, Workstream: i.workstream, Proof: i.status },
   })),
 });
 const projectPlan = (project) => planProject(desired.issues, desired.fields, project);
@@ -215,17 +263,17 @@ describe('the project plan', () => {
       [
         ['Slice', true],
         ['Workstream', true],
-        ['Status', true],
+        ['Proof', true],
       ],
     );
     assert.deepEqual(p.fields[0].add, ['Slice 3', 'Slice 4']);
     assert.deepEqual(ids(p.itemsAdd), ids(desired.issues));
     assert.equal(p.sets.length, 3 * desired.issues.length);
     assert.deepEqual(
-      p.sets.find((s) => s.id === 'focus_link' && s.field === 'Status'),
+      p.sets.find((s) => s.id === 'focus_link' && s.field === 'Proof'),
       {
         id: 'focus_link',
-        field: 'Status',
+        field: 'Proof',
         from: null,
         to: 'open',
       },
@@ -239,9 +287,9 @@ describe('the project plan', () => {
 
   test('adds the options a field lacks, keeping the others, and creates a field that is missing', () => {
     const project = projectHeld();
-    project.fields.Status.options = [
+    project.fields.Workstream.options = [
       { id: 'O_todo', name: 'Todo' },
-      { id: 'O_open', name: 'open' },
+      { id: 'O_w0', name: 'W0: Zoom' },
     ];
     delete project.fields.Slice;
     const p = projectPlan(project);
@@ -249,15 +297,29 @@ describe('the project plan', () => {
       p.fields.map((f) => [f.name, f.create, f.add]),
       [
         ['Slice', true, ['Slice 3', 'Slice 4']],
-        ['Status', false, ['part', 'proved']],
+        ['Workstream', false, ['W1: Focus, hover and untangle', 'S3: Slice end']],
       ],
     );
   });
 
+  test('never replaces the options of the Proof field: one that lacks an option is refused, not changed', () => {
+    const project = projectHeld();
+    project.fields.Proof.options = project.fields.Proof.options.filter((o) => o.name !== 'proved');
+    assert.throws(() => projectPlan(project), /Proof.*proved.*by hand/);
+  });
+
+  test('does not look at the built-in Status field', () => {
+    const project = projectHeld();
+    project.fields.Status = { id: 'F_Status', options: [{ id: 'O_todo', name: 'Todo' }] };
+    project.items[0].values.Status = 'Todo';
+    const p = projectPlan(project);
+    assert.deepEqual([p.create, p.fields, p.itemsAdd, p.sets], [false, [], [], []]);
+  });
+
   test('sets only the values that differ, saying what each was', () => {
     const project = projectHeld();
-    project.items.find((i) => i.id === 'focus_link').values.Status = 'part';
-    assert.deepEqual(projectPlan(project).sets, [{ id: 'focus_link', field: 'Status', from: 'part', to: 'open' }]);
+    project.items.find((i) => i.id === 'focus_link').values.Proof = 'part';
+    assert.deepEqual(projectPlan(project).sets, [{ id: 'focus_link', field: 'Proof', from: 'part', to: 'open' }]);
   });
 
   test('adds an issue that is not yet an item, with its values', () => {
@@ -277,7 +339,7 @@ describe('the project plan', () => {
 });
 
 describe('the whole plan, printed', () => {
-  const everything = buildPlan(desired, { labelNames: [], issues: [], project: null });
+  const everything = buildPlan(desired, remoteOf());
 
   test('counts what it would do', () => {
     assert.deepEqual(summarise(everything), {
@@ -302,9 +364,9 @@ describe('the whole plan, printed', () => {
     const text = formatPlan(everything);
     assert.match(
       text,
-      /create issue zoom_out_to_fit: Zoom out must fit the drawing \(closed; slice-3, status:proved, workstream:W0\)/,
+      /create issue zoom_out_to_fit "Viewing · zoom out to fit" \(closed; slice-3, status:proved, workstream:W0\)/,
     );
-    assert.match(text, /create issue focus_link: Choosing a link must show it \(open;/);
+    assert.match(text, /create issue focus_link "Viewing · focus link" \(open;/);
     assert.match(text, /create label workstream:W1/);
     assert.match(text, /create project "graph-note requirements"/);
     assert.match(text, /create field Slice \(Slice 3, Slice 4\)/);
@@ -319,22 +381,55 @@ describe('the whole plan, printed', () => {
 
   test('prints each kind of change for a GitHub that has drifted', () => {
     const project = projectHeld();
-    project.items.find((i) => i.id === 'focus_link').values.Status = 'part';
-    const remote = {
-      labelNames: [],
+    project.items.find((i) => i.id === 'focus_link').values.Proof = 'part';
+    const remote = remoteOf({
       issues: [
         ...replaceIssue('focus_link', { title: 'mine' }),
-        { number: 70, title: 'old', body: '<!-- requirement:old_one -->', state: 'OPEN', labels: [] },
+        { number: 70, title: 'old', body: generated('old_one'), state: 'OPEN', labels: [], author: ME },
       ],
       project,
-    };
+    });
     const text = formatPlan(buildPlan(desired, remote));
     assert.match(text, /update issue #\d+ focus_link: title/);
     assert.match(text, /mark removed issue #70 old_one: label, comment, close/);
-    assert.match(text, /set focus_link Status: part → open/);
+    assert.match(text, /set focus_link Proof: part → open/);
   });
 
   test('is the same text each time', () => {
-    assert.equal(formatPlan(everything), formatPlan(buildPlan(desired, { labelNames: [], issues: [], project: null })));
+    assert.equal(formatPlan(everything), formatPlan(buildPlan(desired, remoteOf())));
+  });
+});
+
+describe('the guard against removing too much', () => {
+  const goneIssues = (n) =>
+    Array.from({ length: n }, (_, i) => ({
+      number: 100 + i,
+      title: 't',
+      body: generated(`old_${i}`),
+      state: 'OPEN',
+      labels: [],
+      author: ME,
+    }));
+
+  test('holds nothing back from an ordinary plan', () => {
+    assert.equal(guardProblem(buildPlan(desired, remoteOf({ issues: issuesHeld() }))), null);
+  });
+
+  test('allows as many removals as the limit, which is 10', () => {
+    assert.equal(MAX_REMOVALS, 10);
+    assert.equal(guardProblem(buildPlan(desired, remoteOf({ issues: goneIssues(10) }))), null);
+  });
+
+  test('stops a plan that removes more than that, saying how many and how to allow it', () => {
+    const problem = guardProblem(buildPlan(desired, remoteOf({ issues: goneIssues(11) })));
+    assert.match(problem, /11 issues/);
+    assert.match(problem, /--allow-removals/);
+  });
+
+  test('stops a plan made from a board with no requirements, which would remove everything', () => {
+    const empty = desiredState({ sections: [], requirements: [] }, WORKSTREAMS, [3, 4]);
+    const problem = guardProblem(buildPlan(empty, remoteOf({ issues: issuesHeld() })));
+    assert.match(problem, /no requirements/);
+    assert.match(problem, /--allow-removals/);
   });
 });

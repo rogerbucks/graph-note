@@ -9,7 +9,16 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { REQUIREMENTS } from '../scripts/check-requirements.mjs';
 import { readBoard } from '../scripts/slice-board.mjs';
-import { assignWorkstreams, desiredState, readWorkstreams } from '../scripts/github-project-desired.mjs';
+import {
+  BANNER_START,
+  assignWorkstreams,
+  desiredState,
+  markerOf,
+  readWorkstreams,
+} from '../scripts/github-project-desired.mjs';
+import { mirror } from '../scripts/github-project.mjs';
+import { fakeGithub } from './repository/github-project-fake.js';
+import { FIXTURE, WORKSTREAMS } from './repository/github-project-fixture.js';
 import { read, path, readJSON } from './repository/repo.js';
 
 const board = readBoard(read(REQUIREMENTS));
@@ -92,8 +101,26 @@ describe('the desired issues for the real requirements', () => {
     assert.equal(new Set(issues.map((i) => i.title)).size, issues.length);
   });
 
-  test('have titles no longer than the id, a colon and 80 characters', () => {
-    for (const i of issues) assert.ok(i.title.length <= i.id.length + 2 + 80, i.title);
+  test('have titles of at most 100 characters that say what the requirement is called', () => {
+    for (const i of issues) {
+      assert.ok(i.title.length <= 100, i.title);
+      assert.ok(i.title.includes(i.id.replaceAll('_', ' ')), `${i.title} lacks the words of ${i.id}`);
+    }
+  });
+
+  test('begin with the title of the requirement’s section, as the old first-clause titles did not', () => {
+    for (const i of issues) {
+      const r = board.requirements.find((x) => x.id === i.id);
+      const section = board.sections.find((s) => s.num === r.section).title;
+      assert.ok(i.title.startsWith(section.slice(0, 20)), i.title);
+    }
+  });
+
+  test('open on the whole rule', () => {
+    for (const i of issues) {
+      const r = board.requirements.find((x) => x.id === i.id);
+      assert.equal(i.body.split('\n')[0].replaceAll('`', ''), r.rule.replace(/\s+/g, ' ').replaceAll('`', ''), i.id);
+    }
   });
 
   test('are closed exactly when the requirement is proved, by the status the slice board uses', () => {
@@ -140,10 +167,16 @@ describe('the command', () => {
     );
   });
 
-  test('refuses --apply together with --dry-run', () => {
-    const result = command('--apply', '--dry-run');
-    assert.equal(result.status, 1);
-    assert.match(result.stderr, /github-project: .*--apply.*--dry-run/);
+  test('refuses two of --apply, --check and --dry-run together', () => {
+    for (const [a, b] of [
+      ['--apply', '--dry-run'],
+      ['--apply', '--check'],
+      ['--check', '--dry-run'],
+    ]) {
+      const result = command(a, b);
+      assert.equal(result.status, 1, `${a} ${b}`);
+      assert.match(result.stderr, new RegExp(`github-project: .*${a}.*${b}|github-project: .*${b}.*${a}`));
+    }
   });
 
   test('refuses an unknown option, a missing value and slices that are not whole numbers', () => {
@@ -155,9 +188,121 @@ describe('the command', () => {
     }
   });
 
-  test('with --apply and no gh to run, stops with gh’s absence and changes nothing', () => {
-    const result = command('--apply');
-    assert.equal(result.status, 1);
-    assert.match(result.stderr, /github-project: .*gh/);
+  test('with --apply or --check and no git or gh to run, stops saying so and changes nothing', () => {
+    for (const mode of ['--apply', '--check']) {
+      const result = command(mode);
+      assert.equal(result.status, 1, mode);
+      assert.match(result.stderr, /github-project: .*(git|gh)/, mode);
+    }
+  });
+
+  test('takes --allow-removals only to go with --apply', () => {
+    assert.equal(command('--allow-removals').status, 1);
+    assert.match(command('--allow-removals').stderr, /--allow-removals.*--apply/);
+  });
+});
+
+describe('the mirror, read-only with --check and changing with --apply, against a stand-in for gh', () => {
+  const real = readBoard(FIXTURE);
+  const desired = desiredState(real, WORKSTREAMS, [3, 4]);
+  const ORIGIN = 'rogerbucks/graph-note';
+  const run = (gh, mode, over = {}, desiredState_ = desired) => {
+    const out = [];
+    const sleeps = [];
+    mirror(
+      { desired: desiredState_, mode, allowRemovals: false, ...over },
+      { run: gh.run, originRepo: ORIGIN, write: (t) => out.push(t), sleep: (ms) => sleeps.push(ms) },
+    );
+    return { text: out.join(''), sleeps };
+  };
+  const generated = (id) => `old\n\n${BANNER_START} old.\n\n${markerOf(id)}\n`;
+  const vanished = (gh, n) =>
+    gh.hub.issues.push(
+      ...Array.from({ length: n }, (_, i) => ({
+        number: 200 + i,
+        title: 't',
+        body: generated(`old_${i}`),
+        state: 'OPEN',
+        labels: [],
+        author: { login: 'rogerbucks' },
+        url: `https://github.com/o/r/issues/${200 + i}`,
+      })),
+    );
+
+  test('--check reads GitHub and prints the real diff, changing nothing', () => {
+    const gh = fakeGithub();
+    const { text, sleeps } = run(gh, 'check');
+    assert.deepEqual(gh.hub.mutations, []);
+    assert.deepEqual(sleeps, []);
+    assert.match(text, /github-project: check/);
+    assert.match(text, /read-only/);
+    assert.match(text, /rogerbucks\/graph-note/);
+    assert.match(text, /issues: create 5 /);
+  });
+
+  test('--check of a GitHub that is in step says there is nothing to do', () => {
+    const gh = fakeGithub();
+    run(gh, 'apply');
+    const { text } = run(gh, 'check');
+    assert.match(
+      text,
+      /issues: create 0 \(0 closed at once\) · update 0 · close 0 · reopen 0 · mark removed 0 · unchanged 5/,
+    );
+    assert.match(text, /project: create 0 · fields create 0 · options add 0 · items add 0 · values set 0/);
+  });
+
+  test('--apply prints the target repository, then the same plan --check prints, and then does it', () => {
+    const checked = run(fakeGithub(), 'check').text;
+    const gh = fakeGithub();
+    const { text } = run(gh, 'apply');
+    const plan = (t) => t.slice(t.indexOf('labels: create'));
+    assert.match(text, /github-project: apply/);
+    assert.match(text, /target repository: rogerbucks\/graph-note/);
+    assert.equal(plan(text).split('\ngithub-project: applied')[0] + '\n', plan(checked));
+    assert.equal(gh.hub.issues.length, 5);
+    assert.match(text, /github-project: applied\n$/);
+  });
+
+  test('refuses when gh points at another repository than the origin, having asked nothing else', () => {
+    for (const mode of ['check', 'apply']) {
+      const gh = fakeGithub({ name: 'other' });
+      assert.throws(() => run(gh, mode), /gh points at rogerbucks\/other.*origin is rogerbucks\/graph-note/s);
+      assert.equal(gh.hub.calls.length, 1, mode);
+    }
+  });
+
+  test('--apply stops, changing nothing, when the plan removes more than 10 issues', () => {
+    const gh = fakeGithub();
+    run(gh, 'apply');
+    vanished(gh, 11);
+    gh.hub.mutations.length = 0;
+    assert.throws(() => run(gh, 'apply'), /11 issues.*--allow-removals/s);
+    assert.deepEqual(gh.hub.mutations, []);
+  });
+
+  test('--apply goes on with --allow-removals, labelling and closing them all and deleting none', () => {
+    const gh = fakeGithub();
+    run(gh, 'apply');
+    vanished(gh, 11);
+    run(gh, 'apply', { allowRemovals: true });
+    const gone = gh.hub.issues.filter((i) => i.number >= 200);
+    assert.ok(gone.every((i) => i.state === 'CLOSED' && i.labels.some((l) => l.name === 'requirement:removed')));
+    assert.equal(gh.hub.issues.length, 5 + 11);
+  });
+
+  test('--apply stops for a board with no requirements, which would remove every issue', () => {
+    const gh = fakeGithub();
+    run(gh, 'apply');
+    const empty = desiredState({ sections: [], requirements: [] }, WORKSTREAMS, [3, 4]);
+    gh.hub.mutations.length = 0;
+    assert.throws(() => run(gh, 'apply', {}, empty), /no requirements.*--allow-removals/s);
+    assert.deepEqual(gh.hub.mutations, []);
+  });
+
+  test('--check shows that the guard would stop an apply, and does not itself stop', () => {
+    const gh = fakeGithub();
+    run(gh, 'apply');
+    vanished(gh, 11);
+    assert.match(run(gh, 'check').text, /warning: an apply would stop: .*--allow-removals/);
   });
 });
