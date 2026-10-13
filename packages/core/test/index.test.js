@@ -281,6 +281,7 @@ const TYPES = [
   'ThemeColours',
   'ThingAdded',
   'ThingLook',
+  'ThingNote', // a note on a thing or a link (editor spec §24, 13 Oct 2026)
   'Token',
   'TokenClass',
   'Told',

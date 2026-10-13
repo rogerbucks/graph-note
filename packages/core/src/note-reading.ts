@@ -11,11 +11,25 @@ export interface Block {
   line: number;
 }
 
+/**
+ * A note on a thing or a link (editor spec §24, note_comment, note_text): the /// lines written directly above it. Its
+ * text is CommonMark for the host to render, its summary the text's first paragraph; the block (index in the note) and
+ * the /// lines in that block (1 = its graph line) say where it is written.
+ */
+export interface ThingNote {
+  text: string;
+  summary: string;
+  block: number;
+  lines: number[];
+}
+
 /** One thing to draw: its id, its kinds joined by a dot, and its text. */
 export interface Box {
   key: string;
   kind: string;
   text: string;
+  /** Only for a thing with a note written directly above it (editor spec §24). */
+  note?: ThingNote;
   /**
    * Only for a thing written without a name, drawn under the name suggested for it (spec §4, unnamed_drawn_suggested):
    * the block it is written in, and the 0-based line and character there, just after its (, where the name would go.
@@ -37,6 +51,8 @@ export interface Link {
   to: string;
   /** Which written link this is, as an index into its graph's edges, where the drawing holds only some links (a view). */
   edge?: number;
+  /** Only for a link with a note written directly above it (editor spec §24). */
+  note?: ThingNote;
 }
 
 /** One graph, ready to draw: its boxes, its links, and the estimates added where what was written was a near miss. */

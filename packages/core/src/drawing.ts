@@ -5,6 +5,7 @@ import gs from '@graph-note/graph-spec';
 import type { Graph, World } from '@graph-note/graph-spec';
 import { estimate } from './estimates.ts';
 import type { GraphDrawing, NoteReading, Problem } from './note-reading.ts';
+import { addNotes } from './notes.ts';
 import { mergePathProblems } from './paths.ts';
 import { readBlocks, REREAD_BUDGET } from './partial-read.ts';
 import { textTooLarge } from './layout-limits.ts';
@@ -99,6 +100,8 @@ export function readNote(
     graphs.set(name, d);
   }
   problems.push(...undeclared(whole, upto), ...undeclaredUse(whole, upto, problems));
+  // each note on the box or link below it, and a note that belongs to none of a line's things said (editor spec §24)
+  problems.push(...addNotes(graphs, upto));
   // a path's own problems (editor spec §7) say what the reader's reports of a step through nothing left unsaid
   const all = mergePathProblems({ graphs, problems, world, whole, texts: upto });
   all.sort((a, b) => a.block - b.block || a.line - b.line);

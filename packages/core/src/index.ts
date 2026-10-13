@@ -6,7 +6,7 @@ export { hops } from './estimates.ts';
 export { replaceBlock, insertBlockAfter, History } from './store.ts';
 export type { BlockRef, WriteResult } from './store.ts';
 export type { Span } from './blocks.ts';
-export type { Block, Box, Link, GraphDrawing, Problem, NoteReading } from './note-reading.ts';
+export type { Block, Box, Link, GraphDrawing, Problem, NoteReading, ThingNote } from './note-reading.ts';
 export { layoutSource, drawingSource, STYLE } from './layout.ts';
 export { explain, distance } from './estimates.ts';
 export type { Estimate } from './estimates.ts';
