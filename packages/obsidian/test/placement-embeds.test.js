@@ -62,7 +62,13 @@ describe('a graph embedded in another note is read-only wherever it is shown', (
       // every other control of the details only finds the way round the drawing (§25): each is pressed, and the note and
       // the text being edited are checked below to be as they were
       assert.deepEqual(
-        pressTheRest(el, ['Close details', ...UNTANGLING], () => tapKey(el, 'large')),
+        pressTheRest(el, ['Close details', ...UNTANGLING], () => tapKey(el, 'large'), [
+          'Minimise details',
+          'Close details',
+          'Which device?',
+          'Link: Large reader answers Which device?',
+          ...UNTANGLING,
+        ]),
         ['Close details', ...UNTANGLING],
       );
       await wait(50);

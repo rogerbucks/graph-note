@@ -36,6 +36,7 @@
 3. Scroll the note up and down a little: check the sheet stays where it is.
 4. Scroll until the card is off the screen: check the sheet goes; scroll back and check it returns.
 5. Do the same in Live Preview, and on the Mac.
+6. Confirm it really pins: the details must open as the sheet, floating at the foot of the screen with a shadow, and not as a panel inside the card under the drawing. Inside the card means the plugin found the sheet was not laid out where it put it, such as in a container that moves fixed things; note which view and device that was.
 
 **Checklist line:**
 

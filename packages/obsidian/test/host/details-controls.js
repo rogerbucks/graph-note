@@ -21,31 +21,41 @@ export const controlsIn = (el) => el.querySelectorAll(SELECTOR);
 export const controls = (el) => controlsIn(el).map(nameOf);
 
 /**
- * Presses every control of the details but those named in `kept`, each a button and never a field, the details opened
- * again by `reopen` before each, as pressing one draws other details; and opens them once more after. Returns the names
- * of the controls left, those in `kept`, for the test to hold to what it expects.
+ * Holds the details `reopen` opens to exactly the controls named in `all`, in order, so a control nobody expected fails
+ * the test; then presses every one of them but those named in `kept`, each a button and never a field, the details
+ * opened again before each, as pressing one draws other details. After a choice in the body it presses the trail's Back
+ * and then its Forward, and every other control the choice brings. It opens the details once more after, and returns
+ * the names of the controls left, those in `kept`, for the test to hold to what it expects.
  */
-export function pressTheRest(el, kept, reopen) {
+export function pressTheRest(el, kept, reopen, all) {
   const press = (name) => {
     const c = controlsIn(el).find((x) => nameOf(x) === name);
     assert.ok(c, `${name} is there`);
     assert.equal(c.localName, 'button', `${name} is a button, never a field`);
     c.click();
   };
+  const starting = (words) => controls(el).find((n) => n.startsWith(words));
   reopen();
+  assert.deepEqual(controls(el), all, 'the details hold these controls and no others');
   const rest = controlsIn(el).filter((c) => !kept.includes(nameOf(c)));
   const names = rest.map(nameOf);
   for (const name of names) {
     reopen();
     press(name);
   }
-  // and the controls a choice in the body brings, such as the trail's Back: each pressed after that choice
+  // after a choice in the body: the trail's Back, then its Forward, and each other control the choice brings
   const choice = rest.find((c) => !c.closest('.graph-note-details-head'));
   if (choice) {
     reopen();
     press(nameOf(choice));
     const more = controls(el).filter((n) => !kept.includes(n) && !names.includes(n));
-    for (const name of more) {
+    const back = starting('Back to ');
+    assert.ok(back, 'a choice gives the trail a step back');
+    press(back);
+    const forward = starting('Forward to ');
+    assert.ok(forward, 'and, once back, a step forward');
+    press(forward);
+    for (const name of more.filter((n) => n !== back)) {
       reopen();
       press(nameOf(choice));
       press(name);

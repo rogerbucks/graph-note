@@ -92,7 +92,8 @@ export class DetailsSheet {
    * size may have changed, the card keeps the chosen thing clear above it.
    */
   moved(resized: boolean): void {
-    if (this.el.hidden || !this.el.hasClass('graph-note-sheet')) return;
+    // away with its card, the sheet is not laid out at all (display: none): it is placed when the card comes back
+    if (this.el.hidden || !this.el.hasClass('graph-note-sheet') || this.el.hasClass('is-away')) return;
     if (!this.place()) return this.inCard();
     if (resized) this.host.moved();
   }
@@ -178,7 +179,10 @@ export class DetailsSheet {
     if (!card) return;
     if (!this.watcher && typeof IntersectionObserver !== 'undefined') {
       this.watcher = new IntersectionObserver((seen) => {
-        this.el.toggleClass('is-away', !seen.some((s) => s.isIntersecting));
+        const back = seen.some((s) => s.isIntersecting),
+          was = this.el.hasClass('is-away');
+        this.el.toggleClass('is-away', !back);
+        if (back && was) this.moved(true); // placed again where the card is now, the chosen thing kept clear
       });
       this.watcher.observe(card);
     }

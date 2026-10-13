@@ -42,7 +42,17 @@ const KEPT = ['Close details', ...UNTANGLING];
  * sheet minimised (§25) — each pressed in turn, `reopen` opening the details again before each; the names of the rest.
  * The test then checks the note is unchanged, so any of them that wrote would show.
  */
-const pressed = (el, reopen) => pressTheRest(el, KEPT, reopen);
+const pressed = (el, reopen, all) => pressTheRest(el, KEPT, reopen, all);
+
+/** Large reader's links in its details, each thing and each link a choice (§25). */
+const LARGE_LINKS = [
+  'Which device?',
+  'Link: Large reader answers Which device?',
+  'light',
+  'Link: Large reader has tag light',
+  'cheap',
+  'Link: Large reader has tag cheap',
+];
 
 const details = (el) => el.querySelector('.graph-note-details');
 
@@ -81,7 +91,12 @@ describe('a card in reading view shows its details and offers nothing that write
       assert.ok(!d.querySelector('.metadata-add-button'), 'no Add property');
       assert.ok(!d.textContent.includes('Add property'));
       assert.deepEqual(
-        pressed(shown.reading, () => tapKey(shown.reading, 'large')),
+        pressed(shown.reading, () => tapKey(shown.reading, 'large'), [
+          'Minimise details',
+          'Close details',
+          ...LARGE_LINKS,
+          ...UNTANGLING,
+        ]),
         KEPT,
       );
       await unchanged(env, shown);
@@ -127,7 +142,12 @@ describe('a card in reading view shows its details and offers nothing that write
       assert.ok(items().includes('since: 2024'), `a link’s property is shown: ${items()}`);
       const link = shown.reading.querySelectorAll('g.edge').find((g) => g.getAttribute('data-link') === '0');
       assert.deepEqual(
-        pressed(shown.reading, () => link.dispatch('keydown', { key: 'Enter' })),
+        pressed(shown.reading, () => link.dispatch('keydown', { key: 'Enter' }), [
+          'Minimise details',
+          'Close details',
+          'Large reader',
+          'Which device?',
+        ]),
         ['Close details'],
       );
       await unchanged(env, shown);
@@ -171,7 +191,11 @@ describe('a card in reading view shows its details and offers nothing that write
       const shown = await readingWhileEdited(env);
       tapKey(shown.reading, 'small_reader');
       assert.deepEqual(
-        pressed(shown.reading, () => tapKey(shown.reading, 'small_reader')),
+        pressed(shown.reading, () => tapKey(shown.reading, 'small_reader'), [
+          'Minimise details',
+          'Close details',
+          ...UNTANGLING,
+        ]),
         KEPT,
         'no Add the name',
       );
@@ -267,7 +291,12 @@ describe('a card in reading view shows its details and offers nothing that write
         box.dispatch('keydown', { key });
         assert.ok(!details(shown.reading).hidden, `${key === ' ' ? 'Space' : key} opens the details`);
         assert.deepEqual(
-          pressed(shown.reading, () => box.dispatch('keydown', { key })),
+          pressed(shown.reading, () => box.dispatch('keydown', { key }), [
+            'Minimise details',
+            'Close details',
+            ...LARGE_LINKS,
+            ...UNTANGLING,
+          ]),
           KEPT,
           'and they hold nothing to change',
         );
@@ -303,7 +332,8 @@ describe('a card in reading view shows its details and offers nothing that write
       for (const label of ['Edit here', 'Edit in pane', 'Record a path', 'Make a view'])
         assert.ok(!labelled(full, label), `no ${label}`);
       assert.deepEqual(
-        pressed(full, () => tapKey(full, 'large')),
+        // full screen shows the details in its own place, never as the sheet: no toggle
+        pressed(full, () => tapKey(full, 'large'), ['Close details', ...LARGE_LINKS, ...UNTANGLING]),
         KEPT,
       );
       assert.ok(details(full).textContent.includes('name: Large reader'), 'its properties are shown');

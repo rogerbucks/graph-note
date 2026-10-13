@@ -488,6 +488,8 @@ details.graph-note-style > summary {
   position: fixed;
   left: var(--graph-note-sheet-left, 0);
   width: var(--graph-note-sheet-width, 100%);
+  /* its border and padding inside that width, so it is laid out exactly where it was put, as the plugin checks */
+  box-sizing: border-box;
   bottom: var(--graph-note-sheet-bottom, 0);
   z-index: var(--layer-popover);
   display: flex;

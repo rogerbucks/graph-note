@@ -41,10 +41,14 @@ const rect = (top, bottom, left = 0, width = 700) => ({
   width,
   height: bottom - top,
 });
-/** The sheet laid out as a browser lays it out from what the plugin set: fixed, `height` tall, in an 800-pixel window. */
+/**
+ * The sheet laid out as a browser lays it out from what the plugin set: fixed, `height` tall, in an 800-pixel window;
+ * and, hidden or away with its card (display: none), a box of no size at all.
+ */
 const laidOut =
   (d, height = 100) =>
   () => {
+    if (d.hidden || d.hasClass('is-away')) return rect(0, 0, 0, 0);
     const p = (k) => parseFloat(d.cssProps[`--graph-note-sheet-${k}`] ?? '0');
     return rect(800 - p('bottom') - height, 800 - p('bottom'), p('left'), p('width'));
   };
@@ -100,6 +104,10 @@ describe('in view mode the details open as a sheet pinned to the foot of the vis
     assert.equal(details(el).cssProps['--graph-note-sheet-width'], '700px');
   });
 
+  test('its width counts its border and padding, so it is laid out exactly as wide as the card it was given', () => {
+    assert.equal(css(SHEET, 'box-sizing'), 'border-box');
+  });
+
   test('its foot is the foot of the note’s visible part, not of the window', async () => {
     const holder = env.doc.body.createDiv({ cls: 'markdown-preview-view' });
     holder.getBoundingClientRect = () => rect(40, 700);
@@ -127,6 +135,23 @@ describe('in view mode the details open as a sheet pinned to the foot of the vis
     assert.ok(!details(el).hasClass('is-away'));
     labelled(details(el), 'Close details').click();
     assert.ok(!watched.some((x) => x.target === card), 'and no longer watched once closed');
+  });
+
+  test('scrolled while its card is away, the sheet is still the sheet when the card comes back, placed again', () => {
+    const d = details(el),
+      card = el.querySelector('.graph-note-view');
+    d.getBoundingClientRect = laidOut(d);
+    tapKey(el, 'large');
+    const w = watched.find((x) => x.target === card);
+    w.tell(false);
+    for (const fn of env.doc.listeners.get('scroll') ?? []) fn({ type: 'scroll', target: env.doc.body });
+    card.getBoundingClientRect = () => rect(100, 500);
+    w.tell(true);
+    assert.ok(d.hasClass('graph-note-sheet'), 'still the sheet');
+    assert.ok(toggle(el), 'with its toggle');
+    assert.equal(d.cssProps['--graph-note-sheet-bottom'], '300px', 'placed again over the card where it is now');
+    labelled(d, 'Close details').click();
+    card.getBoundingClientRect = () => rect(0, 400);
   });
 
   test('a card unloaded with its sheet open is no longer watched', async () => {
