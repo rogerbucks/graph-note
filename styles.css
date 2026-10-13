@@ -794,3 +794,15 @@ details.graph-note-style > summary {
   color: var(--text-faint);
   font-style: normal;
 }
+/* The send dialog (§19): what will be sent, exactly, wrapped so a phone shows all of it without scrolling sideways, and
+   why nothing may be sent, in the theme's error colour. */
+.graph-note-ai-shown pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 40vh;
+  overflow-y: auto;
+  font-size: var(--font-smaller);
+}
+.graph-note-ai-refused {
+  color: var(--text-error);
+}

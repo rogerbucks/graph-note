@@ -231,6 +231,89 @@ export class SecretComponent {
     return this;
   }
 }
+/** A dialog: a box over the page, with its title and content, taken away when closed. */
+export class Modal {
+  constructor(a) {
+    this.app = a;
+    this.modalEl = document.createElement('div');
+    this.modalEl.className = 'modal';
+    this.titleEl = this.modalEl.createDiv({ cls: 'modal-title' });
+    this.contentEl = this.modalEl.createDiv({ cls: 'modal-content' });
+  }
+  setTitle(t) {
+    this.titleEl.setText(t);
+    return this;
+  }
+  open() {
+    document.body.appendChild(this.modalEl);
+    this.onOpen?.();
+  }
+  close() {
+    this.onClose?.();
+    this.modalEl.remove();
+  }
+}
+/** A row of a dialog or settings page: its name, its description and its controls, enough for the send dialog. */
+export class Setting {
+  constructor(el) {
+    this.settingEl = el.createDiv({ cls: 'setting-item' });
+    const infoEl = this.settingEl.createDiv({ cls: 'setting-item-info' });
+    this.nameEl = infoEl.createDiv({ cls: 'setting-item-name' });
+    this.descEl = infoEl.createDiv({ cls: 'setting-item-description' });
+    this.controlEl = this.settingEl.createDiv({ cls: 'setting-item-control' });
+  }
+  setName(t) {
+    this.nameEl.setText(t);
+    return this;
+  }
+  setDesc(t) {
+    this.descEl.setText(t);
+    return this;
+  }
+  addDropdown(cb) {
+    const sel = this.controlEl.createEl('select');
+    const c = {
+      addOption: (v, n) => (sel.createEl('option', { text: n, attr: { value: v } }), c),
+      setValue: (v) => ((sel.value = v), c),
+      onChange: (f) => (sel.addEventListener('change', () => f(sel.value)), c),
+    };
+    cb(c);
+    return this;
+  }
+  addToggle(cb) {
+    const t = this.controlEl.createEl('input', { type: 'checkbox' });
+    const c = {
+      setValue: (v) => ((t.checked = !!v), c),
+      onChange: (f) => (t.addEventListener('change', () => f(t.checked)), c),
+    };
+    cb(c);
+    return this;
+  }
+  addTextArea(cb) {
+    const f = this.controlEl.createEl('textarea');
+    const c = {
+      setValue: (v) => ((f.value = v), c),
+      onChange: (fn) => (f.addEventListener('input', () => fn(f.value)), c),
+    };
+    cb(c);
+    return this;
+  }
+  addButton(cb) {
+    const b = this.controlEl.createEl('button');
+    const c = {
+      setButtonText: (t) => (b.setText(t), c),
+      setCta: () => c,
+      setDisabled: (d) => ((b.disabled = d), c),
+      onClick: (f) => (b.addEventListener('click', f), c),
+    };
+    cb(c);
+    return this;
+  }
+}
+/** Obsidian's request function: the browser view sends nothing anywhere, so every request fails as unreachable. */
+export async function requestUrl() {
+  throw new Error('the browser view sends no request');
+}
 export class Notice {
   constructor(m) {
     console.log('Notice:', m);

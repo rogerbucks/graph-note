@@ -92,13 +92,29 @@ module that ties the parts together, named as the folder is.
 - `mark-proposal.ts` — the marks on the drawing: a class for the line (heavier for what is added, dashed for what is changed,
   dotted for what is removed), a word and a sign on each box, and the name said so to screen readers.
 
+### `src/ai/` — asking an AI model to propose changes (spec §19)
+
+- `ai.ts` — the command, Ask an AI model to propose changes: only a notice while AI is off or no model is set up;
+  otherwise the send dialog on the note in front (never one in reading view), with its classification read as an export
+  reads it. Obsidian has no AI of its own to offer first, so only the models set up here are offered.
+- `send-dialog.ts` — `SendDialog`: what to send (the whole graph, a view, or the things ticked), the model (the one set
+  up for proposing changes first) and the question; Show what will be sent puts the exact request on screen, with the
+  model, its address, the headers (a key only by its name) and the note's classification, or why nothing may be sent;
+  Send, pressed on exactly that, sends it once, and any change takes the yes away until it is shown again. The key is
+  read from the app's secret store as the request goes. Every send is recorded in the plugin's data (`recordAiSend`);
+  an answer is written into the note as a change set after the graph's blocks, through `vault.process`, and a failure is
+  said in a notice, the note left as it was.
+- `send.ts` — the one module that reaches the network: the request, with Obsidian's `requestUrl`, never a vendor's
+  library. Only the send dialog imports it (`test/policy.test.js`).
+
 ### `src/settings/` — the settings page (spec §21)
 
 - `settings.ts` — `GraphNoteSettingTab`: one page in Obsidian's plugin settings, in its declarative form, built from the
   core's `OPTIONS` so every option is on it with its sentence: strictness and the departures Simplified allows, with
   the action that converts a note to standard GQL; the classifications; formatting; drawing.
-- `ai-models.ts` — the AI models of §19 as a list, a page for each: name, purpose, ceiling, model, endpoint, and its key
-  chosen in the app's own secret store by name, so only the name is saved.
+- `ai-models.ts` — the AI models of §19 as a list, a page for each: name, purpose (the spec's purposes suggested),
+  ceiling, model, endpoint (said on the model's row when it cannot be used), and its key chosen in the app's own secret
+  store by name, so only the name is saved. Use AI models, off until turned on, heads the part of the page.
 
 ### `src/graph-view/` — a drawn graph
 
@@ -181,7 +197,8 @@ package, or all with `npm test` from the repository root. Each builds `main.js` 
 
 - `test/host/` — the stand-ins for the host and what the tests share: `fake-dom.js` (a small DOM), `fake-settings.js` (the settings page, drawn from its definitions, and the secret
   store), `fake-obsidian.js`
-  (the obsidian module and CodeMirror), `load-plugin.js` (building and loading the plugin), `cascade.js` (the part of
+  (the obsidian module and CodeMirror, with a dialog and a `requestUrl` that never reaches the network: each request is
+  kept, and answered by the test's own `state.reply`), `load-plugin.js` (building and loading the plugin), `cascade.js` (the part of
   the CSS cascade a test needs), `notes.js` (a fenced block, a button by its label), and the notes each group of tests
   opens: `card-notes.js`, `pane-notes.js`, `view-notes.js`, and `inspector-steps.js` (opening a box's details and driving the inspector's rows, menus and chips).
   `editing-view.js` opens a note in the editing view, in Live Preview, with the plugin's own extension and view plugins,
