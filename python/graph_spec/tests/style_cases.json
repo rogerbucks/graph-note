@@ -1,0 +1,238 @@
+{
+  "about": "Graphs whose style graph hides or shows arrowheads (editor spec §15: arrows_switchable, arrows_both_renderers) and shows properties inline (§14: properties_switch, properties_readable, crowded_properties), drawn the same by the plugin's core and by graph_svg.py. Each case is a note's gql blocks, each block a list of lines, and the view it is drawn in, if any (its name only: the whole graph is drawn, styled as that view is). For every case both give the same problems reading each style, the same links drawn without their arrowheads, the same rows shown inline, and, for every graph drawn, the same Graphviz source in each direction laid out, byte for byte. The expected answers are the core's, run live: packages/core/test/layout-parity.test.js holds graph_svg.py to the core on these cases, and tests/test_graph_svg_styled.py does the same from the Python side.",
+  "cases": [
+    {
+      "name": "arrowheads hidden for the whole graph, the link drawn backwards too",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'The park'}),",
+          "(cafe:Cafe {name: 'Cafe'}),",
+          "(guide:Source {name: 'The guide'}),",
+          "(green:Tag {name: 'Green'}),",
+          "(home)-[:NEAR]->(park),",
+          "(cafe)-[:SERVES]->(park),",
+          "(home)-[:CITES]->(guide),",
+          "(park)-[:TAGGED]->(green)"
+        ],
+        ["// graph: trip_style · STYLE trip", "(a1:Arrows {arrowheads: 'hide'})"]
+      ]
+    },
+    {
+      "name": "arrowheads hidden for one relationship type, and shown again for it in a view, drawn in that view",
+      "view": "walks",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'The park'}),",
+          "(lake:Place {name: 'The lake'}),",
+          "(home)-[:NEAR]->(park),",
+          "(park)-[:NEAR]->(lake),",
+          "(home)-[:FACES]->(lake)"
+        ],
+        [
+          "// graph: trip_style · STYLE trip",
+          "(a1:Arrows {arrowheads: 'hide'}),",
+          "(a2:Arrows {arrowheads: 'show', type: 'NEAR', view: 'walks'})"
+        ]
+      ]
+    },
+    {
+      "name": "arrowheads hidden in one view only, drawn as the whole graph",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'The park'}),",
+          "(home)-[:NEAR]->(park)"
+        ],
+        ["// graph: trip_style · STYLE trip", "(a1:Arrows {arrowheads: 'hide', view: 'walks'})"]
+      ]
+    },
+    {
+      "name": "properties of things shown inline by kind and by thing: text, numbers, a date, an instant, true and false, and text to escape",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home', rooms: 4, open: TRUE, size: 1.5, built: DATE '1901-05-01'}),",
+          "(park:Place {name: 'The park', rooms: 0, open: FALSE, size: 1e21, since: DATETIME '2026-10-06T09:30:00+01:00'}),",
+          "(cafe:Cafe {name: 'Cafe', note: 'Tea & <cake> \"fresh\" 🍰', tiny: 0.0000001, big: 120000000000000000000000}),",
+          "(home)-[:NEAR]->(park),",
+          "(cafe)-[:SERVES]->(park)"
+        ],
+        [
+          "// graph: trip_style · STYLE trip",
+          "(s1:Show {property: 'rooms', kind: 'Place'}),",
+          "(s2:Show {property: 'open', kind: 'Place'}),",
+          "(s3:Show {property: 'size', kind: 'Place'}),",
+          "(s4:Show {property: 'built', thing: 'home'}),",
+          "(s5:Show {property: 'since', thing: 'park'}),",
+          "(s6:Show {property: 'note', kind: 'Cafe'}),",
+          "(s7:Show {property: 'tiny', thing: 'cafe'}),",
+          "(s8:Show {property: 'big', thing: 'cafe'})"
+        ]
+      ]
+    },
+    {
+      "name": "properties of links shown inline, on a link drawn backwards and on one with its arrowhead hidden",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'The park'}),",
+          "(cafe:Cafe {name: 'Cafe'}),",
+          "(guide:Source {name: 'The guide'}),",
+          "(green:Tag {name: 'Green'}),",
+          "(home)-[:NEAR {miles: 1.5, by: 'foot'}]->(park),",
+          "(cafe)-[:SERVES {since: DATE '2020-01-01'}]->(park),",
+          "(home)-[:CITES {page: 12}]->(guide),",
+          "(park)-[:TAGGED {by: 'Ann & Bob'}]->(green)"
+        ],
+        [
+          "// graph: trip_style · STYLE trip",
+          "(s1:Show {property: 'miles', type: 'NEAR'}),",
+          "(s2:Show {property: 'by', type: 'NEAR'}),",
+          "(s3:Show {property: 'by', type: 'TAGGED'}),",
+          "(s4:Show {property: 'since', type: 'SERVES'}),",
+          "(a1:Arrows {arrowheads: 'hide', type: 'NEAR'})"
+        ]
+      ]
+    },
+    {
+      "name": "a crowded box says how many properties are hidden, a long value counted by the rows it wraps to",
+      "blocks": [
+        [
+          "// graph: venue",
+          "(hall:Venue {name: 'Hall', a1: 'one', a2: 'two', a3: 'three', a4: 'four', a5: 'five'}),",
+          "(room:Venue {name: 'Room', a1: 'one', note: 'a long note that wraps over more than one row of its box'}),",
+          "(shed:Venue {name: 'Shed', a1: 'one', a2: 'two', note: 'a long note that wraps over more than one row of its box'}),",
+          "(barn:Venue {name: 'Barn', note: 'a story 🌧 so long that its last row is cut: it wraps over far more than three rows of its box'}),",
+          "(barn)-[:HAS {a: 'a value so long that it wraps over far more than the three rows a link holds, and on'}]->(hall),",
+          "(hall)-[:HAS {a: 'one', b: 'two', c: 'three', d: 'four', e: 'five'}]->(room)"
+        ],
+        [
+          "// graph: venue_style · STYLE venue",
+          "(s1:Show {property: 'a1', kind: 'Venue'}),",
+          "(s2:Show {property: 'a2', kind: 'Venue'}),",
+          "(s3:Show {property: 'a3', kind: 'Venue'}),",
+          "(s4:Show {property: 'a4', thing: 'hall'}),",
+          "(s5:Show {property: 'a5', thing: 'hall'}),",
+          "(s6:Show {property: 'note', kind: 'Venue'}),",
+          "(s7:Show {property: 'a', type: 'HAS'}),",
+          "(s8:Show {property: 'b', type: 'HAS'}),",
+          "(s9:Show {property: 'c', type: 'HAS'}),",
+          "(s10:Show {property: 'd', type: 'HAS'}),",
+          "(s11:Show {property: 'e', type: 'HAS'})"
+        ]
+      ]
+    },
+    {
+      "name": "switched on for the graph and off in a view, drawn in that view, with a kind switched on there alone",
+      "view": "quiet",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home', open: 'always'}),",
+          "(park:Place {name: 'The park', open: 'dawn'}),",
+          "(cafe:Cafe {name: 'Cafe', open: '8am'}),",
+          "(home)-[:NEAR {miles: 2}]->(park),",
+          "(cafe)-[:SERVES]->(park)"
+        ],
+        [
+          "// graph: trip_style · STYLE trip",
+          "(s1:Show {property: 'open', kind: 'Place'}),",
+          "(s2:Show {property: 'open', thing: 'park', view: 'quiet', inline: 'off'}),",
+          "(s3:Show {property: 'open', kind: 'Cafe', view: 'quiet'}),",
+          "(s4:Show {property: 'miles', type: 'NEAR', inline: 'off'})"
+        ]
+      ]
+    },
+    {
+      "name": "properties, arrowheads and nudges together: a group, a direction, rows inline and links without heads",
+      "blocks": [
+        [
+          "// graph: team",
+          "(ann:Person {name: 'Ann', role: 'lead'}), (bob:Person {name: 'Bob', role: 'design'}),",
+          "(t1:Team {name: 'One', size: 2}),",
+          "(ann)-[:IN {since: 2020}]->(t1), (bob)-[:IN {since: 2024}]->(t1)"
+        ],
+        [
+          "// graph: team_style · STYLE team",
+          "(g1:Nudge {word: 'group', thing: 'ann', group: 'Early'}),",
+          "(n1:Nudge {word: 'direction', direction: 'TB'}),",
+          "(s1:Show {property: 'role', kind: 'Person'}),",
+          "(s2:Show {property: 'size', thing: 't1'}),",
+          "(s3:Show {property: 'since', type: 'IN'}),",
+          "(a1:Arrows {arrowheads: 'hide', type: 'IN'})"
+        ]
+      ]
+    },
+    {
+      "name": "a thing drawn under a suggested name shows its properties below its text and its mark",
+      "blocks": [
+        [
+          "// graph: reader",
+          "(question:Question {title: 'Which device?'}),",
+          "(:Option {name: 'Large reader', price: 300}),",
+          "(large_reader)-[:ANSWERS]->(question)"
+        ],
+        ["// graph: reader_style · STYLE reader", "(s1:Show {property: 'price', kind: 'Option'})"]
+      ]
+    },
+    {
+      "name": "a graph typed by a shared schema in a block of its own: its links read in the schema's words, with their properties shown and arrowheads hidden",
+      "blocks": [
+        [
+          "// graph: shared · SCHEMA shared_reader",
+          "(t:Meta:ElementType {name: 'SEES', kind: 'edge', reading: 'can see', reverse_name: 'is seen by'}),",
+          "(u:Meta:ElementType {name: 'NEAR', kind: 'edge', reading: 'is close to', reverse_name: 'is close to'})"
+        ],
+        [
+          "// graph: other · schema shared_reader",
+          "(x:Thing {name: 'Tower'}), (y:Thing {name: 'Hill'}), (z:Thing {name: 'Sea'}),",
+          "(x)-[:SEES {miles: 12}]->(y), (y)-[:NEAR]->(z)"
+        ],
+        [
+          "// graph: other_style · STYLE other",
+          "(s1:Show {property: 'miles', type: 'SEES'}),",
+          "(a1:Arrows {arrowheads: 'hide', type: 'NEAR'})"
+        ]
+      ]
+    },
+    {
+      "name": "what cannot be used is the same problem in both, and is left out: words, names, keys and choices that conflict",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home', open: 'always'}),",
+          "(park:Place {name: 'The park', open: 'dawn'}),",
+          "(home)-[:NEAR {miles: 2}]->(park)"
+        ],
+        [
+          "// graph: trip_style · STYLE trip",
+          "(a1:Arrows {}),",
+          "(a2:Arrows {arrowheads: 'hid'}),",
+          "(a3:Arrows {arrowheads: 'hide', type: 'NEARR'}),",
+          "(a4:Arrows {arrowheads: 'hide', type: 'NEAR'}),",
+          "(a5:Arrows {arrowheads: 'show', type: 'NEAR'}),",
+          "(a6:Arrows {arowheads: 'hide'}),",
+          "(a7:Arrows {arrowheads: 'hide', type: 3}),",
+          "(s1:Show {property: 'open'}),",
+          "(s2:Show {property: 'open', kind: 'Place', thing: 'home'}),",
+          "(s3:Show {kind: 'Place'}),",
+          "(s4:Show {property: 'opn', kind: 'Place'}),",
+          "(s5:Show {property: 'open', kind: 'Plaice'}),",
+          "(s6:Show {property: 'miles', type: 'NEAR', inline: 'offf'}),",
+          "(s7:Show {property: 'open', kind: 'Place', inline: 'off'}),",
+          "(s8:Show {property: 'open', kind: 'Place', inline: 'on'}),",
+          "(s9:Show {property: 'open', kind: 'Place', vew: 'v'}),",
+          "(s10:Show {property: 'miles', type: 'NEAR', view: 'v'}),",
+          "(x1:Colour {name: 'red'}),",
+          "(l1:Look {view: 'v', thing: 'home', colur: 'green'})"
+        ]
+      ]
+    }
+  ]
+}

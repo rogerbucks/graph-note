@@ -70,7 +70,9 @@ module that ties the parts together, named as the folder is.
   holds; on a phone, offered to the share sheet instead, every page at once, or saved in the vault when the phone
   cannot share a file of that kind.
 - `image.ts` — the image laid out in the layout worker under its limits (one over a limit, or a note too large to read,
-  writes nothing and says why), in fixed colours with its frame; a PNG too large for one sharp image drawn on pages
+  writes nothing and says why), in fixed colours with its frame, drawn with its style — the arrowheads it hides and the
+  properties it shows inline, their values from the graph as read (`ImageAsk`'s `data`, which comes with every style,
+  or the type check fails); a PNG too large for one sharp image drawn on pages
   (`pngPages`), every page drawn before any is written, or refused when even pages cannot hold it.
 - `export-form.ts` — the Export form on a drawing: the whole diagram, or a view with or without its faded context; SVG,
   PNG or the data as a GQL block, CSV or GraphML; light or dark, for an image only; and Export anyway when the note's

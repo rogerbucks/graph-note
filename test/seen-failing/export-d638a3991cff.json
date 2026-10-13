@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/export.test.js",
+  "test": "arrowheads and properties in an export > the whole diagram is drawn with the arrowheads hidden and the properties shown",
+  "seen_failing_first": false,
+  "evidence": "Asked for in the review of PR #121: export.ts already drew through styledDrawing with ExportInfo.data since 94675d1, untested; this test exercises that path, so it passed at its parent. Its partner, the view leaving out a parallel link, failed first and drove the fix in export-scope.ts."
+}

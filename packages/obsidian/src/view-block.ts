@@ -12,13 +12,13 @@ import {
   gqlBlocks,
   legendOf,
   lookOf,
-  nudgedDrawing,
   outsideOf,
   parseView,
   readNote,
   readStyle,
   readingOf,
   styleEdit,
+  styledDrawing,
   underStrictness,
 } from '@graph-note/core';
 import type { GraphDrawing, NamedView, Outside, StyleChange, ThingLook } from '@graph-note/core';
@@ -202,7 +202,8 @@ export async function renderViewBlock(
   };
   let drawn;
   try {
-    drawn = await plugin.layout({ ...nudgedDrawing(drawing, style), nudges: style.nudges }, owner);
+    // styled as this view: its nudges, and the properties and arrowheads chosen for it or for the whole graph (§14, §15)
+    drawn = await plugin.layout(styledDrawing(drawing, style, g, v.name), owner);
   } catch (e) {
     // a view whose drawing cannot be laid out shows its text and why, never a blank card
     console.error('Graph Note could not draw view', v.name, e);

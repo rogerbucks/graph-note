@@ -2,6 +2,7 @@
 // drawn where what was written was a near miss — and the problems, each with its block, its line and its fix.
 import type { World } from '@graph-note/graph-spec';
 import type { Estimate } from './estimates.ts';
+import type { InlineProperties } from './inline-properties.ts';
 import type { Refusal } from './layout-limits.ts';
 import type { Nudge } from './style-graph.ts';
 
@@ -67,6 +68,13 @@ export interface GraphDrawing {
   direction?: string;
   /** The nudges of its style graph (spec §6), written into the layout; none, the layout the Python library gives. */
   nudges?: Nudge[];
+  /**
+   * The links its style graph draws without their arrowheads (spec §15), by their order in the layout source: its links,
+   * then the links guessed from a near miss of a name. None: every arrowhead is drawn.
+   */
+  arrowless?: number[];
+  /** The properties its style graph shows below the text of its boxes and links (spec §14); none, no property shown. */
+  inline?: InlineProperties;
 }
 
 /** Something that could not be read: its graph, the block (index in the note), the line in that block (1 = its graph line), what is wrong, and the fix. */

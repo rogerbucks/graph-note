@@ -18,9 +18,12 @@ export { PALETTES, THEME_COLOURS, fixedPalette } from './palette.ts';
 export type { Palette, ThemeColours } from './palette.ts';
 export { readStyle, outsideOf, lookOf, legendOf } from './style.ts';
 export type { StyleReading } from './style.ts';
-export { FORMATS, LINES, NUDGE_WORDS, OUTSIDE, STYLE_HUES } from './style-graph.ts';
+export { ARROWHEADS, FORMATS, INLINE, LINES, NUDGE_WORDS, OUTSIDE, STYLE_HUES } from './style-graph.ts';
 export type {
+  ArrowheadsChoice,
+  Arrows,
   Frame,
+  InlineSwitch,
   LegendEntry,
   LineStyle,
   LinkTarget,
@@ -38,9 +41,20 @@ export type {
   ThingLook,
   ViewStyle,
 } from './style-graph.ts';
-export { nudgedSource, nudgedDrawing } from './style-source.ts';
+export { nudgedSource, nudgedDrawing, styledDrawing } from './style-source.ts';
+export { arrowsShown } from './arrows.ts';
+export { INLINE_ROWS } from './inline-properties.ts';
+export type { InlineProperties, PropertyRow } from './inline-properties.ts';
 export { styleEdit } from './style-edit.ts';
-export type { LookWrite, NudgeWrite, ShownWrite, StyleChange, StyleEdit } from './style-edit.ts';
+export type {
+  ArrowsWrite,
+  LookWrite,
+  NudgeWrite,
+  ShowWrite,
+  ShownWrite,
+  StyleChange,
+  StyleEdit,
+} from './style-edit.ts';
 export { loadEngine } from './engine.ts';
 export type { Engine, Drawn, Direction, Details, LinkDetail, LinkDetails } from './render.ts';
 export { LAYOUT_LIMITS, PAGE_LIMITS, READ_LIMITS, textTooLarge, tooLarge } from './layout-limits.ts';

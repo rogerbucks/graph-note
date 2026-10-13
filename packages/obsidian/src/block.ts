@@ -10,11 +10,11 @@ import {
   gqlBlocks,
   graphOfBlock,
   namesSharedSchema,
-  nudgedDrawing,
   parked,
   readNote,
   readStyle,
   replaceBlock,
+  styledDrawing,
   styleOf,
   viewsOf,
   underStrictness,
@@ -165,11 +165,12 @@ export async function renderBlock(
   }
   // a problem's line in the note: the block's fence line, plus its line in the block (1 = the line after the fence)
   const shown = (p: Problem): ShownProblem => ({ ...p, noteLine: (blocks[p.block]?.line ?? 0) + p.line });
-  // its style graph (§2): what is wrong in it listed with the graph's problems; what is sound, its nudges (§6), drawn
+  // its style graph (§2): what is wrong in it listed with the graph's problems; what is sound — its nudges (§6), the
+  // properties it shows inline (§14) and the arrowheads it hides (§15) — drawn
   const styling = readStyle(texts, graph, reading);
   const problems = [...reading.problems, ...styling.problems].filter((p) => p.graph === graph).map(shown);
   const plain = reading.graphs.get(graph);
-  const drawing = plain && { ...nudgedDrawing(plain, styling.style), nudges: styling.style.nudges };
+  const drawing = plain && styledDrawing(plain, styling.style, reading.world[graph]);
   const root = el.createDiv({ cls: 'graph-note' });
 
   if (!drawing || !drawing.boxes.length) {

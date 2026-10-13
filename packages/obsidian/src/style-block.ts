@@ -8,12 +8,15 @@ import { plural } from './graph-view/view-bar';
 export function renderStyleBlock(el: HTMLElement, source: string, styled: string, texts: string[]): void {
   const { style, problems } = readStyle(texts, styled, readNote(texts));
   const own = problems.filter((p) => texts[p.block] === source && p.severity !== 'hint');
+  // a Show switched off shows nothing, so it is not counted as a property shown
+  const shownCount = style.shows.filter((s) => s.inline === 'on').length;
   const held = [
     style.nudges.length ? plural(style.nudges.length, 'nudge') : '',
     style.looks.length ? plural(style.looks.length, 'look') : '',
-    style.shows.length ? `${style.shows.length} shown ${style.shows.length === 1 ? 'property' : 'properties'}` : '',
+    shownCount ? `${shownCount} shown ${shownCount === 1 ? 'property' : 'properties'}` : '',
     style.views.size ? plural(style.views.size, 'view setting') : '',
     style.shown.size ? plural(style.shown.size, 'saved view') : '',
+    style.arrows.length ? plural(style.arrows.length, 'arrowhead setting') : '',
   ].filter(Boolean);
   const fold = el.createEl('details', { cls: 'graph-note-style' });
   fold.createEl('summary', {

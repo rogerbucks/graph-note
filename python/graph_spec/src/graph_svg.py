@@ -46,6 +46,12 @@ import textwrap
 import zlib
 from collections.abc import Collection, Iterable, Mapping, Sequence
 
+# arrowheads hidden (editor spec §15) and properties shown inline (§14), written into the source as
+# the plugin's core writes them; they live with the style graph that chooses them
+from graphspec.style.arrows import arrowless_source
+from graphspec.style.drawn import render_args  # noqa: F401 — re-exported: render(**render_args(…))
+from graphspec.style.inline import inline_source
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 STYLE = json.load(open(os.path.join(HERE, "graph_svg.style.json"), encoding="utf-8"))
 DOT = shutil.which("dot") or next(
@@ -316,8 +322,9 @@ def _themed(svg, kinds, readings=()):
     return "\n".join(line.strip() for line in svg.splitlines() if line.strip())
 
 
-def _layout(nodes, edges, rankdir, suggested=(), nudges=()):
+def _layout(nodes, edges, rankdir, suggested=(), nudges=(), arrowless=(), inline=None):
     src, kinds, readings = dot_source(nodes, edges, rankdir, suggested)
+    src = inline_source(arrowless_source(src, arrowless), inline)
     src = nudged_source(src, nudges, [key for key, _, _ in nodes])
     r = subprocess.run([DOT, "-Tsvg"], input=src, capture_output=True, text=True, timeout=60)
     if r.returncode:
@@ -332,6 +339,8 @@ def render(
     suggested: Collection[str] = (),
     nudges: Sequence[Mapping] = (),
     direction: str | None = None,
+    arrowless: Sequence[int] = (),
+    inline: Mapping | None = None,
 ) -> str:
     """The graph as one block of inline SVG. Raises RuntimeError if Graphviz is missing or fails.
     Laid out both left-to-right and top-to-bottom; the one that shrinks least to fit the page width
@@ -340,14 +349,19 @@ def render(
     end. suggested: the keys of boxes drawn under a suggested name, marked as dot_source marks
     them, and refused as it refuses them. nudges and direction: the graph's style, as
     gql_profile.read_style gives it (editor spec §6): the nudges written into each source
-    (nudged_source), and only the direction a direction nudge sets laid out (directions)."""
+    (nudged_source), and only the direction a direction nudge sets laid out (directions).
+    arrowless and inline: the links drawn without their arrowheads (graphspec.style.arrows,
+    arrowless) and the properties shown (graphspec.style.inline, inline_rows), written into each
+    source before the nudges (arrowless_source, inline_source), as the core writes them."""
     if isinstance(suggested, str):
         raise TypeError("suggested is a collection of keys, not one key as a string")
     if not DOT:
         raise RuntimeError("Graphviz (dot) is not installed")
     target, best = STYLE["page_width"], None
     for rd in directions(direction):
-        svg, kinds, readings, w, h = _layout(nodes, edges, rd, suggested, nudges)
+        svg, kinds, readings, w, h = _layout(
+            nodes, edges, rd, suggested, nudges, arrowless, inline
+        )
         fit = min(1.0, target / w) - (
             0.25 if h > STYLE["max_height_ratio"] * max(w, target) else 0
         )

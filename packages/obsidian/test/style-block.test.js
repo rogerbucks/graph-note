@@ -123,3 +123,41 @@ describe('the graph it styles', () => {
     }
   });
 });
+
+describe('properties shown and arrowheads hidden (editor spec §14, §15)', () => {
+  const CHOSEN = `// graph: reader_style · STYLE reader
+(s1:Show {property: 'name', kind: 'Option'}),
+(s2:Show {property: 'title', kind: 'Question', inline: 'off'}),
+(a1:Arrows {arrowheads: 'hide'})`;
+
+  // proves: properties_switch
+  test('the fold counts only the properties switched on, and says the arrowheads are set', async () => {
+    const { env, el } = await shown(noteOf(DATA, CHOSEN), 1);
+    try {
+      assert.match(
+        el.querySelector('details.graph-note-style summary').textContent,
+        /^Style of graph reader: 1 shown property, 1 arrowhead setting$/,
+      );
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: properties_switch, arrows_switchable
+  test('the graph it styles is laid out with its properties shown and its arrowheads hidden', async () => {
+    const { env, asked } = await shown(noteOf(DATA, CHOSEN), 0);
+    try {
+      const d = asked.at(-1);
+      assert.deepEqual(d.arrowless, [0, 1]);
+      assert.deepEqual(d.inline, {
+        boxes: [
+          ['large', [['name', 'Large reader']]],
+          ['small', [['name', 'Small reader']]],
+        ],
+        links: [],
+      });
+    } finally {
+      env.uninstall();
+    }
+  });
+});

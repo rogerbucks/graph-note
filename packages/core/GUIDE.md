@@ -191,8 +191,11 @@ style block beside it: `// graph: trip_style · STYLE trip`. `blocks.ts` knows o
 it. A graph line that says STYLE but names no graph is a problem, never data.
 
 - `style-graph.ts` — what a style graph holds once read (`StyleGraph`: nudges, shows, looks, each view's fade or hide,
-  how each view was shown, the direction) and the words it allows: the four nudge words, the lines, the formats, fade or
-  hide, and the colours, which are only the locked style's hues by name (`STYLE_HUES`).
+  how each view was shown, the direction, where arrowheads are hidden) and the words it allows: the four nudge words, the
+  lines, the formats, fade or hide, on or off (`INLINE`), show or hide (`ARROWHEADS`), and the colours, which are only
+  the locked style's hues by name (`STYLE_HUES`). A Show switches a property on or off inline for a kind, a thing or a
+  relationship type's links, in the whole graph or one view; an Arrows hides or shows arrowheads for every link or one
+  type's, in the whole graph or one view.
 - `style.ts` — `readStyle`: every style block of a graph read with the data's own reader (`readBlocks`, told which blocks
   to read), so what cannot be read is a problem on its line and the rest is used; never a throw, and a style too large
   to read is not read (the locked style is kept, and why is said). `lookOf` is the look of a thing or link in a view or
@@ -212,15 +215,30 @@ it. A graph line that says STYLE but names no graph is a problem, never data.
   the rename comes first, then what is still absent is said.
 - `style-conflicts.ts` — the things checked against each other: two directions, beside and before on one pair, a thing
   in two groups, a loop of befores, a view set to both fade and hide or saved twice, a colour given two meanings in one
-  view or path. The first written is kept, the later left out, each with a problem.
+  view or path, a property switched both on and off, or arrowheads both hidden and shown, for one place in one view. The
+  first written is kept, the later left out, each with a problem.
 - `style-source.ts` — nudges applied after the layout source is made (`nudgedSource`: beside a `rank=same` line, before
   an invisible link after every drawn one, group a labelled cluster), and direction set on the drawing (`nudgedDrawing`).
   With no nudges the source is returned unchanged, byte-identical to the Python library's. The Python library honours
   nudges the same way (`graph_svg.nudged_source`, its style read by `gql_profile.read_style`), held to the core byte for
   byte on `python/graph_spec/tests/nudge_cases.json` by `test/layout-parity.test.js` (python_honours_nudges).
-- `style-edit.ts` — `styleEdit`: a nudge, a look, a view's fade or hide, or how a view was shown, written as text into the
-  graph's style block (made after the graph's last block when there is none); a view's setting changed in place, never
-  written twice; never a data block touched. A styled hue is drawn with `theme.ts`'s `hueColour`, the same blends as a
+  `styledDrawing` is the drawing as its style draws it in a view or the whole graph, as every host draws a graph, a view
+  or an export: its direction and nudges, the links it draws without arrowheads, and the properties it shows inline.
+- `arrows.ts` — arrowheads hidden or shown (§15): `arrowsShown` (the most particular choice — a view's over the whole
+  graph's, then a type's over every link's — shown when none), `arrowlessLinks` (the links a drawing draws without them,
+  guesses included), `linkTypes` (the type each link is styled by: a guessed type's link by the type it is taken for,
+  for its arrowhead and its properties alike) and `arrowlessSource` (`dir=none` written on those links). Only the arrowhead changes, so each link
+  keeps its reading when tapped and in the text version (direction_never_lost).
+- `inline-properties.ts` — properties shown inline (§14): `inlineRows` (each box's and link's rows, its most particular
+  Show deciding — a view's over the whole graph's, then a thing's over its kind's), `valueText` (a value said as the
+  reader keeps it), and `inlineSource` (the rows below a box's text or a link's reading, at the kind caption's size, in
+  the box's text colour or the link's label colour; past `INLINE_ROWS`, whole properties and how many are hidden). The
+  Python library draws both the same way (`graphspec/style/arrows.py`, `inline.py`), held to the core byte for byte on
+  `python/graph_spec/tests/style_cases.json` by `test/layout-parity.test.js` (arrows_both_renderers).
+- `style-edit.ts` — `styleEdit`: a nudge, a look, a view's fade or hide, how a view was shown, a property switched on or
+  off inline, or arrowheads hidden or shown, written as text into the graph's style block (made after the graph's last
+  block when there is none); a view's setting, or a choice of properties or arrowheads for one place, changed in place,
+  never written twice; never a data block touched. A styled hue is drawn with `theme.ts`'s `hueColour`, the same blends as a
   kind's, so it meets the locked contrast.
 
 **Views (spec §2, §7)**
@@ -264,7 +282,8 @@ SVG or PNG (`EXPORT_FORMATS`), of the whole diagram or of a view, in the fixed l
 a GQL block, CSV or GraphML (`DATA_FORMATS`), each read back into the very things and links exported.
 
 - `export-scope.ts` — `exportScope`: what an export holds. The whole diagram is the graph as drawn. A view is put to the
-  graph as `evaluate` puts it and holds only its things and the links between them, in the graph's order, with a guess (an
+  graph as `evaluate` puts it and holds only its things and the links between them, in the graph's order, each saying
+  which written link it is (`edge`, so its properties are its own), with a guess (an
   estimated link) still a guess at its new place; with the faded context asked for it holds the whole graph and lists what
   is outside the view (`faded`: things by key, links by edge number). An empty graph or view is `empty`, with `why`.
 - `export-marks.ts` — fading and looks written into the SVG (`marked`): an opacity in the style attribute of the group of

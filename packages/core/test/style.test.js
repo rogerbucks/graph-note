@@ -4,9 +4,10 @@
 // drawing: the graph is drawn in the locked style, and the problem is listed.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { dataKind, graphOfBlock, styleOf } from '../src/blocks.ts';
+import { dataKind, gqlBlocks, graphOfBlock, styleOf } from '../src/blocks.ts';
 import { readNote } from '../src/drawing.ts';
 import { outsideOf, readStyle } from '../src/style.ts';
+import { styleEdit } from '../src/style-edit.ts';
 
 const TRIP = `// graph: trip · SOURCE
 (home:Place {name: 'Home'}),
@@ -148,7 +149,96 @@ describe('a style block in a note', () => {
     assert.deepEqual(style.nudges, []);
     assert.deepEqual(style.looks, []);
     assert.equal(style.direction, undefined);
-    assert.equal(style.views.size + style.shown.size + style.shows.length, 0);
+    assert.equal(style.views.size + style.shown.size + style.shows.length + style.arrows.length, 0);
+  });
+});
+
+describe('the properties shown are remembered in the style graph', () => {
+  const NOTE = ['# A walk', '', '```gql', TRIP, '```', ''].join('\n');
+  const blocksOf = (note) => gqlBlocks(note).map((b) => b.text);
+  const write = (note, show) => {
+    const r = styleEdit(note, 'trip', { show });
+    assert.ok('note' in r, r.refused);
+    return r.note;
+  };
+  const shows = (note) => {
+    const { style, problems } = styleIn(...blocksOf(note));
+    assert.deepEqual(problems, []);
+    return style.shows.map(({ at: _at, ...s }) => s);
+  };
+
+  // proves: properties_remembered
+  test('for the whole graph or for one view: written to the style graph, never the data, and read back', () => {
+    let note = write(NOTE, { property: 'open', kind: 'Place', inline: 'on' });
+    note = write(note, { property: 'seq', type: 'STEP', view: 'walked', inline: 'on' });
+    note = write(note, { property: 'open', kind: 'Place', view: 'walked', inline: 'off' });
+    const blocks = blocksOf(note);
+    assert.equal(blocks[0], TRIP, 'the data block is never touched');
+    assert.equal(styleOf(blocks[1]), 'trip');
+    assert.deepEqual(blocks[1].split('\n').slice(2), [
+      "(show_1:Show {property: 'open', kind: 'Place', inline: 'on'}),",
+      "(show_2:Show {property: 'seq', type: 'STEP', view: 'walked', inline: 'on'}),",
+      "(show_3:Show {property: 'open', kind: 'Place', view: 'walked', inline: 'off'})",
+    ]);
+    assert.deepEqual(shows(note), [
+      { property: 'open', kind: 'Place', inline: 'on' },
+      { property: 'seq', type: 'STEP', view: 'walked', inline: 'on' },
+      { property: 'open', kind: 'Place', view: 'walked', inline: 'off' },
+    ]);
+  });
+
+  // proves: properties_remembered
+  test('switched again, the choice is changed where it is written, never written twice', () => {
+    const on = write(NOTE, { property: 'open', kind: 'Place', view: 'walked', inline: 'on' });
+    const off = write(on, { property: 'open', kind: 'Place', view: 'walked', inline: 'off' });
+    assert.deepEqual(shows(off), [{ property: 'open', kind: 'Place', view: 'walked', inline: 'off' }]);
+    // the same property for the whole graph is a choice of its own
+    const both = write(off, { property: 'open', kind: 'Place', inline: 'on' });
+    assert.deepEqual(shows(both), [
+      { property: 'open', kind: 'Place', view: 'walked', inline: 'off' },
+      { property: 'open', kind: 'Place', inline: 'on' },
+    ]);
+  });
+
+  // proves: properties_remembered
+  test('a choice the style graph would not accept is refused, with the reason, and nothing is written', () => {
+    const refused = (show) => styleEdit(NOTE, 'trip', { show });
+    assert.deepEqual(refused({ kind: 'Place', inline: 'on' }), { refused: 'a Show names the property to show' });
+    assert.deepEqual(refused({ property: 'open', inline: 'on' }), {
+      refused: 'a Show is for one kind, thing or relationship type',
+    });
+    assert.deepEqual(refused({ property: 'open', kind: 'Place', inline: 'maybe' }), {
+      refused: 'inline must be on or off',
+    });
+  });
+
+  // proves: properties_remembered
+  test('a Show for a relationship type names a property its links have; switched on or off, nothing else', () => {
+    const { style, problems } = styleIn(
+      TRIP,
+      styleBlock(
+        "(s1:Show {property: 'seq', type: 'STEP'}),",
+        "(s2:Show {property: 'sq', type: 'STEP'}),",
+        "(s3:Show {property: 'seq', type: 'STEP', inline: 'offf'}),",
+        "(s4:Show {property: 'seq', type: 'STEP', view: 'v', inline: 'off'}),",
+        "(s5:Show {property: 'seq', type: 'STEP', view: 'v', inline: 'on'})",
+      ),
+    );
+    assert.deepEqual(
+      problems.map((p) => [p.line, p.message, p.fix]),
+      [
+        [3, 'sq is not a property of STEP in graph trip', 'write a property it has in graph trip, or remove it'],
+        [4, 'inline must be on or off', 'change offf to off'],
+        [6, 'seq of STEP is switched both off (line 5) and on in view v', 'remove one of them'],
+      ],
+    );
+    assert.deepEqual(
+      style.shows.map((s) => [s.property, s.type, s.view, s.inline]),
+      [
+        ['seq', 'STEP', undefined, 'on'],
+        ['seq', 'STEP', 'v', 'off'],
+      ],
+    );
   });
 });
 
@@ -209,7 +299,7 @@ describe('the style graph is checked like any graph', () => {
     assert.deepEqual(
       problems.map((p) => [p.line, p.message]),
       [
-        [2, 'Colour is not a kind of thing a style graph holds: Nudge, Show, Look, ViewStyle or Shown'],
+        [2, 'Colour is not a kind of thing a style graph holds: Nudge, Show, Look, ViewStyle, Shown or Arrows'],
         [5, 'a link means nothing in a style graph'],
         [6, 'zoom must be a number'],
       ],
@@ -233,8 +323,12 @@ describe('the style graph is checked like any graph', () => {
       problems.map((p) => [p.line, p.message, p.fix]),
       [
         [2, 'a direction nudge names its direction', "add direction: 'LR' or 'TB'"],
-        [3, 'a Show is for one kind or one thing', "add kind: '<Kind>' or thing: '<id>'"],
-        [4, 'a Show is for one kind or one thing', 'remove one of them'],
+        [
+          3,
+          'a Show is for one kind, thing or relationship type',
+          "add kind: '<Kind>', thing: '<id>' or type: '<TYPE>'",
+        ],
+        [4, 'a Show is for one kind, thing or relationship type', 'remove all but one of them'],
         [5, 'a Show names the property to show', "add property: '<name>'"],
         [6, 'a ViewStyle says fade or hide', "add outside: 'fade' or 'hide'"],
         [7, 'a Shown names its view', "add view: '<the view's name>'"],

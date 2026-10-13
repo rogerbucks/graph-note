@@ -432,3 +432,25 @@ describe('a PNG too large for one sharp image', () => {
     }
   });
 });
+
+describe('an image drawn with its style (editor spec §14, §15)', () => {
+  // proves: properties_switch, arrows_switchable
+  test('shows the properties its style switches on and hides the arrowheads it hides, values from the note', async () => {
+    const STYLED =
+      "// graph: trip_style · STYLE trip\n(s1:Show {property: 'name', kind: 'Cafe'}),\n(a1:Arrows {arrowheads: 'hide'})";
+    const env = await loaded(noteOf(DATA, STYLED));
+    try {
+      const laid = [];
+      const layout = env.plugin.layoutForExport.bind(env.plugin);
+      env.plugin.layoutForExport = (d, theme) => (laid.push(d), layout(d, theme));
+      const { go } = await exporting(env);
+      go();
+      await until(() => written(env, '.svg').length === 1);
+      assert.deepEqual(laid.at(-1).inline, { boxes: [['cafe', [['name', 'Cafe']]]], links: [] });
+      assert.deepEqual(laid.at(-1).arrowless, [0, 1, 2]);
+      assert.match(env.state.files.get(written(env, '.svg')[0]), />name: Cafe</);
+    } finally {
+      env.uninstall();
+    }
+  });
+});

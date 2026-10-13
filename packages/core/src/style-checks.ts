@@ -1,11 +1,13 @@
-// Checking each thing of a style graph (editor spec §2, style_graph_checked; §6; §7): its kind, its words, its values and
+// Checking each thing of a style graph (editor spec §2, style_graph_checked; §6; §7; §14; §15): its kind, its words, its values and
 // every name it uses, against the graph it styles. What is sound is kept; each fault is a problem on its line with its
 // fix, and the part at fault — or the whole thing, when nothing of it can be used — is left out of the style.
 import { nearest } from './estimates.ts';
 import { STYLE } from './layout.ts';
 import type { Problem } from './note-reading.ts';
 import {
+  ARROWHEADS,
   FORMATS,
+  INLINE,
   LINES,
   NUDGE_WORDS,
   OUTSIDE,
@@ -15,7 +17,7 @@ import {
   styleProblem,
   wordFix,
 } from './style-graph.ts';
-import type { Look, Nudge, Show, Shown, StyleAt, StyleKind, ViewStyle } from './style-graph.ts';
+import type { Arrows, Look, Nudge, Show, Shown, StyleAt, StyleKind, ViewStyle } from './style-graph.ts';
 import { readFrame, unknownKeys } from './style-words.ts';
 
 /** One thing of a style graph as read: its kinds, its properties, where it is, and where each property's text is. */
@@ -38,8 +40,8 @@ export interface StyledNames {
   kinds: Set<string>;
   types: Set<string>;
   paths: Set<string>;
-  /** The property names of a kind's things, or of one thing. */
-  properties(of: { kind?: string; thing?: string }): Set<string>;
+  /** The property names of a kind's things, of one thing, or of a relationship type's links. */
+  properties(of: { kind?: string; thing?: string; type?: string }): Set<string>;
 }
 
 /** What each thing of a style graph gives, checked one by one, before the things are checked against each other. */
@@ -49,6 +51,7 @@ export interface Checked {
   looks: Look[];
   views: (ViewStyle & { view: string; at: StyleAt })[];
   shown: (Shown & { view: string; at: StyleAt })[];
+  arrows: Arrows[];
   problems: Problem[];
 }
 
@@ -146,25 +149,59 @@ function nudgeOf(raw: RawThing, names: StyledNames, out: Problem[]): Nudge | nul
   return out.length === before ? n : null;
 }
 
-/** A property shown inline, checked: a property of the kind's things, or of the thing, that it names. */
+/** What a Show is for: one kind, thing or relationship type (§14). */
+export const SHOW_FOR = 'a Show is for one kind, thing or relationship type';
+
+/**
+ * A property switched on or off for showing inline, checked: a property of the kind's things, of the thing, or of the
+ * type's links, that it names; on unless it says off; in a view when it names one, whose name is the user's own.
+ */
 function showOf(raw: RawThing, names: StyledNames, out: Problem[]): Show | null {
   const r = reader(raw, names, out),
     before = out.length;
   const has = (k: string) => raw.props[k] !== undefined;
+  const targets = ['kind', 'thing', 'type'].filter(has).length;
   if (!has('property')) r.missing('a Show names the property to show', "add property: '<name>'");
-  else if (has('kind') === has('thing')) {
-    if (has('kind')) r.report('a Show is for one kind or one thing', 'remove one of them');
-    else r.missing('a Show is for one kind or one thing', "add kind: '<Kind>' or thing: '<id>'");
-  } else {
+  else if (targets > 1) r.report(SHOW_FOR, 'remove all but one of them');
+  else if (!targets) r.missing(SHOW_FOR, "add kind: '<Kind>', thing: '<id>' or type: '<TYPE>'");
+  else {
     const kind = r.name('kind', names.kinds, 'a kind'),
-      thing = r.name('thing', names.things, 'a thing', 'the id of a thing');
-    const of = kind ? { kind } : thing ? { thing } : null;
+      thing = r.name('thing', names.things, 'a thing', 'the id of a thing'),
+      type = r.name('type', names.types, 'a relationship type');
+    const of = kind ? { kind } : thing ? { thing } : type ? { type } : null;
     if (of) {
-      const property = r.name('property', names.properties(of), `a property of ${kind ?? thing}`, 'a property it has');
-      if (property && out.length === before) return { property, ...of, at: raw.at };
+      const property = r.name(
+        'property',
+        names.properties(of),
+        `a property of ${kind ?? thing ?? type}`,
+        'a property it has',
+      );
+      const inline =
+        raw.props.inline === undefined ? 'on' : r.word('inline', INLINE, `inline must be ${orList(INLINE)}`);
+      const view = r.text('view');
+      if (property && inline && out.length === before)
+        return { property, ...of, ...(view === undefined ? {} : { view }), inline, at: raw.at };
     }
   }
   return null;
+}
+
+/**
+ * Where arrowheads are hidden or shown, checked (§15): show or hide, for every link or the links of a relationship type
+ * the graph has, in the whole graph or in a view, whose name is the user's own.
+ */
+function arrowsOf(raw: RawThing, names: StyledNames, out: Problem[]): Arrows | null {
+  const r = reader(raw, names, out),
+    before = out.length;
+  if (raw.props.arrowheads === undefined) {
+    r.missing('an Arrows says show or hide', `add arrowheads: ${orList(ARROWHEADS.map((w) => `'${w}'`))}`);
+    return null;
+  }
+  const arrowheads = r.word('arrowheads', ARROWHEADS, `arrowheads must be ${orList(ARROWHEADS)}`);
+  const type = r.name('type', names.types, 'a relationship type'),
+    view = r.text('view');
+  if (!arrowheads || out.length !== before) return null;
+  return { arrowheads, ...(view === undefined ? {} : { view }), ...(type === undefined ? {} : { type }), at: raw.at };
 }
 
 /** A look, checked: one view or path, one thing, kind or link, all in the graph, and at least one change that is sound. */
@@ -272,7 +309,7 @@ function shownOf(raw: RawThing, names: StyledNames, out: Problem[]): Checked['sh
 
 /** Each thing of a style graph checked on its own, in the order written: what it gives, and the problems found. */
 export function checkThings(raws: RawThing[], names: StyledNames): Checked {
-  const c: Checked = { nudges: [], shows: [], looks: [], views: [], shown: [], problems: [] };
+  const c: Checked = { nudges: [], shows: [], looks: [], views: [], shown: [], arrows: [], problems: [] };
   for (const raw of raws) {
     const kinds = raw.labels.filter((l) => (STYLE_KINDS as readonly string[]).includes(l));
     if (kinds.length !== 1 || raw.labels.length !== 1) {
@@ -300,6 +337,7 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
     else if (kinds[0] === 'Show') push(c.shows, kept(showOf(thing, names, p)));
     else if (kinds[0] === 'Look') push(c.looks, kept(lookOf(thing, names, p)));
     else if (kinds[0] === 'ViewStyle') push(c.views, kept(viewStyleOf(thing, names, p)));
+    else if (kinds[0] === 'Arrows') push(c.arrows, kept(arrowsOf(thing, names, p)));
     else push(c.shown, kept(shownOf(thing, names, p)));
   }
   return c;

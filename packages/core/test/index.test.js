@@ -17,7 +17,8 @@
 // write a name only suggested (acceptNameFirst, 11 Oct 2026), and adding a thing (addThing, suggestName and their types,
 // 11 Oct 2026), and an estimated link's fix (estimateFix, EstimateFix, 11 Oct 2026), and focus and untangling a large graph
 // (focusOf, highlightOf, FocusState, edgesOf, neighbourhood, LegendFilter, shortestPath, find, nextAlong, Untangle and their
-// types, and boundsOf and centres of the tap areas, 13 Oct 2026).
+// types, and boundsOf and centres of the tap areas, 13 Oct 2026), and arrowheads hidden and properties shown inline
+// (styledDrawing, arrowsShown, ARROWHEADS, INLINE, INLINE_ROWS and their types, 13 Oct 2026).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -28,6 +29,7 @@ const ts = require('typescript');
 const ENTRY = new URL('../src/index.ts', import.meta.url);
 
 const VALUES = [
+  'ARROWHEADS',
   'DATA_FORMATS',
   'DEFAULT_SETTINGS',
   'DEPARTURES',
@@ -38,6 +40,8 @@ const VALUES = [
   'FORMATS',
   'FocusState',
   'History',
+  'INLINE',
+  'INLINE_ROWS',
   'KEPT',
   'KIND',
   'LAYOUT_LIMITS',
@@ -76,6 +80,7 @@ const VALUES = [
   'addToList',
   'addView',
   'aiModel',
+  'arrowsShown',
   'blockItems',
   'boundsOf',
   'centres',
@@ -186,6 +191,7 @@ const VALUES = [
   'stepOver',
   'styleEdit',
   'styleOf',
+  'styledDrawing',
   'suggestName',
   'textFromName',
   'textTooLarge',
@@ -202,6 +208,9 @@ const VALUES = [
 
 const TYPES = [
   'AiModel',
+  'ArrowheadsChoice',
+  'Arrows',
+  'ArrowsWrite',
   'Block',
   'BlockRef',
   'Bounds',
@@ -250,6 +259,8 @@ const TYPES = [
   'Indent',
   'Inline',
   'InlineKind',
+  'InlineProperties',
+  'InlineSwitch',
   'Kept',
   'Layers',
   'LayoutLimits',
@@ -297,6 +308,7 @@ const TYPES = [
   'Problem',
   'PropType',
   'Property',
+  'PropertyRow',
   'Range',
   'ReadLimits',
   'Refusal',
@@ -306,6 +318,7 @@ const TYPES = [
   'Settings',
   'Shape',
   'Show',
+  'ShowWrite',
   'Shown',
   'ShownWrite',
   'Size',

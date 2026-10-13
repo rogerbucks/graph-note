@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/display.test.js",
+  "test": "a box crowded with properties > drawn, no two rows of a crowded link's label overlap",
+  "seen_failing_first": false,
+  "evidence": "Asked for in the review of PR #121: a crowded link's label already held its rows in an HTML table since 94675d1, which Graphviz lays out without overlap; the test pins that for links as the box test does for boxes, so it passed at its parent."
+}

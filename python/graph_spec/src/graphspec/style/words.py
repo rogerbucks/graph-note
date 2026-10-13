@@ -1,6 +1,8 @@
-"""The words a style graph may use for its nudges (editor spec §6, four_nudge_words), and how a
-problem with one is said: the core's style-graph.ts, as far as nudges need it. The directions are
-the locked style's, from graph_svg.style.json, the one file both renderers read."""
+"""The words a style graph may use for what graph_svg draws — its nudges (editor spec §6,
+four_nudge_words), the properties it shows inline (§14) and where it hides arrowheads (§15) — the
+keys each kind of style thing may have, and how a problem with one is said: the core's
+style-graph.ts and style-words.ts, as far as these need them. The directions and sizes are the
+locked style's, from graph_svg.style.json, the one file both renderers read."""
 
 from __future__ import annotations
 
@@ -8,16 +10,47 @@ import json
 import os
 from collections.abc import Sequence
 
-from graphspec.style.near_names import distance, utf16_units
+from graphspec.style.near_names import distance, nearest, utf16_units
 
 _STYLE_FILE = os.path.join(os.path.dirname(__file__), "..", "..", "graph_svg.style.json")
 with open(_STYLE_FILE, encoding="utf-8") as _f:
-    DIRECTIONS: list[str] = json.load(_f)["directions"]
+    LOCKED: dict = json.load(_f)
+DIRECTIONS: list[str] = LOCKED["directions"]
 
 # The four words a nudge may be (§6, four_nudge_words).
 NUDGE_WORDS = ("beside", "before", "group", "direction")
+# Whether a property is shown inline (§14): on, unless a Show switches it off.
+INLINE = ("on", "off")
+# Whether links are drawn with their arrowheads (§15): shown, unless the style graph hides them.
+ARROWHEADS = ("show", "hide")
 # The kinds of thing a style graph holds, by label.
-STYLE_KINDS = ("Nudge", "Show", "Look", "ViewStyle", "Shown")
+STYLE_KINDS = ("Nudge", "Show", "Look", "ViewStyle", "Shown", "Arrows")
+# The keys each kind of style thing may have (§2, style_words_checked); a thing's id is its name.
+STYLE_KEYS = {
+    "Nudge": ("word", "thing", "other", "group", "direction"),
+    "Show": ("property", "kind", "thing", "type", "view", "inline"),
+    "Look": (
+        "view",
+        "path",
+        "thing",
+        "kind",
+        "from",
+        "type",
+        "to",
+        "colour",
+        "line",
+        "format",
+        "means",
+    ),
+    "ViewStyle": ("view", "outside"),
+    "Shown": ("view", "zoom", "x", "y", "frame", "selected"),
+    "Arrows": ("arrowheads", "view", "type"),
+}
+
+
+def article(word: str) -> str:
+    """A word as a sentence says it before a kind's name: 'an Arrows', 'a Show'."""
+    return "an" if word[:1].upper() in ("A", "E", "I", "O", "U") else "a"
 
 
 def or_list(xs: Sequence[str]) -> str:
@@ -55,6 +88,27 @@ def style_problem(graph: str, at: dict, message: str, fix: str) -> dict:
         "message": message,
         "fix": fix,
     }
+
+
+def unknown_keys(kind: str, written: Sequence[str], graph: str, at: dict) -> list[dict]:
+    """A problem for each key written on a thing of `kind` that the style graph does not know, as
+    the core's style-words.ts unknownKeys says it: the fix is the nearest known key the thing does
+    not already write, or, of several equally near, each of them; with none near, the keys to
+    choose from."""
+    known = STYLE_KEYS[kind]
+    out = []
+    for k in written:
+        if k == "id" or k in known:
+            continue
+        near = nearest(k, [c for c in known if c not in written])
+        by = [] if not near else [near["one"]] if "one" in near else near["several"]
+        if by:
+            mean = "the one you mean: " if len(by) > 1 else ""
+            fix = f"change {k} to {mean}{or_list(by)}"
+        else:
+            fix = f"remove {k}, or use one of {or_list(known)}"
+        out.append(style_problem(graph, at, f"{k} is not a key {article(kind)} {kind} uses", fix))
+    return out
 
 
 def replace_first(s: str, pattern: str, replacement: str) -> str:

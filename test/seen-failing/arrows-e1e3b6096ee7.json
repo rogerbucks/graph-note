@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/arrows.test.js",
+  "test": "arrowheads can be hidden or shown > a link drawn backwards keeps dir=back when its type is shown again over a whole-graph hide",
+  "seen_failing_first": false,
+  "evidence": "Asked for in the review of PR #121 to pin behaviour arrowlessSource already had since 94675d1: a link whose type is shown is never touched, so its dir=back stays. It guards against a later change, so it passed at its parent."
+}

@@ -14,5 +14,7 @@ declare const GraphLayout: {
   pick(names: string[], palette: string[], pinned: Record<string, string>): Record<string, string>;
   /** Python's html.escape(s), quote=True. */
   escape(s: string): string;
+  /** Python's textwrap.wrap(text, width, break_on_hyphens=False): the lines a box's text is wrapped to. */
+  wrap(text: string, width: number): string[];
 };
 export = GraphLayout;
