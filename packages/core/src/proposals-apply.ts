@@ -134,11 +134,25 @@ function linkOut(texts: readonly string[], blocks: number[], c: ProposedChange &
       };
 }
 
+/**
+ * Whether the text names the id as a word of its own: not as part of a longer word, nor after a dot as a property of
+ * another name. The character before it is looked at by hand, as a regular expression would with a lookbehind, which iOS
+ * before 16.4 cannot load.
+ */
+function namesThing(text: string, id: string): boolean {
+  for (let at = text.indexOf(id); at !== -1; at = text.indexOf(id, at + 1)) {
+    const before = text[at - 1] ?? '',
+      after = text[at + id.length] ?? '';
+    if (!/[\w.]/.test(before) && !/\w/.test(after)) return true;
+  }
+  return false;
+}
+
 /** A thing taken out: the item that writes it, the links that are items of their own, and the SET lines that give it properties. */
 function thingOut(texts: readonly string[], blocks: number[], c: ProposedChange & { op: 'remove-thing' }): Edited {
   const name = literally(c.thing);
   const own = new RegExp(`^\\(\\s*${name}\\s*((?::\\s*\\w+\\s*)*)(\\{[^{}]*\\})?\\s*\\)$`);
-  const mentions = new RegExp(`(?<![\\w.])${name}(?!\\w)`);
+  const mentions = { test: (blank: string) => namesThing(blank, c.thing) };
   const assignment = new RegExp(`^(SET\\s+)?${name}\\s*\\.`);
   let out = [...texts],
     wrote = false;
