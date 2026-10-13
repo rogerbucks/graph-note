@@ -1,6 +1,6 @@
 # Device checks
 
-One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md)): 88 checks in 12 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
+One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md)): 94 checks in 13 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
 
 ## 01 Viewing
 
@@ -125,3 +125,12 @@ One note for each check in the device checklist ([the checklist, on GitHub](http
 ## 12 Proposals
 
 - [[Device checks/12 Proposals/R-01 Proposal on the phone|R-01 Proposal on the phone]]
+
+## 13 AI models
+
+- [[Device checks/13 AI models/U-01 AI off until turned on|U-01 AI off until turned on]]
+- [[Device checks/13 AI models/U-02 Models by address and purpose|U-02 Models by address and purpose]]
+- [[Device checks/13 AI models/U-03 See exactly what is sent|U-03 See exactly what is sent]]
+- [[Device checks/13 AI models/U-04 Choose what is sent|U-04 Choose what is sent]]
+- [[Device checks/13 AI models/U-05 Ceiling and credentials|U-05 Ceiling and credentials]]
+- [[Device checks/13 AI models/U-06 Unreachable model and the send record|U-06 Unreachable model and the send record]]
