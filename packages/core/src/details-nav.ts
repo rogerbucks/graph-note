@@ -20,6 +20,9 @@ export interface LinkGroup {
   count: number;
   /** The group in words: "reports to Ann", "is reported to by Bob and Cy (2)". */
   words: string;
+  /** The words before and after the things' names, listed as `listed` lists them, so a host can make each name a control. */
+  before: string;
+  after: string;
 }
 
 /** Names listed as a sentence lists them: "Ann", "Bob and Cy", "Bob, Cy and Dee". */
@@ -60,18 +63,20 @@ export function linkGroups(reading: NoteReading, graph: string, key: string): Li
         things: [],
         count: 0,
         words: '',
+        before: '',
+        after: '',
       };
       group.things.push({ key: other, text: textOf(other), link });
       group.count = group.things.length;
       groups.set(id, group);
     });
   for (const g of groups.values()) {
-    const names = listed(g.things.map((t) => t.text)),
-      count = g.count > 1 ? ` (${g.count})` : '',
-      forward = d.links[g.things[0]?.link ?? 0]?.reading ?? g.type;
-    g.words = g.reading.startsWith('inverse of ')
-      ? `${names} ${forward} this${count}`
-      : `${g.reading} ${names}${count}`;
+    const count = g.count > 1 ? ` (${g.count})` : '',
+      forward = d.links[g.things[0]?.link ?? 0]?.reading ?? g.type,
+      guessed = g.reading.startsWith('inverse of ');
+    g.before = guessed ? '' : `${g.reading} `;
+    g.after = guessed ? ` ${forward} this${count}` : count;
+    g.words = `${g.before}${listed(g.things.map((t) => t.text))}${g.after}`;
   }
   return [...groups.values()];
 }

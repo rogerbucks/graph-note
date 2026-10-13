@@ -1,6 +1,6 @@
 # V-07 Tap a box for details
 
-**You should see:** first, the graph drawn down the page, Reason above Option above Question, with the link words `favours` and `answers` each beside their line and a small gap between the line and the first letter, never touching it. Then, after tapping the Large reader box, a panel headed by its text, `Large reader`, with its kind, `Option`. Under the heading Links out, one line for the link going out: `Links out: answers → Which device should I read on?`. Under the heading Links in, one line for the link coming in: `Links in: A4 pages need a big screen favours this`.
+**You should see:** first, the graph drawn down the page, Reason above Option above Question, with the link words `favours` and `answers` each beside their line and a small gap between the line and the first letter, never touching it. Then, after tapping the Large reader box, a panel headed by its text, `Large reader`, with its kind, `Option`. Under the heading Links out, one line for the link going out, in words, with the question's name underlined as a choice: `Links out: answers Which device should I read on?`. Under the heading Links in, one line for the link coming in, read the other way round: `Links in: is favoured by A4 pages need a big screen`.
 
 **Test diagram:**
 
@@ -14,8 +14,8 @@
 ```
 
 <!-- expect: clean -->
-<!-- expect: detail "large | Links out: answers → Which device should I read on?" -->
-<!-- expect: detail "large | Links in: A4 pages need a big screen favours this" -->
+<!-- expect: detail "large | Links out: answers Which device should I read on?" -->
+<!-- expect: detail "large | Links in: is favoured by A4 pages need a big screen" -->
 
 **Do this:**
 

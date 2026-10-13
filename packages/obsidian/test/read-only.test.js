@@ -29,12 +29,17 @@ const NOTE = ['# Reader', '', fence(RICH), ''].join('\n');
 const VIEW = "// graph: reader · QUERY view answers\nMATCH (n {id: 'q'})-[]-{1,1}(m) RETURN n, m";
 const VIEW_NOTE = ['# Reader', '', fence(RICH), '', fence(VIEW), ''].join('\n');
 
-/** Every control in the card's details that can be pressed or typed in, by its name, its words, its class or its tag. */
+/**
+ * Every control in the card's details that can be pressed or typed in, by its name, its words, its class or its tag; but
+ * those that only find the way round the drawing (§25), which choose a linked thing or link, step along the trail or
+ * minimise the sheet, and so change the picture and never the note, as the untangling does.
+ */
 const controls = (el) =>
   el
     .querySelectorAll(
       '.graph-note-details button, .graph-note-details input, .graph-note-details select, .graph-note-details textarea, .graph-note-details [role="button"]',
     )
+    .filter((c) => !c.closest('.graph-note-link-group, .graph-note-trail') && !c.hasClass('graph-note-sheet-toggle'))
     .map((c) => c.getAttribute('aria-label') || c.textContent || c.getAttribute('class') || c.tagName);
 
 /**
@@ -137,7 +142,8 @@ describe('a card in reading view shows its details and offers nothing that write
       assert.ok(!d.querySelector('.multi-select-pill-remove-button'), 'no x');
       assert.ok(!d.querySelector('input.multi-select-input'), 'no field to add');
       const items = d.querySelectorAll('li').map((li) => li.textContent);
-      assert.ok(items.includes('has tag → light') && items.includes('has tag → cheap'), `its things: ${items}`);
+      // listed as the details list a thing's links, grouped and in words (§25, details_links_listed)
+      assert.ok(items.includes('has tag light and cheap (2)'), `its things: ${items}`);
       await unchanged(env, shown);
     } finally {
       env.uninstall();

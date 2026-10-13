@@ -43,12 +43,16 @@ async function showEmbedded(env, where) {
   return el;
 }
 
-/** Every control in the details that can be pressed or typed in, by its name, its words or its tag. */
+/**
+ * Every control in the details that can be pressed or typed in, by its name, its words or its tag; but those that only
+ * find the way round the drawing (§25): a linked thing or link chosen, a step along the trail, the sheet minimised.
+ */
 const controls = (el) =>
   el
     .querySelectorAll(
       '.graph-note-details button, .graph-note-details input, .graph-note-details textarea, .graph-note-details [role="button"]',
     )
+    .filter((c) => !c.closest('.graph-note-link-group, .graph-note-trail') && !c.hasClass('graph-note-sheet-toggle'))
     .map((c) => c.getAttribute('aria-label') || c.textContent || c.tagName);
 
 /** What a thing's details offer beside closing, where the note is only read (§25): both change the picture, never the note. */

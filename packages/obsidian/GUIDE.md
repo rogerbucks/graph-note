@@ -94,7 +94,8 @@ module that ties the parts together, named as the folder is.
 - `taps.ts` — what a tap or a key lands on, and the nearest things to a tap; where a box is, to bring it into view, and
   the middle of each, for the arrow keys.
 - `selection.ts` — what is selected in a card and how it shows (spec §25): the selection is the focus, with the
-  highlight, the untangling and the arrow keys that walk the links. Ties the next four to the card; marks the drawing by
+  highlight, the untangling and the arrow keys that walk the links; a thing chosen from the details brought into view,
+  readable, and the selection kept clear above the details sheet. Ties the next four to the card; marks the drawing by
   class only.
 - `focus-marks.ts` — what the core says is kept, hidden or highlighted, put on the drawing as classes
   (`graph-note-kept`, `-dim`, `-hidden`, `-hot`); `styles.css` draws them by strength and outline, never by colour alone,
@@ -107,8 +108,19 @@ module that ties the parts together, named as the folder is.
   `untangle-legend.ts` (a button for each kind and relationship type: in front, hidden, back) and `untangle-find.ts`
   (the search row).
 - `details-panel.ts` — the details of a box, a link or an estimated link, the one shown marked as selected, its
-  properties to read, and the inspector while the block is edited; a thing's offers Show only this and its neighbours and
-  the shortest path to another thing (§25); closing it, by button, Escape or a tap on empty space, clears the focus.
+  properties to read, and the inspector while the block is edited; a thing's links grouped by type and direction in
+  words, each thing and link a choice, and the trail's back and forward (§25); a thing's offers Show only this and its
+  neighbours and the shortest path to another thing (§25); closing it, by button, Escape or a tap on empty space, clears
+  the focus.
+- `details-nav.ts` — finding your way from the details (§25): the groups of links rendered from the core's
+  `linkGroups`, the trail's buttons, the names of steps, and `Glide`, the brief eased move to what is chosen, a frame at
+  a time, at once when the system asks for reduced motion.
+- `details-sheet.ts` — the details in view mode, in a note's card (§25): a sheet pinned to the foot of the part of the
+  screen the note is seen in, over the card, gone while the card is off the screen; its toggle minimises it to a bar or
+  restores it, the state remembered for the session; Escape in it closes it, never a key typed in the note; it says
+  where its top is, so the card keeps the chosen thing clear above it.
+- `selection-pointer.ts` — the arrow at the edge of the drawing pointing to a selection out of view, named for it; tapped,
+  it brings the selection into view, and a tap on it is never a tap on the drawing (§25).
 - `estimate-actions.ts` — what an estimated link's details offer (§3): the quick fix, its problem's own fix (the core's
   `estimateFix`), written into the text being edited, or else into the note while the block is still as drawn
   (`ViewOptions.writeBlock`); and Edit the link, which opens the editor with the misspelt word selected. Neither where
@@ -142,7 +154,7 @@ module that ties the parts together, named as the folder is.
   same way. An edit into the block (the editor's `replace`) is checked again as it is written (`PaneSession.edit`); a
   refusal reloads the block and says so in the draft banner, with the edit kept as a draft.
 - `placement.ts` — where a card is: read-only in reading view, a hover preview and an embed of another note (in Live
-  Preview too); waiting for a card to be put on the page.
+  Preview too); waiting for a card to be put on the page; the part of the screen its note is seen in, and scrolling it.
 - `read-only.ts` — the one check every write from a card passes: each function in its options, at any depth, is closed
   where the card is read-only (reading view, an embed, and full screen opened from them), but those named as only
   reading, so a new control that writes is read-only there by default; an option it cannot reach is refused, loudly.

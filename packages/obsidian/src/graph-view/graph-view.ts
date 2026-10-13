@@ -21,6 +21,7 @@ import { Taps, targetAt, targetOf } from './taps';
 import type { Target } from './taps';
 import { DetailsPanel } from './details-panel';
 import { Selection } from './selection';
+import { onPointer } from './selection-pointer';
 import type { ViewOptions } from './view-options';
 
 /** A drawn graph with its bar, zoom, full screen, details and, in edit mode, the inspector. */
@@ -98,6 +99,8 @@ export class GraphView extends MarkdownRenderChild {
       open: (t, walking) => this.open(t, false, walking),
       taps: this.taps,
       drawing: () => this.drawing(),
+      viewport: () => this.viewport,
+      size: () => this.viewportSize(),
     });
 
     list = renderProblems(root, problems, true, this.o.completeness);
@@ -194,6 +197,7 @@ export class GraphView extends MarkdownRenderChild {
   }
 
   override onunload(): void {
+    this.sel.stop(); // a move under way ends with the card
     this.fullscreen?.overlay.remove();
     this.fullscreen = null;
   }
@@ -223,6 +227,7 @@ export class GraphView extends MarkdownRenderChild {
       '--graph-note-touch': this.zoom.touchAction(),
     });
     this.viewport.toggleClass('is-zoomed', this.zoom.zoomedIn());
+    this.sel.viewChanged(); // the arrow to a selection out of view follows (§25)
   }
 
   private point(e: { clientX: number; clientY: number }) {
@@ -265,6 +270,7 @@ export class GraphView extends MarkdownRenderChild {
       return false;
     };
     this.registerDomEvent(vp, 'pointerdown', (e: PointerEvent) => {
+      if (onPointer(e.target)) return; // the arrow to the selection is a button of its own, never the drawing (§25)
       const target = targetAt(e.target),
         p = this.point(e),
         near = this.near(p);
@@ -283,6 +289,7 @@ export class GraphView extends MarkdownRenderChild {
       use(e, { kind: 'move', id: e.pointerId, ...this.point(e) });
     });
     this.registerDomEvent(vp, 'pointerup', (e: PointerEvent) => {
+      if (onPointer(e.target)) return;
       const p = this.point(e);
       use(e, { kind: 'up', id: e.pointerId, ...p, time: e.timeStamp ?? 0 });
       const down = this.boxDown,
@@ -318,6 +325,7 @@ export class GraphView extends MarkdownRenderChild {
     );
     // a double click on or near a box or link only selects it, as its two clicks did; only empty space zooms (§3)
     this.registerDomEvent(vp, 'dblclick', (e: MouseEvent) => {
+      if (onPointer(e.target)) return;
       const p = this.point(e),
         onBox = !!targetAt(e.target);
       use(e, { kind: 'dblclick', ...p, onBox, near: !onBox && this.near(p).length > 0 });

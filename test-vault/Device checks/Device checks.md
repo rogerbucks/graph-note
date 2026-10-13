@@ -1,6 +1,6 @@
 # Device checks
 
-One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md)): 96 checks in 12 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
+One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md)): 103 checks in 13 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
 
 ## 01 Viewing
 
@@ -133,3 +133,13 @@ One note for each check in the device checklist ([the checklist, on GitHub](http
 - [[Device checks/12 Focus and untangle/F-07 Shortest path|F-07 Shortest path]]
 - [[Device checks/12 Focus and untangle/F-08 Find a thing|F-08 Find a thing]]
 - [[Device checks/12 Focus and untangle/F-09 Walk the links by arrow key|F-09 Walk the links by arrow key]]
+
+## 13 Details and the sheet
+
+- [[Device checks/13 Details and the sheet/G-01 Links listed in words|G-01 Links listed in words]]
+- [[Device checks/13 Details and the sheet/G-02 Reduced motion|G-02 Reduced motion]]
+- [[Device checks/13 Details and the sheet/G-03 Trail back and forward|G-03 Trail back and forward]]
+- [[Device checks/13 Details and the sheet/G-04 Arrow to the selection|G-04 Arrow to the selection]]
+- [[Device checks/13 Details and the sheet/G-05 Sheet pinned and clear|G-05 Sheet pinned and clear]]
+- [[Device checks/13 Details and the sheet/G-06 Sheet minimised and remembered|G-06 Sheet minimised and remembered]]
+- [[Device checks/13 Details and the sheet/G-07 Sheet closed and reached|G-07 Sheet closed and reached]]

@@ -102,6 +102,14 @@ describe('a thing’s links, grouped by relationship type and direction, in word
     assert.deepEqual(linkGroups(r, 'nowhere', 'a'), []);
   });
 
+  test('the words before and after the names are given apart, so a host can make each name a control', () => {
+    const r = readNote(["// graph: g · SOURCE\n(a:X {name: 'A'}),\n(b:X {name: 'B'}),\n(a)-[:PART_OF_PLAN]->(b)"]);
+    for (const g of [...linkGroups(reading, 'team', 'ann'), ...linkGroups(r, 'g', 'b')])
+      assert.equal(`${g.before}${listed(g.things.map((t) => t.text))}${g.after}`, g.words);
+    const [, , back] = linkGroups(reading, 'team', 'ann');
+    assert.deepEqual([back.before, back.after], ['is reported to by ', ' (2)']);
+  });
+
   test('names are listed as a sentence lists them', () => {
     assert.equal(listed(['Ann']), 'Ann');
     assert.equal(listed(['Bob', 'Cy']), 'Bob and Cy');

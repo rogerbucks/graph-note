@@ -1,6 +1,7 @@
 // Where a drawing's card is placed (spec §3, §4): read-only in reading view, a hover preview or an embed, editable in
 // Live Preview and Source mode; and, since Live Preview draws a block into a card that goes on the page only after,
-// what waits for a card to be put on the page before deciding what it offers.
+// what waits for a card to be put on the page before deciding what it offers. Also the part of the screen its note is
+// seen in, which the details sheet is pinned to the foot of, and scrolling that note (§25).
 
 /**
  * Whether a card is where the note is only read, not edited: reading view, a hover preview or an embed, as opposed to
@@ -12,6 +13,27 @@
 export const readOnlyHere = (el: HTMLElement): boolean =>
   !!el.closest('.markdown-embed, .internal-embed') ||
   (!!el.closest('.markdown-reading-view, .markdown-preview-view') && !el.closest('.markdown-source-view'));
+
+/** What scrolls a note: CodeMirror's scroller in the editing view, the preview in reading view. */
+const SCROLLER = '.cm-scroller, .markdown-preview-view';
+
+/**
+ * The part of the screen a card's note is seen in (§25, the details sheet): its scroller's top and foot within the window,
+ * and how far that foot is above the window's, where a phone's toolbar may sit. The whole window when there is none.
+ */
+export function screenOf(el: HTMLElement): { top: number; bottom: number; below: number } {
+  const height = el.win.innerHeight,
+    r = el.closest(SCROLLER)?.getBoundingClientRect();
+  const top = Math.max(0, r?.top ?? 0),
+    bottom = Math.min(height, r?.bottom ?? height);
+  return { top, bottom, below: height - bottom };
+}
+
+/** Scrolls the note a card is in down by `by` pixels, so what is in the card rises by as much (§25). */
+export function scrollNote(el: HTMLElement, by: number): void {
+  const scroller = el.closest(SCROLLER);
+  if (scroller) scroller.scrollTop += by;
+}
 
 /** The checks still waiting for their card to be put on the page, by the document the card is drawn in. */
 const waiting = new Map<Document, Set<() => void>>();
