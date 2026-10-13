@@ -63,9 +63,10 @@ const luhn = (digits: string) => {
 // apiKey) it starts with a capital after a lower-case letter or digit. A bare `key` is an ordinary word (key: 'primary'),
 // so only a name ending in _key or Key is a secret's; a real key under a bare name is still found by its value's shape.
 const SECRET_NAMES = [
-  /(?<![A-Za-z0-9])(?:pass(?:word|wd|phrase|code)?|pwd|pin|secret|token|credentials?)(?![A-Za-z0-9])/i,
-  /(?<=_)key(?![A-Za-z0-9])/i,
-  /(?<=[a-z0-9])(?:Pass(?:word|wd|phrase|code)?|Pwd|Pin|Secret|Token|Key|Credentials?)(?![A-Za-z0-9])/,
+  // the character before is matched, not looked behind at: a lookbehind is a syntax error on iOS before 16.4
+  /(?:^|[^A-Za-z0-9])(?:pass(?:word|wd|phrase|code)?|pwd|pin|secret|token|credentials?)(?![A-Za-z0-9])/i,
+  /_key(?![A-Za-z0-9])/i,
+  /[a-z0-9](?:Pass(?:word|wd|phrase|code)?|Pwd|Pin|Secret|Token|Key|Credentials?)(?![A-Za-z0-9])/,
 ];
 // then a text of four characters or more, given to it with a colon or an equals sign
 const SECRET_VALUE = String.raw`["']?\s*[:=]\s*["'][^"'\s]{4,}`;
@@ -91,7 +92,9 @@ const CREDENTIALS: { what: string; test: (line: string) => boolean }[] = [
   {
     what: 'a card number',
     test: (l) =>
-      [...l.matchAll(/(?<![\w.-])[2-6](?:[ -]?\d){12,18}(?![\w.-])/g)].some(([m]) => luhn(m.replace(/[ -]/g, ''))),
+      [...l.matchAll(/(?:^|[^\w.-])([2-6](?:[ -]?\d){12,18})(?![\w.-])/g)].some(([, m]) =>
+        luhn((m ?? '').replace(/[ -]/g, '')),
+      ),
   },
 ];
 

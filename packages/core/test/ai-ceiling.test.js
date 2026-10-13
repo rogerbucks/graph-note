@@ -33,6 +33,16 @@ test('a bare key is a word, not a secret: only a name ending in _key or Key is o
   assert.deepEqual(credentialsIn(`(t:Service {key: '${real}'})`), ['an API key']);
 });
 
+test('a card number is found by its checksum, alone or among words, and a number that fails it is not', () => {
+  // the test number every card network publishes, made here so no line of this file has its shape
+  const card = ['4111', '1111', '1111', '1111'];
+  assert.deepEqual(credentialsIn(`(c:Card {number: '${card.join(' ')}'})`), ['a card number']);
+  assert.deepEqual(credentialsIn(card.join('-')), ['a card number']);
+  assert.deepEqual(credentialsIn(`paid with ${card.join('')}, thanks`), ['a card number']);
+  assert.deepEqual(credentialsIn(`(c:Card {number: '${[...card.slice(0, 3), '1112'].join(' ')}'})`), []);
+  assert.deepEqual(credentialsIn(`v${card.join('')}`), []);
+});
+
 test('a name that only holds such a word inside another word is not one', () => {
   for (const name of ['keynote', 'monkey', 'pinboard', 'tokenised', 'password_hint_shown'])
     assert.deepEqual(credentialsIn(named(name)), [], name);
