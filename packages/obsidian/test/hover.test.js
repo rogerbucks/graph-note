@@ -92,8 +92,10 @@ describe('pointing at a thing or a link', () => {
     out(box);
   });
 
-  test('pointing at empty space highlights nothing', () => {
+  test('pointing at empty space highlights nothing: moving on to it from a thing takes the highlight away', () => {
     const vp = el.querySelector('.graph-note-viewport');
+    over(thing(el, 'q'));
+    assert.deepEqual(hotThings(el), ['q'], 'highlighted under the pointer');
     vp.dispatch('pointerover', { target: vp, pointerType: 'mouse' });
     assert.equal(hot(el).length, 0);
   });
@@ -187,8 +189,26 @@ describe('nothing depends on hover', () => {
   });
 
   test('on touch, emptying the selection takes the highlight with it', () => {
+    tap(el, thing(el, 'eyes'), 5);
+    assert.ok(hot(el).length > 0, 'the tap gave the highlight');
     el.querySelector('.graph-note-viewport').dispatch('keydown', { key: 'Escape' });
     assert.equal(hot(el).length, 0);
+  });
+
+  test('a click’s focus is not the keyboard’s, but tabbing away and back is: the highlight is there again', () => {
+    const vp = el.querySelector('.graph-note-viewport'),
+      g = thing(el, 'q');
+    // a click: the pointer goes down on the thing, which takes the focus, and it is selected
+    vp.dispatch('pointerdown', { target: g, pointerId: 6, pointerType: 'mouse', clientX: 20, clientY: 20, button: 0 });
+    g.focus();
+    vp.dispatch('pointerup', { target: g, pointerId: 6, pointerType: 'mouse', clientX: 20, clientY: 20, button: 0 });
+    assert.equal(hot(el).length, 0, 'nothing is pointed at, and a click’s focus is not a keyboard’s');
+    // Tab to something outside the drawing, and back to the thing
+    const outside = el.querySelectorAll('button')[0];
+    outside.focus();
+    g.focus();
+    assert.deepEqual(hotThings(el), ['q'], 'keyboard focus on it, highlighted');
+    g.blur();
   });
 
   test('a thing can be selected from the keyboard alone and it is highlighted as a hover would', () => {
@@ -235,37 +255,42 @@ describe('a highlight never moves, resizes or re-lays the drawing', () => {
   });
 
   test('what the style does to a highlighted thing is paint, never a size or a place', () => {
-    const geometric = [
-      'width',
-      'height',
-      'transform',
-      'x',
-      'y',
-      'cx',
-      'cy',
-      'r',
-      'rx',
-      'ry',
-      'font-size',
-      'font-weight',
-      'font-style',
-      'letter-spacing',
-      'stroke-width',
-      'stroke-dasharray',
-      'margin',
-      'padding',
-      'top',
-      'left',
-      'position',
-      'display',
-      'visibility',
-      'scale',
-      'translate',
-    ];
+    // an allow-list, so a property nobody thought of is refused until someone says it is paint
+    const paint = ['filter', 'text-decoration', 'opacity', 'fill-opacity', 'stroke-opacity'];
     const mine = rules(styles, 'styles.css').filter((r) => r.selectors.some((s) => s.includes(HOT)));
     assert.ok(mine.length > 0, 'the highlight is styled');
     for (const r of mine)
-      for (const d of r.declarations) assert.ok(!geometric.includes(d.property), `${r.selectors[0]}: ${d.property}`);
+      for (const d of r.declarations) assert.ok(paint.includes(d.property), `${r.selectors[0]}: ${d.property}`);
+  });
+
+  test('only the things whose highlight changes are touched: a hover writes the classes of one thing, not of every thing', async () => {
+    const { FakeElement } = await import('./host/fake-dom.js');
+    const written = new Set();
+    const was = FakeElement.prototype.setClassSet;
+    FakeElement.prototype.setClassSet = function (s) {
+      written.add(this);
+      return was.call(this, s);
+    };
+    try {
+      // a focus, from the keyboard so that no touch holds a highlight, so every thing has a mark to keep
+      el.querySelector('.graph-note-viewport').dispatch('keydown', { key: 'Escape' });
+      thing(el, 'large').dispatch('keydown', { key: 'Enter' });
+      assert.ok(thing(el, 'tablet').hasClass('graph-note-dim'));
+      written.clear();
+      over(thing(el, 'tablet'));
+      out(thing(el, 'tablet'));
+      assert.deepEqual(
+        [...written].map((g) => g.getAttribute('data-key')),
+        ['tablet'],
+      );
+      written.clear();
+      over(link(el, 3));
+      out(link(el, 3));
+      assert.ok(written.size <= 3, `the link and its two ends, not all ${el.querySelectorAll('g.node').length + 4}`);
+      assert.ok(written.has(link(el, 3)));
+    } finally {
+      FakeElement.prototype.setClassSet = was;
+    }
   });
 
   test('it is shown by more than colour: an outline glow and an underline on the words', () => {

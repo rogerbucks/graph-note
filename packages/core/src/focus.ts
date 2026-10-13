@@ -23,11 +23,12 @@ export interface Kept {
 export type FocusDepth = 1 | 2;
 
 /**
- * How a faded thing is drawn (focus_readable): lighter, never gone. Its outline thinner, its fill none, its words and
- * labels at `text` of their strength — the most that still leaves the worst of them (a yellow label on the light page)
- * 4.5:1, which `focus.test.js` works out in both themes. Lines and outlines keep their colour, so they keep their 3:1.
+ * How a faded thing is drawn (focus_readable): lighter, never gone. Its outline no heavier than the drawing's ordinary
+ * line (1), its fill none, its words and labels at `text` of their strength — the most that still leaves the worst of them
+ * (a yellow label on the light page) 4.5:1, which `focus.test.js` works out in both themes. Lines and outlines keep their
+ * colour and their full strength, so they keep their 3:1; a line is never drawn thinner than that ordinary width.
  */
-export const FADE = { fill: 0, width: 0.75, text: 0.95 } as const;
+export const FADE = { fill: 0, width: 1, text: 0.95 } as const;
 
 /** How a thing kept at full strength is drawn beyond its colour (focus_readable): a heavier outline than a faded one. */
 export const KEPT = { width: 2 } as const;

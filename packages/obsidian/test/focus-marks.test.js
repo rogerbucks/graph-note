@@ -6,7 +6,7 @@ import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
-import { rules, winner } from './host/cascade.js';
+import { rules, specificity, winner } from './host/cascade.js';
 import { load, GRAPH, show, styles } from './host/view-notes.js';
 import { FADE, KEPT } from '../../core/src/focus.ts';
 
@@ -274,15 +274,33 @@ describe('what is faded stays readable, and focus is shown by more than colour',
   test('a kept box has the heavier outline, and the one selected the heaviest', () => {
     assert.equal(value(shape(['node', 'graph-note-kept']), 'stroke-width'), String(KEPT.width));
     assert.equal(value(shape(['edge', 'graph-note-kept']), 'stroke-width'), String(KEPT.width));
-    // the selected rule is written with :is(), which the stand-in cascade does not read: compare the two rules themselves,
-    // equally specific, so the selected one must come after the kept one to win
-    const at = (re) => all.findIndex((r) => r.selectors.some((s) => re.test(s)));
-    const selected = all[at(/is-selected/)],
-      keptRule = all[at(/graph-note-kept/)];
-    const width = (r) => Number(r.declarations.find((d) => d.property === 'stroke-width')?.value);
-    assert.ok(width(selected) > KEPT.width, `${width(selected)} over ${KEPT.width}`);
-    assert.ok(at(/is-selected/) > at(/graph-note-kept/), 'written after it');
-    assert.ok(keptRule);
+    // the cascade reads :is() as a browser ranks it, so what wins here wins on the page
+    for (const kind of ['node', 'edge'])
+      assert.equal(
+        value(shape([kind, 'graph-note-kept', 'is-selected']), 'stroke-width'),
+        '3',
+        `a selected ${kind} is heavier than one only kept`,
+      );
+  });
+
+  test('a view’s look keeps its line, whether the thing is kept or faded: the focus never outranks it', () => {
+    for (const focus of ['graph-note-kept', 'graph-note-dim'])
+      assert.equal(
+        value(shape(['node', focus, 'graph-note-look', 'graph-note-line-bold']), 'stroke-width'),
+        '3',
+        focus,
+      );
+  });
+
+  test('the focus rules are no more specific than the rules they must give way to', () => {
+    const specific = (re) =>
+      all
+        .filter((r) => r.selectors.some((s) => re.test(s)) && r.declarations.some((d) => d.property === 'stroke-width'))
+        .flatMap((r) => r.selectors.filter((s) => re.test(s)).map((s) => specificity(s).join('.')));
+    const selected = specific(/is-selected/),
+      focus = specific(/graph-note-(kept|dim)\b/);
+    assert.ok(selected.length && focus.length);
+    for (const s of focus) assert.ok(selected.includes(s), `${s} against the selected rule’s ${selected}`);
   });
 
   test('fading is never done by colour, by hiding or by moving: only the outline, the fill and the words’ strength', () => {

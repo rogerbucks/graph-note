@@ -4,7 +4,8 @@
 import type { LegendFilter, LegendItem, LegendState } from '@graph-note/core';
 
 const SAYS: Record<LegendState, string> = { normal: '', forward: ' — in front', hidden: ' — hidden' };
-const PRESSED: Record<LegendState, string> = { normal: 'false', forward: 'true', hidden: 'mixed' };
+// only a line brought forward is pressed in: a hidden one says so in words, and is struck through
+const PRESSED: Record<LegendState, string> = { normal: 'false', forward: 'true', hidden: 'false' };
 
 /** The legend panel of a card, hidden until the bar's button opens it, and how to draw its buttons again. */
 export interface LegendPanel {

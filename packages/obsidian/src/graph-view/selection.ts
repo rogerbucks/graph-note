@@ -3,9 +3,9 @@
 // the keyboard focus, the untangling (filter, legend, path, search) and the arrow keys that walk the links. It marks the
 // drawing by class only, so nothing moves, and it never reaches the note.
 import { FocusState, estimateEdge, nextAlong } from '@graph-note/core';
-import type { FocusTarget, GraphDrawing, Zoom } from '@graph-note/core';
+import type { FocusTarget, GraphDrawing, Kept, Layers, Zoom } from '@graph-note/core';
 import type { DetailsPanel } from './details-panel';
-import { focusTargetOf, markDrawing, sameTarget } from './focus-marks';
+import { DrawingMarks, focusTargetOf, sameTarget } from './focus-marks';
 import { Highlight } from './hover';
 import type { Taps, Target } from './taps';
 import { UntangleView } from './untangle';
@@ -16,8 +16,8 @@ export interface SelectionHost {
   svg: () => SVGSVGElement;
   zoom: () => Zoom;
   details: () => DetailsPanel;
-  /** Opens a box or link as a tap does. */
-  open: (t: Target) => void;
+  /** Opens a box or link as a tap does; `walking` when an arrow key does, which never answers a question for a second thing. */
+  open: (t: Target, walking?: boolean) => void;
   taps: Taps;
   drawing: () => GraphDrawing | undefined;
 }
@@ -30,6 +30,11 @@ export class Selection {
   private readonly hover: Highlight;
   private readonly o: ViewOptions;
   private readonly host: SelectionHost;
+  private marks: DrawingMarks | null = null;
+  /** What the focus and the untangling come to, worked out again only when either changes. */
+  private layers: Layers;
+  /** What is highlighted as drawn now, so a change of highlight marks only what it touched. */
+  private shownHot: Kept | null = null;
   /** The middle of each thing by its key, found when the arrow keys first walk. */
   private places: Map<string, { x: number; y: number }> | null = null;
   /** Whether the focus last came by a pointer, so a click's focus is not a keyboard's highlight. */
@@ -45,9 +50,10 @@ export class Selection {
       graph: o.graph,
       depth: () => o.focusDepth ?? 1,
       changed: () => this.refresh(),
-      go: (key) => this.goTo(key),
+      go: (key) => this.goTo(key, false),
     });
-    this.hover = new Highlight(this.untangle.edges, () => this.refresh());
+    this.layers = this.untangle.layers(null);
+    this.hover = new Highlight(this.untangle.edges, () => this.hotChanged());
   }
 
   /** What a card's details offer of a thing, to untangle the drawing. */
@@ -59,6 +65,7 @@ export class Selection {
   closed(): void {
     this.focus.clear();
     this.hover.tapped(null);
+    this.refresh();
   }
 
   /** A box or link was opened: it is the selection, and so the focus. */
@@ -84,11 +91,27 @@ export class Selection {
     return true;
   }
 
-  /** Marks the drawing as it should look now: the focus, what is hidden or brought forward, and the highlight. */
+  /** The focus or the untangling changed: works the layers out again and marks every box and link. */
   refresh(): void {
     const kept = this.focus.kept(this.untangle.edges, this.o.focusDepth ?? 1);
-    const layers = this.untangle.layers(kept);
-    markDrawing(this.host.svg(), { ...layers, hot: this.hover.hot() });
+    this.layers = this.untangle.layers(kept);
+    this.shownHot = this.hover.hot();
+    this.drawn().all({ ...this.layers, hot: this.shownHot });
+  }
+
+  /** Only the highlight changed: marks just the boxes and links it was on and is on now, over the layers as they stand. */
+  private hotChanged(): void {
+    const was = this.shownHot,
+      now = this.hover.hot();
+    this.shownHot = now;
+    const things = new Set([...(was?.things ?? []), ...(now?.things ?? [])]),
+      links = new Set([...(was?.edges ?? []), ...(now?.edges ?? [])]);
+    this.drawn().some({ ...this.layers, hot: now }, things, links);
+  }
+
+  private drawn(): DrawingMarks {
+    this.marks ??= new DrawingMarks(this.host.svg());
+    return this.marks;
   }
 
   /** A tap on empty space, or Escape: drops a question for a second thing, else clears the selection and the focus. */
@@ -120,9 +143,11 @@ export class Selection {
     this.hover.focus(this.byPointer ? null : focusTargetOf(e.target));
   }
 
-  /** Something lost the focus. */
-  focusOut(): void {
+  /** Something lost the focus; when it left the drawing, what comes back to it is the keyboard's, not a click's. */
+  focusOut(e: FocusEvent): void {
     this.hover.focus(null);
+    const viewport = this.host.svg().closest('.graph-note-viewport');
+    if (!viewport?.contains(e.relatedTarget as Node | null)) this.byPointer = false;
   }
 
   /** A key was pressed: Escape clears the focus first, the arrows walk the links. True when used. */
@@ -133,11 +158,14 @@ export class Selection {
     return e.key.startsWith('Arrow') && this.walk(e.key);
   }
 
-  /** Selects a thing as its details do, brings it into view and gives it the keyboard focus (finding, walking). */
-  private goTo(key: string): void {
+  /**
+   * Selects a thing as its details do, brings it into view and gives it the keyboard focus (finding, walking). A thing
+   * found answers a question waiting for a second thing; one walked to does not, it only moves the selection.
+   */
+  private goTo(key: string, walking: boolean): void {
     const svg = this.host.svg();
     const g = Array.from(svg.querySelectorAll<SVGGElement>('g.node')).find((n) => n.getAttribute('data-key') === key);
-    this.host.open({ key });
+    this.host.open({ key }, walking);
     const box = g ? this.host.taps.bounds(g.getAttribute('id') ?? '') : null;
     if (box) this.host.zoom().reveal(box);
     g?.focus({ preventScroll: true });
@@ -149,11 +177,11 @@ export class Selection {
     if (!selected || !('thing' in selected)) return false;
     const svg = this.host.svg();
     this.places ??= this.host.taps.places((id) => svg.querySelector(`#${id}`)?.getAttribute('data-key') ?? null);
-    const { hidden } = this.untangle.layers(null);
+    const { hidden } = this.layers;
     const shown = this.untangle.edges.filter((_e, i) => !hidden.edges.has(i));
     const next = nextAlong(shown, this.places, selected.thing, arrow);
     if (!next) return false;
-    this.goTo(next);
+    this.goTo(next, true);
     return true;
   }
 }

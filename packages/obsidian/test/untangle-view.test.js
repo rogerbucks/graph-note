@@ -4,8 +4,9 @@
 // drawing and never the note. The built plugin, loaded against the stand-ins for the page.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { build } from './host/load-plugin.js';
+import { build, load as loadWith, until, wait } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
+import { NOTE, PATH, showIn } from './host/card-notes.js';
 import { load, GRAPH, show } from './host/view-notes.js';
 import { hitAreas, boundsOf } from '../../core/src/hits.ts';
 import { readNote } from '../../core/src/drawing.ts';
@@ -126,6 +127,7 @@ describe('the legend', () => {
     assert.deepEqual(links(el, 'graph-note-hidden'), ['0', '1', '2', '3']);
     assert.deepEqual(keys(el, 'graph-note-dim'), [], 'nothing is brought forward now');
     assert.match(entry('Option').textContent, /hidden/);
+    assert.equal(entry('Option').getAttribute('aria-pressed'), 'false', 'a hidden line is not pressed in');
   });
 
   test('and once more puts it back', () => {
@@ -210,6 +212,18 @@ describe('the shortest path between two things', () => {
     el.querySelector('.graph-note-viewport').dispatch('keydown', { key: 'Escape' });
     assert.doesNotMatch(said(el), /Choose a second thing/);
   });
+
+  test('an arrow key that walks the selection does not answer the question: it is still waiting for a second thing', () => {
+    tap(el, thing(el, 'tablet'), 10);
+    offer().click();
+    el.querySelector('.graph-note-viewport').dispatch('keydown', { key: 'ArrowUp', target: thing(el, 'tablet') });
+    assert.ok(thing(el, 'eyes').hasClass('is-selected'), 'the selection walked on to a neighbour');
+    assert.match(said(el), /Choose a second thing to find the shortest path from Tablet\./);
+    assert.doesNotMatch(said(el), /The shortest path from/);
+    // tapping a second thing still answers it
+    tap(el, thing(el, 'q'), 11);
+    assert.match(said(el), /The shortest path from Tablet to Which device\? is 1 step/);
+  });
 });
 
 describe('finding a thing', () => {
@@ -272,14 +286,17 @@ describe('finding a thing', () => {
   });
 
   test('nothing like it says so', () => {
-    const message = el.querySelector('.graph-note-find p');
+    // a status, so a screen reader hears how many were found, or that none were, as it is typed
+    const status = el.querySelector('.graph-note-find [role="status"]');
+    assert.ok(status, 'a status in the search row');
     search('tablet');
-    assert.ok(message.hidden, 'not said when something matches');
+    assert.match(status.textContent, /^1 thing found\.$/);
+    search('e');
+    assert.match(status.textContent, /^\d+ things found\.$/);
     search('zzzz');
-    assert.ok(!message.hidden);
-    assert.match(message.textContent, /No thing matches/);
+    assert.match(status.textContent, /^No thing matches\.$/);
     search('');
-    assert.ok(message.hidden, 'nor with nothing typed');
+    assert.equal(status.textContent, '', 'nor with nothing typed');
   });
 
   test('a thing hidden by a filter is found: choosing it shows the whole graph first', () => {
@@ -289,6 +306,19 @@ describe('finding a thing', () => {
     search('left on')[0].click();
     assert.ok(!thing(el, 'island').hasClass('graph-note-hidden'));
     assert.ok(thing(el, 'island').hasClass('is-selected'));
+  });
+
+  test('Escape in the box closes the row and gives the focus back to the button that opened it', () => {
+    const button = labelled(el, 'Find a thing'),
+      row = el.querySelector('.graph-note-find');
+    assert.ok(!row.hidden, 'open');
+    const input = row.querySelector('input');
+    input.focus();
+    const e = input.dispatch('keydown', { key: 'Escape' });
+    assert.ok(row.hidden, 'closed');
+    assert.equal(button.getAttribute('aria-expanded'), 'false');
+    assert.equal(env.doc.activeElement, button);
+    assert.ok(e.defaultPrevented);
   });
 });
 
@@ -416,5 +446,40 @@ describe('only the drawing changes, never the note', () => {
     assert.equal(JSON.stringify([...env.state.files.entries()]), sourceBefore);
     assert.ok(text.length > 0);
     assert.equal(el.querySelectorAll('g.node').length, 5, 'every thing is still drawn');
+  });
+
+  test('on a card being edited in place the same steps leave the editor’s text and the note as they were', async () => {
+    const edited = await loadWith({ files: { [PATH]: NOTE } });
+    try {
+      const live = await showIn(edited, 'live');
+      labelled(live, 'Edit here').click();
+      await until(() => !!live.querySelector('textarea'));
+      const box = live.querySelector('textarea'),
+        typed = box.value;
+      tap(live, thing(live, 'large'));
+      withText(live.querySelector('.graph-note-details'), 'button', 'Show only this and its neighbours').click();
+      withText(banner(live), 'button', 'Show the whole graph').click();
+      labelled(live, 'Filter by kind or link').click();
+      live.querySelectorAll('.graph-note-filter button')[0].click();
+      live.querySelectorAll('.graph-note-filter button')[0].click();
+      tap(live, thing(live, 'q'), 4);
+      withText(live.querySelector('.graph-note-details'), 'button', 'Shortest path to another thing').click();
+      tap(live, thing(live, 'large'), 5);
+      assert.match(said(live), /The shortest path from/);
+      labelled(live, 'Find a thing').click();
+      const input = live.querySelector('.graph-note-find input');
+      input.value = 'large';
+      input.dispatch('input');
+      live.querySelectorAll('.graph-note-find-results button')[0].click();
+      live.querySelector('.graph-note-viewport').dispatch('keydown', { key: 'ArrowUp', target: thing(live, 'large') });
+      live.querySelector('.graph-note-viewport').dispatch('keydown', { key: 'Escape' });
+      await wait(50);
+      assert.ok(live.querySelector('textarea') === box, 'the editor is still open');
+      assert.equal(box.value, typed, 'nothing was written into the text being edited');
+      assert.equal(edited.state.files.get(PATH), NOTE, 'nothing was written into the note');
+      assert.equal((edited.state.writes ?? []).length, 0, 'the vault was never written');
+    } finally {
+      edited.uninstall();
+    }
   });
 });

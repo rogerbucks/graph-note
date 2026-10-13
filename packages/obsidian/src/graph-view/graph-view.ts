@@ -95,7 +95,7 @@ export class GraphView extends MarkdownRenderChild {
       svg: () => this.svg,
       zoom: () => this.zoom,
       details: () => this.details,
-      open: (t) => this.open(t),
+      open: (t, walking) => this.open(t, false, walking),
       taps: this.taps,
       drawing: () => this.drawing(),
     });
@@ -235,11 +235,14 @@ export class GraphView extends MarkdownRenderChild {
     return this.taps.near(p, this.zoom.view());
   }
 
-  /** Opens a box or link; with `extend` (Shift), a second thing asks for the shortest path from the one selected (§25). */
-  private open(t: Target, extend = false): void {
+  /**
+   * Opens a box or link; with `extend` (Shift), a second thing asks for the shortest path from the one selected (§25). An
+   * arrow key's `walking` only moves the selection: it never answers a question for a second thing.
+   */
+  private open(t: Target, extend = false, walking = false): void {
     // while recording a walk, or making a view, a tap chooses rather than opening details (§7)
     if ('key' in t && (this.walk?.tap(t.key) || this.maker?.tap(t.key))) return;
-    if ('key' in t && this.sel.second(t.key, extend)) return;
+    if ('key' in t && !walking && this.sel.second(t.key, extend)) return;
     if ('key' in t) this.details.showDetails(t.key);
     else if ('link' in t) this.details.showLink(t.link);
     else {
@@ -303,7 +306,7 @@ export class GraphView extends MarkdownRenderChild {
     this.registerDomEvent(vp, 'pointerout', (e: PointerEvent) => this.sel.out(e));
     // and the same highlight with the keyboard focus, which a click's focus is not
     this.registerDomEvent(vp, 'focusin', (e: FocusEvent) => this.sel.focusIn(e));
-    this.registerDomEvent(vp, 'focusout', () => this.sel.focusOut());
+    this.registerDomEvent(vp, 'focusout', (e: FocusEvent) => this.sel.focusOut(e));
     this.registerDomEvent(
       vp,
       'wheel',

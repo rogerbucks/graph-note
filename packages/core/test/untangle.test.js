@@ -382,8 +382,13 @@ describe('only the drawing changes, never the data', () => {
   test('every step above leaves the reading, the drawing and the note’s text as they were', () => {
     const fresh = readNote([NOTE]);
     const d = freeze(fresh.graphs.get('reader'));
-    const text = freeze([...fresh.texts]);
-    const before = JSON.stringify([d, text, propertiesOf(fresh, 'reader', { thing: 'tablet' })]);
+    // the note's own texts, frozen where they are: a write to one would throw; and the graph the reading holds, whose maps
+    // and sets cannot be frozen, written out whole before and after
+    const text = freeze(fresh.texts);
+    const whole = () =>
+      JSON.stringify(fresh.world.reader, (_k, v) => (v instanceof Map ? [...v] : v instanceof Set ? [...v] : v));
+    assert.ok(whole().length > 100, 'the graph is written out in full');
+    const before = JSON.stringify([d, text, whole(), propertiesOf(fresh, 'reader', { thing: 'tablet' })]);
     const es = edgesOf(d);
     const u = new Untangle(d);
     u.showOnly('q', 2);
@@ -401,6 +406,7 @@ describe('only the drawing changes, never the data', () => {
     nextAlong(es, new Map(), 'q', 'ArrowRight');
     u.showAll();
     u.clearRoute();
-    assert.equal(JSON.stringify([d, text, propertiesOf(fresh, 'reader', { thing: 'tablet' })]), before);
+    assert.equal(JSON.stringify([d, text, whole(), propertiesOf(fresh, 'reader', { thing: 'tablet' })]), before);
+    assert.equal(fresh.texts[0], NOTE, 'the note’s text itself');
   });
 });

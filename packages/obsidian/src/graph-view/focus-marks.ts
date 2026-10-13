@@ -34,23 +34,45 @@ export function sameTarget(a: FocusTarget | null, b: FocusTarget | null): boolea
 }
 
 /**
- * Marks every box and link: `graph-note-hidden` for what is hidden; with something kept, `graph-note-kept` for what stays
- * at full strength and `graph-note-dim` for what fades — except what is highlighted, which comes forward under the pointer
- * (`graph-note-hot`) over any focus; the focus itself is as it was when the highlight goes.
+ * The boxes and links of one drawing, found once, and marked as the drawing is to look: `graph-note-hidden` for what is
+ * hidden; with something kept, `graph-note-kept` for what stays at full strength and `graph-note-dim` for what fades —
+ * except what is highlighted, which comes forward under the pointer (`graph-note-hot`) over any focus, the focus itself
+ * being as it was when the highlight goes. A change of highlight marks only the things it touched.
  */
-export function markDrawing(svg: Element, m: Marks): void {
-  const mark = (g: Element, hidden: boolean, kept: boolean, hot: boolean) => {
+export class DrawingMarks {
+  private readonly nodes = new Map<string, Element>();
+  private readonly edges = new Map<number, Element>();
+
+  /** For a drawing's SVG, whose boxes and links are looked up once. */
+  constructor(svg: Element) {
+    for (const g of Array.from(svg.querySelectorAll('g.node'))) this.nodes.set(g.getAttribute('data-key') ?? '', g);
+    for (const g of Array.from(svg.querySelectorAll('g.edge'))) this.edges.set(edgeNumber(g), g);
+  }
+
+  /** Marks every box and link. */
+  all(m: Marks): void {
+    for (const [key, g] of this.nodes)
+      this.mark(g, m, m.hidden.things.has(key), !!m.kept?.things.has(key), !!m.hot?.things.has(key));
+    for (const [n, g] of this.edges)
+      this.mark(g, m, m.hidden.edges.has(n), !!m.kept?.edges.has(n), !!m.hot?.edges.has(n));
+  }
+
+  /** Marks only these boxes (by key) and links (by place), as `m` says: the ones a change of highlight touched. */
+  some(m: Marks, things: Iterable<string>, links: Iterable<number>): void {
+    for (const key of things) {
+      const g = this.nodes.get(key);
+      if (g) this.mark(g, m, m.hidden.things.has(key), !!m.kept?.things.has(key), !!m.hot?.things.has(key));
+    }
+    for (const n of links) {
+      const g = this.edges.get(n);
+      if (g) this.mark(g, m, m.hidden.edges.has(n), !!m.kept?.edges.has(n), !!m.hot?.edges.has(n));
+    }
+  }
+
+  private mark(g: Element, m: Marks, hidden: boolean, kept: boolean, hot: boolean): void {
     g.classList.toggle('graph-note-hidden', hidden);
     g.classList.toggle('graph-note-kept', !!m.kept && kept);
     g.classList.toggle('graph-note-dim', !!m.kept && !kept && !hot);
     g.classList.toggle('graph-note-hot', hot);
-  };
-  for (const g of Array.from(svg.querySelectorAll('g.node'))) {
-    const key = g.getAttribute('data-key') ?? '';
-    mark(g, m.hidden.things.has(key), !!m.kept?.things.has(key), !!m.hot?.things.has(key));
-  }
-  for (const g of Array.from(svg.querySelectorAll('g.edge'))) {
-    const n = edgeNumber(g);
-    mark(g, m.hidden.edges.has(n), !!m.kept?.edges.has(n), !!m.hot?.edges.has(n));
   }
 }

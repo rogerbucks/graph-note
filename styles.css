@@ -29,25 +29,21 @@
   background: var(--background-secondary);
 }
 /* Focus (spec §25): what a selection keeps stands out by strength and outline, never by colour alone and never by moving
-   or hiding anything. A faded box has a thinner outline and no fill; its words and lines keep their colour, so they keep
-   the contrast of §11 (the words at 0.95, which the core's FADE holds to 4.5:1). A kept box has the heavier outline. These
-   come before the selected rule just below, which is as specific and must win, so the selected thing is the heaviest. */
-.graph-note-svg g.node.graph-note-dim > path,
-.graph-note-svg g.node.graph-note-dim > polygon {
+   or hiding anything. A faded box has no fill and an outline no heavier than the drawing's ordinary line; its words and
+   lines keep their colour, so they keep the contrast of §11 (the words at 0.95, which the core's FADE holds to 4.5:1). A
+   kept box has the heavier outline. The outline rules are exactly as specific as the selected rule and a view's looks
+   below, and come before them, so the selected thing is the heaviest and a look keeps its line; only the fill, which
+   nothing below sets, is written more specifically. */
+.graph-note-svg g.node.graph-note-dim > :is(path, polygon) {
   fill-opacity: 0;
-  stroke-width: 0.75;
 }
-.graph-note-svg g.edge.graph-note-dim > path,
-.graph-note-svg g.edge.graph-note-dim > polygon {
-  stroke-width: 0.75;
+.graph-note-svg g.graph-note-dim > :is(path, polygon) {
+  stroke-width: 1;
 }
 .graph-note-svg g.graph-note-dim > text {
   fill-opacity: 0.95;
 }
-.graph-note-svg g.node.graph-note-kept > path,
-.graph-note-svg g.node.graph-note-kept > polygon,
-.graph-note-svg g.edge.graph-note-kept > path,
-.graph-note-svg g.edge.graph-note-kept > polygon {
+.graph-note-svg g.graph-note-kept > :is(path, polygon) {
   stroke-width: 2;
 }
 .graph-note-svg g.graph-note-hidden {

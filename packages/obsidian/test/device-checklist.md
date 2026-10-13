@@ -10,7 +10,8 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 
 **Numbers.** Every item has a number in its line: its section's letter, a dash and two digits, such as `V-03`, the
 third item of Viewing. The letters are B Before, V Viewing, Z Zoom, P The edit pane, I Editing in place and the
-inspector, S The style graph, W Views, D Parked for later, T Walked paths, X Export, C Settings, and A Accessibility.
+inspector, S The style graph, W Views, D Parked for later, T Walked paths, X Export, C Settings, A Accessibility, and F Focus
+and untangle.
 **A number never changes once given**, whatever happens to the item's words or its place; a removed item's number is
 never used again, and **a new item takes the next number in its section**. Each item after Before has a note in
 `test-vault/Device checks/` that shows the case in Obsidian, found by its number (`test/device-check-notes.test.js`
@@ -288,6 +289,36 @@ holds the two together).
       box's details or an estimate's reason.
 - [ ] **A-02** With VoiceOver: the drawing is described as a list of sentences, and a new problem typed in the pane is announced
       without the focus moving.
+
+## Focus and untangle — spec §25
+
+- [ ] **F-01** Tap a box: it, its links and the boxes at their other ends stay filled, with the heavier outline; every other box
+      becomes an empty outline and its words stay as easy to read; nothing moves or disappears. Tap empty space, or press
+      Escape: everything is back as it was. Desktop and phone, light and dark (slice 3, focus_neighbours, focus_readable,
+      focus_cleared).
+- [ ] **F-02** Tap a link: it and the two boxes it joins stay at full strength and the rest fade. Settings › Graph Note › Focus
+      reaches › Two steps: tap a box and the boxes two links away stay at full strength too (slice 3, focus_link,
+      focus_depth).
+- [ ] **F-03** Mac, pointer: point at a box and it gets a glow round its outline and its words are underlined; point at a link and
+      the link and its two boxes do; point at a faded box while one thing is selected and it comes forward until the pointer
+      leaves. Nothing in the drawing shifts or changes size (slice 3, hover_highlight, hover_still).
+- [ ] **F-04** Without a pointer: on the phone, a tap that selects a box gives it the same glow and underline, and they stay until
+      something else is chosen; on a keyboard, Tab to a box or a link gives them too (slice 3, hover_not_alone).
+- [ ] **F-05** Open a box's details and press Show only this and its neighbours: the other boxes and their links disappear, and a
+      banner names the box and the steps. Widen to two steps and Narrow to one step change it; Show the whole graph brings
+      everything back (slice 3, untangle_neighbourhood).
+- [ ] **F-06** Press Filter by kind or link: each kind and relationship type is a button with its count. Choose one: it comes
+      forward, the rest fade, and the button says "in front". Choose it again: it is hidden, struck through, and says
+      "hidden". Once more: it is back (slice 3, untangle_legend).
+- [ ] **F-07** Open a box's details and press Shortest path to another thing, then tap a second box: the path stays at full strength
+      and the banner reads out the boxes along it. With a box that has no route to it, the banner says there is none. Clear
+      the path puts the focus back (slice 3, untangle_path).
+- [ ] **F-08** Zoom in far, press Find a thing and type part of a name or of a property's value: the matches are listed with
+      their kind. Choose one: its details open and it is brought into view. Escape closes the search and returns to its
+      button (slice 3, untangle_find).
+- [ ] **F-09** Select a box, then press the arrow keys: the selection moves along a link to the neighbouring box in that
+      direction, and every neighbour can be reached by some arrow. Nothing in the note changes in any of this (slice 3,
+      untangle_keyboard, untangle_data_untouched).
 
 ## Result
 

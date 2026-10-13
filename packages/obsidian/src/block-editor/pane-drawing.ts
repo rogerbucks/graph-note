@@ -3,8 +3,8 @@
 // the editor has none: the card's own drawing is its drawing. It is laid out apart from the interface, as every drawing
 // is (spec §9): a graph typed or pasted past a limit is not drawn, and a banner beside its text says why.
 import { Component } from 'obsidian';
-import { parked } from '@graph-note/core';
-import type { Drawn, NoteReading, PaneSession, Refusal } from '@graph-note/core';
+import { depthOf, parked } from '@graph-note/core';
+import type { Drawn, FocusDepth, NoteReading, PaneSession, Refusal } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
 import { GraphView } from '../graph-view/graph-view';
 import { refusalBanner } from '../layout-worker/refusal-banner';
@@ -35,6 +35,7 @@ function drawInPane(
   reading: NoteReading,
   s: PaneSession,
   on: Choosing,
+  focusDepth: FocusDepth,
 ) {
   host.empty();
   if (!drawn) {
@@ -51,6 +52,8 @@ function drawInPane(
     graph: s.graph,
     drawn,
     mode: 'pane',
+    // how far focus reaches, as the settings say, here as in a card (§25)
+    focusDepth,
     problems: reading.problems
       .filter((p) => p.graph === s.graph && reading.texts[p.block] === s.text)
       .map((p) => ({ ...p, noteLine: p.line })),
@@ -93,7 +96,7 @@ export class PaneDrawing extends Component {
       .then((drawn) => {
         if (stale() || drawn === null) return;
         this.clear();
-        const view = drawInPane(host, drawn, reading, s, on);
+        const view = drawInPane(host, drawn, reading, s, on, depthOf(this.plugin.settings.focusDepth));
         if (!view) return;
         this.view = view;
         this.addChild(view);

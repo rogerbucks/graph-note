@@ -39,6 +39,8 @@ export class UntangleView {
   private readonly host: UntangleHost;
   private readonly names: Map<string, string>;
   private asking: string | null = null;
+  /** The bar's button that opens the search row, which Escape in the row gives the focus back to. */
+  private findButton: HTMLElement | null = null;
 
   /** Builds the legend panel, the search row and the banner at the end of what the card has so far. */
   constructor(root: HTMLElement, host: UntangleHost) {
@@ -52,6 +54,7 @@ export class UntangleView {
         if (this.core.layers(null).hidden.things.has(f.key)) this.reset();
         host.go(f.key);
       },
+      close: () => this.closeFind(),
     });
     this.legend = renderLegend(root, kindLegend(host.drawing), this.core.legend, () => host.changed());
     this.banner = new Banner(root);
@@ -69,9 +72,17 @@ export class UntangleView {
 
   /** Opens or closes the search row (the bar's button), the cursor in its box on opening. */
   toggleFind(b: HTMLElement): void {
+    this.findButton = b;
     this.finder.el.hidden = !this.finder.el.hidden;
     b.setAttribute('aria-expanded', String(!this.finder.el.hidden));
     if (!this.finder.el.hidden) this.finder.focus();
+  }
+
+  /** Closes the search row, as Escape in its box does, and gives the focus back to the button that opened it. */
+  private closeFind(): void {
+    this.finder.el.hidden = true;
+    this.findButton?.setAttribute('aria-expanded', 'false');
+    this.findButton?.focus();
   }
 
   /** Opens or closes the legend panel (the bar's button). */

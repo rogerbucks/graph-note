@@ -1,6 +1,7 @@
 // The part of the CSS cascade a test needs: for one element, in given states, which declaration wins each property, by
 // importance, then specificity, then order. Not a browser: every @media block is taken to apply, a child combinator is read
-// as a descendant one, and a selector with a pseudo-element or a functional pseudo-class never matches.
+// as a descendant one, :is() is written out as one selector for each argument, and a selector with a pseudo-element or any
+// other functional pseudo-class never matches.
 
 /** The shorthands that set each longhand a test asks about. */
 const SHORTHANDS = {
@@ -12,6 +13,35 @@ const SHORTHANDS = {
   'font-family': ['font'],
   'line-height': ['font'],
 };
+
+/** A selector list split at its top-level commas, so the commas inside :is( ) stay where they are. */
+function splitList(list) {
+  const out = [];
+  let depth = 0,
+    from = 0;
+  [...list].forEach((c, i) => {
+    if (c === '(') depth++;
+    else if (c === ')') depth--;
+    else if (c === ',' && depth === 0) {
+      out.push(list.slice(from, i));
+      from = i + 1;
+    }
+  });
+  out.push(list.slice(from));
+  return out.map((s) => s.trim()).filter(Boolean);
+}
+
+/**
+ * A selector with each :is(a, b) written out as one selector for each of its arguments, as the specificity of :is() is
+ * that of its most specific argument: a rule over :is(path, polygon) is two rules, of the one specificity.
+ */
+function expandIs(selector) {
+  const m = /:is\(([^()]*)\)/.exec(selector);
+  if (!m) return [selector];
+  return splitList(m[1]).flatMap((arg) =>
+    expandIs(selector.slice(0, m.index) + arg + selector.slice(m.index + m[0].length)),
+  );
+}
 
 /** Every style rule in a stylesheet, flattened out of its @media blocks: { selectors, declarations, source, order }. */
 export function rules(css, source) {
@@ -31,7 +61,7 @@ export function rules(css, source) {
         important: /!important$/.test(value),
       });
     }
-    out.push({ selectors: head.split(',').map((s) => s.trim()), declarations, source });
+    out.push({ selectors: splitList(head).flatMap(expandIs), declarations, source });
   }
   return out;
 }

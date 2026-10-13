@@ -202,10 +202,15 @@ describe('a card in reading view shows its details and offers nothing that write
       assert.ok(full, 'full screen is open');
       assert.ok(!labelled(full, 'Add a thing'), 'no Add a thing in full screen');
       // the one field is the search box, which finds a thing and writes nothing (§25)
-      assert.ok(
-        full.querySelectorAll('input').every((i) => i.closest('.graph-note-find')),
-        'no field to type a thing in',
-      );
+      const fields = full.querySelectorAll('input');
+      assert.equal(fields.length, 1, 'no field to type a thing in, but the one');
+      assert.equal(fields[0].getAttribute('type'), 'search');
+      assert.ok(fields[0].closest('.graph-note-find'), 'it is the search box');
+      // typing in it and pressing Enter finds a thing and selects it, and writes nothing
+      fields[0].value = 'large';
+      fields[0].dispatch('input');
+      fields[0].dispatch('keydown', { key: 'Enter' });
+      assert.ok(full.querySelector('g.node.is-selected'), 'the thing found is selected');
       await unchanged(env, shown);
     } finally {
       env.uninstall();

@@ -1,18 +1,28 @@
 // The search box over a drawing (editor spec §25, untangle_find): typing lists the things whose name or property holds what
 // was typed, each with its kind and, for a property, which; choosing one — or pressing Enter for the first — selects it and
-// brings it into view, as opening its details does. Searching only reads: nothing is changed in the drawing or the note.
+// brings it into view, as opening its details does. Escape closes the row. Searching only reads: nothing is changed in the
+// drawing or the note.
 import type { Found } from '@graph-note/core';
 
-/** What the box asks of its card: the things that match, and what to do with the one chosen. */
+/** What the box asks of its card: the things that match, what to do with the one chosen, and how to close the row. */
 export interface FindActions {
   search: (query: string) => Found[];
   choose: (found: Found) => void;
+  /** Escape was pressed in the box: closes the row and gives the focus back to the button that opened it. */
+  close: () => void;
 }
 
 /** The search row of a card, hidden until the bar's button opens it, and how to put the cursor in its box. */
 export interface FindRow {
   el: HTMLElement;
   focus: () => void;
+}
+
+/** What is said, for a screen reader, of a search's result: how many were found, or that none matches. */
+function said(typed: string, count: number): string {
+  if (!typed.trim()) return '';
+  if (!count) return 'No thing matches.';
+  return count === 1 ? '1 thing found.' : `${count} things found.`;
 }
 
 /** Builds the search row in a card. */
@@ -26,14 +36,13 @@ export function renderFind(root: HTMLElement, on: FindActions): FindRow {
       'aria-label': 'Find a thing by name or property',
     },
   });
+  const status = el.createEl('p', { cls: 'graph-note-quiet', attr: { role: 'status' } });
   const list = el.createEl('ul', { cls: 'graph-note-find-results' });
-  const none = el.createEl('p', { cls: 'graph-note-quiet', text: 'No thing matches.' });
-  none.hidden = true;
   let shown: Found[] = [];
   const run = () => {
     list.empty();
     shown = on.search(input.value);
-    none.hidden = shown.length > 0 || !input.value.trim();
+    status.setText(said(input.value, shown.length));
     for (const f of shown) {
       const b = list.createEl('li').createEl('button', {
         text: `${f.text} · ${f.kind}${f.via === 'name' ? '' : ` — ${f.via}`}`,
@@ -48,6 +57,9 @@ export function renderFind(root: HTMLElement, on: FindActions): FindRow {
     if (e.key === 'Enter' && first) {
       e.preventDefault();
       on.choose(first);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      on.close();
     }
   });
   return { el, focus: () => input.focus() };
