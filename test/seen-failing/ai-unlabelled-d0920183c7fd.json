@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/ai-unlabelled.test.js",
+  "test": "in Obsidian > the setting is used: an unlabelled note goes to a model cleared for the level chosen, and to none by default",
+  "seen_failing_first": false,
+  "evidence": "moved, name kept, from packages/core/test/ai-unlabelled.test.js, where it was seen failing first at commit 3e2e309; the assertion restored with the move, that Send stays off, holds what that commit already built (commit 2a642a1)"
+}

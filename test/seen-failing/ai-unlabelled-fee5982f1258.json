@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/ai-unlabelled.test.js",
+  "test": "in Obsidian > when the metadata cache is behind the note, the higher reading is taken, an unlabelled one counting as its default",
+  "seen_failing_first": false,
+  "evidence": "moved, name kept, from packages/core/test/ai-unlabelled.test.js, where it was seen failing first at commit 3e2e309; it passes before this commit because what it tests was already built (commit 2a642a1)"
+}
