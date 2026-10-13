@@ -230,6 +230,19 @@ class Styled(unittest.TestCase):
         )
         self.assertEqual(parts["links"], [("NEAR", {"miles": 2})])
 
+    def test_graph_parts_reads_links_in_the_words_of_a_shared_schema(self):
+        # a graph typed by a shared schema written in a block of its own: each link is read in
+        # the schema's words, as the core reads it, never in the type's own
+        texts = [
+            "// graph: shared · SCHEMA shared_reader\n(t:Meta:ElementType {name: 'SEES', "
+            "kind: 'edge', reading: 'can see', reverse_name: 'is seen by'})",
+            "// graph: other · schema shared_reader\n(x:Thing {name: 'Tower'}), "
+            "(y:Thing {name: 'Hill'}), (x)-[:SEES]->(y)",
+        ]
+        store, problems = gp.read_for_drawing(texts)
+        parts = graph_parts(gr.World.from_store(store), "other", problems)
+        self.assertEqual(parts["edges"], [("x", "can see", "y")])
+
     def test_render_args_draws_every_case_as_the_core_does(self):
         # parity for any caller: graph_svg.render(**render_args(texts, graph, view)) hands Graphviz
         # the core's source in each direction, byte for byte, with nothing more to write

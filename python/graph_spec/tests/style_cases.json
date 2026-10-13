@@ -182,6 +182,26 @@
       ]
     },
     {
+      "name": "a graph typed by a shared schema in a block of its own: its links read in the schema's words, with their properties shown and arrowheads hidden",
+      "blocks": [
+        [
+          "// graph: shared · SCHEMA shared_reader",
+          "(t:Meta:ElementType {name: 'SEES', kind: 'edge', reading: 'can see', reverse_name: 'is seen by'}),",
+          "(u:Meta:ElementType {name: 'NEAR', kind: 'edge', reading: 'is close to', reverse_name: 'is close to'})"
+        ],
+        [
+          "// graph: other · schema shared_reader",
+          "(x:Thing {name: 'Tower'}), (y:Thing {name: 'Hill'}), (z:Thing {name: 'Sea'}),",
+          "(x)-[:SEES {miles: 12}]->(y), (y)-[:NEAR]->(z)"
+        ],
+        [
+          "// graph: other_style · STYLE other",
+          "(s1:Show {property: 'miles', type: 'SEES'}),",
+          "(a1:Arrows {arrowheads: 'hide', type: 'NEAR'})"
+        ]
+      ]
+    },
+    {
       "name": "what cannot be used is the same problem in both, and is left out: words, names, keys and choices that conflict",
       "blocks": [
         [

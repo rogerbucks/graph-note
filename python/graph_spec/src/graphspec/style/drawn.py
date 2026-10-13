@@ -1,8 +1,10 @@
-"""A graph ready for graph_svg.render, as the plugin's core draws it (editor spec §3, §6, §14,
-§15): its boxes and links chosen as the core chooses them — the vault's graph-spec-draw.py and the
-parity tests did this by hand — each with its properties, and its style read and applied for a
-view or the whole graph. A caller gets the core's drawing, byte for byte, from one call:
-graph_svg.render(**render_args(texts, graph, view))."""
+"""A graph ready for graph_svg.render (editor spec §3, §6, §14, §15): its boxes and its written
+links, chosen as the core chooses them — the vault's graph-spec-draw.py and the parity tests did
+this by hand — each link read in its schema's words, the graph's own or a shared one's, each with
+its properties; and its style read and applied for a view or the whole graph. For what it draws,
+one call gives the core's source byte for byte: graph_svg.render(**render_args(texts, graph,
+view)). It does not draw the links the core guesses from a near miss, nor read a misspelt type as
+the type it is taken for: those estimates are the plugin's alone (layout.ts, drawingSource)."""
 
 from __future__ import annotations
 
@@ -28,7 +30,9 @@ def graph_parts(world: World, graph: str, problems: Iterable[dict] = ()) -> dict
     every thing but the schema's, and every link between two of them."""
     g = world[graph]
     ids = [i for i, (labels, _) in g.nodes.items() if not labels & SCHEMA_LABELS]
-    drawn, words = set(ids), readings(g, None)
+    # each link in its schema's words: the graph's own, else the shared schema it names, as the
+    # core reads them (drawing.ts) and as reading.py's _names finds its types
+    drawn, words = set(ids), readings(g, world.schema_for(graph)[1])
 
     def text(i):
         p = g.p(i)
