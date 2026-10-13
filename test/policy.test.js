@@ -501,6 +501,22 @@ describe('the shipped source', () => {
     const offenders = sourceFiles().flatMap((f) => forbiddenImports(read(f)).map((m) => `${f}: ${m}`));
     assert.deepEqual(offenders, []);
   });
+
+  // iOS before 16.4 stops the whole plugin loading on a regular expression with a lookbehind. The store's linter finds
+  // only a literal one, so what is built from a string, as `new RegExp(…)` does, is found here, by the text itself.
+  test('no source holds a lookbehind, in a regular expression or in a string one is built from', () => {
+    const lookbehind = /\(\?<[=!]/;
+    assert.ok(lookbehind.test('/(?<=a)b/') && lookbehind.test('/(?<!a)b/'), 'a literal one is found');
+    assert.ok(
+      lookbehind.test("new RegExp('(?<![\\\\w])x')") && lookbehind.test('`(?<=${a})b`'),
+      'a built one is found',
+    );
+    assert.equal(lookbehind.test('/(?<name>a)(?:b)(?=c)(?!d)/'), false, 'a named group and a lookahead are not');
+    assert.deepEqual(
+      sourceFiles().filter((f) => lookbehind.test(read(f))),
+      [],
+    );
+  });
 });
 
 describe('the content check is installed', () => {
