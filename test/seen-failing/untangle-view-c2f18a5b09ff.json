@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/untangle-view.test.js",
+  "test": "only the drawing changes, never the note > on a card being edited in place the same steps leave the editor’s text and the note as they were",
+  "seen_failing_first": false,
+  "evidence": "Pins that nothing writes while a card is edited in place, which the untangling code of 6676f91 already satisfied (it never writes); a review asked for the case, and a test of something never done cannot fail first."
+}
