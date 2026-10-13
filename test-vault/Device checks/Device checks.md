@@ -1,6 +1,6 @@
 # Device checks
 
-One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md)): 87 checks in 11 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
+One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md)): 116 checks in 16 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
 
 ## 01 Viewing
 
@@ -121,3 +121,47 @@ One note for each check in the device checklist ([the checklist, on GitHub](http
 
 - [[Device checks/11 Accessibility/A-01 Keyboard only|A-01 Keyboard only]]
 - [[Device checks/11 Accessibility/A-02 VoiceOver|A-02 VoiceOver]]
+
+## 12 Focus and untangle
+
+- [[Device checks/12 Focus and untangle/F-01 Focus on a thing|F-01 Focus on a thing]]
+- [[Device checks/12 Focus and untangle/F-02 Focus on a link and its reach|F-02 Focus on a link and its reach]]
+- [[Device checks/12 Focus and untangle/F-03 Hover highlight with a pointer|F-03 Hover highlight with a pointer]]
+- [[Device checks/12 Focus and untangle/F-04 Highlight by touch and keyboard|F-04 Highlight by touch and keyboard]]
+- [[Device checks/12 Focus and untangle/F-05 Show only a thing and its neighbours|F-05 Show only a thing and its neighbours]]
+- [[Device checks/12 Focus and untangle/F-06 Legend brings forward and hides|F-06 Legend brings forward and hides]]
+- [[Device checks/12 Focus and untangle/F-07 Shortest path|F-07 Shortest path]]
+- [[Device checks/12 Focus and untangle/F-08 Find a thing|F-08 Find a thing]]
+- [[Device checks/12 Focus and untangle/F-09 Walk the links by arrow key|F-09 Walk the links by arrow key]]
+
+## 13 Proposals
+
+- [[Device checks/13 Proposals/R-01 Proposal on the phone|R-01 Proposal on the phone]]
+
+## 14 Details and the sheet
+
+- [[Device checks/14 Details and the sheet/G-01 Links listed in words|G-01 Links listed in words]]
+- [[Device checks/14 Details and the sheet/G-02 Reduced motion|G-02 Reduced motion]]
+- [[Device checks/14 Details and the sheet/G-03 Trail back and forward|G-03 Trail back and forward]]
+- [[Device checks/14 Details and the sheet/G-04 Arrow to the selection|G-04 Arrow to the selection]]
+- [[Device checks/14 Details and the sheet/G-05 Sheet pinned and clear|G-05 Sheet pinned and clear]]
+- [[Device checks/14 Details and the sheet/G-06 Sheet minimised and remembered|G-06 Sheet minimised and remembered]]
+- [[Device checks/14 Details and the sheet/G-07 Sheet closed and reached|G-07 Sheet closed and reached]]
+
+## 15 Diagram types
+
+- [[Device checks/15 Diagram types/E-01 Choose a diagram type|E-01 Choose a diagram type]]
+- [[Device checks/15 Diagram types/E-02 Same look in every type|E-02 Same look in every type]]
+- [[Device checks/15 Diagram types/E-03 One way to work in every type|E-03 One way to work in every type]]
+- [[Device checks/15 Diagram types/E-04 Tree stops fitting|E-04 Tree stops fitting]]
+- [[Device checks/15 Diagram types/E-05 Wide types on a phone|E-05 Wide types on a phone]]
+- [[Device checks/15 Diagram types/E-06 Large graph way in|E-06 Large graph way in]]
+
+## 16 AI models
+
+- [[Device checks/16 AI models/U-01 AI off until turned on|U-01 AI off until turned on]]
+- [[Device checks/16 AI models/U-02 Models by address and purpose|U-02 Models by address and purpose]]
+- [[Device checks/16 AI models/U-03 See exactly what is sent|U-03 See exactly what is sent]]
+- [[Device checks/16 AI models/U-04 Choose what is sent|U-04 Choose what is sent]]
+- [[Device checks/16 AI models/U-05 Ceiling and credentials|U-05 Ceiling and credentials]]
+- [[Device checks/16 AI models/U-06 Unreachable model and the send record|U-06 Unreachable model and the send record]]

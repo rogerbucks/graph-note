@@ -322,6 +322,35 @@ describe('the AI models of §19', () => {
       env.uninstall();
     }
   });
+
+  test('a model’s page says when its address cannot be used, and suggests the purposes a model may be for', async () => {
+    const far = { name: 'Far', endpoint: 'http://api.example.com/v1/chat/completions', model: 'm' };
+    const env = await load({ data: { settings: { aiModels: [far] } } });
+    try {
+      const el = page(env);
+      const desc = (r) => r.querySelector('.setting-item-description').textContent;
+      assert.match(desc(row(el, 'Model 1')), /reached over https only/);
+      assert.match(desc(row(el, 'Purpose')), /Research questions, Proposing changes, Restricted processing/);
+      assert.match(desc(row(el, 'Endpoint')), /http:\/\/ for a model on this device/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('AI is off until it is turned on, the first choice of its part of the page', async () => {
+    const env = await load();
+    try {
+      const el = page(env);
+      const use = row(el, 'Use AI models').querySelector('select');
+      assert.equal(use.value, 'off');
+      use.value = 'on';
+      use.dispatch('change');
+      await wait(10);
+      assert.equal(env.state.data.settings.aiUse, 'on');
+    } finally {
+      env.uninstall();
+    }
+  });
 });
 
 describe('formatting and drawing defaults', () => {

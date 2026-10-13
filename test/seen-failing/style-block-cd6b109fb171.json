@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/style-block.test.js",
+  "test": "properties shown and arrowheads hidden (editor spec §14, §15) > the graph it styles is laid out with its properties shown and its arrowheads hidden",
+  "seen_failing_first": false,
+  "evidence": "block.ts has drawn through styledDrawing since 94675d1, untested in the host; this test pins that the Obsidian block hands the layout its arrowless links and inline rows, so it passed at its parent."
+}

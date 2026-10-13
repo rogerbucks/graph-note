@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/table-view.test.js",
+  "test": "the selection on a graph drawn as a table > with a row selected, an arrow key walks nowhere: the selection stays and the key is left to the page",
+  "seen_failing_first": false,
+  "evidence": "Coverage added after the fix: a188763 (wave1) made Selection.walk return false when a graph drawn as a table has no SVG, before this test was written; the review of that fix asked for the test. Without a188763 the walk read the missing SVG and threw."
+}

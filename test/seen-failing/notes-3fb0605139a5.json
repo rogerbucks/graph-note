@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/notes.test.js",
+  "test": "note_one_owner: a note above a line holding more than one thing belongs to none of them > no box has the note",
+  "seen_failing_first": false,
+  "evidence": "a negative: before notes were read at all no box had a note, so it held trivially; it guards that a shared note is put on none of the line's things"
+}

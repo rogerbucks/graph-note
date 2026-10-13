@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/proposals-changes.test.js",
+  "test": "the value of a change of a property > is one value: a number, a truth, a date or a text, with brackets and commas in the text as it likes",
+  "seen_failing_first": false,
+  "evidence": "Written after its code, on purpose: the guard (isOneValue in proposals.ts) came in the previous commit, f4d2aac, where its probes were put into an existing test, which the record does not count as new. This pins what it allows as a test of its own."
+}

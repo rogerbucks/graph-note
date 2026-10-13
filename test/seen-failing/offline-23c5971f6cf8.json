@@ -1,0 +1,6 @@
+{
+  "file": "test/offline.test.js",
+  "test": "the core’s AI send reaches no network of its own: only the transport it is handed, once, when the user says yes",
+  "seen_failing_first": false,
+  "evidence": "written after its code: the core's send, made test first in commit 064d995 with an injected transport, already reached no network of its own; this holds it to the offline promise with the network trapped (commit b1c6b17)"
+}

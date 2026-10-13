@@ -21,7 +21,10 @@ import type { Written } from './written-things.ts';
 
 const HIDDEN = new Set<string>(gs.SCHEMA_LABELS);
 
-/** The names of graph `g`: its things, kinds, relationship types, paths, and the property names of a kind or thing. */
+/**
+ * The names of graph `g`: its things, kinds, relationship types, paths, and the property names of a kind, a thing or a
+ * relationship type's links.
+ */
 function namesOf(reading: Pick<NoteReading, 'whole'>, graph: string, g: Graph): StyledNames {
   const things = [...g.nodes.keys()].filter((i) => ![...(g.nodes.get(i)?.[0] ?? [])].some((l) => HIDDEN.has(l)));
   const kindsOf = (id: string) => [...(g.nodes.get(id)?.[0] ?? [])].filter((l) => !HIDDEN.has(l));
@@ -32,12 +35,14 @@ function namesOf(reading: Pick<NoteReading, 'whole'>, graph: string, g: Graph): 
     kinds: new Set(things.flatMap(kindsOf)),
     types: new Set([...g.edges.map(([, t]) => t), ...declared.keys()]),
     paths: new Set(g.labelled('Path')),
-    properties: ({ kind, thing }) =>
-      new Set(
-        things
-          .filter((id) => (thing !== undefined ? id === thing : kindsOf(id).includes(kind ?? '')))
-          .flatMap((id) => Object.keys(g.p(id)).filter((k) => k !== 'id')),
-      ),
+    properties: ({ kind, thing, type }) =>
+      type !== undefined
+        ? new Set(g.edges.filter(([, t]) => t === type).flatMap(([, , , props]) => Object.keys(props)))
+        : new Set(
+            things
+              .filter((id) => (thing !== undefined ? id === thing : kindsOf(id).includes(kind ?? '')))
+              .flatMap((id) => Object.keys(g.p(id)).filter((k) => k !== 'id')),
+          ),
   };
 }
 

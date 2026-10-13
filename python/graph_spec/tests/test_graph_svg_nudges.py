@@ -198,8 +198,9 @@ class Nudges(unittest.TestCase):
             marks = ("[style=invis];", "subgraph cluster_", '{rank=same; "')
             return any(m in s for d in drawn.values() for s in d.values() for m in marks)
 
-        # the direction alone, the style that cannot be read, and the one that names no graph
-        self.assertEqual(sum(not nudged(drawn) for drawn in sources), 3)
+        # the direction alone, the style that cannot be read, the one that names no graph, and
+        # the nudges with keys their kind does not know
+        self.assertEqual(sum(not nudged(drawn) for drawn in sources), 4)
 
     def test_render_lays_out_the_direction_set_from_the_nudged_source(self):
         # what graph_svg.render hands Graphviz: only the direction a direction nudge sets, and the

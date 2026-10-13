@@ -9,6 +9,7 @@ import { fence, labelled } from './host/notes.js';
 import { PATH, showIn } from './host/card-notes.js';
 import { tapKey } from './host/inspector-steps.js';
 import { fakeContext } from './host/fake-obsidian.js';
+import { pressTheRest } from './host/details-controls.js';
 
 before(() => build());
 
@@ -43,13 +44,8 @@ async function showEmbedded(env, where) {
   return el;
 }
 
-/** Every control in the details that can be pressed or typed in, by its name or its tag. */
-const controls = (el) =>
-  el
-    .querySelectorAll(
-      '.graph-note-details button, .graph-note-details input, .graph-note-details textarea, .graph-note-details [role="button"]',
-    )
-    .map((c) => c.getAttribute('aria-label') || c.tagName);
+/** What a thing's details offer beside closing, where the note is only read (§25): both change the picture, never the note. */
+const UNTANGLING = ['Show only this and its neighbours', 'Shortest path to another thing'];
 
 describe('a graph embedded in another note is read-only wherever it is shown', () => {
   test('embedded in a note in Live Preview: Source and no Edit, and its details change nothing, while its own block is edited', async () => {
@@ -63,8 +59,18 @@ describe('a graph embedded in another note is read-only wherever it is shown', (
       for (const label of ['Edit here', 'Edit in pane', 'Record a path', 'Make a view'])
         assert.ok(!labelled(el, label), `no ${label}`);
       assert.ok(labelled(el, 'Show source'), 'Source is offered');
-      tapKey(el, 'large');
-      assert.deepEqual(controls(el), ['Close details']);
+      // every other control of the details only finds the way round the drawing (§25): each is pressed, and the note and
+      // the text being edited are checked below to be as they were
+      assert.deepEqual(
+        pressTheRest(el, ['Close details', ...UNTANGLING], () => tapKey(el, 'large'), [
+          'Minimise details',
+          'Close details',
+          'Which device?',
+          'Link: Large reader answers Which device?',
+          ...UNTANGLING,
+        ]),
+        ['Close details', ...UNTANGLING],
+      );
       await wait(50);
       assert.equal(live.querySelector('textarea').value, typed);
       assert.equal(env.state.files.get(PATH), NOTE);

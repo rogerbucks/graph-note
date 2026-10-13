@@ -238,12 +238,13 @@ export class FakeElement {
     if (!this.isConnected || had === this) return;
     if (!options?.preventScroll) doc.scrolledToFocus = (doc.scrolledToFocus ?? 0) + 1;
     doc.activeElement = this;
+    // and, as in a browser, each event names the element the focus is going to, or coming from, as its relatedTarget
     if (had) {
-      had.dispatch('blur');
-      had.dispatch('focusout');
+      had.dispatch('blur', { relatedTarget: this });
+      had.dispatch('focusout', { relatedTarget: this });
     }
-    this.dispatch('focus');
-    this.dispatch('focusin');
+    this.dispatch('focus', { relatedTarget: had });
+    this.dispatch('focusin', { relatedTarget: had });
   }
   blur() {
     if (this.ownerDocument.activeElement !== this) return;
@@ -417,6 +418,20 @@ export function fakeDocument(width = 700) {
     );
   doc.defaultView = {
     innerHeight: 800,
+    // the window's own listeners, such as resize: a test tells them with `tell`
+    listeners: new Map(),
+    addEventListener(type, fn) {
+      (this.listeners.get(type) ?? this.listeners.set(type, []).get(type)).push(fn);
+    },
+    removeEventListener(type, fn) {
+      this.listeners.set(
+        type,
+        (this.listeners.get(type) ?? []).filter((f) => f !== fn),
+      );
+    },
+    tell(type, init = {}) {
+      for (const fn of [...(this.listeners.get(type) ?? [])]) fn.call(this, { type, ...init });
+    },
     setTimeout,
     clearTimeout,
     requestAnimationFrame: (f) => setTimeout(f, 0),

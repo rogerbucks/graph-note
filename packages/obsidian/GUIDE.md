@@ -28,7 +28,7 @@ module that ties the parts together, named as the folder is.
   saying so, with Change the view, when it matches nothing; faded or hidden
   outside it as its style says; its looks and legend; Save as shown and Fade or Hide others written in the style graph.
 - `style-block.ts` — a style block (§2): never drawn, folded away until opened, saying whose style it is, what it holds
-  and how many problems it has. The graph it styles is drawn with its nudges, and its problems listed, by `block.ts`.
+  (its diagram types among the rest) and how many problems it has. The graph it styles is drawn with its nudges, and its problems listed, by `block.ts`.
 - `code.ts` — a block that is not a graph, shown as coloured code; a very long one plain.
 - `live-preview.ts` — the editing view's own cards, so the page stays still while a block is typed in; each block keeps
   its identity however lines move above it, so its card, and the editor in place in it, survive the move; each card's
@@ -70,7 +70,9 @@ module that ties the parts together, named as the folder is.
   holds; on a phone, offered to the share sheet instead, every page at once, or saved in the vault when the phone
   cannot share a file of that kind.
 - `image.ts` — the image laid out in the layout worker under its limits (one over a limit, or a note too large to read,
-  writes nothing and says why), in fixed colours with its frame; a PNG too large for one sharp image drawn on pages
+  writes nothing and says why), in fixed colours with its frame, drawn with its style — the arrowheads it hides and the
+  properties it shows inline, their values from the graph as read (`ImageAsk`'s `data`, which comes with every style,
+  or the type check fails); a PNG too large for one sharp image drawn on pages
   (`pngPages`), every page drawn before any is written, or refused when even pages cannot hold it.
 - `export-form.ts` — the Export form on a drawing: the whole diagram, or a view with or without its faded context; SVG,
   PNG or the data as a GQL block, CSV or GraphML; light or dark, for an image only; and Export anyway when the note's
@@ -79,30 +81,104 @@ module that ties the parts together, named as the folder is.
 - `png.ts` — a PNG of the SVG drawn on a canvas at twice natural size or more, at the size it is given: the whole image,
   or one page of it; the canvas made nothing wide and nothing high once its PNG is made, so pages never pile up.
 - `classification.ts` — a note's classification however its front matter writes it (any key case, a word, a number, a
-  list's highest), and from its own text before the metadata cache has indexed it.
+  list's highest), and from its own text before the metadata cache has indexed it; `classificationInText` reads the
+  text alone, and `higherClassification` takes the higher of two readings (an unknown one counts highest; none counts
+  as the level set for unlabelled notes, and wins a tie with it).
 - `vault-write.ts` — writing through the vault's API: a name of its own for each export, so none is overwritten, and one
   number shared by the pages of one export (`freePaths`); the
   plugin's own temporary file deleted outright on a failure, never left in the vault or its trash.
+
+### `src/proposals/` — a proposal in a note (spec §17)
+
+- `proposal-block.ts` — `renderProposalBlock`: a block whose graph line says CHANGE SET is drawn over its graph by the core's
+  review (`ProposalReview.show`: the changes waiting laid over the graph, nothing written), as a card with the proposal's
+  strip. A decision goes through the vault's API against the note as it is then (`vault.process`): Accept writes the change
+  into the graph's block through the core's review, which has the pane's own session check it; Reject writes only the
+  record in the change set; Undo takes the last decision back. The reviews are kept by the plugin (`reviewOf`) while it
+  runs, so Undo is still there when the card is drawn again. The person is recorded as "you": Obsidian does not say who is
+  at the keyboard.
+- `proposal-strip.ts` — the card above the drawing: who proposed it, when and what it read; a notice, with a button to say it
+  has been read, when the graph has moved since (Accept stays off until then); the changes one to a row, each in plain
+  English and its exact text (the GQL, the SET line or the removal, in a code span, and in the buttons' names) with Accept
+  and Reject, and its reason as plain text (a model's reason is kept escaped in the note, and unescaped for the card); Accept all and a group's Accept send the ids of what can be accepted now; in groups with Accept and Reject for the group when there are many; Accept all, Reject
+  all and Undo. On a phone it is a sheet at the bottom of the screen (`is-sheet`). Reading view takes the buttons away, and
+  the gate (`read-only.ts`) closes `decide` and `undo`.
+- `mark-proposal.ts` — the marks on the drawing: a class for the line (heavier for what is added, dashed for what is changed,
+  dotted for what is removed), a word and a sign on each box, and the name said so to screen readers.
+
+### `src/ai/` — asking an AI model to propose changes (spec §19)
+
+- `ai.ts` — the command, Ask an AI model to propose changes: only a notice while AI is off or no model is set up;
+  otherwise the send dialog on the note in front (never one in reading view), with its classification read from its
+  text as well as the metadata cache, the higher taken (`higherClassification`), and read again each time the dialog
+  shows what will be sent, against the classifications as they are then. Obsidian has no AI of its own to offer
+  first, so only the models set up here are offered. Also the command Clear the record of sends to AI models; the
+  plugin keeps the last `SENDS_KEPT` (200).
+- `send-dialog.ts` — `SendDialog`: what to send (the whole graph, a view, or the things ticked), the model (the one set
+  up for proposing changes first) and the question; Show what will be sent puts the exact request on screen, with the
+  model, its address, the headers (a key only by its name) and the note's classification, or why nothing may be sent;
+  Send, pressed on exactly that, sends it once, and any change takes the yes away until it is shown again; the note's
+  classification is read once more as Send is pressed, and if it has changed nothing goes until it is shown again. The key is
+  read from the app's secret store as the request goes; every model's key is read before, only to make sure none is in
+  what is sent. Every send is recorded in the plugin's data (`recordAiSend`);
+  an answer is written into the note as a change set after the graph's blocks, through `vault.process`, and a failure is
+  said in a notice, the note left as it was.
+- `send.ts` — the one module that reaches the network: the request, with Obsidian's `requestUrl`, never a vendor's
+  library. Only the send dialog imports it (`test/policy.test.js`).
 
 ### `src/settings/` — the settings page (spec §21)
 
 - `settings.ts` — `GraphNoteSettingTab`: one page in Obsidian's plugin settings, in its declarative form, built from the
   core's `OPTIONS` so every option is on it with its sentence: strictness and the departures Simplified allows, with
   the action that converts a note to standard GQL; the classifications; formatting; drawing.
-- `ai-models.ts` — the AI models of §19 as a list, a page for each: name, purpose, ceiling, model, endpoint, and its key
-  chosen in the app's own secret store by name, so only the name is saved.
+- `ai-models.ts` — the AI models of §19 as a list, a page for each: name, purpose (the spec's purposes suggested),
+  ceiling, model, endpoint (said on the model's row when it cannot be used), and its key chosen in the app's own secret
+  store by name, so only the name is saved. Use AI models, off until turned on, heads the part of the page;
+  Unlabelled notes count as, a choice among the classifications, the most sensitive until chosen, follows them.
 
 ### `src/graph-view/` — a drawn graph
 
 - `graph-view.ts` — `GraphView`: the card, its zoom and full screen; ties the rest together.
-- `view-bar.ts` — the bar: problems badge, Fit, zoom, Full screen, Export, Edit here, Edit in pane, Source.
+- `viewport-events.ts` — how the drawing is worked by pointer, wheel and keyboard: each event to the core's `Zoom`, a
+  tap opening what it lands on or clearing the selection, the highlight's pointer and focus, the sheet moved with the note.
+- `view-bar.ts` — the bar: problems badge, Fit, zoom, Find a thing, Filter by kind or link, Full screen, Export, Edit here,
+  Edit in pane, Source.
 - `problems-list.ts` — the problems behind the badge, grouped when many, and the completeness report.
 - `drawing-svg.ts` — the SVG put in the card, each box and link reachable by keyboard and named; a drawing that runs
   down the page is marked `graph-note-down`, which `styles.css` uses to give a link's label a gap from its line, so the
   layout source and the SVG stay the Python library's.
-- `taps.ts` — what a tap or a key lands on, and the nearest things to a tap.
+- `taps.ts` — what a tap or a key lands on, and the nearest things to a tap; where a box is, to bring it into view, and
+  the middle of each, for the arrow keys.
+- `selection.ts` — what is selected in a card and how it shows (spec §25): the selection is the focus, with the
+  highlight, the untangling and the arrow keys that walk the links; a thing chosen from the details brought into view,
+  readable, and the selection kept clear above the details sheet. Ties the next four to the card; marks the drawing by
+  class only.
+- `focus-marks.ts` — what the core says is kept, hidden or highlighted, put on the drawing as classes
+  (`graph-note-kept`, `-dim`, `-hidden`, `-hot`); `styles.css` draws them by strength and outline, never by colour alone,
+  and never by moving or resizing anything, so a highlight lays nothing out again.
+- `hover.ts` — the highlight: under the pointer, with the keyboard focus, and on touch from the tap that selects, so
+  nothing depends on hover.
+- `untangle.ts` — filtering the drawing to a thing and its neighbours, the legend, the shortest path and the search
+  box, tied to the core's `Untangle`; the picture only, never the note, so reading view has them. Its parts:
+  `untangle-banner.ts` (what the drawing is filtered to, the path, the question, each with its way back),
+  `untangle-legend.ts` (a button for each kind and relationship type: in front, hidden, back) and `untangle-find.ts`
+  (the search row).
 - `details-panel.ts` — the details of a box, a link or an estimated link, the one shown marked as selected, its
-  properties to read, and the inspector while the block is edited.
+  properties to read, and the inspector while the block is edited; a thing's links grouped by type and direction in
+  words, each thing and link a choice, and the trail's back and forward (§25); a thing's offers Show only this and its
+  neighbours and the shortest path to another thing (§25); closing it, by button, Escape or a tap on empty space, clears
+  the focus.
+- `details-nav.ts` — finding your way from the details (§25): the groups of links rendered from the core's
+  `linkGroups`, the trail's buttons, the names of steps, and `Glide`, the brief eased move to what is chosen, a frame at
+  a time, at once when the system asks for reduced motion.
+- `details-sheet.ts` — the details in view mode, in a note's card (§25): a sheet pinned to the foot of the part of the
+  screen the note is seen in, or of the card when the card ends above it, over the card, placed again as the window, the
+  card or the note's scroll moves, gone while the card is off the screen; in the card instead where the browser does not
+  lay it out where it was put (a transformed container), in a canvas card and in a hover preview; its toggle minimises it to a bar or
+  restores it, the state remembered for the session; Escape in it closes it, never a key typed in the note; it says
+  where its top is, so the card keeps the chosen thing clear above it.
+- `selection-pointer.ts` — the arrow at the edge of the drawing pointing to a selection out of view, named for it; tapped,
+  it brings the selection into view, and a tap on it is never a tap on the drawing (§25).
 - `estimate-actions.ts` — what an estimated link's details offer (§3): the quick fix, its problem's own fix (the core's
   `estimateFix`), written into the text being edited, or else into the note while the block is still as drawn
   (`ViewOptions.writeBlock`); and Edit the link, which opens the editor with the misspelt word selected. Neither where
@@ -119,6 +195,16 @@ module that ties the parts together, named as the folder is.
   reading said as it is built, and Write the view, a view block after the graph's last block.
 - `view-strip.ts` — a view's card: its reading in plain English, Fade or Hide others, Save as shown, the legend, and what
   is outside it faded and its looks drawn on the drawing.
+- `type-strip.ts` — the diagram type (§15), on every card, a graph's or a view's: how it is drawn, and Diagram type,
+  listing the seven types, each that fits to choose (written into the style graph, for the graph or the view; a tree
+  along the relationship it fits best) and each that does not with why, the suggested one said and never drawn until
+  chosen; a chosen type that has stopped fitting said, the graph drawn as a network, and the nearest type that fits
+  offered; and the way in to a graph of more than 50 things, the table or a view. Reading view keeps the words and
+  drops the controls that write. The core decides all of it (`diagramOffer`).
+- `table-view.ts` — a graph drawn as a table: the plugin's own table, never Graphviz, a row for each thing (its kind and
+  properties) and each link, each row reached, named and opened as a box or a link is (`taps.ts` and the details take
+  a row as its thing or link), moved and scaled as a whole by the card's zoom. On a phone, a wide tree, flow or
+  timeline is fitted to its height and scrolled across only (`graph-view.ts`, the core's `Zoom` with `across`).
 - `walk.ts` — walked paths (§7): the strip below the bar with Play for each path in the note, stepping one thing at a
   time, marked and said; a path with no steps said to have none; and, while the block is edited, Record, which numbers
   each box as it is tapped and writes the path into the text.
@@ -136,7 +222,7 @@ module that ties the parts together, named as the folder is.
   same way. An edit into the block (the editor's `replace`) is checked again as it is written (`PaneSession.edit`); a
   refusal reloads the block and says so in the draft banner, with the edit kept as a draft.
 - `placement.ts` — where a card is: read-only in reading view, a hover preview and an embed of another note (in Live
-  Preview too); waiting for a card to be put on the page.
+  Preview too); waiting for a card to be put on the page; the part of the screen its note is seen in, and scrolling it.
 - `read-only.ts` — the one check every write from a card passes: each function in its options, at any depth, is closed
   where the card is read-only (reading view, an embed, and full screen opened from them), but those named as only
   reading, so a new control that writes is read-only there by default; an option it cannot reach is refused, loudly.
@@ -173,7 +259,8 @@ package, or all with `npm test` from the repository root. Each builds `main.js` 
 
 - `test/host/` — the stand-ins for the host and what the tests share: `fake-dom.js` (a small DOM), `fake-settings.js` (the settings page, drawn from its definitions, and the secret
   store), `fake-obsidian.js`
-  (the obsidian module and CodeMirror), `load-plugin.js` (building and loading the plugin), `cascade.js` (the part of
+  (the obsidian module and CodeMirror, with a dialog and a `requestUrl` that never reaches the network: each request is
+  kept, and answered by the test's own `state.reply`), `load-plugin.js` (building and loading the plugin), `cascade.js` (the part of
   the CSS cascade a test needs), `notes.js` (a fenced block, a button by its label), and the notes each group of tests
   opens: `card-notes.js`, `pane-notes.js`, `view-notes.js`, and `inspector-steps.js` (opening a box's details and driving the inspector's rows, menus and chips).
   `editing-view.js` opens a note in the editing view, in Live Preview, with the plugin's own extension and view plugins,

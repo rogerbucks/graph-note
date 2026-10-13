@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/hover.test.js",
+  "test": "nothing depends on hover > on touch, emptying the selection takes the highlight with it",
+  "seen_failing_first": false,
+  "evidence": "Guards the new code against a highlight left behind: before the highlight existed Escape marked nothing and nothing was ever highlighted, so the assertion held vacuously; its set-up (the tap and the earlier touch test) is what the other tests of this file prove failing first."
+}

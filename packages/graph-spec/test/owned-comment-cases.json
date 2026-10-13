@@ -1,5 +1,5 @@
 {
-  "about": "The comments an element owns, read by both readers from the same text and held to one table (graph spec §26 notes, §27 tagged comments). A run of /// note lines and //@ key: value lines is owned by the element on the line directly below it; a blank line or any other comment ends the run, and a line holding more than one element owns nothing. A //@ line with no key is an ordinary comment. Each case gives the block and what is owned (line of the element, the element, its tags in order, its note lines and its summary), the comment lines that own nothing, and the //@ lines that are malformed. Roger, 11 Oct 2026: /// and //@ lines mix in one run, and a //@ line is never a note. A case with \"refused\" gives the line both readers refuse it at instead. Each case has a stable id, and names the requirements it proves (\"partial\" where it proves part).",
+  "about": "The comments an element owns, read by both readers from the same text and held to one table (graph spec §26 notes, §27 tagged comments). A run of /// note lines and //@ key: value lines is owned by the element on the line directly below it; a blank line or any other comment ends the run, and a line holding more than one element owns nothing. A //@ line with no key is an ordinary comment. Each case gives the block and what is owned (line of the element, the element, its tags in order, its note lines and its summary), the comment lines that own nothing, and the //@ lines that are malformed. Roger, 11 Oct 2026: /// and //@ lines mix in one run, and a //@ line is never a note. A case with \"refused\" gives the line both readers refuse it at instead. A case with \"notes\" also gives what notes() reads (editor spec §24): each note with its element's line, the element, its /// lines, its text (those lines joined, CommonMark for the host to render) and its summary; and, in \"shared\", each line holding more than one element with a note above it, which belongs to none of them. Each case has a stable id, and names the requirements it proves: req:26 and req:27 are the graph spec's, plain ids such as note_comment the editor's (\"partial\" where it proves part).",
   "cases": [
     {
       "id": "tag-above-thing",
@@ -100,11 +100,18 @@
     {
       "id": "note-several-elements",
       "name": "a note above a line with several elements owns nothing",
-      "proves": ["req:26.owner", "req:26.two-readers"],
+      "proves": ["req:26.owner", "req:26.two-readers", "note_one_owner", "note_both_readers"],
       "block": "// graph: g\n/// A note.\n(a:T), (b:T)",
       "owned": [],
       "unowned": [2],
-      "malformed": []
+      "malformed": [],
+      "notes": [],
+      "shared": [
+        {
+          "line": 3,
+          "lines": [2]
+        }
+      ]
     },
     {
       "id": "tag-path-owns-nothing",
@@ -174,20 +181,30 @@
     {
       "id": "note-four-slashes",
       "name": "four slashes make an ordinary comment, not a note",
-      "proves": ["req:26.marker", "req:26.two-readers"],
+      "proves": [
+        "req:26.marker",
+        "req:26.two-readers",
+        "note_comment",
+        "note_never_other_comments",
+        "note_both_readers"
+      ],
       "block": "// graph: g\n//// not a note\n(a:T)",
       "owned": [],
       "unowned": [],
-      "malformed": []
+      "malformed": [],
+      "notes": [],
+      "shared": []
     },
     {
       "id": "note-no-space",
       "name": "three slashes followed by text with no space make an ordinary comment",
-      "proves": ["req:26.marker"],
+      "proves": ["req:26.marker", "note_comment", "note_never_other_comments", "note_both_readers"],
       "block": "// graph: g\n///not a note\n(a:T)",
       "owned": [],
       "unowned": [],
-      "malformed": []
+      "malformed": [],
+      "notes": [],
+      "shared": []
     },
     {
       "id": "note-summary",
@@ -211,11 +228,13 @@
     {
       "id": "note-no-element-below",
       "name": "a note above a MATCH line, or at the end of the block, owns nothing",
-      "proves": ["req:26.owner"],
+      "proves": ["req:26.owner", "note_comment", "note_both_readers"],
       "block": "// graph: g\n/// on a match\nMATCH (a:T {id: 'a'})\nINSERT (b:T)\n/// at the end",
       "owned": [],
       "unowned": [2, 5],
-      "malformed": []
+      "malformed": [],
+      "notes": [],
+      "shared": []
     },
     {
       "id": "note-header-not-a-note",
@@ -229,7 +248,7 @@
     {
       "id": "note-crlf",
       "name": "a block whose lines end in CR LF keeps its paragraph break, and no CR in the text",
-      "proves": ["req:26.text partial", "req:26.two-readers"],
+      "proves": ["req:26.text partial", "req:26.two-readers", "note_comment", "note_text", "note_both_readers"],
       "block": "// graph: g\r\n/// a\r\n///\r\n//@ k: v\r\n/// b\r\n(a:T)\r\n",
       "owned": [
         {
@@ -243,7 +262,19 @@
         }
       ],
       "unowned": [],
-      "malformed": []
+      "malformed": [],
+      "notes": [
+        {
+          "line": 6,
+          "element": {
+            "thing": "a"
+          },
+          "lines": [2, 3, 5],
+          "text": "a\n\nb",
+          "summary": "a"
+        }
+      ],
+      "shared": []
     },
     {
       "id": "note-trailing-spaces",
@@ -276,11 +307,13 @@
     {
       "id": "note-inside-parens",
       "name": "a note inside a thing's brackets, one level in, owns nothing, though another thing begins on the line below",
-      "proves": ["req:26.owner"],
+      "proves": ["req:26.owner", "note_comment", "note_one_owner", "note_both_readers"],
       "block": "// graph: g\n(a:T\n/// inside\n), (b:T {id: 'b'})",
       "owned": [],
       "unowned": [3],
-      "malformed": []
+      "malformed": [],
+      "notes": [],
+      "shared": []
     },
     {
       "id": "note-multi-line-thing",
@@ -363,6 +396,502 @@
       "proves": ["req:27.two-readers"],
       "block": "// graph: g\n//@ k: v\n(a:T) // after code",
       "refused": 3
+    },
+    {
+      "id": "note-above-link",
+      "name": "a note directly above a link is the link's",
+      "proves": ["note_comment", "note_both_readers", "req:26.owner"],
+      "block": "// graph: g\n(a:T),\n(b:T),\n/// Why a leads to b.\n(a)-[:R]->(b)",
+      "owned": [
+        {
+          "line": 5,
+          "element": {
+            "link": ["a", "R", "b"]
+          },
+          "tags": [],
+          "note": ["Why a leads to b."],
+          "summary": "Why a leads to b."
+        }
+      ],
+      "unowned": [],
+      "malformed": [],
+      "notes": [
+        {
+          "line": 5,
+          "element": {
+            "link": ["a", "R", "b"]
+          },
+          "lines": [4],
+          "text": "Why a leads to b.",
+          "summary": "Why a leads to b."
+        }
+      ],
+      "shared": []
+    },
+    {
+      "id": "note-each-its-own",
+      "name": "a note above each of two things, each on its own line, is each one's own",
+      "proves": ["note_comment", "note_one_owner", "note_both_readers"],
+      "block": "// graph: g\n/// On a.\n(a:T),\n/// On b.\n(b:T)",
+      "owned": [
+        {
+          "line": 3,
+          "element": {
+            "thing": "a"
+          },
+          "tags": [],
+          "note": ["On a."],
+          "summary": "On a."
+        },
+        {
+          "line": 5,
+          "element": {
+            "thing": "b"
+          },
+          "tags": [],
+          "note": ["On b."],
+          "summary": "On b."
+        }
+      ],
+      "unowned": [],
+      "malformed": [],
+      "notes": [
+        {
+          "line": 3,
+          "element": {
+            "thing": "a"
+          },
+          "lines": [2],
+          "text": "On a.",
+          "summary": "On a."
+        },
+        {
+          "line": 5,
+          "element": {
+            "thing": "b"
+          },
+          "lines": [4],
+          "text": "On b.",
+          "summary": "On b."
+        }
+      ],
+      "shared": []
+    },
+    {
+      "id": "note-indented",
+      "name": "a note indented as its thing is, is the thing's",
+      "proves": ["note_comment", "note_both_readers"],
+      "block": "// graph: g\n  /// Indented, as its thing is.\n  (a:T)",
+      "owned": [
+        {
+          "line": 3,
+          "element": {
+            "thing": "a"
+          },
+          "tags": [],
+          "note": ["Indented, as its thing is."],
+          "summary": "Indented, as its thing is."
+        }
+      ],
+      "unowned": [],
+      "malformed": [],
+      "notes": [
+        {
+          "line": 3,
+          "element": {
+            "thing": "a"
+          },
+          "lines": [2],
+          "text": "Indented, as its thing is.",
+          "summary": "Indented, as its thing is."
+        }
+      ],
+      "shared": []
+    },
+    {
+      "id": "note-plain-comment-ends",
+      "name": "an ordinary comment between a note and its thing ends the note",
+      "proves": ["note_comment", "note_never_other_comments", "note_both_readers"],
+      "block": "// graph: g\n/// A note.\n// a plain comment\n(a:T)",
+      "owned": [],
+      "unowned": [2],
+      "malformed": [],
+      "notes": [],
+      "shared": []
+    },
+    {
+      "id": "note-blank-starts-another",
+      "name": "a blank line ends a note, and the lines below it are a note of their own",
+      "proves": ["note_comment", "note_both_readers"],
+      "block": "// graph: g\n/// first\n\n/// second\n(a:T)",
+      "owned": [
+        {
+          "line": 5,
+          "element": {
+            "thing": "a"
+          },
+          "tags": [],
+          "note": ["second"],
+          "summary": "second"
+        }
+      ],
+      "unowned": [2],
+      "malformed": [],
+      "notes": [
+        {
+          "line": 5,
+          "element": {
+            "thing": "a"
+          },
+          "lines": [4],
+          "text": "second",
+          "summary": "second"
+        }
+      ],
+      "shared": []
+    },
+    {
+      "id": "note-after-code-refused",
+      "name": "three slashes after code on its line are no note: the line is refused, as any comment after code is",
+      "proves": ["note_comment", "note_both_readers"],
+      "block": "// graph: g\n(a:T) /// not on a line of its own",
+      "refused": 2
+    },
+    {
+      "id": "note-markdown-text",
+      "name": "a note's text is its lines joined in order, Markdown kept as written, a bare /// a paragraph break",
+      "proves": ["note_text", "note_both_readers"],
+      "block": "// graph: g\n/// A **bold** claim, see [[Other note]].\n///\n/// - one\n/// - two\n(a:T)",
+      "owned": [
+        {
+          "line": 6,
+          "element": {
+            "thing": "a"
+          },
+          "tags": [],
+          "note": ["A **bold** claim, see [[Other note]].", "", "- one", "- two"],
+          "summary": "A **bold** claim, see [[Other note]]."
+        }
+      ],
+      "unowned": [],
+      "malformed": [],
+      "notes": [
+        {
+          "line": 6,
+          "element": {
+            "thing": "a"
+          },
+          "lines": [2, 3, 4, 5],
+          "text": "A **bold** claim, see [[Other note]].\n\n- one\n- two",
+          "summary": "A **bold** claim, see [[Other note]]."
+        }
+      ],
+      "shared": []
+    },
+    {
+      "id": "note-leading-break",
+      "name": "a note that opens with a bare /// has the paragraph after it as its summary",
+      "proves": ["note_text", "note_both_readers"],
+      "block": "// graph: g\n///\n/// After a bare line.\n(a:T)",
+      "owned": [
+        {
+          "line": 4,
+          "element": {
+            "thing": "a"
+          },
+          "tags": [],
+          "note": ["", "After a bare line."],
+          "summary": "After a bare line."
+        }
+      ],
+      "unowned": [],
+      "malformed": [],
+      "notes": [
+        {
+          "line": 4,
+          "element": {
+            "thing": "a"
+          },
+          "lines": [2, 3],
+          "text": "\nAfter a bare line.",
+          "summary": "After a bare line."
+        }
+      ],
+      "shared": []
+    },
+    {
+      "id": "note-indent-kept",
+      "name": "only the one space after the slashes is the marker's: further indentation is the text's, as CommonMark reads it",
+      "proves": ["note_text", "note_both_readers"],
+      "block": "// graph: g\n/// Code:\n///\n///     x = 1\n(a:T)",
+      "owned": [
+        {
+          "line": 5,
+          "element": {
+            "thing": "a"
+          },
+          "tags": [],
+          "note": ["Code:", "", "    x = 1"],
+          "summary": "Code:"
+        }
+      ],
+      "unowned": [],
+      "malformed": [],
+      "notes": [
+        {
+          "line": 5,
+          "element": {
+            "thing": "a"
+          },
+          "lines": [2, 3, 4],
+          "text": "Code:\n\n    x = 1",
+          "summary": "Code:"
+        }
+      ],
+      "shared": []
+    },
+    {
+      "id": "note-around-a-tag",
+      "name": "a //@ line inside a note is left out of its text, which joins the /// lines either side of it",
+      "proves": ["note_text", "note_both_readers", "req:26.mixed-run"],
+      "block": "// graph: g\n/// a\n//@ k: v\n/// b\n(a:T)",
+      "owned": [
+        {
+          "line": 5,
+          "element": {
+            "thing": "a"
+          },
+          "tags": [["k", "v"]],
+          "note": ["a", "b"],
+          "summary": "a\nb"
+        }
+      ],
+      "unowned": [],
+      "malformed": [],
+      "notes": [
+        {
+          "line": 5,
+          "element": {
+            "thing": "a"
+          },
+          "lines": [2, 4],
+          "text": "a\nb",
+          "summary": "a\nb"
+        }
+      ],
+      "shared": []
+    },
+    {
+      "id": "note-two-slashes",
+      "name": "a line of two slashes is an ordinary comment, never a note",
+      "proves": ["note_never_other_comments", "note_both_readers"],
+      "block": "// graph: g\n// two slashes\n(a:T)",
+      "owned": [],
+      "unowned": [],
+      "malformed": [],
+      "notes": [],
+      "shared": []
+    },
+    {
+      "id": "note-four-slashes-above",
+      "name": "a line of four slashes is not part of the note below it",
+      "proves": ["note_never_other_comments", "note_both_readers"],
+      "block": "// graph: g\n//// ruled off\n/// A note.\n(a:T)",
+      "owned": [
+        {
+          "line": 4,
+          "element": {
+            "thing": "a"
+          },
+          "tags": [],
+          "note": ["A note."],
+          "summary": "A note."
+        }
+      ],
+      "unowned": [],
+      "malformed": [],
+      "notes": [
+        {
+          "line": 4,
+          "element": {
+            "thing": "a"
+          },
+          "lines": [3],
+          "text": "A note.",
+          "summary": "A note."
+        }
+      ],
+      "shared": []
+    },
+    {
+      "id": "note-five-slashes",
+      "name": "a line of five slashes and a space is an ordinary comment, never a note",
+      "proves": ["note_never_other_comments", "note_both_readers"],
+      "block": "// graph: g\n///// not a note\n(a:T)",
+      "owned": [],
+      "unowned": [],
+      "malformed": [],
+      "notes": [],
+      "shared": []
+    },
+    {
+      "id": "note-dash-comment-refused",
+      "name": "a -- comment is no note: the profile refuses it, at its line",
+      "proves": ["note_never_other_comments", "note_both_readers"],
+      "block": "// graph: g\n/// A note.\n-- a dash comment\n(a:T)",
+      "refused": 3
+    },
+    {
+      "id": "note-block-comment-refused",
+      "name": "three slashes inside a /* */ comment are no note: the profile refuses the comment, at its line",
+      "proves": ["note_never_other_comments", "note_both_readers"],
+      "block": "// graph: g\n/*\n/// not a note\n*/\n(a:T)",
+      "refused": 2
+    },
+    {
+      "id": "note-graph-line-ends",
+      "name": "a // graph: line is never a note, and ends the note above it",
+      "proves": ["note_never_other_comments", "note_both_readers"],
+      "block": "// graph: g\n/// A note.\n// graph: h\n(a:T)",
+      "owned": [],
+      "unowned": [2],
+      "malformed": [],
+      "notes": [],
+      "shared": []
+    },
+    {
+      "id": "note-excerpt-line-ends",
+      "name": "a // excerpt line is never a note, and ends the note above it",
+      "proves": ["note_never_other_comments", "note_both_readers"],
+      "block": "// graph: g\n/// A note.\n// excerpt\n(a:T)",
+      "owned": [],
+      "unowned": [2],
+      "malformed": [],
+      "notes": [],
+      "shared": []
+    },
+    {
+      "id": "note-in-excerpt",
+      "name": "an excerpt holds no notes",
+      "proves": ["note_never_other_comments", "note_both_readers"],
+      "block": "// excerpt\n/// A note.\n(a:T)",
+      "owned": [],
+      "unowned": [],
+      "malformed": [],
+      "notes": [],
+      "shared": []
+    },
+    {
+      "id": "note-in-query",
+      "name": "a query block holds no notes",
+      "proves": ["note_never_other_comments", "note_both_readers"],
+      "block": "// graph: g · QUERY\n/// A note.\nMATCH (a) RETURN a",
+      "owned": [],
+      "unowned": [],
+      "malformed": [],
+      "notes": [],
+      "shared": []
+    },
+    {
+      "id": "note-shared-line",
+      "name": "a note above a line holding two things belongs to neither, and that line is said",
+      "proves": ["note_one_owner", "note_both_readers", "req:26.owner"],
+      "block": "// graph: g\n/// A note.\n(a:T {name: 'A'}), (b:T {name: 'B'})",
+      "owned": [],
+      "unowned": [2],
+      "malformed": [],
+      "notes": [],
+      "shared": [
+        {
+          "line": 3,
+          "lines": [2]
+        }
+      ]
+    },
+    {
+      "id": "note-shared-path",
+      "name": "a note above a path of two things and a link belongs to none of them, and that line is said",
+      "proves": ["note_one_owner", "note_both_readers", "req:26.owner"],
+      "block": "// graph: g\n/// A note.\n(a:T)-[:R]->(b:T)",
+      "owned": [],
+      "unowned": [2],
+      "malformed": [],
+      "notes": [],
+      "shared": [
+        {
+          "line": 3,
+          "lines": [2]
+        }
+      ]
+    },
+    {
+      "id": "note-shared-around-a-tag",
+      "name": "a note around a //@ line above a shared line is said by its /// lines alone",
+      "proves": ["note_one_owner", "note_both_readers"],
+      "block": "// graph: g\n/// a\n//@ k: v\n/// b\n(a:T), (b:T)",
+      "owned": [],
+      "unowned": [2, 3, 4],
+      "malformed": [],
+      "notes": [],
+      "shared": [
+        {
+          "line": 5,
+          "lines": [2, 4]
+        }
+      ]
+    },
+    {
+      "id": "tags-shared-no-note",
+      "name": "//@ lines alone above a shared line are no note, so nothing is said",
+      "proves": ["note_one_owner", "note_both_readers"],
+      "block": "// graph: g\n//@ k: v\n(a:T), (b:T)",
+      "owned": [],
+      "unowned": [2],
+      "malformed": [],
+      "notes": [],
+      "shared": []
+    },
+    {
+      "id": "note-inside-braces-not-shared",
+      "name": "a note inside a thing's braces is not said to be above a shared line, though the line below it ends one thing and begins another",
+      "proves": ["note_one_owner", "note_both_readers"],
+      "block": "// graph: g\n(a:T {name: 'x',\n/// inside\nid: 'a'}), (b:T {id: 'b'})",
+      "owned": [],
+      "unowned": [3],
+      "malformed": [],
+      "notes": [],
+      "shared": []
+    },
+    {
+      "id": "note-unicode",
+      "name": "a note indented with U+3000 above a thing indented with U+00A0 is the thing's, and a character outside the BMP is kept whole in its text",
+      "proves": ["note_comment", "note_text", "note_both_readers"],
+      "block": "// graph: g\n　/// Read on 😀 days, naïvely.\n (a:T {name: 'A'})",
+      "owned": [
+        {
+          "line": 3,
+          "element": {
+            "thing": "a"
+          },
+          "tags": [],
+          "note": ["Read on 😀 days, naïvely."],
+          "summary": "Read on 😀 days, naïvely."
+        }
+      ],
+      "unowned": [],
+      "malformed": [],
+      "notes": [
+        {
+          "line": 3,
+          "element": {
+            "thing": "a"
+          },
+          "lines": [2],
+          "text": "Read on 😀 days, naïvely.",
+          "summary": "Read on 😀 days, naïvely."
+        }
+      ],
+      "shared": []
     }
   ]
 }

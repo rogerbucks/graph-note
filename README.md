@@ -14,7 +14,19 @@ An Obsidian plugin that draws the graphs written in notes, and lets them be edit
 
 ## Privacy and network use
 
-The plugin makes no network requests. A later version will be able to send content to an AI model, and only to a model the user has set up, only when the user sends it. This section will say exactly what is sent when that arrives.
+The plugin makes no network request of its own: no analytics, no update checks, no remote images, no databases. Graphviz, the one runtime dependency, is bundled and runs on your device.
+
+**The one exception: AI models you set up.** The plugin can ask an AI model to propose changes to a graph, and sends content only to AI models you have set up yourself, by their address, and only when you send it. AI is off until you turn it on (Use AI models, in the plugin's settings) and set up a model. Then, for each send:
+
+- **You choose what is sent:** the whole graph, one of its views, or the things you tick. It is written out as GQL: each thing with its kinds and properties, and the links between them, with your question and the instructions that ask for changes. Nothing else of the vault goes: not the note's other text, not another graph, not a comment.
+- **You see exactly what will be sent, and to which model and address, before it goes,** and nothing goes until you press Send. Nothing is ever sent in the background.
+- **Each model has a ceiling,** the highest classification of note it may be sent, set by you. A note above it is not sent to that model, and a note at the highest classification you have set is never sent to any model. A note with no classification counts as the most sensitive level, so by default it is sent to no model: give it a classification, or choose a lower level for such notes under Unlabelled notes count as, in the plugin's settings.
+- **Credentials are looked for by common patterns,** such as a password or secret property, an API key, an access key, a token, a private key, a card number, or the key of any model you set up. What matches is never sent. These are patterns, not a guarantee: keep secrets out of notes you send.
+- **A key stays in Obsidian's own secret store,** never in the vault, the plugin's settings, a note or a log. A model on another machine is reached over https only, and a model's address may hold no user name, password or query string.
+- **The answer comes back as a proposal,** written into the note as a change set beside the graph, and each change is accepted or rejected by you. An AI never writes to the graph.
+- **Every send is recorded** in the plugin's own data, without the text sent: a SHA-256 digest of it, its size, what kind of choice it was and how many things and links, the model's name and address, the time, and what came of it. The last 200 sends are kept; the command "Clear the record of sends to AI models" clears them.
+
+Requests go straight from your device to the address you gave, with Obsidian's own request function: there is no server of this plugin's in between, and no AI vendor's library inside it. Obsidian follows redirects; point a model only at an address you trust. Obsidian also adds headers of its own to each request, beyond those shown before you send.
 
 ## Developing
 

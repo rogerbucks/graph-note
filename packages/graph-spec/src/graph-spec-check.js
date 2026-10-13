@@ -23,6 +23,7 @@ const { COMMENT_RULE, COMMENT_FIX, header, tokens, quote } = require('./reader/t
 const { checkSyntax } = require('./reader/syntax.js');
 const { Store, read } = require('./reader/store.js');
 const { ownedComments } = require('./reader/owned-comments.js');
+const { notes } = require('./reader/notes.js');
 const { schemaFor, worldFromStore, canon, Graph } = require('./graph/graph.js');
 const { SPEC_SCHEMA, SPEC_NODES, SPEC_MARKERS, SPEC_EDGES, types, typed, untyped } = require('./rules/types.js');
 const { project, rebuild, projectsBack } = require('./rules/projection.js');
@@ -107,4 +108,5 @@ module.exports = {
   pyrepr,
   ownedComments,
   quote,
+  notes,
 };

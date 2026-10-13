@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_notes.py",
+  "test": "Notes.test_note_standard_the_engine_loads_the_same_graph_with_notes_as_without",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour the engine route already had: every comment line reached Grafeo as a /* */ comment (req:3.engine-keeps-comments) before notes() was written, so a block loads the same with its notes as without"
+}

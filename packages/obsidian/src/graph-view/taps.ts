@@ -1,8 +1,8 @@
 // Taps and keys in a drawing (spec §3, tap_cycles_near): what a tap or a key lands on — a box, a written link or an
 // estimated one — and what is near enough to a tap to be what was meant: within a fingertip, the nearest first, and the
 // next of them when the same place is tapped again.
-import { TapCycle, hitAreas, nearby } from '@graph-note/core';
-import type { HitAreas, View } from '@graph-note/core';
+import { TapCycle, boundsOf, centres, hitAreas, nearby } from '@graph-note/core';
+import type { Bounds, HitAreas, View } from '@graph-note/core';
 
 /** What a tap or a key can land on: a box, by its id, or an estimated link, by its place in the drawing's estimates. */
 export type Target = { key: string } | { estimate: number } | { link: number };
@@ -12,12 +12,12 @@ const REACH_PX = 22;
 /** How close, in screen pixels, two taps must be to count as the same place, so the second takes the next thing near. */
 const SAME_PLACE_PX = 12;
 
-/** The box or link an element of the drawing belongs to, if any. */
+/** The box or link an element of the drawing belongs to, if any: a table's row is its thing's or its link's (§15). */
 export function targetAt(target: EventTarget | null): Target | null {
   const el = target as Element | null;
-  const key = el?.closest?.('g.node')?.getAttribute('data-key');
+  const key = el?.closest?.('g.node, tr[data-key]')?.getAttribute('data-key');
   if (key) return { key };
-  const edge = el?.closest?.('g.edge'),
+  const edge = el?.closest?.('g.edge, tr[data-link]'),
     estimate = edge?.getAttribute('data-estimate'),
     link = edge?.getAttribute('data-link');
   if (estimate) return { estimate: Number(estimate) };
@@ -50,6 +50,23 @@ export class Taps {
     if (!v.width || !v.height || !vb.width || !vb.height) return [];
     const per = vb.width / v.width;
     return nearby(this.areas, vb.x + (p.x - v.x) * per, vb.y + ((p.y - v.y) * vb.height) / v.height, REACH_PX * per);
+  }
+
+  /** Where the box or link with this id in the drawing is, as fractions of the drawing, to bring it into view (§25). */
+  bounds(id: string): Bounds | null {
+    this.areas ??= hitAreas(this.svgText);
+    return boundsOf(this.areas, id);
+  }
+
+  /** The middle of each box, by the key `keyOf` gives its id in the drawing: where the arrow keys walk between (§25). */
+  places(keyOf: (id: string) => string | null): Map<string, { x: number; y: number }> {
+    this.areas ??= hitAreas(this.svgText);
+    const out = new Map<string, { x: number; y: number }>();
+    for (const [id, at] of centres(this.areas)) {
+      const key = keyOf(id);
+      if (key !== null) out.set(key, at);
+    }
+    return out;
   }
 
   /** On or near several things, a tap in the same place again chooses the next of them (§3). */

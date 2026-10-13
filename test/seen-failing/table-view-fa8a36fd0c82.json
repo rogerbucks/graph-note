@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/table-view.test.js",
+  "test": "the selection on a graph drawn as a table > a row taking and losing the focus marks nothing: no fade, no kept outline, no highlight",
+  "seen_failing_first": false,
+  "evidence": "Coverage added after the fix: a188763 (wave1) made the selection's marks skip a graph drawn as a table, which has no SVG, before this test was written; the review of that fix asked for the test. Without a188763 a focus change on a row built DrawingMarks on the missing SVG and threw."
+}

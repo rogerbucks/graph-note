@@ -4,7 +4,15 @@
 // (big_export); one too large even for pages is refused, with the SVG suggested. Every page is drawn before any is
 // written, so a page that cannot be drawn leaves nothing behind.
 import { exportWithLayout, pageSvg, pngPages, pngSize } from '@graph-note/core';
-import type { ExportGo, ExportLayout, ExportScope, ExportTheme, StyleGraph } from '@graph-note/core';
+import type {
+  ExportGo,
+  ExportInfo,
+  ExportLayout,
+  ExportScope,
+  ExportTheme,
+  NoteReading,
+  StyleGraph,
+} from '@graph-note/core';
 import type GraphNotePlugin from '../main';
 import { exportFailureWords, exportRefusalWords } from '../layout-worker/refusal-words';
 
@@ -15,18 +23,24 @@ export interface ExportFile {
   bytes: Uint8Array | string;
 }
 
-/** What the image is made from: the scope, the colours, the style, where it came from, and the plan's names. */
-export interface ImageAsk {
+/**
+ * What the image is made from: the scope, the colours, the style, where it came from, and the plan's names. The style
+ * comes with the graph as read (`data`), whose values the properties it shows inline are drawn with (spec §14): one
+ * without the other is a type error, as in the core's `ExportInfo`.
+ */
+export type ImageAsk = {
   scope: ExportScope;
   format: 'svg' | 'png';
   theme: ExportTheme;
-  style: StyleGraph;
   note: string;
   date: string;
   go: ExportGo;
   /** The plan again, for a PNG split across `pages` pages: the same names, each page's among them. */
   paged: (pages: number) => ExportGo;
-}
+} & ({ style: StyleGraph; data: GraphRead } | { style?: undefined; data?: undefined });
+
+/** One graph as the note reads it. */
+type GraphRead = NonNullable<NoteReading['world'][string]>;
 
 /** The image's files, one or a page each; or why there are none, in words. Rejects only on a failure not the layout's. */
 export async function imageFiles(
@@ -39,9 +53,12 @@ export async function imageFiles(
       layoutFailed = true;
       throw e;
     });
+  // drawn with its style — nudges, arrowheads hidden and properties shown inline — and the values those properties have
+  const basics = { note: x.note, date: x.date, theme: x.theme };
+  const info: ExportInfo = x.style ? { ...basics, style: x.style, data: x.data } : basics;
   let image;
   try {
-    image = await exportWithLayout(x.scope, layout, { note: x.note, date: x.date, theme: x.theme, style: x.style });
+    image = await exportWithLayout(x.scope, layout, info);
   } catch (e) {
     // the layout worker or its engine failed: told as a limit is, with what to do; any other failure is the caller's
     if (!layoutFailed) throw e;

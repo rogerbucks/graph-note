@@ -1,12 +1,15 @@
 // Drawing a graph (spec §3): laid out by the Graphviz engine in each direction the style lists, the better fit chosen and
 // themed, as graph_svg.render does; and what tapping a box shows. The engine itself is started by engine.ts and handed in,
 // so these steps need no WebAssembly and run in any host (spec §10).
+import GraphLayout from '@graph-note/graph-spec/src/graph-layout.js';
 import type { GraphDrawing, NoteReading, Problem } from './note-reading.ts';
 import { drawingSource, layoutSource, STYLE } from './layout.ts';
 import type { LayoutSource } from './layout.ts';
 import { themed, sizeOf, choose } from './theme.ts';
 import type { Palette } from './palette.ts';
 import { nudgedSource } from './style-source.ts';
+import { arrowlessSource } from './arrows.ts';
+import { inlineSource } from './inline-properties.ts';
 
 /** Graphviz: layout source in, SVG text out. Throws when it cannot lay the source out. */
 export interface Engine {
@@ -31,15 +34,29 @@ export interface Direction {
 
 /**
  * What Graphviz is handed for a drawing: one source for each direction the style lists, in the style's order — or only
- * the drawing's own direction, when it was given one of those (spec §21, settings_formatting).
+ * the drawing's own direction, when it was given one of those (spec §21, settings_formatting; a direction nudge, §6) —
+ * or else only its diagram type's direction (§15: a tree down, the other types across).
  */
 export function directions(drawing: GraphDrawing): Direction[] {
-  const only = drawing.direction && STYLE.directions.includes(drawing.direction) ? [drawing.direction] : null;
+  const own = drawing.direction && STYLE.directions.includes(drawing.direction) ? drawing.direction : undefined;
+  const only = own ?? (drawing.diagram ? GraphLayout.typeDirection(drawing.diagram) : undefined);
   const keys = drawing.boxes.map((b) => b.key);
-  return (only ?? STYLE.directions).map((rankdir) => ({
+  return (only ? [only] : STYLE.directions).map((rankdir) => ({
     rankdir,
-    // the style graph's nudges written in (§6); with none, the source the Python library gives, byte for byte
-    dot: nudgedSource(drawingSource(drawing, rankdir as 'LR' | 'TB'), drawing.nudges ?? [], keys),
+    // the diagram type chosen (§15), the style graph's arrowheads hidden (§15), properties shown (§14) and nudges written
+    // in (§6); with none of them, the source the Python library gives, byte for byte
+    dot: nudgedSource(
+      inlineSource(
+        arrowlessSource(
+          GraphLayout.typedSource(drawingSource(drawing, rankdir as 'LR' | 'TB'), drawing.diagram, STYLE),
+          drawing.arrowless ?? [],
+        ),
+        drawing.inline,
+      ),
+      drawing.nudges ?? [],
+      keys,
+      drawing.diagram,
+    ),
     src: layoutSource(drawing, rankdir as 'LR' | 'TB'),
   }));
 }

@@ -47,7 +47,17 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   (`setProperty` finds no pattern for a name that is not written), the host saying why in these words. A name only
   suggested is also left out of the names completed while typing and of the near misses guessed (`help.ts`, `estimates.ts`).
 - `schema-checks.ts` — the warnings for types a schema does not declare.
-- `note-reading.ts` — the types reading gives: `NoteReading`, `GraphDrawing`, `Problem`, `Block`, `Box`, `Link`.
+- `note-reading.ts` — the types reading gives: `NoteReading`, `GraphDrawing`, `Problem`, `Block`, `Box`, `Link`, and
+  `ThingNote`, a note on a thing or a link.
+- `notes.ts` — notes on things and links (editor spec §24): `addNotes` reads each data block holding `///` with the
+  graph library's `notes`, which the Python reader is held to by one table, and puts each note on the box or link drawn
+  below it (`Box.note`, `Link.note`: its CommonMark text, its summary, its block and its `///` lines). It reads the
+  block as the reader read it (`readBlocks`' `read`: with the suggested names in, and with what could not be read left
+  out), so a thing drawn under a suggested name keeps its note. A note above a line holding more than one thing belongs
+  to none of them, and is a warning whose fix says to put the thing on its own line; each note on what the reader left
+  out is a warning that it is not shown, found, when the block cannot be read whole, as each run of `///` lines directly
+  above a line where an item left out begins (`read`'s `dropped`; every item of a block left out whole); a note on a thing already noted where it is first written is a hint naming it, the
+  first note kept. The layout source never reads a note.
 - `drawing.ts` — `readNote`: what a note's graph blocks draw, built from the modules above.
 - `estimates.ts` — near misses drawn as guesses; never a guess of a thing drawn under a suggested name, whose name nobody
   has written (a fix changing a word to it would write it unaccepted).
@@ -103,8 +113,38 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   its theme variables; the fixed light and dark entries, for a host that draws the SVG as an isolated image (a Claude
   Code pane), are worked out to hex and paint their own page, with the locked contrast held; the system entry carries
   both in the drawing's own style sheet, `prefers-color-scheme` choosing, for a host that cannot say which it shows.
-- `hits.ts` — what a tap lands on or near.
-- `zoom.ts` — zoom, pan and full screen.
+- `hits.ts` — what a tap lands on or near, and where a box is (`boundsOf`, as fractions of the drawing; `centres`).
+- `zoom.ts` — zoom, pan and full screen; `reveal` brings a box into view, centred, and leaves one already in view alone;
+  `aim` says where the view would go to do so, keeping the zoom unless it is below a scale given (§25); `keepClear` keeps
+  a strip at the viewport's foot clear, as a sheet covers it, letting the drawing pan up into it by as much and no more.
+- `zoom-across.ts` — `AcrossZoom`, a `Zoom` that only adds to it: a wide drawing fitted to its height, shown from its
+  start and moved across only by one finger, until it is zoomed in; a pinch as any drawing's (a tree, flow or timeline
+  on a phone, §15 wide_types_phone).
+
+**Finding your way round a large graph (spec §25)**
+
+Pure and host-free: each says only what to keep at full strength, hide or bring forward, so a host changes the drawing
+and nothing else (untangle_data_untouched). Nothing here is written to a note or saved.
+
+- `focus.ts` — focus on a selection: `focusOf` keeps a thing, its links and the things at their other ends (to two steps
+  by the setting), or a link and the two things it joins; `highlightOf` is what the pointer, keyboard focus or a touch's
+  tap marks; `FocusState` is the selection, cleared by an empty tap or Escape; `edgesOf` numbers the drawing's links as
+  its SVG does (written ones, then the estimates of a name), `estimateEdge` finds one. `FADE` and `KEPT` are how a faded
+  and a kept thing are drawn, by strength and outline, never by colour; `focus.test.js` holds `FADE.text` to 4.5:1 in
+  both themes, and the host's `styles.css` to these numbers.
+- `untangle.ts` — `neighbourhood` (a thing and what is within one or two steps, filtered to), `kindLegend` and
+  `LegendFilter` (choosing a kind or relationship type brings it forward, again hides it, once more puts it back),
+  `shortestPath` and `pathWords` (fewest links, either way; or that there is none), `find` (by name or property),
+  `nextAlong` (an arrow key walks to the neighbour in that direction), `emphasis` (a path over the selection over the
+  legend), and `Untangle`, which holds all of it for one drawing and works it out into `layers`: what is kept and what is
+  hidden.
+- `details-nav.ts` — finding your way from a thing's details: `linkGroups` (its links by relationship type and direction,
+  in words with a count: "is reported to by Bob and Cy (2)", the reverse reading the schema's or the library's guess, a
+  thing linked twice the same way named once with each of its links),
+  `Trail` (the things chosen from them, back and forward), `glideAt` and `MOVE_MS` (the brief eased move to a chosen
+  thing), `READABLE_SCALE` (below it a thing's words are under 11 pixels, too small to read), `pointerTo` (the arrow at
+  the view's edge pointing to a selection out of sight), and `sheetLimit` and `coverOf` (how tall the details sheet may
+  be, and how much of a viewport it covers).
 
 **Editing**
 
@@ -163,8 +203,11 @@ style block beside it: `// graph: trip_style · STYLE trip`. `blocks.ts` knows o
 it. A graph line that says STYLE but names no graph is a problem, never data.
 
 - `style-graph.ts` — what a style graph holds once read (`StyleGraph`: nudges, shows, looks, each view's fade or hide,
-  how each view was shown, the direction) and the words it allows: the four nudge words, the lines, the formats, fade or
-  hide, and the colours, which are only the locked style's hues by name (`STYLE_HUES`).
+  how each view was shown, the direction, where arrowheads are hidden, the diagram types chosen) and the words it allows: the four nudge words, the
+  lines, the formats, fade or hide, on or off (`INLINE`), show or hide (`ARROWHEADS`), and the colours, which are only
+  the locked style's hues by name (`STYLE_HUES`). A Show switches a property on or off inline for a kind, a thing or a
+  relationship type's links, in the whole graph or one view; an Arrows hides or shows arrowheads for every link or one
+  type's, in the whole graph or one view.
 - `style.ts` — `readStyle`: every style block of a graph read with the data's own reader (`readBlocks`, told which blocks
   to read), so what cannot be read is a problem on its line and the rest is used; never a throw, and a style too large
   to read is not read (the locked style is kept, and why is said). `lookOf` is the look of a thing or link in a view or
@@ -184,16 +227,55 @@ it. A graph line that says STYLE but names no graph is a problem, never data.
   the rename comes first, then what is still absent is said.
 - `style-conflicts.ts` — the things checked against each other: two directions, beside and before on one pair, a thing
   in two groups, a loop of befores, a view set to both fade and hide or saved twice, a colour given two meanings in one
-  view or path. The first written is kept, the later left out, each with a problem.
+  view or path, a property switched both on and off, or arrowheads both hidden and shown, for one place in one view. The
+  first written is kept, the later left out, each with a problem.
 - `style-source.ts` — nudges applied after the layout source is made (`nudgedSource`: beside a `rank=same` line, before
   an invisible link after every drawn one, group a labelled cluster), and direction set on the drawing (`nudgedDrawing`).
   With no nudges the source is returned unchanged, byte-identical to the Python library's. The Python library honours
   nudges the same way (`graph_svg.nudged_source`, its style read by `gql_profile.read_style`), held to the core byte for
   byte on `python/graph_spec/tests/nudge_cases.json` by `test/layout-parity.test.js` (python_honours_nudges).
-- `style-edit.ts` — `styleEdit`: a nudge, a look, a view's fade or hide, or how a view was shown, written as text into the
-  graph's style block (made after the graph's last block when there is none); a view's setting changed in place, never
-  written twice; never a data block touched. A styled hue is drawn with `theme.ts`'s `hueColour`, the same blends as a
+  `styledDrawing` is the drawing as its style draws it in a view or the whole graph, as every host draws a graph, a view
+  or an export: its direction and nudges, the links it draws without arrowheads, and the properties it shows inline.
+- `arrows.ts` — arrowheads hidden or shown (§15): `arrowsShown` (the most particular choice — a view's over the whole
+  graph's, then a type's over every link's — shown when none), `arrowlessLinks` (the links a drawing draws without them,
+  guesses included), `linkTypes` (the type each link is styled by: a guessed type's link by the type it is taken for,
+  for its arrowhead and its properties alike) and `arrowlessSource` (`dir=none` written on those links). Only the arrowhead changes, so each link
+  keeps its reading when tapped and in the text version (direction_never_lost).
+- `inline-properties.ts` — properties shown inline (§14): `inlineRows` (each box's and link's rows, its most particular
+  Show deciding — a view's over the whole graph's, then a thing's over its kind's), `valueText` (a value said as the
+  reader keeps it), and `inlineSource` (the rows below a box's text or a link's reading, at the kind caption's size, in
+  the box's text colour or the link's label colour; past `INLINE_ROWS`, whole properties and how many are hidden). The
+  Python library draws both the same way (`graphspec/style/arrows.py`, `inline.py`), held to the core byte for byte on
+  `python/graph_spec/tests/style_cases.json` by `test/layout-parity.test.js` (arrows_both_renderers).
+- `style-edit.ts` — `styleEdit`: a nudge, a look, a view's fade or hide, how a view was shown, a property switched on or
+  off inline, arrowheads hidden or shown, or the diagram type chosen, written as text into the graph's style block
+  (made after the graph's last block when there is none); a view's setting, or a choice of properties, arrowheads or
+  diagram type for one place, changed in place, never written twice; never a data block touched. A styled hue is drawn with `theme.ts`'s `hueColour`, the same blends as a
   kind's, so it meets the locked contrast.
+
+**Diagram types (spec §15)**
+
+A graph is drawn as a network unless its style graph chooses a type: `(d1:Diagram {type: 'tree', relationship:
+'MANAGES'})`, for the whole graph or, with `view`, for one view (type_remembered). Style-graph.ts holds the seven
+`DIAGRAM_TYPES`; style-checks.ts and style-conflicts.ts check a Diagram's words and allow one type for each place.
+
+- `types-shape.ts` — the shape a type is judged on (`shapeOf`: the things, their kinds and first dates, the links, and
+  the groups the nudges draw), with its first loop and its centre.
+- `types.ts` — which types fit a drawing's shape, and why each that does not (`typeFits`): a network always; a tree
+  along one relationship with at most one parent each (a parent linked twice is one) and no loop (none chosen: the
+  relationship with the most links that makes one, of two with as many the first by name); a flow, links with no loop;
+  a radial drawing, three things or more joined to the centre, the thing with the most links, and no group written; lanes,
+  every thing of one kind and every group of one kind, two kinds or more, each group drawn inside its lane and never by
+  the nudges again; a timeline, every thing carrying a date, a rank for each day; a table, any things. `suggestType` gives the best fit and why, never
+  drawn unless chosen; `diagramFor` the type drawn: the chosen one while it fits, else a network, with why and
+  `nearestType` (type_stops_fitting), and the plan Graphviz lays it out by; `diagramOffer` all three at once, for a
+  host's card, a tree judged along the relationship chosen for it. `styledDrawing` puts that plan on the
+  drawing; render.ts writes it in first (graph-layout.js `typedSource`) and lays a tree out down and the other types
+  across, unless a direction is set. The Python library judges and lays out alike (`graphspec/style/diagram_types.py`),
+  held byte for byte on `python/graph_spec/tests/type_cases.json` by `test/layout-parity.test.js`.
+- `types-table.ts` — the table, which the host draws as a plain table (`tableOf`: Thing, Kind and each property, and
+  each link); the way in to a graph of more than `LARGE_GRAPH` things (`wayIn`, large_way_in); and which types scroll
+  one way only on a phone (`scrollsOneWay`).
 
 **Views (spec §2, §7)**
 
@@ -236,7 +318,8 @@ SVG or PNG (`EXPORT_FORMATS`), of the whole diagram or of a view, in the fixed l
 a GQL block, CSV or GraphML (`DATA_FORMATS`), each read back into the very things and links exported.
 
 - `export-scope.ts` — `exportScope`: what an export holds. The whole diagram is the graph as drawn. A view is put to the
-  graph as `evaluate` puts it and holds only its things and the links between them, in the graph's order, with a guess (an
+  graph as `evaluate` puts it and holds only its things and the links between them, in the graph's order, each saying
+  which written link it is (`edge`, so its properties are its own), with a guess (an
   estimated link) still a guess at its new place; with the faded context asked for it holds the whole graph and lists what
   is outside the view (`faded`: things by key, links by edge number). An empty graph or view is `empty`, with `why`.
 - `export-marks.ts` — fading and looks written into the SVG (`marked`): an opacity in the style attribute of the group of
@@ -291,17 +374,92 @@ a GQL block, CSV or GraphML (`DATA_FORMATS`), each read back into the very thing
 - `export-write.ts` — `writeSafely`: the bytes go to a temporary file given by the host's `write`, then `rename` into place;
   on any failure the temporary file is `remove`d, the target is never touched, and the result says why in a sentence.
 
+**Proposals (spec §17)**
+
+A proposal is changes to a graph that somebody other than the person reading proposes: an AI's answer (§19), a graph
+step's output (§20), or anyone. It is data, whatever its source; nothing here knows where it came from. It is shown over
+the graph and never written until a person accepts a change, and then written as an ordinary edit.
+
+- `proposals.ts` — the data: `makeProposal` checks a proposal (who proposed it, the state of the graph it was made against,
+  at least one change, each change written as a block writes it) and gives each change an id (`c1`…) and a group; `Provenance`
+  (who, when, what it read, the basis); a change is an addition (one item of GQL), a change of a property (`set`) or a
+  removal of a thing or a link; `thingChange` and `linkChange` build additions from parts for a source whose answer is data;
+  `groupsOf` and `provenanceLines`; `BIG_PROPOSAL`, above which a proposal is reviewed in groups.
+- `proposals-basis.ts` — `basisOf`: the state of a graph as graph-spec's change sets name it (`against`), and `staleness`,
+  whether the graph has moved since.
+- `proposals-text.ts` — a proposal as graph-spec's change set (§24 H1), with what that has no line for as comments its readers
+  pass over (who proposed it, what it read, removals, ids, groups, reasons, and each decision a person made). `changeSetText`
+  writes it, `readChangeSet` reads it back whole; so the change set in the note is the record of what was decided.
+  `recordDecisions` records a decision by putting one line above the change (and the `// basis now:` line), keeping every
+  other byte of the block, an author's comments among them.
+- `proposals-apply.ts` — one change written as text on the blocks' texts (an addition after the graph's last block of data, a
+  property changed where it is written, a removal of the item that wrote the thing or link), `notTaken` (a change read back to
+  see it took effect) and `newProblems` (what a change leaves wrong that was not before). Not exported by the entry: only a
+  review writes a change.
+- `proposals-marks.ts` — which boxes and links each change adds, changes or removes (`MARK_WORDS` says it in words, never by
+  colour alone), and each change read back in plain English as the text pane reads a line (`readBack`).
+- `proposals-review.ts` — `ProposalReview`: `show` (the proposal laid over the graph, rows, groups, marks, provenance, whether
+  the graph has moved; writes nothing), `accept` and `reject` (a person, by name, one change, some, a group or all; accepted
+  changes are written through `PaneSession`, so they are checked as any edit is, then read back, and refused whole if one does
+  not take effect or leaves a new problem; a graph that has moved is refused until its notice is seen), and `undo`. It works
+  on the note's text and hands the new text back; the host writes it. The decision is recorded in the note's change set.
+- `proposals-shown.ts` — the shapes a review hands a host: `ProposalShown`, its `ChangeRow`s, who decides (`Person`), which
+  changes (`Which`) and what came of it (`Reviewed`).
+
+**Working with an AI (spec §19)**
+
+The core reaches no network: a send goes only through the transport a host hands in, and only once the user has seen
+exactly what goes and said yes to it. Its answer comes back as a proposal (§17), never an edit.
+
+- `ai.ts` — the send: `prepareSend` makes the exact request for what the user chose, or refuses (AI off, no such model,
+  an address that cannot be used, above the model's ceiling, at the highest classification, or holding a credential);
+  `confirmSend` is the user's yes to exactly that request, good for one send; `sendPrepared` sends it through the host's
+  `Transport`, putting the key from the host's secret store in its header only as it goes and taking it out of anything
+  said before it is cut short, and gives back a proposal or why there is none, with a `SendRecord` of the send either
+  way: never the text sent, only its SHA-256 digest and size, its scope (the kind of choice and the counts), the model's
+  name and address, the time and the outcome. The model is copied as it is prepared, so what is sent is what was shown.
+  The address and the whole message are looked over for credentials before they are put in the request.
+- `ai-digest.ts` — `sha256` and `utf8Size`, written here, as the core has no host's library; a lone surrogate is taken
+  as U+FFFD, as a UTF-8 encoder sends it.
+- `ai-choice.ts` — which AI may be asked: `aiReady` (off until `aiUse` is on and a model has a name, a model and a
+  usable address), `endpointProblem` (a host written in letters, digits, dots, hyphens, colons and brackets only, so it
+  cannot be told apart from another; no user name, password, query string or fragment; plain http only to localhost,
+  127.x.x.x or [::1] exactly, read with the runtime's own URL; any other by https), and `modelChoices` (the host's own
+  AI first, where it has one; then the models set up for the purpose; then the rest; none while AI is off).
+  `AI_PURPOSES` are the spec's purposes.
+- `ai-ceiling.ts` — `clearance`: a note with no classification counts as `aiUnlabelled`, the most sensitive level
+  until the user chooses another (unclassified_strictest), so by default it goes to no model, and the refusal says to
+  give it a classification or choose a lower level under Unlabelled notes count as; a note above a
+  model's ceiling is not sent to it, saying why and naming the models cleared for it; nothing at the highest
+  classification set goes to any model; an unknown classification counts above every ceiling. `credentialsIn` names, by
+  common patterns, the kinds of credential a text holds (a private key, an access key, an API key, a token, a password
+  or secret by its name, even at the end of a snake_case or camelCase one, though a bare `key` is an ordinary word and
+  only a name ending in `_key` or `Key` is a secret's, a card number, or the key of any model set up), never
+  the text.
+- `ai-scope.ts` — `aiScope`: what is sent of a note, as the user chose (the whole graph, a view, or things by name),
+  written out again as GQL from the graph as read: each thing with its kinds and properties, and the links between the
+  things chosen. Nothing else of the note goes: no prose, no other graph, no comment.
+- `ai-request.ts` — the request body, in the chat completions shape local servers and most services take, with the
+  instructions that ask for changes as JSON (`INSTRUCTIONS`); `readReply` and `changesIn` read an answer back, the whole
+  answer refused if one change cannot be read. A model's reason is kept as plain text, each Markdown and HTML mark
+  escaped, so it never renders as an image, a link or HTML where `///` notes are rendered.
+- `ai-answer.ts` — `proposalFrom`: the changes made into a proposal from the model, against the state of the graph that
+  was sent, naming the send's record; `noteWithProposal`: the note with its change set written after the graph's last
+  block, the graph untouched.
+
 **Settings (spec §21)**
 
 - `strictness.ts` — the three departures from standard GQL the reader reads as meant (each problem says which, in
   `Problem.departure`), what Standard, Forgiving and Simplified make of them, converting a note back to standard GQL,
   checked before it is written, and the standard text an engine or an export is given whatever the level.
 - `settings.ts` — every option with its name, sentence, choices and default (`OPTIONS`, `DEFAULT_SETTINGS`), and saved
-  settings read back with anything unknown, out of range or secret left out (`settingsFrom`). An AI model keeps the
-  name of its key in the host's secret store (`keyName`), never the key. The Export section holds the export theme (light
+  settings read back with anything unknown, out of range or secret left out (`settingsFrom`). AI is off until `aiUse`
+  is turned on; `aiUnlabelled`, the level a note with no classification counts as, is one of `classifications`, the
+  most sensitive until chosen. An AI model keeps the name of its key in the host's secret store (`keyName`), never the key. The Export section holds the export theme (light
   or dark), whether an export saved in the vault gets a companion note, the folder exports go to (`vaultFolder` keeps it
   inside the vault; empty is next to the note) and the classification above which an export asks first (one of
-  `classifications`, the lowest until chosen).
+  `classifications`, the lowest until chosen). The Drawing section also holds how far focus reaches from a selected
+  thing (`focusDepth`: `one`, the default, or `two`; `depthOf` reads it).
 
 ## Command-line tools, `bin/`
 

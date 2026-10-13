@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/table-view.test.js",
+  "test": "the selection on a graph drawn as a table > Escape clears the selection and closes the details",
+  "seen_failing_first": false,
+  "evidence": "Coverage added after the fix: Escape on a table goes through Selection.clear and the details' close, which work once a188763 (wave1) stopped select() reading the missing SVG; that fix came before this test, which the review of it asked for."
+}

@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/proposals-changes.test.js",
+  "test": "the value of a change of a property > is refused when it carries more than the property it is for, however it is written",
+  "seen_failing_first": false,
+  "evidence": "Written after its code, on purpose: the injection guard (isOneValue in proposals.ts) came in the previous commit, f4d2aac, where its probes were put into an existing test, which the record does not count as new. This is the guard's own test, which could not fail against a parent that already holds the guard; the review reported that these probes wrote extra content before the guard."
+}

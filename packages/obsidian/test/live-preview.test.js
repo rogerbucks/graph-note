@@ -61,6 +61,26 @@ describe('views and style blocks in the editing view', () => {
   });
 });
 
+describe('a change set in the editing view', () => {
+  // a proposal (editor spec §17) is drawn over the graph blocks of its note, so its card redraws with them
+  test('gets the plugin’s own widget, drawn as a proposal over its graph with the changes to decide, in Live Preview only', async () => {
+    const changes = `// graph: reader · CHANGE SET cs1 · against 0123456789abcdef · by ada\n(small:Option {name: 'Small reader'})`;
+    const note = ['# Reader', '', fence(READER), '', fence(changes), '', fence(QUERY), ''].join('\n');
+    const env = await load({ files: { [PATH]: note } });
+    try {
+      const ws = widgets(editorState(env, note));
+      assert.equal(ws.length, 2, 'the graph and the change set; a plain query is left to Obsidian');
+      assert.deepEqual(widgets(editorState(env, note, false)), []);
+      const dom = ws[1].widget.toDOM();
+      env.doc.body.appendChild(dom);
+      await until(() => !!dom.querySelector('.graph-note-proposal'));
+      assert.equal(dom.querySelectorAll('li.graph-note-proposal-row').length, 1);
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
 describe('the editing view draws graph blocks with its own widget', () => {
   test('in Live Preview each graph block is one block widget over its fences; a query is left to Obsidian', async () => {
     const env = await load({ files: { [PATH]: NOTE } });

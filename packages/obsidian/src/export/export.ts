@@ -136,11 +136,14 @@ async function exporting(plugin: GraphNotePlugin, ask: ExportAsk): Promise<Expor
       ...(data.faded ? { faded: { things: data.faded.things.length, links: data.faded.links.length } } : {}),
     };
   } else {
+    // the style goes with the graph as read, whose values the properties it shows inline are drawn with
+    const data = reading.world[ask.graph];
+    const styling = data ? { style: readStyle(texts, ask.graph, reading).style, data } : {};
     const made = await imageFiles(plugin, {
       scope,
       format: ask.format,
       theme: ask.theme,
-      style: readStyle(texts, ask.graph, reading).style,
+      ...styling,
       note: ask.path,
       date,
       go,

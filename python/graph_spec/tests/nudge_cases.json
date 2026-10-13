@@ -1,5 +1,5 @@
 {
-  "about": "Graphs with nudges (editor spec §6: four_nudge_words, nudge_problems, python_honours_nudges; §2: broken_style_block), drawn the same by the plugin's core and by graph_svg.py. Each case is a note's gql blocks, each block a list of lines: data blocks, and style blocks that nudge them. For every case both readers give the same problems reading the data, the same problems reading each style, and, for every graph drawn, the same Graphviz source in each direction laid out, nudges written in, byte for byte. The expected answers are the core's, run live: packages/core/test/layout-parity.test.js holds graph_svg.py to the core on these cases, and tests/test_graph_svg_nudges.py does the same from the Python side. Style blocks here hold nudges only: Show, Look, ViewStyle and Shown are drawn by the plugin alone, so graph_svg.py does not read them.",
+  "about": "Graphs with nudges (editor spec §6: four_nudge_words, nudge_problems, python_honours_nudges; §2: broken_style_block), drawn the same by the plugin's core and by graph_svg.py. Each case is a note's gql blocks, each block a list of lines: data blocks, and style blocks that nudge them. For every case both readers give the same problems reading the data, the same problems reading each style, and, for every graph drawn, the same Graphviz source in each direction laid out, nudges written in, byte for byte. The expected answers are the core's, run live: packages/core/test/layout-parity.test.js holds graph_svg.py to the core on these cases, and tests/test_graph_svg_nudges.py does the same from the Python side. Style blocks here hold nudges only: the properties a Show shows inline and the arrowheads an Arrows hides have their own table, style_cases.json, and Look, ViewStyle and Shown are drawn by the plugin alone.",
   "cases": [
     {
       "name": "beside: two things put on one rank",
@@ -281,6 +281,23 @@
           "(park)-[:NEAR]->(lake)"
         ],
         ["// graph: trip_style · STYLE", "(n1:Nudge {word: 'beside', thing: 'home', other: 'cafe'})"]
+      ]
+    },
+    {
+      "name": "a nudge with a key its kind does not know: the key is the problem, with the nearest as its fix, and the nudge is left out, not told what it lacks",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'The park'}),",
+          "(cafe:Cafe {name: 'Cafe'}),",
+          "(home)-[:NEAR]->(park)"
+        ],
+        [
+          "// graph: trip_style · STYLE trip",
+          "(n1:Nudge {word: 'beside', thing: 'home', othr: 'park'}),",
+          "(n2:Nudge {word: 'before', thing: 'cafe', other: 'home', note: 'why'})"
+        ]
       ]
     }
   ]

@@ -29,7 +29,9 @@ and no module requires one that requires it back.
 - **`src/reader/`** — the document profile reader (`gql_profile.py`): `profile-error.js`, `whitespace.js` (whitespace
   as GQL names it, the one set every reader uses), `tokens.js` (the header line and tokens), `parser.js` (one block's
   statement), `syntax.js` (a block's syntax alone), `owned-comments.js` (the `///` notes and `//@` lines each element owns, §26 and §27, held with the Python reader to
-  `test/owned-comment-cases.json`), `store.js` (the store, its corrected text — the colons and commas the reader
+  `test/owned-comment-cases.json`), `notes.js` (each note's text and summary, and the lines holding more than one
+  element that a note above belongs to none of: editor spec §24, held with the Python reader to the same table),
+  `store.js` (the store, its corrected text — the colons and commas the reader
   read in, written where it read them, as `store.py` writes them — and `read`).
 - **`src/graph/`** — `graph.js`: the plain graph the rules run on, the world made from a store, and `canon`.
 - **`src/rules/`** — the spec's rules (`graph_rules.py`): `types.js` (§5), `projection.js` (§18), `certainty.js` (§20),
@@ -47,7 +49,8 @@ and no module requires one that requires it back.
 
 - **`src/graph-layout.js`** — the Graphviz layout source, byte-identical to `graph_svg.py`, with its optional
   `suggested` keys: boxes drawn under a suggested name, dashed and labelled from the style's `suggested_style` and
-  `suggested_label`. Still one UMD file.
+  `suggested_label`; and `typedSource`, that source laid out as a diagram type by the core's plan (editor spec §15),
+  byte-identical to the Python library's `diagram_types.typed_source`, with `typeDirection`. Still one UMD file.
 - **`src/graph-spec.d.ts`**, **`src/graph-layout-types.d.ts`** — the types the TypeScript in `packages/core` uses.
 - **`bin/graph-spec-check-node.js`** — the Node adapter: one JSON request on stdin, one answer on stdout. The vault's
   conformance suite and the Python parity tests run the checker through it.

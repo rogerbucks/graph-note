@@ -15,6 +15,7 @@ import { exportScope } from '../packages/core/src/export-scope.ts';
 import { readBack } from '../packages/core/src/help.ts';
 import { drawingSource } from '../packages/core/src/layout.ts';
 import { details } from '../packages/core/src/render.ts';
+import { linkGroups } from '../packages/core/src/details-nav.ts';
 import { DEFAULT_SETTINGS } from '../packages/core/src/settings.ts';
 import { toStandard } from '../packages/core/src/strictness.ts';
 import { LAYOUT_LIMITS, tooLarge } from '../packages/core/src/layout-limits.ts';
@@ -65,11 +66,12 @@ function computed({ file, text }) {
     detail: graphs.flatMap(([g, d]) =>
       d.boxes.flatMap((b) => {
         const x = details(reading, g, b.key);
+        // the links as the details list them: grouped by type and direction, in words (§25, linkGroups)
+        const groups = linkGroups(reading, g, b.key);
         return [
           `${b.key} | text: ${x.text}`,
           `${b.key} | kind: ${x.kind}`,
-          ...x.out.map((l) => `${b.key} | Links out: ${l.reading} → ${l.text}`),
-          ...x.in.map((l) => `${b.key} | Links in: ${l.text} ${l.reading} this`),
+          ...groups.map((l) => `${b.key} | Links ${l.direction}: ${l.words}`),
         ];
       }),
     ),

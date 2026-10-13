@@ -10,7 +10,8 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 
 **Numbers.** Every item has a number in its line: its section's letter, a dash and two digits, such as `V-03`, the
 third item of Viewing. The letters are B Before, V Viewing, Z Zoom, P The edit pane, I Editing in place and the
-inspector, S The style graph, W Views, D Parked for later, T Walked paths, X Export, C Settings, and A Accessibility.
+inspector, S The style graph, W Views, D Parked for later, T Walked paths, X Export, C Settings, A Accessibility, F Focus
+and untangle, R Proposals, G Details and the sheet, E Diagram types, and U AI models.
 **A number never changes once given**, whatever happens to the item's words or its place; a removed item's number is
 never used again, and **a new item takes the next number in its section**. Each item after Before has a note in
 `test-vault/Device checks/` that shows the case in Obsidian, found by its number (`test/device-check-notes.test.js`
@@ -288,6 +289,126 @@ holds the two together).
       box's details or an estimate's reason.
 - [ ] **A-02** With VoiceOver: the drawing is described as a list of sentences, and a new problem typed in the pane is announced
       without the focus moving.
+
+## Focus and untangle — spec §25
+
+- [ ] **F-01** Tap a box: it, its links and the boxes at their other ends stay filled, with the heavier outline; every other box
+      becomes an empty outline and its words stay as easy to read; nothing moves or disappears. Tap empty space, or press
+      Escape: everything is back as it was. Desktop and phone, light and dark (slice 3, focus_neighbours, focus_readable,
+      focus_cleared).
+- [ ] **F-02** Tap a link: it and the two boxes it joins stay at full strength and the rest fade. Settings › Graph Note › Focus
+      reaches › Two steps: tap a box and the boxes two links away stay at full strength too (slice 3, focus_link,
+      focus_depth).
+- [ ] **F-03** Mac, pointer: point at a box and it gets a glow round its outline and its words are underlined; point at a link and
+      the link and its two boxes do; point at a faded box while one thing is selected and it comes forward until the pointer
+      leaves. Nothing in the drawing shifts or changes size (slice 3, hover_highlight, hover_still).
+- [ ] **F-04** Without a pointer: on the phone, a tap that selects a box gives it the same glow and underline, and they stay until
+      something else is chosen; on a keyboard, Tab to a box or a link gives them too (slice 3, hover_not_alone).
+- [ ] **F-05** Open a box's details and press Show only this and its neighbours: the other boxes and their links disappear, and a
+      banner names the box and the steps. Widen to two steps and Narrow to one step change it; Show the whole graph brings
+      everything back (slice 3, untangle_neighbourhood).
+- [ ] **F-06** Press Filter by kind or link: each kind and relationship type is a button with its count. Choose one: it comes
+      forward, the rest fade, and the button says "in front". Choose it again: it is hidden, struck through, and says
+      "hidden". Once more: it is back (slice 3, untangle_legend).
+- [ ] **F-07** Open a box's details and press Shortest path to another thing, then tap a second box: the path stays at full strength
+      and the banner reads out the boxes along it. With a box that has no route to it, the banner says there is none. Clear
+      the path puts the focus back (slice 3, untangle_path).
+- [ ] **F-08** Zoom in far, press Find a thing and type part of a name or of a property's value: the matches are listed with
+      their kind. Choose one: its details open and it is brought into view. Escape closes the search and returns to its
+      button (slice 3, untangle_find).
+- [ ] **F-09** Select a box, then press the arrow keys: the selection moves along a link to the neighbouring box in that
+      direction, and every neighbour can be reached by some arrow. Nothing in the note changes in any of this (slice 3,
+      untangle_keyboard, untangle_data_untouched).
+
+## Proposals — spec §17
+
+- [ ] **R-01** Phone: a change set proposed against a graph (`// graph: reader · CHANGE SET …`), in Live Preview. The changes are
+      listed in a sheet at the bottom of the screen, one to a row, each in plain English with its own Accept and Reject,
+      and every button is easy to hit with a thumb. The drawing above marks what is added, changed and removed, in words
+      as well as in its outlines. Accept one change: only it is written into the graph, and its row says it was accepted.
+      Reject another: the graph block is the same, and the change set records it. Undo takes the last decision back. A
+      graph changed since the proposal was made shows a notice first, and Accept stays off until the notice is marked
+      read (slice 3, proposals_phone, proposal_provenance, person_decides).
+
+## Details and the sheet — spec §25
+
+- [ ] **G-01** Tap a box with several links of one type: its details list them by type and way, in words, each group once
+      with a count where there are several, such as "is answered by Kindle and Tablet (2)". Each name is underlined; tap
+      one and it becomes the selection, its details open and the drawing glides to it at the same zoom. Zoomed far out,
+      it is brought up to a size that can be read (slice 3, details_links_listed, details_choose_moves).
+- [ ] **G-02** Settings › Accessibility › Reduce motion on the Mac, or Reduce Motion on the iPhone: choosing a linked thing
+      jumps straight to it, with no glide. With it off, the glide is brief, and the box is marked selected and named in
+      the details as the glide starts (slice 3, details_move_motion).
+- [ ] **G-03** Choose three things in turn from the details, then press Back twice and Forward once: each step returns to
+      the thing it names, and tapping a box in the drawing starts the trail again (slice 3, details_trail).
+- [ ] **G-04** Select a box, then zoom in until it is out of sight: a round arrow at the edge of the drawing points to it.
+      Tap the arrow: the box comes back into view and the arrow goes (slice 3, selection_pointer).
+- [ ] **G-05** iPhone, reading view and Live Preview, a card taller than the screen: tap a box near the foot of the screen.
+      The details open as a sheet at the foot of the screen, over the card and as wide as it, and the drawing moves up
+      so the box sits above the sheet. Scroll the note: the sheet stays where it is; scroll the card off the screen: the
+      sheet goes, and comes back with the card. Same on the Mac (slice 3, details_on_screen, sheet_pinned,
+      sheet_keeps_thing_clear).
+- [ ] **G-06** Press the arrow in the sheet's header: it shrinks to a bar with the box's name and kind, and the drawing
+      settles; press it again and the full details return, scrolling inside the sheet, which never covers more than
+      about half the screen. Minimise it, close it and tap another box, in this card or another: it opens minimised
+      (slice 3, sheet_min_max, sheet_state_remembered).
+- [ ] **G-07** Close the sheet with its x, with Escape, and by tapping empty space in the drawing: each closes it and clears
+      the selection. In Live Preview, with the sheet open, click into the note's text and type, Escape and the arrow
+      keys included: every key reaches the note. With VoiceOver, the arrow and the x are read as "Minimise details" and
+      "Close details", and Tab reaches both (slice 3, sheet_closed, sheet_reachable).
+
+## Diagram types — spec §15
+
+- [ ] **E-01** Diagram type on a card lists Network, Tree, Flow, Radial, Lanes, Timeline and Table: each that fits can be
+      pressed, each that does not is greyed with why beside it, and one says "suggested". The card says "Drawn as a
+      network" until a type is pressed. Press Tree: a Diagram is written into the style block, never the data, and the
+      card redraws top to bottom (slice 3, diagram_type_set, type_only_when_fits, suggest_type, type_remembered).
+- [ ] **E-02** Press each type in turn, in light and dark: every box keeps its kind's colour and every link its reading's,
+      the words are the same sizes, and all read as clearly as in the network; a table's rows read the same way
+      (type_one_look).
+- [ ] **E-03** In each type, the table among them: tap a box or a row for its details; Edit here, then change a property in
+      the inspector; zoom in and out with the buttons and a pinch, Fit, and Full screen. Each works as in the network
+      (type_one_way_to_work).
+- [ ] **E-04** On the tree, give a thing a second parent: the card says the graph no longer fits a tree and why, draws it as a
+      network, and offers Use flow; press it, and the style block now says flow (type_stops_fitting).
+- [ ] **E-05** Phone: a wide flow, a wide tree and a wide timeline each show at a readable size, fitted top to bottom; a finger
+      moves the drawing sideways only, and up and down still scroll the note (wide_types_phone).
+- [ ] **E-06** A graph of 51 things says it has too many to read in one drawing and offers Show as table and a view; Show as
+      table draws it as a table (large_way_in).
+
+## AI models — spec §19
+
+Run these on the Mac and the phone with aeroplane mode off, and a model of your own to send to: a local one (Ollama or
+LM Studio on the Mac) is enough. Use a throwaway key, never a real one, and only the dummy notes of the test vault. A
+note with no classification counts as the most sensitive level and so, by default, goes to no model: give each note a
+classification of Public in its front matter first, and take it out again afterwards.
+
+- [ ] **U-01** With Use AI models off, as it is until you turn it on, run "Ask an AI model to propose changes" from the
+      command palette: a notice says AI is off, no dialog opens, and nothing is sent. Turn it on with no model set up: the
+      notice says to set one up. Obsidian has no AI of its own, so the dialog offers only the models you set up (slice 3,
+      ai_off_until_chosen, host_ai_first).
+- [ ] **U-02** Set up two models: one on this device by `http://localhost`, for Proposing changes, and one by `https://`, for
+      Research questions, its key chosen with the app's own key field. A remote address written with `http://` is said on
+      its model's row to need https. In the dialog the model for proposing changes is offered first, and data.json holds
+      the key's name, never the key (slice 3, user_models, models_by_purpose, keys_kept_secret).
+- [ ] **U-03** In the dialog, choose a model and press Show what will be sent: the exact request is shown, with the model, its
+      address, the headers (the key only by its name) and the note's classification, and Send stays off until then.
+      Change the question: Send goes off again until it is shown again. Press Send: exactly that goes, once, and the
+      answer arrives as a change set under the graph, each change waiting to be accepted or rejected; the graph block is
+      unchanged (slice 3, seen_before_sent, never_in_background, answers_are_proposals).
+- [ ] **U-04** Choose "A view of it", then "Only the things ticked" with two things ticked, pressing Show what will be sent
+      each time: what is shown holds only those things and the links between them, and none of the note's prose
+      (slice 3, user_chooses_what).
+- [ ] **U-05** Give the note a classification above the chosen model's ceiling: Show what will be sent says why, names a model
+      cleared for it, and Send stays off. At the highest classification set, nothing is sent to any model; nor is a note
+      holding a password property. With no classification the note counts as the most sensitive level, so it goes to no
+      model, and the dialog points to Unlabelled notes count as; set that to Internal, and it goes to a model cleared for
+      Internal and to none cleared only for Public (slice 3, model_ceiling, never_above_ceiling, never_credential,
+      unclassified_strictest).
+- [ ] **U-06** Stop the local model's server and send: a notice says the model could not be reached and that nothing was
+      changed, and the note is as it was. The plugin's data.json lists the last sends, failed ones too, each with a
+      digest and the size of what was sent, never its text, the model and the time, and never a key; "Clear the record
+      of sends to AI models" empties it (slice 3, ai_unreachable, record_every_send).
 
 ## Result
 

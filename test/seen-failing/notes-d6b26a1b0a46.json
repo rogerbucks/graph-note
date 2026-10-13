@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/notes.test.js",
+  "test": "note_standard: notes stay plain comments: a block reads to the same graph with its notes as without them, passes the syntax check and the dialect linter alike, and keeps every line in the text an engine is given",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour the reader already had: /// lines were whole-line comments to the store, checkSyntax, lint and corrected() before notes() was written; this test guards that notes() adds nothing that changes it"
+}

@@ -20,20 +20,32 @@ export interface AiModel {
 /** How a line the editor writes is indented. */
 export type Indent = 'two' | 'four' | 'tab';
 
+/** How far focus reaches (§25): `one` step, the default, or `two`. */
+export type FocusDepthSetting = 'one' | 'two';
+
 /** The theme an exported image is drawn in, its colours fixed so it reads the same outside Obsidian (§16). */
 export type ExportTheme = 'light' | 'dark';
 
 /** Whether an export saved into the vault also gets a companion note (§16). */
 export type CompanionSetting = 'off' | 'on';
 
+/** Whether AI is used at all (§19, ai_off_until_chosen): off until the user turns it on. */
+export type AiUse = 'off' | 'on';
+
 /** Every option the editor offers. */
 export interface Settings extends StrictnessSettings {
+  /** Whether the editor may send anything to an AI model: off until the user turns it on. */
+  aiUse: AiUse;
   /** The classifications a note may carry, lowest first: the ceilings an AI model may be given. */
   classifications: string[];
+  /** The level a note with no classification counts as for AI (§19, unclassified_strictest): the highest until chosen. */
+  aiUnlabelled: string;
   aiModels: AiModel[];
   indent: Indent;
   /** The best fit of the locked style's directions, or one of them. */
   direction: string;
+  /** How far focus reaches from a selected thing: one step, or two (§25). */
+  focusDepth: FocusDepthSetting;
   /** The colours exported images are drawn in. */
   exportTheme: ExportTheme;
   /** Whether an export saved in the vault gets a companion note. */
@@ -50,10 +62,14 @@ const CLASSIFICATIONS = ['Public', 'Internal', 'Confidential', 'Restricted'];
 export const DEFAULT_SETTINGS: Settings = {
   strictness: 'forgiving',
   allowed: [],
+  aiUse: 'off',
   classifications: CLASSIFICATIONS,
+  // the most sensitive, so a note nobody has classified goes to no model until the user chooses otherwise
+  aiUnlabelled: CLASSIFICATIONS.at(-1) ?? '',
   aiModels: [],
   indent: 'four',
   direction: 'best',
+  focusDepth: 'one',
   exportTheme: 'light',
   companionNote: 'off',
   exportFolder: '',
@@ -111,10 +127,28 @@ export const OPTIONS: Option[] = [
     choices: DEPARTURES.map((d) => ({ value: d.id, name: d.name, sentence: d.sentence })),
   },
   {
+    key: 'aiUse',
+    section: 'AI models',
+    name: 'Use AI models',
+    sentence:
+      'Whether the editor may send anything to an AI model. Even on, nothing is sent until you send it, and only to a model set up below, after you have seen exactly what will be sent.',
+    choices: [
+      { value: 'off', name: 'Off: nothing is ever sent' },
+      { value: 'on', name: 'On: send only when I say' },
+    ],
+  },
+  {
     key: 'classifications',
     section: 'AI models',
     name: 'Classifications',
     sentence: 'The classifications a note may carry, lowest first, one per line.',
+  },
+  {
+    key: 'aiUnlabelled',
+    section: 'AI models',
+    name: 'Unlabelled notes count as',
+    sentence:
+      'The classification a note with no classification counts as when it would be sent to an AI model. The most sensitive until you choose: nothing at it is ever sent, so an unlabelled note goes to no model.',
   },
   {
     key: 'aiModels',
@@ -138,6 +172,17 @@ export const OPTIONS: Option[] = [
     choices: [
       { value: 'best', name: 'Best fit' },
       ...STYLE.directions.map((d) => ({ value: d, name: d === 'LR' ? 'Left to right' : 'Top to bottom' })),
+    ],
+  },
+  {
+    key: 'focusDepth',
+    section: 'Drawing',
+    name: 'Focus reaches',
+    sentence:
+      'How far focus reaches from a selected thing: its own links, or those of the things at their other ends too.',
+    choices: [
+      { value: 'one', name: 'One step' },
+      { value: 'two', name: 'Two steps' },
     ],
   },
   {
@@ -237,7 +282,13 @@ export function settingsFrom(saved: unknown): Settings {
     strictness: oneOf<Strictness>('strictness', s.strictness, d.strictness),
     // copies, never the defaults themselves: a change to what is handed out never changes them
     allowed: Array.isArray(s.allowed) ? (s.allowed as unknown[]).filter(isDeparture) : [...d.allowed],
+    aiUse: oneOf<AiUse>('aiUse', s.aiUse, d.aiUse),
     classifications: [...classifications],
+    // one of the classifications set, else the most sensitive of them, so a level being retyped never lowers it
+    aiUnlabelled:
+      typeof s.aiUnlabelled === 'string' && classifications.includes(s.aiUnlabelled)
+        ? s.aiUnlabelled
+        : (classifications.at(-1) ?? ''),
     aiModels: Array.isArray(s.aiModels)
       ? s.aiModels
           .filter((m): m is Record<string, unknown> => !!m && typeof m === 'object')
@@ -245,6 +296,7 @@ export function settingsFrom(saved: unknown): Settings {
       : [],
     indent: oneOf<Indent>('indent', s.indent, d.indent),
     direction: oneOf('direction', s.direction, d.direction),
+    focusDepth: oneOf<FocusDepthSetting>('focusDepth', s.focusDepth, d.focusDepth),
     exportTheme: oneOf<ExportTheme>('exportTheme', s.exportTheme, d.exportTheme),
     companionNote: oneOf<CompanionSetting>('companionNote', s.companionNote, d.companionNote),
     exportFolder: vaultFolder(s.exportFolder) ?? d.exportFolder,

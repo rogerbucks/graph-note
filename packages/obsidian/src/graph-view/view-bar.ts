@@ -33,6 +33,10 @@ export interface BarActions {
   fit: () => void;
   zoomOut: () => void;
   zoomIn: () => void;
+  /** Find a thing: opens or closes the search row, and says which (§25). */
+  find: (b: HTMLButtonElement) => void;
+  /** Filter by kind or link: opens or closes the legend that untangles, and says which (§25). */
+  legend: (b: HTMLButtonElement) => void;
   fullScreen: () => void;
   editHere: () => void;
   toggleSource: (b: HTMLButtonElement) => void;
@@ -76,6 +80,14 @@ export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): Ba
   button(bar, 'Fit', 'maximize', () => on.fit());
   button(bar, 'Zoom out', 'zoom-out', () => on.zoomOut());
   button(bar, 'Zoom in', 'zoom-in', () => on.zoomIn());
+  // finding a thing and filtering by kind only change the picture, never the note, so they are offered wherever it is (§25);
+  // a graph drawn as a table (§15) has nothing to fade or hide, so there it is found but never filtered
+  const find = button(bar, 'Find a thing', 'search', () => on.find(find));
+  find.setAttribute('aria-expanded', 'false');
+  if (!o.diagram?.table) {
+    const legend = button(bar, 'Filter by kind or link', 'filter', () => on.legend(legend));
+    legend.setAttribute('aria-expanded', 'false');
+  }
   if (mode === 'full') button(bar, 'Close full screen', 'minimize', () => o.onClose?.());
   else button(bar, 'Full screen', 'expand', () => on.fullScreen());
   // Export writes a new file, never the note, so it is offered wherever the drawing is (spec §16)

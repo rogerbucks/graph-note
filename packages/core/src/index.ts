@@ -6,7 +6,7 @@ export { hops } from './estimates.ts';
 export { replaceBlock, insertBlockAfter, History } from './store.ts';
 export type { BlockRef, WriteResult } from './store.ts';
 export type { Span } from './blocks.ts';
-export type { Block, Box, Link, GraphDrawing, Problem, NoteReading } from './note-reading.ts';
+export type { Block, Box, Link, GraphDrawing, Problem, NoteReading, ThingNote } from './note-reading.ts';
 export { layoutSource, drawingSource, STYLE } from './layout.ts';
 export { explain, distance } from './estimates.ts';
 export type { Estimate } from './estimates.ts';
@@ -18,9 +18,12 @@ export { PALETTES, THEME_COLOURS, fixedPalette } from './palette.ts';
 export type { Palette, ThemeColours } from './palette.ts';
 export { readStyle, outsideOf, lookOf, legendOf } from './style.ts';
 export type { StyleReading } from './style.ts';
-export { FORMATS, LINES, NUDGE_WORDS, OUTSIDE, STYLE_HUES } from './style-graph.ts';
+export { ARROWHEADS, FORMATS, INLINE, LINES, NUDGE_WORDS, OUTSIDE, STYLE_HUES } from './style-graph.ts';
 export type {
+  ArrowheadsChoice,
+  Arrows,
   Frame,
+  InlineSwitch,
   LegendEntry,
   LineStyle,
   LinkTarget,
@@ -38,9 +41,36 @@ export type {
   ThingLook,
   ViewStyle,
 } from './style-graph.ts';
-export { nudgedSource, nudgedDrawing } from './style-source.ts';
+export { nudgedSource, nudgedDrawing, styledDrawing } from './style-source.ts';
+export { arrowsShown } from './arrows.ts';
+export { INLINE_ROWS } from './inline-properties.ts';
+export type { InlineProperties, PropertyRow } from './inline-properties.ts';
 export { styleEdit } from './style-edit.ts';
-export type { LookWrite, NudgeWrite, ShownWrite, StyleChange, StyleEdit } from './style-edit.ts';
+export {
+  DIAGRAM_TYPES,
+  LARGE_GRAPH,
+  diagramFor,
+  diagramOffer,
+  nearestType,
+  shapeOf,
+  suggestType,
+  typeFits,
+} from './types.ts';
+export type { DiagramChoice, DiagramOffer, DiagramType, GraphShape, Suggestion, TypeFit } from './types.ts';
+export { scrollsOneWay, tableOf, wayIn } from './types-table.ts';
+export type { DiagramTable } from './types-table.ts';
+export type { DiagramPlan } from './note-reading.ts';
+export type { Diagram } from './style-graph.ts';
+export type {
+  ArrowsWrite,
+  DiagramWrite,
+  LookWrite,
+  NudgeWrite,
+  ShowWrite,
+  ShownWrite,
+  StyleChange,
+  StyleEdit,
+} from './style-edit.ts';
 export { loadEngine } from './engine.ts';
 export type { Engine, Drawn, Direction, Details, LinkDetail, LinkDetails } from './render.ts';
 export { LAYOUT_LIMITS, PAGE_LIMITS, READ_LIMITS, textTooLarge, tooLarge } from './layout-limits.ts';
@@ -56,7 +86,10 @@ export type {
   Told,
 } from './layout-worker.ts';
 export { Zoom, MIN_SCALE, MAX_SCALE, STEP } from './zoom.ts';
-export type { Mode, Size, View, ZoomEvent } from './zoom.ts';
+export { AcrossZoom } from './zoom-across.ts';
+export type { Mode, Place, Size, View, ZoomEvent } from './zoom.ts';
+export { MOVE_MS, READABLE_SCALE, Trail, coverOf, glideAt, linkGroups, pointerTo, sheetLimit } from './details-nav.ts';
+export type { LinkGroup, Pointing, TrailStep } from './details-nav.ts';
 export { tokenize, TOKEN_CLASSES } from './tokens.ts';
 export type { Token, TokenClass } from './tokens.ts';
 export { diagnostics, completions, readBack, textVersion, SEVERITY, KIND } from './help.ts';
@@ -79,9 +112,11 @@ export type { Converted, Departure, Strictness, StrictnessSettings } from './str
 export { OPTIONS, DEFAULT_SETTINGS, settingsFrom, indentText, aiModel } from './settings.ts';
 export type {
   AiModel,
+  AiUse,
   Choice as OptionChoice,
   CompanionSetting,
   ExportTheme,
+  FocusDepthSetting,
   Indent,
   Option,
   Settings,
@@ -132,8 +167,61 @@ export {
 } from './inspector.ts';
 export { listValues, makeList, addToList, removeFromList, linkedValues, listsOf } from './linked-list.ts';
 export type { ListShape, ListValue, ListEdit } from './linked-list.ts';
-export { hitAreas, nearby, TapCycle } from './hits.ts';
+export { BIG_PROPOSAL, linkChange, makeProposal, provenanceLines, thingChange, valueGql } from './proposals.ts';
+export type {
+  ChangeGroup,
+  ChangeInput,
+  ChangeOp,
+  Proposal,
+  ProposalInput,
+  ProposedChange,
+  Proposer,
+  ProposerKind,
+  Provenance,
+} from './proposals.ts';
+export { NO_BASIS, basisOf } from './proposals-basis.ts';
+export type { Stale } from './proposals-basis.ts';
+export { MARK_WORDS } from './proposals-marks.ts';
+export type { ChangeMark, MarkKind, Marks } from './proposals-marks.ts';
+export { changeSetId } from './proposals-text.ts';
+export type { Decision } from './proposals-text.ts';
+export { ProposalReview } from './proposals-review.ts';
+export { aiReady, confirmSend, prepareSend, sendPrepared } from './ai.ts';
+export type {
+  Confirmation,
+  PreparedSend,
+  SendAsk,
+  SendDeps,
+  SendRecord,
+  SendRefused,
+  SendResult,
+  Transport,
+  TransportReply,
+  TransportRequest,
+} from './ai.ts';
+export { AI_PURPOSES, endpointProblem, modelChoices } from './ai-choice.ts';
+export type { HostAi, ModelChoice } from './ai-choice.ts';
+export type { ScopeChoice } from './ai-scope.ts';
+export { noteWithProposal } from './ai-answer.ts';
+export type { ChangeRow, DecideOptions, Person, ProposalShown, Reviewed, Which } from './proposals-shown.ts';
+export { hitAreas, nearby, TapCycle, boundsOf, centres } from './hits.ts';
+export { FADE, KEPT, FocusState, depthOf, edgesOf, estimateEdge, focusOf, highlightOf } from './focus.ts';
+export type { FocusDepth, FocusEdge, FocusTarget, Kept } from './focus.ts';
+export {
+  FIND_LIMIT,
+  LegendFilter,
+  Untangle,
+  emphasis,
+  find,
+  kindLegend,
+  neighbourhood,
+  neighbourhoodWords,
+  nextAlong,
+  pathWords,
+  shortestPath,
+} from './untangle.ts';
+export type { Found, Layers, LegendItem, LegendState, PathFound } from './untangle.ts';
 export { TextHistory } from './history.ts';
 export type { Change, TextState } from './history.ts';
-export type { HitAreas, Shape } from './hits.ts';
+export type { Bounds, HitAreas, Shape } from './hits.ts';
 export type { PropType, Property, Target, Edit, Parsed } from './inspector.ts';

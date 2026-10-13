@@ -46,6 +46,14 @@ import textwrap
 import zlib
 from collections.abc import Collection, Iterable, Mapping, Sequence
 
+# arrowheads hidden and the diagram type (editor spec §15) and properties shown inline (§14),
+# written into the source as the plugin's core writes them; they live with the style graph that
+# chooses them, as do the directions laid out (re-exported here)
+from graphspec.style.arrows import arrowless_source
+from graphspec.style.diagram_types import directions, typed_source
+from graphspec.style.drawn import render_args  # noqa: F401 — re-exported: render(**render_args(…))
+from graphspec.style.inline import inline_source
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 STYLE = json.load(open(os.path.join(HERE, "graph_svg.style.json"), encoding="utf-8"))
 DOT = shutil.which("dot") or next(
@@ -190,7 +198,9 @@ def dot_source(
     return "\n".join(out), kinds, readings
 
 
-def nudged_source(dot: str, nudges: Sequence[Mapping], keys: Iterable[str]) -> str:
+def nudged_source(
+    dot: str, nudges: Sequence[Mapping], keys: Iterable[str], diagram: Mapping | None = None
+) -> str:
     """The Graphviz source `dot` (from dot_source) with a graph's nudges (editor spec §6) written
     in before its last line, as the plugin's core writes them (style-source.ts, nudgedSource), so
     a nudged graph is laid out the same by both, byte for byte (python_honours_nudges): each
@@ -198,8 +208,10 @@ def nudged_source(dot: str, nudges: Sequence[Mapping], keys: Iterable[str]) -> s
     every link drawn — so Graphviz numbers the drawn links as before — then one box (a cluster)
     for each group label, in the order first written, its label in the kind caption's size and
     colour. nudges: as gql_profile.read_style gives them, each {word, thing, other, group}. A
-    nudge naming a thing not among `keys` (the boxes drawn) is left out. With nothing to add, `dot`
-    is returned unchanged: with no nudges, the layout source is drawn as it is."""
+    nudge naming a thing not among `keys` (the boxes drawn) is left out; so is a group when the
+    plan `diagram` is lanes, which draw it inside its lane (diagram_types.typed_source). With
+    nothing to add, `dot` is returned unchanged: with no nudges, the layout source as it is."""
+    lanes = bool(diagram) and diagram["type"] == "lanes"
     drawn, added, groups = set(keys), [], {}
     for n in nudges:
         things = [k for k in (n.get("thing"), n.get("other")) if k is not None]
@@ -210,7 +222,7 @@ def nudged_source(dot: str, nudges: Sequence[Mapping], keys: Iterable[str]) -> s
         elif n["word"] == "before":
             other = things[1] if len(things) > 1 else ""
             added.append(f'  "{things[0]}" -> "{other}" [style=invis];')
-        elif n["word"] == "group" and n.get("group") is not None:
+        elif n["word"] == "group" and n.get("group") is not None and not lanes:
             groups.setdefault(n["group"], []).extend(things)
     # the label as an HTML-like label, entity-escaped as the boxes' own are: a backslash or a quote
     # is drawn as written
@@ -233,15 +245,6 @@ def nudged_source(dot: str, nudges: Sequence[Mapping], keys: Iterable[str]) -> s
         return nudged
     at = nudged.find("{") + 1
     return nudged[:at] + "\n  newrank=true;" + nudged[at:]
-
-
-def directions(direction: str | None = None) -> list[str]:
-    """The directions a drawing is laid out in: only `direction`, when a direction nudge sets one
-    the style lists (read_style gives it), else every direction the style lists, in its order —
-    as the plugin's core chooses them (render.ts, directions)."""
-    if direction and direction in STYLE["directions"]:
-        return [direction]
-    return list(STYLE["directions"])
 
 
 def _themed(svg, kinds, readings=()):
@@ -316,9 +319,10 @@ def _themed(svg, kinds, readings=()):
     return "\n".join(line.strip() for line in svg.splitlines() if line.strip())
 
 
-def _layout(nodes, edges, rankdir, suggested=(), nudges=()):
+def _layout(nodes, edges, rankdir, suggested=(), nudges=(), arrowless=(), inline=None, plan=None):
     src, kinds, readings = dot_source(nodes, edges, rankdir, suggested)
-    src = nudged_source(src, nudges, [key for key, _, _ in nodes])
+    src = inline_source(arrowless_source(typed_source(src, plan), arrowless), inline)
+    src = nudged_source(src, nudges, [key for key, _, _ in nodes], plan)
     r = subprocess.run([DOT, "-Tsvg"], input=src, capture_output=True, text=True, timeout=60)
     if r.returncode:
         raise RuntimeError(f"Graphviz failed: {r.stderr.strip()[:300]}")
@@ -332,6 +336,9 @@ def render(
     suggested: Collection[str] = (),
     nudges: Sequence[Mapping] = (),
     direction: str | None = None,
+    arrowless: Sequence[int] = (),
+    inline: Mapping | None = None,
+    diagram: Mapping | None = None,
 ) -> str:
     """The graph as one block of inline SVG. Raises RuntimeError if Graphviz is missing or fails.
     Laid out both left-to-right and top-to-bottom; the one that shrinks least to fit the page width
@@ -340,14 +347,21 @@ def render(
     end. suggested: the keys of boxes drawn under a suggested name, marked as dot_source marks
     them, and refused as it refuses them. nudges and direction: the graph's style, as
     gql_profile.read_style gives it (editor spec §6): the nudges written into each source
-    (nudged_source), and only the direction a direction nudge sets laid out (directions)."""
+    (nudged_source), and only the direction a direction nudge sets laid out (directions).
+    arrowless and inline: the links drawn without their arrowheads (graphspec.style.arrows,
+    arrowless) and the properties shown (graphspec.style.inline, inline_rows), written into each
+    source before the nudges (arrowless_source, inline_source), as the core writes them. diagram:
+    the plan of the diagram type it is drawn as (diagram_types.diagram_for), written in first
+    (typed_source), and laid out in that type's direction unless a nudge sets one (§15)."""
     if isinstance(suggested, str):
         raise TypeError("suggested is a collection of keys, not one key as a string")
     if not DOT:
         raise RuntimeError("Graphviz (dot) is not installed")
     target, best = STYLE["page_width"], None
-    for rd in directions(direction):
-        svg, kinds, readings, w, h = _layout(nodes, edges, rd, suggested, nudges)
+    for rd in directions(direction, diagram):
+        svg, kinds, readings, w, h = _layout(
+            nodes, edges, rd, suggested, nudges, arrowless, inline, diagram
+        )
         fit = min(1.0, target / w) - (
             0.25 if h > STYLE["max_height_ratio"] * max(w, target) else 0
         )

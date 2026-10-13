@@ -21,14 +21,17 @@ import {
   findsNetwork,
   findsHotkeys,
   forbiddenImports,
+  reachesSendModule,
+  findsBackground,
 } from './repository/repo.js';
 
 const SEMVER = /^\d+\.\d+\.\d+$/;
 const EXACT = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
 const RUNTIME_ALLOWED = new Set(['@viz-js/viz']);
 // The one place that may reach the network: sending to an AI the user has set
-// up, only when the user sends (spec §13 and §19). It does not exist until then.
+// up, only when the user sends (spec §13 and §19). Only the send dialog reaches it.
 const AI_SEND_MODULE = 'packages/obsidian/src/ai/send.ts';
+const AI_SEND_DIALOG = 'packages/obsidian/src/ai/send-dialog.ts';
 const TEST_FRAMEWORKS = ['jest', 'mocha', 'vitest', 'ava', 'tap', 'jasmine', 'uvu', 'chai'];
 
 const allDeps = (pkg) => ({
@@ -490,6 +493,26 @@ describe('the shipped source', () => {
     assert.deepEqual(offenders, []);
   });
 
+  // never_in_background (spec §19): the send module is reached from the send dialog alone, whose Send button is the
+  // user saying yes; nothing in the AI's folder runs on a timer or on an event, so nothing is ever sent unasked (the
+  // scans themselves are tested in test/repository-scans.test.js)
+  test('the AI send module is there, and only the send dialog reaches it', () => {
+    assert.ok(exists(AI_SEND_MODULE), AI_SEND_MODULE);
+    assert.deepEqual(
+      sourceFiles().filter((f) => f !== AI_SEND_MODULE && reachesSendModule(read(f))),
+      [AI_SEND_DIALOG],
+    );
+  });
+
+  test('nothing sends to an AI in the background: no timer and no event in the AI’s folder', () => {
+    const folder = sourceFiles().filter((f) => f.startsWith('packages/obsidian/src/ai/'));
+    assert.ok(folder.length > 1);
+    assert.deepEqual(
+      folder.filter((f) => findsBackground(read(f))),
+      [],
+    );
+  });
+
   test('no command sets a default hotkey', () => {
     assert.deepEqual(
       sourceFiles().filter((f) => findsHotkeys(read(f))),
@@ -500,6 +523,22 @@ describe('the shipped source', () => {
   test('no source imports Node or Electron built-ins', () => {
     const offenders = sourceFiles().flatMap((f) => forbiddenImports(read(f)).map((m) => `${f}: ${m}`));
     assert.deepEqual(offenders, []);
+  });
+
+  // iOS before 16.4 stops the whole plugin loading on a regular expression with a lookbehind. The store's linter finds
+  // only a literal one, so what is built from a string, as `new RegExp(…)` does, is found here, by the text itself.
+  test('no source holds a lookbehind, in a regular expression or in a string one is built from', () => {
+    const lookbehind = /\(\?<[=!]/;
+    assert.ok(lookbehind.test('/(?<=a)b/') && lookbehind.test('/(?<!a)b/'), 'a literal one is found');
+    assert.ok(
+      lookbehind.test("new RegExp('(?<![\\\\w])x')") && lookbehind.test('`(?<=${a})b`'),
+      'a built one is found',
+    );
+    assert.equal(lookbehind.test('/(?<name>a)(?:b)(?=c)(?!d)/'), false, 'a named group and a lookahead are not');
+    assert.deepEqual(
+      sourceFiles().filter((f) => lookbehind.test(read(f))),
+      [],
+    );
   });
 });
 

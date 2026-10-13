@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/notes.test.js",
+  "test": "note_comment and note_text: a note is on the box or link it is written directly above > a note in a block after the one drawn up to is never read: a box drawn with no note gets none, and nothing is said of it",
+  "seen_failing_first": false,
+  "evidence": "replaces a test the review of #118 found vacuous (its box was never drawn); addNotes already read only the blocks up to upTo, so this one passed first; it would fail if a later block's note reached box b or a problem were said of block 1"
+}

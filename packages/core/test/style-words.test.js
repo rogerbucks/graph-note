@@ -4,9 +4,11 @@
 // the style graph's tests.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { gqlBlocks } from '../src/blocks.ts';
 import { readNote } from '../src/drawing.ts';
 import { diagnostics } from '../src/help.ts';
 import { readStyle } from '../src/style.ts';
+import { styleEdit } from '../src/style-edit.ts';
 
 const TRIP = `// graph: trip · SOURCE
 (home:Place {name: 'Home'}),
@@ -58,7 +60,12 @@ describe('a key the style graph does not know', () => {
           'remove comment, or use one of word, thing, other, group or direction',
           undefined,
         ],
-        [5, 'proprty is not a key a Show uses', 'remove proprty, or use one of property, kind or thing', undefined],
+        [
+          5,
+          'proprty is not a key a Show uses',
+          'remove proprty, or use one of property, kind, thing, type, view or inline',
+          undefined,
+        ],
       ],
     );
     assert.ok(problems.every((p) => p.graph === 'trip' && p.severity === 'error' && p.block === 1));
@@ -227,6 +234,100 @@ describe('a view’s name', () => {
     );
     assert.deepEqual([...style.views.keys()], names);
     assert.deepEqual([...style.shown.keys()], names);
+  });
+});
+
+describe('the diagram type, saved in the style graph', () => {
+  // proves: type_remembered
+  test('is a Diagram: its type, for the whole graph or for one view, and for a tree its relationship', () => {
+    const { style, problems } = styleIn(
+      TRIP,
+      styleBlock("(d1:Diagram {type: 'tree', relationship: 'NEAR'}),", "(d2:Diagram {type: 'table', view: 'all'})"),
+    );
+    assert.deepEqual(problems, []);
+    assert.deepEqual(
+      style.diagrams.map(({ at: _at, ...d }) => d),
+      [
+        { type: 'tree', relationship: 'NEAR' },
+        { type: 'table', view: 'all' },
+      ],
+    );
+  });
+
+  // proves: type_remembered
+  test('a type not in the set, a relationship not in the graph or given to another type, is a problem, left out', () => {
+    const { style, problems } = styleIn(
+      TRIP,
+      styleBlock(
+        "(d1:Diagram {type: 'tre'}),",
+        "(d2:Diagram {type: 'flow', relationship: 'NEAR'}),",
+        "(d3:Diagram {type: 'tree', relationship: 'NEER'}),",
+        "(d4:Diagram {view: 'v'})",
+      ),
+    );
+    assert.deepEqual(
+      problems.map((p) => [p.line, p.message, p.fix]),
+      [
+        [2, 'tre is not a diagram type', 'change tre to tree'],
+        [3, 'a relationship is chosen only for a tree', "remove relationship, or make it type: 'tree'"],
+        [4, 'NEER is not a relationship type in graph trip', 'change NEER to NEAR'],
+        [
+          5,
+          'a Diagram names its type',
+          "add type: 'network', 'tree', 'flow', 'radial', 'lanes', 'timeline' or 'table'",
+        ],
+      ],
+    );
+    assert.deepEqual(style.diagrams, []);
+  });
+
+  // proves: type_remembered
+  test('two types for one place: the later is a problem and left out; a view’s and the whole graph’s are two places', () => {
+    const { style, problems } = styleIn(
+      TRIP,
+      styleBlock(
+        "(d1:Diagram {type: 'flow'}),",
+        "(d2:Diagram {type: 'radial', view: 'v'}),",
+        "(d3:Diagram {type: 'tree'}),",
+        "(d4:Diagram {type: 'flow'})",
+      ),
+    );
+    assert.deepEqual(messages(problems), ['the diagram type of the whole graph is set to both flow (line 2) and tree']);
+    assert.deepEqual(
+      style.diagrams.map((d) => [d.type, d.view]),
+      [
+        ['flow', undefined],
+        ['radial', 'v'],
+        ['flow', undefined],
+      ],
+    );
+  });
+
+  // proves: type_remembered
+  test('is written into the style block when chosen, changed in place for the same place, never into the data', () => {
+    const note = `\`\`\`gql\n${TRIP}\n\`\`\`\n`;
+    const first = styleEdit(note, 'trip', { diagram: { type: 'tree', relationship: 'NEAR' } });
+    assert.match(first.note, /\(diagram_1:Diagram \{type: 'tree', relationship: 'NEAR'\}\)/);
+    const again = styleEdit(first.note, 'trip', { diagram: { type: 'flow' } });
+    assert.match(again.note, /\(diagram_1:Diagram \{type: 'flow'\}\)/);
+    assert.equal(again.note.match(/:Diagram /g).length, 1, 'changed in place, never written twice');
+    const view = styleEdit(again.note, 'trip', { diagram: { type: 'table', view: 'v' } });
+    assert.match(view.note, /\(diagram_2:Diagram \{type: 'table', view: 'v'\}\)/);
+    const texts = gqlBlocks(view.note).map((b) => b.text);
+    assert.equal(texts[0], TRIP, 'the data untouched');
+    assert.deepEqual(
+      readStyle(texts, 'trip', readNote(texts)).style.diagrams.map((d) => [d.type, d.view]),
+      [
+        ['flow', undefined],
+        ['table', 'v'],
+      ],
+    );
+    assert.deepEqual(styleEdit(note, 'trip', { diagram: { type: 'pie' } }), {
+      refused: 'type must be network, tree, flow, radial, lanes, timeline or table',
+    });
+    assert.deepEqual(styleEdit(note, 'trip', { diagram: { type: 'flow', relationship: 'NEAR' } }), {
+      refused: 'a relationship is chosen only for a tree',
+    });
   });
 });
 

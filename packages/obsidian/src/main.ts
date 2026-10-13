@@ -11,9 +11,12 @@ import type {
   GraphDrawing,
   LayoutLimits,
   PngSize,
+  ProposalReview,
   Refusal,
+  SendRecord,
   Settings,
 } from '@graph-note/core';
+import { AI_COMMAND, CLEAR_SENDS_COMMAND, SENDS_KEPT, askAi, clearAiSends } from './ai/ai';
 import { exportGraph } from './export/export';
 import type { ExportAsk, ExportOutcome } from './export/export';
 import { PNG_PIXEL_LIMIT, rasterise } from './export/png';
@@ -43,6 +46,8 @@ export type Drafts = Record<string, KeptDraft>;
 interface Saved {
   drafts?: Drafts;
   settings?: unknown;
+  /** The record of every send to an AI model (§19, record_every_send): never a key. */
+  aiSends?: SendRecord[];
 }
 
 /** The plugin: draws each graph block, opens the editors, and keeps the drafts and the shared schemas. */
@@ -66,6 +71,9 @@ export default class GraphNotePlugin extends Plugin {
     // the drafts kept follow their note when it is renamed or moved, edited or not, and can all be recovered (spec §9)
     this.registerEvent(this.app.vault.on('rename', (f, old) => void followRename(this, f.path, old)));
     this.addCommand({ ...RECOVER_COMMAND, callback: () => recoverDrafts(this) });
+    // nothing is sent unless the user opens this, chooses, sees exactly what goes and presses Send (§19)
+    this.addCommand({ ...AI_COMMAND, callback: () => askAi(this) });
+    this.addCommand({ ...CLEAR_SENDS_COMMAND, callback: () => clearAiSends(this) });
     this.registerView(PANE, (leaf) => new GraphPane(leaf, this));
     this.registerEditorExtension(addForYou);
     // in Live Preview the plugin draws graph blocks itself, so a card being typed in is never torn down (spec §4)
@@ -128,7 +136,7 @@ export default class GraphNotePlugin extends Plugin {
     this.settings = settingsFrom(next);
     this.saved = { ...this.saved, settings: this.settings };
     await this.saveData(this.saved);
-    const shown = (s: Settings) => JSON.stringify([s.strictness, s.allowed, s.direction]);
+    const shown = (s: Settings) => JSON.stringify([s.strictness, s.allowed, s.direction, s.focusDepth]);
     if (shown(was) !== shown(this.settings)) for (const changed of [...this.settingsWatchers]) changed();
   }
 
@@ -185,6 +193,20 @@ export default class GraphNotePlugin extends Plugin {
     await this.saveData(this.saved);
   }
 
+  /** Keeps the record of one send to an AI model with the last ones before it (§19, record_every_send). */
+  async recordAiSend(record: SendRecord): Promise<void> {
+    this.saved = { ...this.saved, aiSends: [...(this.saved.aiSends ?? []), record].slice(-SENDS_KEPT) };
+    await this.saveData(this.saved);
+  }
+
+  /** Clears the record of sends to AI models; gives how many there were. */
+  async clearAiSends(): Promise<number> {
+    const n = this.saved.aiSends?.length ?? 0;
+    this.saved = { ...this.saved, aiSends: [] };
+    await this.saveData(this.saved);
+    return n;
+  }
+
   /**
    * Starts the Graphviz engine on the page's own thread, for where no worker can run. Kept separate so a test can stand
    * in a failing one.
@@ -225,9 +247,9 @@ export default class GraphNotePlugin extends Plugin {
    */
   layout(drawing: GraphDrawing, owner?: object): Promise<Drawn | Refusal | null> {
     // the direction set on the settings page, one the locked style allows (spec §21); else the best fit
-    // a direction the graph's own style sets (§6) comes before the settings' default
+    // a direction the graph's own style sets (§6), or its diagram type's (§15), comes before the settings' default
     const { direction } = this.settings;
-    const keep = direction === 'best' || !!drawing.direction;
+    const keep = direction === 'best' || !!drawing.direction || !!drawing.diagram;
     return this.layoutsOf()?.draw(keep ? drawing : { ...drawing, direction }, owner) ?? Promise.resolve(null);
   }
 
@@ -253,6 +275,18 @@ export default class GraphNotePlugin extends Plugin {
     this.unloaded = true;
     this.layouts?.close();
     this.layouts = null;
+  }
+
+  /** The reviews of proposals, by note and proposal: kept while the plugin runs, so a decision can be undone (spec §17). */
+  private readonly reviews = new Map<string, ProposalReview>();
+
+  /** The review of the proposal a note's change set holds: the one kept, while the proposal is the same, else `fresh`. */
+  reviewOf(path: string, fresh: ProposalReview): ProposalReview {
+    const key = `${path}#${fresh.proposal.id}`,
+      kept = this.reviews.get(key);
+    if (kept && JSON.stringify(kept.proposal) === JSON.stringify(fresh.proposal)) return kept;
+    this.reviews.set(key, fresh);
+    return fresh;
   }
 
   /** The editors (CodeMirror views) open on notes in the editing view, as the plugin's editor extension sees them. */

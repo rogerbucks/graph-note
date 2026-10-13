@@ -1,9 +1,11 @@
 // What a drawn graph is given (spec §3, §4, §14): the reading and the graph, its drawn SVG and its problems, where it is
 // shown, what its buttons do, and the editor open in place on its card, if any, which its inspector writes through.
-import type { CompletenessReport, Drawn, Indent, Mode, NoteReading, Parked } from '@graph-note/core';
+import type { CompletenessReport, Drawn, FocusDepth, Indent, Mode, NoteReading, Parked } from '@graph-note/core';
 import type { DeclaredList } from '../properties/list-row';
 import type { ShownProblem } from './problems-list';
 import type { ViewShown } from './view-strip';
+import type { ProposalCard } from '../proposals/proposal-strip';
+import type { DiagramShown } from './type-strip';
 import type { Exporting } from '../export/export-form';
 
 /** What declaring Deferred and DEFERS in the graph's schema gave: the text to park into, and the graph as the note now reads it. */
@@ -52,8 +54,14 @@ export interface ViewOptions {
   parked?: Map<string, Parked>;
   /** How the editor indents a thing it writes, as the settings say (spec §21). */
   indent?: Indent;
+  /** How many steps along its links focus reaches from a selected thing, as the settings say (§25); one when not given. */
+  focusDepth?: FocusDepth;
   /** Set when the drawing is a view (spec §7): what it shows, how, and how to write its style. */
   view?: ViewShown;
+  /** Set when the drawing is a proposal laid over the graph (spec §17): what it adds, changes and removes, marked, and how a person decides. */
+  proposal?: ProposalCard;
+  /** The diagram types (spec §15): which fit and why not, the one suggested, the one drawn, and how to choose one. */
+  diagram?: DiagramShown;
   /** What the drawing can export, and how (§16); without it, no Export is offered. */
   exporting?: Exporting;
   /** Writes a view block after the graph's last block in the note (§7, views_by_tapping); resolves to why not, or null. */

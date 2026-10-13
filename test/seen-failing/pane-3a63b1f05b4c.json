@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/pane.test.js",
+  "test": "how far focus reaches in the pane’s drawing (editor spec §25, focus_depth) > one step by default",
+  "seen_failing_first": false,
+  "evidence": "The control for the test below it, which fails first: the pane's drawing already kept one step by default (the default depth of 6676f91), so the default is pinned here to show that the setting is what changes it."
+}

@@ -10,6 +10,7 @@ import { fence, labelled } from './host/notes.js';
 import { PATH, showIn } from './host/card-notes.js';
 import { tapKey } from './host/inspector-steps.js';
 import { fakeContext } from './host/fake-obsidian.js';
+import { pressTheRest } from './host/details-controls.js';
 
 before(() => build());
 
@@ -29,13 +30,29 @@ const NOTE = ['# Reader', '', fence(RICH), ''].join('\n');
 const VIEW = "// graph: reader · QUERY view answers\nMATCH (n {id: 'q'})-[]-{1,1}(m) RETURN n, m";
 const VIEW_NOTE = ['# Reader', '', fence(RICH), '', fence(VIEW), ''].join('\n');
 
-/** Every control in the card's details that can be pressed or typed in, by its name, its class or its tag. */
-const controls = (el) =>
-  el
-    .querySelectorAll(
-      '.graph-note-details button, .graph-note-details input, .graph-note-details select, .graph-note-details textarea, .graph-note-details [role="button"]',
-    )
-    .map((c) => c.getAttribute('aria-label') || c.getAttribute('class') || c.tagName);
+/**
+ * What a thing's details offer beside closing, where the note is only read (§25): to show the drawing filtered to it, and
+ * the shortest path to another thing. Both change the picture and nothing else, so reading view has them.
+ */
+const UNTANGLING = ['Show only this and its neighbours', 'Shortest path to another thing'];
+const KEPT = ['Close details', ...UNTANGLING];
+
+/**
+ * The controls of the details beside closing and untangling — a linked thing or link chosen, a step of the trail, the
+ * sheet minimised (§25) — each pressed in turn, `reopen` opening the details again before each; the names of the rest.
+ * The test then checks the note is unchanged, so any of them that wrote would show.
+ */
+const pressed = (el, reopen, all) => pressTheRest(el, KEPT, reopen, all);
+
+/** Large reader's links in its details, each thing and each link a choice (§25). */
+const LARGE_LINKS = [
+  'Which device?',
+  'Link: Large reader answers Which device?',
+  'light',
+  'Link: Large reader has tag light',
+  'cheap',
+  'Link: Large reader has tag cheap',
+];
 
 const details = (el) => el.querySelector('.graph-note-details');
 
@@ -73,7 +90,15 @@ describe('a card in reading view shows its details and offers nothing that write
       assert.ok(items.includes('name: Large reader') && items.includes('weight: 180'), `its properties: ${items}`);
       assert.ok(!d.querySelector('.metadata-add-button'), 'no Add property');
       assert.ok(!d.textContent.includes('Add property'));
-      assert.deepEqual(controls(shown.reading), ['Close details']);
+      assert.deepEqual(
+        pressed(shown.reading, () => tapKey(shown.reading, 'large'), [
+          'Minimise details',
+          'Close details',
+          ...LARGE_LINKS,
+          ...UNTANGLING,
+        ]),
+        KEPT,
+      );
       await unchanged(env, shown);
     } finally {
       env.uninstall();
@@ -115,7 +140,16 @@ describe('a card in reading view shows its details and offers nothing that write
       const d = details(shown.reading);
       assert.equal(d.querySelectorAll('input').length, 0, 'a link: no field');
       assert.ok(items().includes('since: 2024'), `a link’s property is shown: ${items()}`);
-      assert.deepEqual(controls(shown.reading), ['Close details']);
+      const link = shown.reading.querySelectorAll('g.edge').find((g) => g.getAttribute('data-link') === '0');
+      assert.deepEqual(
+        pressed(shown.reading, () => link.dispatch('keydown', { key: 'Enter' }), [
+          'Minimise details',
+          'Close details',
+          'Large reader',
+          'Which device?',
+        ]),
+        ['Close details'],
+      );
       await unchanged(env, shown);
     } finally {
       env.uninstall();
@@ -131,7 +165,8 @@ describe('a card in reading view shows its details and offers nothing that write
       assert.ok(!d.querySelector('.multi-select-pill-remove-button'), 'no x');
       assert.ok(!d.querySelector('input.multi-select-input'), 'no field to add');
       const items = d.querySelectorAll('li').map((li) => li.textContent);
-      assert.ok(items.includes('has tag → light') && items.includes('has tag → cheap'), `its things: ${items}`);
+      // listed as the details list a thing's links, grouped and in words (§25, details_links_listed)
+      assert.ok(items.includes('has tag light and cheap (2)'), `its things: ${items}`);
       await unchanged(env, shown);
     } finally {
       env.uninstall();
@@ -155,7 +190,15 @@ describe('a card in reading view shows its details and offers nothing that write
     try {
       const shown = await readingWhileEdited(env);
       tapKey(shown.reading, 'small_reader');
-      assert.deepEqual(controls(shown.reading), ['Close details'], 'no Add the name');
+      assert.deepEqual(
+        pressed(shown.reading, () => tapKey(shown.reading, 'small_reader'), [
+          'Minimise details',
+          'Close details',
+          ...UNTANGLING,
+        ]),
+        KEPT,
+        'no Add the name',
+      );
       assert.ok(details(shown.reading).textContent.includes('Suggested name: small_reader'), 'the name is said');
       await unchanged(env, shown);
     } finally {
@@ -195,7 +238,16 @@ describe('a card in reading view shows its details and offers nothing that write
       const full = env.doc.body.querySelector('.graph-note-fullscreen');
       assert.ok(full, 'full screen is open');
       assert.ok(!labelled(full, 'Add a thing'), 'no Add a thing in full screen');
-      assert.ok(!full.querySelector('input'), 'no field to type a thing in');
+      // the one field is the search box, which finds a thing and writes nothing (§25)
+      const fields = full.querySelectorAll('input');
+      assert.equal(fields.length, 1, 'no field to type a thing in, but the one');
+      assert.equal(fields[0].getAttribute('type'), 'search');
+      assert.ok(fields[0].closest('.graph-note-find'), 'it is the search box');
+      // typing in it and pressing Enter finds a thing and selects it, and writes nothing
+      fields[0].value = 'large';
+      fields[0].dispatch('input');
+      fields[0].dispatch('keydown', { key: 'Enter' });
+      assert.ok(full.querySelector('g.node.is-selected'), 'the thing found is selected');
       await unchanged(env, shown);
     } finally {
       env.uninstall();
@@ -238,7 +290,16 @@ describe('a card in reading view shows its details and offers nothing that write
       for (const key of ['Enter', ' ']) {
         box.dispatch('keydown', { key });
         assert.ok(!details(shown.reading).hidden, `${key === ' ' ? 'Space' : key} opens the details`);
-        assert.deepEqual(controls(shown.reading), ['Close details'], 'and they hold nothing to change');
+        assert.deepEqual(
+          pressed(shown.reading, () => box.dispatch('keydown', { key }), [
+            'Minimise details',
+            'Close details',
+            ...LARGE_LINKS,
+            ...UNTANGLING,
+          ]),
+          KEPT,
+          'and they hold nothing to change',
+        );
       }
       for (const key of ['Delete', 'Backspace', 'z', 'Enter'])
         for (const ctrl of [false, true]) box.dispatch('keydown', { key, ctrlKey: ctrl, metaKey: ctrl });
@@ -270,8 +331,11 @@ describe('a card in reading view shows its details and offers nothing that write
       assert.ok(full, 'full screen is open');
       for (const label of ['Edit here', 'Edit in pane', 'Record a path', 'Make a view'])
         assert.ok(!labelled(full, label), `no ${label}`);
-      tapKey(full, 'large');
-      assert.deepEqual(controls(full), ['Close details']);
+      assert.deepEqual(
+        // full screen shows the details in its own place, never as the sheet: no toggle
+        pressed(full, () => tapKey(full, 'large'), ['Close details', ...LARGE_LINKS, ...UNTANGLING]),
+        KEPT,
+      );
       assert.ok(details(full).textContent.includes('name: Large reader'), 'its properties are shown');
       await unchanged(env, shown);
     } finally {

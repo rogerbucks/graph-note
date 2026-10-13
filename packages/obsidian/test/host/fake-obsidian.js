@@ -283,6 +283,39 @@ export function fakeObsidian(state = {}) {
       return this;
     }
   }
+  // A dialog, as Obsidian's Modal: its title and content on the page while it is open; each open one in state.modals.
+  state.modals = [];
+  class Modal {
+    constructor(app_) {
+      this.app = app_;
+      this.modalEl = globalThis.activeDocument.body.createDiv({ cls: 'modal' });
+      this.titleEl = this.modalEl.createDiv({ cls: 'modal-title' });
+      this.contentEl = this.modalEl.createDiv({ cls: 'modal-content' });
+    }
+    setTitle(t) {
+      this.titleEl.setText(t);
+      return this;
+    }
+    open() {
+      state.modals.push(this);
+      this.onOpen?.();
+    }
+    close() {
+      this.onClose?.();
+      this.modalEl.remove();
+      state.modals = state.modals.filter((m) => m !== this);
+    }
+  }
+  // Obsidian's request function, which never reaches the network here: each request is kept in state.requests and
+  // answered by state.reply(request), a test's own; with none, it fails as an unreachable address does
+  state.requests = [];
+  const requestUrl = async (request) => {
+    state.requests.push(JSON.parse(JSON.stringify(request)));
+    if (!state.reply) throw new Error('net::ERR_CONNECTION_REFUSED');
+    const { status, text } = await state.reply(request);
+    if (status >= 400 && request.throw !== false) throw new Error(`Request failed, status ${status}`);
+    return { status, text, headers: {}, json: undefined, arrayBuffer: new ArrayBuffer(0) };
+  };
   const setIcon = (el, icon) => {
     el.setAttribute('data-icon', icon);
     state.icons.push(icon);
@@ -341,6 +374,8 @@ export function fakeObsidian(state = {}) {
     TFile,
     Notice,
     Menu,
+    Modal,
+    requestUrl,
     setIcon,
     setTooltip,
     Platform,

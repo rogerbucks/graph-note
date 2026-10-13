@@ -3,7 +3,7 @@
 // rewritten with its stray parts removed. A view's name is the user's own and is never checked here or anywhere.
 import { nearest } from './estimates.ts';
 import type { Problem } from './note-reading.ts';
-import { STYLE_KEYS, orList, styleProblem } from './style-graph.ts';
+import { STYLE_KEYS, article, orList, styleProblem } from './style-graph.ts';
 import type { Frame, StyleAt, StyleKind } from './style-graph.ts';
 import { trim } from './whitespace.ts';
 
@@ -32,7 +32,7 @@ export function unknownKeys(
       return styleProblem(
         graph,
         at,
-        `${k} is not a key a ${kind} uses`,
+        `${k} is not a key ${article(kind)} ${kind} uses`,
         by.length
           ? `change ${k} to ${by.length > 1 ? 'the one you mean: ' : ''}${orList(by)}`
           : `remove ${k}, or use one of ${orList(known)}`,

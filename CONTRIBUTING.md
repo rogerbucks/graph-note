@@ -69,8 +69,9 @@ of Obsidian's rules, sentence case in the interface among them. These are the gu
 - **The vault changes only through its API.** Never the file system or the adapter. A note is changed with
   `vault.process`, so the change is made atomically against the note as it is now.
 - **The app is `this.app`**, never the global `app`.
-- **No network requests.** The one future exception is spec §13's: sending to an AI or a database the user has set up,
-  only when the user sends or imports.
+- **No network requests,** with one exception (spec §13, §19): a send to an AI model the user has set up, only when the
+  user sends it, made by `packages/obsidian/src/ai/send.ts` alone with Obsidian's `requestUrl`, never an SDK, and
+  reached only from the send dialog. No databases and no remote images.
 
 ## Code style
 
@@ -167,9 +168,11 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/instruction-counts.test.js` — the benchmarks' work counted in CPU instructions: Cachegrind's output read, each case counted less its setup, the claims checked, nothing counted and said so where Valgrind is not installed, and every benchmark case still doing its work.
 - `test/ignore-entries.test.js` — an entry of `.ignore` that git ignores as build output may be missing in a fresh checkout, and any other entry that names a file must exist, so a misspelt path is caught.
 - `test/licences.test.js` — licences through the whole build chain, and the one allowance for a GPL tool run in CI alone and never shipped.
-- `test/offline.test.js` — the bundled engine makes no network request.
-- `test/policy.test.js` — the plugin-store files, supply-chain pins and least-privilege CI.
+- `test/offline.test.js` — no network request but the one exception, a send to an AI model the user set up: the bundled engine makes none, and the core's AI send makes none of its own, going only through the transport it is handed.
+- `test/policy.test.js` — the plugin-store files, supply-chain pins and least-privilege CI; the one module that may reach the network, reached only from the send dialog, and nothing in the AI's folder on a timer or an event.
+- `test/ai-disclosed.test.js` — the AI use disclosed in the README: content goes only to models the user sets up, only when the user sends it, and the one exception to no network use stated precisely (spec §19, ai_disclosed).
 - `test/public-readiness.test.js` — fit to be public and kept so: a clean history, a fresh clone set up from the README alone, and GitHub settings that let only a collaborator contribute.
+- `test/repository-scans.test.js` — the source scans behind the one network exception: the AI send module found however it is imported, Obsidian's `request(` taken for a request, and every timer and event found.
 - `test/quality-metrics.test.js` — the quality metrics are held to a committed baseline, and a worse one fails without a recorded reason.
 - `test/quality-baseline.test.js` — the baseline cannot be loosened without a reason, is whole, and says which machine measured it.
 - `test/quality-instructions.test.js` — the instruction counts in the ratchet: one metric for each benchmark, with a small tolerance, held only against counts from the same machine; not measured where Valgrind cannot run, which fails only on Linux; recorded and printed until the baseline holds them; a claim that does not hold failing always; test duration only warning.

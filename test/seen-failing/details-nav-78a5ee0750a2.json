@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/details-nav.test.js",
+  "test": "in view mode, details in a tall card show on screen without covering the thing chosen > while the block is edited the details are the inspector, in the card, not the sheet",
+  "seen_failing_first": false,
+  "evidence": "A control: the inspector, while the block is edited, stays in the card and is never the view-mode sheet; before the sheet existed nothing was a sheet, so it passed by design."
+}

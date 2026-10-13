@@ -46,7 +46,7 @@ const reading = readNote(STYLED);
 const { style, problems } = readStyle(STYLED, 'team', reading);
 assert.deepEqual(problems, []);
 const AROUND = { name: 'around_bob', spec: { kind: 'near', id: 'bob', depth: 1 } };
-const INFO = { note: 'Trips/Team.md', date: '2026-10-11', theme: 'light', style };
+const INFO = { note: 'Trips/Team.md', date: '2026-10-11', theme: 'light', style, data: reading.world.team };
 const texts = (svg) => [...svg.matchAll(/>([^<>]+)<\/(?:text|tspan)>/g)].map((m) => m[1]);
 const nodeGroups = (svg) => [...svg.matchAll(/<g id="node\d+" class="node"/g)].length;
 

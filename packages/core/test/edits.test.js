@@ -7,6 +7,10 @@ import gs from '@graph-note/graph-spec';
 import { gqlBlocks } from '../src/blocks.ts';
 import { readNote } from '../src/drawing.ts';
 import { isDraft, lockBlock, reverseGuess } from '../src/lock.ts';
+import { notTaken } from '../src/proposals-apply.ts';
+import { basisOf } from '../src/proposals-basis.ts';
+import { ProposalReview } from '../src/proposals-review.ts';
+import { linkChange, makeProposal, thingChange } from '../src/proposals.ts';
 import { insertBlockAfter, replaceBlock, History } from '../src/store.ts';
 
 const DRAFT = `// graph: reader · SOURCE
@@ -181,6 +185,41 @@ describe('every edit round-trips', () => {
       const r = replaceBlock(note, ref, step);
       note = r.note;
       ref = r.ref;
+    }
+    assert.equal(note, NOTE, 'undone, the original bytes');
+  });
+
+  test('a change accepted from a proposal is an edit like these: read back it gives the graph intended; undone, the original bytes (editor spec §17, accepting_is_an_edit)', () => {
+    const proposal = makeProposal({
+      id: 'cs1',
+      graph: 'reader',
+      by: { name: 'ada', kind: 'model' },
+      basis: basisOf(NOTE, 'reader'),
+      changes: [
+        thingChange('price', 'Reason', { title: 'Costs more' }),
+        linkChange('price', 'COUNTS_AGAINST', 'large'),
+        { op: 'set', thing: 'eyes', key: 'title', value: "'Easier on the eyes'" },
+        { op: 'remove-link', from: 'eyes', type: 'FAVOURS', to: 'large' },
+        { op: 'remove-thing', thing: 'eyes' },
+      ],
+    });
+    // the changes are made in turn, each from the note the last left, and undone one after another to the original bytes
+    const review = new ProposalReview(proposal);
+    let note = NOTE;
+    const edited = [];
+    for (const id of ['c1', 'c2', 'c3', 'c4', 'c5']) {
+      const r = review.accept(note, [id], { name: 'roger' }, { at: '2026-10-13T10:30:00Z', staleSeen: true });
+      assert.equal(r.ok, true, r.reason);
+      const change = proposal.changes.find((c) => c.id === id);
+      assert.equal(notTaken(readNote(gqlBlocks(r.note).map((x) => x.text)), 'reader', change), null, id);
+      edited.push(note);
+      note = r.note;
+    }
+    for (const before of edited.reverse()) {
+      const u = review.undo(note);
+      assert.equal(u.ok, true, u.reason);
+      note = u.note;
+      assert.equal(note, before);
     }
     assert.equal(note, NOTE, 'undone, the original bytes');
   });

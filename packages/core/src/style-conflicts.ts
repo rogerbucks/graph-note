@@ -1,11 +1,12 @@
-// The things of a style graph checked against each other (editor spec §6, nudge_problems; §7): nudges that conflict — two
-// directions, beside and before on one pair, a thing in two groups, a loop of befores — a view set both to fade and to
-// hide, a view saved as shown twice, and a colour given two meanings in one view or path. Each is a problem with a fix;
-// the first written is kept and the later left out, so what is kept never conflicts.
+// The things of a style graph checked against each other (editor spec §6, nudge_problems; §7; §14; §15): nudges that
+// conflict — two directions, beside and before on one pair, a thing in two groups, a loop of befores — a view set both to
+// fade and to hide, a view saved as shown twice, a colour given two meanings in one view or path, a property switched both
+// on and off for one kind, thing or type in one view, arrowheads both hidden and shown for the same links in one view,
+// and two diagram types for the whole graph or one view. Each is a problem with a fix; the first written is kept and the later left out, so what is kept never conflicts.
 import type { Problem } from './note-reading.ts';
 import type { Checked } from './style-checks.ts';
 import { emptyStyle, styleProblem } from './style-graph.ts';
-import type { Look, Nudge, StyleGraph } from './style-graph.ts';
+import type { Arrows, Diagram, Look, Nudge, Show, StyleAt, StyleGraph } from './style-graph.ts';
 
 const REMOVE = 'remove one of them';
 
@@ -103,6 +104,71 @@ function settleLooks(looks: Look[], graph: string, out: Problem[]): Look[] {
   });
 }
 
+/**
+ * The things of one kind that conflict with none written before them: two that choose for the same place (`placeOf`)
+ * differently (`choiceOf`) are a problem on the later, which is left out; the same choice written twice is kept.
+ */
+function settleChoices<T extends { at: StyleAt }>(
+  things: T[],
+  placeOf: (t: T) => string,
+  choiceOf: (t: T) => string,
+  said: (first: T, later: T) => string,
+  graph: string,
+  out: Problem[],
+): T[] {
+  const first = new Map<string, T>();
+  return things.filter((t) => {
+    const was = first.get(placeOf(t));
+    if (!was) first.set(placeOf(t), t);
+    if (!was || choiceOf(was) === choiceOf(t)) return true;
+    out.push(styleProblem(graph, t.at, said(was, t), REMOVE));
+    return false;
+  });
+}
+
+const inView = (view: string | undefined) => (view === undefined ? '' : ` in view ${view}`);
+
+/** The properties shown, each switched one way only for each kind, thing or type in each view. */
+const settleShows = (shows: Show[], graph: string, out: Problem[]): Show[] =>
+  settleChoices(
+    shows,
+    (s) => [s.view ?? '', s.kind ?? '', s.thing ?? '', s.type ?? '', s.property].join('\u0000'),
+    (s) => s.inline,
+    (was, s) =>
+      `${s.property} of ${s.kind ?? s.thing ?? s.type} is switched both ${was.inline} (line ${was.at.line}) and ${s.inline}${inView(s.view)}`,
+    graph,
+    out,
+  );
+
+/** Where arrowheads are hidden or shown, each chosen one way only for every link or a type, in each view. */
+const settleArrows = (arrows: Arrows[], graph: string, out: Problem[]): Arrows[] =>
+  settleChoices(
+    arrows,
+    (a) => [a.view ?? '', a.type ?? ''].join('\u0000'),
+    (a) => a.arrowheads,
+    (was, a) =>
+      `the arrowheads of ${a.type ?? 'every link'} ${a.view === undefined ? 'in the whole graph' : `in view ${a.view}`} ` +
+      `are set to both ${was.arrowheads} (line ${was.at.line}) and ${a.arrowheads}`,
+    graph,
+    out,
+  );
+
+/** A diagram type as a sentence says it: its type, and for a tree the relationship it follows. */
+const typeSaid = (d: Diagram) => `${d.type}${d.relationship === undefined ? '' : ` along ${d.relationship}`}`;
+
+/** The diagram types chosen, one for the whole graph and one for each view (§15). */
+const settleDiagrams = (diagrams: Diagram[], graph: string, out: Problem[]): Diagram[] =>
+  settleChoices(
+    diagrams,
+    (d) => d.view ?? '',
+    typeSaid,
+    (was, d) =>
+      `the diagram type of ${d.view === undefined ? 'the whole graph' : `view ${d.view}`} is set to both ` +
+      `${typeSaid(was)} (line ${was.at.line}) and ${typeSaid(d)}`,
+    graph,
+    out,
+  );
+
 /** The style a checked style graph gives, once its things are checked against each other, and the problems found. */
 export function settle(checked: Checked, graph: string): { style: StyleGraph; problems: Problem[] } {
   const problems: Problem[] = [],
@@ -110,7 +176,9 @@ export function settle(checked: Checked, graph: string): { style: StyleGraph; pr
   const { kept, direction } = settleNudges(checked.nudges, graph, problems);
   style.nudges = kept;
   if (direction) style.direction = direction;
-  style.shows = checked.shows;
+  style.shows = settleShows(checked.shows, graph, problems);
+  style.arrows = settleArrows(checked.arrows, graph, problems);
+  style.diagrams = settleDiagrams(checked.diagrams, graph, problems);
   style.looks = settleLooks(checked.looks, graph, problems);
   const viewAt = new Map<string, number>();
   for (const { view, outside, at } of checked.views) {

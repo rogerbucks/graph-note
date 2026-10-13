@@ -20,6 +20,7 @@ const DATA = [
   'completeness',
   'parked',
   'indent',
+  'focusDepth',
 ] as const satisfies readonly (keyof ViewOptions)[];
 
 /**

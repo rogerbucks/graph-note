@@ -61,6 +61,27 @@ declare namespace GraphSpecCheck {
   type World = Record<string, Graph>;
 
   function worldFromStore(store: Store): World;
+  /** A graph's canonical text, hashed: the state a change set is made against is its first sixteen digits. */
+  function canon(g: Graph): string;
+
+  /** A change set's first line (§24 H1): its graph, its id, the state it was made against and its author; null when it is not one. */
+  function changesetHeader(block: string): { graph: string; id: string; against: string; by: string } | null;
+  /** A change set checked against its base blocks: each check with whether it passed, its header and the graph's state after it. */
+  function checkChangeset(
+    base: string[],
+    block: string,
+    matrix?: unknown,
+    switches?: Set<string>,
+  ): {
+    results: [string, boolean][];
+    /** The header, with `refreshes` — each §20 value the change set recomputes: the claim, the key, its value before and after. */
+    header:
+      | ({ graph: string; id: string; against: string; by: string } & {
+          refreshes?: [string, string, Value | null, Value][];
+        })
+      | null;
+    after: string | null;
+  };
   /** [the shared schema a graph names, that schema's graph if it was loaded]. */
   function schemaFor(world: World, graph: string): [string | undefined, Graph | undefined];
   /** {type: [reading, reverse reading]} from the graph's own schema, else the shared one given. */
@@ -116,6 +137,19 @@ declare namespace GraphSpecCheck {
   /** The notes and //@ lines a block's elements own, the comment lines that own nothing, and the //@ lines with no
    * key. Throws ProfileError where the reader does; a query or an excerpt owns nothing. */
   function ownedComments(block: string): { owned: OwnedComment[]; unowned: number[]; malformed: number[] };
+
+  /** A note on a thing or a link (§26; editor spec §24): its element's line, the element, its /// lines' numbers, its
+   * text (CommonMark, for the host to render) and its summary, the text's first paragraph. */
+  interface ElementNote {
+    line: number;
+    element: { thing: string } | { link: [string, string, string] };
+    lines: number[];
+    text: string;
+    summary: string;
+  }
+  /** A block's notes, and each line holding more than one element with a note's /// lines above it, which belongs to
+   * none of them. Throws ProfileError where the reader does; a query or an excerpt holds no notes. */
+  function notes(block: string): { notes: ElementNote[]; shared: { line: number; lines: number[] }[] };
 
   /** The dialect linter: traps in a GQL text, each with its line. */
   function lint(text: string): { trap: string; line: number }[];

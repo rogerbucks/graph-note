@@ -3,15 +3,23 @@
 // reaches the vault: the plugin's saved settings hold only that name.
 import { SecretComponent } from 'obsidian';
 import type { App, SettingDefinitionList, SettingTab } from 'obsidian';
-import { aiModel } from '@graph-note/core';
+import { AI_PURPOSES, aiModel, endpointProblem } from '@graph-note/core';
 import type { AiModel, Settings } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
 
-const TEXTS: [keyof AiModel, string][] = [
-  ['name', 'Name'],
-  ['purpose', 'Purpose'],
-  ['model', 'Model'],
-  ['endpoint', 'Endpoint'],
+const TEXTS: [keyof AiModel, string, string][] = [
+  ['name', 'Name', ''],
+  [
+    'purpose',
+    'Purpose',
+    `What it is for: ${AI_PURPOSES.join(', ')}, or your own words. A send for that purpose offers this model first.`,
+  ],
+  ['model', 'Model', 'The model’s own name at its address, as the service names it.'],
+  [
+    'endpoint',
+    'Endpoint',
+    'The address requests go to, such as a chat completions address: http:// for a model on this device, https:// for any other.',
+  ],
 ];
 
 /** The models, each a page of its own, with an affordance to add one and to remove each. */
@@ -31,13 +39,16 @@ export function aiModelList(app: App, owner: GraphNotePlugin, tab: SettingTab): 
         m.name ? `${m.name}: ${m.purpose || 'no purpose given'}, up to ${m.ceiling}` : 'Not named yet',
         // a ceiling no longer among the classifications is kept as written, and said, until it is chosen again
         ...(s.classifications.includes(m.ceiling) ? [] : [`${m.ceiling} is no longer a classification: choose again`]),
+        // an address set but not usable is said, so a model that will never be offered says why (user_models)
+        ...(m.endpoint.trim() ? [endpointProblem(m.endpoint) ?? ''].filter(Boolean) : []),
       ].join('. '),
       items: [
         {
           type: 'group',
           items: [
-            ...TEXTS.map(([field, name]) => ({
+            ...TEXTS.map(([field, name, desc]) => ({
               name,
+              ...(desc ? { desc } : {}),
               control: { type: 'text' as const, key: `aiModels.${i}.${field}` },
             })),
             {

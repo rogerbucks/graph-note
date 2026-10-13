@@ -5,15 +5,17 @@
 import { MarkdownRenderChild, Notice, TFile } from 'obsidian';
 import type { Component, MarkdownPostProcessorContext } from 'obsidian';
 import {
+  changeSetId,
   completenessReport,
+  depthOf,
   gqlBlocks,
   graphOfBlock,
   namesSharedSchema,
-  nudgedDrawing,
   parked,
   readNote,
   readStyle,
   replaceBlock,
+  styledDrawing,
   styleOf,
   viewsOf,
   underStrictness,
@@ -23,8 +25,10 @@ import type GraphNotePlugin from './main';
 import type { EditTarget } from './main';
 import { renderCode } from './code';
 import { renderStyleBlock } from './style-block';
-import { renderViewBlock, writeViewBlock } from './view-block';
+import { renderViewBlock, writeStyle, writeViewBlock } from './view-block';
+import { renderProposalBlock } from './proposals/proposal-block';
 import { GraphView } from './graph-view/graph-view';
+import { diagramShown, tableDrawn } from './graph-view/type-strip';
 import { readOnlyHere, settlePlacements, whenPlaced } from './graph-view/placement';
 import { renderProblems } from './graph-view/problems-list';
 import { refusalBanner } from './layout-worker/refusal-banner';
@@ -127,6 +131,8 @@ export async function renderBlock(
   // a query block named as a view is drawn as the view (§7)
   const view = viewsOf([source])[0];
   if (view) return renderViewBlock(plugin, source, el, ctx, view, owner);
+  // a change set is a proposal, drawn over its graph and decided change by change (§17)
+  if (changeSetId(source)) return renderProposalBlock(plugin, source, el, ctx, owner);
   const styled = styleOf(source);
   if (styled) {
     // a style block is never drawn as a graph: folded away until opened (§2)
@@ -164,11 +170,18 @@ export async function renderBlock(
   }
   // a problem's line in the note: the block's fence line, plus its line in the block (1 = the line after the fence)
   const shown = (p: Problem): ShownProblem => ({ ...p, noteLine: (blocks[p.block]?.line ?? 0) + p.line });
-  // its style graph (§2): what is wrong in it listed with the graph's problems; what is sound, its nudges (§6), drawn
+  // its style graph (§2): what is wrong in it listed with the graph's problems; what is sound — its nudges (§6), the
+  // properties it shows inline (§14) and the arrowheads it hides (§15) — drawn
   const styling = readStyle(texts, graph, reading);
   const problems = [...reading.problems, ...styling.problems].filter((p) => p.graph === graph).map(shown);
   const plain = reading.graphs.get(graph);
-  const drawing = plain && { ...nudgedDrawing(plain, styling.style), nudges: styling.style.nudges };
+  const drawing = plain && styledDrawing(plain, styling.style, reading.world[graph]);
+  // the diagram types (§15): which fit, the one suggested and the one drawn; choosing one writes it in the style graph
+  const diagram =
+    plain &&
+    diagramShown(plain, styling.style, reading.world[graph], undefined, (change, done) => {
+      void writeStyle(plugin, target.path, graph, { diagram: change }, done);
+    });
   const root = el.createDiv({ cls: 'graph-note' });
 
   if (!drawing || !drawing.boxes.length) {
@@ -209,7 +222,8 @@ export async function renderBlock(
 
   let drawn: Drawn | Refusal | null;
   try {
-    drawn = await plugin.layout(drawing, owner);
+    // a graph drawn as a table is the plugin's own table, never laid out (§15)
+    drawn = diagram?.table ? tableDrawn(diagram.table) : await plugin.layout(drawing, owner);
   } catch (e) {
     console.error('Graph Note could not draw', graph, e);
     root.createDiv({
@@ -241,6 +255,7 @@ export async function renderBlock(
       drawn,
       problems,
       mode: 'note',
+      ...(diagram ? { diagram } : {}),
       completeness: completenessReport(reading, graph, new Date().toISOString().slice(0, 10)),
       parked: parked(reading, graph, new Date().toISOString().slice(0, 10)),
       writeView: (block) => writeViewBlock(plugin, target.path, graph, block),
@@ -251,6 +266,7 @@ export async function renderBlock(
         run: (ask) => plugin.exportGraph(ask),
       },
       indent: plugin.settings.indent,
+      focusDepth: depthOf(plugin.settings.focusDepth),
       lineOf: (at) => (blocks[at.block]?.line ?? 0) + at.line,
       onEdit: () => {
         void plugin.openEditor(target);

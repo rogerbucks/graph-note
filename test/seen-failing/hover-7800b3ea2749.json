@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/hover.test.js",
+  "test": "pointing at a thing or a link > pointing at empty space highlights nothing: moving on to it from a thing takes the highlight away",
+  "seen_failing_first": false,
+  "evidence": "Review made this test assert the highlight first and then its going; it still passes against the code before this commit because that code (commit 6676f91, earlier on this branch) already had the highlight. The earlier weak version was excused for the same reason; rewriting that earlier commit so it fails first was refused by the permission classifier, so this stays."
+}
