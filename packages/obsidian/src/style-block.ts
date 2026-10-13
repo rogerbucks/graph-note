@@ -14,6 +14,7 @@ export function renderStyleBlock(el: HTMLElement, source: string, styled: string
     style.shows.length ? `${style.shows.length} shown ${style.shows.length === 1 ? 'property' : 'properties'}` : '',
     style.views.size ? plural(style.views.size, 'view setting') : '',
     style.shown.size ? plural(style.shown.size, 'saved view') : '',
+    style.arrows.length ? plural(style.arrows.length, 'arrowhead setting') : '',
   ].filter(Boolean);
   const fold = el.createEl('details', { cls: 'graph-note-style' });
   fold.createEl('summary', {

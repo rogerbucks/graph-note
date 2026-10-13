@@ -1,9 +1,10 @@
-"""A graph's style, read from its style blocks (editor spec §2, §6): every style block of the graph
-read with the reader the data is read with, so what cannot be read is a problem on its line and the
-rest is used; then each thing checked against the graph it styles, and the nudges against each
-other. The core's style.ts readStyle, step for step, as far as nudges go, so graph_svg draws a
-nudged graph as the plugin does (python_honours_nudges). Reading it never raises and never stops
-the drawing (broken_style_block): at worst the graph is drawn in the locked style.
+"""A graph's style, read from its style blocks (editor spec §2, §6, §14, §15): every style block of
+the graph read with the reader the data is read with, so what cannot be read is a problem on its
+line and the rest is used; then each thing checked against the graph it styles, and the things
+against each other. The core's style.ts readStyle, step for step, as far as what graph_svg draws
+goes — nudges, properties shown inline and arrowheads hidden — so graph_svg draws a styled graph
+as the plugin does (python_honours_nudges, arrows_both_renderers). Reading it never raises and
+never stops the drawing (broken_style_block): at worst the graph is drawn in the locked style.
 
 The plugin alone does not read a style too large to read on a phone (layout-limits.ts,
 READ_LIMITS), as it does not read such data: the Python library reads any size."""
@@ -18,9 +19,9 @@ from graphspec.reader.block_items import blank_text
 from graphspec.reader.drawing import REREAD_BUDGET, _graph_of, read_for_drawing, style_of
 from graphspec.reader.written_things import written_in
 from graphspec.rules.plain_graph import World
-from graphspec.rules.views import SCHEMA_LABELS
+from graphspec.rules.views import SCHEMA_LABELS, readings
 from graphspec.style.checks import check_things
-from graphspec.style.conflicts import settle_nudges
+from graphspec.style.conflicts import settle_arrows, settle_nudges, settle_shows
 
 
 def _links(texts, blocks, graph):
@@ -43,6 +44,35 @@ def _links(texts, blocks, graph):
     return out
 
 
+def _names(world, graph, g):
+    """The names of graph `g`, as the core's style.ts namesOf gives them: its things, kinds and
+    relationship types (written, or declared by its schema), and the property names of a kind's
+    things, of one thing, or of a relationship type's links."""
+    things = [i for i, (labels, _) in g.nodes.items() if not labels & SCHEMA_LABELS]
+
+    def kinds_of(i):
+        return [x for x in g.nodes[i][0] if x not in SCHEMA_LABELS]
+
+    def properties(of):
+        if of.get("type") is not None:
+            return {k for _, t, _, p in g.edges if t == of["type"] for k in p}
+        chosen = [
+            i
+            for i in things
+            if (i == of["thing"] if of.get("thing") is not None else of.get("kind") in kinds_of(i))
+        ]
+        return {k for i in chosen for k in g.p(i) if k != "id"}
+
+    declared = readings(g, world.schema_for(graph)[1])
+    return {
+        "graph": graph,
+        "things": set(things),
+        "kinds": {k for i in things for k in kinds_of(i)},
+        "types": {t for _, t, _, _ in g.edges} | set(declared),
+        "properties": properties,
+    }
+
+
 def _in_order(labels, written):
     """A thing's kinds in the order written, as the core's store keeps them; a set here."""
     order = [x for x in dict.fromkeys(written.labels if written else ()) if x in labels]
@@ -54,17 +84,18 @@ def read_style(
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     """The style of `graph`: every style block of the note for it (`// graph: <name> · STYLE
     <graph>`), read as the data is, merged, and checked against the graph as the note reads it
-    (`world`, from read_for_drawing's store). Returns ({nudges, direction}, problems): each nudge
-    {word, thing, other, group, direction as written, at: {block, line, id}}, only those sound and
-    in no conflict; the direction a direction nudge sets, or None; and each problem {graph, block,
-    line, severity, message, fix}, the block's index in `texts` and its line. The problems are the
-    core's, word for word, for everything but a Show, Look, ViewStyle or Shown: those are taken as
-    style things and not checked further (graphspec/style/checks.py), so the core's problems with
-    them are not given here; nor are the core's edits (replace, span). Nothing is ever written to
-    the data."""
+    (`world`, from read_for_drawing's store). Returns ({nudges, direction, shows, arrows},
+    problems): each nudge {word, thing, other, group, direction as written, at: {block, line,
+    id}}; each Show {property, kind, thing or type, view (if any), inline: 'on' or 'off', at}; each
+    Arrows {arrowheads: 'show' or 'hide', view and type (if any), at}; only those sound and in no
+    conflict; the direction a direction nudge sets, or None; and each problem {graph, block, line,
+    severity, message, fix}, the block's index in `texts` and its line. The problems are the
+    core's, word for word, for everything but a Look, ViewStyle or Shown: of those only the keys
+    are checked (graphspec/style/checks.py), so the core's other problems with them are not given
+    here; nor are the core's edits (replace, span). Nothing is ever written to the data."""
     blocks = [i for i, t in enumerate(texts) if style_of(t) == graph]
     first = {"block": blocks[0] if blocks else 0, "line": 1, "id": ""}
-    style: dict[str, Any] = {"nudges": [], "direction": None}
+    style: dict[str, Any] = {"nudges": [], "direction": None, "shows": [], "arrows": []}
     if not blocks:
         return style, []
     g = world.graphs.get(graph)
@@ -106,9 +137,12 @@ def read_style(
                 }
             )
     raws.sort(key=lambda r: (r["at"]["block"], r["at"]["line"]))
-    things = {i for i, (labels, _) in g.nodes.items() if not labels & SCHEMA_LABELS}
-    nudges, checked = check_things(raws, {"graph": graph, "things": things})
-    kept, direction, conflicts = settle_nudges(nudges, graph)
+    c = check_things(raws, _names(world, graph, g))
+    checked = c["problems"]
+    kept, direction, conflicts = settle_nudges(c["nudges"], graph)
+    shows, show_conflicts = settle_shows(c["shows"], graph)
+    arrows, arrow_conflicts = settle_arrows(c["arrows"], graph)
+    conflicts = [*conflicts, *show_conflicts, *arrow_conflicts]
     # a style block named as a data graph: a reader that does not know STYLE merges it into the
     # data
     named = []
@@ -128,4 +162,4 @@ def read_style(
             )
     every = [*named, *problems, *_links(texts, blocks, graph), *checked, *conflicts]
     every.sort(key=lambda p: (p["block"], p["line"]))
-    return {"nudges": kept, "direction": direction}, every
+    return {"nudges": kept, "direction": direction, "shows": shows, "arrows": arrows}, every

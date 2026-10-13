@@ -3,6 +3,9 @@
 // that source (no_nudges_layout_places). Beside puts two things on one rank, before orders them with a link never drawn,
 // group draws its things in a labelled box, and direction sets the direction the drawing is laid out in.
 import GraphLayout from '@graph-note/graph-spec/src/graph-layout.js';
+import type { Graph } from '@graph-note/graph-spec';
+import { arrowlessLinks } from './arrows.ts';
+import { inlineRows } from './inline-properties.ts';
 import { STYLE } from './layout.ts';
 import type { GraphDrawing } from './note-reading.ts';
 import type { Nudge, StyleGraph } from './style-graph.ts';
@@ -49,4 +52,20 @@ export function nudgedSource(dot: string, nudges: readonly Nudge[], keys: Iterab
 /** The drawing laid out in the direction its style's direction nudge sets; the same drawing when it sets none. */
 export function nudgedDrawing(drawing: GraphDrawing, style: Pick<StyleGraph, 'direction'>): GraphDrawing {
   return style.direction ? { ...drawing, direction: style.direction } : drawing;
+}
+
+/**
+ * The drawing as its style graph draws it in `view` (none: the whole graph), as every host draws a graph, a view or an
+ * export: in the direction its direction nudge sets, with its nudges (§6), the links it draws without their arrowheads
+ * (§15) and the properties it shows inline (§14), their values from `g`, the graph as read (none: no property shown).
+ */
+export function styledDrawing(drawing: GraphDrawing, style: StyleGraph, g?: Graph, view?: string): GraphDrawing {
+  const arrowless = arrowlessLinks(drawing, style, view),
+    inline = g ? inlineRows(drawing, g, style, view) : undefined;
+  return {
+    ...nudgedDrawing(drawing, style),
+    nudges: style.nudges,
+    ...(arrowless.length ? { arrowless } : {}),
+    ...(inline && (inline.boxes.length || inline.links.length) ? { inline } : {}),
+  };
 }

@@ -110,7 +110,13 @@ async function exporting(plugin: GraphNotePlugin, ask: ExportAsk): Promise<Expor
     });
   let image;
   try {
-    image = await exportWithLayout(scope, layout, { note: ask.path, date, theme: ask.theme, style });
+    image = await exportWithLayout(scope, layout, {
+      note: ask.path,
+      date,
+      theme: ask.theme,
+      style,
+      data: reading.world[ask.graph],
+    });
   } catch (e) {
     // the layout worker or its engine failed: told as a limit is, with what to do; any other failure is the caller's
     if (!layoutFailed) throw e;

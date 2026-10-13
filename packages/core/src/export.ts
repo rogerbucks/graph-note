@@ -4,6 +4,7 @@
 // (export_self_explaining, export_fixed_theme). The host draws the SVG onto a canvas for a PNG, at the size `pngSize`
 // gives (export_png_sharp), and writes the file; what to export is in export-scope.ts, whether to is in export-plan.ts.
 import GraphLayout from '@graph-note/graph-spec/src/graph-layout.js';
+import type { Graph } from '@graph-note/graph-spec';
 import { marked } from './export-marks.ts';
 import type { Marks } from './export-marks.ts';
 import { framed, saidDate } from './export-frame.ts';
@@ -19,7 +20,7 @@ import type { Drawn, Engine } from './render.ts';
 import type { ExportTheme } from './settings.ts';
 import { legendOf, lookOf } from './style.ts';
 import type { StyleGraph, ThingLook } from './style-graph.ts';
-import { nudgedDrawing } from './style-source.ts';
+import { styledDrawing } from './style-source.ts';
 import { hueColour } from './theme.ts';
 
 /** The formats an image is offered in (export_formats). */
@@ -57,6 +58,8 @@ export interface ExportInfo {
   theme: ExportTheme;
   /** The graph's style, for a view's looks and legend and for the nudges that lay the drawing out; none is the locked style. */
   style?: StyleGraph;
+  /** The graph as read (`reading.world[graph]`), for the values of the properties its style shows inline; none, none shown. */
+  data?: Graph;
 }
 
 /** An exported image: the SVG text, and its size in CSS pixels. */
@@ -119,9 +122,12 @@ const refuseEmpty = (scope: ExportScope): void => {
   if (scope.empty) throw new Error(`There is nothing to export: ${scope.why ?? 'the scope is empty'}`);
 };
 
-/** The drawing an export lays out: the scope's, with the style's nudges and direction when it has a style. */
+/**
+ * The drawing an export lays out: the scope's, styled as its view or the whole graph is when it has a style — its nudges
+ * and direction, the arrowheads it hides and the properties it shows inline (§14, §15).
+ */
 const laidOutDrawing = (scope: ExportScope, info: ExportInfo): GraphDrawing =>
-  info.style ? { ...nudgedDrawing(scope.drawing, info.style), nudges: info.style.nudges } : scope.drawing;
+  info.style ? styledDrawing(scope.drawing, info.style, info.data, scope.view) : scope.drawing;
 
 /**
  * The image of `scope`, laid out by `engine` and drawn in the fixed colours of `info.theme`, in its frame. Refuses an empty

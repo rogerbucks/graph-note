@@ -1,7 +1,9 @@
-"""The nudges of a style graph checked against each other (editor spec §6, nudge_problems): two
-directions, beside and before on one pair, a thing in two groups, a loop of befores. Each is a
-problem with a fix; the first written is kept and the later left out, so what is kept never
-conflicts. The core's style-conflicts.ts, function for function, as far as nudges go."""
+"""The things of a style graph checked against each other (editor spec §6, nudge_problems; §14;
+§15): nudges that conflict — two directions, beside and before on one pair, a thing in two groups,
+a loop of befores — a property switched both on and off for one kind, thing or type in one view,
+and arrowheads both hidden and shown for the same links in one view. Each is a problem with a fix;
+the first written is kept and the later left out, so what is kept never conflicts. The core's
+style-conflicts.ts, function for function, as far as what graph_svg draws goes."""
 
 from __future__ import annotations
 
@@ -81,3 +83,56 @@ def settle_nudges(nudges: list[dict], graph: str) -> tuple[list[dict], str | Non
         kept.append(n)
     chosen = direction.get("direction") if direction is not None else None
     return kept, chosen or None, out
+
+
+def _settle_choices(things, place_of, choice_of, said, graph):
+    """The things of one kind that conflict with none written before them: two that choose for
+    the same place differently are a problem on the later, which is left out; the same choice
+    written twice is kept. Returns (kept, problems)."""
+    first, kept, out = {}, [], []
+    for t in things:
+        was = first.setdefault(place_of(t), t)
+        if was is t or choice_of(was) == choice_of(t):
+            kept.append(t)
+        else:
+            out.append(style_problem(graph, t["at"], said(was, t), REMOVE))
+    return kept, out
+
+
+def _in_view(view):
+    return "" if view is None else f" in view {view}"
+
+
+def settle_shows(shows: list[dict], graph: str) -> tuple[list[dict], list[dict]]:
+    """The properties shown, each switched one way only for each kind, thing or type in each
+    view; and a problem for each one switched the other way."""
+
+    def place(s):
+        keys = ("view", "kind", "thing", "type")
+        return "\0".join([*(s.get(k) or "" for k in keys), s["property"]])
+
+    def said(was, s):
+        what = s.get("kind") or s.get("thing") or s.get("type")
+        return (
+            f"{s['property']} of {what} is switched both {was['inline']} "
+            f"(line {was['at']['line']}) and {s['inline']}{_in_view(s.get('view'))}"
+        )
+
+    return _settle_choices(shows, place, lambda s: s["inline"], said, graph)
+
+
+def settle_arrows(arrows: list[dict], graph: str) -> tuple[list[dict], list[dict]]:
+    """Where arrowheads are hidden or shown, each chosen one way only for every link or a type,
+    in each view; and a problem for each one chosen the other way."""
+
+    def place(a):
+        return "\0".join([a.get("view") or "", a.get("type") or ""])
+
+    def said(was, a):
+        where = "in the whole graph" if a.get("view") is None else f"in view {a['view']}"
+        return (
+            f"the arrowheads of {a.get('type') or 'every link'} {where} are set to both "
+            f"{was['arrowheads']} (line {was['at']['line']}) and {a['arrowheads']}"
+        )
+
+    return _settle_choices(arrows, place, lambda a: a["arrowheads"], said, graph)

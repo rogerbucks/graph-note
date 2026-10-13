@@ -11,7 +11,7 @@ import { readNote } from '../src/drawing.ts';
 import { layoutSource } from '../src/layout.ts';
 import { directions } from '../src/render.ts';
 import { readStyle } from '../src/style.ts';
-import { nudgedDrawing } from '../src/style-source.ts';
+import { nudgedDrawing, styledDrawing } from '../src/style-source.ts';
 
 const PY_SRC = fileURLToPath(new URL('../../../python/graph_spec/src', import.meta.url));
 
@@ -354,4 +354,58 @@ test('a graph with nudges is drawn the same by both, its style read alike, byte 
     }
     assert.deepEqual(python[n], { styles, drawn }, c.name);
   });
+});
+
+// arrows_both_renderers (editor spec §15), and properties shown inline (§14): a graph's style graph hides or shows its
+// arrowheads and shows properties below the text of boxes and links, and graph_svg.py draws it as the core does — the
+// same problems reading each style, the same links without arrowheads, the same rows, and the source of each direction
+// laid out, byte for byte. The cases are shared with python/graph_spec/tests/test_graph_svg_styled.py, whose Python
+// answer (python_answer: read_for_drawing, read_style, arrowless, inline_rows and graph_svg's sources) is run here.
+const { cases: STYLED } = JSON.parse(
+  readFileSync(new URL('../../../python/graph_spec/tests/style_cases.json', import.meta.url), 'utf8'),
+);
+const PY_TESTS = fileURLToPath(new URL('../../../python/graph_spec/tests', import.meta.url));
+const PYTHON_STYLED = `
+import json, sys
+sys.path.insert(0, ${JSON.stringify(PY_TESTS)})
+from test_graph_svg_styled import python_answer
+print(json.dumps([python_answer(texts, view) for texts, view in json.load(sys.stdin)]))
+`;
+
+test('arrowheads hidden or shown, and properties shown inline, are drawn the same by both, byte for byte', () => {
+  const notes = STYLED.map((c) => [c.blocks.map((lines) => lines.join('\n')), c.view ?? null]);
+  const r = spawnSync('python3', ['-c', PYTHON_STYLED], { input: JSON.stringify(notes), encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr);
+  const python = JSON.parse(r.stdout);
+  const row = (p) => [p.block, p.line, p.severity, p.message, p.fix];
+  STYLED.forEach((c, n) => {
+    const [texts, view] = notes[n];
+    const reading = readNote(texts),
+      styles = {},
+      drawn = {},
+      arrowless = {},
+      inline = {};
+    for (const t of texts) {
+      const g = styleOf(t);
+      if (g !== null && !(g in styles)) styles[g] = readStyle(texts, g, reading).problems.map(row);
+    }
+    for (const [graph, drawing] of reading.graphs) {
+      // as the plugin draws a graph or a view (packages/obsidian/src/block.ts, view-block.ts): styled for its view
+      const { style } = readStyle(texts, graph, reading);
+      const styled = styledDrawing(drawing, style, reading.world[graph], view ?? undefined);
+      drawn[graph] = Object.fromEntries(directions(styled).map((d) => [d.rankdir, d.dot]));
+      arrowless[graph] = styled.arrowless ?? [];
+      inline[graph] = styled.inline ?? { boxes: [], links: [] };
+    }
+    assert.deepEqual(python[n], { styles, drawn, arrowless, inline }, c.name);
+  });
+  const sources = python.flatMap((p) => Object.values(p.drawn).flatMap((d) => Object.values(d)));
+  assert.ok(
+    sources.some((s) => s.includes('dir=none')),
+    'some arrowheads are hidden',
+  );
+  assert.ok(
+    sources.some((s) => s.includes('properties hidden')),
+    'a crowded box says how many are hidden',
+  );
 });

@@ -58,7 +58,12 @@ describe('a key the style graph does not know', () => {
           'remove comment, or use one of word, thing, other, group or direction',
           undefined,
         ],
-        [5, 'proprty is not a key a Show uses', 'remove proprty, or use one of property, kind or thing', undefined],
+        [
+          5,
+          'proprty is not a key a Show uses',
+          'remove proprty, or use one of property, kind, thing, type, view or inline',
+          undefined,
+        ],
       ],
     );
     assert.ok(problems.every((p) => p.graph === 'trip' && p.severity === 'error' && p.block === 1));

@@ -7,6 +7,8 @@ import type { LayoutSource } from './layout.ts';
 import { themed, sizeOf, choose } from './theme.ts';
 import type { Palette } from './palette.ts';
 import { nudgedSource } from './style-source.ts';
+import { arrowlessSource } from './arrows.ts';
+import { inlineSource } from './inline-properties.ts';
 
 /** Graphviz: layout source in, SVG text out. Throws when it cannot lay the source out. */
 export interface Engine {
@@ -38,8 +40,16 @@ export function directions(drawing: GraphDrawing): Direction[] {
   const keys = drawing.boxes.map((b) => b.key);
   return (only ?? STYLE.directions).map((rankdir) => ({
     rankdir,
-    // the style graph's nudges written in (§6); with none, the source the Python library gives, byte for byte
-    dot: nudgedSource(drawingSource(drawing, rankdir as 'LR' | 'TB'), drawing.nudges ?? [], keys),
+    // the style graph's arrowheads hidden (§15), properties shown (§14) and nudges written in (§6); with none of them,
+    // the source the Python library gives, byte for byte
+    dot: nudgedSource(
+      inlineSource(
+        arrowlessSource(drawingSource(drawing, rankdir as 'LR' | 'TB'), drawing.arrowless ?? []),
+        drawing.inline,
+      ),
+      drawing.nudges ?? [],
+      keys,
+    ),
     src: layoutSource(drawing, rankdir as 'LR' | 'TB'),
   }));
 }

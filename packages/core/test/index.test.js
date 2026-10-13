@@ -13,7 +13,8 @@
 // readingOf, evaluate and their types, 11 Oct 2026), and export (exportScope, exportSvg, exportWithLayout, pngSize, exportPlan,
 // companionNote, writeSafely, saidDate, EXPORT_FORMATS, PNG_MIN_SCALE and their types, 11 Oct 2026), and the refusal to
 // write a name only suggested (acceptNameFirst, 11 Oct 2026), and adding a thing (addThing, suggestName and their types,
-// 11 Oct 2026), and an estimated link's fix (estimateFix, EstimateFix, 11 Oct 2026).
+// 11 Oct 2026), and an estimated link's fix (estimateFix, EstimateFix, 11 Oct 2026), and arrowheads hidden and properties
+// shown inline (styledDrawing, arrowsShown, ARROWHEADS, INLINE, INLINE_ROWS and their types, 13 Oct 2026).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -24,12 +25,15 @@ const ts = require('typescript');
 const ENTRY = new URL('../src/index.ts', import.meta.url);
 
 const VALUES = [
+  'ARROWHEADS',
   'DEFAULT_SETTINGS',
   'DEPARTURES',
   'DeferredNotDeclared',
   'EXPORT_FORMATS',
   'FORMATS',
   'History',
+  'INLINE',
+  'INLINE_ROWS',
   'KIND',
   'LAYOUT_LIMITS',
   'LINES',
@@ -65,6 +69,7 @@ const VALUES = [
   'addToList',
   'addView',
   'aiModel',
+  'arrowsShown',
   'blockItems',
   'choose',
   'chosen',
@@ -155,6 +160,7 @@ const VALUES = [
   'stepOver',
   'styleEdit',
   'styleOf',
+  'styledDrawing',
   'suggestName',
   'textFromName',
   'textTooLarge',
@@ -171,6 +177,9 @@ const VALUES = [
 
 const TYPES = [
   'AiModel',
+  'ArrowheadsChoice',
+  'Arrows',
+  'ArrowsWrite',
   'Block',
   'BlockRef',
   'Box',
@@ -210,6 +219,8 @@ const TYPES = [
   'Indent',
   'Inline',
   'InlineKind',
+  'InlineProperties',
+  'InlineSwitch',
   'LayoutLimits',
   'LayoutPort',
   'LayoutReply',
@@ -251,6 +262,7 @@ const TYPES = [
   'Problem',
   'PropType',
   'Property',
+  'PropertyRow',
   'Range',
   'ReadLimits',
   'Refusal',
@@ -260,6 +272,7 @@ const TYPES = [
   'Settings',
   'Shape',
   'Show',
+  'ShowWrite',
   'Shown',
   'ShownWrite',
   'Size',

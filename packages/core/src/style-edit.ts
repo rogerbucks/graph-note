@@ -1,14 +1,17 @@
-// Writing to the style graph (editor spec §2, §6, §7): a nudge, a look, whether a view fades or hides what is outside it,
-// and how a view was shown — each written as text into the graph's style block, never into a data block. A note with no
-// style block for the graph gets one, after the graph's last block, with its graph line and a comment saying whose style
-// it is. A view's setting and how it was shown are each changed in place when already written, never written twice.
+// Writing to the style graph (editor spec §2, §6, §7, §14, §15): a nudge, a look, whether a view fades or hides what is
+// outside it, how a view was shown, a property switched on or off inline, and arrowheads hidden or shown — each written
+// as text into the graph's style block, never into a data block. A note with no style block for the graph gets one, after
+// the graph's last block, with its graph line and a comment saying whose style it is. A view's setting, how it was shown,
+// and a choice of properties or arrowheads are each changed in place when already written for the same place, never
+// written twice.
 import { dataKind, gqlSpans, graphOf, styleOf } from './blocks.ts';
 import type { Span } from './blocks.ts';
 import { items } from './block-items.ts';
 import { STYLE } from './layout.ts';
 import { quoted } from './lock.ts';
 import { insertBlockAfter, replaceBlock } from './store.ts';
-import { FORMATS, LINES, NUDGE_WORDS, OUTSIDE, STYLE_HUES, orList } from './style-graph.ts';
+import { SHOW_FOR } from './style-checks.ts';
+import { ARROWHEADS, FORMATS, INLINE, LINES, NUDGE_WORDS, OUTSIDE, STYLE_HUES, orList } from './style-graph.ts';
 import type { Frame, LinkTarget } from './style-graph.ts';
 import { acceptNameFirst, unnamedIn } from './suggested-names.ts';
 import { writtenIn } from './written-things.ts';
@@ -45,9 +48,31 @@ export interface ShownWrite {
   selected?: string;
 }
 
+/** A property to switch on or off for showing inline (§14): for one kind, thing or relationship type, in a view or not. */
+export interface ShowWrite {
+  property: string;
+  kind?: string;
+  thing?: string;
+  type?: string;
+  view?: string;
+  inline: string;
+}
+
+/** Arrowheads to hide or show (§15): for every link or one relationship type's, in a view or the whole graph. */
+export interface ArrowsWrite {
+  arrowheads: string;
+  view?: string;
+  type?: string;
+}
+
 /** One change to a graph's style. */
 export type StyleChange =
-  { nudge: NudgeWrite } | { look: LookWrite } | { outside: { view: string; outside: string } } | { shown: ShownWrite };
+  | { nudge: NudgeWrite }
+  | { look: LookWrite }
+  | { outside: { view: string; outside: string } }
+  | { shown: ShownWrite }
+  | { show: ShowWrite }
+  | { arrows: ArrowsWrite };
 
 /** What a style edit gives: the new note, or the reason nothing was written. */
 export type StyleEdit = { note: string } | { refused: string };
@@ -95,10 +120,54 @@ function shownRefusal(s: ShownWrite): string | null {
   return null;
 }
 
-/** The thing to write for a change, its kind, the view it replaces the setting of (if any), or why it cannot be written. */
-function thingFor(
-  change: StyleChange,
-): { kind: string; props: [string, Value][]; view?: string } | { refused: string } {
+/** Why a property cannot be switched on or off, or null. */
+function showRefusal(s: ShowWrite): string | null {
+  if (!s.property) return 'a Show names the property to show';
+  if ([s.kind, s.thing, s.type].filter(Boolean).length !== 1) return SHOW_FOR;
+  if (!(INLINE as readonly string[]).includes(s.inline)) return `inline must be ${orList(INLINE)}`;
+  if (s.view === '') return 'a view needs a name';
+  return null;
+}
+
+/** Why arrowheads cannot be hidden or shown so, or null. */
+function arrowsRefusal(a: ArrowsWrite): string | null {
+  if (!(ARROWHEADS as readonly string[]).includes(a.arrowheads)) return `arrowheads must be ${orList(ARROWHEADS)}`;
+  if (a.type === '') return 'a relationship type needs a name';
+  if (a.view === '') return 'a view needs a name';
+  return null;
+}
+
+/** A thing to write: its kind and properties, and the values that find one already written to change in place. */
+type ToWrite = { kind: string; props: [string, Value][]; match?: [string, string | undefined][] };
+
+/** A Show or an Arrows to write, changed in place where one is written for the same place, or why it cannot be. */
+function choiceFor(change: { show: ShowWrite } | { arrows: ArrowsWrite }): ToWrite | { refused: string } {
+  if ('show' in change) {
+    const s = change.show,
+      why = showRefusal(s);
+    if (why) return { refused: why };
+    const place: [string, string | undefined][] = [
+      ['property', s.property],
+      ['kind', s.kind || undefined],
+      ['thing', s.thing || undefined],
+      ['type', s.type || undefined],
+      ['view', s.view],
+    ];
+    return { kind: 'Show', props: [...place, ['inline', s.inline]], match: place };
+  }
+  const a = change.arrows,
+    why = arrowsRefusal(a);
+  if (why) return { refused: why };
+  const place: [string, string | undefined][] = [
+    ['view', a.view],
+    ['type', a.type],
+  ];
+  return { kind: 'Arrows', props: [['arrowheads', a.arrowheads], ...place], match: place };
+}
+
+/** The thing to write for a change, its kind, what finds one to change in place (if any), or why it cannot be written. */
+function thingFor(change: StyleChange): ToWrite | { refused: string } {
+  if ('show' in change || 'arrows' in change) return choiceFor(change);
   if ('nudge' in change) {
     const n = change.nudge,
       why = nudgeRefusal(n);
@@ -138,7 +207,7 @@ function thingFor(
         ['view', view],
         ['outside', outside],
       ],
-      view,
+      match: [['view', view]],
     };
   }
   const s = change.shown,
@@ -155,7 +224,7 @@ function thingFor(
       ['frame', f],
       ['selected', s.selected],
     ],
-    view: s.view,
+    match: [['view', s.view]],
   };
 }
 
@@ -165,10 +234,18 @@ function namedBy(change: StyleChange): string[] {
   if ('nudge' in change) return named(change.nudge.thing, change.nudge.other);
   if ('look' in change) return named(change.look.thing, change.look.link?.from, change.look.link?.to);
   if ('shown' in change) return named(change.shown.selected);
+  if ('show' in change) return named(change.show.thing);
   return [];
 }
 
-const PREFIX: Record<string, string> = { Nudge: 'nudge', Look: 'look', ViewStyle: 'outside', Shown: 'shown' };
+const PREFIX: Record<string, string> = {
+  Nudge: 'nudge',
+  Look: 'look',
+  ViewStyle: 'outside',
+  Shown: 'shown',
+  Show: 'show',
+  Arrows: 'arrows',
+};
 
 /** The block with a thing written after its last item, comma-joined, the rest of the block kept as it was. */
 function appended(block: string, thing: string): string {
@@ -200,9 +277,13 @@ export function styleEdit(note: string, graph: string, change: StyleChange): Sty
   const styles = spans.filter((s) => styleOf(s.text) === graph);
   const written = styles.flatMap((s) => writtenIn(s.text).map((w) => ({ s, w })));
   const taken = new Set(written.flatMap(({ w }) => (w.variable ? [w.variable.name] : [])));
-  // a view's setting, or how it was shown, already written for this view: changed where it is, keeping its id
-  const same = thing.view
-    ? written.find(({ w }) => w.writes && w.labels.includes(thing.kind) && w.props.get('view') === thing.view)
+  // a view's setting, how it was shown, or a choice of properties or arrowheads, already written for the same place:
+  // changed where it is, keeping its id
+  const match = thing.match;
+  const same = match
+    ? written.find(
+        ({ w }) => w.writes && w.labels.includes(thing.kind) && match.every(([k, v]) => w.props.get(k) === v),
+      )
     : undefined;
   if (same?.w.variable) {
     const text = thingText(same.w.variable.name, thing.kind, thing.props);
