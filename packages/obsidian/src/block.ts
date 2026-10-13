@@ -5,6 +5,7 @@
 import { MarkdownRenderChild, Notice, TFile } from 'obsidian';
 import type { Component, MarkdownPostProcessorContext } from 'obsidian';
 import {
+  changeSetId,
   completenessReport,
   gqlBlocks,
   graphOfBlock,
@@ -24,6 +25,7 @@ import type { EditTarget } from './main';
 import { renderCode } from './code';
 import { renderStyleBlock } from './style-block';
 import { renderViewBlock, writeViewBlock } from './view-block';
+import { renderProposalBlock } from './proposals/proposal-block';
 import { GraphView } from './graph-view/graph-view';
 import { readOnlyHere, settlePlacements, whenPlaced } from './graph-view/placement';
 import { renderProblems } from './graph-view/problems-list';
@@ -126,6 +128,8 @@ export async function renderBlock(
   // a query block named as a view is drawn as the view (§7)
   const view = viewsOf([source])[0];
   if (view) return renderViewBlock(plugin, source, el, ctx, view, owner);
+  // a change set is a proposal, drawn over its graph and decided change by change (§17)
+  if (changeSetId(source)) return renderProposalBlock(plugin, source, el, ctx, owner);
   const styled = styleOf(source);
   if (styled) {
     // a style block is never drawn as a graph: folded away until opened (§2)

@@ -4,6 +4,7 @@ import type { CompletenessReport, Drawn, Indent, Mode, NoteReading, Parked } fro
 import type { DeclaredList } from '../properties/list-row';
 import type { ShownProblem } from './problems-list';
 import type { ViewShown } from './view-strip';
+import type { ProposalCard } from '../proposals/proposal-strip';
 import type { Exporting } from '../export/export-form';
 
 /** What declaring Deferred and DEFERS in the graph's schema gave: the text to park into, and the graph as the note now reads it. */
@@ -54,6 +55,8 @@ export interface ViewOptions {
   indent?: Indent;
   /** Set when the drawing is a view (spec §7): what it shows, how, and how to write its style. */
   view?: ViewShown;
+  /** Set when the drawing is a proposal laid over the graph (spec §17): what it adds, changes and removes, marked, and how a person decides. */
+  proposal?: ProposalCard;
   /** What the drawing can export, and how (§16); without it, no Export is offered. */
   exporting?: Exporting;
   /** Writes a view block after the graph's last block in the note (§7, views_by_tapping); resolves to why not, or null. */
