@@ -86,7 +86,7 @@ export function readNote(
   const tooLarge = textTooLarge([...blocks.filter((b) => typeof dataKind(b) === 'string'), ...shared]);
   if (tooLarge) return { graphs: new Map(), problems: [], world: {}, whole: {}, texts: upto, tooLarge };
   // drawn from the blocks up to `upTo`, with names suggested against every block, as the whole note suggests them
-  const { store, problems } = readBlocks(blocks, shared, budget, dataKind, upTo);
+  const { store, problems, read } = readBlocks(blocks, shared, budget, dataKind, upTo);
   const world = gs.worldFromStore(store);
   const whole = upTo >= blocks.length - 1 ? world : gs.worldFromStore(readBlocks(blocks, shared, budget).store);
   const graphs = new Map<string, GraphDrawing>();
@@ -101,7 +101,7 @@ export function readNote(
   }
   problems.push(...undeclared(whole, upto), ...undeclaredUse(whole, upto, problems));
   // each note on the box or link below it, and a note that belongs to none of a line's things said (editor spec §24)
-  problems.push(...addNotes(graphs, upto));
+  problems.push(...addNotes(graphs, upto, read));
   // a path's own problems (editor spec §7) say what the reader's reports of a step through nothing left unsaid
   const all = mergePathProblems({ graphs, problems, world, whole, texts: upto });
   all.sort((a, b) => a.block - b.block || a.line - b.line);

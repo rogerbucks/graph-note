@@ -51,9 +51,12 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   `ThingNote`, a note on a thing or a link.
 - `notes.ts` — notes on things and links (editor spec §24): `addNotes` reads each data block holding `///` with the
   graph library's `notes`, which the Python reader is held to by one table, and puts each note on the box or link drawn
-  below it (`Box.note`, `Link.note`: its CommonMark text, its summary, its block and its `///` lines); a note above a
-  line holding more than one thing belongs to none of them, and is a warning whose fix says to put the thing on its own
-  line. A block the reader refuses gives no notes. The layout source never reads a note.
+  below it (`Box.note`, `Link.note`: its CommonMark text, its summary, its block and its `///` lines). It reads the
+  block as the reader read it (`readBlocks`' `read`: with the suggested names in, and with what could not be read left
+  out), so a thing drawn under a suggested name keeps its note. A note above a line holding more than one thing belongs
+  to none of them, and is a warning whose fix says to put the thing on its own line; a note on what the reader left out
+  is a warning that it is not shown; a note on a thing already noted where it is first written is a hint naming it, the
+  first note kept. The layout source never reads a note.
 - `drawing.ts` — `readNote`: what a note's graph blocks draw, built from the modules above.
 - `estimates.ts` — near misses drawn as guesses; never a guess of a thing drawn under a suggested name, whose name nobody
   has written (a fix changing a word to it would write it unaccepted).

@@ -11,6 +11,7 @@ Usage:
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import unittest
@@ -105,6 +106,7 @@ class Notes(unittest.TestCase):
     def test_note_both_readers_the_table_is_read_as_it_says(self):
         self.reads_as_the_table_says("note_both_readers")
 
+    @unittest.skipUnless(shutil.which("node"), "node is not installed")
     def test_note_both_readers_the_javascript_reader_reads_every_case_alike(self):
         out = subprocess.run(
             ["node", "-e", JS_SCRIPT, CHECKER, CASES_FILE],

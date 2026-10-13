@@ -100,11 +100,18 @@
     {
       "id": "note-several-elements",
       "name": "a note above a line with several elements owns nothing",
-      "proves": ["req:26.owner", "req:26.two-readers"],
+      "proves": ["req:26.owner", "req:26.two-readers", "note_one_owner", "note_both_readers"],
       "block": "// graph: g\n/// A note.\n(a:T), (b:T)",
       "owned": [],
       "unowned": [2],
-      "malformed": []
+      "malformed": [],
+      "notes": [],
+      "shared": [
+        {
+          "line": 3,
+          "lines": [2]
+        }
+      ]
     },
     {
       "id": "tag-path-owns-nothing",
@@ -174,20 +181,30 @@
     {
       "id": "note-four-slashes",
       "name": "four slashes make an ordinary comment, not a note",
-      "proves": ["req:26.marker", "req:26.two-readers"],
+      "proves": [
+        "req:26.marker",
+        "req:26.two-readers",
+        "note_comment",
+        "note_never_other_comments",
+        "note_both_readers"
+      ],
       "block": "// graph: g\n//// not a note\n(a:T)",
       "owned": [],
       "unowned": [],
-      "malformed": []
+      "malformed": [],
+      "notes": [],
+      "shared": []
     },
     {
       "id": "note-no-space",
       "name": "three slashes followed by text with no space make an ordinary comment",
-      "proves": ["req:26.marker"],
+      "proves": ["req:26.marker", "note_comment", "note_never_other_comments", "note_both_readers"],
       "block": "// graph: g\n///not a note\n(a:T)",
       "owned": [],
       "unowned": [],
-      "malformed": []
+      "malformed": [],
+      "notes": [],
+      "shared": []
     },
     {
       "id": "note-summary",
@@ -211,11 +228,13 @@
     {
       "id": "note-no-element-below",
       "name": "a note above a MATCH line, or at the end of the block, owns nothing",
-      "proves": ["req:26.owner"],
+      "proves": ["req:26.owner", "note_comment", "note_both_readers"],
       "block": "// graph: g\n/// on a match\nMATCH (a:T {id: 'a'})\nINSERT (b:T)\n/// at the end",
       "owned": [],
       "unowned": [2, 5],
-      "malformed": []
+      "malformed": [],
+      "notes": [],
+      "shared": []
     },
     {
       "id": "note-header-not-a-note",
@@ -229,7 +248,7 @@
     {
       "id": "note-crlf",
       "name": "a block whose lines end in CR LF keeps its paragraph break, and no CR in the text",
-      "proves": ["req:26.text partial", "req:26.two-readers"],
+      "proves": ["req:26.text partial", "req:26.two-readers", "note_comment", "note_text", "note_both_readers"],
       "block": "// graph: g\r\n/// a\r\n///\r\n//@ k: v\r\n/// b\r\n(a:T)\r\n",
       "owned": [
         {
@@ -243,7 +262,19 @@
         }
       ],
       "unowned": [],
-      "malformed": []
+      "malformed": [],
+      "notes": [
+        {
+          "line": 6,
+          "element": {
+            "thing": "a"
+          },
+          "lines": [2, 3, 5],
+          "text": "a\n\nb",
+          "summary": "a"
+        }
+      ],
+      "shared": []
     },
     {
       "id": "note-trailing-spaces",
@@ -276,11 +307,13 @@
     {
       "id": "note-inside-parens",
       "name": "a note inside a thing's brackets, one level in, owns nothing, though another thing begins on the line below",
-      "proves": ["req:26.owner"],
+      "proves": ["req:26.owner", "note_comment", "note_one_owner", "note_both_readers"],
       "block": "// graph: g\n(a:T\n/// inside\n), (b:T {id: 'b'})",
       "owned": [],
       "unowned": [3],
-      "malformed": []
+      "malformed": [],
+      "notes": [],
+      "shared": []
     },
     {
       "id": "note-multi-line-thing",
@@ -827,6 +860,37 @@
       "unowned": [3],
       "malformed": [],
       "notes": [],
+      "shared": []
+    },
+    {
+      "id": "note-unicode",
+      "name": "a note indented with U+3000 above a thing indented with U+00A0 is the thing's, and a character outside the BMP is kept whole in its text",
+      "proves": ["note_comment", "note_text", "note_both_readers"],
+      "block": "// graph: g\n　/// Read on 😀 days, naïvely.\n (a:T {name: 'A'})",
+      "owned": [
+        {
+          "line": 3,
+          "element": {
+            "thing": "a"
+          },
+          "tags": [],
+          "note": ["Read on 😀 days, naïvely."],
+          "summary": "Read on 😀 days, naïvely."
+        }
+      ],
+      "unowned": [],
+      "malformed": [],
+      "notes": [
+        {
+          "line": 3,
+          "element": {
+            "thing": "a"
+          },
+          "lines": [2],
+          "text": "Read on 😀 days, naïvely.",
+          "summary": "Read on 😀 days, naïvely."
+        }
+      ],
       "shared": []
     }
   ]

@@ -80,6 +80,16 @@ export interface Prepared {
   gaps: BlockGaps[];
 }
 
+/**
+ * A block as read, every line where it was written: `named`, with what `prepare` read as meant and the suggested names
+ * put in; `applied`, the same with whatever could not be read left out, as the store took it. Notes are read from these
+ * (notes.ts), so a thing drawn under a suggested name keeps its note.
+ */
+export interface ReadText {
+  named: string;
+  applied: string;
+}
+
 /** Which blocks are read, and as what: `dataKind`, or, for the style graph (style.ts), its style blocks read as data. */
 export type KindOf = (text: string) => ReturnType<typeof dataKind>;
 
@@ -212,8 +222,9 @@ export function readBlocks(
   budget = REREAD_BUDGET,
   kindOf: KindOf = dataKind,
   upTo = texts.length - 1,
-): { store: gs.Store; problems: Problem[] } {
+): { store: gs.Store; problems: Problem[]; read: Map<number, ReadText> } {
   const { clean, problems, skip, gaps } = prepare(texts, kindOf);
+  const read = new Map<number, ReadText>();
   const store = new gs.Store();
   for (const s of shared) {
     try {
@@ -229,6 +240,7 @@ export function readBlocks(
     if (skip.has(block)) continue;
     // every change made to a block keeps its line breaks where they were, so its lines are indexed once
     const lineAt = lineIndex(texts[block] ?? '');
+    const named = withNames(clean[block] ?? '', gaps[block]?.named ?? []);
     for (;;) {
       const text = clean[block] ?? '',
         commasFrom = store.commas.length,
@@ -287,9 +299,10 @@ export function readBlocks(
         continue;
       }
       meant.push(...readAsMeant(store, block, text, commasFrom, baresFrom));
+      read.set(block, { named, applied: withNames(text, gaps[block]?.named ?? []) });
       break;
     }
   }
   const listed = problems.concat(meant).filter((p) => p.block <= upTo);
-  return { store, problems: listed.sort((a, b) => a.block - b.block || a.line - b.line) };
+  return { store, problems: listed.sort((a, b) => a.block - b.block || a.line - b.line), read };
 }
