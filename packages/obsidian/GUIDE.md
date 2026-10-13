@@ -87,7 +87,7 @@ module that ties the parts together, named as the folder is.
 - `proposal-strip.ts` — the card above the drawing: who proposed it, when and what it read; a notice, with a button to say it
   has been read, when the graph has moved since (Accept stays off until then); the changes one to a row, each in plain
   English and its exact text (the GQL, the SET line or the removal, in a code span, and in the buttons' names) with Accept
-  and Reject; Accept all and a group's Accept send the ids of what can be accepted now; in groups with Accept and Reject for the group when there are many; Accept all, Reject
+  and Reject, and its reason as plain text (a model's reason is kept escaped in the note, and unescaped for the card); Accept all and a group's Accept send the ids of what can be accepted now; in groups with Accept and Reject for the group when there are many; Accept all, Reject
   all and Undo. On a phone it is a sheet at the bottom of the screen (`is-sheet`). Reading view takes the buttons away, and
   the gate (`read-only.ts`) closes `decide` and `undo`.
 - `mark-proposal.ts` — the marks on the drawing: a class for the line (heavier for what is added, dashed for what is changed,

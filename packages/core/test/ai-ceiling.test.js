@@ -14,8 +14,23 @@ test('a secret’s name inside a longer snake_case one is still found', () => {
 });
 
 test('token, pin, passcode and key are names of secrets too', () => {
-  for (const name of ['token', 'pin', 'passcode', 'key', 'card_pin', 'session_token'])
+  for (const name of ['token', 'pin', 'passcode', 'signing_key', 'card_pin', 'session_token'])
     assert.deepEqual(credentialsIn(named(name)), ['a password or secret'], name);
+});
+
+test('a secret’s name at the end of a camelCase one is found too', () => {
+  for (const name of ['smtpPassword', 'dbSecret', 'apiKey', 'authToken', 'cardPin'])
+    assert.deepEqual(credentialsIn(named(name)), ['a password or secret'], name);
+});
+
+test('a bare key is a word, not a secret: only a name ending in _key or Key is one', () => {
+  assert.deepEqual(credentialsIn("(t:Table {key: 'primary'})"), []);
+  assert.deepEqual(credentialsIn("(t:Table {Key: 'primary'})"), []);
+  for (const name of ['api_key', 'private_key', 'API_KEY', 'apiKey', 'privateKey'])
+    assert.deepEqual(credentialsIn(named(name)), ['a password or secret'], name);
+  // a real key under a bare key is still found, by the shape of its value
+  const real = `${['s', 'k'].join('')}-${'Q'.repeat(24)}`;
+  assert.deepEqual(credentialsIn(`(t:Service {key: '${real}'})`), ['an API key']);
 });
 
 test('a name that only holds such a word inside another word is not one', () => {

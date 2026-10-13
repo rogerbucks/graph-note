@@ -12,6 +12,11 @@ test('the digest is SHA-256 of the text as UTF-8, across the lengths where its p
   for (const t of texts) assert.equal(sha256(t), node(t), `${t.length} characters`);
 });
 
+test('a lone surrogate is taken as U+FFFD, as a UTF-8 encoder sends it', () => {
+  for (const t of ['a\uD800b', '\uDC00', 'end \uD83D']) assert.equal(sha256(t), node(t), JSON.stringify(t));
+  assert.equal(utf8Size('a\uD800b'), Buffer.byteLength('a\uD800b', 'utf8'));
+});
+
 test('the size is the bytes sent, as UTF-8', () => {
   assert.equal(utf8Size('abc'), 3);
   assert.equal(utf8Size('é'), 2);

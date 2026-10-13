@@ -309,7 +309,8 @@ exactly what goes and said yes to it. Its answer comes back as a proposal (§17)
   way: never the text sent, only its SHA-256 digest and size, its scope (the kind of choice and the counts), the model's
   name and address, the time and the outcome. The model is copied as it is prepared, so what is sent is what was shown.
   The address and the whole message are looked over for credentials before they are put in the request.
-- `ai-digest.ts` — `sha256` and `utf8Size`, written here, as the core has no host's library.
+- `ai-digest.ts` — `sha256` and `utf8Size`, written here, as the core has no host's library; a lone surrogate is taken
+  as U+FFFD, as a UTF-8 encoder sends it.
 - `ai-choice.ts` — which AI may be asked: `aiReady` (off until `aiUse` is on and a model has a name, a model and a
   usable address), `endpointProblem` (a host written in letters, digits, dots, hyphens, colons and brackets only, so it
   cannot be told apart from another; no user name, password, query string or fragment; plain http only to localhost,
@@ -320,7 +321,8 @@ exactly what goes and said yes to it. Its answer comes back as a proposal (§17)
   model's ceiling is not sent to it, saying why and naming the models cleared for it; nothing at the highest
   classification set goes to any model; an unknown classification counts above every ceiling. `credentialsIn` names, by
   common patterns, the kinds of credential a text holds (a private key, an access key, an API key, a token, a password
-  or secret by its name, even at the end of a snake_case one, a card number, or the key of any model set up), never
+  or secret by its name, even at the end of a snake_case or camelCase one, though a bare `key` is an ordinary word and
+  only a name ending in `_key` or `Key` is a secret's, a card number, or the key of any model set up), never
   the text.
 - `ai-scope.ts` — `aiScope`: what is sent of a note, as the user chose (the whole graph, a view, or things by name),
   written out again as GQL from the graph as read: each thing with its kinds and properties, and the links between the

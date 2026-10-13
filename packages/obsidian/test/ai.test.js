@@ -6,6 +6,7 @@ import { before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { build, load, until } from './host/load-plugin.js';
+import { show } from './host/view-notes.js';
 
 before(() => build());
 
@@ -246,6 +247,31 @@ describe('asking an AI model to propose changes (§19)', () => {
       assert.match(env.state.notices.at(-1), /200 sends/);
     } finally {
       env.uninstall();
+    }
+  });
+
+  test('a model’s reason is kept escaped in the note, and shown on the card as the plain text it gave', async () => {
+    const reason = '![](https://example.com/x.png) see **this** <b>now</b> & more';
+    const env = await open(ON);
+    let note;
+    try {
+      env.state.reply = reply([{ op: 'remove-thing', thing: 'alice', reason }]);
+      const m = await shown(env);
+      button(m, 'Send').click();
+      await until(() => env.state.files.get(PATH).includes('CHANGE SET'));
+      note = env.state.files.get(PATH);
+    } finally {
+      env.uninstall();
+    }
+    const line = note.split('\n').find((l) => l.startsWith('/// '));
+    assert.ok(line && !line.includes('![') && !line.includes('<b>'), `escaped in the note: ${line}`);
+    const viewer = await load({ files: { 'Some note.md': note } });
+    try {
+      const card = await show(viewer, note, 1);
+      await until(() => !!card.el.querySelector('.graph-note-proposal-reason'));
+      assert.equal(card.el.querySelector('.graph-note-proposal-reason').textContent, ` — ${reason}`);
+    } finally {
+      viewer.uninstall();
     }
   });
 

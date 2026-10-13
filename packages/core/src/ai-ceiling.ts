@@ -58,6 +58,18 @@ const luhn = (digits: string) => {
   return sum % 10 === 0;
 };
 
+// A secret's name, ending the name a value is given under. In snake_case (user_password, db_secret) it is bounded by
+// what is not a letter or digit, never by \b, for which an underscore is part of the word; in camelCase (smtpPassword,
+// apiKey) it starts with a capital after a lower-case letter or digit. A bare `key` is an ordinary word (key: 'primary'),
+// so only a name ending in _key or Key is a secret's; a real key under a bare name is still found by its value's shape.
+const SECRET_NAMES = [
+  /(?<![A-Za-z0-9])(?:pass(?:word|wd|phrase|code)?|pwd|pin|secret|token|credentials?)(?![A-Za-z0-9])/i,
+  /(?<=_)key(?![A-Za-z0-9])/i,
+  /(?<=[a-z0-9])(?:Pass(?:word|wd|phrase|code)?|Pwd|Pin|Secret|Token|Key|Credentials?)(?![A-Za-z0-9])/,
+];
+// then a text of four characters or more, given to it with a colon or an equals sign
+const SECRET_VALUE = String.raw`["']?\s*[:=]\s*["'][^"'\s]{4,}`;
+
 // The kinds of credential looked for, each by its shape: general patterns, never anyone's own.
 const CREDENTIALS: { what: string; test: (line: string) => boolean }[] = [
   { what: 'a private key', test: (l) => /-----BEGIN [A-Z ]*PRIVATE KEY/.test(l) },
@@ -74,12 +86,7 @@ const CREDENTIALS: { what: string; test: (line: string) => boolean }[] = [
   { what: 'a token', test: (l) => /\beyJ[\w-]{8,}\.eyJ[\w-]{8,}\.[\w-]{8,}/.test(l) },
   {
     what: 'a password or secret',
-    test: (l) =>
-      // the name may end a longer one in snake_case (user_password, db_secret), so it is bounded by what is not a
-      // letter or digit, never by \b, for which an underscore is part of the word
-      /(?<![A-Za-z0-9])(?:pass(?:word|wd|phrase|code)?|pwd|pin|secret|token|key|credentials?)(?![A-Za-z0-9])["']?\s*[:=]\s*["'][^"'\s]{4,}/i.test(
-        l,
-      ),
+    test: (l) => SECRET_NAMES.some((name) => new RegExp(`${name.source}${SECRET_VALUE}`, name.flags).test(l)),
   },
   {
     what: 'a card number',
