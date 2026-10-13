@@ -163,7 +163,8 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/ignore-entries.test.js` — an entry of `.ignore` that git ignores as build output may be missing in a fresh checkout, and any other entry that names a file must exist, so a misspelt path is caught.
 - `test/licences.test.js` — licences through the whole build chain, and the one allowance for a GPL tool run in CI alone and never shipped.
 - `test/offline.test.js` — no network request but the one exception, a send to an AI model the user set up: the bundled engine makes none, and the core's AI send makes none of its own, going only through the transport it is handed.
-- `test/policy.test.js` — the plugin-store files, supply-chain pins and least-privilege CI; the one module that may reach the network, reached only from the send dialog, nothing in the AI's folder on a timer or an event, and the AI use disclosed in the README.
+- `test/policy.test.js` — the plugin-store files, supply-chain pins and least-privilege CI; the one module that may reach the network, reached only from the send dialog, and nothing in the AI's folder on a timer or an event.
+- `test/ai-disclosed.test.js` — the AI use disclosed in the README: content goes only to models the user sets up, only when the user sends it, and the one exception to no network use stated precisely (spec §19, ai_disclosed).
 - `test/public-readiness.test.js` — fit to be public and kept so: a clean history, a fresh clone set up from the README alone, and GitHub settings that let only a collaborator contribute.
 - `test/repository-scans.test.js` — the source scans behind the one network exception: the AI send module found however it is imported, Obsidian's `request(` taken for a request, and every timer and event found.
 - `test/quality-metrics.test.js` — the quality metrics are held to a committed baseline, and a worse one fails without a recorded reason.

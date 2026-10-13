@@ -51,7 +51,8 @@ export class SendDialog extends Modal {
     private readonly plugin: GraphNotePlugin,
     private readonly file: TFile,
     private readonly note: string,
-    private readonly level: string | null,
+    /** The note's classification, read each time it is asked, against the classifications as they are then. */
+    private readonly levelOf: () => string | null,
     private readonly shared: string[],
   ) {
     super(plugin.app);
@@ -215,7 +216,8 @@ export class SendDialog extends Modal {
       model: this.model,
       note: this.note,
       notePath: this.file.path,
-      level: this.level,
+      // read now, never kept from when the dialog opened, so a classification changed meanwhile is never stale here
+      level: this.levelOf(),
       choice,
       question: this.question,
       secrets,

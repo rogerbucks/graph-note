@@ -30,15 +30,18 @@ export async function askAi(plugin: GraphNotePlugin): Promise<void> {
   const front = noteToRewrite(plugin.app.workspace, 'to ask an AI model about its graph');
   if (!front) return;
   const text = await plugin.app.vault.read(front.file);
-  // read from the text being sent as well as the metadata cache, which can be behind it: the higher is taken
-  const levels = plugin.settings.classifications;
-  const level = higherClassification(
-    classificationOf(plugin.app, front.file, text, levels),
-    classificationInText(text, levels),
-    levels,
-    plugin.settings.aiUnlabelled,
-  );
-  new SendDialog(plugin, front.file, text, level, await plugin.sharedSchemas()).open();
+  // read from the text being sent as well as the metadata cache, which can be behind it, the higher taken; and read
+  // again each time the dialog shows what will be sent, against the classifications as they are then
+  const levelOf = () => {
+    const { classifications: levels, aiUnlabelled } = plugin.settings;
+    return higherClassification(
+      classificationOf(plugin.app, front.file, text, levels),
+      classificationInText(text, levels),
+      levels,
+      aiUnlabelled,
+    );
+  };
+  new SendDialog(plugin, front.file, text, levelOf, await plugin.sharedSchemas()).open();
 }
 
 /** Clears the record of sends, saying how many were let go. */

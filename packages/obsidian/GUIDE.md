@@ -98,7 +98,8 @@ module that ties the parts together, named as the folder is.
 
 - `ai.ts` — the command, Ask an AI model to propose changes: only a notice while AI is off or no model is set up;
   otherwise the send dialog on the note in front (never one in reading view), with its classification read from its
-  text as well as the metadata cache, the higher taken (`higherClassification`). Obsidian has no AI of its own to offer
+  text as well as the metadata cache, the higher taken (`higherClassification`), and read again each time the dialog
+  shows what will be sent, against the classifications as they are then. Obsidian has no AI of its own to offer
   first, so only the models set up here are offered. Also the command Clear the record of sends to AI models; the
   plugin keeps the last `SENDS_KEPT` (200).
 - `send-dialog.ts` — `SendDialog`: what to send (the whole graph, a view, or the things ticked), the model (the one set
