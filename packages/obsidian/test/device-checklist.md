@@ -11,7 +11,8 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 **Numbers.** Every item has a number in its line: its section's letter, a dash and two digits, such as `V-03`, the
 third item of Viewing. The letters are B Before, V Viewing, Z Zoom, P The edit pane, I Editing in place and the
 inspector, S The style graph, W Views, D Parked for later, T Walked paths, X Export, C Settings, A Accessibility, F Focus
-and untangle, R Proposals, G Details and the sheet, E Diagram types, U AI models, and M The View menu.
+and untangle, R Proposals, G Details and the sheet, E Diagram types, U AI models, Q Sources and steps, L Link flow and
+path play, and M The View menu.
 **A number never changes once given**, whatever happens to the item's words or its place; a removed item's number is
 never used again, and **a new item takes the next number in its section**. Each item after Before has a note in
 `test-vault/Device checks/` that shows the case in Obsidian, found by its number (`test/device-check-notes.test.js`
@@ -409,6 +410,63 @@ classification of Public in its front matter first, and take it out again afterw
       changed, and the note is as it was. The plugin's data.json lists the last sends, failed ones too, each with a
       digest and the size of what was sent, never its text, the model and the time, and never a key; "Clear the record
       of sends to AI models" empties it (slice 3, ai_unreachable, record_every_send).
+
+## Sources and steps — spec §7, §20
+
+The .gql file of Q-03 and Q-04 is made by hand on the Mac, outside Obsidian, and taken out again afterwards; on the phone
+it arrives only when Obsidian Sync's "Other file types" is on.
+
+- [ ] **Q-01** Two views of one graph in one note, the graph block above them: each card draws only its view, from the one
+      graph block, and the things outside it are faded. Change a name in the graph block: both views draw the new name.
+      Nothing of the graph is copied into the views' blocks (slice 3, many_views_one_data).
+- [ ] **Q-02** A note whose block says `// graph: trip · FROM [[…]]`, naming the note of Q-01, with a view under it: the FROM
+      block draws the whole graph of Q-01, read-only, and the view draws its part, each under a line saying "Drawn from
+      the note …" with an Open button that opens Q-01. Change a name in Q-01's graph block and come back: both cards draw
+      the new name, and this note still holds none of the data (slice 3, many_views_one_data, view_of_another_note).
+- [ ] **Q-03** Mac: put a plain text file `trip.gql` in a folder `Graph files` at the root of the vault, holding a graph that
+      starts `// graph: trip`. A block `// graph: trip · FROM Graph files/trip.gql` draws it, under a line naming the
+      file. Edit opens this block; the bar has no Edit here. Change the file in another editor and save it: the card draws
+      the change. Add a line that cannot be read: the rest is still drawn, and the problem is listed (slice 3, gql_file_source).
+- [ ] **Q-04** A block drawn from a file that is not there says which file and why, never a blank card: `Graph
+      files/nowhere.gql` is "not in the vault". Move `trip.gql` of Q-03 into another folder: Q-03's card says at once
+      that it is not there any more and where a file of that name now is, and moving it back draws it again (slice 3,
+      gql_file_missing).
+- [ ] **Q-05** A step, in Live Preview: its card says what it proposes into and what its point takes, offers the note's graph
+      and its view, and nothing in the note changes until Run is pressed. Press Run with the graph chosen: a change set
+      appears under the graph, each link waiting to be accepted or rejected, and the graph block is the same. Choose the
+      view of people only and press Run: the card says which kind and which type it lacks, and nothing is written. The
+      step written as CALL says it never calls a named action, and has no Run. In reading view no Run is offered (slice
+      3, graph_step_io, step_inputs_checked, run_declared_only, step_output_proposal).
+
+## Link flow and path play — spec §7, §11
+
+Run these with the system's reduce-motion setting off, as it is by default, until L-03 turns it on: on the Mac, System
+Settings › Accessibility › Display › Reduce motion; on the iPhone, Settings › Accessibility › Motion › Reduce Motion.
+
+- [ ] **L-01** A graph whose style block holds a Flow with dashes for one relationship type: the dashes run along each of
+      its links, in the direction of its arrow, and each of its labels opens with ⇢; the other links are still. Under the
+      bar the legend says "⇢ moving dashes:" and what the movement means. Take the Flow out of the style block: every
+      link is still and the legend goes (slice 3, links_show_flow, flow_in_style_graph, motion_not_alone).
+- [ ] **L-02** A Flow with a dot for every link: a dot travels along each link, the link drawn from its far end too, in
+      the direction it reads, and each label opens with •. With VoiceOver, a link is read with "a moving dot:" and what it
+      means. A view whose Flow is still draws its links still (slice 3, links_show_flow, motion_not_alone).
+- [ ] **L-03** Turn the system's reduce-motion setting on, and redraw the notes of L-01 and L-02: the dashes stand still,
+      no dot is drawn, and the icons and the legend stay. Press Play on a path: each step is marked at once, with no
+      pulse and no dot. Open an exported animated SVG in a browser: it is still, every step outlined and numbered. Turn
+      the setting off again afterwards (slice 3, motion_reduced_respected).
+- [ ] **L-04** Press Play \<title>: the path steps on its own, two seconds a step, the step now on outlined and pulsing,
+      and a dot running the link from the step before when a link joins them; "Step 2 of 4: …" is said each step. Choose
+      Half a second a step under Pace: it goes faster at once. Pause holds it on its step and Play on carries on from
+      there; Next pauses it; at the last step it stops; Stop playing clears it. Desktop and phone (slice 3,
+      path_autoplay).
+- [ ] **L-05** While it plays, press Export as an animated SVG: the Export form opens on the path, SVG chosen, at the pace
+      it was playing. Export it: opened in a browser, the image plays round and round, the outline moving from step to
+      step and a dot along a link between two steps; every step is numbered on its thing, and the frame says the walk in
+      order and its pace. Nothing else needs to be installed (slice 3, path_animation_export).
+- [ ] **L-06** iPhone: on the note of 201 steps, press Play and Export as an animated SVG, then Export it: the form says
+      the animated SVG was not made, that the path has 201 steps, more than the 200 an animated SVG can play smoothly
+      on this phone, that nothing was saved, and how to make it fit; nothing is written. On the Mac the same path
+      exports (slice 3, animation_export_fits).
 
 ## The View menu — spec §25
 

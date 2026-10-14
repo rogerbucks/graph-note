@@ -1,9 +1,10 @@
 // Checking each thing of a style graph (editor spec §2, style_graph_checked; §6; §7; §14; §15, the arrowheads and the
-// diagram type; §25, the links): its kind, its words, its values and every name it uses, against the graph it styles.
-// What is sound is kept; each fault is a problem on its line with its fix, and the part at fault — or the whole thing,
-// when nothing of it can be used — is left out of the style. The choices for how a graph or a view is drawn are checked
-// in style-choice-checks.ts, and every thing is read through style-thing-reader.ts.
+// diagram type; §7, how links move; §25, how links are routed and merged): its kind, its words, its values and every
+// name it uses, against the graph it styles. What is sound is kept; each fault is a problem on its line with its fix, and
+// the part at fault — or the whole thing, when nothing of it can be used — is left out of the style. The choices for how
+// a graph or a view is drawn are checked in style-choice-checks.ts, and every thing is read through style-reader.ts.
 import { STYLE } from './layout.ts';
+import { flowOf } from './link-flow.ts';
 import type { Problem } from './note-reading.ts';
 import { arrowsOf, diagramOf, linksOf } from './style-choice-checks.ts';
 import {
@@ -18,13 +19,47 @@ import {
   orList,
   styleProblem,
 } from './style-graph.ts';
-import type { Arrows, Diagram, Links, Look, Nudge, Show, Shown, StyleAt, StyleKind, ViewStyle } from './style-graph.ts';
-import { reader } from './style-thing-reader.ts';
-import type { RawThing, StyledNames } from './style-thing-reader.ts';
+import type {
+  Arrows,
+  Diagram,
+  Flow,
+  Links,
+  Look,
+  Nudge,
+  Show,
+  Shown,
+  StyleAt,
+  StyleKind,
+  ViewStyle,
+} from './style-graph.ts';
+import { reader } from './style-reader.ts';
 import { readFrame, unknownKeys } from './style-words.ts';
 
-export type { RawThing, StyledNames } from './style-thing-reader.ts';
 export { TREE_ONLY } from './style-choice-checks.ts';
+
+/** One thing of a style graph as read: its kinds, its properties, where it is, and where each property's text is. */
+export interface RawThing {
+  labels: string[];
+  props: Record<string, unknown>;
+  at: StyleAt;
+  /** Where a property's quoted text is written: its 0-based line in the block and the characters it spans. */
+  span(key: string): Problem['span'];
+  /** Where a property's key is written: its 0-based line in the block and the characters it spans. */
+  keySpan(key: string): Problem['span'];
+  /** Set when the thing writes a key its kind does not know: what it lacks may be that key, misspelt, so is not yet said. */
+  misspelt?: boolean;
+}
+
+/** The names of the graph a style graph styles, which every name in the style must be one of. */
+export interface StyledNames {
+  graph: string;
+  things: Set<string>;
+  kinds: Set<string>;
+  types: Set<string>;
+  paths: Set<string>;
+  /** The property names of a kind's things, of one thing, or of a relationship type's links. */
+  properties(of: { kind?: string; thing?: string; type?: string }): Set<string>;
+}
 
 /** What each thing of a style graph gives, checked one by one, before the things are checked against each other. */
 export interface Checked {
@@ -35,6 +70,7 @@ export interface Checked {
   shown: (Shown & { view: string; at: StyleAt })[];
   arrows: Arrows[];
   diagrams: Diagram[];
+  flows: Flow[];
   links: Links[];
   problems: Problem[];
 }
@@ -232,6 +268,7 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
     shown: [],
     arrows: [],
     diagrams: [],
+    flows: [],
     links: [],
     problems: [],
   };
@@ -264,6 +301,7 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
     else if (kinds[0] === 'ViewStyle') push(c.views, kept(viewStyleOf(thing, names, p)));
     else if (kinds[0] === 'Arrows') push(c.arrows, kept(arrowsOf(thing, names, p)));
     else if (kinds[0] === 'Diagram') push(c.diagrams, kept(diagramOf(thing, names, p)));
+    else if (kinds[0] === 'Flow') push(c.flows, kept(flowOf(thing, names, p)));
     else if (kinds[0] === 'Links') push(c.links, kept(linksOf(thing, names, p)));
     else push(c.shown, kept(shownOf(thing, names, p)));
   }

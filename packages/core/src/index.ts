@@ -18,10 +18,12 @@ export { PALETTES, THEME_COLOURS, fixedPalette } from './palette.ts';
 export type { Palette, ThemeColours } from './palette.ts';
 export { readStyle, outsideOf, lookOf, legendOf } from './style.ts';
 export type { StyleReading } from './style.ts';
-export { ARROWHEADS, FORMATS, INLINE, LINES, NUDGE_WORDS, OUTSIDE, STYLE_HUES } from './style-graph.ts';
+export { ARROWHEADS, FLOW_MOTIONS, FORMATS, INLINE, LINES, NUDGE_WORDS, OUTSIDE, STYLE_HUES } from './style-graph.ts';
 export type {
   ArrowheadsChoice,
   Arrows,
+  Flow,
+  FlowMotion,
   Frame,
   InlineSwitch,
   LegendEntry,
@@ -43,6 +45,8 @@ export type {
 } from './style-graph.ts';
 export { nudgedSource, nudgedDrawing, styledDrawing } from './style-source.ts';
 export { arrowsShown } from './arrows.ts';
+export { FLOW_ICONS, flowFor, flowLegend, flowSaid, reversedLinks } from './link-flow.ts';
+export type { FlowLegendEntry, FlowLink, Moving } from './link-flow.ts';
 export { INLINE_ROWS } from './inline-properties.ts';
 export type { InlineProperties, PropertyRow } from './inline-properties.ts';
 export { styleEdit } from './style-edit.ts';
@@ -100,6 +104,10 @@ export { isDraft, lockBlock, reverseGuess } from './lock.ts';
 export { PaneSession } from './pane.ts';
 export { PathPlayer, PathRecorder, mergePathProblems, pathBlock, pathProblems, pathsOf } from './paths.ts';
 export type { PathBlock, PathReading, PathStep, WalkedPath } from './paths.ts';
+export { DEFAULT_PACE, PATH_PACES, PathAutoplay, paceSaid } from './path-play.ts';
+export type { Scheduler } from './path-play.ts';
+export { ANIMATION_LIMITS, animationFits } from './path-animation.ts';
+export type { Device, ExportWalk, TooLargeToAnimate } from './path-animation.ts';
 export { viewsOf, readingOf } from './views.ts';
 export type { NamedView } from './views.ts';
 export { VIEW_FORMS, VIEW_KINDS, VIEW_LIMITS, VIEW_NAMES, parseView } from './view-profile.ts';
@@ -107,6 +115,19 @@ export { addView, makeView } from './view-write.ts';
 export type { ViewArgs, ViewKind, ViewRefusal, ViewSpec } from './view-profile.ts';
 export { evaluate } from './view-evaluate.ts';
 export type { ViewResult } from './view-evaluate.ts';
+export { isSourceBlock, isStepBlock } from './blocks.ts';
+export { lineInSource, readSource, sourceFor, sourceOf } from './sources.ts';
+export type {
+  Fetched as SourceFetched,
+  Source as GraphSource,
+  SourceFault,
+  SourceRead,
+  SourceRefusal,
+} from './sources.ts';
+export { runStep, stepOf } from './steps.ts';
+export type { Step as GraphStep, StepFault, StepOutput, StepRun } from './steps.ts';
+export { givenLabel } from './steps-input.ts';
+export type { StepGiven, StepPoint } from './steps-input.ts';
 export { DEPARTURES, underStrictness, toStandard, standardBlocks } from './strictness.ts';
 export type { Converted, Departure, Strictness, StrictnessSettings } from './strictness.ts';
 export { OPTIONS, DEFAULT_SETTINGS, settingsFrom, indentText, aiModel } from './settings.ts';

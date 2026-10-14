@@ -1,36 +1,16 @@
-// Reading one thing of a style graph (editor spec §2, style_graph_checked): its properties read one by one, each fault — a
-// value of the wrong type, a word not allowed, a name the styled graph does not have — a problem on its line with its fix,
-// and the edit that makes the fix where there is one. Every check of a style thing reads through this.
+// Reading one thing of a style graph (editor spec §2, style_graph_checked): each property read as text, a number, a word
+// it allows or a name of the graph it styles, and each fault reported as a problem on the thing's line with its fix — the
+// nearest word or name where there is one, as an edit on the written word. Shared by every check of a style thing
+// (style-checks.ts, link-flow.ts).
 import { nearest } from './estimates.ts';
 import type { Problem } from './note-reading.ts';
 import { orList, styleProblem, wordFix } from './style-graph.ts';
-import type { StyleAt } from './style-graph.ts';
+import type { RawThing, StyledNames } from './style-checks.ts';
 
-/** One thing of a style graph as read: its kinds, its properties, where it is, and where each property's text is. */
-export interface RawThing {
-  labels: string[];
-  props: Record<string, unknown>;
-  at: StyleAt;
-  /** Where a property's quoted text is written: its 0-based line in the block and the characters it spans. */
-  span(key: string): Problem['span'];
-  /** Where a property's key is written: its 0-based line in the block and the characters it spans. */
-  keySpan(key: string): Problem['span'];
-  /** Set when the thing writes a key its kind does not know: what it lacks may be that key, misspelt, so is not yet said. */
-  misspelt?: boolean;
-}
+/** The reader of one style thing's properties, each fault pushed onto `out`. */
+export type ThingReader = ReturnType<typeof reader>;
 
-/** The names of the graph a style graph styles, which every name in the style must be one of. */
-export interface StyledNames {
-  graph: string;
-  things: Set<string>;
-  kinds: Set<string>;
-  types: Set<string>;
-  paths: Set<string>;
-  /** The property names of a kind's things, of one thing, or of a relationship type's links. */
-  properties(of: { kind?: string; thing?: string; type?: string }): Set<string>;
-}
-
-/** Reads one thing's properties, reporting each fault into `out`: a value of the wrong type, a word not allowed, a name not there. */
+/** Reads one thing's properties, reporting each fault: a value of the wrong type, a word not allowed, a name not there. */
 export function reader(raw: RawThing, names: StyledNames, out: Problem[]) {
   const report = (message: string, fix: string, edit: Pick<Problem, 'replace' | 'span'> = {}) =>
     out.push(styleProblem(names.graph, raw.at, message, fix, edit));
@@ -62,11 +42,7 @@ export function reader(raw: RawThing, names: StyledNames, out: Problem[]) {
       const v = r.text(key);
       if (v === undefined || (among as readonly string[]).includes(v)) return v as T | undefined;
       const { fix, nearest: near } = wordFix(v, among, always);
-      report(
-        message.replace('$', () => v),
-        fix,
-        edit(key, v, near ? [near] : []),
-      );
+      report(message.split('$').join(v), fix, edit(key, v, near ? [near] : []));
       return undefined;
     },
     /** A name of the styled graph, or undefined and a problem whose fix is the nearest name. */

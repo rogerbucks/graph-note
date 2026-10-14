@@ -4,8 +4,8 @@
 import type { Problem } from './note-reading.ts';
 import { ARROWHEADS, DIAGRAM_TYPES, ON_OFF, ROUTINGS, orList } from './style-graph.ts';
 import type { Arrows, Diagram, Links } from './style-graph.ts';
-import { reader } from './style-thing-reader.ts';
-import type { RawThing, StyledNames } from './style-thing-reader.ts';
+import type { RawThing, StyledNames } from './style-checks.ts';
+import { reader } from './style-reader.ts';
 
 const inView = (view: string | undefined) => (view === undefined ? {} : { view });
 

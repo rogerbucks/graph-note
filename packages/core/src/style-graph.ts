@@ -1,6 +1,6 @@
 // The style graph's shape (editor spec §2, §6, §7, §14, §15): what a style block holds once read — nudges, the properties
 // shown inline, looks for views and paths, whether a view fades or hides what is outside it, how a view was shown,
-// where arrowheads are hidden, and the diagram type chosen — and the words each may use. A style graph is written in the same notation as the data, in
+// where arrowheads are hidden, the diagram type chosen, and how links move — and the words each may use. A style graph is written in the same notation as the data, in
 // its own block, and never in the data.
 import { distance } from './estimates.ts';
 import { STYLE } from './layout.ts';
@@ -49,6 +49,14 @@ export const DIAGRAM_TYPES = ['network', 'tree', 'flow', 'radial', 'lanes', 'tim
 export type DiagramType = (typeof DIAGRAM_TYPES)[number];
 
 /**
+ * How a link moves to show flow (§7, links_show_flow): dashes running along its arrow, a dot travelling along it, or
+ * still, which takes back a movement chosen for a wider place. Links are still unless a Flow moves them (link-flow.ts).
+ */
+export const FLOW_MOTIONS = ['dashes', 'dot', 'still'] as const;
+/** One of the ways a link may move, or still. */
+export type FlowMotion = (typeof FLOW_MOTIONS)[number];
+
+/**
  * How links are drawn (§25, untangle_routing): curved, as Graphviz draws them unless told otherwise, straight, or with
  * right angles, so a dense graph can trade curves for fewer crossings.
  */
@@ -62,7 +70,17 @@ export const ON_OFF = ['on', 'off'] as const;
 export type OnOff = (typeof ON_OFF)[number];
 
 /** The kinds of thing a style graph holds, by label. */
-export const STYLE_KINDS = ['Nudge', 'Show', 'Look', 'ViewStyle', 'Shown', 'Arrows', 'Diagram', 'Links'] as const;
+export const STYLE_KINDS = [
+  'Nudge',
+  'Show',
+  'Look',
+  'ViewStyle',
+  'Shown',
+  'Arrows',
+  'Diagram',
+  'Flow',
+  'Links',
+] as const;
 /** One of the kinds of thing a style graph holds. */
 export type StyleKind = (typeof STYLE_KINDS)[number];
 
@@ -78,6 +96,7 @@ export const STYLE_KEYS: Record<StyleKind, readonly string[]> = {
   Shown: ['view', 'zoom', 'x', 'y', 'frame', 'selected', 'labels', 'hubs', 'groups', 'merge'],
   Arrows: ['arrowheads', 'view', 'type'],
   Diagram: ['type', 'view', 'relationship'],
+  Flow: ['motion', 'means', 'type', 'view'],
   Links: ['view', 'routing', 'merge'],
 };
 
@@ -158,6 +177,22 @@ export interface Links {
   at: StyleAt;
 }
 
+/**
+ * How links move (§7, flow_in_style_graph): for every link, or the links of one relationship type; in the whole graph,
+ * or in one view. A moving link always says what its movement means (`means`, motion_not_alone), in its legend and to a
+ * screen reader, and carries an icon on its label. Still unless a Flow moves it (link-flow.ts).
+ */
+export interface Flow {
+  motion: FlowMotion;
+  /** What the movement means, in words: required for dashes and a dot, so movement is never the only signal. */
+  means?: string;
+  /** The view it is chosen for; none, the whole graph. */
+  view?: string;
+  /** The relationship type whose links it is for; none, every link. */
+  type?: string;
+  at: StyleAt;
+}
+
 /** A link, by its two ends and its relationship type. */
 export interface LinkTarget {
   from: string;
@@ -224,6 +259,8 @@ export interface StyleGraph {
   arrows: Arrows[];
   /** The diagram types chosen, for the whole graph or a view, in the order written. */
   diagrams: Diagram[];
+  /** Where links move, and how, in the order written; none, every link still (flow_in_style_graph). */
+  flows: Flow[];
   /** How links are routed and whether they are merged, for the whole graph or a view, in the order written. */
   links: Links[];
 }
@@ -252,7 +289,17 @@ export interface LegendEntry {
 
 /** A style graph with nothing in it: the locked style. */
 export function emptyStyle(): StyleGraph {
-  return { nudges: [], shows: [], looks: [], views: new Map(), shown: new Map(), arrows: [], diagrams: [], links: [] };
+  return {
+    nudges: [],
+    shows: [],
+    looks: [],
+    views: new Map(),
+    shown: new Map(),
+    arrows: [],
+    diagrams: [],
+    flows: [],
+    links: [],
+  };
 }
 
 /**

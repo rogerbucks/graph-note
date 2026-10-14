@@ -19,6 +19,7 @@ from graphspec.rules.plain_graph import World
 from graphspec.rules.views import SCHEMA_LABELS, _word, readings
 from graphspec.style.arrows import arrowless
 from graphspec.style.diagram_types import diagram_for
+from graphspec.style.flow import flow_links
 from graphspec.style.folding import drawn_groups, fold_plan, links_of, starting_switches
 from graphspec.style.inline import inline_rows
 from graphspec.style.reading import read_style
@@ -68,7 +69,8 @@ def render_args(
     """The arguments graph_svg.render draws `graph` of a note's gql blocks (`texts`) with, as
     the plugin draws it in `view` (None: the whole graph): its boxes and links, the keys drawn
     under a suggested name, and its style — nudges, direction, the links drawn without their
-    arrowheads, the properties shown inline, and the plan of the diagram type it is drawn as, while
+    arrowheads, the properties shown inline, the links that move (§7, flow_links), and the plan of
+    the diagram type it is drawn as, while
     the data fits the one chosen (a network, with no plan, otherwise). A table chosen is drawn as a
     network, as only the plugin draws a table, and a note on stderr says so. And what its View
     menu folds and merges (§25): the switches start as the plugin's settings start a graph, links
@@ -86,13 +88,12 @@ def render_args(
             "draws; it is drawn here as a network",
             file=sys.stderr,
         )
-    turned = {**starting_switches(style, view), **(switches or {})}
     keys = [key for key, _, _ in parts["nodes"]]
     folding = fold_plan(
         keys,
         [(s, d) for s, _, d in parts["edges"]],
         drawn_groups(style["nudges"], keys, choice.get("plan")),
-        {**turned, "opened": opened or {}},
+        {**starting_switches(style, view), **(switches or {}), "opened": opened or {}},
     )
     routing = links_of(style, view)["routing"]
     return {
@@ -104,6 +105,7 @@ def render_args(
         "arrowless": arrowless([t for t, _ in parts["links"]], style["arrows"], view),
         "inline": inline_rows(parts["boxes"], parts["links"], style["shows"], view),
         "diagram": choice.get("plan"),
+        "flow": flow_links([t for t, _ in parts["links"]], style["flows"], view),
         "folding": folding,
         "routing": None if routing == "curved" else routing,
     }

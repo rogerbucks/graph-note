@@ -1,5 +1,11 @@
 {
-  "W0": { "title": "Slice switch and zoom", "requirements": ["zoom_out_to_fit", "zoom_fit_recomputed"] },
+  "W0": {
+    "title": "Slice switch and zoom",
+    "requirements": [
+      "zoom_out_to_fit",
+      "zoom_fit_recomputed"
+    ]
+  },
   "W1": {
     "title": "Focus, hover and untangle",
     "requirements": [
@@ -79,7 +85,14 @@
       "wide_types_phone"
     ]
   },
-  "W6": { "title": "Data export", "requirements": ["export_data_formats", "export_lossless", "big_export"] },
+  "W6": {
+    "title": "Data export",
+    "requirements": [
+      "export_data_formats",
+      "export_lossless",
+      "big_export"
+    ]
+  },
   "W7": {
     "title": "Links, attachments and rich details",
     "requirements": [
@@ -108,7 +121,9 @@
       "person_decides",
       "big_proposal",
       "proposals_phone",
-      "proposals_read_back"
+      "proposals_read_back",
+      "proposals_checked",
+      "decider_named"
     ]
   },
   "W9": {
@@ -128,7 +143,8 @@
       "answers_are_proposals",
       "record_every_send",
       "ai_unreachable",
-      "ai_disclosed"
+      "ai_disclosed",
+      "unclassified_strictest"
     ]
   },
   "W10": {
@@ -180,7 +196,12 @@
   },
   "W14": {
     "title": "Notes in the editor",
-    "requirements": ["note_shown", "note_callouts", "note_kept_by_edits", "note_add"]
+    "requirements": [
+      "note_shown",
+      "note_callouts",
+      "note_kept_by_edits",
+      "note_add"
+    ]
   },
   "W15": {
     "title": "Viewer aids",
@@ -193,5 +214,306 @@
       "quick_info_no_hover_only"
     ]
   },
-  "S3": { "title": "Slice end", "requirements": ["done_means_proved"] }
+  "C0": {
+    "title": "Editor server and its security",
+    "requirements": [
+      "cc_loopback_only",
+      "cc_one_server",
+      "cc_session_token",
+      "cc_token_unkept",
+      "cc_host_checked",
+      "cc_origin_checked",
+      "cc_csp",
+      "cc_body_limit",
+      "cc_no_remote",
+      "cc_server_stops",
+      "cc_threats_tested"
+    ]
+  },
+  "C1": {
+    "title": "Editor note store",
+    "requirements": [
+      "cc_open_notes_only",
+      "cc_no_escape",
+      "cc_atomic_write",
+      "cc_write_if_unchanged",
+      "cc_redrawn_on_change",
+      "cc_drafts_outside",
+      "cc_undo_safe"
+    ]
+  },
+  "C2": {
+    "title": "Editor in the Claude Code mod",
+    "requirements": [
+      "cc_editor_opens",
+      "cc_start_failure",
+      "cc_transcript_clean"
+    ]
+  },
+  "C3": {
+    "title": "Classification in the core and the Claude ceiling",
+    "requirements": [
+      "cc_classified_asks",
+      "cc_credential_never"
+    ]
+  },
+  "C4": {
+    "title": "Shared display layer",
+    "requirements": [
+      "cc_core_only",
+      "cc_same_bytes"
+    ]
+  },
+  "C5": {
+    "title": "Browser host shell",
+    "requirements": [
+      "cc_text_not_html",
+      "cc_one_renderer",
+      "cc_worker_same_origin",
+      "cc_theme_follows",
+      "cc_icons",
+      "cc_settings_shared",
+      "cc_offline"
+    ]
+  },
+  "C6": {
+    "title": "Editor export",
+    "requirements": [
+      "cc_exports_new_only",
+      "cc_export_same"
+    ]
+  },
+  "C7": {
+    "title": "Proposals from Claude",
+    "requirements": [
+      "cc_claude_only",
+      "cc_claude_proposes"
+    ]
+  },
+  "C8": {
+    "title": "Editor accessibility and motion",
+    "requirements": [
+      "cc_keyboard",
+      "cc_reduced_motion",
+      "cc_text_version"
+    ]
+  },
+  "S3": {
+    "title": "Slice end",
+    "requirements": [
+      "done_means_proved"
+    ]
+  },
+  "W16": {
+    "title": "Type and instance",
+    "requirements": [
+      "type_instance_split",
+      "instance_inherits_type",
+      "type_suggestion_bundle",
+      "mesh_one_format",
+      "mesh_text_canonical",
+      "mesh_index_rebuilds",
+      "mesh_work_in_engine",
+      "mesh_engine_parity",
+      "mesh_surfaces_share_data",
+      "mesh_rebuilt_alike"
+    ]
+  },
+  "W17": {
+    "title": "Certainty and contested links",
+    "requirements": [
+      "conflicts_flagged_kept",
+      "certainty_in_words",
+      "certainty_query_dimension",
+      "doubt_stays_local",
+      "contested_link_marker",
+      "hand_clusters_contestable"
+    ]
+  },
+  "W18": {
+    "title": "Time and provenance",
+    "requirements": [
+      "history_before_join",
+      "two_kinds_of_time",
+      "changes_logged_with_provenance"
+    ]
+  },
+  "W19": {
+    "title": "Mesh join",
+    "requirements": [
+      "mesh_join_reports_gaps",
+      "same_join_every_author",
+      "state_names_start_doubtful"
+    ]
+  },
+  "W20": {
+    "title": "Clusters and centroids",
+    "requirements": [
+      "recursive_centroids",
+      "stored_centroids",
+      "centroid_cohesion",
+      "centroid_cycle_guard",
+      "cluster_kind_recorded",
+      "multiple_membership",
+      "parent_floor_optional",
+      "cycles_allowed_flagged",
+      "derivations_need_no_upkeep",
+      "centroids_correct_first"
+    ]
+  },
+  "W21": {
+    "title": "Altitude and audience profiles",
+    "requirements": [
+      "altitude_query_parameter",
+      "audience_profiles_named",
+      "altitude_relative_to_lens",
+      "sibling_drafts",
+      "one_profile_mechanism",
+      "altitude_composition_apart",
+      "browsing_leaves_no_links",
+      "altitude_topic_index",
+      "phase_shifts_altitude"
+    ]
+  },
+  "W22": {
+    "title": "Lenses as graph data",
+    "requirements": [
+      "lens_is_saved_query",
+      "lens_library",
+      "lens_freshness"
+    ]
+  },
+  "W23": {
+    "title": "Process core and views",
+    "requirements": [
+      "transitions_walkable",
+      "hybrid_transitions",
+      "guards_are_data",
+      "run_log_is_truth",
+      "machines_inside_states",
+      "one_process_core",
+      "core_of_eight",
+      "views_declare_limits",
+      "edits_from_any_view",
+      "process_views_cached",
+      "running_rule_override"
+    ]
+  },
+  "W24": {
+    "title": "Runs, tests and debugger",
+    "requirements": [
+      "test_runs_flagged",
+      "process_debugger",
+      "test_run_source",
+      "test_runs_leave_certainty",
+      "intent_checks",
+      "saved_scenarios",
+      "side_effects_stubbed",
+      "playback_controller"
+    ]
+  },
+  "W25": {
+    "title": "Trust in the drawing and the theme graph",
+    "requirements": [
+      "drawing_follows_engine",
+      "certainty_drawn",
+      "drawing_holds_no_state",
+      "accessibility_queryable",
+      "accessibility_lenses_run",
+      "views_over_one_graph",
+      "multi_member_drawn",
+      "view_types_offered",
+      "views_as_scaffolds",
+      "render_cascade",
+      "theme_graph",
+      "theme_links_meaningful",
+      "drawing_history_diffs"
+    ]
+  },
+  "W26": {
+    "title": "AI query contract and write scoring",
+    "requirements": [
+      "ai_systems_query",
+      "ai_minimal_contract",
+      "ai_provenance_with_results",
+      "ai_queries_untrusted",
+      "ai_write_scoring",
+      "external_writes_reviewed",
+      "auto_writes_roll_back"
+    ]
+  },
+  "W27": {
+    "title": "Export gaps and secrets",
+    "requirements": [
+      "export_only_way_out",
+      "engine_never_sends",
+      "export_gap_summary",
+      "export_one_way",
+      "secrets_named_only",
+      "boundary_rules_on_export"
+    ]
+  },
+  "W28": {
+    "title": "Permissions",
+    "requirements": [
+      "default_no_access",
+      "inferred_grants_never_open",
+      "grant_status_only_revokes",
+      "permissions_before_read",
+      "permissions_graph_native",
+      "role_grant_rules",
+      "permission_preview",
+      "contested_grants_paused"
+    ]
+  },
+  "W29": {
+    "title": "Personal profiles",
+    "requirements": [
+      "profiles_at_display",
+      "profile_settings",
+      "reminders_sent_elsewhere",
+      "pacing_automatic",
+      "profiles_private",
+      "adapted_for_viewer",
+      "learning_review_lens"
+    ]
+  },
+  "W30": {
+    "title": "Encrypted local store and CRDT transport",
+    "requirements": [
+      "crdt_transport",
+      "local_encrypted_store",
+      "five_layer_stack",
+      "embedded_backends",
+      "encrypted_everywhere"
+    ]
+  },
+  "W31": {
+    "title": "Peer-to-peer network fabric",
+    "requirements": [
+      "mesh_vpn_sync"
+    ]
+  },
+  "W32": {
+    "title": "iOS app",
+    "requirements": [
+      "ios_app"
+    ]
+  },
+  "W33": {
+    "title": "Web layer and corporate boundary",
+    "requirements": [
+      "web_layer_separate",
+      "corporate_personal_split",
+      "boundary_contract",
+      "open_no_lock_in",
+      "platform_security_first",
+      "corporate_filtered_views",
+      "portable_no_servers"
+    ]
+  },
+  "Q": {
+    "title": "Open questions",
+    "requirements": []
+  }
 }

@@ -1,0 +1,10 @@
+{
+  "file": "test/slice-board.test.js",
+  "test": "reading the requirements > a copy with no open question gives an empty list of questions",
+  "seen_failing_first": false,
+  "fault": true,
+  "commits": [
+    "2c5b9f6266cdcdd75bb57a675186d9eaebaa54c8"
+  ],
+  "evidence": "Written first on purpose and committed alone in 2c5b9f6, before its code; seen failing there with the other new open question tests (16 of 157), and passing from b552a2f, which adds the code."
+}

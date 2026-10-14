@@ -1,0 +1,6 @@
+{
+  "file": "test/requirements.test.js",
+  "test": "a tampered copy fails the check > a question can never prove a requirement: one proved only by a question is unproved",
+  "seen_failing_first": false,
+  "evidence": "Pins behaviour that already held, asked for in review: readBoard and the check count only Test nodes as proofs, so a requirement proved only by a question was already unproved and open before 354313e."
+}

@@ -109,13 +109,14 @@ def python_answer(texts, view, switches, opened):
                 args["nodes"],
                 args["edges"],
                 rd,
-                args["suggested"],
-                args["nudges"],
-                args["arrowless"],
-                args["inline"],
-                args["diagram"],
-                args["folding"],
-                args["routing"],
+                suggested=args["suggested"],
+                nudges=args["nudges"],
+                arrowless=args["arrowless"],
+                inline=args["inline"],
+                plan=args["diagram"],
+                flow=args["flow"],
+                folding=args["folding"],
+                routing=args["routing"],
             )[0]
             for rd in graph_svg.directions(args["direction"], args["diagram"])
         }

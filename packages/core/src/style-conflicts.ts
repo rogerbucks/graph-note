@@ -2,12 +2,13 @@
 // conflict — two directions, beside and before on one pair, a thing in two groups, a loop of befores — a view set both to
 // fade and to hide, a view saved as shown twice, a colour given two meanings in one view or path, a property switched both
 // on and off for one kind, thing or type in one view, arrowheads both hidden and shown for the same links in one view,
-// two diagram types for the whole graph or one view, and two routings or two choices of merging links (§25). Each is a
-// problem with a fix; the first written is kept and the later left out, so what is kept never conflicts.
+// two diagram types for the whole graph or one view, links set to move two ways in one view, and two routings or two
+// choices of merging links (§25). Each is a problem with a fix; the first written is kept and the later left out, so
+// what is kept never conflicts.
 import type { Problem } from './note-reading.ts';
 import type { Checked } from './style-checks.ts';
 import { emptyStyle, styleProblem } from './style-graph.ts';
-import type { Arrows, Diagram, Links, Look, Nudge, Show, StyleAt, StyleGraph } from './style-graph.ts';
+import type { Arrows, Diagram, Flow, Links, Look, Nudge, Show, StyleAt, StyleGraph } from './style-graph.ts';
 
 const REMOVE = 'remove one of them';
 
@@ -196,6 +197,22 @@ function settleLinks(links: Links[], graph: string, out: Problem[]): Links[] {
   return links.filter((l) => (!l.routing || routed.includes(l)) && (!l.merge || merged.includes(l)));
 }
 
+/** A Flow's movement as a sentence says it: its motion, and what it means. */
+const flowSaid = (f: Flow) => `${f.motion}${f.means === undefined ? '' : `, meaning ${f.means}`}`;
+
+/** Where links move, each moved one way only for every link or a type, in each view (§7). */
+const settleFlows = (flows: Flow[], graph: string, out: Problem[]): Flow[] =>
+  settleChoices(
+    flows,
+    (f) => [f.view ?? '', f.type ?? ''].join('\u0000'),
+    (f) => [f.motion, f.means ?? ''].join('\u0000'),
+    (was, f) =>
+      `the links of ${f.type ?? 'every type'} ${f.view === undefined ? 'in the whole graph' : `in view ${f.view}`} ` +
+      `are set to move both as ${flowSaid(was)} (line ${was.at.line}), and as ${flowSaid(f)}`,
+    graph,
+    out,
+  );
+
 /** The style a checked style graph gives, once its things are checked against each other, and the problems found. */
 export function settle(checked: Checked, graph: string): { style: StyleGraph; problems: Problem[] } {
   const problems: Problem[] = [],
@@ -206,6 +223,7 @@ export function settle(checked: Checked, graph: string): { style: StyleGraph; pr
   style.shows = settleShows(checked.shows, graph, problems);
   style.arrows = settleArrows(checked.arrows, graph, problems);
   style.diagrams = settleDiagrams(checked.diagrams, graph, problems);
+  style.flows = settleFlows(checked.flows, graph, problems);
   style.links = settleLinks(checked.links, graph, problems);
   style.looks = settleLooks(checked.looks, graph, problems);
   const viewAt = new Map<string, number>();

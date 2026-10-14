@@ -2,8 +2,8 @@
 §15): nudges that conflict — two directions, beside and before on one pair, a thing in two groups,
 a loop of befores — a property switched both on and off for one kind, thing or type in one view,
 arrowheads both hidden and shown for the same links in one view, two diagram types for the
-whole graph or one view, two routings or two choices of merging links (§25), and a view saved as
-shown twice. Each is a problem with a fix;
+whole graph or one view, links set to move two ways in one view, two routings or two choices of
+merging links (§25), and a view saved as shown twice. Each is a problem with a fix;
 the first written is kept and the later left out, so what is kept never conflicts. The core's
 style-conflicts.ts, function for function, as far as what graph_svg draws goes."""
 
@@ -138,6 +138,32 @@ def settle_arrows(arrows: list[dict], graph: str) -> tuple[list[dict], list[dict
         )
 
     return _settle_choices(arrows, place, lambda a: a["arrowheads"], said, graph)
+
+
+def _flow_said(f):
+    """A Flow's movement as a sentence says it: its motion, and what it means."""
+    means = "" if f.get("means") is None else f", meaning {f['means']}"
+    return f"{f['motion']}{means}"
+
+
+def settle_flows(flows: list[dict], graph: str) -> tuple[list[dict], list[dict]]:
+    """Where links move, each moved one way only for every link or a type, in each view (§7);
+    and a problem for each one moved another way."""
+
+    def place(f):
+        return "\0".join([f.get("view") or "", f.get("type") or ""])
+
+    def choice(f):
+        return "\0".join([f["motion"], f.get("means") or ""])
+
+    def said(was, f):
+        where = "in the whole graph" if f.get("view") is None else f"in view {f['view']}"
+        return (
+            f"the links of {f.get('type') or 'every type'} {where} are set to move both as "
+            f"{_flow_said(was)} (line {was['at']['line']}), and as {_flow_said(f)}"
+        )
+
+    return _settle_choices(flows, place, choice, said, graph)
 
 
 def _type_said(d):

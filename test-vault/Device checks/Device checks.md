@@ -1,6 +1,6 @@
 # Device checks
 
-One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md)): 123 checks in 17 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
+One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md)): 134 checks in 19 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
 
 ## 01 Viewing
 
@@ -166,12 +166,29 @@ One note for each check in the device checklist ([the checklist, on GitHub](http
 - [[Device checks/16 AI models/U-05 Ceiling and credentials|U-05 Ceiling and credentials]]
 - [[Device checks/16 AI models/U-06 Unreachable model and the send record|U-06 Unreachable model and the send record]]
 
-## 17 The View menu
+## 17 Sources and steps
 
-- [[Device checks/17 The View menu/M-01 The four switches and their defaults|M-01 The four switches and their defaults]]
-- [[Device checks/17 The View menu/M-02 Labels by zoom|M-02 Labels by zoom]]
-- [[Device checks/17 The View menu/M-03 Busy hub folded into a stub|M-03 Busy hub folded into a stub]]
-- [[Device checks/17 The View menu/M-04 Groups folded into boxes|M-04 Groups folded into boxes]]
-- [[Device checks/17 The View menu/M-05 Links merged into a trunk|M-05 Links merged into a trunk]]
-- [[Device checks/17 The View menu/M-06 Straight and right-angled links|M-06 Straight and right-angled links]]
-- [[Device checks/17 The View menu/M-07 Switches keep the selection|M-07 Switches keep the selection]]
+- [[Device checks/17 Sources and steps/Q-01 Two views of one graph|Q-01 Two views of one graph]]
+- [[Device checks/17 Sources and steps/Q-02 Views of a graph in another note|Q-02 Views of a graph in another note]]
+- [[Device checks/17 Sources and steps/Q-03 Graph from a gql file|Q-03 Graph from a gql file]]
+- [[Device checks/17 Sources and steps/Q-04 Missing or moved gql file|Q-04 Missing or moved gql file]]
+- [[Device checks/17 Sources and steps/Q-05 Run a step|Q-05 Run a step]]
+
+## 18 Link flow and path play
+
+- [[Device checks/18 Link flow and path play/L-01 Dashes for one type|L-01 Dashes for one type]]
+- [[Device checks/18 Link flow and path play/L-02 A dot on every link|L-02 A dot on every link]]
+- [[Device checks/18 Link flow and path play/L-03 Still under reduced motion|L-03 Still under reduced motion]]
+- [[Device checks/18 Link flow and path play/L-04 Play on its own|L-04 Play on its own]]
+- [[Device checks/18 Link flow and path play/L-05 Export as an animated SVG|L-05 Export as an animated SVG]]
+- [[Device checks/18 Link flow and path play/L-06 Too large for the phone|L-06 Too large for the phone]]
+
+## 19 The View menu
+
+- [[Device checks/19 The View menu/M-01 The four switches and their defaults|M-01 The four switches and their defaults]]
+- [[Device checks/19 The View menu/M-02 Labels by zoom|M-02 Labels by zoom]]
+- [[Device checks/19 The View menu/M-03 Busy hub folded into a stub|M-03 Busy hub folded into a stub]]
+- [[Device checks/19 The View menu/M-04 Groups folded into boxes|M-04 Groups folded into boxes]]
+- [[Device checks/19 The View menu/M-05 Links merged into a trunk|M-05 Links merged into a trunk]]
+- [[Device checks/19 The View menu/M-06 Straight and right-angled links|M-06 Straight and right-angled links]]
+- [[Device checks/19 The View menu/M-07 Switches keep the selection|M-07 Switches keep the selection]]

@@ -139,6 +139,33 @@ describe('reading the requirements', () => {
     );
   });
 
+  test('a copy with no open question gives an empty list of questions', () => {
+    assert.deepEqual(board.questions, []);
+  });
+
+  test('gives each open question its id, number, slice, text and the requirements it blocks', () => {
+    const asked = readBoard(
+      `${FIXTURE.trimEnd()},
+(q_01_ai_interface:Question {num: 'Q-01', slice: 2, text: 'Which interface do external AI tools use?'}),
+(q_02_free:Question {num: 'Q-02', slice: 3, text: 'A question blocking nothing.'}),
+(q_01_ai_interface)-[:BLOCKS]->(view_part),
+(q_01_ai_interface)-[:BLOCKS]->(view_open)
+`,
+    );
+    assert.deepEqual(asked.questions, [
+      {
+        id: 'q_01_ai_interface',
+        num: 'Q-01',
+        slice: 2,
+        text: 'Which interface do external AI tools use?',
+        blocks: ['view_part', 'view_open'],
+      },
+      { id: 'q_02_free', num: 'Q-02', slice: 3, text: 'A question blocking nothing.', blocks: [] },
+    ]);
+    assert.equal(asked.requirements.length, board.requirements.length, 'a question is not a requirement');
+    assert.equal(renderBoard({ ...asked, slice: 2, date: DATE }), page(), 'the board ignores the questions');
+  });
+
   test('a text the reader cannot read is refused, never drawn as empty', () => {
     assert.throws(() => readBoard('(broken:Requirement {section'), /./);
   });

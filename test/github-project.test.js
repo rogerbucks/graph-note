@@ -35,8 +35,14 @@ const command = (...args) =>
   });
 
 describe('the workstreams file', () => {
-  test('names the workstreams W0 to W15 and the slice-end workstream S3, with the titles agreed', () => {
-    assert.deepEqual(Object.keys(workstreams), [...Array.from({ length: 16 }, (_, n) => `W${n}`), 'S3']);
+  test('names the workstreams W0 to W15, the slice-end workstream S3, the graph mesh workstreams W16 to W33 and the open-questions workstream Q, with the titles agreed', () => {
+    assert.deepEqual(Object.keys(workstreams), [
+      ...Array.from({ length: 16 }, (_, n) => `W${n}`),
+      ...Array.from({ length: 9 }, (_, n) => `C${n}`),
+      'S3',
+      ...Array.from({ length: 18 }, (_, n) => `W${n + 16}`),
+      'Q',
+    ]);
     assert.deepEqual(
       Object.values(workstreams).map((w) => w.title),
       [
@@ -56,7 +62,35 @@ describe('the workstreams file', () => {
         'Notes reader parity',
         'Notes in the editor',
         'Viewer aids',
+        'Editor server and its security',
+        'Editor note store',
+        'Editor in the Claude Code mod',
+        'Classification in the core and the Claude ceiling',
+        'Shared display layer',
+        'Browser host shell',
+        'Editor export',
+        'Proposals from Claude',
+        'Editor accessibility and motion',
         'Slice end',
+        'Type and instance',
+        'Certainty and contested links',
+        'Time and provenance',
+        'Mesh join',
+        'Clusters and centroids',
+        'Altitude and audience profiles',
+        'Lenses as graph data',
+        'Process core and views',
+        'Runs, tests and debugger',
+        'Trust in the drawing and the theme graph',
+        'AI query contract and write scoring',
+        'Export gaps and secrets',
+        'Permissions',
+        'Personal profiles',
+        'Encrypted local store and CRDT transport',
+        'Peer-to-peer network fabric',
+        'iOS app',
+        'Web layer and corporate boundary',
+        'Open questions',
       ],
     );
   });

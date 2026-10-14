@@ -27,12 +27,22 @@ module that ties the parts together, named as the folder is.
   what is allowed, outside the view profile; shown as its query under the banner when its note is too large to read;
   saying so, with Change the view, when it matches nothing; faded or hidden
   outside it as its style says; its looks and legend; Save as shown and Fade or Hide others written in the style graph.
+  A view of a graph the note draws FROM another note or a .gql file is put to that source, read there (`sourcedView`),
+  says where it comes from, and is drawn again when the source changes; it offers no export, which reads this note.
+- `step-block.ts` — a graph step (§20): its card says what it proposes into, each point with what it takes and a choice
+  of the note's graphs and views to give it, and Run; nothing runs until Run is pressed, and then against the note as it
+  is, through `vault.process`: refused inputs are listed in the card, and an output is written beside its graph as a
+  change set for a person to accept or reject; Run is off while a run is under way, so a second press runs nothing.
+  Reading view, an embed and a hover preview offer no Run.
+- `edit-in-pane.ts` — Edit on a FROM block's card and a step's, opening the block in the pane as an empty graph's card
+  does; taken away where the card is only read.
 - `style-block.ts` — a style block (§2): never drawn, folded away until opened, saying whose style it is, what it holds
   (its diagram types among the rest) and how many problems it has. The graph it styles is drawn with its nudges, and its problems listed, by `block.ts`.
 - `code.ts` — a block that is not a graph, shown as coloured code; a very long one plain.
 - `live-preview.ts` — the editing view's own cards, so the page stays still while a block is typed in; each block keeps
   its identity however lines move above it, so its card, and the editor in place in it, survive the move; each card's
-  last height kept by its note and line, for the blocks the note has now.
+  last height kept by its note and line, for the blocks the note has now. A FROM block and a step get a card too, each
+  known by its graph line alone, so a long block is never read to choose its card.
 - `editor.ts` — the comma and the colon added for you in the note's own editor.
 - `pane.ts` — the edit pane, which holds a block editor.
 - `reading-view.ts` — reading view never changes the note: `noteToRewrite`, which every command rewriting a note asks
@@ -51,6 +61,16 @@ module that ties the parts together, named as the folder is.
 - `refusal-words.ts` — those words, with no Obsidian in them, in two voices: the banner's, and the notice of an export
   stopped for the same reason ("what happened: why. Nothing was saved. What to do."), and for a layout that failed (the
   worker or its engine raised an error: its reason is put in brackets).
+
+### `src/sources/` — a graph drawn from another note or a .gql file (spec §20, §7 view_of_another_note)
+
+- `sources.ts` — `renderSourceBlock`: a FROM block's card, the whole graph as its source holds it, read-only, with
+  its problems at their lines there; or why it cannot be drawn, with the block as text, never blank; a source too large
+  to read under the banner a note's blocks get. `sourcedView` is the same reading for a view of the graph.
+- `source-read.ts` — the source found as Obsidian finds a link from the note (else by its path), read through the vault,
+  never copied; a .gql file larger than `READ_LIMITS.bytes` by the size the vault keeps is never read; a missing one
+  looked for by name elsewhere, so a move is said; one that cannot be read said with its reason; and `watchSource`, which draws the card again when the source is changed, made, moved or deleted.
+- `source-strip.ts` — the line naming where the data comes from, and Open for a note, as a tap on a link opens it.
 
 ### `src/properties/` — the inspector's properties, as Obsidian's Properties panel
 
@@ -73,8 +93,12 @@ module that ties the parts together, named as the folder is.
   writes nothing and says why), in fixed colours with its frame, drawn with its style — the arrowheads it hides and the
   properties it shows inline, their values from the graph as read (`ImageAsk`'s `data`, which comes with every style,
   or the type check fails); a PNG too large for one sharp image drawn on pages
-  (`pngPages`), every page drawn before any is written, or refused when even pages cannot hold it.
-- `export-form.ts` — the Export form on a drawing: the whole diagram, or a view with or without its faded context; SVG,
+  (`pngPages`), every page drawn before any is written, or refused when even pages cannot hold it. An SVG moves the links
+  its style moves and plays a path it is given, as an animated SVG, still under reduced motion; a PNG is drawn still.
+  One too large for the device (`deviceOf`: a phone or a computer) is refused before anything is laid out, saying why
+  and what would make it fit (`tooLargeWords`; `export.ts` asks first, the core again).
+- `export-form.ts` — the Export form on a drawing: the whole diagram, or a view with or without its faded context, or a
+  path played as an animated SVG at a pace chosen; SVG,
   PNG or the data as a GQL block, CSV or GraphML; light or dark, for an image only; and Export anyway when the note's
   classification asks first. `dataExportBar` gives a graph or view shown as text, too large to draw, a bar with an
   Export button for its data alone.
@@ -213,9 +237,22 @@ module that ties the parts together, named as the folder is.
   properties) and each link, each row reached, named and opened as a box or a link is (`taps.ts` and the details take
   a row as its thing or link), moved and scaled as a whole by the card's zoom. On a phone, a wide tree, flow or
   timeline is fitted to its height and scrolled across only (`graph-view.ts`, the core's `Zoom` with `across`).
-- `walk.ts` — walked paths (§7): the strip below the bar with Play for each path in the note, stepping one thing at a
-  time, marked and said; a path with no steps said to have none; and, while the block is edited, Record, which numbers
-  each box as it is tapped and writes the path into the text.
+- `walk.ts` — walked paths (§7): the strip below the bar with Play for each path in the note, playing it (`path-play.ts`);
+  a path with no steps said to have none; and, while the block is edited, Record, which numbers each box as it is
+  tapped and writes the path into the text. Its `stop`, which the card calls as it unloads, leaves no step waiting.
+- `path-play.ts` — a path playing (path_autoplay): the core's `PathAutoplay` stepping on its own at the pace chosen
+  (Pace), Pause and Play on, Previous and Next (a step by hand pauses it) and Stop; the step now on outlined, pulsing,
+  and a dot running the link from the step before when a link joins them, forwards along the walk; each step said in
+  the strip's one live region; at once and with no dot under reduced motion. Export as an animated SVG always opens the
+  Export form on the path at its pace (`openExportForm`, in place of a form already open; path_animation_export), and
+  an export at a pace Play does not step at is refused. `playablePaths` are the paths the Export form offers.
+- `flow-marks.ts` — links that move (§7, links_show_flow): each link the style graph moves, found by Graphviz's number
+  (`linkGroup`, so a link guessed from a near miss of its type is found too, which has no `data-link`), given the
+  classes `styles.css` moves it by, its name said with its movement and meaning, and for a dot a runner, a copy of its
+  line (`runnerOn`, which the path playing uses too), drawn whatever the setting and hidden by `styles.css` under reduced
+  motion, so turning that off later moves it at once; and the card's legend of what the moving
+  links mean, each in words beside its icon (motion_not_alone). The movement is `styles.css`'s, still under
+  `prefers-reduced-motion` (motion_reduced_respected).
 - `add-thing.ts` — adding a thing (§5): while the card is edited, Add a thing asks for the text first and suggests the name
   from it as it is typed (`suggestName`), shown before anything is written; Add the thing writes it into the text being
   edited (`addThing`), as one edit an undo takes back. A name of its own is kept and held to the same rules. The pane's
@@ -234,7 +271,7 @@ module that ties the parts together, named as the folder is.
 - `read-only.ts` — the one check every write from a card passes: each function in its options, at any depth, is closed
   where the card is read-only (reading view, an embed, and full screen opened from them), but those named as only
   reading, so a new control that writes is read-only there by default; an option it cannot reach is refused, loudly.
-- `view-options.ts` — what a drawing is given.
+- `view-options.ts` — what a drawing is given, its links' movement among it (`LinkMotion`).
 
 ### `src/block-editor/` — the text of one graph block, in the pane or in place
 

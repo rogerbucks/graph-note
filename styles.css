@@ -469,6 +469,101 @@ details.graph-note-style > summary {
   font-weight: var(--font-bold);
   fill: var(--text-normal);
 }
+/* Links that move (spec §7): dashes running along a link's line, or a dot travelling a copy of it, as the style graph
+   says; a line laid out from its far end moves backwards, so it reads forwards. A path playing: the step now on pulses,
+   and a dot runs the link from the step before. Every one of them is still under reduced motion (spec §11), below:
+   the dashes, the icons, the outline and the words stay. */
+.graph-note-svg .graph-note-flow-dashes > path {
+  stroke-dasharray: 6 4;
+  animation: graph-note-flow-dashes 1s linear infinite;
+}
+.graph-note-svg .graph-note-flow-back.graph-note-flow-dashes > path {
+  animation-direction: reverse;
+}
+/* a runner is a path too: named with its element, so it outranks the dashes of a link that both moves and is walked */
+.graph-note-svg path.graph-note-flow-runner,
+.graph-note-svg path.graph-note-path-runner {
+  fill: none;
+  stroke: var(--text-normal);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-dasharray: 0 200;
+  pointer-events: none;
+}
+.graph-note-svg path.graph-note-flow-runner {
+  animation: graph-note-flow-dot 2s linear infinite;
+}
+.graph-note-svg .graph-note-flow-back > path.graph-note-flow-runner {
+  animation-direction: reverse;
+}
+.graph-note-svg path.graph-note-path-runner {
+  stroke: var(--interactive-accent);
+  animation: graph-note-flow-dot var(--graph-note-run, 1s) ease-in-out 1 forwards;
+}
+.graph-note-svg path.graph-note-path-runner-back {
+  animation-direction: reverse;
+}
+.graph-note-svg g.graph-note-step-current > :is(path, polygon) {
+  animation: graph-note-step-pulse 1.2s ease-in-out infinite alternate;
+}
+@keyframes graph-note-flow-dashes {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+@keyframes graph-note-flow-dot {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -100;
+  }
+}
+@keyframes graph-note-step-pulse {
+  from {
+    stroke-width: 4;
+  }
+  to {
+    stroke-width: 6;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .graph-note-svg .graph-note-flow-dashes > path,
+  .graph-note-svg path.graph-note-flow-runner,
+  .graph-note-svg path.graph-note-path-runner,
+  .graph-note-svg g.graph-note-step-current > :is(path, polygon) {
+    animation: none;
+  }
+  .graph-note-svg path.graph-note-flow-runner,
+  .graph-note-svg path.graph-note-path-runner {
+    display: none;
+  }
+}
+/* What the moving links mean, in words beside their icons (spec §7, motion_not_alone). */
+.graph-note-flow-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-4-1) var(--size-4-4);
+  margin: 0;
+  padding: var(--size-4-1) var(--size-4-2);
+  list-style: none;
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+.graph-note-flow-legend .graph-note-flow-icon {
+  color: var(--text-normal);
+  font-weight: var(--font-bold);
+}
+.graph-note-walk-pace {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-1);
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+.graph-note-walk select {
+  min-height: 44px;
+}
 .graph-note-park {
   display: flex;
   flex-wrap: wrap;
@@ -647,6 +742,42 @@ details.graph-note-style > summary {
 }
 .graph-note-empty button {
   min-height: 44px;
+}
+
+/* Where a card's data comes from, when it is written in another note or a .gql file (editor spec §7, §20). */
+.graph-note-source {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-4-2);
+  align-items: center;
+  margin-bottom: var(--size-4-2);
+  color: var(--text-muted);
+}
+.graph-note-source button,
+.graph-note-step-points button,
+.graph-note-card-actions button {
+  min-height: 44px;
+}
+/* Edit on a card that is not a graph's own drawing: a FROM block's or a step's (editor spec §4, §20). */
+.graph-note-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--size-4-2);
+}
+
+/* A graph step's card (editor spec §20): its points, each with its choice, and Run. */
+.graph-note-step-points {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-4-2);
+  align-items: center;
+  margin-bottom: var(--size-4-2);
+}
+.graph-note-step-point {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-4-2);
+  align-items: center;
 }
 
 /* Text for screen readers only: off the screen, never display:none, so it is still read. */

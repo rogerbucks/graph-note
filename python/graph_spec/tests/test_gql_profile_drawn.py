@@ -123,6 +123,19 @@ class DrawnInPart(unittest.TestCase):
         self.assertEqual(sorted(store.graphs), ["trip"])
         self.assertEqual(problems, [])
 
+    def test_a_block_drawn_from_a_file_or_a_note_is_not_drawn(self):
+        # editor spec §20: `· FROM` names where the graph is written; the block holds no data of
+        # its own, as the core's blocks.ts reads it (isSourceBlock), even one with lines in it
+        store, problems = gp.read_for_drawing(
+            [
+                "// graph: trip · FROM Graphs/trip.gql",
+                "// graph: walk · FROM [[Walks]]\n(w:Walk {name: 'Copied in'})",
+                "// graph: home\n(a:Place {name: 'Home'})",
+            ]
+        )
+        self.assertEqual(sorted(store.graphs), ["home"])
+        self.assertEqual(problems, [])
+
     def test_a_graph_line_that_cannot_be_read_is_a_problem_and_its_block_is_left_out(self):
         store, problems = gp.read_for_drawing(["// graph: reader-choice\n(x:Thing)"])
         self.assertEqual(store.graphs, {})

@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/flow-marks.test.js",
+  "test": "the links a Flow moves > with no Flow, no link moves and the card has no legend of movement",
+  "seen_failing_first": false,
+  "evidence": "it pins flow_in_style_graph's off by default from the plugin's side: before any Flow existed no link moved and the card had no legend of movement, so it passes at its parent (3b452c0), where the core already reads Flow but the plugin draws nothing of it; written with the three tests of the marks that failed there, as the control that the marks come only from a Flow"
+}
