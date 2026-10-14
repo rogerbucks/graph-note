@@ -3,8 +3,14 @@
 // question (spec §12, requirements_checked_in_ci). One way only: requirements/editor-requirements.gql stays the only
 // source, and the issues and project items made from it are derivatives, regenerated and never edited by hand. A
 // requirement's status (proved, part or open) is the one the slice board reads from the same file; its workstream is
-// the one in requirements/workstreams.json. A question's issue is labelled question, lists the requirements it blocks
-// and stays open; its workstream is the one that lists it, or Q, Open questions. The planning is in github-project-plan.mjs and the gh calls in github-project-gh.mjs.
+// the one in requirements/workstreams.json. A question's issue is labelled kind:question, lists the requirements it
+// blocks and stays open; its workstream is the one that lists it, or Q, Open questions. The planning is in
+// github-project-plan.mjs and the gh calls in github-project-gh.mjs.
+//
+// When the options of Slice or Workstream change, as when workstreams are added or more slices are chosen, the next
+// --apply replaces that field's options in GitHub. That clears the field on every item, and the run sets it again on
+// each item it manages: growing Workstream from 17 options to 36 re-sets Workstream on every item, and choosing
+// --slices 3,4,6,7,8,9 re-sets Slice too.
 //
 // Usage:
 //   node scripts/github-project.mjs [--slices 3,4] [--dry-run]    print the plan; makes no network call (the default)

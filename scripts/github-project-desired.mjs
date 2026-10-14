@@ -1,6 +1,6 @@
 // The desired state of the GitHub mirror of the requirements (spec §12, requirements_checked_in_ci): for each
 // requirement and each open question of the chosen slices, the issue that should exist — its title, body, labels and
-// whether it is open — and the options of the project fields it fills. A question's issue is labelled question, stays
+// whether it is open — and the options of the project fields it fills. A question's issue is labelled kind:question, stays
 // open and lists the requirements it blocks; it carries the same marker as a requirement's, so it is adopted, kept and
 // removed in the same way. Pure: it reads the board that slice-board.mjs reads from the requirements
 // copy, and the workstreams file, and gives values; scripts/github-project-plan.mjs compares them with what GitHub
@@ -14,8 +14,11 @@ export const SCRIPT = 'scripts/github-project.mjs';
 export const CATCH_ALL = 'S3';
 /** The workstream of an open question that no workstream lists. */
 export const QUESTIONS_WORKSTREAM = 'Q';
-/** The label every open question's issue carries. */
-export const QUESTION_LABEL = 'question';
+/**
+ * The label every open question's issue carries. Namespaced, as GitHub's own `question` label is somebody's own and a
+ * managed label is taken off an issue that should not carry it.
+ */
+export const QUESTION_LABEL = 'kind:question';
 /** The title of the project the issues are collected in. */
 export const PROJECT_TITLE = 'graph-note requirements';
 /** The label of an issue whose requirement is no longer in the requirements file. */
@@ -35,7 +38,7 @@ export const BANNER_START = '> **Generated — do not edit.**';
 const MAX_TITLE = 100;
 const TITLE_SEPARATOR = ' · ';
 const QUESTION_TITLE = 'Open question';
-const MANAGED_LABEL = /^(slice-\d+|workstream:.+|status:(open|part|proved)|requirement:removed|question)$/;
+const MANAGED_LABEL = /^(slice-\d+|workstream:.+|status:(open|part|proved)|requirement:removed|kind:question)$/;
 const MARKER = /<!-- requirement:([\w.-]+) -->/g;
 // An @name or @org/team, or a #number, that is not already inside a code span or a longer word.
 const MENTION = /(?<![\w`])(@[A-Za-z0-9][\w-]*(?:\/[\w-]+)?|#\d+)/g;

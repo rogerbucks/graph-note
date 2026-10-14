@@ -2,8 +2,9 @@
 // Checks the repository's generated copy of the editor's requirements (spec §12, requirements_checked_in_ci), read with
 // the repo's own graph-spec reader: every requirement of a slice that has started is proved by a test, every test the
 // repository holds is where it says, every test claims a requirement, no test is planned while its file is written,
-// every open question has its number, slice and text and blocks only requirements, and the copy's do-not-hand-edit
-// banner stands. A question never needs a test.
+// every open question has its number, a whole-number slice and its text and blocks only requirements, only a question
+// blocks anything, and the copy's do-not-hand-edit banner stands. A question never needs a test, and never proves a
+// requirement.
 //
 // Usage:
 //   node scripts/check-requirements.mjs           the committed copy
@@ -38,8 +39,9 @@ export const filesOf = (field) => [...String(field ?? '').matchAll(FILE_PATH)].m
 
 /**
  * Every problem with a copy of the requirements, each as {kind, id, message}. kind is banner, unreadable, unproved,
- * missing-file, unclaimed, status or question (a question lacking its num, slice or text, or with a BLOCKS link to
- * something that is not a requirement). exists(path) says whether the repository holds a repo-relative path.
+ * missing-file, unclaimed, status, question (a question lacking its num, slice or text, with a slice that is not a
+ * whole number, or with a BLOCKS link to something that is not a requirement) or blocks (a BLOCKS link from something
+ * that is not a question). exists(path) says whether the repository holds a repo-relative path.
  */
 export function auditRequirements(text, { exists = (rel) => existsSync(join(ROOT, rel)), slice = CURRENT_SLICE } = {}) {
   const problems = [];
@@ -110,6 +112,8 @@ export function auditRequirements(text, { exists = (rel) => existsSync(join(ROOT
     for (const field of ['num', 'slice', 'text'])
       if (n.props[field] === undefined || n.props[field] === '')
         problems.push({ kind: 'question', id, message: `question ${id} has no ${field}` });
+    if (n.props.slice !== undefined && !Number.isInteger(n.props.slice))
+      problems.push({ kind: 'question', id, message: `question ${id} has a slice that is not a whole number` });
     for (const [from, type, to] of graph.edges)
       if (from === key && type === 'BLOCKS' && !byKey.get(to)?.labels.has('Requirement'))
         problems.push({
@@ -118,6 +122,15 @@ export function auditRequirements(text, { exists = (rel) => existsSync(join(ROOT
           message: `question ${id} blocks ${byKey.get(to)?.props.id ?? to}, which is not a requirement`,
         });
   }
+  for (const [from, type, to] of graph.edges)
+    if (type === 'BLOCKS' && !byKey.get(from)?.labels.has('Question')) {
+      const name = (key) => byKey.get(key)?.props.id ?? key;
+      problems.push({
+        kind: 'blocks',
+        id: name(from),
+        message: `${name(from)} blocks ${name(to)}, but it is not a question: only a question blocks`,
+      });
+    }
   return problems;
 }
 
