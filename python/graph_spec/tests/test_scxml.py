@@ -23,6 +23,8 @@ sys.path.insert(0, HERE)
 
 import gql_profile as gp  # noqa: E402
 import graph_rules as gr  # noqa: E402
+import graph_spec as gs  # noqa: E402
+from engine_support import needs_engine  # noqa: E402
 from graphspec.engine.optional_imports import etree  # noqa: E402
 from graphspec.engine.process.scxml import NS, comment_note, note_comment, to_scxml  # noqa: E402
 
@@ -92,6 +94,49 @@ class ScxmlKeepsNotes(unittest.TestCase):
     def test_note_standard_with_no_notes_the_export_is_as_it_was(self):
         self.assertEqual(to_scxml(plain(PLAIN), PLAIN), to_scxml(plain(PLAIN)))
         self.assertNotIn("<!--", to_scxml(plain(PROCESS)))
+
+
+# two transitions with the same ends, the first written holding the note: the note is the first's
+# whatever order a source gives the transitions in, as the core puts a note on the first link
+# written with its ends
+ORDERED = "\n".join(
+    [
+        "// graph: loan_process",
+        "(applied:State {id: 'loan/applied', flow: 'loan', initial: TRUE}),",
+        "(closed:State {id: 'loan/closed', flow: 'loan', final: TRUE}),",
+        "/// Scored above 600.",
+        "(applied)-[:TRANSITION {event: 'assess', guard: 'score > 600'}]->(closed),",
+        "(applied)-[:TRANSITION {event: 'assess', guard: 'else'}]->(closed)",
+    ]
+)
+SCORED = ("transition", "loan_applied", "assess", "score > 600", "loan_closed")
+
+
+def out_of_order(g):
+    """The same graph with its links given in the reverse of the order written, as a source such
+    as a database may give its rows."""
+    return gr.Graph(g.nodes, list(reversed(g.edges)))
+
+
+class ATransitionNoteFollowsTheWrittenOrder(unittest.TestCase):
+    def test_note_standard_rows_out_of_written_order_still_note_the_transition_written(self):
+        for source in (plain(ORDERED), out_of_order(plain(ORDERED))):
+            self.assertEqual(noted(to_scxml(source, ORDERED)), [(SCORED, "Scored above 600.")])
+
+    def test_note_standard_the_export_is_the_same_whatever_order_the_rows_come_in(self):
+        for block in (ORDERED, PROCESS):
+            self.assertEqual(
+                to_scxml(out_of_order(plain(block)), block), to_scxml(plain(block), block)
+            )
+
+    @needs_engine
+    def test_note_standard_grafeo_s_rows_give_the_export_the_reader_s_reading_gives(self):
+        for block in (ORDERED, PROCESS):
+            db = gs.grafeo.GrafeoDB()
+            db.execute("CREATE GRAPH loan_process")
+            db.set_graph("loan_process")
+            db.execute(gs.strip(block))
+            self.assertEqual(to_scxml(db, block), to_scxml(plain(block), block))
 
 
 class OneCommentForOneNote(unittest.TestCase):
