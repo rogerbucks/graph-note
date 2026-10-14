@@ -14,12 +14,14 @@ const ts = require('typescript');
 const PACKAGES = ['packages/core', 'packages/graph-spec', 'packages/obsidian', 'packages/claude-code'];
 const PYTHON = 'python/graph_spec';
 const CODE = /\.(ts|js|mjs)$/;
+/** A package's folders of code: its source, its command-line tools, the browser harness and the editor's server. */
+const CODE_FOLDERS = ['src', 'bin', 'harness', 'server'];
 /** The code that ships or is built from: each package's own folders. */
 const codeFiles = () =>
-  PACKAGES.flatMap((p) => ['src', 'test', 'bin', 'harness'].flatMap((d) => walk(`${p}/${d}`))).filter((f) =>
-    CODE.test(f),
-  );
-const sourceFiles = (pkg) => walk(`${pkg}/src`).filter((f) => /\.(ts|js)$/.test(f) && !f.endsWith('.d.ts'));
+  PACKAGES.flatMap((p) => [...CODE_FOLDERS, 'test'].flatMap((d) => walk(`${p}/${d}`))).filter((f) => CODE.test(f));
+/** A package's modules held to the naming, comment and export rules: its source, and the Claude Code editor's server. */
+const sourceFiles = (pkg) =>
+  ['src', 'server'].flatMap((d) => walk(`${pkg}/${d}`)).filter((f) => /\.(ts|js)$/.test(f) && !f.endsWith('.d.ts'));
 const pluginSource = () =>
   walk('packages/obsidian/src')
     .filter((f) => f.endsWith('.ts'))
@@ -153,9 +155,9 @@ describe('naming conventions', () => {
     const loose = [];
     const named = (mods, n) => mods.some((m) => n === m || n.startsWith(`${m}-`) || n.startsWith(`${m}_`));
     for (const p of PACKAGES) {
-      const mods = ['src', 'bin', 'harness']
-        .flatMap((d) => walk(`${p}/${d}`))
-        .map((f) => basename(f).replace(/(\.d)?\.(ts|js|mjs)$/, ''));
+      const mods = CODE_FOLDERS.flatMap((d) => walk(`${p}/${d}`)).map((f) =>
+        basename(f).replace(/(\.d)?\.(ts|js|mjs)$/, ''),
+      );
       for (const f of walk(`${p}/test`).filter((x) => /\.test\.(js|mjs)$/.test(x)))
         if (!named(mods, basename(f).replace(/\.test\.(js|mjs)$/, '')) && !spanning.has(f)) loose.push(f);
     }
@@ -208,7 +210,7 @@ describe('small modules, easy to find and to work in', () => {
   // would, rather than a monolith file"): small modules with one responsibility each, in folders named for their
   // feature, each package with a guide to where things live; a package's entry points stay, re-exporting the modules
   const SOURCE = [
-    ...PACKAGES.flatMap((p) => ['src', 'bin'].flatMap((d) => walk(`${p}/${d}`))).filter(
+    ...PACKAGES.flatMap((p) => ['src', 'bin', 'server'].flatMap((d) => walk(`${p}/${d}`))).filter(
       (f) => /\.(ts|js|mjs)$/.test(f) && !f.endsWith('.d.ts'),
     ),
     ...walk(`${PYTHON}/src`).filter((f) => f.endsWith('.py')),

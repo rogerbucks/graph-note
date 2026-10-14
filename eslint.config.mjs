@@ -49,6 +49,14 @@ export default defineConfig([
     },
   },
   {
+    // The Claude Code editor's local server runs in Node, as a process of its own, never in Obsidian or a page
+    // (packages/claude-code/GUIDE.md): Node's built-ins and globals are what it is written in, and a popout window's
+    // timers mean nothing there. Every other rule holds.
+    files: ['packages/claude-code/server/**/*.ts'],
+    languageOptions: { globals: { process: 'readonly', Buffer: 'readonly' } },
+    rules: { 'obsidianmd/no-nodejs-modules': 'off', 'obsidianmd/prefer-window-timers': 'off' },
+  },
+  {
     // The graph-spec library is plain CommonJS modules, gathered by its entry point and bundled into one file for pages
     // (packages/graph-spec/GUIDE.md); the plugin's esbuild bundles them too. require() is how its modules import.
     // (graph-layout.js stays one UMD file, page global and module.exports, so it is left as it was.)

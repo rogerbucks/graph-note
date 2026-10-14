@@ -28,6 +28,33 @@ unless the app sets its own. Whether the desktop app does, and keeps the drawing
 - `bin/render-process.ts` — the core's `loadEngine`, run by node: a JSON list of DOT on stdin, a JSON list of SVG on
   stdout. Bundled into `mod/bin/render.mjs`.
 
+## The browser editor's server, `server/`
+
+The local server the browser-pane editor will talk to (spec §26, slice 4; workstream C0). It runs in Node as a process of
+its own, so it sits outside `src/` (whose modules may import no Node built-in): Node's own `http`, no framework and no
+runtime dependency beyond the core's `READ_LIMITS`. Built into `mod/bin/editor-server.mjs`.
+
+- `server/editor-server.ts` — the process: takes no argument but `--test-note`, so it can never be told to listen
+  elsewhere; prints one line of JSON, `{"url":"http://127.0.0.1:<port>/#token=<token>"}`, the token in the fragment and
+  written nowhere else (no port or token file); says on stderr why it stopped, and exits.
+- `server/start-server.ts` — `startEditorServer`: listens on 127.0.0.1 alone, on a port the system chooses, with a fresh
+  256-bit token; every request through `request-guard.ts` first; no query or fragment in an address, so a token there
+  is refused; the page (a placeholder until C5) served with no token, as it says nothing of any note; every `/api/`
+  call needs the token; a write needs the server's own origin; stops after `IDLE_MS` (30 minutes) with no request open
+  or made, its clock and timer injectable (`now`, `every`), or at once on `stop`.
+- `server/request-guard.ts` — the checks: the exact Host (`127.0.0.1:<port>` or `localhost:<port>`, no forwarded or
+  Tailscale header read), no other Origin and no cross-site `Sec-Fetch-Site` on any request, a write's Origin its own
+  and `Sec-Fetch-Site: same-origin`, the token only as `Authorization: Bearer`, compared in constant time
+  (`timingSafeEqual` over SHA-256 digests); and `SECURITY_HEADERS`, on every answer: the content security policy
+  (`CSP`), `nosniff`, `no-store`, `no-referrer`, and no CORS header ever (OPTIONS is refused).
+- `server/request-body.ts` — `readBody`: a body held to the core's read limit for a note (`READ_LIMITS.bytes`), refused
+  (413) before it is read when its length says it is larger, or as soon as one sent in parts passes it.
+- `server/session-watch.ts` — `watchSession`: stops the process when its input closes (the session ended), when its
+  parent changes (the process that started it exited) or on SIGTERM, SIGINT or SIGHUP (`/graph stop`).
+- `server/test-note.ts` — TEST ONLY: a few notes in memory, by plain name at `/api/test-note/<name>`, each write made
+  against the version it names (`If-Match`), served only with `--test-note`, so the threat tests have a route to aim
+  at. The note store (C1) replaces it.
+
 ## The mod, `mod/`
 
 The folder Claude Code loads (`--plugin-dir`). It is checked by Claude Code, not by the repository's linter: run
@@ -46,7 +73,8 @@ and `register.tsx` stays thin.
   on each surface, and node missing.
 - `tests/fixtures.d.ts` — the types of the built `tests/fixtures.js`: the sample note and the SVG drawn for it.
 
-Built, never edited (gitignored): `mod/hooks/graph.js`, `mod/bin/render.mjs`, `mod/tests/fixtures.js`. Claude Code writes
+Built, never edited (gitignored): `mod/hooks/graph.js`, `mod/bin/render.mjs`, `mod/bin/editor-server.mjs`,
+`mod/tests/fixtures.js`. Claude Code writes
 `mod/.claude-plugin/types/` when it loads the mod; `mod/tsconfig.json` extends it, so `tsc -p packages/claude-code/mod`
 type-checks the mod once it has been loaded.
 
@@ -61,5 +89,6 @@ in every new session, the desktop app's included. After a change: `npm run build
 
 - `npm run build --workspace packages/claude-code` (`esbuild.config.mjs`) builds the mod, and its test fixtures from
   `test-vault/Sample graph note.md`. The root `npm run build` runs it.
-- `test/` runs in the repository's suite: `graph-view.test.js`, `graphviz-process.test.js`, and `build.test.mjs` (the
-  build writes a hooks bundle with no WebAssembly engine, under 1 MiB, and a render script that draws).
+- `test/` runs in the repository's suite: `graph-view.test.js`, `graphviz-process.test.js`, `build.test.mjs` (the
+  build writes a hooks bundle with no WebAssembly engine, under 1 MiB, and a render script that draws), and
+  `editor-threats.test.js` (the server's threat model, each threat tried against a running server started in the test).
