@@ -44,16 +44,19 @@ import shutil
 import subprocess
 import textwrap
 import zlib
-from collections.abc import Collection, Iterable, Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
 
-# arrowheads hidden and the diagram type (§15), properties shown inline (§14) and links that move
-# (§7), written into the source as the plugin's core writes them; they live with the style graph
-# that chooses them, as do the directions laid out (re-exported here)
+# arrowheads hidden and the diagram type (editor spec §15), properties shown inline (§14), links
+# that move (§7), nudges (§6), and folds, trunks and routing (§25), written into the source as the
+# plugin's core writes them; they live with the style graph that chooses them, as do the
+# directions laid out (re-exported here)
 from graphspec.style.arrows import arrowless_source
 from graphspec.style.diagram_types import directions, typed_source
 from graphspec.style.drawn import render_args  # noqa: F401 — re-exported: render(**render_args(…))
 from graphspec.style.flow import flow_source
+from graphspec.style.fold_source import folded_source, routed_source
 from graphspec.style.inline import inline_source
+from graphspec.style.nudges import nudged_source
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 STYLE = json.load(open(os.path.join(HERE, "graph_svg.style.json"), encoding="utf-8"))
@@ -199,53 +202,30 @@ def dot_source(
     return "\n".join(out), kinds, readings
 
 
-def nudged_source(
-    dot: str, nudges: Sequence[Mapping], keys: Iterable[str], diagram: Mapping | None = None
-) -> str:
-    """The Graphviz source `dot` (from dot_source) with a graph's nudges (editor spec §6) written
-    in before its last line, as the plugin's core writes them (style-source.ts, nudgedSource), so
-    a nudged graph is laid out the same by both, byte for byte (python_honours_nudges): each
-    beside a {rank=same; …} line and each before an invisible link, in the order written, after
-    every link drawn — so Graphviz numbers the drawn links as before — then one box (a cluster)
-    for each group label, in the order first written, its label in the kind caption's size and
-    colour. nudges: as gql_profile.read_style gives them, each {word, thing, other, group}. A
-    nudge naming a thing not among `keys` (the boxes drawn) is left out; so is a group when the
-    plan `diagram` is lanes, which draw it inside its lane (diagram_types.typed_source). With
-    nothing to add, `dot` is returned unchanged: with no nudges, the layout source as it is."""
-    lanes = bool(diagram) and diagram["type"] == "lanes"
-    drawn, added, groups = set(keys), [], {}
-    for n in nudges:
-        things = [k for k in (n.get("thing"), n.get("other")) if k is not None]
-        if not things or not all(k in drawn for k in things):
-            continue
-        if n["word"] == "beside":
-            added.append("  {rank=same; " + "; ".join(f'"{k}"' for k in things) + ";}")
-        elif n["word"] == "before":
-            other = things[1] if len(things) > 1 else ""
-            added.append(f'  "{things[0]}" -> "{other}" [style=invis];')
-        elif n["word"] == "group" and n.get("group") is not None and not lanes:
-            groups.setdefault(n["group"], []).extend(things)
-    # the label as an HTML-like label, entity-escaped as the boxes' own are: a backslash or a quote
-    # is drawn as written
-    for i, (label, members) in enumerate(groups.items()):
-        added.append(
-            f"  subgraph cluster_{i + 1} {{label=<{html.escape(label)}>; "
-            f'fontname="{STYLE["font"]}"; fontsize={STYLE["kind_font_size"]}; '
-            'fontcolor="#0000fe"; color="#0000fe"; style="rounded"; '
-            + "".join(f'"{k}"; ' for k in members)
-            + "}"
-        )
-    if not added:
-        return dot
-    end = dot.rfind("}")
-    nudged = dot[:end] + "\n".join(added) + "\n" + dot[end:]
-    # the layout source puts unlinked things of one kind on one rank; without newrank, Graphviz
-    # takes such things out of a group's box without a word. Only when a group is written, so any
-    # other source stays the plugin's
-    if not groups:
-        return nudged
-    at = nudged.find("{") + 1
-    return nudged[:at] + "\n  newrank=true;" + nudged[at:]
+def drawn_source(
+    nodes: list[tuple[str, str, str]],
+    edges: list[tuple[str, str, str]],
+    rankdir: str,
+    suggested: Collection[str] = (),
+    nudges: Sequence[Mapping] = (),
+    arrowless: Sequence[int] = (),
+    inline: Mapping | None = None,
+    plan: Mapping | None = None,
+    flow: Sequence[Mapping] = (),
+    folding: Mapping | None = None,
+    routing: str | None = None,
+) -> tuple[str, list[str], list[str]]:
+    """The Graphviz source render lays a graph out from in `rankdir`, with its kinds and readings,
+    as the plugin's core writes it (render.ts, directions): the layout source (dot_source), laid
+    out as its diagram type (typed_source), its moving links marked (flow_source), its arrowheads
+    hidden and properties shown (arrowless_source, inline_source), its nudges written in
+    (nudged_source), then folded and merged as `folding` says (folded_source) and its links routed
+    (routed_source)."""
+    src, kinds, readings = dot_source(nodes, edges, rankdir, suggested)
+    src = flow_source(typed_source(src, plan), flow)
+    src = inline_source(arrowless_source(src, arrowless), inline)
+    src = nudged_source(src, nudges, [key for key, _, _ in nodes], plan)
+    return routed_source(folded_source(src, folding), routing), kinds, readings
 
 
 def _themed(svg, kinds, readings=()):
@@ -320,13 +300,8 @@ def _themed(svg, kinds, readings=()):
     return "\n".join(line.strip() for line in svg.splitlines() if line.strip())
 
 
-def _layout(
-    nodes, edges, rankdir, suggested=(), nudges=(), arrowless=(), inline=None, plan=None, flow=()
-):
-    src, kinds, readings = dot_source(nodes, edges, rankdir, suggested)
-    src = flow_source(typed_source(src, plan), flow)
-    src = inline_source(arrowless_source(src, arrowless), inline)
-    src = nudged_source(src, nudges, [key for key, _, _ in nodes], plan)
+def _layout(nodes, edges, rankdir, **drawn):
+    src, kinds, readings = drawn_source(nodes, edges, rankdir, **drawn)
     r = subprocess.run([DOT, "-Tsvg"], input=src, capture_output=True, text=True, timeout=60)
     if r.returncode:
         raise RuntimeError(f"Graphviz failed: {r.stderr.strip()[:300]}")
@@ -344,6 +319,8 @@ def render(
     inline: Mapping | None = None,
     diagram: Mapping | None = None,
     flow: Sequence[Mapping] = (),
+    folding: Mapping | None = None,
+    routing: str | None = None,
 ) -> str:
     """The graph as one block of inline SVG. Raises RuntimeError if Graphviz is missing or fails.
     Laid out both left-to-right and top-to-bottom; the one that shrinks least to fit the page width
@@ -358,7 +335,10 @@ def render(
     source before the nudges (arrowless_source, inline_source), as the core writes them. diagram:
     the plan of the diagram type it is drawn as (diagram_types.diagram_for), written in first
     (typed_source), and laid out in that type's direction unless a nudge sets one (§15). flow: the
-    links that move (flow_links), marked as the core's link-flow.ts marks them (flow_source)."""
+    links that move (flow_links), marked as the core's link-flow.ts marks them (flow_source).
+    folding and routing: what a View menu folds and merges (graphspec.style.folding, fold_plan;
+    none unless asked for) and how the style graph routes the links (§25), written in last
+    (folded_source, routed_source)."""
     if isinstance(suggested, str):
         raise TypeError("suggested is a collection of keys, not one key as a string")
     if not DOT:
@@ -366,7 +346,17 @@ def render(
     target, best = STYLE["page_width"], None
     for rd in directions(direction, diagram):
         svg, kinds, readings, w, h = _layout(
-            nodes, edges, rd, suggested, nudges, arrowless, inline, diagram, flow
+            nodes,
+            edges,
+            rd,
+            suggested=suggested,
+            nudges=nudges,
+            arrowless=arrowless,
+            inline=inline,
+            plan=diagram,
+            flow=flow,
+            folding=folding,
+            routing=routing,
         )
         fit = min(1.0, target / w) - (
             0.25 if h > STYLE["max_height_ratio"] * max(w, target) else 0

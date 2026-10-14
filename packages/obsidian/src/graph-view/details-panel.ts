@@ -108,8 +108,10 @@ export class DetailsPanel {
    */
   private select(key: string | null, link: number | null = null, estimate: number | null = null): void {
     for (const g of Array.from(this.svg.querySelectorAll('g.node, g.edge, tr[data-key], tr[data-link]'))) {
+      // a thing folded into a group's box (§25) is selected as its box
       const on =
         (key !== null && g.getAttribute('data-key') === key) ||
+        (key !== null && (g.getAttribute('data-keys') ?? '').split(' ').includes(key)) ||
         (link !== null && g.getAttribute('data-link') === String(link)) ||
         (estimate !== null && g.getAttribute('data-estimate') === String(estimate));
       g.classList.toggle('is-selected', on);
@@ -304,6 +306,23 @@ export class DetailsPanel {
     row
       .createEl('button', { text: 'Shortest path to another thing', attr: { type: 'button' } })
       .addEventListener('click', () => on.routeFrom(key));
+    // a busy hub's links, folded into one stub or open, folded or opened from its details too (§25, untangle_hubs)
+    const hub = on.hub?.(key);
+    if (hub)
+      row
+        .createEl('button', {
+          text: `${hub.folded ? 'Open' : 'Fold'} its ${hub.links} links`,
+          attr: { type: 'button' },
+        })
+        .addEventListener('click', () => on.toggleHub?.(key));
+  }
+
+  /** The drawing was laid out again (§25): the box or link whose details are open is marked as selected on it again. */
+  reselect(): void {
+    const shown = this.shown;
+    if (this.el.hidden || !shown) return;
+    if ('key' in shown) this.select(shown.key);
+    else this.select(null, shown.link);
   }
 
   /**

@@ -10,6 +10,7 @@ import type { Palette } from './palette.ts';
 import { nudgedSource } from './style-source.ts';
 import { arrowlessSource } from './arrows.ts';
 import { inlineSource } from './inline-properties.ts';
+import { foldedSource, routedSource } from './fold-source.ts';
 import { flowSource } from './link-flow.ts';
 
 /** Graphviz: layout source in, SVG text out. Throws when it cannot lay the source out. */
@@ -45,21 +46,28 @@ export function directions(drawing: GraphDrawing): Direction[] {
   return (only ? [only] : STYLE.directions).map((rankdir) => ({
     rankdir,
     // the diagram type chosen (§15), the links moved (§7), the style graph's arrowheads hidden (§15), properties shown
-    // (§14) and nudges written in (§6); with none of them, the source the Python library gives, byte for byte
-    dot: nudgedSource(
-      inlineSource(
-        arrowlessSource(
-          flowSource(
-            GraphLayout.typedSource(drawingSource(drawing, rankdir as 'LR' | 'TB'), drawing.diagram, STYLE),
-            drawing.flow ?? [],
+    // (§14) and nudges written in (§6), then what the View menu folds and merges and how the links are routed (§25);
+    // with none of them, the source the Python library gives, byte for byte
+    dot: routedSource(
+      foldedSource(
+        nudgedSource(
+          inlineSource(
+            arrowlessSource(
+              flowSource(
+                GraphLayout.typedSource(drawingSource(drawing, rankdir as 'LR' | 'TB'), drawing.diagram, STYLE),
+                drawing.flow ?? [],
+              ),
+              drawing.arrowless ?? [],
+            ),
+            drawing.inline,
           ),
-          drawing.arrowless ?? [],
+          drawing.nudges ?? [],
+          keys,
+          drawing.diagram,
         ),
-        drawing.inline,
+        drawing.folding,
       ),
-      drawing.nudges ?? [],
-      keys,
-      drawing.diagram,
+      drawing.routing,
     ),
     src: layoutSource(drawing, rankdir as 'LR' | 'TB'),
   }));

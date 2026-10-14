@@ -1,12 +1,14 @@
 """Each thing of a style graph checked on its own (editor spec §2, style_graph_checked; §6; §7;
-§14; §15): its kind, the keys it writes, and for a nudge, a Show, an Arrows, a Diagram or a Flow
-its words, its values and
-every name it uses, against the graph it styles. The core's style-checks.ts, function for function,
-as far as what graph_svg draws goes: what is sound is kept, and each fault is a problem on its line
-with its fix, the same words as the core's.
+§14; §15; §25): its kind, the keys it writes, and for a nudge, a Show, an Arrows, a Diagram, a Flow
+or a Links its words, its values and every name it uses, against the graph it styles. The core's
+style-checks.ts, style-choice-checks.ts and link-flow.ts, function for function, as far as what
+graph_svg draws goes: what is sound is kept, and each fault is a problem on its line with its fix,
+the same words as the core's.
 
-A Look, ViewStyle or Shown is drawn by the plugin alone, never by graph_svg, so here only the keys
-it writes are checked; the core checks the rest."""
+A Look or ViewStyle is drawn by the plugin alone, never by graph_svg, so here only the keys it
+writes are checked; the core checks the rest. Of a Shown, graph_svg draws the switches a view was
+saved with, so its view and those are checked too; its zoom, place, frame and selection are the
+plugin's alone."""
 
 from __future__ import annotations
 
@@ -21,6 +23,9 @@ from graphspec.style.words import (
     FLOW_MOTIONS,
     INLINE,
     NUDGE_WORDS,
+    ON_OFF,
+    ROUTINGS,
+    SAVED_SWITCHES,
     STYLE_KINDS,
     or_list,
     replace_first,
@@ -214,6 +219,41 @@ def _diagram_of(raw, names, out):
     }
 
 
+def _links_of(raw, names, out):
+    """How links are drawn, checked (§25, untangle_routing, untangle_merge): a routing of the
+    three, merging on or off, or both, in the whole graph or in a view, whose name is the user's
+    own."""
+    r, before, props = _Reader(raw, names, out), len(out), raw["props"]
+    if "routing" not in props and "merge" not in props:
+        add = "add routing: " + or_list([f"'{w}'" for w in ROUTINGS]) + ", or merge: 'on'"
+        r.missing("a Links sets routing or merge", add)
+        return None
+    routing = r.word("routing", ROUTINGS, f"$ is not a routing: links are {or_list(ROUTINGS)}")
+    merge = r.word("merge", ON_OFF, f"merge must be {or_list(ON_OFF)}")
+    view = r.text("view")
+    if len(out) != before:
+        return None
+    chosen = {"routing": routing, "merge": merge, "view": view}
+    return {**{k: v for k, v in chosen.items() if v is not None}, "at": raw["at"]}
+
+
+def _shown_of(raw, names, out):
+    """How a view was shown, as far as graph_svg draws it (§25, view_switch_view_only): the view,
+    and the View menu's switches saved with it, each on or off. Its zoom, place, frame and
+    selection are the plugin's alone, so they are not read here."""
+    r = _Reader(raw, names, out)
+    view = r.text("view")
+    if not view:
+        r.missing("a Shown names its view", "add view: '<the view's name>'")
+        return None
+    shown = {"view": view, "at": raw["at"]}
+    for k in SAVED_SWITCHES:
+        v = r.word(k, ON_OFF, f"{k} must be {or_list(ON_OFF)}")
+        if v is not None:
+            shown[k] = v
+    return shown
+
+
 def _flow_of(raw, names, out):
     """A Flow, checked (§7): how its links move — dashes, a dot, or still — for every link or the
     links of a relationship type the graph has, in the whole graph or a view, whose name is the
@@ -241,20 +281,22 @@ def _flow_of(raw, names, out):
     }
 
 
-# The kinds a style graph checks fully here, each with its check and where what it gives goes.
+# The kinds a style graph checks here, each with its check and where what it gives goes.
 _CHECKS = {
     "Nudge": (_nudge_of, "nudges"),
     "Show": (_show_of, "shows"),
     "Arrows": (_arrows_of, "arrows"),
     "Diagram": (_diagram_of, "diagrams"),
     "Flow": (_flow_of, "flows"),
+    "Links": (_links_of, "links"),
+    "Shown": (_shown_of, "shown"),
 }
 
 
 def check_things(raws: list[dict], names: dict) -> dict[str, list[dict]]:
     """Each thing of a style graph checked on its own, in the order written: the nudges, Shows,
-    Arrows, Diagrams and Flows that are sound, and the problems found ({nudges, shows, arrows,
-    diagrams, flows, problems}). A raw thing
+    Arrows, Diagrams, Flows, Links and Shown that are sound, and the problems found ({nudges,
+    shows, arrows, diagrams, flows, links, shown, problems}). A raw thing
     is {labels (in the order written), props, at: {block, line, id}}; names is {graph, things,
     kinds, types: names in the graph styled, properties(of): the property names of a kind's things,
     a thing or a type's links}. A thing that writes a key its kind does not know is reported on
@@ -265,6 +307,8 @@ def check_things(raws: list[dict], names: dict) -> dict[str, list[dict]]:
         "arrows": [],
         "diagrams": [],
         "flows": [],
+        "links": [],
+        "shown": [],
         "problems": [],
     }
     problems = c["problems"]

@@ -242,6 +242,21 @@ export {
   shortestPath,
 } from './untangle.ts';
 export type { Found, Layers, LegendItem, LegendState, PathFound } from './untangle.ts';
+export { BUSY_HUB, foldsHiding } from './untangle-fold.ts';
+export type { Folding } from './untangle-fold.ts';
+export {
+  LABEL_SCALE,
+  SWITCH_NAMES,
+  SWITCH_SETTINGS,
+  VIEW_SWITCHES,
+  ViewState,
+  labelsHidden,
+  startingSwitches,
+} from './view-switches.ts';
+export type { Fold, ViewSwitch, ViewSwitches } from './view-switches.ts';
+export { linksOf } from './style.ts';
+export type { Links, OnOff, Routing } from './style-graph.ts';
+export type { SwitchSetting } from './settings.ts';
 export { TextHistory } from './history.ts';
 export type { Change, TextState } from './history.ts';
 export type { Bounds, HitAreas, Shape } from './hits.ts';

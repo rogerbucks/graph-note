@@ -10,9 +10,12 @@ export interface Marks {
   hot: Kept | null;
 }
 
-/** The place among the drawing's links of a link's element, from its id in the SVG (`edge3` is the third, so 2). */
+/**
+ * The place among the drawing's links of a link's element, from its id in the SVG (`edge3` is the third, so 2); a link
+ * merged into a trunk (§25) has a second line to the trunk, `edge3_tail`, which is the same link.
+ */
 export function edgeNumber(g: Element): number {
-  const n = /^edge(\d+)$/.exec(g.getAttribute('id') ?? '')?.[1];
+  const n = /^edge(\d+)(?:_tail)?$/.exec(g.getAttribute('id') ?? '')?.[1];
   return n === undefined ? -1 : Number(n) - 1;
 }
 
@@ -41,20 +44,26 @@ export function sameTarget(a: FocusTarget | null, b: FocusTarget | null): boolea
  */
 export class DrawingMarks {
   private readonly nodes = new Map<string, Element>();
-  private readonly edges = new Map<number, Element>();
+  /** Each link's lines: one, or two for a link merged into a trunk. */
+  private readonly edges = new Map<number, Element[]>();
 
   /** For a drawing's SVG, whose boxes and links are looked up once. */
   constructor(svg: Element) {
-    for (const g of Array.from(svg.querySelectorAll('g.node'))) this.nodes.set(g.getAttribute('data-key') ?? '', g);
-    for (const g of Array.from(svg.querySelectorAll('g.edge'))) this.edges.set(edgeNumber(g), g);
+    // a fold's stub, box or trunk (§25) is no thing or link of the graph, so focus never marks it
+    for (const g of Array.from(svg.querySelectorAll('g.node[data-key]')))
+      this.nodes.set(g.getAttribute('data-key') ?? '', g);
+    for (const g of Array.from(svg.querySelectorAll('g.edge'))) {
+      const n = edgeNumber(g);
+      if (n >= 0) this.edges.set(n, [...(this.edges.get(n) ?? []), g]);
+    }
   }
 
   /** Marks every box and link. */
   all(m: Marks): void {
     for (const [key, g] of this.nodes)
       this.mark(g, m, m.hidden.things.has(key), !!m.kept?.things.has(key), !!m.hot?.things.has(key));
-    for (const [n, g] of this.edges)
-      this.mark(g, m, m.hidden.edges.has(n), !!m.kept?.edges.has(n), !!m.hot?.edges.has(n));
+    for (const [n, gs] of this.edges)
+      for (const g of gs) this.mark(g, m, m.hidden.edges.has(n), !!m.kept?.edges.has(n), !!m.hot?.edges.has(n));
   }
 
   /** Marks only these boxes (by key) and links (by place), as `m` says: the ones a change of highlight touched. */
@@ -63,10 +72,9 @@ export class DrawingMarks {
       const g = this.nodes.get(key);
       if (g) this.mark(g, m, m.hidden.things.has(key), !!m.kept?.things.has(key), !!m.hot?.things.has(key));
     }
-    for (const n of links) {
-      const g = this.edges.get(n);
-      if (g) this.mark(g, m, m.hidden.edges.has(n), !!m.kept?.edges.has(n), !!m.hot?.edges.has(n));
-    }
+    for (const n of links)
+      for (const g of this.edges.get(n) ?? [])
+        this.mark(g, m, m.hidden.edges.has(n), !!m.kept?.edges.has(n), !!m.hot?.edges.has(n));
   }
 
   private mark(g: Element, m: Marks, hidden: boolean, kept: boolean, hot: boolean): void {

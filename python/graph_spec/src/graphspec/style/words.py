@@ -1,6 +1,7 @@
 """The words a style graph may use for what graph_svg draws — its nudges (editor spec §6,
 four_nudge_words), the properties it shows inline (§14), where it hides arrowheads and the diagram
-type it chooses (§15), and how links move (§7) — the
+type it chooses (§15), how links move (§7), and how they are routed and merged and a view's
+switches saved (§25) — the
 keys each kind of style thing may have, and how a problem with one is said: the core's
 style-graph.ts and style-words.ts, as far as these need them. The directions and sizes are the
 locked style's, from graph_svg.style.json, the one file both renderers read."""
@@ -30,8 +31,25 @@ DIAGRAM_TYPES = ("network", "tree", "flow", "radial", "lanes", "timeline", "tabl
 # How a link moves to show flow (§7, links_show_flow): dashes, a dot, or still; still unless a
 # Flow moves it (graphspec/style/flow.py).
 FLOW_MOTIONS = ("dashes", "dot", "still")
+# How links are drawn (§25, untangle_routing): curved, as Graphviz draws them, straight, or with
+# right angles.
+ROUTINGS = ("curved", "straight", "right-angled")
+# A switch written in the style graph: links merged into trunks (§25), or a view's switches saved.
+ON_OFF = ("on", "off")
+# The View menu's switches a view saved as shown keeps (§25, view_switch_view_only).
+SAVED_SWITCHES = ("labels", "hubs", "groups", "merge")
 # The kinds of thing a style graph holds, by label.
-STYLE_KINDS = ("Nudge", "Show", "Look", "ViewStyle", "Shown", "Arrows", "Diagram", "Flow")
+STYLE_KINDS = (
+    "Nudge",
+    "Show",
+    "Look",
+    "ViewStyle",
+    "Shown",
+    "Arrows",
+    "Diagram",
+    "Flow",
+    "Links",
+)
 # The keys each kind of style thing may have (§2, style_words_checked); a thing's id is its name.
 STYLE_KEYS = {
     "Nudge": ("word", "thing", "other", "group", "direction"),
@@ -50,10 +68,11 @@ STYLE_KEYS = {
         "means",
     ),
     "ViewStyle": ("view", "outside"),
-    "Shown": ("view", "zoom", "x", "y", "frame", "selected"),
+    "Shown": ("view", "zoom", "x", "y", "frame", "selected", *SAVED_SWITCHES),
     "Arrows": ("arrowheads", "view", "type"),
     "Diagram": ("type", "view", "relationship"),
     "Flow": ("motion", "means", "type", "view"),
+    "Links": ("view", "routing", "merge"),
 }
 
 
