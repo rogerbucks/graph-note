@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/sources.test.js",
+  "test": "a source is a place inside the vault, and never read when too large > a place inside the vault, folders and all, is not refused",
+  "seen_failing_first": false,
+  "evidence": "A control for the new guard: a path inside the vault, with folders, spaces and dots in its file name, was already accepted before the guard, so it passed first. It holds that the guard refuses only what leaves the vault or reaches a hidden folder; the nine refusals beside it failed first."
+}
