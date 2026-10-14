@@ -7,6 +7,10 @@ import type { Zoom, ZoomEvent } from '@graph-note/core';
 import type { DetailsPanel } from './details-panel';
 import type { Selection } from './selection';
 import { onPointer } from './selection-pointer';
+import { onImageControl } from './animated-images';
+
+/** Whether an event came from a button of the drawing's own — the arrow to the selection (§25), an image's control (§18). */
+const ownButton = (target: EventTarget | null): boolean => onPointer(target) || onImageControl(target);
 import { targetAt, targetOf } from './taps';
 import type { Taps, Target } from './taps';
 
@@ -50,7 +54,7 @@ export function bindViewportEvents(host: ViewportHost): void {
   card.registerDomEvent(vp.win, 'resize', () => details.moved(true));
   card.registerDomEvent(vp.doc, 'scroll', () => details.moved(false), { capture: true, passive: true });
   card.registerDomEvent(vp, 'pointerdown', (e: PointerEvent) => {
-    if (onPointer(e.target)) return; // the arrow to the selection is a button of its own, never the drawing (§25)
+    if (ownButton(e.target)) return; // the arrow to the selection, an image's control: buttons of their own (§25, §18)
     const target = targetAt(e.target),
       p = point(e),
       near = nearTo(p);
@@ -69,7 +73,7 @@ export function bindViewportEvents(host: ViewportHost): void {
     use(e, { kind: 'move', id: e.pointerId, ...point(e) });
   });
   card.registerDomEvent(vp, 'pointerup', (e: PointerEvent) => {
-    if (onPointer(e.target)) return;
+    if (ownButton(e.target)) return;
     const p = point(e);
     use(e, { kind: 'up', id: e.pointerId, ...p, time: e.timeStamp ?? 0 });
     const down = boxDown,
@@ -105,12 +109,14 @@ export function bindViewportEvents(host: ViewportHost): void {
   );
   // a double click on or near a box or link only selects it, as its two clicks did; only empty space zooms (§3)
   card.registerDomEvent(vp, 'dblclick', (e: MouseEvent) => {
-    if (onPointer(e.target)) return;
+    if (ownButton(e.target)) return;
     const p = point(e),
       onBox = !!targetAt(e.target);
     use(e, { kind: 'dblclick', ...p, onBox, near: !onBox && nearTo(p).length > 0 });
   });
   card.registerDomEvent(vp, 'keydown', (e: KeyboardEvent) => {
+    // Enter and Space press an image's control, never the box it is on (§18)
+    if (onImageControl(e.target) && (e.key === 'Enter' || e.key === ' ')) return;
     const target = targetAt(e.target);
     // Escape clears the selection and the focus first; with a thing selected the arrow keys walk its links (§25)
     const used = sel.key(e);

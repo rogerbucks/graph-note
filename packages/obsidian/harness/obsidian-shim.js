@@ -391,6 +391,12 @@ export function setIcon(el, icon) {
 export function setTooltip(el, t) {
   el.title = t;
 }
+/** Bytes as base64, as Obsidian's own helper writes them: for an image embedded in an export. */
+export function arrayBufferToBase64(buffer) {
+  let s = '';
+  for (const b of new Uint8Array(buffer)) s += String.fromCharCode(b);
+  return btoa(s);
+}
 /** Where a note's front matter is, as Obsidian finds it: the text between a first line of --- and the next. */
 export function getFrontMatterInfo(text) {
   const m = /^---\r?\n([\s\S]*?)\r?\n?---(?:\r?\n|$)/.exec(text);

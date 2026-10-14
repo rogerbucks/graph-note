@@ -269,6 +269,7 @@ export async function renderViewBlock(
       view,
       diagram,
       motion: { flow: styled.flow ?? [], reversed: reversedLinks(styled, drawn.rankdir) },
+      images: plugin.cardImages(ctx.sourcePath, styled.pictures), // its things' images and pictures (§18)
       // an export reads the note it is in: a view drawn from elsewhere is exported from where its data is written
       ...(from
         ? {}

@@ -21,6 +21,8 @@ import { renderProposalStrip } from '../proposals/proposal-strip';
 import { plural, renderBar } from './view-bar';
 import { describeDrawing, insertSvg } from './drawing-svg';
 import { markFlow, renderFlowLegend } from './flow-marks';
+import { MovingImages, placePictures } from './animated-images';
+import { reducedMotion } from './details-nav';
 import { Taps } from './taps';
 import type { Target } from './taps';
 import { DetailsPanel } from './details-panel';
@@ -46,6 +48,8 @@ export class GraphView extends MarkdownRenderChild {
   private detailsEl!: HTMLElement;
   private details!: DetailsPanel;
   private walk: Walk | null = null;
+  /** Its things' images, in the drawing and the details, and how many move (§18). */
+  private images: MovingImages | null = null;
   private maker: ViewMaker | null = null;
   private adder: AddThing | null = null;
   private fullscreen: { view: GraphView; overlay: HTMLElement } | null = null;
@@ -141,6 +145,9 @@ export class GraphView extends MarkdownRenderChild {
     if (table) this.table = renderTable(this.viewport, table);
     else this.svg = insertSvg(this.viewport, this.o.drawn, this.drawing());
     if (this.svg && this.o.motion) markFlow(this.svg, this.o.motion.flow); // the links its style moves (§7)
+    // its things' images, counted as they move, still under reduced motion; the pictures its style draws on boxes (§18)
+    this.images = new MovingImages(reducedMotion(activeWindow), this.o.images);
+    if (this.svg) placePictures(this.svg, this.images);
     if (view && this.svg) markView(this.svg, view); // a view: what is outside it faded, its looks drawn (§7)
     if (this.o.proposal && this.svg) markProposal(this.svg, this.o.proposal.shown.marks); // a proposal: what it adds, changes, removes (§17)
     // the drawing as sentences, for screen readers (spec §11)
@@ -154,6 +161,7 @@ export class GraphView extends MarkdownRenderChild {
       this.viewport,
       this.o,
       this.sel.actions(),
+      this.images,
     );
     // closing the details, by button, Escape or a tap on empty space, clears the selection and the focus with them (§25)
     this.details.onClosed = () => this.sel.closed();
@@ -236,6 +244,7 @@ export class GraphView extends MarkdownRenderChild {
     (this.sel as Selection | undefined)?.stop();
     (this.details as DetailsPanel | undefined)?.unload();
     this.walk?.stop(); // a path playing on its own stops with its card: no step waits on the clock
+    this.images?.release(); // and its images let go of what they hold
     this.fullscreen?.overlay.remove();
     this.fullscreen = null;
   }

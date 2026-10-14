@@ -15,6 +15,8 @@ import { button } from './view-bar';
 import { linkWords, renderLinkGroups, renderTrail, stepName, thingButton } from './details-nav';
 import type { NavActions } from './details-nav';
 import { DetailsSheet } from './details-sheet';
+import { renderImages } from './animated-images';
+import type { MovingImages } from './animated-images';
 import type { ThingActions } from './untangle';
 import type { ViewOptions } from './view-options';
 
@@ -33,6 +35,8 @@ export class DetailsPanel {
   /** Set while the details are drawn for a step of the trail, or drawn again: the trail goes on rather than starting again. */
   private walking = false;
   private readonly sheet: DetailsSheet;
+  /** The card's images, a thing's shown in its details (§18). */
+  private readonly images: MovingImages | undefined;
 
   /** The thing whose details are open, if a thing's are: what a view saved as shown keeps as selected (§7). */
   selectedKey(): string | null {
@@ -46,12 +50,14 @@ export class DetailsPanel {
     viewport: HTMLElement,
     o: ViewOptions,
     actions?: ThingActions & NavActions,
+    images?: MovingImages,
   ) {
     this.el = el;
     this.svg = svg;
     this.viewport = viewport;
     this.o = o;
     this.actions = actions;
+    this.images = images;
     this.sheet = new DetailsSheet(el, {
       // the sheet is for view mode, in a note's card: full screen and the pane show the details in their own place
       on: () => o.mode === 'note' && !o.editing?.()?.session,
@@ -161,6 +167,7 @@ export class DetailsPanel {
    */
   private panel(title: string, kind?: string): HTMLElement {
     const el = this.el;
+    this.images?.release('details'); // the images of the details shown before let go
     el.empty();
     el.hidden = false;
     el.setAttribute('aria-label', `Details of ${title}`);
@@ -178,6 +185,7 @@ export class DetailsPanel {
   /** Closes the details and clears what is selected, as the close button does, and tells the card (§25): the focus clears too. */
   close(): void {
     this.el.hidden = true;
+    this.images?.release('details');
     this.shown = null;
     this.trail.clear();
     this.sheet.closed();
@@ -257,6 +265,8 @@ export class DetailsPanel {
       el,
       propertiesOf(this.o.reading, this.o.graph, { thing: key }).map((p) => [p.key, p.value]),
     );
+    // the images its properties name, each moving, or still saying why, with its pause and play control (§18)
+    if (this.images) renderImages(el, this.o.reading.world[this.o.graph]?.p(key) ?? {}, this.images);
     links(
       'Problems',
       d.problems.map((p) => problemText({ ...p, noteLine: this.o.lineOf(p) })),

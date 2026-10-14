@@ -270,6 +270,8 @@ export async function renderBlock(
       ...(diagram ? { diagram } : {}),
       // the links its style graph moves, and the lines laid out backwards (§7)
       motion: { flow: drawing.flow ?? [], reversed: reversedLinks(drawing, drawn.rankdir) },
+      // its things' images, found from this note, and the pictures its style draws on boxes (§18)
+      images: plugin.cardImages(target.path, drawing.pictures),
       completeness: completenessReport(reading, graph, new Date().toISOString().slice(0, 10)),
       parked: parked(reading, graph, new Date().toISOString().slice(0, 10)),
       writeView: (block) => writeViewBlock(plugin, target.path, graph, block),

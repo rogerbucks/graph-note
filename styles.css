@@ -513,6 +513,63 @@ details.graph-note-style > summary {
     display: none;
   }
 }
+/* Animated images (spec §18): a thing's images in its details, each a figure with its pause and play button and what
+   it says; and a picture on a box, in the square Graphviz kept for it, its control drawn in the corner. Whether one
+   moves is the plugin's to say, image by image (animated-images.ts), never a style's, so nothing here moves. */
+.graph-note-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-4-2) var(--size-4-4);
+}
+.graph-note-image {
+  margin: 0;
+  max-width: 100%;
+}
+.graph-note-image img {
+  display: block;
+  max-width: 100%;
+  max-height: 240px;
+  object-fit: contain;
+}
+.graph-note-image figcaption,
+.graph-note-image .graph-note-image-said {
+  margin: var(--size-4-1) 0 0;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+.graph-note-image .graph-note-image-said:empty {
+  display: none;
+}
+.graph-note-image .graph-note-image-control[aria-disabled='true'] {
+  cursor: not-allowed;
+}
+.graph-note-svg image.graph-note-picture {
+  pointer-events: none;
+}
+.graph-note-svg .graph-note-image-control {
+  cursor: pointer;
+}
+.graph-note-svg .graph-note-image-control rect {
+  fill: var(--background-primary);
+  stroke: var(--text-normal);
+  stroke-width: 1;
+}
+.graph-note-svg .graph-note-image-control text {
+  fill: var(--text-normal);
+  font-size: 8px;
+}
+.graph-note-svg .graph-note-image-control:focus-visible rect {
+  stroke: var(--interactive-accent);
+  stroke-width: 2;
+}
+.graph-note-svg .graph-note-image-control[aria-disabled='true'] {
+  cursor: not-allowed;
+}
+.graph-note-svg rect.graph-note-picture-missing {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-dasharray: 3 3;
+}
 /* What the moving links mean, in words beside their icons (spec §7, motion_not_alone). */
 .graph-note-flow-legend {
   display: flex;

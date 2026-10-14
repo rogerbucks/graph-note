@@ -94,6 +94,12 @@ export function fakeObsidian(state = {}) {
     getFiles: () => [...files.keys()].map((p) => new TFile(p)),
     read: async (f) => files.get(f.path),
     cachedRead: async (f) => files.get(f.path),
+    // a file's bytes, as an attachment is read: a note's text as UTF-8, bytes as they are
+    readBinary: async (f) => {
+      const held = files.get(f.path);
+      const bytes = typeof held === 'string' ? new TextEncoder().encode(held) : held;
+      return bytes.slice().buffer;
+    },
     process: async (f, fn) => {
       const next = fn(files.get(f.path));
       if (next !== files.get(f.path)) {
@@ -399,6 +405,7 @@ export function fakeObsidian(state = {}) {
     ...settings,
     parseYaml,
     getFrontMatterInfo,
+    arrayBufferToBase64: (b) => Buffer.from(b).toString('base64'),
   };
 }
 

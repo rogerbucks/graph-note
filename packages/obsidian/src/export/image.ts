@@ -2,9 +2,18 @@
 // (layout_contained), in the fixed colours chosen, framed, and kept as SVG or drawn as a PNG at twice natural size or
 // more (export_png_sharp). A PNG too large for one sharp image is drawn on pages, each its own file, named in order
 // (big_export); one too large even for pages is refused, with the SVG suggested. Every page is drawn before any is
-// written, so a page that cannot be drawn leaves nothing behind.
-import { Platform } from 'obsidian';
-import { exportWithLayout, pageSvg, pngPages, pngSize } from '@graph-note/core';
+// written, so a page that cannot be drawn leaves nothing behind. The images on boxes are read from the vault and
+// embedded in the file (§18), and what was done with each animated image is said (export_animation_stated).
+import { Platform, arrayBufferToBase64 } from 'obsidian';
+import {
+  IMAGE_LIMITS,
+  animationSaid,
+  exportWithLayout,
+  imageFacts,
+  pageSvg,
+  pngPages,
+  pngSize,
+} from '@graph-note/core';
 import type {
   ExportGo,
   ExportInfo,
@@ -13,11 +22,13 @@ import type {
   ExportTheme,
   ExportWalk,
   NoteReading,
+  PictureLoad,
   StyleGraph,
   TooLargeToAnimate,
 } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
 import { exportFailureWords, exportRefusalWords } from '../layout-worker/refusal-words';
+import { vaultImages } from '../images/vault-images';
 
 /** One file an export writes: its name, its path in the vault, and its bytes or text. */
 export interface ExportFile {
@@ -58,7 +69,7 @@ type GraphRead = NonNullable<NoteReading['world'][string]>;
 export async function imageFiles(
   plugin: GraphNotePlugin,
   x: ImageAsk,
-): Promise<{ files: ExportFile[] } | { stopped: string }> {
+): Promise<{ files: ExportFile[]; animation?: string } | { stopped: string }> {
   let layoutFailed = false;
   const layout: ExportLayout = (d, theme) =>
     plugin.layoutForExport(d, theme).catch((e: unknown) => {
@@ -74,6 +85,7 @@ export async function imageFiles(
     motion: x.format === 'svg',
     device: deviceOf(),
     ...(x.walk ? { walk: x.walk } : {}),
+    pictures: picturesFrom(plugin, x.note), // the images on boxes, embedded in the file (§18)
   };
   const info: ExportInfo = x.style ? { ...basics, style: x.style, data: x.data } : basics;
   let image;
@@ -92,7 +104,9 @@ export async function imageFiles(
   if ('reason' in image) return { stopped: exportRefusalWords(image) };
   if ('why' in image) return { stopped: tooLargeWords(image) };
   const { go } = x;
-  if (x.format === 'svg') return { files: [{ name: go.fileName, path: go.path, bytes: image.svg }] };
+  // what was done with each animated image, said with the outcome (export_animation_stated)
+  const said = image.animation ? { animation: animationSaid(image.animation) } : {};
+  if (x.format === 'svg') return { files: [{ name: go.fileName, path: go.path, bytes: image.svg }], ...said };
   const pages = pngPages(image.width, image.height, plugin.pngPixelLimit);
   if (!pages) {
     const size = pngSize(image.width, image.height);
@@ -109,6 +123,7 @@ export async function imageFiles(
           bytes: await plugin.rasterise(image.svg, pngSize(image.width, image.height)),
         },
       ],
+      ...said,
     };
   const named = x.paged(pages.length).pages ?? [];
   const files: ExportFile[] = [];
@@ -121,5 +136,29 @@ export async function imageFiles(
       bytes: await plugin.rasterise(pageSvg(image.svg, page), pngSize(page.width, page.height)),
     });
   }
-  return { files };
+  return { files, ...said };
+}
+
+/**
+ * The loader of the images on an export's boxes (§18, export-pictures.ts): each found from the note at `note`, read
+ * through the vault, what its bytes say, and, for one that moves, its first frame drawn; or why it cannot be had.
+ */
+function picturesFrom(plugin: GraphNotePlugin, note: string): PictureLoad {
+  const source = vaultImages(plugin.app, note);
+  return async (value) => {
+    const found = source.find(value);
+    if (!found) return { why: `${value} names no image` };
+    if ('why' in found) return found;
+    const bytes = await found.read();
+    const facts = imageFacts(bytes);
+    const still = facts.animated || found.size > IMAGE_LIMITS.bytes ? await plugin.stillFrame(bytes, found.mime) : null;
+    return {
+      name: found.name,
+      mime: found.mime,
+      base64: arrayBufferToBase64(bytes.slice().buffer),
+      size: found.size,
+      facts,
+      ...(still ? { still: arrayBufferToBase64(still.slice().buffer) } : {}),
+    };
+  };
 }

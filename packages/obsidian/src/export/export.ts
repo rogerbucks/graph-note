@@ -169,6 +169,8 @@ async function exporting(plugin: GraphNotePlugin, ask: ExportAsk): Promise<Expor
   const { go } = plan;
   let files: ExportFile[];
   let held: CompanionInfo['data'] | undefined;
+  /** What was done with each animated image, said after the outcome (export_animation_stated); none for data. */
+  let animation = '';
   if (isDataFormat(ask.format)) {
     const data = exportedData(reading, scope);
     files = [{ name: go.fileName, path: go.path, bytes: dataText(data, ask.format, { note: ask.path, date }) }];
@@ -198,6 +200,7 @@ async function exporting(plugin: GraphNotePlugin, ask: ExportAsk): Promise<Expor
     });
     if ('stopped' in made) return said(made);
     files = made.files;
+    animation = made.animation ? ` ${made.animation}` : '';
   }
   const name = files.length === 1 ? go.fileName : `${go.fileName} on ${files.length} pages`;
   if (sheet) {
@@ -208,7 +211,7 @@ async function exporting(plugin: GraphNotePlugin, ask: ExportAsk): Promise<Expor
     const run = async (): Promise<ExportOutcome> => {
       try {
         await sheet.share({ files: shared, title: go.fileName });
-        return said({ done: `Shared ${name}.` });
+        return said({ done: `Shared ${name}.${animation}` });
       } catch (e) {
         const cancelled = e instanceof Error && e.name === 'AbortError';
         return said({
@@ -220,16 +223,15 @@ async function exporting(plugin: GraphNotePlugin, ask: ExportAsk): Promise<Expor
     };
     return { share: { name, run } };
   }
-  return said(
-    await intoVault(plugin, {
-      note: ask.path,
-      files,
-      scope,
-      date,
-      companion: go.companion?.path ?? null,
-      ...(held ? { data: held } : {}),
-    }),
-  );
+  const outcome = await intoVault(plugin, {
+    note: ask.path,
+    files,
+    scope,
+    date,
+    companion: go.companion?.path ?? null,
+    ...(held ? { data: held } : {}),
+  });
+  return said('done' in outcome ? { done: `${outcome.done}${animation}` } : outcome);
 }
 
 /** What is written into the vault: the files, and what their companion note, when set, is made from. */
