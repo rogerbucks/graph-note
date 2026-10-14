@@ -48,15 +48,22 @@ const ADDS = 'INSERT adds links between things the MATCH found, never a thing of
 const WRITE_WORDS = new Set(['SET', 'DELETE', 'DETACH', 'REMOVE', 'MERGE', 'CREATE', 'DROP', 'LOAD', 'FINISH']);
 const CODE_WORDS = new Set(['const', 'let', 'var', 'function', 'import', 'await', 'async', 'new', 'class', 'def']);
 
-type Tok = { kind: 'str' | 'num' | 'word' | 'sym' | 'bad'; text: string };
+/** One token of a rule: a text, a number, a word, a mark, or a character that cannot be read; and as it is written. */
+export type RuleToken = { kind: 'str' | 'num' | 'word' | 'sym' | 'bad'; text: string };
+type Tok = RuleToken;
 
+// a text ends at its line, so a quote left open is never read on through the rest of the rule
 const TOKEN = new RegExp(
-  `${S}*(?:('(?:[^'\\\\]|\\\\[^\\n])*')|(-?\\d+(?:\\.\\d+)?)|([A-Za-z_][A-Za-z0-9_]*)|(->|<-|=>|[()[\\]{}:,.=;|-])|(${N}))`,
+  `${S}*(?:('(?:[^'\\\\\\n]|\\\\[^\\n])*')|(-?\\d+(?:\\.\\d+)?)|([A-Za-z_][A-Za-z0-9_]*)|(->|<-|=>|[()[\\]{}:,.=;|-])|(${N}))`,
   'y',
 );
 
-/** The rule's tokens, every one kept, an unknown character among them, so nothing is passed over in silence. */
-function tokens(text: string): Tok[] {
+/**
+ * The rule's tokens up to and including the first mark that cannot be read, which is kept, so nothing is passed over
+ * in silence, and nothing after it is read (spec §9): however a rule is written, it is read once, never again from
+ * each open quote.
+ */
+export function ruleTokens(text: string): Tok[] {
   const out: Tok[] = [];
   TOKEN.lastIndex = 0;
   for (let m = TOKEN.exec(text); m && m[0]; m = TOKEN.exec(text)) {
@@ -65,7 +72,10 @@ function tokens(text: string): Tok[] {
     else if (num !== undefined) out.push({ kind: 'num', text: num });
     else if (word !== undefined) out.push({ kind: 'word', text: word });
     else if (sym !== undefined) out.push({ kind: 'sym', text: sym });
-    else out.push({ kind: 'bad', text: bad ?? '' });
+    else {
+      out.push({ kind: 'bad', text: bad ?? '' });
+      break;
+    }
   }
   return out;
 }
@@ -105,7 +115,7 @@ function valueOf(t: Tok | undefined): string | number | boolean | undefined {
  * then the form. Only MATCH one pattern, then INSERT links between the things it names, is read.
  */
 export function readRule(text: string): StepRule | { fault: string } {
-  const toks = tokens(text);
+  const toks = ruleTokens(text);
   if (!toks.length) return fault('a step needs its rule');
   const not = notAQuery(toks);
   if (not) return fault(not);

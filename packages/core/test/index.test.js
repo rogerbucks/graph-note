@@ -26,7 +26,7 @@
 // their types, 14 Oct 2026; AcrossZoom, the zoom of a drawing scrolled across only, moved out of Zoom in the review of
 // #126), and sending to an AI model (aiReady, modelChoices, endpointProblem, AI_PURPOSES, prepareSend, confirmSend,
 // sendPrepared, noteWithProposal and their types, 13 Oct 2026: the core reaches no network, so a send goes only through
-// the transport a host hands in), and graph sources and steps (isSourceBlock, sourceOf, sourceFor, readSource,
+// the transport a host hands in), and graph sources and steps (isSourceBlock, isStepBlock, sourceOf, sourceFor, readSource,
 // lineInSource, stepOf, runStep, givenLabel and their types, 14 Oct 2026: a source is read from text the host fetches,
 // and a step's output is only ever a proposal).
 import { test, describe } from 'node:test';
@@ -164,6 +164,7 @@ const VALUES = [
   'isDraft',
   'isSharedSchema',
   'isSourceBlock',
+  'isStepBlock',
   'kindLegend',
   'layoutSource',
   'legendOf',

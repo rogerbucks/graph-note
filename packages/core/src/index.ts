@@ -107,7 +107,7 @@ export { addView, makeView } from './view-write.ts';
 export type { ViewArgs, ViewKind, ViewRefusal, ViewSpec } from './view-profile.ts';
 export { evaluate } from './view-evaluate.ts';
 export type { ViewResult } from './view-evaluate.ts';
-export { isSourceBlock } from './blocks.ts';
+export { isSourceBlock, isStepBlock } from './blocks.ts';
 export { lineInSource, readSource, sourceFor, sourceOf } from './sources.ts';
 export type {
   Fetched as SourceFetched,

@@ -1,7 +1,7 @@
 // A graph step's pattern matched (editor spec §20, graph_step_io): every way the things and links of the pattern can be
 // found in the graph the step is given, as GQL matches a path pattern: a link is used once in a match (different
 // edges), a name used twice is the same thing, and a link written either way matches both. The work is bounded, so a
-// step over a large graph never holds the page (spec §9): past `MOST_MATCHES`, or `MOST_TRIES` partial matches, it stops
+// step over a large graph never holds the page (spec §9): past `MOST_MATCHES`, or `MOST_TRIES` things and links looked at, it stops
 // and says so rather than give part of an answer.
 import type { StepRule, ThingPattern } from './steps-rule.ts';
 
@@ -20,7 +20,7 @@ export interface StepMatch {
 /** The most matches a step is taken through: a step that finds more is stopped, and says so. */
 export const MOST_MATCHES = 10_000;
 
-/** The most partial matches tried: a pattern that keeps almost matching over a large graph is stopped too. */
+/** The most things and links looked at, fitting or not: a pattern that keeps almost matching over a large graph is stopped too. */
 export const MOST_TRIES = 1_000_000;
 
 /** Whether a thing fits its place in the pattern: its kind, its properties, and the thing its name is already given to. */
@@ -63,12 +63,14 @@ export function matchesOf(rule: StepRule, g: StepGraph): { found: StepMatch[]; o
     ids.pop();
     if (fresh) named.delete(p.name as string);
   };
+  // every thing and every link looked at is one try, whether or not it fits, so a pattern that almost matches
+  // everywhere is stopped as surely as one that matches
+  const tried = () => {
+    if (++tries > MOST_TRIES) over = true;
+    return !over;
+  };
   const walk = (at: number): void => {
     if (over) return;
-    if (++tries > MOST_TRIES) {
-      over = true;
-      return;
-    }
     if (at === rule.links.length) {
       if (found.length === MOST_MATCHES) over = true;
       else found.push({ ids: [...ids], links: [...used] });
@@ -80,6 +82,7 @@ export function matchesOf(rule: StepRule, g: StepGraph): { found: StepMatch[]; o
     const seen = new Set<number>();
     for (const w of ways)
       for (const e of (w === 'out' ? out : inc).get(here) ?? []) {
+        if (!tried()) return;
         const [from, t, to] = g.links[e] as [string, string, string];
         if (seen.has(e) || used.includes(e) || (type && t !== type)) continue;
         seen.add(e);
@@ -89,7 +92,7 @@ export function matchesOf(rule: StepRule, g: StepGraph): { found: StepMatch[]; o
       }
   };
   for (const id of g.things.keys()) {
-    if (over) break;
+    if (!tried()) break;
     place(0, id, () => walk(0));
   }
   return over ? { found: [], over } : { found, over };

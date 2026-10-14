@@ -171,3 +171,41 @@ describe('a missing, moved or unreadable source is named, with why, never drawn 
     assert.match(r.refused, /or put the note back/);
   });
 });
+
+describe('a source is a place inside the vault, and never read when too large', () => {
+  // proves: gql_file_source
+  for (const [why, place] of [
+    ['a leading slash', '/etc/trip.gql'],
+    ['a leading backslash', '\\\\server\\trip.gql'],
+    ['a drive letter', 'D:/Graphs/trip.gql'],
+    ['a drive letter with no slash', 'c:trip.gql'],
+    ['a .. part', 'Graphs/../../trip.gql'],
+    ['a .. part between backslashes', 'Graphs\\..\\trip.gql'],
+    ['a .. part in a note link', '[[../Secret]]'],
+    ['a part starting with a dot', '.obsidian/trip.gql'],
+    ['a hidden folder further in', 'Graphs/.hidden/trip.gql'],
+  ])
+    test(`FROM a place with ${why} is refused, naming it`, () => {
+      const [s] = sourcesOf([`// graph: trip · FROM ${place}`]);
+      assert.ok(s.fault, `${place} is refused`);
+      assert.match(s.fault, /is not a place inside the vault: write its path from the vault’s root/);
+    });
+
+  // proves: gql_file_source
+  test('a place inside the vault, folders and all, is not refused', () => {
+    const [s] = sourcesOf(['// graph: trip · FROM Graphs/Trips 2026/trip.v2.gql']);
+    assert.deepEqual(s, { graph: 'trip', kind: 'file', target: 'Graphs/Trips 2026/trip.v2.gql', block: 0 });
+  });
+
+  // proves: gql_file_source
+  test('a file the host found too large is not read, and says which limit, as a note’s blocks are not', () => {
+    const r = readSource(fromFile, { found: 'Graphs/trip.gql', tooLarge: READ_LIMITS.bytes + 1 });
+    assert.deepEqual(r.reading.tooLarge, {
+      reason: 'too-large',
+      limit: 'text-bytes',
+      count: READ_LIMITS.bytes + 1,
+      most: READ_LIMITS.bytes,
+    });
+    assert.equal(r.reading.graphs.size, 0);
+  });
+});

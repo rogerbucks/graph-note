@@ -633,8 +633,15 @@ details.graph-note-style > summary {
   color: var(--text-muted);
 }
 .graph-note-source button,
-.graph-note-step-points button {
+.graph-note-step-points button,
+.graph-note-card-actions button {
   min-height: 44px;
+}
+/* Edit on a card that is not a graph's own drawing: a FROM block's or a step's (editor spec §4, §20). */
+.graph-note-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--size-4-2);
 }
 
 /* A graph step's card (editor spec §20): its points, each with its choice, and Run. */

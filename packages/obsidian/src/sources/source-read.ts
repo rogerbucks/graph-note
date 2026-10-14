@@ -5,7 +5,7 @@
 // And a card drawn from a source is drawn again whenever that source changes, moves, or comes back.
 import { MarkdownRenderChild, TFile } from 'obsidian';
 import type { MarkdownPostProcessorContext, TAbstractFile } from 'obsidian';
-import { namesSharedSchema, readSource } from '@graph-note/core';
+import { namesSharedSchema, READ_LIMITS, readSource } from '@graph-note/core';
 import type { GraphSource, SourceFetched, SourceRead, SourceRefusal } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
 
@@ -38,6 +38,10 @@ async function lookUp(plugin: GraphNotePlugin, source: GraphSource, from: string
       .map((f) => f.path);
     return { missing: true, elsewhere };
   }
+  // a .gql file over the bytes a note's graph blocks may hold is never read, by the size the vault keeps for it (§9); a
+  // note is read, as Obsidian reads it, and only its graph blocks are held to the limits
+  if (source.kind === 'file' && file.stat.size > READ_LIMITS.bytes)
+    return { found: file.path, tooLarge: file.stat.size };
   try {
     return { found: file.path, text: await plugin.app.vault.cachedRead(file) };
   } catch (e) {

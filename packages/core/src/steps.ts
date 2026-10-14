@@ -6,7 +6,7 @@
 // checked against the point first (steps-input.ts); the rule is matched over the inputs together (steps-match.ts); and
 // the graph it gives is offered as a proposal (§17) of the links new to the step's graph, never written by the step.
 import gs from '@graph-note/graph-spec';
-import { gqlBlocks, graphOfBlock } from './blocks.ts';
+import { firstLine, gqlBlocks, graphOfBlock, isStepBlock } from './blocks.ts';
 import { readNote } from './drawing.ts';
 import { linkChange, makeProposal, thingChange } from './proposals.ts';
 import type { ChangeInput, Proposal } from './proposals.ts';
@@ -50,8 +50,8 @@ export type StepRun =
 const STEP = new RegExp(`·${S}*QUERY${S}+step\\b(?:${S}+(${N}+))?`);
 const TAKES = new RegExp(`^${S}*//${S}*takes\\b([^:]*)(?::(.*))?$`);
 const WORD = /^[A-Za-z_]\w*$/;
-/** How far into a block its graph line is looked for before the block is taken not to be a step. */
-const STEP_LOOK = 4096;
+/** The longest a step block may be, graph line and comments included: a step is a short rule (spec §9). */
+export const MOST_STEP_CHARACTERS = 8192;
 
 /** What one `// takes` line declares, or why it cannot be read. */
 function pointOf(line: string): StepPoint | string {
@@ -76,18 +76,16 @@ function pointOf(line: string): StepPoint | string {
  * one word, says what it takes at each named point, and its rule matches no kind or type no point says it takes.
  */
 export function stepOf(text: string, block = 0): Step | StepFault | null {
-  // a block that cannot be a step is passed over without being split, however large it is (§9): its graph line, which
-  // would say so, is near its start
-  if (!STEP.test(text.slice(0, STEP_LOOK))) return null;
+  // a block is a step by its graph line alone, so one that is not, however long, is never read further (§9)
+  if (!isStepBlock(text)) return null;
+  const head = firstLine(text);
   let graph: string | null, kind: string;
   try {
-    [graph, kind] = gs.header(text);
+    [graph, kind] = gs.header(head);
   } catch {
     return null;
   }
-  const lines = text.split('\n'),
-    at = lines.findIndex((l) => trim(l)),
-    named = STEP.exec(lines[at] ?? '');
+  const named = STEP.exec(head);
   if (kind !== 'query' || !graph || !named) return null;
   const of = graph,
     name = named[1] ?? '',
@@ -95,6 +93,14 @@ export function stepOf(text: string, block = 0): Step | StepFault | null {
   if (!name) return fault('a step needs a name: write it after step, as QUERY step <name>');
   if (!WORD.test(name))
     return fault(`the step name '${name}' is not one word: use letters, digits and underscores only`);
+  // a step is a short rule: a longer block is refused before its rule is read, so no text pasted or synced into a
+  // note can hold the editor (§9)
+  if (text.length > MOST_STEP_CHARACTERS)
+    return fault(
+      `a step is at most ${MOST_STEP_CHARACTERS.toLocaleString('en-GB')} characters long, and this one is ${text.length.toLocaleString('en-GB')}: shorten it, or split it into steps`,
+    );
+  const lines = text.split('\n'),
+    at = lines.findIndex((l) => trim(l));
   const body = lines.slice(at + 1),
     points: StepPoint[] = [];
   for (const line of body.filter((l) => TAKES.test(l))) {

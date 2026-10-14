@@ -5,7 +5,7 @@
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';
-import { fence } from './host/notes.js';
+import { fence, labelled } from './host/notes.js';
 import { show } from './host/view-notes.js';
 
 before(() => build());
@@ -71,6 +71,38 @@ describe('a block drawn from a .gql file', () => {
     try {
       assert.match(el.querySelector('.graph-note-banner').textContent, /too large to read/i);
       assert.equal(el.querySelector('svg'), null);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: gql_file_source
+  test('a file larger than the bytes a note’s blocks may hold is never read: its size says so first', async () => {
+    const env = await load({ files: { 'Some note.md': note, [FILE]: `${TRIP}\n// ${'x'.repeat(600_000)}` } });
+    let reads = 0;
+    const cachedRead = env.app.vault.cachedRead;
+    env.app.vault.cachedRead = async (f) => {
+      if (f.path === FILE) reads++;
+      return cachedRead(f);
+    };
+    try {
+      const { el } = await show(env, note, 0);
+      assert.match(el.querySelector('.graph-note-banner').textContent, /too large to read/i);
+      assert.equal(reads, 0, 'the file was never read');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: gql_file_source
+  test('Edit opens the FROM block in the pane, as an empty graph’s card does', async () => {
+    const { env, el } = await card({ [FILE]: TRIP });
+    const opened = [];
+    env.plugin.openEditor = async (target) => void opened.push(target);
+    try {
+      await until(() => keys(el).length > 0);
+      labelled(el, 'Edit').click();
+      assert.deepEqual(opened, [{ path: 'Some note.md', line: 2, graph: 'trip' }]);
     } finally {
       env.uninstall();
     }

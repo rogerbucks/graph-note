@@ -20,6 +20,7 @@ import type { GraphStep, StepFault, StepGiven, StepRun } from '@graph-note/core'
 import type GraphNotePlugin from './main';
 import { renderCode } from './code';
 import { readOnlyHere, whenPlaced } from './graph-view/placement';
+import { editInPane } from './edit-in-pane';
 
 const and = (xs: readonly string[]) =>
   xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`;
@@ -91,12 +92,15 @@ export function renderStepBlock(
   step: GraphStep | StepFault,
 ): void {
   const root = el.createDiv({ cls: 'graph-note graph-note-step' });
+  const info = ctx.getSectionInfo(el);
+  // the step's text is edited in the pane, as an empty graph's is (§4)
+  const target = info ? { path: ctx.sourcePath, line: info.lineStart, graph: step.graph } : null;
+  editInPane(root.createDiv({ cls: 'graph-note-card-actions' }), plugin, target);
   if ('fault' in step) {
     root.createDiv({ cls: 'graph-note-banner', attr: { role: 'alert' }, text: `This step cannot run: ${step.fault}` });
     renderCode(root, source);
     return;
   }
-  const info = ctx.getSectionInfo(el);
   const texts = info ? gqlBlocks(info.text).map((b) => b.text) : [source];
   root.createEl('p', {
     text: `Step ${step.name} proposes links into ${step.graph}. It runs only when you press Run, and what it gives is proposed for you to accept or reject.`,
@@ -122,14 +126,27 @@ export function renderStepBlock(
   whenPlaced(root, () => {
     if (!info || readOnlyHere(root)) controls.remove();
   });
+  // one run at a time: Run is off from the press until what it came to is said, so a second press runs nothing
+  let running = false;
   press.addEventListener('click', () => {
-    if (!info || readOnlyHere(root)) return;
+    if (running || !info || readOnlyHere(root)) return;
+    running = true;
+    press.disabled = true;
     const given: Record<string, StepGiven> = {};
     for (const [point, pick] of picks) {
       const chosen = choices.find((c) => givenLabel(c) === pick.value);
       if (chosen) given[point] = chosen;
     }
-    void run(plugin, ctx.sourcePath, step, given).then((r) => sayRun(said, step, r));
+    void run(plugin, ctx.sourcePath, step, given)
+      .then((r) => sayRun(said, step, r))
+      .catch((e: unknown) => {
+        console.error('Graph Note could not run step', step.name, e);
+        new Notice(`Step ${step.name} could not run, and nothing was written.`);
+      })
+      .finally(() => {
+        running = false;
+        press.disabled = false;
+      });
   });
   renderCode(root, source);
 }

@@ -13,7 +13,8 @@ import { basisOf } from '../src/proposals-basis.ts';
 import { linkChange, thingChange } from '../src/proposals.ts';
 import { ProposalReview } from '../src/proposals-review.ts';
 import { viewBlock, viewQuery } from '../src/view-write.ts';
-import { checkInputs, inputsFor, runStep, stepOf, stepsOf } from '../src/steps.ts';
+import { checkInputs, inputsFor, MOST_STEP_CHARACTERS, runStep, stepOf, stepsOf } from '../src/steps.ts';
+import { ruleTokens } from '../src/steps-rule.ts';
 
 const TEAM = `// graph: team
 (ada:Person {name: 'Ada'}),
@@ -245,5 +246,31 @@ describe('the output is a proposal, written only when a person accepts it', () =
       r.refused.join(' '),
       /graph team is not written in this note, so the step has nowhere to propose its output/,
     );
+  });
+});
+
+describe('a step never holds the editor, however it is written (spec §9)', () => {
+  // proves: run_declared_only
+  test('a step longer than MOST_STEP_CHARACTERS is refused before its rule is read', () => {
+    const long = `${STEP}\n${' '.repeat(MOST_STEP_CHARACTERS)}`;
+    const s = stepOf(long);
+    assert.match(s.fault, /a step is at most 8,192 characters long, and this one is \d[\d,]+: shorten it/);
+    const adversarial = `// graph: team · QUERY step s\n// takes people: (:Person)\n${"'\\".repeat(100_000)}`;
+    assert.match(stepOf(adversarial).fault, /a step is at most 8,192 characters long/);
+  });
+
+  // proves: run_declared_only
+  test('the rule is read no further than its first mark that cannot be read: 200 KB of open quotes is one token', () => {
+    const adversarial = "'\\".repeat(100_000);
+    assert.equal(adversarial.length, 200_000);
+    assert.deepEqual(ruleTokens(adversarial), [{ kind: 'bad', text: "'" }]);
+    assert.deepEqual(ruleTokens(`MATCH (a ${'§'} ${"'".repeat(1000)}`).length, 4, 'MATCH, (, a and the mark');
+  });
+
+  // proves: run_declared_only
+  test('a text in a pattern ends at its line: a quote left open is never read on into the next line', () => {
+    const toks = ruleTokens("MATCH (a {k: 'x\n'})");
+    assert.deepEqual(toks.at(-1), { kind: 'bad', text: "'" });
+    assert.equal(toks.length, 7, 'MATCH ( a { k : then the open quote, and nothing after it');
   });
 });

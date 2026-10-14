@@ -50,6 +50,14 @@ const GRAPH_OF = new RegExp(`^${S}*//${S}*graph:${S}*(${N}+)`),
  */
 export const isSourceBlock = (text: string): boolean => FROM_WORD.test(firstLine(text));
 
+const STEP_WORD = new RegExp(`^${S}*//${S}*graph:[^\\n]*·${S}*QUERY${S}+step\\b`);
+
+/**
+ * Whether a block is meant as a graph step (editor spec §20, steps.ts), by its graph line alone, `// graph: team · QUERY
+ * step colleagues`: cheap however long the block is, so the editing view can choose its card without reading it.
+ */
+export const isStepBlock = (text: string): boolean => STEP_WORD.test(firstLine(text));
+
 /**
  * The graph a style block styles (editor spec §2, style_block_in_note): its graph line says STYLE and the graph's name,
  * `// graph: trip_style · STYLE trip`. Null for any other block. A style block is never data to draw (`dataKind`).
@@ -60,7 +68,7 @@ export const styleOf = (text: string): string | null => STYLES.exec(firstLine(te
 export const graphOf = (text: string): string | null => GRAPH_OF.exec(firstLine(text))?.[1] ?? null;
 
 /** The first line of a text with anything on it, found line by line: a large block is never split whole to find it (§9). */
-function firstLine(text: string): string {
+export function firstLine(text: string): string {
   for (let at = 0; ;) {
     const end = text.indexOf('\n', at),
       line = end === -1 ? text.slice(at) : text.slice(at, end);

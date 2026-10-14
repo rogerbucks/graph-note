@@ -20,6 +20,7 @@ import { renderCode } from '../code';
 import { GraphView } from '../graph-view/graph-view';
 import { renderProblems } from '../graph-view/problems-list';
 import { refusalBanner } from '../layout-worker/refusal-banner';
+import { editInPane } from '../edit-in-pane';
 import { readFromVault, watchSource } from './source-read';
 import { sourceAlert, sourceStrip } from './source-strip';
 
@@ -55,6 +56,10 @@ export async function renderSourceBlock(
 ): Promise<void> {
   const root = el.createDiv({ cls: 'graph-note' });
   const s = sourceOf(text);
+  // the block itself, its place after FROM among it, is edited in the pane, whatever its source holds (§4)
+  const info = ctx.getSectionInfo(el);
+  const target = info ? { path: ctx.sourcePath, line: info.lineStart, graph: s?.graph ?? '' } : null;
+  editInPane(root.createDiv({ cls: 'graph-note-card-actions' }), plugin, target);
   if (!s || 'fault' in s) {
     sourceAlert(root, `This block cannot be drawn: ${s?.fault ?? 'it names no source'}.`);
     renderCode(root, text);
@@ -113,9 +118,10 @@ export async function renderSourceBlock(
       mode: 'note',
       focusDepth: depthOf(plugin.settings.focusDepth),
       lineOf: (at) => lineInSource(read, at),
-      // the data is written in the source, so the card is read-only here; the strip opens a note to change it there
+      // the data is written in the source, so the drawing is read-only here; the strip opens a note to change it there,
+      // and Edit opens this block in the pane
       onEdit: () => {
-        if (s.kind === 'note') void plugin.app.workspace.openLinkText(s.target, ctx.sourcePath);
+        if (target) void plugin.openEditor(target);
       },
       readOnly: () => true,
     }),

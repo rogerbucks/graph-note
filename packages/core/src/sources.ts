@@ -6,6 +6,7 @@
 // nothing can be drawn: missing, moved, unreadable, or holding no such graph. Never a blank drawing.
 import { gqlBlocks, graphOf, graphOfBlock, isSourceBlock } from './blocks.ts';
 import { readNote } from './drawing.ts';
+import { READ_LIMITS } from './layout-limits.ts';
 import type { NoteReading, Problem } from './note-reading.ts';
 import { S, trim } from './whitespace.ts';
 
@@ -26,10 +27,14 @@ export interface SourceFault {
   fault: string;
 }
 
-/** What the host found at a source's place: the text read there, or why there is none. */
+/**
+ * What the host found at a source's place: the text read there, or why there is none: unreadable, missing, or larger
+ * than `READ_LIMITS.bytes` by the size it keeps (`tooLarge`, in bytes), so it was never read.
+ */
 export type Fetched =
   | { found: string; text: string }
   | { found: string; unreadable: string }
+  | { found: string; tooLarge: number }
   | { missing: true; elsewhere?: readonly string[] };
 
 /** A source read: the reading of its blocks, as a note's are read, the place it was read from, and its blocks' lines. */
@@ -60,6 +65,13 @@ function placeOf(written: string): string {
   return trim(inner.split('|')[0]?.split('#')[0] ?? '');
 }
 
+/**
+ * Whether a place could reach outside the vault, or into what it hides: a leading slash or backslash, a drive letter, a
+ * `..` part, or any part starting with a dot (the config folder, `.trash`, a hidden folder), split at either slash.
+ */
+const outsideVault = (place: string): boolean =>
+  /^[/\\]/.test(place) || /^[A-Za-z]:/.test(place) || place.split(/[/\\]/).some((part) => part.startsWith('.'));
+
 /** Whether a line holds anything but whitespace or a whole-line comment. */
 const holds = (line: string) => !!trim(line) && !trim(line).startsWith('//');
 
@@ -79,6 +91,10 @@ export function sourceOf(text: string, block = 0): Source | SourceFault | null {
   if (!graph || !NAME.test(graph))
     return fault(`the graph name '${graph ?? ''}' is not one word: use letters, digits and underscores only`);
   if (!target) return fault('say where the graph is written after FROM: a .gql file, or a note as [[Note]]');
+  if (outsideVault(target))
+    return fault(
+      `${target} is not a place inside the vault: write its path from the vault’s root, with no leading slash, drive, .. or folder starting with a dot`,
+    );
   const last = target.split('/').at(-1) ?? '';
   const kind = /\.gql$/i.test(last) ? 'file' : /\.md$/i.test(last) || !last.includes('.') ? 'note' : null;
   if (!kind)
@@ -154,6 +170,13 @@ export function readSource(source: Source, fetched: Fetched, shared: string[] = 
   }
   if ('unreadable' in fetched)
     return refuse(source, 'unreadable', `${name} could not be read (${fetched.unreadable}), ${cannot}.`);
+  if ('tooLarge' in fetched) {
+    // never read: over the bytes a note's graph blocks may hold, said as they are (spec §9, layout_contained)
+    const most = READ_LIMITS.bytes;
+    const tooLarge = { reason: 'too-large', limit: 'text-bytes', count: fetched.tooLarge, most } as const;
+    const reading: NoteReading = { graphs: new Map(), problems: [], world: {}, whole: {}, texts: [], tooLarge };
+    return { source, from: fetched.found, texts: [], lines: [], reading };
+  }
   const blocks = kind === 'file' ? [{ text: fileBlock(fetched.text), line: 0 }] : gqlBlocks(fetched.text);
   const texts = blocks.map((b) => b.text);
   if (kind === 'file' && graphOf(texts[0] ?? '') === null)

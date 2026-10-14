@@ -79,6 +79,37 @@ describe('a step’s card', () => {
     }
   });
 
+  // proves: run_declared_only
+  test('Run is off while a run is under way, so pressing it twice runs the step once', async () => {
+    const { env, el } = await stepCard();
+    try {
+      const run = labelled(el, 'Run step colleagues');
+      run.click();
+      assert.equal(run.disabled, true, 'off while the run is under way');
+      run.click();
+      await until(() => !run.disabled);
+      const now = env.state.files.get(PATH);
+      assert.equal(now.split('CHANGE SET').length - 1, 1, 'one change set');
+      assert.equal(env.state.writes.length, 1, 'one write');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: graph_step_io
+  test('Edit opens the step block in the pane, as an empty graph’s card does', async () => {
+    const { env, el } = await stepCard();
+    const opened = [];
+    env.plugin.openEditor = async (target) => void opened.push(target);
+    try {
+      labelled(el, 'Edit').click();
+      const fences = note.split('\n').flatMap((l, i) => (l === '```gql' ? [i] : []));
+      assert.deepEqual(opened, [{ path: PATH, line: fences[2], graph: 'team' }]);
+    } finally {
+      env.uninstall();
+    }
+  });
+
   // proves: step_inputs_checked
   test('an input that does not fit its point is refused, saying why, and nothing is written', async () => {
     const { env, el } = await stepCard();
@@ -123,6 +154,7 @@ describe('a step’s card', () => {
       await env.state.processors.get('gql')(STEP, el, fakeContext(note, fences[2]));
       assert.match(el.querySelector('.graph-note-step').textContent, /Step colleagues/);
       assert.equal(labelled(el, 'Run step colleagues'), undefined);
+      assert.equal(labelled(el, 'Edit'), undefined, 'nor Edit');
     } finally {
       env.uninstall();
     }

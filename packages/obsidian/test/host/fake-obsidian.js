@@ -80,6 +80,11 @@ export function fakeObsidian(state = {}) {
       this.name = path.split('/').pop();
       this.extension = path.split('.').pop() ?? 'md';
     }
+    // its size in bytes, as Obsidian keeps it without reading the file
+    get stat() {
+      const held = files.get(this.path);
+      return { size: typeof held === 'string' ? Buffer.byteLength(held) : (held?.byteLength ?? 0), ctime: 0, mtime: 0 };
+    }
   }
   const file = (path) => (files.has(path) ? new TFile(path) : null);
   const vault = {

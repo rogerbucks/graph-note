@@ -10,7 +10,7 @@ import { Decoration, EditorView, ViewPlugin, WidgetType } from '@codemirror/view
 import type { DecorationSet } from '@codemirror/view';
 import { Component, editorInfoField, editorLivePreviewField } from 'obsidian';
 import type { MarkdownPostProcessorContext } from 'obsidian';
-import { changeSetId, gqlSpans, graphOfBlock, isSourceBlock, stepOf, styleOf, viewsOf } from '@graph-note/core';
+import { changeSetId, gqlSpans, graphOfBlock, isSourceBlock, isStepBlock, styleOf, viewsOf } from '@graph-note/core';
 import type { Span } from '@graph-note/core';
 import type GraphNotePlugin from './main';
 import { renderShown } from './block';
@@ -212,14 +212,15 @@ function cards(plugin: GraphNotePlugin, state: EditorState): DecorationSet {
   for (const s of spans) {
     // a graph, a view, a style block, a change set (a proposal, §17), a block drawn FROM elsewhere and a step (§20) are
     // drawn from the other blocks too, so each gets a card that redraws with them; a plain query, a schema, or a block
-    // not yet closed is left to Obsidian
+    // not yet closed is left to Obsidian. A FROM block and a step are known by their graph line alone, so a long block
+    // is never read here
     const drawnFromOthers =
       !!graphOfBlock(s.text) ||
       !!styleOf(s.text) ||
       viewsOf([s.text]).length > 0 ||
       !!changeSetId(s.text) ||
       isSourceBlock(s.text) ||
-      !!stepOf(s.text);
+      isStepBlock(s.text);
     if (!drawnFromOthers || s.close >= state.doc.lines) continue;
     const widget = new GraphBlock(plugin, path, s.id, s.open, s.close, s.text, blocks, note);
     out.push(
