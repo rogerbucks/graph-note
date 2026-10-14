@@ -19,7 +19,12 @@ import {
   neutralise,
   readWorkstreams,
 } from '../scripts/github-project-desired.mjs';
-import { FIXTURE, WORKSTREAMS } from './repository/github-project-fixture.js';
+import {
+  FIXTURE,
+  FIXTURE_WITH_QUESTIONS,
+  WORKSTREAMS,
+  WORKSTREAMS_WITH_QUESTIONS,
+} from './repository/github-project-fixture.js';
 
 const board = readBoard(FIXTURE);
 const byId = (issues, id) => issues.find((i) => i.id === id);
@@ -301,7 +306,7 @@ describe('the labels this generator owns', () => {
       'requirement:removed',
     ])
       assert.ok(isManagedLabel(name), name);
-    for (const name of ['bug', 'status', 'slice', 'status:blocked', 'slice-x', 'requirement'])
+    for (const name of ['bug', 'status', 'slice', 'status:blocked', 'slice-x', 'requirement', 'questions'])
       assert.equal(isManagedLabel(name), false, name);
   });
 
@@ -311,5 +316,90 @@ describe('the labels this generator owns', () => {
       assert.match(style.color, /^[0-9A-F]{6}$/);
       assert.ok(style.description.length > 0 && style.description.length <= 100, name);
     }
+  });
+});
+
+describe('the desired issues for open questions', () => {
+  const asked = readBoard(FIXTURE_WITH_QUESTIONS);
+  const state = desiredState(asked, WORKSTREAMS_WITH_QUESTIONS, [3, 4]);
+  const question = byId(state.issues, 'q_01_ai_interface');
+
+  test('are one for each question of the chosen slices, beside the requirements', () => {
+    const ids = state.issues.map((i) => i.id);
+    assert.ok(ids.includes('q_01_ai_interface') && ids.includes('q_02_listed'));
+    assert.equal(ids.includes('q_03_old'), false, 'a question outside the chosen slices has no issue');
+    assert.equal(ids.length, 7);
+    assert.deepEqual(
+      desiredState(board, WORKSTREAMS_WITH_QUESTIONS, [3, 4])
+        .issues.map((i) => i.id)
+        .sort(),
+      ['done_means_proved', 'focus_link', 'focus_neighbours', 'stray_new', 'zoom_out_to_fit'],
+      'a copy with no question adds nothing',
+    );
+  });
+
+  test('are titled Open question, a dot, the number and the first words of the question, within 100 characters', () => {
+    assert.equal(byId(state.issues, 'q_02_listed').title, 'Open question · Q-02 A question a workstream lists.');
+    assert.ok(question.title.startsWith('Open question · Q-01 Which interface'), question.title);
+    const long = readBoard(
+      FIXTURE_WITH_QUESTIONS.replace('A question a workstream lists.', `${'Many long words '.repeat(12)}end.`),
+    );
+    const title = byId(desiredState(long, WORKSTREAMS_WITH_QUESTIONS, [4]).issues, 'q_02_listed').title;
+    assert.ok(title.length <= 100, `${title.length}`);
+    assert.ok(title.startsWith('Open question · Q-02 Many long words'), title);
+    const cut = title.slice('Open question · Q-02 '.length, -1);
+    assert.ok(title.endsWith('…'), title);
+    assert.ok(`${'Many long words '.repeat(12)}end.`.startsWith(`${cut} `), 'the question is cut at a word');
+  });
+
+  test('have a body that opens on the question, neutralised, then the banner, kind, slice and workstream', () => {
+    const lines = question.body.split('\n');
+    assert.equal(lines[0], 'Which interface do external AI tools use to query the graph? Ask `@alice` about `#12`.');
+    assert.ok(lines[2].startsWith(BANNER_START), lines[2]);
+    assert.match(question.body, /- \*\*Kind:\*\* open question/);
+    assert.match(question.body, /- \*\*Slice:\*\* 3/);
+    assert.match(question.body, /- \*\*Workstream:\*\* Q: Open questions/);
+  });
+
+  test('list the requirements each blocks, or say it blocks nothing named', () => {
+    assert.match(question.body, /\*\*Blocks:\*\*\n\n- `zoom_out_to_fit`\n- `focus_link`\n/);
+    assert.match(byId(state.issues, 'q_02_listed').body, /_Blocks nothing named\._/);
+  });
+
+  test('end their body with the marker requirements use, so adoption works unchanged', () => {
+    assert.ok(question.body.trimEnd().endsWith(markerOf('q_01_ai_interface')));
+    assert.equal(generatedIdOf(question.body), 'q_01_ai_interface');
+    assert.equal(adoptedId({ author: 'me', body: question.body }, 'me'), 'q_01_ai_interface');
+    assert.deepEqual(state, desiredState(asked, WORKSTREAMS_WITH_QUESTIONS, [4, 3]), 'the same text each time');
+  });
+
+  test('carry the slice, question and workstream labels, sorted, stay open, and are open in the Proof field', () => {
+    assert.deepEqual(question.labels, ['question', 'slice-3', 'workstream:Q']);
+    assert.equal(question.state, 'open');
+    assert.deepEqual([question.slice, question.workstream, question.status], ['Slice 3', 'Q: Open questions', 'open']);
+  });
+
+  test('take the workstream that lists the question, else the open-questions workstream', () => {
+    assert.equal(byId(state.issues, 'q_02_listed').workstream, 'W1: Focus, hover and untangle');
+    assert.deepEqual(byId(state.issues, 'q_02_listed').labels, ['question', 'slice-4', 'workstream:W1']);
+  });
+
+  test('cannot place an unlisted question when the open-questions workstream is missing', () => {
+    const { Q: _gone, ...without } = WORKSTREAMS_WITH_QUESTIONS;
+    assert.throws(() => desiredState(asked, without, [3, 4]), /q_01_ai_interface.*\bQ\b/);
+  });
+
+  test('count as known in every slice, so a question outside the chosen slices is not taken as removed', () => {
+    assert.ok(state.known.includes('q_03_old'));
+    assert.ok(state.known.includes('q_01_ai_interface'));
+  });
+});
+
+describe('the question label', () => {
+  test('is one this generator owns, with its own description', () => {
+    assert.ok(isManagedLabel('question'));
+    const style = labelStyle('question');
+    assert.match(style.color, /^[0-9A-F]{6}$/);
+    assert.equal(style.description, 'An open question, generated from the requirements file');
   });
 });

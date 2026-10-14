@@ -104,6 +104,32 @@ describe('a tampered copy fails the check', () => {
     assert.ok(real().includes("(test_trace:Test {proves: '"), 'the copy holds a test outside the repository');
   });
 
+  test('an open question lacking its number, slice or text, or blocking what is not a requirement; a whole one is fine', () => {
+    const asked = [
+      "(q_fine:Question {num: 'Q-01', slice: 1, text: 'Which interface do external AI tools use?'}),",
+      '(q_fine)-[:BLOCKS]->(autocomplete),',
+      "(q_no_num:Question {slice: 3, text: 'No number.'}),",
+      "(q_no_slice:Question {num: 'Q-02', text: 'No slice.'}),",
+      "(q_no_text:Question {num: 'Q-03', slice: 3}),",
+      "(q_blocks_test:Question {num: 'Q-04', slice: 3, text: 'Blocks a test.'}),",
+      '(q_blocks_test)-[:BLOCKS]->(test_abuse),',
+      '',
+    ].join('\n');
+    const problems = auditRequirements(replaced(real(), '// ── Links ──\n', `// ── Links ──\n${asked}`), { exists });
+    assert.deepEqual(kinds(problems, 'question').sort(), ['q_blocks_test', 'q_no_num', 'q_no_slice', 'q_no_text']);
+    const message = (id) => problems.find((p) => p.kind === 'question' && p.id === id).message;
+    assert.match(message('q_no_num'), /q_no_num.*num/);
+    assert.match(message('q_no_slice'), /q_no_slice.*slice/);
+    assert.match(message('q_no_text'), /q_no_text.*text/);
+    assert.match(message('q_blocks_test'), /q_blocks_test.*test_abuse.*not a requirement/);
+    assert.deepEqual(kinds(problems, 'unproved'), [], 'a question never needs a test');
+    assert.deepEqual(
+      problems.filter((p) => p.kind !== 'question').map((p) => p.message),
+      [],
+      'a whole question blocking a requirement is fine',
+    );
+  });
+
   test('a test that claims no requirement', () => {
     const orphan =
       "(test_orphan:Test {proves: 'nothing', file: 'test/requirements.test.js', where: 'repo', status: 'written'}),\n";

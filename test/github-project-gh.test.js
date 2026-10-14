@@ -10,7 +10,12 @@ import { buildPlan } from '../scripts/github-project-plan.mjs';
 import { executePlan, ghRunner, readRemote } from '../scripts/github-project-gh.mjs';
 import { fakeGithub } from './repository/github-project-fake.js';
 import { path } from './repository/repo.js';
-import { FIXTURE, WORKSTREAMS } from './repository/github-project-fixture.js';
+import {
+  FIXTURE,
+  FIXTURE_WITH_QUESTIONS,
+  WORKSTREAMS,
+  WORKSTREAMS_WITH_QUESTIONS,
+} from './repository/github-project-fixture.js';
 
 const board = readBoard(FIXTURE);
 const desiredFor = (slices = [3, 4]) => desiredState(board, WORKSTREAMS, slices);
@@ -375,5 +380,45 @@ describe('the gh runner', () => {
     };
     assert.throws(() => executePlan(failing, REPO, plan, { sleep: noSleep }), /boom/);
     assert.equal(calls, 3);
+  });
+});
+
+describe('open questions, applied', () => {
+  const asked = (slices = [3, 4]) =>
+    desiredState(readBoard(FIXTURE_WITH_QUESTIONS), WORKSTREAMS_WITH_QUESTIONS, slices);
+
+  test('are made as open issues with the question label, put in the project as open, and a second apply changes nothing', () => {
+    const gh = fakeGithub();
+    apply(gh, asked());
+    const issue = issueOf(gh, 'q_01_ai_interface');
+    assert.equal(issue.state, 'OPEN');
+    assert.deepEqual(labelsOf(issue), ['question', 'slice-3', 'workstream:Q']);
+    const made = gh.hub.calls.find((c) => c.args[0] === 'label' && c.args[1] === 'create' && c.args[2] === 'question');
+    assert.equal(
+      made.args[made.args.indexOf('--description') + 1],
+      'An open question, generated from the requirements file',
+    );
+    const [project] = gh.hub.projects;
+    assert.deepEqual(project.items.find((i) => i.number === issue.number).values, {
+      Slice: 'Slice 3',
+      Workstream: 'Q: Open questions',
+      Proof: 'open',
+    });
+    quiet(gh);
+    apply(gh, asked());
+    assert.deepEqual(gh.hub.mutations, []);
+  });
+
+  test('outside the chosen slices are left alone, and one that went is labelled removed and closed', () => {
+    const gh = fakeGithub();
+    apply(gh, asked());
+    quiet(gh);
+    apply(gh, asked([4]));
+    assert.equal(issueOf(gh, 'q_01_ai_interface').state, 'OPEN', 'its question is only outside the chosen slices');
+    const gone = desiredState(readBoard(FIXTURE), WORKSTREAMS_WITH_QUESTIONS, [3, 4]);
+    apply(gh, gone);
+    const removed = issueOf(gh, 'q_02_listed');
+    assert.equal(removed.state, 'CLOSED');
+    assert.ok(labelsOf(removed).includes('requirement:removed'));
   });
 });

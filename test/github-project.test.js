@@ -35,8 +35,8 @@ const command = (...args) =>
   });
 
 describe('the workstreams file', () => {
-  test('names the workstreams W0 to W15 and the slice-end workstream S3, with the titles agreed', () => {
-    assert.deepEqual(Object.keys(workstreams), [...Array.from({ length: 16 }, (_, n) => `W${n}`), 'S3']);
+  test('names the workstreams W0 to W15, the slice-end workstream S3 and the open-questions workstream Q, with the titles agreed', () => {
+    assert.deepEqual(Object.keys(workstreams), [...Array.from({ length: 16 }, (_, n) => `W${n}`), 'S3', 'Q']);
     assert.deepEqual(
       Object.values(workstreams).map((w) => w.title),
       [
@@ -57,6 +57,7 @@ describe('the workstreams file', () => {
         'Notes in the editor',
         'Viewer aids',
         'Slice end',
+        'Open questions',
       ],
     );
   });
