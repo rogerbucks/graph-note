@@ -1,7 +1,7 @@
 // The block editor (spec §4, §9): the text of one graph block, with everything that helps write it — a plain text field
 // over a coloured picture of it, problems with fixes, suggestions, each line read back, the comma added for you — and the
 // safe writing behind it (the core's session never overwrites a block changed meanwhile), undo, redo and Lock the graph.
-import { Component } from 'obsidian';
+import { Component, Notice } from 'obsidian';
 import { indentText, isDraft } from '@graph-note/core';
 import type { Change, CompletionItem, NoteReading, PaneSession } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
@@ -203,6 +203,7 @@ export class BlockEditor extends Component {
     showTools(el.tools, {
       inline: this.layout === 'inline',
       draft: !!this.help.reading && isDraft(this.help.reading, s.graph),
+      why: { undo: s.stepRefusal('undo'), redo: s.stepRefusal('redo') },
       done: () => void this.done(),
       undo: () => void this.history('undo'),
       redo: () => void this.history('redo'),
@@ -307,6 +308,7 @@ export class BlockEditor extends Component {
   private async write(): Promise<void> {
     const refused = await this.note.write();
     if (refused) await this.keepDraft(refused);
+    else this.showTools(); // a write of its own is the editor's to undo, whatever changed outside before it
   }
 
   private async keepDraft({ reason, draft, edit }: Refused): Promise<void> {
@@ -320,12 +322,13 @@ export class BlockEditor extends Component {
     this.showKeptDraft(keptMessage(reason, edit));
   }
 
-  /** The text as the note now has it, shown with its history started again, its help and its drawing. */
+  /** The text as the note now has it, shown with its history started again, its help, its drawing and its tools. */
   private reloaded(): void {
     this.undoes.reset(this.el?.text);
     this.analyse();
     this.paint();
     this.redraw();
+    this.showTools();
   }
 
   /** The draft banner: Restore and Discard act on the very draft it shows, by its id (kept-draft.ts). */
@@ -337,7 +340,6 @@ export class BlockEditor extends Component {
     if (outcome === 'reloaded' && this.el) {
       this.el.text.value = this.session?.text ?? '';
       this.reloaded();
-      this.showTools();
     } else if (outcome === 'conflict') void this.write();
     else {
       this.analyse();
@@ -354,6 +356,12 @@ export class BlockEditor extends Component {
       this.writeTimer = null;
     }
     const refused = await this.note.step(which);
+    if (refused?.history) {
+      // nothing to take back since the block changed outside the editor (§9): said, and nothing kept, as nothing was typed
+      new Notice(refused.reason);
+      this.el?.announce.setText(refused.reason);
+      return this.showTools();
+    }
     if (refused) {
       await this.keepDraft(refused);
       return;

@@ -136,14 +136,30 @@ export function buildEditor(
   return { root: pane, text, overlay, fixbar, suggest, list, draft, drawing: drawingEl, tools, announce };
 }
 
-/** The head's tools: Done in place, Undo and Redo, and Lock the graph while the graph is a draft. */
+/**
+ * The head's tools: Done in place, Undo and Redo, and Lock the graph while the graph is a draft. An Undo or Redo with
+ * nothing to take back since the block changed outside the editor (`why`, §9) is marked unavailable and named by why,
+ * and pressed it says so.
+ */
 export function showTools(
   tools: HTMLElement,
-  o: { inline: boolean; draft: boolean; done: () => void; undo: () => void; redo: () => void; lock: () => void },
+  o: {
+    inline: boolean;
+    draft: boolean;
+    why: { undo: string | null; redo: string | null };
+    done: () => void;
+    undo: () => void;
+    redo: () => void;
+    lock: () => void;
+  },
 ): void {
   tools.empty();
   if (o.inline) button(tools, 'Done', 'check', () => o.done(), 'Done');
-  button(tools, 'Undo', 'undo-2', () => o.undo());
-  button(tools, 'Redo', 'redo-2', () => o.redo());
+  const step = (label: string, icon: string, why: string | null, onClick: () => void) => {
+    const b = button(tools, why ?? label, icon, onClick);
+    if (why) b.setAttribute('aria-disabled', 'true');
+  };
+  step('Undo', 'undo-2', o.why.undo, () => o.undo());
+  step('Redo', 'redo-2', o.why.redo, () => o.redo());
   if (o.draft) button(tools, 'Lock the graph', 'lock', () => o.lock(), 'Lock the graph');
 }
