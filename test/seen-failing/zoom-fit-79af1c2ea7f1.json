@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/zoom-fit.test.js",
+  "test": "zooming out stops at the fit > the limit is the whole fit, or natural size when that is larger; a drawing with no size is drawn at natural size",
+  "seen_failing_first": false,
+  "evidence": "renamed in the review of #452 from '… a drawing or view with no size is drawn at natural size': its assertion on a view with no size, which now has no fit, moved to the new test 'a view with no size, as a hidden card has, has no fit yet', which failed first; what is left holds the fit as it was"
+}
