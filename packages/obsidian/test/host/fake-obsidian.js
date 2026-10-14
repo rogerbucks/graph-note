@@ -94,7 +94,11 @@ export function fakeObsidian(state = {}) {
     getMarkdownFiles: () => [...files.keys()].filter((p) => p.endsWith('.md')).map((p) => new TFile(p)),
     getFiles: () => [...files.keys()].map((p) => new TFile(p)),
     read: async (f) => files.get(f.path),
-    cachedRead: async (f) => files.get(f.path),
+    // a read from the cache, kept in `state.reads` when a test asks which notes were read
+    cachedRead: async (f) => {
+      state.reads?.push(f.path);
+      return files.get(f.path);
+    },
     process: async (f, fn) => {
       const next = fn(files.get(f.path));
       if (next !== files.get(f.path)) {

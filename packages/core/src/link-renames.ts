@@ -28,7 +28,10 @@ function renamed(link: FoundLink, to: string): string | null {
     name = full.slice(full.lastIndexOf('/') + 1),
     next = link.target.includes('/') ? full : name;
   if (UNSAFE.test(next)) return null;
-  return link.markdown ? next.replaceAll(' ', '%20').replaceAll('(', '%28').replaceAll(')', '%29') : next;
+  // in a Markdown link's destination, percent signs first, so a name holding one is read back as it is
+  return link.markdown
+    ? next.replaceAll('%', '%25').replaceAll(' ', '%20').replaceAll('(', '%28').replaceAll(')', '%29')
+    : next;
 }
 
 /**

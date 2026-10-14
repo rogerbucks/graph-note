@@ -92,13 +92,20 @@ export function getFrontMatterInfo(content) {
   return m ? { exists: true, frontmatter: m[1] } : { exists: false, frontmatter: '' };
 }
 
-/** The metadata cache: a note's front matter; with `state.noCache`, a note not yet indexed, which has none. */
+/**
+ * The metadata cache: a note's front matter, and its sections where a test gives them in `state.sections` by path; with
+ * `state.noCache`, a note not yet indexed, which has none.
+ */
 export function fakeMetadataCache(state) {
   return {
     getFileCache: (f) => {
       if (state.noCache) return null;
       const info = getFrontMatterInfo(state.files.get(f.path) ?? '');
-      return info.exists ? { frontmatter: parseYaml(info.frontmatter) } : {};
+      const sections = state.sections?.[f.path];
+      return {
+        ...(info.exists ? { frontmatter: parseYaml(info.frontmatter) } : {}),
+        ...(sections ? { sections } : {}),
+      };
     },
   };
 }

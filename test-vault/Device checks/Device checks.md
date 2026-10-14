@@ -206,3 +206,4 @@ One note for each check in the device checklist ([the checklist, on GitHub](http
 - [[Device checks/21 Links and attachments/H-09 Links by keyboard|H-09 Links by keyboard]]
 - [[Device checks/21 Links and attachments/H-10 Rich details|H-10 Rich details]]
 - [[Device checks/21 Links and attachments/H-11 A thing that is a note|H-11 A thing that is a note]]
+- [[Device checks/21 Links and attachments/H-12 No picture loaded from an embed|H-12 No picture loaded from an embed]]

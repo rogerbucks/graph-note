@@ -6,10 +6,18 @@
 // was (back_where_you_were). Nothing here fetches anything: every opening is Obsidian's.
 import { Keymap, MarkdownRenderer, Modal, Notice, TFile } from 'obsidian';
 import type { App, Component } from 'obsidian';
-import { leavingWords, linkTo, refusedWords, safeMarkdown } from '@graph-note/core';
+import {
+  embedParts,
+  embeddedMarkdown,
+  leavingWords,
+  linkKind,
+  linkTo,
+  refusedWords,
+  safeMarkdown,
+} from '@graph-note/core';
 import type { BrokenLink, FoundLink } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
-import { followAnchor } from './links-list';
+import { FOLLOWED, followAnchor } from './links-list';
 
 /** The source the plugin's links are hovered from, as Page preview's settings name it. */
 export const HOVER_SOURCE = 'graph-note';
@@ -60,6 +68,15 @@ class LeaveObsidian extends Modal {
 
   override onOpen(): void {
     this.setTitle('Leave Obsidian?');
+    // where it goes, first and large: the web site's host, or whom a mail is written to
+    let where = '';
+    try {
+      where = new URL(this.address).host;
+    } catch {
+      where = '';
+    }
+    const shown = where || this.address.replace(/^mailto:/i, '').split('?')[0] || this.address;
+    this.contentEl.createEl('p', { cls: 'graph-note-leave-host', text: shown });
     this.contentEl.createEl('p', { text: this.words });
     const row = this.contentEl.createDiv({ cls: 'graph-note-leave-row' });
     row.createEl('button', { text: 'Open', cls: 'mod-cta', attr: { type: 'button' } }).addEventListener('click', () => {
@@ -72,13 +89,17 @@ class LeaveObsidian extends Modal {
 }
 
 /**
- * Each link Obsidian rendered inside `el`: one that may not be opened becomes its text; the rest open and preview as the
- * card's own links do, `where` saying where the card is when one takes its tab.
+ * Each link Obsidian rendered inside `el` not yet followed: one that may not be opened, by its `href` or its `data-href`,
+ * becomes its text; the rest open and preview as the card's own links do, `where` saying where the card is when one
+ * takes its tab.
  */
 function followRendered(el: HTMLElement, host: LinkHost, where: () => LeftAt | null = () => null): void {
   for (const a of Array.from(el.querySelectorAll('a'))) {
-    const link = linkTo(a.getAttribute('data-href') ?? a.getAttribute('href') ?? '');
-    if (link.kind !== 'refused') {
+    if (a.hasAttribute(FOLLOWED)) continue;
+    const href = a.getAttribute('href') ?? '',
+      data = a.getAttribute('data-href');
+    const link = linkTo(data ?? href);
+    if (link.kind !== 'refused' && linkKind(href) !== 'refused') {
       followAnchor(a, link, host, where);
       continue;
     }
@@ -122,8 +143,28 @@ export function linkHost(plugin: GraphNotePlugin, path: string, graph: string): 
       });
     },
     render: async (markdown, el, owner, where) => {
-      await MarkdownRenderer.render(plugin.app, safeMarkdown(markdown), el, path, owner);
-      followRendered(el, { ...host, broken: [] }, where);
+      const draw = async (md: string, into: HTMLElement, from: string) => {
+        // links Obsidian puts in later, as a post-processor may, are judged as they come, for as long as `owner` lasts
+        const later = new MutationObserver(() => followRendered(into, { ...host, broken: [] }, where));
+        later.observe(into, { childList: true, subtree: true });
+        owner.register(() => later.disconnect());
+        await MarkdownRenderer.render(plugin.app, md, into, from, owner);
+        followRendered(into, { ...host, broken: [] }, where);
+      };
+      // a note embedded is read here and rendered made safe, never handed to Obsidian to embed: so nothing it holds,
+      // a remote image among it, is loaded (offline_and_mobile_apis); a note it embeds in turn is a link
+      const parts = embedParts(markdown);
+      for (const part of parts) {
+        if ('text' in part) {
+          await draw(safeMarkdown(part.text), parts.length === 1 ? el : el.createDiv(), path);
+          continue;
+        }
+        const box = el.createDiv({ cls: 'graph-note-embed' }),
+          file = plugin.app.metadataCache.getFirstLinkpathDest(part.embed.target, path);
+        if (file instanceof TFile && file.extension === 'md')
+          await draw(embeddedMarkdown(await plugin.app.vault.cachedRead(file)), box, file.path);
+        else await draw(safeMarkdown(`[[${part.embed.opens}]]`), box, path); // a note not there: a link to it
+      }
     },
     cameBack: () => {
       const at = left().get(key);

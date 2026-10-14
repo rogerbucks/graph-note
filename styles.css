@@ -1252,6 +1252,11 @@ details.graph-note-style > summary {
 .graph-note-text-link {
   text-decoration: underline;
 }
+/* Where a link that leaves Obsidian goes, first and large in the dialog that asks before it opens. */
+.graph-note-leave-host {
+  font-size: var(--font-ui-large);
+  font-weight: var(--font-bold);
+}
 .graph-note-link-fixes,
 .graph-note-leave-row {
   display: flex;

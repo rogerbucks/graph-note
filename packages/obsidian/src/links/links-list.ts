@@ -31,11 +31,27 @@ export function linkAnchor(
   return a;
 }
 
+/** Set on an anchor once it follows its link as the card's own do, so it is never made to twice. */
+export const FOLLOWED = 'data-graph-note-followed';
+
 /**
- * An anchor on the page made to follow `link` as the card's own links do: opened by Obsidian on a click or Enter, never
- * by the browser; previewed on hover, and on a touch screen by a long press, whose press then opens nothing.
+ * An anchor on the page made to follow `link` as the card's own links do: opened by Obsidian on a click, a middle-click
+ * or Enter, never by the browser; previewed on hover, and on a touch screen by a long press, whose press then opens
+ * nothing. An address outside the vault is kept in `data-href`, the anchor's own `href` going nowhere (`#`), and its
+ * context menu kept closed, so no middle-click, menu or drag hands it to the browser past the dialog (safe_to_click).
  */
 export function followAnchor(a: HTMLElement, link: FoundLink, host: LinkHost, where: () => LeftAt | null): void {
+  a.setAttribute(FOLLOWED, '');
+  const vault = link.kind === 'note' || link.kind === 'file';
+  if (!vault) {
+    a.setAttribute('data-href', link.opens);
+    a.setAttribute('href', '#');
+    a.addEventListener('contextmenu', (evt) => evt.preventDefault());
+  }
+  a.addEventListener('auxclick', (evt) => {
+    evt.preventDefault();
+    if (evt.button === 1) host.open(link, evt, where());
+  });
   let pressed = false,
     timer: number | null = null;
   const stop = () => {

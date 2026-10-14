@@ -34,7 +34,8 @@
 // and the View menu's folding, merging and routing (ViewState, startingSwitches, labelsHidden, foldsHiding, linksOf,
 // VIEW_SWITCHES, SWITCH_NAMES, SWITCH_SETTINGS, LABEL_SCALE, BUSY_HUB and their types, 14 Oct 2026), and links and
 // attachments (linksIn, linkKind, linkTo, linksHeld, attachmentsOf, noteOf, brokenLinks, withMeant, renamedLinks,
-// applyChanges, safeMarkdown, leavingWords, refusedWords, attachmentType and their types, 15 Oct 2026).
+// applyChanges, safeMarkdown, leavingWords, refusedWords, attachmentType and their types, 15 Oct 2026; an embedded note
+// read and made safe by the host, embedParts, embeddedMarkdown and EmbedPart, the same day).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -155,6 +156,8 @@ const VALUES = [
   'draw',
   'drawingSource',
   'edgesOf',
+  'embedParts',
+  'embeddedMarkdown',
   'emphasis',
   'endpointProblem',
   'estimateEdge',
@@ -352,6 +355,7 @@ const TYPES = [
   'Direction',
   'Drawn',
   'Edit',
+  'EmbedPart',
   'Engine',
   'Estimate',
   'EstimateFix',

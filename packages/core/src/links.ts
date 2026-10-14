@@ -9,12 +9,13 @@ import { distance } from './estimates.ts';
 import { propertiesOf } from './inspector.ts';
 import type { Target } from './inspector.ts';
 import type { NoteReading, Problem } from './note-reading.ts';
-import { attachmentType, linksIn } from './link-scan.ts';
+import { attachmentType, linkTo, linksIn } from './link-scan.ts';
 import type { FoundLink } from './link-scan.ts';
 
 export { attachmentType, leavingWords, linkKind, linkTo, linksIn, refusedWords } from './link-scan.ts';
 export type { FoundLink, LinkKind } from './link-scan.ts';
-export { safeMarkdown } from './link-markdown.ts';
+export { embedParts, embeddedMarkdown, safeMarkdown } from './link-markdown.ts';
+export type { EmbedPart } from './link-markdown.ts';
 export { applyChanges, renamedLinks } from './link-renames.ts';
 
 /** A link held in a property of a thing or a relationship. */
@@ -48,11 +49,27 @@ export function attachmentsOf(reading: NoteReading, graph: string, key: string):
   });
 }
 
+/** How a global note id begins (graph spec §10, Identity): `note:` and the note's file name. */
+const NOTE_ID = 'note:';
+
 /**
- * The note a thing stands for (node_is_a_note): its id, when the id is a link to a note and nothing else, as
- * `(trip:Doc {id: '[[Trip plan]]'})` writes it; null for any other thing.
+ * The note a thing stands for (node_is_a_note): its id, when the id is a global note id, `note:` and the note's name,
+ * as `(m:Doc {id: 'note:Graph spec model'})` writes it (graph spec §10); or, as well, when the id is a link to a note and
+ * nothing else, `{id: '[[Trip plan]]'}`. Null for any other thing, a file named after `note:` among them.
  */
 export function noteOf(_reading: NoteReading, _graph: string, key: string): FoundLink | null {
+  if (key.startsWith(NOTE_ID)) {
+    const name = linkTo(key.slice(NOTE_ID.length));
+    if (!name.target || name.kind !== 'note') return null;
+    const at = NOTE_ID.length;
+    return {
+      ...name,
+      written: key,
+      end: key.length,
+      targetAt: { start: name.targetAt.start + at, end: name.targetAt.end + at },
+      label: name.opens,
+    };
+  }
   const [only, ...more] = linksIn(key);
   return only && !more.length && only.start === 0 && only.end === key.length && only.kind === 'note' && !only.embed
     ? only
@@ -104,9 +121,11 @@ function likelyMeant(link: FoundLink, names: readonly string[]): string[] {
 }
 
 const orList = (xs: string[]) => (xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} or ${xs.at(-1)}`);
-/** A name written where a Markdown link's destination is: its spaces and brackets percent-encoded. */
+/** A name written where a Markdown link's destination is: percent signs first, then spaces and brackets, percent-encoded. */
 const asWritten = (link: FoundLink, name: string) =>
-  link.markdown ? name.replaceAll(' ', '%20').replaceAll('(', '%28').replaceAll(')', '%29') : name;
+  link.markdown
+    ? name.replaceAll('%', '%25').replaceAll(' ', '%20').replaceAll('(', '%28').replaceAll(')', '%29')
+    : name;
 
 /**
  * Every link of a graph to a note or file the vault does not hold (broken_links_problems): a warning, as it is drawn
@@ -129,24 +148,29 @@ export function brokenLinks(reading: NoteReading, graph: string, vault: LinkVaul
     const t = reading.texts[i] ?? '';
     return graphOf(t) === graph && dataKind(t) === 'data';
   });
-  const used = new Map<string, number>();
+  // where each written link was last found, so the next of the same is looked for only after it; and what each target
+  // most likely meant, worked out once
+  const cursors = new Map<string, { o: number; l: number; at: number }>();
+  const meanings = new Map<string, string[]>();
   return held.flatMap((h): BrokenLink[] => {
     const { link } = h;
     if ((link.kind !== 'note' && link.kind !== 'file') || !link.target || vault.found(link.target)) return [];
-    const meant = likelyMeant(link, vault.names);
+    const said = `${link.kind}\u0000${link.target}`;
+    const meant = meanings.get(said) ?? likelyMeant(link, vault.names);
+    meanings.set(said, meant);
     // where it is written: the next place this same link is written, so a link written twice is found twice
-    const nth = used.get(link.written) ?? 0;
-    used.set(link.written, nth + 1);
-    let place: { block: number; line: number; col: number } | null = null,
-      seen = 0;
-    for (const { i, lines } of ours) {
-      for (let l = 0; l < lines.length && !place; l++) {
-        for (let at = (lines[l] ?? '').indexOf(link.written); at >= 0 && !place;) {
-          if (seen++ === nth) place = { block: i, line: l, col: at };
-          at = (lines[l] ?? '').indexOf(link.written, at + 1);
-        }
+    const from = cursors.get(link.written) ?? { o: 0, l: 0, at: 0 };
+    let place: { block: number; line: number; col: number } | null = null;
+    for (let o = from.o; o < ours.length && !place; o++) {
+      const { i, lines } = ours[o] ?? { i: 0, lines: [] };
+      for (let l = o === from.o ? from.l : 0; l < lines.length && !place; l++) {
+        const at = (lines[l] ?? '').indexOf(link.written, o === from.o && l === from.l ? from.at : 0);
+        if (at < 0) continue;
+        place = { block: i, line: l, col: at };
+        cursors.set(link.written, { o, l, at: at + 1 });
       }
     }
+    if (!place) cursors.set(link.written, { o: ours.length, l: 0, at: 0 });
     const what = link.kind === 'note' ? `Create the note ${link.target}` : `Put ${link.target} in the vault`;
     const or = meant.length ? `, or change it to ${orList(meant.map((m) => `[[${m}]]`))}` : '';
     const span = place && {

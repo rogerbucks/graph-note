@@ -517,16 +517,21 @@ Settings › Accessibility › Display › Reduce motion; on the iPhone, Setting
 - [ ] **H-07** Rename a note that a graph block links to, in the file explorer: the link inside the block changes to the
       new name at once, its alias kept. With the note open in Live Preview while renaming, Command-Z takes the change
       back (slice 3, renames_follow).
-- [ ] **H-08** Tap a web address in the details: a dialog says the link leaves Obsidian and what it opens; Cancel opens
-      nothing, and Open hands it to the browser. A link to a javascript address is shown as text, never as a link, and
-      tapping it does nothing (slice 3, safe_to_click).
+- [ ] **H-08** Tap a web address in the details: a dialog shows the site large and says the link leaves Obsidian and
+      what it opens; Cancel opens nothing, and Open hands it to the browser. On the Mac, a middle-click asks the same,
+      and right-clicking it offers no menu to open it. A link to a javascript address is shown as text, never as a link,
+      and tapping it does nothing (slice 3, safe_to_click).
 - [ ] **H-09** On the Mac, open a box's details from the keyboard and press Tab: each link is reached in turn, and Return
       opens the one reached (slice 3, links_by_keyboard).
 - [ ] **H-10** A thing's details show its words as Obsidian shows them in a note: emphasis, maths and a link rendered,
       not as marks. An image from outside the vault is shown as a link only, and HTML written in a property as text (slice
       3, rich_details).
-- [ ] **H-11** A thing whose id is a link to a note shows that note in its details, rendered as an embed, with Open
-      beside it; Open opens the note (slice 3, node_is_a_note).
+- [ ] **H-11** A thing whose id is a global note id, note: and the note's name, shows that note in its details,
+      rendered, with Open beside it; Open opens the note. A thing whose id is a link to the note does the same (slice
+      3, node_is_a_note).
+- [ ] **H-12** With the phone online, a thing that stands for a note holding a picture from the web, written as Markdown
+      and as HTML, shows each picture in its details only as a link with its address, and no picture is loaded; a note
+      that note embeds is a link too (slice 3, rich_details).
 
 ## Result
 

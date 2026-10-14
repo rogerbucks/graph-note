@@ -76,7 +76,9 @@ function unmasked(target: string): string {
         ? Number(name.slice(1))
         : -1;
     const decoded = code >= 0 ? String.fromCodePoint(Math.min(code, 0x10ffff)) : (ENTITY_WORDS[name] ?? '');
-    if (decoded && decoded.charCodeAt(0) >= 0x20) out += decoded;
+    // a decoded control, or a decoded space before anything else, is dropped as a written one is
+    if (decoded && decoded.charCodeAt(0) > 0x20) out += decoded;
+    else if (decoded === ' ' && out) out += decoded;
     i += entity[0].length - 1;
   }
   return out;
@@ -99,6 +101,15 @@ function decoded(raw: string): string {
   } catch {
     return raw;
   }
+}
+
+/**
+ * Whether a Markdown destination may never be opened (safe_to_click): refused as written, or, for one that reads as a
+ * note or a file, refused once percent-decoded as a host decodes it, so an encoded scheme is never let through.
+ */
+export function destinationRefused(raw: string): boolean {
+  const kind = linkKind(raw);
+  return kind === 'refused' || ((kind === 'note' || kind === 'file') && linkKind(decoded(raw)) === 'refused');
 }
 
 /**
@@ -180,15 +191,21 @@ function lineLinks(line: string): FoundLink[] {
     if (end >= line.length) return null;
     let ds = close + 2,
       de = end;
+    while (ds < de && (line[ds] === ' ' || line[ds] === '\t')) ds++; // spaces before a destination, as Markdown allows
     if (line[ds] === '<' && line[de - 1] === '>' && de - ds > 2) {
       ds++;
       de--;
-    } else if (spaceDest(close + 2) < end) return null;
+    } else {
+      // a destination ends at a space, where only its title may follow: `[x](address "title")`
+      const space = spaceDest(ds);
+      if (space < de) {
+        if (!/^["'(]/.test(line.slice(space, de).trim())) return null;
+        de = space;
+      }
+    }
     const raw = line.slice(ds, de);
     if (!raw) return null;
-    let kind = linkKind(raw);
-    // a destination the host decodes is judged decoded too, so an encoded scheme is never let through
-    if ((kind === 'note' || kind === 'file') && linkKind(decoded(raw)) === 'refused') kind = 'refused';
+    const kind = destinationRefused(raw) ? 'refused' : linkKind(raw);
     const vault = kind === 'note' || kind === 'file',
       cut = vault ? subpathAt(raw) : raw.length;
     return {

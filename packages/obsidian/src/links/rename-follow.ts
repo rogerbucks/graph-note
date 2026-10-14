@@ -13,6 +13,9 @@ export async function followLinks(plugin: GraphNotePlugin, file: TAbstractFile, 
   if (!(file instanceof TFile)) return;
   const { vault, metadataCache } = plugin.app;
   for (const note of vault.getMarkdownFiles()) {
+    // a note the index says holds no code block holds no graph block: it is never read (one not indexed yet is)
+    const sections = metadataCache.getFileCache(note)?.sections;
+    if (sections && !sections.some((s) => s.type === 'code')) continue;
     // a link that still finds a file, as one of the same name elsewhere would, is left as it is
     const stillFound = (target: string) => !!metadataCache.getFirstLinkpathDest(target, note.path);
     const changes = (text: string) => (text.includes('gql') ? renamedLinks(text, old, file.path, stillFound) : []);

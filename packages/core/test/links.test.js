@@ -83,8 +83,12 @@ describe('only notes, files and web and mail addresses may be opened (safe_to_cl
       'obsidian://open?vault=x',
       '//evil.example.com/x',
       'C:\\Windows\\x.exe',
+      '&#106;avascript:alert(1)',
+      '&#x6A;avascript:alert(1)',
+      '&#32;javascript:alert(1)',
     ])
       assert.equal(linkKind(t), 'refused', t);
+    assert.equal(linksIn('[x](%6Aavascript:alert(1))')[0]?.kind, 'refused', 'a scheme percent-encoded');
   });
 
   test('a link that leaves Obsidian is said so plainly before it is opened; one in the vault is not', () => {
@@ -101,7 +105,8 @@ describe('only notes, files and web and mail addresses may be opened (safe_to_cl
     assert.equal(safeMarkdown('![[https://x.org/c.png]]'), '[[https://x.org/c.png]]');
     assert.equal(
       safeMarkdown('<img src="https://x.org/t.gif"> <b>bold</b>'),
-      '&lt;img src="https://x.org/t.gif"> &lt;b>bold&lt;/b>',
+      '[https://x.org/t.gif](https://x.org/t.gif) &lt;b>bold&lt;/b>',
+      'an HTML image is a link to it, never loaded; other HTML is text',
     );
     assert.equal(safeMarkdown('[run](javascript:alert(1))'), '\\[run](javascript:alert(1))');
     assert.equal(
@@ -144,6 +149,27 @@ describe('links and attachments of a thing (links_shown, attachments_at_a_glance
     assert.equal(noteOf(reading, 'trip', '[[Trip plan]]')?.target, 'Trip plan');
     assert.equal(noteOf(reading, 'trip', 'plan'), null);
   });
+
+  test('a thing whose id is a global note id, note: and the note’s name, stands for that note (graph spec §10)', () => {
+    const ids = readNote([
+      "// graph: spec\n(m:Doc {id: 'note:Graph spec model'}),\n(r:Doc {id: 'note:report.pdf'}),\n(e:Doc {id: 'note:'})",
+    ]);
+    const note = noteOf(ids, 'spec', 'note:Graph spec model');
+    assert.deepEqual(
+      [note?.target, note?.opens, note?.label, note?.kind, note?.written],
+      ['Graph spec model', 'Graph spec model', 'Graph spec model', 'note', 'note:Graph spec model'],
+    );
+    assert.equal('note:Graph spec model'.slice(note.targetAt.start, note.targetAt.end), 'Graph spec model');
+    assert.equal(noteOf(ids, 'spec', 'note:report.pdf'), null, 'a file is no note');
+    assert.equal(noteOf(ids, 'spec', 'note:'), null, 'a note needs its name');
+  });
+
+  test('a global note id that names no note is broken, with its fix', () => {
+    const ids = readNote(["// graph: spec\n(m:Doc {id: 'note:Graph spec modle'})"]);
+    const [broken] = brokenLinks(ids, 'spec', { found: () => false, names: ['Graph spec model'] });
+    assert.equal(broken?.problem.fix, 'Create the note Graph spec modle, or change it to [[Graph spec model]].');
+    assert.deepEqual(broken?.problem.span, { line: 1, character: 18, end: 34 });
+  });
 });
 
 describe('a link that names nothing is broken, with its fix (broken_links_problems)', () => {
@@ -177,6 +203,24 @@ describe('a link that names nothing is broken, with its fix (broken_links_proble
     const broken = brokenLinks(reading, 'trip', { found: () => false, names: [] });
     assert.equal(broken.find((b) => b.link.target === 'Plnas')?.problem.fix, 'Create the note Plnas.');
     assert.equal(broken.length, 3, 'a web address is never broken in the vault');
+  });
+
+  test('one link written many times is found at each place in turn, and what it meant is worked out once', () => {
+    const lines = Array.from({ length: 40 }, (_, i) => `(t${i}:Doc {see: '[[Plnas]]'})`);
+    const many = readNote([`// graph: trip\n${lines.join(',\n')}`]);
+    let asked = 0;
+    const names = new Proxy(['Plans'], {
+      get: (t, k) => {
+        if (k === Symbol.iterator || k === 'filter') asked++;
+        return Reflect.get(t, k);
+      },
+    });
+    const broken = brokenLinks(many, 'trip', { found: () => false, names });
+    assert.deepEqual(
+      broken.map((b) => b.problem.line),
+      lines.map((_, i) => i + 2),
+    );
+    assert.equal(asked, 1, 'the names looked through once for the one target');
   });
 });
 
@@ -213,6 +257,16 @@ describe('renames follow inside graph blocks, never in prose (renames_follow)', 
     assert.deepEqual(renamedLinks(note, 'Projects/Plans.md', "Projects/Roger's plans.md"), []);
   });
 
+  test('a new name holding a percent sign is written percent-encoded first, where a Markdown link writes it', () => {
+    const changed = applyChanges(note, renamedLinks(note, 'Projects/Plans.md', 'Projects/100% plans.md'));
+    assert.ok(changed.includes("map: '[m](100%25%20plans.md)'"), changed);
+    assert.ok(changed.includes("see: '[[100% plans]]"), 'a wikilink is written as the name is');
+    const written = "// graph: t\n(p:Doc {see: '[x](100%25%20plna)'})";
+    const [plan] = brokenLinks(readNote([written]), 't', { found: () => false, names: ['100% plan'] });
+    assert.deepEqual(plan?.problem.replace, { written: '100%25%20plna', with: ['100%25%20plan'] });
+    assert.equal(withMeant(written, plan, '100% plan'), "// graph: t\n(p:Doc {see: '[x](100%25%20plan)'})");
+  });
+
   test('a rename into another folder writes the new path where a link was written as a path', () => {
     const changes = renamedLinks(note, 'Projects/Plans.md', 'Archive/Plans.md');
     assert.ok(applyChanges(note, changes).includes('[[Archive/Plans.md#Costs]]'));
@@ -228,7 +282,7 @@ describe('in Obsidian', () => {
   const PATH = 'Some note.md';
   const GRAPH = `// graph: trip
 (plan:Doc {name: 'Plan [[Plans]]', see: '[[Plans]] and https://example.com/a', files: '![[photo.png]], [[report.pdf]]', bad: '[run](javascript:alert(1))', gone: '[[Plnas]]', wiki: '[[javascript:alert(2)]]'}),
-(site:Place {name: 'Site'}),
+(site:Place {name: 'Go [x](javascript:y)'}),
 (plan)-[:NEAR]->(site)`;
   const NOTE = ['# Trip [[Plans]]', '', fence(GRAPH), ''].join('\n');
   const FILES = { [PATH]: NOTE, 'Plans.md': '# Plans', 'photo.png': '', 'report.pdf': '' };
@@ -271,6 +325,11 @@ describe('in Obsidian', () => {
       assert.equal(box.querySelector('text.graph-note-attachments')?.textContent, '📎 2');
       assert.match(box.getAttribute('aria-label'), /2 attachments/);
       assert.equal(el.querySelector('g.node[data-key="site"] text.graph-note-attachments'), null);
+      assert.deepEqual(
+        el.querySelectorAll('g.node[data-key="site"] text.graph-note-link').map((t) => t.textContent),
+        [],
+        'a link that is never opened is never drawn as one',
+      );
     } finally {
       env.uninstall();
     }
@@ -284,8 +343,13 @@ describe('in Obsidian', () => {
       const files = el.querySelectorAll('.graph-note-attachment-list li').map((li) => li.textContent);
       assert.deepEqual(files, ['photo.png — image', 'report.pdf — PDF']);
       // as written, and as Obsidian rendered it: no link anywhere in the details runs script
-      const scripted = (a) => /javascript/i.test(`${a.getAttribute('href')} ${a.getAttribute('data-href')}`);
-      assert.deepEqual(el.querySelectorAll('.graph-note-details a').filter(scripted), []);
+      const addresses = el
+        .querySelectorAll('.graph-note-details a')
+        .map((a) => `${a.getAttribute('href')} ${a.getAttribute('data-href')}`);
+      assert.deepEqual(
+        addresses.filter((t) => /javascript/i.test(t)),
+        [],
+      );
       const refused = el.querySelectorAll('.graph-note-link-refused').map((s) => s.textContent);
       assert.ok(
         refused.some((t) => /run.*not opened/.test(t)),
@@ -344,8 +408,15 @@ describe('in Obsidian', () => {
     const env = await setUp();
     try {
       const el = await card(env);
-      anchor(el, 'https://example.com/a').click();
+      const a = anchor(el, 'https://example.com/a');
+      // the address is the plugin's to hand over, never the browser's to follow: no middle-click or menu reaches it
+      assert.equal(a.getAttribute('href'), '#');
+      assert.equal(a.getAttribute('data-href'), 'https://example.com/a');
+      assert.ok(a.dispatch('contextmenu', { button: 2 }).defaultPrevented, 'no menu to open it outside the dialog');
+      assert.ok(a.dispatch('auxclick', { button: 1 }).defaultPrevented);
       const asked = env.state.modals.at(-1);
+      assert.ok(asked, 'a middle-click asks first too');
+      assert.equal(asked.contentEl.querySelector('.graph-note-leave-host')?.textContent, 'example.com');
       assert.match(asked.contentEl.textContent, /This link leaves Obsidian: it opens https:\/\/example\.com\/a/);
       assert.equal(env.doc.opened, undefined, 'nothing opened yet');
       press(asked.contentEl, 'Open').click();
@@ -400,13 +471,22 @@ describe('in Obsidian', () => {
     try {
       const el = await card(env);
       host.labelled(el, 'Zoom in').click();
-      const zoomed = el.querySelector('svg').getAttribute('width');
+      host.labelled(el, 'Zoom in').click();
+      const place = (card) => {
+        const vp = card.querySelector('.graph-note-viewport');
+        return [
+          card.querySelector('svg').getAttribute('width'),
+          vp.cssProps['--graph-note-x'],
+          vp.cssProps['--graph-note-y'],
+        ];
+      };
+      const left = place(el);
       host.tapKey(el, 'plan');
       anchor(el, 'Plans').click();
       // Obsidian's back step shows the note again, and its block is drawn afresh
       const again = await card(env, null);
       await host.until(() => !again.querySelector('.graph-note-details').hidden);
-      assert.equal(again.querySelector('svg').getAttribute('width'), zoomed);
+      assert.deepEqual(place(again), left, 'the same zoom, and panned to the same place');
       assert.equal(again.querySelector('g.node.is-selected')?.getAttribute('data-key'), 'plan');
     } finally {
       env.uninstall();
@@ -437,10 +517,29 @@ describe('in Obsidian', () => {
       await env.app.vault.rename(env.app.vault.getFileByPath('Plans.md'), 'Trip plans.md');
       await host.until(() => env.state.files.get(PATH).includes("see: '[[Trip plans]]"));
       assert.ok(env.state.files.get(PATH).startsWith('# Trip [[Plans]]'), 'prose is the host’s own to update');
-      const view = host.openNote(env, env.state.files.get(PATH), PATH);
+      const before = env.state.files.get(PATH);
+      const view = host.openNote(env, before, PATH);
       await env.app.vault.rename(env.app.vault.getFileByPath('Trip plans.md'), 'Plans.md');
       await host.until(() => view.state.doc.toString().includes("see: '[[Plans]]"));
       assert.ok(env.state.files.get(PATH).includes("see: '[[Trip plans]]"), 'written by the editor, which saves it');
+      // one change, which one undo takes back whole
+      const made = view.transactions.filter((t) => t.tr.isUserEvent('input.graph-note'));
+      assert.equal(made.length, 1);
+      assert.equal(made[0].tr.changes.invert(made[0].before).apply(view.state.doc).toString(), before);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a note whose index holds no code block is never read for a rename', async () => {
+    const env = await setUp();
+    try {
+      env.state.files.set('Prose.md', 'Only prose, and [[Plans]].');
+      env.state.sections = { 'Prose.md': [{ type: 'paragraph' }], [PATH]: [{ type: 'heading' }, { type: 'code' }] };
+      env.state.reads = [];
+      await env.app.vault.rename(env.app.vault.getFileByPath('Plans.md'), 'Trip plans.md');
+      await host.until(() => env.state.files.get(PATH).includes("see: '[[Trip plans]]"));
+      assert.ok(!env.state.reads.includes('Prose.md'), env.state.reads.join(', '));
     } finally {
       env.uninstall();
     }

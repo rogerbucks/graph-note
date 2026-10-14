@@ -262,6 +262,8 @@ export {
   attachmentType,
   attachmentsOf,
   brokenLinks,
+  embedParts,
+  embeddedMarkdown,
   leavingWords,
   linkKind,
   linkTo,
@@ -273,7 +275,7 @@ export {
   safeMarkdown,
   withMeant,
 } from './links.ts';
-export type { Attachment, BrokenLink, FoundLink, LinkKind, LinkVault, PlacedLink } from './links.ts';
+export type { Attachment, BrokenLink, EmbedPart, FoundLink, LinkKind, LinkVault, PlacedLink } from './links.ts';
 export { TextHistory } from './history.ts';
 export type { Change, TextState } from './history.ts';
 export type { Bounds, HitAreas, Shape } from './hits.ts';

@@ -12,7 +12,8 @@ const SVG = 'http://www.w3.org/2000/svg';
 /** Marks the links and attachments of a drawing of graph `graph`, as the card's link host finds them in the vault. */
 export function markLinks(svg: SVGSVGElement, reading: NoteReading, graph: string, host: LinkHost): void {
   for (const t of Array.from(svg.querySelectorAll('g.node text, g.edge text'))) {
-    const links = linksIn(t.textContent ?? '');
+    // a link that is never opened is never drawn as one (safe_to_click)
+    const links = linksIn(t.textContent ?? '').filter((l) => l.kind !== 'refused');
     if (!links.length) continue;
     t.classList.add('graph-note-link');
     const broken = links.some((l) => (l.kind === 'note' || l.kind === 'file') && l.target && !host.found(l.target));

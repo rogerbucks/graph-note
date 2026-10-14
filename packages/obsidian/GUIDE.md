@@ -285,17 +285,22 @@ module that ties the parts together, named as the folder is.
 - `link-host.ts` — `linkHost`, what a card is given to follow its links through Obsidian (`LinkHost`): a note or file
   opened by the workspace's own `openLinkText`, a modifier-click a new tab; a web or mail address said to leave
   Obsidian in a dialog, and handed to the system only on Open; any other link never opened; a hover told to Page
-  preview (`hover-link`, from `HOVER_SOURCE`); Markdown rendered by `MarkdownRenderer` after the core's `safeMarkdown`,
-  so nothing remote loads and no HTML is rendered, its own links followed by the same rules; where a card was left when
+  preview (`hover-link`, from `HOVER_SOURCE`), the dialog showing the site's host first; Markdown rendered by
+  `MarkdownRenderer` after the core's `safeMarkdown`, so nothing remote loads and no HTML is rendered, a note embedded
+  read here and rendered made safe (`embedParts`, `embeddedMarkdown`), never embedded by Obsidian, and every link it
+  renders, then or later (a MutationObserver for as long as its owner lasts), followed by the same rules, refused when
+  its `href` or its `data-href` is; where a card was left when
   a link took its tab (`cameBack`, back_where_you_were); and Create the note for a broken link, the one write, closed in
   reading view. `vaultNames` gives the names a broken link's likeliest meaning is chosen from.
 - `links-list.ts` — the details' Links and Attachments: each link an anchor (`linkAnchor`, `followAnchor`) opened on a
-  click or Enter, previewed on hover and on a long press by touch; one never opened shown as text; a broken one marked,
+  click, a middle-click or Enter, previewed on hover and on a long press by touch, an address outside the vault kept in
+  `data-href` with `href="#"` and no context menu, so nothing reaches the browser past the dialog; one never opened shown as text; a broken one marked,
   with Create the note and Change it to what it most likely meant (written through the card's `writeBlock`).
 - `link-marks.ts` — on the drawing: a line of a box's or link's words holding a link drawn as a link (broken, dashed),
   and a paperclip with the count on a thing with attachments, said to screen readers.
 - `rename-follow.ts` — `followLinks`, on the vault's rename event: every link to the renamed note or file inside a
-  graph block of any note rewritten, through the note's editor when open (one undoable change), else `vault.process`.
+  graph block of any note rewritten, through the note's editor when open (one undoable change), else `vault.process`;
+  a note the metadata cache says holds no code block is never read.
 
 ### `src/block-editor/` — the text of one graph block, in the pane or in place
 
