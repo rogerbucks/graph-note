@@ -187,12 +187,18 @@ ${requirements
 const emptySlice = (board, slice) => !board.requirements.some((r) => r.slice === slice);
 const noRequirements = (slice) => `<p class="none">Slice ${slice} has no requirements.</p>`;
 
+/** How many faults the copy has, said after what is still to prove; nothing when it has none. */
+const faulty = (done) => {
+  const n = done.faults?.length ?? 0;
+  return n ? `, and the copy has ${n} fault${n === 1 ? '' : 's'}` : '';
+};
+
 /** Whether the slice is done (done_means_proved), as check-requirements.mjs's `sliceDone` says: nothing when not given. */
 const doneLine = (done) => {
   if (!done?.total) return '';
   const words = done.done
     ? `Slice ${esc(done.slice)} is done: every one of its ${done.total} requirements is proved by a written test.`
-    : `Slice ${esc(done.slice)} is not done: ${done.missing.length} of ${done.total} requirements are still to prove.`;
+    : `Slice ${esc(done.slice)} is not done: ${done.missing.length} of ${done.total} requirements are still to prove${faulty(done)}.`;
   const chip = done.done
     ? '<span class="chip chip-proved">done</span>'
     : '<span class="chip chip-open">not done</span>';

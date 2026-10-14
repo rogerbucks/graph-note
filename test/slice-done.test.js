@@ -90,6 +90,62 @@ describe('whether a slice is done', () => {
   });
 
   // proves: done_means_proved
+  test('a copy whose banner was edited is never done: only the generated copy is checked', () => {
+    const text = replaced(allWritten(), 'do not hand-edit; regenerate.', 'edited by hand.');
+    const r = sliceDone(text, 3, { exists: everyFile });
+    assert.equal(r.done, false);
+    assert.deepEqual(r.missing, [], 'every requirement proved');
+    assert.deepEqual(
+      r.faults.map((f) => f.id),
+      ['line 2'],
+    );
+    assert.match(r.faults[0].why, /not the generated banner/);
+    assert.match(r.said, /slice 3 is not done: 0 of \d+ requirements are still to prove, and the copy has 1 fault/);
+  });
+
+  // proves: done_means_proved
+  test('a test whose where the check does not know proves nothing: a changed where never skips its file', () => {
+    const elsewhere = replaced(allWritten(), ZOOM_FIT, ZOOM_FIT.replace("where: 'repo'", "where: 'elsewhere'"));
+    const r = sliceDone(elsewhere, 3, { exists: everyFile });
+    assert.deepEqual(ids(r).sort(), ['zoom_fit_recomputed', 'zoom_out_to_fit']);
+    assert.match(
+      r.missing[0].why,
+      /test_zoom_fit says where: 'elsewhere', which is not repo, both or outside the repo/,
+    );
+    // a test kept outside the repository, as the trace is, names no file here, and is not looked for
+    const outside = replaced(allWritten(), ZOOM_FIT, ZOOM_FIT.replace("where: 'repo'", "where: 'outside the repo'"));
+    const noFile = (rel) => rel !== 'packages/core/test/zoom-fit.test.js';
+    assert.equal(sliceDone(outside, 3, { exists: noFile }).done, true);
+    assert.equal(
+      sliceDone(allWritten(), 3, { exists: noFile }).done,
+      false,
+      'in the repository, its file is looked for',
+    );
+  });
+
+  // proves: done_means_proved
+  test('a requirement whose slice is not a whole number is a fault, never left out of its slice', () => {
+    const from = "(zoom_out_to_fit:Requirement {section: '25', slice: 3,";
+    const text = replaced(allWritten(), from, from.replace('slice: 3', "slice: '3'"));
+    const r = sliceDone(text, 3, { exists: everyFile });
+    assert.equal(r.done, false);
+    assert.deepEqual(
+      r.faults.map((f) => f.id),
+      ['zoom_out_to_fit'],
+    );
+    assert.match(r.faults[0].why, /requirement zoom_out_to_fit has slice '3', which is not a whole number/);
+    assert.equal(sliceDone(text, 2, { exists: everyFile }).done, false, 'nor can any slice be done while it is so');
+  });
+
+  // proves: done_means_proved
+  test('every slice before the one under way is done, as committed', () => {
+    for (let s = 1; s < requirements.CURRENT_SLICE; s++) {
+      const r = sliceDone(real(), s, { exists });
+      assert.equal(r.done, true, `${r.said}: ${JSON.stringify(r.missing.slice(0, 3))}`);
+    }
+  });
+
+  // proves: done_means_proved
   test('as committed, what is still to prove is every requirement the board does not count as proved', () => {
     const r = sliceDone(real(), 3, { exists });
     const open = ofSlice(real(), 3).filter((q) => q.status !== 'proved');
@@ -153,6 +209,11 @@ describe('the slice board', () => {
       /<span class="chip chip-open">not done<\/span> Slice 3 is not done: 2 of \d+ requirements are still to prove\./,
     );
     assert.doesNotMatch(notDone, /Slice 3 is done/);
+    const edited = replaced(allWritten(), 'do not hand-edit; regenerate.', 'edited by hand.');
+    assert.match(
+      board(edited, 3, { exists: everyFile }),
+      /Slice 3 is not done: 0 of \d+ .*, and the copy has 1 fault\./,
+    );
   });
 
   // proves: done_means_proved

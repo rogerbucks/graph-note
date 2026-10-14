@@ -40,6 +40,25 @@ const FILE_PATH =
 /** The repository paths a test's file field names. */
 export const filesOf = (field) => [...String(field ?? '').matchAll(FILE_PATH)].map((m) => m[1]);
 
+/** Where a test may be kept: the repository's, both, or outside it. Any other is not known, so proves nothing. */
+export const WHERE = ['repo', 'both', 'outside the repo'];
+
+/** A banner problem, as the audit lists it, for each line of the do-not-hand-edit banner that is not as generated. */
+function bannerProblems(text) {
+  const lines = text.split('\n');
+  return BANNER.flatMap((want, i) =>
+    lines[i] === want
+      ? []
+      : [
+          {
+            kind: 'banner',
+            id: `line ${i + 1}`,
+            message: `line ${i + 1} of ${REQUIREMENTS} is not the generated banner: regenerate the copy, never edit it`,
+          },
+        ],
+  );
+}
+
 /**
  * Every problem with a copy of the requirements, each as {kind, id, message}. kind is banner, unreadable, unproved,
  * missing-file, unclaimed, status, question (a question lacking its num, slice or text, with a slice that is not a
@@ -47,16 +66,7 @@ export const filesOf = (field) => [...String(field ?? '').matchAll(FILE_PATH)].m
  * that is not a question). exists(path) says whether the repository holds a repo-relative path.
  */
 export function auditRequirements(text, { exists = (rel) => existsSync(join(ROOT, rel)), slice = CURRENT_SLICE } = {}) {
-  const problems = [];
-  const lines = text.split('\n');
-  BANNER.forEach((want, i) => {
-    if (lines[i] !== want)
-      problems.push({
-        kind: 'banner',
-        id: `line ${i + 1}`,
-        message: `line ${i + 1} of ${REQUIREMENTS} is not the generated banner: regenerate the copy, never edit it`,
-      });
-  });
+  const problems = bannerProblems(text);
 
   let graph;
   try {
@@ -139,10 +149,13 @@ export function auditRequirements(text, { exists = (rel) => existsSync(join(ROOT
 
 /**
  * Whether slice `slice` is done (spec §12, done_means_proved): every one of its requirements proved by a written test,
- * and every repository file such a test names there. {slice, done, total, missing: [{id, why}], said}: `total` counts the
- * slice's requirements, `missing` lists each still to prove with why (it names no test; a test it names is not
- * written; a written test's file is not in the repository), and `said` says it in a line. A slice with no requirements
- * is never done. Only the slice's own requirements count. Throws what the reader throws for a copy it cannot read.
+ * and every repository file such a test names there, in a copy that can be trusted. {slice, done, total, missing: [{id,
+ * why}], faults: [{id, why}], said}: `total` counts the slice's requirements, `missing` lists each still to prove with
+ * why (it names no test; a test it names is not written; a written test's file is not in the repository, or it says a
+ * `where` not in `WHERE`, so its file is never skipped unknowingly), `faults` what makes the copy untrustworthy (a banner
+ * line not as generated; a requirement whose slice is not a whole number, which no slice can then be done while it
+ * holds), and `said` says it in a line. A slice with no requirements is never done. Only the slice's own requirements
+ * count. Throws what the reader throws for a copy it cannot read.
  */
 export function sliceDone(text, slice, { exists = (rel) => existsSync(join(ROOT, rel)) } = {}) {
   const store = read([text]);
@@ -151,34 +164,50 @@ export function sliceDone(text, slice, { exists = (rel) => existsSync(join(ROOT,
   for (const [from, type, to] of graph.edges)
     if (type === 'PROVED_BY' && graph.nodes.get(to)?.labels.has('Test'))
       proving.set(from, [...(proving.get(from) ?? []), graph.nodes.get(to).props]);
+  const requirements = [...graph.nodes].filter(([, n]) => n.labels.has('Requirement'));
+  const faults = [
+    ...bannerProblems(text).map((p) => ({ id: p.id, why: p.message })),
+    ...requirements
+      .filter(([, n]) => !Number.isInteger(n.props.slice))
+      .map(([, n]) => ({
+        id: n.props.id,
+        why: `requirement ${n.props.id} has slice ${JSON.stringify(n.props.slice ?? null).replaceAll('"', "'")}, which is not a whole number`,
+      })),
+  ];
   const why = (test) => {
     if (test.status !== 'written') return [`test ${test.id} is ${test.status ?? 'without a status'}, not written`];
+    if (!WHERE.includes(test.where))
+      return [
+        `test ${test.id} says where: '${test.where}', which is not ${WHERE.slice(0, -1).join(', ')} or ${WHERE.at(-1)}`,
+      ];
     if (!IN_REPO.has(test.where)) return [];
     const files = filesOf(test.file);
     const absent = files.length ? files.filter((f) => !exists(f)) : ['file named for it'];
     return absent.length ? [`test ${test.id} is written, but the repository has no ${absent.join(', ')}`] : [];
   };
-  const own = [...graph.nodes].filter(([, n]) => n.labels.has('Requirement') && n.props.slice === slice);
+  const own = requirements.filter(([, n]) => n.props.slice === slice);
   const missing = own.flatMap(([key, n]) => {
     const tests = proving.get(key) ?? [];
     const reasons = tests.length ? tests.flatMap(why) : ['it names no test'];
     return reasons.length ? [{ id: n.props.id, why: reasons.join('; ') }] : [];
   });
   const total = own.length,
-    done = total > 0 && !missing.length;
-  const said = !total
-    ? `slice ${slice} has no requirements, so it is not done`
-    : done
-      ? `slice ${slice} is done: all ${total} of its requirements are proved by written tests`
-      : `slice ${slice} is not done: ${missing.length} of ${total} requirements are still to prove`;
-  return { slice, done, total, missing, said };
+    done = total > 0 && !missing.length && !faults.length;
+  const faulty = faults.length ? `, and the copy has ${faults.length} fault${faults.length === 1 ? '' : 's'}` : '';
+  const said =
+    !total && !faults.length
+      ? `slice ${slice} has no requirements, so it is not done`
+      : done
+        ? `slice ${slice} is done: all ${total} of its requirements are proved by written tests`
+        : `slice ${slice} is not done: ${missing.length} of ${total} requirements are still to prove${faulty}`;
+  return { slice, done, total, missing, faults, said };
 }
 
-/** Prints whether a slice is done, and each requirement still to prove; 0 when it is done, else 1. */
+/** Prints whether a slice is done, and each fault and requirement still to prove; 0 when it is done, else 1. */
 function doneMain(text, slice) {
   const r = sliceDone(text, slice);
   console.log(r.said);
-  for (const m of r.missing) console.log(`  ${m.id}: ${m.why}`);
+  for (const m of [...r.faults, ...r.missing]) console.log(`  ${m.id}: ${m.why}`);
   return r.done ? 0 : 1;
 }
 
