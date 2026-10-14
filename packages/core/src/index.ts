@@ -107,6 +107,19 @@ export { addView, makeView } from './view-write.ts';
 export type { ViewArgs, ViewKind, ViewRefusal, ViewSpec } from './view-profile.ts';
 export { evaluate } from './view-evaluate.ts';
 export type { ViewResult } from './view-evaluate.ts';
+export { isSourceBlock, isStepBlock } from './blocks.ts';
+export { lineInSource, readSource, sourceFor, sourceOf } from './sources.ts';
+export type {
+  Fetched as SourceFetched,
+  Source as GraphSource,
+  SourceFault,
+  SourceRead,
+  SourceRefusal,
+} from './sources.ts';
+export { runStep, stepOf } from './steps.ts';
+export type { Step as GraphStep, StepFault, StepOutput, StepRun } from './steps.ts';
+export { givenLabel } from './steps-input.ts';
+export type { StepGiven, StepPoint } from './steps-input.ts';
 export { DEPARTURES, underStrictness, toStandard, standardBlocks } from './strictness.ts';
 export type { Converted, Departure, Strictness, StrictnessSettings } from './strictness.ts';
 export { OPTIONS, DEFAULT_SETTINGS, settingsFrom, indentText, aiModel } from './settings.ts';

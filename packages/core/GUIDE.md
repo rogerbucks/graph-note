@@ -311,6 +311,41 @@ reads `· QUERY` as a query, and the core draws no query as data, so a view is n
   by one table, `python/graph_spec/tests/view_cases.json`, which `test/view-parity.test.js` holds the core to and the
   Python library's `test_view_parity.py` holds Grafeo to.
 
+**Graph sources and graph steps (spec §20; §7 view_of_another_note)**
+
+A graph may be written somewhere other than the note that draws it, and a step works out a graph from graphs. Neither
+is data of the note it is written in: `blocks.ts`'s `isSourceBlock` keeps a FROM block out of `dataKind` (the Python
+reader's `data_kind` does the same), and a step is a query block, so the note reads the same with them or without. Both
+are known by their graph line alone (`isSourceBlock`, `isStepBlock`), so a long block is never read to decide it.
+
+- `sources.ts` — a block whose graph line says FROM and a place, `// graph: trip · FROM Graphs/trip.gql` or
+  `· FROM [[Trip plan]]`, draws its graph from that .gql file or note (`sourceOf`, `sourceFor`; a place that is neither,
+  or a block holding lines of its own, is a fault, so data is never copied in; so is a place that could leave the vault
+  or reach what it hides: a leading slash or backslash, a drive letter, a `..` part or any part starting with a dot).
+  The host fetches the text (`Fetched`: found, unreadable, too large by the size it keeps and so never read, or missing
+  with any file of the same name `elsewhere`); `readSource` reads it as a note's own
+  blocks are read, by `readNote`, so the same partial reader and limits hold (a .gql file is one block, its CRs taken
+  off), or refuses in a sentence naming the place: missing, moved, unreadable, no graph line, or no such graph (a note
+  that draws it FROM elsewhere itself is named, with where to point instead). `lineInSource` is a problem's line there.
+- `steps.ts` — a step is a query block `// graph: <graph> · QUERY step <name>`, its named points declared above its rule
+  (`// takes <point>: (:Kind), [:TYPE]`); `stepOf` reads one or says what to change (no name, longer than
+  `MOST_STEP_CHARACTERS`, refused before its rule is read, no point, a rule matching a kind or type no point takes). `runStep` runs it only when a host asks, on the note as it is: the step's fault, a
+  graph the note does not write, and each input are checked first, and any refuses the run; the links its INSERT names
+  for every match are its output graph, and those its graph lacks are a proposal from the step (`makeProposal`,
+  `linkChange`, `thingChange` for an end the graph lacks, `basisOf`), id `<step>_<n>`, each with the match that found
+  it as its reason. Nothing is written: the host writes the proposal beside the graph (`noteWithProposal`).
+- `steps-rule.ts` — the rule, a GQL query over graph data and never code or a named action: MATCH one pattern (things
+  with an optional name, kind and properties, joined by up to `MOST_PATTERN_LINKS` links, one way or either), then
+  INSERT links between things it named. CALL, a function, SET or DELETE and the other writes, RETURN, and anything that
+  reads as code are refused, each saying why and showing `RULE_FORM`. `ruleTokens` reads a rule once: a text ends at
+  its line, and nothing after the first mark that cannot be read is read (spec §9).
+- `steps-match.ts` — every match of the pattern, as GQL matches a path: each link once in a match, a name used twice the
+  same thing; bounded by `MOST_MATCHES` and `MOST_TRIES` (every thing and link looked at, fitting or not), past which it
+  stops and says so (spec §9).
+- `steps-input.ts` — what is given at a point: a graph of the note, whole, or a view of one (a queried path among them),
+  put to the reading as `evaluate` puts it, never a copy; `inputFaults` checks each against its point (every kind and
+  type it takes held, something given) before the step runs; `together` reads the inputs as one graph, a thing by id.
+
 **Export (spec §16)**
 
 The host does what needs a canvas, the file system or a dialog; the core decides everything else. An image is exported as

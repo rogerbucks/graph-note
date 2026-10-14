@@ -251,6 +251,31 @@ describe('which blocks are graphs', () => {
     assert.deepEqual(core, ['ws'], 'the core');
     assert.deepEqual(JSON.parse(py.stdout), ['ws'], 'the Python library');
   });
+
+  // a block drawn FROM elsewhere holds no data of its own (editor spec §20, gql_file_source): neither reader draws it, so
+  // a note holding one draws the same in the plugin and the vault's Python (drawn_in_part)
+  test('a block drawn FROM a file or a note is no graph of its own, in the core as in the Python library', () => {
+    // a FROM block holding lines of its own is a fault (sources.ts), and still never read as data
+    const blocks = [
+      '// graph: trip · FROM Graphs/trip.gql',
+      "// graph: walk · FROM [[Walks]]\n(w:Walk {name: 'Copied in'})",
+      "// graph: home\n(a:Place {name: 'Home'})",
+    ];
+    const core = readNote(blocks);
+    const py = spawnSync(
+      'python3',
+      [
+        '-c',
+        `import json, sys\nsys.path.insert(0, ${JSON.stringify(PY_SRC)})\nimport gql_profile as gp\n` +
+          'store, problems = gp.read_for_drawing(json.load(sys.stdin))\n' +
+          'print(json.dumps([sorted(store.graphs), [p["message"] for p in problems]]))',
+      ],
+      { input: JSON.stringify(blocks), encoding: 'utf8' },
+    );
+    assert.equal(py.status, 0, py.stderr);
+    assert.deepEqual([[...core.graphs.keys()], core.problems], [['home'], []], 'the core');
+    assert.deepEqual(JSON.parse(py.stdout), [['home'], []], 'the Python library');
+  });
 });
 
 describe('a comma with nothing after it', () => {

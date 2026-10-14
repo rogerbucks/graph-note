@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/live-preview-sources.test.js",
+  "test": "sources and steps in Live Preview > a FROM block and a step each get the plugin’s own card; a plain query is left to Obsidian",
+  "seen_failing_first": false,
+  "evidence": "Live Preview already gave FROM blocks and steps their own cards since 04b3f5d, untested; the review asked for Live Preview tests, so this one pins that and passed first. The two beside it, for Edit and for a step too long to read, failed first."
+}

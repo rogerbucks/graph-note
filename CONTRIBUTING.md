@@ -135,6 +135,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `packages/obsidian/test/accessibility.test.js` — contrast in both themes, and a keyboard path for every action.
 - `packages/obsidian/test/build.test.mjs` — the build writes the files the plugin is installed from.
 - `packages/obsidian/test/inline.test.js` — editing in place in the drawing's card.
+- `packages/obsidian/test/views-many.test.js` — several views of one graph, in one note or in several, each drawn from the one data set where it is written and none copying it; a view of a graph written in another note says which and opens it (editor spec §7, many_views_one_data, view_of_another_note).
 - `packages/graph-spec/test/characterisation.test.mjs` — the library gives the answers recorded before it moved here.
 - `packages/graph-spec/test/commas.test.mjs` — both readers read a missing comma the same way, and write it into the same corrected text.
 - `packages/graph-spec/test/escapes.test.mjs` — both readers read quoted text's escapes as GQL does, refuse one GQL does not name with the fix that doubles the backslash, and quote a text alike (req:3.gql-escapes; one table, `escape-cases.json`).
