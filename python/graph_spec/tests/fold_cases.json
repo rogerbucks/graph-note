@@ -1,0 +1,236 @@
+{
+  "about": "Graphs folded, merged and routed as a graph's View menu and style graph say (editor spec §25: untangle_hubs, untangle_groups, untangle_merge, untangle_routing, view_switch_defaults), drawn the same by the plugin's core and by graph_svg.py. Each case is a note's gql blocks, each block a list of lines; the view it is drawn in, if any (its name only: the whole graph is drawn, styled and switched as that view is); the switches turned from where they start (hubs, groups and merge, each true or false; a switch not given starts as the plugin's settings hold it by default, as the style graph merges links, or as the view was saved as shown); and the busy hubs and groups opened again. For every case both give the same problems reading each style and, for every graph drawn, the same Graphviz source in each direction laid out, byte for byte. The expected answers are the core's, run live: packages/core/test/layout-parity.test.js holds graph_svg.py to the core on these cases, and tests/test_graph_svg_folds.py does the same from the Python side.",
+  "cases": [
+    {
+      "name": "a busy hub folded, as the settings fold one until the View menu says otherwise",
+      "blocks": [
+        [
+          "// graph: kit",
+          "(box:Box {name: 'Toolbox'}),",
+          "(shed:Place {name: 'Shed'}),",
+          "(t1:Tool {name: 'Hammer'}), (t2:Tool {name: 'Saw'}), (t3:Tool {name: 'Drill'}), (t4:Tool {name: 'Level'}),",
+          "(t5:Tool {name: 'Tape'}), (t6:Tool {name: 'Chisel'}), (t7:Tool {name: 'Plane'}), (t8:Tool {name: 'File'}),",
+          "(t9:Tool {name: 'Clamp'}), (t10:Tool {name: 'Square'}), (t11:Tool {name: 'Knife'}), (t12:Tool {name: 'Pliers'}),",
+          "(t13:Tool {name: 'Wrench'}),",
+          "(box)-[:HOLDS]->(t1), (box)-[:HOLDS]->(t2), (box)-[:HOLDS]->(t3), (box)-[:HOLDS]->(t4), (box)-[:HOLDS]->(t5),",
+          "(box)-[:HOLDS]->(t6), (box)-[:HOLDS]->(t7), (box)-[:HOLDS]->(t8), (box)-[:HOLDS]->(t9), (box)-[:HOLDS]->(t10),",
+          "(box)-[:HOLDS]->(t11), (box)-[:HOLDS]->(t12), (box)-[:HOLDS]->(t13),",
+          "(t1)-[:KEPT_IN]->(shed), (box)-[:KEPT_IN]->(shed)"
+        ]
+      ]
+    },
+    {
+      "name": "the busy hub opened again from its stub, and the hubs switch turned off",
+      "blocks": [
+        [
+          "// graph: kit",
+          "(box:Box {name: 'Toolbox'}),",
+          "(t1:Tool {name: 'Hammer'}), (t2:Tool {name: 'Saw'}), (t3:Tool {name: 'Drill'}), (t4:Tool {name: 'Level'}),",
+          "(t5:Tool {name: 'Tape'}), (t6:Tool {name: 'Chisel'}), (t7:Tool {name: 'Plane'}), (t8:Tool {name: 'File'}),",
+          "(t9:Tool {name: 'Clamp'}), (t10:Tool {name: 'Square'}), (t11:Tool {name: 'Knife'}), (t12:Tool {name: 'Pliers'}),",
+          "(t13:Tool {name: 'Wrench'}),",
+          "(box)-[:HOLDS]->(t1), (box)-[:HOLDS]->(t2), (box)-[:HOLDS]->(t3), (box)-[:HOLDS]->(t4), (box)-[:HOLDS]->(t5),",
+          "(box)-[:HOLDS]->(t6), (box)-[:HOLDS]->(t7), (box)-[:HOLDS]->(t8), (box)-[:HOLDS]->(t9), (box)-[:HOLDS]->(t10),",
+          "(box)-[:HOLDS]->(t11), (box)-[:HOLDS]->(t12), (box)-[:HOLDS]->(t13)"
+        ]
+      ],
+      "opened": { "hubs": ["box"] }
+    },
+    {
+      "name": "the hubs switch off: a busy hub drawn with every link",
+      "blocks": [
+        [
+          "// graph: kit",
+          "(box:Box {name: 'Toolbox'}),",
+          "(t1:Tool {name: 'Hammer'}), (t2:Tool {name: 'Saw'}), (t3:Tool {name: 'Drill'}), (t4:Tool {name: 'Level'}),",
+          "(t5:Tool {name: 'Tape'}), (t6:Tool {name: 'Chisel'}), (t7:Tool {name: 'Plane'}), (t8:Tool {name: 'File'}),",
+          "(t9:Tool {name: 'Clamp'}), (t10:Tool {name: 'Square'}), (t11:Tool {name: 'Knife'}), (t12:Tool {name: 'Pliers'}),",
+          "(t13:Tool {name: 'Wrench'}),",
+          "(box)-[:HOLDS]->(t1), (box)-[:HOLDS]->(t2), (box)-[:HOLDS]->(t3), (box)-[:HOLDS]->(t4), (box)-[:HOLDS]->(t5),",
+          "(box)-[:HOLDS]->(t6), (box)-[:HOLDS]->(t7), (box)-[:HOLDS]->(t8), (box)-[:HOLDS]->(t9), (box)-[:HOLDS]->(t10),",
+          "(box)-[:HOLDS]->(t11), (box)-[:HOLDS]->(t12), (box)-[:HOLDS]->(t13)"
+        ]
+      ],
+      "switches": { "hubs": false }
+    },
+    {
+      "name": "groups folded into boxes, their links drawn to the boxes, a link inside one left out",
+      "blocks": [
+        [
+          "// graph: teams",
+          "(ann:Person {name: 'Ann'}), (bob:Person {name: 'Bob'}), (cy:Person {name: 'Cy'}),",
+          "(dee:Person {name: 'Dee'}), (eve:Person {name: 'Eve'}),",
+          "(ann)-[:HELPS]->(bob), (ann)-[:ASKS]->(cy), (bob)-[:ASKS]->(dee),",
+          "(cy)-[:HELPS]->(dee), (dee)-[:ASKS]->(eve)"
+        ],
+        [
+          "// graph: teams_style · STYLE teams",
+          "(n1:Nudge {word: 'group', thing: 'ann', group: 'Red team'}),",
+          "(n2:Nudge {word: 'group', thing: 'bob', group: 'Red team'}),",
+          "(n3:Nudge {word: 'group', thing: 'cy', group: 'Blue \"team\" & co'}),",
+          "(n4:Nudge {word: 'group', thing: 'dee', group: 'Blue \"team\" & co'}),",
+          "(n5:Nudge {word: 'beside', thing: 'ann', other: 'eve'})"
+        ]
+      ],
+      "switches": { "groups": true }
+    },
+    {
+      "name": "one group opened again, the other still folded",
+      "blocks": [
+        [
+          "// graph: teams",
+          "(ann:Person {name: 'Ann'}), (bob:Person {name: 'Bob'}), (cy:Person {name: 'Cy'}),",
+          "(dee:Person {name: 'Dee'}), (eve:Person {name: 'Eve'}),",
+          "(ann)-[:HELPS]->(bob), (ann)-[:ASKS]->(cy), (bob)-[:ASKS]->(dee),",
+          "(cy)-[:HELPS]->(dee), (dee)-[:ASKS]->(eve)"
+        ],
+        [
+          "// graph: teams_style · STYLE teams",
+          "(n1:Nudge {word: 'group', thing: 'ann', group: 'Red team'}),",
+          "(n2:Nudge {word: 'group', thing: 'bob', group: 'Red team'}),",
+          "(n3:Nudge {word: 'group', thing: 'cy', group: 'Blue team'}),",
+          "(n4:Nudge {word: 'group', thing: 'dee', group: 'Blue team'}),",
+          "(n5:Nudge {word: 'before', thing: 'bob', other: 'eve'})"
+        ]
+      ],
+      "switches": { "groups": true },
+      "opened": { "groups": ["Red team"] }
+    },
+    {
+      "name": "links between two groups merged into a trunk, as the style graph merges them",
+      "blocks": [
+        [
+          "// graph: teams",
+          "(ann:Person {name: 'Ann'}), (bob:Person {name: 'Bob'}), (cy:Person {name: 'Cy'}),",
+          "(dee:Person {name: 'Dee'}), (eve:Person {name: 'Eve'}),",
+          "(ann)-[:HELPS]->(bob), (ann)-[:ASKS]->(cy), (bob)-[:ASKS]->(dee),",
+          "(cy)-[:HELPS]->(dee), (dee)-[:ASKS]->(eve), (bob)-[:HELPS]->(cy)"
+        ],
+        [
+          "// graph: teams_style · STYLE teams",
+          "(n1:Nudge {word: 'group', thing: 'ann', group: 'Red team'}),",
+          "(n2:Nudge {word: 'group', thing: 'bob', group: 'Red team'}),",
+          "(n3:Nudge {word: 'group', thing: 'cy', group: 'Blue team'}),",
+          "(n4:Nudge {word: 'group', thing: 'dee', group: 'Blue team'}),",
+          "(r1:Links {merge: 'on'})"
+        ]
+      ]
+    },
+    {
+      "name": "a trunk of links drawn from their far end, arrowheads hidden on one type, and a property shown",
+      "blocks": [
+        [
+          "// graph: club",
+          "(ann:Person {name: 'Ann'}), (bob:Person {name: 'Bob'}),",
+          "(c1:Club {name: 'North club'}),",
+          "(t1:Tag {name: 'Chess', since: 2020}), (t2:Tag {name: 'Go'}),",
+          "(ann)-[:LIKES]->(t1), (bob)-[:LIKES]->(t2), (ann)-[:PLAYS]->(t2),",
+          "(ann)-[:JOINS]->(c1)"
+        ],
+        [
+          "// graph: club_style · STYLE club",
+          "(n1:Nudge {word: 'group', thing: 'ann', group: 'People'}),",
+          "(n2:Nudge {word: 'group', thing: 'bob', group: 'People'}),",
+          "(n3:Nudge {word: 'group', thing: 't1', group: 'Games'}),",
+          "(n4:Nudge {word: 'group', thing: 't2', group: 'Games'}),",
+          "(a1:Arrows {arrowheads: 'hide', type: 'PLAYS'}),",
+          "(s1:Show {property: 'since', kind: 'Tag'})"
+        ]
+      ],
+      "switches": { "merge": true }
+    },
+    {
+      "name": "busy hub, folded group and trunk together, links routed straight",
+      "blocks": [
+        [
+          "// graph: kit",
+          "(box:Box {name: 'Toolbox'}),",
+          "(t1:Tool {name: 'Hammer'}), (t2:Tool {name: 'Saw'}), (t3:Tool {name: 'Drill'}), (t4:Tool {name: 'Level'}),",
+          "(t5:Tool {name: 'Tape'}), (t6:Tool {name: 'Chisel'}), (t7:Tool {name: 'Plane'}), (t8:Tool {name: 'File'}),",
+          "(t9:Tool {name: 'Clamp'}), (t10:Tool {name: 'Square'}), (t11:Tool {name: 'Knife'}), (t12:Tool {name: 'Pliers'}),",
+          "(t13:Tool {name: 'Wrench'}),",
+          "(ann:Person {name: 'Ann'}), (bob:Person {name: 'Bob'}), (cy:Person {name: 'Cy'}), (dee:Person {name: 'Dee'}),",
+          "(box)-[:HOLDS]->(t1), (box)-[:HOLDS]->(t2), (box)-[:HOLDS]->(t3), (box)-[:HOLDS]->(t4), (box)-[:HOLDS]->(t5),",
+          "(box)-[:HOLDS]->(t6), (box)-[:HOLDS]->(t7), (box)-[:HOLDS]->(t8), (box)-[:HOLDS]->(t9), (box)-[:HOLDS]->(t10),",
+          "(box)-[:HOLDS]->(t11), (box)-[:HOLDS]->(t12), (box)-[:HOLDS]->(t13),",
+          "(ann)-[:USES]->(box), (ann)-[:ASKS]->(cy), (bob)-[:ASKS]->(dee), (ann)-[:ASKS]->(dee)"
+        ],
+        [
+          "// graph: kit_style · STYLE kit",
+          "(n1:Nudge {word: 'group', thing: 'ann', group: 'Makers'}),",
+          "(n2:Nudge {word: 'group', thing: 'bob', group: 'Makers'}),",
+          "(n3:Nudge {word: 'group', thing: 'cy', group: 'Helpers'}),",
+          "(n4:Nudge {word: 'group', thing: 'dee', group: 'Helpers'}),",
+          "(n5:Nudge {word: 'group', thing: 'box', group: 'Kit'}),",
+          "(r1:Links {routing: 'straight', merge: 'on'})"
+        ]
+      ],
+      "switches": { "groups": false }
+    },
+    {
+      "name": "a view routed at right angles and saved as shown with its switches",
+      "view": "asking",
+      "blocks": [
+        [
+          "// graph: teams",
+          "(ann:Person {name: 'Ann'}), (bob:Person {name: 'Bob'}), (cy:Person {name: 'Cy'}),",
+          "(dee:Person {name: 'Dee'}), (eve:Person {name: 'Eve'}),",
+          "(ann)-[:HELPS]->(bob), (ann)-[:ASKS]->(cy), (bob)-[:ASKS]->(dee),",
+          "(cy)-[:HELPS]->(dee), (dee)-[:ASKS]->(eve)"
+        ],
+        [
+          "// graph: teams_style · STYLE teams",
+          "(n1:Nudge {word: 'group', thing: 'ann', group: 'Red team'}),",
+          "(n2:Nudge {word: 'group', thing: 'bob', group: 'Red team'}),",
+          "(n3:Nudge {word: 'group', thing: 'cy', group: 'Blue team'}),",
+          "(n4:Nudge {word: 'group', thing: 'dee', group: 'Blue team'}),",
+          "(r1:Links {routing: 'straight'}),",
+          "(r2:Links {view: 'asking', routing: 'right-angled'}),",
+          "(w1:Shown {view: 'asking', zoom: 1, groups: 'on', hubs: 'off', labels: 'off'})"
+        ]
+      ]
+    },
+    {
+      "name": "the whole graph of that note, routed straight and not folded",
+      "blocks": [
+        [
+          "// graph: teams",
+          "(ann:Person {name: 'Ann'}), (bob:Person {name: 'Bob'}), (cy:Person {name: 'Cy'}),",
+          "(dee:Person {name: 'Dee'}), (eve:Person {name: 'Eve'}),",
+          "(ann)-[:HELPS]->(bob), (ann)-[:ASKS]->(cy), (bob)-[:ASKS]->(dee),",
+          "(cy)-[:HELPS]->(dee), (dee)-[:ASKS]->(eve)"
+        ],
+        [
+          "// graph: teams_style · STYLE teams",
+          "(n1:Nudge {word: 'group', thing: 'ann', group: 'Red team'}),",
+          "(n2:Nudge {word: 'group', thing: 'bob', group: 'Red team'}),",
+          "(r1:Links {routing: 'straight'}),",
+          "(w1:Shown {view: 'asking', zoom: 1, groups: 'on', hubs: 'off'})"
+        ]
+      ]
+    },
+    {
+      "name": "Links written wrong: each the same problem, the rest used",
+      "blocks": [
+        [
+          "// graph: teams",
+          "(ann:Person {name: 'Ann'}), (bob:Person {name: 'Bob'}),",
+          "(ann)-[:HELPS]->(bob)"
+        ],
+        [
+          "// graph: teams_style · STYLE teams",
+          "(r1:Links {routing: 'stright'}),",
+          "(r2:Links {merge: 'yes'}),",
+          "(r3:Links {view: 'v'}),",
+          "(r4:Links {routing: 'right-angled'}),",
+          "(r5:Links {routing: 'straight'}),",
+          "(r6:Links {merge: 'on', view: 'v'}),",
+          "(r7:Links {merge: 'off', view: 'v', routing: 'curved'}),",
+          "(r8:Links {routng: 'curved'}),",
+          "(r9:Links {routing: 2}),",
+          "(w1:Shown {view: 'v', zoom: 1, labls: 'on'})"
+        ]
+      ]
+    }
+  ]
+}

@@ -1,7 +1,9 @@
-"""A graph ready for graph_svg.render (editor spec §3, §6, §14, §15): its boxes and its written
-links, chosen as the core chooses them — the vault's graph-spec-draw.py and the parity tests did
-this by hand — each link read in its schema's words, the graph's own or a shared one's, each with
-its properties; and its style read and applied for a view or the whole graph. For what it draws,
+"""A graph ready for graph_svg.render (editor spec §3, §6, §14, §15, §25): its boxes and its
+written links, chosen as the core chooses them — the vault's graph-spec-draw.py and the parity
+tests did this by hand — each link read in its schema's words, the graph's own or a shared one's,
+each with its properties; its style read and applied for a view or the whole graph; and what its
+View menu folds and merges, and how its links are routed (graphspec/style/folding.py). For what it
+draws,
 one call gives the core's source byte for byte: graph_svg.render(**render_args(texts, graph,
 view)). It does not draw the links the core guesses from a near miss, nor read a misspelt type as
 the type it is taken for: those estimates are the plugin's alone (layout.ts, drawingSource)."""
@@ -9,7 +11,7 @@ the type it is taken for: those estimates are the plugin's alone (layout.ts, dra
 from __future__ import annotations
 
 import sys
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
 
 from graphspec.reader.drawing import read_for_drawing
@@ -17,6 +19,7 @@ from graphspec.rules.plain_graph import World
 from graphspec.rules.views import SCHEMA_LABELS, _word, readings
 from graphspec.style.arrows import arrowless
 from graphspec.style.diagram_types import diagram_for
+from graphspec.style.folding import drawn_groups, fold_plan, links_of, starting_switches
 from graphspec.style.inline import inline_rows
 from graphspec.style.reading import read_style
 
@@ -55,13 +58,23 @@ def graph_parts(world: World, graph: str, problems: Iterable[dict] = ()) -> dict
     }
 
 
-def render_args(texts: Sequence[str], graph: str, view: str | None = None) -> dict[str, Any]:
+def render_args(
+    texts: Sequence[str],
+    graph: str,
+    view: str | None = None,
+    switches: Mapping[str, bool] | None = None,
+    opened: Mapping[str, Sequence[str]] | None = None,
+) -> dict[str, Any]:
     """The arguments graph_svg.render draws `graph` of a note's gql blocks (`texts`) with, as
     the plugin draws it in `view` (None: the whole graph): its boxes and links, the keys drawn
     under a suggested name, and its style — nudges, direction, the links drawn without their
     arrowheads, the properties shown inline, and the plan of the diagram type it is drawn as, while
     the data fits the one chosen (a network, with no plan, otherwise). A table chosen is drawn as a
-    network, as only the plugin draws a table, and a note on stderr says so."""
+    network, as only the plugin draws a table, and a note on stderr says so. And what its View
+    menu folds and merges (§25): the switches start as the plugin's settings start a graph, links
+    merged as the style graph says and a view as it was saved as shown (folding.starting_switches),
+    then as `switches` turns them ({hubs, groups, merge: bool}), with the busy hubs and groups
+    `opened` again ({hubs: keys, groups: labels}); and how its links are routed (None: curved)."""
     store, problems = read_for_drawing(texts)
     world = World.from_store(store)
     parts = graph_parts(world, graph, problems)
@@ -73,6 +86,15 @@ def render_args(texts: Sequence[str], graph: str, view: str | None = None) -> di
             "draws; it is drawn here as a network",
             file=sys.stderr,
         )
+    turned = {**starting_switches(style, view), **(switches or {})}
+    keys = [key for key, _, _ in parts["nodes"]]
+    folding = fold_plan(
+        keys,
+        [(s, d) for s, _, d in parts["edges"]],
+        drawn_groups(style["nudges"], keys, choice.get("plan")),
+        {**turned, "opened": opened or {}},
+    )
+    routing = links_of(style, view)["routing"]
     return {
         "nodes": parts["nodes"],
         "edges": parts["edges"],
@@ -82,4 +104,6 @@ def render_args(texts: Sequence[str], graph: str, view: str | None = None) -> di
         "arrowless": arrowless([t for t, _ in parts["links"]], style["arrows"], view),
         "inline": inline_rows(parts["boxes"], parts["links"], style["shows"], view),
         "diagram": choice.get("plan"),
+        "folding": folding,
+        "routing": None if routing == "curved" else routing,
     }

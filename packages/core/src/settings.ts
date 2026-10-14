@@ -32,6 +32,9 @@ export type CompanionSetting = 'off' | 'on';
 /** Whether AI is used at all (§19, ai_off_until_chosen): off until the user turns it on. */
 export type AiUse = 'off' | 'on';
 
+/** A switch of the View menu as the settings hold its default (§25, view_switch_defaults): on or off. */
+export type SwitchSetting = 'on' | 'off';
+
 /** Every option the editor offers. */
 export interface Settings extends StrictnessSettings {
   /** Whether the editor may send anything to an AI model: off until the user turns it on. */
@@ -46,6 +49,11 @@ export interface Settings extends StrictnessSettings {
   direction: string;
   /** How far focus reaches from a selected thing: one step, or two (§25). */
   focusDepth: FocusDepthSetting;
+  /** Each View menu switch's default, used by every graph until its View menu changes it (§25). */
+  labelsByZoom: SwitchSetting;
+  foldHubs: SwitchSetting;
+  foldGroups: SwitchSetting;
+  mergeLinks: SwitchSetting;
   /** The colours exported images are drawn in. */
   exportTheme: ExportTheme;
   /** Whether an export saved in the vault gets a companion note. */
@@ -70,6 +78,10 @@ export const DEFAULT_SETTINGS: Settings = {
   indent: 'four',
   direction: 'best',
   focusDepth: 'one',
+  labelsByZoom: 'on',
+  foldHubs: 'on',
+  foldGroups: 'off',
+  mergeLinks: 'off',
   exportTheme: 'light',
   companionNote: 'off',
   exportFolder: '',
@@ -108,6 +120,20 @@ const INDENTS: Choice[] = [
   { value: 'four', name: 'Four spaces' },
   { value: 'tab', name: 'A tab' },
 ];
+
+/** The default of one of the View menu's switches (§25): on or off, in the Drawing section. */
+function switchOption(key: keyof Settings, name: string, sentence: string): Option {
+  return {
+    key,
+    section: 'Drawing',
+    name,
+    sentence,
+    choices: [
+      { value: 'on', name: 'On' },
+      { value: 'off', name: 'Off' },
+    ],
+  };
+}
 
 /** Every option, in the order the settings page shows them. */
 export const OPTIONS: Option[] = [
@@ -185,6 +211,26 @@ export const OPTIONS: Option[] = [
       { value: 'two', name: 'Two steps' },
     ],
   },
+  switchOption(
+    'labelsByZoom',
+    'Labels by zoom',
+    'Whether a link’s label shows only when zoomed in far enough to read it; a graph’s View menu can change it.',
+  ),
+  switchOption(
+    'foldHubs',
+    'Busy hubs folded',
+    'Whether a thing with many links draws them folded into one stub marked with their count; a graph’s View menu can change it.',
+  ),
+  switchOption(
+    'foldGroups',
+    'Groups folded',
+    'Whether each group draws as one box showing how many things it holds; a graph’s View menu can change it.',
+  ),
+  switchOption(
+    'mergeLinks',
+    'Parallel links merged',
+    'Whether links running between the same two groups share one trunk; a graph’s View menu can change it.',
+  ),
   {
     key: 'exportTheme',
     section: 'Export',
@@ -297,6 +343,10 @@ export function settingsFrom(saved: unknown): Settings {
     indent: oneOf<Indent>('indent', s.indent, d.indent),
     direction: oneOf('direction', s.direction, d.direction),
     focusDepth: oneOf<FocusDepthSetting>('focusDepth', s.focusDepth, d.focusDepth),
+    labelsByZoom: oneOf<SwitchSetting>('labelsByZoom', s.labelsByZoom, d.labelsByZoom),
+    foldHubs: oneOf<SwitchSetting>('foldHubs', s.foldHubs, d.foldHubs),
+    foldGroups: oneOf<SwitchSetting>('foldGroups', s.foldGroups, d.foldGroups),
+    mergeLinks: oneOf<SwitchSetting>('mergeLinks', s.mergeLinks, d.mergeLinks),
     exportTheme: oneOf<ExportTheme>('exportTheme', s.exportTheme, d.exportTheme),
     companionNote: oneOf<CompanionSetting>('companionNote', s.companionNote, d.companionNote),
     exportFolder: vaultFolder(s.exportFolder) ?? d.exportFolder,

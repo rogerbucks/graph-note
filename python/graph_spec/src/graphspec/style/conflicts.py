@@ -1,8 +1,9 @@
 """The things of a style graph checked against each other (editor spec §6, nudge_problems; §14;
 §15): nudges that conflict — two directions, beside and before on one pair, a thing in two groups,
 a loop of befores — a property switched both on and off for one kind, thing or type in one view,
-arrowheads both hidden and shown for the same links in one view, and two diagram types for the
-whole graph or one view. Each is a problem with a fix;
+arrowheads both hidden and shown for the same links in one view, two diagram types for the
+whole graph or one view, two routings or two choices of merging links (§25), and a view saved as
+shown twice. Each is a problem with a fix;
 the first written is kept and the later left out, so what is kept never conflicts. The core's
 style-conflicts.ts, function for function, as far as what graph_svg draws goes."""
 
@@ -158,3 +159,59 @@ def settle_diagrams(diagrams: list[dict], graph: str) -> tuple[list[dict], list[
         )
 
     return _settle_choices(diagrams, lambda d: d.get("view") or "", _type_said, said, graph)
+
+
+def settle_links(links: list[dict], graph: str) -> tuple[list[dict], list[dict]]:
+    """How links are drawn (§25): one routing and one choice of merging for the whole graph and
+    for each view; and a problem for each chosen otherwise for the same place. A Links that
+    conflicts with an earlier one in either is left out whole."""
+
+    def where(t):
+        return "the whole graph" if t.get("view") is None else f"view {t['view']}"
+
+    def place(t):
+        return t.get("view") or ""
+
+    def routing_said(was, t):
+        return (
+            f"the routing of links in {where(t)} is set to both {was['routing']} "
+            f"(line {was['at']['line']}) and {t['routing']}"
+        )
+
+    def merge_said(was, t):
+        return (
+            f"merging links in {where(t)} is set to both {was['merge']} "
+            f"(line {was['at']['line']}) and {t['merge']}"
+        )
+
+    routed, out = _settle_choices(
+        [t for t in links if "routing" in t], place, lambda t: t["routing"], routing_said, graph
+    )
+    merged, more = _settle_choices(
+        [t for t in links if "merge" in t], place, lambda t: t["merge"], merge_said, graph
+    )
+    kept = [
+        t
+        for t in links
+        if ("routing" not in t or any(t is r for r in routed))
+        and ("merge" not in t or any(t is m for m in merged))
+    ]
+    return kept, [*out, *more]
+
+
+def settle_shown(shown: list[dict], graph: str) -> tuple[dict[str, dict], list[dict]]:
+    """How each view was shown, as far as graph_svg draws it (§25): the first saved for each view
+    by its name, and a problem for each view saved as shown again."""
+    first, out = {}, []
+    for s in shown:
+        view = s["view"]
+        if view in first:
+            line = first[view]["at"]["line"]
+            message = f"view {view} is saved as shown twice, here and on line {line}"
+            out.append(style_problem(graph, s["at"], message, REMOVE))
+        else:
+            first[view] = s
+    kept = {
+        view: {k: v for k, v in s.items() if k not in ("view", "at")} for view, s in first.items()
+    }
+    return kept, out

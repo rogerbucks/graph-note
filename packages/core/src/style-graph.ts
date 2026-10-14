@@ -48,8 +48,21 @@ export const DIAGRAM_TYPES = ['network', 'tree', 'flow', 'radial', 'lanes', 'tim
 /** One of the diagram types. */
 export type DiagramType = (typeof DIAGRAM_TYPES)[number];
 
+/**
+ * How links are drawn (§25, untangle_routing): curved, as Graphviz draws them unless told otherwise, straight, or with
+ * right angles, so a dense graph can trade curves for fewer crossings.
+ */
+export const ROUTINGS = ['curved', 'straight', 'right-angled'] as const;
+/** One of the routings. */
+export type Routing = (typeof ROUTINGS)[number];
+
+/** A switch written in the style graph: links merged into trunks (§25, untangle_merge), or a view's switches saved. */
+export const ON_OFF = ['on', 'off'] as const;
+/** On or off. */
+export type OnOff = (typeof ON_OFF)[number];
+
 /** The kinds of thing a style graph holds, by label. */
-export const STYLE_KINDS = ['Nudge', 'Show', 'Look', 'ViewStyle', 'Shown', 'Arrows', 'Diagram'] as const;
+export const STYLE_KINDS = ['Nudge', 'Show', 'Look', 'ViewStyle', 'Shown', 'Arrows', 'Diagram', 'Links'] as const;
 /** One of the kinds of thing a style graph holds. */
 export type StyleKind = (typeof STYLE_KINDS)[number];
 
@@ -62,9 +75,10 @@ export const STYLE_KEYS: Record<StyleKind, readonly string[]> = {
   Show: ['property', 'kind', 'thing', 'type', 'view', 'inline'],
   Look: ['view', 'path', 'thing', 'kind', 'from', 'type', 'to', 'colour', 'line', 'format', 'means'],
   ViewStyle: ['view', 'outside'],
-  Shown: ['view', 'zoom', 'x', 'y', 'frame', 'selected'],
+  Shown: ['view', 'zoom', 'x', 'y', 'frame', 'selected', 'labels', 'hubs', 'groups', 'merge'],
   Arrows: ['arrowheads', 'view', 'type'],
   Diagram: ['type', 'view', 'relationship'],
+  Links: ['view', 'routing', 'merge'],
 };
 
 /** A word as a sentence says it before a kind's name: `an Arrows`, `a Show`. */
@@ -132,6 +146,18 @@ export interface Diagram {
   at: StyleAt;
 }
 
+/**
+ * How links are drawn (§25): their routing (untangle_routing), and whether the links running between the same two
+ * groups are merged into shared trunks (untangle_merge); for the whole graph, or for one view.
+ */
+export interface Links {
+  routing?: Routing;
+  merge?: OnOff;
+  /** The view it is chosen for; none, the whole graph. */
+  view?: string;
+  at: StyleAt;
+}
+
 /** A link, by its two ends and its relationship type. */
 export interface LinkTarget {
   from: string;
@@ -167,13 +193,20 @@ export interface Frame {
   height: number;
 }
 
-/** How a view was shown, saved when the user asked (§7, view_saved_as_shown): only what was written and could be read. */
+/**
+ * How a view was shown, saved when the user asked (§7, view_saved_as_shown): only what was written and could be read;
+ * with the View menu's switches as they stood (§25, view_switch_view_only).
+ */
 export interface Shown {
   zoom?: number;
   x?: number;
   y?: number;
   frame?: Frame;
   selected?: string;
+  labels?: OnOff;
+  hubs?: OnOff;
+  groups?: OnOff;
+  merge?: OnOff;
 }
 
 /** A graph's style, read from its style blocks and checked: only what is sound is here; the rest is in the problems. */
@@ -191,6 +224,8 @@ export interface StyleGraph {
   arrows: Arrows[];
   /** The diagram types chosen, for the whole graph or a view, in the order written. */
   diagrams: Diagram[];
+  /** How links are routed and whether they are merged, for the whole graph or a view, in the order written. */
+  links: Links[];
 }
 
 /** Where styling applies: a view, or a path; with neither, the plain drawing, which keeps the locked style. */
@@ -217,7 +252,7 @@ export interface LegendEntry {
 
 /** A style graph with nothing in it: the locked style. */
 export function emptyStyle(): StyleGraph {
-  return { nudges: [], shows: [], looks: [], views: new Map(), shown: new Map(), arrows: [], diagrams: [] };
+  return { nudges: [], shows: [], looks: [], views: new Map(), shown: new Map(), arrows: [], diagrams: [], links: [] };
 }
 
 /**

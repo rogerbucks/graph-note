@@ -5,6 +5,7 @@ import type { Estimate } from './estimates.ts';
 import type { InlineProperties } from './inline-properties.ts';
 import type { Refusal } from './layout-limits.ts';
 import type { Nudge } from './style-graph.ts';
+import type { Folding } from './untangle-fold.ts';
 
 /** A gql block in a note: its text, and the note line (1-based) its opening fence is on. */
 export interface Block {
@@ -77,6 +78,10 @@ export interface GraphDrawing {
   inline?: InlineProperties;
   /** The diagram type it is laid out as (spec §15), when one is chosen and fits; none, a network. */
   diagram?: DiagramPlan;
+  /** How its style graph routes its links (spec §25): straight or right-angled; none, curved, as Graphviz draws them. */
+  routing?: 'straight' | 'right-angled';
+  /** What its View menu folds and merges (spec §25, untangle-fold.ts); none, nothing. */
+  folding?: Folding;
 }
 
 /**

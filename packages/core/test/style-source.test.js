@@ -8,7 +8,7 @@ import { loadEngine } from '../src/engine.ts';
 import { drawingSource, layoutSource } from '../src/layout.ts';
 import { draw } from '../src/render.ts';
 import { readStyle } from '../src/style.ts';
-import { nudgedDrawing, nudgedSource } from '../src/style-source.ts';
+import { nudgedDrawing, nudgedSource, styledDrawing } from '../src/style-source.ts';
 
 const TRIP = `// graph: trip
 (home:Place {name: 'Home'}),
@@ -82,6 +82,19 @@ describe('each nudge', () => {
     const { drawing, style } = styled("(n1:Nudge {word: 'direction', direction: 'TB'})");
     assert.deepEqual(nudgedDrawing(drawing, style), { ...drawing, direction: 'TB' });
     assert.equal(drawing.direction, undefined, 'the drawing read is not changed');
+  });
+
+  // proves: untangle_routing
+  test('the drawing is routed as its Links says, a view’s own over the whole graph’s; curved is as it was', () => {
+    const { drawing, style } = styled(
+      "(r1:Links {routing: 'straight'}),",
+      "(r2:Links {view: 'near', routing: 'right-angled'}),",
+      "(r3:Links {view: 'round', routing: 'curved'})",
+    );
+    assert.equal(styledDrawing(drawing, style).routing, 'straight');
+    assert.equal(styledDrawing(drawing, style, undefined, 'near').routing, 'right-angled');
+    assert.equal('routing' in styledDrawing(drawing, style, undefined, 'round'), false);
+    assert.equal('routing' in styledDrawing(drawing, styled().style), false);
   });
 
   // proves: four_nudge_words

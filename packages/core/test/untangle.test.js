@@ -1,10 +1,14 @@
 // Untangling a large graph (editor spec §25, slice 3): a thing and its neighbours alone, the legend bringing a kind or a
 // relationship type forward or hiding it, the shortest path between two things, finding a thing, walking the links by
-// arrow key — and, in every one, only the drawing changes, never the data. Host-free: plain data in, sets of what to
-// show out; the Obsidian package's tests put them on a drawing.
-import { test, describe } from 'node:test';
+// arrow key, labels by zoom, busy hubs and groups folded, links merged into trunks and routed — and, in every one, only
+// the drawing changes, never the data. Host-free: plain data in, sets of what to show out, or the drawing laid out; the
+// Obsidian package's tests put them on a card.
+import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
+import { readStyle } from '../src/style.ts';
+import { styledDrawing } from '../src/style-source.ts';
+import { LABEL_SCALE, ViewState, labelsHidden } from '../src/view-switches.ts';
 import { draw } from '../src/render.ts';
 import { loadEngine } from '../src/engine.ts';
 import { hitAreas, boundsOf } from '../src/hits.ts';
@@ -370,6 +374,82 @@ describe('what is brought forward, and what overrides what', () => {
   });
 });
 
+describe('the View menu’s untangling: labels by zoom, folded hubs and groups, merged links, and routing', () => {
+  const HUB = [
+    '// graph: g',
+    "(hub:Hub {name: 'Hub'}),",
+    ...Array.from({ length: 13 }, (_, i) => `(p${i}:Part {name: 'Part ${i}'}),`),
+    "(ann:Person {name: 'Ann'}), (bob:Person {name: 'Bob'}), (cy:Person {name: 'Cy'}), (dee:Person {name: 'Dee'}),",
+    ...Array.from({ length: 13 }, (_, i) => `(hub)-[:HAS]->(p${i}),`),
+    '(ann)-[:ASKS]->(cy), (bob)-[:ASKS]->(dee), (ann)-[:HELPS]->(bob)',
+  ].join('\n');
+  const STYLE_BLOCK = `// graph: g_style · STYLE g
+(n1:Nudge {word: 'group', thing: 'ann', group: 'Red team'}),
+(n2:Nudge {word: 'group', thing: 'bob', group: 'Red team'}),
+(n3:Nudge {word: 'group', thing: 'cy', group: 'Blue team'}),
+(n4:Nudge {word: 'group', thing: 'dee', group: 'Blue team'}),
+(r1:Links {routing: 'straight'})`;
+  const texts = [HUB, STYLE_BLOCK];
+  const read = readNote(texts);
+  const styled = styledDrawing(read.graphs.get('g'), readStyle(texts, 'g', read).style, read.world.g);
+  const ids = (svg) => [...svg.matchAll(/<g id="([^"]*)" class="(?:node|edge)"/g)].map((m) => m[1]);
+  let engine;
+  before(async () => {
+    engine = await loadEngine();
+  });
+
+  // proves: untangle_labels
+  test('labels by zoom hide link labels while the drawing is too small to read them, and show them zoomed in', () => {
+    const d = draw(drawing, engine);
+    const zoom = new Zoom({ width: d.width, height: d.height }, { width: d.width / 3, height: 200 }, 'note');
+    assert.equal(labelsHidden({ labels: true }, zoom.view().scale), true, 'fitted to a narrow note, too small');
+    while (zoom.view().scale < LABEL_SCALE) zoom.zoomIn();
+    assert.equal(labelsHidden({ labels: true }, zoom.view().scale), false);
+    assert.equal(labelsHidden({ labels: false }, 0.3), false, 'switched off, always shown');
+  });
+
+  // proves: untangle_hubs
+  test('a busy hub folded draws its links as one stub with their count; opened from the stub, they are back', () => {
+    const state = new ViewState({ labels: true, hubs: true, groups: false, merge: false });
+    const folded = draw(state.folded(styled), engine).svg;
+    assert.ok(ids(folded).includes('fold_hub_1') && folded.includes('13 links'));
+    assert.ok(!ids(folded).includes('node3'), 'a part hung only from the hub is folded with it');
+    state.open({ hub: 'hub' });
+    const open = draw(state.folded(styled), engine).svg;
+    assert.ok(!ids(open).includes('fold_hub_1') && ids(open).includes('node3') && ids(open).includes('edge13'));
+  });
+
+  // proves: untangle_groups
+  test('a group folded is one box showing its count, its links drawn to it under their own numbers; and it opens again', () => {
+    const state = new ViewState({ labels: true, hubs: false, groups: true, merge: false });
+    const folded = draw(state.folded(styled), engine).svg;
+    assert.ok(ids(folded).includes('fold_group_1') && folded.includes('2 things'));
+    assert.ok(
+      !ids(folded).includes('node15') && ids(folded).includes('edge14'),
+      'Ann is in the box; her link is drawn',
+    );
+    state.open({ group: 'Red team' });
+    assert.ok(!ids(draw(state.folded(styled), engine).svg).includes('fold_group_1'));
+  });
+
+  // proves: untangle_merge
+  test('links between the same two groups merged run as one trunk, each still its own line with its reading', () => {
+    const state = new ViewState({ labels: true, hubs: false, groups: false, merge: true });
+    const svg = draw(state.folded(styled), engine).svg;
+    for (const id of ['trunk_1', 'edge14', 'edge14_tail', 'edge15', 'edge15_tail'])
+      assert.ok(ids(svg).includes(id), id);
+    assert.equal((svg.match(/>asks</g) ?? []).length, 2, 'each link’s reading is drawn once, as before');
+  });
+
+  // proves: untangle_routing
+  test('the style graph routes the links straight, and the drawing is laid out so', () => {
+    assert.equal(styled.routing, 'straight');
+    const d = draw(styled, engine);
+    assert.ok(d.svg.length > 0);
+    assert.notEqual(d.svg, draw({ ...styled, routing: undefined }, engine).svg);
+  });
+});
+
 describe('only the drawing changes, never the data', () => {
   const freeze = (v) => {
     if (v && typeof v === 'object' && !Object.isFrozen(v)) {
@@ -406,6 +486,12 @@ describe('only the drawing changes, never the data', () => {
     nextAlong(es, new Map(), 'q', 'ArrowRight');
     u.showAll();
     u.clearRoute();
+    // folding and merging (untangle_hubs, untangle_groups, untangle_merge) work out a plan, beside the drawing
+    const state = new ViewState({ labels: true, hubs: true, groups: true, merge: true });
+    state.folded(d);
+    state.open({ hub: 'q' });
+    state.turn('merge', false);
+    state.folded(d);
     assert.equal(JSON.stringify([d, text, whole(), propertiesOf(fresh, 'reader', { thing: 'tablet' })]), before);
     assert.equal(fresh.texts[0], NOTE, 'the note’s text itself');
   });

@@ -13,6 +13,8 @@ import { directions } from '../src/render.ts';
 import { readStyle } from '../src/style.ts';
 import { nudgedDrawing, styledDrawing } from '../src/style-source.ts';
 import { diagramFor, shapeOf, typeFits } from '../src/types.ts';
+import { DEFAULT_SETTINGS } from '../src/settings.ts';
+import { ViewState, startingSwitches } from '../src/view-switches.ts';
 
 const PY_SRC = fileURLToPath(new URL('../../../python/graph_spec/src', import.meta.url));
 
@@ -460,4 +462,59 @@ test('every diagram type Graphviz draws is laid out from the same source by both
     python.some((p) => Object.values(p.choice).some((c) => c.stopped)),
     'a type that stopped fitting is drawn as a network',
   );
+});
+
+// untangle_hubs, untangle_groups, untangle_merge, untangle_routing (editor spec §25): a graph folded, merged and routed
+// as its View menu and style graph say is drawn the same by graph_svg.py as by the core — the same problems reading
+// each style, and the source of each direction laid out, byte for byte. The cases are shared with
+// python/graph_spec/tests/test_graph_svg_folds.py, whose Python answer (python_answer: graph_svg's render_args and
+// drawn_source) is run here; the core's state of the switches starts from the default settings (view_switch_defaults).
+const { cases: FOLDED } = JSON.parse(
+  readFileSync(new URL('../../../python/graph_spec/tests/fold_cases.json', import.meta.url), 'utf8'),
+);
+const PYTHON_FOLDED = `
+import json, sys
+sys.path.insert(0, ${JSON.stringify(PY_TESTS)})
+from test_graph_svg_folds import python_answer
+print(json.dumps([python_answer(*case) for case in json.load(sys.stdin)]))
+`;
+
+test('a graph folded, merged and routed is drawn the same by both, its Links read alike, byte for byte', () => {
+  const notes = FOLDED.map((c) => [
+    c.blocks.map((lines) => lines.join('\n')),
+    c.view ?? null,
+    c.switches ?? null,
+    c.opened ?? null,
+  ]);
+  const r = spawnSync('python3', ['-c', PYTHON_FOLDED], { input: JSON.stringify(notes), encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr);
+  const python = JSON.parse(r.stdout);
+  const row = (p) => [p.block, p.line, p.severity, p.message, p.fix];
+  FOLDED.forEach((c, n) => {
+    const [texts, view, switches, opened] = notes[n];
+    const reading = readNote(texts),
+      styles = {},
+      drawn = {};
+    for (const t of texts) {
+      const g = styleOf(t);
+      if (g !== null && !(g in styles)) styles[g] = readStyle(texts, g, reading).problems.map(row);
+    }
+    for (const [graph, drawing] of reading.graphs) {
+      // as the plugin draws a graph or a view (block.ts, view-block.ts): styled, then folded by the card's switches
+      const { style } = readStyle(texts, graph, reading);
+      const styled = styledDrawing(drawing, style, reading.world[graph], view ?? undefined);
+      const state = new ViewState(startingSwitches(DEFAULT_SETTINGS, style, view ?? undefined));
+      for (const [s, on] of Object.entries(switches ?? {})) state.turn(s, on);
+      for (const hub of opened?.hubs ?? []) state.open({ hub });
+      for (const group of opened?.groups ?? []) state.open({ group });
+      drawn[graph] = Object.fromEntries(directions(state.folded(styled)).map((d) => [d.rankdir, d.dot]));
+    }
+    assert.deepEqual(python[n], { styles, drawn }, c.name);
+  });
+  const sources = python.flatMap((p) => Object.values(p.drawn).flatMap((d) => Object.values(d)));
+  for (const mark of ['id="fold_hub_1"', 'id="fold_group_1"', 'id="trunk_1"', 'splines=line', 'splines=ortho'])
+    assert.ok(
+      sources.some((s) => s.includes(mark)),
+      mark,
+    );
 });

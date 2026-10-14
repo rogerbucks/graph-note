@@ -2,11 +2,12 @@
 // conflict — two directions, beside and before on one pair, a thing in two groups, a loop of befores — a view set both to
 // fade and to hide, a view saved as shown twice, a colour given two meanings in one view or path, a property switched both
 // on and off for one kind, thing or type in one view, arrowheads both hidden and shown for the same links in one view,
-// and two diagram types for the whole graph or one view. Each is a problem with a fix; the first written is kept and the later left out, so what is kept never conflicts.
+// two diagram types for the whole graph or one view, and two routings or two choices of merging links (§25). Each is a
+// problem with a fix; the first written is kept and the later left out, so what is kept never conflicts.
 import type { Problem } from './note-reading.ts';
 import type { Checked } from './style-checks.ts';
 import { emptyStyle, styleProblem } from './style-graph.ts';
-import type { Arrows, Diagram, Look, Nudge, Show, StyleAt, StyleGraph } from './style-graph.ts';
+import type { Arrows, Diagram, Links, Look, Nudge, Show, StyleAt, StyleGraph } from './style-graph.ts';
 
 const REMOVE = 'remove one of them';
 
@@ -169,6 +170,32 @@ const settleDiagrams = (diagrams: Diagram[], graph: string, out: Problem[]): Dia
     out,
   );
 
+/**
+ * How links are drawn (§25): one routing and one choice of merging for the whole graph and for each view. A Links that
+ * conflicts with an earlier one in either is left out whole.
+ */
+function settleLinks(links: Links[], graph: string, out: Problem[]): Links[] {
+  const where = (l: Links) => (l.view === undefined ? 'the whole graph' : `view ${l.view}`);
+  const routed = settleChoices(
+    links.filter((l) => l.routing !== undefined),
+    (l) => l.view ?? '',
+    (l) => l.routing ?? '',
+    (was, l) =>
+      `the routing of links in ${where(l)} is set to both ${was.routing} (line ${was.at.line}) and ${l.routing}`,
+    graph,
+    out,
+  );
+  const merged = settleChoices(
+    links.filter((l) => l.merge !== undefined),
+    (l) => l.view ?? '',
+    (l) => l.merge ?? '',
+    (was, l) => `merging links in ${where(l)} is set to both ${was.merge} (line ${was.at.line}) and ${l.merge}`,
+    graph,
+    out,
+  );
+  return links.filter((l) => (!l.routing || routed.includes(l)) && (!l.merge || merged.includes(l)));
+}
+
 /** The style a checked style graph gives, once its things are checked against each other, and the problems found. */
 export function settle(checked: Checked, graph: string): { style: StyleGraph; problems: Problem[] } {
   const problems: Problem[] = [],
@@ -179,6 +206,7 @@ export function settle(checked: Checked, graph: string): { style: StyleGraph; pr
   style.shows = settleShows(checked.shows, graph, problems);
   style.arrows = settleArrows(checked.arrows, graph, problems);
   style.diagrams = settleDiagrams(checked.diagrams, graph, problems);
+  style.links = settleLinks(checked.links, graph, problems);
   style.looks = settleLooks(checked.looks, graph, problems);
   const viewAt = new Map<string, number>();
   for (const { view, outside, at } of checked.views) {

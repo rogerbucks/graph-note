@@ -9,6 +9,7 @@ import { PALETTES } from '../src/palette.ts';
 import { loadEngine } from '../src/engine.ts';
 import { layoutSource } from '../src/layout.ts';
 import { themed, sizeOf, choose } from '../src/theme.ts';
+import { foldedSource, routedSource } from '../src/fold-source.ts';
 
 const WIDE = `// graph: g
 (q:Question {title: 'Which device?'}),
@@ -33,6 +34,21 @@ describe('drawing', () => {
       assert.equal(drawn.svg, themed(best.svg, best.src.kinds, best.src.readings));
       assert.equal(drawn.width, best.width);
       assert.equal(drawn.height, best.height);
+    }
+  });
+
+  // proves: untangle_hubs, untangle_routing
+  test('a drawing folded and routed is laid out from the source folded, then routed, in each direction', () => {
+    const drawing = readNote([WIDE]).graphs.get('g');
+    const folding = { hidden: ['o1'], folded: [1], hubs: [], groups: [], merge: false };
+    const laid = directions({ ...drawing, folding, routing: 'straight' });
+    assert.deepEqual(
+      laid.map((d) => d.rankdir),
+      ['LR', 'TB'],
+    );
+    for (const d of laid) {
+      assert.equal(d.dot, routedSource(foldedSource(layoutSource(drawing, d.rankdir).source, folding), 'straight'));
+      assert.ok(!d.dot.includes('"o1"'));
     }
   });
 

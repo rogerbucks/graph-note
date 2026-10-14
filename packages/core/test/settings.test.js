@@ -154,6 +154,35 @@ describe('formatting and drawing defaults', () => {
   });
 });
 
+describe('the View menu’s defaults (editor spec §25)', () => {
+  const keys = ['labelsByZoom', 'foldHubs', 'foldGroups', 'mergeLinks'];
+
+  // proves: view_switch_defaults
+  test('each switch’s default is an option in the Drawing section, on or off', () => {
+    for (const key of keys) {
+      const o = OPTIONS.find((x) => x.key === key);
+      assert.equal(o?.section, 'Drawing', key);
+      assert.match(o.sentence, /^[A-Z].*View menu.*\.$/, key);
+      assert.deepEqual(
+        o.choices.map((c) => c.value),
+        ['on', 'off'],
+        key,
+      );
+    }
+  });
+
+  // proves: view_switch_defaults
+  test('labels by zoom on, busy hubs folded on, groups folded off and links merged off, until changed', () => {
+    assert.deepEqual(
+      keys.map((k) => DEFAULT_SETTINGS[k]),
+      ['on', 'on', 'off', 'off'],
+    );
+    const saved = { labelsByZoom: 'off', foldHubs: 'off', foldGroups: 'on', mergeLinks: 'on' };
+    assert.deepEqual(settingsFrom(saved), { ...DEFAULT_SETTINGS, ...saved });
+    assert.equal(settingsFrom({ foldHubs: 'yes' }).foldHubs, 'on');
+  });
+});
+
 describe('the export options (editor spec §16)', () => {
   const exports = ['exportTheme', 'companionNote', 'exportFolder', 'exportAsksAbove'];
 

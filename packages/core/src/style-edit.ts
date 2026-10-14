@@ -18,6 +18,7 @@ import {
   INLINE,
   LINES,
   NUDGE_WORDS,
+  ON_OFF,
   OUTSIDE,
   STYLE_HUES,
   orList,
@@ -56,7 +57,12 @@ export interface ShownWrite {
   y: number;
   frame?: Frame;
   selected?: string;
+  /** The View menu's switches as they stand (§25, view_switch_view_only), each on or off. */
+  switches?: Partial<Record<(typeof SWITCH_KEYS)[number], string>>;
 }
+
+/** The switches a view saved as shown keeps, in the order they are written. */
+const SWITCH_KEYS = ['labels', 'hubs', 'groups', 'merge'] as const;
 
 /** A property to switch on or off for showing inline (§14): for one kind, thing or relationship type, in a view or not. */
 export interface ShowWrite {
@@ -135,6 +141,10 @@ function shownRefusal(s: ShownWrite): string | null {
   const f = s.frame;
   if (f && ![f.x, f.y, f.width, f.height].every(Number.isFinite)) return 'frame must be four numbers';
   if (s.selected !== undefined && !s.selected) return 'selected must name a thing';
+  const wrong = SWITCH_KEYS.find(
+    (k) => s.switches?.[k] !== undefined && !(ON_OFF as readonly string[]).includes(s.switches[k] ?? ''),
+  );
+  if (wrong) return `${wrong} must be ${orList(ON_OFF)}`;
   return null;
 }
 
@@ -266,6 +276,7 @@ function thingFor(change: StyleChange): ToWrite | { refused: string } {
       ['y', s.y],
       ['frame', f],
       ['selected', s.selected],
+      ...SWITCH_KEYS.map((k): [string, Value] => [k, s.switches?.[k]]),
     ],
     match: [['view', s.view]],
   };
