@@ -268,6 +268,25 @@ export type { Fold, ViewSwitch, ViewSwitches } from './view-switches.ts';
 export { linksOf } from './style.ts';
 export type { Links, OnOff, Routing } from './style-graph.ts';
 export type { SwitchSetting } from './settings.ts';
+export {
+  applyChanges,
+  attachmentType,
+  attachmentsOf,
+  brokenLinks,
+  embedParts,
+  embeddedMarkdown,
+  leavingWords,
+  linkKind,
+  linkTo,
+  linksHeld,
+  linksIn,
+  noteOf,
+  refusedWords,
+  renamedLinks,
+  safeMarkdown,
+  withMeant,
+} from './links.ts';
+export type { Attachment, BrokenLink, EmbedPart, FoundLink, LinkKind, LinkVault, PlacedLink } from './links.ts';
 export { TextHistory } from './history.ts';
 export type { Change, TextState } from './history.ts';
 export type { Bounds, HitAreas, Shape } from './hits.ts';

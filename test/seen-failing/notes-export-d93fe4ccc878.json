@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/notes-export.test.js",
+  "test": "CSV, which has no comments > leaves every note out: the export is byte for byte the export of the graph without them",
+  "seen_failing_first": false,
+  "evidence": "CSV never wrote notes, so the parent already leaves them out; this pins the rule's other half (leave notes out where the format has no comments) so a later note column would fail."
+}

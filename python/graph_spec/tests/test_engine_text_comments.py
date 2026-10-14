@@ -115,6 +115,41 @@ class EveryCommentReachesGrafeoOnItsOwnLine(unittest.TestCase):
         self.assertEqual(last_given(log), want)
 
 
+class ANoteReachesGrafeoAboveItsElement(unittest.TestCase):
+    """note_standard (editor spec §24; graph spec req:26.plain): a /// note is a whole-line
+    comment, so the text an engine is given keeps it, a /* */ comment on its own line, its text
+    whole, directly above the thing or link it is on. A regression test: the engine text kept
+    notes before the exports did."""
+
+    NOTED = [
+        "(r:Reason {id: 'r', title: 'Sun'}),",
+        "/// The option, */ not its end.",
+        "///",
+        "/// A second paragraph.",
+        "(o:Option {id: 'o', name: 'Coast'}),",
+        "/// Why it favours it.",
+        "(r)-[:FAVOURS]->(o)",
+    ]
+
+    def test_load_gives_grafeo_each_note_line_as_a_block_comment_above_its_element(self):
+        with given_to_grafeo() as log:
+            gs.load("// graph: joined\n" + "\n".join(self.NOTED))
+        self.assertEqual(
+            last_given(log),
+            [
+                "/* graph: joined */",
+                "INSERT",
+                "(r:Reason {id: 'r', title: 'Sun'}),",
+                "/* / The option, * / not its end. */",
+                "/* / */",
+                "/* / A second paragraph. */",
+                "(o:Option {id: 'o', name: 'Coast'}),",
+                "/* / Why it favours it. */",
+                "(r)-[:FAVOURS]->(o)",
+            ],
+        )
+
+
 class AStarSlashInACommentDoesNotEndIt(unittest.TestCase):
     TRAP = (
         "(r:Reason {id: 'r', title: 'Sun'}),\n// ends */ here, */ and here\n(o:Option {id: 'o'})"

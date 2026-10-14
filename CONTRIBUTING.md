@@ -132,6 +132,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `packages/core/test/views-across.test.js` — a view saved as shown is written in the style graph, never the data, and reopens the same (editor spec §7).
 - `packages/core/test/edge-cases.test.js` — empty, broken and oversized inputs each give a stated result, never a blank or a crash (spec §9).
 - `packages/core/test/edits.test.js` — every edit from the pane round-trips; locking writes a schema the checks pass.
+- `packages/core/test/notes-export.test.js` — each data export keeps the `///` notes where its format has comments, a GQL block's `///` lines and GraphML's XML comments, read back as written however hostile, and leaves them out of CSV, which has none; the text an engine is given keeps them too (editor spec §24, note_standard).
 - `packages/core/test/imports.test.js` — the core imports no host.
 - `packages/claude-code/test/build.test.mjs` — the build writes the mod's hooks bundle, with no WebAssembly engine, and a render script that draws.
 - `packages/claude-code/test/editor-threats.test.js` — the browser editor's server against its threat model, each threat tried on the running server: loopback only, wrong Host, wrong Origin, no token or a wrong one, a token in the address, a stale write, an oversized body, the content security policy, no CORS, a path escape on the test-only note route, the server's own limits, no outgoing request, and the idle stop (editor spec §26, test_cc_threats).

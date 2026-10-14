@@ -3,7 +3,7 @@
 // reads it back into the very things and links exported. A thing is written under its id where its id is a name the
 // profile reads as one; otherwise, as for an id with a space or a word the profile keeps, under a name of its own, with
 // its id written in full. A view's faded context, when asked for, is marked by a `//@ faded:` line above each of its
-// things and links.
+// things and links. A note (§24, note_standard) is kept as the `///` lines directly above its thing or link.
 import gs from '@graph-note/graph-spec';
 import type { GTime, Value } from '@graph-note/graph-spec';
 import { saidDate } from './export-frame.ts';
@@ -70,9 +70,16 @@ export function gqlBlock(data: ExportedData, info: DataInfo): string {
     fadedLinks = new Set(data.faded?.links ?? []);
   const tag = `//@ faded: outside view ${oneLine(data.view ?? '')}`;
   const outside = [...data.things.map(([id]) => fadedThings.has(id)), ...data.links.map((_, i) => fadedLinks.has(i))];
+  // each note as the /// lines directly above its thing or link (§26): a line of its text after `/// `, an empty one a
+  // bare `///`, so the library's notes reads back the very text
+  const thingNotes = new Map(data.notes?.things ?? []),
+    linkNotes = new Map(data.notes?.links ?? []);
+  const notes = [...data.things.map(([id]) => thingNotes.get(id)), ...data.links.map((_, i) => linkNotes.get(i))];
+  const noteLines = (text: string) => text.split('\n').map((l) => (l === '' ? '///' : `/// ${l}`));
   const code = [...things, ...links].map((line, i, all) => {
     const written = i < all.length - 1 ? `${line},` : line;
-    return outside[i] ? `${tag}\n${written}` : written;
+    const note = notes[i];
+    return [...(note === undefined ? [] : noteLines(note)), ...(outside[i] ? [tag] : []), written].join('\n');
   });
   return [`// graph: ${data.graph}`, said, ...code, ''].join('\n');
 }

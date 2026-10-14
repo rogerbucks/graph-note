@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/notes-export.test.js",
+  "test": "the GQL an engine is given > keeps every /// line where it is written, so each note is still above its thing or link",
+  "seen_failing_first": false,
+  "evidence": "A regression test asked for: standardBlocks already kept every /// line before this change, so it passed first; it pins that behaviour."
+}

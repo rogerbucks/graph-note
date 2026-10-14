@@ -19,8 +19,8 @@ import {
 } from './export-data-readers.js';
 
 const INFO = { note: 'Trips/Team.md', date: '2026-10-11' };
-// what a reader gives beside the things and links: nothing marked as a view's faded context
-const NONE_FADED = { faded: { things: [], links: [] } };
+// what a reader gives beside the things and links: nothing marked as a view's faded context, and no note
+const NONE_FADED = { faded: { things: [], links: [] }, notes: { things: [], links: [] } };
 const dataOfNote = (block, graph) => {
   const r = readNote([block]);
   return exportedData(r, exportScope(r, { graph }));
@@ -205,10 +205,22 @@ describe('GraphML', () => {
     assert.ok(graph.children.filter((c) => c.name === 'node').every((n) => /^n\d+$/.test(n.attrs.id)));
   });
 
-  // proves: export_lossless
-  test('the test reader refuses a comment, which no export writes, rather than taking it out unread', () => {
-    assert.throws(() => xmlTree('<graphml><!-- a note --></graphml>'), /comment/);
-    assert.throws(() => xmlTree('<graphml><desc>a <!-- b --> c</desc></graphml>'), /comment/);
+  // proves: export_lossless, note_standard
+  test('the test reader reads a comment as XML does, to its first -->, and refuses one XML refuses or one outside the root', () => {
+    assert.deepEqual(xmlTree('<graphml><!-- a <b> & c --></graphml>').children, [{ comment: ' a <b> & c ' }]);
+    assert.deepEqual(xmlTree('<graphml><desc>a <!-- b --> c</desc></graphml>').children[0].children, [
+      'a ',
+      { comment: ' b ' },
+      ' c',
+    ]);
+    for (const bad of [
+      '<graphml><!-- a -- b --></graphml>',
+      '<graphml><!-- a ---></graphml>',
+      '<graphml><!-- a </graphml>',
+      '<!-- a --><graphml></graphml>',
+    ])
+      assert.throws(() => xmlTree(bad), /comment|text outside|tag/, bad);
+    // with no note, no export writes a comment
     assert.doesNotMatch(text, /<!--/);
   });
 

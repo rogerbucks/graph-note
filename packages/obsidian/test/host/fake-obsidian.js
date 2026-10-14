@@ -3,6 +3,7 @@
 import { createRequire } from 'node:module';
 import { fakeSettings } from './fake-settings.js';
 import { addVaultWrites, fakeFileManager, fakeMetadataCache, getFrontMatterInfo, parseYaml } from './fake-vault.js';
+import { fakeKeymap, fakeMarkdownRenderer } from './fake-markdown.js';
 
 // the CommonJS copies of CodeMirror, as the built plugin requires them: one copy, so its fields and facets are known
 const require = createRequire(import.meta.url);
@@ -93,7 +94,11 @@ export function fakeObsidian(state = {}) {
     getMarkdownFiles: () => [...files.keys()].filter((p) => p.endsWith('.md')).map((p) => new TFile(p)),
     getFiles: () => [...files.keys()].map((p) => new TFile(p)),
     read: async (f) => files.get(f.path),
-    cachedRead: async (f) => files.get(f.path),
+    // a read from the cache, kept in `state.reads` when a test asks which notes were read
+    cachedRead: async (f) => {
+      state.reads?.push(f.path);
+      return files.get(f.path);
+    },
     // the address a file is shown from without being read, as Obsidian gives one for an image
     getResourcePath: (f) => `app://vault/${f.path}`,
     // a file's bytes, as an attachment is read: a note's text as UTF-8, bytes as they are
@@ -144,9 +149,13 @@ export function fakeObsidian(state = {}) {
     },
     on: () => ({}),
     offref: () => {},
-    // a link opened, as a tap on a link in a note opens it: kept, for a test to see which, and from where
-    openLinkText: async (link, from) => {
-      state.opened = { link, from };
+    // a link opened, as a tap on a link in a note opens it: kept, for a test to see which, from where, and in which leaf
+    openLinkText: async (link, from, newLeaf) => {
+      state.opened = newLeaf === undefined ? { link, from } : { link, from, newLeaf };
+    },
+    // an event told to the workspace: a hover over a link, which Page preview answers with its preview, is kept
+    trigger: (name, data) => {
+      if (name === 'hover-link') state.hovered = data;
     },
   };
   // the note in front, by its path in state.active
@@ -241,7 +250,11 @@ export function fakeObsidian(state = {}) {
     addSettingTab(tab) {
       state.settingTabs.push(tab);
     }
+    registerHoverLinkSource(id, info) {
+      state.hoverSources.set(id, info);
+    }
   }
+  state.hoverSources = new Map();
   class Notice {
     constructor(message) {
       state.notices.push(String(message));
@@ -403,6 +416,8 @@ export function fakeObsidian(state = {}) {
     setIcon,
     setTooltip,
     Platform,
+    MarkdownRenderer: fakeMarkdownRenderer(state),
+    Keymap: fakeKeymap,
     app,
     ...settings,
     parseYaml,

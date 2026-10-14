@@ -165,6 +165,36 @@ and nothing else (untangle_data_untouched). Nothing here is written to a note or
   the view's edge pointing to a selection out of sight), and `sheetLimit` and `coverOf` (how tall the details sheet may
   be, and how much of a viewport it covers).
 
+**Links and attachments (spec §18)**
+
+The core finds and judges links; the host says which files the vault holds, and opens, previews and renders through its
+own handlers. Nothing here reaches the network.
+
+- `links.ts` — the entry for §18, re-exporting the three below: `linksHeld` (every link in a thing's or relationship's
+  text properties, by property), `attachmentsOf` (a thing's files, by name and type, each once), `noteOf` (a thing whose
+  id is a global note id, `note:` and the note's name as graph spec §10 writes it, or a link to a note, stands for it),
+  and `brokenLinks` (each written link found from where the last of the same was, what it meant worked out once per
+  target) (each link to a note or file the host's `LinkVault` does not
+  hold: a warning on the line it is written, its fix in words, Create the note or Put the file in the vault, or change it
+  to what it most likely meant — a file of the same name with another extension, else the nearest names — with the
+  place to change; `withMeant` writes that change into the block).
+- `link-scan.ts` — `linksIn`, one linear pass over each line (every search for a closing mark goes on from where the
+  last stopped): wikilinks with heading and alias, embeds, Markdown links and images, bare web and mail addresses, each
+  with where its target is written; `linkKind` (only notes, files, web and mail addresses are opened; any other scheme,
+  however disguised by controls or entities, is refused); `linkTo` (a host's rendered link, judged alike);
+  `leavingWords` (said before a link leaves the host) and `refusedWords`; `attachmentType`.
+- `link-markdown.ts` — `safeMarkdown`: what a host renders for a thing's details, with an image from outside the vault,
+  Markdown or HTML, made a link showing its address (nothing remote loaded), a Markdown link or reference definition the
+  user may not open escaped to text (its address on its own line or the next), other raw HTML escaped, inside maths too,
+  a note embed made a link, and only an image, a sound, a video or a PDF of the vault left embedded (a canvas, a base or
+  any other file embedded is a link); code spans and fences untouched, told apart as CommonMark tells them (an escaped
+  backtick opens no span; a backtick fence's words hold no backtick; a fence closes on its marks alone). `embedParts`
+  cuts out each note embedded, for the host to read itself, and `embeddedMarkdown` is that note's text made safe, front
+  matter left out, only the section a heading embed names (offline_and_mobile_apis).
+- `link-renames.ts` — `renamedLinks`, the changes that follow a renamed note or file in every link inside a note's
+  graph blocks (never prose), keeping each link's alias, heading and form; a link that still finds a file, or whose new
+  name a block could not hold, is left; `applyChanges` makes them.
+
 **Editing**
 
 - `pane.ts` — the edit session: what is typed, written back to the note safely; `texts` gives the note's blocks with the
@@ -481,21 +511,31 @@ a GQL block, CSV or GraphML (`DATA_FORMATS`), each read back into the very thing
 - `export-data.ts` — `exportedData`: the things a scope draws and the links written between them, with every kind and
   property as read, never a schema's own thing or a guess (`ExportScope.linksAt` finds a view's links as written). A
   view holds only its own, unless its faded context is asked for: then the whole graph, with what is outside the view
-  in `faded`, which each format marks. `dataText` writes it in one of `DATA_FORMATS`. No layout is asked for.
+  in `faded`, which each format marks. Each thing's and link's `///` note, as `notes.ts` put it on the drawing, is in
+  `notes` (§24, note_standard): kept by a format with comments, left out of CSV, which has none. `dataText` writes it
+  in one of `DATA_FORMATS`. No layout is asked for.
 - `export-data-model.ts` — the data's types, and the five kinds of value the profile reads, each said so it reads back.
 - `export-data-gql.ts` — a GQL block: the graph line, a comment saying where it came from, a thing or link to a line; a
   thing under its id, or, where its id cannot be a name, under `thing_<n>` with its id written in full. A thing or link
-  of a view's faded context owns a `//@ faded: outside view <name>` line (§27), a comment to the reader.
+  of a view's faded context owns a `//@ faded: outside view <name>` line (§27), a comment to the reader; a note is
+  the `///` lines directly above its thing or link.
 - `export-data-csv.ts` — CSV as RFC 4180 writes it, with no byte order mark, so a spreadsheet that assumes another
   encoding without one may show non-ASCII text wrongly: a header naming each property with the kind of its values, a
   row for each thing then each link, of kind `faded thing` or `faded link` outside a view; an empty text quoted, so it is
   told from a missing one; a text a spreadsheet would run as a formula guarded by an apostrophe, which the readers take
-  off but a spreadsheet such as Excel shows.
+  off but a spreadsheet such as Excel shows. CSV has no comments, so a note is left out, never made a column.
 - `export-data-graphml.ts` — GraphML that keeps to its schema: a node named by its place, the thing's id, kinds and a
   link's type as data, a key for each property and kind (a day or an instant said by the key's own description,
   `gn:date` or `gn:datetime`), a view's faded context marked by `:faded`, XML's marks escaped; a character XML cannot
   hold refused, naming where it is. No GraphML schema is on this machine to validate against, and none is downloaded:
-  the output was checked well-formed with xmllint, and it writes no attribute GraphML does not name.
+  the output was checked well-formed with xmllint, and it writes no attribute GraphML does not name. A note is an XML
+  comment on the line directly before its node or edge, a comment and never a key, as GQL's engines take it.
+- `xml-comment.ts` — `noteComment`: a note as the XML comment that holds it, its text escaped (`\\`, `\-` for a
+  hyphen after a hyphen, `\r`, `\u{…}` for a character XML cannot hold) so it holds no `--`, never ends with `-`, can
+  never end the comment, and reads back exactly. The Python library's SCXML export writes the same comment
+  (`note_comment`), both held to `python/graph_spec/tests/note_comment_cases.json`; `notXml` is XML 1.0's characters.
+  `commentPieces` gives the escaped text a piece for each character, keeping only the last character written, so the
+  work is linear in the note (a run of hyphens among them), counted in `test/xml-comment.test.js`, never timed.
 - `export-plan.ts` — `exportPlan`, the one decision before anything is written: `{ nothing }` for an empty scope,
   `{ ask }` for a note classified above the configured level (naming both; a classification not in the list counts as
   above every level; the host asks again with `confirmed` once the user says yes), or `{ go }` with the file's name and
@@ -619,4 +659,6 @@ each ratio between two sizes or two cases of the same work — is counted in CPU
 
 A data export is proved by reading it back (export_lossless): `test/export-data-readers.js` reads a GQL block with the
 graph-spec reader, and CSV and GraphML with strict readers of its own, as RFC 4180 and XML read them, so an escape the
-writer leaves out shows. The Obsidian package's tests read its exports back with them too.
+writer leaves out shows. The Obsidian package's tests read its exports back with them too. They read the notes back
+too (`readNotes`; note_standard): a GQL block's with the library's `notes`, a GraphML comment's escapes by a strict
+reader of their own (`commentNote`); `test/notes-export.test.js` holds each format to the rule.

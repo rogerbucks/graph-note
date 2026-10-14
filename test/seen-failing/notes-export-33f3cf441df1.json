@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/notes-export.test.js",
+  "test": "GraphML, which has comments > with no notes, no comment is written",
+  "seen_failing_first": false,
+  "evidence": "A guard, not new behaviour: GraphML wrote no comment before this change, and this pins that a graph with no notes still gets none now that notes are written as comments."
+}

@@ -160,7 +160,7 @@ export class GraphView extends MarkdownRenderChild {
     // a graph drawn as a table is the plugin's own table; any other, the SVG Graphviz drew (§15)
     const table = this.o.diagram?.table;
     if (table) this.table = renderTable(this.viewport, table);
-    else this.svg = insertSvg(this.viewport, this.o.drawn, this.drawing(), this.o.switches?.state.plan);
+    else this.svg = insertSvg(this.viewport, this.o.drawn, this.drawing(), this.o.switches?.state.plan, this.o);
     if (this.svg && this.o.motion) markFlow(this.svg, this.o.motion.flow); // the links its style moves (§7)
     if (view && this.svg) markView(this.svg, view); // a view: what is outside it faded, its looks drawn (§7)
     if (this.o.proposal && this.svg) markProposal(this.svg, this.o.proposal.shown.marks); // a proposal: what it adds, changes, removes (§17)
@@ -178,6 +178,7 @@ export class GraphView extends MarkdownRenderChild {
     if (this.svg) this.details.pictures(this.svg); // the pictures its style draws on boxes (§18)
     // closing the details, by button, Escape or a tap on empty space, clears the selection and the focus with them (§25)
     this.details.onClosed = () => this.sel.closed();
+    this.details.view = () => this.zoom.view(); // where a link that takes the card's tab leaves it (§18)
     const slot = mode === 'note' ? root.createDiv({ cls: 'graph-note-edit-slot' }) : null;
 
     // on a phone, a wide tree, flow or timeline is fitted to its height and scrolled across only (wide_types_phone)
@@ -190,8 +191,8 @@ export class GraphView extends MarkdownRenderChild {
       : new Zoom(size, this.viewportSize(), mode);
     this.zoom.onChange = (v) => this.apply(v);
     this.zoom.onExit = () => this.o.onClose?.();
-    // a view saved as shown is shown so again (§7)
-    const was = view?.shown;
+    // a view saved as shown is shown so again (§7); a card a link took the tab from, as it was left (§18)
+    const was = view?.shown ?? this.o.links?.cameBack();
     if (was?.zoom !== undefined) this.zoom.restore(was.zoom, was.x ?? 0, was.y ?? 0);
     this.apply(this.zoom.view());
     const { viewport, zoom, sel, details, taps, svg } = this;
@@ -302,7 +303,7 @@ export class GraphView extends MarkdownRenderChild {
       on = was && svg.contains(was) ? was.getAttribute('id') : null;
     this.drawn = drawn;
     this.walk?.stop(); // a path playing marks the drawing it began on: it stops, and is played again on this one
-    swapSvg(svg, drawn, this.drawing(), this.o.switches?.state.plan);
+    swapSvg(svg, drawn, this.drawing(), this.o.switches?.state.plan, this.o);
     this.details.pictures(svg); // the pictures went with the drawing: each box drawn now gets its own, by its key (§18)
     if (this.o.motion) markFlow(svg, this.o.motion.flow); // the links its style moves, on both lines of a trunk (§7)
     this.flowLegend();

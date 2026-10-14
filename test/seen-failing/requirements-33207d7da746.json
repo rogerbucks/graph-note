@@ -1,0 +1,10 @@
+{
+  "file": "test/requirements.test.js",
+  "test": "run on its own > passes the committed copy, and lists each problem of a broken one with a non-zero exit",
+  "seen_failing_first": false,
+  "fault": true,
+  "commits": [
+    "12c6a717678fafaba4dfd38150ebda6c6f436448"
+  ],
+  "evidence": "At its own commit (12c6a71) the checked-in requirements copy did not yet mark test_view_switches written, so running the check on the committed copy exited non-zero and the test failed. The copy came in the next change, d393a1a (requirements copy w3), as the merge order required; the test passes from there."
+}
