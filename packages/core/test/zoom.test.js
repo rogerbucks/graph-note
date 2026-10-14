@@ -1,6 +1,7 @@
 // Zoom, pan and full-screen (spec §3): Fit, zoom in and zoom out by button, gesture and key, between the fit of the whole
-// drawing (§25, zoom-fit.test.js) and four times natural size. The host passes plain events in; the zoom says whether it used each one, so the host stops the
-// browser's own handling only then — and the note still scrolls when the drawing does not need the gesture.
+// drawing (§25, zoom-fit.test.js) and four times natural size. The host passes plain events in; the zoom says whether
+// it used each one, so the host stops the browser's own handling only then — and the note still scrolls when the
+// drawing does not need the gesture.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { Zoom, MAX_SCALE } from '../src/zoom.ts';

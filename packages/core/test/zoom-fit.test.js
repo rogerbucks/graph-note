@@ -73,12 +73,11 @@ describe('zooming out stops at the fit', () => {
   });
 
   // proves: zoom_out_to_fit
-  test('the limit is the whole fit, or natural size when that is larger; a drawing or view with no size is drawn at natural size', () => {
+  test('the limit is the whole fit, or natural size when that is larger; a drawing with no size is drawn at natural size', () => {
     close(fit.wholeFit({ width: 1000, height: 500 }, { width: 500, height: 500 }), 0.5, 'the narrower way decides');
     close(fit.outLimit({ width: 1000, height: 500 }, { width: 500, height: 500 }), 0.5);
     close(fit.outLimit({ width: 100, height: 50 }, { width: 500, height: 500 }), 1);
     close(fit.outLimit({ width: 0, height: 50 }, { width: 500, height: 500 }), 1);
-    close(fit.outLimit({ width: 100, height: 50 }, { width: 0, height: 0 }), 1);
     const z = make('pane', { width: 1000, height: 500 }, { width: 500, height: 250 });
     close(z.outLimit(), 0.5, 'the zoom says its limit, for a host to show zoom out can go no further');
   });
@@ -123,6 +122,50 @@ describe('the fit is worked out again', () => {
     z.setMode('note');
     z.resize({ width: 400, height: 200 });
     for (const s of outEveryWay(z)) close(s, 0.2, 'the note’s fit again');
+  });
+
+  // proves: zoom_fit_recomputed
+  test('a view with no size, as a hidden card has, has no fit yet: the limit is none, never one for another size', () => {
+    assert.equal(fit.outLimit({ width: 1000, height: 500 }, { width: 0, height: 0 }), 0);
+    assert.equal(fit.outLimit({ width: 1000, height: 500 }, { width: 300, height: 0 }), 0);
+    assert.equal(make('note', { width: 1000, height: 500 }, { width: 0, height: 0 }).outLimit(), 0);
+  });
+
+  // proves: zoom_fit_recomputed
+  test('a card hidden and shown again keeps its zoom: a resize to no size is no resize', () => {
+    const z = make('note', { width: 1000, height: 500 }, { width: 300, height: 150 });
+    close(z.outLimit(), 0.3);
+    z.zoomAt(1.6, 150, 75);
+    const was = z.view();
+    close(was.scale, 0.48);
+    z.resize({ width: 0, height: 0 });
+    assert.deepEqual(z.view(), was, 'hidden: nothing moves');
+    z.resize({ width: 300, height: 150 });
+    assert.deepEqual(z.view(), was, 'shown again at 0.48, above the fit of 0.3');
+  });
+
+  // proves: zoom_fit_recomputed
+  test('a zoom restored before the view has a size is kept, and held to the fit only once there is one', () => {
+    const z = make('note', { width: 1000, height: 500 }, { width: 0, height: 0 });
+    z.restore(0.48, 0, 0);
+    close(z.view().scale, 0.48, 'not raised to a fit worked out for no size');
+    z.resize({ width: 300, height: 150 });
+    close(z.view().scale, 0.48, 'laid out with a fit of 0.3: kept');
+    const low = make('note', { width: 1000, height: 500 }, { width: 0, height: 0 });
+    low.restore(0.2, 0, 0);
+    low.resize({ width: 300, height: 150 });
+    close(low.view().scale, 0.3, 'below the fit once there is one: brought up to it');
+  });
+
+  // proves: zoom_fit_recomputed
+  test('a drawing laid out again while its card is hidden takes its new size, and is held to it when shown', () => {
+    const z = make('pane', { width: 1000, height: 500 }, { width: 500, height: 250 });
+    z.zoomIn();
+    z.resize({ width: 0, height: 0 }, { width: 4000, height: 2000 });
+    close(z.view().scale, 0.625, 'hidden: its zoom kept');
+    assert.equal(z.view().width, 4000 * 0.625, 'at its new size');
+    z.resize({ width: 500, height: 250 });
+    for (const s of outEveryWay(z)) close(s, 0.125, 'the fit of the drawing laid out while hidden');
   });
 
   // proves: zoom_fit_recomputed

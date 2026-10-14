@@ -178,6 +178,9 @@ module that ties the parts together, named as the folder is.
 ### `src/graph-view/` — a drawn graph
 
 - `graph-view.ts` — `GraphView`: the card, its zoom and full screen; ties the rest together.
+- `viewport-size.ts` — the viewport's size: drawn at the drawing's own size while the page gives it none, and told to
+  the zoom as none then (`zoomSize`), so a card hidden by `display: none` or another tab, or made before it is laid
+  out, keeps its zoom, a zoom saved as shown among it (zoom_fit_recomputed).
 - `viewport-events.ts` — how the drawing is worked by pointer, wheel and keyboard: each event to the core's `Zoom`, a
   tap opening what it lands on or clearing the selection, the highlight's pointer and focus, the sheet moved with the note.
 - `view-bar.ts` — the bar: problems badge, Fit, zoom, Find a thing, Filter by kind or link, View, Full screen, Export,

@@ -123,7 +123,9 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   drawing's fit, or natural size when it fits larger, in place of §3's quarter, zoom_out_to_fit; `Zoom.outLimit` says
   it), and where it may sit in its viewport (`clampPan`), each worked out from the sizes given whenever it is asked, so
   a resized view, full screen or a drawing laid out again has its own (zoom_fit_recomputed); `resize` brings a drawing
-  shown below the new fit up to it.
+  shown below the new fit up to it. A viewport with no size (`hasSize`), as a hidden card or one not yet laid out has,
+  has no fit yet (`outLimit` 0, `held` keeps any scale above 0), and a resize to it is no resize: only the drawing's new
+  size is taken, so a hidden card keeps its zoom and a zoom restored before layout is kept.
 - `zoom-across.ts` — `AcrossZoom`, a `Zoom` that only adds to it: a wide drawing fitted to its height, shown from its
   start and moved across only by one finger, until it is zoomed in; a pinch as any drawing's (a tree, flow or timeline
   on a phone, §15 wide_types_phone).

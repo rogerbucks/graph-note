@@ -2,7 +2,7 @@
 // the host passes plain events in and draws the view this returns. handle() says whether the event was used, so the host
 // stops the browser's own handling only then — in a note the wheel and a one-finger drag still scroll the note. The
 // limits it holds the drawing within are zoom-fit.ts's.
-import { MAX_SCALE, STEP, clamp, clampPan, fitScale, outLimit } from './zoom-fit.ts';
+import { MAX_SCALE, STEP, clamp, clampPan, fitScale, hasSize, held, outLimit } from './zoom-fit.ts';
 import type { Mode, Size } from './zoom-fit.ts';
 
 export { MAX_SCALE, STEP } from './zoom-fit.ts';
@@ -218,11 +218,14 @@ export class Zoom {
   /**
    * A new viewport, and the drawing's size too when it was laid out again by the View menu (§25). A fitted drawing is
    * fitted again; any other keeps its zoom, unless the fit worked out again for the new sizes is above it, when it is
-   * brought up to the fit about the viewport's middle (zoom_fit_recomputed).
+   * brought up to the fit about the viewport's middle (zoom_fit_recomputed). A viewport with no size, as a hidden card
+   * has, is no resize: only the drawing's new size is taken, and the view is kept for when it shows again.
    */
   resize(viewport: Size, content = this.content): void {
     const fitted = this.isFitted();
-    [this.viewport, this.content] = [viewport, content];
+    this.content = content;
+    if (!hasSize(viewport)) return;
+    this.viewport = viewport;
     if (fitted) {
       this.fit();
       return;
@@ -241,9 +244,9 @@ export class Zoom {
     return outLimit(this.content, this.viewport);
   }
 
-  /** A scale held within the limits: no further out than the fit, no further in than four times natural size. */
+  /** A scale held within the limits (zoom-fit.ts, `held`). */
   private within(scale: number): number {
-    return clamp(scale, this.outLimit(), MAX_SCALE);
+    return held(scale, this.content, this.viewport);
   }
 
   setMode(mode: Mode): void {

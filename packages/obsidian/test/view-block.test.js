@@ -290,6 +290,30 @@ describe('a view saved as shown', () => {
     }
   });
 
+  // proves: zoom_fit_recomputed
+  test('a zoom saved as shown is kept when the card is made before it is laid out: 0.48 with a fit of 0.3 opens at 0.48', async () => {
+    const widthOf = (card) => Number(card.querySelector('svg').getAttribute('width'));
+    const near = (a, b, msg) => assert.ok(Math.abs(a - b) < 1e-6, `${msg}: ${a} ≈ ${b}`);
+    const style = "// graph: trip_style · STYLE trip\n(s1:Shown {view: 'round_park', zoom: 0.48, x: 0, y: 0})";
+    const note = noteOf(DATA, NEAR, style);
+    const wide = await load({ files: { [PATH]: note }, width: 1e6 });
+    let d;
+    try {
+      d = widthOf((await show(wide, noteOf(DATA, NEAR), 1)).el); // its natural width: a fit above natural size
+    } finally {
+      wide.uninstall();
+    }
+    const env = await load({ files: { [PATH]: note }, width: 0 }); // made before it has a size, as a card not yet placed
+    try {
+      const { el } = await show(env, note, 1);
+      env.doc.width = 0.3 * d;
+      env.doc.observers.forEach((o) => o.cb([])); // laid out: the fit is 0.3
+      near(widthOf(el), 0.48 * d, 'as it was saved');
+    } finally {
+      env.uninstall();
+    }
+  });
+
   // proves: untangle_legend
   test('Save as shown writes the legend’s choices too, and the view reopens with them; choosing alone writes nothing', async () => {
     const note = noteOf(DATA, NEAR);

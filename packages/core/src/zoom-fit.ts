@@ -31,9 +31,20 @@ export function wholeFit(content: Size, viewport: Size): number {
   return cw > 0 && ch > 0 && vw > 0 && vh > 0 ? Math.min(vw / cw, vh / ch) : 1;
 }
 
-/** The furthest the drawing zooms out (zoom_out_to_fit): where the whole of it fits, or natural size if it fits larger. */
+/** Whether a viewport has a size: one with none (its card hidden, or not yet laid out) has no fit to hold a drawing to. */
+export const hasSize = (viewport: Size): boolean => viewport.width > 0 && viewport.height > 0;
+
+/**
+ * The furthest the drawing zooms out (zoom_out_to_fit): where the whole of it fits, or natural size if it fits larger.
+ * 0 while the viewport has no size: no fit is known yet, so a zoom restored before layout is kept until there is one.
+ */
 export function outLimit(content: Size, viewport: Size): number {
-  return Math.min(wholeFit(content, viewport), 1);
+  return hasSize(viewport) ? Math.min(wholeFit(content, viewport), 1) : 0;
+}
+
+/** A scale held within the limits: no further out than the fit, if one is known, and never 0; no further in than 4. */
+export function held(scale: number, content: Size, viewport: Size): number {
+  return clamp(scale, outLimit(content, viewport) || Number.MIN_VALUE, MAX_SCALE);
 }
 
 /** The scale that shows the whole drawing: in a note never above natural size, as a note draws it; elsewhere up to the limit. */

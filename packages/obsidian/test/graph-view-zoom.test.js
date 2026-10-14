@@ -71,6 +71,43 @@ describe('zoom in the note', () => {
   });
 });
 
+describe('a card hidden and shown again', () => {
+  const widthOf = (el) => Number(svgOf(el).getAttribute('width'));
+  /** The drawing's natural width: its width in a note wide enough to draw it at natural size. */
+  const natural = async () => {
+    const env = await load({ width: 1e6 });
+    try {
+      return widthOf((await show(env, fence(GRAPH))).el);
+    } finally {
+      env.uninstall();
+    }
+  };
+  /** Tells every card its viewport changed size, as the browser's ResizeObserver does. */
+  const resized = (env) => env.doc.observers.forEach((o) => o.cb([]));
+  const near = (a, b, msg) => assert.ok(Math.abs(a - b) < 1e-6, `${msg}: ${a} ≈ ${b}`);
+
+  // proves: zoom_fit_recomputed
+  test('keeps its zoom: hidden, its viewport has no size, which is no resize; 0.48 with a fit of 0.3 comes back at 0.48', async () => {
+    const d = await natural();
+    const env = await load({ width: 0.3 * d });
+    try {
+      const { el } = await show(env, fence(GRAPH));
+      near(widthOf(el), 0.3 * d, 'fitted at 0.3');
+      const vp = el.querySelector('.graph-note-viewport');
+      vp.dispatch('wheel', { deltaY: -Math.log(1.6) / 0.0028, clientX: 0, clientY: 0, ctrlKey: true });
+      near(widthOf(el), 0.48 * d, 'zoomed to 0.48');
+      env.doc.width = 0; // display: none, or another tab in front: clientWidth is 0
+      resized(env);
+      near(widthOf(el), 0.48 * d, 'hidden: its zoom kept');
+      env.doc.width = 0.3 * d;
+      resized(env);
+      near(widthOf(el), 0.48 * d, 'shown again at 0.48');
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
 describe('full screen', () => {
   let env;
   before(async () => {
