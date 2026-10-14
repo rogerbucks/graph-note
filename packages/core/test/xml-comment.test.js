@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { noteComment } from '../src/xml-comment.ts';
+import { commentPieces, noteComment } from '../src/xml-comment.ts';
 import { commentNote, xmlTree } from './export-data-readers.js';
 
 const { cases } = JSON.parse(
@@ -24,6 +24,38 @@ test('each comment is one XML reads, holding no -- and no - at its end, and read
     const [only, ...rest] = xmlTree(`<graphml>${written}</graphml>`).children;
     assert.deepEqual(rest, [], c.id);
     assert.equal(commentNote(only.comment), c.text, c.id);
+  }
+});
+
+/** A text given one character at a time, counting the characters taken and, at each, the pieces given out so far. */
+function counted(text, work) {
+  return {
+    *[Symbol.iterator]() {
+      for (const c of text) {
+        work.taken++;
+        work.ahead = Math.max(work.ahead, work.taken - work.given);
+        yield c;
+      }
+    },
+  };
+}
+
+// proves: note_standard
+test('the work is linear in the note: each character is taken once and given out as one short piece before the next is taken, 500,000 hyphens among them', () => {
+  for (const text of ['-'.repeat(500_000), '\\-\r'.repeat(170_000), 'a-'.repeat(250_000)]) {
+    const work = { taken: 0, given: 0, ahead: 0, longest: 0 };
+    const pieces = [];
+    for (const piece of commentPieces(counted(text, work))) {
+      work.given++;
+      work.longest = Math.max(work.longest, piece.length);
+      pieces.push(piece);
+    }
+    const chars = [...text].length;
+    assert.equal(work.taken, chars, 'each character is taken once');
+    assert.equal(work.given, chars, 'one piece for each character');
+    assert.equal(work.ahead, 1, 'a piece is given out before the next character is taken');
+    assert.ok(work.longest <= 10, 'each piece is a few characters, whatever came before it');
+    assert.equal(`<!-- ${pieces.join('')} -->`, noteComment(text), 'the comment is its pieces joined');
   }
 });
 

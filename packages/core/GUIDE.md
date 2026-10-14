@@ -504,6 +504,8 @@ a GQL block, CSV or GraphML (`DATA_FORMATS`), each read back into the very thing
   hyphen after a hyphen, `\r`, `\u{…}` for a character XML cannot hold) so it holds no `--`, never ends with `-`, can
   never end the comment, and reads back exactly. The Python library's SCXML export writes the same comment
   (`note_comment`), both held to `python/graph_spec/tests/note_comment_cases.json`; `notXml` is XML 1.0's characters.
+  `commentPieces` gives the escaped text a piece for each character, keeping only the last character written, so the
+  work is linear in the note (a run of hyphens among them), counted in `test/xml-comment.test.js`, never timed.
 - `export-plan.ts` — `exportPlan`, the one decision before anything is written: `{ nothing }` for an empty scope,
   `{ ask }` for a note classified above the configured level (naming both; a classification not in the list counts as
   above every level; the host asks again with `confirmed` once the user says yes), or `{ go }` with the file's name and

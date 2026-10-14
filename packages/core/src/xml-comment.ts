@@ -21,15 +21,25 @@ export const notXml = (c: string): boolean => {
   );
 };
 
-/** A note as the XML comment that holds it, `<!-- … -->`, one pass over its characters. */
-export function noteComment(note: string): string {
-  let out = '';
+/**
+ * A note's text as the comment writes it, one piece for each character, given out as it is taken: linear by
+ * construction, as all it keeps between characters is the last character written (never the text written so far,
+ * which a search of would make a run of hyphens quadratic).
+ */
+export function* commentPieces(note: Iterable<string>): Generator<string> {
+  let last = '';
   for (const c of note) {
-    if (c === '\\') out += '\\\\';
-    else if (c === '\r') out += '\\r';
-    else if (c === '-' && out.endsWith('-')) out += '\\-';
-    else if (notXml(c)) out += `\\u{${(c.codePointAt(0) ?? 0).toString(16).toUpperCase()}}`;
-    else out += c;
+    let piece = c;
+    if (c === '\\') piece = '\\\\';
+    else if (c === '\r') piece = '\\r';
+    else if (c === '-' && last === '-') piece = '\\-';
+    else if (notXml(c)) piece = `\\u{${(c.codePointAt(0) ?? 0).toString(16).toUpperCase()}}`;
+    last = piece.slice(-1);
+    yield piece;
   }
-  return `<!-- ${out} -->`;
+}
+
+/** A note as the XML comment that holds it, `<!-- … -->`, its pieces joined once. */
+export function noteComment(note: string): string {
+  return `<!-- ${[...commentPieces(note)].join('')} -->`;
 }
