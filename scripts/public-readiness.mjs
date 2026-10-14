@@ -1,17 +1,19 @@
 #!/usr/bin/env node
 // Fit to be public, and kept so (spec §13, Delivery). Three checks, the same before the repository goes public and
-// after: nothing confidential or personal and no secret in any commit of any branch or tag, and every commit from a
-// no-reply address (--history); a stranger's fresh clone sets up and builds from the README's own steps, which name
-// nothing on the maintainer's machine (--setup); and the repository's settings on GitHub let no one but a collaborator
-// contribute (--settings). CI and the release run the first two. The third is read, and set, through the GitHub CLI by
-// whoever administers the repository, since CI's own token cannot read a repository's settings.
+// after: nothing confidential or personal and no secret in any commit of the checked-out branch's own history, and
+// every commit from a no-reply address (--history); a stranger's fresh clone sets up and builds from the README's own
+// steps, which name nothing on the maintainer's machine (--setup); and the repository's settings on GitHub let no one
+// but a collaborator contribute (--settings). CI and the release run the first two. The third is read, and set,
+// through the GitHub CLI by whoever administers the repository, since CI's own token cannot read a repository's
+// settings.
 //
 // Usage:
-//   node scripts/public-readiness.mjs --history            every blob and commit message, every branch and tag
+//   node scripts/public-readiness.mjs --history            every blob and commit message of HEAD's own history
 //   node scripts/public-readiness.mjs --setup              a fresh clone runs the README's steps; the docs name no machine
 //   node scripts/public-readiness.mjs --settings           compare the GitHub settings with the wanted ones (admin, gh)
 //   node scripts/public-readiness.mjs --settings --apply   set each one that differs
-//   node scripts/public-readiness.mjs --make-public --yes  --history first, then make the repository public
+//   node scripts/public-readiness.mjs --make-public --yes  --history over every branch and tag first, then make the
+//                                                          repository public
 //
 // Exits 1 and lists each problem by place and kind. What matched is never printed, so a CI log cannot leak it.
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -36,14 +38,18 @@ const NO_ONE = /(@users\.noreply\.github\.com|^noreply@github\.com|@example\.(co
 const problemsIn = (text) => [...findProblems(text), ...findSecrets(text)].map((p) => ({ rule: p.rule, line: p.line }));
 
 /**
- * Every problem in a repository's whole history, each as {where, rule}: a blob that looks confidential, personal or
- * secret, a blob too large, a commit message with the same, or a commit by an address that names a person. The place
- * is a path and line, or a commit; never the text.
+ * Every problem in the history of `refs` (the checked-out commit's own, `HEAD`, unless told otherwise), each as
+ * {where, rule}: a blob that looks confidential, personal or secret, a blob too large, a commit message with the same,
+ * or a commit by an address that names a person. The place is a path and line, or a commit; never the text. Other
+ * branches are not read: a bot's branch holds commits that are not this history, and a pull request is judged on its
+ * own. `refs: ['--all']` reads every branch and tag, as the check before the repository is made public does.
  */
-export function historyProblems(root = ROOT) {
+export function historyProblems(root = ROOT, { refs = ['HEAD'] } = {}) {
   const found = [];
   const pathOf = new Map();
-  for (const line of git(root, ['rev-list', '--objects', '--all']).toString().split('\n')) {
+  for (const line of git(root, ['rev-list', '--objects', ...refs])
+    .toString()
+    .split('\n')) {
     const i = line.indexOf(' ');
     if (i > 0 && !pathOf.has(line.slice(0, i))) pathOf.set(line.slice(0, i), line.slice(i + 1));
   }
@@ -59,7 +65,9 @@ export function historyProblems(root = ROOT) {
     if (body.subarray(0, 8000).includes(0)) continue;
     for (const p of problemsIn(body.toString('utf8'))) found.push({ where: `${where}:${p.line}`, rule: p.rule });
   }
-  for (const record of git(root, ['log', '--all', '--format=%H%x00%ae%x00%ce%x00%B%x01']).toString().split('\x01')) {
+  for (const record of git(root, ['log', ...refs, '--format=%H%x00%ae%x00%ce%x00%B%x01'])
+    .toString()
+    .split('\x01')) {
     const [sha, author, committer, message] = record.trim().split('\x00');
     if (!sha) continue;
     const commit = `commit ${sha.slice(0, 8)}`;
@@ -347,7 +355,9 @@ export function settingsReport(repo, { apply = false, log = console.log } = {}) 
 function main(argv) {
   const flag = (f) => argv.includes(f);
   const problems = [];
-  if (flag('--history') || flag('--make-public')) problems.push(...historyProblems());
+  // Making the repository public publishes every branch and tag, so that gate reads them all.
+  if (flag('--history') || flag('--make-public'))
+    problems.push(...historyProblems(ROOT, { refs: flag('--make-public') ? ['--all'] : ['HEAD'] }));
   if (flag('--setup')) problems.push(...setupProblems(), ...freshCloneProblems(ROOT, { log: console.error }));
   for (const p of problems) console.error(`  ${p.where} — ${p.rule}${p.detail ? `\n${p.detail}` : ''}`);
   if (problems.length) {

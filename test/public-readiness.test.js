@@ -88,6 +88,52 @@ describe('the history', () => {
     assert.match(where(problems, 'author-email')[0], /^commit [0-9a-f]{8} by …@mail\.test$/);
   });
 
+  test("only the checked-out branch's own history is read: another branch's commits and blobs are not", () => {
+    const { dir, commit } = repository();
+    const git = (...args) => execFileSync('git', args, { cwd: dir, encoding: 'utf8' });
+    const email = ['one', 'mail.test'].join('@');
+    git('switch', '-q', '-c', 'side');
+    commit('side.js', `const key = '${awsKey()}';\n`, `Written by ${email}`, { GIT_AUTHOR_EMAIL: email });
+    git('tag', 'side-tag');
+    git('switch', '-q', 'main');
+    commit('b.txt', 'b\n');
+    assert.deepEqual(historyProblems(dir), [], 'the side branch is not part of this history');
+    git('switch', '-q', 'side');
+    assert.deepEqual(rules(historyProblems(dir)), ['author-email', 'aws-key', 'email'], 'checked out, it is');
+  });
+
+  test('every branch and tag can still be asked for, as before a repository is made public', () => {
+    const { dir, commit } = repository();
+    const git = (...args) => execFileSync('git', args, { cwd: dir, encoding: 'utf8' });
+    const email = ['one', 'mail.test'].join('@');
+    git('switch', '-q', '-c', 'side');
+    commit('side.txt', 'a\n', 'Side', { GIT_AUTHOR_EMAIL: email });
+    git('switch', '-q', 'main');
+    assert.deepEqual(rules(historyProblems(dir, { refs: ['--all'] })), ['author-email']);
+  });
+
+  test("an address at GitHub's no-reply domain names no one, in a commit message as in the author field", () => {
+    const { dir, commit } = repository();
+    const noReply = ['49699333+dependabot[bot]', 'users.noreply.github.com'].join('@');
+    commit('a.txt', 'a\n', `Bump a\n\nSigned-off-by: dependabot[bot] <${noReply}>`, {
+      GIT_AUTHOR_EMAIL: noReply,
+      GIT_COMMITTER_EMAIL: noReply,
+    });
+    assert.deepEqual(historyProblems(dir), []);
+  });
+
+  test("any other address stays a problem, in a commit message and in the author field, GitHub's own among them", () => {
+    const { dir, commit } = repository();
+    const other = ['one', 'mail.test'].join('@');
+    const lookalike = ['one', 'users.noreply.github.com.mail.test'].join('@');
+    const github = ['person', 'github.com'].join('@');
+    commit('a.txt', 'a\n', `Change a\n\nSigned-off-by: One <${other}>`);
+    commit('b.txt', 'b\n', `Change b\n\nSigned-off-by: One <${lookalike}>`, { GIT_AUTHOR_EMAIL: github });
+    const problems = historyProblems(dir);
+    assert.deepEqual(rules(problems), ['author-email', 'email', 'email']);
+    assert.match(where(problems, 'author-email')[0], /^commit [0-9a-f]{8} by …@github\.com$/);
+  });
+
   test('a blob too large to belong in a small plugin is a problem', () => {
     const { dir, commit } = repository();
     commit('big.txt', 'a'.repeat(MAX_BLOB_BYTES + 1));
