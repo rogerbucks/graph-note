@@ -1,6 +1,7 @@
 // The style graph's shape (editor spec §2, §6, §7, §14, §15): what a style block holds once read — nudges, the properties
 // shown inline, looks for views and paths, whether a view fades or hides what is outside it, how a view was shown,
-// where arrowheads are hidden, the diagram type chosen, and how links move — and the words each may use. A style graph is written in the same notation as the data, in
+// where arrowheads are hidden, the diagram type chosen, how links move and the pictures on boxes (§18) — and the words
+// each may use. A style graph is written in the same notation as the data, in
 // its own block, and never in the data.
 import { distance } from './estimates.ts';
 import { STYLE } from './layout.ts';
@@ -80,6 +81,7 @@ export const STYLE_KINDS = [
   'Diagram',
   'Flow',
   'Links',
+  'Picture',
 ] as const;
 /** One of the kinds of thing a style graph holds. */
 export type StyleKind = (typeof STYLE_KINDS)[number];
@@ -98,6 +100,7 @@ export const STYLE_KEYS: Record<StyleKind, readonly string[]> = {
   Diagram: ['type', 'view', 'relationship'],
   Flow: ['motion', 'means', 'type', 'view'],
   Links: ['view', 'routing', 'merge'],
+  Picture: ['property', 'kind', 'thing', 'view'],
 };
 
 /** A word as a sentence says it before a kind's name: `an Arrows`, `a Show`. */
@@ -193,6 +196,19 @@ export interface Flow {
   at: StyleAt;
 }
 
+/**
+ * A thing's image drawn on its box (§18, animated_image_shown): the property that holds it, for every thing of a kind or
+ * one thing; in the whole graph, or in one view. The most particular decides (picture.ts).
+ */
+export interface Picture {
+  property: string;
+  kind?: string;
+  thing?: string;
+  /** The view it is chosen for; none, the whole graph. */
+  view?: string;
+  at: StyleAt;
+}
+
 /** A link, by its two ends and its relationship type. */
 export interface LinkTarget {
   from: string;
@@ -263,6 +279,8 @@ export interface StyleGraph {
   flows: Flow[];
   /** How links are routed and whether they are merged, for the whole graph or a view, in the order written. */
   links: Links[];
+  /** The boxes drawn with a picture, and the property holding it, in the order written; none, no picture on a box. */
+  pictures: Picture[];
 }
 
 /** Where styling applies: a view, or a path; with neither, the plain drawing, which keeps the locked style. */
@@ -299,6 +317,7 @@ export function emptyStyle(): StyleGraph {
     diagrams: [],
     flows: [],
     links: [],
+    pictures: [],
   };
 }
 

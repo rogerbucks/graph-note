@@ -57,6 +57,7 @@ from graphspec.style.flow import flow_source
 from graphspec.style.fold_source import folded_source, routed_source
 from graphspec.style.inline import inline_source
 from graphspec.style.nudges import nudged_source
+from graphspec.style.picture import picture_source
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 STYLE = json.load(open(os.path.join(HERE, "graph_svg.style.json"), encoding="utf-8"))
@@ -214,16 +215,17 @@ def drawn_source(
     flow: Sequence[Mapping] = (),
     folding: Mapping | None = None,
     routing: str | None = None,
+    pictures: Sequence[Mapping] = (),
 ) -> tuple[str, list[str], list[str]]:
     """The Graphviz source render lays a graph out from in `rankdir`, with its kinds and readings,
     as the plugin's core writes it (render.ts, directions): the layout source (dot_source), laid
     out as its diagram type (typed_source), its moving links marked (flow_source), its arrowheads
-    hidden and properties shown (arrowless_source, inline_source), its nudges written in
-    (nudged_source), then folded and merged as `folding` says (folded_source) and its links routed
-    (routed_source)."""
+    hidden and properties shown (arrowless_source, inline_source), room kept for its pictures
+    (picture_source), its nudges written in (nudged_source), then folded and merged as `folding`
+    says (folded_source) and its links routed (routed_source)."""
     src, kinds, readings = dot_source(nodes, edges, rankdir, suggested)
     src = flow_source(typed_source(src, plan), flow)
-    src = inline_source(arrowless_source(src, arrowless), inline)
+    src = picture_source(inline_source(arrowless_source(src, arrowless), inline), pictures)
     src = nudged_source(src, nudges, [key for key, _, _ in nodes], plan)
     return routed_source(folded_source(src, folding), routing), kinds, readings
 
@@ -321,6 +323,7 @@ def render(
     flow: Sequence[Mapping] = (),
     folding: Mapping | None = None,
     routing: str | None = None,
+    pictures: Sequence[Mapping] = (),
 ) -> str:
     """The graph as one block of inline SVG. Raises RuntimeError if Graphviz is missing or fails.
     Laid out both left-to-right and top-to-bottom; the one that shrinks least to fit the page width
@@ -338,7 +341,8 @@ def render(
     links that move (flow_links), marked as the core's link-flow.ts marks them (flow_source).
     folding and routing: what a View menu folds and merges (graphspec.style.folding, fold_plan;
     none unless asked for) and how the style graph routes the links (§25), written in last
-    (folded_source, routed_source)."""
+    (folded_source, routed_source). pictures: the boxes drawn with a picture (pictures_for), room
+    kept for each before the nudges (picture_source); the image is a host's to put there."""
     if isinstance(suggested, str):
         raise TypeError("suggested is a collection of keys, not one key as a string")
     if not DOT:
@@ -357,6 +361,7 @@ def render(
             flow=flow,
             folding=folding,
             routing=routing,
+            pictures=pictures,
         )
         fit = min(1.0, target / w) - (
             0.25 if h > STYLE["max_height_ratio"] * max(w, target) else 0

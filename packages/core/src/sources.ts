@@ -69,7 +69,7 @@ function placeOf(written: string): string {
  * Whether a place could reach outside the vault, or into what it hides: a leading slash or backslash, a drive letter, a
  * `..` part, or any part starting with a dot (the config folder, `.trash`, a hidden folder), split at either slash.
  */
-const outsideVault = (place: string): boolean =>
+export const outsideVault = (place: string): boolean =>
   /^[/\\]/.test(place) || /^[A-Za-z]:/.test(place) || place.split(/[/\\]/).some((part) => part.startsWith('.'));
 
 /** Whether a line holds anything but whitespace or a whole-line comment. */

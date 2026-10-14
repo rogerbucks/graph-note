@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/image-facts.test.js",
+  "test": "an animated image is known by its bytes > a GIF cut short is read as far as it goes, never past its end: only its whole frames are counted",
+  "seen_failing_first": false,
+  "evidence": "A strengthened copy of 'a GIF cut short', renamed, asked for in the review of #443: it pins that the GIF reader already counted only whole frames at every length, so it held before; the reader was right, the old test only too loose."
+}

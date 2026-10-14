@@ -12,7 +12,7 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 third item of Viewing. The letters are B Before, V Viewing, Z Zoom, P The edit pane, I Editing in place and the
 inspector, S The style graph, W Views, D Parked for later, T Walked paths, X Export, C Settings, A Accessibility, F Focus
 and untangle, R Proposals, G Details and the sheet, E Diagram types, U AI models, Q Sources and steps, L Link flow and
-path play, and M The View menu.
+path play, M The View menu, and K Animated images.
 **A number never changes once given**, whatever happens to the item's words or its place; a removed item's number is
 never used again, and **a new item takes the next number in its section**. Each item after Before has a note in
 `test-vault/Device checks/` that shows the case in Obsidian, found by its number (`test/device-check-notes.test.js`
@@ -493,6 +493,38 @@ Settings › Accessibility › Display › Reduce motion; on the iPhone, Setting
       stay open and its neighbours stay in focus; nothing in the note changes, in reading view too. In a view, Save as
       shown writes the switches into the style block; close the note and open it again: the view opens with them (slice
       3, view_switch_view_only, untangle_data_untouched).
+
+## Animated images — spec §18, §11, §16
+
+The test vault holds notes only, so the images are put in by hand on the Mac, outside Obsidian, in the folder
+`Device checks/20 Animated images`, and taken out again afterwards; on the phone they arrive only when Obsidian Sync's
+"Images" file type is on. Each note says which files it needs: any animated GIF, APNG, animated WebP and animated SVG
+will do, under the names given, and for K-05 a GIF larger than 5 MB. Reduce motion stays off until K-04 turns it on.
+
+- [ ] **K-01** Open the details of Ann: under Images, cat.gif, spin.png, dance.webp and loop.svg each move, each with its
+      name and a Pause button; a property naming an image outside the vault says it is not loaded, and shows nothing
+      (slice 3, animated_image_shown).
+- [ ] **K-02** A graph whose style block holds a Picture for the kind Cat: each cat's box shows its image moving, at the
+      top of the box above its kind, with a small pause button in the picture's corner; the dog's box has no picture.
+      Light and dark themes both (slice 3, animated_image_shown).
+- [ ] **K-03** Desktop: Tab to the picture's control on a box and press Enter: the picture stops on its first frame and the
+      control shows Play; press Space: it moves again. The details do not open. In the details, Tab to Pause and press
+      Enter, then Play. Phone: tap the control on a box, then the button in the details: each pauses and plays, and the
+      tap never selects the box (slice 3, animation_pause_play).
+- [ ] **K-04** Turn the system's reduce-motion setting on and redraw the note of K-02: every picture and every image in
+      the details is still, its first frame, each saying it is still as the system asks; press Play on one: only that
+      one moves. Turn the setting off again afterwards (slice 3, motion_reduced_respected).
+- [ ] **K-05** A thing whose image is the GIF of more than 5 MB: it is never read, so its box shows only its Play control
+      where the picture would be, and its image in the details shows nothing, each saying it is over the 5 MB an
+      animated image may be, and the limits in a sentence; pressing Play leaves it so and says why again. The drawing is
+      drawn at once, without waiting for it (slice 3, animated_image_limited).
+- [ ] **K-06** Seven cats, each with an animated GIF and a Picture: six pictures move and the seventh is still, saying six
+      are already moving here; pressing its Play says so again. Pause one of the six, then press Play on the seventh:
+      it moves (slice 3, animated_image_limited).
+- [ ] **K-07** Export the note of K-02 as SVG: the notice says each cat's image was kept moving, and still under reduced
+      motion; opened in a browser the file shows them moving, and still with reduce motion on, and loads nothing from
+      elsewhere. Export it as PNG: the notice says each was reduced to its first frame, as a PNG cannot move (slice 3,
+      export_animation_stated).
 
 ## Result
 

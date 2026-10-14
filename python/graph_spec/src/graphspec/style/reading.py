@@ -94,12 +94,13 @@ def read_style(
     """The style of `graph`: every style block of the note for it (`// graph: <name> · STYLE
     <graph>`), read as the data is, merged, and checked against the graph as the note reads it
     (`world`, from read_for_drawing's store). Returns ({nudges, direction, shows, arrows,
-    diagrams, flows, links, shown}, problems): each nudge {word, thing, other, group, direction
-    as written, at: {block, line, id}}; each Show {property, kind, thing or type, view (if any),
-    inline: 'on' or 'off', at}; each Arrows {arrowheads: 'show' or 'hide', view and type (if any),
-    at}; each Diagram {type, view and relationship (if any), at}; each Flow {motion: 'dashes',
-    'dot' or 'still', means, view and type (if any), at}; each Links {routing, merge and view (if
-    any), at}; only those sound and in no conflict; for each view saved as shown, the View menu's
+    diagrams, flows, links, shown, pictures}, problems): each nudge {word, thing, other, group,
+    direction as written, at: {block, line, id}}; each Show {property, kind, thing or type, view
+    (if any), inline: 'on' or 'off', at}; each Arrows {arrowheads: 'show' or 'hide', view and type
+    (if any), at}; each Diagram {type, view and relationship (if any), at}; each Flow {motion:
+    'dashes', 'dot' or 'still', means, view and type (if any), at}; each Links {routing, merge and
+    view (if any), at}; each Picture {property, kind or thing, view (if any), at}; only those
+    sound and in no conflict; for each view saved as shown, the View menu's
     switches saved with it ({view: {labels, hubs, groups, merge: 'on' or 'off', as written}}); the
     direction a direction nudge sets, or None; and each problem {graph, block, line, severity,
     message, fix}, the block's index in `texts` and its line. The problems are the core's, word for
@@ -118,6 +119,7 @@ def read_style(
         "flows": [],
         "links": [],
         "shown": {},
+        "pictures": [],
     }
     if not blocks:
         return style, []
@@ -198,4 +200,6 @@ def read_style(
     every = [*named, *problems, *_links(texts, blocks, graph), *checked, *conflicts]
     every.sort(key=lambda p: (p["block"], p["line"]))
     chosen = {"nudges": kept, "direction": direction, "shows": shows, "arrows": arrows}
-    return {**chosen, "diagrams": diagrams, "flows": flows, "links": links, "shown": shown}, every
+    # a box's picture is the most particular Picture's, the first of two alike: none conflicts
+    chosen = {**chosen, "diagrams": diagrams, "flows": flows, "pictures": c["pictures"]}
+    return {**chosen, "links": links, "shown": shown}, every
