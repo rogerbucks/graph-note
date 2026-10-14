@@ -42,13 +42,23 @@ const select = (el: HTMLElement, label: string, options: [string, string][], val
   return s;
 };
 
+/** The Export form shown in `parent`, if there is one. */
+const shownForm = (parent: HTMLElement) =>
+  Array.from(parent.children).find((c) => c.classList.contains('graph-note-export'));
+
 /** Shows the Export form in `el`, or takes it away when it is shown; the focus goes to its first choice. */
 export function toggleExportForm(parent: HTMLElement, x: Exporting): void {
-  const was = Array.from(parent.children).find((c) => c.classList.contains('graph-note-export'));
-  if (was) {
-    was.remove();
-    return;
-  }
+  const was = shownForm(parent);
+  if (was) was.remove();
+  else openExportForm(parent, x);
+}
+
+/**
+ * Shows the Export form in `parent` as `x` asks, in place of one already shown, never taking it away: as a played path's
+ * Export as an animated SVG opens it on that path. The focus goes to its first choice.
+ */
+export function openExportForm(parent: HTMLElement, x: Exporting): void {
+  shownForm(parent)?.remove();
   const el = parent.createDiv({ cls: 'graph-note-export', attr: { role: 'group', 'aria-label': 'Export' } });
   const scopes: [string, string][] = x.view
     ? [

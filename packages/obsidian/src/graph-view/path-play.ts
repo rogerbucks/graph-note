@@ -7,9 +7,9 @@
 // when the playing stops or its card goes.
 import { DEFAULT_PACE, PATH_PACES, PathAutoplay, PathPlayer, paceSaid, pathsOf } from '@graph-note/core';
 import type { NoteReading, PathStep, WalkedPath } from '@graph-note/core';
-import { toggleExportForm } from '../export/export-form';
+import { openExportForm } from '../export/export-form';
 import { reducedMotion } from './details-nav';
-import { runnerOn } from './flow-marks';
+import { linkGroup, runnerOn } from './flow-marks';
 import { button } from './view-bar';
 import type { ViewOptions } from './view-options';
 
@@ -67,8 +67,9 @@ export class PathPlay {
     pace.addEventListener('change', () => this.auto.setPace(Number(pace.value)));
     const exporting = o.exporting;
     if (exporting)
+      // always opens the form on this path, in place of one already open, never closing it
       button(controls, 'Export as an animated SVG', 'download', () =>
-        toggleExportForm(card, {
+        openExportForm(card, {
           ...exporting,
           paths: playablePaths(o.reading, o.graph),
           walk: { id: path.id, pace: this.auto.pace },
@@ -121,7 +122,7 @@ export class PathPlay {
     const n = links.findIndex(
       (l) => (l.from === from.key && l.to === to.key) || (l.from === to.key && l.to === from.key),
     );
-    const g = n < 0 ? null : this.svg()?.querySelector(`g.edge[data-link="${n}"]`);
+    const g = n < 0 ? null : linkGroup(this.svg(), n);
     if (!g) return;
     const along = links[n]?.from === from.key,
       back = along === (this.o.motion?.reversed ?? []).includes(n);

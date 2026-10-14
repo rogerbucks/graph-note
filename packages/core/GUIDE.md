@@ -370,7 +370,9 @@ a GQL block, CSV or GraphML (`DATA_FORMATS`), each read back into the very thing
 - `export-motion.ts` — movement in an exported SVG, by CSS in the file itself (no encoder, nothing loaded): with
   `ExportInfo.motion` (an SVG; a PNG is drawn still), the links a style moves run their dashes, or a dot travels a copy
   of each one's line (`withRunners`), and `withStyleSheet` puts the style sheet first in the image; every animation stops
-  under `@media (prefers-reduced-motion: reduce)`, leaving the dashes, the icons and the legend's words.
+  under `@media (prefers-reduced-motion: reduce)`, leaving the dashes, the icons and the legend's words. Every rule is
+  written under the class the image's root carries (`IMAGE_CLASS`, `inImage`), so an SVG put inline in a page styles
+  nothing of the page's own.
 - `export-pages.ts` — `pngPages`: an image too large for one sharp PNG on the device, split into a grid of pages, each at
   twice natural size or more, within the device's pixels and no side over `PNG_MOST_SIDE` (32,767 device pixels), as
   few as the pixels allow and then evened out, so a row is never whole pages and a sliver, in reading order; null when

@@ -4,7 +4,7 @@
 // and numbered on its thing, and the frame says the walk in order, so the still image tells it too (motion_not_alone);
 // under `@media (prefers-reduced-motion: reduce)` every animation stops (motion_reduced_respected). One too large for
 // the device is refused before anything is laid out, saying why and what would make it fit (animation_export_fits).
-import { runnerOf, withStyleSheet } from './export-motion.ts';
+import { inImage, runnerOf, withStyleSheet } from './export-motion.ts';
 import { STYLE } from './layout.ts';
 import type { GraphDrawing } from './note-reading.ts';
 import type { Palette } from './palette.ts';
@@ -35,9 +35,13 @@ export interface TooLargeToAnimate {
   fix: string;
 }
 
-/** About how many bytes an animated SVG of this size takes: the drawing's things and links, and the steps' style. */
+/**
+ * About how many bytes an animated SVG of this size takes: the drawing's things and links, and each step's share of the
+ * style sheet and the drawing (its thing's keyframes and rule, a dot's runner and keyframes, its number, its words in
+ * the frame), about 800 bytes.
+ */
 export const animationBytes = (x: { steps: number; things: number; links: number }): number =>
-  2000 + x.things * 800 + x.links * 600 + x.steps * 250;
+  2000 + x.things * 800 + x.links * 600 + x.steps * 800;
 
 const where = (device: Device) => (device === 'phone' ? 'this phone' : 'this computer');
 
@@ -107,7 +111,8 @@ export function pathPlan(drawing: GraphDrawing, path: WalkedPath, reversed: read
 const pct = (slot: number, of: number) => `${Math.round((slot / of) * 10000) / 100}%`;
 const justAfter = (slot: number, of: number) => `${(Math.round((slot / of) * 10000) + 1) / 100}%`;
 const seconds = (ms: number) => `${Math.round(ms) / 1000}s`;
-const shapes = (n: number) => `#node${n} > path, #node${n} > polygon, #node${n} > ellipse`;
+// every rule is written under the image's own class, so it reaches nothing of a page the SVG is put inline in
+const shapes = (n: number) => ['path', 'polygon', 'ellipse'].map((s) => inImage(`#node${n} > ${s}`)).join(', ');
 
 /** Where a thing's box starts, its least x and y, from the first shape of its group: a path, a polygon or an ellipse. */
 function cornerOf(body: string): { x: number; y: number } | null {
@@ -175,9 +180,8 @@ export function pathCss(plan: PathPlan, pace: number): string {
     out.push(`${shapes(node)} { stroke-width: 3; animation: graph-note-step-${node} ${round} step-end infinite; }`);
     animated.push(shapes(node));
   }
-  out.push(
-    '.graph-note-path-runner { fill: none; stroke-width: 6; stroke-linecap: round; stroke-dasharray: 0 200; opacity: 0; }',
-  );
+  const runner = inImage('.graph-note-path-runner');
+  out.push(`${runner} { fill: none; stroke-width: 6; stroke-linecap: round; stroke-dasharray: 0 200; opacity: 0; }`);
   plan.runners.forEach((r, i) => {
     const k = i + 1,
       [from, to] = r.back ? [-100, 0] : [0, -100];
@@ -192,13 +196,12 @@ export function pathCss(plan: PathPlan, pace: number): string {
       ...(r.slot + 1 < n ? [frame(justAfter(r.slot + 1, n), 0, to), frame('100%', 0, to)] : []),
     ];
     out.push(`@keyframes graph-note-run-${k} { ${frames.join(' ')} }`);
-    out.push(
-      `#graph-note-run-${k} { stroke-dasharray: 0 200; animation: graph-note-run-${k} ${round} linear infinite; }`,
-    );
-    animated.push(`#graph-note-run-${k}`);
+    const one = inImage(`#graph-note-run-${k}`);
+    out.push(`${one} { stroke-dasharray: 0 200; animation: graph-note-run-${k} ${round} linear infinite; }`);
+    animated.push(one);
   });
   out.push(
-    `@media (prefers-reduced-motion: reduce) { ${animated.map((s) => `${s} { animation: none; }`).join(' ')} .graph-note-path-runner { display: none; } }`,
+    `@media (prefers-reduced-motion: reduce) { ${animated.map((s) => `${s} { animation: none; }`).join(' ')} ${runner} { display: none; } }`,
   );
   return out.join('\n');
 }

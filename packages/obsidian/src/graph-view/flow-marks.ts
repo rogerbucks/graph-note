@@ -1,10 +1,9 @@
 // Links that move, on the drawing (spec §7, links_show_flow, motion_not_alone, motion_reduced_respected): each link the
 // style graph moves marked by class for `styles.css` to run its dashes, or a dot along a copy of its line, so the line
 // itself stays; named for a screen reader with its movement and what it means; and the card's legend saying each in
-// words beside its icon. The movement is the style sheet's alone, stopped under reduced motion, where no dot is added.
+// words beside its icon. The movement is the style sheet's alone, stopped under reduced motion, where the dot is hidden.
 import { flowLegend, flowSaid } from '@graph-note/core';
 import type { FlowLink } from '@graph-note/core';
-import { reducedMotion } from './details-nav';
 
 const SVG = 'http://www.w3.org/2000/svg';
 
@@ -24,17 +23,24 @@ export function runnerOn(g: Element, cls: string, more = ''): SVGPathElement | n
 }
 
 /**
- * The links of `svg` that `flow` moves (each a written link, by its `data-link`), marked: the classes the style sheet
- * moves them by, their name with the movement and its meaning, and, for a dot, its runner — none under reduced motion.
+ * A written link's group in the drawing, by its index among the links: Graphviz numbers them `edge1`, `edge2`… in the
+ * order written, a link guessed from a near miss of its type among them, which has no `data-link` (drawing-svg.ts).
+ */
+export const linkGroup = (svg: Element | undefined, index: number): Element | null =>
+  svg?.querySelector(`g.edge[id="edge${index + 1}"]`) ?? null;
+
+/**
+ * The links of `svg` that `flow` moves (each a written link, by its place, a guessed one too), marked: the classes the
+ * style sheet moves them by, their name with the movement and its meaning, and, for a dot, its runner. The runner is
+ * drawn whatever the system asks, and `styles.css` hides it under reduced motion, so turning that off moves it at once.
  */
 export function markFlow(svg: SVGSVGElement, flow: readonly FlowLink[]): void {
-  const still = reducedMotion(activeWindow);
   for (const f of flow) {
-    const g = svg.querySelector(`g.edge[data-link="${f.index}"]`);
+    const g = linkGroup(svg, f.index);
     if (!g) continue;
     g.classList.add('graph-note-flow', `graph-note-flow-${f.motion}`);
     g.setAttribute('aria-label', `${g.getAttribute('aria-label') ?? ''}, ${flowSaid(f)}`);
-    if (f.motion === 'dot' && !still) runnerOn(g, 'graph-note-flow-runner');
+    if (f.motion === 'dot') runnerOn(g, 'graph-note-flow-runner');
   }
 }
 

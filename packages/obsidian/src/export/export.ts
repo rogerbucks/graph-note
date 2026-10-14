@@ -8,8 +8,10 @@
 // of them or none, with the companion note when set (export_companion_note). Each outcome is said once.
 import { Notice, Platform, TFile } from 'obsidian';
 import {
+  PATH_PACES,
   PathPlayer,
   animationFits,
+  paceSaid,
   companionNote,
   dataText,
   exportPlan,
@@ -92,7 +94,8 @@ const said = (outcome: ExportOutcome): ExportOutcome => {
 
 /**
  * The path an export plays (§7), found in the note as it is now; or why it is not made, before anything is laid out: the
- * path is gone or has no steps, it is asked for as anything but an SVG, or it is too large for the device
+ * path is gone or has no steps, it is asked for as anything but an SVG or at a pace Play does not step at, or it is too
+ * large for the device
  * (animation_export_fits), saying why and what would make it fit.
  */
 function playedWalk(
@@ -107,6 +110,10 @@ function playedWalk(
     return { stopped: `The path ${asked.id} is not in the note with a step to play, so nothing was exported.` };
   if (format !== 'svg')
     return { stopped: 'A played path is exported as an animated SVG only. Nothing was saved. Choose SVG.' };
+  if (!(PATH_PACES as readonly number[]).includes(asked.pace))
+    return {
+      stopped: `The animated SVG was not made: ${asked.pace} is not a pace a path plays at. Nothing was saved. Choose one of ${PATH_PACES.map(paceSaid).join(', ').toLowerCase()}.`,
+    };
   const large = animationFits(
     { steps: path.steps.length, things: scope.drawing.boxes.length, links: scope.drawing.links.length },
     deviceOf(),

@@ -163,6 +163,34 @@ describe('the moving highlight', () => {
       env.uninstall();
     }
   });
+
+  // proves: path_autoplay, links_show_flow
+  test('the dot runs a link guessed from a near miss of its type too, which has no data-link', async () => {
+    const guessed = `// graph: trip
+(home:Place {name: 'Home'}),
+(park:Place {name: 'The park'}),
+(cafe:Place {name: 'Cafe'}),
+(home)-[:NEAR]->(park),
+(cafe)-[:NEAR]->(home),
+(park)-[:NEER]->(cafe),
+(tour:Path {title: 'Sunday walk'}),
+(tour)-[:STEP {seq: 1}]->(home),
+(tour)-[:STEP {seq: 2}]->(park),
+(tour)-[:STEP {seq: 3}]->(cafe)`;
+    const { env, timer, el } = await playing(guessed);
+    try {
+      labelled(el, 'Play Sunday walk').click();
+      timer.tick();
+      timer.tick();
+      const link = el.querySelectorAll('g.edge').find((g) => g.getAttribute('id') === 'edge3');
+      assert.ok(link.getAttribute('data-estimate') !== null, 'the misspelt link is drawn as a guess');
+      const runners = el.querySelectorAll('.graph-note-path-runner');
+      assert.equal(runners.length, 1);
+      assert.ok(link.querySelectorAll('path').includes(runners[0]), 'on the guessed link from the park to the cafe');
+    } finally {
+      env.uninstall();
+    }
+  });
 });
 
 describe('still or instant whenever the system asks for reduced motion', () => {
@@ -216,6 +244,47 @@ describe('a played path exported as an animated SVG', () => {
       assert.match(svg, /animation: graph-note-step-\d+ 6s step-end infinite/);
       assert.match(svg, /@media \(prefers-reduced-motion: reduce\)/);
       assert.match(svg, /path Sunday walk/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: path_animation_export
+  test('Export as an animated SVG always opens the form on the path: pressed again, or with the form already open', async () => {
+    const { env, el } = await playing();
+    try {
+      const forms = () => el.querySelectorAll('.graph-note-export');
+      labelled(el, 'Play Sunday walk').click();
+      labelled(el, 'Export as an animated SVG').click();
+      labelled(el, 'Export as an animated SVG').click();
+      assert.equal(forms().length, 1, 'still open, once');
+      assert.equal(select(forms()[0], 'What to export').value, 'path:tour');
+      // the bar's Export closes the form, and opens it again on the whole diagram; the path's button puts the path back
+      labelled(el.querySelector('.graph-note-bar'), 'Export').click();
+      assert.equal(forms().length, 0);
+      labelled(el.querySelector('.graph-note-bar'), 'Export').click();
+      assert.equal(select(forms()[0], 'What to export').value, 'whole');
+      labelled(el, 'Export as an animated SVG').click();
+      assert.equal(forms().length, 1);
+      assert.equal(select(forms()[0], 'What to export').value, 'path:tour');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: path_animation_export
+  test('a pace that is not one Play steps at is refused, and nothing is written', async () => {
+    const { env } = await playing();
+    try {
+      const out = await env.plugin.exportGraph({
+        path: PATH,
+        graph: 'trip',
+        format: 'svg',
+        theme: 'light',
+        walk: { id: 'tour', pace: 3 },
+      });
+      assert.match(out.stopped, /3 is not a pace a path plays at/);
+      assert.deepEqual(written(env, '.svg'), []);
     } finally {
       env.uninstall();
     }

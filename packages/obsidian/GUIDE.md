@@ -215,11 +215,14 @@ module that ties the parts together, named as the folder is.
 - `path-play.ts` — a path playing (path_autoplay): the core's `PathAutoplay` stepping on its own at the pace chosen
   (Pace), Pause and Play on, Previous and Next (a step by hand pauses it) and Stop; the step now on outlined, pulsing,
   and a dot running the link from the step before when a link joins them, forwards along the walk; each step said in
-  the strip's one live region; at once and with no dot under reduced motion. Export as an animated SVG opens the Export
-  form on the path at its pace (path_animation_export). `playablePaths` are the paths the Export form offers.
-- `flow-marks.ts` — links that move (§7, links_show_flow): each link the style graph moves given the classes
-  `styles.css` moves it by, its name said with its movement and meaning, and for a dot a runner, a copy of its line
-  (`runnerOn`, which the path playing uses too), none under reduced motion; and the card's legend of what the moving
+  the strip's one live region; at once and with no dot under reduced motion. Export as an animated SVG always opens the
+  Export form on the path at its pace (`openExportForm`, in place of a form already open; path_animation_export), and
+  an export at a pace Play does not step at is refused. `playablePaths` are the paths the Export form offers.
+- `flow-marks.ts` — links that move (§7, links_show_flow): each link the style graph moves, found by Graphviz's number
+  (`linkGroup`, so a link guessed from a near miss of its type is found too, which has no `data-link`), given the
+  classes `styles.css` moves it by, its name said with its movement and meaning, and for a dot a runner, a copy of its
+  line (`runnerOn`, which the path playing uses too), drawn whatever the setting and hidden by `styles.css` under reduced
+  motion, so turning that off later moves it at once; and the card's legend of what the moving
   links mean, each in words beside its icon (motion_not_alone). The movement is `styles.css`'s, still under
   `prefers-reduced-motion` (motion_reduced_respected).
 - `add-thing.ts` — adding a thing (§5): while the card is edited, Add a thing asks for the text first and suggests the name

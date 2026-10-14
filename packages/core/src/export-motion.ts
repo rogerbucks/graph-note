@@ -10,22 +10,40 @@ import type { FlowLink } from './link-flow.ts';
 const DASH_SECONDS = 1,
   DOT_SECONDS = 2;
 
+/**
+ * The class an exported image carries on its root, which every rule of its style sheet is written under, so a sheet in
+ * an SVG put inline in a page reaches nothing of the page's own.
+ */
+export const IMAGE_CLASS = 'graph-note-image';
+
+/** A selector written under the image's own class. */
+export const inImage = (selector: string): string => `.${IMAGE_CLASS} ${selector}`;
+
 /** The style sheet that moves the links: dashes running, a dot travelling, backwards along a line laid out backwards. */
 const FLOW_CSS = [
   '@keyframes graph-note-flow-dashes { to { stroke-dashoffset: -20; } }',
   '@keyframes graph-note-flow-dot { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -100; } }',
-  `.graph-note-flow-dashes > path { stroke-dasharray: 6 4; animation: graph-note-flow-dashes ${DASH_SECONDS}s linear infinite; }`,
-  '.graph-note-flow-back.graph-note-flow-dashes > path { animation-direction: reverse; }',
-  '.graph-note-flow-runner { fill: none; stroke-width: 5; stroke-linecap: round; stroke-dasharray: 0 200; ' +
+  `${inImage('.graph-note-flow-dashes > path')} { stroke-dasharray: 6 4; ` +
+    `animation: graph-note-flow-dashes ${DASH_SECONDS}s linear infinite; }`,
+  `${inImage('.graph-note-flow-back.graph-note-flow-dashes > path')} { animation-direction: reverse; }`,
+  `${inImage('.graph-note-flow-runner')} { fill: none; stroke-width: 5; stroke-linecap: round; stroke-dasharray: 0 200; ` +
     `animation: graph-note-flow-dot ${DOT_SECONDS}s linear infinite; }`,
-  '.graph-note-flow-back > .graph-note-flow-runner { animation-direction: reverse; }',
-  '@media (prefers-reduced-motion: reduce) { .graph-note-flow-dashes > path, .graph-note-flow-runner { animation: none; } ' +
-    '.graph-note-flow-runner { display: none; } }',
+  `${inImage('.graph-note-flow-back > .graph-note-flow-runner')} { animation-direction: reverse; }`,
+  `@media (prefers-reduced-motion: reduce) { ${inImage('.graph-note-flow-dashes > path')}, ` +
+    `${inImage('.graph-note-flow-runner')} { animation: none; } ${inImage('.graph-note-flow-runner')} { display: none; } }`,
 ].join('\n');
 
-/** An SVG with a style sheet of its own, first inside its root element, where every shape sees it. */
+/**
+ * An SVG with a style sheet of its own, first inside its root element, where every shape sees it; the root given the
+ * image's class (`IMAGE_CLASS`) the sheet's rules are written under, once.
+ */
 export function withStyleSheet(svg: string, css: string): string {
-  return svg.replace(/(<svg\b[^>]*>)/, (open: string) => `${open}\n<style>${css}</style>`);
+  return svg.replace(/(<svg\b[^>]*>)/, (open: string) => {
+    const classed = open.includes(`class="${IMAGE_CLASS}"`)
+      ? open
+      : open.replace(/^<svg\b/, `<svg class="${IMAGE_CLASS}"`);
+    return `${classed}\n<style>${css}</style>`;
+  });
 }
 
 /**

@@ -15,6 +15,7 @@ import { FLOW_ICONS, flowFor, flowLegend, flowLinks, flowSaid, flowSource, rever
 import { directions, draw } from '../src/render.ts';
 import { readStyle } from '../src/style.ts';
 import { styledDrawing } from '../src/style-source.ts';
+import { unscoped } from './sheet-scope.js';
 
 const engine = await loadEngine();
 
@@ -323,6 +324,13 @@ describe('an exported SVG moves its links, and is still under reduced motion', (
     // a dot runs along a copy of each moving link's line, so the line itself is still drawn
     const runners = svg.match(/class="graph-note-flow-runner"/g) ?? [];
     assert.equal(runners.length, 4, 'one for each link a dot moves along');
+  });
+
+  // proves: links_show_flow
+  test('its style sheet reaches only into the image: every rule under the class the image carries', () => {
+    const svg = exported(true, ...LINES);
+    assert.match(svg, /^<svg [^>]*class="graph-note-image"/);
+    assert.deepEqual(unscoped(/<style>([\s\S]*?)<\/style>/.exec(svg)?.[1] ?? ''), []);
   });
 
   // proves: motion_not_alone

@@ -10,7 +10,8 @@ import { loadEngine } from '../src/engine.ts';
 import { exportSvg, exportWithLayout } from '../src/export.ts';
 import { exportScope } from '../src/export-scope.ts';
 import { PALETTES } from '../src/palette.ts';
-import { ANIMATION_LIMITS, animationFits, pathPlan } from '../src/path-animation.ts';
+import { ANIMATION_LIMITS, animationBytes, animationFits, pathPlan } from '../src/path-animation.ts';
+import { unscoped } from './sheet-scope.js';
 import { pathsOf } from '../src/paths.ts';
 import { chosen, directions } from '../src/render.ts';
 
@@ -84,6 +85,13 @@ describe('a played path exported as an animated SVG', () => {
   });
 
   // proves: path_animation_export
+  test('its style sheet reaches only into the image: every rule under the class the image carries', () => {
+    const svg = exported(1000);
+    assert.match(svg, /^<svg [^>]*class="graph-note-image"/);
+    assert.deepEqual(unscoped(sheetOf(svg)), []);
+  });
+
+  // proves: path_animation_export
   test('the pace set is the pace played: half a second a step makes the round two seconds', () => {
     assert.match(sheetOf(exported(500)), /animation: graph-note-step-\d+ 2s step-end infinite/);
   });
@@ -139,6 +147,12 @@ describe('an animated SVG too large for the device is refused before it starts',
       /^the animated SVG would be about \d+(\.\d)? MB, more than the \d+ MB this computer opens smoothly$/,
     );
     assert.match(big.fix, /view that holds the path/);
+  });
+
+  // proves: animation_export_fits
+  test('each step is reckoned at about 800 bytes, as its keyframes, outline and number take', () => {
+    const one = animationBytes({ steps: 1, things: 0, links: 0 }) - animationBytes({ steps: 0, things: 0, links: 0 });
+    assert.ok(one >= 800, `a step reckoned at ${one} bytes`);
   });
 
   // proves: animation_export_fits
