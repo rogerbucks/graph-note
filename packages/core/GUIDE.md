@@ -235,8 +235,8 @@ it. A graph line that says STYLE but names no graph is a problem, never data.
 
 - `style-graph.ts` — what a style graph holds once read (`StyleGraph`: nudges, shows, looks, each view's fade or hide,
   how each view was shown and the View menu's switches it was saved with, the direction, where arrowheads are hidden,
-  the diagram types chosen, how links move, how links are routed and merged) and the words it allows: the four nudge
-  words, the ways a link moves (`FLOW_MOTIONS`), the routings (`ROUTINGS`), the
+  the diagram types chosen, how links move, how links are routed and merged, the pictures on boxes) and the words it
+  allows: the four nudge words, the ways a link moves (`FLOW_MOTIONS`), the routings (`ROUTINGS`), the
   lines, the formats, fade or hide, on or off (`INLINE`), show or hide (`ARROWHEADS`), and the colours, which are only
   the locked style's hues by name (`STYLE_HUES`). A Show switches a property on or off inline for a kind, a thing or a
   relationship type's links, in the whole graph or one view; an Arrows hides or shows arrowheads for every link or one
@@ -300,11 +300,42 @@ it. A graph line that says STYLE but names no graph is a problem, never data.
   itself is a style sheet's — the plugin's `styles.css`, or an export's (`export-motion.ts`) — and stops under reduced
   motion (motion_reduced_respected). The Python library writes the same source (`graphspec/style/flow.py`), held to the
   core byte for byte on `python/graph_spec/tests/flow_cases.json` by `test/link-flow-parity.test.js`.
+- `picture.ts` — a picture on a box (§18, animated_image_shown): a `Picture` in the style graph,
+  `(p1:Picture {property: 'photo', kind: 'Cat'})`, names the property holding a thing's image, for a kind's things or
+  one thing, in the whole graph or a `view`; `pictureOf` checks one, `pictureFor` picks the most particular (a view's over
+  the whole graph's, a thing's over its kind's, the first of two alike), `picturesFor` gives each box whose Picture's
+  property holds text, and `pictureSource` keeps room for it in the source: a fixed square of `PICTURE_SIZE` points at the
+  top of the box's label, filled with `PICTURE_MARK`, which a host finds and fills with the image. The Python library
+  keeps the same room (`graphspec/style/picture.py`), held to the core byte for byte on
+  `python/graph_spec/tests/picture_cases.json` by `test/picture-parity.test.js`.
 - `style-edit.ts` — `styleEdit`: a nudge, a look, a view's fade or hide, how a view was shown, a property switched on or
   off inline, arrowheads hidden or shown, or the diagram type chosen, written as text into the graph's style block
   (made after the graph's last block when there is none); a view's setting, or a choice of properties, arrowheads or
   diagram type for one place, changed in place, never written twice; never a data block touched. A styled hue is drawn with `theme.ts`'s `hueColour`, the same blends as a
   kind's, so it meets the locked contrast.
+
+**Animated images (spec §18, §11, §13)**
+
+A thing's image is a file attached in the vault, named by a property's value; the host reads it and draws it with its
+own image decoding, and the core says what it is and what it may do. No library decodes an image here.
+
+- `image-links.ts` — where an image comes from: `imageLink` reads a value as a link (`[[cat.gif]]`, `![[cat.gif|200]]`)
+  or a path from the vault's root to a file of an image type (`IMAGE_EXTENSIONS`); an address outside the vault
+  (`https:`, `data:`, `//`) is never loaded (remote images are a later slice, remote_images_asked), and a place that
+  could leave the vault is refused, as a source's is (`sources.ts`, `outsideVault`), a link's target as a path's.
+  `imagesOf` lists a thing's images; `neverMoves` knows a JPEG by its name, for an image too large to read.
+- `image-facts.ts` — `imageFacts`: an image's format, whether it moves, its frames and its size, read from its bytes'
+  header and chunks (a GIF's image descriptors, an APNG's `acTL`, an animated WebP's flag and `ANMF` chunks, an AVIF's
+  `avis` brand, an SVG's animate elements or keyframes), never past the bytes there, and never looping on a length that
+  does not move it on. An SVG's start and root are found by `svgScan`, which looks at each character once and counts
+  what it looked at, so hostile markup (200 empty comments) costs no more than its length (review of #443). An SVG has
+  no frames to count, and has a pixel size only when its root gives one in pixels: its size on disk alone holds it to
+  the limits otherwise; an AVIF's size is not read either.
+- `image-limits.ts` — the limits an animated image moves within (`IMAGE_LIMITS`, said in `LIMITS_SAID`: size on disk,
+  pixels a frame, frames, and how many move at once in one drawing); an image over the size on disk is never read, and
+  is not shown, saying why; `startOf` says how an image starts — moving; still
+  under reduced motion, until played (motion_reduced_respected); its first frame, saying why, past a limit, Play refused
+  (animated_image_limited); still while as many as may move already do — and `playRefusal` why Play is refused.
 
 **Diagram types (spec §15)**
 
@@ -434,6 +465,14 @@ a GQL block, CSV or GraphML (`DATA_FORMATS`), each read back into the very thing
   under `@media (prefers-reduced-motion: reduce)`, leaving the dashes, the icons and the legend's words. Every rule is
   written under the class the image's root carries (`IMAGE_CLASS`, `inImage`), so an SVG put inline in a page styles
   nothing of the page's own.
+- `export-pictures.ts` — the pictures on boxes in an exported image (§16, export_animation_stated; §18): with
+  `ExportInfo.pictures`, the host's loader, each image embedded as a data address, so the file loads nothing; an SVG
+  keeps an animated one moving within `IMAGE_LIMITS`, its first frame beside it shown instead under reduced motion by
+  the image's own style sheet, scoped under `IMAGE_CLASS`; a PNG, or one past a limit, reduced to its first frame; one
+  that cannot be had, or was never read (`UnreadImage`, over the size limit: left out), drawn as a dashed frame. Only an
+  image type of a fixed list is written before the bytes, which must be base64, and an image is never put inline.
+  `ExportImage.animation` says what was done with each animated image, a line
+  each, and the frame says it too (`animationSaid`).
 - `export-pages.ts` — `pngPages`: an image too large for one sharp PNG on the device, split into a grid of pages, each at
   twice natural size or more, within the device's pixels and no side over `PNG_MOST_SIDE` (32,767 device pixels), as
   few as the pixels allow and then evened out, so a row is never whole pages and a sliver, in reading order; null when

@@ -5,6 +5,7 @@ import type { Estimate } from './estimates.ts';
 import type { InlineProperties } from './inline-properties.ts';
 import type { Refusal } from './layout-limits.ts';
 import type { FlowLink } from './link-flow.ts';
+import type { PictureBox } from './picture.ts';
 import type { Nudge } from './style-graph.ts';
 import type { Folding } from './untangle-fold.ts';
 
@@ -85,6 +86,8 @@ export interface GraphDrawing {
   routing?: 'straight' | 'right-angled';
   /** What its View menu folds and merges (spec §25, untangle-fold.ts); none, nothing. */
   folding?: Folding;
+  /** The boxes its style graph draws a picture on (spec §18, picture.ts), room kept for each; none, no picture. */
+  pictures?: PictureBox[];
 }
 
 /**

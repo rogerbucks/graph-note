@@ -22,6 +22,7 @@ from graphspec.style.diagram_types import diagram_for
 from graphspec.style.flow import flow_links
 from graphspec.style.folding import drawn_groups, fold_plan, links_of, starting_switches
 from graphspec.style.inline import inline_rows
+from graphspec.style.picture import pictures_for
 from graphspec.style.reading import read_style
 
 # The properties that give a thing its text, in the order the drawing chooses among them.
@@ -69,7 +70,8 @@ def render_args(
     """The arguments graph_svg.render draws `graph` of a note's gql blocks (`texts`) with, as
     the plugin draws it in `view` (None: the whole graph): its boxes and links, the keys drawn
     under a suggested name, and its style — nudges, direction, the links drawn without their
-    arrowheads, the properties shown inline, the links that move (§7, flow_links), and the plan of
+    arrowheads, the properties shown inline, the links that move (§7, flow_links), the boxes drawn
+    with a picture (§18, pictures_for), and the plan of
     the diagram type it is drawn as, while
     the data fits the one chosen (a network, with no plan, otherwise). A table chosen is drawn as a
     network, as only the plugin draws a table, and a note on stderr says so. How its links are
@@ -115,4 +117,5 @@ def render_args(
         "flow": flow_links([t for t, _ in parts["links"]], style["flows"], view),
         "folding": folding,
         "routing": None if routing == "curved" else routing,
+        "pictures": pictures_for(parts["boxes"], style["pictures"], view),
     }

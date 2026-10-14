@@ -226,6 +226,8 @@ export function settle(checked: Checked, graph: string): { style: StyleGraph; pr
   style.flows = settleFlows(checked.flows, graph, problems);
   style.links = settleLinks(checked.links, graph, problems);
   style.looks = settleLooks(checked.looks, graph, problems);
+  // a box's picture is the most particular Picture's, the first written of two alike (picture.ts): none conflicts
+  style.pictures = checked.pictures;
   const viewAt = new Map<string, number>();
   for (const { view, outside, at } of checked.views) {
     const first = style.views.get(view);

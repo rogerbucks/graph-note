@@ -124,6 +124,7 @@ export const files = new Map();
 const listeners = [];
 const vault = {
   getFileByPath: (p) => (files.has(p) ? new TFile(p) : null),
+  getResourcePath: (f) => `app://local/${f.path}`,
   read: async (f) => files.get(f.path),
   process: async (f, fn) => {
     const next = fn(files.get(f.path));
@@ -390,6 +391,12 @@ export function setIcon(el, icon) {
 }
 export function setTooltip(el, t) {
   el.title = t;
+}
+/** Bytes as base64, as Obsidian's own helper writes them: for an image embedded in an export. */
+export function arrayBufferToBase64(buffer) {
+  let s = '';
+  for (const b of new Uint8Array(buffer)) s += String.fromCharCode(b);
+  return btoa(s);
 }
 /** Where a note's front matter is, as Obsidian finds it: the text between a first line of --- and the next. */
 export function getFrontMatterInfo(text) {

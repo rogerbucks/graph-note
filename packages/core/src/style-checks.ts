@@ -1,11 +1,13 @@
 // Checking each thing of a style graph (editor spec §2, style_graph_checked; §6; §7; §14; §15, the arrowheads and the
-// diagram type; §7, how links move; §25, how links are routed and merged): its kind, its words, its values and every
-// name it uses, against the graph it styles. What is sound is kept; each fault is a problem on its line with its fix, and
-// the part at fault — or the whole thing, when nothing of it can be used — is left out of the style. The choices for how
-// a graph or a view is drawn are checked in style-choice-checks.ts, and every thing is read through style-reader.ts.
+// diagram type; §7, how links move; §25, how links are routed and merged; §18, a picture on a box): its kind, its words,
+// its values and every name it uses, against the graph it styles. What is sound is kept; each fault is a problem on its
+// line with its fix, and the part at fault — or the whole thing, when nothing of it can be used — is left out of the
+// style. The choices for how a graph or a view is drawn are checked in style-choice-checks.ts, and every thing is read
+// through style-reader.ts.
 import { STYLE } from './layout.ts';
 import { flowOf } from './link-flow.ts';
 import type { Problem } from './note-reading.ts';
+import { pictureOf } from './picture.ts';
 import { arrowsOf, diagramOf, linksOf } from './style-choice-checks.ts';
 import {
   FORMATS,
@@ -26,6 +28,7 @@ import type {
   Links,
   Look,
   Nudge,
+  Picture,
   Show,
   Shown,
   StyleAt,
@@ -72,6 +75,7 @@ export interface Checked {
   diagrams: Diagram[];
   flows: Flow[];
   links: Links[];
+  pictures: Picture[];
   problems: Problem[];
 }
 
@@ -270,6 +274,7 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
     diagrams: [],
     flows: [],
     links: [],
+    pictures: [],
     problems: [],
   };
   for (const raw of raws) {
@@ -303,6 +308,7 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
     else if (kinds[0] === 'Diagram') push(c.diagrams, kept(diagramOf(thing, names, p)));
     else if (kinds[0] === 'Flow') push(c.flows, kept(flowOf(thing, names, p)));
     else if (kinds[0] === 'Links') push(c.links, kept(linksOf(thing, names, p)));
+    else if (kinds[0] === 'Picture') push(c.pictures, kept(pictureOf(thing, names, p)));
     else push(c.shown, kept(shownOf(thing, names, p)));
   }
   return c;
