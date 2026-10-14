@@ -1,9 +1,12 @@
 // The limits a drawing is zoomed and panned within (spec §3, §25): how far in and out it zooms, the scale that fits the
 // whole drawing, and where it may sit in its viewport. Pure and host-free: zoom.ts's `Zoom`, and zoom-across.ts's
-// `AcrossZoom` through it, hold a drawing to them, and work them out again from the sizes they hold each time they ask.
+// `AcrossZoom` through it, hold a drawing to them, and work them out again from the sizes they hold each time they ask,
+// so a resized view, full screen entered or left, or a drawing laid out again has its own (zoom_fit_recomputed).
+//
+// From slice 3 the furthest out is the fit (zoom_out_to_fit): where the whole drawing fits its view, or natural size
+// when it would fit larger. It replaces §3's quarter of natural size, so a drawing that fits only below a quarter can
+// still be seen whole; four times natural size stays the furthest in.
 
-/** The furthest the drawing zooms out. */
-export const MIN_SCALE = 0.25;
 /** The furthest the drawing zooms in. */
 export const MAX_SCALE = 4;
 /** One press of zoom in or zoom out. */
@@ -21,16 +24,21 @@ export interface Size {
 /** `v` held between `lo` and `hi`. */
 export const clamp = (v: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, v));
 
-/** The scale at which the whole drawing just fits its viewport; 1 for a drawing with no size. */
+/** The scale at which the whole drawing just fits its viewport; 1, natural size, for a drawing or a view with no size. */
 export function wholeFit(content: Size, viewport: Size): number {
   const { width: cw, height: ch } = content,
     { width: vw, height: vh } = viewport;
-  return cw > 0 && ch > 0 ? Math.min(vw / cw, vh / ch) : 1;
+  return cw > 0 && ch > 0 && vw > 0 && vh > 0 ? Math.min(vw / cw, vh / ch) : 1;
+}
+
+/** The furthest the drawing zooms out (zoom_out_to_fit): where the whole of it fits, or natural size if it fits larger. */
+export function outLimit(content: Size, viewport: Size): number {
+  return Math.min(wholeFit(content, viewport), 1);
 }
 
 /** The scale that shows the whole drawing: in a note never above natural size, as a note draws it; elsewhere up to the limit. */
 export function fitScale(content: Size, viewport: Size, mode: Mode): number {
-  return clamp(wholeFit(content, viewport), MIN_SCALE, mode === 'note' ? 1 : MAX_SCALE);
+  return Math.min(wholeFit(content, viewport), mode === 'note' ? 1 : MAX_SCALE);
 }
 
 /** Where the drawing may sit: its viewport, the strip kept clear at the viewport's foot (§25), and its size there. */

@@ -100,7 +100,7 @@ export type {
   RunnerOptions,
   Told,
 } from './layout-worker.ts';
-export { Zoom, MIN_SCALE, MAX_SCALE, STEP } from './zoom.ts';
+export { Zoom, MAX_SCALE, STEP } from './zoom.ts';
 export { AcrossZoom } from './zoom-across.ts';
 export type { Mode, Place, Size, View, ZoomEvent } from './zoom.ts';
 export { MOVE_MS, READABLE_SCALE, Trail, coverOf, glideAt, linkGroups, pointerTo, sheetLimit } from './details-nav.ts';

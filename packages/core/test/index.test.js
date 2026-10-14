@@ -38,7 +38,9 @@
 // and their types, 14 Oct 2026: the host loads the files, and the core says what each can do), and links and
 // attachments (linksIn, linkKind, linkTo, linksHeld, attachmentsOf, noteOf, brokenLinks, withMeant, renamedLinks,
 // applyChanges, safeMarkdown, leavingWords, refusedWords, attachmentType and their types, 15 Oct 2026; an embedded note
-// read and made safe by the host, embedParts, embeddedMarkdown and EmbedPart, the same day).
+// read and made safe by the host, embedParts, embeddedMarkdown and EmbedPart, the same day). MIN_SCALE, the quarter of
+// natural size, went on 15 Oct 2026: from slice 3 the furthest out is the fit of the whole drawing (zoom_out_to_fit),
+// worked out by the zoom itself.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -84,7 +86,6 @@ const VALUES = [
   'LegendFilter',
   'MARK_WORDS',
   'MAX_SCALE',
-  'MIN_SCALE',
   'MOVE_MS',
   'NO_BASIS',
   'NUDGE_WORDS',

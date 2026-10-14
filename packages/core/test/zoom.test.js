@@ -1,9 +1,9 @@
-// Zoom, pan and full-screen (spec §3): Fit, zoom in and zoom out by button, gesture and key, within a quarter and four
-// times natural size. The host passes plain events in; the zoom says whether it used each one, so the host stops the
+// Zoom, pan and full-screen (spec §3): Fit, zoom in and zoom out by button, gesture and key, between the fit of the whole
+// drawing (§25, zoom-fit.test.js) and four times natural size. The host passes plain events in; the zoom says whether it used each one, so the host stops the
 // browser's own handling only then — and the note still scrolls when the drawing does not need the gesture.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { Zoom, MIN_SCALE, MAX_SCALE } from '../src/zoom.ts';
+import { Zoom, MAX_SCALE } from '../src/zoom.ts';
 import { AcrossZoom } from '../src/zoom-across.ts';
 
 const close = (a, b, msg) => assert.ok(Math.abs(a - b) < 1e-9, `${msg ?? ''} ${a} ≈ ${b}`);
@@ -50,7 +50,8 @@ describe('fit', () => {
     close(z.view().scale, 0.25);
     z.zoomIn();
     const before = z.view().scale;
-    z.resize({ width: 400, height: 200 });
+    // a view that grows past its fit brings the zoom up to the new fit (zoom-fit.test.js): this one stays above it
+    z.resize({ width: 300, height: 150 });
     close(z.view().scale, before, 'a zoomed drawing keeps its zoom');
   });
 
@@ -70,18 +71,18 @@ describe('fit', () => {
 });
 
 describe('limits', () => {
-  test('zoom stays between a quarter and four times natural size', () => {
-    assert.equal(MIN_SCALE, 0.25);
+  // from slice 3 the furthest out is the fit of §25 (zoom_out_to_fit), not a quarter: zoom-fit.test.js holds it in full
+  test('zoom stays between the fit of the whole drawing and four times natural size', () => {
     assert.equal(MAX_SCALE, 4);
     const z = make();
     for (let i = 0; i < 40; i++) z.zoomIn();
     close(z.view().scale, 4);
     for (let i = 0; i < 80; i++) z.zoomOut();
-    close(z.view().scale, 0.25);
+    close(z.view().scale, 0.5, 'the whole drawing fits at half size');
     z.zoomAt(1e9, 10, 10);
     close(z.view().scale, 4);
     z.zoomAt(1e-9, 10, 10);
-    close(z.view().scale, 0.25);
+    close(z.view().scale, 0.5);
   });
 
   test('the drawing is resized, not stretched, so its text stays sharp at every level', () => {
@@ -263,9 +264,10 @@ describe('pinching', () => {
   // device check Z-03 (Roger, 11 Oct 2026): "pinch zoom in and out should be a little quicker" — 1.4 times the rate it
   // was, which followed the fingers exactly: as a factor, each spread is raised to the power 1.4
   test('a pinch zooms 1.4 times as fast as the fingers move: twice apart is 2 ** 1.4 times the size, half as far 2 ** -1.4', () => {
-    const z = make('pane', { width: 100, height: 100 }, { width: 400, height: 400 });
-    close(z.view().scale, 4, 'fitted to the pane, at the upper limit');
-    z.zoomAt(1 / 4, 200, 200);
+    // a drawing large enough to zoom out below natural size: one smaller than its view stops there (zoom_out_to_fit)
+    const z = make('pane', { width: 2000, height: 2000 }, { width: 400, height: 400 });
+    close(z.view().scale, 0.2, 'fitted to the pane');
+    z.zoomAt(5, 200, 200);
     close(z.view().scale, 1);
     z.handle({ kind: 'down', id: 1, pointer: 'touch', x: 150, y: 200 });
     z.handle({ kind: 'down', id: 2, pointer: 'touch', x: 250, y: 200 });

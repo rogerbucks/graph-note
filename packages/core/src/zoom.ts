@@ -2,10 +2,10 @@
 // the host passes plain events in and draws the view this returns. handle() says whether the event was used, so the host
 // stops the browser's own handling only then — in a note the wheel and a one-finger drag still scroll the note. The
 // limits it holds the drawing within are zoom-fit.ts's.
-import { MAX_SCALE, MIN_SCALE, STEP, clamp, clampPan, fitScale } from './zoom-fit.ts';
+import { MAX_SCALE, STEP, clamp, clampPan, fitScale, outLimit } from './zoom-fit.ts';
 import type { Mode, Size } from './zoom-fit.ts';
 
-export { MAX_SCALE, MIN_SCALE, STEP } from './zoom-fit.ts';
+export { MAX_SCALE, STEP } from './zoom-fit.ts';
 export type { Mode, Size } from './zoom-fit.ts';
 
 /** Two taps this close in time (ms) and place (px) are a double tap; a pointer that moves further than TAP_SLOP is a drag. */
@@ -158,14 +158,14 @@ export class Zoom {
 
   /** Zooms by `factor` about a point of the viewport, which stays where it is unless the limits stop it. */
   zoomAt(factor: number, px: number, py: number): void {
-    const s = clamp(this.scale * factor, MIN_SCALE, MAX_SCALE),
+    const s = this.within(this.scale * factor),
       r = s / this.scale;
     this.place(s, px - (px - this.x) * r, py - (py - this.y) * r);
   }
 
   /** Shows the drawing at a scale and position saved before (a view saved as shown, spec §7), within the limits. */
   restore(scale: number, x: number, y: number): void {
-    this.place(clamp(scale, MIN_SCALE, MAX_SCALE), x, y);
+    this.place(this.within(scale), x, y);
   }
 
   /**
@@ -215,11 +215,35 @@ export class Zoom {
     this.place(this.scale, this.x + dx, this.y + dy);
   }
 
+  /**
+   * A new viewport, and the drawing's size too when it was laid out again by the View menu (§25). A fitted drawing is
+   * fitted again; any other keeps its zoom, unless the fit worked out again for the new sizes is above it, when it is
+   * brought up to the fit about the viewport's middle (zoom_fit_recomputed).
+   */
   resize(viewport: Size, content = this.content): void {
     const fitted = this.isFitted();
-    [this.viewport, this.content] = [viewport, content]; // the drawing's size too, laid out again by the View menu (§25)
-    if (fitted) this.fit();
-    else this.place(this.scale, this.x, this.y);
+    [this.viewport, this.content] = [viewport, content];
+    if (fitted) {
+      this.fit();
+      return;
+    }
+    const s = this.within(this.scale),
+      r = s / this.scale,
+      [mx, my] = [viewport.width / 2, viewport.height / 2];
+    this.place(s, mx - (mx - this.x) * r, my - (my - this.y) * r);
+  }
+
+  /**
+   * The furthest the drawing zooms out now (zoom_out_to_fit): where the whole of it fits the viewport, or natural size
+   * when it fits larger; worked out again from the viewport and drawing as they are each time it is asked.
+   */
+  outLimit(): number {
+    return outLimit(this.content, this.viewport);
+  }
+
+  /** A scale held within the limits: no further out than the fit, no further in than four times natural size. */
+  private within(scale: number): number {
+    return clamp(scale, this.outLimit(), MAX_SCALE);
   }
 
   setMode(mode: Mode): void {
@@ -311,7 +335,7 @@ export class Zoom {
       const [a, b] = [...this.pointers.values()].filter((q) => q.touch);
       if (!a || !b) return false;
       const spread = Math.hypot(a.x - b.x, a.y - b.y) / this.pinch.d;
-      const s = clamp(this.pinch.scale * spread ** PINCH_RATE, MIN_SCALE, MAX_SCALE);
+      const s = this.within(this.pinch.scale * spread ** PINCH_RATE);
       const mx = (a.x + b.x) / 2,
         my = (a.y + b.y) / 2;
       this.place(s, mx - this.pinch.px * s, my - this.pinch.py * s);

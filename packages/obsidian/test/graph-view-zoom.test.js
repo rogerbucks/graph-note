@@ -28,7 +28,9 @@ describe('zoom in the note', () => {
     assert.ok(widthOf(el) > fitted);
     labelled(el, 'Zoom out').click();
     labelled(el, 'Zoom out').click();
-    assert.ok(widthOf(el) < fitted);
+    // zooming out stops where the whole drawing fits (editor spec §25, zoom_out_to_fit): never smaller than fitted
+    assert.equal(widthOf(el), fitted);
+    labelled(el, 'Zoom in').click();
     labelled(el, 'Fit').click();
     assert.equal(widthOf(el), fitted);
     assert.ok(!svgOf(el).getAttribute('style')?.includes('scale'), 'resized, not scaled');
