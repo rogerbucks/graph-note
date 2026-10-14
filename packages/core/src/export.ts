@@ -7,6 +7,8 @@ import GraphLayout from '@graph-note/graph-spec/src/graph-layout.js';
 import type { Graph } from '@graph-note/graph-spec';
 import { marked } from './export-marks.ts';
 import type { Marks } from './export-marks.ts';
+import { withFlow, withRunners } from './export-motion.ts';
+import { flowLegend } from './link-flow.ts';
 import { framed, saidDate } from './export-frame.ts';
 import type { LegendItem } from './export-frame.ts';
 import type { ExportScope } from './export-scope.ts';
@@ -60,6 +62,11 @@ export type ExportInfo = {
   date: string;
   /** The fixed colours it is drawn in. */
   theme: ExportTheme;
+  /**
+   * Whether the image may move (§7): an SVG moves the links its style moves, and is still under reduced motion; a PNG is
+   * drawn from a still image. Still unless set.
+   */
+  motion?: boolean;
 } & (
   | { style?: undefined; data?: undefined }
   | {
@@ -82,19 +89,24 @@ const chip = (hue: string, p: Palette): Pick<LegendItem, 'fill' | 'stroke'> => (
   stroke: hueColour(hue, 'line', p),
 });
 
-/** The legend: each kind as the drawing colours it, then each colour a look uses in the view with what it means. */
-function legendItems(scope: ExportScope, style: StyleGraph | undefined, p: Palette): LegendItem[] {
+/**
+ * The legend: each kind as the drawing colours it, then each colour a look uses in the view with what it means, then
+ * each way a link moves with its icon and what it means (motion_not_alone), so a still image says it too.
+ */
+function legendItems(scope: ExportScope, drawing: GraphDrawing, style: StyleGraph | undefined, p: Palette) {
   const kinds = layoutSource(scope.drawing, 'LR').kinds,
     hues = GraphLayout.pick(kinds, STYLE.kind_hues, STYLE.kind_colours);
   const looks = style && scope.view !== undefined ? legendOf(style, { view: scope.view }) : [];
-  return [
+  const items: LegendItem[] = [
     ...kinds.map((kind) => ({ label: kind, ...chip(hues[kind] ?? '', p) })),
     ...looks.map((e) => ({
       label: e.means,
       fill: hueColour(e.colour, 'line', p),
       stroke: hueColour(e.colour, 'line', p),
     })),
+    ...flowLegend(drawing.flow ?? []).map((e) => ({ label: e.words, fill: p.page ?? 'none', stroke: p.text })),
   ];
+  return items;
 }
 
 /** What a view's looks do to the things and links drawn; none outside a view, where the locked style is kept. */
@@ -176,11 +188,15 @@ export async function exportWithLayout(
 /** The drawn graph marked, in its frame, in the fixed colours of `info.theme`. */
 function framedImage(scope: ExportScope, drawing: GraphDrawing, drawn: Drawn, info: ExportInfo): ExportImage {
   const palette = info.theme === 'dark' ? PALETTES.dark : PALETTES.light;
-  const body = marked(
-    drawn.svg,
-    drawing.boxes.map((b) => b.key),
-    { faded: scope.faded, looks: looksOf(scope, info.style) },
-    palette,
+  const flow = info.motion ? (drawing.flow ?? []) : [];
+  const body = withRunners(
+    marked(
+      drawn.svg,
+      drawing.boxes.map((b) => b.key),
+      { faded: scope.faded, looks: looksOf(scope, info.style) },
+      palette,
+    ),
+    flow,
   );
   const view = scope.view !== undefined;
   const subtitle = view
@@ -191,11 +207,12 @@ function framedImage(scope: ExportScope, drawing: GraphDrawing, drawn: Drawn, in
     {
       title: view ? `${scope.graph} · view ${scope.view}` : scope.graph,
       ...(subtitle ? { subtitle } : {}),
-      legend: legendItems(scope, info.style, palette),
+      legend: legendItems(scope, drawing, info.style, palette),
       footer: footerText(info.note, info.date),
     },
     palette,
   );
+  image.svg = withFlow(image.svg, flow);
   // a theme variable or a blend in a colour would read as black or nothing outside Obsidian: never let one out
   if (/(?:style|fill|stroke)="[^"]*(?:var\(--|color-mix\()/.test(image.svg))
     throw new Error(

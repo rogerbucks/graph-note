@@ -46,12 +46,13 @@ import textwrap
 import zlib
 from collections.abc import Collection, Iterable, Mapping, Sequence
 
-# arrowheads hidden and the diagram type (editor spec §15) and properties shown inline (§14),
-# written into the source as the plugin's core writes them; they live with the style graph that
-# chooses them, as do the directions laid out (re-exported here)
+# arrowheads hidden and the diagram type (§15), properties shown inline (§14) and links that move
+# (§7), written into the source as the plugin's core writes them; they live with the style graph
+# that chooses them, as do the directions laid out (re-exported here)
 from graphspec.style.arrows import arrowless_source
 from graphspec.style.diagram_types import directions, typed_source
 from graphspec.style.drawn import render_args  # noqa: F401 — re-exported: render(**render_args(…))
+from graphspec.style.flow import flow_source
 from graphspec.style.inline import inline_source
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -319,9 +320,12 @@ def _themed(svg, kinds, readings=()):
     return "\n".join(line.strip() for line in svg.splitlines() if line.strip())
 
 
-def _layout(nodes, edges, rankdir, suggested=(), nudges=(), arrowless=(), inline=None, plan=None):
+def _layout(
+    nodes, edges, rankdir, suggested=(), nudges=(), arrowless=(), inline=None, plan=None, flow=()
+):
     src, kinds, readings = dot_source(nodes, edges, rankdir, suggested)
-    src = inline_source(arrowless_source(typed_source(src, plan), arrowless), inline)
+    src = flow_source(typed_source(src, plan), flow)
+    src = inline_source(arrowless_source(src, arrowless), inline)
     src = nudged_source(src, nudges, [key for key, _, _ in nodes], plan)
     r = subprocess.run([DOT, "-Tsvg"], input=src, capture_output=True, text=True, timeout=60)
     if r.returncode:
@@ -339,6 +343,7 @@ def render(
     arrowless: Sequence[int] = (),
     inline: Mapping | None = None,
     diagram: Mapping | None = None,
+    flow: Sequence[Mapping] = (),
 ) -> str:
     """The graph as one block of inline SVG. Raises RuntimeError if Graphviz is missing or fails.
     Laid out both left-to-right and top-to-bottom; the one that shrinks least to fit the page width
@@ -352,7 +357,8 @@ def render(
     arrowless) and the properties shown (graphspec.style.inline, inline_rows), written into each
     source before the nudges (arrowless_source, inline_source), as the core writes them. diagram:
     the plan of the diagram type it is drawn as (diagram_types.diagram_for), written in first
-    (typed_source), and laid out in that type's direction unless a nudge sets one (§15)."""
+    (typed_source), and laid out in that type's direction unless a nudge sets one (§15). flow: the
+    links that move (flow_links), marked as the core's link-flow.ts marks them (flow_source)."""
     if isinstance(suggested, str):
         raise TypeError("suggested is a collection of keys, not one key as a string")
     if not DOT:
@@ -360,7 +366,7 @@ def render(
     target, best = STYLE["page_width"], None
     for rd in directions(direction, diagram):
         svg, kinds, readings, w, h = _layout(
-            nodes, edges, rd, suggested, nudges, arrowless, inline, diagram
+            nodes, edges, rd, suggested, nudges, arrowless, inline, diagram, flow
         )
         fit = min(1.0, target / w) - (
             0.25 if h > STYLE["max_height_ratio"] * max(w, target) else 0

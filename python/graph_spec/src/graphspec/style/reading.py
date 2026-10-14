@@ -2,8 +2,8 @@
 the graph read with the reader the data is read with, so what cannot be read is a problem on its
 line and the rest is used; then each thing checked against the graph it styles, and the things
 against each other. The core's style.ts readStyle, step for step, as far as what graph_svg draws
-goes — nudges, properties shown inline, arrowheads hidden and the diagram type — so graph_svg
-draws a styled graph
+goes — nudges, properties shown inline, arrowheads hidden, the diagram type and how links move —
+so graph_svg draws a styled graph
 as the plugin does (python_honours_nudges, arrows_both_renderers). Reading it never raises and
 never stops the drawing (broken_style_block): at worst the graph is drawn in the locked style.
 
@@ -22,7 +22,13 @@ from graphspec.reader.written_things import written_in
 from graphspec.rules.plain_graph import World
 from graphspec.rules.views import SCHEMA_LABELS, readings
 from graphspec.style.checks import check_things
-from graphspec.style.conflicts import settle_arrows, settle_diagrams, settle_nudges, settle_shows
+from graphspec.style.conflicts import (
+    settle_arrows,
+    settle_diagrams,
+    settle_flows,
+    settle_nudges,
+    settle_shows,
+)
 
 
 def _links(texts, blocks, graph):
@@ -86,10 +92,11 @@ def read_style(
     """The style of `graph`: every style block of the note for it (`// graph: <name> · STYLE
     <graph>`), read as the data is, merged, and checked against the graph as the note reads it
     (`world`, from read_for_drawing's store). Returns ({nudges, direction, shows, arrows,
-    diagrams}, problems): each nudge {word, thing, other, group, direction as written, at: {block,
-    line, id}}; each Show {property, kind, thing or type, view (if any), inline: 'on' or 'off',
-    at}; each Arrows {arrowheads: 'show' or 'hide', view and type (if any), at}; each Diagram
-    {type, view and relationship (if any), at}; only those sound and in no
+    diagrams, flows}, problems): each nudge {word, thing, other, group, direction as written, at:
+    {block, line, id}}; each Show {property, kind, thing or type, view (if any), inline: 'on' or
+    'off', at}; each Arrows {arrowheads: 'show' or 'hide', view and type (if any), at}; each
+    Diagram {type, view and relationship (if any), at}; each Flow {motion: 'dashes', 'dot' or
+    'still', means, view and type (if any), at}; only those sound and in no
     conflict; the direction a direction nudge sets, or None; and each problem {graph, block, line,
     severity, message, fix}, the block's index in `texts` and its line. The problems are the
     core's, word for word, for everything but a Look, ViewStyle or Shown: of those only the keys
@@ -103,6 +110,7 @@ def read_style(
         "shows": [],
         "arrows": [],
         "diagrams": [],
+        "flows": [],
     }
     if not blocks:
         return style, []
@@ -151,7 +159,14 @@ def read_style(
     shows, show_conflicts = settle_shows(c["shows"], graph)
     arrows, arrow_conflicts = settle_arrows(c["arrows"], graph)
     diagrams, diagram_conflicts = settle_diagrams(c["diagrams"], graph)
-    conflicts = [*conflicts, *show_conflicts, *arrow_conflicts, *diagram_conflicts]
+    flows, flow_conflicts = settle_flows(c["flows"], graph)
+    conflicts = [
+        *conflicts,
+        *show_conflicts,
+        *arrow_conflicts,
+        *diagram_conflicts,
+        *flow_conflicts,
+    ]
     # a style block named as a data graph: a reader that does not know STYLE merges it into the
     # data
     named = []
@@ -172,4 +187,4 @@ def read_style(
     every = [*named, *problems, *_links(texts, blocks, graph), *checked, *conflicts]
     every.sort(key=lambda p: (p["block"], p["line"]))
     chosen = {"nudges": kept, "direction": direction, "shows": shows, "arrows": arrows}
-    return {**chosen, "diagrams": diagrams}, every
+    return {**chosen, "diagrams": diagrams, "flows": flows}, every

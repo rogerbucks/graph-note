@@ -26,7 +26,8 @@
 // their types, 14 Oct 2026; AcrossZoom, the zoom of a drawing scrolled across only, moved out of Zoom in the review of
 // #126), and sending to an AI model (aiReady, modelChoices, endpointProblem, AI_PURPOSES, prepareSend, confirmSend,
 // sendPrepared, noteWithProposal and their types, 13 Oct 2026: the core reaches no network, so a send goes only through
-// the transport a host hands in).
+// the transport a host hands in), and links that move (FLOW_MOTIONS, FLOW_ICONS, flowFor, flowLegend, flowSaid,
+// reversedLinks and their types, 14 Oct 2026).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -49,6 +50,8 @@ const VALUES = [
   'EXPORT_FORMATS',
   'FADE',
   'FIND_LIMIT',
+  'FLOW_ICONS',
+  'FLOW_MOTIONS',
   'FORMATS',
   'FocusState',
   'History',
@@ -144,6 +147,9 @@ const VALUES = [
   'find',
   'fixed',
   'fixedPalette',
+  'flowFor',
+  'flowLegend',
+  'flowSaid',
   'focusOf',
   'glideAt',
   'gqlBlocks',
@@ -217,6 +223,7 @@ const VALUES = [
   'renameProperty',
   'replaceBlock',
   'reverseGuess',
+  'reversedLinks',
   'saidDate',
   'scrollsOneWay',
   'sendPrepared',
@@ -310,6 +317,10 @@ const TYPES = [
   'ExportScope',
   'ExportTheme',
   'ExportedData',
+  'Flow',
+  'FlowLegendEntry',
+  'FlowLink',
+  'FlowMotion',
   'FocusDepth',
   'FocusDepthSetting',
   'FocusEdge',
@@ -351,6 +362,7 @@ const TYPES = [
   'Marks',
   'Mode',
   'ModelChoice',
+  'Moving',
   'NameStyle',
   'NamedView',
   'NewThing',

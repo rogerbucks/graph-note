@@ -18,10 +18,12 @@ export { PALETTES, THEME_COLOURS, fixedPalette } from './palette.ts';
 export type { Palette, ThemeColours } from './palette.ts';
 export { readStyle, outsideOf, lookOf, legendOf } from './style.ts';
 export type { StyleReading } from './style.ts';
-export { ARROWHEADS, FORMATS, INLINE, LINES, NUDGE_WORDS, OUTSIDE, STYLE_HUES } from './style-graph.ts';
+export { ARROWHEADS, FLOW_MOTIONS, FORMATS, INLINE, LINES, NUDGE_WORDS, OUTSIDE, STYLE_HUES } from './style-graph.ts';
 export type {
   ArrowheadsChoice,
   Arrows,
+  Flow,
+  FlowMotion,
   Frame,
   InlineSwitch,
   LegendEntry,
@@ -43,6 +45,8 @@ export type {
 } from './style-graph.ts';
 export { nudgedSource, nudgedDrawing, styledDrawing } from './style-source.ts';
 export { arrowsShown } from './arrows.ts';
+export { FLOW_ICONS, flowFor, flowLegend, flowSaid, reversedLinks } from './link-flow.ts';
+export type { FlowLegendEntry, FlowLink, Moving } from './link-flow.ts';
 export { INLINE_ROWS } from './inline-properties.ts';
 export type { InlineProperties, PropertyRow } from './inline-properties.ts';
 export { styleEdit } from './style-edit.ts';

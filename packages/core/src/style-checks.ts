@@ -1,9 +1,9 @@
 // Checking each thing of a style graph (editor spec §2, style_graph_checked; §6; §7; §14; §15, the arrowheads and the
-// diagram type): its kind, its words, its values and
+// diagram type; §7, how links move): its kind, its words, its values and
 // every name it uses, against the graph it styles. What is sound is kept; each fault is a problem on its line with its
 // fix, and the part at fault — or the whole thing, when nothing of it can be used — is left out of the style.
-import { nearest } from './estimates.ts';
 import { STYLE } from './layout.ts';
+import { flowOf } from './link-flow.ts';
 import type { Problem } from './note-reading.ts';
 import {
   ARROWHEADS,
@@ -17,9 +17,9 @@ import {
   STYLE_KINDS,
   orList,
   styleProblem,
-  wordFix,
 } from './style-graph.ts';
-import type { Arrows, Diagram, Look, Nudge, Show, Shown, StyleAt, StyleKind, ViewStyle } from './style-graph.ts';
+import type { Arrows, Diagram, Flow, Look, Nudge, Show, Shown, StyleAt, StyleKind, ViewStyle } from './style-graph.ts';
+import { reader } from './style-reader.ts';
 import { readFrame, unknownKeys } from './style-words.ts';
 
 /** One thing of a style graph as read: its kinds, its properties, where it is, and where each property's text is. */
@@ -55,69 +55,12 @@ export interface Checked {
   shown: (Shown & { view: string; at: StyleAt })[];
   arrows: Arrows[];
   diagrams: Diagram[];
+  flows: Flow[];
   problems: Problem[];
 }
 
 const FOUR = 'a nudge must be one of four words: beside, before, group or direction';
 const KINDS = `${STYLE_KINDS.slice(0, -1).join(', ')} or ${STYLE_KINDS.at(-1)}`;
-
-/** Reads one thing's properties, reporting each fault: a value of the wrong type, a word not allowed, a name not there. */
-function reader(raw: RawThing, names: StyledNames, out: Problem[]) {
-  const report = (message: string, fix: string, edit: Pick<Problem, 'replace' | 'span'> = {}) =>
-    out.push(styleProblem(names.graph, raw.at, message, fix, edit));
-  const edit = (key: string, written: string, by: string[]) => {
-    const span = raw.span(key);
-    return by.length ? { replace: { written, with: by }, ...(span ? { span } : {}) } : {};
-  };
-  const r = {
-    report,
-    edit,
-    /** A fault of something absent, said unless a misspelt key may be it: the rename comes first, then this is said. */
-    missing(message: string, fix: string) {
-      if (!raw.misspelt) report(message, fix);
-    },
-    text(key: string): string | undefined {
-      const v = raw.props[key];
-      if (v === undefined || typeof v === 'string') return v;
-      report(`${key} must be text`, `write ${key} in quotes`);
-      return undefined;
-    },
-    number(key: string): number | undefined {
-      const v = raw.props[key];
-      if (v === undefined || (typeof v === 'number' && Number.isFinite(v))) return v;
-      report(`${key} must be a number`, `write ${key} as a number, such as ${key}: 1`);
-      return undefined;
-    },
-    /** A word of `among`, or undefined and a problem. */
-    word<T extends string>(key: string, among: readonly T[], message: string, always = false): T | undefined {
-      const v = r.text(key);
-      if (v === undefined || (among as readonly string[]).includes(v)) return v as T | undefined;
-      const { fix, nearest: near } = wordFix(v, among, always);
-      report(
-        message.replace('$', () => v),
-        fix,
-        edit(key, v, near ? [near] : []),
-      );
-      return undefined;
-    },
-    /** A name of the styled graph, or undefined and a problem whose fix is the nearest name. */
-    name(key: string, among: Set<string>, what: string, fixWhat = what): string | undefined {
-      const v = r.text(key);
-      if (v === undefined || among.has(v)) return v;
-      const near = nearest(v, among),
-        by = !near ? [] : 'one' in near ? [near.one] : near.several;
-      report(
-        `${v} is not ${what} in graph ${names.graph}`,
-        by.length
-          ? `change ${v} to ${by.length > 1 ? 'the one you mean: ' : ''}${orList(by)}`
-          : `write ${fixWhat} in graph ${names.graph}, or remove it`,
-        edit(key, v, by),
-      );
-      return undefined;
-    },
-  };
-  return r;
-}
 
 /** A nudge, checked: one of the four words, with the parts its word needs, each naming a thing of the graph. */
 function nudgeOf(raw: RawThing, names: StyledNames, out: Problem[]): Nudge | null {
@@ -340,7 +283,17 @@ function shownOf(raw: RawThing, names: StyledNames, out: Problem[]): Checked['sh
 
 /** Each thing of a style graph checked on its own, in the order written: what it gives, and the problems found. */
 export function checkThings(raws: RawThing[], names: StyledNames): Checked {
-  const c: Checked = { nudges: [], shows: [], looks: [], views: [], shown: [], arrows: [], diagrams: [], problems: [] };
+  const c: Checked = {
+    nudges: [],
+    shows: [],
+    looks: [],
+    views: [],
+    shown: [],
+    arrows: [],
+    diagrams: [],
+    flows: [],
+    problems: [],
+  };
   for (const raw of raws) {
     const kinds = raw.labels.filter((l) => (STYLE_KINDS as readonly string[]).includes(l));
     if (kinds.length !== 1 || raw.labels.length !== 1) {
@@ -370,6 +323,7 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
     else if (kinds[0] === 'ViewStyle') push(c.views, kept(viewStyleOf(thing, names, p)));
     else if (kinds[0] === 'Arrows') push(c.arrows, kept(arrowsOf(thing, names, p)));
     else if (kinds[0] === 'Diagram') push(c.diagrams, kept(diagramOf(thing, names, p)));
+    else if (kinds[0] === 'Flow') push(c.flows, kept(flowOf(thing, names, p)));
     else push(c.shown, kept(shownOf(thing, names, p)));
   }
   return c;
