@@ -133,6 +133,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `packages/core/test/edge-cases.test.js` — empty, broken and oversized inputs each give a stated result, never a blank or a crash (spec §9).
 - `packages/core/test/edits.test.js` — every edit from the pane round-trips; locking writes a schema the checks pass.
 - `packages/core/test/undo-over-theirs.test.js` — undo never undoes over a change another program, a sync or another pane made to the block: the history starts again from the note as it now is, Undo and Redo say why there is nothing to take back, and a change elsewhere in the note leaves undo working (editor spec §9, undo_never_over_theirs; §26, cc_undo_safe).
+- `packages/core/test/undo-one-block.test.js` — undo stays in its block: switching the pane to another block starts that block's own history, so Undo and Redo never write one block's text into another, and a reason that held for the block left is not given for the one chosen (editor spec §9, undo_stays_in_its_block).
 - `packages/core/test/notes-export.test.js` — each data export keeps the `///` notes where its format has comments, a GQL block's `///` lines and GraphML's XML comments, read back as written however hostile, and leaves them out of CSV, which has none; the text an engine is given keeps them too (editor spec §24, note_standard).
 - `packages/core/test/imports.test.js` — the core imports no host.
 - `packages/claude-code/test/build.test.mjs` — the build writes the mod's hooks bundle, with no WebAssembly engine, and a render script that draws.

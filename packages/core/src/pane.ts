@@ -78,7 +78,10 @@ export class PaneSession {
     }));
   }
 
-  /** Switches to another block of the note. Write what was typed first. */
+  /**
+   * Switches to another block of the note, starting its own history, so Undo never writes one block's text into another
+   * (§9, undo_stays_in_its_block). Write what was typed first.
+   */
   select(line: number): void {
     const b = graphBlocks(this.lastNote).find((x) => x.open === line);
     if (!b) return;
@@ -86,6 +89,8 @@ export class PaneSession {
     this.text = b.text;
     this.ref = { line: b.open, text: b.text };
     this.dirty = false;
+    this.history.clear();
+    this.dropped.undo = this.dropped.redo = false;
   }
 
   type(text: string): void {
@@ -224,12 +229,13 @@ export class PaneSession {
     return !can && this.dropped[which] ? CHANGED_ELSEWHERE[which] : null;
   }
 
-  /** An Undo or Redo refused for the history: why, with the block as it is, as nothing typed needs keeping. */
-  private refusedStep(note: string, which: 'undo' | 'redo'): PaneWrite | null {
+  /**
+   * An Undo or Redo refused for the history: why, with the block as it is, as nothing typed needs keeping. The note it
+   * was pressed on is not taken as seen: the change in it, if any, is the host's to tell (`noteChanged`).
+   */
+  private refusedStep(which: 'undo' | 'redo'): PaneWrite | null {
     const reason = this.stepRefusal(which);
-    if (!reason) return null;
-    this.lastNote = note;
-    return { ok: false, reason, draft: this.text, history: true };
+    return reason ? { ok: false, reason, draft: this.text, history: true } : null;
   }
 
   private step(note: string, text: string | null): PaneWrite {
@@ -249,11 +255,11 @@ export class PaneSession {
       if (!w.ok) return w;
       note = w.note;
     }
-    return this.refusedStep(note, 'undo') ?? this.step(note, this.history.undo());
+    return this.refusedStep('undo') ?? this.step(note, this.history.undo());
   }
 
   /** Redoes the last undo; never one made before the block changed outside the pane: refused then, saying why. */
   redo(note: string): PaneWrite {
-    return this.refusedStep(note, 'redo') ?? this.step(note, this.history.redo());
+    return this.refusedStep('redo') ?? this.step(note, this.history.redo());
   }
 }

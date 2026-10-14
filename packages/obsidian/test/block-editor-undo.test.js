@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import { build, load, until, wait } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
 import { PATH, READER, show } from './host/card-notes.js';
+import * as two from './host/pane-notes.js';
 
 before(() => build());
 
@@ -124,6 +125,61 @@ describe('a change elsewhere in the note', () => {
       await wait(20);
       assert.equal(note(env), NOTE.replace('Between.', 'Changed.'));
       assert.equal(el.querySelector('textarea').value, READER);
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
+// editor spec §9, undo_stays_in_its_block. Review of #451, 15 Oct 2026: Undo after switching blocks in the picker wrote
+// the first block's old text over the second
+describe('switching blocks in the picker', () => {
+  const EDITED = two.READER.replace('Easy on the eyes', 'Kind to the eyes'); // as many lines, so no block moves
+  /** The pane on the note's first block, with EDITED written from it. */
+  async function edited() {
+    const env = await two.open();
+    two.type(env.el, EDITED);
+    await until(() => two.note(env) === two.NOTE.replace(two.READER, EDITED));
+    return env;
+  }
+  /** Chooses the note's second block in the pane's picker. */
+  async function chooseOther(env) {
+    const picker = env.el.querySelector('select');
+    picker.value = '13';
+    picker.dispatch('change');
+    await until(() => two.textarea(env.el)?.value === two.OTHER);
+  }
+
+  test('Undo in the block chosen never writes the first block’s text into it', async () => {
+    const env = await edited();
+    try {
+      const written = two.note(env);
+      await chooseOther(env);
+      labelled(env.el, 'Undo').click();
+      await wait(20);
+      assert.equal(two.note(env), written, 'neither block changed');
+      assert.equal(two.textarea(env.el).value, two.OTHER);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('the reason that held for the first block is not given for the one chosen', async () => {
+    const env = await edited();
+    try {
+      const theirs = two.note(env).replace('Kind to the eyes', 'Gentle on the eyes');
+      await env.app.vault.modify({ path: two.PATH }, theirs);
+      await wait(20);
+      assert.equal(tool(env.el, 'undo').getAttribute('aria-disabled'), 'true', 'the first block’s Undo says why');
+      await chooseOther(env);
+      const undo = tool(env.el, 'undo');
+      assert.equal(undo.getAttribute('aria-label'), 'Undo');
+      assert.equal(undo.getAttribute('aria-disabled'), null);
+      const notices = env.state.notices.length;
+      undo.click();
+      await wait(20);
+      assert.equal(two.note(env), theirs);
+      assert.deepEqual(env.state.notices.slice(notices), [], 'nothing said: there is simply nothing to undo');
     } finally {
       env.uninstall();
     }
