@@ -392,8 +392,10 @@ describe('open questions, applied', () => {
     apply(gh, asked());
     const issue = issueOf(gh, 'q_01_ai_interface');
     assert.equal(issue.state, 'OPEN');
-    assert.deepEqual(labelsOf(issue), ['question', 'slice-3', 'workstream:Q']);
-    const made = gh.hub.calls.find((c) => c.args[0] === 'label' && c.args[1] === 'create' && c.args[2] === 'question');
+    assert.deepEqual(labelsOf(issue), ['kind:question', 'slice-3', 'workstream:Q']);
+    const made = gh.hub.calls.find(
+      (c) => c.args[0] === 'label' && c.args[1] === 'create' && c.args[2] === 'kind:question',
+    );
     assert.equal(
       made.args[made.args.indexOf('--description') + 1],
       'An open question, generated from the requirements file',

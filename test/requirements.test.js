@@ -8,6 +8,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { auditRequirements, BANNER, CURRENT_SLICE, REQUIREMENTS } from '../scripts/check-requirements.mjs';
+import { readBoard } from '../scripts/slice-board.mjs';
 import { exists, read, path } from './repository/repo.js';
 
 const real = () => read(REQUIREMENTS);
@@ -128,6 +129,35 @@ describe('a tampered copy fails the check', () => {
       [],
       'a whole question blocking a requirement is fine',
     );
+  });
+
+  test('an open question whose slice is not a whole number', () => {
+    const asked = "(q_text_slice:Question {num: 'Q-05', slice: '3', text: 'A slice given as text.'}),\n";
+    const problems = auditRequirements(replaced(real(), '// ── Links ──\n', `// ── Links ──\n${asked}`), { exists });
+    assert.deepEqual(kinds(problems, 'question'), ['q_text_slice']);
+    assert.match(problems.find((p) => p.kind === 'question').message, /q_text_slice.*slice.*whole number/);
+  });
+
+  test('a BLOCKS link from something that is not a question', () => {
+    const problems = auditRequirements(
+      replaced(real(), '// ── Links ──\n', '// ── Links ──\n(test_abuse)-[:BLOCKS]->(autocomplete),\n'),
+      { exists },
+    );
+    assert.deepEqual(kinds(problems, 'blocks'), ['test_abuse']);
+    assert.match(problems.find((p) => p.kind === 'blocks').message, /test_abuse.*autocomplete.*not a question/);
+  });
+
+  test('a question can never prove a requirement: one proved only by a question is unproved', () => {
+    const asked = [
+      "(q_proof:Question {num: 'Q-06', slice: 1, text: 'Taken for a proof.'}),",
+      "(proved_by_question:Requirement {section: '1', slice: 1, level: 'must', rule: 'Proved only by a question.'}),",
+      '(proved_by_question)-[:PROVED_BY]->(q_proof),',
+      '',
+    ].join('\n');
+    const text = replaced(real(), '// ── Links ──\n', `// ── Links ──\n${asked}`);
+    assert.deepEqual(kinds(auditRequirements(text, { exists }), 'unproved'), ['proved_by_question']);
+    const r = readBoard(text).requirements.find((x) => x.id === 'proved_by_question');
+    assert.deepEqual([r.tests, r.status], [[], 'open']);
   });
 
   test('a test that claims no requirement', () => {

@@ -374,14 +374,14 @@ describe('the desired issues for open questions', () => {
   });
 
   test('carry the slice, question and workstream labels, sorted, stay open, and are open in the Proof field', () => {
-    assert.deepEqual(question.labels, ['question', 'slice-3', 'workstream:Q']);
+    assert.deepEqual(question.labels, ['kind:question', 'slice-3', 'workstream:Q']);
     assert.equal(question.state, 'open');
     assert.deepEqual([question.slice, question.workstream, question.status], ['Slice 3', 'Q: Open questions', 'open']);
   });
 
   test('take the workstream that lists the question, else the open-questions workstream', () => {
     assert.equal(byId(state.issues, 'q_02_listed').workstream, 'W1: Focus, hover and untangle');
-    assert.deepEqual(byId(state.issues, 'q_02_listed').labels, ['question', 'slice-4', 'workstream:W1']);
+    assert.deepEqual(byId(state.issues, 'q_02_listed').labels, ['kind:question', 'slice-4', 'workstream:W1']);
   });
 
   test('cannot place an unlisted question when the open-questions workstream is missing', () => {
@@ -396,9 +396,16 @@ describe('the desired issues for open questions', () => {
 });
 
 describe('the question label', () => {
+  test('is namespaced as kind:question, so GitHub’s own question label stays somebody’s own', () => {
+    assert.equal(isManagedLabel('question'), false);
+    assert.equal(isManagedLabel('kind:other'), false);
+    const asked = desiredState(readBoard(FIXTURE_WITH_QUESTIONS), WORKSTREAMS_WITH_QUESTIONS, [3]);
+    assert.ok(byId(asked.issues, 'q_01_ai_interface').labels.includes('kind:question'));
+  });
+
   test('is one this generator owns, with its own description', () => {
-    assert.ok(isManagedLabel('question'));
-    const style = labelStyle('question');
+    assert.ok(isManagedLabel('kind:question'));
+    const style = labelStyle('kind:question');
     assert.match(style.color, /^[0-9A-F]{6}$/);
     assert.equal(style.description, 'An open question, generated from the requirements file');
   });
