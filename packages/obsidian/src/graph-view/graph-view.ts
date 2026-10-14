@@ -139,7 +139,7 @@ export class GraphView extends MarkdownRenderChild {
     if (this.o.editing) this.adder = new AddThing(root, this.o); // a thing added from its text, while edited (§5)
     const view = this.o.view;
     const writes: HTMLElement[] = view
-      ? renderViewStrip(root, view, () => ({ view: this.zoom.view(), selected: this.details.selectedKey() }))
+      ? renderViewStrip(root, view, () => this.sel.shownNow(this.zoom.view(), this.details.selectedKey()))
       : [];
     // a proposal laid over the graph (§17): who proposed it and the changes to accept or reject, which reading view takes away
     if (this.o.proposal) writes.push(...renderProposalStrip(root, this.o.proposal));
@@ -163,6 +163,7 @@ export class GraphView extends MarkdownRenderChild {
     else this.svg = insertSvg(this.viewport, this.o.drawn, this.drawing(), this.o.switches?.state.plan, this.o);
     if (this.svg && this.o.motion) markFlow(this.svg, this.o.motion.flow); // the links its style moves (§7)
     if (view && this.svg) markView(this.svg, view); // a view: what is outside it faded, its looks drawn (§7)
+    if (view?.shown?.legend?.length) this.sel.refresh(); // and its legend's choices, as it was saved as shown (§25)
     if (this.o.proposal && this.svg) markProposal(this.svg, this.o.proposal.shown.marks); // a proposal: what it adds, changes, removes (§17)
     // the drawing as sentences, for screen readers (spec §11)
     const d = this.drawing();

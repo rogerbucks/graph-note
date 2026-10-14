@@ -15,6 +15,7 @@ from __future__ import annotations
 from typing import Any
 
 from graphspec.style.flow import MEANS_NEEDED
+from graphspec.style.legend import legend_checked
 from graphspec.style.near_names import nearest
 from graphspec.style.picture import PICTURE_FOR
 from graphspec.style.words import (
@@ -240,7 +241,8 @@ def _links_of(raw, names, out):
 
 def _shown_of(raw, names, out):
     """How a view was shown, as far as graph_svg draws it (§25, view_switch_view_only): the view,
-    and the View menu's switches saved with it, each on or off. Its zoom, place, frame and
+    the View menu's switches saved with it, each on or off, and the legend's choices
+    (untangle_legend, graphspec/style/legend.py), the sound ones kept. Its zoom, place, frame and
     selection are the plugin's alone, so they are not read here."""
     r = _Reader(raw, names, out)
     view = r.text("view")
@@ -252,6 +254,9 @@ def _shown_of(raw, names, out):
         v = r.word(k, ON_OFF, f"{k} must be {or_list(ON_OFF)}")
         if v is not None:
             shown[k] = v
+    legend = legend_checked(r, names)
+    if legend is not None:
+        shown["legend"] = legend
     return shown
 
 

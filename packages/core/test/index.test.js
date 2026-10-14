@@ -13,8 +13,7 @@
 // readingOf, evaluate and their types, 11 Oct 2026), and export (exportScope, exportSvg, exportWithLayout, pngSize, exportPlan,
 // companionNote, writeSafely, saidDate, EXPORT_FORMATS, PNG_MIN_SCALE and their types, 11 Oct 2026; the data exports,
 // DATA_FORMATS, isDataFormat, exportedData and dataText, and an image across pages, pngPages and pageSvg, with their
-// types, 13 Oct 2026), and the refusal to
-// write a name only suggested (acceptNameFirst, 11 Oct 2026), and adding a thing (addThing, suggestName and their types,
+// types, 13 Oct 2026), and the refusal to write a name only suggested (acceptNameFirst, 11 Oct 2026), and adding a thing (addThing, suggestName and their types,
 // 11 Oct 2026), and an estimated link's fix (estimateFix, EstimateFix, 11 Oct 2026), and focus and untangling a large graph
 // (focusOf, highlightOf, FocusState, edgesOf, neighbourhood, LegendFilter, shortestPath, find, nextAlong, Untangle and their
 // types, and boundsOf and centres of the tap areas, 13 Oct 2026), and arrowheads hidden and properties shown inline
@@ -38,9 +37,7 @@
 // and their types, 14 Oct 2026: the host loads the files, and the core says what each can do), and links and
 // attachments (linksIn, linkKind, linkTo, linksHeld, attachmentsOf, noteOf, brokenLinks, withMeant, renamedLinks,
 // applyChanges, safeMarkdown, leavingWords, refusedWords, attachmentType and their types, 15 Oct 2026; an embedded note
-// read and made safe by the host, embedParts, embeddedMarkdown and EmbedPart, the same day). MIN_SCALE, the quarter of
-// natural size, went on 15 Oct 2026: from slice 3 the furthest out is the fit of the whole drawing (zoom_out_to_fit),
-// worked out by the zoom itself.
+// read and made safe by the host, embedParts, embeddedMarkdown and EmbedPart, the same day; LEGEND_CHOICES too).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -80,6 +77,7 @@ const VALUES = [
   'LABEL_SCALE',
   'LARGE_GRAPH',
   'LAYOUT_LIMITS',
+  'LEGEND_CHOICES',
   'LIMITS_SAID',
   'LINES',
   'LayoutRunner',
@@ -427,6 +425,8 @@ const TYPES = [
   'LayoutReply',
   'LayoutRequest',
   'LayoutScope',
+  'LegendChoice',
+  'LegendChoiceState',
   'LegendEntry',
   'LegendItem',
   'LegendState',
@@ -577,8 +577,7 @@ const TYPES = [
 /** The names src/index.ts exports, as written: values, and types only. */
 function written() {
   const src = ts.createSourceFile('index.ts', readFileSync(ENTRY, 'utf8'), ts.ScriptTarget.Latest, true);
-  const values = [],
-    types = [];
+  const [values, types] = [[], []];
   for (const n of src.statements)
     if (ts.isExportDeclaration(n) && n.exportClause && ts.isNamedExports(n.exportClause))
       for (const e of n.exportClause.elements) (n.isTypeOnly || e.isTypeOnly ? types : values).push(e.name.text);

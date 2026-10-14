@@ -1,9 +1,10 @@
 // Untangling a large graph in a card (editor spec §25, slice 3): a thing and its neighbours alone, the legend, the shortest
 // path between two things and the search box, tied to the core's `Untangle`. It holds only what the drawing shows and says
 // it in a banner; the card marks the drawing from `layers`. Nothing here reaches the note (untangle_data_untouched), so none
-// of it is gated for reading view: it changes the picture, never the data.
+// of it is gated for reading view: it changes the picture, never the data. Only the legend's choices are ever written, by
+// a view's Save as shown (view-strip.ts), which is gated; a view saved so starts with them (untangle_legend).
 import { Untangle, find, kindLegend, neighbourhoodWords, pathWords } from '@graph-note/core';
-import type { FocusDepth, FocusEdge, Kept, Layers, GraphDrawing, NoteReading } from '@graph-note/core';
+import type { FocusDepth, FocusEdge, Kept, Layers, GraphDrawing, LegendChoice, NoteReading } from '@graph-note/core';
 import { Banner } from './untangle-banner';
 import type { BannerRow } from './untangle-banner';
 import { renderFind } from './untangle-find';
@@ -22,6 +23,8 @@ export interface UntangleHost {
   changed: () => void;
   /** Selects a thing and brings it into view, as opening its details does. */
   go: (key: string) => void;
+  /** The legend's choices a view was saved as shown with, to start with (§25, untangle_legend); none for any other. */
+  legend?: readonly LegendChoice[];
 }
 
 /** What the details of a thing offer, which the card gives them. */
@@ -49,7 +52,7 @@ export class UntangleView {
   /** Builds the legend panel, the search row and the banner at the end of what the card has so far. */
   constructor(root: HTMLElement, host: UntangleHost) {
     this.host = host;
-    this.core = new Untangle(host.drawing);
+    this.core = new Untangle(host.drawing, host.legend);
     this.names = new Map(host.drawing.boxes.map((b) => [b.key, b.text]));
     this.finder = renderFind(root, {
       search: (q) => find(host.reading, host.graph, q),
@@ -62,6 +65,11 @@ export class UntangleView {
     });
     this.legend = renderLegend(root, kindLegend(host.drawing), this.core.legend, () => host.changed());
     this.banner = new Banner(root);
+  }
+
+  /** What the legend brings forward and hides now, as a view saved as shown keeps it. */
+  legendChoices(): LegendChoice[] {
+    return this.core.legend.choices();
   }
 
   /** The links of the drawing as the core numbers them. */

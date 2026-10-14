@@ -1,11 +1,13 @@
 // Untangling a large graph (editor spec §25, slice 3): a thing and its neighbours alone, the legend bringing a kind or a
 // relationship type forward or hiding it, the shortest path between two things, finding a thing, and walking the links by
 // arrow key. Host-free and pure: each says only what to show, hide or bring forward, so the host changes the drawing and
-// nothing else (untangle_data_untouched). Nothing here is written to the note, and nothing is kept past the drawing.
+// nothing else (untangle_data_untouched). Nothing here is written to the note, and nothing is kept past the drawing but
+// the legend's choices, which a host writes into the style graph when the user saves a view as shown (untangle-saved.ts).
 import { adjacency, edgesOf, within } from './focus.ts';
 import type { FocusDepth, FocusEdge, Kept } from './focus.ts';
 import { propertiesOf } from './inspector.ts';
 import type { GraphDrawing, NoteReading } from './note-reading.ts';
+import type { LegendChoice } from './untangle-saved.ts';
 
 const stepsWord = (n: number): string => `${n} step${n === 1 ? '' : 's'}`;
 const SEPARATOR = ' · ';
@@ -70,8 +72,9 @@ export type LegendState = 'normal' | 'forward' | 'hidden';
 
 /**
  * The legend's choices for one drawing: choosing a kind or a relationship type brings it forward and fades the rest,
- * choosing it again hides it, and once more puts it back (untangle_legend). Held by the drawing alone: nothing here is
- * saved, and a drawing opened again starts with every line as it is.
+ * choosing it again hides it, and once more puts it back (untangle_legend). Held by the drawing alone: saved only when
+ * the user saves a view as shown, written then by its host from `choices` (untangle-saved.ts), and given back by
+ * `restore` when that view opens; any other drawing opened again starts with every line as it is.
  */
 export class LegendFilter {
   private readonly chosen = new Map<string, 'forward' | 'hidden'>();
@@ -79,6 +82,20 @@ export class LegendFilter {
   /** How a line stands now. */
   state(id: string): LegendState {
     return this.chosen.get(id) ?? 'normal';
+  }
+
+  /** Each line brought forward or hidden, as a view saved as shown keeps it: kinds first, then types, each by name. */
+  choices(): LegendChoice[] {
+    const order = (id: string) => (id.startsWith('kind:') ? 0 : 1);
+    return [...this.chosen]
+      .map(([id, state]) => ({ id, state }))
+      .sort((a, b) => order(a.id) - order(b.id) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  }
+
+  /** Puts the lines as a view saved as shown keeps them, every other line as it is. */
+  restore(choices: readonly LegendChoice[]): void {
+    this.chosen.clear();
+    for (const c of choices) if (c.state === 'forward' || c.state === 'hidden') this.chosen.set(c.id, c.state);
   }
 
   /** Moves a line on to its next state and says which it is in now: normal, forward, hidden, and round again. */
@@ -272,10 +289,11 @@ export class Untangle {
   readonly edges: FocusEdge[];
   private readonly d: GraphDrawing;
 
-  /** For one drawing. */
-  constructor(d: GraphDrawing) {
+  /** For one drawing; a view saved as shown with its legend's choices starts with them (untangle_legend). */
+  constructor(d: GraphDrawing, legend: readonly LegendChoice[] = []) {
     this.d = d;
     this.edges = edgesOf(d);
+    this.legend.restore(legend);
   }
 
   /** Filters the drawing to a thing and what lies within `steps` of it. */

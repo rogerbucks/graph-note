@@ -131,7 +131,8 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 **Finding your way round a large graph (spec §25)**
 
 Pure and host-free: each says only what to keep at full strength, hide or bring forward, so a host changes the drawing
-and nothing else (untangle_data_untouched). Nothing here is written to a note or saved.
+and nothing else (untangle_data_untouched). Nothing here is written to a note or saved, but the legend's choices, which
+a host writes into the style graph when the user saves a view as shown (untangle-saved.ts).
 
 - `focus.ts` — focus on a selection: `focusOf` keeps a thing, its links and the things at their other ends (to two steps
   by the setting), or a link and the two things it joins; `highlightOf` is what the pointer, keyboard focus or a touch's
@@ -144,7 +145,15 @@ and nothing else (untangle_data_untouched). Nothing here is written to a note or
   `shortestPath` and `pathWords` (fewest links, either way; or that there is none), `find` (by name or property),
   `nextAlong` (an arrow key walks to the neighbour in that direction), `emphasis` (a path over the selection over the
   legend), and `Untangle`, which holds all of it for one drawing and works it out into `layers`: what is kept and what is
-  hidden.
+  hidden. `LegendFilter.choices` gives the legend's lines brought forward or hidden, kinds first, each by name, and
+  `restore` puts them back; an `Untangle` made for a view saved with them starts with them.
+- `untangle-saved.ts` — the legend's choices saved with a view (untangle_legend, view_saved_as_shown): written by
+  `styleEdit` as a Shown's `legend` ('kind:Person forward, type:NEAR hidden', `legendText`) only when the user saves the
+  view as shown, never otherwise, a choice that is no legend's refused first (`legendRefusal`); read and checked by
+  `legendChecked` (an empty entry, one that cannot be read, a state not allowed, a kind or type the graph lacks with the
+  nearest, a line chosen twice: each a problem on the Shown's line with its fix, the rest kept). The Python library
+  reads it the same (`graphspec/style/legend.py`), held to `python/graph_spec/tests/legend_cases.json` by
+  `test/untangle-saved-parity.test.js`.
 - `untangle-fold.ts` — folding (untangle_hubs, untangle_groups, untangle_merge): `BUSY_HUB` (a thing with more links is
   a busy hub), `busyHubs`, `drawnGroups` (the groups the nudges draw, as `nudgedSource` boxes them; none in lanes),
   `foldPlan` (what a drawing folds and merges: things hidden with a hub, links folded into a stub or inside a folded

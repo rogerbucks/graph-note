@@ -3,7 +3,7 @@
 // colours its looks use, each with what it means (styling_keeps_locked_rules); and, on the drawing, what is outside the
 // view faded, and each look drawn in the locked style's own blend of its hue (styled_paths_and_views).
 import { hueColour } from '@graph-note/core';
-import type { LegendEntry, Outside, ThingLook, View } from '@graph-note/core';
+import type { LegendChoice, LegendEntry, Outside, ThingLook, View } from '@graph-note/core';
 import { button } from './view-bar';
 
 /** What a drawing shown as a view is given, beyond a plain drawing's options. */
@@ -17,19 +17,22 @@ export interface ViewShown {
   /** Each look the style gives, by thing and by link index. */
   looks: { things: Map<string, ThingLook>; links: Map<number, ThingLook> };
   legend: LegendEntry[];
-  /** How the view was saved as shown, to show it so again. */
-  shown?: { zoom?: number; x?: number; y?: number; selected?: string };
+  /** How the view was saved as shown, to show it so again: its legend's choices among it (§25, untangle_legend). */
+  shown?: { zoom?: number; x?: number; y?: number; selected?: string; legend?: readonly LegendChoice[] };
   /** Writes the choice of what is outside the view into the style graph. */
   setOutside: (outside: Outside) => void;
-  /** Writes how the view is shown now into the style graph. */
-  saveShown: (view: View, selected: string | null) => void;
+  /** Writes how the view is shown now into the style graph, the legend's choices with it. */
+  saveShown: (view: View, selected: string | null, legend: readonly LegendChoice[]) => void;
 }
 
-/** The strip under the bar, and the legend. `now` gives how the drawing is shown, and what is selected. */
+/**
+ * The strip under the bar, and the legend. `now` gives how the drawing is shown, what is selected and what the legend
+ * that untangles has chosen, which Save as shown writes and nothing else does.
+ */
 export function renderViewStrip(
   root: HTMLElement,
   v: ViewShown,
-  now: () => { view: View; selected: string | null },
+  now: () => { view: View; selected: string | null; legend: readonly LegendChoice[] },
 ): HTMLElement[] {
   const strip = root.createDiv({ cls: 'graph-note-view-strip' });
   strip.createSpan({ cls: 'graph-note-view-reading', text: `View ${v.name}: ${v.reading}` });
@@ -40,8 +43,8 @@ export function renderViewStrip(
       v.setOutside(other),
     ),
     button(strip, 'Save as shown', 'bookmark', () => {
-      const { view, selected } = now();
-      v.saveShown(view, selected);
+      const { view, selected, legend } = now();
+      v.saveShown(view, selected, legend);
     }),
   ];
   if (!v.legend.length) return writes;

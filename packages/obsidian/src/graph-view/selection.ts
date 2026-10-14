@@ -5,7 +5,18 @@
 // view, readable, by a brief move (details_choose_moves, details_move_motion); the selection is kept clear of the details
 // sheet (sheet_keeps_thing_clear), and pointed to by an arrow at the edge when it is out of view (selection_pointer).
 import { FocusState, READABLE_SCALE, coverOf, estimateEdge, nextAlong, pointerTo } from '@graph-note/core';
-import type { Bounds, FocusTarget, GraphDrawing, Kept, Layers, Size, TrailStep, Zoom } from '@graph-note/core';
+import type {
+  Bounds,
+  FocusTarget,
+  GraphDrawing,
+  Kept,
+  Layers,
+  LegendChoice,
+  Size,
+  TrailStep,
+  View,
+  Zoom,
+} from '@graph-note/core';
 import type { DetailsPanel } from './details-panel';
 import { Glide, stepName } from './details-nav';
 import type { NavActions } from './details-nav';
@@ -83,6 +94,8 @@ export class Selection {
       depth: () => o.focusDepth ?? 1,
       changed: () => this.refresh(),
       go: (key) => this.goTo(key, false),
+      // a view saved as shown opens with its legend's choices (§25, untangle_legend)
+      legend: o.view?.shown?.legend,
     });
     this.layers = this.untangle.layers(null);
     this.hover = new Highlight(this.untangle.edges, () => this.hotChanged());
@@ -108,6 +121,11 @@ export class Selection {
     this.host.zoom().keepClear(0);
     this.refresh();
     this.pointAt();
+  }
+
+  /** How the card is shown now, for a view's Save as shown: its view, what is selected and the legend's choices (§7, §25). */
+  shownNow(view: View, selected: string | null): { view: View; selected: string | null; legend: LegendChoice[] } {
+    return { view, selected, legend: this.untangle.legendChoices() };
   }
 
   /** A box or link was opened: it is the selection, and so the focus; and it is brought into view as it came (`How`). */

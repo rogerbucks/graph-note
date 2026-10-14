@@ -37,6 +37,7 @@ import type {
 } from './style-graph.ts';
 import { reader } from './style-reader.ts';
 import { readFrame, unknownKeys } from './style-words.ts';
+import { legendChecked } from './untangle-saved.ts';
 
 export { TREE_ONLY } from './style-choice-checks.ts';
 
@@ -259,6 +260,9 @@ function shownOf(raw: RawThing, names: StyledNames, out: Problem[]): Checked['sh
     const v = r.word(k, ON_OFF, `${k} must be ${orList(ON_OFF)}`);
     if (v !== undefined) shown[k] = v;
   }
+  // the legend's lines brought forward or hidden (§25, untangle_legend): the sound ones kept
+  const legend = legendChecked(r, names);
+  if (legend !== undefined) shown.legend = legend;
   return shown;
 }
 

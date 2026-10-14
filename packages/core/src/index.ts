@@ -253,6 +253,8 @@ export {
   shortestPath,
 } from './untangle.ts';
 export type { Found, Layers, LegendItem, LegendState, PathFound } from './untangle.ts';
+export { LEGEND_CHOICES } from './untangle-saved.ts';
+export type { LegendChoice, LegendChoiceState } from './untangle-saved.ts';
 export { BUSY_HUB, foldsHiding } from './untangle-fold.ts';
 export type { Folding } from './untangle-fold.ts';
 export {

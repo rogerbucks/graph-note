@@ -289,4 +289,33 @@ describe('a view saved as shown', () => {
       env.uninstall();
     }
   });
+
+  // proves: untangle_legend
+  test('Save as shown writes the legend’s choices too, and the view reopens with them; choosing alone writes nothing', async () => {
+    const note = noteOf(DATA, NEAR);
+    const { env, el } = await viewCard(note, 1);
+    try {
+      const nearLine = (card) => card.querySelector('.graph-note-filter button.graph-note-filter-type');
+      const hiddenLinks = (card) =>
+        card.querySelectorAll('g.edge').filter((g) => g.classList.contains('graph-note-hidden')).length;
+      labelled(el, 'Filter by kind or link').click();
+      nearLine(el).click();
+      nearLine(el).click();
+      assert.match(nearLine(el).textContent, /hidden/);
+      assert.equal(hiddenLinks(el), 3, 'every NEAR link hidden');
+      assert.equal(env.state.files.get(PATH), note, 'choosing in the legend writes nothing');
+      labelled(el, 'Save as shown').click();
+      await until(() => /legend: 'type:NEAR hidden'/.test(env.state.files.get(PATH)));
+      const now = env.state.files.get(PATH);
+      const at = now
+        .split('```gql')
+        .slice(1)
+        .findIndex((b) => b.includes('QUERY view'));
+      const again = await show(env, now, at);
+      assert.match(nearLine(again.el).textContent, /hidden/, 'the legend stands as it was saved');
+      assert.equal(hiddenLinks(again.el), 3, 'and the drawing with it');
+    } finally {
+      env.uninstall();
+    }
+  });
 });

@@ -208,7 +208,8 @@ module that ties the parts together, named as the folder is.
 - `hover.ts` — the highlight: under the pointer, with the keyboard focus, and on touch from the tap that selects, so
   nothing depends on hover.
 - `untangle.ts` — filtering the drawing to a thing and its neighbours, the legend, the shortest path and the search
-  box, tied to the core's `Untangle`; the picture only, never the note, so reading view has them. Its parts:
+  box, tied to the core's `Untangle`; the picture only, never the note, so reading view has them, though a view's Save
+  as shown writes the legend's choices and the view opens with them again (untangle_legend). Its parts:
   `untangle-banner.ts` (what the drawing is filtered to, the path, the question, each with its way back),
   `untangle-legend.ts` (a button for each kind and relationship type: in front, hidden, back) and `untangle-find.ts`
   (the search row).
@@ -246,8 +247,9 @@ module that ties the parts together, named as the folder is.
   not undone with the park.
 - `view-maker.ts` — making a view by tapping (§7), while the block is edited: the kind of view, the boxes tapped, its
   reading said as it is built, and Write the view, a view block after the graph's last block.
-- `view-strip.ts` — a view's card: its reading in plain English, Fade or Hide others, Save as shown, the legend, and what
-  is outside it faded and its looks drawn on the drawing.
+- `view-strip.ts` — a view's card: its reading in plain English, Fade or Hide others, Save as shown (with the legend's
+  choices that untangle, §25 untangle_legend, which a view saved so opens with), the legend, and what is outside it
+  faded and its looks drawn on the drawing.
 - `type-strip.ts` — the diagram type (§15), on every card, a graph's or a view's: how it is drawn, and Diagram type,
   listing the seven types, each that fits to choose (written into the style graph, for the graph or the view; a tree
   along the relationship it fits best) and each that does not with why, the suggested one said and never drawn until
