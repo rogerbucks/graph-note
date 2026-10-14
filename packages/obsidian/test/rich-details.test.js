@@ -138,8 +138,12 @@ describe('a thing that stands for a note (node_is_a_note)', () => {
       assert.deepEqual(remote, [], 'nothing remote is on the page to load');
       for (const r of env.state.rendered)
         assert.doesNotMatch(r.markdown, /!\[[^\]]*\]\(https?:|<img|!\[\[/i, r.markdown);
-      const hrefs = panel.querySelectorAll('a').map((a) => a.getAttribute('data-href'));
-      for (const h of ['https://example.com/a.png', 'https://example.com/b.png']) assert.ok(hrefs.includes(h), h);
+      // each remote image a link to it, its whole address kept for the plugin to hand over, and no other address
+      const outside = panel
+        .querySelectorAll('a')
+        .map((a) => a.getAttribute('data-href') ?? '')
+        .filter((h) => h.startsWith('https:') || h.startsWith('http:'));
+      assert.deepEqual(outside, ['https://example.com/a.png', 'https://example.com/b.png']);
       assert.ok(!panel.textContent.includes('inner.png'), 'a note it embeds is a link, never read in');
     } finally {
       env.uninstall();
