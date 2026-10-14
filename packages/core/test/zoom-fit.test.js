@@ -169,6 +169,21 @@ describe('the fit is worked out again', () => {
   });
 
   // proves: zoom_fit_recomputed
+  test('a fitted card laid out again while hidden is fitted again when it shows: 0.3 at 2000 wide becomes 0.15 at 4000', () => {
+    const z = make('note', { width: 2000, height: 1000 }, { width: 600, height: 300 });
+    close(z.view().scale, 0.3, 'fitted');
+    z.resize({ width: 0, height: 0 }, { width: 4000, height: 2000 });
+    z.resize({ width: 600, height: 300 });
+    close(z.view().scale, 0.15, 'fitted to its new size');
+    assert.ok(z.isFitted());
+    const zoomed = make('note', { width: 2000, height: 1000 }, { width: 600, height: 300 });
+    zoomed.zoomIn();
+    zoomed.resize({ width: 0, height: 0 }, { width: 4000, height: 2000 });
+    zoomed.resize({ width: 600, height: 300 });
+    close(zoomed.view().scale, 0.375, 'one zoomed in keeps its zoom');
+  });
+
+  // proves: zoom_fit_recomputed
   test('when the graph changes: a drawing laid out again at a new size has the fit of its new size', () => {
     const z = make('pane', { width: 1000, height: 500 }, { width: 500, height: 250 });
     z.zoomIn();

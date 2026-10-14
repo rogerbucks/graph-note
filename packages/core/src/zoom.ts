@@ -103,6 +103,8 @@ export class Zoom {
   private lastTap: { x: number; y: number; time: number } | null = null;
   /** The strip at the foot of the viewport kept clear, in pixels: what a sheet over it covers (§25). */
   private clear = 0;
+  /** Whether the drawing was fitted when its card was hidden, so it is fitted again when it shows (§25). */
+  private refit = false;
 
   protected content: Size;
   protected viewport: Size;
@@ -158,14 +160,14 @@ export class Zoom {
 
   /** Zooms by `factor` about a point of the viewport, which stays where it is unless the limits stop it. */
   zoomAt(factor: number, px: number, py: number): void {
-    const s = this.within(this.scale * factor),
+    const s = held(this.scale * factor, this.content, this.viewport),
       r = s / this.scale;
     this.place(s, px - (px - this.x) * r, py - (py - this.y) * r);
   }
 
   /** Shows the drawing at a scale and position saved before (a view saved as shown, spec §7), within the limits. */
   restore(scale: number, x: number, y: number): void {
-    this.place(this.within(scale), x, y);
+    this.place(held(scale, this.content, this.viewport), x, y);
   }
 
   /**
@@ -216,21 +218,22 @@ export class Zoom {
   }
 
   /**
-   * A new viewport, and the drawing's size too when it was laid out again by the View menu (§25). A fitted drawing is
-   * fitted again; any other keeps its zoom, unless the fit worked out again for the new sizes is above it, when it is
-   * brought up to the fit about the viewport's middle (zoom_fit_recomputed). A viewport with no size, as a hidden card
-   * has, is no resize: only the drawing's new size is taken, and the view is kept for when it shows again.
+   * A new viewport, and the drawing's size too when the View menu laid it out again (§25). A fitted drawing is fitted
+   * again; any other keeps its zoom, brought up about the viewport's middle to the fit worked out again if that is above
+   * it (zoom_fit_recomputed). A viewport with no size (a hidden card's) is no resize: only the drawing's size is taken,
+   * and the view kept, or, fitted then (`refit`), fitted again at the next resize with a size.
    */
   resize(viewport: Size, content = this.content): void {
-    const fitted = this.isFitted();
+    const fitted = this.refit || this.isFitted();
     this.content = content;
+    this.refit = fitted && !hasSize(viewport);
     if (!hasSize(viewport)) return;
     this.viewport = viewport;
     if (fitted) {
       this.fit();
       return;
     }
-    const s = this.within(this.scale),
+    const s = held(this.scale, this.content, viewport),
       r = s / this.scale,
       [mx, my] = [viewport.width / 2, viewport.height / 2];
     this.place(s, mx - (mx - this.x) * r, my - (my - this.y) * r);
@@ -242,11 +245,6 @@ export class Zoom {
    */
   outLimit(): number {
     return outLimit(this.content, this.viewport);
-  }
-
-  /** A scale held within the limits (zoom-fit.ts, `held`). */
-  private within(scale: number): number {
-    return held(scale, this.content, this.viewport);
   }
 
   setMode(mode: Mode): void {
@@ -338,7 +336,7 @@ export class Zoom {
       const [a, b] = [...this.pointers.values()].filter((q) => q.touch);
       if (!a || !b) return false;
       const spread = Math.hypot(a.x - b.x, a.y - b.y) / this.pinch.d;
-      const s = this.within(this.pinch.scale * spread ** PINCH_RATE);
+      const s = held(this.pinch.scale * spread ** PINCH_RATE, this.content, this.viewport);
       const mx = (a.x + b.x) / 2,
         my = (a.y + b.y) / 2;
       this.place(s, mx - this.pinch.px * s, my - this.pinch.py * s);
