@@ -9,8 +9,10 @@ import { watchSession } from './session-watch.ts';
 
 /** What a process may be handed by the code that runs it, never by its arguments. */
 export interface EditorProcessOptions {
-  /** What answers the API; none until the note store (C1). */
+  /** What answers the API: the note store's (editor-store.ts), once the mod hands it a vault (C2). */
   api?: ApiHandler;
+  /** What a stop waits for: the note store's own stop, which finishes the writes under way. */
+  drain?: () => Promise<void>;
 }
 
 /** Exits with code 2, saying why on stderr, before anything is started. */
@@ -25,7 +27,10 @@ export async function runEditorProcess(args: string[], options: EditorProcessOpt
   process.stderr.on('error', () => {});
   if (process.ppid === 1) refuse('the process that started it has already exited, so nothing would stop it');
   if (args.length) refuse(`it takes no argument, and was given ${args[0]}`);
-  const server = await startEditorServer(options.api ? { api: options.api } : {});
+  const server = await startEditorServer({
+    ...(options.api ? { api: options.api } : {}),
+    ...(options.drain ? { drain: options.drain } : {}),
+  });
   const finish = (reason: string) => {
     void server.stop(reason).then(() => {
       // exits once what it says is written, or soon after if no one is left to read it
