@@ -36,17 +36,40 @@ const note = (env) => env.state.files.get(PATH);
 /** The editor's Undo or Redo button, whatever it says. */
 const tool = (el, which) => el.querySelectorAll('.graph-note-pane-tools button')[which === 'undo' ? 0 : 1];
 
-/** Holds that the button says why there is nothing to take back, and that pressing it says so and changes nothing. */
+/** What the editor says to screen readers from now on, each text it is set to in turn. */
+function heard(el) {
+  const announce = el.querySelector('.graph-note-announce'),
+    said = [],
+    set = announce.setText.bind(announce);
+  announce.setText = (text) => {
+    said.push(text);
+    set(text);
+  };
+  return said;
+}
+
+/**
+ * Holds that the button keeps its name, so voice control finds it, and says why there is nothing to take back; and that
+ * pressing it, twice, says so each time, to screen readers too, and changes nothing.
+ */
 async function refuses(env, el, which, expected) {
-  const b = tool(el, which);
-  assert.match(b.getAttribute('aria-label'), NOTHING[which], `${which} says why`);
-  assert.equal(b.getAttribute('aria-disabled'), 'true');
-  const notices = env.state.notices.length;
-  b.click();
-  await wait(20);
+  const label = which === 'undo' ? 'Undo' : 'Redo',
+    said = heard(el),
+    notices = env.state.notices.length;
+  for (let press = 0; press < 2; press++) {
+    const b = tool(el, which);
+    assert.equal(b.getAttribute('aria-label'), label, `${which} keeps its name`);
+    assert.match(b.getAttribute('aria-description') ?? '', NOTHING[which], `${which} says why`);
+    assert.equal(b.getAttribute('aria-disabled'), 'true');
+    b.click();
+    await wait(20);
+  }
   assert.equal(note(env), expected, 'the note is unchanged');
-  assert.match(env.state.notices.slice(notices).join('\n'), NOTHING[which], 'pressed, it says why');
-  assert.match(el.querySelector('.graph-note-announce').textContent, NOTHING[which], 'and to screen readers');
+  const told = env.state.notices.slice(notices);
+  assert.equal(told.length, 2, 'pressed, it says why, each time');
+  for (const n of told) assert.match(n, NOTHING[which]);
+  const reason = told[0];
+  assert.deepEqual(said, ['', reason, '', reason], 'cleared, then said again, so a repeat is heard');
   assert.deepEqual(env.state.data?.drafts ?? {}, {}, 'nothing kept as a draft: nothing typed was refused');
 }
 
@@ -60,6 +83,51 @@ describe('another program changes the block', () => {
       assert.equal(el.querySelector('textarea').value, THEIRS, 'reloaded');
       await refuses(env, el, 'undo', theirs);
       assert.equal(el.querySelector('textarea').value, THEIRS);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('Undo by key or the Edit menu says why too, in a notice and to screen readers', async () => {
+    const { env, el } = await written();
+    try {
+      await env.app.vault.modify({ path: PATH }, NOTE.replace(READER, THEIRS));
+      await wait(20);
+      const said = heard(el),
+        notices = env.state.notices.length,
+        t = el.querySelector('textarea');
+      t.dispatch('beforeinput', { inputType: 'historyUndo' });
+      await wait(20);
+      t.dispatch('beforeinput', { inputType: 'historyUndo' });
+      await wait(20);
+      const told = env.state.notices.slice(notices);
+      assert.equal(told.length, 2);
+      assert.match(told[0], NOTHING.undo);
+      assert.deepEqual(said, ['', told[0], '', told[0]]);
+      assert.equal(t.value, THEIRS, 'nothing taken back');
+      assert.equal(note(env), NOTE.replace(READER, THEIRS));
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('typing after it makes Undo available again at once, its own to take back', async () => {
+    const { env, el } = await written();
+    try {
+      const theirs = NOTE.replace(READER, THEIRS);
+      await env.app.vault.modify({ path: PATH }, theirs);
+      await wait(20);
+      assert.equal(tool(el, 'undo').getAttribute('aria-disabled'), 'true');
+      const t = el.querySelector('textarea'),
+        more = THEIRS + ',\n(more:Reason)';
+      t.value = more;
+      t.setSelectionRange(more.length, more.length);
+      t.dispatch('input');
+      const undo = tool(el, 'undo');
+      assert.equal(undo.getAttribute('aria-disabled'), null, 'available as soon as it is typed');
+      assert.equal(undo.getAttribute('aria-description'), null);
+      undo.click();
+      await until(() => note(env) === theirs && t.value === THEIRS);
     } finally {
       env.uninstall();
     }
@@ -82,6 +150,26 @@ describe('a sync changes the block', () => {
       env.state.data.drafts = {}; // the refused undo kept its text as a draft, as any refused write does
       await refuses(env, el, 'redo', synced);
       await refuses(env, el, 'undo', synced);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // review of #451, 15 Oct 2026: a refused Undo took the note it was pressed on as read, so the late change was skipped
+  test('a change heard, a second synced but not yet heard, Undo refused: the late change still reaches the field', async () => {
+    const { env, el } = await written();
+    try {
+      await env.app.vault.modify({ path: PATH }, NOTE.replace(READER, THEIRS)); // T1, heard
+      await wait(20);
+      const second = READER + ',\n(second:Reason)',
+        synced = NOTE.replace(READER, second);
+      env.state.files.set(PATH, synced); // T2, written by the sync, not yet heard
+      tool(el, 'undo').click();
+      await wait(20);
+      assert.equal(note(env), synced, 'the undo is refused');
+      await env.app.vault.modify({ path: PATH }, synced); // T2 heard late
+      await wait(20);
+      assert.equal(el.querySelector('textarea').value, second, 'the field shows the late change');
     } finally {
       env.uninstall();
     }

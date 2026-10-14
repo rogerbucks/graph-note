@@ -1,11 +1,11 @@
 // The block editor (spec §4, §9): the text of one graph block, with everything that helps write it — a plain text field
 // over a coloured picture of it, problems with fixes, suggestions, each line read back, the comma added for you — and the
 // safe writing behind it (the core's session never overwrites a block changed meanwhile), undo, redo and Lock the graph.
-import { Component, Notice } from 'obsidian';
+import { Component } from 'obsidian';
 import { indentText, isDraft } from '@graph-note/core';
 import type { Change, CompletionItem, NoteReading, PaneSession } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
-import { buildEditor, showTools } from './editor-layout';
+import { buildEditor, sayRefused, showTools, toolsSaid } from './editor-layout';
 import type { EditorParts, Layout } from './editor-layout';
 import { withFix } from './problem-help';
 import type { FixChanges } from './problem-help';
@@ -196,14 +196,20 @@ export class BlockEditor extends Component {
     this.showKeptDraft();
   }
 
-  private showTools(): void {
+  /** What the tools last said of Undo and Redo, so typing draws them again only when that changes (§9). */
+  private toolsShown = '';
+
+  private showTools(onlyIfChanged = false): void {
     const el = this.el,
       s = this.session;
     if (!el || !s) return;
+    const why = { undo: s.stepRefusal('undo'), redo: s.stepRefusal('redo') };
+    if (onlyIfChanged && toolsSaid(why) === this.toolsShown) return;
+    this.toolsShown = toolsSaid(why);
     showTools(el.tools, {
       inline: this.layout === 'inline',
       draft: !!this.help.reading && isDraft(this.help.reading, s.graph),
-      why: { undo: s.stepRefusal('undo'), redo: s.stepRefusal('redo') },
+      why,
       done: () => void this.done(),
       undo: () => void this.history('undo'),
       redo: () => void this.history('redo'),
@@ -220,6 +226,7 @@ export class BlockEditor extends Component {
     // what is added for you is a step of its own, so the very next undo takes back only it (spec §4)
     if (addForYouInField(el.text, s.text, this.note.text, s.ref.line, stepped)) this.undoes.record(el.text, 'other');
     s.type(el.text.value);
+    this.showTools(true); // typing after a reload makes Undo available again
     this.analyse();
     this.help.announce(el); // new problems said to screen readers, the focus left where it is
     this.paint();
@@ -232,6 +239,7 @@ export class BlockEditor extends Component {
       s = this.session;
     if (!el || !s) return;
     s.type(el.text.value);
+    this.showTools(true);
     this.analyse();
     this.help.announce(el); // new problems said to screen readers, the focus left where it is
     this.paint();
@@ -357,9 +365,7 @@ export class BlockEditor extends Component {
     }
     const refused = await this.note.step(which);
     if (refused?.history) {
-      // nothing to take back since the block changed outside the editor (§9): said, and nothing kept, as nothing was typed
-      new Notice(refused.reason);
-      this.el?.announce.setText(refused.reason);
+      if (this.el) sayRefused(this.el.announce, refused.reason); // nothing typed, so nothing kept as a draft (§9)
       return this.showTools();
     }
     if (refused) {

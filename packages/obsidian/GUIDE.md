@@ -333,8 +333,11 @@ module that ties the parts together, named as the folder is.
 ### `src/block-editor/` — the text of one graph block, in the pane or in place
 
 - `block-editor.ts` — `BlockEditor`: ties the parts together; the field and what typing in it does. After another
-  program, a sync or another pane changes its block, Undo and Redo are named by why there is nothing to take back,
-  marked unavailable, and pressed say so, leaving the note as it is (undo_never_over_theirs).
+  program, a sync or another pane changes its block, Undo and Redo keep their names, so voice control finds them, and
+  are marked unavailable and described by why there is nothing to take back; pressed, or by key, they say so in a
+  notice and to screen readers (cleared first, so a repeat is heard), leaving the note as it is
+  (undo_never_over_theirs). Typing makes Undo available again at once. Switching block in the picker starts that
+  block's own history (undo_stays_in_its_block).
 - `editor-layout.ts` — the editor's parts on the page, built once for each block.
 - `block-note.ts` — the note behind the editor and its session: opening, writing, undo, Lock, drafts; the note followed
   when it is renamed or moved, and what is typed kept as a draft when it is deleted; each editor's own draft known by

@@ -1035,6 +1035,9 @@ details.graph-note-style > summary {
   align-items: center;
   gap: var(--size-4-1);
 }
+.graph-note-pane-tools button[aria-disabled='true'] {
+  cursor: not-allowed;
+}
 .graph-note-tabs {
   display: flex;
   gap: var(--size-4-1);

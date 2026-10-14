@@ -81,7 +81,7 @@ export async function writeThroughVault(
 
 /**
  * Undo or Redo of the session's changes to the note, through the vault; refused, never over a change made outside the
- * editor (§9), with the note kept as it was found.
+ * editor (§9); a refused write keeps the note as it was found.
  */
 export async function stepNote(
   vault: Vault,
@@ -97,7 +97,9 @@ export async function stepNote(
       keep(r.note);
       return r.note;
     }
-    keep(data);
+    // a refused write took the note as found; Undo or Redo with nothing to take back did not, so a change in it is
+    // still heard when the vault tells of it
+    if (!r.history) keep(data);
     refused = refusal(r);
     return data;
   });

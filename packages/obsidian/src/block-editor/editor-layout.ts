@@ -1,7 +1,7 @@
 // The block editor's parts on the page (spec §4, §9): the head with its picker and tools, the draft banner, on a phone the
 // Drawing and Text tabs, the text field over its coloured picture, the fix and suggestion bars, the problems list and the
 // announcer for screen readers — built once for each block shown, in the pane or in place in a drawing's card.
-import { Platform, setIcon } from 'obsidian';
+import { Notice, Platform, setIcon } from 'obsidian';
 import type { PaneSession } from '@graph-note/core';
 
 /** Where the editor sits: in the edit pane, with its own drawing, a picker and, on a phone, tabs; or in place, in a drawing's card. */
@@ -138,8 +138,8 @@ export function buildEditor(
 
 /**
  * The head's tools: Done in place, Undo and Redo, and Lock the graph while the graph is a draft. An Undo or Redo with
- * nothing to take back since the block changed outside the editor (`why`, §9) is marked unavailable and named by why,
- * and pressed it says so.
+ * nothing to take back since the block changed outside the editor (`why`, §9) keeps its name, so voice control still
+ * finds it, is marked unavailable and described by why, and pressed it says so.
  */
 export function showTools(
   tools: HTMLElement,
@@ -156,10 +156,25 @@ export function showTools(
   tools.empty();
   if (o.inline) button(tools, 'Done', 'check', () => o.done(), 'Done');
   const step = (label: string, icon: string, why: string | null, onClick: () => void) => {
-    const b = button(tools, why ?? label, icon, onClick);
-    if (why) b.setAttribute('aria-disabled', 'true');
+    const b = button(tools, label, icon, onClick);
+    if (!why) return;
+    b.setAttribute('aria-disabled', 'true');
+    b.setAttribute('aria-description', why);
   };
   step('Undo', 'undo-2', o.why.undo, () => o.undo());
   step('Redo', 'redo-2', o.why.redo, () => o.redo());
   if (o.draft) button(tools, 'Lock the graph', 'lock', () => o.lock(), 'Lock the graph');
+}
+
+/** What the tools say of Undo and Redo, to draw them again only when it changes. */
+export const toolsSaid = (why: { undo: string | null; redo: string | null }): string => `${why.undo}\n${why.redo}`;
+
+/**
+ * Says why Undo or Redo was refused (§9): in a notice, and to screen readers, cleared first and said on the next frame,
+ * so the same words said again are heard again.
+ */
+export function sayRefused(announce: HTMLElement, reason: string): void {
+  new Notice(reason);
+  announce.setText('');
+  window.requestAnimationFrame(() => announce.setText(reason));
 }
