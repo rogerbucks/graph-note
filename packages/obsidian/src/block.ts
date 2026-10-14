@@ -15,6 +15,7 @@ import {
   readNote,
   readStyle,
   replaceBlock,
+  reversedLinks,
   styledDrawing,
   styleOf,
   viewsOf,
@@ -256,6 +257,8 @@ export async function renderBlock(
       problems,
       mode: 'note',
       ...(diagram ? { diagram } : {}),
+      // the links its style graph moves, and the lines laid out backwards (§7)
+      motion: { flow: drawing.flow ?? [], reversed: reversedLinks(drawing, drawn.rankdir) },
       completeness: completenessReport(reading, graph, new Date().toISOString().slice(0, 10)),
       parked: parked(reading, graph, new Date().toISOString().slice(0, 10)),
       writeView: (block) => writeViewBlock(plugin, target.path, graph, block),

@@ -11,6 +11,7 @@ import { gateWrites } from './read-only';
 import { renderProblems } from './problems-list';
 import { listParked } from './parked';
 import { Walk } from './walk';
+import { playablePaths } from './path-play';
 import { ViewMaker } from './view-maker';
 import { AddThing } from './add-thing';
 import { toggleExportForm } from '../export/export-form';
@@ -19,6 +20,7 @@ import { markProposal } from '../proposals/mark-proposal';
 import { renderProposalStrip } from '../proposals/proposal-strip';
 import { plural, renderBar } from './view-bar';
 import { describeDrawing, insertSvg } from './drawing-svg';
+import { markFlow, renderFlowLegend } from './flow-marks';
 import { Taps } from './taps';
 import type { Target } from './taps';
 import { DetailsPanel } from './details-panel';
@@ -84,7 +86,7 @@ export class GraphView extends MarkdownRenderChild {
       fullScreen: () => this.openFullscreen(),
       editHere: () => (this.o.editing?.()?.session ? this.o.onDoneEditing?.() : this.o.onEditHere?.()),
       toggleSource: (b) => this.toggleSource(b),
-      export: () => this.o.exporting && toggleExportForm(root, this.o.exporting),
+      export: () => this.o.exporting && toggleExportForm(root, { ...this.o.exporting, paths: this.playable() }),
     });
     const { editing, source } = placed;
     this.editButton = placed.editButton;
@@ -124,6 +126,8 @@ export class GraphView extends MarkdownRenderChild {
     if (this.o.proposal) writes.push(...renderProposalStrip(root, this.o.proposal));
     // how it is drawn, and the diagram types to choose from (§15)
     if (this.o.diagram) writes.push(...renderTypeStrip(root, this.o.diagram));
+    // what its moving links mean, in words beside their icons (§7, motion_not_alone)
+    renderFlowLegend(root, this.o.motion?.flow ?? []);
     this.viewport = root.createDiv({
       cls: 'graph-note-viewport',
       attr: {
@@ -136,6 +140,7 @@ export class GraphView extends MarkdownRenderChild {
     const table = this.o.diagram?.table;
     if (table) this.table = renderTable(this.viewport, table);
     else this.svg = insertSvg(this.viewport, this.o.drawn, this.drawing());
+    if (this.svg && this.o.motion) markFlow(this.svg, this.o.motion.flow); // the links its style moves (§7)
     if (view && this.svg) markView(this.svg, view); // a view: what is outside it faded, its looks drawn (§7)
     if (this.o.proposal && this.svg) markProposal(this.svg, this.o.proposal.shown.marks); // a proposal: what it adds, changes, removes (§17)
     // the drawing as sentences, for screen readers (spec §11)
@@ -230,6 +235,7 @@ export class GraphView extends MarkdownRenderChild {
     // a move under way ends with the card, and the sheet's watchers with it; a card unloaded before it was built has none
     (this.sel as Selection | undefined)?.stop();
     (this.details as DetailsPanel | undefined)?.unload();
+    this.walk?.stop(); // a path playing on its own stops with its card: no step waits on the clock
     this.fullscreen?.overlay.remove();
     this.fullscreen = null;
   }
@@ -240,6 +246,11 @@ export class GraphView extends MarkdownRenderChild {
 
   private boxes() {
     return this.o.reading.graphs.get(this.o.graph)?.boxes ?? [];
+  }
+
+  /** The paths that can be played, which the Export form offers as animated SVGs (§7). */
+  private playable() {
+    return playablePaths(this.o.reading, this.o.graph);
   }
 
   /**

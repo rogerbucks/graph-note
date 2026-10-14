@@ -192,6 +192,18 @@ and nothing else (untangle_data_untouched). Nothing here is written to a note or
   STEP's own line with its fix and, where the step sits on one line, the edit that removes it, and a path with no steps;
   `mergePathProblems` is what `readNote` uses to put them in `NoteReading.problems`, replacing the reader's own report of
   the same STEP, so the badge counts each once.
+- `path-play.ts` — `PathAutoplay`: Play stepping through a path on its own (path_autoplay), around a `PathPlayer`
+  (which also says where it is, `index`, and goes back to the first step, `restart`): from the step it is on, one step at
+  the pace set (`PATH_PACES`, `DEFAULT_PACE`, said by `paceSaid`), until the last; paused or stopped at any step, played
+  on from where it paused, a step taken by hand pausing it. The host hands in its timer (`Scheduler`), so the core never
+  waits on a clock and a host clears it when its card goes.
+- `path-animation.ts` — a played path exported as an animated SVG (path_animation_export): `pathPlan` (each step's
+  thing, by Graphviz's node number, and a dot for each two steps in a row a drawn link joins, forwards along the walk),
+  `pathBody` (each step's number on its thing, and the dots' runners) and `pathCss` (a heavier outline moving from step
+  to step at the pace, round and round, by `step-end` keyframes; every step outlined when still; all of it stopped under
+  reduced motion); `pathSubtitle` says the walk in order. `animationFits` refuses one too large for the device
+  (`ANIMATION_LIMITS`: steps, and an estimate of its bytes), saying why and what would make it fit, before anything is
+  laid out (animation_export_fits); `exportWithLayout` gives that refusal back as a `TooLargeToAnimate`.
 - `path-edits.ts` — a step taken out numbers the later steps of its path again (`stepsAfter`), carried as the removing
   fix's further edits (`Problem.also`), so the path keeps §22's steps 1 to n.
 
@@ -351,6 +363,8 @@ a GQL block, CSV or GraphML (`DATA_FORMATS`), each read back into the very thing
   given back whole as its `Refusal`, for the host to say why and write nothing; null when it is no longer wanted. An
   empty scope is refused before any layout is asked for; an engine failure is raised. `exportSvg` is the same with an
   engine run on the calling thread under no limit: for tests and tools, never a host that draws apart from its interface.
+  With `ExportInfo.walk` the image plays that path (path-animation.ts), refused first when too large for
+  `ExportInfo.device`; with `ExportInfo.motion` it moves the links its style moves (export-motion.ts).
   `pngSize` is the PNG's pixel size, never under `PNG_MIN_SCALE` (twice natural size) and rounded up. A view's looks are
   drawn and put in the legend with what they mean.
 - `export-motion.ts` — movement in an exported SVG, by CSS in the file itself (no encoder, nothing loaded): with

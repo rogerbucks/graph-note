@@ -27,7 +27,8 @@
 // #126), and sending to an AI model (aiReady, modelChoices, endpointProblem, AI_PURPOSES, prepareSend, confirmSend,
 // sendPrepared, noteWithProposal and their types, 13 Oct 2026: the core reaches no network, so a send goes only through
 // the transport a host hands in), and links that move (FLOW_MOTIONS, FLOW_ICONS, flowFor, flowLegend, flowSaid,
-// reversedLinks and their types, 14 Oct 2026).
+// reversedLinks and their types, 14 Oct 2026), and a path played on its own and exported as an animated SVG
+// (PathAutoplay, PATH_PACES, DEFAULT_PACE, paceSaid, animationFits, ANIMATION_LIMITS and their types, 14 Oct 2026).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -39,10 +40,12 @@ const ENTRY = new URL('../src/index.ts', import.meta.url);
 
 const VALUES = [
   'AI_PURPOSES',
+  'ANIMATION_LIMITS',
   'ARROWHEADS',
   'AcrossZoom',
   'BIG_PROPOSAL',
   'DATA_FORMATS',
+  'DEFAULT_PACE',
   'DEFAULT_SETTINGS',
   'DEPARTURES',
   'DIAGRAM_TYPES',
@@ -74,8 +77,10 @@ const VALUES = [
   'OUTSIDE',
   'PAGE_LIMITS',
   'PALETTES',
+  'PATH_PACES',
   'PNG_MIN_SCALE',
   'PaneSession',
+  'PathAutoplay',
   'PathPlayer',
   'PathRecorder',
   'ProposalReview',
@@ -103,6 +108,7 @@ const VALUES = [
   'addView',
   'aiModel',
   'aiReady',
+  'animationFits',
   'arrowsShown',
   'basisOf',
   'blockItems',
@@ -198,6 +204,7 @@ const VALUES = [
   'nudgedDrawing',
   'nudgedSource',
   'outsideOf',
+  'paceSaid',
   'pageSvg',
   'parkForLater',
   'parked',
@@ -292,6 +299,7 @@ const TYPES = [
   'DeferredDeclared',
   'Departure',
   'Details',
+  'Device',
   'Diagnostic',
   'Diagram',
   'DiagramChoice',
@@ -316,6 +324,7 @@ const TYPES = [
   'ExportRequest',
   'ExportScope',
   'ExportTheme',
+  'ExportWalk',
   'ExportedData',
   'Flow',
   'FlowLegendEntry',
@@ -408,6 +417,7 @@ const TYPES = [
   'RuleReport',
   'RunnerOptions',
   'SafeWrite',
+  'Scheduler',
   'ScopeChoice',
   'SendAsk',
   'SendDeps',
@@ -445,6 +455,7 @@ const TYPES = [
   'Token',
   'TokenClass',
   'Told',
+  'TooLargeToAnimate',
   'TrailStep',
   'Transport',
   'TransportReply',

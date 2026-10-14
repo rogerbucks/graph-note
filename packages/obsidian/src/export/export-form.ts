@@ -1,9 +1,10 @@
 // The Export form on a drawing (spec §16): what to export — the whole diagram, or on a view the view or the view with its
 // faded context (export_two_scopes) — as SVG or PNG (export_formats), light or dark (export_fixed_theme), or its data as
 // a GQL block, CSV or GraphML (export_data_formats), which takes no theme; and, when the note's classification is above
-// the configured level, the question asked before anything is written (classified_export). A graph or view too large to
-// draw, shown as text, gets a bar of its own with an Export button for its data alone (`dataExportBar`).
-import { isDataFormat } from '@graph-note/core';
+// the configured level, the question asked before anything is written (classified_export). A path that can be played is
+// offered too, as an animated SVG at a pace chosen (path_animation_export). A graph or view too large to draw, shown as
+// text, gets a bar of its own with an Export button for its data alone (`dataExportBar`).
+import { DEFAULT_PACE, PATH_PACES, isDataFormat, paceSaid } from '@graph-note/core';
 import type { DataFormat, ExportFormat, ExportTheme, ViewSpec } from '@graph-note/core';
 import { button } from '../graph-view/view-bar';
 import type { ExportAsk, ExportOutcome } from './export';
@@ -18,6 +19,10 @@ export interface Exporting {
   run: (ask: ExportAsk) => Promise<ExportOutcome>;
   /** Only the data: for a graph shown as text, which has no drawing to make an image of. */
   dataOnly?: boolean;
+  /** The paths that can be played, each offered as an animated SVG of it played (§7, path_animation_export). */
+  paths?: { id: string; title: string }[];
+  /** The path chosen first, and the pace it is played at: as it was playing when Export as an animated SVG was pressed. */
+  walk?: { id: string; pace: number };
 }
 
 const IMAGE_FORMATS: [string, string][] = [
@@ -52,10 +57,24 @@ export function toggleExportForm(parent: HTMLElement, x: Exporting): void {
         ['whole', 'The whole diagram'],
       ]
     : [['whole', 'The whole diagram']];
-  const what = select(el, 'What to export', scopes, scopes[0]?.[0] ?? 'whole');
+  // a path played, as an animated SVG of the whole diagram (§7): only where there is a drawing
+  const paths = x.dataOnly ? [] : (x.paths ?? []);
+  for (const p of paths) scopes.push([`path:${p.id}`, `Path ${p.title}, played as an animated SVG`]);
+  const what = select(el, 'What to export', scopes, x.walk ? `path:${x.walk.id}` : (scopes[0]?.[0] ?? 'whole'));
   // an image, or the data the image shows (export_data_formats); only the data where there is no drawing
   const formats = x.dataOnly ? DATA_FORMATS : [...IMAGE_FORMATS, ...DATA_FORMATS];
   const format = select(el, 'Format', formats, formats[0]?.[0] ?? 'gql');
+  const paces = PATH_PACES.map((ms): [string, string] => [String(ms), paceSaid(ms)]);
+  const pace = paths.length ? select(el, 'Pace', paces, String(x.walk?.pace ?? DEFAULT_PACE)) : null;
+  const played = () => what.value.startsWith('path:');
+  // a played path is an animated SVG, and only it has a pace
+  const scoped = () => {
+    if (played()) format.value = 'svg';
+    format.disabled = played();
+    if (pace) pace.disabled = !played();
+    themed();
+  };
+  what.addEventListener('change', scoped);
   const theme = select(
     el,
     'Theme',
@@ -70,7 +89,7 @@ export function toggleExportForm(parent: HTMLElement, x: Exporting): void {
     theme.disabled = isDataFormat(format.value);
   };
   format.addEventListener('change', themed);
-  themed();
+  scoped();
   // what the form says beyond the notices: a question, or the image ready to share — never the same words twice
   const said = el.createDiv({ cls: 'graph-note-export-said', attr: { role: 'alert' } });
   // closed: the focus goes back to the bar's Export button, never lost to the page
@@ -100,12 +119,18 @@ export function toggleExportForm(parent: HTMLElement, x: Exporting): void {
     it.disabled = true;
     el.setAttribute('aria-busy', 'true');
     const scope = what.value;
+    const walk = played()
+      ? { walk: { id: scope.slice('path:'.length), pace: Number(pace?.value ?? DEFAULT_PACE) } }
+      : {};
     try {
       show(
         await x.run({
           path: x.path,
           graph: x.graph,
-          ...(scope !== 'whole' && x.view ? { view: x.view, context: scope === 'context' } : {}),
+          ...((scope === 'view' || scope === 'context') && x.view
+            ? { view: x.view, context: scope === 'context' }
+            : {}),
+          ...walk,
           format: format.value as ExportFormat | DataFormat,
           theme: theme.value as ExportTheme,
           confirmed,
