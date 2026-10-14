@@ -4,11 +4,19 @@
 // the server stops after an idle period with no page, or at once when told. It makes no outgoing request (cc_no_remote).
 // The page and its files say nothing about any note, so they are served without the token, which a browser's
 // navigation cannot carry as a header; the token reaches the page in the address's fragment, which is never sent.
-import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
+// What the API does is handed in (`api`): the note store is workstream C1; until then only the tests hand one in.
+import {
+  STATUS_CODES,
+  createServer,
+  type IncomingHttpHeaders,
+  type IncomingMessage,
+  type ServerOptions,
+  type ServerResponse,
+} from 'node:http';
 import type { AddressInfo } from 'node:net';
+import type { Duplex } from 'node:stream';
 import { readBody, BODY_LIMIT } from './request-body.ts';
 import { SECURITY_HEADERS, crossOrigin, hostAllowed, newToken, tokenMatches, writeAllowed } from './request-guard.ts';
-import { TEST_NOTE_ROUTE, TestNotes } from './test-note.ts';
 
 /** How long the server waits with no page before it stops: 30 minutes. */
 export const IDLE_MS = 30 * 60 * 1000;
@@ -16,8 +24,38 @@ export const IDLE_MS = 30 * 60 * 1000;
 /** How often the server checks whether it has been idle that long. */
 export const IDLE_CHECK_MS = 60 * 1000;
 
+/**
+ * The server's own limits on what a client may hold of it: time to send the headers, time for a whole request, how
+ * long an idle connection is kept, how many headers are read, and how many connections at once.
+ */
+export const SERVER_LIMITS = {
+  headersTimeout: 10_000,
+  requestTimeout: 30_000,
+  keepAliveTimeout: 5_000,
+  maxHeadersCount: 64,
+  maxConnections: 32,
+} as const;
+
 /** Runs `check` every `ms` milliseconds until the function it gives back is called. */
 export type Every = (ms: number, check: () => void) => () => void;
+
+/** An API call that has passed every check: its method, its path after `/api/`, its body (a PUT's) and headers. */
+export interface ApiRequest {
+  method: 'GET' | 'PUT';
+  path: string;
+  body: string;
+  headers: IncomingHttpHeaders;
+}
+
+/** What the API answers: a status, its text and any headers of its own. */
+export interface ApiAnswer {
+  status: number;
+  text: string;
+  headers?: Record<string, string>;
+}
+
+/** What answers the API calls that pass the server's checks. */
+export type ApiHandler = (request: ApiRequest) => ApiAnswer | Promise<ApiAnswer>;
 
 /** How a server is started. It takes no host and no port: it listens on 127.0.0.1, on a port the system chooses. */
 export interface EditorServerOptions {
@@ -27,8 +65,8 @@ export interface EditorServerOptions {
   now?: () => number;
   /** How the idle check is run on a timer; a test hands in its own and runs the checks by hand. */
   every?: Every;
-  /** TEST ONLY: notes held in memory and served at TEST_NOTE_ROUTE, for the threat tests (C1 is the real store). */
-  testNotes?: Readonly<Record<string, string>>;
+  /** What answers the API; with none, every API call that passes the checks is not found. */
+  api?: ApiHandler;
 }
 
 /** A running editor server. */
@@ -44,13 +82,15 @@ export interface EditorServer {
   readonly stopped: string | null;
   /** How many requests are open now: while any is, the server is not idle. */
   readonly openRequests: number;
+  /** The limits the running server holds clients to, read from it. */
+  readonly limits: Record<keyof typeof SERVER_LIMITS, number | null>;
   /** Resolves, with why, once it has stopped and its port is closed. */
   readonly closed: Promise<string>;
   /** Stops it at once: no new connection, every open one closed. */
   stop(reason?: string): Promise<string>;
 }
 
-const OPTION_NAMES = new Set(['idleMs', 'now', 'every', 'testNotes']);
+const OPTION_NAMES = new Set(['idleMs', 'now', 'every', 'api']);
 
 /** The page until the editor's own is built (workstream C5): it says so, and loads nothing. */
 const PAGE =
@@ -69,6 +109,19 @@ function send(res: ServerResponse, status: number, text: string, headers: Record
   res.end(status === 204 ? undefined : text);
 }
 
+/** Node's own refusal of a request it could not read (400, 408 or 431), with the headers every answer carries. */
+function refuseUnread(err: Error & { code?: string }, socket: Duplex): void {
+  if (!socket.writable || err.code === 'ECONNRESET') {
+    socket.destroy();
+    return;
+  }
+  const status = err.code === 'HPE_HEADER_OVERFLOW' ? 431 : err.code === 'ERR_HTTP_REQUEST_TIMEOUT' ? 408 : 400;
+  const headers = Object.entries(SECURITY_HEADERS)
+    .map(([name, value]) => `${name}: ${value}\r\n`)
+    .join('');
+  socket.end(`HTTP/1.1 ${status} ${STATUS_CODES[status]}\r\n${headers}content-length: 0\r\nconnection: close\r\n\r\n`);
+}
+
 /** Starts a server on 127.0.0.1, on a port the system chooses, with a fresh token. */
 export async function startEditorServer(options: EditorServerOptions = {}): Promise<EditorServer> {
   for (const name of Object.keys(options))
@@ -77,13 +130,14 @@ export async function startEditorServer(options: EditorServerOptions = {}): Prom
   const sessionToken = newToken();
   const now = options.now ?? Date.now;
   const idleMs = options.idleMs ?? IDLE_MS;
-  const notes = options.testNotes ? new TestNotes(options.testNotes) : null;
+  const api = options.api;
   let last = now(),
     open = 0,
     stopped: string | null = null,
     port = 0;
 
-  async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  /** Answers one request; `seen` marks it as the page's, which starts the idle wait again. */
+  async function handle(req: IncomingMessage, res: ServerResponse, seen: () => void): Promise<void> {
     const host = req.headers.host;
     if (host === undefined || !hostAllowed(host, port))
       return send(res, 403, 'This server answers only its own address.');
@@ -93,40 +147,48 @@ export async function startEditorServer(options: EditorServerOptions = {}): Prom
     const url = req.url ?? '/';
     if (url.includes('?') || url.includes('#'))
       return send(res, 400, 'This server takes nothing in the address after its path, and never a token.');
-    if (req.method !== 'GET' && req.method !== 'PUT') return send(res, 405, 'This server takes only GET and PUT.');
+    const method = req.method;
+    if (method !== 'GET' && method !== 'PUT') return send(res, 405, 'This server takes only GET and PUT.');
     if (!url.startsWith('/api/')) {
-      if (url === '/' && req.method === 'GET')
-        return send(res, 200, PAGE, { 'content-type': 'text/html; charset=utf-8' });
-      return send(res, 404, 'Not found.');
+      if (url !== '/' || method !== 'GET') return send(res, 404, 'Not found.');
+      seen();
+      return send(res, 200, PAGE, { 'content-type': 'text/html; charset=utf-8' });
     }
     if (!tokenMatches(req.headers.authorization, sessionToken))
       return send(res, 401, 'Not authorised.', { 'www-authenticate': 'Bearer' });
-    if (req.method === 'PUT' && !writeAllowed(req.headers, host))
+    seen();
+    if (method === 'PUT' && !writeAllowed(req.headers, host))
       return send(res, 403, 'A change must come from the editor’s own page.');
-    const body = req.method === 'PUT' ? await readBody(req) : '';
+    const body = method === 'PUT' ? await readBody(req) : '';
     if (body === null) {
       req.resume();
       return send(res, 413, `Larger than a note may be: at most ${BODY_LIMIT} bytes.`, { connection: 'close' });
     }
-    if (notes && url.startsWith(TEST_NOTE_ROUTE)) {
-      const answer = notes.answer(req.method, url.slice(TEST_NOTE_ROUTE.length), body, req.headers['if-match']);
-      return send(res, answer.status, answer.text, answer.headers);
-    }
-    return send(res, 404, 'Not found.');
+    if (!api) return send(res, 404, 'Not found.');
+    const answer = await api({ method, path: url.slice('/api/'.length), body, headers: req.headers });
+    return send(res, answer.status, answer.text, answer.headers);
   }
 
-  const server = createServer((req, res) => {
+  // a request with no Host comes to `handle`, which refuses it with the headers every answer carries (Node takes
+  // `requireHostHeader`, which the types this repository pins do not name yet)
+  const server = createServer({ requireHostHeader: false } as ServerOptions, (req, res) => {
     open++;
-    last = now();
+    let page = false;
     res.on('close', () => {
       open--;
-      last = now();
+      if (page) last = now();
     });
-    handle(req, res).catch(() => {
+    const seen = () => {
+      page = true;
+      last = now();
+    };
+    handle(req, res, seen).catch(() => {
       if (!res.headersSent) send(res, 500, 'The server could not answer.');
       else res.destroy();
     });
   });
+  Object.assign(server, SERVER_LIMITS);
+  server.on('clientError', refuseUnread);
   await new Promise<void>((resolve, reject) => {
     server.once('error', reject);
     server.listen({ host: '127.0.0.1', port: 0, exclusive: true }, () => {
@@ -162,6 +224,10 @@ export async function startEditorServer(options: EditorServerOptions = {}): Prom
     },
     get openRequests() {
       return open;
+    },
+    get limits() {
+      const { headersTimeout, requestTimeout, keepAliveTimeout, maxHeadersCount, maxConnections } = server;
+      return { headersTimeout, requestTimeout, keepAliveTimeout, maxHeadersCount, maxConnections };
     },
     closed,
     stop,

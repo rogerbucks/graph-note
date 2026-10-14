@@ -5,18 +5,25 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import type { IncomingHttpHeaders } from 'node:http';
 
-/** The content security policy of every answer: the server's own origin only, no inline script and no eval. */
+/**
+ * The content security policy of every answer: the server's own origin only, no inline script and no eval, never
+ * framed, and no base address, form target or plugin, which `default-src` does not cover.
+ */
 export const CSP =
   "default-src 'self'; script-src 'self'; worker-src 'self'; connect-src 'self'; img-src 'self' data: blob:; " +
-  "style-src 'self'; frame-ancestors 'none'";
+  "style-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'; object-src 'none'";
 
-/** The headers every answer carries: the policy, no sniffing, nothing cached, no referrer, no use by another site. */
+/**
+ * The headers every answer carries, Node's own refusals included: the policy, no sniffing, nothing cached, no
+ * referrer, no use by another site, and no window shared with another origin's.
+ */
 export const SECURITY_HEADERS: Readonly<Record<string, string>> = {
   'content-security-policy': CSP,
   'x-content-type-options': 'nosniff',
   'cache-control': 'no-store',
   'referrer-policy': 'no-referrer',
   'cross-origin-resource-policy': 'same-origin',
+  'cross-origin-opener-policy': 'same-origin',
 };
 
 /** A fresh session token: 256 random bits, as base64url, made once for each start and kept only in memory. */

@@ -1,63 +1,24 @@
 // The editor server's threat model (spec §26, slice 4; test_cc_threats), each threat proved against the running server,
 // started here on a port the system chooses and stopped after: loopback only, wrong Host, wrong Origin, no token, a
 // wrong token, a token in the address, a stale write, an oversized body, the content security policy, no CORS, a path
-// escape (on C0's test-only note route; the real note store is C1), no outgoing request, and every way it stops. The
-// idle stop is driven by a clock handed in, never by waiting: a test asserts the work done, never the time taken.
+// escape (on the test-only note route of fixtures/editor-server-test.ts; the real note store is C1), the server's own
+// limits, no outgoing request, and the idle stop. The idle stop is driven by a clock handed in, never by waiting: a
+// test asserts the work done, never the time taken. The process itself is tried in editor-threats-process.test.js.
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
-import net from 'node:net';
-import { spawn, spawnSync } from 'node:child_process';
-import { mkdtempSync, readdirSync, readFileSync } from 'node:fs';
-import { networkInterfaces, tmpdir } from 'node:os';
+import { readdirSync, readFileSync } from 'node:fs';
+import { networkInterfaces } from 'node:os';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import esbuild from 'esbuild';
 import { READ_LIMITS } from '@graph-note/core';
 import { startEditorServer, IDLE_MS } from '../server/start-server.ts';
-
-const SERVER = fileURLToPath(new URL('../server/', import.meta.url));
-const ENTRY = join(SERVER, 'editor-server.ts');
-const NOTE = 'A test note, held in memory.';
-const POLICY =
-  "default-src 'self'; script-src 'self'; worker-src 'self'; connect-src 'self'; img-src 'self' data: blob:; " +
-  "style-src 'self'; frame-ancestors 'none'";
-
-/** One request, made on a connection of its own; resolves with its status, headers and text. */
-function ask(port, { method = 'GET', path = '/', headers = {}, body, setHost = true } = {}) {
-  return new Promise((resolve, reject) => {
-    const req = http.request({ host: '127.0.0.1', port, method, path, headers, agent: false, setHost }, (res) => {
-      let text = '';
-      res.setEncoding('utf8');
-      res.on('data', (d) => (text += d));
-      res.on('end', () => resolve({ status: res.statusCode, headers: res.headers, text }));
-    });
-    req.on('error', reject);
-    if (Array.isArray(body)) {
-      for (const part of body) req.write(part);
-      req.end();
-    } else req.end(body);
-  });
-}
-
-/**
- * Whether anything answers a connection to an address and port. An address of this machine that drops the attempt,
- * as a VPN's may, is given a few seconds: a server listening there would have answered at once.
- */
-function reachable(host, port) {
-  return new Promise((resolve) => {
-    const socket = net.connect({ host, port, timeout: 3000 });
-    socket.once('connect', () => (socket.destroy(), resolve(true)));
-    socket.once('timeout', () => (socket.destroy(), resolve(false)));
-    socket.once('error', () => resolve(false));
-  });
-}
-
-const pause = (ms) => new Promise((r) => setTimeout(r, ms));
+import { ENTRY, POLICY, SERVER, ask, pause, reachable, sendRaw } from './editor-threats-support.js';
+import { TEST_NOTE as NOTE, TestNotes } from './fixtures/editor-server-test.ts';
 
 /** A server with the test-only note route, stopped when the file's tests end. */
 async function started(options = {}) {
-  const s = await startEditorServer({ testNotes: { sample: NOTE }, ...options });
+  const s = await startEditorServer({ api: new TestNotes({ sample: NOTE }).api, ...options });
   after(() => s.stop());
   return s;
 }
@@ -65,6 +26,21 @@ async function started(options = {}) {
 const bearer = (s) => ({ authorization: `Bearer ${s.token}` });
 const writing = (s, etag) => ({ ...bearer(s), origin: s.origin, 'sec-fetch-site': 'same-origin', 'if-match': etag });
 const noteOf = async (s) => ask(s.port, { path: '/api/test-note/sample', headers: bearer(s) });
+
+/** The headers every answer must carry, Node's own refusals included. */
+function assertGuarded(headers, what) {
+  assert.equal(headers['content-security-policy'], POLICY, what);
+  assert.equal(headers['x-content-type-options'], 'nosniff', what);
+  assert.equal(headers['cache-control'], 'no-store', what);
+  assert.equal(headers['cross-origin-opener-policy'], 'same-origin', what);
+}
+
+/** A token compared as text: an equality naming any token, or a text method called on or with one. */
+const COMPARED_AS_TEXT = [
+  /\w*token\w*\s*[!=]==?|[!=]==?\s*[\w$`{(]*token/i,
+  /token\w*\s*\??\.\s*(includes|startsWith|endsWith|indexOf|localeCompare)\s*\(/i,
+  /\.\s*(includes|startsWith|endsWith|indexOf|localeCompare)\s*\(\s*[\w$`{(]*token/i,
+];
 
 describe('loopback only (cc_loopback_only)', () => {
   test('it listens on 127.0.0.1 alone, on a port the system chose', async () => {
@@ -86,19 +62,6 @@ describe('loopback only (cc_loopback_only)', () => {
     const hosts = ['::1', ...others];
     const answered = await Promise.all(hosts.map((host) => reachable(host, s.port)));
     assert.equal(hosts.filter((_h, i) => answered[i]).join(), '', 'answered there');
-  });
-
-  test('the process takes no port or host to listen on, and no remote reach', () => {
-    for (const args of [
-      ['--port', '8080'],
-      ['--host', '0.0.0.0'],
-      ['--tailscale-user', 'someone'],
-    ]) {
-      const r = spawnSync(process.execPath, [ENTRY, ...args], { encoding: 'utf8', timeout: 30_000, stdio: 'pipe' });
-      assert.equal(r.status, 2, `${args.join(' ')}: ${r.stderr}`);
-      assert.match(r.stderr, /takes no argument but --test-note/);
-      assert.equal(r.stdout, '');
-    }
   });
 });
 
@@ -138,6 +101,22 @@ describe('wrong Host (cc_host_checked)', () => {
     const r = await ask(s.port, { path: '/api/test-note/sample', headers: bearer(s), setHost: false });
     assert.ok([400, 403].includes(r.status), String(r.status));
     assert.ok(!r.text.includes(NOTE));
+  });
+
+  test('a refusal Node makes itself carries the security headers too: no Host, a malformed request', async () => {
+    const s = await started();
+    const noHost = await ask(s.port, { path: '/', setHost: false });
+    assert.equal(noHost.status, 403);
+    assertGuarded(noHost.headers, 'no Host');
+    const malformed = await sendRaw(s.port, `GET / HTTP/1.1\r\nHost: 127.0.0.1:${s.port}\r\nNo colon here\r\n\r\n`);
+    const [head] = malformed.split('\r\n\r\n');
+    const [status, ...lines] = head.split('\r\n');
+    assert.match(status, /^HTTP\/1\.1 400 /);
+    const headers = Object.fromEntries(
+      lines.map((l) => [l.slice(0, l.indexOf(':')).toLowerCase(), l.slice(l.indexOf(':') + 2)]),
+    );
+    assertGuarded(headers, 'malformed');
+    assert.equal(headers.connection, 'close');
   });
 });
 
@@ -192,7 +171,32 @@ describe('the token (cc_session_token, cc_one_server)', () => {
       'timingSafeEqual compares it',
     );
     for (const [i, t] of texts.entries())
-      assert.doesNotMatch(t, /token\s*[!=]==|[!=]==\s*token\b/, `${files[i]} compares a token with === or !==`);
+      for (const pattern of COMPARED_AS_TEXT) assert.doesNotMatch(t, pattern, `${files[i]} compares a token as text`);
+  });
+
+  test('that scan finds a token compared as text however it is named, and passes the server’s own uses', () => {
+    const found = (code) => COMPARED_AS_TEXT.some((p) => p.test(code));
+    for (const bad of [
+      'given === sessionToken',
+      'sessionToken !== given',
+      'if (token == header) ok()',
+      'return header != TOKEN;',
+      'a === `${sessionToken}`',
+      'x === (token)',
+      'sessionToken.includes(given)',
+      'given.startsWith(sessionToken)',
+      'given?.endsWith(token)',
+      'sessionToken.localeCompare(given) === 0',
+      'header.indexOf(token) !== -1',
+    ])
+      assert.ok(found(bad), bad);
+    for (const good of [
+      'const sessionToken = newToken();',
+      'tokenMatches(req.headers.authorization, sessionToken)',
+      'const same = timingSafeEqual(digest(given ?? ""), digest(sessionToken));',
+      'return given !== undefined && same;',
+    ])
+      assert.ok(!found(good), good);
   });
 });
 
@@ -211,51 +215,7 @@ describe('the token is never kept (cc_token_unkept, cc_one_server)', () => {
       assert.ok(!r.text.includes(NOTE) && !r.text.includes(s.token), path);
     }
   });
-
-  test('the process hands the token over once, in the address’s fragment, and keeps it nowhere', async () => {
-    const dirs = ['cwd', 'home', 'tmp'].map((d) => mkdtempSync(join(tmpdir(), `editor-${d}-`)));
-    const [cwd, home, tmp] = dirs;
-    const run = startProcess(['--test-note'], { cwd, env: { ...process.env, HOME: home, TMPDIR: tmp } });
-    const { url } = await run.ready;
-    const address = new URL(url);
-    const token = /^#token=([A-Za-z0-9_-]{43})$/.exec(address.hash)?.[1];
-    assert.ok(token, address.hash.replace(/=.*/, '=…'));
-    assert.deepEqual([address.hostname, address.pathname, address.search], ['127.0.0.1', '/', '']);
-    const port = Number(address.port);
-    const answers = [
-      await ask(port, { path: '/api/test-note/sample', headers: { authorization: `Bearer ${token}` } }),
-      await ask(port, { path: '/api/test-note/sample' }),
-      await ask(port, { path: '/' }),
-      await ask(port, { path: '/', headers: { host: 'evil.example' } }),
-    ];
-    assert.equal(answers[0].text, NOTE);
-    run.child.kill('SIGTERM');
-    assert.deepEqual(await run.exited, { code: 0, signal: null });
-    for (const a of answers) assert.ok(!JSON.stringify(a).includes(token), 'no answer repeats it');
-    assert.equal(run.out.stdout, `${JSON.stringify({ url })}\n`, 'the one line, and nothing more');
-    assert.ok(!run.out.stderr.includes(token), 'never in what it says on stderr');
-    for (const d of dirs) assert.deepEqual(readdirSync(d), [], `no file written to ${d}`);
-  });
 });
-
-/** Starts the server as the mod will, as a process: what it prints, when it exits, and the address it hands over. */
-function startProcess(args, options = {}) {
-  const child = spawn(process.execPath, [ENTRY, ...args], { stdio: 'pipe', ...options });
-  const out = { stdout: '', stderr: '' };
-  child.stdout.setEncoding('utf8');
-  child.stderr.setEncoding('utf8');
-  child.stderr.on('data', (d) => (out.stderr += d));
-  const exited = new Promise((r) => child.on('exit', (code, signal) => r({ code, signal })));
-  const ready = new Promise((resolve, reject) => {
-    child.stdout.on('data', (d) => {
-      out.stdout += d;
-      if (out.stdout.includes('\n')) resolve(JSON.parse(out.stdout.split('\n')[0]));
-    });
-    child.on('exit', () => reject(new Error(`the server exited before it was ready: ${out.stderr}`)));
-  });
-  after(() => child.exitCode === null && child.signalCode === null && child.kill('SIGKILL'));
-  return { child, out, exited, ready };
-}
 
 describe('cross-origin (cc_origin_checked)', () => {
   const etagOf = async (s) => (await noteOf(s)).headers.etag;
@@ -294,12 +254,8 @@ describe('cross-origin (cc_origin_checked)', () => {
 
   test('the control: a write from its own origin, against the version read, is made', async () => {
     const s = await started();
-    const r = await ask(s.port, {
-      method: 'PUT',
-      path: '/api/test-note/sample',
-      headers: writing(s, await etagOf(s)),
-      body: 'changed',
-    });
+    const headers = writing(s, await etagOf(s));
+    const r = await ask(s.port, { method: 'PUT', path: '/api/test-note/sample', headers, body: 'changed' });
     assert.equal(r.status, 204);
     assert.equal((await noteOf(s)).text, 'changed');
   });
@@ -318,20 +274,17 @@ describe('cross-origin (cc_origin_checked)', () => {
 
   test('no cross-origin request is answered: no CORS header, and OPTIONS allows nothing', async () => {
     const s = await started();
+    const preflight = {
+      origin: 'http://evil.example',
+      'access-control-request-method': 'PUT',
+      'access-control-request-headers': 'authorization',
+    };
     const answers = [
       await ask(s.port, { path: '/api/test-note/sample', headers: { ...bearer(s), origin: 'http://evil.example' } }),
       await ask(s.port, { path: '/', headers: { origin: 'http://evil.example' } }),
       await ask(s.port, { path: '/', headers: { 'sec-fetch-site': 'cross-site' } }),
       await ask(s.port, { path: '/api/test-note/sample', headers: { ...bearer(s), 'sec-fetch-site': 'same-site' } }),
-      await ask(s.port, {
-        method: 'OPTIONS',
-        path: '/api/test-note/sample',
-        headers: {
-          origin: 'http://evil.example',
-          'access-control-request-method': 'PUT',
-          'access-control-request-headers': 'authorization',
-        },
-      }),
+      await ask(s.port, { method: 'OPTIONS', path: '/api/test-note/sample', headers: preflight }),
       await ask(s.port, { method: 'OPTIONS', path: '/api/test-note/sample', headers: { origin: s.origin } }),
     ];
     const cors = (a) => Object.keys(a.headers).filter((h) => h.startsWith('access-control-') || h === 'allow');
@@ -359,17 +312,16 @@ describe('content security policy (cc_csp, cc_no_remote)', () => {
     };
     for (const [status, a] of Object.entries(answers)) {
       assert.equal(a.status, Number(status));
-      assert.equal(a.headers['content-security-policy'], POLICY, status);
-      assert.equal(a.headers['x-content-type-options'], 'nosniff', status);
-      assert.equal(a.headers['cache-control'], 'no-store', status);
+      assertGuarded(a.headers, status);
       assert.equal(a.headers['set-cookie'], undefined, status);
     }
   });
 
   test('the policy allows only its own origin: no inline script, no eval, nothing from elsewhere', () => {
     assert.doesNotMatch(POLICY, /unsafe-inline|unsafe-eval|https?:|\*|wss?:/);
-    for (const d of POLICY.split('; ').filter((x) => !/^(img-src|frame-ancestors)/.test(x)))
-      assert.match(d, / 'self'$/, d);
+    for (const d of POLICY.split('; ').filter((x) => !x.startsWith('img-src'))) assert.match(d, / '(self|none)'$/, d);
+    for (const d of ['frame-ancestors', 'base-uri', 'form-action', 'object-src'])
+      assert.ok(POLICY.split('; ').includes(`${d} 'none'`), d);
   });
 
   test('the page holds no inline script or style', async () => {
@@ -409,6 +361,19 @@ describe('body limit (cc_body_limit)', () => {
     const r = await put(s, 'é'.repeat(READ_LIMITS.bytes / 2));
     assert.equal(r.status, 204);
     assert.equal((await noteOf(s)).text.length, READ_LIMITS.bytes / 2);
+  });
+});
+
+describe('the server’s own limits', () => {
+  test('headers, requests, idle connections, header count and connections are each held to a set limit', async () => {
+    const s = await started();
+    assert.deepEqual(s.limits, {
+      headersTimeout: 10_000,
+      requestTimeout: 30_000,
+      keepAliveTimeout: 5_000,
+      maxHeadersCount: 64,
+      maxConnections: 32,
+    });
   });
 });
 
@@ -498,6 +463,36 @@ describe('the server stops (cc_server_stops)', () => {
     assert.deepEqual(c.checks, [], 'its check is cancelled');
   });
 
+  test('a refused request never starts the wait again, so a page probing ports cannot keep it alive', async () => {
+    const c = clock();
+    const s = await started({ now: c.now, every: c.every });
+    c.tick(IDLE_MS - 1);
+    const refused = [
+      await ask(s.port, { path: '/', headers: { host: 'evil.example' } }),
+      await ask(s.port, { path: '/api/test-note/sample' }),
+      await ask(s.port, { path: '/api/test-note/sample', headers: { authorization: 'Bearer wrong' } }),
+      await ask(s.port, { path: '/', headers: { origin: 'http://evil.example' } }),
+      await ask(s.port, { path: '/?probe=1' }),
+    ];
+    assert.deepEqual(
+      refused.map((r) => r.status),
+      [403, 401, 401, 403, 400],
+    );
+    c.tick(1);
+    assert.equal(await s.closed, 'idle', 'the wait was not started again');
+  });
+
+  test('the page itself, from its own address, starts the wait again', async () => {
+    const c = clock();
+    const s = await started({ now: c.now, every: c.every });
+    c.tick(IDLE_MS - 1);
+    assert.equal((await ask(s.port, { path: '/' })).status, 200);
+    c.tick(IDLE_MS - 1);
+    assert.equal(s.stopped, null);
+    c.tick(1);
+    assert.equal(await s.closed, 'idle');
+  });
+
   test('never while a request is still open', async () => {
     const c = clock();
     const s = await started({ now: c.now, every: c.every });
@@ -530,62 +525,5 @@ describe('the server stops (cc_server_stops)', () => {
     await s.stop('stop');
     assert.equal(s.stopped, 'stop');
     assert.equal(await reachable('127.0.0.1', s.port), false);
-  });
-
-  test('when the session’s input closes', async () => {
-    const run = startProcess(['--test-note']);
-    const port = Number(new URL((await run.ready).url).port);
-    run.child.stdin.end();
-    assert.deepEqual(await run.exited, { code: 0, signal: null });
-    assert.match(run.out.stderr, /stopped: the session ended/);
-    assert.equal(await reachable('127.0.0.1', port), false);
-  });
-
-  test('on a stop signal', async () => {
-    for (const signal of ['SIGTERM', 'SIGINT', 'SIGHUP']) {
-      const run = startProcess(['--test-note']);
-      await run.ready;
-      run.child.kill(signal);
-      assert.deepEqual(await run.exited, { code: 0, signal: null }, signal);
-      assert.match(run.out.stderr, new RegExp(`stopped: ${signal}`));
-    }
-  });
-
-  test('when the process that started it exits, though its input never closes', async () => {
-    const parentCode = [
-      "const { spawn } = require('node:child_process');",
-      `const c = spawn(process.execPath, [${JSON.stringify(ENTRY)}, '--test-note'], { stdio: ['ignore', 'pipe', 'ignore'] });`,
-      "let line = '';",
-      "c.stdout.on('data', (d) => { line += d; if (line.includes('\\n')) process.stdout.write(JSON.stringify({ pid: c.pid, ...JSON.parse(line) }) + '\\n'); });",
-      'setInterval(() => {}, 60000);',
-    ].join('\n');
-    const parent = spawn(process.execPath, ['-e', parentCode], { stdio: ['ignore', 'pipe', 'inherit'] });
-    const parentExited = new Promise((r) => parent.on('exit', r));
-    let line = '';
-    const { pid, url } = await new Promise((resolve) =>
-      parent.stdout.on('data', (d) => {
-        line += d;
-        if (line.includes('\n')) resolve(JSON.parse(line.split('\n')[0]));
-      }),
-    );
-    const alive = () => {
-      try {
-        process.kill(pid, 0);
-        return true;
-      } catch {
-        return false;
-      }
-    };
-    after(() => alive() && process.kill(pid, 'SIGKILL'));
-    const address = new URL(url);
-    const token = address.hash.slice('#token='.length);
-    const port = Number(address.port);
-    const before = await ask(port, { path: '/api/test-note/sample', headers: { authorization: `Bearer ${token}` } });
-    assert.equal(before.text, NOTE, 'the control: it runs while its parent does');
-    parent.kill('SIGKILL');
-    await parentExited;
-    for (let i = 0; i < 300 && alive(); i++) await pause(100);
-    assert.equal(alive(), false, 'the server is gone');
-    assert.equal(await reachable('127.0.0.1', port), false);
   });
 });

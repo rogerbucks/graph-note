@@ -1,6 +1,7 @@
 // Bundles the /graph mod: mod/hooks/graph.js, what its hooks module runs (platform neutral: a mod has no Node and no
 // WebAssembly, and the core's engine is left out by tree-shaking), and mod/bin/render.mjs, the core's Graphviz engine run
-// by node as a process, and mod/bin/editor-server.mjs, the browser editor's local server. Then the mod's test fixtures: the test vault's sample note, and the SVG Graphviz draws for it.
+// by node as a process, and mod/bin/editor-server.mjs, the browser editor's local server. Then the mod's test
+// fixtures: the test vault's sample note, and the SVG Graphviz draws for it.
 import esbuild from 'esbuild';
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';

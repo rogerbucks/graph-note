@@ -41,8 +41,13 @@ test('bin/editor-server.mjs is the editor server, built whole: it refuses to be 
     timeout: 30_000,
   });
   assert.equal(r.status, 2, r.stderr);
-  assert.match(r.stderr, /takes no argument but --test-note/);
+  assert.match(r.stderr, /takes no argument/);
   assert.doesNotMatch(readFileSync(`${pkg}mod/bin/editor-server.mjs`, 'utf8'), /^import .* from ['"](?!node:)/m);
+});
+
+test('the shipped editor server holds nothing of the tests: no test note route and no flag for one', () => {
+  const text = readFileSync(`${pkg}mod/bin/editor-server.mjs`, 'utf8');
+  assert.doesNotMatch(text, /test-note|testNotes|TestNotes/);
 });
 
 test('the repository is a marketplace listing the mod by its folder, so an install reads the working copy', () => {
