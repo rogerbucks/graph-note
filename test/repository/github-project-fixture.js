@@ -31,3 +31,20 @@ export const WORKSTREAMS = {
   W1: { title: 'Focus, hover and untangle', requirements: ['focus_neighbours', 'focus_link'] },
   S3: { title: 'Slice end', requirements: ['done_means_proved'] },
 };
+
+/** The same copy with open questions: two in the chosen slices, one outside them, and what each blocks. */
+export const FIXTURE_WITH_QUESTIONS = `${FIXTURE.trimEnd()},
+// ── Questions ──
+(q_01_ai_interface:Question {num: 'Q-01', slice: 3, text: 'Which interface do external AI tools use to query the graph? Ask @alice about #12.'}),
+(q_02_listed:Question {num: 'Q-02', slice: 4, text: 'A question a workstream lists.'}),
+(q_03_old:Question {num: 'Q-03', slice: 2, text: 'An old question, in a slice not chosen.'}),
+(q_01_ai_interface)-[:BLOCKS]->(zoom_out_to_fit),
+(q_01_ai_interface)-[:BLOCKS]->(focus_link)
+`;
+
+/** The workstreams with the open-questions workstream, and one question listed elsewhere. */
+export const WORKSTREAMS_WITH_QUESTIONS = {
+  ...WORKSTREAMS,
+  W1: { title: 'Focus, hover and untangle', requirements: ['focus_neighbours', 'focus_link', 'q_02_listed'] },
+  Q: { title: 'Open questions', requirements: [] },
+};
