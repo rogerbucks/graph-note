@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_engine_text_comments.py",
+  "test": "ANoteReachesGrafeoAboveItsElement.test_load_gives_grafeo_each_note_line_as_a_block_comment_above_its_element",
+  "seen_failing_first": false,
+  "evidence": "A regression test asked for: the text Grafeo is given already carried each /// line as a /* */ comment before this change, so it passed first; it pins that behaviour."
+}

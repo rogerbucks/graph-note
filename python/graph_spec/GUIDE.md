@@ -17,7 +17,7 @@ A host puts `src/` on `sys.path` and imports the four entry points by name. Each
 - `src/graphspec/engine/` — graph_spec's: host `settings`, `optional_imports` (Grafeo, PyYAML, lxml, rfc8785, loaded on first use), Grafeo `queries`, §18 `projection`, §5 `schema`, §22 `paths`, §24 H1 `dialect_lint` and `embedded_queries`, §24 H4 `changesets`.
 - `src/graphspec/engine/documents/` — a document's GQL block read (`reading`), the hash filler (`fill`), the classification note (`classification`).
 - `src/graphspec/engine/joining/` — §21: `config`, `restating`, `breaches`, `claims`, `union`, `merge3`, `finish` (and join, join3), `audit` (held, lost, invented), `emit`, `named_rules`, `gql_rules`.
-- `src/graphspec/engine/process/` — §7, §16: the process engine (`machine`) and its SCXML export (`scxml`).
+- `src/graphspec/engine/process/` — §7, §16: the process engine (`machine`) and its SCXML export (`scxml`). Given the block the process is written in, `to_scxml` keeps each `///` note on a State or a transition as an XML comment directly before its element (editor spec §24, note_standard), written by `note_comment` as the core's `xml-comment.ts` writes one and read back by `comment_note`; `tests/note_comment_cases.json` holds both languages to one table, and `tests/test_scxml.py` reads the export back.
 - `src/graphspec/engine/certainty/` — §20: the likelihood `scale`, cached values (`caches`), `track_record`, `checks`.
 - `src/graphspec/engine/judgements/` — §23: `basis` and its hashes, `review`, `checks`.
 - `src/graphspec/engine/serving/` — §24 H3: the `view_server` and its `checks`.

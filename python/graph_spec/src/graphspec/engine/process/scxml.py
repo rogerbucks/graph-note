@@ -1,5 +1,6 @@
 """§16: a process exported to SCXML, read back from the XML, and checked equivalent to its
-flat original."""
+flat original. SCXML is XML, which has comments, so the export keeps each /// note on a State or
+a transition as an XML comment before its element (editor spec §24, note_standard)."""
 
 from __future__ import annotations
 
@@ -10,6 +11,8 @@ from typing import TYPE_CHECKING, Any
 from graphspec.engine.optional_imports import etree
 from graphspec.engine.process.machine import Machine
 from graphspec.engine.queries import Q
+from graphspec.reader.notes import notes
+from graphspec.reader.written_things import written_in
 from graphspec.rules.plain_graph import Graph
 
 if TYPE_CHECKING:
@@ -25,11 +28,118 @@ def ecma(g: str) -> str:
     return g.replace(" = ", " === ").replace(" and not ", " && !").replace(" and ", " && ")
 
 
-def to_scxml(db: Graph | GrafeoDB) -> str:
+def _not_xml(c: str) -> bool:
+    """Whether XML 1.0 cannot hold a character, even as a reference: a control character other
+    than tab, line feed and carriage return, U+FFFE, U+FFFF, or half of a surrogate pair alone."""
+    code = ord(c)
+    return (
+        (code < 0x20 and code not in (0x09, 0x0A, 0x0D))
+        or code in (0xFFFE, 0xFFFF)
+        or 0xD800 <= code <= 0xDFFF
+    )
+
+
+def note_comment(note: str) -> str:
+    """A /// note as the text of the XML comment that holds it, between <!-- and -->, as the
+    core's xml-comment.ts writes it (tests/note_comment_cases.json holds both; editor spec §24,
+    note_standard): spaced at both ends, a backslash written \\\\, a hyphen directly after a hyphen
+    \\-, a carriage return \\r and a character XML cannot hold \\u{its code point in hexadecimal},
+    so it holds no -- and no - at its end, can never end its comment, and reads back exactly."""
+    out: list[str] = []
+    last = ""
+    for c in note:
+        if c == "\\":
+            piece = "\\\\"
+        elif c == "\r":
+            piece = "\\r"
+        elif c == "-" and last == "-":
+            piece = "\\-"
+        elif _not_xml(c):
+            piece = f"\\u{{{ord(c):X}}}"
+        else:
+            piece = c
+        out.append(piece)
+        last = piece[-1]
+    return " " + "".join(out) + " "
+
+
+def comment_note(text: str) -> str:
+    """The note an XML comment's text holds, as note_comment writes it; raises ValueError for a
+    text it would not write: not spaced at both ends, or a backslash before anything but \\, -, r
+    or {a code point in hexadecimal}."""
+    if len(text) < 2 or text[0] != " " or text[-1] != " ":
+        raise ValueError("a note's comment is spaced from its <!-- and its -->")
+    s, out, i = text[1:-1], [], 0
+    while i < len(s):
+        if s[i] != "\\":
+            out.append(s[i])
+            i += 1
+            continue
+        e = s[i + 1 : i + 2]
+        if e in ("\\", "-"):
+            out.append(e)
+            i += 2
+        elif e == "r":
+            out.append("\r")
+            i += 2
+        elif e == "u" and s[i + 2 : i + 3] == "{":
+            end = s.find("}", i + 3)
+            digits = s[i + 3 : end] if end >= 0 else ""
+            if not 1 <= len(digits) <= 6 or any(d not in "0123456789ABCDEF" for d in digits):
+                raise ValueError(f"\\u{{{digits}}} names no character")
+            if int(digits, 16) > 0x10FFFF:
+                raise ValueError(f"\\u{{{digits}}} names no character")
+            out.append(chr(int(digits, 16)))
+            i = end + 1
+        else:
+            raise ValueError(f"\\{e} is no escape a note's comment is written with")
+    return "".join(out)
+
+
+def _noted(block: str, m: Machine) -> tuple[dict[str, str], dict[int, str]]:
+    """The notes of a process's block (editor spec §24), as the core's notes.ts puts them on what
+    it draws: a State's by its id, its first note kept; a TRANSITION's on the first transition
+    with its ends and no note yet, in the order written, by the identity of its row in m. A name
+    stands for the id written with it, or is its own id (§3). A note on anything else, such as a
+    DETAILED_IN, which SCXML writes no element for, is left out."""
+    ids: dict[str, str] = {}
+    for w in written_in(block):
+        given = w.props.get("id")
+        if w.variable and isinstance(given, str):
+            ids.setdefault(w.variable[1], given)
+    states: dict[str, str] = {}
+    moves: dict[int, str] = {}
+    for n in notes(block)["notes"]:
+        el = n["element"]
+        if "thing" in el:
+            s = ids.get(el["thing"], el["thing"])
+            if s in m.S:
+                states.setdefault(s, n["text"])
+            continue
+        a, t, b = el["link"]
+        if t.upper() != "TRANSITION":
+            continue
+        a, b = ids.get(a, a), ids.get(b, b)
+        row = next(
+            (r for r in m.moves if r["a"] == a and r["b"] == b and id(r) not in moves), None
+        )
+        if row is not None:
+            moves[id(row)] = n["text"]
+    return states, moves
+
+
+def to_scxml(db: Graph | GrafeoDB, block: str | None = None) -> str:
     """The process graph as W3C SCXML text: the loan flow's states, each sub-flow nested in the
     state it details, with their transitions and actions — built from the reader's plain graph
-    (req:18.scxml-reads-plain), or from a Grafeo database a host asks for."""
+    (req:18.scxml-reads-plain), or from a Grafeo database a host asks for. Given the block the
+    graph is written in, each /// note on a State or a transition is kept as an XML comment
+    directly before its element (editor spec §24, note_standard; note_comment)."""
     m = Machine(db)
+    states, moves = _noted(block, m) if block is not None else ({}, {})
+
+    def noted(parent_el, note):
+        if note is not None:
+            parent_el.append(etree.Comment(note_comment(note)))
 
     def name(s):
         return s.replace("/", "_")
@@ -53,6 +163,7 @@ def to_scxml(db: Graph | GrafeoDB) -> str:
             id=name(s),
             **({"initial": name(m.D[s])} if s in m.D else {}),
         )
+        noted(parent_el, states.get(s))
         parent_el.append(el)
         for (a, e), ts in sorted(m.T.items()):
             if a != s:
@@ -65,6 +176,7 @@ def to_scxml(db: Graph | GrafeoDB) -> str:
                     | ({"target": name(t["b"])} if t["b"] != t["a"] else {})
                 )
                 tr = element("transition", **attrs)
+                noted(el, moves.get(id(t)))
                 el.append(tr)
                 if t["d"]:
                     tr.append(element("log", label="do", expr=f"'{t['d']}'"))
