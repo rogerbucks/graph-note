@@ -54,6 +54,24 @@
       ]
     },
     {
+      "name": "a picture on boxes laid out as lanes: the square kept in each box, inside its lane",
+      "blocks": [
+        [
+          "// graph: pets",
+          "(tom:Cat {name: 'Tom', photo: '[[tom.gif]]'}),",
+          "(kit:Cat {name: 'Kit', photo: '[[kit.gif]]'}),",
+          "(rex:Dog {name: 'Rex', photo: '[[rex.gif]]'}),",
+          "(tom)-[:CHASES]->(rex),",
+          "(kit)-[:CHASES]->(rex)"
+        ],
+        [
+          "// graph: pets_style · STYLE pets",
+          "(p1:Picture {property: 'photo', kind: 'Cat'}),",
+          "(d1:Diagram {type: 'lanes'})"
+        ]
+      ]
+    },
+    {
       "name": "Pictures written wrong: each the same problem in both, and left out; the one written right drawn",
       "blocks": [
         [

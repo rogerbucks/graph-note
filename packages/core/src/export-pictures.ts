@@ -23,11 +23,39 @@ export interface LoadedImage {
   still?: string;
 }
 
-/** The host's loader: the image a picture's value names, or why it cannot be had. */
-export type PictureLoad = (value: string) => Promise<LoadedImage | { why: string }>;
+/** An image a host found but never read, being over the size limit (`IMAGE_LIMITS.bytes`): its name and size alone. */
+export interface UnreadImage {
+  name: string;
+  size: number;
+  unread: true;
+}
+
+/** The host's loader: the image a picture's value names, found but not read when too large, or why it cannot be had. */
+export type PictureLoad = (value: string) => Promise<LoadedImage | UnreadImage | { why: string }>;
 
 /** What an export does with a picture: the image the host loaded for it, or why none was; none when nothing was loaded. */
-export type PictureLoaded = LoadedImage | { why: string } | undefined;
+export type PictureLoaded = LoadedImage | UnreadImage | { why: string } | undefined;
+
+/**
+ * The types an image is embedded as: the only words ever written into the file before its bytes, so a type a host
+ * gives can never close the attribute and write markup of its own. An image is only ever embedded as an image element
+ * from a data address, never put inline: an SVG attachment written into the file would run as part of it.
+ */
+const EMBEDDED = new Set([
+  'image/gif',
+  'image/png',
+  'image/apng',
+  'image/webp',
+  'image/svg+xml',
+  'image/jpeg',
+  'image/avif',
+]);
+
+/** Base64, as written: its letters, digits, `+`, `/` and padding, nothing that could close an attribute. */
+const BASE64 = /^[A-Za-z0-9+/]*={0,2}$/;
+
+/** A megabyte count, as the limits are said: one decimal place where it has one. */
+const mb = (bytes: number): string => `${Math.round((bytes / (1024 * 1024)) * 10) / 10} MB`;
 
 /** The style sheet that shows an image's first frame in place of its movement under reduced motion. */
 const STILL_CSS = [
@@ -87,9 +115,16 @@ export function withPictures(
     if (!image || 'why' in image) {
       drawn = frame;
       if (image) said.push(`${thing}: not drawn, as ${image.why}`);
-    } else if (image.facts && !image.facts.animated) {
+    } else if ('unread' in image) {
+      drawn = frame;
+      said.push(`${thing}: ${image.name} left out, as it is ${mb(image.size)}, over ${mb(IMAGE_LIMITS.bytes)}`);
+    } else if (!EMBEDDED.has(image.mime) || !BASE64.test(image.base64)) {
+      drawn = frame;
+      said.push(`${thing}: not drawn, as ${image.name} is not of an image type an export embeds`);
+    } else if (image.facts && image.facts.format !== null && !image.facts.animated) {
       drawn = imageAt('graph-note-picture', at, image.mime, image.base64);
     } else {
+      const first = image.still !== undefined && BASE64.test(image.still) ? image.still : undefined;
       const past = pastLimit(image),
         why = !moving
           ? 'a PNG cannot move'
@@ -98,17 +133,17 @@ export function withPictures(
             : moved >= IMAGE_LIMITS.moving
               ? `${IMAGE_LIMITS.moving} animated images already move in it`
               : null;
-      const still = image.still ? imageAt('graph-note-picture-still', at, 'image/png', image.still) : '';
+      const still = first ? imageAt('graph-note-picture-still', at, 'image/png', first) : '';
       if (why === null) {
         moved++;
         drawn = imageAt('graph-note-picture-moving', at, image.mime, image.base64) + still;
         said.push(
           `${thing}: ${image.name} kept moving${still ? ', and still under reduced motion' : ', and moving under reduced motion too, as its first frame could not be made'}`,
         );
-      } else if (image.still || !moving) {
+      } else if (first || !moving) {
         // a PNG is drawn from the file as an image, which shows an animated one's first frame
-        drawn = image.still
-          ? imageAt('graph-note-picture', at, 'image/png', image.still)
+        drawn = first
+          ? imageAt('graph-note-picture', at, 'image/png', first)
           : imageAt('graph-note-picture', at, image.mime, image.base64);
         said.push(`${thing}: ${image.name} reduced to its first frame, as ${why}`);
       } else {

@@ -146,7 +146,17 @@ class Picture(unittest.TestCase):
         square = f'width="{PICTURE_SIZE}" height="{PICTURE_SIZE}" bgcolor="{PICTURE_MARK}"'
         self.assertTrue(all(square in s for s in sources))
         self.assertEqual(self.core[1]["pictures"], {"pets": [[1, "rex", "photo", "[[rex.gif]]"]]})
-        self.assertEqual(len(self.core[3]["styles"]["pets"]), 7, self.core[3]["styles"])
+        self.assertEqual(len(self.core[4]["styles"]["pets"]), 7, self.core[4]["styles"])
+
+    def test_a_picture_in_lanes_is_kept_in_its_box(self):
+        # laid out as lanes, each cat's box keeps its square and the dog's has none, in each
+        # direction laid out
+        lanes = self.core[3]["drawn"]["pets"].values()
+        self.assertTrue(all("cluster" in s for s in lanes))
+        for s in lanes:
+            boxes = [line for line in s.split("\n") if "[label=<<table " in line]
+            pictured = [line.split('"')[1] for line in boxes if PICTURE_MARK in line]
+            self.assertEqual(pictured, ["tom", "kit"], s)
 
     def test_with_no_picture_the_source_is_unchanged(self):
         # animated_image_shown: nothing on a box unless a Picture asks

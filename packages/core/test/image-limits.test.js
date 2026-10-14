@@ -83,6 +83,35 @@ describe('an animated image past a limit', () => {
   });
 });
 
+describe('an image whose bytes say nothing, or that was not read', () => {
+  // proves: motion_reduced_respected
+  test('one of no format the reader knows may move: it gets a control, and is still under reduced motion', () => {
+    const unknown = { format: null, animated: false, frames: 0, width: 0, height: 0 };
+    assert.deepEqual(startOf({ facts: unknown, size: 2000, reduced: false, moving: 0 }), { moving: true });
+    assert.equal(startOf({ facts: unknown, size: 2000, reduced: true, moving: 0 }).playable, true);
+  });
+
+  // proves: animated_image_limited
+  test('one not read, being over the size limit, is not shown, saying so, and Play is refused', () => {
+    const start = startOf({ facts: null, size: 6 * MB, reduced: false, moving: 0 });
+    assert.deepEqual(start, {
+      moving: false,
+      playable: false,
+      why: 'Not shown: it is 6 MB, over the 5 MB an animated image may be, so it is not read.',
+    });
+  });
+
+  // proves: animated_image_limited
+  test('one not read whose type never moves, a photograph, is shown as it is, with no Play to refuse', () => {
+    assert.deepEqual(startOf({ facts: null, size: 6 * MB, neverMoves: true, reduced: false, moving: 0 }), {
+      moving: false,
+      playable: false,
+      why: '',
+      plain: true,
+    });
+  });
+});
+
 describe('an image that does not move', () => {
   // proves: animated_image_shown
   test('is shown as it is: neither moving nor held, with nothing to say', () => {

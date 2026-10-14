@@ -17,6 +17,12 @@ export const IMAGE_EXTENSIONS: ReadonlySet<string> = new Set([
   'avif',
 ]);
 
+/**
+ * Whether a file's type, by its name, never moves: a JPEG. Used only for an image not read, being over the size limit,
+ * whose bytes cannot say; every other image type may move (a PNG may be an APNG, an AVIF a sequence).
+ */
+export const neverMoves = (name: string): boolean => /\.jpe?g$/i.test(name);
+
 /** An image a value names: the vault's file to load by its link, or why it is not loaded. */
 export type ImageLink = { link: string } | { refused: string };
 
@@ -35,23 +41,23 @@ const isImage = (place: string): boolean => IMAGE_EXTENSIONS.has(/\.([^./\\]+)$/
 /**
  * The image a property's value names, or null when it names none: a value that is not text, or names a note or any file
  * that is not an image. An address with a scheme (`https:`, `data:`) or starting `//` is outside the vault and is never
- * loaded; a place with a leading slash, a drive, a `..` part or a part starting with a dot is refused.
+ * loaded; a place with a leading slash, a drive, a `..` part or a part starting with a dot is refused. A link's target is
+ * held to the same as a path is (review of #443): `[[../x.gif]]` leaves the vault as `../x.gif` does.
  */
 export function imageLink(value: unknown): ImageLink | null {
   if (typeof value !== 'string') return null;
   const written = value.trim(),
-    link = LINK.exec(written)?.[1]?.trim();
-  if (link !== undefined) return isImage(link) ? { link } : null;
-  if (SCHEME.test(written) && !/^[A-Za-z]:[/\\]/.test(written))
-    return isImage(written.replace(/[?#].*$/, '')) || /^data:image\//i.test(written)
+    place = LINK.exec(written)?.[1]?.trim() ?? written;
+  if (SCHEME.test(place) && !/^[A-Za-z]:[/\\]/.test(place))
+    return isImage(place.replace(/[?#].*$/, '')) || /^data:image\//i.test(place)
       ? { refused: `${written} is outside the vault, and an image from outside the vault is not loaded` }
       : null;
-  if (!isImage(written)) return null;
-  if (outsideVault(written) || written.split(/[/\\]/).includes('..'))
+  if (!isImage(place)) return null;
+  if (outsideVault(place) || place.split(/[/\\]/).includes('..'))
     return {
       refused: `${written} is not a place inside the vault: write its path from the vault’s root, or link it as [[name]]`,
     };
-  return { link: written };
+  return { link: place };
 }
 
 /** The images a thing's properties name, in the order of the properties' names, as its details list them. */

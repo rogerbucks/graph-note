@@ -92,11 +92,23 @@ describe('an animated image is known by its bytes', () => {
   });
 
   // proves: animated_image_limited
-  test('a GIF cut short is read as far as it goes, never past its end', () => {
+  test('a GIF cut short is read as far as it goes, never past its end: only its whole frames are counted', () => {
     const whole = gif({ frames: 5 });
-    const cut = whole.slice(0, whole.length - 30);
-    const facts = imageFacts(cut);
-    assert.equal(facts.format, 'gif');
-    assert.ok(facts.frames < 5, `${facts.frames} frames read of what is there`);
+    // its header, colour table and loop extension take 38 bytes, each frame 23, and the trailer 1
+    assert.equal(whole.length, 38 + 5 * 23 + 1);
+    assert.equal(imageFacts(whole.slice(0, whole.length - 30)).frames, 3);
+    for (let n = 38; n <= whole.length; n++) {
+      const facts = imageFacts(whole.slice(0, n));
+      assert.equal(facts.format, 'gif', `cut at ${n}`);
+      assert.equal(facts.frames, Math.max(1, Math.min(5, Math.floor((n - 38) / 23))), `cut at ${n}`);
+    }
+  });
+
+  // proves: animated_image_shown, motion_reduced_respected
+  test('an AVIF image sequence moves; a still AVIF does not', () => {
+    const avif = (brand) =>
+      Uint8Array.from([0, 0, 0, 0x1c, ...[...`ftyp${brand}`].map((c) => c.charCodeAt(0)), 0, 0, 0, 0]);
+    assert.deepEqual(imageFacts(avif('avis')), { format: 'avif', animated: true, frames: 0, width: 0, height: 0 });
+    assert.deepEqual(imageFacts(avif('avif')), { format: 'avif', animated: false, frames: 1, width: 0, height: 0 });
   });
 });

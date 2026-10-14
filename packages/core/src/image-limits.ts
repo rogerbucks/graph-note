@@ -40,9 +40,15 @@ export type Start =
 
 /** What an image may be: its facts when it was read, and its size on disk. */
 export interface ImageAt {
-  /** Null when it was not read, being over the size limit: it may move, so it is held as one that does. */
+  /**
+   * Null when it was not read, being over the size limit: it may move, so it is held as one that does, unless its type
+   * never moves (`neverMoves`). Facts of no known format may move too, so are held as moving ones are (an AVIF the
+   * reader does not know, say), with a control and still under reduced motion.
+   */
   facts: ImageFacts | null;
   size: number;
+  /** For an image not read: set when its type, by its name, never moves (a JPEG), so it is shown as it is. */
+  neverMoves?: boolean;
 }
 
 /** Why an animated image is past a limit, in words after "Shown as its first frame: ", or null when it is within them. */
@@ -62,12 +68,15 @@ const countWords = (): string =>
 
 /**
  * How an image starts in a drawing or its details, where `moving` images already move: still and as it is when it does
- * not move; its first frame, saying why, when past a limit (Play refused) or under reduced motion (Play allowed); still
+ * not move; not shown, saying why, when it was not read, being over the size limit (Play refused); its first frame,
+ * saying why, when past a limit (Play refused) or under reduced motion (Play allowed); still
  * while as many as may move at once already do; and otherwise moving.
  */
 export function startOf(x: ImageAt & { reduced: boolean; moving: number }): Start {
-  if (x.facts && !x.facts.animated) return { moving: false, playable: false, why: '', plain: true };
+  const still = x.facts ? x.facts.format !== null && !x.facts.animated : !!x.neverMoves;
+  if (still) return { moving: false, playable: false, why: '', plain: true };
   const past = pastLimit(x);
+  if (past && !x.facts) return { moving: false, playable: false, why: `Not shown: ${past}, so it is not read.` };
   if (past) return { moving: false, playable: false, why: `Shown as its first frame: ${past}.` };
   if (x.reduced) return { moving: false, playable: true, why: REDUCED_WORDS };
   if (x.moving >= IMAGE_LIMITS.moving) return { moving: false, playable: true, why: countWords() };

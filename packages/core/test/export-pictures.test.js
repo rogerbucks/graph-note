@@ -39,19 +39,24 @@ const layout = async (d, theme) => {
 const base64 = (bytes) => Buffer.from(bytes).toString('base64');
 const MB = 1024 * 1024;
 
-/** The images the vault holds, as a host loads them: tom moves, kit is still, rex moves but is too large. */
+/** The images the vault holds, as a host loads them: tom moves, kit is still, rex moves but has too many frames. */
 const FILES = {
   'tom.gif': { bytes: gif({ frames: 6 }) },
   'kit.png': { bytes: png() },
-  'rex.gif': { bytes: gif({ frames: 4 }), size: 9 * MB },
+  'rex.gif': { bytes: gif({ frames: 600 }) },
 };
 const STILL = base64(png({ width: 1, height: 1 }));
 
-/** A host's loader: each image's bytes, facts and size, and its first frame drawn as a PNG. */
+/**
+ * A host's loader: each image's bytes, facts and size, and its first frame drawn as a PNG; one over the size limit
+ * never read, only named and its size given.
+ */
 async function load(value) {
   const name = /\[\[(.*)\]\]/.exec(value)[1],
     f = FILES[name];
   if (!f) return { why: `${name} is not in the vault` };
+  const size = f.size ?? f.bytes.length;
+  if (size > 5 * MB) return { name, size, unread: true };
   return {
     name,
     mime: name.endsWith('.gif') ? 'image/gif' : 'image/png',
@@ -86,7 +91,7 @@ describe('an exported SVG', () => {
     assert.doesNotMatch(image.svg, /href="(?!data:)/, 'nothing is loaded from elsewhere');
     assert.deepEqual(image.animation, [
       'Tom: tom.gif kept moving, and still under reduced motion',
-      'Rex: rex.gif reduced to its first frame, as it is 9 MB, over the 5 MB an animated image may be',
+      'Rex: rex.gif reduced to its first frame, as it has 600 frames, over the 500 an animated image may have',
     ]);
     assert.match(image.svg, /Animated images: Tom: tom\.gif kept moving/, 'the image says it too');
     assert.ok(!image.animation.some((s) => s.includes('kit.png')), 'a still image needs nothing said');
@@ -130,6 +135,24 @@ describe('a picture that cannot be drawn', () => {
     );
     assert.match(image.svg, /<rect class="graph-note-picture-missing"[^>]*stroke-dasharray/);
     assert.equal(image.animation[0], 'Tom: not drawn, as tom.gif is not in the vault');
+  });
+
+  // proves: animated_image_limited, export_animation_stated
+  test('one over the size limit, never read, is left out, and the export says so', async () => {
+    const image = await exported('svg', [PETS, STYLE], async (value) =>
+      value.includes('tom') ? { name: 'tom.gif', size: 9 * MB, unread: true } : load(value),
+    );
+    assert.equal(image.animation[0], 'Tom: tom.gif left out, as it is 9 MB, over 5 MB');
+    assert.ok(!image.svg.includes(base64(FILES['tom.gif'].bytes)));
+  });
+
+  // proves: animated_image_shown
+  test('one whose type is not an image type the export knows is left out, never written into the file', async () => {
+    const image = await exported('svg', [PETS, STYLE], async (value) =>
+      value.includes('tom') ? { ...(await load(value)), mime: 'text/html" onload="x' } : load(value),
+    );
+    assert.doesNotMatch(image.svg, /onload/);
+    assert.equal(image.animation[0], 'Tom: not drawn, as tom.gif is not of an image type an export embeds');
   });
 
   // proves: animated_image_shown

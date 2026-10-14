@@ -3,7 +3,7 @@
 // never loaded, and a place that could leave the vault is refused, each saying why.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { imageLink, imagesOf, IMAGE_EXTENSIONS } from '../src/image-links.ts';
+import { imageLink, imagesOf, IMAGE_EXTENSIONS, neverMoves } from '../src/image-links.ts';
 
 describe('a property names an image in the vault', () => {
   // proves: animated_image_shown
@@ -44,6 +44,33 @@ describe('a property names an image in the vault', () => {
   test('a place that could leave the vault, or reach what it hides, is refused', () => {
     for (const place of ['../secret.gif', '/etc/cat.gif', 'C:/cat.gif', '.obsidian/icon.png', 'a/../../b.gif'])
       assert.match(imageLink(place)?.refused ?? '', /is not a place inside the vault/, place);
+  });
+
+  // proves: animated_image_limited
+  test('by its name alone, only a JPEG is known never to move', () => {
+    assert.deepEqual(['a.jpg', 'b.JPEG', 'c.png', 'd.gif', 'e.avif', 'f.webp', 'g.svg'].map(neverMoves), [
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+    ]);
+  });
+
+  // proves: animated_image_shown
+  test('a link is held to the same: no leaving the vault, no hidden folder, no address from elsewhere', () => {
+    for (const place of [
+      '[[../x.gif]]',
+      '[[/etc/x.png]]',
+      '[[.obsidian/x.png]]',
+      '![[a/../../x.webp]]',
+      '[[C:/x.gif]]',
+    ])
+      assert.match(imageLink(place)?.refused ?? '', /is not a place inside the vault/, place);
+    for (const remote of ['file:///etc/x.gif', 'app://local/x.png', '[[file:///etc/x.gif]]', '[[app://local/x.png]]'])
+      assert.match(imageLink(remote)?.refused ?? '', /is outside the vault/, remote);
   });
 
   // proves: animated_image_shown

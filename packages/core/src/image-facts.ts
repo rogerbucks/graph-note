@@ -1,11 +1,11 @@
 // What an image's own bytes say of it (editor spec §18, animated_image_shown, animated_image_limited): its format, whether
 // it moves, how many frames it has and how large each is, read from the header and chunks each format writes — a GIF's
-// image descriptors, an APNG's animation control chunk, an animated WebP's flag and frames, an SVG's animate elements or
-// CSS keyframes. Nothing is decoded and no library is used: the host's own image decoding draws it (no new dependency).
+// image descriptors, an APNG's animation control chunk, an animated WebP's flag and frames, an AVIF sequence's brand, an
+// SVG's animate elements or CSS keyframes. Nothing is decoded and no library is used: the host's own image decoding draws it (no new dependency).
 // Every read is held to the bytes there, so a file cut short or written wrongly is read as far as it goes.
 
 /** The formats an image's bytes are known as: a PNG that moves is an APNG, and is still `png` here. */
-export type ImageFormat = 'gif' | 'png' | 'webp' | 'svg' | 'jpeg';
+export type ImageFormat = 'gif' | 'png' | 'webp' | 'svg' | 'jpeg' | 'avif';
 
 /** What an image's bytes say: its format (null when no format is known), whether it moves, its frames and its size. */
 export interface ImageFacts {
@@ -108,9 +108,58 @@ const svgSize = (root: string, name: string): number => {
   return m ? Math.round(parseFloat(m[1] ?? '0')) : 0;
 };
 
+/** Where an SVG's markup starts and its root element, and how many characters were looked at to find them. */
+export interface SvgScan {
+  /** Where its `<svg` root starts; null when the text is no SVG. */
+  start: number | null;
+  /** The root's start tag, up to its `>`; empty when it has none. */
+  root: string;
+  looked: number;
+}
+
+const SPACE = /\s/;
+/** A UTF-8 byte order mark, read a byte to a character. */
+const BOM = 'ï»¿';
+
+/**
+ * Where an SVG starts: past a byte order mark, white space, an XML declaration, comments and a doctype, in any order,
+ * each found by searching on from where the last ended, so every character is looked at once and a comment ends at its
+ * first `-->` (review of #443: a pattern that went back over itself took seconds on 200 bytes); then its root's start
+ * tag, to its first `>`. No pattern runs over the text but those that look at each character once.
+ */
+export function svgScan(text: string): SvgScan {
+  let at = text.startsWith(BOM) ? BOM.length : 0,
+    looked = at;
+  const skipTo = (end: string, from: number): boolean => {
+    const found = text.indexOf(end, from);
+    looked += (found < 0 ? text.length : found + end.length) - at;
+    if (found < 0) return false;
+    at = found + end.length;
+    return true;
+  };
+  for (;;) {
+    while (at < text.length && SPACE.test(text.charAt(at))) {
+      at++;
+      looked++;
+    }
+    if (text.startsWith('<?', at)) {
+      if (!skipTo('?>', at + 2)) return { start: null, root: '', looked };
+    } else if (text.startsWith('<!--', at)) {
+      if (!skipTo('-->', at + 4)) return { start: null, root: '', looked };
+    } else if (text.slice(at, at + 9).toUpperCase() === '<!DOCTYPE') {
+      if (!skipTo('>', at + 9)) return { start: null, root: '', looked };
+    } else break;
+  }
+  const start = at;
+  if (text.slice(at, at + 4).toLowerCase() !== '<svg' || /[A-Za-z0-9:_.-]/.test(text.charAt(at + 4)))
+    return { start: null, root: '', looked };
+  const end = text.indexOf('>', at);
+  looked += (end < 0 ? text.length : end + 1) - at;
+  return { start, root: end < 0 ? '' : text.slice(at, end + 1), looked };
+}
+
 /** An SVG: its root's size, and whether an animate element or a CSS animation moves anything in it. */
-function svgFacts(text: string): ImageFacts {
-  const root = /<svg\b[^>]*>/i.exec(text)?.[0] ?? '';
+function svgFacts(text: string, root: string): ImageFacts {
   const animated = /<(?:animate|animateMotion|animateTransform|set)\b|@keyframes\b/i.test(text);
   return {
     format: 'svg',
@@ -119,6 +168,17 @@ function svgFacts(text: string): ImageFacts {
     width: svgSize(root, 'width'),
     height: svgSize(root, 'height'),
   };
+}
+
+/**
+ * An AVIF, by the major brand of its file type box: `avis`, an image sequence, moves; `avif` is still. Its size is not
+ * read, so only its size on disk holds it to the limits.
+ */
+function avifFacts(b: Uint8Array): ImageFacts | null {
+  if (!starts(b, 4, 'ftyp')) return null;
+  if (starts(b, 8, 'avis')) return { format: 'avif', animated: true, frames: 0, width: 0, height: 0 };
+  if (starts(b, 8, 'avif')) return { format: 'avif', animated: false, frames: 1, width: 0, height: 0 };
+  return null;
 }
 
 /**
@@ -131,9 +191,14 @@ export function imageFacts(bytes: Uint8Array): ImageFacts {
   if (b[0] === 0x89 && starts(b, 1, 'PNG\r\n\u001a\n')) return pngFacts(b);
   if (starts(b, 0, 'RIFF') && starts(b, 8, 'WEBP')) return webpFacts(b);
   if (b[0] === 0xff && b[1] === 0xd8) return { format: 'jpeg', animated: false, frames: 1, width: 0, height: 0 };
-  const head = text(b.subarray(0, 1024)).replace(/^ï»¿/, '');
-  if (/^\s*(?:<\?xml[^>]*>\s*)?(?:<!--[\s\S]*?-->\s*|<!DOCTYPE[^>]*>\s*)*<svg\b/i.test(head)) return svgFacts(text(b));
-  return NONE;
+  const avif = avifFacts(b);
+  if (avif) return avif;
+  // markup starts with `<` after any white space: anything else is not read whole as text
+  const head = text(b.subarray(0, 1024));
+  if (!(head.startsWith(BOM) ? head.slice(BOM.length) : head).trimStart().startsWith('<')) return NONE;
+  const all = text(b),
+    scan = svgScan(all);
+  return scan.start === null ? NONE : svgFacts(all, scan.root);
 }
 
 /**

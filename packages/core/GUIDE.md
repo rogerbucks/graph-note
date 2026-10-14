@@ -297,12 +297,18 @@ own image decoding, and the core says what it is and what it may do. No library 
 - `image-links.ts` — where an image comes from: `imageLink` reads a value as a link (`[[cat.gif]]`, `![[cat.gif|200]]`)
   or a path from the vault's root to a file of an image type (`IMAGE_EXTENSIONS`); an address outside the vault
   (`https:`, `data:`, `//`) is never loaded (remote images are a later slice, remote_images_asked), and a place that
-  could leave the vault is refused, as a source's is (`sources.ts`, `outsideVault`). `imagesOf` lists a thing's images.
+  could leave the vault is refused, as a source's is (`sources.ts`, `outsideVault`), a link's target as a path's.
+  `imagesOf` lists a thing's images; `neverMoves` knows a JPEG by its name, for an image too large to read.
 - `image-facts.ts` — `imageFacts`: an image's format, whether it moves, its frames and its size, read from its bytes'
-  header and chunks (a GIF's image descriptors, an APNG's `acTL`, an animated WebP's flag and `ANMF` chunks, an SVG's
-  animate elements or keyframes), never past the bytes there.
+  header and chunks (a GIF's image descriptors, an APNG's `acTL`, an animated WebP's flag and `ANMF` chunks, an AVIF's
+  `avis` brand, an SVG's animate elements or keyframes), never past the bytes there, and never looping on a length that
+  does not move it on. An SVG's start and root are found by `svgScan`, which looks at each character once and counts
+  what it looked at, so hostile markup (200 empty comments) costs no more than its length (review of #443). An SVG has
+  no frames to count, and has a pixel size only when its root gives one in pixels: its size on disk alone holds it to
+  the limits otherwise; an AVIF's size is not read either.
 - `image-limits.ts` — the limits an animated image moves within (`IMAGE_LIMITS`, said in `LIMITS_SAID`: size on disk,
-  pixels a frame, frames, and how many move at once in one drawing); `startOf` says how an image starts — moving; still
+  pixels a frame, frames, and how many move at once in one drawing); an image over the size on disk is never read, and
+  is not shown, saying why; `startOf` says how an image starts — moving; still
   under reduced motion, until played (motion_reduced_respected); its first frame, saying why, past a limit, Play refused
   (animated_image_limited); still while as many as may move already do — and `playRefusal` why Play is refused.
 
@@ -438,7 +444,9 @@ a GQL block, CSV or GraphML (`DATA_FORMATS`), each read back into the very thing
   `ExportInfo.pictures`, the host's loader, each image embedded as a data address, so the file loads nothing; an SVG
   keeps an animated one moving within `IMAGE_LIMITS`, its first frame beside it shown instead under reduced motion by
   the image's own style sheet, scoped under `IMAGE_CLASS`; a PNG, or one past a limit, reduced to its first frame; one
-  that cannot be had drawn as a dashed frame. `ExportImage.animation` says what was done with each animated image, a line
+  that cannot be had, or was never read (`UnreadImage`, over the size limit: left out), drawn as a dashed frame. Only an
+  image type of a fixed list is written before the bytes, which must be base64, and an image is never put inline.
+  `ExportImage.animation` says what was done with each animated image, a line
   each, and the frame says it too (`animationSaid`).
 - `export-pages.ts` — `pngPages`: an image too large for one sharp PNG on the device, split into a grid of pages, each at
   twice natural size or more, within the device's pixels and no side over `PNG_MOST_SIDE` (32,767 device pixels), as
