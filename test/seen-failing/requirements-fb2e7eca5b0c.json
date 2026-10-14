@@ -1,0 +1,10 @@
+{
+  "file": "test/requirements.test.js",
+  "test": "a tampered copy fails the check > a test marked planned while its file is written",
+  "seen_failing_first": false,
+  "fault": true,
+  "commits": [
+    "12c6a717678fafaba4dfd38150ebda6c6f436448"
+  ],
+  "evidence": "At its own commit (12c6a71) the checked-in requirements copy did not yet mark test_view_switches written, so the test's baseline copy was not clean and it failed. The copy came in the next change, d393a1a (requirements copy w3), as the merge order required; the test passes from there."
+}

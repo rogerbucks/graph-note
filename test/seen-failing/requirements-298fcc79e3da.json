@@ -4,7 +4,8 @@
   "seen_failing_first": false,
   "fault": true,
   "commits": [
+    "12c6a717678fafaba4dfd38150ebda6c6f436448",
     "2c5b9f6266cdcdd75bb57a675186d9eaebaa54c8"
   ],
-  "evidence": "Written first on purpose and committed alone in 2c5b9f6, before its code; seen failing there with the other new open question tests (16 of 157), and passing from b552a2f, which adds the code."
+  "evidence": "Failed at two commits. At 2c5b9f6 it was written first on purpose and committed alone, before its code; seen failing there with the other new open question tests (16 of 157), and passing from b552a2f, which adds the code. At 12c6a71 the checked-in requirements copy did not yet mark test_view_switches written, so the test failed again; the copy came in the next change, d393a1a (requirements copy w3), as the merge order required."
 }
