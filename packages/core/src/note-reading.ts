@@ -5,6 +5,7 @@ import type { Estimate } from './estimates.ts';
 import type { InlineProperties } from './inline-properties.ts';
 import type { Refusal } from './layout-limits.ts';
 import type { FlowLink } from './link-flow.ts';
+import type { PictureBox } from './picture.ts';
 import type { Nudge } from './style-graph.ts';
 
 /** A gql block in a note: its text, and the note line (1-based) its opening fence is on. */
@@ -80,6 +81,8 @@ export interface GraphDrawing {
   diagram?: DiagramPlan;
   /** The links its style graph moves (spec §7, link-flow.ts), each with how and what it means; none, every link still. */
   flow?: FlowLink[];
+  /** The boxes its style graph draws a picture on (spec §18, picture.ts), room kept for each; none, no picture. */
+  pictures?: PictureBox[];
 }
 
 /**

@@ -1,6 +1,6 @@
 """Each thing of a style graph checked on its own (editor spec §2, style_graph_checked; §6; §7;
-§14; §15): its kind, the keys it writes, and for a nudge, a Show, an Arrows, a Diagram or a Flow
-its words, its values and
+§14; §15; §18): its kind, the keys it writes, and for a nudge, a Show, an Arrows, a Diagram, a Flow
+or a Picture its words, its values and
 every name it uses, against the graph it styles. The core's style-checks.ts, function for function,
 as far as what graph_svg draws goes: what is sound is kept, and each fault is a problem on its line
 with its fix, the same words as the core's.
@@ -14,6 +14,7 @@ from typing import Any
 
 from graphspec.style.flow import MEANS_NEEDED
 from graphspec.style.near_names import nearest
+from graphspec.style.picture import PICTURE_FOR
 from graphspec.style.words import (
     ARROWHEADS,
     DIAGRAM_TYPES,
@@ -241,6 +242,34 @@ def _flow_of(raw, names, out):
     }
 
 
+def _picture_of(raw, names, out):
+    """A Picture, checked (§18): the property that holds the image, of the kind's things or of
+    the thing it names, which the graph has; in a view when it names one, whose name is the
+    user's own."""
+    r, before, props = _Reader(raw, names, out), len(out), raw["props"]
+    targets = sum(1 for k in ("kind", "thing") if k in props)
+    if "property" not in props:
+        r.missing("a Picture names the property that holds its image", "add property: '<name>'")
+    elif targets > 1:
+        r.report(PICTURE_FOR, "remove one of them")
+    elif not targets:
+        r.missing(PICTURE_FOR, "add kind: '<Kind>' or thing: '<id>'")
+    else:
+        kind = r.name("kind", names["kinds"], "a kind")
+        thing = r.name("thing", names["things"], "a thing", "the id of a thing")
+        of = {"kind": kind} if kind else {"thing": thing} if thing else None
+        if of:
+            what = next(iter(of.values()))
+            prop = r.name(
+                "property", names["properties"](of), f"a property of {what}", "a property it has"
+            )
+            view = r.text("view")
+            if prop and len(out) == before:
+                seen = {} if view is None else {"view": view}
+                return {"property": prop, **of, **seen, "at": raw["at"]}
+    return None
+
+
 # The kinds a style graph checks fully here, each with its check and where what it gives goes.
 _CHECKS = {
     "Nudge": (_nudge_of, "nudges"),
@@ -248,13 +277,14 @@ _CHECKS = {
     "Arrows": (_arrows_of, "arrows"),
     "Diagram": (_diagram_of, "diagrams"),
     "Flow": (_flow_of, "flows"),
+    "Picture": (_picture_of, "pictures"),
 }
 
 
 def check_things(raws: list[dict], names: dict) -> dict[str, list[dict]]:
     """Each thing of a style graph checked on its own, in the order written: the nudges, Shows,
-    Arrows, Diagrams and Flows that are sound, and the problems found ({nudges, shows, arrows,
-    diagrams, flows, problems}). A raw thing
+    Arrows, Diagrams, Flows and Pictures that are sound, and the problems found ({nudges, shows,
+    arrows, diagrams, flows, pictures, problems}). A raw thing
     is {labels (in the order written), props, at: {block, line, id}}; names is {graph, things,
     kinds, types: names in the graph styled, properties(of): the property names of a kind's things,
     a thing or a type's links}. A thing that writes a key its kind does not know is reported on
@@ -265,6 +295,7 @@ def check_things(raws: list[dict], names: dict) -> dict[str, list[dict]]:
         "arrows": [],
         "diagrams": [],
         "flows": [],
+        "pictures": [],
         "problems": [],
     }
     problems = c["problems"]

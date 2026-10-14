@@ -31,7 +31,17 @@ DIAGRAM_TYPES = ("network", "tree", "flow", "radial", "lanes", "timeline", "tabl
 # Flow moves it (graphspec/style/flow.py).
 FLOW_MOTIONS = ("dashes", "dot", "still")
 # The kinds of thing a style graph holds, by label.
-STYLE_KINDS = ("Nudge", "Show", "Look", "ViewStyle", "Shown", "Arrows", "Diagram", "Flow")
+STYLE_KINDS = (
+    "Nudge",
+    "Show",
+    "Look",
+    "ViewStyle",
+    "Shown",
+    "Arrows",
+    "Diagram",
+    "Flow",
+    "Picture",
+)
 # The keys each kind of style thing may have (§2, style_words_checked); a thing's id is its name.
 STYLE_KEYS = {
     "Nudge": ("word", "thing", "other", "group", "direction"),
@@ -54,6 +64,7 @@ STYLE_KEYS = {
     "Arrows": ("arrowheads", "view", "type"),
     "Diagram": ("type", "view", "relationship"),
     "Flow": ("motion", "means", "type", "view"),
+    "Picture": ("property", "kind", "thing", "view"),
 }
 
 

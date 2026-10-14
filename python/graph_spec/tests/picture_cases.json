@@ -1,0 +1,79 @@
+{
+  "about": "Graphs whose style graph draws a picture on a box (editor spec §18: animated_image_shown), drawn the same by the plugin's core and by graph_svg.py. Each case is a note's gql blocks, each block a list of lines, and the view it is drawn in, if any (its name only: the whole graph is drawn, styled as that view is). For every case both give the same problems reading each style, the same boxes drawn with a picture and the property and value naming it, and, for every graph drawn, the same Graphviz source in each direction laid out, byte for byte: the room kept for each picture, a marked square at the top of its box. The expected answers are the core's, run live: packages/core/test/picture-parity.test.js holds graph_svg.py to the core on these cases, and tests/test_graph_svg_picture.py does the same from the Python side.",
+  "cases": [
+    {
+      "name": "a picture on every thing of a kind, one thing's own over its kind's, a value not text drawing none",
+      "blocks": [
+        [
+          "// graph: pets",
+          "(tom:Cat {name: 'Tom', photo: '[[tom.gif]]', badge: '[[star.png]]'}),",
+          "(kit:Cat {name: 'Kit', photo: 'Attachments/kit.webp'}),",
+          "(old:Cat {name: 'Old', photo: 3}),",
+          "(rex:Dog {name: 'Rex', photo: '[[rex.gif]]'}),",
+          "(tom)-[:CHASES]->(rex),",
+          "(kit)-[:CHASES]->(rex)"
+        ],
+        [
+          "// graph: pets_style · STYLE pets",
+          "(p1:Picture {property: 'photo', kind: 'Cat'}),",
+          "(p2:Picture {property: 'badge', thing: 'tom'})"
+        ]
+      ]
+    },
+    {
+      "name": "a picture chosen for a view, drawn in that view and not in the whole graph",
+      "view": "dogs",
+      "blocks": [
+        [
+          "// graph: pets",
+          "(tom:Cat {name: 'Tom', photo: '[[tom.gif]]'}),",
+          "(rex:Dog {name: 'Rex', photo: '[[rex.gif]]'}),",
+          "(tom)-[:CHASES]->(rex)"
+        ],
+        [
+          "// graph: pets_style · STYLE pets",
+          "(p1:Picture {property: 'photo', kind: 'Dog', view: 'dogs'})"
+        ]
+      ]
+    },
+    {
+      "name": "a picture with properties shown inline and a nudge: the square above the caption, the rows below the text",
+      "blocks": [
+        [
+          "// graph: pets",
+          "(tom:Cat {name: 'Tom', photo: '[[tom.gif]]', age: 4}),",
+          "(rex:Dog {name: 'Rex', photo: '[[rex.gif]]'}),",
+          "(tom)-[:CHASES]->(rex)"
+        ],
+        [
+          "// graph: pets_style · STYLE pets",
+          "(p1:Picture {property: 'photo', thing: 'tom'}),",
+          "(s1:Show {property: 'age', kind: 'Cat'}),",
+          "(n1:Nudge {word: 'group', thing: 'tom', group: 'Indoor'})"
+        ]
+      ]
+    },
+    {
+      "name": "Pictures written wrong: each the same problem in both, and left out; the one written right drawn",
+      "blocks": [
+        [
+          "// graph: pets",
+          "(tom:Cat {name: 'Tom', photo: '[[tom.gif]]'}),",
+          "(rex:Dog {name: 'Rex', photo: '[[rex.gif]]'}),",
+          "(tom)-[:CHASES]->(rex)"
+        ],
+        [
+          "// graph: pets_style · STYLE pets",
+          "(p1:Picture {kind: 'Cat'}),",
+          "(p2:Picture {property: 'photo', kind: 'Cat', thing: 'tom'}),",
+          "(p3:Picture {property: 'photo'}),",
+          "(p4:Picture {property: 'photo', kind: 'Kat'}),",
+          "(p5:Picture {property: 'phot', kind: 'Cat'}),",
+          "(p6:Picture {property: 'photo', kind: 'Cat', size: 'big'}),",
+          "(p7:Picture {property: 'photo', thing: 'rex', view: 3}),",
+          "(p8:Picture {property: 'photo', kind: 'Dog'})"
+        ]
+      ]
+    }
+  ]
+}

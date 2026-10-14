@@ -8,6 +8,8 @@ import type { Graph } from '@graph-note/graph-spec';
 import { marked } from './export-marks.ts';
 import type { Marks } from './export-marks.ts';
 import { withFlow, withRunners } from './export-motion.ts';
+import { animationSaid, withPictures, withStillPictures } from './export-pictures.ts';
+import type { PictureLoad, PictureLoaded } from './export-pictures.ts';
 import { flowLegend, reversedLinks } from './link-flow.ts';
 import { PATH_LEGEND, animationFits, pathBody, pathPlan, pathSubtitle, withPath } from './path-animation.ts';
 import type { Device, ExportWalk, TooLargeToAnimate } from './path-animation.ts';
@@ -76,6 +78,11 @@ export type ExportInfo = {
   walk?: ExportWalk;
   /** Where it is made, for the size an animated SVG may be (animation_export_fits); a computer when not said. */
   device?: Device;
+  /**
+   * The host's loader of the images on boxes (§18, export-pictures.ts), each embedded in the file; without it each picture
+   * is a frame. Only `exportWithLayout` loads them.
+   */
+  pictures?: PictureLoad;
 } & (
   | { style?: undefined; data?: undefined }
   | {
@@ -91,6 +98,8 @@ export interface ExportImage {
   svg: string;
   width: number;
   height: number;
+  /** What was done with each animated image on a box, and why a picture was not drawn, a line each (export_animation_stated). */
+  animation?: string[];
 }
 
 const chip = (hue: string, p: Palette): Pick<LegendItem, 'fill' | 'stroke'> => ({
@@ -207,11 +216,20 @@ export async function exportWithLayout(
   const large = tooLarge(drawing, info);
   if (large) return large;
   const drawn = await layout(drawing, info.theme === 'dark' ? 'dark' : 'light');
-  return !drawn || 'reason' in drawn ? drawn : framedImage(scope, drawing, drawn, info);
+  if (!drawn || 'reason' in drawn) return drawn;
+  const load = info.pictures,
+    loaded = load ? await Promise.all((drawing.pictures ?? []).map((p) => load(p.value))) : [];
+  return framedImage(scope, drawing, drawn, info, loaded);
 }
 
-/** The drawn graph marked, in its frame, in the fixed colours of `info.theme`. */
-function framedImage(scope: ExportScope, drawing: GraphDrawing, drawn: Drawn, info: ExportInfo): ExportImage {
+/** The drawn graph marked, in its frame, in the fixed colours of `info.theme`, its pictures filled by what was `loaded`. */
+function framedImage(
+  scope: ExportScope,
+  drawing: GraphDrawing,
+  drawn: Drawn,
+  info: ExportInfo,
+  loaded: readonly PictureLoaded[] = [],
+): ExportImage {
   const palette = info.theme === 'dark' ? PALETTES.dark : PALETTES.light;
   const flow = info.motion ? (drawing.flow ?? []) : [];
   const { walk } = info;
@@ -222,15 +240,20 @@ function framedImage(scope: ExportScope, drawing: GraphDrawing, drawn: Drawn, in
     { faded: scope.faded, looks: looksOf(scope, info.style) },
     palette,
   );
-  const body = withRunners(walk && plan ? pathBody(looked, walk.path, plan, palette) : looked, flow);
+  // the pictures on boxes embedded, moving in an SVG within their limits, and what was done with each said (§16, §18)
+  const pictured = withPictures(looked, drawing, loaded, !!info.motion, palette);
+  const body = withRunners(walk && plan ? pathBody(pictured.svg, walk.path, plan, palette) : pictured.svg, flow);
   const view = scope.view !== undefined;
   const viewSaid = view
     ? sentence(scope.reading ?? '') + (scope.context ? ' (the rest of the graph is faded)' : '')
     : undefined;
+  const animation = pictured.said.length ? pictured.said : undefined;
   // a played path says it is played, at what pace, and the walk in order, so the image tells it still (motion_not_alone)
-  const subtitle = [viewSaid, walk && pathSubtitle(walk)].filter(Boolean).join('. ');
+  const subtitle = [viewSaid, walk && pathSubtitle(walk), animation && animationSaid(animation).slice(0, -1)]
+    .filter(Boolean)
+    .join('. ');
   const title = view ? `${scope.graph} · view ${scope.view}` : scope.graph;
-  const image = framed(
+  const image: ExportImage = framed(
     { svg: body, width: drawn.width, height: drawn.height },
     {
       title: walk ? `${title} · path ${walk.path.title}` : title,
@@ -240,8 +263,9 @@ function framedImage(scope: ExportScope, drawing: GraphDrawing, drawn: Drawn, in
     },
     palette,
   );
-  image.svg = withFlow(image.svg, flow);
+  image.svg = withStillPictures(withFlow(image.svg, flow));
   if (walk && plan) image.svg = withPath(image.svg, plan, walk.pace);
+  if (animation) image.animation = animation;
   // a theme variable or a blend in a colour would read as black or nothing outside Obsidian: never let one out
   if (/(?:style|fill|stroke)="[^"]*(?:var\(--|color-mix\()/.test(image.svg))
     throw new Error(

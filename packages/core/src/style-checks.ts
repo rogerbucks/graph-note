@@ -1,10 +1,11 @@
 // Checking each thing of a style graph (editor spec §2, style_graph_checked; §6; §7; §14; §15, the arrowheads and the
-// diagram type; §7, how links move): its kind, its words, its values and
+// diagram type; §7, how links move; §18, a picture on a box): its kind, its words, its values and
 // every name it uses, against the graph it styles. What is sound is kept; each fault is a problem on its line with its
 // fix, and the part at fault — or the whole thing, when nothing of it can be used — is left out of the style.
 import { STYLE } from './layout.ts';
 import { flowOf } from './link-flow.ts';
 import type { Problem } from './note-reading.ts';
+import { pictureOf } from './picture.ts';
 import {
   ARROWHEADS,
   DIAGRAM_TYPES,
@@ -18,7 +19,19 @@ import {
   orList,
   styleProblem,
 } from './style-graph.ts';
-import type { Arrows, Diagram, Flow, Look, Nudge, Show, Shown, StyleAt, StyleKind, ViewStyle } from './style-graph.ts';
+import type {
+  Arrows,
+  Diagram,
+  Flow,
+  Look,
+  Nudge,
+  Picture,
+  Show,
+  Shown,
+  StyleAt,
+  StyleKind,
+  ViewStyle,
+} from './style-graph.ts';
 import { reader } from './style-reader.ts';
 import { readFrame, unknownKeys } from './style-words.ts';
 
@@ -56,6 +69,7 @@ export interface Checked {
   arrows: Arrows[];
   diagrams: Diagram[];
   flows: Flow[];
+  pictures: Picture[];
   problems: Problem[];
 }
 
@@ -292,6 +306,7 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
     arrows: [],
     diagrams: [],
     flows: [],
+    pictures: [],
     problems: [],
   };
   for (const raw of raws) {
@@ -324,6 +339,7 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
     else if (kinds[0] === 'Arrows') push(c.arrows, kept(arrowsOf(thing, names, p)));
     else if (kinds[0] === 'Diagram') push(c.diagrams, kept(diagramOf(thing, names, p)));
     else if (kinds[0] === 'Flow') push(c.flows, kept(flowOf(thing, names, p)));
+    else if (kinds[0] === 'Picture') push(c.pictures, kept(pictureOf(thing, names, p)));
     else push(c.shown, kept(shownOf(thing, names, p)));
   }
   return c;

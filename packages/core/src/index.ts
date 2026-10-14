@@ -29,6 +29,7 @@ export type {
   LegendEntry,
   LineStyle,
   LinkTarget,
+  Picture,
   Look,
   Nudge,
   NudgeWord,
@@ -49,6 +50,16 @@ export { FLOW_ICONS, flowFor, flowLegend, flowSaid, reversedLinks } from './link
 export type { FlowLegendEntry, FlowLink, Moving } from './link-flow.ts';
 export { INLINE_ROWS } from './inline-properties.ts';
 export type { InlineProperties, PropertyRow } from './inline-properties.ts';
+export { PICTURE_MARK, PICTURE_SIZE, pictureFor, picturesFor } from './picture.ts';
+export type { PictureBox } from './picture.ts';
+export { imageFacts } from './image-facts.ts';
+export type { ImageFacts, ImageFormat } from './image-facts.ts';
+export { IMAGE_EXTENSIONS, imageLink, imagesOf } from './image-links.ts';
+export type { ImageLink, NamedImage } from './image-links.ts';
+export { IMAGE_LIMITS, LIMITS_SAID, REDUCED_WORDS, pastLimit, playRefusal, startOf } from './image-limits.ts';
+export type { ImageAt, Start } from './image-limits.ts';
+export { animationSaid } from './export-pictures.ts';
+export type { LoadedImage, PictureLoad } from './export-pictures.ts';
 export { styleEdit } from './style-edit.ts';
 export {
   DIAGRAM_TYPES,
