@@ -4,7 +4,8 @@
 // the server stops after an idle period with no page, or at once when told. It makes no outgoing request (cc_no_remote).
 // The page and its files say nothing about any note, so they are served without the token, which a browser's
 // navigation cannot carry as a header; the token reaches the page in the address's fragment, which is never sent.
-// What the API does is handed in (`api`): the note store is workstream C1; until then only the tests hand one in.
+// What the API does is handed in (`api`): the note store (editor-store.ts, workstream C1), whose answers may be a
+// stream (`feed`), and what a stop waits for (`drain`), so a write under way is finished before the process exits.
 import {
   STATUS_CODES,
   createServer,
@@ -47,11 +48,18 @@ export interface ApiRequest {
   headers: IncomingHttpHeaders;
 }
 
-/** What the API answers: a status, its text and any headers of its own. */
+/**
+ * A stream the page reads with fetch, so the token stays in a header: `start` is handed what sends each piece, and
+ * gives back what ends the stream's part in the API once the connection closes, whoever closes it.
+ */
+export type ApiFeed = (send: (text: string) => void) => () => void;
+
+/** What the API answers: a status, its text and any headers of its own; or, for a stream, its feed in place of text. */
 export interface ApiAnswer {
   status: number;
   text: string;
   headers?: Record<string, string>;
+  feed?: ApiFeed;
 }
 
 /** What answers the API calls that pass the server's checks. */
@@ -67,6 +75,11 @@ export interface EditorServerOptions {
   every?: Every;
   /** What answers the API; with none, every API call that passes the checks is not found. */
   api?: ApiHandler;
+  /**
+   * What a stop waits for before the server counts as stopped: the note store refusing any further write and finishing
+   * those under way (C0 review), so the process never exits half way through one.
+   */
+  drain?: () => Promise<void>;
 }
 
 /** A running editor server. */
@@ -90,7 +103,7 @@ export interface EditorServer {
   stop(reason?: string): Promise<string>;
 }
 
-const OPTION_NAMES = new Set(['idleMs', 'now', 'every', 'api']);
+const OPTION_NAMES = new Set(['idleMs', 'now', 'every', 'api', 'drain']);
 
 /** The page until the editor's own is built (workstream C5): it says so, and loads nothing. */
 const PAGE =
@@ -165,8 +178,15 @@ export async function startEditorServer(options: EditorServerOptions = {}): Prom
       return send(res, 413, `Larger than a note may be: at most ${BODY_LIMIT} bytes.`, { connection: 'close' });
     }
     if (!api) return send(res, 404, 'Not found.');
+    // checked again after the body is read, so no call reaches the API once a stop has begun
+    if (stopped !== null)
+      return send(res, 503, 'The editor has stopped; nothing was written.', { connection: 'close' });
     const answer = await api({ method, path: url.slice('/api/'.length), body, headers: req.headers });
-    return send(res, answer.status, answer.text, answer.headers);
+    if (!answer.feed) return send(res, answer.status, answer.text, answer.headers);
+    res.writeHead(answer.status, { ...SECURITY_HEADERS, ...answer.headers });
+    const end = answer.feed((text) => void (res.destroyed || res.write(text)));
+    if (res.destroyed) end();
+    else res.on('close', end);
   }
 
   // a request with no Host comes to `handle`, which refuses it with the headers every answer carries (Node takes
@@ -209,7 +229,9 @@ export async function startEditorServer(options: EditorServerOptions = {}): Prom
     if (stopped !== null) return closed;
     stopped = reason;
     cancel();
-    server.close(() => markClosed(reason));
+    // the API stops taking writes and finishes those under way while the connections close
+    const drained = (options.drain?.() ?? Promise.resolve()).catch(() => {});
+    server.close(() => void drained.then(() => markClosed(reason)));
     server.closeAllConnections();
     return closed;
   }
