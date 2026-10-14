@@ -9,9 +9,12 @@
 // Usage:
 //   node scripts/check-requirements.mjs           the committed copy
 //   node scripts/check-requirements.mjs --stdin   a copy on stdin
+//   node scripts/check-requirements.mjs --done N  whether slice N is done (done_means_proved), with or without --stdin
 //
 // Exits 1 and lists each problem. The copy is never edited here: a problem is fixed in the vault's requirements graph,
-// which regenerates the copy.
+// which regenerates the copy. With --done it checks only that a slice is done: every one of its requirements proved by
+// a written test whose file is there (exit 0), or not, listing each requirement still to prove and why (exit 1). A
+// slice in progress is not done, so CI runs the check without it.
 import { existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
@@ -134,8 +137,67 @@ export function auditRequirements(text, { exists = (rel) => existsSync(join(ROOT
   return problems;
 }
 
+/**
+ * Whether slice `slice` is done (spec §12, done_means_proved): every one of its requirements proved by a written test,
+ * and every repository file such a test names there. {slice, done, total, missing: [{id, why}], said}: `total` counts the
+ * slice's requirements, `missing` lists each still to prove with why (it names no test; a test it names is not
+ * written; a written test's file is not in the repository), and `said` says it in a line. A slice with no requirements
+ * is never done. Only the slice's own requirements count. Throws what the reader throws for a copy it cannot read.
+ */
+export function sliceDone(text, slice, { exists = (rel) => existsSync(join(ROOT, rel)) } = {}) {
+  const store = read([text]);
+  const graph = store.graph(Object.keys(store.graphs)[0]);
+  const proving = new Map();
+  for (const [from, type, to] of graph.edges)
+    if (type === 'PROVED_BY' && graph.nodes.get(to)?.labels.has('Test'))
+      proving.set(from, [...(proving.get(from) ?? []), graph.nodes.get(to).props]);
+  const why = (test) => {
+    if (test.status !== 'written') return [`test ${test.id} is ${test.status ?? 'without a status'}, not written`];
+    if (!IN_REPO.has(test.where)) return [];
+    const files = filesOf(test.file);
+    const absent = files.length ? files.filter((f) => !exists(f)) : ['file named for it'];
+    return absent.length ? [`test ${test.id} is written, but the repository has no ${absent.join(', ')}`] : [];
+  };
+  const own = [...graph.nodes].filter(([, n]) => n.labels.has('Requirement') && n.props.slice === slice);
+  const missing = own.flatMap(([key, n]) => {
+    const tests = proving.get(key) ?? [];
+    const reasons = tests.length ? tests.flatMap(why) : ['it names no test'];
+    return reasons.length ? [{ id: n.props.id, why: reasons.join('; ') }] : [];
+  });
+  const total = own.length,
+    done = total > 0 && !missing.length;
+  const said = !total
+    ? `slice ${slice} has no requirements, so it is not done`
+    : done
+      ? `slice ${slice} is done: all ${total} of its requirements are proved by written tests`
+      : `slice ${slice} is not done: ${missing.length} of ${total} requirements are still to prove`;
+  return { slice, done, total, missing, said };
+}
+
+/** Prints whether a slice is done, and each requirement still to prove; 0 when it is done, else 1. */
+function doneMain(text, slice) {
+  const r = sliceDone(text, slice);
+  console.log(r.said);
+  for (const m of r.missing) console.log(`  ${m.id}: ${m.why}`);
+  return r.done ? 0 : 1;
+}
+
 function main(args) {
   const text = args.includes('--stdin') ? readFileSync(0, 'utf8') : readFileSync(join(ROOT, REQUIREMENTS), 'utf8');
+  const at = args.indexOf('--done');
+  if (at !== -1) {
+    const slice = args[at + 1];
+    if (!/^\d+$/.test(slice ?? '')) {
+      console.error('--done needs a slice number, such as --done 3');
+      return 2;
+    }
+    try {
+      return doneMain(text, Number(slice));
+    } catch (e) {
+      console.error(`${REQUIREMENTS} cannot be read: ${e.message}`);
+      return 1;
+    }
+  }
   const problems = auditRequirements(text);
   for (const p of problems) console.log(`${p.kind}: ${p.message}`);
   if (!problems.length) console.log(`${REQUIREMENTS}: every started requirement proved, every test in place`);
