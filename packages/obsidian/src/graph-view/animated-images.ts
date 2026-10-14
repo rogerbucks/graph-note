@@ -4,11 +4,14 @@
 // frame, under reduced motion until the user plays it (motion_reduced_respected); and past the core's stated limits of
 // size and count, its first frame, saying why, Play refused with the reason (animated_image_limited). The core decides
 // how each starts and whether it may play (`startOf`, `playRefusal`); the browser's own decoding draws it, from the
-// file's bytes read through the vault, and the first frame is drawn by the plugin (`stillFrame`). Each card counts what
-// moves on it, its details among it, and lets every image go with it.
-import { IMAGE_LIMITS, LIMITS_SAID, imageFacts, imagesOf, playRefusal, startOf } from '@graph-note/core';
-import type { PictureBox, Start } from '@graph-note/core';
+// file's bytes read through the vault, and the first frame is drawn by the plugin (`stillFrame`). A file over the size
+// limit is never read: by its size on disk alone it is not shown, saying why, or, a photograph, shown from the vault's
+// own address. An image is only ever shown by an image element, never put inline: an SVG attachment put in the page
+// would run as part of it. Each card counts what moves on it, its details among it, and lets every image go with it.
+import { IMAGE_LIMITS, LIMITS_SAID, imageFacts, imagesOf, neverMoves, playRefusal, startOf } from '@graph-note/core';
+import type { ImageFacts, PictureBox, Start } from '@graph-note/core';
 import type { FoundImage, ImageSource } from '../images/vault-images';
+import { STILL_PIXELS } from '../images/still-frame';
 import { figureView, pictureView, refusedFigure, refusedPicture, squareIn } from './image-views';
 import type { ImageView } from './image-views';
 
@@ -64,6 +67,7 @@ export class AnimatedImage {
   private playing = false;
   private gone = false;
   private bytes: Uint8Array | null = null;
+  private facts: ImageFacts | null = null;
   private moving: string | null = null;
   private still: string | null | undefined;
 
@@ -73,8 +77,14 @@ export class AnimatedImage {
     private readonly card: MovingImages,
   ) {}
 
-  /** Reads the file's bytes through the vault; false, saying why, when it cannot. */
+  /** Whether the file is over the size limit, so never read (review of #443): its size on disk says so, before any read. */
+  private get unread(): boolean {
+    return this.found.size > IMAGE_LIMITS.bytes;
+  }
+
+  /** Reads the file's bytes through the vault, unless it is over the size limit; false, saying why, when it cannot. */
   async read(): Promise<boolean> {
+    if (this.unread) return true;
     try {
       this.bytes = await this.found.read();
       return true;
@@ -87,13 +97,19 @@ export class AnimatedImage {
 
   /** Starts it as the core says, against what moves on the card now: at once, so images started in turn are counted in turn. */
   begin(): void {
-    const bytes = this.bytes;
-    if (!bytes || this.gone) return;
+    if (this.gone || (!this.bytes && !this.unread)) return;
     const size = this.found.size;
-    const facts = size > IMAGE_LIMITS.bytes ? null : imageFacts(bytes);
-    const start = startOf({ facts, size, reduced: this.card.reduced, moving: this.card.moving });
+    this.facts = this.bytes ? imageFacts(this.bytes) : null;
+    const start = startOf({
+      facts: this.facts,
+      size,
+      neverMoves: neverMoves(this.found.name),
+      reduced: this.card.reduced,
+      moving: this.card.moving,
+    });
     this.start = start;
-    if (!start.moving && start.plain) this.view.show(this.movingUrl(), 'plain');
+    // a photograph too large to read is shown from the vault's own address, never read here
+    if (!start.moving && start.plain) this.view.show(this.bytes ? this.movingUrl() : this.found.url, 'plain');
     else if (start.moving) this.play();
     else void this.hold(start.playable ? start.why : `${start.why} ${LIMITS_SAID}`, !start.playable);
   }
@@ -135,12 +151,21 @@ export class AnimatedImage {
     this.view.show(this.movingUrl(), 'moving');
   }
 
-  /** Held still, its first frame, saying why; `refused` when Play cannot move it. */
+  /**
+   * Held still, its first frame, saying why; `refused` when Play cannot move it. One never read has no first frame to
+   * draw, and one whose frame is over `STILL_PIXELS` is never drawn: each shows nothing, saying why.
+   */
   private async hold(why: string, refused: boolean): Promise<void> {
     this.view.control(false, refused, () => this.press());
     this.view.say(why);
+    if (!this.bytes) {
+      this.view.show(null, 'still');
+      return;
+    }
+    const facts = this.facts,
+      drawable = !facts || facts.width * facts.height <= STILL_PIXELS;
     if (this.still === undefined) {
-      const png = this.bytes ? await this.card.images?.still(this.bytes, this.found.mime) : null;
+      const png = drawable ? await this.card.images?.still(this.bytes, this.found.mime) : null;
       if (this.gone) return;
       this.still ??= png ? urlOf(png, 'image/png') : null;
     }

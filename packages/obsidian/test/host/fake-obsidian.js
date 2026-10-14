@@ -94,6 +94,8 @@ export function fakeObsidian(state = {}) {
     getFiles: () => [...files.keys()].map((p) => new TFile(p)),
     read: async (f) => files.get(f.path),
     cachedRead: async (f) => files.get(f.path),
+    // the address a file is shown from without being read, as Obsidian gives one for an image
+    getResourcePath: (f) => `app://vault/${f.path}`,
     // a file's bytes, as an attachment is read: a note's text as UTF-8, bytes as they are
     readBinary: async (f) => {
       const held = files.get(f.path);

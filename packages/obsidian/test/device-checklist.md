@@ -488,10 +488,10 @@ will do, under the names given, and for M-05 a GIF larger than 5 MB. Reduce moti
 - [ ] **M-04** Turn the system's reduce-motion setting on and redraw the note of M-02: every picture and every image in
       the details is still, its first frame, each saying it is still as the system asks; press Play on one: only that
       one moves. Turn the setting off again afterwards (slice 3, motion_reduced_respected).
-- [ ] **M-05** A thing whose image is the GIF of more than 5 MB: its picture and its image in the details are still, its
-      first frame, saying it is over the 5 MB an animated image may be, and the limits in a sentence; pressing Play
-      leaves it still and says why again. The drawing is drawn at once, without waiting for it (slice 3,
-      animated_image_limited).
+- [ ] **M-05** A thing whose image is the GIF of more than 5 MB: it is never read, so its box shows only its Play control
+      where the picture would be, and its image in the details shows nothing, each saying it is over the 5 MB an animated image may be, and the limits
+      in a sentence; pressing Play leaves it so and says why again. The drawing is drawn at once, without waiting for it
+      (slice 3, animated_image_limited).
 - [ ] **M-06** Seven cats, each with an animated GIF and a Picture: six pictures move and the seventh is still, saying six
       are already moving here; pressing its Play says so again. Pause one of the six, then press Play on the seventh:
       it moves (slice 3, animated_image_limited).

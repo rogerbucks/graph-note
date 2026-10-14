@@ -549,7 +549,12 @@ details.graph-note-style > summary {
 .graph-note-svg .graph-note-image-control {
   cursor: pointer;
 }
-.graph-note-svg .graph-note-image-control rect {
+.graph-note-svg .graph-note-image-control rect.graph-note-image-hit {
+  fill: transparent;
+  stroke: none;
+  pointer-events: all;
+}
+.graph-note-svg .graph-note-image-control rect:not(.graph-note-image-hit) {
   fill: var(--background-primary);
   stroke: var(--text-normal);
   stroke-width: 1;
@@ -558,7 +563,7 @@ details.graph-note-style > summary {
   fill: var(--text-normal);
   font-size: 8px;
 }
-.graph-note-svg .graph-note-image-control:focus-visible rect {
+.graph-note-svg .graph-note-image-control:focus-visible rect:not(.graph-note-image-hit) {
   stroke: var(--interactive-accent);
   stroke-width: 2;
 }

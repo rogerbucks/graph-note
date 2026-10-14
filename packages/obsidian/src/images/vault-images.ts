@@ -24,6 +24,8 @@ export interface FoundImage {
   path: string;
   mime: string;
   size: number;
+  /** The address the vault shows it from without its bytes being read here: for a photograph too large to read. */
+  url: string;
   read(): Promise<Uint8Array>;
 }
 
@@ -49,6 +51,7 @@ export function vaultImages(
         path: file.path,
         mime: MIME[file.extension.toLowerCase()] ?? 'application/octet-stream',
         size: file.stat.size,
+        url: vault.getResourcePath(file),
         read: async () => new Uint8Array(await vault.readBinary(file)),
       };
     },

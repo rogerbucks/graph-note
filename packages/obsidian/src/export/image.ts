@@ -29,6 +29,7 @@ import type {
 import type GraphNotePlugin from '../main';
 import { exportFailureWords, exportRefusalWords } from '../layout-worker/refusal-words';
 import { vaultImages } from '../images/vault-images';
+import { STILL_PIXELS } from '../images/still-frame';
 
 /** One file an export writes: its name, its path in the vault, and its bytes or text. */
 export interface ExportFile {
@@ -149,9 +150,13 @@ function picturesFrom(plugin: GraphNotePlugin, note: string): PictureLoad {
     const found = source.find(value);
     if (!found) return { why: `${value} names no image` };
     if ('why' in found) return found;
+    // over the size limit, its size on disk is all that is known: it is never read (review of #443)
+    if (found.size > IMAGE_LIMITS.bytes) return { name: found.name, size: found.size, unread: true };
     const bytes = await found.read();
     const facts = imageFacts(bytes);
-    const still = facts.animated || found.size > IMAGE_LIMITS.bytes ? await plugin.stillFrame(bytes, found.mime) : null;
+    const drawable = facts.width * facts.height <= STILL_PIXELS;
+    const still =
+      (facts.animated || facts.format === null) && drawable ? await plugin.stillFrame(bytes, found.mime) : null;
     return {
       name: found.name,
       mime: found.mime,

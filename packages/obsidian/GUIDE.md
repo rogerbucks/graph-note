@@ -118,9 +118,13 @@ module that ties the parts together, named as the folder is.
 
 - `vault-images.ts` — `vaultImages`: a property's value read by the core (`imageLink`) and found as Obsidian finds a
   link from the note, its type, size and bytes read through the vault's API; an address outside the vault, or a place
-  that could leave it, never loaded, with the core's words.
+  that could leave it (a link's target held to the same as a path), never loaded, with the core's words. A folder in
+  the vault that is a symbolic link elsewhere is followed, as Obsidian follows it for any link: a file reached through
+  it counts as the vault's. Its `url` is the vault's own address for it, so a photograph over the size limit is shown
+  without being read here.
 - `still-frame.ts` — `stillFrame`: an image's first frame as a PNG, drawn by the platform's own decoding on a canvas
-  from the file's bytes (no library); null where it cannot be drawn. The plugin's `stillFrame` calls it, so a test can
+  from the file's bytes (no library); null where it cannot be drawn, and never drawn for a frame over `STILL_PIXELS`
+  (50 million pixels). The plugin's `stillFrame` calls it, so a test can
   stand in one, as for `rasterise`.
 
 ### `src/proposals/` — a proposal in a note (spec §17)
@@ -262,7 +266,9 @@ module that ties the parts together, named as the folder is.
   reduced motion until played (motion_reduced_respected); its first frame past a limit, saying why with the limits, Play
   refused (animated_image_limited) — with a pause and play control (animation_pause_play). `MovingImages` counts what
   moves on the card, its details among it, so no more than `IMAGE_LIMITS.moving` do, and lets each image go with the
-  details it was shown in or with the card. An address outside the vault is never loaded, and says so.
+  details it was shown in or with the card. An address outside the vault is never loaded, and says so. A file over the
+  size limit is never read: its size on disk decides, and it is not shown, saying why (a JPEG, by its name, is shown from
+  the vault's address). An image is only ever shown by an image element; an SVG is never put inline in the page.
 - `image-views.ts` — where an image is drawn: a figure in the details (the image, its caption, a button and what it
   says), or the picture on a box with its control drawn in the square's corner, an SVG button reached by Tab and pressed
   by Enter, Space, a click or a tap, which `viewport-events.ts` never takes for a tap or a key on the box.

@@ -42,14 +42,21 @@ const FILES = {
 };
 const STILL = png({ width: 1, height: 1 });
 
-/** The note drawn, its images in the vault, the first frame drawn by a stand-in; with `reduce`, reduced motion on. */
+/**
+ * The note drawn, its images in the vault, the first frame drawn by a stand-in; with `reduce`, reduced motion on. Every
+ * file read through the vault is kept in `env.read`, and every first frame asked for in `env.stills`.
+ */
 async function drawn(note = noteOf(PETS, STYLE), options = {}) {
   const env = await load({ files: { [PATH]: note, ...(options.files ?? FILES) } });
-  env.plugin.stillFrame = async () => STILL;
+  env.read = [];
+  env.stills = [];
+  const readBinary = env.app.vault.readBinary;
+  env.app.vault.readBinary = (f) => (env.read.push(f.path), readBinary(f));
+  env.plugin.stillFrame = async (bytes) => (env.stills.push(bytes.length), STILL);
   if (options.reduce)
     env.doc.defaultView.matchMedia = (q) => ({ media: q, matches: q === '(prefers-reduced-motion: reduce)' });
-  const { el } = await show(env, note);
-  return { env, el };
+  const { el, ctx } = await show(env, note);
+  return { env, el, ctx };
 }
 
 const box = (el, key) => el.querySelectorAll('g.node').find((g) => g.getAttribute('data-key') === key);
@@ -115,6 +122,21 @@ describe('an animated image is shown', () => {
       const remote = figure(el, 'https://x.org/rex.gif');
       assert.equal(remote.querySelector('img'), null, 'nothing is loaded');
       assert.match(remote.textContent, /is outside the vault, and an image from outside the vault is not loaded/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: animated_image_shown
+  test('only from the vault on a box too: its square a dashed frame saying why, and no image', async () => {
+    const style = "// graph: pets_style · STYLE pets\n(p1:Picture {property: 'site', kind: 'Dog'})";
+    const { env, el } = await drawn(noteOf(PETS, style));
+    try {
+      await until(() => box(el, 'rex').querySelector('rect.graph-note-picture-missing'));
+      const frame = box(el, 'rex').querySelector('rect.graph-note-picture-missing');
+      assert.match(titleOf(frame), /^Not shown: https:\/\/x\.org\/rex\.gif is outside the vault/);
+      assert.equal(pictureOf(el, 'rex'), null);
+      assert.ok(!env.read.some((p) => p.includes('rex')), 'nothing read for it');
     } finally {
       env.uninstall();
     }
@@ -205,20 +227,55 @@ describe('under reduced motion', () => {
 
 describe('past the limits', () => {
   // proves: animated_image_limited
-  test('one larger than the size limit is its first frame, saying why and the limits, and Play is refused', async () => {
+  test('one larger than the size limit is never read: a placeholder saying why and the limits, Play refused', async () => {
     const { env, el } = await drawn();
     try {
       await details(el, 'rex', 2);
       const f = figure(el, 'big.gif');
-      assert.ok(f.querySelector('img').classList.contains('graph-note-image-still'));
+      assert.ok(f.querySelector('img').hidden, 'nothing drawn');
+      assert.ok(!env.read.includes('big.gif'), 'never read');
+      assert.equal(env.stills.length, 0, 'no first frame drawn');
       const said = f.querySelector('[role="status"]');
-      assert.match(said.textContent, /^Shown as its first frame: it is 6 MB, over the 5 MB an animated image may be\./);
+      assert.match(
+        said.textContent,
+        /^Not shown: it is 6 MB, over the 5 MB an animated image may be, so it is not read\. /,
+      );
       assert.match(said.textContent, /An animated image moves when it is at most 5 MB/);
       const play = labelled(f, 'Play big.gif');
       assert.equal(play.getAttribute('aria-disabled'), 'true');
       play.click();
       await until(() => said.getAttribute('data-refused') === 'true');
-      assert.ok(f.querySelector('img').classList.contains('graph-note-image-still'), 'still, whatever is pressed');
+      assert.ok(f.querySelector('img').hidden, 'still nothing, whatever is pressed');
+      assert.ok(!env.read.includes('big.gif'));
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: animated_image_limited
+  test('a photograph over the size limit is never read either, and shown as it is, with no Play', async () => {
+    const files = { ...FILES, 'huge.jpg': new Uint8Array(6 * MB) };
+    const note = noteOf(PETS.replace("'[[kit.png]]'", "'[[huge.jpg]]'"), STYLE);
+    const { env, el } = await drawn(note, { files });
+    try {
+      await until(() => pictureOf(el, 'kit')?.classList.contains('graph-note-image-plain'));
+      assert.equal(pictureOf(el, 'kit').getAttribute('href'), 'app://vault/huge.jpg');
+      assert.equal(controlOf(el, 'kit'), null);
+      assert.ok(!env.read.includes('huge.jpg'));
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: animated_image_limited
+  test('a frame too large to draw is never drawn: no first frame is made over 50 million pixels', async () => {
+    const files = { ...FILES, 'tom.gif': gif({ width: 10000, height: 6000, frames: 2 }) };
+    const { env, el } = await drawn(undefined, { files });
+    try {
+      await until(() => controlOf(el, 'tom')?.getAttribute('aria-label') === 'Play tom.gif');
+      assert.equal(env.stills.length, 0);
+      assert.equal(pictureOf(el, 'tom').getAttribute('href'), null, 'nothing drawn');
+      assert.match(titleOf(controlOf(el, 'tom')), /Its first frame cannot be drawn on this device\./);
     } finally {
       env.uninstall();
     }
@@ -245,6 +302,69 @@ describe('past the limits', () => {
       await until(() => first.getAttribute('aria-label').startsWith('Play'));
       held.dispatch('keydown', { key: 'Enter' });
       await until(() => held.getAttribute('aria-label') === `Pause c${waiting}.gif`);
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
+describe('letting go', () => {
+  // proves: animated_image_limited
+  test('details shown again let go of the images before: what they counted as moving is freed', async () => {
+    // five cats move on their boxes; each cat's details make a sixth, so each opened in turn must free the last
+    const cats = Array.from({ length: 5 }, (_, i) => `(c${i}:Cat {name: 'Cat ${i}', photo: '[[c${i}.gif]]'})`);
+    const files = Object.fromEntries(cats.map((_, i) => [`c${i}.gif`, gif({ frames: 2 })]));
+    const { env, el } = await drawn(noteOf(`// graph: pets\n${cats.join(',\n')}`, STYLE), { files });
+    try {
+      await until(() => cats.every((_, i) => controlOf(el, `c${i}`)));
+      for (const key of ['c0', 'c1', 'c2']) {
+        await details(el, key, 1);
+        assert.ok(labelled(figures(el)[0], `Pause ${key}.gif`), `${key}'s image moves in its details`);
+      }
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: animated_image_shown
+  test('a card unloaded lets go of every address it made for its images', async () => {
+    const made = [],
+      revoked = [];
+    const { createObjectURL, revokeObjectURL } = URL;
+    URL.createObjectURL = (b) => {
+      const url = createObjectURL(b);
+      made.push(url);
+      return url;
+    };
+    URL.revokeObjectURL = (u) => (revoked.push(u), revokeObjectURL(u));
+    const { env, el, ctx } = await drawn();
+    try {
+      await until(() => controlOf(el, 'tom'));
+      await details(el, 'ann', 3);
+      controlOf(el, 'tom').dispatch('keydown', { key: 'Enter' });
+      await until(() => controlOf(el, 'tom').getAttribute('aria-label') === 'Play tom.gif');
+      assert.ok(made.length >= 5, `${made.length} addresses made`);
+      assert.deepEqual(revoked, [], 'none let go while the card is shown');
+      // the card is the block's child: Obsidian unloads it as the note closes
+      for (const card of ctx.children) card.unload();
+      assert.deepEqual([...revoked].sort(), [...made].sort());
+    } finally {
+      URL.createObjectURL = createObjectURL;
+      URL.revokeObjectURL = revokeObjectURL;
+      env.uninstall();
+    }
+  });
+});
+
+describe('the control on a box', () => {
+  // proves: animation_pause_play
+  test('is at least 24 pixels to touch, though drawn smaller', async () => {
+    const { env, el } = await drawn();
+    try {
+      await until(() => controlOf(el, 'tom'));
+      const hit = controlOf(el, 'tom').querySelector('rect.graph-note-image-hit');
+      assert.ok(hit, 'a hit area');
+      assert.ok(Number(hit.getAttribute('width')) >= 24 && Number(hit.getAttribute('height')) >= 24);
     } finally {
       env.uninstall();
     }
@@ -289,6 +409,19 @@ describe('an export', () => {
       env.plugin.rasterise = async () => new Uint8Array([137, 80, 78, 71]);
       const said = await exported(env, el, 'png');
       assert.match(said, /Animated images: Tom: tom\.gif reduced to its first frame, as a PNG cannot move\./);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: export_animation_stated, animated_image_limited
+  test('never reads an image over the size limit: it is left out, and the notice says so', async () => {
+    const style = "// graph: pets_style · STYLE pets\n(p1:Picture {property: 'photo', kind: 'Dog'})";
+    const { env, el } = await drawn(noteOf(PETS, style));
+    try {
+      const said = await exported(env, el, 'svg');
+      assert.match(said, /Animated images: Rex: big\.gif left out, as it is 6 MB, over 5 MB\./);
+      assert.ok(!env.read.includes('big.gif'), 'never read');
     } finally {
       env.uninstall();
     }

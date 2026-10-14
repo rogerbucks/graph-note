@@ -6,6 +6,9 @@ import { PICTURE_MARK } from '@graph-note/core';
 
 const SVG = 'http://www.w3.org/2000/svg';
 
+/** The side of the area a box's image control is hit in, in the drawing's own units, each at least a pixel: 24 or more. */
+const HIT = 24;
+
 /** How an image is shown: moving, its first frame held still, or as it is, never moving. */
 export type Shown = 'moving' | 'still' | 'plain';
 
@@ -131,6 +134,14 @@ export function pictureView(square: Element, name: string): ImageView {
       if (!control) {
         const c = svgEl(g, 'g', { class: 'graph-note-image-control', role: 'button', tabindex: 0 });
         title = svgEl(c, 'title', {});
+        // the area a finger or pointer hits: at least 24 pixels square, centred on the button drawn smaller
+        svgEl(c, 'rect', {
+          class: 'graph-note-image-hit',
+          x: at.x + at.width - size / 2 - HIT / 2,
+          y: at.y + at.height - size / 2 - HIT / 2,
+          width: HIT,
+          height: HIT,
+        });
         svgEl(c, 'rect', { x: at.x + at.width - size, y: at.y + at.height - size, width: size, height: size, rx: 3 });
         glyph = svgEl(c, 'text', {
           x: at.x + at.width - size / 2,

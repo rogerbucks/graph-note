@@ -124,6 +124,7 @@ export const files = new Map();
 const listeners = [];
 const vault = {
   getFileByPath: (p) => (files.has(p) ? new TFile(p) : null),
+  getResourcePath: (f) => `app://local/${f.path}`,
   read: async (f) => files.get(f.path),
   process: async (f, fn) => {
     const next = fn(files.get(f.path));

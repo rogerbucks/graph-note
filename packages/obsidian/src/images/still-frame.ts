@@ -7,6 +7,12 @@
 /** The most pixels a first frame is drawn at; a larger one is drawn smaller, keeping its shape. */
 const MOST_PIXELS = 4_000_000;
 
+/**
+ * The most pixels an image's frame may have for its first frame to be drawn at all (review of #443): a larger one would
+ * hold the page and the device's memory while it is drawn, so it is never put on a canvas.
+ */
+export const STILL_PIXELS = 50_000_000;
+
 /** The PNG of the first frame of the image `bytes` of type `mime`, or null when it cannot be drawn here. */
 export function stillFrame(bytes: Uint8Array, mime: string): Promise<Uint8Array | null> {
   if (typeof Image === 'undefined' || typeof URL.createObjectURL !== 'function') return Promise.resolve(null);
@@ -22,6 +28,7 @@ export function stillFrame(bytes: Uint8Array, mime: string): Promise<Uint8Array 
         const w = img.naturalWidth || 1,
           h = img.naturalHeight || 1,
           scale = Math.min(1, Math.sqrt(MOST_PIXELS / (w * h)));
+        if (w * h > STILL_PIXELS) return done(null);
         const canvas: HTMLCanvasElement = activeDocument.body.createEl('canvas');
         canvas.remove(); // drawn on off the page, never shown
         canvas.width = Math.max(1, Math.round(w * scale));
