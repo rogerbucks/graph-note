@@ -1,6 +1,6 @@
 # Device checks
 
-One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md)): 127 checks in 18 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
+One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md)): 134 checks in 19 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
 
 ## 01 Viewing
 
@@ -182,3 +182,13 @@ One note for each check in the device checklist ([the checklist, on GitHub](http
 - [[Device checks/18 Link flow and path play/L-04 Play on its own|L-04 Play on its own]]
 - [[Device checks/18 Link flow and path play/L-05 Export as an animated SVG|L-05 Export as an animated SVG]]
 - [[Device checks/18 Link flow and path play/L-06 Too large for the phone|L-06 Too large for the phone]]
+
+## 19 Animated images
+
+- [[Device checks/19 Animated images/M-01 Images in the details|M-01 Images in the details]]
+- [[Device checks/19 Animated images/M-02 A picture on a box|M-02 A picture on a box]]
+- [[Device checks/19 Animated images/M-03 Pause and play|M-03 Pause and play]]
+- [[Device checks/19 Animated images/M-04 Still under reduced motion|M-04 Still under reduced motion]]
+- [[Device checks/19 Animated images/M-05 Over the size limit|M-05 Over the size limit]]
+- [[Device checks/19 Animated images/M-06 Six moving at once|M-06 Six moving at once]]
+- [[Device checks/19 Animated images/M-07 Export says what it did|M-07 Export says what it did]]
