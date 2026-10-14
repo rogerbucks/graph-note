@@ -30,23 +30,35 @@ export const linkGroup = (svg: Element | undefined, index: number): Element | nu
   svg?.querySelector(`g.edge[id="edge${index + 1}"]`) ?? null;
 
 /**
+ * Every group that draws a written link: its own, and, for a link merged into a trunk by the View menu (§25), first its
+ * line from its thing to the trunk (`edgeN_tail`), so the two are in the order the line runs.
+ */
+export const linkGroups = (svg: Element | undefined, index: number): Element[] =>
+  [`edge${index + 1}_tail`, `edge${index + 1}`].flatMap((id) => {
+    const g = svg?.querySelector(`g.edge[id="${id}"]`);
+    return g ? [g] : [];
+  });
+
+/**
  * The links of `svg` that `flow` moves (each a written link, by its place, a guessed one too), marked: the classes the
  * style sheet moves them by, their name with the movement and its meaning, and, for a dot, its runner. The runner is
  * drawn whatever the system asks, and `styles.css` hides it under reduced motion, so turning that off moves it at once.
  */
 export function markFlow(svg: SVGSVGElement, flow: readonly FlowLink[]): void {
-  for (const f of flow) {
-    const g = linkGroup(svg, f.index);
-    if (!g) continue;
-    g.classList.add('graph-note-flow', `graph-note-flow-${f.motion}`);
-    g.setAttribute('aria-label', `${g.getAttribute('aria-label') ?? ''}, ${flowSaid(f)}`);
-    if (f.motion === 'dot') runnerOn(g, 'graph-note-flow-runner');
-  }
+  for (const f of flow)
+    for (const g of linkGroups(svg, f.index)) {
+      g.classList.add('graph-note-flow', `graph-note-flow-${f.motion}`);
+      g.setAttribute('aria-label', `${g.getAttribute('aria-label') ?? ''}, ${flowSaid(f)}`);
+      if (f.motion === 'dot') runnerOn(g, 'graph-note-flow-runner');
+    }
 }
 
-/** The card's legend of what moves: each movement and its meaning once, its icon beside the words. None when none moves. */
-export function renderFlowLegend(root: HTMLElement, flow: readonly FlowLink[]): void {
-  const entries = flowLegend(flow);
+/**
+ * The card's legend of what moves: each movement and its meaning once, its icon beside the words. None when none moves.
+ * A link `folded` into a stub or a box by the View menu (§25) is not drawn, so not said.
+ */
+export function renderFlowLegend(root: HTMLElement, flow: readonly FlowLink[], folded: readonly number[] = []): void {
+  const entries = flowLegend(flow.filter((f) => !folded.includes(f.index)));
   if (!entries.length) return;
   const ul = root.createEl('ul', {
     cls: 'graph-note-flow-legend',

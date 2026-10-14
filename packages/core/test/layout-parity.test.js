@@ -507,7 +507,9 @@ test('a graph folded, merged and routed is drawn the same by both, its Links rea
       for (const [s, on] of Object.entries(switches ?? {})) state.turn(s, on);
       for (const hub of opened?.hubs ?? []) state.open({ hub });
       for (const group of opened?.groups ?? []) state.open({ group });
-      drawn[graph] = Object.fromEntries(directions(state.folded(styled)).map((d) => [d.rankdir, d.dot]));
+      // a case with no View menu is drawn as an export draws it, with nothing folded
+      const laid = directions(switches ? state.folded(styled) : styled);
+      drawn[graph] = Object.fromEntries(laid.map((d) => [d.rankdir, d.dot]));
     }
     assert.deepEqual(python[n], { styles, drawn }, c.name);
   });

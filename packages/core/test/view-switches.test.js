@@ -118,6 +118,28 @@ describe('a card’s state of the switches', () => {
     assert.deepEqual(state.plan?.hubs, [['hub', 13]], 'the last plan is kept, for what a tap on its stub opens');
   });
 
+  test('a hub’s details count the links in its stub, and offer nothing with hubs unfolded or the hub in a folded box', () => {
+    // two busy hubs joined: the link between them is in the first one's stub, so the second's holds 12
+    const two = [
+      star(13),
+      ...Array.from({ length: 12 }, (_, i) => `(m${i}:Leaf {name: 'More ${i}'})`),
+      "(hub2:Hub {name: 'Second hub'})",
+      ...Array.from({ length: 12 }, (_, i) => `(hub2)-[:HAS]->(m${i})`),
+      '(hub)-[:NEAR]->(hub2)',
+    ].join(',\n');
+    const { drawing } = styledOf(two);
+    const state = new ViewState({ labels: true, hubs: true, groups: false, merge: false });
+    assert.deepEqual(state.hub(drawing, 'hub'), { links: 14, folded: true });
+    assert.deepEqual(state.hub(drawing, 'hub2'), { links: 12, folded: true }, 'the links actually in its stub');
+    state.turn('hubs', false);
+    assert.equal(state.hub(drawing, 'hub'), null, 'hubs not folded: nothing to open or fold');
+    const boxed = styledOf(star(13), `${GROUPED},\n(n3:Nudge {word: 'group', thing: 'hub', group: 'Centre'})`).drawing;
+    const grouped = new ViewState({ labels: true, hubs: true, groups: true, merge: false });
+    assert.equal(grouped.hub(boxed, 'hub'), null, 'a hub inside a folded box is drawn as the box');
+    grouped.open({ group: 'Centre' });
+    assert.deepEqual(grouped.hub(boxed, 'hub'), { links: 13, folded: true });
+  });
+
   test('turning a switch on again folds what was opened again', () => {
     const { drawing } = styledOf(star(13));
     const state = new ViewState({ labels: true, hubs: true, groups: false, merge: false });

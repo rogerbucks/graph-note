@@ -164,8 +164,10 @@ export default class GraphNotePlugin extends Plugin {
    * (view_switch_defaults). It is the drawing's alone, never written to the note (view_switch_view_only).
    */
   switchesFor(path: string, graph: string, style: StyleGraph, view?: string): ViewState {
-    const key = [path, graph, view ?? ''].join('\u0000');
-    const state = this.viewStates.get(key) ?? new ViewState(startingSwitches(this.settings, style, view));
+    // where it starts is part of the key: a Links merging or a view saved as shown, written since, starts it afresh
+    const start = startingSwitches(this.settings, style, view);
+    const key = [path, graph, view ?? '', JSON.stringify(start)].join('\u0000');
+    const state = this.viewStates.get(key) ?? new ViewState(start);
     this.viewStates.set(key, state);
     return state;
   }

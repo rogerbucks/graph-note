@@ -29,6 +29,11 @@ export function foldAt(target: EventTarget | null): string | null {
   return (target as Element | null)?.closest?.('[data-fold]')?.getAttribute('data-fold') ?? null;
 }
 
+/** A thing's box in the drawing, by its key. */
+export function boxIn(svg: Element | null, key: string): SVGElement | undefined {
+  return Array.from(svg?.querySelectorAll<SVGElement>('g.node') ?? []).find((g) => g.getAttribute('data-key') === key);
+}
+
 /** The box or link an id in the drawing names. */
 export function targetOf(svg: SVGSVGElement, id: string): Target | null {
   return targetAt(svg.querySelector(`#${id}`) ?? null);

@@ -72,11 +72,13 @@ def render_args(
     arrowheads, the properties shown inline, the links that move (§7, flow_links), and the plan of
     the diagram type it is drawn as, while
     the data fits the one chosen (a network, with no plan, otherwise). A table chosen is drawn as a
-    network, as only the plugin draws a table, and a note on stderr says so. And what its View
-    menu folds and merges (§25): the switches start as the plugin's settings start a graph, links
-    merged as the style graph says and a view as it was saved as shown (folding.starting_switches),
-    then as `switches` turns them ({hubs, groups, merge: bool}), with the busy hubs and groups
-    `opened` again ({hubs: keys, groups: labels}); and how its links are routed (None: curved)."""
+    network, as only the plugin draws a table, and a note on stderr says so. How its links are
+    routed (§25; None: curved). And, only when `switches` is given, what a View menu folds and
+    merges: the switches start as the plugin's settings start a graph, links merged as the style
+    graph says and a view as it was saved as shown (folding.starting_switches), then as `switches`
+    turns them ({hubs, groups, merge: bool}; {} for as they start), with the busy hubs and groups
+    `opened` again ({hubs: keys, groups: labels}). With no switches nothing is folded or merged,
+    as an export and the Claude Code pane draw a graph."""
     store, problems = read_for_drawing(texts)
     world = World.from_store(store)
     parts = graph_parts(world, graph, problems)
@@ -89,11 +91,16 @@ def render_args(
             file=sys.stderr,
         )
     keys = [key for key, _, _ in parts["nodes"]]
-    folding = fold_plan(
-        keys,
-        [(s, d) for s, _, d in parts["edges"]],
-        drawn_groups(style["nudges"], keys, choice.get("plan")),
-        {**starting_switches(style, view), **(switches or {}), "opened": opened or {}},
+    # with no View menu, as an export and the Claude Code pane draw a graph, nothing is folded
+    folding = (
+        None
+        if switches is None
+        else fold_plan(
+            keys,
+            [(s, d) for s, _, d in parts["edges"]],
+            drawn_groups(style["nudges"], keys, choice.get("plan")),
+            {**starting_switches(style, view), **switches, "opened": opened or {}},
+        )
     )
     routing = links_of(style, view)["routing"]
     return {

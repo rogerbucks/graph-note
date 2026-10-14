@@ -9,7 +9,7 @@ import { DEFAULT_PACE, PATH_PACES, PathAutoplay, PathPlayer, paceSaid, pathsOf }
 import type { NoteReading, PathStep, WalkedPath } from '@graph-note/core';
 import { openExportForm } from '../export/export-form';
 import { reducedMotion } from './details-nav';
-import { linkGroup, runnerOn } from './flow-marks';
+import { linkGroups, runnerOn } from './flow-marks';
 import { button } from './view-bar';
 import type { ViewOptions } from './view-options';
 
@@ -122,11 +122,12 @@ export class PathPlay {
     const n = links.findIndex(
       (l) => (l.from === from.key && l.to === to.key) || (l.from === to.key && l.to === from.key),
     );
-    const g = n < 0 ? null : linkGroup(this.svg(), n);
-    if (!g) return;
+    // a link merged into a trunk (§25) is drawn as two lines: the dot runs both
+    const gs = n < 0 ? [] : linkGroups(this.svg(), n);
+    if (!gs.length) return;
     const along = links[n]?.from === from.key,
       back = along === (this.o.motion?.reversed ?? []).includes(n);
     this.card.setCssProps({ '--graph-note-run': `${Math.min(this.auto.pace, RUN_MOST_MS)}ms` });
-    runnerOn(g, 'graph-note-path-runner', back ? 'graph-note-path-runner-back' : '');
+    for (const g of gs) runnerOn(g, 'graph-note-path-runner', back ? 'graph-note-path-runner-back' : '');
   }
 }

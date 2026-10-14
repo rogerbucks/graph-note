@@ -10,6 +10,7 @@ import { fence, labelled } from './host/notes.js';
 import { show, styles } from './host/view-notes.js';
 import { showIn } from './host/card-notes.js';
 import { open } from './host/pane-notes.js';
+import { rules, winner } from './host/cascade.js';
 
 before(() => build());
 
@@ -216,6 +217,50 @@ describe('groups folded and links merged', () => {
     }
   });
 
+  test('a thing selected, then folded into its group’s box: the box is selected, the thing’s details kept', async () => {
+    const { env, el } = await card();
+    try {
+      tap(el, thing(el, 'ann'));
+      turn(el, 'Groups folded').click();
+      await until(() => !!node(el, 'fold_group_1'));
+      assert.ok(!thing(el, 'ann'));
+      assert.ok(node(el, 'fold_group_1').hasClass('is-selected'));
+      assert.equal(node(el, 'fold_group_1').getAttribute('aria-pressed'), 'true');
+      assert.ok(!node(el, 'fold_group_2').hasClass('is-selected'));
+      assert.match(el.querySelector('.graph-note-details').textContent, /Ann/, 'Ann’s details still open');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('Enter on a busy hub’s stub opens it and takes the keyboard to the hub', async () => {
+    const { env, el } = await card();
+    try {
+      const stub = node(el, 'fold_hub_1');
+      stub.focus();
+      el.querySelector('.graph-note-viewport').dispatch('keydown', { key: 'Enter', target: stub });
+      await until(() => !!thing(el, 't2') && env.doc.activeElement === thing(el, 'box'));
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a Links that merges, written after the graph was first drawn, starts it merged when drawn again', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      const before = (await show(env, NOTE)).el;
+      assert.equal(turn(before, 'Parallel links merged').getAttribute('aria-checked'), 'false');
+      const merged = NOTE.replace("group: 'Helpers'})\n```", "group: 'Helpers'}),\n(r1:Links {merge: 'on'})\n```");
+      assert.notEqual(merged, NOTE);
+      env.state.files.set(PATH, merged);
+      const after = (await show(env, merged)).el;
+      assert.equal(turn(after, 'Parallel links merged').getAttribute('aria-checked'), 'true');
+      assert.ok(edge(after, 'trunk_1'), 'drawn merged, as the style graph now says');
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('links between the same two groups share one trunk, each still tapped and read as itself', async () => {
     const { env, el } = await card();
     try {
@@ -251,10 +296,43 @@ describe('labels by zoom', () => {
     }
   });
 
-  test('a link in focus, highlighted or selected keeps its label when the rest are hidden', () => {
-    const rule =
-      /\.graph-note-labels-hidden g\.edge:not\(\.graph-note-kept\):not\(\.graph-note-hot\):not\(\.is-selected\) text\s*\{\s*fill-opacity:\s*0;?\s*\}/;
-    assert.match(styles, rule);
+  test('a link in focus, highlighted or selected keeps its label when the rest are hidden, on the labels drawn', async () => {
+    const { env, el } = await card(NOTE, { width: 150 });
+    try {
+      const all = rules(styles, 'styles.css'),
+        svg = el.querySelector('svg');
+      // each label as drawn: its own element, inside its link's group as marked now, inside the drawing as marked now
+      const labelOf = (g) => ({
+        tag: 'text',
+        classes: [],
+        ancestors: [
+          { tag: 'g', classes: g.className.split(' ') },
+          { tag: 'svg', classes: svg.className.split(' ') },
+        ],
+      });
+      const painted = (g) => winner(all, labelOf(g), 'fill-opacity')?.value ?? '1';
+      tap(el, thing(el, 'cy'));
+      assert.ok(svg.hasClass('graph-note-labels-hidden'));
+      const check = () => {
+        const withLabels = el.querySelectorAll('g.edge').filter((g) => g.querySelector('text'));
+        assert.ok(withLabels.length >= 2);
+        for (const g of withLabels) {
+          const shown = ['graph-note-kept', 'graph-note-hot', 'is-selected'].some((c) => g.hasClass(c));
+          assert.equal(painted(g) !== '0', shown, `${g.getAttribute('id')}: ${g.className}`);
+        }
+      };
+      check();
+      assert.notEqual(painted(edge(el, 'edge14')), '0', 'Ann asks Cy: in focus');
+      assert.equal(painted(edge(el, 'edge15')), '0', 'Bob asks Dee: neither in focus nor highlighted');
+      edge(el, 'edge15').classList.add('graph-note-hot'); // under the pointer, as hover.ts marks it
+      check();
+      assert.notEqual(painted(edge(el, 'edge15')), '0', 'Bob asks Dee: highlighted');
+      edge(el, 'edge15').classList.remove('graph-note-hot');
+      turn(el, 'Labels by zoom').click();
+      assert.notEqual(painted(edge(el, 'edge15')), '0', 'switched off, every label is painted');
+    } finally {
+      env.uninstall();
+    }
   });
 });
 
@@ -272,9 +350,11 @@ describe('a switch turned', () => {
       // the box is at the other end of a link of Ann's, folded into its stub
       assert.deepEqual(kept(), ['ann', 'box', 'cy']);
       labelled(el, 'View').click();
-      const b = turn(el, 'Parallel links merged');
-      b.focus();
-      b.click();
+      // the keyboard on the first box, as Tab leaves it; the switch turned by a pointer, which leaves the focus there
+      const first = el.querySelector('#node1');
+      first.focus();
+      assert.equal(env.doc.activeElement, first);
+      turn(el, 'Parallel links merged').click();
       await until(() => !!edge(el, 'trunk_1'));
       assert.equal(thing(el, 'ann').getAttribute('aria-pressed'), 'true', 'still selected');
       assert.ok(thing(el, 'ann').hasClass('is-selected'));
@@ -282,7 +362,10 @@ describe('a switch turned', () => {
       assert.ok(edge(el, 'edge14').hasClass('graph-note-kept') && edge(el, 'edge14_tail').hasClass('graph-note-kept'));
       assert.ok(thing(el, 'bob').hasClass('graph-note-dim'));
       assert.match(el.querySelector('.graph-note-details').textContent, /Ann/, 'its details still open');
-      assert.equal(env.doc.activeElement, b, 'the keyboard is where it was');
+      // the drawing is new, and the keyboard is on the same box in it
+      const now = el.querySelector('#node1');
+      assert.notEqual(now, first, 'drawn afresh');
+      assert.equal(env.doc.activeElement, now, 'the keyboard is on the first box, as it was');
     } finally {
       env.uninstall();
     }

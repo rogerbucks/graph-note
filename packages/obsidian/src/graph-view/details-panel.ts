@@ -108,8 +108,10 @@ export class DetailsPanel {
    */
   private select(key: string | null, link: number | null = null, estimate: number | null = null): void {
     for (const g of Array.from(this.svg.querySelectorAll('g.node, g.edge, tr[data-key], tr[data-link]'))) {
+      // a thing folded into a group's box (§25) is selected as its box
       const on =
         (key !== null && g.getAttribute('data-key') === key) ||
+        (key !== null && (g.getAttribute('data-keys') ?? '').split(' ').includes(key)) ||
         (link !== null && g.getAttribute('data-link') === String(link)) ||
         (estimate !== null && g.getAttribute('data-estimate') === String(estimate));
       g.classList.toggle('is-selected', on);

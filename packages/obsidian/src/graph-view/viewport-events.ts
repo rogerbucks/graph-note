@@ -23,8 +23,8 @@ export interface ViewportHost {
   svg: SVGSVGElement | null;
   /** Opens a box or link; with `extend` (Shift), a second thing asks for the shortest path from the one selected (§25). */
   open: (t: Target, extend?: boolean) => void;
-  /** Opens a busy hub's stub or a folded group's box (§25), by its `data-fold`. */
-  unfold: (fold: string) => void;
+  /** Opens a busy hub's stub or a folded group's box (§25), by its `data-fold`; `byKey` when the keyboard opened it. */
+  unfold: (fold: string, byKey?: boolean) => void;
 }
 
 /** Binds the drawing's pointer, wheel, focus and key events, and the window's and note's that move the details sheet. */
@@ -125,7 +125,7 @@ export function bindViewportEvents(host: ViewportHost): void {
     // Enter or Space on a fold's stub or box opens it (§25)
     if (fold && (e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault();
-      host.unfold(fold);
+      host.unfold(fold, true);
       return;
     }
     // Escape clears the selection and the focus first; with a thing selected the arrow keys walk its links (§25)

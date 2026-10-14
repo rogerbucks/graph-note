@@ -197,11 +197,18 @@
 .graph-note-view-menu button[aria-checked='true'] {
   font-weight: var(--font-semibold);
 }
-.graph-note-svg.graph-note-labels-hidden g.edge:not(.graph-note-kept):not(.graph-note-hot):not(.is-selected) text {
+.graph-note-svg.graph-note-labels-hidden g.edge text {
   fill-opacity: 0;
+}
+.graph-note-svg.graph-note-labels-hidden g.edge:is(.graph-note-kept, .graph-note-hot, .is-selected) text {
+  fill-opacity: 1;
 }
 .graph-note-svg g[data-fold] {
   cursor: pointer;
+}
+/* The slot the legend of moving links is drawn in again after a switch: no box of its own, so the legend sits as before. */
+.graph-note-flow-legend-slot {
+  display: contents;
 }
 /* A proposal laid over the graph (spec §17): what it adds is drawn with a heavier outline, what it changes dashed, what it
    removes dotted, each also marked in words and signed, and said to screen readers, so none is told by colour alone. */

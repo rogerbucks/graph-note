@@ -57,11 +57,12 @@ process.stdout.write(JSON.stringify(cases.map(([texts, view, switches, opened]) 
   for (const [graph, drawing] of reading.graphs) {
     const { style } = readStyle(texts, graph, reading);
     const styled = styledDrawing(drawing, style, reading.world[graph], view ?? undefined);
+    // with no View menu, as an export draws it, nothing is folded
     const state = new ViewState(startingSwitches(DEFAULT_SETTINGS, style, view ?? undefined));
     for (const [s, on] of Object.entries(switches ?? {})) state.turn(s, on);
     for (const hub of opened?.hubs ?? []) state.open({ hub });
     for (const group of opened?.groups ?? []) state.open({ group });
-    const laid = directions(state.folded(styled));
+    const laid = directions(switches ? state.folded(styled) : styled);
     drawn[graph] = Object.fromEntries(laid.map((d) => [d.rankdir, d.dot]));
   }
   return { styles, drawn };
@@ -170,10 +171,17 @@ class Folds(unittest.TestCase):
     def test_render_draws_the_folded_routed_source(self):
         # what graph_svg.render hands Graphviz is drawn_source's, for each direction
         texts = texts_of(CASES[0])
-        args = graph_svg.render_args(texts, "kit")
+        args = graph_svg.render_args(texts, "kit", None, {})
         self.assertEqual(args["folding"]["hubs"], [["box", 14]])
         self.assertIsNone(graph_svg.render_args(texts, "kit", None, {"hubs": False})["folding"])
         self.assertIsNone(args["routing"])
+
+    def test_with_no_switches_nothing_is_folded_or_merged(self):
+        # as an export and the Claude Code pane draw a graph: render(**render_args(…)) folds
+        # nothing, a busy hub and a Links that merges notwithstanding
+        texts = texts_of(CASES[1])
+        self.assertIsNone(graph_svg.render_args(texts, "kit")["folding"])
+        self.assertIsNotNone(graph_svg.render_args(texts, "kit", None, {})["folding"])
 
 
 if __name__ == "__main__":

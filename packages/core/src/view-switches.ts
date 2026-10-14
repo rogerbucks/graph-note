@@ -10,7 +10,7 @@ import type { GraphDrawing } from './note-reading.ts';
 import type { Settings } from './settings.ts';
 import { linksOf } from './style.ts';
 import type { OnOff, StyleGraph } from './style-graph.ts';
-import { busyHubs, drawnGroups, foldPlan } from './untangle-fold.ts';
+import { drawnGroups, foldPlan } from './untangle-fold.ts';
 import type { Folding } from './untangle-fold.ts';
 
 /** The four switches, in the order the View menu lists them. */
@@ -126,12 +126,21 @@ export class ViewState {
     return this.plan ? { ...rest, folding: this.plan } : rest;
   }
 
-  /** A busy hub's links and whether they are folded now, for its details to offer to open or fold them; null for another thing. */
+  /**
+   * A busy hub's stub as its details offer it: how many links the stub holds folded (those not already in another stub
+   * or a box), and whether it is folded now. Null for a thing that is no busy hub, with busy hubs not folded, or for a
+   * hub drawn inside a folded group's box.
+   */
   hub(d: GraphDrawing, key: string): { links: number; folded: boolean } | null {
-    const edges = edgesOf(d);
-    if (!busyHubs([key], edges).length) return null;
-    const links = edges.filter((e) => e.from === key || e.to === key).length;
-    return { links, folded: this.switches.hubs && !this.openedHubs.has(key) };
+    if (!this.switches.hubs) return null;
+    const keys = d.boxes.map((b) => b.key);
+    const opened = [...this.openedHubs].filter((k) => k !== key);
+    const plan = foldPlan(keys, edgesOf(d), drawnGroups(d.nudges ?? [], keys, d.diagram), {
+      ...this.switches,
+      opened: { hubs: opened, groups: [...this.openedGroups] },
+    });
+    const stub = plan?.hubs.find(([k]) => k === key);
+    return stub ? { links: stub[1], folded: !this.openedHubs.has(key) } : null;
   }
 
   /** The switches as a view saved as shown writes them (§7). */

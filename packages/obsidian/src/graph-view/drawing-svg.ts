@@ -117,6 +117,12 @@ function markFolds(svg: SVGSVGElement, plan: Folding | undefined, textOf: (k: st
     g.setAttribute('aria-label', label);
     svg.querySelector(`#${id}_link`)?.setAttribute('data-fold', fold);
   }
+  // a folded group's box stands for its things: one of them selected, the box is marked selected (details-panel.ts)
+  plan.groups.forEach(([, things, folded], i) => {
+    const g = folded ? svg.querySelector(`#fold_group_${i + 1}`) : null;
+    g?.setAttribute('data-keys', things.join(' '));
+    g?.setAttribute('aria-pressed', 'false');
+  });
 }
 
 /** The drawing as sentences, for screen readers (spec §11), named as the viewport's description. */

@@ -1,5 +1,5 @@
 {
-  "about": "Graphs folded, merged and routed as a graph's View menu and style graph say (editor spec §25: untangle_hubs, untangle_groups, untangle_merge, untangle_routing, view_switch_defaults), drawn the same by the plugin's core and by graph_svg.py. Each case is a note's gql blocks, each block a list of lines; the view it is drawn in, if any (its name only: the whole graph is drawn, styled and switched as that view is); the switches turned from where they start (hubs, groups and merge, each true or false; a switch not given starts as the plugin's settings hold it by default, as the style graph merges links, or as the view was saved as shown); and the busy hubs and groups opened again. For every case both give the same problems reading each style and, for every graph drawn, the same Graphviz source in each direction laid out, byte for byte. The expected answers are the core's, run live: packages/core/test/layout-parity.test.js holds graph_svg.py to the core on these cases, and tests/test_graph_svg_folds.py does the same from the Python side.",
+  "about": "Graphs folded, merged and routed as a graph's View menu and style graph say (editor spec §25: untangle_hubs, untangle_groups, untangle_merge, untangle_routing, view_switch_defaults), drawn the same by the plugin's core and by graph_svg.py. Each case is a note's gql blocks, each block a list of lines; the view it is drawn in, if any (its name only: the whole graph is drawn, styled and switched as that view is); the switches, when the case has a View menu (none: drawn as an export and the Claude Code pane draw it, with nothing folded or merged), turned from where they start (hubs, groups and merge, each true or false; {} turns none; a switch not given starts as the plugin's settings hold it by default, as the style graph merges links, or as the view was saved as shown); and the busy hubs and groups opened again. For every case both give the same problems reading each style and, for every graph drawn, the same Graphviz source in each direction laid out, byte for byte. The expected answers are the core's, run live: packages/core/test/layout-parity.test.js holds graph_svg.py to the core on these cases, and tests/test_graph_svg_folds.py does the same from the Python side.",
   "cases": [
     {
       "name": "a busy hub folded, as the settings fold one until the View menu says otherwise",
@@ -16,6 +16,33 @@
           "(box)-[:HOLDS]->(t6), (box)-[:HOLDS]->(t7), (box)-[:HOLDS]->(t8), (box)-[:HOLDS]->(t9), (box)-[:HOLDS]->(t10),",
           "(box)-[:HOLDS]->(t11), (box)-[:HOLDS]->(t12), (box)-[:HOLDS]->(t13),",
           "(t1)-[:KEPT_IN]->(shed), (box)-[:KEPT_IN]->(shed)"
+        ]
+      ],
+      "switches": {}
+    },
+    {
+      "name": "no switches given: drawn as an export draws it, with nothing folded or merged",
+      "blocks": [
+        [
+          "// graph: kit",
+          "(box:Box {name: 'Toolbox'}),",
+          "(t1:Tool {name: 'Hammer'}), (t2:Tool {name: 'Saw'}), (t3:Tool {name: 'Drill'}), (t4:Tool {name: 'Level'}),",
+          "(t5:Tool {name: 'Tape'}), (t6:Tool {name: 'Chisel'}), (t7:Tool {name: 'Plane'}), (t8:Tool {name: 'File'}),",
+          "(t9:Tool {name: 'Clamp'}), (t10:Tool {name: 'Square'}), (t11:Tool {name: 'Knife'}), (t12:Tool {name: 'Pliers'}),",
+          "(t13:Tool {name: 'Wrench'}),",
+          "(ann:Person {name: 'Ann'}), (bob:Person {name: 'Bob'}), (cy:Person {name: 'Cy'}), (dee:Person {name: 'Dee'}),",
+          "(box)-[:HOLDS]->(t1), (box)-[:HOLDS]->(t2), (box)-[:HOLDS]->(t3), (box)-[:HOLDS]->(t4), (box)-[:HOLDS]->(t5),",
+          "(box)-[:HOLDS]->(t6), (box)-[:HOLDS]->(t7), (box)-[:HOLDS]->(t8), (box)-[:HOLDS]->(t9), (box)-[:HOLDS]->(t10),",
+          "(box)-[:HOLDS]->(t11), (box)-[:HOLDS]->(t12), (box)-[:HOLDS]->(t13),",
+          "(ann)-[:ASKS]->(cy), (bob)-[:ASKS]->(dee)"
+        ],
+        [
+          "// graph: kit_style · STYLE kit",
+          "(n1:Nudge {word: 'group', thing: 'ann', group: 'Makers'}),",
+          "(n2:Nudge {word: 'group', thing: 'bob', group: 'Makers'}),",
+          "(n3:Nudge {word: 'group', thing: 'cy', group: 'Helpers'}),",
+          "(n4:Nudge {word: 'group', thing: 'dee', group: 'Helpers'}),",
+          "(r1:Links {merge: 'on'})"
         ]
       ]
     },
@@ -34,6 +61,7 @@
           "(box)-[:HOLDS]->(t11), (box)-[:HOLDS]->(t12), (box)-[:HOLDS]->(t13)"
         ]
       ],
+      "switches": {},
       "opened": { "hubs": ["box"] }
     },
     {
@@ -114,7 +142,8 @@
           "(n4:Nudge {word: 'group', thing: 'dee', group: 'Blue team'}),",
           "(r1:Links {merge: 'on'})"
         ]
-      ]
+      ],
+      "switches": {}
     },
     {
       "name": "a trunk of links drawn from their far end, arrowheads hidden on one type, and a property shown",
@@ -188,7 +217,8 @@
           "(r2:Links {view: 'asking', routing: 'right-angled'}),",
           "(w1:Shown {view: 'asking', zoom: 1, groups: 'on', hubs: 'off', labels: 'off'})"
         ]
-      ]
+      ],
+      "switches": {}
     },
     {
       "name": "the whole graph of that note, routed straight and not folded",

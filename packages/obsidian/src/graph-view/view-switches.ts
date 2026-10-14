@@ -102,12 +102,17 @@ export class ViewSwitching {
     }
   }
 
-  /** Opens a busy hub's stub or a folded group's box, by its `data-fold` (`hub:` or `group:` and its name). */
-  unfold(fold: string): void {
+  /**
+   * Opens a busy hub's stub or a folded group's box, by its `data-fold` (`hub:` or `group:` and its name). Opened from the
+   * keyboard, `focus` then takes the keyboard to the hub, or to the group's first thing, on the drawing laid out again.
+   */
+  unfold(fold: string, focus?: (key: string) => void): void {
     const at = fold.indexOf(':'),
-      name = fold.slice(at + 1);
-    this.o.state.open(fold.startsWith('hub:') ? { hub: name } : { group: name });
-    void this.redraw();
+      name = fold.slice(at + 1),
+      hub = fold.startsWith('hub:');
+    const to = hub ? name : this.o.state.plan?.groups.find(([label]) => label === name)?.[1][0];
+    this.o.state.open(hub ? { hub: name } : { group: name });
+    void this.redraw(focus && to !== undefined ? () => focus(to) : undefined);
   }
 
   /** A busy hub's links and whether they are folded now, for its details; null for another thing. */

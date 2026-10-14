@@ -171,8 +171,10 @@ module that ties the parts together, named as the folder is.
   each a switch on or off, starting as the settings (and a view saved as shown) say; `ViewSwitching` turns them, opens a
   busy hub's stub or a folded group's box, folds or opens a hub from its details, and opens the folds a thing found is
   hidden in, laying the graph out again (`SwitchesShown.relayout`) for the card to put in place, keeping the selection
-  and the focus. The state is the plugin's for each graph and view in a note (`switchesFor`), never the note's: it is
-  saved only when a view is saved as shown.
+  (a thing folded into a box selected as its box) and the focus, the keyboard on the same box or taken to a hub opened
+  by Enter, its moving links marked again, the legend saying only those drawn, and a path playing stopped. The state is
+  the plugin's for each graph and view in a note and where it starts (`switchesFor`), never the note's: it is saved
+  only when a view is saved as shown.
 - `problems-list.ts` — the problems behind the badge, grouped when many, and the completeness report.
 - `drawing-svg.ts` — the SVG put in the card, each box and link reachable by keyboard and named; a drawing that runs
   down the page is marked `graph-note-down`, which `styles.css` uses to give a link's label a gap from its line, so the
@@ -247,7 +249,8 @@ module that ties the parts together, named as the folder is.
   Export form on the path at its pace (`openExportForm`, in place of a form already open; path_animation_export), and
   an export at a pace Play does not step at is refused. `playablePaths` are the paths the Export form offers.
 - `flow-marks.ts` — links that move (§7, links_show_flow): each link the style graph moves, found by Graphviz's number
-  (`linkGroup`, so a link guessed from a near miss of its type is found too, which has no `data-link`), given the
+  (`linkGroup`, so a link guessed from a near miss of its type is found too, which has no `data-link`; `linkGroups`
+  gives both lines of a link merged into a trunk by the View menu, which move and carry a played path's dot alike), given the
   classes `styles.css` moves it by, its name said with its movement and meaning, and for a dot a runner, a copy of its
   line (`runnerOn`, which the path playing uses too), drawn whatever the setting and hidden by `styles.css` under reduced
   motion, so turning that off later moves it at once; and the card's legend of what the moving

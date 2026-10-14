@@ -22,7 +22,7 @@ import { plural, renderBar } from './view-bar';
 import { describeDrawing, insertSvg, swapSvg } from './drawing-svg';
 import { ViewSwitching } from './view-switches';
 import { markFlow, renderFlowLegend } from './flow-marks';
-import { Taps } from './taps';
+import { Taps, boxIn } from './taps';
 import type { Target } from './taps';
 import { DetailsPanel } from './details-panel';
 import { Selection } from './selection';
@@ -61,6 +61,8 @@ export class GraphView extends MarkdownRenderChild {
   /** The View menu and what its switches do (§25); none for a graph drawn as a table. */
   private switching: ViewSwitching | null = null;
   private unloaded = false;
+  /** Where the legend of moving links is (§7). */
+  private legendSlot!: HTMLElement;
 
   constructor(containerEl: HTMLElement, options: ViewOptions) {
     super(containerEl);
@@ -143,8 +145,10 @@ export class GraphView extends MarkdownRenderChild {
     if (this.o.proposal) writes.push(...renderProposalStrip(root, this.o.proposal));
     // how it is drawn, and the diagram types to choose from (§15)
     if (this.o.diagram) writes.push(...renderTypeStrip(root, this.o.diagram));
-    // what its moving links mean, in words beside their icons (§7, motion_not_alone)
-    renderFlowLegend(root, this.o.motion?.flow ?? []);
+    // what its moving links mean, in words beside their icons (§7, motion_not_alone): only those drawn, never a link folded
+    // into a stub or a box (§25), so its slot is filled again whenever the View menu lays the graph out again
+    this.legendSlot = root.createDiv({ cls: 'graph-note-flow-legend-slot' });
+    this.flowLegend();
     this.viewport = root.createDiv({
       cls: 'graph-note-viewport',
       attr: {
@@ -191,7 +195,8 @@ export class GraphView extends MarkdownRenderChild {
     this.apply(this.zoom.view());
     const { viewport, zoom, sel, details, taps, svg } = this;
     const open = (t: Target, x?: boolean) => this.open(t, x),
-      unfold = (fold: string) => this.switching?.unfold(fold);
+      unfold = (fold: string, byKey?: boolean) =>
+        this.switching?.unfold(fold, byKey ? (key) => boxIn(this.svg, key)?.focus({ preventScroll: true }) : undefined);
     bindViewportEvents({ card: this, viewport, zoom, sel, details, taps, svg, open, unfold });
     const observer = new ResizeObserver(() => this.zoom.resize(this.viewportSize()));
     observer.observe(this.viewport);
@@ -295,7 +300,10 @@ export class GraphView extends MarkdownRenderChild {
     const was = activeDocument.activeElement,
       on = was && svg.contains(was) ? was.getAttribute('id') : null;
     this.drawn = drawn;
+    this.walk?.stop(); // a path playing marks the drawing it began on: it stops, and is played again on this one
     swapSvg(svg, drawn, this.drawing(), this.o.switches?.state.plan);
+    if (this.o.motion) markFlow(svg, this.o.motion.flow); // the links its style moves, on both lines of a trunk (§7)
+    this.flowLegend();
     if (this.o.view) markView(svg, this.o.view);
     if (this.o.proposal) markProposal(svg, this.o.proposal.shown.marks);
     this.taps.reset(drawn.svg);
@@ -304,6 +312,12 @@ export class GraphView extends MarkdownRenderChild {
     this.details.reselect();
     if (on) svg.querySelector<SVGElement>(`#${on}`)?.focus({ preventScroll: true });
     this.apply(this.zoom.view());
+  }
+
+  /** The legend of the moving links drawn now: a link folded into a stub or a box is not drawn, so not said (§7, §25). */
+  private flowLegend(): void {
+    this.legendSlot.empty();
+    renderFlowLegend(this.legendSlot, this.o.motion?.flow ?? [], this.o.switches?.state.plan?.folded);
   }
 
   private apply(v: View): void {
