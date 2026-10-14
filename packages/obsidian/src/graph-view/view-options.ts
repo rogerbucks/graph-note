@@ -9,6 +9,8 @@ import type {
   Mode,
   NoteReading,
   Parked,
+  Refusal,
+  ViewState,
 } from '@graph-note/core';
 
 /**
@@ -53,6 +55,16 @@ export interface Editing {
 /** A box, a link or an estimated link chosen in the drawing, as the editor finds where it is written (§3, §4). */
 export type Chosen = { thing: string } | { link: number } | { estimate: number };
 
+/**
+ * A graph's View menu (§25): the card's switches and the folds opened, and how to lay the graph out again as they now
+ * fold it, for the card asking (`owner`, so a newer layout for it replaces one not yet started). It changes the drawing,
+ * never the note, so it is open in reading view too.
+ */
+export interface SwitchesShown {
+  state: ViewState;
+  relayout: (owner: object) => Promise<Drawn | Refusal | null>;
+}
+
 /** What a drawing needs: the reading, the graph, its drawn SVG and problems, where it is shown, and what its buttons do. */
 export interface ViewOptions {
   /** The block's text, shown read-only by Source in reading view (spec §3). */
@@ -81,6 +93,8 @@ export interface ViewOptions {
   proposal?: ProposalCard;
   /** The diagram types (spec §15): which fit and why not, the one suggested, the one drawn, and how to choose one. */
   diagram?: DiagramShown;
+  /** The View menu's switches (§25); without it, as for a graph drawn as a table, no View menu is offered. */
+  switches?: SwitchesShown;
   /** What the drawing can export, and how (§16); without it, no Export is offered. */
   exporting?: Exporting;
   /** How its links move, as its style graph says (§7); none, every link still. */

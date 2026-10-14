@@ -168,7 +168,8 @@ export class Trail {
 export const MOVE_MS = 240;
 
 /** The smallest a drawing's words may be on the screen, in pixels, before a thing is too small to read. */
-const READABLE_PX = 11;
+/** The fewest pixels a word may be drawn at and still be read (§25): a thing's words, and a link's label. */
+export const READABLE_PX = 11;
 
 /** The scale below which a thing's words are too small to read (details_choose_moves): its words under 11 pixels. */
 export const READABLE_SCALE = READABLE_PX / ((STYLE.font_size * 4) / 3);

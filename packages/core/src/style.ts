@@ -14,7 +14,7 @@ import { checkThings } from './style-checks.ts';
 import type { RawThing, StyledNames } from './style-checks.ts';
 import { settle } from './style-conflicts.ts';
 import { emptyStyle } from './style-graph.ts';
-import type { LegendEntry, Outside, StyleGraph, StyleScope, StyleTarget, ThingLook } from './style-graph.ts';
+import type { LegendEntry, Outside, Routing, StyleGraph, StyleScope, StyleTarget, ThingLook } from './style-graph.ts';
 import { isSpace, S } from './whitespace.ts';
 import { writtenIn } from './written-things.ts';
 import type { Written } from './written-things.ts';
@@ -185,6 +185,18 @@ export function readStyle(
 /** Whether a view fades or hides the things outside it, as its style graph says (§7): fade when nothing is written. */
 export function outsideOf(style: StyleGraph, view: string): Outside {
   return style.views.get(view)?.outside ?? 'fade';
+}
+
+/**
+ * How the links of the whole graph, or of `view`, are drawn (§25): their routing (untangle_routing) and whether links
+ * running between the same groups are merged into trunks (untangle_merge), each a view's own over the whole graph's;
+ * curved and unmerged when the style graph says nothing.
+ */
+export function linksOf(style: Pick<StyleGraph, 'links'>, view?: string): { routing: Routing; merge: boolean } {
+  const chosen = <K extends 'routing' | 'merge'>(key: K) =>
+    (view === undefined ? undefined : style.links.find((l) => l.view === view && l[key] !== undefined)?.[key]) ??
+    style.links.find((l) => l.view === undefined && l[key] !== undefined)?.[key];
+  return { routing: chosen('routing') ?? 'curved', merge: chosen('merge') === 'on' };
 }
 
 const inScope = (style: StyleGraph, scope: StyleScope) =>

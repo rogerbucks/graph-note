@@ -177,6 +177,39 @@
 .graph-note-filter button.is-hidden {
   text-decoration: line-through;
 }
+/* The View menu (spec §25): four switches, each a 44-point target saying on or off in words. Labels by zoom paints a
+   link's label clear while the drawing is too small to read it, but never on a link in focus, highlighted or selected:
+   paint only, as focus and the highlight are, so nothing moves and nothing is laid out again. A busy hub's stub and a
+   folded group's box are buttons that open. */
+.graph-note-view > .graph-note-view-menu {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-4-2);
+  margin: 0;
+  border-top: 1px solid var(--background-modifier-border);
+  padding: var(--size-4-2) var(--size-4-3);
+}
+.graph-note-view-menu button {
+  min-width: 44px;
+  min-height: 44px;
+}
+.graph-note-view-menu button[aria-checked='true'] {
+  font-weight: var(--font-semibold);
+}
+.graph-note-svg.graph-note-labels-hidden g.edge text {
+  fill-opacity: 0;
+}
+.graph-note-svg.graph-note-labels-hidden g.edge:is(.graph-note-kept, .graph-note-hot, .is-selected) text {
+  fill-opacity: 1;
+}
+.graph-note-svg g[data-fold] {
+  cursor: pointer;
+}
+/* The slot the legend of moving links is drawn in again after a switch: no box of its own, so the legend sits as before. */
+.graph-note-flow-legend-slot {
+  display: contents;
+}
 /* A proposal laid over the graph (spec §17): what it adds is drawn with a heavier outline, what it changes dashed, what it
    removes dotted, each also marked in words and signed, and said to screen readers, so none is told by colour alone. */
 .graph-note-svg g.graph-note-proposed.is-add > :is(path, polygon),

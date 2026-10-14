@@ -1,10 +1,10 @@
-# M-06 Six moving at once
+# K-06 Six moving at once
 
 **You should see:** of the seven cats, the first six pictures move and the seventh, Gus, stands still on its first frame. Hovering Gus's control on the Mac says six animated images are already moving here, and to pause one of them to play this one; pressing Play on Gus leaves it still and says so again. Pause Ada's picture, then press Play on Gus: Gus moves.
 
 **Test diagram:**
 
-Before you start, put seven animated GIFs in this note's folder, `Device checks/19 Animated images`, on the Mac, outside Obsidian, named `c1.gif` to `c7.gif`; the same GIF copied seven times will do. Take them out again afterwards.
+Before you start, put seven animated GIFs in this note's folder, `Device checks/20 Animated images`, on the Mac, outside Obsidian, named `c1.gif` to `c7.gif`; the same GIF copied seven times will do. Take them out again afterwards.
 
 ```gql
 // graph: seven · SOURCE
@@ -35,8 +35,8 @@ The style block: a picture on every cat's box.
 
 **Checklist line:**
 
-> **M-06** Seven cats, each with an animated GIF and a Picture: six pictures move and the seventh is still, saying six
+> **K-06** Seven cats, each with an animated GIF and a Picture: six pictures move and the seventh is still, saying six
 > are already moving here; pressing its Play says so again. Pause one of the six, then press Play on the seventh:
 > it moves.
 
-**Back to the checklist:** [M-06 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for M-06 in its list.
+**Back to the checklist:** [K-06 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for K-06 in its list.

@@ -26,10 +26,11 @@ const DATA = [
 /**
  * The functions that only read, show or leave, never change a note: open wherever the card is, each by its path in the
  * options. Of the export, only `run` is open: it writes a new file at a name no file has, never the note (spec §16,
- * vault-write.ts), and anything else an export is given later is gated like the rest. The images only find and read
- * the vault's files and draw a first frame (§18), so are open whole.
+ * vault-write.ts), and anything else an export is given later is gated like the rest. The View menu's switches change
+ * the drawing alone, and lay it out again, never writing (§25, view_switch_view_only): open, the state held by its class.
+ * The images only find and read the vault's files and draw a first frame (§18), so are open whole.
  */
-export const READS = ['lineOf', 'onClose', 'watchEditing', 'readOnly', 'exporting.run', 'images'] as const;
+export const READS = ['lineOf', 'onClose', 'watchEditing', 'readOnly', 'exporting.run', 'switches', 'images'] as const;
 
 const OPEN: ReadonlySet<string> = new Set<string>([...DATA, ...READS]);
 

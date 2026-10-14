@@ -114,7 +114,7 @@ export class Zoom {
   /** The strip at the foot of the viewport kept clear, in pixels: what a sheet over it covers (§25). */
   private clear = 0;
 
-  protected readonly content: Size;
+  protected content: Size;
   protected viewport: Size;
   protected mode: Mode;
 
@@ -228,9 +228,9 @@ export class Zoom {
     this.place(this.scale, this.x + dx, this.y + dy);
   }
 
-  resize(viewport: Size): void {
+  resize(viewport: Size, content = this.content): void {
     const fitted = this.isFitted();
-    this.viewport = viewport;
+    [this.viewport, this.content] = [viewport, content]; // the drawing's size too, laid out again by the View menu (§25)
     if (fitted) this.fit();
     else this.place(this.scale, this.x, this.y);
   }

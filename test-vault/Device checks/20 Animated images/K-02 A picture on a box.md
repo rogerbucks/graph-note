@@ -1,10 +1,10 @@
-# M-02 A picture on a box
+# K-02 A picture on a box
 
 **You should see:** each cat's box carries its picture at the top, above the word CAT and its name, and the picture moves. A small square button sits in the picture's lower right corner, showing two bars for pause. Rex is a dog, and no Picture asks for one, so his box has no picture and keeps its usual size. Switch Obsidian between its light and dark themes: the pictures, the buttons and the boxes read clearly in both.
 
 **Test diagram:**
 
-Before you start, put two animated GIFs in this note's folder, `Device checks/19 Animated images`, on the Mac, outside Obsidian, named `tom.gif` and `kit.gif`, and any animated GIF named `rex.gif`. Take them out again afterwards.
+Before you start, put two animated GIFs in this note's folder, `Device checks/20 Animated images`, on the Mac, outside Obsidian, named `tom.gif` and `kit.gif`, and any animated GIF named `rex.gif`. Take them out again afterwards.
 
 ```gql
 // graph: cats · SOURCE
@@ -33,8 +33,8 @@ The style block: a picture on every cat's box, from its photo.
 
 **Checklist line:**
 
-> **M-02** A graph whose style block holds a Picture for the kind Cat: each cat's box shows its image moving, at the
+> **K-02** A graph whose style block holds a Picture for the kind Cat: each cat's box shows its image moving, at the
 > top of the box above its kind, with a small pause button in the picture's corner; the dog's box has no picture.
 > Light and dark themes both.
 
-**Back to the checklist:** [M-02 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for M-02 in its list.
+**Back to the checklist:** [K-02 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for K-02 in its list.

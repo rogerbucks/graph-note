@@ -28,6 +28,10 @@ export interface UntangleHost {
 export interface ThingActions {
   showOnly: (key: string) => void;
   routeFrom: (key: string) => void;
+  /** A busy hub's links and whether they are folded now (§25, untangle_hubs); null for another thing. */
+  hub?: (key: string) => { links: number; folded: boolean } | null;
+  /** Folds a busy hub's links into their stub, or opens them, and draws the graph again. */
+  toggleHub?: (key: string) => void;
 }
 
 /** The untangling of one card: the core's state, the banner, the legend panel and the search row. */

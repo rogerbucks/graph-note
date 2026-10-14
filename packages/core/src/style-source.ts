@@ -11,6 +11,7 @@ import { flowLinks } from './link-flow.ts';
 import type { GraphDrawing } from './note-reading.ts';
 import { picturesFor } from './picture.ts';
 import type { Nudge, StyleGraph } from './style-graph.ts';
+import { linksOf } from './style.ts';
 import { diagramFor } from './types.ts';
 
 const id = (key: string) => `"${key}"`;
@@ -76,6 +77,7 @@ export function styledDrawing(drawing: GraphDrawing, style: StyleGraph, g?: Grap
     inline = g ? inlineRows(drawing, g, style, view) : undefined,
     { plan } = diagramFor(drawing, style, g, view),
     flow = flowLinks(drawing, style, view),
+    { routing } = linksOf(style, view),
     pictures = g ? picturesFor(drawing, g, style, view) : [];
   return {
     ...nudgedDrawing(drawing, style),
@@ -84,6 +86,8 @@ export function styledDrawing(drawing: GraphDrawing, style: StyleGraph, g?: Grap
     ...(inline && (inline.boxes.length || inline.links.length) ? { inline } : {}),
     ...(plan ? { diagram: plan } : {}),
     ...(flow.length ? { flow } : {}),
+    // the links straight or right-angled, as its Links says (§25); curved is how Graphviz draws them already
+    ...(routing === 'curved' ? {} : { routing }),
     ...(pictures.length ? { pictures } : {}),
   };
 }

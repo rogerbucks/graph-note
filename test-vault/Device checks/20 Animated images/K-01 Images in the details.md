@@ -1,10 +1,10 @@
-# M-01 Images in the details
+# K-01 Images in the details
 
 **You should see:** opening Ann's details shows a part headed Images. In it cat.gif, spin.png, dance.webp and loop.svg are each moving, each with its property and file name under it and a Pause button beside it. The site property names an image on the web: it says the address is outside the vault and is not loaded, and no image is shown for it, so nothing is fetched from the web. Kit's details show kit.png, a still image, with no button.
 
 **Test diagram:**
 
-Before you start, put four animated images and one still one in this note's folder, `Device checks/19 Animated images`, on the Mac, outside Obsidian: an animated GIF named `cat.gif`, an animated PNG (APNG) named `spin.png`, an animated WebP named `dance.webp`, an SVG that animates (with an `<animate>` element) named `loop.svg`, and any still PNG named `kit.png`. Take them out again afterwards.
+Before you start, put four animated images and one still one in this note's folder, `Device checks/20 Animated images`, on the Mac, outside Obsidian: an animated GIF named `cat.gif`, an animated PNG (APNG) named `spin.png`, an animated WebP named `dance.webp`, an SVG that animates (with an `<animate>` element) named `loop.svg`, and any still PNG named `kit.png`. Take them out again afterwards.
 
 ```gql
 // graph: pets · SOURCE
@@ -24,7 +24,7 @@ Before you start, put four animated images and one still one in this note's fold
 
 **Checklist line:**
 
-> **M-01** Open the details of Ann: under Images, cat.gif, spin.png, dance.webp and loop.svg each move, each with its
+> **K-01** Open the details of Ann: under Images, cat.gif, spin.png, dance.webp and loop.svg each move, each with its
 > name and a Pause button; a property naming an image outside the vault says it is not loaded, and shows nothing.
 
-**Back to the checklist:** [M-01 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for M-01 in its list.
+**Back to the checklist:** [K-01 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for K-01 in its list.

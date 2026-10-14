@@ -200,11 +200,18 @@ describe('a tampered copy fails the check', () => {
 
 describe('run on its own', () => {
   test('passes the committed copy, and lists each problem of a broken one with a non-zero exit', () => {
+    // within a time limit: a check left waiting for its input, as under a loaded machine, fails here, never hangs the run
     const run = (input) =>
-      spawnSync(process.execPath, [path('scripts/check-requirements.mjs'), '--stdin'], { input, encoding: 'utf8' });
+      spawnSync(process.execPath, [path('scripts/check-requirements.mjs'), '--stdin'], {
+        input,
+        encoding: 'utf8',
+        timeout: 30_000,
+      });
     const ok = run(real());
+    assert.ok(!ok.error, String(ok.error));
     assert.equal(ok.status, 0, ok.stdout + ok.stderr);
     const bad = run(without(real(), '(autocomplete)-[:PROVED_BY]->(test_autocomplete),'));
+    assert.ok(!bad.error, String(bad.error));
     assert.equal(bad.status, 1);
     assert.match(bad.stdout, /autocomplete/);
   });

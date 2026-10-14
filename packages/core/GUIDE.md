@@ -113,8 +113,9 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   its theme variables; the fixed light and dark entries, for a host that draws the SVG as an isolated image (a Claude
   Code pane), are worked out to hex and paint their own page, with the locked contrast held; the system entry carries
   both in the drawing's own style sheet, `prefers-color-scheme` choosing, for a host that cannot say which it shows.
-- `hits.ts` — what a tap lands on or near, and where a box is (`boundsOf`, as fractions of the drawing; `centres`).
-- `zoom.ts` — zoom, pan and full screen; `reveal` brings a box into view, centred, and leaves one already in view alone;
+- `hits.ts` — what a tap lands on or near, and where a box is (`boundsOf`, as fractions of the drawing; `centres`); a
+  link merged into a trunk (§25) by either of its lines.
+- `zoom.ts` — zoom, pan and full screen, and `resize` for a new viewport or a drawing laid out again (§25); `reveal` brings a box into view, centred, and leaves one already in view alone;
   `aim` says where the view would go to do so, keeping the zoom unless it is below a scale given (§25); `keepClear` keeps
   a strip at the viewport's foot clear, as a sheet covers it, letting the drawing pan up into it by as much and no more.
 - `zoom-across.ts` — `AcrossZoom`, a `Zoom` that only adds to it: a wide drawing fitted to its height, shown from its
@@ -138,6 +139,24 @@ and nothing else (untangle_data_untouched). Nothing here is written to a note or
   `nextAlong` (an arrow key walks to the neighbour in that direction), `emphasis` (a path over the selection over the
   legend), and `Untangle`, which holds all of it for one drawing and works it out into `layers`: what is kept and what is
   hidden.
+- `untangle-fold.ts` — folding (untangle_hubs, untangle_groups, untangle_merge): `BUSY_HUB` (a thing with more links is
+  a busy hub), `busyHubs`, `drawnGroups` (the groups the nudges draw, as `nudgedSource` boxes them; none in lanes),
+  `foldPlan` (what a drawing folds and merges: things hidden with a hub, links folded into a stub or inside a folded
+  group, each hub's count, every group and whether it is folded, and whether links between groups merge), and
+  `foldsHiding` (the folds a found thing is hidden in). Plain lists, so the plan crosses to the layout worker.
+- `fold-source.ts` — the plan written into the layout source last (`foldedSource`): a stub with its count for each hub,
+  a box with its count for each folded group, two or more links from one group to another drawn through one trunk, each
+  link still its own two lines (`edge7_tail`, `edge7`), and every box and link still drawn given the id Graphviz gave it
+  unfolded, so the host finds each by its number as before; and `routedSource`, links straight (`splines=line`) or
+  right-angled (`splines=ortho`, readings as `xlabel`). Nothing to fold or route: the source unchanged. The Python
+  library writes the same (`graphspec/style/folding.py`, `fold_source.py`), held to it byte for byte on
+  `python/graph_spec/tests/fold_cases.json` by `test/layout-parity.test.js`.
+- `view-switches.ts` — the View menu's four switches (view_switches): `VIEW_SWITCHES`, `SWITCH_NAMES`,
+  `startingSwitches` (from the settings' defaults, the style graph's merging and a view's switches saved as shown,
+  view_switch_defaults), `labelsHidden` and `LABEL_SCALE` (a link's label under 11 pixels is hidden, untangle_labels),
+  and `ViewState`, one card's switches and the folds opened since, which folds a styled drawing for its layout
+  (`folded`), offers a hub's fold from its details (`hub`) and gives the switches a view saves (`saved`); the drawing's
+  alone, never written to the note (view_switch_view_only).
 - `details-nav.ts` — finding your way from a thing's details: `linkGroups` (its links by relationship type and direction,
   in words with a count: "is reported to by Bob and Cy (2)", the reverse reading the schema's or the library's guess, a
   thing linked twice the same way named once with each of its links),
@@ -215,9 +234,9 @@ style block beside it: `// graph: trip_style · STYLE trip`. `blocks.ts` knows o
 it. A graph line that says STYLE but names no graph is a problem, never data.
 
 - `style-graph.ts` — what a style graph holds once read (`StyleGraph`: nudges, shows, looks, each view's fade or hide,
-  how each view was shown, the direction, where arrowheads are hidden, the diagram types chosen, how links move, the
-  pictures on boxes) and the
-  words it allows: the four nudge words, the ways a link moves (`FLOW_MOTIONS`), the
+  how each view was shown and the View menu's switches it was saved with, the direction, where arrowheads are hidden,
+  the diagram types chosen, how links move, how links are routed and merged, the pictures on boxes) and the words it
+  allows: the four nudge words, the ways a link moves (`FLOW_MOTIONS`), the routings (`ROUTINGS`), the
   lines, the formats, fade or hide, on or off (`INLINE`), show or hide (`ARROWHEADS`), and the colours, which are only
   the locked style's hues by name (`STYLE_HUES`). A Show switches a property on or off inline for a kind, a thing or a
   relationship type's links, in the whole graph or one view; an Arrows hides or shows arrowheads for every link or one
@@ -228,7 +247,11 @@ it. A graph line that says STYLE but names no graph is a problem, never data.
   path (a named hue, a line, a format; the thing's own look over its kind's); `legendOf` every colour used there with
   what it means; `outsideOf` a view's fade or hide, fade when none is written.
 - `style-reader.ts` — `reader`: one style thing's properties read as text, a number, a word it allows or a name of the
-  graph it styles, each fault a problem with its fix; shared by `style-checks.ts` and `link-flow.ts`.
+  graph it styles, each fault a problem with its fix; shared by `style-checks.ts`, `style-choice-checks.ts` and
+  `link-flow.ts`.
+- `style-choice-checks.ts` — the choices for how a graph or a view is drawn, each checked: an Arrows, a Diagram, and a
+  Links (§25: `routing` one of `ROUTINGS`, curved, straight or right-angled; `merge` on or off; for the whole graph or
+  a view). `style.ts`'s `linksOf` says how a graph's or a view's links are drawn, a view's own over the whole graph's.
 - `style-checks.ts` — each style thing checked on its own: its kind, its words, its values, and every name it uses
   (thing, other, from, to, selected, kind, relationship type, path, property) against the graph it styles, a name not
   there given the nearest (`estimates.ts`'s `nearest`) as its fix. A view's name is not checked: views are query blocks,
@@ -251,7 +274,9 @@ it. A graph line that says STYLE but names no graph is a problem, never data.
   nudges the same way (`graph_svg.nudged_source`, its style read by `gql_profile.read_style`), held to the core byte for
   byte on `python/graph_spec/tests/nudge_cases.json` by `test/layout-parity.test.js` (python_honours_nudges).
   `styledDrawing` is the drawing as its style draws it in a view or the whole graph, as every host draws a graph, a view
-  or an export: its direction and nudges, the links it draws without arrowheads, and the properties it shows inline.
+  or an export: its direction and nudges, the links it draws without arrowheads, the properties it shows inline, and
+  how its links are routed (§25). `render.ts`'s `directions` writes in, last, what the View menu folds (`folding`, put on
+  the drawing by `ViewState.folded`) and the routing.
 - `arrows.ts` — arrowheads hidden or shown (§15): `arrowsShown` (the most particular choice — a view's over the whole
   graph's, then a type's over every link's — shown when none), `arrowlessLinks` (the links a drawing draws without them,
   guesses included), `linkTypes` (the type each link is styled by: a guessed type's link by the type it is taken for,
@@ -569,7 +594,8 @@ exactly what goes and said yes to it. Its answer comes back as a proposal (§17)
   or dark), whether an export saved in the vault gets a companion note, the folder exports go to (`vaultFolder` keeps it
   inside the vault; empty is next to the note) and the classification above which an export asks first (one of
   `classifications`, the lowest until chosen). The Drawing section also holds how far focus reaches from a selected
-  thing (`focusDepth`: `one`, the default, or `two`; `depthOf` reads it).
+  thing (`focusDepth`: `one`, the default, or `two`; `depthOf` reads it), and the default of each View menu switch
+  (`labelsByZoom` and `foldHubs` on, `foldGroups` and `mergeLinks` off, view_switch_defaults).
 
 ## Command-line tools, `bin/`
 

@@ -1,10 +1,10 @@
-# M-04 Still under reduced motion
+# K-04 Still under reduced motion
 
 **You should see:** with the system's reduce-motion setting on, every picture on a box and every image in the details stands still on its first frame. Each control shows Play, and each image in the details says it is still, as the system asks for reduced motion, and that Play moves it; hovering a picture's control on the Mac shows the same words. Pressing Play on one picture moves that one only: the others stay still.
 
 **Test diagram:**
 
-Before you start, put animated GIFs named `tom.gif` and `kit.gif` in this note's folder, `Device checks/19 Animated images`, on the Mac, outside Obsidian. Take them out again afterwards.
+Before you start, put animated GIFs named `tom.gif` and `kit.gif` in this note's folder, `Device checks/20 Animated images`, on the Mac, outside Obsidian. Take them out again afterwards.
 
 ```gql
 // graph: still · SOURCE
@@ -32,8 +32,8 @@ The style block: a picture on every cat's box.
 
 **Checklist line:**
 
-> **M-04** Turn the system's reduce-motion setting on and redraw the note of M-02: every picture and every image in
+> **K-04** Turn the system's reduce-motion setting on and redraw the note of K-02: every picture and every image in
 > the details is still, its first frame, each saying it is still as the system asks; press Play on one: only that
 > one moves. Turn the setting off again afterwards.
 
-**Back to the checklist:** [M-04 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for M-04 in its list.
+**Back to the checklist:** [K-04 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for K-04 in its list.

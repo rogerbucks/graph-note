@@ -57,6 +57,19 @@ export const FLOW_MOTIONS = ['dashes', 'dot', 'still'] as const;
 /** One of the ways a link may move, or still. */
 export type FlowMotion = (typeof FLOW_MOTIONS)[number];
 
+/**
+ * How links are drawn (§25, untangle_routing): curved, as Graphviz draws them unless told otherwise, straight, or with
+ * right angles, so a dense graph can trade curves for fewer crossings.
+ */
+export const ROUTINGS = ['curved', 'straight', 'right-angled'] as const;
+/** One of the routings. */
+export type Routing = (typeof ROUTINGS)[number];
+
+/** A switch written in the style graph: links merged into trunks (§25, untangle_merge), or a view's switches saved. */
+export const ON_OFF = ['on', 'off'] as const;
+/** On or off. */
+export type OnOff = (typeof ON_OFF)[number];
+
 /** The kinds of thing a style graph holds, by label. */
 export const STYLE_KINDS = [
   'Nudge',
@@ -67,6 +80,7 @@ export const STYLE_KINDS = [
   'Arrows',
   'Diagram',
   'Flow',
+  'Links',
   'Picture',
 ] as const;
 /** One of the kinds of thing a style graph holds. */
@@ -81,10 +95,11 @@ export const STYLE_KEYS: Record<StyleKind, readonly string[]> = {
   Show: ['property', 'kind', 'thing', 'type', 'view', 'inline'],
   Look: ['view', 'path', 'thing', 'kind', 'from', 'type', 'to', 'colour', 'line', 'format', 'means'],
   ViewStyle: ['view', 'outside'],
-  Shown: ['view', 'zoom', 'x', 'y', 'frame', 'selected'],
+  Shown: ['view', 'zoom', 'x', 'y', 'frame', 'selected', 'labels', 'hubs', 'groups', 'merge'],
   Arrows: ['arrowheads', 'view', 'type'],
   Diagram: ['type', 'view', 'relationship'],
   Flow: ['motion', 'means', 'type', 'view'],
+  Links: ['view', 'routing', 'merge'],
   Picture: ['property', 'kind', 'thing', 'view'],
 };
 
@@ -154,6 +169,18 @@ export interface Diagram {
 }
 
 /**
+ * How links are drawn (§25): their routing (untangle_routing), and whether the links running between the same two
+ * groups are merged into shared trunks (untangle_merge); for the whole graph, or for one view.
+ */
+export interface Links {
+  routing?: Routing;
+  merge?: OnOff;
+  /** The view it is chosen for; none, the whole graph. */
+  view?: string;
+  at: StyleAt;
+}
+
+/**
  * How links move (§7, flow_in_style_graph): for every link, or the links of one relationship type; in the whole graph,
  * or in one view. A moving link always says what its movement means (`means`, motion_not_alone), in its legend and to a
  * screen reader, and carries an icon on its label. Still unless a Flow moves it (link-flow.ts).
@@ -217,13 +244,20 @@ export interface Frame {
   height: number;
 }
 
-/** How a view was shown, saved when the user asked (§7, view_saved_as_shown): only what was written and could be read. */
+/**
+ * How a view was shown, saved when the user asked (§7, view_saved_as_shown): only what was written and could be read;
+ * with the View menu's switches as they stood (§25, view_switch_view_only).
+ */
 export interface Shown {
   zoom?: number;
   x?: number;
   y?: number;
   frame?: Frame;
   selected?: string;
+  labels?: OnOff;
+  hubs?: OnOff;
+  groups?: OnOff;
+  merge?: OnOff;
 }
 
 /** A graph's style, read from its style blocks and checked: only what is sound is here; the rest is in the problems. */
@@ -243,6 +277,8 @@ export interface StyleGraph {
   diagrams: Diagram[];
   /** Where links move, and how, in the order written; none, every link still (flow_in_style_graph). */
   flows: Flow[];
+  /** How links are routed and whether they are merged, for the whole graph or a view, in the order written. */
+  links: Links[];
   /** The boxes drawn with a picture, and the property holding it, in the order written; none, no picture on a box. */
   pictures: Picture[];
 }
@@ -280,6 +316,7 @@ export function emptyStyle(): StyleGraph {
     arrows: [],
     diagrams: [],
     flows: [],
+    links: [],
     pictures: [],
   };
 }

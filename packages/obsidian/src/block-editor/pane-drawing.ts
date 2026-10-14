@@ -3,12 +3,12 @@
 // the editor has none: the card's own drawing is its drawing. It is laid out apart from the interface, as every drawing
 // is (spec §9): a graph typed or pasted past a limit is not drawn, and a banner beside its text says why.
 import { Component } from 'obsidian';
-import { depthOf, parked } from '@graph-note/core';
+import { ViewState, depthOf, parked, startingSwitches } from '@graph-note/core';
 import type { Drawn, FocusDepth, NoteReading, PaneSession, Refusal } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
 import { GraphView } from '../graph-view/graph-view';
 import { refusalBanner } from '../layout-worker/refusal-banner';
-import type { Chosen } from '../graph-view/view-options';
+import type { Chosen, SwitchesShown } from '../graph-view/view-options';
 
 /** What choosing in the drawing does: Edit, a box or a link chosen, and the text replaced, as by an estimate's quick fix. */
 interface Choosing {
@@ -36,6 +36,7 @@ function drawInPane(
   s: PaneSession,
   on: Choosing,
   focusDepth: FocusDepth,
+  switches: SwitchesShown,
 ) {
   host.empty();
   if (!drawn) {
@@ -52,8 +53,9 @@ function drawInPane(
     graph: s.graph,
     drawn,
     mode: 'pane',
-    // how far focus reaches, as the settings say, here as in a card (§25)
+    // how far focus reaches, as the settings say, and the View menu, here as in a card (§25)
     focusDepth,
+    switches,
     problems: reading.problems
       .filter((p) => p.graph === s.graph && reading.texts[p.block] === s.text)
       .map((p) => ({ ...p, noteLine: p.line })),
@@ -71,6 +73,8 @@ function drawInPane(
 export class PaneDrawing extends Component {
   private view: GraphView | null = null;
   private readonly plugin: GraphNotePlugin;
+  /** The pane's View menu (§25): started from the settings, kept while the pane redraws what is typed. */
+  private state: ViewState | null = null;
 
   constructor(plugin: GraphNotePlugin) {
     super();
@@ -86,17 +90,20 @@ export class PaneDrawing extends Component {
   /** Draws the session's graph, as read, into `host` — unless, by the time it is laid out, `stale` says it is not wanted. */
   redraw(host: HTMLElement, reading: NoteReading, s: PaneSession, stale: () => boolean, on: Choosing): void {
     const d = reading.graphs.get(s.graph);
+    const state = (this.state ??= new ViewState(startingSwitches(this.plugin.settings)));
+    const laidOut = (by: object) => (d ? this.plugin.layout(state.folded(d), by) : Promise.resolve(null));
     // too large to read, nothing was read (§9); and a layout this editor asked for before, not yet started, is dropped
     const laid = reading.tooLarge
       ? Promise.resolve(reading.tooLarge)
       : d && d.boxes.length
-        ? this.plugin.layout(d, this)
+        ? laidOut(this)
         : Promise.resolve(undefined);
     void laid
       .then((drawn) => {
         if (stale() || drawn === null) return;
         this.clear();
-        const view = drawInPane(host, drawn, reading, s, on, depthOf(this.plugin.settings.focusDepth));
+        const depth = depthOf(this.plugin.settings.focusDepth);
+        const view = drawInPane(host, drawn, reading, s, on, depth, { state, relayout: laidOut });
         if (!view) return;
         this.view = view;
         this.addChild(view);

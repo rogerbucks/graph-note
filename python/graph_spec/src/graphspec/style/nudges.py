@@ -1,7 +1,6 @@
-"""Nudges applied to the layout (editor spec §6): a step after the layout source is made, never a
-change to it, so a graph with no nudges is laid out from exactly the source dot_source gives. The
-core's style-source.ts, nudgedSource, so a nudged graph is laid out the same by both, byte for byte
-(python_honours_nudges). Moved here from graph_svg.py, which re-exports it."""
+"""A graph's nudges written into its layout source (editor spec §6), as the plugin's core writes
+them (style-source.ts, nudgedSource), so a nudged graph is laid out the same by both, byte for byte
+(python_honours_nudges). graph_svg re-exports it."""
 
 from __future__ import annotations
 

@@ -46,14 +46,15 @@ import textwrap
 import zlib
 from collections.abc import Collection, Mapping, Sequence
 
-# arrowheads hidden and the diagram type (§15), properties shown inline (§14), links that move
-# (§7), room for a picture on a box (§18) and the nudges (§6), written into the source as the
+# arrowheads hidden and the diagram type (editor spec §15), properties shown inline (§14), links
+# that move (§7), nudges (§6), and folds, trunks and routing (§25), written into the source as the
 # plugin's core writes them; they live with the style graph that chooses them, as do the
-# directions laid out (re-exported here, with nudged_source)
+# directions laid out (re-exported here)
 from graphspec.style.arrows import arrowless_source
 from graphspec.style.diagram_types import directions, typed_source
 from graphspec.style.drawn import render_args  # noqa: F401 — re-exported: render(**render_args(…))
 from graphspec.style.flow import flow_source
+from graphspec.style.fold_source import folded_source, routed_source
 from graphspec.style.inline import inline_source
 from graphspec.style.nudges import nudged_source
 from graphspec.style.picture import picture_source
@@ -202,6 +203,33 @@ def dot_source(
     return "\n".join(out), kinds, readings
 
 
+def drawn_source(
+    nodes: list[tuple[str, str, str]],
+    edges: list[tuple[str, str, str]],
+    rankdir: str,
+    suggested: Collection[str] = (),
+    nudges: Sequence[Mapping] = (),
+    arrowless: Sequence[int] = (),
+    inline: Mapping | None = None,
+    plan: Mapping | None = None,
+    flow: Sequence[Mapping] = (),
+    folding: Mapping | None = None,
+    routing: str | None = None,
+    pictures: Sequence[Mapping] = (),
+) -> tuple[str, list[str], list[str]]:
+    """The Graphviz source render lays a graph out from in `rankdir`, with its kinds and readings,
+    as the plugin's core writes it (render.ts, directions): the layout source (dot_source), laid
+    out as its diagram type (typed_source), its moving links marked (flow_source), its arrowheads
+    hidden and properties shown (arrowless_source, inline_source), room kept for its pictures
+    (picture_source), its nudges written in (nudged_source), then folded and merged as `folding`
+    says (folded_source) and its links routed (routed_source)."""
+    src, kinds, readings = dot_source(nodes, edges, rankdir, suggested)
+    src = flow_source(typed_source(src, plan), flow)
+    src = picture_source(inline_source(arrowless_source(src, arrowless), inline), pictures)
+    src = nudged_source(src, nudges, [key for key, _, _ in nodes], plan)
+    return routed_source(folded_source(src, folding), routing), kinds, readings
+
+
 def _themed(svg, kinds, readings=()):
     """Swap the placeholder colours for Obsidian theme variables, as inline styles, and make the
     SVG fit a note."""
@@ -274,22 +302,8 @@ def _themed(svg, kinds, readings=()):
     return "\n".join(line.strip() for line in svg.splitlines() if line.strip())
 
 
-def _layout(
-    nodes,
-    edges,
-    rankdir,
-    suggested=(),
-    nudges=(),
-    arrowless=(),
-    inline=None,
-    plan=None,
-    flow=(),
-    pictures=(),
-):
-    src, kinds, readings = dot_source(nodes, edges, rankdir, suggested)
-    src = flow_source(typed_source(src, plan), flow)
-    src = picture_source(inline_source(arrowless_source(src, arrowless), inline), pictures)
-    src = nudged_source(src, nudges, [key for key, _, _ in nodes], plan)
+def _layout(nodes, edges, rankdir, **drawn):
+    src, kinds, readings = drawn_source(nodes, edges, rankdir, **drawn)
     r = subprocess.run([DOT, "-Tsvg"], input=src, capture_output=True, text=True, timeout=60)
     if r.returncode:
         raise RuntimeError(f"Graphviz failed: {r.stderr.strip()[:300]}")
@@ -307,6 +321,8 @@ def render(
     inline: Mapping | None = None,
     diagram: Mapping | None = None,
     flow: Sequence[Mapping] = (),
+    folding: Mapping | None = None,
+    routing: str | None = None,
     pictures: Sequence[Mapping] = (),
 ) -> str:
     """The graph as one block of inline SVG. Raises RuntimeError if Graphviz is missing or fails.
@@ -323,8 +339,10 @@ def render(
     the plan of the diagram type it is drawn as (diagram_types.diagram_for), written in first
     (typed_source), and laid out in that type's direction unless a nudge sets one (§15). flow: the
     links that move (flow_links), marked as the core's link-flow.ts marks them (flow_source).
-    pictures: the boxes drawn with a picture (picture.pictures_for), room kept for each as the
-    core's picture.ts keeps it (picture_source); the image itself is a host's to put there."""
+    folding and routing: what a View menu folds and merges (graphspec.style.folding, fold_plan;
+    none unless asked for) and how the style graph routes the links (§25), written in last
+    (folded_source, routed_source). pictures: the boxes drawn with a picture (pictures_for), room
+    kept for each before the nudges (picture_source); the image is a host's to put there."""
     if isinstance(suggested, str):
         raise TypeError("suggested is a collection of keys, not one key as a string")
     if not DOT:
@@ -335,12 +353,14 @@ def render(
             nodes,
             edges,
             rd,
-            suggested,
-            nudges,
-            arrowless,
-            inline,
-            diagram,
+            suggested=suggested,
+            nudges=nudges,
+            arrowless=arrowless,
+            inline=inline,
+            plan=diagram,
             flow=flow,
+            folding=folding,
+            routing=routing,
             pictures=pictures,
         )
         fit = min(1.0, target / w) - (

@@ -12,11 +12,10 @@ import { showSuggested } from './suggested-name';
 import { parkButton, parkedNote } from './parked';
 import { estimateActions } from './estimate-actions';
 import { button } from './view-bar';
-import { linkWords, renderLinkGroups, renderTrail, stepName, thingButton } from './details-nav';
+import { linkWords, reducedMotion, renderLinkGroups, renderTrail, stepName, thingButton } from './details-nav';
 import type { NavActions } from './details-nav';
 import { DetailsSheet } from './details-sheet';
-import { renderImages } from './animated-images';
-import type { MovingImages } from './animated-images';
+import { MovingImages, placePictures, renderImages } from './animated-images';
 import type { ThingActions } from './untangle';
 import type { ViewOptions } from './view-options';
 
@@ -35,8 +34,8 @@ export class DetailsPanel {
   /** Set while the details are drawn for a step of the trail, or drawn again: the trail goes on rather than starting again. */
   private walking = false;
   private readonly sheet: DetailsSheet;
-  /** The card's images, a thing's shown in its details (§18). */
-  private readonly images: MovingImages | undefined;
+  /** The card's images, a thing's shown in its details and the pictures on its boxes, counted as they move (§18). */
+  private readonly images: MovingImages;
 
   /** The thing whose details are open, if a thing's are: what a view saved as shown keeps as selected (§7). */
   selectedKey(): string | null {
@@ -50,14 +49,14 @@ export class DetailsPanel {
     viewport: HTMLElement,
     o: ViewOptions,
     actions?: ThingActions & NavActions,
-    images?: MovingImages,
   ) {
     this.el = el;
     this.svg = svg;
     this.viewport = viewport;
     this.o = o;
     this.actions = actions;
-    this.images = images;
+    // still under reduced motion, as the system asks when the card is drawn (§11)
+    this.images = new MovingImages(reducedMotion(activeWindow), o.images);
     this.sheet = new DetailsSheet(el, {
       // the sheet is for view mode, in a note's card: full screen and the pane show the details in their own place
       on: () => o.mode === 'note' && !o.editing?.()?.session,
@@ -76,9 +75,19 @@ export class DetailsPanel {
     this.sheet.moved(resized);
   }
 
-  /** The card is going: the sheet's watchers stop. */
+  /** The card is going: the sheet's watchers stop, and its images let go of what they hold. */
   unload(): void {
     this.sheet.closed();
+    this.images.release();
+  }
+
+  /**
+   * The pictures its style draws on the boxes of `svg` (§18), counted as they move with the details' images; those
+   * placed on a drawing before let go first, as a drawing laid out again holds none of them.
+   */
+  pictures(svg: Element): void {
+    this.images.release('boxes');
+    placePictures(svg, this.images);
   }
 
   /** A thing or link chosen from the details: the next step of the trail, made the selection by the card. */
@@ -114,8 +123,10 @@ export class DetailsPanel {
    */
   private select(key: string | null, link: number | null = null, estimate: number | null = null): void {
     for (const g of Array.from(this.svg.querySelectorAll('g.node, g.edge, tr[data-key], tr[data-link]'))) {
+      // a thing folded into a group's box (§25) is selected as its box
       const on =
         (key !== null && g.getAttribute('data-key') === key) ||
+        (key !== null && (g.getAttribute('data-keys') ?? '').split(' ').includes(key)) ||
         (link !== null && g.getAttribute('data-link') === String(link)) ||
         (estimate !== null && g.getAttribute('data-estimate') === String(estimate));
       g.classList.toggle('is-selected', on);
@@ -167,7 +178,7 @@ export class DetailsPanel {
    */
   private panel(title: string, kind?: string): HTMLElement {
     const el = this.el;
-    this.images?.release('details'); // the images of the details shown before let go
+    this.images.release('details'); // the images of the details shown before let go
     el.empty();
     el.hidden = false;
     el.setAttribute('aria-label', `Details of ${title}`);
@@ -185,7 +196,7 @@ export class DetailsPanel {
   /** Closes the details and clears what is selected, as the close button does, and tells the card (§25): the focus clears too. */
   close(): void {
     this.el.hidden = true;
-    this.images?.release('details');
+    this.images.release('details');
     this.shown = null;
     this.trail.clear();
     this.sheet.closed();
@@ -266,7 +277,7 @@ export class DetailsPanel {
       propertiesOf(this.o.reading, this.o.graph, { thing: key }).map((p) => [p.key, p.value]),
     );
     // the images its properties name, each moving, or still saying why, with its pause and play control (§18)
-    if (this.images) renderImages(el, this.o.reading.world[this.o.graph]?.p(key) ?? {}, this.images);
+    renderImages(el, this.o.reading.world[this.o.graph]?.p(key) ?? {}, this.images);
     links(
       'Problems',
       d.problems.map((p) => problemText({ ...p, noteLine: this.o.lineOf(p) })),
@@ -314,6 +325,23 @@ export class DetailsPanel {
     row
       .createEl('button', { text: 'Shortest path to another thing', attr: { type: 'button' } })
       .addEventListener('click', () => on.routeFrom(key));
+    // a busy hub's links, folded into one stub or open, folded or opened from its details too (§25, untangle_hubs)
+    const hub = on.hub?.(key);
+    if (hub)
+      row
+        .createEl('button', {
+          text: `${hub.folded ? 'Open' : 'Fold'} its ${hub.links} links`,
+          attr: { type: 'button' },
+        })
+        .addEventListener('click', () => on.toggleHub?.(key));
+  }
+
+  /** The drawing was laid out again (§25): the box or link whose details are open is marked as selected on it again. */
+  reselect(): void {
+    const shown = this.shown;
+    if (this.el.hidden || !shown) return;
+    if ('key' in shown) this.select(shown.key);
+    else this.select(null, shown.link);
   }
 
   /**

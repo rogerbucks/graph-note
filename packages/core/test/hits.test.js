@@ -51,6 +51,19 @@ describe('the areas of a drawing', () => {
     assert.deepEqual(a.shapes.map((s) => s.id).sort(), ['edge1', 'edge2', 'node1', 'node2', 'node3']);
     for (const s of a.shapes) assert.ok(s.polygons.length + s.lines.length > 0, s.id);
   });
+
+  // proves: untangle_merge
+  test('a link merged into a trunk is found by either of its lines, the one to the trunk as `edgeN_tail`', () => {
+    const tail = SVG.replace('<g id="edge1" class="edge">', '<g id="edge1_tail" class="edge">');
+    assert.deepEqual(
+      hitAreas(tail).shapes.map((s) => [s.id, s.kind]),
+      [
+        ['node1', 'node'],
+        ['node2', 'node'],
+        ['edge1_tail', 'edge'],
+      ],
+    );
+  });
 });
 
 describe('what is near a tap', () => {

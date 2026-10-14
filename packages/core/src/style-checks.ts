@@ -1,18 +1,20 @@
 // Checking each thing of a style graph (editor spec §2, style_graph_checked; §6; §7; §14; §15, the arrowheads and the
-// diagram type; §7, how links move; §18, a picture on a box): its kind, its words, its values and
-// every name it uses, against the graph it styles. What is sound is kept; each fault is a problem on its line with its
-// fix, and the part at fault — or the whole thing, when nothing of it can be used — is left out of the style.
+// diagram type; §7, how links move; §25, how links are routed and merged; §18, a picture on a box): its kind, its words,
+// its values and every name it uses, against the graph it styles. What is sound is kept; each fault is a problem on its
+// line with its fix, and the part at fault — or the whole thing, when nothing of it can be used — is left out of the
+// style. The choices for how a graph or a view is drawn are checked in style-choice-checks.ts, and every thing is read
+// through style-reader.ts.
 import { STYLE } from './layout.ts';
 import { flowOf } from './link-flow.ts';
 import type { Problem } from './note-reading.ts';
 import { pictureOf } from './picture.ts';
+import { arrowsOf, diagramOf, linksOf } from './style-choice-checks.ts';
 import {
-  ARROWHEADS,
-  DIAGRAM_TYPES,
   FORMATS,
   INLINE,
   LINES,
   NUDGE_WORDS,
+  ON_OFF,
   OUTSIDE,
   STYLE_HUES,
   STYLE_KINDS,
@@ -23,6 +25,7 @@ import type {
   Arrows,
   Diagram,
   Flow,
+  Links,
   Look,
   Nudge,
   Picture,
@@ -34,6 +37,8 @@ import type {
 } from './style-graph.ts';
 import { reader } from './style-reader.ts';
 import { readFrame, unknownKeys } from './style-words.ts';
+
+export { TREE_ONLY } from './style-choice-checks.ts';
 
 /** One thing of a style graph as read: its kinds, its properties, where it is, and where each property's text is. */
 export interface RawThing {
@@ -69,12 +74,15 @@ export interface Checked {
   arrows: Arrows[];
   diagrams: Diagram[];
   flows: Flow[];
+  links: Links[];
   pictures: Picture[];
   problems: Problem[];
 }
 
 const FOUR = 'a nudge must be one of four words: beside, before, group or direction';
 const KINDS = `${STYLE_KINDS.slice(0, -1).join(', ')} or ${STYLE_KINDS.at(-1)}`;
+/** The View menu's switches a view saved as shown keeps (§25, view_switch_view_only). */
+const SAVED_SWITCHES = ['labels', 'hubs', 'groups', 'merge'] as const;
 
 /** A nudge, checked: one of the four words, with the parts its word needs, each naming a thing of the graph. */
 function nudgeOf(raw: RawThing, names: StyledNames, out: Problem[]): Nudge | null {
@@ -144,52 +152,6 @@ function showOf(raw: RawThing, names: StyledNames, out: Problem[]): Show | null 
     }
   }
   return null;
-}
-
-/**
- * Where arrowheads are hidden or shown, checked (§15): show or hide, for every link or the links of a relationship type
- * the graph has, in the whole graph or in a view, whose name is the user's own.
- */
-function arrowsOf(raw: RawThing, names: StyledNames, out: Problem[]): Arrows | null {
-  const r = reader(raw, names, out),
-    before = out.length;
-  if (raw.props.arrowheads === undefined) {
-    r.missing('an Arrows says show or hide', `add arrowheads: ${orList(ARROWHEADS.map((w) => `'${w}'`))}`);
-    return null;
-  }
-  const arrowheads = r.word('arrowheads', ARROWHEADS, `arrowheads must be ${orList(ARROWHEADS)}`);
-  const type = r.name('type', names.types, 'a relationship type'),
-    view = r.text('view');
-  if (!arrowheads || out.length !== before) return null;
-  return { arrowheads, ...(view === undefined ? {} : { view }), ...(type === undefined ? {} : { type }), at: raw.at };
-}
-
-/** What a Diagram's relationship is for (§15): the branches of a tree, and nothing else. */
-export const TREE_ONLY = 'a relationship is chosen only for a tree';
-
-/**
- * The diagram type chosen, checked (§15, type_remembered): one of the types, in the whole graph or a view, whose name is
- * the user's own; for a tree, a relationship type the graph has, which no other type takes.
- */
-function diagramOf(raw: RawThing, names: StyledNames, out: Problem[]): Diagram | null {
-  const r = reader(raw, names, out),
-    before = out.length;
-  if (raw.props.type === undefined) {
-    r.missing('a Diagram names its type', `add type: ${orList(DIAGRAM_TYPES.map((w) => `'${w}'`))}`);
-    return null;
-  }
-  const type = r.word('type', DIAGRAM_TYPES, '$ is not a diagram type');
-  const relationship = r.name('relationship', names.types, 'a relationship type'),
-    view = r.text('view');
-  if (type && relationship !== undefined && type !== 'tree')
-    r.report(TREE_ONLY, "remove relationship, or make it type: 'tree'");
-  if (!type || out.length !== before) return null;
-  return {
-    type,
-    ...(view === undefined ? {} : { view }),
-    ...(relationship === undefined ? {} : { relationship }),
-    at: raw.at,
-  };
 }
 
 /** A look, checked: one view or path, one thing, kind or link, all in the graph, and at least one change that is sound. */
@@ -292,6 +254,11 @@ function shownOf(raw: RawThing, names: StyledNames, out: Problem[]): Checked['sh
   }
   const selected = r.name('selected', names.things, 'a thing', 'the id of a thing');
   if (selected !== undefined) shown.selected = selected;
+  // the View menu's switches as they stood when it was saved (§25)
+  for (const k of SAVED_SWITCHES) {
+    const v = r.word(k, ON_OFF, `${k} must be ${orList(ON_OFF)}`);
+    if (v !== undefined) shown[k] = v;
+  }
   return shown;
 }
 
@@ -306,6 +273,7 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
     arrows: [],
     diagrams: [],
     flows: [],
+    links: [],
     pictures: [],
     problems: [],
   };
@@ -339,6 +307,7 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
     else if (kinds[0] === 'Arrows') push(c.arrows, kept(arrowsOf(thing, names, p)));
     else if (kinds[0] === 'Diagram') push(c.diagrams, kept(diagramOf(thing, names, p)));
     else if (kinds[0] === 'Flow') push(c.flows, kept(flowOf(thing, names, p)));
+    else if (kinds[0] === 'Links') push(c.links, kept(linksOf(thing, names, p)));
     else if (kinds[0] === 'Picture') push(c.pictures, kept(pictureOf(thing, names, p)));
     else push(c.shown, kept(shownOf(thing, names, p)));
   }

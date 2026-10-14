@@ -26,7 +26,9 @@ from graphspec.style.conflicts import (
     settle_arrows,
     settle_diagrams,
     settle_flows,
+    settle_links,
     settle_nudges,
+    settle_shown,
     settle_shows,
 )
 
@@ -92,17 +94,20 @@ def read_style(
     """The style of `graph`: every style block of the note for it (`// graph: <name> · STYLE
     <graph>`), read as the data is, merged, and checked against the graph as the note reads it
     (`world`, from read_for_drawing's store). Returns ({nudges, direction, shows, arrows,
-    diagrams, flows, pictures}, problems): each nudge {word, thing, other, group, direction as
-    written, at: {block, line, id}}; each Show {property, kind, thing or type, view (if any),
-    inline: 'on' or 'off', at}; each Arrows {arrowheads: 'show' or 'hide', view and type (if
-    any), at}; each Diagram {type, view and relationship (if any), at}; each Flow {motion:
-    'dashes', 'dot' or 'still', means, view and type (if any), at}; each Picture {property, kind
-    or thing, view (if any), at}; only those sound and in no conflict; the direction a direction
-    nudge sets, or None; and each problem {graph, block, line, severity, message, fix}, the
-    block's index in `texts` and its line. The problems are the
-    core's, word for word, for everything but a Look, ViewStyle or Shown: of those only the keys
-    are checked (graphspec/style/checks.py), so the core's other problems with them are not given
-    here; nor are the core's edits (replace, span). Nothing is ever written to the data."""
+    diagrams, flows, links, shown, pictures}, problems): each nudge {word, thing, other, group,
+    direction as written, at: {block, line, id}}; each Show {property, kind, thing or type, view
+    (if any), inline: 'on' or 'off', at}; each Arrows {arrowheads: 'show' or 'hide', view and type
+    (if any), at}; each Diagram {type, view and relationship (if any), at}; each Flow {motion:
+    'dashes', 'dot' or 'still', means, view and type (if any), at}; each Links {routing, merge and
+    view (if any), at}; each Picture {property, kind or thing, view (if any), at}; only those
+    sound and in no conflict; for each view saved as shown, the View menu's
+    switches saved with it ({view: {labels, hubs, groups, merge: 'on' or 'off', as written}}); the
+    direction a direction nudge sets, or None; and each problem {graph, block, line, severity,
+    message, fix}, the block's index in `texts` and its line. The problems are the core's, word for
+    word, for everything but a Look, ViewStyle or Shown: of those only the keys, and a Shown's view
+    and switches, are checked (graphspec/style/checks.py), so the core's other problems with them
+    are not given here; nor are the core's edits (replace, span). Nothing is ever written to the
+    data."""
     blocks = [i for i, t in enumerate(texts) if style_of(t) == graph]
     first = {"block": blocks[0] if blocks else 0, "line": 1, "id": ""}
     style: dict[str, Any] = {
@@ -112,6 +117,8 @@ def read_style(
         "arrows": [],
         "diagrams": [],
         "flows": [],
+        "links": [],
+        "shown": {},
         "pictures": [],
     }
     if not blocks:
@@ -162,12 +169,16 @@ def read_style(
     arrows, arrow_conflicts = settle_arrows(c["arrows"], graph)
     diagrams, diagram_conflicts = settle_diagrams(c["diagrams"], graph)
     flows, flow_conflicts = settle_flows(c["flows"], graph)
+    links, link_conflicts = settle_links(c["links"], graph)
+    shown, shown_conflicts = settle_shown(c["shown"], graph)
     conflicts = [
         *conflicts,
         *show_conflicts,
         *arrow_conflicts,
         *diagram_conflicts,
         *flow_conflicts,
+        *link_conflicts,
+        *shown_conflicts,
     ]
     # a style block named as a data graph: a reader that does not know STYLE merges it into the
     # data
@@ -190,4 +201,5 @@ def read_style(
     every.sort(key=lambda p: (p["block"], p["line"]))
     chosen = {"nudges": kept, "direction": direction, "shows": shows, "arrows": arrows}
     # a box's picture is the most particular Picture's, the first of two alike: none conflicts
-    return {**chosen, "diagrams": diagrams, "flows": flows, "pictures": c["pictures"]}, every
+    chosen = {**chosen, "diagrams": diagrams, "flows": flows, "pictures": c["pictures"]}
+    return {**chosen, "links": links, "shown": shown}, every
