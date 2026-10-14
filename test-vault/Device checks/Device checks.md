@@ -1,6 +1,6 @@
 # Device checks
 
-One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md)): 116 checks in 16 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
+One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md)): 123 checks in 17 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
 
 ## 01 Viewing
 
@@ -165,3 +165,13 @@ One note for each check in the device checklist ([the checklist, on GitHub](http
 - [[Device checks/16 AI models/U-04 Choose what is sent|U-04 Choose what is sent]]
 - [[Device checks/16 AI models/U-05 Ceiling and credentials|U-05 Ceiling and credentials]]
 - [[Device checks/16 AI models/U-06 Unreachable model and the send record|U-06 Unreachable model and the send record]]
+
+## 17 The View menu
+
+- [[Device checks/17 The View menu/M-01 The four switches and their defaults|M-01 The four switches and their defaults]]
+- [[Device checks/17 The View menu/M-02 Labels by zoom|M-02 Labels by zoom]]
+- [[Device checks/17 The View menu/M-03 Busy hub folded into a stub|M-03 Busy hub folded into a stub]]
+- [[Device checks/17 The View menu/M-04 Groups folded into boxes|M-04 Groups folded into boxes]]
+- [[Device checks/17 The View menu/M-05 Links merged into a trunk|M-05 Links merged into a trunk]]
+- [[Device checks/17 The View menu/M-06 Straight and right-angled links|M-06 Straight and right-angled links]]
+- [[Device checks/17 The View menu/M-07 Switches keep the selection|M-07 Switches keep the selection]]

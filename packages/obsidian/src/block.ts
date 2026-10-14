@@ -220,10 +220,14 @@ export async function renderBlock(
     return;
   }
 
+  // the View menu (§25): one state for every card of this graph in this note, folding it as its switches say; a graph
+  // drawn as a table has none
+  const state = diagram?.table ? undefined : plugin.switchesFor(target.path, graph, styling.style);
+  const laidOut = (by?: object) => plugin.layout(state ? state.folded(drawing) : drawing, by);
   let drawn: Drawn | Refusal | null;
   try {
     // a graph drawn as a table is the plugin's own table, never laid out (§15)
-    drawn = diagram?.table ? tableDrawn(diagram.table) : await plugin.layout(drawing, owner);
+    drawn = diagram?.table ? tableDrawn(diagram.table) : await laidOut(owner);
   } catch (e) {
     console.error('Graph Note could not draw', graph, e);
     root.createDiv({
@@ -256,6 +260,7 @@ export async function renderBlock(
       problems,
       mode: 'note',
       ...(diagram ? { diagram } : {}),
+      ...(state ? { switches: { state, relayout: (by: object) => laidOut(by) } } : {}),
       completeness: completenessReport(reading, graph, new Date().toISOString().slice(0, 10)),
       parked: parked(reading, graph, new Date().toISOString().slice(0, 10)),
       writeView: (block) => writeViewBlock(plugin, target.path, graph, block),

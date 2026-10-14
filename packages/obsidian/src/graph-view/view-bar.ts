@@ -1,5 +1,6 @@
-// A drawing's bar (spec §3): the problems badge, Fit, zoom out, zoom in, Full screen, and where the note is edited, Edit
-// here and Edit in pane; in reading view, Source. Each control says what it is in words as well as by its icon.
+// A drawing's bar (spec §3): the problems badge, Fit, zoom out, zoom in, Find a thing, Filter by kind or link, View (§25),
+// Full screen, and where the note is edited, Edit here and Edit in pane; in reading view, Source. Each control says what
+// it is in words as well as by its icon.
 import { setIcon } from 'obsidian';
 import { parkedCount } from '@graph-note/core';
 import type { ViewOptions } from './view-options';
@@ -37,6 +38,8 @@ export interface BarActions {
   find: (b: HTMLButtonElement) => void;
   /** Filter by kind or link: opens or closes the legend that untangles, and says which (§25). */
   legend: (b: HTMLButtonElement) => void;
+  /** View: opens or closes the View menu's switches, and says which (§25). */
+  view: (b: HTMLButtonElement) => void;
   fullScreen: () => void;
   editHere: () => void;
   toggleSource: (b: HTMLButtonElement) => void;
@@ -87,6 +90,11 @@ export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): Ba
   if (!o.diagram?.table) {
     const legend = button(bar, 'Filter by kind or link', 'filter', () => on.legend(legend));
     legend.setAttribute('aria-expanded', 'false');
+  }
+  // the View menu's switches change the drawing alone, so it is offered wherever the drawing is (§25)
+  if (o.switches) {
+    const view = button(bar, 'View', 'layers', () => on.view(view));
+    view.setAttribute('aria-expanded', 'false');
   }
   if (mode === 'full') button(bar, 'Close full screen', 'minimize', () => o.onClose?.());
   else button(bar, 'Full screen', 'expand', () => on.fullScreen());

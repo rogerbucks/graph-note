@@ -24,6 +24,11 @@ export function targetAt(target: EventTarget | null): Target | null {
   return link ? { link: Number(link) } : null;
 }
 
+/** The fold an element of the drawing opens, if it is a busy hub's stub or a folded group's box (§25): `hub:` or `group:` and its name. */
+export function foldAt(target: EventTarget | null): string | null {
+  return (target as Element | null)?.closest?.('[data-fold]')?.getAttribute('data-fold') ?? null;
+}
+
 /** The box or link an id in the drawing names. */
 export function targetOf(svg: SVGSVGElement, id: string): Target | null {
   return targetAt(svg.querySelector(`#${id}`) ?? null);
@@ -33,11 +38,17 @@ export function targetOf(svg: SVGSVGElement, id: string): Target | null {
 export class Taps {
   private areas: HitAreas | null = null;
   private readonly cycle = new TapCycle(SAME_PLACE_PX);
-  private readonly svgText: string;
+  private svgText: string;
 
   /** For the drawing whose SVG text this is. */
   constructor(svgText: string) {
     this.svgText = svgText;
+  }
+
+  /** The drawing was laid out again (§25): its areas are found afresh, from its new SVG text. */
+  reset(svgText: string): void {
+    this.svgText = svgText;
+    this.areas = null;
   }
 
   /**

@@ -11,7 +11,7 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 **Numbers.** Every item has a number in its line: its section's letter, a dash and two digits, such as `V-03`, the
 third item of Viewing. The letters are B Before, V Viewing, Z Zoom, P The edit pane, I Editing in place and the
 inspector, S The style graph, W Views, D Parked for later, T Walked paths, X Export, C Settings, A Accessibility, F Focus
-and untangle, R Proposals, G Details and the sheet, E Diagram types, and U AI models.
+and untangle, R Proposals, G Details and the sheet, E Diagram types, U AI models, and M The View menu.
 **A number never changes once given**, whatever happens to the item's words or its place; a removed item's number is
 never used again, and **a new item takes the next number in its section**. Each item after Before has a note in
 `test-vault/Device checks/` that shows the case in Obsidian, found by its number (`test/device-check-notes.test.js`
@@ -409,6 +409,32 @@ classification of Public in its front matter first, and take it out again afterw
       changed, and the note is as it was. The plugin's data.json lists the last sends, failed ones too, each with a
       digest and the size of what was sent, never its text, the model and the time, and never a key; "Clear the record
       of sends to AI models" empties it (slice 3, ai_unreachable, record_every_send).
+
+## The View menu — spec §25
+
+- [ ] **M-01** Press View on a graph's bar: four switches, Labels by zoom, Busy hubs folded, Groups folded and Parallel links
+      merged, each saying on or off; labels and hubs are on, groups and merging off. In Settings › Graph Note, change a
+      switch's default under Drawing, then open the note again: its graphs start as the settings now say (slice 3,
+      view_switches, view_switch_defaults).
+- [ ] **M-02** On the phone, a wide graph fitted to the note shows its boxes but no link labels; pinch to zoom in and the
+      labels appear once they can be read. Tap a box: its own links keep their labels at any zoom, as does a link under
+      the pointer on the Mac. Turn Labels by zoom off: every label shows at any zoom (slice 3, untangle_labels).
+- [ ] **M-03** A thing with 13 links or more is drawn with its links folded into one dashed stub saying how many. Tap the
+      stub: the links and the things on them come back, the drawing redrawn at once. Tap the thing and press Fold its 14
+      links in its details: they fold again; Open its 14 links opens them (slice 3, untangle_hubs).
+- [ ] **M-04** Turn Groups folded on: each group is one box with its name and how many things it holds, and the links to
+      its things run to the box. Tap a box, or press Enter on it: that group opens and the other stays folded. Find a
+      thing inside a folded group: its group opens and it is selected (slice 3, untangle_groups).
+- [ ] **M-05** Turn Parallel links merged on: the links running from one group to the other share one thick trunk. Tap a
+      link at either end: its details open, reading as before, and VoiceOver reads it as the same link. In the style
+      block, merge: 'on' starts the graph merged (slice 3, untangle_merge).
+- [ ] **M-06** In the style block, routing: 'straight' draws every link as a straight line, and routing: 'right-angled'
+      as lines with right angles, each reading set beside its line; 'curved' is the drawing as before. A word that is not
+      one of the three is a problem with its fix (slice 3, untangle_routing).
+- [ ] **M-07** Select a box, then turn each switch in turn: the drawing redraws at once, the box stays selected, its details
+      stay open and its neighbours stay in focus; nothing in the note changes, in reading view too. In a view, Save as
+      shown writes the switches into the style block; close the note and open it again: the view opens with them (slice
+      3, view_switch_view_only, untangle_data_untouched).
 
 ## Result
 

@@ -4,7 +4,7 @@
 // parts in its folder: the bar, the drawing, taps, the details, and where the card is placed.
 import { MarkdownRenderChild, Platform, setIcon } from 'obsidian';
 import { AcrossZoom, Zoom, scrollsOneWay } from '@graph-note/core';
-import type { View } from '@graph-note/core';
+import type { Drawn, View } from '@graph-note/core';
 import { renderCode } from '../code';
 import { readOnlyHere, whenPlaced } from './placement';
 import { gateWrites } from './read-only';
@@ -18,7 +18,8 @@ import { markView, renderViewStrip } from './view-strip';
 import { markProposal } from '../proposals/mark-proposal';
 import { renderProposalStrip } from '../proposals/proposal-strip';
 import { plural, renderBar } from './view-bar';
-import { describeDrawing, insertSvg } from './drawing-svg';
+import { describeDrawing, insertSvg, swapSvg } from './drawing-svg';
+import { ViewSwitching } from './view-switches';
 import { Taps } from './taps';
 import type { Target } from './taps';
 import { DetailsPanel } from './details-panel';
@@ -53,6 +54,11 @@ export class GraphView extends MarkdownRenderChild {
   private readonly taps: Taps;
   private codeEl: HTMLElement | null = null;
   private readonly readOnly: () => boolean;
+  /** The drawing as laid out now: the one given, or the one a View menu switch laid out since (§25). */
+  private drawn: Drawn;
+  /** The View menu and what its switches do (§25); none for a graph drawn as a table. */
+  private switching: ViewSwitching | null = null;
+  private unloaded = false;
 
   constructor(containerEl: HTMLElement, options: ViewOptions) {
     super(containerEl);
@@ -62,6 +68,7 @@ export class GraphView extends MarkdownRenderChild {
     // are given the same check as `readOnly`, so a control that writes is not offered at all there
     this.o = gateWrites({ ...options, readOnly: this.readOnly }, this.readOnly);
     this.taps = new Taps(options.drawn.svg);
+    this.drawn = options.drawn;
   }
 
   override onload(): void {
@@ -81,6 +88,7 @@ export class GraphView extends MarkdownRenderChild {
       zoomIn: () => this.zoom.zoomIn(),
       find: (b) => this.sel.untangle.toggleFind(b),
       legend: (b) => this.sel.untangle.toggleLegend(b),
+      view: (b) => this.switching?.menu.toggle(b),
       fullScreen: () => this.openFullscreen(),
       editHere: () => (this.o.editing?.()?.session ? this.o.onDoneEditing?.() : this.o.onEditHere?.()),
       toggleSource: (b) => this.toggleSource(b),
@@ -109,7 +117,16 @@ export class GraphView extends MarkdownRenderChild {
       drawing: () => this.drawing(),
       viewport: () => this.viewport,
       size: () => this.viewportSize(),
+      unfoldTo: (key, then) => !!this.switching?.unfoldTo(key, then),
     });
+    // the View menu's switches, under the bar with the rest that change the picture only (§25)
+    if (this.o.switches)
+      this.switching = new ViewSwitching(
+        root,
+        this.o.switches,
+        { drawing: () => this.drawing(), relaid: (d) => this.relaid(d), shown: () => this.apply(this.zoom.view()) },
+        this,
+      );
 
     list = renderProblems(root, problems, true, this.o.completeness);
     if (this.o.parked) listParked(list, this.o.parked, (k) => this.boxes().find((b) => b.key === k)?.text ?? k);
@@ -135,7 +152,7 @@ export class GraphView extends MarkdownRenderChild {
     // a graph drawn as a table is the plugin's own table; any other, the SVG Graphviz drew (§15)
     const table = this.o.diagram?.table;
     if (table) this.table = renderTable(this.viewport, table);
-    else this.svg = insertSvg(this.viewport, this.o.drawn, this.drawing());
+    else this.svg = insertSvg(this.viewport, this.o.drawn, this.drawing(), this.o.switches?.state.plan);
     if (view && this.svg) markView(this.svg, view); // a view: what is outside it faded, its looks drawn (§7)
     if (this.o.proposal && this.svg) markProposal(this.svg, this.o.proposal.shown.marks); // a proposal: what it adds, changes, removes (§17)
     // the drawing as sentences, for screen readers (spec §11)
@@ -143,13 +160,12 @@ export class GraphView extends MarkdownRenderChild {
     if (d) describeDrawing(root, this.viewport, d);
     this.detailsEl = root.createDiv({ cls: 'graph-note-details', attr: { role: 'region', 'aria-live': 'polite' } });
     this.detailsEl.hidden = true;
-    this.details = new DetailsPanel(
-      this.detailsEl,
-      this.svg ?? this.table ?? this.viewport,
-      this.viewport,
-      this.o,
-      this.sel.actions(),
-    );
+    const sw = this.switching;
+    this.details = new DetailsPanel(this.detailsEl, this.svg ?? this.table ?? this.viewport, this.viewport, this.o, {
+      ...this.sel.actions(),
+      // a busy hub's details open or fold its links (§25)
+      ...(sw ? { hub: (k: string) => sw.hub(k), toggleHub: (k: string) => sw.toggleHub(k) } : {}),
+    });
     // closing the details, by button, Escape or a tap on empty space, clears the selection and the focus with them (§25)
     this.details.onClosed = () => this.sel.closed();
     const slot = mode === 'note' ? root.createDiv({ cls: 'graph-note-edit-slot' }) : null;
@@ -169,7 +185,9 @@ export class GraphView extends MarkdownRenderChild {
     if (was?.zoom !== undefined) this.zoom.restore(was.zoom, was.x ?? 0, was.y ?? 0);
     this.apply(this.zoom.view());
     const { viewport, zoom, sel, details, taps, svg } = this;
-    bindViewportEvents({ card: this, viewport, zoom, sel, details, taps, svg, open: (t, x) => this.open(t, x) });
+    const open = (t: Target, x?: boolean) => this.open(t, x),
+      unfold = (fold: string) => this.switching?.unfold(fold);
+    bindViewportEvents({ card: this, viewport, zoom, sel, details, taps, svg, open, unfold });
     const observer = new ResizeObserver(() => this.zoom.resize(this.viewportSize()));
     observer.observe(this.viewport);
     this.register(() => observer.disconnect());
@@ -227,6 +245,7 @@ export class GraphView extends MarkdownRenderChild {
   }
 
   override onunload(): void {
+    this.unloaded = true;
     // a move under way ends with the card, and the sheet's watchers with it; a card unloaded before it was built has none
     (this.sel as Selection | undefined)?.stop();
     (this.details as DetailsPanel | undefined)?.unload();
@@ -247,15 +266,40 @@ export class GraphView extends MarkdownRenderChild {
    * across, as tall as the drawing, up to a part of the window.
    */
   private viewportSize() {
-    const width = this.viewport.clientWidth || this.o.drawn.width;
-    if (this.o.mode !== 'note') return { width, height: this.viewport.clientHeight || this.o.drawn.height };
-    if (this.across) return { width, height: Math.min(this.o.drawn.height, activeWindow.innerHeight * ACROSS_HEIGHT) };
-    return { width, height: this.o.drawn.height * Math.min(1, width / this.o.drawn.width) };
+    const drawn = this.drawn;
+    const width = this.viewport.clientWidth || drawn.width;
+    if (this.o.mode !== 'note') return { width, height: this.viewport.clientHeight || drawn.height };
+    if (this.across) return { width, height: Math.min(drawn.height, activeWindow.innerHeight * ACROSS_HEIGHT) };
+    return { width, height: drawn.height * Math.min(1, width / drawn.width) };
+  }
+
+  /**
+   * The graph laid out again, as a View menu switch, a stub or a box asks (§25): put in the same SVG element, marked as
+   * a view or a proposal marks it, sized and tapped afresh, the selection, its focus and its details kept, and the
+   * keyboard back on the box or link it was on (view_switch_view_only).
+   */
+  private relaid(drawn: Drawn): void {
+    const svg = this.svg;
+    if (!svg || this.unloaded) return; // a card gone while its layout ran has nothing to put it in
+    const was = activeDocument.activeElement,
+      on = was && svg.contains(was) ? was.getAttribute('id') : null;
+    this.drawn = drawn;
+    swapSvg(svg, drawn, this.drawing(), this.o.switches?.state.plan);
+    if (this.o.view) markView(svg, this.o.view);
+    if (this.o.proposal) markProposal(svg, this.o.proposal.shown.marks);
+    this.taps.reset(drawn.svg);
+    this.zoom.resize(this.viewportSize(), { width: drawn.width, height: drawn.height });
+    this.sel.redrawn();
+    this.details.reselect();
+    if (on) svg.querySelector<SVGElement>(`#${on}`)?.focus({ preventScroll: true });
+    this.apply(this.zoom.view());
   }
 
   private apply(v: View): void {
     this.svg?.setAttribute('width', String(v.width));
     this.svg?.setAttribute('height', String(v.height));
+    // labels by zoom: link labels hidden while too small to read, but on a link in focus or highlighted (§25)
+    this.svg?.toggleClass('graph-note-labels-hidden', !!this.switching?.labelsHidden(v.scale));
     this.table?.setCssProps({ '--graph-note-scale': String(v.scale) });
     this.viewport.setCssProps({
       '--graph-note-x': `${v.x}px`,
@@ -295,6 +339,7 @@ export class GraphView extends MarkdownRenderChild {
     });
     const view = new GraphView(overlay.createDiv({ cls: 'graph-note' }), {
       ...this.o,
+      drawn: this.drawn, // as laid out now, with the View menu's switches as they stand (§25)
       mode: 'full',
       onClose: () => this.closeFullscreen(),
       readOnly: this.readOnly, // full screen opened in reading view is read-only too
@@ -310,5 +355,6 @@ export class GraphView extends MarkdownRenderChild {
     this.removeChild(f.view);
     f.overlay.remove();
     this.viewport.focus();
+    this.switching?.sync(); // a switch turned in full screen holds here too (§25)
   }
 }

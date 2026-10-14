@@ -27,7 +27,8 @@
 // #126), and sending to an AI model (aiReady, modelChoices, endpointProblem, AI_PURPOSES, prepareSend, confirmSend,
 // sendPrepared, noteWithProposal and their types, 13 Oct 2026: the core reaches no network, so a send goes only through
 // the transport a host hands in), and the View menu's folding, merging and routing (ViewState, startingSwitches,
-// labelsHidden, foldsHiding, linksOf, VIEW_SWITCHES, SWITCH_NAMES, LABEL_SCALE, BUSY_HUB and their types, 14 Oct 2026).
+// labelsHidden, foldsHiding, linksOf, VIEW_SWITCHES, SWITCH_NAMES, SWITCH_SETTINGS, LABEL_SCALE, BUSY_HUB and their
+// types, 14 Oct 2026).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -86,6 +87,7 @@ const VALUES = [
   'STYLE',
   'STYLE_HUES',
   'SWITCH_NAMES',
+  'SWITCH_SETTINGS',
   'THEME_COLOURS',
   'TIMEOUTS_BEFORE_STOPPING',
   'TOKEN_CLASSES',

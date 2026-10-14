@@ -53,6 +53,20 @@ describe('fit', () => {
     z.resize({ width: 400, height: 200 });
     close(z.view().scale, before, 'a zoomed drawing keeps its zoom');
   });
+
+  // proves: view_switch_view_only
+  test('a drawing laid out again at a new size, as a View menu switch does, is fitted if it was, else keeps its zoom', () => {
+    const z = make();
+    z.resize({ width: 500, height: 250 }, { width: 500, height: 250 });
+    close(z.view().scale, 1, 'fitted again: the smaller drawing at natural size');
+    assert.equal(z.view().width, 500);
+    const zoomed = make();
+    zoomed.zoomIn();
+    const scale = zoomed.view().scale;
+    zoomed.resize({ width: 500, height: 250 }, { width: 800, height: 400 });
+    close(zoomed.view().scale, scale);
+    assert.equal(zoomed.view().width, 800 * scale);
+  });
 });
 
 describe('limits', () => {

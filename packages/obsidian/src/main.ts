@@ -2,7 +2,18 @@
 import { Notice, Plugin, TFile, editorInfoField } from 'obsidian';
 import type { EditorView } from '@codemirror/view';
 import type { MarkdownPostProcessorContext } from 'obsidian';
-import { gqlBlocks, isSharedSchema, LAYOUT_LIMITS, settingsFrom, standardBlocks, toStandard } from '@graph-note/core';
+import {
+  gqlBlocks,
+  isSharedSchema,
+  LAYOUT_LIMITS,
+  settingsFrom,
+  standardBlocks,
+  startingSwitches,
+  SWITCH_SETTINGS,
+  toStandard,
+  VIEW_SWITCHES,
+  ViewState,
+} from '@graph-note/core';
 import type {
   Converted,
   Drawn,
@@ -15,6 +26,7 @@ import type {
   Refusal,
   SendRecord,
   Settings,
+  StyleGraph,
 } from '@graph-note/core';
 import { AI_COMMAND, CLEAR_SENDS_COMMAND, SENDS_KEPT, askAi, clearAiSends } from './ai/ai';
 import { exportGraph } from './export/export';
@@ -136,8 +148,26 @@ export default class GraphNotePlugin extends Plugin {
     this.settings = settingsFrom(next);
     this.saved = { ...this.saved, settings: this.settings };
     await this.saveData(this.saved);
-    const shown = (s: Settings) => JSON.stringify([s.strictness, s.allowed, s.direction, s.focusDepth]);
+    // the View menu's defaults too (§25): every graph starts again from them, until its View menu changes them
+    const switches = (s: Settings) => VIEW_SWITCHES.map((v) => s[SWITCH_SETTINGS[v]]);
+    if (JSON.stringify(switches(was)) !== JSON.stringify(switches(this.settings))) this.viewStates.clear();
+    const shown = (s: Settings) => JSON.stringify([s.strictness, s.allowed, s.direction, s.focusDepth, switches(s)]);
     if (shown(was) !== shown(this.settings)) for (const changed of [...this.settingsWatchers]) changed();
+  }
+
+  /** Each graph's View menu state (§25), by note, graph and view: kept while the plugin runs, never saved. */
+  private readonly viewStates = new Map<string, ViewState>();
+
+  /**
+   * The View menu's state of a graph, or of one of its views, in a note (§25): the same for every card that draws it, so
+   * a card drawn again keeps it; started from the settings, the style graph's merging and a view saved as shown
+   * (view_switch_defaults). It is the drawing's alone, never written to the note (view_switch_view_only).
+   */
+  switchesFor(path: string, graph: string, style: StyleGraph, view?: string): ViewState {
+    const key = [path, graph, view ?? ''].join('\u0000');
+    const state = this.viewStates.get(key) ?? new ViewState(startingSwitches(this.settings, style, view));
+    this.viewStates.set(key, state);
+    return state;
   }
 
   /** Converts the note in front back to standard GQL (spec §21), checked by the standard checker before it is written. */

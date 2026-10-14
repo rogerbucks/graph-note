@@ -31,6 +31,10 @@ export interface SelectionHost {
   /** The drawing's viewport, and its size as the zoom has it. */
   viewport: () => HTMLElement;
   size: () => Size;
+  /**
+   * Opens the folds a thing is hidden in (§25), to go to it once the drawing is laid out again; false when none hides it.
+   */
+  unfoldTo?: (key: string, then: () => void) => boolean;
 }
 
 /**
@@ -168,6 +172,18 @@ export class Selection {
     this.pointAt();
   }
 
+  /**
+   * The drawing was laid out again, as a View menu switch lays it out (§25, view_switch_view_only): the selection and the
+   * focus are kept, and marked on the new drawing; where things are is found afresh.
+   */
+  redrawn(): void {
+    this.marks = null;
+    this.places = null;
+    this.box = this.target ? this.boundsOf(this.target) : null;
+    this.refresh();
+    this.pointAt();
+  }
+
   /** Stops a move under way, as a finger or the pointer takes over, or the card goes. */
   stop(): void {
     this.glide?.stop();
@@ -287,6 +303,9 @@ export class Selection {
    */
   private goTo(key: string, walking: boolean): void {
     const svg = this.host.svg();
+    // a thing folded away with a hub or into a group's box is found by opening its folds first (§25)
+    const drawn = Array.from(svg?.querySelectorAll('g.node') ?? []).some((n) => n.getAttribute('data-key') === key);
+    if (svg && !drawn && this.host.unfoldTo?.(key, () => this.goTo(key, walking))) return;
     // the thing's box in a drawing; in a graph drawn as a table (§15), its row, which takes the focus as a box does
     const g = svg
       ? Array.from(svg.querySelectorAll<SVGGElement>('g.node')).find((n) => n.getAttribute('data-key') === key)

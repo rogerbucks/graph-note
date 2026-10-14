@@ -226,6 +226,7 @@ export type { Folding } from './untangle-fold.ts';
 export {
   LABEL_SCALE,
   SWITCH_NAMES,
+  SWITCH_SETTINGS,
   VIEW_SWITCHES,
   ViewState,
   labelsHidden,

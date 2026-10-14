@@ -113,8 +113,9 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   its theme variables; the fixed light and dark entries, for a host that draws the SVG as an isolated image (a Claude
   Code pane), are worked out to hex and paint their own page, with the locked contrast held; the system entry carries
   both in the drawing's own style sheet, `prefers-color-scheme` choosing, for a host that cannot say which it shows.
-- `hits.ts` — what a tap lands on or near, and where a box is (`boundsOf`, as fractions of the drawing; `centres`).
-- `zoom.ts` — zoom, pan and full screen; `reveal` brings a box into view, centred, and leaves one already in view alone;
+- `hits.ts` — what a tap lands on or near, and where a box is (`boundsOf`, as fractions of the drawing; `centres`); a
+  link merged into a trunk (§25) by either of its lines.
+- `zoom.ts` — zoom, pan and full screen, and `resize` for a new viewport or a drawing laid out again (§25); `reveal` brings a box into view, centred, and leaves one already in view alone;
   `aim` says where the view would go to do so, keeping the zoom unless it is below a scale given (§25); `keepClear` keeps
   a strip at the viewport's foot clear, as a sheet covers it, letting the drawing pan up into it by as much and no more.
 - `zoom-across.ts` — `AcrossZoom`, a `Zoom` that only adds to it: a wide drawing fitted to its height, shown from its

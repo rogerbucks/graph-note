@@ -131,6 +131,8 @@ export async function renderViewBlock(
   }
   const { style } = readStyle(texts, v.graph, reading);
   const outside = outsideOf(style, v.name);
+  // the View menu (§25): this view's own state, started as it was saved as shown, else as the settings say
+  const state = plugin.switchesFor(ctx.sourcePath, v.graph, style, v.name);
   const things = new Set(result.things),
     links = new Set(result.links);
   // hidden: the drawing holds only the view; faded: it holds the whole graph, and what is outside the view is faded.
@@ -184,6 +186,7 @@ export async function renderViewBlock(
       [...looks.things.values(), ...looks.links.values()].some((l) => l.hue === e.colour),
     ),
     shown: style.shown.get(v.name),
+    // the View menu's switches as they stand are saved with the view, and only then (§25, view_switch_view_only)
     setOutside: (o: Outside) =>
       void writeStyle(
         plugin,
@@ -197,7 +200,16 @@ export async function renderViewBlock(
         plugin,
         ctx.sourcePath,
         v.graph,
-        { shown: { view: v.name, zoom: z.scale, x: z.x, y: z.y, ...(selected ? { selected } : {}) } },
+        {
+          shown: {
+            view: v.name,
+            zoom: z.scale,
+            x: z.x,
+            y: z.y,
+            ...(selected ? { selected } : {}),
+            switches: state.saved(),
+          },
+        },
         `Saved how view ${v.name} is shown.`,
       ),
   };
@@ -205,12 +217,11 @@ export async function renderViewBlock(
   const diagram = diagramShown(drawing, style, g, v.name, (change, done) => {
     void writeStyle(plugin, ctx.sourcePath, v.graph, { diagram: change }, done);
   });
+  const laidOut = (by?: object) => plugin.layout(state.folded(styledDrawing(drawing, style, g, v.name)), by);
   let drawn;
   try {
     // styled as this view: its nudges, and the properties, arrowheads and type chosen for it or the whole graph (§14, §15)
-    drawn = diagram.table
-      ? tableDrawn(diagram.table)
-      : await plugin.layout(styledDrawing(drawing, style, g, v.name), owner);
+    drawn = diagram.table ? tableDrawn(diagram.table) : await laidOut(owner);
   } catch (e) {
     // a view whose drawing cannot be laid out shows its text and why, never a blank card
     console.error('Graph Note could not draw view', v.name, e);
@@ -250,6 +261,7 @@ export async function renderViewBlock(
       onEdit: () => changeView(plugin, ctx.sourcePath, line),
       view,
       diagram,
+      ...(diagram.table ? {} : { switches: { state, relayout: (by: object) => laidOut(by) } }),
       exporting: {
         path: ctx.sourcePath,
         graph: v.graph,

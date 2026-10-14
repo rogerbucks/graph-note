@@ -415,6 +415,60 @@ describe('walking the links by arrow key', () => {
   });
 });
 
+describe('labels by zoom, folded hubs and groups, merged links and routing', () => {
+  // a hub of 13 parts, two groups of two people, and the style graph's links routed straight
+  const HUB = [
+    '// graph: kit',
+    "(hub:Hub {name: 'Hub'}),",
+    ...Array.from({ length: 13 }, (_, i) => `(p${i}:Part {name: 'Part ${i}'}),`),
+    "(ann:Person {name: 'Ann'}), (bob:Person {name: 'Bob'}), (cy:Person {name: 'Cy'}), (dee:Person {name: 'Dee'}),",
+    ...Array.from({ length: 13 }, (_, i) => `(hub)-[:HAS]->(p${i}),`),
+    '(ann)-[:ASKS]->(cy), (bob)-[:ASKS]->(dee)',
+  ].join('\n');
+  const STYLED = `// graph: kit_style · STYLE kit
+(n1:Nudge {word: 'group', thing: 'ann', group: 'Askers'}), (n2:Nudge {word: 'group', thing: 'bob', group: 'Askers'}),
+(n3:Nudge {word: 'group', thing: 'cy', group: 'Asked'}), (n4:Nudge {word: 'group', thing: 'dee', group: 'Asked'}),
+(r1:Links {routing: 'straight'})`;
+  const NOTED = ['# Kit', '', fence(HUB), '', fence(STYLED), ''].join('\n');
+  const byId = (el, id) => el.querySelector(`#${id}`);
+  const switched = (el, name) =>
+    el.querySelectorAll('.graph-note-view-menu button').find((b) => b.textContent.startsWith(name));
+
+  test('each changes only the drawing: folded, merged, routed and labelled by zoom, the note never written', async () => {
+    const env = await loadWith({ files: { [PATH]: NOTED }, width: 150 });
+    try {
+      const laid = [];
+      const layout = env.plugin.layout.bind(env.plugin);
+      env.plugin.layout = (d, owner) => (laid.push(d), layout(d, owner));
+      const el = await showIn(env, 'live', { note: NOTED });
+      // untangle_routing: the style graph's straight links, laid out so
+      assert.equal(laid[0].routing, 'straight');
+      // untangle_labels: a card too narrow to read a link's label hides them, zoomed in it shows them
+      const svg = el.querySelector('svg');
+      assert.ok(svg.hasClass('graph-note-labels-hidden'));
+      for (let i = 0; i < 12 && svg.hasClass('graph-note-labels-hidden'); i++) labelled(el, 'Zoom in').click();
+      assert.ok(!svg.hasClass('graph-note-labels-hidden'));
+      // untangle_hubs: the hub's links folded into a stub with their count, opened from it
+      assert.match(byId(el, 'fold_hub_1').textContent, /13 links/);
+      assert.ok(!thing(el, 'p3'));
+      tap(el, byId(el, 'fold_hub_1'));
+      await until(() => !!thing(el, 'p3'));
+      // untangle_groups and untangle_merge, from the View menu
+      switched(el, 'Parallel links merged').click();
+      await until(() => !!byId(el, 'trunk_1'));
+      assert.equal(byId(el, 'edge14_tail').getAttribute('data-link'), '13');
+      switched(el, 'Groups folded').click();
+      await until(() => !!byId(el, 'fold_group_1'));
+      assert.match(byId(el, 'fold_group_1').textContent, /Askers.*2 things/);
+      // untangle_data_untouched
+      assert.equal(env.state.files.get(PATH), NOTED);
+      assert.equal((env.state.writes ?? []).length, 0);
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
 describe('only the drawing changes, never the note', () => {
   let env, el;
   before(async () => {

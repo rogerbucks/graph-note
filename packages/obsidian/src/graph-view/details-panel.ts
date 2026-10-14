@@ -304,6 +304,23 @@ export class DetailsPanel {
     row
       .createEl('button', { text: 'Shortest path to another thing', attr: { type: 'button' } })
       .addEventListener('click', () => on.routeFrom(key));
+    // a busy hub's links, folded into one stub or open, folded or opened from its details too (§25, untangle_hubs)
+    const hub = on.hub?.(key);
+    if (hub)
+      row
+        .createEl('button', {
+          text: `${hub.folded ? 'Open' : 'Fold'} its ${hub.links} links`,
+          attr: { type: 'button' },
+        })
+        .addEventListener('click', () => on.toggleHub?.(key));
+  }
+
+  /** The drawing was laid out again (§25): the box or link whose details are open is marked as selected on it again. */
+  reselect(): void {
+    const shown = this.shown;
+    if (this.el.hidden || !shown) return;
+    if ('key' in shown) this.select(shown.key);
+    else this.select(null, shown.link);
   }
 
   /**

@@ -141,14 +141,22 @@ module that ties the parts together, named as the folder is.
 - `graph-view.ts` — `GraphView`: the card, its zoom and full screen; ties the rest together.
 - `viewport-events.ts` — how the drawing is worked by pointer, wheel and keyboard: each event to the core's `Zoom`, a
   tap opening what it lands on or clearing the selection, the highlight's pointer and focus, the sheet moved with the note.
-- `view-bar.ts` — the bar: problems badge, Fit, zoom, Find a thing, Filter by kind or link, Full screen, Export, Edit here,
-  Edit in pane, Source.
+- `view-bar.ts` — the bar: problems badge, Fit, zoom, Find a thing, Filter by kind or link, View, Full screen, Export,
+  Edit here, Edit in pane, Source.
+- `view-switches.ts` — the View menu (§25): labels by zoom, busy hubs folded, groups folded and parallel links merged,
+  each a switch on or off, starting as the settings (and a view saved as shown) say; `ViewSwitching` turns them, opens a
+  busy hub's stub or a folded group's box, folds or opens a hub from its details, and opens the folds a thing found is
+  hidden in, laying the graph out again (`SwitchesShown.relayout`) for the card to put in place, keeping the selection
+  and the focus. The state is the plugin's for each graph and view in a note (`switchesFor`), never the note's: it is
+  saved only when a view is saved as shown.
 - `problems-list.ts` — the problems behind the badge, grouped when many, and the completeness report.
 - `drawing-svg.ts` — the SVG put in the card, each box and link reachable by keyboard and named; a drawing that runs
   down the page is marked `graph-note-down`, which `styles.css` uses to give a link's label a gap from its line, so the
-  layout source and the SVG stay the Python library's.
+  layout source and the SVG stay the Python library's. A busy hub's stub and a folded group's box are buttons
+  (`data-fold`), and a link merged into a trunk is itself by either of its lines (§25); laid out again, the new drawing
+  goes into the same SVG element (`swapSvg`), so everything that holds it holds the new one.
 - `taps.ts` — what a tap or a key lands on, and the nearest things to a tap; where a box is, to bring it into view, and
-  the middle of each, for the arrow keys.
+  the middle of each, for the arrow keys; the fold a stub or a box opens (`foldAt`).
 - `selection.ts` — what is selected in a card and how it shows (spec §25): the selection is the focus, with the
   highlight, the untangling and the arrow keys that walk the links; a thing chosen from the details brought into view,
   readable, and the selection kept clear above the details sheet. Ties the next four to the card; marks the drawing by
@@ -248,7 +256,7 @@ module that ties the parts together, named as the folder is.
 - `suggestions.ts` — the suggestions bar.
 - `kept-draft.ts` — the draft banner: what was typed, never lost; Restore and Discard act on the very draft shown, by its
   id, and on no other when it is gone.
-- `pane-drawing.ts` — the pane's own drawing of what is typed.
+- `pane-drawing.ts` — the pane's own drawing of what is typed, with a View menu of its own (§25).
 
 ## Tests, `test/`
 

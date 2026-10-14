@@ -59,7 +59,8 @@ export function hitAreas(svg: string): HitAreas {
   const [tx = 0, ty = 0] = nums(/translate\(([^)]*)\)/.exec(transform)?.[1] ?? '0 0');
   const place = ([x, y]: Pt): Pt => [sx * (x + tx), sy * (y + ty)];
   const shapes: Shape[] = [];
-  for (const [, id, kind, body] of svg.matchAll(/<g\b[^>]*\bid="((node|edge)\d+)"[^>]*>([\s\S]*?)<\/g>/g)) {
+  // a link merged into a trunk (§25) is drawn as two lines: its own, `edgeN`, and the one to the trunk, `edgeN_tail`
+  for (const [, id, kind, body] of svg.matchAll(/<g\b[^>]*\bid="((node|edge)\d+(?:_tail)?)"[^>]*>([\s\S]*?)<\/g>/g)) {
     const s: Shape = { id: id ?? '', kind: kind as 'node' | 'edge', polygons: [], lines: [] };
     for (const [tag, name] of (body ?? '').matchAll(/<(path|polygon|polyline|ellipse|text)\b[^>]*>/g)) {
       if (name === 'polygon') s.polygons.push(pairs(nums(attr(tag, 'points') ?? '')).map(place));
