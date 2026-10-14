@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/undo-over-theirs.test.js",
+  "test": "a change elsewhere in the note > a change that moves the block leaves it working too",
+  "seen_failing_first": false,
+  "evidence": "A control for the fix of undo over another program's change: a change above the block only moves it, so the session keeps its history and its own undo still works, as main already did. It holds that the fix drops the history only when the block itself changed, never for a change elsewhere."
+}
