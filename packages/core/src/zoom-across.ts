@@ -3,8 +3,10 @@
 // finger moves it across and never up or down, while the browser keeps scrolling the page up and down. Zoomed in, by a
 // pinch or a button, it pans both ways, as any drawing does, and Fit brings the one-way view back. Everything else is
 // Zoom's own (zoom.ts), which this only adds to, so the two never differ in anything else.
-import { MAX_SCALE, MIN_SCALE, Zoom } from './zoom.ts';
-import type { Mode, Size, ZoomEvent } from './zoom.ts';
+import { Zoom } from './zoom.ts';
+import { MAX_SCALE, MIN_SCALE } from './zoom-fit.ts';
+import type { Mode, Size } from './zoom-fit.ts';
+import type { ZoomEvent } from './zoom.ts';
 
 const EPS = 1e-9;
 

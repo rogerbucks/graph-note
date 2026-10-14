@@ -118,6 +118,9 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `zoom.ts` — zoom, pan and full screen, and `resize` for a new viewport or a drawing laid out again (§25); `reveal` brings a box into view, centred, and leaves one already in view alone;
   `aim` says where the view would go to do so, keeping the zoom unless it is below a scale given (§25); `keepClear` keeps
   a strip at the viewport's foot clear, as a sheet covers it, letting the drawing pan up into it by as much and no more.
+- `zoom-fit.ts` — the limits `Zoom` holds a drawing within: `MAX_SCALE` and `STEP`, the scale that fits the whole
+  drawing (`wholeFit`, and `fitScale`, never above natural size in a note), and where it may sit in its viewport
+  (`clampPan`), each worked out from the sizes given whenever it is asked.
 - `zoom-across.ts` — `AcrossZoom`, a `Zoom` that only adds to it: a wide drawing fitted to its height, shown from its
   start and moved across only by one finger, until it is zoomed in; a pinch as any drawing's (a tree, flow or timeline
   on a phone, §15 wide_types_phone).

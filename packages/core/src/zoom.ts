@@ -1,13 +1,13 @@
 // Zoom, pan and full-screen for a drawing (spec §3), with the gestures maps and photo apps have taught everyone. Host-free:
 // the host passes plain events in and draws the view this returns. handle() says whether the event was used, so the host
-// stops the browser's own handling only then — in a note the wheel and a one-finger drag still scroll the note.
+// stops the browser's own handling only then — in a note the wheel and a one-finger drag still scroll the note. The
+// limits it holds the drawing within are zoom-fit.ts's.
+import { MAX_SCALE, MIN_SCALE, STEP, clamp, clampPan, fitScale } from './zoom-fit.ts';
+import type { Mode, Size } from './zoom-fit.ts';
 
-/** The furthest the drawing zooms out. */
-export const MIN_SCALE = 0.25;
-/** The furthest the drawing zooms in. */
-export const MAX_SCALE = 4;
-/** One press of zoom in or zoom out. */
-export const STEP = 1.25;
+export { MAX_SCALE, MIN_SCALE, STEP } from './zoom-fit.ts';
+export type { Mode, Size } from './zoom-fit.ts';
+
 /** Two taps this close in time (ms) and place (px) are a double tap; a pointer that moves further than TAP_SLOP is a drag. */
 const DOUBLE_TAP_MS = 300,
   DOUBLE_TAP_PX = 30,
@@ -24,15 +24,6 @@ const PINCH_RATE = 1.4;
  * with Ctrl or Command in a note, and alone in full screen and the pane, which cannot be told from it.
  */
 const WHEEL_RATE = 0.002 * PINCH_RATE;
-
-/** Where the drawing is shown: in a note, full-screen, or in the edit pane. Only in a note does the wheel alone scroll. */
-export type Mode = 'note' | 'full' | 'pane';
-
-/** A width and a height, in CSS pixels. */
-export interface Size {
-  width: number;
-  height: number;
-}
 
 /** The drawing's scale, its top-left corner in the viewport, and its size there — set as its size, so text stays sharp. */
 export interface View {
@@ -95,7 +86,6 @@ interface Pinch {
   scale: number;
 }
 
-const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 const EPS = 1e-9;
 
 /** Zoom and pan for one drawing: takes the host's events, and reports the view to draw. */
@@ -137,10 +127,7 @@ export class Zoom {
 
   /** The scale that shows the whole drawing: in a note never above natural size, as a note draws it; elsewhere up to the limit. */
   fitScale(): number {
-    const { width: cw, height: ch } = this.content,
-      { width: vw, height: vh } = this.viewport;
-    const raw = cw > 0 && ch > 0 ? Math.min(vw / cw, vh / ch) : 1;
-    return clamp(raw, MIN_SCALE, this.mode === 'note' ? 1 : MAX_SCALE);
+    return fitScale(this.content, this.viewport, this.mode);
   }
 
   isFitted(): boolean {
@@ -358,23 +345,9 @@ export class Zoom {
     return p.pans;
   }
 
-  /**
-   * Keeps the drawing in view: centred on an axis where it is smaller than the viewport, edge to edge where it is larger;
-   * up and down, it may also rise into the strip kept clear at the foot, by as much as the strip and no further.
-   */
+  /** Keeps the drawing in view, as zoom-fit.ts's `clampPan` says, in this viewport and with this strip kept clear. */
   private clampPan(scale: number, x: number, y: number, centre = false): [number, number] {
-    const w = this.content.width * scale,
-      h = this.content.height * scale,
-      { width: vw, height: vh } = this.viewport;
-    const range = (size: number, room: number): [number, number] =>
-      size <= room ? [(room - size) / 2, (room - size) / 2] : [room - size, 0];
-    const axis = (v: number, size: number, room: number) => {
-      const [lo, hi] = range(size, room);
-      return centre ? (room - size) / 2 : clamp(v, lo, hi);
-    };
-    if (centre || !this.clear) return [axis(x, w, vw), axis(y, h, vh)];
-    const [lo, hi] = range(h, vh);
-    return [axis(x, w, vw), clamp(y, Math.min(lo, vh - this.clear - h), hi)];
+    return clampPan({ content: this.content, viewport: this.viewport, clear: this.clear }, scale, x, y, centre);
   }
 
   private place(scale: number, x: number, y: number, centre = false): void {
