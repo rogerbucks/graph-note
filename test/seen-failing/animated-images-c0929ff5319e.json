@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/animated-images.test.js",
+  "test": "an animated image is shown > only from the vault on a box too: its square a dashed frame saying why, and no image",
+  "seen_failing_first": false,
+  "evidence": "Asked for in the review of #443 to cover the box picture as well as the details: a remote value on a box already drew a dashed frame and read nothing, so this pins what held."
+}

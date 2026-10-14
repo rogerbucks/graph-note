@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/animated-images.test.js",
+  "test": "letting go > details shown again let go of the images before: what they counted as moving is freed",
+  "seen_failing_first": false,
+  "evidence": "Asked for in the review of #443: release() already freed the moving count when details were shown again, so this pins what held."
+}

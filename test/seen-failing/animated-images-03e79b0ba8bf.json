@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/animated-images.test.js",
+  "test": "letting go > a card unloaded lets go of every address it made for its images",
+  "seen_failing_first": false,
+  "evidence": "Asked for in the review of #443: a card's unload already revoked every blob address its images made, so this pins what held."
+}
