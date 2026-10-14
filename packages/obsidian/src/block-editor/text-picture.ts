@@ -1,6 +1,7 @@
 // The coloured picture under the block editor's text field (spec §4): the text in gql-highlight's colours, each problem
-// underlined over exactly its words with a sign at the end of its line, and each line read back in plain English.
-import { tokenize } from '@graph-note/core';
+// underlined over exactly its words with a sign at the end of its line, each link in a text or a comment marked as a
+// link (§18, links_shown), and each line read back in plain English.
+import { linksIn, tokenize } from '@graph-note/core';
 import type { Diagnostic } from '@graph-note/core';
 import type { Ghost } from './inline-completion';
 
@@ -55,13 +56,16 @@ export function paintText(
           (d.range.start.line < n || d.range.start.character <= from) &&
           (d.range.end.line > n || to <= d.range.end.character),
       );
+    // the links written in its texts and comments, each marked as a link (§18, links_shown)
+    const links = linksIn(parts.flatMap((p) => (p.ghost ? [] : [p.s])).join(''));
+    const inLink = (from: number, to: number) => links.some((l) => l.start <= from && to <= l.end);
     let col = 0;
     for (const p of parts) {
       if (p.ghost) {
         overlay.createSpan({ cls: 'graph-note-ghost', text: p.s });
         continue;
       }
-      // split each token where a problem starts or ends, so the mark covers exactly the problem's words
+      // split each token where a problem or a link starts or ends, so the mark covers exactly its words
       const edges = new Set([0, p.s.length]);
       for (const d of marks)
         for (const c of [
@@ -69,6 +73,9 @@ export function paintText(
           d.range.end.line === n ? d.range.end.character : Infinity,
         ])
           if (c > col && c < col + p.s.length) edges.add(c - col);
+      if (p.c === 'string' || p.c === 'comment')
+        for (const l of links)
+          for (const c of [l.start, l.end]) if (c > col && c < col + p.s.length) edges.add(c - col);
       const cuts = [...edges].sort((a, b) => a - b);
       for (let i = 0; i < cuts.length - 1; i++) {
         const a = cuts[i] ?? 0,
@@ -77,6 +84,7 @@ export function paintText(
           d = cut(col + a, col + b);
         const cls = [
           p.c ? `gql-${p.c}` : '',
+          (p.c === 'string' || p.c === 'comment') && inLink(col + a, col + b) ? 'graph-note-text-link' : '',
           d ? `graph-note-problem is-${d.severity === 1 ? 'error' : d.severity === 4 ? 'hint' : 'warning'}` : '',
         ]
           .filter(Boolean)

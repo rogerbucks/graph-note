@@ -5,6 +5,7 @@
 import { MarkdownRenderChild, Notice, TFile } from 'obsidian';
 import type { Component, MarkdownPostProcessorContext } from 'obsidian';
 import {
+  brokenLinks,
   changeSetId,
   completenessReport,
   depthOf,
@@ -39,6 +40,7 @@ import { renderProblems } from './graph-view/problems-list';
 import { refusalBanner } from './layout-worker/refusal-banner';
 import { dataExportBar } from './export/export-form';
 import type { ShownProblem } from './graph-view/problems-list';
+import { linkHost, vaultNames } from './links/link-host';
 
 /**
  * A graph shown as its text with a banner saying why it is not drawn (spec §9): too large, or its layout stopped. An
@@ -185,7 +187,19 @@ export async function renderBlock(
   // its style graph (§2): what is wrong in it listed with the graph's problems; what is sound — its nudges (§6), the
   // properties it shows inline (§14) and the arrowheads it hides (§15) — drawn
   const styling = readStyle(texts, graph, reading);
-  const problems = [...reading.problems, ...styling.problems].filter((p) => p.graph === graph).map(shown);
+  // its links followed through Obsidian, and each that names nothing in the vault a problem with its fix (§18)
+  const followed = linkHost(plugin, target.path, graph);
+  let names: string[] | undefined; // the vault's names, listed only once a link is found broken
+  const broken = brokenLinks(reading, graph, {
+    found: followed.found,
+    get names() {
+      return (names ??= vaultNames(plugin));
+    },
+  });
+  const links = { ...followed, broken };
+  const problems = [...reading.problems, ...styling.problems, ...broken.map((b) => b.problem)]
+    .filter((p) => p.graph === graph)
+    .map(shown);
   const plain = reading.graphs.get(graph);
   const drawing = plain && styledDrawing(plain, styling.style, reading.world[graph]);
   // the diagram types (§15): which fit, the one suggested and the one drawn; choosing one writes it in the style graph
@@ -275,6 +289,7 @@ export async function renderBlock(
       ...(state ? { switches: { state, relayout: (by: object) => laidOut(by) } } : {}),
       // the links its style graph moves, and the lines laid out backwards (§7)
       motion: { flow: drawing.flow ?? [], reversed: reversedLinks(drawing, drawn.rankdir) },
+      links,
       // its things' images, found from this note, and the pictures its style draws on boxes (§18)
       images: plugin.cardImages(target.path, drawing.pictures),
       completeness: completenessReport(reading, graph, new Date().toISOString().slice(0, 10)),

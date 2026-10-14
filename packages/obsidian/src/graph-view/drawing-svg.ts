@@ -1,12 +1,15 @@
 // The drawing itself (spec §3, §11): the SVG the engine drew, put in the viewport, with each box and each link — written
 // or estimated — made reachable from the keyboard and named for screen readers, and the drawing told as sentences. A
 // drawing folded by the View menu (§25) has a stub for each busy hub and a box for each group folded, each a button
-// that opens it; a link merged into a trunk is tapped and named as itself by either of its lines. Laid out again, the
-// drawing is put in the same SVG element (`swapSvg`), so everything that holds it holds the new drawing.
+// that opens it; a link merged into a trunk is tapped and named as itself by either of its lines. Words holding a link to
+// a note, a file or an address are drawn as a link, and a thing's attachments counted (§18, links/link-marks.ts). Laid
+// out again, the drawing is put in the same SVG element (`swapSvg`), so everything that holds it holds the new drawing.
 import { textVersion, withoutColorMix } from '@graph-note/core';
 import type { Drawn, Folding, GraphDrawing } from '@graph-note/core';
 import { boxLabel } from './suggested-name';
 import { markParked } from './parked';
+import { markLinks } from '../links/link-marks';
+import type { ViewOptions } from './view-options';
 
 let described = 0;
 
@@ -21,31 +24,47 @@ function parsed(drawn: Drawn): SVGSVGElement {
   return activeDocument.importNode(svg, true) as unknown as SVGSVGElement;
 }
 
-/** The drawing, parsed from its SVG text into the viewport, each box and link made reachable from the keyboard and named. */
+/**
+ * The drawing, parsed from its SVG text into the viewport, each box and link made reachable from the keyboard and named;
+ * given the card's options, its links shown as links and its attachments counted (§18).
+ */
 export function insertSvg(
   viewport: HTMLElement,
   drawn: Drawn,
   d: GraphDrawing | undefined,
   plan?: Folding,
+  o?: ViewOptions,
 ): SVGSVGElement {
   const svg = viewport.appendChild(parsed(drawn));
   svg.removeAttribute('style');
   svg.classList.add('graph-note-svg');
-  decorate(svg, drawn, d, plan);
+  decorate(svg, drawn, d, plan, o);
   return svg;
 }
 
 /** The drawing laid out again (§25): its new SVG put in place of the old, inside the same element, and marked as before. */
-export function swapSvg(svg: SVGSVGElement, drawn: Drawn, d: GraphDrawing | undefined, plan?: Folding): void {
+export function swapSvg(
+  svg: SVGSVGElement,
+  drawn: Drawn,
+  d: GraphDrawing | undefined,
+  plan?: Folding,
+  o?: ViewOptions,
+): void {
   const fresh = parsed(drawn);
   svg.replaceChildren(...Array.from(fresh.children));
   const box = fresh.getAttribute('viewBox');
   if (box) svg.setAttribute('viewBox', box);
-  decorate(svg, drawn, d, plan);
+  decorate(svg, drawn, d, plan, o);
 }
 
-/** Each box and link of a drawing made reachable from the keyboard and named, and its folds made buttons. */
-function decorate(svg: SVGSVGElement, drawn: Drawn, d: GraphDrawing | undefined, plan?: Folding): void {
+/** Each box and link of a drawing made reachable from the keyboard and named, its folds made buttons and its links shown. */
+function decorate(
+  svg: SVGSVGElement,
+  drawn: Drawn,
+  d: GraphDrawing | undefined,
+  plan?: Folding,
+  o?: ViewOptions,
+): void {
   svg.classList.toggle('graph-note-down', drawn.rankdir === 'TB'); // labels sit beside their lines, so they are given a gap
   const boxes = d?.boxes ?? [];
   for (const g of Array.from(svg.querySelectorAll('g.node'))) {
@@ -85,6 +104,7 @@ function decorate(svg: SVGSVGElement, drawn: Drawn, d: GraphDrawing | undefined,
   }
   markFolds(svg, plan, textOf);
   markParked(svg, boxes); // things parked for later: dashed, with a later mark (spec §5)
+  if (o?.links) markLinks(svg, o.reading, o.graph, o.links); // links shown as links, attachments counted (§18)
 }
 
 /** Each busy hub's stub and each folded group's box (§25): a button that opens it, named with its count. */

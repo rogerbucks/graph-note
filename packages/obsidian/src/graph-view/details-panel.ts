@@ -15,9 +15,11 @@ import { button } from './view-bar';
 import { linkWords, reducedMotion, renderLinkGroups, renderTrail, stepName, thingButton } from './details-nav';
 import type { NavActions } from './details-nav';
 import { DetailsSheet } from './details-sheet';
+import { RichDetails } from './rich-details';
 import { MovingImages, placePictures, renderImages } from './animated-images';
 import type { ThingActions } from './untangle';
 import type { ViewOptions } from './view-options';
+import type { View } from '@graph-note/core';
 
 /** The details of one drawing, shown in its card below the drawing, or in view mode as the sheet. */
 export class DetailsPanel {
@@ -34,8 +36,13 @@ export class DetailsPanel {
   /** Set while the details are drawn for a step of the trail, or drawn again: the trail goes on rather than starting again. */
   private walking = false;
   private readonly sheet: DetailsSheet;
+  /** Its text and properties rendered by Obsidian, the note a thing stands for, and its links (§18). */
+  private readonly rich: RichDetails;
   /** The card's images, a thing's shown in its details and the pictures on its boxes, counted as they move (§18). */
   private readonly images: MovingImages;
+
+  /** The drawing's view as it is now, set by the card: where a link that takes the card's tab leaves it (§18). */
+  view?: () => View;
 
   /** The thing whose details are open, if a thing's are: what a view saved as shown keeps as selected (§7). */
   selectedKey(): string | null {
@@ -55,6 +62,11 @@ export class DetailsPanel {
     this.viewport = viewport;
     this.o = o;
     this.actions = actions;
+    this.rich = new RichDetails(
+      o,
+      () => this.view?.(),
+      () => this.selectedKey(),
+    );
     // still under reduced motion, as the system asks when the card is drawn (§11)
     this.images = new MovingImages(reducedMotion(activeWindow), o.images);
     this.sheet = new DetailsSheet(el, {
@@ -78,6 +90,7 @@ export class DetailsPanel {
   /** The card is going: the sheet's watchers stop, and its images let go of what they hold. */
   unload(): void {
     this.sheet.closed();
+    this.rich.end();
     this.images.release();
   }
 
@@ -153,6 +166,7 @@ export class DetailsPanel {
       thingButton(li, end.text, () => this.choose({ key: end.key }));
     }
     this.readOnlyProperties(el, d.properties);
+    this.rich.links(el, { link: index });
     if (d.problems.length) {
       el.createEl('h4', { text: 'Problems' });
       const probs = el.createEl('ul');
@@ -167,9 +181,7 @@ export class DetailsPanel {
    */
   private readOnlyProperties(el: HTMLElement, properties: [string, string][]): void {
     if (!properties.length || this.o.editing?.()?.session) return;
-    el.createEl('h4', { text: 'Properties' });
-    const ul = el.createEl('ul');
-    for (const [k, v] of properties) ul.createEl('li', { text: `${k}: ${v}` });
+    this.rich.properties(el, properties); // each value rendered by Obsidian, as in a note (§18, rich_details)
   }
 
   /**
@@ -178,6 +190,7 @@ export class DetailsPanel {
    */
   private panel(title: string, kind?: string): HTMLElement {
     const el = this.el;
+    this.rich.begin();
     this.images.release('details'); // the images of the details shown before let go
     el.empty();
     el.hidden = false;
@@ -200,6 +213,7 @@ export class DetailsPanel {
     this.shown = null;
     this.trail.clear();
     this.sheet.closed();
+    this.rich.end();
     this.select(null);
     this.viewport.focus();
     const ed = this.o.editing?.();
@@ -248,6 +262,7 @@ export class DetailsPanel {
     this.shown = { key };
     const el = this.panel(d.text, d.kind);
     this.retrace(el, { key });
+    this.rich.thing(el, key, d.text); // the note it stands for, and its text rendered by Obsidian (§18)
     const links = (title: string, items: string[]) => {
       if (!items.length) return;
       el.createEl('h4', { text: title });
@@ -276,6 +291,7 @@ export class DetailsPanel {
       el,
       propertiesOf(this.o.reading, this.o.graph, { thing: key }).map((p) => [p.key, p.value]),
     );
+    this.rich.links(el, { thing: key });
     // the images its properties name, each moving, or still saying why, with its pause and play control (§18)
     renderImages(el, this.o.reading.world[this.o.graph]?.p(key) ?? {}, this.images);
     links(

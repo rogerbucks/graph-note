@@ -12,7 +12,7 @@ schema written last. Add one link with a misspelt name, and one empty graph bloc
 third item of Viewing. The letters are B Before, V Viewing, Z Zoom, P The edit pane, I Editing in place and the
 inspector, S The style graph, W Views, D Parked for later, T Walked paths, X Export, C Settings, A Accessibility, F Focus
 and untangle, R Proposals, G Details and the sheet, E Diagram types, U AI models, Q Sources and steps, L Link flow and
-path play, M The View menu, and K Animated images.
+path play, M The View menu, K Animated images, and H Links and attachments.
 **A number never changes once given**, whatever happens to the item's words or its place; a removed item's number is
 never used again, and **a new item takes the next number in its section**. Each item after Before has a note in
 `test-vault/Device checks/` that shows the case in Obsidian, found by its number (`test/device-check-notes.test.js`
@@ -525,6 +525,45 @@ will do, under the names given, and for K-05 a GIF larger than 5 MB. Reduce moti
       motion; opened in a browser the file shows them moving, and still with reduce motion on, and loads nothing from
       elsewhere. Export it as PNG: the notice says each was reduced to its first frame, as a PNG cannot move (slice 3,
       export_animation_stated).
+
+## Links and attachments — spec §18
+
+- [ ] **H-01** A box whose name holds a link draws it in the link colour, underlined. Tap the box: its details list each
+      link it holds under Links, by property, each underlined. Press Edit here and tap the box again: the inspector lists
+      them too, and in the text the link inside its quotes is underlined (slice 3, links_shown).
+- [ ] **H-02** Tap a link to a note in the details: Obsidian opens the note in the same tab. On the Mac, Command-click it:
+      it opens in a new tab, as a link in a note does (slice 3, host_opens_links).
+- [ ] **H-03** With photo.png and report.pdf in the vault, the box that links both carries a paperclip and 2 at its top
+      left, and VoiceOver reads "2 attachments" with its name. Its details list them under Attachments (2), as "photo.png —
+      image" and "report.pdf — PDF"; tap one and Obsidian opens it (slice 3, attachments_at_a_glance).
+- [ ] **H-04** On the Mac, hold Command and point at a link to a note in the details: Obsidian's own preview of the note
+      shows, as for a link in a note. On the iPhone, press and hold the link: the preview shows, and lifting the finger
+      opens nothing (slice 3, link_preview).
+- [ ] **H-05** Zoom in, tap a box, then tap a link to a note in its details: the note opens in the same tab. Go back:
+      the graph is at the same zoom and place, with the same box selected and its details open (slice 3,
+      back_where_you_were).
+- [ ] **H-06** A link to a note the vault does not hold is dashed in its box and marked "names nothing" in the details,
+      and the problems badge lists that it names no note or file, with its fix. Change it to the note it most likely
+      meant: the block is written with the right name. Create the note: the note is made, and the link is no longer
+      broken (slice 3, broken_links_problems).
+- [ ] **H-07** Rename a note that a graph block links to, in the file explorer: the link inside the block changes to the
+      new name at once, its alias kept. With the note open in Live Preview while renaming, Command-Z takes the change
+      back (slice 3, renames_follow).
+- [ ] **H-08** Tap a web address in the details: a dialog shows the site large and says the link leaves Obsidian and
+      what it opens; Cancel opens nothing, and Open hands it to the browser. On the Mac, a middle-click asks the same,
+      and right-clicking it offers no menu to open it. A link to a javascript address is shown as text, never as a link,
+      and tapping it does nothing (slice 3, safe_to_click).
+- [ ] **H-09** On the Mac, open a box's details from the keyboard and press Tab: each link is reached in turn, and Return
+      opens the one reached (slice 3, links_by_keyboard).
+- [ ] **H-10** A thing's details show its words as Obsidian shows them in a note: emphasis, maths and a link rendered,
+      not as marks. An image from outside the vault is shown as a link only, and HTML written in a property as text (slice
+      3, rich_details).
+- [ ] **H-11** A thing whose id is a global note id, note: and the note's name, shows that note in its details,
+      rendered, with Open beside it; Open opens the note. A thing whose id is a link to the note does the same (slice
+      3, node_is_a_note).
+- [ ] **H-12** With the phone online, a thing that stands for a note holding a picture from the web, written as Markdown
+      and as HTML, shows each picture in its details only as a link with its address, and no picture is loaded; a note
+      that note embeds is a link too (slice 3, rich_details).
 
 ## Result
 

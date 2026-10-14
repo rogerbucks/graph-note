@@ -35,6 +35,21 @@ test('bin/render.mjs draws SVG from DOT on its own, through node', () => {
   assert.match(JSON.parse(r.stdout)[0], /<svg /);
 });
 
+test('bin/editor-server.mjs is the editor server, built whole: it refuses to be told where to listen', () => {
+  const r = spawnSync(process.execPath, [`${pkg}mod/bin/editor-server.mjs`, '--port', '8080'], {
+    encoding: 'utf8',
+    timeout: 30_000,
+  });
+  assert.equal(r.status, 2, r.stderr);
+  assert.match(r.stderr, /takes no argument/);
+  assert.doesNotMatch(readFileSync(`${pkg}mod/bin/editor-server.mjs`, 'utf8'), /^import .* from ['"](?!node:)/m);
+});
+
+test('the shipped editor server holds nothing of the tests: no test note route and no flag for one', () => {
+  const text = readFileSync(`${pkg}mod/bin/editor-server.mjs`, 'utf8');
+  assert.doesNotMatch(text, /test-note|testNotes|TestNotes/);
+});
+
 test('the repository is a marketplace listing the mod by its folder, so an install reads the working copy', () => {
   const market = JSON.parse(readFileSync(`${pkg}../../.claude-plugin/marketplace.json`, 'utf8'));
   const manifest = JSON.parse(readFileSync(`${pkg}mod/.claude-plugin/plugin.json`, 'utf8'));

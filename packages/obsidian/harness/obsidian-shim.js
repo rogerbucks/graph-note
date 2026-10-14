@@ -101,8 +101,9 @@ export class MarkdownRenderChild extends Component {
   }
 }
 import { StateField } from '@codemirror/state';
-// Obsidian's global helper: an element not yet on the page
+// Obsidian's global helpers: an element not yet on the page
 globalThis.createDiv = (o = {}) => info(document.createElement('div'), o);
+globalThis.createSpan = (o = {}) => info(document.createElement('span'), o);
 /** Obsidian's own editor fields: whether an editor is in Live Preview, and which file it shows. */
 export const editorLivePreviewField = StateField.define({ create: () => true, update: (v) => v });
 export const editorInfoField = StateField.define({ create: () => ({ file: null }), update: (v) => v });
@@ -136,6 +137,12 @@ const vault = {
   },
   cachedRead: async (f) => files.get(f.path),
   getMarkdownFiles: () => [...files.keys()].map((p) => new TFile(p)),
+  getFiles: () => [...files.keys()].map((p) => new TFile(p)),
+  getAbstractFileByPath: (p) => (files.has(p) ? new TFile(p) : null),
+  create: async (p, t) => {
+    files.set(p, t);
+    return new TFile(p);
+  },
   modify: async (f, t) => {
     files.set(f.path, t);
     listeners.forEach((l) => l(new TFile(f.path)));
@@ -170,10 +177,19 @@ const workspace = {
   revealLeaf: async () => {},
   // the plugin writes the note, and the stand-in editor follows it: no note is open in an Obsidian editor
   getActiveFile: () => null,
+  // a link followed from a card (§18): the browser view has one note, so a link to another opens nothing, and a hover
+  // previews nothing
+  openLinkText: async () => {},
+  trigger: () => {},
 };
-// nothing is indexed here, so a note's front matter is read from its text
-const metadataCache = { getFileCache: () => null };
-export const app = { vault, workspace, metadataCache };
+// nothing is indexed here, so a note's front matter is read from its text, and a link finds a note by its path alone
+const metadataCache = {
+  getFileCache: () => null,
+  getFirstLinkpathDest: (link) => vault.getAbstractFileByPath(link) ?? vault.getAbstractFileByPath(`${link}.md`),
+};
+// a note a broken link names is made in the vault's root, as Obsidian's default puts a new note
+const fileManager = { getNewFileParent: () => ({ path: '/' }) };
+export const app = { vault, workspace, metadataCache, fileManager };
 export class ItemView extends Component {
   constructor(leaf) {
     super();
@@ -200,8 +216,9 @@ export class Plugin extends Component {
   registerEditorExtension(ext) {
     editorExtensions.push(...(Array.isArray(ext) ? ext : [ext]));
   }
-  // the browser view has no settings page and no command palette
+  // the browser view has no settings page, no command palette and no Page preview
   addSettingTab() {}
+  registerHoverLinkSource() {}
   addCommand(c) {
     return c;
   }
@@ -434,3 +451,11 @@ export function parseYaml(text) {
   return out;
 }
 export const Platform = { isMobile: false, isDesktop: true };
+/** Obsidian's Markdown renderer (§18): the browser view has none, so a detail's Markdown is shown as its text. */
+export const MarkdownRenderer = {
+  render: async (_app, markdown, el) => {
+    el.createEl('p', { text: markdown });
+  },
+};
+/** Which modifier opens a link in a new tab: Command or Ctrl, as in Obsidian. */
+export const Keymap = { isModEvent: (e) => (e && (e.metaKey || e.ctrlKey) ? 'tab' : false) };
