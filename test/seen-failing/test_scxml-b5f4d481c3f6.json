@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_scxml.py",
+  "test": "ATransitionNoteFollowsTheWrittenOrder.test_note_standard_grafeo_s_rows_give_the_export_the_reader_s_reading_gives",
+  "seen_failing_first": false,
+  "evidence": "Grafeo gave these blocks' transition rows in the order written, so the old row-order lookup already chose the transition written; no Grafeo database could be built that gives them out of order. The fault is shown by the plain graph with its links reversed, which failed first; this test holds Grafeo's export to the reader's."
+}
