@@ -1,0 +1,10 @@
+{
+  "file": "test/github-project-desired.test.js",
+  "test": "the question label > is namespaced as kind:question, so GitHub’s own question label stays somebody’s own",
+  "seen_failing_first": false,
+  "fault": true,
+  "commits": [
+    "354313e05fccc3a96de60cf832908e6aeaee84bd"
+  ],
+  "evidence": "Written first on purpose and committed alone in 354313e, before its code; seen failing there, and passing from a352276, which adds the code."
+}

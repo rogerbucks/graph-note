@@ -1,0 +1,10 @@
+{
+  "file": "test/requirements.test.js",
+  "test": "a tampered copy fails the check > an open question whose slice is not a whole number",
+  "seen_failing_first": false,
+  "fault": true,
+  "commits": [
+    "354313e05fccc3a96de60cf832908e6aeaee84bd"
+  ],
+  "evidence": "Written first on purpose and committed alone in 354313e, before its code; seen failing there, and passing from a352276, which adds the code."
+}
