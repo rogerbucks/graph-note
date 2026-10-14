@@ -42,11 +42,7 @@ export function reader(raw: RawThing, names: StyledNames, out: Problem[]) {
       const v = r.text(key);
       if (v === undefined || (among as readonly string[]).includes(v)) return v as T | undefined;
       const { fix, nearest: near } = wordFix(v, among, always);
-      report(
-        message.replace('$', () => v),
-        fix,
-        edit(key, v, near ? [near] : []),
-      );
+      report(message.split('$').join(v), fix, edit(key, v, near ? [near] : []));
       return undefined;
     },
     /** A name of the styled graph, or undefined and a problem whose fix is the nearest name. */
