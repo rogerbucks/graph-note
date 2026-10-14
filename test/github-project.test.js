@@ -38,6 +38,7 @@ describe('the workstreams file', () => {
   test('names the workstreams W0 to W15, the slice-end workstream S3, the graph mesh workstreams W16 to W33 and the open-questions workstream Q, with the titles agreed', () => {
     assert.deepEqual(Object.keys(workstreams), [
       ...Array.from({ length: 16 }, (_, n) => `W${n}`),
+      ...Array.from({ length: 9 }, (_, n) => `C${n}`),
       'S3',
       ...Array.from({ length: 18 }, (_, n) => `W${n + 16}`),
       'Q',
@@ -61,6 +62,15 @@ describe('the workstreams file', () => {
         'Notes reader parity',
         'Notes in the editor',
         'Viewer aids',
+        'Editor server and its security',
+        'Editor note store',
+        'Editor in the Claude Code mod',
+        'Classification in the core and the Claude ceiling',
+        'Shared display layer',
+        'Browser host shell',
+        'Editor export',
+        'Proposals from Claude',
+        'Editor accessibility and motion',
         'Slice end',
         'Type and instance',
         'Certainty and contested links',

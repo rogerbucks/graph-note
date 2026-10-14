@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/style-reader.test.js",
+  "test": "a word not allowed, in the message given for it > a message with one $ has the word written in its place",
+  "seen_failing_first": false,
+  "evidence": "A control: a message with one placeholder was filled correctly before the fix too; it pins that today's messages read the same."
+}

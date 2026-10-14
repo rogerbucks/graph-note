@@ -121,7 +121,9 @@
       "person_decides",
       "big_proposal",
       "proposals_phone",
-      "proposals_read_back"
+      "proposals_read_back",
+      "proposals_checked",
+      "decider_named"
     ]
   },
   "W9": {
@@ -141,7 +143,8 @@
       "answers_are_proposals",
       "record_every_send",
       "ai_unreachable",
-      "ai_disclosed"
+      "ai_disclosed",
+      "unclassified_strictest"
     ]
   },
   "W10": {
@@ -209,6 +212,90 @@
       "details_narrow",
       "quick_info",
       "quick_info_no_hover_only"
+    ]
+  },
+  "C0": {
+    "title": "Editor server and its security",
+    "requirements": [
+      "cc_loopback_only",
+      "cc_one_server",
+      "cc_session_token",
+      "cc_token_unkept",
+      "cc_host_checked",
+      "cc_origin_checked",
+      "cc_csp",
+      "cc_body_limit",
+      "cc_no_remote",
+      "cc_server_stops",
+      "cc_threats_tested"
+    ]
+  },
+  "C1": {
+    "title": "Editor note store",
+    "requirements": [
+      "cc_open_notes_only",
+      "cc_no_escape",
+      "cc_atomic_write",
+      "cc_write_if_unchanged",
+      "cc_redrawn_on_change",
+      "cc_drafts_outside",
+      "cc_undo_safe"
+    ]
+  },
+  "C2": {
+    "title": "Editor in the Claude Code mod",
+    "requirements": [
+      "cc_editor_opens",
+      "cc_start_failure",
+      "cc_transcript_clean"
+    ]
+  },
+  "C3": {
+    "title": "Classification in the core and the Claude ceiling",
+    "requirements": [
+      "cc_classified_asks",
+      "cc_credential_never"
+    ]
+  },
+  "C4": {
+    "title": "Shared display layer",
+    "requirements": [
+      "cc_core_only",
+      "cc_same_bytes"
+    ]
+  },
+  "C5": {
+    "title": "Browser host shell",
+    "requirements": [
+      "cc_text_not_html",
+      "cc_one_renderer",
+      "cc_worker_same_origin",
+      "cc_theme_follows",
+      "cc_icons",
+      "cc_settings_shared",
+      "cc_offline"
+    ]
+  },
+  "C6": {
+    "title": "Editor export",
+    "requirements": [
+      "cc_exports_new_only",
+      "cc_export_same"
+    ]
+  },
+  "C7": {
+    "title": "Proposals from Claude",
+    "requirements": [
+      "cc_claude_only",
+      "cc_claude_proposes"
+    ]
+  },
+  "C8": {
+    "title": "Editor accessibility and motion",
+    "requirements": [
+      "cc_keyboard",
+      "cc_reduced_motion",
+      "cc_text_version"
     ]
   },
   "S3": {
