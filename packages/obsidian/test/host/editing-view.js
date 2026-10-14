@@ -28,8 +28,12 @@ export function openNote(env, text, path) {
         ...(env.state.editorExtensions ?? []).filter((e) => !e?.listener),
       ],
     }),
+    // each change kept with the text it was made to, so a test can see it and take it back as one undo would
+    transactions: [],
     dispatch(spec) {
-      view.state = view.state.update(spec).state;
+      const tr = view.state.update(spec);
+      view.transactions.push({ tr, before: view.state.doc });
+      view.state = tr.state;
     },
   };
   const made = viewPlugins(env).map((p) => p.create(view));

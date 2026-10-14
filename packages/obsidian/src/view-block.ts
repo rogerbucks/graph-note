@@ -33,6 +33,7 @@ import { refusalBanner } from './layout-worker/refusal-banner';
 import { dataExportBar } from './export/export-form';
 import { sourcedView } from './sources/sources';
 import { sourceAlert, sourceStrip } from './sources/source-strip';
+import { linkHost } from './links/link-host';
 
 /** Writes a change to the style graph of `graph` into the note at `path`, against the note as it is when written. */
 export async function writeStyle(
@@ -283,6 +284,8 @@ export async function renderViewBlock(
       diagram,
       ...(diagram.table ? {} : { switches: { state, relayout: (by: object) => laidOut(by) } }),
       motion: { flow: styled.flow ?? [], reversed: reversedLinks(styled, drawn.rankdir) },
+      // its links shown and followed as the graph's are (§18); a broken one is reported on the graph's own card
+      links: { ...linkHost(plugin, ctx.sourcePath, v.graph), broken: [] },
       images: plugin.cardImages(ctx.sourcePath, styled.pictures), // its things' images and pictures (§18)
       // an export reads the note it is in: a view drawn from elsewhere is exported from where its data is written
       ...(from
