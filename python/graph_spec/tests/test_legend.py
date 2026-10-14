@@ -5,11 +5,11 @@ Usage:
 
 untangle_legend (editor spec §25): the legend's choices — the kinds and relationship types brought
 forward or hidden — are written to the style graph as a Shown's `legend` when the user saves a view
-as shown, and both renderers read them alike (§12). Each case of tests/legend_cases.json is a note
-and the view whose Shown is read; the core reads it, by Node, and gives the problems of each style,
-and for each graph drawn the choices read for the view and what they bring forward and hide in the
-drawing. The Python library must give the same, from gql_profile.read_style and
-graphspec.style.legend.legend_layers over the parts graph_svg draws.
+as shown, and both libraries read them alike (§12); only the plugin applies them. Each case of
+tests/legend_cases.json is a note and the view whose Shown is read; the core reads it, by Node, and
+gives the problems of each style, and for each graph drawn the choices read for the view and what
+they bring forward and hide in the drawing. The Python library must give the same, from
+gql_profile.read_style and graphspec.style.legend.legend_layers over the parts graph_svg draws.
 """
 
 import json

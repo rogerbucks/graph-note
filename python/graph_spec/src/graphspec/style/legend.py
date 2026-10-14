@@ -3,8 +3,9 @@ view_saved_as_shown): what the plugin's legend brings forward and hides, written
 as a Shown's `legend` only when the user saves the view as shown, such as
 'kind:Person forward, type:NEAR hidden'. The core's untangle-saved.ts and LegendFilter.apply,
 function for function: the text read and checked against the graph, each fault a problem on the
-Shown's line with the core's words and fix, the rest kept; and what the choices bring forward and
-hide in a drawing, so both renderers draw a view saved so alike. tests/legend_cases.json holds both
+Shown's line with the core's words and fix, the rest kept; and the same sets of things and links
+the choices bring forward and hide in a drawing. Applying them, fading and hiding, is the plugin's
+alone, on the SVG it draws: graph_svg draws no legend's choices. tests/legend_cases.json holds both
 to one table."""
 
 from __future__ import annotations
@@ -92,7 +93,9 @@ def _sorted_keys(keys: Iterable[str]) -> list[str]:
 def legend_layers(
     nodes: Sequence[tuple], links: Sequence[tuple[str, str, str]], choices: Iterable[dict]
 ) -> dict:
-    """What the legend's choices come to for a drawing, as the core's LegendFilter.apply says:
+    """What the legend's choices come to for a drawing, as the core's LegendFilter.apply works it
+    out — the same sets, for the parity tests and any reader; the plugin applies them, graph_svg
+    does not:
     {forward: {things, edges} or None when nothing is brought forward, hidden: {things, edges}},
     things by key and links by their place in `links`, each list sorted. `nodes` are (key, kinds
     joined by ' · ', …) as graph_parts gives them; `links` are (from key, relationship type, to
