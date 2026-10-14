@@ -214,6 +214,18 @@ describe('choosing a linked thing or a link in the list', () => {
     assert.ok(!link.hasClass('graph-note-hidden'), 'shown again');
     assert.ok(link.hasClass('is-selected'), 'and selected');
   });
+});
+
+// zooming out stops at the fit (zoom_out_to_fit), so only a drawing that fits its card below a readable scale is ever
+// shown too small to read: a narrow card's
+describe('choosing a linked thing in a narrow card', () => {
+  let env, el;
+  before(async () => {
+    env = await load({ width: 200 });
+    motion(env, true);
+    el = (await show(env, fence(GRAPH))).el;
+  });
+  after(() => env.uninstall());
 
   test('a thing too small to read is brought up to a scale where it can be read', () => {
     for (let i = 0; i < 20; i++) labelled(el, 'Zoom out').click();
