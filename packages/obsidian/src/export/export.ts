@@ -2,11 +2,16 @@
 // made (nothing to export, a question to ask first, or go), then the files: the image drawn in fixed colours with its
 // frame (image.ts), on pages when one PNG cannot be sharp (big_export), or the data written as a GQL block, CSV or
 // GraphML (export_data_formats), with no layout asked for, so a graph too large to draw is still exported whole, and a
-// view's faded context marked as outside it when asked for (view_export_stays_view). Then either offered to a phone's
+// view's faded context marked as outside it when asked for (view_export_stays_view); or a path played into an animated
+// SVG, refused before anything is laid out when too large for the device (animation_export_fits). Then either offered to a phone's
 // share sheet by a tap of its own (export_share_sheet), or written safely into the vault under names of their own, all
 // of them or none, with the companion note when set (export_companion_note). Each outcome is said once.
 import { Notice, Platform, TFile } from 'obsidian';
 import {
+  PATH_PACES,
+  PathPlayer,
+  animationFits,
+  paceSaid,
   companionNote,
   dataText,
   exportPlan,
@@ -14,6 +19,7 @@ import {
   exportedData,
   gqlBlocks,
   isDataFormat,
+  pathsOf,
   readNote,
   readStyle,
   writeSafely,
@@ -24,13 +30,15 @@ import type {
   ExportFormat,
   ExportScope,
   ExportTheme,
+  ExportWalk,
+  NoteReading,
   ViewSpec,
   WriteOps,
 } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
 import { exportRefusalWords } from '../layout-worker/refusal-words';
 import { classificationOf } from './classification';
-import { imageFiles } from './image';
+import { deviceOf, imageFiles, tooLargeWords } from './image';
 import type { ExportFile } from './image';
 import { freePaths, vaultOps } from './vault-write';
 
@@ -45,6 +53,8 @@ export interface ExportAsk {
   theme: ExportTheme;
   /** Set once the person has said yes to the question asked. */
   confirmed?: boolean;
+  /** A path to play into the image, by its id, at its pace in milliseconds a step: an animated SVG (§7). */
+  walk?: { id: string; pace: number };
 }
 
 /**
@@ -82,6 +92,35 @@ const said = (outcome: ExportOutcome): ExportOutcome => {
   return outcome;
 };
 
+/**
+ * The path an export plays (§7), found in the note as it is now; or why it is not made, before anything is laid out: the
+ * path is gone or has no steps, it is asked for as anything but an SVG or at a pace Play does not step at, or it is too
+ * large for the device
+ * (animation_export_fits), saying why and what would make it fit.
+ */
+function playedWalk(
+  reading: NoteReading,
+  graph: string,
+  asked: { id: string; pace: number },
+  format: ExportFormat | DataFormat,
+  scope: ExportScope,
+): ExportWalk | { stopped: string } {
+  const path = pathsOf(reading, graph).find((p) => p.id === asked.id);
+  if (!path || PathPlayer.refusal(path))
+    return { stopped: `The path ${asked.id} is not in the note with a step to play, so nothing was exported.` };
+  if (format !== 'svg')
+    return { stopped: 'A played path is exported as an animated SVG only. Nothing was saved. Choose SVG.' };
+  if (!(PATH_PACES as readonly number[]).includes(asked.pace))
+    return {
+      stopped: `The animated SVG was not made: ${asked.pace} is not a pace a path plays at. Nothing was saved. Choose one of ${PATH_PACES.map(paceSaid).join(', ').toLowerCase()}.`,
+    };
+  const large = animationFits(
+    { steps: path.steps.length, things: scope.drawing.boxes.length, links: scope.drawing.links.length },
+    deviceOf(),
+  );
+  return large ? { stopped: tooLargeWords(large) } : { path, pace: asked.pace };
+}
+
 /** Carries out an export the form asked for; never rejects: whatever goes wrong is said, and nothing half-done is left. */
 export async function exportGraph(plugin: GraphNotePlugin, ask: ExportAsk): Promise<ExportOutcome> {
   try {
@@ -108,6 +147,9 @@ async function exporting(plugin: GraphNotePlugin, ask: ExportAsk): Promise<Expor
   const now = new Date(),
     two = (n: number) => String(n).padStart(2, '0');
   const date = `${now.getFullYear()}-${two(now.getMonth() + 1)}-${two(now.getDate())}`;
+  // a path played as an animated SVG: refused before it starts when it is gone, or too large for the device
+  const walk = ask.walk && playedWalk(reading, ask.graph, ask.walk, ask.format, scope);
+  if (walk && 'stopped' in walk) return said(walk);
   const sheet = shareSheet(ask.format);
   const planned = (pages?: number, confirmed = !!ask.confirmed) =>
     exportPlan({
@@ -144,6 +186,7 @@ async function exporting(plugin: GraphNotePlugin, ask: ExportAsk): Promise<Expor
       format: ask.format,
       theme: ask.theme,
       ...styling,
+      ...(walk ? { walk } : {}),
       note: ask.path,
       date,
       go,

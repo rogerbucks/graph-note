@@ -18,13 +18,13 @@
    `(home:Place {name: 'Home'}),`
    `(park:Place {name: 'The park'}),`
    `(home)-[:NEAR]->(park)`
-2. Come back to this note. Check the card draws Home and The park under a line naming the file, and offers no Edit here.
+2. Come back to this note. Check the card draws Home and The park under a line naming the file. Edit opens this block; the bar has no Edit here.
 3. In TextEdit, add a line `, (lake:Place {name: 'The lake'})` at the end of the file and save it. Check the card draws The lake too.
 4. Add another line, `, (cafe:Place {name: 'Cafe' oops})`, and save. Check the rest is still drawn and the badge lists the problem at its line in the file.
 5. Keep the file for Q-04, then delete the `Graph files` folder when Q-04 is done.
 
 **Checklist line:**
 
-> **Q-03** Mac: put a plain text file `trip.gql` in a folder `Graph files` at the root of the vault, holding a graph that starts `// graph: trip`. A block `// graph: trip · FROM Graph files/trip.gql` draws it, under a line naming the file, with no Edit here. Change the file in another editor and save it: the card draws the change. Add a line that cannot be read: the rest is still drawn, and the problem is listed.
+> **Q-03** Mac: put a plain text file `trip.gql` in a folder `Graph files` at the root of the vault, holding a graph that starts `// graph: trip`. A block `// graph: trip · FROM Graph files/trip.gql` draws it, under a line naming the file. Edit opens this block; the bar has no Edit here. Change the file in another editor and save it: the card draws the change. Add a line that cannot be read: the rest is still drawn, and the problem is listed.
 
 **Back to the checklist:** [Q-03 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Q-03 in its list.

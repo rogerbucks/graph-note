@@ -3,6 +3,7 @@
 // more (export_png_sharp). A PNG too large for one sharp image is drawn on pages, each its own file, named in order
 // (big_export); one too large even for pages is refused, with the SVG suggested. Every page is drawn before any is
 // written, so a page that cannot be drawn leaves nothing behind.
+import { Platform } from 'obsidian';
 import { exportWithLayout, pageSvg, pngPages, pngSize } from '@graph-note/core';
 import type {
   ExportGo,
@@ -10,8 +11,10 @@ import type {
   ExportLayout,
   ExportScope,
   ExportTheme,
+  ExportWalk,
   NoteReading,
   StyleGraph,
+  TooLargeToAnimate,
 } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
 import { exportFailureWords, exportRefusalWords } from '../layout-worker/refusal-words';
@@ -37,7 +40,16 @@ export type ImageAsk = {
   go: ExportGo;
   /** The plan again, for a PNG split across `pages` pages: the same names, each page's among them. */
   paged: (pages: number) => ExportGo;
+  /** A path played into the image (§7): an animated SVG of it. */
+  walk?: ExportWalk;
 } & ({ style: StyleGraph; data: GraphRead } | { style?: undefined; data?: undefined });
+
+/** What an animated SVG too large for the device says (animation_export_fits): why, that nothing was saved, and the fix. */
+export const tooLargeWords = (t: TooLargeToAnimate): string =>
+  `The animated SVG was not made: ${t.why}. Nothing was saved. To make it fit, ${t.fix}.`;
+
+/** The device an export is made on, for the size an animated SVG may be. */
+export const deviceOf = (): 'phone' | 'desktop' => (Platform.isMobile ? 'phone' : 'desktop');
 
 /** One graph as the note reads it. */
 type GraphRead = NonNullable<NoteReading['world'][string]>;
@@ -53,8 +65,16 @@ export async function imageFiles(
       layoutFailed = true;
       throw e;
     });
-  // drawn with its style — nudges, arrowheads hidden and properties shown inline — and the values those properties have
-  const basics = { note: x.note, date: x.date, theme: x.theme };
+  // drawn with its style — nudges, arrowheads hidden and properties shown inline — and the values those properties have;
+  // an SVG moves the links its style moves, and plays a path it is given (§7), where a PNG is drawn still
+  const basics = {
+    note: x.note,
+    date: x.date,
+    theme: x.theme,
+    motion: x.format === 'svg',
+    device: deviceOf(),
+    ...(x.walk ? { walk: x.walk } : {}),
+  };
   const info: ExportInfo = x.style ? { ...basics, style: x.style, data: x.data } : basics;
   let image;
   try {
@@ -70,6 +90,7 @@ export async function imageFiles(
         'The export was stopped: Graph Note was unloaded before the layout finished. Nothing was saved. Try again once Graph Note is enabled again.',
     };
   if ('reason' in image) return { stopped: exportRefusalWords(image) };
+  if ('why' in image) return { stopped: tooLargeWords(image) };
   const { go } = x;
   if (x.format === 'svg') return { files: [{ name: go.fileName, path: go.path, bytes: image.svg }] };
   const pages = pngPages(image.width, image.height, plugin.pngPixelLimit);

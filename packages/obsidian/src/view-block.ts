@@ -19,6 +19,7 @@ import {
   readStyle,
   readingOf,
   styleEdit,
+  reversedLinks,
   styledDrawing,
   underStrictness,
 } from '@graph-note/core';
@@ -221,11 +222,11 @@ export async function renderViewBlock(
     void writeStyle(plugin, ctx.sourcePath, v.graph, { diagram: change }, done);
   });
   let drawn;
+  // styled as this view: its nudges, and the properties, arrowheads, type and moving links chosen for it or the whole
+  // graph (§7, §14, §15)
+  const styled = styledDrawing(drawing, style, g, v.name);
   try {
-    // styled as this view: its nudges, and the properties, arrowheads and type chosen for it or the whole graph (§14, §15)
-    drawn = diagram.table
-      ? tableDrawn(diagram.table)
-      : await plugin.layout(styledDrawing(drawing, style, g, v.name), owner);
+    drawn = diagram.table ? tableDrawn(diagram.table) : await plugin.layout(styled, owner);
   } catch (e) {
     // a view whose drawing cannot be laid out shows its text and why, never a blank card
     console.error('Graph Note could not draw view', v.name, e);
@@ -267,6 +268,7 @@ export async function renderViewBlock(
       onEdit: () => changeView(plugin, ctx.sourcePath, line),
       view,
       diagram,
+      motion: { flow: styled.flow ?? [], reversed: reversedLinks(styled, drawn.rankdir) },
       // an export reads the note it is in: a view drawn from elsewhere is exported from where its data is written
       ...(from
         ? {}

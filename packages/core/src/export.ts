@@ -7,6 +7,10 @@ import GraphLayout from '@graph-note/graph-spec/src/graph-layout.js';
 import type { Graph } from '@graph-note/graph-spec';
 import { marked } from './export-marks.ts';
 import type { Marks } from './export-marks.ts';
+import { withFlow, withRunners } from './export-motion.ts';
+import { flowLegend, reversedLinks } from './link-flow.ts';
+import { PATH_LEGEND, animationFits, pathBody, pathPlan, pathSubtitle, withPath } from './path-animation.ts';
+import type { Device, ExportWalk, TooLargeToAnimate } from './path-animation.ts';
 import { framed, saidDate } from './export-frame.ts';
 import type { LegendItem } from './export-frame.ts';
 import type { ExportScope } from './export-scope.ts';
@@ -60,6 +64,18 @@ export type ExportInfo = {
   date: string;
   /** The fixed colours it is drawn in. */
   theme: ExportTheme;
+  /**
+   * Whether the image may move (§7): an SVG moves the links its style moves, and is still under reduced motion; a PNG is
+   * drawn from a still image. Still unless set.
+   */
+  motion?: boolean;
+  /**
+   * A path played into the image (§7, path_animation_export): an animated SVG, its heavier outline moving from step to
+   * step at its pace, every step numbered, still under reduced motion.
+   */
+  walk?: ExportWalk;
+  /** Where it is made, for the size an animated SVG may be (animation_export_fits); a computer when not said. */
+  device?: Device;
 } & (
   | { style?: undefined; data?: undefined }
   | {
@@ -82,20 +98,36 @@ const chip = (hue: string, p: Palette): Pick<LegendItem, 'fill' | 'stroke'> => (
   stroke: hueColour(hue, 'line', p),
 });
 
-/** The legend: each kind as the drawing colours it, then each colour a look uses in the view with what it means. */
-function legendItems(scope: ExportScope, style: StyleGraph | undefined, p: Palette): LegendItem[] {
+/**
+ * The legend: each kind as the drawing colours it, then each colour a look uses in the view with what it means, then
+ * each way a link moves with its icon and what it means (motion_not_alone), so a still image says it too.
+ */
+function legendItems(scope: ExportScope, drawing: GraphDrawing, info: ExportInfo, p: Palette) {
+  const { style, walk } = info;
   const kinds = layoutSource(scope.drawing, 'LR').kinds,
     hues = GraphLayout.pick(kinds, STYLE.kind_hues, STYLE.kind_colours);
   const looks = style && scope.view !== undefined ? legendOf(style, { view: scope.view }) : [];
-  return [
+  const items: LegendItem[] = [
     ...kinds.map((kind) => ({ label: kind, ...chip(hues[kind] ?? '', p) })),
     ...looks.map((e) => ({
       label: e.means,
       fill: hueColour(e.colour, 'line', p),
       stroke: hueColour(e.colour, 'line', p),
     })),
+    ...flowLegend(drawing.flow ?? []).map((e) => ({ label: e.words, fill: p.page ?? 'none', stroke: p.text })),
+    ...(walk ? [{ label: PATH_LEGEND, fill: p.page ?? 'none', stroke: p.text }] : []),
   ];
+  return items;
 }
+
+/** Why an animated SVG of `info`'s path is too large for its device, before anything is laid out; null when it fits. */
+const tooLarge = (drawing: GraphDrawing, info: ExportInfo): TooLargeToAnimate | null =>
+  info.walk
+    ? animationFits(
+        { steps: info.walk.path.steps.length, things: drawing.boxes.length, links: drawing.links.length },
+        info.device ?? 'desktop',
+      )
+    : null;
 
 /** What a view's looks do to the things and links drawn; none outside a view, where the locked style is kept. */
 function looksOf(scope: ExportScope, style: StyleGraph | undefined): Marks['looks'] {
@@ -146,6 +178,8 @@ const laidOutDrawing = (scope: ExportScope, info: ExportInfo): GraphDrawing =>
 export function exportSvg(scope: ExportScope, engine: Engine, info: ExportInfo): ExportImage {
   refuseEmpty(scope);
   const drawing = laidOutDrawing(scope, info);
+  const large = tooLarge(drawing, info);
+  if (large) throw new Error(`The animated SVG was not made: ${large.why}. ${sentence(large.fix)}.`);
   const laid = directions(drawing);
   const drawn = chosen(
     laid,
@@ -160,15 +194,18 @@ export function exportSvg(scope: ExportScope, engine: Engine, info: ExportInfo):
  * from the interface and under the same size and time limits (layout_contained) — so a huge or hostile graph never holds
  * the page for an export. The limit's refusal is given back whole, for the host to say why and write nothing
  * (failed_export); null when the layout is no longer wanted; an engine that fails raises its failure. Refuses an empty
- * scope before any layout is asked for.
+ * scope before any layout is asked for, and gives back why a played path is too large to animate on its device, and
+ * what would make it fit, before any layout is asked for either (animation_export_fits).
  */
 export async function exportWithLayout(
   scope: ExportScope,
   layout: ExportLayout,
   info: ExportInfo,
-): Promise<ExportImage | Refusal | null> {
+): Promise<ExportImage | Refusal | TooLargeToAnimate | null> {
   refuseEmpty(scope);
   const drawing = laidOutDrawing(scope, info);
+  const large = tooLarge(drawing, info);
+  if (large) return large;
   const drawn = await layout(drawing, info.theme === 'dark' ? 'dark' : 'light');
   return !drawn || 'reason' in drawn ? drawn : framedImage(scope, drawing, drawn, info);
 }
@@ -176,26 +213,35 @@ export async function exportWithLayout(
 /** The drawn graph marked, in its frame, in the fixed colours of `info.theme`. */
 function framedImage(scope: ExportScope, drawing: GraphDrawing, drawn: Drawn, info: ExportInfo): ExportImage {
   const palette = info.theme === 'dark' ? PALETTES.dark : PALETTES.light;
-  const body = marked(
+  const flow = info.motion ? (drawing.flow ?? []) : [];
+  const { walk } = info;
+  const plan = walk && pathPlan(drawing, walk.path, reversedLinks(drawing, drawn.rankdir));
+  const looked = marked(
     drawn.svg,
     drawing.boxes.map((b) => b.key),
     { faded: scope.faded, looks: looksOf(scope, info.style) },
     palette,
   );
+  const body = withRunners(walk && plan ? pathBody(looked, walk.path, plan, palette) : looked, flow);
   const view = scope.view !== undefined;
-  const subtitle = view
+  const viewSaid = view
     ? sentence(scope.reading ?? '') + (scope.context ? ' (the rest of the graph is faded)' : '')
     : undefined;
+  // a played path says it is played, at what pace, and the walk in order, so the image tells it still (motion_not_alone)
+  const subtitle = [viewSaid, walk && pathSubtitle(walk)].filter(Boolean).join('. ');
+  const title = view ? `${scope.graph} · view ${scope.view}` : scope.graph;
   const image = framed(
     { svg: body, width: drawn.width, height: drawn.height },
     {
-      title: view ? `${scope.graph} · view ${scope.view}` : scope.graph,
+      title: walk ? `${title} · path ${walk.path.title}` : title,
       ...(subtitle ? { subtitle } : {}),
-      legend: legendItems(scope, info.style, palette),
+      legend: legendItems(scope, drawing, info, palette),
       footer: footerText(info.note, info.date),
     },
     palette,
   );
+  image.svg = withFlow(image.svg, flow);
+  if (walk && plan) image.svg = withPath(image.svg, plan, walk.pace);
   // a theme variable or a blend in a colour would read as black or nothing outside Obsidian: never let one out
   if (/(?:style|fill|stroke)="[^"]*(?:var\(--|color-mix\()/.test(image.svg))
     throw new Error(

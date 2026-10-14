@@ -1,6 +1,6 @@
 # Device checks
 
-One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md)): 121 checks in 17 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
+One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md)): 127 checks in 18 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
 
 ## 01 Viewing
 
@@ -173,3 +173,12 @@ One note for each check in the device checklist ([the checklist, on GitHub](http
 - [[Device checks/17 Sources and steps/Q-03 Graph from a gql file|Q-03 Graph from a gql file]]
 - [[Device checks/17 Sources and steps/Q-04 Missing or moved gql file|Q-04 Missing or moved gql file]]
 - [[Device checks/17 Sources and steps/Q-05 Run a step|Q-05 Run a step]]
+
+## 18 Link flow and path play
+
+- [[Device checks/18 Link flow and path play/L-01 Dashes for one type|L-01 Dashes for one type]]
+- [[Device checks/18 Link flow and path play/L-02 A dot on every link|L-02 A dot on every link]]
+- [[Device checks/18 Link flow and path play/L-03 Still under reduced motion|L-03 Still under reduced motion]]
+- [[Device checks/18 Link flow and path play/L-04 Play on its own|L-04 Play on its own]]
+- [[Device checks/18 Link flow and path play/L-05 Export as an animated SVG|L-05 Export as an animated SVG]]
+- [[Device checks/18 Link flow and path play/L-06 Too large for the phone|L-06 Too large for the phone]]

@@ -235,6 +235,16 @@ export class PathPlayer {
     return this.path.steps[this.at] as PathStep;
   }
 
+  /** Where the step now on is in the path, from 0. */
+  get index(): number {
+    return this.at;
+  }
+
+  /** Back to the first step. */
+  restart(): void {
+    this.at = 0;
+  }
+
   /** Whether the first step is on. */
   get atStart(): boolean {
     return this.at === 0;
