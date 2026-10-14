@@ -21,6 +21,11 @@ export interface ExportedData {
    * and links by their place in `links`. Each format marks them so, and reads back the same things and links.
    */
   faded?: { things: string[]; links: number[] };
+  /**
+   * Only when a thing or link it holds has a note (editor spec §24, note_standard): each note's text as the reader read
+   * it, things' by id and links' by their place in `links`. A format with comments keeps them; CSV leaves them out.
+   */
+  notes?: { things: [id: string, text: string][]; links: [at: number, text: string][] };
 }
 
 /** Where the data came from, as a format that can say so says it: the note's path and the day, `YYYY-MM-DD`. */

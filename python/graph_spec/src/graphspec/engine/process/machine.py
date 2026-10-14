@@ -57,6 +57,7 @@ class Machine:
     def __init__(self, source, restart_on_self=False, flow=None):
         states, moves, details = process_rows(source)
         self.S = {r["id"]: r for r in states}
+        self.moves = moves  # every transition, in the order written: the rows T groups
         self.T = {}
         for r in moves:
             self.T.setdefault((r["a"], r["e"]), []).append(r)

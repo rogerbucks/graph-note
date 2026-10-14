@@ -7,11 +7,14 @@
 // asked for, is marked by the key `:faded`, for nodes and edges alike, false unless a node or edge says true. A text is
 // escaped so XML reads it back as written: its marks, a carriage return, and anything in an attribute that XML would
 // make a space. A character XML 1.0 cannot hold at all, as a control character, is refused, naming where it is, for
-// the GQL block or CSV, which hold it: never written as something else.
+// the GQL block or CSV, which hold it: never written as something else. A note (§24, note_standard) is kept as an XML
+// comment on the line directly before its node or edge, escaped by xml-comment.ts so it reads back as written and can
+// never end its comment; a comment, not a key, so a tool reading the file takes it for a comment, as GQL's engines do.
 import type { Value } from '@graph-note/graph-spec';
 import { saidDate } from './export-frame.ts';
 import { kindOf, numberText, oneLine, timeText } from './export-data-model.ts';
 import type { DataInfo, ExportedData, ValueKind } from './export-data-model.ts';
+import { notXml, noteComment } from './xml-comment.ts';
 
 /** What a key's description says of a day or an instant, which GraphML's types have no word for. */
 const DESC_KINDS: Partial<Record<ValueKind, string>> = { date: 'gn:date', datetime: 'gn:datetime' };
@@ -22,20 +25,6 @@ const ATTR_TYPES: Record<ValueKind, string> = {
   boolean: 'boolean',
   date: 'string',
   datetime: 'string',
-};
-/**
- * Whether XML 1.0 cannot hold a character, even as a reference: a control character other than tab, line feed and
- * carriage return, the two non-characters U+FFFE and U+FFFF, or half of a surrogate pair alone (a whole pair is one
- * character, beyond U+FFFF, as a string is walked by its characters).
- */
-const notXml = (c: string) => {
-  const code = c.codePointAt(0) ?? 0;
-  return (
-    (code < 0x20 && code !== 0x09 && code !== 0x0a && code !== 0x0d) ||
-    code === 0xfffe ||
-    code === 0xffff ||
-    (code >= 0xd800 && code <= 0xdfff)
-  );
 };
 const MARKS: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', '\r': '&#13;' };
 const IN_ATTRIBUTE: Record<string, string> = { ...MARKS, '\t': '&#9;', '\n': '&#10;' };
@@ -84,15 +73,22 @@ export function graphmlText(data: ExportedData, info: DataInfo): string {
   const fadedThings = new Set(data.faded?.things ?? []),
     fadedLinks = new Set(data.faded?.links ?? []);
   const faded = (yes: boolean) => (yes ? [datum('faded', 'true')] : []);
+  // a note is the XML comment on the line directly before its node or edge (xml-comment.ts)
+  const thingNotes = new Map(data.notes?.things ?? []),
+    linkNotes = new Map(data.notes?.links ?? []);
+  const noted = (note: string | undefined, line: string) =>
+    note === undefined ? line : `    ${noteComment(note)}\n${line}`;
   const nodes = data.things.map(([id, kinds, props]) => {
     const whose = `Thing ${holdable(id, `A thing’s id, ${JSON.stringify(id)},`)}`;
     const own = [datum('id', escaped(id)), datum('labels', kinds.join(';')), ...faded(fadedThings.has(id))];
-    return `    <node id="${place.get(id)}">${[...own, ...propsOf('node', props, whose)].join('')}</node>`;
+    const line = `    <node id="${place.get(id)}">${[...own, ...propsOf('node', props, whose)].join('')}</node>`;
+    return noted(thingNotes.get(id), line);
   });
   const edges = data.links.map(([from, type, to, props], i) => {
     const own = [datum('type', type), ...faded(fadedLinks.has(i))];
     const whose = `The link ${from} ${type} ${to}`;
-    return `    <edge source="${place.get(from)}" target="${place.get(to)}">${[...own, ...propsOf('edge', props, whose)].join('')}</edge>`;
+    const line = `    <edge source="${place.get(from)}" target="${place.get(to)}">${[...own, ...propsOf('edge', props, whose)].join('')}</edge>`;
+    return noted(linkNotes.get(i), line);
   });
   const what = data.view === undefined ? `graph ${data.graph}` : `view ${data.view} of graph ${data.graph}`;
   const desc = `Exported from ${oneLine(info.note)}, ${oneLine(what)}, ${saidDate(info.date)}`;

@@ -2,7 +2,9 @@
 // into the things and links it holds, so a round trip proves the export lost nothing. A GQL block is read by the
 // repository's own graph-spec reader. CSV and GraphML are read here, strictly, as their standards say: RFC 4180's
 // quoting and its CRLF record ends; XML's references, its line ends made LF and the whitespace in an attribute made
-// spaces. So an escape the writer leaves out shows as a difference, never as a reader being kind.
+// spaces, and its comments, refused where XML refuses one. So an escape the writer leaves out shows as a difference,
+// never as a reader being kind. Each also gives the notes it keeps (editor spec §24, note_standard): a GQL block's
+// `///` lines, read by the library's notes; a GraphML comment directly before a node or edge, its escapes read here.
 import gs from '@graph-note/graph-spec';
 
 /** A graph as a data export holds it: things as [id, kinds, properties], links as [from, type, to, properties]. */
@@ -12,9 +14,10 @@ export const dataOf = (g) => ({
 });
 
 /**
- * The one graph a GQL block writes, read by the graph-spec reader, as a data export holds it; and what it marks as a
- * view's faded context, by a `//@ faded:` line owned by a thing or link (§27, read by the library's ownedComments), the
- * export writing one thing or link to a line, things first.
+ * The one graph a GQL block writes, read by the graph-spec reader, as a data export holds it; what it marks as a
+ * view's faded context, by a `//@ faded:` line owned by a thing or link (§27, read by the library's ownedComments); and
+ * each thing's and link's note, its `///` lines read by the library's notes (§26, editor spec §24) — the export writing
+ * one thing or link to a line, things first.
  */
 export function readGql(text) {
   const world = gs.worldFromStore(gs.read([text]));
@@ -26,14 +29,29 @@ export function readGql(text) {
     .map((line, i) => [line.trim(), i + 1])
     .filter(([line]) => line && !line.startsWith('//'))
     .map(([, n]) => n);
+  // a thing by its id, a link by its place among the links, from the line of code that writes it
+  const owner = (line, thing, link) => {
+    const at = code.indexOf(line);
+    if (at < data.things.length) thing(data.things[at][0]);
+    else link(at - data.things.length);
+  };
   const faded = { things: [], links: [] };
   for (const { line, tags } of gs.ownedComments(text).owned) {
     if (!tags.some(([k]) => k === 'faded')) continue;
-    const at = code.indexOf(line);
-    if (at < data.things.length) faded.things.push(data.things[at][0]);
-    else faded.links.push(at - data.things.length);
+    owner(
+      line,
+      (id) => faded.things.push(id),
+      (i) => faded.links.push(i),
+    );
   }
-  return { graph: names[0], ...data, faded };
+  const notes = { things: [], links: [] };
+  for (const { line, text: note } of gs.notes(text).notes)
+    owner(
+      line,
+      (id) => notes.things.push([id, note]),
+      (i) => notes.links.push([i, note]),
+    );
+  return { graph: names[0], ...data, faded, notes };
 }
 
 /** The records of a CSV text (RFC 4180), each a list of cells, each `{ text, quoted }`; records end at CRLF. */
@@ -105,7 +123,7 @@ function valueOf(kind, s, csv = false) {
 const FIXED = ['kind', 'id', 'labels', 'from', 'type', 'to'];
 
 /** The things and links of a CSV export, and those of kind `faded thing` or `faded link`, a view's faded context. An
- * empty cell that is not quoted is a property the row does not have. */
+ * empty cell that is not quoted is a property the row does not have. CSV has no comments, so it holds no note. */
 export function readCsv(text) {
   const [head, ...rows] = csvRecords(text);
   const names = head.map((c) => c.text);
@@ -137,7 +155,7 @@ export function readCsv(text) {
       if (kind !== written) faded.links.push(links.length - 1);
     } else throw new Error(`a row of kind ${written}`);
   }
-  return { things, links, faded };
+  return { things, links, faded, notes: { things: [], links: [] } };
 }
 
 const REFS = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
@@ -163,21 +181,74 @@ function decoded(raw) {
   });
 }
 
-/** An XML text's root element: `{ name, attrs, children }`, each child an element or a text, whitespace kept inside
- * the root. The declaration is dropped; an attribute's line ends and tabs become spaces, as XML says. A comment is
- * refused, not taken out: no export writes one, and taking one out by a pattern could leave part of it read as XML. */
+/** A comment's text as XML reads it, its line ends made LF; refused where XML refuses it: `--` inside it, a `-` at
+ * its end, or a character XML 1.0 cannot hold. */
+function commentText(raw) {
+  const text = raw.replace(/\r\n?/g, '\n');
+  if (text.includes('--')) throw new Error('-- inside a comment, which XML forbids');
+  if (text.endsWith('-')) throw new Error('a comment ending with -, which XML forbids');
+  if (NOT_XML.test(text)) throw new Error('a character XML 1.0 cannot hold, in a comment');
+  return text;
+}
+
+/**
+ * A note from the text of the XML comment that holds it, read strictly, on its own, as the writer is meant to write
+ * it (editor spec §24, note_standard): one space at each end, `\\` a backslash, `\-` a hyphen, `\r` a carriage return
+ * and `\u{…}` a character by its code point in hexadecimal; any other backslash is refused, so a writer that leaves an
+ * escape out shows.
+ */
+export function commentNote(text) {
+  if (text.length < 2 || text[0] !== ' ' || text.at(-1) !== ' ')
+    throw new Error('a note comment not spaced at its ends');
+  const s = text.slice(1, -1);
+  let out = '';
+  for (let i = 0; i < s.length; i++) {
+    if (s[i] !== '\\') {
+      out += s[i];
+      continue;
+    }
+    const e = s[++i];
+    if (e === '\\' || e === '-') out += e;
+    else if (e === 'r') out += '\r';
+    else if (e === 'u' && s[i + 1] === '{') {
+      const end = s.indexOf('}', i);
+      const hex = end < 0 ? '' : s.slice(i + 2, end);
+      if (!/^[0-9A-F]{1,6}$/.test(hex) || parseInt(hex, 16) > 0x10ffff)
+        throw new Error(`\\u{${hex}} names no character`);
+      out += String.fromCodePoint(parseInt(hex, 16));
+      i = end;
+    } else throw new Error(`\\${e ?? ''} is no escape a note's comment is written with`);
+  }
+  return out;
+}
+
+/** An XML text's root element: `{ name, attrs, children }`, each child an element, a text or a comment (`{ comment }`,
+ * its text), whitespace kept inside the root. The declaration is dropped; an attribute's line ends and tabs become
+ * spaces, as XML says. A comment is read from its `<!--` to the first `-->`, as XML reads one, and refused where XML
+ * refuses it; one outside the root is refused, as no export writes one there. */
 export function xmlTree(text) {
-  if (text.includes('<!--')) throw new Error('a comment, which no export writes');
   const body = text.replace(/^<\?xml[^?]*\?>/, '');
-  const tag = /<(\/?)([\w:.-]+)((?:\s+[\w:.-]+\s*=\s*"[^"]*")*)\s*(\/?)>/g;
+  const tag = /<(\/?)([\w:.-]+)((?:\s+[\w:.-]+\s*=\s*"[^"]*")*)\s*(\/?)>/y;
   const root = { children: [] },
     open = [root];
-  let at = 0,
-    m;
-  while ((m = tag.exec(body))) {
-    const between = body.slice(at, m.index);
+  let at = 0;
+  for (;;) {
+    const next = body.indexOf('<', at);
+    const between = body.slice(at, next < 0 ? undefined : next);
     if (open.length > 1 && between) open.at(-1).children.push(decoded(between));
     else if (between.trim()) throw new Error('text outside the root element');
+    if (next < 0) break;
+    if (body.startsWith('<!--', next)) {
+      if (open.length === 1) throw new Error('a comment outside the root element, which no export writes');
+      const end = body.indexOf('-->', next + 4);
+      if (end < 0) throw new Error('a comment that is not closed');
+      open.at(-1).children.push({ comment: commentText(body.slice(next + 4, end)) });
+      at = end + 3;
+      continue;
+    }
+    tag.lastIndex = next;
+    const m = tag.exec(body);
+    if (!m) throw new Error('a < that is not a tag');
     at = tag.lastIndex;
     const [, closing, name, attrText, empty] = m;
     if (closing) {
@@ -249,7 +320,29 @@ export function readGraphml(text) {
     if (own[':faded'] === 'true') faded.links.push(i);
     return [byNode.get(e.attrs.source), own[':type'], byNode.get(e.attrs.target), props];
   });
-  return { graph: graph.attrs.id, things, links, faded };
+  // each note is the comment directly before its node or edge, with only whitespace between; a comment before
+  // anything else, or two before one element, is refused, as the export writes neither
+  const notes = { things: [], links: [] };
+  let pending = null,
+    node = 0,
+    edge = 0;
+  for (const c of graph.children) {
+    if (typeof c === 'string') {
+      if (c.trim()) throw new Error('text between the elements of the graph');
+    } else if ('comment' in c) {
+      if (pending !== null) throw new Error('two comments before one element');
+      pending = commentNote(c.comment);
+    } else {
+      if (pending !== null && c.name === 'node') notes.things.push([things[node][0], pending]);
+      else if (pending !== null && c.name === 'edge') notes.links.push([edge, pending]);
+      else if (pending !== null) throw new Error(`a comment before <${c.name}>, which holds no note`);
+      if (c.name === 'node') node++;
+      if (c.name === 'edge') edge++;
+      pending = null;
+    }
+  }
+  if (pending !== null) throw new Error('a comment before no element');
+  return { graph: graph.attrs.id, things, links, faded, notes };
 }
 
 const readerOf = (format) => (format === 'gql' ? readGql : format === 'csv' ? readCsv : readGraphml);
@@ -262,3 +355,6 @@ export function readBack(format, text) {
 
 /** What a data export of `format` marks as a view's faded context: things by id, links by their place among the links. */
 export const readFaded = (format, text) => readerOf(format)(text).faded;
+
+/** The notes a data export of `format` keeps: things' as [id, text], links' as [place among the links, text]. */
+export const readNotes = (format, text) => readerOf(format)(text).notes;

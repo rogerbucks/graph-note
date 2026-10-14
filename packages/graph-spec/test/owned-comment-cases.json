@@ -892,6 +892,73 @@
         }
       ],
       "shared": []
+    },
+    {
+      "id": "notes-on-a-process",
+      "name": "notes on a State and on a transition of a process, one holding --> and <!-- and a backslash, read alike by both readers: the notes the Python library's SCXML export keeps as XML comments (python/graph_spec/tests/test_scxml.py)",
+      "proves": ["note_comment", "note_text", "note_both_readers"],
+      "block": "// graph: loan_process\n/// Where every loan starts.\n(applied:State {id: 'loan/applied', flow: 'loan', initial: TRUE}),\n/// Closed for good: --> <!-- a -- b --- c -\n/// \\ back\\slash\n(closed:State {id: 'loan/closed', flow: 'loan', final: TRUE}),\n/// Scored above 600.\n(applied)-[:TRANSITION {event: 'assess', guard: 'score > 600'}]->(closed),\n(applied)-[:TRANSITION {event: 'assess', guard: 'else'}]->(closed)",
+      "owned": [
+        {
+          "line": 3,
+          "element": {
+            "thing": "applied"
+          },
+          "tags": [],
+          "note": ["Where every loan starts."],
+          "summary": "Where every loan starts."
+        },
+        {
+          "line": 6,
+          "element": {
+            "thing": "closed"
+          },
+          "tags": [],
+          "note": ["Closed for good: --> <!-- a -- b --- c -", "\\ back\\slash"],
+          "summary": "Closed for good: --> <!-- a -- b --- c -\n\\ back\\slash"
+        },
+        {
+          "line": 8,
+          "element": {
+            "link": ["applied", "TRANSITION", "closed"]
+          },
+          "tags": [],
+          "note": ["Scored above 600."],
+          "summary": "Scored above 600."
+        }
+      ],
+      "unowned": [],
+      "malformed": [],
+      "notes": [
+        {
+          "line": 3,
+          "element": {
+            "thing": "applied"
+          },
+          "lines": [2],
+          "text": "Where every loan starts.",
+          "summary": "Where every loan starts."
+        },
+        {
+          "line": 6,
+          "element": {
+            "thing": "closed"
+          },
+          "lines": [4, 5],
+          "text": "Closed for good: --> <!-- a -- b --- c -\n\\ back\\slash",
+          "summary": "Closed for good: --> <!-- a -- b --- c -\n\\ back\\slash"
+        },
+        {
+          "line": 8,
+          "element": {
+            "link": ["applied", "TRANSITION", "closed"]
+          },
+          "lines": [7],
+          "text": "Scored above 600.",
+          "summary": "Scored above 600."
+        }
+      ],
+      "shared": []
     }
   ]
 }

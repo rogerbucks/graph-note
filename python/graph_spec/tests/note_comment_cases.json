@@ -1,0 +1,27 @@
+{
+  "about": "A /// note written as an XML comment (editor spec §24 note_standard; graph spec req:26.plain): what the core writes into a GraphML export and the Python library into an SCXML export, held to this one table by packages/core/test/xml-comment.test.js and python/graph_spec/tests/test_scxml.py, so both write the same comment for the same note and read it back the same. The comment is <!--, a space, the note's text, a space and -->. XML forbids -- inside a comment and a - at its end, and the only way out of a comment is -->, so a - directly after a - is written \\-; a backslash is written \\\\, a carriage return \\r (XML would make it a line feed), and a character XML 1.0 cannot hold \\u{its code point in hexadecimal}. Nothing else is changed, so the comment reads back as the note, and its text can never end the comment. Each case has a stable id, the note's text and the comment written for it.",
+  "cases": [
+    { "id": "plain", "text": "Leads the team.", "comment": "<!-- Leads the team. -->" },
+    { "id": "empty", "text": "", "comment": "<!--  -->" },
+    { "id": "close", "text": "-->", "comment": "<!-- -\\-> -->" },
+    { "id": "open", "text": "<!--", "comment": "<!-- <!-\\- -->" },
+    { "id": "injection", "text": "--><node id=\"x\"/><!--", "comment": "<!-- -\\-><node id=\"x\"/><!-\\- -->" },
+    { "id": "dashes", "text": "a -- b --- c", "comment": "<!-- a -\\- b -\\-\\- c -->" },
+    { "id": "only-dashes", "text": "--", "comment": "<!-- -\\- -->" },
+    { "id": "ends-with-a-dash", "text": "a -", "comment": "<!-- a - -->" },
+    { "id": "starts-with-a-dash", "text": "-a", "comment": "<!-- -a -->" },
+    { "id": "backslash", "text": "\\ a\\-b \\\\", "comment": "<!-- \\\\ a\\\\-b \\\\\\\\ -->" },
+    { "id": "escape-lookalikes", "text": "\\r \\u{41} \\-", "comment": "<!-- \\\\r \\\\u{41} \\\\- -->" },
+    { "id": "carriage-returns", "text": "a\r\nb\rc", "comment": "<!-- a\\r\nb\\rc -->" },
+    { "id": "dash-cr-dash", "text": "-\r-", "comment": "<!-- -\\r- -->" },
+    { "id": "lines", "text": "first\n\nthird\tcolumn", "comment": "<!-- first\n\nthird\tcolumn -->" },
+    { "id": "control", "text": "bell\u0007 and nul\u0000", "comment": "<!-- bell\\u{7} and nul\\u{0} -->" },
+    { "id": "non-characters", "text": "￾￿", "comment": "<!-- \\u{FFFE}\\u{FFFF} -->" },
+    { "id": "lone-surrogate", "text": "\uD800x", "comment": "<!-- \\u{D800}x -->" },
+    {
+      "id": "marks-kept",
+      "text": "😀 ]]> &amp; <a href=\"x\"> 'q'",
+      "comment": "<!-- 😀 ]]> &amp; <a href=\"x\"> 'q' -->"
+    }
+  ]
+}
