@@ -100,7 +100,9 @@ of Obsidian's rules, sentence case in the interface among them. These are the gu
 ## Layout
 
 - **Each package keeps its code in `src/` and its tests in `test/`.** The Python library uses `src/` and `tests/`, as
-  Python's tools expect. Tools that run from the command line go in `bin/`; the browser harness in `harness/`.
+  Python's tools expect. Tools that run from the command line go in `bin/`; the browser harness in `harness/`; the
+  Claude Code editor's local server, which runs in Node, in `packages/claude-code/server/`, held to the same naming,
+  size and comment rules as `src/`.
 - **One module, one purpose.** Each module opens with a comment saying what it is for, and which part of the spec.
 - **The public interface is documented where it is declared:** every export has its own comment, directly above it.
 - **The core is host-free:** it imports no Obsidian, editor or Node module, so it runs on a phone and, later, in VS Code.
@@ -132,6 +134,8 @@ These test behaviour across modules, or the repository itself, so they are named
 - `packages/core/test/edits.test.js` — every edit from the pane round-trips; locking writes a schema the checks pass.
 - `packages/core/test/imports.test.js` — the core imports no host.
 - `packages/claude-code/test/build.test.mjs` — the build writes the mod's hooks bundle, with no WebAssembly engine, and a render script that draws.
+- `packages/claude-code/test/editor-threats.test.js` — the browser editor's server against its threat model, each threat tried on the running server: loopback only, wrong Host, wrong Origin, no token or a wrong one, a token in the address, a stale write, an oversized body, the content security policy, no CORS, a path escape on the test-only note route, the server's own limits, no outgoing request, and the idle stop (editor spec §26, test_cc_threats).
+- `packages/claude-code/test/editor-threats-process.test.js` — the same threat model tried on the server's process: no argument taken, the token handed over once and kept nowhere, no start when orphaned, and every way the process stops (editor spec §26, test_cc_threats).
 - `packages/obsidian/test/accessibility.test.js` — contrast in both themes, and a keyboard path for every action.
 - `packages/obsidian/test/build.test.mjs` — the build writes the files the plugin is installed from.
 - `packages/obsidian/test/inline.test.js` — editing in place in the drawing's card.

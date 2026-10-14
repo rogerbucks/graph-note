@@ -28,6 +28,47 @@ unless the app sets its own. Whether the desktop app does, and keeps the drawing
 - `bin/render-process.ts` — the core's `loadEngine`, run by node: a JSON list of DOT on stdin, a JSON list of SVG on
   stdout. Bundled into `mod/bin/render.mjs`.
 
+## The browser editor's server, `server/`
+
+The local server the browser-pane editor will talk to (spec §26, slice 4; workstream C0). It runs in Node as a process of
+its own, so it sits outside `src/` (whose modules may import no Node built-in): Node's own `http`, no framework and no
+runtime dependency beyond the core's `READ_LIMITS`. Built into `mod/bin/editor-server.mjs`.
+
+- `server/editor-server.ts` — the shipped process: `runEditorProcess` with its arguments, and no API of its own yet.
+- `server/editor-process.ts` — `runEditorProcess`: refuses (exit 2) any argument, so it can never be told to listen
+  elsewhere, and a start with no parent left (`process.ppid` is 1), which nothing would stop; prints one line of JSON,
+  `{"url":"http://127.0.0.1:<port>/#token=<token>"}`, the token in the fragment and written nowhere else (no port or
+  token file); says on stderr why it stopped, and exits. The code that runs it may hand in an `api`; arguments never.
+- `server/start-server.ts` — `startEditorServer`: listens on 127.0.0.1 alone, on a port the system chooses, with a fresh
+  256-bit token; every request through `request-guard.ts` first; no query or fragment in an address, so a token there
+  is refused; the page (a placeholder until C5) served with no token, as it says nothing of any note; every `/api/`
+  call needs the token, then goes to the `api` handed in (`ApiHandler`; none, and it is not found); a write needs the
+  server's own origin. `SERVER_LIMITS` holds clients to 10 s for the headers, 30 s for a request, 5 s for an idle
+  connection, 64 headers and 32 connections; a request Node cannot read is refused (400, 408 or 431) with the security
+  headers too, and one with no Host comes to the checks and is refused there. It stops after `IDLE_MS` (30 minutes)
+  with no request open and none of the page's, its clock and timer injectable (`now`, `every`), or at once on `stop`:
+  only the page itself (`GET /` from its own address) or a call that passed the token starts the wait again, so a page
+  probing ports cannot keep it alive.
+- `server/request-guard.ts` — the checks: the exact Host (`127.0.0.1:<port>` or `localhost:<port>`, no forwarded or
+  Tailscale header read), no other Origin and no cross-site `Sec-Fetch-Site` on any request, a write's Origin its own
+  and `Sec-Fetch-Site: same-origin`, the token only as `Authorization: Bearer`, compared in constant time
+  (`timingSafeEqual` over SHA-256 digests); and `SECURITY_HEADERS`, on every answer: the content security policy
+  (`CSP`, with `base-uri`, `form-action` and `object-src` all `'none'`), `nosniff`, `no-store`, `no-referrer`,
+  `Cross-Origin-Opener-Policy: same-origin`, and no CORS header ever (OPTIONS is refused).
+- `server/request-body.ts` — `readBody`: a body held to the core's read limit for a note (`READ_LIMITS.bytes`), refused
+  (413) before it is read when its length says it is larger, or as soon as one sent in parts passes it.
+- `server/session-watch.ts` — `watchSession`: stops the process when its input closes (the session ended), when its
+  parent changes (the process that started it exited) or on SIGTERM, SIGINT or SIGHUP (`/graph stop`).
+
+Nothing of the tests ships: their stand-in for the note store, `test/fixtures/editor-server-test.ts` (TEST ONLY: a few
+notes in memory, by plain name at `/api/test-note/<name>`, each write made against the version it names, `If-Match`),
+is handed in as the `api` of the tests' own process (`--serve`), and `build.test.mjs` holds the built server free of
+it. The note store (C1) is the real `api`.
+
+**Left for C1: a write cut short by a stop.** `stop` closes every connection at once, a write in progress among them,
+so the server could stop between a write's start and its end. C1's write must be atomic (a temporary file beside the
+note, renamed into place, cc_atomic_write), so a stop leaves the note as it was or as written, never half of each.
+
 ## The mod, `mod/`
 
 The folder Claude Code loads (`--plugin-dir`). It is checked by Claude Code, not by the repository's linter: run
@@ -46,7 +87,8 @@ and `register.tsx` stays thin.
   on each surface, and node missing.
 - `tests/fixtures.d.ts` — the types of the built `tests/fixtures.js`: the sample note and the SVG drawn for it.
 
-Built, never edited (gitignored): `mod/hooks/graph.js`, `mod/bin/render.mjs`, `mod/tests/fixtures.js`. Claude Code writes
+Built, never edited (gitignored): `mod/hooks/graph.js`, `mod/bin/render.mjs`, `mod/bin/editor-server.mjs`,
+`mod/tests/fixtures.js`. Claude Code writes
 `mod/.claude-plugin/types/` when it loads the mod; `mod/tsconfig.json` extends it, so `tsc -p packages/claude-code/mod`
 type-checks the mod once it has been loaded.
 
@@ -61,5 +103,7 @@ in every new session, the desktop app's included. After a change: `npm run build
 
 - `npm run build --workspace packages/claude-code` (`esbuild.config.mjs`) builds the mod, and its test fixtures from
   `test-vault/Sample graph note.md`. The root `npm run build` runs it.
-- `test/` runs in the repository's suite: `graph-view.test.js`, `graphviz-process.test.js`, and `build.test.mjs` (the
-  build writes a hooks bundle with no WebAssembly engine, under 1 MiB, and a render script that draws).
+- `test/` runs in the repository's suite: `graph-view.test.js`, `graphviz-process.test.js`, `build.test.mjs` (the
+  build writes a hooks bundle with no WebAssembly engine, under 1 MiB, and a render script that draws), and
+  `editor-threats.test.js` and `editor-threats-process.test.js` (the server's threat model, each threat tried against a
+  running server or process started in the test), with their support, `editor-threats-support.js`.
