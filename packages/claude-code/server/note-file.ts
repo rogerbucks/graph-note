@@ -64,7 +64,10 @@ export async function readNoteFile(real: string): Promise<NoteText> {
   try {
     const stat = await file.stat();
     if (!stat.isFile()) return { ok: false, why: 'The note is no longer a file.' };
-    // the file opened is the one at the path now, so no folder swapped in between is read through
+    // the path still leads nowhere but itself, so no folder swapped for a link since it was checked is read through
+    // (`lstat` alone follows such a folder as `open` did); then the file opened is the one at the path now
+    if ((await fs.realpath(real).catch(() => null)) !== real)
+      return { ok: false, why: 'The note’s folder was moved or replaced.' };
     const there = await fs.lstat(real).catch(() => null);
     if (!there || there.dev !== stat.dev || there.ino !== stat.ino)
       return { ok: false, why: 'The note changed place while it was read.' };

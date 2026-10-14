@@ -88,11 +88,14 @@ The note store (workstream C1), the real `api`:
   must be inside the vault, end in `.md`, have no part starting with a dot (`.obsidian`, `.git`, `.trash`, a hidden
   file) and hold no NUL; a link that leads out of the vault, into a hidden folder or onto another kind of file is
   refused, each saying why, and so is a file with a second hard link (`nlink > 1`), which could lie outside the vault.
-- `server/note-file.ts` — `readNoteFile` (the whole note within the core's read limit, `O_NOFOLLOW`, the file opened
-  held to the one at the path by device and inode, UTF-8 that must decode exactly; its version the SHA-256 of its
+- `server/note-file.ts` — `readNoteFile` (the whole note within the core's read limit, `O_NOFOLLOW`, the path's real
+  path still itself once it is open, so no folder swapped for a link is read through, and the file opened held to the
+  one at the path by device and inode, UTF-8 that must decode exactly; its version the SHA-256 of its
   bytes) and `writeAtomically` (cc_atomic_write): a new, hidden file beside the note, given the note's mode with
   `chmod` (the umask narrows `open`'s), written and flushed, its folder's real path checked to be the note's still, then
-  renamed into place, the folder flushed; on any failure the temporary file is removed and the note is as it was.
+  renamed into place, the folder flushed; on any failure the temporary file is removed and the note is as it was. A
+  write refused because its folder was swapped can leave its temporary file in the folder swapped away, which the store
+  can no longer reach by the note's path.
   `NoteFiles` are its three steps, which the tests hand in to hold or break one. **What the rename does not keep:** a
   note's extended attributes, ACLs, other hard links (refused anyway) and birth time are those of the new file, not
   the old. **Flushing on macOS:** `fsync` there is not `F_FULLFSYNC`, so the drive's own cache may still hold a write

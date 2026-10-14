@@ -1,6 +1,6 @@
 // The note store hardened after the security review of #450 (spec §26, test_cc_store): a write never clears a draft
 // saved after it began; a note keeps its file mode; a note with another hard link is refused; a folder swapped for a link
-// under a write is caught before the rename; the drafts folder is its owner's alone; a draft of control characters is
+// under a write is caught before the rename, and under a read before anything is read; the drafts folder is its owner's alone; a draft of control characters is
 // still offered; and the real fs.watch is seen to report a change. Each asserts the work done, never the time taken.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
@@ -19,7 +19,7 @@ import {
 } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { NoteStore } from '../server/editor-store.ts';
-import { NODE_FILES } from '../server/note-file.ts';
+import { NODE_FILES, readNoteFile } from '../server/note-file.ts';
 import * as watching from '../server/note-watch.ts';
 import { BODY_LIMIT } from '../server/request-body.ts';
 import { ask, pause } from './editor-threats-support.js';
@@ -126,6 +126,19 @@ describe('the note’s own file kept (cc_atomic_write)', () => {
     assert.equal(readFileSync(join(copy, 'plan.md'), 'utf8'), PLAN);
     assert.equal(readFileSync(join(v.top, 'Notes moved', 'plan.md'), 'utf8'), PLAN);
   });
+
+  test('a folder swapped for a link out of the vault before a read is caught, and nothing outside is read', async () => {
+    const v = tempVault();
+    const real = realpathSync(v.plan),
+      copy = join(v.outside, 'Notes copy');
+    mkdirSync(copy);
+    writeFileSync(join(copy, 'plan.md'), 'OUTSIDE\n');
+    renameSync(dirname(real), join(v.top, 'Notes moved'));
+    symlinkSync(copy, dirname(real));
+    const r = await readNoteFile(real);
+    assert.equal(r.ok, false);
+    assert.equal(r.text, undefined);
+  });
 });
 
 describe('the real watcher (cc_redrawn_on_change)', () => {
@@ -141,5 +154,11 @@ describe('the real watcher (cc_redrawn_on_change)', () => {
     }
     close();
     assert.ok(changes > 0, 'fs.watch saw no change to the note');
+    // closed: once what was queued before has run, a later write adds no change
+    await settle();
+    const seen = changes;
+    writeFileSync(v.plan, PLAN);
+    await settle();
+    assert.equal(changes, seen);
   });
 });

@@ -26,7 +26,9 @@ export function debounced(fn: () => void, ms: number): () => void {
 export const watchWith =
   (ms: number): Watcher =>
   (folder, file, changed) => {
-    const later = debounced(changed, ms);
+    let closed = false;
+    // a read already waiting out its debounce when the watch is closed is not made
+    const later = debounced(() => closed || changed(), ms);
     let watcher: ReturnType<typeof watch>;
     try {
       // a name that is not given (some systems give none) may be the note's
@@ -35,7 +37,10 @@ export const watchWith =
       return () => {};
     }
     watcher.on('error', () => {});
-    return () => watcher.close();
+    return () => {
+      closed = true;
+      watcher.close();
+    };
   };
 
 /** The watcher the store uses unless handed another: fs.watch on the note's folder, debounced by WATCH_DEBOUNCE_MS. */
