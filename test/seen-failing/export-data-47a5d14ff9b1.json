@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/export-data.test.js",
+  "test": "GraphML > the test reader reads a comment as XML does, to its first -->, and refuses one XML refuses or one outside the root",
+  "seen_failing_first": false,
+  "evidence": "It tests the test reader (export-data-readers.js), test support changed in the same commit, not product code, so the parent's code cannot make it fail; it replaces the test that held the reader refused every comment."
+}
