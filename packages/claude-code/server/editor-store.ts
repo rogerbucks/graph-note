@@ -198,7 +198,9 @@ export class NoteStore {
           return answer(500, { why: w.why, draft: kept.ok });
         }
         note.version = w.version;
-        await this.drafts.clear(note.inVault);
+        // the draft this write makes good is cleared; one typed on top of what was just written is newer, and kept
+        const draft = await this.drafts.take(note.inVault);
+        if (draft && (draft.text === text || draft.against !== w.version)) await this.drafts.clear(note.inVault);
         return answer(200, { version: w.version }, { etag: w.version });
       }),
     );
@@ -208,15 +210,17 @@ export class NoteStore {
     return writeAtomically(now.real as string, text, now.mode, this.files);
   }
 
+  /** Keeps what was typed as the note's draft, under the note's lock, so no write under way can clear it after. */
   private keepDraft(id: string, text: string, ifMatch: string | null): Promise<ApiAnswer> {
     const note = this.notes.get(id) as OpenNote;
     return this.counted(
-      (async () => {
+      this.locked(id, async () => {
+        if (this.stopped) return STOPPED;
         const against = ifMatch ?? (await this.load(note).then((r) => (r.ok ? r.version : null)));
         if (this.stopped) return STOPPED;
         const kept = await this.drafts.keep(note.inVault, { text, against });
         return kept.ok ? { status: 204, text: '' } : answer(500, { why: kept.why });
-      })(),
+      }),
     );
   }
 

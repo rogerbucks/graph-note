@@ -79,22 +79,31 @@ The note store (workstream C1), the real `api`:
   draft; cc_write_if_unchanged), `PUT notes/<id>/draft` (an empty one clears it) and `GET notes/<id>/events` (a
   stream, a JSON object to a line: the note now, then each change on disk that differs from what the page has, or
   `{gone}`; cc_redrawn_on_change). Anything else, an id never opened among it, is "No such note is open." (404). Each
-  read and write checks the note's place again (410 when it moved or now leads out). `stop` closes the watchers, lets
-  no write start (each checks again when its turn under the lock comes) and resolves once those under way are done.
+  read and write checks the note's place again (410 when it moved or now leads out). A draft is kept under the note's
+  lock too, so a write under way never clears one saved after it began; a write that is made clears the draft unless
+  that draft was typed against the very version it wrote, and differs. `stop` closes the watchers, lets no write start
+  (each checks again when its turn under the lock comes) and resolves once those under way are done. **A write refused
+  with 503 keeps no draft** (keeping one is a write too): the page must keep its own text when the server stops.
 - `server/note-place.ts` — `notePlace` (cc_no_escape): a path, as written and as its real path, every link followed,
   must be inside the vault, end in `.md`, have no part starting with a dot (`.obsidian`, `.git`, `.trash`, a hidden
   file) and hold no NUL; a link that leads out of the vault, into a hidden folder or onto another kind of file is
-  refused, each saying why.
-- `server/note-file.ts` — `readNoteFile` (the whole note within the core's read limit, `O_NOFOLLOW`, UTF-8 that must
-  decode exactly; its version the SHA-256 of its bytes) and `writeAtomically` (cc_atomic_write): a new, hidden file
-  beside the note, written and flushed, then renamed into place, the folder flushed; on any failure the temporary file
-  is removed and the note is as it was. `NoteFiles` are its three steps, which the tests hand in to hold or break one.
-- `server/note-drafts.ts` — `DraftShelf` (cc_drafts_outside): a draft for each note in the data folder, named by a
-  digest of the vault and the note's path, readable by its owner only, written as a note is, and offered when the note
-  is next opened; a write that is made clears it.
-- `server/note-watch.ts` — `watchNote`: `fs.watch` on the note's folder (a note replaced by a rename is still
-  followed), its burst of events read once, `WATCH_DEBOUNCE_MS` (100 ms) after the last; the store is handed it, so a
-  test fires a watcher by hand.
+  refused, each saying why, and so is a file with a second hard link (`nlink > 1`), which could lie outside the vault.
+- `server/note-file.ts` — `readNoteFile` (the whole note within the core's read limit, `O_NOFOLLOW`, the file opened
+  held to the one at the path by device and inode, UTF-8 that must decode exactly; its version the SHA-256 of its
+  bytes) and `writeAtomically` (cc_atomic_write): a new, hidden file beside the note, given the note's mode with
+  `chmod` (the umask narrows `open`'s), written and flushed, its folder's real path checked to be the note's still, then
+  renamed into place, the folder flushed; on any failure the temporary file is removed and the note is as it was.
+  `NoteFiles` are its three steps, which the tests hand in to hold or break one. **What the rename does not keep:** a
+  note's extended attributes, ACLs, other hard links (refused anyway) and birth time are those of the new file, not
+  the old. **Flushing on macOS:** `fsync` there is not `F_FULLFSYNC`, so the drive's own cache may still hold a write
+  that has been flushed; Node offers no `F_FULLFSYNC`, and the rename keeps the note whole either way.
+- `server/note-drafts.ts` — `DraftShelf` (cc_drafts_outside): a draft for each note in the data folder (set to 0700
+  when opened), named by a digest of the vault and the note's path, readable by its owner only (0600), written as a
+  note is, and offered when the note is next opened; a draft file may hold up to `6 × BODY_LIMIT + 1024` characters,
+  room for a note's worth of control characters as JSON writes them.
+- `server/note-watch.ts` — `watchNote`, `watchWith(ms)`: `fs.watch` on the note's folder (a note replaced by a rename
+  is still followed), its burst of events read once, `WATCH_DEBOUNCE_MS` (100 ms) after the last; the store is handed
+  it, so a test fires a watcher by hand.
 
 Nothing of the tests ships: their stand-in, `test/fixtures/editor-server-test.ts` (TEST ONLY: a few notes in memory,
 by plain name at `/api/test-note/<name>`, each write made against the version it names, `If-Match`), is still handed in
@@ -141,5 +150,7 @@ in every new session, the desktop app's included. After a change: `npm run build
   `editor-threats.test.js` and `editor-threats-process.test.js` (the server's threat model, each threat tried against a
   running server or process started in the test), with their support, `editor-threats-support.js`; and
   `editor-store.test.js` (the note store on a real vault in a temporary folder, served by a running server, with
-  `EditorSession` as the page; a watcher fired by hand and file steps held, never a clock), with its support,
-  `editor-store-support.js`.
+  `EditorSession` as the page; a watcher fired by hand and file steps held, never a clock) and
+  `editor-store-hardening.test.js` (what the security review of #450 found: a draft saved during a write, a note's
+  mode, hard links, a folder swapped under a write, the drafts folder's mode and longest draft, and the real fs.watch),
+  with their support, `editor-store-support.js`.

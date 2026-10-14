@@ -1,5 +1,6 @@
 // Where a note may be (spec §26, cc_no_escape): inside the vault, a .md file, in no hidden folder, and never reached by
-// a symlink that leads out of the vault. The path is checked as written and again as its real path, every link
+// a symlink that leads out of the vault, nor a file with a second hard link, which could lie anywhere on the same
+// disk. The path is checked as written and again as its real path, every link
 // followed, so neither `..` nor a link can leave the vault. The note store checks a note's place when it is opened and
 // again before every read and write, so a note swapped for a link after it was opened is refused too.
 import { promises as fs } from 'node:fs';
@@ -51,5 +52,7 @@ export async function notePlace(vault: Vault, given: string): Promise<Place> {
   if (asLinked) return { ok: false, why: asLinked };
   const stat = await fs.stat(real).catch(() => null);
   if (!stat?.isFile()) return { ok: false, why: `${given} is not a file.` };
+  // another hard link to it may lie outside the vault, so a write here would change a file there
+  if (stat.nlink > 1) return { ok: false, why: `${given} has another hard link, which may lie outside the vault.` };
   return { ok: true, real, inVault };
 }

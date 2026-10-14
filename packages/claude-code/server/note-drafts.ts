@@ -9,6 +9,12 @@ import { inside, type Vault } from './note-place.ts';
 import { BODY_LIMIT } from './request-body.ts';
 import { NODE_FILES, writeAtomically, type NoteFiles } from './note-file.ts';
 
+/**
+ * The most characters a draft's file may hold: a note's worth of control characters, each written by JSON as six
+ * (`\u0001`), and room for the rest of the record.
+ */
+const DRAFT_MOST = 6 * BODY_LIMIT + 1024;
+
 /** A draft: what was typed, and the version of the note it was typed against (null when it was not known). */
 export interface Draft {
   text: string;
@@ -39,6 +45,8 @@ export class DraftShelf {
     await fs.mkdir(named, { recursive: true, mode: 0o700 });
     const real = await fs.realpath(named);
     if (within(real) || real === vault.real) throw refuse();
+    // its owner's alone, even when it was made before, or under a umask that left it open
+    await fs.chmod(real, 0o700);
     return new DraftShelf(real, vault, files);
   }
 
@@ -62,7 +70,7 @@ export class DraftShelf {
   /** The note's draft, or null when none is kept or it cannot be read as one. */
   async take(inVault: string): Promise<Draft | null> {
     const raw = await fs.readFile(this.fileOf(inVault), 'utf8').catch(() => null);
-    if (raw === null || raw.length > 2 * BODY_LIMIT) return null;
+    if (raw === null || raw.length > DRAFT_MOST) return null;
     try {
       const d: unknown = JSON.parse(raw);
       if (!d || typeof d !== 'object') return null;

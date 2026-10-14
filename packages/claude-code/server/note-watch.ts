@@ -22,16 +22,21 @@ export function debounced(fn: () => void, ms: number): () => void {
   };
 }
 
-/** The watcher the store uses unless handed another: fs.watch on the note's folder, debounced. */
-export const watchNote: Watcher = (folder, file, changed) => {
-  const later = debounced(changed, WATCH_DEBOUNCE_MS);
-  let watcher: ReturnType<typeof watch>;
-  try {
-    // a name that is not given (some systems give none) may be the note's
-    watcher = watch(folder, { persistent: false }, (_event, name) => (name === null || name === file) && later());
-  } catch {
-    return () => {};
-  }
-  watcher.on('error', () => {});
-  return () => watcher.close();
-};
+/** fs.watch on the note's folder, its events for the note debounced by `ms`. */
+export const watchWith =
+  (ms: number): Watcher =>
+  (folder, file, changed) => {
+    const later = debounced(changed, ms);
+    let watcher: ReturnType<typeof watch>;
+    try {
+      // a name that is not given (some systems give none) may be the note's
+      watcher = watch(folder, { persistent: false }, (_event, name) => (name === null || name === file) && later());
+    } catch {
+      return () => {};
+    }
+    watcher.on('error', () => {});
+    return () => watcher.close();
+  };
+
+/** The watcher the store uses unless handed another: fs.watch on the note's folder, debounced by WATCH_DEBOUNCE_MS. */
+export const watchNote: Watcher = watchWith(WATCH_DEBOUNCE_MS);

@@ -22,6 +22,8 @@ export const NODE_FILES: NoteFiles = {
   async writeTemp(temp, text, mode) {
     const file = await fs.open(temp, 'wx', mode);
     try {
+      // the umask narrows the mode `open` makes a file with; the note's own is put back whole
+      await file.chmod(mode);
       await file.writeFile(text, 'utf8');
       await file.sync();
     } finally {
@@ -62,6 +64,10 @@ export async function readNoteFile(real: string): Promise<NoteText> {
   try {
     const stat = await file.stat();
     if (!stat.isFile()) return { ok: false, why: 'The note is no longer a file.' };
+    // the file opened is the one at the path now, so no folder swapped in between is read through
+    const there = await fs.lstat(real).catch(() => null);
+    if (!there || there.dev !== stat.dev || there.ino !== stat.ino)
+      return { ok: false, why: 'The note changed place while it was read.' };
     if (stat.size > BODY_LIMIT)
       return { ok: false, why: `The note is larger than a note may be: ${BODY_LIMIT} bytes.` };
     const bytes = new Uint8Array(await file.readFile());
@@ -95,6 +101,9 @@ function causeOf(e: unknown): string {
   return CAUSES[code] ?? 'the system gave no reason it can say';
 }
 
+/** The refusal of a rename whose folder is no longer the one checked. */
+const FOLDER_MOVED = 'folder moved';
+
 /** A temporary name beside `target`, hidden, so the vault's own app passes it by. */
 export function tempBeside(target: string): string {
   return join(dirname(target), `.${basename(target)}.${randomBytes(6).toString('hex')}.graph-note`);
@@ -110,10 +119,13 @@ export async function writeAtomically(
   const temp = tempBeside(target);
   try {
     await files.writeTemp(temp, text, mode);
+    // the folder is still the one checked: one swapped for a link meanwhile would carry the rename out of the vault
+    if ((await fs.realpath(dirname(temp)).catch(() => null)) !== dirname(target)) throw new Error(FOLDER_MOVED);
     await files.rename(temp, target);
     return { ok: true, version: versionOf(text) };
   } catch (e) {
     await files.remove(temp).catch(() => {});
-    return { ok: false, why: `It could not be written: ${causeOf(e)}. The note is as it was.` };
+    const cause = e instanceof Error && e.message === FOLDER_MOVED ? 'its folder was moved or replaced' : causeOf(e);
+    return { ok: false, why: `It could not be written: ${cause}. The note is as it was.` };
   }
 }
