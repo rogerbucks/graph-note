@@ -30,6 +30,7 @@ import gql_profile as gp  # noqa: E402
 import graph_rules as gr  # noqa: E402
 import graph_svg  # noqa: E402
 from graphspec.style.folding import BUSY_HUB  # noqa: E402
+from graphspec.style.picture import PICTURE_MARK  # noqa: E402
 
 with open(os.path.join(HERE, "fold_cases.json"), encoding="utf-8") as f:
     CASES = json.load(f)["cases"]
@@ -118,6 +119,7 @@ def python_answer(texts, view, switches, opened):
                 flow=args["flow"],
                 folding=args["folding"],
                 routing=args["routing"],
+                pictures=args["pictures"],
             )[0]
             for rd in graph_svg.directions(args["direction"], args["diagram"])
         }
@@ -182,6 +184,19 @@ class Folds(unittest.TestCase):
         texts = texts_of(CASES[1])
         self.assertIsNone(graph_svg.render_args(texts, "kit")["folding"])
         self.assertIsNotNone(graph_svg.render_args(texts, "kit", None, {})["folding"])
+
+    def test_a_picture_stays_on_its_own_box_when_others_are_folded(self):
+        # animated_image_shown with untangle_groups and untangle_hubs: the last case folds a group
+        # of two pictured people into one box and a pictured hub's links into a stub; in both
+        # renderers the room for a picture is kept on the hub's box and on the one person left,
+        # and on no group box or stub, in each direction laid out
+        case = len(CASES) - 1
+        self.assertIn("pictures", CASES[case]["name"])
+        for theirs, ours in ((self.core[case], "core"), (self.python[case], "python")):
+            for s in theirs["drawn"]["kit"].values():
+                pictured = [line for line in s.split("\n") if PICTURE_MARK in line]
+                keys = sorted(line.split('"')[1] for line in pictured)
+                self.assertEqual(keys, ["box", "cy"], f"{ours}: {s}")
 
 
 if __name__ == "__main__":

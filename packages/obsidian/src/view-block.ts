@@ -286,6 +286,7 @@ export async function renderViewBlock(
       motion: { flow: styled.flow ?? [], reversed: reversedLinks(styled, drawn.rankdir) },
       // its links shown and followed as the graph's are (§18); a broken one is reported on the graph's own card
       links: { ...linkHost(plugin, ctx.sourcePath, v.graph), broken: [] },
+      images: plugin.cardImages(ctx.sourcePath, styled.pictures), // its things' images and pictures (§18)
       // an export reads the note it is in: a view drawn from elsewhere is exported from where its data is written
       ...(from
         ? {}

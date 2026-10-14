@@ -49,6 +49,7 @@ STYLE_KINDS = (
     "Diagram",
     "Flow",
     "Links",
+    "Picture",
 )
 # The keys each kind of style thing may have (§2, style_words_checked); a thing's id is its name.
 STYLE_KEYS = {
@@ -73,6 +74,7 @@ STYLE_KEYS = {
     "Diagram": ("type", "view", "relationship"),
     "Flow": ("motion", "means", "type", "view"),
     "Links": ("view", "routing", "merge"),
+    "Picture": ("property", "kind", "thing", "view"),
 }
 
 

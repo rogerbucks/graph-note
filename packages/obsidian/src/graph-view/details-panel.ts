@@ -12,14 +12,14 @@ import { showSuggested } from './suggested-name';
 import { parkButton, parkedNote } from './parked';
 import { estimateActions } from './estimate-actions';
 import { button } from './view-bar';
-import { linkWords, renderLinkGroups, renderTrail, stepName, thingButton } from './details-nav';
+import { linkWords, reducedMotion, renderLinkGroups, renderTrail, stepName, thingButton } from './details-nav';
 import type { NavActions } from './details-nav';
 import { DetailsSheet } from './details-sheet';
 import { RichDetails } from './rich-details';
+import { MovingImages, placePictures, renderImages } from './animated-images';
 import type { ThingActions } from './untangle';
 import type { ViewOptions } from './view-options';
 import type { View } from '@graph-note/core';
-import type { LeftAt } from '../links/link-host';
 
 /** The details of one drawing, shown in its card below the drawing, or in view mode as the sheet. */
 export class DetailsPanel {
@@ -38,6 +38,8 @@ export class DetailsPanel {
   private readonly sheet: DetailsSheet;
   /** Its text and properties rendered by Obsidian, the note a thing stands for, and its links (§18). */
   private readonly rich: RichDetails;
+  /** The card's images, a thing's shown in its details and the pictures on its boxes, counted as they move (§18). */
+  private readonly images: MovingImages;
 
   /** The drawing's view as it is now, set by the card: where a link that takes the card's tab leaves it (§18). */
   view?: () => View;
@@ -45,13 +47,6 @@ export class DetailsPanel {
   /** The thing whose details are open, if a thing's are: what a view saved as shown keeps as selected (§7). */
   selectedKey(): string | null {
     return this.shown && 'key' in this.shown ? this.shown.key : null;
-  }
-
-  /** Where the card is now: its zoom, where it is panned and the thing selected, for the back step (back_where_you_were). */
-  private leftAt(): LeftAt | null {
-    const v = this.view?.(),
-      selected = this.selectedKey();
-    return v ? { zoom: v.scale, x: v.x, y: v.y, ...(selected ? { selected } : {}) } : null;
   }
 
   /** For the details element of a card, its drawing, the viewport the focus goes back to, the card's options and what a thing's details offer. */
@@ -67,7 +62,13 @@ export class DetailsPanel {
     this.viewport = viewport;
     this.o = o;
     this.actions = actions;
-    this.rich = new RichDetails(o, () => this.leftAt());
+    this.rich = new RichDetails(
+      o,
+      () => this.view?.(),
+      () => this.selectedKey(),
+    );
+    // still under reduced motion, as the system asks when the card is drawn (§11)
+    this.images = new MovingImages(reducedMotion(activeWindow), o.images);
     this.sheet = new DetailsSheet(el, {
       // the sheet is for view mode, in a note's card: full screen and the pane show the details in their own place
       on: () => o.mode === 'note' && !o.editing?.()?.session,
@@ -86,10 +87,20 @@ export class DetailsPanel {
     this.sheet.moved(resized);
   }
 
-  /** The card is going: the sheet's watchers stop. */
+  /** The card is going: the sheet's watchers stop, and its images let go of what they hold. */
   unload(): void {
     this.sheet.closed();
     this.rich.end();
+    this.images.release();
+  }
+
+  /**
+   * The pictures its style draws on the boxes of `svg` (§18), counted as they move with the details' images; those
+   * placed on a drawing before let go first, as a drawing laid out again holds none of them.
+   */
+  pictures(svg: Element): void {
+    this.images.release('boxes');
+    placePictures(svg, this.images);
   }
 
   /** A thing or link chosen from the details: the next step of the trail, made the selection by the card. */
@@ -180,6 +191,7 @@ export class DetailsPanel {
   private panel(title: string, kind?: string): HTMLElement {
     const el = this.el;
     this.rich.begin();
+    this.images.release('details'); // the images of the details shown before let go
     el.empty();
     el.hidden = false;
     el.setAttribute('aria-label', `Details of ${title}`);
@@ -197,6 +209,7 @@ export class DetailsPanel {
   /** Closes the details and clears what is selected, as the close button does, and tells the card (§25): the focus clears too. */
   close(): void {
     this.el.hidden = true;
+    this.images.release('details');
     this.shown = null;
     this.trail.clear();
     this.sheet.closed();
@@ -279,6 +292,8 @@ export class DetailsPanel {
       propertiesOf(this.o.reading, this.o.graph, { thing: key }).map((p) => [p.key, p.value]),
     );
     this.rich.links(el, { thing: key });
+    // the images its properties name, each moving, or still saying why, with its pause and play control (§18)
+    renderImages(el, this.o.reading.world[this.o.graph]?.p(key) ?? {}, this.images);
     links(
       'Problems',
       d.problems.map((p) => problemText({ ...p, noteLine: this.o.lineOf(p) })),

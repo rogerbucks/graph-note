@@ -99,6 +99,14 @@ export function fakeObsidian(state = {}) {
       state.reads?.push(f.path);
       return files.get(f.path);
     },
+    // the address a file is shown from without being read, as Obsidian gives one for an image
+    getResourcePath: (f) => `app://vault/${f.path}`,
+    // a file's bytes, as an attachment is read: a note's text as UTF-8, bytes as they are
+    readBinary: async (f) => {
+      const held = files.get(f.path);
+      const bytes = typeof held === 'string' ? new TextEncoder().encode(held) : held;
+      return bytes.slice().buffer;
+    },
     process: async (f, fn) => {
       const next = fn(files.get(f.path));
       if (next !== files.get(f.path)) {
@@ -414,6 +422,7 @@ export function fakeObsidian(state = {}) {
     ...settings,
     parseYaml,
     getFrontMatterInfo,
+    arrayBufferToBase64: (b) => Buffer.from(b).toString('base64'),
   };
 }
 

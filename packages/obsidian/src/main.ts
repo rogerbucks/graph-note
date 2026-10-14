@@ -21,6 +21,7 @@ import type {
   ExportTheme,
   GraphDrawing,
   LayoutLimits,
+  PictureBox,
   PngSize,
   ProposalReview,
   Refusal,
@@ -32,6 +33,9 @@ import { AI_COMMAND, CLEAR_SENDS_COMMAND, SENDS_KEPT, askAi, clearAiSends } from
 import { exportGraph } from './export/export';
 import type { ExportAsk, ExportOutcome } from './export/export';
 import { PNG_PIXEL_LIMIT, rasterise } from './export/png';
+import { stillFrame } from './images/still-frame';
+import { vaultImages } from './images/vault-images';
+import type { CardImages } from './graph-view/animated-images';
 import { GraphNoteSettingTab } from './settings/settings';
 import type { DeclaredList } from './properties/list-row';
 import { engineOnThePage, Layouts } from './layout-worker/layout-worker';
@@ -272,6 +276,16 @@ export default class GraphNotePlugin extends Plugin {
   /** A PNG of an exported SVG at `size` (spec §16): kept apart so a test can stand in one, as it can the engine. */
   rasterise(svg: string, size: PngSize): Promise<Uint8Array> {
     return rasterise(svg, size);
+  }
+
+  /** The PNG of an animated image's first frame, or null where it cannot be drawn (§18): apart, so a test can stand in one. */
+  stillFrame(bytes: Uint8Array, mime: string): Promise<Uint8Array | null> {
+    return stillFrame(bytes, mime);
+  }
+
+  /** What a card's images need (§18): the vault's images found from the note at `path`, first frames, and its pictures. */
+  cardImages(path: string, pictures: readonly PictureBox[] = []): CardImages {
+    return { source: vaultImages(this.app, path), still: (b, m) => this.stillFrame(b, m), pictures };
   }
 
   private layouts: Layouts | null = null;

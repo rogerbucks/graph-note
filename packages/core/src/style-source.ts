@@ -9,6 +9,7 @@ import { inlineRows } from './inline-properties.ts';
 import { STYLE } from './layout.ts';
 import { flowLinks } from './link-flow.ts';
 import type { GraphDrawing } from './note-reading.ts';
+import { picturesFor } from './picture.ts';
 import type { Nudge, StyleGraph } from './style-graph.ts';
 import { linksOf } from './style.ts';
 import { diagramFor } from './types.ts';
@@ -68,15 +69,16 @@ export function nudgedDrawing(drawing: GraphDrawing, style: Pick<StyleGraph, 'di
  * The drawing as its style graph draws it in `view` (none: the whole graph), as every host draws a graph, a view or an
  * export: in the direction its direction nudge sets, with its nudges (§6), the links it draws without their arrowheads
  * (§15), the properties it shows inline (§14), their values from `g`, the graph as read (none: no property shown), the
- * links it moves (§7, link-flow.ts), and laid out as the diagram type it chooses while the data fits it (§15,
- * types.ts); a network otherwise.
+ * links it moves (§7, link-flow.ts), the boxes it draws a picture on (§18, picture.ts; none without `g`), and laid out
+ * as the diagram type it chooses while the data fits it (§15, types.ts); a network otherwise.
  */
 export function styledDrawing(drawing: GraphDrawing, style: StyleGraph, g?: Graph, view?: string): GraphDrawing {
   const arrowless = arrowlessLinks(drawing, style, view),
     inline = g ? inlineRows(drawing, g, style, view) : undefined,
     { plan } = diagramFor(drawing, style, g, view),
     flow = flowLinks(drawing, style, view),
-    { routing } = linksOf(style, view);
+    { routing } = linksOf(style, view),
+    pictures = g ? picturesFor(drawing, g, style, view) : [];
   return {
     ...nudgedDrawing(drawing, style),
     nudges: style.nudges,
@@ -86,5 +88,6 @@ export function styledDrawing(drawing: GraphDrawing, style: StyleGraph, g?: Grap
     ...(flow.length ? { flow } : {}),
     // the links straight or right-angled, as its Links says (§25); curved is how Graphviz draws them already
     ...(routing === 'curved' ? {} : { routing }),
+    ...(pictures.length ? { pictures } : {}),
   };
 }

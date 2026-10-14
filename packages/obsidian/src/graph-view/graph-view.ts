@@ -175,6 +175,7 @@ export class GraphView extends MarkdownRenderChild {
       // a busy hub's details open or fold its links (§25)
       ...(sw ? { hub: (k: string) => sw.hub(k), toggleHub: (k: string) => sw.toggleHub(k) } : {}),
     });
+    if (this.svg) this.details.pictures(this.svg); // the pictures its style draws on boxes (§18)
     // closing the details, by button, Escape or a tap on empty space, clears the selection and the focus with them (§25)
     this.details.onClosed = () => this.sel.closed();
     this.details.view = () => this.zoom.view(); // where a link that takes the card's tab leaves it (§18)
@@ -303,6 +304,7 @@ export class GraphView extends MarkdownRenderChild {
     this.drawn = drawn;
     this.walk?.stop(); // a path playing marks the drawing it began on: it stops, and is played again on this one
     swapSvg(svg, drawn, this.drawing(), this.o.switches?.state.plan, this.o);
+    this.details.pictures(svg); // the pictures went with the drawing: each box drawn now gets its own, by its key (§18)
     if (this.o.motion) markFlow(svg, this.o.motion.flow); // the links its style moves, on both lines of a trunk (§7)
     this.flowLegend();
     if (this.o.view) markView(svg, this.o.view);

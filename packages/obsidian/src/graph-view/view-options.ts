@@ -28,6 +28,7 @@ import type { ProposalCard } from '../proposals/proposal-strip';
 import type { DiagramShown } from './type-strip';
 import type { Exporting } from '../export/export-form';
 import type { LinkHost } from '../links/link-host';
+import type { CardImages } from './animated-images';
 
 /** What declaring Deferred and DEFERS in the graph's schema gave: the text to park into, and the graph as the note now reads it. */
 export interface DeclaredDeferred {
@@ -101,6 +102,8 @@ export interface ViewOptions {
   motion?: LinkMotion;
   /** Its links followed through Obsidian, and those that name nothing (§18); none, links shown as plain text. */
   links?: LinkHost;
+  /** The images its things name, found in the vault, and the boxes a Picture draws one on (§18); none, no image shown. */
+  images?: CardImages;
   /** Writes a view block after the graph's last block in the note (§7, views_by_tapping); resolves to why not, or null. */
   writeView?: (block: string) => Promise<string | null>;
   /** Edit here: opens the text in place, inside this card (spec §4); given `at`, with where it is written selected. */

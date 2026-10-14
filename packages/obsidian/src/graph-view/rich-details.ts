@@ -1,11 +1,12 @@
 // The rich parts of a box's or link's details (editor spec §18): a thing's text and properties rendered as Markdown by
 // Obsidian's own MarkdownRenderer, so images, maths, links and embeds appear as in a note (rich_details), the plugin
-// writing no HTML of its own; a thing whose id is a link to a note showing that note, rendered, with a link that opens
-// it (node_is_a_note); and the links and attachments it holds (links-list.ts). What is rendered is owned by a component
+// writing no HTML of its own; a thing whose id is a global note id or a link to a note showing that note, read and
+// rendered made safe, with a link that opens it (node_is_a_note); and the links and attachments it holds
+// (links-list.ts). What is rendered is owned by a component
 // of its own, unloaded when the details are drawn again or close, so nothing rendered outlives what it was rendered for.
 import { Component } from 'obsidian';
 import { attachmentsOf, linksHeld, noteOf, withMeant } from '@graph-note/core';
-import type { Target } from '@graph-note/core';
+import type { Target, View } from '@graph-note/core';
 import { linkAnchor, renderLinks } from '../links/links-list';
 import type { LeftAt } from '../links/link-host';
 import type { ViewOptions } from './view-options';
@@ -17,11 +18,21 @@ const MARKED = /[[\]*_`$!<~=#>|^]/;
 export class RichDetails {
   private owner: Component | null = null;
 
-  /** For a card's options, and where the card is, for the back step when a link takes its tab. */
+  /** Where the card is: its zoom, where it is panned and the thing selected, kept when a link takes its tab. */
+  private readonly where: () => LeftAt | null;
+
+  /** For a card's options, its drawing's view as it is now, and the thing selected (back_where_you_were). */
   constructor(
     private readonly o: ViewOptions,
-    private readonly where: () => LeftAt | null,
-  ) {}
+    view: () => View | undefined,
+    selectedKey: () => string | null,
+  ) {
+    this.where = () => {
+      const v = view(),
+        selected = selectedKey();
+      return v ? { zoom: v.scale, x: v.x, y: v.y, ...(selected ? { selected } : {}) } : null;
+    };
+  }
 
   /** The details are drawn afresh: what was rendered for the last is unloaded, and a new owner started. */
   begin(): void {
