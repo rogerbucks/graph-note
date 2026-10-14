@@ -385,7 +385,18 @@ describe('in Obsidian', () => {
       await env.plugin.openEditor({ path: PATH, line: 2, graph: 'trip' });
       const pane = env.app.workspace.getLeavesOfType('graph-note-pane')[0].view.contentEl;
       const marked = pane.querySelectorAll('.graph-note-overlay .graph-note-text-link').map((s) => s.textContent);
-      assert.ok(marked.includes('[[Plans]]') && marked.includes('https://example.com/a'), marked.join(' '));
+      // every link in the block's texts, each marked whole, in the order written
+      assert.deepEqual(marked, [
+        '[[Plans]]',
+        '[[Plans]]',
+        'https://example.com/a',
+        '![[photo.png]]',
+        '[[report.pdf]]',
+        '[run](javascript:alert(1)',
+        '[[Plnas]]',
+        '[[javascript:alert(2)]]',
+        '[x](javascript:y)',
+      ]);
     } finally {
       env.uninstall();
     }
