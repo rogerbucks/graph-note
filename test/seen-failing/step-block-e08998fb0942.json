@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/step-block.test.js",
+  "test": "a step’s card > runs nothing when it is drawn: the note is as it was until Run is pressed",
+  "seen_failing_first": false,
+  "evidence": "Before the step card existed a step block was drawn as plain code, which also writes nothing, so this passed against the parent. It guards run_declared_only for the new card: drawing it must never run the step; the card's other tests, which need the card, failed first."
+}

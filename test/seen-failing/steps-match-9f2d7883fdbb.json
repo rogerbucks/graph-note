@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/steps-match.test.js",
+  "test": "the work of matching a step’s pattern is bounded > a step finding more than MOST_MATCHES matches is stopped, gives nothing, and says so",
+  "seen_failing_first": false,
+  "evidence": "MOST_MATCHES was already enforced when the step was built (04b3f5d) but had no test; the review asked for one that goes over it, so it pins existing behaviour and passed first. The MOST_TRIES test beside it, whose counting changed, failed first."
+}

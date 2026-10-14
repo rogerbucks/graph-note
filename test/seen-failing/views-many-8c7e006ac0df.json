@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/views-many.test.js",
+  "test": "several views of one graph, in one note > are each drawn from the one data block, none copying it",
+  "seen_failing_first": false,
+  "evidence": "Several views of one graph in one note were already drawn from its one data block since the views of slice 2 (view-block.ts reads the note's own blocks and evaluate puts each view to that reading). This test pins that half of many_views_one_data beside the new half, views in several notes drawn from a source, which failed first."
+}

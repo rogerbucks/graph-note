@@ -1,6 +1,6 @@
-"""Each thing of a style graph checked on its own (editor spec §2, style_graph_checked; §6; §14;
-§15): its kind, the keys it writes, and for a nudge, a Show, an Arrows or a Diagram its words, its
-values and
+"""Each thing of a style graph checked on its own (editor spec §2, style_graph_checked; §6; §7;
+§14; §15): its kind, the keys it writes, and for a nudge, a Show, an Arrows, a Diagram or a Flow
+its words, its values and
 every name it uses, against the graph it styles. The core's style-checks.ts, function for function,
 as far as what graph_svg draws goes: what is sound is kept, and each fault is a problem on its line
 with its fix, the same words as the core's.
@@ -12,11 +12,13 @@ from __future__ import annotations
 
 from typing import Any
 
+from graphspec.style.flow import MEANS_NEEDED
 from graphspec.style.near_names import nearest
 from graphspec.style.words import (
     ARROWHEADS,
     DIAGRAM_TYPES,
     DIRECTIONS,
+    FLOW_MOTIONS,
     INLINE,
     NUDGE_WORDS,
     STYLE_KINDS,
@@ -212,19 +214,47 @@ def _diagram_of(raw, names, out):
     }
 
 
+def _flow_of(raw, names, out):
+    """A Flow, checked (§7): how its links move — dashes, a dot, or still — for every link or the
+    links of a relationship type the graph has, in the whole graph or a view, whose name is the
+    user's own; one that moves links says what the movement means, or it is a problem and its links
+    stay still (motion_not_alone)."""
+    r, before, props = _Reader(raw, names, out), len(out), raw["props"]
+    if "motion" not in props:
+        add = "add motion: " + or_list([f"'{w}'" for w in FLOW_MOTIONS])
+        r.missing("a Flow says how its links move", add)
+        return None
+    motion = r.word("motion", FLOW_MOTIONS, f"motion must be {or_list(FLOW_MOTIONS)}")
+    typ = r.name("type", names["types"], "a relationship type")
+    view = r.text("view")
+    means = r.text("means")
+    if motion and motion != "still" and not means and len(out) == before:
+        r.missing(MEANS_NEEDED, "add means: '<what the movement means>'")
+    if not motion or len(out) != before:
+        return None
+    return {
+        "motion": motion,
+        **({} if means is None else {"means": means}),
+        **({} if view is None else {"view": view}),
+        **({} if typ is None else {"type": typ}),
+        "at": raw["at"],
+    }
+
+
 # The kinds a style graph checks fully here, each with its check and where what it gives goes.
 _CHECKS = {
     "Nudge": (_nudge_of, "nudges"),
     "Show": (_show_of, "shows"),
     "Arrows": (_arrows_of, "arrows"),
     "Diagram": (_diagram_of, "diagrams"),
+    "Flow": (_flow_of, "flows"),
 }
 
 
 def check_things(raws: list[dict], names: dict) -> dict[str, list[dict]]:
     """Each thing of a style graph checked on its own, in the order written: the nudges, Shows,
-    Arrows and Diagrams that are sound, and the problems found ({nudges, shows, arrows, diagrams,
-    problems}). A raw thing
+    Arrows, Diagrams and Flows that are sound, and the problems found ({nudges, shows, arrows,
+    diagrams, flows, problems}). A raw thing
     is {labels (in the order written), props, at: {block, line, id}}; names is {graph, things,
     kinds, types: names in the graph styled, properties(of): the property names of a kind's things,
     a thing or a type's links}. A thing that writes a key its kind does not know is reported on
@@ -234,6 +264,7 @@ def check_things(raws: list[dict], names: dict) -> dict[str, list[dict]]:
         "shows": [],
         "arrows": [],
         "diagrams": [],
+        "flows": [],
         "problems": [],
     }
     problems = c["problems"]

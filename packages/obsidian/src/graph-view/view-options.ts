@@ -1,6 +1,24 @@
 // What a drawn graph is given (spec §3, §4, §14): the reading and the graph, its drawn SVG and its problems, where it is
 // shown, what its buttons do, and the editor open in place on its card, if any, which its inspector writes through.
-import type { CompletenessReport, Drawn, FocusDepth, Indent, Mode, NoteReading, Parked } from '@graph-note/core';
+import type {
+  CompletenessReport,
+  Drawn,
+  FlowLink,
+  FocusDepth,
+  Indent,
+  Mode,
+  NoteReading,
+  Parked,
+} from '@graph-note/core';
+
+/**
+ * How the drawing's links move (§7): the links its style graph moves, and the links whose line Graphviz drew from their
+ * far end, so something moving along them runs backwards to read forwards.
+ */
+export interface LinkMotion {
+  flow: FlowLink[];
+  reversed: number[];
+}
 import type { DeclaredList } from '../properties/list-row';
 import type { ShownProblem } from './problems-list';
 import type { ViewShown } from './view-strip';
@@ -64,6 +82,8 @@ export interface ViewOptions {
   diagram?: DiagramShown;
   /** What the drawing can export, and how (§16); without it, no Export is offered. */
   exporting?: Exporting;
+  /** How its links move, as its style graph says (§7); none, every link still. */
+  motion?: LinkMotion;
   /** Writes a view block after the graph's last block in the note (§7, views_by_tapping); resolves to why not, or null. */
   writeView?: (block: string) => Promise<string | null>;
   /** Edit here: opens the text in place, inside this card (spec §4); given `at`, with where it is written selected. */

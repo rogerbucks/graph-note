@@ -1,0 +1,117 @@
+{
+  "about": "Graphs whose style graph moves its links (editor spec §7: links_show_flow, flow_in_style_graph, motion_not_alone), drawn the same by the plugin's core and by graph_svg.py. Each case is a note's gql blocks, each block a list of lines, and the view it is drawn in, if any (its name only: the whole graph is drawn, styled as that view is). For every case both give the same problems reading each style, the same links moving and how, and, for every graph drawn, the same Graphviz source in each direction laid out, byte for byte: each moving link's label opened by its icon, its classes, and dashes drawn dashed. The expected answers are the core's, run live: packages/core/test/link-flow-parity.test.js holds graph_svg.py to the core on these cases, and tests/test_graph_svg_flow.py does the same from the Python side.",
+  "cases": [
+    {
+      "name": "dashes on every link, the link drawn backwards moving backwards along its line",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'The park'}),",
+          "(cafe:Cafe {name: 'Cafe'}),",
+          "(guide:Source {name: 'The guide'}),",
+          "(green:Tag {name: 'Green'}),",
+          "(home)-[:NEAR]->(park),",
+          "(cafe)-[:SERVES]->(park),",
+          "(home)-[:CITES]->(guide),",
+          "(park)-[:TAGGED]->(green)"
+        ],
+        ["// graph: trip_style · STYLE trip", "(f1:Flow {motion: 'dashes', means: 'the visit goes this way'})"]
+      ]
+    },
+    {
+      "name": "a dot on one relationship type, kept still in a view, drawn in that view",
+      "view": "quiet",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'The park'}),",
+          "(lake:Place {name: 'The lake'}),",
+          "(home)-[:NEAR]->(park),",
+          "(park)-[:NEAR]->(lake),",
+          "(home)-[:FACES]->(lake)"
+        ],
+        [
+          "// graph: trip_style · STYLE trip",
+          "(f1:Flow {motion: 'dot', type: 'NEAR', means: 'people walk this way'}),",
+          "(f2:Flow {motion: 'still', type: 'NEAR', view: 'quiet'})"
+        ]
+      ]
+    },
+    {
+      "name": "a dot on one relationship type, dashes on the rest, with arrowheads hidden and a property shown",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'The park'}),",
+          "(lake:Place {name: 'The lake'}),",
+          "(home)-[:NEAR {miles: 2}]->(park),",
+          "(park)-[:NEAR {miles: 3}]->(lake),",
+          "(home)-[:FACES]->(lake)"
+        ],
+        [
+          "// graph: trip_style · STYLE trip",
+          "(f1:Flow {motion: 'dot', type: 'NEAR', means: 'people walk this way'}),",
+          "(f2:Flow {motion: 'dashes', means: 'the view'}),",
+          "(a1:Arrows {arrowheads: 'hide', type: 'FACES'}),",
+          "(s1:Show {property: 'miles', type: 'NEAR'})"
+        ]
+      ]
+    },
+    {
+      "name": "a tree whose links move: laid out forward, so none moves backwards",
+      "blocks": [
+        [
+          "// graph: team",
+          "(ann:Person {name: 'Ann'}),",
+          "(bob:Person {name: 'Bob'}),",
+          "(cy:Person {name: 'Cy'}),",
+          "(ann)-[:MANAGES]->(bob),",
+          "(ann)-[:MANAGES]->(cy)"
+        ],
+        [
+          "// graph: team_style · STYLE team",
+          "(d1:Diagram {type: 'tree', relationship: 'MANAGES'}),",
+          "(f1:Flow {motion: 'dashes', type: 'MANAGES', means: 'work is handed down'})"
+        ]
+      ]
+    },
+    {
+      "name": "Flows at fault: no motion, a motion not allowed, a type not in the graph, no meaning, an unknown key, and two that conflict",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'The park'}),",
+          "(home)-[:NEAR]->(park)"
+        ],
+        [
+          "// graph: trip_style · STYLE trip",
+          "(f1:Flow {means: 'walking'}),",
+          "(f2:Flow {motion: 'dahses', means: 'walking'}),",
+          "(f3:Flow {motion: 'dot', type: 'NEER', means: 'walking'}),",
+          "(f4:Flow {motion: 'dot'}),",
+          "(f5:Flow {motion: 'dot', speed: 'fast', means: 'walking'}),",
+          "(f6:Flow {motion: 'dashes', type: 'NEAR', means: 'walking'}),",
+          "(f7:Flow {motion: 'dot', type: 'NEAR', means: 'walking'}),",
+          "(f8:Flow {motion: 7, means: 'walking'}),",
+          "(f9:Flow {motion: 'still', means: 7})"
+        ]
+      ]
+    },
+    {
+      "name": "no Flow: every link still, and the source the layout source",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'The park'}),",
+          "(home)-[:NEAR]->(park)"
+        ],
+        ["// graph: trip_style · STYLE trip", "(a1:Arrows {arrowheads: 'show'})"]
+      ]
+    }
+  ]
+}

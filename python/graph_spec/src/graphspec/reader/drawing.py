@@ -19,6 +19,9 @@ GRAPH_LINE = re.compile(rf"{S}*//{S}*graph:")
 # blocks.ts reads it — `// graph: trip_style · STYLE trip`
 STYLES = re.compile(rf"{S}*//{S}*graph:[^\n]*·{S}*STYLE{S}+([^{SPACE}·]+)")
 STYLE_WORD = re.compile(rf"{S}*//{S}*graph:[^\n]*·{S}*STYLE(?:{S}|·|\Z)")
+# a block drawn from elsewhere (editor spec §20): its graph line says FROM and a .gql file or a
+# note, as the core's blocks.ts reads it (isSourceBlock) — `// graph: trip · FROM Graphs/trip.gql`
+FROM_WORD = re.compile(rf"{S}*//{S}*graph:[^\n]*·{S}*FROM(?:{S}|·|\Z)")
 
 
 # ── Drawing in part ──────────────────────────────────────────────────────────────────────────────
@@ -50,10 +53,10 @@ def style_of(text: str) -> str | None:
 
 
 def _data_kind(text):
-    """'data' or 'schema' for a block to draw; None for a query, excerpt, change set, style block
-    or plain code; or the problem with a graph line that cannot be read, or with a style block
-    that names no graph to style."""
-    if style_of(text) is not None:
+    """'data' or 'schema' for a block to draw; None for a query, excerpt, change set, style block,
+    a block drawn FROM a file or a note, or plain code; or the problem with a graph line that
+    cannot be read, or with a style block that names no graph to style."""
+    if style_of(text) is not None or FROM_WORD.match(_first_line(text)):
         return None
     if STYLE_WORD.match(_first_line(text)):
         own = _graph_of(text) or "<name>"

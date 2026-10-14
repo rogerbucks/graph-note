@@ -10,11 +10,14 @@ import {
   depthOf,
   gqlBlocks,
   graphOfBlock,
+  isSourceBlock,
   namesSharedSchema,
   parked,
   readNote,
   readStyle,
   replaceBlock,
+  reversedLinks,
+  stepOf,
   styledDrawing,
   styleOf,
   viewsOf,
@@ -27,6 +30,8 @@ import { renderCode } from './code';
 import { renderStyleBlock } from './style-block';
 import { renderViewBlock, writeStyle, writeViewBlock } from './view-block';
 import { renderProposalBlock } from './proposals/proposal-block';
+import { renderSourceBlock } from './sources/sources';
+import { renderStepBlock } from './step-block';
 import { GraphView } from './graph-view/graph-view';
 import { diagramShown, tableDrawn } from './graph-view/type-strip';
 import { readOnlyHere, settlePlacements, whenPlaced } from './graph-view/placement';
@@ -109,7 +114,8 @@ export async function renderShown(
   const draw = async () => {
     for (const child of mine.splice(0)) child.unload();
     el.empty();
-    await renderBlock(plugin, source, el, local, owner);
+    // a card drawn from another note or a file is drawn again when that source changes (§20)
+    await renderBlock(plugin, source, el, local, owner, () => void draw());
   };
   const keeper = new MarkdownRenderChild(el);
   keeper.register(plugin.watchSettings(() => void draw()));
@@ -120,6 +126,7 @@ export async function renderShown(
 /**
  * Draws one gql block where the note shows it (spec §3): its graph with the bar, or its problems, or a prompt when it is
  * empty. `owner` is what the drawing is for, such as Live Preview's card: a newer drawing for it replaces one not yet laid out.
+ * `redraw` draws the card again, for one drawn from another note or a file when that source changes (§20).
  */
 export async function renderBlock(
   plugin: GraphNotePlugin,
@@ -127,10 +134,15 @@ export async function renderBlock(
   el: HTMLElement,
   ctx: MarkdownPostProcessorContext,
   owner?: object,
+  redraw?: () => void,
 ): Promise<void> {
   // a query block named as a view is drawn as the view (§7)
   const view = viewsOf([source])[0];
-  if (view) return renderViewBlock(plugin, source, el, ctx, view, owner);
+  if (view) return renderViewBlock(plugin, source, el, ctx, view, owner, redraw);
+  // a block drawn from another note or a .gql file (§20), and a graph step, run only when asked (§20)
+  if (isSourceBlock(source)) return renderSourceBlock(plugin, source, el, ctx, owner, redraw);
+  const step = stepOf(source);
+  if (step) return renderStepBlock(plugin, source, el, ctx, step);
   // a change set is a proposal, drawn over its graph and decided change by change (§17)
   if (changeSetId(source)) return renderProposalBlock(plugin, source, el, ctx, owner);
   const styled = styleOf(source);
@@ -256,6 +268,8 @@ export async function renderBlock(
       problems,
       mode: 'note',
       ...(diagram ? { diagram } : {}),
+      // the links its style graph moves, and the lines laid out backwards (§7)
+      motion: { flow: drawing.flow ?? [], reversed: reversedLinks(drawing, drawn.rankdir) },
       completeness: completenessReport(reading, graph, new Date().toISOString().slice(0, 10)),
       parked: parked(reading, graph, new Date().toISOString().slice(0, 10)),
       writeView: (block) => writeViewBlock(plugin, target.path, graph, block),

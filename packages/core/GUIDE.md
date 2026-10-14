@@ -192,6 +192,18 @@ and nothing else (untangle_data_untouched). Nothing here is written to a note or
   STEP's own line with its fix and, where the step sits on one line, the edit that removes it, and a path with no steps;
   `mergePathProblems` is what `readNote` uses to put them in `NoteReading.problems`, replacing the reader's own report of
   the same STEP, so the badge counts each once.
+- `path-play.ts` — `PathAutoplay`: Play stepping through a path on its own (path_autoplay), around a `PathPlayer`
+  (which also says where it is, `index`, and goes back to the first step, `restart`): from the step it is on, one step at
+  the pace set (`PATH_PACES`, `DEFAULT_PACE`, said by `paceSaid`), until the last; paused or stopped at any step, played
+  on from where it paused, a step taken by hand pausing it. The host hands in its timer (`Scheduler`), so the core never
+  waits on a clock and a host clears it when its card goes.
+- `path-animation.ts` — a played path exported as an animated SVG (path_animation_export): `pathPlan` (each step's
+  thing, by Graphviz's node number, and a dot for each two steps in a row a drawn link joins, forwards along the walk),
+  `pathBody` (each step's number on its thing, and the dots' runners) and `pathCss` (a heavier outline moving from step
+  to step at the pace, round and round, by `step-end` keyframes; every step outlined when still; all of it stopped under
+  reduced motion); `pathSubtitle` says the walk in order. `animationFits` refuses one too large for the device
+  (`ANIMATION_LIMITS`: steps, and an estimate of its bytes), saying why and what would make it fit, before anything is
+  laid out (animation_export_fits); `exportWithLayout` gives that refusal back as a `TooLargeToAnimate`.
 - `path-edits.ts` — a step taken out numbers the later steps of its path again (`stepsAfter`), carried as the removing
   fix's further edits (`Problem.also`), so the path keeps §22's steps 1 to n.
 
@@ -203,7 +215,8 @@ style block beside it: `// graph: trip_style · STYLE trip`. `blocks.ts` knows o
 it. A graph line that says STYLE but names no graph is a problem, never data.
 
 - `style-graph.ts` — what a style graph holds once read (`StyleGraph`: nudges, shows, looks, each view's fade or hide,
-  how each view was shown, the direction, where arrowheads are hidden, the diagram types chosen) and the words it allows: the four nudge words, the
+  how each view was shown, the direction, where arrowheads are hidden, the diagram types chosen, how links move) and the
+  words it allows: the four nudge words, the ways a link moves (`FLOW_MOTIONS`), the
   lines, the formats, fade or hide, on or off (`INLINE`), show or hide (`ARROWHEADS`), and the colours, which are only
   the locked style's hues by name (`STYLE_HUES`). A Show switches a property on or off inline for a kind, a thing or a
   relationship type's links, in the whole graph or one view; an Arrows hides or shows arrowheads for every link or one
@@ -213,6 +226,8 @@ it. A graph line that says STYLE but names no graph is a problem, never data.
   to read is not read (the locked style is kept, and why is said). `lookOf` is the look of a thing or link in a view or
   path (a named hue, a line, a format; the thing's own look over its kind's); `legendOf` every colour used there with
   what it means; `outsideOf` a view's fade or hide, fade when none is written.
+- `style-reader.ts` — `reader`: one style thing's properties read as text, a number, a word it allows or a name of the
+  graph it styles, each fault a problem with its fix; shared by `style-checks.ts` and `link-flow.ts`.
 - `style-checks.ts` — each style thing checked on its own: its kind, its words, its values, and every name it uses
   (thing, other, from, to, selected, kind, relationship type, path, property) against the graph it styles, a name not
   there given the nearest (`estimates.ts`'s `nearest`) as its fix. A view's name is not checked: views are query blocks,
@@ -247,6 +262,18 @@ it. A graph line that says STYLE but names no graph is a problem, never data.
   the box's text colour or the link's label colour; past `INLINE_ROWS`, whole properties and how many are hidden). The
   Python library draws both the same way (`graphspec/style/arrows.py`, `inline.py`), held to the core byte for byte on
   `python/graph_spec/tests/style_cases.json` by `test/layout-parity.test.js` (arrows_both_renderers).
+- `link-flow.ts` — links that move (§7): a `Flow` in the style graph, `(f1:Flow {motion: 'dashes', means: '…'})`, for
+  every link or a `type`'s, in the whole graph or a `view`, moves its links as dashes running along them or a dot
+  travelling along them; `still` takes a wider one back, and every link is still unless a Flow moves it
+  (flow_in_style_graph). `flowOf` checks one (a Flow that moves links must say what it `means`, motion_not_alone),
+  `flowFor` and `flowLinks` choose as `arrows.ts` does (the most particular, the first of two alike), and `flowSource`
+  writes each moving link into the source: its label opened by its icon (`FLOW_ICONS`), the classes
+  `graph-note-flow`, `-dashes` or `-dot` and `-back` (its line laid out from its far end, so it moves backwards along
+  it), and dashes drawn dashed, so they show when still. `flowLegend` and `flowSaid` say each movement and its meaning in
+  words, for the legend and a screen reader; `reversedLinks` says which lines run against their links. The movement
+  itself is a style sheet's — the plugin's `styles.css`, or an export's (`export-motion.ts`) — and stops under reduced
+  motion (motion_reduced_respected). The Python library writes the same source (`graphspec/style/flow.py`), held to the
+  core byte for byte on `python/graph_spec/tests/flow_cases.json` by `test/link-flow-parity.test.js`.
 - `style-edit.ts` — `styleEdit`: a nudge, a look, a view's fade or hide, how a view was shown, a property switched on or
   off inline, arrowheads hidden or shown, or the diagram type chosen, written as text into the graph's style block
   (made after the graph's last block when there is none); a view's setting, or a choice of properties, arrowheads or
@@ -311,6 +338,41 @@ reads `· QUERY` as a query, and the core draws no query as data, so a view is n
   by one table, `python/graph_spec/tests/view_cases.json`, which `test/view-parity.test.js` holds the core to and the
   Python library's `test_view_parity.py` holds Grafeo to.
 
+**Graph sources and graph steps (spec §20; §7 view_of_another_note)**
+
+A graph may be written somewhere other than the note that draws it, and a step works out a graph from graphs. Neither
+is data of the note it is written in: `blocks.ts`'s `isSourceBlock` keeps a FROM block out of `dataKind` (the Python
+reader's `data_kind` does the same), and a step is a query block, so the note reads the same with them or without. Both
+are known by their graph line alone (`isSourceBlock`, `isStepBlock`), so a long block is never read to decide it.
+
+- `sources.ts` — a block whose graph line says FROM and a place, `// graph: trip · FROM Graphs/trip.gql` or
+  `· FROM [[Trip plan]]`, draws its graph from that .gql file or note (`sourceOf`, `sourceFor`; a place that is neither,
+  or a block holding lines of its own, is a fault, so data is never copied in; so is a place that could leave the vault
+  or reach what it hides: a leading slash or backslash, a drive letter, a `..` part or any part starting with a dot).
+  The host fetches the text (`Fetched`: found, unreadable, too large by the size it keeps and so never read, or missing
+  with any file of the same name `elsewhere`); `readSource` reads it as a note's own
+  blocks are read, by `readNote`, so the same partial reader and limits hold (a .gql file is one block, its CRs taken
+  off), or refuses in a sentence naming the place: missing, moved, unreadable, no graph line, or no such graph (a note
+  that draws it FROM elsewhere itself is named, with where to point instead). `lineInSource` is a problem's line there.
+- `steps.ts` — a step is a query block `// graph: <graph> · QUERY step <name>`, its named points declared above its rule
+  (`// takes <point>: (:Kind), [:TYPE]`); `stepOf` reads one or says what to change (no name, longer than
+  `MOST_STEP_CHARACTERS`, refused before its rule is read, no point, a rule matching a kind or type no point takes). `runStep` runs it only when a host asks, on the note as it is: the step's fault, a
+  graph the note does not write, and each input are checked first, and any refuses the run; the links its INSERT names
+  for every match are its output graph, and those its graph lacks are a proposal from the step (`makeProposal`,
+  `linkChange`, `thingChange` for an end the graph lacks, `basisOf`), id `<step>_<n>`, each with the match that found
+  it as its reason. Nothing is written: the host writes the proposal beside the graph (`noteWithProposal`).
+- `steps-rule.ts` — the rule, a GQL query over graph data and never code or a named action: MATCH one pattern (things
+  with an optional name, kind and properties, joined by up to `MOST_PATTERN_LINKS` links, one way or either), then
+  INSERT links between things it named. CALL, a function, SET or DELETE and the other writes, RETURN, and anything that
+  reads as code are refused, each saying why and showing `RULE_FORM`. `ruleTokens` reads a rule once: a text ends at
+  its line, and nothing after the first mark that cannot be read is read (spec §9).
+- `steps-match.ts` — every match of the pattern, as GQL matches a path: each link once in a match, a name used twice the
+  same thing; bounded by `MOST_MATCHES` and `MOST_TRIES` (every thing and link looked at, fitting or not), past which it
+  stops and says so (spec §9).
+- `steps-input.ts` — what is given at a point: a graph of the note, whole, or a view of one (a queried path among them),
+  put to the reading as `evaluate` puts it, never a copy; `inputFaults` checks each against its point (every kind and
+  type it takes held, something given) before the step runs; `together` reads the inputs as one graph, a thing by id.
+
 **Export (spec §16)**
 
 The host does what needs a canvas, the file system or a dialog; the core decides everything else. An image is exported as
@@ -336,8 +398,16 @@ a GQL block, CSV or GraphML (`DATA_FORMATS`), each read back into the very thing
   given back whole as its `Refusal`, for the host to say why and write nothing; null when it is no longer wanted. An
   empty scope is refused before any layout is asked for; an engine failure is raised. `exportSvg` is the same with an
   engine run on the calling thread under no limit: for tests and tools, never a host that draws apart from its interface.
+  With `ExportInfo.walk` the image plays that path (path-animation.ts), refused first when too large for
+  `ExportInfo.device`; with `ExportInfo.motion` it moves the links its style moves (export-motion.ts).
   `pngSize` is the PNG's pixel size, never under `PNG_MIN_SCALE` (twice natural size) and rounded up. A view's looks are
   drawn and put in the legend with what they mean.
+- `export-motion.ts` — movement in an exported SVG, by CSS in the file itself (no encoder, nothing loaded): with
+  `ExportInfo.motion` (an SVG; a PNG is drawn still), the links a style moves run their dashes, or a dot travels a copy
+  of each one's line (`withRunners`), and `withStyleSheet` puts the style sheet first in the image; every animation stops
+  under `@media (prefers-reduced-motion: reduce)`, leaving the dashes, the icons and the legend's words. Every rule is
+  written under the class the image's root carries (`IMAGE_CLASS`, `inImage`), so an SVG put inline in a page styles
+  nothing of the page's own.
 - `export-pages.ts` — `pngPages`: an image too large for one sharp PNG on the device, split into a grid of pages, each at
   twice natural size or more, within the device's pixels and no side over `PNG_MOST_SIDE` (32,767 device pixels), as
   few as the pixels allow and then evened out, so a row is never whole pages and a sliver, in reading order; null when
