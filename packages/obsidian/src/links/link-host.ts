@@ -161,8 +161,11 @@ export function linkHost(plugin: GraphNotePlugin, path: string, graph: string): 
         }
         const box = el.createDiv({ cls: 'graph-note-embed' }),
           file = plugin.app.metadataCache.getFirstLinkpathDest(part.embed.target, path);
+        // a heading embedded, `![[Note#Heading]]`, is that section alone
+        const hash = part.embed.opens.indexOf('#'),
+          heading = hash >= 0 ? part.embed.opens.slice(hash + 1) : undefined;
         if (file instanceof TFile && file.extension === 'md')
-          await draw(embeddedMarkdown(await plugin.app.vault.cachedRead(file)), box, file.path);
+          await draw(embeddedMarkdown(await plugin.app.vault.cachedRead(file), heading), box, file.path);
         else await draw(safeMarkdown(`[[${part.embed.opens}]]`), box, path); // a note not there: a link to it
       }
     },

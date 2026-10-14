@@ -18,6 +18,7 @@ const GRAPH = `// graph: trip
 (trip:Doc {id: 'note:Trip plan', name: 'Trip'}),
 (old:Doc {id: '[[Trip plan]]', name: 'Old trip'}),
 (guide:Doc {name: 'Guide', see: 'Read ![[Trip plan]] first'}),
+(way:Doc {name: 'Way', see: '![[Trip plan#Route]]'}),
 (plan)-[:FOR]->(trip)`;
 /** The note a thing stands for: remote images in it, as Markdown and as HTML, and a note it embeds, holding another. */
 const TRIP_PLAN = [
@@ -26,6 +27,8 @@ const TRIP_PLAN = [
   '![](https://example.com/a.png)',
   '<img src=https://example.com/b.png>',
   '![[Inner]]',
+  '## Route',
+  'By the coast.',
 ].join('\n');
 const FILES = {
   [PATH]: ['# Trip', '', fence(GRAPH), ''].join('\n'),
@@ -150,6 +153,20 @@ describe('a thing that stands for a note (node_is_a_note)', () => {
       await until(() => panel.textContent.includes('Go by train.'));
       const remote = remoteImages(panel);
       assert.deepEqual(remote, []);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a heading of a note embedded shows that section alone', async () => {
+    const env = await load({ files: { ...FILES } });
+    try {
+      const { panel } = await details(env, 'way');
+      await until(() => panel.textContent.includes('By the coast.'));
+      assert.ok(!panel.textContent.includes('Go by train.'), 'nothing of the note above the heading');
+      assert.ok(
+        env.state.rendered.some((r) => r.markdown === '## Route\nBy the coast.' && r.sourcePath === 'Trip plan.md'),
+      );
     } finally {
       env.uninstall();
     }

@@ -63,6 +63,25 @@ describe('a script link is text before anything renders it (safe_to_click)', () 
     assert.equal(safeMarkdown('  [r]: <javascript:void0>'), '  \\[r]: &lt;javascript:void0>');
     assert.equal(safeMarkdown('[r]: https://x.org'), '[r]: https://x.org');
   });
+
+  test('a reference definition whose destination is on the next line is judged by that line', () => {
+    assert.equal(safeMarkdown('[r]:\n  javascript:void0'), '\\[r]:\n  javascript:void0');
+    assert.equal(safeMarkdown('  [r]:  \n<javascript:void0>'), '  \\[r]:  \n&lt;javascript:void0>');
+    assert.equal(safeMarkdown('[r]:\n  https://x.org'), '[r]:\n  https://x.org', 'a web address is kept');
+  });
+});
+
+describe('only a file that cannot load anything is embedded (offline_and_mobile_apis)', () => {
+  test('an image, a sound, a video or a PDF of the vault is shown in place; a canvas, a base or any other file is a link', () => {
+    assert.equal(
+      safeMarkdown('![[p.png]] ![[s.mp3]] ![[v.mp4]] ![[d.pdf]] ![x](scans/q.jpg)'),
+      '![[p.png]] ![[s.mp3]] ![[v.mp4]] ![[d.pdf]] ![x](scans/q.jpg)',
+    );
+    assert.equal(
+      safeMarkdown('![[a.canvas]] ![[b.base]] ![[t.csv]] ![x](c.canvas)'),
+      '[[a.canvas]] [[b.base]] [[t.csv]] [x](c.canvas)',
+    );
+  });
 });
 
 describe('an embedded note loads nothing remote (rich_details, offline_and_mobile_apis)', () => {
@@ -109,5 +128,23 @@ describe('an embedded note loads nothing remote (rich_details, offline_and_mobil
         '[[Inner note]]',
       ].join('\n'),
     );
+  });
+
+  test('a heading embedded is that section alone: its heading down to the next of its level or higher', () => {
+    const note = ['# A', 'one', '## B', 'two', '```', '# not a heading', '```', '### C', 'three', '## D', 'four'].join(
+      '\n',
+    );
+    assert.equal(
+      embeddedMarkdown(note, 'B'),
+      ['## B', 'two', '```', '# not a heading', '```', '### C', 'three'].join('\n'),
+    );
+    assert.equal(
+      embeddedMarkdown(note, 'b '),
+      embeddedMarkdown(note, 'B'),
+      'found as Obsidian finds one: case and ends aside',
+    );
+    assert.equal(embeddedMarkdown(note, 'D'), '## D\nfour', 'the last runs to the end');
+    assert.equal(embeddedMarkdown(note, 'A#B'), embeddedMarkdown(note, 'B'), 'a nested heading by its last part');
+    assert.equal(embeddedMarkdown(note, 'Nowhere'), embeddedMarkdown(note), 'no such heading: the whole note');
   });
 });

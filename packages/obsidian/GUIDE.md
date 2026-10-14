@@ -314,7 +314,8 @@ module that ties the parts together, named as the folder is.
   Obsidian in a dialog, and handed to the system only on Open; any other link never opened; a hover told to Page
   preview (`hover-link`, from `HOVER_SOURCE`), the dialog showing the site's host first; Markdown rendered by
   `MarkdownRenderer` after the core's `safeMarkdown`, so nothing remote loads and no HTML is rendered, a note embedded
-  read here and rendered made safe (`embedParts`, `embeddedMarkdown`), never embedded by Obsidian, and every link it
+  read here and rendered made safe (`embedParts`, `embeddedMarkdown`; a heading embedded, only its section), never
+  embedded by Obsidian, and every link it
   renders, then or later (a MutationObserver for as long as its owner lasts), followed by the same rules, refused when
   its `href` or its `data-href` is; where a card was left when
   a link took its tab (`cameBack`, back_where_you_were); and Create the note for a broken link, the one write, closed in

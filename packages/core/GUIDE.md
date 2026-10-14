@@ -185,10 +185,12 @@ own handlers. Nothing here reaches the network.
   `leavingWords` (said before a link leaves the host) and `refusedWords`; `attachmentType`.
 - `link-markdown.ts` — `safeMarkdown`: what a host renders for a thing's details, with an image from outside the vault,
   Markdown or HTML, made a link showing its address (nothing remote loaded), a Markdown link or reference definition the
-  user may not open escaped to text, other raw HTML escaped, inside maths too, and a note embed made a link; code spans
-  and fences untouched, told apart as CommonMark tells them (an escaped backtick opens no span; a backtick fence's words
-  hold no backtick; a fence closes on its marks alone). `embedParts` cuts out each note embedded, for the host to read
-  itself, and `embeddedMarkdown` is that note's text made safe, front matter left out (offline_and_mobile_apis).
+  user may not open escaped to text (its address on its own line or the next), other raw HTML escaped, inside maths too,
+  a note embed made a link, and only an image, a sound, a video or a PDF of the vault left embedded (a canvas, a base or
+  any other file embedded is a link); code spans and fences untouched, told apart as CommonMark tells them (an escaped
+  backtick opens no span; a backtick fence's words hold no backtick; a fence closes on its marks alone). `embedParts`
+  cuts out each note embedded, for the host to read itself, and `embeddedMarkdown` is that note's text made safe, front
+  matter left out, only the section a heading embed names (offline_and_mobile_apis).
 - `link-renames.ts` — `renamedLinks`, the changes that follow a renamed note or file in every link inside a note's
   graph blocks (never prose), keeping each link's alias, heading and form; a link that still finds a file, or whose new
   name a block could not hold, is left; `applyChanges` makes them.
