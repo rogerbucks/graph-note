@@ -1221,3 +1221,51 @@ details.graph-note-style > summary {
 .graph-note-ai-refused {
   color: var(--text-error);
 }
+
+/* Links (§18): a link in the details, on the drawing and in the text pane is drawn as Obsidian draws a link, in its link
+   colour and underlined; one that names nothing as Obsidian draws an unresolved link, dashed; one that is never opened
+   as plain, muted text. A thing's attachments are counted by a paperclip at its box's top left. */
+.graph-note-link {
+  color: var(--link-color);
+  text-decoration: underline;
+  cursor: var(--cursor-link, pointer);
+}
+.graph-note-link.is-unresolved {
+  color: var(--link-unresolved-color);
+  text-decoration-style: dashed;
+}
+.graph-note-svg text.graph-note-link {
+  fill: var(--link-color);
+  text-decoration: underline;
+}
+.graph-note-svg text.graph-note-link.is-unresolved {
+  fill: var(--link-unresolved-color);
+  text-decoration-style: dashed;
+}
+.graph-note-svg text.graph-note-attachments {
+  fill: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+.graph-note-link-refused {
+  color: var(--text-muted);
+}
+.graph-note-text-link {
+  text-decoration: underline;
+}
+.graph-note-link-fixes,
+.graph-note-leave-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-4-2);
+  margin-top: var(--size-4-1);
+}
+/* A property's value, rendered by Obsidian, follows its name on the line, as the plain value did. */
+.graph-note-rich-properties .graph-note-rich-value,
+.graph-note-rich-properties .graph-note-rich-value > p {
+  display: inline;
+  margin: 0;
+}
+.graph-note-note-body {
+  border-left: 2px solid var(--background-modifier-border);
+  padding-left: var(--size-4-2);
+}

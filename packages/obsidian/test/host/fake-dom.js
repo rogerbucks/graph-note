@@ -434,11 +434,21 @@ export function fakeDocument(width = 700) {
     },
     setTimeout,
     clearTimeout,
+    // an address opened outside the page, as Obsidian hands it to the system's browser or mail app: kept, never fetched
+    open(url, target) {
+      (doc.opened ??= []).push({ url, target });
+      return null;
+    },
     requestAnimationFrame: (f) => setTimeout(f, 0),
     cancelAnimationFrame: clearTimeout,
     // Obsidian's helpers on the window: an element not yet on the page
     createDiv: (o = {}) => {
       const e = new FakeElement('div', doc);
+      applyInfo(e, typeof o === 'string' ? { cls: o } : o);
+      return e;
+    },
+    createSpan: (o = {}) => {
+      const e = new FakeElement('span', doc);
       applyInfo(e, typeof o === 'string' ? { cls: o } : o);
       return e;
     },
@@ -458,6 +468,7 @@ export function installGlobals(doc) {
   set('activeWindow', doc.defaultView);
   set('window', doc.defaultView);
   set('createDiv', doc.defaultView.createDiv);
+  set('createSpan', doc.defaultView.createSpan);
   set(
     'DOMParser',
     class {

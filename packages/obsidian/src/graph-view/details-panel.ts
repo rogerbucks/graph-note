@@ -15,8 +15,11 @@ import { button } from './view-bar';
 import { linkWords, renderLinkGroups, renderTrail, stepName, thingButton } from './details-nav';
 import type { NavActions } from './details-nav';
 import { DetailsSheet } from './details-sheet';
+import { RichDetails } from './rich-details';
 import type { ThingActions } from './untangle';
 import type { ViewOptions } from './view-options';
+import type { View } from '@graph-note/core';
+import type { LeftAt } from '../links/link-host';
 
 /** The details of one drawing, shown in its card below the drawing, or in view mode as the sheet. */
 export class DetailsPanel {
@@ -33,10 +36,22 @@ export class DetailsPanel {
   /** Set while the details are drawn for a step of the trail, or drawn again: the trail goes on rather than starting again. */
   private walking = false;
   private readonly sheet: DetailsSheet;
+  /** Its text and properties rendered by Obsidian, the note a thing stands for, and its links (§18). */
+  private readonly rich: RichDetails;
+
+  /** The drawing's view as it is now, set by the card: where a link that takes the card's tab leaves it (§18). */
+  view?: () => View;
 
   /** The thing whose details are open, if a thing's are: what a view saved as shown keeps as selected (§7). */
   selectedKey(): string | null {
     return this.shown && 'key' in this.shown ? this.shown.key : null;
+  }
+
+  /** Where the card is now: its zoom, where it is panned and the thing selected, for the back step (back_where_you_were). */
+  private leftAt(): LeftAt | null {
+    const v = this.view?.(),
+      selected = this.selectedKey();
+    return v ? { zoom: v.scale, x: v.x, y: v.y, ...(selected ? { selected } : {}) } : null;
   }
 
   /** For the details element of a card, its drawing, the viewport the focus goes back to, the card's options and what a thing's details offer. */
@@ -52,6 +67,7 @@ export class DetailsPanel {
     this.viewport = viewport;
     this.o = o;
     this.actions = actions;
+    this.rich = new RichDetails(o, () => this.leftAt());
     this.sheet = new DetailsSheet(el, {
       // the sheet is for view mode, in a note's card: full screen and the pane show the details in their own place
       on: () => o.mode === 'note' && !o.editing?.()?.session,
@@ -73,6 +89,7 @@ export class DetailsPanel {
   /** The card is going: the sheet's watchers stop. */
   unload(): void {
     this.sheet.closed();
+    this.rich.end();
   }
 
   /** A thing or link chosen from the details: the next step of the trail, made the selection by the card. */
@@ -138,6 +155,7 @@ export class DetailsPanel {
       thingButton(li, end.text, () => this.choose({ key: end.key }));
     }
     this.readOnlyProperties(el, d.properties);
+    this.rich.links(el, { link: index });
     if (d.problems.length) {
       el.createEl('h4', { text: 'Problems' });
       const probs = el.createEl('ul');
@@ -152,9 +170,7 @@ export class DetailsPanel {
    */
   private readOnlyProperties(el: HTMLElement, properties: [string, string][]): void {
     if (!properties.length || this.o.editing?.()?.session) return;
-    el.createEl('h4', { text: 'Properties' });
-    const ul = el.createEl('ul');
-    for (const [k, v] of properties) ul.createEl('li', { text: `${k}: ${v}` });
+    this.rich.properties(el, properties); // each value rendered by Obsidian, as in a note (§18, rich_details)
   }
 
   /**
@@ -163,6 +179,7 @@ export class DetailsPanel {
    */
   private panel(title: string, kind?: string): HTMLElement {
     const el = this.el;
+    this.rich.begin();
     el.empty();
     el.hidden = false;
     el.setAttribute('aria-label', `Details of ${title}`);
@@ -183,6 +200,7 @@ export class DetailsPanel {
     this.shown = null;
     this.trail.clear();
     this.sheet.closed();
+    this.rich.end();
     this.select(null);
     this.viewport.focus();
     const ed = this.o.editing?.();
@@ -231,6 +249,7 @@ export class DetailsPanel {
     this.shown = { key };
     const el = this.panel(d.text, d.kind);
     this.retrace(el, { key });
+    this.rich.thing(el, key, d.text); // the note it stands for, and its text rendered by Obsidian (§18)
     const links = (title: string, items: string[]) => {
       if (!items.length) return;
       el.createEl('h4', { text: title });
@@ -259,6 +278,7 @@ export class DetailsPanel {
       el,
       propertiesOf(this.o.reading, this.o.graph, { thing: key }).map((p) => [p.key, p.value]),
     );
+    this.rich.links(el, { thing: key });
     links(
       'Problems',
       d.problems.map((p) => problemText({ ...p, noteLine: this.o.lineOf(p) })),

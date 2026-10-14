@@ -202,6 +202,10 @@ module that ties the parts together, named as the folder is.
   words, each thing and link a choice, and the trail's back and forward (§25); a thing's offers Show only this and its
   neighbours and the shortest path to another thing (§25); closing it, by button, Escape or a tap on empty space, clears
   the focus.
+- `rich-details.ts` — `RichDetails`, the rich parts of the details (§18): a thing's text (when it holds Markdown) and its
+  properties rendered by Obsidian's `MarkdownRenderer`, the note a thing whose id is a link to a note stands for, embedded
+  with Open beside it (node_is_a_note), and the links and attachments it holds (`links/links-list.ts`); all owned by a
+  component unloaded when the details are drawn again or close.
 - `details-nav.ts` — finding your way from the details (§25): the groups of links rendered from the core's
   `linkGroups`, the trail's buttons, the names of steps, and `Glide`, the brief eased move to what is chosen, a frame at
   a time, at once when the system asks for reduced motion.
@@ -276,6 +280,23 @@ module that ties the parts together, named as the folder is.
   reading, so a new control that writes is read-only there by default; an option it cannot reach is refused, loudly.
 - `view-options.ts` — what a drawing is given, its links' movement among it (`LinkMotion`).
 
+### `src/links/` — links and attachments (spec §18)
+
+- `link-host.ts` — `linkHost`, what a card is given to follow its links through Obsidian (`LinkHost`): a note or file
+  opened by the workspace's own `openLinkText`, a modifier-click a new tab; a web or mail address said to leave
+  Obsidian in a dialog, and handed to the system only on Open; any other link never opened; a hover told to Page
+  preview (`hover-link`, from `HOVER_SOURCE`); Markdown rendered by `MarkdownRenderer` after the core's `safeMarkdown`,
+  so nothing remote loads and no HTML is rendered, its own links followed by the same rules; where a card was left when
+  a link took its tab (`cameBack`, back_where_you_were); and Create the note for a broken link, the one write, closed in
+  reading view. `vaultNames` gives the names a broken link's likeliest meaning is chosen from.
+- `links-list.ts` — the details' Links and Attachments: each link an anchor (`linkAnchor`, `followAnchor`) opened on a
+  click or Enter, previewed on hover and on a long press by touch; one never opened shown as text; a broken one marked,
+  with Create the note and Change it to what it most likely meant (written through the card's `writeBlock`).
+- `link-marks.ts` — on the drawing: a line of a box's or link's words holding a link drawn as a link (broken, dashed),
+  and a paperclip with the count on a thing with attachments, said to screen readers.
+- `rename-follow.ts` — `followLinks`, on the vault's rename event: every link to the renamed note or file inside a
+  graph block of any note rewritten, through the note's editor when open (one undoable change), else `vault.process`.
+
 ### `src/block-editor/` — the text of one graph block, in the pane or in place
 
 - `block-editor.ts` — `BlockEditor`: ties the parts together; the field and what typing in it does.
@@ -308,7 +329,8 @@ package, or all with `npm test` from the repository root. Each builds `main.js` 
 - `test/host/` — the stand-ins for the host and what the tests share: `fake-dom.js` (a small DOM), `fake-settings.js` (the settings page, drawn from its definitions, and the secret
   store), `fake-obsidian.js`
   (the obsidian module and CodeMirror, with a dialog and a `requestUrl` that never reaches the network: each request is
-  kept, and answered by the test's own `state.reply`), `load-plugin.js` (building and loading the plugin), `cascade.js` (the part of
+  kept, and answered by the test's own `state.reply`), `fake-markdown.js` (Obsidian's MarkdownRenderer, each render
+  kept with what it was handed, and its Keymap), `load-plugin.js` (building and loading the plugin), `cascade.js` (the part of
   the CSS cascade a test needs), `notes.js` (a fenced block, a button by its label), and the notes each group of tests
   opens: `card-notes.js`, `pane-notes.js`, `view-notes.js`, and `inspector-steps.js` (opening a box's details and driving the inspector's rows, menus and chips).
   `editing-view.js` opens a note in the editing view, in Live Preview, with the plugin's own extension and view plugins,

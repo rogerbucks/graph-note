@@ -1,6 +1,6 @@
 # Device checks
 
-One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md)): 134 checks in 19 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
+One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md)): 145 checks in 20 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
 
 ## 01 Viewing
 
@@ -192,3 +192,17 @@ One note for each check in the device checklist ([the checklist, on GitHub](http
 - [[Device checks/19 The View menu/M-05 Links merged into a trunk|M-05 Links merged into a trunk]]
 - [[Device checks/19 The View menu/M-06 Straight and right-angled links|M-06 Straight and right-angled links]]
 - [[Device checks/19 The View menu/M-07 Switches keep the selection|M-07 Switches keep the selection]]
+
+## 21 Links and attachments
+
+- [[Device checks/21 Links and attachments/H-01 Links shown as links|H-01 Links shown as links]]
+- [[Device checks/21 Links and attachments/H-02 Opened by Obsidian|H-02 Opened by Obsidian]]
+- [[Device checks/21 Links and attachments/H-03 Attachments at a glance|H-03 Attachments at a glance]]
+- [[Device checks/21 Links and attachments/H-04 Preview on hover or long press|H-04 Preview on hover or long press]]
+- [[Device checks/21 Links and attachments/H-05 Back where you were|H-05 Back where you were]]
+- [[Device checks/21 Links and attachments/H-06 Broken link and its fixes|H-06 Broken link and its fixes]]
+- [[Device checks/21 Links and attachments/H-07 Renames follow|H-07 Renames follow]]
+- [[Device checks/21 Links and attachments/H-08 Safe to click|H-08 Safe to click]]
+- [[Device checks/21 Links and attachments/H-09 Links by keyboard|H-09 Links by keyboard]]
+- [[Device checks/21 Links and attachments/H-10 Rich details|H-10 Rich details]]
+- [[Device checks/21 Links and attachments/H-11 A thing that is a note|H-11 A thing that is a note]]

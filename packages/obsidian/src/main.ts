@@ -44,6 +44,8 @@ import { InlineEditors } from './inline-editors';
 import { followRename, recoverDrafts, RECOVER_COMMAND, withIds } from './drafts';
 import type { KeptDraft } from './block-editor/kept-draft';
 import { noteToRewrite, stillToRewrite } from './reading-view';
+import { followLinks } from './links/rename-follow';
+import { HOVER_SOURCE } from './links/link-host';
 
 /** Where Edit was pressed: the note, the line of the block's opening fence (0-based), and the graph it draws. */
 export interface EditTarget {
@@ -82,6 +84,9 @@ export default class GraphNotePlugin extends Plugin {
     });
     // the drafts kept follow their note when it is renamed or moved, edited or not, and can all be recovered (spec §9)
     this.registerEvent(this.app.vault.on('rename', (f, old) => void followRename(this, f.path, old)));
+    // a renamed note or file is followed by every link to it in graph blocks; Page preview previews the cards' links (§18)
+    this.registerEvent(this.app.vault.on('rename', (f, old) => void followLinks(this, f, old)));
+    this.registerHoverLinkSource(HOVER_SOURCE, { display: 'Graph Note', defaultMod: true });
     this.addCommand({ ...RECOVER_COMMAND, callback: () => recoverDrafts(this) });
     // nothing is sent unless the user opens this, chooses, sees exactly what goes and presses Send (§19)
     this.addCommand({ ...AI_COMMAND, callback: () => askAi(this) });

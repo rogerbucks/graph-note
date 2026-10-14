@@ -51,13 +51,17 @@ function gone(state, f) {
   state.tell?.('delete', f);
 }
 
-/** The file manager: a file put in the trash is gone from the vault, and kept in `state.trashed`. */
+/**
+ * The file manager: a file put in the trash is gone from the vault, and kept in `state.trashed`; a new note goes in the
+ * vault's root, as Obsidian's default for new notes puts it.
+ */
 export function fakeFileManager(state) {
   return {
     trashFile: async (f) => {
       (state.trashed ??= []).push(f.path);
       gone(state, f);
     },
+    getNewFileParent: () => ({ path: '/' }),
   };
 }
 

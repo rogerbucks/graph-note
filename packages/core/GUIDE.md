@@ -165,6 +165,29 @@ and nothing else (untangle_data_untouched). Nothing here is written to a note or
   the view's edge pointing to a selection out of sight), and `sheetLimit` and `coverOf` (how tall the details sheet may
   be, and how much of a viewport it covers).
 
+**Links and attachments (spec §18)**
+
+The core finds and judges links; the host says which files the vault holds, and opens, previews and renders through its
+own handlers. Nothing here reaches the network.
+
+- `links.ts` — the entry for §18, re-exporting the three below: `linksHeld` (every link in a thing's or relationship's
+  text properties, by property), `attachmentsOf` (a thing's files, by name and type, each once), `noteOf` (a thing whose
+  id is a link to a note stands for it), and `brokenLinks` (each link to a note or file the host's `LinkVault` does not
+  hold: a warning on the line it is written, its fix in words, Create the note or Put the file in the vault, or change it
+  to what it most likely meant — a file of the same name with another extension, else the nearest names — with the
+  place to change; `withMeant` writes that change into the block).
+- `link-scan.ts` — `linksIn`, one linear pass over each line (every search for a closing mark goes on from where the
+  last stopped): wikilinks with heading and alias, embeds, Markdown links and images, bare web and mail addresses, each
+  with where its target is written; `linkKind` (only notes, files, web and mail addresses are opened; any other scheme,
+  however disguised by controls or entities, is refused); `linkTo` (a host's rendered link, judged alike);
+  `leavingWords` (said before a link leaves the host) and `refusedWords`; `attachmentType`.
+- `link-markdown.ts` — `safeMarkdown`: what a host renders for a thing's details, with an image from outside the vault
+  made a link (nothing remote loaded), a Markdown link the user may not open escaped to text, and raw HTML escaped; code
+  spans, fences and inline maths untouched.
+- `link-renames.ts` — `renamedLinks`, the changes that follow a renamed note or file in every link inside a note's
+  graph blocks (never prose), keeping each link's alias, heading and form; a link that still finds a file, or whose new
+  name a block could not hold, is left; `applyChanges` makes them.
+
 **Editing**
 
 - `pane.ts` — the edit session: what is typed, written back to the note safely; `texts` gives the note's blocks with the
