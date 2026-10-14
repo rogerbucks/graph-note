@@ -4,7 +4,8 @@
 // test and every one is written, part when some are, open otherwise. The board counts the requirements whose slice
 // equals N exactly, unlike check-requirements.mjs, which holds every slice up to the current one (<=). The page is CSS
 // only (its stylesheet is slice-board-style.mjs): no script, font, image or request, so it opens offline, and it
-// switches between three altitudes (Overview, Working, Full) with radio inputs.
+// switches between three altitudes (Overview, Working, Full) with radio inputs. readBoard also reads the copy's open
+// questions, which the GitHub mirror uses; the board itself does not show them.
 //
 // Usage:
 //   node scripts/slice-board.mjs [--slice N] [--prs FILE] [--date YYYY-MM-DD] [--standalone] > board.html
@@ -39,7 +40,9 @@ export function statusOf(tests) {
 
 /**
  * Reads the requirements copy: {sections: [{num, title}], requirements: [{id, section, slice, level, rule, tests,
- * status}]}, each test {id, proves, files, where, status}. Throws what the reader throws for a text it cannot read.
+ * status}], questions: [{id, num, slice, text, blocks}]}, each test {id, proves, files, where, status}. A question's
+ * `blocks` lists the ids of the requirements it has a BLOCKS link to; a copy with no question gives an empty list.
+ * Throws what the reader throws for a text it cannot read.
  */
 export function readBoard(text) {
   const store = read([text]);
@@ -58,8 +61,13 @@ export function readBoard(text) {
     ]),
   );
   const proving = new Map();
-  for (const [from, type, to] of graph.edges)
+  const blocking = new Map();
+  for (const [from, type, to] of graph.edges) {
     if (type === 'PROVED_BY' && tests.has(to)) proving.set(from, [...(proving.get(from) ?? []), tests.get(to)]);
+    const blocked = graph.nodes.get(to);
+    if (type === 'BLOCKS' && blocked?.labels.has('Requirement'))
+      blocking.set(from, [...(blocking.get(from) ?? []), blocked.props.id]);
+  }
   return {
     sections: ofLabel('Section').map(([, n]) => ({ num: String(n.props.num), title: String(n.props.title ?? '') })),
     requirements: ofLabel('Requirement').map(([key, n]) => {
@@ -74,6 +82,13 @@ export function readBoard(text) {
         status: statusOf(named),
       };
     }),
+    questions: ofLabel('Question').map(([key, n]) => ({
+      id: n.props.id,
+      num: String(n.props.num ?? ''),
+      slice: n.props.slice,
+      text: String(n.props.text ?? ''),
+      blocks: blocking.get(key) ?? [],
+    })),
   };
 }
 

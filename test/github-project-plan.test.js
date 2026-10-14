@@ -139,6 +139,11 @@ describe('the issue plan for an issue that drifted', () => {
     assert.deepEqual([u.addLabels, u.removeLabels], [['status:open'], ['status:part']]);
   });
 
+  test('leaves a question label somebody added to a requirement’s issue', () => {
+    const labels = ['slice-4', 'workstream:W1', 'status:open', 'question'];
+    assert.deepEqual(plan(replaceIssue('focus_link', { labels })).update, []);
+  });
+
   test('adds a label that is missing', () => {
     const [u] = plan(replaceIssue('focus_link', { labels: ['slice-4', 'status:open'] })).update;
     assert.deepEqual([u.addLabels, u.removeLabels], [['workstream:W1'], []]);

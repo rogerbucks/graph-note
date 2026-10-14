@@ -1,6 +1,8 @@
 // The desired state of the GitHub mirror of the requirements (spec §12, requirements_checked_in_ci): for each
-// requirement of the chosen slices, the issue that should exist — its title, body, labels and whether it is open — and
-// the options of the project fields it fills. Pure: it reads the board that slice-board.mjs reads from the requirements
+// requirement and each open question of the chosen slices, the issue that should exist — its title, body, labels and
+// whether it is open — and the options of the project fields it fills. A question's issue is labelled kind:question, stays
+// open and lists the requirements it blocks; it carries the same marker as a requirement's, so it is adopted, kept and
+// removed in the same way. Pure: it reads the board that slice-board.mjs reads from the requirements
 // copy, and the workstreams file, and gives values; scripts/github-project-plan.mjs compares them with what GitHub
 // holds, and scripts/github-project-gh.mjs does the difference. The requirements file stays the only source; every
 // issue and project item made from it is a derivative, regenerated and never edited by hand.
@@ -10,6 +12,13 @@ import { REQUIREMENTS } from './check-requirements.mjs';
 export const SCRIPT = 'scripts/github-project.mjs';
 /** The workstream of a requirement that no workstream lists: the slice-end one. */
 export const CATCH_ALL = 'S3';
+/** The workstream of an open question that no workstream lists. */
+export const QUESTIONS_WORKSTREAM = 'Q';
+/**
+ * The label every open question's issue carries. Namespaced, as GitHub's own `question` label is somebody's own and a
+ * managed label is taken off an issue that should not carry it.
+ */
+export const QUESTION_LABEL = 'kind:question';
 /** The title of the project the issues are collected in. */
 export const PROJECT_TITLE = 'graph-note requirements';
 /** The label of an issue whose requirement is no longer in the requirements file. */
@@ -28,7 +37,8 @@ export const BANNER_START = '> **Generated — do not edit.**';
 
 const MAX_TITLE = 100;
 const TITLE_SEPARATOR = ' · ';
-const MANAGED_LABEL = /^(slice-\d+|workstream:.+|status:(open|part|proved)|requirement:removed)$/;
+const QUESTION_TITLE = 'Open question';
+const MANAGED_LABEL = /^(slice-\d+|workstream:.+|status:(open|part|proved)|requirement:removed|kind:question)$/;
 const MARKER = /<!-- requirement:([\w.-]+) -->/g;
 // An @name or @org/team, or a #number, that is not already inside a code span or a longer word.
 const MENTION = /(?<![\w`])(@[A-Za-z0-9][\w-]*(?:\/[\w-]+)?|#\d+)/g;
@@ -65,20 +75,24 @@ export function readWorkstreams(text) {
 /**
  * The workstream id of each requirement, as a Map from the requirement's id: the workstream that lists it, or the
  * slice-end workstream when none does. Throws when a requirement needs the slice-end workstream and the file has none.
+ * Open questions are placed the same way with `{catchAll: QUESTIONS_WORKSTREAM, kind: 'question'}`.
  */
-export function assignWorkstreams(requirements, workstreams) {
+export function assignWorkstreams(requirements, workstreams, { catchAll = CATCH_ALL, kind = 'requirement' } = {}) {
   const owner = new Map();
   for (const [id, w] of Object.entries(workstreams)) for (const req of w.requirements) owner.set(req, id);
   const placed = new Map();
   for (const r of requirements) {
-    if (!owner.has(r.id) && !Object.hasOwn(workstreams, CATCH_ALL))
-      throw new Error(
-        `requirement ${r.id} is in no workstream, and the workstreams file has no ${CATCH_ALL} to hold it`,
-      );
-    placed.set(r.id, owner.get(r.id) ?? CATCH_ALL);
+    if (!owner.has(r.id) && !Object.hasOwn(workstreams, catchAll))
+      throw new Error(`${kind} ${r.id} is in no workstream, and the workstreams file has no ${catchAll} to hold it`);
+    placed.set(r.id, owner.get(r.id) ?? catchAll);
   }
   return placed;
 }
+
+const oneLine = (text) =>
+  String(text ?? '')
+    .replace(/\s+/g, ' ')
+    .trim();
 
 const cutAtWord = (text, max) => {
   const head = text.slice(0, max);
@@ -97,6 +111,19 @@ export function titleOf(sectionTitle, id) {
   if (!sectionTitle || room < 2) return words.length <= MAX_TITLE ? words : `${words.slice(0, MAX_TITLE - 1)}…`;
   const section = sectionTitle.length <= room ? sectionTitle : `${cutAtWord(sectionTitle, room - 1)}…`;
   return `${section}${TITLE_SEPARATOR}${words}`;
+}
+
+/**
+ * The title of an open question's issue: Open question, a dot, the question's number and its first words. Never over
+ * 100 characters: a long question is cut at a word with an ellipsis, as a long section title is.
+ */
+export function questionTitleOf(num, text) {
+  const head = `${QUESTION_TITLE}${TITLE_SEPARATOR}${num}`;
+  const words = oneLine(text);
+  const room = MAX_TITLE - head.length - 1;
+  if (!words) return head.length <= MAX_TITLE ? head : `${head.slice(0, MAX_TITLE - 1)}…`;
+  if (room < 2) return `${head} ${words}`.slice(0, MAX_TITLE - 1) + '…';
+  return `${head} ${words.length <= room ? words : `${cutAtWord(words, room - 1)}…`}`;
 }
 
 /**
@@ -153,17 +180,13 @@ export function labelStyle(name) {
     return { color: '1D76DB', description: `Workstream of a requirement, ${generated}` };
   if (name === REMOVED_LABEL)
     return { color: '6A737D', description: 'The requirement is no longer in the requirements file' };
+  if (name === QUESTION_LABEL) return { color: 'D876E3', description: `An open question, ${generated}` };
   const colours = { open: 'D93F0B', part: 'FBCA04', proved: '0E8A16' };
   return {
     color: colours[name.slice('status:'.length)] ?? 'EDEDED',
     description: `Status of a requirement, ${generated}`,
   };
 }
-
-const oneLine = (text) =>
-  String(text ?? '')
-    .replace(/\s+/g, ' ')
-    .trim();
 
 const testLine = (t) => {
   const where = t.where && t.where !== 'repo' ? t.where : '';
@@ -192,12 +215,34 @@ const bodyOf = (r, workstream) =>
     '',
   ].join('\n');
 
+const blocksLines = (q) => (q.blocks.length ? q.blocks.map((id) => `- \`${id}\``) : ['_Blocks nothing named._']);
+
+// An open question's body: the question first, then the banner, and the requirements it blocks.
+const questionBodyOf = (q, workstream) =>
+  [
+    neutralise(oneLine(q.text)),
+    '',
+    `${BANNER_START} Made by \`${SCRIPT}\` from \`${REQUIREMENTS}\`, the only source. Change the question there; an edit here is overwritten.`,
+    '',
+    '- **Kind:** open question',
+    `- **Slice:** ${q.slice}`,
+    `- **Workstream:** ${workstream}`,
+    '',
+    '**Blocks:**',
+    '',
+    ...blocksLines(q),
+    '',
+    markerOf(q.id),
+    '',
+  ].join('\n');
+
 /**
  * The desired state for the chosen slices, from a board as readBoard gives it and the workstreams: {issues, fields,
  * known}. Each issue is {id, title, body, labels (sorted), state ('open' or 'closed'), slice, workstream, status}, the
- * last three being the options its project item takes. `fields` maps each project field to its options. `known` lists
- * every requirement id the copy holds, in any slice, so that an issue whose requirement is only outside the chosen
- * slices is told from one whose requirement went.
+ * last three being the options its project item takes; the requirements' issues come first, then one for each open
+ * question of the chosen slices, always open, its Proof `open`. `fields` maps each project field to its options.
+ * `known` lists every requirement and question id the copy holds, in any slice, so that an issue whose requirement or
+ * question is only outside the chosen slices is told from one whose requirement or question went.
  */
 export function desiredState(board, workstreams, slices) {
   const chosen = [...new Set(slices)].sort((a, b) => a - b);
@@ -217,6 +262,21 @@ export function desiredState(board, workstreams, slices) {
       status: r.status,
     };
   });
+  const questions = (board.questions ?? []).filter((q) => chosen.includes(q.slice));
+  const askedIn = assignWorkstreams(questions, workstreams, { catchAll: QUESTIONS_WORKSTREAM, kind: 'question' });
+  for (const q of questions) {
+    const workstream = askedIn.get(q.id);
+    issues.push({
+      id: q.id,
+      title: questionTitleOf(q.num, q.text),
+      body: questionBodyOf(q, option(workstream)),
+      labels: [QUESTION_LABEL, `slice-${q.slice}`, `workstream:${workstream}`].sort(),
+      state: 'open',
+      slice: `Slice ${q.slice}`,
+      workstream: option(workstream),
+      status: 'open',
+    });
+  }
   return {
     issues,
     fields: {
@@ -224,6 +284,6 @@ export function desiredState(board, workstreams, slices) {
       Workstream: Object.keys(workstreams).map(option),
       Proof: [...STATUSES],
     },
-    known: board.requirements.map((r) => r.id),
+    known: [...board.requirements, ...(board.questions ?? [])].map((r) => r.id),
   };
 }
