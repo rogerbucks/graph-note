@@ -193,5 +193,6 @@
       "quick_info_no_hover_only"
     ]
   },
-  "S3": { "title": "Slice end", "requirements": ["done_means_proved"] }
+  "S3": { "title": "Slice end", "requirements": ["done_means_proved"] },
+  "Q": { "title": "Open questions", "requirements": [] }
 }

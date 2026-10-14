@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-// Mirrors the editor's requirements into a GitHub Project, one issue for each requirement (spec §12,
-// requirements_checked_in_ci). One way only: requirements/editor-requirements.gql stays the only source, and the
-// issues and project items made from it are derivatives, regenerated and never edited by hand. A requirement's status
-// (proved, part or open) is the one the slice board reads from the same file; its workstream is the one in
-// requirements/workstreams.json. The planning is in github-project-plan.mjs and the gh calls in github-project-gh.mjs.
+// Mirrors the editor's requirements into a GitHub Project, one issue for each requirement and one for each open
+// question (spec §12, requirements_checked_in_ci). One way only: requirements/editor-requirements.gql stays the only
+// source, and the issues and project items made from it are derivatives, regenerated and never edited by hand. A
+// requirement's status (proved, part or open) is the one the slice board reads from the same file; its workstream is
+// the one in requirements/workstreams.json. A question's issue is labelled question, lists the requirements it blocks
+// and stays open; its workstream is the one that lists it, or Q, Open questions. The planning is in github-project-plan.mjs and the gh calls in github-project-gh.mjs.
 //
 // Usage:
 //   node scripts/github-project.mjs [--slices 3,4] [--dry-run]    print the plan; makes no network call (the default)
@@ -24,7 +25,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { REQUIREMENTS } from './check-requirements.mjs';
 import { readBoard } from './slice-board.mjs';
-import { desiredState, readWorkstreams } from './github-project-desired.mjs';
+import { QUESTION_LABEL, desiredState, readWorkstreams } from './github-project-desired.mjs';
 import { buildPlan, formatPlan, guardProblem } from './github-project-plan.mjs';
 import { executePlan, ghRunner, pinRepo, readRemote, repoOfRemote } from './github-project-gh.mjs';
 import { retrying } from './github-project-retry.mjs';
@@ -63,8 +64,11 @@ function parseOptions(args) {
 }
 
 const countLine = (issues, slices) => {
-  const n = (status) => issues.filter((i) => i.status === status).length;
-  return `requirements: ${issues.length} in slices ${slices.join(', ')} · ${n('proved')} proved · ${n('part')} part · ${n('open')} open`;
+  const asked = issues.filter((i) => i.labels.includes(QUESTION_LABEL)).length;
+  const requirements = issues.filter((i) => !i.labels.includes(QUESTION_LABEL));
+  const n = (status) => requirements.filter((i) => i.status === status).length;
+  const questions = asked ? ` · open questions: ${asked}` : '';
+  return `requirements: ${requirements.length} in slices ${slices.join(', ')} · ${n('proved')} proved · ${n('part')} part · ${n('open')} open${questions}`;
 };
 
 /** The repository this checkout's origin remote names, as `owner/name`. */

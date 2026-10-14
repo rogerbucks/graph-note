@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 // Checks the repository's generated copy of the editor's requirements (spec §12, requirements_checked_in_ci), read with
 // the repo's own graph-spec reader: every requirement of a slice that has started is proved by a test, every test the
-// repository holds is where it says, every test claims a requirement, no test is planned while its file is written, and
-// the copy's do-not-hand-edit banner stands.
+// repository holds is where it says, every test claims a requirement, no test is planned while its file is written,
+// every open question has its number, slice and text and blocks only requirements, and the copy's do-not-hand-edit
+// banner stands. A question never needs a test.
 //
 // Usage:
 //   node scripts/check-requirements.mjs           the committed copy
@@ -37,7 +38,8 @@ export const filesOf = (field) => [...String(field ?? '').matchAll(FILE_PATH)].m
 
 /**
  * Every problem with a copy of the requirements, each as {kind, id, message}. kind is banner, unreadable, unproved,
- * missing-file, unclaimed or status. exists(path) says whether the repository holds a repo-relative path.
+ * missing-file, unclaimed, status or question (a question lacking its num, slice or text, or with a BLOCKS link to
+ * something that is not a requirement). exists(path) says whether the repository holds a repo-relative path.
  */
 export function auditRequirements(text, { exists = (rel) => existsSync(join(ROOT, rel)), slice = CURRENT_SLICE } = {}) {
   const problems = [];
@@ -101,6 +103,20 @@ export function auditRequirements(text, { exists = (rel) => existsSync(join(ROOT
         id,
         message: `test ${id} is planned, but ${files.join(', ')} is written: its status should be written`,
       });
+  }
+
+  for (const [key, n] of ofLabel('Question')) {
+    const { id } = n.props;
+    for (const field of ['num', 'slice', 'text'])
+      if (n.props[field] === undefined || n.props[field] === '')
+        problems.push({ kind: 'question', id, message: `question ${id} has no ${field}` });
+    for (const [from, type, to] of graph.edges)
+      if (from === key && type === 'BLOCKS' && !byKey.get(to)?.labels.has('Requirement'))
+        problems.push({
+          kind: 'question',
+          id,
+          message: `question ${id} blocks ${byKey.get(to)?.props.id ?? to}, which is not a requirement`,
+        });
   }
   return problems;
 }
