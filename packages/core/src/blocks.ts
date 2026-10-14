@@ -41,7 +41,14 @@ const GRAPH_OF = new RegExp(`^${S}*//${S}*graph:${S}*(${N}+)`),
   SHARED = new RegExp(`^${S}*//${S}*graph:[^\\n]*·${S}*SCHEMA${S}+${N}+`),
   NAMES_SHARED = new RegExp(`^${S}*//${S}*graph:[^\\n]*·${S}*schema${S}+${N}+`),
   STYLES = new RegExp(`^${S}*//${S}*graph:[^\\n]*·${S}*STYLE${S}+([^${SPACE}·]+)`),
-  STYLE_WORD = new RegExp(`^${S}*//${S}*graph:[^\\n]*·${S}*STYLE(?:${S}|·|$)`);
+  STYLE_WORD = new RegExp(`^${S}*//${S}*graph:[^\\n]*·${S}*STYLE(?:${S}|·|$)`),
+  FROM_WORD = new RegExp(`^${S}*//${S}*graph:[^\\n]*·${S}*FROM(?:${S}|·|$)`);
+
+/**
+ * Whether a block draws its graph from somewhere else (editor spec §20, sources.ts): its graph line says FROM and a
+ * .gql file or a note, `// graph: trip · FROM Graphs/trip.gql`. Such a block holds no data of its own (`dataKind`).
+ */
+export const isSourceBlock = (text: string): boolean => FROM_WORD.test(firstLine(text));
 
 /**
  * The graph a style block styles (editor spec §2, style_block_in_note): its graph line says STYLE and the graph's name,
@@ -66,11 +73,12 @@ function firstLine(text: string): string {
 const isGraphLine = (text: string) => GRAPH_LINE.test(firstLine(text));
 
 /**
- * The kind of a block, or null when it holds no data to draw: a query, an excerpt, a change set, a style block (read only
- * by style.ts), or no graph line. A graph line that says STYLE but names no graph to style is a problem, never data.
+ * The kind of a block, or null when it holds no data to draw: a query (a view or a step among them), an excerpt, a change
+ * set, a style block (read only by style.ts), a block drawn FROM elsewhere (read only by sources.ts), or no graph line. A
+ * graph line that says STYLE but names no graph to style is a problem, never data.
  */
 export function dataKind(text: string): 'data' | 'schema' | null | Problem {
-  if (styleOf(text) !== null) return null;
+  if (styleOf(text) !== null || isSourceBlock(text)) return null;
   if (STYLE_WORD.test(firstLine(text))) {
     const own = graphOf(text) ?? '<name>';
     return {

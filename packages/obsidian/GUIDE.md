@@ -27,6 +27,12 @@ module that ties the parts together, named as the folder is.
   what is allowed, outside the view profile; shown as its query under the banner when its note is too large to read;
   saying so, with Change the view, when it matches nothing; faded or hidden
   outside it as its style says; its looks and legend; Save as shown and Fade or Hide others written in the style graph.
+  A view of a graph the note draws FROM another note or a .gql file is put to that source, read there (`sourcedView`),
+  says where it comes from, and is drawn again when the source changes; it offers no export, which reads this note.
+- `step-block.ts` — a graph step (§20): its card says what it proposes into, each point with what it takes and a choice
+  of the note's graphs and views to give it, and Run; nothing runs until Run is pressed, and then against the note as it
+  is, through `vault.process`: refused inputs are listed in the card, and an output is written beside its graph as a
+  change set for a person to accept or reject. Reading view, an embed and a hover preview offer no Run.
 - `style-block.ts` — a style block (§2): never drawn, folded away until opened, saying whose style it is, what it holds
   (its diagram types among the rest) and how many problems it has. The graph it styles is drawn with its nudges, and its problems listed, by `block.ts`.
 - `code.ts` — a block that is not a graph, shown as coloured code; a very long one plain.
@@ -51,6 +57,16 @@ module that ties the parts together, named as the folder is.
 - `refusal-words.ts` — those words, with no Obsidian in them, in two voices: the banner's, and the notice of an export
   stopped for the same reason ("what happened: why. Nothing was saved. What to do."), and for a layout that failed (the
   worker or its engine raised an error: its reason is put in brackets).
+
+### `src/sources/` — a graph drawn from another note or a .gql file (spec §20, §7 view_of_another_note)
+
+- `sources.ts` — `renderSourceBlock`: a FROM block's card, the whole graph as its source holds it, read-only, with
+  its problems at their lines there; or why it cannot be drawn, with the block as text, never blank; a source too large
+  to read under the banner a note's blocks get. `sourcedView` is the same reading for a view of the graph.
+- `source-read.ts` — the source found as Obsidian finds a link from the note (else by its path), read through the vault,
+  never copied; a missing one looked for by name elsewhere, so a move is said; one that cannot be read said with its
+  reason; and `watchSource`, which draws the card again when the source is changed, made, moved or deleted.
+- `source-strip.ts` — the line naming where the data comes from, and Open for a note, as a tap on a link opens it.
 
 ### `src/properties/` — the inspector's properties, as Obsidian's Properties panel
 

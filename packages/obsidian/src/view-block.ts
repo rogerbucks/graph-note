@@ -11,6 +11,7 @@ import {
   evaluate,
   gqlBlocks,
   legendOf,
+  lineInSource,
   lookOf,
   outsideOf,
   parseView,
@@ -29,6 +30,8 @@ import { diagramShown, tableDrawn } from './graph-view/type-strip';
 import type { ViewShown } from './graph-view/view-strip';
 import { refusalBanner } from './layout-worker/refusal-banner';
 import { dataExportBar } from './export/export-form';
+import { sourcedView } from './sources/sources';
+import { sourceAlert, sourceStrip } from './sources/source-strip';
 
 /** Writes a change to the style graph of `graph` into the note at `path`, against the note as it is when written. */
 export async function writeStyle(
@@ -91,6 +94,7 @@ export async function renderViewBlock(
   ctx: MarkdownPostProcessorContext,
   v: NamedView,
   owner?: object,
+  redraw?: () => void,
 ): Promise<void> {
   const info = ctx.getSectionInfo(el);
   const blocks = info ? gqlBlocks(info.text) : [{ text: source, line: 0 }];
@@ -107,7 +111,16 @@ export async function renderViewBlock(
     renderCode(root, source);
     return;
   }
-  const read = readNote(texts);
+  // a graph the note draws FROM another note or a file is read there, never copied here (§7, §20); else its own blocks
+  const sourced = await sourcedView(plugin, texts, v.graph, el, ctx, redraw);
+  if (sourced && 'refused' in sourced) {
+    // the source missing, moved or unreadable: said, naming it, with the query as text, never a blank drawing
+    sourceAlert(root, sourced.refused);
+    renderCode(root, source);
+    return;
+  }
+  const from = sourced?.read ?? null;
+  const read = from ? from.reading : readNote(texts);
   if (read.tooLarge) {
     // too large to read (spec §9, layout_contained): nothing was read, so there is no graph for the view to match
     // nothing in — the query, and why, as a graph's text is shown
@@ -115,6 +128,8 @@ export async function renderViewBlock(
     renderCode(root, source);
     return;
   }
+  // where the data comes from, with the way to it, when it is written elsewhere (view_of_another_note)
+  if (from) sourceStrip(root, plugin, from.source, ctx.sourcePath);
   const reading = { ...read, problems: underStrictness(read.problems, plugin.settings) };
   const base = reading.graphs.get(v.graph);
   const result = evaluate(spec, reading, v.graph);
@@ -225,14 +240,16 @@ export async function renderViewBlock(
   if (!drawn) return; // no longer wanted: a newer drawing of this card was asked for, or the plugin unloaded
   if ('reason' in drawn) {
     // over a size or time limit: the query, with a banner saying which limit and the numbers, as a graph's text is; and
-    // its data still offered for export, which needs no layout (spec §16, export_data_formats)
-    dataExportBar(root, {
-      path: ctx.sourcePath,
-      graph: v.graph,
-      view: { name: v.name, spec },
-      theme: plugin.settings.exportTheme,
-      run: (ask) => plugin.exportGraph(ask),
-    });
+    // its data still offered for export, which needs no layout (spec §16, export_data_formats); an export reads this
+    // note, so a view drawn from elsewhere offers none
+    if (!from)
+      dataExportBar(root, {
+        path: ctx.sourcePath,
+        graph: v.graph,
+        view: { name: v.name, spec },
+        theme: plugin.settings.exportTheme,
+        run: (ask) => plugin.exportGraph(ask),
+      });
     refusalBanner(root, drawn);
     renderCode(root, source);
     return;
@@ -246,17 +263,22 @@ export async function renderViewBlock(
       problems: [],
       mode: 'note',
       focusDepth: depthOf(plugin.settings.focusDepth),
-      lineOf: (at) => (blocks[at.block]?.line ?? 0) + at.line,
+      lineOf: (at) => (from ? lineInSource(from, at) : (blocks[at.block]?.line ?? 0) + at.line),
       onEdit: () => changeView(plugin, ctx.sourcePath, line),
       view,
       diagram,
-      exporting: {
-        path: ctx.sourcePath,
-        graph: v.graph,
-        view: { name: v.name, spec },
-        theme: plugin.settings.exportTheme,
-        run: (ask) => plugin.exportGraph(ask),
-      },
+      // an export reads the note it is in: a view drawn from elsewhere is exported from where its data is written
+      ...(from
+        ? {}
+        : {
+            exporting: {
+              path: ctx.sourcePath,
+              graph: v.graph,
+              view: { name: v.name, spec },
+              theme: plugin.settings.exportTheme,
+              run: (ask) => plugin.exportGraph(ask),
+            },
+          }),
     }),
   );
 }

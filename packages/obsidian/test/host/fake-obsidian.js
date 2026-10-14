@@ -86,6 +86,7 @@ export function fakeObsidian(state = {}) {
     getFileByPath: file,
     getAbstractFileByPath: file,
     getMarkdownFiles: () => [...files.keys()].filter((p) => p.endsWith('.md')).map((p) => new TFile(p)),
+    getFiles: () => [...files.keys()].map((p) => new TFile(p)),
     read: async (f) => files.get(f.path),
     cachedRead: async (f) => files.get(f.path),
     process: async (f, fn) => {
@@ -130,6 +131,10 @@ export function fakeObsidian(state = {}) {
     },
     on: () => ({}),
     offref: () => {},
+    // a link opened, as a tap on a link in a note opens it: kept, for a test to see which, and from where
+    openLinkText: async (link, from) => {
+      state.opened = { link, from };
+    },
   };
   // the note in front, by its path in state.active
   workspace.getActiveFile = () => file(state.active ?? '');
@@ -137,6 +142,12 @@ export function fakeObsidian(state = {}) {
   workspace.getActiveViewOfType = (type) => (state.activeView instanceof type ? state.activeView : null);
   addVaultWrites(vault, state, file);
   const app = { vault, workspace, metadataCache: fakeMetadataCache(state), fileManager: fakeFileManager(state) };
+  // a link found as Obsidian finds one: the file whose path is the link, or ends with it, a note's .md left off
+  app.metadataCache.getFirstLinkpathDest = (link) => {
+    const ends = (p, l) => p === l || p.endsWith(`/${l}`);
+    const path = [...files.keys()].find((p) => ends(p, link) || ends(p, `${link}.md`));
+    return path ? file(path) : null;
+  };
   const settings = fakeSettings(state, app);
   class WorkspaceLeaf {
     constructor(app_, how) {

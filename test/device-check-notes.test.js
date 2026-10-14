@@ -1,8 +1,9 @@
 // The device check notes: the device checklist (packages/obsidian/test/device-checklist.md) numbers every item, and the
 // test vault holds a note for each item after Before, in test-vault/Device checks/, that shows the case on a graph to try
 // it on. This holds the two together, so a changed checklist fails here, loudly, until the notes follow it. It holds
-// each note's graph blocks to what the note says they read as, with the graph's own reader and checkers, and the index to
-// the notes it lists. Editor spec §3, tried first in a test vault.
+// each note's graph blocks to what the note says they read as, with the graph's own reader and checkers (a view of a graph
+// drawn FROM another note of the device checks put to that note's graph, as the plugin puts it), and the index to the
+// notes it lists. Editor spec §3, tried first in a test vault.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -15,6 +16,7 @@ import { readStyle } from '../packages/core/src/style.ts';
 import { viewsOf } from '../packages/core/src/views.ts';
 import { parseView } from '../packages/core/src/view-profile.ts';
 import { evaluate } from '../packages/core/src/view-evaluate.ts';
+import { readSource, sourceFor } from '../packages/core/src/sources.ts';
 import {
   CHECKLIST,
   CHECKLIST_URL,
@@ -244,9 +246,23 @@ function readingOf(text) {
       .filter(([, ok]) => !ok)
       .map(([rule]) => rule),
   );
-  const views = viewsOf(texts).map((v) => ({ ...v, spec: parseView(v.query) }));
+  const views = viewsOf(texts).map((v) => ({
+    ...v,
+    spec: parseView(v.query),
+    reading: sourced(texts, v.graph) ?? reading,
+  }));
   const messages = (hint) => all.filter((p) => (p.severity === 'hint') === hint).map((p) => p.message);
   return { reading, problems: messages(false), hints: messages(true), checks, views };
+}
+
+/**
+ * The reading a view of `graph` is put to when its note draws the graph FROM another note of the device checks (editor
+ * spec §7, view_of_another_note), read there as the plugin reads it; else null, for the note's own reading.
+ */
+function sourced(texts, graph) {
+  const s = sourceFor(texts, graph);
+  const file = s && 'target' in s && noteFiles().find((f) => stem(f) === s.target);
+  return (file && readSource(s, { found: file, text: read(file) }).reading) || null;
 }
 
 /** Each expected text found in the messages, and each message expected: nothing missing and nothing unexpected. */
@@ -305,12 +321,12 @@ describe('each note’s graph blocks read as the note says they do', () => {
 
   test('a view block parses as one of the five kinds, unless the note expects its refusal', () => {
     for (const { file, text } of notes()) {
-      const { views, reading } = readingOf(text);
+      const { views } = readingOf(text);
       const refusals = expectations(text).filter((e) => e.word === 'refused');
       const refused = views.filter((v) => 'refused' in v.spec);
       assert.equal(refused.length, refusals.length, `${file}: refused views`);
       refused.forEach((v, i) => assert.ok(v.spec.refused.includes(refusals[i].text), `${file}: ${v.spec.refused}`));
-      const empty = views.filter((v) => !('refused' in v.spec) && evaluate(v.spec, reading, v.graph).empty);
+      const empty = views.filter((v) => !('refused' in v.spec) && evaluate(v.spec, v.reading, v.graph).empty);
       assert.equal(
         empty.length,
         expectations(text).filter((e) => e.word === 'view-empty').length,
