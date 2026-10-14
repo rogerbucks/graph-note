@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/style-reader.test.js",
+  "test": "a word not allowed, in the message given for it > a word that is allowed reports nothing",
+  "seen_failing_first": false,
+  "evidence": "A control: an allowed word reported nothing before the fix too; it pins that the replaced line is not reached for an allowed word."
+}
