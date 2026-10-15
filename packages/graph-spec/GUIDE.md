@@ -39,7 +39,8 @@ and no module requires one that requires it back.
   `readings.js` and `guessed-readings.js` (a relationship type's readings, declared or guessed), and `check.js`, which
   runs every rule that applies to a graph.
 - **`src/changesets/`** — §24 H1: `dialect-lint.js` (the traps in model-written GQL) and `changeset.js` (checking a
-  change set against its base).
+  change set against its base) and `changes.js` (the DELETE and SET statements of a change set, each naming one
+  target, read and applied; held with the Python reader to `test/change-cases.json`).
 - **`src/joins/`** — §21 joins (`graph_spec.py`): `python-text.js`, `normalise.js`, `named-rules.js`, `validate.js`,
   `claims.js`, `union.js`, `merge3.js`, `finish.js`, and `join-docs.js`, which answers a join request end to end.
 - **`src/views/`** — `mermaid.js` (relationships, legend and paths as Mermaid text) and `views.js` (every view of a

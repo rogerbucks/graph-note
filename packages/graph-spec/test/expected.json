@@ -14,8 +14,13 @@
     "reviews": [],
     "whys": [],
     "changesets": [
-      { "failed": [], "after": "5e79de97087e10c4", "refreshes": [] },
-      { "failed": ["it was made against the graph as it stands"], "after": "4f7522a52031960b", "refreshes": [] }
+      { "failed": [], "after": "5e79de97087e10c4", "refreshes": [], "changes": [] },
+      {
+        "failed": ["it was made against the graph as it stands"],
+        "after": "4f7522a52031960b",
+        "refreshes": [],
+        "changes": []
+      }
     ],
     "lint": [],
     "views": {}

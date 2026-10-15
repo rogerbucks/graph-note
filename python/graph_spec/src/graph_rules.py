@@ -134,8 +134,6 @@ from graphspec.rules.completeness import (
     completeness,
 )
 from graphspec.rules.changesets import (
-    MODEL_MAY_ADD,
-    MODEL_MAY_LINK,
     _state,
     changeset_header,
     check_changeset,
