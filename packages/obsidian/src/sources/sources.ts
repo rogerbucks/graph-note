@@ -18,6 +18,7 @@ import type { Drawn, Refusal, SourceRead } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
 import { renderCode } from '../code';
 import { GraphView } from '../graph-view/graph-view';
+import { aidsOf } from '../graph-view/viewer-aids';
 import { renderProblems } from '../graph-view/problems-list';
 import { refusalBanner } from '../layout-worker/refusal-banner';
 import { editInPane } from '../edit-in-pane';
@@ -118,6 +119,7 @@ export async function renderSourceBlock(
       mode: 'note',
       focusDepth: depthOf(plugin.settings.focusDepth),
       callouts: plugin.settings.noteCallouts === 'on',
+      aids: aidsOf(plugin.settings),
       lineOf: (at) => lineInSource(read, at),
       // the data is written in the source, so the drawing is read-only here; the strip opens a note to change it there,
       // and Edit opens this block in the pane

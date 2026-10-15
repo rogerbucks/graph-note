@@ -1,8 +1,8 @@
 // Notes shown in the editor (editor spec §24, note_shown, note_callouts): a thing's or link's `///` note shows in its
 // details, rendered as Markdown through the one renderer the details use, raw HTML never rendered; and a setting, off by
 // default, draws each note on the drawing as a callout joined to its thing by a dashed line, after the layout, so the
-// layout itself is the same with it on or off. The tooltip is the same note in a hover; its case is added to this file by
-// the quick-info work (quick_info), so this file proves the details and the callouts.
+// layout itself is the same with it on or off. The tooltip (quick_info) shows the same note's first paragraph, through the
+// same renderer, so this file proves the details, the tooltip and the callouts.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -10,6 +10,7 @@ import { build, load, until, root } from './host/load-plugin.js';
 import { show } from './host/card-notes.js';
 import { tapKey } from './host/inspector-steps.js';
 import { fence } from './host/notes.js';
+import { clock, link, open, pointerOver, thing, tipOf } from './host/quick-info-steps.js';
 
 before(() => build());
 
@@ -97,6 +98,57 @@ describe('note_shown: a note is shown in the details of its thing or link, as Ma
       await until(() => !panelOf(el).hidden && panelOf(el).textContent.includes('Middle'));
       assert.equal(noteIn(panelOf(el)), null);
       assert.ok(!panelOf(el).textContent.includes('Why we go.'), 'a link’s note is not its end’s');
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
+describe('note_shown: a note is shown in the tooltip of its thing or link, as Markdown', () => {
+  /** The tooltip opened by a hover on `g` of the card drawn. */
+  async function hovered(env, pick) {
+    const el = await drawn(env);
+    const time = clock(env);
+    pointerOver(pick(el));
+    time.fire();
+    await until(() => open(env));
+    return tipOf(env).querySelector('.graph-note-quick-note');
+  }
+
+  test('a thing’s tooltip shows the first paragraph of its note rendered as Markdown, from its note, by the one renderer', async () => {
+    const env = await load({ files: { ...FILES } });
+    try {
+      const note = await hovered(env, (el) => thing(el, 'start'));
+      assert.equal(note.querySelector('strong').textContent, 'start');
+      assert.ok(!note.textContent.includes('Packed'), 'the first paragraph only');
+      const handed = env.state.rendered.filter((r) => r.markdown === 'The **start** of the trip.');
+      assert.ok(handed.length && handed.every((r) => r.sourcePath === PATH && r.component));
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a link’s tooltip shows its note, its wikilink a link', async () => {
+    const env = await load({ files: { ...FILES } });
+    try {
+      const note = await hovered(env, (el) => link(el, 0));
+      assert.ok(note.textContent.includes('Why we go.'));
+      assert.equal(note.querySelector('a.internal-link')?.getAttribute('data-href'), 'Plan');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('raw HTML in the first paragraph is never rendered: it is shown as the text it is, and no remote image loads', async () => {
+    const graph = '// graph: g\n/// Hot <b>loud</b> <img src="https://example.com/t.gif">.\n(a:T {name: \'A\'})';
+    const env = await load({ files: { [PATH]: ['# Trip', '', fence(graph), ''].join('\n') } });
+    try {
+      const note = await hovered(env, (el) => thing(el, 'a'));
+      assert.equal(note.querySelector('b'), null);
+      assert.equal(note.querySelector('img'), null);
+      assert.ok(note.textContent.includes('<b>loud</b>'));
+      const handed = env.state.rendered.map((r) => r.markdown).filter((m) => m.includes('Hot'));
+      assert.ok(handed.length && handed.every((m) => !/<(b|img)\b/i.test(m)), 'escaped before it reaches Obsidian');
     } finally {
       env.uninstall();
     }

@@ -273,7 +273,7 @@ export {
 export type { Fold, ViewSwitch, ViewSwitches } from './view-switches.ts';
 export { linksOf } from './style.ts';
 export type { Links, OnOff, Routing } from './style-graph.ts';
-export type { SwitchSetting } from './settings.ts';
+export type { MiniMapSetting, SwitchSetting } from './settings.ts';
 export {
   applyChanges,
   attachmentType,
