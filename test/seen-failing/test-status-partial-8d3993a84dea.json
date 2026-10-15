@@ -1,0 +1,6 @@
+{
+  "file": "test/test-status-partial.test.js",
+  "test": "a requirement with only a partial test in the GitHub mirror > stays open, labelled status:part",
+  "seen_failing_first": false,
+  "evidence": "Passed first because the mirror takes the board's status, and the board already made a partial-only requirement part after the first change; it pins that the mirror needed no change."
+}

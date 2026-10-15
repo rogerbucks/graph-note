@@ -1,0 +1,6 @@
+{
+  "file": "test/test-status-partial.test.js",
+  "test": "a test status that is not one of the three > a flip to '' is refused in the flip check",
+  "seen_failing_first": false,
+  "evidence": "Passed first because the flip check already refused any status change it did not know as a changed field; it pins that an unknown status stays refused after the forward-move rule."
+}

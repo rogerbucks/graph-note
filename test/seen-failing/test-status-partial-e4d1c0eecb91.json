@@ -1,0 +1,6 @@
+{
+  "file": "test/test-status-partial.test.js",
+  "test": "a partial test on the slice board > moves no requirement when a pull request flips a test to partial: nothing is proved or merged by it",
+  "seen_failing_first": false,
+  "evidence": "Passed first because the build status only counts tests newly written, so a partial test moved nothing; it pins that decision so partial never reaches Merged or Released."
+}

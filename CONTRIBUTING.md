@@ -7,6 +7,15 @@ CI. A change that breaks one fails before it is merged.
 
 - **Spec, then test, then code.** Each behaviour is a requirement in the spec first. Its test is written next and seen
   to fail, and only then is the code written. A commit message says which tests were seen failing first.
+- **A test in the requirements copy has one of three statuses.** `planned`: no file yet. `partial`: the file is there
+  but does not yet prove every rule its record covers, as when several workstreams add cases to one shared file over
+  time. `written`: it proves them all. A `partial` or `written` test must have its file; a `planned` test whose file is
+  there is refused. A requirement is proved only when a test proving it is `written`: a `partial` one leaves it
+  unproved, `check-requirements.mjs --done` lists it with "partial" in the reason, and the slice board counts it as
+  part, in progress, never proved. A test moves only forward: planned to partial, partial to written, or planned to
+  written; the flip check refuses every backward move, and a flip to `partial` needs the file. A flip to `partial`
+  moves no requirement in the build status: only a test newly `written` does, so nothing is Merged or Released on a
+  partial test.
 - **CI proves it.** `scripts/tests-first.mjs` replays each new commit: its tests run against its parent's code, and
   every test new in the commit must fail there. A test written after its code, such as one that pins behaviour that
   already existed, has its reason in `test/seen-failing/`, or the build fails: one file for each test, written by `node
@@ -208,13 +217,14 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/quiet-reporter.test.js` — the quiet test run when a failure's details cannot be passed on, as when an assertion holds a function: every failure still reported, the run failed, never crashed.
 - `test/run-ceiling.test.js` — every run of the npm test commands, in CI too, is stopped with one line at a memory or time ceiling, before a runaway test can exhaust the machine; a run within both passes through unchanged.
 - `test/requirements.test.js` — the generated requirements copy: started requirements proved, tests where they say.
-- `test/check-requirements-flips.test.js` — a pull request may change that copy only by tests flipped from planned to written. A pull request carrying the label `requirements-copy` (the vault's full regenerated copies) skips that comparison in CI; the audit in `test/requirements.test.js` still runs. Adding or removing the label starts CI again (the workflow's `pull_request` types include `labeled` and `unlabeled`); a plain re-run reuses the old event's labels, so it does not pick the label up.
+- `test/check-requirements-flips.test.js` — a pull request may change that copy only by tests moved forward in status (planned to partial, partial to written, planned to written), never back. A pull request carrying the label `requirements-copy` (the vault's full regenerated copies) skips that comparison in CI; the audit in `test/requirements.test.js` still runs. Adding or removing the label starts CI again (the workflow's `pull_request` types include `labeled` and `unlabeled`); a plain re-run reuses the old event's labels, so it does not pick the label up.
 - `test/slice-done.test.js` — a slice is done only when every one of its requirements is proved by a written test whose file is there, in a copy whose banner is as generated, whose every slice is a whole number and whose every test is kept where the check knows: `check-requirements.mjs --done <slice>` says so or lists what is missing, and the slice board's overview says the same, each tried on tampered copies of the requirements; every slice before the one under way is done (spec §12, done_means_proved).
 - `test/slice-board-style.test.js` — the slice board's stylesheet: colour tokens that agree in light and dark, the altitude switch by CSS alone, a layout that holds at 400px, and the source written one rule and one declaration to a line.
 - `test/slice-board.test.js` — the slice board: a CSS-only HTML page of how far the slice under way is proved, from the requirements copy and, optionally, the open pull requests.
 - `test/speed-index.test.js` — the one measure of a machine's speed, which the quality metrics record and scale their timings by: fixed plain work, the least of seven runs.
 - `test/timed-assertions.test.js` — a test asserts the work done, never the time taken: no JavaScript test or its support asserts a span of elapsed time; a polling deadline, mock timers and a clock handed to the code tested are allowed.
 - `test/test-vault.test.js` — the test vault: dummy notes tied to requirements, nothing Obsidian writes committed, each session clean.
+- `test/test-status-partial.test.js` — the third test status, `partial`: a test whose file is there but does not yet prove every rule its record covers. It needs its file like a written one, leaves its requirement unproved in `--done` (the reason says partial), may be flipped to only from planned and to written (every backward move refused), and counts on the slice board as part and in progress, never proved.
 - `test/tests-first.test.js` — every test is seen to fail before its code, replayed commit by commit: how a replay judges a new test.
 - `test/tests-first-command.test.js` — that replay's command line, run as CI and a person run it: `--check`, `--excuse` and `--migrate`.
 - `test/tests-first-complete.test.js` — that command line's `--complete`: a commit that changed a test and has no record fails, until `--update` records it.
