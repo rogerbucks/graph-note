@@ -258,16 +258,18 @@ export function withoutItem(text: string, all: Item[], it: Item): string {
   const lineStart = text.lastIndexOf('\n', it.from - 1) + 1;
   const alone = /^[ \t]*$/.test(text.slice(lineStart, it.from));
   // the note's lines go too, when nothing else is on the item's line: the note belongs to the item alone
-  const sole = alone && /^[ \t]*(?:,[ \t]*)?(?:\n|$)/.test(text.slice(it.to));
+  const sole = alone && /^[ \t]*(?:,[ \t]*)?(?:\r?\n|$)/.test(text.slice(it.to));
   const own = sole ? runStart(text, lineStart) : lineStart;
   if (it.comma !== -1) {
     const end = it.comma + 1;
     if (!alone) return text.slice(0, it.from) + text.slice(end).replace(/^[ \t]+/, '');
-    return text.slice(0, own) + text.slice(end + (/^[ \t]*\n/.exec(text.slice(end))?.[0].length ?? 0));
+    return text.slice(0, own) + text.slice(end + (/^[ \t]*\r?\n/.exec(text.slice(end))?.[0].length ?? 0));
   }
   // the last item: its own line goes, and the comma that parted it from the item before; other comments and blank lines stay
   const before = all[all.indexOf(it) - 1];
-  const cut = text.slice(0, alone && own > 0 ? own - 1 : it.from) + text.slice(it.to);
+  // the line break before it goes with it, a CR with its LF
+  const brk = own > 1 && text[own - 2] === '\r' ? own - 2 : own - 1;
+  const cut = text.slice(0, alone && own > 0 ? brk : it.from) + text.slice(it.to);
   return before && before.comma !== -1 ? cut.slice(0, before.comma) + cut.slice(before.comma + 1) : cut;
 }
 

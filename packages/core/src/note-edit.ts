@@ -72,9 +72,11 @@ export function setNote(block: string, t: Target, text: string | null): Edit {
   const crowded = items(block).some((x) => x.from !== item.from && lineOf(x.from) === lineOf(item.to - 1));
   if (crowded || ![...lead].every(isSpace))
     return { ok: false, reason: `this thing or link shares its line with another: ${ALONE}` };
-  const cr = (lines[index] ?? '').endsWith('\r') ? '\r' : '',
-    want = noteLines(text),
+  const want = noteLines(text),
     old = ownedAbove(lines, index).filter((i) => NOTE.test(trim(lines[i] ?? '')));
+  // the line ends as the note's own lines end, else the thing's line, else the line above it (the last line has none)
+  const ends = [old[0], index, index - 1].find((i) => i !== undefined && i >= 0 && i < lines.length - 1);
+  const cr = ends !== undefined && (lines[ends] ?? '').endsWith('\r') ? '\r' : '';
   const at = old[0] ?? index,
     next = lines.filter((_, i) => !old.includes(i));
   next.splice(at, 0, ...want.map((l) => `${lead}///${l === '' ? '' : ` ${l}`}${cr}`));
