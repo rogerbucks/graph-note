@@ -88,6 +88,8 @@ export interface ViewOptions {
   indent?: Indent;
   /** How many steps along its links focus reaches from a selected thing, as the settings say (§25); one when not given. */
   focusDepth?: FocusDepth;
+  /** Whether each note is drawn on the drawing as a callout, as the settings say (§24, note_callouts); off when not given. */
+  callouts?: boolean;
   /** Set when the drawing is a view (spec §7): what it shows, how, and how to write its style. */
   view?: ViewShown;
   /** Set when the drawing is a proposal laid over the graph (spec §17): what it adds, changes and removes, marked, and how a person decides. */

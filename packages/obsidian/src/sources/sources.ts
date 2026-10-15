@@ -117,6 +117,7 @@ export async function renderSourceBlock(
       problems,
       mode: 'note',
       focusDepth: depthOf(plugin.settings.focusDepth),
+      callouts: plugin.settings.noteCallouts === 'on',
       lineOf: (at) => lineInSource(read, at),
       // the data is written in the source, so the drawing is read-only here; the strip opens a note to change it there,
       // and Edit opens this block in the pane

@@ -280,6 +280,7 @@ export async function renderViewBlock(
       problems: [],
       mode: 'note',
       focusDepth: depthOf(plugin.settings.focusDepth),
+      callouts: plugin.settings.noteCallouts === 'on',
       lineOf: (at) => (from ? lineInSource(from, at) : (blocks[at.block]?.line ?? 0) + at.line),
       onEdit: () => changeView(plugin, ctx.sourcePath, line),
       view,

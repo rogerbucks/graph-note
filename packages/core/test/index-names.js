@@ -14,7 +14,7 @@
 // readingOf, evaluate and their types, 11 Oct 2026), and export (exportScope, exportSvg, exportWithLayout, pngSize, exportPlan,
 // companionNote, writeSafely, saidDate, EXPORT_FORMATS, PNG_MIN_SCALE and their types, 11 Oct 2026; the data exports,
 // DATA_FORMATS, isDataFormat, exportedData and dataText, and an image across pages, pngPages and pageSvg, with their
-// types, 13 Oct 2026), and the refusal to
+// types, 13 Oct 2026), and adding, changing and removing a note (setNote, 16 Oct 2026), and the refusal to
 // write a name only suggested (acceptNameFirst, 11 Oct 2026), and adding a thing (addThing, suggestName and their types,
 // 11 Oct 2026), and an estimated link's fix (estimateFix, EstimateFix, 11 Oct 2026), and focus and untangling a large graph
 // (focusOf, highlightOf, FocusState, edgesOf, neighbourhood, LegendFilter, shortestPath, find, nextAlong, Untangle and their
@@ -287,6 +287,7 @@ export const VALUES = [
   'scrollsOneWay',
   'sendPrepared',
   'serveLayouts',
+  'setNote',
   'setProperty',
   'settingsFrom',
   'shapeOf',

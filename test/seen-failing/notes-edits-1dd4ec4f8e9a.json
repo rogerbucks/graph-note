@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/notes-edits.test.js",
+  "test": "note_kept_by_edits: an edit that takes a thing or link out takes its note with it, and gives it to no other > applyChange: a proposal removing a link takes the link’s note, and no thing’s",
+  "seen_failing_first": false,
+  "evidence": "the removal itself was fixed in an earlier commit of this branch (6c42c7f); this is the same case restated in the sweep table, with LF line ends, so it passes against the code before. Its CRLF twin is the case that failed first"
+}

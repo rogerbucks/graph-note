@@ -8,6 +8,7 @@ import { textVersion, withoutColorMix } from '@graph-note/core';
 import type { Drawn, Folding, GraphDrawing } from '@graph-note/core';
 import { boxLabel } from './suggested-name';
 import { markParked } from './parked';
+import { markCallouts } from './note-callouts';
 import { markLinks } from '../links/link-marks';
 import type { ViewOptions } from './view-options';
 
@@ -105,6 +106,7 @@ function decorate(
   markFolds(svg, plan, textOf);
   markParked(svg, boxes); // things parked for later: dashed, with a later mark (spec §5)
   if (o?.links) markLinks(svg, o.reading, o.graph, o.links); // links shown as links, attachments counted (§18)
+  if (o?.callouts && d) markCallouts(svg, drawn, d); // the notes, as callouts, over the finished layout (§24)
 }
 
 /** Each busy hub's stub and each folded group's box (§25): a button that opens it, named with its count. */

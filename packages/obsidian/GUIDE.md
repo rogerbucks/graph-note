@@ -225,6 +225,12 @@ module that ties the parts together, named as the folder is.
   properties rendered by Obsidian's `MarkdownRenderer`, the note a thing whose id is a link to a note stands for, embedded
   with Open beside it (node_is_a_note), and the links and attachments it holds (`links/links-list.ts`); all owned by a
   component unloaded when the details are drawn again or close.
+- `note-controls.ts` — while the block is edited, the details' Add a note, Change the note and Remove the note, written by
+  the core's `setNote` through the editor (note_add); a refusal is said beside them, nothing written. `rich-details.ts`
+  shows the note itself, rendered as Markdown by the same renderer (note_shown).
+- `note-callouts.ts` — `markCallouts`: with the setting Draw notes as callouts on (off by default), each note drawn over the
+  finished SVG as a box beside its thing joined by a dashed line, within the viewBox, its words as text (note_callouts);
+  the layout and the viewBox are as without.
 - `details-nav.ts` — finding your way from the details (§25): the groups of links rendered from the core's
   `linkGroups`, the trail's buttons, the names of steps, and `Glide`, the brief eased move to what is chosen, a frame at
   a time, at once when the system asks for reduced motion.

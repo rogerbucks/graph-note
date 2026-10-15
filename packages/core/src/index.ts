@@ -197,6 +197,7 @@ export {
   spanOf,
   linkInBlock,
 } from './inspector.ts';
+export { setNote } from './note-edit.ts';
 export { listValues, makeList, addToList, removeFromList, linkedValues, listsOf } from './linked-list.ts';
 export type { ListShape, ListValue, ListEdit } from './linked-list.ts';
 export { BIG_PROPOSAL, linkChange, makeProposal, provenanceLines, thingChange, valueGql } from './proposals.ts';

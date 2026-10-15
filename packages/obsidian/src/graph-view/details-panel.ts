@@ -369,6 +369,7 @@ export class DetailsPanel {
     if (!ed?.session) return;
     ed.selected = 'thing' in target ? { key: target.thing } : { link: target.link };
     const text = () => ed.session?.text ?? '';
+    const replace = (t: string) => this.o.editing?.() === ed && ed.replace(t);
     renderProperties(el, {
       reading: this.o.reading,
       now: () => ed.session?.current() ?? this.o.reading,
@@ -380,10 +381,9 @@ export class DetailsPanel {
       inBlock: () =>
         'thing' in target ? target : { link: linkInBlock(this.o.reading, this.o.graph, target.link, text()) },
       // only while this editor is still open on the card: a control left from before Done reaches nothing
-      replace: (t) => {
-        if (this.o.editing?.() === ed) ed.replace(t);
-      },
+      replace,
       lists: (ed.lists ??= []),
     });
+    this.rich.noteControls(el, target, text, replace);
   }
 }

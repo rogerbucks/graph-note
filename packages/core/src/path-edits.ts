@@ -4,6 +4,7 @@
 // reads 1 to n. Host-free. A step written over several lines, or with seq after another property, is not renumbered.
 import { blankText, items, lineIndex } from './block-items.ts';
 import type { Problem } from './note-reading.ts';
+import { ownedAbove } from './note-lines.ts';
 
 type Edit = { span: { line: number; character: number; end: number }; text: string };
 
@@ -69,10 +70,19 @@ export function removal(
             text: '',
           },
         ];
+  // the step's note and tags go with it, their lines emptied, so the next step never takes them up (§24, note_kept_by_edits)
+  const alone = /^[ \t]*$/.test(text.slice(start, it.from)) && /^[ \t]*(?:\r?\n|$)/.test(text.slice(end));
+  const lines = text.split('\n');
+  const notes: Edit[] = alone
+    ? ownedAbove(lines, lineOf(it.from) - 1).map((i) => ({
+        span: { line: i, character: 0, end: (lines[i] ?? '').length },
+        text: '',
+      }))
+    : [];
   return {
     replace: { written: text.slice(it.from, end), with: [''] },
     span: { line: lineOf(it.from) - 1, character: it.from - start, end: end - start },
     fixTitle: 'Remove the step',
-    also: [...comma, ...stepsAfter(text, dropped)],
+    also: [...comma, ...notes, ...stepsAfter(text, dropped)],
   };
 }

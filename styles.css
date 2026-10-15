@@ -1339,3 +1339,41 @@ details.graph-note-style > summary {
   border-left: 2px solid var(--background-modifier-border);
   padding-left: var(--size-4-2);
 }
+/* A note in a thing's or link's details, rendered by Obsidian, and its controls while the block is edited (§24). */
+.graph-note-thing-note {
+  border-left: 2px solid var(--interactive-accent);
+  padding-left: var(--size-4-2);
+}
+.graph-note-note-controls {
+  margin-top: var(--size-4-2);
+}
+.graph-note-note-field {
+  width: 100%;
+}
+.graph-note-note-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-4-2);
+  margin-top: var(--size-4-1);
+}
+.graph-note-note-said:not(:empty) {
+  color: var(--text-error);
+  margin-bottom: var(--size-4-1);
+}
+/* A note drawn as a callout over the finished drawing, joined to its thing by a dashed line (§24, note_callouts). */
+.graph-note-callouts {
+  pointer-events: none;
+}
+.graph-note-callout-line {
+  stroke: var(--text-muted);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+}
+.graph-note-callout-box {
+  fill: var(--background-secondary);
+  stroke: var(--background-modifier-border-hover);
+  stroke-width: 1;
+}
+.graph-note-callout-text {
+  fill: var(--text-normal);
+}
