@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/editor-mod.test.js",
+  "test": "only the person typing can say yes (cc_classified_asks) > the composer is the one origin that asks, and its yes opens the note",
+  "seen_failing_first": false,
+  "evidence": "Written to pin that the person typing still gets the question and the yes, which worked before origins were checked; the origin refusals are the new tests."
+}
