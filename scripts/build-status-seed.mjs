@@ -2,7 +2,8 @@
 // has none is not "not started" just because nothing has set it. Where its requirement stands on GitHub says more. Proved
 // on main and proved by the copy of a published release: Released and Done. Proved on main only: Merged and Done. Held by an
 // open pull request of this repository, by its copy's diff or its Requirements line (the rules of build-status-events.mjs):
-// In PR and In Progress. Otherwise nothing, which is Not started and Todo. A draft release is not published and is never read.
+// In PR and In Progress, with the day the earliest of those pull requests was opened as its Started on. Otherwise nothing,
+// which is Not started and Todo, and no Started on. A draft release is not published and is never read.
 // Only the seed is worked out here; the mirror gives it only to an item with no value (or, for Status, with Todo, which is
 // the board's default), so a value already set is never overwritten and nothing moves back from Released or Done.
 import { DEFAULT_BRANCH } from './build-status.mjs';
@@ -14,6 +15,9 @@ const MERGED = { buildStatus: 'Merged', progress: 'Done' };
 const HELD = { buildStatus: 'In PR', progress: 'In Progress' };
 /** The most published releases read, newest first, to find what each proves. */
 const MAX_RELEASES = 30;
+
+/** The earlier of two days (YYYY-MM-DD), either of which may be missing. */
+const earlier = (a, b) => (a && b ? (a < b ? a : b) : (a ?? b ?? null));
 
 /** The ids proved on main that the copy of a published release proves too, reading releases newest first. */
 function releasedIds(run, repo, proved, warnings) {
@@ -38,15 +42,18 @@ function releasedIds(run, repo, proved, warnings) {
   return released;
 }
 
-/** The ids the open pull requests of this repository hold: what their copies prove, and what their lines name while the copy has not landed. */
+/**
+ * The ids the open pull requests of this repository hold (what their copies prove, and what their lines name while the
+ * copy has not landed), as a Map from each to the earliest day one of them was opened, or null where GitHub gave none.
+ */
 function heldIds(run, repo, warnings) {
-  const held = new Set();
+  const held = new Map();
   for (const number of openPullNumbers(run, repo)) {
     const pr = readPullRequest(run, repo, number);
     if (skipReason(pr, repo)) continue;
     try {
       const { proved, claimed, landed } = claimsOf(pr, { repo }, { github: run });
-      for (const id of [...proved, ...(landed ? [] : claimed)]) held.add(id);
+      for (const id of [...proved, ...(landed ? [] : claimed)]) held.set(id, earlier(held.get(id), pr.createdAt));
     } catch (e) {
       if (!(e instanceof Unreadable)) throw e;
       warnings.push(`pull request #${number}: ${e.message}, so it holds nothing here`);
@@ -70,8 +77,9 @@ function provedOnMain(run, repo, warnings) {
 
 /**
  * The seed for the requirements, from where each stands on GitHub: {seed: Map from a requirement id to {buildStatus,
- * progress}, warnings}. What is proved on main is read from main through the API. An id with no entry is Not started and
- * Todo. A requirements file that cannot be read (main's, a release's, a pull request's) is a warning: the seed leaves what
+ * progress, startedOn}, warnings}. What is proved on main is read from main through the API. An id with no entry is Not
+ * started and Todo, and has no Started on. A held one's startedOn is the earliest day an open pull request holding it was
+ * opened; a proved one's is undefined, as its Started on is kept. A requirements file that cannot be read (main's, a release's, a pull request's) is a warning: the seed leaves what
  * it would have shown out, and the mirror stops an apply on warnings unless it is told to go on.
  */
 export function seedOf(run, repo, { write = () => {} } = {}) {
@@ -79,7 +87,7 @@ export function seedOf(run, repo, { write = () => {} } = {}) {
   const proved = provedOnMain(run, repo, warnings);
   const released = releasedIds(run, repo, proved, warnings);
   const seed = new Map();
-  for (const id of heldIds(run, repo, warnings)) seed.set(id, HELD);
+  for (const [id, day] of heldIds(run, repo, warnings)) seed.set(id, day ? { ...HELD, startedOn: day } : HELD);
   for (const id of proved) seed.set(id, released.has(id) ? RELEASED : MERGED);
   for (const w of warnings) write(`warning: ${w}\n`);
   return { seed, warnings };

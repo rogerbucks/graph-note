@@ -5,6 +5,9 @@
 // for what it was making, and a call that a second try could repeat (a comment, a new field) is not tried again at
 // all, so the run stops as it always did and the next run resumes. Nothing here touches the network itself.
 
+/** An apply stopped, before its next call that changes something, because the time it may take is spent. */
+export class BudgetSpent extends Error {}
+
 /** The waits before the first, second and third retry of a call that failed in a transient way, in milliseconds. */
 export const RETRY_DELAYS_MS = [5000, 15000, 45000];
 const RATE_LIMITED = /secondary rate limit|submitted too quickly|abuse detection/i;
@@ -62,12 +65,14 @@ export function retrying(run, { sleep = waitFor, delays = RETRY_DELAYS_MS } = {}
  * (then it is not tried again), else a function that re-reads what GitHub holds, through `read`, and gives {value} (what
  * the call would have given) when the thing is there, else undefined. It runs before each retry, and when the re-read
  * itself fails for good, that failure stops the run: a call is never made again on a look that did not happen. Any
- * other failure goes on up.
+ * other failure goes on up. `budget`, where given, is {now (a clock in milliseconds), until}: once the clock reaches
+ * `until` no call is made, and BudgetSpent is thrown instead, so a long apply stops in time and the next one goes on.
  */
-export function paced(run, { sleep, pauseMs, retryMs, delays, lookup }) {
+export function paced(run, { sleep, pauseMs, retryMs, delays, lookup, budget }) {
   let first = true;
   const read = retrying(run, { sleep, delays });
   return (args, input) => {
+    if (budget && budget.now() >= budget.until) throw new BudgetSpent('the time this apply may take is spent');
     if (!first) sleep(pauseMs);
     first = false;
     const check = lookup(args, input, read);

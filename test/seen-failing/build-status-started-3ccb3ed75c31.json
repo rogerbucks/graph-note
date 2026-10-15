@@ -1,0 +1,6 @@
+{
+  "file": "test/build-status-started.test.js",
+  "test": "Started on, put right by the mirror > keeps the day of an item proved on main, and of one already started",
+  "seen_failing_first": false,
+  "evidence": "It pins that the mirror leaves an existing Started on alone (proved on main, or already started); before Started on was derived the mirror never touched it, so it held before its code. The setting and clearing test beside it failed first."
+}

@@ -1,0 +1,6 @@
+{
+  "file": "test/github-project-run.test.js",
+  "test": "a run that would make many issues > has no such cap when a person applies it",
+  "seen_failing_first": false,
+  "evidence": "It pins that the cap is the workflow's alone; a person's apply never had a cap, so it held before. The refusal test beside it failed first."
+}

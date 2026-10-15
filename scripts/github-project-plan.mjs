@@ -17,6 +17,10 @@ import {
   idOfBody,
   isManagedLabel,
 } from './github-project-desired.mjs';
+import { STARTED_FIELD, planTyped, typedDiffers, wantedTyped, withClosedOn } from './github-project-fields.mjs';
+
+/** An apply stopped because the seed was made despite warnings, so some of its values may be wrong. */
+export class SeedWarnings extends Error {}
 
 /** The most issues a plan may remove (label and close) unless the person allows more. */
 export const MAX_REMOVALS = 10;
@@ -53,13 +57,14 @@ const plain = (text) =>
 export function planIssues(desired, remote, known, login) {
   const plan = { create: [], update: [], close: [], reopen: [], removed: [], unchanged: [], outside: [], warnings: [] };
   const held = new Map();
+  const writers = [login].flat().filter(Boolean).join(' or ') || 'the signed-in login';
   for (const issue of [...remote].sort((a, b) => a.number - b.number)) {
     const id = adoptedId(issue, login);
     if (id === null) {
       const marked = idOfBody(issue.body);
       if (marked !== null)
         plan.warnings.push(
-          `issue #${issue.number} carries the marker of ${marked} but is not adopted: it was not written by ${login ?? 'the signed-in login'}, or it lacks the generated banner or the marker at its end`,
+          `issue #${issue.number} carries the marker of ${marked} but is not adopted: it was not written by ${writers}, or it lacks the generated banner or the marker at its end`,
         );
       continue;
     }
@@ -113,13 +118,15 @@ export function planLabels(wanted, existing) {
 }
 
 /**
- * What to do to the project. `remote` is the project GitHub holds, {id, number, fields: {name: {id, options}}, items:
- * [{itemId, id (the requirement's), values: {field: option}}]}, or null for none. Gives {create, fields, itemsAdd,
- * sets}: whether to make the project; for each field that is missing or lacks options, {name, create, add: options to
- * add}; the requirements to add as items; and each field value to set, {id, field, from, to}. Options already there are
- * kept, and an item no longer wanted is left in the project.
+ * What to do to the project. `remote` is the project GitHub holds, {id, number, fields: {name: {id, options}}, typed:
+ * {name: {id, type, iterations}}, items: [{itemId, id (the requirement's), values: {field: value}}]}, or null for none.
+ * Gives {create, fields, typed, itemsAdd, sets}: whether to make the project; for each single-choice field that is
+ * missing or lacks options, {name, create, add: options to add}; the other fields to make, or the Wave field whose
+ * iterations to set (planTyped); the requirements to add as items; and each field value to set, {id, field, from, to},
+ * `to` null to clear it. Options already there are kept, and an item no longer wanted is left in the project.
+ * `iterations` are the waves of the plan, or null without one, when Wave and Order are not made.
  */
-export function planProject(desired, wantedFields, remote) {
+export function planProject(desired, wantedFields, remote, iterations = null) {
   const fields = [];
   for (const name of FIELD_NAMES) {
     const have = remote?.fields?.[name];
@@ -139,8 +146,24 @@ export function planProject(desired, wantedFields, remote) {
       const from = items.get(d.id)?.values?.[field] ?? null;
       if (differs(field, from, d[FIELD_KEYS[field]])) sets.push({ id: d.id, field, from, to: d[FIELD_KEYS[field]] });
     }
-  return { create: remote === null, fields, itemsAdd, sets };
+  const wanted = wantedTyped(iterations);
+  for (const d of desired)
+    for (const { name, key } of wanted) {
+      const values = items.get(d.id)?.values;
+      const from = values?.[name] ?? null;
+      // Started on is cleared only for an item Not started: one whose build has gone further keeps it
+      const building = (values?.[BUILD_STATUS_FIELD] ?? BUILD_STATUSES[0]) !== BUILD_STATUSES[0];
+      if (name === STARTED_FIELD && d[key] === null && building) continue;
+      if (typedDiffers(name, from, d[key])) sets.push({ id: d.id, field: name, from, to: d[key] });
+    }
+  // a single-choice field of a typed field's name is of the wrong type too
+  const kinds = { ...remote?.typed };
+  for (const name of Object.keys(remote?.fields ?? {})) kinds[name] = { type: 'SINGLE_SELECT' };
+  return { create: remote === null, fields, typed: planTyped(kinds, iterations), itemsAdd, sets };
 }
+
+/** The plan of a project that is not read, as when no token may read it: nothing is done to it. */
+const UNREAD = { create: false, fields: [], typed: [], itemsAdd: [], sets: [], unread: true };
 
 /**
  * Whether a field's value on an item is to be set. Slice, Workstream and Proof follow the requirement, so any difference.
@@ -166,20 +189,29 @@ function refuseMissingSeeds(desired, remote) {
 }
 
 /**
- * The whole plan for a desired state (as desiredState gives it) and what GitHub holds ({labelNames, issues, project}):
- * the plan of the issues, the labels to make, the plan of the project, the warnings, and what the executor needs of the
- * project that exists.
+ * The whole plan for a desired state (as desiredState gives it) and what GitHub holds ({login, adopters, labelNames,
+ * issues, project}): the plan of the issues, the labels to make, the plan of the project, the warnings, the logins whose
+ * issues are adopted, and what the executor needs of the project that exists. Closed on is derived here from the issues
+ * GitHub holds (withClosedOn). A project that is undefined was not read, and nothing is planned for it.
  */
 export function buildPlan(desired, remote) {
-  const issues = planIssues(desired.issues, remote.issues, new Set(desired.known), remote.login);
+  const adopters = remote.adopters ?? remote.login;
+  const issues = planIssues(desired.issues, remote.issues, new Set(desired.known), adopters);
   const needed = desired.issues.flatMap((i) => i.labels);
   if (issues.removed.some((r) => r.label)) needed.push(REMOVED_LABEL);
+  const dated = withClosedOn(desired.issues, remote.issues, adopters);
   return {
     desired,
     labels: planLabels(needed, remote.labelNames),
     issues,
-    project: planProject(desired.issues, desired.fields, remote.project),
+    project:
+      remote.project === undefined
+        ? UNREAD
+        : planProject(dated, desired.fields, remote.project, desired.iterations ?? null),
     projectRef: remote.project ? { id: remote.project.id, number: remote.project.number } : null,
+    adopters,
+    creator: remote.login,
+    dated,
     warnings: issues.warnings,
   };
 }
@@ -211,7 +243,7 @@ export function summarise(plan) {
     removed: issues.removed.length,
     unchanged: issues.unchanged.length,
     projectCreate: project.create ? 1 : 0,
-    fieldsCreate: project.fields.filter((f) => f.create).length,
+    fieldsCreate: [...project.fields, ...project.typed].filter((f) => f.create).length,
     optionsAdd: project.fields.reduce((n, f) => n + f.add.length, 0),
     itemsAdd: project.itemsAdd.length,
     valuesSet: project.sets.length,
@@ -234,6 +266,14 @@ function seedTally(label, field, options, sets) {
   const counts = options.map((o) => [o, mine.filter((s) => s.to === o).length]).filter(([, n]) => n > 0);
   return `seeded ${label}: ${counts.length ? counts.map(([o, n]) => `${o} ${n}`).join(' · ') : 'none'}`;
 }
+
+/** The line of a field that is not a single choice: made, with its type, or the Wave field given the plan's iterations. */
+const typedLine = (f) => {
+  const waves = f.iterations ? `: ${f.iterations.map((i) => `${i.title} from ${i.startDate}`).join(', ')}` : '';
+  return f.create
+    ? `create field ${f.name} (${f.type.toLowerCase()}${waves})`
+    : `set the iterations of ${f.name}${waves}`;
+};
 
 /** The plan as text: its counts first, then the tally of the values it would seed, then a line for each change. */
 export function formatPlan(plan) {
@@ -259,16 +299,18 @@ export function formatPlan(plan) {
     ),
     ...(issues.outside.length ? [`left alone, outside the chosen slices: ${issues.outside.join(', ')}`] : []),
     ...(project.create ? [`create project "${PROJECT_TITLE}"`] : []),
+    ...(project.unread ? ['project: not read, so nothing is done to it'] : []),
     ...project.fields.map((f) =>
       f.create ? `create field ${f.name} (${f.add.join(', ')})` : `add options to field ${f.name}: ${f.add.join(', ')}`,
     ),
+    ...project.typed.map((f) => typedLine(f)),
     ...project.itemsAdd.map((id) => {
       const i = issueOf(id);
       return `add to project ${id} (${i.slice} · ${i.workstream} · ${i.status})`;
     }),
     ...project.sets
       .filter((s) => !added.has(s.id))
-      .map((s) => `set ${s.id} ${s.field}: ${s.from === null ? '' : `${s.from} → `}${s.to}`),
+      .map((s) => `set ${s.id} ${s.field}: ${s.from === null ? '' : `${s.from} → `}${s.to ?? 'cleared'}`),
     ...plan.warnings.map((w) => `warning: ${w}`),
   ];
   return `${lines.join('\n')}\n`;

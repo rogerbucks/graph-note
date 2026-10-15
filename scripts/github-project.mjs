@@ -19,13 +19,16 @@
 //                                                                  do the plan with gh, which needs a token that may
 //                                                                  write issues and projects (the `project` scope)
 //
+// On every push to main the workflow .github/workflows/project-mirror.yml runs the --apply above in GitHub Actions, where
+// scripts/github-project-run.mjs runs it with the workflow's own token for the issues and PROJECT_TOKEN for the project.
+//
 // --check and --apply also work out the values an item with none is given (see scripts/build-status-seed.mjs), from main
 // and the releases and open pull requests of GitHub, and print the tally of them. If a file they read could not be read, the
 // seed carries a warning; --check says that an apply would stop, and --apply stops unless --accept-warnings is given.
 //
 // A dry run cannot see GitHub, so it compares with an empty one: every issue shows as a create. --check and --apply
 // first confirm that gh points at this checkout's own origin repository, then read GitHub, find each issue it made by
-// its hidden marker (only issues written by the signed-in login, with the generated banner and the marker at the end),
+// its hidden marker (only issues written by the owner or the workflows' bot, with the generated banner and the marker at the end),
 // change only what differs, and never delete: an issue whose requirement went is labelled requirement:removed and
 // closed, with a comment. --apply stops, unless --allow-removals is given, when the requirements file holds no
 // requirements or the plan removes more than 10 issues. It is safe to run again.
@@ -37,9 +40,12 @@ import { REQUIREMENTS } from './check-requirements.mjs';
 import { readBoard } from './slice-board.mjs';
 import { QUESTION_LABEL, desiredState, readWorkstreams, withSeed } from './github-project-desired.mjs';
 import { seedOf } from './build-status-seed.mjs';
-import { buildPlan, formatPlan, guardProblem } from './github-project-plan.mjs';
+import { SeedWarnings, buildPlan, formatPlan, guardProblem } from './github-project-plan.mjs';
 import { executePlan, ghRunner, pinRepo, readRemote, repoOfRemote } from './github-project-gh.mjs';
 import { retrying } from './github-project-retry.mjs';
+import { runInWorkflow } from './github-project-run.mjs';
+import { CreatesCapped, createsProblem } from './github-project-issues.mjs';
+import { WAVES_FILE, readWaves, waveLines } from './github-project-waves.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const WORKSTREAMS = 'requirements/workstreams.json';
@@ -76,6 +82,12 @@ function parseOptions(args) {
   return options;
 }
 
+/** The tally of the waves plan and its warnings, a line each, or nothing without a plan. */
+const wavesText = (desired) =>
+  waveLines(desired)
+    .map((line) => `${line}\n`)
+    .join('');
+
 const countLine = (issues, slices) => {
   const asked = issues.filter((i) => i.labels.includes(QUESTION_LABEL)).length;
   const requirements = issues.filter((i) => !i.labels.includes(QUESTION_LABEL));
@@ -100,22 +112,36 @@ function originRepo() {
  * warnings}: the Map from a requirement id to the {buildStatus, progress} an item with none takes
  * (scripts/build-status-seed.mjs), where the requirement stands on GitHub in place of Not started and Todo, and the warnings
  * (a requirements file that could not be read) the seed was made despite. The plan prints the tally of what it would seed.
- * An apply with warnings in the seed stops, since it would fix wrong values for good, unless `acceptWarnings` is given;
- * a check says that it would.
+ * An apply with warnings in the seed stops (SeedWarnings), since it would fix wrong values for good, unless
+ * `acceptWarnings` is given; a check says that it would. With `project` false the project is not read and nothing is done
+ * to it, and no seed is made: only the issues are mirrored. `deps.creator`, where given, is the login that makes issues
+ * (the workflow's bot), so GitHub is not asked who is signed in; `deps.budget`, where given, is the time the apply may
+ * take ({now, until}, see paced in github-project-retry.mjs), after which it stops with BudgetSpent. With `maxCreates`
+ * (the workflow's), an apply that would make more issues than that on a board with issues of its own stops before
+ * anything changes (CreatesCapped); and any apply stops making issues (CreatesUnlisted) when the list by creator does
+ * not give back what it made (github-project-issues.mjs). An apply by a login whose issues would not be adopted
+ * (neither the owner nor the bot) is refused before anything changes.
  */
 export function mirror(
-  { desired: base, mode, allowRemovals, acceptWarnings, seed },
-  { run: raw, originRepo: origin, write, sleep },
+  { desired: base, mode, allowRemovals, acceptWarnings, seed, project = true, maxCreates },
+  { run: raw, originRepo: origin, write, sleep, creator, budget },
 ) {
   const run = retrying(raw, sleep ? { sleep } : {});
   const repo = pinRepo(run, origin);
-  const seeded = seed ? seed(run, repo) : { seed: new Map(), warnings: [] };
-  const desired = withSeed(base, seeded.seed);
-  const plan = buildPlan(desired, readRemote(run, repo));
+  // the seed gives only project values, so a run that does not read the project needs none
+  const seeded = seed && project ? seed(run, repo) : { seed: new Map(), warnings: [] };
+  const desired = withSeed(base, seeded.seed, { started: Boolean(seed && project) });
+  const remote = readRemote(run, repo, { creator, project });
+  if (mode === 'apply' && !remote.adopters.some((a) => a.toLowerCase() === remote.login.toLowerCase()))
+    throw new Error(
+      `${remote.login} is signed in, but only issues written by ${remote.adopters.join(' or ')} are adopted, so the issues this apply made would be made again by the next; apply as the owner, or let the workflow apply`,
+    );
+  const plan = buildPlan(desired, remote);
   const slices = desired.fields.Slice.map((option) => Number(option.replace('Slice ', '')));
   const heading =
     mode === 'check' ? 'check — read-only: GitHub is read and nothing is changed' : 'apply — GitHub is changed';
   write(`github-project: ${heading}\ntarget repository: ${repo}\n${countLine(desired.issues, slices)}\n`);
+  write(wavesText(desired));
   write(formatPlan(plan));
   const problem = guardProblem(plan);
   const n = seeded.warnings.length;
@@ -127,22 +153,36 @@ export function mirror(
     return;
   }
   if (problem && !allowRemovals) throw new Error(problem);
-  if (seedProblem && !acceptWarnings) throw new Error(seedProblem);
-  executePlan(raw, repo, plan, sleep ? { sleep } : {});
+  if (seedProblem && !acceptWarnings) throw new SeedWarnings(seedProblem);
+  const tooMany = maxCreates === undefined ? null : createsProblem(plan, maxCreates);
+  if (tooMany) throw new CreatesCapped(tooMany);
+  executePlan(raw, repo, plan, { ...(sleep ? { sleep } : {}), ...(budget ? { budget } : {}) });
   write('github-project: applied\n');
 }
 
-function main(args) {
+/** The desired state for the chosen slices, from the requirements copy, the workstreams file and the waves plan. */
+export function loadDesired(slices) {
+  const board = readBoard(readFileSync(join(ROOT, REQUIREMENTS), 'utf8'));
+  const workstreams = readWorkstreams(readFileSync(join(ROOT, WORKSTREAMS), 'utf8'));
+  const waves = readWaves(readFileSync(join(ROOT, WAVES_FILE), 'utf8'), workstreams);
+  return desiredState(board, workstreams, slices, waves);
+}
+
+/**
+ * The command line. An --apply in a GitHub Actions run (GITHUB_ACTIONS is true) is the workflow's, run by
+ * github-project-run.mjs with the workflow's two tokens; anything else runs as a person runs it.
+ */
+function main(args, env = process.env) {
   try {
     const options = parseOptions(args);
-    const board = readBoard(readFileSync(join(ROOT, REQUIREMENTS), 'utf8'));
-    const workstreams = readWorkstreams(readFileSync(join(ROOT, WORKSTREAMS), 'utf8'));
-    const desired = desiredState(board, workstreams, options.slices);
+    if (options.mode === 'apply' && env.GITHUB_ACTIONS === 'true')
+      return runInWorkflow(options, env, { mirror, load: loadDesired });
+    const desired = loadDesired(options.slices);
     if (options.mode === 'dry-run') {
       const plan = buildPlan(desired, { login: null, labelNames: [], issues: [], project: null });
       const note = 'no network call is made; GitHub is taken to be empty, so every issue shows as a create';
       process.stdout.write(
-        `github-project: dry run — ${note}\n${countLine(desired.issues, options.slices)}\n${formatPlan(plan)}`,
+        `github-project: dry run — ${note}\n${countLine(desired.issues, options.slices)}\n${wavesText(desired)}${formatPlan(plan)}`,
       );
       return 0;
     }

@@ -48,3 +48,15 @@ export const WORKSTREAMS_WITH_QUESTIONS = {
   W1: { title: 'Focus, hover and untangle', requirements: ['focus_neighbours', 'focus_link', 'q_02_listed'] },
   Q: { title: 'Open questions', requirements: [] },
 };
+
+/**
+ * A waves plan for the fixture: W1 first, then the slice-end workstream, whose listed requirement comes before the one it
+ * holds by default. W0 is in no wave; its one requirement in the copy is proved.
+ */
+export const WAVES = {
+  about: 'A plan for the tests.',
+  waves: [
+    { title: 'Wave 1 · Focus', start: '2026-10-20', end: '2026-11-02', estimate: true, workstreams: ['W1'] },
+    { title: 'Wave 2 · Slice end', start: '2026-11-03', end: '2026-11-16', estimate: false, workstreams: ['S3'] },
+  ],
+};

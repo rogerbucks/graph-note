@@ -1,0 +1,6 @@
+{
+  "file": "test/github-project-fields.test.js",
+  "test": "Wave and Order, from the waves plan > the update sent for the Wave field holds only the schema’s keys: an iteration’s id, title, start and length",
+  "seen_failing_first": false,
+  "evidence": "It pins the keys the mirror already sent, against the schema the owner read on 15 Oct 2026 (id, title, startDate, duration); review asked that a drift fail a test, and the code already met it."
+}

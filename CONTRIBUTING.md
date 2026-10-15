@@ -171,6 +171,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/build-status-board.test.js` — the build status's project board: each item's Build status and Status, setting either, the issues read with the workflow's token and the project with the project token alone, and every trouble that is the board's own.
 - `test/build-status-run.test.js` — the build status event by event: a pull request opened, CI's checks failing and passing, its merge and closing, the pull requests it leaves alone (a fork, a stale one, one merged elsewhere), a very large one, a release; and a project token that is missing, expired (401) or refused, which warns and never fails.
 - `test/build-status-env.test.js` — the build status run whole from a workflow's environment: the event file, the two tokens each to its own runner, the exit code, and a requirements file too large to read.
+- `test/build-status-started.test.js` — Started on: the day a pull request of this repository first took a requirement on, by its copy or its Requirements line, set once and kept when it merges or while another pull request holds the item, cleared when it closes unmerged and nothing else holds it; and the mirror's seed setting the earliest such day where none is, clearing it only for an item Not started, and keeping it for one proved, `part` on main (1 of 3 tests written and merged) or In PR or later.
 - `test/build-status-claims.test.js` — the built-in Status field (Todo, In Progress, Done), an item two pull requests hold, and the `Requirements:` line of a draft pull request, the only part of its untrusted description that is read.
 - `test/build-status-comments.test.js` — the comments after a pull request is closed and locked: the Merged comment, and the Released comment a release leaves on each pull request it moves, by unlocking, commenting and locking again, and every way that can fail.
 - `test/build-status-workflow.test.js` — the two build status workflows: woken only by the checks of a pull request, a push to main and a release; the project secret given only to the script on main; no event text in a command line; least privilege.
@@ -186,6 +187,11 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/github-project-gh-owner.test.js` — that mirror's project found, made and filled through GraphQL by the owner's login, with a runner for which every `gh project` verb but `item-edit` fails with "unknown owner type", and an owner or a list that is not there an error naming the owner, never no projects.
 - `test/github-project-gh-safety.test.js` — that mirror's care: every call names its repository or owner, gh must point at the origin's repository, mutating calls are paced and retried once on a secondary rate limit, and a list that hit its cap is refused.
 - `test/github-project-retry.test.js` — that mirror's patience: a timeout, a reset connection, a 502, 503 or 504 or "something went wrong" is waited out 5, 15 and 45 seconds and tried again, a fourth failure stops the run, and a create that went through before the failure is never made twice, and only an issue the signed-in login wrote is taken up again. The worst case is 65 seconds of waiting (5 + 15 + 45) for one call, and the same again for each look at GitHub before a retried create, before the run stops with gh's words.
+- `test/github-project-waves.test.js` — that mirror's waves plan, `requirements/waves.json`: read and refused, each requirement's Wave and Order derived from it (a reordered plan moves Order), the iterations of the Wave field, the tally `--check` prints with a warning for each requirement not proved in no wave, and the real plan holding every requirement of slices 3 to 9 not yet proved.
+- `test/github-project-fields.test.js` — that mirror's fields that are not a single choice, each derived: Closed on set on close from the issue's closedAt (for one closed before the field existed too), cleared on reopen, unchanged when right and put right when not; Wave an iteration field with a wave's dates, Order a number, both moved by a reordered plan and cleared for a requirement in no wave, an iteration kept by its id when its dates change; and the rule Started on follows.
+- `test/github-project-adopt.test.js` — whose issues the mirror and the build status take for their own: the owner's and the workflows' bot's (`app/github-actions` as gh gives it), never a stranger's or another app's; the bot's first apply made and its second changing nothing; and an apply by any other login refused.
+- `test/github-project-run.test.js` — that mirror run by its workflow: the issues written with the workflow's token and by its bot, the project with `PROJECT_TOKEN` alone, a second run changing nothing, a missing or refused project token a warning with the issues mirrored alone, a seed with warnings applying nothing, `--accept-warnings` and `--allow-removals` refused, anything else an error, no token printed, and the command handing over in GitHub Actions; the time budget; issues the creator list does not give back stopping the creating at the first and never made again by a later push; more than 20 creates on a board with its issues refused; and GitHub's rate limits a warning.
+- `test/github-project-workflow.test.js` — the workflow that runs that mirror: woken by a push to main alone, `issues: write` its one write permission, one run at a time and none cancelled, main checked out with nothing installed, the one command, and the project secret given only to it.
 - `test/github-project-plan.test.js` — that mirror's plan: what differs between the desired state and what GitHub holds, for the issues, the labels and the project.
 - `test/instruction-counts.test.js` — the benchmarks' work counted in CPU instructions: Cachegrind's output read, each case counted less its setup, the claims checked, nothing counted and said so where Valgrind is not installed, and every benchmark case still doing its work.
 - `test/ignore-entries.test.js` — an entry of `.ignore` that git ignores as build output may be missing in a fresh checkout, and any other entry that names a file must exist, so a misspelt path is caught.
@@ -254,23 +260,64 @@ These test behaviour across modules, or the repository itself, so they are named
   through GraphQL, not by `gh project create` and `gh project item-add`; only `gh project item-edit`, which takes ids,
   is still used. An owner that cannot be found, or an answer with no list of projects, is an error naming the owner and
   never taken for no projects, which would make the project a second time.
+- **Every other field is derived, never authored** (Roger, 15 Oct 2026). **Closed on** is a date field, the day (UTC)
+  of each issue's `closedAt`: set for every closed issue, those closed before the field existed too, cleared on reopen,
+  and put right if anyone changes it. **Started on** is a date field, the day a draft or open pull request of this
+  repository first took the requirement on, by its copy or its `Requirements:` line: the build status sets it where
+  there is none, keeps it when the pull request merges and while another pull request holds the item, and clears it
+  when the item is let go; the seed carries the earliest day of the open pull requests that hold an item, so a sync sets
+  it where none is and clears it only for an item Not started (none holds it, no test of it is written and its Build
+  status is not past Not started); one proved, `part` on main or In PR or later keeps it. **Wave** and **Order**
+  come from the waves plan below.
+- **The waves plan is `requirements/waves.json`**, the one place the order of the work lives: the waves in order, each
+  with its workstreams in order and a planned `start` and `end`, `estimate: true` marking the dates as estimates (the
+  wave's title on the board then ends "· est.", and `--check` prints a note that they are estimates). Its last wave is
+  a placeholder with no workstreams, for Roger's held changes after all waves. Wave
+  is an *iteration* field, one iteration for each wave with its dates, made and kept by `createProjectV2Field` and
+  `updateProjectV2Field` with `iterationConfiguration` (an iteration whose title is unchanged keeps its id, so the items
+  keep their wave). Order is a number field: the wave's position times 10 000, the workstream's times 100, then the
+  requirement's (those its workstream lists, in its order, then those it holds by default), so 10 203 is the third
+  requirement of the second workstream of the first wave. A requirement whose workstream is in no wave has neither, and
+  `--check` prints a tally for each wave and warns of each requirement in no wave that is not proved.
 - **See the plan with `npm run project:plan`.** It is a dry run and makes no network call, so it compares with an empty
   GitHub. `--check` reads GitHub and prints the real diff, changing nothing. `--apply` prints the same plan, then does
   it with `gh`: it finds each issue by its hidden `<!-- requirement:<id> -->` marker, changes only what differs, and
-  never deletes (an issue whose requirement went is labelled `requirement:removed` and closed, with a comment). There
-  is no apply script and no workflow for the mirror: applying needs a token with the `project` scope, which the owner
-  adds by hand.
-- **Only what it made is its own.** An issue is adopted only when the signed-in login wrote it, its body has the
-  generated banner, and its marker is the last thing in it; a marker anyone else writes is warned of and ignored, and an
-  issue whose banner or closing marker was edited away is no longer ours, so a new one is made. `--apply` stops, unless
-  `--allow-removals` is given, when the requirements file holds no requirements or the plan removes more than 10 issues.
+  never deletes (an issue whose requirement went is labelled `requirement:removed` and closed, with a comment).
+- **The full mirror runs on every push to main** (Roger, 15 Oct 2026, option A), in `.github/workflows/project-mirror.yml`:
+  `node scripts/github-project.mjs --apply --slices 3,4,5,6,7,8,9`, which in GitHub Actions hands over to
+  `scripts/github-project-run.mjs`. So issues close and Proof follows main with no session doing it. The issues and
+  labels are written with the workflow's own token, whose one write permission is `issues: write`, so the issues it makes
+  are written by `github-actions[bot]`; the project is read and written with `PROJECT_TOKEN` (the project scope only), each
+  call routed to its token. A missing `PROJECT_TOKEN`, one GitHub refuses (only a 401, a 403 or "Bad credentials" is
+  the token's trouble), or any other failure of a project call (a mirror error, in gh's own words, such as an input the
+  schema refuses) is a `::warning::`, and the issues are mirrored without the project; a seed made despite warnings applies nothing, with a `::warning::`; neither fails the run, and the
+  workflow never passes `--accept-warnings` or `--allow-removals`. An apply may take 45 minutes (`MIRROR_BUDGET_MINUTES`
+  sets another), inside the job's 60, since a first run makes some 2,000 paced calls: once that is spent it makes no
+  more and warns "board partly updated; the next push continues", exit 0, and the next push plans again from what
+  GitHub holds. GitHub's rate limits (a 403 or 429 that says "rate limit" or "submitted too quickly") warn "rate
+  limited; the next push continues", exit 0. **No issue is ever made twice:** the first issue an apply makes is looked
+  for at once in the list by its creator, and before making any the apply looks among the hundred newest issues for one
+  of its own that list missed; either way it stops creating and warns "bot-created issues aren't listed by creator=…;
+  creating stopped to avoid duplicates", exit 0, so a creator filter that ever failed could not make every push create
+  the issues again. And a run of the workflow makes at most 20 issues on a board that has its issues already (a first
+  mirror makes them all); a plan with more is refused with a warning and nothing applied, for a person to check, as the
+  removal guard does. Anything else is an `::error::`. It runs main's own code
+  only: woken by a push to main alone, it checks out main, installs nothing and keeps no cache. One mirror runs at a time
+  (`concurrency: project-mirror`, `cancel-in-progress: false`): GitHub keeps one run waiting in the group, a newer push
+  replacing the one that waited and never the one running, which is enough since each run mirrors main as it stands.
+- **Only what it made is its own.** An issue is adopted only when the repository's owner or `github-actions[bot]` wrote
+  it (gh gives the bot as `app/github-actions`, the REST API as `github-actions[bot]`), its body has the generated banner, and its marker is the last thing in
+  it; only those two logins' issues are read, a marker anyone else writes is ignored, and an issue whose banner or
+  closing marker was edited away is no longer ours, so a new one is made. `--apply` stops, unless `--allow-removals` is
+  given, when the requirements file holds no requirements or the plan removes more than 10 issues.
 - **It goes only where this checkout's origin says.** `gh` runs in the repository folder with `GH_REPO` and `GH_HOST`
   removed, must point at the origin's repository or the run stops, and names the repository (`--repo`) or the owner
   (`--owner`) on every call. Calls that change something are paced about a second apart and tried once more after a
   secondary rate limit; a list that comes back as long as its cap is refused. An origin on any host but github.com is
   refused, and an error never repeats a login or token from the remote.
-- **Always apply as the same GitHub login.** Issues are adopted only when the signed-in login wrote them, so if the login
-  changes between runs, earlier issues are not adopted and the script would create duplicates.
+- **Apply as the owner, or let the workflow apply.** Issues are adopted only when the owner or the bot wrote them, so an
+  `--apply` signed in as any other login is refused before it changes anything: its issues would be made again by
+  every later run.
 - **The project is dedicated to the script.** Changing the options of Slice or Workstream replaces them in GitHub, which
   clears the value on every item, and the script sets the values again on the items it manages. A value on an item the
   script does not manage would be lost, so keep nothing else in this project.
@@ -293,8 +340,11 @@ These test behaviour across modules, or the repository itself, so they are named
   warning in the comment (never a failure).
 - **Lists are of this repository's own before any cap.** The open pull requests and the pull requests merged in a span
   are paged through (ten pages at most) keeping only those whose head and base are this repository, so a crowd of fork
-  pull requests cannot hide one that holds an item; the issues are asked for by author (`--author`, the owner), in the
-  build status and in the mirror (which adopts only its own login's issues), so issues others file never reach the cap.
+  pull requests cannot hide one that holds an item; the issues are asked for by their creator (the owner, and
+  `github-actions[bot]`) from the REST list endpoint, `repos/{owner}/{name}/issues?state=all&creator=…`, paged through,
+  in the build status and in the mirror (which adopts only those two logins' issues), so issues others file never reach
+  the cap. Not `gh issue list`, which may use the search: capped at 1,000 and behind its index, so a create tried again
+  could be made twice. A pull request, which that endpoint lists too, is left out.
 - **Which pull requests.** Only those of this repository: one from a fork moves nothing and gets no comment. The pull
   requests an event names must still have, as their head, the commit its checks ran on. Merged counts only when the pull
   request merged into main.

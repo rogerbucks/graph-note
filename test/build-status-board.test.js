@@ -47,7 +47,7 @@ describe('the Build status field of the project', () => {
       asked.every((a) => a === 'api graphql'),
       asked.join(' | '),
     );
-    assert.ok(side.hub.calls.some((c) => c.args[0] === 'issue' && c.args[1] === 'list'));
+    assert.ok(side.hub.calls.some((c) => c.args[0] === 'api' && /\/issues\?/.test(c.args[1])));
     assert.ok(side.hub.calls.every((c) => !c.args.includes('user')));
   });
 
@@ -77,8 +77,8 @@ describe('the Build status field of the project', () => {
         url: 'u',
       });
     const read = board();
-    const list = side.hub.calls.find((c) => c.args[0] === 'issue' && c.args[1] === 'list');
-    assert.equal(list.args[list.args.indexOf('--author') + 1], 'rogerbucks');
+    const list = side.hub.calls.find((c) => c.args[0] === 'api' && /\/issues\?/.test(c.args[1]));
+    assert.equal(new URLSearchParams(list.args[1].split('?')[1]).get('creator'), 'rogerbucks');
     assert.equal(read.items.size, 5);
     assert.ok(![...read.issues.values()].some((i) => i.number >= 900));
   });

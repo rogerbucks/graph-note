@@ -32,11 +32,11 @@ import {
   mergedPullNumbers,
   releaseBefore,
 } from './build-status-gh.mjs';
-import { readBuildBoard, setBuildStatus, setProgress } from './build-status-board.mjs';
+import { readBuildBoard, setBuildStatus, setProgress, setStartedOn } from './build-status-board.mjs';
 
 const TAG = /^\w[\w.+/-]{0,99}$/;
 const NO_BOARD = { sections: [], requirements: [], questions: [] };
-const LET_GO = { build: 'Not started', progress: 'Todo' };
+const LET_GO = { build: 'Not started', progress: 'Todo', started: null };
 
 /** The requirements file of a ref as a board, or an empty one where there is no file. Throws Unreadable where it cannot be read. */
 export function boardAt(run, repo, ref) {
@@ -67,8 +67,9 @@ export function skipReason(pr, repo, rules = {}) {
 
 /**
  * Looks after the board for one event: reads it once, on first need, and once it fails goes on without it, saying so once
- * in a warning. `settle(moves)` does each move, {id, build, progress} (the Build status and the built-in Status to give
- * the requirement's item, either may be left out, both for an item that is only listed), and gives the entries of the
+ * in a warning. `settle(moves)` does each move, {id, build, progress, started} (the Build status and the built-in Status to
+ * give the requirement's item, either may be left out, both for an item that is only listed; and the day for its Started
+ * on where it has none, or null to clear it, or left out to leave it), and gives the entries of the
  * comment ({id, number, status}); `problem()` is the text to put in a comment, or null; `url()` is the board's address,
  * once it is read. Each problem is also added to `found`, once.
  */
@@ -89,12 +90,15 @@ export function boardKeeper(ctx, deps, found) {
       fail(e);
     }
   };
-  const set = (item, id, { build, progress }) => {
+  const set = (item, id, { build, progress, started }) => {
     const opts = { sleep: deps.sleep };
     const nextBuild = build && nextStatus(item.current, build);
     if (nextBuild) setBuildStatus(deps.project, board, id, nextBuild, opts);
     const nextDone = progress && nextProgress(item.progress, progress);
     if (nextDone) setProgress(deps.project, board, id, nextDone, opts);
+    // Started on is set once, by the first pull request to take the item on, and cleared when it is let go
+    const moveStart = started === null ? item.started !== null : Boolean(started) && item.started === null;
+    if (moveStart && board.startedField) setStartedOn(deps.project, board, id, started, opts);
   };
   return {
     problem: () => problem?.text ?? null,
@@ -157,16 +161,19 @@ function heldByOthers(number, ctx, deps) {
 /**
  * The moves of a pull request: each requirement its copy proves gets the stage of the pull request; each the line names but
  * the copy does not prove is In PR and In Progress while the pull request is open and its copy has not landed, and let go
- * (back to Not started and Todo) otherwise. So is each of a pull request closed unmerged, except those another open pull
- * request of this repository holds, which are only listed.
+ * (back to Not started and Todo, its Started on cleared) otherwise. So is each of a pull request closed unmerged, except
+ * those another open pull request of this repository holds, which are only listed. What it takes on gets the day it was
+ * opened as its Started on, where the item has none.
  */
 function movesOf(pr, stage, claims, held) {
   const holding = pr.state === 'open' && !claims.landed;
+  // the day the pull request was opened is the Started on of what it takes on, where none is set yet
+  const day = pr.createdAt ? { started: pr.createdAt } : {};
   const proved = claims.proved.map((id) =>
-    stage === 'Not started' ? { id, letGo: true } : { id, build: stage, progress: progressOf(stage) },
+    stage === 'Not started' ? { id, letGo: true } : { id, build: stage, progress: progressOf(stage), ...day },
   );
   const claimed = claims.claimed.map((id) =>
-    holding ? { id, build: 'In PR', progress: 'In Progress' } : { id, letGo: true },
+    holding ? { id, build: 'In PR', progress: 'In Progress', ...day } : { id, letGo: true },
   );
   const all = [...proved, ...claimed];
   const letGo = all.filter((m) => m.letGo);

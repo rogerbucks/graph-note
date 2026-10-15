@@ -1,0 +1,6 @@
+{
+  "file": "test/github-project-run.test.js",
+  "test": "GitHub’s rate limits > a 403 that is not a rate limit is still the token’s trouble on the project, and an error on the issues",
+  "seen_failing_first": false,
+  "evidence": "It pins that only a rate limit becomes the new warning; a plain 403 on the issues was already an error, so it held before. The two rate-limit tests beside it failed first."
+}

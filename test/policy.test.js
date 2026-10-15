@@ -233,14 +233,14 @@ describe('GitHub Actions', () => {
     }
   });
 
-  test('only the release job may write', () => {
+  test('only four jobs may write: the release, the lock, the build status comment and the mirror’s issues', () => {
     for (const f of workflowFiles()) {
       for (const [name, lines] of Object.entries(jobs(read(f)))) {
         const perms = block(lines, 'permissions', 4);
         if (!perms) continue;
         const writes = permissionValues(perms).some((v) => /write/.test(v));
         if (!writes) continue;
-        // the two other writers may touch nothing else: one locks pull request conversations, and one leaves the build
+        // the three other writers may touch nothing else: one locks pull request conversations, one leaves the build
         // status comment on a pull request, with read access to what it reads (test/build-status-workflow.test.js)
         const given = perms
           .slice(1)
@@ -252,7 +252,12 @@ describe('GitHub Actions', () => {
           f.endsWith('/build-status.yml') &&
           name === 'update' &&
           given.filter((l) => /write/.test(l)).join() === 'pull-requests: write';
-        assert.ok(release || lock || comment, `${f}: job ${name} writes`);
+        // and one mirrors the requirements into their issues on a push to main (test/github-project-workflow.test.js)
+        const mirror =
+          f.endsWith('/project-mirror.yml') &&
+          name === 'mirror' &&
+          [...given].sort().join() === 'contents: read,issues: write';
+        assert.ok(release || lock || comment || mirror, `${f}: job ${name} writes`);
       }
       assert.doesNotMatch(read(f), /write-all/, f);
     }

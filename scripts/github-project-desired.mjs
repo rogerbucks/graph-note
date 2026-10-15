@@ -7,6 +7,7 @@
 // holds, and scripts/github-project-gh.mjs does the difference. The requirements file stays the only source; every
 // issue and project item made from it is a derivative, regenerated and never edited by hand.
 import { REQUIREMENTS } from './check-requirements.mjs';
+import { iterationsOf, wavesOf } from './github-project-waves.mjs';
 
 /** The command that makes the mirror, named in each issue so a reader knows where it came from. */
 export const SCRIPT = 'scripts/github-project.mjs';
@@ -173,12 +174,17 @@ export function generatedIdOf(body) {
   return text.split('\n').some((line) => line.startsWith(BANNER_START)) ? id : null;
 }
 
+/** The login of the workflows' own bot, as the mirror gives an issue's author: it makes the issues when the mirror runs on main. */
+export const BOT_LOGIN = 'github-actions[bot]';
+
 /**
- * The requirement id of an issue this generator may adopt, or null: it was written by the signed-in login, and its body
- * is one this generator made. A marker alone proves nothing, since anybody can write one.
+ * The requirement id of an issue this generator may adopt, or null: it was written by one of `adopters` (a login, or a
+ * list of them; the mirror's are the repository's owner and BOT_LOGIN), and its body is one this generator made. A marker
+ * alone proves nothing, since anybody can write one.
  */
-export function adoptedId(issue, login) {
-  if (!login || !issue.author || issue.author.toLowerCase() !== login.toLowerCase()) return null;
+export function adoptedId(issue, adopters) {
+  const logins = (Array.isArray(adopters) ? adopters : [adopters]).filter(Boolean).map((l) => l.toLowerCase());
+  if (!issue.author || !logins.includes(issue.author.toLowerCase())) return null;
   return generatedIdOf(issue.body);
 }
 
@@ -260,14 +266,18 @@ const questionBodyOf = (q, workstream) =>
  * `known` lists every requirement and question id the copy holds, in any slice, so that an issue whose requirement or
  * question is only outside the chosen slices is told from one whose requirement or question went.
  */
-export function desiredState(board, workstreams, slices) {
+export function desiredState(board, workstreams, slices, plan = null) {
   const chosen = [...new Set(slices)].sort((a, b) => a - b);
   const requirements = board.requirements.filter((r) => chosen.includes(r.slice));
   const placed = assignWorkstreams(requirements, workstreams);
   const option = (id) => `${id}: ${workstreams[id].title}`;
+  const inWaves = plan ? wavesOf(requirements, placed, workstreams, plan) : null;
+  // without a plan, Wave and Order are left as they are; with one, a requirement in no wave has neither
+  const planned = (id) => (plan ? { wave: null, order: null, ...inWaves.get(id) } : {});
   const issues = requirements.map((r) => {
     const workstream = placed.get(r.id);
     return {
+      ...planned(r.id),
       id: r.id,
       title: titleOf(board.sections.find((s) => s.num === r.section)?.title, r.id),
       body: bodyOf(r, option(workstream)),
@@ -285,6 +295,7 @@ export function desiredState(board, workstreams, slices) {
   for (const q of questions) {
     const workstream = askedIn.get(q.id);
     issues.push({
+      ...(plan ? { wave: null, order: null } : {}),
       id: q.id,
       title: questionTitleOf(q.num, q.text),
       body: questionBodyOf(q, option(workstream)),
@@ -306,18 +317,27 @@ export function desiredState(board, workstreams, slices) {
       [BUILD_STATUS_FIELD]: [...BUILD_STATUSES],
     },
     known: [...board.requirements, ...(board.questions ?? [])].map((r) => r.id),
+    iterations: plan ? iterationsOf(plan) : null,
+    waves: plan ? { ...plan, requirements: requirements.map((r) => r.id) } : null,
   };
 }
 
 /**
  * A desired state whose issues take, for the ids a seed names, its Build status and built-in Status in place of the first
  * stage and Todo. `seed` maps a requirement id to {buildStatus, progress}, as scripts/build-status-seed.mjs works it out
- * from where the requirement stands on GitHub; an id it does not name keeps the defaults. The state given is not changed.
+ * from where the requirement stands on GitHub; an id it does not name keeps the defaults. With `started`, each issue also
+ * takes its Started on from the seed: the day a pull request holding it was opened, kept (undefined) for one proved, and
+ * for one the seed does not name, which no pull request holds, cleared (null) only while no test of it is written (it is
+ * open) — and the plan clears it then only for an item whose Build status is not past Not started — else kept. The state
+ * given is not changed.
  */
-export function withSeed(desired, seed) {
+export function withSeed(desired, seed, { started = false } = {}) {
   const issues = desired.issues.map((issue) => {
     const given = seed.get(issue.id);
-    return given ? { ...issue, buildStatus: given.buildStatus, progress: given.progress } : issue;
+    const unheld = issue.status === 'open' ? null : undefined;
+    const startedOn = started ? (given ? given.startedOn : unheld) : undefined;
+    const dated = startedOn === undefined ? issue : { ...issue, startedOn };
+    return given ? { ...dated, buildStatus: given.buildStatus, progress: given.progress } : dated;
   });
   return { ...desired, issues };
 }

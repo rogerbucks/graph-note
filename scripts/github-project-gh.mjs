@@ -10,6 +10,7 @@ import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { REQUIREMENTS } from './check-requirements.mjs';
+import { typedMutation, valueArgs, withClosedOn } from './github-project-fields.mjs';
 import {
   BUILD_STATUS_FIELD,
   PROJECT_TITLE,
@@ -18,6 +19,7 @@ import {
   idOfBody,
   labelStyle,
 } from './github-project-desired.mjs';
+import { ISSUE_CAP, adoptersOf, authorOf, createGuard, readAdoptable, readIssues } from './github-project-issues.mjs';
 import { planProject } from './github-project-plan.mjs';
 import {
   PROJECT_CAP,
@@ -31,8 +33,8 @@ import {
 } from './github-project-read.mjs';
 import { RETRY_DELAYS_MS, paced, retrying, waitFor } from './github-project-retry.mjs';
 
-// the project is read by github-project-read.mjs; these stay importable from here
-export { PROJECT_CAP, findProject, readProject };
+// the project is read by github-project-read.mjs, the issues by github-project-issues.mjs; these stay importable from here
+export { ISSUE_CAP, PROJECT_CAP, adoptersOf, authorOf, findProject, readAdoptable, readIssues, readProject };
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OPTION_COLOURS = {
@@ -46,9 +48,8 @@ const OPTION_COLOURS = {
   },
 };
 
-/** The most labels, issues and projects a list is asked for; a list that comes back this long may be cut short. */
+/** The most labels a list is asked for; a list that comes back this long may be cut short (issues: ISSUE_CAP). */
 export const LABEL_CAP = 1000;
-export const ISSUE_CAP = 5000;
 /** The pause before each call that changes something but the first, and the wait before a retry, in milliseconds. */
 export const PAUSE_MS = 1000;
 export const RETRY_MS = 60000;
@@ -140,58 +141,46 @@ const readLabels = (run, repo) =>
     LABEL_CAP,
     'labels',
   ).map((l) => l.name);
-/**
- * The issues of a repository, only those `author` wrote where one is given: the mirror adopts only an issue its own login
- * wrote, so asking for those alone keeps issues anybody else files from reaching the cap of the list.
- */
-export const readIssues = (run, repo, author) =>
-  whole(
-    JSON.parse(
-      run(
-        inRepo(repo, [
-          ...['issue', 'list', '--state', 'all', '--limit', String(ISSUE_CAP)],
-          ...(author ? ['--author', author] : []),
-          ...['--json', 'number,title,body,state,labels,author,url'],
-        ]),
-      ),
-    ),
-    ISSUE_CAP,
-    'issues',
-  ).map((i) => ({ ...i, labels: i.labels.map((l) => l.name), author: i.author?.login }));
 
 /**
- * What GitHub holds now: {login, labelNames, issues, project}. `repo` is `owner/name`. The login is the one signed in,
- * whose issues alone may be adopted. Each issue is {number, title, body, state, labels (names), author (login), url};
- * the project is null when none has the title, else as readProject gives it, with the items of adopted issues only.
- * Throws for a list that hit its cap.
+ * What GitHub holds now: {login, adopters, labelNames, issues, project}. `repo` is `owner/name`. The login is the one
+ * that makes issues: `creator` where it is given (the workflow's bot, whose token may not ask who it is), else the one
+ * signed in. Only the issues of the adopters (the owner and the bot) may be adopted, and only theirs are read. Each issue
+ * is {number, title, body, state, labels (names), author (login), url, closedAt}; the project is null when none has the
+ * title, undefined when `project` is false (it is not read), else as readProject gives it, with the items of adopted
+ * issues only. Throws for a list that hit its cap.
  */
-export function readRemote(run, repo) {
-  const login = JSON.parse(run(['api', 'user'])).login;
+export function readRemote(run, repo, { creator, project = true } = {}) {
+  const login = creator ?? JSON.parse(run(['api', 'user'])).login;
+  const adopters = adoptersOf(repo);
   const labelNames = readLabels(run, repo);
-  const issues = readIssues(run, repo, login);
+  const issues = readAdoptable(run, repo, adopters);
+  const base = { login, adopters, labelNames, issues };
+  if (!project) return { ...base, project: undefined };
   const found = findProject(run, ownerOf(repo));
-  if (!found) return { login, labelNames, issues, project: null };
-  const idByNumber = new Map(issues.flatMap((i) => (adoptedId(i, login) ? [[i.number, adoptedId(i, login)]] : [])));
-  return { login, labelNames, issues, project: readProject(run, ownerOf(repo), found.number, idByNumber) };
+  if (!found) return { ...base, project: null };
+  const idByNumber = new Map(
+    issues.flatMap((i) => (adoptedId(i, adopters) ? [[i.number, adoptedId(i, adopters)]] : [])),
+  );
+  return { ...base, project: readProject(run, ownerOf(repo), found.number, idByNumber) };
 }
 
 /**
  * For a call that changes something, how to find out after a transient failure whether it already went through (see
  * paced): a function that re-reads what GitHub holds and gives {value}, what the call would have given, or undefined.
  * A create has one. An issue is taken up only as readRemote would adopt it: by the requirement id in its marker, and
- * only when the signed-in login wrote it, so somebody else's issue with the same title and body is never taken. A call
+ * only when one of the adopters wrote it, so somebody else's issue with the same title and body is never taken. A call
  * that changes only to a state it is given (an edit, a close, a reopen, adding to a project, setting a value, replacing
  * a field's options) has one that always says undefined, so it is simply tried again. A call a second try could repeat
  * (a comment, a new field) gives null and is not tried again.
  */
-function lookup(args, input, read, owner) {
+function lookup(args, input, read, owner, adopters) {
   const [group, verb] = args;
   const flag = (name) => args[args.indexOf(name) + 1];
   if (group === 'issue' && verb === 'create')
     return () => {
-      const login = JSON.parse(read(['api', 'user'])).login;
       const id = idOfBody(input);
-      const made = readIssues(read, flag('--repo'), login).find((i) => id && adoptedId(i, login) === id);
+      const made = readAdoptable(read, flag('--repo'), adopters).find((i) => id && adoptedId(i, adopters) === id);
       return made && { value: `${made.url}\n` };
     };
   if (group === 'label' && verb === 'create')
@@ -208,15 +197,18 @@ function lookup(args, input, read, owner) {
 
 const flags = (flag, values) => values.flatMap((v) => [flag, v]);
 
-function doIssues(act, repo, plan) {
+function doIssues(act, repo, plan, guard) {
   const made = {};
   const issue = (...args) => inRepo(repo, ['issue', ...args]);
+  if (plan.issues.create.length) guard.before();
   for (const d of plan.issues.create) {
     const url = act(
       issue('create', '--title', d.title, '--body-file', '-', ...flags('--label', d.labels)),
       d.body,
     ).trim();
     made[d.id] = { number: Number(url.split('/').at(-1)), url };
+    // the first one made must be in the list by creator, or every run would make it again
+    if (Object.keys(made).length === 1) guard.after(made[d.id].number);
     if (d.state === 'closed') act(issue('close', String(made[d.id].number), '--reason', 'completed'));
   }
   for (const u of plan.issues.update) {
@@ -280,7 +272,7 @@ function doFields(act, project, remote, fieldPlans) {
  */
 export function executePlan(run, repo, plan, opts = {}) {
   const owner = ownerOf(repo);
-  const lookingFor = (args, input, read) => lookup(args, input, read, owner);
+  const lookingFor = (args, input, read) => lookup(args, input, read, owner, plan.adopters ?? adoptersOf(repo));
   const settings = {
     sleep: waitFor,
     pauseMs: PAUSE_MS,
@@ -295,22 +287,34 @@ export function executePlan(run, repo, plan, opts = {}) {
     const { color, description } = labelStyle(name);
     act(inRepo(repo, ['label', 'create', name, '--color', color, '--description', description]));
   }
-  const made = doIssues(act, repo, plan);
+  const made = doIssues(act, repo, plan, createGuard(read, repo, plan));
+  if (plan.project.unread) return;
   const known = { ...plan.issues.held, ...made };
   const idByNumber = new Map(Object.entries(known).map(([id, i]) => [i.number, id]));
+  // an issue closed, reopened or made just now has its Closed on only once GitHub holds it
+  const { create, close, reopen } = plan.issues;
+  const issues =
+    create.length || close.length || reopen.length
+      ? withClosedOn(plan.desired.issues, readAdoptable(read, repo, plan.adopters), plan.adopters)
+      : plan.dated;
 
   let ref = plan.projectRef;
   if (!ref) {
     const created = graphql(act, CREATE_PROJECT, { owner: ownerId(read, owner), title: PROJECT_TITLE }).createProjectV2;
     ref = { id: created.projectV2.id, number: created.projectV2.number };
   }
-  const { issues, fields } = plan.desired;
+  const { fields, iterations = null } = plan.desired;
+  const replan = (project) => planProject(issues, fields, project, iterations);
   let remote = readProject(read, owner, ref.number, idByNumber);
-  let todo = planProject(issues, fields, remote);
-  if (todo.fields.length) {
+  let todo = replan(remote);
+  if (todo.fields.length || todo.typed.length) {
     doFields(act, ref, remote, todo.fields);
+    for (const typed of todo.typed) {
+      const { query, variables } = typedMutation(ref.id, typed, remote.typed);
+      graphql(act, query, variables);
+    }
     remote = readProject(read, owner, ref.number, idByNumber);
-    todo = planProject(issues, fields, remote);
+    todo = replan(remote);
   }
   const itemIds = new Map(remote.items.map((i) => [i.id, i.itemId]));
   for (const id of todo.itemsAdd) {
@@ -320,18 +324,12 @@ export function executePlan(run, repo, plan, opts = {}) {
     itemIds.set(id, added.id);
   }
   for (const set of todo.sets) {
-    const field = remote.fields[set.field];
-    act([
-      'project',
-      'item-edit',
-      '--id',
-      itemIds.get(set.id),
-      '--project-id',
-      ref.id,
-      '--field-id',
-      field.id,
-      '--single-select-option-id',
-      field.options.find((o) => o.name === set.to).id,
-    ]);
+    const select = remote.fields[set.field];
+    const field = select ?? remote.typed[set.field];
+    const value = select
+      ? ['--single-select-option-id', select.options.find((o) => o.name === set.to).id]
+      : valueArgs(set.field, field, set.to);
+    const item = ['--id', itemIds.get(set.id), '--project-id', ref.id, '--field-id', field.id];
+    act(['project', 'item-edit', ...item, ...value]);
   }
 }

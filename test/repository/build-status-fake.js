@@ -7,7 +7,7 @@ import { readBoard } from '../../scripts/slice-board.mjs';
 import { desiredState } from '../../scripts/github-project-desired.mjs';
 import { buildPlan } from '../../scripts/github-project-plan.mjs';
 import { executePlan, readRemote } from '../../scripts/github-project-gh.mjs';
-import { fakeGithub } from './github-project-fake.js';
+import { fakeGithub, restIssueList } from './github-project-fake.js';
 import { FIXTURE, WORKSTREAMS } from './github-project-fixture.js';
 
 const flag = (args, name) => args[args.indexOf(name) + 1];
@@ -97,9 +97,11 @@ export function fakeRepoSide({ repo = 'rogerbucks/graph-note', pageSize = 100, i
     hub.calls.push({ args, input });
     if (args[0] === 'issue' && args[1] === 'list') {
       if (flag(args, '--repo') !== repo) throw new Error('gh issue list: names no repository, or the wrong one');
-      const author = flag(args, '--author');
-      // only the issues one author wrote when asked for, as GitHub gives them, so others’ never count against the cap
-      return json(issues().filter((i) => !args.includes('--author') || i.author?.login === author));
+      // only the issues one author (or one GitHub App, app/<name> as gh gives it) wrote when asked for, as GitHub gives
+      // them, so others’ never count against the cap
+      const author = args.includes('--app') ? `app/${flag(args, '--app')}` : flag(args, '--author');
+      const asked = args.includes('--author') || args.includes('--app');
+      return json(issues().filter((i) => !asked || i.author?.login === author));
     }
     if (args[0] !== 'api') throw new Error(`fake repository gh does not know: ${args.join(' ')}`);
     const path = args[1];
@@ -144,6 +146,7 @@ export function fakeRepoSide({ repo = 'rogerbucks/graph-note', pageSize = 100, i
       return args.includes('-H') ? hub.files[ref] : json({ type: 'file', size: Buffer.byteLength(hub.files[ref]) });
     }
     if (rest === 'releases?per_page=100') return json(hub.releases);
+    if (rest.startsWith('issues?')) return restIssueList(issues(), rest.slice('issues?'.length));
     if ((m = /^issues\/(\d+)\/comments\?per_page=100$/.exec(rest))) return listComments(m[1]);
     throw new Error(`fake repository gh does not know: ${args.join(' ')}`);
   };
@@ -165,6 +168,7 @@ export function pull(
     body = null,
     draft = false,
     mergedAt = null,
+    createdAt = null,
   } = {},
 ) {
   return {
@@ -172,6 +176,7 @@ export function pull(
     state,
     merged,
     merged_at: mergedAt,
+    created_at: createdAt,
     merge_commit_sha: mergeSha,
     draft,
     body,

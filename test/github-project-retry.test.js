@@ -35,6 +35,8 @@ const flaky = (gh, when, times, message, { after = false, stderr } = {}) => {
   return { run, state };
 };
 const is = (group, verb) => (args) => args[0] === group && args[1] === verb;
+/** The list of the issues, read through the REST endpoint. */
+const isIssueList = (args) => args[0] === 'api' && /\/issues\?/.test(args[1]);
 
 /** A whole apply with the retry delays recorded apart from the pauses between calls. */
 const apply = (gh, run = gh.run) => {
@@ -57,7 +59,7 @@ describe('a 502 from GitHub', () => {
   test('is waited out on a read too, so a check or apply is not stopped by it', () => {
     const gh = fakeGithub();
     const sleeps = [];
-    const { run } = flaky(gh, is('issue', 'list'), 1, 'gh issue list failed: HTTP 502: Bad Gateway');
+    const { run } = flaky(gh, isIssueList, 1, 'gh api failed: HTTP 502: Bad Gateway');
     let out = '';
     mirror(
       { desired, mode: 'check' },
@@ -324,8 +326,7 @@ describe('looking again before a create is tried again', () => {
           throw Object.assign(new Error(`gh issue create failed: ${TIMEOUT}`), { stderr: TIMEOUT });
         }
       }
-      if (armed && is('issue', 'list')(args))
-        throw Object.assign(new Error(`gh issue list failed: ${TIMEOUT}`), { stderr: TIMEOUT });
+      if (armed && isIssueList(args)) throw Object.assign(new Error(`gh api failed: ${TIMEOUT}`), { stderr: TIMEOUT });
       return gh.run(args, input);
     };
     const plan = buildPlan(desired, readRemote(run, REPO));

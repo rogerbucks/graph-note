@@ -62,14 +62,16 @@ describe('every call names where it goes', () => {
     assert.ok(queries.some((q) => /addProjectV2ItemById\(/.test(q.query)));
   });
 
-  test('every other call is a lookup of the login, GraphQL, or an edit by global id', () => {
+  test('every other call is a lookup of the login, GraphQL, an edit by global id, or the pinned repository’s issue list', () => {
     const rest = calls.filter(
       ([group, verb]) => !['issue', 'label'].includes(group) && !(group === 'project' && verb !== 'item-edit'),
     );
     assert.ok(rest.length > 0);
     for (const [group, verb] of rest)
       assert.ok(
-        (group === 'api' && ['user', 'graphql'].includes(verb)) || (group === 'project' && verb === 'item-edit'),
+        (group === 'api' && ['user', 'graphql'].includes(verb)) ||
+          (group === 'api' && verb.startsWith(`repos/${REPO}/issues?`)) ||
+          (group === 'project' && verb === 'item-edit'),
         `${group} ${verb}`,
       );
   });

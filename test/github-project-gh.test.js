@@ -185,7 +185,7 @@ describe('a second apply', () => {
 });
 
 describe('an apply after a requirement’s proof changed', () => {
-  test('changes only what differs: the status label, the issue state and the project value', () => {
+  test('changes only what differs: the status label, the issue state and the project values, Proof and Closed on', () => {
     const gh = fakeGithub();
     apply(gh);
     quiet(gh);
@@ -205,13 +205,17 @@ describe('an apply after a requirement’s proof changed', () => {
     assert.equal(a.state, 'CLOSED');
     assert.equal(b.state, 'OPEN');
     assert.ok(labelsOf(a).includes('status:proved') && !labelsOf(a).includes('status:part'));
+    // Proof on each, Closed on set on the one closed and cleared on the one reopened
+    const edits = Array(4).fill('project item-edit');
     assert.deepEqual(
       gh.hub.mutations.map((m) => m.split(' ').slice(0, 2).join(' ')).sort(),
-      ['issue close', 'issue edit', 'issue edit', 'issue reopen', 'project item-edit', 'project item-edit'].sort(),
+      ['issue close', 'issue edit', 'issue edit', 'issue reopen', ...edits].sort(),
     );
     const items = gh.hub.projects[0].items;
     assert.equal(items.find((i) => i.number === a.number).values.Proof, 'proved');
     assert.equal(items.find((i) => i.number === b.number).values.Proof, 'part');
+    assert.equal(items.find((i) => i.number === a.number).values['Closed on'], '2026-10-15');
+    assert.equal(items.find((i) => i.number === b.number).values['Closed on'], undefined);
   });
 
   test('puts back a title or body somebody edited by hand', () => {
@@ -343,16 +347,17 @@ describe('reading GitHub', () => {
     assert.equal(remote.project, null);
   });
 
-  test('gives the signed-in login, and each issue’s author', () => {
-    const gh = fakeGithub({ login: 'the-owner' });
+  test('gives the signed-in login, the logins it adopts (the owner and the workflows’ bot), and each issue’s author', () => {
+    const gh = fakeGithub();
     apply(gh);
     const remote = readRemote(gh.run, REPO);
-    assert.equal(remote.login, 'the-owner');
-    assert.ok(remote.issues.every((i) => i.author === 'the-owner'));
+    assert.equal(remote.login, 'rogerbucks');
+    assert.deepEqual(remote.adopters, ['rogerbucks', 'github-actions[bot]']);
+    assert.ok(remote.issues.every((i) => i.author === 'rogerbucks'));
   });
 
-  test('asks for only the issues the signed-in login wrote, so issues others write cannot reach the cap of the list', () => {
-    const gh = fakeGithub({ login: 'the-owner' });
+  test('asks for only the issues the owner and the workflows’ bot wrote, so issues others write cannot reach the cap of the list', () => {
+    const gh = fakeGithub();
     apply(gh);
     gh.hub.issues.push({
       number: 900,
@@ -363,11 +368,13 @@ describe('reading GitHub', () => {
       author: { login: 'spammer' },
       url: 'https://github.com/o/r/issues/900',
     });
+    gh.hub.calls.length = 0;
     const remote = readRemote(gh.run, REPO);
-    const lists = gh.hub.calls.filter((c) => c.args[0] === 'issue' && c.args[1] === 'list');
-    const last = lists.at(-1).args;
-    assert.equal(last[last.indexOf('--author') + 1], 'the-owner');
-    assert.ok(remote.issues.every((i) => i.author === 'the-owner'));
+    // through the REST list endpoint, by creator (test/github-project-adopt.test.js has the whole call)
+    const lists = gh.hub.calls.filter((c) => c.args[0] === 'api' && /\/issues\?/.test(c.args[1]));
+    const asked = lists.map((c) => new URLSearchParams(c.args[1].split('?')[1]).get('creator'));
+    assert.deepEqual(asked, ['rogerbucks', 'github-actions[bot]']);
+    assert.ok(remote.issues.every((i) => i.author === 'rogerbucks'));
     assert.ok(!remote.issues.some((i) => i.number === 900));
   });
 

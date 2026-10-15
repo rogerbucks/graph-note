@@ -1,0 +1,6 @@
+{
+  "file": "test/github-project-adopt.test.js",
+  "test": "reading the issues > gives each issue as before: its state upper case, its labels’ names, its author, url and closedAt; a pull request is left out",
+  "seen_failing_first": false,
+  "evidence": "It pins that the move to the REST list keeps the shape the mirror read before; gh issue list already gave that shape and lists no pull requests, so it held before. The REST-call tests beside it failed first."
+}
