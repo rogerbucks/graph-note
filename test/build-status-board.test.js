@@ -4,7 +4,7 @@
 // against in-memory stand-ins for gh, so no network is touched. Editor spec §12, requirements_checked_in_ci.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { BoardProblem, readBuildBoard, setBuildStatus } from '../scripts/build-status-board.mjs';
+import { BoardProblem, readBuildBoard, setBuildStatus, setProgress } from '../scripts/build-status-board.mjs';
 import { fakeGithub } from './repository/github-project-fake.js';
 import { fakeRepoSide, mirroredProject } from './repository/build-status-fake.js';
 
@@ -92,6 +92,37 @@ describe('the Build status field of the project', () => {
     assert.throws(
       () => setBuildStatus(gh.run, read, 'focus_link', 'Released'),
       (e) => e instanceof BoardProblem && /Released/.test(e.message),
+    );
+  });
+
+  test('has the built-in Status beside it, read as each item’s current Todo, In Progress or Done, none to begin with', () => {
+    const { board } = both();
+    assert.equal(board().items.get('focus_link').progress, null);
+  });
+
+  test('has the built-in Status set by the id of its option, and the Build status left as it was', () => {
+    const { gh, board } = both();
+    const read = board();
+    setProgress(gh.run, read, 'focus_link', 'In Progress');
+    assert.equal(read.items.get('focus_link').progress, 'In Progress');
+    const fresh = board().items.get('focus_link');
+    assert.deepEqual([fresh.progress, fresh.current], ['In Progress', 'Not started']);
+    assert.equal(gh.hub.mutations.length, 1);
+  });
+
+  test('is a problem to report when the project has no Status field, or lacks the option to set', () => {
+    const { gh, board } = both();
+    const [project] = gh.hub.projects;
+    const status = project.fields.find((f) => f.name === 'Status');
+    status.options = status.options.filter((o) => o.name !== 'Done');
+    assert.throws(
+      () => setProgress(gh.run, board(), 'focus_link', 'Done'),
+      (e) => e instanceof BoardProblem && /no option Done/.test(e.message),
+    );
+    project.fields = project.fields.filter((f) => f.name !== 'Status');
+    assert.throws(
+      () => setProgress(gh.run, board(), 'focus_link', 'In Progress'),
+      (e) => e instanceof BoardProblem && /no Status field/.test(e.message),
     );
   });
 

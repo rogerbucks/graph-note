@@ -10,6 +10,7 @@ import {
   TRIGGER_JOB,
   Unreadable,
   checkRollup,
+  openPullNumbers,
   parentOf,
   pullNumbersForSha,
   readPullRequest,
@@ -39,7 +40,29 @@ describe('a pull request', () => {
       baseRef: 'main',
       headRepo: REPO,
       baseRepo: REPO,
+      requested: [],
     });
+  });
+
+  test('gives the requirements its description names in the Requirements line, and not a word of the description', () => {
+    const side = fakeRepoSide();
+    side.hub.pulls[7] = pull(7, {
+      body: 'Hello @everyone ${{ x }}\nRequirements: focus_link, nope!\nBye',
+      draft: true,
+    });
+    const read = readPullRequest(side.run, REPO, 7);
+    assert.deepEqual(read.requested, ['focus_link']);
+    assert.equal(read.draft, true);
+    assert.doesNotMatch(JSON.stringify(read), /everyone|Hello|Bye|nope/);
+  });
+
+  test('is listed among the open ones by number, at most fifty, the fork’s too, for the caller to judge', () => {
+    const side = fakeRepoSide();
+    for (const n of [4, 2, 9]) side.hub.pulls[n] = pull(n);
+    side.hub.pulls[3] = pull(3, { state: 'closed' });
+    assert.deepEqual(openPullNumbers(side.run, REPO), [2, 4, 9]);
+    for (let n = 20; n < 90; n += 1) side.hub.pulls[n] = pull(n);
+    assert.equal(openPullNumbers(side.run, REPO).length, 50);
   });
 
   test('has no head repository when its fork has gone', () => {

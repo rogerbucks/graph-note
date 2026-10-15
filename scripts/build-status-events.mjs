@@ -1,7 +1,13 @@
 // What the build status does for one pull request or one release (spec §12, requirements_checked_in_ci): the pull
-// requests it looks after and the ones it leaves alone, the requirements a pull request moves, the stage it puts them
-// in on the board, and the one comment it leaves. build-status-run.mjs hands it each pull request an event is about.
-// Reading is through build-status-gh.mjs, the board is build-status-board.mjs and the pure rules are build-status.mjs.
+// requests it looks after and the ones it leaves alone, the requirements a pull request moves or takes on, the stage it
+// puts them in on the board (the Build status and the built-in Status), and the one comment it leaves.
+// build-status-run.mjs hands it each pull request an event is about. Reading is through build-status-gh.mjs, the board is
+// build-status-board.mjs and the pure rules are build-status.mjs.
+//
+// A pull request moves the requirements whose tests its requirements file newly marks written against the base's (its
+// copy). A draft pull request may take items on before its copy proves them, with the line `Requirements: id1, id2` in
+// its description; only ids that are plain and are in main's file count, and once the copy proves anything the copy's diff
+// decides, an id the line names but the copy does not prove being let go, with a warning in the comment.
 import { readBoard } from './slice-board.mjs';
 import {
   DEFAULT_BRANCH,
@@ -9,23 +15,27 @@ import {
   commentBody,
   describeProblem,
   movedRequirements,
+  nextProgress,
   nextStatus,
+  progressOf,
   redactSecrets,
   stageOf,
 } from './build-status.mjs';
 import {
   Unreadable,
   checkRollup,
+  openPullNumbers,
   parentOf,
   readPullRequest,
   readRequirementsAt,
   releaseBefore,
   upsertComment,
 } from './build-status-gh.mjs';
-import { readBuildBoard, setBuildStatus } from './build-status-board.mjs';
+import { readBuildBoard, setBuildStatus, setProgress } from './build-status-board.mjs';
 
 const TAG = /^\w[\w.+/-]{0,99}$/;
 const NO_BOARD = { sections: [], requirements: [], questions: [] };
+const LET_GO = { build: 'Not started', progress: 'Todo' };
 
 /** The requirements file of a ref as a board, or an empty one where there is no file. Throws Unreadable where it cannot be read. */
 function boardAt(run, repo, ref) {
@@ -56,9 +66,10 @@ export function skipReason(pr, repo, rules = {}) {
 
 /**
  * Looks after the board for one event: reads it once, on first need, and once it fails goes on without it, saying so once
- * in a warning. `settle(ids, stage)` sets the stage on each id and gives the entries of the comment ({id, number,
- * status}); `problem()` is the text to put in a comment, or null; `url()` is the board's address, once it is read.
- * Each problem is also added to `found`, once.
+ * in a warning. `settle(moves)` does each move, {id, build, progress} (the Build status and the built-in Status to give
+ * the requirement's item, either may be left out, both for an item that is only listed), and gives the entries of the
+ * comment ({id, number, status}); `problem()` is the text to put in a comment, or null; `url()` is the board's address,
+ * once it is read. Each problem is also added to `found`, once.
  */
 export function boardKeeper(ctx, deps, found) {
   let board;
@@ -77,29 +88,93 @@ export function boardKeeper(ctx, deps, found) {
       fail(e);
     }
   };
+  const set = (item, id, { build, progress }) => {
+    const opts = { sleep: deps.sleep };
+    const nextBuild = build && nextStatus(item.current, build);
+    if (nextBuild) setBuildStatus(deps.project, board, id, nextBuild, opts);
+    const nextDone = progress && nextProgress(item.progress, progress);
+    if (nextDone) setProgress(deps.project, board, id, nextDone, opts);
+  };
   return {
     problem: () => problem?.text ?? null,
     url: () => (board ? `https://github.com/users/${board.owner}/projects/${board.projectNumber}` : null),
-    settle(ids, stage) {
-      if (!ids.length) return [];
+    settle(moves) {
+      if (!moves.length) return [];
       open();
-      return ids.map((id) => {
-        const item = board?.items.get(id);
-        const issue = board?.issues.get(id);
-        if (!board) return { id, number: null, status: null, unknown: true };
-        if (problem) return { id, number: issue?.number ?? null, status: item?.current ?? null };
-        if (!item) return { id, number: issue?.number ?? null, status: null };
+      return moves.map((move) => {
+        const item = board?.items.get(move.id);
+        const issue = board?.issues.get(move.id);
+        if (!board) return { id: move.id, number: null, status: null, unknown: true };
+        if (problem) return { id: move.id, number: issue?.number ?? null, status: item?.current ?? null };
+        if (!item) return { id: move.id, number: issue?.number ?? null, status: null };
         try {
-          const next = nextStatus(item.current, stage);
-          if (next) setBuildStatus(deps.project, board, id, next, { sleep: deps.sleep });
+          set(item, move.id, move);
         } catch (e) {
           fail(e);
         }
-        return { id, number: item.number, status: item.current };
+        return { id: move.id, number: item.number, status: item.current };
       });
     },
   };
 }
+
+/**
+ * What a pull request takes on, as {proved, claimed, landed}: `proved` the requirements its copy newly proves (against the
+ * base branch's file, or for a merged one its merge commit against that commit's first parent), `claimed` the ones its
+ * Requirements line names that are in the base's file and not proved, and `landed` whether its copy proves anything yet.
+ * Throws Unreadable where a file cannot be read.
+ */
+function claimsOf(pr, ctx, deps) {
+  if (pr.merged && !pr.mergeSha) throw new Unreadable('the merge commit of the pull request is not known');
+  const [before, after] = pr.merged
+    ? [parentOf(deps.github, ctx.repo, pr.mergeSha), pr.mergeSha]
+    : [pr.baseRef, pr.headSha];
+  const base = boardAt(deps.github, ctx.repo, before);
+  const proved = movedRequirements(base, boardAt(deps.github, ctx.repo, after));
+  const known = new Set(base.requirements.map((r) => r.id));
+  const claimed = pr.requested.filter((id) => known.has(id) && !proved.includes(id)).sort();
+  return { proved, claimed, landed: proved.length > 0 };
+}
+
+/** The ids another open pull request of this repository holds: what its copy proves, and what its line names while its copy has not landed. */
+function heldByOthers(number, ctx, deps) {
+  const held = new Set();
+  for (const other of openPullNumbers(deps.github, ctx.repo)) {
+    if (other === number) continue;
+    const pr = readPullRequest(deps.github, ctx.repo, other);
+    if (skipReason(pr, ctx.repo)) continue;
+    try {
+      const { proved, claimed, landed } = claimsOf(pr, ctx, deps);
+      for (const id of [...proved, ...(landed ? [] : claimed)]) held.add(id);
+    } catch (e) {
+      if (!(e instanceof Unreadable)) throw e;
+    }
+  }
+  return held;
+}
+
+/**
+ * The moves of a pull request: each requirement its copy proves gets the stage of the pull request; each the line names but
+ * the copy does not prove is In PR and In Progress while the pull request is open and its copy has not landed, and let go
+ * (back to Not started and Todo) otherwise. So is each of a pull request closed unmerged, except those another open pull
+ * request of this repository holds, which are only listed.
+ */
+function movesOf(pr, stage, claims, held) {
+  const holding = pr.state === 'open' && !claims.landed;
+  const proved = claims.proved.map((id) =>
+    stage === 'Not started' ? { id, letGo: true } : { id, build: stage, progress: progressOf(stage) },
+  );
+  const claimed = claims.claimed.map((id) =>
+    holding ? { id, build: 'In PR', progress: 'In Progress' } : { id, letGo: true },
+  );
+  const all = [...proved, ...claimed];
+  const letGo = all.filter((m) => m.letGo);
+  if (!letGo.length) return all;
+  const others = held();
+  return all.map((m) => (!m.letGo ? m : others.has(m.id) ? { id: m.id } : { id: m.id, ...LET_GO }));
+}
+
+const list = (ids) => ids.map((id) => `\`${id}\``).join(', ');
 
 /** Looks after one pull request: its stage, the requirements it moves, the board and the comment. Gives {number, ...}. */
 export function handlePull(number, ctx, deps, keeper, rules) {
@@ -108,47 +183,59 @@ export function handlePull(number, ctx, deps, keeper, rules) {
   if (skipped) return { number, skipped };
   const stage = stageOf(pr, pr.state === 'open' ? checkRollup(deps.github, ctx.repo, pr.headSha) : []);
   const problems = [];
-  let ids = [];
+  let claims = { proved: [], claimed: [], landed: false };
   try {
-    if (pr.merged && !pr.mergeSha) throw new Unreadable('the merge commit of the pull request is not known');
-    const [before, after] = pr.merged
-      ? [parentOf(deps.github, ctx.repo, pr.mergeSha), pr.mergeSha]
-      : [pr.baseRef, pr.headSha];
-    ids = movedRequirements(boardAt(deps.github, ctx.repo, before), boardAt(deps.github, ctx.repo, after));
+    claims = claimsOf(pr, ctx, deps);
   } catch (e) {
     if (!(e instanceof Unreadable)) throw e;
     problems.push(`${e.message}, so no requirement was moved.`);
     deps.annotate('warning', `pull request #${number}: ${e.message}`);
   }
-  if (ids.length > MAX_IDS) {
-    const note = `This pull request moves ${ids.length} requirements; only the first ${MAX_IDS} were handled.`;
+  const total = claims.proved.length + claims.claimed.length;
+  if (total > MAX_IDS) {
+    const note = `This pull request moves ${total} requirements; only the first ${MAX_IDS} were handled.`;
     problems.push(note);
     deps.annotate('warning', `pull request #${number}: ${note}`);
-    ids = ids.slice(0, MAX_IDS);
+    claims = {
+      ...claims,
+      proved: claims.proved.slice(0, MAX_IDS),
+      claimed: claims.claimed.slice(0, MAX_IDS - claims.proved.length),
+    };
   }
-  const items = keeper.settle(ids, stage);
-  if (ids.length && keeper.problem()) problems.push(keeper.problem());
-  const body = commentBody({ stage, items, problems, repo: ctx.repo, runUrl: ctx.runUrl, boardUrl: keeper.url() });
+  if (claims.landed && claims.claimed.length)
+    problems.push(`The Requirements line names ${list(claims.claimed)}, not proved by the copy of this pull request.`);
+  const moves = movesOf(pr, stage, claims, () => heldByOthers(number, ctx, deps));
+  const items = keeper.settle(moves);
+  if (items.length && keeper.problem()) problems.push(keeper.problem());
+  const headline = claims.proved.length || !moves.some((m) => m.build === 'In PR') ? stage : 'In PR';
+  const body = commentBody({
+    stage: headline,
+    items,
+    problems,
+    repo: ctx.repo,
+    runUrl: ctx.runUrl,
+    boardUrl: keeper.url(),
+  });
   let comment;
   try {
-    comment = upsertComment(deps.github, ctx.repo, number, body, { create: ids.length > 0 || problems.length > 0 });
+    comment = upsertComment(deps.github, ctx.repo, number, body, { create: items.length > 0 || problems.length > 0 });
   } catch (e) {
     comment = 'failed';
     const why = redactSecrets(e.stderr ?? e.message, [deps.projectToken]);
     deps.annotate('warning', `could not leave the comment on #${number}: ${why}`);
   }
-  deps.write(`build-status: #${number} ${stage}, ${ids.length} requirement(s), comment ${comment}\n`);
-  return { number, stage, ids, comment };
+  deps.write(`build-status: #${number} ${headline}, ${claims.proved.length} requirement(s), comment ${comment}\n`);
+  return { number, stage, ids: claims.proved, comment };
 }
 
-/** Looks after a release: Released on the requirements newly proved since the release before it. Gives {tag, since, ids}. */
+/** Looks after a release: Released and Done on the requirements newly proved since the release before it. Gives {tag, since, ids}. */
 export function handleRelease(payload, ctx, deps, keeper) {
   const tag = payload.release?.tag_name;
   if (!TAG.test(String(tag))) throw new Error('the release tag is not a plain tag name');
   const since = releaseBefore(deps.github, ctx.repo, tag);
   const before = since ? boardAt(deps.github, ctx.repo, since) : NO_BOARD;
   const ids = movedRequirements(before, boardAt(deps.github, ctx.repo, tag));
-  keeper.settle(ids, 'Released');
+  keeper.settle(ids.map((id) => ({ id, build: 'Released', progress: 'Done' })));
   deps.write(`build-status: release ${tag}, ${ids.length} requirement(s) since ${since ?? 'the start'}\n`);
   return { tag, since, ids };
 }

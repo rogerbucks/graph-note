@@ -7,7 +7,7 @@
 // out and none of its code is run.
 import { spawnSync } from 'node:child_process';
 import { REQUIREMENTS } from './check-requirements.mjs';
-import { COMMENT_MARKER } from './build-status.mjs';
+import { COMMENT_MARKER, requestedIds } from './build-status.mjs';
 import { ghRunner } from './github-project-gh.mjs';
 
 /** The workflow whose run is the check that counts: the other workflows of a pull request are not the build's. */
@@ -18,6 +18,7 @@ export const TRIGGER_JOB = 'build-status-trigger';
 export const MAX_FILE_BYTES = 3_000_000;
 
 const PAGE = 100;
+const MAX_OPEN = 50;
 const SHA = /^[0-9a-f]{40}$/;
 const REF = /^[\w][\w.+/-]{0,199}$/;
 const NOT_FOUND = /HTTP 404|Not Found/;
@@ -38,9 +39,10 @@ const words = (e) => (typeof e.stderr === 'string' ? e.stderr : String(e.message
 const json = (run, repo, path, extra = []) => JSON.parse(run(['api', `repos/${repo}/${path}`, ...extra]));
 
 /**
- * A pull request as {number, state ('open' or 'closed'), merged, draft, mergeSha, headSha, baseRef, headRepo, baseRepo}.
- * The repositories are `owner/name`, headRepo null where the head's fork has gone. Throws for a number that is not a
- * whole number, and for a head commit or base branch the API gives in a form git would not use.
+ * A pull request as {number, state ('open' or 'closed'), merged, draft, mergeSha, headSha, baseRef, headRepo, baseRepo,
+ * requested}. The repositories are `owner/name`, headRepo null where the head's fork has gone; `requested` is the ids its
+ * description names in the Requirements line (requestedIds), and the description is kept no further than that. Throws for a
+ * number that is not a whole number, and for a head commit or base branch the API gives in a form git would not use.
  */
 export function readPullRequest(run, repo, number) {
   const data = json(run, repo, `pulls/${wholeNumber(number)}`);
@@ -57,7 +59,17 @@ export function readPullRequest(run, repo, number) {
     baseRef: data.base.ref,
     headRepo: data.head.repo?.full_name ?? null,
     baseRepo: data.base.repo?.full_name ?? null,
+    requested: requestedIds(data.body),
   };
+}
+
+/** The numbers of the open pull requests, sorted, at most fifty; the judging of each (a fork's, say) is the caller's. */
+export function openPullNumbers(run, repo) {
+  return json(run, repo, `pulls?state=open&per_page=${PAGE}`)
+    .map((p) => p.number)
+    .filter(Number.isInteger)
+    .sort((a, b) => a - b)
+    .slice(0, MAX_OPEN);
 }
 
 /** The numbers of the pull requests a commit is in, sorted. */

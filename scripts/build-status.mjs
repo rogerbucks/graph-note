@@ -90,6 +90,55 @@ export function nextStatus(current, wanted) {
   return wanted;
 }
 
+/** The options of the project's built-in Status field, in order. */
+export const PROGRESS = ['Todo', 'In Progress', 'Done'];
+const PROGRESS_OF = {
+  'Not started': 'Todo',
+  'In PR': 'In Progress',
+  'Checks failing': 'In Progress',
+  'Checks passing': 'In Progress',
+  Merged: 'Done',
+  Released: 'Done',
+};
+
+/** The built-in Status an item takes with a build stage: In Progress while a pull request holds it, Done once merged. */
+export function progressOf(stage) {
+  if (!Object.hasOwn(PROGRESS_OF, stage)) throw new Error(`${stage} is not a build status`);
+  return PROGRESS_OF[stage];
+}
+
+/**
+ * The Status to set an item to, or null to leave it: Todo to In Progress to Done, never back from Done, and back to Todo
+ * from In Progress when the pull request that held it is let go. None counts as Todo. Throws for a value that is not one of
+ * PROGRESS.
+ */
+export function nextProgress(current, wanted) {
+  const have = current ?? PROGRESS[0];
+  for (const value of [have, wanted]) if (!PROGRESS.includes(value)) throw new Error(`${value} is not a Status`);
+  if (have === wanted || have === 'Done') return null;
+  return wanted;
+}
+
+const REQUIREMENTS_LINE = 'Requirements:';
+const MAX_LINE_LENGTH = 20_000;
+
+/**
+ * The requirement ids a pull request's description names in its fixed line, `Requirements: id1, id2`: the first line that
+ * opens with exactly `Requirements:`, split at commas, each id kept only if it isSafeId, once each, at most MAX_IDS. The
+ * description is untrusted: no other line is read, and nothing of it is kept but those ids. Not text, or no such line,
+ * gives none.
+ */
+export function requestedIds(body) {
+  if (typeof body !== 'string') return [];
+  for (const raw of body.split('\n')) {
+    const line = raw.trim();
+    if (!line.startsWith(REQUIREMENTS_LINE)) continue;
+    const named = line.slice(REQUIREMENTS_LINE.length, MAX_LINE_LENGTH).split(',');
+    return [...new Set(named.map((s) => s.trim()).filter(isSafeId))].slice(0, MAX_IDS);
+  }
+  return [];
+}
+
 /** A GitHub Actions annotation of a level, with its text on one line and `%` and line ends encoded as the runner needs. */
 export function annotation(level, text) {
   if (!LEVELS.includes(level)) throw new Error(`${level} is not an annotation level`);

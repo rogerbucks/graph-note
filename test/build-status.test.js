@@ -10,14 +10,18 @@ import {
   COMMENT_MARKER,
   DEFAULT_BRANCH,
   MAX_IDS,
+  PROGRESS,
   annotation,
   checksStage,
   commentBody,
   describeProblem,
   isSafeId,
   movedRequirements,
+  nextProgress,
   nextStatus,
+  progressOf,
   redactSecrets,
+  requestedIds,
   stageOf,
 } from '../scripts/build-status.mjs';
 import { FIXTURE } from './repository/github-project-fixture.js';
@@ -165,6 +169,70 @@ describe('which value may replace which', () => {
   test('refuses a value that is not a stage', () => {
     assert.throws(() => nextStatus('In PR', 'Done'), /Done/);
     assert.throws(() => nextStatus('Whatever', 'Merged'), /Whatever/);
+  });
+});
+
+describe('the built-in Status field', () => {
+  test('follows the build: In Progress for a pull request’s stages, Done once merged or released, Todo if not started', () => {
+    assert.deepEqual(PROGRESS, ['Todo', 'In Progress', 'Done']);
+    for (const stage of ['In PR', 'Checks failing', 'Checks passing']) assert.equal(progressOf(stage), 'In Progress');
+    for (const stage of ['Merged', 'Released']) assert.equal(progressOf(stage), 'Done');
+    assert.equal(progressOf('Not started'), 'Todo');
+    assert.throws(() => progressOf('Whatever'), /Whatever/);
+  });
+
+  test('moves Todo to In Progress to Done, and never back from Done', () => {
+    assert.equal(nextProgress('Todo', 'In Progress'), 'In Progress');
+    assert.equal(nextProgress('In Progress', 'Done'), 'Done');
+    assert.equal(nextProgress('Todo', 'Done'), 'Done');
+    assert.equal(nextProgress(null, 'In Progress'), 'In Progress');
+    for (const to of ['Todo', 'In Progress']) assert.equal(nextProgress('Done', to), null);
+  });
+
+  test('goes back to Todo from In Progress only, and changes nothing that is already so', () => {
+    assert.equal(nextProgress('In Progress', 'Todo'), 'Todo');
+    assert.equal(nextProgress(null, 'Todo'), null);
+    for (const s of PROGRESS) assert.equal(nextProgress(s, s), null);
+    assert.throws(() => nextProgress('Todo', 'Blocked'), /Blocked/);
+  });
+});
+
+describe('the Requirements line of a pull request’s description', () => {
+  test('names the requirements the pull request takes on, in a line that opens with Requirements: and a list', () => {
+    assert.deepEqual(requestedIds('Requirements: focus_link, zoom_out_to_fit'), ['focus_link', 'zoom_out_to_fit']);
+    assert.deepEqual(requestedIds('Requirements:focus_link,zoom_out_to_fit'), ['focus_link', 'zoom_out_to_fit']);
+  });
+
+  test('is found among other lines, whatever else the description says, and only that line is read', () => {
+    const body = 'Fixes things @someone.\n\nRequirements: a_1, b.2\r\nMore words: c_3\nRequirements: d_4';
+    assert.deepEqual(requestedIds(body), ['a_1', 'b.2']);
+  });
+
+  test('keeps only ids that are plain, once each, and drops the rest without a word', () => {
+    const line = 'Requirements: ok_1, bad id, ok_1, x](http://evil), $(whoami), ../x, , ok-2, ' + 'y'.repeat(101);
+    assert.deepEqual(requestedIds(line), ['ok_1', 'ok-2']);
+  });
+
+  test('is not any other line: not lower case, not in a list or quoted, not bold, not after other words', () => {
+    for (const body of [
+      'requirements: a_1',
+      '- Requirements: a_1',
+      '> Requirements: a_1',
+      '**Requirements:** a_1',
+      'See Requirements: a_1',
+      'Requirement: a_1',
+      '',
+    ])
+      assert.deepEqual(requestedIds(body), [], body);
+  });
+
+  test('is nothing for a description that is not text', () => {
+    for (const body of [null, undefined, 42, {}, ['Requirements: a_1']]) assert.deepEqual(requestedIds(body), []);
+  });
+
+  test('names at most 200 requirements', () => {
+    const ids = Array.from({ length: 300 }, (_, i) => `r${i}`);
+    assert.equal(requestedIds(`Requirements: ${ids.join(', ')}`).length, 200);
   });
 });
 
