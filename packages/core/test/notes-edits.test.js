@@ -71,7 +71,10 @@ describe('note_add: setNote writes the comment lines above a thing or a link', (
     const text = done(setNote(TRIP, { thing: 'start' }, 'Gone **north**.'));
     assert.deepEqual(notesOf(text), { ...NOTES, things: { ...NOTES.things, start: 'Gone **north**.' } });
     assert.ok(text.includes('//@ colour: orange\n(start:'), 'the tag stays directly above the thing');
-    assert.equal(text.replace('/// Gone **north**.\n', ''), TRIP.replace(/\/\/\/.*\n(\/\/\/\n)?\/\/\/ Packed already\.\n/, ''));
+    assert.equal(
+      text.replace('/// Gone **north**.\n', ''),
+      TRIP.replace(/\/\/\/.*\n(\/\/\/\n)?\/\/\/ Packed already\.\n/, ''),
+    );
   });
 
   test('removes a note with null, or with a text of nothing but whitespace; adding then removing gives back the bytes', () => {

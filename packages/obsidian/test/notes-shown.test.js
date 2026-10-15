@@ -23,6 +23,8 @@ const GRAPH = `// graph: trip
 /// Why we go. See [[Plan]].
 (start)-[:TO]->(mid)`;
 const FILES = { [PATH]: ['# Trip', '', fence(GRAPH), ''].join('\n'), 'Plan.md': '# Plan' };
+/** The saved data of a plugin whose setting draws callouts. */
+const ON = { settings: { noteCallouts: 'on' } };
 const SUMMARIES = { 'thing:start': 'The start of the trip.', 'link:0': 'Why we go. See Plan.' };
 
 /** The card, drawn once the layout is done. */
@@ -146,7 +148,7 @@ describe('note_callouts: a setting draws notes as callouts, joined to their thin
   });
 
   test('on: a callout for each note, saying its summary, joined by a line from its thing or link', async () => {
-    const env = await load({ files: { ...FILES }, data: { noteCallouts: 'on' } });
+    const env = await load({ files: { ...FILES }, data: ON });
     try {
       const el = await drawn(env);
       const all = callouts(el);
@@ -166,7 +168,7 @@ describe('note_callouts: a setting draws notes as callouts, joined to their thin
   });
 
   test('on: a thing’s callout is joined to its box, and no callout leaves the drawing', async () => {
-    const env = await load({ files: { ...FILES }, data: { noteCallouts: 'on' } });
+    const env = await load({ files: { ...FILES }, data: ON });
     try {
       const el = await drawn(env);
       const c = callouts(el).find((x) => x.getAttribute('data-for') === 'thing:start');
@@ -202,7 +204,7 @@ describe('note_callouts: a setting draws notes as callouts, joined to their thin
       }
     }
     const off = await layout(null),
-      on = await layout({ noteCallouts: 'on' });
+      on = await layout(ON);
     assert.equal(off.callouts, 0);
     assert.equal(on.callouts, 2);
     assert.deepEqual({ ...on, callouts: 0 }, off);
@@ -210,9 +212,11 @@ describe('note_callouts: a setting draws notes as callouts, joined to their thin
 
   test('a callout’s words are text, never HTML, however the note is written', async () => {
     const files = {
-      [PATH]: ['# Trip', '', fence("// graph: g\n/// <img src=x> <b>loud</b> & more\n(a:T {name: 'A'})"), ''].join('\n'),
+      [PATH]: ['# Trip', '', fence("// graph: g\n/// <img src=x> <b>loud</b> & more\n(a:T {name: 'A'})"), ''].join(
+        '\n',
+      ),
     };
-    const env = await load({ files, data: { noteCallouts: 'on' } });
+    const env = await load({ files, data: ON });
     try {
       const el = await drawn(env);
       const c = callouts(el)[0];
@@ -227,8 +231,10 @@ describe('note_callouts: a setting draws notes as callouts, joined to their thin
     const css = readFileSync(`${root}styles.css`, 'utf8');
     const rule = (name) => new RegExp(`\\.${name}\\s*\\{([^}]*)\\}`).exec(css)?.[1] ?? '';
     assert.match(rule('graph-note-callout-line'), /stroke-dasharray:\s*\d/);
-    for (const name of ['graph-note-callout-box', 'graph-note-callout-text'])
-      assert.match(rule(name), /var\(--/, name);
-    assert.ok(!/#[0-9a-f]{3,8}\b/i.test(rule('graph-note-callout-box') + rule('graph-note-callout-text')), 'no fixed colour');
+    for (const name of ['graph-note-callout-box', 'graph-note-callout-text']) assert.match(rule(name), /var\(--/, name);
+    assert.ok(
+      !/#[0-9a-f]{3,8}\b/i.test(rule('graph-note-callout-box') + rule('graph-note-callout-text')),
+      'no fixed colour',
+    );
   });
 });
