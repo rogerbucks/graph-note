@@ -1,0 +1,325 @@
+{
+  "about": "Change sets that DELETE and SET (graph spec section 24, 16 Oct 2026). Both readers run these cases: packages/graph-spec/test/changes.test.mjs and python/graph_spec/tests/test_changes.py. The base graph is head followed by base_rest, one block. A case names its author (by, ada unless given), what it was made against (against, the base's state unless given), the lines after the header (body), the checks it fails (failed, by the keys in labels), the changes read from it in order (changes: op and reason) and the graph it leaves (after: the lines that follow head, so head and after read alone give the same state; null when it is refused). A case with same_id_as reads a change with the id of one in that case; every other change has an id of its own.",
+  "labels": {
+    "statement": "each DELETE and SET is its own statement and names exactly one target (§24)",
+    "basis": "only the header says what it was made against and who made it (§24)",
+    "find": "each DELETE and SET finds its one target in the graph (§24)",
+    "dangling": "a DELETE leaves no link without its end; DETACH DELETE removes a thing with its links (§24)",
+    "current": "it was made against the graph as it stands",
+    "model": "a model adds only claims, assessments, evidence, proposals and options (§24 rule 2)"
+  },
+  "head": [
+    "// graph: library",
+    "INSERT",
+    "(t_book:ElementType {id: 'type:Book', name: 'Book', kind: 'node'}),",
+    "(t_person:ElementType {id: 'type:Person', name: 'Person', kind: 'node'}),",
+    "(t_model:ElementType {id: 'type:Model', name: 'Model', kind: 'node'}),",
+    "(t_wrote:ElementType {id: 'type:WROTE', name: 'WROTE', kind: 'edge', reading: 'wrote', reverse_name: 'written by'}),",
+    "(library_schema:GraphMeta {id: 'meta:library', graph: 'library', schema: 'library@1'}),",
+    "(library_schema)-[:DECLARES]->(t_book),",
+    "(library_schema)-[:DECLARES]->(t_person),",
+    "(library_schema)-[:DECLARES]->(t_model),",
+    "(library_schema)-[:DECLARES]->(t_wrote),",
+    "(ada:Person {name: 'Ada'}),",
+    "(bot:Model {name: 'Drafter'}),"
+  ],
+  "base_rest": [
+    "(grace:Person {name: 'Grace'}),",
+    "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+    "(atlas:Book {title: 'Atlas'}),",
+    "(ada)-[:WROTE]->(notes),",
+    "(ada)-[:WROTE]->(atlas)"
+  ],
+  "cases": [
+    {
+      "name": "delete a link by its two ends and its type",
+      "body": ["MATCH (a {id: 'ada'})-[r:WROTE]->(b {id: 'atlas'}) DELETE r"],
+      "failed": [],
+      "changes": [["delete-link", null]],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(ada)-[:WROTE]->(notes)"
+      ]
+    },
+    {
+      "name": "delete a thing that has no links",
+      "body": ["MATCH (p:Person {id: 'grace'}) DELETE p"],
+      "failed": [],
+      "changes": [["delete-thing", null]],
+      "after": [
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
+      ]
+    },
+    {
+      "name": "detach delete a thing that has a link",
+      "body": ["MATCH (b:Book {id: 'atlas'}) DETACH DELETE b"],
+      "failed": [],
+      "changes": [["detach-delete-thing", null]],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(ada)-[:WROTE]->(notes)"
+      ]
+    },
+    {
+      "name": "delete a thing that still has a link is refused",
+      "body": ["MATCH (b:Book {id: 'atlas'}) DELETE b"],
+      "failed": ["dangling"],
+      "changes": [["delete-thing", null]],
+      "after": null
+    },
+    {
+      "name": "set a value, named by the thing's name",
+      "body": ["SET notes.pages = 66"],
+      "failed": [],
+      "changes": [["set-thing", null]],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 66}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
+      ]
+    },
+    {
+      "name": "set the same value, written with a MATCH on two lines",
+      "body": ["MATCH (b:Book {id: 'notes'})", "SET b.pages = 66"],
+      "failed": [],
+      "changes": [["set-thing", null]],
+      "same_id_as": "set a value, named by the thing's name",
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 66}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
+      ]
+    },
+    {
+      "name": "set several values on one thing",
+      "body": ["SET notes.pages = 66, notes.edition = 2"],
+      "failed": [],
+      "changes": [["set-thing", null]],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 66, edition: 2}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
+      ]
+    },
+    {
+      "name": "set a value on a link",
+      "body": ["MATCH (a {id: 'ada'})-[r:WROTE]->(b {id: 'notes'}) SET r.year = 1843"],
+      "failed": [],
+      "changes": [["set-link", null]],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(ada)-[:WROTE {year: 1843}]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
+      ]
+    },
+    {
+      "name": "an addition, a removal and a change in one set, with their reasons",
+      "body": [
+        "(late:Book {title: 'A late book'}),",
+        "(grace)-[:WROTE]->(late)",
+        "//@ reason: the page count was a draft figure",
+        "SET notes.pages = 66",
+        "//@ reason: Atlas is a duplicate",
+        "MATCH (b:Book {id: 'atlas'}) DETACH DELETE b",
+        "MATCH (a {id: 'ada'})-[r:WROTE]->(b {id: 'notes'}) DELETE r"
+      ],
+      "failed": [],
+      "changes": [
+        ["set-thing", "the page count was a draft figure"],
+        ["detach-delete-thing", "Atlas is a duplicate"],
+        ["delete-link", null]
+      ],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 66}),",
+        "(late:Book {title: 'A late book'}),",
+        "(grace)-[:WROTE]->(late)"
+      ]
+    },
+    {
+      "name": "a reason is a hint, never needed",
+      "body": ["//@ reason: tidy", "MATCH (p:Person {id: 'grace'}) DELETE p"],
+      "failed": [],
+      "changes": [["delete-thing", "tidy"]],
+      "same_id_as": "delete a thing that has no links",
+      "after": [
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
+      ]
+    },
+    {
+      "name": "a model may delete and set ordinary things and links",
+      "by": "bot",
+      "body": ["MATCH (a {id: 'ada'})-[r:WROTE]->(b {id: 'atlas'}) DELETE r", "SET notes.pages = 66"],
+      "failed": [],
+      "changes": [
+        ["delete-link", null],
+        ["set-thing", null]
+      ],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 66}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(ada)-[:WROTE]->(notes)"
+      ]
+    },
+    {
+      "name": "a model still adds only what it may add",
+      "by": "bot",
+      "body": ["(late:Book {title: 'A late book'}),", "(ada)-[:WROTE]->(late)", "SET notes.pages = 66"],
+      "failed": ["model"],
+      "changes": [["set-thing", null]],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 66}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(late:Book {title: 'A late book'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas),",
+        "(ada)-[:WROTE]->(late)"
+      ]
+    },
+    {
+      "name": "one DELETE naming two things is refused",
+      "body": ["MATCH (a {id: 'ada'}), (b {id: 'grace'}) DELETE a, b"],
+      "failed": ["statement"],
+      "changes": [],
+      "after": null
+    },
+    {
+      "name": "one MATCH of two things then a DELETE of one is refused",
+      "body": ["MATCH (a {id: 'ada'}), (b {id: 'grace'}) DELETE b"],
+      "failed": ["statement"],
+      "changes": [],
+      "after": null
+    },
+    {
+      "name": "one SET naming two things is refused",
+      "body": ["SET notes.pages = 66, atlas.pages = 12"],
+      "failed": ["statement"],
+      "changes": [],
+      "after": null
+    },
+    {
+      "name": "a link whose end is not named is refused",
+      "body": ["MATCH (a {id: 'ada'})-[r:WROTE]->(b) DELETE r"],
+      "failed": ["statement"],
+      "changes": [],
+      "after": null
+    },
+    {
+      "name": "a link without its type is refused",
+      "body": ["MATCH (a {id: 'ada'})-[r]->(b {id: 'atlas'}) DELETE r"],
+      "failed": ["statement"],
+      "changes": [],
+      "after": null
+    },
+    {
+      "name": "things found by kind, not by name, are refused",
+      "body": ["MATCH (b:Book) DELETE b"],
+      "failed": ["statement"],
+      "changes": [],
+      "after": null
+    },
+    {
+      "name": "a DELETE with nothing matched is refused",
+      "body": ["DELETE notes"],
+      "failed": ["statement"],
+      "changes": [],
+      "after": null
+    },
+    {
+      "name": "a DELETE and a SET in one statement is refused",
+      "body": ["MATCH (b:Book {id: 'notes'}) SET b.pages = 1 DELETE b"],
+      "failed": ["statement"],
+      "changes": [],
+      "after": null
+    },
+    {
+      "name": "a SET of an id is refused",
+      "body": ["SET notes.id = 'other'"],
+      "failed": ["statement"],
+      "changes": [],
+      "after": null
+    },
+    {
+      "name": "a target that is not in the graph is refused",
+      "body": ["MATCH (p:Person {id: 'nobody'}) DELETE p"],
+      "failed": ["find"],
+      "changes": [["delete-thing", null]],
+      "after": null
+    },
+    {
+      "name": "a thing deleted is not there to SET after",
+      "body": ["MATCH (p:Person {id: 'grace'}) DELETE p", "SET grace.mood = 'glad'"],
+      "failed": ["find"],
+      "changes": [
+        ["delete-thing", null],
+        ["set-thing", null]
+      ],
+      "after": null
+    },
+    {
+      "name": "a link that is not in the graph is refused",
+      "body": ["MATCH (a {id: 'grace'})-[r:WROTE]->(b {id: 'atlas'}) DELETE r"],
+      "failed": ["find"],
+      "changes": [["delete-link", null]],
+      "after": null
+    },
+    {
+      "name": "a comment line carrying what it was made against is refused",
+      "body": ["//@ against: 0000000000000000", "SET notes.pages = 66"],
+      "failed": ["basis"],
+      "changes": [["set-thing", null]],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 66}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
+      ]
+    },
+    {
+      "name": "a comment line carrying who made it is refused",
+      "body": ["//@ by: grace", "SET notes.pages = 66"],
+      "failed": ["basis"],
+      "changes": [["set-thing", null]],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 66}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
+      ]
+    },
+    {
+      "name": "a removal made against an old state is refused",
+      "against": "0000000000000000",
+      "body": ["MATCH (p:Person {id: 'grace'}) DELETE p"],
+      "failed": ["current"],
+      "changes": [["delete-thing", null]],
+      "after": [
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
+      ]
+    }
+  ]
+}
