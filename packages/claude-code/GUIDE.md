@@ -176,8 +176,8 @@ in every new session, the desktop app's included. After a change: `npm run build
   `EditorSession` as the page; a watcher fired by hand and file steps held, never a clock) and
   `editor-store-hardening.test.js` (what the security review of #450 found: a draft saved during a write, a note's
   mode, hard links, a folder swapped under a write, the drafts folder's mode and longest draft, and the real fs.watch),
-  with their support, `editor-store-support.js`; and `editor-mod-launch.test.js` (`/graph edit` from the mod: the launcher
-  over real server processes started the way the host starts one, standard input closed at once; held back from
-  `editor-mod.test.js`, which C3 and C7 create to complete `test_cc_mod`), with its support, `editor-mod-support.js`. The mod's wiring
+  with their support, `editor-store-support.js`; and `editor-mod.test.js` (`/graph edit` from the mod: the launcher
+  over real server processes started the way the host starts one, standard input closed at once; the other
+  workstreams' cases for `test_cc_mod`, C3 and C7, are added to it, and it is `partial` until then), with its support, `editor-mod-support.js`. The mod's wiring
   (`register.tsx`) is checked by `claude plugin validate` and a type check; `claude plugin test` needs a Claude Code
   signed in and online, so no test of it is in the repository yet.

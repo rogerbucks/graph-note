@@ -1,4 +1,4 @@
-// Test support for the mod's editor tests (editor-mod-launch.test.js): a host that starts a process as Claude Code's
+// Test support for the mod's editor tests (editor-mod.test.js): a host that starts a process as Claude Code's
 // `$.process.spawn` does (standard input closed at once, the output handed over piece by piece, the child killed when the
 // loop is left), a vault on disk in a temporary folder, and the launcher made over them. Test code only: nothing here ships.
 import { after } from 'node:test';
