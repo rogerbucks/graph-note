@@ -156,17 +156,18 @@ describe('a hand change to the requirements copy', () => {
     const dir = mkdtempSync(join(tmpdir(), 'check-requirements-flips-'));
     try {
       const file = join(dir, 'base.gql');
-      writeFileSync(file, replaced(base(), 'do not hand-edit; regenerate.', 'edited by hand.'));
+      const extra = "(test_extra:Test {proves: 'extra', file: 'test/x.test.js', where: 'repo', status: 'written'}),\n";
+      writeFileSync(file, replaced(base(), '// ── Tests ──\n', `// ── Tests ──\n${extra}`));
       const run = () =>
         spawnSync(process.execPath, [path('scripts/check-requirements-flips.mjs'), '--base', file], {
           encoding: 'utf8',
           timeout: 30_000,
         });
-      // the committed copy is the head, so against this edited base the banner differs
+      // the committed copy is the head, so against this base a record has gone
       const bad = run();
       assert.ok(!bad.error, String(bad.error));
       assert.equal(bad.status, 1);
-      assert.match(bad.stdout, /^banner: /m);
+      assert.match(bad.stdout, /^removed: test_extra/m);
       writeFileSync(file, base());
       const ok = run();
       assert.equal(ok.status, 0, ok.stdout + ok.stderr);
