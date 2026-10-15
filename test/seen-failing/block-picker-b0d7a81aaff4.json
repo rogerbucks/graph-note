@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/block-picker.test.js",
+  "test": "the picker after the note’s line count changes > a block chosen that is gone once what was typed is written: said in a notice, and nothing else opened",
+  "seen_failing_first": false,
+  "evidence": "Asked for by the review of #465 to cover the CHOSEN_GONE notice, which the earlier code already gave when no block was left at the chosen place. The test pins it beside the new text check, which gives the same notice when another block has come to that place."
+}
