@@ -1,0 +1,6 @@
+{
+  "file": "test/build-status-board.test.js",
+  "test": "the Build status field of the project > has an item’s Status read as none where it has none",
+  "seen_failing_first": false,
+  "evidence": "A guard on behaviour the board read already had: before this commit the mirror seeded no Status, so every item read as none and the test passes against the old code. It deletes the seeded Todo to pin that an item with no Status still reads as none for the workflow, now that the mirror gives most items Todo."
+}
