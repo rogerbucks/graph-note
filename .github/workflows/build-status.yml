@@ -1,0 +1,60 @@
+name: Build status
+
+# Shows on the "graph-note requirements" GitHub Project where each requirement's build is up to, in its Build status
+# field (Not started, In PR, Checks failing, Checks passing, Merged, Released), and leaves one short comment on the pull
+# request, updated at each step. The values come from GitHub's events alone. scripts/build-status-run.mjs does the work.
+#
+# It is never woken by a pull request itself: it follows the checks of one (CI, and the "Build status trigger" workflow
+# that runs when one is opened, pushed to, reopened or closed), a push to main (a merge) and a published release. So its
+# definition is always the one on main, and the job runs the script on main: nothing of a pull request is checked out or
+# run. The pull request's requirements file is read through the API as data. PROJECT_TOKEN (a classic token with the
+# project and public_repo scopes) is for the project board alone: listing the project, reading it and setting its values.
+# The workflow's own token reads the repository, its issues and CI's run, and leaves the comment. A comment on a pull
+# request that is closed and locked (the lock workflow locks every one) is tried first; only if GitHub refuses because it
+# is locked does the script unlock the conversation, comment and lock it again in the one step. Locking and unlocking a
+# pull request need no more than the pull-requests: write the comment needs, as the lock workflow shows. When PROJECT_TOKEN is missing or refused the run says so in a warning and in the comment, and does
+# not fail.
+on:
+  workflow_run:
+    workflows: [CI, Build status trigger]
+    types: [completed]
+  push:
+    branches: [main]
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+# One run at a time for each commit of the checks (a push to main or a release has its own commit), and none is cancelled.
+# A run waiting in a group is replaced by the newer one: that is enough, as each run starts from the state GitHub holds
+# and not from the event that woke it. Pull requests on other commits are never in the same group, so one never replaces
+# another's. A merge's push and the trigger's closed run are in different groups; the comment is looked for again just
+# before it is made, so they do not make it twice.
+concurrency:
+  group: build-status-${{ github.event.workflow_run.head_sha || github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+      issues: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Update the board and the pull request comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+        run: node scripts/build-status-run.mjs

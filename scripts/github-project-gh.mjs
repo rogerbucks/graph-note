@@ -10,12 +10,28 @@ import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { REQUIREMENTS } from './check-requirements.mjs';
-import { PROJECT_TITLE, REMOVED_LABEL, adoptedId, idOfBody, labelStyle } from './github-project-desired.mjs';
+import {
+  BUILD_STATUS_FIELD,
+  PROJECT_TITLE,
+  REMOVED_LABEL,
+  adoptedId,
+  idOfBody,
+  labelStyle,
+} from './github-project-desired.mjs';
 import { planProject } from './github-project-plan.mjs';
 import { RETRY_DELAYS_MS, paced, retrying, waitFor } from './github-project-retry.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const OPTION_COLOURS = { open: 'ORANGE', part: 'YELLOW', proved: 'GREEN' };
+const OPTION_COLOURS = {
+  Proof: { open: 'ORANGE', part: 'YELLOW', proved: 'GREEN' },
+  [BUILD_STATUS_FIELD]: {
+    'In PR': 'BLUE',
+    'Checks failing': 'RED',
+    'Checks passing': 'YELLOW',
+    Merged: 'PURPLE',
+    Released: 'GREEN',
+  },
+};
 
 /** The most labels, issues and projects a list is asked for; a list that comes back this long may be cut short. */
 export const LABEL_CAP = 1000;
@@ -58,10 +74,14 @@ const UPDATE_FIELD = `mutation($field: ID!, $options: [ProjectV2SingleSelectFiel
 /**
  * The real runner: run(args, input) runs `gh` with the arguments, giving it the input on its standard input, and gives
  * its output. Throws with gh's own words when gh fails or cannot be started. `spawn` is spawnSync, or a stand-in.
+ * `options.env` is the environment gh starts from (the process's own by default) and `options.set` names variables to
+ * add to it, or, given as undefined, to take out, so that a runner can hold its own token and see no other.
  */
-export function ghRunner(spawn = spawnSync) {
+export function ghRunner(spawn = spawnSync, { env: from = process.env, set = {} } = {}) {
   // GH_REPO and GH_HOST would send gh somewhere the checkout does not say, so gh never sees them.
-  const { GH_REPO: _repo, GH_HOST: _host, ...env } = process.env;
+  const { GH_REPO: _repo, GH_HOST: _host, ...rest } = from;
+  const env = { ...rest, ...set };
+  for (const name of Object.keys(env)) if (env[name] === undefined) delete env[name];
   return (args, input) => {
     const result = spawn('gh', args, { input, encoding: 'utf8', maxBuffer: 1 << 28, cwd: ROOT, env });
     if (result.error)
@@ -122,7 +142,7 @@ function graphql(run, query, variables) {
  * The project in the shape planProject reads: {id, number, fields: {name: {id, options}}, items: [{itemId, id, values}]}.
  * `idByNumber` maps an issue number to its requirement's id; an item that is not one of those issues is left out.
  */
-function readProject(run, owner, number, idByNumber) {
+export function readProject(run, owner, number, idByNumber) {
   let project;
   const items = [];
   let after = null;
@@ -160,12 +180,17 @@ const readLabels = (run, repo) =>
     LABEL_CAP,
     'labels',
   ).map((l) => l.name);
-const readIssues = (run, repo) =>
+/**
+ * The issues of a repository, only those `author` wrote where one is given: the mirror adopts only an issue its own login
+ * wrote, so asking for those alone keeps issues anybody else files from reaching the cap of the list.
+ */
+export const readIssues = (run, repo, author) =>
   whole(
     JSON.parse(
       run(
         inRepo(repo, [
           ...['issue', 'list', '--state', 'all', '--limit', String(ISSUE_CAP)],
+          ...(author ? ['--author', author] : []),
           ...['--json', 'number,title,body,state,labels,author,url'],
         ]),
       ),
@@ -179,7 +204,7 @@ const readProjects = (run, owner) =>
     PROJECT_CAP,
     'projects',
   );
-const findProject = (run, owner) => readProjects(run, owner).find((p) => p.title === PROJECT_TITLE);
+export const findProject = (run, owner) => readProjects(run, owner).find((p) => p.title === PROJECT_TITLE);
 
 /**
  * What GitHub holds now: {login, labelNames, issues, project}. `repo` is `owner/name`. The login is the one signed in,
@@ -190,7 +215,7 @@ const findProject = (run, owner) => readProjects(run, owner).find((p) => p.title
 export function readRemote(run, repo) {
   const login = JSON.parse(run(['api', 'user'])).login;
   const labelNames = readLabels(run, repo);
-  const issues = readIssues(run, repo);
+  const issues = readIssues(run, repo, login);
   const found = findProject(run, ownerOf(repo));
   if (!found) return { login, labelNames, issues, project: null };
   const idByNumber = new Map(issues.flatMap((i) => (adoptedId(i, login) ? [[i.number, adoptedId(i, login)]] : [])));
@@ -213,7 +238,7 @@ function lookup(args, input, read) {
     return () => {
       const login = JSON.parse(read(['api', 'user'])).login;
       const id = idOfBody(input);
-      const made = readIssues(read, flag('--repo')).find((i) => id && adoptedId(i, login) === id);
+      const made = readIssues(read, flag('--repo'), login).find((i) => id && adoptedId(i, login) === id);
       return made && { value: `${made.url}\n` };
     };
   if (group === 'label' && verb === 'create')
@@ -266,7 +291,7 @@ function doIssues(act, repo, plan) {
 
 const optionInput = (name, field, old) => ({
   name,
-  color: old?.color ?? (field === 'Proof' ? (OPTION_COLOURS[name] ?? 'GRAY') : 'GRAY'),
+  color: old?.color ?? OPTION_COLOURS[field]?.[name] ?? 'GRAY',
   description: old?.description ?? '',
 });
 

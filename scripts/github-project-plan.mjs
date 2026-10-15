@@ -4,6 +4,7 @@
 // can print it and a test can prove it. A plan changes only what differs and never deletes: an issue whose requirement
 // went is labelled and closed, an issue outside the chosen slices is left alone, a label somebody else added stays.
 import {
+  BUILD_STATUS_FIELD,
   FIELD_NAMES,
   FIXED_FIELDS,
   PROJECT_TITLE,
@@ -16,7 +17,7 @@ import {
 /** The most issues a plan may remove (label and close) unless the person allows more. */
 export const MAX_REMOVALS = 10;
 
-const FIELD_KEYS = { Slice: 'slice', Workstream: 'workstream', Proof: 'status' };
+const FIELD_KEYS = { Slice: 'slice', Workstream: 'workstream', Proof: 'status', [BUILD_STATUS_FIELD]: 'buildStatus' };
 
 const lower = (name) => String(name).toLowerCase();
 const hasLabel = (labels, name) => labels.some((l) => lower(l) === lower(name));
@@ -125,7 +126,9 @@ export function planProject(desired, wantedFields, remote) {
   for (const d of desired)
     for (const field of FIELD_NAMES) {
       const from = items.get(d.id)?.values?.[field] ?? null;
-      if (from !== d[FIELD_KEYS[field]]) sets.push({ id: d.id, field, from, to: d[FIELD_KEYS[field]] });
+      // Build status is set by events (scripts/build-status.mjs), so here only a missing value is given its first stage
+      const differs = field === BUILD_STATUS_FIELD ? from === null : from !== d[FIELD_KEYS[field]];
+      if (differs) sets.push({ id: d.id, field, from, to: d[FIELD_KEYS[field]] });
     }
   return { create: remote === null, fields, itemsAdd, sets };
 }

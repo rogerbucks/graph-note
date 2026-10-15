@@ -1,0 +1,6 @@
+{
+  "file": "test/build-status-comments.test.js",
+  "test": "the Merged comment, after the pull request is closed and locked > is made when the conversation is open, without touching its lock",
+  "seen_failing_first": false,
+  "evidence": "A guard on behaviour the previous commit already had: the comment on a conversation that is open was made with one write and no lock call. The test passes against the old code for that reason, and pins that the new unlock-and-lock path is taken only for a refusal because of a lock."
+}

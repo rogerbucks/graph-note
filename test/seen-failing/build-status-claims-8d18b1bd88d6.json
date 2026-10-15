@@ -1,0 +1,6 @@
+{
+  "file": "test/build-status-claims.test.js",
+  "test": "the Requirements line of a draft pull request > does nothing without the line: a draft with no copy change moves nothing and gets no comment",
+  "seen_failing_first": false,
+  "evidence": "A guard on behaviour the previous commit already had: a pull request whose copy marks no test written moved nothing and got no comment, with or without a description. The test passes against the old code for that reason, and pins that a description without the Requirements line takes nothing on."
+}

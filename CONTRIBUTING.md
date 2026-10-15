@@ -162,6 +162,16 @@ These test behaviour across modules, or the repository itself, so they are named
 - `python/graph_spec/tests/test_view_parity.py` — Grafeo, running each view of `view_cases.json` as written, returns the things the core returns, and, of a fixed list of GQL's and Cypher's words, refuses as a name and as a kind exactly the words the core keeps from them (editor spec §7, views_agree_with_grafeo).
 - `python/graph_spec/tests/test_settings.py` — what a host sets after importing the library.
 - `test/cheap-checks.test.js` — the quiet test run, running only a change's tests, the AI guide and the search ignore file.
+- `test/build-status.test.js` — the build status's pure part: the requirements a pull request moves, found from the tests it newly marks written; the stage an event gives; which value may replace which; the comment and the annotations.
+- `test/build-status-gh.test.js` — the build status's calls to GitHub, through in-memory stand-ins for `gh`: a pull request, the requirements file at a ref and its size, CI's run, the releases, the pull requests merged in a span, the one comment, leaving it on a locked conversation, and the two tokens kept apart.
+- `test/build-status-gh-lock.test.js` — leaving the comment on a conversation that may be locked: unlocked only for a pull request whose own `locked` field is true (a refusal that says blocked unlocks nothing), and the lock taken up again with the repository's retry, or the pull request said to be left unlocked.
+- `test/build-status-gh-lists.test.js` — the open pull requests and those merged in a span, of this repository's own before any cap, past a crowd of fork pull requests.
+- `test/build-status-board.test.js` — the build status's project board: each item's Build status and Status, setting either, the issues read with the workflow's token and the project with the project token alone, and every trouble that is the board's own.
+- `test/build-status-run.test.js` — the build status event by event: a pull request opened, CI's checks failing and passing, its merge and closing, the pull requests it leaves alone (a fork, a stale one, one merged elsewhere), a very large one, a release; and a project token that is missing, expired (401) or refused, which warns and never fails.
+- `test/build-status-env.test.js` — the build status run whole from a workflow's environment: the event file, the two tokens each to its own runner, the exit code, and a requirements file too large to read.
+- `test/build-status-claims.test.js` — the built-in Status field (Todo, In Progress, Done), an item two pull requests hold, and the `Requirements:` line of a draft pull request, the only part of its untrusted description that is read.
+- `test/build-status-comments.test.js` — the comments after a pull request is closed and locked: the Merged comment, and the Released comment a release leaves on each pull request it moves, by unlocking, commenting and locking again, and every way that can fail.
+- `test/build-status-workflow.test.js` — the two build status workflows: woken only by the checks of a pull request, a push to main and a release; the project secret given only to the script on main; no event text in a command line; least privilege.
 - `test/classification.test.js` — the content check refuses confidential or personal files.
 - `test/conventions.test.js` — the conventions on this page.
 - `test/device-check-notes.test.js` — the device checklist numbers every item, the test vault holds one note for each item after Before in `Device checks/`, the note's checklist line is the item's words, each note's graph blocks read as it says they do (the repository's reader and checker, and `parseView` for a view), and the index lists the notes in order (editor spec §3, tried first in a test vault).
@@ -220,13 +230,17 @@ These test behaviour across modules, or the repository itself, so they are named
 - **Where each requirement goes.** `requirements/workstreams.json` maps a workstream id to its title and its requirement
   ids; a requirement it does not list falls to `S3`, and an id the current copy does not hold yet is fine. An issue
   carries the labels `slice-N`, `workstream:<id>` and `status:open|part|proved`, and is closed when proved. Its status
-  is the one the slice board reads. The project's fields are Slice, Workstream and Proof (open, part, proved); its
-  built-in Status field is never touched.
+  is the one the slice board reads. The project's fields are Slice, Workstream, Proof (open, part, proved) and Build
+  status (Not started, In PR, Checks failing, Checks passing, Merged, Released); its built-in Status field (Todo, In
+  Progress, Done) is never touched by the mirror. The mirror makes Build status and its options, gives a new item Not
+  started, and never sets another value or replaces the options: the values of Build status and of Status come from the
+  build status workflow below, from GitHub's events alone.
 - **See the plan with `npm run project:plan`.** It is a dry run and makes no network call, so it compares with an empty
   GitHub. `--check` reads GitHub and prints the real diff, changing nothing. `--apply` prints the same plan, then does
   it with `gh`: it finds each issue by its hidden `<!-- requirement:<id> -->` marker, changes only what differs, and
   never deletes (an issue whose requirement went is labelled `requirement:removed` and closed, with a comment). There
-  is no apply script and no workflow: applying needs a token with the `project` scope, which the owner adds by hand.
+  is no apply script and no workflow for the mirror: applying needs a token with the `project` scope, which the owner
+  adds by hand.
 - **Only what it made is its own.** An issue is adopted only when the signed-in login wrote it, its body has the
   generated banner, and its marker is the last thing in it; a marker anyone else writes is warned of and ignored, and an
   issue whose banner or closing marker was edited away is no longer ours, so a new one is made. `--apply` stops, unless
@@ -241,6 +255,57 @@ These test behaviour across modules, or the repository itself, so they are named
 - **The project is dedicated to the script.** Changing the options of Slice or Workstream replaces them in GitHub, which
   clears the value on every item, and the script sets the values again on the items it manages. A value on an item the
   script does not manage would be lost, so keep nothing else in this project.
+
+## The build status of each requirement
+
+- **Where a requirement's build is up to shows on the project, from GitHub's events alone** (Roger, 15 Oct 2026). The
+  "Build status" field and the built-in "Status" field are never authored by a person or by the mirror:
+  `scripts/build-status-run.mjs` sets them from what happens to a pull request, in the workflow
+  `.github/workflows/build-status.yml`.
+- **No hand-linking.** A pull request's items are the requirements whose tests its `requirements/editor-requirements.gql`
+  newly marks written, against the base branch's (a merged pull request: its merge commit against that commit's first
+  parent; a release: the tag against the release before it). Both files are read through the API as data, a file of
+  over 3 MB being a warning and not read. At most 200 requirements are handled for one pull request, with a warning above.
+- **A helper opens a draft pull request as its first step,** with the line `Requirements: id1, id2` in its description,
+  so the items it will build are taken on (In Progress, In PR) before any test of its copy is written. That line is the
+  only part of the description that is read: it is split at commas, an id is kept only if it is plain (letters, digits,
+  underscore, dot and hyphen) and is in main's requirements file, and nothing else is ever echoed. Once the copy marks
+  tests written, the copy's diff decides, and an id the line names that the landed copy does not prove is let go, with a
+  warning in the comment (never a failure).
+- **Lists are of this repository's own before any cap.** The open pull requests and the pull requests merged in a span
+  are paged through (ten pages at most) keeping only those whose head and base are this repository, so a crowd of fork
+  pull requests cannot hide one that holds an item; the issues are asked for by author (`--author`, the owner), in the
+  build status and in the mirror (which adopts only its own login's issues), so issues others file never reach the cap.
+- **Which pull requests.** Only those of this repository: one from a fork moves nothing and gets no comment. The pull
+  requests an event names must still have, as their head, the commit its checks ran on. Merged counts only when the pull
+  request merged into main.
+- **The stages.** In PR while CI runs or has not started, Checks failing when CI's run fails, Checks passing when it
+  passes (CI's own run only, found by its workflow path: the other workflows of a pull request, such as code scanning or
+  the dependency review, are not the build's checks), Merged on the merge (a push to main), Released when a release is
+  published, and Not started again if the pull request is closed unmerged. An item never goes back from Merged or
+  Released.
+- **The built-in Status follows:** In Progress while a same-repository pull request, draft or open, holds the item; Done
+  when it merges into main or is released; Todo again when the pull request closes unmerged, unless another open
+  same-repository pull request still holds the item (which also keeps its Build status). Never back from Done.
+- **One comment, updated at each step,** on the pull request, with links to the items, the board and the run; none when
+  a pull request moves no requirement. A release comments, with the stage Released, on each pull request merged since the
+  release before that proved any of its requirements. A comment is tried first; only if it fails and the pull request's
+  own `locked` field, read from the API, is true (every pull request's is, and a merged one's is closed too) is it
+  unlocked, commented and locked again in the one step. The lock is taken up again with the repository's retry for a
+  short failure of GitHub; if it still fails, the warning says that pull request `#N` was left unlocked. It is made with the workflow's own token, with
+  `pull-requests: write` as the only write permission (it is what locking needs, as the lock workflow shows). When
+  two runs would make it at once it is looked for again just before it is made.
+- **`PROJECT_TOKEN` is for the board alone** (a classic token with the `project` scope, as a secret): listing the project,
+  reading its fields and items and setting their values. The issues, the pull requests, the files and CI's run are read
+  with the workflow's own token, which also leaves the comments. (`public_repo` was asked for to read issues and the
+  signed-in login; it is no longer used by this workflow, and whether to keep that scope is the owner's call.) When
+  `PROJECT_TOKEN` is missing or GitHub refuses it (expired: 401), the run says so in a `::warning::` annotation and a line
+  in the comment, and does not fail: CI never fails over it.
+- **Nothing of a pull request is run with the secret.** The workflow follows the checks of a pull request (CI, and the
+  `Build status trigger` workflow, which has no secret and does nothing) instead of being woken by the pull request, so
+  its definition is the one on main and its job checks out main, with no package cache. No `pull_request_target`, no
+  event text in a command line, and the script prints no token. Runs are grouped by the commit of the checks, so one pull
+  request's waiting run never replaces another's. Actions are pinned to commit hashes at least 7 days old.
 
 ## The quality ratchet
 

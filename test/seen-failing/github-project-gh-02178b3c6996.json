@@ -1,0 +1,6 @@
+{
+  "file": "test/github-project-gh.test.js",
+  "test": "the Build status field, applied > keeps a value an event set, on a later apply that changes nothing else",
+  "seen_failing_first": false,
+  "evidence": "A guard on existing behaviour: before this commit the mirror knew no Build status field, so it never touched a value an event had put there. The test passes against the old code because of that, and is written to fail if the new field code ever overwrote such a value."
+}
