@@ -154,6 +154,9 @@ export class PaneSession {
       this.twin = true;
       this.changedElsewhere();
     }
+    // followed warily, a new block of its graph beside it that may be the original rewritten beside a copy: its history
+    // starts again, as after a change made outside, so Undo never reverts what may be the copy
+    if ('wary' in f) this.changedElsewhere();
     const span = 'at' in f ? spans[f.at] : undefined;
     if (span) this.ref = { line: span.open, text: this.ref.text };
     return span ?? null;

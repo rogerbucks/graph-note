@@ -210,14 +210,19 @@ describe('a copy in place of another block, in one change', () => {
 });
 
 describe('a new block that is not the held block edited', () => {
-  test('a different block of its graph pasted directly above it: followed, never stopped', () => {
+  // the coordinator, 15 Oct 2026: a block pasted beside it could as well be the original rewritten beside a copy, so the
+  // block is followed, never stopped, but its history is cleared: Undo never reverts what may be a copy
+  test('a different block of its graph pasted directly above it: followed, never stopped, its history cleared', () => {
     const { s, note } = written();
     const changed = note.replace(fence(MINE), fence(FRESH) + '\n\n' + fence(MINE));
     assert.equal(s.noteChanged(changed), 'unchanged');
-    assert.equal(s.stepRefusal('undo'), null);
-    const back = s.undo(changed);
-    assert.equal(back.ok, true);
-    assert.equal(back.note, changed.replace(fence(MINE), fence(A)), 'its own write undone, the new block kept');
+    assert.equal(s.stopped, false);
+    refusedForHistory(s.undo(changed), 'undo');
+    s.type(MINE + ',\n(more:T)');
+    const w = s.write(changed);
+    assert.equal(w.ok, true);
+    assert.equal(w.note, changed.replace(fence(MINE), fence(MINE + ',\n(more:T)')), 'written where its text is');
+    assert.equal(s.undo(w.note).note, changed, 'its own write after it undone');
   });
 
   test('an edit above it and below it, and a new block of its graph, in one change: followed, never stopped', () => {
@@ -230,11 +235,12 @@ describe('a new block that is not the held block edited', () => {
   });
 
   // the re-review of #465, 15 Oct 2026: half of the shorter text let a tiny block read as the held block edited
-  test('a tiny block of its graph pasted directly above it: followed, never stopped', () => {
+  test('a tiny block of its graph pasted directly above it: followed, never stopped, its history cleared', () => {
     const { s, note } = written();
     const changed = note.replace(fence(MINE), fence('// graph: alpha\n(z:T)') + '\n\n' + fence(MINE));
     assert.equal(s.noteChanged(changed), 'unchanged');
-    assert.equal(s.stepRefusal('undo'), null);
+    assert.equal(s.stopped, false);
+    assert.match(s.stepRefusal('undo') ?? '', /^Nothing to undo: another program/);
   });
 
   test('a copy pasted directly above it, then the original edited: the original is followed', () => {
@@ -313,13 +319,17 @@ describe('the original rewritten after a copy is pasted', () => {
   });
 
   // the one case no reading of the note can tell: the note is, byte for byte, a new block pasted above the block
-  test('a copy pasted beside it and the original rewritten whole, in one change, reads as a new block pasted above', () => {
+  test('a copy pasted beside it and the original rewritten whole, in one change: read as a block pasted above, history cleared', () => {
     const rewrite = REWRITES['rewritten whole'];
     const { s, note } = written();
     const changed = note.replace(fence(MINE), fence(rewrite) + '\n\n' + fence(MINE));
     const pastedAbove = note.replace('# Note\n\n', '# Note\n\n' + fence(rewrite) + '\n\n');
     assert.equal(changed, pastedAbove, 'the same text');
     assert.equal(s.noteChanged(changed), 'unchanged');
+    const w = s.undo(changed);
+    refusedForHistory(w, 'undo');
+    assert.match(w.reason, /^Nothing to undo: another program/);
+    assert.ok(changed.includes(fence(MINE)), 'what may be a copy is never reverted');
   });
 });
 

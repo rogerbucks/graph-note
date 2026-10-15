@@ -8,7 +8,7 @@ import type { Span } from './blocks.ts';
 import { trim } from './whitespace.ts';
 
 /** Where the block is now: its index among the note's gql blocks; gone; or not to be told apart from a copy of it. */
-export type Followed = { at: number } | { gone: true } | { twin: true };
+export type Followed = { at: number; wary?: true } | { gone: true } | { twin: true };
 
 /** The blocks looked at while following one, counted so a test can hold the work linear, never timed (spec §12). */
 export interface FollowWork {
@@ -25,6 +25,8 @@ interface Context {
   graph: string | null;
   known: Set<string>;
   work: FollowWork;
+  /** Whether a new block of its graph came directly beside it, so it may be a copy beside the original rewritten. */
+  wary: boolean;
 }
 
 /**
@@ -33,7 +35,9 @@ interface Context {
  * puts it where they do; one whose change runs through it puts it where its unchanged opening (or closing) fence is.
  * - Two readings leaving it whole in two places: a copy pasted beside it, the two not told apart (`twin`).
  * - One leaving it whole, the other finding a new block in its place: a block pasted beside it, unless that block
- *   reads as the held one edited (`readsAsEdited`), when either could be it (`twin`).
+ *   reads as the held one edited (`readsAsEdited`), when either could be it (`twin`). A new block of its graph pasted
+ *   directly beside it could still be the original rewritten beside a copy, so it is followed `wary`: the session
+ *   clears its history, so Undo never reverts what may be a copy.
  * - Only a new block of its graph in its place: the held block edited, unless a copy of its old text is elsewhere and
  *   the new text keeps too little of it to know it by (`twin`): never the copy (the re-review of #465).
  * - Neither reading placing it, the change running through the whole block: by its text, and a twin when two blocks
@@ -54,10 +58,12 @@ export function followBlock(before: string, after: string, line: number, work: F
     graph: graphOfBlock(was.text),
     known: textsOf(old, work),
     work,
+    wary: false,
   };
   const placed = byLines(c);
   if (placed === 'twin') return { twin: true };
-  return placed ? { at: now.indexOf(placed) } : byText(c, line);
+  if (!placed) return byText(c, line);
+  return c.wary ? { at: now.indexOf(placed), wary: true } : { at: now.indexOf(placed) };
 }
 
 /** One reading's place for the block: the block there, and whether the reading leaves it whole. */
@@ -93,7 +99,13 @@ function decide(c: Context, readings: Reading[]): Span | 'twin' | null {
   const cut = readings.flatMap((r) => (r && !(r.whole && r.span.text === c.was.text) ? [r.span] : []));
   const [w, w2] = whole;
   if (w && w2) return w === w2 ? w : 'twin';
-  if (w) return cut.some((p) => p !== w && readsAsEdited(c, p)) ? 'twin' : w;
+  if (w) {
+    if (cut.some((p) => p !== w && readsAsEdited(c, p))) return 'twin';
+    // a new block of its graph beside it, which no reading tells from the original rewritten beside a copy: followed
+    // by its text, warily (the coordinator, 15 Oct 2026)
+    c.wary = cut.some((p) => p !== w && isNewOfGraph(c, p) && besideEachOther(c.b, p, w));
+    return w;
+  }
   // another block moved to its line, or one of another graph, is never the block
   const places = [...new Set(cut.filter((p) => p.text === c.was.text || isNewOfGraph(c, p)))];
   const [p, p2] = places;
@@ -106,7 +118,8 @@ function decide(c: Context, readings: Reading[]): Span | 'twin' | null {
 /**
  * The block by its text when the change runs through the whole of it: two holding it are a twin; one holding it is the
  * block, unless a new block of its graph sits on its line, before or after the lines the change added, and could be it
- * rewritten while the other is a copy: a twin then, unless that block was only pasted beside it, the note gaining it.
+ * rewritten while the other is a copy: a twin then, unless that block was only pasted beside it, the note gaining it,
+ * when it is followed `wary`.
  */
 function byText(c: Context, line: number): Followed {
   const { now, old, was } = c;
@@ -119,7 +132,7 @@ function byText(c: Context, line: number): Followed {
   const rival = find(c, (s) => (s.open === line || s.open === line + shift) && s !== held && isNewOfGraph(c, s));
   if (!rival) return { at: now.indexOf(held) };
   const pasted = now.length > old.length && besideEachOther(c.b, rival, held) && !readsAsEdited(c, rival);
-  return pasted ? { at: now.indexOf(held) } : { twin: true };
+  return pasted ? { at: now.indexOf(held), wary: true } : { twin: true };
 }
 
 /** None holding its text: the block of its graph on its line, unless that is another block of the note moved there. */
