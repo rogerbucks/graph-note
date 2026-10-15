@@ -127,9 +127,10 @@ export function buildEditor(
 }
 
 /**
- * The head's tools: Done in place, Undo and Redo, and Lock the graph while the graph is a draft. An Undo or Redo with
- * nothing to take back since the block changed outside the editor (`why`, §9) keeps its name, so voice control still
- * finds it, is marked unavailable and described by why, and pressed it says so.
+ * The head's tools: Done in place, Open again while the editor is stopped by a copy of its block (`again`, §9), Undo and
+ * Redo, and Lock the graph while the graph is a draft. An Undo or Redo with nothing to take back since the block changed
+ * outside the editor (`why`, §9) keeps its name, so voice control still finds it, is marked unavailable and described
+ * by why, and pressed it says so.
  */
 export function showTools(
   tools: HTMLElement,
@@ -141,10 +142,13 @@ export function showTools(
     undo: () => void;
     redo: () => void;
     lock: () => void;
+    again: (() => void) | null;
   },
 ): void {
   tools.empty();
   if (o.inline) button(tools, 'Done', 'check', () => o.done(), 'Done');
+  const again = o.again;
+  if (again) button(tools, 'Open again', 'refresh-cw', () => again(), 'Open again');
   const step = (label: string, icon: string, why: string | null, onClick: () => void) => {
     const b = button(tools, label, icon, onClick);
     if (!why) return;

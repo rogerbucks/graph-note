@@ -63,6 +63,35 @@ describe('the picker after the note’s line count changes', () => {
     }
   });
 
+  // the review of #465, 15 Oct 2026: a choice found again by its place alone could open another block that came there
+  test('a block chosen that is gone once what was typed is written: said in a notice, and nothing else opened', async () => {
+    const env = await open();
+    try {
+      type(env.el, MORE);
+      env.state.files.set(PATH, NOTE.replace(fence(OTHER), '')); // changed on disk, not yet heard
+      choose(env, 'other');
+      await until(() => env.state.notices.some((n) => /no longer in the note/.test(n)));
+      assert.equal(textarea(env.el).value, MORE);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a block chosen whose place now holds another block of its graph: said in a notice, that block never opened', async () => {
+    const env = await open();
+    try {
+      const another = "// graph: other\n(y:Thing {name: 'Y'})";
+      type(env.el, MORE);
+      env.state.files.set(PATH, NOTE.replace(OTHER, another));
+      choose(env, 'other');
+      await until(() => env.state.notices.some((n) => /no longer in the note/.test(n)));
+      assert.equal(textarea(env.el).value, MORE, 'the block being edited stays open');
+      assert.equal(note(env), NOTE.replace(READER, MORE).replace(OTHER, another), 'what was typed is written');
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('a graph block added to a note that had one gives it a picker', async () => {
     const one = ['# Reader', '', fence(READER), ''].join('\n');
     const env = await open({ note: one });

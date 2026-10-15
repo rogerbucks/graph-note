@@ -26,11 +26,12 @@ export interface Choice {
 /**
  * What writing the pane's text into the note did: the new note, or why not and the draft kept. `edit` marks an edit made
  * for the person that the note written into refused (§4), rather than a block changed meanwhile; `history` an Undo or
- * Redo with nothing to take back since the block changed outside the pane (§9), where nothing typed needs keeping.
+ * Redo with nothing to take back since the block changed outside the pane (§9), where nothing typed needs keeping;
+ * `stopped` a refusal as the session cannot tell its block from a copy, nothing reloaded (block_followed_not_its_copy).
  */
 export type PaneWrite =
   | { ok: true; note: string; unchanged?: true }
-  | { ok: false; reason: string; draft: string; edit?: true; history?: true };
+  | { ok: false; reason: string; draft: string; edit?: true; history?: true; stopped?: true };
 
 /** Why Undo and Redo have nothing to take back once the block changed outside the pane (§9, undo_never_over_theirs). */
 const CHANGED_ELSEWHERE = {
@@ -79,6 +80,11 @@ export class PaneSession {
     this.lastNote = note;
   }
 
+  /** Whether the session has stopped, as it cannot tell its block from a copy (§9), until a block is chosen again. */
+  get stopped(): boolean {
+    return this.twin;
+  }
+
   /** The graph blocks the picker offers, in the note last seen. */
   choices(): Choice[] {
     return graphBlocks(this.lastNote).map((b) => ({
@@ -86,6 +92,11 @@ export class PaneSession {
       graph: b.graph,
       label: `${b.graph} · line ${b.open + 1}`,
     }));
+  }
+
+  /** The text of the graph block whose fence opens on `line` in the note last seen; undefined when none does. */
+  blockText(line: number): string | undefined {
+    return graphBlocks(this.lastNote).find((b) => b.open === line)?.text;
   }
 
   /**
@@ -207,7 +218,7 @@ export class PaneSession {
     const draft = this.text;
     this.changedElsewhere();
     this.dirty = false;
-    if (this.twin) return { ok: false, reason: TWIN, draft };
+    if (this.twin) return { ok: false, reason: TWIN, draft, stopped: true };
     if (!span) return { ok: false, reason: 'the block is no longer in the note where the pane read it', draft };
     this.ref = { line: span.open, text: span.text };
     this.text = span.text;

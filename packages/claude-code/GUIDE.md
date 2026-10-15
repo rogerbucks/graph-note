@@ -27,7 +27,8 @@ unless the app sets its own. Whether the desktop app does, and keeps the drawing
   (`write`, `undo`, `redo`, each `against` that version, so the server refuses one made over a change it has not seen),
   and `changed` for a change on disk: drawn again, or a conflict that keeps what is typed (cc_redrawn_on_change). Once
   another program changes the block, the writes before it are never undone, and undo says so (`UNDO_OVER_THEIRS`),
-  and the typing history starts again from the block as reloaded (cc_undo_safe).
+  and the typing history starts again from the block as reloaded (cc_undo_safe). Stopped by a copy of its block it
+  cannot tell from it, undo says that in the core's words instead (block_followed_not_its_copy).
 
 ## The process, `bin/`
 

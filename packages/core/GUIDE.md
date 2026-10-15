@@ -224,14 +224,17 @@ own handlers. Nothing here reaches the network.
   (undo_never_over_theirs, cc_undo_safe); a change elsewhere in the note leaves the history as it is. Switching to
   another block (`select`) starts that block's own history, so Undo never writes one block's text into another
   (undo_stays_in_its_block). Through every change, the block is followed by `block-follow.ts`, never to a copy of it;
-  when a copy cannot be told from it, the session stops: every write, Undo and Redo is refused saying so, and
-  `noteChanged` says `conflict`, until a block is chosen again (block_followed_not_its_copy).
+  when a copy cannot be told from it, the session stops (`stopped`): every write (marked `stopped`), Undo and Redo is
+  refused saying so, and `noteChanged` says `conflict`, until a block is chosen again (block_followed_not_its_copy).
+  `blockText` is the text of the block on a line, for a picker to check a choice is still the block it showed.
 - `block-follow.ts` — `followBlock`: where the session's block is in a note changed since, found by the lines unchanged
   at the note's start and end, never by its text alone, so a copy pasted elsewhere is never taken for it, and the
-  original edited after the paste is still the block, while another block moved to its line (a fence line is every
-  block's) is never taken for it, edited. A change that could as well sit before the block as after it (a
-  copy pasted beside it) is read both ways, and two blocks found make it a `twin`; when the change runs through the
-  whole block, it is found by its text only when no new block of its graph could be it, edited.
+  original edited after the paste is still the block. A block that is not the held block's text is taken for it only
+  when it reads as it edited (`readsAsEdited`: new to the note, of its graph, keeping at least half of its text after
+  the graph line, and nearer it than any other block of the graph), so another block moved to its line or a new one
+  pasted above it is never taken for it. A change that could as well sit before the block as after it (a copy pasted
+  beside it) is read both ways, and two blocks found make it a `twin`; when the change runs through the whole block,
+  it is found by its text, a `twin` when two blocks hold it, or when any new block reads as it edited.
 - `edit-check.ts` — that check (§4): `editRefusal` refuses a name the note written into draws only under a suggested
   name (accept its name first), or a name the edit gives a thing that another block of the graph gives too (already a
   name); `newNames` finds the names an edit newly writes.

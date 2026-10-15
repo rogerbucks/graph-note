@@ -346,11 +346,14 @@ module that ties the parts together, named as the folder is.
 - `editor-layout.ts` — the editor's parts on the page, built once for each block.
 - `block-picker.ts` — the pane's picker of the note's graph blocks: built again from the note as the session last saw
   it each time the tools are shown (after every write, reload and change made outside), so its lines are never an older
-  note's; a block chosen is found again, once what is typed is written, by its place among the graph blocks and its
-  graph, and said in a notice when it is no longer there, never silently nothing.
+  note's; a block chosen is found again, once what is typed is written, by its place among the graph blocks, its graph
+  and its text, and said in a notice when it is no longer there, never silently nothing, nor another block opened.
+  Open again, in the tools of the pane and in place while the session is stopped by a copy of its block (§9), keeps
+  what is typed as a draft and goes on with the block.
 - `block-note.ts` — the note behind the editor and its session: opening, writing, undo, Lock, drafts; the note followed
   when it is renamed or moved, and what is typed kept as a draft when it is deleted; each editor's own draft known by
-  its id, beside another's.
+  its id, beside another's. Stopped by a copy, the stop is said once: typing after it is held in the session as typing
+  rests, kept as a draft when the block is opened again or the editor closes, never saved again at every pause.
 - `note-writing.ts` — writing safely, through the note's editor or the vault.
 - `kept-field.ts` — the field's focus and scroll, kept through each redraw.
 - `typing-keys.ts` — what typing does: Tab and Enter for the inline match or a suggestion, Escape to put it away, undo and

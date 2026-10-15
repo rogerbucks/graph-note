@@ -220,6 +220,7 @@ export class BlockEditor extends Component {
       undo: () => void this.history('undo'),
       redo: () => void this.history('redo'),
       lock: () => void this.lock(),
+      again: s.stopped ? () => void this.picker.again() : null,
     });
   }
 
@@ -261,7 +262,7 @@ export class BlockEditor extends Component {
     if (this.writeTimer !== null) w.clearTimeout(this.writeTimer);
     this.writeTimer = w.setTimeout(() => {
       this.writeTimer = null;
-      void this.write();
+      void this.write(true);
     }, WRITE_AFTER_MS[this.layout]);
     if (this.drawTimer !== null) w.clearTimeout(this.drawTimer);
     this.drawTimer = w.setTimeout(() => {
@@ -312,14 +313,14 @@ export class BlockEditor extends Component {
     });
   }
 
-  /** Writes what is typed into the note; a refused write reloads the block and keeps what was typed as a draft. */
-  private async write(): Promise<void> {
-    const refused = await this.note.write();
+  /** Writes what is typed into the note (held while typing rests, `BlockNote.write`); a refusal keeps it as a draft. */
+  private async write(hold = false): Promise<void> {
+    const refused = await this.note.write(hold);
     if (refused) await this.keepDraft(refused);
     else this.showTools(); // a write of its own is the editor's to undo, whatever changed outside before it
   }
 
-  private async keepDraft({ reason, draft, edit }: Refused): Promise<void> {
+  private async keepDraft({ reason, draft, edit, stopped }: Refused): Promise<void> {
     await this.note.keepDraft(draft);
     // a deleted note has no block to reload: the text stays as typed, with its caret and its history
     if (this.note.file()) {
@@ -327,7 +328,7 @@ export class BlockEditor extends Component {
       this.reloaded();
     }
     // an edit the note refused (§4) is kept as this editor's own draft, by its id, and the banner offers that draft
-    this.showKeptDraft(keptMessage(reason, edit));
+    this.showKeptDraft(keptMessage(reason, edit, stopped));
   }
 
   /** The text as the note now has it, shown with its history started again, its help, its drawing and its tools. */

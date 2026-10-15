@@ -11,10 +11,11 @@ export type Followed = { at: number } | { gone: true } | { twin: true };
 /**
  * The block whose fence opened on `line` in `before`, found in `after`. The lines the two notes share at their start and
  * at their end are unchanged, so a block among them is where they put it, and a block the change runs through opens
- * where it did when its opening fence is unchanged. A change whose lines could sit before the block or after it (a copy
- * pasted beside it) is read both ways: when the two readings give two blocks, either could be the one held (`twin`).
- * When the change runs through the whole block, it is found by its text, only once and only when no new block of its
- * graph could be the one held, edited; else by its line, as reloading has always found it.
+ * where it did when its opening fence is unchanged, if the block there is its text or reads as it edited
+ * (`readsAsEdited`). A change whose lines could sit before the block or after it (a copy pasted beside it) is read both
+ * ways: when the two readings give two blocks, either could be the one held (`twin`). When the change runs through the
+ * whole block, it is found by its text, only once and only when no new block reads as it edited; else by its line, as
+ * reloading has always found it.
  */
 export function followBlock(before: string, after: string, line: number): Followed {
   const now = gqlSpans(after),
@@ -34,13 +35,10 @@ function byLines(a: string[], b: string[], was: Span, spans: { old: Span[]; now:
   while (start < most && a[start] === b[start]) start++;
   let end = 0;
   while (end < most && a[a.length - 1 - end] === b[b.length - 1 - end]) end++;
-  const shift = b.length - a.length,
-    graph = graphOfBlock(was.text),
-    others = new Set(old.filter((s) => s !== was).map((s) => s.text));
-  // the block held, edited, is of its graph, and is not another block of the note moved to its place (a fence line is
-  // every block's, so a block cut away brings the next one's fence to its line)
-  const credible = (s: Span | undefined) =>
-    s && (s.text === was.text || (graphOfBlock(s.text) === graph && !others.has(s.text))) ? s : null;
+  const shift = b.length - a.length;
+  // a fence line is every block's, so a block cut away, or a new one pasted above, brings another fence to its line:
+  // only the block's own text, or one that reads as it edited, is the block
+  const credible = (s: Span | undefined) => (s && (s.text === was.text || readsAsEdited(s, was, old)) ? s : null);
   const at = (head: number, tail: number) => {
     const from = a.length - tail;
     // its opening fence among the lines unchanged at the start: it opens where it did, edited or not
@@ -65,10 +63,9 @@ function byText(old: Span[], now: Span[], line: number, was: Span | null): Follo
   const same = text === undefined ? [] : now.filter((s) => s.text === text);
   if (same.length > 1) return { twin: true };
   const graph = was ? graphOfBlock(was.text) : null;
-  if (same[0]) {
-    const known = new Set(old.map((s) => s.text));
-    const rival =
-      now.length > old.length && now.some((s) => s !== same[0] && !known.has(s.text) && graphOfBlock(s.text) === graph);
+  if (same[0] && was) {
+    // the copy may have come in place of another block, so the count of blocks says nothing (the review of #465)
+    const rival = now.some((s) => s !== same[0] && readsAsEdited(s, was, old));
     return rival ? { twin: true } : { at: now.indexOf(same[0]) };
   }
   const others = new Set(old.filter((s) => s !== was).map((s) => s.text));
@@ -76,4 +73,39 @@ function byText(old: Span[], now: Span[], line: number, was: Span | null): Follo
     (s) => s.open === line && (!graph || (graphOfBlock(s.text) === graph && !others.has(s.text))),
   );
   return here >= 0 ? { at: here } : { gone: true };
+}
+
+/**
+ * Whether `s`, a block whose text the note did not hold before, reads as the held block `was` edited: of its graph, its
+ * text after the graph line keeps at least half of the held block's at its start and end, and more of it than of any
+ * other block of the graph before (a copy of the held block among them aside). A new block sharing only the graph line,
+ * or nearer another block, is another block.
+ */
+function readsAsEdited(s: Span, was: Span, old: Span[]): boolean {
+  const graph = graphOfBlock(was.text);
+  if (graphOfBlock(s.text) !== graph || old.some((o) => o.text === s.text)) return false;
+  const theirs = body(s.text),
+    mine = body(was.text),
+    kept = closeness(mine, theirs);
+  if (!kept || kept * 2 < Math.min(mine.length, theirs.length)) return false;
+  // a copy of the held block, as it was, is no other block to be nearer to
+  return old.every(
+    (o) => o.text === was.text || graphOfBlock(o.text) !== graph || closeness(body(o.text), theirs) < kept,
+  );
+}
+
+/** A block's text after its graph line, which every block of the graph shares; nothing when it is only that line. */
+function body(text: string): string {
+  const i = text.indexOf('\n');
+  return i < 0 ? '' : text.slice(i + 1);
+}
+
+/** How much two texts share at their start and their end, in UTF-16 units, never counting one unit twice. */
+function closeness(x: string, y: string): number {
+  const most = Math.min(x.length, y.length);
+  let start = 0;
+  while (start < most && x[start] === y[start]) start++;
+  let end = 0;
+  while (end < most - start && x[x.length - 1 - end] === y[y.length - 1 - end]) end++;
+  return start + end;
 }

@@ -140,6 +140,19 @@ describe('a copy it cannot tell from the original', () => {
     assert.ok(edited.includes(fence(THEIRS)) && edited.includes(fence(MINE)), 'both left as they are');
   });
 
+  test('a stopped session says so: `stopped`, and its refused write marked `stopped`', () => {
+    const { s, note } = written();
+    const pasted = pastedBeside(note);
+    assert.equal(s.stopped, false);
+    s.noteChanged(pasted);
+    assert.equal(s.stopped, true);
+    s.type(MINE + ',\n(more:T)');
+    const w = s.write(pasted);
+    assert.deepEqual([w.ok, w.stopped], [false, true]);
+    s.select(s.choices()[0].line);
+    assert.equal(s.stopped, false, 'until a block is chosen again');
+  });
+
   test('choosing a block again goes on, with that block’s own history', () => {
     const { s, note } = written();
     const pasted = pastedBeside(note);
@@ -152,5 +165,77 @@ describe('a copy it cannot tell from the original', () => {
     assert.equal(w.ok, true);
     assert.equal(w.note, pasted.replace(fence(MINE), fence(MINE + ',\n(more:T)')), 'written into the block chosen');
     assert.equal(s.undo(w.note).note, pasted, 'and undone there');
+  });
+});
+
+// The review of #465, 15 Oct 2026: one change can put a copy in place of another block, keeping the count of blocks,
+// and a new block of the same graph is not the held block edited unless it reads as it
+const B2 = "// graph: alpha\n(b:T {name: 'B'})";
+const B3 = "// graph: beta\n(b:T {name: 'B'})";
+const FRESH = "// graph: alpha\n(fresh:T {name: 'Fresh'})";
+/** `# Note`, the held block A, then block `b`, then `End.`; a session on A that has written MINE into it. */
+function besideBlock(b) {
+  const note = ['# Note', '', fence(A), '', fence(b), '', 'End.', ''].join('\n');
+  const s = new PaneSession(note, 2);
+  s.type(MINE);
+  const w = s.write(note);
+  assert.equal(w.ok, true);
+  return { s, note: w.note };
+}
+
+describe('a copy in place of another block, in one change', () => {
+  for (const [what, b] of [
+    ['another block of its graph', B2],
+    ['a block of another graph', B3],
+  ]) {
+    test(`over ${what}, with the original edited and the note above it: the session stops, undoing neither`, () => {
+      const { s, note } = besideBlock(b);
+      // the note as one outside change leaves it: `# Note!`, A edited to THEIRS, and B replaced by a copy of MINE
+      const changed = ['# Note!', '', fence(THEIRS), '', fence(MINE), '', 'End.', ''].join('\n');
+      assert.equal(note, ['# Note', '', fence(MINE), '', fence(b), '', 'End.', ''].join('\n'));
+      assert.equal(s.noteChanged(changed), 'conflict');
+      const w = s.undo(changed);
+      refusedForHistory(w, 'undo');
+      stopped(w.reason);
+    });
+  }
+
+  test('a copy pasted far off while the note above changes: two blocks hold its text, and it stops', () => {
+    const { s, note } = written();
+    const changed = pastedFar(note.replace('# Note', '# Note!'));
+    assert.equal(s.noteChanged(changed), 'conflict');
+    stopped(s.stepRefusal('undo'));
+  });
+});
+
+describe('a new block that is not the held block edited', () => {
+  test('a different block of its graph pasted directly above it: followed, never stopped', () => {
+    const { s, note } = written();
+    const changed = note.replace(fence(MINE), fence(FRESH) + '\n\n' + fence(MINE));
+    assert.equal(s.noteChanged(changed), 'unchanged');
+    assert.equal(s.stepRefusal('undo'), null);
+    const back = s.undo(changed);
+    assert.equal(back.ok, true);
+    assert.equal(back.note, changed.replace(fence(MINE), fence(A)), 'its own write undone, the new block kept');
+  });
+
+  test('an edit above it and below it, and a new block of its graph, in one change: followed, never stopped', () => {
+    const { s, note } = written();
+    const changed = note.replace('# Note', '# Note!').replace('Between.', 'Between!') + '\n' + fence(FRESH) + '\n';
+    assert.equal(s.noteChanged(changed), 'unchanged');
+    const back = s.undo(changed);
+    assert.equal(back.ok, true);
+    assert.equal(back.note, changed.replace(fence(MINE), fence(A)));
+  });
+
+  test('a copy pasted directly above it, then the original edited: the original is followed', () => {
+    const { s, note } = written();
+    const above = note.replace('# Note\n', '# Note\n' + fence(MINE) + '\n');
+    assert.equal(s.noteChanged(above), 'unchanged', 'the original kept the blank line above it');
+    const edited = above.replace('\n\n' + fence(MINE), '\n\n' + fence(THEIRS));
+    assert.ok(edited.startsWith('# Note\n' + fence(MINE) + '\n'), 'the copy as it was pasted');
+    assert.equal(s.noteChanged(edited), 'reloaded');
+    assert.equal(s.text, THEIRS);
+    refusedForHistory(s.undo(edited), 'undo');
   });
 });
