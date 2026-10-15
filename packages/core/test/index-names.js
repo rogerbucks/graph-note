@@ -242,6 +242,8 @@ export const VALUES = [
   'matchClass',
   'matrixGrants',
   'matrixProblems',
+  'matrixRows',
+  'matrixRowsFrom',
   'mergePathProblems',
   'modelChoices',
   'nameFromText',

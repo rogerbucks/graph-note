@@ -247,6 +247,7 @@ export {
   matrixProblems,
   unmatchedClasses,
 } from './ai-matrix.ts';
+export { matrixRows, matrixRowsFrom } from './matrix-table.ts';
 export type { ClassGrant, Mark, MatrixCell, MatrixInput, MatrixRow, MatrixSwitch } from './ai-matrix.ts';
 export { noteWithProposal } from './ai-answer.ts';
 export type { ChangeRow, DecideOptions, Person, ProposalShown, Reviewed, Which } from './proposals-shown.ts';

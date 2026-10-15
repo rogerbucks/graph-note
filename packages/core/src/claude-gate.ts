@@ -20,6 +20,8 @@ export type GateSettings = Pick<Settings, 'classifications' | 'aiUnlabelled'> & 
   /** The rows of the vault's destination matrix, as the host read them, and the table mapping its class names. */
   matrix?: MatrixRow[];
   aiClassMap?: Record<string, string>;
+  /** The note that holds the matrix, by its path in the vault, for the host that reads it. */
+  aiMatrixNote?: string;
 };
 
 /** The name Claude is set up under among the AI models. */

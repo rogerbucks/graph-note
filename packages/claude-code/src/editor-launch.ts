@@ -5,9 +5,9 @@
 // a session has one server, reused for the same note and replaced for another (cc_one_server); and it ends when the
 // session does, on `/graph stop`, or by itself when the server stops (cc_server_stops). No Node module is imported here:
 // the host's calls are handed in, so the tests run the launcher over real processes and the mod over the host's own.
-import { claudeGate, sha256 } from '@graph-note/core';
+import { CLAUDE, claudeGate, matchClass, matrixRows, sha256 } from '@graph-note/core';
 import type { Gate, GateSettings } from '@graph-note/core';
-import { folderOf, fullPath, nameOf } from './editor-paths.ts';
+import { folderOf, fullPath, insideVault, nameOf } from './editor-paths.ts';
 import { NOT_THE_PERSON, NOT_THE_PERSON_ASKING, fromPerson } from './editor-words.ts';
 import type { EditOutcome } from './editor-words.ts';
 
@@ -76,7 +76,15 @@ export function settingsForServer(settings: GateSettings): string {
   return JSON.stringify({
     classifications: settings.classifications,
     aiUnlabelled: settings.aiUnlabelled,
-    aiModels: settings.aiModels.map((m) => ({ name: m.name, ceiling: m.ceiling })),
+    // each model's row and switches go too, so the server holds Claude to the same row as the mod
+    aiModels: settings.aiModels.map((m) => ({
+      name: m.name,
+      ceiling: m.ceiling,
+      ...(m.matrixRow ? { matrixRow: m.matrixRow, matrixOn: m.matrixOn ?? [] } : {}),
+    })),
+    aiClassMap: settings.aiClassMap ?? {},
+    // the rows the mod read from the matrix note; none given are none, and a row picked then clears nothing
+    matrix: settings.matrix ?? [],
   });
 }
 
@@ -165,9 +173,23 @@ export class EditorLauncher {
     });
   }
 
-  /** The settings the gate reads for `note`. */
-  async gateSettings(_note: string): Promise<GateSettings> {
-    return this.#ports.settings();
+  /**
+   * The settings the gate reads for `note`. When a row of the destination matrix is picked for Claude, the matrix note
+   * named in the settings is read from inside the vault (a path that is outside it is never read) and its rows are
+   * handed on; a note that is not there, cannot be read or is refused gives no rows, so the row clears nothing.
+   */
+  async gateSettings(note: string): Promise<GateSettings> {
+    const settings = await this.#ports.settings();
+    const claude = settings.aiModels.find((m) => m.name.trim().toLowerCase() === CLAUDE.toLowerCase());
+    if (!claude?.matrixRow) return settings;
+    const path = insideVault(await this.#vaultOf(note), settings.aiMatrixNote ?? '');
+    if (path === null) return { ...settings, matrix: [] };
+    const known = (name: string) => matchClass(name, settings.classifications, settings.aiClassMap ?? {}) !== null;
+    try {
+      return { ...settings, matrix: matrixRows(await this.#ports.read(path), known) };
+    } catch {
+      return { ...settings, matrix: [] };
+    }
   }
 
   /** The note read and the settings, for the gate alone: the text is neither kept nor said, only its digest. */
