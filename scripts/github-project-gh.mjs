@@ -74,10 +74,14 @@ const UPDATE_FIELD = `mutation($field: ID!, $options: [ProjectV2SingleSelectFiel
 /**
  * The real runner: run(args, input) runs `gh` with the arguments, giving it the input on its standard input, and gives
  * its output. Throws with gh's own words when gh fails or cannot be started. `spawn` is spawnSync, or a stand-in.
+ * `options.env` is the environment gh starts from (the process's own by default) and `options.set` names variables to
+ * add to it, or, given as undefined, to take out, so that a runner can hold its own token and see no other.
  */
-export function ghRunner(spawn = spawnSync) {
+export function ghRunner(spawn = spawnSync, { env: from = process.env, set = {} } = {}) {
   // GH_REPO and GH_HOST would send gh somewhere the checkout does not say, so gh never sees them.
-  const { GH_REPO: _repo, GH_HOST: _host, ...env } = process.env;
+  const { GH_REPO: _repo, GH_HOST: _host, ...rest } = from;
+  const env = { ...rest, ...set };
+  for (const name of Object.keys(env)) if (env[name] === undefined) delete env[name];
   return (args, input) => {
     const result = spawn('gh', args, { input, encoding: 'utf8', maxBuffer: 1 << 28, cwd: ROOT, env });
     if (result.error)

@@ -1,0 +1,21 @@
+name: Build status trigger
+
+# This workflow does nothing itself. It exists so that a pull request being opened, pushed to, reopened or closed wakes
+# the "Build status" workflow, which runs the copy of its script that is on main and holds the project token. A pull
+# request's own workflow files can never hold that token: this one has no token, no secret and no checkout, and reads
+# nothing from the pull request.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: read
+
+jobs:
+  # named as the checks of a change leave out (scripts/build-status-gh.mjs, IGNORED_CHECKS), so it is never counted as one
+  build-status-trigger:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Wake the Build status workflow
+        run: echo "The Build status workflow follows this one, from main."

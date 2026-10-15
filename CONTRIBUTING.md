@@ -160,6 +160,10 @@ These test behaviour across modules, or the repository itself, so they are named
 - `python/graph_spec/tests/test_view_parity.py` — Grafeo, running each view of `view_cases.json` as written, returns the things the core returns, and, of a fixed list of GQL's and Cypher's words, refuses as a name and as a kind exactly the words the core keeps from them (editor spec §7, views_agree_with_grafeo).
 - `python/graph_spec/tests/test_settings.py` — what a host sets after importing the library.
 - `test/cheap-checks.test.js` — the quiet test run, running only a change's tests, the AI guide and the search ignore file.
+- `test/build-status.test.js` — the build status's pure part: the requirements a pull request moves, found from the tests it newly marks written; the stage an event gives; which value may replace which; the comment and the annotations.
+- `test/build-status-gh.test.js` — the build status's calls to GitHub, through in-memory stand-ins for `gh`: a pull request, the requirements file at a ref, a commit's checks, the releases, the one comment, the Build status field, and the two tokens kept apart.
+- `test/build-status-run.test.js` — the build status event by event: a pull request opened, its checks failing and passing, its merge, closing and a release; and a project token that is missing, expired (401) or refused, which warns and never fails.
+- `test/build-status-workflow.test.js` — the two build status workflows: woken only by the checks of a pull request, a push to main and a release; the project secret given only to the script on main; no event text in a command line; least privilege.
 - `test/classification.test.js` — the content check refuses confidential or personal files.
 - `test/conventions.test.js` — the conventions on this page.
 - `test/device-check-notes.test.js` — the device checklist numbers every item, the test vault holds one note for each item after Before in `Device checks/`, the note's checklist line is the item's words, each note's graph blocks read as it says they do (the repository's reader and checker, and `parseView` for a view), and the index lists the notes in order (editor spec §3, tried first in a test vault).
@@ -217,13 +221,16 @@ These test behaviour across modules, or the repository itself, so they are named
 - **Where each requirement goes.** `requirements/workstreams.json` maps a workstream id to its title and its requirement
   ids; a requirement it does not list falls to `S3`, and an id the current copy does not hold yet is fine. An issue
   carries the labels `slice-N`, `workstream:<id>` and `status:open|part|proved`, and is closed when proved. Its status
-  is the one the slice board reads. The project's fields are Slice, Workstream and Proof (open, part, proved); its
-  built-in Status field is never touched.
+  is the one the slice board reads. The project's fields are Slice, Workstream, Proof (open, part, proved) and Build
+  status (Not started, In PR, Checks failing, Checks passing, Merged, Released); its built-in Status field is never
+  touched. The mirror makes Build status and its options, gives a new item Not started, and never sets another value or
+  replaces the options: the values come from the build status workflow below, from GitHub's events alone.
 - **See the plan with `npm run project:plan`.** It is a dry run and makes no network call, so it compares with an empty
   GitHub. `--check` reads GitHub and prints the real diff, changing nothing. `--apply` prints the same plan, then does
   it with `gh`: it finds each issue by its hidden `<!-- requirement:<id> -->` marker, changes only what differs, and
   never deletes (an issue whose requirement went is labelled `requirement:removed` and closed, with a comment). There
-  is no apply script and no workflow: applying needs a token with the `project` scope, which the owner adds by hand.
+  is no apply script and no workflow for the mirror: applying needs a token with the `project` scope, which the owner
+  adds by hand.
 - **Only what it made is its own.** An issue is adopted only when the signed-in login wrote it, its body has the
   generated banner, and its marker is the last thing in it; a marker anyone else writes is warned of and ignored, and an
   issue whose banner or closing marker was edited away is no longer ours, so a new one is made. `--apply` stops, unless
@@ -238,6 +245,28 @@ These test behaviour across modules, or the repository itself, so they are named
 - **The project is dedicated to the script.** Changing the options of Slice or Workstream replaces them in GitHub, which
   clears the value on every item, and the script sets the values again on the items it manages. A value on an item the
   script does not manage would be lost, so keep nothing else in this project.
+
+## The build status of each requirement
+
+- **Where a requirement's build is up to shows on the project, from GitHub's events alone** (Roger, 15 Oct 2026). The
+  "Build status" field is never authored by a person or by the mirror: `scripts/build-status-run.mjs` sets it from what
+  happens to a pull request, in the workflow `.github/workflows/build-status.yml`.
+- **No hand-linking.** A pull request's items are the requirements whose tests its `requirements/editor-requirements.gql`
+  newly marks written, against the base branch's (a merged pull request: its merge commit against that commit's first
+  parent; a release: the tag against the release before it). Both files are read through the API as data.
+- **The stages.** In PR while its checks run or none has reported, Checks failing as soon as one fails, Checks passing
+  when all have finished well, Merged on the merge (a push to main), Released when a release is published, and Not
+  started again if the pull request is closed unmerged. An item never goes back from Merged or Released.
+- **One comment, updated at each step,** on the pull request, with links to the items, the board and the run; none when
+  a pull request moves no requirement. It is made with the workflow's own token, with `pull-requests: write` as the only
+  write permission.
+- **`PROJECT_TOKEN` is for the board alone** (a classic token with the `project` and `public_repo` scopes, as a secret).
+  When it is missing or GitHub refuses it (expired: 401), the run says so in a `::warning::` annotation and a line in the
+  comment, and does not fail: CI never fails over it.
+- **Nothing of a pull request is run with the secret.** The workflow follows the checks of a pull request (CI, and the
+  `Build status trigger` workflow, which has no secret and does nothing) instead of being woken by the pull request, so
+  its definition is the one on main and its job checks out main. No `pull_request_target`, no event text in a command
+  line, and the script prints no token. Actions are pinned to commit hashes at least 7 days old.
 
 ## The quality ratchet
 

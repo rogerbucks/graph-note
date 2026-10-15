@@ -1,0 +1,52 @@
+name: Build status
+
+# Shows on the "graph-note requirements" GitHub Project where each requirement's build is up to, in its Build status
+# field (Not started, In PR, Checks failing, Checks passing, Merged, Released), and leaves one short comment on the pull
+# request, updated at each step. The values come from GitHub's events alone. scripts/build-status-run.mjs does the work.
+#
+# It is never woken by a pull request itself: it follows the checks of one (CI, and the "Build status trigger" workflow
+# that runs when one is opened, pushed to, reopened or closed), a push to main (a merge) and a published release. So its
+# definition is always the one on main, and the job runs the script on main: nothing of a pull request is checked out or
+# run. The pull request's requirements file is read through the API as data. PROJECT_TOKEN (a classic token with the
+# project and public_repo scopes) is for the project board alone; the workflow's own token reads the repository and
+# leaves the comment. When PROJECT_TOKEN is missing or refused the run says so in a warning and in the comment, and does
+# not fail.
+on:
+  workflow_run:
+    workflows: [CI, Build status trigger]
+    types: [completed]
+  push:
+    branches: [main]
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+# one run at a time for a pull request, so the board and the comment never race; none is cancelled
+concurrency:
+  group: build-status-${{ github.event.workflow_run.pull_requests[0].number || github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      checks: read
+      statuses: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - name: Update the board and the pull request comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+        run: node scripts/build-status-run.mjs
