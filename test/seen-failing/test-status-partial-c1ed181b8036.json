@@ -1,0 +1,6 @@
+{
+  "file": "test/test-status-partial.test.js",
+  "test": "a requirement proved only by a partial test > is proved when the same test is written",
+  "seen_failing_first": false,
+  "evidence": "Passed first: a written test already proves a slice; this is the control case beside the partial one, kept to show the change did not break it."
+}

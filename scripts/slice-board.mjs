@@ -28,15 +28,18 @@ const STATUSES = ['proved', 'part', 'open'];
 const DEFAULT_ALTITUDE = 'working';
 const MEANINGS = {
   proved: 'every test it names is written',
-  part: 'some of its tests are written',
+  part: 'some of its tests are written, or one is partial',
   open: 'none is written, or it names no test',
 };
 
-/** The status of a requirement from its tests: proved, part or open. */
+/**
+ * The status of a requirement from its tests: proved, part or open. Only written tests prove: a partial test (its file
+ * is there but does not yet prove every rule) makes the requirement part, in progress, and never proved.
+ */
 export function statusOf(tests) {
   const written = tests.filter((t) => t.status === 'written').length;
-  if (!written) return 'open';
-  return written === tests.length ? 'proved' : 'part';
+  if (written === tests.length && written) return 'proved';
+  return written || tests.some((t) => t.status === 'partial') ? 'part' : 'open';
 }
 
 /**
@@ -162,7 +165,7 @@ const sectionLabel = (num, title) => `§${esc(num)}${title ? ` ${esc(title)}` : 
 const testItem = (t) => {
   const files = t.files.map((f) => `<code>${esc(f)}</code>`).join('');
   const where = t.where && t.where !== 'repo' ? t.where : t.files.length ? '' : 'no file yet';
-  return `<li class="test"><span class="chip chip-${t.status === 'written' ? 'written' : 'planned'}">${esc(t.status)}</span>
+  return `<li class="test"><span class="chip chip-${['written', 'partial'].includes(t.status) ? t.status : 'planned'}">${esc(t.status)}</span>
 <span class="proves">${esc(t.proves)}</span>
 <div class="scroll files">${files}${where ? `<span class="where">${esc(where)}</span>` : ''}</div></li>`;
 };

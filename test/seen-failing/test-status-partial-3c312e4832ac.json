@@ -1,0 +1,6 @@
+{
+  "file": "test/test-status-partial.test.js",
+  "test": "a partial test in the audit > is accepted when its file is there",
+  "seen_failing_first": false,
+  "evidence": "Passed first because the audit ignores any status it does not know, so a partial test raised nothing before the change; it pins that a partial test stays accepted once the file rule is written."
+}
