@@ -1,6 +1,6 @@
 {
   "name": "@graph-note/claude-code",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "private": true,
   "description": "The Claude Code host: a mod whose /graph draws a graph note in a pane, on the same core.",
   "license": "MIT",
@@ -9,6 +9,6 @@
     "build": "node esbuild.config.mjs"
   },
   "dependencies": {
-    "@graph-note/core": "0.4.4"
+    "@graph-note/core": "0.4.5"
   }
 }
