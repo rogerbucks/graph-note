@@ -672,7 +672,18 @@ exactly what goes and said yes to it. Its answer comes back as a proposal (§17)
   change or the cell is no longer conditional; a cell not exactly ✅, ⚠️ or ❌ is `unknown` and refuses; names are
   compared exactly, so a compatibility character never matches; a table that disagrees with itself or with a name
   matches nothing (`classMapProblems`).
+- `settings-matrix.ts` — the two options of the matrix, the note that holds it and the table of class names (`MATRIX_OPTIONS`).
 - `vault-folder.ts` — `vaultFolder`, the export folder kept inside the vault, re-exported by `settings.ts`.
+- `claude-gate.ts` — `claudeGate` (spec §26, cc_classified_asks, cc_credential_never): whether a note may open in the
+  browser editor's pane, which Claude can read. `{ open }`; `{ ask }` for a note above Claude's ceiling (the ceiling of
+  the AI model named Claude, else the lowest classification); `{ refuse }` for one at the highest classification, one
+  with a classification not among those set, one with none when `aiUnlabelled` is the highest (the default), and
+  one holding a credential at any classification. The words name kinds and levels, never the note's label or text. A
+  third argument, the SHA-256 of a text, is the user's yes to that text alone. `classificationOf` reads the one
+  unindented top-level front matter `classification:` key; several, a list, mapping, block, anchor, tag, open quote or an
+  empty value with child lines are `unknown`, which refuses (`noteClassification` gives the label or null). The ceiling
+  of the model named Claude is cleared by its matrix row when one is picked (the host hands the rows as `matrix`),
+  else by its ceiling.
 - `ai-scope.ts` — `aiScope`: what is sent of a note, as the user chose (the whole graph, a view, or things by name),
   written out again as GQL from the graph as read: each thing with its kinds and properties, and the links between the
   things chosen. Nothing else of the note goes: no prose, no other graph, no comment.

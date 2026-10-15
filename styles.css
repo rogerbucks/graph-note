@@ -1377,3 +1377,115 @@ details.graph-note-style > summary {
 .graph-note-callout-text {
   fill: var(--text-normal);
 }
+
+/* The mini-map (§24, mini_map): a small copy of the whole drawing in a corner of its view, the part in view outlined; tapped
+   or dragged, it moves the view, so a finger on it never scrolls the note. Colours from the theme. */
+.graph-note-mini-map {
+  position: absolute;
+  inset-inline-end: var(--size-4-2);
+  inset-block-end: var(--size-4-2);
+  z-index: 1;
+  padding: 0;
+  line-height: 0;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border-focus);
+  border-radius: var(--radius-s);
+  box-shadow: var(--shadow-s);
+  touch-action: none;
+  cursor: crosshair;
+}
+.graph-note-mini-map[hidden] {
+  display: none;
+}
+.graph-note-mini-svg {
+  display: block;
+  max-width: none;
+}
+.graph-note-mini-box {
+  fill: var(--background-secondary);
+  stroke: var(--text-faint);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.graph-note-mini-line {
+  stroke: var(--text-faint);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.graph-note-mini-frame {
+  fill: var(--interactive-accent);
+  fill-opacity: 0.15;
+  stroke: var(--interactive-accent);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+/* The details kept open (§24, details_always_visible, details_narrow): the panel beside the drawing, wrapping below it in a
+   card too narrow for both (the plugin sets is-details-below by the card's width). */
+.graph-note-view.is-details-open:not(.is-details-below) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+.graph-note-view.is-details-open:not(.is-details-below) > * {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+.graph-note-view.is-details-open:not(.is-details-below) > .graph-note-viewport {
+  flex: 1 1 58%;
+}
+.graph-note-view.is-details-open:not(.is-details-below) > .graph-note-details {
+  flex: 1 1 14rem;
+  align-self: stretch;
+  max-height: var(--graph-note-height, none);
+  overflow-y: auto;
+  border-top: 0;
+  border-inline-start: 1px solid var(--background-modifier-border);
+}
+
+/* The quick-info tooltip (§24, quick_info): on the page itself, above the full-screen card, placed beside its thing by the
+   plugin and never over it; it takes no pointer, so it never gets between a finger and the drawing. */
+.graph-note-quick-info {
+  position: fixed;
+  left: var(--graph-note-qi-x, 0);
+  top: var(--graph-note-qi-y, 0);
+  z-index: var(--layer-tooltip);
+  max-width: min(22rem, 90vw);
+  padding: var(--size-4-2) var(--size-4-3);
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  border: 1px solid var(--background-modifier-border-focus);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-l);
+  font-size: var(--font-ui-small);
+  pointer-events: none;
+}
+.graph-note-quick-info[hidden] {
+  display: none;
+}
+.graph-note-quick-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--size-4-2);
+}
+.graph-note-quick-kind {
+  font-size: var(--font-ui-smaller);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+.graph-note-quick-info ul {
+  margin: var(--size-4-1) 0;
+  padding-inline-start: var(--size-4-4);
+}
+.graph-note-quick-problems {
+  color: var(--text-muted);
+}
+.graph-note-quick-note {
+  margin-top: var(--size-4-1);
+  padding-top: var(--size-4-1);
+  border-top: 1px solid var(--background-modifier-border);
+}
+.graph-note-quick-note p {
+  margin: 0;
+}

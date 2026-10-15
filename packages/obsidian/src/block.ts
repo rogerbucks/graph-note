@@ -34,6 +34,7 @@ import { renderProposalBlock } from './proposals/proposal-block';
 import { renderSourceBlock } from './sources/sources';
 import { renderStepBlock } from './step-block';
 import { GraphView } from './graph-view/graph-view';
+import { aidsOf } from './graph-view/viewer-aids';
 import { diagramShown, tableDrawn } from './graph-view/type-strip';
 import { readOnlyHere, settlePlacements, whenPlaced } from './graph-view/placement';
 import { renderProblems } from './graph-view/problems-list';
@@ -304,6 +305,7 @@ export async function renderBlock(
       indent: plugin.settings.indent,
       focusDepth: depthOf(plugin.settings.focusDepth),
       callouts: plugin.settings.noteCallouts === 'on',
+      aids: aidsOf(plugin.settings),
       lineOf: (at) => (blocks[at.block]?.line ?? 0) + at.line,
       onEdit: () => {
         void plugin.openEditor(target);

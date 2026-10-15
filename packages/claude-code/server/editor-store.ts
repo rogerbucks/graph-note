@@ -18,6 +18,8 @@ import { DraftShelf } from './note-drafts.ts';
 import { NODE_FILES, readNoteFile, writeAtomically, type NoteFiles, type NoteText } from './note-file.ts';
 import { notePlace, type Vault } from './note-place.ts';
 import { watchNote, type Watcher } from './note-watch.ts';
+import { sha256 } from '@graph-note/core';
+import type { NoteGate } from './editor-gate.ts';
 
 /** How a store is made: the vault, the mod's data folder for drafts (outside the vault), and what it is handed. */
 export interface NoteStoreOptions {
@@ -27,6 +29,12 @@ export interface NoteStoreOptions {
   watch?: Watcher;
   /** The file operations a note's write is made of; Node's own unless a test hands in its own. */
   files?: NoteFiles;
+  /**
+   * What is asked before any text of a note is sent (cc_classified_asks, cc_credential_never): on each read, on the
+   * change stream's first line and each change, in the answer to a stale write, and for a draft. The shipped server
+   * always hands one in; a store made without one sends everything, which only the store's own tests do.
+   */
+  gate?: NoteGate;
 }
 
 /** The note opened, by the id the store gave it; or why it may not be. */
@@ -40,6 +48,8 @@ interface OpenNote {
   version: string | null;
   feeds: Set<(text: string) => void>;
   unwatch: () => void;
+  /** The digest of the text this editor last wrote: typed by the user, so not asked about again. */
+  vouched: string | null;
 }
 
 /** One route of the API: a note's id, and what of it is asked for. */
@@ -68,12 +78,19 @@ export class NoteStore {
   private readonly drafts: DraftShelf;
   private readonly watch: Watcher;
   private readonly files: NoteFiles;
+  private readonly gate: NoteGate | undefined;
 
-  private constructor(where: Vault, drafts: DraftShelf, watch: Watcher, files: NoteFiles) {
+  private constructor(where: Vault, drafts: DraftShelf, watch: Watcher, files: NoteFiles, gate?: NoteGate) {
     this.where = where;
     this.drafts = drafts;
     this.watch = watch;
     this.files = files;
+    this.gate = gate;
+  }
+
+  /** Why the text of a note may not be sent, or null: the gate's word, asked each time and never remembered. */
+  private refusal(note: OpenNote, text: string): string | null {
+    return this.gate ? this.gate.note(text, note.vouched) : null;
   }
 
   /** A store over the vault; refused when the vault is no folder, or the drafts folder is inside it. */
@@ -83,7 +100,7 @@ export class NoteStore {
     if (!(await fs.stat(real)).isDirectory()) throw new Error('The vault must be a folder.');
     const where = { real, named };
     const drafts = await DraftShelf.open(options.drafts, where);
-    return new NoteStore(where, drafts, options.watch ?? watchNote, options.files ?? NODE_FILES);
+    return new NoteStore(where, drafts, options.watch ?? watchNote, options.files ?? NODE_FILES, options.gate);
   }
 
   /** The vault's real path. */
@@ -107,7 +124,13 @@ export class NoteStore {
     const known = this.ids.get(place.inVault);
     if (known) return { ok: true, id: known };
     const id = randomBytes(16).toString('hex');
-    const note: OpenNote = { inVault: place.inVault, version: null, feeds: new Set(), unwatch: () => {} };
+    const note: OpenNote = {
+      inVault: place.inVault,
+      version: null,
+      feeds: new Set(),
+      unwatch: () => {},
+      vouched: null,
+    };
     this.notes.set(id, note);
     this.ids.set(place.inVault, id);
     note.unwatch = this.watch(dirname(place.real), basename(place.real), () => void this.changed(id));
@@ -151,8 +174,15 @@ export class NoteStore {
     const note = this.notes.get(id) as OpenNote;
     const r = await this.load(note);
     if (!r.ok) return answer(410, { why: r.why });
+    const refused = this.refusal(note, r.text);
+    if (refused !== null) {
+      note.version = null;
+      return answer(410, { why: refused });
+    }
     note.version = r.version;
-    const draft = await this.drafts.take(note.inVault);
+    const taken = await this.drafts.take(note.inVault);
+    // a draft is typed text too: one the gate refuses (a credential, say) is withheld, and stays on the shelf unsent
+    const draft = taken && this.gate?.draft(taken.text) ? null : taken;
     return answer(200, { text: r.text, version: r.version, draft }, { etag: r.version });
   }
 
@@ -187,6 +217,8 @@ export class NoteStore {
           const kept = await keep();
           return answer(410, { why: now.ok ? 'The note is gone.' : now.why, draft: kept.ok });
         }
+        const refused = this.refusal(note, now.text);
+        if (refused !== null) return answer(410, { why: refused, draft: false });
         if (now.version !== ifMatch) {
           const kept = await keep();
           return answer(409, { text: now.text, version: now.version, draft: kept.ok }, { etag: now.version });
@@ -198,6 +230,7 @@ export class NoteStore {
           return answer(500, { why: w.why, draft: kept.ok });
         }
         note.version = w.version;
+        note.vouched = sha256(text);
         // the draft this write makes good is cleared; one typed on top of what was just written is newer, and kept
         const draft = await this.drafts.take(note.inVault);
         if (draft && (draft.text === text || draft.against !== w.version)) await this.drafts.clear(note.inVault);
@@ -230,8 +263,14 @@ export class NoteStore {
     const feed = (send: (text: string) => void) => {
       note.feeds.add(send);
       void this.load(note).then((r) => {
-        if (r.ok) note.version = r.version;
-        send(`${JSON.stringify(r.ok ? { version: r.version, text: r.text } : { gone: r.why })}\n`);
+        const refused = r.ok ? this.refusal(note, r.text) : null;
+        note.version = r.ok && refused === null ? r.version : null;
+        const line = r.ok
+          ? refused === null
+            ? { version: r.version, text: r.text }
+            : { gone: refused }
+          : { gone: r.why };
+        send(`${JSON.stringify(line)}\n`);
       });
       return () => note.feeds.delete(send);
     };
@@ -244,10 +283,13 @@ export class NoteStore {
       const note = this.notes.get(id);
       if (this.stopped || !note) return;
       const r = await this.load(note);
-      if (r.ok && r.version === note.version) return;
-      if (!r.ok && note.version === null) return;
-      note.version = r.ok ? r.version : null;
-      const line = `${JSON.stringify(r.ok ? { version: r.version, text: r.text } : { gone: r.why })}\n`;
+      const refused = r.ok ? this.refusal(note, r.text) : null;
+      const sendable = r.ok && refused === null;
+      if (sendable && r.version === note.version) return;
+      if (!sendable && note.version === null) return;
+      note.version = sendable ? r.version : null;
+      const said = sendable ? { version: r.version, text: r.text } : { gone: refused ?? (r.ok ? '' : r.why) };
+      const line = `${JSON.stringify(said)}\n`;
       for (const send of note.feeds) send(line);
     });
   }

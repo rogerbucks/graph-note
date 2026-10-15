@@ -26,8 +26,20 @@ unless the app sets its own. Whether the desktop app does, and keeps the drawing
   which only `link` gives (a `#` field, so `JSON.stringify` shows none). `edit` reuses the server for the same note,
   replaces it for another (one server for each session, cc_one_server), and says why a start failed in words
   (cc_start_failure); `stop` kills it; a server that ends by itself is forgotten, with why in `ended`. One call at a
-  time. `sayEdit`, `sayStopped` and `editArgs` are the words and the command line; none holds the address, the token
-  or the note's text (cc_transcript_clean).
+  time. `sayEdit`, `sayStopped`, `editArgs` and `confirmArgs` are the words and the command line; none holds the address,
+  the token or the note's text (cc_transcript_clean). **The gate (workstream C3):** before any server starts, `edit` reads
+  the note through the `read` port, the settings through the `settings` port, and asks the core's `claudeGate`. A note
+  above Claude's ceiling starts nothing and is remembered as asked about: `confirm` (`/graph confirm`) is the user's
+  yes, for that one note, once, and checks the gate again first (cc_classified_asks). The highest classification, one not
+  among those set, an unlabelled note when the level for such notes is the highest (the default), a credential, and a
+  note or settings that cannot be read have no yes (cc_credential_never). `held` on the outcome says which, and neither
+  is drawn in its place. Only the person typing can say yes: `edit` and `confirm` take the host's `origin`, and
+  `fromPerson` accepts exactly `origin.kind === 'composer'`; any other, or none, is refused (`bridge`, Remote Control, is
+  an open question for the owner and is not accepted). The yes is the digest of the text it was given about, handed to
+  the server (`GRAPH_NOTE_EDITOR_CONFIRMED`, with `_SETTINGS`), which runs the same gate (`server/editor-gate.ts`,
+  `storeGate`) before every send in `editor-store.ts`: a read, a draft, the change stream, a stale write's answer. A
+  refusal sends `gone` and no text, and a changed note needs a new question. A note already open and now held back is closed. `gate` asks the same for `/graph <note>`'s own
+  drawing. The mod reads the settings from `settings.json` in its data folder; none is the defaults, the strictest.
 - `mod-entry.ts` — what the hooks module takes from the three above; bundled into `mod/hooks/graph.js`.
 - `editor-session.ts` — `EditorSession`, the browser editor page's side of a note (spec §26; for C5): the core's
   `PaneSession` and `TextHistory` over one block, the note and version the page last had from the server, what to send
@@ -178,6 +190,6 @@ in every new session, the desktop app's included. After a change: `npm run build
   mode, hard links, a folder swapped under a write, the drafts folder's mode and longest draft, and the real fs.watch),
   with their support, `editor-store-support.js`; and `editor-mod.test.js` (`/graph edit` from the mod: the launcher
   over real server processes started the way the host starts one, standard input closed at once; the other
-  workstreams' cases for `test_cc_mod`, C3 and C7, are added to it, and it is `partial` until then), with its support, `editor-mod-support.js`. The mod's wiring
+  workstreams' cases for `test_cc_mod`: C3's, the gate, are in it, C7's are still to be added, and it is `partial` until then), with its support, `editor-mod-support.js`. The mod's wiring
   (`register.tsx`) is checked by `claude plugin validate` and a type check; `claude plugin test` needs a Claude Code
   signed in and online, so no test of it is in the repository yet.

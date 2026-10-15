@@ -29,6 +29,7 @@ import type { DiagramShown } from './type-strip';
 import type { Exporting } from '../export/export-form';
 import type { LinkHost } from '../links/link-host';
 import type { CardImages } from './animated-images';
+import type { ViewerAids } from './viewer-aids';
 
 /** What declaring Deferred and DEFERS in the graph's schema gave: the text to park into, and the graph as the note now reads it. */
 export interface DeclaredDeferred {
@@ -90,6 +91,8 @@ export interface ViewOptions {
   focusDepth?: FocusDepth;
   /** Whether each note is drawn on the drawing as a callout, as the settings say (§24, note_callouts); off when not given. */
   callouts?: boolean;
+  /** The mini-map's setting and whether the details stay open, as the settings say (§24); off and closed when not given. */
+  aids?: ViewerAids;
   /** Set when the drawing is a view (spec §7): what it shows, how, and how to write its style. */
   view?: ViewShown;
   /** Set when the drawing is a proposal laid over the graph (spec §17): what it adds, changes and removes, marked, and how a person decides. */

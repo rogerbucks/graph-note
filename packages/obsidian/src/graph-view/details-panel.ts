@@ -16,6 +16,8 @@ import { linkWords, reducedMotion, renderLinkGroups, renderTrail, stepName, thin
 import type { NavActions } from './details-nav';
 import { DetailsSheet } from './details-sheet';
 import { RichDetails } from './rich-details';
+import { renderSummary } from './details-summary';
+import { untangleOffers } from './details-untangle';
 import { MovingImages, placePictures, renderImages } from './animated-images';
 import type { ThingActions } from './untangle';
 import type { ViewOptions } from './view-options';
@@ -70,8 +72,9 @@ export class DetailsPanel {
     // still under reduced motion, as the system asks when the card is drawn (§11)
     this.images = new MovingImages(reducedMotion(activeWindow), o.images);
     this.sheet = new DetailsSheet(el, {
-      // the sheet is for view mode, in a note's card: full screen and the pane show the details in their own place
-      on: () => o.mode === 'note' && !o.editing?.()?.session,
+      // the sheet is for view mode, in a note's card: full screen and the pane show the details in their own place; and a
+      // panel kept open is in the card, beside or below the drawing, never pinned to the screen (§24)
+      on: () => o.mode === 'note' && !o.editing?.()?.session && !o.aids?.detailsOpen,
       close: () => this.close(),
       moved: () => this.actions?.sheetMoved(),
     });
@@ -206,6 +209,17 @@ export class DetailsPanel {
     return body;
   }
 
+  /**
+   * The graph's summary, shown while nothing is chosen when the panel is kept open (§24, details_always_visible): how many
+   * things and links it has, of which kinds, and its problems. Nothing is selected, and no trail is begun.
+   */
+  summary(): void {
+    this.shown = null;
+    this.trail.clear();
+    this.select(null);
+    renderSummary(this.panel(`Graph ${this.o.graph}`, 'summary'), this.o.reading, this.o.graph);
+  }
+
   /** Closes the details and clears what is selected, as the close button does, and tells the card (§25): the focus clears too. */
   close(): void {
     this.el.hidden = true;
@@ -215,6 +229,8 @@ export class DetailsPanel {
     this.sheet.closed();
     this.rich.end();
     this.select(null);
+    // kept open, the panel goes back to the summary; it is never left empty (§24)
+    if (this.o.aids?.detailsOpen) this.summary();
     this.viewport.focus();
     const ed = this.o.editing?.();
     if (ed) ed.selected = null;
@@ -286,7 +302,7 @@ export class DetailsPanel {
       );
     }
     if (!groups.length) el.createEl('p', { text: 'No links in or out.' });
-    this.untangling(el, key);
+    if (!this.o.diagram?.table) untangleOffers(el, key, this.actions);
     this.readOnlyProperties(
       el,
       propertiesOf(this.o.reading, this.o.graph, { thing: key }).map((p) => [p.key, p.value]),
@@ -325,31 +341,6 @@ export class DetailsPanel {
         // the note as it is now: a thing written in another block is found, and one only suggested is not parked (§4)
         () => ed.session?.current() ?? this.o.reading,
       );
-  }
-
-  /**
-   * What a thing's details offer to untangle the drawing (§25): its neighbourhood alone, and the shortest path to another
-   * thing. A graph drawn as a table (§15) has nothing to hide or bring forward, so there neither is offered.
-   */
-  private untangling(el: HTMLElement, key: string): void {
-    const on = this.actions;
-    if (!on || this.o.diagram?.table) return;
-    const row = el.createDiv({ cls: 'graph-note-untangle-offers' });
-    row
-      .createEl('button', { text: 'Show only this and its neighbours', attr: { type: 'button' } })
-      .addEventListener('click', () => on.showOnly(key));
-    row
-      .createEl('button', { text: 'Shortest path to another thing', attr: { type: 'button' } })
-      .addEventListener('click', () => on.routeFrom(key));
-    // a busy hub's links, folded into one stub or open, folded or opened from its details too (§25, untangle_hubs)
-    const hub = on.hub?.(key);
-    if (hub)
-      row
-        .createEl('button', {
-          text: `${hub.folded ? 'Open' : 'Fold'} its ${hub.links} links`,
-          attr: { type: 'button' },
-        })
-        .addEventListener('click', () => on.toggleHub?.(key));
   }
 
   /** The drawing was laid out again (§25): the box or link whose details are open is marked as selected on it again. */

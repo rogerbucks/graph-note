@@ -42,7 +42,10 @@
 // read and made safe by the host, embedParts, embeddedMarkdown and EmbedPart, the same day). MIN_SCALE, the quarter of
 // natural size, went on 15 Oct 2026: from slice 3 the furthest out is the fit of the whole drawing (zoom_out_to_fit),
 // worked out by the zoom itself. The legend's choices a view saves as shown (LEGEND_CHOICES, LegendChoice and
-// LegendChoiceState, untangle_legend) came the same day. The lists moved here from index.test.js in the review of #452.
+// LegendChoiceState, untangle_legend) came the same day. The mini-map's setting (MiniMapSetting, mini_map_setting) came
+// with the viewer aids on 16 Oct 2026. What the browser editor may show Claude (claudeGate, noteClassification,
+// classificationOf, sha256, CLAUDE, Gate, GateSettings and NoteClassification, cc_classified_asks and
+// cc_credential_never) came on 16 Oct 2026. The lists moved here from index.test.js in the review of #452.
 
 /** The values src/index.ts exports, sorted. */
 export const VALUES = [
@@ -52,6 +55,7 @@ export const VALUES = [
   'AcrossZoom',
   'BIG_PROPOSAL',
   'BUSY_HUB',
+  'CLAUDE',
   'DATA_FORMATS',
   'DEFAULT_PACE',
   'DEFAULT_SETTINGS',
@@ -144,6 +148,8 @@ export const VALUES = [
   'classMapFrom',
   'classMapProblems',
   'classMapText',
+  'classificationOf',
+  'claudeGate',
   'colonFor',
   'colonInNote',
   'commaFor',
@@ -248,6 +254,7 @@ export const VALUES = [
   'neighbourhoodWords',
   'neverMoves',
   'nextAlong',
+  'noteClassification',
   'noteOf',
   'noteWithProposal',
   'nudgedDrawing',
@@ -296,6 +303,7 @@ export const VALUES = [
   'setNote',
   'setProperty',
   'settingsFrom',
+  'sha256',
   'shapeOf',
   'sheetLimit',
   'shortestPath',
@@ -410,6 +418,8 @@ export const TYPES = [
   'Found',
   'FoundLink',
   'Frame',
+  'Gate',
+  'GateSettings',
   'GraphDrawing',
   'GraphNames',
   'GraphShape',
@@ -460,6 +470,7 @@ export const TYPES = [
   'MatrixInput',
   'MatrixRow',
   'MatrixSwitch',
+  'MiniMapSetting',
   'Mode',
   'ModelChoice',
   'Moving',
@@ -467,6 +478,7 @@ export const TYPES = [
   'NamedImage',
   'NamedView',
   'NewThing',
+  'NoteClassification',
   'NoteReading',
   'Nudge',
   'NudgeWord',

@@ -7,6 +7,11 @@ import { STYLE } from './layout.ts';
 import { switchesFrom } from './ai-matrix.ts';
 import type { MatrixSwitch } from './ai-matrix.ts';
 import { vaultFolder } from './vault-folder.ts';
+import { AID_OPTIONS } from './settings-aids.ts';
+import { MATRIX_OPTIONS } from './settings-matrix.ts';
+import type { MiniMapSetting } from './settings-aids.ts';
+
+export type { MiniMapSetting } from './settings-aids.ts';
 
 /** An AI model set up for §19: what it is for, and its ceiling — the highest classification of note it may be sent. */
 export interface AiModel {
@@ -67,6 +72,10 @@ export interface Settings extends StrictnessSettings {
   mergeLinks: SwitchSetting;
   /** Whether each note is drawn on the drawing as a callout joined to its thing by a dashed line (§24, note_callouts). */
   noteCallouts: SwitchSetting;
+  /** When the small copy of the whole drawing, with the visible part outlined, shows (§24, mini_map_setting). */
+  miniMap: MiniMapSetting;
+  /** Whether the details panel stays open beside or below the drawing, showing the graph's summary (§24, details_always_visible). */
+  detailsOpen: SwitchSetting;
   /** The colours exported images are drawn in. */
   exportTheme: ExportTheme;
   /** Whether an export saved in the vault gets a companion note. */
@@ -98,6 +107,8 @@ export const DEFAULT_SETTINGS: Settings = {
   foldGroups: 'off',
   mergeLinks: 'off',
   noteCallouts: 'off',
+  miniMap: 'auto',
+  detailsOpen: 'off',
   exportTheme: 'light',
   companionNote: 'off',
   exportFolder: '',
@@ -199,20 +210,7 @@ export const OPTIONS: Option[] = [
     sentence:
       'Each AI model the editor may ask, with its purpose and its ceiling, the highest classification of note it may be sent, or a row of the destination matrix.',
   },
-  {
-    key: 'aiMatrixNote',
-    section: 'AI models',
-    name: 'Destination matrix note',
-    sentence:
-      'The note that holds the vault’s destination matrix, by its path. A model can then take a row of it in place of a ceiling.',
-  },
-  {
-    key: 'aiClassMap',
-    section: 'AI models',
-    name: 'Matrix classes',
-    sentence:
-      'Classes of the matrix that go by another name than a classification, one per line as matrix name: classification. A class matched by neither is flagged and never sent.',
-  },
+  ...MATRIX_OPTIONS, // the matrix note and its class names (§19)
   {
     key: 'indent',
     section: 'Formatting',
@@ -266,6 +264,7 @@ export const OPTIONS: Option[] = [
     'Draw notes as callouts',
     'Whether each note written above a thing or link is drawn on the drawing as a callout, joined to its thing by a dashed line. Off unless you turn it on; a note always shows in its thing’s details.',
   ),
+  ...AID_OPTIONS, // the mini-map and the details kept open (§24)
   {
     key: 'exportTheme',
     section: 'Export',
@@ -367,6 +366,8 @@ export function settingsFrom(saved: unknown): Settings {
     foldGroups: oneOf<SwitchSetting>('foldGroups', s.foldGroups, d.foldGroups),
     mergeLinks: oneOf<SwitchSetting>('mergeLinks', s.mergeLinks, d.mergeLinks),
     noteCallouts: oneOf<SwitchSetting>('noteCallouts', s.noteCallouts, d.noteCallouts),
+    miniMap: oneOf<MiniMapSetting>('miniMap', s.miniMap, d.miniMap),
+    detailsOpen: oneOf<SwitchSetting>('detailsOpen', s.detailsOpen, d.detailsOpen),
     exportTheme: oneOf<ExportTheme>('exportTheme', s.exportTheme, d.exportTheme),
     companionNote: oneOf<CompanionSetting>('companionNote', s.companionNote, d.companionNote),
     exportFolder: vaultFolder(s.exportFolder) ?? d.exportFolder,

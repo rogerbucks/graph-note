@@ -5,7 +5,15 @@
 // a session has one server, reused for the same note and replaced for another (cc_one_server); and it ends when the
 // session does, on `/graph stop`, or by itself when the server stops (cc_server_stops). No Node module is imported here:
 // the host's calls are handed in, so the tests run the launcher over real processes and the mod over the host's own.
-import { notePath } from './graph-view.ts';
+import { claudeGate, sha256 } from '@graph-note/core';
+import type { Gate, GateSettings } from '@graph-note/core';
+import { folderOf, fullPath, nameOf } from './editor-paths.ts';
+import { NOT_THE_PERSON, NOT_THE_PERSON_ASKING, fromPerson } from './editor-words.ts';
+import type { EditOutcome } from './editor-words.ts';
+
+// what the launcher says and understands lives in editor-words.ts; it is one module to the code that imports it
+export { confirmArgs, editArgs, fromPerson, sayEdit, sayStopped } from './editor-words.ts';
+export type { EditOutcome } from './editor-words.ts';
 
 /** One piece of what a started process wrote, as `$.process.spawn` hands it over. */
 export interface SpawnedPiece {
@@ -30,6 +38,10 @@ export interface EditorPorts {
   spawn: (request: { argv: readonly string[]; env?: Record<string, string> }) => Spawned;
   /** `$.fs.exists`. */
   exists: (path: string) => Promise<boolean>;
+  /** `$.fs.read`: the note's text, read for its classification before anything is opened, and never kept. */
+  read: (path: string) => Promise<string>;
+  /** The settings the gate reads (classifications, the level for unlabelled notes, the models): read at each use. */
+  settings: () => Promise<GateSettings>;
   /** The session's working folder: a note named by a relative path is found from it. */
   cwd: string;
   /** The command that runs the shipped server, with no argument after it: it takes none. */
@@ -42,9 +54,6 @@ export interface EditorPorts {
   after: (ms: number, fn: () => void) => { cancel: () => void };
 }
 
-/** What `/graph edit` came to: the note it opened, or why it could not. */
-export type EditOutcome = { ok: true; title: string; reused: boolean } | { ok: false; why: string };
-
 /** A server running: what it was started for, and how its life is ended and awaited. */
 interface Running {
   note: string;
@@ -55,64 +64,25 @@ interface Running {
   stopping: string | null;
 }
 
+/** What the gate made of a note: its word, the digest of the text it read, and the settings it used; none if unreadable. */
+interface Checked {
+  gate: Gate;
+  digest: string | null;
+  settings: GateSettings | null;
+}
+
 /** How long a server has to hand over its address before it is killed and the start said to have failed. */
 export const START_TIMEOUT_MS = 15_000;
 
 const NO_NODE =
   'Node could not be started, and the editor needs it. Install Node.js, make sure `node` is on the path, then try again.';
 
-/** The words of the pane's answer: which note, and nothing of the address, the token or the note's text. */
-export function sayEdit(outcome: EditOutcome): string {
-  if (outcome.ok) {
-    const open = outcome.reused ? 'The editor is already open for' : 'The editor is ready for';
-    return `${open} ${outcome.title}. The link to open in the browser pane is in the Graph editor pane, and is not shown here.`;
-  }
-  const why = /[.!?]$/.test(outcome.why) ? outcome.why : `${outcome.why}.`;
-  return `The editor was not started: ${why} The drawing /graph gives is shown instead.`;
-}
-
-/** The words for a server that has stopped, with the reason. */
-export function sayStopped(reason: string): string {
-  return `The editor stopped: ${reason}.`;
-}
-
-/** The note named after `/graph edit`, or null when the arguments are not that command; '' when no note was named. */
-export function editArgs(args: string): string | null {
-  const m = /^edit(?:\s+([\s\S]*))?$/.exec(args.trim());
-  return m ? notePath(m[1] ?? '') : null;
-}
-
-/** Whether a path is a full one, on either kind of system. */
-const isFull = (path: string) => /^([\\/]|[A-Za-z]:[\\/])/.test(path);
-
-/** `given` as a full path from `cwd`, with `.` and `..` settled and the separator of `cwd` kept. */
-function fullPath(cwd: string, given: string): string {
-  const sep = cwd.includes('\\') && !cwd.includes('/') ? '\\' : '/';
-  const full = isFull(given) ? given : `${cwd}${sep}${given}`;
-  const drive = /^[A-Za-z]:/.exec(full)?.[0] ?? '';
-  const parts: string[] = [];
-  for (const part of full.slice(drive.length).split(/[\\/]+/)) {
-    if (part === '' || part === '.') continue;
-    if (part === '..') parts.pop();
-    else parts.push(part);
-  }
-  return `${drive}${sep}${parts.join(sep)}`;
-}
-
-/** The folder holding a path. */
-function folderOf(path: string): string {
-  const cut = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
-  return cut <= 0 ? path.slice(0, 1) : path.slice(0, cut);
-}
-
-/** The last part of a path. */
-const nameOf = (path: string) => path.slice(Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\')) + 1);
-
 /** The session's editor: at most one server, started for one note. */
 export class EditorLauncher {
   readonly #ports: EditorPorts;
   #running: Running | null = null;
   #ended: string | null = null;
+  #pending: { note: string; digest: string } | null = null;
   #queue: Promise<unknown> = Promise.resolve();
 
   constructor(ports: EditorPorts) {
@@ -134,9 +104,13 @@ export class EditorLauncher {
     return this.#running?.done ?? Promise.resolve();
   }
 
-  /** Opens `given` in the session's server: the one running when it is for this note, else a new one in its place. */
-  edit(given: string, cwd: string = this.#ports.cwd): Promise<EditOutcome> {
-    return this.#inTurn(() => this.#edit(given, cwd));
+  /**
+   * Opens `given` in the session's server: the one running when it is for this note, else a new one in its place. The
+   * `origin` is the host's account of who ran the command: only the person typing (`composer`) is asked a question; for
+   * any other, or none given, a note above Claude's level is refused (cc_classified_asks).
+   */
+  edit(given: string, cwd: string = this.#ports.cwd, origin?: unknown): Promise<EditOutcome> {
+    return this.#inTurn(() => this.#edit(given, cwd, fromPerson(origin)));
   }
 
   /** Stops the server, killing its process; true when one was running. */
@@ -151,18 +125,99 @@ export class EditorLauncher {
     return turn;
   }
 
-  async #edit(given: string, cwd: string): Promise<EditOutcome> {
+  /**
+   * Whether the note named may open in a pane Claude can read (cc_classified_asks, cc_credential_never): the note is
+   * read here, for the gate alone, and its text is neither kept nor said. Settings or a note that cannot be read refuse.
+   */
+  async gate(given: string, cwd: string = this.#ports.cwd): Promise<Gate> {
+    return (await this.#check(fullPath(cwd, given))).gate;
+  }
+
+  /**
+   * The yes to the question the last `edit` asked: opens that note, once, for the text it was asked about. Only the
+   * person typing can say it: a command from any other origin, or none, is refused and leaves the question waiting.
+   * The gate is asked again first; a note changed since the question is asked about afresh, never carried over.
+   */
+  confirm(origin?: unknown): Promise<EditOutcome> {
+    return this.#inTurn(async () => {
+      if (!fromPerson(origin)) return { ok: false as const, why: NOT_THE_PERSON, held: 'refused' as const };
+      const pending = this.#pending;
+      this.#pending = null;
+      if (pending === null)
+        return {
+          ok: false as const,
+          why: 'Nothing is waiting for a yes: /graph edit <path to a note> asks first.',
+          held: 'refused' as const,
+        };
+      const checked = await this.#check(pending.note);
+      if (!('ask' in checked.gate)) return this.#held(pending.note, checked, true);
+      if (checked.digest !== pending.digest) return this.#held(pending.note, checked, true);
+      return this.#open(pending.note, checked.settings, pending.digest);
+    });
+  }
+
+  /** The note read and the settings, for the gate alone: the text is neither kept nor said, only its digest. */
+  async #check(note: string): Promise<Checked> {
+    try {
+      const text = await this.#ports.read(note);
+      const settings = await this.#ports.settings();
+      return { gate: claudeGate(text, settings), digest: sha256(text), settings };
+    } catch {
+      return {
+        gate: {
+          refuse:
+            'The note or the settings could not be read, so it cannot be checked against the level set for Claude.',
+        },
+        digest: null,
+        settings: null,
+      };
+    }
+  }
+
+  /**
+   * The outcome for a note the gate held back. A question is remembered for `confirm` only when the person asked it
+   * (`person`); a refusal forgets any, and an open gate passes.
+   */
+  #held(note: string, checked: Checked, person: boolean): EditOutcome {
+    const gate = checked.gate;
+    if ('open' in gate) {
+      this.#pending = null;
+      return { ok: false, why: `${nameOf(note)}: nothing asks about this note now.`, held: 'refused' };
+    }
+    if ('ask' in gate && person && checked.digest !== null) {
+      this.#pending = { note, digest: checked.digest };
+      return { ok: false, why: `${nameOf(note)}: ${gate.ask}`, held: 'asks' };
+    }
+    this.#pending = null;
+    const why = 'ask' in gate ? `${gate.ask} ${NOT_THE_PERSON_ASKING}` : gate.refuse;
+    return { ok: false, why: `${nameOf(note)}: ${why}`, held: 'refused' };
+  }
+
+  async #edit(given: string, cwd: string, person: boolean): Promise<EditOutcome> {
     if (given === '')
       return { ok: false, why: 'Name a note to edit: /graph edit <path to a note>, quoted if it has spaces.' };
     const note = fullPath(cwd, given);
+    this.#pending = null;
+    const checked = await this.#check(note);
+    if (!('open' in checked.gate)) {
+      // a note open already and now held back (its classification was raised) is closed, not left readable
+      if (this.#running?.note === note) await this.#stop('the note is now above the level set for Claude');
+      return this.#held(note, checked, person);
+    }
+    return this.#open(note, checked.settings, null);
+  }
+
+  /** Opens `note`: the server running when it is for this note, else a new one in its place. */
+  async #open(note: string, settings: GateSettings | null, confirmed: string | null): Promise<EditOutcome> {
     const title = nameOf(note);
     if (this.#running?.note === note) return { ok: true, title, reused: true };
     await this.#stop('another note was opened');
-    const started = await this.#start(note);
+    const started = await this.#start(note, settings, confirmed);
     return started.ok ? { ok: true, title, reused: false } : started;
   }
 
   async #stop(reason: string): Promise<boolean> {
+    this.#pending = null;
     const running = this.#running;
     if (!running) return false;
     running.stopping = reason;
@@ -184,13 +239,27 @@ export class EditorLauncher {
   }
 
   /** Starts the server for `note` and waits for its address, or for why it could not start. */
-  async #start(note: string): Promise<{ ok: true } | { ok: false; why: string }> {
+  async #start(
+    note: string,
+    settings: GateSettings | null,
+    confirmed: string | null,
+  ): Promise<{ ok: true } | { ok: false; why: string }> {
     const [command, ...rest] = this.#ports.server;
     if (command === undefined) return { ok: false, why: NO_NODE };
     const env = {
       GRAPH_NOTE_EDITOR_VAULT: await this.#vaultOf(note),
       GRAPH_NOTE_EDITOR_NOTE: note,
       GRAPH_NOTE_EDITOR_DRAFTS: this.#ports.drafts,
+      // the server asks the gate again before every send, with the same settings and the digest of the text said yes to
+      // (never the text); none given means the defaults, the strictest
+      GRAPH_NOTE_EDITOR_SETTINGS: settings
+        ? JSON.stringify({
+            classifications: settings.classifications,
+            aiUnlabelled: settings.aiUnlabelled,
+            aiModels: settings.aiModels.map((m) => ({ name: m.name, ceiling: m.ceiling })),
+          })
+        : '',
+      GRAPH_NOTE_EDITOR_CONFIRMED: confirmed ?? '',
       // the host closes a child's input when it starts it, so the input's closing is not the session's end here
       GRAPH_NOTE_EDITOR_INPUT: 'ignore',
     };

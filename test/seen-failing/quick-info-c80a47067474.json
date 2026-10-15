@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/quick-info.test.js",
+  "test": "quick_info_no_hover_only: the same tooltip by keyboard focus and by long press > a finger that moves off is dragging, not holding",
+  "seen_failing_first": false,
+  "evidence": "A negative case: with no tooltip in the code nothing opens at all, so a finger that moved off opening nothing held before the code. Its twin, a finger held still showing the tooltip, failed first."
+}

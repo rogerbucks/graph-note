@@ -241,6 +241,18 @@ module that ties the parts together, named as the folder is.
 - `note-callouts.ts` — `markCallouts`: with the setting Draw notes as callouts on (off by default), each note drawn over the
   finished SVG as a box beside its thing joined by a dashed line, within the viewBox, its words as text (note_callouts);
   the layout and the viewBox are as without.
+- `viewer-aids.ts` — `aidsOf` (the settings' mini-map and details-kept-open) and `Aids`, the parts a card builds from them:
+  the mini-map, the quick-info tooltip and where the kept-open details sit (§24).
+- `mini-map.ts` — `MiniMap` (mini_map, mini_map_setting): a small copy of the whole drawing (a box for each thing, a line
+  for each link, from the tap areas) with the part in view outlined; shown by the setting (off, when the drawing is bigger
+  than its view, always); tapped or dragged it pans the core's `Zoom` so the middle of the view is where it points.
+- `quick-info.ts` — `QuickInfo` (quick_info, quick_info_no_hover_only): the tooltip opened by a hover after a moment, a long
+  press on touch and the keyboard focus (not a click's), closed by leaving, a press, a move of the view or Escape; on the
+  page itself, its note rendered by the card's renderer. `quick-info-content.ts` is what it says (`infoOf`, from the
+  core's details); `quick-info-place.ts` is where it goes (`placeTip`: below, above, right, left, never over the thing).
+- `details-summary.ts` — the graph's summary the details panel shows when it is kept open and nothing is chosen
+  (details_always_visible); `details-untangle.ts`, a thing's untangling offers; `source-toggle.ts`, Source in reading
+  view; `full-screen.ts`, the card's full-screen overlay.
 - `details-nav.ts` — finding your way from the details (§25): the groups of links rendered from the core's
   `linkGroups`, the trail's buttons, the names of steps, and `Glide`, the brief eased move to what is chosen, a frame at
   a time, at once when the system asks for reduced motion.

@@ -8,11 +8,14 @@ import type { DetailsPanel } from './details-panel';
 import type { Selection } from './selection';
 import { onPointer } from './selection-pointer';
 import { onImageControl } from './animated-images';
+import { onMiniMap } from './mini-map';
+import type { QuickInfo } from './quick-info';
 import { foldAt, targetAt, targetOf } from './taps';
 import type { Taps, Target } from './taps';
 
-/** Whether an event came from a button of the drawing's own — the arrow to the selection (§25), an image's control (§18). */
-const ownButton = (target: EventTarget | null): boolean => onPointer(target) || onImageControl(target);
+/** Whether an event came from a control of the drawing's own — the arrow to the selection (§25), an image's control (§18), the mini-map (§24). */
+const ownButton = (target: EventTarget | null): boolean =>
+  onPointer(target) || onImageControl(target) || onMiniMap(target);
 
 /** What the drawing's events need of their card, all built before they are bound. */
 export interface ViewportHost {
@@ -23,6 +26,8 @@ export interface ViewportHost {
   sel: Selection;
   details: DetailsPanel;
   taps: Taps;
+  /** The quick-info tooltip (§24): opened by a hover, a long press and the keyboard focus, closed by a press or Escape. */
+  info: QuickInfo;
   /** The drawing's SVG; none for a graph drawn as a table (§15). */
   svg: SVGSVGElement | null;
   /** Opens a box or link; with `extend` (Shift), a second thing asks for the shortest path from the one selected (§25). */
@@ -65,6 +70,7 @@ export function bindViewportEvents(host: ViewportHost): void {
     const first = near[0] && svg ? targetOf(svg, near[0]) : null;
     const pointer = e.pointerType === 'touch' || e.pointerType === 'pen' ? e.pointerType : 'mouse';
     sel.pressed();
+    host.info.pressed(e); // any tooltip closes; a finger held on a thing or link opens it (§24)
     const fold = foldAt(e.target);
     if (fold) foldDown = { id: e.pointerId, ...p, fold };
     else if (target ?? first)
@@ -76,6 +82,8 @@ export function bindViewportEvents(host: ViewportHost): void {
     }
   });
   card.registerDomEvent(vp, 'pointermove', (e: PointerEvent) => {
+    if (onMiniMap(e.target)) return; // the mini-map moves the view by itself (§24)
+    host.info.moved(e);
     use(e, { kind: 'move', id: e.pointerId, ...point(e) });
   });
   card.registerDomEvent(vp, 'pointerup', (e: PointerEvent) => {
@@ -86,6 +94,7 @@ export function bindViewportEvents(host: ViewportHost): void {
       empty = emptyDown,
       folded = foldDown;
     boxDown = emptyDown = foldDown = null;
+    if (host.info.released(e.pointerId)) return; // a finger held on a thing opened its tooltip: the lift is not a tap (§24)
     if (folded && folded.id === e.pointerId && Math.hypot(p.x - folded.x, p.y - folded.y) < 10)
       host.unfold(folded.fold);
     // a tap on empty space clears the selection and the focus (§25); a drag across it only pans
@@ -99,18 +108,33 @@ export function bindViewportEvents(host: ViewportHost): void {
   });
   card.registerDomEvent(vp, 'pointercancel', (e: PointerEvent) => {
     boxDown = emptyDown = foldDown = null;
+    host.info.released(e.pointerId);
     zoom.handle({ kind: 'cancel', id: e.pointerId });
   });
   // the highlight under the pointer, for as long as it stays; a finger is not hovering (§25)
-  card.registerDomEvent(vp, 'pointerover', (e: PointerEvent) => sel.over(e));
-  card.registerDomEvent(vp, 'pointerout', (e: PointerEvent) => sel.out(e));
-  // and the same highlight with the keyboard focus, which a click's focus is not
-  card.registerDomEvent(vp, 'focusin', (e: FocusEvent) => sel.focusIn(e));
-  card.registerDomEvent(vp, 'focusout', (e: FocusEvent) => sel.focusOut(e));
+  // and the quick-info tooltip after a moment (§24)
+  card.registerDomEvent(vp, 'pointerover', (e: PointerEvent) => {
+    sel.over(e);
+    host.info.over(e);
+  });
+  card.registerDomEvent(vp, 'pointerout', (e: PointerEvent) => {
+    sel.out(e);
+    host.info.out(e);
+  });
+  // and the same highlight, and tooltip, with the keyboard focus, which a click's focus is not
+  card.registerDomEvent(vp, 'focusin', (e: FocusEvent) => {
+    sel.focusIn(e);
+    host.info.focusIn(e);
+  });
+  card.registerDomEvent(vp, 'focusout', (e: FocusEvent) => {
+    sel.focusOut(e);
+    host.info.focusOut();
+  });
   card.registerDomEvent(
     vp,
     'wheel',
     (e: WheelEvent) => {
+      host.info.hide(); // the drawing is about to move from under it
       const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
       use(e, { kind: 'wheel', ...point(e), dy, ctrl: e.ctrlKey, meta: e.metaKey });
     },
@@ -124,6 +148,7 @@ export function bindViewportEvents(host: ViewportHost): void {
     use(e, { kind: 'dblclick', ...p, onBox, near: !onBox && nearTo(p).length > 0 });
   });
   card.registerDomEvent(vp, 'keydown', (e: KeyboardEvent) => {
+    host.info.key(e); // Escape closes a tooltip, and goes on to do what it did (§24)
     // Enter and Space press an image's control, never the box it is on (§18)
     if (onImageControl(e.target) && (e.key === 'Enter' || e.key === ' ')) return;
     const target = targetAt(e.target),

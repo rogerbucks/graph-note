@@ -232,6 +232,9 @@ export type {
   TransportReply,
   TransportRequest,
 } from './ai.ts';
+export { CLAUDE, claudeGate, classificationOf, noteClassification } from './claude-gate.ts';
+export type { Gate, GateSettings, NoteClassification } from './claude-gate.ts';
+export { sha256 } from './ai-digest.ts';
 export { AI_PURPOSES, endpointProblem, modelChoices } from './ai-choice.ts';
 export type { HostAi, ModelChoice } from './ai-choice.ts';
 export type { ScopeChoice } from './ai-scope.ts';
@@ -280,7 +283,7 @@ export {
 export type { Fold, ViewSwitch, ViewSwitches } from './view-switches.ts';
 export { linksOf } from './style.ts';
 export type { Links, OnOff, Routing } from './style-graph.ts';
-export type { SwitchSetting } from './settings.ts';
+export type { MiniMapSetting, SwitchSetting } from './settings.ts';
 export {
   applyChanges,
   attachmentType,
