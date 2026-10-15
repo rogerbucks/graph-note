@@ -223,12 +223,28 @@ own handlers. Nothing here reaches the network.
   and Redo are refused saying why (`history: true`, `stepRefusal`), so no undo is ever written over that change
   (undo_never_over_theirs, cc_undo_safe); a change elsewhere in the note leaves the history as it is. Switching to
   another block (`select`) starts that block's own history, so Undo never writes one block's text into another
-  (undo_stays_in_its_block). A known edge: the block is followed by its text, so if another program pastes a copy of
-  the block and then edits the original, the session may follow the copy, whose text is unchanged.
+  (undo_stays_in_its_block). Through every change, the block is followed by `block-follow.ts`, never to a copy of it;
+  when a copy cannot be told from it, the session stops (`stopped`): every write (marked `stopped`), Undo and Redo is
+  refused saying so, and `noteChanged` says `conflict`, until a block is chosen again (block_followed_not_its_copy).
+  `blockText` is the text of the block on a line, for a picker to check a choice is still the block it showed.
+- `block-follow.ts` — `followBlock`: where the session's block is in a note changed since, found by the lines unchanged
+  at the note's start and end, never by its text alone, so a copy pasted elsewhere is never taken for it, and the
+  original edited after the paste is still the block; rewritten so far that too little of it is left to know it by
+  (`readsAsEdited`: keeping at least half of the held block's text after the graph line), with a copy elsewhere, the
+  session stops, never following the copy. Another block moved to its line is never taken for it, and a new block
+  pasted beside it is taken for it edited only when it reads so. A block followed with a new block of its graph
+  directly beside it, on either side, is followed `wary`, as no reading tells that from the original rewritten beside
+  a copy: the session clears its history, as after a change made outside, so Undo never reverts what may be a copy;
+  Undo and Redo follow the note they are pressed on first, so this holds whether the change was heard or not. A change
+  that could as well sit before the block as after it (a copy pasted beside it) is read both ways, and two blocks found
+  make it a `twin`; when the change runs through the whole block, it is found by its text, a `twin` when two blocks
+  hold it, or when a new block of its graph sits on its line, unless that was only pasted beside it. The work is
+  linear in the blocks, counted in `FollowWork`.
 - `edit-check.ts` — that check (§4): `editRefusal` refuses a name the note written into draws only under a suggested
   name (accept its name first), or a name the edit gives a thing that another block of the graph gives too (already a
   name); `newNames` finds the names an edit newly writes.
-- `store.ts` — replacing or inserting a block in a note, keeping every other byte.
+- `store.ts` — replacing or inserting a block in a note, keeping every other byte; `replaceSpan` writes a block already
+  found, as the session finds its own.
 - `history.ts` — the text's own undo history.
 - `help.ts` — diagnostics, fixes, completions and the read-back, in the shapes of the Language Server Protocol.
 - `tokens.ts` — the gql-highlight tokenizer, for colouring.

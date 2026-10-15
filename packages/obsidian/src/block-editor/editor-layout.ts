@@ -1,4 +1,4 @@
-// The block editor's parts on the page (spec §4, §9): the head with its picker and tools, the draft banner, on a phone the
+// The block editor's parts on the page (spec §4, §9): the head with its tools, the draft banner, on a phone the
 // Drawing and Text tabs, the text field over its coloured picture, the fix and suggestion bars, the problems list and the
 // announcer for screen readers — built once for each block shown, in the pane or in place in a drawing's card.
 import { Notice, Platform, setIcon } from 'obsidian';
@@ -10,6 +10,8 @@ export type Layout = 'pane' | 'inline';
 /** The editor's parts its code works with once they are built. */
 export interface EditorParts {
   root: HTMLElement;
+  /** The head, which holds the picker (block-picker.ts) and the tools. */
+  head: HTMLElement;
   text: HTMLTextAreaElement;
   overlay: HTMLElement;
   fixbar: HTMLElement;
@@ -41,31 +43,19 @@ export function button(
 }
 
 /**
- * Builds the editor of a session's block into a container: in the pane with its drawing, a picker when the note has
- * several graph blocks and, on a phone, tabs; in place, the text alone. `choose` opens another block of the note, and
- * `showDrawing` is called when the Drawing tab is chosen.
+ * Builds the editor of a session's block into a container: in the pane with its drawing and, on a phone, tabs, its head
+ * left for the picker (block-picker.ts); in place, the text alone. `showDrawing` is called when the Drawing tab is chosen.
  */
 export function buildEditor(
   container: HTMLElement,
   s: PaneSession,
   layout: Layout,
-  on: { choose: (line: number) => void; showDrawing: () => void },
+  on: { showDrawing: () => void },
 ): EditorParts {
   const inline = layout === 'inline';
   const pane = container.createDiv({ cls: inline ? 'graph-note-pane graph-note-inline' : 'graph-note-pane' });
 
   const head = pane.createDiv({ cls: 'graph-note-pane-head' });
-  const choices = s.choices();
-  if (!inline && choices.length > 1) {
-    const picker = head.createEl('select', { cls: 'dropdown', attr: { 'aria-label': 'Graph block' } });
-    for (const c of choices) {
-      const o = picker.createEl('option', { text: c.label, attr: { value: String(c.line) } });
-      if (c.line === s.ref.line) o.setAttribute('selected', '');
-    }
-    picker.addEventListener('change', () => {
-      on.choose(Number(picker.value));
-    });
-  }
   const tools = head.createDiv({ cls: 'graph-note-pane-tools' });
 
   const draft = pane.createDiv({ cls: 'graph-note-draft', attr: { role: 'status' } });
@@ -133,13 +123,14 @@ export function buildEditor(
     cls: 'graph-note-announce graph-note-sr',
     attr: { role: 'status', 'aria-live': 'polite' },
   });
-  return { root: pane, text, overlay, fixbar, suggest, list, draft, drawing: drawingEl, tools, announce };
+  return { root: pane, head, text, overlay, fixbar, suggest, list, draft, drawing: drawingEl, tools, announce };
 }
 
 /**
- * The head's tools: Done in place, Undo and Redo, and Lock the graph while the graph is a draft. An Undo or Redo with
- * nothing to take back since the block changed outside the editor (`why`, §9) keeps its name, so voice control still
- * finds it, is marked unavailable and described by why, and pressed it says so.
+ * The head's tools: Done in place, Open again while the editor is stopped by a copy of its block (`again`, §9), Undo and
+ * Redo, and Lock the graph while the graph is a draft. An Undo or Redo with nothing to take back since the block changed
+ * outside the editor (`why`, §9) keeps its name, so voice control still finds it, is marked unavailable and described
+ * by why, and pressed it says so.
  */
 export function showTools(
   tools: HTMLElement,
@@ -151,10 +142,13 @@ export function showTools(
     undo: () => void;
     redo: () => void;
     lock: () => void;
+    again: (() => void) | null;
   },
 ): void {
   tools.empty();
   if (o.inline) button(tools, 'Done', 'check', () => o.done(), 'Done');
+  const again = o.again;
+  if (again) button(tools, 'Open again', 'refresh-cw', () => again(), 'Open again');
   const step = (label: string, icon: string, why: string | null, onClick: () => void) => {
     const b = button(tools, label, icon, onClick);
     if (!why) return;

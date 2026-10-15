@@ -154,12 +154,20 @@ export function checkRollup(run, repo, sha) {
  * list does not hold yet (a release that has only just been published) has the newest release before it.
  */
 export function releaseBefore(run, repo, tag) {
-  const published = json(run, repo, `releases?per_page=${PAGE}`)
+  const published = publishedReleases(run, repo);
+  const at = published.findIndex((r) => r.tag === tag);
+  return (at === -1 ? published.at(-1) : published[at - 1]) ?? null;
+}
+
+/**
+ * The published releases, oldest first, as [{tag, publishedAt}]. A draft is not one: it has not been published, so it is
+ * not in the list, and its tag is never read.
+ */
+export function publishedReleases(run, repo) {
+  return json(run, repo, `releases?per_page=${PAGE}`)
     .filter((r) => !r.draft && r.published_at)
-    .sort((a, b) => String(a.published_at).localeCompare(String(b.published_at)));
-  const at = published.findIndex((r) => r.tag_name === tag);
-  const before = at === -1 ? published.at(-1) : published[at - 1];
-  return before ? { tag: before.tag_name, publishedAt: before.published_at } : null;
+    .map((r) => ({ tag: r.tag_name, publishedAt: r.published_at }))
+    .sort((a, b) => String(a.publishedAt).localeCompare(String(b.publishedAt)));
 }
 
 const timeOf = (text) => {

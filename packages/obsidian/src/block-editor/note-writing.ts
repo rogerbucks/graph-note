@@ -10,13 +10,15 @@ import type { PaneSession } from '@graph-note/core';
 /**
  * A write the note refused, because its block changed meanwhile, or (`edit`) because the note refused an edit made from
  * the drawing (§4): why, and what was typed, to keep as a draft. `history` marks an Undo or Redo with nothing to take
- * back since the block changed outside the editor (§9): only why, as nothing typed needs keeping.
+ * back since the block changed outside the editor (§9): only why, as nothing typed needs keeping. `stopped` marks the
+ * session stopped by a copy of its block it cannot tell from it, nothing reloaded (block_followed_not_its_copy).
  */
 export interface Refused {
   reason: string;
   draft: string;
   edit?: true;
   history?: true;
+  stopped?: true;
 }
 
 /** The refusal of a write, as the session gave it. */
@@ -25,6 +27,7 @@ const refusal = (r: Refused): Refused => ({
   draft: r.draft,
   ...(r.edit ? { edit: true } : {}),
   ...(r.history ? { history: true } : {}),
+  ...(r.stopped ? { stopped: true } : {}),
 });
 
 /** Why a write found no note to write into: it was deleted while its block was edited (spec §9). */

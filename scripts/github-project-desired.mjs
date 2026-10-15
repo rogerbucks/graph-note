@@ -36,6 +36,12 @@ export const BUILD_STATUS_FIELD = 'Build status';
  * stage; it never sets any other, and never replaces the options, which would clear every value.
  */
 export const BUILD_STATUSES = ['Not started', 'In PR', 'Checks failing', 'Checks passing', 'Merged', 'Released'];
+/** The project's built-in single-choice field: Todo, In Progress, Done. The mirror never makes it or changes its options. */
+export const PROGRESS_FIELD = 'Status';
+/** The options of the built-in Status, in order. */
+export const PROGRESS_STATUSES = ['Todo', 'In Progress', 'Done'];
+/** The value of the built-in Status an item with none is given when nothing says more. */
+export const DEFAULT_PROGRESS = PROGRESS_STATUSES[0];
 /** The fields whose options never change, so the script never replaces them: one that lacks an option is refused. */
 export const FIXED_FIELDS = ['Proof', BUILD_STATUS_FIELD];
 /** The statuses a requirement can have, as the slice board gives them. */
@@ -247,7 +253,8 @@ const questionBodyOf = (q, workstream) =>
 /**
  * The desired state for the chosen slices, from a board as readBoard gives it and the workstreams: {issues, fields,
  * known}. Each issue is {id, title, body, labels (sorted), state ('open' or 'closed'), slice, workstream, status,
- * buildStatus}, the last four being the options its project item takes (the Build status only when it has none); the
+ * buildStatus, progress}, the last five being the options its project item takes (the Build status, and the built-in
+ * Status as `progress`, only as the seed of an item that has none, or has Todo; see withSeed); the
  * requirements' issues come first, then one for each open
  * question of the chosen slices, always open, its Proof `open`. `fields` maps each project field to its options.
  * `known` lists every requirement and question id the copy holds, in any slice, so that an issue whose requirement or
@@ -270,6 +277,7 @@ export function desiredState(board, workstreams, slices) {
       workstream: option(workstream),
       status: r.status,
       buildStatus: BUILD_STATUSES[0],
+      progress: DEFAULT_PROGRESS,
     };
   });
   const questions = (board.questions ?? []).filter((q) => chosen.includes(q.slice));
@@ -286,6 +294,7 @@ export function desiredState(board, workstreams, slices) {
       workstream: option(workstream),
       status: 'open',
       buildStatus: BUILD_STATUSES[0],
+      progress: DEFAULT_PROGRESS,
     });
   }
   return {
@@ -298,4 +307,17 @@ export function desiredState(board, workstreams, slices) {
     },
     known: [...board.requirements, ...(board.questions ?? [])].map((r) => r.id),
   };
+}
+
+/**
+ * A desired state whose issues take, for the ids a seed names, its Build status and built-in Status in place of the first
+ * stage and Todo. `seed` maps a requirement id to {buildStatus, progress}, as scripts/build-status-seed.mjs works it out
+ * from where the requirement stands on GitHub; an id it does not name keeps the defaults. The state given is not changed.
+ */
+export function withSeed(desired, seed) {
+  const issues = desired.issues.map((issue) => {
+    const given = seed.get(issue.id);
+    return given ? { ...issue, buildStatus: given.buildStatus, progress: given.progress } : issue;
+  });
+  return { ...desired, issues };
 }

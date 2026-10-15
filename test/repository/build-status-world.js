@@ -35,7 +35,7 @@ export const checksOf = (numbers, head = HEAD) => ({
 
 /**
  * The world: `side` (the repository, `hub` to set up and read back), `gh` (the project), `deps` for handleEvent,
- * `annotations`, and `send(eventName, payload)`, `trigger()` (the checks of pull request 7), `value(id, field)`,
+ * `annotations`, `writes` (the lines the run logs), and `send(eventName, payload)`, `trigger()` (the checks of pull request 7), `value(id, field)`,
  * `values()` (the Build status of the fixture’s ids), `comments(n)`.
  */
 export function world({ token = TOKEN } = {}) {
@@ -46,12 +46,13 @@ export function world({ token = TOKEN } = {}) {
   side.hub.files[HEAD] = HEAD_TEXT;
   side.hub.workflowRuns[HEAD] = [ci('in_progress')];
   const annotations = [];
+  const writes = [];
   const deps = {
     github: side.run,
     project: token ? gh.run : null,
     projectToken: token,
     annotate: (level, text) => annotations.push([level, text]),
-    write: () => {},
+    write: (text) => writes.push(text),
     sleep: noSleep,
   };
   const send = (eventName, payload) => handleEvent({ eventName, payload, repo: REPO, runUrl: RUN }, deps);
@@ -63,5 +64,5 @@ export function world({ token = TOKEN } = {}) {
   };
   const values = (field) => Object.fromEntries(IDS.map((id) => [id, value(id, field)]));
   const comments = (number = 7) => side.hub.comments[number] ?? [];
-  return { side, gh, deps, annotations, send, trigger, value, values, comments };
+  return { side, gh, deps, annotations, writes, send, trigger, value, values, comments };
 }

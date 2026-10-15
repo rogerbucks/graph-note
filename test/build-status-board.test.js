@@ -44,11 +44,24 @@ describe('the Build status field of the project', () => {
     const asked = gh.hub.calls.slice(before).map((c) => c.args.slice(0, 2).join(' '));
     assert.ok(asked.length > 0);
     assert.ok(
-      asked.every((a) => /^(project list|api graphql)$/.test(a)),
+      asked.every((a) => a === 'api graphql'),
       asked.join(' | '),
     );
     assert.ok(side.hub.calls.some((c) => c.args[0] === 'issue' && c.args[1] === 'list'));
     assert.ok(side.hub.calls.every((c) => !c.args.includes('user')));
+  });
+
+  test('is read and set with a token gh cannot resolve the owner’s type for: no `gh project` verb that needs an owner is used', () => {
+    const { gh, side } = both();
+    const unknownOwnerType = (args, input) => {
+      if (args[0] === 'project' && args[1] !== 'item-edit')
+        throw Object.assign(new Error('gh project failed: unknown owner type'), { stderr: 'unknown owner type' });
+      return gh.run(args, input);
+    };
+    const read = readBuildBoard(side.run, unknownOwnerType, REPO, { sleep: noSleep });
+    assert.equal(read.items.size, 5);
+    setBuildStatus(unknownOwnerType, read, 'focus_link', 'In PR', { sleep: noSleep });
+    assert.equal(readBuildBoard(side.run, gh.run, REPO).items.get('focus_link').current, 'In PR');
   });
 
   test('asks for only the issues the owner wrote, so issues others write cannot reach the cap of the list', () => {
@@ -88,7 +101,7 @@ describe('the Build status field of the project', () => {
     const [project] = gh.hub.projects;
     const mine = project.items.find((i) => i.values['Build status'] === 'Checks failing');
     assert.equal(mine.values.Proof, 'open');
-    assert.ok(project.items.every((i) => !('Status' in i.values)));
+    assert.ok(project.items.every((i) => i.values.Status === 'Todo'));
   });
 
   test('is a problem to report, not a crash, when the project or the field is not there yet', () => {
@@ -114,8 +127,14 @@ describe('the Build status field of the project', () => {
     );
   });
 
-  test('has the built-in Status beside it, read as each item’s current Todo, In Progress or Done, none to begin with', () => {
+  test('has the built-in Status beside it, read as each item’s current Todo, In Progress or Done, Todo from the mirror', () => {
     const { board } = both();
+    assert.equal(board().items.get('focus_link').progress, 'Todo');
+  });
+
+  test('has an item’s Status read as none where it has none', () => {
+    const { gh, board } = both();
+    for (const item of gh.hub.projects[0].items) delete item.values.Status;
     assert.equal(board().items.get('focus_link').progress, null);
   });
 

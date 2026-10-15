@@ -39,7 +39,7 @@ const NO_BOARD = { sections: [], requirements: [], questions: [] };
 const LET_GO = { build: 'Not started', progress: 'Todo' };
 
 /** The requirements file of a ref as a board, or an empty one where there is no file. Throws Unreadable where it cannot be read. */
-function boardAt(run, repo, ref) {
+export function boardAt(run, repo, ref) {
   const text = readRequirementsAt(run, repo, ref);
   if (text === null) return NO_BOARD;
   try {
@@ -125,7 +125,7 @@ export function boardKeeper(ctx, deps, found) {
  * Requirements line names that are in the base's file and not proved, and `landed` whether its copy proves anything yet.
  * Throws Unreadable where a file cannot be read.
  */
-function claimsOf(pr, ctx, deps) {
+export function claimsOf(pr, ctx, deps) {
   if (pr.merged && !pr.mergeSha) throw new Unreadable('the merge commit of the pull request is not known');
   const [before, after] = pr.merged
     ? [parentOf(deps.github, ctx.repo, pr.mergeSha), pr.mergeSha]
@@ -211,7 +211,8 @@ export function handlePull(number, ctx, deps, keeper, rules) {
   const headline = claims.proved.length || !moves.some((m) => m.build === 'In PR') ? stage : 'In PR';
   const create = items.length > 0 || problems.length > 0;
   const comment = postComment(number, { stage: headline, items, problems }, create, ctx, deps, keeper);
-  deps.write(`build-status: #${number} ${headline}, ${claims.proved.length} requirement(s), comment ${comment}\n`);
+  const counts = `${claims.proved.length} proved by its copy, ${claims.claimed.length} named by its Requirements line`;
+  deps.write(`build-status: #${number} ${headline}, ${counts}, comment ${comment}\n`);
   return { number, stage, ids: claims.proved, comment };
 }
 

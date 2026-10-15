@@ -134,6 +134,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `packages/core/test/edits.test.js` — every edit from the pane round-trips; locking writes a schema the checks pass.
 - `packages/core/test/undo-over-theirs.test.js` — undo never undoes over a change another program, a sync or another pane made to the block: the history starts again from the note as it now is, Undo and Redo say why there is nothing to take back, and a change elsewhere in the note leaves undo working (editor spec §9, undo_never_over_theirs; §26, cc_undo_safe).
 - `packages/core/test/undo-one-block.test.js` — undo stays in its block: switching the pane to another block starts that block's own history, so Undo and Redo never write one block's text into another, and a reason that held for the block left is not given for the one chosen (editor spec §9, undo_stays_in_its_block).
+- `packages/core/test/block-copy.test.js` — the block followed, not its copy: after another program pastes a copy of the open block and then edits the original, the session keeps to the original, so Undo never reverts the copy while their edit survives; a copy it cannot tell from the block stops it, every write and Undo refused saying so, until a block is chosen again (editor spec §9, block_followed_not_its_copy).
 - `packages/core/test/notes-export.test.js` — each data export keeps the `///` notes where its format has comments, a GQL block's `///` lines and GraphML's XML comments, read back as written however hostile, and leaves them out of CSV, which has none; the text an engine is given keeps them too (editor spec §24, note_standard).
 - `packages/core/test/imports.test.js` — the core imports no host.
 - `packages/claude-code/test/build.test.mjs` — the build writes the mod's hooks bundle, with no WebAssembly engine, and a render script that draws.
@@ -164,6 +165,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/cheap-checks.test.js` — the quiet test run, running only a change's tests, the AI guide and the search ignore file.
 - `test/build-status.test.js` — the build status's pure part: the requirements a pull request moves, found from the tests it newly marks written; the stage an event gives; which value may replace which; the comment and the annotations.
 - `test/build-status-gh.test.js` — the build status's calls to GitHub, through in-memory stand-ins for `gh`: a pull request, the requirements file at a ref and its size, CI's run, the releases, the pull requests merged in a span, the one comment, leaving it on a locked conversation, and the two tokens kept apart.
+- `test/build-status-seed.test.js` — the first values the mirror gives an item that has none: Released, Merged, In PR or Not started with the built-in Status to match, a draft release not counting, the tally `--check` prints, and a value already set never overwritten (only Todo replaced).
 - `test/build-status-gh-lock.test.js` — leaving the comment on a conversation that may be locked: unlocked only for a pull request whose own `locked` field is true (a refusal that says blocked unlocks nothing), and the lock taken up again with the repository's retry, or the pull request said to be left unlocked.
 - `test/build-status-gh-lists.test.js` — the open pull requests and those merged in a span, of this repository's own before any cap, past a crowd of fork pull requests.
 - `test/build-status-board.test.js` — the build status's project board: each item's Build status and Status, setting either, the issues read with the workflow's token and the project with the project token alone, and every trouble that is the board's own.
@@ -177,9 +179,11 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/device-check-notes.test.js` — the device checklist numbers every item, the test vault holds one note for each item after Before in `Device checks/`, the note's checklist line is the item's words, each note's graph blocks read as it says they do (the repository's reader and checker, and `parseView` for a view), and the index lists the notes in order (editor spec §3, tried first in a test vault).
 - `test/device-check-quotes.test.js` — what a device check note quotes from Obsidian's screen (a read-back, a label, the tap text of an estimate, a box's details, an export's footer and file name, the conversion notice) is computed from the note's own graph blocks with the real functions and matches exactly; the notes' generator scripts and filler set up the case they describe (editor spec §3).
 - `test/engine-version.test.js` — the Graphviz version is read from the engine, named in the notices, and checked against published advisories.
+- `test/fixed-sleeps.test.js` — no new fixed sleep in the tests: an awaited `wait(20)` or the like outside a polling loop is held, file by file, to the allowance in `test/fixed-sleeps.json`, which only goes down (`node scripts/fixed-sleeps.mjs --tighten`).
 - `test/github-project.test.js` — the GitHub mirror of the requirements as a person runs it: the real workstreams file puts every requirement of slices 3 and 4 in exactly one workstream and may name ids a later copy brings, and the command is a dry run by default, with no network call.
 - `test/github-project-desired.test.js` — that mirror's desired state: the first clause of a rule, each issue's title, body, labels and open or closed, the marker, the project's fields and options.
 - `test/github-project-gh.test.js` — that mirror applied through an in-memory stand-in for `gh`: a first apply, a second that changes nothing, drift put right, a removed requirement labelled and closed, and nothing ever deleted.
+- `test/github-project-gh-owner.test.js` — that mirror's project found, made and filled through GraphQL by the owner's login, with a runner for which every `gh project` verb but `item-edit` fails with "unknown owner type", and an owner or a list that is not there an error naming the owner, never no projects.
 - `test/github-project-gh-safety.test.js` — that mirror's care: every call names its repository or owner, gh must point at the origin's repository, mutating calls are paced and retried once on a secondary rate limit, and a list that hit its cap is refused.
 - `test/github-project-retry.test.js` — that mirror's patience: a timeout, a reset connection, a 502, 503 or 504 or "something went wrong" is waited out 5, 15 and 45 seconds and tried again, a fourth failure stops the run, and a create that went through before the failure is never made twice, and only an issue the signed-in login wrote is taken up again. The worst case is 65 seconds of waiting (5 + 15 + 45) for one call, and the same again for each look at GitHub before a retried create, before the run stops with gh's words.
 - `test/github-project-plan.test.js` — that mirror's plan: what differs between the desired state and what GitHub holds, for the issues, the labels and the project.
@@ -231,10 +235,25 @@ These test behaviour across modules, or the repository itself, so they are named
   ids; a requirement it does not list falls to `S3`, and an id the current copy does not hold yet is fine. An issue
   carries the labels `slice-N`, `workstream:<id>` and `status:open|part|proved`, and is closed when proved. Its status
   is the one the slice board reads. The project's fields are Slice, Workstream, Proof (open, part, proved) and Build
-  status (Not started, In PR, Checks failing, Checks passing, Merged, Released); its built-in Status field (Todo, In
-  Progress, Done) is never touched by the mirror. The mirror makes Build status and its options, gives a new item Not
-  started, and never sets another value or replaces the options: the values of Build status and of Status come from the
-  build status workflow below, from GitHub's events alone.
+  status (Not started, In PR, Checks failing, Checks passing, Merged, Released); the built-in Status field (Todo, In
+  Progress, Done) is the board's own, and the mirror never makes it or changes its options. The mirror makes Build status
+  and its options, and **seeds** an item that has no value from where its requirement stands on GitHub
+  (`scripts/build-status-seed.mjs`), never more: proved on main and by the copy of a *published* release (a draft does not
+  count): Released and Done; proved on main only: Merged and Done; held by an open pull request of this repository, by
+  its copy's diff or its `Requirements:` line: In PR and In Progress; otherwise Not started and Todo. A Build status
+  already set is never overwritten, nor is a Status of In Progress or Done; only Todo, the board's default and no choice,
+  is replaced by a seed that says more. Nothing moves back from Released or Done. What is proved on main is read from
+  main through the API, not from the checkout the script is run from. `--check` prints the tally of what it would seed
+  for each option (`seeded Build status: …`, `seeded Status: …`) to confirm before `--apply`. A requirements file the
+  seed could not read (main's, a release's, a pull request's) is a warning: `--check` says an apply would stop, and
+  `--apply` stops unless `--accept-warnings` is given, since it would fix wrong values for good. After the
+  first seed, the values come from the build status workflow below, from GitHub's events alone. The project is found by
+  GraphQL (`repositoryOwner(login:) { projectsV2 }`, a user or an organization), never by `gh project list`, which asks
+  gh to resolve the owner's type and fails ("unknown owner type") for a token with only the project scope. The project
+  is also made (`createProjectV2`, with the owner's node id) and filled (`addProjectV2ItemById`, with the issue's node id)
+  through GraphQL, not by `gh project create` and `gh project item-add`; only `gh project item-edit`, which takes ids,
+  is still used. An owner that cannot be found, or an answer with no list of projects, is an error naming the owner and
+  never taken for no projects, which would make the project a second time.
 - **See the plan with `npm run project:plan`.** It is a dry run and makes no network call, so it compares with an empty
   GitHub. `--check` reads GitHub and prints the real diff, changing nothing. `--apply` prints the same plan, then does
   it with `gh`: it finds each issue by its hidden `<!-- requirement:<id> -->` marker, changes only what differs, and
@@ -259,9 +278,9 @@ These test behaviour across modules, or the repository itself, so they are named
 ## The build status of each requirement
 
 - **Where a requirement's build is up to shows on the project, from GitHub's events alone** (Roger, 15 Oct 2026). The
-  "Build status" field and the built-in "Status" field are never authored by a person or by the mirror:
-  `scripts/build-status-run.mjs` sets them from what happens to a pull request, in the workflow
-  `.github/workflows/build-status.yml`.
+  "Build status" field and the built-in "Status" field are never authored by a person, and the mirror only gives an item
+  its first values (see above): `scripts/build-status-run.mjs` sets them from what happens to a pull request, in the
+  workflow `.github/workflows/build-status.yml`.
 - **No hand-linking.** A pull request's items are the requirements whose tests its `requirements/editor-requirements.gql`
   newly marks written, against the base branch's (a merged pull request: its merge commit against that commit's first
   parent; a release: the tag against the release before it). Both files are read through the API as data, a file of
@@ -362,6 +381,12 @@ These test behaviour across modules, or the repository itself, so they are named
   with a control showing the count sees the work when it is done. Speed itself is the benchmarks' instruction counts;
   `scripts/timed-assertions.mjs`, run by `test/timed-assertions.test.js`, fails any assertion on a span of elapsed time
   (a polling deadline in a loop that awaits, and Node's mock timers, are allowed).
+- **A test waits for the state it asserts, never a number of milliseconds** (15 Oct 2026). A sleep holds only while the
+  machine is as fast as when it was written: under a loaded full run the work takes longer, and the test fails once in
+  a while and passes alone. Wait with the test support's `until(() => …)` on the state asserted; where nothing should
+  change, wait for a positive sign that the work is done (a notice counted, the tools drawn again) and then assert.
+  `scripts/fixed-sleeps.mjs`, run by `test/fixed-sleeps.test.js`, fails a fixed sleep beyond each file's allowance in
+  `test/fixed-sleeps.json`, and an allowance higher than the file needs, so a sleep taken out stays out.
 - **A baseline from the CI runner:** run the "Quality baseline" workflow by hand, download its `quality-metrics`
   artifact, and commit its `metrics.json` as `quality/baseline.json` in a normal pull request. The same artifact's
   `instruction-spread.json` counts every benchmark three times: its `largest_spread` is how far a count moved between

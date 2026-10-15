@@ -15,9 +15,13 @@
 // Usage:
 //   node scripts/github-project.mjs [--slices 3,4] [--dry-run]    print the plan; makes no network call (the default)
 //   node scripts/github-project.mjs [--slices 3,4] --check        read GitHub and print the real diff; changes nothing
-//   node scripts/github-project.mjs [--slices 3,4] --apply [--allow-removals]
+//   node scripts/github-project.mjs [--slices 3,4] --apply [--allow-removals] [--accept-warnings]
 //                                                                  do the plan with gh, which needs a token that may
 //                                                                  write issues and projects (the `project` scope)
+//
+// --check and --apply also work out the values an item with none is given (see scripts/build-status-seed.mjs), from main
+// and the releases and open pull requests of GitHub, and print the tally of them. If a file they read could not be read, the
+// seed carries a warning; --check says that an apply would stop, and --apply stops unless --accept-warnings is given.
 //
 // A dry run cannot see GitHub, so it compares with an empty one: every issue shows as a create. --check and --apply
 // first confirm that gh points at this checkout's own origin repository, then read GitHub, find each issue it made by
@@ -31,7 +35,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { REQUIREMENTS } from './check-requirements.mjs';
 import { readBoard } from './slice-board.mjs';
-import { QUESTION_LABEL, desiredState, readWorkstreams } from './github-project-desired.mjs';
+import { QUESTION_LABEL, desiredState, readWorkstreams, withSeed } from './github-project-desired.mjs';
+import { seedOf } from './build-status-seed.mjs';
 import { buildPlan, formatPlan, guardProblem } from './github-project-plan.mjs';
 import { executePlan, ghRunner, pinRepo, readRemote, repoOfRemote } from './github-project-gh.mjs';
 import { retrying } from './github-project-retry.mjs';
@@ -53,10 +58,11 @@ function parseSlices(value) {
 
 function parseOptions(args) {
   const given = new Set();
-  const options = { slices: DEFAULT_SLICES, allowRemovals: false };
+  const options = { slices: DEFAULT_SLICES, allowRemovals: false, acceptWarnings: false };
   for (let i = 0; i < args.length; i += 1) {
     if (MODES.some(([flag]) => flag === args[i])) given.add(args[i]);
     else if (args[i] === '--allow-removals') options.allowRemovals = true;
+    else if (args[i] === '--accept-warnings') options.acceptWarnings = true;
     else if (args[i] === '--slices') {
       if (args[i + 1] === undefined) throw new Error('--slices needs a value');
       options.slices = parseSlices(args[(i += 1)]);
@@ -66,6 +72,7 @@ function parseOptions(args) {
   if (flags.length > 1) throw new Error(`${flags[0][0]} and ${flags[1][0]} cannot be used together`);
   options.mode = flags.length ? flags[0][1] : 'dry-run';
   if (options.allowRemovals && options.mode !== 'apply') throw new Error('--allow-removals only goes with --apply');
+  if (options.acceptWarnings && options.mode !== 'apply') throw new Error('--accept-warnings only goes with --apply');
   return options;
 }
 
@@ -89,11 +96,21 @@ function originRepo() {
  * Reads GitHub and prints the plan for `desired`, in 'check' mode (read-only) or 'apply' mode (then does it). `deps` are
  * the gh runner, the origin repository (`owner/name`), a function that writes text and the blocking sleep to pace calls
  * with. Throws, having changed nothing further, when gh points at another repository than the origin, or when apply is
- * stopped by the guard against removing too much and `allowRemovals` is not given.
+ * stopped by the guard against removing too much and `allowRemovals` is not given. `seed(run, repo)`, if given, gives {seed,
+ * warnings}: the Map from a requirement id to the {buildStatus, progress} an item with none takes
+ * (scripts/build-status-seed.mjs), where the requirement stands on GitHub in place of Not started and Todo, and the warnings
+ * (a requirements file that could not be read) the seed was made despite. The plan prints the tally of what it would seed.
+ * An apply with warnings in the seed stops, since it would fix wrong values for good, unless `acceptWarnings` is given;
+ * a check says that it would.
  */
-export function mirror({ desired, mode, allowRemovals }, { run: raw, originRepo: origin, write, sleep }) {
+export function mirror(
+  { desired: base, mode, allowRemovals, acceptWarnings, seed },
+  { run: raw, originRepo: origin, write, sleep },
+) {
   const run = retrying(raw, sleep ? { sleep } : {});
   const repo = pinRepo(run, origin);
+  const seeded = seed ? seed(run, repo) : { seed: new Map(), warnings: [] };
+  const desired = withSeed(base, seeded.seed);
   const plan = buildPlan(desired, readRemote(run, repo));
   const slices = desired.fields.Slice.map((option) => Number(option.replace('Slice ', '')));
   const heading =
@@ -101,11 +118,16 @@ export function mirror({ desired, mode, allowRemovals }, { run: raw, originRepo:
   write(`github-project: ${heading}\ntarget repository: ${repo}\n${countLine(desired.issues, slices)}\n`);
   write(formatPlan(plan));
   const problem = guardProblem(plan);
+  const n = seeded.warnings.length;
+  const seedProblem = n
+    ? `the seed was made despite ${n} warning${n === 1 ? '' : 's'} (above), so some values may be wrong; pass --accept-warnings if that is meant`
+    : null;
   if (mode === 'check') {
-    if (problem) write(`warning: an apply would stop: ${problem}\n`);
+    for (const stop of [problem, seedProblem]) if (stop) write(`warning: an apply would stop: ${stop}\n`);
     return;
   }
   if (problem && !allowRemovals) throw new Error(problem);
+  if (seedProblem && !acceptWarnings) throw new Error(seedProblem);
   executePlan(raw, repo, plan, sleep ? { sleep } : {});
   write('github-project: applied\n');
 }
@@ -124,9 +146,16 @@ function main(args) {
       );
       return 0;
     }
+    const write = (text) => process.stdout.write(text);
     mirror(
-      { desired, mode: options.mode, allowRemovals: options.allowRemovals },
-      { run: ghRunner(), originRepo: originRepo(), write: (text) => process.stdout.write(text) },
+      {
+        desired,
+        mode: options.mode,
+        allowRemovals: options.allowRemovals,
+        acceptWarnings: options.acceptWarnings,
+        seed: (run, repo) => seedOf(run, repo, { write }),
+      },
+      { run: ghRunner(), originRepo: originRepo(), write },
     );
     return 0;
   } catch (e) {

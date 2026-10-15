@@ -23,14 +23,17 @@ const GONE_MESSAGE =
 
 /**
  * What the banner says when a write was refused: the block reloaded from the note, or the note deleted; or, for an `edit`
- * made from the drawing that the note as written refused (§4), why in the core's words, with the block reloaded.
+ * made from the drawing that the note as written refused (§4), why in the core's words, with the block reloaded; or, the
+ * editor `stopped` by a copy of its block (§9), the core's words, nothing reloaded.
  */
-export const keptMessage = (reason: string, edit = false): string =>
+export const keptMessage = (reason: string, edit = false, stopped = false): string =>
   edit
     ? `The edit was not written: ${reason}. The block is as the note has it, and the edit is kept as a draft.`
-    : reason === NOTE_DELETED
-      ? DELETED_MESSAGE
-      : `The block changed in the note while you were typing (${reason}), so it was reloaded. What you typed is kept as a draft.`;
+    : stopped
+      ? `${reason} What you typed is kept as a draft.`
+      : reason === NOTE_DELETED
+        ? DELETED_MESSAGE
+        : `The block changed in the note while you were typing (${reason}), so it was reloaded. What you typed is kept as a draft.`;
 
 /** The drafts an editor's banner offers and acts on: the one to show, and each by its id. */
 export interface DraftsOf {

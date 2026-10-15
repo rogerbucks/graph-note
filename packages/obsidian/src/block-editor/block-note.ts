@@ -68,18 +68,31 @@ export class BlockNote {
     return true;
   }
 
+  /** Whether the session's stop by a copy of its block (§9) has been said, by a refused write kept as a draft. */
+  private stopSaid = false;
+
   /**
    * Writes what is typed, when it changed, through the note's editor when it is open, else the vault; returns a refusal.
    * A note deleted meanwhile is refused too, so what is typed is kept as a draft, never dropped (nothing_typed_lost).
+   * With `hold`, as typing rests, a session stopped by a copy whose stop was said already writes nothing to the note and
+   * says nothing again: what is typed is saved quietly as this editor's own draft, so it is never held in memory alone
+   * and nothing is lost if Obsidian closes or crashes (the review of #465).
    */
-  async write(): Promise<Refused | null> {
+  async write(hold = false): Promise<Refused | null> {
     const s = this.session,
       file = this.file();
     if (!s || !s.dirty) return null;
     if (!file) return { reason: NOTE_DELETED, draft: s.text };
+    if (!s.stopped) this.stopSaid = false;
+    else if (hold && this.stopSaid) {
+      await this.keepDraft(s.text);
+      return null;
+    }
     const keep = (note: string) => (this.text = note);
     const cm = this.plugin.editorFor(this.path);
-    return cm ? writeThroughEditor(cm, s, keep) : await writeThroughVault(this.plugin.app.vault, file, s, keep);
+    const r = cm ? writeThroughEditor(cm, s, keep) : await writeThroughVault(this.plugin.app.vault, file, s, keep);
+    if (r?.stopped) this.stopSaid = true;
+    return r;
   }
 
   /** Undo or Redo of the session's own changes to the note; returns a refusal. */
