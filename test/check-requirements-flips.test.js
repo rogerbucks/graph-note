@@ -21,9 +21,10 @@ const there = () => true;
 const refused = (head, exists = there) => refusedChanges(base(), head, { exists });
 const kinds = (problems) => problems.map((p) => p.kind);
 
-const PLANNED = "file: 'packages/obsidian/test/mini-map.test.js', where: 'repo', status: 'planned'";
-const WRITTEN = "file: 'packages/obsidian/test/mini-map.test.js', where: 'repo', status: 'written'";
-const MOVED = "file: 'packages/obsidian/test/minimap.test.js', where: 'repo', status: 'written'";
+// two tests the copy still holds as planned
+const PLANNED = "file: 'packages/obsidian/test/database.test.js', where: 'repo', status: 'planned'";
+const WRITTEN = "file: 'packages/obsidian/test/database.test.js', where: 'repo', status: 'written'";
+const MOVED = "file: 'packages/obsidian/test/databases.test.js', where: 'repo', status: 'written'";
 
 describe('a hand change to the requirements copy', () => {
   test('the same copy has nothing refused', () => {
@@ -37,8 +38,8 @@ describe('a hand change to the requirements copy', () => {
   test('several tests flipped at once are accepted', () => {
     const two = replaced(
       replaced(base(), PLANNED, WRITTEN),
-      "file: 'packages/obsidian/test/details-open.test.js', where: 'repo', status: 'planned'",
-      "file: 'packages/obsidian/test/details-open.test.js', where: 'repo', status: 'written'",
+      "file: 'packages/core/test/ai-matrix.test.js', where: 'repo', status: 'planned'",
+      "file: 'packages/core/test/ai-matrix.test.js', where: 'repo', status: 'written'",
     );
     assert.deepEqual(refused(two), []);
   });
@@ -50,10 +51,10 @@ describe('a hand change to the requirements copy', () => {
   test('a flip to written is refused when the file it names is not there', () => {
     const problems = refused(
       replaced(base(), PLANNED, MOVED),
-      (rel) => rel !== 'packages/obsidian/test/minimap.test.js',
+      (rel) => rel !== 'packages/obsidian/test/databases.test.js',
     );
     assert.deepEqual(kinds(problems), ['missing-file']);
-    assert.match(problems[0].message, /test_mini_map.*packages\/obsidian\/test\/minimap\.test\.js/);
+    assert.match(problems[0].message, /test_database.*packages\/obsidian\/test\/databases\.test\.js/);
   });
 
   test('a path corrected on a test that is not flipped is refused', () => {
@@ -95,14 +96,14 @@ describe('a hand change to the requirements copy', () => {
   test('a field changed other than the status and path of a flipped test is refused', () => {
     const problems = refused(replaced(base(), PLANNED, `${WRITTEN.replace("'repo'", "'both'")}`));
     assert.deepEqual(kinds(problems), ['field']);
-    assert.match(problems[0].message, /test_mini_map.*where/);
+    assert.match(problems[0].message, /test_database.*where/);
   });
 
   test('the proves text of a flipped test changed is refused', () => {
     const head = replaced(
       base(),
-      "(test_mini_map:Test {proves: 'the mini-map appears",
-      "(test_mini_map:Test {proves: 'a mini-map appears",
+      "(test_database:Test {proves: 'database connections are set up",
+      "(test_database:Test {proves: 'the database connections are set up",
     );
     assert.deepEqual(kinds(refused(replaced(head, PLANNED, WRITTEN))), ['field']);
   });
