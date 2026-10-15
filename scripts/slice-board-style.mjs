@@ -252,7 +252,8 @@ svg.bar {
   background: var(--proved-bg);
   color: var(--proved-text);
 }
-.chip-part {
+.chip-part,
+.chip-partial {
   background: var(--part-bg);
   color: var(--part-text);
 }

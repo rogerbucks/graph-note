@@ -43,6 +43,14 @@ export const filesOf = (field) => [...String(field ?? '').matchAll(FILE_PATH)].m
 /** Where a test may be kept: the repository's, both, or outside it. Any other is not known, so proves nothing. */
 export const WHERE = ['repo', 'both', 'outside the repo'];
 
+/**
+ * The statuses of a test, in the order it moves through them: planned (no file yet), partial (the file is there but does
+ * not yet prove every rule its record covers) and written (it proves them all). Only a written test proves a requirement.
+ */
+export const TEST_STATUSES = ['planned', 'partial', 'written'];
+/** The statuses whose test file must be in the repository. */
+export const HAS_FILE = ['partial', 'written'];
+
 /** A banner problem, as the audit lists it, for each line of the do-not-hand-edit banner that is not as generated. */
 function bannerProblems(text) {
   const lines = text.split('\n');
@@ -106,11 +114,11 @@ export function auditRequirements(text, { exists = (rel) => existsSync(join(ROOT
     if (!IN_REPO.has(where)) continue;
     const files = filesOf(n.props.file);
     const missing = files.filter((f) => !exists(f));
-    if (status === 'written' && (missing.length || !files.length))
+    if (HAS_FILE.includes(status) && (missing.length || !files.length))
       problems.push({
         kind: 'missing-file',
         id,
-        message: `test ${id} is written, but the repository has no ${missing.join(', ') || 'file named for it'}`,
+        message: `test ${id} is ${status}, but the repository has no ${missing.join(', ') || 'file named for it'}`,
       });
     if (status === 'planned' && files.length && !missing.length)
       problems.push({
@@ -175,6 +183,10 @@ export function sliceDone(text, slice, { exists = (rel) => existsSync(join(ROOT,
       })),
   ];
   const why = (test) => {
+    if (test.status === 'partial')
+      return [
+        `test ${test.id} is partial: its file does not yet prove every rule its record covers, so it is not written`,
+      ];
     if (test.status !== 'written') return [`test ${test.id} is ${test.status ?? 'without a status'}, not written`];
     if (!WHERE.includes(test.where))
       return [

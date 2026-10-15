@@ -14,7 +14,7 @@ import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { BANNER, REQUIREMENTS, filesOf } from './check-requirements.mjs';
+import { BANNER, HAS_FILE, REQUIREMENTS, TEST_STATUSES, filesOf } from './check-requirements.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const { read } = createRequire(import.meta.url)('../packages/graph-spec/src/graph-spec-check.js');
@@ -80,19 +80,22 @@ function recordProblems(id, was, now, exists) {
     problems.push({ kind: 'field', id, message: `${id}: ${name} ${detail}, which only a flip's status and file may` });
   if ([...was.labels].sort().join() !== [...now.labels].sort().join()) field('labels', 'changed');
   const isTest = was.labels.has('Test');
-  const flipped = isTest && was.props.status === 'planned' && now.props.status === 'written';
+  const from = TEST_STATUSES.indexOf(was.props.status);
+  const to = TEST_STATUSES.indexOf(now.props.status);
+  const bothKnown = from !== -1 && to !== -1 && from !== to;
+  const flipped = isTest && bothKnown && to > from;
   const names = new Set([...Object.keys(was.props), ...Object.keys(now.props)]);
   for (const name of names) {
     if (same(was.props[name], now.props[name])) continue;
     if (name === 'status') {
       if (flipped) continue;
-      if (isTest && was.props.status === 'written' && now.props.status === 'planned')
+      if (isTest && bothKnown)
         problems.push({
           kind: 'flip-back',
           id,
-          message: `${id}: status went from written to planned: only planned to written is allowed`,
+          message: `${id}: status went from ${was.props.status} to ${now.props.status}: a test only moves forward, from planned to partial or written, and from partial to written`,
         });
-      else if (was.props.status === 'planned' && now.props.status === 'written')
+      else if (bothKnown)
         problems.push({
           kind: 'not-a-test',
           id,
@@ -102,14 +105,14 @@ function recordProblems(id, was, now, exists) {
     } else if (name === 'file' && flipped) continue;
     else field(name, 'changed');
   }
-  if (flipped && IN_REPO.has(now.props.where)) {
+  if (flipped && HAS_FILE.includes(now.props.status) && IN_REPO.has(now.props.where)) {
     const files = filesOf(now.props.file);
     const missing = files.filter((f) => !exists(f));
     if (missing.length || !files.length)
       problems.push({
         kind: 'missing-file',
         id,
-        message: `${id}: flipped to written, but the repository has no ${missing.join(', ') || 'file named for it'}`,
+        message: `${id}: flipped to ${now.props.status}, but the repository has no ${missing.join(', ') || 'file named for it'}`,
       });
   }
   return problems;
