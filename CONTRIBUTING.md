@@ -215,6 +215,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/speed-index.test.js` — the one measure of a machine's speed, which the quality metrics record and scale their timings by: fixed plain work, the least of seven runs.
 - `test/timed-assertions.test.js` — a test asserts the work done, never the time taken: no JavaScript test or its support asserts a span of elapsed time; a polling deadline, mock timers and a clock handed to the code tested are allowed.
 - `test/test-vault.test.js` — the test vault: dummy notes tied to requirements, nothing Obsidian writes committed, each session clean.
+- `test/test-status-partial.test.js` — the third test status, `partial`: a test whose file is there but does not yet prove every rule its record covers. It needs its file like a written one, leaves its requirement unproved in `--done` (the reason says partial), may be flipped to only from planned and to written (every backward move refused), and counts on the slice board as part and in progress, never proved.
 - `test/tests-first.test.js` — every test is seen to fail before its code, replayed commit by commit: how a replay judges a new test.
 - `test/tests-first-command.test.js` — that replay's command line, run as CI and a person run it: `--check`, `--excuse` and `--migrate`.
 - `test/tests-first-complete.test.js` — that command line's `--complete`: a commit that changed a test and has no record fails, until `--update` records it.
