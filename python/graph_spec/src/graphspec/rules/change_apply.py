@@ -88,6 +88,34 @@ def adds_cache(labels: Collection[str], props_json: str) -> bool:
     return "Claim" in labels and bool(CACHE_KEYS & set(json.loads(props_json)))
 
 
+GENERATED = (
+    "an added WAS_GENERATED_BY comes from a thing the set adds, to an activity of the set's own "
+    "author (§24)"
+)
+
+
+def foreign_generations(
+    st: Store, g: str, new_edges: Collection[tuple], made: Collection[str], by: str
+) -> list[tuple]:
+    """The added WAS_GENERATED_BY links that do not come from a thing the set adds, to an Activity
+    associated with the set's author: a link from a thing already there, or to an engine run or
+    another author's run, would make a cache."""
+    from graphspec.rules.plain_graph import World
+
+    w = World.from_store(st)[g]
+
+    def own(a):
+        return (
+            a in w.nodes
+            and "Activity" in w.nodes[a][0]
+            and any(e[2] == by for e in w.out(a, "ASSOCIATED_WITH"))
+        )
+
+    return [
+        e for e in new_edges if e[1] == "WAS_GENERATED_BY" and not (e[0] in made and own(e[2]))
+    ]
+
+
 def apply_change(store: Store, g: str, c: dict[str, Any]) -> tuple[str, str] | None:
     """The change made on a store's graph g, or what stops it: None when made, else (kind, what) —
     kind is 'find' when its target is not in the graph, 'dangling' when a DELETE would leave a
@@ -114,8 +142,17 @@ def apply_change(store: Store, g: str, c: dict[str, Any]) -> tuple[str, str] | N
             for e in graph["edges"]
         ):
             return "record", where
-        if "Proposal" not in labels and any(
-            e[1] == "WAS_GENERATED_BY" and e[0] == k for e in graph["edges"]
+
+        # (a model's own work, made under an activity of the model, is not one)
+        def model_run(a):
+            return any(
+                e[1] == "ASSOCIATED_WITH" and e[0] == a and "Model" in nodes[e[2]]["labels"]
+                for e in graph["edges"]
+            )
+
+        if any(
+            e[1] == "WAS_GENERATED_BY" and e[0] == k and not model_run(e[2])
+            for e in graph["edges"]
         ):
             return "record", where
         if c["op"].startswith("set"):

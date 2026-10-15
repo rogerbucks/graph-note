@@ -222,8 +222,10 @@ function applyChange(store, g, c) {
     const nodeLabels = (key) => graph.nodes.get(key).labels;
     if (graph.edges.some((e) => e[1] === 'DELIVERED' && e[2] === k && nodeLabels(e[0]).has('Delivery')))
       return ['record', where];
-    if (!labels.has('Proposal') && graph.edges.some((e) => e[1] === 'WAS_GENERATED_BY' && e[0] === k))
-      return ['record', where];
+    // (a model's own work, made under an activity of the model, is not one)
+    const modelRun = (a) =>
+      graph.edges.some((e) => e[1] === 'ASSOCIATED_WITH' && e[0] === a && nodeLabels(e[2]).has('Model'));
+    if (graph.edges.some((e) => e[1] === 'WAS_GENERATED_BY' && e[0] === k && !modelRun(e[2]))) return ['record', where];
     if (c.op.startsWith('set')) {
       if (labels.has('Claim') && Object.keys(c.set).some((x) => CACHE_KEYS.includes(x))) return ['record', where];
       Object.assign(graph.nodes.get(k).props, c.set);

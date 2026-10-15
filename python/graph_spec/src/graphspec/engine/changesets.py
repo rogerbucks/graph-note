@@ -31,9 +31,11 @@ from graphspec.reader.store import Store
 from graphspec.reader.whitespace import N, S
 from graphspec.reader.whitespace import strip as ws_strip
 from graphspec.rules.change_apply import (
+    GENERATED,
     LABELS,
     adds_cache,
     apply_change,
+    foreign_generations,
     gql_of,
     is_record_add,
     stop_fix,
@@ -302,6 +304,21 @@ def check_changeset(
         f"{caches[:4]} — leave them out: the engine makes them from the claim's assessments",
     )
     if caches:
+        return res, h, None
+    foreign = foreign_generations(
+        st,
+        h["graph"],
+        [e for e in after[1] if after[1][e] > before[1][e]],
+        new_nodes,
+        h["by"],
+    )
+    add(
+        GENERATED,
+        not foreign,
+        f"{foreign[:2]} — a generation is added only for a new thing, under an activity "
+        f"associated with {h['by']}; a cache is made by an engine run, never written",
+    )
+    if foreign:
         return res, h, None
     # a set that is not only additions is not applied further
     if read and (gone or changed) and "additions-only" not in switches:

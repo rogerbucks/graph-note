@@ -16,6 +16,10 @@ const LABELS = {
   dangling: 'a DELETE leaves no link without its end; DETACH DELETE removes a thing with its links (§24)',
   record: 'it never removes or changes a record or a cache (§24 rule 4)',
 };
+const GENERATED =
+  "an added WAS_GENERATED_BY comes from a thing the set adds, to an activity of the set's own author (§24)";
+// whether activity a is one of its author's: an Activity associated with them
+const own = (g, a, by) => g.has(a, 'Activity') && g.out(a, 'ASSOCIATED_WITH').some((e) => e[2] === by);
 function changesetHeader(block) {
   const first = block.split('\n').find((line) => line.trim()) || '';
   const m = /^\s*\/\/\s*graph:\s*(\S+)\s*·\s*CHANGE SET\s+(\S+)\s*·\s*against\s+([0-9a-f]{16})\s*·\s*by\s+(\S+)/.exec(
@@ -123,6 +127,15 @@ function checkChangeset(base, block, matrix, sw = new Set()) {
   const caches = newNodes.some(([, [labels, props]]) => addsCache(labels.split(':'), JSON.parse(props)));
   add("it adds no cache — a claim's likelihood, confidence and status are the engine's (§24 rule 5)", !caches);
   if (caches) return { results: res, header: h, after: null };
+  // a generation is added only from a thing the set adds, to an activity of the set's own author
+  const stored = worldFromStore(st)[h.graph],
+    made = new Set(newNodes.map(([i]) => i)),
+    foreign = [...ac]
+      .filter(([e, n]) => n > (bc.get(e) || 0))
+      .map(([e]) => JSON.parse(e))
+      .filter(([s, t, d]) => t === 'WAS_GENERATED_BY' && !(made.has(s) && own(stored, d, h.by)));
+  add(GENERATED, !foreign.length);
+  if (foreign.length) return { results: res, header: h, after: null };
   // a set that is not only additions is not applied further: its DELETEs and SETs would act on a graph it has wrongly changed
   if (read.length && (gone || changed) && !sw.has('additions-only')) return { results: res, header: h, after: null };
   for (const c of read) {
