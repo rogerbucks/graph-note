@@ -1,0 +1,6 @@
+{
+  "file": "test/public-readiness.test.js",
+  "test": "the history > every branch and tag can still be asked for, as before a repository is made public",
+  "seen_failing_first": false,
+  "evidence": "Pins behaviour that already held: the history check read every branch and tag (--all) before this change, and the new refs option keeps that reading available for the check made before a repository is public. The test guards that the narrowing to HEAD did not remove it."
+}
