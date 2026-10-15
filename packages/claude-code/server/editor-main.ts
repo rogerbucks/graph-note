@@ -22,7 +22,7 @@ export const EDITOR_ENVIRONMENT = {
 } as const;
 
 /** The gate's settings from the environment, as the core reads settings back; none, or unreadable ones, are the defaults. */
-function gateSettings(raw: string | undefined): GateSettings {
+export function gateSettings(raw: string | undefined): GateSettings {
   try {
     const s = settingsFrom(JSON.parse(raw ?? 'null'));
     return { classifications: s.classifications, aiUnlabelled: s.aiUnlabelled, aiModels: s.aiModels };

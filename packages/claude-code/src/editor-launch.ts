@@ -71,6 +71,15 @@ interface Checked {
   settings: GateSettings | null;
 }
 
+/** The settings as the server is given them, in its environment: no key, only what its gate reads. */
+export function settingsForServer(settings: GateSettings): string {
+  return JSON.stringify({
+    classifications: settings.classifications,
+    aiUnlabelled: settings.aiUnlabelled,
+    aiModels: settings.aiModels.map((m) => ({ name: m.name, ceiling: m.ceiling })),
+  });
+}
+
 /** How long a server has to hand over its address before it is killed and the start said to have failed. */
 export const START_TIMEOUT_MS = 15_000;
 
@@ -156,11 +165,16 @@ export class EditorLauncher {
     });
   }
 
+  /** The settings the gate reads for `note`. */
+  async gateSettings(_note: string): Promise<GateSettings> {
+    return this.#ports.settings();
+  }
+
   /** The note read and the settings, for the gate alone: the text is neither kept nor said, only its digest. */
   async #check(note: string): Promise<Checked> {
     try {
       const text = await this.#ports.read(note);
-      const settings = await this.#ports.settings();
+      const settings = await this.gateSettings(note);
       return { gate: claudeGate(text, settings), digest: sha256(text), settings };
     } catch {
       return {
@@ -252,13 +266,7 @@ export class EditorLauncher {
       GRAPH_NOTE_EDITOR_DRAFTS: this.#ports.drafts,
       // the server asks the gate again before every send, with the same settings and the digest of the text said yes to
       // (never the text); none given means the defaults, the strictest
-      GRAPH_NOTE_EDITOR_SETTINGS: settings
-        ? JSON.stringify({
-            classifications: settings.classifications,
-            aiUnlabelled: settings.aiUnlabelled,
-            aiModels: settings.aiModels.map((m) => ({ name: m.name, ceiling: m.ceiling })),
-          })
-        : '',
+      GRAPH_NOTE_EDITOR_SETTINGS: settings ? settingsForServer(settings) : '',
       GRAPH_NOTE_EDITOR_CONFIRMED: confirmed ?? '',
       // the host closes a child's input when it starts it, so the input's closing is not the session's end here
       GRAPH_NOTE_EDITOR_INPUT: 'ignore',
