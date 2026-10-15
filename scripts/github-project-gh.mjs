@@ -60,6 +60,12 @@ const READ_PROJECT = `query($owner: String!, $number: Int!, $after: String) {
   }
 }
 ${PROJECT_FRAGMENT}`;
+const LIST_PROJECTS = `query($owner: String!, $after: String) {
+  repositoryOwner(login: $owner) {
+    ... on User { projectsV2(first: 100, after: $after) { pageInfo { hasNextPage endCursor } nodes { id number title } } }
+    ... on Organization { projectsV2(first: 100, after: $after) { pageInfo { hasNextPage endCursor } nodes { id number title } } }
+  }
+}`;
 const CREATE_FIELD = `mutation($project: ID!, $name: String!, $options: [ProjectV2SingleSelectFieldOptionInput!]) {
   createProjectV2Field(input: {projectId: $project, dataType: SINGLE_SELECT, name: $name, singleSelectOptions: $options}) {
     projectV2Field { ... on ProjectV2SingleSelectField { id name } }
@@ -198,12 +204,22 @@ export const readIssues = (run, repo, author) =>
     ISSUE_CAP,
     'issues',
   ).map((i) => ({ ...i, labels: i.labels.map((l) => l.name), author: i.author?.login }));
-const readProjects = (run, owner) =>
-  whole(
-    JSON.parse(run(['project', 'list', '--owner', owner, '--format', 'json', '--limit', String(PROJECT_CAP)])).projects,
-    PROJECT_CAP,
-    'projects',
-  );
+/**
+ * The projects of an owner, a user or an organization, as [{id, number, title}], found by the owner's login through
+ * GraphQL. `gh project list --owner` is not used: it first asks gh to resolve the owner's type, which a token with only the
+ * project scope cannot always do ("unknown owner type"). Refused when the list is as long as its cap.
+ */
+const readProjects = (run, owner) => {
+  const found = [];
+  let after = null;
+  do {
+    const answer = graphql(run, LIST_PROJECTS, { owner, after }).repositoryOwner?.projectsV2;
+    if (!answer) return found;
+    found.push(...answer.nodes);
+    after = answer.pageInfo.hasNextPage && found.length < PROJECT_CAP ? answer.pageInfo.endCursor : null;
+  } while (after !== null);
+  return whole(found, PROJECT_CAP, 'projects');
+};
 export const findProject = (run, owner) => readProjects(run, owner).find((p) => p.title === PROJECT_TITLE);
 
 /**

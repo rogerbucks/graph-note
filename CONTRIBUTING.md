@@ -164,6 +164,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/cheap-checks.test.js` — the quiet test run, running only a change's tests, the AI guide and the search ignore file.
 - `test/build-status.test.js` — the build status's pure part: the requirements a pull request moves, found from the tests it newly marks written; the stage an event gives; which value may replace which; the comment and the annotations.
 - `test/build-status-gh.test.js` — the build status's calls to GitHub, through in-memory stand-ins for `gh`: a pull request, the requirements file at a ref and its size, CI's run, the releases, the pull requests merged in a span, the one comment, leaving it on a locked conversation, and the two tokens kept apart.
+- `test/build-status-seed.test.js` — the first values the mirror gives an item that has none: Released, Merged, In PR or Not started with the built-in Status to match, a draft release not counting, the tally `--check` prints, and a value already set never overwritten (only Todo replaced).
 - `test/build-status-gh-lock.test.js` — leaving the comment on a conversation that may be locked: unlocked only for a pull request whose own `locked` field is true (a refusal that says blocked unlocks nothing), and the lock taken up again with the repository's retry, or the pull request said to be left unlocked.
 - `test/build-status-gh-lists.test.js` — the open pull requests and those merged in a span, of this repository's own before any cap, past a crowd of fork pull requests.
 - `test/build-status-board.test.js` — the build status's project board: each item's Build status and Status, setting either, the issues read with the workflow's token and the project with the project token alone, and every trouble that is the board's own.
@@ -231,10 +232,18 @@ These test behaviour across modules, or the repository itself, so they are named
   ids; a requirement it does not list falls to `S3`, and an id the current copy does not hold yet is fine. An issue
   carries the labels `slice-N`, `workstream:<id>` and `status:open|part|proved`, and is closed when proved. Its status
   is the one the slice board reads. The project's fields are Slice, Workstream, Proof (open, part, proved) and Build
-  status (Not started, In PR, Checks failing, Checks passing, Merged, Released); its built-in Status field (Todo, In
-  Progress, Done) is never touched by the mirror. The mirror makes Build status and its options, gives a new item Not
-  started, and never sets another value or replaces the options: the values of Build status and of Status come from the
-  build status workflow below, from GitHub's events alone.
+  status (Not started, In PR, Checks failing, Checks passing, Merged, Released); the built-in Status field (Todo, In
+  Progress, Done) is the board's own, and the mirror never makes it or changes its options. The mirror makes Build status
+  and its options, and **seeds** an item that has no value from where its requirement stands on GitHub
+  (`scripts/build-status-seed.mjs`), never more: proved on main and by the copy of a *published* release (a draft does not
+  count): Released and Done; proved on main only: Merged and Done; held by an open pull request of this repository, by
+  its copy's diff or its `Requirements:` line: In PR and In Progress; otherwise Not started and Todo. A Build status
+  already set is never overwritten, nor is a Status of In Progress or Done; only Todo, the board's default and no choice,
+  is replaced by a seed that says more. Nothing moves back from Released or Done. `--check` prints the tally of what
+  it would seed for each option (`seeded Build status: …`, `seeded Status: …`) to confirm before `--apply`. After the
+  first seed, the values come from the build status workflow below, from GitHub's events alone. The project is found by
+  GraphQL (`repositoryOwner(login:) { projectsV2 }`, a user or an organization), never by `gh project list`, which asks
+  gh to resolve the owner's type and fails ("unknown owner type") for a token with only the project scope.
 - **See the plan with `npm run project:plan`.** It is a dry run and makes no network call, so it compares with an empty
   GitHub. `--check` reads GitHub and prints the real diff, changing nothing. `--apply` prints the same plan, then does
   it with `gh`: it finds each issue by its hidden `<!-- requirement:<id> -->` marker, changes only what differs, and
@@ -259,9 +268,9 @@ These test behaviour across modules, or the repository itself, so they are named
 ## The build status of each requirement
 
 - **Where a requirement's build is up to shows on the project, from GitHub's events alone** (Roger, 15 Oct 2026). The
-  "Build status" field and the built-in "Status" field are never authored by a person or by the mirror:
-  `scripts/build-status-run.mjs` sets them from what happens to a pull request, in the workflow
-  `.github/workflows/build-status.yml`.
+  "Build status" field and the built-in "Status" field are never authored by a person, and the mirror only gives an item
+  its first values (see above): `scripts/build-status-run.mjs` sets them from what happens to a pull request, in the
+  workflow `.github/workflows/build-status.yml`.
 - **No hand-linking.** A pull request's items are the requirements whose tests its `requirements/editor-requirements.gql`
   newly marks written, against the base branch's (a merged pull request: its merge commit against that commit's first
   parent; a release: the tag against the release before it). Both files are read through the API as data, a file of

@@ -31,7 +31,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { REQUIREMENTS } from './check-requirements.mjs';
 import { readBoard } from './slice-board.mjs';
-import { QUESTION_LABEL, desiredState, readWorkstreams } from './github-project-desired.mjs';
+import { QUESTION_LABEL, desiredState, readWorkstreams, withSeed } from './github-project-desired.mjs';
+import { seedOf } from './build-status-seed.mjs';
 import { buildPlan, formatPlan, guardProblem } from './github-project-plan.mjs';
 import { executePlan, ghRunner, pinRepo, readRemote, repoOfRemote } from './github-project-gh.mjs';
 import { retrying } from './github-project-retry.mjs';
@@ -89,11 +90,14 @@ function originRepo() {
  * Reads GitHub and prints the plan for `desired`, in 'check' mode (read-only) or 'apply' mode (then does it). `deps` are
  * the gh runner, the origin repository (`owner/name`), a function that writes text and the blocking sleep to pace calls
  * with. Throws, having changed nothing further, when gh points at another repository than the origin, or when apply is
- * stopped by the guard against removing too much and `allowRemovals` is not given.
+ * stopped by the guard against removing too much and `allowRemovals` is not given. `seed(run, repo)`, if given, gives the Map
+ * from a requirement id to the {buildStatus, progress} an item with none takes (scripts/build-status-seed.mjs): where the
+ * requirement stands on GitHub, in place of Not started and Todo. The plan prints the tally of what it would seed.
  */
-export function mirror({ desired, mode, allowRemovals }, { run: raw, originRepo: origin, write, sleep }) {
+export function mirror({ desired: base, mode, allowRemovals, seed }, { run: raw, originRepo: origin, write, sleep }) {
   const run = retrying(raw, sleep ? { sleep } : {});
   const repo = pinRepo(run, origin);
+  const desired = seed ? withSeed(base, seed(run, repo)) : base;
   const plan = buildPlan(desired, readRemote(run, repo));
   const slices = desired.fields.Slice.map((option) => Number(option.replace('Slice ', '')));
   const heading =
@@ -124,9 +128,15 @@ function main(args) {
       );
       return 0;
     }
+    const write = (text) => process.stdout.write(text);
     mirror(
-      { desired, mode: options.mode, allowRemovals: options.allowRemovals },
-      { run: ghRunner(), originRepo: originRepo(), write: (text) => process.stdout.write(text) },
+      {
+        desired,
+        mode: options.mode,
+        allowRemovals: options.allowRemovals,
+        seed: (run, repo) => seedOf(run, repo, board, { write }).seed,
+      },
+      { run: ghRunner(), originRepo: originRepo(), write },
     );
     return 0;
   } catch (e) {

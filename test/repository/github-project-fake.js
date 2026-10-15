@@ -80,6 +80,15 @@ export function fakeGithub({ owner = 'rogerbucks', name = 'graph-note', login = 
       for (const item of p.items) delete item.values[f.name];
       return json({ data: { updateProjectV2Field: { projectV2Field: f } } });
     }
+    if (/projectsV2\(/.test(query)) {
+      // the owner’s projects, a hundred to the page, found by the owner’s login whether it is a user or an organization
+      if (variables.owner !== owner) return json({ data: { repositoryOwner: null } });
+      const start = variables.after ? Number(variables.after) : 0;
+      const nodes = hub.projects.slice(start, start + 100).map(({ id, number, title }) => ({ id, number, title }));
+      const end = start + nodes.length;
+      const pageInfo = { hasNextPage: end < hub.projects.length, endCursor: String(end) };
+      return json({ data: { repositoryOwner: { projectsV2: { pageInfo, nodes } } } });
+    }
     return json(readProject(project(variables.number), variables.after));
   };
 
