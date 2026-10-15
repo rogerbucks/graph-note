@@ -9,8 +9,11 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { ask, reachable } from './editor-threats-support.js';
-import { PLAN, launcherFor, modVault, partsOf } from './editor-mod-support.js';
-import { editArgs, sayEdit, sayStopped } from '../src/editor-launch.ts';
+import { COMPOSER, PLAN, launcherFor, modVault, partsOf, writeNote } from './editor-mod-support.js';
+import * as launch from '../src/editor-launch.ts';
+
+const { editArgs, sayEdit, sayStopped } = launch;
+const confirmArgs = (args) => launch.confirmArgs(args);
 
 /** The page's own first call: the note by the id and token the address carries. */
 const readNote = (link) => {
@@ -346,5 +349,215 @@ describe('the server stops (cc_server_stops)', () => {
   });
 });
 
-// C3 (cc_classified_asks, cc_credential_never) and C7 (cc_claude_only, cc_claude_proposes) add their cases below, to
-// this file: the launcher takes the gate and the proposal channel before `edit` starts the server. None is written here.
+/** Whether a server was started: the host was asked for a process. */
+const started = (host) => host.requests.length > 0;
+
+describe('a note above the level set for Claude is asked about first (cc_classified_asks)', () => {
+  test('a note at or below Claude’s ceiling opens with no question', async () => {
+    const where = modVault();
+    const { launcher, host } = launcherFor(where);
+    for (const level of ['Public', 'Internal']) {
+      const outcome = await launcher.edit(writeNote(where, `${level}.md`, level));
+      assert.equal(outcome.ok, true, level);
+    }
+    assert.equal(host.requests.length, 2);
+  });
+
+  test('a note above it starts no server, shows nothing, and says which note and which levels, not its text', async () => {
+    const where = modVault();
+    const { launcher, host } = launcherFor(where);
+    const path = writeNote(where, 'plan2.md', 'Confidential', 'The hidden plan.\n');
+    const outcome = await launcher.edit(path);
+    assert.equal(outcome.ok, false);
+    assert.equal(outcome.held, 'asks');
+    assert.match(outcome.why, /plan2\.md/);
+    assert.match(outcome.why, /Confidential/);
+    assert.match(outcome.why, /Internal/);
+    assert.equal(started(host), false, 'no process was started, so nothing can be read');
+    assert.equal(launcher.link, null);
+    const words = sayEdit(outcome);
+    assert.match(words, /confirm/i, 'it says how to say yes');
+    assert.ok(!/drawing/i.test(words), 'the note is not drawn instead');
+    assert.ok(!JSON.stringify(outcome).includes('hidden plan'));
+  });
+
+  test('/graph confirm opens the note that was asked about, once', async () => {
+    const where = modVault();
+    const { launcher, host } = launcherFor(where);
+    await launcher.edit(writeNote(where, 'plan2.md', 'Confidential'));
+    const opened = await launcher.confirm();
+    assert.deepEqual(opened, { ok: true, title: 'plan2.md', reused: false });
+    assert.equal(host.requests.length, 1);
+    assert.equal((await readNote(launcher.link)).status, 200);
+    const again = await launcher.confirm();
+    assert.equal(again.ok, false, 'one yes is for one question');
+    assert.match(again.why, /nothing/i);
+    assert.equal(host.requests.length, 1);
+  });
+
+  test('with nothing asked, /graph confirm opens nothing', async () => {
+    const where = modVault();
+    const { launcher, host } = launcherFor(where);
+    const outcome = await launcher.confirm();
+    assert.equal(outcome.ok, false);
+    assert.match(outcome.why, /nothing/i);
+    assert.equal(started(host), false);
+  });
+
+  test('a question is forgotten when another note is named or the editor is stopped', async () => {
+    const where = modVault();
+    const { launcher, host } = launcherFor(where);
+    await launcher.edit(writeNote(where, 'plan2.md', 'Confidential'));
+    await launcher.edit(where.plan);
+    assert.equal((await launcher.confirm()).ok, false, 'asking about another note drops the first question');
+    assert.equal(host.requests.length, 1, 'only the plan was opened');
+    await launcher.stop('x');
+    await launcher.edit(writeNote(where, 'plan3.md', 'Confidential'));
+    await launcher.stop('/graph stop');
+    assert.equal((await launcher.confirm()).ok, false, 'a stop drops it');
+  });
+
+  test('the yes is checked again: a note raised to the highest meanwhile is refused', async () => {
+    const where = modVault();
+    const { launcher, host } = launcherFor(where);
+    const path = writeNote(where, 'plan2.md', 'Confidential');
+    await launcher.edit(path);
+    writeNote(where, 'plan2.md', 'Restricted');
+    const outcome = await launcher.confirm();
+    assert.equal(outcome.ok, false);
+    assert.equal(outcome.held, 'refused');
+    assert.equal(started(host), false);
+  });
+
+  test('a note whose classification is raised after it opened is refused when named again, and its server stops', async () => {
+    const where = modVault();
+    const { launcher, host } = launcherFor(where);
+    const path = writeNote(where, 'plan2.md', 'Internal');
+    assert.equal((await launcher.edit(path)).ok, true);
+    const { port } = partsOf(launcher.link);
+    writeNote(where, 'plan2.md', 'Confidential');
+    const outcome = await launcher.edit(path);
+    assert.equal(outcome.held, 'asks');
+    assert.equal(launcher.link, null, 'the editor open for it was stopped');
+    assert.equal(await reachable('127.0.0.1', port), false);
+    assert.equal(host.requests.length, 1);
+  });
+
+  test('without a Claude set up, or with its ceiling gone, the ceiling is the lowest classification', async () => {
+    const where = modVault();
+    const a = launcherFor(where, { settings: { ceiling: null } });
+    assert.equal((await a.launcher.edit(writeNote(where, 'i.md', 'Internal'))).held, 'asks');
+    assert.equal((await a.launcher.edit(writeNote(where, 'p.md', 'Public'))).ok, true);
+    const b = launcherFor(where, { settings: { ceiling: 'Gone' } });
+    assert.equal((await b.launcher.edit(writeNote(where, 'i.md', 'Internal'))).held, 'asks');
+  });
+
+  test('/graph confirm is read from the command line', () => {
+    assert.equal(confirmArgs('confirm'), true);
+    assert.equal(confirmArgs('  confirm  '), true);
+    assert.equal(confirmArgs('confirm plan.md'), false);
+    assert.equal(confirmArgs('confirmed.md'), false);
+    assert.equal(confirmArgs('edit confirm'), false);
+  });
+
+  test('/graph’s own drawing of a note is held to the same gate, so a pane never shows what the editor would not', async () => {
+    const where = modVault();
+    const { launcher, host } = launcherFor(where);
+    assert.deepEqual(await launcher.gate(writeNote(where, 'a.md', 'Internal')), { open: true });
+    assert.ok('ask' in (await launcher.gate(writeNote(where, 'b.md', 'Confidential'))));
+    assert.ok('refuse' in (await launcher.gate(writeNote(where, 'c.md', 'Restricted'))));
+    assert.equal(started(host), false);
+  });
+});
+
+describe('the highest classification never opens, and a credential never reaches Claude (cc_credential_never)', () => {
+  test('a note at the highest classification is refused with no question, whatever Claude’s ceiling is', async () => {
+    const where = modVault();
+    for (const ceiling of ['Internal', 'Restricted']) {
+      const { launcher, host } = launcherFor(where, { settings: { ceiling } });
+      const outcome = await launcher.edit(writeNote(where, 'top.md', 'Restricted'));
+      assert.equal(outcome.ok, false);
+      assert.equal(outcome.held, 'refused', ceiling);
+      assert.match(outcome.why, /highest/);
+      assert.equal(started(host), false);
+      assert.equal(launcher.link, null);
+      const words = sayEdit(outcome);
+      assert.ok(!/confirm/i.test(words), 'there is no yes that opens it');
+      assert.equal((await launcher.confirm()).ok, false, '/graph confirm cannot open it');
+      assert.equal(started(host), false);
+    }
+  });
+
+  test('a note with no classification counts as the level set for unlabelled notes, the highest until chosen', async () => {
+    const where = modVault();
+    const path = writeNote(where, 'none.md', null);
+    const strict = launcherFor(where, { settings: { aiUnlabelled: 'Restricted' } });
+    const refused = await strict.launcher.edit(path);
+    assert.equal(refused.held, 'refused');
+    assert.match(refused.why, /no classification/);
+    assert.equal(started(strict.host), false);
+    const asking = launcherFor(where, { settings: { aiUnlabelled: 'Confidential' } });
+    assert.equal((await asking.launcher.edit(path)).held, 'asks');
+    const open = launcherFor(where, { settings: { aiUnlabelled: 'Internal' } });
+    assert.equal((await open.launcher.edit(path)).ok, true);
+  });
+
+  test('a classification that is not one of those set is refused', async () => {
+    const where = modVault();
+    const { launcher, host } = launcherFor(where);
+    const outcome = await launcher.edit(writeNote(where, 'odd.md', 'Top Secret'));
+    assert.equal(outcome.held, 'refused');
+    assert.equal(started(host), false);
+  });
+
+  test('a credential in a note of any classification is refused, named by kind, never quoted, with no yes', async () => {
+    const where = modVault();
+    const secret = ['v', 'a', 'l', 'u', 'e'].join('').repeat(2);
+    for (const level of ['Public', 'Internal', 'Confidential']) {
+      const { launcher, host } = launcherFor(where);
+      const outcome = await launcher.edit(writeNote(where, 'cred.md', level, `db_password: "${secret}"\n`));
+      assert.equal(outcome.ok, false, level);
+      assert.equal(outcome.held, 'refused', level);
+      assert.match(outcome.why, /password or secret/);
+      assert.ok(!JSON.stringify(outcome).includes(secret), 'the value is not said');
+      assert.equal(started(host), false);
+      assert.equal((await launcher.confirm()).ok, false);
+    }
+  });
+
+  test('settings that cannot be read, or a note that cannot, fail closed: nothing opens', async () => {
+    const where = modVault();
+    const broken = launcherFor(where, {
+      ports: {
+        settings: async () => {
+          throw new Error('no settings');
+        },
+      },
+    });
+    const a = await broken.launcher.edit(where.plan);
+    assert.equal(a.ok, false);
+    assert.equal(a.held, 'refused');
+    assert.equal(started(broken.host), false);
+    const noRead = launcherFor(where, {
+      ports: {
+        read: async () => {
+          throw new Error('no such file');
+        },
+      },
+    });
+    const b = await noRead.launcher.edit(where.plan);
+    assert.equal(b.ok, false);
+    assert.equal(started(noRead.host), false);
+  });
+
+  test('a refusal says nothing of the note’s text, the address or a token', async () => {
+    const where = modVault();
+    const { launcher } = launcherFor(where);
+    const outcome = await launcher.edit(writeNote(where, 'top.md', 'Restricted', 'The hidden plan.\n'));
+    for (const text of [JSON.stringify(outcome), sayEdit(outcome), JSON.stringify(launcher)])
+      assert.ok(!text.includes('hidden plan'));
+  });
+});
+
+// C7 (cc_claude_only, cc_claude_proposes) adds its cases below, to this file: the launcher takes the proposal channel
+// before `edit` starts the server. None is written here.

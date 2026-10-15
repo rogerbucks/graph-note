@@ -4,6 +4,9 @@
 // address. With no vault in its environment it serves no API, as before. A note that cannot be opened, or a folder that
 // is refused, is thrown as plain words, which the process says on stderr before it listens anywhere.
 import type { EditorProcessOptions } from './editor-process.ts';
+import { settingsFrom } from '@graph-note/core';
+import type { GateSettings } from '@graph-note/core';
+import { storeGate } from './editor-gate.ts';
 import { NoteStore } from './editor-store.ts';
 
 /** The variables the mod sets; the process reads these and no others. */
@@ -12,7 +15,22 @@ export const EDITOR_ENVIRONMENT = {
   note: 'GRAPH_NOTE_EDITOR_NOTE',
   drafts: 'GRAPH_NOTE_EDITOR_DRAFTS',
   input: 'GRAPH_NOTE_EDITOR_INPUT',
+  /** The gate's settings as JSON: the classifications, the level for unlabelled notes and the AI models (no key). */
+  settings: 'GRAPH_NOTE_EDITOR_SETTINGS',
+  /** The digest of the text the user said yes to; empty when none was asked. */
+  confirmed: 'GRAPH_NOTE_EDITOR_CONFIRMED',
 } as const;
+
+/** The gate's settings from the environment, as the core reads settings back; none, or unreadable ones, are the defaults. */
+function gateSettings(raw: string | undefined): GateSettings {
+  try {
+    const s = settingsFrom(JSON.parse(raw ?? 'null'));
+    return { classifications: s.classifications, aiUnlabelled: s.aiUnlabelled, aiModels: s.aiModels };
+  } catch {
+    const d = settingsFrom(null);
+    return { classifications: d.classifications, aiUnlabelled: d.aiUnlabelled, aiModels: d.aiModels };
+  }
+}
 
 /** The process's options from its environment: the store for the vault, with the note opened, and how it is stopped. */
 export async function optionsFromEnvironment(env: Record<string, string | undefined>): Promise<EditorProcessOptions> {
@@ -21,7 +39,10 @@ export async function optionsFromEnvironment(env: Record<string, string | undefi
   const note = env[EDITOR_ENVIRONMENT.note];
   const drafts = env[EDITOR_ENVIRONMENT.drafts];
   if (!note || !drafts) throw new Error('It was given a vault but not the note to open, or the folder for drafts.');
-  const store = await NoteStore.create({ vault, drafts });
+  // the gate is always in: with no settings given it is the defaults, the strictest
+  const confirmed = env[EDITOR_ENVIRONMENT.confirmed] || null;
+  const gate = storeGate(gateSettings(env[EDITOR_ENVIRONMENT.settings]), confirmed);
+  const store = await NoteStore.create({ vault, drafts, gate });
   const opened = await store.open(note);
   if (!opened.ok) {
     await store.stop();

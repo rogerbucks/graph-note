@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/editor-mod.test.js",
+  "test": "only the person typing can say yes (cc_classified_asks) > any origin may still open a note at or below the level: only the yes needs the person",
+  "seen_failing_first": false,
+  "evidence": "The behaviour already existed: before the gate was strict about origin, any command could open a note at or below the level, so this pins that it still does."
+}
