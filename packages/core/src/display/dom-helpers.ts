@@ -27,6 +27,7 @@ export interface HelperWindow {
 }
 
 const SVG = 'http://www.w3.org/2000/svg';
+const HTML = 'http://www.w3.org/1999/xhtml';
 
 /** The element a node is, as the helpers use it: any DOM element with its methods. */
 type Host = Element & {
@@ -44,7 +45,7 @@ function made(
 ) {
   const info: ElementInfo = typeof o === 'string' ? { cls: o } : (o ?? {});
   const doc = parent.ownerDocument;
-  const el = (svg ? doc.createElementNS(SVG, tag) : doc.createElement(tag)) as HTMLElement & { href?: string };
+  const el = doc.createElementNS(svg ? SVG : HTML, tag) as HTMLElement & { href?: string };
   if (info.cls) el.classList.add(...(Array.isArray(info.cls) ? info.cls : info.cls.split(/\s+/).filter(Boolean)));
   if (info.text !== undefined)
     el.textContent = typeof info.text === 'string' ? info.text : (info.text.textContent ?? '');
@@ -55,7 +56,7 @@ function made(
   if (info.value !== undefined) input.value = info.value;
   if (info.placeholder !== undefined) input.placeholder = info.placeholder;
   if (info.href !== undefined) el.setAttribute('href', info.href);
-  const into = (info.parent as Node | undefined) ?? parent;
+  const into = info.parent ?? parent;
   if (info.prepend && into.firstChild) into.insertBefore(el, into.firstChild);
   else into.appendChild(el);
   cb?.(el as never);

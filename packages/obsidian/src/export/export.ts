@@ -29,10 +29,8 @@ import type {
   DataFormat,
   ExportFormat,
   ExportScope,
-  ExportTheme,
   ExportWalk,
   NoteReading,
-  ViewSpec,
   WriteOps,
 } from '@graph-note/core';
 import type { ExportAsk, ExportOutcome } from '@graph-note/core/display/export/export-types';
