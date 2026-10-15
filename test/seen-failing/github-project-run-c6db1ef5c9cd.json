@@ -1,0 +1,6 @@
+{
+  "file": "test/github-project-run.test.js",
+  "test": "the time an apply may take > the next push continues from what GitHub holds, and finishes the board",
+  "seen_failing_first": false,
+  "evidence": "It pins that a later run finishes what a budgeted run left; before the budget every apply finished at once, so it held before its code. The budget tests beside it failed first."
+}

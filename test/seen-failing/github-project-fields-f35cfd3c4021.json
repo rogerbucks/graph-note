@@ -1,0 +1,6 @@
+{
+  "file": "test/github-project-fields.test.js",
+  "test": "Wave and Order, from the waves plan > an input key the schema does not hold is refused by the stand-in, as GitHub refuses one, and an id is taken",
+  "seen_failing_first": false,
+  "evidence": "It tests the stand-in itself, made strict in this commit, not the mirror's code, so it passes against the code before; it guards that the strictness stays."
+}

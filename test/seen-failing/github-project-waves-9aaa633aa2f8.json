@@ -1,0 +1,6 @@
+{
+  "file": "test/github-project-waves.test.js",
+  "test": "the tally the mirror prints > takes a wave with no workstreams, as a placeholder: counted with none, and no error or warning",
+  "seen_failing_first": false,
+  "evidence": "It pins that an empty placeholder wave is accepted, as the coordinator asked to check; readWaves already took an empty list of workstreams, so it held before. The estimate tests beside it failed first."
+}

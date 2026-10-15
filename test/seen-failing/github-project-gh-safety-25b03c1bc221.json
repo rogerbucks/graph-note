@@ -1,0 +1,6 @@
+{
+  "file": "test/github-project-gh-safety.test.js",
+  "test": "every call names where it goes > every other call is a lookup of the login, GraphQL, an edit by global id, or the pinned repository’s issue list",
+  "seen_failing_first": false,
+  "evidence": "A rename that widens the allowance to the REST issue list of the pinned repository; before that list existed no call needed it, so it held before. The REST-list tests failed first."
+}

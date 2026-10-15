@@ -1,0 +1,6 @@
+{
+  "file": "test/policy.test.js",
+  "test": "GitHub Actions > only four jobs may write: the release, the lock, the build status comment and the mirror’s issues",
+  "seen_failing_first": false,
+  "evidence": "A rename only, asked for in review: the old name said the release job alone may write, while the test already allowed the lock, the comment and the mirror. Its body did not change."
+}

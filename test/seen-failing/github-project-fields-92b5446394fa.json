@@ -1,0 +1,6 @@
+{
+  "file": "test/github-project-fields.test.js",
+  "test": "Wave and Order, from the waves plan > a wave renamed is a new iteration: its items lose their Wave and the same run gives it them again",
+  "seen_failing_first": false,
+  "evidence": "It pins that the apply re-reads and re-sets Wave after the iterations change, which executePlan already did; added in review to show a renamed wave recovers in one run, so it held before."
+}
