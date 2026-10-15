@@ -105,6 +105,11 @@ export function launcherFor(where, over = {}) {
     cwd: where.top,
     server: [process.execPath, ENTRY],
     drafts: where.data,
+    after: (ms, fn) => {
+      const timer = setTimeout(fn, ms);
+      timer.unref();
+      return { cancel: () => clearTimeout(timer) };
+    },
     ...over.ports,
   });
   after(() => launcher.stop('the test ended'));

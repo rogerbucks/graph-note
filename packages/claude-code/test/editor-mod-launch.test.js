@@ -131,6 +131,44 @@ describe('a start that fails is shown plainly (cc_start_failure)', () => {
     assert.equal(host.requests.length, 2, 'a failure is not remembered as a server');
   });
 
+  test('a server that hands over no address is killed, and gone before the failure is said', async () => {
+    const where = modVault();
+    const silly = [process.execPath, '-e', "console.log('not an address'); setInterval(() => {}, 1e6);"];
+    const { launcher, host } = launcherFor(where, { ports: { server: silly } });
+    const outcome = await launcher.edit(where.plan);
+    assert.equal(outcome.ok, false);
+    assert.match(outcome.why, /address/);
+    const [child] = host.children;
+    assert.ok(child.exitCode !== null || child.signalCode !== null, 'the child has exited, not been left running');
+    assert.equal(launcher.link, null);
+  });
+
+  test('a server never ready is killed at the start timeout, driven by hand, and the failure is said', async () => {
+    const where = modVault();
+    // never prints; its own exit after a while is only a safety net, so a launcher with no timeout fails instead of hanging
+    const quiet = [process.execPath, '-e', 'setInterval(() => {}, 1e6); setTimeout(() => process.exit(3), 4000);'];
+    let fire = () => {};
+    let asked;
+    const registered = new Promise((resolve) => (asked = resolve));
+    const after = (ms, fn) => {
+      fire = fn;
+      asked(ms);
+      return { cancel: () => {} };
+    };
+    const { launcher, host } = launcherFor(where, { ports: { server: quiet, after } });
+    const pending = launcher.edit(where.plan);
+    const ms = await Promise.race([registered, pending]);
+    assert.equal(typeof ms, 'number', 'the launcher asked for a start timeout');
+    assert.ok(ms >= 5000 && ms <= 60000, 'a wait of seconds, not an instant or for ever');
+    fire();
+    const outcome = await pending;
+    assert.equal(outcome.ok, false);
+    assert.match(outcome.why, /did not become ready/);
+    const [child] = host.children;
+    assert.ok(child.exitCode !== null || child.signalCode !== null, 'the child has exited');
+    assert.equal(launcher.link, null);
+  });
+
   test('a start that fails still leaves /graph’s drawing to be shown: the words for it name the drawing', () => {
     const words = sayEdit({ ok: false, why: 'The note is not inside the vault.' });
     assert.match(words, /^The editor was not started: The note is not inside the vault\./);
