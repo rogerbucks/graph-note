@@ -15,6 +15,7 @@ const json = (value) => `${JSON.stringify(value)}\n`;
 const failure = (words) => Object.assign(new Error(`gh api failed: ${words}`), { stderr: words });
 const notFound = () => failure('gh: Not Found (HTTP 404)');
 const LOCKED = 'HTTP 403: Unable to create comment because issue is locked.';
+const page = (list, n) => list.sort((a, b) => b.number - a.number).slice((Number(n) - 1) * 100, Number(n) * 100);
 
 /**
  * A GitHub repository `repo`. `hub` holds what a test sets up and reads back: `pulls` (number to the pull request as the
@@ -96,7 +97,9 @@ export function fakeRepoSide({ repo = 'rogerbucks/graph-note', pageSize = 100, i
     hub.calls.push({ args, input });
     if (args[0] === 'issue' && args[1] === 'list') {
       if (flag(args, '--repo') !== repo) throw new Error('gh issue list: names no repository, or the wrong one');
-      return json(issues());
+      const author = flag(args, '--author');
+      // only the issues one author wrote when asked for, as GitHub gives them, so others’ never count against the cap
+      return json(issues().filter((i) => !args.includes('--author') || i.author?.login === author));
     }
     if (args[0] !== 'api') throw new Error(`fake repository gh does not know: ${args.join(' ')}`);
     const path = args[1];
@@ -109,12 +112,23 @@ export function fakeRepoSide({ repo = 'rogerbucks/graph-note', pageSize = 100, i
     if ((method === 'PUT' || method === 'DELETE') && /^issues\/\d+\/lock$/.test(rest)) return lock(args);
     if ((m = /^pulls\/(\d+)$/.exec(rest))) {
       if (!hub.pulls[m[1]]) throw notFound();
-      return json(hub.pulls[m[1]]);
+      return json({ ...hub.pulls[m[1]], locked: hub.locked.has(Number(m[1])) });
     }
-    if (rest === 'pulls?state=open&per_page=100')
-      return json(Object.values(hub.pulls).filter((p) => p.state === 'open'));
-    if (rest === 'pulls?state=closed&base=main&sort=updated&direction=desc&per_page=100')
-      return json(Object.values(hub.pulls).filter((p) => p.state === 'closed' && p.merged_at && p.base.ref === 'main'));
+    // lists come newest first, a hundred to the page, as GitHub gives them
+    if ((m = /^pulls\?state=open&per_page=100&page=(\d+)$/.exec(rest)))
+      return json(
+        page(
+          Object.values(hub.pulls).filter((p) => p.state === 'open'),
+          m[1],
+        ),
+      );
+    if ((m = /^pulls\?state=closed&base=main&sort=updated&direction=desc&per_page=100&page=(\d+)$/.exec(rest)))
+      return json(
+        page(
+          Object.values(hub.pulls).filter((p) => p.state === 'closed' && p.merged_at && p.base.ref === 'main'),
+          m[1],
+        ),
+      );
     if ((m = /^commits\/([0-9a-f]{40})\/pulls$/.exec(rest)))
       return json((hub.forSha[m[1]] ?? []).map((n) => hub.pulls[n]));
     if ((m = /^actions\/runs\?head_sha=([0-9a-f]{40})&event=pull_request&per_page=100$/.exec(rest)))

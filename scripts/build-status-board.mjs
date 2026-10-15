@@ -27,7 +27,7 @@ export function readBuildBoard(github, project, repo, opts = {}) {
   const found = findProject(retrying(project, opts), owner);
   if (!found) throw new BoardProblem(`the project "${PROJECT_TITLE}" was not found`);
   const issues = new Map();
-  for (const issue of [...readIssues(retrying(github, opts), repo)].sort((a, b) => a.number - b.number)) {
+  for (const issue of [...readIssues(retrying(github, opts), repo, owner)].sort((a, b) => a.number - b.number)) {
     const id = adoptedId(issue, owner);
     if (id && !issues.has(id)) issues.set(id, { number: issue.number, url: issue.url });
   }

@@ -350,6 +350,26 @@ describe('reading GitHub', () => {
     assert.ok(remote.issues.every((i) => i.author === 'the-owner'));
   });
 
+  test('asks for only the issues the signed-in login wrote, so issues others write cannot reach the cap of the list', () => {
+    const gh = fakeGithub({ login: 'the-owner' });
+    apply(gh);
+    gh.hub.issues.push({
+      number: 900,
+      title: 'spam',
+      body: '',
+      state: 'OPEN',
+      labels: [],
+      author: { login: 'spammer' },
+      url: 'https://github.com/o/r/issues/900',
+    });
+    const remote = readRemote(gh.run, REPO);
+    const lists = gh.hub.calls.filter((c) => c.args[0] === 'issue' && c.args[1] === 'list');
+    const last = lists.at(-1).args;
+    assert.equal(last[last.indexOf('--author') + 1], 'the-owner');
+    assert.ok(remote.issues.every((i) => i.author === 'the-owner'));
+    assert.ok(!remote.issues.some((i) => i.number === 900));
+  });
+
   test('finds the project by its title and gives its fields, and its items by requirement id', () => {
     const gh = fakeGithub();
     apply(gh);

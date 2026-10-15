@@ -101,7 +101,11 @@ export function fakeGithub({ owner = 'rogerbucks', name = 'graph-note', login = 
       hub.labels.push({ name: args[2] });
       return '';
     }
-    if (group === 'issue' && verb === 'list') return json(hub.issues);
+    if (group === 'issue' && verb === 'list') {
+      // only the issues one author wrote when asked for, as GitHub gives them
+      const author = flag(args, '--author');
+      return json(hub.issues.filter((i) => !args.includes('--author') || i.author?.login === author));
+    }
     if (group === 'issue' && verb === 'create') {
       mutate(args);
       const number = hub.issues.length + 1;

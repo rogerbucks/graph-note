@@ -200,6 +200,22 @@ describe('a secondary rate limit', () => {
   });
 });
 
+describe('a list that others fill', () => {
+  test('does not hit the cap of the issues: only the signed-in login’s own are asked for, so issues others file are not in it', () => {
+    const gh = fakeGithub();
+    gh.hub.issues = Array.from({ length: ISSUE_CAP }, (_, i) => ({
+      number: i + 1,
+      title: 'spam',
+      body: '',
+      state: 'OPEN',
+      labels: [],
+      author: { login: 'a-stranger' },
+      url: 'u',
+    }));
+    assert.deepEqual(readRemote(gh.run, REPO).issues, []);
+  });
+});
+
 describe('a list that hit its cap', () => {
   test('is refused for labels, issues and projects, which may be only the first part of what GitHub holds', () => {
     assert.deepEqual([LABEL_CAP, ISSUE_CAP, PROJECT_CAP], [1000, 5000, 200]);
@@ -213,7 +229,7 @@ describe('a list that hit its cap', () => {
       body: '',
       state: 'OPEN',
       labels: [],
-      author: { login: 'x' },
+      author: { login: issues.hub.login },
       url: 'u',
     }));
     assert.throws(() => readRemote(issues.run, REPO), /issues.*5000/);

@@ -51,6 +51,25 @@ describe('the Build status field of the project', () => {
     assert.ok(side.hub.calls.every((c) => !c.args.includes('user')));
   });
 
+  test('asks for only the issues the owner wrote, so issues others write cannot reach the cap of the list', () => {
+    const { gh, side, board } = both();
+    for (let n = 0; n < 5; n += 1)
+      gh.hub.issues.push({
+        number: 900 + n,
+        title: 'spam',
+        body: '',
+        state: 'OPEN',
+        labels: [],
+        author: { login: 'spammer' },
+        url: 'u',
+      });
+    const read = board();
+    const list = side.hub.calls.find((c) => c.args[0] === 'issue' && c.args[1] === 'list');
+    assert.equal(list.args[list.args.indexOf('--author') + 1], 'rogerbucks');
+    assert.equal(read.items.size, 5);
+    assert.ok(![...read.issues.values()].some((i) => i.number >= 900));
+  });
+
   test('takes only the issues the owner wrote as the mirror’s, since only the owner’s login runs the mirror', () => {
     const { gh, board } = both();
     for (const issue of gh.hub.issues) issue.author = { login: 'someone-else' };

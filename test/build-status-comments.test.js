@@ -63,8 +63,38 @@ describe('the Merged comment, after the pull request is closed and locked', () =
     assert.equal(w.comments().length, 1);
     assert.equal(w.annotations.length, 1);
     assert.equal(w.annotations[0][0], 'warning');
-    assert.match(w.annotations[0][1], /lock the conversation of #7 again/);
+    assert.match(w.annotations[0][1], /pull request #7 was left unlocked/);
     assert.match(w.annotations[0][1], /Resource not accessible/);
+  });
+
+  test('locks again after a short failure of GitHub, and then warns of nothing', async () => {
+    const w = world();
+    mergedAndLocked(w);
+    let failures = 1;
+    const real = w.deps.github;
+    w.deps.github = (args, input) => {
+      if (args.includes('PUT') && failures-- > 0) throw new Error('gh api failed: HTTP 502 Bad Gateway');
+      return real(args, input);
+    };
+    await w.send('push', { after: MERGE });
+    assert.equal(w.side.hub.locked.has(7), true);
+    assert.deepEqual(w.annotations, []);
+  });
+
+  test('warns that the pull request was left unlocked, with its number, when the lock still fails after the retries', async () => {
+    const w = world();
+    mergedAndLocked(w);
+    const real = w.deps.github;
+    w.deps.github = (args, input) => {
+      if (args.includes('PUT')) throw new Error('gh api failed: HTTP 502 Bad Gateway');
+      return real(args, input);
+    };
+    await w.send('push', { after: MERGE });
+    assert.equal(w.comments().length, 1);
+    assert.equal(w.side.hub.locked.has(7), false);
+    assert.equal(w.annotations.length, 1);
+    assert.match(w.annotations[0][1], /pull request #7 was left unlocked/);
+    assert.match(w.annotations[0][1], /502/);
   });
 
   test('warns, and unlocks nothing, when GitHub will not let it unlock', async () => {

@@ -222,11 +222,13 @@ export function handlePull(number, ctx, deps, keeper, rules) {
  */
 function postComment(number, { stage, items, problems }, create, ctx, deps, keeper) {
   const body = commentBody({ stage, items, problems, repo: ctx.repo, runUrl: ctx.runUrl, boardUrl: keeper.url() });
-  const left = leaveComment(deps.github, ctx.repo, number, body, { create });
+  const left = leaveComment(deps.github, ctx.repo, number, body, { create, sleep: deps.sleep });
   const say = (text) => deps.annotate('warning', redactSecrets(text, [deps.projectToken]));
   if (left.failure) say(`could not leave the comment on #${number}: ${left.failure}`);
   if (left.relockFailed)
-    say(`could not lock the conversation of #${number} again after leaving the comment: ${left.relockFailed}`);
+    say(
+      `pull request #${number} was left unlocked: it could not be locked again after the comment: ${left.relockFailed}`,
+    );
   return left.outcome;
 }
 

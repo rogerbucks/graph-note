@@ -180,12 +180,17 @@ const readLabels = (run, repo) =>
     LABEL_CAP,
     'labels',
   ).map((l) => l.name);
-export const readIssues = (run, repo) =>
+/**
+ * The issues of a repository, only those `author` wrote where one is given: the mirror adopts only an issue its own login
+ * wrote, so asking for those alone keeps issues anybody else files from reaching the cap of the list.
+ */
+export const readIssues = (run, repo, author) =>
   whole(
     JSON.parse(
       run(
         inRepo(repo, [
           ...['issue', 'list', '--state', 'all', '--limit', String(ISSUE_CAP)],
+          ...(author ? ['--author', author] : []),
           ...['--json', 'number,title,body,state,labels,author,url'],
         ]),
       ),
@@ -210,7 +215,7 @@ export const findProject = (run, owner) => readProjects(run, owner).find((p) => 
 export function readRemote(run, repo) {
   const login = JSON.parse(run(['api', 'user'])).login;
   const labelNames = readLabels(run, repo);
-  const issues = readIssues(run, repo);
+  const issues = readIssues(run, repo, login);
   const found = findProject(run, ownerOf(repo));
   if (!found) return { login, labelNames, issues, project: null };
   const idByNumber = new Map(issues.flatMap((i) => (adoptedId(i, login) ? [[i.number, adoptedId(i, login)]] : [])));
@@ -233,7 +238,7 @@ function lookup(args, input, read) {
     return () => {
       const login = JSON.parse(read(['api', 'user'])).login;
       const id = idOfBody(input);
-      const made = readIssues(read, flag('--repo')).find((i) => id && adoptedId(i, login) === id);
+      const made = readIssues(read, flag('--repo'), login).find((i) => id && adoptedId(i, login) === id);
       return made && { value: `${made.url}\n` };
     };
   if (group === 'label' && verb === 'create')

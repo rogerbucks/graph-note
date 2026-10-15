@@ -9,6 +9,7 @@ import { spawnSync } from 'node:child_process';
 import { REQUIREMENTS } from './check-requirements.mjs';
 import { COMMENT_MARKER, requestedIds } from './build-status.mjs';
 import { ghRunner } from './github-project-gh.mjs';
+import { retrying } from './github-project-retry.mjs';
 
 /** The workflow whose run is the check that counts: the other workflows of a pull request are not the build's. */
 export const CI_WORKFLOW = '.github/workflows/ci.yml';
@@ -19,6 +20,7 @@ export const MAX_FILE_BYTES = 3_000_000;
 
 const PAGE = 100;
 const MAX_OPEN = 50;
+const MAX_PAGES = 10;
 const SHA = /^[0-9a-f]{40}$/;
 const REF = /^[\w][\w.+/-]{0,199}$/;
 const NOT_FOUND = /HTTP 404|Not Found/;
@@ -63,9 +65,28 @@ export function readPullRequest(run, repo, number) {
   };
 }
 
-/** The numbers of the open pull requests, sorted, at most fifty; the judging of each (a fork's, say) is the caller's. */
+const ownPull = (p, repo) => p.head?.repo?.full_name === repo && p.base?.repo?.full_name === repo;
+
+/**
+ * Pages through a list of pull requests (newest first, a hundred to the page, at most MAX_PAGES), keeping those of this
+ * repository, whose head and base are both it, that `keep` accepts. The forks' are left out before anything is counted, so
+ * no crowd of them can hide one of ours. Stops once `limit` are kept. Gives {found, cut}: cut is true when the pages ran out
+ * before the list did.
+ */
+function ownPulls(run, repo, path, keep, limit) {
+  const found = [];
+  for (let page = 1; page <= MAX_PAGES; page += 1) {
+    const list = json(run, repo, `${path}&page=${page}`);
+    found.push(...list.filter((p) => ownPull(p, repo) && keep(p)));
+    if (list.length < PAGE || found.length >= limit) return { found, cut: false };
+  }
+  return { found, cut: true };
+}
+
+/** The numbers of the open pull requests of this repository (a fork's are left out first), sorted, at most fifty. */
 export function openPullNumbers(run, repo) {
-  return json(run, repo, `pulls?state=open&per_page=${PAGE}`)
+  const { found } = ownPulls(run, repo, `pulls?state=open&per_page=${PAGE}`, () => true, MAX_OPEN);
+  return found
     .map((p) => p.number)
     .filter(Number.isInteger)
     .sort((a, b) => a - b)
@@ -149,24 +170,22 @@ const timeOf = (text) => {
 };
 
 /**
- * The numbers of the pull requests merged into main after the time `since` and up to the time `until` (either may be
- * null, for no bound), as {numbers (sorted, the most recent fifty at most), truncated}: truncated is true when there were
- * more than that, or the page asked for was full, so some may be missing. Throws for a time that is not a time.
+ * The numbers of the pull requests of this repository (a fork's are left out first) merged into main after the time
+ * `since` and up to the time `until` (either may be null, for no bound), as {numbers (sorted, the most recent fifty at
+ * most), truncated}: truncated is true when there were more than that, or the pages ran out before the list did, so some
+ * may be missing. Throws for a time that is not a time.
  */
 export function mergedPullNumbers(run, repo, since, until) {
   const [from, to] = [timeOf(since), timeOf(until)];
-  const listed = json(run, repo, `pulls?state=closed&base=main&sort=updated&direction=desc&per_page=${PAGE}`);
-  const numbers = listed
-    .filter(
-      (p) =>
-        p.merged_at &&
-        (from === null || Date.parse(p.merged_at) > from) &&
-        (to === null || Date.parse(p.merged_at) <= to),
-    )
+  const inSpan = (p) =>
+    p.merged_at && (from === null || Date.parse(p.merged_at) > from) && (to === null || Date.parse(p.merged_at) <= to);
+  const path = `pulls?state=closed&base=main&sort=updated&direction=desc&per_page=${PAGE}`;
+  const { found, cut } = ownPulls(run, repo, path, inSpan, MAX_OPEN + 1);
+  const numbers = found
     .map((p) => p.number)
     .filter(Number.isInteger)
     .sort((a, b) => a - b);
-  return { numbers: numbers.slice(-MAX_OPEN), truncated: numbers.length > MAX_OPEN || listed.length >= PAGE };
+  return { numbers: numbers.slice(-MAX_OPEN), truncated: numbers.length > MAX_OPEN || cut };
 }
 
 const sameText = (a, b) =>
@@ -201,23 +220,33 @@ export function upsertComment(run, repo, number, body, { create = true } = {}) {
   return 'created';
 }
 
-const LOCKED = /locked/i;
 const lockOf = (run, repo, number, method) => run(['api', `repos/${repo}/issues/${number}/lock`, '--method', method]);
+
+/** Whether a pull request's conversation is locked, by the `locked` field of the pull request itself. */
+const isLocked = (run, repo, number) => json(run, repo, `pulls/${wholeNumber(number)}`).locked === true;
 
 /**
  * Leaves the pull request's one comment as upsertComment does, even where the conversation is locked, as a closed pull
- * request's is (the lock workflow locks each as it opens). The comment is tried first; only if GitHub refuses it because
- * the conversation is locked is the conversation unlocked, the comment left and the conversation locked again, in the one
- * step, and the lock is taken up again even if the comment then fails. Gives {outcome (upsertComment's, or 'failed'),
- * unlocked, relockFailed (GitHub's words, or null), failure (GitHub's words, or null)}. It throws nothing for a failure of
- * GitHub: the caller says so in a warning. An unlock that is refused leaves the comment unmade and nothing to lock again.
+ * request's is (the lock workflow locks each as it opens). The comment is tried first; only if it fails and the pull
+ * request's own `locked` field, read from the API, is true (a word in GitHub's refusal is never taken for it) is the
+ * conversation unlocked, the comment left and the conversation locked again, in the one step. The lock is taken up again
+ * even if the comment then fails, and with the repository's retry for a short failure of GitHub (`opts.sleep` may give
+ * another wait). Gives {outcome (upsertComment's, or 'failed'), unlocked, relockFailed (GitHub's words, or null), failure
+ * (GitHub's words, or null)}. It throws nothing for a failure of GitHub: the caller says so in a warning. An unlock that is
+ * refused leaves the comment unmade and nothing to lock again.
  */
 export function leaveComment(run, repo, number, body, opts = {}) {
   const done = { outcome: 'failed', unlocked: false, relockFailed: null, failure: null };
   try {
     return { ...done, outcome: upsertComment(run, repo, number, body, opts) };
   } catch (e) {
-    if (!LOCKED.test(words(e))) return { ...done, failure: words(e) };
+    let locked = false;
+    try {
+      locked = isLocked(run, repo, number);
+    } catch {
+      // not knowing whether it is locked, the first failure is the one to give
+    }
+    if (!locked) return { ...done, failure: words(e) };
   }
   try {
     lockOf(run, repo, number, 'DELETE');
@@ -231,7 +260,7 @@ export function leaveComment(run, repo, number, body, opts = {}) {
     left.failure = words(e);
   }
   try {
-    lockOf(run, repo, number, 'PUT');
+    lockOf(retrying(run, opts.sleep ? { sleep: opts.sleep } : {}), repo, number, 'PUT');
   } catch (e) {
     left.relockFailed = words(e);
   }

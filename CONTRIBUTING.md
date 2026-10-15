@@ -162,6 +162,8 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/cheap-checks.test.js` — the quiet test run, running only a change's tests, the AI guide and the search ignore file.
 - `test/build-status.test.js` — the build status's pure part: the requirements a pull request moves, found from the tests it newly marks written; the stage an event gives; which value may replace which; the comment and the annotations.
 - `test/build-status-gh.test.js` — the build status's calls to GitHub, through in-memory stand-ins for `gh`: a pull request, the requirements file at a ref and its size, CI's run, the releases, the pull requests merged in a span, the one comment, leaving it on a locked conversation, and the two tokens kept apart.
+- `test/build-status-gh-lock.test.js` — leaving the comment on a conversation that may be locked: unlocked only for a pull request whose own `locked` field is true (a refusal that says blocked unlocks nothing), and the lock taken up again with the repository's retry, or the pull request said to be left unlocked.
+- `test/build-status-gh-lists.test.js` — the open pull requests and those merged in a span, of this repository's own before any cap, past a crowd of fork pull requests.
 - `test/build-status-board.test.js` — the build status's project board: each item's Build status and Status, setting either, the issues read with the workflow's token and the project with the project token alone, and every trouble that is the board's own.
 - `test/build-status-run.test.js` — the build status event by event: a pull request opened, CI's checks failing and passing, its merge and closing, the pull requests it leaves alone (a fork, a stale one, one merged elsewhere), a very large one, a release; and a project token that is missing, expired (401) or refused, which warns and never fails.
 - `test/build-status-env.test.js` — the build status run whole from a workflow's environment: the event file, the two tokens each to its own runner, the exit code, and a requirements file too large to read.
@@ -267,6 +269,10 @@ These test behaviour across modules, or the repository itself, so they are named
   underscore, dot and hyphen) and is in main's requirements file, and nothing else is ever echoed. Once the copy marks
   tests written, the copy's diff decides, and an id the line names that the landed copy does not prove is let go, with a
   warning in the comment (never a failure).
+- **Lists are of this repository's own before any cap.** The open pull requests and the pull requests merged in a span
+  are paged through (ten pages at most) keeping only those whose head and base are this repository, so a crowd of fork
+  pull requests cannot hide one that holds an item; the issues are asked for by author (`--author`, the owner), in the
+  build status and in the mirror (which adopts only its own login's issues), so issues others file never reach the cap.
 - **Which pull requests.** Only those of this repository: one from a fork moves nothing and gets no comment. The pull
   requests an event names must still have, as their head, the commit its checks ran on. Merged counts only when the pull
   request merged into main.
@@ -280,9 +286,10 @@ These test behaviour across modules, or the repository itself, so they are named
   same-repository pull request still holds the item (which also keeps its Build status). Never back from Done.
 - **One comment, updated at each step,** on the pull request, with links to the items, the board and the run; none when
   a pull request moves no requirement. A release comments, with the stage Released, on each pull request merged since the
-  release before that proved any of its requirements. A comment is tried first; only if GitHub refuses it because the
-  conversation is locked (every pull request's is, and a merged one's is closed too) is it unlocked, commented and locked
-  again in the one step, a failure to lock again being a warning. It is made with the workflow's own token, with
+  release before that proved any of its requirements. A comment is tried first; only if it fails and the pull request's
+  own `locked` field, read from the API, is true (every pull request's is, and a merged one's is closed too) is it
+  unlocked, commented and locked again in the one step. The lock is taken up again with the repository's retry for a
+  short failure of GitHub; if it still fails, the warning says that pull request `#N` was left unlocked. It is made with the workflow's own token, with
   `pull-requests: write` as the only write permission (it is what locking needs, as the lock workflow shows). When
   two runs would make it at once it is looked for again just before it is made.
 - **`PROJECT_TOKEN` is for the board alone** (a classic token with the `project` scope, as a secret): listing the project,
