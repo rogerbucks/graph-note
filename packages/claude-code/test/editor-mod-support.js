@@ -3,7 +3,7 @@
 // loop is left), a vault on disk in a temporary folder, and the launcher made over them. Test code only: nothing here ships.
 import { after } from 'node:test';
 import { spawn } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { EditorLauncher } from '../src/editor-launch.ts';
@@ -96,11 +96,33 @@ export function modVault() {
   };
 }
 
+/** The classifications the tests use, lowest first. */
+export const LEVELS = ['Public', 'Internal', 'Confidential', 'Restricted'];
+
+/**
+ * The settings the gate reads: Claude's ceiling Internal, and a note with no classification counting as Public, so the
+ * unlabelled notes of the other tests open. `over` changes any of them; `ceiling` is Claude's, null for no Claude set up.
+ */
+export function gateSettings(over = {}) {
+  const { ceiling = 'Internal', ...rest } = over;
+  const claude = { name: 'Claude', purpose: '', ceiling, endpoint: '', model: '', keyName: '' };
+  return { classifications: LEVELS, aiUnlabelled: 'Public', aiModels: ceiling === null ? [] : [claude], ...rest };
+}
+
+/** A note on disk: front matter with `level` (none when null), then `body`. Returns its path. */
+export function writeNote(where, name, level, body = 'Some text.\n') {
+  const path = join(where.vault, 'Notes', name);
+  writeFileSync(path, level === null ? body : `---\nclassification: ${level}\n---\n${body}`);
+  return path;
+}
+
 /** The launcher over a host, with the shipped server (run from its source) unless `over` says otherwise; stopped after. */
 export function launcherFor(where, over = {}) {
   const host = over.host ?? hostSpawn();
   const launcher = new EditorLauncher({
     spawn: host.spawn,
+    read: async (path) => readFileSync(path, 'utf8'),
+    settings: async () => gateSettings(over.settings),
     exists: async (path) => existsSync(path),
     cwd: where.top,
     server: [process.execPath, ENTRY],
