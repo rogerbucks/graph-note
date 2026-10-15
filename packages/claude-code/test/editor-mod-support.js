@@ -96,6 +96,9 @@ export function modVault() {
   };
 }
 
+/** The origin of a command the person typed into the composer. */
+export const COMPOSER = { kind: 'composer' };
+
 /** The classifications the tests use, lowest first. */
 export const LEVELS = ['Public', 'Internal', 'Confidential', 'Restricted'];
 
@@ -135,6 +138,13 @@ export function launcherFor(where, over = {}) {
     ...over.ports,
   });
   after(() => launcher.stop('the test ended'));
+  if (!over.raw) {
+    // the person typing, unless a test says who else: the launcher itself fails closed on an origin it is not given
+    const edit = launcher.edit.bind(launcher);
+    const confirm = launcher.confirm.bind(launcher);
+    launcher.edit = (given, cwd, origin = COMPOSER) => edit(given, cwd, origin);
+    launcher.confirm = (origin = COMPOSER) => confirm(origin);
+  }
   return { launcher, host };
 }
 

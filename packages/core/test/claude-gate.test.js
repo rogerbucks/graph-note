@@ -3,7 +3,12 @@
 // level set for unlabelled notes, and a credential never reaches Claude.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { claudeGate, noteClassification } from '../src/claude-gate.ts';
+import * as gateModule from '../src/claude-gate.ts';
+
+import { sha256 } from '../src/ai-digest.ts';
+
+const { claudeGate, noteClassification } = gateModule;
+const classificationOf = (text) => gateModule.classificationOf(text);
 
 const LEVELS = ['Public', 'Internal', 'Confidential', 'Restricted'];
 const claude = (ceiling) => ({ name: 'Claude', purpose: '', ceiling, endpoint: '', model: '', keyName: '' });
@@ -96,4 +101,92 @@ test('a credential in the note is refused at any classification, named by kind a
 
 test('settings with no classifications at all refuse every note', () => {
   assert.ok('refuse' in claudeGate(note('Public'), settings({ classifications: [] })));
+});
+
+const front = (...lines) => `---\n${lines.join('\n')}\n---\nSome text.\n`;
+
+test('only an unindented, top-level classification key counts: nested and block-scalar ones do not', () => {
+  assert.equal(noteClassification(front('meta:', '  classification: Restricted')), null);
+  assert.equal(
+    noteClassification(front('about: |', '  classification: Restricted', 'classification: Public')),
+    'Public',
+  );
+  assert.equal(noteClassification(front('about: >', '  classification: Restricted')), null);
+  assert.equal(noteClassification(front(' classification: Restricted')), null, 'indented is not top level');
+  assert.equal(noteClassification(front('- classification: Restricted')), null);
+});
+
+test('several classification keys, or a value that cannot be parsed, are unknown, and refuse', () => {
+  const bad = [
+    front('classification: Public', 'classification: Restricted'),
+    front('classification: Public', 'Classification: Restricted'),
+    front('classification: [Public, Restricted]'),
+    front('classification: {a: b}'),
+    front('classification: |', '  Public'),
+    front('classification: "Public'),
+    front('classification: &anchor Public'),
+    front('classification: !!str Public'),
+  ];
+  for (const text of bad) {
+    assert.equal(classificationOf(text).kind, 'unknown', text);
+    const gate = claudeGate(text, settings({ aiUnlabelled: 'Public', aiModels: [claude('Confidential')] }));
+    assert.ok('refuse' in gate, text);
+    assert.match(gate.refuse, /unknown classification/);
+  }
+});
+
+test('an empty classification followed by list or child lines is unknown; an empty one alone is none', () => {
+  for (const text of [
+    front('classification:', '  - Restricted'),
+    front('classification:', '- Restricted'),
+    front('classification:', '  level: Restricted'),
+    front('classification:  ', '  Restricted'),
+  ]) {
+    assert.equal(classificationOf(text).kind, 'unknown', text);
+    assert.ok('refuse' in claudeGate(text, settings({ aiUnlabelled: 'Public' })), text);
+  }
+  assert.equal(classificationOf(front('classification:', 'title: x')).kind, 'none');
+  assert.equal(classificationOf(front('classification:')).kind, 'none');
+});
+
+test('a refusal or a question never quotes the note’s label or its text', () => {
+  const label = 'tOp-SeCrEt-label';
+  const texts = [
+    note(label, 'The hidden plan.'),
+    note(label.toUpperCase(), 'The hidden plan.'),
+    front('classification: Public', `classification: ${label}`),
+    front('classification:', `  - ${label}`),
+    note('restricted', 'The hidden plan.'),
+    note('CONFIDENTIAL', 'The hidden plan.'),
+  ];
+  for (const text of texts) {
+    const gate = claudeGate(text, settings());
+    const said = JSON.stringify(gate);
+    assert.ok(!said.toLowerCase().includes(label.toLowerCase()), said);
+    assert.ok(!said.includes('hidden plan'), said);
+  }
+  assert.match(claudeGate(note(label), settings()).refuse, /unknown classification/);
+});
+
+test('a yes is for the digest of the text it was given about: that text opens, any other still asks', () => {
+  const text = note('Confidential', 'Agreed.\n');
+  assert.deepEqual(claudeGate(text, settings(), sha256(text)), { open: true });
+  assert.ok('ask' in claudeGate(note('Confidential', 'Changed.\n'), settings(), sha256(text)));
+  assert.ok('ask' in claudeGate(text, settings(), null));
+  assert.ok('ask' in claudeGate(text, settings(), ''));
+});
+
+test('a yes never opens the highest classification, an unknown one, or a credential', () => {
+  for (const text of [
+    note('Restricted'),
+    note('Nonsense'),
+    front('classification: Public', 'classification: Public'),
+    note('Confidential', `db_password: "${value}"\n`),
+  ])
+    assert.ok('refuse' in claudeGate(text, settings(), sha256(text)), text);
+});
+
+test('a label’s case is the settings’ own in what is said', () => {
+  assert.match(claudeGate(note('cOnFiDeNtIaL'), settings()).ask, /Confidential/);
+  assert.ok(!claudeGate(note('cOnFiDeNtIaL'), settings()).ask.includes('cOnFiDeNtIaL'));
 });
