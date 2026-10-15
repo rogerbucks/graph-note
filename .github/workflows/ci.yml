@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
+    # labeled and unlabeled, so the requirements-copy label takes effect (a re-run reuses the old event's labels)
+    types: [opened, synchronize, reopened, labeled, unlabeled]
 
 permissions:
   contents: read
@@ -17,7 +19,7 @@ jobs:
           persist-credentials: false
           # the record of tests seen failing first is checked against the history it was made from
           fetch-depth: 0
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
       - run: npm ci
@@ -31,6 +33,12 @@ jobs:
         run: node scripts/quality-check.mjs --baseline-since "$BASE"
       - run: npm run typecheck
       - run: npm test
+      # the generated requirements copy may change in a pull request only by tests flipped from planned to written
+      # the label requirements-copy, read from the event's labels, lifts only this comparison: the audit above still runs
+      - if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'requirements-copy')
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: node scripts/check-requirements-flips.mjs --base-ref "$BASE"
       - run: npm run build
 
   lint:
@@ -39,7 +47,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
       - run: npm ci
@@ -57,7 +65,7 @@ jobs:
         with:
           persist-credentials: false
       # The parity tests read the shared cases through Node, and run the core's reader, which needs the packages.
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
       - run: npm ci
@@ -88,7 +96,7 @@ jobs:
         with:
           persist-credentials: false
       # The parity tests read the shared cases through Node, and run the core's reader, which needs the packages.
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
       - run: npm ci
@@ -114,7 +122,7 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
       - run: npm ci
@@ -148,7 +156,7 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0

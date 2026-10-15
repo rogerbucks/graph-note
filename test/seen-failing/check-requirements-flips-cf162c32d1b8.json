@@ -1,0 +1,6 @@
+{
+  "file": "test/check-requirements-flips.test.js",
+  "test": "a hand change to the requirements copy > run on its own against a base file: exit 0 for a flip, 1 and each difference named for another change",
+  "seen_failing_first": false,
+  "evidence": "Added in the same commit as the command line it runs, with a wrong expectation that failed; the corrected case in the next commit passed against code that already existed, so it was never seen failing for the right reason."
+}
