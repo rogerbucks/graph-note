@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/block-copy.test.js",
+  "test": "the original rewritten after a copy is pasted > a copy pasted beside it and the original rewritten whole, in one change, reads as a new block pasted above",
+  "seen_failing_first": false,
+  "evidence": "Documents the one case no reading of the note can tell, already read so before: a copy pasted directly beside the block with the original rewritten whole, in one change, is byte for byte a new block pasted above it, which the earlier reviews require to be followed, never stopped. The test holds the two texts equal and the outcome the same, so the limit is stated, not hidden."
+}
