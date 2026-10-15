@@ -5,7 +5,7 @@
 // likely meant (broken_links_problems); and a thing's attachments by name and type (attachments_at_a_glance).
 import { linkTo, refusedWords } from '@graph-note/core';
 import type { Attachment, BrokenLink, FoundLink, PlacedLink } from '@graph-note/core';
-import type { LeftAt, LinkHost } from './link-host';
+import type { LeftAt, LinkHost } from './link-types';
 
 /** How long a finger rests on a link before Obsidian's preview of it is shown, as a long press. */
 const LONG_PRESS_MS = 500;

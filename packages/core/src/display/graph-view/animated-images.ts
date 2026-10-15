@@ -10,7 +10,7 @@
 // would run as part of it. Each card counts what moves on it, its details among it, and lets every image go with it.
 import { IMAGE_LIMITS, LIMITS_SAID, imageFacts, imagesOf, neverMoves, playRefusal, startOf } from '@graph-note/core';
 import type { ImageFacts, PictureBox, Start } from '@graph-note/core';
-import type { FoundImage, ImageSource } from '../images/vault-images';
+import type { FoundImage, ImageSource } from '../images/image-source';
 import { STILL_PIXELS } from '../images/still-frame';
 import { figureView, pictureView, refusedFigure, refusedPicture, squareIn } from './image-views';
 import type { ImageView } from './image-views';

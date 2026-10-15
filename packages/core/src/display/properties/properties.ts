@@ -4,7 +4,8 @@
 // switch for true or false. It is built on Obsidian's own markup and classes, so it takes the theme for free. Each change is
 // checked against its type and written as text into the block being edited (§2, edits are text). A property chosen as a
 // List is held as things linked to this one, and shown as chips (list-row.ts), asked for in list-form.ts.
-import { Menu, Platform, setIcon } from 'obsidian';
+import { displayHost, isPhone, setIcon } from '../host';
+import type { MenuEntry } from '../host';
 import {
   acceptNameFirst,
   linkedValues,
@@ -290,49 +291,40 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
       });
     };
     const menu = () => {
-      const m = new Menu();
-      // every row added is counted, so the menu's height is estimated from what it holds
-      let rows = 0;
-      const addItem = (build: Parameters<Menu['addItem']>[0]) => {
-        rows++;
-        m.addItem(build);
-      };
+      const entries: MenuEntry[] = [];
       for (const t of TYPES) {
-        addItem((item) =>
-          item
-            .setTitle(t.title)
-            .setIcon(t.icon)
-            .setChecked(t.type === state.type)
-            .onClick(() => {
-              if (t.type === state.type) return;
-              const words = t.type === 'boolean' ? state.words : wordsIn(input, state.type, state.words);
-              if (state.written && !write(state.key, [{ key: state.key, type: t.type, words }])) return;
-              state.type = t.type;
-              state.words = words;
-              show();
-              refield();
-            }),
-        );
+        entries.push({
+          title: t.title,
+          icon: t.icon,
+          checked: t.type === state.type,
+          onClick: () => {
+            if (t.type === state.type) return;
+            const words = t.type === 'boolean' ? state.words : wordsIn(input, state.type, state.words);
+            if (state.written && !write(state.key, [{ key: state.key, type: t.type, words }])) return;
+            state.type = t.type;
+            state.words = words;
+            show();
+            refield();
+          },
+        });
         // List, after Text, as Obsidian orders it: held as linked things, so only a thing can have one
-        if (t.type === 'text' && thing !== null)
-          addItem((item) => item.setTitle('List').setIcon('list').onClick(askList));
+        if (t.type === 'text' && thing !== null) entries.push({ title: 'List', icon: 'list', onClick: askList });
       }
-      rows++; // the separator takes a row's room
-      m.addSeparator();
-      addItem((item) =>
-        item
-          .setTitle('Remove')
-          .setIcon('trash-2')
-          .setWarning(true)
-          .onClick(() => {
-            if (state.written && !write(state.key, [{ key: state.key, type: null, words: '' }])) return;
-            keys.delete(state.key);
-            el.remove();
-          }),
-      );
-      // placed where every row stays on screen, measured in the window the icon is in and shown in that window's document
-      m.showAtPosition(
-        menuPosition(icon.getBoundingClientRect(), rows, icon.win.innerHeight, Platform.isPhone),
+      entries.push('separator', {
+        title: 'Remove',
+        icon: 'trash-2',
+        warning: true,
+        onClick: () => {
+          if (state.written && !write(state.key, [{ key: state.key, type: null, words: '' }])) return;
+          keys.delete(state.key);
+          el.remove();
+        },
+      });
+      // placed where every row stays on screen (the separator takes a row's room), measured in the window the icon is in
+      // and shown in that window's document
+      displayHost().menu(
+        entries,
+        menuPosition(icon.getBoundingClientRect(), entries.length, icon.win.innerHeight, isPhone()),
         icon.doc,
       );
     };

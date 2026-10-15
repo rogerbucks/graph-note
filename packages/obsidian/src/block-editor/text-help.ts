@@ -9,8 +9,8 @@ import { announce, caretLine, heardKey, listProblems, showFixes } from './proble
 import type { FixChanges } from './problem-help';
 import { acceptSuggestion, showSuggestions } from './suggestions';
 import { InlineCompletion } from './inline-completion';
-import { unnamedPlace } from '../graph-view/suggested-name';
-import type { Chosen } from '../graph-view/view-options';
+import { unnamedPlace } from '@graph-note/core/display/graph-view/suggested-name';
+import type { Chosen } from '@graph-note/core/display/graph-view/view-options';
 
 /** The help for one editor: what it read last, and what it shows from that. */
 export class TextHelp {

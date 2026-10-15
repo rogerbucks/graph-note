@@ -5,7 +5,7 @@
 // the editor with the misspelt word selected, where the fix bar offers the same fix. Both write only through the card's
 // options, which read-only.ts gates; where the card is read-only neither is offered.
 import { estimateFix } from '@graph-note/core';
-import { withFix } from '../block-editor/problem-help';
+import { withFix } from '../fix-changes';
 import { button } from './view-bar';
 import type { ViewOptions } from './view-options';
 

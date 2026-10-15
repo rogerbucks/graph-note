@@ -5,7 +5,7 @@
 // sheet's alone (`graph-note-mini-*`). Pointer only: the drawing is moved from the keyboard by its own keys.
 import { hitAreas } from '@graph-note/core';
 import type { Drawn, HitAreas, MiniMapSetting, Size, View, Zoom } from '@graph-note/core';
-import type { Component } from 'obsidian';
+import type { Lifecycle } from '../lifecycle';
 import { make } from './note-callouts';
 
 /** The longest side of the copy, in pixels. */
@@ -36,7 +36,7 @@ export class MiniMap {
   private readonly host: MiniMapHost;
 
   /** For the viewport it sits in, the card (which owns its listeners), and what it asks of the card. */
-  constructor(viewport: HTMLElement, card: Component, host: MiniMapHost) {
+  constructor(viewport: HTMLElement, card: Lifecycle, host: MiniMapHost) {
     this.host = host;
     this.el = viewport.createDiv({
       cls: 'graph-note-mini-map',

@@ -18,8 +18,8 @@ import {
 } from '@graph-note/core';
 import type { GraphStep, StepFault, StepGiven, StepRun } from '@graph-note/core';
 import type GraphNotePlugin from './main';
-import { renderCode } from './code';
-import { readOnlyHere, whenPlaced } from './graph-view/placement';
+import { renderCode } from '@graph-note/core/display/code';
+import { readOnlyHere, whenPlaced } from '@graph-note/core/display/graph-view/placement';
 import { editInPane } from './edit-in-pane';
 
 const and = (xs: readonly string[]) =>

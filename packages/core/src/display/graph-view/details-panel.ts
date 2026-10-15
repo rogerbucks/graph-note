@@ -3,7 +3,7 @@
 // problems — with the one shown marked as selected; and, while the block is edited in place, the inspector, which
 // changes its properties in the text. What its links reach can be chosen from it, and the walk retraced (§25); in view
 // mode, in a note's card, it is the sheet pinned to the foot of the screen (details-sheet.ts).
-import { Platform } from 'obsidian';
+import { isPhone } from '../host';
 import { Trail, details, linkDetails, linkGroups, linkInBlock, propertiesOf } from '@graph-note/core';
 import type { Estimate, TrailStep } from '@graph-note/core';
 import { renderProperties } from '../properties/properties';
@@ -198,7 +198,7 @@ export class DetailsPanel {
     el.empty();
     el.hidden = false;
     el.setAttribute('aria-label', `Details of ${title}`);
-    el.toggleClass('is-sheet', Platform.isPhone && !!this.o.editing?.()?.session); // the inspector, on a phone: a bottom sheet (§14)
+    el.toggleClass('is-sheet', isPhone() && !!this.o.editing?.()?.session); // the inspector, on a phone: a bottom sheet (§14)
     const head = el.createDiv({ cls: 'graph-note-details-head' });
     head.createEl('strong', { text: title });
     if (kind) head.createSpan({ cls: 'graph-note-kind', text: kind });

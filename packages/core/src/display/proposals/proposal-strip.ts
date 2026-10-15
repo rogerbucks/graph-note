@@ -3,7 +3,7 @@
 // Reject, or accepted and rejected all at once or a group at a time when there are many. Nothing is written until a
 // person presses Accept. On a phone the list is a sheet at the bottom of the screen (proposals_phone), as the inspector
 // is; each control is a 44-point target and says in words what it does.
-import { Platform } from 'obsidian';
+import { isPhone } from '../host';
 import type { ProposalShown, Which } from '@graph-note/core';
 
 /** What a card is given of a proposal: data to show, and the functions that decide, which reading view closes. */
@@ -34,7 +34,7 @@ export function renderProposalStrip(root: HTMLElement, card: ProposalCard): HTML
     cls: 'graph-note-proposal',
     attr: { role: 'region', 'aria-label': `Proposal ${card.id} for graph ${card.graph}` },
   });
-  strip.toggleClass('is-sheet', Platform.isPhone);
+  strip.toggleClass('is-sheet', isPhone());
   const head = strip.createDiv({ cls: 'graph-note-proposal-head' });
   head.createEl('strong', { text: `Proposal ${card.id}` });
   head.createSpan({ cls: 'graph-note-kind', text: 'nothing is written until you accept' });

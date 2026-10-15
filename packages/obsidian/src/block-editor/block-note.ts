@@ -15,7 +15,7 @@ import {
   namesSharedSchema,
 } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
-import type { DeclaredDeferred } from '../graph-view/view-options';
+import type { DeclaredDeferred } from '@graph-note/core/display/graph-view/view-options';
 import { keyBeside, keyOf, newDraftId } from '../drafts';
 import { DELETED_MESSAGE } from './kept-draft';
 import type { KeptDraft } from './kept-draft';

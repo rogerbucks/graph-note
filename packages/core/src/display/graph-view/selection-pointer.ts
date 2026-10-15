@@ -1,7 +1,7 @@
 // The arrow to a selection out of view (editor spec §25, selection_pointer): a button at the edge of the drawing's view,
 // on the line from its middle towards the selection and pointing along it, named for what it points to; tapped, it brings
 // the selection into view. Where it sits is the core's `pointerTo`; this puts it on the page.
-import { setIcon } from 'obsidian';
+import { setIcon } from '../host';
 import type { Pointing } from '@graph-note/core';
 
 /** Whether an event's target is the arrow, which a tap on is never a tap on the drawing. */

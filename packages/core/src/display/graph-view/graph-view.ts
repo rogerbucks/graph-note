@@ -2,7 +2,8 @@
 // zooms and pans by button, gesture and key (the core's Zoom decides; this passes the events in and shows the view), opens
 // full screen, and shows a box's details when it is tapped or opened from the keyboard. This module ties together the
 // parts in its folder: the bar, the drawing, taps, the details, and where the card is placed.
-import { MarkdownRenderChild, Platform, setIcon } from 'obsidian';
+import { Lifecycle } from '../lifecycle';
+import { isPhone, setIcon } from '../host';
 import { AcrossZoom, Zoom, scrollsOneWay } from '@graph-note/core';
 import type { Drawn, View } from '@graph-note/core';
 import { SourceToggle } from './source-toggle';
@@ -35,8 +36,9 @@ import { viewportSize, zoomSize } from './viewport-size';
 import type { ViewOptions } from './view-options';
 
 /** A drawn graph with its bar, zoom, full screen, details and, in edit mode, the inspector. */
-export class GraphView extends MarkdownRenderChild {
-  private readonly o: ViewOptions;
+export class GraphView extends Lifecycle {
+  readonly containerEl: HTMLElement; // the element the card is drawn in
+  readonly o: ViewOptions; // what the card was given, behind the read-only gate; the plugin's tests reach it by this
   private zoom!: Zoom;
   private viewport!: HTMLElement;
   /** The drawing: Graphviz's SVG, or, for a graph drawn as a table (§15), the table. */
@@ -67,7 +69,8 @@ export class GraphView extends MarkdownRenderChild {
   private legendSlot!: HTMLElement;
 
   constructor(containerEl: HTMLElement, options: ViewOptions) {
-    super(containerEl);
+    super();
+    this.containerEl = containerEl;
     // whether the card is where the note is only read: in reading view, or opened from a card that is (spec §3)
     this.readOnly = () => !!options.readOnly?.() || (options.mode === 'note' && readOnlyHere(containerEl));
     // every write the card can make goes through that one check: none where the card is read-only; and the card's parts
@@ -222,7 +225,7 @@ export class GraphView extends MarkdownRenderChild {
     // on a phone, a wide tree, flow or timeline is fitted to its height and scrolled across only (wide_types_phone)
     const room = Math.min(this.viewport.clientWidth || Infinity, activeWindow.innerWidth || Infinity);
     const type = this.o.diagram?.choice.drawn ?? 'network';
-    this.across = mode === 'note' && scrollsOneWay(type, Platform.isPhone, this.o.drawn.width, room);
+    this.across = mode === 'note' && scrollsOneWay(type, isPhone(), this.o.drawn.width, room);
     const size = { width: this.o.drawn.width, height: this.o.drawn.height };
     this.zoom = this.across ? new AcrossZoom(size, this.zoomSize(), mode) : new Zoom(size, this.zoomSize(), mode);
     this.zoom.onChange = (v) => this.apply(v);

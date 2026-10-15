@@ -1,7 +1,7 @@
 // A list in the inspector (spec §14, list_as_linked_things): one row for a relationship and a kind, its values the things
 // linked to this one, shown as chips as Obsidian's Properties panel shows a list — each removed in place with its x, and
 // a field to add a value in place. Each change is an edit of the block's text, and what it did to the thing is said.
-import { setIcon } from 'obsidian';
+import { setIcon } from '../host';
 import { addToList, removeFromList } from '@graph-note/core';
 import type { ListShape, ListValue, NoteReading } from '@graph-note/core';
 

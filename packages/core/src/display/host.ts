@@ -46,3 +46,12 @@ export function displayHost(): DisplayHost {
   if (!installed) throw new Error(NO_HOST);
   return installed;
 }
+
+/** Draws the icon named `name` into `el`, through the host. */
+export const setIcon = (el: HTMLElement, name: string): void => displayHost().icon(el, name);
+
+/** Whether the screen is a phone's, through the host. */
+export const isPhone = (): boolean => displayHost().isPhone();
+
+/** Tells the person something briefly, through the host. */
+export const notice = (message: string): void => displayHost().notice(message);

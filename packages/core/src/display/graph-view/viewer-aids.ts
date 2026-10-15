@@ -2,7 +2,7 @@
 // (mini_map_setting), whether the details panel stays open (details_always_visible) and where it goes (details_narrow),
 // and the quick-info tooltip. A card is given the settings with its other options, the same in a note, the pane and full
 // screen; `Aids` holds the parts a card builds from them.
-import type { Component } from 'obsidian';
+import type { Lifecycle } from '../lifecycle';
 import type { Drawn, MiniMapSetting, Settings, View, Zoom } from '@graph-note/core';
 import type { DetailsPanel } from './details-panel';
 import { MiniMap } from './mini-map';
@@ -45,7 +45,7 @@ export class Aids {
   private readonly host: AidsHost;
 
   /** For the card (which owns their listeners) and what they ask of it. */
-  constructor(card: Component, host: AidsHost) {
+  constructor(card: Lifecycle, host: AidsHost) {
     this.host = host;
     this.info = new QuickInfo({
       o: host.o,

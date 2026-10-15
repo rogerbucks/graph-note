@@ -5,7 +5,7 @@
 import { attachmentsOf, linksIn } from '@graph-note/core';
 import type { NoteReading } from '@graph-note/core';
 import { cornerOf } from '../graph-view/parked';
-import type { LinkHost } from './link-host';
+import type { LinkHost } from './link-types';
 
 const SVG = 'http://www.w3.org/2000/svg';
 

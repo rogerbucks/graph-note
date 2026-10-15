@@ -2,7 +2,7 @@
 // which decides; a tap on or near a box or link opens it, a tap again in the same place the next of them, and a tap on
 // empty space clears the selection; the highlight under the pointer and with the keyboard focus; and the details sheet
 // placed again as the window and the note move. The card (graph-view.ts) binds these once it has built its parts.
-import type { Component } from 'obsidian';
+import type { Lifecycle } from '../lifecycle';
 import type { Zoom, ZoomEvent } from '@graph-note/core';
 import type { DetailsPanel } from './details-panel';
 import type { Selection } from './selection';
@@ -20,7 +20,7 @@ const ownButton = (target: EventTarget | null): boolean =>
 /** What the drawing's events need of their card, all built before they are bound. */
 export interface ViewportHost {
   /** The card, which registers each listener, so that it goes with the card. */
-  card: Component;
+  card: Lifecycle;
   viewport: HTMLElement;
   zoom: Zoom;
   sel: Selection;

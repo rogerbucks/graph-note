@@ -5,7 +5,7 @@
 // chosen for the rest of the session (sheet_state_remembered); Escape in it closes it (sheet_closed). It says how much
 // of the drawing it covers, so the card can keep the chosen thing clear above it (sheet_keeps_thing_clear). Its keys are
 // its own: nothing typed in the note is taken. While the block is edited, the details are the inspector, in the card.
-import { setIcon } from 'obsidian';
+import { setIcon } from '../host';
 import { sheetLimit } from '@graph-note/core';
 import { screenOf } from './placement';
 

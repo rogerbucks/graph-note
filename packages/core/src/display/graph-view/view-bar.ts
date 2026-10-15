@@ -1,7 +1,7 @@
 // A drawing's bar (spec §3): the problems badge, Fit, zoom out, zoom in, Find a thing, Filter by kind or link, View (§25),
 // Full screen, and where the note is edited, Edit here and Edit in pane; in reading view, Source. Each control says what
 // it is in words as well as by its icon.
-import { setIcon } from 'obsidian';
+import { setIcon } from '../host';
 import { parkedCount } from '@graph-note/core';
 import type { ViewOptions } from './view-options';
 

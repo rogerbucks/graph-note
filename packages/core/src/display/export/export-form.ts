@@ -7,7 +7,7 @@
 import { DEFAULT_PACE, PATH_PACES, isDataFormat, paceSaid } from '@graph-note/core';
 import type { DataFormat, ExportFormat, ExportTheme, ViewSpec } from '@graph-note/core';
 import { button } from '../graph-view/view-bar';
-import type { ExportAsk, ExportOutcome } from './export';
+import type { ExportAsk, ExportOutcome } from './export-types';
 // (ExportOutcome's share holds the tap's own action: see export.ts)
 
 /** What a drawing can export, and how: its note, graph and view, the default colours, and the export itself. */

@@ -4,12 +4,12 @@
 // rendered made safe, with a link that opens it (node_is_a_note); and the links and attachments it holds
 // (links-list.ts). What is rendered is owned by a component
 // of its own, unloaded when the details are drawn again or close, so nothing rendered outlives what it was rendered for.
-import { Component } from 'obsidian';
+import { Lifecycle } from '../lifecycle';
 import { attachmentsOf, linksHeld, noteOf, withMeant } from '@graph-note/core';
 import type { Target, View } from '@graph-note/core';
 import { noteControls } from './note-controls';
 import { linkAnchor, renderLinks } from '../links/links-list';
-import type { LeftAt } from '../links/link-host';
+import type { LeftAt } from '../links/link-types';
 import type { ViewOptions } from './view-options';
 
 /** A text that holds Markdown, so is worth Obsidian's renderer: any of its marks, a link's among them. */
@@ -17,7 +17,7 @@ const MARKED = /[[\]*_`$!<~=#>|^]/;
 
 /** The rich parts of one card's details, rendered by Obsidian into the details as they are drawn. */
 export class RichDetails {
-  private owner: Component | null = null;
+  private owner: Lifecycle | null = null;
 
   /** Where the card is: its zoom, where it is panned and the thing selected, kept when a link takes its tab. */
   private readonly where: () => LeftAt | null;
@@ -38,7 +38,7 @@ export class RichDetails {
   /** The details are drawn afresh: what was rendered for the last is unloaded, and a new owner started. */
   begin(): void {
     this.end();
-    this.owner = new Component();
+    this.owner = new Lifecycle();
     this.owner.load();
   }
 

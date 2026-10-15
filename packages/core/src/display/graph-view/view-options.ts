@@ -27,7 +27,7 @@ import type { ViewShown } from './view-strip';
 import type { ProposalCard } from '../proposals/proposal-strip';
 import type { DiagramShown } from './type-strip';
 import type { Exporting } from '../export/export-form';
-import type { LinkHost } from '../links/link-host';
+import type { LinkHost } from '../links/link-types';
 import type { CardImages } from './animated-images';
 import type { ViewerAids } from './viewer-aids';
 
