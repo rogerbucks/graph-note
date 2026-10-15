@@ -17,25 +17,30 @@ export type Followed = { at: number } | { gone: true } | { twin: true };
  * graph could be the one held, edited; else by its line, as reloading has always found it.
  */
 export function followBlock(before: string, after: string, line: number): Followed {
-  const now = gqlSpans(after);
-  const was = gqlSpans(before).find((s) => s.open === line);
-  if (!was) return byText(before, now, line, null);
-  const placed = byLines(before.split('\n'), after.split('\n'), was, now);
+  const now = gqlSpans(after),
+    old = gqlSpans(before);
+  const was = old.find((s) => s.open === line);
+  if (!was) return byText(old, now, line, null);
+  const placed = byLines(before.split('\n'), after.split('\n'), was, { old, now });
   if (placed === 'twin') return { twin: true };
-  return placed ? { at: now.indexOf(placed) } : byText(before, now, line, was);
+  return placed ? { at: now.indexOf(placed) } : byText(old, now, line, was);
 }
 
 /** The block's place by the lines unchanged around it, read with the common start first and with the common end first. */
-function byLines(a: string[], b: string[], was: Span, now: Span[]): Span | 'twin' | null {
+function byLines(a: string[], b: string[], was: Span, spans: { old: Span[]; now: Span[] }): Span | 'twin' | null {
+  const { old, now } = spans;
   const most = Math.min(a.length, b.length);
   let start = 0;
   while (start < most && a[start] === b[start]) start++;
   let end = 0;
   while (end < most && a[a.length - 1 - end] === b[b.length - 1 - end]) end++;
   const shift = b.length - a.length,
-    graph = graphOfBlock(was.text);
-  // a block of another graph is never the one held, edited: a change of its graph line is not an edit of it
-  const credible = (s: Span | undefined) => (s && (s.text === was.text || graphOfBlock(s.text) === graph) ? s : null);
+    graph = graphOfBlock(was.text),
+    others = new Set(old.filter((s) => s !== was).map((s) => s.text));
+  // the block held, edited, is of its graph, and is not another block of the note moved to its place (a fence line is
+  // every block's, so a block cut away brings the next one's fence to its line)
+  const credible = (s: Span | undefined) =>
+    s && (s.text === was.text || (graphOfBlock(s.text) === graph && !others.has(s.text))) ? s : null;
   const at = (head: number, tail: number) => {
     const from = a.length - tail;
     // its opening fence among the lines unchanged at the start: it opens where it did, edited or not
@@ -53,20 +58,22 @@ function byLines(a: string[], b: string[], was: Span, now: Span[]): Span | 'twin
 /**
  * The block found by its text when the change runs through it: the one block holding the text, unless the note gained a
  * block and a new one of the same graph could be the one held, edited, while the other is a copy; none holding it, the
- * block of the same graph on its line.
+ * block of the same graph on its line, unless that is another block of the note moved there.
  */
-function byText(before: string, now: Span[], line: number, was: Span | null): Followed {
+function byText(old: Span[], now: Span[], line: number, was: Span | null): Followed {
   const text = was?.text;
   const same = text === undefined ? [] : now.filter((s) => s.text === text);
   if (same.length > 1) return { twin: true };
   const graph = was ? graphOfBlock(was.text) : null;
   if (same[0]) {
-    const old = gqlSpans(before),
-      known = new Set(old.map((s) => s.text));
+    const known = new Set(old.map((s) => s.text));
     const rival =
       now.length > old.length && now.some((s) => s !== same[0] && !known.has(s.text) && graphOfBlock(s.text) === graph);
     return rival ? { twin: true } : { at: now.indexOf(same[0]) };
   }
-  const here = now.findIndex((s) => s.open === line && (!graph || graphOfBlock(s.text) === graph));
+  const others = new Set(old.filter((s) => s !== was).map((s) => s.text));
+  const here = now.findIndex(
+    (s) => s.open === line && (!graph || (graphOfBlock(s.text) === graph && !others.has(s.text))),
+  );
   return here >= 0 ? { at: here } : { gone: true };
 }

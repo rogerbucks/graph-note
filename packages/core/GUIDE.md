@@ -228,7 +228,8 @@ own handlers. Nothing here reaches the network.
   `noteChanged` says `conflict`, until a block is chosen again (block_followed_not_its_copy).
 - `block-follow.ts` — `followBlock`: where the session's block is in a note changed since, found by the lines unchanged
   at the note's start and end, never by its text alone, so a copy pasted elsewhere is never taken for it, and the
-  original edited after the paste is still the block. A change that could as well sit before the block as after it (a
+  original edited after the paste is still the block, while another block moved to its line (a fence line is every
+  block's) is never taken for it, edited. A change that could as well sit before the block as after it (a
   copy pasted beside it) is read both ways, and two blocks found make it a `twin`; when the change runs through the
   whole block, it is found by its text only when no new block of its graph could be it, edited.
 - `edit-check.ts` — that check (§4): `editRefusal` refuses a name the note written into draws only under a suggested

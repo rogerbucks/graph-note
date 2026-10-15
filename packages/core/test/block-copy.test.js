@@ -90,6 +90,25 @@ describe('a copy pasted elsewhere, then the original edited', () => {
   });
 });
 
+describe('a block moved, with no copy', () => {
+  // the review of this fix, 15 Oct 2026: a fence line is every block's, so the block cut away brings the next one's fence
+  // to its line; that block, of the same graph, is never taken for the one held, edited
+  test('cut and pasted after another block of its graph, it is followed to where it was pasted', () => {
+    const more = "// graph: alpha\n(more:T {name: 'More'})";
+    const note = ['# Note', '', fence(A), '', fence(more), ''].join('\n');
+    const s = new PaneSession(note, 2);
+    s.type(MINE);
+    const written = s.write(note).note;
+    const moved = written.replace(fence(MINE) + '\n\n', '') + '\n' + fence(MINE) + '\n';
+    assert.equal(s.noteChanged(moved), 'unchanged');
+    assert.equal(s.text, MINE);
+    assert.equal(s.ref.line, moved.split('\n').lastIndexOf('```gql'), 'followed to where it was pasted');
+    const back = s.undo(moved);
+    assert.equal(back.ok, true);
+    assert.equal(back.note, moved.replace(MINE, A), 'its own write undone where it now is, the other block untouched');
+  });
+});
+
 describe('a copy it cannot tell from the original', () => {
   test('pasted directly beside the block: the session stops and says so, writing and undoing neither', () => {
     const { s, note } = written();
