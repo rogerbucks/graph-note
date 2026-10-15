@@ -1,0 +1,6 @@
+{
+  "file": "test/test-status-partial.test.js",
+  "test": "a requirement proved only by a partial test > stays unproved when a second, written test proves it beside the partial one",
+  "seen_failing_first": false,
+  "evidence": "Passed first because --done already treated every status but written as unproved; it pins that a written test beside a partial one still leaves the requirement unproved."
+}

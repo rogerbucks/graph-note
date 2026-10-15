@@ -1,0 +1,6 @@
+{
+  "file": "test/test-status-partial.test.js",
+  "test": "a partial test in the audit > is not asked to be written, unlike a planned test whose file is there",
+  "seen_failing_first": false,
+  "evidence": "Passed first because the audit only checks planned and written, so partial was never asked to be written; it pins that the new file rule did not extend the planned check to partial."
+}

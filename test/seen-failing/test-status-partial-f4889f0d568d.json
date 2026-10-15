@@ -1,0 +1,6 @@
+{
+  "file": "test/test-status-partial.test.js",
+  "test": "a test status that is not one of the three > a flip from planned to written is refused when the file is not there",
+  "seen_failing_first": false,
+  "evidence": "Passed first: the missing-file refusal on a flip to written already existed; this pins it beside the new partial case."
+}
