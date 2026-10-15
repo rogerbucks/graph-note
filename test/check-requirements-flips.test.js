@@ -136,6 +136,40 @@ describe('a hand change to the requirements copy', () => {
     assert.deepEqual(kinds(extra), ['link-added']);
   });
 
+  test('a property added to a link is refused, and so is a link repeated', () => {
+    const link = '(autocomplete)-[:PROVED_BY]->(test_autocomplete),';
+    const withProp = refused(replaced(base(), link, "(autocomplete)-[:PROVED_BY {note: 'x'}]->(test_autocomplete),"));
+    assert.deepEqual(kinds(withProp).sort(), ['link-added', 'link-removed']);
+    const twice = refused(replaced(base(), `${link}\n`, `${link}\n${link}\n`));
+    assert.deepEqual(kinds(twice), ['link-added']);
+  });
+
+  test('an indented comment line is a comment, so adding or editing one is refused', () => {
+    const added = refused(replaced(base(), '// ── Tests ──\n', '// ── Tests ──\n   // slipped in\n'));
+    assert.deepEqual(kinds(added), ['comment']);
+  });
+
+  test('run on its own with --base-ref: the committed copy against HEAD passes; a bad ref, no value or no repo is exit 2', () => {
+    const run = (...args) =>
+      spawnSync(process.execPath, [path('scripts/check-requirements-flips.mjs'), ...args], {
+        encoding: 'utf8',
+        timeout: 30_000,
+      });
+    const same = run('--base-ref', 'HEAD');
+    assert.equal(same.status, 0, same.stdout + same.stderr);
+    const bad = run('--base-ref', 'no-such-ref-for-flips');
+    assert.equal(bad.status, 2, bad.stdout + bad.stderr);
+    assert.match(bad.stderr, /cannot read/);
+    const none = run('--base-ref');
+    assert.equal(none.status, 2, none.stdout + none.stderr);
+    const flag = run('--base-ref', '--base');
+    assert.equal(flag.status, 2, flag.stdout + flag.stderr);
+    // the empty tree holds no copy: only then is there nothing to compare
+    const empty = run('--base-ref', '4b825dc642cb5eb6c3a1d53e0a3dcff0b1bf1ad');
+    assert.equal(empty.status, 0, empty.stdout + empty.stderr);
+    assert.match(empty.stdout, /nothing to compare/);
+  });
+
   test('an edited banner line is refused, even with a good flip beside it', () => {
     const edited = replaced(base(), 'do not hand-edit; regenerate.', 'edited by hand.');
     assert.deepEqual(kinds(refused(edited)), ['banner']);
