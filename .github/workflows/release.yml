@@ -25,7 +25,7 @@ jobs:
           # the full history: the suite the metrics run needs it to find each tests-first record's commit, and the
           # baseline check needs the commit before the tagged one (HEAD~1) to hold the baseline against its earlier copy
           fetch-depth: 0
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           # exact, as a Node patch can move the instruction counts: changed only on purpose, with a new baseline
           node-version: 24.20.0
@@ -54,7 +54,7 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
@@ -76,7 +76,7 @@ jobs:
           persist-credentials: false
           # the full history: npm test runs the tests-first records test, which needs it
           fetch-depth: 0
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
       - run: npm ci
