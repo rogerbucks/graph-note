@@ -12,7 +12,18 @@ import { atom, read, update } from 'claude-code';
 import type { EngineInterface, Register } from 'claude-code';
 
 import type { GraphView } from '../types';
-import { EditorLauncher, editArgs, layOut, notePath, PANE_PALETTE, sayEdit, sayStopped, viewOf } from './graph.js';
+import {
+  EditorLauncher,
+  confirmArgs,
+  editArgs,
+  layOut,
+  notePath,
+  PANE_PALETTE,
+  sayEdit,
+  sayStopped,
+  settingsFrom,
+  viewOf,
+} from './graph.js';
 
 const PANE = 'graph';
 const EDITOR_PANE = 'graph-editor';
@@ -34,6 +45,16 @@ async function launcherOf($: EngineInterface): Promise<EditorLauncher> {
   launcher = new EditorLauncher({
     spawn: (request) => $.process.spawn(request),
     exists: (path) => $.fs.exists(path),
+    read: (path) => $.fs.read(path),
+    // the user's settings, saved as settings.json in the plugin data folder; none, or one that cannot be read, is the
+    // defaults, which are the strictest: Claude's ceiling the lowest, a note with no classification the highest
+    settings: async () => {
+      try {
+        return settingsFrom(JSON.parse(await $.fs.read(`${data}/settings.json`)));
+      } catch {
+        return settingsFrom(null);
+      }
+    },
     after: (ms, fn) => $.clock.after(ms, fn),
     cwd: await $.session.cwd(),
     server: ['node', `${$.plugin.root}/bin/editor-server.mjs`],
@@ -57,8 +78,15 @@ async function viewAt($: EngineInterface, path: string): Promise<GraphView> {
   return viewOf(note, (dots) => layOut(dots, $.plugin.root, run), PANE_PALETTE);
 }
 
-/** Draws the note in the graph pane, as /graph does; the text it answers with. */
+/**
+ * Draws the note in the graph pane, as /graph does; the text it answers with. The pane is one Claude can read, so the
+ * note is held to the same gate as the editor's (cc_classified_asks, cc_credential_never): one that may not open is not
+ * drawn, and the answer says why, with no text of the note.
+ */
 async function drawNote($: EngineInterface, path: string): Promise<string> {
+  const gate = await (await launcherOf($)).gate(path, await $.session.cwd());
+  if ('refuse' in gate) return `${gate.refuse} Nothing was drawn.`;
+  if ('ask' in gate) return `${gate.ask} Nothing was drawn: /graph edit ${path} asks first.`;
   const shown = await viewAt($, path);
   await update($, view, () => shown);
   await $.ui.open({ id: PANE, title: `Graph: ${shown.title}` });
@@ -76,12 +104,15 @@ export const register: Register = (on) => {
       const stopped = launcher ? await launcher.stop('/graph stop') : false;
       return { text: stopped ? sayStopped('/graph stop') : EDITOR_USAGE };
     }
+    const confirming = confirmArgs(e.args);
     const editing = editArgs(e.args);
-    if (editing !== null) {
-      const opened = await (await launcherOf($)).edit(editing, await $.session.cwd());
+    if (confirming || editing !== null) {
+      const opened = confirming
+        ? await (await launcherOf($)).confirm()
+        : await (await launcherOf($)).edit(editing ?? '', await $.session.cwd());
       if (!opened.ok) {
-        // the editor did not start: say why, and show the drawing /graph gives
-        if (editing) await drawNote($, editing);
+        // the editor did not start: say why, and show the drawing /graph gives, unless the gate held the note back
+        if (editing && !opened.held) await drawNote($, editing);
         return { text: sayEdit(opened) };
       }
       await update($, editorChanges, (n) => n + 1);

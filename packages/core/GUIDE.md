@@ -658,6 +658,12 @@ exactly what goes and said yes to it. Its answer comes back as a proposal (§17)
   or secret by its name, even at the end of a snake_case or camelCase one, though a bare `key` is an ordinary word and
   only a name ending in `_key` or `Key` is a secret's, a card number, or the key of any model set up), never
   the text.
+- `claude-gate.ts` — `claudeGate` (spec §26, cc_classified_asks, cc_credential_never): whether a note may open in the
+  browser editor's pane, which Claude can read. `{ open }`; `{ ask }` for a note above Claude's ceiling (the ceiling of
+  the AI model named Claude, else the lowest classification); `{ refuse }` for one at the highest classification, one
+  with a classification not among those set, one with none when `aiUnlabelled` is the highest (the default), and
+  one holding a credential at any classification. The words name kinds and levels, never the text. `noteClassification`
+  reads the front matter `classification:`. The §19 destination matrix is not read (model_ceiling is parked).
 - `ai-scope.ts` — `aiScope`: what is sent of a note, as the user chose (the whole graph, a view, or things by name),
   written out again as GQL from the graph as read: each thing with its kinds and properties, and the links between the
   things chosen. Nothing else of the note goes: no prose, no other graph, no comment.

@@ -5,6 +5,8 @@
 // a session has one server, reused for the same note and replaced for another (cc_one_server); and it ends when the
 // session does, on `/graph stop`, or by itself when the server stops (cc_server_stops). No Node module is imported here:
 // the host's calls are handed in, so the tests run the launcher over real processes and the mod over the host's own.
+import { claudeGate } from '@graph-note/core';
+import type { Gate, GateSettings } from '@graph-note/core';
 import { notePath } from './graph-view.ts';
 
 /** One piece of what a started process wrote, as `$.process.spawn` hands it over. */
@@ -30,6 +32,10 @@ export interface EditorPorts {
   spawn: (request: { argv: readonly string[]; env?: Record<string, string> }) => Spawned;
   /** `$.fs.exists`. */
   exists: (path: string) => Promise<boolean>;
+  /** `$.fs.read`: the note's text, read for its classification before anything is opened, and never kept. */
+  read: (path: string) => Promise<string>;
+  /** The settings the gate reads (classifications, the level for unlabelled notes, the models): read at each use. */
+  settings: () => Promise<GateSettings>;
   /** The session's working folder: a note named by a relative path is found from it. */
   cwd: string;
   /** The command that runs the shipped server, with no argument after it: it takes none. */
@@ -42,8 +48,13 @@ export interface EditorPorts {
   after: (ms: number, fn: () => void) => { cancel: () => void };
 }
 
-/** What `/graph edit` came to: the note it opened, or why it could not. */
-export type EditOutcome = { ok: true; title: string; reused: boolean } | { ok: false; why: string };
+/**
+ * What `/graph edit` came to: the note it opened, or why it could not. A note held back by the gate says so in `held`:
+ * `asks` waits for `confirm` (a yes), `refused` has no yes (the highest classification, a credential, or a note or
+ * settings that could not be read), and neither is drawn in its place.
+ */
+export type EditOutcome =
+  { ok: true; title: string; reused: boolean } | { ok: false; why: string; held?: 'asks' | 'refused' };
 
 /** A server running: what it was started for, and how its life is ended and awaited. */
 interface Running {
@@ -68,7 +79,15 @@ export function sayEdit(outcome: EditOutcome): string {
     return `${open} ${outcome.title}. The link to open in the browser pane is in the Graph editor pane, and is not shown here.`;
   }
   const why = /[.!?]$/.test(outcome.why) ? outcome.why : `${outcome.why}.`;
+  if (outcome.held === 'asks')
+    return `${why} Nothing was opened or shown. Say /graph confirm to open it anyway; anything else leaves it closed.`;
+  if (outcome.held === 'refused') return `${why} Nothing was opened or shown.`;
   return `The editor was not started: ${why} The drawing /graph gives is shown instead.`;
+}
+
+/** Whether the arguments are `/graph confirm`, the user's yes to the question the last `/graph edit` asked. */
+export function confirmArgs(args: string): boolean {
+  return args.trim() === 'confirm';
 }
 
 /** The words for a server that has stopped, with the reason. */
@@ -113,6 +132,7 @@ export class EditorLauncher {
   readonly #ports: EditorPorts;
   #running: Running | null = null;
   #ended: string | null = null;
+  #pending: string | null = null;
   #queue: Promise<unknown> = Promise.resolve();
 
   constructor(ports: EditorPorts) {
@@ -151,10 +171,64 @@ export class EditorLauncher {
     return turn;
   }
 
+  /**
+   * Whether the note named may open in a pane Claude can read (cc_classified_asks, cc_credential_never): the note is
+   * read here, for the gate alone, and its text is neither kept nor said. Settings or a note that cannot be read refuse.
+   */
+  gate(given: string, cwd: string = this.#ports.cwd): Promise<Gate> {
+    return this.#gate(fullPath(cwd, given));
+  }
+
+  /** The yes to the question the last `edit` asked: opens that note, once; the gate is asked again first. */
+  confirm(): Promise<EditOutcome> {
+    return this.#inTurn(async () => {
+      const note = this.#pending;
+      this.#pending = null;
+      if (note === null)
+        return {
+          ok: false as const,
+          why: 'Nothing is waiting for a yes: /graph edit <path to a note> asks first.',
+          held: 'refused' as const,
+        };
+      const gate = await this.#gate(note);
+      if ('refuse' in gate) return this.#held(note, gate);
+      return this.#open(note);
+    });
+  }
+
+  async #gate(note: string): Promise<Gate> {
+    try {
+      return claudeGate(await this.#ports.read(note), await this.#ports.settings());
+    } catch {
+      return {
+        refuse: 'The note or the settings could not be read, so it cannot be checked against the level set for Claude.',
+      };
+    }
+  }
+
+  /** The outcome for a note the gate held back; a question is remembered for `confirm`, a refusal forgets any. */
+  #held(note: string, gate: Gate): EditOutcome {
+    const text = 'ask' in gate ? gate.ask : 'refuse' in gate ? gate.refuse : '';
+    this.#pending = 'ask' in gate ? note : null;
+    return { ok: false, why: `${nameOf(note)}: ${text}`, held: 'ask' in gate ? 'asks' : 'refused' };
+  }
+
   async #edit(given: string, cwd: string): Promise<EditOutcome> {
     if (given === '')
       return { ok: false, why: 'Name a note to edit: /graph edit <path to a note>, quoted if it has spaces.' };
     const note = fullPath(cwd, given);
+    this.#pending = null;
+    const gate = await this.#gate(note);
+    if (!('open' in gate)) {
+      // a note open already and now held back (its classification was raised) is closed, not left readable
+      if (this.#running?.note === note) await this.#stop('the note is now above the level set for Claude');
+      return this.#held(note, gate);
+    }
+    return this.#open(note);
+  }
+
+  /** Opens `note`: the server running when it is for this note, else a new one in its place. */
+  async #open(note: string): Promise<EditOutcome> {
     const title = nameOf(note);
     if (this.#running?.note === note) return { ok: true, title, reused: true };
     await this.#stop('another note was opened');
@@ -163,6 +237,7 @@ export class EditorLauncher {
   }
 
   async #stop(reason: string): Promise<boolean> {
+    this.#pending = null;
     const running = this.#running;
     if (!running) return false;
     running.stopping = reason;
