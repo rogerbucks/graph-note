@@ -8,6 +8,7 @@ const { worldFromStore, canon } = require('../graph/graph.js');
 const { latestAssessment, confidenceFromEvidence, claimStatus } = require('../rules/certainty.js');
 const { check } = require('../rules/check.js');
 const { lint } = require('./dialect-lint.js');
+const { splitChangeset, readChange, changeId, applyChange } = require('./changes.js');
 
 const MODEL_MAY_ADD = new Set(['Claim', 'Assessment', 'Evidence', 'Proposal', 'Option', 'Activity', 'Ref']);
 const MODEL_MAY_LINK = new Set([
@@ -69,7 +70,25 @@ function checkChangeset(base, block, matrix, sw = new Set()) {
   const h = changesetHeader(block);
   add('the change set names its graph, its id, the state it was made against, and its author', h);
   if (!h) return { results: res, header: null, after: null };
-  add('it passes the dialect linter (§24 H1)', !lint(block).length);
+  const parts = splitChangeset(block);
+  add(
+    'it passes the dialect linter (§24 H1)',
+    !lint(parts.additions).length && !parts.changes.some((c) => lint(c.text).length),
+  );
+  add('only the header says what it was made against and who made it (§24)', parts.basisOk);
+  const read = [];
+  let refused = false;
+  for (const c of parts.changes) {
+    try {
+      read.push({ ...readChange(c.text), reason: c.reason });
+    } catch (e) {
+      if (!(e instanceof ProfileError)) throw e;
+      refused = true;
+    }
+  }
+  add('each DELETE and SET is its own statement and names exactly one target (§24)', !refused);
+  h.changes = refused ? [] : read.map((c) => ({ id: changeId(c), op: c.op, reason: c.reason }));
+  if (refused) return { results: res, header: h, after: null };
   const st = new Store();
   base.forEach((b) => st.apply(b));
   if (!(h.graph in st.graphs)) {
@@ -90,7 +109,7 @@ function checkChangeset(base, block, matrix, sw = new Set()) {
   add(`its author ${h.by} is a known person or model`, kind);
   const before = stateOf(w[h.graph]);
   try {
-    st.apply(block);
+    st.apply(parts.additions);
   } catch (e) {
     if (!(e instanceof ProfileError)) throw e;
     add('it loads', false);
@@ -107,8 +126,23 @@ function checkChangeset(base, block, matrix, sw = new Set()) {
   if (!sw.has('additions-only'))
     add('it only adds — nothing removed, nothing already there changed (§12)', !gone && !changed);
   const newNodes = [...after[0]].filter(([i]) => !before[0].has(i));
-  h.refreshes = refreshSection20(st, h.graph);
   const newEdges = [...ac].filter(([e, n]) => n > (bc.get(e) || 0)).map(([e]) => JSON.parse(e));
+  for (const c of read) {
+    const stopped = applyChange(st, h.graph, c);
+    if (!stopped) continue;
+    add(
+      stopped[0] === 'find'
+        ? 'each DELETE and SET finds its one target in the graph (§24)'
+        : 'a DELETE leaves no link without its end; DETACH DELETE removes a thing with its links (§24)',
+      false,
+    );
+    return { results: res, header: h, after: null };
+  }
+  if (read.length) {
+    add('each DELETE and SET finds its one target in the graph (§24)', true);
+    add('a DELETE leaves no link without its end; DETACH DELETE removes a thing with its links (§24)', true);
+  }
+  h.refreshes = refreshSection20(st, h.graph);
   w = worldFromStore(st);
   const g = w[h.graph];
   if (kind === 'Model' && !sw.has('model-may-add')) {

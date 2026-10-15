@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any
 from graphspec.reader.whitespace import N, S
 from graphspec.reader.whitespace import strip as ws_strip
 from graphspec.rules.canonical_json import norm
+from graphspec.rules.changes import apply_change, change_id, read_change, split_changeset
 from graphspec.rules.certainty import claim_status, confidence_from_evidence, latest_assessment
 from graphspec.rules.graph_check import check
 from graphspec.rules.plain_graph import World
@@ -45,6 +46,10 @@ MODEL_MAY_LINK = {
     "RESTS_ON",
     "WAS_DERIVED_FROM",
 }
+FIND = "each DELETE and SET finds its one target in the graph (§24)"
+DANGLING = (
+    "a DELETE leaves no link without its end; DETACH DELETE removes a thing with its links (§24)"
+)
 
 
 def changeset_header(block: str) -> dict[str, str] | None:
@@ -120,13 +125,38 @@ def check_changeset(
     )
     if not h:
         return res, None, None
+    parts = split_changeset(block)
     if lint:
-        found = lint(block)
+        found = lint(parts["additions"]) + [x for c in parts["changes"] for x in lint(c["text"])]
         add(
             "it passes the dialect linter (§24 H1)",
             not found,
             "; ".join(f"line {x['line']}: {x['trap']} → {x['fix']}" for x in found),
         )
+    add(
+        "only the header says what it was made against and who made it (§24)",
+        parts["basis_ok"],
+        "take the 'against' and 'by' out of every line but the header",
+    )
+    read = []
+    refused = []
+    for c in parts["changes"]:
+        try:
+            read.append({**read_change(c["text"]), "reason": c["reason"]})
+        except ProfileError as e:
+            refused.append(f"line {c['line']}: {e.message} — {e.fix}")
+    add(
+        "each DELETE and SET is its own statement and names exactly one target (§24)",
+        not refused,
+        "; ".join(refused),
+    )
+    h["changes"] = (
+        []
+        if refused
+        else [{"id": change_id(c), "op": c["op"], "reason": c["reason"]} for c in read]
+    )
+    if refused:
+        return res, h, None
     st = Store()
     for _, text in base:
         st.apply(text)
@@ -168,7 +198,7 @@ def check_changeset(
     )
     before = _state(w[h["graph"]])
     try:
-        st.apply(block)
+        st.apply(parts["additions"])
     except ProfileError as e:
         add("it loads", False, f"the reader could not read it — {e}")
         return res, h, None
@@ -184,8 +214,22 @@ def check_changeset(
             "correct a fact with a new element that supersedes it, never an edit",
         )
     new_nodes = {i: after[0][i][0] for i in after[0] if i not in before[0]}
-    h["refreshes"] = refresh_section20(st, h["graph"])
     new_edges = [e for e in ac if ac[e] > bc[e]]
+    for c in read:
+        stopped = apply_change(st, h["graph"], c)
+        if stopped:
+            kind, what = stopped
+            if kind == "find":
+                add(
+                    FIND, False, f"{what} is not in the graph — name a thing or link that is there"
+                )
+            else:
+                add(DANGLING, False, f"{what} still has links — remove them, or DETACH DELETE it")
+            return res, h, None
+    if read:
+        add(FIND, True)
+        add(DANGLING, True)
+    h["refreshes"] = refresh_section20(st, h["graph"])
     w = World.from_store(st)
     g = w[h["graph"]]
     if kind == "Model" and "model-may-add" not in switches:
