@@ -6,7 +6,8 @@
 // of its own, unloaded when the details are drawn again or close, so nothing rendered outlives what it was rendered for.
 import { Component } from 'obsidian';
 import { attachmentsOf, linksHeld, noteOf, withMeant } from '@graph-note/core';
-import type { Target, ThingNote, View } from '@graph-note/core';
+import type { Target, View } from '@graph-note/core';
+import { noteControls } from './note-controls';
 import { linkAnchor, renderLinks } from '../links/links-list';
 import type { LeftAt } from '../links/link-host';
 import type { ViewOptions } from './view-options';
@@ -71,6 +72,7 @@ export class RichDetails {
       this.render(box, `![[${note.opens}]]`, 'graph-note-note-body');
     }
     if (host && MARKED.test(text)) this.render(el, text, 'graph-note-rich-text');
+    this.note(el, { thing: key }); // its note (§24, note_shown)
   }
 
   /**
@@ -78,10 +80,25 @@ export class RichDetails {
    * Markdown by the same renderer as the rest of the details, which writes no HTML of its own and is handed none to
    * render. Nothing when it has no note.
    */
-  note(el: HTMLElement, note: ThingNote | undefined): void {
+  private note(el: HTMLElement, target: { thing: string } | { link: number }): void {
+    const drawing = this.o.reading.graphs.get(this.o.graph),
+      note =
+        'thing' in target
+          ? drawing?.boxes.find((b) => b.key === target.thing)?.note
+          : drawing?.links[target.link]?.note;
     if (!note) return;
     el.createEl('h4', { text: 'Note' });
     this.render(el, note.text, 'graph-note-thing-note');
+  }
+
+  /** The note controls of a thing or link while its block is edited (note_add); `replace` writes the block. */
+  noteControls(
+    el: HTMLElement,
+    target: { thing: string } | { link: number },
+    text: () => string,
+    replace: (text: string) => void,
+  ): void {
+    noteControls(el, this.o.reading, this.o.graph, target, text, replace);
   }
 
   /** Properties to read, each `name:` and its value rendered by Obsidian (spec §3, §14). */
@@ -98,6 +115,7 @@ export class RichDetails {
 
   /** The links a box or a link holds, and a thing's attachments, on the card and in the inspector alike. */
   links(el: HTMLElement, target: Target): void {
+    if ('link' in target) this.note(el, target); // a link's note (§24, note_shown)
     const host = this.o.links;
     if (!host) return;
     const { reading, graph } = this.o;
