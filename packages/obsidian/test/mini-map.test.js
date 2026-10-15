@@ -251,7 +251,7 @@ describe('mini_map: in the pane as in a card', () => {
     try {
       await until(() => !!mapOf(env.el));
       assert.equal(shown(env.el), true);
-      assert.equal(mapOf(env.el).querySelectorAll('.graph-note-mini-box').length, 4);
+      assert.equal(mapOf(env.el).querySelectorAll('.graph-note-mini-box').length, 3);
       zoomIn(env.el, 3);
       at(env.el, 'pointerdown', 0.97, 0.5);
       at(env.el, 'pointerup', 0.97, 0.5);

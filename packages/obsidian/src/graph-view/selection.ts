@@ -284,6 +284,11 @@ export class Selection {
     this.stop();
   }
 
+  /** Whether the focus that last arrived was the keyboard's, not a click's: what the quick-info tooltip opens by (§24). */
+  byKeyboard(): boolean {
+    return !this.byPointer;
+  }
+
   /** The pointer is over something, or has left it. */
   over(e: PointerEvent): void {
     if (e.pointerType !== 'touch') this.hover.over(focusTargetOf(e.target));

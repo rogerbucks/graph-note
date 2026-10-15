@@ -64,8 +64,8 @@ const clamp = (n: number, low: number, high: number): number => Math.max(low, Ma
 const overlap = (a: Rect, b: Rect): boolean =>
   a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
 
-/** One element of the drawing's namespace, its attributes set. */
-function make<K extends keyof SVGElementTagNameMap>(
+/** One element of the drawing’s namespace, its attributes set. */
+export function make<K extends keyof SVGElementTagNameMap>(
   tag: K,
   attrs: Record<string, string | number>,
 ): SVGElementTagNameMap[K] {

@@ -27,6 +27,7 @@ import type { GraphDrawing, NamedView, Outside, StyleChange, ThingLook } from '@
 import type GraphNotePlugin from './main';
 import { renderCode } from './code';
 import { GraphView } from './graph-view/graph-view';
+import { aidsOf } from './graph-view/viewer-aids';
 import { diagramShown, tableDrawn } from './graph-view/type-strip';
 import type { ViewShown } from './graph-view/view-strip';
 import { refusalBanner } from './layout-worker/refusal-banner';
@@ -281,6 +282,7 @@ export async function renderViewBlock(
       mode: 'note',
       focusDepth: depthOf(plugin.settings.focusDepth),
       callouts: plugin.settings.noteCallouts === 'on',
+      aids: aidsOf(plugin.settings),
       lineOf: (at) => (from ? lineInSource(from, at) : (blocks[at.block]?.line ?? 0) + at.line),
       onEdit: () => changeView(plugin, ctx.sourcePath, line),
       view,

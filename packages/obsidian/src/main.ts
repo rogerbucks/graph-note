@@ -161,7 +161,16 @@ export default class GraphNotePlugin extends Plugin {
     const switches = (s: Settings) => VIEW_SWITCHES.map((v) => s[SWITCH_SETTINGS[v]]);
     if (JSON.stringify(switches(was)) !== JSON.stringify(switches(this.settings))) this.viewStates.clear();
     const shown = (s: Settings) =>
-      JSON.stringify([s.strictness, s.allowed, s.direction, s.focusDepth, s.noteCallouts, switches(s)]);
+      JSON.stringify([
+        s.strictness,
+        s.allowed,
+        s.direction,
+        s.focusDepth,
+        s.noteCallouts,
+        s.miniMap,
+        s.detailsOpen,
+        switches(s),
+      ]);
     if (shown(was) !== shown(this.settings)) for (const changed of [...this.settingsWatchers]) changed();
   }
 

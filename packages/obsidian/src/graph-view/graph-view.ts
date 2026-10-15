@@ -5,7 +5,7 @@
 import { MarkdownRenderChild, Platform, setIcon } from 'obsidian';
 import { AcrossZoom, Zoom, scrollsOneWay } from '@graph-note/core';
 import type { Drawn, View } from '@graph-note/core';
-import { renderCode } from '../code';
+import { SourceToggle } from './source-toggle';
 import { readOnlyHere, whenPlaced } from './placement';
 import { gateWrites } from './read-only';
 import { renderProblems } from './problems-list';
@@ -29,6 +29,8 @@ import { Selection } from './selection';
 import { renderTypeStrip } from './type-strip';
 import { renderTable } from './table-view';
 import { bindViewportEvents } from './viewport-events';
+import { FullScreen } from './full-screen';
+import { Aids } from './viewer-aids';
 import { viewportSize, zoomSize } from './viewport-size';
 import type { ViewOptions } from './view-options';
 
@@ -47,12 +49,14 @@ export class GraphView extends MarkdownRenderChild {
   private walk: Walk | null = null;
   private maker: ViewMaker | null = null;
   private adder: AddThing | null = null;
-  private fullscreen: { view: GraphView; overlay: HTMLElement } | null = null;
+  private readonly fullscreen: FullScreen;
   /** The selection and so the focus, the highlight, and untangling the drawing (§25). */
   private sel!: Selection;
+  /** The mini-map, the quick-info tooltip and where the kept-open details go (§24). */
+  private aids!: Aids;
   private editButton: HTMLButtonElement | null = null;
   private readonly taps: Taps;
-  private codeEl: HTMLElement | null = null;
+  private readonly source: SourceToggle;
   private readonly readOnly: () => boolean;
   /** The drawing as laid out now: the one given, or the one a View menu switch laid out since (§25). */
   private drawn: Drawn;
@@ -71,6 +75,28 @@ export class GraphView extends MarkdownRenderChild {
     this.o = gateWrites({ ...options, readOnly: this.readOnly }, this.readOnly);
     this.taps = new Taps(options.drawn.svg);
     this.drawn = options.drawn;
+    this.source = new SourceToggle(containerEl, {
+      viewport: () => this.viewport,
+      details: () => this.detailsEl,
+      source: () => this.o.source ?? '',
+      keptOpen: () => !!this.o.aids?.detailsOpen,
+    });
+    this.fullscreen = new FullScreen({
+      graph: options.graph,
+      card: this,
+      draw: (el, close) =>
+        new GraphView(el, {
+          ...this.o,
+          drawn: this.drawn, // as laid out now, with the View menu's switches as they stand (§25)
+          mode: 'full',
+          onClose: close,
+          readOnly: this.readOnly, // full screen opened in reading view is read-only too
+        }),
+      closed: () => {
+        this.viewport.focus();
+        this.switching?.sync(); // a switch turned in full screen holds here too (§25)
+      },
+    });
   }
 
   override onload(): void {
@@ -91,9 +117,9 @@ export class GraphView extends MarkdownRenderChild {
       find: (b) => this.sel.untangle.toggleFind(b),
       legend: (b) => this.sel.untangle.toggleLegend(b),
       view: (b) => this.switching?.menu.toggle(b),
-      fullScreen: () => this.openFullscreen(),
+      fullScreen: () => this.fullscreen.show(),
       editHere: () => (this.o.editing?.()?.session ? this.o.onDoneEditing?.() : this.o.onEditHere?.()),
-      toggleSource: (b) => this.toggleSource(b),
+      toggleSource: (b) => this.source.toggle(b),
       export: () => this.o.exporting && toggleExportForm(root, { ...this.o.exporting, paths: this.playable() }),
     });
     const { editing, source } = placed;
@@ -159,6 +185,18 @@ export class GraphView extends MarkdownRenderChild {
     const table = this.o.diagram?.table;
     if (table) this.table = renderTable(this.viewport, table);
     else this.svg = insertSvg(this.viewport, this.o.drawn, this.drawing(), this.o.switches?.state.plan, this.o);
+    // the mini-map, the quick-info tooltip and where the kept-open details go (§24)
+    this.aids = new Aids(this, {
+      o: this.o,
+      root,
+      viewport: this.viewport,
+      svg: () => this.svg,
+      zoom: () => this.zoom,
+      size: () => this.zoomSize(),
+      drawn: () => this.drawn,
+      taps: this.taps,
+      byKeyboard: () => this.sel.byKeyboard(),
+    });
     if (this.svg && this.o.motion) markFlow(this.svg, this.o.motion.flow); // the links its style moves (§7)
     if (view && this.svg) markView(this.svg, view); // a view: what is outside it faded, its looks drawn (§7)
     if (view?.shown?.legend?.length) this.sel.refresh(); // and its legend's choices, as it was saved as shown (§25)
@@ -175,6 +213,7 @@ export class GraphView extends MarkdownRenderChild {
       ...(sw ? { hub: (k: string) => sw.hub(k), toggleHub: (k: string) => sw.toggleHub(k) } : {}),
     });
     if (this.svg) this.details.pictures(this.svg); // the pictures its style draws on boxes (§18)
+    this.aids.openDetails(this.details); // kept open, if the setting says (§24)
     // closing the details, by button, Escape or a tap on empty space, clears the selection and the focus with them (§25)
     this.details.onClosed = () => this.sel.closed();
     this.details.view = () => this.zoom.view(); // where a link that takes the card's tab leaves it (§18)
@@ -192,13 +231,18 @@ export class GraphView extends MarkdownRenderChild {
     const was = view?.shown ?? this.o.links?.cameBack();
     if (was?.zoom !== undefined) this.zoom.restore(was.zoom, was.x ?? 0, was.y ?? 0);
     this.apply(this.zoom.view());
-    const { viewport, zoom, sel, details, taps, svg } = this;
+    const { viewport, zoom, sel, details, taps, svg } = this,
+      { info } = this.aids;
     const open = (t: Target, x?: boolean) => this.open(t, x),
       unfold = (fold: string, byKey?: boolean) =>
         this.switching?.unfold(fold, byKey ? (key) => boxIn(this.svg, key)?.focus({ preventScroll: true }) : undefined);
-    bindViewportEvents({ card: this, viewport, zoom, sel, details, taps, svg, open, unfold });
-    const observer = new ResizeObserver(() => this.zoom.resize(this.zoomSize()));
+    bindViewportEvents({ card: this, viewport, zoom, sel, details, taps, info, svg, open, unfold });
+    const observer = new ResizeObserver(() => {
+      this.zoom.resize(this.zoomSize());
+      this.aids.placeDetails();
+    });
     observer.observe(this.viewport);
+    if (this.o.aids?.detailsOpen) observer.observe(root); // the card’s own width decides where the details go (§24)
     this.register(() => observer.disconnect());
     if (mode === 'full') this.viewport.focus();
     // what the card offers depends on where it is: in reading view it is read-only, with Source in place of Edit
@@ -224,22 +268,6 @@ export class GraphView extends MarkdownRenderChild {
     );
   }
 
-  /** Source, in reading view: the block's text, coloured and read-only, in place of the drawing; and back. */
-  private toggleSource(b: HTMLButtonElement): void {
-    const showing = !this.viewport.hidden;
-    if (!this.codeEl) {
-      this.codeEl = renderCode(this.containerEl, this.o.source ?? '');
-      this.containerEl.insertBefore(this.codeEl, this.detailsEl);
-      this.codeEl.hidden = true;
-    }
-    this.viewport.hidden = showing;
-    this.codeEl.hidden = !showing;
-    if (showing) this.detailsEl.hidden = true;
-    b.empty();
-    setIcon(b, showing ? 'network' : 'code');
-    b.setAttribute('aria-label', showing ? 'Show drawing' : 'Show source');
-  }
-
   /** The edit button as the card stands: a pencil to edit here, or, while edited, a view icon to finish (spec §4). */
   private showEditing(): void {
     this.walk?.show(); // Record and Make a view are offered only while the card is edited
@@ -257,10 +285,10 @@ export class GraphView extends MarkdownRenderChild {
     this.unloaded = true;
     // a move under way ends with the card, and the sheet's watchers with it; a card unloaded before it was built has none
     (this.sel as Selection | undefined)?.stop();
+    (this.aids as Aids | undefined)?.unload(); // its tooltip is on the page itself, so it goes with the card
     (this.details as DetailsPanel | undefined)?.unload();
     this.walk?.stop(); // a path playing on its own stops with its card: no step waits on the clock
-    this.fullscreen?.overlay.remove();
-    this.fullscreen = null;
+    this.fullscreen.unload();
   }
 
   private drawing() {
@@ -305,6 +333,7 @@ export class GraphView extends MarkdownRenderChild {
     if (this.o.view) markView(svg, this.o.view);
     if (this.o.proposal) markProposal(svg, this.o.proposal.shown.marks);
     this.taps.reset(drawn.svg);
+    this.aids.redrawn(drawn);
     this.zoom.resize(this.zoomSize(), { width: drawn.width, height: drawn.height });
     this.sel.redrawn();
     this.details.reselect();
@@ -331,6 +360,7 @@ export class GraphView extends MarkdownRenderChild {
       '--graph-note-touch': this.zoom.touchAction(),
     });
     this.viewport.toggleClass('is-zoomed', this.zoom.zoomedIn());
+    this.aids.viewChanged(v);
     this.sel.viewChanged(); // the arrow to a selection out of view follows (§25)
   }
 
@@ -352,32 +382,5 @@ export class GraphView extends MarkdownRenderChild {
     this.sel.select(t);
     // while the block is edited, where it is written is selected in the text — an estimate's misspelt word too (§4)
     this.o.onSelect?.('key' in t ? { thing: t.key } : t);
-  }
-
-  private openFullscreen(): void {
-    if (this.fullscreen) return;
-    const overlay = activeDocument.body.createDiv({
-      cls: 'graph-note-fullscreen',
-      attr: { role: 'dialog', 'aria-modal': 'true', 'aria-label': `Graph ${this.o.graph}, full screen` },
-    });
-    const view = new GraphView(overlay.createDiv({ cls: 'graph-note' }), {
-      ...this.o,
-      drawn: this.drawn, // as laid out now, with the View menu's switches as they stand (§25)
-      mode: 'full',
-      onClose: () => this.closeFullscreen(),
-      readOnly: this.readOnly, // full screen opened in reading view is read-only too
-    });
-    this.fullscreen = { view, overlay };
-    this.addChild(view);
-  }
-
-  private closeFullscreen(): void {
-    const f = this.fullscreen;
-    if (!f) return;
-    this.fullscreen = null;
-    this.removeChild(f.view);
-    f.overlay.remove();
-    this.viewport.focus();
-    this.switching?.sync(); // a switch turned in full screen holds here too (§25)
   }
 }

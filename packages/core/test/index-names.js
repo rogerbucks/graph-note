@@ -42,7 +42,8 @@
 // read and made safe by the host, embedParts, embeddedMarkdown and EmbedPart, the same day). MIN_SCALE, the quarter of
 // natural size, went on 15 Oct 2026: from slice 3 the furthest out is the fit of the whole drawing (zoom_out_to_fit),
 // worked out by the zoom itself. The legend's choices a view saves as shown (LEGEND_CHOICES, LegendChoice and
-// LegendChoiceState, untangle_legend) came the same day. The lists moved here from index.test.js in the review of #452.
+// LegendChoiceState, untangle_legend) came the same day. The mini-map's setting (MiniMapSetting, mini_map_setting) came
+// with the viewer aids on 16 Oct 2026. The lists moved here from index.test.js in the review of #452.
 
 /** The values src/index.ts exports, sorted. */
 export const VALUES = [
@@ -447,6 +448,7 @@ export const TYPES = [
   'LookWrite',
   'MarkKind',
   'Marks',
+  'MiniMapSetting',
   'Mode',
   'ModelChoice',
   'Moving',
