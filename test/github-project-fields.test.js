@@ -126,7 +126,7 @@ describe('Wave and Order, from the waves plan', () => {
     assert.deepEqual(
       wave.iterations.map(({ title, startDate, duration }) => [title, startDate, duration]),
       [
-        ['Wave 1 · Focus', '2026-10-20', 14],
+        ['Wave 1 · Focus · est.', '2026-10-20', 14],
         ['Wave 2 · Slice end', '2026-11-03', 14],
       ],
     );
@@ -142,8 +142,8 @@ describe('Wave and Order, from the waves plan', () => {
         valueOf(gh, id, 'Order'),
       ]),
       [
-        ['Wave 1 · Focus', 10101],
-        ['Wave 1 · Focus', 10102],
+        ['Wave 1 · Focus · est.', 10101],
+        ['Wave 1 · Focus · est.', 10102],
         ['Wave 2 · Slice end', 20101],
         ['Wave 2 · Slice end', 20102],
       ],
@@ -170,7 +170,10 @@ describe('Wave and Order, from the waves plan', () => {
       [w[0].workstreams, w[1].workstreams] = [w[1].workstreams, w[0].workstreams];
     });
     apply(gh, desiredFor(swapped));
-    assert.deepEqual([valueOf(gh, 'stray_new', 'Order'), valueOf(gh, 'stray_new', 'Wave')], [10102, 'Wave 1 · Focus']);
+    assert.deepEqual(
+      [valueOf(gh, 'stray_new', 'Order'), valueOf(gh, 'stray_new', 'Wave')],
+      [10102, 'Wave 1 · Focus · est.'],
+    );
     assert.deepEqual(
       [valueOf(gh, 'focus_link', 'Order'), valueOf(gh, 'focus_link', 'Wave')],
       [20102, 'Wave 2 · Slice end'],

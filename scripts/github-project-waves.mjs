@@ -79,10 +79,13 @@ export function readWaves(text, workstreams) {
   return { waves: waves.map(({ from: _from, to: _to, ...wave }) => wave) };
 }
 
+/** A wave's title on the board, its iteration's and its items' Wave: marked “· est.” while its dates are estimates. */
+export const iterationTitle = (wave) => (wave.estimate ? `${wave.title} · est.` : wave.title);
+
 /** The iterations of the Wave field: one for each wave, {title, startDate, duration (days, both ends counted)}. */
 export function iterationsOf(plan) {
   return plan.waves.map((w) => ({
-    title: w.title,
+    title: iterationTitle(w),
     startDate: w.start,
     duration: Math.round((dayOf(w.end) - dayOf(w.start)) / DAY_MS) + 1,
   }));
@@ -105,19 +108,22 @@ export function wavesOf(requirements, placed, workstreams, plan) {
       if (s + 1 >= STEP || members.length >= STEP)
         throw new Error(`wave "${wave.title}" or its workstream ${ws} is too large for Order to number`);
       members.forEach((id, r) =>
-        found.set(id, { wave: wave.title, order: (w + 1) * WAVE_STEP + (s + 1) * STEP + r + 1 }),
+        found.set(id, { wave: iterationTitle(wave), order: (w + 1) * WAVE_STEP + (s + 1) * STEP + r + 1 }),
       );
     });
   });
   return found;
 }
 
+const ESTIMATES =
+  'note: the dates of waves marked estimate are estimates, not commitments; the coordinator sets the real ones';
 const count = (list, status) => list.filter((i) => i.status === status).length;
 const proofs = (list) => `${count(list, 'proved')} proved · ${count(list, 'part')} part · ${count(list, 'open')} open`;
 
 /**
  * The lines the mirror prints of the plan: for each wave its dates (marked when they are estimates) and the count of its
- * requirements by proof; then how many requirements are in no wave, and a warning for each of those not proved. None
+ * requirements by proof (a wave with no workstreams, a placeholder, counts none); a note that estimated dates are
+ * estimates, when any are; then how many requirements are in no wave, and a warning for each of those not proved. None
  * when the desired state has no plan. `desired.waves` is the plan, with the ids of the requirements (not the questions)
  * of the chosen slices as its `requirements`.
  */
@@ -126,10 +132,11 @@ export function waveLines(desired) {
   const ids = new Set(desired.waves.requirements);
   const requirements = desired.issues.filter((i) => ids.has(i.id));
   const lines = desired.waves.waves.map((w) => {
-    const mine = requirements.filter((i) => i.wave === w.title);
+    const mine = requirements.filter((i) => i.wave === iterationTitle(w));
     const dates = `${w.start} to ${w.end}${w.estimate ? ', estimate' : ''}`;
     return `wave ${w.title} (${dates}): ${mine.length} requirements · ${proofs(mine)}`;
   });
+  if (desired.waves.waves.some((w) => w.estimate)) lines.push(ESTIMATES);
   const none = requirements.filter((i) => i.wave === null);
   const flagged = none.filter((i) => i.status !== 'proved');
   if (none.length) lines.push(`in no wave: ${none.length} requirements, ${flagged.length} of them not proved`);

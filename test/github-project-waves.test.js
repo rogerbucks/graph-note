@@ -77,8 +77,9 @@ describe('the Wave and Order of each requirement', () => {
         issues[id].order,
       ]),
       [
-        ['focus_neighbours', 'Wave 1 · Focus', 10101],
-        ['focus_link', 'Wave 1 · Focus', 10102],
+        // a wave whose dates are estimates says so in its title, which is also the iteration's
+        ['focus_neighbours', 'Wave 1 · Focus · est.', 10101],
+        ['focus_link', 'Wave 1 · Focus · est.', 10102],
         // listed by S3 first, then the one S3 holds because no workstream lists it, in the copy's order
         ['done_means_proved', 'Wave 2 · Slice end', 20101],
         ['stray_new', 'Wave 2 · Slice end', 20102],
@@ -127,10 +128,16 @@ describe('the Wave and Order of each requirement', () => {
 
   test('the iterations of the Wave field are the waves, each with its start and its length in days', () => {
     assert.deepEqual(iterationsOf(planOf()), [
-      { title: 'Wave 1 · Focus', startDate: '2026-10-20', duration: 14 },
+      { title: 'Wave 1 · Focus · est.', startDate: '2026-10-20', duration: 14 },
       { title: 'Wave 2 · Slice end', startDate: '2026-11-03', duration: 14 },
     ]);
     assert.deepEqual(desiredWith().iterations, iterationsOf(planOf()));
+  });
+
+  test('an iteration whose dates are estimates is titled so, “· est.” after the wave’s title, and a firm one is not', () => {
+    const [estimated, firm] = iterationsOf(planOf()).map((i) => i.title);
+    assert.equal(estimated, 'Wave 1 · Focus · est.');
+    assert.equal(firm, 'Wave 2 · Slice end');
   });
 });
 
@@ -163,6 +170,24 @@ describe('the tally the mirror prints', () => {
     assert.deepEqual(gh.hub.mutations, []);
   });
 
+  test('says, in a line of its own, that the dates marked estimate are estimates; nothing of it when none is', () => {
+    const note = (lines) => lines.filter((l) => l.startsWith('note: '));
+    assert.deepEqual(note(waveLines(desiredWith())), [
+      'note: the dates of waves marked estimate are estimates, not commitments; the coordinator sets the real ones',
+    ]);
+    assert.deepEqual(note(waveLines(desiredWith(withWaves((w) => (w[0].estimate = false))))), []);
+  });
+
+  test('takes a wave with no workstreams, as a placeholder: counted with none, and no error or warning', () => {
+    const placeholder = withWaves((w) =>
+      w.push({ title: 'Held', start: '2026-11-17', end: '2026-11-30', estimate: true, workstreams: [] }),
+    );
+    const lines = waveLines(desiredWith(placeholder));
+    const held = 'wave Held (2026-11-17 to 2026-11-30, estimate): 0 requirements · 0 proved · 0 part · 0 open';
+    assert.ok(lines.includes(held));
+    assert.ok(!lines.some((l) => l.startsWith('warning:')));
+  });
+
   test('says nothing of waves when there is no plan', () => {
     assert.deepEqual(waveLines(desiredState(board, WORKSTREAMS, [3, 4])), []);
   });
@@ -178,6 +203,13 @@ describe('the real waves file', () => {
     assert.equal(WAVES_FILE, 'requirements/waves.json');
     assert.ok(plan.waves.length > 0);
     assert.ok(plan.waves.every((w) => w.estimate === true));
+  });
+
+  test('ends with a placeholder for Roger’s held changes, after all waves, holding no workstream', () => {
+    const last = plan.waves.at(-1);
+    assert.equal(last.title, 'Roger’s held changes, after all waves');
+    assert.deepEqual(last.workstreams, []);
+    assert.ok(last.start > plan.waves.at(-2).end);
   });
 
   test('puts every requirement of slices 3 to 9 that is not proved in a wave', () => {

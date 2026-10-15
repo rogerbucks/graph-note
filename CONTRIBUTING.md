@@ -269,7 +269,9 @@ These test behaviour across modules, or the repository itself, so they are named
   it where none is, clears it where none holds an item not proved, and keeps it for one proved. **Wave** and **Order**
   come from the waves plan below.
 - **The waves plan is `requirements/waves.json`**, the one place the order of the work lives: the waves in order, each
-  with its workstreams in order and a planned `start` and `end`, `estimate: true` marking the dates as estimates. Wave
+  with its workstreams in order and a planned `start` and `end`, `estimate: true` marking the dates as estimates (the
+  wave's title on the board then ends "· est.", and `--check` prints a note that they are estimates). Its last wave is
+  a placeholder with no workstreams, for Roger's held changes after all waves. Wave
   is an *iteration* field, one iteration for each wave with its dates, made and kept by `createProjectV2Field` and
   `updateProjectV2Field` with `iterationConfiguration` (an iteration whose title is unchanged keeps its id, so the items
   keep their wave). Order is a number field: the wave's position times 10 000, the workstream's times 100, then the
