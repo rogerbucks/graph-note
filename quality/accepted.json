@@ -25,14 +25,14 @@
     {
       "metric": "bundle_bytes",
       "from": 1958060,
-      "to": 2794196,
+      "to": 2806887,
       "reason": "Slice 3's features (core src 246 kB → 512 kB); accepted by Roger, 15 Oct 2026, to release the Undo data-loss fix",
       "date": "2026-10-15"
     },
     {
       "metric": "bundle_bytes_without_viz",
       "from": 357577,
-      "to": 1187615,
+      "to": 1200306,
       "reason": "Slice 3's features (core src 246 kB → 512 kB); accepted by Roger, 15 Oct 2026, to release the Undo data-loss fix",
       "date": "2026-10-15"
     }
