@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/notes-edits.test.js",
+  "test": "note_kept_by_edits: every edit the core exports is swept above, or excluded here with its reason > each export of an editing module is swept or excluded, never both and never neither",
+  "seen_failing_first": false,
+  "evidence": "a check on the sweep itself, written with the real enumeration of the index: it holds the sweep complete, so it passes against the code before, which it does not change"
+}

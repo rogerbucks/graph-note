@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/notes-edits.test.js",
+  "test": "note_add: setNote writes the comment lines above a thing or a link > a //@ line among the note’s lines keeps its place relative to the note’s first line and to the thing",
+  "seen_failing_first": false,
+  "evidence": "pins the entry point added to the sweep: the edit already kept the note, and this case holds that it still does"
+}

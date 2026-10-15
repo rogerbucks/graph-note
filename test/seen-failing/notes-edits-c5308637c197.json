@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/notes-edits.test.js",
+  "test": "note_kept_by_edits: every edit the core exports is swept above, or excluded here with its reason > each exclusion names an export and gives a reason, and no function is swept that the index does not export unless it is internal",
+  "seen_failing_first": false,
+  "evidence": "a check on the sweep itself, written with the real enumeration of the index: it holds the sweep complete, so it passes against the code before, which it does not change"
+}

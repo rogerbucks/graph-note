@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/notes-edits.test.js",
+  "test": "note_kept_by_edits: an edit that takes nothing out leaves every note on the thing it was on > makeView and addView writes a view block after the graph’s last block, the data not touched",
+  "seen_failing_first": false,
+  "evidence": "pins the entry point added to the sweep: the edit already kept the note, and this case holds that it still does"
+}
