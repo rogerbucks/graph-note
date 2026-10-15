@@ -33,6 +33,28 @@ const LIST_PROJECTS = `query($owner: String!, $after: String) {
   }
 }`;
 
+const OWNER_ID = `query($owner: String!) { repositoryOwner(login: $owner) { id } }`;
+const ISSUE_ID = `query($owner: String!, $name: String!, $number: Int!) {
+  repository(owner: $owner, name: $name) { issue(number: $number) { id } }
+}`;
+
+const noOwner = (owner) => new Error(`the owner ${owner} could not be found`);
+
+/** The node id of a user or an organization, by its login. Throws, naming the owner, where there is none. */
+export function ownerId(run, owner) {
+  const found = graphql(run, OWNER_ID, { owner }).repositoryOwner;
+  if (!found?.id) throw noOwner(owner);
+  return found.id;
+}
+
+/** The node id of an issue of `repo` (`owner/name`), by its number. Throws, naming the issue, where there is none. */
+export function issueNodeId(run, repo, number) {
+  const [owner, name] = repo.split('/');
+  const id = graphql(run, ISSUE_ID, { owner, name, number }).repository?.issue?.id;
+  if (!id) throw new Error(`issue #${number} of ${repo} could not be found`);
+  return id;
+}
+
 /** Runs a GraphQL query or mutation through `gh api graphql` and gives its data; throws with GitHub's words when it refuses. */
 export function graphql(run, query, variables) {
   const answer = JSON.parse(run(['api', 'graphql', '--input', '-'], JSON.stringify({ query, variables })));
@@ -58,7 +80,9 @@ export function readProject(run, owner, number, idByNumber) {
   const items = [];
   let after = null;
   do {
-    const page = graphql(run, READ_PROJECT, { owner, number, after }).repositoryOwner.projectV2;
+    const found = graphql(run, READ_PROJECT, { owner, number, after }).repositoryOwner;
+    if (!found) throw noOwner(owner);
+    const page = found.projectV2;
     if (!page) throw new Error(`project ${number} of ${owner} could not be read`);
     project ??= page;
     for (const node of page.items.nodes) {
@@ -77,14 +101,18 @@ export function readProject(run, owner, number, idByNumber) {
 
 /**
  * The projects of an owner, a user or an organization, as [{id, number, title}], found by the owner's login through
- * GraphQL, a hundred to the page. Refused when the list is as long as its cap.
+ * GraphQL, a hundred to the page. Refused when the list is as long as its cap, and when there is no such owner or the
+ * owner has no list, rather than taken for no projects.
  */
 export function readProjects(run, owner) {
   const found = [];
   let after = null;
   do {
-    const answer = graphql(run, LIST_PROJECTS, { owner, after }).repositoryOwner?.projectsV2;
-    if (!answer) return found;
+    const named = graphql(run, LIST_PROJECTS, { owner, after }).repositoryOwner;
+    if (!named) throw noOwner(owner);
+    // an answer with no list is not an empty list: planning from it could make the project a second time
+    const answer = named.projectsV2;
+    if (!answer) throw new Error(`the projects of ${owner} could not be listed`);
     found.push(...answer.nodes);
     after = answer.pageInfo.hasNextPage && found.length < PROJECT_CAP ? answer.pageInfo.endCursor : null;
   } while (after !== null);

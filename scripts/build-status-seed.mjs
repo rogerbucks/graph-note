@@ -5,6 +5,7 @@
 // In PR and In Progress. Otherwise nothing, which is Not started and Todo. A draft release is not published and is never read.
 // Only the seed is worked out here; the mirror gives it only to an item with no value (or, for Status, with Todo, which is
 // the board's default), so a value already set is never overwritten and nothing moves back from Released or Done.
+import { DEFAULT_BRANCH } from './build-status.mjs';
 import { claimsOf, boardAt, skipReason } from './build-status-events.mjs';
 import { Unreadable, openPullNumbers, publishedReleases, readPullRequest } from './build-status-gh.mjs';
 
@@ -54,13 +55,28 @@ function heldIds(run, repo, warnings) {
   return held;
 }
 
+/** The ids proved on main, read through the API, so the seed does not depend on the branch the mirror is run from. */
+function provedOnMain(run, repo, warnings) {
+  try {
+    return boardAt(run, repo, DEFAULT_BRANCH)
+      .requirements.filter((r) => r.status === 'proved')
+      .map((r) => r.id);
+  } catch (e) {
+    if (!(e instanceof Unreadable)) throw e;
+    warnings.push(`${DEFAULT_BRANCH}: ${e.message}, so nothing is taken to be proved on it`);
+    return [];
+  }
+}
+
 /**
- * The seed for the requirements of `board` (as readBoard gives the requirements file the mirror reads, taken as main's):
- * {seed: Map from a requirement id to {buildStatus, progress}, warnings}. An id with no entry is Not started and Todo.
+ * The seed for the requirements, from where each stands on GitHub: {seed: Map from a requirement id to {buildStatus,
+ * progress}, warnings}. What is proved on main is read from main through the API. An id with no entry is Not started and
+ * Todo. A requirements file that cannot be read (main's, a release's, a pull request's) is a warning: the seed leaves what
+ * it would have shown out, and the mirror stops an apply on warnings unless it is told to go on.
  */
-export function seedOf(run, repo, board, { write = () => {} } = {}) {
+export function seedOf(run, repo, { write = () => {} } = {}) {
   const warnings = [];
-  const proved = board.requirements.filter((r) => r.status === 'proved').map((r) => r.id);
+  const proved = provedOnMain(run, repo, warnings);
   const released = releasedIds(run, repo, proved, warnings);
   const seed = new Map();
   for (const id of heldIds(run, repo, warnings)) seed.set(id, HELD);

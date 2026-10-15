@@ -44,7 +44,29 @@ function scene() {
   return side;
 }
 const board = readBoard(MAIN);
-const seeded = (side) => seedOf(side.run, REPO, board, { write: () => {} });
+const seeded = (side) => seedOf(side.run, REPO, { write: () => {} });
+
+describe('what is proved on main', () => {
+  test('is read from main through the API, not from a copy in the checkout the mirror is run from', () => {
+    const side = scene();
+    side.hub.files.main = FIXTURE;
+    side.hub.files[HEAD] = proving(FIXTURE, 'focus_link', 'test_link');
+    side.hub.files[OTHER] = FIXTURE;
+    const { seed } = seeded(side);
+    assert.equal(seed.has('done_means_proved'), false, 'a local copy proving it, which main does not, seeds nothing');
+    assert.equal(seed.get('zoom_out_to_fit').buildStatus, 'Released');
+    const reads = side.hub.calls.filter((c) => c.args.includes('-H') && c.args.includes('ref=main'));
+    assert.ok(reads.length >= 1);
+  });
+
+  test('is a warning, and nothing taken to be proved, when main’s file cannot be read', () => {
+    const side = scene();
+    side.hub.files.main = 'this is not a graph (((';
+    const { seed, warnings } = seeded(side);
+    assert.equal(seed.has('zoom_out_to_fit'), false);
+    assert.match(warnings.join('\n'), /main.*could not be read/);
+  });
+});
 
 describe('the seed of an item with no value', () => {
   test('is Released and Done when it is proved on main and in a published release whose copy proves it', () => {
@@ -132,14 +154,15 @@ describe('the mirror with the seed', () => {
   const together = (gh, side) => (args, input) =>
     args[0] === 'api' && String(args[1]).startsWith('repos/') ? side.run(args, input) : gh.run(args, input);
   const desired = () => desiredState(board, WORKSTREAMS, [3, 4]);
-  const mirrorWith = (mode, gh, side) => {
+  const mirrorWith = (mode, gh, side, { acceptWarnings = false } = {}) => {
     const out = [];
     mirror(
       {
         desired: desired(),
         mode,
         allowRemovals: false,
-        seed: (run, repo) => seedOf(run, repo, board, { write: (t) => out.push(t) }).seed,
+        acceptWarnings,
+        seed: (run, repo) => seedOf(run, repo, { write: (t) => out.push(t) }),
       },
       { run: together(gh, side), originRepo: REPO, write: (t) => out.push(t), sleep: noSleep },
     );
@@ -203,6 +226,63 @@ describe('the mirror with the seed', () => {
     gh.hub.mutations.length = 0;
     mirrorWith('apply', gh, side);
     assert.deepEqual(gh.hub.mutations, []);
+  });
+
+  test('seeds from main on GitHub, not from the requirements file of the checkout it is run from', () => {
+    const gh = fakeGithub();
+    const side = scene();
+    side.hub.files.main = FIXTURE;
+    side.hub.files[HEAD] = proving(FIXTURE, 'focus_link', 'test_link');
+    side.hub.files[OTHER] = FIXTURE;
+    mirrorWith('apply', gh, side);
+    assert.deepEqual(
+      [valueOf(gh, 'done_means_proved', 'Build status'), valueOf(gh, 'done_means_proved', 'Status')],
+      ['Not started', 'Todo'],
+    );
+  });
+
+  describe('when the seed carries a warning, as when a release’s file cannot be read', () => {
+    const unreadableRelease = () => {
+      const side = scene();
+      side.hub.files['v0.5.0'] = 'this is not a graph (((';
+      return side;
+    };
+
+    test('--check says an apply would stop, and names --accept-warnings, and changes nothing', () => {
+      const gh = fakeGithub();
+      const out = mirrorWith('check', gh, unreadableRelease());
+      assert.match(
+        out,
+        /^warning: an apply would stop: the seed was made despite 1 warning .*--accept-warnings if that is meant$/m,
+      );
+      assert.deepEqual(gh.hub.mutations, []);
+    });
+
+    test('--apply refuses, changing nothing, unless --accept-warnings is given', () => {
+      const gh = fakeGithub();
+      assert.throws(() => mirrorWith('apply', gh, unreadableRelease()), /1 warning.*--accept-warnings/s);
+      assert.deepEqual(gh.hub.mutations, []);
+      assert.equal(gh.hub.projects.length, 0);
+    });
+
+    test('--apply goes on with --accept-warnings, with the values the seed could be sure of', () => {
+      const gh = fakeGithub();
+      mirrorWith('apply', gh, unreadableRelease(), { acceptWarnings: true });
+      assert.equal(
+        valueOf(gh, 'zoom_out_to_fit', 'Build status'),
+        'Merged',
+        'a release it could not read releases nothing',
+      );
+      assert.equal(valueOf(gh, 'focus_link', 'Build status'), 'In PR');
+    });
+
+    test('and a seed with none is not stopped, --accept-warnings or not', () => {
+      const gh = fakeGithub();
+      const out = mirrorWith('check', gh, scene());
+      assert.doesNotMatch(out, /an apply would stop/);
+      mirrorWith('apply', gh, scene());
+      assert.equal(gh.hub.projects.length, 1);
+    });
   });
 
   test('never moves an item back from Released or Done, whatever GitHub now says', () => {

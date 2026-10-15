@@ -19,7 +19,16 @@ import {
   labelStyle,
 } from './github-project-desired.mjs';
 import { planProject } from './github-project-plan.mjs';
-import { PROJECT_CAP, findProject, graphql, readProject, readProjects, whole } from './github-project-read.mjs';
+import {
+  PROJECT_CAP,
+  findProject,
+  graphql,
+  issueNodeId,
+  ownerId,
+  readProject,
+  readProjects,
+  whole,
+} from './github-project-read.mjs';
 import { RETRY_DELAYS_MS, paced, retrying, waitFor } from './github-project-retry.mjs';
 
 // the project is read by github-project-read.mjs; these stay importable from here
@@ -44,6 +53,14 @@ export const ISSUE_CAP = 5000;
 export const PAUSE_MS = 1000;
 export const RETRY_MS = 60000;
 
+// the project is made and filled through GraphQL, not `gh project create` and `gh project item-add`, which ask gh to resolve
+// the owner's type first (see github-project-read.mjs)
+const CREATE_PROJECT = `mutation($owner: ID!, $title: String!) {
+  createProjectV2(input: {ownerId: $owner, title: $title}) { projectV2 { id number title } }
+}`;
+const ADD_ITEM = `mutation($project: ID!, $content: ID!) {
+  addProjectV2ItemById(input: {projectId: $project, contentId: $content}) { item { id } }
+}`;
 const CREATE_FIELD = `mutation($project: ID!, $name: String!, $options: [ProjectV2SingleSelectFieldOptionInput!]) {
   createProjectV2Field(input: {projectId: $project, dataType: SINGLE_SELECT, name: $name, singleSelectOptions: $options}) {
     projectV2Field { ... on ProjectV2SingleSelectField { id name } }
@@ -167,7 +184,7 @@ export function readRemote(run, repo) {
  * a field's options) has one that always says undefined, so it is simply tried again. A call a second try could repeat
  * (a comment, a new field) gives null and is not tried again.
  */
-function lookup(args, input, read) {
+function lookup(args, input, read, owner) {
   const [group, verb] = args;
   const flag = (name) => args[args.indexOf(name) + 1];
   if (group === 'issue' && verb === 'create')
@@ -179,10 +196,11 @@ function lookup(args, input, read) {
     };
   if (group === 'label' && verb === 'create')
     return () => (readLabels(read, flag('--repo')).includes(args[2]) ? { value: '' } : undefined);
-  if (group === 'project' && verb === 'create')
+  if (group === 'api' && /createProjectV2\(/.test(input))
     return () => {
-      const made = readProjects(read, flag('--owner')).find((p) => p.title === flag('--title'));
-      return made && { value: JSON.stringify({ id: made.id, number: made.number }) };
+      const title = JSON.parse(input).variables.title;
+      const made = readProjects(read, owner).find((p) => p.title === title);
+      return made && { value: JSON.stringify({ data: { createProjectV2: { projectV2: made } } }) };
     };
   const once = (group === 'issue' && verb === 'comment') || (group === 'api' && /createProjectV2Field/.test(input));
   return once ? null : () => undefined;
@@ -261,10 +279,18 @@ function doFields(act, project, remote, fieldPlans) {
  * `pauseMs`, `retryMs` and `delays`. Throws, with gh's words, at the first call that fails for good.
  */
 export function executePlan(run, repo, plan, opts = {}) {
-  const settings = { sleep: waitFor, pauseMs: PAUSE_MS, retryMs: RETRY_MS, delays: RETRY_DELAYS_MS, lookup, ...opts };
+  const owner = ownerOf(repo);
+  const lookingFor = (args, input, read) => lookup(args, input, read, owner);
+  const settings = {
+    sleep: waitFor,
+    pauseMs: PAUSE_MS,
+    retryMs: RETRY_MS,
+    delays: RETRY_DELAYS_MS,
+    lookup: lookingFor,
+    ...opts,
+  };
   const act = paced(run, settings);
   const read = retrying(run, settings);
-  const owner = ownerOf(repo);
   for (const name of plan.labels) {
     const { color, description } = labelStyle(name);
     act(inRepo(repo, ['label', 'create', name, '--color', color, '--description', description]));
@@ -275,10 +301,8 @@ export function executePlan(run, repo, plan, opts = {}) {
 
   let ref = plan.projectRef;
   if (!ref) {
-    const created = JSON.parse(
-      act(['project', 'create', '--owner', owner, '--title', PROJECT_TITLE, '--format', 'json']),
-    );
-    ref = { id: created.id, number: created.number };
+    const created = graphql(act, CREATE_PROJECT, { owner: ownerId(read, owner), title: PROJECT_TITLE }).createProjectV2;
+    ref = { id: created.projectV2.id, number: created.projectV2.number };
   }
   const { issues, fields } = plan.desired;
   let remote = readProject(read, owner, ref.number, idByNumber);
@@ -291,9 +315,8 @@ export function executePlan(run, repo, plan, opts = {}) {
   const itemIds = new Map(remote.items.map((i) => [i.id, i.itemId]));
   for (const id of todo.itemsAdd) {
     if (!known[id]) throw new Error(`requirement ${id} has no issue to add to the project`);
-    const added = JSON.parse(
-      act(['project', 'item-add', String(ref.number), '--owner', owner, '--url', known[id].url, '--format', 'json']),
-    );
+    const content = issueNodeId(read, repo, known[id].number);
+    const added = graphql(act, ADD_ITEM, { project: ref.id, content }).addProjectV2ItemById.item;
     itemIds.set(id, added.id);
   }
   for (const set of todo.sets) {

@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { readBoard } from '../scripts/slice-board.mjs';
 import { BANNER_START, desiredState, idOfBody, markerOf } from '../scripts/github-project-desired.mjs';
 import { buildPlan } from '../scripts/github-project-plan.mjs';
-import { executePlan, findProject, ghRunner, readRemote } from '../scripts/github-project-gh.mjs';
+import { executePlan, ghRunner, readRemote } from '../scripts/github-project-gh.mjs';
 import { fakeGithub } from './repository/github-project-fake.js';
 import { path } from './repository/repo.js';
 import {
@@ -385,61 +385,6 @@ describe('reading GitHub', () => {
       Proof: 'open',
       'Build status': 'Not started',
       Status: 'Todo',
-    });
-  });
-
-  describe('finds the project through GraphQL, whatever gh can tell of the owner’s type', () => {
-    /** gh as it answers for a token it cannot resolve the owner’s type with: every `gh project` verb that names an owner fails. */
-    const unknownOwnerType = (gh) => (args, input) => {
-      if (args[0] === 'project' && args[1] !== 'item-edit')
-        throw Object.assign(new Error('gh project failed: unknown owner type'), { stderr: 'unknown owner type' });
-      return gh.run(args, input);
-    };
-
-    test('without `gh project list`, which is where gh says unknown owner type', () => {
-      const gh = fakeGithub();
-      apply(gh);
-      const { project } = readRemote(unknownOwnerType(gh), REPO);
-      assert.equal(project.number, 1);
-      assert.equal(project.items.length, 5);
-      const before = gh.hub.calls.length;
-      readRemote(gh.run, REPO);
-      assert.ok(gh.hub.calls.slice(before).every((c) => !(c.args[0] === 'project' && c.args[1] === 'list')));
-    });
-
-    test('asks for the owner of the repository by login, whether a user or an organization, and finds nothing for none', () => {
-      const gh = fakeGithub();
-      apply(gh);
-      const asked = gh.hub.calls.filter((c) => c.args[0] === 'api' && c.args[1] === 'graphql');
-      const lists = asked.filter((c) => /projectsV2/.test(JSON.parse(c.input).query));
-      assert.ok(lists.length > 0);
-      for (const c of lists) assert.equal(JSON.parse(c.input).variables.owner, 'rogerbucks');
-      assert.match(
-        JSON.parse(lists[0].input).query,
-        /repositoryOwner\(login: \$owner\)[\s\S]*on User[\s\S]*on Organization/,
-      );
-      assert.equal(findProject(gh.run, 'someone-else'), undefined);
-      assert.equal(findProject(gh.run, 'rogerbucks').number, 1);
-    });
-
-    test('through every page of projects, a hundred to a page', () => {
-      const gh = fakeGithub();
-      apply(gh);
-      const mine = gh.hub.projects[0];
-      gh.hub.projects = [
-        ...Array.from({ length: 150 }, (_, i) => ({
-          number: 100 + i,
-          title: `other ${i}`,
-          id: `P${i}`,
-          fields: [],
-          items: [],
-        })),
-        mine,
-      ];
-      assert.equal(readRemote(gh.run, REPO).project.number, mine.number);
-      const graphqlCalls = gh.hub.calls.filter((c) => c.args[0] === 'api' && c.args[1] === 'graphql');
-      const lists = graphqlCalls.filter((c) => /projectsV2/.test(JSON.parse(c.input).query));
-      assert.ok(lists.length >= 2);
     });
   });
 

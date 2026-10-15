@@ -181,6 +181,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/github-project.test.js` — the GitHub mirror of the requirements as a person runs it: the real workstreams file puts every requirement of slices 3 and 4 in exactly one workstream and may name ids a later copy brings, and the command is a dry run by default, with no network call.
 - `test/github-project-desired.test.js` — that mirror's desired state: the first clause of a rule, each issue's title, body, labels and open or closed, the marker, the project's fields and options.
 - `test/github-project-gh.test.js` — that mirror applied through an in-memory stand-in for `gh`: a first apply, a second that changes nothing, drift put right, a removed requirement labelled and closed, and nothing ever deleted.
+- `test/github-project-gh-owner.test.js` — that mirror's project found, made and filled through GraphQL by the owner's login, with a runner for which every `gh project` verb but `item-edit` fails with "unknown owner type", and an owner or a list that is not there an error naming the owner, never no projects.
 - `test/github-project-gh-safety.test.js` — that mirror's care: every call names its repository or owner, gh must point at the origin's repository, mutating calls are paced and retried once on a secondary rate limit, and a list that hit its cap is refused.
 - `test/github-project-retry.test.js` — that mirror's patience: a timeout, a reset connection, a 502, 503 or 504 or "something went wrong" is waited out 5, 15 and 45 seconds and tried again, a fourth failure stops the run, and a create that went through before the failure is never made twice, and only an issue the signed-in login wrote is taken up again. The worst case is 65 seconds of waiting (5 + 15 + 45) for one call, and the same again for each look at GitHub before a retried create, before the run stops with gh's words.
 - `test/github-project-plan.test.js` — that mirror's plan: what differs between the desired state and what GitHub holds, for the issues, the labels and the project.
@@ -239,11 +240,18 @@ These test behaviour across modules, or the repository itself, so they are named
   count): Released and Done; proved on main only: Merged and Done; held by an open pull request of this repository, by
   its copy's diff or its `Requirements:` line: In PR and In Progress; otherwise Not started and Todo. A Build status
   already set is never overwritten, nor is a Status of In Progress or Done; only Todo, the board's default and no choice,
-  is replaced by a seed that says more. Nothing moves back from Released or Done. `--check` prints the tally of what
-  it would seed for each option (`seeded Build status: …`, `seeded Status: …`) to confirm before `--apply`. After the
+  is replaced by a seed that says more. Nothing moves back from Released or Done. What is proved on main is read from
+  main through the API, not from the checkout the script is run from. `--check` prints the tally of what it would seed
+  for each option (`seeded Build status: …`, `seeded Status: …`) to confirm before `--apply`. A requirements file the
+  seed could not read (main's, a release's, a pull request's) is a warning: `--check` says an apply would stop, and
+  `--apply` stops unless `--accept-warnings` is given, since it would fix wrong values for good. After the
   first seed, the values come from the build status workflow below, from GitHub's events alone. The project is found by
   GraphQL (`repositoryOwner(login:) { projectsV2 }`, a user or an organization), never by `gh project list`, which asks
-  gh to resolve the owner's type and fails ("unknown owner type") for a token with only the project scope.
+  gh to resolve the owner's type and fails ("unknown owner type") for a token with only the project scope. The project
+  is also made (`createProjectV2`, with the owner's node id) and filled (`addProjectV2ItemById`, with the issue's node id)
+  through GraphQL, not by `gh project create` and `gh project item-add`; only `gh project item-edit`, which takes ids,
+  is still used. An owner that cannot be found, or an answer with no list of projects, is an error naming the owner and
+  never taken for no projects, which would make the project a second time.
 - **See the plan with `npm run project:plan`.** It is a dry run and makes no network call, so it compares with an empty
   GitHub. `--check` reads GitHub and prints the real diff, changing nothing. `--apply` prints the same plan, then does
   it with `gh`: it finds each issue by its hidden `<!-- requirement:<id> -->` marker, changes only what differs, and
