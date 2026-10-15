@@ -45,10 +45,21 @@ describe('every call names where it goes', () => {
     for (const args of these) assert.equal(args[args.indexOf('--repo') + 1], REPO, args.join(' '));
   });
 
-  test('a project call that finds, makes or fills a project carries --owner, the repository’s owner', () => {
-    const these = calls.filter(([group, verb]) => group === 'project' && ['list', 'create', 'item-add'].includes(verb));
-    assert.ok(these.length >= 3);
-    for (const args of these) assert.equal(args[args.indexOf('--owner') + 1], 'rogerbucks', args.join(' '));
+  test('the project is found, made and filled through GraphQL, naming the repository’s owner, never by a gh project verb that resolves the owner’s type', () => {
+    const verbs = calls.filter(([group]) => group === 'project').map(([, verb]) => verb);
+    assert.ok(verbs.length > 0);
+    assert.ok(
+      verbs.every((verb) => verb === 'item-edit'),
+      verbs.join(' '),
+    );
+    const queries = gh.hub.calls
+      .filter((c) => c.args[0] === 'api' && c.args[1] === 'graphql')
+      .map((c) => JSON.parse(c.input));
+    const named = queries.filter((q) => /projectsV2|repositoryOwner/.test(q.query));
+    assert.ok(named.length > 0);
+    for (const q of named) assert.equal(q.variables.owner, 'rogerbucks');
+    assert.ok(queries.some((q) => /createProjectV2\(/.test(q.query)));
+    assert.ok(queries.some((q) => /addProjectV2ItemById\(/.test(q.query)));
   });
 
   test('every other call is a lookup of the login, GraphQL, or an edit by global id', () => {
@@ -200,6 +211,22 @@ describe('a secondary rate limit', () => {
   });
 });
 
+describe('a list that others fill', () => {
+  test('does not hit the cap of the issues: only the signed-in login’s own are asked for, so issues others file are not in it', () => {
+    const gh = fakeGithub();
+    gh.hub.issues = Array.from({ length: ISSUE_CAP }, (_, i) => ({
+      number: i + 1,
+      title: 'spam',
+      body: '',
+      state: 'OPEN',
+      labels: [],
+      author: { login: 'a-stranger' },
+      url: 'u',
+    }));
+    assert.deepEqual(readRemote(gh.run, REPO).issues, []);
+  });
+});
+
 describe('a list that hit its cap', () => {
   test('is refused for labels, issues and projects, which may be only the first part of what GitHub holds', () => {
     assert.deepEqual([LABEL_CAP, ISSUE_CAP, PROJECT_CAP], [1000, 5000, 200]);
@@ -213,7 +240,7 @@ describe('a list that hit its cap', () => {
       body: '',
       state: 'OPEN',
       labels: [],
-      author: { login: 'x' },
+      author: { login: issues.hub.login },
       url: 'u',
     }));
     assert.throws(() => readRemote(issues.run, REPO), /issues.*5000/);

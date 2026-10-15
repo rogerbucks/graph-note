@@ -4,7 +4,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readBoard } from '../scripts/slice-board.mjs';
-import { BANNER_START, desiredState, idOfBody, markerOf } from '../scripts/github-project-desired.mjs';
+import { BANNER_START, desiredState, idOfBody, markerOf, withSeed } from '../scripts/github-project-desired.mjs';
 import {
   MAX_REMOVALS,
   buildPlan,
@@ -254,13 +254,26 @@ const projectHeld = () => ({
   items: desired.issues.map((i) => ({
     itemId: `I_${i.id}`,
     id: i.id,
-    values: { Slice: i.slice, Workstream: i.workstream, Proof: i.status },
+    values: {
+      Slice: i.slice,
+      Workstream: i.workstream,
+      Proof: i.status,
+      'Build status': i.buildStatus,
+      Status: i.progress,
+    },
   })),
 });
+const withStatusField = (project) => {
+  project.fields.Status = {
+    id: 'F_Status',
+    options: ['Todo', 'In Progress', 'Done'].map((name) => ({ id: `O_${name}`, name })),
+  };
+  return project;
+};
 const projectPlan = (project) => planProject(desired.issues, desired.fields, project);
 
 describe('the project plan', () => {
-  test('creates the project, its three fields with their options, and every item with its three values', () => {
+  test('creates the project, its four fields with their options, and every item with its four values', () => {
     const p = projectPlan(null);
     assert.equal(p.create, true);
     assert.deepEqual(
@@ -269,11 +282,12 @@ describe('the project plan', () => {
         ['Slice', true],
         ['Workstream', true],
         ['Proof', true],
+        ['Build status', true],
       ],
     );
     assert.deepEqual(p.fields[0].add, ['Slice 3', 'Slice 4']);
     assert.deepEqual(ids(p.itemsAdd), ids(desired.issues));
-    assert.equal(p.sets.length, 3 * desired.issues.length);
+    assert.equal(p.sets.length, 5 * desired.issues.length);
     assert.deepEqual(
       p.sets.find((s) => s.id === 'focus_link' && s.field === 'Proof'),
       {
@@ -313,12 +327,77 @@ describe('the project plan', () => {
     assert.throws(() => projectPlan(project), /Proof.*proved.*by hand/);
   });
 
-  test('does not look at the built-in Status field', () => {
-    const project = projectHeld();
-    project.fields.Status = { id: 'F_Status', options: [{ id: 'O_todo', name: 'Todo' }] };
-    project.items[0].values.Status = 'Todo';
+  test('never makes or changes the built-in Status field, whose options are the board’s own', () => {
+    const project = withStatusField(projectHeld());
     const p = projectPlan(project);
     assert.deepEqual([p.create, p.fields, p.itemsAdd, p.sets], [false, [], [], []]);
+    delete project.fields.Status;
+    assert.deepEqual(projectPlan(project).fields, [], 'a project without it is not given one');
+  });
+
+  describe('seeds the built-in Status', () => {
+    const issue = (id, progress) => ({ ...desired.issues[0], id, progress });
+    const plan = (issues, values) =>
+      planProject(
+        issues,
+        desired.fields,
+        withStatusField({
+          ...projectHeld(),
+          items: issues.map((i) => ({ itemId: `I_${i.id}`, id: i.id, values: { ...bothSet, ...values[i.id] } })),
+        }),
+      ).sets.filter((s) => s.field === 'Status');
+    const bothSet = {
+      Slice: desired.issues[0].slice,
+      Workstream: desired.issues[0].workstream,
+      Proof: 'open',
+      'Build status': 'Not started',
+    };
+
+    test('on an item with no Status, with the seed, even Todo', () => {
+      const sets = plan([issue('a', 'Done'), issue('b', 'Todo')], { a: {}, b: {} });
+      assert.deepEqual(sets, [
+        { id: 'a', field: 'Status', from: null, to: 'Done' },
+        { id: 'b', field: 'Status', from: null, to: 'Todo' },
+      ]);
+    });
+
+    test('replacing Todo, which is the board’s default and no choice, with In Progress or Done', () => {
+      const sets = plan([issue('a', 'In Progress'), issue('b', 'Done')], {
+        a: { Status: 'Todo' },
+        b: { Status: 'Todo' },
+      });
+      assert.deepEqual(sets, [
+        { id: 'a', field: 'Status', from: 'Todo', to: 'In Progress' },
+        { id: 'b', field: 'Status', from: 'Todo', to: 'Done' },
+      ]);
+    });
+
+    test('and nothing else: Done and In Progress are never overwritten, nor Todo by Todo', () => {
+      const issues = [
+        issue('a', 'Todo'),
+        issue('b', 'In Progress'),
+        issue('c', 'Done'),
+        issue('d', 'Todo'),
+        issue('e', 'Done'),
+      ];
+      const values = {
+        a: { Status: 'Done' },
+        b: { Status: 'Done' },
+        c: { Status: 'In Progress' },
+        d: { Status: 'Todo' },
+        e: { Status: 'Done' },
+      };
+      assert.deepEqual(plan(issues, values), []);
+      assert.deepEqual(plan([issue('x', 'Todo')], { x: { Status: 'In Progress' } }), []);
+    });
+
+    test('and refuses a seed the Status field has no option for, since the options are the board’s to change', () => {
+      const project = withStatusField(projectHeld());
+      project.fields.Status.options = project.fields.Status.options.filter((o) => o.name !== 'Done');
+      const issues = desired.issues.map((i) => ({ ...i, progress: 'Done' }));
+      project.items.forEach((i) => delete i.values.Status);
+      assert.throws(() => planProject(issues, desired.fields, project), /Status.*Done.*by hand/);
+    });
   });
 
   test('sets only the values that differ, saying what each was', () => {
@@ -332,7 +411,23 @@ describe('the project plan', () => {
     project.items = project.items.filter((i) => i.id !== 'focus_link');
     const p = projectPlan(project);
     assert.deepEqual(p.itemsAdd, ['focus_link']);
-    assert.equal(p.sets.length, 3);
+    assert.equal(p.sets.length, 5);
+  });
+
+  test('gives an item with no Build status the first stage, and never changes one that has any', () => {
+    const project = projectHeld();
+    delete project.items.find((i) => i.id === 'focus_link').values['Build status'];
+    project.items.find((i) => i.id === 'focus_neighbours').values['Build status'] = 'Checks passing';
+    project.items.find((i) => i.id === 'zoom_out_to_fit').values['Build status'] = 'Released';
+    assert.deepEqual(projectPlan(project).sets, [
+      { id: 'focus_link', field: 'Build status', from: null, to: 'Not started' },
+    ]);
+  });
+
+  test('never replaces the options of Build status: one that lacks an option is refused, not changed', () => {
+    const project = projectHeld();
+    project.fields['Build status'].options = project.fields['Build status'].options.filter((o) => o.name !== 'Merged');
+    assert.throws(() => projectPlan(project), /Build status.*Merged.*by hand/);
   });
 
   test('leaves alone an item that is no longer desired, never deleting', () => {
@@ -358,10 +453,10 @@ describe('the whole plan, printed', () => {
       removed: 0,
       unchanged: 0,
       projectCreate: 1,
-      fieldsCreate: 3,
-      optionsAdd: 2 + 3 + 3,
+      fieldsCreate: 4,
+      optionsAdd: 2 + 3 + 3 + 6,
       itemsAdd: 5,
-      valuesSet: 15,
+      valuesSet: 25,
     });
   });
 
@@ -402,6 +497,22 @@ describe('the whole plan, printed', () => {
 
   test('is the same text each time', () => {
     assert.equal(formatPlan(everything), formatPlan(buildPlan(desired, remoteOf())));
+  });
+
+  test('tallies the values it would seed for each option, in the field’s order, to confirm them before applying', () => {
+    const seed = new Map([
+      ['zoom_out_to_fit', { buildStatus: 'Released', progress: 'Done' }],
+      ['focus_link', { buildStatus: 'In PR', progress: 'In Progress' }],
+    ]);
+    const text = formatPlan(buildPlan(withSeed(desired, seed), remoteOf()));
+    assert.match(text, /^seeded Build status: Not started 3 · In PR 1 · Released 1$/m);
+    assert.match(text, /^seeded Status: Todo 3 · In Progress 1 · Done 1$/m);
+  });
+
+  test('tallies none when every item has its values already', () => {
+    const text = formatPlan(buildPlan(desired, remoteOf({ project: withStatusField(projectHeld()) })));
+    assert.match(text, /^seeded Build status: none$/m);
+    assert.match(text, /^seeded Status: none$/m);
   });
 });
 

@@ -1,0 +1,6 @@
+{
+  "file": "test/build-status-comments.test.js",
+  "test": "the Merged comment, after the pull request is closed and locked > warns, and goes no further, for any other refusal of the comment",
+  "seen_failing_first": false,
+  "evidence": "A guard on behaviour the previous commit already had: a comment GitHub refused for a reason other than a lock was already a warning, with the board updated and nothing else touched. The test passes against the old code for that reason, and pins that the new path does not unlock for any other refusal."
+}

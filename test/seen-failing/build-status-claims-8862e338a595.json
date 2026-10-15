@@ -1,0 +1,6 @@
+{
+  "file": "test/build-status-claims.test.js",
+  "test": "the Requirements line of a draft pull request > never takes an id into a pull request from a fork",
+  "seen_failing_first": false,
+  "evidence": "A guard on behaviour the previous commit already had: a pull request from a fork was already left alone before anything of it was read. The test passes against the old code for that reason, and pins that the new Requirements line does not take a fork's pull request on either."
+}

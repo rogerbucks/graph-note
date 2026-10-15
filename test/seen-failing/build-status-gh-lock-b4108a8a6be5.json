@@ -1,0 +1,6 @@
+{
+  "file": "test/build-status-gh-lock.test.js",
+  "test": "leaving the comment on a conversation that may be locked > unlocks, comments and locks again in the one step when the pull request is locked",
+  "seen_failing_first": false,
+  "evidence": "Moved from test/build-status-gh.test.js with the same behaviour: the unlock, comment and lock again path existed before this commit, taken then for a refusal that said locked, and the fake's refusal says so, so it passes against the old code. It now pins the same path taken because the pull request's own locked field is true."
+}

@@ -1,0 +1,6 @@
+{
+  "file": "test/build-status-claims.test.js",
+  "test": "the built-in Status field > is never taken back from Done by a pull request that closes unmerged",
+  "seen_failing_first": false,
+  "evidence": "A guard on behaviour the previous commit already had: the Build status never went back from Merged, and the built-in Status was not touched at all before this commit, so an item already Done stayed Done. The test passes against the old code for that reason, and pins that the new Status moves never undo Done."
+}

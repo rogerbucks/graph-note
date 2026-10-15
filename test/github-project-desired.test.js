@@ -6,7 +6,10 @@ import assert from 'node:assert/strict';
 import { readBoard } from '../scripts/slice-board.mjs';
 import {
   BANNER_START,
+  BUILD_STATUSES,
+  BUILD_STATUS_FIELD,
   CATCH_ALL,
+  FIXED_FIELDS,
   PROJECT_TITLE,
   adoptedId,
   assignWorkstreams,
@@ -18,6 +21,7 @@ import {
   markerOf,
   neutralise,
   readWorkstreams,
+  withSeed,
 } from '../scripts/github-project-desired.mjs';
 import {
   FIXTURE,
@@ -276,10 +280,52 @@ describe('the desired issues for chosen slices', () => {
 describe('the project fields', () => {
   const { fields } = desiredState(board, WORKSTREAMS, [3, 4]);
 
-  test('are Slice, Workstream and Proof, each a single choice; the built-in Status field is not used', () => {
-    assert.deepEqual(Object.keys(fields), ['Slice', 'Workstream', 'Proof']);
+  test('are Slice, Workstream, Proof and Build status, each a single choice; the built-in Status field is not used', () => {
+    assert.deepEqual(Object.keys(fields), ['Slice', 'Workstream', 'Proof', 'Build status']);
     assert.deepEqual(fields.Slice, ['Slice 3', 'Slice 4']);
     assert.deepEqual(fields.Proof, ['open', 'part', 'proved']);
+  });
+
+  test('include Build status, a fourth single choice with the six stages of a build, in the order they happen', () => {
+    assert.deepEqual(BUILD_STATUSES, [
+      'Not started',
+      'In PR',
+      'Checks failing',
+      'Checks passing',
+      'Merged',
+      'Released',
+    ]);
+    assert.deepEqual(fields[BUILD_STATUS_FIELD], BUILD_STATUSES);
+    assert.equal(BUILD_STATUS_FIELD, 'Build status');
+    assert.ok(
+      FIXED_FIELDS.includes(BUILD_STATUS_FIELD),
+      'its options are never replaced, so its values are never cleared',
+    );
+  });
+
+  test('give every issue the first stage, Not started, and the Status Todo, as the values a new item starts with', () => {
+    const { issues } = desiredState(board, WORKSTREAMS_WITH_QUESTIONS, [3, 4]);
+    assert.ok(issues.length > 0);
+    assert.ok(issues.every((i) => i.buildStatus === 'Not started' && i.progress === 'Todo'));
+  });
+
+  test('take a seed in place of those, for the ids it names, and no more', () => {
+    const desired = desiredState(board, WORKSTREAMS, [3, 4]);
+    const seed = new Map([
+      ['zoom_out_to_fit', { buildStatus: 'Released', progress: 'Done' }],
+      ['not_an_issue', { buildStatus: 'Merged', progress: 'Done' }],
+    ]);
+    const seeded = withSeed(desired, seed);
+    const of = (id) => seeded.issues.find((i) => i.id === id);
+    assert.deepEqual([of('zoom_out_to_fit').buildStatus, of('zoom_out_to_fit').progress], ['Released', 'Done']);
+    assert.deepEqual([of('focus_link').buildStatus, of('focus_link').progress], ['Not started', 'Todo']);
+    assert.equal(seeded.issues.length, desired.issues.length);
+    assert.deepEqual(seeded.fields, desired.fields);
+    assert.equal(
+      desired.issues.find((i) => i.id === 'zoom_out_to_fit').buildStatus,
+      'Not started',
+      'the original is not changed',
+    );
   });
 
   test('offer every workstream of the file, in the file’s order, with its title', () => {

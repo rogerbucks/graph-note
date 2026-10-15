@@ -1,0 +1,6 @@
+{
+  "file": "test/build-status-gh-lock.test.js",
+  "test": "leaving the comment on a conversation that may be locked > says when it cannot lock again, the comment being made and the conversation left open",
+  "seen_failing_first": false,
+  "evidence": "Moved from test/build-status-gh.test.js with the same behaviour: a lock that is refused for a reason that is not a short failure was reported as relockFailed before this commit, with one attempt, so it passes against the old code. It pins that the retry added now does not change that result."
+}

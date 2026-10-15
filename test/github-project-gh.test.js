@@ -79,18 +79,18 @@ describe('the first apply, against an empty GitHub', () => {
     assert.deepEqual(options('Proof'), ['open', 'part', 'proved']);
   });
 
-  test('leaves the built-in Status field as GitHub made it: its options kept, no value set', () => {
+  test('leaves the built-in Status field as GitHub made it, its options kept, and gives each item the seed Todo', () => {
     const [project] = gh.hub.projects;
     const status = project.fields.find((f) => f.name === 'Status');
     assert.deepEqual(
       status.options.map((o) => o.name),
       ['Todo', 'In Progress', 'Done'],
     );
-    assert.ok(project.items.every((i) => !('Status' in i.values)));
+    assert.ok(project.items.every((i) => i.values.Status === 'Todo'));
     assert.ok(gh.hub.mutations.every((m) => !/ProjectV2Field.* Status$/.test(m)));
   });
 
-  test('adds every issue to the project, with its three field values', () => {
+  test('adds every issue to the project, with its four field values', () => {
     const [project] = gh.hub.projects;
     assert.equal(project.items.length, 5);
     const number = issueOf(gh, 'focus_neighbours').number;
@@ -98,11 +98,69 @@ describe('the first apply, against an empty GitHub', () => {
       Slice: 'Slice 3',
       Workstream: 'W1: Focus, hover and untangle',
       Proof: 'part',
+      'Build status': 'Not started',
+      Status: 'Todo',
     });
   });
 
   test('never deletes anything', () => {
     assert.ok(gh.hub.calls.every((c) => !c.args.some((a) => /delete|remove/i.test(a))));
+  });
+});
+
+describe('the Build status field, applied', () => {
+  const itemOf = (gh, id) => gh.hub.projects[0].items.find((i) => i.number === issueOf(gh, id).number);
+  const eventValue = (gh, id, value) => {
+    itemOf(gh, id).values['Build status'] = value;
+  };
+  const valueOf = (gh, id) => itemOf(gh, id).values['Build status'];
+
+  test('is made with its six stages, and every item starts at Not started', () => {
+    const gh = fakeGithub();
+    apply(gh);
+    const [project] = gh.hub.projects;
+    assert.deepEqual(
+      project.fields.find((f) => f.name === 'Build status').options.map((o) => o.name),
+      ['Not started', 'In PR', 'Checks failing', 'Checks passing', 'Merged', 'Released'],
+    );
+    assert.ok(project.items.every((i) => i.values['Build status'] === 'Not started'));
+  });
+
+  test('keeps a value an event set, on a later apply that changes nothing else', () => {
+    const gh = fakeGithub();
+    apply(gh);
+    eventValue(gh, 'focus_link', 'Checks failing');
+    quiet(gh);
+    apply(gh);
+    assert.deepEqual(gh.hub.mutations, []);
+    assert.equal(valueOf(gh, 'focus_link'), 'Checks failing');
+  });
+
+  test('is added to a project made before it existed, with the other values untouched, and sets nothing else', () => {
+    const gh = fakeGithub();
+    apply(gh);
+    const [project] = gh.hub.projects;
+    project.fields = project.fields.filter((f) => f.name !== 'Build status');
+    for (const item of project.items) delete item.values['Build status'];
+    quiet(gh);
+    apply(gh);
+    assert.ok(project.fields.some((f) => f.name === 'Build status'));
+    assert.ok(project.items.every((i) => i.values['Build status'] === 'Not started'));
+    assert.ok(gh.hub.mutations.every((m) => /createProjectV2Field Build status$|item-edit/.test(m)));
+    assert.ok(project.items.every((i) => i.values.Proof && i.values.Slice && i.values.Workstream));
+  });
+
+  test('is never replaced when Workstream options change: the values events set stay', () => {
+    const gh = fakeGithub();
+    apply(gh);
+    eventValue(gh, 'focus_link', 'Merged');
+    const field = gh.hub.projects[0].fields.find((f) => f.name === 'Workstream');
+    field.options = field.options.slice(0, 1);
+    quiet(gh);
+    apply(gh);
+    assert.ok(gh.hub.mutations.some((m) => /updateProjectV2Field Workstream$/.test(m)));
+    assert.ok(gh.hub.mutations.every((m) => !/ProjectV2Field.* Build status$/.test(m)));
+    assert.equal(valueOf(gh, 'focus_link'), 'Merged');
   });
 });
 
@@ -293,15 +351,41 @@ describe('reading GitHub', () => {
     assert.ok(remote.issues.every((i) => i.author === 'the-owner'));
   });
 
+  test('asks for only the issues the signed-in login wrote, so issues others write cannot reach the cap of the list', () => {
+    const gh = fakeGithub({ login: 'the-owner' });
+    apply(gh);
+    gh.hub.issues.push({
+      number: 900,
+      title: 'spam',
+      body: '',
+      state: 'OPEN',
+      labels: [],
+      author: { login: 'spammer' },
+      url: 'https://github.com/o/r/issues/900',
+    });
+    const remote = readRemote(gh.run, REPO);
+    const lists = gh.hub.calls.filter((c) => c.args[0] === 'issue' && c.args[1] === 'list');
+    const last = lists.at(-1).args;
+    assert.equal(last[last.indexOf('--author') + 1], 'the-owner');
+    assert.ok(remote.issues.every((i) => i.author === 'the-owner'));
+    assert.ok(!remote.issues.some((i) => i.number === 900));
+  });
+
   test('finds the project by its title and gives its fields, and its items by requirement id', () => {
     const gh = fakeGithub();
     apply(gh);
     const { project } = readRemote(gh.run, REPO);
     assert.equal(project.number, 1);
-    assert.deepEqual(Object.keys(project.fields).sort(), ['Proof', 'Slice', 'Status', 'Workstream']);
+    assert.deepEqual(Object.keys(project.fields).sort(), ['Build status', 'Proof', 'Slice', 'Status', 'Workstream']);
     assert.equal(project.items.length, 5);
     const item = project.items.find((i) => i.id === 'focus_link');
-    assert.deepEqual(item.values, { Slice: 'Slice 4', Workstream: 'W1: Focus, hover and untangle', Proof: 'open' });
+    assert.deepEqual(item.values, {
+      Slice: 'Slice 4',
+      Workstream: 'W1: Focus, hover and untangle',
+      Proof: 'open',
+      'Build status': 'Not started',
+      Status: 'Todo',
+    });
   });
 
   test('ignores a project with another title', () => {
@@ -405,6 +489,8 @@ describe('open questions, applied', () => {
       Slice: 'Slice 3',
       Workstream: 'Q: Open questions',
       Proof: 'open',
+      'Build status': 'Not started',
+      Status: 'Todo',
     });
     quiet(gh);
     apply(gh, asked());

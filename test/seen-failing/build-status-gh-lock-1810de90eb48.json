@@ -1,0 +1,6 @@
+{
+  "file": "test/build-status-gh-lock.test.js",
+  "test": "leaving the comment on a conversation that may be locked > unlocks for a locked pull request whatever the words of the refusal, and says why a second try fails",
+  "seen_failing_first": false,
+  "evidence": "The fake's first refusal of a locked pull request's comment still says locked, which the old code looked for, so the old code unlocked here too and the test passes against it. The case the old code got wrong, a refusal of an unlocked pull request that says blocked, is the test that failed first; this one pins that the unlock path and the later failure still behave."
+}

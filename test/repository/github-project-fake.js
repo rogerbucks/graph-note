@@ -80,6 +80,45 @@ export function fakeGithub({ owner = 'rogerbucks', name = 'graph-note', login = 
       for (const item of p.items) delete item.values[f.name];
       return json({ data: { updateProjectV2Field: { projectV2Field: f } } });
     }
+    if (/repositoryOwner\(login: \$owner\) \{ id \}/.test(query))
+      return json({ data: { repositoryOwner: variables.owner === owner ? { id: `OWNER_${owner}` } : null } });
+    if (/issue\(number: \$number\)/.test(query)) {
+      const there = variables.owner === owner && issue(variables.number);
+      return json({ data: { repository: { issue: there ? { id: `ISSUE_${variables.number}` } : null } } });
+    }
+    if (/createProjectV2\(/.test(query)) {
+      if (variables.owner !== `OWNER_${owner}`) throw new Error('createProjectV2: names no owner, or the wrong one');
+      mutate([...args, 'createProjectV2', variables.title]);
+      const created = {
+        number: hub.projects.length + 1,
+        id: nextId('PVT'),
+        title: variables.title,
+        fields: [field('Status', ['Todo', 'In Progress', 'Done'])],
+        items: [],
+      };
+      hub.projects.push(created);
+      const { id, number, title } = created;
+      return json({ data: { createProjectV2: { projectV2: { id, number, title } } } });
+    }
+    if (/addProjectV2ItemById\(/.test(query)) {
+      mutate([...args, 'addProjectV2ItemById', variables.content]);
+      const p = hub.projects.find((x) => x.id === variables.project);
+      const number = Number(variables.content.replace('ISSUE_', ''));
+      // adding an issue twice gives the item it already has, as GitHub does
+      const item = p.items.find((x) => x.number === number) ?? { id: nextId('item'), number, values: {} };
+      if (!p.items.includes(item)) p.items.push(item);
+      return json({ data: { addProjectV2ItemById: { item: { id: item.id } } } });
+    }
+    if (/projectsV2\(/.test(query)) {
+      // the owner’s projects, a hundred to the page, found by the owner’s login whether it is a user or an organization
+      if (variables.owner !== owner) return json({ data: { repositoryOwner: null } });
+      const start = variables.after ? Number(variables.after) : 0;
+      const nodes = hub.projects.slice(start, start + 100).map(({ id, number, title }) => ({ id, number, title }));
+      const end = start + nodes.length;
+      const pageInfo = { hasNextPage: end < hub.projects.length, endCursor: String(end) };
+      return json({ data: { repositoryOwner: { projectsV2: { pageInfo, nodes } } } });
+    }
+    if (variables.owner !== owner) return json({ data: { repositoryOwner: null } });
     return json(readProject(project(variables.number), variables.after));
   };
 
@@ -101,7 +140,11 @@ export function fakeGithub({ owner = 'rogerbucks', name = 'graph-note', login = 
       hub.labels.push({ name: args[2] });
       return '';
     }
-    if (group === 'issue' && verb === 'list') return json(hub.issues);
+    if (group === 'issue' && verb === 'list') {
+      // only the issues one author wrote when asked for, as GitHub gives them
+      const author = flag(args, '--author');
+      return json(hub.issues.filter((i) => !args.includes('--author') || i.author?.login === author));
+    }
     if (group === 'issue' && verb === 'create') {
       mutate(args);
       const number = hub.issues.length + 1;

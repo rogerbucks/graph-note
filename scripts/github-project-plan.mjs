@@ -4,8 +4,13 @@
 // can print it and a test can prove it. A plan changes only what differs and never deletes: an issue whose requirement
 // went is labelled and closed, an issue outside the chosen slices is left alone, a label somebody else added stays.
 import {
+  BUILD_STATUSES,
+  BUILD_STATUS_FIELD,
+  DEFAULT_PROGRESS,
   FIELD_NAMES,
   FIXED_FIELDS,
+  PROGRESS_FIELD,
+  PROGRESS_STATUSES,
   PROJECT_TITLE,
   REMOVED_LABEL,
   adoptedId,
@@ -16,7 +21,13 @@ import {
 /** The most issues a plan may remove (label and close) unless the person allows more. */
 export const MAX_REMOVALS = 10;
 
-const FIELD_KEYS = { Slice: 'slice', Workstream: 'workstream', Proof: 'status' };
+const FIELD_KEYS = {
+  Slice: 'slice',
+  Workstream: 'workstream',
+  Proof: 'status',
+  [BUILD_STATUS_FIELD]: 'buildStatus',
+  [PROGRESS_FIELD]: 'progress',
+};
 
 const lower = (name) => String(name).toLowerCase();
 const hasLabel = (labels, name) => labels.some((l) => lower(l) === lower(name));
@@ -121,13 +132,37 @@ export function planProject(desired, wantedFields, remote) {
   }
   const items = new Map((remote?.items ?? []).map((i) => [i.id, i]));
   const itemsAdd = desired.filter((d) => !items.has(d.id)).map((d) => d.id);
+  refuseMissingSeeds(desired, remote);
   const sets = [];
   for (const d of desired)
-    for (const field of FIELD_NAMES) {
+    for (const field of [...FIELD_NAMES, PROGRESS_FIELD]) {
       const from = items.get(d.id)?.values?.[field] ?? null;
-      if (from !== d[FIELD_KEYS[field]]) sets.push({ id: d.id, field, from, to: d[FIELD_KEYS[field]] });
+      if (differs(field, from, d[FIELD_KEYS[field]])) sets.push({ id: d.id, field, from, to: d[FIELD_KEYS[field]] });
     }
   return { create: remote === null, fields, itemsAdd, sets };
+}
+
+/**
+ * Whether a field's value on an item is to be set. Slice, Workstream and Proof follow the requirement, so any difference.
+ * Build status is set by events (scripts/build-status-run.mjs), so here only a missing value is seeded. The built-in Status
+ * is the board's own: a missing value is seeded, and Todo, which is its default and no choice, may be replaced by a seed
+ * that says more; In Progress and Done are never overwritten.
+ */
+function differs(field, from, to) {
+  if (field === BUILD_STATUS_FIELD) return from === null;
+  if (field === PROGRESS_FIELD) return from === null || (from === DEFAULT_PROGRESS && to !== DEFAULT_PROGRESS);
+  return from !== to;
+}
+
+/** Throws when the project's Status field lacks an option a seed would set: the script never changes the board's own options. */
+function refuseMissingSeeds(desired, remote) {
+  const have = remote?.fields?.[PROGRESS_FIELD];
+  if (!have) return;
+  const lacking = [...new Set(desired.map((d) => d.progress))].filter((o) => !have.options.some((x) => x.name === o));
+  if (lacking.length)
+    throw new Error(
+      `field ${PROGRESS_FIELD} lacks the option ${lacking.join(', ')}; the script never changes the options of ${PROGRESS_FIELD}, so add it by hand`,
+    );
 }
 
 /**
@@ -193,7 +228,14 @@ const updateWhat = (u) =>
     .filter(Boolean)
     .join(', ');
 
-/** The plan as text: its counts first, then a line for each change. */
+/** One line of how many items a field would be seeded with each of its options, in the field's order, or none. */
+function seedTally(label, field, options, sets) {
+  const mine = sets.filter((s) => s.field === field);
+  const counts = options.map((o) => [o, mine.filter((s) => s.to === o).length]).filter(([, n]) => n > 0);
+  return `seeded ${label}: ${counts.length ? counts.map(([o, n]) => `${o} ${n}`).join(' · ') : 'none'}`;
+}
+
+/** The plan as text: its counts first, then the tally of the values it would seed, then a line for each change. */
 export function formatPlan(plan) {
   const c = summarise(plan);
   const { issues, project } = plan;
@@ -203,6 +245,8 @@ export function formatPlan(plan) {
     `labels: create ${c.labelsCreate}`,
     `issues: create ${c.create} (${c.createdClosed} closed at once) · update ${c.update} · close ${c.close} · reopen ${c.reopen} · mark removed ${c.removed} · unchanged ${c.unchanged}`,
     `project: create ${c.projectCreate} · fields create ${c.fieldsCreate} · options add ${c.optionsAdd} · items add ${c.itemsAdd} · values set ${c.valuesSet}`,
+    seedTally('Build status', BUILD_STATUS_FIELD, BUILD_STATUSES, project.sets),
+    seedTally('Status', PROGRESS_FIELD, PROGRESS_STATUSES, project.sets),
     '',
     ...plan.labels.map((name) => `create label ${name}`),
     ...issues.create.map((i) => `create issue ${i.id} "${i.title}" (${i.state}; ${i.labels.join(', ')})`),

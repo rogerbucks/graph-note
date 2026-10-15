@@ -217,7 +217,7 @@ describe('Park for later, while the card is edited', () => {
     try {
       const el = await show(env);
       tapKey(el, 'small');
-      await wait(20);
+      await until(() => !!labelled(el, 'Close details')); // its details shown, with all they offer
       assert.equal(labelled(el, 'Park for later'), undefined);
     } finally {
       env.uninstall();
