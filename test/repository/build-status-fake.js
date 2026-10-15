@@ -97,9 +97,11 @@ export function fakeRepoSide({ repo = 'rogerbucks/graph-note', pageSize = 100, i
     hub.calls.push({ args, input });
     if (args[0] === 'issue' && args[1] === 'list') {
       if (flag(args, '--repo') !== repo) throw new Error('gh issue list: names no repository, or the wrong one');
-      const author = flag(args, '--author');
-      // only the issues one author wrote when asked for, as GitHub gives them, so others’ never count against the cap
-      return json(issues().filter((i) => !args.includes('--author') || i.author?.login === author));
+      // only the issues one author (or one GitHub App, app/<name> as gh gives it) wrote when asked for, as GitHub gives
+      // them, so others’ never count against the cap
+      const author = args.includes('--app') ? `app/${flag(args, '--app')}` : flag(args, '--author');
+      const asked = args.includes('--author') || args.includes('--app');
+      return json(issues().filter((i) => !asked || i.author?.login === author));
     }
     if (args[0] !== 'api') throw new Error(`fake repository gh does not know: ${args.join(' ')}`);
     const path = args[1];

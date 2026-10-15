@@ -2,10 +2,11 @@
 // Build status and its built-in Status, and setting either. The issues are read with the workflow's token and only the
 // project with the project token (PROJECT_TOKEN), so that token is used for nothing but the board. It finds the project,
 // its fields and the mirror's issues as the mirror does (github-project-gh.mjs), by the project's title and the issues
-// the mirror made; the mirror is run by the owner of the repository, so an issue is the mirror's when the owner wrote it.
+// the mirror made; the mirror is run by the owner of the repository or, on main, by the workflows' bot, so an issue is the
+// mirror's when one of those two wrote it.
 // The mirror never sets either field after giving a new item its first Build status; the build status workflow does.
 import { BUILD_STATUS_FIELD, PROGRESS_FIELD, PROJECT_TITLE, adoptedId } from './github-project-desired.mjs';
-import { findProject, readIssues, readProject } from './github-project-gh.mjs';
+import { adoptersOf, findProject, readAdoptable, readProject } from './github-project-gh.mjs';
 import { retrying } from './github-project-retry.mjs';
 
 /** A trouble with the board that is not GitHub refusing a call: the project, its field or an option is not there yet. */
@@ -24,8 +25,9 @@ export function readBuildBoard(github, project, repo, opts = {}) {
   const found = findProject(retrying(project, opts), owner);
   if (!found) throw new BoardProblem(`the project "${PROJECT_TITLE}" was not found`);
   const issues = new Map();
-  for (const issue of [...readIssues(retrying(github, opts), repo, owner)].sort((a, b) => a.number - b.number)) {
-    const id = adoptedId(issue, owner);
+  const adopters = adoptersOf(repo);
+  for (const issue of readAdoptable(retrying(github, opts), repo, adopters)) {
+    const id = adoptedId(issue, adopters);
     if (id && !issues.has(id)) issues.set(id, { number: issue.number, url: issue.url });
   }
   const idByNumber = new Map([...issues].map(([id, issue]) => [issue.number, id]));

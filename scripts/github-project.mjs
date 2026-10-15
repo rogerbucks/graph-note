@@ -111,14 +111,20 @@ function originRepo() {
  * a check says that it would.
  */
 export function mirror(
-  { desired: base, mode, allowRemovals, acceptWarnings, seed },
-  { run: raw, originRepo: origin, write, sleep },
+  { desired: base, mode, allowRemovals, acceptWarnings, seed, project = true },
+  { run: raw, originRepo: origin, write, sleep, creator },
 ) {
   const run = retrying(raw, sleep ? { sleep } : {});
   const repo = pinRepo(run, origin);
-  const seeded = seed ? seed(run, repo) : { seed: new Map(), warnings: [] };
+  // the seed gives only project values, so a run that does not read the project needs none
+  const seeded = seed && project ? seed(run, repo) : { seed: new Map(), warnings: [] };
   const desired = withSeed(base, seeded.seed);
-  const plan = buildPlan(desired, readRemote(run, repo));
+  const remote = readRemote(run, repo, { creator, project });
+  if (mode === 'apply' && !remote.adopters.some((a) => a.toLowerCase() === remote.login.toLowerCase()))
+    throw new Error(
+      `${remote.login} is signed in, but only issues written by ${remote.adopters.join(' or ')} are adopted, so the issues this apply made would be made again by the next; apply as the owner, or let the workflow apply`,
+    );
+  const plan = buildPlan(desired, remote);
   const slices = desired.fields.Slice.map((option) => Number(option.replace('Slice ', '')));
   const heading =
     mode === 'check' ? 'check — read-only: GitHub is read and nothing is changed' : 'apply — GitHub is changed';

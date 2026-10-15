@@ -7,18 +7,30 @@ import { PROJECT_TITLE } from './github-project-desired.mjs';
 /** The most projects a list is asked for; a list that comes back this long may be cut short. */
 export const PROJECT_CAP = 200;
 
+const ITERATION = 'id title startDate duration';
 const PROJECT_FRAGMENT = `fragment P on ProjectV2 {
   id number title
-  fields(first: 50) { nodes { ... on ProjectV2SingleSelectField { id name options { id name color description } } } }
+  fields(first: 50) { nodes {
+    ... on ProjectV2SingleSelectField { id name options { id name color description } }
+    ... on ProjectV2Field { id name dataType }
+    ... on ProjectV2IterationField { id name dataType configuration { iterations { ${ITERATION} } completedIterations { ${ITERATION} } } }
+  } }
   items(first: 100, after: $after) {
     pageInfo { hasNextPage endCursor }
     nodes {
       id
       content { ... on Issue { number } }
-      fieldValues(first: 20) { nodes { ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2SingleSelectField { name } } } } }
+      fieldValues(first: 30) { nodes {
+        ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2SingleSelectField { name } } }
+        ... on ProjectV2ItemFieldDateValue { date field { ... on ProjectV2Field { name } } }
+        ... on ProjectV2ItemFieldNumberValue { number field { ... on ProjectV2Field { name } } }
+        ... on ProjectV2ItemFieldIterationValue { title field { ... on ProjectV2IterationField { name } } }
+      } }
     }
   }
 }`;
+/** A field value as the item holds it: an option's name, a day, a number or an iteration's title, or undefined. */
+const valueOf = (v) => v.name ?? v.date ?? v.number ?? v.title;
 const READ_PROJECT = `query($owner: String!, $number: Int!, $after: String) {
   repositoryOwner(login: $owner) {
     ... on User { projectV2(number: $number) { ...P } }
@@ -89,15 +101,26 @@ export function readProject(run, owner, number, idByNumber) {
       const id = idByNumber.get(node.content?.number);
       if (id === undefined) continue;
       const values = {};
-      for (const v of node.fieldValues.nodes) if (v.name && v.field?.name) values[v.field.name] = v.name;
+      for (const v of node.fieldValues.nodes)
+        if (valueOf(v) !== undefined && valueOf(v) !== null && v.field?.name) values[v.field.name] = valueOf(v);
       items.push({ itemId: node.id, id, values });
     }
     after = page.items.pageInfo.hasNextPage ? page.items.pageInfo.endCursor : null;
   } while (after !== null);
   const fields = {};
-  for (const f of project.fields.nodes) if (f.name && f.options) fields[f.name] = { id: f.id, options: f.options };
-  return { id: project.id, number: project.number, fields, items };
+  const typed = {};
+  for (const f of project.fields.nodes) {
+    if (f.name && f.options) fields[f.name] = { id: f.id, options: f.options };
+    else if (f.name && f.dataType) typed[f.name] = { id: f.id, type: f.dataType, iterations: iterationsOf(f) };
+  }
+  return { id: project.id, number: project.number, fields, typed, items };
 }
+
+/** The iterations of an iteration field, the completed ones with the rest, by start date; none for another field. */
+const iterationsOf = (f) =>
+  [...(f.configuration?.iterations ?? []), ...(f.configuration?.completedIterations ?? [])].sort((a, b) =>
+    String(a.startDate).localeCompare(String(b.startDate)),
+  );
 
 /**
  * The projects of an owner, a user or an organization, as [{id, number, title}], found by the owner's login through

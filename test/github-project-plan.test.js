@@ -453,7 +453,8 @@ describe('the whole plan, printed', () => {
       removed: 0,
       unchanged: 0,
       projectCreate: 1,
-      fieldsCreate: 4,
+      // the four single choices, and the two days, Closed on and Started on (Wave and Order need a waves plan)
+      fieldsCreate: 6,
       optionsAdd: 2 + 3 + 3 + 6,
       itemsAdd: 5,
       valuesSet: 25,

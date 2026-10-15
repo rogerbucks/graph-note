@@ -174,12 +174,17 @@ export function generatedIdOf(body) {
   return text.split('\n').some((line) => line.startsWith(BANNER_START)) ? id : null;
 }
 
+/** The login of the workflows' own bot, as the mirror gives an issue's author: it makes the issues when the mirror runs on main. */
+export const BOT_LOGIN = 'github-actions[bot]';
+
 /**
- * The requirement id of an issue this generator may adopt, or null: it was written by the signed-in login, and its body
- * is one this generator made. A marker alone proves nothing, since anybody can write one.
+ * The requirement id of an issue this generator may adopt, or null: it was written by one of `adopters` (a login, or a
+ * list of them; the mirror's are the repository's owner and BOT_LOGIN), and its body is one this generator made. A marker
+ * alone proves nothing, since anybody can write one.
  */
-export function adoptedId(issue, login) {
-  if (!login || !issue.author || issue.author.toLowerCase() !== login.toLowerCase()) return null;
+export function adoptedId(issue, adopters) {
+  const logins = (Array.isArray(adopters) ? adopters : [adopters]).filter(Boolean).map((l) => l.toLowerCase());
+  if (!issue.author || !logins.includes(issue.author.toLowerCase())) return null;
   return generatedIdOf(issue.body);
 }
 
