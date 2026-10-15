@@ -422,7 +422,8 @@ describe('no outgoing request (cc_no_remote)', () => {
     });
     const [output] = Object.values(built.metafile.outputs);
     const external = [...new Set(output.imports.filter((i) => i.external).map((i) => i.path))].sort();
-    assert.deepEqual(external, ['node:crypto', 'node:fs', 'node:http']);
+    // node:path names the note's place for the store the process now serves (C2); it opens no connection
+    assert.deepEqual(external, ['node:crypto', 'node:fs', 'node:http', 'node:path']);
     const text = built.outputFiles[0].text;
     for (const call of [
       /\bfetch\s*\(/,

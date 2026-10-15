@@ -13,6 +13,10 @@ export interface EditorProcessOptions {
   api?: ApiHandler;
   /** What a stop waits for: the note store's own stop, which finishes the writes under way. */
   drain?: () => Promise<void>;
+  /** The id of the note the page opens on, handed over in the address's fragment beside the token. */
+  note?: string;
+  /** The session's end is not this process's input closing: the host closed it when it started the process (C2). */
+  ignoreInput?: boolean;
 }
 
 /** Exits with code 2, saying why on stderr, before anything is started. */
@@ -39,6 +43,8 @@ export async function runEditorProcess(args: string[], options: EditorProcessOpt
     });
   };
   void server.closed.then((reason) => reason === 'idle' && finish(reason));
-  watchSession(finish);
-  process.stdout.write(`${JSON.stringify({ url: `${server.origin}/#token=${server.token}` })}\n`);
+  watchSession(finish, { input: !options.ignoreInput });
+  process.stdout.write(
+    `${JSON.stringify({ url: `${server.origin}/#token=${server.token}${options.note ? `&note=${options.note}` : ''}` })}\n`,
+  );
 }

@@ -2,16 +2,45 @@
 // the layout source and theming run here, in the mod's own environment (graph.js); Graphviz runs as a process through
 // node (bin/render.mjs), since a mod has no WebAssembly. Where no drawing can be, the pane shows the graph as text with
 // the reason: when node is missing, on the terminal (which draws no Svg), and for a graph too large to draw.
+//
+// /graph edit <note> starts the session's browser editor (spec §26, bin/editor-server.mjs) and draws, in a pane of its
+// own, the address to open in the browser pane. The address carries the session's secret token, so it is drawn and
+// copied and goes nowhere else: not into the command's answer, a log line, a toast, state or the conversation
+// (cc_transcript_clean). /graph stop stops the server; so does the session ending. When the server cannot start, the
+// answer says why and the pane shows the drawing /graph gives.
 import { atom, read, update } from 'claude-code';
 import type { EngineInterface, Register } from 'claude-code';
 
 import type { GraphView } from '../types';
-import { layOut, notePath, PANE_PALETTE, viewOf } from './graph.js';
+import { EditorLauncher, editArgs, layOut, notePath, PANE_PALETTE, sayEdit, sayStopped, viewOf } from './graph.js';
 
 const PANE = 'graph';
+const EDITOR_PANE = 'graph-editor';
 const USAGE = 'Name a note to draw: /graph <path to a note>, quoted if it has spaces.';
+const EDITOR_USAGE = 'No editor is running. /graph edit <path to a note> starts one.';
 const NO_PICTURES = 'This surface cannot draw pictures, so the graph is shown as text. The desktop app draws it.';
 const view = atom({ plugin: 'graph-note', key: 'view' } as const, null as GraphView | null);
+// counts changes to the editor pane so it is drawn again; it holds no address, token or note
+const editorChanges = atom({ plugin: 'graph-note', key: 'editor' } as const, 0);
+
+/** The session's editor: made when first asked for, and kept for the module's life (its server dies with it). */
+let launcher: EditorLauncher | null = null;
+
+/** The launcher over this host's calls; the server it runs is the mod's own bin/editor-server.mjs. */
+async function launcherOf($: EngineInterface): Promise<EditorLauncher> {
+  if (launcher) return launcher;
+  const home = await $.env.get('HOME');
+  const data = (await $.env.get('CLAUDE_PLUGIN_DATA')) ?? `${home ?? ''}/.claude/plugins/data/graph-note`;
+  launcher = new EditorLauncher({
+    spawn: (request) => $.process.spawn(request),
+    exists: (path) => $.fs.exists(path),
+    cwd: await $.session.cwd(),
+    server: ['node', `${$.plugin.root}/bin/editor-server.mjs`],
+    drafts: data,
+    changed: () => void update($, editorChanges, (n) => n + 1).then(() => $.ui.invalidate('ui.render')),
+  });
+  return launcher;
+}
 
 /** The view of the note at `path`, or of why it could not be read. */
 async function viewAt($: EngineInterface, path: string): Promise<GraphView> {
@@ -27,6 +56,14 @@ async function viewAt($: EngineInterface, path: string): Promise<GraphView> {
   return viewOf(note, (dots) => layOut(dots, $.plugin.root, run), PANE_PALETTE);
 }
 
+/** Draws the note in the graph pane, as /graph does; the text it answers with. */
+async function drawNote($: EngineInterface, path: string): Promise<string> {
+  const shown = await viewAt($, path);
+  await update($, view, () => shown);
+  await $.ui.open({ id: PANE, title: `Graph: ${shown.title}` });
+  return shown.why ? `${shown.alt} — shown as text. ${shown.why}` : shown.alt;
+}
+
 export const register: Register = (on) => {
   on('session.start', async ($, e, next) => {
     await $.command.register({ name: 'graph', description: "Draw a graph note's first graph in a pane" });
@@ -34,12 +71,50 @@ export const register: Register = (on) => {
   });
 
   on('command.run', { command: 'graph' }, async ($, e) => {
+    if (e.args.trim() === 'stop') {
+      const stopped = launcher ? await launcher.stop('/graph stop') : false;
+      return { text: stopped ? sayStopped('/graph stop') : EDITOR_USAGE };
+    }
+    const editing = editArgs(e.args);
+    if (editing !== null) {
+      const opened = await (await launcherOf($)).edit(editing, await $.session.cwd());
+      if (!opened.ok) {
+        // the editor did not start: say why, and show the drawing /graph gives
+        if (editing) await drawNote($, editing);
+        return { text: sayEdit(opened) };
+      }
+      await update($, editorChanges, (n) => n + 1);
+      await $.ui.open({ id: EDITOR_PANE, title: 'Graph editor', focus: true });
+      return { text: sayEdit(opened) };
+    }
     const path = notePath(e.args);
     if (!path) return { text: USAGE };
-    const shown = await viewAt($, path);
-    await update($, view, () => shown);
-    await $.ui.open({ id: PANE, title: `Graph: ${shown.title}` });
-    return { text: shown.why ? `${shown.alt} — shown as text. ${shown.why}` : shown.alt };
+    return { text: await drawNote($, path) };
+  });
+
+  // the session ending ends its server
+  on('session.end', async ($, e, next) => {
+    await launcher?.stop('the session ended');
+    return next(e);
+  });
+
+  // the one place the address is read: to draw it for the person, and to copy it for them
+  on('ui.render', { component: 'Pane', requestId: EDITOR_PANE }, async ($, e) => {
+    const { Box, Text, Link, Button } = $.ui.resolve(e);
+    await read($, editorChanges);
+    const href = launcher?.link ?? null;
+    if (href === null) {
+      const ended = launcher?.ended;
+      return <Text dimColor>{ended ? sayStopped(ended) : EDITOR_USAGE}</Text>;
+    }
+    return (
+      <Box flexDirection="column">
+        <Text>Open this address in the browser pane to edit the note:</Text>
+        <Link href={href} label="Open the graph editor" />
+        <Button label="Copy the address" onPress={(press) => $.ui.copy({ text: href, surface: press.surface })} />
+        <Text dimColor>It holds a secret for this session only. It stops when the session ends, or /graph stop.</Text>
+      </Box>
+    );
   });
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {

@@ -21,7 +21,14 @@ unless the app sets its own. Whether the desktop app does, and keeps the drawing
   limit (`LAYOUT_TIMEOUT_MS`), and the SVGs back. After a refused run, `node --version` is asked: a node that is not
   there (ENOENT, "not found") or exit code 127 is said as `NODE_MISSING`, in words with what to do; a host that runs no
   process says its own words; a node that starts means the layout did not finish.
-- `mod-entry.ts` — what the hooks module takes from the two above; bundled into `mod/hooks/graph.js`.
+- `editor-launch.ts` — `EditorLauncher` (workstream C2): the session's one browser-editor server, started for a note
+  through the host's `spawn` (handed in, so no Node module is imported), its first line of output read for the address,
+  which only `link` gives (a `#` field, so `JSON.stringify` shows none). `edit` reuses the server for the same note,
+  replaces it for another (one server for each session, cc_one_server), and says why a start failed in words
+  (cc_start_failure); `stop` kills it; a server that ends by itself is forgotten, with why in `ended`. One call at a
+  time. `sayEdit`, `sayStopped` and `editArgs` are the words and the command line; none holds the address, the token
+  or the note's text (cc_transcript_clean).
+- `mod-entry.ts` — what the hooks module takes from the three above; bundled into `mod/hooks/graph.js`.
 - `editor-session.ts` — `EditorSession`, the browser editor page's side of a note (spec §26; for C5): the core's
   `PaneSession` and `TextHistory` over one block, the note and version the page last had from the server, what to send
   (`write`, `undo`, `redo`, each `against` that version, so the server refuses one made over a change it has not seen),
@@ -41,8 +48,14 @@ The local server the browser-pane editor will talk to (spec §26, slice 4; works
 its own, so it sits outside `src/` (whose modules may import no Node built-in): Node's own `http`, no framework and no
 runtime dependency beyond the core's `READ_LIMITS`. Built into `mod/bin/editor-server.mjs`.
 
-- `server/editor-server.ts` — the shipped process: `runEditorProcess` with its arguments, and no API of its own yet:
-  the process has no way to learn its vault until the mod hands it one (C2), and then runs the note store below.
+- `server/editor-server.ts` — the shipped process: `runEditorProcess` with its arguments and the options
+  `editor-main.ts` makes from the environment; a vault or note it is refused says why on stderr and exits 2.
+- `server/editor-main.ts` — `optionsFromEnvironment`: the mod hands the process `GRAPH_NOTE_EDITOR_VAULT`, `_NOTE`
+  (the one note opened for the session, by its path) and `_DRAFTS`, never an argument; it makes the note store, opens
+  the note, and gives the process the store's `api` and `stop`, the note's id (the address becomes
+  `/#token=<token>&note=<id>`, both in the fragment a browser never sends) and, for `_INPUT=ignore`, no watch on its
+  input: the host closes a child's input when it starts it, so there the session's end is the child being killed.
+  With no vault set it serves no API, as before.
 - `server/editor-process.ts` — `runEditorProcess`: refuses (exit 2) any argument, so it can never be told to listen
   elsewhere, and a start with no parent left (`process.ppid` is 1), which nothing would stop; prints one line of JSON,
   `{"url":"http://127.0.0.1:<port>/#token=<token>"}`, the token in the fragment and written nowhere else (no port or
@@ -125,7 +138,13 @@ and `register.tsx` stays thin.
 - `.claude-plugin/plugin.json` — the manifest, named `graph-note`.
 - `hooks/register.tsx` — the hooks module: registers `/graph`, reads the note with `$.fs.read`, runs Graphviz with
   `$.process.run`, keeps the view in `$.state`, and draws the pane: `Svg` on the desktop, VS Code and mobile; the
-  reason and the text on the terminal (which draws no `Svg`) or wherever no drawing could be made.
+  reason and the text on the terminal (which draws no `Svg`) or wherever no drawing could be made. Also
+  `/graph edit <note>`, which starts the session's server through `$.process.spawn` (the child lives as long as the
+  module or until the loop is left) and draws, in the pane `graph-editor`, a `Link` to its address and a button that
+  copies it; the address is read in that one place and appears in no command answer, log, toast or state. The session
+  ending (`session.end`) and `/graph stop` stop the server; when it cannot start, the answer says why and the `graph`
+  pane draws the note as `/graph` does. The mod's drafts folder is `CLAUDE_PLUGIN_DATA`, else
+  `~/.claude/plugins/data/graph-note`.
 - `hooks/hooks.json` — names `register.tsx` as the mod's one hooks module.
 - `hooks/graph.d.ts` — the types of the bundle, its source's own.
 - `types/index.d.ts` — the mod's state contract, self-contained as Claude Code requires.
@@ -157,4 +176,8 @@ in every new session, the desktop app's included. After a change: `npm run build
   `EditorSession` as the page; a watcher fired by hand and file steps held, never a clock) and
   `editor-store-hardening.test.js` (what the security review of #450 found: a draft saved during a write, a note's
   mode, hard links, a folder swapped under a write, the drafts folder's mode and longest draft, and the real fs.watch),
-  with their support, `editor-store-support.js`.
+  with their support, `editor-store-support.js`; and `editor-mod.test.js` (`/graph edit` from the mod: the launcher over
+  real server processes started the way the host starts one, standard input closed at once; the other workstreams'
+  cases for `test_cc_mod`, C3 and C7, are added to it), with its support, `editor-mod-support.js`. The mod's wiring
+  (`register.tsx`) is checked by `claude plugin validate` and a type check; `claude plugin test` needs a Claude Code
+  signed in and online, so no test of it is in the repository yet.

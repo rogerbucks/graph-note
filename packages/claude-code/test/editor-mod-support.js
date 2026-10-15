@@ -43,10 +43,13 @@ export function hostSpawn() {
     child.stdout.on('data', (text) => push({ done: false, value: { stream: 'stdout', text } }));
     child.stderr.on('data', (text) => push({ done: false, value: { stream: 'stderr', text } }));
     child.once('error', (err) => push({ error: err }));
-    child.once('close', (code, signal) => {
-      finished = true;
-      push({ done: true, value: { code, signal } });
-    });
+    const closed = new Promise((resolve) =>
+      child.once('close', (code, signal) => {
+        finished = true;
+        push({ done: true, value: { code, signal } });
+        resolve({ code, signal });
+      }),
+    );
     const iterator = {
       next: () => {
         const item = pieces.shift();
@@ -55,10 +58,10 @@ export function hostSpawn() {
         if (finished) return Promise.resolve({ done: true, value: { code: null, signal: null } });
         return new Promise((resolve, reject) => waiting.push((i) => (i.error ? reject(i.error) : resolve(i))));
       },
+      // leaving the loop kills the child, and the call settles once the child has gone
       return: () => {
-        child.kill('SIGTERM');
-        for (const w of waiting.splice(0)) w({ done: true, value: { code: null, signal: 'SIGTERM' } });
-        return Promise.resolve({ done: true, value: { code: null, signal: 'SIGTERM' } });
+        if (!finished) child.kill('SIGTERM');
+        return closed.then((value) => ({ done: true, value }));
       },
     };
     return { [Symbol.asyncIterator]: () => iterator };

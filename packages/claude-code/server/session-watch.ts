@@ -20,7 +20,7 @@ function inputIsHeld(): boolean {
 }
 
 /** Calls `stop` with why when the session ends, the parent exits or a stop signal comes; once. */
-export function watchSession(stop: (reason: string) => void): void {
+export function watchSession(stop: (reason: string) => void, watch: { input: boolean } = { input: true }): void {
   let done = false;
   const once = (reason: string) => {
     if (done) return;
@@ -28,7 +28,7 @@ export function watchSession(stop: (reason: string) => void): void {
     stop(reason);
   };
   for (const signal of STOP_SIGNALS) process.on(signal, () => once(signal));
-  if (inputIsHeld()) {
+  if (watch.input && inputIsHeld()) {
     process.stdin.on('end', () => once('the session ended'));
     process.stdin.on('error', () => once('the session ended'));
     process.stdin.resume();
