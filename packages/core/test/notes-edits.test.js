@@ -112,6 +112,21 @@ describe('note_add: setNote writes the comment lines above a thing or a link', (
     }
   });
 
+  test('the lines written end as the block’s do: with CRLF as the other lines are, and as the note’s own lines when they differ', () => {
+    const block = crlf("// graph: trip\n(a:T {name: 'A'}),\n(b:T {name: 'B'})");
+    const added = done(setNote(block, { thing: 'b' }, 'One.\n\nTwo.'));
+    assert.equal(added, crlf("// graph: trip\n(a:T {name: 'A'}),\n/// One.\n///\n/// Two.\n(b:T {name: 'B'})"));
+    // a note whose lines end with LF in a block whose item line ends with CRLF is changed with LF
+    const mixed = "// graph: trip\n/// Old.\n(a:T {name: 'A'})\r\n";
+    assert.equal(done(setNote(mixed, { thing: 'a' }, 'New.')), "// graph: trip\n/// New.\n(a:T {name: 'A'})\r\n");
+  });
+
+  test('a //@ line among the note’s lines keeps its place relative to the note’s first line and to the thing', () => {
+    const block = "// graph: trip\n//@ first: 1\n/// Old.\n//@ second: 2\n(a:T {name: 'A'})";
+    const text = done(setNote(block, { thing: 'a' }, 'New.\n\nMore.'));
+    assert.equal(text, "// graph: trip\n//@ first: 1\n/// New.\n///\n/// More.\n//@ second: 2\n(a:T {name: 'A'})");
+  });
+
   test('undo takes the note away or brings it back, with the block’s other bytes untouched', () => {
     const s = new PaneSession(NOTE, 2);
     s.edit(done(setNote(s.text, { thing: 'end' }, 'Journey’s end.')));
