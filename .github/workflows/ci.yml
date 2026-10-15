@@ -31,6 +31,11 @@ jobs:
         run: node scripts/quality-check.mjs --baseline-since "$BASE"
       - run: npm run typecheck
       - run: npm test
+      # the generated requirements copy may change in a pull request only by tests flipped from planned to written
+      - if: github.event_name == 'pull_request'
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: node scripts/check-requirements-flips.mjs --base-ref "$BASE"
       - run: npm run build
 
   lint:

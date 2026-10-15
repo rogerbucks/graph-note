@@ -6,7 +6,11 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { refusedChanges } from '../scripts/check-requirements-flips.mjs';
 import { REQUIREMENTS } from '../scripts/check-requirements.mjs';
-import { read } from './repository/repo.js';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { path, read } from './repository/repo.js';
 
 const base = () => read(REQUIREMENTS);
 const replaced = (text, from, to) => {
@@ -104,11 +108,14 @@ describe('a hand change to the requirements copy', () => {
   });
 
   test('a record removed is refused, naming it', () => {
-    const line = base()
+    // the record goes with its links, so the copy still reads
+    const head = base()
       .split('\n')
-      .find((l) => l.startsWith('(test_abuse:Test {'));
-    const problems = refused(replaced(base(), `${line}\n`, ''));
+      .filter((l) => !l.startsWith('(test_abuse:Test {') && !l.endsWith('->(test_abuse),'))
+      .join('\n');
+    const problems = refused(head);
     assert.ok(kinds(problems).includes('removed'));
+    assert.ok(kinds(problems).includes('link-removed'));
     assert.match(problems.find((p) => p.kind === 'removed').message, /test_abuse/);
   });
 
@@ -143,6 +150,29 @@ describe('a hand change to the requirements copy', () => {
   test('a copy the reader cannot read is refused as unreadable', () => {
     const head = replaced(base(), '(test_abuse:Test {proves:', '(test_abuse:Test {proves');
     assert.deepEqual(kinds(refused(head)), ['unreadable']);
+  });
+
+  test('run on its own against a base file: exit 0 for a flip, 1 and each difference named for another change', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'check-requirements-flips-'));
+    try {
+      const file = join(dir, 'base.gql');
+      writeFileSync(file, replaced(base(), 'do not hand-edit; regenerate.', 'edited by hand.'));
+      const run = () =>
+        spawnSync(process.execPath, [path('scripts/check-requirements-flips.mjs'), '--base', file], {
+          encoding: 'utf8',
+          timeout: 30_000,
+        });
+      // the committed copy is the head, so against this edited base the banner differs
+      const bad = run();
+      assert.ok(!bad.error, String(bad.error));
+      assert.equal(bad.status, 1);
+      assert.match(bad.stdout, /^banner: /m);
+      writeFileSync(file, base());
+      const ok = run();
+      assert.equal(ok.status, 0, ok.stdout + ok.stderr);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   test('each difference is named: a flip with a second, bad change lists the bad one only', () => {

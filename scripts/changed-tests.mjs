@@ -46,6 +46,7 @@ const READERS = [
   [/^packages\/obsidian\/test\/device-checklist\.md$/, [DEVICE_NOTES, DEVICE_QUOTES]],
   [/^requirements\/workstreams\.json$/, ['test/github-project.test.js']],
   [/^(requirements\/.*|scripts\/check-requirements\.mjs)$/, ['test/requirements.test.js']],
+  [/^scripts\/check-requirements-flips\.mjs$/, ['test/check-requirements-flips.test.js']],
   [/^(scripts\/check-classification\.mjs)$/, ['test/classification.test.js']],
   [/^scripts\/quality-secrets\.mjs$/, ['test/quality-metrics.test.js']],
   [/^scripts\/quality-suite\.mjs$/, ['test/quality-metrics.test.js', CEILING]],
