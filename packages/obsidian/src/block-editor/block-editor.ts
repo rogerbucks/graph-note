@@ -21,12 +21,9 @@ import type { Refused } from './note-writing';
 import { keptMessage, offerDraft } from './kept-draft';
 import { PaneDrawing } from './pane-drawing';
 import { fieldTyping, watchKeys, watchTyping } from './typing-keys';
+import { TypingRests } from './typing-rests';
 
 export type { Layout } from './editor-layout';
-
-/** How long typing rests before it is written: in the pane well inside the spec's third of a second; in place longer. */
-const WRITE_AFTER_MS: Record<Layout, number> = { pane: 150, inline: 700 };
-const DRAW_AFTER_MS = 250;
 
 /** The text editor for one graph block (spec §4), in the pane or in place in the block's card: colours, fixes, suggestions, read-back, and writing back to the note. */
 export class BlockEditor extends Component {
@@ -37,12 +34,12 @@ export class BlockEditor extends Component {
   private readonly note: BlockNote;
   /** What is typed, read, and the help shown from it. */
   private readonly help = new TextHelp({ fix: (changes) => this.apply(changes), accept: (item) => this.accept(item) });
-  private writeTimer: number | null = null;
+  /** The write as typing rests, and the redraw. */
+  private readonly rests: TypingRests;
   /** The field's focus and scroll, kept through each move and redraw. */
   private readonly field: KeptField;
   /** The text's own undo history, which, unlike the field's, survives the field leaving the page (spec §4). */
   private readonly undoes = new FieldHistory();
-  private drawTimer: number | null = null;
   /** The pane's drawing; in place, the card's own drawing is the drawing. */
   private readonly drawing: PaneDrawing;
   private el: EditorParts | null = null;
@@ -61,6 +58,9 @@ export class BlockEditor extends Component {
     super();
     this.plugin = plugin;
     this.layout = layout;
+    this.rests = this.addChild(
+      new TypingRests(layout, { write: () => void this.write(true), draw: () => this.redraw() }),
+    );
     this.note = new BlockNote(plugin);
     this.field = this.addChild(new KeptField(() => this.el?.text));
     this.drawing = this.addChild(new PaneDrawing(plugin));
@@ -86,10 +86,8 @@ export class BlockEditor extends Component {
   }
 
   override onunload(): void {
-    // no timer outlives the editor: what was waiting to be written is written now, and the redraw is not needed
-    if (this.writeTimer !== null) window.clearTimeout(this.writeTimer);
-    if (this.drawTimer !== null) window.clearTimeout(this.drawTimer);
-    this.writeTimer = this.drawTimer = null;
+    // no timer outlives the editor (its waits go with it, typing-rests.ts): what was waiting to be written is written now
+    this.rests.noWrite();
     if (this.session?.dirty) void this.write();
   }
 
@@ -112,10 +110,7 @@ export class BlockEditor extends Component {
   }
 
   async flush(): Promise<void> {
-    if (this.writeTimer !== null) {
-      window.clearTimeout(this.writeTimer);
-      this.writeTimer = null;
-    }
+    this.rests.noWrite();
     await this.write();
   }
 
@@ -237,7 +232,7 @@ export class BlockEditor extends Component {
     this.analyse();
     this.help.announce(el); // new problems said to screen readers, the focus left where it is
     this.paint();
-    this.schedule();
+    this.rests.typed();
   }
 
   /** What the field now holds, analysed and written, without asking for another comma or colon; as after a setting changed. */
@@ -250,25 +245,11 @@ export class BlockEditor extends Component {
     this.analyse();
     this.help.announce(el); // new problems said to screen readers, the focus left where it is
     this.paint();
-    this.schedule();
+    this.rests.typed();
   }
 
   private caretMoved(): void {
     if (this.el) this.help.caretMoved(this.el, this.session);
-  }
-
-  private schedule(): void {
-    const w = window;
-    if (this.writeTimer !== null) w.clearTimeout(this.writeTimer);
-    this.writeTimer = w.setTimeout(() => {
-      this.writeTimer = null;
-      void this.write(true);
-    }, WRITE_AFTER_MS[this.layout]);
-    if (this.drawTimer !== null) w.clearTimeout(this.drawTimer);
-    this.drawTimer = w.setTimeout(() => {
-      this.drawTimer = null;
-      this.redraw();
-    }, DRAW_AFTER_MS);
   }
 
   /** Reads what is typed: the problems, and the reading the suggestions and the read-back come from. */
@@ -360,10 +341,7 @@ export class BlockEditor extends Component {
   private async history(which: Step): Promise<void> {
     const s = this.session;
     if (!s || !this.note.file()) return;
-    if (this.writeTimer !== null) {
-      window.clearTimeout(this.writeTimer);
-      this.writeTimer = null;
-    }
+    this.rests.noWrite();
     const refused = await this.note.step(which);
     if (refused?.history) {
       if (this.el) sayRefused(this.el.announce, refused.reason); // nothing typed, so nothing kept as a draft (§9)

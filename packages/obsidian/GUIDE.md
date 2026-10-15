@@ -350,6 +350,8 @@ module that ties the parts together, named as the folder is.
   and its text, and said in a notice when it is no longer there, never silently nothing, nor another block opened.
   Open again, in the tools of the pane and in place while the session is stopped by a copy of its block (§9), keeps
   what is typed as a draft and goes on with the block.
+- `typing-rests.ts` — the waits after typing: the write once typing rests (in the pane within the spec's third of a
+  second, in place longer) and the redraw, each cleared when a write is made at once or the editor goes.
 - `block-note.ts` — the note behind the editor and its session: opening, writing, undo, Lock, drafts; the note followed
   when it is renamed or moved, and what is typed kept as a draft when it is deleted; each editor's own draft known by
   its id, beside another's. Stopped by a copy, the stop is said once: typing after it is held in the session as typing
