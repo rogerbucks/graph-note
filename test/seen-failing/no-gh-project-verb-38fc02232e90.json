@@ -1,0 +1,6 @@
+{
+  "file": "test/no-gh-project-verb.test.js",
+  "test": "no script runs a gh project verb > the check sees the shape it forbids",
+  "seen_failing_first": false,
+  "evidence": "it tests the scan's own regular expressions on literal strings, which hold before and after the fix; the scan test above failed first against the real scripts"
+}

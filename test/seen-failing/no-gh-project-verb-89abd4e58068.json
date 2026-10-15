@@ -1,0 +1,6 @@
+{
+  "file": "test/no-gh-project-verb.test.js",
+  "test": "no script runs a gh project verb > there are scripts to look at",
+  "seen_failing_first": false,
+  "evidence": "a sanity guard that the scan reads a real number of scripts; it has nothing to fail against before the fix because it only counts files"
+}
