@@ -11,6 +11,11 @@ import { summariseChecks } from './slice-board.mjs';
 /** The hidden first line of the comment, by which the next event finds it again. */
 export const COMMENT_MARKER = '<!-- build-status -->';
 
+/** The most requirements handled for one pull request or release; the rest are left, with a warning. */
+export const MAX_IDS = 200;
+/** The branch a pull request must be merged into for its requirements to be Merged. */
+export const DEFAULT_BRANCH = 'main';
+
 const SAFE_ID = /^[A-Za-z0-9_.-]{1,100}$/;
 const SAFE_LINK = /^https:\/\/github\.com\/[\w./-]+$/;
 const TOKEN_SHAPE = /\b(?:gh[pousr]_|github_pat_)[A-Za-z0-9_]{6,}/g;

@@ -142,7 +142,7 @@ function graphql(run, query, variables) {
  * The project in the shape planProject reads: {id, number, fields: {name: {id, options}}, items: [{itemId, id, values}]}.
  * `idByNumber` maps an issue number to its requirement's id; an item that is not one of those issues is left out.
  */
-function readProject(run, owner, number, idByNumber) {
+export function readProject(run, owner, number, idByNumber) {
   let project;
   const items = [];
   let after = null;
@@ -180,7 +180,7 @@ const readLabels = (run, repo) =>
     LABEL_CAP,
     'labels',
   ).map((l) => l.name);
-const readIssues = (run, repo) =>
+export const readIssues = (run, repo) =>
   whole(
     JSON.parse(
       run(
@@ -199,7 +199,7 @@ const readProjects = (run, owner) =>
     PROJECT_CAP,
     'projects',
   );
-const findProject = (run, owner) => readProjects(run, owner).find((p) => p.title === PROJECT_TITLE);
+export const findProject = (run, owner) => readProjects(run, owner).find((p) => p.title === PROJECT_TITLE);
 
 /**
  * What GitHub holds now: {login, labelNames, issues, project}. `repo` is `owner/name`. The login is the one signed in,

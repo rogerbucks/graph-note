@@ -8,6 +8,8 @@ import { readBoard } from '../scripts/slice-board.mjs';
 import { BUILD_STATUSES } from '../scripts/github-project-desired.mjs';
 import {
   COMMENT_MARKER,
+  DEFAULT_BRANCH,
+  MAX_IDS,
   annotation,
   checksStage,
   commentBody,
@@ -65,6 +67,13 @@ describe('the requirements a pull request moves', () => {
     assert.equal(isSafeId('x'.repeat(101)), false);
     assert.equal(isSafeId(''), false);
     assert.equal(isSafeId(42), false);
+  });
+});
+
+describe('the limits', () => {
+  test('are 200 requirements for a pull request, and main as the branch a merge must be into', () => {
+    assert.equal(MAX_IDS, 200);
+    assert.equal(DEFAULT_BRANCH, 'main');
   });
 });
 

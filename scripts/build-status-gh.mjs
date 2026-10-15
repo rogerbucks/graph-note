@@ -1,19 +1,19 @@
 // The thin layer between the build status and GitHub (spec §12, requirements_checked_in_ci): it reads a pull request, the
-// requirements file at a ref, a commit's checks and the releases, leaves the pull request's one comment, and reads and
-// writes the project's Build status field. All the thinking is in build-status.mjs; this layer only asks and tells,
-// through runners handed in — run(args, input) gives gh's output — so a test can hand in stand-ins and no network is
-// touched. Two runners, each with its own token: the workflow's own token for the repository (reads and the comment),
-// and PROJECT_TOKEN for the project board alone. A pull request is only ever read as data through the API: no file of
-// it is checked out and none of its code is run.
+// requirements file at a ref, CI's run for a commit and the releases, and leaves the pull request's one comment. All the
+// thinking is in build-status.mjs; this layer only asks and tells, through runners handed in — run(args, input) gives
+// gh's output — so a test can hand in stand-ins and no network is touched. Two runners, each with its own token: the
+// workflow's own token for the repository (reads and the comment), and PROJECT_TOKEN for the project board alone (the
+// board is build-status-board.mjs). A pull request is only ever read as data through the API: no file of it is checked
+// out and none of its code is run.
 import { spawnSync } from 'node:child_process';
 import { REQUIREMENTS } from './check-requirements.mjs';
 import { COMMENT_MARKER } from './build-status.mjs';
-import { BUILD_STATUS_FIELD, PROJECT_TITLE, adoptedId } from './github-project-desired.mjs';
-import { ghRunner, readRemote } from './github-project-gh.mjs';
-import { retrying } from './github-project-retry.mjs';
+import { ghRunner } from './github-project-gh.mjs';
 
-/** The checks that are not of the change itself: the job that only wakes the build status. */
-export const IGNORED_CHECKS = ['build-status-trigger'];
+/** The workflow whose run is the check that counts: the other workflows of a pull request are not the build's. */
+export const CI_WORKFLOW = '.github/workflows/ci.yml';
+/** The job of the workflow that only wakes the build status; it is not a check of the change. */
+export const TRIGGER_JOB = 'build-status-trigger';
 /** The most bytes of a requirements file it will read; the file is a few hundred thousand. */
 export const MAX_FILE_BYTES = 3_000_000;
 
@@ -23,8 +23,8 @@ const REF = /^[\w][\w.+/-]{0,199}$/;
 const NOT_FOUND = /HTTP 404|Not Found/;
 const COMMENTER = 'github-actions[bot]';
 
-/** A trouble with the board that is not GitHub refusing a call: the project or its field is not there yet. */
-export class BoardProblem extends Error {}
+/** A requirements file the reader cannot read, or one too large to read, or a merge commit not known: a warning, not a failure. */
+export class Unreadable extends Error {}
 
 const wholeNumber = (n) => {
   if (!Number.isInteger(n) || n < 1) throw new Error(`${n} is not a pull request number`);
@@ -38,8 +38,9 @@ const words = (e) => (typeof e.stderr === 'string' ? e.stderr : String(e.message
 const json = (run, repo, path, extra = []) => JSON.parse(run(['api', `repos/${repo}/${path}`, ...extra]));
 
 /**
- * A pull request as {number, state ('open' or 'closed'), merged, mergeSha, headSha, baseRef}. Throws for a number that is
- * not a whole number, and for a head commit or base branch the API gives in a form git would not use.
+ * A pull request as {number, state ('open' or 'closed'), merged, draft, mergeSha, headSha, baseRef, headRepo, baseRepo}.
+ * The repositories are `owner/name`, headRepo null where the head's fork has gone. Throws for a number that is not a
+ * whole number, and for a head commit or base branch the API gives in a form git would not use.
  */
 export function readPullRequest(run, repo, number) {
   const data = json(run, repo, `pulls/${wholeNumber(number)}`);
@@ -50,9 +51,12 @@ export function readPullRequest(run, repo, number) {
     number,
     state: data.state === 'closed' ? 'closed' : 'open',
     merged: data.merged === true,
+    draft: data.draft === true,
     mergeSha,
     headSha: data.head.sha,
     baseRef: data.base.ref,
+    headRepo: data.head.repo?.full_name ?? null,
+    baseRepo: data.base.repo?.full_name ?? null,
   };
 }
 
@@ -72,38 +76,44 @@ export function parentOf(run, repo, sha) {
 
 /**
  * The text of the requirements file at a ref (a branch, a tag or a commit), read through the API as data, or null when
- * there is no such file or ref. Throws for any other failure, and for a file over MAX_FILE_BYTES.
+ * there is no such file or ref. Its size is asked for first and the file is only downloaded if it is no larger than
+ * MAX_FILE_BYTES. Throws Unreadable for a file over that, and the failure itself for any other.
  */
 export function readRequirementsAt(run, repo, ref) {
   if (!REF.test(String(ref))) throw new Error(`${ref} is not a ref`);
   const args = ['api', `repos/${repo}/contents/${REQUIREMENTS}`, '--method', 'GET', '-f', `ref=${ref}`];
+  const tooLarge = (bytes) =>
+    new Unreadable(`${REQUIREMENTS} at ${ref.slice(0, 12)} is too large to read (${bytes} bytes)`);
   let text;
   try {
+    const size = JSON.parse(run(args)).size;
+    if (size > MAX_FILE_BYTES) throw tooLarge(size);
     text = run([...args, '-H', 'Accept: application/vnd.github.raw+json']);
   } catch (e) {
+    if (e instanceof Unreadable) throw e;
     if (NOT_FOUND.test(words(e))) return null;
     throw e;
   }
-  if (text.length > MAX_FILE_BYTES) throw new Error(`${REQUIREMENTS} at ${ref} is too large (${text.length} bytes)`);
+  if (text.length > MAX_FILE_BYTES) throw tooLarge(text.length);
   return text;
 }
 
 /**
- * The checks of a commit as a status check rollup, the shape the slice board counts: a check run as {status,
- * conclusion} and a commit status as {state}, upper case. The job that only wakes the build status is left out. Throws
- * when a list is as long as the page asked for, since it may be only a part.
+ * CI's own run for a commit as a status check rollup, the shape the slice board counts: [{status, conclusion}], upper
+ * case, one entry for the newest run of the workflow at CI_WORKFLOW (it is known by its path, which a pull request cannot
+ * choose by naming a workflow), or none while CI has not started. The other workflows of a pull request (code scanning,
+ * the dependency review, the lock, the trigger) are not the build's checks. Throws when the list is as long as the page
+ * asked for, since it may be only a part.
  */
 export function checkRollup(run, repo, sha) {
-  const runs = json(run, repo, `commits/${commit(sha)}/check-runs?per_page=${PAGE}`);
-  const statuses = json(run, repo, `commits/${sha}/status?per_page=${PAGE}`).statuses ?? [];
-  if (runs.check_runs.length >= PAGE || statuses.length >= PAGE)
-    throw new Error(`GitHub returned as many checks as one page holds, so there may be more than ${PAGE}`);
-  return [
-    ...runs.check_runs
-      .filter((r) => !IGNORED_CHECKS.includes(r.name))
-      .map((r) => ({ status: String(r.status).toUpperCase(), conclusion: String(r.conclusion ?? '').toUpperCase() })),
-    ...statuses.map((s) => ({ state: String(s.state).toUpperCase() })),
-  ];
+  const found = json(run, repo, `actions/runs?head_sha=${commit(sha)}&event=pull_request&per_page=${PAGE}`);
+  if (found.workflow_runs.length >= PAGE)
+    throw new Error(`GitHub returned as many workflow runs as one page holds, so there may be more than ${PAGE}`);
+  const [newest] = found.workflow_runs
+    .filter((r) => String(r.path).split('@')[0] === CI_WORKFLOW)
+    .sort((a, b) => b.run_number - a.run_number);
+  if (!newest) return [];
+  return [{ status: String(newest.status).toUpperCase(), conclusion: String(newest.conclusion ?? '').toUpperCase() }];
 }
 
 /**
@@ -122,81 +132,40 @@ export function releaseBefore(run, repo, tag) {
 const sameText = (a, b) =>
   String(a).replaceAll('\r\n', '\n').trimEnd() === String(b).replaceAll('\r\n', '\n').trimEnd();
 
+const commentOf = (run, repo, number) =>
+  JSON.parse(run(['api', `repos/${repo}/issues/${number}/comments?per_page=${PAGE}`, '--paginate', '--slurp']))
+    .flat()
+    .find((c) => c.user?.login === COMMENTER && c.user?.type === 'Bot' && String(c.body).startsWith(COMMENT_MARKER));
+
 /**
  * Leaves the pull request's one comment: found by its marker among the comments the workflow's bot wrote (a person who
- * writes the marker in their own is not it), then updated, or made when there is none, unless `create` is false. Gives
+ * writes the marker in their own is not it), then updated, or made when there is none, unless `create` is false. It is
+ * looked for again just before it is made, since another run of the workflow may have made it meanwhile. Gives
  * 'created', 'updated', 'unchanged' (the text is the same, so nothing is written) or 'absent' (none, and none made). The
  * text goes on the input, never in the arguments.
  */
 export function upsertComment(run, repo, number, body, { create = true } = {}) {
-  const pages = JSON.parse(
-    run(['api', `repos/${repo}/issues/${wholeNumber(number)}/comments?per_page=${PAGE}`, '--paginate', '--slurp']),
-  );
-  const mine = pages
-    .flat()
-    .find((c) => c.user?.login === COMMENTER && c.user?.type === 'Bot' && String(c.body).startsWith(COMMENT_MARKER));
-  if (mine && sameText(mine.body, body)) return 'unchanged';
+  wholeNumber(number);
   const input = JSON.stringify({ body });
-  if (mine) {
+  const rewrite = (mine) => {
+    if (sameText(mine.body, body)) return 'unchanged';
     run(['api', `repos/${repo}/issues/comments/${mine.id}`, '--method', 'PATCH', '--input', '-'], input);
     return 'updated';
-  }
+  };
+  const first = commentOf(run, repo, number);
+  if (first) return rewrite(first);
   if (!create) return 'absent';
+  const meanwhile = commentOf(run, repo, number);
+  if (meanwhile) return rewrite(meanwhile);
   run(['api', `repos/${repo}/issues/${number}/comments`, '--method', 'POST', '--input', '-'], input);
   return 'created';
 }
 
 /**
- * The project's Build status field as {items, issues, field, projectId, projectNumber, owner}: `items` maps a
- * requirement id to {itemId, current (its Build status, or null), number and url (its issue's)}, `issues` maps an id to
- * its issue {number, url} whether or not it is an item, and `field` is {id, options}. Found as the mirror finds it, by
- * the project's title and the issues it made. Throws BoardProblem when the project or the field is not there yet.
- */
-export function readBuildBoard(run, repo, opts = {}) {
-  const remote = readRemote(retrying(run, opts), repo);
-  if (!remote.project) throw new BoardProblem(`the project "${PROJECT_TITLE}" was not found`);
-  const field = remote.project.fields[BUILD_STATUS_FIELD];
-  if (!field)
-    throw new BoardProblem(
-      `the project has no ${BUILD_STATUS_FIELD} field yet; run scripts/github-project.mjs --apply to make it`,
-    );
-  const issues = new Map();
-  for (const issue of [...remote.issues].sort((a, b) => a.number - b.number)) {
-    const id = adoptedId(issue, remote.login);
-    if (id && !issues.has(id)) issues.set(id, { number: issue.number, url: issue.url });
-  }
-  const items = new Map(
-    remote.project.items.map((i) => [
-      i.id,
-      { itemId: i.itemId, current: i.values[BUILD_STATUS_FIELD] ?? null, ...issues.get(i.id) },
-    ]),
-  );
-  return {
-    items,
-    issues,
-    field,
-    projectId: remote.project.id,
-    projectNumber: remote.project.number,
-    owner: repo.split('/')[0],
-  };
-}
-
-/** Sets the Build status of a requirement's item to `value` (one of the field's options), and notes it on the item. */
-export function setBuildStatus(run, board, id, value, opts = {}) {
-  const item = board.items.get(id);
-  if (!item) throw new BoardProblem(`${id} is not an item of the project`);
-  const option = board.field.options.find((o) => o.name === value);
-  if (!option) throw new BoardProblem(`the ${BUILD_STATUS_FIELD} field has no option ${value}`);
-  const args = ['project', 'item-edit', '--id', item.itemId, '--project-id', board.projectId];
-  retrying(run, opts)([...args, '--field-id', board.field.id, '--single-select-option-id', option.id]);
-  item.current = value;
-}
-
-/**
  * The two runners: {github, project}. `github` holds the workflow's own token (GH_TOKEN) and is for the repository:
- * reading and the comment. `project` holds PROJECT_TOKEN and is for the project board alone; it is null when that is not
- * set or is only blanks. Neither sees the other's token, nor GITHUB_TOKEN. Throws when GH_TOKEN is missing, which is a
- * mistake in the workflow.
+ * reading, the issues and the comment. `project` holds PROJECT_TOKEN and is for the project board alone; it is null when
+ * that is not set or is only blanks. Neither sees the other's token, nor GITHUB_TOKEN. Throws when GH_TOKEN is missing,
+ * which is a mistake in the workflow.
  */
 export function runnersFrom(env, spawn = spawnSync) {
   const workflow = String(env.GH_TOKEN ?? '').trim();

@@ -4,7 +4,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { block, jobs, permissionValues, read, runCommands, stripComment, usesRefs } from './repository/repo.js';
-import { IGNORED_CHECKS } from '../scripts/build-status-gh.mjs';
+import { TRIGGER_JOB } from '../scripts/build-status-gh.mjs';
 
 const UPDATE = '.github/workflows/build-status.yml';
 const TRIGGER = '.github/workflows/build-status-trigger.yml';
@@ -43,10 +43,10 @@ describe('the workflow that updates the board and the comment', () => {
     assert.deepEqual(top, ['read']);
     const job = block(jobs(text).update, 'permissions', 4);
     assert.deepEqual(permissionLines(job).sort(), [
-      'checks: read',
+      'actions: read',
       'contents: read',
+      'issues: read',
       'pull-requests: write',
-      'statuses: read',
     ]);
   });
 
@@ -57,7 +57,19 @@ describe('the workflow that updates the board and the comment', () => {
       text,
       /uses: actions\/checkout@[0-9a-f]{40} # v\d+\.\d+\.\d+\s*\n\s*with:\s*\n\s*ref: main\s*\n\s*persist-credentials: false/,
     );
-    assert.doesNotMatch(text, /head_ref|head\.sha|head\.ref|pull_request\.head|workflow_run\.head/);
+    // the head commit of the checks is only ever the name of a concurrency group, never something that is run or fetched
+    const outsideGroup = text
+      .split('\n')
+      .filter((l) => !/^\s*group:/.test(l))
+      .join('\n');
+    assert.doesNotMatch(outsideGroup, /head_ref|head\.sha|head\.ref|pull_request\.head|workflow_run\.head/);
+  });
+
+  test('sets up Node without a package cache, so nothing is restored into a job that holds the secret', () => {
+    assert.match(
+      text,
+      /uses: actions\/setup-node@[0-9a-f]{40} # v\d+\.\d+\.\d+\s*\n\s*with:\s*\n\s*node-version: 24\s*\n\s*package-manager-cache: false/,
+    );
   });
 
   test('gives PROJECT_TOKEN to the one step that runs the script on main, and the workflow’s own token for the repository', () => {
@@ -89,10 +101,17 @@ describe('the workflow that updates the board and the comment', () => {
     }
   });
 
-  test('has a time limit, and one run at a time for a pull request, none cancelled', () => {
+  test('has a time limit, and groups its runs by the commit of the checks, so one pull request’s waiting run never replaces another’s', () => {
     assert.match(text, /timeout-minutes: \d+/);
-    assert.match(text, /concurrency:\s*\n\s*group: build-status-/);
-    assert.match(text, /cancel-in-progress: false/);
+    assert.match(
+      text,
+      /concurrency:\s*\n\s*group: build-status-\$\{\{ github\.event\.workflow_run\.head_sha \|\| github\.sha \}\}\s*\n\s*cancel-in-progress: false/,
+    );
+    assert.doesNotMatch(text, /pull_requests\[0\]/);
+  });
+
+  test('says in its comment that a run waiting in a group is replaced, which is enough as each run starts from the state', () => {
+    assert.match(text, /A run waiting in a group is replaced by the newer one/);
   });
 });
 
@@ -112,8 +131,8 @@ describe('the workflow that only wakes it', () => {
     assert.deepEqual(usesRefs(text), []);
   });
 
-  test('is one job named as the checks leave out, so it is never taken for a check of the change', () => {
-    assert.deepEqual(Object.keys(jobs(text)), IGNORED_CHECKS);
+  test('is one job with the name the build status knows it by', () => {
+    assert.deepEqual(Object.keys(jobs(text)), [TRIGGER_JOB]);
   });
 
   test('puts no text of the event into a command line', () => {

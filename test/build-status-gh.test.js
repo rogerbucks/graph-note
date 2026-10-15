@@ -5,41 +5,47 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  BoardProblem,
-  IGNORED_CHECKS,
+  CI_WORKFLOW,
   MAX_FILE_BYTES,
+  TRIGGER_JOB,
+  Unreadable,
   checkRollup,
   parentOf,
   pullNumbersForSha,
-  readBuildBoard,
   readPullRequest,
   readRequirementsAt,
   releaseBefore,
   runnersFrom,
-  setBuildStatus,
   upsertComment,
 } from '../scripts/build-status-gh.mjs';
 import { REQUIREMENTS } from '../scripts/check-requirements.mjs';
-import { fakeGithub } from './repository/github-project-fake.js';
-import { fakeRepoSide, mirroredProject, pull } from './repository/build-status-fake.js';
+import { fakeRepoSide, pull } from './repository/build-status-fake.js';
 
 const REPO = 'rogerbucks/graph-note';
 const SHA = 'b'.repeat(40);
-const noSleep = () => {};
 const MARKER = '<!-- build-status -->';
 
 describe('a pull request', () => {
-  test('is read as its state, whether it merged, its merge commit, its head commit and its base branch', () => {
+  test('is read as its state, whether it merged, its merge commit, its head commit, its base branch and the repositories', () => {
     const side = fakeRepoSide();
     side.hub.pulls[7] = pull(7, { state: 'closed', merged: true, head: SHA, mergeSha: 'c'.repeat(40) });
     assert.deepEqual(readPullRequest(side.run, REPO, 7), {
       number: 7,
       state: 'closed',
       merged: true,
+      draft: false,
       mergeSha: 'c'.repeat(40),
       headSha: SHA,
       baseRef: 'main',
+      headRepo: REPO,
+      baseRepo: REPO,
     });
+  });
+
+  test('has no head repository when its fork has gone', () => {
+    const side = fakeRepoSide();
+    side.hub.pulls[7] = pull(7, { headRepo: null });
+    assert.equal(readPullRequest(side.run, REPO, 7).headRepo, null);
   });
 
   test('is refused when the API gives a head commit or a base branch that is not a name git would use', () => {
@@ -78,17 +84,10 @@ describe('the requirements file at a ref', () => {
     const side = fakeRepoSide();
     side.hub.files.main = 'the text';
     assert.equal(readRequirementsAt(side.run, REPO, 'main'), 'the text');
-    const [call] = side.hub.calls;
-    assert.deepEqual(call.args, [
-      'api',
-      `repos/${REPO}/contents/${REQUIREMENTS}`,
-      '--method',
-      'GET',
-      '-f',
-      'ref=main',
-      '-H',
-      'Accept: application/vnd.github.raw+json',
-    ]);
+    const [ask, get] = side.hub.calls;
+    const where = ['api', `repos/${REPO}/contents/${REQUIREMENTS}`, '--method', 'GET', '-f', 'ref=main'];
+    assert.deepEqual(ask.args, where, 'its size is asked for first');
+    assert.deepEqual(get.args, [...where, '-H', 'Accept: application/vnd.github.raw+json']);
   });
 
   test('is nothing when there is no such file at the ref', () => {
@@ -103,41 +102,58 @@ describe('the requirements file at a ref', () => {
     assert.throws(() => readRequirementsAt(run, REPO, 'main'), /HTTP 500/);
   });
 
-  test('is refused when it is larger than any requirements file should be', () => {
+  test('is refused, by the size GitHub gives before it is downloaded, as unreadable and not as a failure', () => {
     const side = fakeRepoSide();
     side.hub.files.big = 'x'.repeat(MAX_FILE_BYTES + 1);
-    assert.throws(() => readRequirementsAt(side.run, REPO, 'big'), /too large/);
+    assert.throws(
+      () => readRequirementsAt(side.run, REPO, 'big'),
+      (e) => e instanceof Unreadable && /too large/.test(e.message),
+    );
+    assert.equal(side.hub.calls.length, 1, 'the file itself was never downloaded');
   });
 });
 
 describe('the checks of a commit', () => {
-  const side = () => fakeRepoSide();
+  const run = (status, conclusion, extra = {}) => ({ path: CI_WORKFLOW, run_number: 1, status, conclusion, ...extra });
+  const rollup = (runs) => {
+    const side = fakeRepoSide();
+    side.hub.workflowRuns[SHA] = runs;
+    return checkRollup(side.run, REPO, SHA);
+  };
 
-  test('are the check runs and the commit statuses, in the shape the slice board counts', () => {
-    const { hub, run } = side();
-    hub.runs[SHA] = [
-      { name: 'test', status: 'completed', conclusion: 'success' },
-      { name: 'lint', status: 'in_progress', conclusion: null },
-    ];
-    hub.statuses[SHA] = [{ state: 'failure' }];
-    assert.deepEqual(checkRollup(run, REPO, SHA), [
-      { status: 'COMPLETED', conclusion: 'SUCCESS' },
-      { status: 'IN_PROGRESS', conclusion: '' },
-      { state: 'FAILURE' },
-    ]);
+  test('are those of CI’s own run, in the shape the slice board counts', () => {
+    assert.equal(CI_WORKFLOW, '.github/workflows/ci.yml');
+    assert.deepEqual(rollup([run('completed', 'success')]), [{ status: 'COMPLETED', conclusion: 'SUCCESS' }]);
+    assert.deepEqual(rollup([run('in_progress', null)]), [{ status: 'IN_PROGRESS', conclusion: '' }]);
   });
 
-  test('leave out the job that only wakes the build status, which is not a check of the change', () => {
-    const { hub, run } = side();
-    assert.deepEqual(IGNORED_CHECKS, ['build-status-trigger']);
-    hub.runs[SHA] = [{ name: 'build-status-trigger', status: 'completed', conclusion: 'success' }];
-    assert.deepEqual(checkRollup(run, REPO, SHA), []);
+  test('leave out every other workflow, the one that wakes the build status among them', () => {
+    assert.equal(TRIGGER_JOB, 'build-status-trigger');
+    const others = ['codeql', 'dependency-review', 'lock-conversations', 'build-status-trigger'].map((name) =>
+      run('completed', 'failure', { path: `.github/workflows/${name}.yml`, run_number: 9 }),
+    );
+    assert.deepEqual(rollup(others), []);
   });
 
-  test('are refused when there are more than one page holds, which would be only part of them', () => {
-    const { hub, run } = side();
-    hub.runs[SHA] = Array.from({ length: 100 }, () => ({ name: 'x', status: 'completed', conclusion: 'success' }));
-    assert.throws(() => checkRollup(run, REPO, SHA), /more than 100/);
+  test('know CI by its path, whatever the ref the path is given with, and not by a name a pull request could choose', () => {
+    const named = run('completed', 'failure', { name: 'CI', path: '.github/workflows/other.yml' });
+    assert.deepEqual(rollup([named]), []);
+    const refd = run('completed', 'success', { path: `${CI_WORKFLOW}@refs/pull/7/merge` });
+    assert.deepEqual(rollup([refd]), [{ status: 'COMPLETED', conclusion: 'SUCCESS' }]);
+  });
+
+  test('are those of the newest run of CI, as when it was run again', () => {
+    const runs = [run('completed', 'failure', { run_number: 1 }), run('completed', 'success', { run_number: 2 })];
+    assert.deepEqual(rollup(runs), [{ status: 'COMPLETED', conclusion: 'SUCCESS' }]);
+  });
+
+  test('are none while CI has not started', () => {
+    assert.deepEqual(rollup([]), []);
+  });
+
+  test('are refused when there are as many runs as one page holds, which may be only part of them', () => {
+    const runs = Array.from({ length: 100 }, () => run('completed', 'success', { path: '.github/workflows/x.yml' }));
+    assert.throws(() => rollup(runs), /more than 100/);
   });
 });
 
@@ -209,6 +225,22 @@ describe('the one comment on a pull request', () => {
     assert.equal(upsertComment(run, REPO, 5, `${MARKER}\nsecond`, { create: false }), 'updated');
   });
 
+  test('is looked for again just before it is made, in case another run made it in between', () => {
+    const { hub, run } = fakeRepoSide();
+    hub.afterList = () => {
+      hub.comments[5] = [{ id: 40, body: `${MARKER}\nthe other run`, user: bot }];
+    };
+    assert.equal(upsertComment(run, REPO, 5, `${MARKER}\nthis run`), 'updated');
+    assert.deepEqual(
+      hub.comments[5].map((c) => c.body),
+      [`${MARKER}\nthis run`],
+    );
+    assert.deepEqual(
+      hub.mutations.filter((m) => m.startsWith('POST')),
+      [],
+    );
+  });
+
   test('is found among many comments on later pages', () => {
     const { hub, run } = fakeRepoSide({ pageSize: 2 });
     hub.comments[5] = [1, 2, 3, 4].map((id) => ({ id, body: `chat ${id}`, user: { login: 'someone', type: 'User' } }));
@@ -233,83 +265,6 @@ describe('the one comment on a pull request', () => {
     assert.ok(write.args.every((a) => !a.includes('whoami')));
     assert.equal(JSON.parse(write.input).body, `${MARKER}\n"$(whoami)" \`x\``);
     assert.throws(() => upsertComment(run, REPO, '5/../x', 'x'), /pull request number/);
-  });
-});
-
-describe('the Build status field of the project', () => {
-  const item = (gh, id) => {
-    const board = readBuildBoard(gh.run, REPO);
-    return board.items.get(id);
-  };
-
-  test('is read as each requirement’s item, its issue and its current value', () => {
-    const gh = mirroredProject();
-    const board = readBuildBoard(gh.run, REPO);
-    assert.deepEqual([...board.items.keys()].sort(), [
-      'done_means_proved',
-      'focus_link',
-      'focus_neighbours',
-      'stray_new',
-      'zoom_out_to_fit',
-    ]);
-    const got = board.items.get('focus_link');
-    assert.equal(got.current, 'Not started');
-    assert.equal(typeof got.number, 'number');
-    assert.match(got.url, /\/issues\/\d+$/);
-    assert.equal(board.owner, 'rogerbucks');
-    assert.equal(board.projectNumber, 1);
-  });
-
-  test('is set by the id of its option, on the item, and nothing else is touched', () => {
-    const gh = mirroredProject();
-    const board = readBuildBoard(gh.run, REPO);
-    setBuildStatus(gh.run, board, 'focus_link', 'Checks failing');
-    assert.equal(item(gh, 'focus_link').current, 'Checks failing');
-    assert.equal(item(gh, 'focus_neighbours').current, 'Not started');
-    assert.equal(gh.hub.mutations.length, 1);
-    assert.match(gh.hub.mutations[0], /item-edit/);
-    const [project] = gh.hub.projects;
-    const mine = project.items.find((i) => i.values['Build status'] === 'Checks failing');
-    assert.equal(mine.values.Proof, 'open');
-    assert.ok(project.items.every((i) => !('Status' in i.values)));
-  });
-
-  test('is a problem to report, not a crash, when the project or the field is not there yet', () => {
-    const none = fakeGithub();
-    assert.throws(
-      () => readBuildBoard(none.run, REPO),
-      (e) => e instanceof BoardProblem && /graph-note requirements/.test(e.message),
-    );
-    const gh = mirroredProject();
-    gh.hub.projects[0].fields = gh.hub.projects[0].fields.filter((f) => f.name !== 'Build status');
-    assert.throws(
-      () => readBuildBoard(gh.run, REPO),
-      (e) => e instanceof BoardProblem && /no Build status field/.test(e.message),
-    );
-  });
-
-  test('is a problem to report when the field lacks the stage to set', () => {
-    const gh = mirroredProject();
-    const field = gh.hub.projects[0].fields.find((f) => f.name === 'Build status');
-    field.options = field.options.filter((o) => o.name !== 'Released');
-    const board = readBuildBoard(gh.run, REPO);
-    assert.throws(
-      () => setBuildStatus(gh.run, board, 'focus_link', 'Released'),
-      (e) => e instanceof BoardProblem && /Released/.test(e.message),
-    );
-  });
-
-  test('is waited for through a short failure of GitHub, as the mirror does', () => {
-    const gh = mirroredProject();
-    let failures = 1;
-    const flaky = (args, input) => {
-      if (args[0] === 'project' && args[1] === 'item-edit' && failures-- > 0)
-        throw new Error('gh failed: HTTP 502 Bad Gateway');
-      return gh.run(args, input);
-    };
-    const board = readBuildBoard(gh.run, REPO);
-    setBuildStatus(flaky, board, 'focus_link', 'Merged', { sleep: noSleep });
-    assert.equal(item(gh, 'focus_link').current, 'Merged');
   });
 });
 
