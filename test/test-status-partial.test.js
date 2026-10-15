@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import { auditRequirements, sliceDone } from '../scripts/check-requirements.mjs';
 import { refusedChanges } from '../scripts/check-requirements-flips.mjs';
 import { movedRequirements } from '../scripts/build-status.mjs';
+import { desiredState } from '../scripts/github-project-desired.mjs';
 import { readBoard, renderBoard, statusOf, summarise } from '../scripts/slice-board.mjs';
 
 const BANNER = `// graph: editor_requirements · SOURCE
@@ -136,5 +137,35 @@ describe('a partial test on the slice board', () => {
   test('moves no requirement when a pull request flips a test to partial: nothing is proved or merged by it', () => {
     assert.deepEqual(movedRequirements(board('planned'), board('partial')), []);
     assert.deepEqual(movedRequirements(board('partial'), board('written')), ['rule_one']);
+  });
+});
+
+describe('a test status that is not one of the three', () => {
+  for (const bad of ['Partial', 'writen', '']) {
+    test(`'${bad}' is a status problem in the audit`, () => {
+      const problems = audit(copy(bad), present);
+      assert.deepEqual(kinds(problems), ['status']);
+      assert.match(problems[0].message, /test_shared has a status that is not planned, partial or written/);
+    });
+
+    test(`a flip to '${bad}' is refused in the flip check`, () => {
+      assert.deepEqual(kinds(refusedChanges(copy('planned'), copy(bad), { exists: present })), ['field']);
+    });
+  }
+
+  test('a flip from planned to written is refused when the file is not there', () => {
+    const problems = refusedChanges(copy('planned'), copy('written'), { exists: absent });
+    assert.deepEqual(kinds(problems), ['missing-file']);
+    assert.match(problems[0].message, /test_shared: flipped to written, but the repository has no/);
+  });
+});
+
+describe('a requirement with only a partial test in the GitHub mirror', () => {
+  test('stays open, labelled status:part', () => {
+    const issue = desiredState(readBoard(copy('partial')), { S3: { title: 'Slice end', requirements: [] } }, [1])
+      .issues[0];
+    assert.equal(issue.state, 'open');
+    assert.equal(issue.status, 'part');
+    assert.ok(issue.labels.includes('status:part'));
   });
 });
