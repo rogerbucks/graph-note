@@ -50,8 +50,12 @@ describe('whether a slice is done', () => {
 
   // proves: done_means_proved
   test('a requirement proved by two tests, one of them not written, is not proved: only that test is named', () => {
-    const saved = "file: 'packages/core/test/untangle-saved.test.js', where: 'repo', status: 'written'";
-    const text = replaced(allWritten(), saved, saved.replace("'written'", "'planned'"));
+    // found by its id, whatever files the copy lists for it
+    const saved = allWritten()
+      .split('\n')
+      .find((line) => line.startsWith('(test_untangle_saved:Test {'));
+    assert.ok(saved?.includes("status: 'written'"), 'the copy holds test_untangle_saved');
+    const text = replaced(allWritten(), saved, saved.replace("status: 'written'", "status: 'planned'"));
     const r = sliceDone(text, 3, { exists: everyFile });
     assert.deepEqual(ids(r), ['untangle_legend']);
     assert.match(r.missing[0].why, /test_untangle_saved is planned/);
