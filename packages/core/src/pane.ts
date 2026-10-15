@@ -21,10 +21,18 @@ export interface Choice {
 
 /**
  * What writing the pane's text into the note did: the new note, or why not and the draft kept. `edit` marks an edit made
- * for the person that the note written into refused (§4), rather than a block changed meanwhile.
+ * for the person that the note written into refused (§4), rather than a block changed meanwhile; `history` an Undo or
+ * Redo with nothing to take back since the block changed outside the pane (§9), where nothing typed needs keeping.
  */
 export type PaneWrite =
-  { ok: true; note: string; unchanged?: true } | { ok: false; reason: string; draft: string; edit?: true };
+  | { ok: true; note: string; unchanged?: true }
+  | { ok: false; reason: string; draft: string; edit?: true; history?: true };
+
+/** Why Undo and Redo have nothing to take back once the block changed outside the pane (§9, undo_never_over_theirs). */
+const CHANGED_ELSEWHERE = {
+  undo: 'Nothing to undo: another program, a sync or another pane changed this block since, and undoing would overwrite that change.',
+  redo: 'Nothing to redo: another program, a sync or another pane changed this block since, and redoing would overwrite that change.',
+};
 
 /** The note's graph blocks, each with its fence line and its graph. */
 function graphBlocks(note: string) {
@@ -45,6 +53,8 @@ export class PaneSession {
   /** The vault's shared schemas (§5), for a graph that names one: the host loads them. */
   shared: string[] = [];
   private readonly history = new History();
+  /** Whether undo or redo steps were dropped because the block changed outside the pane since they were written. */
+  private readonly dropped = { undo: false, redo: false };
   private lastNote = '';
   /** The names edits made for the person newly wrote, owed the check made as they are written. */
   private readonly owed = new Set<string>();
@@ -68,7 +78,10 @@ export class PaneSession {
     }));
   }
 
-  /** Switches to another block of the note. Write what was typed first. */
+  /**
+   * Switches to another block of the note, starting its own history, so Undo never writes one block's text into another
+   * (§9, undo_stays_in_its_block). Write what was typed first.
+   */
   select(line: number): void {
     const b = graphBlocks(this.lastNote).find((x) => x.open === line);
     if (!b) return;
@@ -76,6 +89,8 @@ export class PaneSession {
     this.text = b.text;
     this.ref = { line: b.open, text: b.text };
     this.dirty = false;
+    this.history.clear();
+    this.dropped.undo = this.dropped.redo = false;
   }
 
   type(text: string): void {
@@ -135,13 +150,17 @@ export class PaneSession {
     if (refused) return refused;
     const r = replaceBlock(note, this.ref, this.text);
     if (r.ok) {
-      if (record) this.history.record(this.ref.text, this.text);
+      if (record) {
+        this.history.record(this.ref.text, this.text);
+        this.dropped.redo = false; // a new write ends any redo, dropped or not
+      }
       this.ref = r.ref;
       this.dirty = false;
       this.lastNote = r.note;
       return { ok: true, note: r.note };
     }
     const draft = this.text;
+    this.changedElsewhere();
     if (r.current) {
       this.ref = { line: r.current.line - 1, text: r.current.text };
       this.text = r.current.text;
@@ -176,12 +195,25 @@ export class PaneSession {
       this.ref = { line: found.open, text: found.text };
       return 'unchanged';
     }
+    this.changedElsewhere();
     if (this.dirty) return 'conflict';
     const here = spans.find((s) => s.open === this.ref.line && graphOfBlock(s.text) === this.graph);
     if (!here) return 'conflict';
     this.ref = { line: here.open, text: here.text };
     this.text = here.text;
     return 'reloaded';
+  }
+
+  /**
+   * The block changed outside the pane — another program, a sync or another pane: the history starts again from the
+   * note as it now is, as no step written before can be taken back or put back without overwriting that change (§9,
+   * undo_never_over_theirs; §26, cc_undo_safe). Undo and Redo then say why there is nothing to take back.
+   */
+  private changedElsewhere(): void {
+    const had = this.history.canUndo() || this.history.canRedo();
+    this.dropped.undo ||= had;
+    this.dropped.redo ||= had;
+    this.history.clear();
   }
 
   canUndo(): boolean {
@@ -191,6 +223,21 @@ export class PaneSession {
     return this.history.canRedo();
   }
 
+  /** Why Undo or Redo has nothing to take back, its steps dropped as the block changed outside the pane; else null. */
+  stepRefusal(which: 'undo' | 'redo'): string | null {
+    const can = which === 'undo' ? this.canUndo() : this.canRedo();
+    return !can && this.dropped[which] ? CHANGED_ELSEWHERE[which] : null;
+  }
+
+  /**
+   * An Undo or Redo refused for the history: why, with the block as it is, as nothing typed needs keeping. The note it
+   * was pressed on is not taken as seen: the change in it, if any, is the host's to tell (`noteChanged`).
+   */
+  private refusedStep(which: 'undo' | 'redo'): PaneWrite | null {
+    const reason = this.stepRefusal(which);
+    return reason ? { ok: false, reason, draft: this.text, history: true } : null;
+  }
+
   private step(note: string, text: string | null): PaneWrite {
     if (text === null) return { ok: true, note, unchanged: true };
     this.text = text;
@@ -198,17 +245,21 @@ export class PaneSession {
     return this.write(note, false);
   }
 
-  /** Undoes the last write; typing not yet written is written first, so it can be redone. */
+  /**
+   * Undoes the last write; typing not yet written is written first, so it can be redone. Never a write made before the
+   * block changed outside the pane: refused then, saying why (`history`).
+   */
   undo(note: string): PaneWrite {
     if (this.dirty) {
       const w = this.write(note);
       if (!w.ok) return w;
       note = w.note;
     }
-    return this.step(note, this.history.undo());
+    return this.refusedStep('undo') ?? this.step(note, this.history.undo());
   }
 
+  /** Redoes the last undo; never one made before the block changed outside the pane: refused then, saying why. */
   redo(note: string): PaneWrite {
-    return this.step(note, this.history.redo());
+    return this.refusedStep('redo') ?? this.step(note, this.history.redo());
   }
 }

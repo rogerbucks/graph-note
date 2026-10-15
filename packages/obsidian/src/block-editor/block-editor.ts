@@ -5,7 +5,7 @@ import { Component } from 'obsidian';
 import { indentText, isDraft } from '@graph-note/core';
 import type { Change, CompletionItem, NoteReading, PaneSession } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
-import { buildEditor, showTools } from './editor-layout';
+import { buildEditor, sayRefused, showTools, toolsSaid } from './editor-layout';
 import type { EditorParts, Layout } from './editor-layout';
 import { withFix } from './problem-help';
 import type { FixChanges } from './problem-help';
@@ -196,13 +196,20 @@ export class BlockEditor extends Component {
     this.showKeptDraft();
   }
 
-  private showTools(): void {
+  /** What the tools last said of Undo and Redo, so typing draws them again only when that changes (§9). */
+  private toolsShown = '';
+
+  private showTools(onlyIfChanged = false): void {
     const el = this.el,
       s = this.session;
     if (!el || !s) return;
+    const why = { undo: s.stepRefusal('undo'), redo: s.stepRefusal('redo') };
+    if (onlyIfChanged && toolsSaid(why) === this.toolsShown) return;
+    this.toolsShown = toolsSaid(why);
     showTools(el.tools, {
       inline: this.layout === 'inline',
       draft: !!this.help.reading && isDraft(this.help.reading, s.graph),
+      why,
       done: () => void this.done(),
       undo: () => void this.history('undo'),
       redo: () => void this.history('redo'),
@@ -219,6 +226,7 @@ export class BlockEditor extends Component {
     // what is added for you is a step of its own, so the very next undo takes back only it (spec §4)
     if (addForYouInField(el.text, s.text, this.note.text, s.ref.line, stepped)) this.undoes.record(el.text, 'other');
     s.type(el.text.value);
+    this.showTools(true); // typing after a reload makes Undo available again
     this.analyse();
     this.help.announce(el); // new problems said to screen readers, the focus left where it is
     this.paint();
@@ -231,6 +239,7 @@ export class BlockEditor extends Component {
       s = this.session;
     if (!el || !s) return;
     s.type(el.text.value);
+    this.showTools(true);
     this.analyse();
     this.help.announce(el); // new problems said to screen readers, the focus left where it is
     this.paint();
@@ -307,6 +316,7 @@ export class BlockEditor extends Component {
   private async write(): Promise<void> {
     const refused = await this.note.write();
     if (refused) await this.keepDraft(refused);
+    else this.showTools(); // a write of its own is the editor's to undo, whatever changed outside before it
   }
 
   private async keepDraft({ reason, draft, edit }: Refused): Promise<void> {
@@ -320,12 +330,13 @@ export class BlockEditor extends Component {
     this.showKeptDraft(keptMessage(reason, edit));
   }
 
-  /** The text as the note now has it, shown with its history started again, its help and its drawing. */
+  /** The text as the note now has it, shown with its history started again, its help, its drawing and its tools. */
   private reloaded(): void {
     this.undoes.reset(this.el?.text);
     this.analyse();
     this.paint();
     this.redraw();
+    this.showTools();
   }
 
   /** The draft banner: Restore and Discard act on the very draft it shows, by its id (kept-draft.ts). */
@@ -337,7 +348,6 @@ export class BlockEditor extends Component {
     if (outcome === 'reloaded' && this.el) {
       this.el.text.value = this.session?.text ?? '';
       this.reloaded();
-      this.showTools();
     } else if (outcome === 'conflict') void this.write();
     else {
       this.analyse();
@@ -354,6 +364,10 @@ export class BlockEditor extends Component {
       this.writeTimer = null;
     }
     const refused = await this.note.step(which);
+    if (refused?.history) {
+      if (this.el) sayRefused(this.el.announce, refused.reason); // nothing typed, so nothing kept as a draft (§9)
+      return this.showTools();
+    }
     if (refused) {
       await this.keepDraft(refused);
       return;

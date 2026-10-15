@@ -200,7 +200,13 @@ own handlers. Nothing here reaches the network.
 - `pane.ts` — the edit session: what is typed, written back to the note safely; `texts` gives the note's blocks with the
   typed text in the edited block's place, and `current()` the note as last seen, read so. `edit` is an edit made from
   the drawing: the names it newly writes are checked as it is written, and a refusal reloads the block and keeps the
-  edit as a draft (`edit: true`).
+  edit as a draft (`edit: true`). Once the block changes outside the session (another program, a sync or another
+  pane: reloaded, a conflict, or a write refused), its undo history starts again from the note as it now is, and Undo
+  and Redo are refused saying why (`history: true`, `stepRefusal`), so no undo is ever written over that change
+  (undo_never_over_theirs, cc_undo_safe); a change elsewhere in the note leaves the history as it is. Switching to
+  another block (`select`) starts that block's own history, so Undo never writes one block's text into another
+  (undo_stays_in_its_block). A known edge: the block is followed by its text, so if another program pastes a copy of
+  the block and then edits the original, the session may follow the copy, whose text is unchanged.
 - `edit-check.ts` — that check (§4): `editRefusal` refuses a name the note written into draws only under a suggested
   name (accept its name first), or a name the edit gives a thing that another block of the graph gives too (already a
   name); `newNames` finds the names an edit newly writes.
