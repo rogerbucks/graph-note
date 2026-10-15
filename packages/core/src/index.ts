@@ -236,7 +236,7 @@ export { AI_PURPOSES, endpointProblem, modelChoices } from './ai-choice.ts';
 export type { HostAi, ModelChoice } from './ai-choice.ts';
 export type { ScopeChoice } from './ai-scope.ts';
 export { classMapFrom, classMapText, matchClass, matrixGrants, unmatchedClasses } from './ai-matrix.ts';
-export type { ClassGrant, Mark, MatrixCell, MatrixRow } from './ai-matrix.ts';
+export type { ClassGrant, Mark, MatrixCell, MatrixInput, MatrixRow } from './ai-matrix.ts';
 export { noteWithProposal } from './ai-answer.ts';
 export type { ChangeRow, DecideOptions, Person, ProposalShown, Reviewed, Which } from './proposals-shown.ts';
 export { hitAreas, nearby, TapCycle, boundsOf, centres } from './hits.ts';

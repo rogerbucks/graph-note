@@ -4,6 +4,7 @@
 import { DEPARTURES } from './strictness.ts';
 import type { Departure, Strictness, StrictnessSettings } from './strictness.ts';
 import { STYLE } from './layout.ts';
+import { vaultFolder } from './vault-folder.ts';
 
 /** An AI model set up for §19: what it is for, and its ceiling — the highest classification of note it may be sent. */
 export interface AiModel {
@@ -15,6 +16,10 @@ export interface AiModel {
   model: string;
   /** The name of its key in the host's secret store: never the key itself. */
   keyName: string;
+  /** The row of the vault's destination matrix the user picked for it (§19, model_ceiling); with none, `ceiling` rules. */
+  matrixRow?: string;
+  /** The conditional classes of that row the user switched on for this model, as the matrix names them. */
+  matrixOn?: string[];
 }
 
 /** How a line the editor writes is indented. */
@@ -44,6 +49,10 @@ export interface Settings extends StrictnessSettings {
   /** The level a note with no classification counts as for AI (§19, unclassified_strictest): the highest until chosen. */
   aiUnlabelled: string;
   aiModels: AiModel[];
+  /** The note that holds the destination matrix, by its path; empty when the vault keeps none. */
+  aiMatrixNote: string;
+  /** Matrix class names mapped by hand to the classification each stands for. */
+  aiClassMap: Record<string, string>;
   indent: Indent;
   /** The best fit of the locked style's directions, or one of them. */
   direction: string;
@@ -77,6 +86,8 @@ export const DEFAULT_SETTINGS: Settings = {
   // the most sensitive, so a note nobody has classified goes to no model until the user chooses otherwise
   aiUnlabelled: CLASSIFICATIONS.at(-1) ?? '',
   aiModels: [],
+  aiMatrixNote: '',
+  aiClassMap: {},
   indent: 'four',
   direction: 'best',
   focusDepth: 'one',
@@ -184,7 +195,21 @@ export const OPTIONS: Option[] = [
     section: 'AI models',
     name: 'AI models',
     sentence:
-      'Each AI model the editor may ask, with its purpose and its ceiling, the highest classification of note it may be sent.',
+      'Each AI model the editor may ask, with its purpose and its ceiling, the highest classification of note it may be sent, or a row of the destination matrix.',
+  },
+  {
+    key: 'aiMatrixNote',
+    section: 'AI models',
+    name: 'Destination matrix note',
+    sentence:
+      'The note that holds the vault’s destination matrix, by its path. A model can then take a row of it in place of a ceiling.',
+  },
+  {
+    key: 'aiClassMap',
+    section: 'AI models',
+    name: 'Matrix classes',
+    sentence:
+      'Classes of the matrix that go by another name than a classification, one per line as matrix name: classification. A class matched by neither is flagged and never sent.',
   },
   {
     key: 'indent',
@@ -292,37 +317,15 @@ export function aiModel(given: Partial<AiModel> & Record<string, unknown>, class
     endpoint: text(given.endpoint),
     model: text(given.model),
     keyName: text(given.keyName),
+    // kept only with a row picked, so a model with none is as it was
+    ...(text(given.matrixRow).trim() && {
+      matrixRow: text(given.matrixRow).trim(),
+      matrixOn: [...new Set(Array.isArray(given.matrixOn) ? given.matrixOn.filter((c) => typeof c === 'string') : [])],
+    }),
   };
 }
 
-const UNSAFE_IN_A_FOLDER = '\\:*?"<>|';
-
-/**
- * A folder inside the vault as the settings keep it: trimmed, with empty parts dropped (`a//b/` is `a/b`), or null when it
- * could reach outside the vault, reach the config folder, or cannot be a folder name on every platform — a leading `/` or
- * `~`, a part that starts with a dot (so `.`, `..` and `.obsidian`), a part that ends in a dot or a space, a name Windows
- * reserves (con, prn, aux, nul, com1–9, lpt1–9), a backslash, a colon, any of `*?"<>|`, or a control character. Empty is
- * next to the note.
- */
-export function vaultFolder(given: unknown): string | null {
-  const folder = typeof given === 'string' ? given.trim() : '';
-  if (!folder) return '';
-  if (folder.startsWith('/') || folder.startsWith('~')) return null;
-  if ([...folder].some((c) => c.charCodeAt(0) < 32 || UNSAFE_IN_A_FOLDER.includes(c))) return null;
-  const parts = folder.split('/').filter((p) => p !== '');
-  return parts.some(unusablePart) ? null : parts.join('/');
-}
-
-// names Windows keeps for devices, whatever follows a dot: con.txt is con
-const RESERVED = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i;
-
-/**
- * Whether a folder name cannot be used for exports: it starts with a dot (so `.`, `..` and the config folder are out),
- * ends in a dot or a space, or is a name Windows reserves.
- */
-function unusablePart(part: string): boolean {
-  return part.startsWith('.') || part.endsWith('.') || part.endsWith(' ') || RESERVED.test(part.split('.')[0] ?? '');
-}
+export { vaultFolder };
 
 /** Settings read back from what was saved: each known one kept when it is in range, else its default. */
 export function settingsFrom(saved: unknown): Settings {
@@ -348,6 +351,12 @@ export function settingsFrom(saved: unknown): Settings {
           .filter((m): m is Record<string, unknown> => !!m && typeof m === 'object')
           .map((m) => aiModel(m, classifications))
       : [],
+    aiMatrixNote: text(s.aiMatrixNote).trim(),
+    aiClassMap: Object.fromEntries(
+      Object.entries(s.aiClassMap && typeof s.aiClassMap === 'object' ? s.aiClassMap : {}).filter(
+        (e): e is [string, string] => typeof e[1] === 'string',
+      ),
+    ),
     indent: oneOf<Indent>('indent', s.indent, d.indent),
     direction: oneOf('direction', s.direction, d.direction),
     focusDepth: oneOf<FocusDepthSetting>('focusDepth', s.focusDepth, d.focusDepth),

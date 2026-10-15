@@ -159,7 +159,7 @@ describe('classes match by name, a settings table maps the others, and an unmatc
     const m = model('A', { matrixRow: 'Local' });
     const g = matrixGrants(m, OTHER, LEVELS, { Open: 'Public' });
     assert.deepEqual(
-      g.map((x) => [x.name, x.classification, x.allowed]),
+      g.map((x) => [x.name, x.level, x.allowed]),
       [
         [' public ', 'Public', true],
         ['OPEN', 'Public', true],

@@ -11,6 +11,7 @@ import { clearance, credentialsIn, levelSaid } from './ai-ceiling.ts';
 import { aiReady, endpointProblem } from './ai-choice.ts';
 import { sha256, utf8Size } from './ai-digest.ts';
 import { askedText, changesIn, readReply, requestBody } from './ai-request.ts';
+import type { MatrixRow } from './ai-matrix.ts';
 import { aiScope } from './ai-scope.ts';
 import type { ScopeChoice } from './ai-scope.ts';
 import { basisOf } from './proposals-basis.ts';
@@ -51,6 +52,8 @@ export interface SendAsk {
   secrets?: readonly string[];
   /** The vault's shared schemas, for reading the note. */
   shared?: string[];
+  /** The rows of the vault's destination matrix, as the host read them; a model with a row picked is held to its row. */
+  matrix?: MatrixRow[];
 }
 
 /** A send made ready: everything that will go, and where, for the user to see before saying yes. */
@@ -129,7 +132,8 @@ export function prepareSend(ask: SendAsk): PreparedSend | SendRefused {
   const address = endpointProblem(model.endpoint);
   if (address) return { refused: `${model.name} cannot be sent to: ${address}` };
   if (!model.model.trim()) return { refused: `${model.name} names no model: set it in the model’s settings.` };
-  const cleared = clearance(ask.level, model, settings.classifications, ready.ready, settings.aiUnlabelled);
+  const matrix = { rows: ask.matrix ?? [], classMap: settings.aiClassMap };
+  const cleared = clearance(ask.level, model, settings.classifications, ready.ready, settings.aiUnlabelled, matrix);
   if ('refused' in cleared) return cleared;
   const scope = aiScope(ask.note, ask.choice, ask.shared);
   if ('refused' in scope) return scope;
@@ -149,7 +153,7 @@ export function prepareSend(ask: SendAsk): PreparedSend | SendRefused {
       ...(model.keyName ? { Authorization: `Bearer (the key named ${model.keyName} in the app’s secret store)` } : {}),
     },
     summary: [
-      `To ${model.name} (${model.model}), at ${model.endpoint.trim()}, whose ceiling is ${model.ceiling}.`,
+      `To ${model.name} (${model.model}), at ${model.endpoint.trim()}, ${model.matrixRow ? `held to the matrix row ${model.matrixRow}` : `whose ceiling is ${model.ceiling}`}.`,
       model.keyName
         ? `It is sent with the key named ${model.keyName} in the app’s secret store, put in only as the request goes.`
         : 'No key is sent.',

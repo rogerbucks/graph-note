@@ -3,9 +3,10 @@
 // so each is found by the settings search. Each change is saved at once, read back as the core reads settings.
 import { PluginSettingTab } from 'obsidian';
 import type { App, SettingDefinition, SettingDefinitionItem } from 'obsidian';
-import { OPTIONS } from '@graph-note/core';
-import type { Option, Settings } from '@graph-note/core';
+import { OPTIONS, classMapFrom, classMapText, unmatchedClasses } from '@graph-note/core';
+import type { MatrixRow, Option, Settings } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
+import { readMatrix } from '../ai/matrix-note';
 import { aiModelList, getModelValue, setModelValue } from './ai-models';
 
 const SECTIONS = ['Strictness', 'AI models', 'Formatting', 'Drawing', 'Export'] as const;
@@ -20,6 +21,7 @@ export class GraphNoteSettingTab extends PluginSettingTab {
   }
 
   override getSettingDefinitions(): SettingDefinitionItem[] {
+    void this.loadMatrix();
     return SECTIONS.flatMap((heading): SettingDefinitionItem[] => [
       {
         type: 'group',
@@ -27,8 +29,18 @@ export class GraphNoteSettingTab extends PluginSettingTab {
         items: OPTIONS.filter((o) => o.section === heading).flatMap((o) => this.definitions(o)),
       },
       // a list stands on its own, after its part of the page
-      ...(heading === 'AI models' ? [aiModelList(this.app, this.owner, this)] : []),
+      ...(heading === 'AI models' ? [aiModelList(this.app, this.owner, this, this.matrix)] : []),
     ]);
+  }
+
+  /** The matrix note's rows as last read; the page is drawn again when the note, or the path to it, changes them. */
+  private matrix: MatrixRow[] = [];
+
+  private async loadMatrix(): Promise<void> {
+    const rows = await readMatrix(this.app, this.owner.settings.aiMatrixNote);
+    if (JSON.stringify(rows) === JSON.stringify(this.matrix)) return;
+    this.matrix = rows;
+    this.update();
   }
 
   /** The rows an option is shown in: one for most; for the departures, one each and the action that converts. */
@@ -51,8 +63,22 @@ export class GraphNoteSettingTab extends PluginSettingTab {
     if (o.key === 'classifications')
       return [{ name: o.name, desc: o.sentence, control: { type: 'textarea', key: 'classifications' } }];
     if (o.key === 'aiModels') return [{ name: o.name, desc: o.sentence }];
-    if (o.key === 'exportFolder')
-      return [{ name: o.name, desc: o.sentence, control: { type: 'text', key: 'exportFolder' } }];
+    if (o.key === 'exportFolder' || o.key === 'aiMatrixNote')
+      return [{ name: o.name, desc: o.sentence, control: { type: 'text', key: o.key } }];
+    if (o.key === 'aiClassMap')
+      return [
+        {
+          name: o.name,
+          // a class of the matrix matched by neither name nor the table here is said, never guessed
+          desc: [
+            o.sentence,
+            ...(unmatchedClasses(this.matrix, s.classifications, s.aiClassMap).length
+              ? [`Flagged now: ${unmatchedClasses(this.matrix, s.classifications, s.aiClassMap).join(', ')}.`]
+              : []),
+          ].join(' '),
+          control: { type: 'textarea', key: 'aiClassMap' },
+        },
+      ];
     // the level an export asks above, and the level an unlabelled note counts as for AI, are each one of the
     // classifications as they are set now
     if (o.key === 'exportAsksAbove' || o.key === 'aiUnlabelled')
@@ -85,6 +111,7 @@ export class GraphNoteSettingTab extends PluginSettingTab {
     const s = this.owner.settings;
     if (key.startsWith('allowed.')) return s.allowed.some((a) => `allowed.${a}` === key);
     if (key === 'classifications') return s.classifications.join('\n');
+    if (key === 'aiClassMap') return classMapText(s.aiClassMap);
     if (key.startsWith('aiModels.')) return getModelValue(s, key);
     return s[key as keyof Settings];
   }
@@ -103,12 +130,17 @@ export class GraphNoteSettingTab extends PluginSettingTab {
         .filter(Boolean);
       if (!levels.length) return;
       change = { classifications: levels };
-    } else if (key.startsWith('aiModels.')) change = setModelValue(s, key, value);
+    } else if (key === 'aiClassMap') change = { aiClassMap: classMapFrom(String(value)) };
+    else if (key.startsWith('aiModels.')) change = setModelValue(s, key, value);
     else change = { [key]: value };
     await this.owner.saveSettings({ ...s, ...change });
     // a level's own sentence, and a model's ceiling, follow a choice; the page is never drawn again under typing
+    const chosen = key.endsWith('.ceiling') || key.endsWith('.matrixRow') || key.includes('.matrixOn.');
     const typed =
-      key === 'classifications' || key === 'exportFolder' || (key.startsWith('aiModels.') && !key.endsWith('.ceiling'));
+      ['classifications', 'exportFolder', 'aiMatrixNote', 'aiClassMap'].includes(key) ||
+      (key.startsWith('aiModels.') && !chosen);
     if (!typed) this.update();
+    // the matrix note, or how its classes are matched, changed what the page shows of it
+    if (key === 'aiMatrixNote' || key === 'aiClassMap') void this.loadMatrix();
   }
 }

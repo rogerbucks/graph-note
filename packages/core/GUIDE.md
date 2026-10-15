@@ -658,6 +658,16 @@ exactly what goes and said yes to it. Its answer comes back as a proposal (§17)
   or secret by its name, even at the end of a snake_case or camelCase one, though a bare `key` is an ordinary word and
   only a name ending in `_key` or `Key` is a secret's, a card number, or the key of any model set up), never
   the text.
+- `ai-matrix.ts` — a model's row of the destination matrix (model_ceiling). The host reads the matrix note and hands
+  the core plain `MatrixRow`s (a mark, yes, conditional or no, for each class), so the core never reads the note's
+  layout. A model with a `matrixRow` picked by the user, never guessed from its name or address, may receive exactly
+  the classes the row marks yes, and each conditional class only once its name is in the model's `matrixOn`; a no is
+  never allowed, and the highest classification never goes to any model. `matchClass` matches a class to a
+  classification by name, else through `aiClassMap`; one matched by neither is flagged (`unmatchedClasses`), never
+  guessed, and never allowed. `matrixGrants` lists a row's classes for the settings page, with the condition to show
+  beside each switch. `clearance` takes the matrix as its last argument and, for a model with a row, uses it in place
+  of the ceiling; with no row the ceiling stands. `classMapFrom` and `classMapText` keep the mapping table as text.
+- `vault-folder.ts` — `vaultFolder`, the export folder kept inside the vault, re-exported by `settings.ts`.
 - `ai-scope.ts` — `aiScope`: what is sent of a note, as the user chose (the whole graph, a view, or things by name),
   written out again as GQL from the graph as read: each thing with its kinds and properties, and the links between the
   things chosen. Nothing else of the note goes: no prose, no other graph, no comment.
@@ -678,8 +688,8 @@ exactly what goes and said yes to it. Its answer comes back as a proposal (§17)
   settings read back with anything unknown, out of range or secret left out (`settingsFrom`). AI is off until `aiUse`
   is turned on; `aiUnlabelled`, the level a note with no classification counts as, is one of `classifications`, the
   most sensitive until chosen. An AI model keeps the name of its key in the host's secret store (`keyName`), never the key. The Export section holds the export theme (light
-  or dark), whether an export saved in the vault gets a companion note, the folder exports go to (`vaultFolder` keeps it
-  inside the vault; empty is next to the note) and the classification above which an export asks first (one of
+  or dark), whether an export saved in the vault gets a companion note, the folder exports go to (`vaultFolder`, in
+  `vault-folder.ts`, keeps it inside the vault; empty is next to the note) and the classification above which an export asks first (one of
   `classifications`, the lowest until chosen). The Drawing section also holds how far focus reaches from a selected
   thing (`focusDepth`: `one`, the default, or `two`; `depthOf` reads it), and the default of each View menu switch
   (`labelsByZoom` and `foldHubs` on, `foldGroups` and `mergeLinks` off, view_switch_defaults).

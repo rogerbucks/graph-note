@@ -162,6 +162,9 @@ module that ties the parts together, named as the folder is.
   what is sent. Every send is recorded in the plugin's data (`recordAiSend`);
   an answer is written into the note as a change set after the graph's blocks, through `vault.process`, and a failure is
   said in a notice, the note left as it was.
+- `matrix-note.ts` — the destination matrix note, named in the settings, read into plain rows (`matrixRows`: the first
+  table with an empty top-left cell; ✅ yes, ⚠️ conditional with the words after it as the condition, ❌ no, anything
+  else no) and read afresh each time what will be sent is shown (`readMatrix`), so the core never sees the note's layout.
 - `send.ts` — the one module that reaches the network: the request, with Obsidian's `requestUrl`, never a vendor's
   library. Only the send dialog imports it (`test/policy.test.js`).
 
@@ -174,6 +177,11 @@ module that ties the parts together, named as the folder is.
   ceiling, model, endpoint (said on the model's row when it cannot be used), and its key chosen in the app's own secret
   store by name, so only the name is saved. Use AI models, off until turned on, heads the part of the page;
   Unlabelled notes count as, a choice among the classifications, the most sensitive until chosen, follows them.
+  The Destination matrix note (a path) and Matrix classes (a mapping of other names to classifications, one per line,
+  with the classes matched by neither flagged) follow.
+- `ai-matrix-controls.ts` — a model's Matrix row: a choice among the rows of the matrix note (none keeps the ceiling), and
+  for a row picked a switch for each class it marks conditional, off until turned on for that model, the row's
+  condition beside it; a class matched by no classification is flagged.
 
 ### `src/graph-view/` — a drawn graph
 

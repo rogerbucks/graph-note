@@ -15,8 +15,9 @@ import {
   sendPrepared,
   viewsOf,
 } from '@graph-note/core';
-import type { PreparedSend, ScopeChoice } from '@graph-note/core';
+import type { MatrixRow, PreparedSend, ScopeChoice } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
+import { readMatrix } from './matrix-note';
 import { obsidianTransport } from './send';
 
 /** The purpose a send from this dialog is for: the model set up for it is offered first. */
@@ -128,7 +129,7 @@ export class SendDialog extends Modal {
       );
     this.shownEl = el.createDiv({ cls: 'graph-note-ai-shown' });
     new Setting(el)
-      .addButton((b) => b.setButtonText('Show what will be sent').onClick(() => this.show()))
+      .addButton((b) => b.setButtonText('Show what will be sent').onClick(() => void this.show()))
       .addButton((b) => {
         this.sendButton = b
           .setButtonText('Send')
@@ -179,7 +180,11 @@ export class SendDialog extends Modal {
     const chosen = this.plugin.settings.aiModels.find((m) => m.name === this.model);
     new Setting(el)
       .setName('Model')
-      .setDesc(chosen ? `${chosen.purpose || 'No purpose given'}; sent notes up to ${chosen.ceiling}.` : '')
+      .setDesc(
+        chosen
+          ? `${chosen.purpose || 'No purpose given'}; ${chosen.matrixRow ? `held to the matrix row ${chosen.matrixRow}` : `sent notes up to ${chosen.ceiling}`}.`
+          : '',
+      )
       .addDropdown((d) => {
         for (const c of choices) d.addOption(c.name, c.forPurpose ? `${c.name}, for ${PURPOSE.toLowerCase()}` : c.name);
         d.setValue(this.model).onChange((v) => {
@@ -199,6 +204,15 @@ export class SendDialog extends Modal {
 
   /** The exact request for what is chosen, or why nothing may be sent. */
   private show(): void {
+    // the matrix note is read now, so a model held to a row is held to the row as the note has it; with none named,
+    // nothing is waited for
+    const note = this.plugin.settings.aiMatrixNote.trim();
+    if (!note) this.prepare([]);
+    else void readMatrix(this.app, note).then((rows) => this.prepare(rows));
+  }
+
+  /** Makes the request against the matrix rows as read. */
+  private prepare(matrix: MatrixRow[]): void {
     const things = (this.things.get(this.graph) ?? []).map((t) => t.key).filter((k) => this.ticked.has(k));
     const choice: ScopeChoice =
       this.what === 'view'
@@ -222,6 +236,7 @@ export class SendDialog extends Modal {
       question: this.question,
       secrets,
       shared: this.shared,
+      matrix,
     });
     this.prepared = 'refused' in p ? null : p;
     this.refusal = 'refused' in p ? p.refused : null;
