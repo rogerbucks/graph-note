@@ -287,8 +287,9 @@ These test behaviour across modules, or the repository itself, so they are named
   `scripts/github-project-run.mjs`. So issues close and Proof follows main with no session doing it. The issues and
   labels are written with the workflow's own token, whose one write permission is `issues: write`, so the issues it makes
   are written by `github-actions[bot]`; the project is read and written with `PROJECT_TOKEN` (the project scope only), each
-  call routed to its token. A missing or refused `PROJECT_TOKEN` is a `::warning::`, and the issues are mirrored without
-  the project; a seed made despite warnings applies nothing, with a `::warning::`; neither fails the run, and the
+  call routed to its token. A missing `PROJECT_TOKEN`, one GitHub refuses (only a 401, a 403 or "Bad credentials" is
+  the token's trouble), or any other failure of a project call (a mirror error, in gh's own words, such as an input the
+  schema refuses) is a `::warning::`, and the issues are mirrored without the project; a seed made despite warnings applies nothing, with a `::warning::`; neither fails the run, and the
   workflow never passes `--accept-warnings` or `--allow-removals`. Anything else is an `::error::`. It runs main's own code
   only: woken by a push to main alone, it checks out main, installs nothing and keeps no cache. One mirror runs at a time
   (`concurrency: project-mirror`, `cancel-in-progress: false`): GitHub keeps one run waiting in the group, a newer push

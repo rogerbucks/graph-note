@@ -123,11 +123,38 @@ describe('a project token that is missing or refused', () => {
     assert.deepEqual(annotations(w.text(), 'error'), []);
   });
 
-  test('refused for want of a scope: a warning with GitHub’s words, never the token, and exit 0', () => {
+  test('refused (403): token trouble too, a warning naming PROJECT_TOKEN with GitHub’s words, never the token', () => {
+    const w = setUp({ refuseProject: `HTTP 403: Resource not accessible by personal access token ${PROJECT_TOKEN}` });
+    assert.equal(w.go(), 0);
+    const [warning] = annotations(w.text(), 'warning');
+    assert.match(
+      warning,
+      /PROJECT_TOKEN was refused by GitHub \(403\).*Resource not accessible by personal access token \*\*\*/,
+    );
+    assert.doesNotMatch(w.text(), /TheProjectToken/);
+    assert.equal(w.gh.hub.issues.length, 5);
+  });
+});
+
+describe('a project call that fails for another reason', () => {
+  test('is a warning labelled a mirror error, in gh’s own words, never blamed on PROJECT_TOKEN, and exit 0', () => {
+    const words = "gh: InputObject 'ProjectV2Iteration' doesn't accept argument 'colour'";
+    const w = setUp({ refuseProject: words });
+    assert.equal(w.go(), 0);
+    const [warning] = annotations(w.text(), 'warning');
+    assert.match(warning, /^::warning::github-project: mirror error, so the project was not updated: gh: InputObject/);
+    assert.doesNotMatch(warning, /PROJECT_TOKEN/);
+    assert.equal(w.gh.hub.issues.length, 5, 'the issues are still mirrored');
+  });
+
+  test('a scope GitHub says is missing, with no 401 or 403, is a mirror error too, its words kept and the token hidden', () => {
     const w = setUp({ refuseProject: `Your token has not been granted the required scopes ${PROJECT_TOKEN}` });
     assert.equal(w.go(), 0);
     const [warning] = annotations(w.text(), 'warning');
-    assert.match(warning, /The board was not updated: Your token has not been granted the required scopes \*\*\*/);
+    assert.match(
+      warning,
+      /mirror error, so the project was not updated: Your token has not been granted the required scopes \*\*\*/,
+    );
     assert.doesNotMatch(w.text(), /TheProjectToken/);
   });
 });

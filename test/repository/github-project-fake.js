@@ -61,13 +61,20 @@ export function fakeGithub({
     const key = { DATE: 'date', NUMBER: 'number', ITERATION: 'title' }[type] ?? 'name';
     return { [key]: value, field: { name } };
   };
-  const iterationsOf = (config) =>
-    config.iterations.map(({ id, title, startDate, duration }) => ({
-      id: id ?? nextId('iter'),
-      title,
-      startDate,
-      duration,
-    }));
+  // an iteration field's configuration, refused as GitHub refuses an input key its schema does not hold (the keys are
+  // the schema's, as the owner read them on 15 Oct 2026, so a drift fails a test); an iteration given an id keeps it
+  const refuseKeys = (what, value, allowed) => {
+    for (const key of Object.keys(value))
+      if (!allowed.includes(key)) throw new Error(`gh: InputObject '${what}' doesn't accept argument '${key}'`);
+  };
+  const iterationsOf = (config) => {
+    refuseKeys('ProjectV2IterationFieldConfigurationInput', config, ['startDate', 'duration', 'iterations']);
+    return config.iterations.map((iteration) => {
+      refuseKeys('ProjectV2Iteration', iteration, ['id', 'title', 'startDate', 'duration']);
+      const { id, title, startDate, duration } = iteration;
+      return { id: id ?? nextId('iter'), title, startDate, duration };
+    });
+  };
 
   const readProject = (p, after) => {
     const start = after ? Number(after) : 0;
@@ -117,7 +124,7 @@ export function fakeGithub({
       const f = p.fields.find((x) => x.id === variables.field);
       mutate([...args, 'updateProjectV2Field', f.name]);
       if (variables.iterations) {
-        // iterations given with their ids are kept, with the values on the items; any other is new
+        // an iteration kept by its id keeps its items' values; an item whose iteration went loses its value
         f.iterations = iterationsOf(variables.iterations);
         for (const item of p.items)
           if (item.values[f.name] !== undefined && !f.iterations.some((i) => i.title === item.values[f.name]))

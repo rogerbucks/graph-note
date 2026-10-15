@@ -42,7 +42,9 @@ const sameIterations = (have, want) =>
 
 /**
  * The configuration of the Wave field for `iterations` ({title, startDate, duration} in order), the existing ones (`have`)
- * kept by their ids where a title matches, so their values stay on the items.
+ * kept by their ids where a title matches, so their values stay on the items. Each iteration holds only the four keys
+ * the schema's ProjectV2Iteration input takes: id, title, startDate and duration. An item whose iteration is made new
+ * loses its Wave, and the apply reads the project again and gives it its Wave again (executePlan).
  */
 export function iterationConfig(iterations, have = []) {
   const [first] = iterations;

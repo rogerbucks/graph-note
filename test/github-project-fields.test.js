@@ -8,7 +8,7 @@ import { readBoard } from '../scripts/slice-board.mjs';
 import { desiredState, idOfBody } from '../scripts/github-project-desired.mjs';
 import { buildPlan, formatPlan } from '../scripts/github-project-plan.mjs';
 import { executePlan, readRemote } from '../scripts/github-project-gh.mjs';
-import { dayOf, iterationConfig, typedDiffers, valueArgs } from '../scripts/github-project-fields.mjs';
+import { dayOf, iterationConfig, typedDiffers, typedMutation, valueArgs } from '../scripts/github-project-fields.mjs';
 import { readWaves } from '../scripts/github-project-waves.mjs';
 import { fakeGithub } from './repository/github-project-fake.js';
 import { FIXTURE, WAVES, WORKSTREAMS } from './repository/github-project-fixture.js';
@@ -197,6 +197,19 @@ describe('Wave and Order, from the waves plan', () => {
     assert.equal(valueOf(gh, 'stray_new', 'Wave'), 'Wave 2 · Slice end');
   });
 
+  test('a wave renamed is a new iteration: its items lose their Wave and the same run gives it them again', () => {
+    const gh = fakeGithub();
+    apply(gh, desiredFor(WAVES));
+    quiet(gh);
+    const firm = withWaves((w) => (w[0].estimate = false));
+    apply(gh, desiredFor(firm));
+    assert.equal(valueOf(gh, 'focus_link', 'Wave'), 'Wave 1 · Focus');
+    assert.equal(valueOf(gh, 'stray_new', 'Wave'), 'Wave 2 · Slice end');
+    quiet(gh);
+    apply(gh, desiredFor(firm));
+    assert.deepEqual(gh.hub.mutations, [], 'and the next run finds nothing to do');
+  });
+
   test('a workstream taken out of every wave clears the Wave and Order of its requirements', () => {
     const gh = fakeGithub();
     apply(gh, desiredFor(WAVES));
@@ -235,6 +248,43 @@ describe('Wave and Order, from the waves plan', () => {
         { title: 'B', startDate: '2026-11-03', duration: 7 },
       ],
     });
+  });
+
+  test('the update sent for the Wave field holds only the schema’s keys: an iteration’s id, title, start and length', () => {
+    const iterations = [{ title: 'A', startDate: '2026-10-20', duration: 14 }];
+    const remote = { Wave: { id: 'F_wave', type: 'ITERATION', iterations: [{ id: 'it_a', ...iterations[0] }] } };
+    const sent = typedMutation('P_1', { name: 'Wave', type: 'ITERATION', create: false, iterations }, remote);
+    assert.deepEqual(Object.keys(sent.variables.iterations).sort(), ['duration', 'iterations', 'startDate']);
+    assert.deepEqual(Object.keys(sent.variables.iterations.iterations[0]).sort(), [
+      'duration',
+      'id',
+      'startDate',
+      'title',
+    ]);
+  });
+
+  test('an input key the schema does not hold is refused by the stand-in, as GitHub refuses one, and an id is taken', () => {
+    const gh = fakeGithub();
+    apply(gh);
+    const send = (iteration) =>
+      gh.run(
+        ['api', 'graphql', '--input', '-'],
+        JSON.stringify({
+          query: 'mutation { createProjectV2Field }',
+          variables: {
+            project: gh.hub.projects[0].id,
+            name: 'Extra',
+            type: 'ITERATION',
+            iterations: { startDate: '2026-10-20', duration: 7, iterations: [iteration] },
+          },
+        }),
+      );
+    assert.throws(
+      () => send({ title: 'A', startDate: '2026-10-20', duration: 7, colour: 'RED' }),
+      /ProjectV2Iteration' doesn't accept argument 'colour'/,
+    );
+    send({ id: 'it_x', title: 'A', startDate: '2026-10-20', duration: 7 });
+    assert.equal(fieldOf(gh, 'Extra').iterations[0].id, 'it_x');
   });
 });
 

@@ -4,8 +4,9 @@
 //
 // Two tokens, each for its own calls: the workflow's own token (GH_TOKEN, `issues: write`) for the repository, its issues
 // and labels, and PROJECT_TOKEN (the project scope only) for the project alone. The issues the mirror makes are written
-// by the workflows' bot, and only the owner's and the bot's are adopted. It warns and never fails over the project token:
-// a missing one, or one GitHub refuses, gives a ::warning:: and the issues are mirrored without the project. A seed made
+// by the workflows' bot, and only the owner's and the bot's are adopted. It warns and never fails over the project: a
+// missing token, one GitHub refuses (401, 403, Bad credentials) or any other failure of a project call (a mirror error,
+// in gh's words) gives a ::warning:: and the issues are mirrored without the project. A seed made
 // despite warnings is never applied blindly: the apply is skipped with a warning, and --accept-warnings is never passed.
 // Anything else that goes wrong is an ::error:: and exit 1. No token is ever printed.
 import { spawnSync } from 'node:child_process';
@@ -17,6 +18,7 @@ import { SeedWarnings } from './github-project-plan.mjs';
 
 const REPO = /^[\w.-]+\/[\w.-]+$/;
 const PROJECT_CALL = /projectv2|projectsv2/i;
+const MAX_WORDS = 300;
 
 /** Whether a gh call is about the project, for the project token: `gh project …`, or GraphQL that names a project. */
 export function isProjectCall(args, input) {
@@ -38,6 +40,21 @@ export function routed({ github, project }) {
       throw Object.assign(e, { projectToken: true });
     }
   };
+}
+
+/**
+ * What to say of a project call that failed. Only GitHub's 401, 403 or "Bad credentials" is the token's trouble, said as
+ * such; anything else, a GraphQL input the schema refused among them, is a mirror error in gh's own words (cut short),
+ * never blamed on the token. The token itself is taken out of the words by the caller.
+ */
+export function projectProblem(error, token) {
+  const words = String(error.stderr ?? error.message)
+    .replace(/\s+/g, ' ')
+    .trim();
+  const cut = words.length > MAX_WORDS ? `${words.slice(0, MAX_WORDS)}…` : words;
+  if (/\b401\b|bad credentials/i.test(words)) return describeProblem(error, token).text;
+  if (/\b403\b/.test(words)) return `PROJECT_TOKEN was refused by GitHub (403), so the board was not updated: ${cut}.`;
+  return `github-project: mirror error, so the project was not updated: ${cut}.`;
 }
 
 /**
@@ -75,7 +92,7 @@ export function runInWorkflow(options, env, io) {
       apply(true);
     } catch (e) {
       if (!e.projectToken) throw e;
-      say('warning', `${describeProblem(e, env.PROJECT_TOKEN).text} The issues are mirrored without it.`);
+      say('warning', `${projectProblem(e, env.PROJECT_TOKEN)} The issues are mirrored without it.`);
       apply(false);
     }
     return 0;
