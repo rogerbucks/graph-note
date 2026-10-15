@@ -233,14 +233,14 @@ describe('GitHub Actions', () => {
     }
   });
 
-  test('only the release job may write', () => {
+  test('only four jobs may write: the release, the lock, the build status comment and the mirror’s issues', () => {
     for (const f of workflowFiles()) {
       for (const [name, lines] of Object.entries(jobs(read(f)))) {
         const perms = block(lines, 'permissions', 4);
         if (!perms) continue;
         const writes = permissionValues(perms).some((v) => /write/.test(v));
         if (!writes) continue;
-        // the two other writers may touch nothing else: one locks pull request conversations, and one leaves the build
+        // the three other writers may touch nothing else: one locks pull request conversations, one leaves the build
         // status comment on a pull request, with read access to what it reads (test/build-status-workflow.test.js)
         const given = perms
           .slice(1)
