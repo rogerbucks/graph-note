@@ -12,7 +12,8 @@
 //   node scripts/public-readiness.mjs --setup              a fresh clone runs the README's steps; the docs name no machine
 //   node scripts/public-readiness.mjs --settings           compare the GitHub settings with the wanted ones (admin, gh)
 //   node scripts/public-readiness.mjs --settings --apply   set each one that differs
-//   node scripts/public-readiness.mjs --make-public --yes  --history of every branch and tag first, then make it public
+//   node scripts/public-readiness.mjs --make-public --yes  --history over every branch and tag first, then make the
+//                                                          repository public
 //
 // Exits 1 and lists each problem by place and kind. What matched is never printed, so a CI log cannot leak it.
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -36,8 +37,9 @@ const NO_ONE = /(@users\.noreply\.github\.com|^noreply@github\.com|@example\.(co
 /**
  * Every problem in the history of `refs` (the checked-out commit's own, `HEAD`, unless told otherwise), each as
  * {where, rule}: a blob that looks confidential, personal or secret, a blob too large, a commit message with the same,
- * or a commit by an address that names a person. The place is a path and line, or a commit; never the text. Another
- * branch, a bot's say, is not this history. `refs: ['--all']` reads every branch and tag, as the gate to public does.
+ * or a commit by an address that names a person. The place is a path and line, or a commit; never the text. Other
+ * branches are not read: a bot's branch holds commits that are not this history, and a pull request is judged on its
+ * own. `refs: ['--all']` reads every branch and tag, as the check before the repository is made public does.
  */
 export function historyProblems(root = ROOT, { refs = ['HEAD'] } = {}) {
   const found = [];
