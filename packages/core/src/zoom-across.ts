@@ -3,8 +3,10 @@
 // finger moves it across and never up or down, while the browser keeps scrolling the page up and down. Zoomed in, by a
 // pinch or a button, it pans both ways, as any drawing does, and Fit brings the one-way view back. Everything else is
 // Zoom's own (zoom.ts), which this only adds to, so the two never differ in anything else.
-import { MAX_SCALE, MIN_SCALE, Zoom } from './zoom.ts';
-import type { Mode, Size, ZoomEvent } from './zoom.ts';
+import { Zoom } from './zoom.ts';
+import { MAX_SCALE } from './zoom-fit.ts';
+import type { Mode, Size } from './zoom-fit.ts';
+import type { ZoomEvent } from './zoom.ts';
 
 const EPS = 1e-9;
 
@@ -18,11 +20,14 @@ export class AcrossZoom extends Zoom {
     this.toStart();
   }
 
-  /** Fitted to the viewport's height, whatever its width: in a note never above natural size, elsewhere up to the limit. */
+  /**
+   * Fitted to the viewport's height, whatever its width: in a note never above natural size, elsewhere up to the limit.
+   * Zooming out still goes on to the fit of the whole drawing (`outLimit`, zoom_out_to_fit), which this is never below.
+   */
   override fitScale(): number {
     const { width: cw, height: ch } = this.content;
-    const raw = cw > 0 && ch > 0 ? this.viewport.height / ch : 1;
-    return Math.min(this.mode === 'note' ? 1 : MAX_SCALE, Math.max(MIN_SCALE, raw));
+    const raw = cw > 0 && ch > 0 && this.viewport.height > 0 ? this.viewport.height / ch : 1;
+    return Math.min(this.mode === 'note' ? 1 : MAX_SCALE, Math.max(this.outLimit(), raw));
   }
 
   /** Fitted, and shown from its start. */

@@ -212,7 +212,8 @@ export async function renderViewBlock(
         { outside: { view: v.name, outside: o } },
         `View ${v.name} now ${o === 'hide' ? 'hides' : 'fades'} what is outside it.`,
       ),
-    saveShown: (z, selected) =>
+    // and the legend's choices, only then too (§25, untangle_legend)
+    saveShown: (z, selected, legend) =>
       void writeStyle(
         plugin,
         ctx.sourcePath,
@@ -225,6 +226,7 @@ export async function renderViewBlock(
             y: z.y,
             ...(selected ? { selected } : {}),
             switches: state.saved(),
+            legend,
           },
         },
         `Saved how view ${v.name} is shown.`,

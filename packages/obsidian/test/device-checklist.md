@@ -59,7 +59,7 @@ holds the two together).
       they move, and once zoomed in, one finger pans.
 - [ ] **Z-04** Double-clicking or double-tapping empty space zooms in there; on or near a box or a link it only chooses, and
       never zooms. Fit returns to the whole drawing.
-- [ ] **Z-05** Zoom stops at a quarter and at four times natural size, and text stays sharp at every level.
+- [ ] **Z-05** Zoom stops at four times natural size and, going out, where the whole drawing fits (natural size when it fits larger), and text stays sharp at every level.
 - [ ] **Z-06** Full screen covers the window, inside the phone's notch and home bar. Escape or Close leaves it. In full screen
       the wheel alone zooms.
 - [ ] **Z-07** Double-clicking the drawing to zoom, or dragging across it, never highlights the words of its boxes and links.

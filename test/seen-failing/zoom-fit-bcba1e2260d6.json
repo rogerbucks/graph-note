@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/zoom-fit.test.js",
+  "test": "zooming out stops at the fit > four times natural size stays the furthest in",
+  "seen_failing_first": false,
+  "evidence": "zoom_out_to_fit keeps the upper limit of four times natural size unchanged, so this test pins behaviour that was already there; it is written with the new lower limit so the requirement's whole rule is held in one file"
+}

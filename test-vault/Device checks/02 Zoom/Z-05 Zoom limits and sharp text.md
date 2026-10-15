@@ -1,6 +1,6 @@
 # Z-05 Zoom limits and sharp text
 
-**You should see:** zooming in stopping at four times natural size, and zooming out stopping at a quarter. At every level in between, and at both ends, the words in boxes and on links stay sharp, never blurred.
+**You should see:** zooming in stopping at four times natural size, and zooming out stopping where the whole drawing fits the view, or at natural size when the drawing is small enough to fit larger (in full screen, say). Resize the window, or enter or leave full screen, and zooming out stops at the new fit. At every level in between, and at both ends, the words in boxes and on links stay sharp, never blurred.
 
 **Test diagram:**
 
@@ -23,6 +23,6 @@
 
 **Checklist line:**
 
-> **Z-05** Zoom stops at a quarter and at four times natural size, and text stays sharp at every level.
+> **Z-05** Zoom stops at four times natural size and, going out, where the whole drawing fits (natural size when it fits larger), and text stays sharp at every level.
 
 **Back to the checklist:** [Z-05 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Z-05 in its list.

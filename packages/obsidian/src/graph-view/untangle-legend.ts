@@ -1,6 +1,7 @@
 // The legend that untangles (editor spec §25, untangle_legend): every kind of thing and relationship type of the drawing
 // as a button; choosing one brings it forward and fades the rest, choosing it again hides it, and once more puts it back.
-// Each says where it stands in words as well as by its look, and nothing here is saved with the note.
+// Each says where it stands in words as well as by its look. Nothing here writes to the note: a view's Save as shown
+// writes the choices (§25, untangle_legend), and a view saved so opens with them.
 import type { LegendFilter, LegendItem, LegendState } from '@graph-note/core';
 
 const SAYS: Record<LegendState, string> = { normal: '', forward: ' — in front', hidden: ' — hidden' };

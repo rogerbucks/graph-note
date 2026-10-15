@@ -118,6 +118,15 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `zoom.ts` — zoom, pan and full screen, and `resize` for a new viewport or a drawing laid out again (§25); `reveal` brings a box into view, centred, and leaves one already in view alone;
   `aim` says where the view would go to do so, keeping the zoom unless it is below a scale given (§25); `keepClear` keeps
   a strip at the viewport's foot clear, as a sheet covers it, letting the drawing pan up into it by as much and no more.
+- `zoom-fit.ts` — the limits `Zoom` holds a drawing within: `MAX_SCALE` and `STEP`, the scale that fits the whole
+  drawing (`wholeFit`, and `fitScale`, never above natural size in a note), the furthest out (`outLimit`: the whole
+  drawing's fit, or natural size when it fits larger, in place of §3's quarter, zoom_out_to_fit; `Zoom.outLimit` says
+  it), and where it may sit in its viewport (`clampPan`), each worked out from the sizes given whenever it is asked, so
+  a resized view, full screen or a drawing laid out again has its own (zoom_fit_recomputed); `resize` brings a drawing
+  shown below the new fit up to it. A viewport with no size (`hasSize`), as a hidden card or one not yet laid out has,
+  has no fit yet (`outLimit` 0, `held` keeps any scale above 0), and a resize to it is no resize: only the drawing's new
+  size is taken, so a hidden card keeps its zoom and a zoom restored before layout is kept; one fitted when hidden is
+  fitted again, to the size it was laid out at meanwhile, at the next resize with a size.
 - `zoom-across.ts` — `AcrossZoom`, a `Zoom` that only adds to it: a wide drawing fitted to its height, shown from its
   start and moved across only by one finger, until it is zoomed in; a pinch as any drawing's (a tree, flow or timeline
   on a phone, §15 wide_types_phone).
@@ -125,7 +134,8 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 **Finding your way round a large graph (spec §25)**
 
 Pure and host-free: each says only what to keep at full strength, hide or bring forward, so a host changes the drawing
-and nothing else (untangle_data_untouched). Nothing here is written to a note or saved.
+and nothing else (untangle_data_untouched). Nothing here is written to a note or saved, but the legend's choices, which
+a host writes into the style graph when the user saves a view as shown (untangle-saved.ts).
 
 - `focus.ts` — focus on a selection: `focusOf` keeps a thing, its links and the things at their other ends (to two steps
   by the setting), or a link and the two things it joins; `highlightOf` is what the pointer, keyboard focus or a touch's
@@ -138,7 +148,15 @@ and nothing else (untangle_data_untouched). Nothing here is written to a note or
   `shortestPath` and `pathWords` (fewest links, either way; or that there is none), `find` (by name or property),
   `nextAlong` (an arrow key walks to the neighbour in that direction), `emphasis` (a path over the selection over the
   legend), and `Untangle`, which holds all of it for one drawing and works it out into `layers`: what is kept and what is
-  hidden.
+  hidden. `LegendFilter.choices` gives the legend's lines brought forward or hidden, kinds first, each by name, and
+  `restore` puts them back; an `Untangle` made for a view saved with them starts with them.
+- `untangle-saved.ts` — the legend's choices saved with a view (untangle_legend, view_saved_as_shown): written by
+  `styleEdit` as a Shown's `legend` ('kind:Person forward, type:NEAR hidden', `legendText`) only when the user saves the
+  view as shown, never otherwise, a choice that is no legend's refused first (`legendRefusal`); read and checked by
+  `legendChecked` (an empty entry, one that cannot be read, a state not allowed, a kind or type the graph lacks with the
+  nearest, a line chosen twice: each a problem on the Shown's line with its fix, the rest kept). The Python library
+  reads it the same (`graphspec/style/legend.py`), held to `python/graph_spec/tests/legend_cases.json` by
+  `test/untangle-saved-parity.test.js`.
 - `untangle-fold.ts` — folding (untangle_hubs, untangle_groups, untangle_merge): `BUSY_HUB` (a thing with more links is
   a busy hub), `busyHubs`, `drawnGroups` (the groups the nudges draw, as `nudgedSource` boxes them; none in lanes),
   `foldPlan` (what a drawing folds and merges: things hidden with a hub, links folded into a stub or inside a folded

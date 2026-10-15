@@ -69,7 +69,7 @@ STYLE_KEYS = {
         "means",
     ),
     "ViewStyle": ("view", "outside"),
-    "Shown": ("view", "zoom", "x", "y", "frame", "selected", *SAVED_SWITCHES),
+    "Shown": ("view", "zoom", "x", "y", "frame", "selected", *SAVED_SWITCHES, "legend"),
     "Arrows": ("arrowheads", "view", "type"),
     "Diagram": ("type", "view", "relationship"),
     "Flow": ("motion", "means", "type", "view"),

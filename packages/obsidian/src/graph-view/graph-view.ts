@@ -29,10 +29,8 @@ import { Selection } from './selection';
 import { renderTypeStrip } from './type-strip';
 import { renderTable } from './table-view';
 import { bindViewportEvents } from './viewport-events';
+import { viewportSize, zoomSize } from './viewport-size';
 import type { ViewOptions } from './view-options';
-
-/** How much of the window's height a drawing scrolled across may take, at most (§15, wide_types_phone). */
-const ACROSS_HEIGHT = 0.6;
 
 /** A drawn graph with its bar, zoom, full screen, details and, in edit mode, the inspector. */
 export class GraphView extends MarkdownRenderChild {
@@ -139,7 +137,7 @@ export class GraphView extends MarkdownRenderChild {
     if (this.o.editing) this.adder = new AddThing(root, this.o); // a thing added from its text, while edited (§5)
     const view = this.o.view;
     const writes: HTMLElement[] = view
-      ? renderViewStrip(root, view, () => ({ view: this.zoom.view(), selected: this.details.selectedKey() }))
+      ? renderViewStrip(root, view, () => this.sel.shownNow(this.zoom.view(), this.details.selectedKey()))
       : [];
     // a proposal laid over the graph (§17): who proposed it and the changes to accept or reject, which reading view takes away
     if (this.o.proposal) writes.push(...renderProposalStrip(root, this.o.proposal));
@@ -163,6 +161,7 @@ export class GraphView extends MarkdownRenderChild {
     else this.svg = insertSvg(this.viewport, this.o.drawn, this.drawing(), this.o.switches?.state.plan, this.o);
     if (this.svg && this.o.motion) markFlow(this.svg, this.o.motion.flow); // the links its style moves (§7)
     if (view && this.svg) markView(this.svg, view); // a view: what is outside it faded, its looks drawn (§7)
+    if (view?.shown?.legend?.length) this.sel.refresh(); // and its legend's choices, as it was saved as shown (§25)
     if (this.o.proposal && this.svg) markProposal(this.svg, this.o.proposal.shown.marks); // a proposal: what it adds, changes, removes (§17)
     // the drawing as sentences, for screen readers (spec §11)
     const d = this.drawing();
@@ -186,9 +185,7 @@ export class GraphView extends MarkdownRenderChild {
     const type = this.o.diagram?.choice.drawn ?? 'network';
     this.across = mode === 'note' && scrollsOneWay(type, Platform.isPhone, this.o.drawn.width, room);
     const size = { width: this.o.drawn.width, height: this.o.drawn.height };
-    this.zoom = this.across
-      ? new AcrossZoom(size, this.viewportSize(), mode)
-      : new Zoom(size, this.viewportSize(), mode);
+    this.zoom = this.across ? new AcrossZoom(size, this.zoomSize(), mode) : new Zoom(size, this.zoomSize(), mode);
     this.zoom.onChange = (v) => this.apply(v);
     this.zoom.onExit = () => this.o.onClose?.();
     // a view saved as shown is shown so again (§7); a card a link took the tab from, as it was left (§18)
@@ -200,7 +197,7 @@ export class GraphView extends MarkdownRenderChild {
       unfold = (fold: string, byKey?: boolean) =>
         this.switching?.unfold(fold, byKey ? (key) => boxIn(this.svg, key)?.focus({ preventScroll: true }) : undefined);
     bindViewportEvents({ card: this, viewport, zoom, sel, details, taps, svg, open, unfold });
-    const observer = new ResizeObserver(() => this.zoom.resize(this.viewportSize()));
+    const observer = new ResizeObserver(() => this.zoom.resize(this.zoomSize()));
     observer.observe(this.viewport);
     this.register(() => observer.disconnect());
     if (mode === 'full') this.viewport.focus();
@@ -279,16 +276,14 @@ export class GraphView extends MarkdownRenderChild {
     return playablePaths(this.o.reading, this.o.graph);
   }
 
-  /**
-   * The viewport's size. In a note it is as tall as the drawing fitted to its width, as a note sizes a drawing; scrolled
-   * across, as tall as the drawing, up to a part of the window.
-   */
+  /** The viewport's size to draw it at (viewport-size.ts). */
   private viewportSize() {
-    const drawn = this.drawn;
-    const width = this.viewport.clientWidth || drawn.width;
-    if (this.o.mode !== 'note') return { width, height: this.viewport.clientHeight || drawn.height };
-    if (this.across) return { width, height: Math.min(drawn.height, activeWindow.innerHeight * ACROSS_HEIGHT) };
-    return { width, height: drawn.height * Math.min(1, width / drawn.width) };
+    return viewportSize(this.viewport, this.drawn, this.o.mode, this.across);
+  }
+
+  /** The viewport's size to tell the zoom: none while hidden or not yet laid out, so the zoom keeps its view (§25). */
+  private zoomSize() {
+    return zoomSize(this.viewport, this.drawn, this.o.mode, this.across);
   }
 
   /**
@@ -310,7 +305,7 @@ export class GraphView extends MarkdownRenderChild {
     if (this.o.view) markView(svg, this.o.view);
     if (this.o.proposal) markProposal(svg, this.o.proposal.shown.marks);
     this.taps.reset(drawn.svg);
-    this.zoom.resize(this.viewportSize(), { width: drawn.width, height: drawn.height });
+    this.zoom.resize(this.zoomSize(), { width: drawn.width, height: drawn.height });
     this.sel.redrawn();
     this.details.reselect();
     if (on) svg.querySelector<SVGElement>(`#${on}`)?.focus({ preventScroll: true });

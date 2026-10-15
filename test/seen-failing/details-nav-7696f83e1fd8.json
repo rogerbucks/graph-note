@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/details-nav.test.js",
+  "test": "choosing a linked thing in a narrow card > a thing too small to read is brought up to a scale where it can be read",
+  "seen_failing_first": false,
+  "evidence": "moved unchanged from the describe 'choosing a linked thing or a link in the list' into a 200-wide card: zoom_out_to_fit now stops a wide card's drawing at its fit, above a readable scale, so only a narrow card can show a thing too small to read; the behaviour it holds was already there"
+}

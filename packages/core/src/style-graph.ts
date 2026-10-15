@@ -6,6 +6,7 @@
 import { distance } from './estimates.ts';
 import { STYLE } from './layout.ts';
 import type { Problem } from './note-reading.ts';
+import type { LegendChoice } from './untangle-saved.ts';
 
 /** The four words a nudge may be (§6, four_nudge_words). */
 export const NUDGE_WORDS = ['beside', 'before', 'group', 'direction'] as const;
@@ -95,7 +96,7 @@ export const STYLE_KEYS: Record<StyleKind, readonly string[]> = {
   Show: ['property', 'kind', 'thing', 'type', 'view', 'inline'],
   Look: ['view', 'path', 'thing', 'kind', 'from', 'type', 'to', 'colour', 'line', 'format', 'means'],
   ViewStyle: ['view', 'outside'],
-  Shown: ['view', 'zoom', 'x', 'y', 'frame', 'selected', 'labels', 'hubs', 'groups', 'merge'],
+  Shown: ['view', 'zoom', 'x', 'y', 'frame', 'selected', 'labels', 'hubs', 'groups', 'merge', 'legend'],
   Arrows: ['arrowheads', 'view', 'type'],
   Diagram: ['type', 'view', 'relationship'],
   Flow: ['motion', 'means', 'type', 'view'],
@@ -246,7 +247,8 @@ export interface Frame {
 
 /**
  * How a view was shown, saved when the user asked (§7, view_saved_as_shown): only what was written and could be read;
- * with the View menu's switches as they stood (§25, view_switch_view_only).
+ * with the View menu's switches as they stood (§25, view_switch_view_only), and the legend's choices (§25,
+ * untangle_legend; untangle-saved.ts).
  */
 export interface Shown {
   zoom?: number;
@@ -258,6 +260,8 @@ export interface Shown {
   hubs?: OnOff;
   groups?: OnOff;
   merge?: OnOff;
+  /** The legend's lines brought forward or hidden, when written: those that are sound, in the order written. */
+  legend?: LegendChoice[];
 }
 
 /** A graph's style, read from its style blocks and checked: only what is sound is here; the rest is in the problems. */
