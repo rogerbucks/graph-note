@@ -327,12 +327,15 @@ export function desiredState(board, workstreams, slices, plan = null) {
  * stage and Todo. `seed` maps a requirement id to {buildStatus, progress}, as scripts/build-status-seed.mjs works it out
  * from where the requirement stands on GitHub; an id it does not name keeps the defaults. With `started`, each issue also
  * takes its Started on from the seed: the day a pull request holding it was opened, kept (undefined) for one proved, and
- * cleared (null) for one the seed does not name, which no pull request holds. The state given is not changed.
+ * for one the seed does not name, which no pull request holds, cleared (null) only while no test of it is written (it is
+ * open) — and the plan clears it then only for an item whose Build status is not past Not started — else kept. The state
+ * given is not changed.
  */
 export function withSeed(desired, seed, { started = false } = {}) {
   const issues = desired.issues.map((issue) => {
     const given = seed.get(issue.id);
-    const startedOn = started ? (given ? given.startedOn : null) : undefined;
+    const unheld = issue.status === 'open' ? null : undefined;
+    const startedOn = started ? (given ? given.startedOn : unheld) : undefined;
     const dated = startedOn === undefined ? issue : { ...issue, startedOn };
     return given ? { ...dated, buildStatus: given.buildStatus, progress: given.progress } : dated;
   });

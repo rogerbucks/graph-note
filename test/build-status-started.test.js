@@ -121,10 +121,11 @@ describe('Started on, put right by the mirror', () => {
     side.hub.files.main = FIXTURE;
     return { gh, side };
   };
-  const valueOf = (gh, id) => {
+  const itemOf = (gh, id) => {
     const issue = gh.hub.issues.find((i) => i.body.includes(`<!-- requirement:${id} -->`));
-    return gh.hub.projects[0].items.find((i) => i.number === issue.number).values['Started on'];
+    return gh.hub.projects[0].items.find((i) => i.number === issue.number);
   };
+  const valueOf = (gh, id) => itemOf(gh, id).values['Started on'];
 
   test('the seed gives an item an open pull request holds the earliest day of those that hold it', () => {
     const { side } = setUp();
@@ -145,9 +146,39 @@ describe('Started on, put right by the mirror', () => {
       return gh.hub.projects[0].items.find((i) => i.number === issue.number);
     };
     item('stray_new').values['Started on'] = '2026-09-01';
+    assert.equal(item('stray_new').values['Build status'], 'Not started');
     sync(side, gh);
     assert.equal(valueOf(gh, 'focus_link'), '2026-10-10');
-    assert.equal(valueOf(gh, 'stray_new'), undefined, 'no pull request holds it');
+    assert.equal(valueOf(gh, 'stray_new'), undefined, 'Not started: no pull request holds it and no test is written');
+  });
+
+  test('1 of 3 tests written and merged keeps Started on, though no pull request holds the requirement now', () => {
+    const THIRD =
+      "(test_third:Test {proves: 'a third proof', file: 'test/third.test.js', where: 'repo', status: 'planned'}),";
+    const three = FIXTURE.replace(
+      '// ── Links ──',
+      `${THIRD}\n// ── Links ──\n(focus_neighbours)-[:PROVED_BY]->(test_third),`,
+    );
+    const board = readBoard(three);
+    assert.equal(board.requirements.find((r) => r.id === 'focus_neighbours').status, 'part');
+    const { gh, side } = setUp();
+    side.hub.files.main = three;
+    const item = itemOf(gh, 'focus_neighbours');
+    Object.assign(item.values, { 'Started on': '2026-10-01', 'Build status': 'Merged', Status: 'Done' });
+    mirror(
+      { desired: desiredState(board, WORKSTREAMS, [3, 4]), mode: 'apply', seed: (run, repo) => seedOf(side.run, repo) },
+      { run: gh.run, originRepo: REPO, write: () => {}, sleep: () => {} },
+    );
+    assert.equal(valueOf(gh, 'focus_neighbours'), '2026-10-01');
+  });
+
+  test('keeps the day of an item with a test written, or with a Build status past Not started', () => {
+    const { gh, side } = setUp();
+    Object.assign(itemOf(gh, 'focus_neighbours').values, { 'Started on': '2026-10-02' });
+    Object.assign(itemOf(gh, 'stray_new').values, { 'Started on': '2026-10-03', 'Build status': 'Checks passing' });
+    sync(side, gh);
+    assert.equal(valueOf(gh, 'focus_neighbours'), '2026-10-02', 'part on main: a test is written');
+    assert.equal(valueOf(gh, 'stray_new'), '2026-10-03', 'its build is past Not started');
   });
 
   test('keeps the day of an item proved on main, and of one already started', () => {

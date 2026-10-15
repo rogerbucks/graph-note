@@ -171,7 +171,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/build-status-board.test.js` — the build status's project board: each item's Build status and Status, setting either, the issues read with the workflow's token and the project with the project token alone, and every trouble that is the board's own.
 - `test/build-status-run.test.js` — the build status event by event: a pull request opened, CI's checks failing and passing, its merge and closing, the pull requests it leaves alone (a fork, a stale one, one merged elsewhere), a very large one, a release; and a project token that is missing, expired (401) or refused, which warns and never fails.
 - `test/build-status-env.test.js` — the build status run whole from a workflow's environment: the event file, the two tokens each to its own runner, the exit code, and a requirements file too large to read.
-- `test/build-status-started.test.js` — Started on: the day a pull request of this repository first took a requirement on, by its copy or its Requirements line, set once and kept when it merges or while another pull request holds the item, cleared when it closes unmerged and nothing else holds it; and the mirror's seed setting the earliest such day where none is, clearing it where no pull request holds an item not proved, and keeping it for one proved.
+- `test/build-status-started.test.js` — Started on: the day a pull request of this repository first took a requirement on, by its copy or its Requirements line, set once and kept when it merges or while another pull request holds the item, cleared when it closes unmerged and nothing else holds it; and the mirror's seed setting the earliest such day where none is, clearing it only for an item Not started, and keeping it for one proved, `part` on main (1 of 3 tests written and merged) or In PR or later.
 - `test/build-status-claims.test.js` — the built-in Status field (Todo, In Progress, Done), an item two pull requests hold, and the `Requirements:` line of a draft pull request, the only part of its untrusted description that is read.
 - `test/build-status-comments.test.js` — the comments after a pull request is closed and locked: the Merged comment, and the Released comment a release leaves on each pull request it moves, by unlocking, commenting and locking again, and every way that can fail.
 - `test/build-status-workflow.test.js` — the two build status workflows: woken only by the checks of a pull request, a push to main and a release; the project secret given only to the script on main; no event text in a command line; least privilege.
@@ -266,7 +266,8 @@ These test behaviour across modules, or the repository itself, so they are named
   repository first took the requirement on, by its copy or its `Requirements:` line: the build status sets it where
   there is none, keeps it when the pull request merges and while another pull request holds the item, and clears it
   when the item is let go; the seed carries the earliest day of the open pull requests that hold an item, so a sync sets
-  it where none is, clears it where none holds an item not proved, and keeps it for one proved. **Wave** and **Order**
+  it where none is and clears it only for an item Not started (none holds it, no test of it is written and its Build
+  status is not past Not started); one proved, `part` on main or In PR or later keeps it. **Wave** and **Order**
   come from the waves plan below.
 - **The waves plan is `requirements/waves.json`**, the one place the order of the work lives: the waves in order, each
   with its workstreams in order and a planned `start` and `end`, `estimate: true` marking the dates as estimates (the

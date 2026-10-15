@@ -17,7 +17,7 @@ import {
   idOfBody,
   isManagedLabel,
 } from './github-project-desired.mjs';
-import { planTyped, typedDiffers, wantedTyped, withClosedOn } from './github-project-fields.mjs';
+import { STARTED_FIELD, planTyped, typedDiffers, wantedTyped, withClosedOn } from './github-project-fields.mjs';
 
 /** An apply stopped because the seed was made despite warnings, so some of its values may be wrong. */
 export class SeedWarnings extends Error {}
@@ -149,7 +149,11 @@ export function planProject(desired, wantedFields, remote, iterations = null) {
   const wanted = wantedTyped(iterations);
   for (const d of desired)
     for (const { name, key } of wanted) {
-      const from = items.get(d.id)?.values?.[name] ?? null;
+      const values = items.get(d.id)?.values;
+      const from = values?.[name] ?? null;
+      // Started on is cleared only for an item Not started: one whose build has gone further keeps it
+      const building = (values?.[BUILD_STATUS_FIELD] ?? BUILD_STATUSES[0]) !== BUILD_STATUSES[0];
+      if (name === STARTED_FIELD && d[key] === null && building) continue;
       if (typedDiffers(name, from, d[key])) sets.push({ id: d.id, field: name, from, to: d[key] });
     }
   // a single-choice field of a typed field's name is of the wrong type too
