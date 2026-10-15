@@ -114,12 +114,13 @@ function originRepo() {
  * An apply with warnings in the seed stops (SeedWarnings), since it would fix wrong values for good, unless
  * `acceptWarnings` is given; a check says that it would. With `project` false the project is not read and nothing is done
  * to it, and no seed is made: only the issues are mirrored. `deps.creator`, where given, is the login that makes issues
- * (the workflow's bot), so GitHub is not asked who is signed in. An apply by a login whose issues would not be adopted
+ * (the workflow's bot), so GitHub is not asked who is signed in; `deps.budget`, where given, is the time the apply may
+ * take ({now, until}, see paced in github-project-retry.mjs), after which it stops with BudgetSpent. An apply by a login whose issues would not be adopted
  * (neither the owner nor the bot) is refused before anything changes.
  */
 export function mirror(
   { desired: base, mode, allowRemovals, acceptWarnings, seed, project = true },
-  { run: raw, originRepo: origin, write, sleep, creator },
+  { run: raw, originRepo: origin, write, sleep, creator, budget },
 ) {
   const run = retrying(raw, sleep ? { sleep } : {});
   const repo = pinRepo(run, origin);
@@ -149,7 +150,7 @@ export function mirror(
   }
   if (problem && !allowRemovals) throw new Error(problem);
   if (seedProblem && !acceptWarnings) throw new SeedWarnings(seedProblem);
-  executePlan(raw, repo, plan, sleep ? { sleep } : {});
+  executePlan(raw, repo, plan, { ...(sleep ? { sleep } : {}), ...(budget ? { budget } : {}) });
   write('github-project: applied\n');
 }
 

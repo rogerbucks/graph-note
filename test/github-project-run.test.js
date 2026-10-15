@@ -54,13 +54,14 @@ function setUp({ refuseProject = null, refuseIssues = null } = {}) {
   };
   const out = [];
   const env = (more = {}) => ({ GITHUB_REPOSITORY: REPO, GH_TOKEN: WORKFLOW_TOKEN, PROJECT_TOKEN, ...more });
-  const go = (more = {}, options = {}) =>
+  const go = (more = {}, options = {}, io = {}) =>
     runInWorkflow({ slices: SLICES, ...options }, env(more), {
       spawn,
       write: (t) => out.push(t),
       mirror,
       load,
       sleep: () => {},
+      ...io,
     });
   return { gh, side, seen, out, go, text: () => out.join('') };
 }
@@ -177,6 +178,54 @@ describe('a seed made despite warnings', () => {
       assert.match(annotations(w.text(), 'error')[0], /never passes --allow-removals or --accept-warnings/);
       assert.deepEqual(w.gh.hub.mutations, []);
     }
+  });
+});
+
+describe('the time an apply may take', () => {
+  /** A clock handed in, never the real one: each look at it is a minute later than the last. */
+  const minuteClock = () => {
+    let at = Date.UTC(2026, 9, 15, 9, 0);
+    return () => (at += 60_000);
+  };
+  const changes = (w) => w.gh.hub.mutations.length;
+
+  test('runs out: no call is made after it, a warning says the board is partly updated, and exit 0', () => {
+    const w = setUp();
+    assert.equal(w.go({}, {}, { now: minuteClock() }), 0);
+    const warnings = annotations(w.text(), 'warning');
+    assert.ok(warnings.some((l) => /board partly updated; the next push continues/.test(l)));
+    assert.ok(changes(w) > 0, 'it made what it could before');
+    const whole = setUp();
+    whole.go();
+    assert.ok(changes(w) < changes(whole), 'and stopped before the end');
+    assert.deepEqual(annotations(w.text(), 'error'), []);
+  });
+
+  test('is 45 minutes by default, and MIRROR_BUDGET_MINUTES sets another', () => {
+    const short = setUp();
+    short.go({ MIRROR_BUDGET_MINUTES: '5' }, {}, { now: minuteClock() });
+    const long = setUp();
+    long.go({}, {}, { now: minuteClock() });
+    // each look at the clock is a minute: about one call a minute is made before the budget is spent
+    assert.ok(changes(short) >= 3 && changes(short) <= 5, `${changes(short)} changes in 5 minutes`);
+    assert.ok(changes(long) >= 40 && changes(long) <= 45, `${changes(long)} changes in 45 minutes`);
+  });
+
+  test('the next push continues from what GitHub holds, and finishes the board', () => {
+    const w = setUp();
+    w.go({ MIRROR_BUDGET_MINUTES: '5' }, {}, { now: minuteClock() });
+    assert.equal(w.go(), 0);
+    w.gh.hub.mutations.length = 0;
+    w.go();
+    assert.deepEqual(w.gh.hub.mutations, [], 'the board is whole: nothing is left to do');
+    assert.equal(w.gh.hub.issues.length, 5);
+  });
+
+  test('a budget that is not a number of minutes is an error before any call', () => {
+    const w = setUp();
+    assert.equal(w.go({ MIRROR_BUDGET_MINUTES: 'soon' }), 1);
+    assert.match(annotations(w.text(), 'error')[0], /MIRROR_BUDGET_MINUTES/);
+    assert.deepEqual(w.seen, []);
   });
 });
 

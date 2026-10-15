@@ -15,10 +15,22 @@ import { runnersFrom } from './build-status-gh.mjs';
 import { seedOf } from './build-status-seed.mjs';
 import { BOT_LOGIN } from './github-project-desired.mjs';
 import { SeedWarnings } from './github-project-plan.mjs';
+import { BudgetSpent } from './github-project-retry.mjs';
 
 const REPO = /^[\w.-]+\/[\w.-]+$/;
 const PROJECT_CALL = /projectv2|projectsv2/i;
 const MAX_WORDS = 300;
+/** The minutes an apply may take by default, well inside the job's 60, so a long first run stops in time, not red. */
+export const BUDGET_MINUTES = 45;
+const MINUTES = /^\d{1,4}(\.\d+)?$/;
+
+/** The minutes of MIRROR_BUDGET_MINUTES, or the default where it is not set; throws for anything but a number. */
+function minutesOf(value) {
+  if (value === undefined || value === '') return BUDGET_MINUTES;
+  if (!MINUTES.test(value) || Number(value) <= 0)
+    throw new Error('MIRROR_BUDGET_MINUTES must be a number of minutes greater than 0');
+  return Number(value);
+}
 
 /** Whether a gh call is about the project, for the project token: `gh project …`, or GraphQL that names a project. */
 export function isProjectCall(args, input) {
@@ -62,11 +74,13 @@ export function projectProblem(error, token) {
  * gives the exit code: 0 when it applied, when the project token was missing or refused (the issues are then mirrored
  * alone), and when the seed had warnings (nothing is applied); 1 for anything else. `options` are the command line's;
  * --allow-removals and --accept-warnings are refused here. `io` gives `mirror` and `load(slices)` (the desired state), as
- * scripts/github-project.mjs hands them over, and may give another `spawn`, `write` and `sleep` (the blocking wait that
- * paces the calls).
+ * scripts/github-project.mjs hands them over, and may give another `spawn`, `write`, `sleep` (the blocking wait that
+ * paces the calls) and `now` (the clock, in milliseconds). The apply may take MIRROR_BUDGET_MINUTES (45 by default):
+ * once that is spent it makes no more calls and warns that the board is partly updated, exit 0; the next push goes on
+ * from what GitHub then holds.
  */
 export function runInWorkflow(options, env, io) {
-  const { spawn = spawnSync, write = (text) => process.stdout.write(text), mirror, load, sleep } = io;
+  const { spawn = spawnSync, write = (text) => process.stdout.write(text), mirror, load, sleep, now = Date.now } = io;
   const secrets = [env.PROJECT_TOKEN, env.GH_TOKEN];
   const say = (level, text) => write(`${annotation(level, redactSecrets(text, secrets))}\n`);
   const print = (text) => write(redactSecrets(text, secrets));
@@ -74,6 +88,7 @@ export function runInWorkflow(options, env, io) {
     if (options.allowRemovals || options.acceptWarnings)
       throw new Error('the workflow never passes --allow-removals or --accept-warnings; a person decides those');
     if (!REPO.test(String(env.GITHUB_REPOSITORY))) throw new Error('GITHUB_REPOSITORY is not owner/name');
+    const budget = { now, until: now() + minutesOf(env.MIRROR_BUDGET_MINUTES) * 60_000 };
     const runners = runnersFrom(env, spawn);
     const run = routed(runners);
     const desired = load(options.slices);
@@ -81,7 +96,7 @@ export function runInWorkflow(options, env, io) {
     const apply = (project) =>
       mirror(
         { desired, mode: 'apply', allowRemovals: false, acceptWarnings: false, project, seed },
-        { run, originRepo: env.GITHUB_REPOSITORY, write: print, creator: BOT_LOGIN, sleep },
+        { run, originRepo: env.GITHUB_REPOSITORY, write: print, creator: BOT_LOGIN, sleep, budget },
       );
     if (!runners.project) {
       say('warning', `${describeProblem(null, '').text} The issues were mirrored without it.`);
@@ -97,6 +112,10 @@ export function runInWorkflow(options, env, io) {
     }
     return 0;
   } catch (e) {
+    if (e instanceof BudgetSpent) {
+      say('warning', 'github-project: board partly updated; the next push continues (this run’s time is spent)');
+      return 0;
+    }
     if (e instanceof SeedWarnings) {
       say('warning', `github-project: nothing was applied: ${e.message.replace(/; pass --accept-warnings.*$/, '')}`);
       return 0;

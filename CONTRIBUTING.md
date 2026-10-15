@@ -291,7 +291,10 @@ These test behaviour across modules, or the repository itself, so they are named
   call routed to its token. A missing `PROJECT_TOKEN`, one GitHub refuses (only a 401, a 403 or "Bad credentials" is
   the token's trouble), or any other failure of a project call (a mirror error, in gh's own words, such as an input the
   schema refuses) is a `::warning::`, and the issues are mirrored without the project; a seed made despite warnings applies nothing, with a `::warning::`; neither fails the run, and the
-  workflow never passes `--accept-warnings` or `--allow-removals`. Anything else is an `::error::`. It runs main's own code
+  workflow never passes `--accept-warnings` or `--allow-removals`. An apply may take 45 minutes (`MIRROR_BUDGET_MINUTES`
+  sets another), inside the job's 60, since a first run makes some 2,000 paced calls: once that is spent it makes no
+  more and warns "board partly updated; the next push continues", exit 0, and the next push plans again from what
+  GitHub holds. Anything else is an `::error::`. It runs main's own code
   only: woken by a push to main alone, it checks out main, installs nothing and keeps no cache. One mirror runs at a time
   (`concurrency: project-mirror`, `cancel-in-progress: false`): GitHub keeps one run waiting in the group, a newer push
   replacing the one that waited and never the one running, which is enough since each run mirrors main as it stands.
