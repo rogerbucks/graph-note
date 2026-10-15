@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
+    # labeled and unlabeled, so the requirements-copy label takes effect (a re-run reuses the old event's labels)
+    types: [opened, synchronize, reopened, labeled, unlabeled]
 
 permissions:
   contents: read
@@ -31,6 +33,12 @@ jobs:
         run: node scripts/quality-check.mjs --baseline-since "$BASE"
       - run: npm run typecheck
       - run: npm test
+      # the generated requirements copy may change in a pull request only by tests flipped from planned to written
+      # the label requirements-copy, read from the event's labels, lifts only this comparison: the audit above still runs
+      - if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'requirements-copy')
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: node scripts/check-requirements-flips.mjs --base-ref "$BASE"
       - run: npm run build
 
   lint:
