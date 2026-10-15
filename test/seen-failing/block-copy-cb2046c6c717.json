@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/block-copy.test.js",
+  "test": "a copy it cannot tell from the original > choosing a block again goes on, with that block’s own history",
+  "seen_failing_first": false,
+  "evidence": "A guard written with the fix, not a gap: before the fix the session never stopped for a copy, so choosing a block again already worked. The test holds that the new stop (a copy it cannot tell from its block) ends when a block is chosen again with select(), with that block's own history (undo_stays_in_its_block), so the stop is never a dead end."
+}

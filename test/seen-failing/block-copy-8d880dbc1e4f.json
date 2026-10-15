@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/block-copy.test.js",
+  "test": "a copy pasted elsewhere, then the original edited > a block that moved while another block changed, with no copy anywhere, is still followed",
+  "seen_failing_first": false,
+  "evidence": "A guard written with the fix, not a gap: the old session followed a block by its text, so with no copy it already found a moved block. The test holds that the new line-based following (block-follow.ts) still falls back to the text when a change runs through the whole block and no copy could be it, so stopping for copies never stops a session that only moved."
+}
