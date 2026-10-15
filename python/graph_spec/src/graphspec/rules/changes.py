@@ -58,6 +58,11 @@ def split_changeset(block: str) -> dict[str, Any]:
             if BASIS.match(line) or HEADER.match(line):
                 basis_ok = False
             continue
+        # a SET whose line ends with a comma goes on to the next line, as the profile reads it
+        if opened and opened["done"] and opened.get("comma"):
+            opened["lines"].append(i)
+            opened["comma"] = strip(line).endswith(",")
+            continue
         word = _word_of(line)
         if word not in VERBS:
             opened = None
@@ -74,6 +79,7 @@ def split_changeset(block: str) -> dict[str, Any]:
             groups.append(opened)
         if word != "MATCH" or _has_verb(line):
             opened["done"] = True
+        opened["comma"] = opened["done"] and strip(line).endswith(",")
     changes = [
         {
             "line": g["lines"][0] + 1,

@@ -50,6 +50,12 @@ function splitChangeset(block) {
       if (BASIS.test(line) || HEADER.test(line)) basisOk = false;
       continue;
     }
+    // a SET whose line ends with a comma goes on to the next line, as the profile reads its values
+    if (open && open.done && open.comma) {
+      open.lines.push(i);
+      open.comma = trim(line).endsWith(',');
+      continue;
+    }
     const word = wordOf(line);
     if (!VERBS.has(word)) {
       open = null;
@@ -63,6 +69,7 @@ function splitChangeset(block) {
       groups.push(open);
     }
     if (word !== 'MATCH' || hasVerb(line)) open.done = true;
+    open.comma = open.done && trim(line).endsWith(',');
   }
   const changes = groups
     .filter((g) => g.done)
