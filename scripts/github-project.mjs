@@ -19,13 +19,16 @@
 //                                                                  do the plan with gh, which needs a token that may
 //                                                                  write issues and projects (the `project` scope)
 //
+// On every push to main the workflow .github/workflows/project-mirror.yml runs the --apply above in GitHub Actions, where
+// scripts/github-project-run.mjs runs it with the workflow's own token for the issues and PROJECT_TOKEN for the project.
+//
 // --check and --apply also work out the values an item with none is given (see scripts/build-status-seed.mjs), from main
 // and the releases and open pull requests of GitHub, and print the tally of them. If a file they read could not be read, the
 // seed carries a warning; --check says that an apply would stop, and --apply stops unless --accept-warnings is given.
 //
 // A dry run cannot see GitHub, so it compares with an empty one: every issue shows as a create. --check and --apply
 // first confirm that gh points at this checkout's own origin repository, then read GitHub, find each issue it made by
-// its hidden marker (only issues written by the signed-in login, with the generated banner and the marker at the end),
+// its hidden marker (only issues written by the owner or the workflows' bot, with the generated banner and the marker at the end),
 // change only what differs, and never delete: an issue whose requirement went is labelled requirement:removed and
 // closed, with a comment. --apply stops, unless --allow-removals is given, when the requirements file holds no
 // requirements or the plan removes more than 10 issues. It is safe to run again.
@@ -37,9 +40,10 @@ import { REQUIREMENTS } from './check-requirements.mjs';
 import { readBoard } from './slice-board.mjs';
 import { QUESTION_LABEL, desiredState, readWorkstreams, withSeed } from './github-project-desired.mjs';
 import { seedOf } from './build-status-seed.mjs';
-import { buildPlan, formatPlan, guardProblem } from './github-project-plan.mjs';
+import { SeedWarnings, buildPlan, formatPlan, guardProblem } from './github-project-plan.mjs';
 import { executePlan, ghRunner, pinRepo, readRemote, repoOfRemote } from './github-project-gh.mjs';
 import { retrying } from './github-project-retry.mjs';
+import { runInWorkflow } from './github-project-run.mjs';
 import { WAVES_FILE, readWaves, waveLines } from './github-project-waves.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -107,8 +111,11 @@ function originRepo() {
  * warnings}: the Map from a requirement id to the {buildStatus, progress} an item with none takes
  * (scripts/build-status-seed.mjs), where the requirement stands on GitHub in place of Not started and Todo, and the warnings
  * (a requirements file that could not be read) the seed was made despite. The plan prints the tally of what it would seed.
- * An apply with warnings in the seed stops, since it would fix wrong values for good, unless `acceptWarnings` is given;
- * a check says that it would.
+ * An apply with warnings in the seed stops (SeedWarnings), since it would fix wrong values for good, unless
+ * `acceptWarnings` is given; a check says that it would. With `project` false the project is not read and nothing is done
+ * to it, and no seed is made: only the issues are mirrored. `deps.creator`, where given, is the login that makes issues
+ * (the workflow's bot), so GitHub is not asked who is signed in. An apply by a login whose issues would not be adopted
+ * (neither the owner nor the bot) is refused before anything changes.
  */
 export function mirror(
   { desired: base, mode, allowRemovals, acceptWarnings, seed, project = true },
@@ -141,18 +148,29 @@ export function mirror(
     return;
   }
   if (problem && !allowRemovals) throw new Error(problem);
-  if (seedProblem && !acceptWarnings) throw new Error(seedProblem);
+  if (seedProblem && !acceptWarnings) throw new SeedWarnings(seedProblem);
   executePlan(raw, repo, plan, sleep ? { sleep } : {});
   write('github-project: applied\n');
 }
 
-function main(args) {
+/** The desired state for the chosen slices, from the requirements copy, the workstreams file and the waves plan. */
+export function loadDesired(slices) {
+  const board = readBoard(readFileSync(join(ROOT, REQUIREMENTS), 'utf8'));
+  const workstreams = readWorkstreams(readFileSync(join(ROOT, WORKSTREAMS), 'utf8'));
+  const waves = readWaves(readFileSync(join(ROOT, WAVES_FILE), 'utf8'), workstreams);
+  return desiredState(board, workstreams, slices, waves);
+}
+
+/**
+ * The command line. An --apply in a GitHub Actions run (GITHUB_ACTIONS is true) is the workflow's, run by
+ * github-project-run.mjs with the workflow's two tokens; anything else runs as a person runs it.
+ */
+function main(args, env = process.env) {
   try {
     const options = parseOptions(args);
-    const board = readBoard(readFileSync(join(ROOT, REQUIREMENTS), 'utf8'));
-    const workstreams = readWorkstreams(readFileSync(join(ROOT, WORKSTREAMS), 'utf8'));
-    const waves = readWaves(readFileSync(join(ROOT, WAVES_FILE), 'utf8'), workstreams);
-    const desired = desiredState(board, workstreams, options.slices, waves);
+    if (options.mode === 'apply' && env.GITHUB_ACTIONS === 'true')
+      return runInWorkflow(options, env, { mirror, load: loadDesired });
+    const desired = loadDesired(options.slices);
     if (options.mode === 'dry-run') {
       const plan = buildPlan(desired, { login: null, labelNames: [], issues: [], project: null });
       const note = 'no network call is made; GitHub is taken to be empty, so every issue shows as a create';

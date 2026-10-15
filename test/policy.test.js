@@ -252,7 +252,12 @@ describe('GitHub Actions', () => {
           f.endsWith('/build-status.yml') &&
           name === 'update' &&
           given.filter((l) => /write/.test(l)).join() === 'pull-requests: write';
-        assert.ok(release || lock || comment, `${f}: job ${name} writes`);
+        // and one mirrors the requirements into their issues on a push to main (test/github-project-workflow.test.js)
+        const mirror =
+          f.endsWith('/project-mirror.yml') &&
+          name === 'mirror' &&
+          [...given].sort().join() === 'contents: read,issues: write';
+        assert.ok(release || lock || comment || mirror, `${f}: job ${name} writes`);
       }
       assert.doesNotMatch(read(f), /write-all/, f);
     }

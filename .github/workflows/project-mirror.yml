@@ -1,0 +1,48 @@
+name: Project mirror
+
+# Mirrors the requirements into their issues and the "graph-note requirements" GitHub Project on every push to main, so
+# the issues close and the project's Proof, Closed on, Wave, Order and Started on follow main with no session doing it.
+# scripts/github-project.mjs --apply does the work; in GitHub Actions it hands over to scripts/github-project-run.mjs.
+#
+# It runs main's own code only: it is woken by a push to main alone, never by a pull request, and checks out main, with no
+# package install and no cache, so no code of a pull request and none of its dependencies ever runs here. Two tokens, each
+# for its own calls: the workflow's own token, with issues: write as its one write permission, makes, edits, labels and
+# closes the issues (the issues it makes are written by github-actions[bot], which the mirror adopts with the owner's);
+# PROJECT_TOKEN (the project scope only) is for the project alone. A missing or refused PROJECT_TOKEN is a warning, and the
+# issues are mirrored without the project; a seed made despite warnings is not applied, with a warning. Neither fails the
+# run. The workflow never passes --accept-warnings or --allow-removals: those are a person's to decide.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# One mirror run at a time for the whole repository, and none cancelled. GitHub keeps at most one run waiting in a group:
+# a push while one runs waits for it, and a newer push replaces the run that was waiting (that one is cancelled, never the
+# one running). That is enough, as each run checks out main as it stands and mirrors the whole of it.
+concurrency:
+  group: project-mirror
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Mirror the requirements into the issues and the project
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+        run: node scripts/github-project.mjs --apply --slices 3,4,5,6,7,8,9

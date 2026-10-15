@@ -19,6 +19,9 @@ import {
 } from './github-project-desired.mjs';
 import { planTyped, typedDiffers, wantedTyped, withClosedOn } from './github-project-fields.mjs';
 
+/** An apply stopped because the seed was made despite warnings, so some of its values may be wrong. */
+export class SeedWarnings extends Error {}
+
 /** The most issues a plan may remove (label and close) unless the person allows more. */
 export const MAX_REMOVALS = 10;
 
