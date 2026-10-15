@@ -10,12 +10,28 @@ import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { REQUIREMENTS } from './check-requirements.mjs';
-import { PROJECT_TITLE, REMOVED_LABEL, adoptedId, idOfBody, labelStyle } from './github-project-desired.mjs';
+import {
+  BUILD_STATUS_FIELD,
+  PROJECT_TITLE,
+  REMOVED_LABEL,
+  adoptedId,
+  idOfBody,
+  labelStyle,
+} from './github-project-desired.mjs';
 import { planProject } from './github-project-plan.mjs';
 import { RETRY_DELAYS_MS, paced, retrying, waitFor } from './github-project-retry.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const OPTION_COLOURS = { open: 'ORANGE', part: 'YELLOW', proved: 'GREEN' };
+const OPTION_COLOURS = {
+  Proof: { open: 'ORANGE', part: 'YELLOW', proved: 'GREEN' },
+  [BUILD_STATUS_FIELD]: {
+    'In PR': 'BLUE',
+    'Checks failing': 'RED',
+    'Checks passing': 'YELLOW',
+    Merged: 'PURPLE',
+    Released: 'GREEN',
+  },
+};
 
 /** The most labels, issues and projects a list is asked for; a list that comes back this long may be cut short. */
 export const LABEL_CAP = 1000;
@@ -266,7 +282,7 @@ function doIssues(act, repo, plan) {
 
 const optionInput = (name, field, old) => ({
   name,
-  color: old?.color ?? (field === 'Proof' ? (OPTION_COLOURS[name] ?? 'GRAY') : 'GRAY'),
+  color: old?.color ?? OPTION_COLOURS[field]?.[name] ?? 'GRAY',
   description: old?.description ?? '',
 });
 

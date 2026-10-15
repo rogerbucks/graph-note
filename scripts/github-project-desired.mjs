@@ -27,9 +27,17 @@ export const REMOVED_LABEL = 'requirement:removed';
  * The project's single-choice fields, in order. The built-in Status field of a GitHub Project is never used: its options
  * are Todo, In Progress and Done, and a person may use it, so the requirement's status goes in the Proof field instead.
  */
-export const FIELD_NAMES = ['Slice', 'Workstream', 'Proof'];
+export const FIELD_NAMES = ['Slice', 'Workstream', 'Proof', 'Build status'];
+/** The project field that says how far a requirement's build is. Its values come from GitHub's events alone. */
+export const BUILD_STATUS_FIELD = 'Build status';
+/**
+ * The stages of a requirement's build, in the order they happen (scripts/build-status.mjs sets them from the events of
+ * GitHub): an item starts at the first. This script makes the field and its options and gives a new item the first
+ * stage; it never sets any other, and never replaces the options, which would clear every value.
+ */
+export const BUILD_STATUSES = ['Not started', 'In PR', 'Checks failing', 'Checks passing', 'Merged', 'Released'];
 /** The fields whose options never change, so the script never replaces them: one that lacks an option is refused. */
-export const FIXED_FIELDS = ['Proof'];
+export const FIXED_FIELDS = ['Proof', BUILD_STATUS_FIELD];
 /** The statuses a requirement can have, as the slice board gives them. */
 export const STATUSES = ['open', 'part', 'proved'];
 /** The start of the banner line every generated issue carries; an issue without it is not one of ours. */
@@ -238,8 +246,9 @@ const questionBodyOf = (q, workstream) =>
 
 /**
  * The desired state for the chosen slices, from a board as readBoard gives it and the workstreams: {issues, fields,
- * known}. Each issue is {id, title, body, labels (sorted), state ('open' or 'closed'), slice, workstream, status}, the
- * last three being the options its project item takes; the requirements' issues come first, then one for each open
+ * known}. Each issue is {id, title, body, labels (sorted), state ('open' or 'closed'), slice, workstream, status,
+ * buildStatus}, the last four being the options its project item takes (the Build status only when it has none); the
+ * requirements' issues come first, then one for each open
  * question of the chosen slices, always open, its Proof `open`. `fields` maps each project field to its options.
  * `known` lists every requirement and question id the copy holds, in any slice, so that an issue whose requirement or
  * question is only outside the chosen slices is told from one whose requirement or question went.
@@ -260,6 +269,7 @@ export function desiredState(board, workstreams, slices) {
       slice: `Slice ${r.slice}`,
       workstream: option(workstream),
       status: r.status,
+      buildStatus: BUILD_STATUSES[0],
     };
   });
   const questions = (board.questions ?? []).filter((q) => chosen.includes(q.slice));
@@ -275,6 +285,7 @@ export function desiredState(board, workstreams, slices) {
       slice: `Slice ${q.slice}`,
       workstream: option(workstream),
       status: 'open',
+      buildStatus: BUILD_STATUSES[0],
     });
   }
   return {
@@ -283,6 +294,7 @@ export function desiredState(board, workstreams, slices) {
       Slice: chosen.map((s) => `Slice ${s}`),
       Workstream: Object.keys(workstreams).map(option),
       Proof: [...STATUSES],
+      [BUILD_STATUS_FIELD]: [...BUILD_STATUSES],
     },
     known: [...board.requirements, ...(board.questions ?? [])].map((r) => r.id),
   };

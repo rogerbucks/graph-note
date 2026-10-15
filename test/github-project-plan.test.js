@@ -254,13 +254,13 @@ const projectHeld = () => ({
   items: desired.issues.map((i) => ({
     itemId: `I_${i.id}`,
     id: i.id,
-    values: { Slice: i.slice, Workstream: i.workstream, Proof: i.status },
+    values: { Slice: i.slice, Workstream: i.workstream, Proof: i.status, 'Build status': i.buildStatus },
   })),
 });
 const projectPlan = (project) => planProject(desired.issues, desired.fields, project);
 
 describe('the project plan', () => {
-  test('creates the project, its three fields with their options, and every item with its three values', () => {
+  test('creates the project, its four fields with their options, and every item with its four values', () => {
     const p = projectPlan(null);
     assert.equal(p.create, true);
     assert.deepEqual(
@@ -269,11 +269,12 @@ describe('the project plan', () => {
         ['Slice', true],
         ['Workstream', true],
         ['Proof', true],
+        ['Build status', true],
       ],
     );
     assert.deepEqual(p.fields[0].add, ['Slice 3', 'Slice 4']);
     assert.deepEqual(ids(p.itemsAdd), ids(desired.issues));
-    assert.equal(p.sets.length, 3 * desired.issues.length);
+    assert.equal(p.sets.length, 4 * desired.issues.length);
     assert.deepEqual(
       p.sets.find((s) => s.id === 'focus_link' && s.field === 'Proof'),
       {
@@ -332,7 +333,23 @@ describe('the project plan', () => {
     project.items = project.items.filter((i) => i.id !== 'focus_link');
     const p = projectPlan(project);
     assert.deepEqual(p.itemsAdd, ['focus_link']);
-    assert.equal(p.sets.length, 3);
+    assert.equal(p.sets.length, 4);
+  });
+
+  test('gives an item with no Build status the first stage, and never changes one that has any', () => {
+    const project = projectHeld();
+    delete project.items.find((i) => i.id === 'focus_link').values['Build status'];
+    project.items.find((i) => i.id === 'focus_neighbours').values['Build status'] = 'Checks passing';
+    project.items.find((i) => i.id === 'zoom_out_to_fit').values['Build status'] = 'Released';
+    assert.deepEqual(projectPlan(project).sets, [
+      { id: 'focus_link', field: 'Build status', from: null, to: 'Not started' },
+    ]);
+  });
+
+  test('never replaces the options of Build status: one that lacks an option is refused, not changed', () => {
+    const project = projectHeld();
+    project.fields['Build status'].options = project.fields['Build status'].options.filter((o) => o.name !== 'Merged');
+    assert.throws(() => projectPlan(project), /Build status.*Merged.*by hand/);
   });
 
   test('leaves alone an item that is no longer desired, never deleting', () => {
@@ -358,10 +375,10 @@ describe('the whole plan, printed', () => {
       removed: 0,
       unchanged: 0,
       projectCreate: 1,
-      fieldsCreate: 3,
-      optionsAdd: 2 + 3 + 3,
+      fieldsCreate: 4,
+      optionsAdd: 2 + 3 + 3 + 6,
       itemsAdd: 5,
-      valuesSet: 15,
+      valuesSet: 20,
     });
   });
 
