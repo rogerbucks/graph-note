@@ -134,6 +134,57 @@ describe('the history', () => {
     assert.match(where(problems, 'author-email')[0], /^commit [0-9a-f]{8} by …@github\.com$/);
   });
 
+  describe("GitHub's address on Dependabot's own sign-off line", () => {
+    const at = (local, domain) => [local, domain].join('@');
+    const bot = (address) => `Signed-off-by: dependabot[bot] <${address}>`;
+    const problemsOfMessage = (...lines) => {
+      const { dir, commit } = repository();
+      commit('a.txt', 'a\n', ['Bump a', '', ...lines].join('\n'));
+      return historyProblems(dir);
+    };
+
+    test('is no one: an address at github.com on a dependabot[bot] sign-off line is clean', () => {
+      assert.deepEqual(problemsOfMessage(bot(at('some-sender', 'github.com'))), []);
+    });
+
+    test('is allowed on that line alone: the same address anywhere else is a problem', () => {
+      const address = at('some-sender', 'github.com');
+      for (const line of [
+        `Signed-off-by: One <${address}>`,
+        `Reviewed-by: dependabot[bot] <${address}>`,
+        `Thanks to ${address} for this`,
+        `${bot(address)} and more words`,
+        `  ${bot(address)}`,
+      ])
+        assert.deepEqual(rules(problemsOfMessage(line)), ['email'], line);
+    });
+
+    test("is allowed to Dependabot alone: another bot's sign-off line is a problem", () => {
+      const address = at('some-sender', 'github.com');
+      for (const name of ['renovate[bot]', 'dependabot', 'Dependabot[bot]', 'dependabot[bot] two'])
+        assert.deepEqual(rules(problemsOfMessage(`Signed-off-by: ${name} <${address}>`)), ['email'], name);
+    });
+
+    test('is allowed at github.com alone: a dependabot sign-off line at any other domain is a problem', () => {
+      for (const domain of ['mail.test', 'github.com.mail.test', 'notgithub.com', 'github.co', 'sub.github.com'])
+        assert.deepEqual(rules(problemsOfMessage(bot(at('some-sender', domain)))), ['email'], domain);
+    });
+
+    test('is one address: a second address on the line is a problem', () => {
+      const line = `Signed-off-by: dependabot[bot] <${at('some-sender', 'github.com')}>, <${at('one', 'mail.test')}>`;
+      assert.deepEqual(rules(problemsOfMessage(line)), ['email']);
+    });
+
+    test('leaves the rest of the message read, each problem still on its own line', () => {
+      const problems = problemsOfMessage(bot(at('some-sender', 'github.com')), '', `Pay with ${card()}`);
+      assert.deepEqual(
+        problems.map((p) => p.rule),
+        ['card'],
+      );
+      assert.match(problems[0].where, /^commit [0-9a-f]{8} message:5$/);
+    });
+  });
+
   test('a blob too large to belong in a small plugin is a problem', () => {
     const { dir, commit } = repository();
     commit('big.txt', 'a'.repeat(MAX_BLOB_BYTES + 1));

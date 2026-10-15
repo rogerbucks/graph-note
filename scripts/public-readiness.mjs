@@ -20,8 +20,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { findProblems } from './check-classification.mjs';
-import { findSecrets } from './quality-secrets.mjs';
+import { messageProblems, problemsIn } from './history-text-problems.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const git = (root, args, input) => execFileSync('git', args, { cwd: root, input, maxBuffer: 2 ** 31 });
@@ -33,8 +32,6 @@ const dedupe = (list) => [...new Map(list.map((p) => [JSON.stringify(p), p])).va
 export const MAX_BLOB_BYTES = 1_000_000;
 // An address that names no one: GitHub's no-reply addresses, or a documentation domain.
 const NO_ONE = /(@users\.noreply\.github\.com|^noreply@github\.com|@example\.(com|org|net))$/i;
-
-const problemsIn = (text) => [...findProblems(text), ...findSecrets(text)].map((p) => ({ rule: p.rule, line: p.line }));
 
 /**
  * Every problem in the history of `refs` (the checked-out commit's own, `HEAD`, unless told otherwise), each as
@@ -67,7 +64,7 @@ export function historyProblems(root = ROOT, { refs = ['HEAD'] } = {}) {
     const [sha, author, committer, message] = record.trim().split('\x00');
     if (!sha) continue;
     const commit = `commit ${sha.slice(0, 8)}`;
-    for (const p of problemsIn(message ?? '')) found.push({ where: `${commit} message:${p.line}`, rule: p.rule });
+    for (const p of messageProblems(message ?? '')) found.push({ where: `${commit} message:${p.line}`, rule: p.rule });
     for (const email of new Set([author, committer]))
       if (!NO_ONE.test(email))
         found.push({ where: `${commit} by …${email.replace(/^.*@/, '@')}`, rule: 'author-email' });
