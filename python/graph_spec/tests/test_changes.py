@@ -86,7 +86,7 @@ class Changes(unittest.TestCase):
             self.assertEqual(
                 [x[:2] for x in got["changes"]], [x[:2] for x in c["changes"]], c["name"]
             )
-            # the links a DETACH DELETE removes are listed by the dry run, for the cases naming them
+            # the links a DETACH DELETE removes are listed, for the cases that name them
             for got_change, want in zip(got["changes"], c["changes"]):
                 if len(want) > 2:
                     self.assertEqual(got_change[3], want[2], c["name"])

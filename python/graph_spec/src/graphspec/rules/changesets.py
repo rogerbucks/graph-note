@@ -10,7 +10,14 @@ from typing import TYPE_CHECKING, Any
 from graphspec.reader.whitespace import N, S
 from graphspec.reader.whitespace import strip as ws_strip
 from graphspec.rules.canonical_json import norm
-from graphspec.rules.changes import apply_change, change_id, read_change, split_changeset
+from graphspec.rules.changes import (
+    LABELS,
+    apply_change,
+    is_record_add,
+    read_all,
+    split_changeset,
+    stop_fix,
+)
 from graphspec.rules.certainty import claim_status, confidence_from_evidence, latest_assessment
 from graphspec.rules.graph_check import check
 from graphspec.rules.plain_graph import World
@@ -22,34 +29,6 @@ if TYPE_CHECKING:
 
 
 # ── §24 change sets — a dry run on a copy, no database ───────────────────────────────────────────
-MODEL_MAY_ADD = {
-    "Claim",
-    "Assessment",
-    "Evidence",
-    "Proposal",
-    "Option",
-    "Activity",
-    "Ref",
-}  # §24 rule 2
-MODEL_MAY_LINK = {
-    "ABOUT",
-    "ASSESSES",
-    "BY",
-    "SUPPORTED_BY",
-    "CONTRADICTED_BY",
-    "FROM",
-    "CONSIDERED",
-    "WAS_GENERATED_BY",
-    "ASSOCIATED_WITH",
-    "CHALLENGED_BY",
-    "USED",
-    "RESTS_ON",
-    "WAS_DERIVED_FROM",
-}
-FIND = "each DELETE and SET finds its one target in the graph (§24)"
-DANGLING = (
-    "a DELETE leaves no link without its end; DETACH DELETE removes a thing with its links (§24)"
-)
 
 
 def changeset_header(block: str) -> dict[str, str] | None:
@@ -116,6 +95,7 @@ def check_changeset(
     def add(label, ok, fix=""):
         res.append((label, bool(ok), "" if ok else fix))
 
+    block = block.replace("\r\n", "\n")  # a line ends at LF in the reader; CRLF text reads as LF
     h = changeset_header(block)
     add(
         "the change set names its graph, its id, the state it was made against, and its author",
@@ -138,22 +118,11 @@ def check_changeset(
         parts["basis_ok"],
         "take the 'against' and 'by' out of every line but the header",
     )
-    read = []
-    refused = []
-    for c in parts["changes"]:
-        try:
-            read.append({**read_change(c["text"]), "reason": c["reason"]})
-        except ProfileError as e:
-            refused.append(f"line {c['line']}: {e.message} — {e.fix}")
+    read, refused, h["changes"] = read_all(parts["changes"])
     add(
         "each DELETE and SET is its own statement and names exactly one target (§24)",
         not refused,
         "; ".join(refused),
-    )
-    h["changes"] = (
-        []
-        if refused
-        else [{"id": change_id(c), "op": c["op"], "reason": c["reason"]} for c in read]
     )
     if refused:
         return res, h, None
@@ -214,33 +183,32 @@ def check_changeset(
             "correct a fact with a new element that supersedes it, never an edit",
         )
     new_nodes = {i: after[0][i][0] for i in after[0] if i not in before[0]}
-    new_edges = [e for e in ac if ac[e] > bc[e]]
+    # a set that is not only additions is not applied further: its DELETEs and SETs would act on a
+    # graph it has wrongly changed
+    if read and (gone or changed) and "additions-only" not in switches:
+        return res, h, None
     for c in read:
         stopped = apply_change(st, h["graph"], c)
         if stopped:
-            kind, what = stopped
-            if kind == "find":
-                add(
-                    FIND, False, f"{what} is not in the graph — name a thing or link that is there"
-                )
-            else:
-                add(DANGLING, False, f"{what} still has links — remove them, or DETACH DELETE it")
+            add(LABELS[stopped[0]], False, stop_fix(*stopped, c))
             return res, h, None
     if read:
-        add(FIND, True)
-        add(DANGLING, True)
+        for label in LABELS.values():
+            add(label, True)
+        h["changes"] = [
+            {**x, **({"links": c["links"]} if "links" in c else {})}
+            for x, c in zip(h["changes"], read)
+        ]
     h["refreshes"] = refresh_section20(st, h["graph"])
     w = World.from_store(st)
     g = w[h["graph"]]
     if kind == "Model" and "model-may-add" not in switches:
-        bad = sorted(i for i, labels in new_nodes.items() if not labels & MODEL_MAY_ADD) + sorted(
-            {e[1] for e in new_edges if e[1] not in MODEL_MAY_LINK}
-        )
+        bad = sorted(i for i, labels in new_nodes.items() if is_record_add(labels))
         add(
-            "a model adds only claims, assessments, evidence, proposals and options (§24 rule 2)",
+            "a model adds no record and no cache (§24 rule 5)",
             not bad,
-            f"{bad[:4]} — state it as a Claim about the subject, "
-            "or as a Proposal for a person to decide; a model never asserts a fact or a decision",
+            f"{bad[:4]} — state it as a Claim about the subject, or as a Proposal for a "
+            "person to decide; a model never records an event, an issued document or a decision",
         )
         by = [
             x for i in new_nodes if "Assessment" in new_nodes[i] for _, _, x, _ in g.out(i, "BY")

@@ -79,7 +79,7 @@ declare namespace GraphSpecCheck {
       | ({ graph: string; id: string; against: string; by: string } & {
           refreshes?: [string, string, Value | null, Value][];
           /** Each DELETE and SET it holds, in order: the id derived from its statement, its kind of change and the `//@ reason:` hint above it. */
-          changes?: { id: string; op: string; reason: string | null }[];
+          changes?: { id: string; op: string; reason: string | null; links?: [string, string, string][] }[];
         })
       | null;
     after: string | null;

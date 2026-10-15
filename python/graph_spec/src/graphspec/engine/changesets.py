@@ -26,10 +26,19 @@ from graphspec.engine.projection import projects_back
 from graphspec.engine.queries import Q, canon_graph, read, strip
 from graphspec.engine.schema import typed, untyped
 from graphspec.engine.serving.checks import served_rules
-from graphspec.reader.lexer import ProfileError, header
+from graphspec.reader.lexer import ProfileError, header, tokens
 from graphspec.reader.store import Store
 from graphspec.reader.whitespace import N, S
 from graphspec.reader.whitespace import strip as ws_strip
+from graphspec.rules.changes import (
+    LABELS,
+    apply_change,
+    gql_of,
+    is_record_add,
+    read_all,
+    split_changeset,
+    stop_fix,
+)
 from graphspec.rules.changesets import check_changeset as plain_check_changeset
 from graphspec.rules.graph_check import check
 from graphspec.rules.plain_graph import World
@@ -39,30 +48,6 @@ if TYPE_CHECKING:
 
 
 # ── §24 H4: change sets — additions an AI proposes, checked before anyone applies them ──────────
-MODEL_MAY_ADD = {
-    "Claim",
-    "Assessment",
-    "Evidence",
-    "Proposal",
-    "Option",
-    "Activity",
-    "Ref",
-}  # §24 rule 2: claims, assessments, proposals
-MODEL_MAY_LINK = {
-    "ABOUT",
-    "ASSESSES",
-    "BY",
-    "SUPPORTED_BY",
-    "CONTRADICTED_BY",
-    "FROM",
-    "CONSIDERED",
-    "WAS_GENERATED_BY",
-    "ASSOCIATED_WITH",
-    "CHALLENGED_BY",
-    "USED",
-    "RESTS_ON",
-    "WAS_DERIVED_FROM",
-}
 
 
 def changeset_header(block: str) -> dict[str, str] | None:
@@ -188,6 +173,7 @@ def check_changeset(
     def add(label, ok, fix=""):
         res.append((label, bool(ok), "" if ok else fix))
 
+    block = block.replace("\r\n", "\n")  # a line ends at LF in the reader; CRLF text reads as LF
     h = changeset_header(block)
     add(
         "the change set names its graph, its id, the state it was made against, and its author",
@@ -197,12 +183,27 @@ def check_changeset(
     )
     if not h:
         return res, None, None
-    found = lint(block)
+    parts = split_changeset(block)
+    additions = parts["additions"]
+    found = lint(additions) + [x for c in parts["changes"] for x in lint(c["text"])]
     add(
         "it passes the dialect linter (§24 H1)",
         not found,
         "; ".join(f"line {x['line']}: {x['trap']} → {x['fix']}" for x in found),
     )
+    add(
+        "only the header says what it was made against and who made it (§24)",
+        parts["basis_ok"],
+        "take the 'against' and 'by' out of every line but the header",
+    )
+    read, refused, h["changes"] = read_all(parts["changes"])
+    add(
+        "each DELETE and SET is its own statement and names exactly one target (§24)",
+        not refused,
+        "; ".join(refused),
+    )
+    if refused:
+        return res, h, None
     # the reader reads the base, then the change set, each in its graph, before Grafeo is given
     # either; Grafeo is given nothing the reader refuses (req:3.engine-reads-first), and what it
     # is given is the reader's corrected text (req:3.engine-gets-corrected). Grafeo loads
@@ -270,12 +271,13 @@ def check_changeset(
     db.set_graph(h["graph"])
     before = _state(db, h["graph"])
     try:
-        st.apply(block)
+        st.apply(additions)
     except ProfileError as e:
         add("it loads", False, f"the reader could not read it — {e}")
         return res, h, None
     try:
-        db.execute(strip(st.corrected(block)))
+        if tokens(additions):  # a set of only DELETEs and SETs has nothing to insert
+            db.execute(strip(st.corrected(additions)))
     except Exception as e:
         add("it loads", False, f"Grafeo could not run it — {str(e).splitlines()[0][:200]}")
         return res, h, None
@@ -292,20 +294,39 @@ def check_changeset(
             "correct a fact with a new element that supersedes it, never an edit",
         )
     new_nodes = {i: after[0][i][0] for i in after[0] if i not in before[0]}
+    # a set that is not only additions is not applied further
+    if read and (gone or changed) and "additions-only" not in switches:
+        return res, h, None
+    for c in read:
+        # the reader's copy says what stops a change; Grafeo is then given the change as GQL
+        stopped = apply_change(st, h["graph"], c)
+        if stopped:
+            add(LABELS[stopped[0]], False, stop_fix(*stopped, c))
+            return res, h, None
+        try:
+            db.set_graph(h["graph"])
+            db.execute(gql_of(c))
+        except Exception as e:
+            add("it loads", False, f"Grafeo could not run it — {str(e).splitlines()[0][:200]}")
+            return res, h, None
+    if read:
+        for label in LABELS.values():
+            add(label, True)
+        h["changes"] = [
+            {**x, **({"links": c["links"]} if "links" in c else {})}
+            for x, c in zip(h["changes"], read)
+        ]
     db.set_graph(h["graph"])
     h["refreshes"] = refresh_section20(
         db
     )  # the engine's part of applying it — reported, so the applier knows (§11)
-    new_edges = [e for e in after[1] if after[1][e] > before[1][e]]
     if kind == "Model" and "model-may-add" not in switches:
-        bad = sorted(i for i, label in new_nodes.items() if not label & MODEL_MAY_ADD) + sorted(
-            {e[1] for e in new_edges if e[1] not in MODEL_MAY_LINK}
-        )
+        bad = sorted(i for i, label in new_nodes.items() if is_record_add(label))
         add(
-            "a model adds only claims, assessments, evidence, proposals and options (§24 rule 2)",
+            "a model adds no record and no cache (§24 rule 5)",
             not bad,
-            f"{bad[:4]} — state it as a Claim about the subject, "
-            "or as a Proposal for a person to decide; a model never asserts a fact or a decision",
+            f"{bad[:4]} — state it as a Claim about the subject, or as a Proposal for a "
+            "person to decide; a model never records an event, an issued document or a decision",
         )
         db.set_graph(h["graph"])
         by = [

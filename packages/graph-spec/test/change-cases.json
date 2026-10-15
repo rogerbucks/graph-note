@@ -22,13 +22,10 @@
     "(library_schema)-[:DECLARES]->(t_model),",
     "(library_schema)-[:DECLARES]->(t_wrote),",
     "(t_event:ElementType {id: 'type:Event', name: 'Event', kind: 'node'}),",
-    "(t_claim:ElementType {id: 'type:Claim', name: 'Claim', kind: 'node'}),",
     "(library_schema)-[:DECLARES]->(t_event),",
-    "(library_schema)-[:DECLARES]->(t_claim),",
     "(ada:Person {name: 'Ada'}),",
     "(bot:Model {name: 'Drafter'}),",
-    "(sale:Event {title: 'A sale', amount: 10}),",
-    "(c1:Claim {text: 'It will rain', status: 'open'}),"
+    "(sale:Event {title: 'A sale', amount: 10}),"
   ],
   "base_rest": [
     "(grace:Person {name: 'Grace'}),",
@@ -233,7 +230,7 @@
     },
     {
       "name": "a cache is never set",
-      "body": ["SET c1.status = 'confirmed'"],
+      "body": ["(c1:Claim {text: 'It will rain'})", "SET c1.status = 'confirmed'"],
       "failed": ["record"],
       "changes": [["set-thing", null]],
       "after": null
@@ -243,13 +240,13 @@
       "by": "bot",
       "body": ["MATCH (e:Event {id: 'sale'}) DETACH DELETE e"],
       "failed": ["record"],
-      "changes": [["detach-delete-thing", null, []]],
+      "changes": [["detach-delete-thing", null]],
       "after": null
     },
     {
       "name": "a model may not set a cache",
       "by": "bot",
-      "body": ["SET c1.confidence = 'high'"],
+      "body": ["(c1:Claim {text: 'It will rain'})", "SET c1.confidence = 'high'"],
       "failed": ["record"],
       "changes": [["set-thing", null]],
       "after": null

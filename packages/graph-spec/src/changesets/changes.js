@@ -10,7 +10,7 @@ const { Parser } = require('../reader/parser.js');
 
 const VERBS = new Set(['MATCH', 'DELETE', 'DETACH', 'SET']);
 const WORD = new RegExp(`^${S}*([A-Za-z_]+)`),
-  REASON = new RegExp(`^${S}*//@${S}*reason:${S}*(.*)$`),
+  REASON = new RegExp(`^${S}*//@${S}*reason:([^\\n]*)$`),
   BASIS = new RegExp(`^${S}*//@?${S}*(?:against|by)${S}*:`, 'i'),
   HEADER = new RegExp(`^${S}*//${S}*graph:`);
 const wordOf = (line) => {
@@ -24,7 +24,7 @@ function hasVerb(line) {
       (t) => (t[0] === 'kw' && t[1] === 'SET') || (t[0] === 'id' && t[1].toUpperCase() === 'DELETE'),
     );
   } catch (e) {
-    if (e instanceof ProfileError) return false;
+    if (e instanceof ProfileError) return /\b(?:DELETE|SET)\b/i.test(line); // unreadable: the statement's reading says why
     throw e;
   }
 }
@@ -163,6 +163,8 @@ function readChange(text) {
         `SET would change ${v}'s id, and a node's id never changes (§3)`,
         'write the right node, then supersede it (§12)',
       );
+    if (['__proto__', 'constructor', 'prototype'].includes(key))
+      refuse(p, `${key} is not a name a SET may give a value to`, 'choose another name for the value');
     p.take('p', '=');
     set[key] = p.value();
     if (!p.at('p', ',')) break;
@@ -174,9 +176,10 @@ function readChange(text) {
 
 /** A change's id, derived from its statement and never written: the same change, written either way, has the same id. */
 function changeId(c) {
-  const o = { op: c.op };
-  if (c.kind === 'thing') o.thing = c.thing;
-  else Object.assign(o, { from: c.from, type: c.type, to: c.to });
+  const o = { op: c.op },
+    nfc = (s) => s.normalize('NFC'); // an id composed or decomposed names the same thing
+  if (c.kind === 'thing') o.thing = nfc(c.thing);
+  else Object.assign(o, { from: nfc(c.from), type: c.type, to: nfc(c.to) });
   if (c.set) {
     o.set = {};
     for (const k of Object.keys(c.set)) o.set[k] = norm(c.set[k]);
@@ -184,9 +187,20 @@ function changeId(c) {
   return hash16(o);
 }
 
+// A record is corrected by a superseding addition (§12), and a cache is the engine's part (§11, §20): neither is ever
+// removed or changed by a change set, whoever it is by.
+const RECORD_LABELS = ['Event', 'IssuedDocument', 'Decision', 'Delivery', 'Assessment'];
+const CACHE_KEYS = ['likelihood', 'confidence', 'status'];
+/** Whether a new thing is a record: an event, an issued document or a decision (an assessment and evidence are the
+ * claims' own events, which a model may add). */
+const isRecordAdd = (labels) =>
+  labels.some((x) => RECORD_LABELS.includes(x) && x !== 'Assessment') &&
+  !labels.some((x) => x === 'Assessment' || x === 'Evidence');
+
 /**
  * The change made on a store's graph g, or what stops it: null when made, else [kind, what] — kind is 'find' when its
- * target is not in the graph, 'dangling' when a DELETE would leave a link without its end.
+ * target is not in the graph, 'dangling' when a DELETE would leave a link without its end, 'record' when it would
+ * remove or change a record or a cache. A thing's DELETE sets `links`: the links it removes with it.
  */
 function applyChange(store, g, c) {
   const graph = store.graph(g),
@@ -195,12 +209,17 @@ function applyChange(store, g, c) {
   if (c.kind === 'thing') {
     const k = store.find(g, c.thing);
     if (!has(k, c.labels)) return ['find', where];
+    const labels = graph.nodes.get(k).labels;
+    if (RECORD_LABELS.some((x) => labels.has(x))) return ['record', where];
     if (c.op.startsWith('set')) {
+      if (labels.has('Claim') && Object.keys(c.set).some((x) => CACHE_KEYS.includes(x))) return ['record', where];
       Object.assign(graph.nodes.get(k).props, c.set);
       return null;
     }
     const touching = graph.edges.filter((e) => e[0] === k || e[2] === k);
     if (touching.length && c.op === 'delete-thing') return ['dangling', where];
+    const idOf = (key) => graph.nodes.get(key).props.id;
+    c.links = touching.map((e) => [idOf(e[0]), e[1], idOf(e[2])]);
     graph.edges = graph.edges.filter((e) => !touching.includes(e));
     graph.nodes.delete(k);
     return null;
@@ -215,4 +234,4 @@ function applyChange(store, g, c) {
   return null;
 }
 
-module.exports = { splitChangeset, readChange, changeId, applyChange };
+module.exports = { splitChangeset, readChange, changeId, applyChange, isRecordAdd };

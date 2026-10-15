@@ -8,24 +8,14 @@ const { worldFromStore, canon } = require('../graph/graph.js');
 const { latestAssessment, confidenceFromEvidence, claimStatus } = require('../rules/certainty.js');
 const { check } = require('../rules/check.js');
 const { lint } = require('./dialect-lint.js');
-const { splitChangeset, readChange, changeId, applyChange } = require('./changes.js');
+const { splitChangeset, readChange, changeId, applyChange, isRecordAdd } = require('./changes.js');
 
-const MODEL_MAY_ADD = new Set(['Claim', 'Assessment', 'Evidence', 'Proposal', 'Option', 'Activity', 'Ref']);
-const MODEL_MAY_LINK = new Set([
-  'ABOUT',
-  'ASSESSES',
-  'BY',
-  'SUPPORTED_BY',
-  'CONTRADICTED_BY',
-  'FROM',
-  'CONSIDERED',
-  'WAS_GENERATED_BY',
-  'ASSOCIATED_WITH',
-  'CHALLENGED_BY',
-  'USED',
-  'RESTS_ON',
-  'WAS_DERIVED_FROM',
-]);
+// what stops a DELETE or SET, by kind (applyChange)
+const LABELS = {
+  find: 'each DELETE and SET finds its one target in the graph (§24)',
+  dangling: 'a DELETE leaves no link without its end; DETACH DELETE removes a thing with its links (§24)',
+  record: 'it never removes or changes a record or a cache (§24 rule 4)',
+};
 function changesetHeader(block) {
   const first = block.split('\n').find((line) => line.trim()) || '';
   const m = /^\s*\/\/\s*graph:\s*(\S+)\s*·\s*CHANGE SET\s+(\S+)\s*·\s*against\s+([0-9a-f]{16})\s*·\s*by\s+(\S+)/.exec(
@@ -67,6 +57,7 @@ function refreshSection20(store, name) {
 function checkChangeset(base, block, matrix, sw = new Set()) {
   const res = [],
     add = (label, ok) => res.push([label, !!ok]);
+  block = block.replace(/\r\n/g, '\n'); // a line ends at LF in the reader; CRLF text is read as LF text
   const h = changesetHeader(block);
   add('the change set names its graph, its id, the state it was made against, and its author', h);
   if (!h) return { results: res, header: null, after: null };
@@ -86,8 +77,11 @@ function checkChangeset(base, block, matrix, sw = new Set()) {
       refused = true;
     }
   }
-  add('each DELETE and SET is its own statement and names exactly one target (§24)', !refused);
   h.changes = refused ? [] : read.map((c) => ({ id: changeId(c), op: c.op, reason: c.reason }));
+  // the same change twice would be accepted or rejected as two, though it is one
+  if (new Set(h.changes.map((c) => c.id)).size !== h.changes.length) refused = true;
+  if (refused) h.changes = [];
+  add('each DELETE and SET is its own statement and names exactly one target (§24)', !refused);
   if (refused) return { results: res, header: h, after: null };
   const st = new Store();
   base.forEach((b) => st.apply(b));
@@ -126,30 +120,25 @@ function checkChangeset(base, block, matrix, sw = new Set()) {
   if (!sw.has('additions-only'))
     add('it only adds — nothing removed, nothing already there changed (§12)', !gone && !changed);
   const newNodes = [...after[0]].filter(([i]) => !before[0].has(i));
-  const newEdges = [...ac].filter(([e, n]) => n > (bc.get(e) || 0)).map(([e]) => JSON.parse(e));
+  // a set that is not only additions is not applied further: its DELETEs and SETs would act on a graph it has wrongly changed
+  if (read.length && (gone || changed) && !sw.has('additions-only')) return { results: res, header: h, after: null };
   for (const c of read) {
     const stopped = applyChange(st, h.graph, c);
     if (!stopped) continue;
-    add(
-      stopped[0] === 'find'
-        ? 'each DELETE and SET finds its one target in the graph (§24)'
-        : 'a DELETE leaves no link without its end; DETACH DELETE removes a thing with its links (§24)',
-      false,
-    );
+    add(LABELS[stopped[0]], false);
     return { results: res, header: h, after: null };
   }
   if (read.length) {
-    add('each DELETE and SET finds its one target in the graph (§24)', true);
-    add('a DELETE leaves no link without its end; DETACH DELETE removes a thing with its links (§24)', true);
+    for (const label of Object.values(LABELS)) add(label, true);
+    h.changes = read.map((c, i) => ({ ...h.changes[i], ...(c.links ? { links: c.links } : {}) }));
   }
   h.refreshes = refreshSection20(st, h.graph);
   w = worldFromStore(st);
   const g = w[h.graph];
   if (kind === 'Model' && !sw.has('model-may-add')) {
     add(
-      'a model adds only claims, assessments, evidence, proposals and options (§24 rule 2)',
-      newNodes.every(([, [labels]]) => labels.split(':').some((x) => MODEL_MAY_ADD.has(x))) &&
-        newEdges.every((e) => MODEL_MAY_LINK.has(e[1])),
+      'a model adds no record and no cache (§24 rule 5)',
+      newNodes.every(([, [labels]]) => !isRecordAdd(labels.split(':'))),
     );
     const by = newNodes
       .filter(([, [labels]]) => labels.split(':').includes('Assessment'))
