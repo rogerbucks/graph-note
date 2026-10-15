@@ -11,8 +11,10 @@ import { notePath } from './graph-view.ts';
 export type EditOutcome =
   { ok: true; title: string; reused: boolean } | { ok: false; why: string; held?: 'asks' | 'refused' };
 
+/** What a `confirm` from anything but the person typing is told. */
 export const NOT_THE_PERSON =
   'Only the person typing can say yes to opening a note above the level set for Claude: a command from anything else is refused.';
+/** What an `edit` of a note above the level, from anything but the person typing, is told. */
 export const NOT_THE_PERSON_ASKING =
   'Only the person typing can say yes to that, and this command did not come from them, so it is not opened.';
 

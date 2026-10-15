@@ -1,6 +1,0 @@
-{
-  "file": "packages/claude-code/test/editor-mod.test.js",
-  "test": "the highest classification never opens, and a credential never reaches Claude (cc_credential_never) > a refusal says nothing of the note’s text, the address or a token",
-  "seen_failing_first": false,
-  "evidence": "Before the gate nothing was refused, so no refusal said anything; this pins that the new words stay clear of the text, and it passed against code that refused nothing."
-}

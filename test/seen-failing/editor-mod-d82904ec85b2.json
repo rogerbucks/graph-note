@@ -1,6 +1,0 @@
-{
-  "file": "packages/claude-code/test/editor-mod.test.js",
-  "test": "a note above the level set for Claude is asked about first (cc_classified_asks) > a note at or below Claude’s ceiling opens with no question",
-  "seen_failing_first": false,
-  "evidence": "A note at or below the ceiling opened before the gate existed, so this pins the unchanged path next to the new refusals."
-}
