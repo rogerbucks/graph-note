@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/block-copy.test.js",
+  "test": "the original rewritten after a copy is pasted > a copy pasted beside it and the original rewritten, in one change, still read as its own: stopped",
+  "seen_failing_first": false,
+  "evidence": "Asked for by the re-review of #465 (the beside variant, in one change). For rewrites that keep at least half of the held block's text the earlier half rule already stopped; the test pins that the rewritten readings of block-follow.ts, and the half rule now taken of the held block's text rather than the shorter one, still stop for them."
+}

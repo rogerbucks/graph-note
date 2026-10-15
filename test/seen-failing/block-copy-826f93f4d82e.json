@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/block-copy.test.js",
+  "test": "the original rewritten after a copy is pasted > a copy pasted beside it, then the original rewritten, told of each: stopped",
+  "seen_failing_first": false,
+  "evidence": "Asked for by the re-review of #465 (the beside variant, as separate changes). The earlier code already stopped here, at the paste itself, since an identical copy beside the block cannot be told from it; the test pins that the rewrite after it, however heavy, never ends the stop or follows the copy, now that the half rule no longer decides it."
+}
