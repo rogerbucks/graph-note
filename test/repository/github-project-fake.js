@@ -16,10 +16,14 @@ const restLogin = (author) => {
 /**
  * The answer of `gh api repos/{o}/{r}/issues?state=all&creator=<login>&per_page=100 --paginate --slurp`, as the REST
  * API gives it: the issues (and `pulls`, pull requests, which that endpoint lists too) the creator made, or all where none
- * is named, each in the REST shape, a hundred to the page, the pages in a list.
+ * is named, each in the REST shape, a hundred to the page, the pages in a list; with `sort=created&direction=desc` the
+ * newest first, and without `slurp` the first page alone. A creator in `unlisted` is given none, as if GitHub's creator
+ * filter did not find that login's issues.
  */
-export function restIssueList(issues, query, pulls = []) {
-  const creator = new URLSearchParams(query).get('creator');
+export function restIssueList(issues, query, { pulls = [], unlisted = [], slurp = true } = {}) {
+  const params = new URLSearchParams(query);
+  const creator = params.get('creator');
+  if (creator && unlisted.includes(creator)) return json(slurp ? [[]] : []);
   const mine = (login) => !creator || login === creator;
   const listed = [
     ...issues
@@ -36,9 +40,11 @@ export function restIssueList(issues, query, pulls = []) {
       })),
     ...pulls.filter((p) => mine(p.user?.login)).map((p) => ({ ...p, pull_request: { url: 'u' } })),
   ];
+  if (params.get('sort') === 'created' && params.get('direction') === 'desc')
+    listed.sort((a, b) => b.number - a.number);
   const pages = [];
   for (let at = 0; at < listed.length || pages.length === 0; at += 100) pages.push(listed.slice(at, at + 100));
-  return json(pages);
+  return json(slurp ? pages : pages[0]);
 }
 
 /**
@@ -319,7 +325,8 @@ export function fakeGithub({
       const [where, query] = verb.split('?');
       if (where !== `repos/${hub.repo}/issues`)
         throw new Error(`gh api ${verb}: names no repository, or the wrong one`);
-      return restIssueList(hub.issues, query, hub.pullsInIssues);
+      const { pullsInIssues: pulls, unlistedCreators: unlisted } = hub;
+      return restIssueList(hub.issues, query, { pulls, unlisted, slurp: args.includes('--slurp') });
     }
     if (group === 'api' && verb === 'graphql') return graphql(args, input);
     throw new Error(`fake gh does not know: ${args.join(' ')}`);

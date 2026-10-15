@@ -12,7 +12,6 @@ import { fileURLToPath } from 'node:url';
 import { REQUIREMENTS } from './check-requirements.mjs';
 import { typedMutation, valueArgs, withClosedOn } from './github-project-fields.mjs';
 import {
-  BOT_LOGIN,
   BUILD_STATUS_FIELD,
   PROJECT_TITLE,
   REMOVED_LABEL,
@@ -20,6 +19,7 @@ import {
   idOfBody,
   labelStyle,
 } from './github-project-desired.mjs';
+import { ISSUE_CAP, adoptersOf, authorOf, createGuard, readAdoptable, readIssues } from './github-project-issues.mjs';
 import { planProject } from './github-project-plan.mjs';
 import {
   PROJECT_CAP,
@@ -33,8 +33,8 @@ import {
 } from './github-project-read.mjs';
 import { RETRY_DELAYS_MS, paced, retrying, waitFor } from './github-project-retry.mjs';
 
-// the project is read by github-project-read.mjs; these stay importable from here
-export { PROJECT_CAP, findProject, readProject };
+// the project is read by github-project-read.mjs, the issues by github-project-issues.mjs; these stay importable from here
+export { ISSUE_CAP, PROJECT_CAP, adoptersOf, authorOf, findProject, readAdoptable, readIssues, readProject };
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OPTION_COLOURS = {
@@ -48,9 +48,8 @@ const OPTION_COLOURS = {
   },
 };
 
-/** The most labels, issues and projects a list is asked for; a list that comes back this long may be cut short. */
+/** The most labels a list is asked for; a list that comes back this long may be cut short (issues: ISSUE_CAP). */
 export const LABEL_CAP = 1000;
-export const ISSUE_CAP = 5000;
 /** The pause before each call that changes something but the first, and the wait before a retry, in milliseconds. */
 export const PAUSE_MS = 1000;
 export const RETRY_MS = 60000;
@@ -142,53 +141,6 @@ const readLabels = (run, repo) =>
     LABEL_CAP,
     'labels',
   ).map((l) => l.name);
-/**
- * An issue's author as one login: gh gives a GitHub App's as `app/<name>` (and marks it a bot), which is `<name>[bot]`
- * here, as the REST API and BOT_LOGIN spell it.
- */
-export function authorOf(author) {
-  const login = author?.login;
-  if (typeof login !== 'string') return undefined;
-  const bot = author.is_bot === true || login.startsWith('app/');
-  const name = login.replace(/^app\//, '');
-  return bot && !name.endsWith('[bot]') ? `${name}[bot]` : name;
-}
-
-/**
- * The issues of a repository, only those `author` wrote where one is given: the mirror adopts only the issues of its own
- * logins, so asking for those alone keeps issues anybody else files from reaching the cap of the list. They are read
- * from the REST list endpoint by `creator`, paged through, not by `gh issue list`, which may use the search (capped at
- * 1,000, and behind its index, so a create tried again could be made twice). A pull request, which that endpoint lists
- * too, is left out. Each is {number, title, body, state ('OPEN' or 'CLOSED'), labels (names), author, url, closedAt}.
- */
-export function readIssues(run, repo, author) {
-  const creator = author ? `&creator=${encodeURIComponent(author)}` : '';
-  const pages = JSON.parse(
-    run(['api', `repos/${repo}/issues?state=all${creator}&per_page=100`, '--paginate', '--slurp']),
-  );
-  const issues = pages.flat().filter((i) => !i.pull_request);
-  return whole(issues, ISSUE_CAP, 'issues').map((i) => ({
-    number: i.number,
-    title: i.title,
-    body: i.body ?? '',
-    state: String(i.state).toUpperCase(),
-    labels: (i.labels ?? []).map((l) => (typeof l === 'string' ? l : l.name)),
-    author: authorOf(i.user),
-    url: i.html_url,
-    closedAt: i.closed_at ?? null,
-  }));
-}
-
-/** The logins whose issues the mirror adopts: the repository's owner, and the workflows' bot, which runs it on main. */
-export const adoptersOf = (repo) => [ownerOf(repo), BOT_LOGIN];
-
-/** The issues each of the `adopters` wrote, once each, by number. */
-export function readAdoptable(run, repo, adopters) {
-  const found = new Map();
-  for (const login of [adopters].flat())
-    for (const issue of readIssues(run, repo, login)) found.set(issue.number, issue);
-  return [...found.values()].sort((a, b) => a.number - b.number);
-}
 
 /**
  * What GitHub holds now: {login, adopters, labelNames, issues, project}. `repo` is `owner/name`. The login is the one
@@ -245,15 +197,18 @@ function lookup(args, input, read, owner, adopters) {
 
 const flags = (flag, values) => values.flatMap((v) => [flag, v]);
 
-function doIssues(act, repo, plan) {
+function doIssues(act, repo, plan, guard) {
   const made = {};
   const issue = (...args) => inRepo(repo, ['issue', ...args]);
+  if (plan.issues.create.length) guard.before();
   for (const d of plan.issues.create) {
     const url = act(
       issue('create', '--title', d.title, '--body-file', '-', ...flags('--label', d.labels)),
       d.body,
     ).trim();
     made[d.id] = { number: Number(url.split('/').at(-1)), url };
+    // the first one made must be in the list by creator, or every run would make it again
+    if (Object.keys(made).length === 1) guard.after(made[d.id].number);
     if (d.state === 'closed') act(issue('close', String(made[d.id].number), '--reason', 'completed'));
   }
   for (const u of plan.issues.update) {
@@ -332,7 +287,7 @@ export function executePlan(run, repo, plan, opts = {}) {
     const { color, description } = labelStyle(name);
     act(inRepo(repo, ['label', 'create', name, '--color', color, '--description', description]));
   }
-  const made = doIssues(act, repo, plan);
+  const made = doIssues(act, repo, plan, createGuard(read, repo, plan));
   if (plan.project.unread) return;
   const known = { ...plan.issues.held, ...made };
   const idByNumber = new Map(Object.entries(known).map(([id, i]) => [i.number, id]));

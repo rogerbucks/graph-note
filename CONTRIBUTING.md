@@ -190,7 +190,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/github-project-waves.test.js` — that mirror's waves plan, `requirements/waves.json`: read and refused, each requirement's Wave and Order derived from it (a reordered plan moves Order), the iterations of the Wave field, the tally `--check` prints with a warning for each requirement not proved in no wave, and the real plan holding every requirement of slices 3 to 9 not yet proved.
 - `test/github-project-fields.test.js` — that mirror's fields that are not a single choice, each derived: Closed on set on close from the issue's closedAt (for one closed before the field existed too), cleared on reopen, unchanged when right and put right when not; Wave an iteration field with a wave's dates, Order a number, both moved by a reordered plan and cleared for a requirement in no wave, an iteration kept by its id when its dates change; and the rule Started on follows.
 - `test/github-project-adopt.test.js` — whose issues the mirror and the build status take for their own: the owner's and the workflows' bot's (`app/github-actions` as gh gives it), never a stranger's or another app's; the bot's first apply made and its second changing nothing; and an apply by any other login refused.
-- `test/github-project-run.test.js` — that mirror run by its workflow: the issues written with the workflow's token and by its bot, the project with `PROJECT_TOKEN` alone, a second run changing nothing, a missing or refused project token a warning with the issues mirrored alone, a seed with warnings applying nothing, `--accept-warnings` and `--allow-removals` refused, anything else an error, no token printed, and the command handing over in GitHub Actions.
+- `test/github-project-run.test.js` — that mirror run by its workflow: the issues written with the workflow's token and by its bot, the project with `PROJECT_TOKEN` alone, a second run changing nothing, a missing or refused project token a warning with the issues mirrored alone, a seed with warnings applying nothing, `--accept-warnings` and `--allow-removals` refused, anything else an error, no token printed, and the command handing over in GitHub Actions; the time budget; issues the creator list does not give back stopping the creating at the first and never made again by a later push; more than 20 creates on a board with its issues refused; and GitHub's rate limits a warning.
 - `test/github-project-workflow.test.js` — the workflow that runs that mirror: woken by a push to main alone, `issues: write` its one write permission, one run at a time and none cancelled, main checked out with nothing installed, the one command, and the project secret given only to it.
 - `test/github-project-plan.test.js` — that mirror's plan: what differs between the desired state and what GitHub holds, for the issues, the labels and the project.
 - `test/instruction-counts.test.js` — the benchmarks' work counted in CPU instructions: Cachegrind's output read, each case counted less its setup, the claims checked, nothing counted and said so where Valgrind is not installed, and every benchmark case still doing its work.
@@ -294,7 +294,14 @@ These test behaviour across modules, or the repository itself, so they are named
   workflow never passes `--accept-warnings` or `--allow-removals`. An apply may take 45 minutes (`MIRROR_BUDGET_MINUTES`
   sets another), inside the job's 60, since a first run makes some 2,000 paced calls: once that is spent it makes no
   more and warns "board partly updated; the next push continues", exit 0, and the next push plans again from what
-  GitHub holds. Anything else is an `::error::`. It runs main's own code
+  GitHub holds. GitHub's rate limits (a 403 or 429 that says "rate limit" or "submitted too quickly") warn "rate
+  limited; the next push continues", exit 0. **No issue is ever made twice:** the first issue an apply makes is looked
+  for at once in the list by its creator, and before making any the apply looks among the hundred newest issues for one
+  of its own that list missed; either way it stops creating and warns "bot-created issues aren't listed by creator=…;
+  creating stopped to avoid duplicates", exit 0, so a creator filter that ever failed could not make every push create
+  the issues again. And a run of the workflow makes at most 20 issues on a board that has its issues already (a first
+  mirror makes them all); a plan with more is refused with a warning and nothing applied, for a person to check, as the
+  removal guard does. Anything else is an `::error::`. It runs main's own code
   only: woken by a push to main alone, it checks out main, installs nothing and keeps no cache. One mirror runs at a time
   (`concurrency: project-mirror`, `cancel-in-progress: false`): GitHub keeps one run waiting in the group, a newer push
   replacing the one that waited and never the one running, which is enough since each run mirrors main as it stands.

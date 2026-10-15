@@ -16,6 +16,7 @@ import { seedOf } from './build-status-seed.mjs';
 import { BOT_LOGIN } from './github-project-desired.mjs';
 import { SeedWarnings } from './github-project-plan.mjs';
 import { BudgetSpent } from './github-project-retry.mjs';
+import { CreatesCapped, CreatesUnlisted, MAX_CREATES } from './github-project-issues.mjs';
 
 const REPO = /^[\w.-]+\/[\w.-]+$/;
 const PROJECT_CALL = /projectv2|projectsv2/i;
@@ -54,18 +55,32 @@ export function routed({ github, project }) {
   };
 }
 
+/** gh's own words in a failure, on one line and cut short. */
+const wordsOf = (error) => {
+  const words = String(error.stderr ?? error.message)
+    .replace(/\s+/g, ' ')
+    .trim();
+  return words.length > MAX_WORDS ? `${words.slice(0, MAX_WORDS)}…` : words;
+};
+
+/**
+ * Whether a failure is one of GitHub's rate limits: a 403 or 429 that says "rate limit" or "submitted too quickly". It
+ * is neither the token's trouble nor a fault of the mirror: the run stops with a warning, and the next push goes on.
+ */
+export function isRateLimited(error) {
+  const words = String(error?.stderr ?? error?.message ?? '');
+  return /\b(403|429)\b/.test(words) && /rate limit|submitted too quickly/i.test(words);
+}
+
 /**
  * What to say of a project call that failed. Only GitHub's 401, 403 or "Bad credentials" is the token's trouble, said as
  * such; anything else, a GraphQL input the schema refused among them, is a mirror error in gh's own words (cut short),
  * never blamed on the token. The token itself is taken out of the words by the caller.
  */
 export function projectProblem(error, token) {
-  const words = String(error.stderr ?? error.message)
-    .replace(/\s+/g, ' ')
-    .trim();
-  const cut = words.length > MAX_WORDS ? `${words.slice(0, MAX_WORDS)}…` : words;
-  if (/\b401\b|bad credentials/i.test(words)) return describeProblem(error, token).text;
-  if (/\b403\b/.test(words)) return `PROJECT_TOKEN was refused by GitHub (403), so the board was not updated: ${cut}.`;
+  const cut = wordsOf(error);
+  if (/\b401\b|bad credentials/i.test(cut)) return describeProblem(error, token).text;
+  if (/\b403\b/.test(cut)) return `PROJECT_TOKEN was refused by GitHub (403), so the board was not updated: ${cut}.`;
   return `github-project: mirror error, so the project was not updated: ${cut}.`;
 }
 
@@ -95,7 +110,7 @@ export function runInWorkflow(options, env, io) {
     const seed = (r, repo) => seedOf(r, repo, { write: print });
     const apply = (project) =>
       mirror(
-        { desired, mode: 'apply', allowRemovals: false, acceptWarnings: false, project, seed },
+        { desired, mode: 'apply', allowRemovals: false, acceptWarnings: false, project, seed, maxCreates: MAX_CREATES },
         { run, originRepo: env.GITHUB_REPOSITORY, write: print, creator: BOT_LOGIN, sleep, budget },
       );
     if (!runners.project) {
@@ -106,7 +121,7 @@ export function runInWorkflow(options, env, io) {
     try {
       apply(true);
     } catch (e) {
-      if (!e.projectToken) throw e;
+      if (!e.projectToken || isRateLimited(e)) throw e;
       say('warning', `${projectProblem(e, env.PROJECT_TOKEN)} The issues are mirrored without it.`);
       apply(false);
     }
@@ -118,6 +133,11 @@ export function runInWorkflow(options, env, io) {
     }
     if (e instanceof SeedWarnings) {
       say('warning', `github-project: nothing was applied: ${e.message.replace(/; pass --accept-warnings.*$/, '')}`);
+      return 0;
+    }
+    const stop = e instanceof CreatesUnlisted || e instanceof CreatesCapped ? e.message : null;
+    if (stop || isRateLimited(e)) {
+      say('warning', `github-project: ${stop ?? `rate limited; the next push continues (${wordsOf(e)})`}`);
       return 0;
     }
     say('error', `github-project: ${e.stderr ?? e.message}`);

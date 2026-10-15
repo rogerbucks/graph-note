@@ -210,6 +210,7 @@ export function buildPlan(desired, remote) {
         : planProject(dated, desired.fields, remote.project, desired.iterations ?? null),
     projectRef: remote.project ? { id: remote.project.id, number: remote.project.number } : null,
     adopters,
+    creator: remote.login,
     dated,
     warnings: issues.warnings,
   };

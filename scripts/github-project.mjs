@@ -44,6 +44,7 @@ import { SeedWarnings, buildPlan, formatPlan, guardProblem } from './github-proj
 import { executePlan, ghRunner, pinRepo, readRemote, repoOfRemote } from './github-project-gh.mjs';
 import { retrying } from './github-project-retry.mjs';
 import { runInWorkflow } from './github-project-run.mjs';
+import { CreatesCapped, createsProblem } from './github-project-issues.mjs';
 import { WAVES_FILE, readWaves, waveLines } from './github-project-waves.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -115,11 +116,14 @@ function originRepo() {
  * `acceptWarnings` is given; a check says that it would. With `project` false the project is not read and nothing is done
  * to it, and no seed is made: only the issues are mirrored. `deps.creator`, where given, is the login that makes issues
  * (the workflow's bot), so GitHub is not asked who is signed in; `deps.budget`, where given, is the time the apply may
- * take ({now, until}, see paced in github-project-retry.mjs), after which it stops with BudgetSpent. An apply by a login whose issues would not be adopted
+ * take ({now, until}, see paced in github-project-retry.mjs), after which it stops with BudgetSpent. With `maxCreates`
+ * (the workflow's), an apply that would make more issues than that on a board with issues of its own stops before
+ * anything changes (CreatesCapped); and any apply stops making issues (CreatesUnlisted) when the list by creator does
+ * not give back what it made (github-project-issues.mjs). An apply by a login whose issues would not be adopted
  * (neither the owner nor the bot) is refused before anything changes.
  */
 export function mirror(
-  { desired: base, mode, allowRemovals, acceptWarnings, seed, project = true },
+  { desired: base, mode, allowRemovals, acceptWarnings, seed, project = true, maxCreates },
   { run: raw, originRepo: origin, write, sleep, creator, budget },
 ) {
   const run = retrying(raw, sleep ? { sleep } : {});
@@ -150,6 +154,8 @@ export function mirror(
   }
   if (problem && !allowRemovals) throw new Error(problem);
   if (seedProblem && !acceptWarnings) throw new SeedWarnings(seedProblem);
+  const tooMany = maxCreates === undefined ? null : createsProblem(plan, maxCreates);
+  if (tooMany) throw new CreatesCapped(tooMany);
   executePlan(raw, repo, plan, { ...(sleep ? { sleep } : {}), ...(budget ? { budget } : {}) });
   write('github-project: applied\n');
 }

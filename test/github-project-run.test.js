@@ -30,9 +30,10 @@ const load = (slices) =>
  * The world of one run: GitHub as the bot sees it (issues, labels and the project in `gh`, the files and pull requests
  * the seed reads in `side`), and a `spawn` that answers by the token gh is started with, refusing a call made with the
  * wrong one, as GitHub would. `refuseProject` makes every call with the project token fail with GitHub's words, and
- * `refuseIssues` every label made with the workflow's.
+ * `refuseIssues` every label made with the workflow's; `refuse(args)`, where given, gives the words any call fails with,
+ * or null.
  */
-function setUp({ refuseProject = null, refuseIssues = null } = {}) {
+function setUp({ refuseProject = null, refuseIssues = null, refuse = () => null } = {}) {
   const gh = fakeGithub({ login: 'app/github-actions' });
   const side = fakeRepoSide({ issues: () => gh.hub.issues });
   side.hub.files.main = FIXTURE;
@@ -44,9 +45,11 @@ function setUp({ refuseProject = null, refuseIssues = null } = {}) {
     try {
       if (token === PROJECT_TOKEN && refuseProject) throw new Error(refuseProject);
       if (refuseIssues && args[0] === 'label' && args[1] === 'create') throw new Error(refuseIssues);
+      if (refuse(args)) throw new Error(refuse(args));
       if (project !== (token === PROJECT_TOKEN)) throw new Error(`gh ${args.join(' ')}: the wrong token`);
       if (args[0] === 'api' && args[1] === 'user') throw new Error('HTTP 403: Resource not accessible by integration');
-      const repoSide = args[0] === 'api' && String(args[1]).startsWith('repos/');
+      // the files and pull requests the seed reads are the repository side's; the issues, listed too, are gh's
+      const repoSide = args[0] === 'api' && String(args[1]).startsWith('repos/') && !/\/issues\?/.test(args[1]);
       return { status: 0, stdout: (repoSide ? side.run : gh.run)(args, options.input), stderr: '' };
     } catch (e) {
       return { status: 1, stdout: '', stderr: e.stderr ?? e.message };
@@ -226,6 +229,105 @@ describe('the time an apply may take', () => {
     assert.equal(w.go({ MIRROR_BUDGET_MINUTES: 'soon' }), 1);
     assert.match(annotations(w.text(), 'error')[0], /MIRROR_BUDGET_MINUTES/);
     assert.deepEqual(w.seen, []);
+  });
+});
+
+describe('issues the bot makes that the creator list does not give back', () => {
+  const BOT_CREATOR = 'github-actions[bot]';
+  const unlisted = (w) => {
+    w.gh.hub.unlistedCreators = [BOT_CREATOR];
+  };
+  const STOPPED =
+    /bot-created issues aren’t listed by creator=github-actions\[bot\]; creating stopped to avoid duplicates/;
+
+  test('stop the creating at the first one: a warning, exit 0, and one issue made', () => {
+    const w = setUp();
+    unlisted(w);
+    assert.equal(w.go(), 0);
+    assert.ok(annotations(w.text(), 'warning').some((l) => STOPPED.test(l)));
+    assert.equal(w.gh.hub.issues.length, 1);
+    assert.deepEqual(annotations(w.text(), 'error'), []);
+  });
+
+  test('are never made again by the next push: it sees the one already made, and creates nothing', () => {
+    const w = setUp();
+    unlisted(w);
+    w.go();
+    w.out.length = 0;
+    assert.equal(w.go(), 0);
+    assert.ok(annotations(w.text(), 'warning').some((l) => STOPPED.test(l)));
+    assert.equal(w.gh.hub.issues.length, 1, 'no duplicate, push after push');
+    w.go();
+    assert.equal(w.gh.hub.issues.length, 1);
+  });
+
+  test('do not stop a run whose creator list gives them back', () => {
+    const w = setUp();
+    w.go();
+    assert.equal(w.gh.hub.issues.length, 5);
+    assert.ok(!annotations(w.text(), 'warning').some((l) => STOPPED.test(l)));
+  });
+});
+
+describe('a run that would make many issues', () => {
+  const EXTRA = Array.from(
+    { length: 21 },
+    (_, n) => `(extra_${n}:Requirement {section: '3', slice: 3, level: 'must', rule: 'An extra rule ${n}.'}),`,
+  ).join('\n');
+  const many = FIXTURE.replace('// ── Tests ──', `${EXTRA}\n// ── Tests ──`);
+  const loadMany = (slices) => desiredState(readBoard(many), WORKSTREAMS, slices);
+
+  test('is refused with a warning, exit 0, when the board already has its issues: more than 20 creates', () => {
+    const w = setUp();
+    w.go();
+    w.gh.hub.mutations.length = 0;
+    w.out.length = 0;
+    assert.equal(w.go({}, {}, { load: loadMany }), 0);
+    const warning = annotations(w.text(), 'warning').find((l) => /more than 20/.test(l));
+    assert.match(warning, /the plan makes 21 issues, more than 20 in one run/);
+    assert.deepEqual(w.gh.hub.mutations, [], 'nothing was applied');
+  });
+
+  test('is made in full on a first mirror, with no issue of its own yet', () => {
+    const w = setUp();
+    assert.equal(w.go({}, {}, { load: loadMany }), 0);
+    assert.equal(w.gh.hub.issues.length, 26);
+  });
+
+  test('has no such cap when a person applies it', () => {
+    const gh = fakeGithub();
+    const deps = { run: gh.run, originRepo: REPO, write: () => {}, sleep: () => {} };
+    mirror({ desired: load(SLICES), mode: 'apply' }, deps);
+    mirror({ desired: loadMany(SLICES), mode: 'apply' }, deps);
+    assert.equal(gh.hub.issues.length, 26);
+  });
+});
+
+describe('GitHub’s rate limits', () => {
+  const LIMITED = /^::warning::github-project: rate limited; the next push continues/;
+
+  test('a 403 rate limit on the issues is a warning, exit 0: not an error, and not the token’s trouble', () => {
+    const words = 'HTTP 403: API rate limit exceeded for installation ID 1 (https://api.github.com/)';
+    const w = setUp({ refuse: (args) => (args[0] === 'issue' && args[1] === 'create' ? words : null) });
+    assert.equal(w.go(), 0);
+    assert.ok(annotations(w.text(), 'warning').some((l) => LIMITED.test(l)));
+    assert.deepEqual(annotations(w.text(), 'error'), []);
+    assert.doesNotMatch(w.text(), /PROJECT_TOKEN/);
+  });
+
+  test('a 429 “submitted too quickly” on the project is a warning too, never PROJECT_TOKEN’s trouble', () => {
+    const words = 'HTTP 429: You have exceeded a secondary rate limit: content was submitted too quickly';
+    const w = setUp({ refuseProject: words });
+    assert.equal(w.go(), 0);
+    const warnings = annotations(w.text(), 'warning');
+    assert.ok(warnings.some((l) => LIMITED.test(l)));
+    assert.ok(!warnings.some((l) => /PROJECT_TOKEN|mirror error/.test(l)));
+  });
+
+  test('a 403 that is not a rate limit is still the token’s trouble on the project, and an error on the issues', () => {
+    const w = setUp({ refuse: (args) => (args[0] === 'label' ? 'HTTP 403: Resource not accessible' : null) });
+    assert.equal(w.go(), 1);
+    assert.ok(!annotations(w.text(), 'warning').some((l) => LIMITED.test(l)));
   });
 });
 
