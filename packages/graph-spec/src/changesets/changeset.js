@@ -8,7 +8,7 @@ const { worldFromStore, canon } = require('../graph/graph.js');
 const { latestAssessment, confidenceFromEvidence, claimStatus } = require('../rules/certainty.js');
 const { check } = require('../rules/check.js');
 const { lint } = require('./dialect-lint.js');
-const { splitChangeset, readChange, changeId, applyChange, isRecordAdd } = require('./changes.js');
+const { splitChangeset, readChange, changeId, applyChange, isRecordAdd, addsCache } = require('./changes.js');
 
 // what stops a DELETE or SET, by kind (applyChange)
 const LABELS = {
@@ -120,6 +120,9 @@ function checkChangeset(base, block, matrix, sw = new Set()) {
   if (!sw.has('additions-only'))
     add('it only adds — nothing removed, nothing already there changed (§12)', !gone && !changed);
   const newNodes = [...after[0]].filter(([i]) => !before[0].has(i));
+  const caches = newNodes.some(([, [labels, props]]) => addsCache(labels.split(':'), JSON.parse(props)));
+  add("it adds no cache — a claim's likelihood, confidence and status are the engine's (§24 rule 5)", !caches);
+  if (caches) return { results: res, header: h, after: null };
   // a set that is not only additions is not applied further: its DELETEs and SETs would act on a graph it has wrongly changed
   if (read.length && (gone || changed) && !sw.has('additions-only')) return { results: res, header: h, after: null };
   for (const c of read) {

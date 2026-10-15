@@ -32,6 +32,7 @@ from graphspec.reader.whitespace import N, S
 from graphspec.reader.whitespace import strip as ws_strip
 from graphspec.rules.changes import (
     LABELS,
+    adds_cache,
     apply_change,
     gql_of,
     is_record_add,
@@ -294,6 +295,15 @@ def check_changeset(
             "correct a fact with a new element that supersedes it, never an edit",
         )
     new_nodes = {i: after[0][i][0] for i in after[0] if i not in before[0]}
+    caches = [i for i in new_nodes if adds_cache(*after[0][i])]
+    add(
+        "it adds no cache — a claim's likelihood, confidence and status are the engine's "
+        "(§24 rule 5)",
+        not caches,
+        f"{caches[:4]} — leave them out: the engine makes them from the claim's assessments",
+    )
+    if caches:
+        return res, h, None
     # a set that is not only additions is not applied further
     if read and (gone or changed) and "additions-only" not in switches:
         return res, h, None

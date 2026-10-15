@@ -234,4 +234,7 @@ function applyChange(store, g, c) {
   return null;
 }
 
-module.exports = { splitChangeset, readChange, changeId, applyChange, isRecordAdd };
+/** Whether a new thing is a claim carrying a cache (likelihood, confidence or status), which is the engine's to make. */
+const addsCache = (labels, props) => labels.includes('Claim') && CACHE_KEYS.some((k) => k in props);
+
+module.exports = { splitChangeset, readChange, changeId, applyChange, isRecordAdd, addsCache };

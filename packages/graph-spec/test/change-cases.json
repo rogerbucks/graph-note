@@ -24,6 +24,10 @@
     "(library_schema)-[:DECLARES]->(t_wrote),",
     "(t_event:ElementType {id: 'type:Event', name: 'Event', kind: 'node'}),",
     "(library_schema)-[:DECLARES]->(t_event),",
+    "(t_delivery:ElementType {id: 'type:Delivery', name: 'Delivery', kind: 'node'}),",
+    "(t_delivered:ElementType {id: 'type:DELIVERED', name: 'DELIVERED', kind: 'edge', reading: 'delivered', reverse_name: 'delivered by'}),",
+    "(library_schema)-[:DECLARES]->(t_delivery),",
+    "(library_schema)-[:DECLARES]->(t_delivered),",
     "(ada:Person {name: 'Ada'}),",
     "(bot:Model {name: 'Drafter'}),",
     "(sale:Event {title: 'A sale', amount: 10}),"
@@ -264,6 +268,66 @@
       "failed": ["cache"],
       "changes": [],
       "after": null
+    },
+    {
+      "name": "a thing is a record by any of its labels, not only the first",
+      "body": ["(m1:Book:Event {title: 'A sale of a book'})", "MATCH (v:Book {id: 'm1'}) DELETE v"],
+      "failed": ["record"],
+      "changes": [["delete-thing", null]],
+      "after": null
+    },
+    {
+      "name": "a thing a delivery delivered is an issued document, whatever its label",
+      "body": [
+        "(dv:Delivery {title: 'Sent'})",
+        "(doc:Book {title: 'Invoice'})",
+        "(dv)-[:DELIVERED]->(doc)",
+        "MATCH (v:Book {id: 'doc'}) DETACH DELETE v"
+      ],
+      "failed": ["record"],
+      "changes": [["detach-delete-thing", null]],
+      "after": null
+    },
+    {
+      "name": "a model may not delete its own assessment",
+      "by": "bot",
+      "body": [
+        "(a3:Assessment {at: DATE '2026-10-01'})",
+        "(a3)-[:BY]->(bot)",
+        "MATCH (v:Assessment {id: 'a3'}) DELETE v"
+      ],
+      "failed": ["record"],
+      "changes": [["delete-thing", null]],
+      "after": null
+    },
+    {
+      "name": "a value made by an activity is a cache and is never set",
+      "body": [
+        "(r1:Book {title: 'Report'})",
+        "(run:Book {title: 'The run'})",
+        "(r1)-[:WAS_GENERATED_BY]->(run)",
+        "SET r1.title = 'Changed'"
+      ],
+      "failed": ["record"],
+      "changes": [["set-thing", null]],
+      "after": null
+    },
+    {
+      "name": "a model may not add a delivery of a thing",
+      "by": "bot",
+      "body": ["(doc2:Book {title: 'Invoice'})", "(dv2:Delivery {title: 'Sent'})", "(dv2)-[:DELIVERED]->(doc2)"],
+      "failed": ["model"],
+      "changes": [],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(doc2:Book {title: 'Invoice'}),",
+        "(dv2:Delivery {title: 'Sent'}),",
+        "(dv2)-[:DELIVERED]->(doc2),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
+      ]
     },
     {
       "name": "a record is never changed",

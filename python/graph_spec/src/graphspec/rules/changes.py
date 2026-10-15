@@ -4,6 +4,7 @@ applied to a store."""
 from __future__ import annotations
 
 import datetime as dt
+import json
 import re
 import unicodedata
 from collections.abc import Collection
@@ -329,6 +330,12 @@ def is_record_add(labels: Collection[str]) -> bool:
         "Assessment",
         "Evidence",
     }
+
+
+def adds_cache(labels: Collection[str], props_json: str) -> bool:
+    """Whether a new thing is a claim carrying a cache (likelihood, confidence or status), which is
+    the engine's to make. `props_json` is its properties as the state holds them."""
+    return "Claim" in labels and bool(CACHE_KEYS & set(json.loads(props_json)))
 
 
 def apply_change(store: Store, g: str, c: dict[str, Any]) -> tuple[str, str] | None:
