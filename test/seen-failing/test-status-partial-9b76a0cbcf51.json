@@ -1,0 +1,6 @@
+{
+  "file": "test/test-status-partial.test.js",
+  "test": "a flip of a test status by hand > written to planned is refused as a flip back",
+  "seen_failing_first": false,
+  "evidence": "Passed first: written to planned was already refused as a flip back; it is kept as the third backward move the new rule must still refuse."
+}
