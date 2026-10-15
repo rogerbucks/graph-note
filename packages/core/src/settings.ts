@@ -4,6 +4,8 @@
 import { DEPARTURES } from './strictness.ts';
 import type { Departure, Strictness, StrictnessSettings } from './strictness.ts';
 import { STYLE } from './layout.ts';
+import { switchesFrom } from './ai-matrix.ts';
+import type { MatrixSwitch } from './ai-matrix.ts';
 import { vaultFolder } from './vault-folder.ts';
 
 /** An AI model set up for §19: what it is for, and its ceiling — the highest classification of note it may be sent. */
@@ -19,7 +21,7 @@ export interface AiModel {
   /** The row of the vault's destination matrix the user picked for it (§19, model_ceiling); with none, `ceiling` rules. */
   matrixRow?: string;
   /** The conditional classes of that row the user switched on for this model, as the matrix names them. */
-  matrixOn?: string[];
+  matrixOn?: MatrixSwitch[];
 }
 
 /** How a line the editor writes is indented. */
@@ -320,7 +322,7 @@ export function aiModel(given: Partial<AiModel> & Record<string, unknown>, class
     // kept only with a row picked, so a model with none is as it was
     ...(text(given.matrixRow).trim() && {
       matrixRow: text(given.matrixRow).trim(),
-      matrixOn: [...new Set(Array.isArray(given.matrixOn) ? given.matrixOn.filter((c) => typeof c === 'string') : [])],
+      matrixOn: switchesFrom(given.matrixOn),
     }),
   };
 }

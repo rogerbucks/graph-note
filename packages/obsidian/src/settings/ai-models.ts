@@ -103,17 +103,16 @@ const parts = (key: string): [number, Text] => {
 };
 
 /** A model's field, by its control key `aiModels.<index>.<field>`; a class's switch is on or off. */
-export function getModelValue(s: Settings, key: string): string | boolean {
-  if (switchedClass(key)) return switchIsOn(s, key);
+export function getModelValue(s: Settings, key: string, rows: MatrixRow[]): string | boolean {
+  if (switchedClass(key)) return switchIsOn(s, rows, key);
   const [i, field] = parts(key);
   return s.aiModels[i]?.[field] ?? '';
 }
 
 /** The change a model's field makes to the settings, by its control key; a new row starts with every switch off. */
-export function setModelValue(s: Settings, key: string, value: unknown): Partial<Settings> {
+export function setModelValue(s: Settings, key: string, value: unknown, rows: MatrixRow[]): Partial<Settings> {
   const on = switchedClass(key);
-  const model = on ? s.aiModels[on.i] : undefined;
-  if (on && model) return { aiModels: changed(s, on.i, { matrixOn: withSwitch(model, on.name, !!value) }) };
+  if (on) return { aiModels: changed(s, on.i, { matrixOn: withSwitch(s, rows, on.i, on.name, !!value) }) };
   const [i, field] = parts(key);
   return { aiModels: changed(s, i, { [field]: String(value), ...(field === 'matrixRow' ? { matrixOn: [] } : {}) }) };
 }

@@ -17,6 +17,7 @@ import {
 } from '@graph-note/core';
 import type { MatrixRow, PreparedSend, ScopeChoice } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
+import { knownClass } from './matrix-known';
 import { readMatrix } from './matrix-note';
 import { obsidianTransport } from './send';
 
@@ -43,6 +44,8 @@ export class SendDialog extends Modal {
   private prepared: PreparedSend | null = null;
   private refusal: string | null = null;
   private sending = false;
+  /** Counts each Show and each change, so a matrix read that finishes after either is known to be out of date. */
+  private asked = 0;
   private readonly things: Map<string, Listed[]>;
   private readonly views: Map<string, string[]>;
   private shownEl: HTMLElement | null = null;
@@ -196,6 +199,7 @@ export class SendDialog extends Modal {
 
   /** Something chosen changed: what was shown is no longer what would be sent, so the yes waits until it is shown again. */
   private changed(redraw: boolean): void {
+    this.asked++;
     this.prepared = null;
     this.refusal = null;
     if (redraw) this.draw();
@@ -207,8 +211,27 @@ export class SendDialog extends Modal {
     // the matrix note is read now, so a model held to a row is held to the row as the note has it; with none named,
     // nothing is waited for
     const note = this.plugin.settings.aiMatrixNote.trim();
-    if (!note) this.prepare([]);
-    else void readMatrix(this.app, note).then((rows) => this.prepare(rows));
+    this.prepared = null;
+    this.refusal = null;
+    this.drawShown();
+    const ticket = ++this.asked;
+    if (!note) {
+      this.prepare([]);
+      return;
+    }
+    // a read that finishes after anything chosen has changed is ignored, so it never makes ready what was not shown
+    readMatrix(this.app, note, knownClass(this.plugin.settings)).then(
+      (rows) => {
+        if (ticket === this.asked) this.prepare(rows);
+      },
+      () => {
+        if (ticket !== this.asked) return;
+        this.prepared = null;
+        this.refusal =
+          'The matrix note could not be read, so nothing is sent: check the note named in the settings, then press Show what will be sent again.';
+        this.drawShown();
+      },
+    );
   }
 
   /** Makes the request against the matrix rows as read. */

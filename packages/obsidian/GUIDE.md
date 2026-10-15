@@ -163,8 +163,10 @@ module that ties the parts together, named as the folder is.
   an answer is written into the note as a change set after the graph's blocks, through `vault.process`, and a failure is
   said in a notice, the note left as it was.
 - `matrix-note.ts` — the destination matrix note, named in the settings, read into plain rows (`matrixRows`: the first
-  table with an empty top-left cell; ✅ yes, ⚠️ conditional with the words after it as the condition, ❌ no, anything
-  else no) and read afresh each time what will be sent is shown (`readMatrix`), so the core never sees the note's layout.
+  table with an empty top-left cell and a known class across its header; a cell exactly ✅ is yes, ❌ no, ⚠️ with the
+  words after it conditional, anything else unknown, which refuses; `\|` stays in its cell) and read afresh each time
+  what will be sent is shown (`readMatrix`), so the core never sees the note's layout. `matrix-known.ts` says which
+  header names are known classes. A read that fails refuses plainly, and one that finishes after a change is ignored.
 - `send.ts` — the one module that reaches the network: the request, with Obsidian's `requestUrl`, never a vendor's
   library. Only the send dialog imports it (`test/policy.test.js`).
 

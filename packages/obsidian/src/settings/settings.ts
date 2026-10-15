@@ -3,9 +3,10 @@
 // so each is found by the settings search. Each change is saved at once, read back as the core reads settings.
 import { PluginSettingTab } from 'obsidian';
 import type { App, SettingDefinition, SettingDefinitionItem } from 'obsidian';
-import { OPTIONS, classMapFrom, classMapText, unmatchedClasses } from '@graph-note/core';
+import { OPTIONS, classMapFrom, classMapProblems, classMapText, unmatchedClasses } from '@graph-note/core';
 import type { MatrixRow, Option, Settings } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
+import { knownClass } from '../ai/matrix-known';
 import { readMatrix } from '../ai/matrix-note';
 import { aiModelList, getModelValue, setModelValue } from './ai-models';
 
@@ -37,7 +38,7 @@ export class GraphNoteSettingTab extends PluginSettingTab {
   private matrix: MatrixRow[] = [];
 
   private async loadMatrix(): Promise<void> {
-    const rows = await readMatrix(this.app, this.owner.settings.aiMatrixNote);
+    const rows = await readMatrix(this.app, this.owner.settings.aiMatrixNote, knownClass(this.owner.settings));
     if (JSON.stringify(rows) === JSON.stringify(this.matrix)) return;
     this.matrix = rows;
     this.update();
@@ -75,6 +76,7 @@ export class GraphNoteSettingTab extends PluginSettingTab {
             ...(unmatchedClasses(this.matrix, s.classifications, s.aiClassMap).length
               ? [`Flagged now: ${unmatchedClasses(this.matrix, s.classifications, s.aiClassMap).join(', ')}.`]
               : []),
+            ...classMapProblems(s.classifications, s.aiClassMap),
           ].join(' '),
           control: { type: 'textarea', key: 'aiClassMap' },
         },
@@ -112,7 +114,7 @@ export class GraphNoteSettingTab extends PluginSettingTab {
     if (key.startsWith('allowed.')) return s.allowed.some((a) => `allowed.${a}` === key);
     if (key === 'classifications') return s.classifications.join('\n');
     if (key === 'aiClassMap') return classMapText(s.aiClassMap);
-    if (key.startsWith('aiModels.')) return getModelValue(s, key);
+    if (key.startsWith('aiModels.')) return getModelValue(s, key, this.matrix);
     return s[key as keyof Settings];
   }
 
@@ -131,7 +133,7 @@ export class GraphNoteSettingTab extends PluginSettingTab {
       if (!levels.length) return;
       change = { classifications: levels };
     } else if (key === 'aiClassMap') change = { aiClassMap: classMapFrom(String(value)) };
-    else if (key.startsWith('aiModels.')) change = setModelValue(s, key, value);
+    else if (key.startsWith('aiModels.')) change = setModelValue(s, key, value, this.matrix);
     else change = { [key]: value };
     await this.owner.saveSettings({ ...s, ...change });
     // a level's own sentence, and a model's ceiling, follow a choice; the page is never drawn again under typing

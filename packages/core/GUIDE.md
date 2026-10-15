@@ -667,6 +667,11 @@ exactly what goes and said yes to it. Its answer comes back as a proposal (§17)
   guessed, and never allowed. `matrixGrants` lists a row's classes for the settings page, with the condition to show
   beside each switch. `clearance` takes the matrix as its last argument and, for a model with a row, uses it in place
   of the ceiling; with no row the ceiling stands. `classMapFrom` and `classMapText` keep the mapping table as text.
+  Nothing fails open: a row named twice, or two columns standing for one classification, refuses (`matrixProblems`
+  flags them); a switch (`matrixOn`) keeps the condition it was turned on under and is dropped when the note's words
+  change or the cell is no longer conditional; a cell not exactly ✅, ⚠️ or ❌ is `unknown` and refuses; names are
+  compared exactly, so a compatibility character never matches; a table that disagrees with itself or with a name
+  matches nothing (`classMapProblems`).
 - `vault-folder.ts` — `vaultFolder`, the export folder kept inside the vault, re-exported by `settings.ts`.
 - `ai-scope.ts` — `aiScope`: what is sent of a note, as the user chose (the whole graph, a view, or things by name),
   written out again as GQL from the graph as read: each thing with its kinds and properties, and the links between the
