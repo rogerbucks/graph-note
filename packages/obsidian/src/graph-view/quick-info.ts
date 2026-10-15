@@ -104,6 +104,8 @@ export class QuickInfo {
     if (!s) return;
     this.held = { id: e.pointerId, x: e.clientX, y: e.clientY };
     this.after(HOLD_MS, () => {
+      // nothing to show: the hold is nothing, and the lift is a tap as any other
+      if (!infoOf(this.host.o.reading, this.host.o.graph, s.subject)) return;
       this.fired = true;
       return this.show(s.subject, s.at, 'hold');
     });

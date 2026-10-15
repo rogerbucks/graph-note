@@ -281,6 +281,25 @@ describe('quick_info_no_hover_only: the same tooltip by keyboard focus and by lo
     }
   });
 
+  test('a hold on something with nothing to show opens no tooltip, and its lift is still a tap', async () => {
+    const env = await load({ files: { ...FILES } });
+    try {
+      const { el, time } = await drawn(env);
+      // a box the drawing's reading knows nothing of: no info to give
+      const ghost = el.querySelector('svg').createEl('g', { cls: 'node', attr: { 'data-key': 'ghost', id: 'node99' } });
+      const marks = () => JSON.stringify(el.querySelectorAll('g').map((g) => g.getAttribute('class')));
+      const before = marks();
+      touchDown(el, ghost);
+      time.fire();
+      await settled();
+      assert.equal(open(env), false);
+      touchUp(el, ghost, { x: 20, y: 20 });
+      assert.notEqual(marks(), before, 'the lift went on to select it, as any tap does');
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('a finger that moves off is dragging, not holding', async () => {
     const env = await load({ files: { ...FILES } });
     try {
