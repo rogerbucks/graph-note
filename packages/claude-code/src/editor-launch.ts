@@ -7,7 +7,13 @@
 // the host's calls are handed in, so the tests run the launcher over real processes and the mod over the host's own.
 import { claudeGate, sha256 } from '@graph-note/core';
 import type { Gate, GateSettings } from '@graph-note/core';
-import { notePath } from './graph-view.ts';
+import { folderOf, fullPath, nameOf } from './editor-paths.ts';
+import { NOT_THE_PERSON, NOT_THE_PERSON_ASKING, fromPerson } from './editor-words.ts';
+import type { EditOutcome } from './editor-words.ts';
+
+// what the launcher says and understands lives in editor-words.ts; it is one module to the code that imports it
+export { confirmArgs, editArgs, fromPerson, sayEdit, sayStopped } from './editor-words.ts';
+export type { EditOutcome } from './editor-words.ts';
 
 /** One piece of what a started process wrote, as `$.process.spawn` hands it over. */
 export interface SpawnedPiece {
@@ -48,14 +54,6 @@ export interface EditorPorts {
   after: (ms: number, fn: () => void) => { cancel: () => void };
 }
 
-/**
- * What `/graph edit` came to: the note it opened, or why it could not. A note held back by the gate says so in `held`:
- * `asks` waits for `confirm` (a yes), `refused` has no yes (the highest classification, a credential, or a note or
- * settings that could not be read), and neither is drawn in its place.
- */
-export type EditOutcome =
-  { ok: true; title: string; reused: boolean } | { ok: false; why: string; held?: 'asks' | 'refused' };
-
 /** A server running: what it was started for, and how its life is ended and awaited. */
 interface Running {
   note: string;
@@ -73,79 +71,11 @@ interface Checked {
   settings: GateSettings | null;
 }
 
-const NOT_THE_PERSON =
-  'Only the person typing can say yes to opening a note above the level set for Claude: a command from anything else is refused.';
-const NOT_THE_PERSON_ASKING =
-  'Only the person typing can say yes to that, and this command did not come from them, so it is not opened.';
-
-/**
- * Whether a command came from the person typing in the composer: the host's `origin.kind` is exactly `composer`. A
- * plugin, a peer, a channel, a coordinator, a schedule, a bridge, an origin not known and none at all are not them.
- */
-export function fromPerson(origin: unknown): boolean {
-  return typeof origin === 'object' && origin !== null && (origin as { kind?: unknown }).kind === 'composer';
-}
-
 /** How long a server has to hand over its address before it is killed and the start said to have failed. */
 export const START_TIMEOUT_MS = 15_000;
 
 const NO_NODE =
   'Node could not be started, and the editor needs it. Install Node.js, make sure `node` is on the path, then try again.';
-
-/** The words of the pane's answer: which note, and nothing of the address, the token or the note's text. */
-export function sayEdit(outcome: EditOutcome): string {
-  if (outcome.ok) {
-    const open = outcome.reused ? 'The editor is already open for' : 'The editor is ready for';
-    return `${open} ${outcome.title}. The link to open in the browser pane is in the Graph editor pane, and is not shown here.`;
-  }
-  const why = /[.!?]$/.test(outcome.why) ? outcome.why : `${outcome.why}.`;
-  if (outcome.held === 'asks')
-    return `${why} Nothing was opened or shown. Say /graph confirm to open it anyway; anything else leaves it closed.`;
-  if (outcome.held === 'refused') return `${why} Nothing was opened or shown.`;
-  return `The editor was not started: ${why} The drawing /graph gives is shown instead.`;
-}
-
-/** Whether the arguments are `/graph confirm`, the user's yes to the question the last `/graph edit` asked. */
-export function confirmArgs(args: string): boolean {
-  return args.trim() === 'confirm';
-}
-
-/** The words for a server that has stopped, with the reason. */
-export function sayStopped(reason: string): string {
-  return `The editor stopped: ${reason}.`;
-}
-
-/** The note named after `/graph edit`, or null when the arguments are not that command; '' when no note was named. */
-export function editArgs(args: string): string | null {
-  const m = /^edit(?:\s+([\s\S]*))?$/.exec(args.trim());
-  return m ? notePath(m[1] ?? '') : null;
-}
-
-/** Whether a path is a full one, on either kind of system. */
-const isFull = (path: string) => /^([\\/]|[A-Za-z]:[\\/])/.test(path);
-
-/** `given` as a full path from `cwd`, with `.` and `..` settled and the separator of `cwd` kept. */
-function fullPath(cwd: string, given: string): string {
-  const sep = cwd.includes('\\') && !cwd.includes('/') ? '\\' : '/';
-  const full = isFull(given) ? given : `${cwd}${sep}${given}`;
-  const drive = /^[A-Za-z]:/.exec(full)?.[0] ?? '';
-  const parts: string[] = [];
-  for (const part of full.slice(drive.length).split(/[\\/]+/)) {
-    if (part === '' || part === '.') continue;
-    if (part === '..') parts.pop();
-    else parts.push(part);
-  }
-  return `${drive}${sep}${parts.join(sep)}`;
-}
-
-/** The folder holding a path. */
-function folderOf(path: string): string {
-  const cut = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
-  return cut <= 0 ? path.slice(0, 1) : path.slice(0, cut);
-}
-
-/** The last part of a path. */
-const nameOf = (path: string) => path.slice(Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\')) + 1);
 
 /** The session's editor: at most one server, started for one note. */
 export class EditorLauncher {
