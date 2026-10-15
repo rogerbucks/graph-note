@@ -143,8 +143,8 @@ and `register.tsx` stays thin.
   module or until the loop is left) and draws, in the pane `graph-editor`, a `Link` to its address and a button that
   copies it; the address is read in that one place and appears in no command answer, log, toast or state. The session
   ending (`session.end`) and `/graph stop` stop the server; when it cannot start, the answer says why and the `graph`
-  pane draws the note as `/graph` does. The mod's drafts folder is `CLAUDE_PLUGIN_DATA`, else
-  `~/.claude/plugins/data/graph-note`.
+  pane draws the note as `/graph` does. The mod's drafts folder is the plugin data folder
+  (`CLAUDE_PLUGIN_DATA`, else the plugins data folder under the user's Claude config).
 - `hooks/hooks.json` — names `register.tsx` as the mod's one hooks module.
 - `hooks/graph.d.ts` — the types of the bundle, its source's own.
 - `types/index.d.ts` — the mod's state contract, self-contained as Claude Code requires.
