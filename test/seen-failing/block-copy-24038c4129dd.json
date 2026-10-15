@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/block-copy.test.js",
+  "test": "a new block that is not the held block edited > a copy pasted directly above it, then the original edited: the original is followed",
+  "seen_failing_first": false,
+  "evidence": "Asked for by the review of #465 (a copy pasted directly ABOVE). The earlier code already followed the original here: the blank line above the original sets it apart from the copy, so the lines place it. The test holds that the new readsAsEdited rule, which narrows when a changed block counts as the held block edited, still takes the edited original for it."
+}

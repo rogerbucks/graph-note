@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/block-copy.test.js",
+  "test": "a copy in place of another block, in one change > a copy pasted far off while the note above changes: two blocks hold its text, and it stops",
+  "seen_failing_first": false,
+  "evidence": "Asked for by the review of #465 to cover byText's same.length > 1 branch, which the earlier code already had: when a change runs through the whole block and two blocks hold its text, it stops. The test pins that branch while the rival check around it is rewritten, so the rewrite cannot lose it."
+}

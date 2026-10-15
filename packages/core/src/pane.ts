@@ -1,12 +1,16 @@
 // The edit pane's session (spec §4, §9). It holds the block being edited and what has been typed into it; writes what is
 // typed back into the note; refuses a write when the block changed meanwhile, keeping what was typed as a draft and
 // reloading the block as it now is; reloads a clean pane when the note changes under it; and undoes and redoes writes.
+// The block is followed through each change by the lines around it (block-follow.ts), never to a copy of it.
 // Host-free: the host reads and writes the note, and passes its text in.
+import { followBlock } from './block-follow.ts';
+import type { Followed } from './block-follow.ts';
 import { gqlSpans, graphOfBlock } from './blocks.ts';
+import type { Span } from './blocks.ts';
 import { readNote } from './drawing.ts';
 import { editRefusal, newNames } from './edit-check.ts';
 import type { NoteReading } from './note-reading.ts';
-import { History, replaceBlock } from './store.ts';
+import { History, replaceSpan } from './store.ts';
 import type { BlockRef } from './store.ts';
 import { underStrictness } from './strictness.ts';
 import type { StrictnessSettings } from './strictness.ts';
@@ -22,17 +26,22 @@ export interface Choice {
 /**
  * What writing the pane's text into the note did: the new note, or why not and the draft kept. `edit` marks an edit made
  * for the person that the note written into refused (§4), rather than a block changed meanwhile; `history` an Undo or
- * Redo with nothing to take back since the block changed outside the pane (§9), where nothing typed needs keeping.
+ * Redo with nothing to take back since the block changed outside the pane (§9), where nothing typed needs keeping;
+ * `stopped` a refusal as the session cannot tell its block from a copy, nothing reloaded (block_followed_not_its_copy).
  */
 export type PaneWrite =
   | { ok: true; note: string; unchanged?: true }
-  | { ok: false; reason: string; draft: string; edit?: true; history?: true };
+  | { ok: false; reason: string; draft: string; edit?: true; history?: true; stopped?: true };
 
 /** Why Undo and Redo have nothing to take back once the block changed outside the pane (§9, undo_never_over_theirs). */
 const CHANGED_ELSEWHERE = {
   undo: 'Nothing to undo: another program, a sync or another pane changed this block since, and undoing would overwrite that change.',
   redo: 'Nothing to redo: another program, a sync or another pane changed this block since, and redoing would overwrite that change.',
 };
+
+/** Why the session stopped: a copy of its block it cannot tell from the block (§9, block_followed_not_its_copy). */
+const TWIN =
+  'The note now holds a copy of this block, and the editor cannot tell which of the two it was opened on, so it neither writes nor undoes either: open the block again to go on.';
 
 /** The note's graph blocks, each with its fence line and its graph. */
 function graphBlocks(note: string) {
@@ -47,7 +56,7 @@ export class PaneSession {
   graph: string;
   /** What the pane shows: the block as typed. */
   text: string;
-  /** The block as the pane last read or wrote it. */
+  /** The block: the line its fence opens on in the note last seen, and its text as the pane last read or wrote it. */
   ref: BlockRef;
   dirty = false;
   /** The vault's shared schemas (§5), for a graph that names one: the host loads them. */
@@ -55,6 +64,10 @@ export class PaneSession {
   private readonly history = new History();
   /** Whether undo or redo steps were dropped because the block changed outside the pane since they were written. */
   private readonly dropped = { undo: false, redo: false };
+  /** Whether the session stopped, as it cannot tell its block from a copy (§9): until a block is chosen again. */
+  private twin = false;
+  /** Whether the last note taken as seen had a new block of its graph beside the block, followed warily (§9). */
+  private wary = false;
   private lastNote = '';
   /** The names edits made for the person newly wrote, owed the check made as they are written. */
   private readonly owed = new Set<string>();
@@ -69,6 +82,11 @@ export class PaneSession {
     this.lastNote = note;
   }
 
+  /** Whether the session has stopped, as it cannot tell its block from a copy (§9), until a block is chosen again. */
+  get stopped(): boolean {
+    return this.twin;
+  }
+
   /** The graph blocks the picker offers, in the note last seen. */
   choices(): Choice[] {
     return graphBlocks(this.lastNote).map((b) => ({
@@ -78,19 +96,27 @@ export class PaneSession {
     }));
   }
 
+  /** The text of the graph block whose fence opens on `line` in the note last seen; undefined when none does. */
+  blockText(line: number): string | undefined {
+    return graphBlocks(this.lastNote).find((b) => b.open === line)?.text;
+  }
+
   /**
-   * Switches to another block of the note, starting its own history, so Undo never writes one block's text into another
-   * (§9, undo_stays_in_its_block). Write what was typed first.
+   * Switches to another block of the note, the one whose fence opens on `line` in the note last seen, starting its own
+   * history, so Undo never writes one block's text into another (§9, undo_stays_in_its_block); a session stopped by a
+   * copy goes on there. Write what was typed first. False, nothing changed, when no graph block opens on that line.
    */
-  select(line: number): void {
+  select(line: number): boolean {
     const b = graphBlocks(this.lastNote).find((x) => x.open === line);
-    if (!b) return;
+    if (!b) return false;
     this.graph = b.graph;
     this.text = b.text;
     this.ref = { line: b.open, text: b.text };
     this.dirty = false;
     this.history.clear();
     this.dropped.undo = this.dropped.redo = false;
+    this.twin = false;
+    return true;
   }
 
   type(text: string): void {
@@ -100,13 +126,43 @@ export class PaneSession {
 
   /**
    * The texts of the note's gql blocks with what is typed in the edited block's place, and that block's index among them;
-   * -1, with the texts as they are, when the note no longer holds the block.
+   * -1, with the texts as they are, when the note no longer holds the block or the session cannot tell it from a copy.
    */
   texts(note: string): { texts: string[]; index: number } {
     const spans = gqlSpans(note);
-    const at = spans.findIndex((s) => s.open === this.ref.line && s.text === this.ref.text);
-    const index = at >= 0 ? at : spans.findIndex((s) => s.text === this.ref.text);
+    const f = this.locate(note, spans);
+    const index = 'at' in f ? f.at : -1;
     return { texts: spans.map((s, i) => (i === index ? this.text : s.text)), index };
+  }
+
+  /** Where the block is among `spans`, the note's gql blocks, followed from the note last seen (block-follow.ts). */
+  private locate(note: string, spans: Span[]): Followed {
+    if (this.twin) return { twin: true };
+    if (note !== this.lastNote) return followBlock(this.lastNote, note, this.ref.line);
+    const at = spans.findIndex((s) => s.open === this.ref.line);
+    return at >= 0 ? { at } : { gone: true };
+  }
+
+  /**
+   * Takes `note` as seen, the block followed into it (§9): its span there, its line kept in `ref`; or null when it is
+   * gone, or when a copy of it cannot be told from it, which stops the session, its history dropped, until a block is
+   * chosen again (block_followed_not_its_copy).
+   */
+  private follow(note: string): Span | null {
+    const spans = gqlSpans(note);
+    const f = this.locate(note, spans);
+    this.lastNote = note;
+    if ('twin' in f && !this.twin) {
+      this.twin = true;
+      this.changedElsewhere();
+    }
+    // followed warily, a new block of its graph beside it that may be the original rewritten beside a copy: its history
+    // starts again, as after a change made outside, so Undo never reverts what may be the copy
+    this.wary = 'wary' in f;
+    if (this.wary) this.changedElsewhere();
+    const span = 'at' in f ? spans[f.at] : undefined;
+    if (span) this.ref = { line: span.open, text: this.ref.text };
+    return span ?? null;
   }
 
   /** The note as it would read with what is typed — for the pane's own drawing, problems and suggestions. */
@@ -141,32 +197,48 @@ export class PaneSession {
    * block changed meanwhile, and when an edit made for the person names a thing the note draws only under a suggested
    * name, or gives a name another thing has (`editRefusal`), checked here against this note, whatever was checked before.
    */
-  write(note: string, record = true): PaneWrite {
-    this.lastNote = note;
+  write(note: string, step?: 'undo' | 'redo'): PaneWrite {
+    const span = this.follow(note);
     const owed = [...this.owed];
     this.owed.clear();
     if (!this.dirty) return { ok: true, note, unchanged: true };
+    if (!span || span.text !== this.ref.text) return this.refusedWrite(span);
+    // an Undo or Redo is never written into a block followed warily, which may be a copy (the third review of #465)
+    if (step && this.wary) return this.refusedWary(step);
     const refused = this.refusedEdit(note, owed);
     if (refused) return refused;
-    const r = replaceBlock(note, this.ref, this.text);
-    if (r.ok) {
-      if (record) {
-        this.history.record(this.ref.text, this.text);
-        this.dropped.redo = false; // a new write ends any redo, dropped or not
-      }
-      this.ref = r.ref;
-      this.dirty = false;
-      this.lastNote = r.note;
-      return { ok: true, note: r.note };
+    const r = replaceSpan(note, span, this.text);
+    if (!step) {
+      this.history.record(this.ref.text, this.text);
+      this.dropped.redo = false; // a new write ends any redo, dropped or not
     }
+    this.ref = r.ref;
+    this.dirty = false;
+    this.lastNote = r.note;
+    return { ok: true, note: r.note };
+  }
+
+  /** An Undo or Redo refused as the block was just followed warily: the block as it is, its history dropped, saying so. */
+  private refusedWary(step: 'undo' | 'redo'): PaneWrite {
+    this.text = this.ref.text;
+    this.dirty = false;
+    this.dropped[step] = true;
+    return { ok: false, reason: CHANGED_ELSEWHERE[step], draft: this.text, history: true };
+  }
+
+  /**
+   * A write refused as the block changed, went or cannot be told from a copy: what was typed kept as a draft, and the
+   * block reloaded as it now is where there is one.
+   */
+  private refusedWrite(span: Span | null): PaneWrite {
     const draft = this.text;
     this.changedElsewhere();
-    if (r.current) {
-      this.ref = { line: r.current.line - 1, text: r.current.text };
-      this.text = r.current.text;
-    }
     this.dirty = false;
-    return { ok: false, reason: r.reason, draft };
+    if (this.twin) return { ok: false, reason: TWIN, draft, stopped: true };
+    if (!span) return { ok: false, reason: 'the block is no longer in the note where the pane read it', draft };
+    this.ref = { line: span.open, text: span.text };
+    this.text = span.text;
+    return { ok: false, reason: 'the block has changed since the pane read it', draft };
   }
 
   /** The refusal of an edit's owed names by the note written into, with the block reloaded as it is there; or null. */
@@ -183,24 +255,18 @@ export class PaneSession {
     return { ok: false, reason, draft, edit: true };
   }
 
-  /** The note changed outside the pane: nothing to do, the block reloaded into a clean pane, or a conflict with what is typed. */
+  /**
+   * The note changed outside the pane: nothing to do, the block reloaded into a clean pane, or a conflict — with what is
+   * typed, or a session stopped as it cannot tell its block from a copy (§9), which its next write and Undo say.
+   */
   noteChanged(note: string): 'unchanged' | 'reloaded' | 'conflict' {
-    this.lastNote = note;
-    const spans = gqlSpans(note);
-    const same = spans.filter((s) => s.text === this.ref.text);
-    const found =
-      spans.find((s) => s.open === this.ref.line && s.text === this.ref.text) ??
-      (same.length === 1 ? same[0] : undefined);
-    if (found) {
-      this.ref = { line: found.open, text: found.text };
-      return 'unchanged';
-    }
+    const span = this.follow(note);
+    if (this.twin) return 'conflict';
+    if (span?.text === this.ref.text) return 'unchanged';
     this.changedElsewhere();
-    if (this.dirty) return 'conflict';
-    const here = spans.find((s) => s.open === this.ref.line && graphOfBlock(s.text) === this.graph);
-    if (!here) return 'conflict';
-    this.ref = { line: here.open, text: here.text };
-    this.text = here.text;
+    if (this.dirty || !span || graphOfBlock(span.text) !== this.graph) return 'conflict';
+    this.ref = { line: span.open, text: span.text };
+    this.text = span.text;
     return 'reloaded';
   }
 
@@ -217,49 +283,57 @@ export class PaneSession {
   }
 
   canUndo(): boolean {
-    return this.dirty || this.history.canUndo();
+    return !this.twin && (this.dirty || this.history.canUndo());
   }
   canRedo(): boolean {
-    return this.history.canRedo();
+    return !this.twin && this.history.canRedo();
   }
 
-  /** Why Undo or Redo has nothing to take back, its steps dropped as the block changed outside the pane; else null. */
+  /**
+   * Why Undo or Redo has nothing to take back: the session stopped by a copy of its block it cannot tell from it, or its
+   * steps dropped as the block changed outside the pane; else null.
+   */
   stepRefusal(which: 'undo' | 'redo'): string | null {
+    if (this.twin) return TWIN;
     const can = which === 'undo' ? this.canUndo() : this.canRedo();
     return !can && this.dropped[which] ? CHANGED_ELSEWHERE[which] : null;
   }
 
-  /**
-   * An Undo or Redo refused for the history: why, with the block as it is, as nothing typed needs keeping. The note it
-   * was pressed on is not taken as seen: the change in it, if any, is the host's to tell (`noteChanged`).
-   */
+  /** An Undo or Redo refused for the history: why, with the block as it is, as nothing typed needs keeping. */
   private refusedStep(which: 'undo' | 'redo'): PaneWrite | null {
     const reason = this.stepRefusal(which);
     return reason ? { ok: false, reason, draft: this.text, history: true } : null;
   }
 
-  private step(note: string, text: string | null): PaneWrite {
+  private step(note: string, text: string | null, which: 'undo' | 'redo'): PaneWrite {
     if (text === null) return { ok: true, note, unchanged: true };
     this.text = text;
     this.dirty = text !== this.ref.text;
-    return this.write(note, false);
+    return this.write(note, which);
   }
 
   /**
-   * Undoes the last write; typing not yet written is written first, so it can be redone. Never a write made before the
-   * block changed outside the pane: refused then, saying why (`history`).
+   * Undoes the last write; typing not yet written is written first, so it can be redone. The note it is pressed on is
+   * followed first, as `noteChanged` would, so a stop or a block followed warily refuses it before it is checked,
+   * heard or not (the third review of #465). Never a write made before the block changed outside the pane: refused
+   * then, saying why (`history`).
    */
   undo(note: string): PaneWrite {
+    this.follow(note);
     if (this.dirty) {
       const w = this.write(note);
       if (!w.ok) return w;
       note = w.note;
     }
-    return this.refusedStep('undo') ?? this.step(note, this.history.undo());
+    return this.refusedStep('undo') ?? this.step(note, this.history.undo(), 'undo');
   }
 
-  /** Redoes the last undo; never one made before the block changed outside the pane: refused then, saying why. */
+  /**
+   * Redoes the last undo, the note followed first as for Undo; never one made before the block changed outside the
+   * pane, or into a block followed warily: refused then, saying why.
+   */
   redo(note: string): PaneWrite {
-    return this.refusedStep('redo') ?? this.step(note, this.history.redo());
+    this.follow(note);
+    return this.refusedStep('redo') ?? this.step(note, this.history.redo(), 'redo');
   }
 }

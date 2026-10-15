@@ -107,8 +107,10 @@ export class EditorSession {
   }
 
   private step(against: string, way: 'undo' | 'redo'): ToWrite {
-    // the core drops the steps written before another program changed the block (undo_never_over_theirs), and says so
-    if (this.pane.stepRefusal(way)) return { ok: false, reason: UNDO_OVER_THEIRS };
+    // the core drops the steps written before another program changed the block (undo_never_over_theirs), and says so;
+    // stopped by a copy of the block it cannot tell from it, it says that in its own words (block_followed_not_its_copy)
+    const why = this.pane.stepRefusal(way);
+    if (why) return { ok: false, reason: this.pane.stopped ? why : UNDO_OVER_THEIRS };
     const can = way === 'undo' ? this.pane.canUndo() : this.pane.canRedo();
     if (!can) return { ok: true, note: this.note, against, unchanged: true };
     if ((way === 'undo' ? this.undoable : this.redoable) === 0) return { ok: false, reason: UNDO_OVER_THEIRS };
