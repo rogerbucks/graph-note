@@ -363,7 +363,7 @@ describe('a release', () => {
     assert.equal(w.value('focus_link'), 'Released');
     assert.equal(w.value('focus_neighbours'), 'Released');
     assert.equal(w.value('zoom_out_to_fit'), 'Not started');
-    assert.deepEqual(result.release, { tag: 'v0.5.0', since: 'v0.4.0', ids: MOVED });
+    assert.deepEqual(result.release, { tag: 'v0.5.0', since: 'v0.4.0', ids: MOVED, pulls: [] });
   });
 
   test('takes every proved requirement for the first release, which has none before it', async () => {

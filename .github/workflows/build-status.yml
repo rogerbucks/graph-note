@@ -9,7 +9,10 @@ name: Build status
 # definition is always the one on main, and the job runs the script on main: nothing of a pull request is checked out or
 # run. The pull request's requirements file is read through the API as data. PROJECT_TOKEN (a classic token with the
 # project and public_repo scopes) is for the project board alone: listing the project, reading it and setting its values.
-# The workflow's own token reads the repository, its issues and CI's run, and leaves the comment. When PROJECT_TOKEN is missing or refused the run says so in a warning and in the comment, and does
+# The workflow's own token reads the repository, its issues and CI's run, and leaves the comment. A comment on a pull
+# request that is closed and locked (the lock workflow locks every one) is tried first; only if GitHub refuses because it
+# is locked does the script unlock the conversation, comment and lock it again in the one step. Locking and unlocking a
+# pull request need no more than the pull-requests: write the comment needs, as the lock workflow shows. When PROJECT_TOKEN is missing or refused the run says so in a warning and in the comment, and does
 # not fail.
 on:
   workflow_run:

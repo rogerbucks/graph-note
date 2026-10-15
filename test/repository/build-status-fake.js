@@ -22,7 +22,7 @@ const LOCKED = 'HTTP 403: Unable to create comment because issue is locked.';
  * `forSha` (sha to the numbers of the pull requests the commit is in), `workflowRuns` (sha to its workflow runs),
  * `releases`, `comments` (pull request number to its comments), `locked` (the numbers of the locked conversations, which
  * refuse a comment as GitHub does), `failComments`, `failUnlock` and `failLock` (the words every such call fails with),
- * and `afterList` (a function run once, after the next listing of comments, as another run would write in between).
+ * `failAfterUnlock` (the words a comment fails with once its conversation has been unlocked), and `afterList` (a function run once, after the next listing of comments, as another run would write in between).
  * `issues()` gives the issues `gh issue list` prints.
  */
 export function fakeRepoSide({ repo = 'rogerbucks/graph-note', pageSize = 100, issues = () => [] } = {}) {
@@ -39,6 +39,7 @@ export function fakeRepoSide({ repo = 'rogerbucks/graph-note', pageSize = 100, i
     failComments: null,
     failUnlock: null,
     failLock: null,
+    failAfterUnlock: null,
     afterList: null,
     calls: [],
     mutations: [],
@@ -51,8 +52,8 @@ export function fakeRepoSide({ repo = 'rogerbucks/graph-note', pageSize = 100, i
     if (hub.failComments) throw failure(hub.failComments);
     const number = Number(/issues\/(\d+)\/comments$/.exec(args[1])?.[1]);
     if (method === 'POST' && hub.locked.has(number)) throw failure(LOCKED);
-    hub.mutations.push(`${method} ${args[1]}`);
     if (method === 'POST') {
+      hub.mutations.push(`${method} ${args[1]}`);
       const made = { id: (hub.ids += 1), body, user: { login: 'github-actions[bot]', type: 'Bot' } };
       (hub.comments[number] ??= []).push(made);
       return json(made);
@@ -60,6 +61,7 @@ export function fakeRepoSide({ repo = 'rogerbucks/graph-note', pageSize = 100, i
     const id = Number(/comments\/(\d+)$/.exec(args[1])[1]);
     const owner = Object.entries(hub.comments).find(([, list]) => list.some((c) => c.id === id));
     if (hub.locked.has(Number(owner[0]))) throw failure(LOCKED);
+    hub.mutations.push(`${method} ${args[1]}`);
     const found = owner[1].find((c) => c.id === id);
     found.body = body;
     return json(found);
@@ -72,7 +74,10 @@ export function fakeRepoSide({ repo = 'rogerbucks/graph-note', pageSize = 100, i
     if (method === 'PUT' && hub.failLock) throw failure(hub.failLock);
     hub.mutations.push(`${method} ${args[1]}`);
     if (method === 'PUT') hub.locked.add(number);
-    else hub.locked.delete(number);
+    else {
+      hub.locked.delete(number);
+      if (hub.failAfterUnlock) hub.failComments = hub.failAfterUnlock;
+    }
     return '';
   };
 

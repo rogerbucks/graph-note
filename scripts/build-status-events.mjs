@@ -28,8 +28,9 @@ import {
   parentOf,
   readPullRequest,
   readRequirementsAt,
+  leaveComment,
+  mergedPullNumbers,
   releaseBefore,
-  upsertComment,
 } from './build-status-gh.mjs';
 import { readBuildBoard, setBuildStatus, setProgress } from './build-status-board.mjs';
 
@@ -208,34 +209,80 @@ export function handlePull(number, ctx, deps, keeper, rules) {
   const items = keeper.settle(moves);
   if (items.length && keeper.problem()) problems.push(keeper.problem());
   const headline = claims.proved.length || !moves.some((m) => m.build === 'In PR') ? stage : 'In PR';
-  const body = commentBody({
-    stage: headline,
-    items,
-    problems,
-    repo: ctx.repo,
-    runUrl: ctx.runUrl,
-    boardUrl: keeper.url(),
-  });
-  let comment;
-  try {
-    comment = upsertComment(deps.github, ctx.repo, number, body, { create: items.length > 0 || problems.length > 0 });
-  } catch (e) {
-    comment = 'failed';
-    const why = redactSecrets(e.stderr ?? e.message, [deps.projectToken]);
-    deps.annotate('warning', `could not leave the comment on #${number}: ${why}`);
-  }
+  const create = items.length > 0 || problems.length > 0;
+  const comment = postComment(number, { stage: headline, items, problems }, create, ctx, deps, keeper);
   deps.write(`build-status: #${number} ${headline}, ${claims.proved.length} requirement(s), comment ${comment}\n`);
   return { number, stage, ids: claims.proved, comment };
 }
 
-/** Looks after a release: Released and Done on the requirements newly proved since the release before it. Gives {tag, since, ids}. */
+/**
+ * Leaves the one comment of a pull request, on a conversation that may be locked and closed (as a merged pull request's
+ * is), and says in warnings what could not be done: the comment itself, or the lock taken up again after it. Gives the
+ * outcome: created, updated, unchanged, absent or failed.
+ */
+function postComment(number, { stage, items, problems }, create, ctx, deps, keeper) {
+  const body = commentBody({ stage, items, problems, repo: ctx.repo, runUrl: ctx.runUrl, boardUrl: keeper.url() });
+  const left = leaveComment(deps.github, ctx.repo, number, body, { create });
+  const say = (text) => deps.annotate('warning', redactSecrets(text, [deps.projectToken]));
+  if (left.failure) say(`could not leave the comment on #${number}: ${left.failure}`);
+  if (left.relockFailed)
+    say(`could not lock the conversation of #${number} again after leaving the comment: ${left.relockFailed}`);
+  return left.outcome;
+}
+
+/**
+ * Looks after a release: Released and Done on the requirements newly proved since the release before it, and a comment on
+ * each pull request merged in between that proved any of them, with the stage Released. Gives {tag, since, ids, pulls:
+ * [{number, comment}]}.
+ */
 export function handleRelease(payload, ctx, deps, keeper) {
   const tag = payload.release?.tag_name;
   if (!TAG.test(String(tag))) throw new Error('the release tag is not a plain tag name');
-  const since = releaseBefore(deps.github, ctx.repo, tag);
-  const before = since ? boardAt(deps.github, ctx.repo, since) : NO_BOARD;
-  const ids = movedRequirements(before, boardAt(deps.github, ctx.repo, tag));
-  keeper.settle(ids.map((id) => ({ id, build: 'Released', progress: 'Done' })));
+  const previous = releaseBefore(deps.github, ctx.repo, tag);
+  const before = previous ? boardAt(deps.github, ctx.repo, previous.tag) : NO_BOARD;
+  let ids = movedRequirements(before, boardAt(deps.github, ctx.repo, tag));
+  if (ids.length > MAX_IDS) {
+    deps.annotate('warning', `release ${tag}: ${ids.length} requirements; only the first ${MAX_IDS} were handled.`);
+    ids = ids.slice(0, MAX_IDS);
+  }
+  const items = keeper.settle(ids.map((id) => ({ id, build: 'Released', progress: 'Done' })));
+  const pulls = ids.length ? commentOnPulls(items, previous, payload, ctx, deps, keeper) : [];
+  const since = previous?.tag ?? null;
   deps.write(`build-status: release ${tag}, ${ids.length} requirement(s) since ${since ?? 'the start'}\n`);
-  return { tag, since, ids };
+  return { tag, since, ids, pulls };
+}
+
+/** Comments Released on each pull request merged into main between the release before and this one that proved any of `items`. */
+function commentOnPulls(items, previous, payload, ctx, deps, keeper) {
+  const { numbers, truncated } = mergedPullNumbers(
+    deps.github,
+    ctx.repo,
+    previous?.publishedAt ?? null,
+    payload.release?.published_at ?? null,
+  );
+  if (truncated)
+    deps.annotate(
+      'warning',
+      'more pull requests were merged for this release than the 50 looked at; some may have no comment',
+    );
+  const pulls = [];
+  for (const number of numbers) {
+    const pr = readPullRequest(deps.github, ctx.repo, number);
+    if (skipReason(pr, ctx.repo, { mergedOnly: true })) continue;
+    let proved;
+    try {
+      proved = claimsOf(pr, ctx, deps).proved;
+    } catch (e) {
+      if (!(e instanceof Unreadable)) throw e;
+      continue;
+    }
+    const mine = items.filter((item) => proved.includes(item.id));
+    if (!mine.length) continue;
+    const problems = keeper.problem() ? [keeper.problem()] : [];
+    pulls.push({
+      number,
+      comment: postComment(number, { stage: 'Released', items: mine, problems }, true, ctx, deps, keeper),
+    });
+  }
+  return pulls;
 }

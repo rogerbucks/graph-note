@@ -129,8 +129,8 @@ export function checkRollup(run, repo, sha) {
 }
 
 /**
- * The tag of the release published just before `tag`, drafts left out, or null when there is none. A tag the list does
- * not hold yet (a release that has only just been published) has the newest release before it.
+ * The release published just before `tag`, drafts left out, as {tag, publishedAt}, or null when there is none. A tag the
+ * list does not hold yet (a release that has only just been published) has the newest release before it.
  */
 export function releaseBefore(run, repo, tag) {
   const published = json(run, repo, `releases?per_page=${PAGE}`)
@@ -138,7 +138,35 @@ export function releaseBefore(run, repo, tag) {
     .sort((a, b) => String(a.published_at).localeCompare(String(b.published_at)));
   const at = published.findIndex((r) => r.tag_name === tag);
   const before = at === -1 ? published.at(-1) : published[at - 1];
-  return before?.tag_name ?? null;
+  return before ? { tag: before.tag_name, publishedAt: before.published_at } : null;
+}
+
+const timeOf = (text) => {
+  if (text === null || text === undefined) return null;
+  const at = Date.parse(String(text));
+  if (Number.isNaN(at)) throw new Error(`${text} is not a time`);
+  return at;
+};
+
+/**
+ * The numbers of the pull requests merged into main after the time `since` and up to the time `until` (either may be
+ * null, for no bound), as {numbers (sorted, the most recent fifty at most), truncated}: truncated is true when there were
+ * more than that, or the page asked for was full, so some may be missing. Throws for a time that is not a time.
+ */
+export function mergedPullNumbers(run, repo, since, until) {
+  const [from, to] = [timeOf(since), timeOf(until)];
+  const listed = json(run, repo, `pulls?state=closed&base=main&sort=updated&direction=desc&per_page=${PAGE}`);
+  const numbers = listed
+    .filter(
+      (p) =>
+        p.merged_at &&
+        (from === null || Date.parse(p.merged_at) > from) &&
+        (to === null || Date.parse(p.merged_at) <= to),
+    )
+    .map((p) => p.number)
+    .filter(Number.isInteger)
+    .sort((a, b) => a - b);
+  return { numbers: numbers.slice(-MAX_OPEN), truncated: numbers.length > MAX_OPEN || listed.length >= PAGE };
 }
 
 const sameText = (a, b) =>
@@ -171,6 +199,43 @@ export function upsertComment(run, repo, number, body, { create = true } = {}) {
   if (meanwhile) return rewrite(meanwhile);
   run(['api', `repos/${repo}/issues/${number}/comments`, '--method', 'POST', '--input', '-'], input);
   return 'created';
+}
+
+const LOCKED = /locked/i;
+const lockOf = (run, repo, number, method) => run(['api', `repos/${repo}/issues/${number}/lock`, '--method', method]);
+
+/**
+ * Leaves the pull request's one comment as upsertComment does, even where the conversation is locked, as a closed pull
+ * request's is (the lock workflow locks each as it opens). The comment is tried first; only if GitHub refuses it because
+ * the conversation is locked is the conversation unlocked, the comment left and the conversation locked again, in the one
+ * step, and the lock is taken up again even if the comment then fails. Gives {outcome (upsertComment's, or 'failed'),
+ * unlocked, relockFailed (GitHub's words, or null), failure (GitHub's words, or null)}. It throws nothing for a failure of
+ * GitHub: the caller says so in a warning. An unlock that is refused leaves the comment unmade and nothing to lock again.
+ */
+export function leaveComment(run, repo, number, body, opts = {}) {
+  const done = { outcome: 'failed', unlocked: false, relockFailed: null, failure: null };
+  try {
+    return { ...done, outcome: upsertComment(run, repo, number, body, opts) };
+  } catch (e) {
+    if (!LOCKED.test(words(e))) return { ...done, failure: words(e) };
+  }
+  try {
+    lockOf(run, repo, number, 'DELETE');
+  } catch (e) {
+    return { ...done, failure: `could not unlock the locked conversation: ${words(e)}` };
+  }
+  const left = { ...done, unlocked: true };
+  try {
+    left.outcome = upsertComment(run, repo, number, body, opts);
+  } catch (e) {
+    left.failure = words(e);
+  }
+  try {
+    lockOf(run, repo, number, 'PUT');
+  } catch (e) {
+    left.relockFailed = words(e);
+  }
+  return left;
 }
 
 /**

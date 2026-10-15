@@ -50,6 +50,12 @@ describe('the workflow that updates the board and the comment', () => {
     ]);
   });
 
+  test('needs no more than pull-requests: write to comment, and to unlock and lock a conversation as the lock workflow does', () => {
+    assert.match(text, /unlock/);
+    assert.equal((read('.github/workflows/lock-conversations.yml').match(/pull-requests: write/g) ?? []).length, 1);
+    assert.doesNotMatch(text, /issues: write/);
+  });
+
   test('checks out main, never a pull request, and keeps no credentials', () => {
     const checkouts = text.split('\n').filter((l) => /uses:\s*actions\/checkout@/.test(l));
     assert.equal(checkouts.length, 1);
@@ -118,9 +124,9 @@ describe('the workflow that updates the board and the comment', () => {
 describe('the workflow that only wakes it', () => {
   const text = read(TRIGGER);
 
-  test('runs on a pull request opened, pushed to, reopened and closed', () => {
+  test('runs on a pull request opened, pushed to, reopened, edited (its Requirements line may be added) and closed', () => {
     const on = block(lines(TRIGGER), 'on', 0).join('\n');
-    assert.match(on, /pull_request:\s*\n\s*types: \[opened, synchronize, reopened, closed\]/);
+    assert.match(on, /pull_request:\s*\n\s*types: \[opened, synchronize, reopened, edited, closed\]/);
     assert.doesNotMatch(text, /pull_request_target/);
   });
 
