@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/quick-info.test.js",
+  "test": "quick_info_no_hover_only: the same tooltip by keyboard focus and by long press > a click’s focus is not a keyboard’s: pressing on a thing does not open it by focus",
+  "seen_failing_first": false,
+  "evidence": "A negative case: with no tooltip in the code nothing opens at all, so a click's focus opening nothing held before the code. Its twin, a thing that takes the keyboard focus showing it at once, failed first."
+}

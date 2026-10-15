@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/quick-info.test.js",
+  "test": "quick_info_no_hover_only: the same tooltip by keyboard focus and by long press > a tap is not a long press: lifted before the moment, it opens details and no tooltip",
+  "seen_failing_first": false,
+  "evidence": "A negative case on the tooltip: a tap already opened the details and no tooltip existed to open, so it held before the code. Its twin, a long press showing the tooltip and not opening the details, failed first."
+}

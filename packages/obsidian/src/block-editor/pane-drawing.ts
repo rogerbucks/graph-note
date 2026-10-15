@@ -9,6 +9,8 @@ import type GraphNotePlugin from '../main';
 import { GraphView } from '../graph-view/graph-view';
 import { refusalBanner } from '../layout-worker/refusal-banner';
 import type { Chosen, SwitchesShown } from '../graph-view/view-options';
+import { aidsOf } from '../graph-view/viewer-aids';
+import type { ViewerAids } from '../graph-view/viewer-aids';
 
 /** What choosing in the drawing does: Edit, a box or a link chosen, and the text replaced, as by an estimate's quick fix. */
 interface Choosing {
@@ -38,6 +40,7 @@ function drawInPane(
   focusDepth: FocusDepth,
   switches: SwitchesShown,
   callouts: boolean,
+  aids: ViewerAids,
 ) {
   host.empty();
   if (!drawn) {
@@ -58,6 +61,7 @@ function drawInPane(
     focusDepth,
     switches,
     callouts,
+    aids,
     problems: reading.problems
       .filter((p) => p.graph === s.graph && reading.texts[p.block] === s.text)
       .map((p) => ({ ...p, noteLine: p.line })),
@@ -114,6 +118,7 @@ export class PaneDrawing extends Component {
           depth,
           { state, relayout: laidOut },
           this.plugin.settings.noteCallouts === 'on',
+          aidsOf(this.plugin.settings),
         );
         if (!view) return;
         this.view = view;
