@@ -1,0 +1,6 @@
+{
+  "file": "test/github-project-gh.test.js",
+  "test": "the Build status field, applied > is never replaced when Workstream options change: the values events set stay",
+  "seen_failing_first": false,
+  "evidence": "A guard on existing behaviour: replacing the options of Workstream only ever cleared Workstream, so an unknown field's values stayed before this commit too. The test passes against the old code for that reason, and pins that the new Build status field is a fixed one whose options are never replaced and whose values are never cleared."
+}
