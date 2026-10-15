@@ -86,9 +86,8 @@ describe('on a phone', () => {
       assert.equal(shared.length, 0, 'not before its own tap');
       labelled(f, 'Share').click();
       await until(() => shared.length === 1);
-      await wait(20);
+      await until(() => /Not shared/.test(f.textContent));
       assert.deepEqual(files(env, '.svg'), [], 'cancelled: nothing saved');
-      assert.match(f.textContent, /Not shared/);
     } finally {
       env.uninstall();
     }

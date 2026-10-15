@@ -21,8 +21,9 @@ const NOTE = ['# Reader', '', fence(GRAPH), '', fence(VIEW), ''].join('\n');
 /** Draws `source` as another plugin's rendering would: on the page, with no section info (getSectionInfo gives null). */
 async function drawnWithNoSection(env, source, children = []) {
   const el = env.doc.body.createDiv({ cls: 'block-language-gql' });
+  // the processor resolves when the card is drawn: bar, drawing, banner or empty prompt (a layout refused by the worker
+  // is waited for by its test)
   await env.state.processors.get('gql')(source, el, fakeContext(NOTE, -1, children));
-  await wait(20);
   return el;
 }
 

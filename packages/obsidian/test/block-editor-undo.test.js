@@ -5,7 +5,7 @@
 // program's block and kept its history, so Undo wrote the old text over it.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { build, load, until, wait } from './host/load-plugin.js';
+import { build, load, settled, until } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
 import { PATH, READER, show } from './host/card-notes.js';
 import * as two from './host/pane-notes.js';
@@ -35,6 +35,12 @@ async function written() {
 const note = (env) => env.state.files.get(PATH);
 /** The editor's Undo or Redo button, whatever it says. */
 const tool = (el, which) => el.querySelectorAll('.graph-note-pane-tools button')[which === 'undo' ? 0 : 1];
+/** Resolves once the pane has drawn its tools again, as it does on hearing the note changed or on an Undo or Redo. */
+async function toolsRedrawn(el, act) {
+  const before = tool(el, 'undo');
+  await act();
+  await until(() => tool(el, 'undo') !== before);
+}
 
 /** What the editor says to screen readers from now on, each text it is set to in turn. */
 function heard(el) {
@@ -62,7 +68,8 @@ async function refuses(env, el, which, expected) {
     assert.match(b.getAttribute('aria-description') ?? '', NOTHING[which], `${which} says why`);
     assert.equal(b.getAttribute('aria-disabled'), 'true');
     b.click();
-    await wait(20);
+    // pressed, it says why in a notice, and to screen readers on the next frame: both waited for, then checked below
+    await until(() => env.state.notices.length === notices + press + 1 && said.length === 2 * (press + 1));
   }
   assert.equal(note(env), expected, 'the note is unchanged');
   const told = env.state.notices.slice(notices);
@@ -79,8 +86,7 @@ describe('another program changes the block', () => {
     try {
       const theirs = NOTE.replace(READER, THEIRS);
       await env.app.vault.modify({ path: PATH }, theirs);
-      await wait(20);
-      assert.equal(el.querySelector('textarea').value, THEIRS, 'reloaded');
+      await until(() => el.querySelector('textarea').value === THEIRS); // reloaded
       await refuses(env, el, 'undo', theirs);
       assert.equal(el.querySelector('textarea').value, THEIRS);
     } finally {
@@ -92,14 +98,14 @@ describe('another program changes the block', () => {
     const { env, el } = await written();
     try {
       await env.app.vault.modify({ path: PATH }, NOTE.replace(READER, THEIRS));
-      await wait(20);
+      await until(() => el.querySelector('textarea').value === THEIRS);
       const said = heard(el),
         notices = env.state.notices.length,
         t = el.querySelector('textarea');
       t.dispatch('beforeinput', { inputType: 'historyUndo' });
-      await wait(20);
+      await until(() => env.state.notices.length === notices + 1 && said.length === 2);
       t.dispatch('beforeinput', { inputType: 'historyUndo' });
-      await wait(20);
+      await until(() => env.state.notices.length === notices + 2 && said.length === 4);
       const told = env.state.notices.slice(notices);
       assert.equal(told.length, 2);
       assert.match(told[0], NOTHING.undo);
@@ -116,7 +122,7 @@ describe('another program changes the block', () => {
     try {
       const theirs = NOTE.replace(READER, THEIRS);
       await env.app.vault.modify({ path: PATH }, theirs);
-      await wait(20);
+      await until(() => el.querySelector('textarea').value === THEIRS);
       assert.equal(tool(el, 'undo').getAttribute('aria-disabled'), 'true');
       const t = el.querySelector('textarea'),
         more = THEIRS + ',\n(more:Reason)';
@@ -142,11 +148,13 @@ describe('a sync changes the block', () => {
       const synced = NOTE.replace(READER, THEIRS);
       env.state.files.set(PATH, synced);
       labelled(el, 'Undo').click();
-      await wait(20);
+      // refused, the block is reloaded as the sync left it once the text typed is kept as a draft
+      await until(() => el.querySelector('textarea').value === THEIRS);
       assert.equal(note(env), synced, 'the undo is refused: the block changed since');
-      assert.equal(el.querySelector('textarea').value, THEIRS, 'reloaded as the sync left it');
       await env.app.vault.modify({ path: PATH }, synced); // the change heard late
-      await wait(20);
+      // the editor already holds this text, from the refused Undo, so it finds nothing new and nothing shows it: what it
+      // started, a read of the note, is let finish
+      await settled();
       env.state.data.drafts = {}; // the refused undo kept its text as a draft, as any refused write does
       await refuses(env, el, 'redo', synced);
       await refuses(env, el, 'undo', synced);
@@ -160,16 +168,16 @@ describe('a sync changes the block', () => {
     const { env, el } = await written();
     try {
       await env.app.vault.modify({ path: PATH }, NOTE.replace(READER, THEIRS)); // T1, heard
-      await wait(20);
+      await until(() => el.querySelector('textarea').value === THEIRS);
       const second = READER + ',\n(second:Reason)',
         synced = NOTE.replace(READER, second);
       env.state.files.set(PATH, synced); // T2, written by the sync, not yet heard
+      const notices = env.state.notices.length;
       tool(el, 'undo').click();
-      await wait(20);
+      await until(() => env.state.notices.length === notices + 1); // refused, saying why
       assert.equal(note(env), synced, 'the undo is refused');
       await env.app.vault.modify({ path: PATH }, synced); // T2 heard late
-      await wait(20);
-      assert.equal(el.querySelector('textarea').value, second, 'the field shows the late change');
+      await until(() => el.querySelector('textarea').value === second); // the field shows the late change
     } finally {
       env.uninstall();
     }
@@ -190,8 +198,7 @@ describe('another pane changes the block', () => {
       t.setSelectionRange(THEIRS.length, THEIRS.length);
       t.dispatch('input');
       await until(() => note(env) === theirs, 2000);
-      await wait(20);
-      assert.equal(el.querySelector('textarea').value, THEIRS, 'the pane reloaded');
+      await until(() => el.querySelector('textarea').value === THEIRS); // the pane reloaded
       await refuses(env, el, 'undo', theirs);
       labelled(card, 'Undo').click();
       await until(() => note(env) === NOTE.replace(READER, MINE));
@@ -205,14 +212,13 @@ describe('a change elsewhere in the note', () => {
   test('leaves Undo working: the editor’s own change is taken back, the other kept', async () => {
     const { env, el } = await written();
     try {
-      await env.app.vault.modify({ path: PATH }, note(env).replace('Between.', 'Changed.'));
-      await wait(20);
+      // heard, the block unchanged, the pane draws its tools again: Undo still offered
+      await toolsRedrawn(el, () => env.app.vault.modify({ path: PATH }, note(env).replace('Between.', 'Changed.')));
       assert.equal(tool(el, 'undo').getAttribute('aria-label'), 'Undo');
       assert.equal(tool(el, 'undo').getAttribute('aria-disabled'), null);
       labelled(el, 'Undo').click();
-      await wait(20);
+      await until(() => el.querySelector('textarea').value === READER);
       assert.equal(note(env), NOTE.replace('Between.', 'Changed.'));
-      assert.equal(el.querySelector('textarea').value, READER);
     } finally {
       env.uninstall();
     }
@@ -243,8 +249,8 @@ describe('switching blocks in the picker', () => {
     try {
       const written = two.note(env);
       await chooseOther(env);
-      labelled(env.el, 'Undo').click();
-      await wait(20);
+      // nothing to take back: the pane draws its tools again, and writes nothing
+      await toolsRedrawn(env.el, () => labelled(env.el, 'Undo').click());
       assert.equal(two.note(env), written, 'neither block changed');
       assert.equal(two.textarea(env.el).value, two.OTHER);
     } finally {
@@ -257,15 +263,14 @@ describe('switching blocks in the picker', () => {
     try {
       const theirs = two.note(env).replace('Kind to the eyes', 'Gentle on the eyes');
       await env.app.vault.modify({ path: two.PATH }, theirs);
-      await wait(20);
+      await until(() => two.textarea(env.el).value.includes('Gentle on the eyes'));
       assert.equal(tool(env.el, 'undo').getAttribute('aria-disabled'), 'true', 'the first block’s Undo says why');
       await chooseOther(env);
       const undo = tool(env.el, 'undo');
       assert.equal(undo.getAttribute('aria-label'), 'Undo');
       assert.equal(undo.getAttribute('aria-disabled'), null);
       const notices = env.state.notices.length;
-      undo.click();
-      await wait(20);
+      await toolsRedrawn(env.el, () => undo.click());
       assert.equal(two.note(env), theirs);
       assert.deepEqual(env.state.notices.slice(notices), [], 'nothing said: there is simply nothing to undo');
     } finally {

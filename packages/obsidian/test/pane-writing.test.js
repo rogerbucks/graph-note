@@ -3,7 +3,7 @@
 // in its words.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { build, load, wait } from './host/load-plugin.js';
+import { build, load, until, wait } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
 import { READER, NOTE, PATH, open, textarea, type, note } from './host/pane-notes.js';
 
@@ -80,8 +80,7 @@ describe('writing to the note', () => {
     try {
       const theirs = NOTE.replace(READER, READER + ',\n(theirs:Reason)');
       await env.app.vault.modify({ path: PATH }, theirs);
-      await wait(20);
-      assert.equal(textarea(env.el).value, READER + ',\n(theirs:Reason)');
+      await until(() => textarea(env.el).value === READER + ',\n(theirs:Reason)');
     } finally {
       env.uninstall();
     }
@@ -94,16 +93,15 @@ describe('writing to the note', () => {
       await wait(400);
       type(env.el, READER + ',\n(one:Reason),\n(two:Reason)');
       await wait(400);
+      // each step writes the note, then puts its text in the field: both are waited for before the next press
+      const one = READER + ',\n(one:Reason)',
+        stepped = (block) => note(env) === NOTE.replace(READER, block) && textarea(env.el).value === block;
       labelled(env.el, 'Undo').click();
-      await wait(20);
-      assert.equal(note(env), NOTE.replace(READER, READER + ',\n(one:Reason)'));
+      await until(() => stepped(one));
       labelled(env.el, 'Undo').click();
-      await wait(20);
-      assert.equal(note(env), NOTE);
-      assert.equal(textarea(env.el).value, READER);
+      await until(() => stepped(READER));
       labelled(env.el, 'Redo').click();
-      await wait(20);
-      assert.equal(note(env), NOTE.replace(READER, READER + ',\n(one:Reason)'));
+      await until(() => stepped(one));
     } finally {
       env.uninstall();
     }
