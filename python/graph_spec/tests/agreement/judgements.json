@@ -657,6 +657,11 @@
           "(faro:Place {name: 'Faro', cost: 350})"
         ],
         [
+          "// graph: jud_d10 · CHANGE SET cs_edit · against 3ce1843c7da27b51 · by sam",
+          "MATCH (p:Place {id: 'lisbon'})",
+          "SET p.cost = 400"
+        ],
+        [
           "// graph: jud_j10 · CHANGE SET cs_unsealed · against 8c2c6795ec8c7f94 · by sam",
           "(dx:Decision {title: 'Go to Porto', at: DATE '2026-10-07', content_hash: '0000000000000000'})"
         ],

@@ -6,7 +6,8 @@
     "find": "each DELETE and SET finds its one target in the graph (§24)",
     "dangling": "a DELETE leaves no link without its end; DETACH DELETE removes a thing with its links (§24)",
     "current": "it was made against the graph as it stands",
-    "model": "a model adds only claims, assessments, evidence, proposals and options (§24 rule 2)"
+    "model": "a model adds no record and no cache (§24 rule 5)",
+    "record": "it never removes or changes a record or a cache (§24 rule 4)"
   },
   "head": [
     "// graph: library",
@@ -20,8 +21,14 @@
     "(library_schema)-[:DECLARES]->(t_person),",
     "(library_schema)-[:DECLARES]->(t_model),",
     "(library_schema)-[:DECLARES]->(t_wrote),",
+    "(t_event:ElementType {id: 'type:Event', name: 'Event', kind: 'node'}),",
+    "(t_claim:ElementType {id: 'type:Claim', name: 'Claim', kind: 'node'}),",
+    "(library_schema)-[:DECLARES]->(t_event),",
+    "(library_schema)-[:DECLARES]->(t_claim),",
     "(ada:Person {name: 'Ada'}),",
-    "(bot:Model {name: 'Drafter'}),"
+    "(bot:Model {name: 'Drafter'}),",
+    "(sale:Event {title: 'A sale', amount: 10}),",
+    "(c1:Claim {text: 'It will rain', status: 'open'}),"
   ],
   "base_rest": [
     "(grace:Person {name: 'Grace'}),",
@@ -59,7 +66,7 @@
       "name": "detach delete a thing that has a link",
       "body": ["MATCH (b:Book {id: 'atlas'}) DETACH DELETE b"],
       "failed": [],
-      "changes": [["detach-delete-thing", null]],
+      "changes": [["detach-delete-thing", null, [["ada", "WROTE", "atlas"]]]],
       "after": [
         "(grace:Person {name: 'Grace'}),",
         "(notes:Book {title: 'Notes on the engine', pages: 60}),",
@@ -180,10 +187,10 @@
       ]
     },
     {
-      "name": "a model still adds only what it may add",
+      "name": "a model may add an ordinary thing and link",
       "by": "bot",
       "body": ["(late:Book {title: 'A late book'}),", "(ada)-[:WROTE]->(late)", "SET notes.pages = 66"],
-      "failed": ["model"],
+      "failed": [],
       "changes": [["set-thing", null]],
       "after": [
         "(grace:Person {name: 'Grace'}),",
@@ -194,6 +201,175 @@
         "(ada)-[:WROTE]->(atlas),",
         "(ada)-[:WROTE]->(late)"
       ]
+    },
+    {
+      "name": "a model may not add a record",
+      "by": "bot",
+      "body": ["(refund:Event {title: 'A refund'})"],
+      "failed": ["model"],
+      "changes": [],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(refund:Event {title: 'A refund'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
+      ]
+    },
+    {
+      "name": "a record is never deleted",
+      "body": ["MATCH (e:Event {id: 'sale'}) DELETE e"],
+      "failed": ["record"],
+      "changes": [["delete-thing", null]],
+      "after": null
+    },
+    {
+      "name": "a record is never changed",
+      "body": ["SET sale.amount = 20"],
+      "failed": ["record"],
+      "changes": [["set-thing", null]],
+      "after": null
+    },
+    {
+      "name": "a cache is never set",
+      "body": ["SET c1.status = 'confirmed'"],
+      "failed": ["record"],
+      "changes": [["set-thing", null]],
+      "after": null
+    },
+    {
+      "name": "a model may not detach delete a record",
+      "by": "bot",
+      "body": ["MATCH (e:Event {id: 'sale'}) DETACH DELETE e"],
+      "failed": ["record"],
+      "changes": [["detach-delete-thing", null, []]],
+      "after": null
+    },
+    {
+      "name": "a model may not set a cache",
+      "by": "bot",
+      "body": ["SET c1.confidence = 'high'"],
+      "failed": ["record"],
+      "changes": [["set-thing", null]],
+      "after": null
+    },
+    {
+      "name": "a set written with CRLF line ends reads as one written with LF",
+      "crlf": true,
+      "body": ["//@ reason: tidy", "MATCH (p:Person {id: 'grace'}) DELETE p"],
+      "failed": [],
+      "changes": [["delete-thing", "tidy"]],
+      "same_id_as": "delete a thing that has no links",
+      "after": [
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
+      ]
+    },
+    {
+      "name": "a reason keeps a line separator inside it",
+      "body": ["//@ reason: a b ", "SET notes.pages = 66"],
+      "failed": [],
+      "changes": [["set-thing", "a b"]],
+      "same_id_as": "set a value, named by the thing's name",
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 66}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
+      ]
+    },
+    {
+      "name": "a SET of a key named __proto__ is refused",
+      "body": ["SET notes.__proto__ = 'x'"],
+      "failed": ["statement"],
+      "changes": [],
+      "after": null
+    },
+    {
+      "name": "a comment that only looks like against, by a long s, is no basis line",
+      "body": ["//@ againſt: 0000000000000000", "SET notes.pages = 66"],
+      "failed": [],
+      "changes": [["set-thing", null]],
+      "same_id_as": "set a value, named by the thing's name",
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 66}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
+      ]
+    },
+    {
+      "name": "the same change twice in one set is refused",
+      "body": ["SET notes.pages = 66", "MATCH (b:Book {id: 'notes'}) SET b.pages = 66"],
+      "failed": ["statement"],
+      "changes": [],
+      "after": null
+    },
+    {
+      "name": "the same id composed and decomposed is the same change",
+      "body": ["MATCH (p {id: 'café'}) SET p.x = 1", "MATCH (p {id: 'café'}) SET p.x = 1"],
+      "failed": ["statement"],
+      "changes": [],
+      "after": null
+    },
+    {
+      "name": "keywords in lower case are read",
+      "body": ["match (p:Person {id: 'grace'}) detach delete p"],
+      "failed": [],
+      "changes": [["detach-delete-thing", null, []]],
+      "after": [
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
+      ]
+    },
+    {
+      "name": "double quotes are refused",
+      "body": ["MATCH (p:Person {id: \"grace\"}) DELETE p"],
+      "failed": ["statement"],
+      "changes": [],
+      "after": null
+    },
+    {
+      "name": "a trailing semicolon is refused",
+      "body": ["MATCH (p:Person {id: 'grace'}) DELETE p;"],
+      "failed": ["statement"],
+      "changes": [],
+      "after": null
+    },
+    {
+      "name": "a comment line between a MATCH and its SET is allowed",
+      "body": ["MATCH (b:Book {id: 'notes'})", "// the figure from the cover", "SET b.pages = 66"],
+      "failed": [],
+      "changes": [["set-thing", null]],
+      "same_id_as": "set a value, named by the thing's name",
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 66}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
+      ]
+    },
+    {
+      "name": "an id with an escaped quote is read, and not found",
+      "body": ["MATCH (p {id: 'o\\'neil'}) DELETE p"],
+      "failed": ["find"],
+      "changes": [["delete-thing", null]],
+      "after": null
+    },
+    {
+      "name": "an id in another script is read, and not found",
+      "body": ["MATCH (p {id: 'çaあ'}) DELETE p"],
+      "failed": ["find"],
+      "changes": [["delete-thing", null]],
+      "after": null
     },
     {
       "name": "one DELETE naming two things is refused",

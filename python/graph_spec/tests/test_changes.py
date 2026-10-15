@@ -24,6 +24,8 @@ sys.path.insert(0, HERE)
 import gql_profile as gp  # noqa: E402
 import graph_rules as gr  # noqa: E402
 import graph_spec as gs  # noqa: E402
+from engine_support import needs_engine  # noqa: E402
+from graphspec.engine import settings  # noqa: E402
 
 with open(os.path.join(JS, "test", "change-cases.json"), encoding="utf-8") as f:
     TABLE = json.load(f)
@@ -43,7 +45,7 @@ NOW = state_of(BASE)
 def block_of(case):
     against, by = case.get("against", NOW), case.get("by", "ada")
     header = f"// graph: library · CHANGE SET cs · against {against} · by {by}"
-    return "\n".join([header, *case["body"]])
+    return ("\r\n" if case.get("crlf") else "\n").join([header, *case["body"]])
 
 
 def python_answer(case):
@@ -52,7 +54,7 @@ def python_answer(case):
     )
     return {
         "failed": sorted(label for label, ok, _ in res if not ok),
-        "changes": [[c["op"], c["reason"], c["id"]] for c in h["changes"]],
+        "changes": [[c["op"], c["reason"], c["id"], c.get("links")] for c in h["changes"]],
         "after": after,
     }
 
@@ -81,7 +83,13 @@ class Changes(unittest.TestCase):
             self.assertEqual(
                 got["failed"], sorted(TABLE["labels"][k] for k in c["failed"]), c["name"]
             )
-            self.assertEqual([x[:2] for x in got["changes"]], c["changes"], c["name"])
+            self.assertEqual(
+                [x[:2] for x in got["changes"]], [x[:2] for x in c["changes"]], c["name"]
+            )
+            # the links a DETACH DELETE removes are listed by the dry run, for the cases naming them
+            for got_change, want in zip(got["changes"], c["changes"]):
+                if len(want) > 2:
+                    self.assertEqual(got_change[3], want[2], c["name"])
             self.assertTrue(all(len(x[2]) == 16 for x in got["changes"]), c["name"])
             self.assertEqual(len({x[2] for x in got["changes"]}), len(got["changes"]), c["name"])
             want = None if c["after"] is None else state_of("\n".join(TABLE["head"] + c["after"]))
@@ -97,9 +105,26 @@ class Changes(unittest.TestCase):
             got = python_answer(c)
             self.assertEqual(got["failed"], js["failed"], c["name"])
             self.assertEqual(
-                got["changes"], [[x["op"], x["reason"], x["id"]] for x in js["changes"]], c["name"]
+                got["changes"],
+                [[x["op"], x["reason"], x["id"], x.get("links")] for x in js["changes"]],
+                c["name"],
             )
             self.assertEqual(got["after"], js["after"], c["name"])
+
+    @needs_engine
+    def test_the_engine_s_dry_run_reaches_the_reader_s_outcome(self):
+        old = settings.PARSER
+        try:
+            for c in TABLE["cases"]:
+                ours = python_answer(c)
+                settings.PARSER = "grafeo"
+                res, _, after = gs.check_changeset([("library", BASE)], block_of(c), frozenset())
+                settings.PARSER = old
+                failed = sorted(label for label, ok, _ in res if not ok)
+                self.assertEqual(failed, ours["failed"], c["name"])
+                self.assertEqual(after, ours["after"], c["name"])
+        finally:
+            settings.PARSER = old
 
     def test_a_change_set_with_no_delete_or_set_reads_no_changes(self):
         header = f"// graph: library · CHANGE SET cs · against {NOW} · by ada"

@@ -19,7 +19,7 @@ const ids = new Map();
 for (const c of table.cases) {
   test(c.name, () => {
     const header = `// graph: library · CHANGE SET cs · against ${c.against ?? now} · by ${c.by ?? 'ada'}`;
-    const r = C.checkChangeset(base, [header, ...c.body].join('\n'), {});
+    const r = C.checkChangeset(base, [header, ...c.body].join(c.crlf ? '\r\n' : '\n'), {});
     assert.deepEqual(
       r.results
         .filter((x) => !x[1])
@@ -30,8 +30,10 @@ for (const c of table.cases) {
     const changes = r.header.changes;
     assert.deepEqual(
       changes.map((x) => [x.op, x.reason]),
-      c.changes,
+      c.changes.map((x) => x.slice(0, 2)),
     );
+    // the links a DETACH DELETE removes are listed by the dry run, for those cases that name them
+    c.changes.forEach((x, i) => x[2] && assert.deepEqual(changes[i].links, x[2]));
     for (const x of changes) assert.match(x.id, /^[0-9a-f]{16}$/);
     assert.equal(new Set(changes.map((x) => x.id)).size, changes.length);
     assert.equal(r.after, c.after === null ? null : stateOf([[...table.head, ...c.after].join('\n')]));
