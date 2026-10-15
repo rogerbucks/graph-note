@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/changes.test.mjs",
+  "test": "an id with an escaped quote is read, and not found",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour the reader already had: an id with an escaped quote is read by the existing tokenizer and not found in the graph; written with the review's cases to hold both readers to it (commit fdc7e45)"
+}

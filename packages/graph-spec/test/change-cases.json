@@ -123,6 +123,19 @@
       ]
     },
     {
+      "name": "a SET goes on to the next line after a comma",
+      "body": ["SET notes.pages = 66,", "notes.edition = 2"],
+      "failed": [],
+      "changes": [["set-thing", null]],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 66, edition: 2}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
+      ]
+    },
+    {
       "name": "set a value on a link",
       "body": ["MATCH (a {id: 'ada'})-[r:WROTE]->(b {id: 'notes'}) SET r.year = 1843"],
       "failed": [],
