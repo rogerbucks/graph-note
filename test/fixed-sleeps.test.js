@@ -52,6 +52,35 @@ describe('it catches', () => {
     assert.deepEqual(linesIn(body), [3, 4, 5, 6, 7, 8, 9]);
   });
 
+  test('a sleep of a constant or arithmetic, among others awaited, or resolved from a callback of the timer', () => {
+    const body = `const MS = 20, TWICE = MS * 2;
+test('t', async () => {
+  await wait(MS);
+  await wait(TWICE);
+  await wait(20 * 2);
+  await Promise.all([work(), wait(20)]);
+  await new Promise((r) => setTimeout(() => r(), 50));
+  await new Promise((r) => { setTimeout(() => { r(); }, 50); });
+});`;
+    assert.deepEqual(linesIn(body), [3, 4, 5, 6, 7, 8]);
+  });
+
+  test('a sleep in a loop over cases, or in one that only counts: neither is a poll', () => {
+    const body = `test('t', async () => {
+  for (const note of [a, b]) {
+    click(note);
+    await wait(20);
+  }
+  for (let press = 0; press < 2; press++) {
+    await wait(20);
+  }
+  for (const k in cases) await wait(5);
+  let n = 0;
+  while (n < 3) { n++; await wait(10); }
+});`;
+    assert.deepEqual(linesIn(body), [4, 7, 9, 11]);
+  });
+
   test('a sleep in a helper the test calls, and in a callback', () => {
     const body = `async function drawn(el) {
   await draw(el);
@@ -65,11 +94,13 @@ test('t', async () => {
 });
 
 describe('it allows', () => {
-  test('a poll: a sleep inside a loop, which gives up on waiting rather than standing for the work', () => {
+  test('a poll: a sleep inside a loop whose condition reads state, which gives up on waiting rather than standing for the work', () => {
     const body = `export async function until(ready, ms = 3000) {
   while (!ready()) await wait(10);
   for (let i = 0; i < 100 && !done(); i++) await sleep(100);
   do { await wait(5); } while (!ready());
+  for (let waited = 0; waited < 3000 && alive(pid); waited += 50) await wait(50);
+  while (pending) await wait(10);
 }`;
     assert.deepEqual(linesIn(body), []);
   });
@@ -82,6 +113,7 @@ test('t', async () => {
   await new Promise((r) => setTimeout(r, later));
   setTimeout(go, 20);
   await until(() => done());
+  await Promise.all([work(), go(() => wait(20))]);
 });`;
     assert.deepEqual(linesIn(body), []);
   });
