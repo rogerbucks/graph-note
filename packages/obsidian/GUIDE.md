@@ -354,8 +354,8 @@ module that ties the parts together, named as the folder is.
   second, in place longer) and the redraw, each cleared when a write is made at once or the editor goes.
 - `block-note.ts` — the note behind the editor and its session: opening, writing, undo, Lock, drafts; the note followed
   when it is renamed or moved, and what is typed kept as a draft when it is deleted; each editor's own draft known by
-  its id, beside another's. Stopped by a copy, the stop is said once: typing after it is held in the session as typing
-  rests, kept as a draft when the block is opened again or the editor closes, never saved again at every pause.
+  its id, beside another's. Stopped by a copy, the stop is said once: typing after it is saved quietly as the editor's
+  own draft at each pause, with no banner or notice again, so it is never held in memory alone.
 - `note-writing.ts` — writing safely, through the note's editor or the vault.
 - `kept-field.ts` — the field's focus and scroll, kept through each redraw.
 - `typing-keys.ts` — what typing does: Tab and Enter for the inline match or a suggestion, Escape to put it away, undo and
