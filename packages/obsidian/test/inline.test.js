@@ -82,8 +82,7 @@ describe('edit here, in the card', () => {
       t.dispatch('input');
       labelled(el, 'Done').click();
       await until(() => env.state.files.get(PATH).includes("name: 'X'"), 2000);
-      await wait(20);
-      assert.equal(el.querySelector('textarea'), null);
+      await until(() => el.querySelector('textarea') === null); // the editor closed
       assert.equal((await show(env)).querySelector('textarea'), null);
     } finally {
       env.uninstall();
@@ -334,8 +333,7 @@ describe('edit here, in the card', () => {
       t.dispatch('input');
       labelled(el, 'Done editing').click();
       await until(() => env.state.files.get(PATH).includes("name: 'X'"), 2000);
-      await wait(20);
-      assert.equal(el.querySelector('textarea'), null);
+      await until(() => el.querySelector('textarea') === null); // the editor closed
       assert.equal((await show(env)).querySelector('textarea'), null);
     } finally {
       env.uninstall();

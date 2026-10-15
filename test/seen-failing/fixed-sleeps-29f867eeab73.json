@@ -1,0 +1,6 @@
+{
+  "file": "test/fixed-sleeps.test.js",
+  "test": "it allows > a poll: a sleep inside a loop whose condition reads state, which gives up on waiting rather than standing for the work",
+  "seen_failing_first": false,
+  "evidence": "A guard that the narrowing kept every real poll allowed: the old code took every loop for a poll, so it allowed these too and the test passed there. What changed is that loops over cases or counters are no longer polls, which the new 'it catches' tests prove by failing first; this one holds that polls reading state (until, alive(pid), a flag) stay allowed."
+}

@@ -178,6 +178,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/device-check-notes.test.js` — the device checklist numbers every item, the test vault holds one note for each item after Before in `Device checks/`, the note's checklist line is the item's words, each note's graph blocks read as it says they do (the repository's reader and checker, and `parseView` for a view), and the index lists the notes in order (editor spec §3, tried first in a test vault).
 - `test/device-check-quotes.test.js` — what a device check note quotes from Obsidian's screen (a read-back, a label, the tap text of an estimate, a box's details, an export's footer and file name, the conversion notice) is computed from the note's own graph blocks with the real functions and matches exactly; the notes' generator scripts and filler set up the case they describe (editor spec §3).
 - `test/engine-version.test.js` — the Graphviz version is read from the engine, named in the notices, and checked against published advisories.
+- `test/fixed-sleeps.test.js` — no new fixed sleep in the tests: an awaited `wait(20)` or the like outside a polling loop is held, file by file, to the allowance in `test/fixed-sleeps.json`, which only goes down (`node scripts/fixed-sleeps.mjs --tighten`).
 - `test/github-project.test.js` — the GitHub mirror of the requirements as a person runs it: the real workstreams file puts every requirement of slices 3 and 4 in exactly one workstream and may name ids a later copy brings, and the command is a dry run by default, with no network call.
 - `test/github-project-desired.test.js` — that mirror's desired state: the first clause of a rule, each issue's title, body, labels and open or closed, the marker, the project's fields and options.
 - `test/github-project-gh.test.js` — that mirror applied through an in-memory stand-in for `gh`: a first apply, a second that changes nothing, drift put right, a removed requirement labelled and closed, and nothing ever deleted.
@@ -379,6 +380,12 @@ These test behaviour across modules, or the repository itself, so they are named
   with a control showing the count sees the work when it is done. Speed itself is the benchmarks' instruction counts;
   `scripts/timed-assertions.mjs`, run by `test/timed-assertions.test.js`, fails any assertion on a span of elapsed time
   (a polling deadline in a loop that awaits, and Node's mock timers, are allowed).
+- **A test waits for the state it asserts, never a number of milliseconds** (15 Oct 2026). A sleep holds only while the
+  machine is as fast as when it was written: under a loaded full run the work takes longer, and the test fails once in
+  a while and passes alone. Wait with the test support's `until(() => …)` on the state asserted; where nothing should
+  change, wait for a positive sign that the work is done (a notice counted, the tools drawn again) and then assert.
+  `scripts/fixed-sleeps.mjs`, run by `test/fixed-sleeps.test.js`, fails a fixed sleep beyond each file's allowance in
+  `test/fixed-sleeps.json`, and an allowance higher than the file needs, so a sleep taken out stays out.
 - **A baseline from the CI runner:** run the "Quality baseline" workflow by hand, download its `quality-metrics`
   artifact, and commit its `metrics.json` as `quality/baseline.json` in a normal pull request. The same artifact's
   `instruction-spread.json` counts every benchmark three times: its `largest_spread` is how far a count moved between

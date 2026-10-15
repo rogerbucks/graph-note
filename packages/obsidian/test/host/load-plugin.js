@@ -52,6 +52,12 @@ export async function load(options = {}) {
 
 export const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/**
+ * Resolves once every promise already under way has run on, where none waits on a timer, a frame or a worker: an order,
+ * not a sleep, so the same under any load. For a change that should do nothing visible, where there is no state to wait for.
+ */
+export const settled = () => new Promise((r) => setImmediate(r));
+
 /** Waits until `ready()` is true, or fails after `ms`: for what the engine draws, which takes as long as it takes to start. */
 export async function until(ready, ms = 3000) {
   const t0 = Date.now();

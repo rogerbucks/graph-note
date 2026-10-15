@@ -39,8 +39,7 @@ async function showEmbedded(env, where) {
     .createDiv({ cls: 'markdown-preview-view markdown-rendered' })
     .createDiv({ cls: 'block-language-gql' });
   await env.state.processors.get('gql')(GRAPH, el, fakeContext(NOTE, open));
-  await until(() => !!el.querySelector('svg'));
-  await wait(20);
+  await until(() => !!el.querySelector('svg')); // the bar is drawn before the drawing
   return el;
 }
 
