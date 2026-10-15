@@ -1,0 +1,6 @@
+{
+  "file": "test/conventions.test.js",
+  "test": "naming conventions > each test file is named after its file, or listed in CONTRIBUTING.md as a test that spans modules",
+  "seen_failing_first": false,
+  "evidence": "The rule is widened so a plugin test may be named for a module of the display layer it tests through the plugin; the code had moved in the parent commit, so the widened rule passes there, and the narrower rule it replaces would have failed on the move."
+}

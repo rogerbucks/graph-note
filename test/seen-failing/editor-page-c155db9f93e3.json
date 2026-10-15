@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/editor-page.test.js",
+  "test": "cc_core_only: the page takes everything from the core and the shared display layer > the display layer is a folder of the core, and the Obsidian plugin keeps no copy of it",
+  "seen_failing_first": false,
+  "evidence": "Seen failing at its first commit, 861f53d; this commit only retargets its last check from block.ts to graph-card.ts, where the plugin's import of the layer now is, after the code had moved."
+}
