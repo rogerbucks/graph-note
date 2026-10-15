@@ -111,6 +111,12 @@ export function auditRequirements(text, { exists = (rel) => existsSync(join(ROOT
     const { id, where, status } = n.props;
     if (!claimed.has(key))
       problems.push({ kind: 'unclaimed', id, message: `test ${id} claims no requirement: no PROVED_BY names it` });
+    if (!TEST_STATUSES.includes(status))
+      problems.push({
+        kind: 'status',
+        id,
+        message: `test ${id} has a status that is not planned, partial or written: ${JSON.stringify(status ?? null)}`,
+      });
     if (!IN_REPO.has(where)) continue;
     const files = filesOf(n.props.file);
     const missing = files.filter((f) => !exists(f));
