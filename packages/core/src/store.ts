@@ -3,6 +3,7 @@
 // read it is never overwritten blind: the write is refused, with the block as it now is, so the pane can reload and keep
 // what was typed as a draft. Every write is recorded, so it can be undone back to the original bytes.
 import { gqlSpans } from './blocks.ts';
+import type { Span } from './blocks.ts';
 import type { Block } from './note-reading.ts';
 
 /** The block a pane is editing: the 0-based line of its opening fence, and its text as the pane last read or wrote it. */
@@ -36,6 +37,11 @@ export function replaceBlock(note: string, ref: BlockRef, next: string): WriteRe
       };
     return { ok: false, reason: 'the block is no longer in the note where the pane read it', current: null };
   }
+  return { ok: true, ...replaceSpan(note, target, next) };
+}
+
+/** The note with the block at `target`, one of its gql blocks found already, replaced by `next`: every other byte kept. */
+export function replaceSpan(note: string, target: Span, next: string): { note: string; ref: BlockRef } {
   // lines with their own endings, so every byte outside the block is kept
   const lines = note.match(/[^\n]*\n|[^\n]+$/g) ?? [];
   const eol = /\r\n$/.test(lines[target.open] ?? '') ? '\r\n' : '\n';
@@ -46,7 +52,7 @@ export function replaceBlock(note: string, ref: BlockRef, next: string): WriteRe
     unclosed && i === body.length - 1 && !/\n$/.test(lines[lines.length - 1] ?? '') ? l : l + eol,
   );
   lines.splice(target.open + 1, target.close - target.open - 1, ...written);
-  return { ok: true, note: lines.join(''), ref: { line: target.open, text } };
+  return { note: lines.join(''), ref: { line: target.open, text } };
 }
 
 /** The note with a new gql block written after the block `ref` — as Lock the graph writes a schema, last. */

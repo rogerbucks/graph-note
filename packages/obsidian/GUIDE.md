@@ -344,6 +344,10 @@ module that ties the parts together, named as the folder is.
   (undo_never_over_theirs). Typing makes Undo available again at once. Switching block in the picker starts that
   block's own history (undo_stays_in_its_block).
 - `editor-layout.ts` — the editor's parts on the page, built once for each block.
+- `block-picker.ts` — the pane's picker of the note's graph blocks: built again from the note as the session last saw
+  it each time the tools are shown (after every write, reload and change made outside), so its lines are never an older
+  note's; a block chosen is found again, once what is typed is written, by its place among the graph blocks and its
+  graph, and said in a notice when it is no longer there, never silently nothing.
 - `block-note.ts` — the note behind the editor and its session: opening, writing, undo, Lock, drafts; the note followed
   when it is renamed or moved, and what is typed kept as a draft when it is deleted; each editor's own draft known by
   its id, beside another's.

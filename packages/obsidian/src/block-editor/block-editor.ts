@@ -16,6 +16,7 @@ import { FieldHistory } from './editor-history';
 import type { Step } from './editor-history';
 import { BlockNote } from './block-note';
 import type { Reread } from './block-note';
+import { BlockPicker } from './block-picker';
 import type { Refused } from './note-writing';
 import { keptMessage, offerDraft } from './kept-draft';
 import { PaneDrawing } from './pane-drawing';
@@ -45,6 +46,12 @@ export class BlockEditor extends Component {
   /** The pane's drawing; in place, the card's own drawing is the drawing. */
   private readonly drawing: PaneDrawing;
   private el: EditorParts | null = null;
+  /** The pane's block picker, built again whenever the tools are shown, and a block chosen opened from the note as it is. */
+  private readonly picker = new BlockPicker({
+    session: () => this.session,
+    write: () => this.write(),
+    opened: () => this.render(),
+  });
   /** Called with what is typed, read, whenever it changes: the card in place redraws its drawing from it. */
   onReading?: (reading: NoteReading) => void;
   /** Called when Done is pressed in place. */
@@ -172,12 +179,10 @@ export class BlockEditor extends Component {
       if (this.path) container.createEl('p', { text: 'This note has no graph block to edit.' });
       return;
     }
-    const el = buildEditor(container, s, this.layout, {
-      choose: (line) => void this.choose(line),
-      showDrawing: () => this.redraw(),
-    });
+    const el = buildEditor(container, s, this.layout, { showDrawing: () => this.redraw() });
     this.undoes.start(s.text);
     this.el = el;
+    this.picker.place(this.layout === 'pane' ? el.head : null);
     const typing = fieldTyping(el, s, this.help, this.undoes, {
       typed: (change) => this.typed(change),
       caretMoved: () => this.caretMoved(),
@@ -206,6 +211,7 @@ export class BlockEditor extends Component {
     const why = { undo: s.stepRefusal('undo'), redo: s.stepRefusal('redo') };
     if (onlyIfChanged && toolsSaid(why) === this.toolsShown) return;
     this.toolsShown = toolsSaid(why);
+    this.picker.show(); // the note may have changed since: its blocks' lines with it
     showTools(el.tools, {
       inline: this.layout === 'inline',
       draft: !!this.help.reading && isDraft(this.help.reading, s.graph),
@@ -304,12 +310,6 @@ export class BlockEditor extends Component {
       select: (chosen) => this.reveal(chosen),
       replace: (now) => this.replace(now),
     });
-  }
-
-  private async choose(line: number): Promise<void> {
-    if (this.session?.dirty) await this.write();
-    this.session?.select(line);
-    this.render();
   }
 
   /** Writes what is typed into the note; a refused write reloads the block and keeps what was typed as a draft. */
