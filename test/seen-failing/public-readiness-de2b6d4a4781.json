@@ -1,0 +1,6 @@
+{
+  "file": "test/public-readiness.test.js",
+  "test": "the history > GitHub's address on Dependabot's own sign-off line > is allowed on that line alone: the same address anywhere else is a problem",
+  "seen_failing_first": false,
+  "evidence": "A guard test for the allowance added in the same commit: before it, every address in a commit message was already a problem, so these cases passed against the parent. It holds that the allowance covers one line only."
+}

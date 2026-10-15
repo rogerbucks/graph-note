@@ -1,0 +1,6 @@
+{
+  "file": "test/public-readiness.test.js",
+  "test": "the history > any other address stays a problem, in a commit message and in the author field, GitHub's own among them",
+  "seen_failing_first": false,
+  "evidence": "Pins behaviour that already held: every address outside the no-reply domains was already flagged in a commit message and in the author field. The test guards that narrowing the history to HEAD loosened nothing about addresses."
+}
