@@ -1,0 +1,6 @@
+{
+  "file": "test/build-status-started.test.js",
+  "test": "Started on, set by the build status > is left as it is for a pull request GitHub gives no day for",
+  "seen_failing_first": false,
+  "evidence": "It pins that nothing is set when a pull request has no created_at; before Started on existed nothing set it at all, so it held before its code. Its partner tests (set, kept, cleared) failed first."
+}
