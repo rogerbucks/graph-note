@@ -93,15 +93,16 @@ export class BlockPicker {
 
   /**
    * Open again, once the session stopped as it cannot tell its block from a copy (§9): what is typed is kept as a draft
-   * first, as the stop refuses its write; then the graph block on the line the editor last knew it at, else the first of
-   * its graph, is opened with its own history. The picker cannot do it, as choosing the block shown changes nothing.
+   * first, as the stop refuses its write; then the block of its graph on the line the editor last knew it at, else the
+   * first of its graph, is opened with its own history, or the notice says none is left; never another graph's block.
+   * The picker cannot do it, as choosing the block shown changes nothing.
    */
   async again(): Promise<void> {
     const s = this.host.session();
     if (!s) return;
     if (s.dirty) await this.host.write();
-    const all = s.choices(),
-      c = all.find((x) => x.line === s.ref.line) ?? all.find((x) => x.graph === s.graph);
+    const mine = s.choices().filter((x) => x.graph === s.graph),
+      c = mine.find((x) => x.line === s.ref.line) ?? mine[0];
     if (c && s.select(c.line)) return this.host.opened();
     new Notice(CHOSEN_GONE);
   }

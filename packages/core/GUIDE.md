@@ -229,12 +229,13 @@ own handlers. Nothing here reaches the network.
   `blockText` is the text of the block on a line, for a picker to check a choice is still the block it showed.
 - `block-follow.ts` — `followBlock`: where the session's block is in a note changed since, found by the lines unchanged
   at the note's start and end, never by its text alone, so a copy pasted elsewhere is never taken for it, and the
-  original edited after the paste is still the block. A block that is not the held block's text is taken for it only
-  when it reads as it edited (`readsAsEdited`: new to the note, of its graph, keeping at least half of its text after
-  the graph line, and nearer it than any other block of the graph), so another block moved to its line or a new one
-  pasted above it is never taken for it. A change that could as well sit before the block as after it (a copy pasted
-  beside it) is read both ways, and two blocks found make it a `twin`; when the change runs through the whole block,
-  it is found by its text, a `twin` when two blocks hold it, or when any new block reads as it edited.
+  original edited after the paste is still the block; rewritten so far that too little of it is left to know it by
+  (`readsAsEdited`: keeping at least half of the held block's text after the graph line), with a copy elsewhere, the
+  session stops, never following the copy. Another block moved to its line is never taken for it, and a new block
+  pasted beside it is taken for it edited only when it reads so. A change that could as well sit before the block as
+  after it (a copy pasted beside it) is read both ways, and two blocks found make it a `twin`; when the change runs
+  through the whole block, it is found by its text, a `twin` when two blocks hold it, or when a new block of its graph
+  sits on its line, unless that was only pasted beside it. The work is linear in the blocks, counted in `FollowWork`.
 - `edit-check.ts` — that check (§4): `editRefusal` refuses a name the note written into draws only under a suggested
   name (accept its name first), or a name the edit gives a thing that another block of the graph gives too (already a
   name); `newNames` finds the names an edit newly writes.

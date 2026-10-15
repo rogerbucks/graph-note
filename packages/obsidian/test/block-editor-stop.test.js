@@ -71,4 +71,61 @@ describe('stopped by a copy of its block', () => {
       env.uninstall();
     }
   });
+
+  // the re-review of #465, 15 Oct 2026: an outside change while typing was pending wrote at once, saying the stop again
+  test('a change from outside while typing waits: the draft saved quietly, the banner still shown once', async () => {
+    const { env, pasted } = await stopped();
+    try {
+      const first = MORE + ',\n(one:Reason)';
+      type(env.el, first);
+      await until(() => drafts(env).includes(first));
+      const banner = env.el.querySelector('.graph-note-draft'),
+        said = banner.querySelector('p'),
+        notices = env.state.notices.length;
+      const second = first + ',\n(two:Reason)';
+      type(env.el, second);
+      const theirs = pasted.replace('Between.', 'Between, changed.');
+      await env.app.vault.modify({ path: PATH }, theirs);
+      await until(() => drafts(env).includes(second));
+      assert.ok(banner.querySelector('p') === said && !banner.hidden, 'the banner shown once, as it was');
+      assert.equal(env.state.notices.length, notices, 'no notice');
+      assert.equal(note(env), theirs, 'nothing written into either block');
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
+/** The picker's options, as their labels. */
+const labels = (env) => (env.el.querySelector('select')?.querySelectorAll('option') ?? []).map((o) => o.textContent);
+const W = "// graph: other\n(w:Thing {name: 'W'})";
+
+// the re-review of #465, 15 Oct 2026: Open again opened whatever block was on the last line known, of any graph
+describe('Open again finds a block of its graph', () => {
+  test('another graph’s block on its line: the first block of its own graph is opened instead', async () => {
+    const { env, pasted } = await stopped();
+    try {
+      await env.app.vault.modify({ path: PATH }, pasted.replace(fence(MORE), fence(W)));
+      await until(() => labels(env).includes('other · line 3'));
+      labelled(env.el, 'Open again').click();
+      await until(() => undoButton(env)?.getAttribute('aria-disabled') !== 'true');
+      assert.equal(textarea(env.el).value, MORE, 'the reader block left, never the other graph’s');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('no block of its graph left: said in a notice, and no other block opened', async () => {
+    const { env, pasted } = await stopped();
+    try {
+      await env.app.vault.modify({ path: PATH }, pasted.replaceAll(fence(MORE), fence(W)));
+      await until(() => labels(env).includes('other · line 3'));
+      const shown = textarea(env.el).value;
+      labelled(env.el, 'Open again').click();
+      await until(() => env.state.notices.some((n) => /no longer in the note/.test(n)));
+      assert.equal(textarea(env.el).value, shown, 'nothing else opened');
+    } finally {
+      env.uninstall();
+    }
+  });
 });

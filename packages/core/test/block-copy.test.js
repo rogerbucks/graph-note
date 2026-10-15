@@ -5,6 +5,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { PaneSession } from '../src/pane.ts';
+import { followBlock } from '../src/block-follow.ts';
 
 const fence = (t) => '```gql\n' + t + '\n```';
 const A = "// graph: alpha\n(a:T {name: 'A'})";
@@ -228,6 +229,14 @@ describe('a new block that is not the held block edited', () => {
     assert.equal(back.note, changed.replace(fence(MINE), fence(A)));
   });
 
+  // the re-review of #465, 15 Oct 2026: half of the shorter text let a tiny block read as the held block edited
+  test('a tiny block of its graph pasted directly above it: followed, never stopped', () => {
+    const { s, note } = written();
+    const changed = note.replace(fence(MINE), fence('// graph: alpha\n(z:T)') + '\n\n' + fence(MINE));
+    assert.equal(s.noteChanged(changed), 'unchanged');
+    assert.equal(s.stepRefusal('undo'), null);
+  });
+
   test('a copy pasted directly above it, then the original edited: the original is followed', () => {
     const { s, note } = written();
     const above = note.replace('# Note\n', '# Note\n' + fence(MINE) + '\n');
@@ -237,5 +246,105 @@ describe('a new block that is not the held block edited', () => {
     assert.equal(s.noteChanged(edited), 'reloaded');
     assert.equal(s.text, THEIRS);
     refusedForHistory(s.undo(edited), 'undo');
+  });
+});
+
+// The re-review of #465, 15 Oct 2026: the original rewritten past half its text after a copy was pasted no longer read
+// as the held block edited, so the copy was the one block left holding its text and the session followed it
+const REWRITES = {
+  'rewritten whole': "// graph: alpha\n(q:T {name: 'Q'})",
+  'most lines replaced': "// graph: alpha\n(a:T {name: 'Alpha, renamed'}),\n(x:T), (y:T), (z:T)",
+  'one line added at the top': "// graph: alpha\n(top:T),\n(a:T {name: 'A'}),\n(mine:T)",
+  'much appended': MINE + ",\n(p:T {name: 'a long new thing with a long text'}),\n(r:T {name: 'and another long one'})",
+};
+
+/**
+ * Holds that the session never follows the copy once the original became `rewrite`: it stops, or keeps to the original
+ * and reloads it; Undo takes nothing back, and a write after typing never touches the copy.
+ */
+function neverTheCopy(s, note, rewrite) {
+  const outcome = s.noteChanged(note);
+  assert.notEqual(outcome, 'unchanged', 'the copy, unchanged, is never taken for the block');
+  if (outcome === 'reloaded') assert.equal(s.text, rewrite, 'the original, as they left it');
+  else stopped(s.stepRefusal('undo'));
+  assert.equal(s.undo(note).ok, false, 'nothing undone');
+  s.type(s.text + ',\n(late:T)');
+  const w = s.write(note);
+  if (w.ok) assert.equal(w.note, note.replace(fence(rewrite), fence(rewrite + ',\n(late:T)')), 'into the original');
+  else stopped(w.reason);
+  return outcome;
+}
+
+describe('the original rewritten after a copy is pasted', () => {
+  test('a copy pasted far off, then the original rewritten, told of each: never the copy; rewritten whole, stopped', () => {
+    for (const [what, rewrite] of Object.entries(REWRITES)) {
+      const { s, note } = written();
+      const pasted = pastedFar(note);
+      assert.equal(s.noteChanged(pasted), 'unchanged', what);
+      const outcome = neverTheCopy(s, pasted.replace(fence(MINE), fence(rewrite)), rewrite);
+      if (what === 'rewritten whole') assert.equal(outcome, 'conflict', 'nothing of the block is left to know it by');
+    }
+  });
+
+  test('a copy pasted far off and the original rewritten, in one change: never the copy; rewritten whole, stopped', () => {
+    for (const [what, rewrite] of Object.entries(REWRITES)) {
+      const { s, note } = written();
+      const outcome = neverTheCopy(s, pastedFar(note).replace(fence(MINE), fence(rewrite)), rewrite);
+      if (what === 'rewritten whole') assert.equal(outcome, 'conflict', 'nothing of the block is left to know it by');
+    }
+  });
+
+  test('a copy pasted beside it, then the original rewritten, told of each: stopped', () => {
+    for (const [what, rewrite] of Object.entries(REWRITES)) {
+      const { s, note } = written();
+      const pasted = pastedBeside(note);
+      assert.equal(s.noteChanged(pasted), 'conflict', what);
+      assert.equal(neverTheCopy(s, pasted.replace(fence(MINE), fence(rewrite)), rewrite), 'conflict', what);
+    }
+  });
+
+  test('a copy pasted beside it and the original rewritten, in one change, still read as its own: stopped', () => {
+    for (const what of ['most lines replaced', 'one line added at the top', 'much appended']) {
+      const { s, note } = written();
+      const changed = note.replace(fence(MINE), fence(REWRITES[what]) + '\n\n' + fence(MINE));
+      assert.equal(s.noteChanged(changed), 'conflict', what);
+      stopped(s.undo(changed).reason);
+    }
+  });
+
+  // the one case no reading of the note can tell: the note is, byte for byte, a new block pasted above the block
+  test('a copy pasted beside it and the original rewritten whole, in one change, reads as a new block pasted above', () => {
+    const rewrite = REWRITES['rewritten whole'];
+    const { s, note } = written();
+    const changed = note.replace(fence(MINE), fence(rewrite) + '\n\n' + fence(MINE));
+    const pastedAbove = note.replace('# Note\n\n', '# Note\n\n' + fence(rewrite) + '\n\n');
+    assert.equal(changed, pastedAbove, 'the same text');
+    assert.equal(s.noteChanged(changed), 'unchanged');
+  });
+});
+
+// The re-review of #465, 15 Oct 2026: each new block was compared with every block before, so 8,000 blocks took half a
+// second; the blocks looked at are counted, never timed (spec §12)
+describe('following is linear in the blocks', () => {
+  /** A note of `n` blocks of the graph after the held one, and the note with its first and last lines changed. */
+  function many(n) {
+    const blocks = Array.from({ length: n }, (_, i) => fence(`// graph: alpha\n(b${i}:T {name: 'B ${i}'})`));
+    const before = ['# Note', '', fence(MINE), '', ...blocks, 'End.', ''].join('\n');
+    const after = before.replace('# Note', '# Note!').replace('End.', 'End!') + fence(FRESH) + '\n';
+    return { before, after };
+  }
+  const looked = (n) => {
+    const { before, after } = many(n);
+    const work = { looked: 0 };
+    assert.deepEqual(followBlock(before, after, 2, work), { at: 0 }, 'the block, followed');
+    return work.looked;
+  };
+
+  test('twice the blocks, about twice the blocks looked at, and each looked at a few times at most', () => {
+    const small = looked(1000),
+      large = looked(2000);
+    assert.ok(small >= 1000, `every block looked at, the control: ${small}`);
+    assert.ok(large <= small * 2.2, `${small} then ${large}`);
+    assert.ok(large <= 8 * 2000, `${large} for 2000 blocks`);
   });
 });

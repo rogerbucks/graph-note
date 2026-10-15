@@ -330,7 +330,7 @@ export class BlockEditor extends Component {
     if (outcome === 'reloaded' && this.el) {
       this.el.text.value = this.session?.text ?? '';
       this.reloaded();
-    } else if (outcome === 'conflict') void this.write();
+    } else if (outcome === 'conflict') void this.write(true);
     else {
       this.analyse();
       this.paint();
