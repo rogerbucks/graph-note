@@ -1,0 +1,6 @@
+{
+  "file": "test/build-status-gh-lock.test.js",
+  "test": "leaving the comment on a conversation that may be locked > gives the first failure as it is when it cannot tell whether the pull request is locked",
+  "seen_failing_first": false,
+  "evidence": "Here the refusal does not say locked, so the old code gave the first failure and touched no lock just as the new code does when it cannot read the pull request's locked field. It passes against the old code for that reason, and pins the fallback of the new rule."
+}

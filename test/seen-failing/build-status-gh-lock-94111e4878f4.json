@@ -1,0 +1,6 @@
+{
+  "file": "test/build-status-gh-lock.test.js",
+  "test": "locking the conversation again > is not tried again after a refusal that is not a short failure",
+  "seen_failing_first": false,
+  "evidence": "A guard on the limit of the new retry: before this commit the lock was tried once whatever the refusal, so one attempt after a refusal that is not a short failure passes against the old code. It pins that the new retry does not try such a refusal again."
+}

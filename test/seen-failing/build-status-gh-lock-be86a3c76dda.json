@@ -1,0 +1,6 @@
+{
+  "file": "test/build-status-gh-lock.test.js",
+  "test": "leaving the comment on a conversation that may be locked > gives any other failure as it is when the pull request is not locked, and touches no lock",
+  "seen_failing_first": false,
+  "evidence": "Moved from test/build-status-gh.test.js with the same behaviour: a refusal that did not say locked was given as it was and touched no lock before this commit, so it passes against the old code. It now pins the same result for a pull request whose locked field is false."
+}
