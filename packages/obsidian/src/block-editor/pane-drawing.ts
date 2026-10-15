@@ -37,6 +37,7 @@ function drawInPane(
   on: Choosing,
   focusDepth: FocusDepth,
   switches: SwitchesShown,
+  callouts: boolean,
 ) {
   host.empty();
   if (!drawn) {
@@ -56,6 +57,7 @@ function drawInPane(
     // how far focus reaches, as the settings say, and the View menu, here as in a card (§25)
     focusDepth,
     switches,
+    callouts,
     problems: reading.problems
       .filter((p) => p.graph === s.graph && reading.texts[p.block] === s.text)
       .map((p) => ({ ...p, noteLine: p.line })),
@@ -103,7 +105,16 @@ export class PaneDrawing extends Component {
         if (stale() || drawn === null) return;
         this.clear();
         const depth = depthOf(this.plugin.settings.focusDepth);
-        const view = drawInPane(host, drawn, reading, s, on, depth, { state, relayout: laidOut });
+        const view = drawInPane(
+          host,
+          drawn,
+          reading,
+          s,
+          on,
+          depth,
+          { state, relayout: laidOut },
+          this.plugin.settings.noteCallouts === 'on',
+        );
         if (!view) return;
         this.view = view;
         this.addChild(view);

@@ -303,6 +303,7 @@ export async function renderBlock(
       },
       indent: plugin.settings.indent,
       focusDepth: depthOf(plugin.settings.focusDepth),
+      callouts: plugin.settings.noteCallouts === 'on',
       lineOf: (at) => (blocks[at.block]?.line ?? 0) + at.line,
       onEdit: () => {
         void plugin.openEditor(target);

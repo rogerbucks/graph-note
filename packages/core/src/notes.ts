@@ -4,6 +4,7 @@
 // The layout source never reads a note, so it stays byte-identical with the Python library's (note_standard).
 import gs from '@graph-note/graph-spec';
 import { dataKind } from './blocks.ts';
+import { NOTE, TAG } from './note-lines.ts';
 import type { GraphDrawing, Link, Problem, ThingNote } from './note-reading.ts';
 import type { ReadText } from './partial-read.ts';
 import { trimEnd, trimStart } from './whitespace.ts';
@@ -12,9 +13,7 @@ import { writtenIn } from './written-things.ts';
 const SHARED = 'this note is above a line holding more than one thing, so it belongs to none of them',
   SHARED_FIX = 'put the thing the note is about on a line of its own, directly below the note',
   LOST = 'this note is not shown, as what it is on could not be read',
-  LOST_FIX = 'fix the problem in this block, and the note is shown again',
-  NOTE = /^\/\/\/(?: |$)/,
-  TAG = /^\/\/@ [A-Za-z_][A-Za-z0-9_.-]*:/;
+  LOST_FIX = 'fix the problem in this block, and the note is shown again';
 const duplicate = (key: string) =>
     `this note is on ${key}, which already has a note where it is first written, so this one is not shown`,
   duplicateFix = (key: string) => `join the two notes into one, above ${key} where it is first written`;

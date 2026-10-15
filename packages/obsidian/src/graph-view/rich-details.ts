@@ -6,7 +6,7 @@
 // of its own, unloaded when the details are drawn again or close, so nothing rendered outlives what it was rendered for.
 import { Component } from 'obsidian';
 import { attachmentsOf, linksHeld, noteOf, withMeant } from '@graph-note/core';
-import type { Target, View } from '@graph-note/core';
+import type { Target, ThingNote, View } from '@graph-note/core';
 import { linkAnchor, renderLinks } from '../links/links-list';
 import type { LeftAt } from '../links/link-host';
 import type { ViewOptions } from './view-options';
@@ -71,6 +71,17 @@ export class RichDetails {
       this.render(box, `![[${note.opens}]]`, 'graph-note-note-body');
     }
     if (host && MARKED.test(text)) this.render(el, text, 'graph-note-rich-text');
+  }
+
+  /**
+   * A thing's or link's note (editor spec §24, note_shown), under a heading of its own: its whole text rendered as
+   * Markdown by the same renderer as the rest of the details, which writes no HTML of its own and is handed none to
+   * render. Nothing when it has no note.
+   */
+  note(el: HTMLElement, note: ThingNote | undefined): void {
+    if (!note) return;
+    el.createEl('h4', { text: 'Note' });
+    this.render(el, note.text, 'graph-note-thing-note');
   }
 
   /** Properties to read, each `name:` and its value rendered by Obsidian (spec §3, §14). */

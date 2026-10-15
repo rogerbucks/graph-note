@@ -16,6 +16,7 @@ import { linkWords, reducedMotion, renderLinkGroups, renderTrail, stepName, thin
 import type { NavActions } from './details-nav';
 import { DetailsSheet } from './details-sheet';
 import { RichDetails } from './rich-details';
+import { noteControls } from './note-controls';
 import { MovingImages, placePictures, renderImages } from './animated-images';
 import type { ThingActions } from './untangle';
 import type { ViewOptions } from './view-options';
@@ -165,6 +166,7 @@ export class DetailsPanel {
       li.appendText(`${label}: `);
       thingButton(li, end.text, () => this.choose({ key: end.key }));
     }
+    this.rich.note(el, this.o.reading.graphs.get(this.o.graph)?.links[index]?.note); // its note, rendered (§24)
     this.readOnlyProperties(el, d.properties);
     this.rich.links(el, { link: index });
     if (d.problems.length) {
@@ -263,6 +265,7 @@ export class DetailsPanel {
     const el = this.panel(d.text, d.kind);
     this.retrace(el, { key });
     this.rich.thing(el, key, d.text); // the note it stands for, and its text rendered by Obsidian (§18)
+    this.rich.note(el, this.o.reading.graphs.get(this.o.graph)?.boxes.find((b) => b.key === key)?.note); // its note, rendered (§24)
     const links = (title: string, items: string[]) => {
       if (!items.length) return;
       el.createEl('h4', { text: title });
@@ -384,6 +387,10 @@ export class DetailsPanel {
         if (this.o.editing?.() === ed) ed.replace(t);
       },
       lists: (ed.lists ??= []),
+    });
+    // its note added, changed or removed in the text (§24, note_add), by the core's setNote
+    noteControls(el, this.o.reading, this.o.graph, target, text, (t) => {
+      if (this.o.editing?.() === ed) ed.replace(t);
     });
   }
 }

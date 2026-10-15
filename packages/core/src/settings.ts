@@ -54,6 +54,8 @@ export interface Settings extends StrictnessSettings {
   foldHubs: SwitchSetting;
   foldGroups: SwitchSetting;
   mergeLinks: SwitchSetting;
+  /** Whether each note is drawn on the drawing as a callout joined to its thing by a dashed line (§24, note_callouts). */
+  noteCallouts: SwitchSetting;
   /** The colours exported images are drawn in. */
   exportTheme: ExportTheme;
   /** Whether an export saved in the vault gets a companion note. */
@@ -82,6 +84,7 @@ export const DEFAULT_SETTINGS: Settings = {
   foldHubs: 'on',
   foldGroups: 'off',
   mergeLinks: 'off',
+  noteCallouts: 'off',
   exportTheme: 'light',
   companionNote: 'off',
   exportFolder: '',
@@ -231,6 +234,11 @@ export const OPTIONS: Option[] = [
     'Parallel links merged',
     'Whether links running between the same two groups share one trunk; a graph’s View menu can change it.',
   ),
+  switchOption(
+    'noteCallouts',
+    'Draw notes as callouts',
+    'Whether each note written above a thing or link is drawn on the drawing as a callout, joined to its thing by a dashed line. Off unless you turn it on; a note always shows in its thing’s details.',
+  ),
   {
     key: 'exportTheme',
     section: 'Export',
@@ -347,6 +355,7 @@ export function settingsFrom(saved: unknown): Settings {
     foldHubs: oneOf<SwitchSetting>('foldHubs', s.foldHubs, d.foldHubs),
     foldGroups: oneOf<SwitchSetting>('foldGroups', s.foldGroups, d.foldGroups),
     mergeLinks: oneOf<SwitchSetting>('mergeLinks', s.mergeLinks, d.mergeLinks),
+    noteCallouts: oneOf<SwitchSetting>('noteCallouts', s.noteCallouts, d.noteCallouts),
     exportTheme: oneOf<ExportTheme>('exportTheme', s.exportTheme, d.exportTheme),
     companionNote: oneOf<CompanionSetting>('companionNote', s.companionNote, d.companionNote),
     exportFolder: vaultFolder(s.exportFolder) ?? d.exportFolder,

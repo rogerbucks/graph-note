@@ -8,6 +8,7 @@ import { readNote } from './drawing.ts';
 import { hops } from './estimates.ts';
 import { literally, parseValue, propertiesOf, setProperty, spanOf } from './inspector.ts';
 import { nameFromText, nameStyleOf } from './name-suggestions.ts';
+import { runStart } from './note-lines.ts';
 import type { NameStyle } from './name-suggestions.ts';
 import type { NoteReading } from './note-reading.ts';
 import { acceptNameFirst } from './suggested-names.ts';
@@ -248,18 +249,25 @@ export function addToList(
   };
 }
 
-/** The block without one of its items, and the comma that parted it from its neighbour — and nothing else. */
+/**
+ * The block without one of its items, and the comma that parted it from its neighbour — and nothing else but the note
+ * and tags directly above it (editor spec §24, note_kept_by_edits), which go with a thing or link written on a line of its
+ * own, so the next item never takes them up.
+ */
 export function withoutItem(text: string, all: Item[], it: Item): string {
   const lineStart = text.lastIndexOf('\n', it.from - 1) + 1;
   const alone = /^[ \t]*$/.test(text.slice(lineStart, it.from));
+  // the note's lines go too, when nothing else is on the item's line: the note belongs to the item alone
+  const sole = alone && /^[ \t]*(?:,[ \t]*)?(?:\n|$)/.test(text.slice(it.to));
+  const own = sole ? runStart(text, lineStart) : lineStart;
   if (it.comma !== -1) {
     const end = it.comma + 1;
     if (!alone) return text.slice(0, it.from) + text.slice(end).replace(/^[ \t]+/, '');
-    return text.slice(0, lineStart) + text.slice(end + (/^[ \t]*\n/.exec(text.slice(end))?.[0].length ?? 0));
+    return text.slice(0, own) + text.slice(end + (/^[ \t]*\n/.exec(text.slice(end))?.[0].length ?? 0));
   }
-  // the last item: its own line goes, and the comma that parted it from the item before; comments and blank lines stay
+  // the last item: its own line goes, and the comma that parted it from the item before; other comments and blank lines stay
   const before = all[all.indexOf(it) - 1];
-  const cut = text.slice(0, alone && lineStart > 0 ? lineStart - 1 : it.from) + text.slice(it.to);
+  const cut = text.slice(0, alone && own > 0 ? own - 1 : it.from) + text.slice(it.to);
   return before && before.comma !== -1 ? cut.slice(0, before.comma) + cut.slice(before.comma + 1) : cut;
 }
 

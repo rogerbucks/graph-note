@@ -58,6 +58,13 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   out is a warning that it is not shown, found, when the block cannot be read whole, as each run of `///` lines directly
   above a line where an item left out begins (`read`'s `dropped`; every item of a block left out whole); a note on a thing already noted where it is first written is a hint naming it, the
   first note kept. The layout source never reads a note.
+- `note-lines.ts` — the `///` note lines and `//@` tag lines a thing or link owns, as the reader reads them (`NOTE`, `TAG`,
+  `ownedAbove`, `runStart`): the one definition, used by `notes.ts` and by every edit that takes an item out.
+- `note-edit.ts` — `setNote` (note_add): a thing's or link's note added, changed or removed as text, the `///` lines above
+  it, refused unless the reader reads back the note written on that thing alone. Every edit that takes an item out
+  (`withoutItem`, so proposals' removals and lists, and `removal` for a path's step) takes the note and tags above it too,
+  so no other thing takes them up; every other edit leaves them where they are (note_kept_by_edits,
+  `test/notes-edits.test.js` sweeps the entry points).
 - `drawing.ts` — `readNote`: what a note's graph blocks draw, built from the modules above.
 - `estimates.ts` — near misses drawn as guesses; never a guess of a thing drawn under a suggested name, whose name nobody
   has written (a fix changing a word to it would write it unaccepted).

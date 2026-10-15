@@ -160,7 +160,8 @@ export default class GraphNotePlugin extends Plugin {
     // the View menu's defaults too (§25): every graph starts again from them, until its View menu changes them
     const switches = (s: Settings) => VIEW_SWITCHES.map((v) => s[SWITCH_SETTINGS[v]]);
     if (JSON.stringify(switches(was)) !== JSON.stringify(switches(this.settings))) this.viewStates.clear();
-    const shown = (s: Settings) => JSON.stringify([s.strictness, s.allowed, s.direction, s.focusDepth, switches(s)]);
+    const shown = (s: Settings) =>
+      JSON.stringify([s.strictness, s.allowed, s.direction, s.focusDepth, s.noteCallouts, switches(s)]);
     if (shown(was) !== shown(this.settings)) for (const changed of [...this.settingsWatchers]) changed();
   }
 
