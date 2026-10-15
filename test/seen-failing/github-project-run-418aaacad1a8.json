@@ -1,0 +1,6 @@
+{
+  "file": "test/github-project-run.test.js",
+  "test": "a run that would make many issues > is made in full on a first mirror, with no issue of its own yet",
+  "seen_failing_first": false,
+  "evidence": "It pins the cap's exception for a first mirror; before the cap every run made all its issues, so it held before. The refusal test beside it failed first."
+}

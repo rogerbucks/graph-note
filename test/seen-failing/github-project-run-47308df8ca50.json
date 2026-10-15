@@ -1,0 +1,6 @@
+{
+  "file": "test/github-project-run.test.js",
+  "test": "issues the bot makes that the creator list does not give back > do not stop a run whose creator list gives them back",
+  "seen_failing_first": false,
+  "evidence": "It pins that the new guard lets a healthy run through; before the guard every run went through, so it held before. The stopping tests beside it failed first."
+}
