@@ -107,9 +107,11 @@ export const register: Register = (on) => {
     const confirming = confirmArgs(e.args);
     const editing = editArgs(e.args);
     if (confirming || editing !== null) {
+      // who ran the command, as the host says: only the composer is the person typing, and nothing else may say yes
+      const origin = (e as { origin?: unknown }).origin;
       const opened = confirming
-        ? await (await launcherOf($)).confirm()
-        : await (await launcherOf($)).edit(editing ?? '', await $.session.cwd());
+        ? await (await launcherOf($)).confirm(origin)
+        : await (await launcherOf($)).edit(editing ?? '', await $.session.cwd(), origin);
       if (!opened.ok) {
         // the editor did not start: say why, and show the drawing /graph gives, unless the gate held the note back
         if (editing && !opened.held) await drawNote($, editing);

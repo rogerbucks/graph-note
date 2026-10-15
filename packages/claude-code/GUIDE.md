@@ -33,7 +33,12 @@ unless the app sets its own. Whether the desktop app does, and keeps the drawing
   yes, for that one note, once, and checks the gate again first (cc_classified_asks). The highest classification, one not
   among those set, an unlabelled note when the level for such notes is the highest (the default), a credential, and a
   note or settings that cannot be read have no yes (cc_credential_never). `held` on the outcome says which, and neither
-  is drawn in its place. A note already open and now held back is closed. `gate` asks the same for `/graph <note>`'s own
+  is drawn in its place. Only the person typing can say yes: `edit` and `confirm` take the host's `origin`, and
+  `fromPerson` accepts exactly `origin.kind === 'composer'`; any other, or none, is refused (`bridge`, Remote Control, is
+  an open question for the owner and is not accepted). The yes is the digest of the text it was given about, handed to
+  the server (`GRAPH_NOTE_EDITOR_CONFIRMED`, with `_SETTINGS`), which runs the same gate (`server/editor-gate.ts`,
+  `storeGate`) before every send in `editor-store.ts`: a read, a draft, the change stream, a stale write's answer. A
+  refusal sends `gone` and no text, and a changed note needs a new question. A note already open and now held back is closed. `gate` asks the same for `/graph <note>`'s own
   drawing. The mod reads the settings from `settings.json` in its data folder; none is the defaults, the strictest.
 - `mod-entry.ts` — what the hooks module takes from the three above; bundled into `mod/hooks/graph.js`.
 - `editor-session.ts` — `EditorSession`, the browser editor page's side of a note (spec §26; for C5): the core's

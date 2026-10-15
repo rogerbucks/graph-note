@@ -43,7 +43,7 @@
 // natural size, went on 15 Oct 2026: from slice 3 the furthest out is the fit of the whole drawing (zoom_out_to_fit),
 // worked out by the zoom itself. The legend's choices a view saves as shown (LEGEND_CHOICES, LegendChoice and
 // LegendChoiceState, untangle_legend) came the same day. What the browser editor may show Claude (claudeGate,
-// noteClassification, CLAUDE, Gate and GateSettings, cc_classified_asks and cc_credential_never) came on 16 Oct 2026. The lists moved here from index.test.js in the review of #452.
+// noteClassification, classificationOf, sha256, CLAUDE, Gate, GateSettings and NoteClassification, cc_classified_asks and cc_credential_never) came on 16 Oct 2026. The lists moved here from index.test.js in the review of #452.
 
 /** The values src/index.ts exports, sorted. */
 export const VALUES = [
@@ -143,6 +143,7 @@ export const VALUES = [
   'changeSetId',
   'choose',
   'chosen',
+  'classificationOf',
   'claudeGate',
   'colonFor',
   'colonInNote',
@@ -294,6 +295,7 @@ export const VALUES = [
   'setNote',
   'setProperty',
   'settingsFrom',
+  'sha256',
   'shapeOf',
   'sheetLimit',
   'shortestPath',
@@ -460,6 +462,7 @@ export const TYPES = [
   'NamedImage',
   'NamedView',
   'NewThing',
+  'NoteClassification',
   'NoteReading',
   'Nudge',
   'NudgeWord',

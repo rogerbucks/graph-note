@@ -232,8 +232,9 @@ export type {
   TransportReply,
   TransportRequest,
 } from './ai.ts';
-export { CLAUDE, claudeGate, noteClassification } from './claude-gate.ts';
-export type { Gate, GateSettings } from './claude-gate.ts';
+export { CLAUDE, claudeGate, classificationOf, noteClassification } from './claude-gate.ts';
+export type { Gate, GateSettings, NoteClassification } from './claude-gate.ts';
+export { sha256 } from './ai-digest.ts';
 export { AI_PURPOSES, endpointProblem, modelChoices } from './ai-choice.ts';
 export type { HostAi, ModelChoice } from './ai-choice.ts';
 export type { ScopeChoice } from './ai-scope.ts';

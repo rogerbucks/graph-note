@@ -5,7 +5,7 @@
 // a session has one server, reused for the same note and replaced for another (cc_one_server); and it ends when the
 // session does, on `/graph stop`, or by itself when the server stops (cc_server_stops). No Node module is imported here:
 // the host's calls are handed in, so the tests run the launcher over real processes and the mod over the host's own.
-import { claudeGate } from '@graph-note/core';
+import { claudeGate, sha256 } from '@graph-note/core';
 import type { Gate, GateSettings } from '@graph-note/core';
 import { notePath } from './graph-view.ts';
 
@@ -64,6 +64,26 @@ interface Running {
   iterator: AsyncIterator<SpawnedPiece, SpawnedEnd>;
   done: Promise<void>;
   stopping: string | null;
+}
+
+/** What the gate made of a note: its word, the digest of the text it read, and the settings it used; none if unreadable. */
+interface Checked {
+  gate: Gate;
+  digest: string | null;
+  settings: GateSettings | null;
+}
+
+const NOT_THE_PERSON =
+  'Only the person typing can say yes to opening a note above the level set for Claude: a command from anything else is refused.';
+const NOT_THE_PERSON_ASKING =
+  'Only the person typing can say yes to that, and this command did not come from them, so it is not opened.';
+
+/**
+ * Whether a command came from the person typing in the composer: the host's `origin.kind` is exactly `composer`. A
+ * plugin, a peer, a channel, a coordinator, a schedule, a bridge, an origin not known and none at all are not them.
+ */
+export function fromPerson(origin: unknown): boolean {
+  return typeof origin === 'object' && origin !== null && (origin as { kind?: unknown }).kind === 'composer';
 }
 
 /** How long a server has to hand over its address before it is killed and the start said to have failed. */
@@ -132,7 +152,7 @@ export class EditorLauncher {
   readonly #ports: EditorPorts;
   #running: Running | null = null;
   #ended: string | null = null;
-  #pending: string | null = null;
+  #pending: { note: string; digest: string } | null = null;
   #queue: Promise<unknown> = Promise.resolve();
 
   constructor(ports: EditorPorts) {
@@ -154,9 +174,13 @@ export class EditorLauncher {
     return this.#running?.done ?? Promise.resolve();
   }
 
-  /** Opens `given` in the session's server: the one running when it is for this note, else a new one in its place. */
-  edit(given: string, cwd: string = this.#ports.cwd): Promise<EditOutcome> {
-    return this.#inTurn(() => this.#edit(given, cwd));
+  /**
+   * Opens `given` in the session's server: the one running when it is for this note, else a new one in its place. The
+   * `origin` is the host's account of who ran the command: only the person typing (`composer`) is asked a question; for
+   * any other, or none given, a note above Claude's level is refused (cc_classified_asks).
+   */
+  edit(given: string, cwd: string = this.#ports.cwd, origin?: unknown): Promise<EditOutcome> {
+    return this.#inTurn(() => this.#edit(given, cwd, fromPerson(origin)));
   }
 
   /** Stops the server, killing its process; true when one was running. */
@@ -175,64 +199,90 @@ export class EditorLauncher {
    * Whether the note named may open in a pane Claude can read (cc_classified_asks, cc_credential_never): the note is
    * read here, for the gate alone, and its text is neither kept nor said. Settings or a note that cannot be read refuse.
    */
-  gate(given: string, cwd: string = this.#ports.cwd): Promise<Gate> {
-    return this.#gate(fullPath(cwd, given));
+  async gate(given: string, cwd: string = this.#ports.cwd): Promise<Gate> {
+    return (await this.#check(fullPath(cwd, given))).gate;
   }
 
-  /** The yes to the question the last `edit` asked: opens that note, once; the gate is asked again first. */
-  confirm(): Promise<EditOutcome> {
+  /**
+   * The yes to the question the last `edit` asked: opens that note, once, for the text it was asked about. Only the
+   * person typing can say it: a command from any other origin, or none, is refused and leaves the question waiting.
+   * The gate is asked again first; a note changed since the question is asked about afresh, never carried over.
+   */
+  confirm(origin?: unknown): Promise<EditOutcome> {
     return this.#inTurn(async () => {
-      const note = this.#pending;
+      if (!fromPerson(origin)) return { ok: false as const, why: NOT_THE_PERSON, held: 'refused' as const };
+      const pending = this.#pending;
       this.#pending = null;
-      if (note === null)
+      if (pending === null)
         return {
           ok: false as const,
           why: 'Nothing is waiting for a yes: /graph edit <path to a note> asks first.',
           held: 'refused' as const,
         };
-      const gate = await this.#gate(note);
-      if ('refuse' in gate) return this.#held(note, gate);
-      return this.#open(note);
+      const checked = await this.#check(pending.note);
+      if (!('ask' in checked.gate)) return this.#held(pending.note, checked, true);
+      if (checked.digest !== pending.digest) return this.#held(pending.note, checked, true);
+      return this.#open(pending.note, checked.settings, pending.digest);
     });
   }
 
-  async #gate(note: string): Promise<Gate> {
+  /** The note read and the settings, for the gate alone: the text is neither kept nor said, only its digest. */
+  async #check(note: string): Promise<Checked> {
     try {
-      return claudeGate(await this.#ports.read(note), await this.#ports.settings());
+      const text = await this.#ports.read(note);
+      const settings = await this.#ports.settings();
+      return { gate: claudeGate(text, settings), digest: sha256(text), settings };
     } catch {
       return {
-        refuse: 'The note or the settings could not be read, so it cannot be checked against the level set for Claude.',
+        gate: {
+          refuse:
+            'The note or the settings could not be read, so it cannot be checked against the level set for Claude.',
+        },
+        digest: null,
+        settings: null,
       };
     }
   }
 
-  /** The outcome for a note the gate held back; a question is remembered for `confirm`, a refusal forgets any. */
-  #held(note: string, gate: Gate): EditOutcome {
-    const text = 'ask' in gate ? gate.ask : 'refuse' in gate ? gate.refuse : '';
-    this.#pending = 'ask' in gate ? note : null;
-    return { ok: false, why: `${nameOf(note)}: ${text}`, held: 'ask' in gate ? 'asks' : 'refused' };
+  /**
+   * The outcome for a note the gate held back. A question is remembered for `confirm` only when the person asked it
+   * (`person`); a refusal forgets any, and an open gate passes.
+   */
+  #held(note: string, checked: Checked, person: boolean): EditOutcome {
+    const gate = checked.gate;
+    if ('open' in gate) {
+      this.#pending = null;
+      return { ok: false, why: `${nameOf(note)}: nothing asks about this note now.`, held: 'refused' };
+    }
+    if ('ask' in gate && person && checked.digest !== null) {
+      this.#pending = { note, digest: checked.digest };
+      return { ok: false, why: `${nameOf(note)}: ${gate.ask}`, held: 'asks' };
+    }
+    this.#pending = null;
+    const why = 'ask' in gate ? `${gate.ask} ${NOT_THE_PERSON_ASKING}` : gate.refuse;
+    return { ok: false, why: `${nameOf(note)}: ${why}`, held: 'refused' };
   }
 
-  async #edit(given: string, cwd: string): Promise<EditOutcome> {
+  async #edit(given: string, cwd: string, person: boolean): Promise<EditOutcome> {
     if (given === '')
       return { ok: false, why: 'Name a note to edit: /graph edit <path to a note>, quoted if it has spaces.' };
     const note = fullPath(cwd, given);
     this.#pending = null;
-    const gate = await this.#gate(note);
-    if (!('open' in gate)) {
+    const checked = await this.#check(note);
+    if (!('open' in checked.gate)) {
       // a note open already and now held back (its classification was raised) is closed, not left readable
       if (this.#running?.note === note) await this.#stop('the note is now above the level set for Claude');
-      return this.#held(note, gate);
+      return this.#held(note, checked, person);
     }
-    return this.#open(note);
+    return this.#open(note, checked.settings, null);
   }
 
   /** Opens `note`: the server running when it is for this note, else a new one in its place. */
-  async #open(note: string): Promise<EditOutcome> {
+  async #open(note: string, settings: GateSettings | null, confirmed: string | null): Promise<EditOutcome> {
     const title = nameOf(note);
     if (this.#running?.note === note) return { ok: true, title, reused: true };
     await this.#stop('another note was opened');
-    const started = await this.#start(note);
+    const started = await this.#start(note, settings, confirmed);
     return started.ok ? { ok: true, title, reused: false } : started;
   }
 
@@ -259,13 +309,27 @@ export class EditorLauncher {
   }
 
   /** Starts the server for `note` and waits for its address, or for why it could not start. */
-  async #start(note: string): Promise<{ ok: true } | { ok: false; why: string }> {
+  async #start(
+    note: string,
+    settings: GateSettings | null,
+    confirmed: string | null,
+  ): Promise<{ ok: true } | { ok: false; why: string }> {
     const [command, ...rest] = this.#ports.server;
     if (command === undefined) return { ok: false, why: NO_NODE };
     const env = {
       GRAPH_NOTE_EDITOR_VAULT: await this.#vaultOf(note),
       GRAPH_NOTE_EDITOR_NOTE: note,
       GRAPH_NOTE_EDITOR_DRAFTS: this.#ports.drafts,
+      // the server asks the gate again before every send, with the same settings and the digest of the text said yes to
+      // (never the text); none given means the defaults, the strictest
+      GRAPH_NOTE_EDITOR_SETTINGS: settings
+        ? JSON.stringify({
+            classifications: settings.classifications,
+            aiUnlabelled: settings.aiUnlabelled,
+            aiModels: settings.aiModels.map((m) => ({ name: m.name, ceiling: m.ceiling })),
+          })
+        : '',
+      GRAPH_NOTE_EDITOR_CONFIRMED: confirmed ?? '',
       // the host closes a child's input when it starts it, so the input's closing is not the session's end here
       GRAPH_NOTE_EDITOR_INPUT: 'ignore',
     };
