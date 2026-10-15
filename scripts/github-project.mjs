@@ -118,7 +118,7 @@ export function mirror(
   const repo = pinRepo(run, origin);
   // the seed gives only project values, so a run that does not read the project needs none
   const seeded = seed && project ? seed(run, repo) : { seed: new Map(), warnings: [] };
-  const desired = withSeed(base, seeded.seed);
+  const desired = withSeed(base, seeded.seed, { started: Boolean(seed && project) });
   const remote = readRemote(run, repo, { creator, project });
   if (mode === 'apply' && !remote.adopters.some((a) => a.toLowerCase() === remote.login.toLowerCase()))
     throw new Error(

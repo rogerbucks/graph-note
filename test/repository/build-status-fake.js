@@ -167,6 +167,7 @@ export function pull(
     body = null,
     draft = false,
     mergedAt = null,
+    createdAt = null,
   } = {},
 ) {
   return {
@@ -174,6 +175,7 @@ export function pull(
     state,
     merged,
     merged_at: mergedAt,
+    created_at: createdAt,
     merge_commit_sha: mergeSha,
     draft,
     body,

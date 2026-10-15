@@ -8,6 +8,7 @@
 import { spawnSync } from 'node:child_process';
 import { REQUIREMENTS } from './check-requirements.mjs';
 import { COMMENT_MARKER, requestedIds } from './build-status.mjs';
+import { dayOf } from './github-project-fields.mjs';
 import { ghRunner } from './github-project-gh.mjs';
 import { retrying } from './github-project-retry.mjs';
 
@@ -42,8 +43,9 @@ const json = (run, repo, path, extra = []) => JSON.parse(run(['api', `repos/${re
 
 /**
  * A pull request as {number, state ('open' or 'closed'), merged, draft, mergeSha, headSha, baseRef, headRepo, baseRepo,
- * requested}. The repositories are `owner/name`, headRepo null where the head's fork has gone; `requested` is the ids its
- * description names in the Requirements line (requestedIds), and the description is kept no further than that. Throws for a
+ * requested, createdAt}. The repositories are `owner/name`, headRepo null where the head's fork has gone; `requested` is
+ * the ids its description names in the Requirements line (requestedIds), and the description is kept no further than
+ * that; `createdAt` is the day it was opened (YYYY-MM-DD, UTC), or null where GitHub gives none. Throws for a
  * number that is not a whole number, and for a head commit or base branch the API gives in a form git would not use.
  */
 export function readPullRequest(run, repo, number) {
@@ -62,6 +64,7 @@ export function readPullRequest(run, repo, number) {
     headRepo: data.head.repo?.full_name ?? null,
     baseRepo: data.base.repo?.full_name ?? null,
     requested: requestedIds(data.body),
+    createdAt: dayOf(data.created_at),
   };
 }
 

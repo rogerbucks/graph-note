@@ -28,9 +28,10 @@ const SHA = 'b'.repeat(40);
 const MARKER = '<!-- build-status -->';
 
 describe('a pull request', () => {
-  test('is read as its state, whether it merged, its merge commit, its head commit, its base branch and the repositories', () => {
+  test('is read as its state, whether it merged, its merge commit, its head commit, its base branch, the repositories and the day it was opened', () => {
     const side = fakeRepoSide();
-    side.hub.pulls[7] = pull(7, { state: 'closed', merged: true, head: SHA, mergeSha: 'c'.repeat(40) });
+    const opened = { createdAt: '2026-10-09T12:00:00Z' };
+    side.hub.pulls[7] = pull(7, { state: 'closed', merged: true, head: SHA, mergeSha: 'c'.repeat(40), ...opened });
     assert.deepEqual(readPullRequest(side.run, REPO, 7), {
       number: 7,
       state: 'closed',
@@ -42,6 +43,7 @@ describe('a pull request', () => {
       headRepo: REPO,
       baseRepo: REPO,
       requested: [],
+      createdAt: '2026-10-09',
     });
   });
 
