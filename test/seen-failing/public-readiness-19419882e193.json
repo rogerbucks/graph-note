@@ -1,0 +1,6 @@
+{
+  "file": "test/public-readiness.test.js",
+  "test": "the history > an address at GitHub's no-reply domain names no one, in a commit message as in the author field",
+  "seen_failing_first": false,
+  "evidence": "Pins behaviour that already held: the content check and the author check already treat any address at the no-reply domain as no one. The commits that failed carried GitHub's support address in an automated sign-off line, which is a different address."
+}

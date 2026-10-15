@@ -136,9 +136,11 @@ jobs:
       - name: Every commit that changed a test is recorded
         run: node scripts/tests-first.mjs --complete
 
-  # Fit to be public, and kept so (spec §13): no secret and nothing confidential or personal in any commit of any
-  # branch, every commit from a no-reply address, and a stranger's fresh clone sets up and builds from the README's
-  # steps alone. The clone runs the steps for real, so the job needs what the README asks for: Node and uv.
+  # Fit to be public, and kept so (spec §13): no secret and nothing confidential or personal in any commit of the
+  # checked-out history (HEAD: main and the pull request's own commits, not another branch's, such as a bot's), every
+  # commit from a no-reply address, and a stranger's fresh clone sets up and builds from the README's steps alone. The
+  # full depth gives HEAD its whole history. The clone runs the steps for real, so the job needs what the README asks
+  # for: Node and uv.
   public-readiness:
     runs-on: ubuntu-latest
     steps:

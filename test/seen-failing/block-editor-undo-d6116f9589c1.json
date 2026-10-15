@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/block-editor-undo.test.js",
+  "test": "a change elsewhere in the note > leaves Undo working: the editor’s own change is taken back, the other kept",
+  "seen_failing_first": false,
+  "evidence": "A control for the fix of undo over another program's change: a change to the prose of the note leaves the block as written, so the editor's Undo still takes back its own change and keeps the other, as main already did. It holds that the buttons say nothing is left to undo only when the block itself changed."
+}

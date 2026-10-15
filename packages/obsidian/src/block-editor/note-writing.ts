@@ -9,16 +9,23 @@ import type { PaneSession } from '@graph-note/core';
 
 /**
  * A write the note refused, because its block changed meanwhile, or (`edit`) because the note refused an edit made from
- * the drawing (§4): why, and what was typed, to keep as a draft.
+ * the drawing (§4): why, and what was typed, to keep as a draft. `history` marks an Undo or Redo with nothing to take
+ * back since the block changed outside the editor (§9): only why, as nothing typed needs keeping.
  */
 export interface Refused {
   reason: string;
   draft: string;
   edit?: true;
+  history?: true;
 }
 
 /** The refusal of a write, as the session gave it. */
-const refusal = (r: Refused): Refused => ({ reason: r.reason, draft: r.draft, ...(r.edit ? { edit: true } : {}) });
+const refusal = (r: Refused): Refused => ({
+  reason: r.reason,
+  draft: r.draft,
+  ...(r.edit ? { edit: true } : {}),
+  ...(r.history ? { history: true } : {}),
+});
 
 /** Why a write found no note to write into: it was deleted while its block was edited (spec §9). */
 export const NOTE_DELETED = 'the note was deleted';
@@ -72,7 +79,10 @@ export async function writeThroughVault(
   return refused;
 }
 
-/** Undo or Redo of the session's changes to the note, through the vault. */
+/**
+ * Undo or Redo of the session's changes to the note, through the vault; refused, never over a change made outside the
+ * editor (§9); a refused write keeps the note as it was found.
+ */
 export async function stepNote(
   vault: Vault,
   file: TFile,
@@ -87,6 +97,9 @@ export async function stepNote(
       keep(r.note);
       return r.note;
     }
+    // a refused write took the note as found; Undo or Redo with nothing to take back did not, so a change in it is
+    // still heard when the vault tells of it
+    if (!r.history) keep(data);
     refused = refusal(r);
     return data;
   });

@@ -1,0 +1,6 @@
+{
+  "file": "test/public-readiness.test.js",
+  "test": "the history > GitHub's address on Dependabot's own sign-off line > is read exactly: a different case, a carriage return or a trailing space is a problem",
+  "seen_failing_first": false,
+  "evidence": "A guard test for the allowance: the pattern was already anchored and case-sensitive, so a capital, a carriage return, a trailing space or a trailing tab already failed to match and was read as any other line. It holds that narrowing the name did not loosen the match."
+}

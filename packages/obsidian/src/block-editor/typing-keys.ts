@@ -5,6 +5,7 @@
 import type { Component } from 'obsidian';
 import type { Change, CompletionItem, PaneSession } from '@graph-note/core';
 import type { FieldHistory, Step } from './editor-history';
+import { sayRefused } from './editor-layout';
 import type { EditorParts } from './editor-layout';
 import type { TextHelp } from './text-help';
 
@@ -48,6 +49,11 @@ export function fieldTyping(
       if (!undoes.started) return;
       e.preventDefault();
       if (undoes.step(el.text, which)) act.changed();
+      else {
+        // nothing to take back, the history having started again since the block changed outside the editor (§9)
+        const why = s.stepRefusal(which);
+        if (why) sayRefused(el.announce, why);
+      }
     },
     takeInline: (key) => help.takeInline(el.text, () => act.typed('other'), key === 'Enter'),
     dismissInline: () => help.dismissInline(el, s),

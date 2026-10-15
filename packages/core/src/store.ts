@@ -77,6 +77,12 @@ export class History {
     this.undone.length = 0;
   }
 
+  /** Forgets every step: the block changed outside the pane, so none of them can be taken back or put back over it. */
+  clear(): void {
+    this.done.length = 0;
+    this.undone.length = 0;
+  }
+
   canUndo(): boolean {
     return this.done.length > 0;
   }

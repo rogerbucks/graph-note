@@ -11,9 +11,11 @@ from typing import TYPE_CHECKING, Any
 from graphspec.engine.optional_imports import etree
 from graphspec.engine.process.machine import Machine
 from graphspec.engine.queries import Q
+from graphspec.reader.lexer import header
 from graphspec.reader.notes import notes
+from graphspec.reader.store import Store
 from graphspec.reader.written_things import written_in
-from graphspec.rules.plain_graph import Graph
+from graphspec.rules.plain_graph import Graph, World
 
 if TYPE_CHECKING:
     from grafeo import GrafeoDB
@@ -96,17 +98,41 @@ def comment_note(text: str) -> str:
     return "".join(out)
 
 
+Row = tuple[Any, Any, Any, Any, Any]
+
+
+def _written_transitions(block: str) -> dict[tuple[str, str], list[Row]]:
+    """The block's transitions in the order written, by their ends, each as what its row holds
+    (from, to, event, guard, do): the block's own reading, whatever a source's row order."""
+    st = Store()
+    st.apply(block)
+    g = World.from_store(st).graphs.get(header(block)[0])
+    out: dict[tuple[str, str], list[Row]] = {}
+    for a, t, b, p in g.edges if g else []:
+        if t == "TRANSITION":
+            out.setdefault((a, b), []).append((a, b, p.get("event"), p.get("guard"), p.get("do")))
+    return out
+
+
 def _noted(block: str, m: Machine) -> tuple[dict[str, str], dict[int, str]]:
     """The notes of a process's block (editor spec §24), as the core's notes.ts puts them on what
     it draws: a State's by its id, its first note kept; a TRANSITION's on the first transition
-    with its ends and no note yet, in the order written, by the identity of its row in m. A name
-    stands for the id written with it, or is its own id (§3). A note on anything else, such as a
-    DETAILED_IN, which SCXML writes no element for, is left out."""
+    with its ends and no note yet, in the order written in the block (never the order a source
+    gives its rows in), by the identity of its row in m. A name stands for the id written with
+    it, or is its own id (§3). A note on anything else, such as a DETAILED_IN, which SCXML writes
+    no element for, is left out. One pass over the notes and one over the rows, each note found
+    by a lookup."""
     ids: dict[str, str] = {}
     for w in written_in(block):
         given = w.props.get("id")
         if w.variable and isinstance(given, str):
             ids.setdefault(w.variable[1], given)
+    written = _written_transitions(block)
+    rows: dict[Row, list[dict[str, Any]]] = {}
+    for r in m.moves:
+        rows.setdefault((r["a"], r["b"], r["e"], r["g"], r["d"]), []).append(r)
+    by_ends: dict[tuple[str, str], int] = {}  # the notes taken so far on each pair of ends
+    by_row: dict[Row, int] = {}  # the rows taken so far holding the same
     states: dict[str, str] = {}
     moves: dict[int, str] = {}
     for n in notes(block)["notes"]:
@@ -119,12 +145,16 @@ def _noted(block: str, m: Machine) -> tuple[dict[str, str], dict[int, str]]:
         a, t, b = el["link"]
         if t.upper() != "TRANSITION":
             continue
-        a, b = ids.get(a, a), ids.get(b, b)
-        row = next(
-            (r for r in m.moves if r["a"] == a and r["b"] == b and id(r) not in moves), None
-        )
-        if row is not None:
-            moves[id(row)] = n["text"]
+        ends = (ids.get(a, a), ids.get(b, b))
+        k = by_ends.get(ends, 0)
+        by_ends[ends] = k + 1
+        if k >= len(written.get(ends, [])):
+            continue
+        key = written[ends][k]
+        j = by_row.get(key, 0)
+        by_row[key] = j + 1
+        if j < len(rows.get(key, [])):
+            moves[id(rows[key][j])] = n["text"]
     return states, moves
 
 
