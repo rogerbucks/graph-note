@@ -232,12 +232,14 @@ own handlers. Nothing here reaches the network.
   original edited after the paste is still the block; rewritten so far that too little of it is left to know it by
   (`readsAsEdited`: keeping at least half of the held block's text after the graph line), with a copy elsewhere, the
   session stops, never following the copy. Another block moved to its line is never taken for it, and a new block
-  pasted beside it is taken for it edited only when it reads so; else the block is followed by its text `wary`, as a
-  new block of its graph beside it cannot be told from the original rewritten beside a copy, and the session clears
-  its history, as after a change made outside, so Undo never reverts what may be a copy. A change that could as well sit before the block as
-  after it (a copy pasted beside it) is read both ways, and two blocks found make it a `twin`; when the change runs
-  through the whole block, it is found by its text, a `twin` when two blocks hold it, or when a new block of its graph
-  sits on its line, unless that was only pasted beside it. The work is linear in the blocks, counted in `FollowWork`.
+  pasted beside it is taken for it edited only when it reads so. A block followed with a new block of its graph
+  directly beside it, on either side, is followed `wary`, as no reading tells that from the original rewritten beside
+  a copy: the session clears its history, as after a change made outside, so Undo never reverts what may be a copy;
+  Undo and Redo follow the note they are pressed on first, so this holds whether the change was heard or not. A change
+  that could as well sit before the block as after it (a copy pasted beside it) is read both ways, and two blocks found
+  make it a `twin`; when the change runs through the whole block, it is found by its text, a `twin` when two blocks
+  hold it, or when a new block of its graph sits on its line, unless that was only pasted beside it. The work is
+  linear in the blocks, counted in `FollowWork`.
 - `edit-check.ts` — that check (§4): `editRefusal` refuses a name the note written into draws only under a suggested
   name (accept its name first), or a name the edit gives a thing that another block of the graph gives too (already a
   name); `newNames` finds the names an edit newly writes.

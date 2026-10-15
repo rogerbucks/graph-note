@@ -333,6 +333,62 @@ describe('the original rewritten after a copy is pasted', () => {
   });
 });
 
+// The third review of #465, 15 Oct 2026: a new block of its graph directly beside it, on either side, may be the
+// original rewritten beside a copy; and Undo or Redo pressed before that change is heard must be as wary as after
+const Q = "// graph: alpha\n(q:T {name: 'Q'})";
+const BESIDE = {
+  above: (note) => note.replace(fence(MINE), fence(Q) + '\n\n' + fence(MINE)),
+  below: (note) => note.replace(fence(MINE), fence(MINE) + '\n\n' + fence(Q)),
+};
+
+describe('a new block of its graph directly beside it, on either side', () => {
+  test('pasted directly below it: followed, never stopped, its history cleared', () => {
+    const { s, note } = written();
+    const changed = BESIDE.below(note);
+    assert.equal(s.noteChanged(changed), 'unchanged');
+    assert.equal(s.stopped, false);
+    refusedForHistory(s.undo(changed), 'undo');
+    assert.ok(changed.includes(fence(MINE)), 'what may be a copy is never reverted');
+  });
+
+  test('a copy pasted directly above it and the original rewritten whole, in one change: read so, history cleared', () => {
+    const { s, note } = written();
+    const changed = note.replace(fence(MINE), fence(MINE) + '\n\n' + fence(Q));
+    assert.equal(changed, BESIDE.below(note), 'the same text as a new block pasted below');
+    assert.equal(s.noteChanged(changed), 'unchanged');
+    refusedForHistory(s.undo(changed), 'undo');
+  });
+
+  for (const [side, beside] of Object.entries(BESIDE)) {
+    test(`pasted ${side}: Undo, heard first or not, is refused and reverts nothing`, () => {
+      for (const heard of [true, false]) {
+        const { s, note } = written();
+        const changed = beside(note);
+        if (heard) assert.equal(s.noteChanged(changed), 'unchanged');
+        const w = s.undo(changed);
+        refusedForHistory(w, `undo, ${heard ? 'heard first' : 'not heard'}`);
+        assert.match(w.reason, /^Nothing to undo: another program/);
+        assert.equal(s.text, MINE, 'the block as it is');
+      }
+    });
+
+    test(`pasted ${side}: Redo, heard first or not, is refused and redoes nothing`, () => {
+      for (const heard of [true, false]) {
+        const { s, note } = written();
+        const undone = s.undo(note).note;
+        assert.equal(s.canRedo(), true);
+        const changed = beside(undone.replace(fence(A), fence(MINE))).replace(fence(MINE), fence(A));
+        assert.ok(changed.includes(fence(Q)) && !changed.includes(fence(MINE)), 'Q beside the block, as undone');
+        if (heard) assert.equal(s.noteChanged(changed), 'unchanged');
+        const w = s.redo(changed);
+        refusedForHistory(w, `redo, ${heard ? 'heard first' : 'not heard'}`);
+        assert.match(w.reason, /^Nothing to redo: another program/);
+        assert.equal(s.text, A, 'the block as it is');
+      }
+    });
+  }
+});
+
 // The re-review of #465, 15 Oct 2026: each new block was compared with every block before, so 8,000 blocks took half a
 // second; the blocks looked at are counted, never timed (spec §12)
 describe('following is linear in the blocks', () => {
