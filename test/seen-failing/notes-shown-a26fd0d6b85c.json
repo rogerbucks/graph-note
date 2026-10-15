@@ -1,6 +1,0 @@
-{
-  "file": "packages/obsidian/test/notes-shown.test.js",
-  "test": "note_shown: a note is shown in the details of its thing or link, as Markdown > a thing with no note shows no note section",
-  "seen_failing_first": false,
-  "evidence": "A negative case: a thing with no note showed no note section before the feature existed, and still does. It pins that the new section is not added for a thing without a note."
-}
