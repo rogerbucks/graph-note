@@ -7,7 +7,8 @@
     "dangling": "a DELETE leaves no link without its end; DETACH DELETE removes a thing with its links (§24)",
     "current": "it was made against the graph as it stands",
     "model": "a model adds no record and no cache (§24 rule 5)",
-    "record": "it never removes or changes a record or a cache (§24 rule 4)"
+    "record": "it never removes or changes a record or a cache (§24 rule 4)",
+    "cache": "it adds no cache — a claim's likelihood, confidence and status are the engine's (§24 rule 5)"
   },
   "head": [
     "// graph: library",
@@ -219,6 +220,49 @@
       "body": ["MATCH (e:Event {id: 'sale'}) DELETE e"],
       "failed": ["record"],
       "changes": [["delete-thing", null]],
+      "after": null
+    },
+    {
+      "name": "a decision is never deleted",
+      "body": ["(d1:Decision {title: 'Go'})", "MATCH (v:Decision {id: 'd1'}) DELETE v"],
+      "failed": ["record"],
+      "changes": [["delete-thing", null]],
+      "after": null
+    },
+    {
+      "name": "an issued document is never deleted",
+      "body": ["(i1:IssuedDocument {title: 'Invoice'})", "MATCH (v:IssuedDocument {id: 'i1'}) DELETE v"],
+      "failed": ["record"],
+      "changes": [["delete-thing", null]],
+      "after": null
+    },
+    {
+      "name": "a delivery is never deleted",
+      "body": ["(y1:Delivery {title: 'Sent'})", "MATCH (v:Delivery {id: 'y1'}) DELETE v"],
+      "failed": ["record"],
+      "changes": [["delete-thing", null]],
+      "after": null
+    },
+    {
+      "name": "an assessment is never deleted",
+      "body": ["(a1:Assessment {at: DATE '2026-10-01'})", "MATCH (v:Assessment {id: 'a1'}) DELETE v"],
+      "failed": ["record"],
+      "changes": [["delete-thing", null]],
+      "after": null
+    },
+    {
+      "name": "a model adds a claim carrying a cache and is refused",
+      "by": "bot",
+      "body": ["(c2:Claim {text: 'It will rain', status: 'open'})"],
+      "failed": ["cache"],
+      "changes": [],
+      "after": null
+    },
+    {
+      "name": "a person adds a claim carrying a cache and is refused",
+      "body": ["(c3:Claim {text: 'It will rain', likelihood: 'likely'})"],
+      "failed": ["cache"],
+      "changes": [],
       "after": null
     },
     {
