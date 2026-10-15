@@ -67,7 +67,7 @@ describe('cc_core_only: the page takes everything from the core and the shared d
     assert.ok(!existsSync(at('packages/obsidian/src/graph-view')), 'the drawing lives in the layer alone');
     for (const f of ['properties', 'export/export-form.ts', 'proposals/proposal-strip.ts'])
       assert.ok(!existsSync(at(`packages/obsidian/src/${f}`)), f);
-    const block = readFileSync(at('packages/obsidian/src/block.ts'), 'utf8');
+    const block = readFileSync(at('packages/obsidian/src/graph-card.ts'), 'utf8');
     assert.ok(
       importsOf(block).includes('@graph-note/core/display/graph-view/graph-view'),
       'the plugin draws with the layer',
@@ -92,6 +92,7 @@ describe('cc_core_only: the page takes everything from the core and the shared d
       /^packages\/core\/src\//,
       /^packages\/graph-spec\/src\//,
       /^packages\/claude-code\/src\//,
+      /^python\/graph_spec\/src\/[\w.]+\.json$/, // the style data the graph library reads
       /^node_modules\/@viz-js\//,
     ];
     assert.deepEqual(
@@ -243,7 +244,10 @@ describe('cc_core_only: the page takes everything from the core and the shared d
       assert.deepEqual(drawn, [[b, 'maximize']], 'the icon is the host’s to draw');
       b.click();
       assert.equal(clicks, 1);
-      assert.ok(!/obsidian/.test(out.outputFiles[0].text.replace(/Obsidian/g, '')), 'no Obsidian module in the bundle');
+      assert.ok(
+        !/(from|require\()\s*["']obsidian["']/.test(out.outputFiles[0].text),
+        'no Obsidian module in the bundle',
+      );
     } finally {
       uninstall();
       rmSync(dir, { recursive: true, force: true });

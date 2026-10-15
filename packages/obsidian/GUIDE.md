@@ -9,6 +9,15 @@ package puts them on Obsidian's page. It is bundled by `esbuild.config.mjs` into
 Each module opens with a comment saying what it is for. A feature with several parts has a folder of its own, with one
 module that ties the parts together, named as the folder is.
 
+**The drawing, the details and the forms are the shared display layer's** (editor spec §26, C4), in
+`packages/core/src/display/` and imported as `@graph-note/core/display/<path>`: `code.ts`, `graph-view/`, `properties/`,
+`proposals/proposal-strip.ts` and `mark-proposal.ts`, `export/export-form.ts`, `links/links-list.ts` and
+`link-marks.ts`, `images/still-frame.ts`. Where the sections below describe one of them they still say what it does;
+the layer's own guide (`packages/core/GUIDE.md`) says where it lives. The plugin keeps what is Obsidian's:
+`display-host.ts` installs Obsidian's icons, phone test, notice and menu as the layer's host, and `graph-card.ts` wraps a
+card in a component Obsidian owns (`graphCard`). The layer's types for what the plugin supplies (`LinkHost`, `Exporting`,
+`ImageSource`) are in the layer, and `link-host.ts`, `export.ts` and `vault-images.ts` implement them.
+
 - `main.ts` — the plugin: registers the block processor, the pane, the editor extension, the settings page and the
   command that converts a note to standard GQL; keeps the settings, drafts and shared schemas; opens the editors.
 - `inline-editors.ts` — the editors open in place: each found by its block's identity, never by another block that comes
@@ -72,7 +81,7 @@ module that ties the parts together, named as the folder is.
   looked for by name elsewhere, so a move is said; one that cannot be read said with its reason; and `watchSource`, which draws the card again when the source is changed, made, moved or deleted.
 - `source-strip.ts` — the line naming where the data comes from, and Open for a note, as a tap on a link opens it.
 
-### `src/properties/` — the inspector's properties, as Obsidian's Properties panel
+### The inspector's properties, now the shared layer's `properties/` (packages/core/src/display/properties/)
 
 - `properties.ts` — `renderProperties`: a row for each property, its type menu, and the rows of the lists a thing holds.
 - `list-form.ts` — the form that asks for a kind and a relationship when List is chosen.
@@ -175,7 +184,7 @@ module that ties the parts together, named as the folder is.
   store by name, so only the name is saved. Use AI models, off until turned on, heads the part of the page;
   Unlabelled notes count as, a choice among the classifications, the most sensitive until chosen, follows them.
 
-### `src/graph-view/` — a drawn graph
+### The drawn graph, now the shared layer's `graph-view/` (packages/core/src/display/graph-view/)
 
 - `graph-view.ts` — `GraphView`: the card, its zoom and full screen; ties the rest together.
 - `viewport-size.ts` — the viewport's size: drawn at the drawing's own size while the page gives it none, and told to
