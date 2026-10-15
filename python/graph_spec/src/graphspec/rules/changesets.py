@@ -10,15 +10,14 @@ from typing import TYPE_CHECKING, Any
 from graphspec.reader.whitespace import N, S
 from graphspec.reader.whitespace import strip as ws_strip
 from graphspec.rules.canonical_json import norm
-from graphspec.rules.changes import (
+from graphspec.rules.change_apply import (
     LABELS,
     adds_cache,
     apply_change,
     is_record_add,
-    read_all,
-    split_changeset,
     stop_fix,
 )
+from graphspec.rules.changes import read_all, split_changeset
 from graphspec.rules.certainty import claim_status, confidence_from_evidence, latest_assessment
 from graphspec.rules.graph_check import check
 from graphspec.rules.plain_graph import World
@@ -214,6 +213,8 @@ def check_changeset(
     g = w[h["graph"]]
     if kind == "Model" and "model-may-add" not in switches:
         bad = sorted(i for i, labels in new_nodes.items() if is_record_add(labels))
+        # what a delivery delivers is an issued document, a record
+        bad += sorted(e[2] for e in ac if ac[e] > bc[e] and e[1] == "DELIVERED")
         add(
             "a model adds no record and no cache (§24 rule 5)",
             not bad,

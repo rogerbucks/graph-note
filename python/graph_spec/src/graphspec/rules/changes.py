@@ -1,22 +1,16 @@
 """§24 change sets: the DELETE and SET statements of a change set, each naming one target, read and
-applied to a store."""
+read; change_apply.py applies them."""
 
 from __future__ import annotations
 
-import datetime as dt
-import json
 import re
 import unicodedata
-from collections.abc import Collection
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from graphspec.reader.grammar import Parser
-from graphspec.reader.lexer import ProfileError, quote, tokens
+from graphspec.reader.lexer import ProfileError, tokens
 from graphspec.reader.whitespace import S, strip
 from graphspec.rules.canonical_json import hash16, norm
-
-if TYPE_CHECKING:
-    from graphspec.reader.store import Store
 
 VERBS = {"MATCH", "DELETE", "DETACH", "SET"}
 WORD = re.compile(rf"{S}*([A-Za-z_]+)", re.ASCII)
@@ -243,12 +237,6 @@ def change_id(c: dict[str, Any]) -> str:
     return hash16(o)
 
 
-# A record is corrected by a superseding addition (§12), and a cache is the engine's part (§11,
-# §20): neither is ever removed or changed by a change set, whoever it is by.
-RECORD_LABELS = {"Event", "IssuedDocument", "Decision", "Delivery", "Assessment"}
-CACHE_KEYS = {"likelihood", "confidence", "status"}
-
-
 def read_all(
     statements: list[dict[str, Any]],
 ) -> tuple[list[dict[str, Any]], list[str], list[dict[str, Any]]]:
@@ -265,124 +253,3 @@ def read_all(
     if not refused and len({c["id"] for c in listed}) != len(listed):
         refused.append("the same change is written twice — write it once")
     return read, refused, [] if refused else listed
-
-
-def _literal(v: Any) -> str:
-    """A value as the profile writes it."""
-    if isinstance(v, bool):
-        return "TRUE" if v else "FALSE"
-    if isinstance(v, dt.datetime):
-        return f"DATETIME '{v.isoformat()}+00:00'"  # an instant is held as its UTC time
-    if isinstance(v, dt.date):
-        return f"DATE '{v.isoformat()}'"
-    return quote(v) if isinstance(v, str) else str(v)
-
-
-def gql_of(c: dict[str, Any]) -> str:
-    """A change as the GQL statement an engine is given: it names its one target by id, as the
-    reader read it."""
-
-    def node(var, nid, labels=()):
-        return f"({var}{''.join(':' + x for x in labels)} {{id: {quote(nid)}}})"
-
-    if c["kind"] == "thing":
-        match, var = f"MATCH {node('v', c['thing'], c['labels'])}", "v"
-    else:
-        a, b = node("a", c["from"], c["ends"][0]), node("b", c["to"], c["ends"][1])
-        match, var = f"MATCH {a}-[r:{c['type']}]->{b}", "r"
-    if "set" in c:
-        return f"{match} SET " + ", ".join(
-            f"{var}.{k} = {_literal(v)}" for k, v in c["set"].items()
-        )
-    return f"{match} {'DETACH ' if c['op'].startswith('detach') else ''}DELETE {var}"
-
-
-# what stops a DELETE or SET, by kind (apply_change), as the result's label
-LABELS = {
-    "find": "each DELETE and SET finds its one target in the graph (§24)",
-    "dangling": "a DELETE leaves no link without its end; "
-    "DETACH DELETE removes a thing with its links (§24)",
-    "record": "it never removes or changes a record or a cache (§24 rule 4)",
-}
-
-
-def stop_fix(kind: str, what: str, c: dict[str, Any]) -> str:
-    """What to change when apply_change stopped a change, said with its reason."""
-    if kind == "find":
-        return f"{what} is not in the graph — name a thing or link that is there"
-    if kind == "dangling":
-        return f"{what} still has links — remove them, or DETACH DELETE it"
-    if c.get("set") and CACHE_KEYS & set(c["set"]) and c["kind"] == "thing":
-        return (
-            f"{what}'s {sorted(CACHE_KEYS & set(c['set']))} is a cache, the engine's part (§11): "
-            "it is re-made when the evidence changes, never set"
-        )
-    return (
-        f"{what} is a record (an event, an issued document or a decision) — "
-        "correct it with a new element that supersedes it (§12), never an edit or a removal"
-    )
-
-
-def is_record_add(labels: Collection[str]) -> bool:
-    """Whether a new thing is a record: an event, an issued document or a decision (an assessment
-    and evidence are the claims' own events, which a model may add)."""
-    return bool(set(labels) & (RECORD_LABELS - {"Assessment"})) and not set(labels) & {
-        "Assessment",
-        "Evidence",
-    }
-
-
-def adds_cache(labels: Collection[str], props_json: str) -> bool:
-    """Whether a new thing is a claim carrying a cache (likelihood, confidence or status), which is
-    the engine's to make. `props_json` is its properties as the state holds them."""
-    return "Claim" in labels and bool(CACHE_KEYS & set(json.loads(props_json)))
-
-
-def apply_change(store: Store, g: str, c: dict[str, Any]) -> tuple[str, str] | None:
-    """The change made on a store's graph g, or what stops it: None when made, else (kind, what) —
-    kind is 'find' when its target is not in the graph, 'dangling' when a DELETE would leave a
-    link without its end, 'record' when it would remove or change a record or a cache. A thing's
-    DELETE sets `links`: the links it removes with it."""
-    graph = store.graph(g)
-
-    def has(k, labels):
-        return k is not None and set(labels) <= graph["nodes"][k]["labels"]
-
-    if c["kind"] == "thing":
-        where = c["thing"]
-        k = store.find(g, c["thing"])
-        if not has(k, c["labels"]):
-            return "find", where
-        labels = graph["nodes"][k]["labels"]
-        if labels & RECORD_LABELS:
-            return "record", where
-        if c["op"].startswith("set"):
-            if "Claim" in labels and CACHE_KEYS & set(c["set"]):
-                return "record", where
-            graph["nodes"][k]["props"].update(c["set"])
-            return None
-        touching = [e for e in graph["edges"] if e[0] == k or e[2] == k]
-        if touching and c["op"] == "delete-thing":
-            return "dangling", where
-        nodes = graph["nodes"]
-        c["links"] = [
-            [nodes[e[0]]["props"]["id"], e[1], nodes[e[2]]["props"]["id"]] for e in touching
-        ]
-        graph["edges"] = [e for e in graph["edges"] if not any(e is t for t in touching)]
-        del graph["nodes"][k]
-        return None
-    where = f"{c['from']} {c['type']} {c['to']}"
-    a, b = store.find(g, c["from"]), store.find(g, c["to"])
-    if not has(a, c["ends"][0]) or not has(b, c["ends"][1]):
-        return "find", where
-    at = next(
-        (i for i, e in enumerate(graph["edges"]) if e[0] == a and e[1] == c["type"] and e[2] == b),
-        -1,
-    )
-    if at < 0:
-        return "find", where
-    if c["op"].startswith("set"):
-        graph["edges"][at][3].update(c["set"])
-    else:
-        del graph["edges"][at]
-    return None

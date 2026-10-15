@@ -30,16 +30,15 @@ from graphspec.reader.lexer import ProfileError, header, tokens
 from graphspec.reader.store import Store
 from graphspec.reader.whitespace import N, S
 from graphspec.reader.whitespace import strip as ws_strip
-from graphspec.rules.changes import (
+from graphspec.rules.change_apply import (
     LABELS,
     adds_cache,
     apply_change,
     gql_of,
     is_record_add,
-    read_all,
-    split_changeset,
     stop_fix,
 )
+from graphspec.rules.changes import read_all, split_changeset
 from graphspec.rules.changesets import check_changeset as plain_check_changeset
 from graphspec.rules.graph_check import check
 from graphspec.rules.plain_graph import World
@@ -332,6 +331,8 @@ def check_changeset(
     )  # the engine's part of applying it — reported, so the applier knows (§11)
     if kind == "Model" and "model-may-add" not in switches:
         bad = sorted(i for i, label in new_nodes.items() if is_record_add(label))
+        # what a delivery delivers is an issued document, a record
+        bad += sorted(e[2] for e in after[1] if after[1][e] > before[1][e] and e[1] == "DELIVERED")
         add(
             "a model adds no record and no cache (§24 rule 5)",
             not bad,

@@ -141,7 +141,9 @@ function checkChangeset(base, block, matrix, sw = new Set()) {
   if (kind === 'Model' && !sw.has('model-may-add')) {
     add(
       'a model adds no record and no cache (§24 rule 5)',
-      newNodes.every(([, [labels]]) => !isRecordAdd(labels.split(':'))),
+      newNodes.every(([, [labels]]) => !isRecordAdd(labels.split(':'))) &&
+        // what a delivery delivers is an issued document, a record
+        ![...ac].some(([e, n]) => n > (bc.get(e) || 0) && JSON.parse(e)[1] === 'DELIVERED'),
     );
     const by = newNodes
       .filter(([, [labels]]) => labels.split(':').includes('Assessment'))

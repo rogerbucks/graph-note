@@ -189,13 +189,13 @@ function changeId(c) {
 
 // A record is corrected by a superseding addition (§12), and a cache is the engine's part (§11, §20): neither is ever
 // removed or changed by a change set, whoever it is by.
+// (matched on any label a thing carries; a Delivery is an event, and an Assessment is a record even without Event)
 const RECORD_LABELS = ['Event', 'IssuedDocument', 'Decision', 'Delivery', 'Assessment'];
 const CACHE_KEYS = ['likelihood', 'confidence', 'status'];
-/** Whether a new thing is a record: an event, an issued document or a decision (an assessment and evidence are the
- * claims' own events, which a model may add). */
+/** Whether a new thing is a record a model may not add: an event, an issued document or a decision (an assessment it
+ * makes as itself is its own to add). */
 const isRecordAdd = (labels) =>
-  labels.some((x) => RECORD_LABELS.includes(x) && x !== 'Assessment') &&
-  !labels.some((x) => x === 'Assessment' || x === 'Evidence');
+  labels.some((x) => RECORD_LABELS.includes(x) && x !== 'Assessment') && !labels.includes('Assessment');
 
 /**
  * The change made on a store's graph g, or what stops it: null when made, else [kind, what] — kind is 'find' when its
@@ -211,6 +211,12 @@ function applyChange(store, g, c) {
     if (!has(k, c.labels)) return ['find', where];
     const labels = graph.nodes.get(k).labels;
     if (RECORD_LABELS.some((x) => labels.has(x))) return ['record', where];
+    // an issued document is whatever a delivery delivered, and a value an activity made is a cache (§11)
+    const nodeLabels = (key) => graph.nodes.get(key).labels;
+    if (graph.edges.some((e) => e[1] === 'DELIVERED' && e[2] === k && nodeLabels(e[0]).has('Delivery')))
+      return ['record', where];
+    if (!labels.has('Proposal') && graph.edges.some((e) => e[1] === 'WAS_GENERATED_BY' && e[0] === k))
+      return ['record', where];
     if (c.op.startsWith('set')) {
       if (labels.has('Claim') && Object.keys(c.set).some((x) => CACHE_KEYS.includes(x))) return ['record', where];
       Object.assign(graph.nodes.get(k).props, c.set);
