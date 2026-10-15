@@ -7,4 +7,5 @@ fix offers, each thing checked, the things checked against each other, the readi
 style blocks, the nudges, arrowheads hidden, properties shown and links moved, written into the
 layout source, which diagram types fit a graph and how each is laid out, and what a View menu folds
 and merges, written into the source last when asked (untangle_hubs, untangle_groups,
-untangle_merge, untangle_routing)."""
+untangle_merge, untangle_routing); and the legend's choices a view was saved as shown with, and
+what they bring forward and hide (untangle_legend)."""

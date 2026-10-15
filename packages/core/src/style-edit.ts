@@ -25,6 +25,8 @@ import {
 } from './style-graph.ts';
 import type { Frame, LinkTarget } from './style-graph.ts';
 import { acceptNameFirst, unnamedIn } from './suggested-names.ts';
+import { legendRefusal, legendText } from './untangle-saved.ts';
+import type { LegendChoice } from './untangle-saved.ts';
 import { writtenIn } from './written-things.ts';
 
 /** A nudge to write: its word, and the parts that word needs. */
@@ -59,6 +61,8 @@ export interface ShownWrite {
   selected?: string;
   /** The View menu's switches as they stand (§25, view_switch_view_only), each on or off. */
   switches?: Partial<Record<(typeof SWITCH_KEYS)[number], string>>;
+  /** The legend's lines brought forward or hidden (§25, untangle_legend), as `LegendFilter.choices` gives them. */
+  legend?: readonly LegendChoice[];
 }
 
 /** The switches a view saved as shown keeps, in the order they are written. */
@@ -145,7 +149,7 @@ function shownRefusal(s: ShownWrite): string | null {
     (k) => s.switches?.[k] !== undefined && !(ON_OFF as readonly string[]).includes(s.switches[k] ?? ''),
   );
   if (wrong) return `${wrong} must be ${orList(ON_OFF)}`;
-  return null;
+  return legendRefusal(s.legend ?? []);
 }
 
 /** Why a property cannot be switched on or off, or null. */
@@ -277,6 +281,8 @@ function thingFor(change: StyleChange): ToWrite | { refused: string } {
       ['frame', f],
       ['selected', s.selected],
       ...SWITCH_KEYS.map((k): [string, Value] => [k, s.switches?.[k]]),
+      // written only when something is chosen, and only here, as the view is saved as shown (untangle_legend)
+      ['legend', s.legend?.length ? legendText(s.legend) : undefined],
     ],
     match: [['view', s.view]],
   };

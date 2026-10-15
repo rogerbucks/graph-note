@@ -1,0 +1,115 @@
+{
+  "about": "Views saved as shown with the legend's choices (editor spec §25: untangle_legend; §7: view_saved_as_shown), read the same by the plugin's core and by the Python library. Each case is a note's gql blocks, each block a list of lines, and the view whose Shown is read. For every case both give the same problems reading each style, and, for every graph drawn, the same choices read from the view's Shown (null when it writes no legend) and the same layers those choices come to in the drawing: what is brought forward (null when nothing is) and what is hidden, things by key and links by their place among the links drawn. The expected answers are the core's, run live: packages/core/test/untangle-saved-parity.test.js holds the Python library to the core on these cases, and tests/test_legend.py does the same from the Python side.",
+  "cases": [
+    {
+      "name": "a kind brought forward and a type hidden: the kind's things and the links among them forward, the type's links hidden",
+      "view": "home_life",
+      "blocks": [
+        [
+          "// graph: town",
+          "(ann:Person {name: 'Ann'}),",
+          "(bob:Person {name: 'Bob'}),",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'Park'}),",
+          "(ann)-[:KNOWS]->(bob),",
+          "(ann)-[:LIVES_AT]->(home),",
+          "(home)-[:NEAR]->(park)"
+        ],
+        [
+          "// graph: town_style · STYLE town",
+          "(s1:Shown {view: 'home_life', zoom: 1, x: 0, y: 0, legend: 'kind:Person forward, type:NEAR hidden'})"
+        ]
+      ]
+    },
+    {
+      "name": "a type brought forward brings the things it joins; a kind hidden hides its things and every link to them, never forward",
+      "view": "home_life",
+      "blocks": [
+        [
+          "// graph: town",
+          "(ann:Person {name: 'Ann'}),",
+          "(bob:Person {name: 'Bob'}),",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'Park'}),",
+          "(ann)-[:KNOWS]->(bob),",
+          "(ann)-[:LIVES_AT]->(home),",
+          "(bob)-[:LIVES_AT]->(park),",
+          "(home)-[:NEAR]->(park)"
+        ],
+        [
+          "// graph: town_style · STYLE town",
+          "(s1:Shown {view: 'home_life', legend: 'type:LIVES_AT forward, kind:Place hidden'})"
+        ]
+      ]
+    },
+    {
+      "name": "a thing of two kinds is hidden with either, and other views' saved legends are not this view's",
+      "view": "pets",
+      "blocks": [
+        [
+          "// graph: house",
+          "(rex:Pet:Dog {name: 'Rex'}),",
+          "(tom:Pet:Cat {name: 'Tom'}),",
+          "(ann:Person {name: 'Ann'}),",
+          "(ann)-[:OWNS]->(rex),",
+          "(ann)-[:OWNS]->(tom),",
+          "(rex)-[:CHASES]->(tom)"
+        ],
+        [
+          "// graph: house_style · STYLE house",
+          "(s1:Shown {view: 'pets', legend: 'kind:Dog hidden, type:OWNS forward'}),",
+          "(s2:Shown {view: 'people', legend: 'kind:Person hidden'})"
+        ]
+      ]
+    },
+    {
+      "name": "each fault of a legend written by hand is a problem with its fix, and only the sound choices are kept",
+      "view": "all",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'Park'}),",
+          "(ann:Person {name: 'Ann'}),",
+          "(home)-[:NEAR]->(park),",
+          "(ann)-[:LIVES_AT]->(home)"
+        ],
+        [
+          "// graph: trip_style · STYLE trip",
+          "(s1:Shown {view: 'all', legend: 'kind:Plase forward, type:NEAR foward, colour:red hidden, kind:Place hidden, kind:Place forward, , type:FLIES hidden, type:LIVES_AT forward extra, type:NEER hidden'})"
+        ]
+      ]
+    },
+    {
+      "name": "a legend that is not text, a legend misspelt as a key, and an empty legend",
+      "view": "all",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'Park'}),",
+          "(home)-[:NEAR]->(park)"
+        ],
+        [
+          "// graph: trip_style · STYLE trip",
+          "(s1:Shown {view: 'all', zoom: 2, legend: 3}),",
+          "(s2:Shown {view: 'other', legnd: 'kind:Place hidden'}),",
+          "(s3:Shown {view: 'third', legend: '  '})"
+        ]
+      ]
+    },
+    {
+      "name": "a view saved as shown with no legend chooses nothing: nothing forward, nothing hidden",
+      "view": "all",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'Park'}),",
+          "(home)-[:NEAR]->(park)"
+        ],
+        ["// graph: trip_style · STYLE trip", "(s1:Shown {view: 'all', zoom: 1.5, x: 10, y: -4})"]
+      ]
+    }
+  ]
+}

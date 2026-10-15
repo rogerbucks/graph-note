@@ -1,6 +1,6 @@
 # Z-03 Phone scroll and pinch
 
-**You should see:** one finger on a fitted drawing scrolling the note, not the drawing. A two-finger pinch zooms about the point between the fingers, a little ahead of them: spreading the fingers to twice as far apart makes the drawing about 2.6 times the size, not twice, within the quarter and four times limits. Once zoomed in, one finger pans the drawing.
+**You should see:** one finger on a fitted drawing scrolling the note, not the drawing. A two-finger pinch zooms about the point between the fingers, a little ahead of them: spreading the fingers to twice as far apart makes the drawing about 2.6 times the size, not twice, within the limits: no smaller than the whole drawing's fit, no larger than four times natural size. Once zoomed in, one finger pans the drawing.
 
 **Test diagram:**
 

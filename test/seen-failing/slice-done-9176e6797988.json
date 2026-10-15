@@ -1,0 +1,6 @@
+{
+  "file": "test/slice-done.test.js",
+  "test": "whether a slice is done > every slice before the one under way is done, as committed",
+  "seen_failing_first": false,
+  "evidence": "a guard the review of #452 asked for: slices 1 and 2 were already done in the committed copy, so it holds what was already true and passed against the code before it; it fails if an earlier slice is ever left with a requirement unproved"
+}
