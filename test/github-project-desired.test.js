@@ -21,6 +21,7 @@ import {
   markerOf,
   neutralise,
   readWorkstreams,
+  withSeed,
 } from '../scripts/github-project-desired.mjs';
 import {
   FIXTURE,
@@ -302,10 +303,29 @@ describe('the project fields', () => {
     );
   });
 
-  test('give every issue the first stage, Not started, as the value a new item starts with', () => {
+  test('give every issue the first stage, Not started, and the Status Todo, as the values a new item starts with', () => {
     const { issues } = desiredState(board, WORKSTREAMS_WITH_QUESTIONS, [3, 4]);
     assert.ok(issues.length > 0);
-    assert.ok(issues.every((i) => i.buildStatus === 'Not started'));
+    assert.ok(issues.every((i) => i.buildStatus === 'Not started' && i.progress === 'Todo'));
+  });
+
+  test('take a seed in place of those, for the ids it names, and no more', () => {
+    const desired = desiredState(board, WORKSTREAMS, [3, 4]);
+    const seed = new Map([
+      ['zoom_out_to_fit', { buildStatus: 'Released', progress: 'Done' }],
+      ['not_an_issue', { buildStatus: 'Merged', progress: 'Done' }],
+    ]);
+    const seeded = withSeed(desired, seed);
+    const of = (id) => seeded.issues.find((i) => i.id === id);
+    assert.deepEqual([of('zoom_out_to_fit').buildStatus, of('zoom_out_to_fit').progress], ['Released', 'Done']);
+    assert.deepEqual([of('focus_link').buildStatus, of('focus_link').progress], ['Not started', 'Todo']);
+    assert.equal(seeded.issues.length, desired.issues.length);
+    assert.deepEqual(seeded.fields, desired.fields);
+    assert.equal(
+      desired.issues.find((i) => i.id === 'zoom_out_to_fit').buildStatus,
+      'Not started',
+      'the original is not changed',
+    );
   });
 
   test('offer every workstream of the file, in the file’s order, with its title', () => {

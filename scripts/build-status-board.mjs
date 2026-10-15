@@ -4,12 +4,9 @@
 // its fields and the mirror's issues as the mirror does (github-project-gh.mjs), by the project's title and the issues
 // the mirror made; the mirror is run by the owner of the repository, so an issue is the mirror's when the owner wrote it.
 // The mirror never sets either field after giving a new item its first Build status; the build status workflow does.
-import { BUILD_STATUS_FIELD, PROJECT_TITLE, adoptedId } from './github-project-desired.mjs';
+import { BUILD_STATUS_FIELD, PROGRESS_FIELD, PROJECT_TITLE, adoptedId } from './github-project-desired.mjs';
 import { findProject, readIssues, readProject } from './github-project-gh.mjs';
 import { retrying } from './github-project-retry.mjs';
-
-/** The project's built-in single-choice field: Todo, In Progress and Done. */
-export const PROGRESS_FIELD = 'Status';
 
 /** A trouble with the board that is not GitHub refusing a call: the project, its field or an option is not there yet. */
 export class BoardProblem extends Error {}

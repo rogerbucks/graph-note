@@ -155,7 +155,8 @@ describe('a create that timed out but went through', () => {
   test('is the same for a label and a project: neither is made twice', () => {
     const gh = fakeGithub();
     const a = flaky(gh, is('label', 'create'), 1, TIMEOUT, { after: true });
-    const b = flaky({ run: a.run }, is('project', 'create'), 1, TIMEOUT, { after: true });
+    const makesProject = (args, input) => args[1] === 'graphql' && /createProjectV2\(/.test(input);
+    const b = flaky({ run: a.run }, makesProject, 1, TIMEOUT, { after: true });
     apply(gh, b.run);
     assert.equal(gh.hub.labels.length, 8);
     assert.equal(gh.hub.projects.length, 1);

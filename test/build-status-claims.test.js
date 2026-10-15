@@ -37,7 +37,7 @@ describe('the built-in Status field', () => {
     const w = world();
     await w.trigger();
     assert.deepEqual(statusOf(w), { link: 'In Progress', neighbours: 'In Progress' });
-    assert.equal(w.value('zoom_out_to_fit', 'Status'), undefined);
+    assert.equal(w.value('zoom_out_to_fit', 'Status'), 'Todo');
   });
 
   test('is In Progress for a draft pull request as well, and stays so whatever its checks say', async () => {
@@ -180,13 +180,52 @@ describe('the Requirements line of a draft pull request', () => {
     });
     assert.deepEqual(w.values('Status'), {
       focus_link: 'In Progress',
-      focus_neighbours: undefined,
+      focus_neighbours: 'Todo',
       zoom_out_to_fit: 'In Progress',
-      stray_new: undefined,
+      stray_new: 'Todo',
     });
     assert.deepEqual(result.pulls[0].ids, []);
     assert.match(w.comments()[0].body, /`focus_link` .*: In PR/);
     assert.match(w.comments()[0].body, /Build status: In PR/);
+  });
+
+  test('takes the items on with a token gh cannot resolve the owner’s type for, as the first live run could not', async () => {
+    const w = world();
+    draft(w, 'Requirements: focus_link');
+    const real = w.gh.run;
+    w.deps.project = (args, input) => {
+      if (args[0] === 'project' && args[1] !== 'item-edit')
+        throw Object.assign(new Error('gh project failed: unknown owner type'), { stderr: 'unknown owner type' });
+      return real(args, input);
+    };
+    await w.trigger();
+    assert.equal(w.value('focus_link'), 'In PR');
+    assert.equal(w.value('focus_link', 'Status'), 'In Progress');
+    assert.deepEqual(w.annotations, []);
+    assert.doesNotMatch(w.comments()[0].body, /not updated/);
+  });
+
+  test('says in its log what it counts: the requirements its copy proved, and those its line named', async () => {
+    const w = world();
+    draft(w, 'Requirements: focus_link, zoom_out_to_fit');
+    await w.trigger();
+    assert.match(
+      w.writes.join(''),
+      /#7 In PR, 0 proved by its copy, 2 named by its Requirements line, comment created/,
+    );
+    w.side.hub.files[HEAD] = HEAD_TEXT;
+    await w.trigger();
+    assert.match(
+      w.writes.join(''),
+      /#7 In PR, 2 proved by its copy, 1 named by its Requirements line, comment updated/,
+    );
+  });
+
+  test('says in its log 0 and 0 for a pull request that moves and names nothing', async () => {
+    const w = world();
+    draft(w, 'Just words.');
+    await w.trigger();
+    assert.match(w.writes.join(''), /#7 In PR, 0 proved by its copy, 0 named by its Requirements line, comment absent/);
   });
 
   test('keeps only ids that are plain and are in main’s requirements file, and says nothing of the rest', async () => {

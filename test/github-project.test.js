@@ -234,6 +234,14 @@ describe('the command', () => {
     assert.equal(command('--allow-removals').status, 1);
     assert.match(command('--allow-removals').stderr, /--allow-removals.*--apply/);
   });
+
+  test('takes --accept-warnings only to go with --apply', () => {
+    for (const mode of [[], ['--check'], ['--dry-run']]) {
+      const result = command('--accept-warnings', ...mode);
+      assert.equal(result.status, 1, mode.join(' '));
+      assert.match(result.stderr, /--accept-warnings.*--apply/);
+    }
+  });
 });
 
 describe('the mirror, read-only with --check and changing with --apply, against a stand-in for gh', () => {
