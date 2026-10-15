@@ -1,4 +1,5 @@
-// The browser editor from the Claude Code mod (editor spec §26, slice 4; workstream C2; test_cc_mod): `/graph edit` starts
+// The launcher half of test_cc_mod, held back in this file until C3 and C7 complete editor-mod.test.js (editor spec §26,
+// slice 4; workstream C2): the browser editor from the Claude Code mod. `/graph edit` starts
 // the session's server on the shipped process, as the host starts one, and hands back an address only the pane may draw;
 // a start that fails says why; one session, one server; and the server stops on every trigger the rules name. The
 // launcher is tried over real processes started the way `$.process.spawn` starts them. A test asserts the work done,
@@ -306,6 +307,3 @@ describe('the server stops (cc_server_stops)', () => {
     assert.equal(readFileSync(where.plan, 'utf8'), PLAN.replace('Finish', 'Done'), 'the write that was made is whole');
   });
 });
-
-// C3 (cc_classified_asks, cc_credential_never) and C7 (cc_claude_only, cc_claude_proposes) add their cases below, to
-// this file: the launcher takes the gate and the proposal channel before `edit` starts the server. None is written here.
