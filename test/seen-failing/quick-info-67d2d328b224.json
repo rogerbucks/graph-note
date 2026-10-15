@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/quick-info.test.js",
+  "test": "quick_info: pointing at a thing or a link for a moment opens the tooltip > a finger is not hovering: a touch arriving on a thing opens nothing by itself",
+  "seen_failing_first": false,
+  "evidence": "A negative case: with no tooltip in the code nothing opens at all, so a touch opening nothing held before the code. Its twin, the same arrival by a mouse opening it after a moment, failed first."
+}

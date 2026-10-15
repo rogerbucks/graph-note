@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/mini-map.test.js",
+  "test": "mini_map_setting: Off, When the drawing does not fit, or Always > Off: never shown, however far the drawing is zoomed in",
+  "seen_failing_first": false,
+  "evidence": "A negative case: with no mini-map in the code nothing is ever shown, so Off held before the code. Its twin, Always: shown even when the whole drawing fits, failed first, and proves the setting is read."
+}
