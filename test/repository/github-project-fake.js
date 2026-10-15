@@ -175,6 +175,42 @@ export function fakeGithub({
       for (const item of p.items) delete item.values[f.name];
       return json({ data: { updateProjectV2Field: { projectV2Field: f } } });
     }
+    if (/updateProjectV2ItemFieldValue|clearProjectV2ItemFieldValue/.test(query)) {
+      const clearing = /clearProjectV2ItemFieldValue/.test(query);
+      const keys = Object.keys(variables).sort().join(',');
+      const want = clearing ? 'field,item,project' : 'field,item,project,value';
+      if (keys !== want) throw new Error(`item value: variables ${keys}, not ${want}`);
+      const p = hub.projects.find((x) => x.id === variables.project);
+      const f = p?.fields.find((x) => x.id === variables.field);
+      const found = p?.items.find((x) => x.id === variables.item);
+      if (!f || !found) throw new Error('item value: no such project, field or item');
+      mutate([...args, clearing ? 'clearProjectV2ItemFieldValue' : 'updateProjectV2ItemFieldValue', f.name]);
+      if (clearing) delete found.values[f.name];
+      else {
+        const given = Object.keys(variables.value);
+        if (given.length !== 1) throw new Error('item value: exactly one kind of value is given');
+        const [kind] = given;
+        const value = variables.value[kind];
+        if (kind === 'date' && f.dataType === 'DATE') found.values[f.name] = value;
+        else if (kind === 'number' && f.dataType === 'NUMBER') found.values[f.name] = Number(value);
+        else if (kind === 'iterationId' && f.dataType === 'ITERATION') {
+          const iteration = f.iterations.find((i) => i.id === value);
+          if (!iteration) throw new Error('item value: no such iteration, the id is stale');
+          found.values[f.name] = iteration.title;
+        } else if (kind === 'singleSelectOptionId' && !f.dataType) {
+          const option = f.options.find((o) => o.id === value);
+          if (!option) throw new Error('item value: no such option, the id is stale');
+          found.values[f.name] = option.name;
+        } else throw new Error(`item value: ${kind} does not fit a ${f.dataType ?? 'SINGLE_SELECT'} field`);
+      }
+      return json({
+        data: {
+          [clearing ? 'clearProjectV2ItemFieldValue' : 'updateProjectV2ItemFieldValue']: {
+            projectV2Item: { id: found.id },
+          },
+        },
+      });
+    }
     if (/repositoryOwner\(login: \$owner\) \{ id \}/.test(query))
       return json({ data: { repositoryOwner: variables.owner === owner ? { id: `OWNER_${owner}` } : null } });
     if (/issue\(number: \$number\)/.test(query)) {
@@ -301,25 +337,6 @@ export function fakeGithub({
       const item = { id: nextId('item'), number: Number(url.split('/').at(-1)), values: {} };
       p.items.push(item);
       return json({ id: item.id });
-    }
-    if (group === 'project' && verb === 'item-edit') {
-      mutate(args);
-      const p = hub.projects.find((x) => x.id === flag(args, '--project-id'));
-      const f = p.fields.find((x) => x.id === flag(args, '--field-id'));
-      const values = p.items.find((x) => x.id === flag(args, '--id')).values;
-      if (args.includes('--clear')) delete values[f.name];
-      else if (f.dataType === 'DATE') values[f.name] = flag(args, '--date');
-      else if (f.dataType === 'NUMBER') values[f.name] = Number(flag(args, '--number'));
-      else if (f.dataType === 'ITERATION') {
-        const iteration = f.iterations.find((i) => i.id === flag(args, '--iteration-id'));
-        if (!iteration) throw new Error('item-edit: no such iteration, the id is stale');
-        values[f.name] = iteration.title;
-      } else {
-        const option = f.options.find((o) => o.id === flag(args, '--single-select-option-id'));
-        if (!option) throw new Error('item-edit: no such option, the id is stale');
-        values[f.name] = option.name;
-      }
-      return json({ id: flag(args, '--id') });
     }
     if (group === 'api' && /\/issues\?/.test(verb)) {
       const [where, query] = verb.split('?');

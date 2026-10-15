@@ -86,7 +86,7 @@ describe('Started on, set by the build status', () => {
     w.side.hub.pulls[7].state = 'closed';
     await w.trigger();
     assert.deepEqual([started(w, 'focus_link'), started(w, 'focus_neighbours')], [undefined, undefined]);
-    assert.ok(w.gh.hub.mutations.some((m) => m.includes('--clear')));
+    assert.ok(w.gh.hub.mutations.some((m) => m.includes('clearProjectV2ItemFieldValue')));
   });
 
   test('is kept while another pull request holds the item, and only the items it holds', async () => {

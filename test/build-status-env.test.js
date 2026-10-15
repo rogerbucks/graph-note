@@ -48,7 +48,7 @@ describe('the whole run, from the environment a workflow gives', () => {
     assert.ok(w.comments()[0].body.includes('[Run](https://github.com/rogerbucks/graph-note/actions/runs/99)'));
     assert.ok(seen.includes(WORKFLOW_TOKEN) && seen.includes(TOKEN));
     assert.equal(
-      w.side.hub.calls.filter((c) => c.args.includes('item-edit')).length,
+      w.side.hub.calls.filter((c) => c.args.includes('project') || /ProjectV2/i.test(String(c.input))).length,
       0,
       'the repository side never sees the project',
     );

@@ -6,8 +6,9 @@
 // mirror's when one of those two wrote it.
 // The mirror never sets either field after giving a new item its first Build status; the build status workflow does.
 import { BUILD_STATUS_FIELD, PROGRESS_FIELD, PROJECT_TITLE, adoptedId } from './github-project-desired.mjs';
-import { STARTED_FIELD, valueArgs } from './github-project-fields.mjs';
+import { STARTED_FIELD, itemValueMutation } from './github-project-fields.mjs';
 import { adoptersOf, findProject, readAdoptable, readProject } from './github-project-gh.mjs';
+import { graphql } from './github-project-read.mjs';
 import { retrying } from './github-project-retry.mjs';
 
 /** A trouble with the board that is not GitHub refusing a call: the project, its field or an option is not there yet. */
@@ -63,8 +64,8 @@ function setValue(run, board, id, { name, field, key }, value, opts) {
   if (!field) throw new BoardProblem(`the project has no ${name} field`);
   const option = field.options.find((o) => o.name === value);
   if (!option) throw new BoardProblem(`the ${name} field has no option ${value}`);
-  const args = ['project', 'item-edit', '--id', item.itemId, '--project-id', board.projectId];
-  retrying(run, opts)([...args, '--field-id', field.id, '--single-select-option-id', option.id]);
+  const { query, variables } = itemValueMutation(board.projectId, item.itemId, name, field, value);
+  graphql(retrying(run, opts), query, variables);
   item[key] = value;
 }
 
@@ -78,9 +79,8 @@ export function setStartedOn(run, board, id, day, opts = {}) {
   const item = board.items.get(id);
   if (!item) throw new BoardProblem(`${id} is not an item of the project`);
   if (!board.startedField) throw new BoardProblem(`the project has no ${STARTED_FIELD} field`);
-  const args = ['project', 'item-edit', '--id', item.itemId, '--project-id', board.projectId];
-  const value = valueArgs(STARTED_FIELD, board.startedField, day);
-  retrying(run, opts)([...args, '--field-id', board.startedField.id, ...value]);
+  const { query, variables } = itemValueMutation(board.projectId, item.itemId, STARTED_FIELD, board.startedField, day);
+  graphql(retrying(run, opts), query, variables);
   item.started = day;
 }
 

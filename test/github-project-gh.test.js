@@ -146,7 +146,7 @@ describe('the Build status field, applied', () => {
     apply(gh);
     assert.ok(project.fields.some((f) => f.name === 'Build status'));
     assert.ok(project.items.every((i) => i.values['Build status'] === 'Not started'));
-    assert.ok(gh.hub.mutations.every((m) => /createProjectV2Field Build status$|item-edit/.test(m)));
+    assert.ok(gh.hub.mutations.every((m) => /createProjectV2Field Build status$|ProjectV2ItemFieldValue/.test(m)));
     assert.ok(project.items.every((i) => i.values.Proof && i.values.Slice && i.values.Workstream));
   });
 
@@ -206,7 +206,7 @@ describe('an apply after a requirement’s proof changed', () => {
     assert.equal(b.state, 'OPEN');
     assert.ok(labelsOf(a).includes('status:proved') && !labelsOf(a).includes('status:part'));
     // Proof on each, Closed on set on the one closed and cleared on the one reopened
-    const edits = Array(4).fill('project item-edit');
+    const edits = Array(4).fill('api graphql');
     assert.deepEqual(
       gh.hub.mutations.map((m) => m.split(' ').slice(0, 2).join(' ')).sort(),
       ['issue close', 'issue edit', 'issue edit', 'issue reopen', ...edits].sort(),

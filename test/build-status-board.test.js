@@ -54,7 +54,7 @@ describe('the Build status field of the project', () => {
   test('is read and set with a token gh cannot resolve the owner’s type for: no `gh project` verb that needs an owner is used', () => {
     const { gh, side } = both();
     const unknownOwnerType = (args, input) => {
-      if (args[0] === 'project' && args[1] !== 'item-edit')
+      if (args[0] === 'project')
         throw Object.assign(new Error('gh project failed: unknown owner type'), { stderr: 'unknown owner type' });
       return gh.run(args, input);
     };
@@ -97,7 +97,7 @@ describe('the Build status field of the project', () => {
     assert.equal(board().items.get('focus_link').current, 'Checks failing');
     assert.equal(board().items.get('focus_neighbours').current, 'Not started');
     assert.equal(gh.hub.mutations.length, 1);
-    assert.match(gh.hub.mutations[0], /item-edit/);
+    assert.match(gh.hub.mutations[0], /updateProjectV2ItemFieldValue/);
     const [project] = gh.hub.projects;
     const mine = project.items.find((i) => i.values['Build status'] === 'Checks failing');
     assert.equal(mine.values.Proof, 'open');
@@ -168,7 +168,7 @@ describe('the Build status field of the project', () => {
     const { gh, board } = both();
     let failures = 1;
     const flaky = (args, input) => {
-      if (args[0] === 'project' && args[1] === 'item-edit' && failures-- > 0)
+      if (/updateProjectV2ItemFieldValue/.test(String(input)) && failures-- > 0)
         throw new Error('gh failed: HTTP 502 Bad Gateway');
       return gh.run(args, input);
     };

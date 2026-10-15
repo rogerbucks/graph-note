@@ -1,5 +1,5 @@
 // The thin layer between the GitHub mirror's plan and the gh command (spec §12, requirements_checked_in_ci): it reads
-// what GitHub holds, and does a plan with `gh issue`, `gh label`, `gh project` and `gh api graphql`. All the thinking is
+// what GitHub holds, and does a plan with `gh issue`, `gh label` and `gh api graphql`. All the thinking is
 // in github-project-plan.mjs; this layer only asks and tells, through a runner handed in — run(args, input) gives gh's
 // output — so a test can hand in a stand-in and no network is touched. It never deletes anything. It is careful where it
 // goes (gh runs in this repository's folder, with no repository or host from the environment; the repository gh points
@@ -10,7 +10,7 @@ import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { REQUIREMENTS } from './check-requirements.mjs';
-import { typedMutation, valueArgs, withClosedOn } from './github-project-fields.mjs';
+import { itemValueMutation, typedMutation, withClosedOn } from './github-project-fields.mjs';
 import {
   BUILD_STATUS_FIELD,
   PROJECT_TITLE,
@@ -324,12 +324,8 @@ export function executePlan(run, repo, plan, opts = {}) {
     itemIds.set(id, added.id);
   }
   for (const set of todo.sets) {
-    const select = remote.fields[set.field];
-    const field = select ?? remote.typed[set.field];
-    const value = select
-      ? ['--single-select-option-id', select.options.find((o) => o.name === set.to).id]
-      : valueArgs(set.field, field, set.to);
-    const item = ['--id', itemIds.get(set.id), '--project-id', ref.id, '--field-id', field.id];
-    act(['project', 'item-edit', ...item, ...value]);
+    const field = remote.fields[set.field] ?? remote.typed[set.field];
+    const { query, variables } = itemValueMutation(ref.id, itemIds.get(set.id), set.field, field, set.to);
+    graphql(act, query, variables);
   }
 }

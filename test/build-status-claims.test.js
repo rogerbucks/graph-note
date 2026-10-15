@@ -194,7 +194,7 @@ describe('the Requirements line of a draft pull request', () => {
     draft(w, 'Requirements: focus_link');
     const real = w.gh.run;
     w.deps.project = (args, input) => {
-      if (args[0] === 'project' && args[1] !== 'item-edit')
+      if (args[0] === 'project')
         throw Object.assign(new Error('gh project failed: unknown owner type'), { stderr: 'unknown owner type' });
       return real(args, input);
     };
