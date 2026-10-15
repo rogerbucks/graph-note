@@ -7,6 +7,7 @@
 // holds, and scripts/github-project-gh.mjs does the difference. The requirements file stays the only source; every
 // issue and project item made from it is a derivative, regenerated and never edited by hand.
 import { REQUIREMENTS } from './check-requirements.mjs';
+import { iterationsOf, wavesOf } from './github-project-waves.mjs';
 
 /** The command that makes the mirror, named in each issue so a reader knows where it came from. */
 export const SCRIPT = 'scripts/github-project.mjs';
@@ -260,14 +261,18 @@ const questionBodyOf = (q, workstream) =>
  * `known` lists every requirement and question id the copy holds, in any slice, so that an issue whose requirement or
  * question is only outside the chosen slices is told from one whose requirement or question went.
  */
-export function desiredState(board, workstreams, slices) {
+export function desiredState(board, workstreams, slices, plan = null) {
   const chosen = [...new Set(slices)].sort((a, b) => a - b);
   const requirements = board.requirements.filter((r) => chosen.includes(r.slice));
   const placed = assignWorkstreams(requirements, workstreams);
   const option = (id) => `${id}: ${workstreams[id].title}`;
+  const inWaves = plan ? wavesOf(requirements, placed, workstreams, plan) : null;
+  // without a plan, Wave and Order are left as they are; with one, a requirement in no wave has neither
+  const planned = (id) => (plan ? { wave: null, order: null, ...inWaves.get(id) } : {});
   const issues = requirements.map((r) => {
     const workstream = placed.get(r.id);
     return {
+      ...planned(r.id),
       id: r.id,
       title: titleOf(board.sections.find((s) => s.num === r.section)?.title, r.id),
       body: bodyOf(r, option(workstream)),
@@ -285,6 +290,7 @@ export function desiredState(board, workstreams, slices) {
   for (const q of questions) {
     const workstream = askedIn.get(q.id);
     issues.push({
+      ...(plan ? { wave: null, order: null } : {}),
       id: q.id,
       title: questionTitleOf(q.num, q.text),
       body: questionBodyOf(q, option(workstream)),
@@ -306,6 +312,8 @@ export function desiredState(board, workstreams, slices) {
       [BUILD_STATUS_FIELD]: [...BUILD_STATUSES],
     },
     known: [...board.requirements, ...(board.questions ?? [])].map((r) => r.id),
+    iterations: plan ? iterationsOf(plan) : null,
+    waves: plan ? { ...plan, requirements: requirements.map((r) => r.id) } : null,
   };
 }
 

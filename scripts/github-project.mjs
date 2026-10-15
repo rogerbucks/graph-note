@@ -40,6 +40,7 @@ import { seedOf } from './build-status-seed.mjs';
 import { buildPlan, formatPlan, guardProblem } from './github-project-plan.mjs';
 import { executePlan, ghRunner, pinRepo, readRemote, repoOfRemote } from './github-project-gh.mjs';
 import { retrying } from './github-project-retry.mjs';
+import { WAVES_FILE, readWaves, waveLines } from './github-project-waves.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const WORKSTREAMS = 'requirements/workstreams.json';
@@ -75,6 +76,12 @@ function parseOptions(args) {
   if (options.acceptWarnings && options.mode !== 'apply') throw new Error('--accept-warnings only goes with --apply');
   return options;
 }
+
+/** The tally of the waves plan and its warnings, a line each, or nothing without a plan. */
+const wavesText = (desired) =>
+  waveLines(desired)
+    .map((line) => `${line}\n`)
+    .join('');
 
 const countLine = (issues, slices) => {
   const asked = issues.filter((i) => i.labels.includes(QUESTION_LABEL)).length;
@@ -116,6 +123,7 @@ export function mirror(
   const heading =
     mode === 'check' ? 'check — read-only: GitHub is read and nothing is changed' : 'apply — GitHub is changed';
   write(`github-project: ${heading}\ntarget repository: ${repo}\n${countLine(desired.issues, slices)}\n`);
+  write(wavesText(desired));
   write(formatPlan(plan));
   const problem = guardProblem(plan);
   const n = seeded.warnings.length;
@@ -137,12 +145,13 @@ function main(args) {
     const options = parseOptions(args);
     const board = readBoard(readFileSync(join(ROOT, REQUIREMENTS), 'utf8'));
     const workstreams = readWorkstreams(readFileSync(join(ROOT, WORKSTREAMS), 'utf8'));
-    const desired = desiredState(board, workstreams, options.slices);
+    const waves = readWaves(readFileSync(join(ROOT, WAVES_FILE), 'utf8'), workstreams);
+    const desired = desiredState(board, workstreams, options.slices, waves);
     if (options.mode === 'dry-run') {
       const plan = buildPlan(desired, { login: null, labelNames: [], issues: [], project: null });
       const note = 'no network call is made; GitHub is taken to be empty, so every issue shows as a create';
       process.stdout.write(
-        `github-project: dry run — ${note}\n${countLine(desired.issues, options.slices)}\n${formatPlan(plan)}`,
+        `github-project: dry run — ${note}\n${countLine(desired.issues, options.slices)}\n${wavesText(desired)}${formatPlan(plan)}`,
       );
       return 0;
     }
