@@ -151,8 +151,11 @@ describe('the seed of an item with no value', () => {
 
 describe('the mirror with the seed', () => {
   /** One runner for the repository's API calls and the project, as `gh` is one command. */
+  // the repository's files and pull requests from `side`; the issues, listed through the same API, and the project from `gh`
   const together = (gh, side) => (args, input) =>
-    args[0] === 'api' && String(args[1]).startsWith('repos/') ? side.run(args, input) : gh.run(args, input);
+    args[0] === 'api' && String(args[1]).startsWith('repos/') && !/\/issues\?/.test(args[1])
+      ? side.run(args, input)
+      : gh.run(args, input);
   const desired = () => desiredState(board, WORKSTREAMS, [3, 4]);
   const mirrorWith = (mode, gh, side, { acceptWarnings = false } = {}) => {
     const out = [];

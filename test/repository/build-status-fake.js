@@ -7,7 +7,7 @@ import { readBoard } from '../../scripts/slice-board.mjs';
 import { desiredState } from '../../scripts/github-project-desired.mjs';
 import { buildPlan } from '../../scripts/github-project-plan.mjs';
 import { executePlan, readRemote } from '../../scripts/github-project-gh.mjs';
-import { fakeGithub } from './github-project-fake.js';
+import { fakeGithub, restIssueList } from './github-project-fake.js';
 import { FIXTURE, WORKSTREAMS } from './github-project-fixture.js';
 
 const flag = (args, name) => args[args.indexOf(name) + 1];
@@ -146,6 +146,7 @@ export function fakeRepoSide({ repo = 'rogerbucks/graph-note', pageSize = 100, i
       return args.includes('-H') ? hub.files[ref] : json({ type: 'file', size: Buffer.byteLength(hub.files[ref]) });
     }
     if (rest === 'releases?per_page=100') return json(hub.releases);
+    if (rest.startsWith('issues?')) return restIssueList(issues(), rest.slice('issues?'.length));
     if ((m = /^issues\/(\d+)\/comments\?per_page=100$/.exec(rest))) return listComments(m[1]);
     throw new Error(`fake repository gh does not know: ${args.join(' ')}`);
   };

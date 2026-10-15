@@ -154,27 +154,30 @@ export function authorOf(author) {
   return bot && !name.endsWith('[bot]') ? `${name}[bot]` : name;
 }
 
-const BOT_APP = BOT_LOGIN.replace(/\[bot\]$/, '');
-
 /**
- * The issues of a repository, only those `author` wrote where one is given (BOT_LOGIN asks for the workflows' bot's, by
- * its app): the mirror adopts only the issues of its own logins, so asking for those alone keeps issues anybody else
- * files from reaching the cap of the list.
+ * The issues of a repository, only those `author` wrote where one is given: the mirror adopts only the issues of its own
+ * logins, so asking for those alone keeps issues anybody else files from reaching the cap of the list. They are read
+ * from the REST list endpoint by `creator`, paged through, not by `gh issue list`, which may use the search (capped at
+ * 1,000, and behind its index, so a create tried again could be made twice). A pull request, which that endpoint lists
+ * too, is left out. Each is {number, title, body, state ('OPEN' or 'CLOSED'), labels (names), author, url, closedAt}.
  */
-export const readIssues = (run, repo, author) =>
-  whole(
-    JSON.parse(
-      run(
-        inRepo(repo, [
-          ...['issue', 'list', '--state', 'all', '--limit', String(ISSUE_CAP)],
-          ...(author === BOT_LOGIN ? ['--app', BOT_APP] : author ? ['--author', author] : []),
-          ...['--json', 'number,title,body,state,labels,author,url,closedAt'],
-        ]),
-      ),
-    ),
-    ISSUE_CAP,
-    'issues',
-  ).map((i) => ({ ...i, labels: i.labels.map((l) => l.name), author: authorOf(i.author) }));
+export function readIssues(run, repo, author) {
+  const creator = author ? `&creator=${encodeURIComponent(author)}` : '';
+  const pages = JSON.parse(
+    run(['api', `repos/${repo}/issues?state=all${creator}&per_page=100`, '--paginate', '--slurp']),
+  );
+  const issues = pages.flat().filter((i) => !i.pull_request);
+  return whole(issues, ISSUE_CAP, 'issues').map((i) => ({
+    number: i.number,
+    title: i.title,
+    body: i.body ?? '',
+    state: String(i.state).toUpperCase(),
+    labels: (i.labels ?? []).map((l) => (typeof l === 'string' ? l : l.name)),
+    author: authorOf(i.user),
+    url: i.html_url,
+    closedAt: i.closed_at ?? null,
+  }));
+}
 
 /** The logins whose issues the mirror adopts: the repository's owner, and the workflows' bot, which runs it on main. */
 export const adoptersOf = (repo) => [ownerOf(repo), BOT_LOGIN];

@@ -111,6 +111,49 @@ describe('issues the workflows’ bot made', () => {
   });
 });
 
+describe('reading the issues', () => {
+  const lists = (calls) => calls.filter((c) => c.args[0] === 'api' && /\/issues\?/.test(c.args[1])).map((c) => c.args);
+
+  test('is through the REST list endpoint by creator, paged through, for the owner and the bot; never the search', () => {
+    const gh = fakeGithub({ login: BOT });
+    applyAsBot(gh);
+    gh.hub.calls.length = 0;
+    readRemote(gh.run, REPO, { creator: BOT_LOGIN });
+    assert.deepEqual(lists(gh.hub.calls), [
+      ['api', `repos/${REPO}/issues?state=all&creator=rogerbucks&per_page=100`, '--paginate', '--slurp'],
+      ['api', `repos/${REPO}/issues?state=all&creator=github-actions%5Bbot%5D&per_page=100`, '--paginate', '--slurp'],
+    ]);
+    assert.ok(!gh.hub.calls.some((c) => c.args[0] === 'issue' && c.args[1] === 'list'), 'gh issue list may search');
+  });
+
+  test('gives each issue as before: its state upper case, its labels’ names, its author, url and closedAt; a pull request is left out', () => {
+    const gh = fakeGithub({ login: BOT });
+    applyAsBot(gh);
+    gh.hub.pullsInIssues = [{ number: 50, title: 'a pull request', user: { login: 'rogerbucks' } }];
+    const remote = readRemote(gh.run, REPO, { creator: BOT_LOGIN });
+    assert.ok(!remote.issues.some((i) => i.number === 50));
+    const closed = remote.issues.find((i) => i.state === 'CLOSED');
+    assert.equal(closed.author, BOT_LOGIN);
+    assert.equal(closed.closedAt, gh.hub.now);
+    assert.ok(closed.labels.includes('status:proved'));
+    assert.match(closed.url, /^https:\/\/github\.com\//);
+  });
+
+  test('is the same for the build status board', () => {
+    const gh = fakeGithub({ login: BOT });
+    applyAsBot(gh);
+    const side = fakeRepoSide({ issues: () => gh.hub.issues });
+    readBuildBoard(side.run, gh.run, REPO, { sleep: () => {} });
+    assert.deepEqual(
+      lists(side.hub.calls).map((args) => args[1]),
+      [
+        `repos/${REPO}/issues?state=all&creator=rogerbucks&per_page=100`,
+        `repos/${REPO}/issues?state=all&creator=github-actions%5Bbot%5D&per_page=100`,
+      ],
+    );
+  });
+});
+
 describe('a stranger’s issue', () => {
   test('is never adopted, though it carries the generated banner and a marker: the mirror makes its own', () => {
     const gh = fakeGithub({ login: BOT });

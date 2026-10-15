@@ -7,6 +7,40 @@ const flag = (args, name) => args[args.indexOf(name) + 1];
 const flagsOf = (args, name) => args.flatMap((a, i) => (a === name ? [args[i + 1]] : []));
 const json = (value) => `${JSON.stringify(value)}\n`;
 
+/** An author's login as the REST API gives it: gh's `app/<name>` for a GitHub App is `<name>[bot]` there. */
+const restLogin = (author) => {
+  const login = author?.login;
+  return typeof login === 'string' && login.startsWith('app/') ? `${login.slice(4)}[bot]` : login;
+};
+
+/**
+ * The answer of `gh api repos/{o}/{r}/issues?state=all&creator=<login>&per_page=100 --paginate --slurp`, as the REST
+ * API gives it: the issues (and `pulls`, pull requests, which that endpoint lists too) the creator made, or all where none
+ * is named, each in the REST shape, a hundred to the page, the pages in a list.
+ */
+export function restIssueList(issues, query, pulls = []) {
+  const creator = new URLSearchParams(query).get('creator');
+  const mine = (login) => !creator || login === creator;
+  const listed = [
+    ...issues
+      .filter((i) => mine(restLogin(i.author)))
+      .map((i) => ({
+        number: i.number,
+        title: i.title,
+        body: i.body,
+        state: String(i.state).toLowerCase(),
+        labels: i.labels.map((l) => ({ name: l.name })),
+        user: { login: restLogin(i.author), type: String(restLogin(i.author)).endsWith('[bot]') ? 'Bot' : 'User' },
+        html_url: i.url,
+        closed_at: i.closedAt ?? null,
+      })),
+    ...pulls.filter((p) => mine(p.user?.login)).map((p) => ({ ...p, pull_request: { url: 'u' } })),
+  ];
+  const pages = [];
+  for (let at = 0; at < listed.length || pages.length === 0; at += 100) pages.push(listed.slice(at, at + 100));
+  return json(pages);
+}
+
 /**
  * An empty GitHub for the repository `owner/name`, with `login` signed in (`app/<name>` for a GitHub App, as gh gives a
  * bot's login). `pageSize` makes the project’s item list page; `now` is the time an issue is closed at. Like gh, it refuses an issue or label call that names no repository or another one, and a project call that
@@ -280,6 +314,12 @@ export function fakeGithub({
         values[f.name] = option.name;
       }
       return json({ id: flag(args, '--id') });
+    }
+    if (group === 'api' && /\/issues\?/.test(verb)) {
+      const [where, query] = verb.split('?');
+      if (where !== `repos/${hub.repo}/issues`)
+        throw new Error(`gh api ${verb}: names no repository, or the wrong one`);
+      return restIssueList(hub.issues, query, hub.pullsInIssues);
     }
     if (group === 'api' && verb === 'graphql') return graphql(args, input);
     throw new Error(`fake gh does not know: ${args.join(' ')}`);

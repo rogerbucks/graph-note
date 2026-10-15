@@ -370,12 +370,10 @@ describe('reading GitHub', () => {
     });
     gh.hub.calls.length = 0;
     const remote = readRemote(gh.run, REPO);
-    const lists = gh.hub.calls.filter((c) => c.args[0] === 'issue' && c.args[1] === 'list').map((c) => c.args);
-    const asked = (args) => {
-      const by = args.includes('--author') ? '--author' : '--app';
-      return `${by} ${args[args.indexOf(by) + 1]}`;
-    };
-    assert.deepEqual(lists.map(asked), ['--author rogerbucks', '--app github-actions']);
+    // through the REST list endpoint, by creator (test/github-project-adopt.test.js has the whole call)
+    const lists = gh.hub.calls.filter((c) => c.args[0] === 'api' && /\/issues\?/.test(c.args[1]));
+    const asked = lists.map((c) => new URLSearchParams(c.args[1].split('?')[1]).get('creator'));
+    assert.deepEqual(asked, ['rogerbucks', 'github-actions[bot]']);
     assert.ok(remote.issues.every((i) => i.author === 'rogerbucks'));
     assert.ok(!remote.issues.some((i) => i.number === 900));
   });

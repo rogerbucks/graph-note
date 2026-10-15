@@ -299,7 +299,7 @@ These test behaviour across modules, or the repository itself, so they are named
   (`concurrency: project-mirror`, `cancel-in-progress: false`): GitHub keeps one run waiting in the group, a newer push
   replacing the one that waited and never the one running, which is enough since each run mirrors main as it stands.
 - **Only what it made is its own.** An issue is adopted only when the repository's owner or `github-actions[bot]` wrote
-  it (gh gives the bot as `app/github-actions`), its body has the generated banner, and its marker is the last thing in
+  it (gh gives the bot as `app/github-actions`, the REST API as `github-actions[bot]`), its body has the generated banner, and its marker is the last thing in
   it; only those two logins' issues are read, a marker anyone else writes is ignored, and an issue whose banner or
   closing marker was edited away is no longer ours, so a new one is made. `--apply` stops, unless `--allow-removals` is
   given, when the requirements file holds no requirements or the plan removes more than 10 issues.
@@ -333,9 +333,11 @@ These test behaviour across modules, or the repository itself, so they are named
   warning in the comment (never a failure).
 - **Lists are of this repository's own before any cap.** The open pull requests and the pull requests merged in a span
   are paged through (ten pages at most) keeping only those whose head and base are this repository, so a crowd of fork
-  pull requests cannot hide one that holds an item; the issues are asked for by author (`--author`, the owner, and
-  `--app github-actions`, the bot), in the build status and in the mirror (which adopts only those two logins' issues),
-  so issues others file never reach the cap.
+  pull requests cannot hide one that holds an item; the issues are asked for by their creator (the owner, and
+  `github-actions[bot]`) from the REST list endpoint, `repos/{owner}/{name}/issues?state=all&creator=…`, paged through,
+  in the build status and in the mirror (which adopts only those two logins' issues), so issues others file never reach
+  the cap. Not `gh issue list`, which may use the search: capped at 1,000 and behind its index, so a create tried again
+  could be made twice. A pull request, which that endpoint lists too, is left out.
 - **Which pull requests.** Only those of this repository: one from a fork moves nothing and gets no comment. The pull
   requests an event names must still have, as their head, the commit its checks ran on. Merged counts only when the pull
   request merged into main.
