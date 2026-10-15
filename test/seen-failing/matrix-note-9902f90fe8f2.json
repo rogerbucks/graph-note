@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/matrix-note.test.js",
+  "test": "the matrix note read into plain rows > a conditional cell with no condition is conditional with none, so it can never be switched on",
+  "seen_failing_first": false,
+  "evidence": "It pins a case the first parser already handled (a bare warning mark was already conditional with no condition); the refusal to switch it on is tested in packages/core/test/ai-matrix.test.js, which failed first."
+}
