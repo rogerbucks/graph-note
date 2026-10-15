@@ -29,7 +29,7 @@ function parse(text, side) {
     return {
       graph: {
         nodes: new Map([...graph.nodes].map(([key, n]) => [name(key), n])),
-        edges: graph.edges.map(([from, type, to]) => [name(from), type, name(to)]),
+        edges: graph.edges.map(([from, type, to, props]) => [name(from), type, name(to), props]),
       },
     };
   } catch (e) {
@@ -39,8 +39,14 @@ function parse(text, side) {
 }
 
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
-const edgeKey = ([from, type, to]) => `(${from})-[:${type}]->(${to})`;
-const commentsOf = (text) => text.split('\n').filter((l) => l.startsWith('//'));
+const propsKey = (props) =>
+  JSON.stringify(Object.entries(props ?? {}).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
+const edgeKey = ([from, type, to, props]) => {
+  const p = propsKey(props);
+  return `(${from})-[:${type}${p === '[]' ? '' : ` ${p}`}]->(${to})`;
+};
+// a comment line may be indented, as the reader takes it
+const commentsOf = (text) => text.split('\n').filter((l) => l.trim().startsWith('//'));
 
 /** Banner and other comment lines: the banner as generated, every other comment line as it was. */
 function commentProblems(baseText, headText) {
@@ -131,12 +137,15 @@ export function refusedChanges(baseText, headText, { exists = (rel) => existsSyn
     if (!now.has(id)) problems.push({ kind: 'removed', id, message: `${id}: a record removed by hand` });
   for (const [id, record] of now) if (was.has(id)) problems.push(...recordProblems(id, was.get(id), record, exists));
 
-  const before = new Set(base.graph.edges.map(edgeKey));
-  const after = new Set(head.graph.edges.map(edgeKey));
-  for (const e of after)
-    if (!before.has(e)) problems.push({ kind: 'link-added', id: e, message: `${e}: a link added by hand` });
-  for (const e of before)
-    if (!after.has(e)) problems.push({ kind: 'link-removed', id: e, message: `${e}: a link removed by hand` });
+  // a multiset: a link repeated is a link added
+  const count = (edges) => edges.map(edgeKey).reduce((m, e) => m.set(e, (m.get(e) ?? 0) + 1), new Map());
+  const before = count(base.graph.edges);
+  const after = count(head.graph.edges);
+  for (const [e, n] of after)
+    if (n > (before.get(e) ?? 0)) problems.push({ kind: 'link-added', id: e, message: `${e}: a link added by hand` });
+  for (const [e, n] of before)
+    if (n > (after.get(e) ?? 0))
+      problems.push({ kind: 'link-removed', id: e, message: `${e}: a link removed by hand` });
   return problems;
 }
 
@@ -144,17 +153,31 @@ function main(args) {
   const value = (flag) => args[args.indexOf(flag) + 1];
   const head = readFileSync(join(ROOT, REQUIREMENTS), 'utf8');
   let base;
-  if (args.includes('--base')) base = readFileSync(value('--base'), 'utf8');
-  else if (args.includes('--base-ref')) {
+  if (args.includes('--base-ref')) {
+    const ref = value('--base-ref');
+    if (!ref || ref.startsWith('-')) {
+      console.error('--base-ref needs a commit, such as --base-ref origin/main');
+      return 2;
+    }
+    const git = (...a) => execFileSync('git', a, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
     try {
-      base = execFileSync('git', ['show', `${value('--base-ref')}:${REQUIREMENTS}`], {
-        cwd: ROOT,
-        encoding: 'utf8',
-        stdio: ['ignore', 'pipe', 'ignore'],
-      });
-    } catch {
-      console.log(`${REQUIREMENTS}: not in the base, so nothing to compare`);
-      return 0;
+      // the commit must resolve; only a commit that holds no copy has nothing to compare
+      git('rev-parse', '--verify', '--quiet', `${ref}^{tree}`);
+      if (!git('ls-tree', '--name-only', ref, '--', REQUIREMENTS).trim()) {
+        console.log(`${REQUIREMENTS}: not in the base, so nothing to compare`);
+        return 0;
+      }
+      base = git('show', `${ref}:${REQUIREMENTS}`);
+    } catch (e) {
+      console.error(`cannot read ${REQUIREMENTS} at ${ref}: ${String(e.stderr || e.message).trim()}`);
+      return 2;
+    }
+  } else if (args.includes('--base')) {
+    try {
+      base = readFileSync(value('--base') ?? '', 'utf8');
+    } catch (e) {
+      console.error(`cannot read the base file: ${e.message}`);
+      return 2;
     }
   } else {
     console.error('needs --base-ref <commit> or --base <file>');

@@ -165,7 +165,15 @@ describe('a hand change to the requirements copy', () => {
     const flag = run('--base-ref', '--base');
     assert.equal(flag.status, 2, flag.stdout + flag.stderr);
     // the empty tree holds no copy: only then is there nothing to compare
-    const empty = run('--base-ref', '4b825dc642cb5eb6c3a1d53e0a3dcff0b1bf1ad');
+    // (writing it makes sure the repository holds that object; it is the same object every time)
+    const tree = spawnSync('git', ['hash-object', '-w', '-t', 'tree', '--stdin'], {
+      cwd: path('.'),
+      input: '',
+      encoding: 'utf8',
+      timeout: 30_000,
+    });
+    assert.equal(tree.status, 0, tree.stderr);
+    const empty = run('--base-ref', tree.stdout.trim());
     assert.equal(empty.status, 0, empty.stdout + empty.stderr);
     assert.match(empty.stdout, /nothing to compare/);
   });
