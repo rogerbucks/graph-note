@@ -8,7 +8,14 @@ import { readBoard } from '../scripts/slice-board.mjs';
 import { desiredState, idOfBody } from '../scripts/github-project-desired.mjs';
 import { buildPlan, formatPlan } from '../scripts/github-project-plan.mjs';
 import { executePlan, readRemote } from '../scripts/github-project-gh.mjs';
-import { dayOf, iterationConfig, typedDiffers, typedMutation, valueArgs } from '../scripts/github-project-fields.mjs';
+import {
+  dayOf,
+  iterationConfig,
+  typedDiffers,
+  typedMutation,
+  valueInput,
+  itemValueMutation,
+} from '../scripts/github-project-fields.mjs';
 import { readWaves } from '../scripts/github-project-waves.mjs';
 import { fakeGithub } from './repository/github-project-fake.js';
 import { FIXTURE, WAVES, WORKSTREAMS } from './repository/github-project-fixture.js';
@@ -78,7 +85,7 @@ describe('Closed on', () => {
     quiet(gh);
     apply(gh);
     assert.equal(valueOf(gh, 'zoom_out_to_fit', 'Closed on'), '2026-09-01');
-    assert.ok(gh.hub.mutations.every((m) => /createProjectV2Field Closed on$|item-edit/.test(m)));
+    assert.ok(gh.hub.mutations.every((m) => /createProjectV2Field Closed on$|ProjectV2ItemFieldValue/.test(m)));
   });
 
   test('is cleared on reopen', () => {
@@ -88,7 +95,7 @@ describe('Closed on', () => {
     apply(gh, proving(desiredFor(), 'zoom_out_to_fit', false));
     assert.equal(issueOf(gh, 'zoom_out_to_fit').state, 'OPEN');
     assert.equal(valueOf(gh, 'zoom_out_to_fit', 'Closed on'), undefined);
-    assert.ok(gh.hub.mutations.some((m) => m.includes('--clear')));
+    assert.ok(gh.hub.mutations.some((m) => m.includes('clearProjectV2ItemFieldValue')));
   });
 
   test('is unchanged when already right: a second apply sets nothing', () => {
@@ -178,7 +185,7 @@ describe('Wave and Order, from the waves plan', () => {
       [valueOf(gh, 'focus_link', 'Order'), valueOf(gh, 'focus_link', 'Wave')],
       [20102, 'Wave 2 · Slice end'],
     );
-    assert.ok(gh.hub.mutations.every((m) => m.startsWith('project item-edit')));
+    assert.ok(gh.hub.mutations.every((m) => /ItemFieldValue/.test(m)));
   });
 
   test('new dates set the iterations again, each kept by its id, so the items keep their wave', () => {
@@ -188,7 +195,7 @@ describe('Wave and Order, from the waves plan', () => {
     quiet(gh);
     apply(gh, desiredFor(withWaves((w) => (w[1].end = '2026-11-30'))));
     assert.deepEqual(
-      gh.hub.mutations.filter((m) => !m.startsWith('project item-edit')),
+      gh.hub.mutations.filter((m) => !/ItemFieldValue/.test(m)),
       ['api graphql --input - updateProjectV2Field Wave'],
     );
     const kept = fieldOf(gh, 'Wave').iterations.map((i) => i.id);
@@ -303,12 +310,25 @@ describe('the rule each value follows', () => {
     assert.equal(typedDiffers('Closed on', '2026-10-01', '2026-10-02'), true);
   });
 
-  test('a value is set with the gh flag of its type, and cleared with --clear', () => {
+  test('a value is given as the one key of its type, and cleared with null', () => {
     const wave = { type: 'ITERATION', iterations: [{ id: 'it_1', title: 'Wave 1' }] };
-    assert.deepEqual(valueArgs('Wave', wave, 'Wave 1'), ['--iteration-id', 'it_1']);
-    assert.deepEqual(valueArgs('Order', { type: 'NUMBER' }, 10101), ['--number', '10101']);
-    assert.deepEqual(valueArgs('Closed on', { type: 'DATE' }, '2026-10-15'), ['--date', '2026-10-15']);
-    assert.deepEqual(valueArgs('Closed on', { type: 'DATE' }, null), ['--clear']);
-    assert.throws(() => valueArgs('Wave', wave, 'Wave 9'), /no iteration Wave 9/);
+    const select = { options: [{ id: 'o_1', name: 'Merged' }] };
+    assert.deepEqual(valueInput('Wave', wave, 'Wave 1'), { iterationId: 'it_1' });
+    assert.deepEqual(valueInput('Order', { type: 'NUMBER' }, 10101), { number: 10101 });
+    assert.deepEqual(valueInput('Closed on', { type: 'DATE' }, '2026-10-15'), { date: '2026-10-15' });
+    assert.deepEqual(valueInput('Build status', select, 'Merged'), { singleSelectOptionId: 'o_1' });
+    assert.equal(valueInput('Closed on', { type: 'DATE' }, null), null);
+    assert.throws(() => valueInput('Wave', wave, 'Wave 9'), /no iteration Wave 9/);
+    assert.throws(() => valueInput('Build status', select, 'Nope'), /no option Nope/);
+  });
+
+  test('a value is set or cleared by the item-value mutations, with only the variables they take', () => {
+    const date = { id: 'f_1', type: 'DATE' };
+    const set = itemValueMutation('P', 'I', 'Closed on', date, '2026-10-15');
+    assert.match(set.query, /updateProjectV2ItemFieldValue/);
+    assert.deepEqual(set.variables, { project: 'P', item: 'I', field: 'f_1', value: { date: '2026-10-15' } });
+    const clear = itemValueMutation('P', 'I', 'Closed on', date, null);
+    assert.match(clear.query, /clearProjectV2ItemFieldValue/);
+    assert.deepEqual(clear.variables, { project: 'P', item: 'I', field: 'f_1' });
   });
 });

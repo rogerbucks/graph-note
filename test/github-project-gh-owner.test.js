@@ -20,9 +20,9 @@ const issueOf = (gh, id) => gh.hub.issues.find((i) => idOfBody(i.body) === id);
 const apply = (gh, run = gh.run) =>
   executePlan(run, REPO, buildPlan(desired, readRemote(run, REPO)), { sleep: noSleep });
 
-/** gh as it answers for a token it cannot resolve the owner’s type with: every `gh project` verb but item-edit fails. */
+/** gh as it answers for a token it cannot resolve the owner’s type with: every `gh project` verb fails. */
 const unknownOwnerType = (gh) => (args, input) => {
-  if (args[0] === 'project' && args[1] !== 'item-edit')
+  if (args[0] === 'project')
     throw Object.assign(new Error('gh project failed: unknown owner type'), { stderr: 'unknown owner type' });
   return gh.run(args, input);
 };
@@ -71,7 +71,7 @@ describe('finding the project through GraphQL, whatever gh can tell of the owner
 });
 
 describe('making and filling the project through GraphQL', () => {
-  test('needs no gh project verb but item-edit, as a token that cannot resolve the owner’s type must', () => {
+  test('needs no gh project verb at all, as a token that cannot resolve the owner’s type must', () => {
     const gh = fakeGithub();
     apply(gh, unknownOwnerType(gh));
     const [project] = gh.hub.projects;
@@ -79,7 +79,7 @@ describe('making and filling the project through GraphQL', () => {
     assert.equal(project.items.length, 5);
     const item = project.items.find((i) => i.number === issueOf(gh, 'focus_link').number);
     assert.equal(item.values.Proof, 'open');
-    assert.ok(gh.hub.calls.every((c) => !(c.args[0] === 'project' && c.args[1] !== 'item-edit')));
+    assert.ok(gh.hub.calls.every((c) => c.args[0] !== 'project'));
   });
 
   test('makes the project with the owner’s node id, and adds each issue by its node id', () => {

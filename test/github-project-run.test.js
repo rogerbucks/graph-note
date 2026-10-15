@@ -353,6 +353,8 @@ describe('which calls are the project’s', () => {
     const graphql = (query) => isProjectCall(['api', 'graphql', '--input', '-'], JSON.stringify({ query }));
     assert.equal(graphql('query { repositoryOwner { projectsV2 } }'), true);
     assert.equal(graphql('mutation { createProjectV2Field }'), true);
+    assert.equal(graphql('mutation { updateProjectV2ItemFieldValue(input: {}) { projectV2Item { id } } }'), true);
+    assert.equal(graphql('mutation { clearProjectV2ItemFieldValue(input: {}) { projectV2Item { id } } }'), true);
     assert.equal(graphql('query { repository { issue { id } } }'), false);
     assert.equal(isProjectCall(['issue', 'create', '--title', 'projectV2']), false);
     assert.equal(isProjectCall(['api', 'repos/o/r/pulls/1']), false);

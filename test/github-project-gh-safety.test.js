@@ -46,11 +46,10 @@ describe('every call names where it goes', () => {
   });
 
   test('the project is found, made and filled through GraphQL, naming the repository’s owner, never by a gh project verb that resolves the owner’s type', () => {
-    const verbs = calls.filter(([group]) => group === 'project').map(([, verb]) => verb);
-    assert.ok(verbs.length > 0);
-    assert.ok(
-      verbs.every((verb) => verb === 'item-edit'),
-      verbs.join(' '),
+    assert.deepEqual(
+      calls.filter(([group]) => group === 'project'),
+      [],
+      'no gh project verb, not even item-edit, which checks scopes the project token lacks',
     );
     const queries = gh.hub.calls
       .filter((c) => c.args[0] === 'api' && c.args[1] === 'graphql')
@@ -60,18 +59,16 @@ describe('every call names where it goes', () => {
     for (const q of named) assert.equal(q.variables.owner, 'rogerbucks');
     assert.ok(queries.some((q) => /createProjectV2\(/.test(q.query)));
     assert.ok(queries.some((q) => /addProjectV2ItemById\(/.test(q.query)));
+    assert.ok(queries.some((q) => /updateProjectV2ItemFieldValue\(/.test(q.query)));
   });
 
-  test('every other call is a lookup of the login, GraphQL, an edit by global id, or the pinned repository’s issue list', () => {
-    const rest = calls.filter(
-      ([group, verb]) => !['issue', 'label'].includes(group) && !(group === 'project' && verb !== 'item-edit'),
-    );
+  test('every other call is a lookup of the login, GraphQL, or the pinned repository’s issue list', () => {
+    const rest = calls.filter(([group]) => !['issue', 'label'].includes(group));
     assert.ok(rest.length > 0);
     for (const [group, verb] of rest)
       assert.ok(
         (group === 'api' && ['user', 'graphql'].includes(verb)) ||
-          (group === 'api' && verb.startsWith(`repos/${REPO}/issues?`)) ||
-          (group === 'project' && verb === 'item-edit'),
+          (group === 'api' && verb.startsWith(`repos/${REPO}/issues?`)),
         `${group} ${verb}`,
       );
   });

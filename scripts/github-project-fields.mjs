@@ -118,14 +118,43 @@ export function typedDiffers(name, from, to) {
   return have !== to;
 }
 
-/** The arguments of `gh project item-edit` that give a field (`field`, {type, iterations}) the value `to`, or clear it. */
-export function valueArgs(name, field, to) {
-  if (to === null) return ['--clear'];
-  if (field.type === 'DATE') return ['--date', to];
-  if (field.type === 'NUMBER') return ['--number', String(to)];
+const SET_VALUE = `mutation($project: ID!, $item: ID!, $field: ID!, $value: ProjectV2FieldValue!) {
+  updateProjectV2ItemFieldValue(input: {projectId: $project, itemId: $item, fieldId: $field, value: $value}) {
+    projectV2Item { id }
+  }
+}`;
+const CLEAR_VALUE = `mutation($project: ID!, $item: ID!, $field: ID!) {
+  clearProjectV2ItemFieldValue(input: {projectId: $project, itemId: $item, fieldId: $field}) {
+    projectV2Item { id }
+  }
+}`;
+
+/**
+ * The ProjectV2FieldValue that gives a field (`field`: {id, options} for a single select, {type, iterations} for a
+ * date, number or iteration) the value `to`, or null to clear it. Throws where the option or iteration is not there.
+ */
+export function valueInput(name, field, to) {
+  if (to === null) return null;
+  if (field.options) {
+    const option = field.options.find((o) => o.name === to);
+    if (!option) throw new Error(`field ${name} has no option ${to}`);
+    return { singleSelectOptionId: option.id };
+  }
+  if (field.type === 'DATE') return { date: to };
+  if (field.type === 'NUMBER') return { number: Number(to) };
   const iteration = field.iterations.find((i) => i.title === to);
   if (!iteration) throw new Error(`field ${name} has no iteration ${to}`);
-  return ['--iteration-id', iteration.id];
+  return { iterationId: iteration.id };
+}
+
+/**
+ * The GraphQL {query, variables} that give an item (`item`, its id in the project `project`) a field's value `to`, or
+ * clear it for null. GraphQL, never `gh project item-edit`, so the project token needs the project scope alone.
+ */
+export function itemValueMutation(project, item, name, field, to) {
+  const value = valueInput(name, field, to);
+  const base = { project, item, field: field.id };
+  return value === null ? { query: CLEAR_VALUE, variables: base } : { query: SET_VALUE, variables: { ...base, value } };
 }
 
 /**

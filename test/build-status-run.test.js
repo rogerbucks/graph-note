@@ -445,7 +445,7 @@ describe('the project token', () => {
       let writes = 0;
       const real = w.gh.run;
       w.deps.project = (args, input) => {
-        if (args[0] === 'project' && args[1] === 'item-edit' && (writes += 1))
+        if (/updateProjectV2ItemFieldValue/.test(String(input)) && (writes += 1))
           throw Object.assign(new Error('failed: HTTP 401'), { stderr: 'HTTP 401: Bad credentials' });
         return real(args, input);
       };
