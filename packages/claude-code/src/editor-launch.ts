@@ -38,6 +38,8 @@ export interface EditorPorts {
   drafts: string;
   /** Called when a server that was running ends by itself, so the pane can say so; it is handed nothing. */
   changed?: () => void;
+  /** `$.clock.after`: calls the function once after the milliseconds, unless cancelled; a test drives it by hand. */
+  after: (ms: number, fn: () => void) => { cancel: () => void };
 }
 
 /** What `/graph edit` came to: the note it opened, or why it could not. */
@@ -52,6 +54,9 @@ interface Running {
   done: Promise<void>;
   stopping: string | null;
 }
+
+/** How long a server has to hand over its address before it is killed and the start said to have failed. */
+export const START_TIMEOUT_MS = 15_000;
 
 const NO_NODE =
   'Node could not be started, and the editor needs it. Install Node.js, make sure `node` is on the path, then try again.';
@@ -200,8 +205,19 @@ export class EditorLauncher {
       let line = '';
       let ready = false;
       let running: Running | null = null;
+      let reason: string | null = null;
+      // a start that gets no address, or none in time, kills its process and says so only once the process is gone
+      const giveUp = (why: string) => {
+        if (ready || reason !== null) return;
+        reason = why;
+        void iterator.return?.();
+      };
+      const timer = this.#ports.after(START_TIMEOUT_MS, () =>
+        giveUp(`The editor server did not become ready in ${START_TIMEOUT_MS / 1000} seconds.`),
+      );
       const fail = (why: string) => {
-        if (!ready) resolve({ ok: false, why });
+        timer.cancel();
+        if (!ready) resolve({ ok: false, why: reason ?? why });
       };
       const piece = (p: SpawnedPiece) => {
         if (p.stream === 'stderr') said = (said + p.text).slice(-2000);
@@ -210,7 +226,8 @@ export class EditorLauncher {
           const end = line.indexOf('\n');
           if (end < 0) return;
           const link = this.#linkIn(line.slice(0, end));
-          if (!link) return fail('The editor server did not hand over an address.');
+          if (!link) return giveUp('The editor server did not hand over an address.');
+          timer.cancel();
           ready = true;
           running = { note, title: nameOf(note), link, iterator, done: Promise.resolve(), stopping: null };
           running.done = loop;

@@ -34,6 +34,7 @@ async function launcherOf($: EngineInterface): Promise<EditorLauncher> {
   launcher = new EditorLauncher({
     spawn: (request) => $.process.spawn(request),
     exists: (path) => $.fs.exists(path),
+    after: (ms, fn) => $.clock.after(ms, fn),
     cwd: await $.session.cwd(),
     server: ['node', `${$.plugin.root}/bin/editor-server.mjs`],
     drafts: data,
