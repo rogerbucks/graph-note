@@ -47,6 +47,12 @@ export function displayHost(): DisplayHost {
   return installed;
 }
 
+/** `value` unchanged, once a host is installed: a card's first step, so a page with no host is told so, not left a TypeError. */
+export function inHost<T>(value: T): T {
+  displayHost();
+  return value;
+}
+
 /** Draws the icon named `name` into `el`, through the host. */
 export const setIcon = (el: HTMLElement, name: string): void => displayHost().icon(el, name);
 

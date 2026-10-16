@@ -3,7 +3,7 @@
 // full screen, and shows a box's details when it is tapped or opened from the keyboard. This module ties together the
 // parts in its folder: the bar, the drawing, taps, the details, and where the card is placed.
 import { Lifecycle } from '../lifecycle';
-import { isPhone, setIcon } from '../host';
+import { inHost, isPhone, setIcon } from '../host';
 import { AcrossZoom, Zoom, scrollsOneWay } from '@graph-note/core';
 import type { Drawn, View } from '@graph-note/core';
 import { SourceToggle } from './source-toggle';
@@ -70,7 +70,7 @@ export class GraphView extends Lifecycle {
 
   constructor(containerEl: HTMLElement, options: ViewOptions) {
     super();
-    this.containerEl = containerEl;
+    this.containerEl = inHost(containerEl);
     // whether the card is where the note is only read: in reading view, or opened from a card that is (spec §3)
     this.readOnly = () => !!options.readOnly?.() || (options.mode === 'note' && readOnlyHere(containerEl));
     // every write the card can make goes through that one check: none where the card is read-only; and the card's parts
