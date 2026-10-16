@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/editor-page.test.js",
+  "test": "C8: the text version of the graph is in the page and kept in step (cc_text_version) > the page redraws the words whenever the note changes: a decision or a change on disk",
+  "seen_failing_first": false,
+  "evidence": "Pins that the page already draws the graph, and so its words, on every change; passes against the earlier code by design"
+}

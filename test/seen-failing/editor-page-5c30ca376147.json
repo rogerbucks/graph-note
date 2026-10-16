@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/editor-page.test.js",
+  "test": "C8: the page is still under reduced motion and stays usable (cc_reduced_motion) > the drawing the page shows is still: its image holds no animation, whatever the system asks",
+  "seen_failing_first": false,
+  "evidence": "Pins what the page already does: its sources hold no pointer-only handler, no scripted movement and no inline animation, and its drawing has none; passes against the earlier code by design"
+}

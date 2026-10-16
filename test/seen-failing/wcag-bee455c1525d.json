@@ -1,0 +1,6 @@
+{
+  "file": "test/wcag.test.js",
+  "test": "the browser editor’s page: every state, in both themes > reduced motion asked for meets WCAG 2.2 AA in the dark theme",
+  "seen_failing_first": false,
+  "evidence": "Checks a state already built to AA in C8; axe found nothing to fix"
+}

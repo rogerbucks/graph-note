@@ -252,6 +252,45 @@ describe('the browser editor’s page: every state, in both themes', () => {
       );
       return page;
     },
+    // C8: the keyboard, the text version and reduced motion
+    'the skip link focused': async () => {
+      const page = open(withNote);
+      await drawn(page);
+      page.window.document.querySelector('.gn-skip').focus();
+      return page;
+    },
+    'a menu open with the keyboard on its second row': async () => {
+      const page = open(withNote);
+      await drawn(page);
+      const doc = page.window.document;
+      browserHost(page.window).menu(
+        [
+          { title: 'Export as SVG', icon: 'download', onClick() {} },
+          { title: 'Copy the address', icon: 'copy', onClick() {} },
+        ],
+        { x: 20, y: 20 },
+        doc,
+      );
+      doc.activeElement.dispatchEvent(new page.window.KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+      return page;
+    },
+    'the text version shown': async () => {
+      const page = open(withNote);
+      await drawn(page);
+      await until(() => !!page.window.document.querySelector('.gn-text-version li'));
+      return page;
+    },
+    'reduced motion asked for': async () => {
+      const page = open(withNote);
+      page.window.matchMedia = (media) => ({
+        media,
+        matches: /reduced-motion/.test(media),
+        addEventListener() {},
+        removeEventListener() {},
+      });
+      await drawn(page);
+      return page;
+    },
   };
 
   for (const [name, state] of Object.entries(STATES))

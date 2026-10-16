@@ -14,6 +14,7 @@ import { browserHost, PHONE_WIDTH } from './browser-host.ts';
 import { exportCalls } from './export-calls.ts';
 import { exportingOf, localDay } from './export-run.ts';
 import { DARK, showGraph } from './graph-section.ts';
+import { keepFocus, skipLink } from './keyboard.ts';
 import { PNG_PIXEL_LIMIT, rasterise } from './png.ts';
 import { pageLayouts } from './layout-runner.ts';
 import { renderMarkdown } from './markdown.ts';
@@ -30,6 +31,8 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
   installHost(browserHost(win));
   const root = doc.getElementById('gn-page');
   if (!root) return;
+  const skip = doc.querySelector<HTMLElement>('.gn-skip');
+  if (skip) skipLink(doc, skip);
   const say = (text: string) => root.replaceChildren(Object.assign(doc.createElement('p'), { textContent: text }));
   const { token, note } = takeFragment(win);
   if (!token || !note) return say('Open this page from the link Claude Code gave: it carries what the editor needs.');
@@ -48,6 +51,7 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
     cards.setAttribute('class', 'gn-cards');
     const prose = doc.createElement('article');
     prose.setAttribute('class', 'gn-prose');
+    prose.setAttribute('aria-label', 'The note');
     root.replaceChildren(graph, cards, prose);
     const layouts = pageLayouts(win);
     const status = doc.getElementById('gn-notices');
@@ -85,12 +89,14 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
       graph.append(bar);
       button(bar, 'Export', 'download', () => toggleExportForm(graph, exporting), 'Export');
     };
-    const draw = async () => {
-      renderMarkdown(current.text, prose);
-      showCards(cards, proposalsIn(current.text), decideOn, announce);
-      await showGraph(win, graph, current.text, layouts);
-      addExportBar();
-    };
+    // the keyboard stays on the control it was on when a change on disk draws the page again
+    const draw = async () =>
+      keepFocus(root, async () => {
+        renderMarkdown(current.text, prose);
+        showCards(cards, proposalsIn(current.text), decideOn, announce);
+        await showGraph(win, graph, current.text, layouts);
+        addExportBar();
+      });
     // the user's accept or reject: the core's review on the note, written by the page's own version-checked write
     const decideOn: Decide = async (id, action, which, staleSeen) => {
       const done = decide(current.text, id, action, which, settings.decider, staleSeen);

@@ -1358,7 +1358,7 @@
 (proposals_read_back)-[:PART_OF]->(section_17),
 (proposals_read_back)-[:PROVED_BY]->(test_proposals),
 (cc_editor_opens)-[:PART_OF]->(section_26),
-(cc_editor_opens)-[:PROVED_BY]->(test_cc_mod),
+(cc_editor_opens)-[:PROVED_BY]->(test_cc_page),
 (cc_core_only)-[:PART_OF]->(section_26),
 (cc_core_only)-[:PROVED_BY]->(test_cc_page),
 (cc_same_bytes)-[:PART_OF]->(section_26),

@@ -78,5 +78,75 @@ describe('the same edit writes the same bytes in the browser editor and in Obsid
   });
 });
 
-// C5 and C8 add their cases below, for the same requirement: edits made through the page's own controls (the details,
-// the properties, the drawing's edits), once the browser page exists to make them.
+// C8: the edits the page makes through its own controls. The browser page's one control that writes is the proposal card's
+// Accept and Reject; the details, the properties and the drawing's edits are not on the page (they are the Obsidian
+// plugin's), so the page-control cases are these. Each is made on the same note in both hosts, and the bytes compared.
+describe('a decision on a proposal writes the same bytes through the page’s card and Obsidian’s strip', () => {
+  const GRAPH =
+    "// graph: reader\n(question:Question {name: 'Which device?'}),\n(large_reader:Option {name: 'Large reader', price: 3}),\n(alice:Person {name: 'Alice'}),\n(large_reader)-[:ANSWERS]->(question)";
+  const PEOPLE = "// graph: people\n(ada:Model {name: 'Ada'}),\n(you:Model {name: 'you'})";
+  const CHANGES = [
+    { op: 'add', gql: "(small_reader:Option {name: 'Small reader'})" },
+    { op: 'set', thing: 'large_reader', key: 'price', value: '4' },
+    { op: 'remove-thing', thing: 'alice' },
+  ];
+  const fenced = (t) => '```gql\n' + t + '\n```';
+  const PATH = 'Some note.md';
+  const proposal = async () => {
+    const { ProposalReview, basisOf, makeProposal } = await import('@graph-note/core');
+    const base = ['# Reader', '', fenced(GRAPH), ''].join('\n');
+    const block = new ProposalReview(
+      makeProposal({
+        id: 'cs1',
+        graph: 'reader',
+        by: { name: 'ada', kind: 'model' },
+        at: '2026-10-13T09:00:00Z',
+        read: ['reader'],
+        basis: basisOf(base, 'reader'),
+        changes: CHANGES,
+      }),
+    ).changeSetText();
+    return ['# Reader', '', fenced(GRAPH), '', fenced(block), '', fenced(PEOPLE), ''].join('\n');
+  };
+  /** A note with the time of each decision taken out: that is the one thing two decisions never share. */
+  const untimed = (text) => text.replace(/at: '[^']*'/g, "at: 'T'");
+  const press = (el, label) => {
+    const b = el.querySelectorAll('button').find((x) => x.getAttribute('aria-label')?.startsWith(label));
+    assert.ok(b, `a button ${label}`);
+    b.click();
+  };
+  /** The note Obsidian's strip leaves after `act` is done on the card shown for `note`. */
+  async function obsidianDecides(note, act) {
+    const { load } = await import('../../obsidian/test/host/load-plugin.js');
+    const { show } = await import('../../obsidian/test/host/view-notes.js');
+    const env = await load({ files: { [PATH]: note } });
+    try {
+      const shown = await show(env, note, 1);
+      await until(() => !!shown.el.querySelector('svg') || !!shown.el.querySelector('.graph-note-banner'));
+      act(shown.el);
+      await until(() => env.state.files.get(PATH) !== note);
+      return env.state.files.get(PATH);
+    } finally {
+      env.uninstall();
+    }
+  }
+  const row = (el, n) => el.querySelectorAll('li.graph-note-proposal-row')[n];
+
+  for (const [name, kind, which, act] of [
+    ['accepting one change', 'accept', (c) => [c.rows[1].id], (el) => press(row(el, 1), 'Accept')],
+    ['rejecting one change', 'reject', (c) => [c.rows[2].id], (el) => press(row(el, 2), 'Reject')],
+    ['accepting all', 'accept', () => ({ all: true }), (el) => press(el, 'Accept all')],
+    ['rejecting all', 'reject', () => ({ all: true }), (el) => press(el, 'Reject all')],
+  ]) {
+    test(name, async () => {
+      const { proposalsIn, decide } = await import('../page/proposal-review.ts');
+      const note = await proposal();
+      const [card] = proposalsIn(note);
+      const here = decide(note, card.id, kind, which(card), undefined, false);
+      assert.equal(here.ok, true);
+      const there = await obsidianDecides(note, act);
+      assert.equal(untimed(here.note), untimed(there));
+      assert.notEqual(here.note, note, 'a decision writes');
+    });
+  }
+});
