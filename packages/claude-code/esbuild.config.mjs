@@ -33,6 +33,13 @@ await esbuild.build({
   outfile: join(mod, 'bin/real-path.mjs'),
   platform: 'node',
 });
+// Claude's proposal sent to that server, which node does for the mod, whose hooks have no network (spec §26)
+await esbuild.build({
+  ...common,
+  entryPoints: ['bin/propose-process.ts'],
+  outfile: join(mod, 'bin/propose.mjs'),
+  platform: 'node',
+});
 // the browser editor's local server, which node runs as a process of its own (spec §26)
 await esbuild.build({
   ...common,

@@ -4,7 +4,11 @@
 // (§19), or the Person that is a Step, for a graph step (§20) — unless the note already declares that proposer. It is
 // ordinary data on the card, a change like the others, and lands in the graph only with the first change accepted from the
 // proposal, and goes with the last one rejected. What a model writes can never declare an author (`ai-request.ts`).
+import { items } from './block-items.ts';
+import { graphOfBlock } from './blocks.ts';
 import { proposerKind } from './proposals-check.ts';
+import { DECIDER_DEFAULT } from './proposals-judgement.ts';
+import type { Person } from './proposals-shown.ts';
 import { makeProposal, valueGql } from './proposals.ts';
 import type { Proposal, ProposedChange } from './proposals.ts';
 
@@ -28,6 +32,28 @@ export const declaresProposer = (p: Proposal, c: ProposedChange): boolean =>
   c === p.changes[0] &&
   c.op === 'add' &&
   (['model', 'step'] as const).some((kind) => c.gql === declarationOf(p.provenance.by.name, kind));
+
+/** Why this is not a person who decides, or null: a person gives a name, and what proposed a change cannot accept it. */
+export function notAPerson(p: Proposal, by: unknown): string | null {
+  const name = typeof (by as Person | null)?.name === 'string' ? (by as Person).name.trim() : '';
+  if (!name) return 'a person decides: say who is deciding';
+  const { name: proposer, kind } = p.provenance.by;
+  // the same name in any case is the same proposer, as written: a proposer's name is one word, so no label with a space
+  // is taken for it, and one called the_reader is none for the label "the reader"
+  // ("you" is what the person at the keyboard is called when the settings name nobody: it is never taken for a proposer)
+  const same = name.toLowerCase() === proposer.toLowerCase() && name !== DECIDER_DEFAULT;
+  return same && kind !== 'person' ? `${proposer} proposed this, and is not a person: a person decides` : null;
+}
+
+/**
+ * Whether this change is the declaration of the proposer and the proposal's graph holds exactly that declaration already
+ * (byte for byte, as an item of a data block of the graph), which an earlier proposal from the same proposer accepted. It
+ * is then written nowhere again and blocks nothing; a different node of the same name is not it, and is still refused.
+ */
+export function declarationHeld(p: Proposal, texts: readonly string[], c: ProposedChange): boolean {
+  if (c.op !== 'add' || !declaresProposer(p, c)) return false;
+  return texts.some((t) => graphOfBlock(t) === p.graph && items(t).some((it) => t.slice(it.from, it.to) === c.gql));
+}
 
 /** These changes to accept, with the declaration of the proposer written first among them if it still waits. */
 export function acceptedWith(

@@ -20,6 +20,8 @@ export interface EditorProcessOptions {
   note?: string;
   /** The session's end is not this process's input closing: the host closed it when it started the process (C2). */
   ignoreInput?: boolean;
+  /** The key for Claude's proposals, handed in by the mod's environment, good for the proposal route alone. */
+  proposerKey?: string;
 }
 
 /** Exits with code 2, saying why on stderr, before anything is started. */
@@ -38,6 +40,7 @@ export async function runEditorProcess(args: string[], options: EditorProcessOpt
     ...(options.api ? { api: options.api } : {}),
     ...(options.drain ? { drain: options.drain } : {}),
     ...(options.page ? { page: options.page } : {}),
+    ...(options.proposerKey ? { proposerKey: options.proposerKey } : {}),
   });
   const finish = (reason: string) => {
     void server.stop(reason).then(() => {

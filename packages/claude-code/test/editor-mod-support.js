@@ -2,10 +2,12 @@
 // `$.process.spawn` does (standard input closed at once, the output handed over piece by piece, the child killed when the
 // loop is left), a vault on disk in a temporary folder, and the launcher made over them. Test code only: nothing here ships.
 import { after } from 'node:test';
-import { spawn } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { EditorLauncher } from '../src/editor-launch.ts';
 import { ENTRY } from './editor-threats-support.js';
 
@@ -119,6 +121,28 @@ export function writeNote(where, name, level, body = 'Some text.\n') {
   return path;
 }
 
+/** The shipped process that sends a proposal to the server, run from its source. */
+const PROPOSE = fileURLToPath(new URL('../bin/propose-process.ts', import.meta.url));
+
+/**
+ * The proposal channel as the mod makes it: a key made for each start, and the request handed on the shipped sender's
+ * standard input (never an argument), as `$.process.run` runs it. The request is kept in `sent`.
+ */
+export function proposalPorts(sent = []) {
+  return {
+    key: () => randomBytes(32).toString('base64url'),
+    propose: (request) =>
+      new Promise((resolve, reject) => {
+        sent.push(request);
+        const child = execFile(process.execPath, [PROPOSE], (err, stdout) => {
+          if (err && !stdout) return reject(err);
+          resolve(JSON.parse(stdout));
+        });
+        child.stdin.end(JSON.stringify(request));
+      }),
+  };
+}
+
 /** The launcher over a host, with the shipped server (run from its source) unless `over` says otherwise; stopped after. */
 export function launcherFor(where, over = {}) {
   const host = over.host ?? hostSpawn();
@@ -136,6 +160,7 @@ export function launcherFor(where, over = {}) {
       timer.unref();
       return { cancel: () => clearTimeout(timer) };
     },
+    ...(over.proposals === false ? {} : proposalPorts(over.sent)),
     ...over.ports,
   });
   after(() => launcher.stop('the test ended'));
