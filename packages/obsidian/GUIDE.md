@@ -47,7 +47,7 @@ card in a component Obsidian owns (`graphCard`). The layer's types for what the 
   does; taken away where the card is only read.
 - `style-block.ts` — a style block (§2): never drawn, folded away until opened, saying whose style it is, what it holds
   (its diagram types among the rest) and how many problems it has. The graph it styles is drawn with its nudges, and its problems listed, by `block.ts`.
-- `code.ts` — a block that is not a graph, shown as coloured code; a very long one plain.
+- `code.ts` (now the shared layer's, `core/src/display/code.ts`) — a block that is not a graph, shown as coloured code; a very long one plain.
 - `live-preview.ts` — the editing view's own cards, so the page stays still while a block is typed in; each block keeps
   its identity however lines move above it, so its card, and the editor in place in it, survive the move; each card's
   last height kept by its note and line, for the blocks the note has now. A FROM block and a step get a card too, each
@@ -108,7 +108,7 @@ card in a component Obsidian owns (`graphCard`). The layer's types for what the 
   and what would make it fit (`tooLargeWords`; `export.ts` asks first, the core again). The images on boxes are read
   from the vault (`picturesFrom`), each animated one with its first frame drawn, and embedded by the core; what was
   done with each animated image is said after the outcome, in the notice (export_animation_stated).
-- `export-form.ts` — the Export form on a drawing: the whole diagram, or a view with or without its faded context, or a
+- `export-form.ts` (now the shared layer's, `core/src/display/export/`) — the Export form on a drawing: the whole diagram, or a view with or without its faded context, or a
   path played as an animated SVG at a pace chosen; SVG,
   PNG or the data as a GQL block, CSV or GraphML; light or dark, for an image only; and Export anyway when the note's
   classification asks first. `dataExportBar` gives a graph or view shown as text, too large to draw, a bar with an
@@ -131,7 +131,7 @@ card in a component Obsidian owns (`graphCard`). The layer's types for what the 
   the vault that is a symbolic link elsewhere is followed, as Obsidian follows it for any link: a file reached through
   it counts as the vault's. Its `url` is the vault's own address for it, so a photograph over the size limit is shown
   without being read here.
-- `still-frame.ts` — `stillFrame`: an image's first frame as a PNG, drawn by the platform's own decoding on a canvas
+- `still-frame.ts` (now the shared layer's, `core/src/display/images/`) — `stillFrame`: an image's first frame as a PNG, drawn by the platform's own decoding on a canvas
   from the file's bytes (no library); null where it cannot be drawn, and never drawn for a frame over `STILL_PIXELS`
   (50 million pixels). The plugin's `stillFrame` calls it, so a test can
   stand in one, as for `rasterise`.
@@ -145,13 +145,13 @@ card in a component Obsidian owns (`graphCard`). The layer's types for what the 
   record in the change set; Undo takes the last decision back. The reviews are kept by the plugin (`reviewOf`) while it
   runs, so Undo is still there when the card is drawn again. The person is recorded as "you": Obsidian does not say who is
   at the keyboard.
-- `proposal-strip.ts` — the card above the drawing: who proposed it, when and what it read; a notice, with a button to say it
+- `proposal-strip.ts` (now the shared layer's, `core/src/display/proposals/`) — the card above the drawing: who proposed it, when and what it read; a notice, with a button to say it
   has been read, when the graph has moved since (Accept stays off until then); the changes one to a row, each in plain
   English and its exact text (the GQL, the SET line or the removal, in a code span, and in the buttons' names) with Accept
   and Reject, and its reason as plain text (a model's reason is kept escaped in the note, and unescaped for the card); Accept all and a group's Accept send the ids of what can be accepted now; in groups with Accept and Reject for the group when there are many; Accept all, Reject
   all and Undo. On a phone it is a sheet at the bottom of the screen (`is-sheet`). Reading view takes the buttons away, and
   the gate (`read-only.ts`) closes `decide` and `undo`.
-- `mark-proposal.ts` — the marks on the drawing: a class for the line (heavier for what is added, dashed for what is changed,
+- `mark-proposal.ts` (now the shared layer's, `core/src/display/proposals/`) — the marks on the drawing: a class for the line (heavier for what is added, dashed for what is changed,
   dotted for what is removed), a word and a sign on each box, and the name said so to screen readers.
 
 ### `src/ai/` — asking an AI model to propose changes (spec §19)
@@ -352,11 +352,11 @@ card in a component Obsidian owns (`graphCard`). The layer's types for what the 
   its `href` or its `data-href` is; where a card was left when
   a link took its tab (`cameBack`, back_where_you_were); and Create the note for a broken link, the one write, closed in
   reading view. `vaultNames` gives the names a broken link's likeliest meaning is chosen from.
-- `links-list.ts` — the details' Links and Attachments: each link an anchor (`linkAnchor`, `followAnchor`) opened on a
+- `links-list.ts` (now the shared layer's, `core/src/display/links/`) — the details' Links and Attachments: each link an anchor (`linkAnchor`, `followAnchor`) opened on a
   click, a middle-click or Enter, previewed on hover and on a long press by touch, an address outside the vault kept in
   `data-href` with `href="#"` and no context menu, so nothing reaches the browser past the dialog; one never opened shown as text; a broken one marked,
   with Create the note and Change it to what it most likely meant (written through the card's `writeBlock`).
-- `link-marks.ts` — on the drawing: a line of a box's or link's words holding a link drawn as a link (broken, dashed),
+- `link-marks.ts` (now the shared layer's, `core/src/display/links/`) — on the drawing: a line of a box's or link's words holding a link drawn as a link (broken, dashed),
   and a paperclip with the count on a thing with attachments, said to screen readers.
 - `rename-follow.ts` — `followLinks`, on the vault's rename event: every link to the renamed note or file inside a
   graph block of any note rewritten, through the note's editor when open (one undoable change), else `vault.process`;

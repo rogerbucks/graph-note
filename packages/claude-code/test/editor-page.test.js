@@ -255,6 +255,37 @@ describe('cc_core_only: the page takes everything from the core and the shared d
   });
 });
 
+test('a page that has installed no host fails drawing a card with the layer’s NO_HOST words, not a TypeError', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'graph-note-page-'));
+  const doc = fakeDocument(700),
+    uninstall = installGlobals(doc);
+  try {
+    const out = await build({
+      absWorkingDir: ROOT,
+      stdin: {
+        contents: `export { GraphView } from './${LAYER}/graph-view/graph-view.ts'; export { NO_HOST } from './${LAYER}/host.ts';`,
+        resolveDir: ROOT,
+        loader: 'ts',
+      },
+      bundle: true,
+      format: 'esm',
+      platform: 'node',
+      write: false,
+      logLevel: 'silent',
+    });
+    const file = join(dir, 'bare.mjs');
+    writeFileSync(file, out.outputFiles[0].text);
+    const layer = await import(pathToFileURL(file).href);
+    assert.throws(
+      () => new layer.GraphView(doc.body, {}),
+      (e) => e.message === layer.NO_HOST,
+    );
+  } finally {
+    uninstall();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 // C5: the page's cases for cc_one_renderer, cc_text_not_html, cc_worker_same_origin, cc_theme_follows, cc_icons, cc_offline
 // and cc_settings_shared go here.
 // C8: the page's cases for cc_keyboard, cc_reduced_motion and cc_text_version go here.
