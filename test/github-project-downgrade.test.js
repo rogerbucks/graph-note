@@ -77,7 +77,7 @@ describe('a requirement whose proof goes down', () => {
     assert.deepEqual(gh.hub.mutations, []);
   });
 
-  test('the project plan resets Done only on an item that was proved and no longer is', () => {
+  test('the project plan resets Done on an item whose requirement is not proved, whatever its Proof reads', () => {
     const issue = { ...desiredFor().issues[0], status: 'part', progress: 'In Progress' };
     const held = (proof) => ({
       fields: { Status: { id: 'F', options: ['Todo', 'In Progress', 'Done'].map((name) => ({ id: name, name })) } },
@@ -86,7 +86,23 @@ describe('a requirement whose proof goes down', () => {
     const fieldsOf = desiredFor().fields;
     const statusSets = (proof) => planProject([issue], fieldsOf, held(proof)).sets.filter((s) => s.field === 'Status');
     assert.deepEqual(statusSets('proved'), [{ id: issue.id, field: 'Status', from: 'Done', to: 'In Progress' }]);
-    assert.deepEqual(statusSets('part'), [], 'a Done somebody chose on an open requirement is left');
+    assert.deepEqual(statusSets('part'), [{ id: issue.id, field: 'Status', from: 'Done', to: 'In Progress' }]);
+    assert.deepEqual(statusSets(undefined), [{ id: issue.id, field: 'Status', from: 'Done', to: 'In Progress' }]);
+    const proved = { ...issue, status: 'proved', progress: 'Done' };
+    assert.deepEqual(
+      planProject([proved], fieldsOf, held('proved')).sets.filter((s) => s.field === 'Status'),
+      [],
+      'a proved requirement stays Done',
+    );
+  });
+
+  test('an item already stuck at Done with its Proof corrected is put right by the next apply', () => {
+    const gh = provedWorld();
+    const down = standing(desiredFor(), 'zoom_out_to_fit', 'part');
+    apply(gh, down);
+    itemOf(gh, 'zoom_out_to_fit').values.Status = 'Done';
+    apply(gh, down);
+    assert.equal(valueOf(gh, 'zoom_out_to_fit', 'Status'), 'In Progress');
   });
 
   test('is done even when the creating of a new issue is cut short: the edits come before the creates', () => {
@@ -151,6 +167,34 @@ describe('issues the bot makes that GitHub is slow to list', () => {
       found.map((i) => i.number),
       gh.hub.issues.map((i) => i.number),
     );
+  });
+
+  test('older mirror issues past the first hundred newest are still adopted: the newest are paged through', () => {
+    const gh = botWorld();
+    gh.hub.unlistedCreators = [BOT];
+    for (let n = 1; n <= 150; n += 1)
+      gh.hub.issues.push({
+        number: n,
+        title: `t${n}`,
+        body: '',
+        state: 'OPEN',
+        labels: [],
+        author: { login: 'app/github-actions' },
+        url: `https://github.com/${REPO}/issues/${n}`,
+      });
+    const found = readAdoptable(gh.run, REPO, ['rogerbucks', BOT]);
+    assert.equal(found.length, 150);
+  });
+
+  test('a creator list that misses an issue the newest read finds is a warning, so a broken filter stays visible', () => {
+    const gh = botWorld();
+    apply(gh, desiredFor(), gh.run, BOT);
+    gh.hub.unlistedCreators = [BOT];
+    const remote = readRemote(gh.run, REPO, { creator: BOT });
+    assert.match(remote.warnings.join('\n'), /creator list.*missed.*issue/i);
+    assert.match(buildPlan(desiredFor(), remote).warnings.join('\n'), /creator list.*missed/i);
+    gh.hub.unlistedCreators = [];
+    assert.deepEqual(readRemote(gh.run, REPO, { creator: BOT }).warnings, []);
   });
 
   test('creating stops, with the old words, when no list gives the first issue back however long it waits', () => {
