@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/editor-page.test.js",
+  "test": "C8: the page works from the keyboard (cc_keyboard) > nothing is reachable only by pointer: no double click, context menu or mouse-only handler, no tab order of its own",
+  "seen_failing_first": false,
+  "evidence": "Pins what the page already does: its sources hold no pointer-only handler, no scripted movement and no inline animation, and its drawing has none; passes against the earlier code by design"
+}

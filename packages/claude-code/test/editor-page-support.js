@@ -18,6 +18,7 @@ const started = [];
 export async function cleanUp() {
   await Promise.all(started.splice(0).map((stop) => stop()));
   for (const dir of folders.splice(0)) rmSync(dir, { recursive: true, force: true });
+  building = undefined; // the next describe that needs the page builds it again
 }
 
 /** The page built into a temporary folder, once: where it is, and what went into the page and the worker bundles. */

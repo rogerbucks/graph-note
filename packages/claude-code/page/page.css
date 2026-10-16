@@ -14,6 +14,65 @@ body {
   padding: var(--size-4-4);
 }
 
+header {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: var(--size-4-4) var(--size-4-4) 0;
+}
+
+.gn-title {
+  margin: 0;
+  font-size: 1.3em;
+}
+
+/* the keyboard (spec §26, WCAG 2.2 AA 2.4.1, 2.4.7, 2.4.11): a skip link, off the screen until it has the focus, and a
+   visible focus ring in the text colour on every control and every target the keyboard can rest on */
+.gn-skip {
+  position: absolute;
+  left: -999px;
+  top: 0;
+  z-index: var(--layer-popover);
+  padding: var(--size-4-2) var(--size-4-3);
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  border: 2px solid var(--text-normal);
+}
+
+.gn-skip:focus {
+  left: 0;
+}
+
+a:focus-visible,
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--text-normal);
+  outline-offset: 2px;
+}
+
+/* the text version of the graph (cc_text_version): in the page, read by everyone */
+.gn-text-version h2 {
+  font-size: 1.1em;
+}
+
+.gn-text-version ul {
+  padding-left: var(--size-4-5);
+}
+
+/* reduced motion (cc_reduced_motion, WCAG 2.2 AA 2.3.3): the system asks for none, so nothing moves, fades or scrolls
+   smoothly, the shared layer's own movements among them; nothing is hidden, so the editor is the same without them */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 .gn-drawing img {
   max-width: 100%;
   height: auto;

@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/editor-parity.test.js",
+  "test": "a decision on a proposal writes the same bytes through the page’s card and Obsidian’s strip > accepting one change",
+  "seen_failing_first": false,
+  "evidence": "Pins behaviour that already held: both hosts decide through the core's ProposalReview, so the bytes already matched; the case is the shared proof that the page's card keeps them matching"
+}
