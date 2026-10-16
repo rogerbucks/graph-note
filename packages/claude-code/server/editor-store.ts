@@ -19,7 +19,9 @@ import { NODE_FILES, readNoteFile, writeAtomically, type NoteFiles, type NoteTex
 import { notePlace, type Vault } from './note-place.ts';
 import { watchNote, type Watcher } from './note-watch.ts';
 import { sha256 } from '@graph-note/core';
+
 import type { NoteGate } from './editor-gate.ts';
+import { proposalInto } from './editor-proposals.ts';
 
 /** How a store is made: the vault, the mod's data folder for drafts (outside the vault), and what it is handed. */
 export interface NoteStoreOptions {
@@ -35,6 +37,8 @@ export interface NoteStoreOptions {
    * always hands one in; a store made without one sends everything, which only the store's own tests do.
    */
   gate?: NoteGate;
+  /** The name Claude's proposals are made by, the model named Claude in the settings; `Claude` when none is given. */
+  proposer?: string;
 }
 
 /** The note opened, by the id the store gave it; or why it may not be. */
@@ -53,7 +57,9 @@ interface OpenNote {
 }
 
 /** One route of the API: a note's id, and what of it is asked for. */
-const ROUTE = /^notes\/([0-9a-f]{32})(\/events|\/draft)?$/;
+const ROUTE = /^notes\/([0-9a-f]{32})(\/events|\/draft|\/proposal)?$/;
+
+const NOT_YOURS: ApiAnswer = { status: 403, text: 'This key proposes changes and does nothing else.' };
 
 const NOT_OPEN: ApiAnswer = { status: 404, text: 'No such note is open.' };
 const STOPPED: ApiAnswer = { status: 503, text: 'The editor has stopped; nothing was written.' };
@@ -79,6 +85,7 @@ export class NoteStore {
   private readonly watch: Watcher;
   private readonly files: NoteFiles;
   private readonly gate: NoteGate | undefined;
+  private proposer = 'Claude';
 
   private constructor(where: Vault, drafts: DraftShelf, watch: Watcher, files: NoteFiles, gate?: NoteGate) {
     this.where = where;
@@ -100,7 +107,9 @@ export class NoteStore {
     if (!(await fs.stat(real)).isDirectory()) throw new Error('The vault must be a folder.');
     const where = { real, named };
     const drafts = await DraftShelf.open(options.drafts, where);
-    return new NoteStore(where, drafts, options.watch ?? watchNote, options.files ?? NODE_FILES, options.gate);
+    const store = new NoteStore(where, drafts, options.watch ?? watchNote, options.files ?? NODE_FILES, options.gate);
+    if (options.proposer) store.proposer = options.proposer;
+    return store;
   }
 
   /** The vault's real path. */
@@ -145,6 +154,9 @@ export class NoteStore {
     if (this.stopped) return STOPPED;
     const ifMatch = typeof r.headers['if-match'] === 'string' ? r.headers['if-match'] : null;
     const what = `${r.method} ${m[2] ?? ''}`;
+    // Claude's key proposes and does nothing else; the page's token never does (cc_claude_proposes)
+    if ((r.as === 'proposer') !== (what === 'PUT /proposal')) return NOT_YOURS;
+    if (what === 'PUT /proposal') return this.propose(id, r.body);
     if (what === 'GET ') return this.read(id);
     if (what === 'PUT ') return this.write(id, r.body, ifMatch);
     if (what === 'PUT /draft') return this.keepDraft(id, r.body, ifMatch);
@@ -241,6 +253,40 @@ export class NoteStore {
 
   private writeNote(now: { real?: string; mode: number }, text: string) {
     return writeAtomically(now.real as string, text, now.mode, this.files);
+  }
+
+  /**
+   * Claude's proposal, written beside the graph as a change set and never applied (cc_claude_proposes). Made under the
+   * note's lock from the note as it is on disk now, after the same gate as any send, and again on the text it would
+   * write; written whole by the same temporary file and rename as any write, so a failure leaves the note as it was.
+   * The page is sent the note as it now is. Only the page's own write applies a change.
+   */
+  private propose(id: string, body: string): Promise<ApiAnswer> {
+    return this.counted(
+      this.locked(id, async () => {
+        if (this.stopped) return STOPPED;
+        const note = this.notes.get(id) as OpenNote;
+        const now = await this.load(note);
+        if (!now.ok || !now.real) return answer(410, { why: now.ok ? 'The note is gone.' : now.why });
+        const refused = this.refusal(note, now.text);
+        if (refused !== null) return answer(403, { why: refused });
+        const at = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
+        const made = proposalInto(now.text, body, this.proposer, at);
+        if (!made.ok) return answer(made.status, { why: made.why });
+        // the text to be written is held to the same refusals: a credential in a change never reaches the note
+        const next = this.gate?.note(made.text, sha256(made.text)) ?? null;
+        if (next !== null) return answer(403, { why: next });
+        if (this.stopped) return STOPPED;
+        const w = await this.writeNote(now, made.text);
+        if (!w.ok) return answer(500, { why: w.why });
+        note.version = w.version;
+        // Claude's change set is the editor's own write of the proposal, so it is not asked about again
+        note.vouched = sha256(made.text);
+        const line = `${JSON.stringify({ version: w.version, text: made.text })}\n`;
+        for (const send of note.feeds) send(line);
+        return answer(200, { id: made.id, count: made.count });
+      }),
+    );
   }
 
   /** Keeps what was typed as the note's draft, under the note's lock, so no write under way can clear it after. */

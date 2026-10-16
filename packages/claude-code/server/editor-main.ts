@@ -10,6 +10,7 @@ import { settingsFrom } from '@graph-note/core';
 import { matrixRowsFrom } from '@graph-note/core/hosts/matrix-table';
 import type { GateSettings } from '@graph-note/core';
 import { storeGate } from './editor-gate.ts';
+import { proposerName } from './editor-proposals.ts';
 import { NoteStore } from './editor-store.ts';
 import { loadPageAssets, type PageAssets } from './page-assets.ts';
 import { withSettings } from './page-settings.ts';
@@ -24,6 +25,8 @@ export const EDITOR_ENVIRONMENT = {
   settings: 'GRAPH_NOTE_EDITOR_SETTINGS',
   /** The digest of the text the user said yes to; empty when none was asked. */
   confirmed: 'GRAPH_NOTE_EDITOR_CONFIRMED',
+  /** The key for Claude's proposals, made by the mod for this start: good for the proposal route and nothing else. */
+  proposer: 'GRAPH_NOTE_EDITOR_PROPOSER',
 } as const;
 
 /** The gate's settings from the environment, as the core reads settings back; none, or unreadable ones, are the defaults. */
@@ -67,8 +70,12 @@ export async function optionsFromEnvironment(env: Record<string, string | undefi
   if (!note || !drafts) throw new Error('It was given a vault but not the note to open, or the folder for drafts.');
   // the gate is always in: with no settings given it is the defaults, the strictest
   const confirmed = env[EDITOR_ENVIRONMENT.confirmed] || null;
-  const gate = storeGate(gateSettings(env[EDITOR_ENVIRONMENT.settings]), confirmed);
-  const store = await NoteStore.create({ vault, drafts, gate });
+  const settings = gateSettings(env[EDITOR_ENVIRONMENT.settings]);
+  const gate = storeGate(settings, confirmed);
+  const store = await NoteStore.create({ vault, drafts, gate, proposer: proposerName(settings) });
+  // a key too short to be one, or with odd characters, is no key: no proposal is taken
+  const given = env[EDITOR_ENVIRONMENT.proposer] ?? '';
+  const proposerKey = /^[A-Za-z0-9_-]{32,}$/.test(given) ? given : undefined;
   const opened = await store.open(note);
   if (!opened.ok) {
     await store.stop();
@@ -80,5 +87,6 @@ export async function optionsFromEnvironment(env: Record<string, string | undefi
     drain: () => store.stop(),
     note: opened.id,
     ignoreInput: env[EDITOR_ENVIRONMENT.input] === 'ignore',
+    ...(proposerKey ? { proposerKey } : {}),
   };
 }

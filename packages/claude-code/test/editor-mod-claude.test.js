@@ -159,7 +159,11 @@ describe('Claude proposes through the mod, and only accept applies it (cc_claude
     assert.match(rejected.note, /state: 'rejected'.*decided_by: 'Roger'/s);
     const accepted = decide(text, card.id, 'accept', { all: true }, '  ', false);
     assert.equal(accepted.ok, true, accepted.reason);
-    assert.deepEqual(things(accepted.note), ['extra', 'finish', 'start']);
+    assert.deepEqual(
+      things(accepted.note),
+      ['Claude', 'extra', 'finish', 'start'],
+      'Claude is declared with the first accept',
+    );
     assert.match(accepted.note, /state: 'accepted'.*decided_by: 'you'/s);
     assert.equal(proposalsIn(accepted.note).length, 0, 'what is decided leaves the change set');
   });
@@ -208,7 +212,7 @@ describe('Claude proposes through the mod, and only accept applies it (cc_claude
     );
     assert.equal(readFileSync(where.plan, 'utf8'), before);
     assert.equal((await put(page.token, got.version, decided.note)).status, 200);
-    assert.deepEqual(things(readFileSync(where.plan, 'utf8')), ['extra', 'finish', 'start']);
+    assert.deepEqual(things(readFileSync(where.plan, 'utf8')), ['Claude', 'extra', 'finish', 'start']);
   });
 
   test('the page sees the proposal land: the change stream sends the note with it', async () => {
@@ -439,7 +443,7 @@ describe('a proposal touching content above Claude’s clearance is refused (cc_
     const { where, launcher } = await opened();
     const secret = ['v', 'a', 'l', 'u', 'e'].join('').repeat(2);
     const outcome = await launcher.propose({
-      changes: [{ op: 'add-thing', name: 'vault', kind: 'Step', properties: { db_password: secret } }],
+      changes: [{ op: 'add-thing', name: 'vault', kind: 'Task', properties: { db_password: secret } }],
     });
     assert.equal(outcome.ok, false);
     assert.match(outcome.why, /password or secret/);
