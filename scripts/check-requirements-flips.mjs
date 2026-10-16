@@ -6,7 +6,10 @@
 //
 // Usage:
 //   node scripts/check-requirements-flips.mjs --base-ref <commit>   the committed copy against the copy at <commit>
+//   node scripts/check-requirements-flips.mjs --merge-base-of <ref>  the committed copy against the copy at the merge base
+//                                                                   of <ref> and HEAD: only the branch's own changes
 //   node scripts/check-requirements-flips.mjs --base <file>         the committed copy against a file
+//   --repo <dir> reads the copy and runs git in another repository (the tests use it)
 //
 // Exits 1 and lists each refused difference. A base that holds no copy (the copy is new) has nothing to compare.
 import { existsSync, readFileSync } from 'node:fs';
@@ -154,16 +157,20 @@ export function refusedChanges(baseText, headText, { exists = (rel) => existsSyn
 
 function main(args) {
   const value = (flag) => args[args.indexOf(flag) + 1];
-  const head = readFileSync(join(ROOT, REQUIREMENTS), 'utf8');
+  const repo = args.includes('--repo') ? value('--repo') : ROOT;
+  const head = readFileSync(join(repo, REQUIREMENTS), 'utf8');
   let base;
-  if (args.includes('--base-ref')) {
-    const ref = value('--base-ref');
+  if (args.includes('--base-ref') || args.includes('--merge-base-of')) {
+    const flag = args.includes('--base-ref') ? '--base-ref' : '--merge-base-of';
+    let ref = value(flag);
     if (!ref || ref.startsWith('-')) {
-      console.error('--base-ref needs a commit, such as --base-ref origin/main');
+      console.error(`${flag} needs a commit, such as ${flag} origin/main`);
       return 2;
     }
-    const git = (...a) => execFileSync('git', a, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    const git = (...a) => execFileSync('git', a, { cwd: repo, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
     try {
+      // the merge base of the ref and HEAD, so a change the ref gained after the branch point is not read as a revert
+      if (flag === '--merge-base-of') ref = git('merge-base', ref, 'HEAD').trim();
       // the commit must resolve; only a commit that holds no copy has nothing to compare
       git('rev-parse', '--verify', '--quiet', `${ref}^{tree}`);
       if (!git('ls-tree', '--name-only', ref, '--', REQUIREMENTS).trim()) {
