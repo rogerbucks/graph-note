@@ -26,8 +26,8 @@ import type {
   StyleGraph,
   TooLargeToAnimate,
 } from '@graph-note/core';
+import { exportFailureWords, exportRefusalWords } from '@graph-note/core/hosts/refusal-words';
 import type GraphNotePlugin from '../main';
-import { exportFailureWords, exportRefusalWords } from '../layout-worker/refusal-words';
 import { vaultImages } from '../images/vault-images';
 import { STILL_PIXELS } from '@graph-note/core/display/images/still-frame';
 

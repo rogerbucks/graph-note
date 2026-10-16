@@ -13,7 +13,8 @@ import { storeGate } from './editor-gate.ts';
 import { proposerName } from './editor-proposals.ts';
 import { NoteStore } from './editor-store.ts';
 import { loadPageAssets, type PageAssets } from './page-assets.ts';
-import { withSettings } from './page-settings.ts';
+import { Exporter, withExport } from './export-api.ts';
+import { pageSettings, withSettings } from './page-settings.ts';
 
 /** The variables the mod sets; the process reads these and no others. */
 export const EDITOR_ENVIRONMENT = {
@@ -83,10 +84,16 @@ export async function optionsFromEnvironment(
     await store.stop();
     throw new Error(opened.why);
   }
+  // exports go to the export folder the settings name, else the note's own, as new files only (export-api.ts)
+  const exporter = new Exporter({
+    vault: store.vault,
+    exportFolder: pageSettings(env[EDITOR_ENVIRONMENT.settings]).exportFolder,
+    notePath: (id) => store.pathOf(id),
+  });
   return {
-    api: withSettings(env[EDITOR_ENVIRONMENT.settings], store.api),
+    api: withSettings(env[EDITOR_ENVIRONMENT.settings], withExport(exporter, store.api)),
     page: await pageFiles(),
-    drain: () => store.stop(),
+    drain: async () => void (await Promise.all([store.stop(), exporter.stop()])),
     note: opened.id,
     ignoreInput: env[EDITOR_ENVIRONMENT.input] === 'ignore',
     ...(proposerKey ? { proposerKey } : {}),
