@@ -37,9 +37,8 @@ from graphspec.rules.change_apply import (
     LABELS,
     adds_cache,
     apply_change,
-    PLAN_ADDED,
+    added_link_checks,
     foreign_generations,
-    foreign_plans,
     gql_of,
     is_record_add,
     stop_fix,
@@ -315,17 +314,11 @@ def check_changeset(
     )
     if foreign:
         return res, h, None
-    plans = foreign_plans(
-        st, h["graph"], [e for e in after[1] if after[1][e] > before[1][e]], new_nodes, kind
-    )
-    add(
-        PLAN_ADDED,
-        not plans,
-        f"{plans[:2]} — a plan is added only for an Activity the set adds, and an engine "
-        "derives, a model does not",
-    )
-    if plans:
-        return res, h, None
+    added = [e for e in after[1] if after[1][e] > before[1][e]]
+    for label, bad, fix in added_link_checks(st, h["graph"], added, new_nodes, kind):
+        add(label, not bad, f"{bad[:2]} — {fix}")
+        if bad:
+            return res, h, None
     # a set that is not only additions is not applied further
     if read and (gone or changed) and "additions-only" not in switches:
         return res, h, None

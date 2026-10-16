@@ -19,6 +19,7 @@ const LABELS = {
 };
 const GENERATED =
   "an added WAS_GENERATED_BY comes from a thing the set adds, to an activity of the set's own author (§24)";
+const ASSOCIATION_ADDED = 'an added ASSOCIATED_WITH comes from an Activity the set adds (§24)';
 const PLAN_ADDED =
   'an added HAD_PLAN comes from an Activity the set adds, and never from a model or software agent (§24)';
 // whether activity a is one of its author's own generation: an Activity associated with them that HAD_PLAN no rule, since
@@ -161,6 +162,14 @@ function checkChangeset(base, block, matrix, sw = new Set()) {
     .filter(([s, t]) => t === 'HAD_PLAN' && (kind === 'Model' || !(made.has(s) && stored.has(s, 'Activity'))));
   add(PLAN_ADDED, !plans.length);
   if (plans.length) return { results: res, header: h, after: null };
+  // an association is added only from an Activity the set adds: one added to work already there would turn a fail-closed
+  // cache back into ordinary data
+  const assoc = [...ac]
+    .filter(([e, n]) => n > (bc.get(e) || 0))
+    .map(([e]) => JSON.parse(e))
+    .filter(([s, t]) => t === 'ASSOCIATED_WITH' && !(made.has(s) && stored.has(s, 'Activity')));
+  add(ASSOCIATION_ADDED, !assoc.length);
+  if (assoc.length) return { results: res, header: h, after: null };
   // a set that is not only additions is not applied further: its DELETEs and SETs would act on a graph it has wrongly changed
   if (read.length && (gone || changed) && !sw.has('additions-only')) return { results: res, header: h, after: null };
   for (const c of read) {

@@ -32,3 +32,19 @@ def proposers_of(db: GrafeoDB, jg: str) -> dict[str, list[set[str]]]:
         out[r["p"]].append(labels)
     db.set_graph(jg)
     return out
+
+
+def proposer_warnings(db: GrafeoDB, jg: str) -> list[str]:
+    """The warnings for the old form, sorted, as graphspec.rules.proposers gives them: each names
+    the fix; leaves db on jg."""
+    db.set_graph(jg)
+    rows = Q(
+        db,
+        "MATCH (p:Proposal)-[:WAS_GENERATED_BY]->(a:Activity)-[:ASSOCIATED_WITH]->(m:Ref) RETURN p.id AS p, a.id AS a, m.id AS r",  # noqa: E501  # one literal: embedded_queries reads it whole
+    )
+    return sorted(
+        f"{r['p']} names its proposer through ASSOCIATED_WITH on its activity {r['a']}: "
+        f"attribute it with ({r['p']})-[:WAS_ATTRIBUTED_TO]->({r['r']}) instead; the old form is "
+        "accepted for one release"
+        for r in rows
+    )

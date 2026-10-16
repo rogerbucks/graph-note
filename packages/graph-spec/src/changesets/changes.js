@@ -219,13 +219,16 @@ function applyChange(store, g, c) {
   // one with neither a plan nor an agent associated with it: it fails closed. Work an associated Person or Model made
   // without a plan is ordinary
   const hadPlan = (a) => graph.edges.some((e) => e[1] === 'HAD_PLAN' && e[0] === a);
-  const hasAgent = (a) =>
-    graph.edges.some(
-      (e) =>
-        e[1] === 'ASSOCIATED_WITH' &&
-        e[0] === a &&
-        (nodeLabels(e[2]).has('Ref') || AGENT_LABELS.some((x) => nodeLabels(e[2]).has(x))),
-    );
+  // an agent: a Person, Organization, SoftwareAgent or Model, or a Ref that resolves to one (a Ref that names no graph the
+  // store holds, or nothing in it, is none)
+  const isAgentNode = (key) => {
+    if (!nodeLabels(key).has('Ref')) return AGENT_LABELS.some((x) => nodeLabels(key).has(x));
+    const p = graph.nodes.get(key).props;
+    if (typeof p.graph !== 'string' || typeof p.ref !== 'string' || !Object.hasOwn(store.graphs, p.graph)) return false;
+    const found = store.find(p.graph, p.ref);
+    return found !== null && AGENT_LABELS.some((x) => store.graph(p.graph).nodes.get(found).labels.has(x));
+  };
+  const hasAgent = (a) => graph.edges.some((e) => e[1] === 'ASSOCIATED_WITH' && e[0] === a && isAgentNode(e[2]));
   const makesCache = (a) => hadPlan(a) || !hasAgent(a);
   if (c.kind === 'thing') {
     const k = store.find(g, c.thing);

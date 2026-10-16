@@ -6,7 +6,7 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
 from graphspec.engine.judgements.basis import basis, judgement_hash, resolve_ref
-from graphspec.engine.judgements.proposers import proposers_of
+from graphspec.engine.judgements.proposers import proposer_warnings, proposers_of
 from graphspec.engine.judgements.review import review
 from graphspec.engine.queries import Q
 
@@ -90,7 +90,7 @@ def judgements_rules(db: GrafeoDB, jg: str, graphs: Iterable[str]) -> list[tuple
         (
             "§23 rule 6: every proposal is attributed to the model that proposed it",
             not bad,
-            str(bad),
+            "; ".join([str(sorted(bad)), *("warning: " + x for x in proposer_warnings(db, jg))]),
         )
     )
     bad = sorted(d for d, r in ds.items() if r["h"] != judgement_hash(db, jg, d))
