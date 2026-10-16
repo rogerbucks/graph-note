@@ -6,7 +6,7 @@
 import type { GateSettings, Settings } from '@graph-note/core';
 
 /** What the mod reads from its settings file: the gate's, and any of the editor's own that were saved. */
-export type LaunchSettings = GateSettings & Partial<Settings>;
+export type LaunchSettings = GateSettings & Partial<Omit<Settings, keyof GateSettings>>;
 
 /** The settings the page shows with, beside the gate's. */
 const SHOWN = [
