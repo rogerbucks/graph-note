@@ -44,6 +44,7 @@ process.stdin.on('end', () => {
           .sort(),
         after: r.after,
         refreshes: (r.header && r.header.refreshes) || [],
+        changes: (r.header && r.header.changes) || [],
       });
     } catch (e) {
       out.changesets.push({ error: String((e && e.message) || e) });

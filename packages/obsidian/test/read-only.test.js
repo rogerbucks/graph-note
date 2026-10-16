@@ -428,7 +428,7 @@ describe('a write attempted anyway, by a direct call, changes nothing', () => {
 
 describe('the one check', () => {
   test('every function in a card’s options is closed where it is read-only, but those named as only reading', async () => {
-    const { gateWrites } = await import('../src/graph-view/read-only.ts');
+    const { gateWrites } = await import('../../core/src/display/graph-view/read-only.ts');
     const called = [];
     let readOnly = true;
     const o = gateWrites(
@@ -461,7 +461,7 @@ describe('the one check', () => {
   });
 
   test('functions held at any depth, in lists and in objects with no prototype, are closed too, and keep their this', async () => {
-    const { gateWrites } = await import('../src/graph-view/read-only.ts');
+    const { gateWrites } = await import('../../core/src/display/graph-view/read-only.ts');
     const called = [];
     let readOnly = true;
     const bare = Object.assign(Object.create(null), { write: () => called.push('bare') });
@@ -501,7 +501,7 @@ describe('the one check', () => {
   });
 
   test('a gated async function gives a promise of nothing; one that only returns a promise gives nothing, as documented', async () => {
-    const { gateWrites } = await import('../src/graph-view/read-only.ts');
+    const { gateWrites } = await import('../../core/src/display/graph-view/read-only.ts');
     let wrote = false;
     const o = gateWrites(
       {
@@ -521,7 +521,7 @@ describe('the one check', () => {
   });
 
   test('an option holding an object of a class with methods is refused when the card is made, loudly', async () => {
-    const { gateWrites } = await import('../src/graph-view/read-only.ts');
+    const { gateWrites } = await import('../../core/src/display/graph-view/read-only.ts');
     class Writer {
       write() {
         return 'written';
@@ -534,7 +534,7 @@ describe('the one check', () => {
   });
 
   test('a Map or a Set holding functions is refused when the card is made, as a class’s object is', async () => {
-    const { gateWrites } = await import('../src/graph-view/read-only.ts');
+    const { gateWrites } = await import('../../core/src/display/graph-view/read-only.ts');
     const write = () => 'written';
     assert.throws(() => gateWrites({ graph: 'g', byName: new Map([['save', write]]) }, () => true), /byName/);
     assert.throws(() => gateWrites({ graph: 'g', deep: { all: new Set([write]) } }, () => true), /deep\.all/);
@@ -542,7 +542,7 @@ describe('the one check', () => {
   });
 
   test('a Map or a Set holding an object of a class with methods is refused too, as its writes could not be closed', async () => {
-    const { gateWrites } = await import('../src/graph-view/read-only.ts');
+    const { gateWrites } = await import('../../core/src/display/graph-view/read-only.ts');
     class Writer {
       write() {
         return 'written';
@@ -560,7 +560,7 @@ describe('the one check', () => {
   });
 
   test('an async function gated twice, as full screen gates the card’s gated options again, still gives a promise', async () => {
-    const { gateWrites } = await import('../src/graph-view/read-only.ts');
+    const { gateWrites } = await import('../../core/src/display/graph-view/read-only.ts');
     let readOnly = true;
     const once = gateWrites({ graph: 'g', save: async () => 'saved' }, () => readOnly);
     const twice = gateWrites({ ...once, mode: 'full' }, () => readOnly);

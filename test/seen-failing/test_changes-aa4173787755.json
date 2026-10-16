@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_changes.py",
+  "test": "Changes.test_a_change_set_with_no_delete_or_set_reads_no_changes",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that already existed: a change set of additions only reads no changes, which the first version already did; it failed only on the missing changes key at its own commit (commit 6993756)"
+}

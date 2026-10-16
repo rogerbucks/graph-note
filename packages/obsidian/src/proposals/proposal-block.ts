@@ -8,12 +8,12 @@ import type { MarkdownPostProcessorContext } from 'obsidian';
 import { ProposalReview, changeSetId, gqlSpans, namesSharedSchema, nudgedDrawing, readStyle } from '@graph-note/core';
 import type { Which } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
-import { renderCode } from '../code';
-import { GraphView } from '../graph-view/graph-view';
-import { readOnlyHere, whenPlaced } from '../graph-view/placement';
+import { renderCode } from '@graph-note/core/display/code';
+import { graphCard } from '../graph-card';
+import { readOnlyHere, whenPlaced } from '@graph-note/core/display/graph-view/placement';
 import { refusalBanner } from '../layout-worker/refusal-banner';
-import { renderProposalStrip } from './proposal-strip';
-import type { ProposalCard } from './proposal-strip';
+import { renderProposalStrip } from '@graph-note/core/display/proposals/proposal-strip';
+import type { ProposalCard } from '@graph-note/core/display/proposals/proposal-strip';
 
 /**
  * Who decides here. Obsidian says nothing of who is at the keyboard, so it is the reader: the change set records "the
@@ -67,7 +67,7 @@ export async function renderProposalBlock(
   const graph = review.proposal.graph;
 
   // the card is drawn again from the note as it is, when the change set it was drawn from is not the note's any more
-  let view: GraphView | undefined;
+  let view: ReturnType<typeof graphCard> | undefined;
   const redraw = async (fresh: { block: string; note: string }) => {
     view?.unload();
     root.remove();
@@ -173,7 +173,7 @@ export async function renderProposalBlock(
     renderCode(root, source);
     return;
   }
-  view = new GraphView(root, {
+  view = graphCard(root, {
     source,
     reading: { ...reading, graphs: new Map(reading.graphs).set(graph, drawing) },
     graph,

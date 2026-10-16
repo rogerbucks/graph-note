@@ -16,7 +16,7 @@ describe('waiting for a card to be put on the page', () => {
       uninstall = installGlobals(doc);
     mock.timers.enable({ apis: ['setTimeout', 'Date'] });
     try {
-      const { whenPlaced } = await import('../src/graph-view/placement.ts');
+      const { whenPlaced } = await import('../../core/src/display/graph-view/placement.ts');
       const el = doc.createElement('div');
       let placed = 0;
       whenPlaced(el, () => placed++);
@@ -37,7 +37,7 @@ describe('waiting for a card to be put on the page', () => {
     const doc = fakeDocument(),
       uninstall = installGlobals(doc);
     try {
-      const { whenPlaced } = await import('../src/graph-view/placement.ts');
+      const { whenPlaced } = await import('../../core/src/display/graph-view/placement.ts');
       const el = doc.createElement('div');
       let placed = 0,
         wanted = true;
@@ -62,7 +62,7 @@ describe('waiting for a card to be put on the page', () => {
     const real = doc.defaultView.setTimeout;
     doc.defaultView.setTimeout = (...a) => (timers++, real(...a));
     try {
-      const { whenPlaced } = await import('../src/graph-view/placement.ts');
+      const { whenPlaced } = await import('../../core/src/display/graph-view/placement.ts');
       const cards = [1, 2, 3].map(() => doc.createElement('div'));
       let placed = 0;
       for (const c of cards) whenPlaced(c, () => placed++);

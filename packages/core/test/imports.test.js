@@ -33,6 +33,28 @@ for (const f of sources) {
   });
 }
 
+// The display layer (src/display/, shared by the Obsidian plugin and the browser editor's page) is DOM code, but it too
+// imports no host: only itself, the core by its name and the graph library. The host comes in through display/host.ts.
+const displayFiles = (d = new URL('display/', dir)) =>
+  readdirSync(d, { withFileTypes: true }).flatMap((e) =>
+    e.isDirectory() ? displayFiles(new URL(`${e.name}/`, d)) : /\.ts$/.test(e.name) ? [new URL(e.name, d)] : [],
+  );
+for (const f of displayFiles()) {
+  test(`display/${f.pathname.split('/src/display/')[1]} imports no host`, () => {
+    const found = imports(readFileSync(f, 'utf8'));
+    assert.deepEqual(
+      found.filter((m) => HOSTS.test(m)),
+      [],
+      'a host module',
+    );
+    assert.deepEqual(
+      found.filter((m) => !(ALLOWED.test(m) || /^@graph-note\/core(\/|$)/.test(m))),
+      [],
+      'only the layer, the core and the graph library',
+    );
+  });
+}
+
 // The Graphviz engine is WebAssembly, which some hosts lack (a Claude Code mod has none). Only engine.ts starts it, and
 // within the core only the entry hands it on, so every other module of the core runs where WebAssembly cannot. A host's
 // own code (the Obsidian layout worker, the Claude Code spike's Graphviz process) imports it as it needs.

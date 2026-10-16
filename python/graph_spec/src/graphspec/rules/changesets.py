@@ -10,6 +10,16 @@ from typing import TYPE_CHECKING, Any
 from graphspec.reader.whitespace import N, S
 from graphspec.reader.whitespace import strip as ws_strip
 from graphspec.rules.canonical_json import norm
+from graphspec.rules.change_apply import (
+    GENERATED,
+    LABELS,
+    adds_cache,
+    apply_change,
+    foreign_generations,
+    is_record_add,
+    stop_fix,
+)
+from graphspec.rules.changes import read_all, split_changeset
 from graphspec.rules.certainty import claim_status, confidence_from_evidence, latest_assessment
 from graphspec.rules.graph_check import check
 from graphspec.rules.plain_graph import World
@@ -21,30 +31,6 @@ if TYPE_CHECKING:
 
 
 # ── §24 change sets — a dry run on a copy, no database ───────────────────────────────────────────
-MODEL_MAY_ADD = {
-    "Claim",
-    "Assessment",
-    "Evidence",
-    "Proposal",
-    "Option",
-    "Activity",
-    "Ref",
-}  # §24 rule 2
-MODEL_MAY_LINK = {
-    "ABOUT",
-    "ASSESSES",
-    "BY",
-    "SUPPORTED_BY",
-    "CONTRADICTED_BY",
-    "FROM",
-    "CONSIDERED",
-    "WAS_GENERATED_BY",
-    "ASSOCIATED_WITH",
-    "CHALLENGED_BY",
-    "USED",
-    "RESTS_ON",
-    "WAS_DERIVED_FROM",
-}
 
 
 def changeset_header(block: str) -> dict[str, str] | None:
@@ -111,6 +97,7 @@ def check_changeset(
     def add(label, ok, fix=""):
         res.append((label, bool(ok), "" if ok else fix))
 
+    block = block.replace("\r\n", "\n")  # a line ends at LF in the reader; CRLF text reads as LF
     h = changeset_header(block)
     add(
         "the change set names its graph, its id, the state it was made against, and its author",
@@ -120,13 +107,27 @@ def check_changeset(
     )
     if not h:
         return res, None, None
+    parts = split_changeset(block)
     if lint:
-        found = lint(block)
+        found = lint(parts["additions"]) + [x for c in parts["changes"] for x in lint(c["text"])]
         add(
             "it passes the dialect linter (§24 H1)",
             not found,
             "; ".join(f"line {x['line']}: {x['trap']} → {x['fix']}" for x in found),
         )
+    add(
+        "only the header says what it was made against and who made it (§24)",
+        parts["basis_ok"],
+        "take the 'against' and 'by' out of every line but the header",
+    )
+    read, refused, h["changes"] = read_all(parts["changes"])
+    add(
+        "each DELETE and SET is its own statement and names exactly one target (§24)",
+        not refused,
+        "; ".join(refused),
+    )
+    if refused:
+        return res, h, None
     st = Store()
     for _, text in base:
         st.apply(text)
@@ -168,7 +169,7 @@ def check_changeset(
     )
     before = _state(w[h["graph"]])
     try:
-        st.apply(block)
+        st.apply(parts["additions"])
     except ProfileError as e:
         add("it loads", False, f"the reader could not read it — {e}")
         return res, h, None
@@ -184,19 +185,54 @@ def check_changeset(
             "correct a fact with a new element that supersedes it, never an edit",
         )
     new_nodes = {i: after[0][i][0] for i in after[0] if i not in before[0]}
+    caches = [i for i in new_nodes if adds_cache(*after[0][i])]
+    add(
+        "it adds no cache — a claim's likelihood, confidence and status are the engine's "
+        "(§24 rule 5)",
+        not caches,
+        f"{caches[:4]} — leave them out: the engine makes them from the claim's assessments",
+    )
+    if caches:
+        return res, h, None
+    foreign = foreign_generations(
+        st, h["graph"], [e for e in ac if ac[e] > bc[e]], new_nodes, h["by"]
+    )
+    add(
+        GENERATED,
+        not foreign,
+        f"{foreign[:2]} — a generation is added only for a new thing, under an activity "
+        f"associated with {h['by']}; a cache is made by an engine run, never written",
+    )
+    if foreign:
+        return res, h, None
+    # a set that is not only additions is not applied further: its DELETEs and SETs would act on a
+    # graph it has wrongly changed
+    if read and (gone or changed) and "additions-only" not in switches:
+        return res, h, None
+    for c in read:
+        stopped = apply_change(st, h["graph"], c)
+        if stopped:
+            add(LABELS[stopped[0]], False, stop_fix(*stopped, c))
+            return res, h, None
+    if read:
+        for label in LABELS.values():
+            add(label, True)
+        h["changes"] = [
+            {**x, **({"links": c["links"]} if "links" in c else {})}
+            for x, c in zip(h["changes"], read)
+        ]
     h["refreshes"] = refresh_section20(st, h["graph"])
-    new_edges = [e for e in ac if ac[e] > bc[e]]
     w = World.from_store(st)
     g = w[h["graph"]]
     if kind == "Model" and "model-may-add" not in switches:
-        bad = sorted(i for i, labels in new_nodes.items() if not labels & MODEL_MAY_ADD) + sorted(
-            {e[1] for e in new_edges if e[1] not in MODEL_MAY_LINK}
-        )
+        bad = sorted(i for i, labels in new_nodes.items() if is_record_add(labels))
+        # what a delivery delivers is an issued document, a record
+        bad += sorted(e[2] for e in ac if ac[e] > bc[e] and e[1] == "DELIVERED")
         add(
-            "a model adds only claims, assessments, evidence, proposals and options (§24 rule 2)",
+            "a model adds no record and no cache (§24 rule 5)",
             not bad,
-            f"{bad[:4]} — state it as a Claim about the subject, "
-            "or as a Proposal for a person to decide; a model never asserts a fact or a decision",
+            f"{bad[:4]} — state it as a Claim about the subject, or as a Proposal for a "
+            "person to decide; a model never records an event, an issued document or a decision",
         )
         by = [
             x for i in new_nodes if "Assessment" in new_nodes[i] for _, _, x, _ in g.out(i, "BY")

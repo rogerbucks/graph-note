@@ -23,7 +23,8 @@ const codeFiles = () =>
 const sourceFiles = (pkg) =>
   ['src', 'server'].flatMap((d) => walk(`${pkg}/${d}`)).filter((f) => /\.(ts|js)$/.test(f) && !f.endsWith('.d.ts'));
 const pluginSource = () =>
-  walk('packages/obsidian/src')
+  // the plugin's source, and the display layer it draws with, which the guidelines hold just the same
+  [...walk('packages/obsidian/src'), ...walk('packages/core/src/display')]
     .filter((f) => f.endsWith('.ts'))
     .map((f) => ({ f, text: read(f) }));
 const ci = () => read('.github/workflows/ci.yml');
@@ -155,7 +156,9 @@ describe('naming conventions', () => {
     const loose = [];
     const named = (mods, n) => mods.some((m) => n === m || n.startsWith(`${m}-`) || n.startsWith(`${m}_`));
     for (const p of PACKAGES) {
-      const mods = CODE_FOLDERS.flatMap((d) => walk(`${p}/${d}`)).map((f) =>
+      // a test of the plugin may be named for a module of the display layer, which it tests through the plugin
+      const folders = CODE_FOLDERS.flatMap((d) => walk(`${p}/${d}`));
+      const mods = [...folders, ...(p === 'packages/obsidian' ? walk('packages/core/src/display') : [])].map((f) =>
         basename(f).replace(/(\.d)?\.(ts|js|mjs)$/, ''),
       );
       for (const f of walk(`${p}/test`).filter((x) => /\.test\.(js|mjs)$/.test(x)))

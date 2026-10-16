@@ -6,11 +6,11 @@ import { Component } from 'obsidian';
 import { ViewState, depthOf, parked, startingSwitches } from '@graph-note/core';
 import type { Drawn, FocusDepth, NoteReading, PaneSession, Refusal } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
-import { GraphView } from '../graph-view/graph-view';
+import { graphCard } from '../graph-card';
 import { refusalBanner } from '../layout-worker/refusal-banner';
-import type { Chosen, SwitchesShown } from '../graph-view/view-options';
-import { aidsOf } from '../graph-view/viewer-aids';
-import type { ViewerAids } from '../graph-view/viewer-aids';
+import type { Chosen, SwitchesShown } from '@graph-note/core/display/graph-view/view-options';
+import { aidsOf } from '@graph-note/core/display/graph-view/viewer-aids';
+import type { ViewerAids } from '@graph-note/core/display/graph-view/viewer-aids';
 
 /** What choosing in the drawing does: Edit, a box or a link chosen, and the text replaced, as by an estimate's quick fix. */
 interface Choosing {
@@ -52,7 +52,7 @@ function drawInPane(
     return null;
   }
   const card = host.createDiv({ cls: 'graph-note' });
-  return new GraphView(card, {
+  return graphCard(card, {
     reading,
     graph: s.graph,
     drawn,
@@ -77,7 +77,7 @@ function drawInPane(
 
 /** The pane's drawing, redrawn from what is typed, once it is laid out. */
 export class PaneDrawing extends Component {
-  private view: GraphView | null = null;
+  private view: ReturnType<typeof graphCard> | null = null;
   private readonly plugin: GraphNotePlugin;
   /** The pane's View menu (§25): started from the settings, kept while the pane redraws what is typed. */
   private state: ViewState | null = null;

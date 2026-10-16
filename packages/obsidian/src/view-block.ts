@@ -25,13 +25,13 @@ import {
 } from '@graph-note/core';
 import type { GraphDrawing, NamedView, Outside, StyleChange, ThingLook } from '@graph-note/core';
 import type GraphNotePlugin from './main';
-import { renderCode } from './code';
-import { GraphView } from './graph-view/graph-view';
-import { aidsOf } from './graph-view/viewer-aids';
-import { diagramShown, tableDrawn } from './graph-view/type-strip';
-import type { ViewShown } from './graph-view/view-strip';
+import { renderCode } from '@graph-note/core/display/code';
+import { graphCard } from './graph-card';
+import { aidsOf } from '@graph-note/core/display/graph-view/viewer-aids';
+import { diagramShown, tableDrawn } from '@graph-note/core/display/graph-view/type-strip';
+import type { ViewShown } from '@graph-note/core/display/graph-view/view-strip';
 import { refusalBanner } from './layout-worker/refusal-banner';
-import { dataExportBar } from './export/export-form';
+import { dataExportBar } from '@graph-note/core/display/export/export-form';
 import { sourcedView } from './sources/sources';
 import { sourceAlert, sourceStrip } from './sources/source-strip';
 import { linkHost } from './links/link-host';
@@ -273,7 +273,7 @@ export async function renderViewBlock(
     return;
   }
   ctx.addChild(
-    new GraphView(root, {
+    graphCard(root, {
       source,
       reading: shownReading,
       graph: v.graph,

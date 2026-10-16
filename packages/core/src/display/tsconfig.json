@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "lib": ["DOM", "ES2022"],
+    "erasableSyntaxOnly": false,
+    "types": []
+  },
+  "include": ["./**/*.ts"],
+  "exclude": []
+}

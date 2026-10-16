@@ -188,6 +188,11 @@ in every new session, the desktop app's included. After a change: `npm run build
 
 ## Build and tests
 
+The page of the browser editor (workstream C5) will draw with the display layer shared with the Obsidian plugin,
+`packages/core/src/display/` (`@graph-note/core/display/<module>`), and import no Obsidian code. `editor-page.test.js`
+holds that (cc_core_only, partial until C5 and C8 add their cases) and `editor-parity.test.js` holds that the same edit
+writes the same bytes here and in Obsidian (cc_same_bytes).
+
 - `npm run build --workspace packages/claude-code` (`esbuild.config.mjs`) builds the mod, and its test fixtures from
   `test-vault/Sample graph note.md`. The root `npm run build` runs it.
 - `test/` runs in the repository's suite: `graph-view.test.js`, `graphviz-process.test.js`, `build.test.mjs` (the

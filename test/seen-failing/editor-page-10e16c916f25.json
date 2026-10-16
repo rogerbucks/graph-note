@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/editor-page.test.js",
+  "test": "cc_core_only: the page takes everything from the core and the shared display layer > the layer draws through the host it is given, in a process with no Obsidian in it",
+  "seen_failing_first": false,
+  "evidence": "Seen failing at its first commit, 861f53d; this commit only changes how it looks for an Obsidian import in the bundle (a real import, not the word), after the code had moved."
+}

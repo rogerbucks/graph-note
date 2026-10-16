@@ -108,8 +108,7 @@ def answer(q):
             out["views"][g] = gr.views(
                 world[g], None if world[g].labelled("ElementType") else world.schema_for(g)[1]
             )
-        for t in q.get("lint") or []:
-            out["lint"].append([f["trap"] for f in gs.lint(t)])
+        out["lint"] = [[f["trap"] for f in gs.lint(t)] for t in q.get("lint") or []]
     except Exception as e:
         out["error"] = str(e)
     for c in q.get("changesets") or []:
@@ -120,6 +119,7 @@ def answer(q):
                 "failed": sorted(label for label, ok, _ in res if not ok),
                 "after": after,
                 "refreshes": [list(x) for x in (h or {}).get("refreshes") or []],
+                "changes": (h or {}).get("changes") or [],
             }
         )
     if q.get("join"):

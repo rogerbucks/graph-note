@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/editor-parity.test.js",
+  "test": "the same edit writes the same bytes in the browser editor and in Obsidian > a thing renamed",
+  "seen_failing_first": false,
+  "evidence": "Both hosts already wrote these bytes before the shared display layer existed (the browser session and the pane both write through the core's PaneSession), so this pins behaviour that was already there; it is written first as the guard that the C4 extraction changes no byte in Obsidian (cc_same_bytes)."
+}
