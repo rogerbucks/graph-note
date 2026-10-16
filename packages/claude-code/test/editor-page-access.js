@@ -387,7 +387,7 @@ export function accessCases({ at, ROOT, LAYER }) {
 
     test('the page redraws the words whenever the note changes: a decision or a change on disk', () => {
       const main = pageSources()['page-main.ts'];
-      const draw = main.match(/const draw = async \(\) => \{([\s\S]*?)\n {4}\};/)[1];
+      const draw = main.match(/const draw = async \(\) =>([\s\S]*?)\n {6}\}\);/)[1];
       assert.match(draw, /showGraph\(/, 'drawing the graph draws its words');
       assert.match(main, /current = line;\s*void draw\(\)/, 'a change on disk');
       assert.equal(main.match(/await draw\(\)/g).length >= 3, true, 'start, a decision, a refused write');
