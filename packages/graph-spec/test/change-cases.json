@@ -1,5 +1,5 @@
 {
-  "about": "Change sets that DELETE and SET (graph spec section 24, 16 Oct 2026). Both readers run these cases: packages/graph-spec/test/changes.test.mjs and python/graph_spec/tests/test_changes.py. The base graph is head followed by base_rest, one block. A case names its author (by, ada unless given), what it was made against (against, the base's state unless given), the lines after the header (body), the checks it fails (failed, by the keys in labels), the changes read from it in order (changes: op and reason) and the graph it leaves (after: the lines that follow head, so head and after read alone give the same state; null when it is refused). A case with same_id_as reads a change with the id of one in that case; every other change has an id of its own.",
+  "about": "Change sets that DELETE and SET (graph spec section 24, 16 Oct 2026). Both readers run these cases: packages/graph-spec/test/changes.test.mjs and python/graph_spec/tests/test_changes.py. The base graph is head followed by base_rest, one block. A case names its author (by, ada unless given), what it was made against (against, the base's state unless given), the lines after the header (body), the checks it fails (failed, by the keys in labels), the changes read from it in order (changes: op and reason) and the graph it leaves (after: the lines that follow head, so head and after read alone give the same state; null when it is refused; a case that changes a line of head gives it in head_changed, as [old line, new line] pairs, applied to head before the state is read). A case with same_id_as reads a change with the id of one in that case; every other change has an id of its own.",
   "labels": {
     "statement": "each DELETE and SET is its own statement and names exactly one target (§24)",
     "basis": "only the header says what it was made against and who made it (§24)",
@@ -10,7 +10,12 @@
     "record": "it never removes or changes a record or a cache (§24 rule 4)",
     "generated": "an added WAS_GENERATED_BY comes from a thing the set adds, to an activity of the set's own author (§24)",
     "unknown": "its author stranger is a known person or model",
-    "cache": "it adds no cache — a claim's likelihood, confidence and status are the engine's (§24 rule 5)"
+    "assocadd": "an added ASSOCIATED_WITH comes from an Activity the set adds (§24)",
+    "planadd": "an added HAD_PLAN comes from an Activity the set adds, and never from a model or software agent (§24)",
+    "cache": "it adds no cache — a claim's likelihood, confidence and status are the engine's (§24 rule 5)",
+    "plan": "after it, §11 req:11.had-plan: every HAD_PLAN link goes to a Rule, or to a Ref to one",
+    "attributed": "after it, §24 req:24.prov-attributed: every WAS_ATTRIBUTED_TO link goes to a Person, Organization or SoftwareAgent (a Model counts as one)",
+    "revision": "after it, §12 req:12.prov-revision: every successor was generated after what it supersedes"
   },
   "head": [
     "// graph: library",
@@ -45,6 +50,39 @@
     "(bot_run:Activity {name: 'Drafter run'}),",
     "(figure)-[:WAS_GENERATED_BY]->(engine_run),",
     "(bot_run)-[:ASSOCIATED_WITH]->(bot),",
+    "(t_rule:ElementType {id: 'type:Rule', name: 'Rule', kind: 'node'}),",
+    "(t_supersedes:ElementType {id: 'type:SUPERSEDES', name: 'SUPERSEDES', kind: 'edge', reading: 'supersedes', reverse_name: 'superseded by'}),",
+    "(library_schema)-[:DECLARES]->(t_rule),",
+    "(library_schema)-[:DECLARES]->(t_supersedes),",
+    "(total_rule:Rule {name: 'Total'}),",
+    "(engine_run)-[:HAD_PLAN]->(total_rule),",
+    "(plain_run:Activity {name: 'Typed in by hand'}),",
+    "(ledger:Book {title: 'Ledger'}),",
+    "(ledger)-[:WAS_GENERATED_BY]->(plain_run),",
+    "(plain_run)-[:ASSOCIATED_WITH]->(ada),",
+    "(mystery_run:Activity {name: 'Unknown run'}),",
+    "(made_unknown:Book {title: 'Made somewhere'}),",
+    "(made_unknown)-[:WAS_GENERATED_BY]->(mystery_run),",
+    "(t_ref:ElementType {id: 'type:Ref', name: 'Ref', kind: 'node'}),",
+    "(library_schema)-[:DECLARES]->(t_ref),",
+    "(ghost:Ref {ref: 'nobody', graph: 'elsewhere'}),",
+    "(ghost_run:Activity {name: 'Ghost run'}),",
+    "(ghost_run)-[:ASSOCIATED_WITH]->(ghost),",
+    "(made_ghost:Book {title: 'Made by a ghost'}),",
+    "(made_ghost)-[:WAS_GENERATED_BY]->(ghost_run),",
+    "(known:Ref {ref: 'ada', graph: 'library'}),",
+    "(known_run:Activity {name: 'Known run'}),",
+    "(known_run)-[:ASSOCIATED_WITH]->(known),",
+    "(made_known:Book {title: 'Made by a known'}),",
+    "(made_known)-[:WAS_GENERATED_BY]->(known_run),",
+    "(bot_planned_run:Activity {name: 'Drafter planned run'}),",
+    "(bot_planned_run)-[:ASSOCIATED_WITH]->(bot),",
+    "(bot_planned_run)-[:HAD_PLAN]->(total_rule),",
+    "(planned:Book {title: 'Planned'}),",
+    "(planned)-[:WAS_GENERATED_BY]->(bot_planned_run),",
+    "(acme:Organization {name: 'Acme'}),",
+    "(importer:SoftwareAgent {name: 'Importer'}),",
+    "(edition1:Book {title: 'Edition one', generated_at: DATETIME '2026-09-01T00:00:00+00:00'}),",
     "(sale:Event {title: 'A sale', amount: 10}),"
   ],
   "base_rest": [
@@ -704,6 +742,352 @@
       "failed": ["current"],
       "changes": [["delete-thing", null]],
       "after": [
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
+      ]
+    },
+    {
+      "name": "a value an activity with no plan made is no cache: it may be set",
+      "body": ["SET ledger.checked = TRUE"],
+      "head_changed": [["(ledger:Book {title: 'Ledger'}),", "(ledger:Book {title: 'Ledger', checked: TRUE}),"]],
+      "failed": [],
+      "changes": [["set-thing", null]],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
+      ]
+    },
+    {
+      "name": "a value under an activity that had a plan is a cache, even a model's own: it is never set",
+      "by": "bot",
+      "body": ["SET planned.title = 'Changed'"],
+      "failed": ["record"],
+      "changes": [["set-thing", null]],
+      "after": null
+    },
+    {
+      "name": "a model may not add a generation to an activity that had a plan",
+      "by": "bot",
+      "body": ["(r2:Book {title: 'Report'})", "(r2)-[:WAS_GENERATED_BY]->(bot_planned_run)"],
+      "failed": ["generated"],
+      "changes": [],
+      "after": null
+    },
+    {
+      "name": "an organization is a known author, and may add a record as a person may",
+      "by": "acme",
+      "body": ["(refund:Event {title: 'A refund'})"],
+      "failed": [],
+      "changes": [],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(refund:Event {title: 'A refund'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
+      ]
+    },
+    {
+      "name": "a software agent is a known author, and adds no record as a model adds none",
+      "by": "importer",
+      "body": ["(refund:Event {title: 'A refund'})"],
+      "failed": ["model"],
+      "changes": [],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(refund:Event {title: 'A refund'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
+      ]
+    },
+    {
+      "name": "a thing may be attributed to a person, an organization, a software agent or a model",
+      "body": [
+        "(late:Book {title: 'A late book'})",
+        "(late)-[:WAS_ATTRIBUTED_TO]->(grace)",
+        "(late)-[:WAS_ATTRIBUTED_TO]->(acme)",
+        "(late)-[:WAS_ATTRIBUTED_TO]->(importer)",
+        "(late)-[:WAS_ATTRIBUTED_TO]->(bot)"
+      ],
+      "failed": [],
+      "changes": [],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(late:Book {title: 'A late book'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas),",
+        "(late)-[:WAS_ATTRIBUTED_TO]->(grace),",
+        "(late)-[:WAS_ATTRIBUTED_TO]->(acme),",
+        "(late)-[:WAS_ATTRIBUTED_TO]->(importer),",
+        "(late)-[:WAS_ATTRIBUTED_TO]->(bot)"
+      ]
+    },
+    {
+      "name": "a thing attributed to something that is not an agent is refused",
+      "body": ["(late:Book {title: 'A late book'})", "(late)-[:WAS_ATTRIBUTED_TO]->(notes)"],
+      "failed": ["attributed"],
+      "changes": [],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(late:Book {title: 'A late book'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas),",
+        "(late)-[:WAS_ATTRIBUTED_TO]->(notes)"
+      ]
+    },
+    {
+      "name": "an activity that HAD_PLAN a rule, the Rule itself, is accepted",
+      "body": ["(derive:Activity {name: 'Derive totals'})", "(derive)-[:HAD_PLAN]->(total_rule)"],
+      "failed": [],
+      "changes": [],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(derive:Activity {name: 'Derive totals'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas),",
+        "(derive)-[:HAD_PLAN]->(total_rule)"
+      ]
+    },
+    {
+      "name": "an activity with a rule property and no HAD_PLAN is no derivation: HAD_PLAN is the only marker",
+      "body": ["(derive:Activity {name: 'Derive totals', rule: 'rule:total@1'})"],
+      "failed": [],
+      "changes": [],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(derive:Activity {name: 'Derive totals', rule: 'rule:total@1'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
+      ]
+    },
+    {
+      "name": "a HAD_PLAN to something that is not a Rule is refused",
+      "body": ["(derive:Activity {name: 'Derive totals'})", "(derive)-[:HAD_PLAN]->(notes)"],
+      "failed": ["plan"],
+      "changes": [],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(derive:Activity {name: 'Derive totals'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas),",
+        "(derive)-[:HAD_PLAN]->(notes)"
+      ]
+    },
+    {
+      "name": "a model may add a Person: an ordinary thing, never a record",
+      "by": "bot",
+      "body": ["(bob:Person {name: 'Bob'})"],
+      "failed": [],
+      "changes": [],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(bob:Person {name: 'Bob'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
+      ]
+    },
+    {
+      "name": "a successor generated before what it supersedes is refused",
+      "body": [
+        "(edition2:Book {title: 'Edition two', generated_at: DATETIME '2026-08-01T00:00:00+00:00'})",
+        "(edition2)-[:SUPERSEDES]->(edition1)"
+      ],
+      "failed": ["revision"],
+      "changes": [],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(edition2:Book {title: 'Edition two', generated_at: DATETIME '2026-08-01T00:00:00+00:00'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas),",
+        "(edition2)-[:SUPERSEDES]->(edition1)"
+      ]
+    },
+    {
+      "name": "a successor generated after what it supersedes is accepted, a date against an instant too",
+      "body": [
+        "(edition2:Book {title: 'Edition two', generated_at: DATETIME '2026-10-01T00:00:00+00:00'})",
+        "(edition3:Book {title: 'Edition three', generated_at: DATE '2026-09-01'})",
+        "(edition2)-[:SUPERSEDES]->(edition1)",
+        "(edition3)-[:SUPERSEDES]->(edition1)"
+      ],
+      "failed": [],
+      "changes": [],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(edition2:Book {title: 'Edition two', generated_at: DATETIME '2026-10-01T00:00:00+00:00'}),",
+        "(edition3:Book {title: 'Edition three', generated_at: DATE '2026-09-01'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas),",
+        "(edition2)-[:SUPERSEDES]->(edition1),",
+        "(edition3)-[:SUPERSEDES]->(edition1)"
+      ]
+    },
+    {
+      "name": "a successor with no generation time is not compared",
+      "body": ["(edition2:Book {title: 'Edition two'})", "(edition2)-[:SUPERSEDES]->(edition1)"],
+      "failed": [],
+      "changes": [],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(edition2:Book {title: 'Edition two'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas),",
+        "(edition2)-[:SUPERSEDES]->(edition1)"
+      ]
+    },
+    {
+      "name": "a value an unknown activity made, with no plan and no agent, is a cache and a warning names the fix",
+      "body": ["SET made_unknown.title = 'Changed'"],
+      "failed": ["record"],
+      "warnings": [
+        "ghost_run has no HAD_PLAN and no ASSOCIATED_WITH agent, so what it generated (made_ghost) is read as a cache: add (ghost_run)-[:HAD_PLAN]->(its Rule), or associate ghost_run with its agent",
+        "mystery_run has no HAD_PLAN and no ASSOCIATED_WITH agent, so what it generated (made_unknown) is read as a cache: add (mystery_run)-[:HAD_PLAN]->(its Rule), or associate mystery_run with its agent"
+      ],
+      "changes": [["set-thing", null]],
+      "after": null
+    },
+    {
+      "name": "a model may propose to set what a person's unplanned work made",
+      "by": "bot",
+      "body": ["SET ledger.checked = TRUE"],
+      "head_changed": [["(ledger:Book {title: 'Ledger'}),", "(ledger:Book {title: 'Ledger', checked: TRUE}),"]],
+      "failed": [],
+      "changes": [["set-thing", null]],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
+      ]
+    },
+    {
+      "name": "a model may not add a plan, even for an activity it adds",
+      "by": "bot",
+      "body": ["(r3:Activity {name: 'Plan'})", "(r3)-[:HAD_PLAN]->(total_rule)"],
+      "failed": ["planadd"],
+      "changes": [],
+      "after": null
+    },
+    {
+      "name": "a software agent may not add a plan either",
+      "by": "importer",
+      "body": ["(r3:Activity {name: 'Plan'})", "(r3)-[:HAD_PLAN]->(total_rule)"],
+      "failed": ["planadd"],
+      "changes": [],
+      "after": null
+    },
+    {
+      "name": "a plan added to an activity that is already there is refused: it would freeze its work as a cache",
+      "body": ["(bot_run)-[:HAD_PLAN]->(total_rule)"],
+      "failed": ["planadd"],
+      "changes": [],
+      "after": null
+    },
+    {
+      "name": "a plan is never removed, whoever asks",
+      "body": ["MATCH (a {id: 'engine_run'})-[r:HAD_PLAN]->(b {id: 'total_rule'}) DELETE r"],
+      "failed": ["record"],
+      "changes": [["delete-link", null]],
+      "after": null
+    },
+    {
+      "name": "the generation of a cache by a planned activity is never removed",
+      "body": ["MATCH (a {id: 'figure'})-[r:WAS_GENERATED_BY]->(b {id: 'engine_run'}) DELETE r"],
+      "failed": ["record"],
+      "changes": [["delete-link", null]],
+      "after": null
+    },
+    {
+      "name": "the generation of a cache by an unknown activity is never removed",
+      "body": ["MATCH (a {id: 'made_unknown'})-[r:WAS_GENERATED_BY]->(b {id: 'mystery_run'}) DELETE r"],
+      "failed": ["record"],
+      "changes": [["delete-link", null]],
+      "after": null
+    },
+    {
+      "name": "an association added to an activity that is already there is refused: it would make a cache ordinary",
+      "by": "bot",
+      "body": ["(mystery_run)-[:ASSOCIATED_WITH]->(bot)"],
+      "failed": ["assocadd"],
+      "changes": [],
+      "after": null
+    },
+    {
+      "name": "an activity the set adds may be associated with its agent",
+      "body": ["(r4:Activity {name: 'Own work'})", "(r4)-[:ASSOCIATED_WITH]->(ada)"],
+      "failed": [],
+      "changes": [],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(r4:Activity {name: 'Own work'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas),",
+        "(r4)-[:ASSOCIATED_WITH]->(ada)"
+      ]
+    },
+    {
+      "name": "a Ref that resolves to nothing is no agent: what its activity made is a cache",
+      "body": ["SET made_ghost.title = 'Changed'"],
+      "failed": ["record"],
+      "changes": [["set-thing", null]],
+      "after": null
+    },
+    {
+      "name": "a Ref that resolves to a person is an agent: what its activity made is ordinary",
+      "body": ["SET made_known.checked = TRUE"],
+      "head_changed": [
+        [
+          "(made_known:Book {title: 'Made by a known'}),",
+          "(made_known:Book {title: 'Made by a known', checked: TRUE}),"
+        ]
+      ],
+      "failed": [],
+      "changes": [["set-thing", null]],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
+      ]
+    },
+    {
+      "name": "the generation of ordinary work may be removed",
+      "body": ["MATCH (a {id: 'ledger'})-[r:WAS_GENERATED_BY]->(b {id: 'plain_run'}) DELETE r"],
+      "head_changed": [["(ledger)-[:WAS_GENERATED_BY]->(plain_run),", ""]],
+      "failed": [],
+      "changes": [["delete-link", null]],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
         "(notes:Book {title: 'Notes on the engine', pages: 60}),",
         "(atlas:Book {title: 'Atlas'}),",
         "(ada)-[:WROTE]->(notes),",

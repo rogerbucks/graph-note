@@ -9,13 +9,13 @@ import { createRequire } from 'node:module';
 const gs = createRequire(import.meta.url)('../src/graph-spec-check.js');
 const lines = (...xs) => xs.join('\n');
 
-const DATA = lines('// graph: g', "(a:Book {title: 'A'}),", "(p:Person {name: 'P'}),", '(p)-[:WROTE]->(a)');
+const DATA = lines('// graph: g', "(a:Book {title: 'A'}),", "(p:Author {name: 'P'}),", '(p)-[:WROTE]->(a)');
 const schema = (declares) =>
   lines(
     '// graph: g',
     "(g_schema:GraphMeta {graph: 'g', schema: 'g@1'}),",
     "(kind_book:Meta:ElementType {name: 'Book', kind: 'node', origin: 'source'}),",
-    "(kind_person:Meta:ElementType {name: 'Person', kind: 'node', origin: 'source'}),",
+    "(kind_author:Meta:ElementType {name: 'Author', kind: 'node', origin: 'source'}),",
     "(link_wrote:Meta:ElementType {name: 'WROTE', kind: 'edge', origin: 'source', reading: 'wrote', reverse_name: 'was written by'})",
     ...declares.map((d) => `, (g_schema)-[:DECLARES]->(${d})`),
   );
@@ -26,20 +26,20 @@ const section5 = (blocks) => {
 const untyped = (blocks) => gs.untyped(gs.worldFromStore(gs.read(blocks)).g);
 
 test('a schema whose GraphMeta declares each type passes §5', () => {
-  assert.equal(section5([DATA, schema(['kind_book', 'kind_person', 'link_wrote'])]), true);
+  assert.equal(section5([DATA, schema(['kind_book', 'kind_author', 'link_wrote'])]), true);
 });
 
 test('a schema written without its DECLARES links does not: nothing is declared', () => {
   assert.equal(section5([DATA, schema([])]), false);
-  assert.deepEqual(untyped([DATA, schema([])]).slice(0, 2), [['Book', 'Person'], ['WROTE']]);
+  assert.deepEqual(untyped([DATA, schema([])]).slice(0, 2), [['Author', 'Book'], ['WROTE']]);
 });
 
 test('a type the GraphMeta does not declare is undeclared, and only that one', () => {
   assert.equal(section5([DATA, schema(['kind_book', 'link_wrote'])]), false);
-  assert.deepEqual(untyped([DATA, schema(['kind_book', 'link_wrote'])]).slice(0, 2), [['Person'], []]);
+  assert.deepEqual(untyped([DATA, schema(['kind_book', 'link_wrote'])]).slice(0, 2), [['Author'], []]);
 });
 
 test('a DECLARES link from anything but a GraphMeta declares nothing', () => {
-  const stray = schema(['kind_book', 'link_wrote']) + ',\n(p)-[:DECLARES]->(kind_person)';
-  assert.deepEqual(untyped([DATA, stray]).slice(0, 2), [['Person'], []]);
+  const stray = schema(['kind_book', 'link_wrote']) + ',\n(p)-[:DECLARES]->(kind_author)';
+  assert.deepEqual(untyped([DATA, stray]).slice(0, 2), [['Author'], []]);
 });

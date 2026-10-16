@@ -118,13 +118,16 @@ function changeOf(c: unknown, n: number): ChangeInput | string {
     case 'add-thing':
       if (!words(c, 'name', 'kind')) return `${at} lacks a one-word name or kind`;
       // a model's own words never declare an author: the editor declares who proposed (proposals-author.ts)
-      if (['person', 'model', 'step'].includes((c.kind as string).toLowerCase()))
-        return `${at} cannot add a Person, a Model or a Step: the editor declares who proposed, and nothing a model writes can`;
+      if (['person', 'organization', 'softwareagent', 'model', 'step'].includes((c.kind as string).toLowerCase()))
+        return `${at} cannot add a Person, an Organization, a SoftwareAgent, a Model or a Step: the editor declares who proposed, and nothing a model writes can`;
       return thingChange(c.name as string, c.kind as string, props, extra);
     case 'add-link':
-      return words(c, 'from', 'type', 'to')
-        ? linkChange(c.from as string, c.type as string, c.to as string, props, extra)
-        : `${at} lacks a one-word from, type or to`;
+      if (!words(c, 'from', 'type', 'to')) return `${at} lacks a one-word from, type or to`;
+      // a plan is the engine's, an attribution the editor's, and an association would make a cache ordinary (the graph
+      // spec's §24): nothing a model writes can add one
+      if (['had_plan', 'associated_with', 'was_attributed_to'].includes((c.type as string).toLowerCase()))
+        return `${at} cannot add a HAD_PLAN, ASSOCIATED_WITH or WAS_ATTRIBUTED_TO link: a plan is the engine's, and the editor records who proposed and decided`;
+      return linkChange(c.from as string, c.type as string, c.to as string, props, extra);
     case 'set': {
       const v = c.value;
       if (!words(c, 'thing', 'key') || (typeof v !== 'string' && typeof v !== 'number' && typeof v !== 'boolean'))

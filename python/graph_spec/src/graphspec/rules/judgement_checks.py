@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from graphspec.rules.judgements import basis, judgement_hash, resolve, review
+from graphspec.rules.proposers import proposer_warnings, proposers_of
 
 if TYPE_CHECKING:
     from graphspec.rules.plain_graph import Graph
@@ -74,20 +75,15 @@ def judgements_rules(w: World, jg: str) -> list[tuple[str, bool, str]]:
     )
     bad = []
     for p in g.labelled("Proposal"):
-        ms = [
-            g.p(m)
-            for _, _, a, _ in g.out(p, "WAS_GENERATED_BY")
-            if g.has(a, "Activity")
-            for _, _, m, _ in g.out(a, "ASSOCIATED_WITH")
-            if g.has(m, "Ref")
-        ]
-        if not ms or any("Model" not in resolve(w, m)[1] for m in ms):
+        ms = proposers_of(w, g, p)
+        if not ms or any("Model" not in m["labels"] for m in ms):
             bad.append(p)
+    warnings = proposer_warnings(w, jg)
     out.append(
         (
-            "§23 rule 6: every proposal names the activity and the model that generated it",
+            "§23 rule 6: every proposal is attributed to the model that proposed it",
             not bad,
-            str(sorted(bad)),
+            "; ".join([str(sorted(bad)), *("warning: " + x for x in warnings)]),
         )
     )
     bad = sorted(d for d, r in ds.items() if r.get("content_hash") != judgement_hash(w, jg, d))

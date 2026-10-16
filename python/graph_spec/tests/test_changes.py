@@ -56,6 +56,7 @@ def python_answer(case):
         "failed": sorted(label for label, ok, _ in res if not ok),
         "changes": [[c["op"], c["reason"], c["id"], c.get("links")] for c in h["changes"]],
         "after": after,
+        "warnings": (h or {}).get("warnings"),
     }
 
 
@@ -92,7 +93,11 @@ class Changes(unittest.TestCase):
                     self.assertEqual(got_change[3], want[2], c["name"])
             self.assertTrue(all(len(x[2]) == 16 for x in got["changes"]), c["name"])
             self.assertEqual(len({x[2] for x in got["changes"]}), len(got["changes"]), c["name"])
-            want = None if c["after"] is None else state_of("\n".join(TABLE["head"] + c["after"]))
+            if "warnings" in c:
+                self.assertEqual(got["warnings"], c["warnings"], c["name"])
+            changed = dict(map(tuple, c.get("head_changed", [])))
+            head = [changed.get(line, line) for line in TABLE["head"]]
+            want = None if c["after"] is None else state_of("\n".join(head + c["after"]))
             self.assertEqual(got["after"], want, c["name"])
             if len(got["changes"]) == 1:
                 ids[c["name"]] = got["changes"][0][2]
@@ -118,10 +123,12 @@ class Changes(unittest.TestCase):
             for c in TABLE["cases"]:
                 ours = python_answer(c)
                 settings.PARSER = "grafeo"
-                res, _, after = gs.check_changeset([("library", BASE)], block_of(c), frozenset())
+                res, h, after = gs.check_changeset([("library", BASE)], block_of(c), frozenset())
                 settings.PARSER = old
                 failed = sorted(label for label, ok, _ in res if not ok)
                 self.assertEqual(failed, ours["failed"], c["name"])
+                if "warnings" in c:
+                    self.assertEqual((h or {}).get("warnings"), c["warnings"], c["name"])
                 self.assertEqual(after, ours["after"], c["name"])
         finally:
             settings.PARSER = old

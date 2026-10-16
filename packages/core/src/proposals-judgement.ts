@@ -4,13 +4,16 @@
 // in the note's judgement graph, a gql block whose graph is `judgements` (or ends `_judgements`): reused when the note has
 // one, else added after the change set. It holds the change's statement, so a decided change is still shown and a
 // rejected one can be read again, who proposed it (the change set's `by`) and who decided and when. The decider is plain
-// text, kept exactly as typed in the settings, or "you" when none is set; it is not a link to a Person.
+// text, kept exactly as typed in the settings, or "you" when none is set. Each Decision is also WAS_ATTRIBUTED_TO the
+// proposer and the decider (W3C PROV, the graph spec's req:24.prov-attributed), agents of this judgement graph only: the
+// decider is never a link to a Person of the data graph.
+import { items } from './block-items.ts';
 import { appended } from './linked-list.ts';
 import { dataKind, gqlSpans, graphOf } from './blocks.ts';
 import type { Span } from './blocks.ts';
 import { readNote } from './drawing.ts';
 import { valueGql } from './proposals.ts';
-import type { ChangeInput, ProposedChange } from './proposals.ts';
+import type { ChangeInput, ProposedChange, Proposer, ProposerKind } from './proposals.ts';
 import { readStatement, statementOf } from './proposals-statements.ts';
 import { insertBlockAfter, replaceBlock } from './store.ts';
 import { trim } from './whitespace.ts';
@@ -134,6 +137,32 @@ function itemOf(r: ToRecord, graph: string, proposal: string, proposedBy: string
   return `(${nameOf(graph, proposal, c.id)}:Decision {${props.join(', ')}})`;
 }
 
+/** An agent's label in the judgement graph: a Model for a model, a Person for a person or a graph step, none when the kind is unknown. */
+const agentLabel = (kind: ProposerKind): string | null =>
+  kind === 'model' ? 'Model' : kind === 'unknown' ? null : 'Person';
+
+/** A short hash of a text (FNV-1a over its UTF-16 units, in hex), to tell agents of different names apart in a node name. */
+function shortHash(text: string): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 0x01000193) >>> 0;
+  return h.toString(16).padStart(8, '0');
+}
+
+/**
+ * The agent a name is, as an item of the judgement block (the graph spec's req:24.prov-attributed): its node name and the
+ * item to write, or null when the block already holds exactly that item. The name is kept exactly as typed; a node name
+ * the block holds for something else is never reused.
+ */
+function agentNode(block: string, label: string, name: string, added: readonly string[]) {
+  const held = [...(block ? items(block).map((it) => block.slice(it.from, it.to)) : []), ...added];
+  for (let n = 0; ; n++) {
+    const node = `agent_${label.toLowerCase()}_${name.replace(/\W/g, '_').slice(0, 24)}_${shortHash(name)}${n ? `_${n}` : ''}`;
+    const item = `(${node}:${label} {name: ${valueGql(name)}})`;
+    if (held.includes(item)) return { node, item: null };
+    if (!held.some((t) => t.startsWith(`(${node}:`))) return { node, item };
+  }
+}
+
 /** What writing the decisions did to the note: the note, and the judgement block as it was (null: there was none) and is. */
 export interface Written {
   note: string;
@@ -149,12 +178,28 @@ export function withDecisions(
   note: string,
   graph: string,
   proposal: string,
-  proposedBy: string,
+  proposedBy: Proposer,
   records: readonly ToRecord[],
   after: Span | undefined,
 ): Written | null {
-  const lines = records.map((r) => itemOf(r, graph, proposal, proposedBy));
   const span = judgementSpan(note);
+  // who proposed and who decided are agents of the judgement graph, each Decision WAS_ATTRIBUTED_TO both (req:24.prov-attributed)
+  const agents: string[] = [];
+  const attribute = (decision: string, role: string, kind: ProposerKind, name: string): string[] => {
+    const label = agentLabel(kind);
+    if (!label) return [];
+    const a = agentNode(span?.text ?? '', label, name, agents);
+    if (a.item) agents.push(a.item);
+    return [`(${decision})-[:WAS_ATTRIBUTED_TO {role: ${valueGql(role)}}]->(${a.node})`];
+  };
+  const links = records.flatMap((r) => {
+    const d = nameOf(graph, proposal, r.change.id);
+    return [
+      ...attribute(d, 'proposed', proposedBy.kind, proposedBy.name),
+      ...attribute(d, 'decided', 'person', r.decision.by),
+    ];
+  });
+  const lines = [...records.map((r) => itemOf(r, graph, proposal, proposedBy.name)), ...agents, ...links];
   if (span) {
     const text = appended(span.text, lines);
     const w = replaceBlock(note, { line: span.open, text: span.text }, text);

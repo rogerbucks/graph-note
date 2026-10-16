@@ -157,7 +157,11 @@ describe('a model’s own answer cannot declare an author', () => {
   test('an addition of a Model, a Person or a Step from a model’s answer is refused, saying so', () => {
     for (const kind of ['Model', 'Person', 'Step']) {
       const r = changesIn(answer({ op: 'add-thing', name: 'mallory', kind, properties: {} }));
-      assert.match(r.unread, /cannot add a Person, a Model or a Step: the editor declares who proposed/, kind);
+      assert.match(
+        r.unread,
+        /cannot add a Person, an Organization, a SoftwareAgent, a Model or a Step: the editor declares who proposed/,
+        kind,
+      );
     }
   });
 
@@ -167,6 +171,31 @@ describe('a model’s own answer cannot declare an author', () => {
         changesIn(answer({ op: 'add-thing', name: 'mallory', kind, properties: {} })).unread,
         /cannot add/,
         kind,
+      );
+  });
+
+  test('nor an Organization or a SoftwareAgent, in any case', () => {
+    for (const kind of ['Organization', 'ORGANIZATION', 'SoftwareAgent', 'softwareagent'])
+      assert.match(
+        changesIn(answer({ op: 'add-thing', name: 'mallory', kind, properties: {} })).unread,
+        /cannot add a Person, an Organization, a SoftwareAgent, a Model or a Step/,
+        kind,
+      );
+  });
+
+  test('nor a plan, an association or an attribution: HAD_PLAN, ASSOCIATED_WITH or WAS_ATTRIBUTED_TO, in any case', () => {
+    for (const type of [
+      'HAD_PLAN',
+      'had_plan',
+      'ASSOCIATED_WITH',
+      'associated_with',
+      'WAS_ATTRIBUTED_TO',
+      'Was_Attributed_To',
+    ])
+      assert.match(
+        changesIn(answer({ op: 'add-link', from: 'large_reader', type, to: 'question' })).unread,
+        /cannot add a HAD_PLAN, ASSOCIATED_WITH or WAS_ATTRIBUTED_TO link/,
+        type,
       );
   });
 

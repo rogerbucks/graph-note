@@ -7,7 +7,7 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any
 
 from graphspec.engine.documents.classification import destination_matrix, may_serve
-from graphspec.engine.judgements.basis import resolve_ref
+from graphspec.engine.judgements.proposers import proposers_of
 from graphspec.engine.queries import Q
 
 if TYPE_CHECKING:
@@ -62,14 +62,11 @@ def served_rules(db: GrafeoDB, jg: str) -> list[tuple[str, bool, str]]:
     )
     db.set_graph(jg)
     bad = []
-    for r in Q(
-        db,
-        "MATCH (p:Proposal)-[:WAS_GENERATED_BY]->(:Activity)-[:ASSOCIATED_WITH]->(m:Ref) RETURN DISTINCT p.id AS p, m.ref AS m, m.graph AS g",  # noqa: E501  # one literal: embedded_queries reads it whole
-    ):
-        if "Model" in resolve_ref(db, jg, {"ref": r["m"], "graph": r["g"]})[1] and not Q(
-            db, f"MATCH (:Proposal {{id: '{r['p']}'}})-[:USED]->(:Serving) RETURN 1 AS x LIMIT 1"
+    for p, who in proposers_of(db, jg).items():
+        if any("Model" in labels for labels in who) and not Q(
+            db, f"MATCH (:Proposal {{id: '{p}'}})-[:USED]->(:Serving) RETURN 1 AS x LIMIT 1"
         ):
-            bad.append(r["p"])
+            bad.append(p)
     out.append(
         (
             "§24 H3 rule 4: every proposal a model generated used a serving — "

@@ -80,12 +80,34 @@
         ]
       ],
       "switches": [],
-      "review": ["jud_j1"],
+      "review": [
+        "jud_j1"
+      ],
       "why": [
-        {"graph": "jud_j1", "data": "jud_d1", "top": "trip", "level": 0},
-        {"graph": "jud_j1", "data": "jud_d1", "top": "trip", "level": 2},
-        {"graph": "jud_j1", "data": "jud_d1", "top": "spring", "level": 1},
-        {"graph": "jud_j1", "data": "jud_d1", "top": "summer", "level": 0}
+        {
+          "graph": "jud_j1",
+          "data": "jud_d1",
+          "top": "trip",
+          "level": 0
+        },
+        {
+          "graph": "jud_j1",
+          "data": "jud_d1",
+          "top": "trip",
+          "level": 2
+        },
+        {
+          "graph": "jud_j1",
+          "data": "jud_d1",
+          "top": "spring",
+          "level": 1
+        },
+        {
+          "graph": "jud_j1",
+          "data": "jud_d1",
+          "top": "summer",
+          "level": 0
+        }
       ],
       "changesets": []
     },
@@ -190,7 +212,9 @@
         ]
       ],
       "switches": [],
-      "review": ["jud_j2"],
+      "review": [
+        "jud_j2"
+      ],
       "why": [],
       "changesets": []
     },
@@ -237,7 +261,9 @@
         ]
       ],
       "switches": [],
-      "review": ["jud_j3"],
+      "review": [
+        "jud_j3"
+      ],
       "why": [],
       "changesets": []
     },
@@ -282,7 +308,9 @@
         ]
       ],
       "switches": [],
-      "review": ["jud_j4"],
+      "review": [
+        "jud_j4"
+      ],
       "why": [],
       "changesets": []
     },
@@ -337,7 +365,9 @@
         ]
       ],
       "switches": [],
-      "review": ["jud_j5"],
+      "review": [
+        "jud_j5"
+      ],
       "why": [],
       "changesets": []
     },
@@ -391,7 +421,9 @@
         ]
       ],
       "switches": [],
-      "review": ["jud_j6"],
+      "review": [
+        "jud_j6"
+      ],
       "why": [],
       "changesets": []
     },
@@ -438,7 +470,9 @@
         ]
       ],
       "switches": [],
-      "review": ["jud_j7"],
+      "review": [
+        "jud_j7"
+      ],
       "why": [],
       "changesets": []
     },
@@ -477,7 +511,9 @@
         ]
       ],
       "switches": [],
-      "review": ["jud_j8"],
+      "review": [
+        "jud_j8"
+      ],
       "why": [],
       "changesets": []
     },
@@ -527,7 +563,9 @@
         ]
       ],
       "switches": [],
-      "review": ["jud_j9"],
+      "review": [
+        "jud_j9"
+      ],
       "why": [],
       "changesets": []
     },
@@ -606,27 +644,29 @@
           "(pr1:Proposal {text: 'Book a flat in Lisbon'}),",
           "(act1:Activity {name: 'Draft the Lisbon booking'}),",
           "(pr1)-[:WAS_GENERATED_BY]->(act1),",
-          "(act1)-[:ASSOCIATED_WITH]->(r_planner),",
+          "(pr1)-[:WAS_ATTRIBUTED_TO]->(r_planner),",
           "(pr1)-[:USED]->(sv_cloud),",
           "(pr1)-[:RESTS_ON {reads: 'cost', hash: 'a3a752b9bf4551a3', as_of: DATE '2026-10-02'}]->(r_lisbon),",
           "(pr2:Proposal {text: 'Book a flat in Porto'}),",
           "(act2:Activity {name: 'Draft the Porto booking'}),",
           "(pr2)-[:WAS_GENERATED_BY]->(act2),",
-          "(act2)-[:ASSOCIATED_WITH]->(r_planner),",
+          "(pr2)-[:WAS_ATTRIBUTED_TO]->(r_planner),",
           "(pr2)-[:USED]->(sv_local),",
           "(pr2)-[:RESTS_ON {reads: 'cost', hash: '71be67d96a9068a4', as_of: DATE '2026-10-02'}]->(r_porto)"
         ]
       ],
       "switches": [],
-      "review": ["jud_j10"],
+      "review": [
+        "jud_j10"
+      ],
       "why": [],
       "changesets": [
         [
-          "// graph: jud_j10 · CHANGE SET cs_offered · against 8c2c6795ec8c7f94 · by planner",
+          "// graph: jud_j10 · CHANGE SET cs_offered · against 00da10870dfcf4e8 · by planner",
           "(pr3:Proposal {text: 'Reserve the Lisbon flat for May'}),",
           "(act3:Activity {name: 'Draft the May reservation'}),",
           "(pr3)-[:WAS_GENERATED_BY]->(act3),",
-          "(act3)-[:ASSOCIATED_WITH]->(r_planner),",
+          "(pr3)-[:WAS_ATTRIBUTED_TO]->(r_planner),",
           "(pr3)-[:USED]->(sv_cloud),",
           "(pr3)-[:RESTS_ON {reads: 'cost', hash: 'a3a752b9bf4551a3', as_of: DATE '2026-10-02'}]->(r_lisbon)"
         ],
@@ -641,11 +681,11 @@
           "(pr3:Proposal {text: 'Reserve the Lisbon flat for May'})"
         ],
         [
-          "// graph: jud_j10 · CHANGE SET cs_stranger · against 8c2c6795ec8c7f94 · by stranger",
+          "// graph: jud_j10 · CHANGE SET cs_stranger · against 00da10870dfcf4e8 · by stranger",
           "(pr3:Proposal {text: 'Reserve the Lisbon flat for May'})"
         ],
         [
-          "// graph: jud_j10 · CHANGE SET cs_decision · against 8c2c6795ec8c7f94 · by planner",
+          "// graph: jud_j10 · CHANGE SET cs_decision · against 00da10870dfcf4e8 · by planner",
           "(dx:Decision {title: 'The model decides', at: DATE '2026-10-07', content_hash: '0000000000000000'}),",
           "(dx)-[:DECIDED_BY]->(r_planner)"
         ],
@@ -662,27 +702,27 @@
           "SET p.cost = 400"
         ],
         [
-          "// graph: jud_j10 · CHANGE SET cs_unsealed · against 8c2c6795ec8c7f94 · by sam",
+          "// graph: jud_j10 · CHANGE SET cs_unsealed · against 00da10870dfcf4e8 · by sam",
           "(dx:Decision {title: 'Go to Porto', at: DATE '2026-10-07', content_hash: '0000000000000000'})"
         ],
         [
-          "// graph: jud_j10 · CHANGE SET cs_pin_not_served · against 8c2c6795ec8c7f94 · by planner",
+          "// graph: jud_j10 · CHANGE SET cs_pin_not_served · against 00da10870dfcf4e8 · by planner",
           "(pr4:Proposal {text: 'Reserve the Porto flat for May'}),",
           "(act4:Activity {name: 'Draft the Porto reservation'}),",
           "(pr4)-[:WAS_GENERATED_BY]->(act4),",
-          "(act4)-[:ASSOCIATED_WITH]->(r_planner),",
+          "(pr4)-[:WAS_ATTRIBUTED_TO]->(r_planner),",
           "(pr4)-[:USED]->(sv_cloud),",
           "(pr4)-[:RESTS_ON {reads: 'cost', hash: '71be67d96a9068a4', as_of: DATE '2026-10-03'}]->(r_porto)"
         ],
         [
-          "// graph: jud_j10 · CHANGE SET cs_unserved · against 8c2c6795ec8c7f94 · by planner",
+          "// graph: jud_j10 · CHANGE SET cs_unserved · against 00da10870dfcf4e8 · by planner",
           "(pr5:Proposal {text: 'Reserve a flat, from memory'}),",
           "(act5:Activity {name: 'Draft from memory'}),",
           "(pr5)-[:WAS_GENERATED_BY]->(act5),",
-          "(act5)-[:ASSOCIATED_WITH]->(r_planner)"
+          "(pr5)-[:WAS_ATTRIBUTED_TO]->(r_planner)"
         ],
         [
-          "// graph: jud_j10 · CHANGE SET cs_no_model · against 8c2c6795ec8c7f94 · by sam",
+          "// graph: jud_j10 · CHANGE SET cs_no_model · against 00da10870dfcf4e8 · by sam",
           "(pr6:Proposal {text: 'A proposal with no activity'})"
         ],
         [
@@ -747,27 +787,32 @@
           "(sv_cloud:Serving {consumer_kind: 'cloud', conditions_met: FALSE, at: DATE '2026-10-02'}),",
           "(sv_cloud)-[:SERVED {reads: 'cost', hash: 'a3a752b9bf4551a3', as_of: DATE '2026-10-02', classification: 'Public'}]->(r_lisbon),",
           "(act:Activity {name: 'Draft three bookings'}),",
-          "(act)-[:ASSOCIATED_WITH]->(r_planner),",
           "(pr_ok:Proposal {text: 'Book a flat in Lisbon'}),",
           "(pr_ok)-[:WAS_GENERATED_BY]->(act),",
+          "(pr_ok)-[:WAS_ATTRIBUTED_TO]->(r_planner),",
           "(pr_ok)-[:USED]->(sv_cloud),",
           "(pr_ok)-[:RESTS_ON {reads: 'cost', hash: 'a3a752b9bf4551a3', as_of: DATE '2026-10-02'}]->(r_lisbon),",
           "(pr_unserved:Proposal {text: 'Book a flat in Porto'}),",
           "(pr_unserved)-[:WAS_GENERATED_BY]->(act),",
+          "(pr_unserved)-[:WAS_ATTRIBUTED_TO]->(r_planner),",
           "(pr_unserved)-[:USED]->(sv_cloud),",
           "(pr_unserved)-[:RESTS_ON {reads: 'cost', hash: '71be67d96a9068a4', as_of: DATE '2026-10-02'}]->(r_porto),",
           "(pr_stale:Proposal {text: 'Book a flat in Lisbon, at an old price'}),",
           "(pr_stale)-[:WAS_GENERATED_BY]->(act),",
+          "(pr_stale)-[:WAS_ATTRIBUTED_TO]->(r_planner),",
           "(pr_stale)-[:USED]->(sv_cloud),",
           "(pr_stale)-[:RESTS_ON {reads: 'cost', hash: '7cb0c955fce1b6d9', as_of: DATE '2026-10-02'}]->(r_lisbon),",
           "(pr_late:Proposal {text: 'Book a flat in Lisbon, read later'}),",
           "(pr_late)-[:WAS_GENERATED_BY]->(act),",
+          "(pr_late)-[:WAS_ATTRIBUTED_TO]->(r_planner),",
           "(pr_late)-[:USED]->(sv_cloud),",
           "(pr_late)-[:RESTS_ON {reads: 'cost', hash: 'a3a752b9bf4551a3', as_of: DATE '2026-10-04'}]->(r_lisbon)"
         ]
       ],
       "switches": [],
-      "review": ["jud_j11"],
+      "review": [
+        "jud_j11"
+      ],
       "why": [],
       "changesets": []
     },
@@ -833,15 +878,17 @@
           "(sv_local_unmet:Serving {consumer_kind: 'local', conditions_met: FALSE, at: DATE '2026-10-02'}),",
           "(sv_local_unmet)-[:SERVED {reads: 'cost', hash: '71be67d96a9068a4', as_of: DATE '2026-10-02', classification: 'Confidential'}]->(r_porto),",
           "(act:Activity {name: 'Draft the booking'}),",
-          "(act)-[:ASSOCIATED_WITH]->(r_planner),",
           "(pr_ok:Proposal {text: 'Book a flat in Lisbon'}),",
           "(pr_ok)-[:WAS_GENERATED_BY]->(act),",
+          "(pr_ok)-[:WAS_ATTRIBUTED_TO]->(r_planner),",
           "(pr_ok)-[:USED]->(sv_ok),",
           "(pr_ok)-[:RESTS_ON {reads: 'cost', hash: 'a3a752b9bf4551a3', as_of: DATE '2026-10-02'}]->(r_lisbon)"
         ]
       ],
       "switches": [],
-      "review": ["jud_j12"],
+      "review": [
+        "jud_j12"
+      ],
       "why": [],
       "changesets": []
     },
@@ -895,16 +942,19 @@
           "(sv_cloud:Serving {consumer_kind: 'cloud', conditions_met: FALSE, at: DATE '2026-10-02'}),",
           "(sv_cloud)-[:SERVED {reads: 'cost', hash: 'a3a752b9bf4551a3', as_of: DATE '2026-10-02', classification: 'Public'}]->(r_lisbon),",
           "(act:Activity {name: 'Draft the booking'}),",
-          "(act)-[:ASSOCIATED_WITH]->(r_planner),",
           "(pr_shown:Proposal {text: 'Book a flat in Lisbon'}),",
           "(pr_shown)-[:WAS_GENERATED_BY]->(act),",
+          "(pr_shown)-[:WAS_ATTRIBUTED_TO]->(r_planner),",
           "(pr_shown)-[:USED]->(sv_cloud),",
           "(pr_free:Proposal {text: 'Book a flat somewhere warm'}),",
-          "(pr_free)-[:WAS_GENERATED_BY]->(act)"
+          "(pr_free)-[:WAS_GENERATED_BY]->(act),",
+          "(pr_free)-[:WAS_ATTRIBUTED_TO]->(r_planner)"
         ]
       ],
       "switches": [],
-      "review": ["jud_j13"],
+      "review": [
+        "jud_j13"
+      ],
       "why": [],
       "changesets": []
     },
@@ -958,19 +1008,21 @@
           "(sv_cloud:Serving {consumer_kind: 'cloud', conditions_met: FALSE, at: DATE '2026-10-02'}),",
           "(sv_cloud)-[:SERVED {reads: 'cost', hash: 'a3a752b9bf4551a3', as_of: DATE '2026-10-02', classification: 'Public'}]->(r_lisbon),",
           "(act_model:Activity {name: 'Draft the booking'}),",
-          "(act_model)-[:ASSOCIATED_WITH]->(r_planner),",
           "(act_person:Activity {name: 'Sam drafted the booking'}),",
-          "(act_person)-[:ASSOCIATED_WITH]->(r_sam),",
           "(pr_ok:Proposal {text: 'Book a flat in Lisbon'}),",
           "(pr_ok)-[:WAS_GENERATED_BY]->(act_model),",
+          "(pr_ok)-[:WAS_ATTRIBUTED_TO]->(r_planner),",
           "(pr_ok)-[:USED]->(sv_cloud),",
           "(pr_nameless:Proposal {text: 'Book a flat in Porto'}),",
           "(pr_by_person:Proposal {text: 'Book a flat in Faro'}),",
-          "(pr_by_person)-[:WAS_GENERATED_BY]->(act_person)"
+          "(pr_by_person)-[:WAS_GENERATED_BY]->(act_person),",
+          "(pr_by_person)-[:WAS_ATTRIBUTED_TO]->(r_sam)"
         ]
       ],
       "switches": [],
-      "review": ["jud_j14"],
+      "review": [
+        "jud_j14"
+      ],
       "why": [],
       "changesets": []
     }

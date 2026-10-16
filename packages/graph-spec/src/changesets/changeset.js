@@ -7,6 +7,7 @@ const { Store } = require('../reader/store.js');
 const { worldFromStore, canon } = require('../graph/graph.js');
 const { latestAssessment, confidenceFromEvidence, claimStatus } = require('../rules/certainty.js');
 const { check } = require('../rules/check.js');
+const { hadPlan, activityWarnings } = require('../rules/provenance.js');
 const { lint } = require('./dialect-lint.js');
 const { splitChangeset, readChange, changeId, applyChange, isRecordAdd, addsCache } = require('./changes.js');
 
@@ -18,8 +19,13 @@ const LABELS = {
 };
 const GENERATED =
   "an added WAS_GENERATED_BY comes from a thing the set adds, to an activity of the set's own author (§24)";
-// whether activity a is one of its author's: an Activity associated with them
-const own = (g, a, by) => g.has(a, 'Activity') && g.out(a, 'ASSOCIATED_WITH').some((e) => e[2] === by);
+const ASSOCIATION_ADDED = 'an added ASSOCIATED_WITH comes from an Activity the set adds (§24)';
+const PLAN_ADDED =
+  'an added HAD_PLAN comes from an Activity the set adds, and never from a model or software agent (§24)';
+// whether activity a is one of its author's own generation: an Activity associated with them that HAD_PLAN no rule, since
+// whatever a planned activity generated is a cache (§24)
+const own = (g, a, by) =>
+  g.has(a, 'Activity') && !hadPlan(g, a) && g.out(a, 'ASSOCIATED_WITH').some((e) => e[2] === by);
 function changesetHeader(block) {
   const first = block.split('\n').find((line) => line.trim()) || '';
   const m = /^\s*\/\/\s*graph:\s*(\S+)\s*·\s*CHANGE SET\s+(\S+)\s*·\s*against\s+([0-9a-f]{16})\s*·\s*by\s+(\S+)/.exec(
@@ -101,11 +107,15 @@ function checkChangeset(base, block, matrix, sw = new Set()) {
     const who = Object.values(world)
       .filter((g) => g.nodes.has(h.by))
       .map((g) => g.nodes.get(h.by)[0]);
-    return who.some((labels) => labels.has('Model'))
+    // the header's `by` reads as WAS_ATTRIBUTED_TO that agent for every change in the set (req:24.prov-attributed); a
+    // software agent is held to what a model is held to
+    return who.some((labels) => labels.has('Model') || labels.has('SoftwareAgent'))
       ? 'Model'
       : who.some((labels) => labels.has('Person'))
         ? 'Person'
-        : null;
+        : who.some((labels) => labels.has('Organization'))
+          ? 'Organization'
+          : null;
   };
   const authorLine = `its author ${h.by} is a known person or model`;
   let kind = authorOf(w);
@@ -121,6 +131,7 @@ function checkChangeset(base, block, matrix, sw = new Set()) {
   kind = authorOf(worldFromStore(st));
   add(authorLine, kind);
   const after = stateOf(worldFromStore(st)[h.graph]);
+  h.warnings = activityWarnings(worldFromStore(st), h.graph);
   const count = (a) => a.reduce((m, x) => m.set(x, (m.get(x) || 0) + 1), new Map()),
     bc = count(before[1]),
     ac = count(after[1]);
@@ -143,6 +154,22 @@ function checkChangeset(base, block, matrix, sw = new Set()) {
       .filter(([s, t, d]) => t === 'WAS_GENERATED_BY' && !(made.has(s) && own(stored, d, h.by)));
   add(GENERATED, !foreign.length);
   if (foreign.length) return { results: res, header: h, after: null };
+  // a plan is added only from an Activity the set adds, and never by a model: an engine derives, a model does not, and a
+  // plan added later to work already there would freeze it as a cache
+  const plans = [...ac]
+    .filter(([e, n]) => n > (bc.get(e) || 0))
+    .map(([e]) => JSON.parse(e))
+    .filter(([s, t]) => t === 'HAD_PLAN' && (kind === 'Model' || !(made.has(s) && stored.has(s, 'Activity'))));
+  add(PLAN_ADDED, !plans.length);
+  if (plans.length) return { results: res, header: h, after: null };
+  // an association is added only from an Activity the set adds: one added to work already there would turn a fail-closed
+  // cache back into ordinary data
+  const assoc = [...ac]
+    .filter(([e, n]) => n > (bc.get(e) || 0))
+    .map(([e]) => JSON.parse(e))
+    .filter(([s, t]) => t === 'ASSOCIATED_WITH' && !(made.has(s) && stored.has(s, 'Activity')));
+  add(ASSOCIATION_ADDED, !assoc.length);
+  if (assoc.length) return { results: res, header: h, after: null };
   // a set that is not only additions is not applied further: its DELETEs and SETs would act on a graph it has wrongly changed
   if (read.length && (gone || changed) && !sw.has('additions-only')) return { results: res, header: h, after: null };
   for (const c of read) {

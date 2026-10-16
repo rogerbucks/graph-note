@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/changes.test.mjs",
+  "test": "a model may propose to set what a person's unplanned work made",
+  "seen_failing_first": false,
+  "evidence": "Passes against the old code, which also let anyone set work an unplanned activity made; it pins that a model may still do so once the rule fails closed for unknown activities (the head's plain_run is now associated with a Person). The unknown-activity case beside it failed first."
+}

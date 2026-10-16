@@ -9,6 +9,7 @@ from collections.abc import Collection
 from typing import TYPE_CHECKING, Any
 
 from graphspec.reader.lexer import quote
+from graphspec.rules.provenance import AGENT_LABELS, had_plan
 
 if TYPE_CHECKING:
     from graphspec.reader.store import Store
@@ -98,8 +99,8 @@ def foreign_generations(
     st: Store, g: str, new_edges: Collection[tuple], made: Collection[str], by: str
 ) -> list[tuple]:
     """The added WAS_GENERATED_BY links that do not come from a thing the set adds, to an Activity
-    associated with the set's author: a link from a thing already there, or to an engine run or
-    another author's run, would make a cache."""
+    associated with the set's author that HAD_PLAN no rule: a link from a thing already there, or
+    to an engine run, a planned activity or another author's run, would make a cache."""
     from graphspec.rules.plain_graph import World
 
     w = World.from_store(st)[g]
@@ -108,11 +109,73 @@ def foreign_generations(
         return (
             a in w.nodes
             and "Activity" in w.nodes[a][0]
+            and not had_plan(w, a)
             and any(e[2] == by for e in w.out(a, "ASSOCIATED_WITH"))
         )
 
     return [
         e for e in new_edges if e[1] == "WAS_GENERATED_BY" and not (e[0] in made and own(e[2]))
+    ]
+
+
+PLAN_ADDED = (
+    "an added HAD_PLAN comes from an Activity the set adds, and never from a model or software "
+    "agent (§24)"
+)
+
+
+def foreign_plans(
+    st: Store, g: str, new_edges: Collection[tuple], made: Collection[str], kind: str | None
+) -> list[tuple]:
+    """The added HAD_PLAN links that do not come from an Activity the set adds, or any when the
+    author is a model or a software agent: a plan added later to work already there would freeze it
+    as a cache."""
+    from graphspec.rules.plain_graph import World
+
+    w = World.from_store(st)[g]
+    return [
+        e
+        for e in new_edges
+        if e[1] == "HAD_PLAN"
+        and (kind == "Model" or not (e[0] in made and "Activity" in w.nodes[e[0]][0]))
+    ]
+
+
+ASSOCIATION_ADDED = "an added ASSOCIATED_WITH comes from an Activity the set adds (§24)"
+
+
+def foreign_associations(
+    st: Store, g: str, new_edges: Collection[tuple], made: Collection[str]
+) -> list[tuple]:
+    """The added ASSOCIATED_WITH links that do not come from an Activity the set adds: one added
+    to work already there would turn a fail-closed cache back into ordinary data."""
+    from graphspec.rules.plain_graph import World
+
+    w = World.from_store(st)[g]
+    return [
+        e
+        for e in new_edges
+        if e[1] == "ASSOCIATED_WITH" and not (e[0] in made and "Activity" in w.nodes[e[0]][0])
+    ]
+
+
+def added_link_checks(
+    st: Store, g: str, new_edges: Collection[tuple], made: Collection[str], kind: str | None
+) -> list[tuple[str, list[tuple], str]]:
+    """The checks on the plans and associations a set adds, each as (label, the links that break
+    it, what to do): a plan and an association come only from an Activity the set adds."""
+    return [
+        (
+            PLAN_ADDED,
+            foreign_plans(st, g, new_edges, made, kind),
+            "a plan is added only for an Activity the set adds, and an engine derives, "
+            "a model does not",
+        ),
+        (
+            ASSOCIATION_ADDED,
+            foreign_associations(st, g, new_edges, made),
+            "an association is added only for an Activity the set adds",
+        ),
     ]
 
 
@@ -126,6 +189,33 @@ def apply_change(store: Store, g: str, c: dict[str, Any]) -> tuple[str, str] | N
 
     def has(k, labels):
         return k is not None and set(labels) <= nodes[k]["labels"]
+
+    # a cache is anything WAS_GENERATED_BY an activity that HAD_PLAN a rule (§24, W3C PROV), or by
+    # an unknown activity, one with neither a plan nor an agent associated with it: it fails
+    # closed. Work an associated Person or Model made without a plan is ordinary
+    def planned(a):
+        return any(e[1] == "HAD_PLAN" and e[0] == a for e in graph["edges"])
+
+    def is_agent_node(key):
+        # an agent: a Person, Organization, SoftwareAgent or Model, or a Ref that resolves to one
+        # (a Ref that names no graph the store holds, or nothing in it, is none)
+        if "Ref" not in nodes[key]["labels"]:
+            return bool(AGENT_LABELS & nodes[key]["labels"])
+        p = nodes[key]["props"]
+        if not isinstance(p.get("graph"), str) or p["graph"] not in store.graphs:
+            return False
+        found = store.find(p["graph"], p.get("ref"))
+        return found is not None and bool(
+            AGENT_LABELS & store.graph(p["graph"])["nodes"][found]["labels"]
+        )
+
+    def has_agent(a):
+        return any(
+            e[1] == "ASSOCIATED_WITH" and e[0] == a and is_agent_node(e[2]) for e in graph["edges"]
+        )
+
+    def makes_cache(a):
+        return planned(a) or not has_agent(a)
 
     if c["kind"] == "thing":
         where = c["thing"]
@@ -143,16 +233,8 @@ def apply_change(store: Store, g: str, c: dict[str, Any]) -> tuple[str, str] | N
         ):
             return "record", where
 
-        # (a model's own work, made under an activity of the model, is not one)
-        def model_run(a):
-            return any(
-                e[1] == "ASSOCIATED_WITH" and e[0] == a and "Model" in nodes[e[2]]["labels"]
-                for e in graph["edges"]
-            )
-
         if any(
-            e[1] == "WAS_GENERATED_BY" and e[0] == k and not model_run(e[2])
-            for e in graph["edges"]
+            e[1] == "WAS_GENERATED_BY" and e[0] == k and makes_cache(e[2]) for e in graph["edges"]
         ):
             return "record", where
         if c["op"].startswith("set"):
@@ -161,6 +243,13 @@ def apply_change(store: Store, g: str, c: dict[str, Any]) -> tuple[str, str] | N
             nodes[k]["props"].update(c["set"])
             return None
         touching = [e for e in graph["edges"] if e[0] == k or e[2] == k]
+        # a plan and the generation of a cache are the engine's: not removed with the thing they
+        # touch
+        if any(
+            e[1] == "HAD_PLAN" or (e[1] == "WAS_GENERATED_BY" and makes_cache(e[2]))
+            for e in touching
+        ):
+            return "record", where
         if touching and c["op"] == "delete-thing":
             return "dangling", where
         c["links"] = [
@@ -179,6 +268,10 @@ def apply_change(store: Store, g: str, c: dict[str, Any]) -> tuple[str, str] | N
     )
     if at < 0:
         return "find", where
+    # a plan, and the generation of a cache, are the engine's part: never removed or changed,
+    # whoever the change is by
+    if c["type"] == "HAD_PLAN" or (c["type"] == "WAS_GENERATED_BY" and makes_cache(b)):
+        return "record", where
     if c["op"].startswith("set"):
         graph["edges"][at][3].update(c["set"])
     else:

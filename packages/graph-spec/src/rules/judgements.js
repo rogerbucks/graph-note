@@ -7,6 +7,7 @@ const { jcs, hash16, basisHash } = require('../hashing/canonical-json.js');
 const { bandRank } = require('./certainty.js');
 const { viewAt, below } = require('./paths.js');
 const { lensBuckets } = require('./lenses.js');
+const { proposersOf, proposerWarnings: proposerWarningsOf } = require('./proposers.js');
 
 // §23 judgements
 const JUDGEMENT_EDGES = ['RESTS_ON', 'ASSUMES', 'UNDER'];
@@ -128,18 +129,10 @@ function judgementsRules(w, jg) {
     !Object.entries(w).some(([x, other]) => x !== jg && other.labelled('Ref').some((r) => other.p(r).graph === jg)),
   ]);
   out.push([
-    '§23 rule 6: every proposal names the activity and the model that generated it',
+    '§23 rule 6: every proposal is attributed to the model that proposed it',
     g.labelled('Proposal').every((p) => {
-      const ms = g
-        .out(p, 'WAS_GENERATED_BY')
-        .filter((e) => g.has(e[2], 'Activity'))
-        .flatMap((e) =>
-          g
-            .out(e[2], 'ASSOCIATED_WITH')
-            .filter((x) => g.has(x[2], 'Ref'))
-            .map((x) => g.p(x[2])),
-        );
-      return ms.length && ms.every((m) => resolve(w, m)[1].has('Model'));
+      const ms = proposersOf(w, g, p, resolve);
+      return ms.length && ms.every((m) => m.labels.has('Model'));
     }),
   ]);
   out.push([
@@ -149,4 +142,7 @@ function judgementsRules(w, jg) {
   return out;
 }
 
-module.exports = { resolve, review, whyLayer, judgementsRules };
+/** The warnings for a proposal whose proposer is named in the old form, through ASSOCIATED_WITH on its activity (§23 rule 6). */
+const proposerWarnings = (w, jg) => proposerWarningsOf(w, jg, resolve);
+
+module.exports = { resolve, review, whyLayer, judgementsRules, proposerWarnings };

@@ -15,6 +15,7 @@ from graphspec.rules.change_apply import (
     LABELS,
     adds_cache,
     apply_change,
+    added_link_checks,
     foreign_generations,
     is_record_add,
     stop_fix,
@@ -24,6 +25,7 @@ from graphspec.rules.certainty import claim_status, confidence_from_evidence, la
 from graphspec.rules.graph_check import check
 from graphspec.rules.plain_graph import World
 from graphspec.rules.projection import canon
+from graphspec.rules.provenance import AGENT_LABELS, activity_warnings
 from graphspec.rules.schema_types import untyped
 
 if TYPE_CHECKING:
@@ -149,11 +151,15 @@ def check_changeset(
     def author_of(world):
         """An author is known if the graphs hold it, or the set itself declares it (§24)."""
         who = [world[g].nodes[h["by"]][0] for g in world.graphs if h["by"] in world[g].nodes]
+        # the header's `by` reads as WAS_ATTRIBUTED_TO that agent for every change in the set
+        # (req:24.prov-attributed); a software agent is held to what a model is held to
         kind = (
             "Model"
-            if any("Model" in labels for labels in who)
+            if any(labels & {"Model", "SoftwareAgent"} for labels in who)
             else "Person"
             if any("Person" in labels for labels in who)
+            else "Organization"
+            if any("Organization" in labels for labels in who)
             else None
         )
         known = sorted(
@@ -161,7 +167,7 @@ def check_changeset(
                 i
                 for g in world.graphs.values()
                 for i, (labels, _) in g.nodes.items()
-                if labels & {"Person", "Model"}
+                if labels & AGENT_LABELS
             }
         )
         return kind, known
@@ -185,6 +191,7 @@ def check_changeset(
     kind, known = author_of(World.from_store(st))
     add_author(kind, known)
     after = _state(World.from_store(st)[h["graph"]])
+    h["warnings"] = activity_warnings(World.from_store(st), h["graph"])
     bc, ac = Counter(before[1]), Counter(after[1])
     gone = [i for i in before[0] if i not in after[0]] + [e[:3] for e in bc if ac[e] < bc[e]]
     changed = [i for i in before[0] if i in after[0] and before[0][i] != after[0][i]]
@@ -216,6 +223,11 @@ def check_changeset(
     )
     if foreign:
         return res, h, None
+    added = [e for e in ac if ac[e] > bc[e]]
+    for label, bad, fix in added_link_checks(st, h["graph"], added, new_nodes, kind):
+        add(label, not bad, f"{bad[:2]} — {fix}")
+        if bad:
+            return res, h, None
     # a set that is not only additions is not applied further: its DELETEs and SETs would act on a
     # graph it has wrongly changed
     if read and (gone or changed) and "additions-only" not in switches:

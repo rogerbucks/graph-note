@@ -8,6 +8,7 @@ const { section20 } = require('./certainty.js');
 const { pathsRules } = require('./paths.js');
 const { judgementsRules } = require('./judgements.js');
 const { servedRules } = require('./servings.js');
+const { provRules } = require('./provenance.js');
 
 // §23 applies to a graph that declares the judgement basis (RESTS_ON), or holds proposals or servings — as graph_rules.py
 const isJudgementGraph = (g) =>
@@ -61,7 +62,7 @@ function check(w, name, matrix, sw = new Set()) {
     back = false;
   }
   let out = [t5, ['§18: the flat projection rebuilds the graph', back]];
-  out = out.concat(section20(g, sw), pathsRules(g));
+  out = out.concat(section20(g, sw), pathsRules(g), provRules(w, name));
   if (isJudgementGraph(g)) out = out.concat(judgementsRules(w, name), matrix ? servedRules(w, name, matrix) : []);
   return out;
 }

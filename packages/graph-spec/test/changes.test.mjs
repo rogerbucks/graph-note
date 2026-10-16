@@ -27,6 +27,8 @@ for (const c of table.cases) {
         .sort(),
       c.failed.map((k) => table.labels[k]).sort(),
     );
+    // what the check warns of, for the cases that say (an unknown activity's work is read as a cache)
+    if (c.warnings) assert.deepEqual(r.header.warnings, c.warnings);
     const changes = r.header.changes;
     assert.deepEqual(
       changes.map((x) => [x.op, x.reason]),
@@ -36,7 +38,8 @@ for (const c of table.cases) {
     c.changes.forEach((x, i) => x[2] && assert.deepEqual(changes[i].links, x[2]));
     for (const x of changes) assert.match(x.id, /^[0-9a-f]{16}$/);
     assert.equal(new Set(changes.map((x) => x.id)).size, changes.length);
-    assert.equal(r.after, c.after === null ? null : stateOf([[...table.head, ...c.after].join('\n')]));
+    const head = table.head.map((line) => (c.head_changed ?? []).find(([old]) => old === line)?.[1] ?? line);
+    assert.equal(r.after, c.after === null ? null : stateOf([[...head, ...c.after].join('\n')]));
     if (changes.length === 1) ids.set(c.name, changes[0].id);
     if (c.same_id_as) assert.equal(changes[0].id, ids.get(c.same_id_as));
   });

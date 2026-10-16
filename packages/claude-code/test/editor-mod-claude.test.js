@@ -96,7 +96,7 @@ describe('Claude is the only AI the browser editor offers (cc_claude_only)', () 
     for (const kind of ['Model', 'Person', 'Step']) {
       const outcome = await launcher.propose({ changes: [{ op: 'add-thing', name: 'someone', kind, properties: {} }] });
       assert.equal(outcome.ok, false, kind);
-      assert.match(outcome.why, /cannot add a Person, a Model or a Step/);
+      assert.match(outcome.why, /cannot add a Person, an Organization, a SoftwareAgent, a Model or a Step/);
     }
     assert.equal(readFileSync(where.plan, 'utf8'), PLAN, 'nothing was written');
     assert.equal((await launcher.propose({ changes: [EXTRA] })).ok, true);
