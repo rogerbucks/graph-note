@@ -4,7 +4,7 @@
 
 **Test diagram:**
 
-Before you start, put two animated GIFs in this note's folder, `Device checks/20 Animated images`, on the Mac, outside Obsidian: one larger than 5 MB named `big.gif` (a long screen recording saved as a GIF will do), and a small one named `small.gif`. Take them out again afterwards.
+Before you start, make the files: run `node scripts/reset-test-vault.mjs` in the repository (or `node scripts/make-test-files.mjs`, which makes only the test files). It writes two animated GIFs into this note's folder, `Device checks/20 Animated images`: one larger than 5 MB named `big.gif`, which git does not keep and the script makes each time, and a small one named `small.gif`. Nothing is put in by hand.
 
 ```gql
 // graph: sizes · SOURCE
@@ -24,7 +24,7 @@ The style block: a picture on every clip's box.
 
 **Do this:**
 
-1. Put the two GIFs in this note's folder and open this note: the drawing comes at once.
+1. Make the two GIFs, as above, and open this note: the drawing comes at once.
 2. Look at Big's box: no picture, only the Play control where it would be. Small's picture moves.
 3. Open Big's details: no image, and the words say why, with the limits.
 4. Press Play on Big's image in the details: nothing moves, and it says why again.

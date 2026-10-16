@@ -15,14 +15,14 @@
 
 **Do this:**
 
-1. Drag any image into the vault's root and name it photo.png; drag any PDF there and name it report.pdf. On the iPhone, save them to the vault's folder from the Files app.
+1. Make the files: run `node scripts/reset-test-vault.mjs` in the repository (or `node scripts/make-test-files.mjs`, which makes only the test files). It writes photo.png, an image, and report.pdf, a PDF, into this note's folder, `Device checks/21 Links and attachments`. Nothing is put in by hand. On the iPhone they arrive by Obsidian Sync, with its Images and PDFs file types on.
 2. Open this note again: the Plan box has a paperclip and 2 at its top left.
 3. With VoiceOver on, move to the Plan box: it is read with "2 attachments".
 4. Tap Plan: Attachments (2) lists "photo.png — image" and "report.pdf — PDF". Tap report.pdf: Obsidian opens it.
 
 **Checklist line:**
 
-> **H-03** With photo.png and report.pdf in the vault, the box that links both carries a paperclip and 2 at its top
+> **H-03** With photo.png and report.pdf made in the vault by the generator (reset-test-vault), the box that links both carries a paperclip and 2 at its top
 > left, and VoiceOver reads "2 attachments" with its name. Its details list them under Attachments (2), as "photo.png —
 > image" and "report.pdf — PDF"; tap one and Obsidian opens it.
 

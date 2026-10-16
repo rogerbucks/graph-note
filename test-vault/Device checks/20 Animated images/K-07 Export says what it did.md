@@ -4,7 +4,7 @@
 
 **Test diagram:**
 
-Before you start, put animated GIFs named `tom.gif` and `kit.gif` in this note's folder, `Device checks/20 Animated images`, on the Mac, outside Obsidian. Take them out again afterwards, with the exported files.
+Before you start, make the files: run `node scripts/reset-test-vault.mjs` in the repository (or `node scripts/make-test-files.mjs`, which makes only the test files). It writes animated GIFs named `tom.gif` and `kit.gif` into this note's folder, `Device checks/20 Animated images`. Nothing is put in by hand. Take the exported files out again afterwards.
 
 ```gql
 // graph: export · SOURCE
@@ -24,7 +24,7 @@ The style block: a picture on every cat's box.
 
 **Do this:**
 
-1. Put the two GIFs in this note's folder and open this note.
+1. Make the two GIFs, as above, and open this note.
 2. Press Export, choose SVG, and press Export it: read the notice.
 3. Open the SVG file in a browser: the pictures move. Turn the reduce-motion setting on and reload it: they are still. Turn the setting off again.
 4. Press Export, choose PNG, and press Export it: read the notice, and open the PNG.

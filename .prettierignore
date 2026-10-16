@@ -13,6 +13,8 @@ python/
 test/tests-first/
 # Obsidian writes the test vault's settings files in its own layout; the test-vault tests still check their content
 test-vault/.obsidian/
+# the files the test generator makes (scripts/make-test-files.mjs), byte for byte as it writes them
+test-vault/Graph files/
 test/seen-failing/
 # the Claude Code mod's build (packages/claude-code/esbuild.config.mjs), and the API types Claude Code lays beside it
 packages/claude-code/mod/hooks/graph.js

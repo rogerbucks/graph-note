@@ -4,7 +4,7 @@
 
 **Test diagram:**
 
-Before you start, put four animated images and one still one in this note's folder, `Device checks/20 Animated images`, on the Mac, outside Obsidian: an animated GIF named `cat.gif`, an animated PNG (APNG) named `spin.png`, an animated WebP named `dance.webp`, an SVG that animates (with an `<animate>` element) named `loop.svg`, and any still PNG named `kit.png`. Take them out again afterwards.
+Before you start, make the files: run `node scripts/reset-test-vault.mjs` in the repository (or `node scripts/make-test-files.mjs`, which makes only the test files). It writes four animated images and one still one into this note's folder, `Device checks/20 Animated images`: an animated GIF named `cat.gif`, an animated PNG (APNG) named `spin.png`, an animated WebP named `dance.webp`, an SVG that animates (with an `<animate>` element) named `loop.svg`, and a still PNG named `kit.png`. Nothing is put in by hand.
 
 ```gql
 // graph: pets · SOURCE
@@ -17,7 +17,7 @@ Before you start, put four animated images and one still one in this note's fold
 
 **Do this:**
 
-1. Put the five images in this note's folder, as above, and open this note.
+1. Make the five images, as above, and open this note.
 2. Tap Ann, or Tab to Ann and press Enter: the details open. Under Images, cat.gif, spin.png, dance.webp and loop.svg each move, each with a Pause button.
 3. Read the site entry: it says the address is outside the vault and is not loaded, and shows no image.
 4. Open Kit's details: kit.png is shown still, with no button.

@@ -20,6 +20,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import * as resetScript from '../scripts/reset-test-vault.mjs';
+import { TEST_FILES, makeTestFiles, pathOf } from '../scripts/make-test-files.mjs';
 import { auditRequirements, REQUIREMENTS } from '../scripts/check-requirements.mjs';
 import { exists, read, readJSON, path, notIgnored, ROOT } from './repository/repo.js';
 
@@ -38,6 +39,8 @@ const guideMap = () =>
       m[2].split(',').map((s) => s.trim()),
     ]),
   );
+/** The repository paths of the files the generator makes and git keeps; the large GIF is made at set-up and ignored. */
+const madeFiles = () => TEST_FILES.filter((e) => !e.large).map((e) => `${VAULT}/${pathOf(e)}`);
 const requirementIds = () => new Set([...read(REQUIREMENTS).matchAll(/^\((\w+):Requirement \{/gm)].map((m) => m[1]));
 
 describe('the test vault holds dummy notes, each tied to what it exercises', () => {
@@ -119,7 +122,8 @@ describe('only the notes and two settings are committed', () => {
     const allowed = (f) =>
       KEPT.includes(f) ||
       /^test-vault\/[^/]+\.md$/.test(f) ||
-      /^test-vault\/Device checks\/([^/]+\/)?[^/]+\.md$/.test(f);
+      /^test-vault\/Device checks\/([^/]+\/)?[^/]+\.md$/.test(f) ||
+      madeFiles().includes(f); // the small images and the PDF scripts/make-test-files.mjs makes
     assert.deepEqual(
       tracked.filter((f) => !allowed(f)),
       [],
@@ -142,6 +146,7 @@ describe('each session in the vault starts and ends clean', () => {
     }
     mkdirSync(join(dir, VAULT, '.obsidian'));
     for (const f of KEPT) cpSync(path(f), join(dir, f));
+    makeTestFiles(join(dir, VAULT), { large: false }); // as committed here: the small ones are kept, the large one is not
     git(dir, 'add', '-A');
     git(dir, 'commit', '-q', '-m', 'vault');
     // the plugin build at the repository root, as `npm run build` leaves it
@@ -279,6 +284,23 @@ describe('each session in the vault starts and ends clean', () => {
       for (const gone of ['Untitled.md', '.obsidian/workspace.json', 'A folder'])
         assert.ok(!existsSync(join(dir, VAULT, gone)), `${gone} is removed`);
       assert.equal(git(dir, 'status', '--porcelain', '--', VAULT), '');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  // proves: test_files_generated
+  test('fresh makes the GIF over the size limit, which git ignores, and puts back a test file that was removed', () => {
+    const dir = scratchRepo();
+    try {
+      const big = TEST_FILES.find((e) => e.large);
+      const small = TEST_FILES.find((e) => !e.large && e.format === 'gif');
+      const where = (e) => join(dir, VAULT, pathOf(e));
+      rmSync(where(small));
+      reset(dir);
+      assert.ok(lstatSync(where(big)).size > 5 * 1024 * 1024, 'big.gif is over 5 MB');
+      assert.ok(existsSync(where(small)), 'a missing test file is back');
+      assert.equal(git(dir, 'status', '--porcelain', '--', VAULT), '', 'git sees nothing new');
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
