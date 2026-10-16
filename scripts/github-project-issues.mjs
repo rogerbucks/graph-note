@@ -1,9 +1,10 @@
 // The mirror's own issues (spec §12, requirements_checked_in_ci): reading them from GitHub, by the logins it adopts (the
 // repository's owner and the workflows' bot), and the guards that keep the mirror from making the same issue twice. An
-// issue the mirror does not find as its own it makes again, so if GitHub's list by creator ever failed to give back the
-// bot's issues, every push to main would make them all again. So the first issue an apply makes is looked for in that
-// list at once, and before making any it looks among the newest issues for one of its own that the list missed; either
-// stops the creating. A run in the workflow may also make at most MAX_CREATES issues on a board that has its issues.
+// issue the mirror does not find as its own it makes again, so if GitHub's list by creator failed to give back the
+// bot's issues, every push to main would make them all again. The list by creator does work, but may be a moment behind
+// an issue just made, so the mirror also reads the newest issues, and the first issue an apply makes is looked for in
+// both, again after each delay; only an issue that none of them gives back stops the creating. The apply edits, closes
+// and reopens issues before it makes any, so a stop never holds back a downgrade. A run in the workflow may also make at most MAX_CREATES issues on a board that has its issues.
 // Through a runner handed in, as github-project-gh.mjs.
 import { BOT_LOGIN, adoptedId } from './github-project-desired.mjs';
 import { whole } from './github-project-read.mjs';
@@ -66,11 +67,17 @@ export function readNewest(run, repo) {
 /** The logins whose issues the mirror adopts: the repository's owner, and the workflows' bot, which runs it on main. */
 export const adoptersOf = (repo) => [repo.split('/')[0], BOT_LOGIN];
 
-/** The issues each of the `adopters` wrote, once each, by number. */
+/**
+ * The issues each of the `adopters` wrote, once each, by number: the lists by creator, and the newest issues of the
+ * repository that an adopter wrote. GitHub's list by creator works (`creator=github-actions[bot]` gives the workflows'
+ * bot's issues) but may be a moment behind an issue just made (run 38891890822), and an issue it has not yet listed would
+ * be made again; the unfiltered list of the newest issues shows it at once.
+ */
 export function readAdoptable(run, repo, adopters) {
+  const logins = [adopters].flat();
   const found = new Map();
-  for (const login of [adopters].flat())
-    for (const issue of readIssues(run, repo, login)) found.set(issue.number, issue);
+  for (const login of logins) for (const issue of readIssues(run, repo, login)) found.set(issue.number, issue);
+  for (const issue of readNewest(run, repo)) if (logins.includes(issue.author)) found.set(issue.number, issue);
   return [...found.values()].sort((a, b) => a.number - b.number);
 }
 
@@ -84,7 +91,7 @@ const unlisted = (creator) =>
  * issue is made, and stops when the list by `creator` does not give that issue back. Either way the issue would be made
  * again by every run, so the creating stops at once.
  */
-export function createGuard(read, repo, plan) {
+export function createGuard(read, repo, plan, { sleep = () => {}, delays = [] } = {}) {
   const creator = plan.creator;
   const stop = () => new CreatesUnlisted(`${unlisted(creator)}; creating stopped to avoid duplicates`);
   return {
@@ -93,7 +100,12 @@ export function createGuard(read, repo, plan) {
       if (readNewest(read, repo).some((i) => making.has(adoptedId(i, plan.adopters)))) throw stop();
     },
     after(number) {
-      if (!readIssues(read, repo, creator).some((i) => i.number === number)) throw stop();
+      // the lists may be a moment behind the issue just made: look again after each delay before giving up
+      for (let tried = 0; ; tried += 1) {
+        if (readAdoptable(read, repo, plan.adopters ?? creator).some((i) => i.number === number)) return;
+        if (tried >= delays.length) throw stop();
+        sleep(delays[tried]);
+      }
     },
   };
 }

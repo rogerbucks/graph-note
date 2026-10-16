@@ -200,17 +200,8 @@ const flags = (flag, values) => values.flatMap((v) => [flag, v]);
 function doIssues(act, repo, plan, guard) {
   const made = {};
   const issue = (...args) => inRepo(repo, ['issue', ...args]);
-  if (plan.issues.create.length) guard.before();
-  for (const d of plan.issues.create) {
-    const url = act(
-      issue('create', '--title', d.title, '--body-file', '-', ...flags('--label', d.labels)),
-      d.body,
-    ).trim();
-    made[d.id] = { number: Number(url.split('/').at(-1)), url };
-    // the first one made must be in the list by creator, or every run would make it again
-    if (Object.keys(made).length === 1) guard.after(made[d.id].number);
-    if (d.state === 'closed') act(issue('close', String(made[d.id].number), '--reason', 'completed'));
-  }
+  // The changes to the issues GitHub holds come first, so a creating that stops (guard.after) never keeps back a
+  // downgrade: a requirement whose proof went down is reopened and relabelled whatever happens to the new issues.
   for (const u of plan.issues.update) {
     const args = ['edit', String(u.number)];
     if (u.title) args.push('--title', u.issue.title);
@@ -231,6 +222,17 @@ function doIssues(act, repo, plan, guard) {
         `Requirement \`${r.id}\` is no longer in \`${REQUIREMENTS}\`, so this issue is closed and labelled \`${REMOVED_LABEL}\`. It is kept, not deleted. Generated: do not edit.\n`,
       );
     if (r.close) act(issue('close', number, '--reason', 'not planned'));
+  }
+  if (plan.issues.create.length) guard.before();
+  for (const d of plan.issues.create) {
+    const url = act(
+      issue('create', '--title', d.title, '--body-file', '-', ...flags('--label', d.labels)),
+      d.body,
+    ).trim();
+    made[d.id] = { number: Number(url.split('/').at(-1)), url };
+    // the first one made must be listed, or every run would make it again
+    if (Object.keys(made).length === 1) guard.after(made[d.id].number);
+    if (d.state === 'closed') act(issue('close', String(made[d.id].number), '--reason', 'completed'));
   }
   return made;
 }
@@ -287,7 +289,7 @@ export function executePlan(run, repo, plan, opts = {}) {
     const { color, description } = labelStyle(name);
     act(inRepo(repo, ['label', 'create', name, '--color', color, '--description', description]));
   }
-  const made = doIssues(act, repo, plan, createGuard(read, repo, plan));
+  const made = doIssues(act, repo, plan, createGuard(read, repo, plan, settings));
   if (plan.project.unread) return;
   const known = { ...plan.issues.held, ...made };
   const idByNumber = new Map(Object.entries(known).map(([id, i]) => [i.number, id]));

@@ -375,7 +375,8 @@ describe('reading GitHub', () => {
     // through the REST list endpoint, by creator (test/github-project-adopt.test.js has the whole call)
     const lists = gh.hub.calls.filter((c) => c.args[0] === 'api' && /\/issues\?/.test(c.args[1]));
     const asked = lists.map((c) => new URLSearchParams(c.args[1].split('?')[1]).get('creator'));
-    assert.deepEqual(asked, ['rogerbucks', 'github-actions[bot]']);
+    // then the newest issues of anyone, which has no creator, to catch an issue the lists by creator have not yet got
+    assert.deepEqual(asked, ['rogerbucks', 'github-actions[bot]', null]);
     assert.ok(remote.issues.every((i) => i.author === 'rogerbucks'));
     assert.ok(!remote.issues.some((i) => i.number === 900));
   });
