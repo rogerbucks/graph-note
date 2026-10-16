@@ -28,15 +28,34 @@ function showMenu(entries: MenuEntry[], at: { x: number; y: number }, doc: Docum
   const menu = doc.createElement('div');
   menu.setAttribute('class', 'gn-menu');
   menu.setAttribute('role', 'menu');
+  menu.setAttribute('aria-label', 'Menu');
+  menu.setAttribute('aria-orientation', 'vertical');
   menu.style.left = `${at.x}px`;
   menu.style.top = `${at.y}px`;
-  const close = () => {
+  // the keyboard goes back to where it was when the menu closes, unless a click already put it somewhere else
+  const opener = doc.activeElement as HTMLElement | null;
+  let open = true;
+  const close = (back = true) => {
+    if (!open) return;
+    open = false;
     menu.remove();
     doc.removeEventListener('pointerdown', away, true);
     doc.removeEventListener('keydown', escape, true);
+    if (back) opener?.focus();
   };
-  const away = (e: Event) => void (menu.contains(e.target as Node) || close());
+  const away = (e: Event) => void (menu.contains(e.target as Node) || close(false));
   const escape = (e: KeyboardEvent) => void (e.key === 'Escape' && close());
+  // arrow keys, Home and End walk the rows (the first after the last); Escape and Tab leave the menu
+  menu.addEventListener('keydown', (e) => {
+    const rows = Array.from(menu.querySelectorAll<HTMLElement>('button'));
+    const now = rows.indexOf(doc.activeElement as HTMLElement);
+    const moves: Record<string, number> = { ArrowDown: now + 1, ArrowUp: now - 1, Home: 0, End: rows.length - 1 };
+    const to = Object.hasOwn(moves, e.key) ? moves[e.key] : undefined;
+    if (to !== undefined) rows[(to + rows.length) % rows.length]?.focus();
+    else if (e.key !== 'Escape' && e.key !== 'Tab') return;
+    else close();
+    e.preventDefault();
+  });
   for (const entry of entries) {
     if (entry === 'separator') {
       const rule = doc.createElement('hr');

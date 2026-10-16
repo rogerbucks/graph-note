@@ -240,9 +240,9 @@ The page of the browser editor draws with the display layer shared with the Obsi
 `packages/core/src/display/` (`@graph-note/core/display/<module>`), and imports no Obsidian code. `editor-page.test.js`
 holds that (cc_core_only), and, from C5, the page's host shell: cc_one_renderer, cc_text_not_html, cc_worker_same_origin,
 cc_theme_follows, cc_icons, cc_offline and cc_settings_shared, with its support, `editor-page-support.js` (the page built
-once into a temporary folder and served by the real server, and the worker run as a thread); it is partial until C8 adds
-the keyboard, reduced-motion and text-version cases. `editor-parity.test.js` holds that the same edit
-writes the same bytes here and in Obsidian (cc_same_bytes).
+once into a temporary folder and served by the real server, and the worker run as a thread), and, from C8, the keyboard,
+reduced-motion and text-version cases (`editor-page-access.js`). `editor-parity.test.js` holds that the same edit
+writes the same bytes here and in Obsidian (cc_same_bytes), a decision through the page's card included.
 
 ## The browser editor's page, `page/` (workstream C5)
 
@@ -272,6 +272,14 @@ any other (cc_offline, cc_no_remote), and the server's policy is not loosened fo
   by the settings' decider, else "you", and gives the note's new text for `page-main.ts` to write; the card draws the rows in
   words, with real buttons named for what they act on, a visible focus, the stale notice as a checkbox, and a decision said
   in the status region (WCAG 2.2 AA, spec §11).
+- `keyboard.ts`, `text-version.ts` (workstream C8, cc_keyboard, cc_reduced_motion, cc_text_version; WCAG 2.2 AA) —
+  `skipLink` (the first thing tabbed to, moving focus to the note) and `keepFocus` (a redraw gives the focus back to the
+  control that had it, by kind, name and place); the graph's plain-English sentences as a labelled, never hidden section,
+  the core's `textVersion`, drawn again with every drawing and standing alone when it cannot be drawn. Menus (in
+  `browser-host.ts`) are walked by the arrow keys, Home and End, and Escape or Tab return the focus. `page.css` has the
+  focus ring on every control and a reduced-motion rule that stills every animation, transition and smooth scroll. The page
+  draws the graph as an image, so choosing a thing and editing it are the Obsidian plugin's; what the page writes is a
+  decision on a proposal, a button.
 - `index.html`, `page.css`, `icons/` — the shell, its styles, and the icon files (hand-drawn after Lucide's, credited in
   `licences/bundled.json`; image files, never a code library, cc_one_renderer).
 
