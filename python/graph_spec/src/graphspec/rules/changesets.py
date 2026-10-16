@@ -15,7 +15,9 @@ from graphspec.rules.change_apply import (
     LABELS,
     adds_cache,
     apply_change,
+    PLAN_ADDED,
     foreign_generations,
+    foreign_plans,
     is_record_add,
     stop_fix,
 )
@@ -24,7 +26,7 @@ from graphspec.rules.certainty import claim_status, confidence_from_evidence, la
 from graphspec.rules.graph_check import check
 from graphspec.rules.plain_graph import World
 from graphspec.rules.projection import canon
-from graphspec.rules.provenance import AGENT_LABELS
+from graphspec.rules.provenance import AGENT_LABELS, activity_warnings
 from graphspec.rules.schema_types import untyped
 
 if TYPE_CHECKING:
@@ -190,6 +192,7 @@ def check_changeset(
     kind, known = author_of(World.from_store(st))
     add_author(kind, known)
     after = _state(World.from_store(st)[h["graph"]])
+    h["warnings"] = activity_warnings(World.from_store(st), h["graph"])
     bc, ac = Counter(before[1]), Counter(after[1])
     gone = [i for i in before[0] if i not in after[0]] + [e[:3] for e in bc if ac[e] < bc[e]]
     changed = [i for i in before[0] if i in after[0] and before[0][i] != after[0][i]]
@@ -220,6 +223,15 @@ def check_changeset(
         f"associated with {h['by']}; a cache is made by an engine run, never written",
     )
     if foreign:
+        return res, h, None
+    plans = foreign_plans(st, h["graph"], [e for e in ac if ac[e] > bc[e]], new_nodes, kind)
+    add(
+        PLAN_ADDED,
+        not plans,
+        f"{plans[:2]} — a plan is added only for an Activity the set adds, and an engine "
+        "derives, a model does not",
+    )
+    if plans:
         return res, h, None
     # a set that is not only additions is not applied further: its DELETEs and SETs would act on a
     # graph it has wrongly changed

@@ -3,6 +3,7 @@
 
 const { same } = require('../values/times.js');
 const { resolve } = require('./judgements.js');
+const { proposersOf } = require('./proposers.js');
 
 // §24 servings
 function mayServe(kind, cls, cond, matrix) {
@@ -43,16 +44,8 @@ function servedRules(w, jg, matrix) {
   out.push([
     '§24 H3 rule 4: every proposal a model generated used a serving — it drafted from what it was shown',
     g.labelled('Proposal').every((p) => {
-      const ms = g
-        .out(p, 'WAS_GENERATED_BY')
-        .filter((e) => g.has(e[2], 'Activity'))
-        .flatMap((e) =>
-          g
-            .out(e[2], 'ASSOCIATED_WITH')
-            .filter((x) => g.has(x[2], 'Ref'))
-            .map((x) => g.p(x[2])),
-        );
-      return !ms.some((m) => resolve(w, m)[1].has('Model')) || g.out(p, 'USED').some((e) => g.has(e[2], 'Serving'));
+      const ms = proposersOf(w, g, p, resolve);
+      return !ms.some((m) => m.labels.has('Model')) || g.out(p, 'USED').some((e) => g.has(e[2], 'Serving'));
     }),
   ]);
   return out;

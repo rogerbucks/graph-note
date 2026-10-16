@@ -26,36 +26,34 @@ def prov_rules(db: GrafeoDB, g: str, graphs: Iterable[str] = ()) -> list[tuple[s
     """The provenance rules that apply to graph `g`, as [(label, ok, detail)]; leaves db on `g`."""
     db.set_graph(g)
     out = []
-    derives = {
-        r["a"]: r["rule"]
-        for r in Q(db, "MATCH (a:Activity) RETURN a.id AS a, a.rule AS rule")
-        if isinstance(r["rule"], str) and r["rule"]
-    }
-    if derives:
-        planned = set()
-        for r in Q(
-            db,
-            "MATCH (a:Activity)-[:HAD_PLAN]->(p) RETURN a.id AS a, p.id AS id, p.rule AS rule, p.ref AS ref, labels(p) AS l",  # noqa: E501  # one literal: embedded_queries reads it whole
-        ):
-            rule = derives.get(r["a"])
-            if rule is not None and (
-                r["id"] == rule or r["rule"] == rule or ("Ref" in r["l"] and r["ref"] == rule)
-            ):
-                planned.add(r["a"])
-        bad = sorted(set(derives) - planned)
-        out.append((HAD_PLAN_LABEL, not bad, f"{bad} — link each to its rule with HAD_PLAN"))
+    known = {g, *graphs}
+
+    def labels_of(r):
+        """The labels of what a link goes to: the thing, or what its Ref resolves to (none when the
+        Ref names no graph, or one that is not loaded)."""
+        labels = set(r["l"])
+        if "Ref" not in labels:
+            return labels
+        if not isinstance(r["graph"], str) or r["graph"] not in known:
+            return set()
+        return resolve_ref(db, g, {"ref": r["ref"], "graph": r["graph"]})[1]
+
+    # HAD_PLAN is the only marker of a derivation; its target is the rule's own node (a Rule, whose
+    # id names the engine function and version, §6), or a Ref that resolves to one
+    plans = Q(
+        db,
+        "MATCH (a)-[:HAD_PLAN]->(t) RETURN a.id AS x, t.id AS t, labels(t) AS l, t.ref AS ref, t.graph AS graph",  # noqa: E501  # one literal: embedded_queries reads it whole
+    )
+    if plans:
+        bad = [(r["x"], r["t"]) for r in plans if "Rule" not in labels_of(r)]
+        db.set_graph(g)
+        out.append((HAD_PLAN_LABEL, not bad, f"{bad[:4]} — a plan is a Rule, or a Ref to one"))
     rows = Q(
         db,
         "MATCH (x)-[:WAS_ATTRIBUTED_TO]->(t) RETURN x.id AS x, t.id AS t, labels(t) AS l, t.ref AS ref, t.graph AS graph",  # noqa: E501  # one literal: embedded_queries reads it whole
     )
     if rows:
-        bad = []
-        for r in rows:
-            labels = set(r["l"])
-            if "Ref" in labels:
-                labels = resolve_ref(db, g, {"ref": r["ref"], "graph": r["graph"]})[1]
-            if not is_agent(labels):
-                bad.append((r["x"], r["t"]))
+        bad = [(r["x"], r["t"]) for r in rows if not is_agent(labels_of(r))]
         db.set_graph(g)
         out.append(
             (

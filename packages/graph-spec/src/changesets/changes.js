@@ -7,6 +7,7 @@ const { ProfileError } = require('../reader/profile-error.js');
 const { S, trim } = require('../reader/whitespace.js');
 const { tokens } = require('../reader/tokens.js');
 const { Parser } = require('../reader/parser.js');
+const { AGENT_LABELS } = require('../rules/provenance.js');
 
 const VERBS = new Set(['MATCH', 'DELETE', 'DETACH', 'SET']);
 const WORD = new RegExp(`^${S}*([A-Za-z_]+)`),
@@ -213,25 +214,38 @@ function applyChange(store, g, c) {
   const graph = store.graph(g),
     has = (k, labels) => k !== null && labels.every((x) => graph.nodes.get(k).labels.has(x));
   const where = c.kind === 'thing' ? c.thing : `${c.from} ${c.type} ${c.to}`;
+  const nodeLabels = (key) => graph.nodes.get(key).labels;
+  // a cache is anything WAS_GENERATED_BY an activity that HAD_PLAN a rule (§24, W3C PROV), or by an unknown activity,
+  // one with neither a plan nor an agent associated with it: it fails closed. Work an associated Person or Model made
+  // without a plan is ordinary
+  const hadPlan = (a) => graph.edges.some((e) => e[1] === 'HAD_PLAN' && e[0] === a);
+  const hasAgent = (a) =>
+    graph.edges.some(
+      (e) =>
+        e[1] === 'ASSOCIATED_WITH' &&
+        e[0] === a &&
+        (nodeLabels(e[2]).has('Ref') || AGENT_LABELS.some((x) => nodeLabels(e[2]).has(x))),
+    );
+  const makesCache = (a) => hadPlan(a) || !hasAgent(a);
   if (c.kind === 'thing') {
     const k = store.find(g, c.thing);
     if (!has(k, c.labels)) return ['find', where];
     const labels = graph.nodes.get(k).labels;
     if (RECORD_LABELS.some((x) => labels.has(x))) return ['record', where];
     // an issued document is whatever a delivery delivered
-    const nodeLabels = (key) => graph.nodes.get(key).labels;
     if (graph.edges.some((e) => e[1] === 'DELIVERED' && e[2] === k && nodeLabels(e[0]).has('Delivery')))
       return ['record', where];
-    // a cache is anything WAS_GENERATED_BY an activity that HAD_PLAN a rule (§24, W3C PROV); a value made by an activity
-    // with no plan, a person's or a model's own work among them, is not one
-    const hadPlan = (a) => graph.edges.some((e) => e[1] === 'HAD_PLAN' && e[0] === a);
-    if (graph.edges.some((e) => e[1] === 'WAS_GENERATED_BY' && e[0] === k && hadPlan(e[2]))) return ['record', where];
+    if (graph.edges.some((e) => e[1] === 'WAS_GENERATED_BY' && e[0] === k && makesCache(e[2])))
+      return ['record', where];
     if (c.op.startsWith('set')) {
       if (labels.has('Claim') && Object.keys(c.set).some((x) => CACHE_KEYS.includes(x))) return ['record', where];
       Object.assign(graph.nodes.get(k).props, c.set);
       return null;
     }
     const touching = graph.edges.filter((e) => e[0] === k || e[2] === k);
+    // a plan and the generation of a cache are the engine's: not removed with the thing they touch
+    if (touching.some((e) => e[1] === 'HAD_PLAN' || (e[1] === 'WAS_GENERATED_BY' && makesCache(e[2]))))
+      return ['record', where];
     if (touching.length && c.op === 'delete-thing') return ['dangling', where];
     const idOf = (key) => graph.nodes.get(key).props.id;
     c.links = touching.map((e) => [idOf(e[0]), e[1], idOf(e[2])]);
@@ -244,6 +258,8 @@ function applyChange(store, g, c) {
   if (!has(a, c.ends[0]) || !has(b, c.ends[1])) return ['find', where];
   const at = graph.edges.findIndex((e) => e[0] === a && e[1] === c.type && e[2] === b);
   if (at < 0) return ['find', where];
+  // a plan, and the generation of a cache, are the engine's part: never removed or changed, whoever the change is by
+  if (c.type === 'HAD_PLAN' || (c.type === 'WAS_GENERATED_BY' && makesCache(b))) return ['record', where];
   if (c.op.startsWith('set')) Object.assign(graph.edges[at][3], c.set);
   else graph.edges.splice(at, 1);
   return null;

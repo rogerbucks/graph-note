@@ -132,6 +132,8 @@ declare namespace GraphSpecCheck {
   function readChange(text: string): ReadChange;
   /** The id a statement is given, derived from what it does and never written: the same change has the same id. */
   function changeId(change: ReadChange): string;
+  /** The warnings for proposals whose proposer is named in the old form (ASSOCIATED_WITH on the activity), sorted; each names the fix. */
+  function proposerWarnings(world: World, judgementGraph: string): string[];
   /** The schema's own kinds, left out of drawings. */
   const SCHEMA_LABELS: string[];
   const SPEC_NODES: string[];

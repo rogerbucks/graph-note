@@ -30,7 +30,7 @@ const { project, rebuild, projectsBack } = require('./rules/projection.js');
 const { section20 } = require('./rules/certainty.js');
 const { pathsRules, viewAt, below } = require('./rules/paths.js');
 const { lensBuckets } = require('./rules/lenses.js');
-const { review, whyLayer, judgementsRules } = require('./rules/judgements.js');
+const { review, whyLayer, judgementsRules, proposerWarnings } = require('./rules/judgements.js');
 const { servedRules } = require('./rules/servings.js');
 const { check } = require('./rules/check.js');
 const { completeness } = require('./rules/completeness.js');
@@ -113,4 +113,5 @@ module.exports = {
   splitChangeset,
   readChange,
   changeId,
+  proposerWarnings,
 };

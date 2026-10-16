@@ -4,7 +4,9 @@
 // in the note's judgement graph, a gql block whose graph is `judgements` (or ends `_judgements`): reused when the note has
 // one, else added after the change set. It holds the change's statement, so a decided change is still shown and a
 // rejected one can be read again, who proposed it (the change set's `by`) and who decided and when. The decider is plain
-// text, kept exactly as typed in the settings, or "you" when none is set; it is not a link to a Person.
+// text, kept exactly as typed in the settings, or "you" when none is set. Each Decision is also WAS_ATTRIBUTED_TO the
+// proposer and the decider (W3C PROV, the graph spec's req:24.prov-attributed), agents of this judgement graph only: the
+// decider is never a link to a Person of the data graph.
 import { items } from './block-items.ts';
 import { appended } from './linked-list.ts';
 import { dataKind, gqlSpans, graphOf } from './blocks.ts';

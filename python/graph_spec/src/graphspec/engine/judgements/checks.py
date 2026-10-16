@@ -6,6 +6,7 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
 from graphspec.engine.judgements.basis import basis, judgement_hash, resolve_ref
+from graphspec.engine.judgements.proposers import proposers_of
 from graphspec.engine.judgements.review import review
 from graphspec.engine.queries import Q
 
@@ -80,16 +81,14 @@ def judgements_rules(db: GrafeoDB, jg: str, graphs: Iterable[str]) -> list[tuple
             str(bad),
         )
     )
-    bad = []
-    for r in Q(
-        db,
-        "MATCH (p:Proposal) OPTIONAL MATCH (p)-[:WAS_GENERATED_BY]->(a:Activity)-[:ASSOCIATED_WITH]->(m:Ref) RETURN p.id AS p, m.ref AS m, m.graph AS g, m.id AS rid",  # noqa: E501  # one literal: embedded_queries reads it whole
-    ):
-        if not r["m"] or "Model" not in resolve_ref(db, jg, {"ref": r["m"], "graph": r["g"]})[1]:
-            bad.append(r["p"])
+    bad = [
+        p
+        for p, who in proposers_of(db, jg).items()
+        if not who or any("Model" not in labels for labels in who)
+    ]
     out.append(
         (
-            "§23 rule 6: every proposal names the activity and the model that generated it",
+            "§23 rule 6: every proposal is attributed to the model that proposed it",
             not bad,
             str(bad),
         )

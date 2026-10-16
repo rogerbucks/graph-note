@@ -119,6 +119,9 @@ from graphspec.rules.judgement_checks import (
     is_judgement_graph,
     judgements_rules,
 )
+from graphspec.rules.proposers import (
+    proposer_warnings,
+)
 from graphspec.rules.servings import (
     may_serve,
     served_rules,

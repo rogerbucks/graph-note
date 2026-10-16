@@ -37,7 +37,9 @@ from graphspec.rules.change_apply import (
     LABELS,
     adds_cache,
     apply_change,
+    PLAN_ADDED,
     foreign_generations,
+    foreign_plans,
     gql_of,
     is_record_add,
     stop_fix,
@@ -46,6 +48,7 @@ from graphspec.rules.changes import read_all, split_changeset
 from graphspec.rules.changesets import check_changeset as plain_check_changeset
 from graphspec.rules.graph_check import check
 from graphspec.rules.plain_graph import World
+from graphspec.rules.provenance import activity_warnings
 
 if TYPE_CHECKING:
     from grafeo import GrafeoDB
@@ -275,6 +278,7 @@ def check_changeset(
     add_author(kind, known)
     db.set_graph(h["graph"])
     after = _state(db, h["graph"])
+    h["warnings"] = activity_warnings(World.from_store(st), h["graph"])
     gone = [i for i in before[0] if i not in after[0]] + [
         e[:3] for e in before[1] if after[1][e] < before[1][e]
     ]
@@ -310,6 +314,17 @@ def check_changeset(
         f"associated with {h['by']}; a cache is made by an engine run, never written",
     )
     if foreign:
+        return res, h, None
+    plans = foreign_plans(
+        st, h["graph"], [e for e in after[1] if after[1][e] > before[1][e]], new_nodes, kind
+    )
+    add(
+        PLAN_ADDED,
+        not plans,
+        f"{plans[:2]} — a plan is added only for an Activity the set adds, and an engine "
+        "derives, a model does not",
+    )
+    if plans:
         return res, h, None
     # a set that is not only additions is not applied further
     if read and (gone or changed) and "additions-only" not in switches:

@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from graphspec.rules.judgements import resolve
+from graphspec.rules.proposers import proposers_of
 
 if TYPE_CHECKING:
     from graphspec.rules.plain_graph import World
@@ -76,16 +76,10 @@ def served_rules(
     )
     bad = []
     for p in g.labelled("Proposal"):
-        ms = {
-            g.p(m).get("ref"): g.p(m).get("graph")
-            for _, _, a, _ in g.out(p, "WAS_GENERATED_BY")
-            if g.has(a, "Activity")
-            for _, _, m, _ in g.out(a, "ASSOCIATED_WITH")
-            if g.has(m, "Ref")
-        }
-        if any(
-            "Model" in resolve(w, {"ref": r, "graph": gr})[1] for r, gr in ms.items()
-        ) and not any(g.has(s, "Serving") for _, _, s, _ in g.out(p, "USED")):
+        ms = proposers_of(w, g, p)
+        if any("Model" in m["labels"] for m in ms) and not any(
+            g.has(s, "Serving") for _, _, s, _ in g.out(p, "USED")
+        ):
             bad.append(p)
     out.append(
         (

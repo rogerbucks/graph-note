@@ -37,8 +37,10 @@ and no module requires one that requires it back.
 - **`src/rules/`** — the spec's rules (`graph_rules.py`): `types.js` (§5), `projection.js` (§18), `certainty.js` (§20),
   `paths.js` (§22), `lenses.js` (§15), `judgements.js` (§23), `servings.js` (§24), `completeness.js` (§25),
   `readings.js` and `guessed-readings.js` (a relationship type's readings, declared or guessed), `provenance.js` (W3C
-  PROV is normative: §11 a derivation links to its rule with HAD_PLAN, §24 an attribution goes to a Person, Organization
-  or SoftwareAgent, §12 a successor is generated after what it supersedes; `hadPlan` is also what marks a cache, §24),
+  PROV is normative: §11 a HAD_PLAN goes to a Rule, §24 an attribution goes to a Person, Organization or SoftwareAgent,
+  §12 a successor is generated after what it supersedes; `hadPlan` and the unknown activity, one with neither a plan nor an
+  agent, are what mark a cache, §24, with a warning for the second), `proposers.js` (who proposed a Proposal, through
+  WAS_ATTRIBUTED_TO, the old ASSOCIATED_WITH form accepted with a warning; `proposer-cases.json`),
   and `check.js`, which runs every rule that applies to a graph.
 - **`src/changesets/`** — §24 H1: `dialect-lint.js` (the traps in model-written GQL) and `changeset.js` (checking a
   change set against its base) and `changes.js` (the DELETE and SET statements of a change set, each naming one
