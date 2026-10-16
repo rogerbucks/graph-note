@@ -1,0 +1,72 @@
+// A change as the statement a change set holds (editor spec §17, §24 of the graph spec): an addition is the item as a block
+// writes it, a change of a property is a `SET`, and a removal is a `DELETE` of exactly one thing or link, so every tool
+// that reads GQL reads them and graph-spec's own check dry-runs them. A change's id is derived from its statement by the
+// graph library, never written by anyone, so the same change has the same id wherever it is read. This module writes a
+// statement from a change and reads one back, with the library's own reading of it.
+import gs from '@graph-note/graph-spec';
+import { blankText } from './block-items.ts';
+import type { ChangeOp } from './proposals.ts';
+import { trim } from './whitespace.ts';
+
+/** The statement that makes a change, as a change set holds it: the item for an addition, else a SET or a DELETE. */
+export function statementOf(c: ChangeOp): string {
+  if (c.op === 'add') return c.gql;
+  if (c.op === 'set') return `SET ${c.thing}.${c.key} = ${c.value}`;
+  // a thing goes with the links it has, as the editor takes it out (proposals-apply.ts): DETACH DELETE lists them
+  if (c.op === 'remove-thing') return `MATCH (v {id: ${gs.quote(c.thing)}}) DETACH DELETE v`;
+  return `MATCH (a {id: ${gs.quote(c.from)}})-[r:${c.type}]->(b {id: ${gs.quote(c.to)}}) DELETE r`;
+}
+
+/** An addition's text as its tokens, so spacing never changes what it is. */
+function shapeOf(gql: string): string {
+  try {
+    return gs
+      .tokens(gql)
+      .map((t) => `${t[0]}:${t[3]}`)
+      .join(' ');
+  } catch (e) {
+    if (e instanceof gs.ProfileError) return trim(gql);
+    throw e;
+  }
+}
+
+/**
+ * A change's id, derived from its statement and never written. A DELETE or a SET has the id the graph library gives it
+ * (the one `checkChangeset` reports), an addition the sixteen digits of its tokens' hash: the same change, written either
+ * way, has the same id.
+ */
+export function changeIdOf(c: ChangeOp): string {
+  if (c.op === 'add') return gs.hash16({ op: 'add', gql: shapeOf(c.gql) });
+  try {
+    return gs.changeId(gs.readChange(statementOf(c)));
+  } catch (e) {
+    if (e instanceof gs.ProfileError) return gs.hash16({ op: c.op, statement: statementOf(c) });
+    throw e;
+  }
+}
+
+/**
+ * The change a DELETE or SET statement makes, read as the check reads it; or why the editor cannot review it. A SET of
+ * a link's property, or of more than one property, is the library's to check but is not one this editor lists, since
+ * each row is one change of one value.
+ */
+export function readStatement(text: string): ChangeOp | { refused: string } {
+  let c;
+  try {
+    c = gs.readChange(text);
+  } catch (e) {
+    if (e instanceof gs.ProfileError) return { refused: `${e.msg}: ${e.fix}` };
+    throw e;
+  }
+  if (c.op === 'delete-thing' || c.op === 'detach-delete-thing') return { op: 'remove-thing', thing: c.thing ?? '' };
+  if (c.op === 'delete-link') return { op: 'remove-link', from: c.from ?? '', type: c.type ?? '', to: c.to ?? '' };
+  const keys = Object.keys(c.set ?? {});
+  if (c.op === 'set-link')
+    return { refused: 'a SET of a link’s property is not one the editor lists: edit it in the text' };
+  if (keys.length !== 1)
+    return { refused: 'a SET gives one property: write each as its own statement, as `SET thing.key = value`' };
+  // the value as it is written: what follows the = of the one assignment, in the text with its strings blanked
+  const at = /\bSET\s+[A-Za-z_]\w*\s*\.\s*[A-Za-z_]\w*\s*=/i.exec(blankText(text));
+  const value = at ? trim(text.slice(at.index + at[0].length)) : '';
+  return { op: 'set', thing: c.thing ?? '', key: keys[0] ?? '', value };
+}

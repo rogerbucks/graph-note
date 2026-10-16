@@ -133,10 +133,12 @@ module that ties the parts together, named as the folder is.
   review (`ProposalReview.show`: the changes waiting laid over the graph, nothing written), as a card with the proposal's
   strip. A decision goes through the vault's API against the note as it is then (`vault.process`): Accept writes the change
   into the graph's block through the core's review, which has the pane's own session check it; Reject writes only the
-  record in the change set; Undo takes the last decision back. The reviews are kept by the plugin (`reviewOf`) while it
-  runs, so Undo is still there when the card is drawn again. The person is recorded as "you": Obsidian does not say who is
-  at the keyboard.
-- `proposal-strip.ts` — the card above the drawing: who proposed it, when and what it read; a notice, with a button to say it
+  record in the note's judgement graph; both take the change out of the change set; Undo takes the last decision back. The
+  reviews are kept by the plugin (`reviewOf`) while it runs, so Undo is still there when the card is drawn again. The
+  person is recorded by the name in the settings' Proposals section, exactly as typed, or "you" when it is empty:
+  Obsidian does not say who is at the keyboard.
+- `proposal-strip.ts` — the card above the drawing: who proposed it, when and what it read; what the graph spec's check of
+  the change set said (all passed, or each line that failed); a notice, with a button to say it
   has been read, when the graph has moved since (Accept stays off until then); the changes one to a row, each in plain
   English and its exact text (the GQL, the SET line or the removal, in a code span, and in the buttons' names) with Accept
   and Reject, and its reason as plain text (a model's reason is kept escaped in the note, and unescaped for the card); Accept all and a group's Accept send the ids of what can be accepted now; in groups with Accept and Reject for the group when there are many; Accept all, Reject

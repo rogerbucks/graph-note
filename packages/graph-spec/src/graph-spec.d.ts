@@ -99,6 +99,8 @@ declare namespace GraphSpecCheck {
   const COMMENT_FIX: string;
   /** A text quoted as the profile writes it, each control character GQL has an escape for written as that escape. */
   function quote(s: string): string;
+  /** A text's tokens: [kind, the text as written, line, the value, column]. Throws ProfileError. */
+  function tokens(text: string): [string, string, number, string, number][];
   /** The first sixteen hexadecimal digits of the SHA-256 of an object in canonical JSON (RFC 8785). */
   function hash16(value: unknown): string;
   /** One statement of a change set, as the check reads it (§24). */

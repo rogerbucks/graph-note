@@ -39,7 +39,7 @@ export function noteWithProposal(note: string, proposal: Proposal): string {
   const spans = gqlSpans(note);
   const own = spans.filter((s) => graphOfBlock(s.text) === proposal.graph);
   const after = own.at(-1) ?? spans.at(-1);
-  const block = changeSetText(proposal, new Map(), null);
+  const block = changeSetText(proposal);
   if (!after) return `${note}${note.endsWith('\n') || !note ? '' : '\n'}\n\`\`\`gql\n${block}\n\`\`\`\n`;
   const written = insertBlockAfter(note, { line: after.open, text: after.text }, block);
   return written.ok ? written.note : `${note}\n\`\`\`gql\n${block}\n\`\`\`\n`;

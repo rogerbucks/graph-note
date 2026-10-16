@@ -217,7 +217,9 @@ export type { Stale } from './proposals-basis.ts';
 export { MARK_WORDS } from './proposals-marks.ts';
 export type { ChangeMark, MarkKind, Marks } from './proposals-marks.ts';
 export { changeSetId } from './proposals-text.ts';
-export type { Decision } from './proposals-text.ts';
+export { DECIDER_DEFAULT, deciderName } from './proposals-judgement.ts';
+export type { Decision } from './proposals-judgement.ts';
+export type { ProposalCheck } from './proposals-check.ts';
 export { ProposalReview } from './proposals-review.ts';
 export { aiReady, confirmSend, prepareSend, sendPrepared } from './ai.ts';
 export type {

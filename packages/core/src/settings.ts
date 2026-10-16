@@ -5,6 +5,7 @@ import { DEPARTURES } from './strictness.ts';
 import type { Departure, Strictness, StrictnessSettings } from './strictness.ts';
 import { STYLE } from './layout.ts';
 import { AID_OPTIONS } from './settings-aids.ts';
+import { vaultFolder } from './vault-folder.ts';
 import type { MiniMapSetting } from './settings-aids.ts';
 
 export type { MiniMapSetting } from './settings-aids.ts';
@@ -72,7 +73,12 @@ export interface Settings extends StrictnessSettings {
   exportFolder: string;
   /** The classification above which an export asks first: one of `classifications`. */
   exportAsksAbove: string;
+  /** The name recorded when you accept or reject a change in a proposal, as typed; empty records "you" (§17). */
+  decider: string;
 }
+
+/** The most characters a decider's name is kept to. */
+const MOST_NAME = 200;
 
 const CLASSIFICATIONS = ['Public', 'Internal', 'Confidential', 'Restricted'];
 
@@ -100,6 +106,7 @@ export const DEFAULT_SETTINGS: Settings = {
   exportFolder: '',
   // the lowest, so anything above it asks
   exportAsksAbove: CLASSIFICATIONS[0] ?? '',
+  decider: '',
 };
 
 /** One choice of an option: its value, its name, and, where it needs one, a sentence. */
@@ -112,7 +119,7 @@ export interface Choice {
 /** One option on the settings page: the setting it sets, its part of the page, its name, its sentence, its choices. */
 export interface Option {
   key: keyof Settings;
-  section: 'Strictness' | 'AI models' | 'Formatting' | 'Drawing' | 'Export';
+  section: 'Strictness' | 'AI models' | 'Proposals' | 'Formatting' | 'Drawing' | 'Export';
   name: string;
   sentence: string;
   choices?: Choice[];
@@ -283,6 +290,13 @@ export const OPTIONS: Option[] = [
     sentence:
       'The classification above which an export asks first, naming the classification; one of the classifications set above.',
   },
+  {
+    key: 'decider',
+    section: 'Proposals',
+    name: 'Your name on decisions',
+    sentence:
+      'The name recorded when you accept or reject a change in a proposal, kept exactly as you type it; left empty, it is recorded as “you”.',
+  },
 ];
 
 const text = (v: unknown, fallback = ''): string => (typeof v === 'string' ? v : fallback);
@@ -304,35 +318,6 @@ export function aiModel(given: Partial<AiModel> & Record<string, unknown>, class
     model: text(given.model),
     keyName: text(given.keyName),
   };
-}
-
-const UNSAFE_IN_A_FOLDER = '\\:*?"<>|';
-
-/**
- * A folder inside the vault as the settings keep it: trimmed, with empty parts dropped (`a//b/` is `a/b`), or null when it
- * could reach outside the vault, reach the config folder, or cannot be a folder name on every platform — a leading `/` or
- * `~`, a part that starts with a dot (so `.`, `..` and `.obsidian`), a part that ends in a dot or a space, a name Windows
- * reserves (con, prn, aux, nul, com1–9, lpt1–9), a backslash, a colon, any of `*?"<>|`, or a control character. Empty is
- * next to the note.
- */
-export function vaultFolder(given: unknown): string | null {
-  const folder = typeof given === 'string' ? given.trim() : '';
-  if (!folder) return '';
-  if (folder.startsWith('/') || folder.startsWith('~')) return null;
-  if ([...folder].some((c) => c.charCodeAt(0) < 32 || UNSAFE_IN_A_FOLDER.includes(c))) return null;
-  const parts = folder.split('/').filter((p) => p !== '');
-  return parts.some(unusablePart) ? null : parts.join('/');
-}
-
-// names Windows keeps for devices, whatever follows a dot: con.txt is con
-const RESERVED = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i;
-
-/**
- * Whether a folder name cannot be used for exports: it starts with a dot (so `.`, `..` and the config folder are out),
- * ends in a dot or a space, or is a name Windows reserves.
- */
-function unusablePart(part: string): boolean {
-  return part.startsWith('.') || part.endsWith('.') || part.endsWith(' ') || RESERVED.test(part.split('.')[0] ?? '');
 }
 
 /** Settings read back from what was saved: each known one kept when it is in range, else its default. */
@@ -377,6 +362,8 @@ export function settingsFrom(saved: unknown): Settings {
       typeof s.exportAsksAbove === 'string' && classifications.includes(s.exportAsksAbove)
         ? s.exportAsksAbove
         : (classifications[0] ?? ''),
+    // as typed, spaces and capitals kept; a name is one line, and not an essay
+    decider: typeof s.decider === 'string' ? s.decider.replace(/[\r\n]+/g, ' ').slice(0, MOST_NAME) : d.decider,
   };
 }
 
