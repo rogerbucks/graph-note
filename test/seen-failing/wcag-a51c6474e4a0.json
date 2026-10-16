@@ -1,0 +1,10 @@
+{
+  "file": "test/wcag.test.js",
+  "test": "the Obsidian host: every view, in both themes > the details after a choice, with the trail meets WCAG 2.2 AA in the light theme",
+  "seen_failing_first": false,
+  "fault": true,
+  "commits": [
+    "94c04d41cedd16eaad271a08a02fe7a36d74a888"
+  ],
+  "evidence": "The test was written first and failed at its own commit on the contrast faults it finds in the link buttons of the details; commit 8d82635 fixes them. It could not be replayed because the fault it finds was still there."
+}
