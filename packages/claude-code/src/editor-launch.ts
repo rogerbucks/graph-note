@@ -11,6 +11,7 @@ import { withMatrix } from './editor-matrix.ts';
 import { folderOf, fullPath, nameOf } from './editor-paths.ts';
 import { sendProposal } from './editor-propose.ts';
 import type { ProposeOutcome, ProposeRequest, ProposeReply } from './editor-propose.ts';
+import type { Spawned, SpawnedEnd, SpawnedPiece } from './editor-spawn.ts';
 import { settingsEnvironment, settingsForServer } from './editor-settings-env.ts';
 import type { LaunchSettings } from './editor-settings-env.ts';
 import { NOT_THE_PERSON, NOT_THE_PERSON_ASKING, fromPerson } from './editor-words.ts';
@@ -19,26 +20,10 @@ import type { EditOutcome } from './editor-words.ts';
 // what the launcher says and understands lives in editor-words.ts; it is one module to the code that imports it
 export { confirmArgs, editArgs, fromPerson, sayEdit, sayStopped } from './editor-words.ts';
 export type { EditOutcome } from './editor-words.ts';
+export type { Spawned, SpawnedEnd, SpawnedPiece } from './editor-spawn.ts';
 export { sayProposed } from './editor-propose.ts';
 export type { ProposeOutcome } from './editor-propose.ts';
 export { settingsForServer } from './editor-settings-env.ts';
-
-/** One piece of what a started process wrote, as `$.process.spawn` hands it over. */
-export interface SpawnedPiece {
-  stream: 'stdout' | 'stderr';
-  text: string;
-}
-
-/** How a started process ended. */
-export interface SpawnedEnd {
-  code: number | null;
-  signal: string | null;
-}
-
-/** What `$.process.spawn` returns: the pieces, then how it ended; leaving the loop (`return`) kills the child. */
-export interface Spawned {
-  [Symbol.asyncIterator](): AsyncIterator<SpawnedPiece, SpawnedEnd>;
-}
 
 /** What the launcher is handed by the code that runs it. */
 export interface EditorPorts {
