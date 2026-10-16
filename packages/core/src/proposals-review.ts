@@ -13,7 +13,7 @@ import { PaneSession } from './pane.ts';
 import { applyChange, namesOf, newProblems, notTaken } from './proposals-apply.ts';
 import { basisOf, staleness } from './proposals-basis.ts';
 import type { Stale } from './proposals-basis.ts';
-import { acceptedWith, rejectedWith } from './proposals-author.ts';
+import { acceptedWith, rejectedWith, withProposer } from './proposals-author.ts';
 import { checkProposal, checkRefusal, proposerKind } from './proposals-check.ts';
 import { DECIDER_DEFAULT, decidedIn, inOrder } from './proposals-judgement.ts';
 import type { Decision, ToRecord } from './proposals-judgement.ts';
@@ -162,6 +162,15 @@ export class ProposalReview {
     return same && kind !== 'person' ? `${proposer} proposed this, and is not a person: a person decides` : null;
   }
 
+  /** The change set to check: the note's own, else the one the editor would write for what waits. */
+  private heldText(note: string): string {
+    const held = changeSetSpan(note, this.proposal);
+    if (held) return held.text;
+    const waiting = { ...this.proposal, changes: this.waiting() };
+    const declared = withProposer(note, waiting);
+    return changeSetText('refused' in declared ? waiting : declared);
+  }
+
   /** The changes not yet decided, in the order proposed. */
   private waiting(): ProposedChange[] {
     return this.proposal.changes.filter((c) => this.state(c.id) === 'pending');
@@ -270,10 +279,6 @@ export class ProposalReview {
     const chosen = acceptedWith(this.proposal, this.waiting(), picked);
     const stale = this.staleness(note);
     if (stale && !options.staleSeen) return refuse(stale.message, stale);
-    // the change set as the note holds it must pass the graph spec's own check: nothing is written on one that fails
-    const held = changeSetSpan(note, this.proposal);
-    const unchecked = held && checkRefusal(checkProposal(note, held.text, this.shared), 'seen');
-    if (unchecked) return refuse(unchecked);
     const { graph } = this.proposal;
     const before = textsOf(note);
     const beforeReading = readNote(before, undefined, this.shared);
@@ -305,6 +310,10 @@ export class ProposalReview {
     }
     const fresh = newProblems(beforeReading, after, graph)[0];
     if (fresh) return refuse(`it would leave the graph with a problem: ${fresh.message}`);
+    // the change set as the note holds it must pass the graph spec's own check: nothing is written on one that fails (after
+    // the edit's own checks, which say more); a proposal held only in memory is checked as the editor would write it
+    const unchecked = checkRefusal(checkProposal(note, this.heldText(note), this.shared), 'seen');
+    if (unchecked) return refuse(unchecked);
     const at = options.at ?? new Date().toISOString();
     const decided = new Map(this.decided);
     for (const c of chosen) decided.set(c.id, { state: 'accepted', by: by.name, at });

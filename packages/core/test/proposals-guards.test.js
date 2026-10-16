@@ -58,7 +58,7 @@ describe('proposals_checked: the review refuses what the check refuses, and writ
     const [only] = review.proposal.changes;
     const r = review.accept(note, [only.id], ROGER, { at: NOW });
     assert.equal(r.ok, false);
-    assert.match(r.reason, /a DELETE leaves no link without its end/);
+    assert.match(r.reason, /a DELETE leaves no link without its end|still has links/);
   });
 
   test('the graph having moved is the stale notice’s to say, not a refusal once it has been seen', () => {

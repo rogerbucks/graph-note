@@ -402,7 +402,9 @@ describe('person_decides: the editor never applies a proposal without a person a
     );
     assert.match(review.reject(NOTE, [C1], { name: 'ada' }, { at: NOW }).reason, /a person decides/);
     const own = new ProposalReview(proposalOf({ by: { name: 'roger', kind: 'person' } }));
-    assert.equal(own.accept(NOTE, [C1], ROGER, { at: NOW }).ok, true);
+    // a person who proposes is declared by the one who owns the graph, which the check wants of any author
+    const known = `${NOTE}\n\`\`\`gql\n// graph: people\n(roger:Person {name: 'Roger'})\n\`\`\`\n`;
+    assert.equal(own.accept(known, [C1], ROGER, { at: NOW }).ok, true);
   });
 
   test('the proposer is known by its name in any case, and no other name is taken for it', () => {

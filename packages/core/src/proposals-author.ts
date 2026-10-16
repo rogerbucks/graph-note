@@ -14,17 +14,20 @@ const WORD = /^[A-Za-z_]\w*$/;
 export const DECLARES = 'declares who proposed this, so that the graph spec’s check knows its author';
 
 /** The declaration of a proposer, as an addition: a Model for a model, a Person that is a Step for a step; none for a person. */
-function declarationOf(p: Proposal): string | null {
-  const { name, kind } = p.provenance.by;
-  if (!WORD.test(name) || (kind !== 'model' && kind !== 'step')) return null;
-  return `(${name}:${kind === 'model' ? 'Model' : 'Person:Step'} {name: ${valueGql(name)}})`;
+function declarationOf(name: string, kind: 'model' | 'step'): string | null {
+  return WORD.test(name) ? `(${name}:${kind === 'model' ? 'Model' : 'Person:Step'} {name: ${valueGql(name)}})` : null;
 }
 
-/** Whether a change is the declaration of the proposal's proposer: the first change, an addition of that name as a Model or a Person. */
+/**
+ * Whether a change is the declaration of the proposal's proposer: the first change, and byte for byte what the editor
+ * writes for that proposer, as a model or as a step (a note read back does not say which it was). Anything else that names
+ * the author — more properties, a link, a path — is an ordinary change, accepted or rejected explicitly. Text is compared
+ * as text: no pattern is made from the name.
+ */
 export const declaresProposer = (p: Proposal, c: ProposedChange): boolean =>
   c === p.changes[0] &&
   c.op === 'add' &&
-  new RegExp(`^\\(\\s*${p.provenance.by.name}\\s*:\\s*(?:Model|Person)\\b`).test(c.gql);
+  (['model', 'step'] as const).some((kind) => c.gql === declarationOf(p.provenance.by.name, kind));
 
 /** These changes to accept, with the declaration of the proposer written first among them if it still waits. */
 export function acceptedWith(
@@ -59,7 +62,8 @@ export function rejectedWith(
  * declare (a person is declared by the person who owns the graph).
  */
 export function withProposer(note: string, p: Proposal): Proposal | { refused: string } {
-  const gql = declarationOf(p);
+  const { kind } = p.provenance.by;
+  const gql = kind === 'model' || kind === 'step' ? declarationOf(p.provenance.by.name, kind) : null;
   const first = p.changes[0];
   if (!gql || (first && declaresProposer(p, first)) || proposerKind(note, p.provenance.by.name) !== 'unknown') return p;
   const { id, graph, provenance } = p;

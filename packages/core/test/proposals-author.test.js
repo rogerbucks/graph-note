@@ -237,10 +237,14 @@ describe('an accept of a proposal held only in memory is checked too', () => {
   });
 
   test('a change the check fails for what it does is refused in memory as it is in the note', () => {
-    const p = proposalOf({ changes: [{ op: 'remove-thing', thing: 'nobody' }] });
-    const r = new ProposalReview(p).accept(NOTE, [p.changes[0].id], ROGER, { at: NOW });
-    assert.equal(r.ok, false);
-    assert.match(r.reason, /graph spec’s check of this change set fails/);
+    const p = proposalOf({ changes: [{ op: 'remove-thing', thing: 'large_reader', detach: false }, CHANGES[2]] });
+    const r = new ProposalReview(p).accept(NOTE, [p.changes[1].id], ROGER, { at: NOW });
+    assert.equal(
+      r.ok,
+      false,
+      'the plain DELETE of a thing with links fails the check, though only the SET is accepted',
+    );
+    assert.match(r.reason, /graph spec’s check of this change set fails.*a DELETE leaves no link without its end/);
   });
 
   test('a model’s proposal, declared by the editor as it would be written, passes', () => {
