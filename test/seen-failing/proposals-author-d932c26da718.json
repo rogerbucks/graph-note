@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/proposals-author.test.js",
+  "test": "the editor declares the proposer in the proposal, as its first addition > a note that already declares the proposer gets no second declaration",
+  "seen_failing_first": false,
+  "evidence": "Its first version looked at the people block and was corrected in the implementation commit to look at the change set only; that nothing is declared twice held before, since nothing declared a proposer at all. It guards the skip."
+}
