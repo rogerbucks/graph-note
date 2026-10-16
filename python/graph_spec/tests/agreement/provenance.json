@@ -22,7 +22,7 @@
           "(meta)-[:DECLARES]->(t_assoc),",
           "(meta)-[:DECLARES]->(t_gen),",
           "(total_rule:Rule {id: 'rule:total@1', name: 'Total'}),",
-          "(derive:Activity {name: 'Derive totals', rule: 'rule:total@1'}),",
+          "(derive:Activity {name: 'Derive totals'}),",
           "(derive)-[:HAD_PLAN]->(total_rule),",
           "(ada:Person {name: 'Ada'}),",
           "(acme:Organization {name: 'Acme'}),",
@@ -52,57 +52,58 @@
       ],
       "changesets": [
         [
-          "// graph: prov_ok · CHANGE SET cs_organization · against b821098d68dcc376 · by acme",
+          "// graph: prov_ok · CHANGE SET cs_organization · against 0288bbe8164590cd · by acme",
           "(late:Doc {title: 'Late'}),",
           "(late)-[:WAS_ATTRIBUTED_TO]->(acme)"
         ],
         [
-          "// graph: prov_ok · CHANGE SET cs_software_agent · against b821098d68dcc376 · by importer",
+          "// graph: prov_ok · CHANGE SET cs_software_agent · against 0288bbe8164590cd · by importer",
           "(late:Doc {title: 'Late'}),",
           "(late)-[:WAS_ATTRIBUTED_TO]->(importer)"
         ],
         [
-          "// graph: prov_ok · CHANGE SET cs_stranger · against b821098d68dcc376 · by stranger",
+          "// graph: prov_ok · CHANGE SET cs_stranger · against 0288bbe8164590cd · by stranger",
           "(late:Doc {title: 'Late'})"
         ],
         [
-          "// graph: prov_ok · CHANGE SET cs_not_an_agent · against b821098d68dcc376 · by ada",
+          "// graph: prov_ok · CHANGE SET cs_not_an_agent · against 0288bbe8164590cd · by ada",
           "(late:Doc {title: 'Late'}),",
           "(late)-[:WAS_ATTRIBUTED_TO]->(v1)"
         ],
         [
-          "// graph: prov_ok · CHANGE SET cs_own_run · against b821098d68dcc376 · by bot",
+          "// graph: prov_ok · CHANGE SET cs_own_run · against 0288bbe8164590cd · by bot",
           "(report:Doc {title: 'Report'}),",
           "(report)-[:WAS_GENERATED_BY]->(bot_run)"
         ],
         [
-          "// graph: prov_ok · CHANGE SET cs_planned_run · against b821098d68dcc376 · by ada",
+          "// graph: prov_ok · CHANGE SET cs_planned_run · against 0288bbe8164590cd · by ada",
           "(report:Doc {title: 'Report'}),",
           "(report)-[:WAS_GENERATED_BY]->(planned_run)"
         ],
         [
-          "// graph: prov_ok · CHANGE SET cs_set_no_plan · against b821098d68dcc376 · by ada",
+          "// graph: prov_ok · CHANGE SET cs_set_no_plan · against 0288bbe8164590cd · by ada",
           "MATCH (d:Doc {id: 'made_plain'})",
           "SET d.title = 'Made by hand, checked'"
         ],
         [
-          "// graph: prov_ok · CHANGE SET cs_set_cache · against b821098d68dcc376 · by ada",
+          "// graph: prov_ok · CHANGE SET cs_set_cache · against 0288bbe8164590cd · by ada",
           "MATCH (d:Doc {id: 'made_planned'})",
           "SET d.title = 'Made by the total, checked'"
         ],
         [
-          "// graph: prov_ok · CHANGE SET cs_derive_without_plan · against b821098d68dcc376 · by ada",
-          "(again:Activity {name: 'Derive again', rule: 'rule:total@1'})"
+          "// graph: prov_ok · CHANGE SET cs_plan_not_a_rule · against 0288bbe8164590cd · by ada",
+          "(again:Activity {name: 'Derive again'}),",
+          "(again)-[:HAD_PLAN]->(v1)"
         ],
         [
-          "// graph: prov_ok · CHANGE SET cs_revision_early · against b821098d68dcc376 · by ada",
+          "// graph: prov_ok · CHANGE SET cs_revision_early · against 0288bbe8164590cd · by ada",
           "(v5:Doc {title: 'Five', generated_at: DATETIME '2026-08-01T00:00:00+00:00'}),",
           "(v5)-[:SUPERSEDES]->(v2)"
         ]
       ]
     },
     {
-      "name": "provenance: a derivation with no plan, an attribution to a thing that is no agent, and a successor generated before its predecessor",
+      "name": "provenance: a plan that is no rule, an attribution to a thing that is no agent, and a successor generated before its predecessor",
       "blocks": [
         [
           "// graph: prov_broken",
@@ -118,9 +119,10 @@
           "(meta)-[:DECLARES]->(t_supersedes),",
           "(total_rule:Rule {id: 'rule:total@1', name: 'Total'}),",
           "(other_rule:Rule {id: 'rule:other@1', name: 'Other'}),",
-          "(derive:Activity {name: 'Derive totals', rule: 'rule:total@1'}),",
-          "(derive_wrong:Activity {name: 'Derive others', rule: 'rule:other@1'}),",
-          "(derive_wrong)-[:HAD_PLAN]->(total_rule),",
+          "(derive:Activity {name: 'Derive totals'}),",
+          "(derive)-[:HAD_PLAN]->(total_rule),",
+          "(derive_wrong:Activity {name: 'Derive others'}),",
+          "(derive_wrong)-[:HAD_PLAN]->(t_doc),",
           "(v1:Doc {title: 'One', generated_at: DATETIME '2026-09-01T00:00:00+00:00'}),",
           "(v2:Doc {title: 'Two', generated_at: DATETIME '2026-08-01T00:00:00+00:00'}),",
           "(v3:Doc {title: 'Three', generated_at: DATE '2026-07-01'}),",

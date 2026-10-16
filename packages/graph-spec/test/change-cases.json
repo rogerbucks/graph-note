@@ -11,7 +11,7 @@
     "generated": "an added WAS_GENERATED_BY comes from a thing the set adds, to an activity of the set's own author (§24)",
     "unknown": "its author stranger is a known person or model",
     "cache": "it adds no cache — a claim's likelihood, confidence and status are the engine's (§24 rule 5)",
-    "plan": "after it, §11 req:11.had-plan: every activity that derives an element by a rule links to that rule with HAD_PLAN",
+    "plan": "after it, §11 req:11.had-plan: every HAD_PLAN link goes to a Rule, or to a Ref to one",
     "attributed": "after it, §24 req:24.prov-attributed: every WAS_ATTRIBUTED_TO link goes to a Person, Organization or SoftwareAgent (a Model counts as one)",
     "revision": "after it, §12 req:12.prov-revision: every successor was generated after what it supersedes"
   },
@@ -52,7 +52,7 @@
     "(t_supersedes:ElementType {id: 'type:SUPERSEDES', name: 'SUPERSEDES', kind: 'edge', reading: 'supersedes', reverse_name: 'superseded by'}),",
     "(library_schema)-[:DECLARES]->(t_rule),",
     "(library_schema)-[:DECLARES]->(t_supersedes),",
-    "(total_rule:Rule {name: 'Total', rule: 'rule:total@1'}),",
+    "(total_rule:Rule {name: 'Total'}),",
     "(engine_run)-[:HAD_PLAN]->(total_rule),",
     "(plain_run:Activity {name: 'Typed in by hand'}),",
     "(ledger:Book {title: 'Ledger'}),",
@@ -830,24 +830,24 @@
       ]
     },
     {
-      "name": "an activity that derives by a rule and links to it with HAD_PLAN is accepted",
-      "body": ["(derive:Activity {name: 'Derive totals', rule: 'rule:total@1'})", "(derive)-[:HAD_PLAN]->(total_rule)"],
+      "name": "an activity that HAD_PLAN a rule, the Rule itself, is accepted",
+      "body": ["(derive:Activity {name: 'Derive totals'})", "(derive)-[:HAD_PLAN]->(total_rule)"],
       "failed": [],
       "changes": [],
       "after": [
         "(grace:Person {name: 'Grace'}),",
         "(notes:Book {title: 'Notes on the engine', pages: 60}),",
         "(atlas:Book {title: 'Atlas'}),",
-        "(derive:Activity {name: 'Derive totals', rule: 'rule:total@1'}),",
+        "(derive:Activity {name: 'Derive totals'}),",
         "(ada)-[:WROTE]->(notes),",
         "(ada)-[:WROTE]->(atlas),",
         "(derive)-[:HAD_PLAN]->(total_rule)"
       ]
     },
     {
-      "name": "an activity that derives by a rule and has no HAD_PLAN is refused",
+      "name": "an activity with a rule property and no HAD_PLAN is no derivation: HAD_PLAN is the only marker",
       "body": ["(derive:Activity {name: 'Derive totals', rule: 'rule:total@1'})"],
-      "failed": ["plan"],
+      "failed": [],
       "changes": [],
       "after": [
         "(grace:Person {name: 'Grace'}),",
@@ -859,18 +859,33 @@
       ]
     },
     {
-      "name": "an activity whose HAD_PLAN is another rule than the one it derives by is refused",
-      "body": ["(derive:Activity {name: 'Derive totals', rule: 'rule:other@1'})", "(derive)-[:HAD_PLAN]->(total_rule)"],
+      "name": "a HAD_PLAN to something that is not a Rule is refused",
+      "body": ["(derive:Activity {name: 'Derive totals'})", "(derive)-[:HAD_PLAN]->(notes)"],
       "failed": ["plan"],
       "changes": [],
       "after": [
         "(grace:Person {name: 'Grace'}),",
         "(notes:Book {title: 'Notes on the engine', pages: 60}),",
         "(atlas:Book {title: 'Atlas'}),",
-        "(derive:Activity {name: 'Derive totals', rule: 'rule:other@1'}),",
+        "(derive:Activity {name: 'Derive totals'}),",
         "(ada)-[:WROTE]->(notes),",
         "(ada)-[:WROTE]->(atlas),",
-        "(derive)-[:HAD_PLAN]->(total_rule)"
+        "(derive)-[:HAD_PLAN]->(notes)"
+      ]
+    },
+    {
+      "name": "a model may add a Person: an ordinary thing, never a record",
+      "by": "bot",
+      "body": ["(bob:Person {name: 'Bob'})"],
+      "failed": [],
+      "changes": [],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(bob:Person {name: 'Bob'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
       ]
     },
     {

@@ -261,7 +261,7 @@ export const cases = {
       lines(
         '// graph: prov_kept',
         "(total_rule:Rule {id: 'rule:total@1', name: 'Total'}),",
-        "(derive:Activity {name: 'Derive totals', rule: 'rule:total@1'}),",
+        "(derive:Activity {name: 'Derive totals'}),",
         '(derive)-[:HAD_PLAN]->(total_rule),',
         "(ada:Person {name: 'Ada'}),",
         "(acme:Organization {name: 'Acme'}),",
@@ -282,15 +282,17 @@ export const cases = {
     matrix: {},
   },
 
-  'provenance broken: no plan, no agent and a revision out of order': {
+  'provenance broken: a plan that is no rule, no agent and a revision out of order': {
     blocks: [
       lines(
         '// graph: prov_broken',
         "(total_rule:Rule {id: 'rule:total@1', name: 'Total'}),",
         "(other_rule:Rule {id: 'rule:other@1', name: 'Other'}),",
-        "(derive:Activity {name: 'Derive totals', rule: 'rule:total@1'}),",
-        "(derive_wrong:Activity {name: 'Derive others', rule: 'rule:other@1'}),",
-        '(derive_wrong)-[:HAD_PLAN]->(total_rule),',
+        "(derive:Activity {name: 'Derive totals'}),",
+        "(derive_wrong:Activity {name: 'Derive others'}),",
+        '(derive)-[:HAD_PLAN]->(total_rule),',
+        '(derive_wrong)-[:HAD_PLAN]->(other_rule),',
+        '(derive_wrong)-[:HAD_PLAN]->(derive),',
         "(v1:Doc {title: 'One', generated_at: DATETIME '2026-09-01T00:00:00+00:00'}),",
         "(v2:Doc {title: 'Two', generated_at: DATETIME '2026-08-01T00:00:00+00:00'}),",
         "(v3:Doc {title: 'Three', generated_at: DATE '2026-07-01'}),",

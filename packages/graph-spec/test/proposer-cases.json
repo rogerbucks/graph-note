@@ -1,0 +1,72 @@
+{
+  "about": "Who proposed a Proposal (graph spec section 23 rule 6, section 24 H3 rule 4; 16 Oct 2026): the Proposal is WAS_ATTRIBUTED_TO a Ref to a Model. The old form, an Activity the Proposal WAS_GENERATED_BY that is ASSOCIATED_WITH the Model, is still accepted for one release, with a warning naming the fix. Both readers run these cases: packages/graph-spec/test/proposers.test.mjs and python/graph_spec/tests/test_proposers.py. Each case gives its blocks, the judgement graph, whether rule 6 holds and the warnings, sorted.",
+  "rule6": "§23 rule 6: every proposal is attributed to the model that proposed it",
+  "people": ["// graph: people", "(planner:Model {name: 'Planner'}),", "(sam:Person {name: 'Sam'})"],
+  "cases": [
+    {
+      "name": "a proposal attributed to a model holds, with no warning",
+      "graph": "jud",
+      "body": [
+        "// graph: jud",
+        "(r_planner:Ref {ref: 'planner', graph: 'people'}),",
+        "(pr:Proposal {text: 'Reserve the flat'}),",
+        "(pr)-[:WAS_ATTRIBUTED_TO]->(r_planner)"
+      ],
+      "holds": true,
+      "warnings": []
+    },
+    {
+      "name": "a proposal that names its model through its activity still holds, with a warning naming the fix",
+      "graph": "jud",
+      "body": [
+        "// graph: jud",
+        "(r_planner:Ref {ref: 'planner', graph: 'people'}),",
+        "(pr:Proposal {text: 'Reserve the flat'}),",
+        "(act:Activity {name: 'Draft'}),",
+        "(pr)-[:WAS_GENERATED_BY]->(act),",
+        "(act)-[:ASSOCIATED_WITH]->(r_planner)"
+      ],
+      "holds": true,
+      "warnings": [
+        "pr names its proposer through ASSOCIATED_WITH on its activity act: attribute it with (pr)-[:WAS_ATTRIBUTED_TO]->(r_planner) instead; the old form is accepted for one release"
+      ]
+    },
+    {
+      "name": "a proposal attributed to nobody fails",
+      "graph": "jud",
+      "body": ["// graph: jud", "(pr:Proposal {text: 'Reserve the flat'})"],
+      "holds": false,
+      "warnings": []
+    },
+    {
+      "name": "a proposal attributed to a person fails",
+      "graph": "jud",
+      "body": [
+        "// graph: jud",
+        "(r_sam:Ref {ref: 'sam', graph: 'people'}),",
+        "(pr:Proposal {text: 'Reserve the flat'}),",
+        "(pr)-[:WAS_ATTRIBUTED_TO]->(r_sam)"
+      ],
+      "holds": false,
+      "warnings": []
+    },
+    {
+      "name": "a proposal with a model beside a person fails, in either form",
+      "graph": "jud",
+      "body": [
+        "// graph: jud",
+        "(r_planner:Ref {ref: 'planner', graph: 'people'}),",
+        "(r_sam:Ref {ref: 'sam', graph: 'people'}),",
+        "(pr:Proposal {text: 'Reserve the flat'}),",
+        "(act:Activity {name: 'Draft'}),",
+        "(pr)-[:WAS_GENERATED_BY]->(act),",
+        "(act)-[:ASSOCIATED_WITH]->(r_sam),",
+        "(pr)-[:WAS_ATTRIBUTED_TO]->(r_planner)"
+      ],
+      "holds": false,
+      "warnings": [
+        "pr names its proposer through ASSOCIATED_WITH on its activity act: attribute it with (pr)-[:WAS_ATTRIBUTED_TO]->(r_sam) instead; the old form is accepted for one release"
+      ]
+    }
+  ]
+}
