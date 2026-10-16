@@ -20,6 +20,7 @@ import { build } from 'esbuild';
 import { FakeElement, fakeDocument, installGlobals } from '../../obsidian/test/host/fake-dom.js';
 import { ask, POLICY } from './editor-threats-support.js';
 import { exportSameCases } from './editor-page-export.js';
+import { editingCases } from './editor-page-editing.js';
 import { accessCases } from './editor-page-access.js';
 import { PACKAGE, built, cleanUp, pageSources, runWorker, servePage } from './editor-page-support.js';
 
@@ -581,3 +582,6 @@ exportSameCases({ at, ROOT, LAYER, importsOf });
 
 // C8: cc_keyboard, cc_reduced_motion and cc_text_version (cases in editor-page-access.js, within the size baseline).
 accessCases({ at, ROOT, LAYER });
+
+// C9: the page opens the note with the edit pane of the Obsidian host (cases in editor-page-editing.js, within the size baseline).
+editingCases({ at, LAYER, importsOf, bundled });

@@ -22,14 +22,14 @@ export const PAGE_NOTE = [
 ].join('\n');
 
 /** The server's answers to the page's calls. */
-function answer(url, note) {
+function answer(url, note, draft) {
   if (url.startsWith('/api/settings')) return {};
-  if (url.startsWith('/api/notes/')) return { text: note, version: '1', draft: null };
+  if (url.startsWith('/api/notes/')) return { text: note, version: '1', draft };
   return { note: 'Reader.md', folder: 'Exports' };
 }
 
 /** A `Worker` for the window that runs the built layout worker's file in a thread, as a browser runs it from the server. */
-function workerFor(window, file) {
+export function workerFor(window, file) {
   const prelude =
     "const { parentPort } = require('node:worker_threads');" +
     'globalThis.self = { postMessage: (m) => parentPort.postMessage(m), set onmessage(f) { parentPort.on("message", (d) => f({ data: d })); } };';
@@ -55,8 +55,9 @@ function workerFor(window, file) {
 /**
  * The page as built in `dir`, opened at `hash` (the address's fragment, which carries the token and the note), with the
  * script run. Returns {dom, window, stop}: `stop` puts away the worker threads; the caller closes the DOM (audit does).
+ * `draft` is a draft the server holds for the note, which the page offers back.
  */
-export function openEditorPage(dir, hash, note = PAGE_NOTE) {
+export function openEditorPage(dir, hash, note = PAGE_NOTE, draft = null) {
   const html = readFileSync(join(dir, 'index.html'), 'utf8');
   // the built page is one module whose last line exports the starter; run as a plain script, it starts itself
   const script = readFileSync(join(dir, 'page.js'), 'utf8').replace(/\nexport \{[^}]*\};?\s*$/, '\n');
@@ -67,8 +68,13 @@ export function openEditorPage(dir, hash, note = PAGE_NOTE) {
   window.matchMedia = (media) => ({ media, matches: false, addEventListener() {}, removeEventListener() {} });
   window.URL.createObjectURL = () => 'blob:drawing';
   window.URL.revokeObjectURL = () => {};
+  window.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
   window.fetch = async (url) => {
-    const body = answer(String(url), note);
+    const body = answer(String(url), note, draft);
     return { ok: true, status: 200, json: async () => body, text: async () => JSON.stringify(body) };
   };
   const stop = workerFor(window, join(dir, 'layout-worker.js'));
