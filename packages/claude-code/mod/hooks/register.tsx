@@ -13,7 +13,9 @@ import type { EngineInterface, Register } from 'claude-code';
 
 import type { GraphView } from '../types';
 import {
+  DATA_FOLDER_REFUSAL,
   EditorLauncher,
+  guardDataFolder,
   confirmArgs,
   editArgs,
   layOut,
@@ -38,11 +40,20 @@ const editorChanges = atom({ plugin: 'graph-note', key: 'editor' } as const, 0);
 /** The session's editor: made when first asked for, and kept for the module's life (its server dies with it). */
 let launcher: EditorLauncher | null = null;
 
+/** The mod's data folder (settings and drafts): `CLAUDE_PLUGIN_DATA`, else the plugins data folder under the config. */
+async function dataFolderOf($: EngineInterface): Promise<{ data: string; home?: string }> {
+  const home = await $.env.get('HOME');
+  const data = (await $.env.get('CLAUDE_PLUGIN_DATA')) ?? `${home ?? ''}/.claude/plugins/data/graph-note`;
+  return home ? { data, home } : { data };
+}
+
+/** The tools the data folder's guard judges; the user changes the settings there, never Claude. */
+const GUARDED_TOOLS = ['Write', 'Edit', 'NotebookEdit', 'Bash'] as const;
+
 /** The launcher over this host's calls; the server it runs is the mod's own bin/editor-server.mjs. */
 async function launcherOf($: EngineInterface): Promise<EditorLauncher> {
   if (launcher) return launcher;
-  const home = await $.env.get('HOME');
-  const data = (await $.env.get('CLAUDE_PLUGIN_DATA')) ?? `${home ?? ''}/.claude/plugins/data/graph-note`;
+  const { data } = await dataFolderOf($);
   launcher = new EditorLauncher({
     spawn: (request) => $.process.spawn(request),
     // a matrix note is read only when its real path, links settled, is inside the vault: the mod's file calls do not
@@ -102,6 +113,25 @@ async function drawNote($: EngineInterface, path: string): Promise<string> {
 }
 
 export const register: Register = (on) => {
+  // Claude's own writes to the data folder are refused (spec §26): it could loosen its own gate. A guard that fails
+  // refuses too. Reads are not hooked.
+  for (const tool of GUARDED_TOOLS) {
+    on('tool.call', { tool }, async ($, e, next) => {
+      const { data, home } = await dataFolderOf($);
+      const refusal = await guardDataFolder(tool, e as Record<string, unknown>, {
+        data,
+        ...(home ? { home } : {}),
+        cwd: await $.session.cwd(),
+        realPath: realPathVia(
+          (request) => $.process.spawn(request),
+          ['node', `${$.plugin.root}/bin/real-path.mjs`],
+          (ms, fn) => $.clock.after(ms, fn),
+        ),
+      });
+      return refusal === null ? next(e) : { deny: refusal };
+    }).catch(($, e, next) => (next.called ? next(e) : { deny: DATA_FOLDER_REFUSAL }));
+  }
+
   on('session.start', async ($, e, next) => {
     await $.command.register({ name: 'graph', description: "Draw a graph note's first graph in a pane" });
     return next(e);

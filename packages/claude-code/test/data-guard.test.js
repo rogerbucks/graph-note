@@ -133,7 +133,13 @@ describe('Bash is refused when the command names the folder at all', () => {
   test('a path that only resolves into the folder through a link is refused', async () => {
     const w = world();
     symlinkSync(w.data, join(w.elsewhere, 'linked-folder'));
-    refused(await guardDataFolder('Bash', { command: `echo {} > ${join(w.elsewhere, 'linked-folder')}/settings.json` }, w.ports));
+    refused(
+      await guardDataFolder(
+        'Bash',
+        { command: `echo {} > ${join(w.elsewhere, 'linked-folder')}/settings.json` },
+        w.ports,
+      ),
+    );
   });
 
   test('a command that does not name the folder is allowed', async () => {
@@ -147,7 +153,11 @@ describe('Bash is refused when the command names the folder at all', () => {
 describe('the refusal', () => {
   test('says the user changes these settings, and where, and echoes nothing of the call', async () => {
     const w = world();
-    const answer = await guardDataFolder('Bash', { command: `echo SECRET-VALUE > ${join(w.data, 'settings.json')}` }, w.ports);
+    const answer = await guardDataFolder(
+      'Bash',
+      { command: `echo SECRET-VALUE > ${join(w.data, 'settings.json')}` },
+      w.ports,
+    );
     refused(answer);
     assert.match(answer, /user/i);
     assert.match(answer, /settings\.json/);
@@ -164,7 +174,9 @@ describe('the data folder is wherever the mod keeps it', () => {
     mkdirSync(fallback, { recursive: true });
     const ports = { ...w.ports, data: fallback, home: defaulted };
     refused(await guardDataFolder('Write', { file_path: join(fallback, 'settings.json') }, ports));
-    refused(await guardDataFolder('Bash', { command: 'echo {} > ~/.claude/plugins/data/graph-note/settings.json' }, ports));
+    refused(
+      await guardDataFolder('Bash', { command: 'echo {} > ~/.claude/plugins/data/graph-note/settings.json' }, ports),
+    );
     // the folder the other setting names is not guarded now
     allowed(await guardDataFolder('Write', { file_path: join(w.data, 'settings.json') }, ports));
   });
