@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/proposals-judgement-attributed.test.js",
+  "test": "req:24.prov-attributed: a decision is attributed to the proposer and to the person who decided > the plain texts stay beside the links, exactly as typed",
+  "seen_failing_first": false,
+  "evidence": "Pins behaviour that already held: the decided_by and proposed_by texts were written before this change and stay as typed beside the new links. The test asserts they are not lost; the new links themselves are held by the tests that failed first in the same file."
+}

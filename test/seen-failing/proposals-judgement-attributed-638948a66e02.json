@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/proposals-judgement-attributed.test.js",
+  "test": "req:24.prov-attributed: a decision is attributed to the proposer and to the person who decided > taking the decision back takes the agents out with it",
+  "seen_failing_first": false,
+  "evidence": "Passes against the old code because, with no agents written, undo trivially left no judgement block. It guards the new code: the agent nodes are written inside the same block, so taking the block back takes them out; the tests that failed first hold the writing itself."
+}
