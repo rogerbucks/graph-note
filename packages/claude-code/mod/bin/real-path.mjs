@@ -10,7 +10,7 @@ try {
   const path = rest[1];
   if (link) {
     try {
-      process.stdout.write(resolve(dirname(path), readlinkSync(path)));
+      process.stdout.write(resolve(realpathSync.native(dirname(path)), readlinkSync(path)));
     } catch (err) {
       const code = err.code ?? "";
       if (code === "EINVAL" || NOT_THERE.has(code)) process.exitCode = 3;

@@ -19,7 +19,8 @@ try {
   const path = rest[1];
   if (link) {
     try {
-      process.stdout.write(resolve(dirname(path), readlinkSync(path)));
+      // a relative target is read from the real path of the link's folder, which may itself be reached through a link
+      process.stdout.write(resolve(realpathSync.native(dirname(path)), readlinkSync(path)));
     } catch (err) {
       const code = (err as NodeJS.ErrnoException).code ?? '';
       if (code === 'EINVAL' || NOT_THERE.has(code)) process.exitCode = 3;

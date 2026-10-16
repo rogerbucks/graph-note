@@ -67,7 +67,11 @@ unless the app sets its own. Whether the desktop app does, and keeps the drawing
   cannot be parsed, so it is refused when it names the folder at all, even to read it (as written, real, through the
   home folder by tilde or the HOME variable, or by `CLAUDE_PLUGIN_DATA`), or names `plugins/data` as whole path parts (so a renamed or moved
   folder is caught; the check is made on a copy with quotes and backslashes taken out and the home forms put in), or has a word (the first 40 with a `/`, or starting `.` or `~`) that
-  resolves into it. It does not stop a path the shell builds (`cd` there, then a bare file name; a variable, a glob,
+  resolves into it. A command with `mv`, `rm`, `cp`, `rsync` or `ln` in it is also refused when one of those words
+  resolves to a folder above the data folder and below home (the Claude config folder, its plugins folder); `ls` and
+  other reads of those stay allowed. A relative link is settled from the real path of its own folder. It does not stop
+  a glob that expands to such a folder (a star in place of part of the folder's name), a name the shell builds, other tools that move folders (`find
+  -delete`, `git`, `install`, `tar -x`), and a path the shell builds (`cd` there, then a bare file name; a variable, a glob,
   command substitution or an encoded string that makes the path), a program that is handed no path and finds the folder
   itself, or a write through another tool such as an MCP server. It is a guard against a session slipping, not against
   one set on getting round it; the settings file's own mode is the other half.

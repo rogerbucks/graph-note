@@ -138,6 +138,9 @@ function names(text: string, needle: string): boolean {
 /** `plugins/data` as whole path parts, the folder every plugin's data lives in, however it was renamed or moved. */
 const PLUGINS_DATA = /(^|[^A-Za-z0-9._-])plugins\/data(?![A-Za-z0-9._-])/i;
 
+/** A command that moves, removes, copies, syncs or links whole folders: `mv`, `rm`, `cp`, `rsync` or `ln` as a command. */
+const MOVERS = /(^|[\s;|&(`])(mv|rm|cp|rsync|ln)(?=\s)/;
+
 /**
  * A copy of the command as the shell would read it: quotes and backslashes taken out, and the home folder put in for
  * `$HOME`, `${HOME}`, `~` and `~name` (any named user is taken as the home folder, which only widens the match).
@@ -185,9 +188,15 @@ async function guardCommand(command: string, ports: GuardPorts): Promise<string 
     .split(/[\s'"`;|&<>()=,]+/)
     .filter((word) => word.includes('/') || word.startsWith('.') || word.startsWith('~'))
     .slice(0, MAX_WORDS);
+  const moves = MOVERS.test(copy);
+  const home = ports.home ? normalise(ports.home) : null;
   for (const word of words) {
     for (const form of await forms(word, ports)) {
       if (where.some((folder) => inside(form, folder))) return DATA_FOLDER_REFUSAL;
+      // moving, removing, copying, syncing or linking a folder above the data folder, below home, takes it too
+      if (moves && home && form.toLowerCase() !== home.toLowerCase() && inside(form, home)) {
+        if (where.some((folder) => inside(folder, form))) return DATA_FOLDER_REFUSAL;
+      }
     }
   }
   return null;
