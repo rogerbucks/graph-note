@@ -261,7 +261,7 @@
   color: var(--text-muted);
 }
 .graph-note-proposal-checked.is-failed {
-  color: var(--text-error);
+  color: color-mix(in srgb, var(--text-error) 60%, var(--text-normal));
 }
 .graph-note-proposal-bulk {
   display: flex;
@@ -312,7 +312,7 @@
   overflow-wrap: anywhere;
 }
 .graph-note-proposal-blocked {
-  color: var(--text-error);
+  color: color-mix(in srgb, var(--text-error) 60%, var(--text-normal));
 }
 .graph-note-proposal-decision {
   color: var(--text-muted);
@@ -809,7 +809,7 @@ details.graph-note-style > summary {
 .graph-note-refusal-icon {
   flex: none;
   display: flex;
-  color: var(--text-error);
+  color: color-mix(in srgb, var(--text-error) 60%, var(--text-normal));
 }
 .graph-note-empty {
   padding: var(--size-4-3);
@@ -883,7 +883,7 @@ details.graph-note-style > summary {
   transform: none;
 }
 .graph-note-alert {
-  color: var(--text-error);
+  color: color-mix(in srgb, var(--text-error) 60%, var(--text-normal));
 }
 .graph-note-alert::before {
   content: '✖ ';
@@ -952,7 +952,9 @@ details.graph-note-style > summary {
   padding: 0 var(--size-2-1);
   background: none;
   box-shadow: none;
-  color: var(--link-color);
+  /* the link colour mixed with the text colour, underlined: the link colour alone is under 4.5:1 on the card in Obsidian's
+     default themes (SC 1.4.3); 70% of it keeps the hue and reaches 5:1 in both */
+  color: color-mix(in srgb, var(--link-color) 70%, var(--text-normal));
   text-decoration: underline;
   font-size: inherit;
   cursor: pointer;
@@ -1154,10 +1156,10 @@ details.graph-note-style > summary {
   text-decoration-color: var(--text-faint);
 }
 .graph-note-line-sign {
-  color: var(--text-warning);
+  color: color-mix(in srgb, var(--text-warning) 50%, var(--text-normal));
 }
 .graph-note-readback {
-  color: var(--text-faint);
+  color: var(--text-muted);
   font-family: var(--font-interface);
   font-style: italic;
 }
@@ -1192,11 +1194,11 @@ details.graph-note-style > summary {
 }
 .graph-note-pane-problems li.is-error::marker {
   content: '✖ ';
-  color: var(--text-error);
+  color: color-mix(in srgb, var(--text-error) 60%, var(--text-normal));
 }
 .graph-note-pane-problems li.is-warning::marker {
   content: '⚠ ';
-  color: var(--text-warning);
+  color: color-mix(in srgb, var(--text-warning) 50%, var(--text-normal));
 }
 .graph-note-pane-problems li.is-hint::marker {
   content: 'ℹ ';
@@ -1218,52 +1220,56 @@ details.graph-note-style > summary {
   box-shadow: var(--shadow-s);
 }
 
-/* GQL text, coloured by token class as the gql-highlight plugin colours it, from the theme's own code colours. */
+/* GQL text, coloured by token class as the gql-highlight plugin colours it, from the theme's own code colours. WCAG 2.2 AA
+   (SC 1.4.3): Obsidian's default code colours are too pale on the page (the comment and punctuation colours, the yellow,
+   cyan and green hues are under 4.5:1), so each hue is mixed with the theme's text colour until the text reaches 4.5:1 on the
+   page and on the code background in both default themes, and the comment and punctuation take the muted text colour. A
+   mix of the theme's own variables follows any theme; nothing here is a fixed colour. */
 .gql-kw {
-  color: var(--code-keyword);
+  color: color-mix(in srgb, var(--code-keyword) 60%, var(--text-normal));
 }
 .gql-type {
-  color: var(--code-keyword);
+  color: color-mix(in srgb, var(--code-keyword) 60%, var(--text-normal));
   font-style: italic;
 }
 .gql-label {
-  color: var(--code-function);
+  color: color-mix(in srgb, var(--code-function) 40%, var(--text-normal));
 }
 .gql-edge {
-  color: var(--code-important);
+  color: color-mix(in srgb, var(--code-important) 50%, var(--text-normal));
   font-weight: 600;
 }
 .gql-prop {
-  color: var(--code-property);
+  color: color-mix(in srgb, var(--code-property) 50%, var(--text-normal));
 }
 .gql-string {
-  color: var(--code-string);
+  color: color-mix(in srgb, var(--code-string) 50%, var(--text-normal));
 }
 .gql-value {
-  color: var(--code-value);
+  color: color-mix(in srgb, var(--code-value) 60%, var(--text-normal));
 }
 .gql-comment {
-  color: var(--code-comment);
+  color: var(--text-muted);
   font-style: italic;
 }
 .gql-fn {
-  color: var(--code-tag);
+  color: color-mix(in srgb, var(--code-tag) 60%, var(--text-normal));
 }
 .gql-param {
-  color: var(--code-important);
+  color: color-mix(in srgb, var(--code-important) 50%, var(--text-normal));
 }
 .gql-var {
   color: var(--code-normal, inherit);
 }
 .gql-arrow {
-  color: var(--code-operator);
+  color: color-mix(in srgb, var(--code-operator) 60%, var(--text-normal));
   font-weight: 600;
 }
 .gql-op {
-  color: var(--code-operator);
+  color: color-mix(in srgb, var(--code-operator) 60%, var(--text-normal));
 }
 .gql-punct {
-  color: var(--code-punctuation);
+  color: var(--text-muted);
 }
 
 /* The editing view's own card (spec §4): its children's margins stay inside it, so the height CodeMirror is told is the
@@ -1278,7 +1284,7 @@ details.graph-note-style > summary {
   display: inline-block;
   width: 0;
   white-space: pre;
-  color: var(--text-faint);
+  color: var(--text-muted);
   font-style: normal;
 }
 /* The send dialog (§19): what will be sent, exactly, wrapped so a phone shows all of it without scrolling sideways, and
@@ -1291,7 +1297,7 @@ details.graph-note-style > summary {
   font-size: var(--font-smaller);
 }
 .graph-note-ai-refused {
-  color: var(--text-error);
+  color: color-mix(in srgb, var(--text-error) 60%, var(--text-normal));
 }
 
 /* Links (§18): a link in the details, on the drawing and in the text pane is drawn as Obsidian draws a link, in its link
@@ -1364,7 +1370,7 @@ details.graph-note-style > summary {
   margin-top: var(--size-4-1);
 }
 .graph-note-note-said:not(:empty) {
-  color: var(--text-error);
+  color: color-mix(in srgb, var(--text-error) 60%, var(--text-normal));
   margin-bottom: var(--size-4-1);
 }
 /* A note drawn as a callout over the finished drawing, joined to its thing by a dashed line (§24, note_callouts). */
@@ -1410,12 +1416,12 @@ details.graph-note-style > summary {
 }
 .graph-note-mini-box {
   fill: var(--background-secondary);
-  stroke: var(--text-faint);
+  stroke: var(--text-muted);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
 .graph-note-mini-line {
-  stroke: var(--text-faint);
+  stroke: var(--text-muted);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }

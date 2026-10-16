@@ -1,0 +1,6 @@
+{
+  "file": "test/wcag.test.js",
+  "test": "the check itself > runs a good number of axe rules, so a pass means it looked",
+  "seen_failing_first": false,
+  "evidence": "This tests the new check itself, whose code is test support under test/ and so comes across to the parent with the test; no product code is involved, so it cannot fail first. It is proved by planting the faults it finds."
+}

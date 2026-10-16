@@ -62,6 +62,26 @@
     "eslint-plugin-no-unsanitized": {
       "licence": "MPL-2.0",
       "reason": "Weak copyleft at the file level, applying only to its own files if modified and distributed. Part of the Obsidian review rules; run at lint time, never bundled or modified."
+    },
+    "axe-core": {
+      "licence": "MPL-2.0",
+      "reason": "Weak copyleft at the file level, applying only to its own files if modified and distributed. The accessibility checker the WCAG tests run (test/wcag.test.js, spec §11); used in tests only, never bundled or modified."
+    },
+    "@csstools/color-helpers": {
+      "licence": "MIT-0",
+      "reason": "A permissive licence (MIT with no attribution condition). Read by jsdom, the DOM the WCAG tests run in; tests only, never bundled."
+    },
+    "@csstools/css-syntax-patches-for-csstree": {
+      "licence": "MIT-0",
+      "reason": "A permissive licence (MIT with no attribution condition). Read by jsdom, the DOM the WCAG tests run in; tests only, never bundled."
+    },
+    "lru-cache": {
+      "licence": "BlueOak-1.0.0",
+      "reason": "A permissive licence (Blue Oak Model License). Read by jsdom, the DOM the WCAG tests run in; tests only, never bundled."
+    },
+    "mdn-data": {
+      "licence": "CC0-1.0",
+      "reason": "Public-domain dedication (data about CSS). Read by jsdom, the DOM the WCAG tests run in; tests only, never bundled."
     }
   },
   "ciOnlyTools": {

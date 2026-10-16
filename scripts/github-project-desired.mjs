@@ -43,6 +43,8 @@ export const PROGRESS_FIELD = 'Status';
 export const PROGRESS_STATUSES = ['Todo', 'In Progress', 'Done'];
 /** The value of the built-in Status an item with none is given when nothing says more. */
 export const DEFAULT_PROGRESS = PROGRESS_STATUSES[0];
+/** The Status of a requirement that is part proved (status:part) and that no seed says more about. */
+export const IN_PROGRESS = PROGRESS_STATUSES[1];
 /** The fields whose options never change, so the script never replaces them: one that lacks an option is refused. */
 export const FIXED_FIELDS = ['Proof', BUILD_STATUS_FIELD];
 /** The statuses a requirement can have, as the slice board gives them. */
@@ -287,7 +289,8 @@ export function desiredState(board, workstreams, slices, plan = null) {
       workstream: option(workstream),
       status: r.status,
       buildStatus: BUILD_STATUSES[0],
-      progress: DEFAULT_PROGRESS,
+      // a requirement some of whose tests are written, or one is partial, is under way even with no pull request open
+      progress: r.status === 'part' ? IN_PROGRESS : DEFAULT_PROGRESS,
     };
   });
   const questions = (board.questions ?? []).filter((q) => chosen.includes(q.slice));

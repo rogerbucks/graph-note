@@ -35,12 +35,12 @@ const command = (...args) =>
   });
 
 describe('the workstreams file', () => {
-  test('names the workstreams W0 to W15, the slice-end workstream S3, the graph mesh workstreams W16 to W33 and the open-questions workstream Q, with the titles agreed', () => {
+  test('names the workstreams W0 to W15, the slice-end workstream S3, the graph mesh workstreams W16 to W33, the WCAG workstream W34 and the open-questions workstream Q, with the titles agreed', () => {
     assert.deepEqual(Object.keys(workstreams), [
       ...Array.from({ length: 16 }, (_, n) => `W${n}`),
       ...Array.from({ length: 9 }, (_, n) => `C${n}`),
       'S3',
-      ...Array.from({ length: 18 }, (_, n) => `W${n + 16}`),
+      ...Array.from({ length: 19 }, (_, n) => `W${n + 16}`),
       'Q',
     ]);
     assert.deepEqual(
@@ -90,6 +90,7 @@ describe('the workstreams file', () => {
         'Peer-to-peer network fabric',
         'iOS app',
         'Web layer and corporate boundary',
+        'WCAG 2.2 AA for every interface',
         'Open questions',
       ],
     );
