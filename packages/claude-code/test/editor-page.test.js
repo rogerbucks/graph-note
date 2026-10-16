@@ -550,6 +550,25 @@ describe('C5: the page’s host shell, built and served as the mod ships it', ()
     assert.equal(write.status, 405, 'settings are never written from the page');
     assert.doesNotMatch(sources()['server-calls.ts'], /PUT|method:/);
   });
+  test('the note’s id is encoded in the address’s fragment, so no character in it can add or end a field', async () => {
+    const { pageAddress } = await import(at('packages/claude-code/server/editor-process.ts'));
+    const url = new URL(pageAddress('http://127.0.0.1:1', 'tok', 'a%b+c&d#e'));
+    const fields = new URLSearchParams(url.hash.slice(1));
+    assert.deepEqual([...fields.keys()], ['token', 'note']);
+    assert.equal(fields.get('note'), 'a%b+c&d#e');
+    assert.equal(fields.get('token'), 'tok');
+  });
+
+  test('a start with no built page fails in plain words, and never serves the page’s source folder', async () => {
+    const { pageFiles } = await import(at('packages/claude-code/server/editor-main.ts'));
+    const here = mkdtempSync(join(tmpdir(), 'graph-note-nopage-'));
+    try {
+      await assert.rejects(() => pageFiles(join(here, 'bin')), /not built/);
+      await assert.rejects(() => pageFiles(join(here, 'server')), /not built/);
+    } finally {
+      rmSync(here, { recursive: true, force: true });
+    }
+  });
 });
 
 // C8: the page's cases for cc_keyboard, cc_reduced_motion and cc_text_version go here.

@@ -3,7 +3,7 @@
 // the one note for the session by the path the mod names, and hands the process its API and the note's id for the
 // address. With no vault in its environment it serves no API, as before. A note that cannot be opened, or a folder that
 // is refused, is thrown as plain words, which the process says on stderr before it listens anywhere.
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { EditorProcessOptions } from './editor-process.ts';
 import { settingsFrom } from '@graph-note/core';
@@ -48,16 +48,14 @@ export function gateSettings(raw: string | undefined): GateSettings {
 }
 
 /**
- * The page's files, from the folder the build made beside this process: `mod/page/` from the built `mod/bin/`, or from
- * this source folder `mod/page/` of its package. A folder that is not there serves no page files (the placeholder shows).
+ * The page's files, from the folder the build made: `mod/page/` beside the built `mod/bin/` this process runs from, or
+ * `mod/page/` of the package when run from this source folder. Never the page's source folder. With no built page the
+ * start fails in plain words, before the server listens, rather than serving a page that cannot run.
  */
-async function pageFiles(): Promise<PageAssets> {
-  const here = dirname(fileURLToPath(import.meta.url));
-  for (const folder of ['../mod/page', '../page']) {
-    const files = await loadPageAssets(join(here, folder));
-    if (files.has('/')) return files;
-  }
-  return new Map();
+export async function pageFiles(here = dirname(fileURLToPath(import.meta.url))): Promise<PageAssets> {
+  const files = await loadPageAssets(join(here, basename(here) === 'bin' ? '../page' : '../mod/page'));
+  if (!files.has('/')) throw new Error('The editor page is not built: run `npm run build` for the Graph Note mod.');
+  return files;
 }
 
 /** The process's options from its environment: the store for the vault, with the note opened, and how it is stopped. */

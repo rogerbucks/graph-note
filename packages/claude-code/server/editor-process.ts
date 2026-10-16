@@ -48,7 +48,10 @@ export async function runEditorProcess(args: string[], options: EditorProcessOpt
   };
   void server.closed.then((reason) => reason === 'idle' && finish(reason));
   watchSession(finish, { input: !options.ignoreInput });
-  process.stdout.write(
-    `${JSON.stringify({ url: `${server.origin}/#token=${server.token}${options.note ? `&note=${options.note}` : ''}` })}\n`,
-  );
+  process.stdout.write(`${JSON.stringify({ url: pageAddress(server.origin, server.token, options.note) })}\n`);
+}
+
+/** The address the page opens at: the token and the note's id in the fragment, the id encoded so no character in it can end or add a field. */
+export function pageAddress(origin: string, token: string, note?: string): string {
+  return `${origin}/#token=${token}${note ? `&note=${encodeURIComponent(note)}` : ''}`;
 }
