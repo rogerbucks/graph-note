@@ -1,5 +1,5 @@
 // graph: editor_requirements · SOURCE
-// Generated from the editor's requirements graph by graph-note-requirements-export.py — do not hand-edit; regenerate.
+// The editor's requirements graph, the one source: edit it here, in a pull request. A test only moves forward.
 // ── Sections ──
 (section_1:Section {num: '1', title: 'Purpose and scope'}),
 (section_2:Section {num: '2', title: 'One store, three layers'}),

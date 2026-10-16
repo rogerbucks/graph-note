@@ -1,8 +1,9 @@
 #!/usr/bin/env node
-// Checks a change to the generated requirements copy against the copy it started from. The copy says do not hand-edit,
-// and a vault-side script pulls one kind of change back into the source later: tests flipped from planned to written,
-// with a flipped test's repository file path corrected. This accepts exactly that and refuses every other difference,
-// naming each one.
+// Checks a change to the requirements graph against the graph it started from. The graph is the one source of the
+// requirements, edited here in pull requests (Roger, 16 Oct 2026: no vault holds them any more), so records, links and
+// comments may be added, changed and removed. What a pull request may never do is move a test back: a test's status
+// goes only forward, from planned to partial or written and from partial to written, a test flipped forward must have
+// its file, and a test that is partial or written is never removed. This refuses exactly those, naming each one.
 //
 // Usage:
 //   node scripts/check-requirements-flips.mjs --base-ref <commit>   the committed copy against the copy at <commit>
@@ -17,7 +18,7 @@ import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { BANNER, HAS_FILE, REQUIREMENTS, TEST_STATUSES, filesOf } from './check-requirements.mjs';
+import { HAS_FILE, REQUIREMENTS, TEST_STATUSES, filesOf } from './check-requirements.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const { read } = createRequire(import.meta.url)('../packages/graph-spec/src/graph-spec-check.js');
@@ -30,10 +31,7 @@ function parse(text, side) {
     const graph = store.graph(Object.keys(store.graphs)[0]);
     const name = (key) => graph.nodes.get(key)?.props.id ?? key;
     return {
-      graph: {
-        nodes: new Map([...graph.nodes].map(([key, n]) => [name(key), n])),
-        edges: graph.edges.map(([from, type, to, props]) => [name(from), type, name(to), props]),
-      },
+      graph: { nodes: new Map([...graph.nodes].map(([key, n]) => [name(key), n])) },
     };
   } catch (e) {
     const at = e.line === undefined ? '' : ` at line ${e.line}`;
@@ -42,73 +40,38 @@ function parse(text, side) {
 }
 
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
-const propsKey = (props) =>
-  JSON.stringify(Object.entries(props ?? {}).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
-const edgeKey = ([from, type, to, props]) => {
-  const p = propsKey(props);
-  return `(${from})-[:${type}${p === '[]' ? '' : ` ${p}`}]->(${to})`;
-};
-// a comment line may be indented, as the reader takes it
-const commentsOf = (text) => text.split('\n').filter((l) => l.trim().startsWith('//'));
 
-/** Banner and other comment lines: the banner as generated, every other comment line as it was. */
-function commentProblems(baseText, headText) {
-  const lines = headText.split('\n');
-  const banner = BANNER.flatMap((want, i) =>
-    lines[i] === want
-      ? []
-      : [
-          {
-            kind: 'banner',
-            id: `line ${i + 1}`,
-            message: `line ${i + 1} is not the generated banner: regenerate the copy`,
-          },
-        ],
-  );
-  const was = commentsOf(baseText).slice(BANNER.length);
-  const now = commentsOf(headText).slice(BANNER.length);
-  const changed = was.length !== now.length || was.some((l, i) => l !== now[i]);
-  return [
-    ...banner,
-    ...(changed
-      ? [{ kind: 'comment', id: 'comments', message: 'a comment line or heading was changed, added or removed' }]
-      : []),
-  ];
-}
-
-/** The problems with one record present in both copies. */
+/** The problems with one record present in both copies: a test moved back, or flipped forward without its file. */
 function recordProblems(id, was, now, exists) {
   const problems = [];
-  const field = (name, detail) =>
-    problems.push({ kind: 'field', id, message: `${id}: ${name} ${detail}, which only a flip's status and file may` });
-  if ([...was.labels].sort().join() !== [...now.labels].sort().join()) field('labels', 'changed');
-  const isTest = was.labels.has('Test');
+  if (same(was.props.status, now.props.status)) return problems;
+  const isTest = was.labels.has('Test') && now.labels.has('Test');
   const from = TEST_STATUSES.indexOf(was.props.status);
   const to = TEST_STATUSES.indexOf(now.props.status);
-  const bothKnown = from !== -1 && to !== -1 && from !== to;
-  const flipped = isTest && bothKnown && to > from;
-  const names = new Set([...Object.keys(was.props), ...Object.keys(now.props)]);
-  for (const name of names) {
-    if (same(was.props[name], now.props[name])) continue;
-    if (name === 'status') {
-      if (flipped) continue;
-      if (isTest && bothKnown)
-        problems.push({
-          kind: 'flip-back',
-          id,
-          message: `${id}: status went from ${was.props.status} to ${now.props.status}: a test only moves forward, from planned to partial or written, and from partial to written`,
-        });
-      else if (bothKnown)
-        problems.push({
-          kind: 'not-a-test',
-          id,
-          message: `${id}: is not a test, so its status may not be flipped by hand`,
-        });
-      else field('status', `went from ${JSON.stringify(was.props.status)} to ${JSON.stringify(now.props.status)}`);
-    } else if (name === 'file' && flipped) continue;
-    else field(name, 'changed');
+  if (isTest && (from === -1 || to === -1)) {
+    problems.push({
+      kind: 'field',
+      id,
+      message: `${id}: status went from ${JSON.stringify(was.props.status)} to ${JSON.stringify(now.props.status)}, which is not planned, partial or written`,
+    });
+    return problems;
   }
-  if (flipped && HAS_FILE.includes(now.props.status) && IN_REPO.has(now.props.where)) {
+  if (!isTest) {
+    if (from !== -1 && to !== -1)
+      problems.push({
+        kind: 'not-a-test',
+        id,
+        message: `${id}: is not a test, so it has no status to flip`,
+      });
+    return problems;
+  }
+  if (to < from)
+    problems.push({
+      kind: 'flip-back',
+      id,
+      message: `${id}: status went from ${was.props.status} to ${now.props.status}: a test only moves forward, from planned to partial or written, and from partial to written`,
+    });
+  else if (HAS_FILE.includes(now.props.status) && IN_REPO.has(now.props.where)) {
     const files = filesOf(now.props.file);
     const missing = files.filter((f) => !exists(f));
     if (missing.length || !files.length)
@@ -122,36 +85,29 @@ function recordProblems(id, was, now, exists) {
 }
 
 /**
- * The differences between two copies of the requirements that may not be made by hand, each as {kind, id, message}:
- * banner, comment, unreadable, added, removed, link-added, link-removed, field (a record's field changed, other than the
- * status and file of a flipped test), flip-back (a test's status from written to planned), not-a-test (a status flipped
- * on a record that is not a test) and missing-file (a flipped test whose file the repository does not hold). Empty when
- * the only differences are tests flipped from planned to written, each with its file path perhaps corrected.
- * exists(path) says whether the repository holds a repo-relative path.
+ * The differences between two copies of the requirements that a pull request may not make, each as {kind, id,
+ * message}: unreadable, flip-back (a test's status moved back), not-a-test (a status flipped on a record that is not a
+ * test), missing-file (a test flipped to partial or written whose file the repository does not hold) and removed (a
+ * test that was partial or written taken out). Empty for every other change: records, links and comments added,
+ * changed or removed, and tests moved forward with their files. exists(path) says whether the repository holds a
+ * repo-relative path.
  */
 export function refusedChanges(baseText, headText, { exists = (rel) => existsSync(join(ROOT, rel)) } = {}) {
-  const problems = commentProblems(baseText, headText);
   const base = parse(baseText, 'base');
   const head = parse(headText, 'head');
-  if (base.problem || head.problem) return [...problems, base.problem, head.problem].filter(Boolean);
+  if (base.problem || head.problem) return [base.problem, head.problem].filter(Boolean);
 
   const was = base.graph.nodes;
   const now = head.graph.nodes;
-  for (const id of now.keys())
-    if (!was.has(id)) problems.push({ kind: 'added', id, message: `${id}: a record added by hand` });
-  for (const id of was.keys())
-    if (!now.has(id)) problems.push({ kind: 'removed', id, message: `${id}: a record removed by hand` });
+  const problems = [];
+  for (const [id, record] of was)
+    if (!now.has(id) && record.labels.has('Test') && HAS_FILE.includes(record.props.status))
+      problems.push({
+        kind: 'removed',
+        id,
+        message: `${id}: a ${record.props.status} test was removed: a test only moves forward, so it stays`,
+      });
   for (const [id, record] of now) if (was.has(id)) problems.push(...recordProblems(id, was.get(id), record, exists));
-
-  // a multiset: a link repeated is a link added
-  const count = (edges) => edges.map(edgeKey).reduce((m, e) => m.set(e, (m.get(e) ?? 0) + 1), new Map());
-  const before = count(base.graph.edges);
-  const after = count(head.graph.edges);
-  for (const [e, n] of after)
-    if (n > (before.get(e) ?? 0)) problems.push({ kind: 'link-added', id: e, message: `${e}: a link added by hand` });
-  for (const [e, n] of before)
-    if (n > (after.get(e) ?? 0))
-      problems.push({ kind: 'link-removed', id: e, message: `${e}: a link removed by hand` });
   return problems;
 }
 
@@ -195,7 +151,7 @@ function main(args) {
   }
   const problems = refusedChanges(base, head);
   for (const p of problems) console.log(`${p.kind}: ${p.message}`);
-  if (!problems.length) console.log(`${REQUIREMENTS}: unchanged, or changed only by tests flipped to written`);
+  if (!problems.length) console.log(`${REQUIREMENTS}: no test moved back or lost`);
   return problems.length ? 1 : 0;
 }
 
