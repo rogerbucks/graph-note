@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/changes.test.mjs",
+  "test": "the generation of ordinary work may be removed",
+  "seen_failing_first": false,
+  "evidence": "Passes against the old code, which did not check an edge DELETE at all; it pins that the new refusal of removing a plan or a cache's generation leaves an ordinary activity's generation removable. The cases that refuse the removal failed first."
+}
