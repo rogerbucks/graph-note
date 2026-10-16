@@ -254,6 +254,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/tests-first-tally.test.js` — that replay's `--tally`: what the records prove as JSON, and writes nothing.
 - `test/tests-first-unfinished.test.js` — that replay when a run of a test file does not finish: stopped at the time limit, it proves nothing.
 - `test/tests-first-run.test.js` — one run of one test file in that replay: what its report shows, and why it did not finish.
+- `test/wcag.test.js` — every view and page of every host (Obsidian's card, details, edit pane and settings, the browser editor's page in each state) passes axe-core's WCAG 2.2 A and AA rules and the 4.5:1 text contrast, in the light and the dark theme; the check is tried on planted faults first; a host with no entry fails (editor spec §11, wcag_aa, wcag_new_hosts, wcag_checked).
 - `test/whitespace.test.js` — the three copies of the one whitespace set are the same, and the set is openGQL's.
 
 ## The requirements in a GitHub Project
@@ -403,6 +404,9 @@ These test behaviour across modules, or the repository itself, so they are named
 
 ## The quality ratchet
 
+- **Every release is walked through for accessibility** (spec §11): the keyboard and screen reader list in
+  [RELEASING.md](RELEASING.md), for what the automated WCAG check (`test/wcag.test.js`) cannot see. Every interface in every
+  host meets WCAG 2.2 Level AA, and a new host does before its first release: add its views to `test/wcag.test.js`.
 - **Every release measures the code** (spec §12): `node scripts/quality-metrics.mjs --out quality/metrics.json` writes
   file sizes, an `npm audit` count, a secrets scan, the bundle's size, the work a fixed set of benchmarks takes, counted
   in CPU instructions and never in elapsed time, the suite's duration, its flaky tests, the size of a passing quiet run
