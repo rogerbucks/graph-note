@@ -19,7 +19,9 @@ const GRAPH = [
   '(large_reader)-[:ANSWERS]->(question),',
   '(alice)-[:ASKED]->(question)',
 ].join('\n');
-const BODY = `# Reader\n\nProse that is never sent.\n\n\`\`\`gql\n${GRAPH}\n\`\`\`\n`;
+// the graph spec's check wants the model that proposes declared in the note's graphs, or its proposal is not written
+const PEOPLE = "// graph: people\n(Local:Model {name: 'Local'}),\n(Remote:Model {name: 'Remote'})";
+const BODY = `# Reader\n\nProse that is never sent.\n\n\`\`\`gql\n${GRAPH}\n\`\`\`\n\n\`\`\`gql\n${PEOPLE}\n\`\`\`\n`;
 /** The note with front matter giving it a classification; none for no front matter. */
 const noteAt = (level) => (level ? `---\n${'classification'}: ${level}\n---\n${BODY}` : BODY);
 const NOTE = noteAt('Public');
@@ -132,7 +134,10 @@ describe('asking an AI model to propose changes (§19)', () => {
       assert.equal(env.state.requests[0].body, body);
       assert.equal(env.state.requests[0].url, LOCAL.endpoint);
       const note = env.state.files.get(PATH);
-      assert.ok(note.startsWith(NOTE), 'the graph and everything before the change set are as they were');
+      assert.ok(
+        note.startsWith(NOTE.slice(0, NOTE.indexOf('```gql\n// graph: people'))),
+        'the graph and everything before the change set are as they were',
+      );
       assert.match(note, /\(small_reader:Option \{name: 'Small'\}\)/);
       const [record] = env.state.data.aiSends;
       assert.equal(record.digest, createHash('sha256').update(body, 'utf8').digest('hex'));

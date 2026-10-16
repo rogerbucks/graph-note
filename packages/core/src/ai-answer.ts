@@ -3,6 +3,7 @@
 // proposal is written into the note as a change set beside the graph — never into the graph, which changes only when a
 // person accepts a change in the review.
 import { gqlSpans, graphOfBlock } from './blocks.ts';
+import { checkProposal, checkRefusal } from './proposals-check.ts';
 import { makeProposal } from './proposals.ts';
 import type { ChangeInput, Proposal } from './proposals.ts';
 import { changeSetText, oneWord } from './proposals-text.ts';
@@ -33,13 +34,17 @@ export function proposalFrom(changes: ChangeInput[], from: AnswerSource): Propos
 
 /**
  * The note with the proposal's change set written after the last block of its graph (after the last gql block when the
- * graph has none here), every other byte kept. The graph's own blocks are not touched.
+ * graph has none here), every other byte kept. The graph's own blocks are not touched. A proposal is written only if the
+ * graph spec's own check passes it, against the note as it is: otherwise nothing is written, and it says which lines failed
+ * (the proposer must be declared as a Model or a Person in the note's graphs, as the check wants).
  */
-export function noteWithProposal(note: string, proposal: Proposal): string {
+export function noteWithProposal(note: string, proposal: Proposal): string | { refused: string } {
+  const block = changeSetText(proposal);
+  const refused = checkRefusal(checkProposal(note, block), 'counts');
+  if (refused) return { refused };
   const spans = gqlSpans(note);
   const own = spans.filter((s) => graphOfBlock(s.text) === proposal.graph);
   const after = own.at(-1) ?? spans.at(-1);
-  const block = changeSetText(proposal);
   if (!after) return `${note}${note.endsWith('\n') || !note ? '' : '\n'}\n\`\`\`gql\n${block}\n\`\`\`\n`;
   const written = insertBlockAfter(note, { line: after.open, text: after.text }, block);
   return written.ok ? written.note : `${note}\n\`\`\`gql\n${block}\n\`\`\`\n`;

@@ -11,10 +11,17 @@ import { trim } from './whitespace.ts';
 /** The statement that makes a change, as a change set holds it: the item for an addition, else a SET or a DELETE. */
 export function statementOf(c: ChangeOp): string {
   if (c.op === 'add') return c.gql;
-  if (c.op === 'set') return `SET ${c.thing}.${c.key} = ${c.value}`;
-  // a thing goes with the links it has, as the editor takes it out (proposals-apply.ts): DETACH DELETE lists them
-  if (c.op === 'remove-thing') return `MATCH (v {id: ${gs.quote(c.thing)}}) DETACH DELETE v`;
-  return `MATCH (a {id: ${gs.quote(c.from)}})-[r:${c.type}]->(b {id: ${gs.quote(c.to)}}) DELETE r`;
+  const kinds = (labels?: readonly string[]) => (labels ?? []).map((l) => `:${l}`).join('');
+  if (c.op === 'set')
+    return c.labels?.length
+      ? `MATCH (v${kinds(c.labels)} {id: ${gs.quote(c.thing)}}) SET v.${c.key} = ${c.value}`
+      : `SET ${c.thing}.${c.key} = ${c.value}`;
+  // a thing goes with the links it has unless the statement is a plain DELETE (`detach: false`), which keeps to what the
+  // graph spec says of it: no link left without its end
+  if (c.op === 'remove-thing')
+    return `MATCH (v${kinds(c.labels)} {id: ${gs.quote(c.thing)}}) ${c.detach === false ? '' : 'DETACH '}DELETE v`;
+  const [a, b] = c.ends ?? [[], []];
+  return `MATCH (a${kinds(a)} {id: ${gs.quote(c.from)}})-[r:${c.type}]->(b${kinds(b)} {id: ${gs.quote(c.to)}}) DELETE r`;
 }
 
 /** An addition's text as its tokens, so spacing never changes what it is. */
@@ -58,8 +65,22 @@ export function readStatement(text: string): ChangeOp | { refused: string } {
     if (e instanceof gs.ProfileError) return { refused: `${e.msg}: ${e.fix}` };
     throw e;
   }
-  if (c.op === 'delete-thing' || c.op === 'detach-delete-thing') return { op: 'remove-thing', thing: c.thing ?? '' };
-  if (c.op === 'delete-link') return { op: 'remove-link', from: c.from ?? '', type: c.type ?? '', to: c.to ?? '' };
+  const labels = c.labels?.length ? { labels: c.labels } : {};
+  // a plain DELETE stays plain, and the kinds the MATCH names are kept: the target must have them
+  if (c.op === 'delete-thing' || c.op === 'detach-delete-thing')
+    return {
+      op: 'remove-thing',
+      thing: c.thing ?? '',
+      ...(c.op === 'delete-thing' ? { detach: false as const } : {}),
+      ...labels,
+    };
+  if (c.op === 'delete-link') {
+    const ends =
+      c.ends && (c.ends[0]?.length || c.ends[1]?.length)
+        ? { ends: [c.ends[0] ?? [], c.ends[1] ?? []] as [string[], string[]] }
+        : {};
+    return { op: 'remove-link', from: c.from ?? '', type: c.type ?? '', to: c.to ?? '', ...ends };
+  }
   const keys = Object.keys(c.set ?? {});
   if (c.op === 'set-link')
     return { refused: 'a SET of a link’s property is not one the editor lists: edit it in the text' };
@@ -68,5 +89,5 @@ export function readStatement(text: string): ChangeOp | { refused: string } {
   // the value as it is written: what follows the = of the one assignment, in the text with its strings blanked
   const at = /\bSET\s+[A-Za-z_]\w*\s*\.\s*[A-Za-z_]\w*\s*=/i.exec(blankText(text));
   const value = at ? trim(text.slice(at.index + at[0].length)) : '';
-  return { op: 'set', thing: c.thing ?? '', key: keys[0] ?? '', value };
+  return { op: 'set', thing: c.thing ?? '', key: keys[0] ?? '', value, ...labels };
 }

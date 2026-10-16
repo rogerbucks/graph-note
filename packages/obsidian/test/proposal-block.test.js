@@ -30,7 +30,7 @@ const CHANGES = [
 ];
 
 /** The graph that says what the proposer is: the graph spec's check wants its author to be a known person or model. */
-const PEOPLE = "// graph: people\n(ada:Model {name: 'Ada'})";
+const PEOPLE = "// graph: people\n(ada:Model {name: 'Ada'}),\n(you:Model {name: 'you'})";
 /** The ids of the five changes above, derived from their statements. */
 const [C1, C2] = makeProposal({
   id: 'ids',
@@ -308,28 +308,21 @@ describe('a person decides, a change at a time', () => {
     }
   });
 
-  test('Accept all, with a change that cannot be accepted among them, applies the rest and leaves that one waiting', async () => {
+  test('Accept all, with a change among them that the graph spec’s check fails, writes nothing and says why on the card', async () => {
     const { note } = proposed([{ op: 'add', gql: "(alice:Person {name: 'Alicia'})" }, ...CHANGES.slice(0, 1)]);
     const { env, el } = await card(note);
     try {
       press(el, 'Accept all (1)');
-      await until(() => noteNow(env) !== note);
-      const graph = noteNow(env).split('```gql')[1].split('```')[0];
-      assert.match(graph, /small_reader:Option/);
-      assert.doesNotMatch(graph, /Alicia/);
-      assert.match(env.state.notices.at(-1), /Accepted 1 change/);
-      const again = await show(env, noteNow(env), 1);
-      await until(() => !!again.el.querySelector('svg'));
-      assert.deepEqual(
-        rows(again.el).map((r) => r.classList.contains('is-pending')),
-        [true, false],
-      );
+      await until(() => env.state.notices.length > 0);
+      assert.equal(noteNow(env), note, 'nothing was written');
+      assert.match(env.state.notices.at(-1), /Nothing was decided: the graph spec’s check of this change set fails/);
+      assert.match(el.querySelector('.graph-note-proposal-status').textContent, /check of this change set fails/);
     } finally {
       env.uninstall();
     }
   });
 
-  test('Accept for a group does the same: what can be accepted in it, and not what cannot', async () => {
+  test('Accept for a group is refused the same way, naming the check’s line', async () => {
     const changes = [
       { op: 'add', gql: "(alice:Person {name: 'Alicia'})", group: 'People' },
       thingChange('small_reader', 'Option', { name: 'Small reader' }, { group: 'People' }),
@@ -339,10 +332,40 @@ describe('a person decides, a change at a time', () => {
     const { env, el } = await card(note);
     try {
       press(el, 'Accept People');
-      await until(() => noteNow(env) !== note);
-      const graph = noteNow(env).split('```gql')[1].split('```')[0];
-      assert.match(graph, /small_reader:Option/);
-      assert.doesNotMatch(graph, /Alicia|o1:Option/);
+      await until(() => env.state.notices.length > 0);
+      assert.equal(noteNow(env), note);
+      assert.match(env.state.notices.at(-1), /check of this change set fails: /);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a proposal whose proposer the note does not declare shows the failed line on the card, and Accept is refused', async () => {
+    const { note } = proposed(CHANGES, { by: { name: 'stranger', kind: 'model' } });
+    const { env, el } = await card(note);
+    try {
+      assert.match(el.querySelector('.graph-note-proposal-checked').textContent, /fails 1 of \d+/);
+      assert.match(el.querySelector('.graph-note-proposal-checked').textContent, /stranger is a known person or model/);
+      press(row(el, 'c3'), 'Accept');
+      await until(() => env.state.notices.length > 0);
+      assert.equal(noteNow(env), note);
+      assert.match(el.querySelector('.graph-note-proposal-status').textContent, /stranger is a known person or model/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a Reject that is refused, as a waiting change still needs the thing, says so on the card', async () => {
+    const { note } = proposed();
+    const { env, el } = await card(note);
+    try {
+      press(row(el, 'c1'), 'Reject');
+      await until(() => env.state.notices.length > 0);
+      assert.equal(noteNow(env), note);
+      assert.match(
+        el.querySelector('.graph-note-proposal-status').textContent,
+        /Nothing was decided: .* needs small_reader/,
+      );
     } finally {
       env.uninstall();
     }

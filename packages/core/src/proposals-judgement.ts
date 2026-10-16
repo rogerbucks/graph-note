@@ -6,7 +6,7 @@
 // rejected one can be read again, who proposed it (the change set's `by`) and who decided and when. The decider is plain
 // text, kept exactly as typed in the settings, or "you" when none is set; it is not a link to a Person.
 import { appended } from './linked-list.ts';
-import { gqlSpans, graphOf } from './blocks.ts';
+import { dataKind, gqlSpans, graphOf } from './blocks.ts';
 import type { Span } from './blocks.ts';
 import { readNote } from './drawing.ts';
 import { valueGql } from './proposals.ts';
@@ -49,9 +49,11 @@ export interface ToRecord {
 /** The graph name that is a judgement graph here: `judgements`, or a name ending `_judgements`. */
 const isJudgement = (name: string | null): boolean => name === 'judgements' || /_judgements$/.test(name ?? '');
 
+/** Whether a block is a judgement block: a block of data, never a change set, a query or a schema, of such a graph. */
+const isJudgementBlock = (text: string): boolean => dataKind(text) === 'data' && isJudgement(graphOf(text));
+
 /** The note's judgement block, if it has one: the first gql block whose graph line names a judgement graph. */
-export const judgementSpan = (note: string): Span | undefined =>
-  gqlSpans(note).find((s) => isJudgement(graphOf(s.text)));
+export const judgementSpan = (note: string): Span | undefined => gqlSpans(note).find((s) => isJudgementBlock(s.text));
 
 const str = (v: unknown): string | undefined => (typeof v === 'string' ? v : undefined);
 
@@ -176,7 +178,7 @@ export function withoutDecisions(
   note: string,
   w: Pick<Written, 'before' | 'after'>,
 ): { ok: true; note: string } | { ok: false; reason: string } {
-  const span = gqlSpans(note).find((s) => s.text === w.after && isJudgement(graphOf(s.text)));
+  const span = gqlSpans(note).find((s) => s.text === w.after && isJudgementBlock(s.text));
   if (!span)
     return { ok: false, reason: 'the judgement block has changed since the decision was made, so it cannot be undone' };
   if (w.before !== null) {

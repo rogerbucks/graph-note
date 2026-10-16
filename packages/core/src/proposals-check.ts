@@ -40,6 +40,19 @@ export function checkProposal(note: string, block: string, shared: readonly stri
   }
 }
 
+const MOVED = /^it was made against the graph as it stands/;
+
+/**
+ * Why a proposal must not be accepted or written, or null: the check failed, saying which lines. `moved: 'seen'` leaves out
+ * the line that says the graph has moved since, which the stale notice has already said and the person has read.
+ */
+export function checkRefusal(check: ProposalCheck, moved: 'seen' | 'counts'): string | null {
+  const failed = check.results.filter((r) => !r.ok && !(moved === 'seen' && MOVED.test(r.label)));
+  return failed.length
+    ? `the graph spec’s check of this change set fails: ${failed.map((r) => r.label).join('; ')}`
+    : null;
+}
+
 /** What the note's graphs say a proposer is: a Model, a Person or a graph Step; otherwise nothing is said. */
 export function proposerKind(note: string, name: string, shared: string[] = []): ProposerKind {
   const read = readNote(

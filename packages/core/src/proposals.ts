@@ -41,9 +41,12 @@ export interface Provenance {
  */
 export type ChangeOp =
   | { op: 'add'; gql: string }
-  | { op: 'set'; thing: string; key: string; value: string }
-  | { op: 'remove-thing'; thing: string }
-  | { op: 'remove-link'; from: string; type: string; to: string };
+  | { op: 'set'; thing: string; key: string; value: string; labels?: string[] }
+  | { op: 'remove-thing'; thing: string; detach?: false; labels?: string[] }
+  | { op: 'remove-link'; from: string; type: string; to: string; ends?: [string[], string[]] };
+// `detach: false` is a plain DELETE, which leaves no link without its end and so is refused for a thing that has links;
+// without it a removal of a thing is a DETACH DELETE. `labels` and `ends` are the kinds the statement's MATCH names, which
+// the target must have; a change a source builds names none.
 
 /** A change as a source offers it: its group is given by the proposal when the source leaves it out, and it never has an id. */
 export type ChangeInput = ChangeOp & { group?: string; reason?: string };
@@ -103,6 +106,10 @@ function faultIn(c: ChangeInput, n: number): string | null {
     const word = /^[A-Za-z]+/.exec(blankText(c.gql).trim())?.[0].toUpperCase();
     if (found.length !== 1 || word === 'SET' || word === 'MATCH' || word === 'INSERT' || !c.gql.includes('('))
       return `${at}: an addition is one thing, or one link or path, as a block writes it; write each as its own change`;
+    // a line break outside a text would let the addition write a line of its own into the change set
+    const item = found[0];
+    if (item && /[\r\n]/.test(blankText(c.gql.slice(item.from, item.to))))
+      return `${at}: an addition is on one line: a line break outside a text is not part of it`;
   } else if (c.op === 'set') {
     if (!WORD.test(c.thing) || !WORD.test(c.key) || c.key === 'id')
       return `${at}: a change of a property names a thing and a property (not its id), each one word`;
@@ -114,6 +121,8 @@ function faultIn(c: ChangeInput, n: number): string | null {
   } else if (![c.from, c.type, c.to].every((w) => WORD.test(w))) {
     return `${at}: a removal of a link names where it is from, its type and where it goes to, each one word`;
   }
+  const kinds = c.op === 'remove-link' ? (c.ends ?? []).flat() : c.op === 'add' ? [] : (c.labels ?? []);
+  if (!kinds.every((k) => WORD.test(k))) return `${at}: a kind a statement names is one word`;
   if (c.group !== undefined && (!c.group.trim() || !oneLine(c.group))) return `${at}: a group is named on one line`;
   if (c.reason !== undefined && !oneLine(c.reason)) return `${at}: a reason is given on one line`;
   return null;
@@ -122,9 +131,22 @@ function faultIn(c: ChangeInput, n: number): string | null {
 /** The change with only its own parts, in a fixed order of keys: what two sources write the same way is the same change. */
 function opOf(c: ChangeOp): ChangeOp {
   if (c.op === 'add') return { op: 'add', gql: c.gql };
-  if (c.op === 'set') return { op: 'set', thing: c.thing, key: c.key, value: c.value };
-  if (c.op === 'remove-thing') return { op: 'remove-thing', thing: c.thing };
-  return { op: 'remove-link', from: c.from, type: c.type, to: c.to };
+  const some = (l?: string[]) => (l?.length ? l : null);
+  if (c.op === 'set') {
+    const labels = some(c.labels);
+    return { op: 'set', thing: c.thing, key: c.key, value: c.value, ...(labels ? { labels } : {}) };
+  }
+  if (c.op === 'remove-thing') {
+    const labels = some(c.labels);
+    return {
+      op: 'remove-thing',
+      thing: c.thing,
+      ...(c.detach === false ? { detach: false as const } : {}),
+      ...(labels ? { labels } : {}),
+    };
+  }
+  const ends = c.ends && (c.ends[0].length || c.ends[1].length) ? c.ends : null;
+  return { op: 'remove-link', from: c.from, type: c.type, to: c.to, ...(ends ? { ends } : {}) };
 }
 
 /** What a proposal is made from: where it came from, and the changes. */

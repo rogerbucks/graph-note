@@ -24,6 +24,7 @@ import {
   CHANGES,
   GRAPH,
   NOTE,
+  NOTE_WITH_ADA,
   NOW,
   ROGER,
   blocksOf,
@@ -356,11 +357,14 @@ describe('proposal_provenance: a proposal shows who proposed it, when and what i
   });
 
   test('the graph moving because changes were accepted is not the basis moving: the rest of the proposal is not called stale', () => {
-    const { note } = noteWithChangeSet();
+    const { note } = noteWithChangeSet(proposalOf(), NOTE_WITH_ADA);
     const review = new ProposalReview(proposalOf());
     const r = accepted(review.accept(note, [C1], ROGER, { at: NOW }));
     assert.equal(review.show(r.note).stale, null);
-    const reread = ProposalReview.fromChangeSet(blocksOf(r.note)[1], r.note);
+    const reread = ProposalReview.fromChangeSet(
+      blocksOf(r.note).find((b) => b.includes('CHANGE SET')),
+      r.note,
+    );
     assert.equal(reread.show(r.note).stale, null);
     assert.equal(accepted(reread.accept(r.note, [C3], ROGER, { at: NOW })).ids[0], C3);
   });

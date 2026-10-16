@@ -13,7 +13,7 @@ import { PaneSession } from './pane.ts';
 import { applyChange, namesOf, newProblems, notTaken } from './proposals-apply.ts';
 import { basisOf, staleness } from './proposals-basis.ts';
 import type { Stale } from './proposals-basis.ts';
-import { checkProposal, proposerKind } from './proposals-check.ts';
+import { checkProposal, checkRefusal, proposerKind } from './proposals-check.ts';
 import { DECIDER_DEFAULT, decidedIn, inOrder } from './proposals-judgement.ts';
 import type { Decision, ToRecord } from './proposals-judgement.ts';
 import { exactOf, marksOf, markOf, saidOf } from './proposals-marks.ts';
@@ -267,6 +267,10 @@ export class ProposalReview {
     if (!chosen.length) return { ok: true, note, ids: [] };
     const stale = this.staleness(note);
     if (stale && !options.staleSeen) return refuse(stale.message, stale);
+    // the change set as the note holds it must pass the graph spec's own check: nothing is written on one that fails
+    const held = changeSetSpan(note, this.proposal);
+    const unchecked = held && checkRefusal(checkProposal(note, held.text, this.shared), 'seen');
+    if (unchecked) return refuse(unchecked);
     const { graph } = this.proposal;
     const before = textsOf(note);
     const beforeReading = readNote(before, undefined, this.shared);

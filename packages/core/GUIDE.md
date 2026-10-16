@@ -631,6 +631,9 @@ the graph and never written until a person accepts a change, and then written as
 - `proposals-check.ts` — `checkProposal`: graph-spec's own `checkChangeset` run on the change set as the note holds it,
   against the note's other graphs, every line of its answer kept (proposals_checked); `proposerKind`, what the note's graphs
   say the proposer is (a Model, a Person or a Step).
+  An accept is refused while the check fails on the change set the note holds (the "moved" line aside once the stale
+  notice is seen), `noteWithProposal` writes a proposal only if the check passes it, a plain `DELETE` stays plain
+  (refused for a thing that has links) and the kinds a MATCH names are held to, and only a data block is a judgement block.
 - `proposals-needs.ts` — what a change needs of the others: a link needs the things it joins before it is accepted, and
   a change that adds what another needs is not rejected alone.
 - `proposals-apply.ts` — one change written as text on the blocks' texts (an addition after the graph's last block of data, a
