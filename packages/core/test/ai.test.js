@@ -395,7 +395,11 @@ describe('an answer comes back as a proposal (answers_are_proposals)', () => {
       .map((b) => b.text)
       .find((t) => t.includes('CHANGE SET'));
     const review = ProposalReview.fromChangeSet(block);
-    assert.deepEqual(review.pending(), ['c1', 'c2', 'c3']);
+    assert.deepEqual(
+      review.pending(),
+      result.proposal.changes.map((c) => c.id),
+    );
+    assert.equal(review.pending().length, 3);
     assert.ok(note.startsWith(NOTE.slice(0, NOTE.indexOf('```gql\n// graph: other'))));
   });
 });

@@ -29,6 +29,17 @@ const CHANGES = [
   { op: 'remove-thing', thing: 'alice' },
 ];
 
+/** The graph that says what the proposer is: the graph spec's check wants its author to be a known person or model. */
+const PEOPLE = "// graph: people\n(ada:Model {name: 'Ada'})";
+/** The ids of the five changes above, derived from their statements. */
+const [C1, C2] = makeProposal({
+  id: 'ids',
+  graph: 'reader',
+  by: { name: 'ada', kind: 'model' },
+  basis: '0123456789abcdef',
+  changes: CHANGES,
+}).changes.map((c) => c.id);
+
 /** The change set of a proposal made against the graph as the note holds it, and the note that holds both. */
 function proposed(changes = CHANGES, over = {}) {
   const base = noteOf(GRAPH);
@@ -43,7 +54,7 @@ function proposed(changes = CHANGES, over = {}) {
     ...over,
   });
   const block = new ProposalReview(p).changeSetText();
-  return { block, note: noteOf(GRAPH, block) };
+  return { block, note: noteOf(GRAPH, block, PEOPLE) };
 }
 
 async function card(note, options = {}) {
@@ -54,7 +65,8 @@ async function card(note, options = {}) {
 }
 const node = (el, key) => el.querySelectorAll('g.node').find((g) => g.getAttribute('data-key') === key);
 const rows = (el) => el.querySelectorAll('li.graph-note-proposal-row');
-const row = (el, id) => rows(el).find((r) => r.getAttribute('data-change') === id);
+// a change by its place in the list, 'c1' the first row: ids are derived from each statement, so no test writes one
+const row = (el, place) => rows(el)[Number(place.slice(1)) - 1];
 const press = (el, label) => {
   const b = el.querySelectorAll('button').find((x) => x.getAttribute('aria-label')?.startsWith(label));
   assert.ok(b, `a button ${label}`);
@@ -161,8 +173,8 @@ describe('a change set in a note is a proposal, shown over its graph', () => {
           "(small_reader:Option {name: 'Small reader'})",
           '(small_reader)-[:ANSWERS]->(question)',
           'SET large_reader.price = 4',
-          'remove link large_reader ANSWERS question',
-          'remove thing alice',
+          "MATCH (a {id: 'large_reader'})-[r:ANSWERS]->(b {id: 'question'}) DELETE r",
+          "MATCH (v {id: 'alice'}) DETACH DELETE v",
         ],
       );
       const accept = row(el, 'c3').querySelector('.graph-note-proposal-accept');
@@ -183,7 +195,7 @@ describe('a change set in a note is a proposal, shown over its graph', () => {
       await until(() => env.state.notices.length > 0);
       assert.match(
         env.state.notices.at(-1),
-        /Nothing was decided: c2 needs c1, which adds small_reader: accept c1 first/,
+        new RegExp(`Nothing was decided: ${C2} needs ${C1}, which adds small_reader: accept ${C1} first`),
       );
       assert.equal(noteNow(env), note);
     } finally {
@@ -193,7 +205,7 @@ describe('a change set in a note is a proposal, shown over its graph', () => {
 });
 
 describe('a person decides, a change at a time', () => {
-  test('Accept writes that change into the graph and no other, records it in the change set, and says so', async () => {
+  test('Accept writes that change into the graph and no other, records it in the judgement graph, and says so', async () => {
     const { note } = proposed();
     const { env, el } = await card(note);
     try {
@@ -202,7 +214,9 @@ describe('a person decides, a change at a time', () => {
       const now = noteNow(env);
       assert.match(now, /\(question:Question[^]*\(small_reader:Option \{name: 'Small reader'\}\)\n```/);
       assert.doesNotMatch(now.split('```gql')[1], /price: 4/);
-      assert.match(now, /\/\/@ accepted: the_reader, \d{4}-\d\d-\d\dT[\d:.]+Z\n\(small_reader:Option/);
+      assert.match(now, /\/\/ graph: judgements\n\(decision_reader_cs1_\w+:Decision \{state: 'accepted',/);
+      assert.match(now, /decided_by: 'you', at: '\d{4}-\d\d-\d\dT[\d:.]+Z'/);
+      assert.doesNotMatch(now.split('```gql')[2], /small_reader:Option/, 'it left the change set');
       assert.match(env.state.notices.at(-1), /Accepted 1 change: written into the graph\. Undo takes them back\./);
       const again = await show(env, now, 1);
       await until(() => !!again.el.querySelector('svg'));
@@ -212,7 +226,7 @@ describe('a person decides, a change at a time', () => {
       );
       assert.match(
         row(again.el, 'c1').querySelector('.graph-note-proposal-decision').textContent,
-        /Accepted by the reader on /,
+        /Accepted by you on /,
       );
       assert.equal(row(again.el, 'c1').querySelectorAll('button').length, 0);
       assert.equal(row(again.el, 'c2').querySelector('.graph-note-proposal-blocked'), null);
@@ -245,15 +259,16 @@ describe('a person decides, a change at a time', () => {
     }
   });
 
-  test('Reject writes only the record in the change set: the graph block is the same bytes', async () => {
+  test('Reject writes only the record in the judgement graph: the graph block is the same bytes, and the change leaves the set', async () => {
     const { note } = proposed();
     const { env, el } = await card(note);
     try {
       press(row(el, 'c3'), 'Reject');
       await until(() => noteNow(env) !== note);
-      const [, graph, set] = noteNow(env).split('```gql');
+      const [, graph, set, judgement] = noteNow(env).split('```gql');
       assert.equal(graph.split('```')[0].trim(), GRAPH);
-      assert.match(set, /\/\/@ rejected: the_reader, [^\n]*\nSET large_reader\.price = 4/);
+      assert.doesNotMatch(set, /SET large_reader\.price = 4/);
+      assert.match(judgement, /state: 'rejected'[^\n]*statement: 'SET large_reader\.price = 4'/);
       assert.match(env.state.notices.at(-1), /Rejected 1 change: the graph is unchanged/);
     } finally {
       env.uninstall();
@@ -351,9 +366,9 @@ describe('a person decides, a change at a time', () => {
     try {
       press(el, 'Reject all');
       await until(() => noteNow(env) !== note);
-      const [, graph, set] = noteNow(env).split('```gql');
+      const [, graph, , judgement] = noteNow(env).split('```gql');
       assert.equal(graph.split('```')[0].trim(), GRAPH);
-      assert.equal(set.match(/\/\/@ rejected: the_reader,/g).length, 5);
+      assert.equal(judgement.match(/state: 'rejected'/g).length, 5);
     } finally {
       env.uninstall();
     }
@@ -375,7 +390,7 @@ describe('a person decides, a change at a time', () => {
 describe('a proposal whose graph has moved', () => {
   test('says so before anything is accepted, and nothing is accepted until the notice has been read', async () => {
     const { block } = proposed();
-    const moved = noteOf(GRAPH.replace('price: 3', 'price: 5'), block);
+    const moved = noteOf(GRAPH.replace('price: 3', 'price: 5'), block, PEOPLE);
     const { env, el } = await card(moved);
     try {
       const notice = el.querySelector('.graph-note-proposal-stale');
@@ -513,10 +528,7 @@ describe('a change set that is no proposal', () => {
     const empty = `// graph: reader · CHANGE SET cs9 · against ${basisOf(base, 'reader')} · by ada`;
     const { env, el } = await card(noteOf(GRAPH, empty));
     try {
-      assert.match(
-        el.querySelector('[role="alert"]').textContent,
-        /cannot be shown: a proposal holds at least one change/,
-      );
+      assert.match(el.querySelector('[role="alert"]').textContent, /cannot be shown: this change set holds no change/);
       assert.ok(el.querySelector('pre'));
     } finally {
       env.uninstall();

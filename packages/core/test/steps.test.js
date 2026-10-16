@@ -217,7 +217,7 @@ describe('the output is a proposal, written only when a person accepts it', () =
     assert.equal(texts(proposed)[0], TEAM, 'the graph block is as it was');
     assert.equal(readNote(texts(proposed)).graphs.get('team').links.length, 3);
     const review = ProposalReview.fromChangeSet(texts(proposed)[1]);
-    const accepted = review.accept(proposed, ['c1'], { name: 'you' });
+    const accepted = review.accept(proposed, [r.proposal.changes[0].id], { name: 'you' });
     assert.ok(accepted.ok, accepted.reason);
     const links = readNote(texts(accepted.note)).graphs.get('team').links;
     assert.ok(links.some((l) => l.from === 'ada' && l.type === 'WORKS_WITH' && l.to === 'bob'));

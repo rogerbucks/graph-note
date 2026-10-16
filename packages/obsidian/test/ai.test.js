@@ -253,7 +253,7 @@ describe('asking an AI model to propose changes (§19)', () => {
     } finally {
       env.uninstall();
     }
-    const line = note.split('\n').find((l) => l.startsWith('/// '));
+    const line = note.split('\n').find((l) => l.startsWith('//@ reason: '));
     assert.ok(line && !line.includes('![') && !line.includes('<b>'), `escaped in the note: ${line}`);
     const viewer = await load({ files: { 'Some note.md': note } });
     try {

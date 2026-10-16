@@ -207,7 +207,7 @@ describe('every edit round-trips', () => {
     const review = new ProposalReview(proposal);
     let note = NOTE;
     const edited = [];
-    for (const id of ['c1', 'c2', 'c3', 'c4', 'c5']) {
+    for (const { id } of proposal.changes) {
       const r = review.accept(note, [id], { name: 'roger' }, { at: '2026-10-13T10:30:00Z', staleSeen: true });
       assert.equal(r.ok, true, r.reason);
       const change = proposal.changes.find((c) => c.id === id);

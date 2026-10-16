@@ -1,8 +1,9 @@
 // What the proposals tests share (editor spec §17): a small draft graph in a note, a proposal of every kind of change
 // made against it, and the change set written into the note after it. Test support only — nothing here ships.
+import { readNote } from '../src/drawing.ts';
 import { basisOf } from '../src/proposals-basis.ts';
 import { makeProposal } from '../src/proposals.ts';
-import { changeSetText, readChangeSet } from '../src/proposals-text.ts';
+import { changeSetText } from '../src/proposals-text.ts';
 
 export const GRAPH = `// graph: reader
 (question:Question {name: 'Which device?'}),
@@ -10,10 +11,17 @@ export const GRAPH = `// graph: reader
 (alice:Person {name: 'Alice'}),
 (large_reader)-[:ANSWERS]->(question)`;
 
+/** A graph that says who the proposer is: the graph spec's check wants its author to be a known person or model. */
+export const PEOPLE = `// graph: people
+(ada:Model {name: 'Ada'})`;
+
 /** A note holding `graph` as its one gql block. */
 export const noteOf = (graph = GRAPH) => `# Reader\n\n\`\`\`gql\n${graph}\n\`\`\`\n\nAfter.\n`;
 export const NOTE = noteOf();
 export const BASIS = basisOf(NOTE, 'reader');
+
+/** The same note with the graph that names its proposer after the graph. */
+export const NOTE_WITH_ADA = `${NOTE}\n\`\`\`gql\n${PEOPLE}\n\`\`\`\n`;
 
 export const ADA = { name: 'ada', kind: 'model' };
 export const ROGER = { name: 'roger' };
@@ -45,18 +53,27 @@ export function proposalOf(over = {}) {
   return made;
 }
 
+/** The ids of the five changes of `CHANGES`: derived from each statement, so never written in a test. */
+export const [C1, C2, C3, C4, C5] = proposalOf().changes.map((c) => c.id);
+
 /** The note with the proposal's change set written as a gql block after the graph; the block as written is returned too. */
 export function noteWithChangeSet(proposal = proposalOf(), note = NOTE) {
-  const block = changeSetText(proposal, new Map(), null);
+  const block = changeSetText(proposal);
   return { note: `${note}\n\`\`\`gql\n${block}\n\`\`\`\n`, block };
 }
 
 /** The gql blocks of a note, as texts. */
 export const blocksOf = (note) => [...note.matchAll(/```gql\n([\s\S]*?)\n```/g)].map((m) => m[1]);
 
-/** The decisions a change set block records, by change id. */
-export function decisionsIn(block) {
-  const r = readChangeSet(block);
-  if ('refused' in r) throw new Error(r.refused);
-  return r.decisions;
+/** The decisions a note's judgement graph records, by change id: read from the note's own text, as any tool reads it. */
+export function decisionsIn(note) {
+  const block = blocksOf(note).find((b) => /^\/\/ graph: (?:\w+_)?judgements\b/.test(b));
+  const out = new Map();
+  if (!block) return out;
+  const g = readNote([block]).world[/^\/\/ graph: (\S+)/.exec(block)[1]];
+  for (const d of g.labelled('Decision')) {
+    const p = g.p(d);
+    out.set(p.change, { state: p.state, by: p.decided_by, at: p.at });
+  }
+  return out;
 }
