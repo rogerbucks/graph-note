@@ -78,7 +78,12 @@ async function run(
       shared,
     });
     outcome = r;
-    return 'proposal' in r ? noteWithProposal(note, r.proposal) : note;
+    if (!('proposal' in r)) return note;
+    // a proposal the graph spec's check fails is not written, and the run says so
+    const written = noteWithProposal(note, r.proposal);
+    if (typeof written === 'string') return written;
+    outcome = { refused: [`Step ${step.name} gave a proposal that was not written: ${written.refused}`] };
+    return note;
   });
   return outcome;
 }

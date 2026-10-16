@@ -217,7 +217,9 @@ export type { Stale } from './proposals-basis.ts';
 export { MARK_WORDS } from './proposals-marks.ts';
 export type { ChangeMark, MarkKind, Marks } from './proposals-marks.ts';
 export { changeSetId } from './proposals-text.ts';
-export type { Decision } from './proposals-text.ts';
+export { DECIDER_DEFAULT, deciderName } from './proposals-judgement.ts';
+export type { Decision } from './proposals-judgement.ts';
+export type { ProposalCheck } from './proposals-check.ts';
 export { ProposalReview } from './proposals-review.ts';
 export { aiReady, confirmSend, prepareSend, sendPrepared } from './ai.ts';
 export type {
@@ -238,6 +240,16 @@ export { sha256 } from './ai-digest.ts';
 export { AI_PURPOSES, endpointProblem, modelChoices } from './ai-choice.ts';
 export type { HostAi, ModelChoice } from './ai-choice.ts';
 export type { ScopeChoice } from './ai-scope.ts';
+export {
+  classMapFrom,
+  classMapProblems,
+  classMapText,
+  matchClass,
+  matrixGrants,
+  matrixProblems,
+  unmatchedClasses,
+} from './ai-matrix.ts';
+export type { ClassGrant, Mark, MatrixCell, MatrixInput, MatrixRow, MatrixSwitch } from './ai-matrix.ts';
 export { noteWithProposal } from './ai-answer.ts';
 export type { ChangeRow, DecideOptions, Person, ProposalShown, Reviewed, Which } from './proposals-shown.ts';
 export { hitAreas, nearby, TapCycle, boundsOf, centres } from './hits.ts';

@@ -5,8 +5,9 @@
 // a session has one server, reused for the same note and replaced for another (cc_one_server); and it ends when the
 // session does, on `/graph stop`, or by itself when the server stops (cc_server_stops). No Node module is imported here:
 // the host's calls are handed in, so the tests run the launcher over real processes and the mod over the host's own.
-import { claudeGate, sha256 } from '@graph-note/core';
-import type { Gate } from '@graph-note/core';
+import { CLAUDE, claudeGate, sha256 } from '@graph-note/core';
+import type { Gate, GateSettings } from '@graph-note/core';
+import { withMatrix } from './editor-matrix.ts';
 import { folderOf, fullPath, nameOf } from './editor-paths.ts';
 import { settingsEnvironment } from './editor-settings-env.ts';
 import type { LaunchSettings } from './editor-settings-env.ts';
@@ -38,6 +39,11 @@ export interface Spawned {
 export interface EditorPorts {
   /** `$.process.spawn`, narrowed to what the launcher asks of it: a command by its arguments, and its environment. */
   spawn: (request: { argv: readonly string[]; env?: Record<string, string> }) => Spawned;
+  /**
+   * A file's real path, links settled (`realPathVia` over the host's process call); with none, a matrix note cannot be
+   * placed inside the vault and is refused.
+   */
+  realPath?: (path: string) => Promise<string>;
   /** `$.fs.exists`. */
   exists: (path: string) => Promise<boolean>;
   /** `$.fs.read`: the note's text, read for its classification before anything is opened, and never kept. */
@@ -71,6 +77,24 @@ interface Checked {
   gate: Gate;
   digest: string | null;
   settings: LaunchSettings | null;
+}
+
+/** The settings as the server is given them, in its environment: no key, only what its gate reads. */
+export function settingsForServer(settings: GateSettings): string {
+  return JSON.stringify({
+    classifications: settings.classifications,
+    aiUnlabelled: settings.aiUnlabelled,
+    // each model's row and switches go too, so the server holds Claude to the same row as the mod
+    aiModels: settings.aiModels.map((m) => ({
+      name: m.name,
+      ceiling: m.ceiling,
+      ...(m.matrixRow ? { matrixRow: m.matrixRow, matrixOn: m.matrixOn ?? [] } : {}),
+    })),
+    aiClassMap: settings.aiClassMap ?? {},
+    // the rows the mod read from the matrix note; none given are none, and a row picked then clears nothing
+    matrix: settings.matrix ?? [],
+    ...(settings.matrixProblem ? { matrixProblem: settings.matrixProblem } : {}),
+  });
 }
 
 /** How long a server has to hand over its address before it is killed and the start said to have failed. */
@@ -158,11 +182,24 @@ export class EditorLauncher {
     });
   }
 
+  /**
+   * The settings the gate reads for `note`. When a row of the destination matrix is picked for Claude, the matrix note
+   * named in the settings is read from inside the vault (a path that is outside it is never read) and its rows are
+   * handed on; a note that is not there, cannot be read or is refused gives no rows, so the row clears nothing.
+   */
+  async gateSettings(note: string): Promise<GateSettings> {
+    const settings = await this.#ports.settings();
+    const claude = settings.aiModels.find((m) => m.name.trim().toLowerCase() === CLAUDE.toLowerCase());
+    if (!claude?.matrixRow) return settings;
+    // the real paths, links settled: a note, or a folder above it, that is a link out of the vault is never read
+    return withMatrix(settings, await this.#vaultOf(note), this.#ports);
+  }
+
   /** The note read and the settings, for the gate alone: the text is neither kept nor said, only its digest. */
   async #check(note: string): Promise<Checked> {
     try {
       const text = await this.#ports.read(note);
-      const settings = await this.#ports.settings();
+      const settings = await this.gateSettings(note);
       return { gate: claudeGate(text, settings), digest: sha256(text), settings };
     } catch {
       return {
@@ -255,7 +292,7 @@ export class EditorLauncher {
       // the server asks the gate again before every send, with the same settings and the digest of the text said yes to
       // (never the text); none given means the defaults, the strictest
       // and the settings the page shows with, which it is told read only (settingsEnvironment)
-      GRAPH_NOTE_EDITOR_SETTINGS: settingsEnvironment(settings),
+      GRAPH_NOTE_EDITOR_SETTINGS: settings ? settingsEnvironment(settings, settingsForServer(settings)) : '',
       GRAPH_NOTE_EDITOR_CONFIRMED: confirmed ?? '',
       // the host closes a child's input when it starts it, so the input's closing is not the session's end here
       GRAPH_NOTE_EDITOR_INPUT: 'ignore',

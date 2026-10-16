@@ -15,8 +15,10 @@ import {
   sendPrepared,
   viewsOf,
 } from '@graph-note/core';
-import type { PreparedSend, ScopeChoice } from '@graph-note/core';
+import type { MatrixRow, PreparedSend, ScopeChoice } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
+import { knownClass } from './matrix-known';
+import { readMatrix } from './matrix-note';
 import { obsidianTransport } from './send';
 
 /** The purpose a send from this dialog is for: the model set up for it is offered first. */
@@ -42,6 +44,8 @@ export class SendDialog extends Modal {
   private prepared: PreparedSend | null = null;
   private refusal: string | null = null;
   private sending = false;
+  /** Counts each Show and each change, so a matrix read that finishes after either is known to be out of date. */
+  private asked = 0;
   private readonly things: Map<string, Listed[]>;
   private readonly views: Map<string, string[]>;
   private shownEl: HTMLElement | null = null;
@@ -128,7 +132,7 @@ export class SendDialog extends Modal {
       );
     this.shownEl = el.createDiv({ cls: 'graph-note-ai-shown' });
     new Setting(el)
-      .addButton((b) => b.setButtonText('Show what will be sent').onClick(() => this.show()))
+      .addButton((b) => b.setButtonText('Show what will be sent').onClick(() => void this.show()))
       .addButton((b) => {
         this.sendButton = b
           .setButtonText('Send')
@@ -179,7 +183,11 @@ export class SendDialog extends Modal {
     const chosen = this.plugin.settings.aiModels.find((m) => m.name === this.model);
     new Setting(el)
       .setName('Model')
-      .setDesc(chosen ? `${chosen.purpose || 'No purpose given'}; sent notes up to ${chosen.ceiling}.` : '')
+      .setDesc(
+        chosen
+          ? `${chosen.purpose || 'No purpose given'}; ${chosen.matrixRow ? `held to the matrix row ${chosen.matrixRow}` : `sent notes up to ${chosen.ceiling}`}.`
+          : '',
+      )
       .addDropdown((d) => {
         for (const c of choices) d.addOption(c.name, c.forPurpose ? `${c.name}, for ${PURPOSE.toLowerCase()}` : c.name);
         d.setValue(this.model).onChange((v) => {
@@ -191,6 +199,7 @@ export class SendDialog extends Modal {
 
   /** Something chosen changed: what was shown is no longer what would be sent, so the yes waits until it is shown again. */
   private changed(redraw: boolean): void {
+    this.asked++;
     this.prepared = null;
     this.refusal = null;
     if (redraw) this.draw();
@@ -199,6 +208,34 @@ export class SendDialog extends Modal {
 
   /** The exact request for what is chosen, or why nothing may be sent. */
   private show(): void {
+    // the matrix note is read now, so a model held to a row is held to the row as the note has it; with none named,
+    // nothing is waited for
+    const note = this.plugin.settings.aiMatrixNote.trim();
+    this.prepared = null;
+    this.refusal = null;
+    this.drawShown();
+    const ticket = ++this.asked;
+    if (!note) {
+      this.prepare([]);
+      return;
+    }
+    // a read that finishes after anything chosen has changed is ignored, so it never makes ready what was not shown
+    readMatrix(this.app, note, knownClass(this.plugin.settings)).then(
+      (rows) => {
+        if (ticket === this.asked) this.prepare(rows);
+      },
+      () => {
+        if (ticket !== this.asked) return;
+        this.prepared = null;
+        this.refusal =
+          'The matrix note could not be read, so nothing is sent: check the note named in the settings, then press Show what will be sent again.';
+        this.drawShown();
+      },
+    );
+  }
+
+  /** Makes the request against the matrix rows as read. */
+  private prepare(matrix: MatrixRow[]): void {
     const things = (this.things.get(this.graph) ?? []).map((t) => t.key).filter((k) => this.ticked.has(k));
     const choice: ScopeChoice =
       this.what === 'view'
@@ -222,6 +259,7 @@ export class SendDialog extends Modal {
       question: this.question,
       secrets,
       shared: this.shared,
+      matrix,
     });
     this.prepared = 'refused' in p ? null : p;
     this.refusal = 'refused' in p ? p.refused : null;
@@ -279,12 +317,25 @@ export class SendDialog extends Modal {
     }
     const { proposal } = result,
       n = proposal.changes.length;
+    const outcome: { refused: string | null } = { refused: null };
     try {
-      await this.app.vault.process(this.file, (now) => noteWithProposal(now, proposal));
+      await this.app.vault.process(this.file, (now) => {
+        // a proposal the graph spec's check fails is not written
+        const written = noteWithProposal(now, proposal);
+        if (typeof written === 'string') return written;
+        outcome.refused = written.refused;
+        return now;
+      });
     } catch (e) {
       new Notice(
         `${p.model.name} answered, but its proposal could not be written into ${this.file.path} (${String(e)}).`,
       );
+      return;
+    }
+    if (outcome.refused) {
+      new Notice(`${p.model.name} answered, but its proposal was not written into the note: ${outcome.refused}`);
+      this.refusal = outcome.refused;
+      this.drawShown();
       return;
     }
     new Notice(

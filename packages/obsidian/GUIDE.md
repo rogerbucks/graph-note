@@ -142,10 +142,12 @@ card in a component Obsidian owns (`graphCard`). The layer's types for what the 
   review (`ProposalReview.show`: the changes waiting laid over the graph, nothing written), as a card with the proposal's
   strip. A decision goes through the vault's API against the note as it is then (`vault.process`): Accept writes the change
   into the graph's block through the core's review, which has the pane's own session check it; Reject writes only the
-  record in the change set; Undo takes the last decision back. The reviews are kept by the plugin (`reviewOf`) while it
-  runs, so Undo is still there when the card is drawn again. The person is recorded as "you": Obsidian does not say who is
-  at the keyboard.
-- `proposal-strip.ts` (now the shared layer's, `core/src/display/proposals/`) — the card above the drawing: who proposed it, when and what it read; a notice, with a button to say it
+  record in the note's judgement graph; both take the change out of the change set; Undo takes the last decision back. The
+  reviews are kept by the plugin (`reviewOf`) while it runs, so Undo is still there when the card is drawn again. The
+  person is recorded by the name in the settings' Proposals section, exactly as typed, or "you" when it is empty:
+  Obsidian does not say who is at the keyboard.
+- `proposal-strip.ts` (now the shared layer's, `core/src/display/proposals/`) — the card above the drawing: who proposed it, when and what it read; what the graph spec's check of
+  the change set said (all passed, or each line that failed); a notice, with a button to say it
   has been read, when the graph has moved since (Accept stays off until then); the changes one to a row, each in plain
   English and its exact text (the GQL, the SET line or the removal, in a code span, and in the buttons' names) with Accept
   and Reject, and its reason as plain text (a model's reason is kept escaped in the note, and unescaped for the card); Accept all and a group's Accept send the ids of what can be accepted now; in groups with Accept and Reject for the group when there are many; Accept all, Reject
@@ -171,6 +173,11 @@ card in a component Obsidian owns (`graphCard`). The layer's types for what the 
   what is sent. Every send is recorded in the plugin's data (`recordAiSend`);
   an answer is written into the note as a change set after the graph's blocks, through `vault.process`, and a failure is
   said in a notice, the note left as it was.
+- `matrix-note.ts` — the destination matrix note, named in the settings, read into plain rows (`matrixRows`: the first
+  table with an empty top-left cell and a known class across its header; a cell exactly ✅ is yes, ❌ no, ⚠️ with the
+  words after it conditional, anything else unknown, which refuses; `\|` stays in its cell) and read afresh each time
+  what will be sent is shown (`readMatrix`), so the core never sees the note's layout. `matrix-known.ts` says which
+  header names are known classes. A read that fails refuses plainly, and one that finishes after a change is ignored.
 - `send.ts` — the one module that reaches the network: the request, with Obsidian's `requestUrl`, never a vendor's
   library. Only the send dialog imports it (`test/policy.test.js`).
 
@@ -183,6 +190,11 @@ card in a component Obsidian owns (`graphCard`). The layer's types for what the 
   ceiling, model, endpoint (said on the model's row when it cannot be used), and its key chosen in the app's own secret
   store by name, so only the name is saved. Use AI models, off until turned on, heads the part of the page;
   Unlabelled notes count as, a choice among the classifications, the most sensitive until chosen, follows them.
+  The Destination matrix note (a path) and Matrix classes (a mapping of other names to classifications, one per line,
+  with the classes matched by neither flagged) follow.
+- `ai-matrix-controls.ts` — a model's Matrix row: a choice among the rows of the matrix note (none keeps the ceiling), and
+  for a row picked a switch for each class it marks conditional, off until turned on for that model, the row's
+  condition beside it; a class matched by no classification is flagged.
 
 ### The drawn graph, now the shared layer's `graph-view/` (packages/core/src/display/graph-view/)
 

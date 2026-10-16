@@ -38,6 +38,7 @@ const { readings } = require('./rules/readings.js');
 const { guessReadings, reverseReading } = require('./rules/guessed-readings.js');
 const { lint } = require('./changesets/dialect-lint.js');
 const { changesetHeader, checkChangeset } = require('./changesets/changeset.js');
+const { splitChangeset, readChange, changeId } = require('./changesets/changes.js');
 const { pyrepr } = require('./joins/python-text.js');
 const { parseDoc } = require('./joins/normalise.js');
 const { union } = require('./joins/union.js');
@@ -109,4 +110,7 @@ module.exports = {
   ownedComments,
   quote,
   notes,
+  splitChangeset,
+  readChange,
+  changeId,
 };

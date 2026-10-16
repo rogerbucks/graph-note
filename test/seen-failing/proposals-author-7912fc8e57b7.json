@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/proposals-author.test.js",
+  "test": "only the declaration the editor writes is written with the first accept > exactly what the editor writes for a model or a step, for that header’s `by`, is its declaration",
+  "seen_failing_first": false,
+  "evidence": "A control case: the exact text the editor writes was recognised as its declaration before the change, by a pattern; the change keeps that and drops the pattern, so it held before."
+}

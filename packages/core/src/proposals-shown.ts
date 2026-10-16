@@ -4,7 +4,8 @@ import type { NoteReading } from './note-reading.ts';
 import type { Stale } from './proposals-basis.ts';
 import type { MarkKind, Marks } from './proposals-marks.ts';
 import type { ChangeGroup } from './proposals.ts';
-import type { Decision } from './proposals-text.ts';
+import type { ProposalCheck } from './proposals-check.ts';
+import type { Decision } from './proposals-judgement.ts';
 
 /** Who decides: a person, by name. */
 export interface Person {
@@ -53,4 +54,6 @@ export interface ProposalShown {
   stale: Stale | null;
   /** Many changes: reviewed in groups. */
   grouped: boolean;
+  /** The graph spec's own check of the change set as the note holds it, every line of its answer (proposals_checked). */
+  checked: ProposalCheck;
 }

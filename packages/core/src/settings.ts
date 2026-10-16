@@ -4,22 +4,16 @@
 import { DEPARTURES } from './strictness.ts';
 import type { Departure, Strictness, StrictnessSettings } from './strictness.ts';
 import { STYLE } from './layout.ts';
+import { switchesFrom } from './ai-matrix.ts';
+import type { AiModel } from './ai-model.ts';
+import { vaultFolder } from './vault-folder.ts';
 import { AID_OPTIONS } from './settings-aids.ts';
+import { MATRIX_OPTIONS } from './settings-matrix.ts';
 import type { MiniMapSetting } from './settings-aids.ts';
 
 export type { MiniMapSetting } from './settings-aids.ts';
 
-/** An AI model set up for §19: what it is for, and its ceiling — the highest classification of note it may be sent. */
-export interface AiModel {
-  name: string;
-  purpose: string;
-  ceiling: string;
-  /** Where requests go, set by the user; nothing is sent unless the user sends it. */
-  endpoint: string;
-  model: string;
-  /** The name of its key in the host's secret store: never the key itself. */
-  keyName: string;
-}
+export type { AiModel } from './ai-model.ts';
 
 /** How a line the editor writes is indented. */
 export type Indent = 'two' | 'four' | 'tab';
@@ -48,6 +42,10 @@ export interface Settings extends StrictnessSettings {
   /** The level a note with no classification counts as for AI (§19, unclassified_strictest): the highest until chosen. */
   aiUnlabelled: string;
   aiModels: AiModel[];
+  /** The note that holds the destination matrix, by its path; empty when the vault keeps none. */
+  aiMatrixNote: string;
+  /** Matrix class names mapped by hand to the classification each stands for. */
+  aiClassMap: Record<string, string>;
   indent: Indent;
   /** The best fit of the locked style's directions, or one of them. */
   direction: string;
@@ -72,7 +70,12 @@ export interface Settings extends StrictnessSettings {
   exportFolder: string;
   /** The classification above which an export asks first: one of `classifications`. */
   exportAsksAbove: string;
+  /** The name recorded when you accept or reject a change in a proposal, as typed; empty records "you" (§17). */
+  decider: string;
 }
+
+/** The most characters a decider's name is kept to. */
+const MOST_NAME = 200;
 
 const CLASSIFICATIONS = ['Public', 'Internal', 'Confidential', 'Restricted'];
 
@@ -85,6 +88,8 @@ export const DEFAULT_SETTINGS: Settings = {
   // the most sensitive, so a note nobody has classified goes to no model until the user chooses otherwise
   aiUnlabelled: CLASSIFICATIONS.at(-1) ?? '',
   aiModels: [],
+  aiMatrixNote: '',
+  aiClassMap: {},
   indent: 'four',
   direction: 'best',
   focusDepth: 'one',
@@ -100,6 +105,7 @@ export const DEFAULT_SETTINGS: Settings = {
   exportFolder: '',
   // the lowest, so anything above it asks
   exportAsksAbove: CLASSIFICATIONS[0] ?? '',
+  decider: '',
 };
 
 /** One choice of an option: its value, its name, and, where it needs one, a sentence. */
@@ -112,7 +118,7 @@ export interface Choice {
 /** One option on the settings page: the setting it sets, its part of the page, its name, its sentence, its choices. */
 export interface Option {
   key: keyof Settings;
-  section: 'Strictness' | 'AI models' | 'Formatting' | 'Drawing' | 'Export';
+  section: 'Strictness' | 'AI models' | 'Proposals' | 'Formatting' | 'Drawing' | 'Export';
   name: string;
   sentence: string;
   choices?: Choice[];
@@ -194,8 +200,9 @@ export const OPTIONS: Option[] = [
     section: 'AI models',
     name: 'AI models',
     sentence:
-      'Each AI model the editor may ask, with its purpose and its ceiling, the highest classification of note it may be sent.',
+      'Each AI model the editor may ask, with its purpose and its ceiling, the highest classification of note it may be sent, or a row of the destination matrix.',
   },
+  ...MATRIX_OPTIONS, // the matrix note and its class names (§19)
   {
     key: 'indent',
     section: 'Formatting',
@@ -283,6 +290,13 @@ export const OPTIONS: Option[] = [
     sentence:
       'The classification above which an export asks first, naming the classification; one of the classifications set above.',
   },
+  {
+    key: 'decider',
+    section: 'Proposals',
+    name: 'Your name on decisions',
+    sentence:
+      'The name recorded when you accept or reject a change in a proposal, kept exactly as you type it; left empty, it is recorded as “you”.',
+  },
 ];
 
 const text = (v: unknown, fallback = ''): string => (typeof v === 'string' ? v : fallback);
@@ -303,36 +317,12 @@ export function aiModel(given: Partial<AiModel> & Record<string, unknown>, class
     endpoint: text(given.endpoint),
     model: text(given.model),
     keyName: text(given.keyName),
+    // kept only with a row picked, so a model with none is as it was
+    ...(text(given.matrixRow).trim() && {
+      matrixRow: text(given.matrixRow).trim(),
+      matrixOn: switchesFrom(given.matrixOn),
+    }),
   };
-}
-
-const UNSAFE_IN_A_FOLDER = '\\:*?"<>|';
-
-/**
- * A folder inside the vault as the settings keep it: trimmed, with empty parts dropped (`a//b/` is `a/b`), or null when it
- * could reach outside the vault, reach the config folder, or cannot be a folder name on every platform — a leading `/` or
- * `~`, a part that starts with a dot (so `.`, `..` and `.obsidian`), a part that ends in a dot or a space, a name Windows
- * reserves (con, prn, aux, nul, com1–9, lpt1–9), a backslash, a colon, any of `*?"<>|`, or a control character. Empty is
- * next to the note.
- */
-export function vaultFolder(given: unknown): string | null {
-  const folder = typeof given === 'string' ? given.trim() : '';
-  if (!folder) return '';
-  if (folder.startsWith('/') || folder.startsWith('~')) return null;
-  if ([...folder].some((c) => c.charCodeAt(0) < 32 || UNSAFE_IN_A_FOLDER.includes(c))) return null;
-  const parts = folder.split('/').filter((p) => p !== '');
-  return parts.some(unusablePart) ? null : parts.join('/');
-}
-
-// names Windows keeps for devices, whatever follows a dot: con.txt is con
-const RESERVED = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i;
-
-/**
- * Whether a folder name cannot be used for exports: it starts with a dot (so `.`, `..` and the config folder are out),
- * ends in a dot or a space, or is a name Windows reserves.
- */
-function unusablePart(part: string): boolean {
-  return part.startsWith('.') || part.endsWith('.') || part.endsWith(' ') || RESERVED.test(part.split('.')[0] ?? '');
 }
 
 /** Settings read back from what was saved: each known one kept when it is in range, else its default. */
@@ -359,6 +349,12 @@ export function settingsFrom(saved: unknown): Settings {
           .filter((m): m is Record<string, unknown> => !!m && typeof m === 'object')
           .map((m) => aiModel(m, classifications))
       : [],
+    aiMatrixNote: text(s.aiMatrixNote).trim(),
+    aiClassMap: Object.fromEntries(
+      Object.entries(s.aiClassMap && typeof s.aiClassMap === 'object' ? s.aiClassMap : {}).filter(
+        (e): e is [string, string] => typeof e[1] === 'string',
+      ),
+    ),
     indent: oneOf<Indent>('indent', s.indent, d.indent),
     direction: oneOf('direction', s.direction, d.direction),
     focusDepth: oneOf<FocusDepthSetting>('focusDepth', s.focusDepth, d.focusDepth),
@@ -377,6 +373,8 @@ export function settingsFrom(saved: unknown): Settings {
       typeof s.exportAsksAbove === 'string' && classifications.includes(s.exportAsksAbove)
         ? s.exportAsksAbove
         : (classifications[0] ?? ''),
+    // as typed, spaces and capitals kept; a name is one line, and not an essay
+    decider: typeof s.decider === 'string' ? s.decider.replace(/[\r\n]+/g, ' ').slice(0, MOST_NAME) : d.decider,
   };
 }
 

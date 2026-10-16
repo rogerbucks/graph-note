@@ -4,15 +4,27 @@
 // highest classification never opens, whatever the settings; a note with no classification counts as the level set for
 // unlabelled notes (the highest until chosen); one whose classification cannot be read for certain is unknown, and
 // refused; and a credential never reaches Claude, at any classification. The level for Claude is the ceiling of the model
-// named Claude among the models set up (§19); with none, the lowest classification, so everything above it asks. The
-// §19 destination matrix is not read (model_ceiling is the owner's call): `ceilingOf` is the one place a default from it
-// would come in. What is said names kinds and the levels set, never the note's own label or its text.
+// named Claude among the models set up (§19); with none, the lowest classification, so everything above it asks. When a
+// row of the destination matrix is picked for that model (model_ceiling), the row decides instead, by the same rules as
+// for any model (a no, an unknown mark, a duplicate or a missing row never clears; a conditional class only once
+// switched on), so a note it does not clear asks. What is said names kinds and the levels set, never the note's own label or its text.
 import { sha256 } from './ai-digest.ts';
 import { credentialsIn } from './ai-ceiling.ts';
+import { matrixRefusal } from './ai-matrix.ts';
+import type { MatrixRow } from './ai-matrix.ts';
 import type { AiModel, Settings } from './settings.ts';
 
 /** The settings the gate reads. */
-export type GateSettings = Pick<Settings, 'classifications' | 'aiUnlabelled'> & { aiModels: readonly AiModel[] };
+export type GateSettings = Pick<Settings, 'classifications' | 'aiUnlabelled'> & {
+  aiModels: readonly AiModel[];
+  /** The rows of the vault's destination matrix, as the host read them, and the table mapping its class names. */
+  matrix?: MatrixRow[];
+  aiClassMap?: Record<string, string>;
+  /** The note that holds the matrix, by its path in the vault, for the host that reads it. */
+  aiMatrixNote?: string;
+  /** Why the host did not read the matrix note (such as a link out of the vault), said when a row then clears nothing. */
+  matrixProblem?: string;
+};
 
 /** The name Claude is set up under among the AI models. */
 export const CLAUDE = 'Claude';
@@ -139,11 +151,26 @@ export function claudeGate(text: string, settings: GateSettings, confirmed: stri
   if (at === levels.length - 1)
     return { refuse: `${said}, the highest classification set: it is never shown to Claude, whatever the settings.` };
   const ceiling = ceilingOf(settings);
-  if (at > ceiling) {
+  // a row of the destination matrix picked for the model named Claude replaces its ceiling, held to the same rules
+  const claude = settings.aiModels.find((m) => same(m.name, CLAUDE));
+  const row = claude?.matrixRow;
+  const cleared =
+    claude && row
+      ? matrixRefusal(
+          level,
+          '',
+          claude,
+          { rows: settings.matrix ?? [], classMap: settings.aiClassMap ?? {} },
+          levels,
+        ) === null
+      : at <= ceiling;
+  if (!cleared) {
     if (confirmed && confirmed === sha256(text)) return { open: true };
-    return {
-      ask: `${said}, above the level set for Claude, ${levels[ceiling]}. Claude can read the pane the editor opens in.`,
-    };
+    const set = row
+      ? `not cleared for Claude by its matrix row, ${row}`
+      : `above the level set for Claude, ${levels[ceiling]}`;
+    const why = row && settings.matrixProblem ? ` ${settings.matrixProblem}` : '';
+    return { ask: `${said}, ${set}. Claude can read the pane the editor opens in.${why}` };
   }
   return { open: true };
 }

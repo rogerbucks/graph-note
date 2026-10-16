@@ -177,8 +177,38 @@ function thingOut(texts: readonly string[], blocks: number[], c: ProposedChange 
     : { ok: false, reason: `${c.thing} is also named in a longer path: edit it in the text` };
 }
 
+/**
+ * Why a statement's target is not the one it names, or null: a kind its MATCH names that the target lacks, and a plain
+ * DELETE of a thing that still has links (the graph spec refuses it: only DETACH DELETE takes a thing with its links).
+ * Only a statement that names a kind or is plain is looked into.
+ */
+function targetFault(texts: readonly string[], graph: string, c: ProposedChange): string | null {
+  const wants: [string, readonly string[] | undefined][] =
+    c.op === 'remove-link'
+      ? [
+          [c.from, c.ends?.[0]],
+          [c.to, c.ends?.[1]],
+        ]
+      : c.op === 'add'
+        ? []
+        : [[c.thing, c.labels]];
+  const plain = c.op === 'remove-thing' && c.detach === false;
+  if (!plain && !wants.some(([, kinds]) => kinds?.length)) return null;
+  const g = readNote([...texts]).world[graph];
+  for (const [id, kinds] of wants) {
+    const have = g?.nodes.get(id)?.[0];
+    const lacks = have && (kinds ?? []).find((k) => !have.has(k));
+    if (lacks) return `${id} is not a ${lacks}: the statement's MATCH names a kind it does not have`;
+  }
+  if (plain && g?.edges.some((e) => e[0] === c.thing || e[2] === c.thing))
+    return `${c.thing} still has links: a DELETE without DETACH leaves none without its end (§24); write DETACH DELETE to take them too`;
+  return null;
+}
+
 /** The blocks' texts after one change is written, or why it cannot be. */
 export function applyChange(texts: readonly string[], graph: string, c: ProposedChange): Edited {
+  const fault = targetFault(texts, graph, c);
+  if (fault) return { ok: false, reason: fault };
   const blocks = dataBlocks(texts, graph);
   // an addition goes after the last block that is data, never into the schema locked after it
   const last = blocks.filter((i) => !declares(texts[i] ?? '')).at(-1) ?? blocks.at(-1);

@@ -528,16 +528,12 @@ describe('C5: the page’s host shell, built and served as the mod ships it', ()
       direction: 'LR',
       aiModels: [{ name: 'Claude', ceiling: 'Public', endpoint: 'https://x.example/v1', model: 'm' }],
     };
-    const sent = settingsEnvironment(saved);
-    assert.deepEqual(Object.keys(JSON.parse(sent)).sort(), [
-      'aiModels',
-      'aiUnlabelled',
-      'classifications',
-      'direction',
-      'indent',
-    ]);
+    const { settingsForServer } = await import(at('packages/claude-code/src/editor-launch.ts'));
+    const sent = settingsEnvironment(saved, settingsForServer(saved));
+    const keys = Object.keys(JSON.parse(sent));
+    for (const k of ['aiModels', 'aiUnlabelled', 'classifications', 'direction', 'indent'])
+      assert.ok(keys.includes(k), k);
     assert.doesNotMatch(sent, /endpoint|x\.example/, 'no model’s address goes to the server');
-    assert.equal(settingsEnvironment(null), '');
     const server = await servePage(sent);
     const headers = { authorization: `Bearer ${server.token}` };
     const reply = await ask(server.port, { path: '/api/settings', headers });

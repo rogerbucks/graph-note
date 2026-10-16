@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/proposals-checked.test.js",
+  "test": "proposals_checked: the review refuses what the check refuses, and writes only what it passes > the graph having moved is the stale notice’s to say, not a refusal once it has been seen",
+  "seen_failing_first": false,
+  "evidence": "Pins a behaviour the change must keep, not add: the moved graph is refused until the notice is seen and then taken. It passed before because the old accept had no check to get in its way; it guards the new check's one exemption."
+}

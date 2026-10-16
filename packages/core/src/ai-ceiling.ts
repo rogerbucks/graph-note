@@ -4,6 +4,8 @@
 // that looks like a credential, whatever the note's classification. A note with no classification counts as the level
 // set for unlabelled notes, the most sensitive until the user chooses (unclassified_strictest), so by default it goes
 // to no model.
+import { matrixRefusal } from './ai-matrix.ts';
+import type { MatrixInput } from './ai-matrix.ts';
 import type { AiModel } from './settings.ts';
 
 const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
@@ -14,13 +16,22 @@ export const levelSaid = (level: string, unlabelled: boolean): string =>
   unlabelled ? `This note has no classification, so it counts as ${level}` : `This note is classified ${level}`;
 
 /** Why a note of `level` may not be sent to `model`, or null when it may; `unlabelled` when it counts as that level. */
-function aboveCeiling(level: string, unlabelled: boolean, model: AiModel, levels: string[]): string | null {
+function aboveCeiling(
+  level: string,
+  unlabelled: boolean,
+  model: AiModel,
+  levels: string[],
+  matrix?: MatrixInput | null,
+): string | null {
   const at = rank(levels, level),
     top = levels.length - 1;
   if (at === -1)
     return `This note is classified "${level}", which is not one of the classifications set (${levels.join(', ')}), so it counts as above every ceiling and is not sent.`;
   if (at === top)
     return `${levelSaid(levels[top] ?? level, unlabelled)}, the highest classification set: nothing at it is ever sent to any model.`;
+  // a row picked in the model's settings replaces its ceiling (model_ceiling); with none, the ceiling stands
+  if (model.matrixRow)
+    return matrixRefusal(levels[at] ?? level, levelSaid(levels[at] ?? level, unlabelled), model, matrix, levels);
   const ceiling = rank(levels, model.ceiling);
   if (ceiling === -1)
     return `${model.name}’s ceiling, ${model.ceiling}, is no longer one of the classifications set: choose it again in the model’s settings before anything is sent to it.`;
@@ -37,7 +48,8 @@ export type Clearance = { cleared: true } | { refused: string; cleared: string[]
  * may be asked. A note with no classification (null) counts as `unlabelled`, the level set for such notes, the most
  * sensitive until the user chooses (unclassified_strictest); one not among those set counts as above every ceiling; one
  * at the highest is never sent. When it may not, the refusal says why and names the models cleared for it, and for a
- * note with no classification, what to change: give it one, or choose a lower level for unlabelled notes.
+ * note with no classification, what to change: give it one, or choose a lower level for unlabelled notes. A model with
+ * a matrix row picked is held to the classes its row allows, in place of its ceiling, against the `matrix` the host read.
  */
 export function clearance(
   level: string | null,
@@ -45,12 +57,13 @@ export function clearance(
   levels: string[],
   models: AiModel[],
   unlabelled: string,
+  matrix?: MatrixInput | null,
 ): Clearance {
   const counted = level === null || !level.trim();
   const as = counted ? unlabelled : level;
-  const why = aboveCeiling(as, counted, model, levels);
+  const why = aboveCeiling(as, counted, model, levels, matrix);
   if (!why) return { cleared: true };
-  const others = models.filter((m) => m !== model && !aboveCeiling(as, counted, m, levels)).map((m) => m.name);
+  const others = models.filter((m) => m !== model && !aboveCeiling(as, counted, m, levels, matrix)).map((m) => m.name);
   // only a level a ceiling can reach has a model to offer: the highest and an unknown one have none
   const offer = /highest|not one of the classifications/.test(why)
     ? ''

@@ -3,7 +3,7 @@
 // loop is left), a vault on disk in a temporary folder, and the launcher made over them. Test code only: nothing here ships.
 import { after } from 'node:test';
 import { spawn } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { EditorLauncher } from '../src/editor-launch.ts';
@@ -127,6 +127,7 @@ export function launcherFor(where, over = {}) {
     read: async (path) => readFileSync(path, 'utf8'),
     settings: async () => gateSettings(over.settings),
     exists: async (path) => existsSync(path),
+    realPath: async (path) => realpathSync(path),
     cwd: where.top,
     server: [process.execPath, ENTRY],
     drafts: where.data,

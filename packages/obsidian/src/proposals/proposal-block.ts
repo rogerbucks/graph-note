@@ -2,10 +2,19 @@
 // what it adds, changes and removes marked, and listed with Accept and Reject for each change (proposal_shown_not_applied,
 // proposal_one_by_one). Showing it writes nothing. A person's Accept writes the change into the graph's block through the
 // core's review, which has the pane's own session check it first (accepting_is_an_edit); a Reject writes only the record
-// in the change set (rejecting_recorded). Both go through the vault's API against the note as it is then, and can be undone.
+// in the note's judgement graph (rejecting_recorded). Both take the change out of the change set and go through the
+// vault's API against the note as it is then, and can be undone. The card shows the graph spec's check of the change set.
 import { Notice, TFile } from 'obsidian';
 import type { MarkdownPostProcessorContext } from 'obsidian';
-import { ProposalReview, changeSetId, gqlSpans, namesSharedSchema, nudgedDrawing, readStyle } from '@graph-note/core';
+import {
+  ProposalReview,
+  changeSetId,
+  deciderName,
+  gqlSpans,
+  namesSharedSchema,
+  nudgedDrawing,
+  readStyle,
+} from '@graph-note/core';
 import type { Which } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
 import { renderCode } from '@graph-note/core/display/code';
@@ -16,12 +25,11 @@ import { renderProposalStrip } from '@graph-note/core/display/proposals/proposal
 import type { ProposalCard } from '@graph-note/core/display/proposals/proposal-strip';
 
 /**
- * Who decides here. Obsidian says nothing of who is at the keyboard, so it is the reader: the change set records "the
- * reader", with the time, beside what was decided. The core compares a person's name with the proposer's as they are
- * written, in any case: a label with a space is never a proposer's name, which is one word, so a proposer called "you",
- * or "the_reader", never stands in this person's way.
+ * Who decides here. Obsidian says nothing of who is at the keyboard, so it is the name set in the settings, exactly as
+ * typed, or "you" when none is set (decider_named); the judgement graph records it with the time, beside what was
+ * decided. The core compares a person's name with the proposer's as they are written, in any case.
  */
-const PERSON = { name: 'the reader' };
+const personOf = (plugin: GraphNotePlugin) => ({ name: deciderName(plugin.settings.decider) });
 
 /** Opens the note at the change set's line, for its text to be read or changed there. */
 function openAt(plugin: GraphNotePlugin, path: string, line: number): void {
@@ -42,7 +50,14 @@ export async function renderProposalBlock(
   held?: string,
 ): Promise<void> {
   const root = el.createDiv({ cls: 'graph-note' });
-  const read = ProposalReview.fromChangeSet(source);
+  const info = ctx.getSectionInfo(el);
+  const path = ctx.sourcePath;
+  // with no section info, as when another plugin renders the block, the card cannot know which note it would write: it
+  // shows the proposal and writes nothing, as in reading view (spec §3)
+  // `held` is the note as it is when the card is drawn again after the change set was found changed under it
+  const note = held ?? info?.text ?? source;
+  // read with the note, which says what the proposer is and what has been decided of it already
+  const read = ProposalReview.fromChangeSet(source, note);
   if ('refused' in read) {
     root.createDiv({
       cls: 'graph-note-banner',
@@ -52,12 +67,6 @@ export async function renderProposalBlock(
     renderCode(root, source);
     return;
   }
-  const info = ctx.getSectionInfo(el);
-  const path = ctx.sourcePath;
-  // with no section info, as when another plugin renders the block, the card cannot know which note it would write: it
-  // shows the proposal and writes nothing, as in reading view (spec §3)
-  // `held` is the note as it is when the card is drawn again after the change set was found changed under it
-  const note = held ?? info?.text ?? source;
   const readOnly = () => !info || readOnlyHere(root);
   const review = plugin.reviewOf(path, read);
   review.shared = [...note.matchAll(/```gql\n([\s\S]*?)\n```/g)].some((m) => namesSharedSchema(m[1] ?? ''))
@@ -110,7 +119,7 @@ export async function renderProposalBlock(
       write((now): Change => {
         // the change set is read again from the note: a card drawn from one that was edited since decides nothing
         const held = heldNow(now);
-        const current = held && ProposalReview.fromChangeSet(held.block);
+        const current = held && ProposalReview.fromChangeSet(held.block, now);
         if (!held || !current || 'refused' in current)
           return { ok: false, reason: 'the change set is no longer in the note as this card was drawn' };
         if (JSON.stringify(current.proposal) !== JSON.stringify(review.proposal))
@@ -119,14 +128,14 @@ export async function renderProposalBlock(
             reason: 'the change set has changed since this card was drawn: it is drawn again from the note as it is',
             again: { block: held.block, note: now },
           };
-        const r = review[kind](now, which, PERSON, { staleSeen });
+        const r = review[kind](now, which, personOf(plugin), { staleSeen });
         if (!r.ok) return r;
         return {
           ...r,
           said:
             kind === 'accept'
               ? `Accepted ${count(r.ids.length)}: written into the graph. Undo takes them back.`
-              : `Rejected ${count(r.ids.length)}: the graph is unchanged, and the change set records it.`,
+              : `Rejected ${count(r.ids.length)}: the graph is unchanged, and the note’s judgement graph records it.`,
         };
       }),
     undo: review.canUndo()

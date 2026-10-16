@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/hosts-boundary.test.js",
+  "test": "sources.ts does not import a host-side module",
+  "seen_failing_first": false,
+  "evidence": "It pins a boundary that already held when the test was written (no core module imported a host-side module, as none existed); the tests beside it, which fail first, cover the new subpath and the entry."
+}

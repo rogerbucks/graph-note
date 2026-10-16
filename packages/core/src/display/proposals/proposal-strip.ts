@@ -40,6 +40,19 @@ export function renderProposalStrip(root: HTMLElement, card: ProposalCard): HTML
   head.createSpan({ cls: 'graph-note-kind', text: 'nothing is written until you accept' });
   const info = strip.createEl('ul', { cls: 'graph-note-proposal-provenance' });
   for (const line of shown.provenance) info.createEl('li', { text: line });
+  // the graph spec's own check of the change set, said in words, each line that failed named (proposals_checked)
+  const failed = shown.checked.results.filter((r) => !r.ok);
+  const checked = strip.createDiv({
+    cls: `graph-note-proposal-checked${failed.length ? ' is-failed' : ''}`,
+    attr: { role: 'status' },
+    text: failed.length
+      ? `The graph spec’s check of this change set fails ${failed.length} of ${shown.checked.results.length}:`
+      : `The graph spec’s check of this change set passes all ${shown.checked.results.length}.`,
+  });
+  if (failed.length) {
+    const list = checked.createEl('ul');
+    for (const r of failed) list.createEl('li', { text: r.label });
+  }
   const status = strip.createDiv({
     cls: 'graph-note-proposal-status',
     attr: { role: 'status', 'aria-live': 'polite' },
