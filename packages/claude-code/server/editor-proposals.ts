@@ -24,7 +24,7 @@ export type Proposed =
   { ok: true; text: string; id: string; count: number } | { ok: false; status: number; why: string };
 
 /** The most changes one proposal holds, and the most things it says it read. */
-export const MOST_CHANGES = 50;
+const MOST_CHANGES = 50;
 const MOST_READ = 20;
 
 const no = (status: number, why: string): Proposed => ({ ok: false, status, why });
@@ -47,9 +47,9 @@ function readOf(given: unknown): string[] | string {
 }
 
 /** The most characters of any text in a change, and of a reason; the most proposals waiting; room left in the note. */
-export const MOST_VALUE = 1000;
-export const MOST_REASON = 500;
-export const MOST_OPEN = 10;
+const MOST_VALUE = 1000;
+const MOST_REASON = 500;
+const MOST_OPEN = 10;
 const ROOM_BYTES = 8000;
 const ROOM_LINES = 100;
 

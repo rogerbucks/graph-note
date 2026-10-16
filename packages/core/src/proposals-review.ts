@@ -150,10 +150,6 @@ export class ProposalReview {
     return all.filter((c) => chosen.has(c.id));
   }
 
-  private notAPerson(by: unknown): string | null {
-    return notAPerson(this.proposal, by);
-  }
-
   /**
    * The change set to check: the note's own, else the one the editor would write for what waits. A declaration of the
    * proposer that the graph holds already is left out of it, as it is written nowhere again.
@@ -271,7 +267,7 @@ export class ProposalReview {
    * again with what still waits, held to the graph as the accepts left it.
    */
   accept(note: string, which: Which, by: Person, options: DecideOptions = {}): Reviewed {
-    const nobody = this.notAPerson(by);
+    const nobody = notAPerson(this.proposal, by);
     if (nobody) return refuse(nobody);
     this.sync(note);
     const picked = this.choose(which);
@@ -334,7 +330,7 @@ export class ProposalReview {
    * applies it applies them, and the rejection — who, and when — is kept as a Decision in the judgement graph.
    */
   reject(note: string, which: Which, by: Person, options: DecideOptions = {}): Reviewed {
-    const nobody = this.notAPerson(by);
+    const nobody = notAPerson(this.proposal, by);
     if (nobody) return refuse(nobody);
     this.sync(note);
     const picked = this.choose(which);
