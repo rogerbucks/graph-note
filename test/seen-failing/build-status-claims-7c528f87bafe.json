@@ -1,0 +1,6 @@
+{
+  "file": "test/build-status-claims.test.js",
+  "test": "the Requirements line of a draft pull request > takes the items named on, In Progress and In PR, before any test of the copy is written",
+  "seen_failing_first": false,
+  "evidence": "This existing test was only brought into step with a behaviour changed by a commit that came with its own test, seen failing first (6ee12b4: a requirement part proved is mirrored In Progress, not Todo; and the new workstream W34 in the workstreams file): its old expectation broke when the code changed, and the expectation was corrected, so it passes against the parent's code."
+}

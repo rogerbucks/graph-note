@@ -1,0 +1,6 @@
+{
+  "file": "test/build-status-board.test.js",
+  "test": "the Build status field of the project > is set by the id of its option, on the item, and nothing else is touched",
+  "seen_failing_first": false,
+  "evidence": "This existing test was only brought into step with a behaviour changed by a commit that came with its own test, seen failing first (6ee12b4: a requirement part proved is mirrored In Progress, not Todo; and the new workstream W34 in the workstreams file): its old expectation broke when the code changed, and the expectation was corrected, so it passes against the parent's code."
+}

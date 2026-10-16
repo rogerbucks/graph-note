@@ -2,5 +2,5 @@
   "file": "test/github-project-gh.test.js",
   "test": "the first apply, against an empty GitHub > leaves the built-in Status field as GitHub made it, its options kept, and gives each item the seed Todo, or In Progress when it is part proved",
   "seen_failing_first": false,
-  "evidence": "Only the title changed in this commit (the case was edited in 6ee12b4, where it failed against the code before the fix); the title is put back to the old one in a later commit, which keeps the old test's own record."
+  "evidence": "Only the title of this existing case was lengthened here, with its expectation updated for the In Progress behaviour that 6ee12b4 brought with a test seen failing first; the title was put back in a later commit."
 }
