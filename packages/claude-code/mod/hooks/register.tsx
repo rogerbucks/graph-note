@@ -21,6 +21,7 @@ import {
   layOut,
   notePath,
   PANE_PALETTE,
+  readLinkVia,
   realPathVia,
   sayEdit,
   sayStopped,
@@ -43,7 +44,8 @@ let launcher: EditorLauncher | null = null;
 /** The mod's data folder (settings and drafts): `CLAUDE_PLUGIN_DATA`, else the plugins data folder under the config. */
 async function dataFolderOf($: EngineInterface): Promise<{ data: string; home?: string }> {
   const home = await $.env.get('HOME');
-  const data = (await $.env.get('CLAUDE_PLUGIN_DATA')) ?? `${home ?? ''}/.claude/plugins/data/graph-note`;
+  // an empty CLAUDE_PLUGIN_DATA is unset
+  const data = (await $.env.get('CLAUDE_PLUGIN_DATA')) || `${home ?? ''}/.claude/plugins/data/graph-note`;
   return home ? { data, home } : { data };
 }
 
@@ -123,6 +125,11 @@ export const register: Register = (on) => {
         ...(home ? { home } : {}),
         cwd: await $.session.cwd(),
         realPath: realPathVia(
+          (request) => $.process.spawn(request),
+          ['node', `${$.plugin.root}/bin/real-path.mjs`],
+          (ms, fn) => $.clock.after(ms, fn),
+        ),
+        readLink: readLinkVia(
           (request) => $.process.spawn(request),
           ['node', `${$.plugin.root}/bin/real-path.mjs`],
           (ms, fn) => $.clock.after(ms, fn),

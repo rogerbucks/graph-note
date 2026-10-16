@@ -28,6 +28,11 @@ export const DATA_FOLDER_REFUSAL =
   'graph-note plugin data folder (CLAUDE_PLUGIN_DATA, or else the plugins data folder under their Claude config ' +
   'folder). Nothing was changed.';
 
+/** The refusal when the guard could not tell where a path leads, so it cannot say the call leaves the folder alone. */
+export const CHECK_FAILED_REFUSAL =
+  'graph-note: this call was refused because the guard for the mod’s data folder could not check where it ' +
+  'leads (node could not be run, or did not answer). Nothing was changed. Try again, or ask the user.';
+
 /** What the guard asks of the host: the folder, the home and working folders, and a real-path call. */
 export interface GuardPorts {
   /** The mod's data folder, as the mod names it. */
@@ -38,6 +43,8 @@ export interface GuardPorts {
   cwd: string;
   /** A path's real path, links settled; rejects when the path does not exist. */
   realPath: (path: string) => Promise<string>;
+  /** Where the link at a path leads as a full path, or null when it is no link or not there; rejects on failure. */
+  readLink?: (path: string) => Promise<string | null>;
 }
 
 /** A path with `.` and `..` settled by its text alone. */
@@ -59,18 +66,41 @@ function absolute(path: string, ports: GuardPorts): string {
 
 /** Whether `path` is `folder` or inside it. */
 function inside(path: string, folder: string): boolean {
-  return path === folder || path.startsWith(`${folder}/`);
+  // the case of a name is not told apart: macOS and Windows disks do not, and a folder with only its case changed is
+  // never worth refusing less
+  const here = path.toLowerCase();
+  const there = folder.toLowerCase();
+  return here === there || here.startsWith(`${there}/`);
 }
 
-/** The real path of `path`, or of its nearest parent that exists with the rest put back; null when none can be had. */
-async function settle(path: string, ports: GuardPorts): Promise<string | null> {
+/** Why a path could not be settled: a path that is not there is an answer, anything else is a failure. */
+function isNotThere(err: unknown): boolean {
+  const code = (err as { code?: unknown } | null)?.code;
+  return code === 'ENOENT' || code === 'ENOTDIR';
+}
+
+/** How many links in a row are followed before the guard gives up and refuses. */
+const MAX_LINKS = 8;
+
+/**
+ * The real path of `path`, or of its nearest parent that exists with the rest put back; null when none can be had. A
+ * part that is not there but is a link (dangling) is followed to where it leads. Rejects when the real-path or link
+ * call cannot run, which the caller takes as a refusal.
+ */
+async function settle(path: string, ports: GuardPorts, links = 0): Promise<string | null> {
   let rest = '';
   let head = path;
   for (;;) {
     try {
       const real = await ports.realPath(head);
       return rest ? `${real.replace(/\/$/, '')}${rest}` : real;
-    } catch {
+    } catch (err) {
+      if (!isNotThere(err)) throw err;
+      const leads = ports.readLink ? await ports.readLink(head) : null;
+      if (leads !== null) {
+        if (links >= MAX_LINKS) throw new Error('Too many links in a row.');
+        return settle(`${normalise(leads)}${rest}`, ports, links + 1);
+      }
       const cut = head.lastIndexOf('/');
       if (cut <= 0) return null;
       rest = `${head.slice(cut)}${rest}`;
@@ -97,10 +127,28 @@ async function folders(ports: GuardPorts): Promise<string[]> {
 
 /** Whether `text` holds `needle` as a whole path: what follows it is not part of a longer name. */
 function names(text: string, needle: string): boolean {
-  for (let at = text.indexOf(needle); at >= 0; at = text.indexOf(needle, at + 1)) {
-    if (!/[A-Za-z0-9._-]/.test(text.charAt(at + needle.length))) return true;
+  const hay = text.toLowerCase();
+  const find = needle.toLowerCase();
+  for (let at = hay.indexOf(find); at >= 0; at = hay.indexOf(find, at + 1)) {
+    if (!/[a-z0-9._-]/.test(hay.charAt(at + find.length))) return true;
   }
   return false;
+}
+
+/** `plugins/data` as whole path parts, the folder every plugin's data lives in, however it was renamed or moved. */
+const PLUGINS_DATA = /(^|[^A-Za-z0-9._-])plugins\/data(?![A-Za-z0-9._-])/i;
+
+/**
+ * A copy of the command as the shell would read it: quotes and backslashes taken out, and the home folder put in for
+ * `$HOME`, `${HOME}`, `~` and `~name` (any named user is taken as the home folder, which only widens the match).
+ */
+function plain(command: string, ports: GuardPorts): string {
+  const bare = command.replace(/['"`\\]/g, '');
+  const home = ports.home?.replace(/\/$/, '');
+  if (!home) return bare;
+  return bare
+    .replace(/\$\{HOME\}|\$HOME(?![A-Za-z0-9_])/g, home)
+    .replace(/(^|[\s=:;|&<>(])~[A-Za-z0-9_.-]*(?=\/|[\s;|&<>)]|$)/g, (_all, before: string) => `${before}${home}`);
 }
 
 /** The ways a command may write the data folder's own path: as given, real, through the home folder. */
@@ -129,8 +177,11 @@ async function guardFile(path: string, ports: GuardPorts): Promise<string | null
 
 async function guardCommand(command: string, ports: GuardPorts): Promise<string | null> {
   const where = await folders(ports);
-  if (spellings(where, ports).some((spelling) => names(command, spelling))) return DATA_FOLDER_REFUSAL;
-  const words = command
+  const copy = plain(command, ports);
+  if (PLUGINS_DATA.test(copy)) return DATA_FOLDER_REFUSAL;
+  const spelt = spellings(where, ports);
+  if (spelt.some((spelling) => names(command, spelling) || names(copy, spelling))) return DATA_FOLDER_REFUSAL;
+  const words = copy
     .split(/[\s'"`;|&<>()=,]+/)
     .filter((word) => word.includes('/') || word.startsWith('.') || word.startsWith('~'))
     .slice(0, MAX_WORDS);
@@ -151,11 +202,16 @@ export async function guardDataFolder(
   input: { file_path?: unknown; notebook_path?: unknown; command?: unknown },
   ports: GuardPorts,
 ): Promise<string | null> {
-  if (tool === 'Bash') {
-    return typeof input.command === 'string' && input.command ? guardCommand(input.command, ports) : null;
-  }
   const field = FILE_TOOLS[tool];
-  if (!field) return null;
-  const path = input[field];
-  return typeof path === 'string' && path ? guardFile(path, ports) : null;
+  if (tool !== 'Bash' && !field) return null;
+  try {
+    if (tool === 'Bash') {
+      return typeof input.command === 'string' && input.command ? await guardCommand(input.command, ports) : null;
+    }
+    const path = input[field as 'file_path' | 'notebook_path'];
+    return typeof path === 'string' && path ? await guardFile(path, ports) : null;
+  } catch {
+    // the real path could not be had (the process did not run, node is missing, it timed out): not knowing is a no
+    return CHECK_FAILED_REFUSAL;
+  }
 }

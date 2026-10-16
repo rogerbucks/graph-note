@@ -56,9 +56,17 @@ unless the app sets its own. Whether the desktop app does, and keeps the drawing
   The refusal (`DATA_FOLDER_REFUSAL`) says the user changes these settings, in `settings.json` in the plugin data folder,
   and echoes nothing of the call. Reads (the Read tool, Grep) are not hooked. **File tools** are judged by the target's
   real path (asked of `bin/real-path.mjs`), a relative path taken from the session's folder, a file not yet made by its
-  nearest parent that exists, so a link elsewhere, or a linked parent, is found. **Bash limits, honestly:** a command
+  nearest parent that exists, so a link elsewhere, or a linked parent, is found, and so is a link that leads nowhere yet (a dangling link, or
+  one as a parent, asked of the same process with `--link` and followed from the link's own folder, up to 8 in a
+  row). Names are compared without regard to case, and the real path is the disk's own (`realpathSync.native`), so
+  `GRAPH-NOTE` on a macOS disk is the folder. **Fail closed:** a path that is not there is an answer (exit 2), but node
+  missing, a process that fails or one that does not answer in time refuses the call (`CHECK_FAILED_REFUSAL`). An empty
+  `CLAUDE_PLUGIN_DATA` is unset. **Scope:** the editor server's own writes of drafts are the mod's and are not
+  hooked; the hook judges Claude's tool calls, which a subagent's are among when the host raises `tool.call` for them
+  (not tested here). **Bash limits, honestly:** a command
   cannot be parsed, so it is refused when it names the folder at all, even to read it (as written, real, through the
-  home folder by tilde or the HOME variable, or by `CLAUDE_PLUGIN_DATA`), or has a word (the first 40 with a `/`, or starting `.` or `~`) that
+  home folder by tilde or the HOME variable, or by `CLAUDE_PLUGIN_DATA`), or names `plugins/data` as whole path parts (so a renamed or moved
+  folder is caught; the check is made on a copy with quotes and backslashes taken out and the home forms put in), or has a word (the first 40 with a `/`, or starting `.` or `~`) that
   resolves into it. It does not stop a path the shell builds (`cd` there, then a bare file name; a variable, a glob,
   command substitution or an encoded string that makes the path), a program that is handed no path and finds the folder
   itself, or a write through another tool such as an MCP server. It is a guard against a session slipping, not against
