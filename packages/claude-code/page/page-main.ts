@@ -1,9 +1,9 @@
 // The browser editor's page (spec §26): what loads when the pane opens the server's address. It installs the page's host
 // under the shared display layer, takes the token out of the address, reads the settings and the note from the server,
-// and shows the note: its Markdown rendered with raw HTML off, and its first graph drawn through the layout worker, its
-// words beside it. What Claude has proposed for the note is a card under the graph, for the user to accept or reject;
-// the page follows the note's changes, so a proposal appears as it lands. Whatever goes wrong is said in words on the
-// page; it is never left blank.
+// and shows the note: its Markdown rendered with raw HTML off, and, beside it, the edit pane of the Obsidian host (the
+// layer's block editor: the drawing with its details, the text, the problems, Undo, Redo and Lock the graph). What Claude has
+// proposed for the note is a card under the graph, for the user to accept or reject; the page follows the note's changes,
+// so a proposal appears as it lands. Whatever goes wrong is said in words on the page; it is never left blank.
 import { installDomHelpers } from '@graph-note/core/display/dom-helpers';
 import { installHost, notice } from '@graph-note/core/display/host';
 import { toggleExportForm } from '@graph-note/core/display/export/export-form';
@@ -11,14 +11,17 @@ import { button } from '@graph-note/core/display/graph-view/view-bar';
 import { gqlBlocks } from '../../core/src/blocks.ts';
 import { readNote } from '../../core/src/drawing.ts';
 import { browserHost, PHONE_WIDTH } from './browser-host.ts';
+import { openEditorPane } from './editor-pane.ts';
 import { exportCalls } from './export-calls.ts';
 import { exportingOf, localDay } from './export-run.ts';
 import { DARK, showGraph } from './graph-section.ts';
 import { keepFocus, skipLink } from './keyboard.ts';
 import { PNG_PIXEL_LIMIT, rasterise } from './png.ts';
 import { pageLayouts } from './layout-runner.ts';
+import { textVersionSection } from './text-version.ts';
 import { renderMarkdown } from './markdown.ts';
 import { noteCalls } from './note-calls.ts';
+import { PageNote } from './page-note.ts';
 import { focusCards, showCards } from './proposal-card.ts';
 import type { Decide } from './proposal-card.ts';
 import { decide, proposalsIn } from './proposal-review.ts';
@@ -39,6 +42,7 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
   try {
     const calls = serverCalls(token, win.fetch.bind(win));
     const exports = exportCalls(token, win.fetch.bind(win));
+    const notes = noteCalls(token, win.fetch.bind(win));
     const [settings, opened, target] = await Promise.all([
       calls.settings(),
       calls.note(note),
@@ -57,10 +61,19 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
     const status = doc.getElementById('gn-notices');
     // a decision or a refusal is said in the page's status region, which a screen reader announces
     const announce = (text: string) => void (status && (status.textContent = text));
-    let current = { text: opened.text, version: opened.version };
-    // the export bar sits in the graph's section, which is drawn again with the graph, so it is made again with it
+    // the note as the page has it: the editor's, so that what is typed, a decision and a change on disk all write against one version
+    const page = new PageNote(
+      note,
+      { read: calls.note, write: notes.write, keepDraft: notes.keepDraft },
+      settings,
+      opened,
+    );
+    // the export bar sits under the editor and is made again when the note changes, as its text is the note's
+    let bar: HTMLElement | null = null;
     const addExportBar = () => {
-      const first = readNote(gqlBlocks(current.text).map((b) => b.text))
+      bar?.remove();
+      bar = null;
+      const first = readNote(gqlBlocks(page.text).map((b) => b.text))
         .graphs.values()
         .next().value;
       if (!first || !target) return;
@@ -68,7 +81,7 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
       const exporting = exportingOf(
         {
           note: target.note,
-          text: current.text,
+          text: page.text,
           settings,
           folder: target.folder,
           layout: (d, theme) => layouts.draw(d, undefined, theme),
@@ -82,47 +95,65 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
         first.graph,
         dark.matches ? 'dark' : 'light',
       );
-      const bar = doc.createElement('div');
-      bar.setAttribute('class', 'graph-note-bar');
+      bar = doc.createElement('div');
+      bar.setAttribute('class', 'graph-note-bar gn-export-bar');
       bar.setAttribute('role', 'toolbar');
       bar.setAttribute('aria-label', `Graph ${first.graph}`);
       graph.append(bar);
       button(bar, 'Export', 'download', () => toggleExportForm(graph, exporting), 'Export');
     };
-    // the keyboard stays on the control it was on when a change on disk draws the page again
-    const draw = async () =>
-      keepFocus(root, async () => {
-        renderMarkdown(current.text, prose);
-        showCards(cards, proposalsIn(current.text), decideOn, announce);
-        await showGraph(win, graph, current.text, layouts);
+    // the graph as plain-English sentences, under the editor, made again with the note (cc_text_version)
+    let words: HTMLElement | null = null;
+    const addTextVersion = () => {
+      words?.remove();
+      const first = readNote(gqlBlocks(page.text).map((b) => b.text))
+        .graphs.values()
+        .next().value;
+      words = first ? graph.appendChild(textVersionSection(doc, first)) : null;
+    };
+    // everything but the editor, which draws itself from what is typed and from the changes the note tells it of; the
+    // keyboard stays on the control it was on when a change on disk draws the page again
+    const draw = () =>
+      keepFocus(root, () => {
+        renderMarkdown(page.text, prose);
+        showCards(cards, proposalsIn(page.text), decideOn, announce);
         addExportBar();
+        addTextVersion();
+        return Promise.resolve();
       });
     // the user's accept or reject: the core's review on the note, written by the page's own version-checked write
     const decideOn: Decide = async (id, action, which, staleSeen) => {
-      const done = decide(current.text, id, action, which, settings.decider, staleSeen);
+      const done = decide(page.text, id, action, which, settings.decider, staleSeen);
       if (!done.ok) return `Nothing was written: ${done.reason}`;
-      const w = await notes.write(note, done.note, current.version);
+      const w = await page.writeWhole(done.note);
       if (!w.ok) {
-        const now = await calls.note(note);
-        current = { text: now.text, version: now.version };
-        await draw();
+        if (!w.theirs) {
+          const now = await calls.note(note);
+          page.feed({ text: now.text, version: now.version });
+        }
         return w.why;
       }
-      current = { text: done.note, version: w.version };
-      await draw();
       focusCards(cards);
       const n = done.ids.length;
       return `${action === 'accept' ? 'Accepted' : 'Rejected'} ${n} ${n === 1 ? 'change' : 'changes'}.`;
     };
-    const notes = noteCalls(token, win.fetch.bind(win));
+    page.onSeen = () => void draw();
+    const pane = doc.createElement('div');
+    pane.setAttribute('class', 'gn-pane');
+    graph.append(pane);
+    await openEditorPane(pane, page, settings, layouts);
+    if (!page.session) await showGraph(win, pane, page.text, layouts);
     await draw();
     // a proposal that lands, or any other change on disk, is drawn when the server sends it
     void notes
       .follow(note, (line) => {
-        if ('gone' in line) return announce(`The note is no longer shown: ${line.gone}`);
-        if (line.version === current.version) return;
-        current = line;
-        void draw().then(() => announce('The note changed, and is shown again as it now is.'));
+        if ('gone' in line) {
+          page.feed(line);
+          return announce(`The note is no longer shown: ${line.gone}`);
+        }
+        if (line.version === page.version) return;
+        page.feed(line);
+        announce('The note changed, and is shown again as it now is.');
       })
       .catch(() => announce('The editor stopped sending changes to the note.'));
   } catch (e) {

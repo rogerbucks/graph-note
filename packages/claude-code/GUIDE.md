@@ -241,8 +241,14 @@ The page of the browser editor draws with the display layer shared with the Obsi
 holds that (cc_core_only), and, from C5, the page's host shell: cc_one_renderer, cc_text_not_html, cc_worker_same_origin,
 cc_theme_follows, cc_icons, cc_offline and cc_settings_shared, with its support, `editor-page-support.js` (the page built
 once into a temporary folder and served by the real server, and the worker run as a thread), and, from C8, the keyboard,
-reduced-motion and text-version cases (`editor-page-access.js`). `editor-parity.test.js` holds that the same edit
-writes the same bytes here and in Obsidian (cc_same_bytes), a decision through the page's card included.
+reduced-motion and text-version cases (`editor-page-access.js`), and, from C9, the editing cases (`editor-page-editing.js`:
+the page opens the note with the drawing, the details and the edit pane of the Obsidian host, its colours set under the
+unchanged policy, stale writes, undo, the gate), each run on the page as built over the real server and a vault on disk
+(`editor-page-live.js`: its script in a DOM, its `fetch` the server's own HTTP). `editor-parity.test.js` holds that the
+same edit writes the same bytes here and in Obsidian (cc_same_bytes), a decision through the page's card included, and,
+from C9, every kind of edit the pane makes (`editor-parity-page.js`): typing, a fix, a suggestion, Undo and Redo, Lock the
+graph, an estimated link's quick fix from the drawing, another block chosen, the note changed elsewhere first, and a stale
+write, each made on the page and in the plugin's pane and compared byte for byte.
 
 ## The browser editor's page, `page/` (workstream C5)
 
@@ -252,8 +258,21 @@ An ordinary web page in Claude Code's browser pane, not an Obsidian view, so it 
 any other (cc_offline, cc_no_remote), and the server's policy is not loosened for it.
 
 - `page-main.ts` — `startPage`: installs the DOM helpers and the page's host under the shared layer, takes the token and
-  the note's id out of the address's fragment, reads the settings and the note, and shows the note's Markdown and its
-  first graph; anything that goes wrong is said in words on the page, never a blank.
+  the note's id out of the address's fragment, reads the settings and the note, and shows the note's Markdown and, beside
+  it, the edit pane of the Obsidian host (C9); anything that goes wrong is said in words on the page, never a blank.
+- `editor-pane.ts`, `page-note.ts` (workstream C9, cc_editor_opens, cc_core_only, cc_same_bytes) — the layer's block editor
+  (`display/editor/block-editor.ts`, the one the Obsidian pane runs) opened on the page's note: the drawing with its
+  details, the text field, problems, fixes, suggestions, Undo, Redo, Lock the graph, the picker of the note's graph blocks
+  and the draft banner. `PageNote` is its note, the layer's `EditorNote` over the editor server's store: the core's
+  `PaneSession` makes every write, through `EditorSession`, from the note as the page last had it, sent whole against that
+  version and one at a time (so the server refuses one made over a change the page has not seen); a stale write, a note
+  gone or any other failure keeps what was typed as the server's draft and shows the block as the note now has it; undo
+  never goes over another program's change. Its `feed` takes the change stream, `writeWhole` the page's own whole-note
+  writes (a decision on a proposal, Lock the graph). The drawing is the layer's, inline in the page, not an image: the
+  policy is the server's, unchanged (`style-src 'self'`, no inline style), so the page's host sets `noInlineStyle` and the
+  layer sets the colours the core writes as style attributes through the CSSOM, which the policy allows (proved on a real
+  browser, and in `editor-page-editing.js` by what the parser is given). Not on the page: the shared schemas other notes
+  hold (a graph naming one reads as it would with none), the in-place card's inspector, views, played paths and pictures.
 - `browser-host.ts` — the page's `DisplayHost`: icons (a span the stylesheet fills from `/icons/<name>.svg`, never the
   name as text), the phone test, notices and menus, all set as text.
 - `markdown.ts` — the one Markdown renderer (`marked`, the browser host's one runtime dependency, spec §13): raw HTML is
@@ -263,7 +282,8 @@ any other (cc_offline, cc_no_remote), and the server's policy is not loosened fo
 - `layout-runner.ts`, `layout-worker-entry.ts` — layout in a worker served at `/layout-worker.js` from the server's own
   origin, under the core's `LayoutRunner` and its limits; the page carries no Graphviz engine, the worker does.
 - `graph-section.ts` — the first graph laid out and drawn as an isolated image (a blob, which the policy allows) in the
-  palette of the system's scheme, drawn again when the scheme changes, its words beside it.
+  palette of the system's scheme, drawn again when the scheme changes, its words beside it. Since C9 the page draws a
+  note's graph with the edit pane instead; this stands for a note with no graph block to edit, which it says so for.
 - `server-calls.ts` — the page's reads from the server (`/api/settings`, `/api/notes/<id>`), the token held in memory.
 - `note-calls.ts` — the page's two other calls on its note: the change stream, and the user's decision written (the whole
   note, `If-Match` its version, the page's token alone). Kept apart so `server-calls.ts` stays read only.
@@ -277,9 +297,8 @@ any other (cc_offline, cc_no_remote), and the server's policy is not loosened fo
   control that had it, by kind, name and place); the graph's plain-English sentences as a labelled, never hidden section,
   the core's `textVersion`, drawn again with every drawing and standing alone when it cannot be drawn. Menus (in
   `browser-host.ts`) are walked by the arrow keys, Home and End, and Escape or Tab return the focus. `page.css` has the
-  focus ring on every control and a reduced-motion rule that stills every animation, transition and smooth scroll. The page
-  draws the graph as an image, so choosing a thing and editing it are the Obsidian plugin's; what the page writes is a
-  decision on a proposal, a button.
+  focus ring on every control and a reduced-motion rule that stills every animation, transition and smooth scroll. The
+  words stand under the editor's drawing, which has its own for screen readers too.
 - `index.html`, `page.css`, `icons/` — the shell, its styles, and the icon files (hand-drawn after Lucide's, credited in
   `licences/bundled.json`; image files, never a code library, cc_one_renderer).
 

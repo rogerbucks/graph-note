@@ -6,11 +6,11 @@
 import { settingsFrom } from '../../core/src/settings.ts';
 import type { Settings } from '../../core/src/settings.ts';
 
-/** What the server gives for a note: its text, its version and any draft kept for it. */
+/** What the server gives for a note: its text, its version and any draft kept for it, with the version it was typed against. */
 export interface NoteReply {
   text: string;
   version: string;
-  draft: string | null;
+  draft: { text: string; against: string | null } | string | null;
 }
 
 /** The address's fragment as the token and the note's id; both are empty when the address had none. */
