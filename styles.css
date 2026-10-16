@@ -261,7 +261,7 @@
   color: var(--text-muted);
 }
 .graph-note-proposal-checked.is-failed {
-  color: var(--graph-note-text-error, var(--text-error));
+  color: color-mix(in srgb, var(--text-error) 60%, var(--text-normal));
 }
 .graph-note-proposal-bulk {
   display: flex;
@@ -312,7 +312,7 @@
   overflow-wrap: anywhere;
 }
 .graph-note-proposal-blocked {
-  color: var(--graph-note-text-error, var(--text-error));
+  color: color-mix(in srgb, var(--text-error) 60%, var(--text-normal));
 }
 .graph-note-proposal-decision {
   color: var(--text-muted);
@@ -809,7 +809,7 @@ details.graph-note-style > summary {
 .graph-note-refusal-icon {
   flex: none;
   display: flex;
-  color: var(--graph-note-text-error, var(--text-error));
+  color: color-mix(in srgb, var(--text-error) 60%, var(--text-normal));
 }
 .graph-note-empty {
   padding: var(--size-4-3);
@@ -883,7 +883,7 @@ details.graph-note-style > summary {
   transform: none;
 }
 .graph-note-alert {
-  color: var(--graph-note-text-error, var(--text-error));
+  color: color-mix(in srgb, var(--text-error) 60%, var(--text-normal));
 }
 .graph-note-alert::before {
   content: '✖ ';
@@ -1155,7 +1155,7 @@ details.graph-note-style > summary {
   text-decoration-color: var(--text-faint);
 }
 .graph-note-line-sign {
-  color: var(--graph-note-text-warning, var(--text-warning));
+  color: color-mix(in srgb, var(--text-warning) 50%, var(--text-normal));
 }
 .graph-note-readback {
   color: var(--text-muted);
@@ -1193,11 +1193,11 @@ details.graph-note-style > summary {
 }
 .graph-note-pane-problems li.is-error::marker {
   content: '✖ ';
-  color: var(--graph-note-text-error, var(--text-error));
+  color: color-mix(in srgb, var(--text-error) 60%, var(--text-normal));
 }
 .graph-note-pane-problems li.is-warning::marker {
   content: '⚠ ';
-  color: var(--graph-note-text-warning, var(--text-warning));
+  color: color-mix(in srgb, var(--text-warning) 50%, var(--text-normal));
 }
 .graph-note-pane-problems li.is-hint::marker {
   content: 'ℹ ';
@@ -1219,83 +1219,56 @@ details.graph-note-style > summary {
   box-shadow: var(--shadow-s);
 }
 
-/* GQL text, coloured by token class as the gql-highlight plugin colours it. WCAG 2.2 AA (SC 1.4.3): Obsidian's default code
-   colours are too pale on the page (the comment and punctuation colours, the yellow, cyan and green hues are under 4.5:1),
-   so the plugin has its own set for the two themes, each 4.5:1 or better on the page and on the code background. Where the
-   theme is not Obsidian's (the browser page sets none of these), the theme's own code colours show. */
-.theme-light {
-  --graph-note-code-comment: #5c5c5c;
-  --graph-note-code-punctuation: #5c5c5c;
-  --graph-note-code-keyword: #a91e68;
-  --graph-note-code-function: #8a5200;
-  --graph-note-code-important: #a34700;
-  --graph-note-code-property: #00706b;
-  --graph-note-code-string: #0b6b2b;
-  --graph-note-code-value: #6034d6;
-  --graph-note-code-operator: #b8202f;
-  --graph-note-code-tag: #b8202f;
-  --graph-note-text-error: #b3262c;
-  --graph-note-text-warning: #8a4b00;
-}
-.theme-dark {
-  --graph-note-code-comment: #b3b3b3;
-  --graph-note-code-punctuation: #b3b3b3;
-  --graph-note-code-keyword: #fa99cd;
-  --graph-note-code-function: #e0de71;
-  --graph-note-code-important: #e9973f;
-  --graph-note-code-property: #53dfdd;
-  --graph-note-code-string: #44cf6e;
-  --graph-note-code-value: #a882ff;
-  --graph-note-code-operator: #ff7b80;
-  --graph-note-code-tag: #ff7b80;
-  --graph-note-text-error: #ff8a8e;
-  --graph-note-text-warning: #e9973f;
-}
+/* GQL text, coloured by token class as the gql-highlight plugin colours it, from the theme's own code colours. WCAG 2.2 AA
+   (SC 1.4.3): Obsidian's default code colours are too pale on the page (the comment and punctuation colours, the yellow,
+   cyan and green hues are under 4.5:1), so each hue is mixed with the theme's text colour until the text reaches 4.5:1 on the
+   page and on the code background in both default themes, and the comment and punctuation take the muted text colour. A
+   mix of the theme's own variables follows any theme; nothing here is a fixed colour. */
 .gql-kw {
-  color: var(--graph-note-code-keyword, var(--code-keyword));
+  color: color-mix(in srgb, var(--code-keyword) 60%, var(--text-normal));
 }
 .gql-type {
-  color: var(--graph-note-code-keyword, var(--code-keyword));
+  color: color-mix(in srgb, var(--code-keyword) 60%, var(--text-normal));
   font-style: italic;
 }
 .gql-label {
-  color: var(--graph-note-code-function, var(--code-function));
+  color: color-mix(in srgb, var(--code-function) 40%, var(--text-normal));
 }
 .gql-edge {
-  color: var(--graph-note-code-important, var(--code-important));
+  color: color-mix(in srgb, var(--code-important) 50%, var(--text-normal));
   font-weight: 600;
 }
 .gql-prop {
-  color: var(--graph-note-code-property, var(--code-property));
+  color: color-mix(in srgb, var(--code-property) 50%, var(--text-normal));
 }
 .gql-string {
-  color: var(--graph-note-code-string, var(--code-string));
+  color: color-mix(in srgb, var(--code-string) 50%, var(--text-normal));
 }
 .gql-value {
-  color: var(--graph-note-code-value, var(--code-value));
+  color: color-mix(in srgb, var(--code-value) 60%, var(--text-normal));
 }
 .gql-comment {
-  color: var(--graph-note-code-comment, var(--code-comment));
+  color: var(--text-muted);
   font-style: italic;
 }
 .gql-fn {
-  color: var(--graph-note-code-tag, var(--code-tag));
+  color: color-mix(in srgb, var(--code-tag) 60%, var(--text-normal));
 }
 .gql-param {
-  color: var(--graph-note-code-important, var(--code-important));
+  color: color-mix(in srgb, var(--code-important) 50%, var(--text-normal));
 }
 .gql-var {
   color: var(--code-normal, inherit);
 }
 .gql-arrow {
-  color: var(--graph-note-code-operator, var(--code-operator));
+  color: color-mix(in srgb, var(--code-operator) 60%, var(--text-normal));
   font-weight: 600;
 }
 .gql-op {
-  color: var(--graph-note-code-operator, var(--code-operator));
+  color: color-mix(in srgb, var(--code-operator) 60%, var(--text-normal));
 }
 .gql-punct {
-  color: var(--graph-note-code-punctuation, var(--code-punctuation));
+  color: var(--text-muted);
 }
 
 /* The editing view's own card (spec §4): its children's margins stay inside it, so the height CodeMirror is told is the
@@ -1323,7 +1296,7 @@ details.graph-note-style > summary {
   font-size: var(--font-smaller);
 }
 .graph-note-ai-refused {
-  color: var(--graph-note-text-error, var(--text-error));
+  color: color-mix(in srgb, var(--text-error) 60%, var(--text-normal));
 }
 
 /* Links (§18): a link in the details, on the drawing and in the text pane is drawn as Obsidian draws a link, in its link
@@ -1396,7 +1369,7 @@ details.graph-note-style > summary {
   margin-top: var(--size-4-1);
 }
 .graph-note-note-said:not(:empty) {
-  color: var(--graph-note-text-error, var(--text-error));
+  color: color-mix(in srgb, var(--text-error) 60%, var(--text-normal));
   margin-bottom: var(--size-4-1);
 }
 /* A note drawn as a callout over the finished drawing, joined to its thing by a dashed line (§24, note_callouts). */

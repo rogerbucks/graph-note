@@ -101,14 +101,26 @@ export function obsidianVariables(theme) {
   };
 }
 
-/** A stylesheet with each var(--name) replaced by the value `variables` gives it, or its fallback; others are left. */
+/**
+ * A stylesheet with each var(--name) replaced by the value `variables` gives it, or its fallback; others are left. Each
+ * `color-mix(in srgb, a p%, b)` of two colours then written out as the colour it makes, as a browser works it out, because
+ * jsdom does not know the function.
+ */
 export function withVariables(css, variables) {
   let text = css;
   for (let pass = 0; pass < 4; pass += 1)
     text = text.replace(/var\(\s*(--[\w-]+)\s*(?:,\s*([^()]*))?\)/g, (whole, name, fallback) =>
       Object.hasOwn(variables, name) ? variables[name] : (fallback?.trim() ?? whole),
     );
-  return text;
+  const colour = '(#[0-9a-fA-F]{3,8}|(?:rgba?|hsla?)\\([^)]*\\))';
+  const mixed = new RegExp(`color-mix\\(\\s*in srgb\\s*,\\s*${colour}\\s+([\\d.]+)%\\s*,\\s*${colour}\\s*\\)`, 'g');
+  return text.replace(mixed, (whole, a, percent, b) => {
+    const [x, y] = [parseColour(a), parseColour(b)];
+    if (!x || !y) return whole;
+    const p = parseFloat(percent) / 100;
+    const channels = [0, 1, 2].map((i) => Math.round(x[i] * p + y[i] * (1 - p)));
+    return `rgb(${channels.join(', ')})`;
+  });
 }
 
 const escapeText = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -195,26 +207,12 @@ export const contrastRatio = (a, b) => {
 };
 
 // ── the DOM ──────────────────────────────────────────────────────────────────────────────────────────────────────────
-/** The variables the style sheet itself sets for a theme, on `.theme-light` or `.theme-dark` as Obsidian's body class has them. */
-export function declaredForTheme(css, theme) {
-  const own = new RegExp(`\\.theme-${theme}\\s*\\{([^}]*)\\}`, 'g');
-  return Object.fromEntries(
-    [...css.matchAll(own)].flatMap((m) =>
-      m[1]
-        .split(';')
-        .map((d) => d.trim())
-        .filter((d) => d.startsWith('--'))
-        .map((d) => [d.slice(0, d.indexOf(':')).trim(), d.slice(d.indexOf(':') + 1).trim()]),
-    ),
-  );
-}
-
 /**
  * A page for a view: the view's HTML inside a document with a language and a title (the host gives these in Obsidian), the
  * stylesheets written out with the theme's variables, the theme's class on the body and its page colour behind.
  */
 export function pageFor({ html, css, theme, title = 'Graph Note view', lang = 'en' }) {
-  const vars = { ...obsidianVariables(theme), ...declaredForTheme(css, theme) };
+  const vars = obsidianVariables(theme);
   const style = withVariables(css, vars);
   return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><title>${escapeText(title)}</title><style>${style}</style></head><body class="theme-${theme}" style="background-color: ${vars['--background-primary']}; color: ${vars['--text-normal']}">${html}</body></html>`;
 }

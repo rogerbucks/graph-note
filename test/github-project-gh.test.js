@@ -79,13 +79,14 @@ describe('the first apply, against an empty GitHub', () => {
     assert.deepEqual(options('Proof'), ['open', 'part', 'proved']);
   });
 
-  test('leaves the built-in Status field as GitHub made it, its options kept, and gives each item the seed Todo, or In Progress when it is part proved', () => {
+  test('leaves the built-in Status field as GitHub made it, its options kept, and gives each item the seed Todo', () => {
     const [project] = gh.hub.projects;
     const status = project.fields.find((f) => f.name === 'Status');
     assert.deepEqual(
       status.options.map((o) => o.name),
       ['Todo', 'In Progress', 'Done'],
     );
+    // Todo is the seed, except for a requirement part proved (status:part), which starts In Progress
     const partNumber = issueOf(gh, 'focus_neighbours').number;
     for (const i of project.items) assert.equal(i.values.Status, i.number === partNumber ? 'In Progress' : 'Todo');
     assert.ok(gh.hub.mutations.every((m) => !/ProjectV2Field.* Status$/.test(m)));
