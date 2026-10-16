@@ -36,12 +36,14 @@ function variables(t: ThemeColours): string[] {
     `--text-normal:${t.text}`,
     `--text-muted:${t.muted}`,
     `--text-faint:${t.muted}`,
-    `--text-error:${t.red}`,
-    `--text-warning:${t.orange}`,
+    // WCAG 2.2 AA (SC 1.4.3): the hues the drawing uses are not text colours; these are drawn towards the text colour until
+    // text in them reaches 4.5:1 on the page and on the secondary background
+    `--text-error:${shade(t.red, t.text, 35)}`,
+    `--text-warning:${shade(t.orange, t.text, 45)}`,
     `--text-on-accent:${t.page}`,
     `--text-selection:${shade(t.page, t.purple ?? t.text, 30)}`,
     `--interactive-accent:${t.purple}`,
-    `--link-color:${t.blue}`,
+    `--link-color:${shade(t.blue, t.text, 40)}`,
     `--link-unresolved-color:${t.muted}`,
     ...[
       'normal',
