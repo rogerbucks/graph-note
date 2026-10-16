@@ -5,7 +5,7 @@
 import { Component, Notice } from 'obsidian';
 import type GraphNotePlugin from './main';
 import type { EditTarget } from './main';
-import type { Editing } from './graph-view/view-options';
+import type { Editing } from '@graph-note/core/display/graph-view/view-options';
 import { BlockEditor } from './block-editor/block-editor';
 import { blocksIn } from './live-preview';
 

@@ -88,7 +88,7 @@ describe('mini_map: shown when the drawing is bigger than its view', () => {
   });
 
   test('the copy and the outline are drawn, never written as HTML', () => {
-    const src = readFileSync(`${root}packages/obsidian/src/graph-view/mini-map.ts`, 'utf8');
+    const src = readFileSync(`${root}packages/core/src/display/graph-view/mini-map.ts`, 'utf8');
     assert.ok(!/innerHTML|outerHTML|insertAdjacentHTML/.test(src));
   });
 

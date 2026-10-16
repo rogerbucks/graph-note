@@ -5,6 +5,7 @@
 import type { App } from 'obsidian';
 import { TFile } from 'obsidian';
 import { imageLink } from '@graph-note/core';
+import type { FoundImage, ImageSource } from '@graph-note/core/display/images/image-source';
 
 /** The type each image file is read as, by its extension. */
 const MIME: Record<string, string> = {
@@ -18,21 +19,7 @@ const MIME: Record<string, string> = {
   avif: 'image/avif',
 };
 
-/** An image found in the vault: its file's name and path, its type, its size on disk, and a way to read its bytes. */
-export interface FoundImage {
-  name: string;
-  path: string;
-  mime: string;
-  size: number;
-  /** The address the vault shows it from without its bytes being read here: for a photograph too large to read. */
-  url: string;
-  read(): Promise<Uint8Array>;
-}
-
-/** The images a card's things name: found from its note, or why not; null for a value that names no image. */
-export interface ImageSource {
-  find(value: string): FoundImage | { why: string } | null;
-}
+export type { FoundImage, ImageSource };
 
 /** The images of the note at `notePath`, found by the app's metadata cache and read through its vault's API. */
 export function vaultImages(

@@ -29,7 +29,7 @@ import type {
 import type GraphNotePlugin from '../main';
 import { exportFailureWords, exportRefusalWords } from '../layout-worker/refusal-words';
 import { vaultImages } from '../images/vault-images';
-import { STILL_PIXELS } from '../images/still-frame';
+import { STILL_PIXELS } from '@graph-note/core/display/images/still-frame';
 
 /** One file an export writes: its name, its path in the vault, and its bytes or text. */
 export interface ExportFile {

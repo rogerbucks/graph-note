@@ -29,12 +29,11 @@ import type {
   DataFormat,
   ExportFormat,
   ExportScope,
-  ExportTheme,
   ExportWalk,
   NoteReading,
-  ViewSpec,
   WriteOps,
 } from '@graph-note/core';
+import type { ExportAsk, ExportOutcome } from '@graph-note/core/display/export/export-types';
 import type GraphNotePlugin from '../main';
 import { exportRefusalWords } from '../layout-worker/refusal-words';
 import { classificationOf } from './classification';
@@ -42,30 +41,7 @@ import { deviceOf, imageFiles, tooLargeWords } from './image';
 import type { ExportFile } from './image';
 import { freePaths, vaultOps } from './vault-write';
 
-/** What the Export form asks for: the note, the graph or view, whether with its faded context, the format and colours. */
-export interface ExportAsk {
-  path: string;
-  graph: string;
-  view?: { name: string; spec: ViewSpec };
-  /** A view's faded context: drawn faded in an image, marked as outside the view in the data. */
-  context?: boolean;
-  format: ExportFormat | DataFormat;
-  theme: ExportTheme;
-  /** Set once the person has said yes to the question asked. */
-  confirmed?: boolean;
-  /** A path to play into the image, by its id, at its pace in milliseconds a step: an animated SVG (§7). */
-  walk?: { id: string; pace: number };
-}
-
-/**
- * How an export went: done or stopped (each said in a notice), a question to ask before it goes on, or files ready
- * to share, which the share sheet opens when the person taps Share — a phone allows it only from a tap of their own.
- */
-export type ExportOutcome =
-  | { done: string }
-  | { stopped: string }
-  | { ask: string }
-  | { share: { name: string; run: () => Promise<ExportOutcome> } };
+export type { ExportAsk, ExportOutcome };
 
 type Sharing = Navigator & { canShare?: (d: ShareData) => boolean };
 

@@ -14,7 +14,7 @@ import { changeSetId, gqlSpans, graphOfBlock, isSourceBlock, isStepBlock, styleO
 import type { Span } from '@graph-note/core';
 import type GraphNotePlugin from './main';
 import { renderShown } from './block';
-import { settlePlacements } from './graph-view/placement';
+import { settlePlacements } from '@graph-note/core/display/graph-view/placement';
 
 /**
  * The last height each card was seen at, by its note and the line its fence opens on: what CodeMirror is told while the

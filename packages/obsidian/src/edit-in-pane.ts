@@ -4,7 +4,7 @@
 // preview, or a card that cannot say which line of which note it is.
 import type GraphNotePlugin from './main';
 import type { EditTarget } from './main';
-import { readOnlyHere, whenPlaced } from './graph-view/placement';
+import { readOnlyHere, whenPlaced } from '@graph-note/core/display/graph-view/placement';
 
 /** Puts Edit into `parent`, opening the block at `target` in the pane; none when there is no target. */
 export function editInPane(parent: HTMLElement, plugin: GraphNotePlugin, target: EditTarget | null): void {

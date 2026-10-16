@@ -27,20 +27,20 @@ import {
 import type { Block, Drawn, Problem, Refusal } from '@graph-note/core';
 import type GraphNotePlugin from './main';
 import type { EditTarget } from './main';
-import { renderCode } from './code';
+import { renderCode } from '@graph-note/core/display/code';
 import { renderStyleBlock } from './style-block';
 import { renderViewBlock, writeStyle, writeViewBlock } from './view-block';
 import { renderProposalBlock } from './proposals/proposal-block';
 import { renderSourceBlock } from './sources/sources';
 import { renderStepBlock } from './step-block';
-import { GraphView } from './graph-view/graph-view';
-import { aidsOf } from './graph-view/viewer-aids';
-import { diagramShown, tableDrawn } from './graph-view/type-strip';
-import { readOnlyHere, settlePlacements, whenPlaced } from './graph-view/placement';
-import { renderProblems } from './graph-view/problems-list';
+import { graphCard } from './graph-card';
+import { aidsOf } from '@graph-note/core/display/graph-view/viewer-aids';
+import { diagramShown, tableDrawn } from '@graph-note/core/display/graph-view/type-strip';
+import { readOnlyHere, settlePlacements, whenPlaced } from '@graph-note/core/display/graph-view/placement';
+import { renderProblems } from '@graph-note/core/display/graph-view/problems-list';
 import { refusalBanner } from './layout-worker/refusal-banner';
-import { dataExportBar } from './export/export-form';
-import type { ShownProblem } from './graph-view/problems-list';
+import { dataExportBar } from '@graph-note/core/display/export/export-form';
+import type { ShownProblem } from '@graph-note/core/display/graph-view/problems-list';
 import { linkHost, vaultNames } from './links/link-host';
 
 /**
@@ -279,7 +279,7 @@ export async function renderBlock(
   }
   let slot: HTMLElement | null = null;
   ctx.addChild(
-    new GraphView(root, {
+    graphCard(root, {
       source,
       reading,
       graph,

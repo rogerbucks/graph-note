@@ -94,11 +94,12 @@ describe('one colour mapping', () => {
   });
 
   test('the plugin names no colour of its own: the drawing’s colours come from the style, through the core’s one table', () => {
-    const dir = `${root}packages/obsidian/src/`;
-    for (const f of readdirSync(dir, { recursive: true }).filter((x) => x.endsWith('.ts'))) {
-      const src = readFileSync(dir + f, 'utf8');
-      assert.doesNotMatch(src, /#[0-9a-fA-F]{6}\b|rgba?\(|--color-[a-z]+/, f);
-    }
+    // the plugin's source, and the display layer it draws with
+    for (const dir of [`${root}packages/obsidian/src/`, `${root}packages/core/src/display/`])
+      for (const f of readdirSync(dir, { recursive: true }).filter((x) => x.endsWith('.ts'))) {
+        const src = readFileSync(dir + f, 'utf8');
+        assert.doesNotMatch(src, /#[0-9a-fA-F]{6}\b|rgba?\(|--color-[a-z]+/, f);
+      }
   });
 
   test('styles.css colours only with the theme’s variables', () => {

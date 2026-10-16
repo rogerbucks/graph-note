@@ -404,7 +404,7 @@ describe('quick_info: it is the theme’s, and goes with its card', () => {
   });
 
   test('the tooltip is made of text, never HTML', () => {
-    const src = readFileSync(`${root}packages/obsidian/src/graph-view/quick-info.ts`, 'utf8');
+    const src = readFileSync(`${root}packages/core/src/display/graph-view/quick-info.ts`, 'utf8');
     assert.ok(!/innerHTML|outerHTML|insertAdjacentHTML/.test(src));
   });
 
