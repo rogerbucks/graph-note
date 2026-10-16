@@ -1,0 +1,6 @@
+{
+  "file": "test/github-project-downgrade.test.js",
+  "test": "a requirement whose proof goes down > a second apply after the downgrade changes nothing",
+  "seen_failing_first": false,
+  "evidence": "Passes before the fix because a stuck Done also leaves the second apply with nothing to change; it guards that the fix settles (no repeated sets). The downgrade tests above it carry the failing proof."
+}

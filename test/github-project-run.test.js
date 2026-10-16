@@ -240,25 +240,24 @@ describe('issues the bot makes that the creator list does not give back', () => 
   const STOPPED =
     /bot-created issues aren’t listed by creator=github-actions\[bot\]; creating stopped to avoid duplicates/;
 
-  test('stop the creating at the first one: a warning, exit 0, and one issue made', () => {
+  test('do not stop the creating: the newest issues show them, so all are made, with no warning and exit 0', () => {
     const w = setUp();
     unlisted(w);
     assert.equal(w.go(), 0);
-    assert.ok(annotations(w.text(), 'warning').some((l) => STOPPED.test(l)));
-    assert.equal(w.gh.hub.issues.length, 1);
+    assert.ok(!annotations(w.text(), 'warning').some((l) => STOPPED.test(l)));
+    assert.equal(w.gh.hub.issues.length, 5);
     assert.deepEqual(annotations(w.text(), 'error'), []);
   });
 
-  test('are never made again by the next push: it sees the one already made, and creates nothing', () => {
+  test('are never made again by the next push: it sees them, and creates nothing', () => {
     const w = setUp();
     unlisted(w);
     w.go();
     w.out.length = 0;
     assert.equal(w.go(), 0);
-    assert.ok(annotations(w.text(), 'warning').some((l) => STOPPED.test(l)));
-    assert.equal(w.gh.hub.issues.length, 1, 'no duplicate, push after push');
+    assert.equal(w.gh.hub.issues.length, 5, 'no duplicate, push after push');
     w.go();
-    assert.equal(w.gh.hub.issues.length, 1);
+    assert.equal(w.gh.hub.issues.length, 5);
   });
 
   test('do not stop a run whose creator list gives them back', () => {

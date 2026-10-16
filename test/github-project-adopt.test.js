@@ -122,6 +122,8 @@ describe('reading the issues', () => {
     assert.deepEqual(lists(gh.hub.calls), [
       ['api', `repos/${REPO}/issues?state=all&creator=rogerbucks&per_page=100`, '--paginate', '--slurp'],
       ['api', `repos/${REPO}/issues?state=all&creator=github-actions%5Bbot%5D&per_page=100`, '--paginate', '--slurp'],
+      // the newest issues too, in case the lists by creator are a moment behind an issue just made
+      ['api', `repos/${REPO}/issues?state=all&sort=created&direction=desc&per_page=100`, '--paginate', '--slurp'],
     ]);
     assert.ok(!gh.hub.calls.some((c) => c.args[0] === 'issue' && c.args[1] === 'list'), 'gh issue list may search');
   });
@@ -149,6 +151,7 @@ describe('reading the issues', () => {
       [
         `repos/${REPO}/issues?state=all&creator=rogerbucks&per_page=100`,
         `repos/${REPO}/issues?state=all&creator=github-actions%5Bbot%5D&per_page=100`,
+        `repos/${REPO}/issues?state=all&sort=created&direction=desc&per_page=100`,
       ],
     );
   });
