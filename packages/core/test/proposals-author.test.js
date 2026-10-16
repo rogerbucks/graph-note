@@ -10,12 +10,15 @@ import { changesIn } from '../src/ai-request.ts';
 import { readNote } from '../src/drawing.ts';
 import { proposerKind } from '../src/proposals-check.ts';
 import { ProposalReview } from '../src/proposals-review.ts';
+import { declaresProposer } from '../src/proposals-author.ts';
 import {
+  BASIS,
   C1,
   C2,
   C3,
   C4,
   C5,
+  CHANGES,
   NOTE,
   NOTE_WITH_ADA,
   NOW,
@@ -53,7 +56,7 @@ describe('the editor declares the proposer in the proposal, as its first additio
   test('a proposal written into a note that does not know its proposer carries the declaration first, and passes the check', () => {
     const note = written();
     const set = setOf(note);
-    assert.match(set, new RegExp(`\\n${DECLARE.replace(/[()]/g, '\\$&')},\\n\\(small_reader:Option`));
+    assert.ok(set.includes(`\n${DECLARE},\n(small_reader:Option`), 'the declaration is the first addition');
     assert.deepEqual(failedIn(note), []);
   });
 
@@ -158,8 +161,90 @@ describe('a model’s own answer cannot declare an author', () => {
     }
   });
 
+  test('in any case: model, PERSON and sTeP are refused as Model, Person and Step are', () => {
+    for (const kind of ['model', 'PERSON', 'sTeP', 'MODEL'])
+      assert.match(
+        changesIn(answer({ op: 'add-thing', name: 'mallory', kind, properties: {} })).unread,
+        /cannot add/,
+        kind,
+      );
+  });
+
   test('any other thing is still proposed, and so is a link to a Person that is already there', () => {
     assert.ok(Array.isArray(changesIn(answer({ op: 'add-thing', name: 'gadget', kind: 'Option', properties: {} }))));
     assert.ok(Array.isArray(changesIn(answer({ op: 'add-link', from: 'alice', type: 'ASKED', to: 'question' }))));
+  });
+});
+
+describe('only the declaration the editor writes is written with the first accept', () => {
+  const header = `// graph: reader · CHANGE SET cs1 · against ${BASIS} · by ada`;
+
+  /** A change set from elsewhere, whose first item names its own author, accepting its SET alone. */
+  const acceptSet = (first) => {
+    const block = `${header}\n${first}\nSET large_reader.price = 4`;
+    const note = `${NOTE}\n\`\`\`gql\n${block}\n\`\`\`\n`;
+    const review = ProposalReview.fromChangeSet(block, note);
+    const set = review.proposal.changes.find((c) => c.op === 'set');
+    return { review, r: review.accept(note, [set.id], ROGER, { at: NOW }), note };
+  };
+
+  test('a first item that names the author with more than the declaration is an ordinary change, not written unasked', () => {
+    for (const first of [
+      "(ada:Person {admin: true})-[:OWNS]->(vault:Thing {name: 'Vault'})",
+      "(ada:Model {name: 'ada', admin: true})",
+      "(ada:Person {name: 'ada'})",
+      "(ada:Model {name: 'Ada'})",
+    ]) {
+      const { review, r } = acceptSet(first);
+      assert.equal(r.ok, true, `${first}: ${r.reason}`);
+      assert.deepEqual(r.ids, [review.proposal.changes.find((c) => c.op === 'set').id], first);
+      assert.deepEqual(modelsIn(r.note), [], first);
+      assert.equal(review.state(review.proposal.changes[0].id), 'pending', first);
+    }
+  });
+
+  test('exactly what the editor writes for a model or a step, for that header’s `by`, is its declaration', () => {
+    for (const [kind, first] of [
+      ['model', "(ada:Model {name: 'ada'})"],
+      ['step', "(ada:Person:Step {name: 'ada'})"],
+    ]) {
+      const p = proposalOf({ by: { name: 'ada', kind }, changes: [{ op: 'add', gql: first }, ...CHANGES.slice(2, 3)] });
+      assert.equal(declaresProposer(p, p.changes[0]), true, kind);
+      assert.equal(declaresProposer(p, p.changes[1]), false, kind);
+    }
+  });
+
+  test('a name with characters a pattern would read is compared as text: it declares nothing and breaks nothing', () => {
+    for (const name of ['a.c', 'a(b', 'a*', '[x', 'a|b', '$']) {
+      const p = proposalOf({
+        by: { name, kind: 'model' },
+        changes: [{ op: 'add', gql: "(abc:Model {name: 'abc'})" }, CHANGES[2]],
+      });
+      assert.doesNotThrow(() => declaresProposer(p, p.changes[0]), name);
+      assert.equal(declaresProposer(p, p.changes[0]), false, name);
+      const review = new ProposalReview(p);
+      assert.doesNotThrow(() => review.accept(NOTE, [p.changes[1].id], ROGER, { at: NOW }), name);
+    }
+  });
+});
+
+describe('an accept of a proposal held only in memory is checked too', () => {
+  test('a proposer the note does not know and the editor does not declare is refused, saying so', () => {
+    const p = proposalOf({ by: { name: 'stranger', kind: 'person' } });
+    const r = new ProposalReview(p).accept(NOTE, [C3], ROGER, { at: NOW });
+    assert.equal(r.ok, false);
+    assert.match(r.reason, /graph spec’s check of this change set fails.*stranger is a known person or model/);
+  });
+
+  test('a change the check fails for what it does is refused in memory as it is in the note', () => {
+    const p = proposalOf({ changes: [{ op: 'remove-thing', thing: 'nobody' }] });
+    const r = new ProposalReview(p).accept(NOTE, [p.changes[0].id], ROGER, { at: NOW });
+    assert.equal(r.ok, false);
+    assert.match(r.reason, /graph spec’s check of this change set fails/);
+  });
+
+  test('a model’s proposal, declared by the editor as it would be written, passes', () => {
+    const r = new ProposalReview(proposalOf()).accept(NOTE, [C3], ROGER, { at: NOW });
+    assert.equal(r.ok, true, r.reason);
   });
 });
