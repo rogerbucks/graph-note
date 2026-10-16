@@ -47,7 +47,7 @@ async function launcherOf($: EngineInterface): Promise<EditorLauncher> {
     spawn: (request) => $.process.spawn(request),
     // a matrix note is read only when its real path, links settled, is inside the vault: the mod's file calls do not
     // settle links, so node is asked
-    realPath: realPathVia((request) => $.process.spawn(request)),
+    realPath: realPathVia((request) => $.process.spawn(request), ['node', `${$.plugin.root}/bin/real-path.mjs`]),
     exists: (path) => $.fs.exists(path),
     read: (path) => $.fs.read(path),
     // the user's settings, saved as settings.json in the plugin data folder; none, or one that cannot be read, is the

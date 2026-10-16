@@ -6,6 +6,7 @@ import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { claudeGate } from '@graph-note/core';
 import { hostSpawn, launcherFor, modVault, writeNote } from './editor-mod-support.js';
 import { realPathVia } from '../src/editor-realpath.ts';
@@ -13,6 +14,8 @@ import { settingsForServer } from '../src/editor-launch.ts';
 import { storeGate } from '../server/editor-gate.ts';
 import { gateSettings as serverSettings } from '../server/editor-main.ts';
 
+// the shipped process, run from its source as the mod runs it built
+const PROGRAM = [process.execPath, fileURLToPath(new URL('../bin/real-path-process.ts', import.meta.url))];
 const MATRIX = '| | Public | Internal |\n|---|---|---|\n| Claude chat | ✅ | ❌ |\n';
 const model = {
   name: 'Claude',
@@ -121,7 +124,7 @@ describe('the real path asked of a host that can only start a process', () => {
   test('a file’s real path, through a link too, and a failure for a file that is not there', async () => {
     const where = modVault();
     const host = hostSpawn();
-    const realPath = realPathVia(host.spawn);
+    const realPath = realPathVia(host.spawn, PROGRAM);
     writeFileSync(join(where.top, 'real.md'), 'x');
     symlinkSync(join(where.top, 'real.md'), join(where.top, 'link.md'));
     const real = await realPath(join(where.top, 'real.md'));
@@ -135,8 +138,7 @@ describe('the real path asked of a host that can only start a process', () => {
     const host = hostSpawn();
     const odd = join(where.top, "it's $(x) `y`.md");
     writeFileSync(odd, 'x');
-    assert.ok((await realPathVia(host.spawn)(odd)).endsWith("it's $(x) `y`.md"));
-    assert.ok(host.requests[0].argv.includes(odd));
-    assert.ok(!host.requests[0].argv[2].includes('$(x)'), 'the script holds none of the path');
+    assert.ok((await realPathVia(host.spawn, PROGRAM)(odd)).endsWith("it's $(x) `y`.md"));
+    assert.deepEqual(host.requests[0].argv, [...PROGRAM, odd], 'the path is the one argument, after the program');
   });
 });

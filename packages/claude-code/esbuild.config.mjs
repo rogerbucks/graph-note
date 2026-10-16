@@ -25,6 +25,13 @@ await esbuild.build({
   outfile: join(mod, 'bin/render.mjs'),
   platform: 'node',
 });
+// the real path of a file, which node settles for the mod, whose file calls settle no links (spec §26)
+await esbuild.build({
+  ...common,
+  entryPoints: ['bin/real-path-process.ts'],
+  outfile: join(mod, 'bin/real-path.mjs'),
+  platform: 'node',
+});
 // the browser editor's local server, which node runs as a process of its own (spec §26)
 await esbuild.build({
   ...common,
