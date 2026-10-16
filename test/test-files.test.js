@@ -11,18 +11,27 @@ import { basename, join } from 'node:path';
 import { inflateSync } from 'node:zlib';
 import { imageFacts } from '../packages/core/src/image-facts.ts';
 import { IMAGE_LIMITS } from '../packages/core/src/image-limits.ts';
-import { TEST_FILES, makeTestFiles, pixelsOf } from '../scripts/make-test-files.mjs';
+import { TEST_FILES, makeTestFiles, pathOf, pixelsOf } from '../scripts/make-test-files.mjs';
 import { notIgnored, path, walk } from './repository/repo.js';
 
 const NOTES = 'test-vault/Device checks';
+const CHECKLIST = 'packages/obsidian/test/device-checklist.md';
 /** A file of a format the notes name that is not a note: `[[cat.gif]]`, `[[report.pdf]]`. */
 const NAMED = /\[\[([^\]|#]+\.(?:gif|png|webp|svg|pdf|jpe?g|avif))(?:[|#][^\]]*)?\]\]/gi;
+
+/** A graph file in the vault's `Graph files` folder: ``Graph files/trip.gql``. */
+const NAMED_GQL = /Graph files\/([\w.-]+\.gql)/g;
+/** Files a note names to show that they are not there (Q-04): the generator must not make them. */
+const ABSENT = ['nowhere.gql'];
 
 /** The names the device-check notes give to files that are not notes, each once. */
 const namedByNotes = () => {
   const names = new Set();
-  for (const f of walk(NOTES).filter((f) => f.endsWith('.md')))
-    for (const m of readFileSync(path(f), 'utf8').matchAll(NAMED)) names.add(basename(m[1]));
+  for (const f of walk(NOTES).filter((f) => f.endsWith('.md'))) {
+    const text = readFileSync(path(f), 'utf8');
+    for (const m of text.matchAll(NAMED)) names.add(basename(m[1]));
+    for (const m of text.matchAll(NAMED_GQL)) if (!ABSENT.includes(m[1])) names.add(m[1]);
+  }
   return [...names].sort();
 };
 
@@ -44,7 +53,7 @@ before(() => {
 });
 
 const whereIs = (name) => filesUnder(vault).find((f) => basename(f) === name);
-const bytesOf = (entry) => new Uint8Array(readFileSync(join(vault, 'Device checks', entry.folder, entry.name)));
+const bytesOf = (entry) => new Uint8Array(readFileSync(join(vault, pathOf(entry))));
 const be32 = (b, at) => ((b[at] << 24) | (b[at + 1] << 16) | (b[at + 2] << 8) | b[at + 3]) >>> 0;
 const le32 = (b, at) => (b[at] | (b[at + 1] << 8) | (b[at + 2] << 16) | (b[at + 3] << 24)) >>> 0;
 const le16 = (b, at) => b[at] | (b[at + 1] << 8);
@@ -74,16 +83,13 @@ describe('the generator makes every file the device-check notes name', () => {
   // proves: test_files_generated
   test('the files kept in the repository are what the generator makes, byte for byte, and the large one is not kept', () => {
     for (const e of TEST_FILES.filter((e) => !e.large)) {
-      const kept = path(`test-vault/Device checks/${e.folder}/${e.name}`);
+      const kept = path(`test-vault/${pathOf(e)}`);
       assert.ok(existsSync(kept), `${e.name} is committed`);
-      assert.ok(notIgnored(`test-vault/Device checks/${e.folder}/${e.name}`), `${e.name} is not ignored`);
-      assert.ok(
-        readFileSync(kept).equals(readFileSync(join(vault, 'Device checks', e.folder, e.name))),
-        `${e.name} is current`,
-      );
+      assert.ok(notIgnored(`test-vault/${pathOf(e)}`), `${e.name} is not ignored`);
+      assert.ok(readFileSync(kept).equals(readFileSync(join(vault, pathOf(e)))), `${e.name} is current`);
     }
     for (const e of TEST_FILES.filter((e) => e.large)) {
-      assert.ok(!notIgnored(`test-vault/Device checks/${e.folder}/${e.name}`), `${e.name} is ignored, made at set-up`);
+      assert.ok(!notIgnored(`test-vault/${pathOf(e)}`), `${e.name} is ignored, made at set-up`);
     }
   });
 });
@@ -91,7 +97,7 @@ describe('the generator makes every file the device-check notes name', () => {
 describe('each made image says what the generator meant it to be', () => {
   // proves: test_files_generated
   test('the header reader reports the format, whether it moves and the frame count intended', () => {
-    for (const e of TEST_FILES.filter((e) => e.format !== 'pdf')) {
+    for (const e of TEST_FILES.filter((e) => !['pdf', 'gql'].includes(e.format))) {
       const facts = imageFacts(bytesOf(e));
       assert.equal(facts.format, e.format, `${e.name} format`);
       assert.equal(facts.frames, e.frames, `${e.name} frames`);
@@ -351,6 +357,21 @@ describe('the animated WebP decodes: its frames are lossless images of the pixel
     }
     assert.ok(sawAnim);
     assert.equal(frames, e.frames);
+  });
+});
+
+describe('the graph file of Q-03 and Q-04', () => {
+  // proves: tests_self_contained
+  test('trip.gql holds the four lines Q-03 gives, starts as a graph named trip, and nowhere.gql is not made', () => {
+    const e = TEST_FILES.find((e) => e.name === 'trip.gql');
+    assert.equal(e.dir, 'Graph files', 'at the vault root, where the blocks name it');
+    const lines = Buffer.from(bytesOf(e)).toString('utf8').trimEnd().split('\n');
+    assert.equal(lines.length, 4);
+    assert.equal(lines[0], '// graph: trip');
+    const note = readFileSync(path(`${NOTES}/17 Sources and steps/Q-03 Graph from a gql file.md`), 'utf8');
+    for (const line of lines) assert.ok(note.includes(`\`${line}\``), `Q-03 shows the line ${line}`);
+    assert.ok(!whereIs('nowhere.gql'), 'Q-04 names a file that is not there, and it stays so');
+    assert.ok(readFileSync(path(CHECKLIST), 'utf8').includes('nowhere.gql'), 'the checklist item still names it');
   });
 });
 

@@ -36,7 +36,7 @@ import {
   words,
 } from './repository/device-checks.js';
 import { testsForChanges } from '../scripts/changed-tests.mjs';
-import { TEST_FILES, makeTestFiles } from '../scripts/make-test-files.mjs';
+import { TEST_FILES, makeTestFiles, pathOf } from '../scripts/make-test-files.mjs';
 import { repository } from './repository/scratch-repository.js';
 import { ROOT, path, read, walk } from './repository/repo.js';
 
@@ -395,8 +395,8 @@ describe('the notes are committed, and a clean session keeps them', () => {
     // large GIF is made at set-up and ignored
     assert.deepEqual(
       files.filter((f) => !f.endsWith('.md')).sort(),
-      TEST_FILES.filter((e) => !e.large)
-        .map((e) => `${FOLDER}/${e.folder}/${e.name}`)
+      TEST_FILES.filter((e) => !e.large && e.dir.startsWith('Device checks/'))
+        .map((e) => `test-vault/${pathOf(e)}`)
         .sort(),
     );
     const stray = [
@@ -435,7 +435,7 @@ describe('the notes are committed, and a clean session keeps them', () => {
       assert.equal(repo.git('status', '--porcelain', '--', FOLDER), '');
       assert.equal(
         repo.git('ls-files', '--', FOLDER).split('\n').length,
-        noteFiles().length + 1 + TEST_FILES.filter((e) => !e.large).length,
+        noteFiles().length + 1 + TEST_FILES.filter((e) => !e.large && e.dir.startsWith('Device checks/')).length,
       );
     } finally {
       repo.done();

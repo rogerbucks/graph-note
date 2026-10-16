@@ -17,13 +17,21 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CUBE, gif, pdf, png, svg, webp } from './make-test-images.mjs';
 
-const ANIMATED = '20 Animated images';
-const LINKS = '21 Links and attachments';
-const NOTES = 'Device checks';
+// folders of the vault, from its root
+const ANIMATED = 'Device checks/20 Animated images';
+const LINKS = 'Device checks/21 Links and attachments';
+const GRAPH_FILES = 'Graph files';
+
+/** The graph file of device checks Q-03 and Q-04: four lines, the first starting `// graph: trip`. */
+export const TRIP_GQL = `// graph: trip
+(home:Place {name: 'Home'}),
+(park:Place {name: 'The park'}),
+(home)-[:NEAR]->(park)
+`;
 
 /** A picture of `frames` frames, `size` by `size`, in colours chosen by `seed`; `animated` is whether it moves. */
-const picture = (folder, name, format, frames, seed, [width, height] = [32, 32]) => ({
-  folder,
+const picture = (dir, name, format, frames, seed, [width, height] = [32, 32]) => ({
+  dir,
   name,
   format,
   frames,
@@ -34,12 +42,12 @@ const picture = (folder, name, format, frames, seed, [width, height] = [32, 32])
   scene: 'square',
 });
 
-/** Every file made, with what it is meant to be: its folder, name, format, frames, size and whether it moves. */
+/** Every file made, with what it is meant to be: its folder (`dir`, from the vault's root), name, format, frames, size and whether it moves. */
 export const TEST_FILES = [
   picture(ANIMATED, 'cat.gif', 'gif', 4, 0),
   picture(ANIMATED, 'spin.png', 'png', 3, 1),
   picture(ANIMATED, 'dance.webp', 'webp', 3, 2),
-  { folder: ANIMATED, name: 'loop.svg', format: 'svg', frames: 0, animated: true, width: 64, height: 64, seed: 3 },
+  { dir: ANIMATED, name: 'loop.svg', format: 'svg', frames: 0, animated: true, width: 64, height: 64, seed: 3 },
   picture(ANIMATED, 'kit.png', 'png', 1, 3),
   picture(ANIMATED, 'tom.gif', 'gif', 4, 4),
   picture(ANIMATED, 'kit.gif', 'gif', 4, 5),
@@ -49,8 +57,13 @@ export const TEST_FILES = [
   // over the 5 MB an animated image may be: noise does not compress, so five frames of a million pixels pass it
   { ...picture(ANIMATED, 'big.gif', 'gif', 5, 99, [1000, 1000]), scene: 'noise', large: true },
   picture(LINKS, 'photo.png', 'png', 1, 3, [64, 48]),
-  { folder: LINKS, name: 'report.pdf', format: 'pdf', frames: 1, animated: false, width: 0, height: 0, seed: 0 },
+  { dir: LINKS, name: 'report.pdf', format: 'pdf', frames: 1, animated: false, width: 0, height: 0, seed: 0 },
+  // device checks Q-03 and Q-04 draw a block from this file; Q-04 names `nowhere.gql` to show a file that is not there
+  { dir: GRAPH_FILES, name: 'trip.gql', format: 'gql', frames: 0, animated: false, width: 0, height: 0, seed: 0 },
 ];
+
+/** Where a file is made, from the vault's root. */
+export const pathOf = (entry) => `${entry.dir}/${entry.name}`;
 
 /** The palette indices of frame `i` of a GIF's picture: a square moving across a ground, or noise for the large one. */
 function indices(entry, i) {
@@ -104,6 +117,8 @@ export function bytesOf(entry) {
       return svg({ size: width });
     case 'pdf':
       return pdf('Report');
+    case 'gql':
+      return Uint8Array.from(Buffer.from(TRIP_GQL));
     default:
       throw new Error(`no encoder for ${entry.format}`);
   }
@@ -120,10 +135,10 @@ function write(path, bytes) {
   writeFileSync(path, bytes);
 }
 
-/** Makes the files in the vault at `vault` (its `Device checks` folder); returns the paths of everything it made or kept. */
+/** Makes the files in the vault at `vault` (each file in its own folder); returns the paths of everything it made or kept. */
 export function makeTestFiles(vault, { large = true } = {}) {
   return TEST_FILES.filter((e) => large || !e.large).map((e) => {
-    const path = join(vault, NOTES, e.folder, e.name);
+    const path = join(vault, pathOf(e));
     write(path, bytesOf(e));
     return path;
   });

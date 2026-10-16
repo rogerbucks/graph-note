@@ -43,6 +43,10 @@ spikes/*/main.js
 !/test-vault/Device checks/20 Animated images/c[1-7].gif
 !/test-vault/Device checks/21 Links and attachments/photo.png
 !/test-vault/Device checks/21 Links and attachments/report.pdf
+# The graph file of device checks Q-03 and Q-04, also made by the generator.
+!/test-vault/Graph files/
+/test-vault/Graph files/*
+!/test-vault/Graph files/trip.gql
 !/test-vault/.obsidian/
 /test-vault/.obsidian/*
 !/test-vault/.obsidian/app.json

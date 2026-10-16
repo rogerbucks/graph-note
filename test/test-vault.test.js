@@ -20,7 +20,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import * as resetScript from '../scripts/reset-test-vault.mjs';
-import { TEST_FILES, makeTestFiles } from '../scripts/make-test-files.mjs';
+import { TEST_FILES, makeTestFiles, pathOf } from '../scripts/make-test-files.mjs';
 import { auditRequirements, REQUIREMENTS } from '../scripts/check-requirements.mjs';
 import { exists, read, readJSON, path, notIgnored, ROOT } from './repository/repo.js';
 
@@ -40,7 +40,7 @@ const guideMap = () =>
     ]),
   );
 /** The repository paths of the files the generator makes and git keeps; the large GIF is made at set-up and ignored. */
-const madeFiles = () => TEST_FILES.filter((e) => !e.large).map((e) => `${VAULT}/Device checks/${e.folder}/${e.name}`);
+const madeFiles = () => TEST_FILES.filter((e) => !e.large).map((e) => `${VAULT}/${pathOf(e)}`);
 const requirementIds = () => new Set([...read(REQUIREMENTS).matchAll(/^\((\w+):Requirement \{/gm)].map((m) => m[1]));
 
 describe('the test vault holds dummy notes, each tied to what it exercises', () => {
@@ -295,7 +295,7 @@ describe('each session in the vault starts and ends clean', () => {
     try {
       const big = TEST_FILES.find((e) => e.large);
       const small = TEST_FILES.find((e) => !e.large && e.format === 'gif');
-      const where = (e) => join(dir, VAULT, 'Device checks', e.folder, e.name);
+      const where = (e) => join(dir, VAULT, pathOf(e));
       rmSync(where(small));
       reset(dir);
       assert.ok(lstatSync(where(big)).size > 5 * 1024 * 1024, 'big.gif is over 5 MB');

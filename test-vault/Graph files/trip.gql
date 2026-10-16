@@ -1,0 +1,4 @@
+// graph: trip
+(home:Place {name: 'Home'}),
+(park:Place {name: 'The park'}),
+(home)-[:NEAR]->(park)
