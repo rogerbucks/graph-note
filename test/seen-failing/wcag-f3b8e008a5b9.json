@@ -1,0 +1,10 @@
+{
+  "file": "test/wcag.test.js",
+  "test": "the browser editor’s page: every state, in both themes > the edit pane with a kept draft offered back meets WCAG 2.2 AA in the dark theme",
+  "seen_failing_first": false,
+  "fault": true,
+  "commits": [
+    "e1a1a7e41b437c701cd9d773906d06539df87be0"
+  ],
+  "evidence": "The cases come a commit before their code, as the process asks (draft PR, cases, then code): they fail at their own commit because the edit pane is not in the display layer and not on the page yet, and pass from the commits that move the pane into the layer and open it on the page."
+}

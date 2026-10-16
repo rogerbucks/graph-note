@@ -7,9 +7,12 @@
     "238aba0a659ff97ffbf82ee743eb1cbf3c69b59f",
     "284afe5442b67087db7022ae4ee75247dbd259fd",
     "649d36c892c6f7201323f6051f9d168a86072347",
+    "9cfeffd1f1f37b54919185db881458b9f0705587",
     "ab45108cbbb2341e57e16610dba7fe6bd0f13023",
     "acaed7440ee831bfe3a8feb0bfcbba3ed0407e9e",
+    "d21a4d3085f6b6499229c910f228c92056fc2048",
+    "e1a1a7e41b437c701cd9d773906d06539df87be0",
     "e95e8f8081ddaaa2a95dec1d31c35b9958325478"
   ],
-  "evidence": "An existing test, not new in 284afe5; when that commit's tests are replayed in a bare checkout it fails there (cause not found), though it passes in this worktree with the full suite. Not a test written for C6."
+  "evidence": "An existing test, not new in these commits; when a commit's tests are replayed in a bare checkout it fails there (cause not found, as recorded for the earlier commits), though it passes in this worktree with the full suite. Not a test written for C9."
 }
