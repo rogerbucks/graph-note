@@ -23,51 +23,86 @@
       "workstreams": ["W15"]
     },
     {
-      "title": "Wave 4 · Slice 4 browser-pane editor",
+      "title": "Wave 4 · Slice 4 finish and slice 5",
       "start": "2026-10-16",
       "end": "2026-10-29",
       "estimate": true,
-      "workstreams": ["C0", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "W34", "W35"]
+      "workstreams": ["C0", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "W34", "W35", "W7", "W10"]
     },
     {
-      "title": "Wave 5 · Slice 5",
+      "title": "Wave 5 · Automated quality and releases",
       "start": "2026-10-30",
       "end": "2026-11-12",
       "estimate": true,
-      "workstreams": ["W7", "W10"]
+      "workstreams": ["A1", "R1", "R2"]
     },
     {
-      "title": "Wave 6 · Slice 6",
+      "title": "Wave 6 · Host and storage contracts",
       "start": "2026-11-13",
       "end": "2026-11-26",
+      "estimate": true,
+      "workstreams": ["L1"]
+    },
+    {
+      "title": "Wave 7 · Standalone app",
+      "start": "2026-11-27",
+      "end": "2026-12-10",
+      "estimate": true,
+      "workstreams": ["H1"]
+    },
+    {
+      "title": "Wave 8 · VS Code plugin",
+      "start": "2026-12-11",
+      "end": "2026-12-24",
+      "estimate": true,
+      "workstreams": ["H2"]
+    },
+    {
+      "title": "Wave 9 · Slice 6 the mesh",
+      "start": "2027-01-04",
+      "end": "2027-01-17",
       "estimate": true,
       "workstreams": ["W16", "W17", "W18", "W19"]
     },
     {
-      "title": "Wave 7 · Slice 7",
-      "start": "2026-11-27",
-      "end": "2026-12-10",
+      "title": "Wave 10 · Slice 7 clusters, lenses and process",
+      "start": "2027-01-18",
+      "end": "2027-01-31",
       "estimate": true,
-      "workstreams": ["W20", "W21", "W22", "W23"]
+      "workstreams": ["W20", "W22", "W21", "W23"]
     },
     {
-      "title": "Wave 8 · Slice 8",
-      "start": "2026-12-11",
-      "end": "2026-12-24",
+      "title": "Wave 11 · Slice 8 permissions, AI and export",
+      "start": "2027-02-01",
+      "end": "2027-02-14",
       "estimate": true,
-      "workstreams": ["W24", "W25", "W26", "W27", "W28", "W29"]
+      "workstreams": ["W28", "W26", "W27"]
     },
     {
-      "title": "Wave 9 · Slice 9",
-      "start": "2026-12-25",
-      "end": "2027-01-07",
+      "title": "Wave 12 · Slice 8 runs, drawing and profiles",
+      "start": "2027-02-15",
+      "end": "2027-02-28",
       "estimate": true,
-      "workstreams": ["W30", "W31", "W32", "W33"]
+      "workstreams": ["W24", "W25", "W29"]
+    },
+    {
+      "title": "Wave 13 · Slice 9 store, sync and network",
+      "start": "2027-03-01",
+      "end": "2027-03-14",
+      "estimate": true,
+      "workstreams": ["W30", "W31"]
+    },
+    {
+      "title": "Wave 14 · Slice 9 web, corporate and iOS",
+      "start": "2027-03-15",
+      "end": "2027-03-28",
+      "estimate": true,
+      "workstreams": ["W33", "W32"]
     },
     {
       "title": "Roger’s held changes, after all waves",
-      "start": "2027-01-08",
-      "end": "2027-01-21",
+      "start": "2027-03-29",
+      "end": "2027-04-11",
       "estimate": true,
       "workstreams": []
     }
