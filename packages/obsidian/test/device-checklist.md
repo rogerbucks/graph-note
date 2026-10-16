@@ -20,7 +20,8 @@ holds the two together).
 
 ## Before
 
-- [ ] **B-01** The build is installed as real files in `.obsidian/plugins/graph-note/`, and has synced to the phone.
+- [ ] **B-01** The build is installed as real files in `.obsidian/plugins/graph-note/`, and the test images are made
+      (`node scripts/reset-test-vault.mjs` does both, big.gif among the images), and both have synced to the phone.
 - [ ] **B-02** Graph Note is switched on. If gql-highlight is also on, it has been reloaded since.
 - [ ] **B-03** The phone is in aeroplane mode for the whole check: everything below must work offline.
 
@@ -496,10 +497,12 @@ Settings › Accessibility › Display › Reduce motion; on the iPhone, Setting
 
 ## Animated images — spec §18, §11, §16
 
-The test vault holds notes only, so the images are put in by hand on the Mac, outside Obsidian, in the folder
-`Device checks/20 Animated images`, and taken out again afterwards; on the phone they arrive only when Obsidian Sync's
-"Images" file type is on. Each note says which files it needs: any animated GIF, APNG, animated WebP and animated SVG
-will do, under the names given, and for K-05 a GIF larger than 5 MB. Reduce motion stays off until K-04 turns it on.
+The images are made, not supplied: run `node scripts/reset-test-vault.mjs` (or `node scripts/make-test-files.mjs`, which
+makes only the test files) in the repository, and the generator writes every file a note names into the folder
+`Device checks/20 Animated images`: real animated GIF, APNG, animated WebP and animated SVG images under the names
+given, and for K-05 a GIF larger than 5 MB, which git does not keep and the script makes each time. Nothing is put in by
+hand. On the phone they arrive only when Obsidian Sync's "Images" file type is on. Each note says which files it needs.
+Reduce motion stays off until K-04 turns it on.
 
 - [ ] **K-01** Open the details of Ann: under Images, cat.gif, spin.png, dance.webp and loop.svg each move, each with its
       name and a Pause button; a property naming an image outside the vault says it is not loaded, and shows nothing
@@ -533,7 +536,7 @@ will do, under the names given, and for K-05 a GIF larger than 5 MB. Reduce moti
       them too, and in the text the link inside its quotes is underlined (slice 3, links_shown).
 - [ ] **H-02** Tap a link to a note in the details: Obsidian opens the note in the same tab. On the Mac, Command-click it:
       it opens in a new tab, as a link in a note does (slice 3, host_opens_links).
-- [ ] **H-03** With photo.png and report.pdf in the vault, the box that links both carries a paperclip and 2 at its top
+- [ ] **H-03** With photo.png and report.pdf made in the vault by the generator (reset-test-vault), the box that links both carries a paperclip and 2 at its top
       left, and VoiceOver reads "2 attachments" with its name. Its details list them under Attachments (2), as "photo.png —
       image" and "report.pdf — PDF"; tap one and Obsidian opens it (slice 3, attachments_at_a_glance).
 - [ ] **H-04** On the Mac, hold Command and point at a link to a note in the details: Obsidian's own preview of the note

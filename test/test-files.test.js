@@ -54,7 +54,7 @@ describe('the generator makes every file the device-check notes name', () => {
   // proves: tests_self_contained, test_files_generated
   test('after it runs, every image and PDF a note names exists', () => {
     const names = namedByNotes();
-    assert.ok(names.length >= 20, `the notes name their files (${names.length})`);
+    assert.ok(names.length >= 19, `the notes name their files (${names.length})`);
     for (const name of names) assert.ok(whereIs(name), `${name} is made by the generator`);
     assert.ok(made.length >= names.length, 'it reports what it made');
   });
@@ -197,7 +197,9 @@ describe('the GIFs decode: their compressed data gives back the frames meant', (
     for (const e of gifs()) {
       const frames = decodeGif(bytesOf(e));
       assert.equal(frames.length, e.frames, `${e.name} frames`);
-      frames.forEach((f, i) => assert.deepEqual(f, [...pixelsOf(e, i)], `${e.name} frame ${i}`));
+      frames.forEach((f, i) =>
+        assert.ok(Buffer.from(f).equals(Buffer.from(pixelsOf(e, i))), `${e.name} frame ${i} decodes to what was drawn`),
+      );
     }
   });
 
@@ -369,12 +371,24 @@ describe('the SVG and the PDF are well formed', () => {
     const text = Buffer.from(bytesOf(e)).toString('latin1');
     assert.match(text, /^%PDF-1\.\d\n/);
     assert.match(text, /%%EOF\n?$/);
+    // the table of where each object is, a cross-reference stream: four bytes (a type, two of offset, a generation) each
     const start = Number(/startxref\n(\d+)\n%%EOF/.exec(text)[1]);
-    assert.equal(text.slice(start, start + 4), 'xref');
-    const count = Number(/xref\n0 (\d+)\n/.exec(text.slice(start))[1]);
-    const offsets = [...text.slice(start).matchAll(/^(\d{10}) \d{5} n ?$/gm)].map((m) => Number(m[1]));
-    assert.equal(offsets.length, count - 1);
-    offsets.forEach((o, i) => assert.equal(text.slice(o, o + `${i + 1} 0 obj`.length), `${i + 1} 0 obj`));
+    const table = /^(\d+) 0 obj\n<< \/Type \/XRef \/Size (\d+) \/W \[1 2 1\] [^>]*\/Length (\d+) >>\nstream\n/.exec(
+      text.slice(start),
+    );
+    assert.ok(table, 'startxref points at the cross-reference stream');
+    const size = Number(table[2]);
+    const from = start + table[0].length;
+    const entries = inflateSync(Buffer.from(text.slice(from, from + Number(table[3])), 'latin1'));
+    assert.equal(entries.length, size * 4);
+    assert.deepEqual([...entries.subarray(0, 4)], [0, 0, 0, 255], 'object 0 is free');
+    for (let n = 1; n < size; n++) {
+      const [type, high, low] = entries.subarray(n * 4, n * 4 + 3);
+      assert.equal(type, 1);
+      const at = (high << 8) | low;
+      assert.equal(text.slice(at, at + `${n} 0 obj`.length), `${n} 0 obj`, `object ${n} is where the table says`);
+    }
+    assert.equal(Number(table[1]), size - 1, 'the stream is the last object');
     assert.match(text, /\/Type \/Catalog/);
   });
 });

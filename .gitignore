@@ -28,6 +28,21 @@ spikes/*/main.js
 !/test-vault/Device checks/*/
 /test-vault/Device checks/*/*
 !/test-vault/Device checks/*/*.md
+# The images and the PDF the checks need are made by scripts/make-test-files.mjs, which test/test-files.test.js holds to
+# this list; the small ones are kept, by name (a picture pasted in a session is not), so a check can be run from a
+# clone. The GIF over the size limit, big.gif, is not kept: it is made when a check is set up (reset-test-vault.mjs).
+!/test-vault/Device checks/20 Animated images/cat.gif
+!/test-vault/Device checks/20 Animated images/spin.png
+!/test-vault/Device checks/20 Animated images/dance.webp
+!/test-vault/Device checks/20 Animated images/loop.svg
+!/test-vault/Device checks/20 Animated images/kit.png
+!/test-vault/Device checks/20 Animated images/tom.gif
+!/test-vault/Device checks/20 Animated images/kit.gif
+!/test-vault/Device checks/20 Animated images/rex.gif
+!/test-vault/Device checks/20 Animated images/small.gif
+!/test-vault/Device checks/20 Animated images/c[1-7].gif
+!/test-vault/Device checks/21 Links and attachments/photo.png
+!/test-vault/Device checks/21 Links and attachments/report.pdf
 !/test-vault/.obsidian/
 /test-vault/.obsidian/*
 !/test-vault/.obsidian/app.json

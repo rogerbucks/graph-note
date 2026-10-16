@@ -36,6 +36,7 @@ import {
   words,
 } from './repository/device-checks.js';
 import { testsForChanges } from '../scripts/changed-tests.mjs';
+import { TEST_FILES, makeTestFiles } from '../scripts/make-test-files.mjs';
 import { repository } from './repository/scratch-repository.js';
 import { ROOT, path, read, walk } from './repository/repo.js';
 
@@ -390,9 +391,13 @@ describe('the notes are committed, and a clean session keeps them', () => {
   test('git would commit every note and the index, and nothing in the folder but notes', () => {
     const files = tracked();
     for (const f of [...noteFiles(), INDEX]) assert.ok(files.includes(f), `${f} can be committed`);
+    // the small images and the PDF the generator makes are kept too (test/test-files.test.js holds them to it); the
+    // large GIF is made at set-up and ignored
     assert.deepEqual(
-      files.filter((f) => !f.endsWith('.md')),
-      [],
+      files.filter((f) => !f.endsWith('.md')).sort(),
+      TEST_FILES.filter((e) => !e.large)
+        .map((e) => `${FOLDER}/${e.folder}/${e.name}`)
+        .sort(),
     );
     const stray = [
       `${FOLDER}/pasted image.png`,
@@ -414,6 +419,8 @@ describe('the notes are committed, and a clean session keeps them', () => {
       const [note] = noteFiles();
       const at = (f) => join(repo.dir, f);
       for (const f of ['main.js', 'manifest.json', 'styles.css']) writeFileSync(at(f), 'build\n'); // the reset copies the build in
+      makeTestFiles(at('test-vault'), { large: false }); // the small test files, as committed here
+      repo.commit({}, 'test files');
       writeFileSync(at(note), `${files[note]}\nTyped in a session.\n`);
       writeFileSync(at(`${FOLDER}/Untitled.md`), 'new');
       mkdirSync(at(`${FOLDER}/A folder`));
@@ -426,7 +433,10 @@ describe('the notes are committed, and a clean session keeps them', () => {
       for (const gone of ['Untitled.md', 'A folder'])
         assert.ok(!existsSync(at(`${FOLDER}/${gone}`)), `${gone} is removed`);
       assert.equal(repo.git('status', '--porcelain', '--', FOLDER), '');
-      assert.equal(repo.git('ls-files', '--', FOLDER).split('\n').length, noteFiles().length + 1);
+      assert.equal(
+        repo.git('ls-files', '--', FOLDER).split('\n').length,
+        noteFiles().length + 1 + TEST_FILES.filter((e) => !e.large).length,
+      );
     } finally {
       repo.done();
     }

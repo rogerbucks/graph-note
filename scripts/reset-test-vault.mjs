@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Readies the test vault, test-vault/, for a session in Obsidian, and clears it after: restores its notes and settings
 // to what is committed, removes everything a session added (notes typed, workspace files, other plugins), and copies the
-// plugin build at the repository root into .obsidian/plugins/graph-note/ as real files. Nothing outside test-vault/ is
+// plugin build at the repository root into .obsidian/plugins/graph-note/ as real files, and makes the test files the
+// device checks need (scripts/make-test-files.mjs), the GIF over the size limit among them. Nothing outside test-vault/ is
 // touched.
 //
 // The vault is synced to a phone with Obsidian Sync, so the reset is Sync-friendly: it never removes Sync's own files in
@@ -18,6 +19,7 @@ import { execFileSync } from 'node:child_process';
 import { copyFileSync, existsSync, lstatSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { makeTestFiles } from './make-test-files.mjs';
 
 export const VAULT = 'test-vault';
 export const PLUGIN_FILES = ['main.js', 'manifest.json', 'styles.css'];
@@ -64,6 +66,9 @@ export function fresh(root) {
     rmSync(target, { force: true }); // an old link is replaced, never written through
     copyFileSync(join(root, f), target);
   }
+  // the images and the PDF the device checks need: the small ones are committed (so this writes nothing), the GIF over
+  // the size limit is ignored by git, and made here (tests_self_contained, test_files_generated)
+  makeTestFiles(join(root, VAULT));
 }
 
 function main(args) {

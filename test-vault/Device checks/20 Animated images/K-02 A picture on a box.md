@@ -4,7 +4,7 @@
 
 **Test diagram:**
 
-Before you start, put two animated GIFs in this note's folder, `Device checks/20 Animated images`, on the Mac, outside Obsidian, named `tom.gif` and `kit.gif`, and any animated GIF named `rex.gif`. Take them out again afterwards.
+Before you start, make the files: run `node scripts/reset-test-vault.mjs` in the repository (or `node scripts/make-test-files.mjs`, which makes only the test files). It writes three animated GIFs into this note's folder, `Device checks/20 Animated images`, named `tom.gif`, `kit.gif` and `rex.gif`. Nothing is put in by hand.
 
 ```gql
 // graph: cats · SOURCE
@@ -26,7 +26,7 @@ The style block: a picture on every cat's box, from its photo.
 
 **Do this:**
 
-1. Put the three GIFs in this note's folder, as above, and open this note.
+1. Make the three GIFs, as above, and open this note.
 2. Look at Tom's and Kit's boxes: each picture moves at the top of its box, with the pause button in its corner.
 3. Look at Rex's box: no picture.
 4. Switch Obsidian to the other theme, in Settings › Appearance, and look again; then switch it back.

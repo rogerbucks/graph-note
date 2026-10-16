@@ -4,7 +4,7 @@
 
 **Test diagram:**
 
-Before you start, put an animated GIF named `tom.gif` in this note's folder, `Device checks/20 Animated images`, on the Mac, outside Obsidian. Take it out again afterwards.
+Before you start, make the file: run `node scripts/reset-test-vault.mjs` in the repository (or `node scripts/make-test-files.mjs`, which makes only the test files). It writes an animated GIF named `tom.gif` into this note's folder, `Device checks/20 Animated images`. Nothing is put in by hand.
 
 ```gql
 // graph: tom · SOURCE
@@ -24,7 +24,7 @@ The style block: Tom's picture on his box.
 
 **Do this:**
 
-1. Put tom.gif in this note's folder and open this note.
+1. Make tom.gif, as above, and open this note.
 2. Mac: click in the note above the drawing, then press Tab until Tom's box is outlined, and Tab once more: the picture's control is outlined.
 3. Press Enter: the picture stops and the control shows Play. Press Space: it moves again. The details stay closed.
 4. Press Enter on Tom's box itself to open his details, Tab to Pause and press Enter, then press Enter on Play.
