@@ -16,9 +16,15 @@ import {
   ADA,
   AT,
   BASIS,
+  C1,
+  C2,
+  C3,
+  C4,
+  C5,
   CHANGES,
   GRAPH,
   NOTE,
+  NOTE_WITH_ADA,
   NOW,
   ROGER,
   blocksOf,
@@ -103,8 +109,8 @@ describe('proposal_shown_not_applied: a proposal is shown over the graph, each k
 describe('proposal_one_by_one: each change is accepted or rejected on its own, or all at once', () => {
   test('accepting one change writes that change and no other; the rest wait', () => {
     const review = new ProposalReview(proposalOf());
-    const r = accepted(review.accept(NOTE, ['c1'], ROGER, { at: NOW }));
-    assert.deepEqual(r.ids, ['c1']);
+    const r = accepted(review.accept(NOTE, [C1], ROGER, { at: NOW }));
+    assert.deepEqual(r.ids, [C1]);
     assert.equal(blocksOf(r.note)[0], `${GRAPH},\n${SMALL}`);
     assert.deepEqual(
       review.show(r.note).rows.map((x) => x.state),
@@ -114,18 +120,18 @@ describe('proposal_one_by_one: each change is accepted or rejected on its own, o
 
   test('one change is accepted and another rejected, in either order, each recorded with who and when', () => {
     const review = new ProposalReview(proposalOf());
-    const rejected = accepted(review.reject(NOTE, ['c3'], ROGER, { at: NOW }));
-    const r = accepted(review.accept(rejected.note, ['c1'], ROGER, { at: NOW }));
+    const rejected = accepted(review.reject(NOTE, [C3], ROGER, { at: NOW }));
+    const r = accepted(review.accept(rejected.note, [C1], ROGER, { at: NOW }));
     assert.equal(blocksOf(r.note)[0], `${GRAPH},\n${SMALL}`);
-    assert.deepEqual(review.decision('c3'), { state: 'rejected', by: 'roger', at: NOW });
-    assert.deepEqual(review.decision('c1'), { state: 'accepted', by: 'roger', at: NOW });
-    assert.equal(review.decision('c2'), undefined);
+    assert.deepEqual(review.decision(C3), { state: 'rejected', by: 'roger', at: NOW });
+    assert.deepEqual(review.decision(C1), { state: 'accepted', by: 'roger', at: NOW });
+    assert.equal(review.decision(C2), undefined);
   });
 
   test('all at once applies every change still waiting, in the order proposed, and one undo takes them all back', () => {
     const review = new ProposalReview(proposalOf());
     const r = accepted(review.accept(NOTE, { all: true }, ROGER, { at: NOW }));
-    assert.deepEqual(r.ids, ['c1', 'c2', 'c3', 'c4', 'c5']);
+    assert.deepEqual(r.ids, [C1, C2, C3, C4, C5]);
     assert.equal(
       blocksOf(r.note)[0],
       `// graph: reader
@@ -135,23 +141,23 @@ ${SMALL},
 ${LINK}`,
     );
     assert.equal(accepted(review.undo(r.note)).note, NOTE);
-    assert.deepEqual(review.pending(), ['c1', 'c2', 'c3', 'c4', 'c5']);
+    assert.deepEqual(review.pending(), [C1, C2, C3, C4, C5]);
   });
 
   test('a change already decided is not decided again, and an id the proposal does not hold is refused', () => {
     const review = new ProposalReview(proposalOf());
-    const r = accepted(review.accept(NOTE, ['c1'], ROGER, { at: NOW }));
-    const again = review.accept(r.note, ['c1'], ROGER, { at: NOW });
+    const r = accepted(review.accept(NOTE, [C1], ROGER, { at: NOW }));
+    const again = review.accept(r.note, [C1], ROGER, { at: NOW });
     assert.equal(again.ok, false);
-    assert.match(again.reason, /c1 was already accepted by roger/);
-    assert.match(review.accept(r.note, ['c9'], ROGER, { at: NOW }).reason, /no change c9/);
+    assert.match(again.reason, new RegExp(`${C1} was already accepted by roger`));
+    assert.match(review.accept(r.note, ['nosuchchange'], ROGER, { at: NOW }).reason, /no change nosuchchange/);
   });
 
   test('a change that needs another is refused with that other named, and nothing is written', () => {
     const review = new ProposalReview(proposalOf());
-    const r = review.accept(NOTE, ['c2'], ROGER, { at: NOW });
+    const r = review.accept(NOTE, [C2], ROGER, { at: NOW });
     assert.equal(r.ok, false);
-    assert.match(r.reason, /c2 needs c1, which adds small_reader: accept c1 first/);
+    assert.match(r.reason, new RegExp(`${C2} needs ${C1}, which adds small_reader: accept ${C1} first`));
     assert.equal(review.pending().length, 5);
   });
 });
@@ -159,28 +165,29 @@ ${LINK}`,
 describe('accepting_is_an_edit: an accepted change is written as text, checked first, like any other edit', () => {
   test('the text of the graph block gains exactly the change, and nothing else in the note moves', () => {
     const review = new ProposalReview(proposalOf());
-    const r = accepted(review.accept(NOTE, ['c1'], ROGER, { at: NOW }));
+    const r = accepted(review.accept(NOTE, [C1], ROGER, { at: NOW }));
     assert.equal(r.note, NOTE.replace(GRAPH, `${GRAPH},\n${SMALL}`));
     assert.deepEqual(readNote(blocksOf(r.note)).problems, []);
   });
 
   test('a change in a property is written in the thing’s own pattern', () => {
-    const r = accepted(new ProposalReview(proposalOf()).accept(NOTE, ['c3'], ROGER, { at: NOW }));
+    const r = accepted(new ProposalReview(proposalOf()).accept(NOTE, [C3], ROGER, { at: NOW }));
     assert.equal(r.note, NOTE.replace('price: 3', 'price: 4'));
   });
 
   test('a removal takes out the text that wrote the link, and the comma that parted it, and nothing else', () => {
-    const r = accepted(new ProposalReview(proposalOf()).accept(NOTE, ['c4'], ROGER, { at: NOW }));
+    const r = accepted(new ProposalReview(proposalOf()).accept(NOTE, [C4], ROGER, { at: NOW }));
     assert.equal(r.note, NOTE.replace(',\n(large_reader)-[:ANSWERS]->(question)', ''));
   });
 
   test('it is checked as the pane checks an edit: a name the graph has is refused in the pane’s words, and nothing is written', () => {
     const proposal = proposalOf({ changes: [{ op: 'add', gql: "(alice:Person {name: 'Alicia'})" }] });
     const review = new ProposalReview(proposal);
-    const r = review.accept(NOTE, ['c1'], ROGER, { at: NOW });
+    const [only] = proposal.changes;
+    const r = review.accept(NOTE, [only.id], ROGER, { at: NOW });
     assert.equal(r.ok, false);
     assert.match(r.reason, /alice is already a name in graph reader: choose another/);
-    assert.deepEqual(review.pending(), ['c1']);
+    assert.deepEqual(review.pending(), [only.id]);
   });
 
   test('a thing the graph draws only under a suggested name is not named until its name is accepted', () => {
@@ -189,7 +196,7 @@ describe('accepting_is_an_edit: an accepted change is written as text, checked f
       basis: basisFor(note),
       changes: [{ op: 'add', gql: '(tablet)-[:ANSWERS]->(question)' }],
     });
-    const r = new ProposalReview(proposal).accept(note, ['c1'], ROGER, { at: NOW });
+    const r = new ProposalReview(proposal).accept(note, [proposal.changes[0].id], ROGER, { at: NOW });
     assert.equal(r.ok, false);
     assert.match(r.reason, /accept its name first/);
   });
@@ -205,7 +212,7 @@ describe('accepting_is_an_edit: an accepted change is written as text, checked f
       basis: basisFor(note),
       changes: [{ op: 'add', gql: "(gadget:Gadget {name: 'Gadget'})" }],
     });
-    const r = new ProposalReview(proposal).accept(note, ['c1'], ROGER, { at: NOW });
+    const r = new ProposalReview(proposal).accept(note, [proposal.changes[0].id], ROGER, { at: NOW });
     assert.equal(r.ok, false);
     assert.match(r.reason, /Gadget/);
   });
@@ -213,60 +220,56 @@ describe('accepting_is_an_edit: an accepted change is written as text, checked f
   test('undone, it gives the note back as it was, byte for byte, and the change is waiting again', () => {
     const review = new ProposalReview(proposalOf());
     assert.equal(review.canUndo(), false);
-    const r = accepted(review.accept(NOTE, ['c3'], ROGER, { at: NOW }));
+    const r = accepted(review.accept(NOTE, [C3], ROGER, { at: NOW }));
     assert.equal(review.canUndo(), true);
     const u = accepted(review.undo(r.note));
     assert.equal(u.note, NOTE);
-    assert.equal(review.state('c3'), 'pending');
+    assert.equal(review.state(C3), 'pending');
     assert.equal(review.canUndo(), false);
     assert.equal(review.undo(u.note).ok, false);
   });
 
   test('an undo that cannot be made, as the block has changed since, leaves the decision there to be undone', () => {
     const review = new ProposalReview(proposalOf());
-    const r = accepted(review.accept(NOTE, ['c3'], ROGER, { at: NOW }));
+    const r = accepted(review.accept(NOTE, [C3], ROGER, { at: NOW }));
     const changed = r.note.replace("name: 'Alice'", "name: 'Alicia'");
     assert.equal(review.undo(changed).ok, false);
     assert.equal(review.canUndo(), true);
-    assert.equal(review.state('c3'), 'accepted');
+    assert.equal(review.state(C3), 'accepted');
     assert.equal(accepted(review.undo(r.note)).note, NOTE);
-    assert.equal(review.state('c3'), 'pending');
+    assert.equal(review.state(C3), 'pending');
   });
 });
 
-describe('rejecting_recorded: rejecting a change leaves the graph unchanged and records the rejection in the change set', () => {
-  test('the graph block is the same bytes, and the change set says who rejected which change, and when', () => {
+describe('rejecting_recorded: rejecting a change leaves the graph unchanged and records the rejection in the note', () => {
+  test('the graph block is the same bytes, and the judgement graph says who rejected which change, and when', () => {
     const { note, block } = noteWithChangeSet();
     const review = new ProposalReview(proposalOf());
-    const r = accepted(review.reject(note, ['c3'], ROGER, { at: NOW }));
+    const r = accepted(review.reject(note, [C3], ROGER, { at: NOW }));
     assert.equal(blocksOf(r.note)[0], GRAPH);
     assert.notEqual(blocksOf(r.note)[1], block);
-    assert.deepEqual(decisionsIn(blocksOf(r.note)[1]).get('c3'), { state: 'rejected', by: 'roger', at: NOW });
-    assert.equal(decisionsIn(blocksOf(r.note)[1]).size, 1);
+    assert.deepEqual(decisionsIn(r.note).get(C3), { state: 'rejected', by: 'roger', at: NOW });
+    assert.equal(decisionsIn(r.note).size, 1);
   });
 
-  test('the record sits in the change set, above the change it is about', () => {
+  test('the rejected change leaves the change set, so a tool that applies the set never applies it', () => {
     const { note } = noteWithChangeSet();
-    const r = accepted(new ProposalReview(proposalOf()).reject(note, ['c3'], ROGER, { at: NOW }));
-    const lines = blocksOf(r.note)[1].split('\n');
-    const at = lines.findIndex((l) => l.startsWith('//@ rejected:'));
-    assert.equal(lines[at], `//@ rejected: roger, ${NOW}`);
-    assert.match(lines.slice(at).join('\n'), /^(\/\/@ [^\n]*\n)*SET large_reader\.price = 4/);
+    const r = accepted(new ProposalReview(proposalOf()).reject(note, [C3], ROGER, { at: NOW }));
+    assert.doesNotMatch(blocksOf(r.note)[1], /SET large_reader\.price/);
+    assert.match(blocksOf(r.note)[1], /MATCH \(v \{id: 'alice'\}\) DETACH DELETE v/);
   });
 
-  test('the record is one line added to the change set: the author’s own comments and every other byte of the note are kept', () => {
-    const { note, block } = noteWithChangeSet();
-    const authored = note.replace(block, block.replace('// read: reader\n', '// read: reader\n// checked by Bob\n'));
-    const r = accepted(new ProposalReview(proposalOf()).reject(authored, ['c3'], ROGER, { at: NOW }));
-    assert.equal(
-      r.note,
-      authored.replace('SET large_reader.price = 4', `//@ rejected: roger, ${NOW}\nSET large_reader.price = 4`),
-    );
+  test('every other byte of the note is kept: the change set loses the change and nothing else is rewritten', () => {
+    const { note } = noteWithChangeSet();
+    const r = accepted(new ProposalReview(proposalOf()).reject(note, [C3], ROGER, { at: NOW }));
+    assert.equal(blocksOf(r.note)[0], blocksOf(note)[0]);
+    assert.ok(r.note.startsWith(note.slice(0, note.indexOf('```gql\n// graph: reader · CHANGE SET'))));
+    assert.ok(r.note.includes('After.\n'));
   });
 
   test('it is still a change set after, against the same state and by the same author', () => {
     const { note } = noteWithChangeSet();
-    const r = accepted(new ProposalReview(proposalOf()).reject(note, ['c3'], ROGER, { at: NOW }));
+    const r = accepted(new ProposalReview(proposalOf()).reject(note, [C3], ROGER, { at: NOW }));
     assert.deepEqual(gs.changesetHeader(blocksOf(r.note)[1]), {
       graph: 'reader',
       id: 'cs1',
@@ -277,25 +280,29 @@ describe('rejecting_recorded: rejecting a change leaves the graph unchanged and 
 
   test('read again from the note, a rejected change stays rejected, and cannot then be accepted', () => {
     const { note } = noteWithChangeSet();
-    const r = accepted(new ProposalReview(proposalOf()).reject(note, ['c3'], ROGER, { at: NOW }));
-    const again = ProposalReview.fromChangeSet(blocksOf(r.note)[1]);
-    assert.equal(again.state('c3'), 'rejected');
+    const r = accepted(new ProposalReview(proposalOf()).reject(note, [C3], ROGER, { at: NOW }));
+    const again = ProposalReview.fromChangeSet(blocksOf(r.note)[1], r.note);
+    assert.equal(again.state(C3), 'rejected');
     assert.equal(again.show(r.note).rows[2].state, 'rejected');
-    assert.match(again.accept(r.note, ['c3'], ROGER, { at: NOW }).reason, /c3 was already rejected by roger/);
+    assert.match(
+      again.accept(r.note, [C3], ROGER, { at: NOW }).reason,
+      new RegExp(`${C3} was already rejected by roger`),
+    );
   });
 
-  test('where the change set is not in the note the rejection is still recorded, in the change set the review writes out', () => {
+  test('where the change set is not in the note the rejection is decided in memory only: nothing is written', () => {
     const review = new ProposalReview(proposalOf());
-    const r = accepted(review.reject(NOTE, ['c3'], ROGER, { at: NOW }));
+    const r = accepted(review.reject(NOTE, [C3], ROGER, { at: NOW }));
     assert.equal(r.note, NOTE);
-    assert.match(review.changeSetText(), new RegExp(`//@ rejected: roger, ${NOW}\\nSET large_reader\\.price = 4`));
+    assert.equal(review.state(C3), 'rejected');
+    assert.doesNotMatch(review.changeSetText(), /SET large_reader\.price/);
   });
 
   test('rejecting all at once leaves the graph untouched and records every one', () => {
     const { note } = noteWithChangeSet();
     const r = accepted(new ProposalReview(proposalOf()).reject(note, { all: true }, ROGER, { at: NOW }));
     assert.equal(blocksOf(r.note)[0], GRAPH);
-    assert.equal(decisionsIn(blocksOf(r.note)[1]).size, 5);
+    assert.equal(decisionsIn(r.note).size, 5);
   });
 });
 
@@ -340,23 +347,26 @@ describe('proposal_provenance: a proposal shows who proposed it, when and what i
     const shown = review.show(moved);
     assert.match(shown.stale.message, /changed since this was proposed/);
     assert.equal(review.show(NOTE).stale, null);
-    const r = review.accept(moved, ['c1'], ROGER, { at: NOW });
+    const r = review.accept(moved, [C1], ROGER, { at: NOW });
     assert.equal(r.ok, false);
     assert.equal(r.stale.was, BASIS);
     assert.match(r.reason, /changed since this was proposed/);
-    assert.equal(review.state('c1'), 'pending');
-    const seen = accepted(review.accept(moved, ['c1'], ROGER, { at: NOW, staleSeen: true }));
+    assert.equal(review.state(C1), 'pending');
+    const seen = accepted(review.accept(moved, [C1], ROGER, { at: NOW, staleSeen: true }));
     assert.equal(blocksOf(seen.note)[0], moved.match(/```gql\n([\s\S]*?)\n```/)[1] + `,\n${SMALL}`);
   });
 
   test('the graph moving because changes were accepted is not the basis moving: the rest of the proposal is not called stale', () => {
-    const { note } = noteWithChangeSet();
+    const { note } = noteWithChangeSet(proposalOf(), NOTE_WITH_ADA);
     const review = new ProposalReview(proposalOf());
-    const r = accepted(review.accept(note, ['c1'], ROGER, { at: NOW }));
+    const r = accepted(review.accept(note, [C1], ROGER, { at: NOW }));
     assert.equal(review.show(r.note).stale, null);
-    const reread = ProposalReview.fromChangeSet(blocksOf(r.note)[1]);
+    const reread = ProposalReview.fromChangeSet(
+      blocksOf(r.note).find((b) => b.includes('CHANGE SET')),
+      r.note,
+    );
     assert.equal(reread.show(r.note).stale, null);
-    assert.equal(accepted(reread.accept(r.note, ['c3'], ROGER, { at: NOW })).ids[0], 'c3');
+    assert.equal(accepted(reread.accept(r.note, [C3], ROGER, { at: NOW })).ids[0], C3);
   });
 });
 
@@ -367,53 +377,52 @@ describe('person_decides: the editor never applies a proposal without a person a
     review.show(NOTE);
     review.show(NOTE.replace('price: 3', 'price: 5'));
     assert.equal(review.changeSetText(), text);
-    assert.deepEqual(review.pending(), ['c1', 'c2', 'c3', 'c4', 'c5']);
+    assert.deepEqual(review.pending(), [C1, C2, C3, C4, C5]);
     assert.deepEqual(review.decisions(), []);
   });
 
   test('accepting needs a person: none given, a blank name, or an object that is no person, is refused', () => {
     const review = new ProposalReview(proposalOf());
     for (const by of [undefined, null, {}, { name: '' }, { name: '   ' }, 'roger'])
-      assert.match(review.accept(NOTE, ['c1'], by, { at: NOW }).reason, /a person decides/);
+      assert.match(review.accept(NOTE, [C1], by, { at: NOW }).reason, /a person decides/);
     assert.deepEqual(review.pending().length, 5);
   });
 
   test('rejecting needs a person too', () => {
     const review = new ProposalReview(proposalOf());
-    assert.match(review.reject(NOTE, ['c1'], undefined, { at: NOW }).reason, /a person decides/);
-    assert.equal(review.state('c1'), 'pending');
+    assert.match(review.reject(NOTE, [C1], undefined, { at: NOW }).reason, /a person decides/);
+    assert.equal(review.state(C1), 'pending');
   });
 
   test('whoever proposed a change, if not a person, cannot be the one to accept it', () => {
     const review = new ProposalReview(proposalOf());
     assert.match(
-      review.accept(NOTE, ['c1'], { name: 'ada' }, { at: NOW }).reason,
+      review.accept(NOTE, [C1], { name: 'ada' }, { at: NOW }).reason,
       /ada proposed this, and is not a person/,
     );
-    assert.match(review.reject(NOTE, ['c1'], { name: 'ada' }, { at: NOW }).reason, /a person decides/);
+    assert.match(review.reject(NOTE, [C1], { name: 'ada' }, { at: NOW }).reason, /a person decides/);
     const own = new ProposalReview(proposalOf({ by: { name: 'roger', kind: 'person' } }));
-    assert.equal(own.accept(NOTE, ['c1'], ROGER, { at: NOW }).ok, true);
+    // a person who proposes is declared by the one who owns the graph, which the check wants of any author
+    const known = `${NOTE}\n\`\`\`gql\n// graph: people\n(roger:Person {name: 'Roger'})\n\`\`\`\n`;
+    assert.equal(own.accept(known, [C1], ROGER, { at: NOW }).ok, true);
   });
 
   test('the proposer is known by its name in any case, and no other name is taken for it', () => {
     const named = new ProposalReview(proposalOf({ by: { name: 'Ada', kind: 'model' } }));
     assert.match(
-      named.accept(NOTE, ['c1'], { name: 'aDA' }, { at: NOW }).reason,
+      named.accept(NOTE, [C1], { name: 'aDA' }, { at: NOW }).reason,
       /Ada proposed this, and is not a person/,
     );
-    assert.match(
-      named.accept(NOTE, ['c1'], { name: ' ada ' }, { at: NOW }).reason,
-      /proposed this, and is not a person/,
-    );
+    assert.match(named.accept(NOTE, [C1], { name: ' ada ' }, { at: NOW }).reason, /proposed this, and is not a person/);
     // a person at the keyboard whose label is not the proposer's is never blocked, whatever the proposer is called
     const you = new ProposalReview(proposalOf({ by: { name: 'you', kind: 'model' } }));
-    assert.equal(you.accept(NOTE, ['c1'], { name: 'the reader' }, { at: NOW }).ok, true);
+    assert.equal(you.accept(NOTE, [C1], { name: 'the reader' }, { at: NOW }).ok, true);
   });
 
   test('a proposer is known by its raw name: one called the_reader is no stand-in for the person labelled "the reader"', () => {
     const review = new ProposalReview(proposalOf({ by: { name: 'the_reader', kind: 'model' } }));
-    assert.equal(review.accept(NOTE, ['c1'], { name: 'the reader' }, { at: NOW }).ok, true);
-    assert.match(review.accept(NOTE, ['c2'], { name: 'The_Reader' }, { at: NOW }).reason, /is not a person/);
+    assert.equal(review.accept(NOTE, [C1], { name: 'the reader' }, { at: NOW }).ok, true);
+    assert.match(review.accept(NOTE, [C2], { name: 'The_Reader' }, { at: NOW }).reason, /is not a person/);
   });
 
   test('an empty choice applies nothing', () => {
@@ -475,8 +484,9 @@ describe('big_proposal: many changes are reviewed in groups, and accept-all appl
   });
 
   test('accept-all on a group applies only what is still waiting in it, and one undo takes back that group', () => {
-    const review = new ProposalReview(bigProposal());
-    const one = accepted(review.accept(NOTE, ['c1'], ROGER, { at: NOW }));
+    const big = bigProposal();
+    const review = new ProposalReview(big);
+    const one = accepted(review.accept(NOTE, [big.changes[0].id], ROGER, { at: NOW }));
     const r = accepted(review.accept(one.note, { group: 'New Option' }, ROGER, { at: NOW }));
     assert.equal(r.ids.length, 11);
     assert.equal(accepted(review.undo(r.note)).note, one.note);
@@ -488,7 +498,7 @@ describe('big_proposal: many changes are reviewed in groups, and accept-all appl
     const r = accepted(review.reject(note, { group: 'Prices' }, ROGER, { at: NOW }));
     assert.equal(r.ids.length, 6);
     assert.equal(blocksOf(r.note)[0], GRAPH);
-    assert.equal(decisionsIn(blocksOf(r.note)[1]).size, 6);
+    assert.equal(decisionsIn(r.note).size, 6);
   });
 
   test('a group the proposal does not hold is refused', () => {
@@ -499,7 +509,8 @@ describe('big_proposal: many changes are reviewed in groups, and accept-all appl
   test('a group of links accepted before the things they join is refused, naming what is missing', () => {
     const r = new ProposalReview(bigProposal()).accept(NOTE, { group: 'New ANSWERS links' }, ROGER, { at: NOW });
     assert.equal(r.ok, false);
-    assert.match(r.reason, /c13 needs c1, which adds o1: accept c1 first/);
+    const ids = new ProposalReview(bigProposal()).proposal.changes.map((c) => c.id);
+    assert.match(r.reason, new RegExp(`${ids[12]} needs ${ids[0]}, which adds o1: accept ${ids[0]} first`));
   });
 });
 
@@ -521,7 +532,13 @@ describe('proposals_read_back: each proposed change is read back in plain Englis
   test('each row also holds the exact text of the change: the GQL it writes, the SET line, or the removal', () => {
     assert.deepEqual(
       new ProposalReview(proposalOf()).show(NOTE).rows.map((r) => r.text),
-      [SMALL, LINK, 'SET large_reader.price = 4', 'remove link large_reader ANSWERS question', 'remove thing alice'],
+      [
+        SMALL,
+        LINK,
+        'SET large_reader.price = 4',
+        "MATCH (a {id: 'large_reader'})-[r:ANSWERS]->(b {id: 'question'}) DELETE r",
+        "MATCH (v {id: 'alice'}) DETACH DELETE v",
+      ],
     );
   });
 
@@ -539,7 +556,7 @@ describe('proposals_read_back: each proposed change is read back in plain Englis
   test('a change refused is still read back, in the same words', () => {
     const proposal = proposalOf({ changes: [{ op: 'add', gql: '(ghost)-[:ANSWERS]->(question)' }] });
     const row = new ProposalReview(proposal).show(NOTE).rows[0];
-    assert.match(row.blocked, /c1 needs ghost, which is not in the graph/);
+    assert.match(row.blocked, /needs ghost, which is not in the graph/);
     assert.equal(row.said, 'Added: ghost (not in the graph) —ANSWERS→ Which device?');
   });
 
@@ -547,7 +564,7 @@ describe('proposals_read_back: each proposed change is read back in plain Englis
     const { note } = noteWithChangeSet();
     const review = new ProposalReview(proposalOf());
     const before = review.show(note).rows.map((r) => r.said);
-    const r = accepted(review.reject(note, ['c1', 'c2'], ROGER, { at: NOW }));
+    const r = accepted(review.reject(note, [C1, C2], ROGER, { at: NOW }));
     assert.deepEqual(
       review.show(r.note).rows.map((x) => x.said),
       before,

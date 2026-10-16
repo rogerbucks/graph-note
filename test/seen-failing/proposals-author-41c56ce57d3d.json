@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/proposals-author.test.js",
+  "test": "an accept of a proposal held only in memory is checked too > a model’s proposal, declared by the editor as it would be written, passes",
+  "seen_failing_first": false,
+  "evidence": "A control case: an in-memory accept that the check must still pass; it was accepted before there was a check, and is after."
+}

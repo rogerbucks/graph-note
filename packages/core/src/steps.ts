@@ -235,6 +235,14 @@ export function runStep(
   const fresh = all.filter(({ link }) => !held.has(link.join(' ')));
   if (!fresh.length)
     return { nothing: `Step ${name} works out nothing new: every link it gives is already in ${graph}.`, output };
+  // an id is written into the change set as a name: only a plain word is, never text that could write a line of its own
+  const odd = fresh.flatMap(({ link }) => [link[0], link[2]]).find((id) => !/^[A-Za-z_]\w*$/.test(id));
+  if (odd !== undefined)
+    return {
+      refused: [
+        `Step ${name} found a thing whose id is not a plain word (${JSON.stringify(odd)}), so it is not proposed.`,
+      ],
+    };
   const changes: ChangeInput[] = [],
     added = new Set<string>();
   for (const { link, m } of fresh) {

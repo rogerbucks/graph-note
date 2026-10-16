@@ -5,6 +5,7 @@ import { hops } from './estimates.ts';
 import { readBack } from './help.ts';
 import type { NoteReading } from './note-reading.ts';
 import { namesOf } from './proposals-apply.ts';
+import { statementOf } from './proposals-statements.ts';
 import type { ProposedChange } from './proposals.ts';
 
 /** What a change does to what it marks: adds it, changes it or removes it. */
@@ -65,13 +66,12 @@ export function marksOf(reading: NoteReading, graph: string, changes: readonly P
 }
 
 /**
- * What a change is, exactly, as it would be written: the GQL an addition adds, the SET line of a change of a property, or
- * the removal as the change set writes it. The plain English of `saidOf` can say less than this; this never does.
+ * What a change is, exactly, as it would be written: the GQL an addition adds, the SET statement of a change of a
+ * property, or the DELETE statement of a removal, as the change set writes it. The plain English of `saidOf` can say less
+ * than this; this never does.
  */
 export function exactOf(c: ProposedChange): string {
-  if (c.op === 'add') return c.gql;
-  if (c.op === 'set') return `SET ${c.thing}.${c.key} = ${c.value}`;
-  return c.op === 'remove-thing' ? `remove thing ${c.thing}` : `remove link ${c.from} ${c.type} ${c.to}`;
+  return statementOf(c);
 }
 
 /**

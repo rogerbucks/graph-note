@@ -217,11 +217,19 @@ describe('the output is a proposal, written only when a person accepts it', () =
     assert.equal(texts(proposed)[0], TEAM, 'the graph block is as it was');
     assert.equal(readNote(texts(proposed)).graphs.get('team').links.length, 3);
     const review = ProposalReview.fromChangeSet(texts(proposed)[1]);
-    const accepted = review.accept(proposed, ['c1'], { name: 'you' });
+    const accepted = review.accept(proposed, [r.proposal.changes[0].id], { name: 'you' });
     assert.ok(accepted.ok, accepted.reason);
     const links = readNote(texts(accepted.note)).graphs.get('team').links;
     assert.ok(links.some((l) => l.from === 'ada' && l.type === 'WORKS_WITH' && l.to === 'bob'));
-    assert.equal(links.length, 4, 'only the change accepted');
+    assert.equal(links.length, 4, 'only the change accepted (and the step, declared with it, is a thing and no link)');
+  });
+
+  // proves: step_output_proposal
+  test('a thing whose id is not a plain word is not proposed: its id would be written into the change set as it stands', () => {
+    const odd = TEAM.replace("(cy:Person {name: 'Cy'})", "(:Person {id: 'cy\\nSET x.y = 1', name: 'Cy'})");
+    const r = run(note(odd, STEP), { people: { graph: 'team' } });
+    assert.ok(!('proposal' in r));
+    assert.match(r.refused.join(' '), /not a plain word/);
   });
 
   // proves: step_output_proposal

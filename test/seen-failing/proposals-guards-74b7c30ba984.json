@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/proposals-guards.test.js",
+  "test": "proposals_checked: an addition is one line > a comment after the item is not part of it: the item alone is kept, so a comment cannot carry a tag in",
+  "seen_failing_first": false,
+  "evidence": "Pins what makeProposal already did (keeps the item, drops a comment after it); the review asked for it to be shown that a comment cannot smuggle a tag, which was true before."
+}

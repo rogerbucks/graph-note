@@ -8,7 +8,7 @@ import type { Option, Settings } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
 import { aiModelList, getModelValue, setModelValue } from './ai-models';
 
-const SECTIONS = ['Strictness', 'AI models', 'Formatting', 'Drawing', 'Export'] as const;
+const SECTIONS = ['Strictness', 'AI models', 'Proposals', 'Formatting', 'Drawing', 'Export'] as const;
 
 /** The plugin's settings page. */
 export class GraphNoteSettingTab extends PluginSettingTab {
@@ -53,6 +53,7 @@ export class GraphNoteSettingTab extends PluginSettingTab {
     if (o.key === 'aiModels') return [{ name: o.name, desc: o.sentence }];
     if (o.key === 'exportFolder')
       return [{ name: o.name, desc: o.sentence, control: { type: 'text', key: 'exportFolder' } }];
+    if (o.key === 'decider') return [{ name: o.name, desc: o.sentence, control: { type: 'text', key: 'decider' } }];
     // the level an export asks above, and the level an unlabelled note counts as for AI, are each one of the
     // classifications as they are set now
     if (o.key === 'exportAsksAbove' || o.key === 'aiUnlabelled')
@@ -108,7 +109,10 @@ export class GraphNoteSettingTab extends PluginSettingTab {
     await this.owner.saveSettings({ ...s, ...change });
     // a level's own sentence, and a model's ceiling, follow a choice; the page is never drawn again under typing
     const typed =
-      key === 'classifications' || key === 'exportFolder' || (key.startsWith('aiModels.') && !key.endsWith('.ceiling'));
+      key === 'classifications' ||
+      key === 'exportFolder' ||
+      key === 'decider' ||
+      (key.startsWith('aiModels.') && !key.endsWith('.ceiling'));
     if (!typed) this.update();
   }
 }

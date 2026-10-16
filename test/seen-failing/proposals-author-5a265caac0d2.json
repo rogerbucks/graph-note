@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/proposals-author.test.js",
+  "test": "a model’s own answer cannot declare an author > any other thing is still proposed, and so is a link to a Person that is already there",
+  "seen_failing_first": false,
+  "evidence": "A control case: the refusal of a Person, a Model or a Step must not touch any other thing or a link, which were proposed before and still are."
+}

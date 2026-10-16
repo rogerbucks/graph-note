@@ -70,6 +70,10 @@ const NAMES = [
   'ownedComments',
   'quote', // a text quoted as the profile writes it (req:3.gql-escapes, 11 Oct 2026)
   'notes', // the notes on things and links, and the lines a note above belongs to none of (editor spec §24, 13 Oct 2026)
+  // the statements of a change set as the check reads them, so the editor reads and names a change as it does (16 Oct 2026)
+  'splitChangeset',
+  'readChange',
+  'changeId',
 ];
 
 test('the entry point exports exactly the names the one file did, in its order', () => {

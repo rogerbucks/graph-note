@@ -96,23 +96,30 @@ function checkChangeset(base, block, matrix, sw = new Set()) {
   let w = worldFromStore(st);
   const now = canon(w[h.graph]).slice(0, 16);
   add('it was made against the graph as it stands', h.against === now);
-  const who = Object.values(w)
-    .filter((g) => g.nodes.has(h.by))
-    .map((g) => g.nodes.get(h.by)[0]);
-  const kind = who.some((labels) => labels.has('Model'))
-    ? 'Model'
-    : who.some((labels) => labels.has('Person'))
-      ? 'Person'
-      : null;
-  add(`its author ${h.by} is a known person or model`, kind);
+  // an author is known if the graphs hold it, or the set itself declares it (§24): looked for again once the additions are in
+  const authorOf = (world) => {
+    const who = Object.values(world)
+      .filter((g) => g.nodes.has(h.by))
+      .map((g) => g.nodes.get(h.by)[0]);
+    return who.some((labels) => labels.has('Model'))
+      ? 'Model'
+      : who.some((labels) => labels.has('Person'))
+        ? 'Person'
+        : null;
+  };
+  const authorLine = `its author ${h.by} is a known person or model`;
+  let kind = authorOf(w);
   const before = stateOf(w[h.graph]);
   try {
     st.apply(parts.additions);
   } catch (e) {
     if (!(e instanceof ProfileError)) throw e;
+    add(authorLine, kind);
     add('it loads', false);
     return { results: res, header: h, after: null };
   }
+  kind = authorOf(worldFromStore(st));
+  add(authorLine, kind);
   const after = stateOf(worldFromStore(st)[h.graph]);
   const count = (a) => a.reduce((m, x) => m.set(x, (m.get(x) || 0) + 1), new Map()),
     bc = count(before[1]),

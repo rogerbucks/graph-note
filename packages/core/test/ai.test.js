@@ -390,12 +390,17 @@ describe('an answer comes back as a proposal (answers_are_proposals)', () => {
   test('written into the note it is a change set beside the graph, which it leaves as it was until a person accepts', async () => {
     const { result } = await sent({}, answer(CHANGES));
     const note = noteWithProposal(NOTE, result.proposal);
+    assert.equal(typeof note, 'string', 'the model is declared by the editor, in the proposal');
     assert.equal(basisOf(note, 'reader'), basisOf(NOTE, 'reader'));
     const block = gqlBlocks(note)
       .map((b) => b.text)
       .find((t) => t.includes('CHANGE SET'));
     const review = ProposalReview.fromChangeSet(block);
-    assert.deepEqual(review.pending(), ['c1', 'c2', 'c3']);
+    assert.deepEqual(
+      review.pending().slice(1),
+      result.proposal.changes.map((c) => c.id),
+    );
+    assert.equal(review.pending().length, 4, 'the three changes, and the declaration of the model before them');
     assert.ok(note.startsWith(NOTE.slice(0, NOTE.indexOf('```gql\n// graph: other'))));
   });
 });

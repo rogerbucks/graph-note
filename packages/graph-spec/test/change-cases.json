@@ -9,6 +9,7 @@
     "model": "a model adds no record and no cache (§24 rule 5)",
     "record": "it never removes or changes a record or a cache (§24 rule 4)",
     "generated": "an added WAS_GENERATED_BY comes from a thing the set adds, to an activity of the set's own author (§24)",
+    "unknown": "its author stranger is a known person or model",
     "cache": "it adds no cache — a claim's likelihood, confidence and status are the engine's (§24 rule 5)"
   },
   "head": [
@@ -357,6 +358,37 @@
       "failed": ["generated"],
       "changes": [],
       "after": null
+    },
+    {
+      "name": "an author the set declares itself is a known author",
+      "by": "newbot",
+      "body": ["(newbot:Model {name: 'Newcomer'})", "(r2:Book {title: 'Draft'})"],
+      "failed": [],
+      "changes": [],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas),",
+        "(newbot:Model {name: 'Newcomer'}),",
+        "(r2:Book {title: 'Draft'})"
+      ]
+    },
+    {
+      "name": "an author that neither the graph nor the set declares is not known",
+      "by": "stranger",
+      "body": ["(r3:Book {title: 'Report'})"],
+      "failed": ["unknown"],
+      "changes": [],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas),",
+        "(r3:Book {title: 'Report'})"
+      ]
     },
     {
       "name": "an added generation by an engine run is refused",

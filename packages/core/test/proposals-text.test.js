@@ -1,244 +1,189 @@
-// A proposal as a change set in the note (editor spec §17): graph-spec's change set for what it adds and sets, with the
-// rest — who proposed it and what it read, the removals, each change's id and group, and what a person decided — written
-// beside it as comments its readers pass over, so the change set in the note is the record and reads back whole.
+// A proposal as a change set in the note (editor spec §17): graph-spec's change set — the things and links it adds as a
+// block writes them, a SET for a change of a property and a DELETE for a removal, so every tool that reads GQL reads
+// it — with who proposed it and what it read as comments its readers pass over. A change's id is derived from its
+// statement and never written; the reason is an optional `//@ reason:` line. What a person decided is not in it.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import gs from '@graph-note/graph-spec';
 import { makeProposal } from '../src/proposals.ts';
-import { changeSetId, changeSetText, readChangeSet, recordDecisions } from '../src/proposals-text.ts';
-import { ADA, AT, BASIS, CHANGES, GRAPH, NOW, proposalOf } from './proposals-fixtures.js';
+import { ProposalReview } from '../src/proposals-review.ts';
+import { changeSetId, changeSetText, readChangeSet } from '../src/proposals-text.ts';
+import { ADA, AT, BASIS, C1, C2, C3, C4, C5, CHANGES, GRAPH, NOTE_WITH_ADA, proposalOf } from './proposals-fixtures.js';
 
 const read = (block) => {
   const r = readChangeSet(block);
   assert.ok(!('refused' in r), r.refused);
   return r;
 };
+/** The proposal a block holds, as the review reads it from a note whose graphs say what ada is. */
+const proposalIn = (block) => {
+  const r = ProposalReview.fromChangeSet(block, NOTE_WITH_ADA);
+  assert.ok(!('refused' in r), r.refused);
+  return r.proposal;
+};
+const failed = (block, base = [GRAPH, "// graph: people\n(ada:Model {name: 'Ada'})"]) =>
+  gs
+    .checkChangeset(base, block, {})
+    .results.filter(([, ok]) => !ok)
+    .map(([label]) => label);
 
 describe('a proposal written as a change set', () => {
   test('is graph-spec’s change set: the header names the graph, the id, the state it was made against and the author', () => {
-    const text = changeSetText(proposalOf(), new Map(), null);
+    const text = changeSetText(proposalOf());
     assert.deepEqual(gs.changesetHeader(text), { graph: 'reader', id: 'cs1', against: BASIS, by: 'ada' });
     assert.deepEqual(gs.header(text), ['reader', 'changeset']);
     assert.deepEqual(changeSetId(text), { graph: 'reader', id: 'cs1' });
     assert.equal(changeSetId(GRAPH), null);
   });
 
-  test('is, in full, the comments of its provenance, then each change under its id and group, the removals last', () => {
+  test('is, in full, the comments of its provenance, the additions, then a statement for each other change', () => {
     assert.equal(
-      changeSetText(proposalOf(), new Map(), null),
+      changeSetText(proposalOf()),
       `// graph: reader · CHANGE SET cs1 · against ${BASIS} · by ada
-// proposer kind: model
 // proposed: ${AT}
 // read: reader
-//@ change: c1
-//@ group: New Option
 (small_reader:Option {name: 'Small reader'}),
-//@ change: c2
-//@ group: New ANSWERS links
 (small_reader)-[:ANSWERS]->(question)
-//@ change: c3
-//@ group: Changed price
 SET large_reader.price = 4
-
-//@ change: c4
-//@ group: Removed ANSWERS links
-//@ remove: link large_reader ANSWERS question
-
-//@ change: c5
-//@ group: Removed things
-//@ remove: thing alice`,
+MATCH (a {id: 'large_reader'})-[r:ANSWERS]->(b {id: 'question'}) DELETE r
+MATCH (v {id: 'alice'}) DETACH DELETE v`,
     );
   });
 
-  test('is passed by graph-spec’s own check of a change set that only adds: the linter finds no trap and it loads', () => {
-    const adds = proposalOf({ changes: [CHANGES[0], CHANGES[1]] });
-    const text = changeSetText(adds, new Map([['c1', { state: 'rejected', by: 'roger', at: NOW }]]), BASIS);
-    assert.deepEqual(gs.lint(text), []);
-    const { results } = gs.checkChangeset([GRAPH], text, {});
-    const failed = results.filter(([, ok]) => !ok).map(([label]) => label);
-    assert.deepEqual(failed, ['its author ada is a known person or model']);
+  test('writes no id, no proposer kind, no basis of its own and no removal as a comment: the header alone carries the basis and the author', () => {
+    const text = changeSetText(proposalOf());
+    assert.doesNotMatch(text, /\/\/@ change:/);
+    assert.doesNotMatch(text, /proposer kind/);
+    assert.doesNotMatch(text, /basis now/);
+    assert.doesNotMatch(text, /\/\/@ remove:/);
+    assert.equal(gs.splitChangeset(text).basisOk, true);
   });
 
-  test('with things, links and a SET together is passed by graph-spec’s check: a comma parts the items of a run, never a run from the SET', () => {
+  test('is passed by graph-spec’s own check, removals and changes of a value among its changes', () => {
+    assert.deepEqual(failed(changeSetText(proposalOf())), []);
+  });
+
+  test('with things, links and several SETs together is passed by graph-spec’s check: each SET is a statement of its own', () => {
     const mixed = proposalOf({
       changes: [CHANGES[0], CHANGES[1], CHANGES[2], { ...CHANGES[2], key: 'size', value: '2' }],
     });
-    const text = changeSetText(mixed, new Map(), null);
-    assert.deepEqual(gs.lint(text), []);
-    const { results } = gs.checkChangeset([GRAPH], text, {}, new Set(['additions-only']));
-    assert.deepEqual(
-      results.filter(([, ok]) => !ok).map(([label]) => label),
-      ['its author ada is a known person or model'],
-    );
-    assert.match(
-      text,
-      /\(small_reader\)-\[:ANSWERS\]->\(question\)\n\/\/@ change: c3\n\/\/@ group: Changed price\nSET large_reader\.price = 4,\n/,
-    );
-    assert.deepEqual(read(text).proposal, mixed);
+    const text = changeSetText(mixed);
+    assert.deepEqual(failed(text), []);
+    assert.match(text, /\nSET large_reader\.price = 4\nSET large_reader\.size = 2$/);
+    assert.deepEqual(proposalIn(text).changes, mixed.changes);
   });
 
-  test('keeps a decision above its change, and the graph’s state after the changes accepted', () => {
-    const decisions = new Map([['c2', { state: 'accepted', by: 'roger', at: NOW }]]);
-    const text = changeSetText(proposalOf(), decisions, 'bafbcdeeb6103e8f');
-    assert.match(text, /\/\/ basis now: bafbcdeeb6103e8f\n/);
-    assert.match(
-      text,
-      new RegExp(`//@ accepted: roger, ${NOW}\\n\\(small_reader\\)-\\[:ANSWERS\\]->\\(question\\)\\n`),
-    );
-  });
-
-  test('keeps a name as one word, so a decision never breaks the line that holds it', () => {
-    const text = changeSetText(
-      proposalOf(),
-      new Map([['c1', { state: 'rejected', by: 'Roger B, esq.', at: NOW }]]),
-      null,
-    );
-    assert.match(text, /\/\/@ rejected: Roger_B_esq\., 2026/);
-  });
-});
-
-describe('a decision recorded in a change set', () => {
-  const decided = (...entries) => new Map(entries.map(([id, state]) => [id, { state, by: 'roger', at: NOW }]));
-  /** The lines `after` has that `before` has not, and `after` with exactly those lines taken out. */
-  const added = (before, after) => {
-    const had = before.split('\n');
-    const lines = after.split('\n');
-    const extra = lines.filter((l) => !had.includes(l));
-    return { extra, rest: lines.filter((l) => had.includes(l)).join('\n') };
-  };
-
-  test('is one line above the change, and one for the state after; every other byte, an author’s comment among them, is kept', () => {
-    const p = proposalOf();
-    const written = changeSetText(p, new Map(), null);
-    const block = written
-      .replace('// read: reader\n', '// read: reader\n// checked by Bob, 12 Oct\n')
-      .replace('//@ change: c2', '// a word from Ada\n//@ change: c2');
-    const after = recordDecisions(block, p, decided(['c2', 'accepted']), 'bafbcdeeb6103e8f');
-    const { extra, rest } = added(block, after);
-    assert.deepEqual(extra, ['// basis now: bafbcdeeb6103e8f', `//@ accepted: roger, ${NOW}`]);
-    assert.equal(rest, block);
-    assert.match(
-      after,
-      new RegExp(`//@ accepted: roger, ${NOW}\\n\\(small_reader\\)-\\[:ANSWERS\\]->\\(question\\)\\n`),
-    );
-    assert.deepEqual(read(after).decisions.get('c2'), { state: 'accepted', by: 'roger', at: NOW });
-  });
-
-  test('replaces its own line when the change is decided again, and takes it away when the decision is gone', () => {
-    const p = proposalOf();
-    const once = recordDecisions(changeSetText(p, new Map(), null), p, decided(['c1', 'rejected']), null);
-    const twice = recordDecisions(once, p, decided(['c1', 'accepted']), 'bafbcdeeb6103e8f');
-    assert.equal(twice.match(/\/\/@ (accepted|rejected):/g).length, 1);
-    assert.match(twice, /\/\/@ accepted: roger/);
-    const none = recordDecisions(twice, p, new Map(), null);
-    assert.equal(none, changeSetText(p, new Map(), null));
-  });
-
-  test('goes above a removal’s own line, and the state after is put with the other facts of the header', () => {
-    const p = proposalOf();
-    const block = changeSetText(p, new Map(), null);
-    const after = recordDecisions(block, p, decided(['c5', 'rejected']), 'bafbcdeeb6103e8f');
-    assert.match(after, new RegExp(`//@ rejected: roger, ${NOW}\\n//@ remove: thing alice`));
-    assert.match(after, /\/\/ read: reader\n\/\/ basis now: bafbcdeeb6103e8f\n\/\/@ change: c1/);
-  });
-
-  test('in a change set written by something else adds no tag nobody decided: only the line of the decision', () => {
-    const text = `// graph: reader · CHANGE SET from_ada · against ${BASIS} · by ada
-// my own comment
-(small_reader:Option {name: 'Small reader'}),
-(small_reader)-[:ANSWERS]->(question)
-SET large_reader.price = 4`;
-    const { proposal } = read(text);
-    const after = recordDecisions(text, proposal, decided(['c2', 'rejected'], ['c3', 'accepted']), null);
-    const { extra, rest } = added(text, after);
-    assert.deepEqual(extra, [`//@ rejected: roger, ${NOW}`, `//@ accepted: roger, ${NOW}`]);
-    assert.equal(rest, text);
-    const back = read(after).decisions;
-    assert.deepEqual([...back.keys()], ['c2', 'c3']);
-    assert.equal(back.get('c2').state, 'rejected');
-    assert.equal(back.get('c3').state, 'accepted');
-  });
-
-  test('is the whole change set written afresh only when the block no longer holds the proposal', () => {
-    const p = proposalOf();
-    const other = proposalOf({ changes: [CHANGES[0]] });
-    const block = changeSetText(other, new Map(), null);
-    assert.equal(
-      recordDecisions(block, p, decided(['c1', 'accepted']), null),
-      changeSetText(p, decided(['c1', 'accepted']), null),
-    );
+  test('puts a group above its change only when it is not the one its kind gives, and a reason directly above', () => {
+    const p = proposalOf({
+      changes: [
+        { ...CHANGES[2], group: 'Prices', reason: 'it costs more now' },
+        { ...CHANGES[0], reason: 'a pocket one' },
+      ],
+    });
+    const text = changeSetText(p);
+    assert.match(text, /\/\/@ reason: a pocket one\n\(small_reader:Option/);
+    assert.match(text, /\/\/@ group: Prices\n\/\/@ reason: it costs more now\nSET large_reader\.price = 4$/);
+    assert.deepEqual(failed(text), []);
   });
 });
 
 describe('a change set read back', () => {
   test('gives the proposal it was written from, change for change', () => {
     const p = proposalOf({ read: ['reader', 'Notes/Devices'] });
-    const r = read(changeSetText(p, new Map(), null));
-    assert.deepEqual(r.proposal, p);
-    assert.equal(r.decisions.size, 0);
-    assert.equal(r.basisNow, null);
+    assert.deepEqual(proposalIn(changeSetText(p)), p);
   });
 
-  test('gives the decisions in it, and the state the accepts left the graph in', () => {
-    const decisions = new Map([
-      ['c1', { state: 'accepted', by: 'roger', at: NOW }],
-      ['c4', { state: 'rejected', by: 'roger', at: NOW }],
-    ]);
-    const r = read(changeSetText(proposalOf(), decisions, 'bafbcdeeb6103e8f'));
-    assert.deepEqual([...r.decisions], [...decisions]);
-    assert.equal(r.basisNow, 'bafbcdeeb6103e8f');
+  test('gives the ids the graph library derives for the statements, the ones checkChangeset reports', () => {
+    const p = proposalOf();
+    const { header } = gs.checkChangeset([GRAPH], changeSetText(p), {});
+    assert.deepEqual(
+      header.changes.map((c) => c.id),
+      [C3, C4, C5],
+    );
+    assert.deepEqual(
+      p.changes.map((c) => c.id),
+      [C1, C2, C3, C4, C5],
+    );
   });
 
-  test('gives a reason the source gave, written as a note above the change', () => {
+  test('gives a reason the source gave, from the line `//@ reason:` above the change', () => {
     const p = proposalOf({ changes: [{ ...CHANGES[0], reason: 'the smaller one is what people asked for' }] });
-    const text = changeSetText(p, new Map(), null);
-    assert.match(text, /\/\/\/ the smaller one is what people asked for\n\(small_reader/);
-    assert.equal(read(text).proposal.changes[0].reason, 'the smaller one is what people asked for');
+    const text = changeSetText(p);
+    assert.match(text, /\/\/@ reason: the smaller one is what people asked for\n\(small_reader/);
+    assert.equal(proposalIn(text).changes[0].reason, 'the smaller one is what people asked for');
+    const { header } = gs.checkChangeset(
+      [GRAPH],
+      changeSetText(proposalOf({ changes: [{ ...CHANGES[2], reason: 'why' }] })),
+      {},
+    );
+    assert.equal(header.changes[0].reason, 'why');
   });
 
-  test('keeps the ids and groups a source named, whatever order the changes are written in', () => {
+  test('keeps the groups a source named, in the order the changes are written', () => {
     const p = proposalOf({
       changes: [
-        { ...CHANGES[2], id: 'price', group: 'Prices' },
-        { ...CHANGES[0], id: 'thing', group: 'Things' },
+        { ...CHANGES[2], group: 'Prices' },
+        { ...CHANGES[0], group: 'Things' },
       ],
     });
-    const r = read(changeSetText(p, new Map(), null));
     assert.deepEqual(
-      r.proposal.changes.map((c) => [c.id, c.group, c.op]),
+      proposalIn(changeSetText(p)).changes.map((c) => [c.group, c.op]),
       [
-        ['thing', 'Things', 'add'],
-        ['price', 'Prices', 'set'],
+        ['Things', 'add'],
+        ['Prices', 'set'],
       ],
     );
   });
 
-  test('reads a change set written by something else — plain GQL, with no comments of ours — number by number', () => {
+  test('reads a change set written by something else — plain GQL, with no comments of ours — change by change', () => {
     const text = `// graph: reader · CHANGE SET from_ada · against ${BASIS} · by ada
 (small_reader:Option {name: 'Small reader'}),
-(small_reader)-[:ANSWERS]->(question),
-SET large_reader.price = 4,
- small_reader.price = 2`;
-    const { proposal } = read(text);
-    assert.equal(proposal.provenance.by.kind, 'unknown');
+(small_reader)-[:ANSWERS]->(question)
+SET large_reader.price = 4
+MATCH (v:Person {id: 'alice'}) DELETE v
+MATCH (v {id: 'large_reader'}) SET v.size = 2`;
+    const proposal = proposalIn(text);
+    assert.equal(proposal.provenance.by.kind, 'model');
     assert.equal(proposal.provenance.at, null);
     assert.deepEqual(
-      proposal.changes.map((c) => [c.id, c.group, c.op]),
+      proposal.changes.map((c) => [c.group, c.op]),
       [
-        ['c1', 'New Option', 'add'],
-        ['c2', 'New ANSWERS links', 'add'],
-        ['c3', 'Changed price', 'set'],
-        ['c4', 'Changed price', 'set'],
+        ['New Option', 'add'],
+        ['New ANSWERS links', 'add'],
+        ['Changed price', 'set'],
+        ['Removed things', 'remove-thing'],
+        ['Changed size', 'set'],
       ],
     );
-    assert.deepEqual(proposal.changes[3], {
+    assert.deepEqual(proposal.changes[4], {
       op: 'set',
-      thing: 'small_reader',
-      key: 'price',
+      thing: 'large_reader',
+      key: 'size',
       value: '2',
-      id: 'c4',
-      group: 'Changed price',
+      id: proposal.changes[4].id,
+      group: 'Changed size',
     });
+  });
+
+  test('a SET of more than one target, as the editor once wrote one, is refused as the check refuses it', () => {
+    const text = `// graph: reader · CHANGE SET old · against ${BASIS} · by ada
+SET large_reader.price = 4,
+ alice.name = 'Alicia'`;
+    assert.match(readChangeSet(text).refused, /line 2: .*more than one target/);
+    assert.ok(failed(text).includes('each DELETE and SET is its own statement and names exactly one target (§24)'));
+  });
+
+  test('a change set in the editor’s old form is refused, saying why and what to do', () => {
+    for (const old of [
+      '//@ change: c1',
+      '//@ remove: thing alice',
+      '// proposer kind: model',
+      '// basis now: 05d75fdcbdb1d37b',
+      '//@ rejected: roger, 2026-10-13T10:30:00Z',
+    ]) {
+      const text = `// graph: reader · CHANGE SET cs1 · against ${BASIS} · by ada\n${old}\n(small_reader:Option)`;
+      assert.match(readChangeSet(text).refused, /old form.*comments that other tools skip/, old);
+    }
   });
 
   test('a block that is not a change set is refused, saying what the first line should read', () => {
@@ -253,6 +198,24 @@ SET large_reader.price = 4,
       basis: BASIS,
       changes: [{ op: 'add', gql: '(odd:Option {name: \'Two, "odd" // things\'})' }],
     });
-    assert.deepEqual(read(changeSetText(p, new Map(), null)).proposal.changes, p.changes);
+    assert.deepEqual(proposalIn(changeSetText(p)).changes, p.changes);
+  });
+
+  test('says what the block holds without making a proposal of it: the header, the facts and the changes in order', () => {
+    const r = read(changeSetText(proposalOf({ read: ['reader', 'Notes/Devices'] })));
+    assert.deepEqual(
+      [r.id, r.graph, r.by, r.basis, r.at, r.read],
+      ['cs1', 'reader', 'ada', BASIS, AT, ['reader', 'Notes/Devices']],
+    );
+    assert.deepEqual(
+      r.changes.map((c) => c.op),
+      ['add', 'add', 'set', 'remove-link', 'remove-thing'],
+    );
+  });
+
+  test('knows its proposer by what the note’s graphs say: a Model is a model, and nothing said is unknown', () => {
+    const block = changeSetText(proposalOf());
+    assert.equal(ProposalReview.fromChangeSet(block, NOTE_WITH_ADA).proposal.provenance.by.kind, 'model');
+    assert.equal(ProposalReview.fromChangeSet(block).proposal.provenance.by.kind, 'unknown');
   });
 });
