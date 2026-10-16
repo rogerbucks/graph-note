@@ -38,7 +38,8 @@ jobs:
       - if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'requirements-copy')
         env:
           BASE: ${{ github.event.pull_request.base.sha }}
-        run: node scripts/check-requirements-flips.mjs --base-ref "$BASE"
+        # against the merge base, so a change main gained after the branch point is not read as a hand revert
+        run: node scripts/check-requirements-flips.mjs --merge-base-of "$BASE"
       - run: npm run build
 
   lint:
