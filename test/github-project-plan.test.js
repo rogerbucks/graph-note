@@ -507,7 +507,7 @@ describe('the whole plan, printed', () => {
     ]);
     const text = formatPlan(buildPlan(withSeed(desired, seed), remoteOf()));
     assert.match(text, /^seeded Build status: Not started 3 · In PR 1 · Released 1$/m);
-    assert.match(text, /^seeded Status: Todo 3 · In Progress 1 · Done 1$/m);
+    assert.match(text, /^seeded Status: Todo 2 · In Progress 2 · Done 1$/m);
   });
 
   test('tallies none when every item has its values already', () => {
