@@ -1,0 +1,6 @@
+{
+  "file": "test/wcag.test.js",
+  "test": "the check itself > reads large text against 3:1 and everything else against 4.5:1",
+  "seen_failing_first": false,
+  "evidence": "This tests the new check itself, whose code is test support under test/ and so comes across to the parent with the test; no product code is involved, so it cannot fail first. It is proved by planting the faults it finds."
+}

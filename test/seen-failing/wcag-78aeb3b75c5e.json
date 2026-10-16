@@ -1,0 +1,6 @@
+{
+  "file": "test/wcag.test.js",
+  "test": "the Obsidian host: every view, in both themes > every row of the settings page has a name, and no two rows of a group share one",
+  "seen_failing_first": false,
+  "evidence": "This view was already conforming at the parent: the test is a guard that keeps it so, not the fix of a fault, so it passes against the code before it. The views that did have faults failed first (see their fault reasons)."
+}

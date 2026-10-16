@@ -512,6 +512,14 @@
       "portable_no_servers"
     ]
   },
+  "W34": {
+    "title": "WCAG 2.2 AA for every interface",
+    "requirements": [
+      "wcag_aa",
+      "wcag_new_hosts",
+      "wcag_checked"
+    ]
+  },
   "Q": {
     "title": "Open questions",
     "requirements": []

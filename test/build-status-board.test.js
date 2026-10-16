@@ -101,7 +101,8 @@ describe('the Build status field of the project', () => {
     const [project] = gh.hub.projects;
     const mine = project.items.find((i) => i.values['Build status'] === 'Checks failing');
     assert.equal(mine.values.Proof, 'open');
-    assert.ok(project.items.every((i) => i.values.Status === 'Todo'));
+    // a requirement part proved (status:part) starts In Progress; the rest Todo
+    assert.ok(project.items.every((i) => i.values.Status === (i.values.Proof === 'part' ? 'In Progress' : 'Todo')));
   });
 
   test('is a problem to report, not a crash, when the project or the field is not there yet', () => {

@@ -86,7 +86,9 @@ describe('the first apply, against an empty GitHub', () => {
       status.options.map((o) => o.name),
       ['Todo', 'In Progress', 'Done'],
     );
-    assert.ok(project.items.every((i) => i.values.Status === 'Todo'));
+    // Todo is the seed, except for a requirement part proved (status:part), which starts In Progress
+    const partNumber = issueOf(gh, 'focus_neighbours').number;
+    for (const i of project.items) assert.equal(i.values.Status, i.number === partNumber ? 'In Progress' : 'Todo');
     assert.ok(gh.hub.mutations.every((m) => !/ProjectV2Field.* Status$/.test(m)));
   });
 
@@ -99,7 +101,7 @@ describe('the first apply, against an empty GitHub', () => {
       Workstream: 'W1: Focus, hover and untangle',
       Proof: 'part',
       'Build status': 'Not started',
-      Status: 'Todo',
+      Status: 'In Progress',
     });
   });
 

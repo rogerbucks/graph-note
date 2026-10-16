@@ -1,0 +1,6 @@
+{
+  "file": "test/wcag.test.js",
+  "test": "every host > has its views checked here before it can be released: a new host with no entry fails",
+  "seen_failing_first": false,
+  "evidence": "This tests the registry of hosts and the requirement's link in the spec copy, which the same commit makes; it holds a rule about the repository, not product code."
+}
