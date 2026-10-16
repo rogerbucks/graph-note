@@ -168,6 +168,42 @@ describe('Claude proposes through the mod, and only accept applies it (cc_claude
     assert.equal(proposalsIn(accepted.note).length, 0, 'what is decided leaves the change set');
   });
 
+  test('a second proposal from Claude is not blocked by the Model the first declared; another node of that name still is', async () => {
+    const { proposalsIn, decide } = await import('../page/proposal-review.ts');
+    const { where, launcher } = await opened();
+    await launcher.propose({ changes: [EXTRA] });
+    await launcher.propose({ changes: [RENAME] });
+    let text = readFileSync(where.plan, 'utf8');
+    const [first, second] = proposalsIn(text);
+    assert.equal(decide(text, first.id, 'accept', { all: true }, 'Roger', false).ok, true);
+    text = decide(text, first.id, 'accept', { all: true }, 'Roger', false).note;
+    const [left] = proposalsIn(text);
+    assert.equal(left.id, second.id);
+    assert.deepEqual(
+      left.rows.map((r) => r.blocked),
+      [null, null],
+      'the declaration already in the graph blocks nothing',
+    );
+    const done = decide(text, second.id, 'accept', { all: true }, 'Roger', false);
+    assert.equal(done.ok, true, done.reason);
+    assert.equal((done.note.match(/\(Claude:Model/g) ?? []).length, 1, 'Claude is declared once, not twice');
+    assert.match(done.note, /\(start:Step \{name: 'Begin'\}\)|name: 'Begin'/);
+    // a different node by that name is not the declaration, and the proposal is still refused
+    const other = modVault();
+    const two = await opened({}, other);
+    writeNote(
+      other,
+      'plan.md',
+      null,
+      PLAN.replace("(start:Step {name: 'Start'}),", "(Claude:Step {name: 'Start'}),(start:Step {name: 'S'}),"),
+    );
+    await two.launcher.propose({ changes: [EXTRA] });
+    const note = readFileSync(other.plan, 'utf8');
+    const refused = decide(note, proposalsIn(note)[0].id, 'accept', { all: true }, 'Roger', false);
+    assert.equal(refused.ok, false);
+    assert.match(refused.reason, /already a name/);
+  });
+
   test('the card shows the proposal in words, with a named button for each choice, and passes the choice on (WCAG 2.2 AA)', async () => {
     const { proposalsIn } = await import('../page/proposal-review.ts');
     const { showCards } = await import('../page/proposal-card.ts');
