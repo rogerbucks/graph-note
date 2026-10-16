@@ -10,6 +10,7 @@ from graphspec.rules.certainty_checks import section20
 from graphspec.rules.judgement_checks import is_judgement_graph, judgements_rules
 from graphspec.rules.paths import paths_rules
 from graphspec.rules.projection import projects_back
+from graphspec.rules.provenance import prov_rules
 from graphspec.rules.schema_types import drafted, is_draft, near_duplicates, typed
 from graphspec.rules.servings import served_rules
 
@@ -55,7 +56,7 @@ def check(
     except ValueError as e:
         back, why18 = False, str(e)
     out = [t5, ("§18: the flat projection rebuilds the graph", back, why18)]
-    out += section20(g, switches) + paths_rules(g)
+    out += section20(g, switches) + paths_rules(g) + prov_rules(w, name)
     if is_judgement_graph(g):
         out += judgements_rules(w, name) + (
             served_rules(w, name, matrix) if matrix is not None else []

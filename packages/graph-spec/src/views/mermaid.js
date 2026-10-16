@@ -2,12 +2,12 @@
 'use strict';
 
 const { strSort } = require('../values/order.js');
-const { SPEC_NODES } = require('../rules/types.js');
+const { SPEC_SCHEMA_NODES } = require('../rules/types.js');
 const { viewAt } = require('../rules/paths.js');
 const { readings } = require('../rules/readings.js');
 
 // ── views — the same text as graph_rules.py ────────────────────────────────────
-const SCHEMA_LABELS = [...SPEC_NODES, 'LikelihoodBand']; // left out of views: the schema, and §20's likelihood scale
+const SCHEMA_LABELS = [...SPEC_SCHEMA_NODES, 'LikelihoodBand']; // left out of views: the schema, and §20's likelihood scale
 function caption(g, i) {
   const p = g.p(i),
     t = p.name || p.title || p.label;

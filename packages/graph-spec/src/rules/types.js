@@ -3,10 +3,14 @@
 
 // §5 types. The spec's own vocabulary is built in, because a page has no store to read it from; the spec's meta-schema
 // declares it as data, and the spec's trace check proves this copy equals it.
-const SPEC_SCHEMA = 'graph-spec@2',
-  SPEC_NODES = ['GraphMeta', 'ElementType', 'Meta', 'Cardinality', 'Coverage'],
+// @3, 16 Oct 2026: W3C PROV is normative for provenance (§11, §12, §24): the agent types, and USED, HAD_PLAN and
+// WAS_ATTRIBUTED_TO. A Model is acceptable wherever a SoftwareAgent is, but is a type a graph declares for itself.
+const SPEC_SCHEMA = 'graph-spec@3',
+  SPEC_SCHEMA_NODES = ['GraphMeta', 'ElementType', 'Meta', 'Cardinality', 'Coverage'], // the schema's own, left out of views
+  SPEC_AGENTS = ['Person', 'Organization', 'SoftwareAgent'],
+  SPEC_NODES = [...SPEC_SCHEMA_NODES, ...SPEC_AGENTS],
   SPEC_MARKERS = ['Meta'],
-  SPEC_EDGES = ['DECLARES'];
+  SPEC_EDGES = ['DECLARES', 'USED', 'HAD_PLAN', 'WAS_ATTRIBUTED_TO'];
 // §5: an ElementType types only when the graph's GraphMeta DECLARES it
 const declaredIn = (graph) =>
   graph
@@ -50,4 +54,14 @@ function untyped(g, shared, builtin = true) {
   ];
 }
 
-module.exports = { SPEC_SCHEMA, SPEC_NODES, SPEC_MARKERS, SPEC_EDGES, types, typed, untyped };
+module.exports = {
+  SPEC_SCHEMA,
+  SPEC_SCHEMA_NODES,
+  SPEC_AGENTS,
+  SPEC_NODES,
+  SPEC_MARKERS,
+  SPEC_EDGES,
+  types,
+  typed,
+  untyped,
+};

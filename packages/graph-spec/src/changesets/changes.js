@@ -218,14 +218,14 @@ function applyChange(store, g, c) {
     if (!has(k, c.labels)) return ['find', where];
     const labels = graph.nodes.get(k).labels;
     if (RECORD_LABELS.some((x) => labels.has(x))) return ['record', where];
-    // an issued document is whatever a delivery delivered, and a value an activity made is a cache (§11)
+    // an issued document is whatever a delivery delivered
     const nodeLabels = (key) => graph.nodes.get(key).labels;
     if (graph.edges.some((e) => e[1] === 'DELIVERED' && e[2] === k && nodeLabels(e[0]).has('Delivery')))
       return ['record', where];
-    // (a model's own work, made under an activity of the model, is not one)
-    const modelRun = (a) =>
-      graph.edges.some((e) => e[1] === 'ASSOCIATED_WITH' && e[0] === a && nodeLabels(e[2]).has('Model'));
-    if (graph.edges.some((e) => e[1] === 'WAS_GENERATED_BY' && e[0] === k && !modelRun(e[2]))) return ['record', where];
+    // a cache is anything WAS_GENERATED_BY an activity that HAD_PLAN a rule (§24, W3C PROV); a value made by an activity
+    // with no plan, a person's or a model's own work among them, is not one
+    const hadPlan = (a) => graph.edges.some((e) => e[1] === 'HAD_PLAN' && e[0] === a);
+    if (graph.edges.some((e) => e[1] === 'WAS_GENERATED_BY' && e[0] === k && hadPlan(e[2]))) return ['record', where];
     if (c.op.startsWith('set')) {
       if (labels.has('Claim') && Object.keys(c.set).some((x) => CACHE_KEYS.includes(x))) return ['record', where];
       Object.assign(graph.nodes.get(k).props, c.set);

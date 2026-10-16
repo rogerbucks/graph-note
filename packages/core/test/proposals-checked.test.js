@@ -321,7 +321,7 @@ describe('cs-rejected-out: a rejected addition leaves the live graph, and the re
     assert.deepEqual(new Set(decisionsIn(two.note).keys()), new Set([C1, C2]));
   });
 
-  test('the judgement block reads without a problem, and links to nothing: the decider is not a Person', () => {
+  test('the judgement block reads without a problem, and links only by WAS_ATTRIBUTED_TO to the agents it holds', () => {
     const { note } = written();
     const r = accepted(new ProposalReview(proposalOf()).reject(note, { all: true }, ROGER, { at: NOW }));
     const read = readNote(blocksOf(r.note));
@@ -330,8 +330,11 @@ describe('cs-rejected-out: a rejected addition leaves the live graph, and the re
       [],
     );
     const name = /^\/\/ graph: (\S+)/.exec(judgementBlocks(r.note)[0])[1];
-    assert.equal(read.world[name].edges.length, 0);
-    assert.equal(read.world[name].labelled('Person').length, 0);
+    // each of the five Decisions is attributed to its proposer (a Model) and to the one who decided (a Person), each once
+    assert.equal(read.world[name].edges.length, 10);
+    assert.ok(read.world[name].edges.every((e) => e[1] === 'WAS_ATTRIBUTED_TO'));
+    assert.equal(read.world[name].labelled('Person').length, 1);
+    assert.equal(read.world[name].labelled('Model').length, 1);
   });
 
   test('fully decided, the change set is a header the check still passes, and the record is all in the judgement graph', () => {
@@ -454,10 +457,11 @@ describe('decider_named: the person who accepts or rejects is recorded by the na
     assert.equal(review.accept(note, [C1], { name: 'Ada Lovelace' }, { at: NOW }).ok, true);
   });
 
-  test('the name is plain text, not a link: no Person is made, and no edge written', () => {
+  test('the name is kept as typed and is a Person of the judgement graph only: no link to a Person of the data graph', () => {
     const { note } = written();
     const r = accepted(new ProposalReview(proposalOf()).accept(note, [C3], { name: 'Dr  Roger B.' }, { at: NOW }));
-    assert.doesNotMatch(judgementBlocks(r.note)[0], /Person|DECIDED_BY|-\[/);
+    assert.doesNotMatch(judgementBlocks(r.note)[0], /DECIDED_BY|:Ref/);
+    assert.match(judgementBlocks(r.note)[0], /:Person \{name: 'Dr {2}Roger B\.'\}/);
     assert.equal(blocksOf(r.note).includes(PEOPLE), true, 'the people graph is as it was');
   });
 });

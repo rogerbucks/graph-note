@@ -10,6 +10,7 @@ from collections.abc import Collection, Iterable, Mapping
 from typing import TYPE_CHECKING, Any
 
 from graphspec.engine import settings
+from graphspec.engine.changeset_author import author_of
 from graphspec.engine.certainty.caches import (
     claim_status,
     confidence_from_evidence,
@@ -23,6 +24,7 @@ from graphspec.engine.judgements.checks import judgements_rules
 from graphspec.engine.optional_imports import grafeo
 from graphspec.engine.paths import paths_rules
 from graphspec.engine.projection import projects_back
+from graphspec.engine.provenance import prov_rules
 from graphspec.engine.queries import Q, canon_graph, read, strip
 from graphspec.engine.schema import typed, untyped
 from graphspec.engine.serving.checks import served_rules
@@ -150,6 +152,7 @@ def graph_rules(
         out += section20(db)
     if Q(db, "MATCH (p:Path) RETURN p LIMIT 1"):
         out += paths_rules(db)
+    out += prov_rules(db, g, graphs)
     if Q(db, "MATCH (d) WHERE d:Decision OR d:Proposal RETURN d LIMIT 1"):
         out += judgements_rules(db, g, graphs) + served_rules(db, g)
     db.set_graph(g)
@@ -244,29 +247,6 @@ def check_changeset(
         f"made against {h['against']}; the graph is now {now} — serve the graph again and redraft",
     )
 
-    def author_of():
-        """An author is known if the graphs hold it, or the set itself declares it (§24)."""
-        who = [
-            (g, set(r["l"]))
-            for g in made
-            for r in (
-                db.set_graph(g) or Q(db, f"MATCH (x {{id: '{h['by']}'}}) RETURN labels(x) AS l")
-            )
-        ]
-        labels = set().union(*(label for _, label in who))
-        kind = "Model" if "Model" in labels else "Person" if "Person" in labels else None
-        known = sorted(
-            {
-                r["i"]
-                for g in made
-                for r in (
-                    db.set_graph(g)
-                    or Q(db, "MATCH (x) WHERE x:Person OR x:Model RETURN x.id AS i")
-                )
-            }
-        )
-        return kind, known
-
     def add_author(kind, known):
         add(
             f"its author {h['by']} is a known person or model",
@@ -275,7 +255,7 @@ def check_changeset(
             "a new author is declared by the graph's owner or by the set itself",
         )
 
-    kind, known = author_of()
+    kind, known = author_of(db, made, h["by"])
     db.set_graph(h["graph"])
     before = _state(db, h["graph"])
     try:
@@ -291,7 +271,7 @@ def check_changeset(
         add_author(kind, known)
         add("it loads", False, f"Grafeo could not run it — {str(e).splitlines()[0][:200]}")
         return res, h, None
-    kind, known = author_of()
+    kind, known = author_of(db, made, h["by"])
     add_author(kind, known)
     db.set_graph(h["graph"])
     after = _state(db, h["graph"])

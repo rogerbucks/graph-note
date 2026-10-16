@@ -283,7 +283,7 @@
     "views": {}
   },
   "a-schema-its-graphmeta-does-not-declare-types-nothing-5": {
-    "canon": { "undeclared": "89e093ffe01bdfa3dc790bd6c7c5891bf5531bc3b11f9bec579f0b4c99c86f5b" },
+    "canon": { "undeclared": "db0ceb8dfa9411ec002d45f2d27dd29d27ab4178a127e4227ce892962c01398f" },
     "verdicts": {
       "undeclared": [
         ["§5: every element has a declared type", false],
@@ -296,7 +296,7 @@
     "lint": [],
     "views": {
       "undeclared": {
-        "projection": "{\"blocks\":{\"ada\":{\"id\":\"ada\",\"name\":\"Ada\",\"type\":[\"Person\"]},\"notes\":{\"id\":\"notes\",\"title\":\"Notes\",\"type\":[\"Book\"]},\"t_book\":{\"id\":\"t_book\",\"kind\":\"node\",\"name\":\"Book\",\"type\":[\"ElementType\"]},\"t_person\":{\"id\":\"t_person\",\"kind\":\"node\",\"name\":\"Person\",\"type\":[\"ElementType\"]},\"u_schema\":{\"declares\":[\"t_book\"],\"graph\":\"undeclared\",\"id\":\"u_schema\",\"schema\":\"undeclared@1\",\"type\":[\"GraphMeta\"]}},\"relationships\":[]}",
+        "projection": "{\"blocks\":{\"ada\":{\"id\":\"ada\",\"name\":\"Ada\",\"type\":[\"Author\"]},\"notes\":{\"id\":\"notes\",\"title\":\"Notes\",\"type\":[\"Book\"]},\"t_author\":{\"id\":\"t_author\",\"kind\":\"node\",\"name\":\"Author\",\"type\":[\"ElementType\"]},\"t_book\":{\"id\":\"t_book\",\"kind\":\"node\",\"name\":\"Book\",\"type\":[\"ElementType\"]},\"u_schema\":{\"declares\":[\"t_book\"],\"graph\":\"undeclared\",\"id\":\"u_schema\",\"schema\":\"undeclared@1\",\"type\":[\"GraphMeta\"]}},\"relationships\":[]}",
         "relationships": "flowchart LR\n    n0[\"ada<br/>Ada\"]\n    n1[\"notes<br/>Notes\"]",
         "legend": ""
       }
@@ -388,5 +388,67 @@
     "changesets": [],
     "lint": [],
     "error": "line 2: cannot read '\u0085(c:T {name: 'C'})' — a data block holds only nodes, relationships and simple values"
+  },
+  "provenance-kept-a-plan-an-agent-and-a-revision-in-order": {
+    "canon": {
+      "prov_kept": "cd97f5eed32e8c1368dbe7e73630be91db43fe23f9a54030e4be8470243a5e46"
+    },
+    "verdicts": {
+      "prov_kept": [
+        ["§5: a draft's kinds and relationship types hold no near-duplicates", true],
+        ["§18: the flat projection rebuilds the graph", true],
+        [
+          "§11 req:11.had-plan: every activity that derives an element by a rule links to that rule with HAD_PLAN",
+          true
+        ],
+        [
+          "§24 req:24.prov-attributed: every WAS_ATTRIBUTED_TO link goes to a Person, Organization or SoftwareAgent (a Model counts as one)",
+          true
+        ],
+        ["§12 req:12.prov-revision: every successor was generated after what it supersedes", true]
+      ]
+    },
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "views": {
+      "prov_kept": {
+        "projection": "{\"blocks\":{\"acme\":{\"id\":\"acme\",\"name\":\"Acme\",\"type\":[\"Organization\"]},\"ada\":{\"id\":\"ada\",\"name\":\"Ada\",\"type\":[\"Person\"]},\"bot\":{\"id\":\"bot\",\"name\":\"Drafter\",\"type\":[\"Model\"]},\"derive\":{\"had_plan\":[\"rule:total@1\"],\"id\":\"derive\",\"name\":\"Derive totals\",\"rule\":\"rule:total@1\",\"type\":[\"Activity\"],\"was_attributed_to\":[\"importer\"]},\"importer\":{\"id\":\"importer\",\"name\":\"Importer\",\"type\":[\"SoftwareAgent\"]},\"rule:total@1\":{\"id\":\"rule:total@1\",\"name\":\"Total\",\"type\":[\"Rule\"]},\"v1\":{\"generated_at\":\"2026-09-01T10:00:00+10:00\",\"id\":\"v1\",\"title\":\"One\",\"type\":[\"Doc\"],\"was_attributed_to\":[\"ada\"]},\"v2\":{\"generated_at\":\"2026-09-01\",\"id\":\"v2\",\"supersedes\":[\"v1\"],\"title\":\"Two\",\"type\":[\"Doc\"],\"was_attributed_to\":[\"acme\"]},\"v3\":{\"id\":\"v3\",\"supersedes\":[\"v2\"],\"title\":\"Three\",\"type\":[\"Doc\"],\"was_attributed_to\":[\"bot\"]}},\"relationships\":[]}",
+        "relationships": "flowchart LR\n    n0[\"acme<br/>Acme\"]\n    n1[\"ada<br/>Ada\"]\n    n2[\"bot<br/>Drafter\"]\n    n3[\"derive<br/>Derive totals\"]\n    n4[\"importer<br/>Importer\"]\n    n5[\"rule:total@1<br/>Total\"]\n    n6[\"v1<br/>One\"]\n    n7[\"v2<br/>Two\"]\n    n8[\"v3<br/>Three\"]\n    n3 -->|had plan| n5\n    n3 -->|was attributed to| n4\n    n6 -->|was attributed to| n1\n    n7 -->|supersedes| n6\n    n7 -->|was attributed to| n0\n    n8 -->|supersedes| n7\n    n8 -->|was attributed to| n2",
+        "legend": "had plan = HAD_PLAN\nsupersedes = SUPERSEDES\nwas attributed to = WAS_ATTRIBUTED_TO"
+      }
+    }
+  },
+  "provenance-broken-no-plan-no-agent-and-a-revision-out-of-order": {
+    "canon": {
+      "prov_broken": "eeca7b526022d1d0e6d15d7d6d7d8417f6f74a5e14974122ed22e22f957509bc"
+    },
+    "verdicts": {
+      "prov_broken": [
+        ["§5: a draft's kinds and relationship types hold no near-duplicates", true],
+        ["§18: the flat projection rebuilds the graph", true],
+        [
+          "§11 req:11.had-plan: every activity that derives an element by a rule links to that rule with HAD_PLAN",
+          false
+        ],
+        [
+          "§24 req:24.prov-attributed: every WAS_ATTRIBUTED_TO link goes to a Person, Organization or SoftwareAgent (a Model counts as one)",
+          false
+        ],
+        ["§12 req:12.prov-revision: every successor was generated after what it supersedes", false]
+      ]
+    },
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "views": {
+      "prov_broken": {
+        "projection": "{\"blocks\":{\"derive\":{\"id\":\"derive\",\"name\":\"Derive totals\",\"rule\":\"rule:total@1\",\"type\":[\"Activity\"]},\"derive_wrong\":{\"had_plan\":[\"rule:total@1\"],\"id\":\"derive_wrong\",\"name\":\"Derive others\",\"rule\":\"rule:other@1\",\"type\":[\"Activity\"]},\"rule:other@1\":{\"id\":\"rule:other@1\",\"name\":\"Other\",\"type\":[\"Rule\"]},\"rule:total@1\":{\"id\":\"rule:total@1\",\"name\":\"Total\",\"type\":[\"Rule\"]},\"v1\":{\"generated_at\":\"2026-09-01T10:00:00+10:00\",\"id\":\"v1\",\"title\":\"One\",\"type\":[\"Doc\"],\"was_attributed_to\":[\"rule:total@1\"]},\"v2\":{\"generated_at\":\"2026-08-01T10:00:00+10:00\",\"id\":\"v2\",\"supersedes\":[\"v1\"],\"title\":\"Two\",\"type\":[\"Doc\"],\"was_attributed_to\":[\"v3\"]},\"v3\":{\"generated_at\":\"2026-07-01\",\"id\":\"v3\",\"supersedes\":[\"v1\"],\"title\":\"Three\",\"type\":[\"Doc\"]}},\"relationships\":[]}",
+        "relationships": "flowchart LR\n    n0[\"derive<br/>Derive totals\"]\n    n1[\"derive_wrong<br/>Derive others\"]\n    n2[\"rule:other@1<br/>Other\"]\n    n3[\"rule:total@1<br/>Total\"]\n    n4[\"v1<br/>One\"]\n    n5[\"v2<br/>Two\"]\n    n6[\"v3<br/>Three\"]\n    n1 -->|had plan| n3\n    n4 -->|was attributed to| n3\n    n5 -->|supersedes| n4\n    n5 -->|was attributed to| n6\n    n6 -->|supersedes| n4",
+        "legend": "had plan = HAD_PLAN\nsupersedes = SUPERSEDES\nwas attributed to = WAS_ATTRIBUTED_TO"
+      }
+    }
   }
 }

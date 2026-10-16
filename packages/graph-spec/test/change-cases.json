@@ -52,7 +52,7 @@
     "(t_supersedes:ElementType {id: 'type:SUPERSEDES', name: 'SUPERSEDES', kind: 'edge', reading: 'supersedes', reverse_name: 'superseded by'}),",
     "(library_schema)-[:DECLARES]->(t_rule),",
     "(library_schema)-[:DECLARES]->(t_supersedes),",
-    "(total_rule:Rule {id: 'rule:total@1', name: 'Total'}),",
+    "(total_rule:Rule {name: 'Total', rule: 'rule:total@1'}),",
     "(engine_run)-[:HAD_PLAN]->(total_rule),",
     "(plain_run:Activity {name: 'Typed in by hand'}),",
     "(ledger:Book {title: 'Ledger'}),",

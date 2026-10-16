@@ -36,8 +36,10 @@ and no module requires one that requires it back.
 - **`src/graph/`** — `graph.js`: the plain graph the rules run on, the world made from a store, and `canon`.
 - **`src/rules/`** — the spec's rules (`graph_rules.py`): `types.js` (§5), `projection.js` (§18), `certainty.js` (§20),
   `paths.js` (§22), `lenses.js` (§15), `judgements.js` (§23), `servings.js` (§24), `completeness.js` (§25),
-  `readings.js` and `guessed-readings.js` (a relationship type's readings, declared or guessed), and `check.js`, which
-  runs every rule that applies to a graph.
+  `readings.js` and `guessed-readings.js` (a relationship type's readings, declared or guessed), `provenance.js` (W3C
+  PROV is normative: §11 a derivation links to its rule with HAD_PLAN, §24 an attribution goes to a Person, Organization
+  or SoftwareAgent, §12 a successor is generated after what it supersedes; `hadPlan` is also what marks a cache, §24),
+  and `check.js`, which runs every rule that applies to a graph.
 - **`src/changesets/`** — §24 H1: `dialect-lint.js` (the traps in model-written GQL) and `changeset.js` (checking a
   change set against its base) and `changes.js` (the DELETE and SET statements of a change set, each naming one
   target, read and applied; held with the Python reader to `test/change-cases.json`). The API also gives

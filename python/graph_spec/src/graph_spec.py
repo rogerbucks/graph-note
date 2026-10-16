@@ -263,6 +263,9 @@ from graphspec.engine.serving.checks import (
     fence_holds,
     served_rules,
 )
+from graphspec.engine.provenance import (
+    prov_rules,
+)
 from graphspec.engine.changesets import (
     _state,
     changeset_header,

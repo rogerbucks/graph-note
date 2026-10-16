@@ -15,10 +15,15 @@ if TYPE_CHECKING:
 # The spec's own vocabulary, built in because a checker must run with no documents to read it from.
 # The spec's meta-schema declares it as data; the spec's trace check proves this copy,
 # graph_spec.py's and graph-spec-check.js's equal it.
-SPEC_SCHEMA = "graph-spec@2"  # @2, 6 Oct 2026: Cardinality and Coverage (§25)
-SPEC_NODES = frozenset({"GraphMeta", "ElementType", "Meta", "Cardinality", "Coverage"})
+SPEC_SCHEMA = "graph-spec@3"  # @2, 6 Oct 2026: Cardinality and Coverage (§25)
+# @3, 16 Oct 2026: W3C PROV is normative for provenance (§11, §12, §24): the agent types, and USED,
+# HAD_PLAN and WAS_ATTRIBUTED_TO. A Model is acceptable wherever a SoftwareAgent is, but is a type
+# a graph declares for itself.
+SPEC_SCHEMA_NODES = frozenset({"GraphMeta", "ElementType", "Meta", "Cardinality", "Coverage"})
+SPEC_AGENTS = frozenset({"Person", "Organization", "SoftwareAgent"})
+SPEC_NODES = SPEC_SCHEMA_NODES | SPEC_AGENTS
 SPEC_MARKERS = frozenset({"Meta"})  # marks a schema node; never types a node by itself
-SPEC_EDGES = frozenset({"DECLARES"})
+SPEC_EDGES = frozenset({"DECLARES", "USED", "HAD_PLAN", "WAS_ATTRIBUTED_TO"})
 
 
 def declared_in(graph: Graph) -> list[dict[str, Any]]:

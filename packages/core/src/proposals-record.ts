@@ -47,7 +47,7 @@ export function recordInNote(
   const w = replaceBlock(note, { line: home.open, text: home.text }, text);
   if (!w.ok) return null;
   const anchor = gqlSpans(w.note).find((s) => s.text === text);
-  const judgement = withDecisions(w.note, proposal.graph, proposal.id, proposal.provenance.by.name, now, anchor);
+  const judgement = withDecisions(w.note, proposal.graph, proposal.id, proposal.provenance.by, now, anchor);
   return judgement ? { note: judgement.note, home: { before: home.text, after: text }, judgement } : null;
 }
 

@@ -18,7 +18,7 @@ import gql_profile as gp  # noqa: E402
 import graph_rules as gr  # noqa: E402
 
 DATA = "\n".join(
-    ["// graph: g", "(a:Book {title: 'A'}),", "(p:Person {name: 'P'}),", "(p)-[:WROTE]->(a)"]
+    ["// graph: g", "(a:Book {title: 'A'}),", "(p:Author {name: 'P'}),", "(p)-[:WROTE]->(a)"]
 )
 
 
@@ -29,7 +29,7 @@ def schema(declares, extra=""):
                 "// graph: g",
                 "(g_schema:GraphMeta {graph: 'g', schema: 'g@1'}),",
                 "(kind_book:Meta:ElementType {name: 'Book', kind: 'node', origin: 'source'}),",
-                "(kind_person:Meta:ElementType {name: 'Person', kind: 'node', origin: 'source'}),",
+                "(kind_author:Meta:ElementType {name: 'Author', kind: 'node', origin: 'source'}),",
                 "(link_wrote:Meta:ElementType {name: 'WROTE', kind: 'edge', origin: 'source',"
                 " reading: 'wrote', reverse_name: 'was written by'})",
                 *[f", (g_schema)-[:DECLARES]->({d})" for d in declares],
@@ -52,22 +52,22 @@ def section5(*blocks):
 
 class Declares(unittest.TestCase):
     def test_declared_by_the_graphmeta_passes(self):
-        self.assertTrue(section5(DATA, schema(["kind_book", "kind_person", "link_wrote"])))
+        self.assertTrue(section5(DATA, schema(["kind_book", "kind_author", "link_wrote"])))
 
     def test_no_declares_declares_nothing(self):
         self.assertFalse(section5(DATA, schema([])))
         self.assertEqual(
-            list(gr.untyped(world(DATA, schema([]))["g"])[:2]), [["Book", "Person"], ["WROTE"]]
+            list(gr.untyped(world(DATA, schema([]))["g"])[:2]), [["Author", "Book"], ["WROTE"]]
         )
 
     def test_only_the_undeclared_type_is_undeclared(self):
         blocks = (DATA, schema(["kind_book", "link_wrote"]))
         self.assertFalse(section5(*blocks))
-        self.assertEqual(list(gr.untyped(world(*blocks)["g"])[:2]), [["Person"], []])
+        self.assertEqual(list(gr.untyped(world(*blocks)["g"])[:2]), [["Author"], []])
 
     def test_declares_from_anything_but_a_graphmeta_declares_nothing(self):
-        stray = schema(["kind_book", "link_wrote"], ",\n(p)-[:DECLARES]->(kind_person)")
-        self.assertEqual(list(gr.untyped(world(DATA, stray)["g"])[:2]), [["Person"], []])
+        stray = schema(["kind_book", "link_wrote"], ",\n(p)-[:DECLARES]->(kind_author)")
+        self.assertEqual(list(gr.untyped(world(DATA, stray)["g"])[:2]), [["Author"], []])
 
 
 if __name__ == "__main__":

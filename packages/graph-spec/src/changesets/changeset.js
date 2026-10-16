@@ -7,6 +7,7 @@ const { Store } = require('../reader/store.js');
 const { worldFromStore, canon } = require('../graph/graph.js');
 const { latestAssessment, confidenceFromEvidence, claimStatus } = require('../rules/certainty.js');
 const { check } = require('../rules/check.js');
+const { hadPlan } = require('../rules/provenance.js');
 const { lint } = require('./dialect-lint.js');
 const { splitChangeset, readChange, changeId, applyChange, isRecordAdd, addsCache } = require('./changes.js');
 
@@ -18,8 +19,10 @@ const LABELS = {
 };
 const GENERATED =
   "an added WAS_GENERATED_BY comes from a thing the set adds, to an activity of the set's own author (§24)";
-// whether activity a is one of its author's: an Activity associated with them
-const own = (g, a, by) => g.has(a, 'Activity') && g.out(a, 'ASSOCIATED_WITH').some((e) => e[2] === by);
+// whether activity a is one of its author's own generation: an Activity associated with them that HAD_PLAN no rule, since
+// whatever a planned activity generated is a cache (§24)
+const own = (g, a, by) =>
+  g.has(a, 'Activity') && !hadPlan(g, a) && g.out(a, 'ASSOCIATED_WITH').some((e) => e[2] === by);
 function changesetHeader(block) {
   const first = block.split('\n').find((line) => line.trim()) || '';
   const m = /^\s*\/\/\s*graph:\s*(\S+)\s*·\s*CHANGE SET\s+(\S+)\s*·\s*against\s+([0-9a-f]{16})\s*·\s*by\s+(\S+)/.exec(
@@ -101,11 +104,15 @@ function checkChangeset(base, block, matrix, sw = new Set()) {
     const who = Object.values(world)
       .filter((g) => g.nodes.has(h.by))
       .map((g) => g.nodes.get(h.by)[0]);
-    return who.some((labels) => labels.has('Model'))
+    // the header's `by` reads as WAS_ATTRIBUTED_TO that agent for every change in the set (req:24.prov-attributed); a
+    // software agent is held to what a model is held to
+    return who.some((labels) => labels.has('Model') || labels.has('SoftwareAgent'))
       ? 'Model'
       : who.some((labels) => labels.has('Person'))
         ? 'Person'
-        : null;
+        : who.some((labels) => labels.has('Organization'))
+          ? 'Organization'
+          : null;
   };
   const authorLine = `its author ${h.by} is a known person or model`;
   let kind = authorOf(w);

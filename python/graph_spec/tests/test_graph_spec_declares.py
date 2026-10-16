@@ -18,11 +18,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import graph_spec as gs  # noqa: E402
 from engine_support import needs_engine  # noqa: E402
 
-DATA = "(a:Book {title: 'A'}),\n(p:Person {name: 'P'}),\n(p)-[:WROTE]->(a),\n"
+DATA = "(a:Book {title: 'A'}),\n(p:Author {name: 'P'}),\n(p)-[:WROTE]->(a),\n"
 SCHEMA = (
     "(g_schema:GraphMeta {graph: 'g', schema: 'g@1'}),\n"
     "(kind_book:Meta:ElementType {name: 'Book', kind: 'node', origin: 'source'}),\n"
-    "(kind_person:Meta:ElementType {name: 'Person', kind: 'node', origin: 'source'}),\n"
+    "(kind_author:Meta:ElementType {name: 'Author', kind: 'node', origin: 'source'}),\n"
     "(link_wrote:Meta:ElementType {name: 'WROTE', kind: 'edge', origin: 'source',"
     " reading: 'wrote', reverse_name: 'was written by'})"
 )
@@ -36,21 +36,21 @@ def loaded(declares, extra=""):
 @needs_engine  # the declares rule as the engine checks it; graph_rules' twin needs none
 class Declares(unittest.TestCase):
     def test_declared_by_the_graphmeta_passes(self):
-        self.assertTrue(gs.typed(loaded(["kind_book", "kind_person", "link_wrote"])))
+        self.assertTrue(gs.typed(loaded(["kind_book", "kind_author", "link_wrote"])))
 
     def test_no_declares_declares_nothing(self):
         db = loaded([])
         self.assertFalse(gs.typed(db))
-        self.assertEqual(list(gs.untyped(db)[:2]), [["Book", "Person"], ["WROTE"]])
+        self.assertEqual(list(gs.untyped(db)[:2]), [["Author", "Book"], ["WROTE"]])
 
     def test_only_the_undeclared_type_is_undeclared(self):
         db = loaded(["kind_book", "link_wrote"])
         self.assertFalse(gs.typed(db))
-        self.assertEqual(list(gs.untyped(db)[:2]), [["Person"], []])
+        self.assertEqual(list(gs.untyped(db)[:2]), [["Author"], []])
 
     def test_declares_from_anything_but_a_graphmeta_declares_nothing(self):
-        db = loaded(["kind_book", "link_wrote"], ",\n(p)-[:DECLARES]->(kind_person)")
-        self.assertEqual(list(gs.untyped(db)[:2]), [["Person"], []])
+        db = loaded(["kind_book", "link_wrote"], ",\n(p)-[:DECLARES]->(kind_author)")
+        self.assertEqual(list(gs.untyped(db)[:2]), [["Author"], []])
 
 
 if __name__ == "__main__":

@@ -9,6 +9,7 @@ from collections.abc import Collection
 from typing import TYPE_CHECKING, Any
 
 from graphspec.reader.lexer import quote
+from graphspec.rules.provenance import had_plan
 
 if TYPE_CHECKING:
     from graphspec.reader.store import Store
@@ -98,8 +99,8 @@ def foreign_generations(
     st: Store, g: str, new_edges: Collection[tuple], made: Collection[str], by: str
 ) -> list[tuple]:
     """The added WAS_GENERATED_BY links that do not come from a thing the set adds, to an Activity
-    associated with the set's author: a link from a thing already there, or to an engine run or
-    another author's run, would make a cache."""
+    associated with the set's author that HAD_PLAN no rule: a link from a thing already there, or
+    to an engine run, a planned activity or another author's run, would make a cache."""
     from graphspec.rules.plain_graph import World
 
     w = World.from_store(st)[g]
@@ -108,6 +109,7 @@ def foreign_generations(
         return (
             a in w.nodes
             and "Activity" in w.nodes[a][0]
+            and not had_plan(w, a)
             and any(e[2] == by for e in w.out(a, "ASSOCIATED_WITH"))
         )
 
@@ -143,17 +145,13 @@ def apply_change(store: Store, g: str, c: dict[str, Any]) -> tuple[str, str] | N
         ):
             return "record", where
 
-        # (a model's own work, made under an activity of the model, is not one)
-        def model_run(a):
-            return any(
-                e[1] == "ASSOCIATED_WITH" and e[0] == a and "Model" in nodes[e[2]]["labels"]
-                for e in graph["edges"]
-            )
+        # a cache is anything WAS_GENERATED_BY an activity that HAD_PLAN a rule (§24, W3C PROV); a
+        # value made by an activity with no plan, a person's or a model's own work among them, is
+        # not one
+        def planned(a):
+            return any(e[1] == "HAD_PLAN" and e[0] == a for e in graph["edges"])
 
-        if any(
-            e[1] == "WAS_GENERATED_BY" and e[0] == k and not model_run(e[2])
-            for e in graph["edges"]
-        ):
+        if any(e[1] == "WAS_GENERATED_BY" and e[0] == k and planned(e[2]) for e in graph["edges"]):
             return "record", where
         if c["op"].startswith("set"):
             if "Claim" in labels and CACHE_KEYS & set(c["set"]):

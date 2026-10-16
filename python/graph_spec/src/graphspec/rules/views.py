@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 from graphspec.rules.canonical_json import jcs
 from graphspec.rules.paths import view_at
 from graphspec.rules.projection import project
-from graphspec.rules.schema_types import SPEC_NODES
+from graphspec.rules.schema_types import SPEC_SCHEMA_NODES
 
 if TYPE_CHECKING:
     from graphspec.rules.plain_graph import Graph
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 # ── views — the same text from Python and from JavaScript ──────────────────────
 # left out of views: the schema, and §20's likelihood scale
-SCHEMA_LABELS = SPEC_NODES | {"LikelihoodBand"}
+SCHEMA_LABELS = SPEC_SCHEMA_NODES | {"LikelihoodBand"}
 
 
 def _caption(g, i):
