@@ -3,6 +3,7 @@
 // proposal is written into the note as a change set beside the graph — never into the graph, which changes only when a
 // person accepts a change in the review.
 import { gqlSpans, graphOfBlock } from './blocks.ts';
+import { withProposer } from './proposals-author.ts';
 import { checkProposal, checkRefusal } from './proposals-check.ts';
 import { makeProposal } from './proposals.ts';
 import type { ChangeInput, Proposal } from './proposals.ts';
@@ -36,9 +37,12 @@ export function proposalFrom(changes: ChangeInput[], from: AnswerSource): Propos
  * The note with the proposal's change set written after the last block of its graph (after the last gql block when the
  * graph has none here), every other byte kept. The graph's own blocks are not touched. A proposal is written only if the
  * graph spec's own check passes it, against the note as it is: otherwise nothing is written, and it says which lines failed
- * (the proposer must be declared as a Model or a Person in the note's graphs, as the check wants).
+ * (the check wants the proposer known, so the editor declares it first among the additions).
  */
-export function noteWithProposal(note: string, proposal: Proposal): string | { refused: string } {
+export function noteWithProposal(note: string, given: Proposal): string | { refused: string } {
+  // the editor declares the proposer in the proposal itself, unless the note already does (proposals-author.ts)
+  const proposal = withProposer(note, given);
+  if ('refused' in proposal) return proposal;
   const block = changeSetText(proposal);
   const refused = checkRefusal(checkProposal(note, block), 'counts');
   if (refused) return { refused };

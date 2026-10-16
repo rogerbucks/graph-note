@@ -243,46 +243,57 @@ def check_changeset(
         h["against"] == now,
         f"made against {h['against']}; the graph is now {now} — serve the graph again and redraft",
     )
-    who = [
-        (g, set(r["l"]))
-        for g in made
-        for r in (db.set_graph(g) or Q(db, f"MATCH (x {{id: '{h['by']}'}}) RETURN labels(x) AS l"))
-    ]
-    kind = (
-        "Model"
-        if any("Model" in label for _, label in who)
-        else "Person"
-        if any("Person" in label for _, label in who)
-        else None
-    )
-    known = sorted(
-        {
-            r["i"]
+
+    def author_of():
+        """An author is known if the graphs hold it, or the set itself declares it (§24)."""
+        who = [
+            (g, set(r["l"]))
             for g in made
             for r in (
-                db.set_graph(g) or Q(db, "MATCH (x) WHERE x:Person OR x:Model RETURN x.id AS i")
+                db.set_graph(g) or Q(db, f"MATCH (x {{id: '{h['by']}'}}) RETURN labels(x) AS l")
             )
-        }
-    )
-    add(
-        f"its author {h['by']} is a known person or model",
-        kind,
-        f"'by' must be the author's own id, exactly — the graph knows {known}; "
-        "a new author is declared by the graph's owner first",
-    )
+        ]
+        labels = set().union(*(label for _, label in who))
+        kind = "Model" if "Model" in labels else "Person" if "Person" in labels else None
+        known = sorted(
+            {
+                r["i"]
+                for g in made
+                for r in (
+                    db.set_graph(g)
+                    or Q(db, "MATCH (x) WHERE x:Person OR x:Model RETURN x.id AS i")
+                )
+            }
+        )
+        return kind, known
+
+    def add_author(kind, known):
+        add(
+            f"its author {h['by']} is a known person or model",
+            kind,
+            f"'by' must be the author's own id, exactly — the graph knows {known}; "
+            "a new author is declared by the graph's owner or by the set itself",
+        )
+
+    kind, known = author_of()
     db.set_graph(h["graph"])
     before = _state(db, h["graph"])
     try:
         st.apply(additions)
     except ProfileError as e:
+        add_author(kind, known)
         add("it loads", False, f"the reader could not read it — {e}")
         return res, h, None
     try:
         if tokens(additions):  # a set of only DELETEs and SETs has nothing to insert
             db.execute(strip(st.corrected(additions)))
     except Exception as e:
+        add_author(kind, known)
         add("it loads", False, f"Grafeo could not run it — {str(e).splitlines()[0][:200]}")
         return res, h, None
+    kind, known = author_of()
+    add_author(kind, known)
+    db.set_graph(h["graph"])
     after = _state(db, h["graph"])
     gone = [i for i in before[0] if i not in after[0]] + [
         e[:3] for e in before[1] if after[1][e] < before[1][e]

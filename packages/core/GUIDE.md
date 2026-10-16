@@ -634,6 +634,12 @@ the graph and never written until a person accepts a change, and then written as
   An accept is refused while the check fails on the change set the note holds (the "moved" line aside once the stale
   notice is seen), `noteWithProposal` writes a proposal only if the check passes it, a plain `DELETE` stays plain
   (refused for a thing that has links) and the kinds a MATCH names are held to, and only a data block is a judgement block.
+- `proposals-author.ts` — the proposer, declared by the editor in the proposal itself: `withProposer` puts the declaration
+  (a Model for an AI model, a Person that is a Step for a step) first among the additions when a proposal is written, unless
+  the note declares it; it is a change on the card like the others, written with the first change accepted
+  (`acceptedWith`) and removed with the last rejected (`rejectedWith`). A model's answer can never add a Person, a Model or
+  a Step (`ai-request.ts`), so only the editor's declaration can make an author known to the check, which accepts an author
+  the set declares itself.
 - `proposals-needs.ts` — what a change needs of the others: a link needs the things it joins before it is accepted, and
   a change that adds what another needs is not rejected alone.
 - `proposals-apply.ts` — one change written as text on the blocks' texts (an addition after the graph's last block of data, a

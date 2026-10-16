@@ -114,9 +114,11 @@ function changeOf(c: unknown, n: number): ChangeInput | string {
   if (props === null) return `${at}: its properties are not each a one-word name with a text, a number, true or false`;
   switch (c.op) {
     case 'add-thing':
-      return words(c, 'name', 'kind')
-        ? thingChange(c.name as string, c.kind as string, props, extra)
-        : `${at} lacks a one-word name or kind`;
+      if (!words(c, 'name', 'kind')) return `${at} lacks a one-word name or kind`;
+      // a model's own words never declare an author: the editor declares who proposed (proposals-author.ts)
+      if (['Person', 'Model', 'Step'].includes(c.kind as string))
+        return `${at} cannot add a Person, a Model or a Step: the editor declares who proposed, and nothing a model writes can`;
+      return thingChange(c.name as string, c.kind as string, props, extra);
     case 'add-link':
       return words(c, 'from', 'type', 'to')
         ? linkChange(c.from as string, c.type as string, c.to as string, props, extra)

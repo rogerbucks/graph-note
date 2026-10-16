@@ -65,7 +65,7 @@ describe('the editor declares the proposer in the proposal, as its first additio
 
   test('a note that already declares the proposer gets no second declaration', () => {
     const note = noteWithProposal(NOTE_WITH_ADA, proposalOf());
-    assert.doesNotMatch(note.slice(note.indexOf('CHANGE SET')), /ada:Model/);
+    assert.doesNotMatch(setOf(note), /ada:Model/);
   });
 
   test('a step is declared as a Person that is a Step, and the note then says it is a step', () => {
@@ -125,7 +125,8 @@ describe('the editor declares the proposer in the proposal, as its first additio
     assert.equal(baseOf(r.note)[0], baseOf(NOTE)[0]);
     assert.doesNotMatch(setOf(r.note), /ada:Model/);
     assert.equal(decisionsIn(r.note).size, 6);
-    assert.deepEqual(failedIn(r.note), []);
+    // nothing waits in the set, so there is nothing for the check to ask a known author for
+    assert.equal(ProposalReview.fromChangeSet(setOf(r.note), r.note).show(r.note).checked.passed, true);
   });
 
   test('rejecting every change but the declaration rejects it too, since nothing is left for it to declare', () => {

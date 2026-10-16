@@ -2,6 +2,7 @@
 // note holds it, run against the note's other graphs by `checkChangeset`, and every line of its answer kept to be shown.
 // The same check names the proposer's kind: a Model or a Person in the note's graphs, which is all the graph says of it.
 import gs from '@graph-note/graph-spec';
+import { items } from './block-items.ts';
 import { dataKind, gqlSpans } from './blocks.ts';
 import { readNote } from './drawing.ts';
 import type { ProposerKind } from './proposals.ts';
@@ -28,6 +29,11 @@ const baseOf = (note: string, shared: readonly string[]): string[] => [
  * vault's shared schemas. Its answer is kept whole; a note whose own graphs the check cannot load is one failed line.
  */
 export function checkProposal(note: string, block: string, shared: readonly string[] = []): ProposalCheck {
+  // a set with every change decided holds nothing to apply, so nothing to check: its proposer's declaration went with the
+  // last change rejected, and leaves it with no known author to ask for
+  const parts = gs.splitChangeset(block);
+  if (!parts.changes.length && !items(parts.additions).length)
+    return { passed: true, results: [{ label: 'nothing waits in it, so there is nothing to check', ok: true }] };
   try {
     const { results } = gs.checkChangeset(baseOf(note, shared), block);
     return { passed: results.every(([, ok]) => ok), results: results.map(([label, ok]) => ({ label, ok })) };
@@ -62,9 +68,9 @@ export function proposerKind(note: string, name: string, shared: string[] = []):
   );
   for (const g of Object.values(read.world)) {
     const labels = g.nodes instanceof Map ? g.nodes.get(name)?.[0] : undefined; // the world also lists what graphs name
+    if (labels?.has('Step')) return 'step'; // a Step is a Person that is a Step: the more particular is said
     if (labels?.has('Model')) return 'model';
     if (labels?.has('Person')) return 'person';
-    if (labels?.has('Step')) return 'step';
   }
   return 'unknown';
 }

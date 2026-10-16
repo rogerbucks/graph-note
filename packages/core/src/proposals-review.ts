@@ -13,6 +13,7 @@ import { PaneSession } from './pane.ts';
 import { applyChange, namesOf, newProblems, notTaken } from './proposals-apply.ts';
 import { basisOf, staleness } from './proposals-basis.ts';
 import type { Stale } from './proposals-basis.ts';
+import { acceptedWith, rejectedWith } from './proposals-author.ts';
 import { checkProposal, checkRefusal, proposerKind } from './proposals-check.ts';
 import { DECIDER_DEFAULT, decidedIn, inOrder } from './proposals-judgement.ts';
 import type { Decision, ToRecord } from './proposals-judgement.ts';
@@ -262,9 +263,11 @@ export class ProposalReview {
     const nobody = this.notAPerson(by);
     if (nobody) return refuse(nobody);
     this.sync(note);
-    const chosen = this.choose(which);
-    if (typeof chosen === 'string') return refuse(chosen);
-    if (!chosen.length) return { ok: true, note, ids: [] };
+    const picked = this.choose(which);
+    if (typeof picked === 'string') return refuse(picked);
+    if (!picked.length) return { ok: true, note, ids: [] };
+    // the proposer's declaration is written with the first change accepted, in the same write
+    const chosen = acceptedWith(this.proposal, this.waiting(), picked);
     const stale = this.staleness(note);
     if (stale && !options.staleSeen) return refuse(stale.message, stale);
     // the change set as the note holds it must pass the graph spec's own check: nothing is written on one that fails
@@ -320,9 +323,12 @@ export class ProposalReview {
     const nobody = this.notAPerson(by);
     if (nobody) return refuse(nobody);
     this.sync(note);
-    const chosen = this.choose(which);
+    const picked = this.choose(which);
+    if (typeof picked === 'string') return refuse(picked);
+    if (!picked.length) return { ok: true, note, ids: [] };
+    // the declaration of the proposer goes with the last change rejected, and is not rejected while others wait
+    const chosen = rejectedWith(this.proposal, this.waiting(), picked);
     if (typeof chosen === 'string') return refuse(chosen);
-    if (!chosen.length) return { ok: true, note, ids: [] };
     const left = leftNeeding(chosen, this.namesIn(readNote(textsOf(note), undefined, this.shared)), this.waiting());
     if (left) return refuse(left);
     const at = options.at ?? new Date().toISOString();

@@ -145,34 +145,45 @@ def check_changeset(
         h["against"] == now,
         f"made against {h['against']}; the graph is now {now} — serve the graph again and redraft",
     )
-    who = [w[g].nodes[h["by"]][0] for g in w.graphs if h["by"] in w[g].nodes]
-    kind = (
-        "Model"
-        if any("Model" in labels for labels in who)
-        else "Person"
-        if any("Person" in labels for labels in who)
-        else None
-    )
-    known = sorted(
-        {
-            i
-            for g in w.graphs.values()
-            for i, (labels, _) in g.nodes.items()
-            if labels & {"Person", "Model"}
-        }
-    )
-    add(
-        f"its author {h['by']} is a known person or model",
-        kind,
-        f"'by' must be the author's own id, exactly — the graph knows {known}; "
-        "a new author is declared by the graph's owner first",
-    )
+
+    def author_of(world):
+        """An author is known if the graphs hold it, or the set itself declares it (§24)."""
+        who = [world[g].nodes[h["by"]][0] for g in world.graphs if h["by"] in world[g].nodes]
+        kind = (
+            "Model"
+            if any("Model" in labels for labels in who)
+            else "Person"
+            if any("Person" in labels for labels in who)
+            else None
+        )
+        known = sorted(
+            {
+                i
+                for g in world.graphs.values()
+                for i, (labels, _) in g.nodes.items()
+                if labels & {"Person", "Model"}
+            }
+        )
+        return kind, known
+
+    def add_author(kind, known):
+        add(
+            f"its author {h['by']} is a known person or model",
+            kind,
+            f"'by' must be the author's own id, exactly — the graph knows {known}; "
+            "a new author is declared by the graph's owner or by the set itself",
+        )
+
+    kind, known = author_of(w)
     before = _state(w[h["graph"]])
     try:
         st.apply(parts["additions"])
     except ProfileError as e:
+        add_author(kind, known)
         add("it loads", False, f"the reader could not read it — {e}")
         return res, h, None
+    kind, known = author_of(World.from_store(st))
+    add_author(kind, known)
     after = _state(World.from_store(st)[h["graph"]])
     bc, ac = Counter(before[1]), Counter(after[1])
     gone = [i for i in before[0] if i not in after[0]] + [e[:3] for e in bc if ac[e] < bc[e]]
