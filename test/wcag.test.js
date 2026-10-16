@@ -4,6 +4,11 @@
 // text (SC 1.4.3), worked out from the real stylesheet with the theme's own colours. The check itself is tried first, on
 // planted faults, so a pass means it looked. Test support: test/repository/wcag.js and wcag-page.js.
 //
+// Views not yet checked, which is why test_wcag is partial: in Obsidian the export dialog, the AI send dialog, the proposal
+// view, the quick-info popover, the style, step and view blocks, the table view, Obsidian's own menus and the Live Preview
+// card; on the browser page nothing is left but the states the editor adds in later workstreams. Each is added to OBSIDIAN
+// or STATES below as it gets a case.
+//
 // Not done here, because jsdom has no layout or paint: the contrast of lines and controls (SC 1.4.11), target size
 // (SC 2.5.8; the details sheet's 44-point cases hold it), reflow and text spacing (SC 1.4.10, 1.4.12). The release
 // walk-through (RELEASING.md, "Accessibility walk-through") covers those by hand, with the keyboard and a screen reader.
