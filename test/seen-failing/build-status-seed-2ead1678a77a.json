@@ -1,0 +1,6 @@
+{
+  "file": "test/build-status-seed.test.js",
+  "test": "the mirror with the seed > --check tallies the values it would seed for each option, and changes nothing",
+  "seen_failing_first": false,
+  "evidence": "This existing test was only brought into step with a behaviour changed by a commit that came with its own test, seen failing first (6ee12b4: a requirement part proved is mirrored In Progress, not Todo; and the new workstream W34 in the workstreams file): its old expectation broke when the code changed, and the expectation was corrected, so it passes against the parent's code."
+}

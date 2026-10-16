@@ -180,7 +180,7 @@ describe('the Requirements line of a draft pull request', () => {
     });
     assert.deepEqual(w.values('Status'), {
       focus_link: 'In Progress',
-      focus_neighbours: 'Todo',
+      focus_neighbours: 'In Progress', // part proved, so under way with no pull request
       zoom_out_to_fit: 'In Progress',
       stray_new: 'Todo',
     });

@@ -181,7 +181,7 @@ describe('the mirror with the seed', () => {
     const gh = fakeGithub();
     const out = mirrorWith('check', gh, scene());
     assert.match(out, /^seeded Build status: Not started 1 · In PR 2 · Merged 1 · Released 1$/m);
-    assert.match(out, /^seeded Status: Todo 1 · In Progress 2 · Done 2$/m);
+    assert.match(out, /^seeded Status: In Progress 3 · Done 2$/m);
     assert.deepEqual(gh.hub.mutations, []);
   });
 
@@ -193,7 +193,7 @@ describe('the mirror with the seed', () => {
     assert.deepEqual(got('done_means_proved'), ['Merged', 'Done']);
     assert.deepEqual(got('focus_link'), ['In PR', 'In Progress']);
     assert.deepEqual(got('stray_new'), ['In PR', 'In Progress']);
-    assert.deepEqual(got('focus_neighbours'), ['Not started', 'Todo']);
+    assert.deepEqual(got('focus_neighbours'), ['Not started', 'In Progress']); // part proved, so under way
   });
 
   test('--apply on a board with values already replaces Todo, and no other value of Status, and no Build status', () => {

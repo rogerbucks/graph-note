@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/data-guard.test.js",
+  "test": "what the first review found > a different case of the folder’s name is the same folder, for files and for Bash",
+  "seen_failing_first": false,
+  "evidence": "The test passed against its parent because the machine's disk ignores case: the real path of a name in another case came back as the folder's own, so the old code refused it. The new lower-case comparison is what keeps a case-sensitive disk safe, which a case-insensitive disk cannot show failing."
+}

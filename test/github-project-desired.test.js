@@ -303,10 +303,24 @@ describe('the project fields', () => {
     );
   });
 
-  test('give every issue the first stage, Not started, and the Status Todo, as the values a new item starts with', () => {
+  test('give every issue the first stage, Not started, and the Status Todo, unless some of its tests are written', () => {
     const { issues } = desiredState(board, WORKSTREAMS_WITH_QUESTIONS, [3, 4]);
     assert.ok(issues.length > 0);
-    assert.ok(issues.every((i) => i.buildStatus === 'Not started' && i.progress === 'Todo'));
+    assert.ok(issues.every((i) => i.buildStatus === 'Not started'));
+    for (const i of issues) assert.equal(i.progress, i.status === 'part' ? 'In Progress' : 'Todo', i.id);
+  });
+
+  test('give a requirement whose only test is partial the Status In Progress, not Todo', () => {
+    const withPartial = readBoard(`${FIXTURE.trimEnd()},
+(partial_thing:Requirement {section: '3', slice: 3, level: 'must', rule: 'Only a partial test proves this so far.'}),
+(test_partial:Test {proves: 'the part that is written', file: 'test/part.test.js', where: 'repo', status: 'partial'}),
+(partial_thing)-[:PROVED_BY]->(test_partial)
+`);
+    const { issues } = desiredState(withPartial, WORKSTREAMS, [3]);
+    const partial = byId(issues, 'partial_thing');
+    assert.equal(partial.status, 'part');
+    assert.equal(partial.progress, 'In Progress');
+    assert.equal(byId(issues, 'done_means_proved').progress, 'Todo', 'an open requirement stays Todo');
   });
 
   test('take a seed in place of those, for the ids it names, and no more', () => {

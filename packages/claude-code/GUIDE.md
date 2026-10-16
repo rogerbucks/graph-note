@@ -50,6 +50,32 @@ unless the app sets its own. Whether the desktop app does, and keeps the drawing
   `storeGate`) before every send in `editor-store.ts`: a read, a draft, the change stream, a stale write's answer. A
   refusal sends `gone` and no text, and a changed note needs a new question. A note already open and now held back is closed. `gate` asks the same for `/graph <note>`'s own
   drawing. The mod reads the settings from `settings.json` in its data folder; none is the defaults, the strictest.
+- `data-guard.ts` — `guardDataFolder` (spec §26): the mod's data folder, which holds `settings.json` and the drafts, is the
+  user's alone, so a `tool.call` hook in `register.tsx` refuses Claude's own Write, Edit, NotebookEdit and Bash calls that
+  reach it (a guard that fails refuses too; `MultiEdit` is not a tool of this Claude Code, and is judged if it appears).
+  The refusal (`DATA_FOLDER_REFUSAL`) says the user changes these settings, in `settings.json` in the plugin data folder,
+  and echoes nothing of the call. Reads (the Read tool, Grep) are not hooked. **File tools** are judged by the target's
+  real path (asked of `bin/real-path.mjs`), a relative path taken from the session's folder, a file not yet made by its
+  nearest parent that exists, so a link elsewhere, or a linked parent, is found, and so is a link that leads nowhere yet (a dangling link, or
+  one as a parent, asked of the same process with `--link` and followed from the link's own folder, up to 8 in a
+  row). Names are compared without regard to case, and the real path is the disk's own (`realpathSync.native`), so
+  `GRAPH-NOTE` on a macOS disk is the folder. **Fail closed:** a path that is not there is an answer (exit 2), but node
+  missing, a process that fails or one that does not answer in time refuses the call (`CHECK_FAILED_REFUSAL`). An empty
+  `CLAUDE_PLUGIN_DATA` is unset. **Scope:** the editor server's own writes of drafts are the mod's and are not
+  hooked; the hook judges Claude's tool calls, which a subagent's are among when the host raises `tool.call` for them
+  (not tested here). **Bash limits, honestly:** a command
+  cannot be parsed, so it is refused when it names the folder at all, even to read it (as written, real, through the
+  home folder by tilde or the HOME variable, or by `CLAUDE_PLUGIN_DATA`), or names `plugins/data` as whole path parts (so a renamed or moved
+  folder is caught; the check is made on a copy with quotes and backslashes taken out and the home forms put in), or has a word (the first 40 with a `/`, or starting `.` or `~`) that
+  resolves into it. A command with `mv`, `rm`, `cp`, `rsync` or `ln` in it is also refused when one of those words
+  resolves to a folder above the data folder and below home (the Claude config folder, its plugins folder); `ls` and
+  other reads of those stay allowed. A relative link is settled from the real path of its own folder. It does not stop
+  a glob that expands to such a folder (a star in place of part of the folder's name), a name the shell builds, other tools that move folders (`find
+  -delete`, `git`, `install`, `tar -x`), and a path the shell builds (`cd` there, then a bare file name; a variable, a glob,
+  command substitution or an encoded string that makes the path), a program that is handed no path and finds the folder
+  itself, or a write through another tool such as an MCP server. It is a guard against a session slipping, not against
+  one set on getting round it; the settings file's own mode is the other half. The `propose` tool and its sender
+  (`bin/propose.mjs`) are the mod's own processes, not Claude's Write, Edit or Bash calls, so the guard does not meet them.
 - `editor-propose.ts` — Claude's proposals (workstream C7, cc_claude_only, cc_claude_proposes): the launcher's `propose`
   sends Claude's input, as JSON, with a key made for each start (`key` port, passed to the server as
   `GRAPH_NOTE_EDITOR_PROPOSER`), through the shipped sender `bin/propose-process.ts` (built to `mod/bin/propose.mjs`, run

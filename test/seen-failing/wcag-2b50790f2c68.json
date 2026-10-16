@@ -1,0 +1,6 @@
+{
+  "file": "test/wcag.test.js",
+  "test": "every host > is named in the spec: every interface, in every host, WCAG 2.2 Level AA",
+  "seen_failing_first": false,
+  "evidence": "This tests the registry of hosts and the requirement's link in the spec copy, which the same commit makes; it holds a rule about the repository, not product code."
+}
