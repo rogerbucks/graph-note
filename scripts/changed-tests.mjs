@@ -40,7 +40,7 @@ const DEVICE_QUOTES = 'test/device-check-quotes.test.js';
 const READERS = [
   [/^(AGENTS\.md|scripts\/changed-tests\.mjs)$/, [CHEAP, CEILING]],
   [/^(CLAUDE\.md|\.ignore|scripts\/quiet-reporter\.mjs|scripts\/quiet_unittest\.py)$/, [CHEAP]],
-  [/^(CONTRIBUTING\.md|(packages|python)\/[^/]+\/GUIDE\.md)$/, [CONVENTIONS]],
+  [/^(CONTRIBUTING\.md|(packages|python)\/[^/]+\/(GUIDE\.md|guide\/[^/]+\.md))$/, [CONVENTIONS]],
   [/^README\.md$/, [CONVENTIONS, 'test/policy.test.js']],
   [/^(test-vault\/.*|scripts\/reset-test-vault\.mjs)$/, ['test/test-vault.test.js', DEVICE_NOTES, DEVICE_QUOTES]],
   [/^packages\/obsidian\/test\/device-checklist\.md$/, [DEVICE_NOTES, DEVICE_QUOTES]],

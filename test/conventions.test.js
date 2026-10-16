@@ -255,7 +255,8 @@ describe('small modules, easy to find and to work in', () => {
         missing.push(guide);
         continue;
       }
-      const text = read(guide);
+      // the guide and, when it is an index, the topic files in its guide/ folder
+      const text = [guide, ...walk(`${p}/guide`).filter((f) => f.endsWith('.md'))].map(read).join('\n');
       const folders = [
         ...new Set(
           walk(`${p}/src`)
