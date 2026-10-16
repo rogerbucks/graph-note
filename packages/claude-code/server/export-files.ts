@@ -18,6 +18,7 @@ export interface ExportFs {
   unlink(path: string): Promise<void>;
 }
 
+/** Node's own file operations. */
 export const NODE_EXPORT_FS: ExportFs = {
   open: (path, flags, mode) => fs.open(path, flags, mode),
   lstat: (path) => fs.lstat(path),

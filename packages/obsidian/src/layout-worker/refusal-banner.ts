@@ -2,7 +2,7 @@
 // the graph is over and the numbers, or how long its layout was given, with an icon beside the words, never colour alone.
 // The words are the core's (refusal-words.ts), shared with the browser editor's page.
 import { setIcon } from 'obsidian';
-import { refusalWords } from '@graph-note/core';
+import { refusalWords } from '@graph-note/core/hosts/refusal-words';
 import type { Refusal } from '@graph-note/core';
 
 /** Puts the banner saying why the graph is not drawn at the end of `parent`. */

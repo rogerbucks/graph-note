@@ -15,7 +15,7 @@ import { exportPlan } from '../../core/src/export-plan.ts';
 import { exportScope } from '../../core/src/export-scope.ts';
 import { exportWithLayout, pngSize } from '../../core/src/export.ts';
 import type { ExportInfo, ExportLayout, PngSize } from '../../core/src/export.ts';
-import { exportFailureWords, exportRefusalWords } from '../../core/src/refusal-words.ts';
+import { exportFailureWords, exportRefusalWords } from '../../core/src/hosts/refusal-words.ts';
 import type { Settings } from '../../core/src/settings.ts';
 import { readStyle } from '../../core/src/style.ts';
 import type { Exporting } from '../../core/src/display/export/export-form.ts';

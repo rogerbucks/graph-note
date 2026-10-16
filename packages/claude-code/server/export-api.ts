@@ -7,7 +7,7 @@
 // The call carries the token and the server's own origin like any change, and its body its own, larger limit, as an image
 // is larger than a note; any other path keeps the note's limit.
 import { posix } from 'node:path';
-import { vaultFolder } from '@graph-note/core';
+import { vaultFolder } from '@graph-note/core/hosts/vault-folder';
 import type { ApiAnswer, ApiHandler, ApiRequest } from './start-server.ts';
 import { EXPORT_BODY_LIMIT } from './request-body.ts';
 import { NODE_EXPORT_FS, nameProblem, writeNewFiles, type ExportFs, type NewFile } from './export-files.ts';
