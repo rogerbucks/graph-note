@@ -520,6 +520,13 @@
       "wcag_checked"
     ]
   },
+  "W35": {
+    "title": "Tests make their own files",
+    "requirements": [
+      "tests_self_contained",
+      "test_files_generated"
+    ]
+  },
   "Q": {
     "title": "Open questions",
     "requirements": []
