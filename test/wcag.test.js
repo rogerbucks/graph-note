@@ -27,7 +27,7 @@ import * as paneNotes from '../packages/obsidian/test/host/pane-notes.js';
 import { built, cleanUp } from '../packages/claude-code/test/editor-page-support.js';
 import { browserHost } from '../packages/claude-code/page/browser-host.ts';
 import { THEMES, audit, auditView, openWindow, pageFor, obsidianVariables } from './repository/wcag.js';
-import { auditPage, openEditorPage } from './repository/wcag-page.js';
+import { auditPage, openEditorPage, PAGE_NOTE } from './repository/wcag-page.js';
 
 const here = new URL('../', import.meta.url).pathname;
 
@@ -209,13 +209,20 @@ describe('the browser editor’s page: every state, in both themes', () => {
   });
 
   /** The page opened as the pane opens it (the token and the note in the address), or with neither. */
-  const open = (hash) => {
-    const page = openEditorPage(dir, hash);
+  const open = (hash, note, draft) => {
+    const page = openEditorPage(dir, hash, note, draft);
     opened.push(page);
     return page;
   };
   const withNote = '#token=t&note=Reader.md';
-  const drawn = (page) => until(() => !!page.window.document.querySelector('.gn-drawing img'));
+  const drawn = (page) =>
+    until(() => !!page.window.document.querySelector('.graph-note-pane-drawing svg.graph-note-svg'), 8000);
+  // a link naming a thing that is not there: a problem, listed with its fix, and an estimated link in the drawing
+  const SLIPPED = PAGE_NOTE.replace(
+    '(large)-[:ANSWERS]->(q)',
+    "(large)-[:ANSWERS]->(q),\n(eyes:Reason {title: 'E'}),\n(eyes)-[:FAVOURS]->(larg)",
+  );
+  const TWO_BLOCKS = `${PAGE_NOTE}\n\`\`\`gql\n// graph: other\n(x:Thing {name: 'X'})\n\`\`\`\n`;
 
   const STATES = {
     'before the note is opened, saying how to open it': async () => open(''),
@@ -224,11 +231,49 @@ describe('the browser editor’s page: every state, in both themes', () => {
       await drawn(page);
       return page;
     },
+    // the editing states (C9): the edit pane of the Obsidian host, which the layer draws on the page
+    'the edit pane with a problem listed and marked': async () => {
+      const page = open(withNote, SLIPPED);
+      await drawn(page);
+      await until(() => page.window.document.querySelectorAll('.graph-note-pane-problems li').length > 0);
+      return page;
+    },
+    'the edit pane with the picker of two graph blocks': async () => {
+      const page = open(withNote, TWO_BLOCKS);
+      await drawn(page);
+      await until(() => !!page.window.document.querySelector('select[aria-label="Graph block"]'));
+      return page;
+    },
+    'the edit pane with a kept draft offered back': async () => {
+      const page = open(withNote, PAGE_NOTE, { text: 'x', against: null });
+      await drawn(page);
+      await until(() => !page.window.document.querySelector('.graph-note-draft').hidden);
+      return page;
+    },
+    'the details of a thing, opened beside the text': async () => {
+      const page = open(withNote);
+      await drawn(page);
+      const box = page.window.document.querySelector('g.node[data-key]');
+      box.dispatchEvent(new page.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      await until(() => !!page.window.document.querySelector('.graph-note-details'));
+      return page;
+    },
+    'the details of an estimated link, with its quick fix': async () => {
+      const page = open(withNote, SLIPPED);
+      await drawn(page);
+      await until(() => !!page.window.document.querySelector('g.edge[data-estimate]'));
+      page.window.document
+        .querySelector('g.edge[data-estimate]')
+        .dispatchEvent(new page.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      await until(() => !!page.window.document.querySelector('.graph-note-details'));
+      return page;
+    },
     'the export form open': async () => {
       const page = open(withNote);
       await drawn(page);
-      await until(() => !!page.window.document.querySelector('.graph-note-bar button'));
-      page.window.document.querySelector('.graph-note-bar button').click();
+      const exporter = () => page.window.document.querySelector('.graph-note-bar button[aria-label="Export"]');
+      await until(() => !!exporter());
+      exporter().click();
       await until(() => !!page.window.document.querySelector('.graph-note-export'));
       return page;
     },

@@ -15,7 +15,8 @@ export type Redraw = 'unchanged' | 'reloaded' | 'conflict';
  * nothing to send. Or why not, with what was typed kept as a draft when there is one.
  */
 export type ToWrite =
-  { ok: true; note: string; against: string; unchanged?: true } | { ok: false; reason: string; draft?: string };
+  | { ok: true; note: string; against: string; unchanged?: true }
+  | { ok: false; reason: string; draft?: string; edit?: true; history?: true; stopped?: true };
 
 /** Undo's refusal once another program has changed the block. */
 export const UNDO_OVER_THEIRS =
@@ -46,6 +47,16 @@ export class EditorSession {
   /** The block as the page shows it. */
   get text(): string {
     return this.pane.text;
+  }
+
+  /** The core's session on the block, which the shared block editor types into and reads. */
+  get session(): PaneSession {
+    return this.pane;
+  }
+
+  /** The note as the page last had it or wrote it. */
+  get current(): string {
+    return this.note;
   }
 
   /** What is typed, with its selection. */
@@ -91,6 +102,16 @@ export class EditorSession {
     this.version = version;
   }
 
+  /**
+   * The page wrote `note` whole itself, as Lock the graph or declaring Deferred does, and the server took it as `version`:
+   * the note now, its block followed as it is in it. Not a change by another program, so no history is dropped.
+   */
+  wrote(note: string, version: string): Redraw {
+    this.note = note;
+    this.version = version;
+    return this.pane.noteChanged(note);
+  }
+
   /** The note with the last write undone (what is typed written first), or why not: never over another's change. */
   undo(): ToWrite {
     const against = this.version;
@@ -110,10 +131,12 @@ export class EditorSession {
     // the core drops the steps written before another program changed the block (undo_never_over_theirs), and says so;
     // stopped by a copy of the block it cannot tell from it, it says that in its own words (block_followed_not_its_copy)
     const why = this.pane.stepRefusal(way);
-    if (why) return { ok: false, reason: this.pane.stopped ? why : UNDO_OVER_THEIRS };
+    // a refusal for the history needs no draft: nothing typed is lost (`history`, as the pane's own are marked)
+    if (why) return { ok: false, reason: this.pane.stopped ? why : UNDO_OVER_THEIRS, history: true };
     const can = way === 'undo' ? this.pane.canUndo() : this.pane.canRedo();
     if (!can) return { ok: true, note: this.note, against, unchanged: true };
-    if ((way === 'undo' ? this.undoable : this.redoable) === 0) return { ok: false, reason: UNDO_OVER_THEIRS };
+    if ((way === 'undo' ? this.undoable : this.redoable) === 0)
+      return { ok: false, reason: UNDO_OVER_THEIRS, history: true };
     const w = way === 'undo' ? this.pane.undo(this.note) : this.pane.redo(this.note);
     if (!w.ok) return w;
     this.note = w.note;

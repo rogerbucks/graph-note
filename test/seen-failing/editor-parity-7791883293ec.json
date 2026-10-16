@@ -1,0 +1,10 @@
+{
+  "file": "packages/claude-code/test/editor-parity.test.js",
+  "test": "C9: every kind of edit writes the same bytes on the page and in Obsidian’s pane (cc_same_bytes) > an estimated link’s quick fix, taken from the drawing’s details",
+  "seen_failing_first": false,
+  "fault": true,
+  "commits": [
+    "e1a1a7e41b437c701cd9d773906d06539df87be0"
+  ],
+  "evidence": "The cases come a commit before their code, as the process asks (draft PR, cases, then code): they fail at their own commit because the edit pane is not in the display layer and not on the page yet, and pass from the commits that move the pane into the layer and open it on the page."
+}

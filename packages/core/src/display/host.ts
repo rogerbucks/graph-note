@@ -29,6 +29,13 @@ export interface DisplayHost {
   notice: (message: string) => void;
   /** Shows a menu of `entries` with its top left at `at`, in the window of `doc`. */
   menu: (entries: MenuEntry[], at: { x: number; y: number }, doc: Document) => void;
+  /**
+   * Whether the host's content security policy forbids inline styles (`style-src` without `'unsafe-inline'`), as the
+   * browser editor's page does (editor spec §26, cc_csp). The core writes the colours of a drawing as style attributes;
+   * where they are forbidden the layer sets the same declarations through the CSSOM, which the policy allows, and no
+   * style attribute is ever parsed from markup. Not set: styles stay attributes, as Obsidian has them.
+   */
+  noInlineStyle?: boolean;
 }
 
 /** What is said when the layer is used before any host was installed. */
@@ -52,6 +59,9 @@ export function inHost<T>(value: T): T {
   displayHost();
   return value;
 }
+
+/** Whether the host forbids inline styles, so a drawing's are set through the CSSOM; false with no host installed. */
+export const noInlineStyle = (): boolean => installed?.noInlineStyle === true;
 
 /** Draws the icon named `name` into `el`, through the host. */
 export const setIcon = (el: HTMLElement, name: string): void => displayHost().icon(el, name);

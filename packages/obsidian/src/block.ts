@@ -38,7 +38,7 @@ import { aidsOf } from '@graph-note/core/display/graph-view/viewer-aids';
 import { diagramShown, tableDrawn } from '@graph-note/core/display/graph-view/type-strip';
 import { readOnlyHere, settlePlacements, whenPlaced } from '@graph-note/core/display/graph-view/placement';
 import { renderProblems } from '@graph-note/core/display/graph-view/problems-list';
-import { refusalBanner } from './layout-worker/refusal-banner';
+import { refusalBanner } from '@graph-note/core/display/refusal-banner';
 import { dataExportBar } from '@graph-note/core/display/export/export-form';
 import type { ShownProblem } from '@graph-note/core/display/graph-view/problems-list';
 import { linkHost, vaultNames } from './links/link-host';

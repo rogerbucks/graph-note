@@ -20,7 +20,7 @@ import type GraphNotePlugin from '../main';
 import { renderCode } from '@graph-note/core/display/code';
 import { graphCard } from '../graph-card';
 import { readOnlyHere, whenPlaced } from '@graph-note/core/display/graph-view/placement';
-import { refusalBanner } from '../layout-worker/refusal-banner';
+import { refusalBanner } from '@graph-note/core/display/refusal-banner';
 import { renderProposalStrip } from '@graph-note/core/display/proposals/proposal-strip';
 import type { ProposalCard } from '@graph-note/core/display/proposals/proposal-strip';
 

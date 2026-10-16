@@ -1,0 +1,10 @@
+{
+  "file": "packages/claude-code/test/editor-page.test.js",
+  "test": "C9: the page opens the note with the edit pane of the Obsidian host (cc_editor_opens, cc_core_only) > the edit pane is the layer’s, and the plugin keeps only its own note behind it",
+  "seen_failing_first": false,
+  "fault": true,
+  "commits": [
+    "e1a1a7e41b437c701cd9d773906d06539df87be0"
+  ],
+  "evidence": "The cases come a commit before their code, as the process asks (draft PR, cases, then code): they fail at their own commit because the edit pane is not in the display layer and not on the page yet, and pass from the commits that move the pane into the layer and open it on the page."
+}

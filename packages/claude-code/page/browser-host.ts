@@ -101,5 +101,7 @@ export function browserHost(win: Window): DisplayHost {
       win.setTimeout(() => note.remove(), NOTICE_MS);
     },
     menu: showMenu,
+    // the page's policy allows no inline style (cc_csp): a drawing's colours are set through the CSSOM instead
+    noInlineStyle: true,
   };
 }

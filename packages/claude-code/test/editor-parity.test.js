@@ -9,6 +9,7 @@ import { createHash } from 'node:crypto';
 import { EditorSession } from '../src/editor-session.ts';
 import { build, until } from '../../obsidian/test/host/load-plugin.js';
 import { NOTE, READER, open, type, note } from '../../obsidian/test/host/pane-notes.js';
+import { parityPageCases } from './editor-parity-page.js';
 
 before(() => build());
 
@@ -150,3 +151,6 @@ describe('a decision on a proposal writes the same bytes through the page’s ca
     });
   }
 });
+
+// C9: every kind of edit, made on the page as built and in Obsidian's pane, writes the same bytes (editor-parity-page.js).
+parityPageCases();

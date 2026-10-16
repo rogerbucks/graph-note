@@ -30,7 +30,7 @@ import { graphCard } from './graph-card';
 import { aidsOf } from '@graph-note/core/display/graph-view/viewer-aids';
 import { diagramShown, tableDrawn } from '@graph-note/core/display/graph-view/type-strip';
 import type { ViewShown } from '@graph-note/core/display/graph-view/view-strip';
-import { refusalBanner } from './layout-worker/refusal-banner';
+import { refusalBanner } from '@graph-note/core/display/refusal-banner';
 import { dataExportBar } from '@graph-note/core/display/export/export-form';
 import { sourcedView } from './sources/sources';
 import { sourceAlert, sourceStrip } from './sources/source-strip';

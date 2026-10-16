@@ -376,41 +376,27 @@ card in a component Obsidian owns (`graphCard`). The layer's types for what the 
 
 ### `src/block-editor/` — the text of one graph block, in the pane or in place
 
-- `block-editor.ts` — `BlockEditor`: ties the parts together; the field and what typing in it does. After another
-  program, a sync or another pane changes its block, Undo and Redo keep their names, so voice control finds them, and
-  are marked unavailable and described by why there is nothing to take back; pressed, or by key, they say so in a
-  notice and to screen readers (cleared first, so a repeat is heard), leaving the note as it is
-  (undo_never_over_theirs). Typing makes Undo available again at once. Switching block in the picker starts that
-  block's own history (undo_stays_in_its_block).
-- `editor-layout.ts` — the editor's parts on the page, built once for each block.
-- `block-picker.ts` — the pane's picker of the note's graph blocks: built again from the note as the session last saw
-  it each time the tools are shown (after every write, reload and change made outside), so its lines are never an older
-  note's; a block chosen is found again, once what is typed is written, by its place among the graph blocks, its graph
-  and its text, and said in a notice when it is no longer there, never silently nothing, nor another block opened.
-  Open again, in the tools of the pane and in place while the session is stopped by a copy of its block (§9), keeps
-  what is typed as a draft and goes on with a block of its graph, the one on its last line or else the first, or says
-  none is left.
-- `typing-rests.ts` — the waits after typing: the write once typing rests (in the pane within the spec's third of a
-  second, in place longer) and the redraw, each cleared when a write is made at once or the editor goes.
-- `block-note.ts` — the note behind the editor and its session: opening, writing, undo, Lock, drafts; the note followed
-  when it is renamed or moved, and what is typed kept as a draft when it is deleted; each editor's own draft known by
-  its id, beside another's. Stopped by a copy, the stop is said once: typing after it is saved quietly as the editor's
-  own draft at each pause and at each change from outside, with no banner or notice again, so it is never held in
-  memory alone.
+**The editor is the display layer's** (editor spec §26, C9), in `packages/core/src/display/editor/` and imported as
+`@graph-note/core/display/editor/<module>`, the same code the browser editor's page runs: `block-editor.ts` (`BlockEditor`,
+which ties the parts together, the field and what typing in it does; after another program, a sync or another pane changes
+its block, Undo and Redo keep their names, so voice control finds them, and are marked unavailable and described by why
+there is nothing to take back, undo_never_over_theirs; switching block in the picker starts that block's own history,
+undo_stays_in_its_block), `editor-layout.ts`, `block-picker.ts` (the picker and Open again), `typing-rests.ts`,
+`kept-field.ts`, `typing-keys.ts`, `inline-completion.ts`, `editor-history.ts`, `added-for-you.ts`, `text-help.ts`,
+`text-picture.ts`, `problem-help.ts`, `suggestions.ts`, `kept-draft.ts` (the draft banner, which acts on the very draft
+shown, by its id), `pane-drawing.ts` (the pane's own drawing, with a View menu of its own, §25) and `lock-text.ts` (the
+text Lock the graph writes). What the editor asks of its note is one interface, `editor-note.ts` (`EditorNote`); the layer's
+own guide (`packages/core/GUIDE.md`) says what each does. The plugin keeps what is Obsidian's:
+
+- `block-editor.ts` — `BlockEditor`: the layer's editor wrapped in a `Component` Obsidian owns, to load and unload with the
+  pane or the plugin, over the vault's note (below). Its public surface is what the pane, the cards and the editors in
+  place use (`mount`, `open`, `flush`, `replace`, `reveal`, `done`, `detach`, `selected`, `lists`).
+- `block-note.ts` — `BlockNote`, the layer's `EditorNote` over the vault: opening, writing, undo, Lock, drafts; the note
+  followed when it is renamed or moved, and what is typed kept as a draft when it is deleted; each editor's own draft known
+  by its id, beside another's. Stopped by a copy, the stop is said once: typing after it is saved quietly as the editor's
+  own draft at each pause and at each change from outside, with no banner or notice again, so it is never held in memory
+  alone.
 - `note-writing.ts` — writing safely, through the note's editor or the vault.
-- `kept-field.ts` — the field's focus and scroll, kept through each redraw.
-- `typing-keys.ts` — what typing does: Tab and Enter for the inline match or a suggestion, Escape to put it away, undo and
-  redo keys.
-- `inline-completion.ts` — the inline match: the best completion for the caret, shown as ghost text, written only when taken.
-- `editor-history.ts` — the text's own undo history in the field.
-- `added-for-you.ts` — the comma and the colon added as you type, and a closer typed where it is already there stepped over.
-- `text-help.ts` — the help beside the text, from what was read.
-- `text-picture.ts` — the coloured picture under the field, with the inline match as ghost text where the caret is.
-- `problem-help.ts` — the problems list, the fixes on the caret's line, the announcements.
-- `suggestions.ts` — the suggestions bar.
-- `kept-draft.ts` — the draft banner: what was typed, never lost; Restore and Discard act on the very draft shown, by its
-  id, and on no other when it is gone.
-- `pane-drawing.ts` — the pane's own drawing of what is typed, with a View menu of its own (§25).
 
 ## Tests, `test/`
 

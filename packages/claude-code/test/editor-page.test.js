@@ -9,7 +9,9 @@
 //     motion cases.
 //   - C6 (editor-page-export.js, registered below) proves cc_export_same: the page's export is the shared export.
 //   - C8 (editor-page-access.js, registered below) proves cc_keyboard, cc_reduced_motion and cc_text_version.
-// Until C9 builds editing on the page (cc_editor_opens, cc_core_only, cc_same_bytes), test_cc_page is `partial`.
+//   - C9 (editor-page-editing.js, registered below) proves cc_editor_opens: the page opens the note with the drawing, the
+//     details and the edit pane of the Obsidian host, all from the layer, its colours set under the unchanged policy.
+// With C9 the file proves every rule its record covers, and test_cc_page is `written`.
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
@@ -20,6 +22,7 @@ import { build } from 'esbuild';
 import { FakeElement, fakeDocument, installGlobals } from '../../obsidian/test/host/fake-dom.js';
 import { ask, POLICY } from './editor-threats-support.js';
 import { exportSameCases } from './editor-page-export.js';
+import { editingCases } from './editor-page-editing.js';
 import { accessCases } from './editor-page-access.js';
 import { PACKAGE, built, cleanUp, pageSources, runWorker, servePage } from './editor-page-support.js';
 
@@ -581,3 +584,6 @@ exportSameCases({ at, ROOT, LAYER, importsOf });
 
 // C8: cc_keyboard, cc_reduced_motion and cc_text_version (cases in editor-page-access.js, within the size baseline).
 accessCases({ at, ROOT, LAYER });
+
+// C9: the page opens the note with the edit pane of the Obsidian host (cases in editor-page-editing.js, within the size baseline).
+editingCases({ at, LAYER, importsOf, bundled });

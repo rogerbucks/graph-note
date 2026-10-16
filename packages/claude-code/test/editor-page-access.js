@@ -6,7 +6,7 @@
 // (not on the page); what the page writes is a decision on a proposal, a real button. Test code only.
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -386,11 +386,19 @@ export function accessCases({ at, ROOT, LAYER }) {
     });
 
     test('the page redraws the words whenever the note changes: a decision or a change on disk', () => {
+      // C9: the note is the editor's (page-note.ts), which tells the page each time it has a new one, and the page draws
+      // everything but the editor, the words included, again then: a change on disk, a decision, a write of its own
       const main = pageSources()['page-main.ts'];
-      const draw = main.match(/const draw = async \(\) =>([\s\S]*?)\n {6}\}\);/)[1];
-      assert.match(draw, /showGraph\(/, 'drawing the graph draws its words');
-      assert.match(main, /current = line;\s*void draw\(\)/, 'a change on disk');
-      assert.equal(main.match(/await draw\(\)/g).length >= 3, true, 'start, a decision, a refused write');
+      const draw = main.match(/const draw = \(\) =>([\s\S]*?)\n {6}\}\);/)[1];
+      assert.match(draw, /addTextVersion\(\)/, 'drawing the page draws the words');
+      assert.match(main, /page\.onSeen = \(\) => void draw\(\)/, 'whenever the note is new');
+      assert.equal(main.match(/await draw\(\)/g).length >= 1, true, 'at the start');
+      const note = readFileSync(at('packages/claude-code/page/page-note.ts'), 'utf8');
+      assert.equal(
+        note.match(/this\.onSeen\?\.\(/g).length >= 3,
+        true,
+        'a change on disk, a write of its own, a whole write',
+      );
     });
   });
 }
