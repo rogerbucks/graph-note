@@ -246,10 +246,64 @@ describe('what the first review found', () => {
   });
 });
 
-describe('the shipped real-path process', () => {
-  const script = fileURLToPath(new URL('../bin/real-path-process.ts', import.meta.url));
-  const run = (...args) => spawnSync(process.execPath, [script, ...args], { encoding: 'utf8' });
+const script = fileURLToPath(new URL('../bin/real-path-process.ts', import.meta.url));
+const run = (...args) => spawnSync(process.execPath, [script, ...args], { encoding: 'utf8' });
 
+describe('what the second review found', () => {
+  test('a relative link is settled from the real path of its folder, however that folder was reached', async () => {
+    const w = world();
+    // the folder the link sits in is reached through another link: ../data is beside the real folder, not the alias
+    const sub = join(w.top, 'sub');
+    mkdirSync(sub);
+    const q = join(w.elsewhere, 'q');
+    symlinkSync(sub, q);
+    symlinkSync('../data/graph-note/not-yet.json', join(sub, 'l'));
+    const answer = run('--link', '--', join(q, 'l'));
+    assert.equal(answer.stdout, join(w.data, 'not-yet.json'));
+    // the guard over the shipped process refuses the write through it
+    const viaProcess = {
+      ...w.ports,
+      readLink: async (path) => {
+        const out = run('--link', '--', path);
+        return out.status === 3 ? null : out.stdout;
+      },
+    };
+    refused(await guardDataFolder('Write', { file_path: join(q, 'l') }, viaProcess));
+  });
+
+  test('Bash that moves, removes, copies, syncs or links an ancestor of the folder below home is refused', async () => {
+    const w = world();
+    const config = join(w.top, 'home');
+    const fallback = join(config, '.claude', 'plugins', 'data', 'graph-note');
+    mkdirSync(fallback, { recursive: true });
+    const ports = { ...w.ports, data: fallback, home: config };
+    for (const command of [
+      'mv ~/.claude ~/old',
+      'rm -rf ~/.claude/plugins',
+      'cp -r ~/.claude/plugins /x',
+      'rsync -a ~/.claude/ /x/',
+      'ln -s ~/.claude /y',
+      `mv ${join(config, '.claude')} ${join(w.elsewhere, 'moved')}`,
+      'cd /x && rm -r "$HOME"/.claude',
+    ]) {
+      refused(await guardDataFolder('Bash', { command }, ports));
+    }
+  });
+
+  test('plain reads of those ancestors, and moves of other things below home, are allowed', async () => {
+    const w = world();
+    const config = join(w.top, 'home');
+    const fallback = join(config, '.claude', 'plugins', 'data', 'graph-note');
+    mkdirSync(join(config, 'notes'), { recursive: true });
+    mkdirSync(fallback, { recursive: true });
+    const ports = { ...w.ports, data: fallback, home: config };
+    allowed(await guardDataFolder('Bash', { command: 'ls ~/.claude ~/.claude/plugins' }, ports));
+    allowed(await guardDataFolder('Bash', { command: 'mv ~/notes/a.md ~/notes/b.md' }, ports));
+    allowed(await guardDataFolder('Bash', { command: 'rm -rf ~ --help' }, ports));
+  });
+});
+
+describe('the shipped real-path process', () => {
   test('says a missing path with exit code 2, and anything else it cannot settle with 1', () => {
     const w = world();
     assert.equal(run('--', join(w.elsewhere, 'missing')).status, 2);
