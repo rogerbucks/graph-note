@@ -5,7 +5,7 @@ import { DEPARTURES } from './strictness.ts';
 import type { Departure, Strictness, StrictnessSettings } from './strictness.ts';
 import { STYLE } from './layout.ts';
 import { switchesFrom } from './ai-matrix.ts';
-import type { MatrixSwitch } from './ai-matrix.ts';
+import type { AiModel } from './ai-model.ts';
 import { vaultFolder } from './vault-folder.ts';
 import { AID_OPTIONS } from './settings-aids.ts';
 import { MATRIX_OPTIONS } from './settings-matrix.ts';
@@ -13,21 +13,7 @@ import type { MiniMapSetting } from './settings-aids.ts';
 
 export type { MiniMapSetting } from './settings-aids.ts';
 
-/** An AI model set up for §19: what it is for, and its ceiling — the highest classification of note it may be sent. */
-export interface AiModel {
-  name: string;
-  purpose: string;
-  ceiling: string;
-  /** Where requests go, set by the user; nothing is sent unless the user sends it. */
-  endpoint: string;
-  model: string;
-  /** The name of its key in the host's secret store: never the key itself. */
-  keyName: string;
-  /** The row of the vault's destination matrix the user picked for it (§19, model_ceiling); with none, `ceiling` rules. */
-  matrixRow?: string;
-  /** The conditional classes of that row the user switched on for this model, as the matrix names them. */
-  matrixOn?: MatrixSwitch[];
-}
+export type { AiModel } from './ai-model.ts';
 
 /** How a line the editor writes is indented. */
 export type Indent = 'two' | 'four' | 'tab';
