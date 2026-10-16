@@ -3,12 +3,16 @@
 // the one note for the session by the path the mod names, and hands the process its API and the note's id for the
 // address. With no vault in its environment it serves no API, as before. A note that cannot be opened, or a folder that
 // is refused, is thrown as plain words, which the process says on stderr before it listens anywhere.
+import { basename, dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { EditorProcessOptions } from './editor-process.ts';
 import { settingsFrom } from '@graph-note/core';
 import { matrixRowsFrom } from '@graph-note/core/hosts/matrix-table';
 import type { GateSettings } from '@graph-note/core';
 import { storeGate } from './editor-gate.ts';
 import { NoteStore } from './editor-store.ts';
+import { loadPageAssets, type PageAssets } from './page-assets.ts';
+import { withSettings } from './page-settings.ts';
 
 /** The variables the mod sets; the process reads these and no others. */
 export const EDITOR_ENVIRONMENT = {
@@ -43,6 +47,17 @@ export function gateSettings(raw: string | undefined): GateSettings {
   }
 }
 
+/**
+ * The page's files, from the folder the build made: `mod/page/` beside the built `mod/bin/` this process runs from, or
+ * `mod/page/` of the package when run from this source folder. Never the page's source folder. With no built page the
+ * start fails in plain words, before the server listens, rather than serving a page that cannot run.
+ */
+export async function pageFiles(here = dirname(fileURLToPath(import.meta.url))): Promise<PageAssets> {
+  const files = await loadPageAssets(join(here, basename(here) === 'bin' ? '../page' : '../mod/page'));
+  if (!files.has('/')) throw new Error('The editor page is not built: run `npm run build` for the Graph Note mod.');
+  return files;
+}
+
 /** The process's options from its environment: the store for the vault, with the note opened, and how it is stopped. */
 export async function optionsFromEnvironment(env: Record<string, string | undefined>): Promise<EditorProcessOptions> {
   const vault = env[EDITOR_ENVIRONMENT.vault];
@@ -60,7 +75,8 @@ export async function optionsFromEnvironment(env: Record<string, string | undefi
     throw new Error(opened.why);
   }
   return {
-    api: store.api,
+    api: withSettings(env[EDITOR_ENVIRONMENT.settings], store.api),
+    page: await pageFiles(),
     drain: () => store.stop(),
     note: opened.id,
     ignoreInput: env[EDITOR_ENVIRONMENT.input] === 'ignore',

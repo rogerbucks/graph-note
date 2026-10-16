@@ -16,6 +16,7 @@ import {
 } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import type { Duplex } from 'node:stream';
+import type { PageAssets, PageFile } from './page-assets.ts';
 import { readBody, BODY_LIMIT } from './request-body.ts';
 import { SECURITY_HEADERS, crossOrigin, hostAllowed, newToken, tokenMatches, writeAllowed } from './request-guard.ts';
 
@@ -80,6 +81,11 @@ export interface EditorServerOptions {
    * those under way (C0 review), so the process never exits half way through one.
    */
   drain?: () => Promise<void>;
+  /**
+   * The page's files, by their paths from the root (page-assets.ts), served by exact path with no token, as they say
+   * nothing of any note; the file at `/` is the page. With none, the placeholder page is served at `/` alone.
+   */
+  page?: PageAssets;
 }
 
 /** A running editor server. */
@@ -103,9 +109,9 @@ export interface EditorServer {
   stop(reason?: string): Promise<string>;
 }
 
-const OPTION_NAMES = new Set(['idleMs', 'now', 'every', 'api', 'drain']);
+const OPTION_NAMES = new Set(['idleMs', 'now', 'every', 'api', 'drain', 'page']);
 
-/** The page until the editor's own is built (workstream C5): it says so, and loads nothing. */
+/** The page where the build's files are not there (a server started from source, not from the built mod): it says so, and loads nothing. */
 const PAGE =
   '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><title>Graph Note editor</title></head>\n' +
   '<body><p>The Graph Note editor is not here yet.</p></body></html>\n';
@@ -120,6 +126,13 @@ const realEvery: Every = (ms, check) => {
 function send(res: ServerResponse, status: number, text: string, headers: Record<string, string> = {}): void {
   res.writeHead(status, { ...SECURITY_HEADERS, 'content-type': 'text/plain; charset=utf-8', ...headers });
   res.end(status === 204 ? undefined : text);
+}
+
+/** Sends one of the page's files with the headers every answer carries, under its own policy where it has one. */
+function sendFile(res: ServerResponse, file: PageFile): void {
+  const csp = file.csp ? { 'content-security-policy': file.csp } : {};
+  res.writeHead(200, { ...SECURITY_HEADERS, ...csp, 'content-type': file.type });
+  res.end(file.body);
 }
 
 /** Node's own refusal of a request it could not read (400, 408 or 431), with the headers every answer carries. */
@@ -163,6 +176,11 @@ export async function startEditorServer(options: EditorServerOptions = {}): Prom
     const method = req.method;
     if (method !== 'GET' && method !== 'PUT') return send(res, 405, 'This server takes only GET and PUT.');
     if (!url.startsWith('/api/')) {
+      const file = method === 'GET' ? options.page?.get(url) : undefined;
+      if (file) {
+        if (url === '/') seen();
+        return sendFile(res, file);
+      }
       if (url !== '/' || method !== 'GET') return send(res, 404, 'Not found.');
       seen();
       return send(res, 200, PAGE, { 'content-type': 'text/html; charset=utf-8' });

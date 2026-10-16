@@ -14,7 +14,7 @@
   "scripts": {
     "build": "npm run build --workspace packages/graph-spec && npm run build --workspace packages/obsidian && npm run build --workspace packages/claude-code",
     "dev": "npm run dev --workspace packages/obsidian",
-    "typecheck": "tsc -p packages/core --noEmit && tsc -p packages/core/src/display --noEmit && tsc -p packages/obsidian --noEmit && tsc -p packages/graph-spec --noEmit && tsc -p packages/claude-code --noEmit",
+    "typecheck": "tsc -p packages/core --noEmit && tsc -p packages/core/src/display --noEmit && tsc -p packages/obsidian --noEmit && tsc -p packages/graph-spec --noEmit && tsc -p packages/claude-code --noEmit && tsc -p packages/claude-code/page --noEmit",
     "lint": "eslint . --max-warnings 0",
     "test": "node scripts/run-ceiling.mjs node --test --test-timeout=300000",
     "test:ai": "node scripts/run-ceiling.mjs node --test --test-timeout=300000 --test-reporter=./scripts/quiet-reporter.mjs",

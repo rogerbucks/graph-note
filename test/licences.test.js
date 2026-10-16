@@ -61,7 +61,7 @@ describe('what is bundled into a release', () => {
   test('the bundled packages are found from the lockfile', () => {
     assert.deepEqual(
       bundledPackages().map((p) => p.name),
-      ['@viz-js/viz'],
+      ['@viz-js/viz', 'marked'],
     );
   });
 

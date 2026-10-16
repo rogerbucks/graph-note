@@ -34,6 +34,20 @@
           "note": "The compiler's runtime and system libraries, linked into the WebAssembly."
         }
       ]
+    },
+    "marked@18.1.0": {
+      "licence": "MIT",
+      "licenceText": "texts/marked.MIT.txt",
+      "source": "https://github.com/markedjs/marked",
+      "checked": "2026-10-16, from the package's own LICENSE and package.json (no dependencies, no install script) at 18.1.0, published 2026-10-05",
+      "inside": []
+    },
+    "lucide-icons@redrawn": {
+      "licence": "ISC AND MIT",
+      "licenceText": "texts/lucide.ISC.txt",
+      "source": "https://github.com/lucide-icons/lucide",
+      "checked": "2026-10-16: not an npm package; the browser editor's icon files (packages/claude-code/page/icons/) are drawn by hand after Lucide's shapes, none copied as a file, and credited here as Lucide asks",
+      "inside": []
     }
   },
   "buildToolExceptions": {

@@ -4,6 +4,7 @@
 // address over once, as one line of JSON on stdout, `{"url":"http://127.0.0.1:<port>/#token=<token>"}`: the token in
 // the fragment, which a browser never sends, and written nowhere else. It stops on the first of an idle period, its
 // input closing, its parent exiting or a stop signal, says why on stderr, and exits.
+import type { PageAssets } from './page-assets.ts';
 import { startEditorServer, type ApiHandler } from './start-server.ts';
 import { watchSession } from './session-watch.ts';
 
@@ -13,6 +14,8 @@ export interface EditorProcessOptions {
   api?: ApiHandler;
   /** What a stop waits for: the note store's own stop, which finishes the writes under way. */
   drain?: () => Promise<void>;
+  /** The page's files (page-assets.ts), served from the server's own origin. */
+  page?: PageAssets;
   /** The id of the note the page opens on, handed over in the address's fragment beside the token. */
   note?: string;
   /** The session's end is not this process's input closing: the host closed it when it started the process (C2). */
@@ -34,6 +37,7 @@ export async function runEditorProcess(args: string[], options: EditorProcessOpt
   const server = await startEditorServer({
     ...(options.api ? { api: options.api } : {}),
     ...(options.drain ? { drain: options.drain } : {}),
+    ...(options.page ? { page: options.page } : {}),
   });
   const finish = (reason: string) => {
     void server.stop(reason).then(() => {
@@ -44,7 +48,10 @@ export async function runEditorProcess(args: string[], options: EditorProcessOpt
   };
   void server.closed.then((reason) => reason === 'idle' && finish(reason));
   watchSession(finish, { input: !options.ignoreInput });
-  process.stdout.write(
-    `${JSON.stringify({ url: `${server.origin}/#token=${server.token}${options.note ? `&note=${options.note}` : ''}` })}\n`,
-  );
+  process.stdout.write(`${JSON.stringify({ url: pageAddress(server.origin, server.token, options.note) })}\n`);
+}
+
+/** The address the page opens at: the token and the note's id in the fragment, the id encoded so no character in it can end or add a field. */
+export function pageAddress(origin: string, token: string, note?: string): string {
+  return `${origin}/#token=${token}${note ? `&note=${encodeURIComponent(note)}` : ''}`;
 }

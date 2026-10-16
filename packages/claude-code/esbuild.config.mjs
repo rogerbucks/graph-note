@@ -7,6 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { buildPage } from './esbuild.page.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const mod = join(here, 'mod');
@@ -39,6 +40,9 @@ await esbuild.build({
   outfile: join(mod, 'bin/editor-server.mjs'),
   platform: 'node',
 });
+
+// the browser editor's page, which that server serves from its own origin (esbuild.page.mjs)
+await buildPage(join(mod, 'page'));
 
 const graph = await import(`${join(mod, 'hooks/graph.js')}?${Date.now()}`);
 const note = readFileSync(join(here, '../../test-vault/Sample graph note.md'), 'utf8');
