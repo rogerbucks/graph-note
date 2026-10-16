@@ -8,7 +8,8 @@
 //     text shown as text, the worker, the theme, icons, offline, settings read only. C8 adds the accessibility and
 //     motion cases.
 //   - C6 (editor-page-export.js, registered below) proves cc_export_same: the page's export is the shared export.
-// Until the file proves every rule its record covers, test_cc_page is `partial`.
+//   - C8 (editor-page-access.js, registered below) proves cc_keyboard, cc_reduced_motion and cc_text_version.
+// With C8 the file proves every rule its record covers.
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
@@ -19,6 +20,7 @@ import { build } from 'esbuild';
 import { FakeElement, fakeDocument, installGlobals } from '../../obsidian/test/host/fake-dom.js';
 import { ask, POLICY } from './editor-threats-support.js';
 import { exportSameCases } from './editor-page-export.js';
+import { accessCases } from './editor-page-access.js';
 import { PACKAGE, built, cleanUp, pageSources, runWorker, servePage } from './editor-page-support.js';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
@@ -482,7 +484,8 @@ describe('C5: the page’s host shell, built and served as the mod ships it', ()
     const refs = [...page.text.matchAll(/(?:href|src)="([^"]+)"/g)].map((m) => m[1]);
     const urls = [...css.matchAll(/url\(['"]?([^'")]+)/g)].map((m) => m[1]);
     assert.ok(refs.length >= 2 && urls.length >= 40);
-    for (const ref of [...refs, ...urls]) {
+    // an address within the page (the skip link's `#gn-page`) asks for nothing
+    for (const ref of [...refs, ...urls].filter((r) => !r.startsWith('#'))) {
       assert.match(ref, /^\/[a-z]/, `${ref} is from the server's own root`);
       assert.equal((await ask(server.port, { path: ref })).status, 200, ref);
     }
@@ -576,4 +579,5 @@ describe('C5: the page’s host shell, built and served as the mod ships it', ()
 // C6: cc_export_same, the page's export is the shared export (cases in editor-page-export.js, within the size baseline).
 exportSameCases({ at, ROOT, LAYER, importsOf });
 
-// C8: the page's cases for cc_keyboard, cc_reduced_motion and cc_text_version go here.
+// C8: cc_keyboard, cc_reduced_motion and cc_text_version (cases in editor-page-access.js, within the size baseline).
+accessCases({ at, ROOT, LAYER });
