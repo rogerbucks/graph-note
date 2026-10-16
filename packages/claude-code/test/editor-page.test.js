@@ -9,7 +9,7 @@
 //     motion cases.
 //   - C6 (editor-page-export.js, registered below) proves cc_export_same: the page's export is the shared export.
 //   - C8 (editor-page-access.js, registered below) proves cc_keyboard, cc_reduced_motion and cc_text_version.
-// With C8 the file proves every rule its record covers.
+// Until C9 builds editing on the page (cc_editor_opens, cc_core_only, cc_same_bytes), test_cc_page is `partial`.
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';

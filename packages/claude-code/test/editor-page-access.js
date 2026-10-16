@@ -100,9 +100,9 @@ export function accessCases({ at, ROOT, LAYER }) {
       const css = (await ask((await servePage()).port, { path: '/page.css' })).text;
       const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => [m[1], m[2]]);
       const ring = rules.filter(([s, b]) => /:focus-visible/.test(s) && /outline:\s*[2-9]px solid/.test(b));
-      const selectors = ring.map(([s]) => s).join(',');
+      const selectors = ring.flatMap(([s]) => s.split(',').map((one) => one.trim()));
       for (const el of ['a', 'button', 'select', 'input', 'textarea', '[tabindex]'])
-        assert.match(selectors, new RegExp(`(^|[\\s,])${el.replace(/[[\]]/g, '\\$&')}:focus-visible`), el);
+        assert.ok(selectors.includes(`${el}:focus-visible`), el);
       // the page's own sheet; the shared sheet's two `outline: none` are the plugin's drawing nodes and its overlay editor,
       // neither of which is on this page (it shows the drawing as an image)
       assert.doesNotMatch(pageSources()['page.css'], /outline:\s*(?:none|0)\b/, 'a focus ring is never taken away');
