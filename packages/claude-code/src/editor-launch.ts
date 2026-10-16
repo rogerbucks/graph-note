@@ -28,7 +28,7 @@ export { settingsForServer } from './editor-settings-env.ts';
 /** What the launcher is handed by the code that runs it. */
 export interface EditorPorts {
   /** `$.process.spawn`, narrowed to what the launcher asks of it: a command by its arguments, and its environment. */
-  spawn: (request: { argv: readonly string[]; env?: Record<string, string> }) => Spawned;
+  spawn: (request: { argv: readonly string[]; env?: Record<string, string>; input?: string }) => Spawned;
   /**
    * A file's real path, links settled (`realPathVia` over the host's process call); with none, a matrix note cannot be
    * placed inside the vault and is refused.
@@ -277,7 +277,8 @@ export class EditorLauncher {
     if (command === undefined) return { ok: false, why: NO_NODE };
     const key = this.#ports.propose ? (this.#ports.key?.() ?? null) : null;
     const env = {
-      GRAPH_NOTE_EDITOR_PROPOSER: key ?? '',
+      // the key itself goes on standard input, where a process listing cannot show it
+      GRAPH_NOTE_EDITOR_PROPOSER: key === null ? '' : 'stdin',
       GRAPH_NOTE_EDITOR_VAULT: await this.#vaultOf(note),
       GRAPH_NOTE_EDITOR_NOTE: note,
       GRAPH_NOTE_EDITOR_DRAFTS: this.#ports.drafts,
@@ -291,7 +292,8 @@ export class EditorLauncher {
     };
     let iterator: AsyncIterator<SpawnedPiece, SpawnedEnd>;
     try {
-      iterator = this.#ports.spawn({ argv: [command, ...rest], env })[Symbol.asyncIterator]();
+      const request = { argv: [command, ...rest], env, ...(key === null ? {} : { input: `${key}\n` }) };
+      iterator = this.#ports.spawn(request)[Symbol.asyncIterator]();
     } catch {
       return { ok: false, why: NO_NODE };
     }

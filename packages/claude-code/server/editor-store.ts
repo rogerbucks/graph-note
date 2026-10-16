@@ -279,10 +279,10 @@ export class NoteStore {
         if (this.stopped) return STOPPED;
         const w = await this.writeNote(now, made.text);
         if (!w.ok) return answer(500, { why: w.why });
-        note.version = w.version;
-        // Claude's change set is the editor's own write of the proposal, so it is not asked about again
-        note.vouched = sha256(made.text);
-        const line = `${JSON.stringify({ version: w.version, text: made.text })}\n`;
+        // Claude's own text never carries the user's yes: a note that needed one asks again about this text
+        const later = this.refusal(note, made.text);
+        note.version = later === null ? w.version : null;
+        const line = `${JSON.stringify(later === null ? { version: w.version, text: made.text } : { gone: later })}\n`;
         for (const send of note.feeds) send(line);
         return answer(200, { id: made.id, count: made.count });
       }),

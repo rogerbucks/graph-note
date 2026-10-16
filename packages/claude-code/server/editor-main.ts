@@ -25,7 +25,7 @@ export const EDITOR_ENVIRONMENT = {
   settings: 'GRAPH_NOTE_EDITOR_SETTINGS',
   /** The digest of the text the user said yes to; empty when none was asked. */
   confirmed: 'GRAPH_NOTE_EDITOR_CONFIRMED',
-  /** The key for Claude's proposals, made by the mod for this start: good for the proposal route and nothing else. */
+  /** `stdin` when the mod hands the key for Claude's proposals on standard input (never here): good for one route only. */
   proposer: 'GRAPH_NOTE_EDITOR_PROPOSER',
 } as const;
 
@@ -62,7 +62,10 @@ export async function pageFiles(here = dirname(fileURLToPath(import.meta.url))):
 }
 
 /** The process's options from its environment: the store for the vault, with the note opened, and how it is stopped. */
-export async function optionsFromEnvironment(env: Record<string, string | undefined>): Promise<EditorProcessOptions> {
+export async function optionsFromEnvironment(
+  env: Record<string, string | undefined>,
+  key?: string,
+): Promise<EditorProcessOptions> {
   const vault = env[EDITOR_ENVIRONMENT.vault];
   if (!vault) return {};
   const note = env[EDITOR_ENVIRONMENT.note];
@@ -74,8 +77,7 @@ export async function optionsFromEnvironment(env: Record<string, string | undefi
   const gate = storeGate(settings, confirmed);
   const store = await NoteStore.create({ vault, drafts, gate, proposer: proposerName(settings) });
   // a key too short to be one, or with odd characters, is no key: no proposal is taken
-  const given = env[EDITOR_ENVIRONMENT.proposer] ?? '';
-  const proposerKey = /^[A-Za-z0-9_-]{32,}$/.test(given) ? given : undefined;
+  const proposerKey = /^[A-Za-z0-9_-]{32,}$/.test(key ?? '') ? key : undefined;
   const opened = await store.open(note);
   if (!opened.ok) {
     await store.stop();

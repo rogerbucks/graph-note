@@ -109,7 +109,9 @@ function changeOf(c: unknown, n: number): ChangeInput | string {
   const at = `change ${n}`;
   if (!isRecord(c)) return `${at} is not an object`;
   const extra =
-    typeof c.reason === 'string' && c.reason.trim() ? { reason: plainText(c.reason.trim().replace(/\s+/g, ' ')) } : {};
+    typeof c.reason === 'string' && c.reason.trim()
+      ? { reason: plainText(c.reason.trim().replace(/[\s\x85]+/g, ' ')) }
+      : {};
   const props = propertiesOf(c.properties);
   if (props === null) return `${at}: its properties are not each a one-word name with a text, a number, true or false`;
   switch (c.op) {
