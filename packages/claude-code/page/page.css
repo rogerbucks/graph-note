@@ -95,6 +95,96 @@ body {
   background: var(--background-modifier-hover);
 }
 
+/* the Export button and form (WCAG 2.2 AA: a visible focus on every control, its words beside its icon, never colour alone) */
+.gn-graph .graph-note-bar button,
+.gn-graph .graph-note-export button,
+.gn-graph .graph-note-export select {
+  min-height: 24px;
+  min-width: 24px;
+  color: var(--text-normal);
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  font: inherit;
+  cursor: pointer;
+}
+
+.gn-graph .graph-note-bar button:focus-visible,
+.gn-graph .graph-note-export button:focus-visible,
+.gn-graph .graph-note-export select:focus-visible {
+  outline: 2px solid var(--text-normal);
+  outline-offset: 2px;
+}
+
+.gn-graph .graph-note-export {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-4-2);
+  align-items: center;
+  margin-top: var(--size-4-2);
+}
+
 .gn-menu-warning {
   color: var(--text-error);
+}
+
+/* Claude's proposals on a card (spec §26, WCAG 2.2 AA): the text colours are the theme's locked pairs; a control has a
+   visible focus ring in the text colour, at least 24 CSS pixels to hit, and nothing is told by colour alone */
+.gn-card {
+  margin: var(--size-4-4) 0;
+  padding: var(--size-4-3);
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  border: 2px solid var(--text-normal);
+  border-radius: var(--radius-m);
+}
+
+.gn-card h2 {
+  margin-top: 0;
+  font-size: 1.1em;
+}
+
+.gn-card-changes {
+  padding-left: var(--size-4-5);
+}
+
+.gn-card-changes li {
+  margin: var(--size-4-2) 0;
+}
+
+.gn-card-button {
+  min-width: 2rem;
+  min-height: 2rem;
+  margin: var(--size-4-1) var(--size-4-2) var(--size-4-1) 0;
+  padding: var(--size-4-1) var(--size-4-3);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  border: 2px solid var(--text-normal);
+  border-radius: var(--radius-s);
+  font: inherit;
+  cursor: pointer;
+}
+
+.gn-card-button[disabled] {
+  border-style: dashed;
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.gn-card :focus-visible,
+.gn-card-button:focus-visible {
+  outline: 3px solid var(--text-normal);
+  outline-offset: 2px;
+}
+
+#gn-notices:empty {
+  display: none;
+}
+
+#gn-notices {
+  padding: var(--size-4-2) var(--size-4-3);
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  border: 2px solid var(--text-normal);
+  border-radius: var(--radius-m);
 }

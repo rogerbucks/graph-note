@@ -9,7 +9,10 @@ import { CLAUDE, claudeGate, sha256 } from '@graph-note/core';
 import type { Gate, GateSettings } from '@graph-note/core';
 import { withMatrix } from './editor-matrix.ts';
 import { folderOf, fullPath, nameOf } from './editor-paths.ts';
-import { settingsEnvironment } from './editor-settings-env.ts';
+import { sendProposal } from './editor-propose.ts';
+import type { ProposeOutcome, ProposeRequest, ProposeReply } from './editor-propose.ts';
+import type { Spawned, SpawnedEnd, SpawnedPiece } from './editor-spawn.ts';
+import { settingsEnvironment, settingsForServer } from './editor-settings-env.ts';
 import type { LaunchSettings } from './editor-settings-env.ts';
 import { NOT_THE_PERSON, NOT_THE_PERSON_ASKING, fromPerson } from './editor-words.ts';
 import type { EditOutcome } from './editor-words.ts';
@@ -17,28 +20,15 @@ import type { EditOutcome } from './editor-words.ts';
 // what the launcher says and understands lives in editor-words.ts; it is one module to the code that imports it
 export { confirmArgs, editArgs, fromPerson, sayEdit, sayStopped } from './editor-words.ts';
 export type { EditOutcome } from './editor-words.ts';
-
-/** One piece of what a started process wrote, as `$.process.spawn` hands it over. */
-export interface SpawnedPiece {
-  stream: 'stdout' | 'stderr';
-  text: string;
-}
-
-/** How a started process ended. */
-export interface SpawnedEnd {
-  code: number | null;
-  signal: string | null;
-}
-
-/** What `$.process.spawn` returns: the pieces, then how it ended; leaving the loop (`return`) kills the child. */
-export interface Spawned {
-  [Symbol.asyncIterator](): AsyncIterator<SpawnedPiece, SpawnedEnd>;
-}
+export type { Spawned, SpawnedEnd, SpawnedPiece } from './editor-spawn.ts';
+export { sayProposed } from './editor-propose.ts';
+export type { ProposeOutcome } from './editor-propose.ts';
+export { settingsForServer } from './editor-settings-env.ts';
 
 /** What the launcher is handed by the code that runs it. */
 export interface EditorPorts {
   /** `$.process.spawn`, narrowed to what the launcher asks of it: a command by its arguments, and its environment. */
-  spawn: (request: { argv: readonly string[]; env?: Record<string, string> }) => Spawned;
+  spawn: (request: { argv: readonly string[]; env?: Record<string, string>; input?: string }) => Spawned;
   /**
    * A file's real path, links settled (`realPathVia` over the host's process call); with none, a matrix note cannot be
    * placed inside the vault and is refused.
@@ -60,6 +50,10 @@ export interface EditorPorts {
   changed?: () => void;
   /** `$.clock.after`: calls the function once after the milliseconds, unless cancelled; a test drives it by hand. */
   after: (ms: number, fn: () => void) => { cancel: () => void };
+  /** A fresh 256-bit secret for each start (letters, digits, `_`, `-`): Claude's proposals' key, the launcher's alone. */
+  key?: () => string;
+  /** Sends a proposal to the server (the shipped sender, run by the host); with none, none can be made. */
+  propose?: (request: ProposeRequest) => Promise<ProposeReply>;
 }
 
 /** A server running: what it was started for, and how its life is ended and awaited. */
@@ -67,6 +61,8 @@ interface Running {
   note: string;
   title: string;
   link: string;
+  /** The key for Claude's proposals to this server: never said, never in state. */
+  key: string | null;
   iterator: AsyncIterator<SpawnedPiece, SpawnedEnd>;
   done: Promise<void>;
   stopping: string | null;
@@ -77,24 +73,6 @@ interface Checked {
   gate: Gate;
   digest: string | null;
   settings: LaunchSettings | null;
-}
-
-/** The settings as the server is given them, in its environment: no key, only what its gate reads. */
-export function settingsForServer(settings: GateSettings): string {
-  return JSON.stringify({
-    classifications: settings.classifications,
-    aiUnlabelled: settings.aiUnlabelled,
-    // each model's row and switches go too, so the server holds Claude to the same row as the mod
-    aiModels: settings.aiModels.map((m) => ({
-      name: m.name,
-      ceiling: m.ceiling,
-      ...(m.matrixRow ? { matrixRow: m.matrixRow, matrixOn: m.matrixOn ?? [] } : {}),
-    })),
-    aiClassMap: settings.aiClassMap ?? {},
-    // the rows the mod read from the matrix note; none given are none, and a row picked then clears nothing
-    matrix: settings.matrix ?? [],
-    ...(settings.matrixProblem ? { matrixProblem: settings.matrixProblem } : {}),
-  });
 }
 
 /** How long a server has to hand over its address before it is killed and the start said to have failed. */
@@ -137,6 +115,18 @@ export class EditorLauncher {
    */
   edit(given: string, cwd: string = this.#ports.cwd, origin?: unknown): Promise<EditOutcome> {
     return this.#inTurn(() => this.#edit(given, cwd, fromPerson(origin)));
+  }
+
+  /** Claude's proposal for the open note (cc_claude_proposes): sent with this start's key; the server writes it, never applied. */
+  propose(input: unknown): Promise<ProposeOutcome> {
+    return this.#inTurn(async () => {
+      const running = this.#running;
+      if (!running) return { ok: false as const, why: 'No editor is open: /graph edit <path to a note> opens one.' };
+      const send = this.#ports.propose;
+      if (!send || running.key === null)
+        return { ok: false as const, why: 'Proposals are not available: this host cannot make the key one needs.' };
+      return sendProposal(send, running.link, running.key, input);
+    });
   }
 
   /** Stops the server, killing its process; true when one was running. */
@@ -285,7 +275,10 @@ export class EditorLauncher {
   ): Promise<{ ok: true } | { ok: false; why: string }> {
     const [command, ...rest] = this.#ports.server;
     if (command === undefined) return { ok: false, why: NO_NODE };
+    const key = this.#ports.propose ? (this.#ports.key?.() ?? null) : null;
     const env = {
+      // the key itself goes on standard input, where a process listing cannot show it
+      GRAPH_NOTE_EDITOR_PROPOSER: key === null ? '' : 'stdin',
       GRAPH_NOTE_EDITOR_VAULT: await this.#vaultOf(note),
       GRAPH_NOTE_EDITOR_NOTE: note,
       GRAPH_NOTE_EDITOR_DRAFTS: this.#ports.drafts,
@@ -299,7 +292,8 @@ export class EditorLauncher {
     };
     let iterator: AsyncIterator<SpawnedPiece, SpawnedEnd>;
     try {
-      iterator = this.#ports.spawn({ argv: [command, ...rest], env })[Symbol.asyncIterator]();
+      const request = { argv: [command, ...rest], env, ...(key === null ? {} : { input: `${key}\n` }) };
+      iterator = this.#ports.spawn(request)[Symbol.asyncIterator]();
     } catch {
       return { ok: false, why: NO_NODE };
     }
@@ -332,7 +326,7 @@ export class EditorLauncher {
           if (!link) return giveUp('The editor server did not hand over an address.');
           timer.cancel();
           ready = true;
-          running = { note, title: nameOf(note), link, iterator, done: Promise.resolve(), stopping: null };
+          running = { note, title: nameOf(note), link, key, iterator, done: Promise.resolve(), stopping: null };
           running.done = loop;
           this.#running = running;
           resolve({ ok: true });

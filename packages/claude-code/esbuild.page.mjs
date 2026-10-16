@@ -34,8 +34,23 @@ export async function buildPage(out) {
     logLevel: 'warning',
     metafile: true,
   };
+  // the shared layer takes some values from the core's entry, which also names the Graphviz engine: the page never carries
+  // that engine (the worker does), so for the page alone the engine's module is an empty stand-in that refuses to start
+  const noEngine = {
+    name: 'no-engine-on-the-page',
+    setup(build) {
+      build.onResolve({ filter: /(^|\/)engine\.ts$/ }, (args) =>
+        args.resolveDir.endsWith('/core/src') ? { path: 'engine', namespace: 'no-engine' } : undefined,
+      );
+      build.onLoad({ filter: /.*/, namespace: 'no-engine' }, () => ({
+        contents: "export const loadEngine = () => Promise.reject(new Error('The page carries no layout engine.'));",
+        loader: 'js',
+      }));
+    },
+  };
   const page = await esbuild.build({
     ...common,
+    plugins: [noEngine],
     entryPoints: ['page/page-main.ts'],
     outfile: join(out, 'page.js'),
     format: 'esm',

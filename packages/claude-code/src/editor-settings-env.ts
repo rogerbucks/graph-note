@@ -22,7 +22,27 @@ const SHOWN = [
   'noteCallouts',
   'miniMap',
   'detailsOpen',
+  // who decides on the card: the name written into each Decision (proposals-judgement.ts)
+  'decider',
 ] as const;
+
+/** The settings as the server is given them, in its environment: no key, only what its gate reads. */
+export function settingsForServer(settings: GateSettings): string {
+  return JSON.stringify({
+    classifications: settings.classifications,
+    aiUnlabelled: settings.aiUnlabelled,
+    // each model's row and switches go too, so the server holds Claude to the same row as the mod
+    aiModels: settings.aiModels.map((m) => ({
+      name: m.name,
+      ceiling: m.ceiling,
+      ...(m.matrixRow ? { matrixRow: m.matrixRow, matrixOn: m.matrixOn ?? [] } : {}),
+    })),
+    aiClassMap: settings.aiClassMap ?? {},
+    // the rows the mod read from the matrix note; none given are none, and a row picked then clears nothing
+    matrix: settings.matrix ?? [],
+    ...(settings.matrixProblem ? { matrixProblem: settings.matrixProblem } : {}),
+  });
+}
 
 /** The JSON for `GRAPH_NOTE_EDITOR_SETTINGS`: the gate's own JSON (`gateJson`) with the page's settings beside it. */
 export function settingsEnvironment(settings: LaunchSettings, gateJson: string): string {

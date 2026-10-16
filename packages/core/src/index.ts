@@ -251,6 +251,7 @@ export {
 } from './ai-matrix.ts';
 export type { ClassGrant, Mark, MatrixCell, MatrixInput, MatrixRow, MatrixSwitch } from './ai-matrix.ts';
 export { noteWithProposal } from './ai-answer.ts';
+export { changesIn } from './ai-request.ts';
 export type { ChangeRow, DecideOptions, Person, ProposalShown, Reviewed, Which } from './proposals-shown.ts';
 export { hitAreas, nearby, TapCycle, boundsOf, centres } from './hits.ts';
 export { FADE, KEPT, FocusState, depthOf, edgesOf, estimateEdge, focusOf, highlightOf } from './focus.ts';

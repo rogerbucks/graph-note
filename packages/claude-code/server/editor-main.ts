@@ -10,9 +10,11 @@ import { settingsFrom } from '@graph-note/core';
 import { matrixRowsFrom } from '@graph-note/core/hosts/matrix-table';
 import type { GateSettings } from '@graph-note/core';
 import { storeGate } from './editor-gate.ts';
+import { proposerName } from './editor-proposals.ts';
 import { NoteStore } from './editor-store.ts';
 import { loadPageAssets, type PageAssets } from './page-assets.ts';
-import { withSettings } from './page-settings.ts';
+import { Exporter, withExport } from './export-api.ts';
+import { pageSettings, withSettings } from './page-settings.ts';
 
 /** The variables the mod sets; the process reads these and no others. */
 export const EDITOR_ENVIRONMENT = {
@@ -24,6 +26,8 @@ export const EDITOR_ENVIRONMENT = {
   settings: 'GRAPH_NOTE_EDITOR_SETTINGS',
   /** The digest of the text the user said yes to; empty when none was asked. */
   confirmed: 'GRAPH_NOTE_EDITOR_CONFIRMED',
+  /** `stdin` when the mod hands the key for Claude's proposals on standard input (never here): good for one route only. */
+  proposer: 'GRAPH_NOTE_EDITOR_PROPOSER',
 } as const;
 
 /** The gate's settings from the environment, as the core reads settings back; none, or unreadable ones, are the defaults. */
@@ -59,7 +63,10 @@ export async function pageFiles(here = dirname(fileURLToPath(import.meta.url))):
 }
 
 /** The process's options from its environment: the store for the vault, with the note opened, and how it is stopped. */
-export async function optionsFromEnvironment(env: Record<string, string | undefined>): Promise<EditorProcessOptions> {
+export async function optionsFromEnvironment(
+  env: Record<string, string | undefined>,
+  key?: string,
+): Promise<EditorProcessOptions> {
   const vault = env[EDITOR_ENVIRONMENT.vault];
   if (!vault) return {};
   const note = env[EDITOR_ENVIRONMENT.note];
@@ -67,18 +74,28 @@ export async function optionsFromEnvironment(env: Record<string, string | undefi
   if (!note || !drafts) throw new Error('It was given a vault but not the note to open, or the folder for drafts.');
   // the gate is always in: with no settings given it is the defaults, the strictest
   const confirmed = env[EDITOR_ENVIRONMENT.confirmed] || null;
-  const gate = storeGate(gateSettings(env[EDITOR_ENVIRONMENT.settings]), confirmed);
-  const store = await NoteStore.create({ vault, drafts, gate });
+  const settings = gateSettings(env[EDITOR_ENVIRONMENT.settings]);
+  const gate = storeGate(settings, confirmed);
+  const store = await NoteStore.create({ vault, drafts, gate, proposer: proposerName(settings) });
+  // a key too short to be one, or with odd characters, is no key: no proposal is taken
+  const proposerKey = /^[A-Za-z0-9_-]{32,}$/.test(key ?? '') ? key : undefined;
   const opened = await store.open(note);
   if (!opened.ok) {
     await store.stop();
     throw new Error(opened.why);
   }
+  // exports go to the export folder the settings name, else the note's own, as new files only (export-api.ts)
+  const exporter = new Exporter({
+    vault: store.vault,
+    exportFolder: pageSettings(env[EDITOR_ENVIRONMENT.settings]).exportFolder,
+    notePath: (id) => store.pathOf(id),
+  });
   return {
-    api: withSettings(env[EDITOR_ENVIRONMENT.settings], store.api),
+    api: withSettings(env[EDITOR_ENVIRONMENT.settings], withExport(exporter, store.api)),
     page: await pageFiles(),
-    drain: () => store.stop(),
+    drain: async () => void (await Promise.all([store.stop(), exporter.stop()])),
     note: opened.id,
     ignoreInput: env[EDITOR_ENVIRONMENT.input] === 'ignore',
+    ...(proposerKey ? { proposerKey } : {}),
   };
 }

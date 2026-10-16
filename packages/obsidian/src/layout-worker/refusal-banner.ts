@@ -1,9 +1,9 @@
 // Why a graph is shown as text instead of drawn (spec §9, layout_contained): a banner in plain words, saying which limit
 // the graph is over and the numbers, or how long its layout was given, with an icon beside the words, never colour alone.
-// The words are refusal-words.ts's.
+// The words are the core's (refusal-words.ts), shared with the browser editor's page.
 import { setIcon } from 'obsidian';
+import { refusalWords } from '@graph-note/core/hosts/refusal-words';
 import type { Refusal } from '@graph-note/core';
-import { refusalWords } from './refusal-words';
 
 /** Puts the banner saying why the graph is not drawn at the end of `parent`. */
 export function refusalBanner(parent: HTMLElement, r: Refusal): HTMLElement {

@@ -13,9 +13,9 @@ import { PaneSession } from './pane.ts';
 import { applyChange, namesOf, newProblems, notTaken } from './proposals-apply.ts';
 import { basisOf, staleness } from './proposals-basis.ts';
 import type { Stale } from './proposals-basis.ts';
-import { acceptedWith, rejectedWith, withProposer } from './proposals-author.ts';
+import { acceptedWith, declarationHeld, notAPerson, rejectedWith, withProposer } from './proposals-author.ts';
 import { checkProposal, checkRefusal, proposerKind } from './proposals-check.ts';
-import { DECIDER_DEFAULT, decidedIn, inOrder } from './proposals-judgement.ts';
+import { decidedIn, inOrder } from './proposals-judgement.ts';
 import type { Decision, ToRecord } from './proposals-judgement.ts';
 import { exactOf, marksOf, markOf, saidOf } from './proposals-marks.ts';
 import { lacking, leftNeeding, unmet } from './proposals-needs.ts';
@@ -150,25 +150,21 @@ export class ProposalReview {
     return all.filter((c) => chosen.has(c.id));
   }
 
-  /** Why this is not a person who decides, or null: a person gives a name, and what proposed a change cannot accept it. */
-  private notAPerson(by: unknown): string | null {
-    const name = typeof (by as Person | null)?.name === 'string' ? (by as Person).name.trim() : '';
-    if (!name) return 'a person decides: say who is deciding';
-    const { name: proposer, kind } = this.proposal.provenance.by;
-    // the same name in any case is the same proposer, as written: a proposer's name is one word, so no label with a space
-    // is taken for it, and one called the_reader is none for the label "the reader"
-    // ("you" is what the person at the keyboard is called when the settings name nobody: it is never taken for a proposer)
-    const same = name.toLowerCase() === proposer.toLowerCase() && name !== DECIDER_DEFAULT;
-    return same && kind !== 'person' ? `${proposer} proposed this, and is not a person: a person decides` : null;
-  }
-
-  /** The change set to check: the note's own, else the one the editor would write for what waits. */
+  /**
+   * The change set to check: the note's own, else the one the editor would write for what waits. A declaration of the
+   * proposer that the graph holds already is left out of it, as it is written nowhere again.
+   */
   private heldText(note: string): string {
     const held = changeSetSpan(note, this.proposal);
-    if (held) return held.text;
-    const waiting = { ...this.proposal, changes: this.waiting() };
-    const declared = withProposer(note, waiting);
+    const open = this.waiting().filter((c) => !this.satisfied(textsOf(note), c));
+    if (held && open.length === this.waiting().length) return held.text;
+    const waiting = { ...this.proposal, changes: open };
+    const declared = held ? waiting : withProposer(note, waiting);
     return changeSetText('refused' in declared ? waiting : declared);
+  }
+
+  private satisfied(texts: readonly string[], c: ProposedChange): boolean {
+    return declarationHeld(this.proposal, texts, c);
   }
 
   /** The changes not yet decided, in the order proposed. */
@@ -198,6 +194,8 @@ export class ProposalReview {
     for (const c of this.proposal.changes) {
       const state = this.state(c.id);
       if (state === 'accepted') continue;
+      // a declaration of the proposer that the graph holds already is satisfied, so it neither lays over nor blocks
+      if (state === 'pending' && this.satisfied(base, c)) continue;
       const into = applyChange(laid, graph, c);
       const dupe = namesOf(c).writes.find((n) => have.has(n));
       const lack = state === 'pending' ? lacking(c, have, this.waiting()) : null;
@@ -269,7 +267,7 @@ export class ProposalReview {
    * again with what still waits, held to the graph as the accepts left it.
    */
   accept(note: string, which: Which, by: Person, options: DecideOptions = {}): Reviewed {
-    const nobody = this.notAPerson(by);
+    const nobody = notAPerson(this.proposal, by);
     if (nobody) return refuse(nobody);
     this.sync(note);
     const picked = this.choose(which);
@@ -285,7 +283,9 @@ export class ProposalReview {
     const lack = unmet(chosen, this.namesIn(beforeReading), this.waiting());
     if (lack) return refuse(lack);
     let texts = before;
+    const satisfied = new Set(chosen.filter((c) => this.satisfied(before, c)));
     for (const c of chosen) {
+      if (satisfied.has(c)) continue;
       const r = applyChange(texts, graph, c);
       if (!r.ok) return refuse(`${c.id} cannot be written: ${r.reason}`);
       texts = r.texts;
@@ -305,6 +305,7 @@ export class ProposalReview {
     }
     const after = readNote(textsOf(out), undefined, this.shared);
     for (const c of chosen) {
+      if (satisfied.has(c)) continue;
       const missed = notTaken(after, graph, c);
       if (missed) return refuse(`${c.id} did not take effect: ${missed}`);
     }
@@ -329,7 +330,7 @@ export class ProposalReview {
    * applies it applies them, and the rejection — who, and when — is kept as a Decision in the judgement graph.
    */
   reject(note: string, which: Which, by: Person, options: DecideOptions = {}): Reviewed {
-    const nobody = this.notAPerson(by);
+    const nobody = notAPerson(this.proposal, by);
     if (nobody) return refuse(nobody);
     this.sync(note);
     const picked = this.choose(which);

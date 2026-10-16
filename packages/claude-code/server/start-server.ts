@@ -17,7 +17,7 @@ import {
 import type { AddressInfo } from 'node:net';
 import type { Duplex } from 'node:stream';
 import type { PageAssets, PageFile } from './page-assets.ts';
-import { readBody, BODY_LIMIT } from './request-body.ts';
+import { readBody, bodyLimitOf, BODY_LIMIT } from './request-body.ts';
 import { SECURITY_HEADERS, crossOrigin, hostAllowed, newToken, tokenMatches, writeAllowed } from './request-guard.ts';
 
 /** How long the server waits with no page before it stops: 30 minutes. */
@@ -47,6 +47,8 @@ export interface ApiRequest {
   path: string;
   body: string;
   headers: IncomingHttpHeaders;
+  /** Whose key it carried: the page's session token, or the proposer's key, which is good for one route alone. */
+  as?: 'page' | 'proposer';
 }
 
 /**
@@ -86,6 +88,11 @@ export interface EditorServerOptions {
    * nothing of any note; the file at `/` is the page. With none, the placeholder page is served at `/` alone.
    */
   page?: PageAssets;
+  /**
+   * The key the mod holds for Claude's proposals (cc_claude_proposes): good for `PUT /api/notes/<id>/proposal` and
+   * nothing else, which the session's token is not good for. With none, no proposal is taken.
+   */
+  proposerKey?: string;
 }
 
 /** A running editor server. */
@@ -109,7 +116,10 @@ export interface EditorServer {
   stop(reason?: string): Promise<string>;
 }
 
-const OPTION_NAMES = new Set(['idleMs', 'now', 'every', 'api', 'drain', 'page']);
+const OPTION_NAMES = new Set(['idleMs', 'now', 'every', 'api', 'drain', 'page', 'proposerKey']);
+
+/** The one route the proposer's key opens. */
+const PROPOSAL = /^\/api\/notes\/[0-9a-f]{32}\/proposal$/;
 
 /** The page where the build's files are not there (a server started from source, not from the built mod): it says so, and loads nothing. */
 const PAGE =
@@ -185,21 +195,30 @@ export async function startEditorServer(options: EditorServerOptions = {}): Prom
       seen();
       return send(res, 200, PAGE, { 'content-type': 'text/html; charset=utf-8' });
     }
-    if (!tokenMatches(req.headers.authorization, sessionToken))
-      return send(res, 401, 'Not authorised.', { 'www-authenticate': 'Bearer' });
+    // the proposal route takes the proposer's key and no other; every other route takes the session's token and not that key
+    const as: 'page' | 'proposer' | null = PROPOSAL.test(url)
+      ? options.proposerKey && tokenMatches(req.headers.authorization, options.proposerKey)
+        ? 'proposer'
+        : null
+      : tokenMatches(req.headers.authorization, sessionToken)
+        ? 'page'
+        : null;
+    if (as === null) return send(res, 401, 'Not authorised.', { 'www-authenticate': 'Bearer' });
     seen();
     if (method === 'PUT' && !writeAllowed(req.headers, host))
       return send(res, 403, 'A change must come from the editor’s own page.');
-    const body = method === 'PUT' ? await readBody(req) : '';
+    const limit = bodyLimitOf(url);
+    const body = method === 'PUT' ? await readBody(req, limit) : '';
     if (body === null) {
       req.resume();
-      return send(res, 413, `Larger than a note may be: at most ${BODY_LIMIT} bytes.`, { connection: 'close' });
+      const what = limit === BODY_LIMIT ? 'a note' : 'an export';
+      return send(res, 413, `Larger than ${what} may be: at most ${limit} bytes.`, { connection: 'close' });
     }
     if (!api) return send(res, 404, 'Not found.');
     // checked again after the body is read, so no call reaches the API once a stop has begun
     if (stopped !== null)
       return send(res, 503, 'The editor has stopped; nothing was written.', { connection: 'close' });
-    const answer = await api({ method, path: url.slice('/api/'.length), body, headers: req.headers });
+    const answer = await api({ method, path: url.slice('/api/'.length), body, headers: req.headers, as });
     if (!answer.feed) return send(res, answer.status, answer.text, answer.headers);
     res.writeHead(answer.status, { ...SECURITY_HEADERS, ...answer.headers });
     const end = answer.feed((text) => void (res.destroyed || res.write(text)));

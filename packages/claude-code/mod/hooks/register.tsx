@@ -24,6 +24,7 @@ import {
   readLinkVia,
   realPathVia,
   sayEdit,
+  sayProposed,
   sayStopped,
   settingsFrom,
   viewOf,
@@ -34,6 +35,21 @@ const EDITOR_PANE = 'graph-editor';
 const USAGE = 'Name a note to draw: /graph <path to a note>, quoted if it has spaces.';
 const EDITOR_USAGE = 'No editor is running. /graph edit <path to a note> starts one.';
 const NO_PICTURES = 'This surface cannot draw pictures, so the graph is shown as text. The desktop app draws it.';
+const PROPOSE = 'mcp__graph-note__propose';
+const PROPOSE_TOOL =
+  'Propose changes to the graph of the note open in the Graph Note editor. Nothing is applied: the changes wait on a card ' +
+  'in the editor for the user to accept or reject. Each change is one of: {op: "add-thing", name, kind, properties?}, ' +
+  '{op: "add-link", from, type, to}, {op: "set", thing, key, value}, {op: "remove-thing", thing}, ' +
+  '{op: "remove-link", from, type, to}, each with an optional "reason". Names are one word. You cannot add a Person, ' +
+  'a Model or a Step. "read" lists what you read, if you say so.';
+const PROPOSE_SCHEMA = {
+  type: 'object',
+  properties: {
+    changes: { type: 'array', items: { type: 'object', properties: { op: { type: 'string' } }, required: ['op'] } },
+    read: { type: 'array', items: { type: 'string' } },
+  },
+  required: ['changes'],
+};
 const view = atom({ plugin: 'graph-note', key: 'view' } as const, null as GraphView | null);
 // counts changes to the editor pane so it is drawn again; it holds no address, token or note
 const editorChanges = atom({ plugin: 'graph-note', key: 'editor' } as const, 0);
@@ -80,6 +96,23 @@ async function launcherOf($: EngineInterface): Promise<EditorLauncher> {
     cwd: await $.session.cwd(),
     server: ['node', `${$.plugin.root}/bin/editor-server.mjs`],
     drafts: data,
+    // Claude's proposals: a key made for each start, and the shipped sender (node), which is handed the request on its
+    // standard input so the key is in no command line (cc_claude_proposes)
+    key: () => {
+      const bytes = new Uint8Array(32);
+      globalThis.crypto.getRandomValues(bytes);
+      return btoa(String.fromCharCode(...bytes))
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+    },
+    propose: async (request) => {
+      const ran = await $.process.run(['node', `${$.plugin.root}/bin/propose.mjs`], {
+        stdin: JSON.stringify(request),
+        timeoutMs: 30_000,
+      });
+      return JSON.parse(ran.stdout) as { status: number; text: string };
+    },
     changed: () => void update($, editorChanges, (n) => n + 1).then(() => $.ui.invalidate('ui.render')),
   });
   return launcher;
@@ -141,7 +174,20 @@ export const register: Register = (on) => {
 
   on('session.start', async ($, e, next) => {
     await $.command.register({ name: 'graph', description: "Draw a graph note's first graph in a pane" });
+    // the one tool Claude has here: to propose changes to the note open in the editor. It writes nothing itself.
+    await $.tool.register({
+      name: 'propose',
+      description: PROPOSE_TOOL,
+      inputSchema: PROPOSE_SCHEMA,
+      isDeferred: false,
+    });
     return next(e);
+  });
+
+  // Claude proposes; the server makes the change set, and the user accepts or rejects it on the card (cc_claude_proposes)
+  on('tool.call', { tool: PROPOSE }, async ($, e) => {
+    const outcome = await (await launcherOf($)).propose({ changes: e.changes, read: e.read });
+    return outcome.ok ? { result: sayProposed(outcome) } : { deny: sayProposed(outcome) };
   });
 
   on('command.run', { command: 'graph' }, async ($, e) => {

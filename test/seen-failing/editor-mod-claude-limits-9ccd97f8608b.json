@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/editor-mod-claude-limits.test.js",
+  "test": "the key and the yes are not Claude’s to carry (cc_claude_proposes) > a note under Claude’s ceiling stays readable after a proposal",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour the commit before it already had: a note under the ceiling was readable after a proposal, and the commit that stops vouching must keep it so"
+}

@@ -3,11 +3,29 @@
 // and it serves the note store; with none it serves no API. editor-process.ts says how it starts, hands its address over
 // and stops. A note or folder it is refused says why on stderr and exits with code 2, before it listens anywhere.
 import { runEditorProcess, type EditorProcessOptions } from './editor-process.ts';
-import { optionsFromEnvironment } from './editor-main.ts';
+import { EDITOR_ENVIRONMENT, optionsFromEnvironment } from './editor-main.ts';
+
+/** The first line of standard input: where the mod hands over the key for Claude's proposals, never in the environment. */
+function firstLine(): Promise<string> {
+  return new Promise((resolve) => {
+    let held = '';
+    const done = () => {
+      process.stdin.off('data', onData).off('end', done).off('error', done).pause();
+      resolve(held.split('\n')[0]?.trim() ?? '');
+    };
+    const onData = (d: string) => {
+      held += d;
+      if (held.includes('\n') || held.length > 512) done();
+    };
+    process.stdin.setEncoding('utf8').on('data', onData).on('end', done).on('error', done);
+  });
+}
 
 let options: EditorProcessOptions | undefined;
 try {
-  options = await optionsFromEnvironment(process.env);
+  // the environment says only that a key is coming on standard input (`stdin`); the key is never in it
+  const key = process.env[EDITOR_ENVIRONMENT.proposer] === 'stdin' ? await firstLine() : undefined;
+  options = await optionsFromEnvironment(process.env, key);
 } catch (err) {
   process.stderr.write(`editor server: ${err instanceof Error ? err.message : String(err)}\n`, () => process.exit(2));
 }
