@@ -50,6 +50,15 @@ unless the app sets its own. Whether the desktop app does, and keeps the drawing
   `storeGate`) before every send in `editor-store.ts`: a read, a draft, the change stream, a stale write's answer. A
   refusal sends `gone` and no text, and a changed note needs a new question. A note already open and now held back is closed. `gate` asks the same for `/graph <note>`'s own
   drawing. The mod reads the settings from `settings.json` in its data folder; none is the defaults, the strictest.
+- `editor-propose.ts` — Claude's proposals (workstream C7, cc_claude_only, cc_claude_proposes): the launcher's `propose`
+  sends Claude's input, as JSON, with a key made for each start (`key` port, passed to the server as
+  `GRAPH_NOTE_EDITOR_PROPOSER`), through the shipped sender `bin/propose-process.ts` (built to `mod/bin/propose.mjs`, run
+  by node with the request on standard input). The key opens `PUT /api/notes/<id>/proposal` and nothing else, and the
+  session's token opens everything but that: Claude has no write. The server (`server/editor-proposals.ts`) reads the body as
+  changes alone (`changesIn`: no Person, Model or Step), declares the proposer (the Model named Claude in the settings) as the
+  first addition, holds the note and the text to be written to the gate, and the store writes the change set beside the graph
+  under the note's lock, by the atomic write; the graph is never touched. The mod registers one tool, `propose`
+  (`mcp__graph-note__propose`), which Claude calls, and `sayProposed` is all it is told. The page shows no other AI.
 - `mod-entry.ts` — what the hooks module takes from the three above; bundled into `mod/hooks/graph.js`.
 - `editor-session.ts` — `EditorSession`, the browser editor page's side of a note (spec §26; for C5): the core's
   `PaneSession` and `TextHistory` over one block, the note and version the page last had from the server, what to send
@@ -219,6 +228,13 @@ any other (cc_offline, cc_no_remote), and the server's policy is not loosened fo
 - `graph-section.ts` — the first graph laid out and drawn as an isolated image (a blob, which the policy allows) in the
   palette of the system's scheme, drawn again when the scheme changes, its words beside it.
 - `server-calls.ts` — the page's reads from the server (`/api/settings`, `/api/notes/<id>`), the token held in memory.
+- `note-calls.ts` — the page's two other calls on its note: the change stream, and the user's decision written (the whole
+  note, `If-Match` its version, the page's token alone). Kept apart so `server-calls.ts` stays read only.
+- `proposal-review.ts`, `proposal-card.ts` (workstream C7) — the proposals a note holds, and the user's accept or reject:
+  `proposalsIn` shows each over the note through the core's `ProposalReview` (nothing written), `decide` accepts or rejects
+  by the settings' decider, else "you", and gives the note's new text for `page-main.ts` to write; the card draws the rows in
+  words, with real buttons named for what they act on, a visible focus, the stale notice as a checkbox, and a decision said
+  in the status region (WCAG 2.2 AA, spec §11).
 - `index.html`, `page.css`, `icons/` — the shell, its styles, and the icon files (hand-drawn after Lucide's, credited in
   `licences/bundled.json`; image files, never a code library, cc_one_renderer).
 
@@ -239,6 +255,7 @@ written). The mod hands the settings the page shows with in the same environment
   mode, hard links, a folder swapped under a write, the drafts folder's mode and longest draft, and the real fs.watch),
   with their support, `editor-store-support.js`; and `editor-mod.test.js` (`/graph edit` from the mod: the launcher
   over real server processes started the way the host starts one, standard input closed at once; the other
-  workstreams' cases for `test_cc_mod`: C3's, the gate, are in it, C7's are still to be added, and it is `partial` until then), with its support, `editor-mod-support.js`. The mod's wiring
+  workstreams' cases for `test_cc_mod`: C3's, the gate, are in it, and C7's, Claude's proposals, in `editor-mod-claude.test.js`),
+  with its support, `editor-mod-support.js`. The mod's wiring
   (`register.tsx`) is checked by `claude plugin validate` and a type check; `claude plugin test` needs a Claude Code
   signed in and online, so no test of it is in the repository yet.

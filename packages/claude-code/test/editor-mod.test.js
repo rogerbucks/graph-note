@@ -559,5 +559,5 @@ describe('the highest classification never opens, and a credential never reaches
   });
 });
 
-// C7 (cc_claude_only, cc_claude_proposes) adds its cases below, to this file: the launcher takes the proposal channel
-// before `edit` starts the server. None is written here.
+// C7's cases, Claude as the only AI and its proposals (cc_claude_only, cc_claude_proposes), are in
+// editor-mod-claude.test.js, kept apart so this file stays under the length the conventions allow; both are test_cc_mod.

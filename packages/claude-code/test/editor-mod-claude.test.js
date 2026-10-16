@@ -168,6 +168,60 @@ describe('Claude proposes through the mod, and only accept applies it (cc_claude
     assert.equal(proposalsIn(accepted.note).length, 0, 'what is decided leaves the change set');
   });
 
+  test('the card shows the proposal in words, with a named button for each choice, and passes the choice on (WCAG 2.2 AA)', async () => {
+    const { proposalsIn } = await import('../page/proposal-review.ts');
+    const { showCards } = await import('../page/proposal-card.ts');
+    const { where, launcher } = await opened();
+    await launcher.propose({ changes: [EXTRA] });
+    // a document of just enough: elements that hold text, attributes, children and listeners
+    const make = (tag) => ({
+      tag,
+      textContent: '',
+      attrs: {},
+      kids: [],
+      listeners: {},
+      setAttribute(k, v) {
+        this.attrs[k] = v;
+      },
+      append(...k) {
+        this.kids.push(...k);
+      },
+      replaceChildren(...k) {
+        this.kids = k;
+      },
+      addEventListener(name, fn) {
+        this.listeners[name] = fn;
+      },
+    });
+    const root = make('div');
+    root.ownerDocument = { createElement: make };
+    const walk = (e) => [e, ...e.kids.flatMap(walk)];
+    const chosen = [];
+    const said = [];
+    const cards = proposalsIn(readFileSync(where.plan, 'utf8'));
+    showCards(
+      root,
+      cards,
+      async (...args) => (chosen.push(args), 'Done.'),
+      (t) => said.push(t),
+    );
+    const all = walk(root);
+    const words = all.map((e) => e.textContent).join(' ');
+    assert.match(words, /Proposed by Claude/);
+    assert.match(words, /Added/);
+    assert.match(words, /Waiting for your decision/, 'a state is a word, not a colour');
+    const buttons = all.filter((e) => e.tag === 'button');
+    assert.ok(buttons.length >= 4, 'accept and reject for each change, and for all');
+    for (const b of buttons) {
+      assert.equal(b.attrs.type, 'button');
+      assert.ok(b.attrs['aria-label'].startsWith(b.textContent), `${b.attrs['aria-label']} contains its visible label`);
+    }
+    buttons.find((b) => b.textContent === 'Accept all').listeners.click();
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.deepEqual(chosen, [[cards[0].id, 'accept', { all: true }, false]]);
+    assert.deepEqual(said, ['Done.'], 'the answer goes to the status region');
+  });
+
   test('the page accepts only a proposal it can read, and a person decides: a name is needed, and Claude is not one', async () => {
     const { proposalsIn, decide } = await import('../page/proposal-review.ts');
     const { where, launcher } = await opened();
