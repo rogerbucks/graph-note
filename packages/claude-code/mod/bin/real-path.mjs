@@ -1,9 +1,9 @@
 // bin/real-path-process.ts
 import { realpathSync } from "node:fs";
-var path = process.argv[2];
+var args = process.argv.slice(2);
 try {
-  if (!path) throw new Error("no path");
-  process.stdout.write(realpathSync(path));
+  if (args.length !== 2 || args[0] !== "--" || !args[1]) throw new Error("not `-- <path>`");
+  process.stdout.write(realpathSync(args[1]));
 } catch {
   process.exitCode = 1;
 }

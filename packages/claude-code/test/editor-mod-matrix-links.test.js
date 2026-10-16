@@ -4,6 +4,7 @@
 // nothing and both gates fail closed, saying why. The vault-only path check is in editor-mod-matrix.test.js.
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,6 +17,8 @@ import { gateSettings as serverSettings } from '../server/editor-main.ts';
 
 // the shipped process, run from its source as the mod runs it built
 const PROGRAM = [process.execPath, fileURLToPath(new URL('../bin/real-path-process.ts', import.meta.url))];
+// a clock that never fires, for a process that answers
+const NEVER_LATE = () => ({ cancel() {} });
 const MATRIX = '| | Public | Internal |\n|---|---|---|\n| Claude chat | ✅ | ❌ |\n';
 const model = {
   name: 'Claude',
@@ -124,7 +127,7 @@ describe('the real path asked of a host that can only start a process', () => {
   test('a file’s real path, through a link too, and a failure for a file that is not there', async () => {
     const where = modVault();
     const host = hostSpawn();
-    const realPath = realPathVia(host.spawn, PROGRAM);
+    const realPath = realPathVia(host.spawn, PROGRAM, NEVER_LATE);
     writeFileSync(join(where.top, 'real.md'), 'x');
     symlinkSync(join(where.top, 'real.md'), join(where.top, 'link.md'));
     const real = await realPath(join(where.top, 'real.md'));
@@ -138,7 +141,78 @@ describe('the real path asked of a host that can only start a process', () => {
     const host = hostSpawn();
     const odd = join(where.top, "it's $(x) `y`.md");
     writeFileSync(odd, 'x');
-    assert.ok((await realPathVia(host.spawn, PROGRAM)(odd)).endsWith("it's $(x) `y`.md"));
-    assert.deepEqual(host.requests[0].argv, [...PROGRAM, odd], 'the path is the one argument, after the program');
+    assert.ok((await realPathVia(host.spawn, PROGRAM, NEVER_LATE)(odd)).endsWith("it's $(x) `y`.md"));
+    assert.deepEqual(host.requests[0].argv, [...PROGRAM, '--', odd], 'one argument, after `--`, no shell');
+    assert.equal(host.requests[0].env, undefined, 'nothing but the path is handed over');
+  });
+
+  test('a path with a newline is one argument and comes back whole', async () => {
+    const where = modVault();
+    const host = hostSpawn();
+    const odd = join(where.top, 'two\nlines.md');
+    writeFileSync(odd, 'x');
+    assert.ok((await realPathVia(host.spawn, PROGRAM, NEVER_LATE)(odd)).endsWith('two\nlines.md'));
+  });
+
+  test('a path starting with a dash is a path, never an option', async () => {
+    const where = modVault();
+    writeFileSync(join(where.top, '-dash.md'), 'x');
+    const out = execFileSync(process.execPath, [...PROGRAM.slice(1), '--', '-dash.md'], {
+      cwd: where.top,
+      encoding: 'utf8',
+    });
+    assert.ok(out.endsWith('-dash.md'));
+    // one that is not there fails closed with nothing on stdout, however it looks like an option
+    for (const odd of ['-v', '--help', '-e']) {
+      const host = hostSpawn();
+      await assert.rejects(realPathVia(host.spawn, PROGRAM, NEVER_LATE)(odd), odd);
+      assert.deepEqual(host.requests[0].argv.slice(-2), ['--', odd]);
+    }
+  });
+
+  test('a process that does not answer in time is killed and the real path is not known', async () => {
+    let killed = false;
+    const hung = () => ({
+      [Symbol.asyncIterator]: () => ({
+        // the process says nothing until it is killed; here it ends a turn later, so the code before the timeout
+        // existed finishes (rejecting for another reason) instead of waiting for ever
+        next: () =>
+          new Promise((resolve) =>
+            setImmediate(() => resolve({ done: true, value: { code: null, signal: 'SIGTERM' } })),
+          ),
+        return: () => ((killed = true), Promise.resolve({ done: true, value: { code: null, signal: 'SIGTERM' } })),
+      }),
+    });
+    const at = (_ms, fn) => (fn(), { cancel() {} });
+    await assert.rejects(realPathVia(hung, PROGRAM, at)('/x'), /did not answer in time/);
+    assert.equal(killed, true);
+  });
+
+  test('only stdout is read, and a failing process, with output or not, fails closed', async () => {
+    const piece = (stream, text) => ({ done: false, value: { stream, text } });
+    const run = (items, code) => () => ({
+      [Symbol.asyncIterator]: () => {
+        const rest = [...items];
+        return {
+          next: async () => (rest.length ? rest.shift() : { done: true, value: { code, signal: null } }),
+          return: async () => ({ done: true, value: { code, signal: null } }),
+        };
+      },
+    });
+    assert.equal(
+      await realPathVia(run([piece('stderr', 'noise'), piece('stdout', '/a/b')], 0), PROGRAM, NEVER_LATE)('/x'),
+      '/a/b',
+    );
+    await assert.rejects(realPathVia(run([piece('stdout', '/a/b')], 1), PROGRAM, NEVER_LATE)('/x'));
+    await assert.rejects(realPathVia(run([piece('stderr', '/a/b')], 0), PROGRAM, NEVER_LATE)('/x'));
+    await assert.rejects(
+      realPathVia(
+        () => {
+          throw new Error('no node');
+        },
+        PROGRAM,
+        NEVER_LATE,
+      )('/x'),
+    );
   });
 });
