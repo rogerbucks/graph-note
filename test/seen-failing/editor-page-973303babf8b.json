@@ -4,7 +4,8 @@
   "seen_failing_first": false,
   "fault": true,
   "commits": [
+    "45beca03bf7572467c7cc645cfde4220c56e80d0",
     "e1a1a7e41b437c701cd9d773906d06539df87be0"
   ],
-  "evidence": "The cases come a commit before their code, as the process asks (draft PR, cases, then code): they fail at their own commit because the edit pane is not in the display layer and not on the page yet, and pass from the commits that move the pane into the layer and open it on the page."
+  "evidence": "Fails at the cases-first commit because the edit pane is not on the page yet, as the process asks. At a later commit, replayed in a bare checkout, it fails again, as the older bundle test of this file does (cause not found, as recorded for that test); it passes in this worktree with the full suite."
 }
