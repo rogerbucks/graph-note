@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/data-guard.test.js",
+  "test": "what the second review found > plain reads of those ancestors, and moves of other things below home, are allowed",
+  "seen_failing_first": false,
+  "evidence": "An allow case: the old code refused nothing of these commands, so it passed against its parent. It pins that the new ancestor rule does not widen into plain reads or other moves; the refusing cases beside it were seen failing."
+}
