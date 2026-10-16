@@ -6,7 +6,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { refusedChanges } from '../scripts/check-requirements-flips.mjs';
 import { REQUIREMENTS } from '../scripts/check-requirements.mjs';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -181,6 +181,63 @@ describe('a hand change to the requirements copy', () => {
     const empty = run('--base-ref', tree.stdout.trim());
     assert.equal(empty.status, 0, empty.stdout + empty.stderr);
     assert.match(empty.stdout, /nothing to compare/);
+  });
+
+  test('--merge-base-of judges only the branch: a change main gained after the branch point is not a revert; a real hand edit still fails', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'flips-merge-base-'));
+    try {
+      const git = (...args) => {
+        const r = spawnSync('git', ['-C', dir, ...args], { encoding: 'utf8', timeout: 30_000 });
+        assert.equal(r.status, 0, r.stderr);
+        return r.stdout.trim();
+      };
+      const run = (...args) =>
+        spawnSync(process.execPath, [path('scripts/check-requirements-flips.mjs'), '--repo', dir, ...args], {
+          encoding: 'utf8',
+          timeout: 30_000,
+        });
+      const file = join(dir, REQUIREMENTS);
+      const commit = (text, message) => {
+        mkdirSync(join(dir, 'requirements'), { recursive: true });
+        writeFileSync(file, text);
+        git('add', '-A');
+        git('-c', 'user.name=t', '-c', 'user.email=t@example.com', 'commit', '-q', '-m', message);
+      };
+      git('init', '-q', '-b', 'main');
+      const start = base();
+      commit(start, 'start');
+      git('checkout', '-q', '-b', 'branch');
+      git('checkout', '-q', 'main');
+      // main gains a change by hand-looking edit (a new proves text), which the branch has not merged
+      commit(replaced(start, 'the first fixture holds', 'the first fixture holds, said differently'), 'main moves on');
+      const mainTip = git('rev-parse', 'main');
+      git('checkout', '-q', 'branch');
+      // the branch changes nothing in the copy, so give it a commit about something else
+      writeFileSync(join(dir, 'other.txt'), 'x');
+      git('add', '-A');
+      git('-c', 'user.name=t', '-c', 'user.email=t@example.com', 'commit', '-q', '-m', 'unrelated');
+
+      // against the tip of main the branch looks like a revert of main's change
+      const tip = run('--base-ref', mainTip);
+      assert.equal(tip.status, 1, tip.stdout + tip.stderr);
+      // against the merge base only the branch's own changes are judged: none
+      const fine = run('--merge-base-of', mainTip);
+      assert.equal(fine.status, 0, fine.stdout + fine.stderr);
+
+      // a real hand edit on the branch is still refused
+      commit(replaced(start, 'the second fixture holds', 'the second fixture holds, edited by hand'), 'hand edit');
+      const edited = run('--merge-base-of', mainTip);
+      assert.equal(edited.status, 1, edited.stdout + edited.stderr);
+      assert.match(edited.stdout, /test_fixture_b/);
+
+      // the option needs a ref that resolves
+      const bad = run('--merge-base-of', 'no-such-ref-for-flips');
+      assert.equal(bad.status, 2, bad.stdout + bad.stderr);
+      const none = run('--merge-base-of');
+      assert.equal(none.status, 2, none.stdout + none.stderr);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   test('an edited banner line is refused, even with a good flip beside it', () => {
