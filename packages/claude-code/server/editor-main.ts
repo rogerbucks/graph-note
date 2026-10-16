@@ -4,7 +4,8 @@
 // address. With no vault in its environment it serves no API, as before. A note that cannot be opened, or a folder that
 // is refused, is thrown as plain words, which the process says on stderr before it listens anywhere.
 import type { EditorProcessOptions } from './editor-process.ts';
-import { matrixRowsFrom, settingsFrom } from '@graph-note/core';
+import { settingsFrom } from '@graph-note/core';
+import { matrixRowsFrom } from '@graph-note/core/hosts/matrix-table';
 import type { GateSettings } from '@graph-note/core';
 import { storeGate } from './editor-gate.ts';
 import { NoteStore } from './editor-store.ts';
@@ -27,12 +28,14 @@ export function gateSettings(raw: string | undefined): GateSettings {
     const given: unknown = JSON.parse(raw ?? 'null');
     const s = settingsFrom(given);
     const matrix = given && typeof given === 'object' ? matrixRowsFrom((given as Record<string, unknown>).matrix) : [];
+    const problem = (given as Record<string, unknown> | null)?.matrixProblem;
     return {
       classifications: s.classifications,
       aiUnlabelled: s.aiUnlabelled,
       aiModels: s.aiModels,
       aiClassMap: s.aiClassMap,
       matrix,
+      ...(typeof problem === 'string' && problem ? { matrixProblem: problem } : {}),
     };
   } catch {
     const d = settingsFrom(null);

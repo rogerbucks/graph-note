@@ -5,7 +5,8 @@
 // a session has one server, reused for the same note and replaced for another (cc_one_server); and it ends when the
 // session does, on `/graph stop`, or by itself when the server stops (cc_server_stops). No Node module is imported here:
 // the host's calls are handed in, so the tests run the launcher over real processes and the mod over the host's own.
-import { CLAUDE, claudeGate, matchClass, matrixRows, sha256 } from '@graph-note/core';
+import { CLAUDE, claudeGate, matchClass, sha256 } from '@graph-note/core';
+import { matrixRows } from '@graph-note/core/hosts/matrix-table';
 import type { Gate, GateSettings } from '@graph-note/core';
 import { folderOf, fullPath, insideVault, nameOf } from './editor-paths.ts';
 import { NOT_THE_PERSON, NOT_THE_PERSON_ASKING, fromPerson } from './editor-words.ts';
@@ -36,6 +37,11 @@ export interface Spawned {
 export interface EditorPorts {
   /** `$.process.spawn`, narrowed to what the launcher asks of it: a command by its arguments, and its environment. */
   spawn: (request: { argv: readonly string[]; env?: Record<string, string> }) => Spawned;
+  /**
+   * A file's real path, links settled (`realPathVia` over the host's process call); with none, a matrix note cannot be
+   * placed inside the vault and is refused.
+   */
+  realPath?: (path: string) => Promise<string>;
   /** `$.fs.exists`. */
   exists: (path: string) => Promise<boolean>;
   /** `$.fs.read`: the note's text, read for its classification before anything is opened, and never kept. */
@@ -85,6 +91,7 @@ export function settingsForServer(settings: GateSettings): string {
     aiClassMap: settings.aiClassMap ?? {},
     // the rows the mod read from the matrix note; none given are none, and a row picked then clears nothing
     matrix: settings.matrix ?? [],
+    ...(settings.matrixProblem ? { matrixProblem: settings.matrixProblem } : {}),
   });
 }
 
@@ -182,13 +189,27 @@ export class EditorLauncher {
     const settings = await this.#ports.settings();
     const claude = settings.aiModels.find((m) => m.name.trim().toLowerCase() === CLAUDE.toLowerCase());
     if (!claude?.matrixRow) return settings;
-    const path = insideVault(await this.#vaultOf(note), settings.aiMatrixNote ?? '');
-    if (path === null) return { ...settings, matrix: [] };
+    const refused = (matrixProblem: string): GateSettings => ({ ...settings, matrix: [], matrixProblem });
+    const vault = await this.#vaultOf(note);
+    const path = insideVault(vault, settings.aiMatrixNote ?? '');
+    if (path === null)
+      return refused('The matrix note named in the settings is not a path inside the vault, so it is not read.');
+    // the real paths, links settled: a note, or a folder above it, that is a link out of the vault is never read
+    const real = this.#ports.realPath;
+    if (!real) return refused('This host cannot tell whether the matrix note is inside the vault, so it is not read.');
+    try {
+      const [inVault, inNote] = [await real(vault), await real(path)];
+      const sep = inVault.includes('\\') && !inVault.includes('/') ? '\\' : '/';
+      if (!inNote.startsWith(inVault.endsWith(sep) ? inVault : `${inVault}${sep}`))
+        return refused('The matrix note is, by its real path, outside the vault, so it is not read.');
+    } catch {
+      return refused('The real path of the matrix note could not be found, so it is not read.');
+    }
     const known = (name: string) => matchClass(name, settings.classifications, settings.aiClassMap ?? {}) !== null;
     try {
       return { ...settings, matrix: matrixRows(await this.#ports.read(path), known) };
     } catch {
-      return { ...settings, matrix: [] };
+      return refused('The matrix note could not be read.');
     }
   }
 

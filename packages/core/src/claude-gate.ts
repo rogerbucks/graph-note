@@ -22,6 +22,8 @@ export type GateSettings = Pick<Settings, 'classifications' | 'aiUnlabelled'> & 
   aiClassMap?: Record<string, string>;
   /** The note that holds the matrix, by its path in the vault, for the host that reads it. */
   aiMatrixNote?: string;
+  /** Why the host did not read the matrix note (such as a link out of the vault), said when a row then clears nothing. */
+  matrixProblem?: string;
 };
 
 /** The name Claude is set up under among the AI models. */
@@ -167,7 +169,8 @@ export function claudeGate(text: string, settings: GateSettings, confirmed: stri
     const set = row
       ? `not cleared for Claude by its matrix row, ${row}`
       : `above the level set for Claude, ${levels[ceiling]}`;
-    return { ask: `${said}, ${set}. Claude can read the pane the editor opens in.` };
+    const why = row && settings.matrixProblem ? ` ${settings.matrixProblem}` : '';
+    return { ask: `${said}, ${set}. Claude can read the pane the editor opens in.${why}` };
   }
   return { open: true };
 }

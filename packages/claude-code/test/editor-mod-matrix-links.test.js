@@ -137,6 +137,6 @@ describe('the real path asked of a host that can only start a process', () => {
     writeFileSync(odd, 'x');
     assert.ok((await realPathVia(host.spawn)(odd)).endsWith("it's $(x) `y`.md"));
     assert.ok(host.requests[0].argv.includes(odd));
-    assert.ok(!host.requests[0].argv.some((a) => a !== odd && a.includes('it')));
+    assert.ok(!host.requests[0].argv[2].includes('$(x)'), 'the script holds none of the path');
   });
 });

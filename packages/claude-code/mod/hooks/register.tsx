@@ -19,6 +19,7 @@ import {
   layOut,
   notePath,
   PANE_PALETTE,
+  realPathVia,
   sayEdit,
   sayStopped,
   settingsFrom,
@@ -44,6 +45,9 @@ async function launcherOf($: EngineInterface): Promise<EditorLauncher> {
   const data = (await $.env.get('CLAUDE_PLUGIN_DATA')) ?? `${home ?? ''}/.claude/plugins/data/graph-note`;
   launcher = new EditorLauncher({
     spawn: (request) => $.process.spawn(request),
+    // a matrix note is read only when its real path, links settled, is inside the vault: the mod's file calls do not
+    // settle links, so node is asked
+    realPath: realPathVia((request) => $.process.spawn(request)),
     exists: (path) => $.fs.exists(path),
     read: (path) => $.fs.read(path),
     // the user's settings, saved as settings.json in the plugin data folder; none, or one that cannot be read, is the

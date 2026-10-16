@@ -2,7 +2,7 @@
 // the settings is read afresh each time, never from a cache, and the table in it is read by the core's one reader
 // (`matrixRows`), so Obsidian and the Claude Code mod read a note alike and the gates are handed rows, never a layout.
 import type { App } from 'obsidian';
-import { matrixRows } from '@graph-note/core';
+import { matrixRows } from '@graph-note/core/hosts/matrix-table';
 import type { MatrixRow } from '@graph-note/core';
 
 export { matrixRows };

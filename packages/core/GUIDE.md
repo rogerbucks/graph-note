@@ -672,8 +672,9 @@ exactly what goes and said yes to it. Its answer comes back as a proposal (§17)
   change or the cell is no longer conditional; a cell not exactly ✅, ⚠️ or ❌ is `unknown` and refuses; names are
   compared exactly, so a compatibility character never matches; a table that disagrees with itself or with a name
   matches nothing (`classMapProblems`).
-- `matrix-table.ts` — `matrixRows`, the one reader of the matrix note's table, for the hosts that read the note
-  (Obsidian and the Claude Code mod); the gates are only ever handed its rows. `matrixRowsFrom` checks rows handed over
+- `hosts/matrix-table.ts` — host-side code, reached as `@graph-note/core/hosts/matrix-table` (not from the entry) and
+  imported by no gate or other core module (`hosts-boundary.test.js`): `matrixRows`, the one reader of the matrix note's
+  table, for the hosts that read the note (Obsidian and the Claude Code mod); the gates are only ever handed its rows. `matrixRowsFrom` checks rows handed over
   as data, and takes none at all if anything in them is not a row.
 - `settings-matrix.ts` — the two options of the matrix, the note that holds it and the table of class names (`MATRIX_OPTIONS`).
 - `vault-folder.ts` — `vaultFolder`, the export folder kept inside the vault, re-exported by `settings.ts`.
