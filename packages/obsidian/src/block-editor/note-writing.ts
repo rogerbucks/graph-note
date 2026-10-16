@@ -4,22 +4,11 @@
 import { Notice } from 'obsidian';
 import type { TFile, Vault } from 'obsidian';
 import type { EditorView } from '@codemirror/view';
-import { gqlSpans, graphOfBlock, insertBlockAfter } from '@graph-note/core';
 import type { PaneSession } from '@graph-note/core';
+import type { Refused } from '@graph-note/core/display/editor/editor-note';
+import { LOCK_FAILED, lockedNote } from '@graph-note/core/display/editor/lock-text';
 
-/**
- * A write the note refused, because its block changed meanwhile, or (`edit`) because the note refused an edit made from
- * the drawing (§4): why, and what was typed, to keep as a draft. `history` marks an Undo or Redo with nothing to take
- * back since the block changed outside the editor (§9): only why, as nothing typed needs keeping. `stopped` marks the
- * session stopped by a copy of its block it cannot tell from it, nothing reloaded (block_followed_not_its_copy).
- */
-export interface Refused {
-  reason: string;
-  draft: string;
-  edit?: true;
-  history?: true;
-  stopped?: true;
-}
+export type { Refused };
 
 /** The refusal of a write, as the session gave it. */
 const refusal = (r: Refused): Refused => ({
@@ -29,9 +18,6 @@ const refusal = (r: Refused): Refused => ({
   ...(r.history ? { history: true } : {}),
   ...(r.stopped ? { stopped: true } : {}),
 });
-
-/** Why a write found no note to write into: it was deleted while its block was edited (spec §9). */
-export const NOTE_DELETED = 'the note was deleted';
 
 /** Told the note's text as it stands after a write, or as it was found when the write was refused. */
 type Keep = (note: string) => void;
@@ -112,15 +98,12 @@ export async function stepNote(
 /** Lock the graph: writes its schema `block` after the graph's last block in the note, or says it could not. */
 export async function lockInNote(vault: Vault, file: TFile, graph: string, block: string, keep: Keep): Promise<void> {
   await vault.process(file, (data) => {
-    const last = gqlSpans(data)
-      .filter((x) => graphOfBlock(x.text) === graph)
-      .pop();
-    const r = last ? insertBlockAfter(data, { line: last.open, text: last.text }, block) : null;
-    if (!r?.ok) {
-      new Notice('The graph could not be locked: its block changed. Try again.');
+    const locked = lockedNote(data, graph, block);
+    if (locked === null) {
+      new Notice(LOCK_FAILED);
       return data;
     }
-    keep(r.note);
-    return r.note;
+    keep(locked);
+    return locked;
   });
 }

@@ -2,37 +2,28 @@
 // changed in the note meanwhile, the note was deleted, or the note refused an edit made from the drawing (§4), what was
 // typed is kept as a draft, offered to be restored or discarded. The banner holds the id of the very draft it shows:
 // Restore and Discard act on that draft only, and on no other when it is gone (Roger's choice A, 11 Oct 2026).
-import { Notice } from 'obsidian';
+import { notice } from '../host';
 import { button } from './editor-layout';
-import { NOTE_DELETED } from './note-writing';
-import { RECOVER_COMMAND } from '../drafts';
-
-/** A draft kept for a block: the text, when it was kept, and its id, given once when it is first kept and never again. */
-export interface KeptDraft {
-  text: string;
-  kept: string;
-  id: string;
-}
-
-/** What is said when the note being edited is deleted while what was typed is not yet written. */
-export const DELETED_MESSAGE = `The note was deleted while you were typing. What you typed is kept as a draft: the command "${RECOVER_COMMAND.name}" writes it into a note.`;
+import { NOTE_DELETED } from './editor-note';
+import type { KeptDraft } from './editor-note';
 
 /** What is said when Restore is pressed on a draft that is no longer kept, restored or discarded elsewhere. */
 const GONE_MESSAGE =
   'That draft is no longer kept: it was restored or discarded elsewhere, so nothing was changed. Any other draft is offered when the block is opened again.';
 
 /**
- * What the banner says when a write was refused: the block reloaded from the note, or the note deleted; or, for an `edit`
- * made from the drawing that the note as written refused (§4), why in the core's words, with the block reloaded; or, the
- * editor `stopped` by a copy of its block (§9), the core's words, nothing reloaded.
+ * What the banner says when a write was refused: the block reloaded from the note, or the note deleted (`deleted`, which
+ * each host words for how its drafts are recovered); or, for an `edit` made from the drawing that the note as written
+ * refused (§4), why in the core's words, with the block reloaded; or, the editor `stopped` by a copy of its block (§9), the
+ * core's words, nothing reloaded.
  */
-export const keptMessage = (reason: string, edit = false, stopped = false): string =>
+export const keptMessage = (reason: string, deleted: string, edit = false, stopped = false): string =>
   edit
     ? `The edit was not written: ${reason}. The block is as the note has it, and the edit is kept as a draft.`
     : stopped
       ? `${reason} What you typed is kept as a draft.`
       : reason === NOTE_DELETED
-        ? DELETED_MESSAGE
+        ? deleted
         : `The block changed in the note while you were typing (${reason}), so it was reloaded. What you typed is kept as a draft.`;
 
 /** The drafts an editor's banner offers and acts on: the one to show, and each by its id. */
@@ -73,7 +64,7 @@ export function offerDraft(
       const now = drafts.draftById(kept.id);
       if (!now) {
         banner.hidden = true;
-        new Notice(GONE_MESSAGE);
+        notice(GONE_MESSAGE);
         return;
       }
       el.text.value = now.text;

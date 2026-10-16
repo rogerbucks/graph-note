@@ -1,8 +1,8 @@
 // The block editor's help with problems (spec §4, §8): the list of every problem with its line, the problems on the
 // caret's line with their fixes as buttons, a fix's edits applied to the text, and new problems said to screen readers.
 import type { Diagnostic } from '@graph-note/core';
-import { withFix } from '@graph-note/core/display/fix-changes';
-import type { FixChanges } from '@graph-note/core/display/fix-changes';
+import { withFix } from '../fix-changes';
+import type { FixChanges } from '../fix-changes';
 import { button } from './editor-layout';
 
 /** LSP DiagnosticSeverity: 1 is an error, 4 a hint. */

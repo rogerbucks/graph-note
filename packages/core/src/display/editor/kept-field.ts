@@ -1,13 +1,13 @@
 // The block editor's field, kept across redraws (spec §4): Obsidian redraws a block's card each time its text is written,
 // so the field moves into each new card, or comes back to the page in the same one, with its scroll, its selection and
 // its focus — given back whenever it is on the page again, until the person goes elsewhere.
-import { Component } from 'obsidian';
+import { Lifecycle } from '../lifecycle';
 
 /** How long a field taken off the page, while typed in, is waited for to come back: a safety stop, not the rule. */
 const REFOCUS_FOR_MS = 30_000;
 
 /** Keeps the field's focus and scroll for the editor whose field `current` gives, through each move and redraw. */
-export class KeptField extends Component {
+export class KeptField extends Lifecycle {
   /**
    * Whether the field is being typed in, and where it was scrolled to. Kept here, not read from the page, because
    * Obsidian takes the old card off the page before the new one asks for the editor: by then the field has lost both.

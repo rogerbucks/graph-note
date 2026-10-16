@@ -4,7 +4,6 @@
 // it is read again; renamed or moved, it is followed; deleted, what is typed is kept as a draft. Each editor keeps its own
 // draft, known by its id, so the pane and the card typed in at once never overwrite or forget each other's.
 import { Notice, TFile } from 'obsidian';
-import type { Component } from 'obsidian';
 import {
   PaneSession,
   declareDeferred,
@@ -16,17 +15,17 @@ import {
 } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
 import type { DeclaredDeferred } from '@graph-note/core/display/graph-view/view-options';
-import { keyBeside, keyOf, newDraftId } from '../drafts';
-import { DELETED_MESSAGE } from './kept-draft';
-import type { KeptDraft } from './kept-draft';
-import { NOTE_DELETED, lockInNote, stepNote, writeThroughEditor, writeThroughVault } from './note-writing';
-import type { Refused } from './note-writing';
+import { RECOVER_COMMAND, keyBeside, keyOf, newDraftId } from '../drafts';
+import { NOTE_DELETED } from '@graph-note/core/display/editor/editor-note';
+import type { EditorNote, KeptDraft, Refused, Reread } from '@graph-note/core/display/editor/editor-note';
+import { lockInNote, stepNote, writeThroughEditor, writeThroughVault } from './note-writing';
 
-/** What the session made of the note's new text: nothing to do, its block reloaded, or a conflict with what is typed. */
-export type Reread = 'unchanged' | 'reloaded' | 'conflict';
+/** What is said when the note being edited is deleted while what was typed is not yet written. */
+export const DELETED_MESSAGE = `The note was deleted while you were typing. What you typed is kept as a draft: the command "${RECOVER_COMMAND.name}" writes it into a note.`;
 
-/** The note a block editor edits, and its session on one block of it. */
-export class BlockNote {
+/** The note a block editor edits, and its session on one block of it: the vault's, written safely (spec §4, §9). */
+export class BlockNote implements EditorNote {
+  readonly deletedMessage = DELETED_MESSAGE;
   /** The note's path. */
   path = '';
   /** The note's text, as last read or written. */
@@ -42,6 +41,11 @@ export class BlockNote {
   /** The note's file, or the file at another path. */
   file(path = this.path): TFile | null {
     return this.plugin.app.vault.getFileByPath(path);
+  }
+
+  /** Whether the note's file is still in the vault. */
+  exists(): boolean {
+    return !!this.file();
   }
 
   /** What the drafts of this note's graph are kept under. */
@@ -141,25 +145,27 @@ export class BlockNote {
   }
 
   /**
-   * Watches the vault for the note changing under the editor, for as long as `owner` is loaded: changed, `on.changed` is
-   * told what the session made of it; renamed or moved, alone or with its folder, the note is followed to its new path,
-   * so what is typed keeps reaching it; deleted, `on.deleted` is told, with a notice when typing is not yet written.
+   * Watches the vault for the note changing under the editor, until the returned function is called: changed,
+   * `on.changed` is told what the session made of it; renamed or moved, alone or with its folder, the note is followed to
+   * its new path, so what is typed keeps reaching it; deleted, `on.deleted` is told, with a notice when typing is not yet
+   * written.
    */
-  watch(owner: Component, on: { changed: (outcome: Reread) => void; deleted: () => void }): void {
+  watch(on: { changed: (outcome: Reread) => void; deleted: () => void }): () => void {
     const vault = this.plugin.app.vault;
-    owner.registerEvent(
+    const refs = [
       vault.on('modify', (f) => {
         if (f instanceof TFile) void this.reread(f).then((outcome) => outcome && on.changed(outcome));
       }),
-    );
-    owner.registerEvent(vault.on('rename', (f, old) => this.renamed(f.path, old)));
-    owner.registerEvent(
+      vault.on('rename', (f, old) => this.renamed(f.path, old)),
       vault.on('delete', (f) => {
         if (!this.isOrHolds(f.path)) return;
         if (this.session?.dirty) new Notice(DELETED_MESSAGE);
         on.deleted();
       }),
-    );
+    ];
+    return () => {
+      for (const ref of refs) vault.offref(ref);
+    };
   }
 
   /** Whether `path` is this note's, or a folder's it is in. */

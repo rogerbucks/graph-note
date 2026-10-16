@@ -1,7 +1,7 @@
 // The block editor's waits after typing (spec §4): what is typed is written once typing rests, in the pane well inside
 // the spec's third of a second and in place longer, and the drawing is redrawn a little after it. A write made at once
 // clears the write waiting, and the editor going clears both, as this is its child component, so no timer outlives it.
-import { Component } from 'obsidian';
+import { Lifecycle } from '../lifecycle';
 import type { Layout } from './editor-layout';
 
 /** How long typing rests before it is written: in the pane well inside the spec's third of a second; in place longer. */
@@ -9,7 +9,7 @@ const WRITE_AFTER_MS: Record<Layout, number> = { pane: 150, inline: 700 };
 const DRAW_AFTER_MS = 250;
 
 /** The two waits after typing in one block editor: the write as typing rests, and the redraw. */
-export class TypingRests extends Component {
+export class TypingRests extends Lifecycle {
   private readonly layout: Layout;
   private readonly on: { write: () => void; draw: () => void };
   private writeTimer: number | null = null;
@@ -44,6 +44,7 @@ export class TypingRests extends Component {
 
   /** The editor goes, and this with it: neither wait outlives it. */
   override onunload(): void {
+    super.onunload();
     if (this.writeTimer !== null) window.clearTimeout(this.writeTimer);
     if (this.drawTimer !== null) window.clearTimeout(this.drawTimer);
     this.writeTimer = this.drawTimer = null;

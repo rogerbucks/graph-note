@@ -10,6 +10,7 @@ import { boxLabel } from './suggested-name';
 import { markParked } from './parked';
 import { markCallouts } from './note-callouts';
 import { markLinks } from '../links/link-marks';
+import { noInlineStyle } from '../host';
 import type { ViewOptions } from './view-options';
 
 let described = 0;
@@ -18,11 +19,35 @@ let described = 0;
 function parsed(drawn: Drawn): SVGSVGElement {
   // CSS color-mix arrived in iOS 16.2, and Obsidian runs on iOS 15: without it a blend would draw black, so use the plain hue
   const mixes = typeof CSS === 'undefined' || CSS.supports('color', 'color-mix(in srgb, red 50%, blue)');
-  const svg = new DOMParser().parseFromString(
-    mixes ? drawn.svg : withoutColorMix(drawn.svg),
-    'image/svg+xml',
-  ).documentElement;
-  return activeDocument.importNode(svg, true) as unknown as SVGSVGElement;
+  const text = mixes ? drawn.svg : withoutColorMix(drawn.svg);
+  // where inline styles are forbidden (host.ts), no style attribute may be parsed from markup, not even in a parser's own
+  // document, which keeps the page's policy: each is renamed in the text, and its declarations set through the CSSOM
+  const inert = noInlineStyle();
+  const svg = new DOMParser().parseFromString(inert ? liftStyles(text) : text, 'image/svg+xml').documentElement;
+  const imported = activeDocument.importNode(svg, true) as unknown as SVGSVGElement;
+  if (inert) setLifted(imported);
+  return imported;
+}
+
+/** Where a style attribute waits between the parse and the CSSOM, where inline styles are forbidden. */
+const LIFTED = 'data-gn-style';
+
+/** `svg` with each style attribute of its tags renamed, so no style is parsed from the markup (text is never touched). */
+const liftStyles = (svg: string): string =>
+  svg.replace(/<[a-zA-Z][^<>]*>/g, (tag) => tag.replace(/\sstyle="/g, ` ${LIFTED}="`));
+
+/** Sets the declarations each lifted attribute held through the CSSOM, and takes the attribute away. */
+function setLifted(root: SVGSVGElement): void {
+  const lifted = [root, ...Array.from(root.querySelectorAll<SVGElement>(`[${LIFTED}]`))];
+  for (const el of lifted) {
+    const style = el.getAttribute(LIFTED);
+    if (style === null) continue;
+    el.removeAttribute(LIFTED);
+    for (const declaration of style.split(';')) {
+      const colon = declaration.indexOf(':');
+      if (colon > 0) el.style.setProperty(declaration.slice(0, colon).trim(), declaration.slice(colon + 1).trim());
+    }
+  }
 }
 
 /**

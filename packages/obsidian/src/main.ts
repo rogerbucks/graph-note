@@ -33,6 +33,7 @@ import { AI_COMMAND, CLEAR_SENDS_COMMAND, SENDS_KEPT, askAi, clearAiSends } from
 import { exportGraph, type ExportAsk, type ExportOutcome } from './export/export';
 import { PNG_PIXEL_LIMIT, rasterise } from './export/png';
 import { installObsidianHost } from './display-host';
+import { directed } from '@graph-note/core/display/editor/pane-drawing';
 import { stillFrame } from '@graph-note/core/display/images/still-frame';
 import { vaultImages } from './images/vault-images';
 import type { CardImages } from '@graph-note/core/display/graph-view/animated-images';
@@ -47,7 +48,7 @@ import type { BlockEditor } from './block-editor/block-editor';
 import { graphBlocks } from './live-preview';
 import { InlineEditors } from './inline-editors';
 import { followRename, recoverDrafts, RECOVER_COMMAND, withIds } from './drafts';
-import type { KeptDraft } from './block-editor/kept-draft';
+import type { KeptDraft } from '@graph-note/core/display/editor/editor-note';
 import { noteToRewrite, stillToRewrite } from './reading-view';
 import { followLinks } from './links/rename-follow';
 import { HOVER_SOURCE } from './links/link-host';
@@ -302,9 +303,7 @@ export default class GraphNotePlugin extends Plugin {
   layout(drawing: GraphDrawing, owner?: object): Promise<Drawn | Refusal | null> {
     // the direction set on the settings page, one the locked style allows (spec §21); else the best fit
     // a direction the graph's own style sets (§6), or its diagram type's (§15), comes before the settings' default
-    const { direction } = this.settings;
-    const keep = direction === 'best' || !!drawing.direction || !!drawing.diagram;
-    return this.layoutsOf()?.draw(keep ? drawing : { ...drawing, direction }, owner) ?? Promise.resolve(null);
+    return this.layoutsOf()?.draw(directed(drawing, this.settings.direction), owner) ?? Promise.resolve(null);
   }
 
   /**

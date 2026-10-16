@@ -20,7 +20,7 @@ import { renderCode } from '@graph-note/core/display/code';
 import { graphCard } from '../graph-card';
 import { aidsOf } from '@graph-note/core/display/graph-view/viewer-aids';
 import { renderProblems } from '@graph-note/core/display/graph-view/problems-list';
-import { refusalBanner } from '../layout-worker/refusal-banner';
+import { refusalBanner } from '@graph-note/core/display/refusal-banner';
 import { editInPane } from '../edit-in-pane';
 import { readFromVault, watchSource } from './source-read';
 import { sourceAlert, sourceStrip } from './source-strip';

@@ -2,15 +2,27 @@
 // selects where it is written in the text, and its Edit puts the focus back in the text. In place, in a drawing's card,
 // the editor has none: the card's own drawing is its drawing. It is laid out apart from the interface, as every drawing
 // is (spec §9): a graph typed or pasted past a limit is not drawn, and a banner beside its text says why.
-import { Component } from 'obsidian';
 import { ViewState, depthOf, parked, startingSwitches } from '@graph-note/core';
-import type { Drawn, FocusDepth, NoteReading, PaneSession, Refusal } from '@graph-note/core';
-import type GraphNotePlugin from '../main';
-import { graphCard } from '../graph-card';
-import { refusalBanner } from '../layout-worker/refusal-banner';
-import type { Chosen, SwitchesShown } from '@graph-note/core/display/graph-view/view-options';
-import { aidsOf } from '@graph-note/core/display/graph-view/viewer-aids';
-import type { ViewerAids } from '@graph-note/core/display/graph-view/viewer-aids';
+import type { Drawn, FocusDepth, GraphDrawing, NoteReading, PaneSession, Refusal, Settings } from '@graph-note/core';
+import { Lifecycle } from '../lifecycle';
+import { refusalBanner } from '../refusal-banner';
+import { GraphView } from '../graph-view/graph-view';
+import type { Chosen, SwitchesShown } from '../graph-view/view-options';
+import { aidsOf } from '../graph-view/viewer-aids';
+import type { ViewerAids } from '../graph-view/viewer-aids';
+
+/** What the pane's drawing asks of its host: the settings as they now are, and a graph laid out apart from the interface (§9). */
+export interface PaneHost {
+  settings: () => Settings;
+  /** The drawing laid out, or why it is shown as text; null when it is no longer wanted. Rejects when the engine cannot start. */
+  layout: (drawing: GraphDrawing, owner: object) => Promise<Drawn | Refusal | null>;
+}
+
+/** A drawing given the direction set on the settings page, unless its own style sets one (§6, §15, §21); else the best fit. */
+export function directed(drawing: GraphDrawing, direction: Settings['direction']): GraphDrawing {
+  const keep = direction === 'best' || !!drawing.direction || !!drawing.diagram;
+  return keep ? drawing : { ...drawing, direction };
+}
 
 /** What choosing in the drawing does: Edit, a box or a link chosen, and the text replaced, as by an estimate's quick fix. */
 interface Choosing {
@@ -52,7 +64,7 @@ function drawInPane(
     return null;
   }
   const card = host.createDiv({ cls: 'graph-note' });
-  return graphCard(card, {
+  return new GraphView(card, {
     reading,
     graph: s.graph,
     drawn,
@@ -76,15 +88,15 @@ function drawInPane(
 }
 
 /** The pane's drawing, redrawn from what is typed, once it is laid out. */
-export class PaneDrawing extends Component {
-  private view: ReturnType<typeof graphCard> | null = null;
-  private readonly plugin: GraphNotePlugin;
+export class PaneDrawing extends Lifecycle {
+  private view: GraphView | null = null;
+  private readonly host: PaneHost;
   /** The pane's View menu (§25): started from the settings, kept while the pane redraws what is typed. */
   private state: ViewState | null = null;
 
-  constructor(plugin: GraphNotePlugin) {
+  constructor(host: PaneHost) {
     super();
-    this.plugin = plugin;
+    this.host = host;
   }
 
   /** Takes the drawing away. */
@@ -96,8 +108,8 @@ export class PaneDrawing extends Component {
   /** Draws the session's graph, as read, into `host` — unless, by the time it is laid out, `stale` says it is not wanted. */
   redraw(host: HTMLElement, reading: NoteReading, s: PaneSession, stale: () => boolean, on: Choosing): void {
     const d = reading.graphs.get(s.graph);
-    const state = (this.state ??= new ViewState(startingSwitches(this.plugin.settings)));
-    const laidOut = (by: object) => (d ? this.plugin.layout(state.folded(d), by) : Promise.resolve(null));
+    const state = (this.state ??= new ViewState(startingSwitches(this.host.settings())));
+    const laidOut = (by: object) => (d ? this.host.layout(state.folded(d), by) : Promise.resolve(null));
     // too large to read, nothing was read (§9); and a layout this editor asked for before, not yet started, is dropped
     const laid = reading.tooLarge
       ? Promise.resolve(reading.tooLarge)
@@ -108,7 +120,7 @@ export class PaneDrawing extends Component {
       .then((drawn) => {
         if (stale() || drawn === null) return;
         this.clear();
-        const depth = depthOf(this.plugin.settings.focusDepth);
+        const depth = depthOf(this.host.settings().focusDepth);
         const view = drawInPane(
           host,
           drawn,
@@ -117,8 +129,8 @@ export class PaneDrawing extends Component {
           on,
           depth,
           { state, relayout: laidOut },
-          this.plugin.settings.noteCallouts === 'on',
-          aidsOf(this.plugin.settings),
+          this.host.settings().noteCallouts === 'on',
+          aidsOf(this.host.settings()),
         );
         if (!view) return;
         this.view = view;

@@ -2,7 +2,7 @@
 // Tab takes the inline match or else the first suggestion, Enter takes the inline match, Escape puts it away, and undo
 // and redo — by key, by the Edit menu or by a phone's gesture — step through the editor's own history in place of the
 // field's.
-import type { Component } from 'obsidian';
+import type { Lifecycle } from '../lifecycle';
 import type { Change, CompletionItem, PaneSession } from '@graph-note/core';
 import type { FieldHistory, Step } from './editor-history';
 import { sayRefused } from './editor-layout';
@@ -70,7 +70,7 @@ function stepOfKey(e: KeyboardEvent): Step | null {
 }
 
 /** Watches what is done in the field, for as long as `owner` is loaded. */
-export function watchTyping(owner: Component, text: HTMLTextAreaElement, on: Typing): void {
+export function watchTyping(owner: Lifecycle, text: HTMLTextAreaElement, on: Typing): void {
   owner.registerDomEvent(text, 'input', () => on.typed());
   owner.registerDomEvent(text, 'keyup', () => on.caretMoved());
   owner.registerDomEvent(text, 'click', () => on.caretMoved());
@@ -80,7 +80,7 @@ export function watchTyping(owner: Component, text: HTMLTextAreaElement, on: Typ
 }
 
 /** Watches the keys and input events that take a suggestion or ask for undo or redo. */
-export function watchKeys(owner: Component, text: HTMLTextAreaElement, on: Typing): void {
+export function watchKeys(owner: Lifecycle, text: HTMLTextAreaElement, on: Typing): void {
   // WebKit ends a composition, then sends the Enter that committed it with isComposing false: so a composition just
   // ended counts as composing for the next key, and until the next tick
   let composedJustNow = false;

@@ -1,8 +1,8 @@
 // The block editor's parts on the page (spec §4, §9): the head with its tools, the draft banner, on a phone the
 // Drawing and Text tabs, the text field over its coloured picture, the fix and suggestion bars, the problems list and the
 // announcer for screen readers — built once for each block shown, in the pane or in place in a drawing's card.
-import { Notice, Platform, setIcon } from 'obsidian';
 import type { PaneSession } from '@graph-note/core';
+import { isPhone, notice, setIcon } from '../host';
 
 /** Where the editor sits: in the edit pane, with its own drawing, a picker and, on a phone, tabs; or in place, in a drawing's card. */
 export type Layout = 'pane' | 'inline';
@@ -65,7 +65,7 @@ export function buildEditor(
   if (inline) {
     drawingEl = null; // in place, the card's own drawing is the drawing
     textEl = pane.createDiv({ cls: 'graph-note-pane-text' });
-  } else if (Platform.isPhone) {
+  } else if (isPhone()) {
     const tabs = pane.createDiv({ cls: 'graph-note-tabs', attr: { role: 'tablist' } });
     drawingEl = pane.createDiv({ cls: 'graph-note-pane-drawing', attr: { role: 'tabpanel' } });
     textEl = pane.createDiv({ cls: 'graph-note-pane-text', attr: { role: 'tabpanel' } });
@@ -113,7 +113,7 @@ export function buildEditor(
     attr: { role: 'toolbar', 'aria-label': 'Suggestions' },
   });
   suggest.hidden = true;
-  const sheetParent = Platform.isPhone && !inline ? pane.createDiv({ cls: 'graph-note-sheet' }) : textEl;
+  const sheetParent = isPhone() && !inline ? pane.createDiv({ cls: 'graph-note-sheet' }) : textEl;
   const list = sheetParent.createDiv({
     cls: 'graph-note-pane-problems',
     attr: { role: 'region', 'aria-label': 'Problems', 'aria-live': 'polite' },
@@ -168,7 +168,7 @@ export const toolsSaid = (why: { undo: string | null; redo: string | null }): st
  * so the same words said again are heard again.
  */
 export function sayRefused(announce: HTMLElement, reason: string): void {
-  new Notice(reason);
+  notice(reason);
   announce.setText('');
   window.requestAnimationFrame(() => announce.setText(reason));
 }
