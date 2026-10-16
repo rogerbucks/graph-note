@@ -10,6 +10,7 @@
     "record": "it never removes or changes a record or a cache (§24 rule 4)",
     "generated": "an added WAS_GENERATED_BY comes from a thing the set adds, to an activity of the set's own author (§24)",
     "unknown": "its author stranger is a known person or model",
+    "assocadd": "an added ASSOCIATED_WITH comes from an Activity the set adds (§24)",
     "planadd": "an added HAD_PLAN comes from an Activity the set adds, and never from a model or software agent (§24)",
     "cache": "it adds no cache — a claim's likelihood, confidence and status are the engine's (§24 rule 5)",
     "plan": "after it, §11 req:11.had-plan: every HAD_PLAN link goes to a Rule, or to a Ref to one",
@@ -62,6 +63,18 @@
     "(mystery_run:Activity {name: 'Unknown run'}),",
     "(made_unknown:Book {title: 'Made somewhere'}),",
     "(made_unknown)-[:WAS_GENERATED_BY]->(mystery_run),",
+    "(t_ref:ElementType {id: 'type:Ref', name: 'Ref', kind: 'node'}),",
+    "(library_schema)-[:DECLARES]->(t_ref),",
+    "(ghost:Ref {ref: 'nobody', graph: 'elsewhere'}),",
+    "(ghost_run:Activity {name: 'Ghost run'}),",
+    "(ghost_run)-[:ASSOCIATED_WITH]->(ghost),",
+    "(made_ghost:Book {title: 'Made by a ghost'}),",
+    "(made_ghost)-[:WAS_GENERATED_BY]->(ghost_run),",
+    "(known:Ref {ref: 'ada', graph: 'library'}),",
+    "(known_run:Activity {name: 'Known run'}),",
+    "(known_run)-[:ASSOCIATED_WITH]->(known),",
+    "(made_known:Book {title: 'Made by a known'}),",
+    "(made_known)-[:WAS_GENERATED_BY]->(known_run),",
     "(bot_planned_run:Activity {name: 'Drafter planned run'}),",
     "(bot_planned_run)-[:ASSOCIATED_WITH]->(bot),",
     "(bot_planned_run)-[:HAD_PLAN]->(total_rule),",
@@ -953,6 +966,7 @@
       "body": ["SET made_unknown.title = 'Changed'"],
       "failed": ["record"],
       "warnings": [
+        "ghost_run has no HAD_PLAN and no ASSOCIATED_WITH agent, so what it generated (made_ghost) is read as a cache: add (ghost_run)-[:HAD_PLAN]->(its Rule), or associate ghost_run with its agent",
         "mystery_run has no HAD_PLAN and no ASSOCIATED_WITH agent, so what it generated (made_unknown) is read as a cache: add (mystery_run)-[:HAD_PLAN]->(its Rule), or associate mystery_run with its agent"
       ],
       "changes": [["set-thing", null]],
@@ -1016,6 +1030,55 @@
       "failed": ["record"],
       "changes": [["delete-link", null]],
       "after": null
+    },
+    {
+      "name": "an association added to an activity that is already there is refused: it would make a cache ordinary",
+      "by": "bot",
+      "body": ["(mystery_run)-[:ASSOCIATED_WITH]->(bot)"],
+      "failed": ["assocadd"],
+      "changes": [],
+      "after": null
+    },
+    {
+      "name": "an activity the set adds may be associated with its agent",
+      "body": ["(r4:Activity {name: 'Own work'})", "(r4)-[:ASSOCIATED_WITH]->(ada)"],
+      "failed": [],
+      "changes": [],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(r4:Activity {name: 'Own work'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas),",
+        "(r4)-[:ASSOCIATED_WITH]->(ada)"
+      ]
+    },
+    {
+      "name": "a Ref that resolves to nothing is no agent: what its activity made is a cache",
+      "body": ["SET made_ghost.title = 'Changed'"],
+      "failed": ["record"],
+      "changes": [["set-thing", null]],
+      "after": null
+    },
+    {
+      "name": "a Ref that resolves to a person is an agent: what its activity made is ordinary",
+      "body": ["SET made_known.checked = TRUE"],
+      "head_changed": [
+        [
+          "(made_known:Book {title: 'Made by a known'}),",
+          "(made_known:Book {title: 'Made by a known', checked: TRUE}),"
+        ]
+      ],
+      "failed": [],
+      "changes": [["set-thing", null]],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
+      ]
     },
     {
       "name": "the generation of ordinary work may be removed",

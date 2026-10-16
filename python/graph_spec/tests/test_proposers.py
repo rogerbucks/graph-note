@@ -67,6 +67,10 @@ class Proposers(unittest.TestCase):
             rows = gs.judgements_rules(db, c["graph"], ["people", c["graph"]])
             rule = [ok for label, ok, _ in rows if label == TABLE["rule6"]]
             self.assertEqual(rule, [c["holds"]], c["name"])
+            # the warning for the old form is the same as the reader's
+            detail = [d for label, _, d in rows if label == TABLE["rule6"]]
+            for warning in c["warnings"]:
+                self.assertIn(warning, detail[0], c["name"])
 
 
 if __name__ == "__main__":

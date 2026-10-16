@@ -183,11 +183,18 @@ describe('a model’s own answer cannot declare an author', () => {
       );
   });
 
-  test('nor a plan or an attribution: a link of type HAD_PLAN or WAS_ATTRIBUTED_TO, in any case', () => {
-    for (const type of ['HAD_PLAN', 'had_plan', 'WAS_ATTRIBUTED_TO', 'Was_Attributed_To'])
+  test('nor a plan, an association or an attribution: HAD_PLAN, ASSOCIATED_WITH or WAS_ATTRIBUTED_TO, in any case', () => {
+    for (const type of [
+      'HAD_PLAN',
+      'had_plan',
+      'ASSOCIATED_WITH',
+      'associated_with',
+      'WAS_ATTRIBUTED_TO',
+      'Was_Attributed_To',
+    ])
       assert.match(
         changesIn(answer({ op: 'add-link', from: 'large_reader', type, to: 'question' })).unread,
-        /cannot add a HAD_PLAN or WAS_ATTRIBUTED_TO link/,
+        /cannot add a HAD_PLAN, ASSOCIATED_WITH or WAS_ATTRIBUTED_TO link/,
         type,
       );
   });
