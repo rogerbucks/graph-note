@@ -254,6 +254,56 @@ export const cases = {
     },
   },
 
+  // W3C PROV is normative for provenance (graph spec §11, §12, §24; Roger, 16 Oct 2026): a derivation links to its rule
+  // with HAD_PLAN, an attribution goes to an agent, a revision is generated after what it supersedes
+  'provenance kept: a plan, an agent and a revision in order': {
+    blocks: [
+      lines(
+        '// graph: prov_kept',
+        "(total_rule:Rule {id: 'rule:total@1', name: 'Total'}),",
+        "(derive:Activity {name: 'Derive totals', rule: 'rule:total@1'}),",
+        '(derive)-[:HAD_PLAN]->(total_rule),',
+        "(ada:Person {name: 'Ada'}),",
+        "(acme:Organization {name: 'Acme'}),",
+        "(importer:SoftwareAgent {name: 'Importer'}),",
+        "(bot:Model {name: 'Drafter'}),",
+        "(v1:Doc {title: 'One', generated_at: DATETIME '2026-09-01T00:00:00+00:00'}),",
+        "(v2:Doc {title: 'Two', generated_at: DATE '2026-09-01'}),",
+        "(v3:Doc {title: 'Three'}),",
+        '(v2)-[:SUPERSEDES]->(v1),',
+        '(v3)-[:SUPERSEDES]->(v2),',
+        '(v1)-[:WAS_ATTRIBUTED_TO]->(ada),',
+        '(v2)-[:WAS_ATTRIBUTED_TO]->(acme),',
+        '(derive)-[:WAS_ATTRIBUTED_TO]->(importer),',
+        '(v3)-[:WAS_ATTRIBUTED_TO]->(bot)',
+      ),
+    ],
+    graphs: ['prov_kept'],
+    matrix: {},
+  },
+
+  'provenance broken: no plan, no agent and a revision out of order': {
+    blocks: [
+      lines(
+        '// graph: prov_broken',
+        "(total_rule:Rule {id: 'rule:total@1', name: 'Total'}),",
+        "(other_rule:Rule {id: 'rule:other@1', name: 'Other'}),",
+        "(derive:Activity {name: 'Derive totals', rule: 'rule:total@1'}),",
+        "(derive_wrong:Activity {name: 'Derive others', rule: 'rule:other@1'}),",
+        '(derive_wrong)-[:HAD_PLAN]->(total_rule),',
+        "(v1:Doc {title: 'One', generated_at: DATETIME '2026-09-01T00:00:00+00:00'}),",
+        "(v2:Doc {title: 'Two', generated_at: DATETIME '2026-08-01T00:00:00+00:00'}),",
+        "(v3:Doc {title: 'Three', generated_at: DATE '2026-07-01'}),",
+        '(v2)-[:SUPERSEDES]->(v1),',
+        '(v3)-[:SUPERSEDES]->(v1),',
+        '(v1)-[:WAS_ATTRIBUTED_TO]->(total_rule),',
+        '(v2)-[:WAS_ATTRIBUTED_TO]->(v3)',
+      ),
+    ],
+    graphs: ['prov_broken'],
+    matrix: {},
+  },
+
   'hashes and canonical JSON': {
     sha256: ['', 'abc', 'graph — notes ✓'],
     jcs: [{ b: 2, a: [1, 'x', true, null], c: { z: 1, y: 'é' } }, 'plain', 1.5],

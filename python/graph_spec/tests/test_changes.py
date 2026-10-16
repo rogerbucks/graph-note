@@ -92,7 +92,9 @@ class Changes(unittest.TestCase):
                     self.assertEqual(got_change[3], want[2], c["name"])
             self.assertTrue(all(len(x[2]) == 16 for x in got["changes"]), c["name"])
             self.assertEqual(len({x[2] for x in got["changes"]}), len(got["changes"]), c["name"])
-            want = None if c["after"] is None else state_of("\n".join(TABLE["head"] + c["after"]))
+            changed = dict(map(tuple, c.get("head_changed", [])))
+            head = [changed.get(line, line) for line in TABLE["head"]]
+            want = None if c["after"] is None else state_of("\n".join(head + c["after"]))
             self.assertEqual(got["after"], want, c["name"])
             if len(got["changes"]) == 1:
                 ids[c["name"]] = got["changes"][0][2]

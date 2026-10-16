@@ -118,7 +118,7 @@ def grafeo_verdicts(db, g, graphs, switches, w):
     out = {"§18: the flat projection rebuilds the graph": gs.projects_back(db, g)}
     if not gr.is_draft(w, g):
         out["§5: every element has a declared type"] = gs.typed(db)
-    rows = gs.paths_rules(db) + gs.section20(db, switches)
+    rows = gs.paths_rules(db) + gs.section20(db, switches) + gs.prov_rules(db, g, graphs)
     db.set_graph(g)
     if gs.Q(db, "MATCH (d:Decision) RETURN d LIMIT 1"):
         rows += gs.judgements_rules(db, g, graphs) + gs.served_rules(db, g)
