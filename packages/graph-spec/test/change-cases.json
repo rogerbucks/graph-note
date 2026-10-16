@@ -10,6 +10,7 @@
     "record": "it never removes or changes a record or a cache (§24 rule 4)",
     "generated": "an added WAS_GENERATED_BY comes from a thing the set adds, to an activity of the set's own author (§24)",
     "unknown": "its author stranger is a known person or model",
+    "planadd": "an added HAD_PLAN comes from an Activity the set adds, and never from a model or software agent (§24)",
     "cache": "it adds no cache — a claim's likelihood, confidence and status are the engine's (§24 rule 5)",
     "plan": "after it, §11 req:11.had-plan: every HAD_PLAN link goes to a Rule, or to a Ref to one",
     "attributed": "after it, §24 req:24.prov-attributed: every WAS_ATTRIBUTED_TO link goes to a Person, Organization or SoftwareAgent (a Model counts as one)",
@@ -57,6 +58,10 @@
     "(plain_run:Activity {name: 'Typed in by hand'}),",
     "(ledger:Book {title: 'Ledger'}),",
     "(ledger)-[:WAS_GENERATED_BY]->(plain_run),",
+    "(plain_run)-[:ASSOCIATED_WITH]->(ada),",
+    "(mystery_run:Activity {name: 'Unknown run'}),",
+    "(made_unknown:Book {title: 'Made somewhere'}),",
+    "(made_unknown)-[:WAS_GENERATED_BY]->(mystery_run),",
     "(bot_planned_run:Activity {name: 'Drafter planned run'}),",
     "(bot_planned_run)-[:ASSOCIATED_WITH]->(bot),",
     "(bot_planned_run)-[:HAD_PLAN]->(total_rule),",
@@ -941,6 +946,89 @@
         "(ada)-[:WROTE]->(notes),",
         "(ada)-[:WROTE]->(atlas),",
         "(edition2)-[:SUPERSEDES]->(edition1)"
+      ]
+    },
+    {
+      "name": "a value an unknown activity made, with no plan and no agent, is a cache and a warning names the fix",
+      "body": ["SET made_unknown.title = 'Changed'"],
+      "failed": ["record"],
+      "warnings": [
+        "mystery_run has no HAD_PLAN and no ASSOCIATED_WITH agent, so what it generated (made_unknown) is read as a cache: add (mystery_run)-[:HAD_PLAN]->(its Rule), or associate mystery_run with its agent"
+      ],
+      "changes": [["set-thing", null]],
+      "after": null
+    },
+    {
+      "name": "a model may propose to set what a person's unplanned work made",
+      "by": "bot",
+      "body": ["SET ledger.checked = TRUE"],
+      "head_changed": [["(ledger:Book {title: 'Ledger'}),", "(ledger:Book {title: 'Ledger', checked: TRUE}),"]],
+      "failed": [],
+      "changes": [["set-thing", null]],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
+      ]
+    },
+    {
+      "name": "a model may not add a plan, even for an activity it adds",
+      "by": "bot",
+      "body": ["(r3:Activity {name: 'Plan'})", "(r3)-[:HAD_PLAN]->(total_rule)"],
+      "failed": ["planadd"],
+      "changes": [],
+      "after": null
+    },
+    {
+      "name": "a software agent may not add a plan either",
+      "by": "importer",
+      "body": ["(r3:Activity {name: 'Plan'})", "(r3)-[:HAD_PLAN]->(total_rule)"],
+      "failed": ["planadd"],
+      "changes": [],
+      "after": null
+    },
+    {
+      "name": "a plan added to an activity that is already there is refused: it would freeze its work as a cache",
+      "body": ["(bot_run)-[:HAD_PLAN]->(total_rule)"],
+      "failed": ["planadd"],
+      "changes": [],
+      "after": null
+    },
+    {
+      "name": "a plan is never removed, whoever asks",
+      "body": ["MATCH (a {id: 'engine_run'})-[r:HAD_PLAN]->(b {id: 'total_rule'}) DELETE r"],
+      "failed": ["record"],
+      "changes": [["delete-link", null]],
+      "after": null
+    },
+    {
+      "name": "the generation of a cache by a planned activity is never removed",
+      "body": ["MATCH (a {id: 'figure'})-[r:WAS_GENERATED_BY]->(b {id: 'engine_run'}) DELETE r"],
+      "failed": ["record"],
+      "changes": [["delete-link", null]],
+      "after": null
+    },
+    {
+      "name": "the generation of a cache by an unknown activity is never removed",
+      "body": ["MATCH (a {id: 'made_unknown'})-[r:WAS_GENERATED_BY]->(b {id: 'mystery_run'}) DELETE r"],
+      "failed": ["record"],
+      "changes": [["delete-link", null]],
+      "after": null
+    },
+    {
+      "name": "the generation of ordinary work may be removed",
+      "body": ["MATCH (a {id: 'ledger'})-[r:WAS_GENERATED_BY]->(b {id: 'plain_run'}) DELETE r"],
+      "head_changed": [["(ledger)-[:WAS_GENERATED_BY]->(plain_run),", ""]],
+      "failed": [],
+      "changes": [["delete-link", null]],
+      "after": [
+        "(grace:Person {name: 'Grace'}),",
+        "(notes:Book {title: 'Notes on the engine', pages: 60}),",
+        "(atlas:Book {title: 'Atlas'}),",
+        "(ada)-[:WROTE]->(notes),",
+        "(ada)-[:WROTE]->(atlas)"
       ]
     }
   ]

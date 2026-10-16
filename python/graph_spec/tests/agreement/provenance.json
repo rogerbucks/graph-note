@@ -40,6 +40,10 @@
           "(derive)-[:WAS_ATTRIBUTED_TO]->(importer),",
           "(v3)-[:WAS_ATTRIBUTED_TO]->(bot),",
           "(plain_run:Activity {name: 'Typed in by hand'}),",
+          "(plain_run)-[:ASSOCIATED_WITH]->(ada),",
+          "(unknown_run:Activity {name: 'Unknown run'}),",
+          "(made_unknown:Doc {title: 'Made somewhere'}),",
+          "(made_unknown)-[:WAS_GENERATED_BY]->(unknown_run),",
           "(planned_run:Activity {name: 'Run of the total'}),",
           "(planned_run)-[:HAD_PLAN]->(total_rule),",
           "(bot_run:Activity {name: 'Drafter run'}),",
@@ -52,51 +56,69 @@
       ],
       "changesets": [
         [
-          "// graph: prov_ok · CHANGE SET cs_organization · against 0288bbe8164590cd · by acme",
+          "// graph: prov_ok · CHANGE SET cs_organization · against df1f4bdc7ac55a34 · by acme",
           "(late:Doc {title: 'Late'}),",
           "(late)-[:WAS_ATTRIBUTED_TO]->(acme)"
         ],
         [
-          "// graph: prov_ok · CHANGE SET cs_software_agent · against 0288bbe8164590cd · by importer",
+          "// graph: prov_ok · CHANGE SET cs_software_agent · against df1f4bdc7ac55a34 · by importer",
           "(late:Doc {title: 'Late'}),",
           "(late)-[:WAS_ATTRIBUTED_TO]->(importer)"
         ],
         [
-          "// graph: prov_ok · CHANGE SET cs_stranger · against 0288bbe8164590cd · by stranger",
+          "// graph: prov_ok · CHANGE SET cs_stranger · against df1f4bdc7ac55a34 · by stranger",
           "(late:Doc {title: 'Late'})"
         ],
         [
-          "// graph: prov_ok · CHANGE SET cs_not_an_agent · against 0288bbe8164590cd · by ada",
+          "// graph: prov_ok · CHANGE SET cs_not_an_agent · against df1f4bdc7ac55a34 · by ada",
           "(late:Doc {title: 'Late'}),",
           "(late)-[:WAS_ATTRIBUTED_TO]->(v1)"
         ],
         [
-          "// graph: prov_ok · CHANGE SET cs_own_run · against 0288bbe8164590cd · by bot",
+          "// graph: prov_ok · CHANGE SET cs_own_run · against df1f4bdc7ac55a34 · by bot",
           "(report:Doc {title: 'Report'}),",
           "(report)-[:WAS_GENERATED_BY]->(bot_run)"
         ],
         [
-          "// graph: prov_ok · CHANGE SET cs_planned_run · against 0288bbe8164590cd · by ada",
+          "// graph: prov_ok · CHANGE SET cs_planned_run · against df1f4bdc7ac55a34 · by ada",
           "(report:Doc {title: 'Report'}),",
           "(report)-[:WAS_GENERATED_BY]->(planned_run)"
         ],
         [
-          "// graph: prov_ok · CHANGE SET cs_set_no_plan · against 0288bbe8164590cd · by ada",
+          "// graph: prov_ok · CHANGE SET cs_set_no_plan · against df1f4bdc7ac55a34 · by ada",
           "MATCH (d:Doc {id: 'made_plain'})",
           "SET d.title = 'Made by hand, checked'"
         ],
         [
-          "// graph: prov_ok · CHANGE SET cs_set_cache · against 0288bbe8164590cd · by ada",
+          "// graph: prov_ok · CHANGE SET cs_set_unknown · against df1f4bdc7ac55a34 · by ada",
+          "MATCH (d:Doc {id: 'made_unknown'})",
+          "SET d.title = 'Made somewhere, checked'"
+        ],
+        [
+          "// graph: prov_ok · CHANGE SET cs_model_plan · against df1f4bdc7ac55a34 · by bot",
+          "(newrun:Activity {name: 'Plan it'}),",
+          "(newrun)-[:HAD_PLAN]->(total_rule)"
+        ],
+        [
+          "// graph: prov_ok · CHANGE SET cs_plan_for_old · against df1f4bdc7ac55a34 · by ada",
+          "(bot_run)-[:HAD_PLAN]->(total_rule)"
+        ],
+        [
+          "// graph: prov_ok · CHANGE SET cs_delete_plan · against df1f4bdc7ac55a34 · by ada",
+          "MATCH (a {id: 'planned_run'})-[r:HAD_PLAN]->(b {id: 'total_rule'}) DELETE r"
+        ],
+        [
+          "// graph: prov_ok · CHANGE SET cs_set_cache · against df1f4bdc7ac55a34 · by ada",
           "MATCH (d:Doc {id: 'made_planned'})",
           "SET d.title = 'Made by the total, checked'"
         ],
         [
-          "// graph: prov_ok · CHANGE SET cs_plan_not_a_rule · against 0288bbe8164590cd · by ada",
+          "// graph: prov_ok · CHANGE SET cs_plan_not_a_rule · against df1f4bdc7ac55a34 · by ada",
           "(again:Activity {name: 'Derive again'}),",
           "(again)-[:HAD_PLAN]->(v1)"
         ],
         [
-          "// graph: prov_ok · CHANGE SET cs_revision_early · against 0288bbe8164590cd · by ada",
+          "// graph: prov_ok · CHANGE SET cs_revision_early · against df1f4bdc7ac55a34 · by ada",
           "(v5:Doc {title: 'Five', generated_at: DATETIME '2026-08-01T00:00:00+00:00'}),",
           "(v5)-[:SUPERSEDES]->(v2)"
         ]
@@ -129,7 +151,9 @@
           "(v2)-[:SUPERSEDES]->(v1),",
           "(v3)-[:SUPERSEDES]->(v1),",
           "(v1)-[:WAS_ATTRIBUTED_TO]->(total_rule),",
-          "(v2)-[:WAS_ATTRIBUTED_TO]->(v3)"
+          "(v2)-[:WAS_ATTRIBUTED_TO]->(v3),",
+          "(nowhere:Ref {ref: 'ghost'}),",
+          "(v3)-[:WAS_ATTRIBUTED_TO]->(nowhere)"
         ]
       ]
     }

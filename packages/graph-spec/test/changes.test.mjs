@@ -27,6 +27,8 @@ for (const c of table.cases) {
         .sort(),
       c.failed.map((k) => table.labels[k]).sort(),
     );
+    // what the check warns of, for the cases that say (an unknown activity's work is read as a cache)
+    if (c.warnings) assert.deepEqual(r.header.warnings, c.warnings);
     const changes = r.header.changes;
     assert.deepEqual(
       changes.map((x) => [x.op, x.reason]),
