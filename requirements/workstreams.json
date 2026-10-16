@@ -537,7 +537,8 @@
       "ux_copy_auto",
       "visual_regression_auto",
       "speed_budgets",
-      "thresholds_named"
+      "thresholds_named",
+      "requirements_as_graph_note"
     ]
   },
   "R1": {
