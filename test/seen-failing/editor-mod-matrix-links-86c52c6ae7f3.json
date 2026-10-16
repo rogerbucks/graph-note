@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/editor-mod-matrix-links.test.js",
+  "test": "the real path asked of a host that can only start a process > only stdout is read, and a failing process, with output or not, fails closed",
+  "seen_failing_first": false,
+  "evidence": "It pins fail-closed behaviour the first version already had (a non-zero exit, no stdout, or a failed start rejected); the changes of this commit are covered by the tests beside it, which fail first."
+}

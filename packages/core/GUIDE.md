@@ -689,6 +689,25 @@ exactly what goes and said yes to it. Its answer comes back as a proposal (§17)
   or secret by its name, even at the end of a snake_case or camelCase one, though a bare `key` is an ordinary word and
   only a name ending in `_key` or `Key` is a secret's, a card number, or the key of any model set up), never
   the text.
+- `ai-matrix.ts` — a model's row of the destination matrix (model_ceiling). The host reads the matrix note and hands
+  the core plain `MatrixRow`s (a mark, yes, conditional or no, for each class), so the core never reads the note's
+  layout. A model with a `matrixRow` picked by the user, never guessed from its name or address, may receive exactly
+  the classes the row marks yes, and each conditional class only once its name is in the model's `matrixOn`; a no is
+  never allowed, and the highest classification never goes to any model. `matchClass` matches a class to a
+  classification by name, else through `aiClassMap`; one matched by neither is flagged (`unmatchedClasses`), never
+  guessed, and never allowed. `matrixGrants` lists a row's classes for the settings page, with the condition to show
+  beside each switch. `clearance` takes the matrix as its last argument and, for a model with a row, uses it in place
+  of the ceiling; with no row the ceiling stands. `classMapFrom` and `classMapText` keep the mapping table as text.
+  Nothing fails open: a row named twice, or two columns standing for one classification, refuses (`matrixProblems`
+  flags them); a switch (`matrixOn`) keeps the condition it was turned on under and is dropped when the note's words
+  change or the cell is no longer conditional; a cell not exactly ✅, ⚠️ or ❌ is `unknown` and refuses; names are
+  compared exactly, so a compatibility character never matches; a table that disagrees with itself or with a name
+  matches nothing (`classMapProblems`).
+- `src/hosts/` — host-side code, kept apart from the core proper. `hosts/matrix-table.ts` is reached as `@graph-note/core/hosts/matrix-table` (not from the entry) and
+  imported by no gate or other core module (`hosts-boundary.test.js`): `matrixRows`, the one reader of the matrix note's
+  table, for the hosts that read the note (Obsidian and the Claude Code mod); the gates are only ever handed its rows. `matrixRowsFrom` checks rows handed over
+  as data, and takes none at all if anything in them is not a row.
+- `settings-matrix.ts` — the two options of the matrix, the note that holds it and the table of class names (`MATRIX_OPTIONS`).
 - `claude-gate.ts` — `claudeGate` (spec §26, cc_classified_asks, cc_credential_never): whether a note may open in the
   browser editor's pane, which Claude can read. `{ open }`; `{ ask }` for a note above Claude's ceiling (the ceiling of
   the AI model named Claude, else the lowest classification); `{ refuse }` for one at the highest classification, one
@@ -696,7 +715,9 @@ exactly what goes and said yes to it. Its answer comes back as a proposal (§17)
   one holding a credential at any classification. The words name kinds and levels, never the note's label or text. A
   third argument, the SHA-256 of a text, is the user's yes to that text alone. `classificationOf` reads the one
   unindented top-level front matter `classification:` key; several, a list, mapping, block, anchor, tag, open quote or an
-  empty value with child lines are `unknown`, which refuses (`noteClassification` gives the label or null). The §19 destination matrix is not read (model_ceiling is parked).
+  empty value with child lines are `unknown`, which refuses (`noteClassification` gives the label or null). The ceiling
+  of the model named Claude is cleared by its matrix row when one is picked (the host hands the rows as `matrix`),
+  else by its ceiling.
 - `ai-scope.ts` — `aiScope`: what is sent of a note, as the user chose (the whole graph, a view, or things by name),
   written out again as GQL from the graph as read: each thing with its kinds and properties, and the links between the
   things chosen. Nothing else of the note goes: no prose, no other graph, no comment.

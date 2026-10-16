@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/editor-mod-matrix-links.test.js",
+  "test": "the real path asked of a host that can only start a process > a path with a newline is one argument and comes back whole",
+  "seen_failing_first": false,
+  "evidence": "It pins a case the first version already handled (the path was already one argument with no shell); the new argument shape and the timeout are covered by the tests beside it, which fail first."
+}

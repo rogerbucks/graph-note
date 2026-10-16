@@ -21,6 +21,16 @@ unless the app sets its own. Whether the desktop app does, and keeps the drawing
   limit (`LAYOUT_TIMEOUT_MS`), and the SVGs back. After a refused run, `node --version` is asked: a node that is not
   there (ENOENT, "not found") or exit code 127 is said as `NODE_MISSING`, in words with what to do; a host that runs no
   process says its own words; a node that starts means the layout did not finish.
+- `editor-paths.ts` — also `insideVault`: a path written relative to the vault, as a full path inside it, or null (the
+  matrix note is never read from outside the vault). `editor-launch.ts` reads the matrix note for Claude's row
+  (`gateSettings`) and hands the server the row, switches, class names and rows (`settingsForServer`), so both gates
+  agree; a note that cannot be read gives no rows and the row clears nothing.
+- `editor-matrix.ts` — `withMatrix`: the matrix note read for Claude's row, only from inside the vault's real path.
+- `editor-realpath.ts` — `realPathVia`: a file's real path, links settled, asked of the shipped process
+  `bin/real-path-process.ts` (built to `mod/bin/real-path.mjs`, run by node) through the host's process call, as the
+  mod's file calls settle no links; the path is the one argument. The matrix note is read
+  only when its real path is inside the vault's real path; a link out, a host with no such call, or a path that cannot
+  be settled refuses it with a plain reason (`matrixProblem`), which both gates give.
 - `editor-launch.ts` — `EditorLauncher` (workstream C2): the session's one browser-editor server, started for a note
   through the host's `spawn` (handed in, so no Node module is imported), its first line of output read for the address,
   which only `link` gives (a `#` field, so `JSON.stringify` shows none). `edit` reuses the server for the same note,

@@ -190,3 +190,56 @@ test('a label’s case is the settings’ own in what is said', () => {
   assert.match(claudeGate(note('cOnFiDeNtIaL'), settings()).ask, /Confidential/);
   assert.ok(!claudeGate(note('cOnFiDeNtIaL'), settings()).ask.includes('cOnFiDeNtIaL'));
 });
+
+// Claude's level from the matrix row picked for the model named Claude (model_ceiling), with the same fail-closed rules;
+// with no row picked, the ceiling above stands.
+const cell = (name, mark, condition) => ({ class: name, mark, ...(condition ? { condition } : {}) });
+const ROWS = [
+  {
+    name: 'Claude chat',
+    cells: [
+      cell('Public', 'yes'),
+      cell('Internal', 'conditional', 'history off'),
+      cell('Confidential', 'no'),
+      cell('Restricted', 'yes'),
+    ],
+  },
+];
+const withRow = (extra = {}, rows = ROWS) =>
+  settings({
+    aiModels: [{ ...claude('Restricted'), matrixRow: 'Claude chat', ...extra }],
+    matrix: rows,
+    aiClassMap: {},
+  });
+
+test('a picked row replaces Claude’s ceiling: yes opens, a conditional is asked until switched on, a no is asked', () => {
+  assert.deepEqual(claudeGate(note('Public'), withRow()), { open: true });
+  assert.match(claudeGate(note('Internal'), withRow()).ask, /Claude chat/);
+  const on = withRow({ matrixOn: [{ class: 'Internal', condition: 'history off' }] });
+  assert.deepEqual(claudeGate(note('Internal'), on), { open: true });
+  const stale = withRow({ matrixOn: [{ class: 'Internal', condition: 'something else' }] });
+  assert.ok('ask' in claudeGate(note('Internal'), stale));
+  assert.ok(
+    'ask' in claudeGate(note('Confidential'), withRow({ matrixOn: [{ class: 'Confidential', condition: '' }] })),
+  );
+});
+
+test('the highest classification still never opens, whatever the row says', () => {
+  assert.ok('refuse' in claudeGate(note('Restricted'), withRow()));
+});
+
+test('a row that is missing, named twice or unreadable asks for everything above the highest, never opens', () => {
+  assert.ok('ask' in claudeGate(note('Public'), withRow({}, [])));
+  assert.ok('ask' in claudeGate(note('Public'), withRow({ matrixRow: 'Nowhere' })));
+  assert.ok('ask' in claudeGate(note('Public'), withRow({}, [...ROWS, ...ROWS])));
+  assert.ok(
+    'ask' in
+      claudeGate(note('Public'), settings({ aiModels: [{ ...claude('Restricted'), matrixRow: 'Claude chat' }] })),
+  );
+});
+
+test('with no row picked the ceiling stands, and a row picked for another model is not Claude’s', () => {
+  assert.deepEqual(claudeGate(note('Internal'), settings()), { open: true });
+  const other = { ...claude('Public'), name: 'Other', matrixRow: 'Claude chat' };
+  assert.ok('ask' in claudeGate(note('Internal'), settings({ aiModels: [other], matrix: ROWS })));
+});

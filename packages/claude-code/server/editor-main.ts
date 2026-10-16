@@ -5,6 +5,7 @@
 // is refused, is thrown as plain words, which the process says on stderr before it listens anywhere.
 import type { EditorProcessOptions } from './editor-process.ts';
 import { settingsFrom } from '@graph-note/core';
+import { matrixRowsFrom } from '@graph-note/core/hosts/matrix-table';
 import type { GateSettings } from '@graph-note/core';
 import { storeGate } from './editor-gate.ts';
 import { NoteStore } from './editor-store.ts';
@@ -22,10 +23,20 @@ export const EDITOR_ENVIRONMENT = {
 } as const;
 
 /** The gate's settings from the environment, as the core reads settings back; none, or unreadable ones, are the defaults. */
-function gateSettings(raw: string | undefined): GateSettings {
+export function gateSettings(raw: string | undefined): GateSettings {
   try {
-    const s = settingsFrom(JSON.parse(raw ?? 'null'));
-    return { classifications: s.classifications, aiUnlabelled: s.aiUnlabelled, aiModels: s.aiModels };
+    const given: unknown = JSON.parse(raw ?? 'null');
+    const s = settingsFrom(given);
+    const matrix = given && typeof given === 'object' ? matrixRowsFrom((given as Record<string, unknown>).matrix) : [];
+    const problem = (given as Record<string, unknown> | null)?.matrixProblem;
+    return {
+      classifications: s.classifications,
+      aiUnlabelled: s.aiUnlabelled,
+      aiModels: s.aiModels,
+      aiClassMap: s.aiClassMap,
+      matrix,
+      ...(typeof problem === 'string' && problem ? { matrixProblem: problem } : {}),
+    };
   } catch {
     const d = settingsFrom(null);
     return { classifications: d.classifications, aiUnlabelled: d.aiUnlabelled, aiModels: d.aiModels };

@@ -18,6 +18,21 @@ export function fullPath(cwd: string, given: string): string {
   return `${drive}${sep}${parts.join(sep)}`;
 }
 
+/**
+ * `given`, a path written relative to the vault, as a full path inside `vault`; null when it is empty, full, starts with
+ * `~`, or once `.` and `..` are settled reaches the vault's own folder or outside it. A link out of the vault is not
+ * seen here, as the mod has only the host's file calls.
+ */
+export function insideVault(vault: string, given: string): string | null {
+  const path = given.trim();
+  if (!path || isFull(path) || path.startsWith('~')) return null;
+  const root = fullPath(vault, vault);
+  const sep = root.includes('\\') && !root.includes('/') ? '\\' : '/';
+  const full = fullPath(vault, path);
+  const prefix = root.endsWith(sep) ? root : `${root}${sep}`;
+  return full.startsWith(prefix) && full.length > prefix.length ? full : null;
+}
+
 /** The folder holding a path. */
 export function folderOf(path: string): string {
   const cut = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));

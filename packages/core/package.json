@@ -7,7 +7,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./display/*": "./src/display/*.ts"
+    "./display/*": "./src/display/*.ts",
+    "./hosts/*": "./src/hosts/*.ts"
   },
   "dependencies": {
     "@graph-note/graph-spec": "0.4.5",

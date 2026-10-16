@@ -4,23 +4,16 @@
 import { DEPARTURES } from './strictness.ts';
 import type { Departure, Strictness, StrictnessSettings } from './strictness.ts';
 import { STYLE } from './layout.ts';
-import { AID_OPTIONS } from './settings-aids.ts';
+import { switchesFrom } from './ai-matrix.ts';
+import type { AiModel } from './ai-model.ts';
 import { vaultFolder } from './vault-folder.ts';
+import { AID_OPTIONS } from './settings-aids.ts';
+import { MATRIX_OPTIONS } from './settings-matrix.ts';
 import type { MiniMapSetting } from './settings-aids.ts';
 
 export type { MiniMapSetting } from './settings-aids.ts';
 
-/** An AI model set up for §19: what it is for, and its ceiling — the highest classification of note it may be sent. */
-export interface AiModel {
-  name: string;
-  purpose: string;
-  ceiling: string;
-  /** Where requests go, set by the user; nothing is sent unless the user sends it. */
-  endpoint: string;
-  model: string;
-  /** The name of its key in the host's secret store: never the key itself. */
-  keyName: string;
-}
+export type { AiModel } from './ai-model.ts';
 
 /** How a line the editor writes is indented. */
 export type Indent = 'two' | 'four' | 'tab';
@@ -49,6 +42,10 @@ export interface Settings extends StrictnessSettings {
   /** The level a note with no classification counts as for AI (§19, unclassified_strictest): the highest until chosen. */
   aiUnlabelled: string;
   aiModels: AiModel[];
+  /** The note that holds the destination matrix, by its path; empty when the vault keeps none. */
+  aiMatrixNote: string;
+  /** Matrix class names mapped by hand to the classification each stands for. */
+  aiClassMap: Record<string, string>;
   indent: Indent;
   /** The best fit of the locked style's directions, or one of them. */
   direction: string;
@@ -91,6 +88,8 @@ export const DEFAULT_SETTINGS: Settings = {
   // the most sensitive, so a note nobody has classified goes to no model until the user chooses otherwise
   aiUnlabelled: CLASSIFICATIONS.at(-1) ?? '',
   aiModels: [],
+  aiMatrixNote: '',
+  aiClassMap: {},
   indent: 'four',
   direction: 'best',
   focusDepth: 'one',
@@ -201,8 +200,9 @@ export const OPTIONS: Option[] = [
     section: 'AI models',
     name: 'AI models',
     sentence:
-      'Each AI model the editor may ask, with its purpose and its ceiling, the highest classification of note it may be sent.',
+      'Each AI model the editor may ask, with its purpose and its ceiling, the highest classification of note it may be sent, or a row of the destination matrix.',
   },
+  ...MATRIX_OPTIONS, // the matrix note and its class names (§19)
   {
     key: 'indent',
     section: 'Formatting',
@@ -317,6 +317,11 @@ export function aiModel(given: Partial<AiModel> & Record<string, unknown>, class
     endpoint: text(given.endpoint),
     model: text(given.model),
     keyName: text(given.keyName),
+    // kept only with a row picked, so a model with none is as it was
+    ...(text(given.matrixRow).trim() && {
+      matrixRow: text(given.matrixRow).trim(),
+      matrixOn: switchesFrom(given.matrixOn),
+    }),
   };
 }
 
@@ -344,6 +349,12 @@ export function settingsFrom(saved: unknown): Settings {
           .filter((m): m is Record<string, unknown> => !!m && typeof m === 'object')
           .map((m) => aiModel(m, classifications))
       : [],
+    aiMatrixNote: text(s.aiMatrixNote).trim(),
+    aiClassMap: Object.fromEntries(
+      Object.entries(s.aiClassMap && typeof s.aiClassMap === 'object' ? s.aiClassMap : {}).filter(
+        (e): e is [string, string] => typeof e[1] === 'string',
+      ),
+    ),
     indent: oneOf<Indent>('indent', s.indent, d.indent),
     direction: oneOf('direction', s.direction, d.direction),
     focusDepth: oneOf<FocusDepthSetting>('focusDepth', s.focusDepth, d.focusDepth),

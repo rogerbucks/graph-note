@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/matrix-send.test.js",
+  "test": "the send dialog and the matrix note > the note is read as the dialog shows what will be sent, and a model held to its row is sent to",
+  "seen_failing_first": false,
+  "evidence": "It pins the working path the dialog already had (the note read, a model sent to); the two tests beside it, which fail first, cover the new behaviour."
+}

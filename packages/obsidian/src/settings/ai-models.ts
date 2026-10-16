@@ -4,7 +4,8 @@
 import { SecretComponent } from 'obsidian';
 import type { App, SettingDefinitionList, SettingTab } from 'obsidian';
 import { AI_PURPOSES, aiModel, endpointProblem } from '@graph-note/core';
-import type { AiModel, Settings } from '@graph-note/core';
+import type { AiModel, MatrixRow, Settings } from '@graph-note/core';
+import { matrixControls, switchIsOn, switchedClass, withSwitch } from './ai-matrix-controls';
 import type GraphNotePlugin from '../main';
 
 const TEXTS: [keyof AiModel, string, string][] = [
@@ -23,7 +24,12 @@ const TEXTS: [keyof AiModel, string, string][] = [
 ];
 
 /** The models, each a page of its own, with an affordance to add one and to remove each. */
-export function aiModelList(app: App, owner: GraphNotePlugin, tab: SettingTab): SettingDefinitionList {
+export function aiModelList(
+  app: App,
+  owner: GraphNotePlugin,
+  tab: SettingTab,
+  matrix: MatrixRow[],
+): SettingDefinitionList {
   const s = owner.settings;
   const save = async (aiModels: AiModel[]) => {
     await owner.saveSettings({ ...owner.settings, aiModels });
@@ -41,6 +47,7 @@ export function aiModelList(app: App, owner: GraphNotePlugin, tab: SettingTab): 
         ...(s.classifications.includes(m.ceiling) ? [] : [`${m.ceiling} is no longer a classification: choose again`]),
         // an address set but not usable is said, so a model that will never be offered says why (user_models)
         ...(m.endpoint.trim() ? [endpointProblem(m.endpoint) ?? ''].filter(Boolean) : []),
+        ...(m.matrixRow ? [`held to the matrix row ${m.matrixRow}`] : []),
       ].join('. '),
       items: [
         {
@@ -62,6 +69,7 @@ export function aiModelList(app: App, owner: GraphNotePlugin, tab: SettingTab): 
                 ),
               },
             },
+            ...matrixControls(s, m, i, matrix),
             {
               name: 'Key',
               desc: 'Kept in the app’s own secret store, never in the vault.',
@@ -88,19 +96,23 @@ function changed(s: Settings, i: number, part: Partial<AiModel>): AiModel[] {
   return s.aiModels.map((m, j) => (j === i ? aiModel({ ...m, ...part }, s.classifications) : m));
 }
 
-const parts = (key: string): [number, keyof AiModel] => {
+type Text = Exclude<keyof AiModel, 'matrixOn'>;
+const parts = (key: string): [number, Text] => {
   const [, i, field] = key.split('.');
-  return [Number(i), field as keyof AiModel];
+  return [Number(i), field as Text];
 };
 
-/** A model's field, by its control key `aiModels.<index>.<field>`. */
-export function getModelValue(s: Settings, key: string): string {
+/** A model's field, by its control key `aiModels.<index>.<field>`; a class's switch is on or off. */
+export function getModelValue(s: Settings, key: string, rows: MatrixRow[]): string | boolean {
+  if (switchedClass(key)) return switchIsOn(s, rows, key);
   const [i, field] = parts(key);
   return s.aiModels[i]?.[field] ?? '';
 }
 
-/** The change a model's field makes to the settings, by its control key. */
-export function setModelValue(s: Settings, key: string, value: unknown): Partial<Settings> {
+/** The change a model's field makes to the settings, by its control key; a new row starts with every switch off. */
+export function setModelValue(s: Settings, key: string, value: unknown, rows: MatrixRow[]): Partial<Settings> {
+  const on = switchedClass(key);
+  if (on) return { aiModels: changed(s, on.i, { matrixOn: withSwitch(s, rows, on.i, on.name, !!value) }) };
   const [i, field] = parts(key);
-  return { aiModels: changed(s, i, { [field]: String(value) }) };
+  return { aiModels: changed(s, i, { [field]: String(value), ...(field === 'matrixRow' ? { matrixOn: [] } : {}) }) };
 }
