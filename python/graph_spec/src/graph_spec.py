@@ -264,8 +264,6 @@ from graphspec.engine.serving.checks import (
     served_rules,
 )
 from graphspec.engine.changesets import (
-    MODEL_MAY_ADD,
-    MODEL_MAY_LINK,
     _state,
     changeset_header,
     check_changeset,
