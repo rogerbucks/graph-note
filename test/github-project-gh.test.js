@@ -79,14 +79,15 @@ describe('the first apply, against an empty GitHub', () => {
     assert.deepEqual(options('Proof'), ['open', 'part', 'proved']);
   });
 
-  test('leaves the built-in Status field as GitHub made it, its options kept, and gives each item the seed Todo', () => {
+  test('leaves the built-in Status field as GitHub made it, its options kept, and gives each item the seed Todo, or In Progress when it is part proved', () => {
     const [project] = gh.hub.projects;
     const status = project.fields.find((f) => f.name === 'Status');
     assert.deepEqual(
       status.options.map((o) => o.name),
       ['Todo', 'In Progress', 'Done'],
     );
-    assert.ok(project.items.every((i) => i.values.Status === 'Todo'));
+    const partNumber = issueOf(gh, 'focus_neighbours').number;
+    for (const i of project.items) assert.equal(i.values.Status, i.number === partNumber ? 'In Progress' : 'Todo');
     assert.ok(gh.hub.mutations.every((m) => !/ProjectV2Field.* Status$/.test(m)));
   });
 
@@ -99,7 +100,7 @@ describe('the first apply, against an empty GitHub', () => {
       Workstream: 'W1: Focus, hover and untangle',
       Proof: 'part',
       'Build status': 'Not started',
-      Status: 'Todo',
+      Status: 'In Progress',
     });
   });
 
