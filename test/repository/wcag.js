@@ -114,13 +114,16 @@ export function withVariables(css, variables) {
     );
   const colour = '(#[0-9a-fA-F]{3,8}|(?:rgba?|hsla?)\\([^)]*\\))';
   const mixed = new RegExp(`color-mix\\(\\s*in srgb\\s*,\\s*${colour}\\s+([\\d.]+)%\\s*,\\s*${colour}\\s*\\)`, 'g');
-  return text.replace(mixed, (whole, a, percent, b) => {
+  const resolved = text.replace(mixed, (whole, a, percent, b) => {
     const [x, y] = [parseColour(a), parseColour(b)];
-    if (!x || !y) return whole;
+    if (!x || !y) throw new Error(`color-mix with a colour this check cannot read: ${whole}`);
     const p = parseFloat(percent) / 100;
     const channels = [0, 1, 2].map((i) => Math.round(x[i] * p + y[i] * (1 - p)));
     return `rgb(${channels.join(', ')})`;
   });
+  const left = /color-mix\([^;}]*/.exec(resolved);
+  if (left) throw new Error(`color-mix this check cannot read: ${left[0]}`);
+  return resolved;
 }
 
 const escapeText = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');

@@ -57,11 +57,13 @@ function workerFor(window, file) {
  * script run. Returns {dom, window, stop}: `stop` puts away the worker threads; the caller closes the DOM (audit does).
  */
 export function openEditorPage(dir, hash, note = PAGE_NOTE) {
-  const html = readFileSync(join(dir, 'index.html'), 'utf8').replace(/<link[^>]*>|<script[^>]*><\/script>/g, '');
+  const html = readFileSync(join(dir, 'index.html'), 'utf8');
   // the built page is one module whose last line exports the starter; run as a plain script, it starts itself
   const script = readFileSync(join(dir, 'page.js'), 'utf8').replace(/\nexport \{[^}]*\};?\s*$/, '\n');
   const dom = openWindow(html, { url: `http://127.0.0.1:1/${hash}` });
   const { window } = dom;
+  // the page's script is run below by hand and its style sheet added by styleFor: its tags are taken out through the DOM
+  window.document.querySelectorAll('script, link[rel="stylesheet"]').forEach((e) => e.remove());
   window.matchMedia = (media) => ({ media, matches: false, addEventListener() {}, removeEventListener() {} });
   window.URL.createObjectURL = () => 'blob:drawing';
   window.URL.revokeObjectURL = () => {};

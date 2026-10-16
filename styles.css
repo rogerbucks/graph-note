@@ -952,8 +952,9 @@ details.graph-note-style > summary {
   padding: 0 var(--size-2-1);
   background: none;
   box-shadow: none;
-  /* the text colour, underlined: the theme's link colour is under 4.5:1 on the card in Obsidian's default themes (SC 1.4.3) */
-  color: var(--text-normal);
+  /* the link colour mixed with the text colour, underlined: the link colour alone is under 4.5:1 on the card in Obsidian's
+     default themes (SC 1.4.3); 70% of it keeps the hue and reaches 5:1 in both */
+  color: color-mix(in srgb, var(--link-color) 70%, var(--text-normal));
   text-decoration: underline;
   font-size: inherit;
   cursor: pointer;
