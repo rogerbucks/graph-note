@@ -15,7 +15,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { CUBE, gif, pdf, png, svg, webp } from './test-images.mjs';
+import { CUBE, gif, pdf, png, svg, webp } from './make-test-images.mjs';
 
 const ANIMATED = '20 Animated images';
 const LINKS = '21 Links and attachments';
