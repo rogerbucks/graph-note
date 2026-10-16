@@ -5,7 +5,10 @@
   "description": "The host-free core of the graph note editor: what to draw, problems and fixes, zoom, edits and undo. No Obsidian, no VS Code.",
   "license": "MIT",
   "type": "module",
-  "exports": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./display/*": "./src/display/*.ts"
+  },
   "dependencies": {
     "@graph-note/graph-spec": "0.4.5",
     "@viz-js/viz": "3.31.0"

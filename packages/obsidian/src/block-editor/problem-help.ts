@@ -1,14 +1,16 @@
 // The block editor's help with problems (spec §4, §8): the list of every problem with its line, the problems on the
 // caret's line with their fixes as buttons, a fix's edits applied to the text, and new problems said to screen readers.
 import type { Diagnostic } from '@graph-note/core';
+import { withFix } from '@graph-note/core/display/fix-changes';
+import type { FixChanges } from '@graph-note/core/display/fix-changes';
 import { button } from './editor-layout';
 
 /** LSP DiagnosticSeverity: 1 is an error, 4 a hint. */
 const HINT = 4;
 const classOf = (d: Diagnostic) => (d.severity === 1 ? 'is-error' : d.severity === HINT ? 'is-hint' : 'is-warning');
 
-/** The edits of a fix, by document, as a problem's fix gives them. */
-export type FixChanges = Record<string, { range: Diagnostic['range']; newText: string }[]>;
+export { withFix };
+export type { FixChanges };
 
 /** Lists every problem with its line and its fix, or says there are none. */
 export function listProblems(list: HTMLElement, problems: Diagnostic[]): void {
@@ -46,19 +48,6 @@ export function showFixes(
     for (const f of d.data.fixes) button(row, f.title, null, () => apply(f.edit.changes), f.title);
     if (!d.data.fixes.length) row.createSpan({ cls: 'graph-note-fix', text: ` ${d.data.fix}` });
   }
-}
-
-/** The text with a fix's edits made, the last first so each place still holds. */
-export function withFix(text: string, changes: FixChanges): string {
-  const lines = text.split('\n');
-  const offset = (p: { line: number; character: number }) =>
-    lines.slice(0, p.line).reduce((a, l) => a + l.length + 1, 0) + p.character;
-  const edits = Object.values(changes)
-    .flat()
-    .sort((a, b) => offset(b.range.start) - offset(a.range.start));
-  let v = text;
-  for (const e of edits) v = v.slice(0, offset(e.range.start)) + e.newText + v.slice(offset(e.range.end));
-  return v;
 }
 
 /** What a problem is known by, so the same one is not announced twice. */

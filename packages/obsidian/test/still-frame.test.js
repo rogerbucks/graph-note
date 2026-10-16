@@ -4,7 +4,7 @@
 // canvas was asked for.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { STILL_PIXELS, stillFrame } from '../src/images/still-frame.ts';
+import { STILL_PIXELS, stillFrame } from '../../core/src/display/images/still-frame.ts';
 
 /** Stands in the page's Image and document for one call: an image of `width` by `height`, and the canvases asked for. */
 async function framed(width, height) {

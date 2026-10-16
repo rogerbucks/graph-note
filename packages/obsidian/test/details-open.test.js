@@ -87,7 +87,7 @@ describe('details_always_visible: a setting keeps the details open, showing the 
 
   test('its summary is text, never HTML', () => {
     for (const file of ['details-panel.ts', 'details-summary.ts']) {
-      const src = readFileSync(`${root}packages/obsidian/src/graph-view/${file}`, 'utf8');
+      const src = readFileSync(`${root}packages/core/src/display/graph-view/${file}`, 'utf8');
       assert.ok(!/innerHTML|outerHTML|insertAdjacentHTML/.test(src), file);
     }
   });

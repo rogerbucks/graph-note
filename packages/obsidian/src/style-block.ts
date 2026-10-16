@@ -1,8 +1,8 @@
 // A style block in a note (spec §2, style_block_in_note): never drawn as a graph, shown folded away until opened — a line
 // saying whose style it is, what it holds and how many problems it has, and its text, coloured, inside.
 import { readNote, readStyle } from '@graph-note/core';
-import { renderCode } from './code';
-import { plural } from './graph-view/view-bar';
+import { renderCode } from '@graph-note/core/display/code';
+import { plural } from '@graph-note/core/display/graph-view/view-bar';
 
 /** Shows the style block `source`, of graph `styled`, folded; `texts` are the note's gql blocks, with it among them. */
 export function renderStyleBlock(el: HTMLElement, source: string, styled: string, texts: string[]): void {

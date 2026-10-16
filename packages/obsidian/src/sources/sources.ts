@@ -16,10 +16,10 @@ import {
 } from '@graph-note/core';
 import type { Drawn, Refusal, SourceRead } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
-import { renderCode } from '../code';
-import { GraphView } from '../graph-view/graph-view';
-import { aidsOf } from '../graph-view/viewer-aids';
-import { renderProblems } from '../graph-view/problems-list';
+import { renderCode } from '@graph-note/core/display/code';
+import { graphCard } from '../graph-card';
+import { aidsOf } from '@graph-note/core/display/graph-view/viewer-aids';
+import { renderProblems } from '@graph-note/core/display/graph-view/problems-list';
 import { refusalBanner } from '../layout-worker/refusal-banner';
 import { editInPane } from '../edit-in-pane';
 import { readFromVault, watchSource } from './source-read';
@@ -110,7 +110,7 @@ export async function renderSourceBlock(
     return;
   }
   ctx.addChild(
-    new GraphView(root, {
+    graphCard(root, {
       source: text,
       reading,
       graph,

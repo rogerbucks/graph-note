@@ -30,15 +30,15 @@ import type {
   StyleGraph,
 } from '@graph-note/core';
 import { AI_COMMAND, CLEAR_SENDS_COMMAND, SENDS_KEPT, askAi, clearAiSends } from './ai/ai';
-import { exportGraph } from './export/export';
-import type { ExportAsk, ExportOutcome } from './export/export';
+import { exportGraph, type ExportAsk, type ExportOutcome } from './export/export';
 import { PNG_PIXEL_LIMIT, rasterise } from './export/png';
-import { stillFrame } from './images/still-frame';
+import { installObsidianHost } from './display-host';
+import { stillFrame } from '@graph-note/core/display/images/still-frame';
 import { vaultImages } from './images/vault-images';
-import type { CardImages } from './graph-view/animated-images';
-import { aidsOf } from './graph-view/viewer-aids';
+import type { CardImages } from '@graph-note/core/display/graph-view/animated-images';
+import { aidsOf } from '@graph-note/core/display/graph-view/viewer-aids';
 import { GraphNoteSettingTab } from './settings/settings';
-import type { DeclaredList } from './properties/list-row';
+import type { DeclaredList } from '@graph-note/core/display/properties/list-row';
 import { engineOnThePage, Layouts } from './layout-worker/layout-worker';
 import { renderShown } from './block';
 import { GraphPane, PANE } from './pane';
@@ -77,6 +77,7 @@ export default class GraphNotePlugin extends Plugin {
   private schemas: Map<string, string[]> | null = null;
 
   override async onload(): Promise<void> {
+    installObsidianHost(); // the display layer draws in Obsidian from here on
     this.saved = ((await this.loadData()) as Saved | null) ?? {};
     // drafts kept before ids are given theirs, and saved at once, so each keeps the same id from one load to the next
     if (Object.values(this.saved.drafts ?? {}).some((d) => !d.id)) await this.saveDrafts(this.drafts());
