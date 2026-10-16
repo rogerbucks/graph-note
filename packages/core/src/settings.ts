@@ -84,7 +84,12 @@ export interface Settings extends StrictnessSettings {
   exportFolder: string;
   /** The classification above which an export asks first: one of `classifications`. */
   exportAsksAbove: string;
+  /** The name recorded when you accept or reject a change in a proposal, as typed; empty records "you" (§17). */
+  decider: string;
 }
+
+/** The most characters a decider's name is kept to. */
+const MOST_NAME = 200;
 
 const CLASSIFICATIONS = ['Public', 'Internal', 'Confidential', 'Restricted'];
 
@@ -114,6 +119,7 @@ export const DEFAULT_SETTINGS: Settings = {
   exportFolder: '',
   // the lowest, so anything above it asks
   exportAsksAbove: CLASSIFICATIONS[0] ?? '',
+  decider: '',
 };
 
 /** One choice of an option: its value, its name, and, where it needs one, a sentence. */
@@ -126,7 +132,7 @@ export interface Choice {
 /** One option on the settings page: the setting it sets, its part of the page, its name, its sentence, its choices. */
 export interface Option {
   key: keyof Settings;
-  section: 'Strictness' | 'AI models' | 'Formatting' | 'Drawing' | 'Export';
+  section: 'Strictness' | 'AI models' | 'Proposals' | 'Formatting' | 'Drawing' | 'Export';
   name: string;
   sentence: string;
   choices?: Choice[];
@@ -298,6 +304,13 @@ export const OPTIONS: Option[] = [
     sentence:
       'The classification above which an export asks first, naming the classification; one of the classifications set above.',
   },
+  {
+    key: 'decider',
+    section: 'Proposals',
+    name: 'Your name on decisions',
+    sentence:
+      'The name recorded when you accept or reject a change in a proposal, kept exactly as you type it; left empty, it is recorded as “you”.',
+  },
 ];
 
 const text = (v: unknown, fallback = ''): string => (typeof v === 'string' ? v : fallback);
@@ -325,8 +338,6 @@ export function aiModel(given: Partial<AiModel> & Record<string, unknown>, class
     }),
   };
 }
-
-export { vaultFolder };
 
 /** Settings read back from what was saved: each known one kept when it is in range, else its default. */
 export function settingsFrom(saved: unknown): Settings {
@@ -376,6 +387,8 @@ export function settingsFrom(saved: unknown): Settings {
       typeof s.exportAsksAbove === 'string' && classifications.includes(s.exportAsksAbove)
         ? s.exportAsksAbove
         : (classifications[0] ?? ''),
+    // as typed, spaces and capitals kept; a name is one line, and not an essay
+    decider: typeof s.decider === 'string' ? s.decider.replace(/[\r\n]+/g, ' ').slice(0, MOST_NAME) : d.decider,
   };
 }
 

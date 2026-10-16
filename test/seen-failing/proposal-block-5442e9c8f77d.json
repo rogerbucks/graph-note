@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/proposal-block.test.js",
+  "test": "a person decides, a change at a time > a Reject that is refused, as a waiting change still needs the thing, says so on the card",
+  "seen_failing_first": false,
+  "evidence": "The refusal and the card's status line already existed from the first commit of this PR; the review asked for the reason to be shown on the card, and this proves it is, so it passed before."
+}

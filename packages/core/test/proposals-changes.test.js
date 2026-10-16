@@ -13,36 +13,38 @@ import {
   thingChange,
   valueGql,
 } from '../src/proposals.ts';
-import { ADA, AT, BASIS, CHANGES, proposalOf } from './proposals-fixtures.js';
+import { ADA, AT, BASIS, C1, C2, C3, C4, C5, CHANGES, proposalOf } from './proposals-fixtures.js';
 
 const made = (over = {}) =>
   makeProposal({ id: 'cs1', graph: 'reader', by: ADA, basis: BASIS, changes: [CHANGES[0]], ...over });
 
 describe('making a proposal', () => {
-  test('gives each change an id, c1 on, and the group its source did not name', () => {
+  test('gives each change its derived id, and the group its source did not name', () => {
     const p = proposalOf();
     assert.deepEqual(
       p.changes.map((c) => [c.id, c.group]),
       [
-        ['c1', 'New Option'],
-        ['c2', 'New ANSWERS links'],
-        ['c3', 'Changed price'],
-        ['c4', 'Removed ANSWERS links'],
-        ['c5', 'Removed things'],
+        [C1, 'New Option'],
+        [C2, 'New ANSWERS links'],
+        [C3, 'Changed price'],
+        [C4, 'Removed ANSWERS links'],
+        [C5, 'Removed things'],
       ],
     );
+    assert.equal(new Set(p.changes.map((c) => c.id)).size, 5);
+    for (const c of p.changes) assert.match(c.id, /^[0-9a-f]{16}$/, 'the id is a hash of the statement, not a number');
   });
 
-  test('keeps an id and a group a source gave, and numbers the others round them without a clash', () => {
+  test('keeps a group a source gave, and never takes an id from the source: the id is the statement’s', () => {
     const p = made({
       changes: [{ ...CHANGES[0], id: 'c1' }, CHANGES[1], { ...CHANGES[2], id: 'c2', group: ' Prices ' }],
     });
     assert.deepEqual(
       p.changes.map((c) => [c.id, c.group]),
       [
-        ['c1', 'New Option'],
-        ['c3', 'New ANSWERS links'],
-        ['c2', 'Prices'],
+        [C1, 'New Option'],
+        [C2, 'New ANSWERS links'],
+        [C3, 'Prices'],
       ],
     );
   });
@@ -87,18 +89,14 @@ describe('making a proposal', () => {
       assert.equal(made({ changes: [{ op: 'set', thing: 'a', key: 'k', value }] }).refused, undefined, value);
     assert.match(refused({ op: 'remove-thing', thing: 'two words' }), /change 2: a removal names the thing/);
     assert.match(refused({ op: 'remove-link', from: 'a', type: 'R', to: '' }), /change 2: a removal of a link/);
-    assert.match(refused({ ...CHANGES[0], id: 'a b' }), /change 2: an id/);
     assert.match(refused({ ...CHANGES[0], group: ' ' }), /change 2: a group/);
     assert.match(refused({ ...CHANGES[0], reason: 'a\nb' }), /change 2: a reason/);
-    assert.match(
-      made({
-        changes: [
-          { ...CHANGES[0], id: 'x' },
-          { ...CHANGES[1], id: 'x' },
-        ],
-      }).refused,
-      /same id/,
-    );
+  });
+
+  test('is refused when one change is proposed twice, however it is spaced: the two have the one derived id', () => {
+    const again = { op: 'add', gql: "(small_reader : Option {name:'Small reader'})" };
+    assert.match(made({ changes: [CHANGES[0], again] }).refused, /two changes are the same change/);
+    assert.match(made({ changes: [CHANGES[2], { ...CHANGES[2] }] }).refused, /same change/);
   });
 });
 
@@ -135,10 +133,10 @@ describe('the groups of a proposal', () => {
   });
 
   test('count what waits, what is accepted and what is rejected, in the order the first change of each comes', () => {
-    const state = (id) => ({ c1: 'accepted', c2: 'rejected' })[id] ?? 'pending';
+    const state = (id) => ({ [C1]: 'accepted', [C2]: 'rejected' })[id] ?? 'pending';
     assert.deepEqual(groupsOf(proposalOf(), state)[0], {
       name: 'New Option',
-      ids: ['c1'],
+      ids: [C1],
       pending: 0,
       accepted: 1,
       rejected: 0,

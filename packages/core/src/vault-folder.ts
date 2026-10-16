@@ -1,5 +1,6 @@
-// The folder exports are saved in, as the settings keep it (spec §16, §21): only a folder inside the vault, written the
-// same way on every platform. Moved out of settings.ts unchanged, which re-exports it.
+// A folder inside the vault as the settings keep it (editor spec §21, the export folder): read from what was typed, and
+// refused when it could reach outside the vault, the config folder or a name some platform cannot hold.
+
 const UNSAFE_IN_A_FOLDER = '\\:*?"<>|';
 
 /**

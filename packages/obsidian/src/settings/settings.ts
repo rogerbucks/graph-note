@@ -10,7 +10,7 @@ import { knownClass } from '../ai/matrix-known';
 import { readMatrix } from '../ai/matrix-note';
 import { aiModelList, getModelValue, setModelValue } from './ai-models';
 
-const SECTIONS = ['Strictness', 'AI models', 'Formatting', 'Drawing', 'Export'] as const;
+const SECTIONS = ['Strictness', 'AI models', 'Proposals', 'Formatting', 'Drawing', 'Export'] as const;
 
 /** The plugin's settings page. */
 export class GraphNoteSettingTab extends PluginSettingTab {
@@ -64,7 +64,7 @@ export class GraphNoteSettingTab extends PluginSettingTab {
     if (o.key === 'classifications')
       return [{ name: o.name, desc: o.sentence, control: { type: 'textarea', key: 'classifications' } }];
     if (o.key === 'aiModels') return [{ name: o.name, desc: o.sentence }];
-    if (o.key === 'exportFolder' || o.key === 'aiMatrixNote')
+    if (o.key === 'exportFolder' || o.key === 'aiMatrixNote' || o.key === 'decider')
       return [{ name: o.name, desc: o.sentence, control: { type: 'text', key: o.key } }];
     if (o.key === 'aiClassMap')
       return [
@@ -139,7 +139,7 @@ export class GraphNoteSettingTab extends PluginSettingTab {
     // a level's own sentence, and a model's ceiling, follow a choice; the page is never drawn again under typing
     const chosen = key.endsWith('.ceiling') || key.endsWith('.matrixRow') || key.includes('.matrixOn.');
     const typed =
-      ['classifications', 'exportFolder', 'aiMatrixNote', 'aiClassMap'].includes(key) ||
+      ['classifications', 'exportFolder', 'decider', 'aiMatrixNote', 'aiClassMap'].includes(key) ||
       (key.startsWith('aiModels.') && !chosen);
     if (!typed) this.update();
     // the matrix note, or how its classes are matched, changed what the page shows of it

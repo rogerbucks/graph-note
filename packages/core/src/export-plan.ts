@@ -7,7 +7,7 @@
 import type { ExportFormat } from './export.ts';
 import type { DataFormat } from './export-data.ts';
 import type { ExportScope } from './export-scope.ts';
-import { vaultFolder } from './settings.ts';
+import { vaultFolder } from './vault-folder.ts';
 import type { Settings } from './settings.ts';
 
 /** What the plan is made from. */

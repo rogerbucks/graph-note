@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/proposals-guards.test.js",
+  "test": "proposals_checked: an addition is one line > a line break written as an escape inside a text is part of the text, and is fine",
+  "seen_failing_first": false,
+  "evidence": "A control case: the new line-break refusal must not touch an escaped break inside a text, which was accepted before and is still."
+}

@@ -99,6 +99,39 @@ declare namespace GraphSpecCheck {
   const COMMENT_FIX: string;
   /** A text quoted as the profile writes it, each control character GQL has an escape for written as that escape. */
   function quote(s: string): string;
+  /** A text's tokens: [kind, the text as written, line, the value, column]. Throws ProfileError. */
+  function tokens(text: string): [string, string, number, string, number][];
+  /** The first sixteen hexadecimal digits of the SHA-256 of an object in canonical JSON (RFC 8785). */
+  function hash16(value: unknown): string;
+  /** One statement of a change set, as the check reads it (§24). */
+  interface ReadChange {
+    op: 'delete-thing' | 'detach-delete-thing' | 'delete-link' | 'set-thing' | 'set-link';
+    kind: 'thing' | 'link';
+    /** A thing: its id and the kinds the statement names. */
+    thing?: string;
+    labels?: string[];
+    /** A link: its two ends' ids, its type and the kinds named at each end. */
+    from?: string;
+    type?: string;
+    to?: string;
+    ends?: string[][];
+    /** A SET: the values it gives. */
+    set?: Record<string, Value>;
+  }
+  /**
+   * A change set's block split as the check splits it: `additions` is the block with the statements' lines blanked (every
+   * line keeps its number), and `changes` are its DELETE and SET statements: the 1-based line each begins on, the
+   * 0-based lines it takes, its text and the `//@ reason:` hint directly above it.
+   */
+  function splitChangeset(block: string): {
+    additions: string;
+    changes: { line: number; lines: number[]; text: string; reason: string | null }[];
+    basisOk: boolean;
+  };
+  /** One statement read; throws ProfileError unless it is a DELETE or a SET of exactly one target. */
+  function readChange(text: string): ReadChange;
+  /** The id a statement is given, derived from what it does and never written: the same change has the same id. */
+  function changeId(change: ReadChange): string;
   /** The schema's own kinds, left out of drawings. */
   const SCHEMA_LABELS: string[];
   const SPEC_NODES: string[];

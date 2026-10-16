@@ -21,7 +21,7 @@
 // types, and boundsOf and centres of the tap areas, 13 Oct 2026), and arrowheads hidden and properties shown inline
 // (styledDrawing, arrowsShown, ARROWHEADS, INLINE, INLINE_ROWS and their types, 13 Oct 2026), and proposals (makeProposal,
 // thingChange, linkChange, ProposalReview, basisOf and their types, 13 Oct 2026: nothing that writes a change without a
-// person deciding is exported), and finding your way from the details (linkGroups, Trail, glideAt, pointerTo, sheetLimit,
+// person deciding is exported; deciderName, DECIDER_DEFAULT and ProposalCheck, 16 Oct 2026), and finding your way from the details (linkGroups, Trail, glideAt, pointerTo, sheetLimit,
 // coverOf, MOVE_MS, READABLE_SCALE, their types, and the zoom's Place, 13 Oct 2026), and the diagram types (DIAGRAM_TYPES,
 // LARGE_GRAPH, diagramFor, diagramOffer, typeFits, shapeOf, suggestType, nearestType, tableOf, wayIn, scrollsOneWay and
 // their types, 14 Oct 2026; AcrossZoom, the zoom of a drawing scrolled across only, moved out of Zoom in the review of
@@ -58,6 +58,7 @@ export const VALUES = [
   'BUSY_HUB',
   'CLAUDE',
   'DATA_FORMATS',
+  'DECIDER_DEFAULT',
   'DEFAULT_PACE',
   'DEFAULT_SETTINGS',
   'DEPARTURES',
@@ -161,6 +162,7 @@ export const VALUES = [
   'confirmSend',
   'coverOf',
   'dataText',
+  'deciderName',
   'declareDeferred',
   'declareDeferredBlock',
   'depthOf',
@@ -514,6 +516,7 @@ export const TYPES = [
   'Property',
   'PropertyRow',
   'Proposal',
+  'ProposalCheck',
   'ProposalInput',
   'ProposalShown',
   'ProposedChange',

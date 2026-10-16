@@ -603,17 +603,45 @@ step's output (§20), or anyone. It is data, whatever its source; nothing here k
 the graph and never written until a person accepts a change, and then written as an ordinary edit.
 
 - `proposals.ts` — the data: `makeProposal` checks a proposal (who proposed it, the state of the graph it was made against,
-  at least one change, each change written as a block writes it) and gives each change an id (`c1`…) and a group; `Provenance`
+  at least one change, each change written as a block writes it) and gives each change its derived id (from its statement,
+  never written by a source, so one change proposed twice is refused) and a group; `Provenance`
   (who, when, what it read, the basis); a change is an addition (one item of GQL), a change of a property (`set`) or a
   removal of a thing or a link; `thingChange` and `linkChange` build additions from parts for a source whose answer is data;
   `groupsOf` and `provenanceLines`; `BIG_PROPOSAL`, above which a proposal is reviewed in groups.
 - `proposals-basis.ts` — `basisOf`: the state of a graph as graph-spec's change sets name it (`against`), and `staleness`,
   whether the graph has moved since.
-- `proposals-text.ts` — a proposal as graph-spec's change set (§24 H1), with what that has no line for as comments its readers
-  pass over (who proposed it, what it read, removals, ids, groups, reasons, and each decision a person made). `changeSetText`
-  writes it, `readChangeSet` reads it back whole; so the change set in the note is the record of what was decided.
-  `recordDecisions` records a decision by putting one line above the change (and the `// basis now:` line), keeping every
-  other byte of the block, an author's comments among them.
+- `proposals-statements.ts` — a change as the statement a change set holds: an addition's item, a `SET thing.key = value`, a
+  `DELETE` of one thing (`DETACH DELETE`, which lists the links it takes) or one link. `statementOf` writes it,
+  `readStatement` reads it with graph-spec's own `readChange`, and `changeIdOf` gives the id the library derives
+  (`changeId`, the one `checkChangeset` reports; an addition's is a hash of its tokens).
+- `proposals-text.ts` — a proposal as graph-spec's change set (§24): the header (the graph, the id, `against`, and `by`,
+  the only place either is said), `// proposed:` and `// read:` comments its readers pass over, the additions, then a
+  statement for each other change, so every tool that reads GQL reads it and `checkChangeset` passes it. An optional
+  `//@ reason:` line sits directly above a change and a `//@ group:` line above it when the group is not the one its kind
+  gives. Nothing a person decided is in it. `changeSetText` writes it, `readChangeSet` reads it as the check does
+  (`splitChangeset`), refusing a statement of more than one target and the editor's old form (removals, ids and decisions
+  as comments), which it does not read.
+- `proposals-judgement.ts` — what was decided, kept in the note (cs-rejected-out, decider_named): a `Decision` for each
+  change in the note's judgement graph, a block whose graph is `judgements` (or ends `_judgements`), reused when the note
+  has one and added after the change set when not. It holds the statement, who proposed it (`proposed_by`), who decided
+  (`decided_by`, plain text exactly as set, or "you": `deciderName`) and when, and the place the change had.
+  `decidedIn` reads them back; `withDecisions` and `withoutDecisions` write and take them back.
+- `proposals-record.ts` — recording a decision in the note: the change set written again with only the changes still
+  waiting and, after an accept, `against` the graph's new state; the Decisions in the judgement graph; and taking both back.
+- `proposals-check.ts` — `checkProposal`: graph-spec's own `checkChangeset` run on the change set as the note holds it,
+  against the note's other graphs, every line of its answer kept (proposals_checked); `proposerKind`, what the note's graphs
+  say the proposer is (a Model, a Person or a Step).
+  An accept is refused while the check fails on the change set the note holds (the "moved" line aside once the stale
+  notice is seen), `noteWithProposal` writes a proposal only if the check passes it, a plain `DELETE` stays plain
+  (refused for a thing that has links) and the kinds a MATCH names are held to, and only a data block is a judgement block.
+- `proposals-author.ts` — the proposer, declared by the editor in the proposal itself: `withProposer` puts the declaration
+  (a Model for an AI model, a Person that is a Step for a step) first among the additions when a proposal is written, unless
+  the note declares it; it is a change on the card like the others, written with the first change accepted
+  (`acceptedWith`) and removed with the last rejected (`rejectedWith`). A model's answer can never add a Person, a Model or
+  a Step (`ai-request.ts`), so only the editor's declaration can make an author known to the check, which accepts an author
+  the set declares itself.
+- `proposals-needs.ts` — what a change needs of the others: a link needs the things it joins before it is accepted, and
+  a change that adds what another needs is not rejected alone.
 - `proposals-apply.ts` — one change written as text on the blocks' texts (an addition after the graph's last block of data, a
   property changed where it is written, a removal of the item that wrote the thing or link), `notTaken` (a change read back to
   see it took effect) and `newProblems` (what a change leaves wrong that was not before). Not exported by the entry: only a
@@ -624,7 +652,10 @@ the graph and never written until a person accepts a change, and then written as
   the graph has moved; writes nothing), `accept` and `reject` (a person, by name, one change, some, a group or all; accepted
   changes are written through `PaneSession`, so they are checked as any edit is, then read back, and refused whole if one does
   not take effect or leaves a new problem; a graph that has moved is refused until its notice is seen), and `undo`. It works
-  on the note's text and hands the new text back; the host writes it. The decision is recorded in the note's change set.
+  on the note's text and hands the new text back; the host writes it. `show` also carries the graph spec's check of the
+  change set (`checked`). A decision is recorded in the note's judgement graph, and the change leaves the change set; it is
+  decided in memory only when the note holds no change set. `fromChangeSet(block, note)` reads a proposal with what the
+  note says was decided of it and who the proposer is.
 - `proposals-shown.ts` — the shapes a review hands a host: `ProposalShown`, its `ChangeRow`s, who decides (`Person`), which
   changes (`Which`) and what came of it (`Reviewed`).
 
@@ -677,7 +708,6 @@ exactly what goes and said yes to it. Its answer comes back as a proposal (§17)
   table, for the hosts that read the note (Obsidian and the Claude Code mod); the gates are only ever handed its rows. `matrixRowsFrom` checks rows handed over
   as data, and takes none at all if anything in them is not a row.
 - `settings-matrix.ts` — the two options of the matrix, the note that holds it and the table of class names (`MATRIX_OPTIONS`).
-- `vault-folder.ts` — `vaultFolder`, the export folder kept inside the vault, re-exported by `settings.ts`.
 - `claude-gate.ts` — `claudeGate` (spec §26, cc_classified_asks, cc_credential_never): whether a note may open in the
   browser editor's pane, which Claude can read. `{ open }`; `{ ask }` for a note above Claude's ceiling (the ceiling of
   the AI model named Claude, else the lowest classification); `{ refuse }` for one at the highest classification, one
@@ -709,10 +739,12 @@ exactly what goes and said yes to it. Its answer comes back as a proposal (§17)
   is turned on; `aiUnlabelled`, the level a note with no classification counts as, is one of `classifications`, the
   most sensitive until chosen. An AI model keeps the name of its key in the host's secret store (`keyName`), never the key. The Export section holds the export theme (light
   or dark), whether an export saved in the vault gets a companion note, the folder exports go to (`vaultFolder`, in
-  `vault-folder.ts`, keeps it inside the vault; empty is next to the note) and the classification above which an export asks first (one of
+  `vault-folder.ts`, keeps it
+  inside the vault; empty is next to the note) and the classification above which an export asks first (one of
   `classifications`, the lowest until chosen). The Drawing section also holds how far focus reaches from a selected
   thing (`focusDepth`: `one`, the default, or `two`; `depthOf` reads it), and the default of each View menu switch
-  (`labelsByZoom` and `foldHubs` on, `foldGroups` and `mergeLinks` off, view_switch_defaults).
+  (`labelsByZoom` and `foldHubs` on, `foldGroups` and `mergeLinks` off, view_switch_defaults). The Proposals section
+  holds `decider`, the name recorded when you accept or reject a change, as typed on one line (decider_named).
 
 ## The shared display layer, `src/display/`
 

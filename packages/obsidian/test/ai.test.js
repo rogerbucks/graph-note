@@ -253,13 +253,17 @@ describe('asking an AI model to propose changes (§19)', () => {
     } finally {
       env.uninstall();
     }
-    const line = note.split('\n').find((l) => l.startsWith('/// '));
+    // the first reason is the editor's own, on the declaration of the model; the model's is the one after it
+    const line = note
+      .split('\n')
+      .filter((l) => l.startsWith('//@ reason: '))
+      .at(-1);
     assert.ok(line && !line.includes('![') && !line.includes('<b>'), `escaped in the note: ${line}`);
     const viewer = await load({ files: { 'Some note.md': note } });
     try {
       const card = await show(viewer, note, 1);
       await until(() => !!card.el.querySelector('.graph-note-proposal-reason'));
-      assert.equal(card.el.querySelector('.graph-note-proposal-reason').textContent, ` — ${reason}`);
+      assert.equal(card.el.querySelectorAll('.graph-note-proposal-reason').at(-1).textContent, ` — ${reason}`);
     } finally {
       viewer.uninstall();
     }

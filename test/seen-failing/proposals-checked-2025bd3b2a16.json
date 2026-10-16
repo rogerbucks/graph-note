@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/proposals-checked.test.js",
+  "test": "proposals_checked: a DELETE keeps what it says, and a label in the MATCH is held to > a DETACH DELETE takes the thing with its links",
+  "seen_failing_first": false,
+  "evidence": "Pins the behaviour a DETACH DELETE already had, so the new plain-DELETE refusal is not taken to have changed it."
+}

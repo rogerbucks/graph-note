@@ -317,12 +317,25 @@ export class SendDialog extends Modal {
     }
     const { proposal } = result,
       n = proposal.changes.length;
+    const outcome: { refused: string | null } = { refused: null };
     try {
-      await this.app.vault.process(this.file, (now) => noteWithProposal(now, proposal));
+      await this.app.vault.process(this.file, (now) => {
+        // a proposal the graph spec's check fails is not written
+        const written = noteWithProposal(now, proposal);
+        if (typeof written === 'string') return written;
+        outcome.refused = written.refused;
+        return now;
+      });
     } catch (e) {
       new Notice(
         `${p.model.name} answered, but its proposal could not be written into ${this.file.path} (${String(e)}).`,
       );
+      return;
+    }
+    if (outcome.refused) {
+      new Notice(`${p.model.name} answered, but its proposal was not written into the note: ${outcome.refused}`);
+      this.refusal = outcome.refused;
+      this.drawShown();
       return;
     }
     new Notice(
