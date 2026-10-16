@@ -7,6 +7,7 @@
 //   - C5 (the second describe below) proves the page's host shell on the page as built and served: one Markdown renderer,
 //     text shown as text, the worker, the theme, icons, offline, settings read only. C8 adds the accessibility and
 //     motion cases.
+//   - C6 (editor-page-export.js, registered below) proves cc_export_same: the page's export is the shared export.
 // Until the file proves every rule its record covers, test_cc_page is `partial`.
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -17,6 +18,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build } from 'esbuild';
 import { FakeElement, fakeDocument, installGlobals } from '../../obsidian/test/host/fake-dom.js';
 import { ask, POLICY } from './editor-threats-support.js';
+import { exportSameCases } from './editor-page-export.js';
 import { PACKAGE, built, cleanUp, pageSources, runWorker, servePage } from './editor-page-support.js';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
@@ -570,5 +572,8 @@ describe('C5: the page’s host shell, built and served as the mod ships it', ()
     }
   });
 });
+
+// C6: cc_export_same, the page's export is the shared export (cases in editor-page-export.js, within the size baseline).
+exportSameCases({ at, ROOT, LAYER, importsOf });
 
 // C8: the page's cases for cc_keyboard, cc_reduced_motion and cc_text_version go here.

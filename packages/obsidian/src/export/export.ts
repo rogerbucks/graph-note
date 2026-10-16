@@ -34,8 +34,8 @@ import type {
   WriteOps,
 } from '@graph-note/core';
 import type { ExportAsk, ExportOutcome } from '@graph-note/core/display/export/export-types';
+import { exportRefusalWords } from '@graph-note/core/hosts/refusal-words';
 import type GraphNotePlugin from '../main';
-import { exportRefusalWords } from '../layout-worker/refusal-words';
 import { classificationOf } from './classification';
 import { deviceOf, imageFiles, tooLargeWords } from './image';
 import type { ExportFile } from './image';

@@ -1,0 +1,15 @@
+{
+  "file": "packages/claude-code/test/editor-page.test.js",
+  "test": "cc_core_only: the page takes everything from the core and the shared display layer > a bundle of the page’s side holds the core, the graph library and the layer alone",
+  "seen_failing_first": false,
+  "fault": true,
+  "commits": [
+    "238aba0a659ff97ffbf82ee743eb1cbf3c69b59f",
+    "284afe5442b67087db7022ae4ee75247dbd259fd",
+    "649d36c892c6f7201323f6051f9d168a86072347",
+    "ab45108cbbb2341e57e16610dba7fe6bd0f13023",
+    "acaed7440ee831bfe3a8feb0bfcbba3ed0407e9e",
+    "e95e8f8081ddaaa2a95dec1d31c35b9958325478"
+  ],
+  "evidence": "An existing test, not new in 284afe5; when that commit's tests are replayed in a bare checkout it fails there (cause not found), though it passes in this worktree with the full suite. Not a test written for C6."
+}
