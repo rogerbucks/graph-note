@@ -389,20 +389,18 @@ describe('an answer comes back as a proposal (answers_are_proposals)', () => {
 
   test('written into the note it is a change set beside the graph, which it leaves as it was until a person accepts', async () => {
     const { result } = await sent({}, answer(CHANGES));
-    // the check wants the proposer declared in the note's graphs: it is not written otherwise
-    const declared = `${NOTE}\n\`\`\`gql\n// graph: people\n(Local:Model {name: 'Local'})\n\`\`\`\n`;
-    assert.match(noteWithProposal(NOTE, result.proposal).refused, /ada|Local is a known person or model/);
-    const note = noteWithProposal(declared, result.proposal);
+    const note = noteWithProposal(NOTE, result.proposal);
+    assert.equal(typeof note, 'string', 'the model is declared by the editor, in the proposal');
     assert.equal(basisOf(note, 'reader'), basisOf(NOTE, 'reader'));
     const block = gqlBlocks(note)
       .map((b) => b.text)
       .find((t) => t.includes('CHANGE SET'));
     const review = ProposalReview.fromChangeSet(block);
     assert.deepEqual(
-      review.pending(),
+      review.pending().slice(1),
       result.proposal.changes.map((c) => c.id),
     );
-    assert.equal(review.pending().length, 3);
+    assert.equal(review.pending().length, 4, 'the three changes, and the declaration of the model before them');
     assert.ok(note.startsWith(NOTE.slice(0, NOTE.indexOf('```gql\n// graph: other'))));
   });
 });

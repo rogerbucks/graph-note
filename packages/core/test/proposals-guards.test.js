@@ -70,8 +70,11 @@ describe('proposals_checked: the review refuses what the check refuses, and writ
   });
 
   test('a proposal that fails the check is not written into the note; one that passes is', () => {
-    const refused = noteWithProposal(NOTE, proposalOf());
-    assert.match(refused.refused, /graph spec’s check of this change set fails.*ada is a known person or model/);
+    const missing = proposalOf({ changes: [{ op: 'remove-thing', thing: 'nobody' }] });
+    assert.match(
+      noteWithProposal(NOTE, missing).refused,
+      /graph spec’s check of this change set fails.*finds its one target/,
+    );
     const text = noteWithProposal(NOTE_WITH_ADA, proposalOf());
     assert.equal(typeof text, 'string');
     assert.deepEqual(failedIn(text), []);

@@ -23,9 +23,7 @@ const STEP = `// graph: team · QUERY step colleagues
 // takes people: (:Person), (:Project), [:WORKS_ON]
 MATCH (a:Person)-[:WORKS_ON]->(p:Project)<-[:WORKS_ON]-(b:Person)
 INSERT (a)-[:WORKS_WITH]->(b)`;
-// the graph spec's check wants the step that proposes declared in the note's graphs, or its proposal is not written
-const STEPPER = "// graph: steppers\n(colleagues:Model {name: 'colleagues'})";
-const note = ['# Team', '', fence(TEAM), '', fence(ONLY), '', fence(STEP), '', fence(STEPPER), ''].join('\n');
+const note = ['# Team', '', fence(TEAM), '', fence(ONLY), '', fence(STEP), ''].join('\n');
 
 async function stepCard() {
   const env = await load({ files: { [PATH]: note } });
@@ -45,7 +43,7 @@ describe('a step’s card', () => {
       assert.equal(choice.getAttribute('aria-label'), 'Give people');
       assert.deepEqual(
         choice.querySelectorAll('option').map((o) => o.textContent),
-        ['graph team', 'graph steppers', 'view people_only of team'],
+        ['graph team', 'view people_only of team'],
       );
       assert.match(el.querySelector('code').textContent, /INSERT \(a\)-\[:WORKS_WITH\]->\(b\)/);
     } finally {

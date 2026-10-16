@@ -26,8 +26,6 @@ const STEP = `// graph: team · QUERY step colleagues
 // takes people: (:Person), (:Project), [:WORKS_ON]
 MATCH (a:Person)-[:WORKS_ON]->(p:Project)<-[:WORKS_ON]-(b:Person)
 INSERT (a)-[:WORKS_WITH]->(b)`;
-// the graph spec's check wants a change set's author declared in the note's graphs: the step stands as a Model
-const STEPPER = "// graph: steppers\n(colleagues:Model {name: 'colleagues'})";
 const note = (...blocks) => `# Team\n\n${blocks.map((b) => '```gql\n' + b + '\n```').join('\n\n')}\n`;
 const texts = (n) => gqlBlocks(n).map((b) => b.text);
 const AT = '2026-10-14T10:00:00Z';
@@ -213,7 +211,7 @@ describe('the output is a proposal, written only when a person accepts it', () =
 
   // proves: step_output_proposal
   test('written into the note it is a change set beside the graph, the graph untouched; accepted, the link is written', () => {
-    const n = note(TEAM, STEP, STEPPER);
+    const n = note(TEAM, STEP);
     const r = run(n, { people: { graph: 'team' } });
     const proposed = noteWithProposal(n, r.proposal);
     assert.equal(texts(proposed)[0], TEAM, 'the graph block is as it was');
@@ -223,7 +221,7 @@ describe('the output is a proposal, written only when a person accepts it', () =
     assert.ok(accepted.ok, accepted.reason);
     const links = readNote(texts(accepted.note)).graphs.get('team').links;
     assert.ok(links.some((l) => l.from === 'ada' && l.type === 'WORKS_WITH' && l.to === 'bob'));
-    assert.equal(links.length, 4, 'only the change accepted');
+    assert.equal(links.length, 4, 'only the change accepted (and the step, declared with it, is a thing and no link)');
   });
 
   // proves: step_output_proposal
@@ -244,7 +242,7 @@ describe('the output is a proposal, written only when a person accepts it', () =
     const r = run(note(done, step), { people: { graph: 'team' } });
     assert.match(r.nothing, /Step colleagues works out nothing new: every link it gives is already in team/);
     assert.ok(!('proposal' in r));
-    const n = note(TEAM, STEP, STEPPER);
+    const n = note(TEAM, STEP);
     const once = noteWithProposal(n, run(n, { people: { graph: 'team' } }).proposal);
     assert.equal(run(once, { people: { graph: 'team' } }).proposal.id, 'colleagues_2');
   });
