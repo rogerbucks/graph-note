@@ -3,9 +3,11 @@
 // whether the command names the folder at all. Reads by the Read tool stay allowed.
 import { afterEach, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readlinkSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { guardDataFolder } from '../src/data-guard.ts';
 
 const made = [];
@@ -26,7 +28,15 @@ function world() {
     data,
     home: top,
     cwd: work,
-    realPath: async (path) => realpathSync(path),
+    realPath: async (path) => realpathSync.native(path),
+    readLink: async (path) => {
+      try {
+        return resolve(dirname(path), readlinkSync(path));
+      } catch (err) {
+        if (err.code === 'ENOENT' || err.code === 'EINVAL') return null;
+        throw err;
+      }
+    },
   };
   return { top, data, work, elsewhere, ports };
 }
@@ -163,6 +173,98 @@ describe('the refusal', () => {
     assert.match(answer, /settings\.json/);
     assert.match(answer, /data folder/i);
     assert.doesNotMatch(answer, /SECRET-VALUE/);
+  });
+});
+
+describe('what the first review found', () => {
+  test('a different case of the folder’s name is the same folder, for files and for Bash', async () => {
+    const w = world();
+    const shouted = join(w.top, 'data', 'GRAPH-NOTE', 'settings.json');
+    refused(await guardDataFolder('Write', { file_path: shouted }, w.ports));
+    refused(await guardDataFolder('Edit', { file_path: join(w.top, 'DATA', 'graph-note', 'new.json') }, w.ports));
+    refused(await guardDataFolder('Bash', { command: `echo {} > ${shouted}` }, w.ports));
+  });
+
+  test('a link that leads nowhere yet, into the folder, is refused when written through', async () => {
+    const w = world();
+    symlinkSync(join(w.data, 'not-yet.json'), join(w.elsewhere, 'dangling'));
+    refused(await guardDataFolder('Write', { file_path: join(w.elsewhere, 'dangling') }, w.ports));
+    // a relative link, settled from the link’s own folder, not the session’s
+    symlinkSync('../data/graph-note/not-yet.json', join(w.elsewhere, 'relative'));
+    refused(await guardDataFolder('Write', { file_path: join(w.elsewhere, 'relative') }, w.ports));
+    refused(await guardDataFolder('Write', { file_path: '../elsewhere/relative' }, w.ports));
+  });
+
+  test('a dangling link used as a parent is refused, and one that leads elsewhere is allowed', async () => {
+    const w = world();
+    symlinkSync(join(w.data, 'no-such-folder'), join(w.elsewhere, 'dangling-parent'));
+    refused(await guardDataFolder('Write', { file_path: join(w.elsewhere, 'dangling-parent', 'x.json') }, w.ports));
+    symlinkSync(join(w.elsewhere, 'nowhere'), join(w.elsewhere, 'harmless'));
+    allowed(await guardDataFolder('Write', { file_path: join(w.elsewhere, 'harmless') }, w.ports));
+  });
+
+  test('a real-path call that cannot run refuses the call, for files and for Bash', async () => {
+    const w = world();
+    const broken = { ...w.ports, realPath: async () => Promise.reject(new Error('spawn node ENOENT')) };
+    const answer = await guardDataFolder('Write', { file_path: join(w.elsewhere, 'a.md') }, broken);
+    refused(answer);
+    refused(await guardDataFolder('Bash', { command: `echo hi > ${join(w.elsewhere, 'out.txt')}` }, broken));
+    // a path that is not there is an answer, not a failure
+    const missing = Object.assign(new Error('no such file'), { code: 'ENOENT' });
+    const absent = {
+      ...w.ports,
+      realPath: async (path) => (path.includes('elsewhere') ? realpathSync(path) : Promise.reject(missing)),
+    };
+    allowed(await guardDataFolder('Write', { file_path: join(w.elsewhere, 'new.md') }, absent));
+  });
+
+  test('a link call that cannot run refuses a file that is not there', async () => {
+    const w = world();
+    const broken = { ...w.ports, readLink: async () => Promise.reject(new Error('timed out')) };
+    refused(await guardDataFolder('Write', { file_path: join(w.elsewhere, 'new.md') }, broken));
+  });
+
+  test('Bash naming plugins/data is refused, even where the folder was renamed', async () => {
+    const w = world();
+    for (const command of [
+      'mv ~/.claude/plugins/data/graph-note ~/gone',
+      'mv /x/.claude/PLUGINS/Data/graph-note /y',
+      `mv '/x/.claude/plugins'/'data'/graph-note /y`,
+      'mv /x/.claude/plug\\ins/da\\ta/graph-note /y',
+      'mv "/x/.claude/plugins/data" /y',
+    ]) {
+      refused(await guardDataFolder('Bash', { command }, w.ports));
+    }
+    allowed(await guardDataFolder('Bash', { command: 'ls /x/plugins/database /x/myplugins/data' }, w.ports));
+  });
+
+  test('home forms are expanded before matching, a named user’s too', async () => {
+    const w = world();
+    refused(await guardDataFolder('Bash', { command: 'echo {} > "$HOME"/data/graph-note/settings.json' }, w.ports));
+    refused(await guardDataFolder('Bash', { command: 'echo {} > ${HOME}/data/graph-note/settings.json' }, w.ports));
+    refused(await guardDataFolder('Bash', { command: 'echo {} > ~someone/.claude/plugins/data/x' }, w.ports));
+  });
+});
+
+describe('the shipped real-path process', () => {
+  const script = fileURLToPath(new URL('../bin/real-path-process.ts', import.meta.url));
+  const run = (...args) => spawnSync(process.execPath, [script, ...args], { encoding: 'utf8' });
+
+  test('says a missing path with exit code 2, and anything else it cannot settle with 1', () => {
+    const w = world();
+    assert.equal(run('--', join(w.elsewhere, 'missing')).status, 2);
+    assert.equal(run('--', join(w.data, 'settings.json')).status, 0);
+    assert.equal(run('settings.json').status, 1);
+  });
+
+  test('--link says where a link leads, settled from the link’s own folder, and 3 for a path that is none', () => {
+    const w = world();
+    symlinkSync('../data/graph-note/not-yet.json', join(w.elsewhere, 'l'));
+    const answer = run('--link', '--', join(w.elsewhere, 'l'));
+    assert.equal(answer.status, 0);
+    assert.equal(answer.stdout, join(w.data, 'not-yet.json'));
+    assert.equal(run('--link', '--', join(w.data, 'settings.json')).status, 3);
+    assert.equal(run('--link', '--', join(w.elsewhere, 'missing')).status, 3);
   });
 });
 
