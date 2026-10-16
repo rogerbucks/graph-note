@@ -184,22 +184,27 @@ describe('Claude proposes through the mod, and only accept applies it (cc_claude
       [null, null],
       'the declaration already in the graph blocks nothing',
     );
-    const done = decide(text, second.id, 'accept', { all: true }, 'Roger', false);
+    // the graph moved with the first accept, which the user has read
+    const done = decide(text, second.id, 'accept', { all: true }, 'Roger', true);
     assert.equal(done.ok, true, done.reason);
-    assert.equal((done.note.match(/\(Claude:Model/g) ?? []).length, 1, 'Claude is declared once, not twice');
+    const graphText = gqlSpans(done.note)
+      .map((s) => s.text)
+      .filter((t) => /^\/\/ graph: plan$/m.test(t))
+      .join('\n');
+    assert.equal((graphText.match(/\(Claude:Model/g) ?? []).length, 1, 'Claude is declared once, not twice');
     assert.match(done.note, /\(start:Step \{name: 'Begin'\}\)|name: 'Begin'/);
     // a different node by that name is not the declaration, and the proposal is still refused
     const other = modVault();
     const two = await opened({}, other);
-    writeNote(
-      other,
-      'plan.md',
-      null,
-      PLAN.replace("(start:Step {name: 'Start'}),", "(Claude:Step {name: 'Start'}),(start:Step {name: 'S'}),"),
-    );
     await two.launcher.propose({ changes: [EXTRA] });
-    const note = readFileSync(other.plan, 'utf8');
-    const refused = decide(note, proposalsIn(note)[0].id, 'accept', { all: true }, 'Roger', false);
+    const proposed = readFileSync(other.plan, 'utf8');
+    // another program then names a node Claude, which is not the declaration
+    const note = proposed.replace(
+      "(start:Step {name: 'Start'}),",
+      "(Claude:Step {name: 'Start'}),(start:Step {name: 'S'}),",
+    );
+    assert.notEqual(note, proposed);
+    const refused = decide(note, proposalsIn(note)[0].id, 'accept', { all: true }, 'Roger', true);
     assert.equal(refused.ok, false);
     assert.match(refused.reason, /already a name/);
   });
