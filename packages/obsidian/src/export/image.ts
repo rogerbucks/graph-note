@@ -8,6 +8,8 @@ import { Platform, arrayBufferToBase64 } from 'obsidian';
 import {
   IMAGE_LIMITS,
   animationSaid,
+  exportFailureWords,
+  exportRefusalWords,
   exportWithLayout,
   imageFacts,
   pageSvg,
@@ -27,7 +29,6 @@ import type {
   TooLargeToAnimate,
 } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
-import { exportFailureWords, exportRefusalWords } from '../layout-worker/refusal-words';
 import { vaultImages } from '../images/vault-images';
 import { STILL_PIXELS } from '@graph-note/core/display/images/still-frame';
 

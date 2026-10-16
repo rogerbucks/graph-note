@@ -138,6 +138,17 @@ The note store (workstream C1), the real `api`:
   note's extended attributes, ACLs, other hard links (refused anyway) and birth time are those of the new file, not
   the old. **Flushing on macOS:** `fsync` there is not `F_FULLFSYNC`, so the drive's own cache may still hold a write
   that has been flushed; Node offers no `F_FULLFSYNC`, and the rename keeps the note whole either way.
+- `server/export-api.ts`, `server/export-files.ts` — the export (workstream C6, cc_exports_new_only). `GET export/<id>` tells
+  the page the note's path and the folder the files go to (the settings' export folder, else the note's own, as the
+  plugin's plan has it); `PUT export/<id>` takes `{files: [{name, text} | {name, base64}]}` (a PNG as base64, checked to be
+  one) and gives `{written: [names]}`. The page names no path: only file names, each only a name (no separator, `..`,
+  control or reserved character, leading or trailing dot, and an ending of an export's: svg, png, gql, csv, graphml, md).
+  Files are only ever created: the folder is made a part at a time and every part must be a real folder, never a link, with
+  its real path checked before each try; each file is opened `O_CREAT|O_EXCL|O_NOFOLLOW` and nothing else, so a file or
+  link already there is never written to; a taken name gives `-2`, `-3`… for every file of the export together; one that
+  cannot be written takes away those made before it. The export has a body limit of its own (`EXPORT_BODY_LIMIT`, 24 MiB:
+  an image is larger than a note); every other path keeps the note's. Same token, Host, Origin and same-origin checks as any
+  change. `Exporter.stop` waits for writes under way.
 - `server/note-drafts.ts` — `DraftShelf` (cc_drafts_outside): a draft for each note in the data folder (set to 0700
   when opened), named by a digest of the vault and the note's path, readable by its owner only (0600), written as a
   note is, and offered when the note is next opened; a draft file may hold up to `6 × BODY_LIMIT + 1024` characters,
@@ -222,6 +233,16 @@ any other (cc_offline, cc_no_remote), and the server's policy is not loosened fo
 - `index.html`, `page.css`, `icons/` — the shell, its styles, and the icon files (hand-drawn after Lucide's, credited in
   `licences/bundled.json`; image files, never a code library, cc_one_renderer).
 
+- `export-run.ts`, `export-calls.ts`, `png.ts` (workstream C6, cc_export_same) — the Export form is the shared layer's
+  (`toggleExportForm`, on an Export button in a toolbar under the graph). `runExport` carries out what it asks with the
+  core exactly as the plugin does: the scope, `exportPlan` (nothing to export, the classification question first, or go),
+  the image drawn by `exportWithLayout` through the worker, or the data as GQL, CSV or GraphML, and a PNG rasterised by the
+  page (`png.ts`) at the core's size, on pages when too large, all drawn before any is saved; a companion note, when set,
+  follows under the name the image was saved as. The files go to the server in one call (`export-calls.ts`, apart from
+  `server-calls.ts`, which only reads). Not offered on the page: views, played paths and the pictures on boxes (a frame).
+  The page bundle stands an empty module in for the core's Graphviz engine (`esbuild.page.mjs`): the layer takes values from
+  the core's entry, which names the engine; only the worker carries it.
+
 The server's side: `server/page-assets.ts` (the files, kept in memory, served by exact path) and `server/page-settings.ts`
 (`GET /api/settings`: the mod's settings read back by the core as the plugin reads them, no model's address or key, never
 written). The mod hands the settings the page shows with in the same environment variable as the gate's
@@ -237,7 +258,9 @@ written). The mod hands the settings the page shows with in the same environment
   `EditorSession` as the page; a watcher fired by hand and file steps held, never a clock) and
   `editor-store-hardening.test.js` (what the security review of #450 found: a draft saved during a write, a note's
   mode, hard links, a folder swapped under a write, the drafts folder's mode and longest draft, and the real fs.watch),
-  with their support, `editor-store-support.js`; and `editor-mod.test.js` (`/graph edit` from the mod: the launcher
+  with their support, `editor-store-support.js`; `editor-export.test.js` (the export on a real vault and a running server:
+  new files only, escapes, links, races, names, limits; test_cc_export) and `editor-page-export.js` (cc_export_same, run
+  from `editor-page.test.js`); and `editor-mod.test.js` (`/graph edit` from the mod: the launcher
   over real server processes started the way the host starts one, standard input closed at once; the other
   workstreams' cases for `test_cc_mod`: C3's, the gate, are in it, C7's are still to be added, and it is `partial` until then), with its support, `editor-mod-support.js`. The mod's wiring
   (`register.tsx`) is checked by `claude plugin validate` and a type check; `claude plugin test` needs a Claude Code

@@ -12,7 +12,7 @@
 //   GET notes/<id>/events   a stream, a JSON object to a line: {version, text} now and on each change, or {gone}
 import { randomBytes } from 'node:crypto';
 import { promises as fs } from 'node:fs';
-import { basename, dirname, resolve } from 'node:path';
+import { basename, dirname, resolve, sep } from 'node:path';
 import type { ApiAnswer, ApiRequest } from './start-server.ts';
 import { DraftShelf } from './note-drafts.ts';
 import { NODE_FILES, readNoteFile, writeAtomically, type NoteFiles, type NoteText } from './note-file.ts';
@@ -106,6 +106,11 @@ export class NoteStore {
   /** The vault's real path. */
   get vault(): string {
     return this.where.real;
+  }
+
+  /** An open note's path in the vault, written with `/`, by its id; null for an id never given. */
+  pathOf(id: string): string | null {
+    return this.notes.get(id)?.inVault.split(sep).join('/') ?? null;
   }
 
   /** How many writes are under way: a stop waits for each. */

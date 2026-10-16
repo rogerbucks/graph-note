@@ -314,12 +314,13 @@ describe('cc_exports_new_only: the request carries the server’s checks', () =>
       body: '{',
     });
     assert.equal(over.status, 413);
-    const big = await send(server, id, [{ name: 'big.csv', text: 'x'.repeat(EXPORT_BODY_LIMIT) }]);
-    assert.equal(big.status, 413);
     assert.deepEqual(
       listing(join(v.vault, 'Notes')).filter((n) => n.endsWith('.csv')),
       [],
     );
+    // larger than a note may be, smaller than an export may
+    const image = await send(server, id, [{ name: 'big.csv', text: 'x'.repeat(600_000) }]);
+    assert.equal(image.status, 200);
   });
 
   test('a note’s own routes keep the note’s limit: the export’s larger one is for the export alone', async () => {

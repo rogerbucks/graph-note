@@ -67,7 +67,7 @@ card in a component Obsidian owns (`graphCard`). The layer's types for what the 
   function `layoutWorker` of the module `graph-note:layout-worker` (typed in `bundled-worker.d.ts`).
 - `refusal-banner.ts` — the banner over a graph shown as text because it is too large to read or draw, took too long,
   or drawing is paused: an icon, and the limit and numbers in words.
-- `refusal-words.ts` — those words, with no Obsidian in them, in two voices: the banner's, and the notice of an export
+- those words are the core's `refusal-words.ts` (shared with the browser editor's page), in two voices: the banner's, and the notice of an export
   stopped for the same reason ("what happened: why. Nothing was saved. What to do."), and for a layout that failed (the
   worker or its engine raised an error: its reason is put in brackets).
 

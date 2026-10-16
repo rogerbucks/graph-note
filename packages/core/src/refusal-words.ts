@@ -1,7 +1,7 @@
 // Why a graph is not laid out, in words (spec §9, layout_contained, and §16, failed_export): the limit it is over and the
 // numbers, how long its layout was given, or that drawing is paused. One telling of each reason, in two voices: the banner
 // over a graph shown as text instead, and the notice of an export that was stopped and wrote nothing.
-import type { Refusal } from '@graph-note/core';
+import type { Refusal } from './layout-limits.ts';
 
 const count = (n: number) => n.toLocaleString('en-GB');
 

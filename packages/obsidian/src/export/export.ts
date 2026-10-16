@@ -16,6 +16,7 @@ import {
   dataText,
   exportPlan,
   exportScope,
+  exportRefusalWords,
   exportedData,
   gqlBlocks,
   isDataFormat,
@@ -35,7 +36,6 @@ import type {
 } from '@graph-note/core';
 import type { ExportAsk, ExportOutcome } from '@graph-note/core/display/export/export-types';
 import type GraphNotePlugin from '../main';
-import { exportRefusalWords } from '../layout-worker/refusal-words';
 import { classificationOf } from './classification';
 import { deviceOf, imageFiles, tooLargeWords } from './image';
 import type { ExportFile } from './image';

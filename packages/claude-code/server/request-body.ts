@@ -7,6 +7,13 @@ import { READ_LIMITS } from '@graph-note/core';
 /** The most bytes a request's body may hold: the core's read limit for a note. */
 export const BODY_LIMIT = READ_LIMITS.bytes;
 
+/** The most bytes the body of an export may hold (export-api.ts): an image, a PNG as base64, is larger than a note. */
+export const EXPORT_BODY_LIMIT = 24 * 1024 * 1024;
+
+/** The limit for a call to `url`: the export's own larger one for an export alone, the note's for all else. */
+export const bodyLimitOf = (url: string): number =>
+  /^\/api\/export\/[0-9a-f]{32}$/.test(url) ? EXPORT_BODY_LIMIT : BODY_LIMIT;
+
 /** The body as UTF-8 text, or null when it is, or says it is, larger than `most` bytes. */
 export async function readBody(req: IncomingMessage, most: number = BODY_LIMIT): Promise<string | null> {
   const declared = Number(req.headers['content-length'] ?? 0);

@@ -17,7 +17,7 @@ import {
 import type { AddressInfo } from 'node:net';
 import type { Duplex } from 'node:stream';
 import type { PageAssets, PageFile } from './page-assets.ts';
-import { readBody, BODY_LIMIT } from './request-body.ts';
+import { readBody, bodyLimitOf, BODY_LIMIT } from './request-body.ts';
 import { SECURITY_HEADERS, crossOrigin, hostAllowed, newToken, tokenMatches, writeAllowed } from './request-guard.ts';
 
 /** How long the server waits with no page before it stops: 30 minutes. */
@@ -190,10 +190,12 @@ export async function startEditorServer(options: EditorServerOptions = {}): Prom
     seen();
     if (method === 'PUT' && !writeAllowed(req.headers, host))
       return send(res, 403, 'A change must come from the editor’s own page.');
-    const body = method === 'PUT' ? await readBody(req) : '';
+    const limit = bodyLimitOf(url);
+    const body = method === 'PUT' ? await readBody(req, limit) : '';
     if (body === null) {
       req.resume();
-      return send(res, 413, `Larger than a note may be: at most ${BODY_LIMIT} bytes.`, { connection: 'close' });
+      const what = limit === BODY_LIMIT ? 'a note' : 'an export';
+      return send(res, 413, `Larger than ${what} may be: at most ${limit} bytes.`, { connection: 'close' });
     }
     if (!api) return send(res, 404, 'Not found.');
     // checked again after the body is read, so no call reaches the API once a stop has begun

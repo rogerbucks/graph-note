@@ -90,6 +90,7 @@ export { loadEngine } from './engine.ts';
 export type { Engine, Drawn, Direction, Details, LinkDetail, LinkDetails } from './render.ts';
 export { LAYOUT_LIMITS, PAGE_LIMITS, READ_LIMITS, textTooLarge, tooLarge } from './layout-limits.ts';
 export type { LayoutLimits, ReadLimits, Refusal } from './layout-limits.ts';
+export { exportFailureWords, exportRefusalWords, refusalWords } from './refusal-words.ts';
 export { LayoutRunner, TIMEOUTS_BEFORE_STOPPING, inThreadPort, serveLayouts } from './layout-worker.ts';
 export type {
   Clock,
@@ -142,6 +143,7 @@ export type { StepGiven, StepPoint } from './steps-input.ts';
 export { DEPARTURES, underStrictness, toStandard, standardBlocks } from './strictness.ts';
 export type { Converted, Departure, Strictness, StrictnessSettings } from './strictness.ts';
 export { OPTIONS, DEFAULT_SETTINGS, settingsFrom, indentText, aiModel } from './settings.ts';
+export { vaultFolder } from './vault-folder.ts';
 export type {
   AiModel,
   AiUse,
