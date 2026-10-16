@@ -58,10 +58,19 @@ export function readIssues(run, repo, author) {
   return whole(issues, ISSUE_CAP, 'issues').map(issueOf);
 }
 
-/** The hundred newest issues of a repository, whoever wrote them, in the shape readIssues gives. One page, unfiltered. */
+/**
+ * The issues of a repository, newest first, whoever wrote them, in the shape readIssues gives: every page, unfiltered, so
+ * an older mirror issue never drops out of what is adopted as the repository grows.
+ */
 export function readNewest(run, repo) {
-  const page = JSON.parse(run(['api', `repos/${repo}/issues?state=all&sort=created&direction=desc&per_page=100`]));
-  return page.filter((i) => !i.pull_request).map(issueOf);
+  const pages = JSON.parse(
+    run(['api', `repos/${repo}/issues?state=all&sort=created&direction=desc&per_page=100`, '--paginate', '--slurp']),
+  );
+  // no cap: --paginate reads every page, so the list is whole however many issues others have filed
+  return pages
+    .flat()
+    .filter((i) => !i.pull_request)
+    .map(issueOf);
 }
 
 /** The logins whose issues the mirror adopts: the repository's owner, and the workflows' bot, which runs it on main. */
@@ -73,11 +82,21 @@ export const adoptersOf = (repo) => [repo.split('/')[0], BOT_LOGIN];
  * bot's issues) but may be a moment behind an issue just made (run 38891890822), and an issue it has not yet listed would
  * be made again; the unfiltered list of the newest issues shows it at once.
  */
-export function readAdoptable(run, repo, adopters) {
+export function readAdoptable(run, repo, adopters, warn = () => {}) {
   const logins = [adopters].flat();
   const found = new Map();
   for (const login of logins) for (const issue of readIssues(run, repo, login)) found.set(issue.number, issue);
-  for (const issue of readNewest(run, repo)) if (logins.includes(issue.author)) found.set(issue.number, issue);
+  const missed = [];
+  for (const issue of readNewest(run, repo))
+    if (logins.includes(issue.author) && !found.has(issue.number)) {
+      found.set(issue.number, issue);
+      missed.push(issue.number);
+    }
+  // the list by creator should have given them: say so, so a broken filter is never silent
+  if (missed.length)
+    warn(
+      `the creator list missed ${missed.length === 1 ? 'issue' : 'issues'} ${missed.map((n) => `#${n}`).join(', ')} that the newest-issues read found; they are adopted, but check the creator filter`,
+    );
   return [...found.values()].sort((a, b) => a.number - b.number);
 }
 

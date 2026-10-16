@@ -154,8 +154,9 @@ export function readRemote(run, repo, { creator, project = true } = {}) {
   const login = creator ?? JSON.parse(run(['api', 'user'])).login;
   const adopters = adoptersOf(repo);
   const labelNames = readLabels(run, repo);
-  const issues = readAdoptable(run, repo, adopters);
-  const base = { login, adopters, labelNames, issues };
+  const warnings = [];
+  const issues = readAdoptable(run, repo, adopters, (w) => warnings.push(w));
+  const base = { login, adopters, labelNames, issues, warnings };
   if (!project) return { ...base, project: undefined };
   const found = findProject(run, ownerOf(repo));
   if (!found) return { ...base, project: null };

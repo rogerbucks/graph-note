@@ -142,9 +142,9 @@ export function planProject(desired, wantedFields, remote, iterations = null) {
   refuseMissingSeeds(desired, remote);
   const sets = [];
   for (const d of desired) {
-    // an item that was proved and no longer is (its issue is reopened) must not stay Done: its Status is set first, so
-    // a run cut short before the Proof is set still finds the downgrade next time
-    const downgraded = items.get(d.id)?.values?.Proof === 'proved' && d.status !== 'proved';
+    // an item whose requirement is not proved (its issue is open) must not stay Done, whatever its Proof reads now: that
+    // repairs one stuck by a run cut short, or whose values an options rebuild cleared. Its Status is set first.
+    const downgraded = d.status !== 'proved';
     for (const field of downgraded ? [PROGRESS_FIELD, ...FIELD_NAMES] : [...FIELD_NAMES, PROGRESS_FIELD]) {
       const from = items.get(d.id)?.values?.[field] ?? null;
       const to = d[FIELD_KEYS[field]];
@@ -175,8 +175,8 @@ const UNREAD = { create: false, fields: [], typed: [], itemsAdd: [], sets: [], u
  * Whether a field's value on an item is to be set. Slice, Workstream and Proof follow the requirement, so any difference.
  * Build status is set by events (scripts/build-status-run.mjs), so here only a missing value is seeded. The built-in Status
  * is the board's own: a missing value is seeded, and Todo, which is its default and no choice, may be replaced by a seed
- * that says more; In Progress and Done are never overwritten — except Done on an item whose Proof was proved and no
- * longer is (planProject), which goes back to the Status the requirement now has.
+ * that says more; In Progress and Done are never overwritten — except Done on an item whose requirement is not proved
+ * (planProject), which goes to the Status the requirement has.
  */
 function differs(field, from, to) {
   if (field === BUILD_STATUS_FIELD) return from === null;
@@ -219,7 +219,7 @@ export function buildPlan(desired, remote) {
     adopters,
     creator: remote.login,
     dated,
-    warnings: issues.warnings,
+    warnings: [...issues.warnings, ...(remote.warnings ?? [])],
   };
 }
 
