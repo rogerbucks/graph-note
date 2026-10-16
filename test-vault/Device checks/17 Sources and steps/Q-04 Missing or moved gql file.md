@@ -14,10 +14,10 @@
 
 0. Open this note in Live Preview, with the cursor outside the block.
 1. Check the card says the file Graph files/nowhere.gql is not in the vault, says what to do, and shows the block as text, with no blank drawing.
-2. Open Q-03, with its file made as Q-03 says. In Obsidian's file list, drag `trip.gql` from `Graph files` into another folder.
+2. Open Q-03, with its file made by the generator, as Q-03 says. In Obsidian's file list, drag `trip.gql` from `Graph files` into another folder.
 3. Check Q-03's card says at once that the file is not there any more, and that a file of that name is in the folder you moved it to.
 4. Drag it back. Check Q-03's card draws the graph again.
-5. Delete the `Graph files` folder.
+5. Nothing to clean up: running the reset puts the file back.
 
 **Checklist line:**
 

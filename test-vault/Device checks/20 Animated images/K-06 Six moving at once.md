@@ -4,7 +4,7 @@
 
 **Test diagram:**
 
-Before you start, put seven animated GIFs in this note's folder, `Device checks/20 Animated images`, on the Mac, outside Obsidian, named `c1.gif` to `c7.gif`; the same GIF copied seven times will do. Take them out again afterwards.
+Before you start, make the files: run `node scripts/reset-test-vault.mjs` in the repository (or `node scripts/make-test-files.mjs`, which makes only the test files). It writes seven animated GIFs into this note's folder, `Device checks/20 Animated images`, named `c1.gif` to `c7.gif`, each a different colour. Nothing is put in by hand.
 
 ```gql
 // graph: seven · SOURCE
@@ -28,7 +28,7 @@ The style block: a picture on every cat's box.
 
 **Do this:**
 
-1. Put the seven GIFs in this note's folder and open this note.
+1. Make the seven GIFs, as above, and open this note.
 2. Count the moving pictures: six move, and Gus's is still.
 3. Press Play on Gus's picture: it stays still, and says six are already moving.
 4. Press Pause on Ada's picture, then Play on Gus's: Gus moves.

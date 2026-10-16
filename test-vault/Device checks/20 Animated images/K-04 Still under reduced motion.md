@@ -4,7 +4,7 @@
 
 **Test diagram:**
 
-Before you start, put animated GIFs named `tom.gif` and `kit.gif` in this note's folder, `Device checks/20 Animated images`, on the Mac, outside Obsidian. Take them out again afterwards.
+Before you start, make the files: run `node scripts/reset-test-vault.mjs` in the repository (or `node scripts/make-test-files.mjs`, which makes only the test files). It writes animated GIFs named `tom.gif` and `kit.gif` into this note's folder, `Device checks/20 Animated images`. Nothing is put in by hand.
 
 ```gql
 // graph: still · SOURCE
@@ -25,7 +25,7 @@ The style block: a picture on every cat's box.
 **Do this:**
 
 1. Turn the reduce-motion setting on: on the Mac, System Settings › Accessibility › Display › Reduce motion; on the iPhone, Settings › Accessibility › Motion › Reduce Motion.
-2. Put the two GIFs in this note's folder, and close and open this note again, so it is drawn afresh: both pictures are still, and each control shows Play.
+2. Make the two GIFs, as above, and close and open this note again, so it is drawn afresh: both pictures are still, and each control shows Play.
 3. Open Tom's details: his image is still, and says why.
 4. Press Play on Kit's picture: Kit's picture moves, and Tom's stays still.
 5. Turn the setting off again.
