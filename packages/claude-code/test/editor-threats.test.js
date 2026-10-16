@@ -422,8 +422,9 @@ describe('no outgoing request (cc_no_remote)', () => {
     });
     const [output] = Object.values(built.metafile.outputs);
     const external = [...new Set(output.imports.filter((i) => i.external).map((i) => i.path))].sort();
-    // node:path names the note's place for the store the process now serves (C2); it opens no connection
-    assert.deepEqual(external, ['node:crypto', 'node:fs', 'node:http', 'node:path']);
+    // node:path names the note's place for the store the process now serves (C2), and node:fs/promises and node:url
+    // find and read the page's own files in the folder beside it (C5); none of them opens a connection
+    assert.deepEqual(external, ['node:crypto', 'node:fs', 'node:fs/promises', 'node:http', 'node:path', 'node:url']);
     const text = built.outputFiles[0].text;
     for (const call of [
       /\bfetch\s*\(/,

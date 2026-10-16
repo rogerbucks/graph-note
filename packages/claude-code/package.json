@@ -9,6 +9,7 @@
     "build": "node esbuild.config.mjs"
   },
   "dependencies": {
-    "@graph-note/core": "0.4.5"
+    "@graph-note/core": "0.4.5",
+    "marked": "18.1.0"
   }
 }

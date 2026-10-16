@@ -6,8 +6,10 @@
 // session does, on `/graph stop`, or by itself when the server stops (cc_server_stops). No Node module is imported here:
 // the host's calls are handed in, so the tests run the launcher over real processes and the mod over the host's own.
 import { claudeGate, sha256 } from '@graph-note/core';
-import type { Gate, GateSettings } from '@graph-note/core';
+import type { Gate } from '@graph-note/core';
 import { folderOf, fullPath, nameOf } from './editor-paths.ts';
+import { settingsEnvironment } from './editor-settings-env.ts';
+import type { LaunchSettings } from './editor-settings-env.ts';
 import { NOT_THE_PERSON, NOT_THE_PERSON_ASKING, fromPerson } from './editor-words.ts';
 import type { EditOutcome } from './editor-words.ts';
 
@@ -41,7 +43,7 @@ export interface EditorPorts {
   /** `$.fs.read`: the note's text, read for its classification before anything is opened, and never kept. */
   read: (path: string) => Promise<string>;
   /** The settings the gate reads (classifications, the level for unlabelled notes, the models): read at each use. */
-  settings: () => Promise<GateSettings>;
+  settings: () => Promise<LaunchSettings>;
   /** The session's working folder: a note named by a relative path is found from it. */
   cwd: string;
   /** The command that runs the shipped server, with no argument after it: it takes none. */
@@ -68,7 +70,7 @@ interface Running {
 interface Checked {
   gate: Gate;
   digest: string | null;
-  settings: GateSettings | null;
+  settings: LaunchSettings | null;
 }
 
 /** How long a server has to hand over its address before it is killed and the start said to have failed. */
@@ -208,7 +210,7 @@ export class EditorLauncher {
   }
 
   /** Opens `note`: the server running when it is for this note, else a new one in its place. */
-  async #open(note: string, settings: GateSettings | null, confirmed: string | null): Promise<EditOutcome> {
+  async #open(note: string, settings: LaunchSettings | null, confirmed: string | null): Promise<EditOutcome> {
     const title = nameOf(note);
     if (this.#running?.note === note) return { ok: true, title, reused: true };
     await this.#stop('another note was opened');
@@ -241,7 +243,7 @@ export class EditorLauncher {
   /** Starts the server for `note` and waits for its address, or for why it could not start. */
   async #start(
     note: string,
-    settings: GateSettings | null,
+    settings: LaunchSettings | null,
     confirmed: string | null,
   ): Promise<{ ok: true } | { ok: false; why: string }> {
     const [command, ...rest] = this.#ports.server;
@@ -252,13 +254,8 @@ export class EditorLauncher {
       GRAPH_NOTE_EDITOR_DRAFTS: this.#ports.drafts,
       // the server asks the gate again before every send, with the same settings and the digest of the text said yes to
       // (never the text); none given means the defaults, the strictest
-      GRAPH_NOTE_EDITOR_SETTINGS: settings
-        ? JSON.stringify({
-            classifications: settings.classifications,
-            aiUnlabelled: settings.aiUnlabelled,
-            aiModels: settings.aiModels.map((m) => ({ name: m.name, ceiling: m.ceiling })),
-          })
-        : '',
+      // and the settings the page shows with, which it is told read only (settingsEnvironment)
+      GRAPH_NOTE_EDITOR_SETTINGS: settingsEnvironment(settings),
       GRAPH_NOTE_EDITOR_CONFIRMED: confirmed ?? '',
       // the host closes a child's input when it starts it, so the input's closing is not the session's end here
       GRAPH_NOTE_EDITOR_INPUT: 'ignore',

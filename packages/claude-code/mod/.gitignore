@@ -2,6 +2,7 @@
 hooks/graph.js
 bin/render.mjs
 bin/editor-server.mjs
+page/
 tests/fixtures.js
 # Written by Claude Code when it loads the mod
 .claude-plugin/types/

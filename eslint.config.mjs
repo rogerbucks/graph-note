@@ -57,6 +57,13 @@ export default defineConfig([
     rules: { 'obsidianmd/no-nodejs-modules': 'off', 'obsidianmd/prefer-window-timers': 'off' },
   },
   {
+    // The browser editor's page is an ordinary web page in Claude Code's pane, not an Obsidian view: it has one window and
+    // none of Obsidian's DOM helpers, so the rules that exist for Obsidian's popout windows and its `createEl` family mean
+    // nothing there (packages/claude-code/GUIDE.md). Every other rule holds, the ones against HTML strings among them.
+    files: ['packages/claude-code/page/**/*.ts'],
+    rules: { 'obsidianmd/prefer-create-el': 'off', 'obsidianmd/no-global-this': 'off' },
+  },
+  {
     // The graph-spec library is plain CommonJS modules, gathered by its entry point and bundled into one file for pages
     // (packages/graph-spec/GUIDE.md); the plugin's esbuild bundles them too. require() is how its modules import.
     // (graph-layout.js stays one UMD file, page global and module.exports, so it is left as it was.)

@@ -74,7 +74,9 @@ runtime dependency beyond the core's `READ_LIMITS`. Built into `mod/bin/editor-s
   token file); says on stderr why it stopped, and exits. The code that runs it may hand in an `api`; arguments never.
 - `server/start-server.ts` — `startEditorServer`: listens on 127.0.0.1 alone, on a port the system chooses, with a fresh
   256-bit token; every request through `request-guard.ts` first; no query or fragment in an address, so a token there
-  is refused; the page (a placeholder until C5) served with no token, as it says nothing of any note; every `/api/`
+  is refused; the page's files (`PageAssets`, read once from the built `mod/page/`, served by exact path with no token, as
+  they say nothing of any note; with none, a placeholder at `/` alone) and, for the worker's file alone, a policy with
+  `'wasm-unsafe-eval'` added to `script-src` (see `page-assets.ts`); every `/api/`
   call needs the token, then goes to the `api` handed in (`ApiHandler`; none, and it is not found); a write needs the
   server's own origin. An answer may be a stream (`ApiAnswer.feed`), written piece by piece until either side closes.
   A stop refuses any call not yet handed to the API (503) and resolves `closed` only once `drain` (the store's own
@@ -178,10 +180,42 @@ in every new session, the desktop app's included. After a change: `npm run build
 
 ## Build and tests
 
-The page of the browser editor (workstream C5) will draw with the display layer shared with the Obsidian plugin,
-`packages/core/src/display/` (`@graph-note/core/display/<module>`), and import no Obsidian code. `editor-page.test.js`
-holds that (cc_core_only, partial until C5 and C8 add their cases) and `editor-parity.test.js` holds that the same edit
+The page of the browser editor draws with the display layer shared with the Obsidian plugin,
+`packages/core/src/display/` (`@graph-note/core/display/<module>`), and imports no Obsidian code. `editor-page.test.js`
+holds that (cc_core_only), and, from C5, the page's host shell: cc_one_renderer, cc_text_not_html, cc_worker_same_origin,
+cc_theme_follows, cc_icons, cc_offline and cc_settings_shared, with its support, `editor-page-support.js` (the page built
+once into a temporary folder and served by the real server, and the worker run as a thread); it is partial until C8 adds
+the keyboard, reduced-motion and text-version cases. `editor-parity.test.js` holds that the same edit
 writes the same bytes here and in Obsidian (cc_same_bytes).
+
+## The browser editor's page, `page/` (workstream C5)
+
+An ordinary web page in Claude Code's browser pane, not an Obsidian view, so it has its own folder and type check
+(`tsc -p packages/claude-code/page`) with the DOM, and its own lint override. Built by `esbuild.page.mjs` into
+`mod/page/` (gitignored), which the server reads when it starts and serves from its own origin; the page asks nothing of
+any other (cc_offline, cc_no_remote), and the server's policy is not loosened for it.
+
+- `page-main.ts` — `startPage`: installs the DOM helpers and the page's host under the shared layer, takes the token and
+  the note's id out of the address's fragment, reads the settings and the note, and shows the note's Markdown and its
+  first graph; anything that goes wrong is said in words on the page, never a blank.
+- `browser-host.ts` — the page's `DisplayHost`: icons (a span the stylesheet fills from `/icons/<name>.svg`, never the
+  name as text), the phone test, notices and menus, all set as text.
+- `markdown.ts` — the one Markdown renderer (`marked`, the browser host's one runtime dependency, spec §13): raw HTML is
+  shown as text, a link is made only to a web or mail address, an image is never loaded (cc_text_not_html).
+- `theme-css.ts` — the page's colours from the core's own theme colours, as CSS variables under the scheme the system is
+  in, which the shared styles (the plugin's `styles.css`, added to the page's sheet at build) and the drawing name.
+- `layout-runner.ts`, `layout-worker-entry.ts` — layout in a worker served at `/layout-worker.js` from the server's own
+  origin, under the core's `LayoutRunner` and its limits; the page carries no Graphviz engine, the worker does.
+- `graph-section.ts` — the first graph laid out and drawn as an isolated image (a blob, which the policy allows) in the
+  palette of the system's scheme, drawn again when the scheme changes, its words beside it.
+- `server-calls.ts` — the page's reads from the server (`/api/settings`, `/api/notes/<id>`), the token held in memory.
+- `index.html`, `page.css`, `icons/` — the shell, its styles, and the icon files (hand-drawn after Lucide's, credited in
+  `licences/bundled.json`; image files, never a code library, cc_one_renderer).
+
+The server's side: `server/page-assets.ts` (the files, kept in memory, served by exact path) and `server/page-settings.ts`
+(`GET /api/settings`: the mod's settings read back by the core as the plugin reads them, no model's address or key, never
+written). The mod hands the settings the page shows with in the same environment variable as the gate's
+(`src/editor-settings-env.ts`).
 
 - `npm run build --workspace packages/claude-code` (`esbuild.config.mjs`) builds the mod, and its test fixtures from
   `test-vault/Sample graph note.md`. The root `npm run build` runs it.
