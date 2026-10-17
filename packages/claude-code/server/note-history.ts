@@ -79,6 +79,13 @@ async function placeOf(real: string): Promise<{ top: string; path: string } | nu
   return path && !path.startsWith('../') ? { top, path } : null;
 }
 
+/** The address of the remote `origin` of the repository the note lives in; null where it has none. */
+export async function originOf(real: string): Promise<string | null> {
+  const at = await placeOf(real);
+  if (!at) return null;
+  return (await git(at.top, ['config', '--get', 'remote.origin.url']))?.trim() || null;
+}
+
 /** The history git keeps. */
 export const GIT_HISTORY: NoteHistory = {
   async versions(real) {

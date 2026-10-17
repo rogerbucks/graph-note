@@ -29,6 +29,62 @@ export interface ChangesDeps {
 /** The id of the list of changes, which the drawing's image names as its description. */
 export const CHANGES_LIST_ID = 'gn-changes-list';
 
+/**
+ * The changes of `shown` in graph `graph`, as parts to place: a drawing with every change marked by its line as well as
+ * its hue, named `named` in its description, and the same changes listed in words under the id `listId`. `drawn` settles
+ * once the drawing is made; each image's address is handed to `keep`, which revokes what it no longer shows.
+ */
+export function changesFigure(
+  win: Window & typeof globalThis,
+  graph: string,
+  shown: ChangesShown,
+  named: string,
+  listId: string,
+  deps: Pick<ChangesDeps, 'layout' | 'dark'>,
+  keep: (url: string) => void,
+): { parts: HTMLElement[]; drawn: Promise<void> } {
+  const doc = win.document;
+  const list = doc.createElement('ul');
+  list.setAttribute('id', listId);
+  if (!shown.changes.length) list.append(Object.assign(doc.createElement('li'), { textContent: NO_CHANGES }));
+  for (const c of shown.changes) {
+    const item = doc.createElement('li');
+    item.setAttribute('class', `gn-change is-${c.mark}`);
+    item.textContent = c.said;
+    if (c.details.length) {
+      const inner = doc.createElement('ul');
+      for (const d of c.details) inner.append(Object.assign(doc.createElement('li'), { textContent: d }));
+      item.append(inner);
+    }
+    list.append(item);
+  }
+  const picture = doc.createElement('div');
+  picture.setAttribute('class', 'gn-drawing');
+  const draw = async () => {
+    const drawing = shown.reading.graphs.get(graph);
+    if (!drawing) return;
+    const theme = deps.dark() ? 'dark' : 'light';
+    const drawn = await deps.layout(drawing, theme).catch(() => null);
+    if (!drawn || 'reason' in drawn)
+      return void picture.replaceChildren(
+        Object.assign(doc.createElement('p'), { textContent: 'The changes are listed as text only: not drawn here.' }),
+      );
+    const svg = markedChanges(drawn.svg, shown, PALETTES[theme]);
+    const url = win.URL.createObjectURL(new win.Blob([svg], { type: 'image/svg+xml' }));
+    keep(url);
+    const img = doc.createElement('img');
+    img.src = url;
+    const n = shown.changes.length;
+    img.setAttribute(
+      'alt',
+      `${named}: ${n} ${n === 1 ? 'change' : 'changes'}, added drawn heavy, changed dashed, removed dotted`,
+    );
+    img.setAttribute('aria-describedby', listId);
+    picture.replaceChildren(img);
+  };
+  return { parts: [picture, list], drawn: draw() };
+}
+
 /** The section's controls and result, under the graph `graph` of the note. */
 export function changesSection(win: Window & typeof globalThis, graph: string, deps: ChangesDeps): HTMLElement {
   const doc = win.document;
@@ -57,44 +113,12 @@ export function changesSection(win: Window & typeof globalThis, graph: string, d
     }
     const heading = doc.createElement('h2');
     heading.textContent = `Changes in graph ${graph} since ${label}`;
-    const list = doc.createElement('ul');
-    list.setAttribute('id', CHANGES_LIST_ID);
-    const lines = shown.changes.length ? shown.changes : null;
-    if (!lines) list.append(Object.assign(doc.createElement('li'), { textContent: NO_CHANGES }));
-    for (const c of lines ?? []) {
-      const item = doc.createElement('li');
-      item.setAttribute('class', `gn-change is-${c.mark}`);
-      item.textContent = c.said;
-      if (c.details.length) {
-        const inner = doc.createElement('ul');
-        for (const d of c.details) inner.append(Object.assign(doc.createElement('li'), { textContent: d }));
-        item.append(inner);
-      }
-      list.append(item);
-    }
-    const picture = doc.createElement('div');
-    picture.setAttribute('class', 'gn-drawing');
-    result.replaceChildren(heading, picture, list);
-    const drawing = shown.reading.graphs.get(graph);
-    if (!drawing) return;
-    const theme = deps.dark() ? 'dark' : 'light';
-    const drawn = await deps.layout(drawing, theme).catch(() => null);
-    if (!drawn || 'reason' in drawn)
-      return void picture.replaceChildren(
-        Object.assign(doc.createElement('p'), { textContent: 'The changes are listed as text only: not drawn here.' }),
-      );
-    if (shownUrl) win.URL.revokeObjectURL(shownUrl);
-    const svg = markedChanges(drawn.svg, shown, PALETTES[theme]);
-    shownUrl = win.URL.createObjectURL(new win.Blob([svg], { type: 'image/svg+xml' }));
-    const img = doc.createElement('img');
-    img.src = shownUrl;
-    const n = shown.changes.length;
-    img.setAttribute(
-      'alt',
-      `Graph ${graph} since ${label}: ${n} ${n === 1 ? 'change' : 'changes'}, added drawn heavy, changed dashed, removed dotted`,
-    );
-    img.setAttribute('aria-describedby', CHANGES_LIST_ID);
-    picture.replaceChildren(img);
+    const figure = changesFigure(win, graph, shown, `Graph ${graph} since ${label}`, CHANGES_LIST_ID, deps, (url) => {
+      if (shownUrl) win.URL.revokeObjectURL(shownUrl);
+      shownUrl = url;
+    });
+    result.replaceChildren(heading, ...figure.parts);
+    await figure.drawn;
   };
 
   open.addEventListener('click', () => {

@@ -6,6 +6,8 @@
 import { settingsFrom } from '../../core/src/settings.ts';
 import type { Settings } from '../../core/src/settings.ts';
 import type { PageVersion } from './changes-section.ts';
+import type { PageItemFiles } from './review-section.ts';
+import type { ReviewItem } from '../../core/src/github-review-items.ts';
 
 /** What the server gives for a note: its text, its version and any draft kept for it, with the version it was typed against. */
 export interface NoteReply {
@@ -43,6 +45,14 @@ export function serverCalls(token: string, fetcher: typeof fetch) {
     /** The note's text at one of the versions just listed. */
     textAt: async (note: string, commit: string): Promise<string> =>
       ((await explained(`${id(note)}/at/${encodeURIComponent(commit)}`)) as { text: string }).text,
+    /** The pull requests, merges and commits of the note's repository, asked for only when the user asks to review. */
+    reviews: async (note: string): Promise<ReviewItem[]> =>
+      ((await explained(`${id(note)}/reviews`)) as { items: ReviewItem[] }).items,
+    /** One of the items just listed, with its changed files. */
+    review: async (note: string, item: ReviewItem): Promise<PageItemFiles> =>
+      (await explained(
+        `${id(note)}/reviews/${encodeURIComponent(item.kind)}/${encodeURIComponent(item.id)}`,
+      )) as PageItemFiles,
     /** The settings the mod uses, read only. */
     settings: async (): Promise<Settings> => settingsFrom(await get('settings')),
     /** The note the session was opened for. */
