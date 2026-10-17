@@ -434,12 +434,12 @@ describe('running only the tests a change touches', () => {
       path('.'),
     );
     assert.equal(list.status, 0);
-    assert.equal(
-      list.stdout,
-      ['pane-added-for-you.test.js', 'pane-help.test.js', 'pane-writing.test.js', 'pane.test.js']
-        .map((f) => `packages/obsidian/test/${f}\n`)
-        .join(''),
-    );
+    // the tests named after it, and the tests that reach it through the import graph, such as the browser page's
+    const listed = list.stdout.split('\n').filter(Boolean);
+    for (const f of ['pane-added-for-you.test.js', 'pane-help.test.js', 'pane-writing.test.js', 'pane.test.js'])
+      assert.ok(listed.includes(`packages/obsidian/test/${f}`), f);
+    assert.ok(listed.includes('packages/claude-code/test/editor-page.test.js'), 'reached through its imports');
+    assert.deepEqual(listed, [...listed].sort(), 'sorted');
     const all = run(process.execPath, ['scripts/changed-tests.mjs', '--list', 'package.json'], path('.'));
     assert.match(all.stdout, /^whole suite: package\.json is shared\n$/);
     assert.match(readJSON('package.json').scripts['test:changed'], / scripts\/changed-tests\.mjs$/);
@@ -459,6 +459,7 @@ describe('finding what changed, on a branch and on main', () => {
     const folder = scratch({
       'package.json': '{}\n',
       'scripts/changed-tests.mjs': read('scripts/changed-tests.mjs'),
+      'scripts/import-graph.mjs': read('scripts/import-graph.mjs'),
       'packages/core/src/zoom.ts': '1\n',
       'packages/core/src/pane.ts': '1\n',
       'packages/core/test/zoom.test.js': 'x\n',
@@ -547,9 +548,10 @@ describe('a short guide for AI sessions', () => {
     assert.doesNotMatch(read('.ignore'), /arrives with its own branch/);
   });
 
-  test('it says test:changed follows the naming inside a package, so the full suite runs before a merge', () => {
+  test('it says test:changed follows the naming and the imports, so the full suite still runs before a merge', () => {
     const flat = guide().replace(/\s+/g, ' ');
-    assert.match(flat, /follows test naming inside a package: a core change can affect plugin tests/);
+    assert.match(flat, /every test that imports it, directly or through other modules/);
+    assert.match(flat, /run the full suite before a merge/);
   });
 
   test('CLAUDE.md holds only the line that points to AGENTS.md; anything more needs the owner’s own word', () => {

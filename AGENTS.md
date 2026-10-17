@@ -7,10 +7,9 @@ Short on purpose. How to check your work cheaply, where things live, and what no
 - `npm run test:ai` — the whole JavaScript suite, quietly. One line when all pass (`ok 693 tests`). For each failure:
   `file:line  name`, a short expected and actual (cut at 200 characters), and the first stack frame in our code. Tests'
   own logging is dropped. One file: `npm run test:ai -- path/to/file.test.js`; `npm run -s` hides npm's banner.
-- `npm run test:changed` — only the tests of the modules you changed (`zoom.ts` runs `zoom*.test.js`), quietly. It runs
-  the whole suite and says why in one line when you changed something shared, such as `index.ts`, `package.json` or test
-  support. `npm run test:changed -- --list` shows the plan without running it. It follows test naming inside a package:
-  a core change can affect plugin tests, so run the full suite before a merge.
+- `npm run test:changed` — only the tests a change reaches: those named after it and every test that imports it, directly
+  or through other modules. The whole suite runs, saying why, for `package.json`, a workflow or a file no test reaches;
+  `-- --list` shows the plan. A folder named in pieces is missed, so run the full suite before a merge.
 - `npm run test:ai:py` — the Python library's tests, quietly (needs `uv`). Add test file names to run only those.
 - Never run bare `node --test`: only these npm scripts and `npm test` are capped, by `scripts/run-ceiling.mjs`. Its
   line `run-ceiling: stopped the run …` means a test runs away: fix the test; raise `GRAPH_NOTE_TEST_*` only if need be.

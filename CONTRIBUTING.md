@@ -55,8 +55,9 @@ CI. A change that breaks one fails before it is merged.
   `ruff check` and `ruff format --check` when the Python library changed. CI runs them all again.
 - **Cheap checks while working.** `npm run test:ai` runs the suite quietly (one line when all pass, and for a failure
   only its file and line, name, short expected and actual, and the first stack frame in our code); `npm run
-  test:changed` runs only the tests of the modules the change touches, found by the naming under "Tests mirror the
-  code", and the whole suite when something shared changed; `npm run test:ai:py` does the same for the Python library.
+  test:changed` runs only the tests the change reaches, found by the naming under "Tests mirror the code" and by
+  the import graph (`scripts/import-graph.mjs`: every test that imports a changed file, directly or through others, or
+  names it to build), and the whole suite when something shared changed; `npm run test:ai:py` does the same for the Python library.
   They are for working: `npm test` and the gate above still run in full before every merge, and in CI. `AGENTS.md` is
   the short guide for AI sessions, and `.ignore` keeps generated and bulky files out of code searches.
 - **A large or risky change goes through a pull request**, and is merged only once CI passes on it. That means one that
@@ -189,6 +190,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `python/graph_spec/tests/test_reader_agrees_with_grafeo.py` — the reader and its plain rules give Grafeo's answers, Grafeo being the reference engine and a test dependency only (req:17.engine-agreement).
 - `python/graph_spec/tests/test_view_parity.py` — Grafeo, running each view of `view_cases.json` as written, returns the things the core returns, and, of a fixed list of GQL's and Cypher's words, refuses as a name and as a kind exactly the words the core keeps from them (editor spec §7, views_agree_with_grafeo).
 - `python/graph_spec/tests/test_settings.py` — what a host sets after importing the library.
+- `test/import-graph.test.js` — the import graph, and the tests that reach a changed file through it: imports by path and by package name, a file or folder a test names to build or walk, and how `npm run test:changed` picks them (editor spec §13, affected_tests_by_imports).
 - `test/cheap-checks.test.js` — the quiet test run, running only a change's tests, the AI guide and the search ignore file.
 - `test/build-status.test.js` — the build status's pure part: the requirements a pull request moves, found from the tests it newly marks written; the stage an event gives; which value may replace which; the comment and the annotations.
 - `test/build-status-gh.test.js` — the build status's calls to GitHub, through in-memory stand-ins for `gh`: a pull request, the requirements file at a ref and its size, CI's run, the releases, the pull requests merged in a span, the one comment, leaving it on a locked conversation, and the two tokens kept apart.
