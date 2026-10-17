@@ -1,0 +1,6 @@
+{
+  "file": "test/text-scaling.test.js",
+  "test": "text scales to 200 per cent with nothing lost > styles.css sizes every text of the interface by a token or its parent’s size, never in pixels or points",
+  "seen_failing_first": false,
+  "evidence": "a guard: the sheets already held to this rule, and the test keeps them to it"
+}

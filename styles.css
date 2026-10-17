@@ -69,6 +69,97 @@
   --gn-cursor-link: var(--cursor-link);
 }
 
+/* Forced colours and more contrast (editor spec §44, forced_colours): when the system forces its own colours, such as a
+   high contrast theme of Windows, every colour token is a system colour (theme-tokens.ts, FORCED_TOKEN_COLOURS), and when
+   it asks for more contrast, secondary text and lines take the full text colour (MORE_CONTRAST_TOKENS). Nothing is said by
+   colour alone (§5), so nothing is lost with the hues. */
+@media (forced-colors: active) {
+  .graph-note,
+  [class^='graph-note-'],
+  [class*=' graph-note-'],
+  [class^='gql-'],
+  [class*=' gql-'] {
+    --gn-bg: Canvas;
+    --gn-bg-alt: Canvas;
+    --gn-bg-hover: Canvas;
+    --gn-border: CanvasText;
+    --gn-border-hover: CanvasText;
+    --gn-border-focus: CanvasText;
+    --gn-text-normal: CanvasText;
+    --gn-text-muted: CanvasText;
+    --gn-text-faint: CanvasText;
+    --gn-text-error: CanvasText;
+    --gn-text-warning: CanvasText;
+    --gn-text-on-accent: HighlightText;
+    --gn-text-selection: Highlight;
+    --gn-accent: Highlight;
+    --gn-link: LinkText;
+    --gn-link-unresolved: LinkText;
+    --gn-hue-red: CanvasText;
+    --gn-hue-orange: CanvasText;
+    --gn-hue-green: CanvasText;
+    --gn-code-background: Canvas;
+    --gn-code-normal: CanvasText;
+    --gn-code-keyword: CanvasText;
+    --gn-code-important: CanvasText;
+    --gn-code-operator: CanvasText;
+    --gn-code-value: CanvasText;
+    --gn-code-tag: CanvasText;
+    --gn-code-string: CanvasText;
+    --gn-code-property: CanvasText;
+    --gn-code-function: CanvasText;
+  }
+}
+@media (prefers-contrast: more) {
+  .graph-note,
+  [class^='graph-note-'],
+  [class*=' graph-note-'],
+  [class^='gql-'],
+  [class*=' gql-'] {
+    --gn-text-muted: var(--gn-text-normal);
+    --gn-text-faint: var(--gn-text-normal);
+    --gn-border: var(--gn-text-normal);
+    --gn-border-hover: var(--gn-text-normal);
+  }
+}
+/* The drawing's colours are written on each shape, which the browser does not force: so the drawing keeps its own, and
+   each shape, line and word is drawn in the system's colours here, the chosen or focused thing in its highlight. */
+@media (forced-colors: active) {
+  .graph-note-svg {
+    forced-color-adjust: none;
+  }
+  .graph-note-svg :is(g.node, g.cluster) > :is(path, polygon, ellipse) {
+    fill: Canvas !important;
+    stroke: CanvasText !important;
+  }
+  .graph-note-svg g.edge > :is(path, polyline) {
+    stroke: CanvasText !important;
+  }
+  .graph-note-svg g.edge > polygon {
+    fill: CanvasText !important;
+    stroke: CanvasText !important;
+  }
+  .graph-note-svg text:not(.graph-note-link) {
+    fill: CanvasText !important;
+  }
+  .graph-note-svg :is(g.is-selected, g.node:focus-visible) > :is(path, polygon, ellipse) {
+    stroke: Highlight !important;
+  }
+  /* the editor's field is see-through text over its coloured picture: forced, its text would show twice */
+  .graph-note-editor textarea.graph-note-text {
+    forced-color-adjust: none;
+    color: transparent;
+    caret-color: CanvasText;
+  }
+  /* a shadow is dropped in forced colours: each thing lifted by one alone keeps an edge instead */
+  .graph-note-proposal.is-sheet,
+  .graph-note-details.is-sheet,
+  .graph-note-viewport > .graph-note-pointer,
+  .graph-note-sheet {
+    border: 1px solid CanvasText;
+  }
+}
+
 /* One frame: the bar, the drawing, its problems and its details sit in one card, the bar as its header strip — so it is
    plain which bar and which details belong to which drawing. The card and the bar's rule take the theme's focus border:
    its ordinary border is too faint to tie a bar to its drawing (Roger's choice A, 8 Oct 2026). */
