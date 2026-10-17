@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/editor-mod-claude.test.js",
+  "test": "Claude’s direct writes through the editor are refused (cc_claude_proposes) > the session’s token, the page’s, makes no proposal: a proposal reaches the note only through the mod",
+  "seen_failing_first": false,
+  "evidence": "An existing test; only its helper changed, to print the launcher's reason when the editor fails to open, so it passed before by design."
+}

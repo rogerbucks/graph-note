@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/editor-mod-claude.test.js",
+  "test": "a proposal touching content above Claude’s clearance is refused (cc_claude_proposes, cc_classified_asks) > a note the user said yes to takes one, but a note changed by another program since needs a new yes",
+  "seen_failing_first": false,
+  "evidence": "An existing test; only its helper changed, to print the launcher's reason when the editor fails to open, so it passed before by design."
+}
