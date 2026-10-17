@@ -34,7 +34,7 @@
       "start": "2026-10-30",
       "end": "2026-11-12",
       "estimate": true,
-      "workstreams": ["V1", "A1", "R1", "R2"]
+      "workstreams": ["V1", "D1", "A1", "R1", "R2"]
     },
     {
       "title": "Wave 6 · Host and storage contracts",
