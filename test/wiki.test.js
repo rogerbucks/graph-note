@@ -78,8 +78,12 @@ describe('the wiki', () => {
       made()['Releases.md'],
       /\| \[0\.5\.0\]\(https:\/\/github\.com\/rogerbucks\/graph-note\/releases\/tag\/0\.5\.0\)/,
     );
-    const releases = [{ tagName: '9.9.9', name: 'Big', publishedAt: '2026-10-01T10:00:00Z', url: 'https://x/9.9.9' }];
-    assert.match(made({ releases })['Releases.md'], /\| \[9\.9\.9\]\(https:\/\/x\/9\.9\.9\) \| Big \| 1 Oct 2026 \|/);
+    // gh release list gives no address, so each links to its tag's page
+    const releases = [{ tagName: '9.9.9', name: 'Big', publishedAt: '2026-10-01T10:00:00Z' }];
+    assert.match(
+      made({ releases })['Releases.md'],
+      /\| \[9\.9\.9\]\(https:\/\/github\.com\/rogerbucks\/graph-note\/releases\/tag\/9\.9\.9\) \| Big \| 1 Oct 2026 \|/,
+    );
   });
 });
 

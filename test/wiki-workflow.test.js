@@ -38,6 +38,19 @@ describe('the workflow that makes the wiki', () => {
     assert.match(runs, /node scripts\/wiki\.mjs --out wiki-out --sha "\$GITHUB_SHA"/);
   });
 
+  test('asks gh only for the release fields it offers', () => {
+    const runs = runCommands(jobs(text).make.join('\n')).join('\n');
+    assert.match(runs, /gh release list .*--json tagName,name,publishedAt /);
+  });
+
+  test('says how to start the wiki when it has no pages yet: the review checks nothing, the publish stops', () => {
+    const review = jobs(text).review.join('\n');
+    assert.match(review, /if ! git clone .*\.wiki\.git/);
+    assert.match(review, /::warning::The wiki has no pages yet/);
+    const publish = jobs(text).publish.join('\n');
+    assert.match(publish, /::error::The wiki has no pages yet.*first page/);
+  });
+
   test('writes only in the publish job, which checks out nothing and runs no Node, npm or script of the repository', () => {
     assert.deepEqual(given('publish'), ['contents: write']);
     const publish = jobs(text).publish.join('\n');

@@ -8,7 +8,7 @@
 //
 // Usage:
 //   node scripts/wiki.mjs --out DIR [--sha SHA] [--date YYYY-MM-DD] [--releases FILE] [--labels FILE]
-// --releases is `gh release list --json tagName,name,publishedAt,url` saved to a file; without it the versions come
+// --releases is `gh release list --json tagName,name,publishedAt` saved to a file; without it the versions come
 // from versions.json alone. --labels is the labels.json scripts/wiki-screens.mjs writes: each label of the card's
 // buttons the guide does not name is printed as a GitHub warning.
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
@@ -262,7 +262,10 @@ export function renderWiki({
     footer('`quality/baseline.json`', sha, today);
 
   const rows = releases.length
-    ? releases.map((r) => `| [${r.tagName}](${r.url}) | ${r.name || r.tagName} | ${day(r.publishedAt.slice(0, 10))} |`)
+    ? releases.map(
+        (r) =>
+          `| [${r.tagName}](${REPO}/releases/tag/${r.tagName}) | ${r.name || r.tagName} | ${day(r.publishedAt.slice(0, 10))} |`,
+      )
     : Object.keys(versions)
         .reverse()
         .map((v) => `| [${v}](${REPO}/releases/tag/${v}) | Obsidian ${versions[v]} or later | — |`);
