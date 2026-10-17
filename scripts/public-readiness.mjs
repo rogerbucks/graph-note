@@ -10,17 +10,19 @@
 // Usage:
 //   node scripts/public-readiness.mjs --history            every blob and commit message of HEAD's own history
 //   node scripts/public-readiness.mjs --setup              a fresh clone runs the README's steps; the docs name no machine
+//   node scripts/public-readiness.mjs --setup-since BASE   the same, but the fresh clone only if a setup input changed
+//                                                          since BASE (a pull request's; main and the release run all)
 //   node scripts/public-readiness.mjs --settings           compare the GitHub settings with the wanted ones (admin, gh)
 //   node scripts/public-readiness.mjs --settings --apply   set each one that differs
 //   node scripts/public-readiness.mjs --make-public --yes  --history over every branch and tag first, then make the
 //                                                          repository public
 //
 // Exits 1 and lists each problem by place and kind. What matched is never printed, so a CI log cannot leak it.
-import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { freshCloneProblems, setupInputsChangedSince } from './fresh-clone.mjs';
 import { messageProblems, problemsIn } from './history-text-problems.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -103,37 +105,6 @@ export function setupProblems(root = ROOT) {
   return setupDocs(root).flatMap((doc) =>
     machineSpecific(readFileSync(join(root, doc), 'utf8')).map((p) => ({ where: `${doc}:${p.line}`, rule: p.rule })),
   );
-}
-
-/** The shell steps of the README's Developing section: each fenced sh block, as the text of its commands. */
-export function readmeSteps(text) {
-  const section = text.split(/^## /m).find((s) => s.startsWith('Developing')) ?? '';
-  return [...section.matchAll(/^```sh\n([\s\S]*?)^```/gm)].map((m) => m[1].trim());
-}
-
-/**
- * Runs the README's steps in a fresh clone of the repository, as a newcomer would, with the clone's origin set to the
- * repository's own. Returns the problems: each step that failed, with the end of what it printed.
- */
-export function freshCloneProblems(root = ROOT, { log = () => {} } = {}) {
-  const steps = readmeSteps(readFileSync(join(root, 'README.md'), 'utf8'));
-  if (!steps.length) return [{ where: 'README.md', rule: 'no-setup-steps' }];
-  const clone = mkdtempSync(join(tmpdir(), 'fresh-clone-'));
-  try {
-    execFileSync('git', ['clone', '--quiet', root, clone]);
-    git(clone, ['remote', 'set-url', 'origin', git(root, ['remote', 'get-url', 'origin']).toString().trim()]);
-    const { NODE_TEST_CONTEXT: _context, ...env } = process.env;
-    return steps.flatMap((step, i) => {
-      log(`README step ${i + 1} of ${steps.length} in a fresh clone:\n${step}`);
-      const opts = { cwd: clone, input: step, env, encoding: 'utf8', timeout: 1_800_000, maxBuffer: 1 << 28 };
-      const r = spawnSync('sh', ['-e'], opts);
-      if (r.status === 0) return [];
-      const detail = `${r.stdout}\n${r.stderr}`.trim().split('\n').slice(-30).join('\n');
-      return [{ where: `README.md step ${i + 1}`, rule: 'setup-step-failed', detail }];
-    });
-  } finally {
-    rmSync(clone, { recursive: true, force: true });
-  }
 }
 
 // ── The settings on GitHub ──
@@ -353,7 +324,18 @@ function main(argv) {
   // Making the repository public publishes every branch and tag, so that gate reads them all.
   if (flag('--history') || flag('--make-public'))
     problems.push(...historyProblems(ROOT, { refs: flag('--make-public') ? ['--all'] : ['HEAD'] }));
-  if (flag('--setup')) problems.push(...setupProblems(), ...freshCloneProblems(ROOT, { log: console.error }));
+  // --setup-since <base>, for a pull request: the fresh clone only when a setup input changed; main and the release run
+  // it every time
+  const since = argv.includes('--setup-since') ? argv[argv.indexOf('--setup-since') + 1] : undefined;
+  if (argv.includes('--setup-since') && !since) {
+    console.error('--setup-since needs the commit to compare with');
+    return 1;
+  }
+  if (flag('--setup') || since) problems.push(...setupProblems());
+  const changed = since && !flag('--setup') ? setupInputsChangedSince(ROOT, since) : [];
+  if (flag('--setup') || changed.length) problems.push(...freshCloneProblems(ROOT, { log: console.error }));
+  else if (since)
+    console.error(`No setup input changed since ${since}: the fresh clone runs on main and at the release.`);
   for (const p of problems) console.error(`  ${p.where} — ${p.rule}${p.detail ? `\n${p.detail}` : ''}`);
   if (problems.length) {
     console.error(
@@ -363,7 +345,9 @@ function main(argv) {
   }
   if (flag('--history'))
     console.log('history: nothing confidential, personal or secret; every commit from a no-reply address');
-  if (flag('--setup')) console.log("setup: the README's steps set up a fresh clone, and the documents name no machine");
+  if (flag('--setup') || changed.length)
+    console.log("setup: the README's steps set up a fresh clone, and the documents name no machine");
+  else if (since) console.log('setup: the documents name no machine, and no setup input changed');
   if (flag('--settings')) {
     const repo = repoOf();
     const differing = settingsReport(repo, { apply: flag('--apply') });
