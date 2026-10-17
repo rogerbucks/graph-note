@@ -3,7 +3,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readBoard } from '../scripts/slice-board.mjs';
-import { bar, fillMarkers, readQuestions, renderWiki, waveStates } from '../scripts/wiki.mjs';
+import { bar, cell, fillMarkers, readQuestions, renderWiki, settingsTables, waveStates } from '../scripts/wiki.mjs';
 import { read } from './repository/repo.js';
 
 const requirementsText = read('requirements/editor-requirements.gql');
@@ -111,6 +111,14 @@ describe('the waves', () => {
         ['later', 0, 1],
       ],
     );
+  });
+});
+
+describe('the settings tables', () => {
+  test('escape a backslash and a bar in every cell, so no text ends or breaks its cell', () => {
+    assert.equal(cell('a | b \\ c'), 'a \\| b \\\\ c');
+    const table = settingsTables([{ section: 'S', name: 'A|B', sentence: 'x \\| y', choices: [{ name: 'on|off' }] }]);
+    assert.ok(table.includes('| **A\\|B** | x \\\\\\| y | on\\|off |'), table);
   });
 });
 

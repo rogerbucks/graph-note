@@ -88,6 +88,9 @@ function slicesTable(requirements) {
   return ['| Slice | Proved | Progress |', '|---|---|---|', ...rows].join('\n');
 }
 
+/** Text as it reads in a cell of a Markdown table: a backslash and a bar each escaped, so neither ends the cell. */
+export const cell = (text) => String(text).replace(/[\\|]/g, '\\$&');
+
 /** The settings of the editor, one table for each part of the settings page, in plain words. */
 export function settingsTables(options) {
   const sections = [...new Set(options.map((o) => o.section))];
@@ -96,8 +99,8 @@ export function settingsTables(options) {
       const rows = options
         .filter((o) => o.section === section)
         .map((o) => {
-          const choices = (o.choices ?? []).map((c) => c.name).join(', ');
-          return `| **${o.name}** | ${o.sentence.replace(/\|/g, '\\|')} | ${choices || '—'} |`;
+          const choices = (o.choices ?? []).map((c) => cell(c.name)).join(', ');
+          return `| **${cell(o.name)}** | ${cell(o.sentence)} | ${choices || '—'} |`;
         });
       return [`### ${section}`, '', '| Setting | What it does | Choices |', '|---|---|---|', ...rows].join('\n');
     })
@@ -209,7 +212,7 @@ export function renderWiki({
   const answered = questions.filter((q) => q.answer).sort((a, b) => b.answered.localeCompare(a.answered));
   out['Decisions.md'] =
     `# Decisions\n\nEvery question the project has answered, newest first.\n\n| | Question | Decision | Date |\n|---|---|---|---|\n` +
-    answered.map((q) => `| ${q.num} | ${q.text} | ${q.answer} | ${day(q.answered)} |`).join('\n') +
+    answered.map((q) => `| ${q.num} | ${cell(q.text)} | ${cell(q.answer)} | ${day(q.answered)} |`).join('\n') +
     '\n' +
     footer('`requirements/editor-requirements.gql`', sha, today);
 
