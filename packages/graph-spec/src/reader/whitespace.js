@@ -12,21 +12,26 @@ const CODES = [
   0x2004, 0x2005, 0x2006, 0x2007, 0x2008, 0x2009, 0x200a, 0x2028, 0x2029, 0x202f, 0x205f, 0x3000,
 ];
 const SPACE = String.fromCodePoint(...CODES);
-/** One whitespace character, and one that is not, for building a pattern: `${S}*`, `(${N}+)`. */
-const S = `[${SPACE}]`,
-  N = `[^${SPACE}]`;
+/** One whitespace character, for building a pattern: `${S}*`. */
+const S = `[${SPACE}]`;
+/** One character that is not whitespace, for building a pattern: `(${N}+)`. */
+const N = `[^${SPACE}]`;
 
+/** Whether one character is whitespace; the empty text is not. */
 const isSpace = (c) => c !== '' && SPACE.includes(c);
+/** The text without the whitespace it starts with. */
 function trimStart(s) {
   let i = 0;
   while (i < s.length && SPACE.includes(s[i])) i++;
   return s.slice(i);
 }
+/** The text without the whitespace it ends with. */
 function trimEnd(s) {
   let i = s.length;
   while (i > 0 && SPACE.includes(s[i - 1])) i--;
   return s.slice(0, i);
 }
+/** The text without the whitespace it starts and ends with: never trim(), which takes in U+FEFF. */
 const trim = (s) => trimEnd(trimStart(s));
 
 module.exports = { S, N, isSpace, trim, trimStart, trimEnd };

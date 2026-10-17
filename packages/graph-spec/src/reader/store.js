@@ -14,6 +14,8 @@ const SHARED = new RegExp(`·${S}*SCHEMA${S}+(${N}+)`),
  * `from`'s own entries, if given. */
 const names = (from) => Object.assign(Object.create(null), from);
 
+// Graphs built from data blocks, in the order they are applied: {graph: {nodes: Map key -> {labels, props}, edges}},
+// with the shared schemas, the schema each graph's header names, and the missing commas and colons read in (§3).
 class Store {
   constructor() {
     this.graphs = names();
@@ -262,6 +264,7 @@ class Store {
     return g;
   }
 }
+// A document's blocks applied in order to a fresh store; the first that cannot be read throws its ProfileError.
 function read(blocks) {
   const s = new Store();
   blocks.forEach((b) => s.apply(b));

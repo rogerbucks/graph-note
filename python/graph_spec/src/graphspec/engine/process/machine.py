@@ -89,16 +89,24 @@ class Machine:
         self.root = tops[0]  # the start of the one flow that is nobody's sub-flow
 
     def expand(self, s):
+        """The configuration entering s gives: s, then each sub-flow's start nested
+        under it."""
         return (s,) + (self.expand(self.D[s]) if s in self.D else ())
 
     def start(self):
+        """The configuration the machine starts in: the one top flow's start, with
+        its sub-flows."""
         return self.expand(self.root)
 
     @staticmethod
     def holds(g, ctx):
+        """Whether a guard holds in the context: the graph's `=` read as Python's
+        `==`."""
         return eval(g.replace(" = ", " == "), {}, dict(ctx))
 
     def enabled(self, s, e, ctx):
+        """The transitions out of s on event e that may fire: those whose guard holds and
+        the unguarded ones, or the `else` ones only when none of those can."""
         ts = self.T.get((s, e), [])
         plain = [t for t in ts if t["g"] and t["g"] != "else" and self.holds(t["g"], ctx)] + [
             t for t in ts if not t["g"]

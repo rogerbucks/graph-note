@@ -5,6 +5,8 @@ const { ProfileError } = require('./profile-error.js');
 const { header, tokens } = require('./tokens.js');
 const { Parser } = require('./parser.js');
 
+// A data block's shape against the profile, without applying it: null, or the ProfileError. A name must be written
+// before it is reused (§3). Query blocks and excerpts are not data and pass; any other error is thrown on.
 function checkSyntax(block) {
   try {
     const [, kind] = header(block);

@@ -84,6 +84,9 @@ function cycles(edges, types) {
   }
   return [...found.entries()].sort(byKey(([k]) => k)).map(([, c]) => c);
 }
+// The breaches of the configured rules in a graph, each once: cycles, too many of a relationship, constraints and
+// nondeterministic transitions, as {kind, why, edges, slots}, each kind only when checks names it. Determinism is
+// checked only when the configuration gives guard cases. A GQL constraint with no named twin throws: no engine here.
 function breaches(nodes, edges, config, checks) {
   let out = [];
   if (checks.includes('cycles'))
@@ -151,6 +154,8 @@ function breaches(nodes, edges, config, checks) {
   }
   return uniq;
 }
+// A document must keep the rules on its own: what breaks them is removed from it, in place, and logged — excluded,
+// never joined.
 function validate(doc, log, config, checks = ['cycles', 'cardinality', 'constraints', 'determinism']) {
   for (const b of breaches(doc.nodes, doc.edges, config, checks)) {
     for (const e of b.edges)

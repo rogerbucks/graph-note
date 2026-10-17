@@ -16,6 +16,8 @@ const SHA_K = [],
   });
 })();
 const rotr = (x, n) => (x >>> n) | (x << (32 - n));
+// The SHA-256 of a text's UTF-8 bytes, as 64 lower-case hex digits: synchronous, so the checker runs in a page and
+// under Node alike, without the platform's asynchronous crypto.
 function sha256hex(str) {
   const bytes = new TextEncoder().encode(str),
     byteLength = bytes.length,

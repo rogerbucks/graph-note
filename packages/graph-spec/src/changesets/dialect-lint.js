@@ -37,6 +37,9 @@ function closeAt(src, i) {
   }
   return src.length - 1;
 }
+// The traps in a GQL text written by a model, as findings {trap, line} sorted by line, as graph_spec.lint finds them.
+// Some return a wrong answer with no error, so they are caught before the text runs. Comments and string contents are
+// blanked first, so nothing in them is a trap; a text that opens as a graph block is also checked against the profile.
 function lint(text) {
   const src = blank(text),
     out = [],

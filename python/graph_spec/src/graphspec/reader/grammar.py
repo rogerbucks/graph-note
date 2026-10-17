@@ -15,12 +15,16 @@ class IdNotTextError(ProfileError):
 
 
 class Parser:
+    """Reads one block's tokens, left to right, into its statement: MATCHes, paths and
+    SETs (§3)."""
+
     def __init__(self, toks):
         # commas: (line, at) for each missing comma read in (§3) — the line it is missing from,
         # and where in the block the code on that line ends, which is where it is written in
         self.t, self.i, self.commas = toks, 0, []
 
     def peek(self, k=0):
+        """The token k places ahead, or an `end` token on the last line once the tokens run out."""
         return (
             self.t[self.i + k]
             if self.i + k < len(self.t)
@@ -42,9 +46,12 @@ class Parser:
         )
 
     def line(self):
+        """The line of the token being read."""
         return self.peek()[2]
 
     def take(self, kind=None, text=None):
+        """Takes the next token, refused with the profile's error unless it is of this kind and
+        text."""
         tok = self.peek()
         if (kind and tok[0] != kind) or (text and tok[1] != text):
             want = text or kind
@@ -58,10 +65,13 @@ class Parser:
         return tok
 
     def at(self, kind=None, text=None):
+        """Whether the next token is of this kind and text, taking nothing."""
         tok = self.peek()
         return (not kind or tok[0] == kind) and (not text or tok[1] == text)
 
     def value(self):
+        """A property value: text, a number, TRUE or FALSE, a DATE, or a DATETIME held
+        as its UTC time (§3); no lists, no expressions."""
         k, t, n, _, _ = self.peek()
         if k == "str":
             self.i += 1
@@ -137,6 +147,8 @@ class Parser:
         )
 
     def props(self, node=False):
+        """A `{key: value, ...}` map, or an empty one when there is none; a node's id
+        must be text."""
         out = {}
         if not self.at("p", "{"):
             return out
@@ -153,6 +165,7 @@ class Parser:
         return out
 
     def node(self):
+        """A node pattern: `(var:Label {props})`."""
         n = self.take("p", "(")[2]
         var = self.name()
         labels = []
@@ -164,6 +177,7 @@ class Parser:
         return {"var": var, "labels": labels, "props": props, "line": n}
 
     def path(self):
+        """A path: nodes joined by `-[:TYPE {props}]->` links."""
         nodes, rels = [self.node()], []
         while self.at("p", "-"):
             self.take("p", "-")
@@ -186,6 +200,7 @@ class Parser:
         return nodes, rels
 
     def statement(self):
+        """The block's whole statement: its MATCHes, its INSERTed paths and its SETs."""
         matches, paths, sets = [], [], []
         while self.at("kw", "MATCH"):
             self.take("kw", "MATCH")

@@ -24,6 +24,9 @@ function pynum(v) {
     m = /^(-?[\d.]+)e([+-])(\d+)$/.exec(r);
   return m ? `${m[1]}e${m[2]}${m[3].padStart(2, '0')}` : r;
 }
+// A value as Python's repr writes it: None, True, quoted strings, datetime.date(…), tuples (arrays), lists
+// ({__list}) and dicts. A join's walking order and a nondeterminism warning are made from this text, so it must match
+// the Python library's byte for byte.
 function pyrepr(v) {
   if (v === null || v === undefined) return 'None';
   if (v === true) return 'True';
@@ -50,25 +53,36 @@ function pyrepr(v) {
     '}'
   );
 }
+// A value as Python's str writes it: a string as itself, a date as ISO 8601, a datetime with a space for the T,
+// anything else as pyrepr.
 const pystr = (v) =>
   typeof v === 'string' ? v : isTime(v) ? (v.kind === 'date' ? v.s : v.s.replace('T', ' ')) : pyrepr(v);
+// Whether two values are equal as Python's == finds them: numbers and booleans by value (True == 1), times when they
+// are the same time; it is how values are grouped as a dict's keys would group them.
 const pyeq = (a, b) =>
   a === b ||
   ((typeof a === 'number' || typeof a === 'boolean') &&
     (typeof b === 'number' || typeof b === 'boolean') &&
     Number(a) === Number(b)) ||
   (isTime(a) && isTime(b) && same(a, b));
+// Python's round(): a half goes to the even neighbour (round(2.5) is 2), where Math.round would go up, so a value a
+// unit map restates is the one the Python library writes.
 const pyround = (x) => {
   const f = Math.floor(x),
     d = x - f;
   return d > 0.5 ? f + 1 : d < 0.5 ? f : f % 2 === 0 ? f : f + 1;
 };
+// A value as it is written inside an identifier, the same in every language: a time in ISO 8601, a string as itself,
+// anything else as RFC 8785 JSON. Claim ids use it, never pyrepr.
 const vtext = (v) => (isTime(v) ? v.s : typeof v === 'string' ? v : jcs(v));
+// A relationship key's identifying values, each written as in an identifier, those absent left out, joined by ';'.
 const identStr = (k) =>
   k[3]
     .filter((x) => x !== null && x !== undefined)
     .map(vtext)
     .join(';');
+// A key as text, to index a Map by and sort by: its Python repr, so keys Python holds as one tuple are one here, and a
+// sort by it walks them in the order Python's sorted(…, key=str) does.
 const keystr = (k) => pyrepr(k);
 
 module.exports = { pyrepr, pystr, pyeq, pyround, vtext, identStr, keystr };

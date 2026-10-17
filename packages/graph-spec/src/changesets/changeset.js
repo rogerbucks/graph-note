@@ -26,6 +26,8 @@ const PLAN_ADDED =
 // whatever a planned activity generated is a cache (§24)
 const own = (g, a, by) =>
   g.has(a, 'Activity') && !hadPlan(g, a) && g.out(a, 'ASSOCIATED_WITH').some((e) => e[2] === by);
+// A change set's first line read — '// graph: G · CHANGE SET <id> · against <state hash> · by <author id>' — as
+// {graph, id, against, by}; null when it is not one.
 function changesetHeader(block) {
   const first = block.split('\n').find((line) => line.trim()) || '';
   const m = /^\s*\/\/\s*graph:\s*(\S+)\s*·\s*CHANGE SET\s+(\S+)\s*·\s*against\s+([0-9a-f]{16})\s*·\s*by\s+(\S+)/.exec(
@@ -64,6 +66,9 @@ function refreshSection20(store, name) {
   }
   return out;
 }
+// A change set dry-run against its base, the blocks loaded in order; it writes nothing. Returns each check as
+// [label, ok], the header (with its changes, warnings and §20 refreshes) and the state hash it would produce. It stops
+// at a failure that makes the later checks meaningless, with after null; sw turns named checks off.
 function checkChangeset(base, block, matrix, sw = new Set()) {
   const res = [],
     add = (label, ok) => res.push([label, !!ok]);
