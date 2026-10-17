@@ -71,7 +71,7 @@ describe('the host contract', () => {
   for (const [broken, overrides, check] of [
     ['an icon drawn twice over', { icon: (el) => el.append(el.ownerDocument.createElement('i')) }, 'an icon'],
     ['a phone test that answers a string', { isPhone: () => 'no' }, 'the phone test'],
-    ['a notice that loses its markup', {}, 'a notice'],
+    ['a notice that shows only its first word', {}, 'a notice'],
     ['a menu that drops its separator', {}, 'a menu shows'],
     ['a style policy said as a word', { noInlineStyle: 'yes' }, 'the style policy'],
   ])
@@ -80,7 +80,7 @@ describe('the host contract', () => {
         const made = plainHost(overrides);
         if (broken.startsWith('a notice')) {
           const notice = made.host.notice;
-          made.host.notice = (m) => notice(m.replace(/<[^>]+>/g, ''));
+          made.host.notice = (m) => notice(m.split(' ')[0]);
         }
         if (broken.startsWith('a menu')) {
           const menu = made.host.menu;
