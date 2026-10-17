@@ -581,6 +581,14 @@
       "github_review_items"
     ]
   },
+  "D1": {
+    "title": "Project wiki and user guide",
+    "requirements": [
+      "wiki_generated",
+      "user_guide_wiki",
+      "wiki_reviewed"
+    ]
+  },
   "Q": {
     "title": "Open questions",
     "requirements": []

@@ -241,6 +241,10 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/slice-done.test.js` — a slice is done only when every one of its requirements is proved by a written test whose file is there, in a copy whose banner is as it should be, whose every slice is a whole number and whose every test is kept where the check knows: `check-requirements.mjs --done <slice>` says so or lists what is missing, and the slice board's overview says the same, each tried on tampered copies of the requirements; every slice before the one under way is done (spec §12, done_means_proved).
 - `test/slice-board-style.test.js` — the slice board's stylesheet: colour tokens that agree in light and dark, the altitude switch by CSS alone, a layout that holds at 400px, and the source written one rule and one declaration to a line.
 - `test/slice-board.test.js` — the slice board: a CSS-only HTML page of how far the slice under way is proved, from the requirements copy and, optionally, the open pull requests.
+- `test/wiki.test.js` — the project wiki: every page made from its file in the repository, ending with the file and commit it came from, the proved counts as the slice board gives them, every answered question a decision and every other open, the roadmap's chart free of the characters it reads as syntax, and the releases from GitHub or `versions.json`.
+- `test/wiki-guide.test.js` — the wiki's user guide: every screenshot taken shown once and no other asked for, every setting listed from the editor's own options, plain words, and a new button of the drawing reported when the guide does not explain it.
+- `test/wiki-review.test.js` — the review of the wiki pages people write or edit: each checked and never changed, a suggestion for each broken link or picture, old version and long sentence, a person's edit to a made page reported, and an issue text that pings no one.
+- `test/wiki-workflow.test.js` — the workflow that makes the wiki: woken by a push to main or a release, the pages made with read access only, and the one job that writes running no code of the repository.
 - `test/speed-index.test.js` — the one measure of a machine's speed, which the quality metrics record and scale their timings by: fixed plain work, the least of seven runs.
 - `test/timed-assertions.test.js` — a test asserts the work done, never the time taken: no JavaScript test or its support asserts a span of elapsed time; a polling deadline, mock timers and a clock handed to the code tested are allowed.
 - `test/test-files.test.js` — every file a test or a device-check note names is made by `scripts/make-test-files.mjs`, and the images it makes decode and move: the GIF's compressed data, the APNG's frames, the WebP's lossless frames, the SVG and the PDF (editor spec §12, tests_self_contained, test_files_generated).
@@ -409,6 +413,21 @@ These test behaviour across modules, or the repository itself, so they are named
   its definition is the one on main and its job checks out main, with no package cache. No `pull_request_target`, no
   event text in a command line, and the script prints no token. Runs are grouped by the commit of the checks, so one pull
   request's waiting run never replaces another's. Actions are pinned to commit hashes at least 7 days old.
+
+## The wiki
+
+The [GitHub wiki](https://github.com/rogerbucks/graph-note/wiki) is made from the repository by `.github/workflows/wiki.yml`
+on every push to main and every release, so it is never edited by hand: an edit there is overwritten. `scripts/wiki.mjs`
+writes the status, roadmap, decisions, open questions, quality and releases pages from the files that hold them, and
+copies the pages written by a person from `wiki/`, filling each `<!-- wiki:NAME -->` marker. `wiki/How-to-use-Graph-Note.md`
+is the user guide, in plain words for people who are not technical: a change people will see changes it in the same pull
+request. Its pictures are `<!-- wiki:shot NAME -->` markers, taken from the build by `scripts/wiki-screens.mjs` (each
+shot is a state of `packages/obsidian/harness`, listed in `SHOTS`), and its settings come from the core's `OPTIONS`. A
+button of the drawing the guide does not name is a warning on the wiki's run. People may edit the wiki too: their pages
+are never changed by the workflow. `scripts/wiki-review.mjs` checks each page a person changed last, on every run and on
+every wiki edit, and the workflow keeps the suggestions in one open issue labelled `wiki-review`, closed when none is
+left. A person's edit to a page the wiki makes is listed there before the next run replaces it. To look at the wiki before a merge:
+`node scripts/wiki-screens.mjs --out out/images && node scripts/wiki.mjs --out out --labels out/images/labels.json`.
 
 ## The quality ratchet
 

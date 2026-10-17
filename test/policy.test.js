@@ -239,7 +239,7 @@ describe('GitHub Actions', () => {
     }
   });
 
-  test('only five jobs may write: the release, the lock, the build status comment, the mirror’s issues and the review', () => {
+  test('only seven jobs may write: the release, the lock, the build status comment, the mirror’s issues, the review, the wiki and its review issue', () => {
     for (const f of workflowFiles()) {
       for (const [name, lines] of Object.entries(jobs(read(f)))) {
         const perms = block(lines, 'permissions', 4);
@@ -268,7 +268,11 @@ describe('GitHub Actions', () => {
           f.endsWith('/claude-review.yml') &&
           name === 'review' &&
           [...given].sort().join() === 'contents: read,pull-requests: write';
-        assert.ok(release || lock || comment || mirror || review, `${f}: job ${name} writes`);
+        // and one pushes the wiki's pages, running no code of the repository (test/wiki-workflow.test.js)
+        const wiki = f.endsWith('/wiki.yml') && name === 'publish' && given.join() === 'contents: write';
+        // and one keeps the wiki-review issue, also running no code of the repository (test/wiki-workflow.test.js)
+        const wikiReport = f.endsWith('/wiki.yml') && name === 'report' && given.join() === 'issues: write';
+        assert.ok(release || lock || comment || mirror || review || wiki || wikiReport, `${f}: job ${name} writes`);
       }
       assert.doesNotMatch(read(f), /write-all/, f);
     }

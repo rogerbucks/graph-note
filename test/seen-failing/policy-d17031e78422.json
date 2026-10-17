@@ -1,0 +1,6 @@
+{
+  "file": "test/policy.test.js",
+  "test": "GitHub Actions > only six jobs may write: the release, the lock, the build status comment, the mirror’s issues, the review and the wiki",
+  "seen_failing_first": false,
+  "evidence": "Renamed from the five-writer test when the wiki's publish job was allowed, in the same commit as the workflow; at the parent there is no wiki workflow, so it passes there. The workflow's own test, test/wiki-workflow.test.js, was seen failing first."
+}

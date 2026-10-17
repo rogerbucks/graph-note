@@ -1,0 +1,6 @@
+{
+  "file": "test/policy.test.js",
+  "test": "GitHub Actions > only seven jobs may write: the release, the lock, the build status comment, the mirror’s issues, the review, the wiki and its review issue",
+  "seen_failing_first": false,
+  "evidence": "Renamed from the six-writer test when the wiki's report job was allowed, in the same commit as that job; at the parent there is no report job, so it passes there. The job's own cases in test/wiki-workflow.test.js were seen failing first."
+}
