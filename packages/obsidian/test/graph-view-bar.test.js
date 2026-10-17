@@ -33,7 +33,7 @@ describe('the bar', () => {
   });
 
   test('in Live Preview the bar leaves room for Obsidian’s own edit-block button, which appears at the block’s top right on hover', () => {
-    assert.match(styles, /\.cm-embed-block \.graph-note-bar\s*\{\s*padding-inline-end:\s*var\(--size-4-9\);/);
+    assert.match(styles, /\.cm-embed-block \.graph-note-bar\s*\{\s*padding-inline-end:\s*var\(--gn-space-9\);/);
   });
 
   test('touch targets are at least 44 points', () => {
@@ -94,11 +94,11 @@ describe('each bar and its details belong to their own drawing', () => {
 
   test('the card has its own border round the bar, the drawing and the details, with the bar as a header strip', () => {
     const card = rule('.graph-note-view');
-    assert.match(card, /border:\s*1px solid var\(--background-modifier-border(-focus)?\)/);
+    assert.match(card, /border:\s*1px solid var\(--gn-border(-focus)?\)/);
     assert.match(card, /border-radius:/);
     assert.match(card, /overflow:\s*hidden/);
     const bar = rule('.graph-note-view > .graph-note-bar');
-    assert.match(bar, /background:\s*var\(--background-secondary\)/);
+    assert.match(bar, /background:\s*var\(--gn-bg-alt\)/);
     assert.match(bar, /border-bottom:\s*1px solid/);
     assert.match(
       rule('.graph-note-view > .graph-note-problems,\n.graph-note-view > .graph-note-details'),
@@ -109,11 +109,8 @@ describe('each bar and its details belong to their own drawing', () => {
   // Roger chose A, 8 Oct 2026: the theme's ordinary border is too faint to tie a bar to its drawing (1.32 : 1 on white,
   // 1.38 : 1 on Obsidian's dark), so the card and the bar's rule take the theme's focus border, still the theme's own
   test('the card and the bar’s rule are drawn in the theme’s focus border, which stands out from the page in light and dark', () => {
-    assert.match(rule('.graph-note-view'), /border:\s*1px solid var\(--background-modifier-border-focus\)/);
-    assert.match(
-      rule('.graph-note-view > .graph-note-bar'),
-      /border-bottom:\s*1px solid var\(--background-modifier-border-focus\)/,
-    );
+    assert.match(rule('.graph-note-view'), /border:\s*1px solid var\(--gn-border-focus\)/);
+    assert.match(rule('.graph-note-view > .graph-note-bar'), /border-bottom:\s*1px solid var\(--gn-border-focus\)/);
     // Obsidian's default themes, as the app ships them (8 Oct 2026): the page, its ordinary border and its focus border
     const themes = { light: ['#ffffff', '#e0e0e0', '#bdbdbd'], dark: ['#1e1e1e', '#363636', '#555555'] };
     const lum = (hex) => {
@@ -210,11 +207,11 @@ describe('one frame: the bar and the details belong to their drawing', () => {
     assert.equal(card.children[0].className, 'graph-note-bar', 'the bar comes first, at the top edge');
     assert.match(
       styles,
-      /\.graph-note-view\s*\{[^}]*border:\s*1px solid var\(--background-modifier-border(-focus)?\);[^}]*border-radius:/,
+      /\.graph-note-view\s*\{[^}]*border:\s*1px solid var\(--gn-border(-focus)?\);[^}]*border-radius:/,
     );
     assert.match(
       styles,
-      /\.graph-note-view > \.graph-note-bar\s*\{[^}]*background:\s*var\(--background-secondary\);[^}]*border-bottom:/,
+      /\.graph-note-view > \.graph-note-bar\s*\{[^}]*background:\s*var\(--gn-bg-alt\);[^}]*border-bottom:/,
     );
   });
 

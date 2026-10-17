@@ -43,11 +43,11 @@ describe('a query block shown as code', () => {
 
 describe('the copy button beside Obsidian’s edit-block button', () => {
   // The edit-block button is Obsidian's, at the top right of the block in Live Preview and shown on hover. The bar leaves
-  // it var(--size-4-9) of room (styles.css); the copy button, which Obsidian also puts at the top right, steps clear of it.
+  // it var(--gn-space-9) of room (styles.css); the copy button, which Obsidian also puts at the top right, steps clear of it.
   test('in Live Preview it is moved in from the right edge by the room the edit-block button takes', () => {
     const moved = winner(all, copyButton(livePreview), 'inset-inline-end');
     assert.ok(moved, 'a rule moves it');
-    assert.match(moved.value, /var\(--size-4-9\)/, 'by the room the bar leaves for the same button');
+    assert.match(moved.value, /var\(--gn-space-9\)/, 'by the room the bar leaves for the same button');
     assert.match(moved.value, /^calc\(/, 'and a little more, so the two do not touch');
   });
 

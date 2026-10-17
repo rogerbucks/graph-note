@@ -1,23 +1,86 @@
 /* The browser page's own styles (spec §26). The colours are the theme's variables (theme-css.ts); the shared display layer's
    styles (the plugin's styles.css) are added to this file when the page is built. No inline style and no remote address:
    every file named here is the server's own. */
+
+/* The design tokens (editor spec §44, ui_theme_tokens): the page's theme (theme-css.ts, written in the names of
+   Obsidian's, which the drawing's Obsidian palette reads too) mapped to the --gn-* tokens every rule of the page and of
+   the shared styles reads. The page has no theme class on its body, so this is the one mapping it has. */
+:root {
+  --gn-bg: var(--background-primary);
+  --gn-bg-alt: var(--background-secondary);
+  --gn-bg-hover: var(--background-modifier-hover);
+  --gn-border: var(--background-modifier-border);
+  --gn-border-hover: var(--background-modifier-border-hover);
+  --gn-border-focus: var(--background-modifier-border-focus);
+  --gn-text-normal: var(--text-normal);
+  --gn-text-muted: var(--text-muted);
+  --gn-text-faint: var(--text-faint);
+  --gn-text-error: var(--text-error);
+  --gn-text-warning: var(--text-warning);
+  --gn-text-on-accent: var(--text-on-accent);
+  --gn-text-selection: var(--text-selection);
+  --gn-accent: var(--interactive-accent);
+  --gn-link: var(--link-color);
+  --gn-link-unresolved: var(--link-unresolved-color);
+  --gn-hue-red: var(--color-red);
+  --gn-hue-orange: var(--color-orange);
+  --gn-hue-green: var(--color-green);
+  --gn-code-background: var(--code-background);
+  --gn-code-normal: var(--code-normal);
+  --gn-code-keyword: var(--code-keyword);
+  --gn-code-important: var(--code-important);
+  --gn-code-operator: var(--code-operator);
+  --gn-code-value: var(--code-value);
+  --gn-code-tag: var(--code-tag);
+  --gn-code-string: var(--code-string);
+  --gn-code-property: var(--code-property);
+  --gn-code-function: var(--code-function);
+  --gn-shadow-s: var(--shadow-s);
+  --gn-shadow-l: var(--shadow-l);
+  --gn-layer-popover: var(--layer-popover);
+  --gn-layer-tooltip: var(--layer-tooltip);
+  --gn-layer-modal: var(--layer-modal);
+  --gn-font-ui: var(--font-interface);
+  --gn-font-mono: var(--font-monospace);
+  --gn-font-size-xs: var(--font-ui-smaller);
+  --gn-font-size-s: var(--font-ui-small);
+  --gn-font-size-l: var(--font-ui-large);
+  --gn-font-size-text-s: var(--font-smaller);
+  --gn-code-size: var(--code-size);
+  --gn-font-weight-bold: var(--font-bold);
+  --gn-font-weight-semibold: var(--font-semibold);
+  --gn-icon-xs: var(--icon-xs);
+  --gn-space-half-1: var(--size-2-1);
+  --gn-space-half-2: var(--size-2-2);
+  --gn-space-1: var(--size-4-1);
+  --gn-space-2: var(--size-4-2);
+  --gn-space-3: var(--size-4-3);
+  --gn-space-4: var(--size-4-4);
+  --gn-space-5: var(--size-4-5);
+  --gn-space-6: var(--size-4-6);
+  --gn-space-9: var(--size-4-9);
+  --gn-radius-s: var(--radius-s);
+  --gn-radius-m: var(--radius-m);
+  --gn-radius-l: var(--radius-l);
+  --gn-cursor-link: var(--cursor-link);
+}
 body {
   margin: 0;
-  background: var(--background-primary);
-  color: var(--text-normal);
-  font: 15px/1.5 var(--font-interface);
+  background: var(--gn-bg);
+  color: var(--gn-text-normal);
+  font: 15px/1.5 var(--gn-font-ui);
 }
 
 .gn-page {
   max-width: 60rem;
   margin: 0 auto;
-  padding: var(--size-4-4);
+  padding: var(--gn-space-4);
 }
 
 header {
   max-width: 60rem;
   margin: 0 auto;
-  padding: var(--size-4-4) var(--size-4-4) 0;
+  padding: var(--gn-space-4) var(--gn-space-4) 0;
 }
 
 .gn-title {
@@ -31,11 +94,11 @@ header {
   position: absolute;
   inset-inline-start: -999px;
   top: 0;
-  z-index: var(--layer-popover);
-  padding: var(--size-4-2) var(--size-4-3);
-  background: var(--background-secondary);
-  color: var(--text-normal);
-  border: 2px solid var(--text-normal);
+  z-index: var(--gn-layer-popover);
+  padding: var(--gn-space-2) var(--gn-space-3);
+  background: var(--gn-bg-alt);
+  color: var(--gn-text-normal);
+  border: 2px solid var(--gn-text-normal);
 }
 
 .gn-skip:focus {
@@ -48,7 +111,7 @@ select:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 [tabindex]:focus-visible {
-  outline: 3px solid var(--text-normal);
+  outline: 3px solid var(--gn-text-normal);
   outline-offset: 2px;
 }
 
@@ -58,7 +121,7 @@ textarea:focus-visible,
 }
 
 .gn-text-version ul {
-  padding-inline-start: var(--size-4-5);
+  padding-inline-start: var(--gn-space-5);
 }
 
 /* reduced motion (cc_reduced_motion, WCAG 2.2 AA 2.3.3): the system asks for none, so nothing moves, fades or scrolls
@@ -80,19 +143,19 @@ textarea:focus-visible,
 
 .gn-prose pre,
 .gn-prose code {
-  font-family: var(--font-monospace);
-  font-size: var(--code-size);
-  background: var(--code-background);
+  font-family: var(--gn-font-mono);
+  font-size: var(--gn-code-size);
+  background: var(--gn-code-background);
 }
 
 .gn-prose pre {
-  padding: var(--size-4-2);
+  padding: var(--gn-space-2);
   overflow-x: auto;
-  border-radius: var(--radius-s);
+  border-radius: var(--gn-radius-s);
 }
 
 .gn-prose a {
-  color: var(--link-color);
+  color: var(--gn-link);
 }
 
 /* an icon is an image file the server holds, painted in the text colour; a name with no file shows the dashed square */
@@ -108,39 +171,39 @@ textarea:focus-visible,
 
 #gn-notices {
   position: fixed;
-  inset-inline-end: var(--size-4-4);
-  bottom: var(--size-4-4);
-  z-index: var(--layer-popover);
+  inset-inline-end: var(--gn-space-4);
+  bottom: var(--gn-space-4);
+  z-index: var(--gn-layer-popover);
 }
 
 .gn-notice,
 .gn-menu {
-  background: var(--background-secondary);
-  color: var(--text-normal);
-  border: 1px solid var(--background-modifier-border);
-  border-radius: var(--radius-m);
-  box-shadow: var(--shadow-s);
+  background: var(--gn-bg-alt);
+  color: var(--gn-text-normal);
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-m);
+  box-shadow: var(--gn-shadow-s);
 }
 
 .gn-notice {
-  padding: var(--size-4-2) var(--size-4-3);
-  margin-top: var(--size-4-1);
+  padding: var(--gn-space-2) var(--gn-space-3);
+  margin-top: var(--gn-space-1);
 }
 
 .gn-menu {
   position: fixed;
-  z-index: var(--layer-popover);
+  z-index: var(--gn-layer-popover);
   display: flex;
   flex-direction: column;
   min-width: 10rem;
-  padding: var(--size-4-1);
+  padding: var(--gn-space-1);
 }
 
 .gn-menu-row {
   display: flex;
-  gap: var(--size-4-2);
+  gap: var(--gn-space-2);
   align-items: center;
-  padding: var(--size-4-1) var(--size-4-2);
+  padding: var(--gn-space-1) var(--gn-space-2);
   background: none;
   border: 0;
   color: inherit;
@@ -151,7 +214,7 @@ textarea:focus-visible,
 
 .gn-menu-row:hover,
 .gn-menu-row:focus-visible {
-  background: var(--background-modifier-hover);
+  background: var(--gn-bg-hover);
 }
 
 /* the Export button and form (WCAG 2.2 AA: a visible focus on every control, its words beside its icon, never colour alone) */
@@ -160,10 +223,10 @@ textarea:focus-visible,
 .gn-graph .graph-note-export select {
   min-height: 24px;
   min-width: 24px;
-  color: var(--text-normal);
-  background: var(--background-secondary);
-  border: 1px solid var(--background-modifier-border);
-  border-radius: var(--radius-s);
+  color: var(--gn-text-normal);
+  background: var(--gn-bg-alt);
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-s);
   font: inherit;
   cursor: pointer;
 }
@@ -171,31 +234,31 @@ textarea:focus-visible,
 .gn-graph .gn-export-bar button:focus-visible,
 .gn-graph .graph-note-export button:focus-visible,
 .gn-graph .graph-note-export select:focus-visible {
-  outline: 2px solid var(--text-normal);
+  outline: 2px solid var(--gn-text-normal);
   outline-offset: 2px;
 }
 
 .gn-graph .graph-note-export {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--size-4-2);
+  gap: var(--gn-space-2);
   align-items: center;
-  margin-top: var(--size-4-2);
+  margin-top: var(--gn-space-2);
 }
 
 .gn-menu-warning {
-  color: var(--text-error);
+  color: var(--gn-text-error);
 }
 
 /* Claude's proposals on a card (spec §26, WCAG 2.2 AA): the text colours are the theme's locked pairs; a control has a
    visible focus ring in the text colour, at least 24 CSS pixels to hit, and nothing is told by colour alone */
 .gn-card {
-  margin: var(--size-4-4) 0;
-  padding: var(--size-4-3);
-  background: var(--background-secondary);
-  color: var(--text-normal);
-  border: 2px solid var(--text-normal);
-  border-radius: var(--radius-m);
+  margin: var(--gn-space-4) 0;
+  padding: var(--gn-space-3);
+  background: var(--gn-bg-alt);
+  color: var(--gn-text-normal);
+  border: 2px solid var(--gn-text-normal);
+  border-radius: var(--gn-radius-m);
 }
 
 .gn-card h2 {
@@ -204,35 +267,35 @@ textarea:focus-visible,
 }
 
 .gn-card-changes {
-  padding-inline-start: var(--size-4-5);
+  padding-inline-start: var(--gn-space-5);
 }
 
 .gn-card-changes li {
-  margin: var(--size-4-2) 0;
+  margin: var(--gn-space-2) 0;
 }
 
 .gn-card-button {
   min-width: 2rem;
   min-height: 2rem;
-  margin: var(--size-4-1) var(--size-4-2) var(--size-4-1) 0;
-  padding: var(--size-4-1) var(--size-4-3);
-  background: var(--background-primary);
-  color: var(--text-normal);
-  border: 2px solid var(--text-normal);
-  border-radius: var(--radius-s);
+  margin: var(--gn-space-1) var(--gn-space-2) var(--gn-space-1) 0;
+  padding: var(--gn-space-1) var(--gn-space-3);
+  background: var(--gn-bg);
+  color: var(--gn-text-normal);
+  border: 2px solid var(--gn-text-normal);
+  border-radius: var(--gn-radius-s);
   font: inherit;
   cursor: pointer;
 }
 
 .gn-card-button[disabled] {
   border-style: dashed;
-  color: var(--text-muted);
+  color: var(--gn-text-muted);
   cursor: not-allowed;
 }
 
 .gn-card :focus-visible,
 .gn-card-button:focus-visible {
-  outline: 3px solid var(--text-normal);
+  outline: 3px solid var(--gn-text-normal);
   outline-offset: 2px;
 }
 
@@ -241,9 +304,9 @@ textarea:focus-visible,
 }
 
 #gn-notices {
-  padding: var(--size-4-2) var(--size-4-3);
-  background: var(--background-secondary);
-  color: var(--text-normal);
-  border: 2px solid var(--text-normal);
-  border-radius: var(--radius-m);
+  padding: var(--gn-space-2) var(--gn-space-3);
+  background: var(--gn-bg-alt);
+  color: var(--gn-text-normal);
+  border: 2px solid var(--gn-text-normal);
+  border-radius: var(--gn-radius-m);
 }

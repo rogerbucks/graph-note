@@ -27,7 +27,7 @@ const NAMES = {
 describe('the plug-in interface', () => {
   test('it is versioned, and its first extension point is the data exports', () => {
     assert.equal(PLUGIN_API, '1');
-    assert.deepEqual(EXTENSION_POINTS, ['exports']);
+    assert.deepEqual(EXTENSION_POINTS, ['exports', 'theme'], 'the data exports first, then the theme tokens');
   });
 
   test('the built-in data exports are added through it, as any plug-in’s are', () => {

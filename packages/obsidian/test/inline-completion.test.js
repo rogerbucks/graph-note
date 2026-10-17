@@ -76,7 +76,7 @@ describe('the best match, shown inline', () => {
   test('the ghost takes no room of its own, so the text after it stays under the field’s', () => {
     const css = readFileSync(new URL('../../../styles.css', import.meta.url), 'utf8');
     assert.match(css, /\.graph-note-ghost\s*\{[^}]*display:\s*inline-block;[^}]*width:\s*0;/);
-    assert.match(css, /\.graph-note-ghost\s*\{[^}]*color:\s*var\(--text-muted\)/);
+    assert.match(css, /\.graph-note-ghost\s*\{[^}]*color:\s*var\(--gn-text-muted\)/);
   });
 
   test('nothing is shown while the field has no focus, or with a selection, or with text after the caret', async () => {

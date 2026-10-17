@@ -1,32 +1,101 @@
 /* Graph Note — styles for the drawing and the edit pane. Colours come from the theme, so light and dark both work. */
 
+/* The design tokens (editor spec §44, ui_theme_tokens): Obsidian's theme mapped to the --gn-* tokens every rule below reads,
+   by the core's one table (packages/core/src/theme-tokens.ts, OBSIDIAN_TOKEN_MAP). They are worked out on each of the
+   plugin's own elements, every one with a class of ours, so each reads Obsidian's variables where it is, as its rules did
+   before, and a theme that sets them anew inside a sidebar or a modal is followed there; no element of Obsidian's own is
+   touched. The browser page reads the same variables of its own theme (theme-css.ts). */
+.graph-note,
+[class^='graph-note-'],
+[class*=' graph-note-'],
+[class^='gql-'],
+[class*=' gql-'] {
+  --gn-bg: var(--background-primary);
+  --gn-bg-alt: var(--background-secondary);
+  --gn-bg-hover: var(--background-modifier-hover);
+  --gn-border: var(--background-modifier-border);
+  --gn-border-hover: var(--background-modifier-border-hover);
+  --gn-border-focus: var(--background-modifier-border-focus);
+  --gn-text-normal: var(--text-normal);
+  --gn-text-muted: var(--text-muted);
+  --gn-text-faint: var(--text-faint);
+  --gn-text-error: var(--text-error);
+  --gn-text-warning: var(--text-warning);
+  --gn-text-on-accent: var(--text-on-accent);
+  --gn-text-selection: var(--text-selection);
+  --gn-accent: var(--interactive-accent);
+  --gn-link: var(--link-color);
+  --gn-link-unresolved: var(--link-unresolved-color);
+  --gn-hue-red: var(--color-red);
+  --gn-hue-orange: var(--color-orange);
+  --gn-hue-green: var(--color-green);
+  --gn-code-background: var(--code-background);
+  --gn-code-normal: var(--code-normal);
+  --gn-code-keyword: var(--code-keyword);
+  --gn-code-important: var(--code-important);
+  --gn-code-operator: var(--code-operator);
+  --gn-code-value: var(--code-value);
+  --gn-code-tag: var(--code-tag);
+  --gn-code-string: var(--code-string);
+  --gn-code-property: var(--code-property);
+  --gn-code-function: var(--code-function);
+  --gn-shadow-s: var(--shadow-s);
+  --gn-shadow-l: var(--shadow-l);
+  --gn-layer-popover: var(--layer-popover);
+  --gn-layer-tooltip: var(--layer-tooltip);
+  --gn-layer-modal: var(--layer-modal);
+  --gn-font-ui: var(--font-interface);
+  --gn-font-mono: var(--font-monospace);
+  --gn-font-size-xs: var(--font-ui-smaller);
+  --gn-font-size-s: var(--font-ui-small);
+  --gn-font-size-l: var(--font-ui-large);
+  --gn-font-size-text-s: var(--font-smaller);
+  --gn-code-size: var(--code-size);
+  --gn-font-weight-bold: var(--font-bold);
+  --gn-font-weight-semibold: var(--font-semibold);
+  --gn-icon-xs: var(--icon-xs);
+  --gn-space-half-1: var(--size-2-1);
+  --gn-space-half-2: var(--size-2-2);
+  --gn-space-1: var(--size-4-1);
+  --gn-space-2: var(--size-4-2);
+  --gn-space-3: var(--size-4-3);
+  --gn-space-4: var(--size-4-4);
+  --gn-space-5: var(--size-4-5);
+  --gn-space-6: var(--size-4-6);
+  --gn-space-9: var(--size-4-9);
+  --gn-radius-s: var(--radius-s);
+  --gn-radius-m: var(--radius-m);
+  --gn-radius-l: var(--radius-l);
+  --gn-cursor-link: var(--cursor-link);
+}
+
 /* One frame: the bar, the drawing, its problems and its details sit in one card, the bar as its header strip — so it is
    plain which bar and which details belong to which drawing. The card and the bar's rule take the theme's focus border:
    its ordinary border is too faint to tie a bar to its drawing (Roger's choice A, 8 Oct 2026). */
 .graph-note-view {
-  border: 1px solid var(--background-modifier-border-focus);
-  border-radius: var(--radius-m);
+  border: 1px solid var(--gn-border-focus);
+  border-radius: var(--gn-radius-m);
   overflow: hidden;
-  background: var(--background-primary);
+  background: var(--gn-bg);
 }
 .graph-note-view > .graph-note-bar {
-  background: var(--background-secondary);
-  border-bottom: 1px solid var(--background-modifier-border-focus);
+  background: var(--gn-bg-alt);
+  border-bottom: 1px solid var(--gn-border-focus);
   margin: 0;
-  padding: var(--size-4-1) var(--size-4-2);
+  padding: var(--gn-space-1) var(--gn-space-2);
 }
 .graph-note-view > .graph-note-problems,
 .graph-note-view > .graph-note-details {
   margin: 0;
   border: 0;
   border-radius: 0;
-  border-top: 1px solid var(--background-modifier-border);
-  padding: var(--size-4-2) var(--size-4-3);
+  border-top: 1px solid var(--gn-border);
+  padding: var(--gn-space-2) var(--gn-space-3);
 }
 .graph-note-view > .graph-note-problems {
   border-top: 0;
-  border-bottom: 1px solid var(--background-modifier-border);
-  background: var(--background-secondary);
+  border-bottom: 1px solid var(--gn-border);
+  background: var(--gn-bg-alt);
 }
 /* Focus (spec §25): what a selection keeps stands out by strength and outline, never by colour alone and never by moving
    or hiding anything. A faded box has no fill and an outline no heavier than the drawing's ordinary line; its words and
@@ -69,11 +138,11 @@
 }
 .graph-note-svg .graph-note-later-mark {
   font-size: 9pt;
-  fill: var(--text-muted);
+  fill: var(--gn-text-muted);
 }
 .graph-note-svg .is-overdue .graph-note-later-mark {
-  fill: var(--text-error);
-  font-weight: var(--font-semibold);
+  fill: var(--gn-text-error);
+  font-weight: var(--gn-font-weight-semibold);
 }
 /* A view (spec §7): what is outside it faded, and said so to screen readers; each look's hue on the outline only, in
    the locked line blend, its text kept in the text colour so the locked contrast holds on any box; the legend says
@@ -82,7 +151,7 @@
   opacity: 0.35;
 }
 .graph-note-svg g.graph-note-look > :is(path, polygon) {
-  stroke: var(--graph-note-look-line, var(--text-muted));
+  stroke: var(--graph-note-look-line, var(--gn-text-muted));
 }
 .graph-note-svg g.graph-note-line-bold > :is(path, polygon) {
   stroke-width: 3;
@@ -94,7 +163,7 @@
   stroke-dasharray: 2 3;
 }
 .graph-note-svg g.graph-note-format-bold > text {
-  font-weight: var(--font-bold);
+  font-weight: var(--gn-font-weight-bold);
 }
 .graph-note-svg g.graph-note-format-italic > text {
   font-style: italic;
@@ -103,8 +172,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--size-4-2);
-  padding: var(--size-4-1) var(--size-4-2);
+  gap: var(--gn-space-2);
+  padding: var(--gn-space-1) var(--gn-space-2);
 }
 .graph-note-view-strip button {
   min-width: 44px;
@@ -113,24 +182,24 @@
 .graph-note-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--size-4-3);
+  gap: var(--gn-space-3);
   margin: 0;
-  padding: var(--size-4-1) var(--size-4-2);
+  padding: var(--gn-space-1) var(--gn-space-2);
   list-style: none;
 }
 .graph-note-swatch {
   display: inline-block;
   width: 1em;
   height: 0.25em;
-  margin-inline-end: var(--size-4-1);
+  margin-inline-end: var(--gn-space-1);
   vertical-align: middle;
-  background: var(--graph-note-swatch, var(--text-muted));
+  background: var(--graph-note-swatch, var(--gn-text-muted));
 }
 /* The highlight (spec §25): under the pointer, with the keyboard focus, or from a touch's tap — a glow round the outline and
    an underline on the words, never a size, a place or a weight, so nothing moves; and over any focus, as the thing comes
    forward from the fade while it is highlighted. */
 .graph-note-svg g.graph-note-hot {
-  filter: drop-shadow(0 0 3px var(--interactive-accent));
+  filter: drop-shadow(0 0 3px var(--gn-accent));
 }
 .graph-note-svg g.graph-note-hot > text {
   text-decoration: underline;
@@ -139,14 +208,14 @@
    thing's details offer. Every control is a 44-point target; what a legend line does is said in words as well as shown. */
 .graph-note-view > :is(.graph-note-untangle, .graph-note-find, .graph-note-filter) {
   margin: 0;
-  border-top: 1px solid var(--background-modifier-border);
-  padding: var(--size-4-2) var(--size-4-3);
+  border-top: 1px solid var(--gn-border);
+  padding: var(--gn-space-2) var(--gn-space-3);
 }
 .graph-note-untangle-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--size-4-2);
+  gap: var(--gn-space-2);
 }
 .graph-note-untangle button,
 .graph-note-untangle-offers button,
@@ -158,8 +227,8 @@
 .graph-note-untangle-offers {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--size-4-2);
-  margin-block: var(--size-4-2);
+  gap: var(--gn-space-2);
+  margin-block: var(--gn-space-2);
 }
 .graph-note-find input {
   width: 100%;
@@ -169,7 +238,7 @@
 .graph-note-filter ul {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--size-4-2);
+  gap: var(--gn-space-2);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -185,17 +254,17 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--size-4-2);
+  gap: var(--gn-space-2);
   margin: 0;
-  border-top: 1px solid var(--background-modifier-border);
-  padding: var(--size-4-2) var(--size-4-3);
+  border-top: 1px solid var(--gn-border);
+  padding: var(--gn-space-2) var(--gn-space-3);
 }
 .graph-note-view-menu button {
   min-width: 44px;
   min-height: 44px;
 }
 .graph-note-view-menu button[aria-checked='true'] {
-  font-weight: var(--font-semibold);
+  font-weight: var(--gn-font-weight-semibold);
 }
 .graph-note-svg.graph-note-labels-hidden g.edge text {
   fill-opacity: 0;
@@ -214,17 +283,17 @@
    removes dotted, each also marked in words and signed, and said to screen readers, so none is told by colour alone. */
 .graph-note-svg g.graph-note-proposed.is-add > :is(path, polygon),
 .graph-note-svg g.edge.graph-note-proposed.is-add > path {
-  stroke: var(--color-green);
+  stroke: var(--gn-hue-green);
   stroke-width: 3;
 }
 .graph-note-svg g.graph-note-proposed.is-change > :is(path, polygon),
 .graph-note-svg g.edge.graph-note-proposed.is-change > path {
-  stroke: var(--color-orange);
+  stroke: var(--gn-hue-orange);
   stroke-dasharray: 6 3;
 }
 .graph-note-svg g.graph-note-proposed.is-remove > :is(path, polygon),
 .graph-note-svg g.edge.graph-note-proposed.is-remove > path {
-  stroke: var(--color-red);
+  stroke: var(--gn-hue-red);
   stroke-dasharray: 2 3;
 }
 .graph-note-svg g.graph-note-proposed.is-remove > text:not(.graph-note-proposal-mark) {
@@ -232,13 +301,13 @@
 }
 .graph-note-svg .graph-note-proposal-mark {
   font-size: 9pt;
-  fill: var(--text-muted);
+  fill: var(--gn-text-muted);
 }
 /* The proposal's list: one change to a row, its sentence and its Accept and Reject; on a phone, a sheet at the bottom of
    the screen. Every control is at least 44 points. */
 .graph-note-proposal {
-  padding: var(--size-4-2) var(--size-4-3);
-  border-top: 1px solid var(--background-modifier-border);
+  padding: var(--gn-space-2) var(--gn-space-3);
+  border-top: 1px solid var(--gn-border);
 }
 .graph-note-proposal.is-sheet {
   position: sticky;
@@ -246,29 +315,29 @@
   z-index: 2;
   max-height: 60vh;
   overflow: auto;
-  background: var(--background-primary);
-  box-shadow: var(--shadow-s);
-  border-radius: var(--radius-l) var(--radius-l) 0 0;
-  padding-bottom: max(var(--size-4-2), env(safe-area-inset-bottom));
+  background: var(--gn-bg);
+  box-shadow: var(--gn-shadow-s);
+  border-radius: var(--gn-radius-l) var(--gn-radius-l) 0 0;
+  padding-bottom: max(var(--gn-space-2), env(safe-area-inset-bottom));
 }
 .graph-note-proposal-provenance {
-  margin: var(--size-4-1) 0;
-  padding-inline-start: var(--size-4-4);
-  color: var(--text-muted);
+  margin: var(--gn-space-1) 0;
+  padding-inline-start: var(--gn-space-4);
+  color: var(--gn-text-muted);
 }
 .graph-note-proposal-checked {
-  margin: var(--size-4-1) 0;
-  color: var(--text-muted);
+  margin: var(--gn-space-1) 0;
+  color: var(--gn-text-muted);
 }
 .graph-note-proposal-checked.is-failed {
-  color: color-mix(in srgb, var(--text-error) 60%, var(--text-normal));
+  color: color-mix(in srgb, var(--gn-text-error) 60%, var(--gn-text-normal));
 }
 .graph-note-proposal-bulk {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--size-4-2);
-  margin: var(--size-4-2) 0;
+  gap: var(--gn-space-2);
+  margin: var(--gn-space-2) 0;
 }
 .graph-note-proposal button {
   min-width: 44px;
@@ -284,43 +353,43 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--size-4-2);
-  padding: var(--size-4-2) 0 var(--size-4-2) var(--size-4-2);
-  border-bottom: 1px solid var(--background-modifier-border);
-  border-inline-start: 3px solid var(--text-muted);
+  gap: var(--gn-space-2);
+  padding: var(--gn-space-2) 0 var(--gn-space-2) var(--gn-space-2);
+  border-bottom: 1px solid var(--gn-border);
+  border-inline-start: 3px solid var(--gn-text-muted);
 }
 .graph-note-proposal-row.is-add {
-  border-inline-start-color: var(--color-green);
+  border-inline-start-color: var(--gn-hue-green);
 }
 .graph-note-proposal-row.is-change {
-  border-inline-start-color: var(--color-orange);
+  border-inline-start-color: var(--gn-hue-orange);
 }
 .graph-note-proposal-row.is-remove {
-  border-inline-start-color: var(--color-red);
+  border-inline-start-color: var(--gn-hue-red);
 }
 .graph-note-proposal-row.is-accepted,
 .graph-note-proposal-row.is-rejected {
-  color: var(--text-muted);
+  color: var(--gn-text-muted);
 }
 .graph-note-proposal-text {
   flex: 1 1 14em;
 }
 .graph-note-proposal-code {
   display: block;
-  margin-top: var(--size-4-1);
+  margin-top: var(--gn-space-1);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 .graph-note-proposal-blocked {
-  color: color-mix(in srgb, var(--text-error) 60%, var(--text-normal));
+  color: color-mix(in srgb, var(--gn-text-error) 60%, var(--gn-text-normal));
 }
 .graph-note-proposal-decision {
-  color: var(--text-muted);
-  font-size: var(--font-ui-small);
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-s);
 }
 .graph-note-proposal-actions {
   display: flex;
-  gap: var(--size-4-2);
+  gap: var(--gn-space-2);
 }
 /* The diagram type (spec §15): how the graph is drawn, and the types to choose from, each that does not fit with why;
    every control a 44-point target, and words beside each, never colour alone. */
@@ -329,8 +398,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--size-4-2);
-  padding: var(--size-4-1) var(--size-4-2);
+  gap: var(--gn-space-2);
+  padding: var(--gn-space-1) var(--gn-space-2);
 }
 .graph-note-type-strip button,
 .graph-note-way-in button,
@@ -341,32 +410,32 @@
 }
 .graph-note-type-drawn,
 .graph-note-type-why {
-  color: var(--text-muted);
-  font-size: var(--font-ui-small);
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-s);
 }
 .graph-note-type-list {
   display: flex;
   flex-direction: column;
-  gap: var(--size-4-1);
+  gap: var(--gn-space-1);
   margin: 0;
-  padding: var(--size-4-1) var(--size-4-2);
+  padding: var(--gn-space-1) var(--gn-space-2);
   list-style: none;
 }
 .graph-note-type-list li {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--size-4-2);
+  gap: var(--gn-space-2);
 }
 .graph-note-type-list button[aria-pressed='true'] {
-  font-weight: var(--font-bold);
-  outline: 2px solid var(--interactive-accent);
+  font-weight: var(--gn-font-weight-bold);
+  outline: 2px solid var(--gn-accent);
 }
 .graph-note-type-stopped {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--size-4-2);
+  gap: var(--gn-space-2);
 }
 /* A graph drawn as a table: the plugin's own, moved and scaled as a whole by the card's zoom, as a drawing is. */
 .graph-note-table {
@@ -380,45 +449,45 @@
 }
 .graph-note-table table {
   border-collapse: collapse;
-  margin-bottom: var(--size-4-3);
-  font-size: var(--font-ui-small);
-  color: var(--text-normal);
+  margin-bottom: var(--gn-space-3);
+  font-size: var(--gn-font-size-s);
+  color: var(--gn-text-normal);
 }
 .graph-note-table th,
 .graph-note-table td {
-  padding: var(--size-4-1) var(--size-4-2);
-  border-bottom: 1px solid var(--background-modifier-border);
+  padding: var(--gn-space-1) var(--gn-space-2);
+  border-bottom: 1px solid var(--gn-border);
   text-align: start;
   white-space: nowrap;
 }
 .graph-note-table th {
-  color: var(--text-muted);
+  color: var(--gn-text-muted);
 }
 .graph-note-table tr[data-key],
 .graph-note-table tr[data-link] {
   cursor: pointer;
 }
 .graph-note-table tr.is-selected {
-  background: var(--background-modifier-hover);
-  outline: 2px solid var(--interactive-accent);
+  background: var(--gn-bg-hover);
+  outline: 2px solid var(--gn-accent);
 }
 .graph-note-table tr:focus-visible {
-  outline: 2px solid var(--interactive-accent);
+  outline: 2px solid var(--gn-accent);
 }
 /* The Export form (spec §16): each choice with its words above it, every control a 44-point target. */
 .graph-note-export {
   display: flex;
   flex-wrap: wrap;
   align-items: end;
-  gap: var(--size-4-2);
-  padding: var(--size-4-2);
-  border-top: 1px solid var(--background-modifier-border);
+  gap: var(--gn-space-2);
+  padding: var(--gn-space-2);
+  border-top: 1px solid var(--gn-border);
 }
 .graph-note-export label {
   display: flex;
   flex-direction: column;
-  color: var(--text-muted);
-  font-size: var(--font-ui-small);
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-s);
 }
 .graph-note-export :is(button, select) {
   min-width: 44px;
@@ -427,8 +496,8 @@
 /* A style block (spec §2): folded away until opened, its line in the muted colour, a 44-point target to open it. */
 details.graph-note-style > summary {
   min-height: 44px;
-  padding-block: var(--size-4-3);
-  color: var(--text-muted);
+  padding-block: var(--gn-space-3);
+  color: var(--gn-text-muted);
   cursor: pointer;
 }
 /* Walked paths (spec §7): the strip below the bar; the step playing outlined heavier; each recorded step numbered. */
@@ -436,9 +505,9 @@ details.graph-note-style > summary {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--size-4-2);
-  padding: var(--size-4-1) var(--size-4-2);
-  border-bottom: 1px solid var(--background-modifier-border);
+  gap: var(--gn-space-2);
+  padding: var(--gn-space-1) var(--gn-space-2);
+  border-bottom: 1px solid var(--gn-border);
 }
 .graph-note-walk button {
   min-width: 44px;
@@ -449,8 +518,8 @@ details.graph-note-style > summary {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--size-4-2);
-  padding: var(--size-4-1) var(--size-4-2);
+  gap: var(--gn-space-2);
+  padding: var(--gn-space-1) var(--gn-space-2);
 }
 .graph-note-view-maker :is(button, select, input) {
   min-width: 44px;
@@ -462,14 +531,14 @@ details.graph-note-style > summary {
   display: flex;
   flex-wrap: wrap;
   align-items: end;
-  gap: var(--size-4-2);
-  padding: var(--size-4-1) var(--size-4-2);
+  gap: var(--gn-space-2);
+  padding: var(--gn-space-1) var(--gn-space-2);
 }
 .graph-note-add-thing label {
   display: flex;
   flex-direction: column;
-  color: var(--text-muted);
-  font-size: var(--font-ui-small);
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-s);
 }
 .graph-note-add-thing :is(button, input) {
   min-width: 44px;
@@ -480,8 +549,8 @@ details.graph-note-style > summary {
 }
 .graph-note-svg .graph-note-step-number {
   font-size: 10pt;
-  font-weight: var(--font-bold);
-  fill: var(--text-normal);
+  font-weight: var(--gn-font-weight-bold);
+  fill: var(--gn-text-normal);
 }
 /* Links that move (spec §7): dashes running along a link's line, or a dot travelling a copy of it, as the style graph
    says; a line laid out from its far end moves backwards, so it reads forwards. A path playing: the step now on pulses,
@@ -498,7 +567,7 @@ details.graph-note-style > summary {
 .graph-note-svg path.graph-note-flow-runner,
 .graph-note-svg path.graph-note-path-runner {
   fill: none;
-  stroke: var(--text-normal);
+  stroke: var(--gn-text-normal);
   stroke-width: 5;
   stroke-linecap: round;
   stroke-dasharray: 0 200;
@@ -511,7 +580,7 @@ details.graph-note-style > summary {
   animation-direction: reverse;
 }
 .graph-note-svg path.graph-note-path-runner {
-  stroke: var(--interactive-accent);
+  stroke: var(--gn-accent);
   animation: graph-note-flow-dot var(--graph-note-run, 1s) ease-in-out 1 forwards;
 }
 .graph-note-svg path.graph-note-path-runner-back {
@@ -559,7 +628,7 @@ details.graph-note-style > summary {
 .graph-note-images {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--size-4-2) var(--size-4-4);
+  gap: var(--gn-space-2) var(--gn-space-4);
 }
 .graph-note-image {
   margin: 0;
@@ -573,9 +642,9 @@ details.graph-note-style > summary {
 }
 .graph-note-image figcaption,
 .graph-note-image .graph-note-image-said {
-  margin: var(--size-4-1) 0 0;
-  color: var(--text-muted);
-  font-size: var(--font-ui-smaller);
+  margin: var(--gn-space-1) 0 0;
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-xs);
 }
 .graph-note-image .graph-note-image-said:empty {
   display: none;
@@ -595,16 +664,16 @@ details.graph-note-style > summary {
   pointer-events: all;
 }
 .graph-note-svg .graph-note-image-control rect:not(.graph-note-image-hit) {
-  fill: var(--background-primary);
-  stroke: var(--text-normal);
+  fill: var(--gn-bg);
+  stroke: var(--gn-text-normal);
   stroke-width: 1;
 }
 .graph-note-svg .graph-note-image-control text {
-  fill: var(--text-normal);
+  fill: var(--gn-text-normal);
   font-size: 8px;
 }
 .graph-note-svg .graph-note-image-control:focus-visible rect:not(.graph-note-image-hit) {
-  stroke: var(--interactive-accent);
+  stroke: var(--gn-accent);
   stroke-width: 2;
 }
 .graph-note-svg .graph-note-image-control[aria-disabled='true'] {
@@ -612,30 +681,30 @@ details.graph-note-style > summary {
 }
 .graph-note-svg rect.graph-note-picture-missing {
   fill: none;
-  stroke: var(--text-muted);
+  stroke: var(--gn-text-muted);
   stroke-dasharray: 3 3;
 }
 /* What the moving links mean, in words beside their icons (spec §7, motion_not_alone). */
 .graph-note-flow-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--size-4-1) var(--size-4-4);
+  gap: var(--gn-space-1) var(--gn-space-4);
   margin: 0;
-  padding: var(--size-4-1) var(--size-4-2);
+  padding: var(--gn-space-1) var(--gn-space-2);
   list-style: none;
-  color: var(--text-muted);
-  font-size: var(--font-ui-small);
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-s);
 }
 .graph-note-flow-legend .graph-note-flow-icon {
-  color: var(--text-normal);
-  font-weight: var(--font-bold);
+  color: var(--gn-text-normal);
+  font-weight: var(--gn-font-weight-bold);
 }
 .graph-note-walk-pace {
   display: flex;
   align-items: center;
-  gap: var(--size-4-1);
-  color: var(--text-muted);
-  font-size: var(--font-ui-small);
+  gap: var(--gn-space-1);
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-s);
 }
 .graph-note-walk select {
   min-height: 44px;
@@ -644,13 +713,13 @@ details.graph-note-style > summary {
   display: flex;
   flex-wrap: wrap;
   align-items: end;
-  gap: var(--size-4-2);
+  gap: var(--gn-space-2);
 }
 .graph-note-park label {
   display: flex;
   flex-direction: column;
-  color: var(--text-muted);
-  font-size: var(--font-ui-small);
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-s);
 }
 .graph-note-park :is(button, input) {
   min-width: 44px;
@@ -665,8 +734,8 @@ details.graph-note-style > summary {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--size-4-1);
-  margin-bottom: var(--size-4-1);
+  gap: var(--gn-space-1);
+  margin-bottom: var(--gn-space-1);
 }
 .graph-note-bar button {
   min-width: 44px;
@@ -674,7 +743,7 @@ details.graph-note-style > summary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--size-4-1);
+  gap: var(--gn-space-1);
 }
 .graph-note-badge {
   margin-inline-end: auto;
@@ -682,17 +751,17 @@ details.graph-note-style > summary {
 /* In Live Preview, Obsidian puts its own edit-block button at a code block's top right, shown on hover; leave it room, as
    Obsidian does for its PDF toolbar, so it never covers the bar's last button. */
 .cm-embed-block .graph-note-bar {
-  padding-inline-end: var(--size-4-9);
+  padding-inline-end: var(--gn-space-9);
 }
 /* The same button covers the copy button of a block shown as code, which Obsidian also puts at the block's top right: in
    Live Preview the copy button steps in from the right edge by that room and a little more, so the two icons sit side by
    side and neither covers the other (device check V-03, 11 Oct 2026). Only sizes, so the same in light and dark and at
    any width; reading view has no edit-block button, so it keeps Obsidian's place. */
 .cm-embed-block pre.graph-note-code .copy-code-button {
-  inset-inline-end: calc(var(--size-4-9) + var(--size-2-2));
+  inset-inline-end: calc(var(--gn-space-9) + var(--gn-space-half-2));
 }
 .graph-note-badge-text {
-  font-size: var(--font-ui-small);
+  font-size: var(--gn-font-size-s);
 }
 
 /* The drawing: resized to zoom, never stretched, so its text stays sharp; moved, not scrolled, to pan. */
@@ -701,10 +770,10 @@ details.graph-note-style > summary {
   overflow: hidden;
   height: var(--graph-note-height, auto);
   touch-action: var(--graph-note-touch, pan-x pan-y);
-  border-radius: var(--radius-s);
+  border-radius: var(--gn-radius-s);
 }
 .graph-note-viewport:focus-visible {
-  outline: 2px solid var(--interactive-accent);
+  outline: 2px solid var(--gn-accent);
   outline-offset: 2px;
 }
 .graph-note-viewport.is-zoomed {
@@ -737,12 +806,12 @@ details.graph-note-style > summary {
 .graph-note-fullscreen {
   position: fixed;
   inset: 0;
-  z-index: var(--layer-modal);
-  background: var(--background-primary);
+  z-index: var(--gn-layer-modal);
+  background: var(--gn-bg);
   display: flex;
   flex-direction: column;
-  padding: max(var(--size-4-2), env(safe-area-inset-top)) max(var(--size-4-2), env(safe-area-inset-right))
-    max(var(--size-4-2), env(safe-area-inset-bottom)) max(var(--size-4-2), env(safe-area-inset-left));
+  padding: max(var(--gn-space-2), env(safe-area-inset-top)) max(var(--gn-space-2), env(safe-area-inset-right))
+    max(var(--gn-space-2), env(safe-area-inset-bottom)) max(var(--gn-space-2), env(safe-area-inset-left));
 }
 .graph-note-fullscreen > .graph-note {
   flex: 1;
@@ -764,19 +833,19 @@ details.graph-note-style > summary {
 }
 .graph-note-problems ul,
 .graph-note-details ul {
-  margin: var(--size-4-1) 0;
-  padding-inline-start: var(--size-4-6);
+  margin: var(--gn-space-1) 0;
+  padding-inline-start: var(--gn-space-6);
 }
 .graph-note-details {
-  margin-top: var(--size-4-2);
-  padding: var(--size-4-2) var(--size-4-3);
-  border: 1px solid var(--background-modifier-border);
-  border-radius: var(--radius-m);
+  margin-top: var(--gn-space-2);
+  padding: var(--gn-space-2) var(--gn-space-3);
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-m);
 }
 .graph-note-details-head {
   display: flex;
   align-items: center;
-  gap: var(--size-4-2);
+  gap: var(--gn-space-2);
 }
 .graph-note-details-head button {
   margin-inline-start: auto;
@@ -784,37 +853,37 @@ details.graph-note-style > summary {
   min-height: 44px;
 }
 .graph-note-details h4 {
-  margin: var(--size-4-2) 0 0;
-  font-size: var(--font-ui-small);
-  color: var(--text-muted);
+  margin: var(--gn-space-2) 0 0;
+  font-size: var(--gn-font-size-s);
+  color: var(--gn-text-muted);
 }
 .graph-note-kind {
-  font-size: var(--font-ui-smaller);
+  font-size: var(--gn-font-size-xs);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--text-muted);
+  color: var(--gn-text-muted);
 }
 .graph-note-banner {
-  padding: var(--size-4-2) var(--size-4-3);
-  border-inline-start: 3px solid var(--text-error);
-  background: var(--background-secondary);
-  margin-bottom: var(--size-4-2);
+  padding: var(--gn-space-2) var(--gn-space-3);
+  border-inline-start: 3px solid var(--gn-text-error);
+  background: var(--gn-bg-alt);
+  margin-bottom: var(--gn-space-2);
 }
 /* A graph over a size or time limit, shown as text: the banner's icon beside its words (spec §9, layout_contained). */
 .graph-note-refusal {
   display: flex;
-  gap: var(--size-4-2);
+  gap: var(--gn-space-2);
   align-items: flex-start;
 }
 .graph-note-refusal-icon {
   flex: none;
   display: flex;
-  color: color-mix(in srgb, var(--text-error) 60%, var(--text-normal));
+  color: color-mix(in srgb, var(--gn-text-error) 60%, var(--gn-text-normal));
 }
 .graph-note-empty {
-  padding: var(--size-4-3);
-  border: 1px dashed var(--background-modifier-border);
-  border-radius: var(--radius-m);
+  padding: var(--gn-space-3);
+  border: 1px dashed var(--gn-border);
+  border-radius: var(--gn-radius-m);
 }
 .graph-note-empty button {
   min-height: 44px;
@@ -824,10 +893,10 @@ details.graph-note-style > summary {
 .graph-note-source {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--size-4-2);
+  gap: var(--gn-space-2);
   align-items: center;
-  margin-bottom: var(--size-4-2);
-  color: var(--text-muted);
+  margin-bottom: var(--gn-space-2);
+  color: var(--gn-text-muted);
 }
 .graph-note-source button,
 .graph-note-step-points button,
@@ -838,21 +907,21 @@ details.graph-note-style > summary {
 .graph-note-card-actions {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: var(--size-4-2);
+  margin-bottom: var(--gn-space-2);
 }
 
 /* A graph step's card (editor spec §20): its points, each with its choice, and Run. */
 .graph-note-step-points {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--size-4-2);
+  gap: var(--gn-space-2);
   align-items: center;
-  margin-bottom: var(--size-4-2);
+  margin-bottom: var(--gn-space-2);
 }
 .graph-note-step-point {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--size-4-2);
+  gap: var(--gn-space-2);
   align-items: center;
 }
 
@@ -878,12 +947,12 @@ details.graph-note-style > summary {
 /* The inspector: Obsidian's own Properties panel (its metadata classes carry the theme's spacing, type and colours), set
    inside the details; on a phone, a sheet at the bottom of the screen. */
 .graph-note-inspector.metadata-container {
-  margin-top: var(--size-4-2);
+  margin-top: var(--gn-space-2);
   margin-block-end: 0;
   transform: none;
 }
 .graph-note-alert {
-  color: color-mix(in srgb, var(--text-error) 60%, var(--text-normal));
+  color: color-mix(in srgb, var(--gn-text-error) 60%, var(--gn-text-normal));
 }
 .graph-note-alert::before {
   content: '✖ ';
@@ -894,10 +963,10 @@ details.graph-note-style > summary {
   z-index: 2;
   max-height: 60vh;
   overflow: auto;
-  background: var(--background-primary);
-  box-shadow: var(--shadow-s);
-  border-radius: var(--radius-l) var(--radius-l) 0 0;
-  padding-bottom: max(var(--size-4-2), env(safe-area-inset-bottom));
+  background: var(--gn-bg);
+  box-shadow: var(--gn-shadow-s);
+  border-radius: var(--gn-radius-l) var(--gn-radius-l) 0 0;
+  padding-bottom: max(var(--gn-space-2), env(safe-area-inset-bottom));
 }
 
 /* The details in view mode (spec §25): a sheet pinned to the foot of the part of the screen the note is seen in, over its
@@ -912,17 +981,17 @@ details.graph-note-style > summary {
   /* its border and padding inside that width, so it is laid out exactly where it was put, as the plugin checks */
   box-sizing: border-box;
   bottom: var(--graph-note-sheet-bottom, 0);
-  z-index: var(--layer-popover);
+  z-index: var(--gn-layer-popover);
   display: flex;
   flex-direction: column;
   max-height: min(45vh, var(--graph-note-sheet-max, 45vh));
   margin: 0;
-  background: var(--background-primary);
-  border: 1px solid var(--background-modifier-border-focus);
+  background: var(--gn-bg);
+  border: 1px solid var(--gn-border-focus);
   border-bottom: 0;
-  border-radius: var(--radius-l) var(--radius-l) 0 0;
-  box-shadow: var(--shadow-l);
-  padding: 0 var(--size-4-3) max(var(--size-4-2), env(safe-area-inset-bottom));
+  border-radius: var(--gn-radius-l) var(--gn-radius-l) 0 0;
+  box-shadow: var(--gn-shadow-l);
+  padding: 0 var(--gn-space-3) max(var(--gn-space-2), env(safe-area-inset-bottom));
 }
 .graph-note-sheet > .graph-note-details-head {
   flex: none;
@@ -944,32 +1013,32 @@ details.graph-note-style > summary {
   padding-inline-start: 0;
 }
 .graph-note-link-group {
-  margin: var(--size-2-1) 0;
+  margin: var(--gn-space-half-1) 0;
 }
 .graph-note-link-group button.graph-note-link-thing {
   display: inline;
   height: auto;
-  padding: 0 var(--size-2-1);
+  padding: 0 var(--gn-space-half-1);
   background: none;
   box-shadow: none;
   /* the link colour mixed with the text colour, underlined: the link colour alone is under 4.5:1 on the card in Obsidian's
      default themes (SC 1.4.3); 70% of it keeps the hue and reaches 5:1 in both */
-  color: color-mix(in srgb, var(--link-color) 70%, var(--text-normal));
+  color: color-mix(in srgb, var(--gn-link) 70%, var(--gn-text-normal));
   text-decoration: underline;
   font-size: inherit;
   cursor: pointer;
 }
 .graph-note-link-group button.graph-note-link-choice {
-  --icon-size: var(--icon-xs);
+  --icon-size: var(--gn-icon-xs);
   display: inline-flex;
   vertical-align: middle;
   height: auto;
-  padding: var(--size-2-1);
+  padding: var(--gn-space-half-1);
 }
 .graph-note-trail {
   display: flex;
-  gap: var(--size-4-2);
-  margin-top: var(--size-4-1);
+  gap: var(--gn-space-2);
+  margin-top: var(--gn-space-1);
 }
 .graph-note-trail button {
   min-width: 44px;
@@ -993,9 +1062,9 @@ details.graph-note-style > summary {
   min-width: 44px;
   min-height: 44px;
   border-radius: 50%;
-  background: var(--interactive-accent);
-  color: var(--text-on-accent);
-  box-shadow: var(--shadow-s);
+  background: var(--gn-accent);
+  color: var(--gn-text-on-accent);
+  box-shadow: var(--gn-shadow-s);
 }
 
 /* The editor in place sits inside the drawing's card, under the drawing, as part of it. */
@@ -1003,8 +1072,8 @@ details.graph-note-style > summary {
   display: none;
 }
 .graph-note-view > .graph-note-edit-slot {
-  border-top: 1px solid var(--background-modifier-border);
-  padding: var(--size-4-2) var(--size-4-3);
+  border-top: 1px solid var(--gn-border);
+  padding: var(--gn-space-2) var(--gn-space-3);
 }
 /* In the card, the text is as tall as its text and one more line to type on: no height of its own, no empty area. */
 .graph-note-pane.graph-note-inline {
@@ -1019,7 +1088,7 @@ details.graph-note-style > summary {
 .graph-note-pane {
   display: flex;
   flex-direction: column;
-  gap: var(--size-4-2);
+  gap: var(--gn-space-2);
   height: 100%;
 }
 .graph-note-pane button,
@@ -1031,29 +1100,29 @@ details.graph-note-style > summary {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--size-4-2);
+  gap: var(--gn-space-2);
 }
 .graph-note-pane-tools {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--size-4-1);
+  gap: var(--gn-space-1);
   margin-inline-start: auto;
 }
 .graph-note-pane-tools button {
   display: inline-flex;
   align-items: center;
-  gap: var(--size-4-1);
+  gap: var(--gn-space-1);
 }
 .graph-note-pane-tools button[aria-disabled='true'] {
   cursor: not-allowed;
 }
 .graph-note-tabs {
   display: flex;
-  gap: var(--size-4-1);
-  border-bottom: 1px solid var(--background-modifier-border);
+  gap: var(--gn-space-1);
+  border-bottom: 1px solid var(--gn-border);
 }
 .graph-note-tabs button[aria-selected='true'] {
-  border-bottom: 2px solid var(--interactive-accent);
+  border-bottom: 2px solid var(--gn-accent);
   font-weight: 600;
 }
 .graph-note-pane-drawing {
@@ -1063,13 +1132,13 @@ details.graph-note-style > summary {
   height: 40vh;
 }
 .graph-note-draft {
-  padding: var(--size-4-2) var(--size-4-3);
-  border-inline-start: 3px solid var(--text-warning);
-  background: var(--background-secondary);
+  padding: var(--gn-space-2) var(--gn-space-3);
+  border-inline-start: 3px solid var(--gn-text-warning);
+  background: var(--gn-bg-alt);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--size-4-2);
+  gap: var(--gn-space-2);
 }
 .graph-note-draft p {
   margin: 0;
@@ -1081,16 +1150,16 @@ details.graph-note-style > summary {
 .graph-note-editor {
   position: relative;
   min-height: 12em;
-  border: 1px solid var(--background-modifier-border);
-  border-radius: var(--radius-s);
-  background: var(--code-background, var(--background-secondary));
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-s);
+  background: var(--gn-code-background, var(--gn-bg-alt));
 }
 .graph-note-overlay,
 .graph-note-text {
   margin: 0;
-  padding: var(--size-4-2) var(--size-4-3);
-  font-family: var(--font-monospace);
-  font-size: var(--code-size, 0.9em);
+  padding: var(--gn-space-2) var(--gn-space-3);
+  font-family: var(--gn-font-mono);
+  font-size: var(--gn-code-size, 0.9em);
   line-height: 1.5;
   white-space: pre;
   overflow: auto;
@@ -1101,7 +1170,7 @@ details.graph-note-style > summary {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  color: var(--code-normal, var(--text-normal));
+  color: var(--gn-code-normal, var(--gn-text-normal));
   background: transparent;
   border: 0;
 }
@@ -1112,7 +1181,7 @@ details.graph-note-style > summary {
   min-height: 8em;
   resize: none;
   overflow-y: hidden;
-  caret-color: var(--text-normal);
+  caret-color: var(--gn-text-normal);
 }
 /* Obsidian styles every textarea, and at hover and focus its textarea:hover (0,1,1) would paint the field grey over the
    picture. So the field's own look carries more weight than any of those, in every state, and matches the picture exactly. */
@@ -1127,17 +1196,17 @@ details.graph-note-style > summary {
   border-radius: 0;
   box-shadow: none;
   outline: none;
-  padding: var(--size-4-2) var(--size-4-3);
-  font-family: var(--font-monospace);
-  font-size: var(--code-size, 0.9em);
+  padding: var(--gn-space-2) var(--gn-space-3);
+  font-family: var(--gn-font-mono);
+  font-size: var(--gn-code-size, 0.9em);
   line-height: 1.5;
 }
 .graph-note-text::selection {
-  background: var(--text-selection);
+  background: var(--gn-text-selection);
   color: transparent;
 }
 .graph-note-editor:focus-within {
-  outline: 2px solid var(--interactive-accent);
+  outline: 2px solid var(--gn-accent);
   outline-offset: 1px;
 }
 .graph-note-problem {
@@ -1146,78 +1215,78 @@ details.graph-note-style > summary {
   text-underline-offset: 3px;
 }
 .graph-note-problem.is-error {
-  text-decoration-color: var(--text-error);
+  text-decoration-color: var(--gn-text-error);
 }
 .graph-note-problem.is-warning {
-  text-decoration-color: var(--text-warning);
+  text-decoration-color: var(--gn-text-warning);
 }
 .graph-note-problem.is-hint {
   text-decoration: underline dotted;
-  text-decoration-color: var(--text-faint);
+  text-decoration-color: var(--gn-text-faint);
 }
 .graph-note-line-sign {
-  color: color-mix(in srgb, var(--text-warning) 50%, var(--text-normal));
+  color: color-mix(in srgb, var(--gn-text-warning) 50%, var(--gn-text-normal));
 }
 .graph-note-readback {
-  color: var(--text-muted);
-  font-family: var(--font-interface);
+  color: var(--gn-text-muted);
+  font-family: var(--gn-font-ui);
   font-style: italic;
 }
 .graph-note-fixbar {
   display: flex;
   flex-direction: column;
-  gap: var(--size-4-1);
-  padding: var(--size-4-2);
-  border-inline-start: 3px solid var(--text-warning);
-  background: var(--background-secondary);
+  gap: var(--gn-space-1);
+  padding: var(--gn-space-2);
+  border-inline-start: 3px solid var(--gn-text-warning);
+  background: var(--gn-bg-alt);
 }
 .graph-note-fixbar > div {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--size-4-2);
+  gap: var(--gn-space-2);
 }
 .graph-note-fixbar .is-error {
-  border-color: var(--text-error);
+  border-color: var(--gn-text-error);
 }
 .graph-note-suggestions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--size-4-1);
+  gap: var(--gn-space-1);
 }
 .graph-note-suggestions button {
-  font-family: var(--font-monospace);
+  font-family: var(--gn-font-mono);
 }
 .graph-note-pane-problems ul {
   margin: 0;
-  padding-inline-start: var(--size-4-6);
+  padding-inline-start: var(--gn-space-6);
 }
 .graph-note-pane-problems li.is-error::marker {
   content: '✖ ';
-  color: color-mix(in srgb, var(--text-error) 60%, var(--text-normal));
+  color: color-mix(in srgb, var(--gn-text-error) 60%, var(--gn-text-normal));
 }
 .graph-note-pane-problems li.is-warning::marker {
   content: '⚠ ';
-  color: color-mix(in srgb, var(--text-warning) 50%, var(--text-normal));
+  color: color-mix(in srgb, var(--gn-text-warning) 50%, var(--gn-text-normal));
 }
 .graph-note-pane-problems li.is-hint::marker {
   content: 'ℹ ';
-  color: var(--text-muted);
+  color: var(--gn-text-muted);
 }
 .graph-note-fix,
 .graph-note-quiet {
-  color: var(--text-muted);
+  color: var(--gn-text-muted);
 }
 .graph-note-sheet {
   position: sticky;
   bottom: 0;
   max-height: 40vh;
   overflow: auto;
-  padding: var(--size-4-2) var(--size-4-3) max(var(--size-4-2), env(safe-area-inset-bottom));
-  background: var(--background-primary);
-  border-top: 1px solid var(--background-modifier-border);
-  border-radius: var(--radius-l) var(--radius-l) 0 0;
-  box-shadow: var(--shadow-s);
+  padding: var(--gn-space-2) var(--gn-space-3) max(var(--gn-space-2), env(safe-area-inset-bottom));
+  background: var(--gn-bg);
+  border-top: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-l) var(--gn-radius-l) 0 0;
+  box-shadow: var(--gn-shadow-s);
 }
 
 /* GQL text, coloured by token class as the gql-highlight plugin colours it, from the theme's own code colours. WCAG 2.2 AA
@@ -1226,50 +1295,50 @@ details.graph-note-style > summary {
    page and on the code background in both default themes, and the comment and punctuation take the muted text colour. A
    mix of the theme's own variables follows any theme; nothing here is a fixed colour. */
 .gql-kw {
-  color: color-mix(in srgb, var(--code-keyword) 60%, var(--text-normal));
+  color: color-mix(in srgb, var(--gn-code-keyword) 60%, var(--gn-text-normal));
 }
 .gql-type {
-  color: color-mix(in srgb, var(--code-keyword) 60%, var(--text-normal));
+  color: color-mix(in srgb, var(--gn-code-keyword) 60%, var(--gn-text-normal));
   font-style: italic;
 }
 .gql-label {
-  color: color-mix(in srgb, var(--code-function) 40%, var(--text-normal));
+  color: color-mix(in srgb, var(--gn-code-function) 40%, var(--gn-text-normal));
 }
 .gql-edge {
-  color: color-mix(in srgb, var(--code-important) 50%, var(--text-normal));
+  color: color-mix(in srgb, var(--gn-code-important) 50%, var(--gn-text-normal));
   font-weight: 600;
 }
 .gql-prop {
-  color: color-mix(in srgb, var(--code-property) 50%, var(--text-normal));
+  color: color-mix(in srgb, var(--gn-code-property) 50%, var(--gn-text-normal));
 }
 .gql-string {
-  color: color-mix(in srgb, var(--code-string) 50%, var(--text-normal));
+  color: color-mix(in srgb, var(--gn-code-string) 50%, var(--gn-text-normal));
 }
 .gql-value {
-  color: color-mix(in srgb, var(--code-value) 60%, var(--text-normal));
+  color: color-mix(in srgb, var(--gn-code-value) 60%, var(--gn-text-normal));
 }
 .gql-comment {
-  color: var(--text-muted);
+  color: var(--gn-text-muted);
   font-style: italic;
 }
 .gql-fn {
-  color: color-mix(in srgb, var(--code-tag) 60%, var(--text-normal));
+  color: color-mix(in srgb, var(--gn-code-tag) 60%, var(--gn-text-normal));
 }
 .gql-param {
-  color: color-mix(in srgb, var(--code-important) 50%, var(--text-normal));
+  color: color-mix(in srgb, var(--gn-code-important) 50%, var(--gn-text-normal));
 }
 .gql-var {
-  color: var(--code-normal, inherit);
+  color: var(--gn-code-normal, inherit);
 }
 .gql-arrow {
-  color: color-mix(in srgb, var(--code-operator) 60%, var(--text-normal));
+  color: color-mix(in srgb, var(--gn-code-operator) 60%, var(--gn-text-normal));
   font-weight: 600;
 }
 .gql-op {
-  color: color-mix(in srgb, var(--code-operator) 60%, var(--text-normal));
+  color: color-mix(in srgb, var(--gn-code-operator) 60%, var(--gn-text-normal));
 }
 .gql-punct {
-  color: var(--text-muted);
+  color: var(--gn-text-muted);
 }
 
 /* The editing view's own card (spec §4): its children's margins stay inside it, so the height CodeMirror is told is the
@@ -1284,7 +1353,7 @@ details.graph-note-style > summary {
   display: inline-block;
   width: 0;
   white-space: pre;
-  color: var(--text-muted);
+  color: var(--gn-text-muted);
   font-style: normal;
 }
 /* The send dialog (§19): what will be sent, exactly, wrapped so a phone shows all of it without scrolling sideways, and
@@ -1294,53 +1363,53 @@ details.graph-note-style > summary {
   overflow-wrap: anywhere;
   max-height: 40vh;
   overflow-y: auto;
-  font-size: var(--font-smaller);
+  font-size: var(--gn-font-size-text-s);
 }
 .graph-note-ai-refused {
-  color: color-mix(in srgb, var(--text-error) 60%, var(--text-normal));
+  color: color-mix(in srgb, var(--gn-text-error) 60%, var(--gn-text-normal));
 }
 
 /* Links (§18): a link in the details, on the drawing and in the text pane is drawn as Obsidian draws a link, in its link
    colour and underlined; one that names nothing as Obsidian draws an unresolved link, dashed; one that is never opened
    as plain, muted text. A thing's attachments are counted by a paperclip at its box's top left. */
 .graph-note-link {
-  color: var(--link-color);
+  color: var(--gn-link);
   text-decoration: underline;
-  cursor: var(--cursor-link, pointer);
+  cursor: var(--gn-cursor-link, pointer);
 }
 .graph-note-link.is-unresolved {
-  color: var(--link-unresolved-color);
+  color: var(--gn-link-unresolved);
   text-decoration-style: dashed;
 }
 .graph-note-svg text.graph-note-link {
-  fill: var(--link-color);
+  fill: var(--gn-link);
   text-decoration: underline;
 }
 .graph-note-svg text.graph-note-link.is-unresolved {
-  fill: var(--link-unresolved-color);
+  fill: var(--gn-link-unresolved);
   text-decoration-style: dashed;
 }
 .graph-note-svg text.graph-note-attachments {
-  fill: var(--text-muted);
-  font-size: var(--font-ui-smaller);
+  fill: var(--gn-text-muted);
+  font-size: var(--gn-font-size-xs);
 }
 .graph-note-link-refused {
-  color: var(--text-muted);
+  color: var(--gn-text-muted);
 }
 .graph-note-text-link {
   text-decoration: underline;
 }
 /* Where a link that leaves Obsidian goes, first and large in the dialog that asks before it opens. */
 .graph-note-leave-host {
-  font-size: var(--font-ui-large);
-  font-weight: var(--font-bold);
+  font-size: var(--gn-font-size-l);
+  font-weight: var(--gn-font-weight-bold);
 }
 .graph-note-link-fixes,
 .graph-note-leave-row {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--size-4-2);
-  margin-top: var(--size-4-1);
+  gap: var(--gn-space-2);
+  margin-top: var(--gn-space-1);
 }
 /* A property's value, rendered by Obsidian, follows its name on the line, as the plain value did. */
 .graph-note-rich-properties .graph-note-rich-value,
@@ -1349,16 +1418,16 @@ details.graph-note-style > summary {
   margin: 0;
 }
 .graph-note-note-body {
-  border-inline-start: 2px solid var(--background-modifier-border);
-  padding-inline-start: var(--size-4-2);
+  border-inline-start: 2px solid var(--gn-border);
+  padding-inline-start: var(--gn-space-2);
 }
 /* A note in a thing's or link's details, rendered by Obsidian, and its controls while the block is edited (§24). */
 .graph-note-thing-note {
-  border-inline-start: 2px solid var(--interactive-accent);
-  padding-inline-start: var(--size-4-2);
+  border-inline-start: 2px solid var(--gn-accent);
+  padding-inline-start: var(--gn-space-2);
 }
 .graph-note-note-controls {
-  margin-top: var(--size-4-2);
+  margin-top: var(--gn-space-2);
 }
 .graph-note-note-field {
   width: 100%;
@@ -1366,44 +1435,44 @@ details.graph-note-style > summary {
 .graph-note-note-buttons {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--size-4-2);
-  margin-top: var(--size-4-1);
+  gap: var(--gn-space-2);
+  margin-top: var(--gn-space-1);
 }
 .graph-note-note-said:not(:empty) {
-  color: color-mix(in srgb, var(--text-error) 60%, var(--text-normal));
-  margin-bottom: var(--size-4-1);
+  color: color-mix(in srgb, var(--gn-text-error) 60%, var(--gn-text-normal));
+  margin-bottom: var(--gn-space-1);
 }
 /* A note drawn as a callout over the finished drawing, joined to its thing by a dashed line (§24, note_callouts). */
 .graph-note-callouts {
   pointer-events: none;
 }
 .graph-note-callout-line {
-  stroke: var(--text-muted);
+  stroke: var(--gn-text-muted);
   stroke-width: 1;
   stroke-dasharray: 4 3;
 }
 .graph-note-callout-box {
-  fill: var(--background-secondary);
-  stroke: var(--background-modifier-border-hover);
+  fill: var(--gn-bg-alt);
+  stroke: var(--gn-border-hover);
   stroke-width: 1;
 }
 .graph-note-callout-text {
-  fill: var(--text-normal);
+  fill: var(--gn-text-normal);
 }
 
 /* The mini-map (§24, mini_map): a small copy of the whole drawing in a corner of its view, the part in view outlined; tapped
    or dragged, it moves the view, so a finger on it never scrolls the note. Colours from the theme. */
 .graph-note-mini-map {
   position: absolute;
-  inset-inline-end: var(--size-4-2);
-  inset-block-end: var(--size-4-2);
+  inset-inline-end: var(--gn-space-2);
+  inset-block-end: var(--gn-space-2);
   z-index: 1;
   padding: 0;
   line-height: 0;
-  background: var(--background-primary);
-  border: 1px solid var(--background-modifier-border-focus);
-  border-radius: var(--radius-s);
-  box-shadow: var(--shadow-s);
+  background: var(--gn-bg);
+  border: 1px solid var(--gn-border-focus);
+  border-radius: var(--gn-radius-s);
+  box-shadow: var(--gn-shadow-s);
   touch-action: none;
   cursor: crosshair;
 }
@@ -1415,20 +1484,20 @@ details.graph-note-style > summary {
   max-width: none;
 }
 .graph-note-mini-box {
-  fill: var(--background-secondary);
-  stroke: var(--text-muted);
+  fill: var(--gn-bg-alt);
+  stroke: var(--gn-text-muted);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
 .graph-note-mini-line {
-  stroke: var(--text-muted);
+  stroke: var(--gn-text-muted);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
 .graph-note-mini-frame {
-  fill: var(--interactive-accent);
+  fill: var(--gn-accent);
   fill-opacity: 0.15;
-  stroke: var(--interactive-accent);
+  stroke: var(--gn-accent);
   stroke-width: 2;
   vector-effect: non-scaling-stroke;
 }
@@ -1453,7 +1522,7 @@ details.graph-note-style > summary {
   max-height: var(--graph-note-height, none);
   overflow-y: auto;
   border-top: 0;
-  border-inline-start: 1px solid var(--background-modifier-border);
+  border-inline-start: 1px solid var(--gn-border);
 }
 
 /* The quick-info tooltip (§24, quick_info): on the page itself, above the full-screen card, placed beside its thing by the
@@ -1462,15 +1531,15 @@ details.graph-note-style > summary {
   position: fixed;
   left: var(--graph-note-qi-x, 0);
   top: var(--graph-note-qi-y, 0);
-  z-index: var(--layer-tooltip);
+  z-index: var(--gn-layer-tooltip);
   max-width: min(22rem, 90vw);
-  padding: var(--size-4-2) var(--size-4-3);
-  background: var(--background-secondary);
-  color: var(--text-normal);
-  border: 1px solid var(--background-modifier-border-focus);
-  border-radius: var(--radius-m);
-  box-shadow: var(--shadow-l);
-  font-size: var(--font-ui-small);
+  padding: var(--gn-space-2) var(--gn-space-3);
+  background: var(--gn-bg-alt);
+  color: var(--gn-text-normal);
+  border: 1px solid var(--gn-border-focus);
+  border-radius: var(--gn-radius-m);
+  box-shadow: var(--gn-shadow-l);
+  font-size: var(--gn-font-size-s);
   pointer-events: none;
 }
 .graph-note-quick-info[hidden] {
@@ -1479,25 +1548,25 @@ details.graph-note-style > summary {
 .graph-note-quick-head {
   display: flex;
   align-items: baseline;
-  gap: var(--size-4-2);
+  gap: var(--gn-space-2);
 }
 .graph-note-quick-kind {
-  font-size: var(--font-ui-smaller);
+  font-size: var(--gn-font-size-xs);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--text-muted);
+  color: var(--gn-text-muted);
 }
 .graph-note-quick-info ul {
-  margin: var(--size-4-1) 0;
-  padding-inline-start: var(--size-4-4);
+  margin: var(--gn-space-1) 0;
+  padding-inline-start: var(--gn-space-4);
 }
 .graph-note-quick-problems {
-  color: var(--text-muted);
+  color: var(--gn-text-muted);
 }
 .graph-note-quick-note {
-  margin-top: var(--size-4-1);
-  padding-top: var(--size-4-1);
-  border-top: 1px solid var(--background-modifier-border);
+  margin-top: var(--gn-space-1);
+  padding-top: var(--gn-space-1);
+  border-top: 1px solid var(--gn-border);
 }
 .graph-note-quick-note p {
   margin: 0;

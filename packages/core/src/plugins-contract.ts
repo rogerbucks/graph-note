@@ -3,6 +3,15 @@
 // saying what was wanted, when what was added breaks a promise of its point.
 import type { DataInfo, ExportedData } from './export-data-model.ts';
 import type { DataExporter } from './plugins.ts';
+import {
+  isTokenColour,
+  TOKEN_BACKGROUNDS,
+  tokenColourProblem,
+  tokenContrastProblem,
+  tokenNameProblem,
+  tokenPrefix,
+} from './theme-tokens.ts';
+import type { ThemeToken } from './theme-tokens.ts';
 
 /** One check of a contract: what it holds a plug-in to, and the run that throws when the plug-in breaks it. */
 export interface PluginCheck {
@@ -78,5 +87,32 @@ export function exporterContract(e: DataExporter): PluginCheck[] {
         if (!/^[a-z]+\/[a-z0-9.+-]+$/.test(e.mime)) fail(e.format, 'a media type', e.mime);
       },
     },
+  ];
+}
+
+/** Every check a theme token of the plug-in `pluginId` is held to (§44, plugin_theme_tokens). */
+export function themeTokenContract(t: ThemeToken, pluginId: string): PluginCheck[] {
+  const held = (why: string | null, wanted: string, got: unknown) => {
+    if (why) fail(t.name, wanted, got);
+  };
+  const contrast = (theme: 'light' | 'dark'): PluginCheck => ({
+    name: `it meets the locked contrast in the ${theme} theme, on the background it sits on`,
+    run: () => {
+      if (!isTokenColour(t[theme])) fail(t.name, `a colour in the ${theme} theme`, t[theme]);
+      if (t.on !== undefined && !Object.hasOwn(TOKEN_BACKGROUNDS, t.on)) fail(t.name, 'a core background', t.on);
+      held(tokenContrastProblem(t, theme), `the locked contrast on ${t.on ?? '--gn-bg'}`, t[theme]);
+    },
+  });
+  return [
+    {
+      name: 'it is named under its plug-in’s own prefix, so it takes no core token’s name and no other plug-in’s',
+      run: () => held(tokenNameProblem(t.name, pluginId), `a name ${tokenPrefix(pluginId)}<word>`, t.name),
+    },
+    {
+      name: 'it gives a colour, as #rrggbb or #rgb, for light and dark, on a core background',
+      run: () => held(tokenColourProblem(t), 'two colours on --gn-bg or --gn-bg-alt', [t.light, t.dark, t.on]),
+    },
+    contrast('light'),
+    contrast('dark'),
   ];
 }

@@ -10,6 +10,7 @@
 // (SC 2.5.8, held by the sheet's own 44-point cases), reflow and spacing (SC 1.4.10, 1.4.12).
 import axe from 'axe-core';
 import { JSDOM, VirtualConsole } from 'jsdom';
+import { OBSIDIAN_TOKEN_MAP } from '../../packages/core/src/theme-tokens.ts';
 
 export const THEMES = ['light', 'dark'];
 
@@ -126,6 +127,17 @@ export function withVariables(css, variables) {
   return resolved;
 }
 
+/**
+ * A stylesheet with each design token it reads written as the variable of Obsidian's theme the token is mapped from
+ * (theme-tokens.ts, `OBSIDIAN_TOKEN_MAP`), its fallback kept: what the token gives in Obsidian, for a check that cannot
+ * follow one custom property to another.
+ */
+export function withObsidianNames(css) {
+  return css.replace(/var\(\s*(--gn-[\w-]+)/g, (whole, name) =>
+    Object.hasOwn(OBSIDIAN_TOKEN_MAP, name) ? `var(${OBSIDIAN_TOKEN_MAP[name]}` : whole,
+  );
+}
+
 const escapeText = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const escapeAttr = (t) => escapeText(t).replace(/"/g, '&quot;');
 /** Elements that never have content, written without an end tag. */
@@ -216,7 +228,7 @@ export const contrastRatio = (a, b) => {
  */
 export function pageFor({ html, css, theme, title = 'Graph Note view', lang = 'en' }) {
   const vars = obsidianVariables(theme);
-  const style = withVariables(css, vars);
+  const style = withVariables(withObsidianNames(css), vars);
   return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><title>${escapeText(title)}</title><style>${style}</style></head><body class="theme-${theme}" style="background-color: ${vars['--background-primary']}; color: ${vars['--text-normal']}">${html}</body></html>`;
 }
 
@@ -237,7 +249,8 @@ export function openWindow(text, options = {}) {
 export function pageStyleFor(css, theme) {
   const dark = /@media \(prefers-color-scheme: dark\)\s*\{(:root\s*\{[^}]*\})\s*\}/.exec(css);
   if (!dark) throw new Error('the page style sheet has no dark scheme to try');
-  const rootOf = (text) => /:root\s*\{([^}]*)\}/.exec(text)?.[1] ?? '';
+  // the theme's variables and the page's design tokens, mapped from them (page.css), are each a :root block
+  const rootOf = (text) => [...text.matchAll(/:root\s*\{([^}]*)\}/g)].map((m) => m[1]).join(';');
   const light = rootOf(css.replace(dark[0], ''));
   const declared = Object.fromEntries(
     [light, ...(theme === 'dark' ? [rootOf(dark[1])] : [])].flatMap((block) =>

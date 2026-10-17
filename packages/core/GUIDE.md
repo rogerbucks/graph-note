@@ -120,6 +120,13 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   its theme variables; the fixed light and dark entries, for a host that draws the SVG as an isolated image (a Claude
   Code pane), are worked out to hex and paint their own page, with the locked contrast held; the system entry carries
   both in the drawing's own style sheet, `prefers-color-scheme` choosing, for a host that cannot say which it shows.
+- `theme-tokens.ts` — the interface's design tokens (editor spec §44, ui_theme_tokens, plugin_theme_tokens):
+  `THEME_TOKENS`, each `--gn-*` token of colour, type, spacing, corners and depth with what it is for, the only
+  variables the style sheets' rules read; `OBSIDIAN_TOKEN_MAP`, the one table from Obsidian's theme, written out at the top
+  of styles.css for each of the plugin's own elements (the browser page maps its own theme in page.css). A plug-in's own
+  colour (`ThemeToken`) is named `--gn-plugin-<its id>-<word>`, gives `#rrggbb` or `#rgb` for light and dark, and must
+  meet `LOCKED_CONTRAST` on the core background it sits on (`TOKEN_BACKGROUNDS`); `themeTokenCss` writes the tokens
+  added as CSS for a host to apply. The drawing's colours are not tokens: they stay in palette.ts.
 - `hits.ts` — what a tap lands on or near, and where a box is (`boundsOf`, as fractions of the drawing; `centres`); a
   link merged into a trunk (§25) by either of its lines.
 - `zoom.ts` — zoom, pan and full screen, and `resize` for a new viewport or a drawing laid out again (§25); `reveal` brings a box into view, centred, and leaves one already in view alone;
@@ -577,9 +584,12 @@ a GQL block, CSV or GraphML (`DATA_FORMATS`), each read back into the very thing
 - `plugins.ts` — the plug-in interface (editor spec §43, plugin_interface, plugin_manifest_limits): `pluginRegistry`,
   where a `GraphNotePlugin` is installed once its manifest (`id`, `version`, `api` of `PLUGIN_API`, the `uses` it names
   of `EXTENSION_POINTS`) is accepted, given only the points it names; a refused plug-in leaves nothing behind, and a
-  call into one that throws is caught and named (`PluginResult`). Its first point is the data exports (`DataExporter`).
+  call into one that throws is caught and named (`PluginResult`). Its first point is the data exports (`DataExporter`);
+  its second, `theme`, hands a plug-in the core's tokens and adds its own (theme-tokens.ts), each refused, saying why,
+  that misses its name or the locked contrast, and listed by `themeTokens()`.
 - `plugins-contract.ts` — the contract suite of each extension point (plugin_contract_suites): `exporterContract`, the
-  checks a data export is held to on `sampleExports`, which the built-ins pass.
+  checks a data export is held to on `sampleExports`, which the built-ins pass; `themeTokenContract`, those a theme
+  token is held to: its name, its colours and its contrast in each theme.
 - `export-data-model.ts` — the data's types, and the five kinds of value the profile reads, each said so it reads back.
 - `export-data-gql.ts` — a GQL block: the graph line, a comment saying where it came from, a thing or link to a line; a
   thing under its id, or, where its id cannot be a name, under `thing_<n>` with its id written in full. A thing or link

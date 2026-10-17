@@ -54,7 +54,9 @@
 // formats (setLocale, currentLocale, DEFAULT_LOCALE, formatCount, formatSize, formatDay, formatInstant,
 // formatList, sortedForReader, locale_formats) the same day, and the catalogue of words (word, setLanguage, currentLanguage,
 // addTranslation, sayWords, placeholdersOf, translationProblems, SOURCE_LANGUAGE, SOURCE_WORDS and their types,
-// words_catalogue) the same day. The lists moved here from index.test.js in the review of #452.
+// words_catalogue) the same day, and the theme tokens (THEME_TOKENS, OBSIDIAN_TOKEN_MAP, themeTokenCss,
+// themeTokenContract, ThemeToken and ThemeTokenUse, ui_theme_tokens) the same day. The lists moved here from
+// index.test.js in the review of #452.
 import { TYPES_LATE } from './index-types-late.js';
 
 /** The values src/index.ts exports, sorted. */
@@ -106,6 +108,7 @@ export const VALUES = [
   'NO_BASIS',
   'NO_CHANGES',
   'NUDGE_WORDS',
+  'OBSIDIAN_TOKEN_MAP',
   'OPTIONS',
   'OUTSIDE',
   'PAGE_LIMITS',
@@ -134,6 +137,7 @@ export const VALUES = [
   'SWITCH_NAMES',
   'SWITCH_SETTINGS',
   'THEME_COLOURS',
+  'THEME_TOKENS',
   'THRESHOLDS',
   'TIMEOUTS_BEFORE_STOPPING',
   'TOKEN_CLASSES',
@@ -373,6 +377,8 @@ export const VALUES = [
   'textFromName',
   'textTooLarge',
   'textVersion',
+  'themeTokenContract',
+  'themeTokenCss',
   'themed',
   'thingChange',
   'thresholdValue',
@@ -580,15 +586,5 @@ export const TYPES = [
   'Property',
   'PropertyRow',
   'Proposal',
-  'ProposalCheck',
-  'ProposalInput',
-  'ProposalShown',
-  'ProposedChange',
-  'Proposer',
-  'ProposerKind',
-  'Provenance',
-  'Range',
-  'ReadLimits',
-  'Refusal',
   ...TYPES_LATE,
 ];
