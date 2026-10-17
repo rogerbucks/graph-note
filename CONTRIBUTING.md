@@ -262,7 +262,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/tests-first-tally.test.js` — that replay's `--tally`: what the records prove as JSON, and writes nothing.
 - `test/tests-first-unfinished.test.js` — that replay when a run of a test file does not finish: stopped at the time limit, it proves nothing.
 - `test/tests-first-run.test.js` — one run of one test file in that replay: what its report shows, and why it did not finish.
-- `test/wcag.test.js` — every view and page of every host (Obsidian's card, details, edit pane and settings, the browser editor's page in each state) passes axe-core's WCAG 2.2 A and AA rules and the 4.5:1 text contrast, in the light and the dark theme; the check is tried on planted faults first; a host with no entry fails (editor spec §11, wcag_aa, wcag_new_hosts, wcag_checked).
+- `test/wcag.test.js` — every view and page of every host (Obsidian's card in each state, its details, edit pane, export form, AI send dialog, proposal, quick-info tooltip, style, step and view blocks, table, Live Preview card, settings and the menus it gives Obsidian; the browser editor's page in each state) passes axe-core's WCAG 2.2 A and AA rules and the 4.5:1 text contrast, in the light and the dark theme; the check is tried on planted faults first; a host with no entry fails (editor spec §11, wcag_aa, wcag_new_hosts, wcag_checked).
 - `test/whitespace.test.js` — the three copies of the one whitespace set are the same, and the set is openGQL's.
 
 ## The requirements in a GitHub Project

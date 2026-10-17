@@ -1,0 +1,6 @@
+{
+  "file": "test/wcag.test.js",
+  "test": "the Obsidian host: every view, in both themes > a menu the plugin gives Obsidian names every item, and reads as a menu, in both themes",
+  "seen_failing_first": false,
+  "evidence": "The plugin already named every item of the menus it gives Obsidian when this case was added: it closes the gap test_wcag listed, and the stand-in menu is checked by the same axe rules tried on planted faults."
+}

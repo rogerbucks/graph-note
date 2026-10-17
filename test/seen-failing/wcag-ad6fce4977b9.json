@@ -1,0 +1,6 @@
+{
+  "file": "test/wcag.test.js",
+  "test": "the Obsidian host: every view, in both themes > the diagram types listed meets WCAG 2.2 AA in the dark theme",
+  "seen_failing_first": false,
+  "evidence": "The view already met WCAG 2.2 AA when its case was added: the case closes the gap test_wcag listed, and was tried on a planted fault (an unnamed button) that it caught."
+}
