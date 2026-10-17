@@ -1,6 +1,7 @@
 // The views of the Obsidian host, each drawn in the fake host in the state a check needs (editor spec §11, §41): the one
-// list every accessibility check of every view goes through (test/wcag.test.js, test/a11y-semantics.test.js), so a view
-// a later workstream adds gets its case here once, with the same commit as the view, and every check covers it.
+// list every accessibility check of every view goes through (test/wcag.test.js, test/a11y-semantics.test.js and
+// test/a11y-keyboard.test.js), so a view a later workstream adds gets its case here once, with the same commit as the
+// view, and every check covers it.
 import assert from 'node:assert/strict';
 import { load, until } from '../../packages/obsidian/test/host/load-plugin.js';
 import { GRAPH, show } from '../../packages/obsidian/test/host/view-notes.js';
@@ -235,6 +236,14 @@ export const OBSIDIAN = {
       .click();
     assert.ok(el.querySelector('.graph-note-untangle'), 'the banner');
     return { env, el };
+  },
+  'a card in full screen': async () => {
+    const env = await load();
+    const { el } = await show(env, `# N\n\n${fence(GRAPH)}\n`);
+    labelled(el, 'Full screen').click();
+    const overlay = env.doc.body.querySelector('.graph-note-fullscreen');
+    assert.ok(overlay?.querySelector('g.node'), 'the drawing in full screen');
+    return { env, el: overlay };
   },
   'the mini-map, once zoomed in past the fit': async () => {
     const { env, el } = await shownBlock(noteOf(GRAPH), 0, { width: 300 });

@@ -23,6 +23,10 @@ export class TextHelp {
   private moved = false;
   /** The problems already announced, so only new ones are (spec §8). */
   private heard = new Set<string>();
+  /** What the fix bar shows now, so it is drawn again only when that changes. */
+  private shownFixes: { bar: HTMLElement; problems: Diagnostic[]; line: number } | null = null;
+  /** What the suggestion bar shows now, by its words, for the same reason. */
+  private shownSuggestions: { bar: HTMLElement; words: string } | null = null;
   private readonly on: { fix: (changes: FixChanges) => void; accept: (item: CompletionItem) => void };
 
   /** `fix` is called with the edits of a fix chosen, and `accept` with a suggestion chosen. */
@@ -72,17 +76,34 @@ export class TextHelp {
       paintText(el.overlay, s.text, this.problems, readBack(this.reading, s.graph, s.text), this.inline.ghost);
   }
 
-  /** The problems on the caret's line, with their fixes. */
+  /**
+   * The problems on the caret's line, with their fixes: drawn again only when the problems or the line change, so a fix
+   * the keyboard is going to as the field loses the focus is still there to take it (spec §41, a11y_keyboard_auto).
+   */
   fixbar(el: EditorParts): void {
-    showFixes(el.fixbar, this.problems, caretLine(el.text), (changes) => this.on.fix(changes));
+    const line = caretLine(el.text),
+      was = this.shownFixes;
+    if (was && was.bar === el.fixbar && was.problems === this.problems && was.line === line) return;
+    this.shownFixes = { bar: el.fixbar, problems: this.problems, line };
+    showFixes(el.fixbar, this.problems, line, (changes) => this.on.fix(changes));
   }
 
-  /** Names, kinds and relationships already in the graph, offered where the caret is. */
+  /**
+   * Names, kinds and relationships already in the graph, offered where the caret is: the bar drawn again only when they
+   * change, so a suggestion the keyboard is going to is still there to take it. A bar kept is the same suggestions, at the
+   * same word, so it takes what it shows.
+   */
   suggest(el: EditorParts, s: PaneSession): void {
     if (!this.reading) return;
     const caret = el.text.selectionStart ?? el.text.value.length;
     this.suggestions = completions(this.reading, s.graph, el.text.value, caret);
-    showSuggestions(el.suggest, this.suggestions.items, (item) => this.on.accept(item));
+    const { from, items } = this.suggestions;
+    const words = JSON.stringify([from, items.map((i) => [i.label, i.insertText, i.detail, i.from])]);
+    const was = this.shownSuggestions;
+    if (!was || was.bar !== el.suggest || was.words !== words) {
+      this.shownSuggestions = { bar: el.suggest, words };
+      showSuggestions(el.suggest, this.suggestions.items, (item) => this.on.accept(item));
+    }
     this.moved = this.inline.update(el.text, this.reading, s.graph, this.suggestions.items.length > 0);
   }
 
@@ -124,9 +145,17 @@ export class TextHelp {
     return spanOf(text, { link: linkInBlock(reading, graph, chosen.link, text) });
   }
 
-  /** The first suggestion, which Tab takes. */
-  first(): CompletionItem | undefined {
-    return this.suggestions.items[0];
+  /**
+   * The first suggestion, which Tab takes in `t`: none when the word being typed already is it, as taking it would change
+   * nothing, so Tab leaves the field as it does anywhere else (spec §41, a11y_keyboard_auto).
+   */
+  first(t: HTMLTextAreaElement): CompletionItem | undefined {
+    const item = this.suggestions.items[0];
+    if (!item) return undefined;
+    const caret = t.selectionStart ?? t.value.length;
+    return t.value.slice(item.from ?? this.suggestions.from, caret) === (item.insertText ?? item.label)
+      ? undefined
+      : item;
   }
 
   /** Writes a suggestion into the field in place of the word being typed. */
