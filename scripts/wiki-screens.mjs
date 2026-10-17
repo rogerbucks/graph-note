@@ -11,10 +11,10 @@
 // DIR gets one PNG for each shot, and labels.json: the name of every button the card shows, which the wiki holds
 // against the guide so a new control is never left unexplained.
 import { spawn, execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
-import { dirname, extname, join, normalize } from 'node:path';
+import { dirname, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -77,15 +77,24 @@ export function findChrome(given, which = (n) => execFileSync('which', [n], { en
   throw new Error('no Chrome found: give one with --chrome PATH');
 }
 
+/**
+ * The files the page may ask for, by the path it asks with: each file of the built harness, and each icon under
+ * /icons/. Only these are served, so no path a request names ever reaches the file system.
+ */
+export function servedFiles(dir, icons = ICONS) {
+  const files = new Map([['/', join(dir, 'index.html')]]);
+  for (const f of readdirSync(dir)) files.set(`/${f}`, join(dir, f));
+  for (const f of readdirSync(icons)) files.set(`/icons/${f}`, join(icons, f));
+  return files;
+}
+
 /** Serves the built harness, and the icons under /icons/, on a free port of this machine only. */
 function serve(dir) {
   const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml' };
+  const files = servedFiles(dir);
   const server = createServer((req, res) => {
-    const path = normalize(decodeURIComponent(new URL(req.url, 'http://x').pathname)).replace(/^(\.\.[/\\])+/, '');
-    const file = path.startsWith('/icons/')
-      ? join(ICONS, path.slice(7))
-      : join(dir, path === '/' ? 'index.html' : path);
-    if (!existsSync(file)) return res.writeHead(404).end();
+    const file = files.get(new URL(req.url, 'http://x').pathname);
+    if (!file) return res.writeHead(404).end();
     res.writeHead(200, { 'content-type': types[extname(file)] ?? 'application/octet-stream' }).end(readFileSync(file));
   });
   return new Promise((done) => server.listen(0, '127.0.0.1', () => done(server)));

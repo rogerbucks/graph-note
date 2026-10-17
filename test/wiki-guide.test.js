@@ -5,7 +5,10 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { OPTIONS } from '../packages/core/src/settings.ts';
 import { settingsTables, shotsOf, unexplained } from '../scripts/wiki.mjs';
-import { SHOTS, findChrome } from '../scripts/wiki-screens.mjs';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { SHOTS, findChrome, servedFiles } from '../scripts/wiki-screens.mjs';
 import { read } from './repository/repo.js';
 
 const guide = read('wiki/How-to-use-Graph-Note.md');
@@ -57,5 +60,19 @@ describe('finding Chrome', () => {
         }),
       /no Chrome found/,
     );
+  });
+});
+
+describe('serving the harness for the screenshots', () => {
+  test('serves only the built files and the icons, by name, so a path such as ../ reaches nothing else', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'wiki-served-'));
+    writeFileSync(join(dir, 'index.html'), '');
+    writeFileSync(join(dir, 'harness.js'), '');
+    const files = servedFiles(dir);
+    assert.equal(files.get('/'), join(dir, 'index.html'));
+    assert.equal(files.get('/harness.js'), join(dir, 'harness.js'));
+    assert.ok(files.get('/icons/pencil.svg').endsWith(join('icons', 'pencil.svg')));
+    for (const asked of ['/../package.json', '/icons/../../../package.json', '/%2e%2e/package.json'])
+      assert.equal(files.get(asked), undefined, asked);
   });
 });
