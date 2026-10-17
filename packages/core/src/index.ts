@@ -159,9 +159,20 @@ export { EXPORT_FORMATS, PNG_MIN_SCALE, exportSvg, exportWithLayout, pngSize } f
 export type { ExportFormat, ExportImage, ExportInfo, ExportLayout, PngSize } from './export.ts';
 export { pageSvg, pngPages } from './export-pages.ts';
 export type { PngPage } from './export-pages.ts';
-export { DATA_FORMATS, dataText, exportedData, isDataFormat } from './export-data.ts';
+export { CORE_EXPORTS, DATA_FORMATS, dataText, exportedData, isDataFormat } from './export-data.ts';
 export type { DataFormat } from './export-data.ts';
 export type { DataInfo, ExportedData } from './export-data-model.ts';
+export { EXTENSION_POINTS, PLUGIN_API, pluginRegistry } from './plugins.ts';
+export type {
+  DataExporter,
+  ExtensionPoint,
+  ExtensionPoints,
+  GraphNotePlugin,
+  PluginRegistry,
+  PluginResult,
+} from './plugins.ts';
+export { exporterContract, sampleExports } from './plugins-contract.ts';
+export type { PluginCheck } from './plugins-contract.ts';
 export { saidDate } from './export-frame.ts';
 export { exportPlan } from './export-plan.ts';
 export type { ExportDecision, ExportGo, ExportPlanInput } from './export-plan.ts';

@@ -560,7 +560,13 @@ a GQL block, CSV or GraphML (`DATA_FORMATS`), each read back into the very thing
   view holds only its own, unless its faded context is asked for: then the whole graph, with what is outside the view
   in `faded`, which each format marks. Each thing's and link's `///` note, as `notes.ts` put it on the drawing, is in
   `notes` (§24, note_standard): kept by a format with comments, left out of CSV, which has none. `dataText` writes it
-  in one of `DATA_FORMATS`. No layout is asked for.
+  in one of `DATA_FORMATS`, the built-in exports `CORE_EXPORTS` adds through the plug-in interface. No layout is asked for.
+- `plugins.ts` — the plug-in interface (editor spec §43, plugin_interface, plugin_manifest_limits): `pluginRegistry`,
+  where a `GraphNotePlugin` is installed once its manifest (`id`, `version`, `api` of `PLUGIN_API`, the `uses` it names
+  of `EXTENSION_POINTS`) is accepted, given only the points it names; a refused plug-in leaves nothing behind, and a
+  call into one that throws is caught and named (`PluginResult`). Its first point is the data exports (`DataExporter`).
+- `plugins-contract.ts` — the contract suite of each extension point (plugin_contract_suites): `exporterContract`, the
+  checks a data export is held to on `sampleExports`, which the built-ins pass.
 - `export-data-model.ts` — the data's types, and the five kinds of value the profile reads, each said so it reads back.
 - `export-data-gql.ts` — a GQL block: the graph line, a comment saying where it came from, a thing or link to a line; a
   thing under its id, or, where its id cannot be a name, under `thing_<n>` with its id written in full. A thing or link
