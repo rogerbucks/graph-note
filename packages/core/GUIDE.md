@@ -785,7 +785,8 @@ host-free entry: `index.ts` exports none of it, and it is reached by the subpath
 (`package.json` `exports`), so a host that draws nothing, like the Claude Code mod's hooks, never bundles it. It is
 DOM code, so it has a `tsconfig.json` of its own with the DOM library (`tsc -p packages/core/src/display`), and the
 core's own type check leaves it out. It is bundled, never run by Node on its own, so it is not held to erasable
-TypeScript; `host.ts`, `lifecycle.ts` and `dom-helpers.ts` are, because their tests load them directly. It imports no
+TypeScript; `host.ts`, `host-contract.ts`, `lifecycle.ts` and `dom-helpers.ts` are, because their tests load them
+directly. It imports no
 host (`test/imports.test.js` holds it to the layer, the core by its name and the graph library) and has the host's
 part come in through `host.ts`.
 
@@ -794,6 +795,9 @@ part come in through `host.ts`.
   page's does: `graph-view/drawing-svg.ts` then renames each style attribute of a drawing in its text before the parser
   sees it and sets the same declarations through the CSSOM, which the policy allows); `installHost` once before anything
   is drawn, `displayHost` for the layer's own use, which throws `NO_HOST` rather than draw a blank.
+- `host-contract.ts` — `hostContract`, the one contract every host's adapter is held to (editor spec §43,
+  hosts_pass_contract): checks with no test framework, each throwing with what was wanted, run against a fresh host and
+  the `HostProbe` through which it shows what it drew; `HOST_CONTRACT_VERSION` moves with `DisplayHost`.
 - `refusal-banner.ts` — why a graph is shown as text instead of drawn, in the core's words, with an icon.
 - `src/display/editor/` — the edit pane (spec §4, §9; editor spec §26, C9), the same one in the Obsidian pane and on the
   browser editor's page: `block-editor.ts` (`BlockEditor`, a `Lifecycle`: the text field over its coloured picture, the
