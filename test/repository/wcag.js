@@ -221,6 +221,23 @@ export const contrastRatio = (a, b) => {
   return (x + 0.05) / (y + 0.05);
 };
 
+/**
+ * A stylesheet without what the system asks for of its own, forced colours and more contrast (test/forced-colours.test.js
+ * holds those): jsdom cannot ask a media query and would apply them, and these checks are of the themes as they are.
+ */
+export function withoutSystemAsks(css) {
+  let text = css;
+  for (;;) {
+    const at = text.search(/@media \((?:forced-colors: active|prefers-contrast: more)\)\s*\{/);
+    if (at < 0) return text;
+    let end = text.indexOf('{', at) + 1;
+    for (let depth = 1; depth && end < text.length; end += 1)
+      if (text[end] === '{') depth += 1;
+      else if (text[end] === '}') depth -= 1;
+    text = text.slice(0, at) + text.slice(end);
+  }
+}
+
 // ── the DOM ──────────────────────────────────────────────────────────────────────────────────────────────────────────
 /**
  * A page for a view: the view's HTML inside a document with a language and a title (the host gives these in Obsidian), the
@@ -228,7 +245,7 @@ export const contrastRatio = (a, b) => {
  */
 export function pageFor({ html, css, theme, title = 'Graph Note view', lang = 'en' }) {
   const vars = obsidianVariables(theme);
-  const style = withVariables(withObsidianNames(css), vars);
+  const style = withVariables(withObsidianNames(withoutSystemAsks(css)), vars);
   return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><title>${escapeText(title)}</title><style>${style}</style></head><body class="theme-${theme}" style="background-color: ${vars['--background-primary']}; color: ${vars['--text-normal']}">${html}</body></html>`;
 }
 
@@ -246,7 +263,8 @@ export function openWindow(text, options = {}) {
  * The browser page's style sheet for one theme (theme-css.ts writes both): the light variables, or, for the dark theme,
  * the ones the dark scheme sets, which jsdom cannot ask for by media query; and each var() written out.
  */
-export function pageStyleFor(css, theme) {
+export function pageStyleFor(sheet, theme) {
+  const css = withoutSystemAsks(sheet);
   const dark = /@media \(prefers-color-scheme: dark\)\s*\{(:root\s*\{[^}]*\})\s*\}/.exec(css);
   if (!dark) throw new Error('the page style sheet has no dark scheme to try');
   // the theme's variables and the page's design tokens, mapped from them (page.css), are each a :root block

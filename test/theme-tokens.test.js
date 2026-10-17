@@ -56,7 +56,9 @@ describe('the interface is styled through the design tokens alone', () => {
     test(`${sheet} defines every design token in its one mapping block, and none anywhere else`, () => {
       const { declared, rest } = split(sheet);
       assert.deepEqual(Object.keys(declared).sort(), [...NAMES].sort());
-      const elsewhere = [...rest.matchAll(/(--gn-[a-z0-9-]+)\s*:/g)].map((m) => m[1]);
+      // the system's forced colours and more contrast give tokens anew in a block each (test/forced-colours.test.js)
+      const system = /@media \((?:forced-colors: active|prefers-contrast: more)\) \{[^{}]*\{[^{}]*\}\s*\}/g;
+      const elsewhere = [...rest.replace(system, '').matchAll(/(--gn-[a-z0-9-]+)\s*:/g)].map((m) => m[1]);
       assert.deepEqual(elsewhere, [], 'a token is mapped from the host’s theme in one place');
     });
   }

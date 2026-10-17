@@ -105,7 +105,7 @@ describe('a plug-in’s theme tokens', () => {
     assert.deepEqual(registry.plugins(), ['acme.tags']);
   });
 
-  test('the tokens are written as CSS a host applies: light by default and in a light host, dark when either asks', () => {
+  test('the tokens are written as CSS a host applies: light by default and in a light host, dark when either asks, the text colour when forced', () => {
     const css = themeTokenCss([TAG, { ...TAG, name: '--gn-plugin-acme-tags-mark', light: '#555', dark: '#bbb' }]);
     assert.equal(
       css,
@@ -113,6 +113,7 @@ describe('a plug-in’s theme tokens', () => {
         ':root,.theme-light{--gn-plugin-acme-tags-tag:#1a5fb4;--gn-plugin-acme-tags-mark:#555}',
         '@media (prefers-color-scheme: dark){:root{--gn-plugin-acme-tags-tag:#99c1f1;--gn-plugin-acme-tags-mark:#bbb}}',
         '.theme-dark{--gn-plugin-acme-tags-tag:#99c1f1;--gn-plugin-acme-tags-mark:#bbb}',
+        '@media (forced-colors: active){:root,.theme-light,.theme-dark{--gn-plugin-acme-tags-tag:CanvasText;--gn-plugin-acme-tags-mark:CanvasText}}',
       ].join('\n'),
     );
     assert.equal(themeTokenCss([]), '', 'no tokens, no CSS');

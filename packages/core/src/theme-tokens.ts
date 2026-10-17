@@ -90,6 +90,42 @@ export const OBSIDIAN_TOKEN_MAP: Readonly<Record<string, string>> = Object.freez
   Object.fromEntries(TABLE.map(([token, obsidian]) => [token, obsidian])),
 );
 
+/** The colour tokens that forced colours give other than the text colour: backgrounds, the accent and links. */
+const FORCED_OTHER: Readonly<Record<string, string>> = {
+  '--gn-bg': 'Canvas',
+  '--gn-bg-alt': 'Canvas',
+  '--gn-bg-hover': 'Canvas',
+  '--gn-code-background': 'Canvas',
+  '--gn-accent': 'Highlight',
+  '--gn-text-selection': 'Highlight',
+  '--gn-text-on-accent': 'HighlightText',
+  '--gn-link': 'LinkText',
+  '--gn-link-unresolved': 'LinkText',
+};
+
+/**
+ * Forced colours (editor spec §44, forced_colours): each colour token as the system colour it takes when the system forces
+ * its own, such as a high contrast theme of Windows: a background is the canvas, the accent and a selection the
+ * highlight, a link the link colour, and every other colour, of text, line, mark or code, the canvas's text. No meaning
+ * is lost with the hues, as none is said by colour alone (§5); each sheet writes this out under forced-colors.
+ */
+export const FORCED_TOKEN_COLOURS: Readonly<Record<string, string>> = Object.freeze(
+  Object.fromEntries(
+    TABLE.filter(([, , kind]) => kind === 'colour').map(([token]) => [token, FORCED_OTHER[token] ?? 'CanvasText']),
+  ),
+);
+
+/**
+ * More contrast (editor spec §44, forced_colours): when the system asks for more contrast, secondary text, faint marks
+ * and lines take the full text colour; each sheet writes this out under prefers-contrast: more.
+ */
+export const MORE_CONTRAST_TOKENS: Readonly<Record<string, string>> = Object.freeze({
+  '--gn-text-muted': 'var(--gn-text-normal)',
+  '--gn-text-faint': 'var(--gn-text-normal)',
+  '--gn-border': 'var(--gn-text-normal)',
+  '--gn-border-hover': 'var(--gn-text-normal)',
+});
+
 /** The locked contrast (§11, WCAG 2.2 AA): 4.5:1 for text (SC 1.4.3), 3:1 for a line or a control's edge (SC 1.4.11). */
 export const LOCKED_CONTRAST = Object.freeze({ text: 4.5, line: 3 });
 
@@ -194,7 +230,8 @@ export function themeTokenProblem(t: ThemeToken, pluginId: string): string | nul
 /**
  * The plug-ins' tokens as CSS a host applies: the light values at the root and under Obsidian's light theme class, the
  * dark ones when the system asks for dark (the browser page) and under Obsidian's dark theme class, which is on the body
- * and so wins over the root whichever the system asks. Nothing when there are none.
+ * and so wins over the root whichever the system asks; in forced colours, each the canvas's text, as the core's own
+ * text and lines are. Nothing when there are none.
  */
 export function themeTokenCss(tokens: readonly ThemeToken[]): string {
   if (!tokens.length) return '';
@@ -203,5 +240,6 @@ export function themeTokenCss(tokens: readonly ThemeToken[]): string {
     `:root,.theme-light{${values('light')}}`,
     `@media (prefers-color-scheme: dark){:root{${values('dark')}}}`,
     `.theme-dark{${values('dark')}}`,
+    `@media (forced-colors: active){:root,.theme-light,.theme-dark{${tokens.map((t) => `${t.name}:CanvasText`).join(';')}}}`,
   ].join('\n');
 }

@@ -1,0 +1,6 @@
+{
+  "file": "test/text-scaling.test.js",
+  "test": "text scales to 200 per cent with nothing lost > every rule listed with a fixed height is still in its sheet",
+  "seen_failing_first": false,
+  "evidence": "a guard: the sheets already held to this rule, and the test keeps them to it"
+}
