@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/export-marks.test.js",
+  "test": "a hostile drawing > a run of groups never closed is left as it was, and every closed group before it still marked",
+  "seen_failing_first": false,
+  "evidence": "The old regular expression gave the same answer, only in quadratic time (about 5 s here against a few milliseconds); CodeQL's polynomial-regex alert on #525 is what changed, and the test pins that the linear walk keeps the answer."
+}

@@ -66,15 +66,27 @@ export function marked(svg: string, keys: readonly string[], marks: Marks, palet
   const fadedThings = new Set(marks.faded.things),
     fadedLinks = new Set(marks.faded.links);
   if (!fadedThings.size && !fadedLinks.size && !marks.looks.things.size && !marks.looks.links.size) return svg;
-  return svg.replace(
-    /(<g id="(node|edge)(\d+)"[^>]*>)([\s\S]*?)(<\/g>)/g,
-    (_, open: string, kind: string, n: string, body: string, close: string) => {
-      const at = Number(n) - 1,
-        node = kind === 'node',
-        key = keys[at] ?? '',
-        faded = node ? fadedThings.has(key) : fadedLinks.has(at),
-        look = node ? marks.looks.things.get(key) : marks.looks.links.get(at);
-      return `${faded ? styled(open, [['opacity', String(FADED_OPACITY)]]) : open}${look ? looked(body, look, palette, !node) : body}${close}`;
-    },
-  );
+  // a linear walk, never a regular expression over the whole SVG, so a hostile drawing cannot make it slow
+  let out = '',
+    from = 0;
+  for (let at = svg.indexOf('<g id="', from); at >= 0; at = svg.indexOf('<g id="', at + 1)) {
+    const id = /^(node|edge)(\d+)"/.exec(svg.slice(at + 7, at + 32));
+    if (!id) continue;
+    const openEnd = svg.indexOf('>', at);
+    if (openEnd < 0) break;
+    const close = svg.indexOf('</g>', openEnd + 1);
+    if (close < 0) break;
+    const [, kind, n] = id;
+    const pos = Number(n) - 1,
+      node = kind === 'node',
+      key = keys[pos] ?? '',
+      faded = node ? fadedThings.has(key) : fadedLinks.has(pos),
+      look = node ? marks.looks.things.get(key) : marks.looks.links.get(pos);
+    const open = svg.slice(at, openEnd + 1),
+      body = svg.slice(openEnd + 1, close);
+    out += `${svg.slice(from, at)}${faded ? styled(open, [['opacity', String(FADED_OPACITY)]]) : open}${look ? looked(body, look, palette, !node) : body}`;
+    from = close;
+    at = close;
+  }
+  return out + svg.slice(from);
 }
