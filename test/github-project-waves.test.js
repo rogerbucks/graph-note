@@ -212,6 +212,13 @@ describe('the real waves file', () => {
     assert.ok(last.start > plan.waves.at(-2).end);
   });
 
+  test('holds the Obsidian community release (R2) in a wave of its own after all others, before the held changes', () => {
+    const at = plan.waves.findIndex((w) => w.workstreams.includes('R2'));
+    assert.equal(at, plan.waves.length - 2, 'R2 is in the last wave before the placeholder');
+    assert.deepEqual(plan.waves[at].workstreams, ['R2']);
+    assert.ok(plan.waves[at].start > plan.waves[at - 1].end);
+  });
+
   test('puts every requirement of slices 3 to 9 that is not proved in a wave', () => {
     const flagged = waveLines(desired).filter((l) => l.startsWith('warning:'));
     assert.deepEqual(flagged, []);
