@@ -23,7 +23,7 @@ export const NOTE_PATH = 'Reader.md';
  * type, field, ... }`. `file()` is the note's text on disk now; `write(text)` is another program changing it, told to the
  * page as the watcher would tell it; `type(text)` is the person typing `text` into the field, as the page hears it.
  */
-export async function livePage(note, { files = {}, settings = '{}', fire = true, before, gate } = {}) {
+export async function livePage(note, { files = {}, settings = '{}', fire = true, before, gate, github } = {}) {
   const top = mkdtempSync(join(tmpdir(), 'editor-page-live-'));
   const vault = join(top, 'vault');
   mkdirSync(vault);
@@ -35,6 +35,7 @@ export async function livePage(note, { files = {}, settings = '{}', fire = true,
     drafts: join(top, 'data'),
     watch: watcher.watch,
     ...(gate ? { gate } : {}),
+    ...(github ? { github } : {}),
   });
   const opened = await store.open(NOTE_PATH);
   if (!opened.ok) throw new Error(opened.why);

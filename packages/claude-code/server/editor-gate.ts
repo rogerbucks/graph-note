@@ -14,6 +14,12 @@ export interface NoteGate {
   note: (text: string, vouched: string | null) => string | null;
   /** For a draft: what the user typed on the note, held to the same refusals, but never asked about again. */
   draft: (text: string) => string | null;
+  /**
+   * For a file of the note's repository read from GitHub for a review (github_review_items): refused as any text is for
+   * a credential or a classification it gives, but one that gives none counts as the lowest classification, since the
+   * user asked for their own repository's change. Where a gate has no word on files, every file is withheld.
+   */
+  file?: (text: string) => string | null;
 }
 
 const said = (gate: Gate): string | null =>
@@ -31,5 +37,6 @@ export function storeGate(settings: GateSettings, confirmed: string | null): Not
       return said(claudeGate(text, settings, vouched));
     },
     draft: (text) => said(claudeGate(text, settings, sha256(text))),
+    file: (text) => said(claudeGate(text, { ...settings, aiUnlabelled: settings.classifications[0] ?? '' }, null)),
   };
 }

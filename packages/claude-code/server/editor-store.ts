@@ -10,8 +10,7 @@
 //   PUT notes/<id>          the new text, If-Match its version: {version}; 409 {text, version, draft} when stale
 //   PUT notes/<id>/draft    what was typed, kept as the note's draft; an empty one clears it
 //   GET notes/<id>/events   a stream, a JSON object to a line: {version, text} now and on each change, or {gone}
-//   GET notes/<id>/versions its earlier versions in git, {versions: [{commit, kind, label}]}, or 404 {why} (changes_view)
-//   GET notes/<id>/at/<commit>  {text} at a commit just listed for it, through the same gate as any read
+//   GET notes/<id>/versions, /at/<commit>, /reviews…  its earlier versions and its repository's changes (editor-changes.ts)
 import { randomBytes } from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import { basename, dirname, resolve, sep } from 'node:path';
@@ -25,6 +24,8 @@ import { sha256 } from '@graph-note/core';
 import type { NoteGate } from './editor-gate.ts';
 import { proposalInto } from './editor-proposals.ts';
 import { GIT_HISTORY, type NoteHistory } from './note-history.ts';
+import { GH_READER, type GitHubReader } from './github-reader.ts';
+import { changesAnswer, type ChangesAsked } from './editor-changes.ts';
 
 /** How a store is made: the vault, the mod's data folder for drafts (outside the vault), and what it is handed. */
 export interface NoteStoreOptions {
@@ -44,6 +45,8 @@ export interface NoteStoreOptions {
   proposer?: string;
   /** Where a note's earlier versions are read from: its git repository, unless a test hands in its own. */
   history?: NoteHistory;
+  /** How the note's repository is read from GitHub for a review: by the user's gh, unless a test hands in its own. */
+  github?: GitHubReader;
 }
 
 /** The note opened, by the id the store gave it; or why it may not be. */
@@ -59,12 +62,13 @@ interface OpenNote {
   unwatch: () => void;
   /** The digest of the text this editor last wrote: typed by the user, so not asked about again. */
   vouched: string | null;
-  /** The commits last listed as its earlier versions: the only ones its text is read at. */
-  listed: Set<string>;
+  /** The commits last listed as its earlier versions, and the items last listed for review: the only ones read. */
+  listed: ChangesAsked['listed'];
 }
 
 /** One route of the API: a note's id, and what of it is asked for. */
-const ROUTE = /^notes\/([0-9a-f]{32})(\/events|\/draft|\/proposal|\/versions|\/at\/[0-9a-f]{40})?$/;
+const ROUTE =
+  /^notes\/([0-9a-f]{32})(\/events|\/draft|\/proposal|\/versions|\/at\/[0-9a-f]{40}|\/reviews(?:\/[a-z]+\/[0-9a-f]+)?)?$/;
 
 const NOT_YOURS: ApiAnswer = { status: 403, text: 'This key proposes changes and does nothing else.' };
 
@@ -94,6 +98,7 @@ export class NoteStore {
   private readonly gate: NoteGate | undefined;
   private proposer = 'Claude';
   private history: NoteHistory = GIT_HISTORY;
+  private github: GitHubReader = GH_READER;
 
   private constructor(where: Vault, drafts: DraftShelf, watch: Watcher, files: NoteFiles, gate?: NoteGate) {
     this.where = where;
@@ -118,6 +123,7 @@ export class NoteStore {
     const store = new NoteStore(where, drafts, options.watch ?? watchNote, options.files ?? NODE_FILES, options.gate);
     if (options.proposer) store.proposer = options.proposer;
     if (options.history) store.history = options.history;
+    if (options.github) store.github = options.github;
     return store;
   }
 
@@ -153,7 +159,7 @@ export class NoteStore {
       feeds: new Set(),
       unwatch: () => {},
       vouched: null,
-      listed: new Set(),
+      listed: { versions: new Set(), items: new Map() },
     };
     this.notes.set(id, note);
     this.ids.set(place.inVault, id);
@@ -176,8 +182,7 @@ export class NoteStore {
     if (what === 'PUT ') return this.write(id, r.body, ifMatch);
     if (what === 'PUT /draft') return this.keepDraft(id, r.body, ifMatch);
     if (what === 'GET /events') return this.follow(id);
-    if (what === 'GET /versions') return this.versions(id);
-    if (what.startsWith('GET /at/')) return this.textAt(id, what.slice('GET /at/'.length));
+    if (/^GET \/(versions|at|reviews)/.test(what)) return this.changes(id, what.slice('GET '.length));
     return { status: 405, text: 'Not this method.' };
   };
 
@@ -215,29 +220,23 @@ export class NoteStore {
     return answer(200, { text: r.text, version: r.version, draft }, { etag: r.version });
   }
 
-  /** The note's earlier versions, listed only when the page asks; their commits are the only ones read after. */
-  private async versions(id: string): Promise<ApiAnswer> {
+  /** The note's earlier versions and its repository's changes, each read only when asked and held to the gate. */
+  private changes(id: string, tail: string): Promise<ApiAnswer> {
     const note = this.notes.get(id) as OpenNote;
-    const r = await this.load(note);
-    if (!r.ok || !r.real) return answer(410, { why: r.ok ? 'The note is gone.' : r.why });
-    // a note the gate holds back says nothing of its history either
-    const held = this.refusal(note, r.text);
-    if (held !== null) return answer(403, { why: held });
-    const v = await this.history.versions(r.real);
-    note.listed = new Set(v.ok ? v.versions.map((x) => x.commit) : []);
-    return v.ok ? answer(200, { versions: v.versions }) : answer(404, { why: v.why });
-  }
-
-  /** The note's text at a commit just listed for it, held to the gate as the note itself is. */
-  private async textAt(id: string, commit: string): Promise<ApiAnswer> {
-    const note = this.notes.get(id) as OpenNote;
-    if (!note.listed.has(commit)) return answer(404, { why: 'No such version of this note.' });
-    const r = await this.load(note);
-    if (!r.ok || !r.real) return answer(410, { why: r.ok ? 'The note is gone.' : r.why });
-    const t = await this.history.textAt(r.real, commit);
-    if (!t.ok) return answer(404, { why: t.why });
-    const refused = this.refusal(note, t.text);
-    return refused === null ? answer(200, { text: t.text }) : answer(403, { why: refused });
+    const gate = this.gate;
+    return changesAnswer(tail, {
+      sendable: async () => {
+        const r = await this.load(note);
+        if (!r.ok || !r.real) return answer(410, { why: r.ok ? 'The note is gone.' : r.why });
+        const held = this.refusal(note, r.text);
+        return held === null ? r.real : answer(403, { why: held });
+      },
+      refusal: (text) => this.refusal(note, text),
+      held: (text) => (!gate ? null : gate.file ? gate.file(text) : 'The gate has no word on files.'),
+      history: this.history,
+      github: this.github,
+      listed: note.listed,
+    });
   }
 
   /** Runs `work` once every earlier call for the same note is done: a write is compared and made under this lock. */

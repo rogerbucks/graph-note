@@ -159,13 +159,22 @@ The note store (workstream C1), the real `api`:
   with 503 keeps no draft** (keeping one is a write too): the page must keep its own text when the server stops.
   `GET notes/<id>/versions` and `GET notes/<id>/at/<commit>` serve the changes view (changes_view): the note's earlier
   versions, read only when the page asks, and its text at a commit just listed for it (never another, nor a name), the
-  current note and the earlier text both held to the gate.
+  current note and the earlier text both held to the gate. `GET notes/<id>/reviews` and `…/reviews/<kind>/<id>` serve the
+  review items (github_review_items): the repository's pull requests, merges and commits, and one just listed with its
+  changed files, each file held to the gate's `file` word (a credential or a classification it gives; none counts as the
+  lowest). These routes live in `server/editor-changes.ts`.
 - `server/note-history.ts` — `GIT_HISTORY` (changes_view): the open note's earlier versions in the git repository it
   lives in, the last `COMMITS_LISTED` commits that changed it and the local branches, and its text at one of them by
   `cat-file` (the stored bytes, no filter). The server's one child process: git by `execFile`, fixed arguments, no shell,
   a bare environment, hooks, the file-system monitor and the pager off, every transport refused (`protocol.allow=never`,
   `GIT_NO_LAZY_FETCH`), within `GIT_TIMEOUT_MS` and the note's size limit. `editor-threats.test.js` holds the bundle to
-  that one call.
+  that call and one other, gh's.
+- `server/github-reader.ts` — `GH_READER` (github_review_items; Roger, 17 Oct 2026): the note's repository, named by its
+  remote `origin` on github.com (`repositoryOf`), read by the user's own gh: `gh api --method GET --hostname github.com`,
+  fixed arguments, no shell, an environment with no token (gh finds its own sign-in), and every path, number and commit
+  checked before it goes in an address. A pull request is compared from its merge base, a commit or merge from its first
+  parent; at most `FILES_READ` files' texts are read, and `requirements/workstreams.json` at the newer side. The one
+  outgoing request the server may cause (cc_no_remote), and only when the user asks.
 - `server/note-place.ts` — `notePlace` (cc_no_escape): a path, as written and as its real path, every link followed,
   must be inside the vault, end in `.md`, have no part starting with a dot (`.obsidian`, `.git`, `.trash`, a hidden
   file) and hold no NUL; a link that leads out of the vault, into a hidden folder or onto another kind of file is
@@ -305,6 +314,10 @@ any other (cc_offline, cc_no_remote), and the server's policy is not loosened fo
   pressed, picked from a labelled list, and the one picked drawn with the note as it now is by the core's `changesView`,
   marked in the scheme's fixed colours by `markedChanges`, with the changes listed in words as the image's description;
   a note in no repository says why. Commit subjects are shown as text.
+- `review-section.ts` (github_review_items) — "Review a change from GitHub…": the repository's changes asked of the
+  server only when pressed, picked from a labelled list, and the one picked read once and shown in levels by the core's
+  `reviewLevels`: a summary by section, workstream and requirement (and the files withheld, with why); each graph in a
+  `changesFigure` (shared with `changes-section.ts`); and every line, marked `+`, `−` or blank as well as by colour.
 - `keyboard.ts`, `text-version.ts` (workstream C8, cc_keyboard, cc_reduced_motion, cc_text_version; WCAG 2.2 AA) —
   `skipLink` (the first thing tabbed to, moving focus to the note) and `keepFocus` (a redraw gives the focus back to the
   control that had it, by kind, name and place); the graph's plain-English sentences as a labelled, never hidden section,

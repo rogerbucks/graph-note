@@ -16,6 +16,7 @@ import { exportCalls } from './export-calls.ts';
 import { exportingOf, localDay } from './export-run.ts';
 import { DARK, showGraph } from './graph-section.ts';
 import { changesSection } from './changes-section.ts';
+import { reviewSection } from './review-section.ts';
 import { keepFocus, skipLink } from './keyboard.ts';
 import { PNG_PIXEL_LIMIT, rasterise } from './png.ts';
 import { pageLayouts } from './layout-runner.ts';
@@ -158,6 +159,15 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
           dark: () => win.matchMedia(DARK).matches,
         }),
       );
+    // the repository's pull requests, merges and commits, read from GitHub only when asked (github_review_items)
+    graph.append(
+      reviewSection(win, {
+        items: () => calls.reviews(note),
+        files: (item) => calls.review(note, item),
+        layout: (d, theme) => layouts.draw(d, undefined, theme),
+        dark: () => win.matchMedia(DARK).matches,
+      }),
+    );
     await draw();
     // a proposal that lands, or any other change on disk, is drawn when the server sends it
     void notes
