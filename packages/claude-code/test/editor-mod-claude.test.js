@@ -9,7 +9,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { gqlSpans, readNote } from '@graph-note/core';
 import { ask } from './editor-threats-support.js';
-import { PLAN, launcherFor, modVault, partsOf, writeNote } from './editor-mod-support.js';
+import { PLAN, launcherFor, modVault, opens, partsOf, writeNote } from './editor-mod-support.js';
 
 const EXTRA = {
   op: 'add-thing',
@@ -33,7 +33,7 @@ const things = (note) => {
 async function opened(settings, where = modVault(), path = where.plan) {
   const sent = [];
   const { launcher, host } = launcherFor(where, { sent, settings });
-  assert.equal((await launcher.edit(path)).ok, true);
+  await opens(launcher, path);
   return { where, launcher, host, sent, page: partsOf(launcher.link) };
 }
 
@@ -422,7 +422,7 @@ describe('Claude’s direct writes through the editor are refused (cc_claude_pro
   test('a mod with no way to make a key opens the editor and proposes nothing', async () => {
     const where = modVault();
     const { launcher } = launcherFor(where, { proposals: false });
-    assert.equal((await launcher.edit(where.plan)).ok, true);
+    await opens(launcher, where.plan);
     const outcome = await launcher.propose({ changes: [EXTRA] });
     assert.equal(outcome.ok, false);
     assert.match(outcome.why, /not available/i);

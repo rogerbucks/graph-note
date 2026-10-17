@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { ask, reachable } from './editor-threats-support.js';
-import { COMPOSER, PLAN, launcherFor, modVault, partsOf, writeNote } from './editor-mod-support.js';
+import { COMPOSER, PLAN, launcherFor, modVault, opens, partsOf, writeNote } from './editor-mod-support.js';
 import * as launch from '../src/editor-launch.ts';
 
 const { editArgs, sayEdit, sayStopped } = launch;
@@ -41,7 +41,7 @@ describe('/graph edit opens the editor (cc_editor_opens)', () => {
   test('a path relative to the session’s folder is the same note, and the folder holding .obsidian is its vault', async () => {
     const where = modVault();
     const { launcher } = launcherFor(where);
-    assert.equal((await launcher.edit('vault/Notes/plan.md')).ok, true);
+    await opens(launcher, 'vault/Notes/plan.md');
     assert.equal((await readNote(launcher.link)).status, 200);
     // a note beside it in the vault opens (the vault is the folder with .obsidian), though it is not in the note's folder
     const other = launcherFor(where);
@@ -51,7 +51,7 @@ describe('/graph edit opens the editor (cc_editor_opens)', () => {
   test('a note with no vault above it is its own folder’s, and only it can be opened by the page', async () => {
     const where = modVault();
     const { launcher } = launcherFor(where);
-    assert.equal((await launcher.edit('loose/solo.md')).ok, true);
+    await opens(launcher, 'loose/solo.md');
     const { port, token, note } = partsOf(launcher.link);
     const guess = await ask(port, {
       path: '/api/notes/0123456789abcdef0123456789abcdef',
@@ -433,7 +433,7 @@ describe('a note above the level set for Claude is asked about first (cc_classif
     const where = modVault();
     const { launcher, host } = launcherFor(where);
     const path = writeNote(where, 'plan2.md', 'Internal');
-    assert.equal((await launcher.edit(path)).ok, true);
+    await opens(launcher, path);
     const { port } = partsOf(launcher.link);
     writeNote(where, 'plan2.md', 'Confidential');
     const outcome = await launcher.edit(path);
