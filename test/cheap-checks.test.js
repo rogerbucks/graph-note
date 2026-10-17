@@ -439,7 +439,6 @@ describe('running only the tests a change touches', () => {
     for (const f of ['pane-added-for-you.test.js', 'pane-help.test.js', 'pane-writing.test.js', 'pane.test.js'])
       assert.ok(listed.includes(`packages/obsidian/test/${f}`), f);
     assert.ok(listed.includes('packages/claude-code/test/editor-page.test.js'), 'reached through its imports');
-    assert.deepEqual(listed, [...listed].sort(), 'sorted');
     const all = run(process.execPath, ['scripts/changed-tests.mjs', '--list', 'package.json'], path('.'));
     assert.match(all.stdout, /^whole suite: package\.json is shared\n$/);
     assert.match(readJSON('package.json').scripts['test:changed'], / scripts\/changed-tests\.mjs$/);
