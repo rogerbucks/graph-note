@@ -2,6 +2,7 @@
 // was typed, each with its kind and, for a property, which; choosing one — or pressing Enter for the first — selects it and
 // brings it into view, as opening its details does. Escape closes the row. Searching only reads: nothing is changed in the
 // drawing or the note.
+import { word } from '@graph-note/core';
 import type { Found } from '@graph-note/core';
 
 /** What the box asks of its card: the things that match, what to do with the one chosen, and how to close the row. */
@@ -21,8 +22,7 @@ export interface FindRow {
 /** What is said, for a screen reader, of a search's result: how many were found, or that none matches. */
 function said(typed: string, count: number): string {
   if (!typed.trim()) return '';
-  if (!count) return 'No thing matches.';
-  return count === 1 ? '1 thing found.' : `${count} things found.`;
+  return count ? word('find.found', { count }) : word('find.none');
 }
 
 /** Builds the search row in a card. */

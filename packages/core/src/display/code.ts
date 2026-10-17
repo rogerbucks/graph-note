@@ -1,7 +1,7 @@
 // A gql block that is not a graph to draw — a query, a schema, an excerpt, or a graph that cannot be read — shown as
 // code, coloured by the same tokenizer as the gql-highlight plugin (spec §4, "colour"), with a copy button. A very long
 // one is shown plain (spec §9, layout_contained): coloured, it would be hundreds of thousands of elements on the page.
-import { tokenize } from '@graph-note/core';
+import { tokenize, word } from '@graph-note/core';
 import { notice, setIcon } from './host';
 
 /** The longest text coloured, in characters: about 2,000 lines of a graph, far more than is read at a glance. */
@@ -17,13 +17,16 @@ export function renderCode(parent: HTMLElement, source: string): HTMLElement {
       if (t.c) code.createSpan({ cls: `gql-${t.c}`, text: t.s });
       else code.appendText(t.s);
     }
-  const copy = pre.createEl('button', { cls: 'copy-code-button', attr: { 'aria-label': 'Copy', type: 'button' } });
+  const copy = pre.createEl('button', {
+    cls: 'copy-code-button',
+    attr: { 'aria-label': word('code.copy'), type: 'button' },
+  });
   setIcon(copy, 'copy');
   copy.addEventListener('click', () => {
     // a device may refuse the clipboard, as a phone can: that is said, never left to fail without a word
     void navigator.clipboard.writeText(source).then(
-      () => notice('Copied'),
-      () => notice('Could not copy: the device did not allow it. Select the text and copy it instead.'),
+      () => notice(word('code.copied')),
+      () => notice(word('code.copy-refused')),
     );
   });
   return pre;

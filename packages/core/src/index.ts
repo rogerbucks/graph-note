@@ -183,6 +183,18 @@ export type {
   PluginResult,
 } from './plugins.ts';
 export { exporterContract, sampleExports } from './plugins-contract.ts';
+export {
+  addTranslation,
+  currentLanguage,
+  placeholdersOf,
+  sayWords,
+  setLanguage,
+  SOURCE_LANGUAGE,
+  translationProblems,
+  word,
+} from './words.ts';
+export type { Catalogue, PluralWords, WordKey, Words, WordValues } from './words.ts';
+export { SOURCE_WORDS } from './source-words.ts';
 export type { PluginCheck } from './plugins-contract.ts';
 export { saidDate } from './export-frame.ts';
 export { exportPlan } from './export-plan.ts';

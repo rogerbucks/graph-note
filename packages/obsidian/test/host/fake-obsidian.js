@@ -422,6 +422,7 @@ export function fakeObsidian(state = {}) {
     setIcon,
     setTooltip,
     Platform,
+    getLanguage: () => state.language ?? 'en',
     MarkdownRenderer: fakeMarkdownRenderer(state),
     Keymap: fakeKeymap,
     app,

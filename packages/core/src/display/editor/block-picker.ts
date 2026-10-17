@@ -3,11 +3,9 @@
 // the lines it offers are never those of an older note; a block chosen is found again in the note as it is once what was
 // typed is written, by its place among the graph blocks, its graph and its text, and said when it is no longer there.
 // Open again, in the pane and in place, goes on with the block after the session stopped by a copy of it (§9).
+import { word } from '@graph-note/core';
 import type { Choice, PaneSession } from '@graph-note/core';
 import { notice } from '../host';
-
-/** Said when the block chosen is no longer in the note. */
-const CHOSEN_GONE = 'That graph block is no longer in the note: choose again from the blocks it has now.';
 
 /** What the picker asks of its editor: its session, what is typed written, and the block chosen opened. */
 export interface PickerHost {
@@ -87,7 +85,7 @@ export class BlockPicker {
     if (s && now && now.graph === graph && s.blockText(now.line) === text && s.select(now.line)) {
       return this.host.opened();
     }
-    notice(CHOSEN_GONE);
+    notice(word('editor.block-gone'));
     this.show();
   }
 
@@ -104,6 +102,6 @@ export class BlockPicker {
     const mine = s.choices().filter((x) => x.graph === s.graph),
       c = mine.find((x) => x.line === s.ref.line) ?? mine[0];
     if (c && s.select(c.line)) return this.host.opened();
-    notice(CHOSEN_GONE);
+    notice(word('editor.block-gone'));
   }
 }

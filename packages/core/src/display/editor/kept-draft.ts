@@ -2,14 +2,11 @@
 // changed in the note meanwhile, the note was deleted, or the note refused an edit made from the drawing (§4), what was
 // typed is kept as a draft, offered to be restored or discarded. The banner holds the id of the very draft it shows:
 // Restore and Discard act on that draft only, and on no other when it is gone (Roger's choice A, 11 Oct 2026).
+import { word } from '@graph-note/core';
 import { notice } from '../host';
 import { button } from './editor-layout';
 import { NOTE_DELETED } from './editor-note';
 import type { KeptDraft } from './editor-note';
-
-/** What is said when Restore is pressed on a draft that is no longer kept, restored or discarded elsewhere. */
-const GONE_MESSAGE =
-  'That draft is no longer kept: it was restored or discarded elsewhere, so nothing was changed. Any other draft is offered when the block is opened again.';
 
 /**
  * What the banner says when a write was refused: the block reloaded from the note, or the note deleted (`deleted`, which
@@ -64,7 +61,7 @@ export function offerDraft(
       const now = drafts.draftById(kept.id);
       if (!now) {
         banner.hidden = true;
-        notice(GONE_MESSAGE);
+        notice(word('editor.draft-gone'));
         return;
       }
       el.text.value = now.text;

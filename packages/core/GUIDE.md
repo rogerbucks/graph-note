@@ -567,6 +567,12 @@ a GQL block, CSV or GraphML (`DATA_FORMATS`), each read back into the very thing
   what is written into a note, an export's data or the layout source (locale_never_changes_bytes), so an order written
   into text, as `github-review-items.ts` writes its groups, keeps one collation. `hosts/refusal-words.ts` still says its
   counts in UK English, as a host-side module may import only types from the core.
+- `words.ts` and `source-words.ts` — the words the person reads, by key (editor spec §42, words_catalogue,
+  language_follows_host, translations_as_files): `word(key, values)` says one in the current language, its `{name}`
+  placeholders filled and its plural form picked for `count` by `Intl.PluralRules`; `SOURCE_WORDS` is UK English. A
+  translation is checked by `translationProblems` and added by `addTranslation`; `setLanguage`, called by
+  `installHost` with the host's `language()`, picks it, or its base language's, else UK English. A word a translation
+  lacks is said in UK English, never as its key. Places move their words into `source-words.ts` one at a time.
 - `plugins.ts` — the plug-in interface (editor spec §43, plugin_interface, plugin_manifest_limits): `pluginRegistry`,
   where a `GraphNotePlugin` is installed once its manifest (`id`, `version`, `api` of `PLUGIN_API`, the `uses` it names
   of `EXTENSION_POINTS`) is accepted, given only the points it names; a refused plug-in leaves nothing behind, and a

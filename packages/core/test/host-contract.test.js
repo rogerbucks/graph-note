@@ -58,10 +58,10 @@ describe('the host contract', () => {
   });
 
   test('it is versioned, and holds a host to each of its promises by name', () => {
-    assert.equal(HOST_CONTRACT_VERSION, 1);
+    assert.equal(HOST_CONTRACT_VERSION, 2);
     const names = hostContract(() => plainHost()).map((c) => c.name);
-    assert.equal(names.length, 6);
-    for (const promise of ['icon', 'phone', 'notice', 'menu shows', 'choosing', 'style policy'])
+    assert.equal(names.length, 7);
+    for (const promise of ['icon', 'phone', 'notice', 'menu shows', 'choosing', 'style policy', 'language'])
       assert.ok(
         names.some((n) => n.includes(promise)),
         promise,
@@ -74,6 +74,7 @@ describe('the host contract', () => {
     ['a notice that shows only its first word', {}, 'a notice'],
     ['a menu that drops its separator', {}, 'a menu shows'],
     ['a style policy said as a word', { noInlineStyle: 'yes' }, 'the style policy'],
+    ['a language that is no tag', { language: () => 'not a language!' }, 'the language'],
   ])
     test(`${broken} fails the check that holds it, saying what was wanted`, async () => {
       const make = () => {

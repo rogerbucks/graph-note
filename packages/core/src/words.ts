@@ -1,0 +1,127 @@
+// The words the person reads, kept by key in one catalogue (editor spec §42, words_catalogue, language_follows_host and
+// translations_as_files). UK English is the source (source-words.ts); a translation is a plain file of the same keys for
+// one language, checked to hold the source's placeholders and plural forms before it is used. The host says the
+// language once (`setLanguage`, from `DisplayHost.language`); a word a translation leaves out is said in UK English,
+// never as its key. A placeholder is written `{name}`; a word that changes with a count is written once for each
+// plural form the language has (`Intl.PluralRules`), with `{count}` shown in the reader's locale.
+import { formatCount } from './locale-formats.ts';
+import { SOURCE_WORDS } from './source-words.ts';
+
+/** The language of the source words, which every translation falls back to. */
+export const SOURCE_LANGUAGE = 'en-GB';
+
+/** The forms of a word that changes with a count, by the plural category of `Intl.PluralRules`; `other` is always given. */
+export type PluralWords = Partial<Record<Intl.LDMLPluralRule, string>> & { other: string };
+
+/** One entry of a catalogue: a word, or its forms for a count. */
+export type Words = string | PluralWords;
+
+/** A catalogue of words by key: the source, or a translation of it. */
+export type Catalogue = Record<string, Words>;
+
+/** The key of a word of the source catalogue. */
+export type WordKey = keyof typeof SOURCE_WORDS;
+
+/** The values a word's placeholders are filled with; `count` also picks a word's plural form. */
+export type WordValues = Record<string, string | number> & { count?: number };
+
+const PLACEHOLDER = /\{([a-z][a-zA-Z0-9]*)\}/g;
+const CATEGORIES: readonly string[] = ['zero', 'one', 'two', 'few', 'many', 'other'];
+
+/** The canonical form of a language tag, or null when it is not one. */
+function canonical(tag: string): string | null {
+  try {
+    return Intl.getCanonicalLocales(tag)[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** The placeholders of an entry, each once, sorted: those of every form, for a word with plural forms. */
+export function placeholdersOf(entry: Words): string[] {
+  const texts = typeof entry === 'string' ? [entry] : Object.values(entry);
+  const names = texts.flatMap((t) =>
+    typeof t === 'string' ? [...t.matchAll(PLACEHOLDER)].map((m) => m[1] ?? '') : [],
+  );
+  return [...new Set(names)].sort();
+}
+
+/**
+ * What is wrong with `translation` of the source `source`, for language `tag`, one line each, or none: a key the source
+ * lacks, an entry that is not a word or plural forms, or one whose placeholders or kind differ from the source's. A key
+ * the translation leaves out is no problem: that word is said in the source language.
+ */
+export function translationProblems(source: Catalogue, translation: Catalogue, tag: string): string[] {
+  const problems: string[] = [];
+  if (!canonical(tag)) problems.push(`"${tag}" is not a language tag`);
+  for (const [key, entry] of Object.entries(translation)) {
+    const from = source[key];
+    if (from === undefined) {
+      problems.push(`${key}: the source has no such word`);
+      continue;
+    }
+    if (typeof entry !== 'string' && (typeof entry !== 'object' || entry === null || typeof entry.other !== 'string')) {
+      problems.push(`${key}: is neither a word nor plural forms with "other"`);
+      continue;
+    }
+    if (typeof entry === 'object') {
+      const bad = Object.entries(entry).filter(([c, t]) => !CATEGORIES.includes(c) || typeof t !== 'string');
+      if (bad.length) problems.push(`${key}: ${bad.map(([c]) => `"${c}"`).join(', ')} is not a plural form`);
+    }
+    if ((typeof from === 'string') !== (typeof entry === 'string'))
+      problems.push(`${key}: the source ${typeof from === 'string' ? 'has one word' : 'changes with a count'}`);
+    const want = placeholdersOf(from).join(', ');
+    const got = placeholdersOf(entry).join(', ');
+    if (want !== got) problems.push(`${key}: has the placeholders [${got}], the source [${want}]`);
+  }
+  return problems;
+}
+
+/** `entry` said with `values`, in `language`: its plural form for the count, and each placeholder filled. */
+export function sayWords(entry: Words, values: WordValues = {}, language = SOURCE_LANGUAGE): string {
+  let text: string;
+  if (typeof entry === 'string') text = entry;
+  else {
+    const category = new Intl.PluralRules(language).select(values.count ?? 0);
+    text = entry[category] ?? entry.other;
+  }
+  return text.replace(PLACEHOLDER, (whole, name: string) => {
+    const value = values[name];
+    if (value === undefined) return whole;
+    return typeof value === 'number' ? formatCount(value) : value;
+  });
+}
+
+const translations = new Map<string, Catalogue>();
+let language = SOURCE_LANGUAGE;
+let words: Catalogue = SOURCE_WORDS;
+
+/**
+ * Adds the translation for language `tag`, so `setLanguage` can choose it; throws, saying every problem, when it does not
+ * hold to the source, and then adds nothing.
+ */
+export function addTranslation(tag: string, translation: Catalogue): void {
+  const problems = translationProblems(SOURCE_WORDS, translation, tag);
+  if (problems.length) throw new Error(`The translation ${tag} was not added:\n${problems.join('\n')}`);
+  translations.set(canonical(tag) as string, { ...translation });
+}
+
+/**
+ * Sets the language the words are said in: its translation, else that of its base language (`fr` for `fr-CA`), else UK
+ * English. The language used.
+ */
+export function setLanguage(tag: string): string {
+  const exact = canonical(tag);
+  const base = exact?.split('-')[0];
+  const found = [exact, base].find((t): t is string => !!t && translations.has(t));
+  language = found ?? SOURCE_LANGUAGE;
+  words = found ? (translations.get(found) as Catalogue) : SOURCE_WORDS;
+  return language;
+}
+
+/** The language the words are said in now. */
+export const currentLanguage = (): string => language;
+
+/** The word kept as `key`, in the current language, with `values` filled in; in UK English when the translation lacks it. */
+export const word = (key: WordKey, values?: WordValues): string =>
+  sayWords(words[key] ?? SOURCE_WORDS[key], values, words[key] === undefined ? SOURCE_LANGUAGE : language);

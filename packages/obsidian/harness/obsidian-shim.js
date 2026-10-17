@@ -464,6 +464,8 @@ export function parseYaml(text) {
   return out;
 }
 export const Platform = { isMobile: false, isDesktop: true };
+/** Obsidian's interface language: the browser's, as the harness runs in one. */
+export const getLanguage = () => globalThis.navigator?.language || 'en';
 /** Obsidian's Markdown renderer (§18): the browser view has none, so a detail's Markdown is shown as its text. */
 export const MarkdownRenderer = {
   render: async (_app, markdown, el) => {
