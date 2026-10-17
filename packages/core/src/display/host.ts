@@ -4,6 +4,8 @@
 // before anything is drawn. Obsidian installs one made of its own `setIcon`, `Platform`, `Notice` and `Menu`; the browser
 // editor's page installs one of its own. The layer imports no host, so nothing else tells it which it is in.
 
+import { setLanguage, SOURCE_LANGUAGE } from '@graph-note/core';
+
 /** A row of a menu the layer asks the host to show. */
 export interface MenuRow {
   title: string;
@@ -36,6 +38,12 @@ export interface DisplayHost {
    * style attribute is ever parsed from markup. Not set: styles stay attributes, as Obsidian has them.
    */
   noInlineStyle?: boolean;
+  /**
+   * The language the host shows itself in, as a language tag: Obsidian's own, the display language of VS Code, the
+   * system's for the app and the browser page (editor spec §42, language_follows_host). The words are said in it when a
+   * translation for it is added, else in UK English. Not set: UK English.
+   */
+  language?: () => string;
 }
 
 /** What is said when the layer is used before any host was installed. */
@@ -46,6 +54,7 @@ let installed: DisplayHost | null = null;
 /** Installs the host the layer draws in; the host that installs it last is the one used. */
 export function installHost(host: DisplayHost): void {
   installed = host;
+  setLanguage(host.language?.() ?? SOURCE_LANGUAGE);
 }
 
 /** The installed host; throws `NO_HOST` when there is none, so a missing one is never a silent blank. */

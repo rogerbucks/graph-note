@@ -581,6 +581,60 @@
       "github_review_items"
     ]
   },
+  "D1": {
+    "title": "Project wiki and user guide",
+    "requirements": [
+      "wiki_generated",
+      "user_guide_wiki",
+      "wiki_reviewed"
+    ]
+  },
+  "G1": {
+    "title": "Language, culture and direction",
+    "requirements": [
+      "words_catalogue",
+      "language_follows_host",
+      "problem_codes",
+      "locale_formats",
+      "locale_never_changes_bytes",
+      "locale_sorting",
+      "rtl_mirrors",
+      "bidi_labels",
+      "rtl_drawing_direction",
+      "pseudo_locales_checked",
+      "translations_as_files"
+    ]
+  },
+  "T1": {
+    "title": "Layer and contract tests, and tests picked by imports",
+    "requirements": [
+      "hosts_pass_contract",
+      "layers_checked",
+      "affected_tests_by_imports"
+    ]
+  },
+  "P1": {
+    "title": "Plug-in interface",
+    "requirements": [
+      "plugin_interface",
+      "plugin_manifest_limits",
+      "plugin_contract_suites",
+      "plugin_theme_tokens"
+    ]
+  },
+  "U1": {
+    "title": "Theming and the standard interface needs",
+    "requirements": [
+      "ui_theme_tokens",
+      "forced_colours",
+      "text_scaling",
+      "colour_never_alone",
+      "progress_shown",
+      "first_run_help",
+      "shortcuts_listed",
+      "print_ready"
+    ]
+  },
   "Q": {
     "title": "Open questions",
     "requirements": []

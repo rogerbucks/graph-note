@@ -16,6 +16,7 @@ import {
   propertyNames,
   renameProperty,
   setProperty,
+  word,
 } from '@graph-note/core';
 import type { ListShape, NoteReading, Property, PropType, Target } from '@graph-note/core';
 import { listForm, suggestShape } from './list-form';
@@ -43,14 +44,15 @@ export interface PropertiesOptions {
 }
 
 /** Each type the document profile holds, in the order and words Obsidian's menu uses, with its icon. List is apart. */
-const TYPES: { type: PropType; title: string; icon: string }[] = [
-  { type: 'text', title: 'Text', icon: 'text' },
-  { type: 'number', title: 'Number', icon: 'binary' },
-  { type: 'boolean', title: 'Checkbox', icon: 'check-square' },
-  { type: 'date', title: 'Date', icon: 'calendar' },
-  { type: 'datetime', title: 'Date & time', icon: 'clock' },
+const TYPES: { type: PropType; icon: string }[] = [
+  { type: 'text', icon: 'text' },
+  { type: 'number', icon: 'binary' },
+  { type: 'boolean', icon: 'check-square' },
+  { type: 'date', icon: 'calendar' },
+  { type: 'datetime', icon: 'clock' },
 ];
-const titleOf = (t: PropType) => TYPES.find((x) => x.type === t)?.title ?? t;
+/** A type's name as the menu says it, in the person's language. */
+const titleOf = (t: PropType): string => word(`properties.type.${t}`);
 
 let lists = 0;
 
@@ -207,7 +209,10 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
     let input = field(valueEl, state.type, state.words, valueLabel());
     const show = () => {
       setIcon(icon, TYPES.find((t) => t.type === state.type)?.icon ?? 'text');
-      icon.setAttribute('aria-label', `Type of ${state.key || 'new property'}: ${titleOf(state.type)}`);
+      icon.setAttribute(
+        'aria-label',
+        word('properties.type-of', { name: state.key || word('properties.new'), type: titleOf(state.type) }),
+      );
       name.setAttribute('aria-label', state.written ? `Name of ${state.key}` : 'New property name');
       input.setAttribute('aria-label', valueLabel());
       el.setAttribute('data-property-key', state.written ? state.key : '');
@@ -294,7 +299,7 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
       const entries: MenuEntry[] = [];
       for (const t of TYPES) {
         entries.push({
-          title: t.title,
+          title: titleOf(t.type),
           icon: t.icon,
           checked: t.type === state.type,
           onClick: () => {
@@ -308,10 +313,11 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
           },
         });
         // List, after Text, as Obsidian orders it: held as linked things, so only a thing can have one
-        if (t.type === 'text' && thing !== null) entries.push({ title: 'List', icon: 'list', onClick: askList });
+        if (t.type === 'text' && thing !== null)
+          entries.push({ title: word('properties.type.list'), icon: 'list', onClick: askList });
       }
       entries.push('separator', {
-        title: 'Remove',
+        title: word('properties.remove'),
         icon: 'trash-2',
         warning: true,
         onClick: () => {

@@ -82,6 +82,24 @@ describe('problems, in plain English, with their place and a fix', () => {
     assert.deepEqual(d.data.fixes, []);
   });
 
+  test('problem_codes: a problem the reader raises carries its stable code, and its diagnostic gives it as code', () => {
+    // editor spec §42: the code is the graph spec's (problem-codes.json), the same from the Python library
+    const text = BLOCK + ',\n  (broken:Reason {title: })',
+      reading = readNote([text]);
+    assert.deepEqual(
+      reading.problems.map((p) => p.code),
+      ['GN207'],
+    );
+    const [d] = diagnostics(reading, 'reader', 0, text, URI);
+    assert.equal(d.code, 'GN207');
+    // a graph line the reader cannot read gives its code too
+    const named = readNote(["// graph: reader-choice\n(a:T {name: 'A'})"]);
+    assert.deepEqual(
+      named.problems.map((p) => p.code),
+      ['GN102'],
+    );
+  });
+
   test('every message is a sentence, and every problem has a place', () => {
     const text = BLOCK + ',\n(eyes)-[:FAVOURS]->(nowhere),\n(x:T {y: }),\n(eyes)-[:FAVORS]->(question)';
     const ds = diagnostics(readNote([text]), 'reader', 0, text, URI);

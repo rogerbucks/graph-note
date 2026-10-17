@@ -159,9 +159,43 @@ export { EXPORT_FORMATS, PNG_MIN_SCALE, exportSvg, exportWithLayout, pngSize } f
 export type { ExportFormat, ExportImage, ExportInfo, ExportLayout, PngSize } from './export.ts';
 export { pageSvg, pngPages } from './export-pages.ts';
 export type { PngPage } from './export-pages.ts';
-export { DATA_FORMATS, dataText, exportedData, isDataFormat } from './export-data.ts';
+export { CORE_EXPORTS, DATA_FORMATS, dataText, exportedData, isDataFormat } from './export-data.ts';
 export type { DataFormat } from './export-data.ts';
 export type { DataInfo, ExportedData } from './export-data-model.ts';
+export { EXTENSION_POINTS, PLUGIN_API, pluginRegistry } from './plugins.ts';
+export {
+  currentLocale,
+  DEFAULT_LOCALE,
+  formatCount,
+  formatDay,
+  formatInstant,
+  formatList,
+  formatSize,
+  setLocale,
+  sortedForReader,
+} from './locale-formats.ts';
+export type {
+  DataExporter,
+  ExtensionPoint,
+  ExtensionPoints,
+  GraphNotePlugin,
+  PluginRegistry,
+  PluginResult,
+} from './plugins.ts';
+export { exporterContract, sampleExports } from './plugins-contract.ts';
+export {
+  addTranslation,
+  currentLanguage,
+  placeholdersOf,
+  sayWords,
+  setLanguage,
+  SOURCE_LANGUAGE,
+  translationProblems,
+  word,
+} from './words.ts';
+export type { Catalogue, PluralWords, WordKey, Words, WordValues } from './words.ts';
+export { SOURCE_WORDS } from './source-words.ts';
+export type { PluginCheck } from './plugins-contract.ts';
 export { saidDate } from './export-frame.ts';
 export { exportPlan } from './export-plan.ts';
 export type { ExportDecision, ExportGo, ExportPlanInput } from './export-plan.ts';
@@ -216,6 +250,23 @@ export { NO_BASIS, basisOf } from './proposals-basis.ts';
 export type { Stale } from './proposals-basis.ts';
 export { MARK_WORDS } from './proposals-marks.ts';
 export type { ChangeMark, MarkKind, Marks } from './proposals-marks.ts';
+export { CHANGE_LOOKS, NO_CHANGES, changesText, changesView, markedChanges } from './changes-view.ts';
+export type { ChangeLine, ChangesShown } from './changes-view.ts';
+export { REVIEW_LEVELS, ReviewItems, asNote, groupSaid, reviewLevels, workstreamsFrom } from './github-review-items.ts';
+export type {
+  ChangedFile,
+  FileLines,
+  GraphChanges,
+  ReviewItem,
+  ReviewLevels,
+  ReviewSource,
+  SummaryGroup,
+  Workstreams,
+} from './github-review-items.ts';
+export { DIFF_LIMIT, lineDiff } from './line-diff.ts';
+export type { DiffLine } from './line-diff.ts';
+export { THRESHOLDS, thresholdValue } from './thresholds.ts';
+export type { Threshold, ThresholdName } from './thresholds.ts';
 export { changeSetId } from './proposals-text.ts';
 export { DECIDER_DEFAULT, deciderName } from './proposals-judgement.ts';
 export type { Decision } from './proposals-judgement.ts';

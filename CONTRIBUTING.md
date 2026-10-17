@@ -55,8 +55,9 @@ CI. A change that breaks one fails before it is merged.
   `ruff check` and `ruff format --check` when the Python library changed. CI runs them all again.
 - **Cheap checks while working.** `npm run test:ai` runs the suite quietly (one line when all pass, and for a failure
   only its file and line, name, short expected and actual, and the first stack frame in our code); `npm run
-  test:changed` runs only the tests of the modules the change touches, found by the naming under "Tests mirror the
-  code", and the whole suite when something shared changed; `npm run test:ai:py` does the same for the Python library.
+  test:changed` runs only the tests the change reaches, found by the naming under "Tests mirror the code" and by
+  the import graph (`scripts/import-graph.mjs`: every test that imports a changed file, directly or through others, or
+  names it to build), and the whole suite when something shared changed; `npm run test:ai:py` does the same for the Python library.
   They are for working: `npm test` and the gate above still run in full before every merge, and in CI. `AGENTS.md` is
   the short guide for AI sessions, and `.ignore` keeps generated and bulky files out of code searches.
 - **A large or risky change goes through a pull request**, and is merged only once CI passes on it. That means one that
@@ -178,12 +179,14 @@ These test behaviour across modules, or the repository itself, so they are named
 - `packages/graph-spec/test/characterisation.test.mjs` — the library gives the answers recorded before it moved here.
 - `packages/graph-spec/test/commas.test.mjs` — both readers read a missing comma the same way, and write it into the same corrected text.
 - `packages/graph-spec/test/escapes.test.mjs` — both readers read quoted text's escapes as GQL does, refuse one GQL does not name with the fix that doubles the backslash, and quote a text alike (req:3.gql-escapes; one table, `escape-cases.json`).
+- `packages/graph-spec/test/problem-codes.test.mjs` — every problem the JavaScript reader raises passes a stable code from `src/reader/problem-codes.json`, with that code's message and fix, and the blocks of `problem-code-cases.json` are refused with their codes (editor spec §42, problem_codes).
 - `packages/graph-spec/test/layout.test.mjs` — the layout source is byte-identical to the Python library's.
 - `packages/graph-spec/test/lint-parity.test.mjs` — the JavaScript dialect linter matches the Python one.
 - `python/graph_spec/tests/test_changeset_header.py` — a change set's first line is read as the reader reads a block's, in the engine's copy and the rules' (lines end at LF only, whitespace is GQL's set).
 - `python/graph_spec/tests/test_engine_gets_corrected.py` — every route to the engine gives Grafeo the reader's corrected text, so a link type without its colon is accepted by both parsers, and the text keeps the block's own lines (req:3.engine-gets-corrected, req:3.engine-text-keeps-lines).
 - `python/graph_spec/tests/test_engine_gets_commas.py` — every route to the engine gives Grafeo the reader's corrected text with each missing comma written in, at the end of the code on its line, so a block missing one loads as the profile parser reads it, and no line is added (req:3.engine-gets-commas, req:3.engine-text-keeps-lines).
 - `python/graph_spec/tests/test_engine_text_comments.py` — every route to the engine gives Grafeo each whole-line comment as a `/* */` comment on its own line, a `*/` in its text broken up, and a line ends at LF only (req:3.engine-keeps-comments, req:3.engine-text-keeps-lines).
+- `python/graph_spec/tests/test_problem_codes.py` — every problem the Python reader raises passes the stable code `problem-codes.json` gives it, the same as the JavaScript reader's, and the blocks of `problem-code-cases.json` are refused with the same codes (editor spec §42, problem_codes).
 - `python/graph_spec/tests/test_escapes.py` — the Python reader answers `escape-cases.json` as the JavaScript one does, and what the engine writes for Grafeo keeps a text's escapes (req:3.gql-escapes).
 - `python/graph_spec/tests/test_id_once_engine.py` — every route to the engine reads the block with the reader first, so no id reaches it twice in a graph (req:3.engine-reads-first, req:3.id-once).
 - `python/graph_spec/tests/test_ids_engine.py` — every route to the engine refuses a SET of a node's id and a node id that is not text, read by the reader first (req:3.set-keeps-id, req:3.id-is-text).
@@ -193,6 +196,9 @@ These test behaviour across modules, or the repository itself, so they are named
 - `python/graph_spec/tests/test_reader_agrees_with_grafeo.py` — the reader and its plain rules give Grafeo's answers, Grafeo being the reference engine and a test dependency only (req:17.engine-agreement).
 - `python/graph_spec/tests/test_view_parity.py` — Grafeo, running each view of `view_cases.json` as written, returns the things the core returns, and, of a fixed list of GQL's and Cypher's words, refuses as a name and as a kind exactly the words the core keeps from them (editor spec §7, views_agree_with_grafeo).
 - `python/graph_spec/tests/test_settings.py` — what a host sets after importing the library.
+- `test/host-adapters.test.js` — every host's real adapter, Obsidian's built as the plugin builds it and the browser page's in a DOM, passes the one host contract of `packages/core/src/display/host-contract.ts` (editor spec §43, hosts_pass_contract; partial until the standalone app and VS Code join it).
+- `test/rtl.test.js` — the style sheets say sides by reading direction (`margin-inline-start`, `inset-inline-end`, `text-align: start`), so the interface mirrors in a right-to-left language; the only rules on a physical side are those placed at a point measured on the screen, each listed with why (editor spec §42, rtl_mirrors).
+- `test/import-graph.test.js` — the import graph, and the tests that reach a changed file through it: imports by path and by package name, a file or folder a test names to build or walk, and how `npm run test:changed` picks them (editor spec §13, affected_tests_by_imports).
 - `test/cheap-checks.test.js` — the quiet test run, running only a change's tests, the AI guide and the search ignore file.
 - `test/build-status.test.js` — the build status's pure part: the requirements a pull request moves, found from the tests it newly marks written; the stage an event gives; which value may replace which; the comment and the annotations.
 - `test/build-status-gh.test.js` — the build status's calls to GitHub, through in-memory stand-ins for `gh`: a pull request, the requirements file at a ref and its size, CI's run, the releases, the pull requests merged in a span, the one comment, leaving it on a locked conversation, and the two tokens kept apart.
@@ -241,10 +247,15 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/quiet-reporter.test.js` — the quiet test run when a failure's details cannot be passed on, as when an assertion holds a function: every failure still reported, the run failed, never crashed.
 - `test/run-ceiling.test.js` — every run of the npm test commands, in CI too, is stopped with one line at a memory or time ceiling, before a runaway test can exhaust the machine; a run within both passes through unchanged.
 - `test/requirements.test.js` — the requirements graph, the one source: started requirements proved, tests where they say.
+- `test/requirements-note.test.js` — the requirements kept as a graph note: the graph as the one block of a Markdown note is read by every tool that reads the requirements, and passes the same audit as the graph file (requirements_as_graph_note).
 - `test/check-requirements-flips.test.js` — the requirements graph is edited here, in pull requests (Roger, 16 Oct 2026: no vault holds it any more): records, links and comments may be added, changed and removed, but a pull request never moves a test back in status (planned to partial, partial to written, planned to written only), never flips one forward without its file, and never removes a test that is partial or written.
 - `test/slice-done.test.js` — a slice is done only when every one of its requirements is proved by a written test whose file is there, in a copy whose banner is as it should be, whose every slice is a whole number and whose every test is kept where the check knows: `check-requirements.mjs --done <slice>` says so or lists what is missing, and the slice board's overview says the same, each tried on tampered copies of the requirements; every slice before the one under way is done (spec §12, done_means_proved).
 - `test/slice-board-style.test.js` — the slice board's stylesheet: colour tokens that agree in light and dark, the altitude switch by CSS alone, a layout that holds at 400px, and the source written one rule and one declaration to a line.
 - `test/slice-board.test.js` — the slice board: a CSS-only HTML page of how far the slice under way is proved, from the requirements copy and, optionally, the open pull requests.
+- `test/wiki.test.js` — the project wiki: every page made from its file in the repository, ending with the file and commit it came from, the proved counts as the slice board gives them, every answered question a decision and every other open, the roadmap's chart free of the characters it reads as syntax, and the releases from GitHub or `versions.json`.
+- `test/wiki-guide.test.js` — the wiki's user guide: every screenshot taken shown once and no other asked for, every setting listed from the editor's own options, plain words, and a new button of the drawing reported when the guide does not explain it.
+- `test/wiki-review.test.js` — the review of the wiki pages people write or edit: each checked and never changed, a suggestion for each broken link or picture, old version and long sentence, a person's edit to a made page reported, and an issue text that pings no one.
+- `test/wiki-workflow.test.js` — the workflow that makes the wiki: woken by a push to main or a release, the pages made with read access only, and the one job that writes running no code of the repository.
 - `test/speed-index.test.js` — the one measure of a machine's speed, which the quality metrics record and scale their timings by: fixed plain work, the least of seven runs.
 - `test/timed-assertions.test.js` — a test asserts the work done, never the time taken: no JavaScript test or its support asserts a span of elapsed time; a polling deadline, mock timers and a clock handed to the code tested are allowed.
 - `test/test-files.test.js` — every file a test or a device-check note names is made by `scripts/make-test-files.mjs`, and the images it makes decode and move: the GIF's compressed data, the APNG's frames, the WebP's lossless frames, the SVG and the PDF (editor spec §12, tests_self_contained, test_files_generated).
@@ -267,6 +278,9 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/tests-first-unfinished.test.js` — that replay when a run of a test file does not finish: stopped at the time limit, it proves nothing.
 - `test/tests-first-run.test.js` — one run of one test file in that replay: what its report shows, and why it did not finish.
 - `test/wcag.test.js` — every view and page of every host (Obsidian's card in each state, its details, edit pane, export form, AI send dialog, proposal, quick-info tooltip, style, step and view blocks, table, Live Preview card, settings and the menus it gives Obsidian; the browser editor's page in each state) passes axe-core's WCAG 2.2 A and AA rules and the 4.5:1 text contrast, in the light and the dark theme; the check is tried on planted faults first; a host with no entry fails (editor spec §11, wcag_aa, wcag_new_hosts, wcag_checked).
+- `test/a11y-semantics.test.js` — every control of every view and page of every host (the views `test/wcag.test.js` checks, kept in `test/repository/views-obsidian.js` and `views-page.js`) has an accessible name, is read as a control and says its state (checked, selected, expanded), as axe-core reads the accessibility tree; each drawing's text version counts the things drawn and says each as its box is labelled; the check is tried on planted faults first (editor spec §41, a11y_semantics_auto).
+- `test/a11y-keyboard.test.js` — a keyboard-only run of every view and page of every host (the views `test/wcag.test.js` checks): Tab and Shift+Tab reach every element of the tab order with the page's own key handlers live, no element keeps the focus (a field that takes Tab is left with Escape then Tab), an action out of the order is in a widget whose arrow keys reach it, one of each kind of action the page draws itself is operated with Enter or Space, and a dialog of ours keeps the focus in it and is left with Escape from every control; the check is tried on planted faults first (editor spec §41, a11y_keyboard_auto).
+- `test/ux-copy.test.js` — every message the user reads in every view of every host (the views `test/wcag.test.js` checks, with the notices and menu items the host shows; the person's own words left out) reads at grade 9 or lower, keeps its sentences to 25 words and uses none of the listed jargon (scored by `scripts/plain-english.mjs`); a message that misses for a reason is recorded in `quality/copy.json` and may never score worse without the record raised; the check is tried first (editor spec §41, ux_copy_auto).
 - `test/whitespace.test.js` — the three copies of the one whitespace set are the same, and the set is openGQL's.
 
 ## The requirements in a GitHub Project
@@ -310,7 +324,8 @@ These test behaviour across modules, or the repository itself, so they are named
 - **The waves plan is `requirements/waves.json`**, the one place the order of the work lives: the waves in order, each
   with its workstreams in order and a planned `start` and `end`, `estimate: true` marking the dates as estimates (the
   wave's title on the board then ends "· est.", and `--check` prints a note that they are estimates). Its last wave is
-  a placeholder with no workstreams, for Roger's held changes after all waves. Wave
+  a placeholder with no workstreams, for Roger's held changes after all waves; the wave before it holds only the
+  Obsidian community release (R2), which Roger put after all the planned work. Wave
   is an *iteration* field, one iteration for each wave with its dates, made and kept by `createProjectV2Field` and
   `updateProjectV2Field` with `iterationConfiguration` (an iteration whose title is unchanged keeps its id, so the items
   keep their wave). Order is a number field: the wave's position times 10 000, the workstream's times 100, then the
@@ -413,6 +428,21 @@ These test behaviour across modules, or the repository itself, so they are named
   its definition is the one on main and its job checks out main, with no package cache. No `pull_request_target`, no
   event text in a command line, and the script prints no token. Runs are grouped by the commit of the checks, so one pull
   request's waiting run never replaces another's. Actions are pinned to commit hashes at least 7 days old.
+
+## The wiki
+
+The [GitHub wiki](https://github.com/rogerbucks/graph-note/wiki) is made from the repository by `.github/workflows/wiki.yml`
+on every push to main and every release, so it is never edited by hand: an edit there is overwritten. `scripts/wiki.mjs`
+writes the status, roadmap, decisions, open questions, quality and releases pages from the files that hold them, and
+copies the pages written by a person from `wiki/`, filling each `<!-- wiki:NAME -->` marker. `wiki/How-to-use-Graph-Note.md`
+is the user guide, in plain words for people who are not technical: a change people will see changes it in the same pull
+request. Its pictures are `<!-- wiki:shot NAME -->` markers, taken from the build by `scripts/wiki-screens.mjs` (each
+shot is a state of `packages/obsidian/harness`, listed in `SHOTS`), and its settings come from the core's `OPTIONS`. A
+button of the drawing the guide does not name is a warning on the wiki's run. People may edit the wiki too: their pages
+are never changed by the workflow. `scripts/wiki-review.mjs` checks each page a person changed last, on every run and on
+every wiki edit, and the workflow keeps the suggestions in one open issue labelled `wiki-review`, closed when none is
+left. A person's edit to a page the wiki makes is listed there before the next run replaces it. To look at the wiki before a merge:
+`node scripts/wiki-screens.mjs --out out/images && node scripts/wiki.mjs --out out --labels out/images/labels.json`.
 
 ## The quality ratchet
 

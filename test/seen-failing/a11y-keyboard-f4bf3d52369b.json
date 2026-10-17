@@ -1,0 +1,6 @@
+{
+  "file": "test/a11y-keyboard.test.js",
+  "test": "the check itself > finds a dialog that lets Tab out, and one that Escape does not leave",
+  "seen_failing_first": false,
+  "evidence": "The check is new test support in the same commit and its planted faults are the proof it looks: it finds each planted fault and passes the clean cases, so there is no code before it for it to fail against."
+}

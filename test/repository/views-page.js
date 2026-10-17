@@ -1,0 +1,136 @@
+// The states of the browser editor's page, each reached on the page as built in a DOM (editor spec §11, §41): the one list
+// every accessibility check of the page goes through (test/wcag.test.js, test/a11y-semantics.test.js and
+// test/a11y-keyboard.test.js), so a state a later workstream adds gets its case here once and every check covers it.
+import { until } from '../../packages/obsidian/test/host/load-plugin.js';
+import { browserHost } from '../../packages/claude-code/page/browser-host.ts';
+import { PAGE_NOTE } from './wcag-page.js';
+
+/**
+ * Each state of the page by its name, reached through `open(hash, note, draft)`, which opens the page as the pane opens it
+ * (the token and the note in the address), or with neither, and gives it back.
+ */
+export function pageStates(open) {
+  const withNote = '#token=t&note=Reader.md';
+  const drawn = (page) =>
+    until(() => !!page.window.document.querySelector('.graph-note-pane-drawing svg.graph-note-svg'), 8000);
+  // a link naming a thing that is not there: a problem, listed with its fix, and an estimated link in the drawing
+  const SLIPPED = PAGE_NOTE.replace(
+    '(large)-[:ANSWERS]->(q)',
+    "(large)-[:ANSWERS]->(q),\n(eyes:Reason {title: 'E'}),\n(eyes)-[:FAVOURS]->(larg)",
+  );
+  const TWO_BLOCKS = `${PAGE_NOTE}\n\`\`\`gql\n// graph: other\n(x:Thing {name: 'X'})\n\`\`\`\n`;
+
+  return {
+    'before the note is opened, saying how to open it': async () => open(''),
+    'the note: words, a code block, a link, and the graph drawn with its words': async () => {
+      const page = open(withNote);
+      await drawn(page);
+      return page;
+    },
+    // the editing states (C9): the edit pane of the Obsidian host, which the layer draws on the page
+    'the edit pane with a problem listed and marked': async () => {
+      const page = open(withNote, SLIPPED);
+      await drawn(page);
+      await until(() => page.window.document.querySelectorAll('.graph-note-pane-problems li').length > 0);
+      return page;
+    },
+    'the edit pane with the picker of two graph blocks': async () => {
+      const page = open(withNote, TWO_BLOCKS);
+      await drawn(page);
+      await until(() => !!page.window.document.querySelector('select[aria-label="Graph block"]'));
+      return page;
+    },
+    'the edit pane with a kept draft offered back': async () => {
+      const page = open(withNote, PAGE_NOTE, { text: 'x', against: null });
+      await drawn(page);
+      await until(() => !page.window.document.querySelector('.graph-note-draft').hidden);
+      return page;
+    },
+    'the details of a thing, opened beside the text': async () => {
+      const page = open(withNote);
+      await drawn(page);
+      const box = page.window.document.querySelector('g.node[data-key]');
+      box.dispatchEvent(new page.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      await until(() => !!page.window.document.querySelector('.graph-note-details'));
+      return page;
+    },
+    'the details of an estimated link, with its quick fix': async () => {
+      const page = open(withNote, SLIPPED);
+      await drawn(page);
+      await until(() => !!page.window.document.querySelector('g.edge[data-estimate]'));
+      page.window.document
+        .querySelector('g.edge[data-estimate]')
+        .dispatchEvent(new page.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      await until(() => !!page.window.document.querySelector('.graph-note-details'));
+      return page;
+    },
+    'the export form open': async () => {
+      const page = open(withNote);
+      await drawn(page);
+      const exporter = () => page.window.document.querySelector('.graph-note-bar button[aria-label="Export"]');
+      await until(() => !!exporter());
+      exporter().click();
+      await until(() => !!page.window.document.querySelector('.graph-note-export'));
+      return page;
+    },
+    'a notice shown': async () => {
+      const page = open(withNote);
+      await drawn(page);
+      browserHost(page.window).notice('Exported two files.');
+      return page;
+    },
+    'a menu open': async () => {
+      const page = open(withNote);
+      await drawn(page);
+      browserHost(page.window).menu(
+        [
+          { title: 'Export as SVG', icon: 'download', onClick() {} },
+          'separator',
+          { title: 'Delete', icon: 'trash', warning: true, onClick() {} },
+        ],
+        { x: 20, y: 20 },
+        page.window.document,
+      );
+      return page;
+    },
+    // C8: the keyboard, the text version and reduced motion
+    'the skip link focused': async () => {
+      const page = open(withNote);
+      await drawn(page);
+      page.window.document.querySelector('.gn-skip').focus();
+      return page;
+    },
+    'a menu open with the keyboard on its second row': async () => {
+      const page = open(withNote);
+      await drawn(page);
+      const doc = page.window.document;
+      browserHost(page.window).menu(
+        [
+          { title: 'Export as SVG', icon: 'download', onClick() {} },
+          { title: 'Copy the address', icon: 'copy', onClick() {} },
+        ],
+        { x: 20, y: 20 },
+        doc,
+      );
+      doc.activeElement.dispatchEvent(new page.window.KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+      return page;
+    },
+    'the text version shown': async () => {
+      const page = open(withNote);
+      await drawn(page);
+      await until(() => !!page.window.document.querySelector('.gn-text-version li'));
+      return page;
+    },
+    'reduced motion asked for': async () => {
+      const page = open(withNote);
+      page.window.matchMedia = (media) => ({
+        media,
+        matches: /reduced-motion/.test(media),
+        addEventListener() {},
+        removeEventListener() {},
+      });
+      await drawn(page);
+      return page;
+    },
+  };
+}

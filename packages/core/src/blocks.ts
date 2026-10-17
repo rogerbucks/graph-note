@@ -111,6 +111,7 @@ export function dataKind(text: string): 'data' | 'schema' | null | Problem {
       line: p?.line ?? 1,
       message: p?.msg ?? 'the graph line cannot be read',
       fix: p?.fix ?? "start the block with '// graph: <name>'",
+      ...(p?.code ? { code: p.code } : {}),
     };
   }
 }

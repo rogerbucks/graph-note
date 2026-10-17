@@ -156,3 +156,16 @@ describe('a look', () => {
     assert.ok(group(out, 'node1').includes(`stroke:${hueColour('green', 'line', PALETTES.dark)}`));
   });
 });
+
+describe('a hostile drawing', () => {
+  // proves: view_export_stays_view
+  test('a run of groups never closed is left as it was, and every closed group before it still marked', () => {
+    const fade = { ...NONE, faded: { things: ['alice'], links: [] } };
+    const open = '<g id="node0"' + '<g id="edge0"'.repeat(20000);
+    assert.equal(marked(open, ['alice'], fade, PALETTES.light), open);
+    const tail = '<g id="node1">a</g>' + '<g id="edge0">a'.repeat(20000);
+    const out = marked(tail, ['alice'], fade, PALETTES.light);
+    assert.ok(out.startsWith(`<g id="node1" style="opacity:${FADED_OPACITY}">a</g>`));
+    assert.equal(out.length, tail.length + ` style="opacity:${FADED_OPACITY}"`.length);
+  });
+});

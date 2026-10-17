@@ -54,12 +54,16 @@ class Store {
         r.line,
         `[${written}] has no colon, and graph ${g} has no relationship type called ${written}`,
         `a relationship type is written with its colon: [:${written.toUpperCase()}]`,
+        undefined,
+        'GN301',
       );
     if (found.length > 1)
       throw new ProfileError(
         r.line,
         `[${written}] has no colon, and graph ${g} has relationship types ${found.slice(0, -1).join(', ')} and ${found.at(-1)}, which differ only by case`,
         `write the one meant with its colon, such as [:${found[0]}]`,
+        undefined,
+        'GN302',
       );
     this.bares.push({ graph: g, line: r.line, written, type: found[0] });
     if (!this.fixes.has(block)) this.fixes.set(block, []);
@@ -115,9 +119,21 @@ class Store {
   applyWhole(block) {
     let [g, kind] = header(block);
     if (kind === 'query')
-      throw new ProfileError(1, 'this is a query block', 'queries ask questions of a graph; they are not data');
+      throw new ProfileError(
+        1,
+        'this is a query block',
+        'queries ask questions of a graph; they are not data',
+        undefined,
+        'GN303',
+      );
     if (kind === 'excerpt')
-      throw new ProfileError(1, 'this is an excerpt', 'an excerpt illustrates part of a graph; it is not data');
+      throw new ProfileError(
+        1,
+        'this is an excerpt',
+        'an excerpt illustrates part of a graph; it is not data',
+        undefined,
+        'GN304',
+      );
     const first = block.split('\n').find((line) => trim(line)) || '';
     if (kind === 'schema') {
       const name = SHARED.exec(first)[1];
@@ -157,13 +173,21 @@ class Store {
     for (const m of matches) {
       const keys = Object.keys(m.props);
       if (keys.length !== 1 || keys[0] !== 'id')
-        throw new ProfileError(m.line, 'MATCH must find a node by its id alone', "write MATCH (v:Label {id: '…'})");
+        throw new ProfileError(
+          m.line,
+          'MATCH must find a node by its id alone',
+          "write MATCH (v:Label {id: '…'})",
+          undefined,
+          'GN305',
+        );
       const k = found(m.props.id);
       if (k === null || !m.labels.every((label) => graph.nodes.get(k).labels.has(label)))
         throw new ProfileError(
           m.line,
           `MATCH finds no ${m.labels.join(':')} with id '${m.props.id}' in graph ${g}`,
           'the node must be written earlier — in this document or one loaded before it',
+          undefined,
+          'GN306',
         );
       bound[m.v] = k;
     }
@@ -173,13 +197,21 @@ class Store {
       for (const n of nodes) {
         if (writes(n)) {
           if (n.v in bound)
-            throw new ProfileError(n.line, `${n.v} is written twice`, 'give each new node its own variable');
+            throw new ProfileError(
+              n.line,
+              `${n.v} is written twice`,
+              'give each new node its own variable',
+              undefined,
+              'GN307',
+            );
           if (!('id' in n.props)) n.props = Object.assign({ id: n.v }, n.props); // a thing's name is its id (§3, 6 Oct 2026)
           if (found(n.props.id) !== null)
             throw new ProfileError(
               n.line,
               `id '${n.props.id}' is already a node in graph ${g}`,
               'an id names one node (§10) — MATCH it to add to it, or supersede it (§12)',
+              undefined,
+              'GN308',
             );
           const k = 'n' + ++this.k;
           graph.nodes.set(k, { labels: new Set(n.labels), props: Object.assign({}, n.props) });
@@ -192,6 +224,8 @@ class Store {
               n.line,
               `${n.v} is used before it is written`,
               'write the node before any relationship that uses it — GQL binds a name only once its node is written (§3)',
+              undefined,
+              'GN309',
             );
           const k = found(n.v); // a bare name not written in this block names the existing node with that id (§3)
           if (k === null)
@@ -199,6 +233,8 @@ class Store {
               n.line,
               `no thing called ${n.v} in graph ${g}`,
               `check the spelling — or write it here with its kind: (${n.v}:Kind {…})`,
+              undefined,
+              'GN310',
             );
           bound[n.v] = k;
         }
@@ -219,6 +255,8 @@ class Store {
           n,
           `SET names ${v}, which is no thing in graph ${g}`,
           'check the spelling — SET names a thing by its id',
+          undefined,
+          'GN311',
         );
       // never an id: the parser refuses a SET of one (§3, req:3.set-keeps-id), so the index stays good
       graph.nodes.get(bound[v]).props[key] = val;

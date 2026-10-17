@@ -1,0 +1,6 @@
+{
+  "file": "test/a11y-keyboard.test.js",
+  "test": "the check itself > finds an action out of the tab order that no arrow key reaches",
+  "seen_failing_first": false,
+  "evidence": "The check is new test support in the same commit and its planted faults are the proof it looks: it finds each planted fault and passes the clean cases, so there is no code before it for it to fail against."
+}

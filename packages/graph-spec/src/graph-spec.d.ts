@@ -14,12 +14,14 @@ declare namespace GraphSpecCheck {
 
   /** A block that is outside the document profile: its line (1 = the block's first line), what is wrong, and the fix. */
   class ProfileError extends Error {
-    constructor(line: number, message: string, fix: string, at?: number);
+    constructor(line: number, message: string, fix: string, at?: number, code?: string);
     line: number;
     msg: string;
     fix: string;
     /** Where the fix is one insertion: the character on the line it goes before (0-based). */
     at?: number;
+    /** The problem's stable code, such as GN101, the same from the Python reader (src/reader/problem-codes.json). */
+    code?: string;
   }
 
   type BlockKind = 'data' | 'schema' | 'query' | 'excerpt' | 'changeset';

@@ -5,6 +5,9 @@
 // (cc_settings_shared), and a note is written by the session in a later workstream, never here.
 import { settingsFrom } from '../../core/src/settings.ts';
 import type { Settings } from '../../core/src/settings.ts';
+import type { PageVersion } from './changes-section.ts';
+import type { PageItemFiles } from './review-section.ts';
+import type { ReviewItem } from '../../core/src/github-review-items.ts';
 
 /** What the server gives for a note: its text, its version and any draft kept for it, with the version it was typed against. */
 export interface NoteReply {
@@ -27,7 +30,29 @@ export function serverCalls(token: string, fetcher: typeof fetch) {
     if (!reply.ok) throw new Error(`The editor server said ${reply.status}: ${await reply.text()}`);
     return reply.json();
   };
+  // an answer the server explains with a `why` is said in its words
+  const explained = async (path: string): Promise<unknown> => {
+    const reply = await fetcher(`/api/${path}`, { headers: { authorization: `Bearer ${token}` } });
+    const body = (await reply.json().catch(() => ({}))) as { why?: unknown };
+    if (!reply.ok) throw new Error(typeof body.why === 'string' ? body.why : `The editor server said ${reply.status}.`);
+    return body;
+  };
+  const id = (note: string) => `notes/${encodeURIComponent(note)}`;
   return {
+    /** The note's earlier versions, asked for only when the user asks to compare (changes_view). */
+    versions: async (note: string): Promise<PageVersion[]> =>
+      ((await explained(`${id(note)}/versions`)) as { versions: PageVersion[] }).versions,
+    /** The note's text at one of the versions just listed. */
+    textAt: async (note: string, commit: string): Promise<string> =>
+      ((await explained(`${id(note)}/at/${encodeURIComponent(commit)}`)) as { text: string }).text,
+    /** The pull requests, merges and commits of the note's repository, asked for only when the user asks to review. */
+    reviews: async (note: string): Promise<ReviewItem[]> =>
+      ((await explained(`${id(note)}/reviews`)) as { items: ReviewItem[] }).items,
+    /** One of the items just listed, with its changed files. */
+    review: async (note: string, item: ReviewItem): Promise<PageItemFiles> =>
+      (await explained(
+        `${id(note)}/reviews/${encodeURIComponent(item.kind)}/${encodeURIComponent(item.id)}`,
+      )) as PageItemFiles,
     /** The settings the mod uses, read only. */
     settings: async (): Promise<Settings> => settingsFrom(await get('settings')),
     /** The note the session was opened for. */

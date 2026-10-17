@@ -1,6 +1,13 @@
-// The last part of the types src/index.ts exports, from SafeWrite on, sorted: test support only, nothing here ships. It
+// The last part of the types src/index.ts exports, from ReviewItem on, sorted: test support only, nothing here ships. It
 // is kept apart from index-names.js, which joins it to the types before it, so neither file passes the test file size.
 export const TYPES_LATE = [
+  'ReviewItem',
+  'ReviewLevels',
+  'ReviewSource',
+  'Reviewed',
+  'Routing',
+  'RuleReport',
+  'RunnerOptions',
   'SafeWrite',
   'Scheduler',
   'ScopeChoice',
@@ -38,6 +45,7 @@ export const TYPES_LATE = [
   'StyleScope',
   'StyleTarget',
   'Suggestion',
+  'SummaryGroup',
   'SwitchSetting',
   'Target',
   'TextChange',
@@ -47,7 +55,9 @@ export const TYPES_LATE = [
   'ThemeColours',
   'ThingAdded',
   'ThingLook',
-  'ThingNote', // a note on a thing or a link (editor spec §24, 13 Oct 2026)
+  'ThingNote', // a note on a thing or a link (editor spec §24, 13 Oct 2026)',
+  'Threshold',
+  'ThresholdName',
   'Token',
   'TokenClass',
   'Told',
@@ -69,6 +79,10 @@ export const TYPES_LATE = [
   'ViewSwitches',
   'WalkedPath',
   'Which',
+  'WordKey',
+  'WordValues',
+  'Words',
+  'Workstreams',
   'WriteOps',
   'WriteResult',
   'ZoomEvent',

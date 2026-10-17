@@ -3,13 +3,29 @@
 // announced to screen readers.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { build, wait } from './host/load-plugin.js';
+import { build, until, wait } from './host/load-plugin.js';
 import { labelled } from './host/notes.js';
 import { READER, NOTE, open, textarea, type, note } from './host/pane-notes.js';
 
 before(() => build());
 
 describe('problems, in place', () => {
+  test('the keyboard going from the field to a fix on its line lands on it: the bar is not drawn again as it goes', async () => {
+    const env = await open();
+    try {
+      type(env.el, READER + ',\n(eyes)-[:FAVOURS]->(larg)');
+      const fixOf = () => labelled(env.el.querySelector('.graph-note-fixbar'), 'Change larg to large');
+      await until(() => !!fixOf());
+      textarea(env.el).focus();
+      const fix = fixOf();
+      fix.focus();
+      assert.ok(fix.isConnected, 'the fix is still on the page');
+      assert.ok(env.doc.activeElement === fix, 'the fix has the focus');
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('a problem is marked where it is, and its fix is offered on that line', async () => {
     const env = await open();
     try {
@@ -93,6 +109,33 @@ describe('suggestions while typing', () => {
       const ev = textarea(env.el).dispatch('keydown', { key: 'Tab' });
       assert.ok(ev.defaultPrevented);
       assert.equal(textarea(env.el).value, READER + ',\n(eyes)-[:FAVOURS]->(question');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('once the word is the first suggestion, Tab is left alone, so the keyboard can leave the field', async () => {
+    const env = await open();
+    try {
+      type(env.el, READER + ',\n(eyes)-[:FAVOURS]->(qu');
+      assert.ok(textarea(env.el).dispatch('keydown', { key: 'Tab' }).defaultPrevented);
+      assert.equal(textarea(env.el).value, READER + ',\n(eyes)-[:FAVOURS]->(question');
+      assert.equal(textarea(env.el).dispatch('keydown', { key: 'Tab' }).defaultPrevented, false);
+      assert.equal(textarea(env.el).value, READER + ',\n(eyes)-[:FAVOURS]->(question');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('the keyboard going from the field to a suggestion lands on it: the bar is not drawn again as it goes', async () => {
+    const env = await open();
+    try {
+      type(env.el, READER + ',\n(eyes)-[:FAVOURS]->(qu');
+      textarea(env.el).focus();
+      const offered = env.el.querySelector('.graph-note-suggestions button');
+      offered.focus();
+      assert.ok(offered.isConnected, 'the suggestion is still on the page');
+      assert.ok(env.doc.activeElement === offered, 'the suggestion has the focus');
     } finally {
       env.uninstall();
     }

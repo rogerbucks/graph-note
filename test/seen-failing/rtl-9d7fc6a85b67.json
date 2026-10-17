@@ -1,0 +1,6 @@
+{
+  "file": "test/rtl.test.js",
+  "test": "the style sheets mirror in a right-to-left language > every rule listed as placed at a measured point is still in its sheet, with a reason",
+  "seen_failing_first": false,
+  "evidence": "It guards the allow-list against rules that are later removed; those rules already existed, so it passes before the change by design."
+}

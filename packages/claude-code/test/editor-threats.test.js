@@ -423,9 +423,39 @@ describe('no outgoing request (cc_no_remote)', () => {
     const [output] = Object.values(built.metafile.outputs);
     const external = [...new Set(output.imports.filter((i) => i.external).map((i) => i.path))].sort();
     // node:path names the note's place for the store the process now serves (C2), and node:fs/promises and node:url
-    // find and read the page's own files in the folder beside it (C5); none of them opens a connection
-    assert.deepEqual(external, ['node:crypto', 'node:fs', 'node:fs/promises', 'node:http', 'node:path', 'node:url']);
+    // find and read the page's own files in the folder beside it (C5); none of them opens a connection.
+    // node:child_process runs git, to read the open note's earlier versions for the changes view (changes_view, Roger,
+    // 17 Oct 2026): one execFile of git, with every transport refused and no lazy fetch. And it runs the user's own gh,
+    // the one request that leaves the machine, made only when the user asks to review their repository's changes
+    // (github_review_items, Roger, 17 Oct 2026): one execFile of gh, for GET alone on github.com, handed no token.
+    assert.deepEqual(external, [
+      'node:child_process',
+      'node:crypto',
+      'node:fs',
+      'node:fs/promises',
+      'node:http',
+      'node:path',
+      'node:url',
+    ]);
     const text = built.outputFiles[0].text;
+    // a name esbuild gives a second import of execFile (execFile2) is counted too
+    assert.deepEqual(
+      text.match(/\bexecFile\d*\(\s*"\w+"/g)?.map((c) => c.replace(/^execFile\d*\(\s*/, '')),
+      ['"git"', '"gh"'],
+    );
+    assert.equal(text.match(/\bexecFile\d*\s*\(/g)?.length, 2);
+    assert.ok(text.includes('["api", "--method", "GET", "--hostname", "github.com"]'));
+    assert.equal(text.match(/"--method"/g)?.length, 1);
+    for (const writing of [/"(-X|-f|-F|--field|--raw-field|--input)"/, /\bGH_TOKEN\b/, /\bGITHUB_TOKEN\b/])
+      assert.doesNotMatch(text, writing);
+    assert.doesNotMatch(text, /(?<![.\w])(spawn|spawnSync|exec|execSync|execFileSync|fork)\s*\(/);
+    for (const setting of [
+      'protocol.allow=never',
+      'core.hooksPath=/dev/null',
+      'core.fsmonitor=false',
+      'GIT_NO_LAZY_FETCH',
+    ])
+      assert.ok(text.includes(setting), setting);
     for (const call of [
       /\bfetch\s*\(/,
       /\.request\s*\(/,

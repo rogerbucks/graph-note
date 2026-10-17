@@ -18,7 +18,7 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { CURRENT_SLICE, REQUIREMENTS, filesOf, sliceDone } from './check-requirements.mjs';
+import { CURRENT_SLICE, REQUIREMENTS, filesOf, requirementsGraph, sliceDone } from './check-requirements.mjs';
 import { ALTITUDES, BOARD_CSS } from './slice-board-style.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -49,7 +49,7 @@ export function statusOf(tests) {
  * Throws what the reader throws for a text it cannot read.
  */
 export function readBoard(text) {
-  const store = read([text]);
+  const store = read([requirementsGraph(text)]);
   const graph = store.graph(Object.keys(store.graphs)[0]);
   const ofLabel = (label) => [...graph.nodes].filter(([, n]) => n.labels.has(label));
   const tests = new Map(

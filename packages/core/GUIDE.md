@@ -253,7 +253,8 @@ own handlers. Nothing here reaches the network.
 - `store.ts` — replacing or inserting a block in a note, keeping every other byte; `replaceSpan` writes a block already
   found, as the session finds its own.
 - `history.ts` — the text's own undo history.
-- `help.ts` — diagnostics, fixes, completions and the read-back, in the shapes of the Language Server Protocol.
+- `help.ts` — diagnostics, fixes, completions and the read-back, in the shapes of the Language Server Protocol; a
+  diagnostic's `code` is its `Problem.code`, the graph spec reader's stable code (editor spec §42, problem_codes).
 - `tokens.ts` — the gql-highlight tokenizer, for colouring.
 - `name-suggestions.ts` — a name from a text, in the style of the graph's names and never one of them or a reserved
   word; a text from a name; and the ASCII words and slug of a text (`nameWords`, `nameSlug`), as the graph reader's names allow.
@@ -560,7 +561,25 @@ a GQL block, CSV or GraphML (`DATA_FORMATS`), each read back into the very thing
   view holds only its own, unless its faded context is asked for: then the whole graph, with what is outside the view
   in `faded`, which each format marks. Each thing's and link's `///` note, as `notes.ts` put it on the drawing, is in
   `notes` (§24, note_standard): kept by a format with comments, left out of CSV, which has none. `dataText` writes it
-  in one of `DATA_FORMATS`. No layout is asked for.
+  in one of `DATA_FORMATS`, the built-in exports `CORE_EXPORTS` adds through the plug-in interface. No layout is asked for.
+- `locale-formats.ts` — what is shown, in the reader's locale (editor spec §42, locale_formats, locale_sorting):
+  `formatCount`, `formatSize`, `formatDay`, `formatInstant`, `formatList` and `sortedForReader`, through the platform's
+  Intl, in the locale `setLocale` was given (UK English until then, and for a tag the platform does not know). Never for
+  what is written into a note, an export's data or the layout source (locale_never_changes_bytes), so an order written
+  into text, as `github-review-items.ts` writes its groups, keeps one collation. `hosts/refusal-words.ts` still says its
+  counts in UK English, as a host-side module may import only types from the core.
+- `words.ts` and `source-words.ts` — the words the person reads, by key (editor spec §42, words_catalogue,
+  language_follows_host, translations_as_files): `word(key, values)` says one in the current language, its `{name}`
+  placeholders filled and its plural form picked for `count` by `Intl.PluralRules`; `SOURCE_WORDS` is UK English. A
+  translation is checked by `translationProblems` and added by `addTranslation`; `setLanguage`, called by
+  `installHost` with the host's `language()`, picks it, or its base language's, else UK English. A word a translation
+  lacks is said in UK English, never as its key. Places move their words into `source-words.ts` one at a time.
+- `plugins.ts` — the plug-in interface (editor spec §43, plugin_interface, plugin_manifest_limits): `pluginRegistry`,
+  where a `GraphNotePlugin` is installed once its manifest (`id`, `version`, `api` of `PLUGIN_API`, the `uses` it names
+  of `EXTENSION_POINTS`) is accepted, given only the points it names; a refused plug-in leaves nothing behind, and a
+  call into one that throws is caught and named (`PluginResult`). Its first point is the data exports (`DataExporter`).
+- `plugins-contract.ts` — the contract suite of each extension point (plugin_contract_suites): `exporterContract`, the
+  checks a data export is held to on `sampleExports`, which the built-ins pass.
 - `export-data-model.ts` — the data's types, and the five kinds of value the profile reads, each said so it reads back.
 - `export-data-gql.ts` — a GQL block: the graph line, a comment saying where it came from, a thing or link to a line; a
   thing under its id, or, where its id cannot be a name, under `thing_<n>` with its id written in full. A thing or link
@@ -662,6 +681,34 @@ the graph and never written until a person accepts a change, and then written as
 - `proposals-shown.ts` — the shapes a review hands a host: `ProposalShown`, its `ChangeRow`s, who decides (`Person`), which
   changes (`Which`) and what came of it (`Reviewed`).
 
+**The changes view (spec §41)**
+
+- `changes-view.ts` — `changesView(before, after, graph)`: two versions of a note, such as the text as it is now and the
+  last commit or a branch, drawn as one graph: every thing and link of the newer, then what the older held that the
+  newer has not, laid out as a plain network (every link still, nothing folded or nudged, no near miss guessed) so every
+  change is in sight. Each thing and link added, removed or changed is marked (the proposals' `Marks`) and listed
+  (`ChangeLine`: its sentence and each property changed); `changesText` is the list as text, `NO_CHANGES` when the two
+  are the same. A thing is matched by its key, a link by its ends and type, the first written first. `markedChanges`
+  writes the marks into the drawn SVG in a palette's fixed colours by `CHANGE_LOOKS` (added a heavy line, changed
+  dashed, removed dotted with its text in italics), so the line tells them apart without colour, in either theme. The
+  host gives the older text however it reads it; nothing is written (changes_view).
+- `github-review-items.ts` — pull requests, merges and commits as items to review (github_review_items): `ReviewItems`
+  over a `ReviewSource` the host hands in (it reads GitHub with its own sign-in; the core reaches no network), which is
+  asked nothing until `list` or `review` is called, each read kept once it succeeds. `reviewLevels` gives an item's
+  changed files at every level, highest first (`REVIEW_LEVELS`): a summary by section (a thing's `section`, named by its
+  Section), by workstream (`workstreamsFrom`, the repository's `workstreams.json`) and each Requirement changed; each
+  graph's changes, ready for the changes view; and every line. `asNote` reads a `.gql` file as the one block it is.
+- `line-diff.ts` — `lineDiff`: every line kept, added or removed, by Myers' shortest edit script, each numbered in the
+  text it is in; past `DIFF_LIMIT` edits, null, so a host says it is too large rather than comparing without end.
+
+**Open numbers (spec §41)**
+
+- `thresholds.ts` — `THRESHOLDS` (thresholds_named): every number a rule leaves open, by name, with its default, the
+  least and most it may be, its unit, what it governs and the requirement that leaves it open (`busy_hub`, `path_pace`,
+  `reread_budget`, `diff_limit`). `thresholdValue` takes a value handed in only inside its range, else the default. The
+  code's own names (`BUSY_HUB`, `DEFAULT_PACE`, `REREAD_BUDGET`, `DIFF_LIMIT`) read their defaults from here; a rule of
+  a later slice adds its entry as it is built (type_suggestion_bundle, centroid_cycle_guard), so the test stays partial.
+
 **Working with an AI (spec §19)**
 
 The core reaches no network: a send goes only through the transport a host hands in, and only once the user has seen
@@ -757,7 +804,8 @@ host-free entry: `index.ts` exports none of it, and it is reached by the subpath
 (`package.json` `exports`), so a host that draws nothing, like the Claude Code mod's hooks, never bundles it. It is
 DOM code, so it has a `tsconfig.json` of its own with the DOM library (`tsc -p packages/core/src/display`), and the
 core's own type check leaves it out. It is bundled, never run by Node on its own, so it is not held to erasable
-TypeScript; `host.ts`, `lifecycle.ts` and `dom-helpers.ts` are, because their tests load them directly. It imports no
+TypeScript; `host.ts`, `host-contract.ts`, `lifecycle.ts` and `dom-helpers.ts` are, because their tests load them
+directly. It imports no
 host (`test/imports.test.js` holds it to the layer, the core by its name and the graph library) and has the host's
 part come in through `host.ts`.
 
@@ -766,6 +814,9 @@ part come in through `host.ts`.
   page's does: `graph-view/drawing-svg.ts` then renames each style attribute of a drawing in its text before the parser
   sees it and sets the same declarations through the CSSOM, which the policy allows); `installHost` once before anything
   is drawn, `displayHost` for the layer's own use, which throws `NO_HOST` rather than draw a blank.
+- `host-contract.ts` — `hostContract`, the one contract every host's adapter is held to (editor spec §43,
+  hosts_pass_contract): checks with no test framework, each throwing with what was wanted, run against a fresh host and
+  the `HostProbe` through which it shows what it drew; `HOST_CONTRACT_VERSION` moves with `DisplayHost`.
 - `refusal-banner.ts` — why a graph is shown as text instead of drawn, in the core's words, with an icon.
 - `src/display/editor/` — the edit pane (spec §4, §9; editor spec §26, C9), the same one in the Obsidian pane and on the
   browser editor's page: `block-editor.ts` (`BlockEditor`, a `Lifecycle`: the text field over its coloured picture, the

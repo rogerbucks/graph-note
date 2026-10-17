@@ -24,7 +24,7 @@ export const AID_OPTIONS: Option[] = [
     section: 'Drawing',
     name: 'Keep the details open',
     sentence:
-      'Whether the details panel stays open beside the drawing (below it where the card is narrow), showing a summary of the graph while nothing is chosen. Off unless you turn it on.',
+      'Whether the details panel stays open beside the drawing, or below it where the card is narrow. While nothing is chosen, it shows a summary of the graph. Off unless you turn it on.',
     choices: [
       { value: 'on', name: 'On' },
       { value: 'off', name: 'Off' },

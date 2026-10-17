@@ -1,7 +1,16 @@
 // What the Claude Code pane shows for a note (spec §10, a Claude Code host): its first graph, read and themed by the
 // core in the host's palette from the one table, laid out by Graphviz through node (graphviz-process.ts); and always the
 // same graph as lines of text, which stand in, with the reason, wherever no drawing can be (spec §9): never a blank pane.
-import { chosen, directions, gqlBlocks, LAYOUT_LIMITS, PALETTES, readNote, tooLarge } from '@graph-note/core';
+import {
+  chosen,
+  directions,
+  formatCount,
+  gqlBlocks,
+  LAYOUT_LIMITS,
+  PALETTES,
+  readNote,
+  tooLarge,
+} from '@graph-note/core';
 import type { Palette, Refusal } from '@graph-note/core';
 import type { Laid } from './graphviz-process.ts';
 
@@ -30,7 +39,7 @@ const INSTEAD = 'It is shown as text instead.';
 /** Why a graph is over the layout limits, in words. */
 function refusalWords(r: Refusal): string {
   if (r.reason !== 'too-large') return `Not drawn. ${INSTEAD}`;
-  const n = (x: number) => x.toLocaleString('en-GB');
+  const n = formatCount;
   if (r.limit === 'text-bytes' || r.limit === 'text-lines') {
     const unit = r.limit === 'text-bytes' ? 'bytes' : 'lines';
     return `Too large to read: the graph blocks here hold ${n(r.count)} ${unit}, and at most ${n(r.most)} are read.`;

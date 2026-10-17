@@ -19,6 +19,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { gqlBlocks } from '../packages/core/src/blocks.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const { read } = createRequire(import.meta.url)('../packages/graph-spec/src/graph-spec-check.js');
@@ -51,6 +52,16 @@ export const TEST_STATUSES = ['planned', 'partial', 'written'];
 /** The statuses whose test file must be in the repository. */
 export const HAS_FILE = ['partial', 'written'];
 
+/**
+ * The requirements graph's text from the copy as kept (requirements_as_graph_note): a graph file is the graph itself; a
+ * note holds it as the one block that opens on the banner, found by the core's own block reader, so either form passes
+ * every reader here alike. A note with no such block, or with more than one, is given back as it is, and refused.
+ */
+export function requirementsGraph(text) {
+  const own = gqlBlocks(text).filter((b) => b.text.split('\n')[0] === BANNER[0]);
+  return own.length === 1 ? `${own[0].text}\n` : text;
+}
+
 /** A banner problem, as the audit lists it, for each line of the banner the file opens on that is not as it should be. */
 function bannerProblems(text) {
   const lines = text.split('\n');
@@ -73,7 +84,8 @@ function bannerProblems(text) {
  * whole number, or with a BLOCKS link to something that is not a requirement) or blocks (a BLOCKS link from something
  * that is not a question). exists(path) says whether the repository holds a repo-relative path.
  */
-export function auditRequirements(text, { exists = (rel) => existsSync(join(ROOT, rel)), slice = CURRENT_SLICE } = {}) {
+export function auditRequirements(copy, { exists = (rel) => existsSync(join(ROOT, rel)), slice = CURRENT_SLICE } = {}) {
+  const text = requirementsGraph(copy);
   const problems = bannerProblems(text);
 
   let graph;
@@ -171,7 +183,8 @@ export function auditRequirements(text, { exists = (rel) => existsSync(join(ROOT
  * holds), and `said` says it in a line. A slice with no requirements is never done. Only the slice's own requirements
  * count. Throws what the reader throws for a copy it cannot read.
  */
-export function sliceDone(text, slice, { exists = (rel) => existsSync(join(ROOT, rel)) } = {}) {
+export function sliceDone(copy, slice, { exists = (rel) => existsSync(join(ROOT, rel)) } = {}) {
+  const text = requirementsGraph(copy);
   const store = read([text]);
   const graph = store.graph(Object.keys(store.graphs)[0]);
   const proving = new Map();

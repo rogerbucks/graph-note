@@ -1,5 +1,6 @@
 // Zooming a drawing (spec §3): fitted to the note to start with, zoomed by button, key and Ctrl or Command with the wheel,
-// one finger left to scroll the note; and full screen, where the wheel alone zooms.
+// one finger left to scroll the note; and full screen, where the wheel alone zooms, which keeps the keyboard in it and
+// gives it back on leaving.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from './host/load-plugin.js';
@@ -125,6 +126,35 @@ describe('full screen', () => {
     assert.ok(labelled(overlay, 'Close full screen'));
     overlay.querySelector('.graph-note-viewport').dispatch('keydown', { key: 'Escape' });
     assert.equal(env.doc.body.querySelector('.graph-note-fullscreen'), null);
+  });
+
+  test('full screen takes the focus and keeps Tab in it; Escape from any control leaves, back to Full screen', async () => {
+    const { el } = await show(env, fence(GRAPH));
+    const opener = labelled(el, 'Full screen');
+    opener.focus();
+    opener.click();
+    try {
+      const overlay = env.doc.body.querySelector('.graph-note-fullscreen');
+      assert.ok(overlay.contains(env.doc.activeElement), 'the focus is in full screen');
+      const stops = overlay
+        .querySelectorAll('button, [tabindex]')
+        .filter((e) => !e.closest('[hidden]') && e.getAttribute('tabindex') !== '-1');
+      const [first, last] = [stops[0], stops.at(-1)];
+      last.focus();
+      assert.ok(last.dispatch('keydown', { key: 'Tab' }).defaultPrevented);
+      assert.ok(env.doc.activeElement === first, 'Tab from the last goes round to the first');
+      assert.ok(first.dispatch('keydown', { key: 'Tab', shiftKey: true }).defaultPrevented);
+      assert.ok(env.doc.activeElement === last, 'Shift+Tab from the first goes round to the last');
+      const fit = labelled(overlay, 'Fit');
+      fit.focus();
+      fit.dispatch('keydown', { key: 'Escape' });
+      assert.ok(!env.doc.body.querySelector('.graph-note-fullscreen'), 'Escape on the bar leaves too');
+      assert.ok(env.doc.activeElement === labelled(el, 'Full screen'), 'the focus is back where it was');
+    } finally {
+      // left open by a failure, full screen would stand in the way of the next test
+      const open = env.doc.body.querySelector('.graph-note-fullscreen');
+      if (open) labelled(open, 'Close full screen').click();
+    }
   });
 
   test('in full screen the wheel alone zooms', async () => {

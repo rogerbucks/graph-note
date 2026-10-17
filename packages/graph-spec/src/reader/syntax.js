@@ -35,6 +35,8 @@ function bindOrder(matches, paths) {
           n.line,
           `${n.v} is used before it is written`,
           'write the node before any relationship that uses it — GQL binds a name only once its node is written (§3)',
+          undefined,
+          'GN309',
         );
     }
 }
