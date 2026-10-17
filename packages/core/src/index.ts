@@ -163,6 +163,17 @@ export { CORE_EXPORTS, DATA_FORMATS, dataText, exportedData, isDataFormat } from
 export type { DataFormat } from './export-data.ts';
 export type { DataInfo, ExportedData } from './export-data-model.ts';
 export { EXTENSION_POINTS, PLUGIN_API, pluginRegistry } from './plugins.ts';
+export {
+  currentLocale,
+  DEFAULT_LOCALE,
+  formatCount,
+  formatDay,
+  formatInstant,
+  formatList,
+  formatSize,
+  setLocale,
+  sortedForReader,
+} from './locale-formats.ts';
 export type {
   DataExporter,
   ExtensionPoint,

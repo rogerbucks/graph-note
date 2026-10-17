@@ -50,7 +50,9 @@
 // NO_CHANGES, ChangeLine and ChangesShown, changes_view) came on 17 Oct 2026, and the review items (ReviewItems,
 // reviewLevels, asNote, groupSaid, workstreamsFrom, REVIEW_LEVELS, lineDiff, DIFF_LIMIT and their types,
 // github_review_items) the same day. The plug-in interface (pluginRegistry, PLUGIN_API, EXTENSION_POINTS, CORE_EXPORTS,
-// exporterContract, sampleExports and their types, plugin_interface) came on 17 Oct 2026 as well. The lists moved here from index.test.js in the review of #452.
+// exporterContract, sampleExports and their types, plugin_interface) came on 17 Oct 2026 as well, and the locale's
+// formats (setLocale, currentLocale, DEFAULT_LOCALE, formatCount, formatSize, formatDay, formatInstant,
+// formatList, sortedForReader, locale_formats) the same day. The lists moved here from index.test.js in the review of #452.
 import { TYPES_LATE } from './index-types-late.js';
 
 /** The values src/index.ts exports, sorted. */
@@ -66,6 +68,7 @@ export const VALUES = [
   'CORE_EXPORTS',
   'DATA_FORMATS',
   'DECIDER_DEFAULT',
+  'DEFAULT_LOCALE',
   'DEFAULT_PACE',
   'DEFAULT_SETTINGS',
   'DEPARTURES',
@@ -179,6 +182,7 @@ export const VALUES = [
   'completions',
   'confirmSend',
   'coverOf',
+  'currentLocale',
   'dataText',
   'deciderName',
   'declareDeferred',
@@ -215,6 +219,11 @@ export const VALUES = [
   'flowSaid',
   'focusOf',
   'foldsHiding',
+  'formatCount',
+  'formatDay',
+  'formatInstant',
+  'formatList',
+  'formatSize',
   'givenLabel',
   'glideAt',
   'gqlBlocks',
@@ -328,6 +337,7 @@ export const VALUES = [
   'scrollsOneWay',
   'sendPrepared',
   'serveLayouts',
+  'setLocale',
   'setNote',
   'setProperty',
   'settingsFrom',
@@ -336,6 +346,7 @@ export const VALUES = [
   'sheetLimit',
   'shortestPath',
   'sizeOf',
+  'sortedForReader',
   'sourceFor',
   'sourceOf',
   'spanOf',

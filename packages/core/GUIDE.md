@@ -561,6 +561,12 @@ a GQL block, CSV or GraphML (`DATA_FORMATS`), each read back into the very thing
   in `faded`, which each format marks. Each thing's and link's `///` note, as `notes.ts` put it on the drawing, is in
   `notes` (§24, note_standard): kept by a format with comments, left out of CSV, which has none. `dataText` writes it
   in one of `DATA_FORMATS`, the built-in exports `CORE_EXPORTS` adds through the plug-in interface. No layout is asked for.
+- `locale-formats.ts` — what is shown, in the reader's locale (editor spec §42, locale_formats, locale_sorting):
+  `formatCount`, `formatSize`, `formatDay`, `formatInstant`, `formatList` and `sortedForReader`, through the platform's
+  Intl, in the locale `setLocale` was given (UK English until then, and for a tag the platform does not know). Never for
+  what is written into a note, an export's data or the layout source (locale_never_changes_bytes), so an order written
+  into text, as `github-review-items.ts` writes its groups, keeps one collation. `hosts/refusal-words.ts` still says its
+  counts in UK English, as a host-side module may import only types from the core.
 - `plugins.ts` — the plug-in interface (editor spec §43, plugin_interface, plugin_manifest_limits): `pluginRegistry`,
   where a `GraphNotePlugin` is installed once its manifest (`id`, `version`, `api` of `PLUGIN_API`, the `uses` it names
   of `EXTENSION_POINTS`) is accepted, given only the points it names; a refused plug-in leaves nothing behind, and a

@@ -8,6 +8,7 @@
 import gs from '@graph-note/graph-spec';
 import { firstLine, gqlBlocks, graphOfBlock, isStepBlock } from './blocks.ts';
 import { readNote } from './drawing.ts';
+import { formatCount } from './locale-formats.ts';
 import { linkChange, makeProposal, thingChange } from './proposals.ts';
 import type { ChangeInput, Proposal } from './proposals.ts';
 import { basisOf } from './proposals-basis.ts';
@@ -97,7 +98,7 @@ export function stepOf(text: string, block = 0): Step | StepFault | null {
   // note can hold the editor (§9)
   if (text.length > MOST_STEP_CHARACTERS)
     return fault(
-      `a step is at most ${MOST_STEP_CHARACTERS.toLocaleString('en-GB')} characters long, and this one is ${text.length.toLocaleString('en-GB')}: shorten it, or split it into steps`,
+      `a step is at most ${formatCount(MOST_STEP_CHARACTERS)} characters long, and this one is ${formatCount(text.length)}: shorten it, or split it into steps`,
     );
   const lines = text.split('\n'),
     at = lines.findIndex((l) => trim(l));
@@ -215,7 +216,7 @@ export function runStep(
   if (over)
     return {
       refused: [
-        `Step ${name} found more than ${MOST_MATCHES.toLocaleString('en-GB')} matches, so it was stopped: give it a smaller part of the graph.`,
+        `Step ${name} found more than ${formatCount(MOST_MATCHES)} matches, so it was stopped: give it a smaller part of the graph.`,
       ],
     };
   const at = (m: StepMatch, thing: string) => m.ids[step.rule.things.findIndex((t) => t.name === thing)] ?? '';
