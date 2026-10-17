@@ -72,7 +72,7 @@ describe('one code style', () => {
     const py = read(`${PYTHON}/pyproject.toml`);
     assert.match(py, /\[dependency-groups\][^[]*\ndev = \["ruff==0\.16\.9"\]/);
     assert.match(py, /\[tool\.ruff\][^[]*\nline-length = 99/);
-    assert.match(py, /\[tool\.ruff\.lint\](?:\s*#.*)*\s*select = \["E", "W", "F", "N"[\],]/);
+    assert.match(py, /\[tool\.ruff\.lint\]\n(?:#[^\n]*\n)*select = \["E", "W", "F", "N"[\],]/);
     assert.match(ci(), /run: uv run --locked ruff check/);
     assert.match(ci(), /run: uv run --locked ruff format --check/);
     const ruff = path(`${PYTHON}/.venv/bin/ruff`);
@@ -256,7 +256,7 @@ describe('the code’s layout', () => {
 
   test('every public Python module, class, method and function has its docstring: Ruff checks it', () => {
     const py = read(`${PYTHON}/pyproject.toml`);
-    const select = /\[tool\.ruff\.lint\](?:\s*#.*)*\s*select = \[([^\]]*)\]/.exec(py)?.[1] ?? '';
+    const select = /\[tool\.ruff\.lint\]\n(?:#[^\n]*\n)*select = \[([^\]]*)\]/.exec(py)?.[1] ?? '';
     for (const code of ['D100', 'D101', 'D102', 'D103', 'D104', 'D106']) assert.ok(select.includes(`"${code}"`), code);
     // the tests are named for what they prove, and their names say it: they carry no docstrings
     assert.match(py, /\[tool\.ruff\.lint\.per-file-ignores\][^[]*\n"tests\/\*\*" = \["D"\]/);
