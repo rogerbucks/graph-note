@@ -15,7 +15,8 @@ const thing = (name, extra = {}) => ({ op: 'add-thing', name, kind: 'Task', prop
 async function opened(where = modVault(), path = where.plan) {
   const sent = [];
   const { launcher, host } = launcherFor(where, { sent });
-  assert.equal((await launcher.edit(path)).ok, true);
+  const outcome = await launcher.edit(path);
+  assert.equal(outcome.ok, true, outcome.why);
   return { where, launcher, host, sent, page: partsOf(launcher.link) };
 }
 
