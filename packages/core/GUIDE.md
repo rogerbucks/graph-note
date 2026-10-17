@@ -560,7 +560,19 @@ a GQL block, CSV or GraphML (`DATA_FORMATS`), each read back into the very thing
   view holds only its own, unless its faded context is asked for: then the whole graph, with what is outside the view
   in `faded`, which each format marks. Each thing's and link's `///` note, as `notes.ts` put it on the drawing, is in
   `notes` (§24, note_standard): kept by a format with comments, left out of CSV, which has none. `dataText` writes it
-  in one of `DATA_FORMATS`. No layout is asked for.
+  in one of `DATA_FORMATS`, the built-in exports `CORE_EXPORTS` adds through the plug-in interface. No layout is asked for.
+- `locale-formats.ts` — what is shown, in the reader's locale (editor spec §42, locale_formats, locale_sorting):
+  `formatCount`, `formatSize`, `formatDay`, `formatInstant`, `formatList` and `sortedForReader`, through the platform's
+  Intl, in the locale `setLocale` was given (UK English until then, and for a tag the platform does not know). Never for
+  what is written into a note, an export's data or the layout source (locale_never_changes_bytes), so an order written
+  into text, as `github-review-items.ts` writes its groups, keeps one collation. `hosts/refusal-words.ts` still says its
+  counts in UK English, as a host-side module may import only types from the core.
+- `plugins.ts` — the plug-in interface (editor spec §43, plugin_interface, plugin_manifest_limits): `pluginRegistry`,
+  where a `GraphNotePlugin` is installed once its manifest (`id`, `version`, `api` of `PLUGIN_API`, the `uses` it names
+  of `EXTENSION_POINTS`) is accepted, given only the points it names; a refused plug-in leaves nothing behind, and a
+  call into one that throws is caught and named (`PluginResult`). Its first point is the data exports (`DataExporter`).
+- `plugins-contract.ts` — the contract suite of each extension point (plugin_contract_suites): `exporterContract`, the
+  checks a data export is held to on `sampleExports`, which the built-ins pass.
 - `export-data-model.ts` — the data's types, and the five kinds of value the profile reads, each said so it reads back.
 - `export-data-gql.ts` — a GQL block: the graph line, a comment saying where it came from, a thing or link to a line; a
   thing under its id, or, where its id cannot be a name, under `thing_<n>` with its id written in full. A thing or link
@@ -785,7 +797,8 @@ host-free entry: `index.ts` exports none of it, and it is reached by the subpath
 (`package.json` `exports`), so a host that draws nothing, like the Claude Code mod's hooks, never bundles it. It is
 DOM code, so it has a `tsconfig.json` of its own with the DOM library (`tsc -p packages/core/src/display`), and the
 core's own type check leaves it out. It is bundled, never run by Node on its own, so it is not held to erasable
-TypeScript; `host.ts`, `lifecycle.ts` and `dom-helpers.ts` are, because their tests load them directly. It imports no
+TypeScript; `host.ts`, `host-contract.ts`, `lifecycle.ts` and `dom-helpers.ts` are, because their tests load them
+directly. It imports no
 host (`test/imports.test.js` holds it to the layer, the core by its name and the graph library) and has the host's
 part come in through `host.ts`.
 
@@ -794,6 +807,9 @@ part come in through `host.ts`.
   page's does: `graph-view/drawing-svg.ts` then renames each style attribute of a drawing in its text before the parser
   sees it and sets the same declarations through the CSSOM, which the policy allows); `installHost` once before anything
   is drawn, `displayHost` for the layer's own use, which throws `NO_HOST` rather than draw a blank.
+- `host-contract.ts` — `hostContract`, the one contract every host's adapter is held to (editor spec §43,
+  hosts_pass_contract): checks with no test framework, each throwing with what was wanted, run against a fresh host and
+  the `HostProbe` through which it shows what it drew; `HOST_CONTRACT_VERSION` moves with `DisplayHost`.
 - `refusal-banner.ts` — why a graph is shown as text instead of drawn, in the core's words, with an icon.
 - `src/display/editor/` — the edit pane (spec §4, §9; editor spec §26, C9), the same one in the Obsidian pane and on the
   browser editor's page: `block-editor.ts` (`BlockEditor`, a `Lifecycle`: the text field over its coloured picture, the

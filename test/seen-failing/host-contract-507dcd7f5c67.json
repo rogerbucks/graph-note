@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/host-contract.test.js",
+  "test": "the host contract > a notice that shows only its first word fails the check that holds it, saying what was wanted",
+  "seen_failing_first": false,
+  "evidence": "A reworded copy of the existing broken-notice test, changed only to clear a CodeQL alert; the check it proves was written first."
+}

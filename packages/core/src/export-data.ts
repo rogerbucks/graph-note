@@ -11,6 +11,7 @@ import { graphmlText } from './export-data-graphml.ts';
 import type { DataInfo, DataLink, DataThing, ExportedData } from './export-data-model.ts';
 import type { ExportScope } from './export-scope.ts';
 import type { GraphDrawing, NoteReading } from './note-reading.ts';
+import { PLUGIN_API, pluginRegistry, type GraphNotePlugin } from './plugins.ts';
 
 /** The formats the data is offered in (export_data_formats): a GQL block, CSV and GraphML. */
 export const DATA_FORMATS = ['gql', 'csv', 'graphml'] as const;
@@ -77,10 +78,36 @@ function notesOf(things: DataThing[], whole: GraphDrawing, numbers: number[]): P
   return notes.things.length || notes.links.length ? { notes } : {};
 }
 
+/**
+ * The built-in data exports, added through the plug-in interface as any plug-in's are (plugin_interface): a GQL block,
+ * CSV and GraphML.
+ */
+export const CORE_EXPORTS: GraphNotePlugin = {
+  id: 'graph-note.data-exports',
+  version: '1.0.0',
+  api: PLUGIN_API,
+  uses: ['exports'],
+  register: (points) => {
+    points.exports?.add({ format: 'gql', title: 'GQL', extension: 'gql', mime: 'text/plain', write: gqlBlock });
+    points.exports?.add({ format: 'csv', title: 'CSV', extension: 'csv', mime: 'text/csv', write: (d) => csvText(d) });
+    points.exports?.add({
+      format: 'graphml',
+      title: 'GraphML',
+      extension: 'graphml',
+      mime: 'application/graphml+xml',
+      write: graphmlText,
+    });
+  },
+};
+
+const BUILT_IN = pluginRegistry();
+BUILT_IN.register(CORE_EXPORTS);
+
 /** The data written in `format`: a GQL block, a CSV table or a GraphML document. Throws, saying why, where it cannot be. */
 export function dataText(data: ExportedData, format: DataFormat, info: DataInfo): string {
-  if (format === 'gql') return gqlBlock(data, info);
-  if (format === 'csv') return csvText(data);
-  if (format === 'graphml') return graphmlText(data, info);
-  throw new Error(`${String(format)} is not a format the data is exported in: ${DATA_FORMATS.join(', ')}`);
+  if (!isDataFormat(format))
+    throw new Error(`${String(format)} is not a format the data is exported in: ${DATA_FORMATS.join(', ')}`);
+  const written = BUILT_IN.writeData(format, data, info);
+  if (!written.ok) throw new Error(written.message);
+  return written.value;
 }
