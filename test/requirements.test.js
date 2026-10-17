@@ -1,4 +1,4 @@
-// The requirements check: CI reads the repository's generated copy of the editor's requirements with the repo's own
+// The requirements check: CI reads the editor's requirements graph, the one source in the repo, with the repo's own
 // graph-spec reader, and fails when a requirement of a started slice is proved by no test, a test the repo holds is
 // missing, a test claims no requirement, a test's status is wrong, or the copy's banner has been edited. Spec §12,
 // requirements_checked_in_ci.
@@ -20,11 +20,11 @@ const replaced = (text, from, to) => {
 const without = (text, line) => replaced(text, `${line}\n`, '');
 
 describe('the requirements copy', () => {
-  test('is the generated copy, at requirements/editor-requirements.gql, opening on its do-not-hand-edit banner', () => {
+  test('is the one source, at requirements/editor-requirements.gql, opening on its banner', () => {
     assert.equal(REQUIREMENTS, 'requirements/editor-requirements.gql');
     assert.ok(exists(REQUIREMENTS));
     assert.deepEqual(real().split('\n').slice(0, 2), BANNER);
-    assert.match(BANNER[1], /do not hand-edit; regenerate/);
+    assert.match(BANNER[1], /the one source: edit it here/);
   });
 
   test('the slice under way is set in one place, and is slice 3', () => {
@@ -36,14 +36,14 @@ describe('the requirements copy', () => {
     assert.deepEqual(
       problems.map((p) => p.message),
       [],
-      'report status mismatches to the vault session, which regenerates the copy',
+      'fix each problem in requirements/editor-requirements.gql itself',
     );
   });
 });
 
 describe('a tampered copy fails the check', () => {
   test('an edited banner line', () => {
-    const text = replaced(real(), 'do not hand-edit; regenerate.', 'edited by hand.');
+    const text = replaced(real(), 'edit it here, in a pull request.', 'edited by hand.');
     assert.deepEqual(kinds(auditRequirements(text, { exists }), 'banner'), ['line 2']);
     const first = replaced(real(), '// graph: editor_requirements · SOURCE', '// graph: editor_requirements');
     assert.deepEqual(kinds(auditRequirements(first, { exists }), 'banner'), ['line 1']);

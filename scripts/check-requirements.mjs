@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-// Checks the repository's generated copy of the editor's requirements (spec §12, requirements_checked_in_ci), read with
+// Checks the editor's requirements graph, the one source (spec §12, requirements_checked_in_ci), read with
 // the repo's own graph-spec reader: every requirement of a slice that has started is proved by a test, every test the
 // repository holds is where it says, every test claims a requirement, no test is planned while its file is written,
 // every open question has its number, a whole-number slice and its text and blocks only requirements, only a question
-// blocks anything, and the copy's do-not-hand-edit banner stands. A question never needs a test, and never proves a
+// blocks anything, and the file's banner stands. A question never needs a test, and never proves a
 // requirement.
 //
 // Usage:
@@ -11,10 +11,10 @@
 //   node scripts/check-requirements.mjs --stdin   a copy on stdin
 //   node scripts/check-requirements.mjs --done N  whether slice N is done (done_means_proved), with or without --stdin
 //
-// Exits 1 and lists each problem. The copy is never edited here: a problem is fixed in the vault's requirements graph,
-// which regenerates the copy. With --done it checks only that a slice is done: every one of its requirements proved by
-// a written test whose file is there (exit 0), or not, listing each requirement still to prove and why (exit 1). A
-// slice in progress is not done, so CI runs the check without it.
+// Exits 1 and lists each problem. The file is never edited here: a problem is fixed by editing the file itself, in a
+// pull request (Roger, 16 Oct 2026: no vault holds the requirements any more). With --done it checks only that a slice is
+// done: every one of its requirements proved by a written test whose file is there (exit 0), or not, listing each
+// requirement still to prove and why (exit 1). A slice in progress is not done, so CI runs the check without it.
 import { existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
@@ -28,7 +28,7 @@ export const REQUIREMENTS = 'requirements/editor-requirements.gql';
 export const CURRENT_SLICE = 3;
 export const BANNER = [
   '// graph: editor_requirements · SOURCE',
-  "// Generated from the editor's requirements graph by graph-note-requirements-export.py — do not hand-edit; regenerate.",
+  "// The editor's requirements graph, the one source: edit it here, in a pull request. A test only moves forward.",
 ];
 // A test whose file the repository holds, alone or as well as somewhere else.
 const IN_REPO = new Set(['repo', 'both']);
@@ -51,7 +51,7 @@ export const TEST_STATUSES = ['planned', 'partial', 'written'];
 /** The statuses whose test file must be in the repository. */
 export const HAS_FILE = ['partial', 'written'];
 
-/** A banner problem, as the audit lists it, for each line of the do-not-hand-edit banner that is not as generated. */
+/** A banner problem, as the audit lists it, for each line of the banner the file opens on that is not as it should be. */
 function bannerProblems(text) {
   const lines = text.split('\n');
   return BANNER.flatMap((want, i) =>
@@ -61,7 +61,7 @@ function bannerProblems(text) {
           {
             kind: 'banner',
             id: `line ${i + 1}`,
-            message: `line ${i + 1} of ${REQUIREMENTS} is not the generated banner: regenerate the copy, never edit it`,
+            message: `line ${i + 1} of ${REQUIREMENTS} is not the banner the requirements open on: put it back`,
           },
         ],
   );
@@ -167,7 +167,7 @@ export function auditRequirements(text, { exists = (rel) => existsSync(join(ROOT
  * why}], faults: [{id, why}], said}: `total` counts the slice's requirements, `missing` lists each still to prove with
  * why (it names no test; a test it names is not written; a written test's file is not in the repository, or it says a
  * `where` not in `WHERE`, so its file is never skipped unknowingly), `faults` what makes the copy untrustworthy (a banner
- * line not as generated; a requirement whose slice is not a whole number, which no slice can then be done while it
+ * line not as it should be; a requirement whose slice is not a whole number, which no slice can then be done while it
  * holds), and `said` says it in a line. A slice with no requirements is never done. Only the slice's own requirements
  * count. Throws what the reader throws for a copy it cannot read.
  */

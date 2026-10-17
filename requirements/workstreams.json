@@ -307,6 +307,7 @@
   "W16": {
     "title": "Type and instance",
     "requirements": [
+      "embedded_backends",
       "type_instance_split",
       "instance_inherits_type",
       "type_suggestion_bundle",
@@ -315,7 +316,6 @@
       "mesh_index_rebuilds",
       "mesh_work_in_engine",
       "mesh_engine_parity",
-      "mesh_surfaces_share_data",
       "mesh_rebuilt_alike"
     ]
   },
@@ -327,7 +327,8 @@
       "certainty_query_dimension",
       "doubt_stays_local",
       "contested_link_marker",
-      "hand_clusters_contestable"
+      "hand_clusters_contestable",
+      "certainty_drawn"
     ]
   },
   "W18": {
@@ -342,7 +343,6 @@
     "title": "Mesh join",
     "requirements": [
       "mesh_join_reports_gaps",
-      "same_join_every_author",
       "state_names_start_doubtful"
     ]
   },
@@ -416,7 +416,6 @@
     "title": "Trust in the drawing and the theme graph",
     "requirements": [
       "drawing_follows_engine",
-      "certainty_drawn",
       "drawing_holds_no_state",
       "accessibility_queryable",
       "accessibility_lenses_run",
@@ -484,8 +483,8 @@
       "crdt_transport",
       "local_encrypted_store",
       "five_layer_stack",
-      "embedded_backends",
-      "encrypted_everywhere"
+      "encrypted_everywhere",
+      "same_join_every_author"
     ]
   },
   "W31": {
@@ -509,7 +508,8 @@
       "open_no_lock_in",
       "platform_security_first",
       "corporate_filtered_views",
-      "portable_no_servers"
+      "portable_no_servers",
+      "mesh_surfaces_share_data"
     ]
   },
   "W34": {
@@ -525,6 +525,53 @@
     "requirements": [
       "tests_self_contained",
       "test_files_generated"
+    ]
+  },
+  "A1": {
+    "title": "Automated quality checks",
+    "requirements": [
+      "a11y_keyboard_auto",
+      "a11y_semantics_auto",
+      "a11y_targets_reflow_auto",
+      "ux_journey_auto",
+      "ux_copy_auto",
+      "visual_regression_auto",
+      "speed_budgets",
+      "thresholds_named",
+      "requirements_as_graph_note"
+    ]
+  },
+  "R1": {
+    "title": "Library release on GitHub",
+    "requirements": [
+      "lib_github_release",
+      "lib_public_api"
+    ]
+  },
+  "R2": {
+    "title": "Obsidian community release",
+    "requirements": [
+      "community_listing",
+      "readme_status_generated"
+    ]
+  },
+  "L1": {
+    "title": "Host and storage contracts",
+    "requirements": [
+      "host_contract_published",
+      "storage_contract"
+    ]
+  },
+  "H1": {
+    "title": "Standalone app",
+    "requirements": [
+      "standalone_app"
+    ]
+  },
+  "H2": {
+    "title": "VS Code plugin",
+    "requirements": [
+      "vscode_plugin"
     ]
   },
   "Q": {

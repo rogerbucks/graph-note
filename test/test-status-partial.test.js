@@ -11,7 +11,7 @@ import { desiredState } from '../scripts/github-project-desired.mjs';
 import { readBoard, renderBoard, statusOf, summarise } from '../scripts/slice-board.mjs';
 
 const BANNER = `// graph: editor_requirements · SOURCE
-// Generated from the editor's requirements graph by graph-note-requirements-export.py — do not hand-edit; regenerate.
+// The editor's requirements graph, the one source: edit it here, in a pull request. A test only moves forward.
 `;
 /** A copy of one slice-1 requirement proved by one test with the given status. */
 const copy = (status, file = "file: 'test/shared.test.js', ") =>
