@@ -1,0 +1,6 @@
+{
+  "file": "test/a11y-semantics.test.js",
+  "test": "the browser editor’s page: every state > the note: words, a code block, a link, and the graph drawn with its words: every control named, read as a control and saying its state; the text version matches",
+  "seen_failing_first": false,
+  "evidence": "A check over views that already met it: every control was already named, read as a control and said its state, and each text version already matched its drawing. The planted-fault tests in the same file prove the check finds each fault."
+}

@@ -682,6 +682,14 @@ the graph and never written until a person accepts a change, and then written as
 - `line-diff.ts` — `lineDiff`: every line kept, added or removed, by Myers' shortest edit script, each numbered in the
   text it is in; past `DIFF_LIMIT` edits, null, so a host says it is too large rather than comparing without end.
 
+**Open numbers (spec §41)**
+
+- `thresholds.ts` — `THRESHOLDS` (thresholds_named): every number a rule leaves open, by name, with its default, the
+  least and most it may be, its unit, what it governs and the requirement that leaves it open (`busy_hub`, `path_pace`,
+  `reread_budget`, `diff_limit`). `thresholdValue` takes a value handed in only inside its range, else the default. The
+  code's own names (`BUSY_HUB`, `DEFAULT_PACE`, `REREAD_BUDGET`, `DIFF_LIMIT`) read their defaults from here; a rule of
+  a later slice adds its entry as it is built (type_suggestion_bundle, centroid_cycle_guard), so the test stays partial.
+
 **Working with an AI (spec §19)**
 
 The core reaches no network: a send goes only through the transport a host hands in, and only once the user has seen

@@ -1,0 +1,6 @@
+{
+  "file": "test/a11y-semantics.test.js",
+  "test": "the check itself > finds a control with no name, one not read as a control, and widgets that say no state",
+  "seen_failing_first": false,
+  "evidence": "The check is new test support in the same commit and its planted faults are the proof it looks: it finds each planted fault and passes the clean case, so there is no code before it for it to fail against."
+}

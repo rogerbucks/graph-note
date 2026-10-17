@@ -10,6 +10,7 @@ import { nameGaps, withNames } from './name-gaps.ts';
 import type { BlockGaps } from './name-gaps.ts';
 import type { Problem } from './note-reading.ts';
 import { trim, trimEnd } from './whitespace.ts';
+import { THRESHOLDS } from './thresholds.ts';
 
 /**
  * Each comment after code on its line (§3: comments are whole lines, as // also occurs inside identifiers): the block
@@ -136,7 +137,7 @@ export function prepare(texts: string[], kindOf: KindOf = dataKind): Prepared {
  * of re-reading on a desktop; a note of ordinary size, with a few dozen problems, never comes near it. The Python
  * reader (graphspec/reader/drawing.py) counts and cuts exactly so, so both draw the same (§12, drawn_in_part).
  */
-export const REREAD_BUDGET = 4_000_000;
+export const REREAD_BUDGET = THRESHOLDS.reread_budget.value;
 
 /** The 0-based line of a character, by a block's line index. */
 type LineOf = (pos: number) => number;

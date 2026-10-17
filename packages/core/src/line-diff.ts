@@ -2,6 +2,8 @@
 // kept, added or removed, found by Myers' shortest edit script, so a change is shown in the fewest lines added and
 // removed. Lines end at LF only, as every reader here reads them. Past `DIFF_LIMIT` lines of edits the rest is said to be
 // too large to compare line by line, never left to run without end.
+import { THRESHOLDS, thresholdValue } from './thresholds.ts';
+
 /** One line of a comparison: kept, added or removed, with its number in the older and the newer text. */
 export interface DiffLine {
   kind: 'keep' | 'add' | 'remove';
@@ -12,22 +14,22 @@ export interface DiffLine {
   new?: number;
 }
 
-/** The most edits (lines added plus removed) compared line by line. */
-export const DIFF_LIMIT = 2000;
+/** The most edits (lines added plus removed) compared line by line, unless a caller sets another (`diff_limit`). */
+export const DIFF_LIMIT = THRESHOLDS.diff_limit.value;
 
 /** The lines of a text, split at LF; an empty text has none. */
 const linesOf = (t: string) => (t === '' ? [] : t.replace(/\n$/, '').split('\n'));
 
 /**
- * The lines of `before` and `after`, each kept, added or removed, in order; null when more than `DIFF_LIMIT` lines
- * changed, which a host says is too large to show line by line.
+ * The lines of `before` and `after`, each kept, added or removed, in order; null when more than `limit` lines changed
+ * (`DIFF_LIMIT` unless set within its range), which a host says is too large to show line by line.
  */
-export function lineDiff(before: string, after: string): DiffLine[] | null {
+export function lineDiff(before: string, after: string, limit: number = DIFF_LIMIT): DiffLine[] | null {
   const a = linesOf(before),
     b = linesOf(after);
   const n = a.length,
     m = b.length,
-    max = Math.min(n + m, DIFF_LIMIT);
+    max = Math.min(n + m, thresholdValue('diff_limit', limit));
   const offset = max + 1;
   const v = new Array<number>(2 * max + 3).fill(0);
   // each step keeps only the furthest points it started from, k = -d-1 … d+1, so memory grows with the edits squared

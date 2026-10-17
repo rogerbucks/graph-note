@@ -231,6 +231,8 @@ export type {
 } from './github-review-items.ts';
 export { DIFF_LIMIT, lineDiff } from './line-diff.ts';
 export type { DiffLine } from './line-diff.ts';
+export { THRESHOLDS, thresholdValue } from './thresholds.ts';
+export type { Threshold, ThresholdName } from './thresholds.ts';
 export { changeSetId } from './proposals-text.ts';
 export { DECIDER_DEFAULT, deciderName } from './proposals-judgement.ts';
 export type { Decision } from './proposals-judgement.ts';
