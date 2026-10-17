@@ -673,6 +673,14 @@ the graph and never written until a person accepts a change, and then written as
   writes the marks into the drawn SVG in a palette's fixed colours by `CHANGE_LOOKS` (added a heavy line, changed
   dashed, removed dotted with its text in italics), so the line tells them apart without colour, in either theme. The
   host gives the older text however it reads it; nothing is written (changes_view).
+- `github-review-items.ts` — pull requests, merges and commits as items to review (github_review_items): `ReviewItems`
+  over a `ReviewSource` the host hands in (it reads GitHub with its own sign-in; the core reaches no network), which is
+  asked nothing until `list` or `review` is called, each read kept once it succeeds. `reviewLevels` gives an item's
+  changed files at every level, highest first (`REVIEW_LEVELS`): a summary by section (a thing's `section`, named by its
+  Section), by workstream (`workstreamsFrom`, the repository's `workstreams.json`) and each Requirement changed; each
+  graph's changes, ready for the changes view; and every line. `asNote` reads a `.gql` file as the one block it is.
+- `line-diff.ts` — `lineDiff`: every line kept, added or removed, by Myers' shortest edit script, each numbered in the
+  text it is in; past `DIFF_LIMIT` edits, null, so a host says it is too large rather than comparing without end.
 
 **Working with an AI (spec §19)**
 
