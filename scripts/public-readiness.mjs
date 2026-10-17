@@ -33,8 +33,9 @@ const dedupe = (list) => [...new Map(list.map((p) => [JSON.stringify(p), p])).va
 
 /** A blob larger than this is a problem: a public repository is cloned whole, and the plugin is small. */
 export const MAX_BLOB_BYTES = 1_000_000;
-// An address that names no one: GitHub's no-reply addresses, or a documentation domain.
-const NO_ONE = /(@users\.noreply\.github\.com|^noreply@github\.com|@example\.(com|org|net))$/i;
+// An address that names no one: GitHub's no-reply addresses, Claude's (Roger, 17 Oct 2026: "Allow
+// noreply@anthropic.com as a commit author"), or a documentation domain.
+const NO_ONE = /(@users\.noreply\.github\.com|^noreply@github\.com|^noreply@anthropic\.com|@example\.(com|org|net))$/i;
 
 /**
  * Every problem in the history of `refs` (the checked-out commit's own, `HEAD`, unless told otherwise), each as

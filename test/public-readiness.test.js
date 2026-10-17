@@ -123,6 +123,16 @@ describe('the history', () => {
     assert.deepEqual(historyProblems(dir), []);
   });
 
+  test("Claude's no-reply address names no one, as a commit's author and committer; one like it stays a problem", () => {
+    const { dir, commit } = repository();
+    const claude = ['noreply', 'anthropic.com'].join('@');
+    commit('a.txt', 'a\n', 'Change a', { GIT_AUTHOR_EMAIL: claude, GIT_COMMITTER_EMAIL: claude });
+    assert.deepEqual(historyProblems(dir), []);
+    const person = ['someone.noreply', 'anthropic.com'].join('@');
+    commit('b.txt', 'b\n', 'Change b', { GIT_AUTHOR_EMAIL: person });
+    assert.deepEqual(rules(historyProblems(dir)), ['author-email']);
+  });
+
   test("any other address stays a problem, in a commit message and in the author field, GitHub's own among them", () => {
     const { dir, commit } = repository();
     const other = ['one', 'mail.test'].join('@');
