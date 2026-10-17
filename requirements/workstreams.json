@@ -574,6 +574,13 @@
       "vscode_plugin"
     ]
   },
+  "V1": {
+    "title": "Changes view and pull request review",
+    "requirements": [
+      "changes_view",
+      "github_review_items"
+    ]
+  },
   "Q": {
     "title": "Open questions",
     "requirements": []

@@ -552,6 +552,8 @@
 (standalone_app:Requirement {section: '41', slice: 5, level: 'must', rule: 'A standalone app built with Tauri v2 on the browser host shell must open a plain folder of notes and draw and edit its graph blocks offline on macOS, Windows and Linux, and the same shell must carry the iPhone app (ios_app).'}),
 (vscode_plugin:Requirement {section: '41', slice: 5, level: 'must', rule: 'A VS Code extension must draw and edit the graph blocks of a workspace\'s Markdown files through the shared display layer in a webview, offering the language model API of VS Code first (host_ai_first).'}),
 (requirements_as_graph_note:Requirement {section: '41', slice: 5, level: 'must', rule: 'Once graph notes can hold it, the requirements graph must be kept as a graph note in this repository, read and checked by the same tools, and every new requirement must be captured there as it is agreed.'}),
+(changes_view:Requirement {section: '41', slice: 5, level: 'must', rule: 'The graph view must offer a changes view that draws what changed between two versions of a graph, the current text and one the user picks such as the last commit or a branch, marking every thing and link added, removed or changed on the drawing, not by colour alone, and listing the same changes as text.'}),
+(github_review_items:Requirement {section: '41', slice: 5, level: 'must', rule: 'The graph view must show the pull requests, merges and commits of the repository a note lives in as items, each opening in the changes view, so that the user and Claude can review a change together; a high level must summarise it by section, workstream and requirement, and each level down must show more, to every thing, link and line changed. GitHub must be read only, only when the user asks, with the host\'s own sign-in, never a stored token.'}),
 // ── Tests ──
 (test_layout_parity:Test {proves: 'the core layout source matches graph_svg.py for every vault graph', where: 'outside the repo', status: 'written'}),
 (test_python_nudges:Test {proves: 'graph_svg.py honours every nudge of the style graph exactly as the core does, so a nudged graph lays out byte for byte the same in Python and in the plugin', file: 'python/graph_spec/tests/test_graph_svg_nudges.py', where: 'repo', status: 'written'}),
@@ -788,6 +790,8 @@
 (test_standalone_app:Test {proves: 'the Tauri v2 app opens a folder of notes and draws and edits its graphs offline on each desktop platform', file: 'test/standalone-app.test.js', where: 'repo', status: 'planned'}),
 (test_vscode_plugin:Test {proves: 'the VS Code extension draws and edits the graph blocks of a Markdown file in a webview', file: 'test/vscode-plugin.test.js', where: 'repo', status: 'planned'}),
 (test_requirements_as_graph_note:Test {proves: 'the requirements are read from their graph note and pass the same audit as the graph file did', file: 'test/requirements-note.test.js', where: 'repo', status: 'planned'}),
+(test_changes_view:Test {proves: 'between two versions the changes view marks each added, removed and changed thing and link on the drawing and lists them as text, in both themes', file: 'packages/core/test/changes-view.test.js', where: 'repo', status: 'planned'}),
+(test_github_review_items:Test {proves: 'pull requests, merges and commits are listed as items, each opens in the changes view, the levels go from a summary by section, workstream and requirement down to each line, and nothing is fetched until asked', file: 'packages/core/test/github-review-items.test.js', where: 'repo', status: 'planned'}),
 // ── Open questions ──
 (q_01_ai_interface:Question {num: 'Q-01', slice: 8, text: 'How does the graph mesh connect to external AI tools: through MCP, an API, or file export?'}),
 (q_02_distribution:Question {num: 'Q-02', slice: 9, text: 'How is the open-source library distributed and versioned?', answer: 'GitHub releases only, with semantic version tags, and never npm (lib_github_release).', answered: '2026-10-16'}),
@@ -805,6 +809,10 @@
 (q_14_roles_auto_apply:Question {num: 'Q-14', slice: 6, text: 'Are permission-bearing types excluded from automatic apply? The recommended answer is yes, always reviewed.'}),
 (q_15_stubbing_revisit:Question {num: 'Q-15', slice: 8, text: 'Should side-effect stubbing be revisited if the graph ever drives real applications directly?'}),
 // ── Links ──
+(github_review_items)-[:PART_OF]->(section_41),
+(github_review_items)-[:PROVED_BY]->(test_github_review_items),
+(changes_view)-[:PART_OF]->(section_41),
+(changes_view)-[:PROVED_BY]->(test_changes_view),
 (requirements_as_graph_note)-[:PART_OF]->(section_41),
 (requirements_as_graph_note)-[:PROVED_BY]->(test_requirements_as_graph_note),
 (a11y_keyboard_auto)-[:PART_OF]->(section_41),
