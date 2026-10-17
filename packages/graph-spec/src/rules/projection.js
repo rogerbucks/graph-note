@@ -24,6 +24,9 @@ function iso(v) {
     '+10:00'
   );
 }
+// §18 the flat projection: [blocks, rels]. One block per node — id, type (its labels), attributes, and a list of
+// targets per relationship type without properties, keyed by the type in lower case — and the relationships with
+// properties, ordered by canonical text. Throws `refused: §18` for a list or a `type` property, which it cannot hold.
 function project(g) {
   const blocks = {},
     rels = [];
@@ -60,6 +63,8 @@ function gqlValue(v) {
   if (typeof v === 'string' && /^\d{4}-\d\d-\d\d$/.test(v)) return `DATE '${v}'`;
   return quote(String(v));
 }
+// GQL from the projection alone — a profile data block for graph `name` — so the reader, not this code, decides what
+// the projection means. Nodes get fresh variables n0, n1, …; a value that looks like a date or instant is read as one.
 function rebuild(name, blocks, rels) {
   const keys = [
     ...new Set(
@@ -96,6 +101,8 @@ function rebuild(name, blocks, rels) {
   }
   return `// graph: ${name}\nINSERT\n` + lines.join(',\n');
 }
+// §18: whether the flat projection, held as text (through JSON) and rebuilt by the profile reader, gives back the same
+// graph. Throws project()'s refusal; check() counts that as a failure.
 function projectsBack(g, name) {
   if (!g.nodes.size && !g.edges.length) return true; // nothing to project
   let [blocks, rels] = project(g);

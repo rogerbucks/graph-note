@@ -72,7 +72,7 @@ describe('one code style', () => {
     const py = read(`${PYTHON}/pyproject.toml`);
     assert.match(py, /\[dependency-groups\][^[]*\ndev = \["ruff==0\.16\.9"\]/);
     assert.match(py, /\[tool\.ruff\][^[]*\nline-length = 99/);
-    assert.match(py, /\[tool\.ruff\.lint\]\s*select = \["E", "W", "F", "N"\]/);
+    assert.match(py, /\[tool\.ruff\.lint\](?:\s*#.*)*\s*select = \["E", "W", "F", "N"[\],]/);
     assert.match(ci(), /run: uv run --locked ruff check/);
     assert.match(ci(), /run: uv run --locked ruff format --check/);
     const ruff = path(`${PYTHON}/.venv/bin/ruff`);
@@ -207,6 +207,59 @@ describe('the code’s layout', () => {
       }
     }
     assert.deepEqual(bare, []);
+  });
+
+  test('the graph-spec library documents its interface too: every name a module exports has its comment', () => {
+    // its modules are CommonJS: the names are those of `module.exports = { … }`, each declared in the module itself
+    // (the entry point only gathers them, and graph-layout.js keeps one UMD api object, documented as a whole)
+    const bare = [];
+    const modules = sourceFiles('packages/graph-spec').filter((f) => !/\/(graph-spec-check|graph-layout)\.js$/.test(f));
+    for (const f of modules) {
+      const text = read(f),
+        src = ts.createSourceFile(f, text, ts.ScriptTarget.Latest, true);
+      const declared = new Map();
+      let names = [];
+      for (const n of src.statements) {
+        const e = ts.isExpressionStatement(n) ? n.expression : null;
+        if (e && ts.isBinaryExpression(e) && e.left.getText(src) === 'module.exports')
+          if (ts.isObjectLiteralExpression(e.right)) names = e.right.properties.map((p) => p.name.getText(src));
+        if ((ts.isFunctionDeclaration(n) || ts.isClassDeclaration(n)) && n.name) declared.set(n.name.text, n);
+        // in `const A = …, B = …;` each name carries its own comment; a lone declaration's goes above the statement
+        if (ts.isVariableStatement(n))
+          for (const d of n.declarationList.declarations)
+            if (ts.isIdentifier(d.name)) declared.set(d.name.text, n.declarationList.declarations.length > 1 ? d : n);
+      }
+      for (const name of names) {
+        const n = declared.get(name);
+        if (!n) continue; // a name it requires from another module is documented there
+        const own = ts.getLeadingCommentRanges(text, n.getFullStart())?.at(-1);
+        if (!own || /\n\s*\n/.test(text.slice(own.end, n.getStart(src)))) bare.push(`${f}: ${name}`);
+      }
+    }
+    assert.deepEqual(bare, []);
+  });
+
+  test('each module’s opening comment says what it is for in a sentence, not a word or two', () => {
+    // at least five words: enough to say what the module does, where a label ("// Helpers") says nothing
+    const opening = (text, py) => {
+      const t = text.replace(/^#!.*\n/, '');
+      const m = py ? /^("""[\s\S]*?"""|(?:[ \t]*#.*\n)+)/.exec(t) : /^(\/\*[\s\S]*?\*\/|(?:[ \t]*\/\/.*\n)+)/.exec(t);
+      return m?.[1] ?? '';
+    };
+    const short = [];
+    for (const f of [...PACKAGES.flatMap(sourceFiles), ...walk(`${PYTHON}/src`).filter((x) => x.endsWith('.py'))]) {
+      const words = opening(read(f), f.endsWith('.py')).match(/[A-Za-z]{2,}/g) ?? [];
+      if (words.length < 5) short.push(`${f}: ${words.join(' ')}`);
+    }
+    assert.deepEqual(short, []);
+  });
+
+  test('every public Python module, class, method and function has its docstring: Ruff checks it', () => {
+    const py = read(`${PYTHON}/pyproject.toml`);
+    const select = /\[tool\.ruff\.lint\](?:\s*#.*)*\s*select = \[([^\]]*)\]/.exec(py)?.[1] ?? '';
+    for (const code of ['D100', 'D101', 'D102', 'D103', 'D104', 'D106']) assert.ok(select.includes(`"${code}"`), code);
+    // the tests are named for what they prove, and their names say it: they carry no docstrings
+    assert.match(py, /\[tool\.ruff\.lint\.per-file-ignores\][^[]*\n"tests\/\*\*" = \["D"\]/);
   });
 });
 
@@ -373,6 +426,18 @@ describe('the conventions, written down', () => {
     ])
       assert.ok(c.includes(tool), tool);
     assert.match(read('README.md'), /\(CONTRIBUTING\.md\)/);
+  });
+
+  test('the README says how the packages fit together, naming every package and its guide', () => {
+    const fit = /## How the packages fit\n([\s\S]*?)(?=\n## |$)/.exec(read('README.md'))?.[1] ?? '';
+    assert.ok(fit, 'README.md has a "How the packages fit" section');
+    for (const p of [...PACKAGES, PYTHON]) {
+      assert.ok(fit.includes(`\`${p}\``), p);
+      assert.ok(fit.includes(`(${p}/GUIDE.md)`), `${p}/GUIDE.md`);
+    }
+    // a package added later is named too
+    const all = walk('packages').map((f) => f.split('/').slice(0, 2).join('/'));
+    for (const p of new Set(all)) if (exists(`${p}/package.json`)) assert.ok(fit.includes(`\`${p}\``), p);
   });
 
   test('every rule here is said in CONTRIBUTING.md too', () => {

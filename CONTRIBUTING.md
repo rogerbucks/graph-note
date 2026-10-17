@@ -112,18 +112,22 @@ of Obsidian's rules, sentence case in the interface among them. These are the gu
   Python's tools expect. Tools that run from the command line go in `bin/`; the browser harness in `harness/`; the
   Claude Code editor's local server, which runs in Node, in `packages/claude-code/server/`, held to the same naming,
   size and comment rules as `src/`.
-- **One module, one purpose.** Each module opens with a comment saying what it is for, and which part of the spec.
-- **The public interface is documented where it is declared:** every export has its own comment, directly above it.
+- **One module, one purpose.** Each module opens with a comment saying what it is for, in a sentence of at least five
+  words, and which part of the spec.
+- **The public interface is documented where it is declared:** every export has its own comment, directly above it. In
+  `packages/graph-spec`, whose modules are CommonJS, that is every name in `module.exports`, at its declaration.
 - **The core is host-free:** it imports no Obsidian, editor or Node module, so it runs on a phone and, later, in VS Code.
 - **Small modules, one responsibility each, in folders named for their feature** (spec §13, "No monolith files"): no
   source file over 400 lines, and no test file over 600, checked in CI. A split follows responsibilities, never line
   counts.
 - **Named so a search by name finds it:** folders and files are named for the feature they hold, never `utils`, `misc`,
   `helpers`, `common` or `lib`.
+- **The README's "How the packages fit"** names every package, its layer and its guide, so a reviewer sees the whole
+  before the parts.
 - **Each package has a short `GUIDE.md`** saying where things live, naming every folder of its source, and it changes
   in the same commit as the code it describes.
 - **Small, typed interfaces:** a module exports a few typed things, so it can be used without reading its inside. In
-  Python, every public function has its docstring and type hints.
+  Python, every public module, class, method and function has its docstring (Ruff's D1 rules check it) and type hints.
 - **A package's entry points stay put:** the modules other code and the vault import (`gql_profile.py`,
   `graph_rules.py`, `graph_spec.py`, `graph_svg.py`, `graph-spec-check.js`, the core's `index.ts`) re-export the smaller
   modules, so a split never breaks a caller. The released `graph-spec-check.js` is built into one file and never edited

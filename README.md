@@ -12,6 +12,33 @@ An Obsidian plugin that draws the graphs written in notes, and lets them be edit
 - Each release also carries both libraries as one archive, `graph-spec-libraries-<version>.tar.gz`. Every asset is listed with its SHA-256 in `SHA256SUMS`.
 - `manifest.json`, `versions.json`, `styles.css` — the files the plugin store reads. `main.js` is built by CI from a tag and attached to each release; it is never committed.
 
+## How the packages fit
+
+Each layer uses only the one beneath it, so a new host (a VS Code extension, a desktop app) reuses everything below the
+hosts unchanged.
+
+```
+  hosts       packages/obsidian      packages/claude-code
+                     \                      /
+  core                 packages/core          host-free: reading, drawing, edits, undo
+                            |
+  format      packages/graph-spec   <=>   python/graph_spec
+              (JavaScript)   held to the same answers   (Python)
+```
+
+- `packages/graph-spec` — the graph format: reads GQL blocks and runs the spec's rules, with no dependencies. Guide:
+  [packages/graph-spec/GUIDE.md](packages/graph-spec/GUIDE.md).
+- `python/graph_spec` — the same format in Python, function for function, with the Graphviz drawing and the
+  Grafeo-backed checks; parity tests hold the two to the same answers. Guide:
+  [python/graph_spec/GUIDE.md](python/graph_spec/GUIDE.md).
+- `packages/core` — the host-free editor core on top of graph-spec: what to draw, problems and their fixes, zoom, edits
+  and undo. It imports no Obsidian, editor or Node module, so it runs on a phone too. Guide:
+  [packages/core/GUIDE.md](packages/core/GUIDE.md).
+- `packages/obsidian` — the Obsidian plugin: puts the core's drawings and edits on Obsidian's page. Guide:
+  [packages/obsidian/GUIDE.md](packages/obsidian/GUIDE.md).
+- `packages/claude-code` — the Claude Code host: a mod whose `/graph <note>` draws a note's graph in a pane, and a
+  browser editor served locally, on the same core. Guide: [packages/claude-code/GUIDE.md](packages/claude-code/GUIDE.md).
+
 ## Privacy and network use
 
 The plugin makes no network request of its own: no analytics, no update checks, no remote images, no databases. Graphviz, the one runtime dependency, is bundled and runs on your device.

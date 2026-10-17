@@ -17,6 +17,8 @@ function pathSteps(g, pid) {
       labels: [...g.nodes.get(e[2])[0]].sort(),
     }));
 }
+// A path seen at an altitude: every step that is a path above that level opened, everything at or below kept.
+// `seen` stops a path that contains itself from opening forever; §22 rule 1 is what reports it.
 function viewAt(g, pid, level, seen) {
   seen = new Set([...(seen || []), pid]);
   const out = [];
@@ -27,6 +29,7 @@ function viewAt(g, pid, level, seen) {
   }
   return out;
 }
+// Everything a path steps to, at any depth up to `depth`: what folds into it. The cap and `seen` keep a cycle finite.
 function below(g, top, depth = 8) {
   const seen = new Set();
   let frontier = [top];
@@ -37,6 +40,7 @@ function below(g, top, depth = 8) {
   }
   return seen;
 }
+// §22's rules on one graph, as [label, ok] pairs; none for a graph with no paths.
 function pathsRules(g) {
   const out = [],
     paths = g.labelled('Path');

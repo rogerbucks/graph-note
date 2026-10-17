@@ -25,6 +25,9 @@ const refinesV = (a, b) => {
   return m(a) !== null && m(b) !== null && m(a).length > m(b).length && m(a).startsWith(m(b));
 };
 const compatibleV = (a, b) => pyeq(a, b) || refinesV(a, b) || refinesV(b, a);
+// Two or more documents joined, a document given twice counted once: agreement and addition asserted, real
+// differences contested — one claim per distinct statement. Labels that only add to one another, and a date that only
+// refines another ('2024-03' of '2024'), are kept and reported as refined, never contested.
 function union(docs, config) {
   docs = [...new Map(docs.map((d) => [d.id, d])).values()];
   const joined = newJ();

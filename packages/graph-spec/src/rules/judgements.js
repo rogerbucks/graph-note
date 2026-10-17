@@ -11,6 +11,8 @@ const { proposersOf, proposerWarnings: proposerWarningsOf } = require('./propose
 
 // §23 judgements
 const JUDGEMENT_EDGES = ['RESTS_ON', 'ASSUMES', 'UNDER'];
+// A Ref followed into the graph it names: [props or null, labels, superseded?]. A missing graph or node is
+// [null, empty, false], so a broken pin reads as unresolved rather than throwing.
 function resolve(w, ref) {
   const g = w[ref.graph];
   if (!g || !g.nodes.has(ref.ref)) return [null, new Set(), false];
@@ -45,6 +47,9 @@ function judgementHash(w, jg, d) {
     .sort(byKey(jcs));
   return hash16({ decision: dec, edges });
 }
+// rule:judgement-review@1: {decision id: sorted reasons} for each current Decision — basis-moved, needs-engine,
+// assumption-weakened, shape-changed; an empty list means none. A lens pin whose rule needs an engine gives
+// needs-engine — never silence. `sw` switches parts of the rule off ('lens-pins', 'assumption-bands').
 function review(w, jg, sw = new Set()) {
   const out = {};
   for (const d of currentDecisions(w, jg)) {
@@ -73,6 +78,8 @@ function review(w, jg, sw = new Set()) {
   }
   return out;
 }
+// The why layer of a view: current judgements in jg resting on, or assuming, anything shown of path top in graph dg at
+// that altitude — or folded into it, unless 'why-folded' is switched off. Sorted.
 function whyLayer(w, jg, dg, top, level, sw = new Set()) {
   const g = w[dg],
     seen = new Set([top, ...viewAt(g, top, level)]);
@@ -83,6 +90,7 @@ function whyLayer(w, jg, dg, top, level, sw = new Set()) {
       hits.add(d);
   return [...hits].sort();
 }
+// §23's rules on judgement graph jg, and on the graphs of the world it refers into, as [label, ok] pairs.
 function judgementsRules(w, jg) {
   const g = w[jg],
     out = [],

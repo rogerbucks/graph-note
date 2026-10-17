@@ -1,4 +1,4 @@
-"""§23's rules on a judgement graph."""
+"""§23's rules run on a judgement graph held in the Grafeo engine."""
 
 from __future__ import annotations
 

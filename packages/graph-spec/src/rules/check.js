@@ -44,6 +44,9 @@ const nearDuplicates = (names) => {
   );
   return out;
 };
+// Every rule that applies to graph `name`, as [label, ok] pairs: §5 (near-duplicate names for a draft, else declared
+// types), §18, §20, §22 and provenance always; §23 only for a judgement graph, and §24 H3 only when a serving matrix
+// is given. A §18 refusal (a list or a `type` property) fails the rule rather than throwing; `sw` holds switches.
 function check(w, name, matrix, sw = new Set()) {
   const g = w[name],
     shared = g.labelled('ElementType').length ? undefined : schemaFor(w, name)[1];

@@ -229,6 +229,7 @@ class ScxmlReader:
         self.root_initial = self.doc.get("initial")
 
     def path(self, el):
+        """The element and its ancestors that carry an id, outermost first."""
         out = []
         while el is not None and el.get("id"):
             out.insert(0, el)
@@ -236,23 +237,31 @@ class ScxmlReader:
         return out
 
     def enter(self, el):
+        """The states entered on entering el: its path, then each `initial` child down to an atomic
+        state."""
         p = self.path(el)
         while p[-1].get("initial"):
             p.append(self.by[p[-1].get("initial")])
         return p
 
     def conf(self, p):
+        """A configuration as the machine writes one: each state's id, its first `_` read back as
+        the `/` the export wrote it from."""
         return tuple(e.get("id").replace("_", "/", 1) for e in p)
 
     def start(self):
+        """The configuration the document starts in, from the root's `initial`."""
         return self.conf(self.enter(self.by[self.root_initial]))
 
     def cond(self, c, ctx):
+        """Whether an SCXML `cond` holds: its ECMAScript operators read as Python's."""
         return eval(
             c.replace("===", "==").replace("&& !", "and not ").replace("&&", "and"), {}, dict(ctx)
         )
 
     def step(self, conf, ev, ctx):
+        """The configuration and actions after event ev: transitions are tried
+        innermost state first, in document order, and the first enabled one fires."""
         p = self.enter(self.by[conf[-1].replace("/", "_", 1)])[: len(conf)]
         for st in reversed(p):
             for t in st.findall(f"{{{NS}}}transition"):

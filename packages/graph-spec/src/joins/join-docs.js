@@ -12,6 +12,8 @@ const { union } = require('./union.js');
 const { merge3 } = require('./merge3.js');
 const { finish } = require('./finish.js');
 
+// A join configuration from the declared data in the suite (spec §17), each part empty when not given. A constraint
+// written in GQL runs as its named twin in RULES, or is null, which the check refuses: there is no engine here.
 function configFrom(d) {
   d = d || {};
   const config = {
@@ -31,6 +33,10 @@ function configFrom(d) {
   ]); // no engine here: a GQL constraint runs as its named twin
   return config;
 }
+// A join request answered end to end: each document read, normalised and validated, then joined — merge3 of the
+// first two over the base when there is one, union otherwise — and finished. The answer's rows, claims, pairs,
+// paradoxes, nodes and relationships are sorted and written as JSON values, to compare with the Python library's;
+// switches turn single steps off ('base-dates', 'validate', 'base').
 function joinDocs(q) {
   // q: {docs: [block], base: block|null, config, findings, checks, hold, switches}
   const config = configFrom(q.config),

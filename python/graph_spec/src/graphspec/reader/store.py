@@ -34,9 +34,11 @@ class Store:
         self._fixes = {}
 
     def graph(self, g):
+        """The graph named g, made empty the first time it is asked for."""
         return self.graphs.setdefault(g, {"nodes": {}, "edges": []})
 
     def find(self, g, nid):
+        """The store's key of the node in graph g whose id is nid, or None."""
         return next(
             (k for k, n in self.graph(g)["nodes"].items() if n["props"].get("id") == nid), None
         )
