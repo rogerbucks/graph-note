@@ -9,6 +9,12 @@ on:
 permissions:
   contents: read
 
+# One run for each pull request: a newer push cancels the run of the older commit, which can no longer be merged (the
+# Build status workflow skips such a run as stale). A push to main is never cancelled, so every merge is checked.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -31,7 +37,8 @@ jobs:
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: node scripts/quality-check.mjs --baseline-since "$BASE"
       - run: npm run typecheck
-      - run: npm test
+      # six files at once on the runner's four cores, as the files mostly wait on the processes they start
+      - run: npm test -- --test-concurrency=6
       # the requirements graph is edited here, but a pull request never moves a test back or removes a proved one
       - if: github.event_name == 'pull_request'
         env:
@@ -162,4 +169,11 @@ jobs:
         with:
           version: 0.12.17
           enable-cache: false
-      - run: node scripts/public-readiness.mjs --history --setup
+      # The fresh clone runs the same tests, lint and build as the jobs above, so a pull request runs it only when it
+      # changes a setup input (the README's steps, what they install, the hook); a push to main and the release always do.
+      - if: github.event_name == 'pull_request'
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: node scripts/public-readiness.mjs --history --setup-since "$BASE"
+      - if: github.event_name != 'pull_request'
+        run: node scripts/public-readiness.mjs --history --setup

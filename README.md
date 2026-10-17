@@ -70,7 +70,7 @@ npm run build
 
 The second line installs the pre-commit check, which refuses any staged file that looks confidential or personal: a classification other than Public in a note's frontmatter, a note's uuid line, an absolute home-folder path, a personal email address, a phone number or a card number. CI runs the same check over every file, so a commit that skipped the hook is still caught.
 
-These steps are all a fresh clone needs. CI runs them, exactly as written here, in a fresh clone on every pull request and before every release, so setting up never depends on anything from a maintainer's machine.
+These steps are all a fresh clone needs. CI runs them, exactly as written here, in a fresh clone on every merge to main, before every release, and on every pull request that changes them or what they install, so setting up never depends on anything from a maintainer's machine.
 
 This is a one-person project and takes no outside contributions: pull requests and issues can be opened by collaborators only, and each pull request's conversation is locked when it opens.
 

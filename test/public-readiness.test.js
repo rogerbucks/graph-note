@@ -10,11 +10,11 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { isSetupInput, readmeSteps, setupInputsChangedSince } from '../scripts/fresh-clone.mjs';
 import { messageProblems } from '../scripts/history-text-problems.mjs';
 import {
   historyProblems,
   machineSpecific,
-  readmeSteps,
   repoOf,
   setupDocs,
   setupProblems,
@@ -279,6 +279,43 @@ describe('the setup', () => {
     assert.deepEqual(machineSpecific('npm ci\nnpm test\nuv sync --locked\nthe ~ key; a<~[b]~>c'), []);
   });
 
+  test('a setup input is what the README steps run that no other CI job does: the steps, what they install, the hook', () => {
+    for (const f of [
+      'README.md',
+      'package.json',
+      'package-lock.json',
+      'packages/core/package.json',
+      '.npmrc',
+      '.githooks/pre-commit',
+      '.gitignore',
+      '.gitattributes',
+      'python/graph_spec/pyproject.toml',
+      'python/graph_spec/uv.lock',
+      'python/graph_spec/.python-version',
+      'scripts/public-readiness.mjs',
+      'scripts/fresh-clone.mjs',
+    ])
+      assert.ok(isSetupInput(f), f);
+    for (const f of ['packages/core/src/zoom.ts', 'test/zoom.test.js', 'CONTRIBUTING.md', 'docs/README.md.txt'])
+      assert.equal(isSetupInput(f), false, f);
+  });
+
+  test('the setup inputs changed since a base are read from where the branch left it, not from its tip', () => {
+    const { dir, commit } = repository();
+    const g = (...args) => execFileSync('git', args, { cwd: dir, encoding: 'utf8' }).trim();
+    const base = g('rev-parse', 'HEAD');
+    commit('zoom.ts', 'export {};\n');
+    assert.deepEqual(setupInputsChangedSince(dir, base), []);
+    commit('package.json', '{}\n');
+    assert.deepEqual(setupInputsChangedSince(dir, base), ['package.json']);
+    // the base moving on after the branch point is not the branch's change
+    g('checkout', '-q', '-b', 'later', base);
+    commit('README.md', '# Thing, later\n');
+    const later = g('rev-parse', 'HEAD');
+    g('checkout', '-q', 'main');
+    assert.deepEqual(setupInputsChangedSince(dir, later), ['package.json']);
+  });
+
   test("this repository's README sets up with npm and uv alone, and its documents name no machine", () => {
     const steps = readmeSteps(read('README.md'));
     assert.ok(steps.length >= 2, 'the JavaScript steps and the Python steps');
@@ -370,7 +407,22 @@ describe('kept so, in CI and at every release', () => {
     const job = jobs(ci)['public-readiness'];
     assert.ok(job, 'a public-readiness job');
     assert.match(job.join('\n'), /fetch-depth: 0/);
-    assert.ok(runCommands(job.join('\n')).some((r) => COMMAND.test(r)));
+    const text = job.join('\n');
+    // a pull request runs the fresh clone when it changes a setup input; a push to main always runs it
+    assert.match(
+      text,
+      /- if: github\.event_name == 'pull_request'\n\s+env:\n\s+BASE: \$\{\{ github\.event\.pull_request\.base\.sha \}\}\n\s+run: node scripts\/public-readiness\.mjs --history --setup-since "\$BASE"\n/,
+    );
+    assert.match(
+      text,
+      /- if: github\.event_name != 'pull_request'\n\s+run: node scripts\/public-readiness\.mjs --history --setup$/m,
+    );
+  });
+
+  test("a newer push to a pull request cancels CI's run of the older commit; a run on main is never cancelled", () => {
+    const concurrency = (block(read('.github/workflows/ci.yml').split('\n'), 'concurrency', 0) ?? []).join('\n');
+    assert.match(concurrency, /group: ci-\$\{\{ github\.event\.pull_request\.number \|\| github\.sha \}\}\n/);
+    assert.match(concurrency, /cancel-in-progress: \$\{\{ github\.event_name == 'pull_request' \}\}/);
   });
 
   test('the release waits for the same checks', () => {
