@@ -15,6 +15,7 @@ import { openEditorPane } from './editor-pane.ts';
 import { exportCalls } from './export-calls.ts';
 import { exportingOf, localDay } from './export-run.ts';
 import { DARK, showGraph } from './graph-section.ts';
+import { changesSection } from './changes-section.ts';
 import { keepFocus, skipLink } from './keyboard.ts';
 import { PNG_PIXEL_LIMIT, rasterise } from './png.ts';
 import { pageLayouts } from './layout-runner.ts';
@@ -143,6 +144,20 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
     graph.append(pane);
     await openEditorPane(pane, page, settings, layouts);
     if (!page.session) await showGraph(win, pane, page.text, layouts);
+    // the changes view: the note now against an earlier version the user picks, read only when asked (changes_view)
+    const shownGraph = readNote(gqlBlocks(page.text).map((b) => b.text))
+      .graphs.values()
+      .next().value;
+    if (shownGraph)
+      graph.append(
+        changesSection(win, shownGraph.graph, {
+          text: () => page.text,
+          versions: () => calls.versions(note),
+          textAt: (commit) => calls.textAt(note, commit),
+          layout: (d, theme) => layouts.draw(d, undefined, theme),
+          dark: () => win.matchMedia(DARK).matches,
+        }),
+      );
     await draw();
     // a proposal that lands, or any other change on disk, is drawn when the server sends it
     void notes

@@ -423,9 +423,29 @@ describe('no outgoing request (cc_no_remote)', () => {
     const [output] = Object.values(built.metafile.outputs);
     const external = [...new Set(output.imports.filter((i) => i.external).map((i) => i.path))].sort();
     // node:path names the note's place for the store the process now serves (C2), and node:fs/promises and node:url
-    // find and read the page's own files in the folder beside it (C5); none of them opens a connection
-    assert.deepEqual(external, ['node:crypto', 'node:fs', 'node:fs/promises', 'node:http', 'node:path', 'node:url']);
+    // find and read the page's own files in the folder beside it (C5); none of them opens a connection.
+    // node:child_process runs git alone, to read the open note's earlier versions for the changes view (changes_view,
+    // Roger, 17 Oct 2026): one execFile of git, with every transport refused and no lazy fetch
+    assert.deepEqual(external, [
+      'node:child_process',
+      'node:crypto',
+      'node:fs',
+      'node:fs/promises',
+      'node:http',
+      'node:path',
+      'node:url',
+    ]);
     const text = built.outputFiles[0].text;
+    assert.equal(text.match(/\bexecFile\s*\(/g)?.length, 1);
+    assert.match(text, /execFile\(\s*"git"/);
+    assert.doesNotMatch(text, /(?<![.\w])(spawn|spawnSync|exec|execSync|execFileSync|fork)\s*\(/);
+    for (const setting of [
+      'protocol.allow=never',
+      'core.hooksPath=/dev/null',
+      'core.fsmonitor=false',
+      'GIT_NO_LAZY_FETCH',
+    ])
+      assert.ok(text.includes(setting), setting);
     for (const call of [
       /\bfetch\s*\(/,
       /\.request\s*\(/,
