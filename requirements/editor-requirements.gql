@@ -790,7 +790,7 @@
 (test_standalone_app:Test {proves: 'the Tauri v2 app opens a folder of notes and draws and edits its graphs offline on each desktop platform', file: 'test/standalone-app.test.js', where: 'repo', status: 'planned'}),
 (test_vscode_plugin:Test {proves: 'the VS Code extension draws and edits the graph blocks of a Markdown file in a webview', file: 'test/vscode-plugin.test.js', where: 'repo', status: 'planned'}),
 (test_requirements_as_graph_note:Test {proves: 'the requirements are read from their graph note and pass the same audit as the graph file did', file: 'test/requirements-note.test.js', where: 'repo', status: 'planned'}),
-(test_changes_view:Test {proves: 'between two versions the changes view marks each added, removed and changed thing and link on the drawing and lists them as text, in both themes', file: 'packages/core/test/changes-view.test.js', where: 'repo', status: 'planned'}),
+(test_changes_view:Test {proves: 'between two versions the changes view marks each added, removed and changed thing and link on the drawing and lists them as text, in both themes', file: 'packages/core/test/changes-view.test.js', where: 'repo', status: 'partial'}),
 (test_github_review_items:Test {proves: 'pull requests, merges and commits are listed as items, each opens in the changes view, the levels go from a summary by section, workstream and requirement down to each line, and nothing is fetched until asked', file: 'packages/core/test/github-review-items.test.js', where: 'repo', status: 'planned'}),
 // ── Open questions ──
 (q_01_ai_interface:Question {num: 'Q-01', slice: 8, text: 'How does the graph mesh connect to external AI tools: through MCP, an API, or file export?'}),

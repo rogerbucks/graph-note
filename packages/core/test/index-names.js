@@ -46,7 +46,8 @@
 // LegendChoiceState, untangle_legend) came the same day. The mini-map's setting (MiniMapSetting, mini_map_setting) came
 // with the viewer aids on 16 Oct 2026. What the browser editor may show Claude (claudeGate, noteClassification,
 // classificationOf, sha256, CLAUDE, Gate, GateSettings and NoteClassification, cc_classified_asks and
-// cc_credential_never) came on 16 Oct 2026. The lists moved here from index.test.js in the review of #452.
+// cc_credential_never) came on 16 Oct 2026. The changes view (changesView, changesText, markedChanges, CHANGE_LOOKS,
+// NO_CHANGES, ChangeLine and ChangesShown, changes_view) came on 17 Oct 2026. The lists moved here from index.test.js in the review of #452.
 import { TYPES_LATE } from './index-types-late.js';
 
 /** The values src/index.ts exports, sorted. */
@@ -57,6 +58,7 @@ export const VALUES = [
   'AcrossZoom',
   'BIG_PROPOSAL',
   'BUSY_HUB',
+  'CHANGE_LOOKS',
   'CLAUDE',
   'DATA_FORMATS',
   'DECIDER_DEFAULT',
@@ -91,6 +93,7 @@ export const VALUES = [
   'MAX_SCALE',
   'MOVE_MS',
   'NO_BASIS',
+  'NO_CHANGES',
   'NUDGE_WORDS',
   'OPTIONS',
   'OUTSIDE',
@@ -147,6 +150,8 @@ export const VALUES = [
   'centres',
   'changeSetId',
   'changesIn',
+  'changesText',
+  'changesView',
   'choose',
   'chosen',
   'classMapFrom',
@@ -243,6 +248,7 @@ export const VALUES = [
   'makeList',
   'makeProposal',
   'makeView',
+  'markedChanges',
   'matchClass',
   'matrixGrants',
   'matrixProblems',
@@ -362,9 +368,11 @@ export const TYPES = [
   'Change',
   'ChangeGroup',
   'ChangeInput',
+  'ChangeLine',
   'ChangeMark',
   'ChangeOp',
   'ChangeRow',
+  'ChangesShown',
   'Choice',
   'ClassGrant',
   'Clock',

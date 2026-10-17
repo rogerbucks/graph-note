@@ -662,6 +662,18 @@ the graph and never written until a person accepts a change, and then written as
 - `proposals-shown.ts` — the shapes a review hands a host: `ProposalShown`, its `ChangeRow`s, who decides (`Person`), which
   changes (`Which`) and what came of it (`Reviewed`).
 
+**The changes view (spec §41)**
+
+- `changes-view.ts` — `changesView(before, after, graph)`: two versions of a note, such as the text as it is now and the
+  last commit or a branch, drawn as one graph: every thing and link of the newer, then what the older held that the
+  newer has not, laid out as a plain network (every link still, nothing folded or nudged, no near miss guessed) so every
+  change is in sight. Each thing and link added, removed or changed is marked (the proposals' `Marks`) and listed
+  (`ChangeLine`: its sentence and each property changed); `changesText` is the list as text, `NO_CHANGES` when the two
+  are the same. A thing is matched by its key, a link by its ends and type, the first written first. `markedChanges`
+  writes the marks into the drawn SVG in a palette's fixed colours by `CHANGE_LOOKS` (added a heavy line, changed
+  dashed, removed dotted with its text in italics), so the line tells them apart without colour, in either theme. The
+  host gives the older text however it reads it; nothing is written (changes_view).
+
 **Working with an AI (spec §19)**
 
 The core reaches no network: a send goes only through the transport a host hands in, and only once the user has seen
