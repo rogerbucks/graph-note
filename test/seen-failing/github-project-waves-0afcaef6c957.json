@@ -1,0 +1,6 @@
+{
+  "file": "test/github-project-waves.test.js",
+  "test": "the real waves file > puts every requirement of slices 3 to 10 that is not proved in a wave",
+  "seen_failing_first": false,
+  "evidence": "renamed to cover slice 10; before this change no slice-10 requirement existed, so the plan already held them all"
+}

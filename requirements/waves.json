@@ -107,9 +107,23 @@
       "workstreams": ["R2"]
     },
     {
-      "title": "Roger’s held changes, after all waves",
+      "title": "Wave 16 · Held: whiteboard board and graph",
       "start": "2027-04-12",
       "end": "2027-04-25",
+      "estimate": true,
+      "workstreams": ["B1", "B2"]
+    },
+    {
+      "title": "Wave 17 · Held: whiteboard brainstorming and working together",
+      "start": "2027-04-26",
+      "end": "2027-05-09",
+      "estimate": true,
+      "workstreams": ["B3", "B4"]
+    },
+    {
+      "title": "Roger’s held changes, after all waves",
+      "start": "2027-05-10",
+      "end": "2027-05-23",
       "estimate": true,
       "workstreams": []
     }

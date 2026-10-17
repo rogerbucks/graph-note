@@ -33,3 +33,6 @@ The requirements every layer is built to are in
 
 How ready these layers are for other languages, right-to-left scripts, plug-ins, themes and contract tests, and the
 plan to add them, is in the [design review](Design-review).
+
+The whiteboard, a board view for brainstorming with several people that decomposes into graph items, is designed in
+the [whiteboard design](Whiteboard-design).
