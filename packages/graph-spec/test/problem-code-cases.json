@@ -1,0 +1,174 @@
+{
+  "about": "Editor spec §42, problem_codes: small blocks each reader refuses, and the stable code it refuses each with (src/reader/problem-codes.json). One table for the JavaScript and the Python reader, so they give the same code: read by problem-codes.test.mjs and python/graph_spec/tests/test_problem_codes.py. via says how a case is read: store, applied to a new Store; change, one change set statement read by readChange (read_change); to_gql, written as standard GQL by the Python library's to_gql. A case read by to_gql, or whose code the table gives to Python alone, is run by Python alone.",
+  "cases": [
+    { "name": "no graph line", "via": "store", "block": "(a:T {id: 'a'})", "code": "GN101" },
+    { "name": "a graph name of two words", "via": "store", "block": "// graph: reader-choice\n(a:T)", "code": "GN102" },
+    { "name": "a comment after code", "via": "store", "block": "// graph: g\n(a:T) // a note", "code": "GN103" },
+    { "name": "a line that is no GQL", "via": "store", "block": "// graph: g\n(a:T),\n@oops", "code": "GN104" },
+    {
+      "name": "an escape GQL does not name",
+      "via": "store",
+      "block": "// graph: g\n(a:T {v: 'a\\qb'})",
+      "code": "GN105"
+    },
+    { "name": "a value with no comma after it", "via": "store", "block": "// graph: g\n(a:T {v: 1)", "code": "GN201" },
+    { "name": "a node with no name", "via": "store", "block": "// graph: g\n(:T)", "code": "GN202" },
+    {
+      "name": "a date with no thirteenth month",
+      "via": "store",
+      "block": "// graph: g\n(a:T {d: DATE '2026-13-01'})",
+      "code": "GN203"
+    },
+    {
+      "name": "an instant that is no instant",
+      "via": "store",
+      "block": "// graph: g\n(a:T {t: DATETIME 'soon'})",
+      "code": "GN204"
+    },
+    {
+      "name": "an instant with no offset",
+      "via": "store",
+      "block": "// graph: g\n(a:T {t: DATETIME '2026-10-17T10:00:00'})",
+      "code": "GN205"
+    },
+    {
+      "name": "an instant before year 1 in UTC",
+      "via": "store",
+      "block": "// graph: g\n(a:T {t: DATETIME '0001-01-01T00:00:00+01:00'})",
+      "code": "GN206"
+    },
+    { "name": "a list as a value", "via": "store", "block": "// graph: g\n(a:T {v: [1]})", "code": "GN207" },
+    { "name": "an id that is a number", "via": "store", "block": "// graph: g\n(a:T {id: 3})", "code": "GN208" },
+    { "name": "a SET of an id", "via": "store", "block": "// graph: g\n(a:T)\nSET a.id = 'b'", "code": "GN209" },
+    {
+      "name": "two patterns on one line with no comma",
+      "via": "store",
+      "block": "// graph: g\n(a:T) (b:T)",
+      "code": "GN210"
+    },
+    {
+      "name": "a bare type the graph does not have",
+      "via": "store",
+      "block": "// graph: g\n(a:T), (b:T), (a)-[knows]->(b)",
+      "code": "GN301"
+    },
+    {
+      "name": "a bare type two types differ from only by case",
+      "via": "store",
+      "block": "// graph: g\n(a:T), (b:T), (a)-[:KNOWS]->(b), (b)-[:Knows]->(a), (a)-[knows]->(b)",
+      "code": "GN302"
+    },
+    { "name": "a query block", "via": "store", "block": "// graph: g · QUERY\nMATCH (a) RETURN a", "code": "GN303" },
+    { "name": "an excerpt", "via": "store", "block": "// graph: g · excerpt\n(a:T)", "code": "GN304" },
+    {
+      "name": "a MATCH by a value that is not the id",
+      "via": "store",
+      "block": "// graph: g\nMATCH (a:T {name: 'x'})\nINSERT (b:T)",
+      "code": "GN305"
+    },
+    {
+      "name": "a MATCH that finds nothing",
+      "via": "store",
+      "block": "// graph: g\nMATCH (a:T {id: 'x'})\nINSERT (b:T)",
+      "code": "GN306"
+    },
+    { "name": "a variable written twice", "via": "store", "block": "// graph: g\n(a:T), (a:U)", "code": "GN307" },
+    {
+      "name": "an id given to two nodes",
+      "via": "store",
+      "block": "// graph: g\n(a:T), (b:T {id: 'a'})",
+      "code": "GN308"
+    },
+    {
+      "name": "a name used before its node is written",
+      "via": "store",
+      "block": "// graph: g\n(a)-[:R]->(b:T), (a:T)",
+      "code": "GN309"
+    },
+    {
+      "name": "a name that is no thing",
+      "via": "store",
+      "block": "// graph: g\n(a:T), (a)-[:R]->(b)",
+      "code": "GN310"
+    },
+    {
+      "name": "a SET of a name that is no thing",
+      "via": "store",
+      "block": "// graph: g\n(a:T)\nSET b.v = 1",
+      "code": "GN311"
+    },
+    {
+      "name": "a target named by another value",
+      "via": "change",
+      "block": "MATCH (a:T {name: 'x'}) DELETE a",
+      "code": "GN401"
+    },
+    {
+      "name": "a link with no type",
+      "via": "change",
+      "block": "MATCH (a:T {id: 'a'})-[r]->(b:T {id: 'b'}) DELETE r",
+      "code": "GN402"
+    },
+    {
+      "name": "a link named with its values",
+      "via": "change",
+      "block": "MATCH (a:T {id: 'a'})-[r:R {w: 1}]->(b:T {id: 'b'}) DELETE r",
+      "code": "GN403"
+    },
+    {
+      "name": "a MATCH of two targets",
+      "via": "change",
+      "block": "MATCH (a:T {id: 'a'}), (b:T {id: 'b'}) DELETE a",
+      "code": "GN404"
+    },
+    { "name": "a DELETE of another name", "via": "change", "block": "MATCH (a:T {id: 'a'}) DELETE b", "code": "GN405" },
+    { "name": "a DELETE with no MATCH", "via": "change", "block": "DELETE a", "code": "GN406" },
+    { "name": "a DETACH with no DELETE", "via": "change", "block": "MATCH (a:T {id: 'a'}) DETACH a", "code": "GN407" },
+    {
+      "name": "a DELETE of two targets",
+      "via": "change",
+      "block": "MATCH (a:T {id: 'a'}) DELETE a, b",
+      "code": "GN408"
+    },
+    { "name": "more after a DELETE", "via": "change", "block": "MATCH (a:T {id: 'a'}) DELETE a b", "code": "GN409" },
+    {
+      "name": "a DETACH DELETE of a link",
+      "via": "change",
+      "block": "MATCH (a:T {id: 'a'})-[r:R]->(b:T {id: 'b'}) DETACH DELETE r",
+      "code": "GN410"
+    },
+    {
+      "name": "a change that is neither DELETE nor SET",
+      "via": "change",
+      "block": "MATCH (a:T {id: 'a'}) REMOVE a.v",
+      "code": "GN411"
+    },
+    { "name": "a SET of two targets", "via": "change", "block": "SET a.v = 1, b.v = 2", "code": "GN412" },
+    {
+      "name": "a change set's SET of an id",
+      "via": "change",
+      "block": "MATCH (a:T {id: 'a'}) SET a.id = 'b'",
+      "code": "GN413"
+    },
+    { "name": "a SET of a name no value may have", "via": "change", "block": "SET a.__proto__ = 1", "code": "GN414" },
+    { "name": "more after a SET", "via": "change", "block": "SET a.v = 1 2", "code": "GN415" },
+    {
+      "name": "standard GQL of a variable written twice",
+      "via": "to_gql",
+      "block": "// graph: g\n(a:T), (a:U)",
+      "code": "GN307"
+    },
+    {
+      "name": "standard GQL of an id given to two nodes",
+      "via": "to_gql",
+      "block": "// graph: g\n(a:T), (b:T {id: 'a'})",
+      "code": "GN501"
+    },
+    {
+      "name": "standard GQL of a bare type",
+      "via": "to_gql",
+      "block": "// graph: g\n(a:T), (b:T), (a)-[knows]->(b)",
+      "code": "GN503"
+    }
+  ]
+}

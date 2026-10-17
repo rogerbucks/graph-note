@@ -192,6 +192,7 @@ function failure(block: number, text: string, error: unknown, all: Item[], lineA
     severity: 'error',
     message: pe?.msg ?? 'this could not be read',
     fix: pe?.fix ?? 'check the line against the guide to writing a graph note',
+    ...(pe?.code ? { code: pe.code } : {}),
   };
   // an escape GQL does not name (req:3.gql-escapes): the reader says where its backslash is, and the fix doubles it
   if (typeof pe?.at === 'number') {

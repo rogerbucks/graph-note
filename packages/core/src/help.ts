@@ -176,6 +176,8 @@ export function diagnostics(
     out.push({
       range,
       severity: p.severity === 'warning' ? SEVERITY.Warning : p.severity === 'hint' ? SEVERITY.Hint : SEVERITY.Error,
+      // the reader's stable code, the same from both libraries (editor spec §42, problem_codes)
+      ...(p.code ? { code: p.code } : {}),
       source: 'graph-note',
       message: sentence(p.message, !!p.replace && p.message.startsWith(p.replace.written)),
       data: { fix: sentence(p.fix), fixes },

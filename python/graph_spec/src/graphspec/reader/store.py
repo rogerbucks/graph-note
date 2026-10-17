@@ -67,6 +67,7 @@ class Store:
                 f"[{written}] has no colon, and graph {g} has no relationship type called "
                 f"{written}",
                 f"a relationship type is written with its colon: [:{written.upper()}]",
+                code="GN301",
             )
         if len(found) > 1:
             raise ProfileError(
@@ -74,6 +75,7 @@ class Store:
                 f"[{written}] has no colon, and graph {g} has relationship types "
                 f"{', '.join(found[:-1])} and {found[-1]}, which differ only by case",
                 f"write the one meant with its colon, such as [:{found[0]}]",
+                code="GN302",
             )
         self.bares.append({"graph": g, "line": r["line"], "written": written, "type": found[0]})
         self._fixes.setdefault(block, []).append((r["at"], written, found[0]))
@@ -129,11 +131,17 @@ class Store:
         g, kind = header(block)
         if kind == "query":
             raise ProfileError(
-                1, "this is a query block", "queries ask questions of a graph; they are not data"
+                1,
+                "this is a query block",
+                "queries ask questions of a graph; they are not data",
+                code="GN303",
             )
         if kind == "excerpt":
             raise ProfileError(
-                1, "this is an excerpt", "an excerpt illustrates part of a graph; it is not data"
+                1,
+                "this is an excerpt",
+                "an excerpt illustrates part of a graph; it is not data",
+                code="GN304",
             )
         first = next((line for line in block.split("\n") if strip(line)), "")
         if kind == "schema":  # a shared schema (§5): kept apart from the data, under its own name
@@ -179,6 +187,7 @@ class Store:
                     m["line"],
                     "MATCH must find a node by its id alone",
                     "write MATCH (v:Label {id: '…'})",
+                    code="GN305",
                 )
             k = found(m["props"]["id"])
             if k is None or not set(m["labels"]) <= graph["nodes"][k]["labels"]:
@@ -187,6 +196,7 @@ class Store:
                     f"MATCH finds no {':'.join(m['labels'])} with id {m['props']['id']!r} "
                     f"in graph {g}",
                     "the node must be written earlier — in this document or one loaded before it",
+                    code="GN306",
                 )
             bound[m["var"]] = k
         # left to right, as Grafeo binds them: a name is reused only once its node is written —
@@ -199,6 +209,7 @@ class Store:
                             n["line"],
                             f"{n['var']} is written twice",
                             "give each new node its own variable",
+                            code="GN307",
                         )
                     if "id" not in n["props"]:
                         # a thing's name is its id (§3, 6 Oct 2026)
@@ -209,6 +220,7 @@ class Store:
                             f"id {n['props']['id']!r} is already a node in graph {g}",
                             "an id names one node (§10) — MATCH it to add to it, "
                             "or supersede it (§12)",
+                            code="GN308",
                         )
                     self._k += 1
                     k = f"n{self._k}"
@@ -228,6 +240,7 @@ class Store:
                             f"{n['var']} is used before it is written",
                             "write the node before any relationship that uses it — "
                             "GQL binds a name only once its node is written (§3)",
+                            code="GN309",
                         )
                     # a bare name not written in this block names the existing node with that
                     # id (§3)
@@ -238,6 +251,7 @@ class Store:
                             f"no thing called {n['var']} in graph {g}",
                             "check the spelling — or write it here with its kind: "
                             f"({n['var']}:Kind {{…}})",
+                            code="GN310",
                         )
                     bound[n["var"]] = k
             for a, r, b in zip(nodes, rels, nodes[1:]):
@@ -251,6 +265,7 @@ class Store:
                     n,
                     f"SET names {var}, which is no thing in graph {g}",
                     "check the spelling — SET names a thing by its id",
+                    code="GN311",
                 )
             # never an id: the parser refuses a SET of one (§3, req:3.set-keeps-id), so the index
             # stays good

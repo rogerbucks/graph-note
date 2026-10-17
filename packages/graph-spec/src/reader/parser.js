@@ -31,6 +31,8 @@ class Parser {
         tok[2],
         `expected '${text || kind}', found '${tok[1] || 'the end'}'`,
         'keep to the document profile (§3)',
+        undefined,
+        'GN201',
       );
     this.i++;
     return tok;
@@ -45,7 +47,13 @@ class Parser {
       this.i++;
       return raw;
     }
-    throw new ProfileError(n, `expected a name, found '${t || 'the end'}'`, 'keep to the document profile (§3)');
+    throw new ProfileError(
+      n,
+      `expected a name, found '${t || 'the end'}'`,
+      'keep to the document profile (§3)',
+      undefined,
+      'GN202',
+    );
   }
   value() {
     const [k, t, n] = this.peek();
@@ -65,7 +73,7 @@ class Parser {
       this.i++;
       const s = unquote(this.take('str')[1]);
       if (!/^\d{4}-\d\d-\d\d$/.test(s) || isNaN(Date.parse(s + 'T00:00:00Z')))
-        throw new ProfileError(n, `'${s}' is not a date`, "write DATE 'YYYY-MM-DD'");
+        throw new ProfileError(n, `'${s}' is not a date`, "write DATE 'YYYY-MM-DD'", undefined, 'GN203');
       return new GTime('date', s);
     }
     if (k === 'kw' && t === 'DATETIME') {
@@ -77,6 +85,8 @@ class Parser {
       n,
       `'${t || 'nothing'}' is not a value in the profile`,
       "use 'text', a number, TRUE, FALSE, DATE '…' or DATETIME '…' — no lists, no expressions",
+      undefined,
+      'GN207',
     );
   }
   /** Refuses a node's id written as a value that is not text — a number, TRUE, FALSE, DATE '…' or DATETIME '…' — with
@@ -89,7 +99,13 @@ class Parser {
     else if (k === 'kw' && (t === 'DATE' || t === 'DATETIME') && next[0] === 'str')
       [written, quoted] = [`${raw} ${next[1]}`, next[1]];
     else return;
-    throw new IdNotTextError(n, `id ${written} is not text`, `write id: ${quoted} — a node's id is always text (§3)`);
+    throw new IdNotTextError(
+      n,
+      `id ${written} is not text`,
+      `write id: ${quoted} — a node's id is always text (§3)`,
+      undefined,
+      'GN208',
+    );
   }
   props(node = false) {
     const out = {};
@@ -192,6 +208,8 @@ class Parser {
             n,
             `SET would change ${v}'s id, and a node's id never changes (§3)`,
             `write the right node, then link ${v} to it or supersede it (§12)`,
+            undefined,
+            'GN209',
           );
         this.take('p', '=');
         sets.push([v, key, this.value(), n]);
@@ -204,6 +222,8 @@ class Parser {
         this.line(),
         `unexpected '${this.peek()[1]}'`,
         'a data block ends after its INSERT and SET (§3)',
+        undefined,
+        'GN210',
       );
     return [matches, paths, sets];
   }

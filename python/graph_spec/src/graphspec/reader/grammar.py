@@ -35,7 +35,10 @@ class Parser:
             self.i += 1
             return raw
         raise ProfileError(
-            n, f"expected a name, found {t or 'the end'!r}", "keep to the document profile (§3)"
+            n,
+            f"expected a name, found {t or 'the end'!r}",
+            "keep to the document profile (§3)",
+            code="GN202",
         )
 
     def line(self):
@@ -49,6 +52,7 @@ class Parser:
                 tok[2],
                 f"expected {want!r}, found {tok[1] or 'the end'!r}",
                 "keep to the document profile (§3)",
+                code="GN201",
             )
         self.i += 1
         return tok
@@ -74,7 +78,9 @@ class Parser:
             try:
                 return dt.date.fromisoformat(s)
             except ValueError:
-                raise ProfileError(n, f"{s!r} is not a date", "write DATE 'YYYY-MM-DD'")
+                raise ProfileError(
+                    n, f"{s!r} is not a date", "write DATE 'YYYY-MM-DD'", code="GN203"
+                )
         if k == "kw" and t == "DATETIME":
             self.i += 1
             s = unquote(self.take("str")[1])
@@ -82,11 +88,17 @@ class Parser:
                 v = dt.datetime.fromisoformat(s)
             except ValueError:
                 raise ProfileError(
-                    n, f"{s!r} is not an instant", "write DATETIME 'YYYY-MM-DDTHH:MM:SS+HH:MM'"
+                    n,
+                    f"{s!r} is not an instant",
+                    "write DATETIME 'YYYY-MM-DDTHH:MM:SS+HH:MM'",
+                    code="GN204",
                 )
             if v.tzinfo is None:
                 raise ProfileError(
-                    n, f"{s!r} has no offset", "an instant carries its offset (§9, principle 11)"
+                    n,
+                    f"{s!r} has no offset",
+                    "an instant carries its offset (§9, principle 11)",
+                    code="GN205",
                 )
             # an instant as its UTC time, exactly as Grafeo returns it; one whose UTC time is
             # before year 1 or after 9999 cannot be held, and is refused as any unreadable value is
@@ -97,12 +109,14 @@ class Parser:
                     n,
                     f"{s!r} is not an instant: in UTC it falls outside years 1 to 9999",
                     "write DATETIME 'YYYY-MM-DDTHH:MM:SS+HH:MM' within years 1 to 9999",
+                    code="GN206",
                 )
         raise ProfileError(
             n,
             f"{t or 'nothing'!r} is not a value in the profile",
             "use 'text', a number, TRUE, FALSE, DATE '…' or DATETIME '…' — "
             "no lists, no expressions",
+            code="GN207",
         )
 
     def text_id(self):
@@ -116,7 +130,10 @@ class Parser:
         else:
             return
         raise IdNotTextError(
-            n, f"id {written} is not text", f"write id: {quoted} — a node's id is always text (§3)"
+            n,
+            f"id {written} is not text",
+            f"write id: {quoted} — a node's id is always text (§3)",
+            code="GN208",
         )
 
     def props(self, node=False):
@@ -219,6 +236,7 @@ class Parser:
                         n,
                         f"SET would change {var}'s id, and a node's id never changes (§3)",
                         f"write the right node, then link {var} to it or supersede it (§12)",
+                        code="GN209",
                     )
                 self.take("p", "=")
                 sets.append((var, key, self.value(), n))
@@ -230,5 +248,6 @@ class Parser:
                 self.line(),
                 f"unexpected {self.peek()[1]!r}",
                 "a data block ends after its INSERT and SET (§3)",
+                code="GN210",
             )
         return matches, paths, sets
