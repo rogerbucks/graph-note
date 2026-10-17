@@ -783,7 +783,7 @@
 (test_ux_copy_auto:Test {proves: 'every user-facing message passes the plain-English check, and a worse score without a reason fails', file: 'test/ux-copy.test.js', where: 'repo', status: 'planned'}),
 (test_visual_regression_auto:Test {proves: 'every view matches its reference drawing in both themes, and a change without a recorded reason fails', file: 'test/visual-regression.test.js', where: 'repo', status: 'planned'}),
 (test_speed_budgets:Test {proves: 'each host stays within its instruction budgets for 50 and 500 things, the 10 000-thing query and a cold start', file: 'test/speed-budgets.test.js', where: 'repo', status: 'planned'}),
-(test_thresholds_named:Test {proves: 'each open number is a named setting with a default and range, and its edges behave as stated', file: 'packages/core/test/thresholds-named.test.js', where: 'repo', status: 'planned'}),
+(test_thresholds_named:Test {proves: 'each open number is a named setting with a default and range, and its edges behave as stated', file: 'packages/core/test/thresholds-named.test.js', where: 'repo', status: 'partial'}),
 (test_lib_github_release:Test {proves: 'a release carries the library as a semantically tagged GitHub release with a changelog, and nothing is published to npm', file: 'test/lib-release.test.js', where: 'repo', status: 'planned'}),
 (test_lib_public_api:Test {proves: 'a change to the declared public interface without a major version fails', file: 'test/lib-public-api.test.js', where: 'repo', status: 'planned'}),
 (test_community_listing:Test {proves: 'the plugin passes the community review checklist', file: 'test/community-listing.test.js', where: 'repo', status: 'planned'}),

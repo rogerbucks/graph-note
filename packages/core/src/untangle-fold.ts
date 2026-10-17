@@ -7,9 +7,10 @@
 import { adjacency } from './focus.ts';
 import type { FocusEdge } from './focus.ts';
 import type { Nudge } from './style-graph.ts';
+import { THRESHOLDS, thresholdValue } from './thresholds.ts';
 
-/** A thing with more links than this is a busy hub, whose links can be folded into one stub (untangle_hubs). */
-export const BUSY_HUB = 12;
+/** A thing with more links than this is a busy hub, whose links can be folded into one stub (untangle_hubs): `busy_hub`. */
+export const BUSY_HUB = THRESHOLDS.busy_hub.value;
 
 /**
  * What a drawing folds and merges, for the layout source: things not drawn, each hidden with a hub it hung from; links
@@ -46,6 +47,7 @@ function linksByThing(edges: readonly FocusEdge[]): Map<string, number[]> {
 
 /** The things, of `keys` and in their order, with more links than `most`: the busy hubs. */
 export function busyHubs(keys: readonly string[], edges: readonly FocusEdge[], most = BUSY_HUB): string[] {
+  most = thresholdValue('busy_hub', most);
   const links = linksByThing(edges);
   return keys.filter((k) => (links.get(k)?.length ?? 0) > most);
 }

@@ -4,12 +4,13 @@
 // clock and a host clears the timer when its card goes; how the moving highlight is drawn, and that it moves at once
 // under reduced motion, is the host's (motion_reduced_respected).
 import type { PathPlayer } from './paths.ts';
+import { THRESHOLDS, thresholdValue } from './thresholds.ts';
 
 /** The paces Play may step at: how long each step is shown, in milliseconds. */
 export const PATH_PACES = [500, 1000, 2000, 4000] as const;
 
-/** The pace Play steps at until the user sets another: two seconds a step, time to read it. */
-export const DEFAULT_PACE = 2000;
+/** The pace Play steps at until the user sets another: two seconds a step, time to read it (`path_pace`). */
+export const DEFAULT_PACE = THRESHOLDS.path_pace.value;
 
 /** A host's timer: `after` runs `run` once, `ms` from now, and gives a handle that `cancel` takes back. */
 export interface Scheduler {
@@ -38,11 +39,13 @@ export class PathAutoplay {
   constructor(player: PathPlayer, scheduler: Scheduler, pace: number = DEFAULT_PACE) {
     this.player = player;
     this.scheduler = scheduler;
-    this.paceMs = PathAutoplay.isPace(pace) ? pace : DEFAULT_PACE;
+    this.paceMs = thresholdValue('path_pace', pace);
   }
 
+  /** Whether `ms` is a pace inside `path_pace`'s range. */
   private static isPace(ms: number): boolean {
-    return typeof ms === 'number' && Number.isFinite(ms) && ms > 0;
+    const { least, most } = THRESHOLDS.path_pace;
+    return typeof ms === 'number' && Number.isFinite(ms) && ms >= least && ms <= most;
   }
 
   /** Whether it is stepping on its own now. */
