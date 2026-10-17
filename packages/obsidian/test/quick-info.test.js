@@ -399,7 +399,7 @@ describe('quick_info: it is the theme’s, and goes with its card', () => {
     assert.match(rule, /background:\s*var\(--/);
     assert.match(rule, /color:\s*var\(--/);
     assert.match(rule, /position:\s*fixed/);
-    assert.match(rule, /z-index:\s*var\(--layer-tooltip\)/);
+    assert.match(rule, /z-index:\s*var\(--gn-layer-tooltip\)/);
     assert.ok(!/#[0-9a-f]{3,8}\b/i.test(rule), 'no fixed colour');
   });
 

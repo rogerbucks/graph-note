@@ -99,7 +99,7 @@ describe('in view mode the details open as a sheet pinned to the foot of the vis
     assert.match(css(SHEET, 'left'), /var\(--graph-note-sheet-left/);
     assert.match(css(SHEET, 'width'), /var\(--graph-note-sheet-width/);
     assert.ok(css(SHEET, 'z-index'), 'over the note');
-    assert.match(css(SHEET, 'background'), /var\(--background-primary\)/, 'the note does not show through');
+    assert.match(css(SHEET, 'background'), /var\(--gn-bg\)/, 'the note does not show through');
     assert.equal(details(el).cssProps['--graph-note-sheet-left'], '0px');
     assert.equal(details(el).cssProps['--graph-note-sheet-width'], '700px');
   });

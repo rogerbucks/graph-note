@@ -362,9 +362,12 @@ describe('Obsidian’s guidelines, beyond the linter', () => {
     const css = read('styles.css').replace(/\/\*[\s\S]*?\*\//g, '');
     assert.doesNotMatch(css, /#[0-9a-f]{3,8}\b/i, 'no hex colours');
     assert.doesNotMatch(css, /\b(rgba?|hsla?)\(\s*\d/, 'no fixed rgb or hsl');
+    // an element of ours is named by one of our classes, or, where the design tokens are mapped for each of them
+    // (theme-tokens.test.js), by the start of one: a class that begins graph-note- or gql-, and nothing of Obsidian's
+    const ourClassStarts = /^\[class\^='(graph-note-|gql-)'\]$|^\[class\*=' (graph-note-|gql-)'\]$/;
     for (const [, sel] of css.matchAll(/(?:^|[{};])\s*([^{}@;]+?)\s*\{/gm)) {
       for (const s of sel.split(/,(?![^(]*\))/))
-        if (!s.includes('@') && !/^\d|^from$|^to$/.test(s.trim()))
+        if (!s.includes('@') && !/^\d|^from$|^to$/.test(s.trim()) && !ourClassStarts.test(s.trim()))
           assert.match(s, /\.(graph-note\b|gql-)/, `selector ${s.trim()}`);
     }
   });

@@ -1,8 +1,9 @@
 // Builds the browser editor's page into one folder (spec §26): the files the server holds and serves from its own origin,
 // and nothing fetched from anywhere. `page.js` is the page; `layout-worker.js` is the worker the core's layout runs in, with
 // the Graphviz engine inside it; `page.css` is the theme (theme-css.ts), the display layer's styles (the plugin's
-// styles.css, which names the same variables), the page's own and one rule for each icon file; `index.html` and the
-// `icons/` folder are copied. Used by esbuild.config.mjs, which puts them in the mod, and by the page's tests.
+// styles.css, which reads the same design tokens), the page's own, with the tokens' mapping, and one rule for each icon
+// file; `index.html` and the `icons/` folder are copied. Used by esbuild.config.mjs, which puts them in the mod, and by
+// the page's tests.
 import esbuild from 'esbuild';
 import { cpSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';

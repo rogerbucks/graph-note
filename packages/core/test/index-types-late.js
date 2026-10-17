@@ -1,6 +1,16 @@
-// The last part of the types src/index.ts exports, from ReviewItem on, sorted: test support only, nothing here ships. It
+// The last part of the types src/index.ts exports, from ProposalCheck on, sorted: test support only, nothing here ships. It
 // is kept apart from index-names.js, which joins it to the types before it, so neither file passes the test file size.
 export const TYPES_LATE = [
+  'ProposalCheck',
+  'ProposalInput',
+  'ProposalShown',
+  'ProposedChange',
+  'Proposer',
+  'ProposerKind',
+  'Provenance',
+  'Range',
+  'ReadLimits',
+  'Refusal',
   'ReviewItem',
   'ReviewLevels',
   'ReviewSource',
@@ -53,6 +63,8 @@ export const TYPES_LATE = [
   'TextFormat',
   'TextState',
   'ThemeColours',
+  'ThemeToken',
+  'ThemeTokenUse',
   'ThingAdded',
   'ThingLook',
   'ThingNote', // a note on a thing or a link (editor spec §24, 13 Oct 2026)',

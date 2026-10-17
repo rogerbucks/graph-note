@@ -2,15 +2,19 @@
 // what Graph Note can be extended with, used by the built-in ones too. A plug-in names itself, the interface version it
 // was built for and, in its manifest, the extension points it uses; it is given only those. What it adds is checked as it
 // is added, and a call into it that throws is caught and named, never let through to blank a drawing. The first
-// extension point is the data exports; diagram types, graph steps and sources, storage, AI providers, commands and
-// theme tokens join it one at a time, each with its own contract suite (plugins-contract.ts).
+// extension point is the data exports, and the second the theme tokens (§44, plugin_theme_tokens): a plug-in inherits the
+// core's design tokens and may add colours of its own, each meeting the locked contrast (theme-tokens.ts). Diagram types,
+// graph steps and sources, storage, AI providers and commands join them one at a time, each with its own contract suite
+// (plugins-contract.ts).
 import type { DataInfo, ExportedData } from './export-data-model.ts';
+import { THEME_TOKENS, themeTokenProblem } from './theme-tokens.ts';
+import type { ThemeToken } from './theme-tokens.ts';
 
 /** The version of the plug-in interface; a plug-in built for another is refused. */
 export const PLUGIN_API = '1';
 
 /** The extension points a plug-in may use, as its manifest names them. */
-export const EXTENSION_POINTS = ['exports'] as const;
+export const EXTENSION_POINTS = ['exports', 'theme'] as const;
 
 /** One of the extension points. */
 export type ExtensionPoint = (typeof EXTENSION_POINTS)[number];
@@ -32,6 +36,8 @@ export interface DataExporter {
 /** What a plug-in is given to add to: only the points its manifest names. */
 export interface ExtensionPoints {
   exports?: { add: (exporter: DataExporter) => void };
+  /** The theme: the core's tokens, which a plug-in's styles may name, and a way to add colours of its own. */
+  theme?: { core: readonly string[]; add: (token: ThemeToken) => void };
 }
 
 /** A plug-in: who it is, what it uses, and what it adds. */
@@ -65,6 +71,8 @@ export interface PluginRegistry {
   exporters: () => DataExporter[];
   /** The export of `format`, or undefined. */
   exporter: (format: string) => DataExporter | undefined;
+  /** Every theme token added, in the order added, for a host to apply (theme-tokens.ts, `themeTokenCss`). */
+  themeTokens: () => ThemeToken[];
   /** The data written by the export of `format`, or what went wrong and whose plug-in it was. */
   writeData: (format: string, data: ExportedData, info: DataInfo) => PluginResult<string>;
 }
@@ -85,6 +93,9 @@ export function pluginRegistry(): PluginRegistry {
   const installed: string[] = [];
   const exporters: DataExporter[] = [];
   const owner = new Map<string, string>();
+  const tokens: ThemeToken[] = [];
+  const tokenOwner = new Map<string, string>();
+  const core = Object.freeze(Object.keys(THEME_TOKENS));
   return {
     register(plugin) {
       const refuse = (why: string): never => {
@@ -100,6 +111,8 @@ export function pluginRegistry(): PluginRegistry {
       // what it adds is kept aside until it has all been accepted, so a refused plug-in leaves nothing behind
       const added: DataExporter[] = [];
       const taken = new Map(owner);
+      const addedTokens: ThemeToken[] = [];
+      const tokenTaken = new Map(tokenOwner);
       const points: ExtensionPoints = {};
       if (plugin.uses.includes('exports'))
         points.exports = {
@@ -110,6 +123,18 @@ export function pluginRegistry(): PluginRegistry {
             added.push({ ...e });
           },
         };
+      if (plugin.uses.includes('theme'))
+        points.theme = Object.freeze({
+          core,
+          add: (t: ThemeToken) => {
+            const why = themeTokenProblem(t, plugin.id);
+            if (why) refuse(why);
+            const by = tokenTaken.get(t.name);
+            if (by) refuse(`the theme token ${t.name} is already added by ${by}`);
+            tokenTaken.set(t.name, plugin.id);
+            addedTokens.push({ ...t });
+          },
+        });
       try {
         plugin.register(Object.freeze(points));
       } catch (e) {
@@ -121,9 +146,14 @@ export function pluginRegistry(): PluginRegistry {
         exporters.push(e);
         owner.set(e.format, plugin.id);
       }
+      for (const t of addedTokens) {
+        tokens.push(t);
+        tokenOwner.set(t.name, plugin.id);
+      }
     },
     plugins: () => [...installed],
     exporters: () => [...exporters],
+    themeTokens: () => tokens.map((t) => ({ ...t })),
     exporter: (format) => exporters.find((e) => e.format === format),
     writeData(format, data, info) {
       const e = exporters.find((x) => x.format === format);

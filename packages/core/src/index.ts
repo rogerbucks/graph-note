@@ -182,7 +182,9 @@ export type {
   PluginRegistry,
   PluginResult,
 } from './plugins.ts';
-export { exporterContract, sampleExports } from './plugins-contract.ts';
+export { exporterContract, sampleExports, themeTokenContract } from './plugins-contract.ts';
+export { OBSIDIAN_TOKEN_MAP, THEME_TOKENS, themeTokenCss } from './theme-tokens.ts';
+export type { ThemeToken, ThemeTokenUse } from './theme-tokens.ts';
 export {
   addTranslation,
   currentLanguage,

@@ -1,5 +1,6 @@
 // The browser page's colours (spec §26, cc_theme_follows): the core's own theme colours (palette.ts, `THEME_COLOURS`), as
-// the CSS variables the shared styles and the drawing's Obsidian palette name, light by default and dark under
+// the CSS variables of Obsidian's theme, which page.css maps to the design tokens every rule reads (§44, ui_theme_tokens)
+// and the drawing's Obsidian palette names, light by default and dark under
 // `prefers-color-scheme`, which is the scheme the pane is handed. The drawing itself is coloured by the core in those same
 // variables, so the page and the drawing change together and keep the locked contrast (§11): the text and muted text on the
 // page are the core's, 4.5:1 or better in both. Made when the page is built; the page holds no script for the theme.
