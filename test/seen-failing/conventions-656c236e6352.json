@@ -1,0 +1,6 @@
+{
+  "file": "test/conventions.test.js",
+  "test": "one code style > CI checks that every file is formatted",
+  "seen_failing_first": false,
+  "evidence": "The old test 'the code is formatted, and CI checks it', renamed when it stopped re-running Prettier (CI's lint job runs it): it checks only that CI does, which the parent's ci.yml already did."
+}
