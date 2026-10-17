@@ -7,8 +7,14 @@ export interface ShownProblem extends Problem {
   noteLine: number;
 }
 
-/** A problem in words: its note line, what is wrong, and the fix. */
-export const problemText = (p: ShownProblem): string => `Line ${p.noteLine}: ${p.message} — ${p.fix}`;
+/** Words as a sentence: a capital first, and a full stop at the end where there is none. */
+const sentence = (t: string): string => {
+  const s = t.trim();
+  return `${s.charAt(0).toUpperCase()}${s.slice(1)}${/[.!?…]$/.test(s) ? '' : '.'}`;
+};
+/** A problem in words: its note line and what is wrong, then the fix, as its own sentence (spec §41, ux_copy_auto). */
+export const problemText = (p: ShownProblem): string =>
+  `Line ${p.noteLine}: ${p.message}${/[.!?…]$/.test(p.message.trim()) ? '' : '.'} ${sentence(p.fix)}`;
 const sign = (p: Problem) => (p.severity === 'hint' ? 'ℹ Hint' : p.severity === 'warning' ? '⚠ Warning' : '✖ Error');
 /** Errors first, then warnings, then hints. */
 const RANK = { error: 0, warning: 1, hint: 2 };
