@@ -269,6 +269,8 @@ export function fakeObsidian(state = {}) {
   class Menu {
     constructor() {
       this.items = [];
+      // the rows in the order shown, separators among them
+      this.rows = [];
     }
     addItem(build) {
       const item = {
@@ -285,12 +287,14 @@ export function fakeObsidian(state = {}) {
         },
         setChecked(c) {
           item.checked = !!c;
+          item.checkable = true;
           return item;
         },
         setSection() {
           return item;
         },
-        setWarning() {
+        setWarning(w) {
+          item.warning = !!w;
           return item;
         },
         onClick(f) {
@@ -301,9 +305,11 @@ export function fakeObsidian(state = {}) {
       };
       build(item);
       this.items.push(item);
+      this.rows.push(item);
       return this;
     }
     addSeparator() {
+      this.rows.push('separator');
       return this;
     }
     showAtMouseEvent() {
