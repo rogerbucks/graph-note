@@ -168,7 +168,7 @@ export const OPTIONS: Option[] = [
     section: 'Strictness',
     name: 'Allowed in Simplified',
     sentence:
-      'The departures from standard GQL that Simplified allows as written; an engine or export still gets standard GQL.',
+      'The ways Simplified lets a graph leave standard GQL as written. An engine or an export still gets standard GQL.',
     choices: DEPARTURES.map((d) => ({ value: d.id, name: d.name, sentence: d.sentence })),
   },
   {
@@ -176,7 +176,7 @@ export const OPTIONS: Option[] = [
     section: 'AI models',
     name: 'Use AI models',
     sentence:
-      'Whether the editor may send anything to an AI model. Even on, nothing is sent until you send it, and only to a model set up below, after you have seen exactly what will be sent.',
+      'Whether the editor may send anything to an AI model. Even when on, nothing is sent until you send it. It goes only to a model set up below, once you have seen exactly what it will send.',
     choices: [
       { value: 'off', name: 'Off: nothing is ever sent' },
       { value: 'on', name: 'On: send only when I say' },
@@ -200,7 +200,7 @@ export const OPTIONS: Option[] = [
     section: 'AI models',
     name: 'AI models',
     sentence:
-      'Each AI model the editor may ask, with its purpose and its ceiling, the highest classification of note it may be sent, or a row of the destination matrix.',
+      'Each AI model the editor may ask, and its purpose. Each has a ceiling: the highest classification of note it may be sent, or a row of the destination matrix.',
   },
   ...MATRIX_OPTIONS, // the matrix note and its class names (§19)
   {
@@ -287,15 +287,14 @@ export const OPTIONS: Option[] = [
     key: 'exportAsksAbove',
     section: 'Export',
     name: 'Ask before exporting above',
-    sentence:
-      'The classification above which an export asks first, naming the classification; one of the classifications set above.',
+    sentence: 'Exports of a note above this classification ask you first. Choose one of the classifications set above.',
   },
   {
     key: 'decider',
     section: 'Proposals',
     name: 'Your name on decisions',
     sentence:
-      'The name recorded when you accept or reject a change in a proposal, kept exactly as you type it; left empty, it is recorded as “you”.',
+      'The name recorded when you accept or reject a change in a proposal. It is kept exactly as you type it. Left empty, it is recorded as “you”.',
   },
 ];
 
