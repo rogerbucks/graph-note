@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/editor-mod-claude-limits.test.js",
+  "test": "the key and the yes are not Claude’s to carry (cc_claude_proposes) > Claude’s own text never carries the user’s yes: a confirmed note asks again after a proposal, and takes no more",
+  "seen_failing_first": false,
+  "evidence": "An existing test; only its helper changed, to print the launcher's reason when the editor fails to open, so it passed before by design."
+}

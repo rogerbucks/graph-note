@@ -33,7 +33,8 @@ const things = (note) => {
 async function opened(settings, where = modVault(), path = where.plan) {
   const sent = [];
   const { launcher, host } = launcherFor(where, { sent, settings });
-  assert.equal((await launcher.edit(path)).ok, true);
+  const outcome = await launcher.edit(path);
+  assert.equal(outcome.ok, true, outcome.why);
   return { where, launcher, host, sent, page: partsOf(launcher.link) };
 }
 

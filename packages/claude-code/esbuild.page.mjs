@@ -65,10 +65,11 @@ export async function buildPage(out) {
     legalComments: 'inline',
   });
   cpSync(join(here, 'page/icons'), join(out, 'icons'), { recursive: true });
-  cpSync(join(here, 'page/index.html'), join(out, 'index.html'));
   const icons = readdirSync(join(here, 'page/icons'))
     .filter((f) => f.endsWith('.svg'))
     .map((f) => f.slice(0, -4));
   writeFileSync(join(out, 'page.css'), pageCss(icons));
+  // the page itself last: a server takes a folder holding index.html for a built one, so it comes once the rest is written
+  cpSync(join(here, 'page/index.html'), join(out, 'index.html'));
   return { page: page.metafile, worker: worker.metafile };
 }
