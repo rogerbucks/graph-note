@@ -1,6 +1,6 @@
 // The states of the browser editor's page, each reached on the page as built in a DOM (editor spec §11, §41): the one list
-// every accessibility check of the page goes through (test/wcag.test.js, test/a11y-semantics.test.js), so a state a later
-// workstream adds gets its case here once and every check covers it.
+// every accessibility check of the page goes through (test/wcag.test.js, test/a11y-semantics.test.js and
+// test/a11y-keyboard.test.js), so a state a later workstream adds gets its case here once and every check covers it.
 import { until } from '../../packages/obsidian/test/host/load-plugin.js';
 import { browserHost } from '../../packages/claude-code/page/browser-host.ts';
 import { PAGE_NOTE } from './wcag-page.js';

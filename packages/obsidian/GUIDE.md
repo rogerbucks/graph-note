@@ -263,7 +263,8 @@ card in a component Obsidian owns (`graphCard`). The layer's types for what the 
   core's details); `quick-info-place.ts` is where it goes (`placeTip`: below, above, right, left, never over the thing).
 - `details-summary.ts` — the graph's summary the details panel shows when it is kept open and nothing is chosen
   (details_always_visible); `details-untangle.ts`, a thing's untangling offers; `source-toggle.ts`, Source in reading
-  view; `full-screen.ts`, the card's full-screen overlay.
+  view; `full-screen.ts`, the card's full-screen overlay, a dialog that takes the keyboard, keeps Tab in it, leaves on
+  Escape from any control and gives the keyboard back.
 - `details-nav.ts` — finding your way from the details (§25): the groups of links rendered from the core's
   `linkGroups`, the trail's buttons, the names of steps, and `Glide`, the brief eased move to what is chosen, a frame at
   a time, at once when the system asks for reduced motion.

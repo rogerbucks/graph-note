@@ -13,7 +13,7 @@ import type { TextHelp } from './text-help';
 export interface Typing {
   typed: () => void;
   caretMoved: () => void;
-  /** The suggestion Tab takes, if there is one. */
+  /** The suggestion Tab takes, if there is one that would change the text. */
   first: () => CompletionItem | undefined;
   accept: (item: CompletionItem) => void;
   step: (e: Event, which: Step) => void;
@@ -43,7 +43,7 @@ export function fieldTyping(
   return {
     typed: () => act.typed(),
     caretMoved: act.caretMoved,
-    first: () => help.first(),
+    first: () => help.first(el.text),
     accept: act.accept,
     step: (e, which) => {
       if (!undoes.started) return;

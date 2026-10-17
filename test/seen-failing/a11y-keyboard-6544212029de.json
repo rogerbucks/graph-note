@@ -1,0 +1,6 @@
+{
+  "file": "test/a11y-keyboard.test.js",
+  "test": "the browser editor’s page: every state, from the keyboard alone > a menu open with the keyboard on its second row: every action reached and operated, and every focus left",
+  "seen_failing_first": false,
+  "evidence": "A keyboard run over a view that already met it: every element of its tab order was reached both ways, its own actions answered Enter or Space, and no focus was kept. The views it found wanting (full screen, and two states of the browser editor) failed first in this commit and are fixed by it."
+}
