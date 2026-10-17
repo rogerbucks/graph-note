@@ -385,8 +385,23 @@ describe('the settings on GitHub', () => {
 
   test("the default branch requires CI's jobs, this check among them, and the dependency review", () => {
     assert.deepEqual(wanted('default branch ruleset: required checks').want, REQUIRED_CHECKS);
-    const ci = Object.keys(jobs(read('.github/workflows/ci.yml')));
-    for (const job of ci) assert.ok(REQUIRED_CHECKS.includes(job), job);
+    const ci = jobs(read('.github/workflows/ci.yml'));
+    for (const [job, lines] of Object.entries(ci)) {
+      if (!lines.some((l) => /^ {4}strategy:/.test(l))) assert.ok(REQUIRED_CHECKS.includes(job), job);
+      // a job split by a matrix reports a check for each part, so it is required through the job that needs it
+      else assert.ok(!REQUIRED_CHECKS.includes(job), job);
+    }
+    assert.match(ci.test.join('\n'), /needs: suite\n\s+if: always\(\)/);
+    assert.ok(runCommands(ci.test.join('\n')).includes('test "$RESULT" = success'));
+    assert.match(ci.test.join('\n'), /RESULT: \$\{\{ needs\.suite\.result \}\}/);
+    // the suite in six parts, each printing only its failures and keeping the full report as a file
+    const run = runCommands(ci.suite.join('\n')).find((r) => r.startsWith('npm test'));
+    assert.match(run, /--test-shard="\$SHARD\/6" --test-reporter=\.\/scripts\/quiet-reporter\.mjs /);
+    assert.match(
+      run,
+      /--test-reporter-destination=stdout --test-reporter=spec --test-reporter-destination=test-report\.txt$/,
+    );
+    assert.match(ci.suite.join('\n'), /shard: \[1, 2, 3, 4, 5, 6\]/);
     assert.ok(REQUIRED_CHECKS.includes('public-readiness'));
     assert.ok(REQUIRED_CHECKS.includes('dependency-review'));
     assert.deepEqual(REQUIRED_CHECKS, [...REQUIRED_CHECKS].sort(), 'sorted, so a comparison is stable');

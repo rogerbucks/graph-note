@@ -160,13 +160,19 @@ const endpoint = (name, phase, path, want, keys) => ({
   write: (repo) => gh(['-X', 'PUT', `repos/${repo}/${path}`], want),
 });
 
-/** The jobs of the CI workflow, by name, read from the file so a job added there is required here too. */
+/**
+ * The jobs of the CI workflow, by name, read from the file so a job added there is required here too. A job split by a
+ * matrix is left out: its checks are named for each part, and the job that needs it stands for them (`test`, `suite`).
+ */
 export function ciJobs(root = ROOT) {
   const lines = readFileSync(join(root, '.github/workflows/ci.yml'), 'utf8').split('\n');
-  return lines
-    .slice(lines.indexOf('jobs:') + 1)
-    .map((l) => /^ {2}([\w-]+):\s*$/.exec(l)?.[1])
-    .filter(Boolean);
+  const names = [];
+  for (const l of lines.slice(lines.indexOf('jobs:') + 1)) {
+    const name = /^ {2}([\w-]+):\s*$/.exec(l)?.[1];
+    if (name) names.push({ name, matrix: false });
+    else if (/^ {4}strategy:/.test(l) && names.length) names[names.length - 1].matrix = true;
+  }
+  return names.filter((j) => !j.matrix).map((j) => j.name);
 }
 /** The checks a change to the default branch must pass: every CI job, this script's among them, and the dependency review. */
 export const REQUIRED_CHECKS = [...ciJobs(), 'dependency-review'].sort();

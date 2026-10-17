@@ -16,8 +16,15 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  test:
+  # The suite, its test files split over six machines that run at once, so a run takes about a minute, not five. Each
+  # prints only its failures; the full report of a failed one is kept as the run's artifact. The test job below stands
+  # for them all as one required check.
+  suite:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -27,8 +34,45 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
+      # the lint job verifies the signatures of this same locked install
+      - run: npm ci
+      # six files at once on the runner's four cores, as the files mostly wait on the processes they start
+      - env:
+          SHARD: ${{ matrix.shard }}
+        run: npm test -- --test-concurrency=6 --test-shard="$SHARD/6" --test-reporter=./scripts/quiet-reporter.mjs --test-reporter-destination=stdout --test-reporter=spec --test-reporter-destination=test-report.txt
+      - if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: test-report-${{ matrix.shard }}
+          path: test-report.txt
+          retention-days: 7
+
+  # Passes when every part of the suite passed: the one check the default branch requires for them.
+  test:
+    runs-on: ubuntu-latest
+    needs: suite
+    if: always()
+    steps:
+      - env:
+          RESULT: ${{ needs.suite.result }}
+        run: test "$RESULT" = success
+
+  # The quick checks: format, lint, content, quality baseline, types, the requirements' flips and the build.
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # the quality baseline and the requirements' flips are compared with the base of the change
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
       - run: npm ci
       - run: npm audit signatures
+      - run: npm run format:check
+      - run: npm run lint
       - run: node scripts/check-classification.mjs --all
       # the quick quality metrics (file sizes, secrets) against the baseline; the slow ones are the release's
       - run: node scripts/quality-check.mjs --fast
@@ -37,8 +81,6 @@ jobs:
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: node scripts/quality-check.mjs --baseline-since "$BASE"
       - run: npm run typecheck
-      # six files at once on the runner's four cores, as the files mostly wait on the processes they start
-      - run: npm test -- --test-concurrency=6
       # the requirements graph is edited here, but a pull request never moves a test back or removes a proved one
       - if: github.event_name == 'pull_request'
         env:
@@ -46,20 +88,6 @@ jobs:
         # against the merge base, so a change main gained after the branch point is not read as a hand revert
         run: node scripts/check-requirements-flips.mjs --merge-base-of "$BASE"
       - run: npm run build
-
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: 24
-      - run: npm ci
-      - run: npm audit signatures
-      - run: npm run format:check
-      - run: npm run lint
 
   python:
     runs-on: ubuntu-latest
@@ -75,8 +103,6 @@ jobs:
         with:
           node-version: 24
       - run: npm ci
-        working-directory: .
-      - run: npm audit signatures
         working-directory: .
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
@@ -107,8 +133,6 @@ jobs:
           node-version: 24
       - run: npm ci
         working-directory: .
-      - run: npm audit signatures
-        working-directory: .
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           version: 0.12.17
@@ -132,7 +156,6 @@ jobs:
         with:
           node-version: 24
       - run: npm ci
-      - run: npm audit signatures
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           version: 0.12.17
