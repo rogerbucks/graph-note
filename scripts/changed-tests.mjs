@@ -4,9 +4,12 @@
 // package's test folder, `graph_svg.py` by `test_graph_svg*.py`. A changed test file runs itself.
 //
 // This is the quick check while working. The whole suite still runs before every merge, and CI runs it (`npm test`).
-// When a change touches anything shared, the whole suite is the answer, and one line says which file made it so:
-// a package's `index.ts`, a module no test is named after, `package.json` and the lock file, test support (the files
-// under test/ or tests/ that are not tests themselves), workflows, and any file this script does not know.
+// A module no test is named after, a package's `index.ts`, a page module and test support (the files under test/ or
+// tests/ that are not tests themselves) run the tests that reach them through the import graph instead
+// (affected_tests_by_imports, `import-graph.mjs`): every test that imports the file, directly or through others, or
+// names it to build. When a change touches anything else shared, the whole suite is the answer, and one line says which
+// file made it so: `package.json` and the lock file, workflows, a file no test reaches, and any file this script does
+// not know.
 //
 // Usage:
 //   node scripts/changed-tests.mjs                 run the tests of what changed since main (npm run test:changed,
@@ -15,9 +18,10 @@
 //   node scripts/changed-tests.mjs --base <ref>    compare with this commit instead of main's
 //   node scripts/changed-tests.mjs [--list] <path>…   plan for these paths, instead of asking git
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { importGraph, testsReaching } from './import-graph.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const JS_TEST = /\.test\.(js|mjs)$/;
@@ -39,6 +43,7 @@ const DEVICE_QUOTES = 'test/device-check-quotes.test.js';
  */
 const READERS = [
   [/^(AGENTS\.md|scripts\/changed-tests\.mjs)$/, [CHEAP, CEILING]],
+  [/^scripts\/import-graph\.mjs$/, [CHEAP, 'test/import-graph.test.js']],
   [/^(CLAUDE\.md|\.ignore|scripts\/quiet-reporter\.mjs|scripts\/quiet_unittest\.py)$/, [CHEAP]],
   [/^(CONTRIBUTING\.md|(packages|python)\/[^/]+\/(GUIDE\.md|guide\/[^/]+\.md))$/, [CONVENTIONS]],
   [/^README\.md$/, [CONVENTIONS, 'test/policy.test.js']],
@@ -67,13 +72,23 @@ const stem = (file) => base(file).replace(/(\.d)?\.[^.]+$/, '');
 /** Tests named after a module: the module's own name, or the name and an aspect after a hyphen (or an underscore). */
 const named = (test, module, joiner) => test === module || test.startsWith(module + joiner);
 
+/** The tests in a module's package named after it. */
+const namedTests = (path, tracked) => {
+  const pkg = /^packages\/[^/]+/.exec(path)[0];
+  return tracked.filter(
+    (f) => f.startsWith(`${pkg}/test/`) && JS_TEST.test(f) && named(stem(f).replace(/\.test$/, ''), stem(path), '-'),
+  );
+};
+
 /**
  * The tests a change touches. Gives `{ all: false, files }`, the tracked test files, sorted and with none twice, or
  * `{ all: true, reason }` with one line saying which changed path is shared. `changed` is the paths git reports (a
  * deleted file among them); `tracked` is every file now in the repository. A deleted module still runs the tests named
- * after it; a deleted test file has nothing left to run.
+ * after it; a deleted test file has nothing left to run. `reach(path)`, when given, is the tests that reach a file
+ * through the import graph: a module no test is named after, an entry, a page module or test support then runs those,
+ * and is shared only when no test reaches it.
  */
-export function testsForChanges(changed, tracked) {
+export function testsForChanges(changed, tracked, reach) {
   const present = new Set(tracked);
   const files = new Set();
   const shared = (path, why = '') => ({ all: true, reason: `${path} is shared${why}` });
@@ -82,12 +97,14 @@ export function testsForChanges(changed, tracked) {
     let m;
     if (JS_TEST.test(path) || PY_TEST.test(path)) add([path]);
     else if ((m = READERS.find(([pattern]) => pattern.test(path)))) add(m[1]);
-    else if ((m = /^(packages\/[^/]+)\/(?:src|bin)\/.+\.(?:ts|js|mjs)$/.exec(path))) {
+    else if (reach && /^(packages\/[^/]+\/(src|bin|page|test)|test)\/.+\.(?:ts|js|mjs)$/.test(path)) {
+      const mirrored = /^packages\/[^/]+\/(src|bin)\//.test(path) ? namedTests(path, tracked) : [];
+      const reached = [...mirrored, ...reach(path)];
+      if (!reached.length) return shared(path, ': no test reaches it');
+      add(reached);
+    } else if ((m = /^(packages\/[^/]+)\/(?:src|bin)\/.+\.(?:ts|js|mjs)$/.exec(path))) {
       if (base(path) === 'index.ts') return shared(path, ': the package’s entry');
-      const mirrored = tracked.filter(
-        (f) =>
-          f.startsWith(`${m[1]}/test/`) && JS_TEST.test(f) && named(stem(f).replace(/\.test$/, ''), stem(path), '-'),
-      );
+      const mirrored = namedTests(path, tracked);
       if (!mirrored.length) return shared(path, ': no test is named after it');
       add(mirrored);
     } else if ((m = /^(python\/[^/]+)\/src\/.+\.py$/.exec(path))) {
@@ -154,7 +171,9 @@ function main(argv) {
     process.stdout.write('nothing has changed, so no tests were chosen\n');
     return 0;
   }
-  const plan = testsForChanges(changed, repositoryFiles());
+  const tracked = repositoryFiles();
+  const graph = importGraph(tracked, (f) => readFileSync(join(ROOT, f), 'utf8'));
+  const plan = testsForChanges(changed, tracked, (path) => testsReaching(graph, path));
   const python = changed.some((f) => f.startsWith('python/'));
   if (list) {
     process.stdout.write(plan.all ? `whole suite: ${plan.reason}\n` : plan.files.map((f) => `${f}\n`).join(''));
