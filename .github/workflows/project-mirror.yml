@@ -45,4 +45,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
-        run: node scripts/github-project.mjs --apply --slices 3,4,5,6,7,8,9
+        run: node scripts/github-project.mjs --apply --slices 3,4,5,6,7,8,9,10

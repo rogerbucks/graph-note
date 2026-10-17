@@ -197,7 +197,7 @@ describe('the real waves file', () => {
   const realBoard = readBoard(read(REQUIREMENTS));
   const workstreams = readWorkstreams(read('requirements/workstreams.json'));
   const plan = readWaves(read(WAVES_FILE), workstreams);
-  const desired = desiredState(realBoard, workstreams, [3, 4, 5, 6, 7, 8, 9], plan);
+  const desired = desiredState(realBoard, workstreams, [3, 4, 5, 6, 7, 8, 9, 10], plan);
 
   test('is read without a fault, every date marked an estimate until the coordinator sets them', () => {
     assert.equal(WAVES_FILE, 'requirements/waves.json');
@@ -212,14 +212,17 @@ describe('the real waves file', () => {
     assert.ok(last.start > plan.waves.at(-2).end);
   });
 
-  test('holds the Obsidian community release (R2) in a wave of its own after all others, before the held changes', () => {
+  test('holds the Obsidian community release (R2) in a wave of its own after all others but Roger’s held ones', () => {
     const at = plan.waves.findIndex((w) => w.workstreams.includes('R2'));
-    assert.equal(at, plan.waves.length - 2, 'R2 is in the last wave before the placeholder');
     assert.deepEqual(plan.waves[at].workstreams, ['R2']);
     assert.ok(plan.waves[at].start > plan.waves[at - 1].end);
+    // Roger, 17 Oct 2026: what he adds later goes after R2, in waves titled “· Held:”, and only there.
+    const held = (w) => w.title.includes('· Held:');
+    assert.ok(plan.waves.slice(at + 1, -1).every(held), 'every wave between R2 and the placeholder is held');
+    assert.ok(!plan.waves.slice(0, at).some(held), 'no held wave comes before R2');
   });
 
-  test('puts every requirement of slices 3 to 9 that is not proved in a wave', () => {
+  test('puts every requirement of slices 3 to 10 that is not proved in a wave', () => {
     const flagged = waveLines(desired).filter((l) => l.startsWith('warning:'));
     assert.deepEqual(flagged, []);
   });

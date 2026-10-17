@@ -638,5 +638,54 @@
   "Q": {
     "title": "Open questions",
     "requirements": []
+  },
+  "B1": {
+    "title": "Whiteboard: the board",
+    "requirements": [
+      "board_view",
+      "board_is_text",
+      "board_items",
+      "board_cards_rich",
+      "board_glyphs_offline",
+      "board_keyboard",
+      "board_speed",
+      "board_exchange",
+      "board_look_and_direction",
+      "board_item_plugins"
+    ]
+  },
+  "B2": {
+    "title": "Whiteboard: board and graph",
+    "requirements": [
+      "board_to_graph",
+      "board_graph_linked",
+      "board_link_kept",
+      "graph_on_board",
+      "board_relations_drawn",
+      "board_checked",
+      "board_ai_decompose",
+      "board_arranged_by_graph"
+    ]
+  },
+  "B3": {
+    "title": "Whiteboard: brainstorming",
+    "requirements": [
+      "board_quick_capture",
+      "board_cluster",
+      "board_vote",
+      "board_templates",
+      "board_facilitation"
+    ]
+  },
+  "B4": {
+    "title": "Whiteboard: working together",
+    "requirements": [
+      "board_live_together",
+      "board_offline_merge",
+      "board_presence",
+      "board_access",
+      "board_authorship",
+      "board_comments"
+    ]
   }
 }

@@ -8,7 +8,7 @@ import { readBoard } from '../scripts/slice-board.mjs';
 import { block, jobs, permissionValues, read, runCommands, stripComment, usesRefs } from './repository/repo.js';
 
 const MIRROR = '.github/workflows/project-mirror.yml';
-const COMMAND = 'node scripts/github-project.mjs --apply --slices 3,4,5,6,7,8,9';
+const COMMAND = 'node scripts/github-project.mjs --apply --slices 3,4,5,6,7,8,9,10';
 const text = read(MIRROR);
 const lines = text.split('\n');
 const code = lines.map(stripComment).join('\n');
@@ -57,12 +57,12 @@ describe('the workflow that mirrors the requirements on main', () => {
     assert.doesNotMatch(code, /npm (ci|install)|yarn|pnpm|actions\/cache/);
   });
 
-  test('runs the full mirror of slices 3 to 9, never passing --accept-warnings or --allow-removals', () => {
+  test('runs the full mirror of slices 3 to 10, never passing --accept-warnings or --allow-removals', () => {
     assert.doesNotMatch(code, /--accept-warnings|--allow-removals/);
     const slices = new Set(readBoard(read(REQUIREMENTS)).requirements.map((r) => r.slice));
     assert.deepEqual(
       [...slices].filter((s) => s >= 3).sort((a, b) => a - b),
-      [3, 4, 5, 6, 7, 8, 9],
+      [3, 4, 5, 6, 7, 8, 9, 10],
       'a new slice is added to the command here',
     );
   });
@@ -71,7 +71,7 @@ describe('the workflow that mirrors the requirements on main', () => {
     assert.equal((text.match(/secrets\.PROJECT_TOKEN/g) ?? []).length, 1);
     assert.match(
       text,
-      /env:\s*\n\s*GH_TOKEN: \$\{\{ github\.token \}\}\s*\n\s*PROJECT_TOKEN: \$\{\{ secrets\.PROJECT_TOKEN \}\}\s*\n\s*run: node scripts\/github-project\.mjs --apply --slices 3,4,5,6,7,8,9\s*$/m,
+      /env:\s*\n\s*GH_TOKEN: \$\{\{ github\.token \}\}\s*\n\s*PROJECT_TOKEN: \$\{\{ secrets\.PROJECT_TOKEN \}\}\s*\n\s*run: node scripts\/github-project\.mjs --apply --slices 3,4,5,6,7,8,9,10\s*$/m,
     );
     assert.equal((text.match(/secrets\./g) ?? []).length, 1);
   });
