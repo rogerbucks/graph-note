@@ -5,6 +5,9 @@ from __future__ import annotations
 
 # ── the plain graph ──────────────────────────────────────────────────────────────────────────
 class Graph:
+    """A graph as the rules read it: nodes by id with their labels and properties, edges as
+    (source, type, target, properties), indexed both ways for quick walks."""
+
     def __init__(self, nodes, edges):
         self.nodes = nodes  # {id: (frozenset(labels), {props})}
         self.edges = edges  # [(src id, type, dst id, {props})]
@@ -14,22 +17,30 @@ class Graph:
             self._in.setdefault(e[2], []).append(e)
 
     def labelled(self, label):
+        """The ids of the nodes that carry this label."""
         return [i for i, (labels, _) in self.nodes.items() if label in labels]
 
     def p(self, i):
+        """A node's properties, or an empty map for an id the graph does not hold."""
         return self.nodes[i][1] if i in self.nodes else {}
 
     def has(self, i, label):
+        """Whether the node is in the graph and carries this label."""
         return i in self.nodes and label in self.nodes[i][0]
 
     def out(self, i, typ=None):
+        """The edges leaving node i, of this type when one is given."""
         return [e for e in self._out.get(i, []) if typ is None or e[1] == typ]
 
     def inc(self, i, typ=None):
+        """The edges reaching node i, of this type when one is given."""
         return [e for e in self._in.get(i, []) if typ is None or e[1] == typ]
 
 
 class World:
+    """Every graph a check reads, by name, with the shared schemas they may name instead of
+    declaring their own types (§5)."""
+
     def __init__(self, graphs, schemas=None, named=None):
         self.graphs = graphs
         self.schemas = schemas or {}
@@ -46,6 +57,7 @@ class World:
 
     @staticmethod
     def from_store(store):
+        """The world made from a reader's store: each graph's nodes keyed by their own ids."""
         out = {}
         for g, stored in store.graphs.items():
             byk = {k: n["props"]["id"] for k, n in stored["nodes"].items()}

@@ -14,7 +14,11 @@ function caption(g, i) {
   return (typeof t === 'string' && t ? `${i}<br/>${t}` : i).replace(/"/g, "'");
 }
 
+// A relationship type's reading (§5); undeclared (a draft), the type's own words: COUNTS_AGAINST -> counts against.
+// A double quote becomes a single one, which Mermaid's label cannot hold.
 const word = (typeWords, t) => ((typeWords.get(t) || [])[0] || t.replace(/_/g, ' ').toLowerCase()).replace(/"/g, "'");
+// The graph's knowledge as a Mermaid flowchart: every node but the schema's, every relationship between them,
+// labelled by its reading (§5), or its type if none is declared. Sorted, so the text is the same as graph_rules.py's.
 function mermaidGraph(g, shared) {
   const ids = strSort([...g.nodes.keys()].filter((i) => !SCHEMA_LABELS.some((label) => g.nodes.get(i)[0].has(label)))),
     v = new Map(ids.map((i, k) => [i, 'n' + k])),
@@ -29,6 +33,8 @@ function mermaidGraph(g, shared) {
     ),
   ].join('\n');
 }
+// What each reading in the relationships view stands for: one line per relationship type drawn,
+// `reading = TYPE`, with ` · reverse: …` when a reverse reading is declared.
 function legend(g, shared) {
   const ids = new Set([...g.nodes.keys()].filter((i) => !SCHEMA_LABELS.some((label) => g.nodes.get(i)[0].has(label)))),
     typeWords = readings(g, shared);
@@ -39,6 +45,7 @@ function legend(g, shared) {
     )
     .join('\n');
 }
+// A path seen at an altitude (§22): the path, then what it shows at that level, in order.
 function mermaidPath(g, top, level) {
   const items = viewAt(g, top, level),
     lines = [

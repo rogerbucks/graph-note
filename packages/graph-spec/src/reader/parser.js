@@ -9,6 +9,8 @@ const { unquote, utcNaive } = require('./tokens.js');
  * taking it for a pattern that is not one. */
 class IdNotTextError extends ProfileError {}
 
+// Parses a data block's tokens into its MATCHes, paths and SETs, as the document profile (§3) writes them; a
+// missing comma is read in and its place kept in commas, so the store can write it in.
 class Parser {
   constructor(t) {
     this.t = t;

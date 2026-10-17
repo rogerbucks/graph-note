@@ -34,6 +34,8 @@ function elseOver(nodes, edges, above) {
     }
   return out;
 }
+// Each named rule, by name, as (nodes, edges) -> its breaches {slots, edges}: what a configuration's constraints
+// name. A constraint written in GQL runs as the rule its reference names, so a join checks constraints with no engine.
 const RULES = {
   'repaid-after-drawn': (nodes, edges) =>
     [...edges.values()]

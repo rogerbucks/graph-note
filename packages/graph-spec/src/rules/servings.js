@@ -10,6 +10,8 @@ function mayServe(kind, cls, cond, matrix) {
   const v = (matrix[kind] || {})[cls];
   return v === 'yes' || (v === 'conditional' && !!cond);
 }
+// §24 H3's rules on judgement graph jg's Servings and proposals, against the destination matrix ({consumer kind:
+// {classification: 'yes' | 'conditional' | anything else}}), as [label, ok] pairs; none when it holds neither.
 function servedRules(w, jg, matrix) {
   const g = w[jg],
     out = [];

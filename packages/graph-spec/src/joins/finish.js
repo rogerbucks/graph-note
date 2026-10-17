@@ -21,6 +21,10 @@ function edgeClaim(joined, e, docs, extraWhat, props) {
     Object.assign({ claimed_relationship: e[1], edge_ident: id, _key: e, _props: Object.assign({}, props) }, props),
   );
 }
+// Paradox checks on the joined graph, flags for a person, then findings. A breach is a paradox only when more than one
+// document stands behind it: its statements become claims and leave the graph. Duplicates by name and undeclared
+// properties are flagged, never changed. Findings confirm and refute claims and apply what they confirm; last, each
+// claim's confidence comes from the documents for it and against it.
 function finish(
   joined,
   config,

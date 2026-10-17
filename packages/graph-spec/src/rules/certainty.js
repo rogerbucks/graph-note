@@ -38,7 +38,13 @@ function words([lo, hi]) {
     b = wordHi(hi);
   return a === b ? a : `${a} to ${b}`;
 }
+// rule:combine@1, both true, with dependence unknown: the Fréchet bounds, in percent. The lower bound is the least
+// overlap two claims must have (a + b - 100, never below 0), the upper the weaker of the two; no product, since that
+// would assume independence.
 const both = (a, b) => [Math.max(0, a[0] + b[0] - 100), Math.min(a[1], b[1])];
+// The 95% Wilson score interval (z = 1.96) for k of n coming true, in percent. Wilson rather than the plain normal
+// interval because it stays inside 0 to 100 and holds up for small n and for k at 0 or n. Rounded outward to 0.1, so
+// the range never claims more precision than it has.
 function wilson(k, n, z = 1.96) {
   const p = k / n,
     d = 1 + (z * z) / n,
@@ -46,12 +52,17 @@ function wilson(k, n, z = 1.96) {
     h = (z * Math.sqrt((p * (1 - p)) / n + (z * z) / (4 * n * n))) / d;
   return [Math.floor((c - h) * 1000) / 10, Math.ceil((c + h) * 1000) / 10];
 }
+// How a track record's range sits against the band its word names: calibrated only when the whole range lies inside
+// the band; over- or under-confident only when it lies wholly below or above; any overlap is cannot judge yet.
 function verdict([lo, hi], [blo, bhi]) {
   if (lo >= blo && hi <= bhi) return 'calibrated';
   if (hi < blo) return 'over-confident';
   if (lo > bhi) return 'under-confident';
   return 'cannot judge yet';
 }
+// rule:corroborate@1: Bayes on odds from a base rate (percent, 50 by default). Each source's reliability is turned into
+// a likelihood ratio — its odds over the base odds — and the ratios multiply, treating the sources as independent.
+// The low corners give the low end, the high corners the high end, rounded outward to 0.1.
 function corroborate(ranges, base = 50) {
   const post = (rs) => {
     const b = base / (100 - base);
@@ -61,9 +72,13 @@ function corroborate(ranges, base = 50) {
   };
   return [Math.floor(post(ranges.map((r) => r[0])) * 10) / 10, Math.ceil(post(ranges.map((r) => r[1])) * 10) / 10];
 }
+// A likelihood word's range in percent, or the range from one word to another; null for a word not on the scale.
 const span = (likelihood, lt) =>
   likelihood in RANGE && (lt || likelihood) in RANGE ? [RANGE[likelihood][0], RANGE[lt || likelihood][1]] : null;
+// A likelihood word's place on the scale, lowest first; -1 for anything not on it, so cannot-judge ranks below every
+// band. §23 compares ranks to tell an assumption has weakened.
 const bandRank = (w) => LIKELIHOOD.indexOf(w);
+// Each assessed claim's likelihood in its latest assessment, by `at`: a Map {claim id: likelihood}.
 function latestAssessment(g) {
   const best = new Map();
   for (const a of g.labelled('Assessment'))
@@ -81,6 +96,9 @@ const sourcesOf = (g, c, t) =>
       .filter((e) => g.has(e[2], 'Evidence'))
       .flatMap((e) => g.out(e[2], 'FROM').map((x) => x[2])),
   );
+// Each claim not derived by a rule, with the confidence its evidence gives, counting distinct sources (FROM), not
+// pieces of evidence: high for two or more sources and none against, moderate for more sources for than against,
+// else low.
 function confidenceFromEvidence(g) {
   const out = new Map();
   for (const c of g.labelled('Claim')) {
@@ -91,6 +109,8 @@ function confidenceFromEvidence(g) {
   }
   return out;
 }
+// Each claim's status: confirmed if a finding confirms it, refuted if one refutes it, else open. A claim both
+// confirmed and refuted reads confirmed.
 function claimStatus(g) {
   const out = new Map();
   for (const c of g.labelled('Claim'))
@@ -186,6 +206,9 @@ function corroboration(g, oneVote = true) {
   }
   return out;
 }
+// §20's checks on one graph, as [label, ok] pairs: every stored certainty value equals its rule. None for a graph with
+// no claims; the derived, calibration, reliability and corroboration checks only where the graph holds them. `sw`
+// switches off 'before-settlement' and 'one-vote-per-source'.
 function section20(g, sw) {
   const out = [],
     stored = new Map(g.labelled('Claim').map((c) => [c, g.p(c)]));

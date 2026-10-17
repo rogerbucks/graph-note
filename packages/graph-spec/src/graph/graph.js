@@ -66,6 +66,8 @@ const schemaFor = (w, g) => {
   const name = own(w.__named, g);
   return [name, name ? own(w.__schemas, name) : undefined];
 };
+/** sha-256 of the RFC 8785 JSON of the graph: nodes by id, relationships by their own canonical text, a null
+ * property left out and an instant with its +00:00, so the hash is the same in every language. */
 function canon(g) {
   const pr = (p) => {
     const o = {};

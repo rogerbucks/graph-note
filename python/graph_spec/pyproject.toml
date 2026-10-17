@@ -35,4 +35,10 @@ reference = ["grafeo==0.5.43"]
 line-length = 99
 
 [tool.ruff.lint]
-select = ["E", "W", "F", "N"]
+# D1xx: every public module, class, method and function has its docstring (CONTRIBUTING.md);
+# magic methods and __init__ are left to their class's
+select = ["E", "W", "F", "N", "D100", "D101", "D102", "D103", "D104", "D106"]
+
+[tool.ruff.lint.per-file-ignores]
+# the tests are named for what they prove: their names say it, with no docstrings
+"tests/**" = ["D"]

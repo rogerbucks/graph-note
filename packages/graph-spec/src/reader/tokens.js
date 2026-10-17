@@ -16,6 +16,9 @@ const EXCERPT = new RegExp(`^${S}*//${S}*excerpt\\b`, 'i'),
   EXCERPT_OF = new RegExp(`·${S}*excerpt\\b`, 'i'),
   QUERY = new RegExp(`·${S}*QUERY\\b`),
   CHANGE_SET = new RegExp(`·${S}*CHANGE SET\\b`);
+// A block's graph and its kind, 'data', 'schema', 'query', 'changeset' or 'excerpt', read from its first line (§3);
+// an excerpt need name no graph. Throws a ProfileError when the line names no graph, or a graph name that is not one
+// word.
 function header(block) {
   const first = block.split('\n').find((line) => trim(line)) || '';
   if (EXCERPT.test(first)) return [null, 'excerpt']; // an illustration, said to be one (§3)
@@ -45,6 +48,7 @@ function header(block) {
 // §3: comments are whole lines; one after code on its line cannot be told from // inside an identifier
 const COMMENT_RULE =
   'a comment must be on a line of its own: // also occurs inside identifiers, such as ni:/// hashes (§3)';
+// The fix COMMENT_RULE's refusal gives, exported with it so a host that warns of the same comment says the same.
 const COMMENT_FIX = 'put the comment on its own line';
 // the start of a text, cut at n UTF-16 units and never inside an emoji, as Python's reader cuts it too
 function excerpt(s, n = 20) {
@@ -152,6 +156,9 @@ const unquote = (s) =>
     .replace(/\\(u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{6}|[^])/g, (_, e) =>
       e[0] in HEX && e.length > 1 ? String.fromCodePoint(parseInt(e.slice(1), 16)) : ESCAPES[e],
     );
+// A DATETIME's text as its UTC time, YYYY-MM-DDTHH:MM:SS with microseconds only when they are not 0, as Python's
+// isoformat() writes it and Grafeo returns it. Throws a ProfileError for a text that is no instant, or one without
+// its offset (§9, principle 11).
 function utcNaive(s, line) {
   const m = /^(\d{4})-(\d\d)-(\d\d)[T ](\d\d):(\d\d)(?::(\d\d)(?:\.(\d{1,6}))?)?(Z|[+-]\d\d:?\d\d)?$/.exec(s);
   if (!m)
