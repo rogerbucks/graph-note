@@ -1,0 +1,6 @@
+{
+  "file": "test/a11y-keyboard.test.js",
+  "test": "the check itself > walks the whole tab order both ways, and passes a page where every action is reached and operated",
+  "seen_failing_first": false,
+  "evidence": "The check is new test support in the same commit and its planted faults are the proof it looks: it finds each planted fault and passes the clean cases, so there is no code before it for it to fail against."
+}

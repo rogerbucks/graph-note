@@ -1,0 +1,6 @@
+{
+  "file": "test/a11y-keyboard.test.js",
+  "test": "the Obsidian host: every view, from the keyboard alone > a view, read in plain English with what is outside it faded: every action reached and operated, and every focus left",
+  "seen_failing_first": false,
+  "evidence": "A keyboard run over a view that already met it: every element of its tab order was reached both ways, its own actions answered Enter or Space, and no focus was kept. The views it found wanting (full screen, and two states of the browser editor) failed first in this commit and are fixed by it."
+}
