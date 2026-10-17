@@ -18,7 +18,7 @@ import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { HAS_FILE, REQUIREMENTS, TEST_STATUSES, filesOf } from './check-requirements.mjs';
+import { HAS_FILE, REQUIREMENTS, TEST_STATUSES, filesOf, requirementsGraph } from './check-requirements.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const { read } = createRequire(import.meta.url)('../packages/graph-spec/src/graph-spec-check.js');
@@ -27,7 +27,7 @@ const IN_REPO = new Set(['repo', 'both']);
 
 function parse(text, side) {
   try {
-    const store = read([text]);
+    const store = read([requirementsGraph(text)]);
     const graph = store.graph(Object.keys(store.graphs)[0]);
     const name = (key) => graph.nodes.get(key)?.props.id ?? key;
     return {

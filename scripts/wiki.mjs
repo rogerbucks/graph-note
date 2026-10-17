@@ -15,6 +15,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { requirementsGraph } from './check-requirements.mjs';
 import { readBoard } from './slice-board.mjs';
 import { SHOTS } from './wiki-screens.mjs';
 
@@ -35,7 +36,7 @@ export const MADE_PAGES = [
 
 /** The open questions and decisions of the requirements: [{num, slice, text, answer, answered}], by number. */
 export function readQuestions(text) {
-  const store = read([text]);
+  const store = read([requirementsGraph(text)]);
   const graph = store.graph(Object.keys(store.graphs)[0]);
   return [...graph.nodes.values()]
     .filter((n) => n.labels.has('Question'))
