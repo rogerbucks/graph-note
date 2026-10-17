@@ -56,6 +56,19 @@ for (const proto of [P, S]) {
     Object.assign(this.style, p);
   };
 }
+// an element's document and window, as Obsidian gives every element them
+for (const proto of [P, S])
+  for (const [name, get] of [
+    ['doc', (n) => n.ownerDocument],
+    ['win', (n) => n.ownerDocument.defaultView],
+  ])
+    if (!(name in proto))
+      Object.defineProperty(proto, name, {
+        get() {
+          return get(this);
+        },
+        configurable: true,
+      });
 window.activeDocument = document;
 window.activeWindow = window;
 
