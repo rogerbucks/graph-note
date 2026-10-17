@@ -34,7 +34,7 @@
       "start": "2026-10-30",
       "end": "2026-11-12",
       "estimate": true,
-      "workstreams": ["V1", "D1", "A1", "R1", "R2"]
+      "workstreams": ["V1", "D1", "A1", "R1"]
     },
     {
       "title": "Wave 6 · Host, storage and plug-in contracts",
@@ -100,9 +100,16 @@
       "workstreams": ["W33", "W32"]
     },
     {
-      "title": "Roger’s held changes, after all waves",
+      "title": "Wave 15 · Obsidian community release",
       "start": "2027-03-29",
       "end": "2027-04-11",
+      "estimate": true,
+      "workstreams": ["R2"]
+    },
+    {
+      "title": "Roger’s held changes, after all waves",
+      "start": "2027-04-12",
+      "end": "2027-04-25",
       "estimate": true,
       "workstreams": []
     }
