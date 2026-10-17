@@ -54,7 +54,7 @@ function packageFile(specifier, packages) {
       const head = pattern.slice(0, star);
       const tail = pattern.slice(star + 1);
       if (sub.startsWith(head) && sub.endsWith(tail) && sub.length >= head.length + tail.length)
-        return join(dir, to.replace('*', sub.slice(head.length, sub.length - tail.length)));
+        return join(dir, to.replaceAll('*', sub.slice(head.length, sub.length - tail.length)));
     }
     return null;
   }
