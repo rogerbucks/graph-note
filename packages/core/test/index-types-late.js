@@ -1,6 +1,13 @@
-// The last part of the types src/index.ts exports, from SafeWrite on, sorted: test support only, nothing here ships. It
+// The last part of the types src/index.ts exports, from ReviewItem on, sorted: test support only, nothing here ships. It
 // is kept apart from index-names.js, which joins it to the types before it, so neither file passes the test file size.
 export const TYPES_LATE = [
+  'ReviewItem',
+  'ReviewLevels',
+  'ReviewSource',
+  'Reviewed',
+  'Routing',
+  'RuleReport',
+  'RunnerOptions',
   'SafeWrite',
   'Scheduler',
   'ScopeChoice',
@@ -72,6 +79,9 @@ export const TYPES_LATE = [
   'ViewSwitches',
   'WalkedPath',
   'Which',
+  'WordKey',
+  'WordValues',
+  'Words',
   'Workstreams',
   'WriteOps',
   'WriteResult',

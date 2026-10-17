@@ -6,7 +6,7 @@
 import type { DisplayHost, MenuEntry } from './host.ts';
 
 /** The version of the host interface these checks hold a host to; it changes with every change to `DisplayHost`. */
-export const HOST_CONTRACT_VERSION = 1;
+export const HOST_CONTRACT_VERSION = 2;
 
 /** A menu row as the person sees it: its title, and whether it is ticked or a warning. */
 export type MenuRowSeen = { title: string; checked?: boolean; warning?: boolean } | 'separator';
@@ -124,6 +124,21 @@ export function hostContract(make: () => HostUnderTest): ContractCheck[] {
         const { host } = make();
         if (host.noInlineStyle !== undefined && typeof host.noInlineStyle !== 'boolean')
           fail('noInlineStyle', 'a boolean or nothing', host.noInlineStyle);
+      },
+    },
+    {
+      name: 'the language is a language tag, or left unsaid',
+      run: () => {
+        const { host } = make();
+        if (host.language === undefined) return;
+        const tag: unknown = host.language();
+        let known = false;
+        try {
+          known = typeof tag === 'string' && Intl.getCanonicalLocales(tag).length === 1;
+        } catch {
+          known = false;
+        }
+        if (!known) fail('language', 'a language tag such as en-GB', tag);
       },
     },
   ];
