@@ -1,7 +1,7 @@
-// A change to the generated requirements copy by hand is refused, except one shape: tests flipped from planned to
-// written, with a flipped test's file path corrected. The vault pulls those flips back into its source later, so the
-// check accepts exactly that and refuses everything else, naming each difference. Each case is a small edit of the
-// real copy, compared with the real copy as the base.
+// The requirements graph is the one source of the requirements, edited here in pull requests (Roger, 16 Oct 2026: no
+// vault holds them any more). A pull request may add, change and remove records, links and comments; it may never move
+// a test back, flip one forward without its file, or remove one that is partial or written. Each case is a small edit
+// of the real graph, compared with the real graph as the base.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { refusedChanges } from '../scripts/check-requirements-flips.mjs';
@@ -61,7 +61,7 @@ describe('a hand change to the requirements copy', () => {
     assert.match(problems[0].message, /test_fixture_a.*packages\/obsidian\/test\/fixture-a2\.test\.js/);
   });
 
-  test('a path corrected on a test that is not flipped is refused', () => {
+  test('a path corrected on a test that is not flipped is accepted', () => {
     const problems = refused(
       replaced(
         base(),
@@ -69,8 +69,7 @@ describe('a hand change to the requirements copy', () => {
         "file: 'packages/core/test/abuse2.test.js', where: 'repo', status: 'written'",
       ),
     );
-    assert.deepEqual(kinds(problems), ['field']);
-    assert.match(problems[0].message, /test_abuse.*file/);
+    assert.deepEqual(problems, []);
   });
 
   test('a flip back from written to planned is refused', () => {
@@ -97,61 +96,60 @@ describe('a hand change to the requirements copy', () => {
     assert.match(problems[0].message, /q_flip/);
   });
 
-  test('a field changed other than the status and path of a flipped test is refused', () => {
-    const problems = refused(replaced(base(), PLANNED, `${WRITTEN.replace("'repo'", "'both'")}`));
-    assert.deepEqual(kinds(problems), ['field']);
-    assert.match(problems[0].message, /test_fixture_a.*where/);
-  });
-
-  test('the proves text of a flipped test changed is refused', () => {
+  test('any other field changed is accepted: a test moved to another place, or what it proves reworded', () => {
+    assert.deepEqual(refused(replaced(base(), PLANNED, `${WRITTEN.replace("'repo'", "'both'")}`)), []);
     const head = replaced(
       base(),
       "(test_fixture_a:Test {proves: 'the first fixture holds",
       "(test_fixture_a:Test {proves: 'a first fixture holds",
     );
-    assert.deepEqual(kinds(refused(replaced(head, PLANNED, WRITTEN))), ['field']);
+    assert.deepEqual(refused(replaced(head, PLANNED, WRITTEN)), []);
   });
 
-  test('a record removed is refused, naming it', () => {
-    // the record goes with its links, so the copy still reads
+  test('a written test removed is refused, naming it', () => {
+    // the record goes with its links, so the graph still reads
     const head = base()
       .split('\n')
       .filter((l) => !l.startsWith('(test_abuse:Test {') && !l.endsWith('->(test_abuse),'))
       .join('\n');
     const problems = refused(head);
-    assert.ok(kinds(problems).includes('removed'));
-    assert.ok(kinds(problems).includes('link-removed'));
-    assert.match(problems.find((p) => p.kind === 'removed').message, /test_abuse/);
+    assert.deepEqual(kinds(problems), ['removed']);
+    assert.match(problems[0].message, /test_abuse.*written/);
   });
 
-  test('a record added is refused, naming it', () => {
-    const orphan = "(test_new:Test {proves: 'new', file: 'test/x.test.js', where: 'repo', status: 'written'}),\n";
-    const problems = refused(replaced(base(), '// ── Tests ──\n', `// ── Tests ──\n${orphan}`));
-    assert.deepEqual(kinds(problems), ['added']);
-    assert.match(problems[0].message, /test_new/);
+  test('a planned test or a question removed is accepted', () => {
+    const head = base()
+      .split('\n')
+      .filter((l) => !l.startsWith('(test_fixture_b:Test {'))
+      .join('\n');
+    assert.deepEqual(refused(head), []);
+    const noQuestion = base()
+      .split('\n')
+      .filter((l) => !l.startsWith('(q_14_roles_auto_apply'))
+      .join('\n');
+    assert.deepEqual(refused(noQuestion), []);
   });
 
-  test('a link added or removed is refused', () => {
+  test('a record added is accepted', () => {
+    const orphan = "(test_new:Test {proves: 'new', file: 'test/x.test.js', where: 'repo', status: 'planned'}),\n";
+    assert.deepEqual(refused(replaced(base(), '// ── Tests ──\n', `// ── Tests ──\n${orphan}`)), []);
+  });
+
+  test('a link added, removed, repeated or given a property is accepted', () => {
     const link = '(autocomplete)-[:PROVED_BY]->(test_autocomplete),';
-    const gone = refused(replaced(base(), `${link}\n`, ''));
-    assert.deepEqual(kinds(gone), ['link-removed']);
-    const extra = refused(
-      replaced(base(), '// ── Links ──\n', `// ── Links ──\n(autocomplete)-[:PROVED_BY]->(test_abuse),\n`),
+    assert.deepEqual(refused(replaced(base(), `${link}\n`, '')), []);
+    const extra = replaced(base(), '// ── Links ──\n', `// ── Links ──\n(autocomplete)-[:PROVED_BY]->(test_abuse),\n`);
+    assert.deepEqual(refused(extra), []);
+    assert.deepEqual(
+      refused(replaced(base(), link, "(autocomplete)-[:PROVED_BY {note: 'x'}]->(test_autocomplete),")),
+      [],
     );
-    assert.deepEqual(kinds(extra), ['link-added']);
+    assert.deepEqual(refused(replaced(base(), `${link}\n`, `${link}\n${link}\n`)), []);
   });
 
-  test('a property added to a link is refused, and so is a link repeated', () => {
-    const link = '(autocomplete)-[:PROVED_BY]->(test_autocomplete),';
-    const withProp = refused(replaced(base(), link, "(autocomplete)-[:PROVED_BY {note: 'x'}]->(test_autocomplete),"));
-    assert.deepEqual(kinds(withProp).sort(), ['link-added', 'link-removed']);
-    const twice = refused(replaced(base(), `${link}\n`, `${link}\n${link}\n`));
-    assert.deepEqual(kinds(twice), ['link-added']);
-  });
-
-  test('an indented comment line is a comment, so adding or editing one is refused', () => {
-    const added = refused(replaced(base(), '// ── Tests ──\n', '// ── Tests ──\n   // slipped in\n'));
-    assert.deepEqual(kinds(added), ['comment']);
+  test('a comment line or heading added or edited is accepted: the banner is the audit’s to check', () => {
+    assert.deepEqual(refused(replaced(base(), '// ── Tests ──\n', '// ── Tests ──\n   // slipped in\n')), []);
+    assert.deepEqual(refused(replaced(base(), '// ── Tests ──', '// ── Tests, edited ──')), []);
   });
 
   test('run on its own with --base-ref: the committed copy against HEAD passes; a bad ref, no value or no repo is exit 2', () => {
@@ -204,12 +202,14 @@ describe('a hand change to the requirements copy', () => {
         git('-c', 'user.name=t', '-c', 'user.email=t@example.com', 'commit', '-q', '-m', message);
       };
       git('init', '-q', '-b', 'main');
-      const start = base();
+      // a partial test whose file the repository holds, so main can flip it forward
+      const PARTIAL = "file: 'packages/core/test/abuse.test.js', where: 'repo', status: 'partial'";
+      const start = replaced(base(), PLANNED, PARTIAL);
       commit(start, 'start');
       git('checkout', '-q', '-b', 'branch');
       git('checkout', '-q', 'main');
-      // main gains a change by hand-looking edit (a new proves text), which the branch has not merged
-      commit(replaced(start, 'the first fixture holds', 'the first fixture holds, said differently'), 'main moves on');
+      // main flips the test forward, which the branch has not merged
+      commit(replaced(start, PARTIAL, PARTIAL.replace("'partial'", "'written'")), 'main moves on');
       const mainTip = git('rev-parse', 'main');
       git('checkout', '-q', 'branch');
       // the branch changes nothing in the copy, so give it a commit about something else
@@ -224,11 +224,18 @@ describe('a hand change to the requirements copy', () => {
       const fine = run('--merge-base-of', mainTip);
       assert.equal(fine.status, 0, fine.stdout + fine.stderr);
 
-      // a real hand edit on the branch is still refused
-      commit(replaced(start, 'the second fixture holds', 'the second fixture holds, edited by hand'), 'hand edit');
+      // a flip back on the branch is still refused
+      commit(
+        replaced(
+          start,
+          "file: 'packages/core/test/abuse.test.js', where: 'repo', status: 'written'",
+          "file: 'packages/core/test/abuse.test.js', where: 'repo', status: 'planned'",
+        ),
+        'flip back',
+      );
       const edited = run('--merge-base-of', mainTip);
       assert.equal(edited.status, 1, edited.stdout + edited.stderr);
-      assert.match(edited.stdout, /test_fixture_b/);
+      assert.match(edited.stdout, /test_abuse/);
 
       // the option needs a ref that resolves
       const bad = run('--merge-base-of', 'no-such-ref-for-flips');
@@ -238,17 +245,6 @@ describe('a hand change to the requirements copy', () => {
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
-  });
-
-  test('an edited banner line is refused, even with a good flip beside it', () => {
-    const edited = replaced(base(), 'do not hand-edit; regenerate.', 'edited by hand.');
-    assert.deepEqual(kinds(refused(edited)), ['banner']);
-    assert.deepEqual(kinds(refused(replaced(edited, PLANNED, WRITTEN))), ['banner']);
-  });
-
-  test('an edited comment line or section heading in the body is refused', () => {
-    const problems = refused(replaced(base(), '// ── Tests ──', '// ── Tests, edited ──'));
-    assert.deepEqual(kinds(problems), ['comment']);
   });
 
   test('a copy the reader cannot read is refused as unreadable', () => {

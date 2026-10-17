@@ -20,7 +20,7 @@ import { BOARD_CSS } from '../scripts/slice-board-style.mjs';
 import { path } from './repository/repo.js';
 
 const FIXTURE = `// graph: editor_requirements · SOURCE
-// Generated from the editor's requirements graph by graph-note-requirements-export.py — do not hand-edit; regenerate.
+// The editor's requirements graph, the one source: edit it here, in a pull request. A test only moves forward.
 // ── Sections ──
 (section_10:Section {num: '10', title: 'Hosts'}),
 (section_3:Section {num: '3', title: 'Viewing <the default>'}),

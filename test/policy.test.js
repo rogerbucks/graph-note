@@ -239,7 +239,7 @@ describe('GitHub Actions', () => {
     }
   });
 
-  test('only four jobs may write: the release, the lock, the build status comment and the mirror’s issues', () => {
+  test('only five jobs may write: the release, the lock, the build status comment, the mirror’s issues and the review', () => {
     for (const f of workflowFiles()) {
       for (const [name, lines] of Object.entries(jobs(read(f)))) {
         const perms = block(lines, 'permissions', 4);
@@ -263,7 +263,12 @@ describe('GitHub Actions', () => {
           f.endsWith('/project-mirror.yml') &&
           name === 'mirror' &&
           [...given].sort().join() === 'contents: read,issues: write';
-        assert.ok(release || lock || comment || mirror, `${f}: job ${name} writes`);
+        // and one leaves Claude's review on a pull request (test/claude-review-workflow.test.js)
+        const review =
+          f.endsWith('/claude-review.yml') &&
+          name === 'review' &&
+          [...given].sort().join() === 'contents: read,pull-requests: write';
+        assert.ok(release || lock || comment || mirror || review, `${f}: job ${name} writes`);
       }
       assert.doesNotMatch(read(f), /write-all/, f);
     }

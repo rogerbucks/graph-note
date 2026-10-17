@@ -94,8 +94,8 @@ describe('whether a slice is done', () => {
   });
 
   // proves: done_means_proved
-  test('a copy whose banner was edited is never done: only the generated copy is checked', () => {
-    const text = replaced(allWritten(), 'do not hand-edit; regenerate.', 'edited by hand.');
+  test('a copy whose banner was edited is never done: only the source as it opens is checked', () => {
+    const text = replaced(allWritten(), 'edit it here, in a pull request.', 'edited by hand.');
     const r = sliceDone(text, 3, { exists: everyFile });
     assert.equal(r.done, false);
     assert.deepEqual(r.missing, [], 'every requirement proved');
@@ -103,7 +103,7 @@ describe('whether a slice is done', () => {
       r.faults.map((f) => f.id),
       ['line 2'],
     );
-    assert.match(r.faults[0].why, /not the generated banner/);
+    assert.match(r.faults[0].why, /not the banner the requirements open on/);
     assert.match(r.said, /slice 3 is not done: 0 of \d+ requirements are still to prove, and the copy has 1 fault/);
   });
 
@@ -213,7 +213,7 @@ describe('the slice board', () => {
       /<span class="chip chip-open">not done<\/span> Slice 3 is not done: 2 of \d+ requirements are still to prove\./,
     );
     assert.doesNotMatch(notDone, /Slice 3 is done/);
-    const edited = replaced(allWritten(), 'do not hand-edit; regenerate.', 'edited by hand.');
+    const edited = replaced(allWritten(), 'edit it here, in a pull request.', 'edited by hand.');
     assert.match(
       board(edited, 3, { exists: everyFile }),
       /Slice 3 is not done: 0 of \d+ .*, and the copy has 1 fault\./,

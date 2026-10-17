@@ -35,12 +35,19 @@ const command = (...args) =>
   });
 
 describe('the workstreams file', () => {
-  test('names the workstreams W0 to W15, the slice-end workstream S3, the graph mesh workstreams W16 to W33, the WCAG workstream W34, the test-files workstream W35 and the open-questions workstream Q, with the titles agreed', () => {
+  test('names the workstreams W0 to W15, the slice-end workstream S3, the graph mesh workstreams W16 to W33, the WCAG workstream W34, the test-files workstream W35, the roadmap workstreams A1, R1, R2, L1, H1, H2 and V1 and the open-questions workstream Q, with the titles agreed', () => {
     assert.deepEqual(Object.keys(workstreams), [
       ...Array.from({ length: 16 }, (_, n) => `W${n}`),
       ...Array.from({ length: 9 }, (_, n) => `C${n}`),
       'S3',
       ...Array.from({ length: 20 }, (_, n) => `W${n + 16}`),
+      'A1',
+      'R1',
+      'R2',
+      'L1',
+      'H1',
+      'H2',
+      'V1',
       'Q',
     ]);
     assert.deepEqual(
@@ -92,6 +99,13 @@ describe('the workstreams file', () => {
         'Web layer and corporate boundary',
         'WCAG 2.2 AA for every interface',
         'Tests make their own files',
+        'Automated quality checks',
+        'Library release on GitHub',
+        'Obsidian community release',
+        'Host and storage contracts',
+        'Standalone app',
+        'VS Code plugin',
+        'Changes view and pull request review',
         'Open questions',
       ],
     );

@@ -1,0 +1,6 @@
+{
+  "file": "test/policy.test.js",
+  "test": "GitHub Actions > only five jobs may write: the release, the lock, the build status comment, the mirror’s issues and the review",
+  "seen_failing_first": false,
+  "evidence": "a rename of the four-writer rule that widens it to the review job; it holds of every workflow before the review is added, so it passes there by design"
+}

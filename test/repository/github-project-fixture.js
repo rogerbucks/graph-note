@@ -1,7 +1,7 @@
 // A small requirements copy and workstreams map that the GitHub mirror's tests share. Test code only — nothing here
 // ships. Hand-made small graphs stand in for the real file, so each rule is seen on a case that shows it.
 export const FIXTURE = `// graph: editor_requirements · SOURCE
-// Generated from the editor's requirements graph by graph-note-requirements-export.py — do not hand-edit; regenerate.
+// The editor's requirements graph, the one source: edit it here, in a pull request. A test only moves forward.
 // ── Sections ──
 (section_3:Section {num: '3', title: 'Viewing'}),
 (section_24:Section {num: '24', title: 'Viewer aids'}),
