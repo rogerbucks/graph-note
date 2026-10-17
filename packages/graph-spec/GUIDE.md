@@ -26,7 +26,9 @@ and no module requires one that requires it back.
   values), `order.js` (the shared sort orders).
 - **`src/hashing/`** — `sha256.js` (SHA-256, synchronous, no platform crypto) and `canonical-json.js` (RFC 8785 JSON,
   `hash16`, `basisHash`).
-- **`src/reader/`** — the document profile reader (`gql_profile.py`): `profile-error.js`, `whitespace.js` (whitespace
+- **`src/reader/`** — the document profile reader (`gql_profile.py`): `profile-error.js` (with `problem-codes.json`,
+  the stable code of every problem it raises, `GN` and three digits, never reused, the same from the Python reader and
+  given as the diagnostic's code: editor spec §42, problem_codes; `test/problem-codes.test.mjs` holds each raise to it), `whitespace.js` (whitespace
   as GQL names it, the one set every reader uses), `tokens.js` (the header line and tokens), `parser.js` (one block's
   statement), `syntax.js` (a block's syntax alone), `owned-comments.js` (the `///` notes and `//@` lines each element owns, §26 and §27, held with the Python reader to
   `test/owned-comment-cases.json`), `notes.js` (each note's text and summary, and the lines holding more than one

@@ -40,6 +40,7 @@ def _refuse_repeats(matches, paths):
                     n["line"],
                     f"{n['var']} is written twice",
                     "give each new node its own variable",
+                    code="GN307",
                 )
             bound.add(n["var"])
             given = n["props"].get("id", n["var"])
@@ -48,6 +49,7 @@ def _refuse_repeats(matches, paths):
                     n["line"],
                     f"id {given!r} is already a node",
                     "an id names one node (§10) — MATCH it to add to it, or supersede it (§12)",
+                    code="GN501",
                 )
             ids.add(given)
 
@@ -66,7 +68,10 @@ def _with_ids(block, nodes):
         if not m:
             # the parser read it, so this is a fault here, never in the block: said, not hidden
             raise ProfileError(
-                line, f"cannot find where {name} is written", "write it as (name:Kind {…})"
+                line,
+                f"cannot find where {name} is written",
+                "write it as (name:Kind {…})",
+                code="GN502",
             )
         given = f"id: {_gql_value(name)}"
         if m.group(3) == ")":
@@ -123,6 +128,7 @@ def to_gql(block: str) -> str:
             f"[{written}] has no colon",
             "an engine is given only corrected text — read the block with its graph and load "
             f"Store.corrected(block), or write it with its colon: [:{written.upper()}]",
+            code="GN503",
         )
     try:
         matches, paths, sets = Parser(tokens(block)).statement()

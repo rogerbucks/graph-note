@@ -128,6 +128,9 @@ export interface Problem {
   also?: { span: { line: number; character: number; end: number }; text: string }[];
   /** Set when what was written departs from standard GQL and was read as meant (spec §21): which departure it is. */
   departure?: Departure;
+  /** The problem's stable code, such as GN207, when the graph spec's reader raised it: the same from the Python
+   * library, and given as the diagnostic's code (editor spec §42, problem_codes). */
+  code?: string;
 }
 
 /** A departure from standard GQL that the reader reads as meant (spec §21): what strictness acts on. */

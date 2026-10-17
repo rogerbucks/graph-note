@@ -14,11 +14,15 @@ UTC = dt.timezone.utc
 
 class ProfileError(ValueError):
     """A block outside the profile: its line, what is wrong, the fix — and, where the fix is one
-    insertion, `at`: the character on the line it goes before (0-based)."""
+    insertion, `at`: the character on the line it goes before (0-based). `code` is the problem's
+    stable code, the same from the JavaScript reader (editor spec §42, problem_codes); the table of
+    codes is packages/graph-spec/src/reader/problem-codes.json, which this library never reads:
+    each raise passes its code as a literal."""
 
-    def __init__(self, line, message, fix, at=None):
+    def __init__(self, line, message, fix, at=None, code=None):
         super().__init__(f"line {line}: {message} — {fix}")
         self.line, self.message, self.fix, self.at = line, message, fix, at
+        self.code = code
 
 
 TOKEN = re.compile(
@@ -50,7 +54,9 @@ def header(block: str) -> tuple[str | None, str]:
         return None, "excerpt"  # an illustration, said to be one (§3)
     m = GRAPH.match(first)
     if not m:
-        raise ProfileError(1, "the block names no graph", "start it with '// graph: <name>' (§3)")
+        raise ProfileError(
+            1, "the block names no graph", "start it with '// graph: <name>' (§3)", code="GN101"
+        )
     rest = m.group(2)
     kind = (
         "schema"
@@ -69,6 +75,7 @@ def header(block: str) -> tuple[str | None, str]:
             1,
             f"the graph name '{m.group(1)}' is not one word",
             "use letters, digits and underscores only — reader_choice, not reader-choice (§3)",
+            code="GN102",
         )
     return m.group(1), kind
 
@@ -109,13 +116,16 @@ def tokens(block: str) -> list[tuple[str, str, int, str, int]]:
                 break
             m = TOKEN.match(raw, pos)
             if not m and strip(raw[pos:]).startswith("//"):
-                raise ProfileError(n, COMMENT_RULE, COMMENT_FIX)  # a comment after code (§3)
+                raise ProfileError(
+                    n, COMMENT_RULE, COMMENT_FIX, code="GN103"
+                )  # a comment after code (§3)
             if not m:
                 # quoted as the JavaScript quotes it: repr() would escape what it cannot print
                 raise ProfileError(
                     n,
                     f"cannot read '{_excerpt(strip(raw[pos:]))}'",
                     "a data block holds only nodes, relationships and simple values",
+                    code="GN104",
                 )
             kind = m.lastgroup
             text = m.group(kind)
@@ -127,6 +137,7 @@ def tokens(block: str) -> list[tuple[str, str, int, str, int]]:
                     f"'{bad[1]}' is not an escape GQL names",
                     f"double the backslash to write a backslash: \\{bad[1]}",
                     m.start(kind) + 1 + bad[0],
+                    code="GN105",
                 )
             if kind == "id" and text.upper() in KEYWORDS:
                 kind, text = "kw", text.upper()

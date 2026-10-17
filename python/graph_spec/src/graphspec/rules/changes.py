@@ -95,8 +95,9 @@ def split_changeset(block: str) -> dict[str, Any]:
     return {"additions": additions, "changes": changes, "basis_ok": basis_ok}
 
 
-def _refuse(p: Parser, message: str, fix: str):
-    raise ProfileError(p.line(), message, fix)
+def _refuse(p: Parser, message: str, fix: str, code: str):
+    """A statement refused at the line it has read to, with its problem's code."""
+    raise ProfileError(p.line(), message, fix, code=code)
 
 
 def _end_of(p: Parser, n: dict[str, Any]) -> tuple[str, list[str]]:
@@ -106,6 +107,7 @@ def _end_of(p: Parser, n: dict[str, Any]) -> tuple[str, list[str]]:
             "a target is named by its id alone",
             "write MATCH (v:Kind {id: '…'}) — a thing by its name, "
             "a link by its two ends and its type",
+            code="GN401",
         )
     return n["props"]["id"], n["labels"]
 
@@ -132,6 +134,7 @@ def read_change(text: str) -> dict[str, Any]:
                     p,
                     "a link is named by its type",
                     "write [r:TYPE] — a link by its two ends and its type",
+                    code="GN402",
                 )
             p.take("p", ":")
             typ = p.name()
@@ -140,6 +143,7 @@ def read_change(text: str) -> dict[str, Any]:
                     p,
                     "a link is named by its two ends and its type alone",
                     "leave its values to a SET",
+                    code="GN403",
                 )
             p.take("p", "]")
             p.take("arrow")
@@ -158,14 +162,14 @@ def read_change(text: str) -> dict[str, Any]:
             a, labels = _end_of(p, first)
             target = {"kind": "thing", "v": first["var"], "thing": a, "labels": labels}
         if p.at("p", ",") or p.at("p", "-") or p.at("kw", "MATCH"):
-            _refuse(p, "this names more than one target", ONE)
+            _refuse(p, "this names more than one target", ONE, code="GN404")
 
     def named(v: str) -> dict[str, Any]:
         if target is None:
             # SET name.key: the name is the thing's id (§3)
             return {"kind": "thing", "v": v, "thing": v, "labels": []}
         if v != target["v"]:
-            _refuse(p, f"{v} is not the one target", ONE)
+            _refuse(p, f"{v} is not the one target", ONE, code="GN405")
         return target
 
     if _is(p, "DELETE") or _is(p, "DETACH"):
@@ -174,32 +178,38 @@ def read_change(text: str) -> dict[str, Any]:
                 p,
                 "a DELETE needs the target it removes",
                 "write MATCH (v:Kind {id: '…'}) DELETE v",
+                code="GN406",
             )
         detach = _is(p, "DETACH")
         p.i += 1
         if detach:
             if not _is(p, "DELETE"):
-                _refuse(p, "DETACH is followed by DELETE", "write DETACH DELETE v")
+                _refuse(p, "DETACH is followed by DELETE", "write DETACH DELETE v", code="GN407")
             p.i += 1
         named(p.name())
         if p.at("p", ","):
-            _refuse(p, "this removes more than one target", ONE)
+            _refuse(p, "this removes more than one target", ONE, code="GN408")
         if not p.at("end"):
             _refuse(
-                p, f"unexpected {p.peek()[1]!r}", "a DELETE ends after the one target it removes"
+                p,
+                f"unexpected {p.peek()[1]!r}",
+                "a DELETE ends after the one target it removes",
+                code="GN409",
             )
         if detach and target["kind"] == "link":
-            _refuse(p, "a link has no links to detach", "write DELETE r")
+            _refuse(p, "a link has no links to detach", "write DELETE r", code="GN410")
         return {**target, "op": ("detach-delete-" if detach else "delete-") + target["kind"]}
     if not p.at("kw", "SET"):
-        _refuse(p, "a change is a DELETE or a SET", "write DELETE or SET after the MATCH")
+        _refuse(
+            p, "a change is a DELETE or a SET", "write DELETE or SET after the MATCH", code="GN411"
+        )
     p.take("kw", "SET")
     values: dict[str, Any] = {}
     first_var = None
     while True:
         v = p.name()
         if first_var is not None and v != first_var:
-            _refuse(p, "this changes more than one target", ONE)
+            _refuse(p, "this changes more than one target", ONE, code="GN412")
         first_var = v
         found = named(v)
         p.take("p", ".")
@@ -209,12 +219,14 @@ def read_change(text: str) -> dict[str, Any]:
                 p,
                 f"{key} is not a name a SET may give a value to",
                 "choose another name for the value",
+                code="GN414",
             )
         if key == "id":
             _refuse(
                 p,
                 f"SET would change {v}'s id, and a node's id never changes (§3)",
                 "write the right node, then supersede it (§12)",
+                code="GN413",
             )
         p.take("p", "=")
         values[key] = p.value()
@@ -222,7 +234,7 @@ def read_change(text: str) -> dict[str, Any]:
             break
         p.take("p", ",")
     if not p.at("end"):
-        _refuse(p, f"unexpected {p.peek()[1]!r}", "a SET ends after its values")
+        _refuse(p, f"unexpected {p.peek()[1]!r}", "a SET ends after its values", code="GN415")
     return {**found, "op": "set-" + found["kind"], "set": values}
 
 

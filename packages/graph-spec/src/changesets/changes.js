@@ -85,8 +85,9 @@ function splitChangeset(block) {
   return { additions, changes, basisOk };
 }
 
-const refuse = (p, message, fix) => {
-  throw new ProfileError(p.line(), message, fix);
+// a statement refused at the line it has read to, with its problem's code (problem-codes.json)
+const refuse = (p, message, fix, code) => {
+  throw new ProfileError(p.line(), message, fix, undefined, code);
 };
 const ONE = 'a DELETE or SET names exactly one target (§24)';
 function endOf(p, n) {
@@ -96,6 +97,7 @@ function endOf(p, n) {
       p,
       'a target is named by its id alone',
       "write MATCH (v:Kind {id: '…'}) — a thing by its name, a link by its two ends and its type",
+      'GN401',
     );
   return { id: n.props.id, labels: n.labels };
 }
@@ -116,10 +118,11 @@ function readChange(text) {
       p.take('p', '[');
       const rel = p.at('p', ':') ? null : p.name();
       if (!p.at('p', ':'))
-        refuse(p, 'a link is named by its type', 'write [r:TYPE] — a link by its two ends and its type');
+        refuse(p, 'a link is named by its type', 'write [r:TYPE] — a link by its two ends and its type', 'GN402');
       p.take('p', ':');
       const type = p.name();
-      if (p.at('p', '{')) refuse(p, 'a link is named by its two ends and its type alone', 'leave its values to a SET');
+      if (p.at('p', '{'))
+        refuse(p, 'a link is named by its two ends and its type alone', 'leave its values to a SET', 'GN403');
       p.take('p', ']');
       p.take('arrow');
       const second = p.node(),
@@ -130,37 +133,39 @@ function readChange(text) {
       const a = endOf(p, first);
       target = { kind: 'thing', v: first.v, thing: a.id, labels: a.labels };
     }
-    if (p.at('p', ',') || p.at('p', '-') || p.at('kw', 'MATCH')) refuse(p, 'this names more than one target', ONE);
+    if (p.at('p', ',') || p.at('p', '-') || p.at('kw', 'MATCH'))
+      refuse(p, 'this names more than one target', ONE, 'GN404');
   }
   const named = (v) => {
     if (!target) return { kind: 'thing', v, thing: v, labels: [] }; // SET name.key: the name is the thing's id (§3)
-    if (v !== target.v) refuse(p, `${v} is not the one target`, ONE);
+    if (v !== target.v) refuse(p, `${v} is not the one target`, ONE, 'GN405');
     return target;
   };
   if (p.at('id') && ['DELETE', 'DETACH'].includes(p.peek()[1].toUpperCase())) {
-    if (!target) refuse(p, 'a DELETE needs the target it removes', "write MATCH (v:Kind {id: '…'}) DELETE v");
+    if (!target) refuse(p, 'a DELETE needs the target it removes', "write MATCH (v:Kind {id: '…'}) DELETE v", 'GN406');
     const detach = p.peek()[1].toUpperCase() === 'DETACH';
     p.i++;
     if (detach) {
       if (!(p.at('id') && p.peek()[1].toUpperCase() === 'DELETE'))
-        refuse(p, 'DETACH is followed by DELETE', 'write DETACH DELETE v');
+        refuse(p, 'DETACH is followed by DELETE', 'write DETACH DELETE v', 'GN407');
       p.i++;
     }
     const v = p.name();
     named(v);
-    if (p.at('p', ',')) refuse(p, 'this removes more than one target', ONE);
-    if (!p.at('end')) refuse(p, `unexpected '${p.peek()[1]}'`, 'a DELETE ends after the one target it removes');
-    if (detach && target.kind === 'link') refuse(p, 'a link has no links to detach', 'write DELETE r');
+    if (p.at('p', ',')) refuse(p, 'this removes more than one target', ONE, 'GN408');
+    if (!p.at('end'))
+      refuse(p, `unexpected '${p.peek()[1]}'`, 'a DELETE ends after the one target it removes', 'GN409');
+    if (detach && target.kind === 'link') refuse(p, 'a link has no links to detach', 'write DELETE r', 'GN410');
     return { ...target, op: (detach ? 'detach-delete-' : 'delete-') + target.kind };
   }
-  if (!p.at('kw', 'SET')) refuse(p, 'a change is a DELETE or a SET', 'write DELETE or SET after the MATCH');
+  if (!p.at('kw', 'SET')) refuse(p, 'a change is a DELETE or a SET', 'write DELETE or SET after the MATCH', 'GN411');
   p.take('kw', 'SET');
   const set = {};
   let named1 = null,
     first = null;
   for (;;) {
     const v = p.name();
-    if (first !== null && v !== first) refuse(p, 'this changes more than one target', ONE);
+    if (first !== null && v !== first) refuse(p, 'this changes more than one target', ONE, 'GN412');
     first = v;
     named1 = named(v);
     p.take('p', '.');
@@ -170,15 +175,16 @@ function readChange(text) {
         p,
         `SET would change ${v}'s id, and a node's id never changes (§3)`,
         'write the right node, then supersede it (§12)',
+        'GN413',
       );
     if (['__proto__', 'constructor', 'prototype'].includes(key))
-      refuse(p, `${key} is not a name a SET may give a value to`, 'choose another name for the value');
+      refuse(p, `${key} is not a name a SET may give a value to`, 'choose another name for the value', 'GN414');
     p.take('p', '=');
     set[key] = p.value();
     if (!p.at('p', ',')) break;
     p.take('p', ',');
   }
-  if (!p.at('end')) refuse(p, `unexpected '${p.peek()[1]}'`, 'a SET ends after its values');
+  if (!p.at('end')) refuse(p, `unexpected '${p.peek()[1]}'`, 'a SET ends after its values', 'GN415');
   return { ...named1, op: 'set-' + named1.kind, set };
 }
 

@@ -253,7 +253,8 @@ own handlers. Nothing here reaches the network.
 - `store.ts` — replacing or inserting a block in a note, keeping every other byte; `replaceSpan` writes a block already
   found, as the session finds its own.
 - `history.ts` — the text's own undo history.
-- `help.ts` — diagnostics, fixes, completions and the read-back, in the shapes of the Language Server Protocol.
+- `help.ts` — diagnostics, fixes, completions and the read-back, in the shapes of the Language Server Protocol; a
+  diagnostic's `code` is its `Problem.code`, the graph spec reader's stable code (editor spec §42, problem_codes).
 - `tokens.ts` — the gql-highlight tokenizer, for colouring.
 - `name-suggestions.ts` — a name from a text, in the style of the graph's names and never one of them or a reserved
   word; a text from a name; and the ASCII words and slug of a text (`nameWords`, `nameSlug`), as the graph reader's names allow.
