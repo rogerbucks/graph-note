@@ -30,3 +30,6 @@ flowchart TB
 
 The requirements every layer is built to are in
 [`requirements/editor-requirements.gql`](https://github.com/rogerbucks/graph-note/blob/main/requirements/editor-requirements.gql).
+
+How ready these layers are for other languages, right-to-left scripts, plug-ins, themes and contract tests, and the
+plan to add them, is in the [design review](Design-review).

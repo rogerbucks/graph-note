@@ -37,18 +37,18 @@
       "workstreams": ["V1", "D1", "A1", "R1", "R2"]
     },
     {
-      "title": "Wave 6 · Host and storage contracts",
+      "title": "Wave 6 · Host, storage and plug-in contracts",
       "start": "2026-11-13",
       "end": "2026-11-26",
       "estimate": true,
-      "workstreams": ["L1"]
+      "workstreams": ["T1", "L1", "P1"]
     },
     {
-      "title": "Wave 7 · Standalone app",
+      "title": "Wave 7 · Language, theming and the standalone app",
       "start": "2026-11-27",
       "end": "2026-12-10",
       "estimate": true,
-      "workstreams": ["H1"]
+      "workstreams": ["G1", "U1", "H1"]
     },
     {
       "title": "Wave 8 · VS Code plugin",
