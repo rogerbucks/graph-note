@@ -5,6 +5,11 @@ name: Wiki
 # the runner's Chrome, and scripts/wiki.mjs writes every page. A button of the drawing the guide does not explain is a
 # warning on the run, never a failure.
 #
+# People may edit the wiki too, and their pages are never changed here. On every run, and whenever a page is edited
+# (gollum), `review` checks each page whose last change is a person's (scripts/wiki-review.mjs) and `report` keeps one
+# open issue, labelled wiki-review, with the suggestions: rewritten in place, and each new list also left as a comment,
+# so a person's edit to a page the wiki makes, which the next publish replaces, stays on record. Closed when nothing is left.
+#
 # Two jobs, so no code runs beside the write. `make` checks out main, installs and runs main's own code with read
 # access only, and uploads the pages. `publish` may write the repository's contents, which is what a push to the wiki
 # needs, and so runs no code of the repository at all: no checkout, no install, no Node. It downloads the pages and
@@ -14,6 +19,7 @@ on:
     branches: [main]
   release:
     types: [published]
+  gollum:
 
 permissions:
   contents: read
@@ -25,6 +31,7 @@ concurrency:
 
 jobs:
   make:
+    if: github.event_name != 'gollum'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -53,8 +60,67 @@ jobs:
           path: wiki-out
           retention-days: 1
 
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm audit signatures
+      - name: Check the pages people wrote or edited
+        env:
+          TOKEN: ${{ github.token }}
+        run: |
+          git clone "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" "$RUNNER_TEMP/wiki"
+          mkdir -p review-out
+          node scripts/wiki-review.mjs --wiki "$RUNNER_TEMP/wiki" --out review-out/review.md
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: wiki-review
+          path: review-out
+          retention-days: 1
+
+  report:
+    needs: review
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: wiki-review
+          path: review-out
+      - name: Keep the wiki-review issue up to date
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          body=review-out/review.md
+          number=$(gh issue list --label wiki-review --state open --limit 1 --json number --jq '.[0].number // empty')
+          if [ ! -s "$body" ]; then
+            [ -n "$number" ] && gh issue close "$number" --comment "Nothing left to suggest: every page people edited passes the checks."
+            exit 0
+          fi
+          gh label create wiki-review --description "Suggestions for wiki pages people edited" --color c5def5 2>/dev/null || true
+          if [ -z "$number" ]; then
+            gh issue create --title "Wiki review: suggestions for pages people edited" --label wiki-review --body-file "$body"
+          elif [ "$(gh issue view "$number" --json body --jq .body)" != "$(cat "$body")" ]; then
+            gh issue edit "$number" --body-file "$body"
+            gh issue comment "$number" --body-file "$body"
+          fi
+
   publish:
-    needs: make
+    if: github.event_name != 'gollum'
+    needs: [make, review]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

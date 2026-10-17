@@ -556,6 +556,7 @@
 (github_review_items:Requirement {section: '41', slice: 5, level: 'must', rule: 'The graph view must show the pull requests, merges and commits of the repository a note lives in as items, each opening in the changes view, so that the user and Claude can review a change together; a high level must summarise it by section, workstream and requirement, and each level down must show more, to every thing, link and line changed. GitHub must be read only, only when the user asks, with the host\'s own sign-in, never a stored token.'}),
 (wiki_generated:Requirement {section: '41', slice: 5, level: 'must', rule: 'The project\'s GitHub wiki must be made from the repository on every push to main and every release: where the work stands, the roadmap, the decisions, the open questions, the quality figures and the releases, each page saying which file and commit it came from, so it never drifts and nobody keeps it by hand.'}),
 (user_guide_wiki:Requirement {section: '41', slice: 5, level: 'must', rule: 'The wiki must hold a guide to using Graph Note in plain words for people who are not technical, with screenshots taken from the current build each time the wiki is made and a list of every setting made from the editor\'s own options, and a button of the drawing that the guide does not explain must be reported when the wiki is made.'}),
+(wiki_reviewed:Requirement {section: '41', slice: 5, level: 'must', rule: 'Every wiki page a person writes or edits must be checked each time the wiki is made or edited, and never changed by the automation: its suggestions (a broken link or picture, an old version, a sentence too long) must be kept in one open issue, and a person\'s edit to a page the wiki makes must be reported there before it is replaced, so it can be moved into the repository.'}),
 // ── Tests ──
 (test_layout_parity:Test {proves: 'the core layout source matches graph_svg.py for every vault graph', where: 'outside the repo', status: 'written'}),
 (test_python_nudges:Test {proves: 'graph_svg.py honours every nudge of the style graph exactly as the core does, so a nudged graph lays out byte for byte the same in Python and in the plugin', file: 'python/graph_spec/tests/test_graph_svg_nudges.py', where: 'repo', status: 'written'}),
@@ -796,6 +797,7 @@
 (test_github_review_items:Test {proves: 'pull requests, merges and commits are listed as items, each opens in the changes view, the levels go from a summary by section, workstream and requirement down to each line, and nothing is fetched until asked', file: 'packages/core/test/github-review-items.test.js', where: 'repo', status: 'planned'}),
 (test_wiki_generated:Test {proves: 'every wiki page is made from its file, says where and at which commit it came from, and counts what the requirements and waves give', file: 'test/wiki.test.js, test/wiki-workflow.test.js', where: 'repo', status: 'written'}),
 (test_user_guide_wiki:Test {proves: 'the guide shows every screenshot taken and no other, lists every setting from the editor\'s options, keeps to plain words, and names a new button it does not explain', file: 'test/wiki-guide.test.js', where: 'repo', status: 'written'}),
+(test_wiki_reviewed:Test {proves: 'a page a person wrote gets a suggestion for each broken link or picture, old version and long sentence, a person\'s edit to a made page is reported, the workflow\'s pages are never checked, and the issue is kept by a job that runs no code of the repository', file: 'test/wiki-review.test.js, test/wiki-workflow.test.js', where: 'repo', status: 'written'}),
 // ── Open questions ──
 (q_01_ai_interface:Question {num: 'Q-01', slice: 8, text: 'How does the graph mesh connect to external AI tools: through MCP, an API, or file export?'}),
 (q_02_distribution:Question {num: 'Q-02', slice: 9, text: 'How is the open-source library distributed and versioned?', answer: 'GitHub releases only, with semantic version tags, and never npm (lib_github_release).', answered: '2026-10-16'}),
@@ -815,6 +817,8 @@
 // ── Links ──
 (wiki_generated)-[:PART_OF]->(section_41),
 (wiki_generated)-[:PROVED_BY]->(test_wiki_generated),
+(wiki_reviewed)-[:PART_OF]->(section_41),
+(wiki_reviewed)-[:PROVED_BY]->(test_wiki_reviewed),
 (user_guide_wiki)-[:PART_OF]->(section_41),
 (user_guide_wiki)-[:PROVED_BY]->(test_user_guide_wiki),
 (github_review_items)-[:PART_OF]->(section_41),

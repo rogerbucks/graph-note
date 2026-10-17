@@ -243,6 +243,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/slice-board.test.js` — the slice board: a CSS-only HTML page of how far the slice under way is proved, from the requirements copy and, optionally, the open pull requests.
 - `test/wiki.test.js` — the project wiki: every page made from its file in the repository, ending with the file and commit it came from, the proved counts as the slice board gives them, every answered question a decision and every other open, the roadmap's chart free of the characters it reads as syntax, and the releases from GitHub or `versions.json`.
 - `test/wiki-guide.test.js` — the wiki's user guide: every screenshot taken shown once and no other asked for, every setting listed from the editor's own options, plain words, and a new button of the drawing reported when the guide does not explain it.
+- `test/wiki-review.test.js` — the review of the wiki pages people write or edit: each checked and never changed, a suggestion for each broken link or picture, old version and long sentence, a person's edit to a made page reported, and an issue text that pings no one.
 - `test/wiki-workflow.test.js` — the workflow that makes the wiki: woken by a push to main or a release, the pages made with read access only, and the one job that writes running no code of the repository.
 - `test/speed-index.test.js` — the one measure of a machine's speed, which the quality metrics record and scale their timings by: fixed plain work, the least of seven runs.
 - `test/timed-assertions.test.js` — a test asserts the work done, never the time taken: no JavaScript test or its support asserts a span of elapsed time; a polling deadline, mock timers and a clock handed to the code tested are allowed.
@@ -422,7 +423,10 @@ copies the pages written by a person from `wiki/`, filling each `<!-- wiki:NAME 
 is the user guide, in plain words for people who are not technical: a change people will see changes it in the same pull
 request. Its pictures are `<!-- wiki:shot NAME -->` markers, taken from the build by `scripts/wiki-screens.mjs` (each
 shot is a state of `packages/obsidian/harness`, listed in `SHOTS`), and its settings come from the core's `OPTIONS`. A
-button of the drawing the guide does not name is a warning on the wiki's run. To look at the wiki before a merge:
+button of the drawing the guide does not name is a warning on the wiki's run. People may edit the wiki too: their pages
+are never changed by the workflow. `scripts/wiki-review.mjs` checks each page a person changed last, on every run and on
+every wiki edit, and the workflow keeps the suggestions in one open issue labelled `wiki-review`, closed when none is
+left. A person's edit to a page the wiki makes is listed there before the next run replaces it. To look at the wiki before a merge:
 `node scripts/wiki-screens.mjs --out out/images && node scripts/wiki.mjs --out out --labels out/images/labels.json`.
 
 ## The quality ratchet

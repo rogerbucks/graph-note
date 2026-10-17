@@ -15,17 +15,19 @@ const given = (job) =>
     .filter(Boolean);
 
 describe('the workflow that makes the wiki', () => {
-  test('is woken by a push to main and a published release, never by a pull request', () => {
+  test('is woken by a push to main, a published release and an edit of the wiki, never by a pull request', () => {
     const on = block(lines, 'on', 0).join('\n');
     assert.match(on, /push:\s*\n\s*branches: \[main\]/);
     assert.match(on, /release:\s*\n\s*types: \[published\]/);
+    assert.match(on, /gollum:/);
     assert.doesNotMatch(on, /pull_request|workflow_run/);
   });
 
   test('makes the pages with read access only, from main, keeping no credentials', () => {
     assert.deepEqual(permissionValues(block(lines, 'permissions', 0)), ['read']);
-    assert.deepEqual(Object.keys(jobs(text)), ['make', 'publish']);
+    assert.deepEqual(Object.keys(jobs(text)), ['make', 'review', 'report', 'publish']);
     assert.deepEqual(given('make'), ['contents: read']);
+    assert.deepEqual(given('review'), ['contents: read']);
     assert.match(jobs(text).make.join('\n'), /ref: main\s*\n\s*persist-credentials: false/);
   });
 
@@ -47,6 +49,28 @@ describe('the workflow that makes the wiki', () => {
     assert.doesNotMatch(runs, /\b(node|npm|npx)\b|scripts\/|actions\/checkout|\.\/\S+\.sh/);
     assert.match(runs, /\.wiki\.git/);
     assert.match(runs, /git push/);
+  });
+
+  test('reviews the pages people edited on every run, and makes and publishes pages only on a push or a release', () => {
+    assert.match(
+      jobs(text).review.join('\n'),
+      /node scripts\/wiki-review\.mjs --wiki "\$RUNNER_TEMP\/wiki" --out review-out\/review\.md/,
+    );
+    for (const job of ['make', 'publish']) assert.match(jobs(text)[job][0], /if: github\.event_name != 'gollum'/, job);
+    assert.doesNotMatch(jobs(text).review.join('\n'), /\bif:/);
+    assert.match(jobs(text).publish.join('\n'), /needs: \[make, review\]/);
+  });
+
+  test('keeps the review issue with no code of the repository: it may write issues alone, and only gh and the shell run', () => {
+    assert.deepEqual(given('report'), ['issues: write']);
+    const report = jobs(text).report.map(stripComment).join('\n');
+    assert.deepEqual(
+      usesRefs(report).map((r) => r.split('@')[0]),
+      ['actions/download-artifact'],
+    );
+    assert.doesNotMatch(report, /\b(node|npm|npx)\b|scripts\/|actions\/checkout|\.\/\S+\.sh|git push/);
+    assert.match(report, /--label wiki-review/);
+    assert.match(report, /gh issue close/);
   });
 
   test('never deletes a page it did not make, and never pushes the list of button labels', () => {
