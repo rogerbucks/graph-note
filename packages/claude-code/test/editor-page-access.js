@@ -93,7 +93,11 @@ export function accessCases({ at, ROOT, LAYER }) {
       assert.equal(ev.defaultPrevented, true, 'the address is not changed');
       assert.equal(doc.activeElement, main);
       const css = (await ask((await servePage()).port, { path: '/page.css' })).text;
-      assert.match(css, /\.gn-skip:focus[^{]*\{[^}]*(?:position:\s*static|clip:\s*auto|left:\s*0)/, 'shown on focus');
+      assert.match(
+        css,
+        /\.gn-skip:focus[^{]*\{[^}]*(?:position:\s*static|clip:\s*auto|inset-inline-start:\s*0)/,
+        'shown on focus',
+      );
     });
 
     test('every control has a visible focus, at least 24 CSS pixels to hit, and none is made to lose its outline', async () => {

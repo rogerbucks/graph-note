@@ -677,7 +677,7 @@ details.graph-note-style > summary {
   gap: var(--size-4-1);
 }
 .graph-note-badge {
-  margin-right: auto;
+  margin-inline-end: auto;
 }
 /* In Live Preview, Obsidian puts its own edit-block button at a code block's top right, shown on hover; leave it room, as
    Obsidian does for its PDF toolbar, so it never covers the bar's last button. */
@@ -765,7 +765,7 @@ details.graph-note-style > summary {
 .graph-note-problems ul,
 .graph-note-details ul {
   margin: var(--size-4-1) 0;
-  padding-left: var(--size-4-6);
+  padding-inline-start: var(--size-4-6);
 }
 .graph-note-details {
   margin-top: var(--size-4-2);
@@ -779,7 +779,7 @@ details.graph-note-style > summary {
   gap: var(--size-4-2);
 }
 .graph-note-details-head button {
-  margin-left: auto;
+  margin-inline-start: auto;
   min-width: 44px;
   min-height: 44px;
 }
@@ -796,7 +796,7 @@ details.graph-note-style > summary {
 }
 .graph-note-banner {
   padding: var(--size-4-2) var(--size-4-3);
-  border-left: 3px solid var(--text-error);
+  border-inline-start: 3px solid var(--text-error);
   background: var(--background-secondary);
   margin-bottom: var(--size-4-2);
 }
@@ -941,7 +941,7 @@ details.graph-note-style > summary {
    button beside it; the trail's back and forward above them. On touch, every choice is 44 points. */
 .graph-note-details ul.graph-note-link-groups {
   list-style: none;
-  padding-left: 0;
+  padding-inline-start: 0;
 }
 .graph-note-link-group {
   margin: var(--size-2-1) 0;
@@ -1037,7 +1037,7 @@ details.graph-note-style > summary {
   display: flex;
   flex-wrap: wrap;
   gap: var(--size-4-1);
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 .graph-note-pane-tools button {
   display: inline-flex;
@@ -1064,7 +1064,7 @@ details.graph-note-style > summary {
 }
 .graph-note-draft {
   padding: var(--size-4-2) var(--size-4-3);
-  border-left: 3px solid var(--text-warning);
+  border-inline-start: 3px solid var(--text-warning);
   background: var(--background-secondary);
   display: flex;
   flex-wrap: wrap;
@@ -1168,7 +1168,7 @@ details.graph-note-style > summary {
   flex-direction: column;
   gap: var(--size-4-1);
   padding: var(--size-4-2);
-  border-left: 3px solid var(--text-warning);
+  border-inline-start: 3px solid var(--text-warning);
   background: var(--background-secondary);
 }
 .graph-note-fixbar > div {
@@ -1190,7 +1190,7 @@ details.graph-note-style > summary {
 }
 .graph-note-pane-problems ul {
   margin: 0;
-  padding-left: var(--size-4-6);
+  padding-inline-start: var(--size-4-6);
 }
 .graph-note-pane-problems li.is-error::marker {
   content: '✖ ';
@@ -1349,13 +1349,13 @@ details.graph-note-style > summary {
   margin: 0;
 }
 .graph-note-note-body {
-  border-left: 2px solid var(--background-modifier-border);
-  padding-left: var(--size-4-2);
+  border-inline-start: 2px solid var(--background-modifier-border);
+  padding-inline-start: var(--size-4-2);
 }
 /* A note in a thing's or link's details, rendered by Obsidian, and its controls while the block is edited (§24). */
 .graph-note-thing-note {
-  border-left: 2px solid var(--interactive-accent);
-  padding-left: var(--size-4-2);
+  border-inline-start: 2px solid var(--interactive-accent);
+  padding-inline-start: var(--size-4-2);
 }
 .graph-note-note-controls {
   margin-top: var(--size-4-2);

@@ -29,7 +29,7 @@ header {
    visible focus ring in the text colour on every control and every target the keyboard can rest on */
 .gn-skip {
   position: absolute;
-  left: -999px;
+  inset-inline-start: -999px;
   top: 0;
   z-index: var(--layer-popover);
   padding: var(--size-4-2) var(--size-4-3);
@@ -39,7 +39,7 @@ header {
 }
 
 .gn-skip:focus {
-  left: 0;
+  inset-inline-start: 0;
 }
 
 a:focus-visible,
@@ -58,7 +58,7 @@ textarea:focus-visible,
 }
 
 .gn-text-version ul {
-  padding-left: var(--size-4-5);
+  padding-inline-start: var(--size-4-5);
 }
 
 /* reduced motion (cc_reduced_motion, WCAG 2.2 AA 2.3.3): the system asks for none, so nothing moves, fades or scrolls
@@ -108,7 +108,7 @@ textarea:focus-visible,
 
 #gn-notices {
   position: fixed;
-  right: var(--size-4-4);
+  inset-inline-end: var(--size-4-4);
   bottom: var(--size-4-4);
   z-index: var(--layer-popover);
 }
@@ -144,7 +144,7 @@ textarea:focus-visible,
   background: none;
   border: 0;
   color: inherit;
-  text-align: left;
+  text-align: start;
   font: inherit;
   cursor: pointer;
 }
@@ -204,7 +204,7 @@ textarea:focus-visible,
 }
 
 .gn-card-changes {
-  padding-left: var(--size-4-5);
+  padding-inline-start: var(--size-4-5);
 }
 
 .gn-card-changes li {
