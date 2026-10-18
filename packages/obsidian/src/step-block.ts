@@ -15,6 +15,7 @@ import {
   runStep,
   stepOf,
   viewsOf,
+  word,
 } from '@graph-note/core';
 import { readInHostDirection } from '@graph-note/core/display/host';
 import type { GraphStep, StepFault, StepGiven, StepRun } from '@graph-note/core';
@@ -37,21 +38,24 @@ function choicesIn(texts: readonly string[]): StepGiven[] {
 function sayRun(said: HTMLElement, step: GraphStep, run: StepRun | null): void {
   said.empty();
   if (!run) {
-    said.createDiv({ cls: 'graph-note-banner', attr: { role: 'alert' }, text: 'The note is not there any more.' });
+    said.createDiv({ cls: 'graph-note-banner', attr: { role: 'alert' }, text: word('step.gone') });
     return;
   }
   if ('refused' in run) {
     const box = said.createDiv({ cls: 'graph-note-banner', attr: { role: 'alert' } });
-    box.createEl('p', { text: `Step ${step.name} did not run:` });
+    box.createEl('p', { text: word('step.did-not-run', { name: step.name }) });
     const list = box.createEl('ul');
     for (const why of run.refused) list.createEl('li', { text: why });
-    new Notice(`Step ${step.name} did not run: ${run.refused[0] ?? ''}`);
+    new Notice(word('step.did-not-run-why', { name: step.name, why: run.refused[0] ?? '' }));
   } else if ('nothing' in run) {
     said.createEl('p', { attr: { role: 'status' }, text: run.nothing });
     new Notice(run.nothing);
   } else {
-    const n = run.proposal.changes.length,
-      done = `Step ${step.name} proposed ${n} change${n === 1 ? '' : 's'} to ${run.proposal.graph}: accept or reject each below the graph.`;
+    const done = word('step.proposed', {
+      name: step.name,
+      count: run.proposal.changes.length,
+      graph: run.proposal.graph,
+    });
     said.createEl('p', { attr: { role: 'status' }, text: done });
     new Notice(done);
   }
@@ -83,7 +87,7 @@ async function run(
     // a proposal the graph spec's check fails is not written, and the run says so
     const written = noteWithProposal(note, r.proposal);
     if (typeof written === 'string') return written;
-    outcome = { refused: [`Step ${step.name} gave a proposal that was not written: ${written.refused}`] };
+    outcome = { refused: [word('step.not-written', { name: step.name, why: written.refused })] };
     return note;
   });
   return outcome;
@@ -103,13 +107,17 @@ export function renderStepBlock(
   const target = info ? { path: ctx.sourcePath, line: info.lineStart, graph: step.graph } : null;
   editInPane(root.createDiv({ cls: 'graph-note-card-actions' }), plugin, target);
   if ('fault' in step) {
-    root.createDiv({ cls: 'graph-note-banner', attr: { role: 'alert' }, text: `This step cannot run: ${step.fault}` });
+    root.createDiv({
+      cls: 'graph-note-banner',
+      attr: { role: 'alert' },
+      text: word('step.cannot-run', { why: step.fault }),
+    });
     renderCode(root, source);
     return;
   }
   const texts = info ? gqlBlocks(info.text).map((b) => b.text) : [source];
   root.createEl('p', {
-    text: `Step ${step.name} proposes links into ${step.graph}. It runs only when you press Run, and what it gives is proposed for you to accept or reject.`,
+    text: word('step.about', { name: step.name, graph: step.graph }),
   });
   const choices = choicesIn(texts),
     picks = new Map<string, HTMLSelectElement>();
@@ -117,16 +125,18 @@ export function renderStepBlock(
   for (const p of step.points) {
     const row = controls.createDiv({ cls: 'graph-note-step-point' });
     const words = [...p.kinds.map((k) => `(:${k})`), ...p.types.map((t) => `[:${t}]`)];
-    row.createSpan({ text: `${p.name} takes ${words.length ? and(words) : 'any graph'}` });
-    const pick = row.createEl('select', { attr: { 'aria-label': `Give ${p.name}` } });
+    row.createSpan({
+      text: word('step.takes', { name: p.name, what: words.length ? and(words) : word('step.any-graph') }),
+    });
+    const pick = row.createEl('select', { attr: { 'aria-label': word('step.give', { name: p.name }) } });
     for (const c of choices) pick.createEl('option', { text: givenLabel(c), attr: { value: givenLabel(c) } });
     pick.value = givenLabel({ graph: step.graph });
     picks.set(p.name, pick);
   }
   const said = root.createDiv({ cls: 'graph-note-step-said' });
   const press = controls.createEl('button', {
-    text: 'Run',
-    attr: { 'aria-label': `Run step ${step.name}`, type: 'button' },
+    text: word('step.run'),
+    attr: { 'aria-label': word('step.run.said', { name: step.name }), type: 'button' },
   });
   // nothing in reading view, an embed or a hover preview may change the note (spec §3), so none of them offers Run
   whenPlaced(root, () => {
@@ -147,7 +157,7 @@ export function renderStepBlock(
       .then((r) => sayRun(said, step, r))
       .catch((e: unknown) => {
         console.error('Graph Note could not run step', step.name, e);
-        new Notice(`Step ${step.name} could not run, and nothing was written.`);
+        new Notice(word('step.could-not-run', { name: step.name }));
       })
       .finally(() => {
         running = false;
