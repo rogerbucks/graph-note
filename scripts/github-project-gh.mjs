@@ -10,6 +10,7 @@ import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { REQUIREMENTS } from './check-requirements.mjs';
+import { linkBlocks } from './github-project-blocks.mjs';
 import { itemValueMutation, typedMutation, withClosedOn } from './github-project-fields.mjs';
 import {
   BUILD_STATUS_FIELD,
@@ -271,7 +272,9 @@ function doFields(act, project, remote, fieldPlans) {
  * secondary rate limit; a call that fails in a transient way (a timeout, a reset connection, a 502, 503 or 504, "Bad
  * Gateway", "something went wrong") is tried again up to three times after `delays`, and a create that may have half
  * happened is looked for first, so it is never made twice. `opts` may give another `sleep` (milliseconds, blocking),
- * `pauseMs`, `retryMs` and `delays`. Throws, with gh's words, at the first call that fails for good.
+ * `pauseMs`, `retryMs` and `delays`. Throws, with gh's words, at the first call that fails for good, except in the
+ * blocked-by links (github-project-blocks.mjs), which are set after the issues and whose failure is only a warning.
+ * Gives {warnings}.
  */
 export function executePlan(run, repo, plan, opts = {}) {
   const owner = ownerOf(repo);
@@ -291,8 +294,14 @@ export function executePlan(run, repo, plan, opts = {}) {
     act(inRepo(repo, ['label', 'create', name, '--color', color, '--description', description]));
   }
   const made = doIssues(act, repo, plan, createGuard(read, repo, plan, settings));
-  if (plan.project.unread) return;
   const known = { ...plan.issues.held, ...made };
+  const warnings = [];
+  try {
+    linkBlocks(act, read, repo, plan.desired.issues, known);
+  } catch (e) {
+    warnings.push(`the blocked-by links were not set: ${e.message}`);
+  }
+  if (plan.project.unread) return { warnings };
   const idByNumber = new Map(Object.entries(known).map(([id, i]) => [i.number, id]));
   // an issue closed, reopened or made just now has its Closed on only once GitHub holds it
   const { create, close, reopen } = plan.issues;
@@ -331,4 +340,5 @@ export function executePlan(run, repo, plan, opts = {}) {
     const { query, variables } = itemValueMutation(ref.id, itemIds.get(set.id), set.field, field, set.to);
     graphql(act, query, variables);
   }
+  return { warnings };
 }

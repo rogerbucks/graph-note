@@ -302,6 +302,7 @@ export function desiredState(board, workstreams, slices, plan = null) {
       id: q.id,
       title: questionTitleOf(q.num, q.text),
       body: questionBodyOf(q, option(workstream)),
+      blocks: q.blocks,
       labels: [QUESTION_LABEL, `slice-${q.slice}`, `workstream:${workstream}`].sort(),
       state: 'open',
       slice: `Slice ${q.slice}`,

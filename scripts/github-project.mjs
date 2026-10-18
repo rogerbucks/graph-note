@@ -156,7 +156,8 @@ export function mirror(
   if (seedProblem && !acceptWarnings) throw new SeedWarnings(seedProblem);
   const tooMany = maxCreates === undefined ? null : createsProblem(plan, maxCreates);
   if (tooMany) throw new CreatesCapped(tooMany);
-  executePlan(raw, repo, plan, { ...(sleep ? { sleep } : {}), ...(budget ? { budget } : {}) });
+  const { warnings } = executePlan(raw, repo, plan, { ...(sleep ? { sleep } : {}), ...(budget ? { budget } : {}) });
+  for (const warning of warnings) write(`warning: ${warning}\n`);
   write('github-project: applied\n');
 }
 

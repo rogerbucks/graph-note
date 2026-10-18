@@ -3,7 +3,7 @@
 // after: nothing confidential or personal and no secret in any commit of the checked-out branch's own history, and
 // every commit from a no-reply address (--history); a stranger's fresh clone sets up and builds from the README's own
 // steps, which name nothing on the maintainer's machine (--setup); and the repository's settings on GitHub let no one
-// but a collaborator contribute (--settings). CI and the release run the first two. The third is read, and set,
+// but a collaborator change the code or open an issue, while anyone may read the plan and discuss it (--settings). CI and the release run the first two. The third is read, and set,
 // through the GitHub CLI by whoever administers the repository, since CI's own token cannot read a repository's
 // settings.
 //
@@ -192,15 +192,16 @@ const checksRule = (ruleset) => ruleset.rules.find((r) => r.type === 'required_s
  * `always`, or `public` for what GitHub gives only a public repository (or a paid security plan).
  */
 export const WANTED = [
-  // Who can contribute: a collaborator opens a pull request or an issue; nothing else is open to anyone. Issues stay on,
-  // with creation set to collaborators only by hand in the repository's settings: that setting has no API field (as of
-  // 11 Oct 2026), so it is the one thing here the script cannot read or set.
+  // Who can contribute: a collaborator opens a pull request or an issue. Issues stay on, with creation set to
+  // collaborators only by hand in the repository's settings: that setting has no API field (as of 11 Oct 2026), so it is
+  // the one thing here the script cannot read or set. Anyone may read the plan, on the requirements project and the
+  // generated wiki, and join a discussion (Roger, 18 Oct 2026); the wiki's editing is kept to collaborators by hand.
   repoField('pull_request_creation_policy', 'collaborators_only'),
   repoField('has_pull_requests', true),
   repoField('has_issues', true),
-  repoField('has_projects', false),
-  repoField('has_wiki', false),
-  repoField('has_discussions', false),
+  repoField('has_projects', true),
+  repoField('has_wiki', true),
+  repoField('has_discussions', true),
   repoField('delete_branch_on_merge', true),
   repoField('allow_auto_merge', true),
   // Secrets: scanned on every push, and refused at the gate.

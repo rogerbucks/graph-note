@@ -73,6 +73,63 @@ describe('the wiki', () => {
       assert.doesNotMatch(line.slice(0, line.lastIndexOf(' :')), /[:#;,]/, line);
   });
 
+  test('clusters the roadmap into phases, in order, each wave under one', () => {
+    const page = made()['Roadmap.md'];
+    const chart = page.match(/```mermaid\n([\s\S]*?)```/)[1];
+    const sections = [...chart.matchAll(/^ {2}section (.+)$/gm)].map((m) => m[1]);
+    assert.deepEqual(
+      sections.filter((s) => s !== 'Releases'),
+      ['Shipped', 'Now', 'Next', 'Later', 'Held'].filter((s) => sections.includes(s)),
+    );
+    assert.ok(sections.includes('Now') && sections.includes('Held'), sections.join());
+    const headings = [...page.matchAll(/^## (.+)$/gm)].map((m) => m[1]);
+    assert.deepEqual(
+      headings,
+      sections.filter((s) => s !== 'Releases'),
+    );
+    for (const w of json('requirements/waves.json').waves.filter((w) => w.workstreams.length))
+      assert.equal(page.split(`### ${w.title}\n`).length, 2, w.title);
+  });
+
+  test('puts a held wave under Held whatever its dates, and the two waves after now under Next', () => {
+    const waves = [
+      { title: 'Wave A', start: '2026-10-10', end: '2026-10-20', workstreams: [] },
+      { title: 'Wave B', start: '2026-10-21', end: '2026-10-30', workstreams: [] },
+      { title: 'Wave C', start: '2026-10-31', end: '2026-11-09', workstreams: [] },
+      { title: 'Wave D', start: '2026-11-10', end: '2026-11-19', workstreams: [] },
+      { title: 'Wave E · Held: later idea', start: '2026-11-20', end: '2026-11-29', workstreams: [] },
+    ];
+    const chart = made({ waves })['Roadmap.md'].match(/```mermaid\n([\s\S]*?)```/)[1];
+    assert.match(
+      chart,
+      /section Now\n {2}Wave A :active, [^\n]+\n {2}section Next\n {2}Wave B [^\n]+\n {2}Wave C [^\n]+\n/,
+    );
+    assert.match(chart, /section Later\n {2}Wave D [^\n]+\n {2}section Held\n {2}Wave E · Held  later idea /);
+  });
+
+  test('marks the first release of each minor version on the roadmap, and counts the releases under each wave', () => {
+    const waves = [
+      { title: 'Wave A', start: '2026-10-01', end: '2026-10-10', workstreams: [] },
+      { title: 'Wave B', start: '2026-10-11', end: '2026-10-20', workstreams: [] },
+    ];
+    const releases = [
+      { tagName: '0.5.1', name: '', publishedAt: '2026-10-12T09:00:00Z' },
+      { tagName: '0.5.0', name: '', publishedAt: '2026-10-11T09:00:00Z' },
+      { tagName: '0.4.2', name: '', publishedAt: '2026-10-03T09:00:00Z' },
+      { tagName: '0.4.1', name: '', publishedAt: '2026-10-02T09:00:00Z' },
+    ];
+    const page = made({ waves, releases })['Roadmap.md'];
+    const chart = page.match(/```mermaid\n([\s\S]*?)```/)[1];
+    assert.match(
+      chart,
+      /section Releases\n {2}0\.4\.1 :milestone, 2026-10-02, 0d\n {2}0\.5\.0 :milestone, 2026-10-11, 0d\n/,
+    );
+    assert.doesNotMatch(chart, /0\.4\.2|0\.5\.1/);
+    assert.match(page, /\| Wave A \| [^|]+ \| [^|]+ \| [^|]+ \| 2 \(0\.4\.1 to 0\.4\.2\) \|/);
+    assert.match(page, /\| Wave B \| [^|]+ \| [^|]+ \| [^|]+ \| 2 \(0\.5\.0 to 0\.5\.1\) \|/);
+    assert.doesNotMatch(made({ waves })['Roadmap.md'], /section Releases/);
+  });
+
   test('lists the releases GitHub gives, or the versions file without them', () => {
     assert.match(
       made()['Releases.md'],
