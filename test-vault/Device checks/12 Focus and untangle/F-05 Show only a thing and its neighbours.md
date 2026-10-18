@@ -39,4 +39,4 @@
 
 > **F-05** Open a box's details and press Show only this and its neighbours: the other boxes and their links disappear, and a banner names the box and the steps. Widen to two steps and Narrow to one step change it; Show the whole graph brings everything back.
 
-**Back to the checklist:** [F-05 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for F-05 in its list.
+**Back to the checklist:** [F-05 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for F-05 in its list.

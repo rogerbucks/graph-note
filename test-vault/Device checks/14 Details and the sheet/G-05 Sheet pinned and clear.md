@@ -45,4 +45,4 @@
 > so the box sits above the sheet. Scroll the note: the sheet stays where it is; scroll the card off the screen: the
 > sheet goes, and comes back with the card. Same on the Mac.
 
-**Back to the checklist:** [G-05 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for G-05 in its list.
+**Back to the checklist:** [G-05 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for G-05 in its list.

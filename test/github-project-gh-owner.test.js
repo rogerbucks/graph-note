@@ -13,7 +13,7 @@ import { issueNodeId, ownerId } from '../scripts/github-project-read.mjs';
 import { fakeGithub } from './repository/github-project-fake.js';
 import { FIXTURE, WORKSTREAMS } from './repository/github-project-fixture.js';
 
-const REPO = 'rogerbucks/graph-note';
+const REPO = 'rogerbucks/thoughtknot';
 const noSleep = () => {};
 const desired = desiredState(readBoard(FIXTURE), WORKSTREAMS, [3, 4]);
 const issueOf = (gh, id) => gh.hub.issues.find((i) => idOfBody(i.body) === id);
@@ -75,7 +75,7 @@ describe('making and filling the project through GraphQL', () => {
     const gh = fakeGithub();
     apply(gh, unknownOwnerType(gh));
     const [project] = gh.hub.projects;
-    assert.equal(project.title, 'graph-note requirements');
+    assert.equal(project.title, 'ThoughtKnot requirements');
     assert.equal(project.items.length, 5);
     const item = project.items.find((i) => i.number === issueOf(gh, 'focus_link').number);
     assert.equal(item.values.Proof, 'open');
@@ -87,7 +87,7 @@ describe('making and filling the project through GraphQL', () => {
     apply(gh);
     const queries = gh.hub.calls.filter((c) => c.args[1] === 'graphql').map((c) => JSON.parse(c.input));
     const made = queries.find((q) => /createProjectV2\(/.test(q.query));
-    assert.deepEqual(made.variables, { owner: 'OWNER_rogerbucks', title: 'graph-note requirements' });
+    assert.deepEqual(made.variables, { owner: 'OWNER_rogerbucks', title: 'ThoughtKnot requirements' });
     const added = queries.filter((q) => /addProjectV2ItemById\(/.test(q.query));
     assert.equal(added.length, 5);
     assert.ok(added.every((q) => /^ISSUE_\d+$/.test(q.variables.content)));
@@ -136,6 +136,6 @@ describe('an owner or a list that is not there', () => {
 
   test('is an error naming the issue that cannot be found to add to the project', () => {
     const gh = fakeGithub();
-    assert.throws(() => issueNodeId(gh.run, REPO, 99), /issue #99 of rogerbucks\/graph-note could not be found/);
+    assert.throws(() => issueNodeId(gh.run, REPO, 99), /issue #99 of rogerbucks\/thoughtknot could not be found/);
   });
 });

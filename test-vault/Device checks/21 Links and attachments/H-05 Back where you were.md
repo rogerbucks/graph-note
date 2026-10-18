@@ -26,4 +26,4 @@
 > **H-05** Zoom in, tap a box, then tap a link to a note in its details: the note opens in the same tab. Go back:
 > the graph is at the same zoom and place, with the same box selected and its details open.
 
-**Back to the checklist:** [H-05 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for H-05 in its list.
+**Back to the checklist:** [H-05 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for H-05 in its list.

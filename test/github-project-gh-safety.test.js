@@ -23,7 +23,7 @@ import { fakeGithub } from './repository/github-project-fake.js';
 import { FIXTURE, WORKSTREAMS } from './repository/github-project-fixture.js';
 
 const desired = desiredState(readBoard(FIXTURE), WORKSTREAMS, [3, 4]);
-const REPO = 'rogerbucks/graph-note';
+const REPO = 'rogerbucks/thoughtknot';
 
 /** A whole apply, recording the pauses it asks for. */
 const apply = (gh, run = gh.run) => {
@@ -83,48 +83,48 @@ describe('every call names where it goes', () => {
 
 describe('the repository gh points at', () => {
   test('is read and must be this checkout’s origin, whatever the case', () => {
-    assert.equal(pinRepo(fakeGithub().run, 'rogerbucks/graph-note'), 'rogerbucks/graph-note');
-    assert.equal(pinRepo(fakeGithub().run, 'RogerBucks/Graph-Note'), 'rogerbucks/graph-note');
+    assert.equal(pinRepo(fakeGithub().run, 'rogerbucks/thoughtknot'), 'rogerbucks/thoughtknot');
+    assert.equal(pinRepo(fakeGithub().run, 'RogerBucks/ThoughtKnot'), 'rogerbucks/thoughtknot');
   });
 
   test('is refused when it is another, naming both, before anything else is asked', () => {
     const gh = fakeGithub({ name: 'other' });
     assert.throws(
-      () => pinRepo(gh.run, 'rogerbucks/graph-note'),
-      /gh points at rogerbucks\/other.*origin is rogerbucks\/graph-note/s,
+      () => pinRepo(gh.run, 'rogerbucks/thoughtknot'),
+      /gh points at rogerbucks\/other.*origin is rogerbucks\/thoughtknot/s,
     );
     assert.equal(gh.hub.calls.length, 1, 'only the look at the repository was made');
   });
 
   test('is derived from the origin remote, in each of the ways a remote is written', () => {
     for (const url of [
-      'https://github.com/rogerbucks/graph-note.git',
-      'https://github.com/rogerbucks/graph-note',
-      'https://GitHub.com/rogerbucks/graph-note.git\n',
-      'https://github.com:443/rogerbucks/graph-note.git',
+      'https://github.com/rogerbucks/thoughtknot.git',
+      'https://github.com/rogerbucks/thoughtknot',
+      'https://GitHub.com/rogerbucks/thoughtknot.git\n',
+      'https://github.com:443/rogerbucks/thoughtknot.git',
     ])
-      assert.deepEqual(repoOfRemote(url), { host: 'github.com', repo: 'rogerbucks/graph-note' }, url);
+      assert.deepEqual(repoOfRemote(url), { host: 'github.com', repo: 'rogerbucks/thoughtknot' }, url);
   });
 
   test('gives the host too, and takes another only when one is handed in', () => {
     const only = { hosts: ['example.com'] };
     for (const url of [
-      'https://example.com/rogerbucks/graph-note.git\n',
-      'git@example.com:rogerbucks/graph-note.git',
-      'ssh://git@example.com/rogerbucks/graph-note.git',
+      'https://example.com/rogerbucks/thoughtknot.git\n',
+      'git@example.com:rogerbucks/thoughtknot.git',
+      'ssh://git@example.com/rogerbucks/thoughtknot.git',
     ])
-      assert.deepEqual(repoOfRemote(url, only), { host: 'example.com', repo: 'rogerbucks/graph-note' }, url);
+      assert.deepEqual(repoOfRemote(url, only), { host: 'example.com', repo: 'rogerbucks/thoughtknot' }, url);
   });
 
   test('is refused when the host is not github.com, naming the host', () => {
     for (const url of [
-      'https://example.com/rogerbucks/graph-note.git',
-      'git@example.com:rogerbucks/graph-note.git',
-      'ssh://git@example.com/rogerbucks/graph-note.git',
-      'https://github.com.example.net/rogerbucks/graph-note.git',
+      'https://example.com/rogerbucks/thoughtknot.git',
+      'git@example.com:rogerbucks/thoughtknot.git',
+      'ssh://git@example.com/rogerbucks/thoughtknot.git',
+      'https://github.com.example.net/rogerbucks/thoughtknot.git',
     ])
       assert.throws(() => repoOfRemote(url), /host.*not github\.com/s, url);
-    assert.throws(() => repoOfRemote('https://github.com/rogerbucks/graph-note', { hosts: ['example.com'] }), /host/);
+    assert.throws(() => repoOfRemote('https://github.com/rogerbucks/thoughtknot', { hosts: ['example.com'] }), /host/);
   });
 
   test('is not guessed from a remote that names no repository', () => {
@@ -135,8 +135,8 @@ describe('the repository gh points at', () => {
   test('is never echoed with its login or token: userinfo shows as ***', () => {
     const userinfo = 'zebra-quokka-17';
     for (const url of [
-      `https://someone:${userinfo}@example.com/rogerbucks/graph-note.git`,
-      `https://${userinfo}@example.com/rogerbucks/graph-note.git`,
+      `https://someone:${userinfo}@example.com/rogerbucks/thoughtknot.git`,
+      `https://${userinfo}@example.com/rogerbucks/thoughtknot.git`,
       `ssh://git:${userinfo}@example.com/only-owner`,
       `https://someone:${userinfo}@example.com/`,
       `bad ${userinfo}@example.com`,

@@ -30,4 +30,4 @@
 
 > **I-14** Tap a box so its properties show, then press Done (or the book icon). The properties stay open but read-only, as a tap shows them outside edit mode: no fields, no Add property, no x on a chip and no add box. Pressing Edit here again, and tapping the box, brings the editable properties back. Details closed before Done stay closed.
 
-**Back to the checklist:** [I-14 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-14 in its list.
+**Back to the checklist:** [I-14 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-14 in its list.

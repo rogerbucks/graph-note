@@ -29,4 +29,4 @@
 
 > **P-04** Names, kinds and relationships already in the graph are suggested while typing. On the desktop, Tab takes the first.
 
-**Back to the checklist:** [P-04 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for P-04 in its list.
+**Back to the checklist:** [P-04 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for P-04 in its list.

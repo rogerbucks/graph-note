@@ -27,4 +27,4 @@ Before you start, make the files: run `node scripts/reset-test-vault.mjs` in the
 > **K-01** Open the details of Ann: under Images, cat.gif, spin.png, dance.webp and loop.svg each move, each with its
 > name and a Pause button; a property naming an image outside the vault says it is not loaded, and shows nothing.
 
-**Back to the checklist:** [K-01 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for K-01 in its list.
+**Back to the checklist:** [K-01 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for K-01 in its list.

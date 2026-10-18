@@ -28,4 +28,4 @@
 
 > **V-07** Tapping a box shows its text, its kind, and its links in and out.
 
-**Back to the checklist:** [V-07 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for V-07 in its list.
+**Back to the checklist:** [V-07 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for V-07 in its list.

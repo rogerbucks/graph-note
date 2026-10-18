@@ -27,4 +27,4 @@
 
 > **P-13** A link type left without its colon is drawn as that type, with a ⚠ whose fix writes the colon. A new type written without its colon is an error that says to write it.
 
-**Back to the checklist:** [P-13 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for P-13 in its list.
+**Back to the checklist:** [P-13 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for P-13 in its list.

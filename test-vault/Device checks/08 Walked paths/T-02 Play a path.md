@@ -32,4 +32,4 @@
 
 > **T-02** Press Play \<title>: "Step 1 of 3: …" is shown and read by VoiceOver, the box outlined heavier; Next and Previous move one step, and stop at the ends; Stop playing clears it. Desktop and phone, light and dark.
 
-**Back to the checklist:** [T-02 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for T-02 in its list.
+**Back to the checklist:** [T-02 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for T-02 in its list.

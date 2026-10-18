@@ -25,14 +25,14 @@ The interface is at contract version <!-- wiki:host-version -->. The version cha
 ## What a host gives
 
 Read from
-[`packages/core/src/display/host.ts`](https://github.com/rogerbucks/graph-note/blob/main/packages/core/src/display/host.ts):
+[`packages/core/src/display/host.ts`](https://github.com/rogerbucks/thoughtknot/blob/main/packages/core/src/display/host.ts):
 
 <!-- wiki:host-members -->
 
 Obsidian's adapter is the shortest example:
-[`packages/obsidian/src/display-host.ts`](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/src/display-host.ts).
+[`packages/obsidian/src/display-host.ts`](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/src/display-host.ts).
 The browser editor's is
-[`packages/claude-code/page/browser-host.ts`](https://github.com/rogerbucks/graph-note/blob/main/packages/claude-code/page/browser-host.ts).
+[`packages/claude-code/page/browser-host.ts`](https://github.com/rogerbucks/thoughtknot/blob/main/packages/claude-code/page/browser-host.ts).
 
 ## Check your host
 

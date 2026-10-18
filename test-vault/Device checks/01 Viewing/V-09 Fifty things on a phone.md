@@ -74,4 +74,4 @@
 
 > **V-09** A 50-thing graph is drawn in under half a second on the phone (§11).
 
-**Back to the checklist:** [V-09 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for V-09 in its list.
+**Back to the checklist:** [V-09 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for V-09 in its list.

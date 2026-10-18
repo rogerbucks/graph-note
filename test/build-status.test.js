@@ -287,8 +287,8 @@ describe('the problem with the project token', () => {
 
 describe('the comment', () => {
   const links = {
-    repo: 'rogerbucks/graph-note',
-    runUrl: 'https://github.com/rogerbucks/graph-note/actions/runs/77',
+    repo: 'rogerbucks/thoughtknot',
+    runUrl: 'https://github.com/rogerbucks/thoughtknot/actions/runs/77',
     boardUrl: 'https://github.com/users/rogerbucks/projects/2',
   };
   const items = [
@@ -307,7 +307,7 @@ describe('the comment', () => {
     const text = commentBody({ ...links, stage: 'In PR', items, problems: [] });
     assert.match(
       text,
-      /- `focus_link` \(\[#12\]\(https:\/\/github\.com\/rogerbucks\/graph-note\/issues\/12\)\): Checks passing/,
+      /- `focus_link` \(\[#12\]\(https:\/\/github\.com\/rogerbucks\/thoughtknot\/issues\/12\)\): Checks passing/,
     );
     assert.match(text, /- `focus_neighbours` \(not on the board yet\)/);
   });
@@ -326,7 +326,7 @@ describe('the comment', () => {
   test('links the board and the run, and is short', () => {
     const text = commentBody({ ...links, stage: 'In PR', items, problems: [] });
     assert.match(text, /\[Board\]\(https:\/\/github\.com\/users\/rogerbucks\/projects\/2\)/);
-    assert.match(text, /\[Run\]\(https:\/\/github\.com\/rogerbucks\/graph-note\/actions\/runs\/77\)/);
+    assert.match(text, /\[Run\]\(https:\/\/github\.com\/rogerbucks\/thoughtknot\/actions\/runs\/77\)/);
     assert.ok(text.split('\n').length <= 10);
   });
 

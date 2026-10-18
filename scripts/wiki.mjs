@@ -24,7 +24,7 @@ import { roadmapPage } from './wiki-roadmap.mjs';
 import { SHOTS } from './wiki-screens.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const REPO = 'https://github.com/rogerbucks/graph-note';
+const REPO = 'https://github.com/rogerbucks/thoughtknot';
 const { read } = createRequire(import.meta.url)('../packages/graph-spec/src/graph-spec-check.js');
 
 /** The pages this script makes from the repository's files, beside the ones it copies from wiki/. */

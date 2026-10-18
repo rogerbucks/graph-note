@@ -75,4 +75,4 @@
 
 > **E-06** A graph of 51 things says it has too many to read in one drawing and offers Show as table and a view; Show as table draws it as a table.
 
-**Back to the checklist:** [E-06 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for E-06 in its list.
+**Back to the checklist:** [E-06 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for E-06 in its list.

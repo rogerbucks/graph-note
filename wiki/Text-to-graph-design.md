@@ -4,9 +4,9 @@ Give an AI a piece of text and get back a graph of the things, kinds and links i
 reject. Designed on 18 October 2026, against version 0.5.0, at Roger's request. Not built yet.
 
 The requirements are section 47 of
-[`requirements/editor-requirements.gql`](https://github.com/rogerbucks/graph-note/blob/main/requirements/editor-requirements.gql),
+[`requirements/editor-requirements.gql`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/editor-requirements.gql),
 slice 10, in workstream X1. They are built in Wave 19 of
-[`requirements/waves.json`](https://github.com/rogerbucks/graph-note/blob/main/requirements/waves.json), after the
+[`requirements/waves.json`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/waves.json), after the
 Obsidian community release (R2), because Roger's rule is that what he adds now goes after R2.
 
 ## Two doors, one contract
