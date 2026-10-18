@@ -32,9 +32,11 @@ from graphspec.style.picture import PICTURE_MARK, PICTURE_SIZE, picture_source  
 with open(os.path.join(HERE, "picture_cases.json"), encoding="utf-8") as f:
     CASES = json.load(f)["cases"]
 
-# The core's answer for each note: as the plugin draws a graph (packages/obsidian/src/block.ts and
-# view-block.ts), the style read for it and the drawing styled for the view it is drawn in
-# (style-source.ts, styledDrawing), laid out in each direction (render.ts, directions).
+# The core's answer for each note, as the plugin draws a graph (packages/obsidian/src/block.ts and
+# view-block.ts). It holds:
+# - the style read for it.
+# - the drawing styled for the view it is drawn in (style-source.ts, styledDrawing).
+# - laid out in each direction (render.ts, directions).
 CORE_SCRIPT = """
 const [src, cases] = [process.argv[1], JSON.parse(process.argv[2])];
 const { readNote } = await import(`${src}/drawing.ts`);
@@ -124,8 +126,8 @@ class Picture(unittest.TestCase):
         cls.python = [python_answer(texts_of(case), case.get("view")) for case in CASES]
 
     def test_the_same_boxes_have_a_picture(self):
-        # animated_image_shown: the same boxes drawn with a picture, from the same property (a
-        # plain loop, never subTest: the tests-first replay counts a test by its own result)
+        # animated_image_shown: the same boxes drawn with a picture, from the same property.
+        # A plain loop, never subTest. The tests-first replay counts a test by its own result.
         for case, ours, theirs in zip(CASES, self.python, self.core, strict=True):
             self.assertEqual(ours["pictures"], theirs["pictures"], case["name"])
 
@@ -135,8 +137,8 @@ class Picture(unittest.TestCase):
             self.assertEqual(ours["drawn"], theirs["drawn"], case["name"])
 
     def test_each_style_gives_the_cores_problems(self):
-        # the same problems for a Picture as the core's, at the same block and line, with the
-        # same words and fix: what cannot be used is left out by both
+        # The same problems for a Picture as the core's, at the same block and line. They have
+        # the same words and fix. What cannot be used is left out by both.
         for case, ours, theirs in zip(CASES, self.python, self.core, strict=True):
             self.assertEqual(ours["styles"], theirs["styles"], case["name"])
 

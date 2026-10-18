@@ -1,6 +1,7 @@
-// The quality baseline cannot be quietly loosened, and says where it was measured (spec §12, quality_ratchet). A baseline
-// committed worse than its parent's needs a recorded reason, as a measured run does; one that lacks a metric, or was
-// measured with tests left out, is refused; and a timing measured on another machine than the baseline's only warns.
+// The quality baseline cannot be quietly loosened, and says where it was measured (spec §12, quality_ratchet):
+// - A baseline committed worse than its parent's needs a recorded reason, as a measured run does.
+// - One that lacks a metric, or was measured with tests left out, is refused.
+// - A timing measured on another machine than the baseline's only warns.
 // Proved on tampered pairs of baselines, and on small repositories made for the purpose.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
@@ -186,7 +187,7 @@ describe('a baseline committed worse than its parent’s', () => {
   });
 });
 
-// No timing is enforced on any machine: test duration only warns, and the work is held by the benchmarks' instruction
+// No timing is enforced on any machine: test duration only warns. The work is held by the benchmarks' instruction
 // counts, which are held only against counts from the same machine (quality-instructions.test.js).
 describe('timings on another machine than the baseline’s', () => {
   const base = () => baseline().metrics;

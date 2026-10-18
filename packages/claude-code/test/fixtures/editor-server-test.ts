@@ -1,11 +1,13 @@
 // TEST ONLY — never built, never shipped. C0's stand-in for the note store (spec §26), and the editor server's process
-// run with it, so the threat tests have a running route to aim at. The real store is server/editor-store.ts (C1),
-// tried on a real vault in editor-store.test.js: notes opened for
-// the session by an id the server gave (cc_open_notes_only), real paths kept inside the vault (cc_no_escape), atomic
-// writes (cc_atomic_write) and drafts kept on a conflict (cc_write_if_unchanged). Here, a few notes are held in memory,
-// never a file, read and written by a plain name at /api/test-note/<name>, each write made only against the version it
-// names (If-Match), so a stale write is refused here too.
-//   node packages/claude-code/test/fixtures/editor-server-test.ts --serve   the server process, with these notes
+// run with it. So the threat tests have a running route to aim at. The real store is server/editor-store.ts (C1),
+// tried on a real vault in editor-store.test.js:
+// - notes opened for the session by an id the server gave (cc_open_notes_only);
+// - real paths kept inside the vault (cc_no_escape);
+// - atomic writes (cc_atomic_write), and drafts kept on a conflict (cc_write_if_unchanged).
+// Here, a few notes are held in memory, never a file. They are read and written by a plain name at
+// /api/test-note/<name>. Each write is made only against the version it names (If-Match). So a stale write is refused
+// here too.
+//   node packages/claude-code/test/fixtures/editor-server-test.ts --serve   the server process, with these notes.
 // Without --serve it only exports, so a test run that loads every file in a test folder starts nothing.
 import { createHash } from 'node:crypto';
 import { runEditorProcess } from '../../server/editor-process.ts';

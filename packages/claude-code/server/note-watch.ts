@@ -1,7 +1,7 @@
-// Watching an open note for changes on disk (spec §26, cc_redrawn_on_change). Its folder is watched, not the file, so a
-// note another program replaces by a rename, as most editors and our own write do, is still followed; fs.watch's burst
-// of events for one change is read once, `WATCH_DEBOUNCE_MS` after the last, well within the second the page has to
-// draw it again. The store is handed the watcher, so a test fires it by hand and never waits on a clock.
+// Watching an open note for changes on disk (spec §26, cc_redrawn_on_change). Its folder is watched, not the file. So a
+// note another program replaces by a rename is still followed. Most editors and our own write do that. fs.watch's burst
+// of events for one change is read once, `WATCH_DEBOUNCE_MS` after the last. That is well within the second the page
+// has to draw it again. The store is handed the watcher, so a test fires it by hand and never waits on a clock.
 import { watch } from 'node:fs';
 
 /** Watches `file` in `folder`, calling `changed` after it changes; gives back what stops watching. */

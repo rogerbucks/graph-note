@@ -1,9 +1,10 @@
 // A slice is done only when every one of its requirements is proved by a written test (spec §12, done_means_proved).
-// The requirements tooling says so: `sliceDone` in scripts/check-requirements.mjs, run as `--done <slice>`, says whether
-// a slice is done and lists each requirement still to prove with why, and the slice board says the same on its overview.
+// The requirements tooling says so. `sliceDone` in scripts/check-requirements.mjs, run as `--done <slice>`, says
+// whether a slice is done. It lists each requirement still to prove, with why. The slice board says the same on its
+// overview.
 //
-// Each case is seen on a tampered copy of the real file, so the check is proved against the file it guards: first every
-// test marked written and every file there, which makes a slice done, then one thing at a time taken away.
+// Each case is seen on a tampered copy of the real file, so the check is proved against the file it guards. First every
+// test is marked written and every file is there, which makes a slice done. Then one thing at a time is taken away.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';

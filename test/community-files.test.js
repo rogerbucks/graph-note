@@ -1,5 +1,7 @@
-// The community files (spec §13, community_files): a code of conduct that says how to report in private, a note that
-// the licence gives no right to the name, and the rule that every commit in a pull request is signed off.
+// The community files (spec §13, community_files). They are:
+// - a code of conduct that says how to report in private.
+// - a note that the licence gives no right to the name.
+// - the rule that every commit in a pull request is signed off.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { read } from './repository/repo.js';

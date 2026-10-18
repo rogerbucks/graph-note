@@ -1,7 +1,7 @@
-// The readings guessed for a relationship type that has none declared (vault task "Fix the lock guessing reverse
-// readings for types ending in a preposition", found 6 Oct 2026; one guess in the libraries, as decided 7 Oct): forward
-// and reverse, from the type's own words. The cases are reading-cases.json, which the Python library answers the same:
-// python/graph_spec/tests/test_graph_rules_readings.py.
+// The readings guessed for a relationship type that has none declared, forward and reverse, from the type's own words.
+// The vault task was "Fix the lock guessing reverse readings for types ending in a preposition", found 6 Oct 2026.
+// There is one guess in the libraries, as decided 7 Oct. The cases are reading-cases.json, which the Python library
+// answers the same: python/graph_spec/tests/test_graph_rules_readings.py.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
@@ -14,8 +14,8 @@ test('every type in the shared table reads as the table says, forward and revers
   for (const [type, reading, reverse] of cases) assert.deepEqual(gs.guessReadings(type), [reading, reverse], type);
 });
 
-// the cases found on 6 Oct 2026: the vault's lock wrote "is proved by by", "is part of by" and "is decided in by"; the
-// plugin's wrote "inverse of …" for all three
+// the cases found on 6 Oct 2026. The vault's lock wrote "is proved by by", "is part of by" and "is decided in by".
+// The plugin's wrote "inverse of …" for all three
 test('PROVED_BY reads "is proved by" and back "proves": never "is proved by by", nor a placeholder', () => {
   assert.deepEqual(gs.guessReadings('PROVED_BY'), ['is proved by', 'proves']);
 });

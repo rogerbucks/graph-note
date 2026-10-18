@@ -1,7 +1,8 @@
 // The browser editor's one Markdown renderer (spec §26, cc_one_renderer, cc_text_not_html): marked, with raw HTML turned
-// off. Every HTML tag a note writes comes out as escaped text, never as an element; a link is made only to a web or mail
-// address (any other kind is shown as its text and never run, safe_to_click); and an image is never loaded from anywhere
-// (cc_no_remote): it stays a link to where it is, or its description as text.
+// off.
+// - Every HTML tag a note writes comes out as escaped text, never as an element.
+// - A link is made only to a web or mail address. Any other kind is shown as its text and never run (safe_to_click).
+// - An image is never loaded from anywhere (cc_no_remote). It stays a link to where it is, or its description as text.
 import { Marked } from 'marked';
 import type { Tokens } from 'marked';
 
@@ -43,7 +44,7 @@ export function markdownHtml(markdown: string): string {
 
 /**
  * `markdown` rendered into `el`, replacing what it held. The HTML is parsed in a document of its own, which runs
- * nothing, and its nodes moved over: no HTML string is ever handed to the page.
+ * nothing. Then its nodes are moved over. No HTML string is ever handed to the page.
  */
 export function renderMarkdown(markdown: string, el: HTMLElement): void {
   const parsed = new DOMParser().parseFromString(`<body>${markdownHtml(markdown)}</body>`, 'text/html');

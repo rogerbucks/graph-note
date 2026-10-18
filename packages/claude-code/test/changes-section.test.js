@@ -1,7 +1,9 @@
-// The changes view in the browser editor (editor spec §41, changes_view): the page as built, in a DOM, against the real
-// server over a vault that is a git repository. "Compare with…" lists the note's earlier versions only once pressed;
-// the one picked is drawn with the note as it now is, each change marked by its line as well as its hue in the scheme's
-// colours, and listed in words; a note kept in no repository says why.
+// The changes view in the browser editor (editor spec §41, changes_view). The page runs as built, in a DOM. It runs
+// against the real server over a vault that is a git repository.
+// - "Compare with…" lists the note's earlier versions only once pressed.
+// - The one picked is drawn with the note as it now is.
+// - Each change is marked by its line as well as its hue in the scheme's colours, and listed in words.
+// - A note kept in no repository says why.
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';

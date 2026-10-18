@@ -1,6 +1,7 @@
-// Test support for the mod's editor tests (editor-mod.test.js): a host that starts a process as Claude Code's
-// `$.process.spawn` does (standard input closed at once, the output handed over piece by piece, the child killed when the
-// loop is left), a vault on disk in a temporary folder, and the launcher made over them. Test code only: nothing here ships.
+// Test support for the mod's editor tests (editor-mod.test.js). Test code only: nothing here ships. It holds:
+// - a host that starts a process as Claude Code's `$.process.spawn` does. Standard input is closed at once. The output
+//   is handed over piece by piece. The child is killed when the loop is left.
+// - a vault on disk in a temporary folder, and the launcher made over them.
 // The servers serve the page the build makes; it is built here first when it is not there, as in a fresh checkout.
 import { after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -18,9 +19,9 @@ import { ENTRY } from './editor-threats-support.js';
 export const PAGE = fileURLToPath(new URL('../mod/page/', import.meta.url));
 
 /**
- * Builds the page into `folder` unless it is built already. A server refuses to start with no page, and a fresh checkout
- * has none until something builds it: in CI the suite runs before `npm run build`, beside the build's own test, which
- * builds it only as these tests start their servers. Building in place is safe beside that test: neither removes a file.
+ * Builds the page into `folder` unless it is built already. A server refuses to start with no page. A fresh checkout
+ * has none until something builds it. In CI the suite runs before `npm run build`, beside the build's own test. That
+ * test builds it only as these tests start their servers. Building in place is safe beside that test: neither removes a file.
  */
 export async function pageReady(folder = PAGE) {
   if (!existsSync(join(folder, 'index.html'))) await buildPage(folder);
@@ -92,8 +93,10 @@ export function hostSpawn() {
 }
 
 /**
- * A vault with its `.obsidian` folder and two notes, a loose note in a folder with no vault above it, and a data folder
- * for drafts, all in a temporary folder removed when the file's tests end.
+ * A temporary folder, removed when the file's tests end. It holds:
+ * - a vault with its `.obsidian` folder and two notes;
+ * - a loose note in a folder with no vault above it;
+ * - a data folder for drafts.
  */
 export function modVault() {
   const top = mkdtempSync(join(tmpdir(), 'editor-mod-'));
@@ -142,7 +145,7 @@ export function writeNote(where, name, level, body = 'Some text.\n') {
 const PROPOSE = fileURLToPath(new URL('../bin/propose-process.ts', import.meta.url));
 
 /**
- * The proposal channel as the mod makes it: a key made for each start, and the request handed on the shipped sender's
+ * The proposal channel as the mod makes it. A key is made for each start. The request is handed on the shipped sender's
  * standard input (never an argument), as `$.process.run` runs it. The request is kept in `sent`.
  */
 export function proposalPorts(sent = []) {

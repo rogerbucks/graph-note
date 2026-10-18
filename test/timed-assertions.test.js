@@ -1,8 +1,9 @@
-// A test asserts the work done, never the time taken (spec §12, quality_ratchet, 12 Oct 2026): no JavaScript test, nor
-// its test support, asserts a span of elapsed time, read from performance.now(), Date.now(), process.hrtime(),
-// process.cpuUsage() or process.resourceUsage(). Proved on the repository's own tests, on the speed tests as they stood
-// before the benchmarks took their claims, and on examples planted for the purpose; and what is allowed is shown
-// allowed: a polling deadline, mock timers, a time compared with a file's, a clock handed to the code tested.
+// A test asserts the work done, never the time taken (spec §12, quality_ratchet, 12 Oct 2026). No JavaScript test, nor
+// its test support, asserts a span of elapsed time. Such a span is read from performance.now(), Date.now(),
+// process.hrtime(), process.cpuUsage() or process.resourceUsage(). It is proved on the repository's own tests, and on
+// the speed tests as they stood before the benchmarks took their claims. It is also proved on examples planted for the
+// purpose. What is allowed is shown allowed: a polling deadline, mock timers, a time compared with a file's, a clock
+// handed to the code tested.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';

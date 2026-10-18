@@ -1,7 +1,11 @@
 // The requirements check: CI reads the editor's requirements graph, the one source in the repo, with the repo's own
-// graph-spec reader, and fails when a requirement of a started slice is proved by no test, a test the repo holds is
-// missing, a test claims no requirement, a test's status is wrong, or the copy's banner has been edited. Spec §12,
-// requirements_checked_in_ci.
+// graph-spec reader. It fails when any of these hold:
+// - a requirement of a started slice is proved by no test;
+// - a test the repo holds is missing;
+// - a test claims no requirement;
+// - a test's status is wrong;
+// - the copy's banner has been edited.
+// Spec §12, requirements_checked_in_ci.
 //
 // Each case is seen on a tampered copy of the real file, so the check is proved against the file it guards.
 import { test, describe } from 'node:test';

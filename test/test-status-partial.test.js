@@ -1,7 +1,10 @@
-// A test has three statuses: planned (no file yet), partial (the file is there but does not yet prove every rule its
-// record covers, as when several workstreams add cases to one shared file over time) and written (it proves them all).
-// A partial test needs its file like a written one, never leaves a requirement proved, may be flipped to only from
-// planned and to written, and counts on the slice board as in progress. Small graphs stand in for the real copy.
+// A test has three statuses:
+// - planned: no file yet.
+// - partial: the file is there, but does not yet prove every rule its record covers. This happens when several
+//   workstreams add cases to one shared file over time.
+// - written: it proves them all.
+// A partial test needs its file like a written one, and never leaves a requirement proved. It may be flipped to only
+// from planned, and to written. It counts on the slice board as in progress. Small graphs stand in for the real copy.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { auditRequirements, sliceDone } from '../scripts/check-requirements.mjs';

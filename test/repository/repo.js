@@ -53,8 +53,8 @@ export const sourceFiles = () =>
 export const workflowFiles = () => walk('.github/workflows').filter((f) => /\.ya?ml$/.test(f));
 
 // ── Workflow YAML, read by indentation ──
-// The workflows are ours and written in plain block style, so a reader of
-// indentation is enough and keeps a YAML parser out of the dependencies.
+// The workflows are ours and written in plain block style. So a reader of
+// indentation is enough, and keeps a YAML parser out of the dependencies.
 
 export const stripComment = (line) => line.replace(/\s+#.*$/, '').replace(/^\s*#.*$/, '');
 
@@ -117,8 +117,8 @@ export const runCommands = (text) =>
 
 // ── Source scanners ──
 
-// Obsidian's `request(` too, the older form of requestUrl: written as code writes a call, with no space, so a sentence
-// such as "refused the request (HTTP 503)" is not taken for one
+// Obsidian's `request(` too, the older form of requestUrl. It is written as code writes a call, with no space. So a
+// sentence such as "refused the request (HTTP 503)" is not taken for one
 const NETWORK =
   /\bfetch\s*\(|\bXMLHttpRequest\b|\bWebSocket\b|\brequestUrl\b|\brequest\(|\bEventSource\b|\bsendBeacon\b/;
 export const findsNetwork = (code) => NETWORK.test(code);

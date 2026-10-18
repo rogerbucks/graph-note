@@ -1,10 +1,12 @@
 // The plugin reaches the network for one thing only. Spec §13 and §19: no network request at runtime, except a send to
-// an AI model the user has set up, made only when the user sends it, and only by the plugin's AI send module
-// (packages/obsidian/src/ai/send.ts, which test/policy.test.js holds to be the one source that can). Everything else is
-// held strictly here: the Graphviz engine the plugin bundles carries Emscripten code that could fetch a WebAssembly file
-// or a lazy file by URL, and this package inlines its WebAssembly, so that code must never run; and the core's own AI
-// send reaches no network of its own, going only through the transport a host hands it. Here every way to reach the
-// network is a trap that records the attempt.
+// an AI model the user has set up. That send is made only when the user sends it. Only the plugin's AI send module
+// makes it (packages/obsidian/src/ai/send.ts). test/policy.test.js holds that to be the one source that can.
+//
+// Everything else is held strictly here:
+// - The Graphviz engine the plugin bundles carries Emscripten code that could fetch a WebAssembly file or a lazy file
+//   by URL. This package inlines its WebAssembly, so that code must never run.
+// - The core's own AI send reaches no network of its own. It goes only through the transport a host hands it.
+// Here every way to reach the network is a trap that records the attempt.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 

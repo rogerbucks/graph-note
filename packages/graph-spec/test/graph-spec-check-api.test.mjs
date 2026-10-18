@@ -1,6 +1,6 @@
-// The entry point, src/graph-spec-check.js, gathers the feature modules into the API the library has always had: the
-// same names, in the same order, as the one file exported before it was split into modules (9 Oct 2026). Pages, the
-// plugin and the vault's conformance suite call these names, so none is lost, renamed or added by accident.
+// The entry point, src/graph-spec-check.js, gathers the feature modules into the API the library has always had. It
+// has the same names, in the same order, as the one file exported before it was split into modules (9 Oct 2026). Pages,
+// the plugin and the vault's conformance suite call these names, so none is lost, renamed or added by accident.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
@@ -70,7 +70,8 @@ const NAMES = [
   'ownedComments',
   'quote', // a text quoted as the profile writes it (req:3.gql-escapes, 11 Oct 2026)
   'notes', // the notes on things and links, and the lines a note above belongs to none of (editor spec §24, 13 Oct 2026)
-  // the statements of a change set as the check reads them, so the editor reads and names a change as it does (16 Oct 2026)
+  // the statements of a change set as the check reads them, so the editor reads and names a change as it does (16 Oct
+  // 2026)
   'splitChangeset',
   'readChange',
   'changeId',

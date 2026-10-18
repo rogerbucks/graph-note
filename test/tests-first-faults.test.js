@@ -1,5 +1,5 @@
 // A test that failed at its own commit is kept in the record as a fault, not replayed. --excuse --fault keeps the reason
-// it failed there, in test/seen-failing/, and then --tally counts the fault as excused, and --check does not warn of it.
+// it failed there, in test/seen-failing/. Then --tally counts the fault as excused, and --check does not warn of it.
 // A reason is kept only for a test the records hold as a fault. Tried on small repositories made for the purpose.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

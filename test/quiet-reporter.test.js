@@ -1,7 +1,7 @@
-// The quiet reporter (scripts/quiet-reporter.mjs) when a failure cannot be passed on whole: the test runner copies each
-// failure from the process that ran it, and an assertion whose values hold a function, a DOM node or anything else it
-// cannot copy arrives as an empty object with no prototype. The run still reports every failure and its file, says the
-// details were lost, and fails; it never crashes, which would lose the rest of the run's report.
+// The quiet reporter (scripts/quiet-reporter.mjs) when a failure cannot be passed on whole. The test runner copies each
+// failure from the process that ran it. An assertion whose values hold a function, a DOM node or anything else it
+// cannot copy arrives as an empty object with no prototype. The run still reports every failure and its file. It says
+// the details were lost, and fails. It never crashes, which would lose the rest of the run's report.
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';

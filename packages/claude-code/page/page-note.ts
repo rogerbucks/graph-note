@@ -1,9 +1,12 @@
-// The note behind the block editor on the browser editor's page (spec §26; cc_editor_opens, cc_same_bytes): what Obsidian's
-// `BlockNote` is to the vault, this is to the editor server's note store. The editor is the display layer's, the same one
-// Obsidian runs; every write is made by the core's session (`EditorSession` over `PaneSession`) from the note as the page
-// last had it and sent whole, against that version, so the server refuses one made over a change it has not seen
-// (cc_write_if_unchanged) and the note written is byte for byte the one Obsidian would write for the same edit. A refused
-// write keeps what was typed as the server's draft, and the block is shown as the note now has it, as the pane's is.
+// The note behind the block editor on the browser editor's page (spec §26; cc_editor_opens, cc_same_bytes). What
+// Obsidian's `BlockNote` is to the vault, this is to the editor server's note store. The editor is the display layer's,
+// the same one Obsidian runs.
+// - The core's session (`EditorSession` over `PaneSession`) makes every write, from the note as the page last had it.
+// - The write is sent whole, against that version.
+// - So the server refuses one made over a change it has not seen (cc_write_if_unchanged).
+// - The note written is byte for byte the one Obsidian would write for the same edit.
+// A refused write keeps what was typed as the server's draft. The block is shown as the note now has it, as the pane's
+// is.
 import { declareDeferred, declareDeferredBlock, indentText, lockBlock } from '@thoughtknot/core';
 import type { PaneSession, Settings } from '@thoughtknot/core';
 import { NOTE_DELETED } from '@thoughtknot/core/display/editor/editor-note';
@@ -114,9 +117,9 @@ export class PageNote implements EditorNote {
   }
 
   /**
-   * One write, undo, redo or lock at a time: each is made from the note as the one before it left it, against the version
-   * the server gave for that, so a write begun while another is on its way is never made over it (the vault's own
-   * `process` does this for Obsidian's pane).
+   * One write, undo, redo or lock at a time. Each is made from the note as the one before it left it. It is made
+   * against the version the server gave for that. So a write begun while another is on its way is never made over it.
+   * The vault's own `process` does this for Obsidian's pane.
    */
   private tail: Promise<unknown> = Promise.resolve();
   private queued<T>(work: () => Promise<T>): Promise<T> {
@@ -220,9 +223,10 @@ export class PageNote implements EditorNote {
   }
 
   /**
-   * Sends what the session made of a write, undo or redo: the note whole, against the version it was made on. A refusal by
-   * the session is the pane's own; a stale write (409) takes the note as it now is, the block reloaded, with what was
-   * typed kept as a draft; a deleted note or any other failure keeps it too. Nothing is ever applied over a change unseen.
+   * Sends what the session made of a write, undo or redo: the note whole, against the version it was made on. A refusal
+   * by the session is the pane's own. A stale write (409) takes the note as it now is, and the block is reloaded. What
+   * was typed is kept as a draft. A deleted note or any other failure keeps it too. Nothing is ever applied over a
+   * change unseen.
    */
   private async send(w: ToWrite, s: PaneSession): Promise<Refused | null> {
     const typed = s.text;

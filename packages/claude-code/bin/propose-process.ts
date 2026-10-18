@@ -1,8 +1,11 @@
-// Sends Claude's proposal to the editor's server, for the Claude Code host (spec §26, cc_claude_proposes): run by node as a
-// process, because a mod has no network. The request comes in on standard input as one JSON object, `{port, note, key,
-// body}`, so the key is in no argument and in no command line; it goes to 127.0.0.1 alone, to the one proposal route
-// (`PUT /api/notes/<id>/proposal`), with the server's own origin as a write needs. The answer goes out on standard output as
-// `{status, text}`; nothing else is written, and a failure says only that the editor could not be reached.
+// Sends Claude's proposal to the editor's server, for the Claude Code host (spec §26, cc_claude_proposes). Node runs it
+// as a process, because a mod has no network.
+// - The request comes in on standard input as one JSON object, `{port, note, key, body}`.
+// - So the key is in no argument and in no command line.
+// - It goes to 127.0.0.1 alone, to the one proposal route (`PUT /api/notes/<id>/proposal`).
+// - It carries the server's own origin, as a write needs.
+// - The answer goes out on standard output as `{status, text}`. Nothing else is written.
+// - A failure says only that the editor could not be reached.
 import { request } from 'node:http';
 
 interface Sending {

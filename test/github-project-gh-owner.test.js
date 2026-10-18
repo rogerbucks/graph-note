@@ -1,8 +1,9 @@
-// The GitHub mirror and the build status find, make and fill the project through GraphQL, by the owner’s login, and never with
-// a `gh project` verb that asks gh to resolve the owner’s type first: for a token with only the project scope that fails
-// with "unknown owner type". An owner that cannot be found, or an answer with no list of projects, is an error naming the
-// owner, never taken for no projects (which would make the project a second time). Every case runs against an in-memory
-// stand-in for gh, so no network is touched. Editor spec §12, requirements_checked_in_ci.
+// The GitHub mirror and the build status find, make and fill the project through GraphQL, by the owner’s login. They
+// never use a `gh project` verb that asks gh to resolve the owner’s type first. For a token with only the project
+// scope, that fails with "unknown owner type". An owner that cannot be found is an error naming the owner. So is an
+// answer with no list of projects. Neither is taken for no projects, which would make the project a second time.
+// Every case runs against an in-memory stand-in for gh, so no network is touched. Editor spec §12,
+// requirements_checked_in_ci.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readBoard } from '../scripts/slice-board.mjs';

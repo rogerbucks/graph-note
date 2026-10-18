@@ -1,15 +1,15 @@
 // The editor's note store (spec §26, slice 4; workstream C1): the API the server hands every call that passed its
-// checks. Notes are read and written only by an id the store gave when the note was opened for the session
-// (cc_open_notes_only); a path never comes from the page. Each note's place is checked when it is opened and again
-// before every read and write (cc_no_escape, note-place.ts). A write names the version it was made against, compared
-// under a lock for the note, and goes by way of a temporary file renamed into place (cc_write_if_unchanged,
-// cc_atomic_write); one refused keeps what was typed as a draft, outside the vault (cc_drafts_outside). A change on disk
-// is streamed to the page (cc_redrawn_on_change). Once stopped it starts no write, and its stop waits for those under
-// way, so the process never exits half way through one (C0 review).
-//   GET notes/<id>          {text, version, draft}, the version also as the ETag
-//   PUT notes/<id>          the new text, If-Match its version: {version}; 409 {text, version, draft} when stale
-//   PUT notes/<id>/draft    what was typed, kept as the note's draft; an empty one clears it
-//   GET notes/<id>/events   a stream, a JSON object to a line: {version, text} now and on each change, or {gone}
+// checks. Notes are read and written only by an id the store gave when the note was opened for the session. A path
+// never comes from the page (cc_open_notes_only). Each note's place is checked when it is opened and again before every
+// read and write (cc_no_escape, note-place.ts). A write names the version it was made against. That is compared under a
+// lock for the note. It goes by way of a temporary file renamed into place (cc_write_if_unchanged, cc_atomic_write).
+// One refused keeps what was typed as a draft, outside the vault (cc_drafts_outside). A change on disk is streamed to
+// the page (cc_redrawn_on_change). Once stopped it starts no write. Its stop waits for those under way, so the process
+// never exits half way through one (C0 review).
+//   GET notes/<id>          {text, version, draft}, the version also as the ETag.
+//   PUT notes/<id>          the new text, If-Match its version: {version}. 409 {text, version, draft} when stale.
+//   PUT notes/<id>/draft    what was typed, kept as the note's draft. An empty one clears it.
+//   GET notes/<id>/events   a stream, a JSON object to a line: {version, text} now and on each change, or {gone}.
 //   GET notes/<id>/versions, /at/<commit>, /reviews…  its earlier versions and its repository's changes (editor-changes.ts)
 import { randomBytes } from 'node:crypto';
 import { promises as fs } from 'node:fs';
@@ -36,9 +36,10 @@ export interface NoteStoreOptions {
   /** The file operations a note's write is made of; Node's own unless a test hands in its own. */
   files?: NoteFiles;
   /**
-   * What is asked before any text of a note is sent (cc_classified_asks, cc_credential_never): on each read, on the
-   * change stream's first line and each change, in the answer to a stale write, and for a draft. The shipped server
-   * always hands one in; a store made without one sends everything, which only the store's own tests do.
+   * What is asked before any text of a note is sent (cc_classified_asks, cc_credential_never). It is asked on each
+   * read, and on the change stream's first line and each change. Also in the answer to a stale write, and for a draft.
+   * The shipped server always hands one in. A store made without one sends everything, which only the store's own tests
+   * do.
    */
   gate?: NoteGate;
   /** The name Claude's proposals are made by, the model named Claude in the settings; `Claude` when none is given. */
@@ -143,8 +144,9 @@ export class NoteStore {
   }
 
   /**
-   * Opens a note for the session, by its path inside the vault or a full one, as the mod names it (never the page): the
-   * id the page will use, the same for a note already open however it was reached; or why it may not be opened.
+   * Opens a note for the session, by its path inside the vault or a full one, as the mod names it (never the page). It
+   * gives the id the page will use. That is the same for a note already open, however it was reached. Or it gives why
+   * it may not be opened.
    */
   async open(given: string): Promise<Opened> {
     if (this.stopped) return { ok: false, why: 'The editor has stopped.' };
@@ -297,10 +299,10 @@ export class NoteStore {
   }
 
   /**
-   * Claude's proposal, written beside the graph as a change set and never applied (cc_claude_proposes). Made under the
-   * note's lock from the note as it is on disk now, after the same gate as any send, and again on the text it would
-   * write; written whole by the same temporary file and rename as any write, so a failure leaves the note as it was.
-   * The page is sent the note as it now is. Only the page's own write applies a change.
+   * Claude's proposal, written beside the graph as a change set and never applied (cc_claude_proposes). It is made
+   * under the note's lock, from the note as it is on disk now. It passes the same gate as any send, and again on the
+   * text it would write. It is written whole by the same temporary file and rename as any write. So a failure leaves
+   * the note as it was. The page is sent the note as it now is. Only the page's own write applies a change.
    */
   private propose(id: string, body: string): Promise<ApiAnswer> {
     return this.counted(

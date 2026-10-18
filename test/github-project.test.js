@@ -1,6 +1,7 @@
-// The GitHub mirror of the requirements, as a person runs it: the real requirements copy and the real workstreams file,
-// and the command line — dry run by default, with no network call. Applying is proved against a stand-in for gh in
-// github-project-gh.test.js; nothing here applies anything. Editor spec §12, requirements_checked_in_ci.
+// The GitHub mirror of the requirements, as a person runs it. It uses the real requirements copy and the real
+// workstreams file, and the command line — dry run by default, with no network call. Applying is proved against a
+// stand-in for gh in github-project-gh.test.js; nothing here applies anything. Editor spec §12,
+// requirements_checked_in_ci.
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';

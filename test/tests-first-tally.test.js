@@ -1,7 +1,8 @@
-// The tests-first replay's --tally (spec §12, tests_first; the rest of its command line is tests-first-command.test.js): it
-// prints what the records prove as JSON, for a reader outside the repository, and writes nothing. Split from
-// tests-first-command.test.js on 11 Oct 2026, so the suite runs it beside the others; each test works on its own copy of
-// a repository recorded once, as recording it again for each would only repeat the same replay.
+// The tests-first replay's --tally (spec §12, tests_first). The rest of its command line is in
+// tests-first-command.test.js. It prints what the records prove as JSON, for a reader outside the repository, and
+// writes nothing. Split from tests-first-command.test.js on 11 Oct 2026, so the suite runs it beside the others. Each
+// test works on its own copy of a repository recorded once. Recording it again for each would only repeat the same
+// replay.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';

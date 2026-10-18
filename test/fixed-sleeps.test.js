@@ -1,7 +1,7 @@
-// No new fixed sleep in the tests (spec §12, quality_ratchet: flaky tests, 15 Oct 2026): a test waits for the state it
+// No new fixed sleep in the tests (spec §12, quality_ratchet: flaky tests, 15 Oct 2026). A test waits for the state it
 // asserts, never a number of milliseconds. Those already there are held, file by file, to an allowance that only goes
-// down. Proved on the repository's own tests, and on sleeps planted for the purpose; and what is allowed is shown
-// allowed: a poll in a loop, a sleep written in a string, a wait for a number handed in.
+// down. Proved on the repository's own tests, and on sleeps planted for the purpose. What is allowed is shown allowed:
+// a poll in a loop, a sleep written in a string, a wait for a number handed in.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';

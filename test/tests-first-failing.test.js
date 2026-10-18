@@ -1,6 +1,6 @@
-// The replay of a commit (tests-first.test.js) when a new test fails at its own commit: it is kept in the record as not
-// replayed, or, when it passes run again, fails the record. Split from tests-first-keeping.test.js on 11 Oct 2026, so the
-// suite runs them side by side.
+// The replay of a commit (tests-first.test.js) when a new test fails at its own commit. It is kept in the record as not
+// replayed. Or, when it passes run again, it fails the record. Split from tests-first-keeping.test.js on 11 Oct 2026,
+// so the suite runs them side by side.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync } from 'node:fs';
@@ -14,10 +14,10 @@ const JS_TEST = (body) =>
   `import { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { twice } from '../src/twice.js';\n${body}\n`;
 
 describe('a new test failing at its own commit', () => {
-  // found on 10 Oct 2026: time-budget tests failing at their own commit under load dropped out of the record unnoticed,
-  // and its count of tests seen failing first fell by one each (layout-worker 26 to 25, partial-read 14 to 13). Since the
-  // review of #69 the commit is recorded with the fault kept, as not replayed: a test may come a commit before its code
-  // (Roger, 10 Oct 2026), and CI asks that every commit that changed a test have its record
+  // found on 10 Oct 2026: time-budget tests failing at their own commit under load dropped out of the record unnoticed.
+  // Its count of tests seen failing first fell by one each (layout-worker 26 to 25, partial-read 14 to 13). Since the
+  // review of #69, the commit is recorded with the fault kept, as not replayed. A test may come a commit before its
+  // code (Roger, 10 Oct 2026). CI asks that every commit that changed a test have its record
   test('is kept in the record as not replayed, naming the test and commit: it is never dropped', () => {
     const r = repository([
       { 'src/twice.js': 'export const twice = (x) => x;\n', 'test/twice.test.js': JS_TEST("test('one', () => {});") },
@@ -49,7 +49,7 @@ describe('a new test failing at its own commit', () => {
     }
   });
 
-  // review of #69: the time-budget guard of 10 Oct 2026, kept: a test that failed only under load must be run again,
+  // review of #69: the time-budget guard of 10 Oct 2026, kept. A test that failed only under load must be run again,
   // never kept as a fault for good
   test('one that fails at its own commit once, and passes run again, fails the record, so it is run again: never kept', () => {
     const markers = mkdtempSync(join(tmpdir(), 'tests-first-marker-'));

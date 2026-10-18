@@ -1,8 +1,8 @@
-// The page's calls to the editor server that served it (spec §26): the session's token and the note's id come in the
-// address's fragment, which a browser never sends, and are taken out of the address as they are read (cc_token_unkept).
-// The token is kept in memory, in this closure, and nowhere else. Every call is to a path from the server's own root, so
-// the page reaches no other origin (cc_no_remote, cc_offline); and the page only reads: settings are the mod's
-// (cc_settings_shared), and a note is written by the session in a later workstream, never here.
+// The page's calls to the editor server that served it (spec §26). The session's token and the note's id come in the
+// address's fragment, which a browser never sends. They are taken out of the address as they are read
+// (cc_token_unkept). The token is kept in memory, in this closure, and nowhere else. Every call is to a path from the
+// server's own root. So the page reaches no other origin (cc_no_remote, cc_offline). And the page only reads. Settings
+// are the mod's (cc_settings_shared). The session writes a note in a later workstream, never here.
 import { settingsFrom } from '../../core/src/settings.ts';
 import type { Settings } from '../../core/src/settings.ts';
 import type { PageVersion } from './changes-section.ts';

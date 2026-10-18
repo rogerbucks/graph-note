@@ -1,6 +1,7 @@
-// Graphviz for the Claude Code host (spec §10; decision of 11 Oct 2026): a mod has no WebAssembly, so the core's own
+// Graphviz for the Claude Code host (spec §10; decision of 11 Oct 2026). A mod has no WebAssembly. So the core's own
 // engine runs as a process through node, DOT in and SVG out (bin/render-process.ts). When node is missing it is said in
-// words, so the pane shows the graph as text with the reason, never a blank drawing; any other failure says what it was.
+// words. So the pane shows the graph as text with the reason, never a blank drawing. Any other failure says what it
+// was.
 import { LAYOUT_LIMITS } from '@thoughtknot/core';
 
 /** What a process gave back, as the host's `$.process.run` resolves it. */
@@ -40,8 +41,9 @@ const messageOf = (err: unknown) => firstLines(err instanceof Error ? err.messag
 const NOT_THERE = /ENOENT|not found|no such file|cannot find/i;
 
 /**
- * After a run was refused, asks node itself whether it starts: a missing node is told apart from a layout that did not
- * finish, and from a host that runs no process at all, which is said in its own words, not as a missing node.
+ * After a run was refused, asks node itself whether it starts. A missing node is told apart from a layout that did not
+ * finish. It is told apart from a host that runs no process at all, too. That is said in its own words, not as a
+ * missing node.
  */
 async function whyRefused(run: RunProcess, err: unknown): Promise<string> {
   try {

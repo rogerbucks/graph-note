@@ -1,4 +1,4 @@
-// The thin layer between the GitHub mirror's plan and the gh command: reading what GitHub holds, and doing the plan with
+// The thin layer between the GitHub mirror's plan and the gh command. It reads what GitHub holds. It does the plan with
 // gh issue, gh label, gh project and gh api graphql. Every case runs against an in-memory stand-in for gh
 // (test/repository/github-project-fake.js) handed in as the runner, so no network is touched. Editor spec §12,
 // requirements_checked_in_ci.

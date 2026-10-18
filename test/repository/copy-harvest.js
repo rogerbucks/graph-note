@@ -1,7 +1,7 @@
-// The messages a view gives its reader (editor spec §41, ux_copy_auto): its words, gathered as a reader meets them, and
-// the names, hints and titles a screen reader or a pointer gives. What comes from the person's own note is left out (the
-// drawing, the graph's text version, the text being edited, code), as the words there are theirs, not ours. Runs on
-// jsdom and on the Obsidian host's fake DOM. Test support only.
+// The messages a view gives its reader (editor spec §41, ux_copy_auto). That is its words, gathered as a reader meets
+// them, and the names, hints and titles a screen reader or a pointer gives. What comes from the person's own note is
+// left out, as the words there are theirs, not ours. That is the drawing, the graph's text version, the text being
+// edited, and code. Runs on jsdom and on the Obsidian host's fake DOM. Test support only.
 
 /** Parts whose words are the person's own: drawings, text versions of them, the text being edited and code. */
 const THEIRS = [

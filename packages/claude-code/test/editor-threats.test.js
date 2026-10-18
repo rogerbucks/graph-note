@@ -1,9 +1,11 @@
-// The editor server's threat model (spec §26, slice 4; test_cc_threats), each threat proved against the running server,
-// started here on a port the system chooses and stopped after: loopback only, wrong Host, wrong Origin, no token, a
-// wrong token, a token in the address, a stale write, an oversized body, the content security policy, no CORS, a path
-// escape (on the test-only note route of fixtures/editor-server-test.ts; the real note store is C1), the server's own
-// limits, no outgoing request, and the idle stop. The idle stop is driven by a clock handed in, never by waiting: a
-// test asserts the work done, never the time taken. The process itself is tried in editor-threats-process.test.js.
+// The editor server's threat model (spec §26, slice 4; test_cc_threats). Each threat is proved against the running
+// server, started here on a port the system chooses and stopped after. The threats:
+// - loopback only, wrong Host, wrong Origin, no token, a wrong token, a token in the address;
+// - a stale write, an oversized body, the content security policy, no CORS;
+// - a path escape (on the test-only note route of fixtures/editor-server-test.ts; the real note store is C1);
+// - the server's own limits, no outgoing request, and the idle stop.
+// The idle stop is driven by a clock handed in, never by waiting. A test asserts the work done, never the time taken.
+// The process itself is tried in editor-threats-process.test.js.
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
@@ -422,12 +424,13 @@ describe('no outgoing request (cc_no_remote)', () => {
     });
     const [output] = Object.values(built.metafile.outputs);
     const external = [...new Set(output.imports.filter((i) => i.external).map((i) => i.path))].sort();
-    // node:path names the note's place for the store the process now serves (C2), and node:fs/promises and node:url
-    // find and read the page's own files in the folder beside it (C5); none of them opens a connection.
-    // node:child_process runs git, to read the open note's earlier versions for the changes view (changes_view, Roger,
-    // 17 Oct 2026): one execFile of git, with every transport refused and no lazy fetch. And it runs the user's own gh,
-    // the one request that leaves the machine, made only when the user asks to review their repository's changes
-    // (github_review_items, Roger, 17 Oct 2026): one execFile of gh, for GET alone on github.com, handed no token.
+    // node:path names the note's place for the store the process now serves (C2). node:fs/promises and node:url
+    // find and read the page's own files in the folder beside it (C5). None of them opens a connection.
+    // node:child_process runs git, to read the open note's earlier versions for the changes view. That is one execFile
+    // of git, with every transport refused and no lazy fetch (changes_view, Roger, 17 Oct 2026). It also runs the user's
+    // own gh, the one request that leaves the machine. It is made only when the user asks to review their repository's
+    // changes. That is one execFile of gh, for GET alone on github.com, handed no token (github_review_items, Roger,
+    // 17 Oct 2026).
     assert.deepEqual(external, [
       'node:child_process',
       'node:crypto',

@@ -1,6 +1,6 @@
 // Claude's level from the destination matrix, in the mod and in the server (editor spec §26, cc_classified_asks;
-// §19, model_ceiling): the mod reads the matrix note named in the settings, inside the vault only, and hands the server
-// the row, the switches, the class names and the rows read, so both gates give the same answer on the same inputs; a
+// §19, model_ceiling). The mod reads the matrix note named in the settings, inside the vault only. It hands the server
+// the row, the switches, the class names and the rows read. So both gates give the same answer on the same inputs. A
 // matrix note that cannot be read, or lies outside the vault, fails both closed. The core's rule is tested in
 // packages/core/test/claude-gate.test.js and packages/core/test/ai-matrix.test.js.
 import { describe, test } from 'node:test';

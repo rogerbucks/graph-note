@@ -1,7 +1,9 @@
-// A note's file read and written (spec §26, cc_atomic_write, cc_write_if_unchanged): read whole within the core's read
-// limit for a note, never through a link at its last step, as UTF-8 that must decode exactly, with its version the
-// SHA-256 of its bytes; written to a new temporary file beside it, flushed to the disk, then renamed into place, so the
-// note on disk is always the old one whole or the new one whole. On any failure the temporary file is removed.
+// A note's file read and written (spec §26, cc_atomic_write, cc_write_if_unchanged).
+// - It is read whole, within the core's read limit for a note, and never through a link at its last step.
+// - It is read as UTF-8 that must decode exactly. Its version is the SHA-256 of its bytes.
+// - It is written to a new temporary file beside it, flushed to the disk, then renamed into place. So the note on disk
+//   is always the old one whole or the new one whole.
+// On any failure the temporary file is removed.
 import { createHash, randomBytes } from 'node:crypto';
 import { constants, promises as fs } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
@@ -64,8 +66,8 @@ export async function readNoteFile(real: string): Promise<NoteText> {
   try {
     const stat = await file.stat();
     if (!stat.isFile()) return { ok: false, why: 'The note is no longer a file.' };
-    // the path still leads nowhere but itself, so no folder swapped for a link since it was checked is read through
-    // (`lstat` alone follows such a folder as `open` did); then the file opened is the one at the path now
+    // the path still leads nowhere but itself. So no folder swapped for a link since it was checked is read through
+    // (`lstat` alone follows such a folder as `open` did). Then the file opened is the one at the path now
     if ((await fs.realpath(real).catch(() => null)) !== real)
       return { ok: false, why: 'The note’s folder was moved or replaced.' };
     const there = await fs.lstat(real).catch(() => null);

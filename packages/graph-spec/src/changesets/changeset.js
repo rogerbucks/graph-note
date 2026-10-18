@@ -22,8 +22,8 @@ const GENERATED =
 const ASSOCIATION_ADDED = 'an added ASSOCIATED_WITH comes from an Activity the set adds (§24)';
 const PLAN_ADDED =
   'an added HAD_PLAN comes from an Activity the set adds, and never from a model or software agent (§24)';
-// whether activity a is one of its author's own generation: an Activity associated with them that HAD_PLAN no rule, since
-// whatever a planned activity generated is a cache (§24)
+// whether activity a is one of its author's own generation: an Activity associated with them that HAD_PLAN no rule.
+// That is because whatever a planned activity generated is a cache (§24)
 const own = (g, a, by) =>
   g.has(a, 'Activity') && !hadPlan(g, a) && g.out(a, 'ASSOCIATED_WITH').some((e) => e[2] === by);
 // A change set's first line read — '// graph: G · CHANGE SET <id> · against <state hash> · by <author id>' — as
@@ -112,7 +112,7 @@ function checkChangeset(base, block, matrix, sw = new Set()) {
     const who = Object.values(world)
       .filter((g) => g.nodes.has(h.by))
       .map((g) => g.nodes.get(h.by)[0]);
-    // the header's `by` reads as WAS_ATTRIBUTED_TO that agent for every change in the set (req:24.prov-attributed); a
+    // the header's `by` reads as WAS_ATTRIBUTED_TO that agent for every change in the set (req:24.prov-attributed). A
     // software agent is held to what a model is held to
     return who.some((labels) => labels.has('Model') || labels.has('SoftwareAgent'))
       ? 'Model'
@@ -159,7 +159,7 @@ function checkChangeset(base, block, matrix, sw = new Set()) {
       .filter(([s, t, d]) => t === 'WAS_GENERATED_BY' && !(made.has(s) && own(stored, d, h.by)));
   add(GENERATED, !foreign.length);
   if (foreign.length) return { results: res, header: h, after: null };
-  // a plan is added only from an Activity the set adds, and never by a model: an engine derives, a model does not, and a
+  // a plan is added only from an Activity the set adds, and never by a model. An engine derives, a model does not. A
   // plan added later to work already there would freeze it as a cache
   const plans = [...ac]
     .filter(([e, n]) => n > (bc.get(e) || 0))
@@ -167,7 +167,7 @@ function checkChangeset(base, block, matrix, sw = new Set()) {
     .filter(([s, t]) => t === 'HAD_PLAN' && (kind === 'Model' || !(made.has(s) && stored.has(s, 'Activity'))));
   add(PLAN_ADDED, !plans.length);
   if (plans.length) return { results: res, header: h, after: null };
-  // an association is added only from an Activity the set adds: one added to work already there would turn a fail-closed
+  // an association is added only from an Activity the set adds. One added to work already there would turn a fail-closed
   // cache back into ordinary data
   const assoc = [...ac]
     .filter(([e, n]) => n > (bc.get(e) || 0))

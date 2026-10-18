@@ -1,8 +1,11 @@
-// A keyboard-only run of a page (editor spec §41, a11y_keyboard_auto): Tab and Shift+Tab walked through it as a browser
-// moves the focus, every action reached, each action the page draws itself operated with Enter or Space, and every
-// dialog of ours left with Escape. It runs on either DOM the tests use, jsdom and the Obsidian host's fake DOM, with the
-// page's own key handlers live. Neither moves the focus on Tab by itself, so the run does what a browser does when a
-// handler leaves the key alone: the focus goes to the next element in the tab order. Test support only.
+// A keyboard-only run of a page (editor spec §41, a11y_keyboard_auto):
+// - Tab and Shift+Tab walk through it as a browser moves the focus.
+// - Every action is reached.
+// - Each action the page draws itself is operated with Enter or Space.
+// - Every dialog of ours is left with Escape.
+// It runs on either DOM the tests use, jsdom and the Obsidian host's fake DOM, with the page's own key handlers live.
+// Neither moves the focus on Tab by itself. So the run does what a browser does when a handler leaves the key alone.
+// The focus then goes to the next element in the tab order. Test support only.
 
 /** What can take the focus at all, before the checks of each element below. */
 const FOCUSABLE = 'a[href], button, input, select, textarea, summary, [tabindex], [contenteditable="true"]';
@@ -142,9 +145,10 @@ function openDialog(doc) {
 }
 
 /**
- * Walks the page with Tab, then with Shift+Tab, round the whole tab order: one line for each element of the order the
- * walk never reaches, each element that keeps the focus (Tab, and Escape then Tab, both leave it there), and each press
- * that takes the focus out of an open dialog.
+ * Walks the page with Tab, then with Shift+Tab, round the whole tab order. It gives one line for each of these:
+ * - an element of the order the walk never reaches;
+ * - an element that keeps the focus (Tab, and Escape then Tab, both leave it there);
+ * - a press that takes the focus out of an open dialog.
  */
 export function walkProblems(doc) {
   const problems = [];

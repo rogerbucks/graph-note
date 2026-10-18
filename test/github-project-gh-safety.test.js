@@ -1,7 +1,9 @@
-// What keeps the GitHub mirror from reaching the wrong place or going too fast: every call names the repository or the
-// owner, the repository gh points at is checked against this checkout's origin before anything is read or done, mutating
-// calls are paced and retried once on a secondary rate limit, and a list that hit its cap is refused rather than taken
-// for the whole. Run against the in-memory stand-in for gh (test/repository/github-project-fake.js). Editor spec §12,
+// What keeps the GitHub mirror from reaching the wrong place or going too fast:
+// - Every call names the repository or the owner.
+// - The repository gh points at is checked against this checkout's origin before anything is read or done.
+// - Mutating calls are paced, and retried once on a secondary rate limit.
+// - A list that hit its cap is refused rather than taken for the whole.
+// Run against the in-memory stand-in for gh (test/repository/github-project-fake.js). Editor spec §12,
 // requirements_checked_in_ci.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

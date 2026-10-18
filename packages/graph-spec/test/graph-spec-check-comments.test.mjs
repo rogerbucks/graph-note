@@ -1,6 +1,6 @@
 // A comment after code on its line (spec §3: "Comments are whole lines starting //. A comment must not follow code on the
-// same line, because // also occurs inside identifiers such as ni:/// hashes."): checking refuses it, with a problem that
-// names the rule and its fix (§4, "Problems in place"). The Python reader says the same words:
+// same line, because // also occurs inside identifiers such as ni:/// hashes."). Checking refuses it, with a problem
+// that names the rule and its fix (§4, "Problems in place"). The Python reader says the same words:
 // python/graph_spec/tests/test_gql_profile_drawn.py.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

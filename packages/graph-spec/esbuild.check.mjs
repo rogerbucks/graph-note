@@ -1,6 +1,6 @@
-// Bundles the graph-spec library's entry point and its feature modules into one self-contained file,
-// packages/graph-spec/dist/graph-spec-check.js: loaded as a script it sets the page global GraphSpecCheck, and required
-// in Node it is the module. The release archive ships it at src/graph-spec-check.js, the path the vault vendors.
+// Bundles the graph-spec library's entry point and its feature modules into one self-contained file. That file is
+// packages/graph-spec/dist/graph-spec-check.js. Loaded as a script, it sets the page global GraphSpecCheck. Required
+// in Node, it is the module. The release archive ships it at src/graph-spec-check.js, the path the vault vendors.
 // Usage: node esbuild.check.mjs [outfile]   (the outfile defaults to dist/graph-spec-check.js; the tests build elsewhere)
 import esbuild from 'esbuild';
 import { dirname, join, resolve } from 'node:path';

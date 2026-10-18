@@ -1,5 +1,5 @@
-// One run of one test file in the tests-first replay (scripts/tests-first-run.mjs; spec §12, tests_first): what its
-// report shows, whether the run finished, and when it did not, why.
+// One run of one test file in the tests-first replay (scripts/tests-first-run.mjs; spec §12, tests_first). It checks
+// what its report shows, whether the run finished, and when it did not, why.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -9,8 +9,8 @@ import { join } from 'node:path';
 import { fromJunit, run } from '../scripts/tests-first-run.mjs';
 
 describe('a run against the code before that did not finish', () => {
-  // found at 7590e45 (10 Oct 2026): the JUnit reporter writes <testsuites> at once, so a run stopped at the time limit
-  // left that much, and was read as finished; its guard, never run, was counted as seen failing
+  // found at 7590e45 (10 Oct 2026): the JUnit reporter writes <testsuites> at once. So a run stopped at the time limit
+  // left that much, and was read as finished. Its guard, never run, was counted as seen failing
   test('a JUnit report cut off before </testsuites> did not finish, even though it began', () => {
     const cut = '<?xml version="1.0" encoding="utf-8"?>\n<testsuites>\n';
     assert.equal(fromJunit(cut).ran, false);
@@ -20,8 +20,9 @@ describe('a run against the code before that did not finish', () => {
 });
 
 describe('a test whose name holds characters XML escapes', () => {
-  // found 11 Oct 2026: the reader cut a tag at the first `>`, and the reporter leaves `>` bare in an attribute, so a test
-  // named with `->` was read with no name and no failure: in neither column, a test the check never saw, passed or not
+  // found 11 Oct 2026: the reader cut a tag at the first `>`, and the reporter leaves `>` bare in an attribute. So a
+  // test named with `->` was read with no name and no failure. It was in neither column: a test the check never saw,
+  // passed or not
   const REPORT = [
     '<?xml version="1.0" encoding="utf-8"?>',
     '<testsuites>',
@@ -95,7 +96,7 @@ function runSource(source) {
   }
 }
 
-// the report is written by Node's JUnit reporter; its text differs a little between Node 24 (CI) and later versions, so
+// the report is written by Node's JUnit reporter. Its text differs a little between Node 24 (CI) and later versions. So
 // these tests write only what both give: a test's name, its diagnostics and its failures
 describe('no test vanishes without a word', () => {
   // review of #72 (11 Oct 2026): a tag not in the exact `name="value"` shape was skipped, and the run still read as whole
@@ -159,7 +160,7 @@ describe('a diagnostic is not a test', () => {
 });
 
 describe('a failure the report does not show', () => {
-  // review of #72 (11 Oct 2026): a parent test that throws after its subtests pass is a <testsuite> with no failure, so
+  // review of #72 (11 Oct 2026): a parent test that throws after its subtests pass is a <testsuite> with no failure. So
   // only its passing subtests were read, and the run looked clean
   test('a parent that fails after its subtests pass makes the run unreadable, with the exit status', () => {
     const r = runSource(
@@ -202,7 +203,7 @@ function runPython(stem, source) {
 }
 
 describe('a Python failure outside any test', () => {
-  // review of #74 (11 Oct 2026): a class that failed to set up left its tests listed as run and passed, and giving up on
+  // review of #74 (11 Oct 2026): a class that failed to set up left its tests listed as run and passed. Giving up on
   // the whole file for it lost the results of every other class in the file
   const pair = ['    def test_fails(self):', '        self.fail("no")', '    def test_passes(self):', '        pass'];
 
@@ -394,7 +395,7 @@ describe('why a run did not finish', () => {
 });
 
 describe('a replay does not see where it runs', () => {
-  // review of #114 (13 Oct 2026): GITHUB_ACTIONS leaked into the replayed tests on CI, so a test that passed on a Mac
+  // review of #114 (13 Oct 2026): GITHUB_ACTIONS leaked into the replayed tests on CI. So a test that passed on a Mac
   // failed in the parent's run there, and the record depended on where it was made
   const withCi = (fn) => {
     const was = process.env.GITHUB_ACTIONS;

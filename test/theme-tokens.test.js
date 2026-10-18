@@ -1,8 +1,9 @@
-// The interface's design tokens (editor spec §44, ui_theme_tokens): one set of named tokens, `--gn-*`, for colour, type,
-// spacing, corners and depth, which every rule of both style sheets reads, and nothing else of a host's. Each sheet maps
-// its host's theme to the tokens in one block, and nowhere else: the plugin's sheet reads Obsidian's theme through the
-// core's table (theme-tokens.ts, `OBSIDIAN_TOKEN_MAP`), and the browser page's reads the theme it is built with
-// (theme-css.ts). So a theme changes the interface with no code, and the interface looks native in each host.
+// The interface's design tokens (editor spec §44, ui_theme_tokens). There is one set of named tokens, `--gn-*`, for
+// colour, type, spacing, corners and depth. Every rule of both style sheets reads them, and nothing else of a host's.
+// Each sheet maps its host's theme to the tokens in one block, and nowhere else:
+// - the plugin's sheet reads Obsidian's theme through the core's table (theme-tokens.ts, `OBSIDIAN_TOKEN_MAP`);
+// - the browser page's sheet reads the theme it is built with (theme-css.ts).
+// So a theme changes the interface with no code, and the interface looks native in each host.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -17,8 +18,9 @@ const SHEETS = {
 };
 
 /**
- * The properties a sheet reads that are not the theme's: an element's own measures, which the code sets on it as it is
- * drawn (`--thoughtknot-*`), and the icon file a page's icon rule names (`--gn-icon-image`, esbuild.page.mjs).
+ * The properties a sheet reads that are not the theme's:
+ * - an element's own measures, which the code sets on it as it is drawn (`--thoughtknot-*`);
+ * - the icon file a page's icon rule names (`--gn-icon-image`, esbuild.page.mjs).
  */
 const OWN = /^--thoughtknot-[a-z0-9-]+$|^--gn-icon-image$/;
 

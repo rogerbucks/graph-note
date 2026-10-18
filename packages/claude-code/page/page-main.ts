@@ -1,9 +1,13 @@
-// The browser editor's page (spec §26): what loads when the pane opens the server's address. It installs the page's host
-// under the shared display layer, takes the token out of the address, reads the settings and the note from the server,
-// and shows the note: its Markdown rendered with raw HTML off, and, beside it, the edit pane of the Obsidian host (the
-// layer's block editor: the drawing with its details, the text, the problems, Undo, Redo and Lock the graph). What Claude has
-// proposed for the note is a card under the graph, for the user to accept or reject; the page follows the note's changes,
-// so a proposal appears as it lands. Whatever goes wrong is said in words on the page; it is never left blank.
+// The browser editor's page (spec §26): what loads when the pane opens the server's address. It:
+// - installs the page's host under the shared display layer;
+// - takes the token out of the address;
+// - reads the settings and the note from the server;
+// - shows the note's Markdown, rendered with raw HTML off;
+// - shows the edit pane of the Obsidian host beside it. That is the layer's block editor: the drawing with its details,
+//   the text, the problems, Undo, Redo and Lock the graph.
+// What Claude has proposed for the note is a card under the graph, for the user to accept or reject. The page follows
+// the note's changes, so a proposal appears as it lands. Whatever goes wrong is said in words on the page. It is never
+// blank.
 import { installDomHelpers } from '@thoughtknot/core/display/dom-helpers';
 import { installHost, notice, readInHostDirection } from '@thoughtknot/core/display/host';
 import { toggleExportForm } from '@thoughtknot/core/display/export/export-form';
@@ -35,7 +39,8 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
   const doc = win.document;
   installDomHelpers(win);
   installHost(browserHost(win));
-  // the whole page reads in the browser's language's direction, so its own parts mirror with the shared ones (rtl_mirrors)
+  // the whole page reads in the browser's language's direction, so its own parts mirror with the shared ones
+  // (rtl_mirrors)
   readInHostDirection(doc.documentElement);
   doc.title = word('page.title');
   const title = doc.querySelector('.gn-title');
@@ -69,7 +74,8 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
     const status = doc.getElementById('gn-notices');
     // a decision or a refusal is said in the page's status region, which a screen reader announces
     const announce = (text: string) => void (status && (status.textContent = text));
-    // the note as the page has it: the editor's, so that what is typed, a decision and a change on disk all write against one version
+    // the note as the page has it: the editor's. So what is typed, a decision and a change on disk all write against
+    // one version
     const page = new PageNote(
       note,
       { read: calls.note, write: notes.write, keepDraft: notes.keepDraft },
@@ -119,7 +125,7 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
         .next().value;
       words = first ? graph.appendChild(textVersionSection(doc, first)) : null;
     };
-    // everything but the editor, which draws itself from what is typed and from the changes the note tells it of; the
+    // everything but the editor, which draws itself from what is typed and from the changes the note tells it of. The
     // keyboard stays on the control it was on when a change on disk draws the page again
     const draw = () =>
       keepFocus(root, () => {

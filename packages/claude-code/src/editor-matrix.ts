@@ -1,6 +1,7 @@
 // The matrix note for Claude's row, read for the gate (spec §26, cc_classified_asks; §19, model_ceiling). Only a note
-// whose real path, links settled, is inside the vault's real path is read; anything else is refused with a plain reason
-// and gives no rows, so the row clears nothing and both gates (the mod's and the server's) fail closed and say why.
+// whose real path, links settled, is inside the vault's real path is read. Anything else is refused with a plain
+// reason, and gives no rows. So the row clears nothing, and both gates (the mod's and the server's) fail closed and say
+// why.
 import { matchClass } from '@thoughtknot/core';
 import type { GateSettings } from '@thoughtknot/core';
 import { matrixRows } from '@thoughtknot/core/hosts/matrix-table';

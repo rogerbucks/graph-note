@@ -1,6 +1,6 @@
-// The quality ratchet (spec §12, quality_ratchet and slice_end_review): the code's quality metrics are measured, held
-// against a committed baseline, and a release fails on any that got worse without a recorded reason. The measuring of
-// the slow metrics (the audit, the build, two runs of the suite) is not run here: this file proves the comparison, the
+// The quality ratchet (spec §12, quality_ratchet and slice_end_review). The code's quality metrics are measured and
+// held against a committed baseline. A release fails on any that got worse without a recorded reason. The measuring of
+// the slow metrics (the audit, the build, two runs of the suite) is not run here. This file proves the comparison, the
 // secrets scan, the readers of the suite's reports and the workflows, on the committed baseline and tampered copies.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

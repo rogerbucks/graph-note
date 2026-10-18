@@ -20,8 +20,8 @@ import graph_rules as gr  # noqa: E402
 import graph_spec as gs  # noqa: E402
 from engine_support import needs_engine  # noqa: E402
 
-# two loans — one whose figures are settled, one with a contested principal and a contested
-# repayment — and a contested claim about something the figure does not depend on (generic data)
+# Two loans. One has settled figures. One has a contested principal and a contested repayment.
+# And a contested claim about something the figure does not depend on (generic data).
 LOANS = """// graph: lending
 (bike:Loan {id: 'loan:bike', principal_cents: 50000, currency: 'GBP'}),
 (r1:Repayment {id: 'rep:1', amount_cents: 12000}),

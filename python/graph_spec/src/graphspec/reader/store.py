@@ -161,7 +161,7 @@ class Store:
         parser = Parser(toks)
         matches, paths, sets = parser.statement()
         self.commas.extend({"graph": g, "line": n} for n, _ in parser.commas)
-        # kept only for a block that has some, so a store that reads many blocks (a block read
+        # kept only for a block that has some. So a store that reads many blocks (a block read
         # again in part) keeps few, and copies few in apply
         if parser.commas:
             self._commas[block] = [at for _, at in parser.commas]
@@ -170,9 +170,9 @@ class Store:
         self._fixes.pop(block, None)  # made again as each bare type is resolved, below
         graph = self.graph(g)
         bound = {}
-        # each id's node, the first in order, as find() gives it: indexed once for the block, not
-        # searched for each thing, so a block of thousands of things is read in time linear in
-        # them (editor spec §9: never freeze), as the JavaScript store reads it
+        # each id's node, the first in order, as find() gives it. It is indexed once for the block,
+        # not searched for each thing, as the JavaScript store reads it. So a block of thousands of
+        # things is read in time linear in them (editor spec §9: never freeze)
         ids = None
 
         def found(nid):
@@ -201,8 +201,8 @@ class Store:
                     code="GN306",
                 )
             bound[m["var"]] = k
-        # left to right, as Grafeo binds them: a name is reused only once its node is written —
-        # earlier in the block, earlier in this path, or found by MATCH (§3)
+        # left to right, as Grafeo binds them. A name is reused only once its node is written (§3):
+        # earlier in the block, earlier in this path, or found by MATCH
         for nodes, rels in paths:
             for n in nodes:
                 if n["labels"] or n["props"]:

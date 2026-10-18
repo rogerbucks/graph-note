@@ -1,6 +1,8 @@
-// W3C PROV is normative for provenance (graph spec §11, §12, §24): a derivation links to its rule with HAD_PLAN, and
-// only to a Rule (req:11.had-plan), who proposed, decided or wrote a thing is WAS_ATTRIBUTED_TO an agent (req:24.prov-attributed), and
-// a revision is generated after what it supersedes (req:12.prov-revision). Each rule is given only where the graph holds
+// W3C PROV is normative for provenance (graph spec §11, §12, §24):
+// - a derivation links to its rule with HAD_PLAN, and only to a Rule (req:11.had-plan);
+// - who proposed, decided or wrote a thing is WAS_ATTRIBUTED_TO an agent (req:24.prov-attributed);
+// - a revision is generated after what it supersedes (req:12.prov-revision). Each rule is given only where the graph
+//   holds
 // what it is about, so a graph without provenance gains no check. The twin of provenance.py.
 'use strict';
 
@@ -16,8 +18,8 @@ const hadPlan = (g, a) => g.out(a, 'HAD_PLAN').length > 0;
 // the labels of what a link goes to: the thing itself, or what a Ref resolves to
 const labelsOf = (w, g, id) => (g.has(id, 'Ref') ? resolve(w, g.p(id))[1] : g.nodes.get(id)[0]);
 /**
- * Whether an activity is unknown: it has no HAD_PLAN and no ASSOCIATED_WITH agent. What an unknown activity generated is
- * read as a cache, so it fails closed (§24); an activity a Person or a Model is associated with, without a plan, is
+ * Whether an activity is unknown: it has no HAD_PLAN and no ASSOCIATED_WITH agent. What an unknown activity generated
+ * is read as a cache, so it fails closed (§24). An activity a Person or a Model is associated with, without a plan, is
  * ordinary work.
  */
 const unknownActivity = (w, g, a) =>
@@ -44,8 +46,8 @@ const when = (v) => (isTime(v) ? (v.kind === 'date' ? v.s + 'T00:00:00' : v.s) :
 function provRules(w, name) {
   const g = w[name],
     out = [];
-  // HAD_PLAN is the only marker of a derivation; its target is the rule's own node (a Rule, whose id names the engine
-  // function and version, §6), or a Ref that resolves to one
+  // HAD_PLAN is the only marker of a derivation. Its target is the rule's own node, or a Ref that resolves to one.
+  // A Rule's id names the engine function and version (§6)
   const plans = g.edges.filter((e) => e[1] === 'HAD_PLAN');
   if (plans.length)
     out.push([

@@ -1,6 +1,7 @@
-// The requirements kept as a graph note (editor spec §41, requirements_as_graph_note): the same graph held as the one
-// block of a Markdown note, with prose around it, is read by every tool that reads the requirements and passes the same
-// audit, gives the same board, questions and slice, and is compared across a change the same way, as the graph file.
+// The requirements kept as a graph note (editor spec §41, requirements_as_graph_note). The same graph is held as the
+// one block of a Markdown note, with prose around it. Like the graph file, it is read by every tool that reads the
+// requirements, and passes the same audit. It gives the same board, questions and slice, and is compared across a
+// change the same way.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';

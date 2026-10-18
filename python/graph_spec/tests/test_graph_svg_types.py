@@ -46,10 +46,12 @@ from graphspec.style.words import DIAGRAM_TYPES  # noqa: E402
 with open(os.path.join(HERE, "type_cases.json"), encoding="utf-8") as f:
     CASES = json.load(f)["cases"]
 
-# The core's answer for each note: as the plugin draws a graph (packages/obsidian/src/block.ts and
-# view-block.ts), the style read for it, the type it is drawn as (types.ts, diagramFor) and the
-# drawing styled for the view it is drawn in (style-source.ts, styledDrawing), laid out in each
-# direction (render.ts, directions); and whether each type fits it (typeFits).
+# The core's answer for each note, as the plugin draws a graph (packages/obsidian/src/block.ts and
+# view-block.ts). It holds:
+# - the style read for it, and the type it is drawn as (types.ts, diagramFor).
+# - the drawing styled for the view it is drawn in (style-source.ts, styledDrawing).
+# - laid out in each direction (render.ts, directions).
+# - whether each type fits it (typeFits).
 CORE_SCRIPT = """
 const [src, cases] = [process.argv[1], JSON.parse(process.argv[2])];
 const { readNote } = await import(`${src}/drawing.ts`);
@@ -142,8 +144,8 @@ class Types(unittest.TestCase):
         cls.python = [python_answer(texts_of(case), case.get("view")) for case in CASES]
 
     def test_each_type_is_laid_out_from_the_cores_source(self):
-        # type_both_renderers: the same source in each direction, byte for byte (a plain loop,
-        # never subTest: the tests-first replay counts a test by its own result)
+        # type_both_renderers: the same source in each direction, byte for byte. A plain loop,
+        # never subTest. The tests-first replay counts a test by its own result.
         for case, ours, theirs in zip(CASES, self.python, self.core, strict=True):
             self.assertEqual(ours["drawn"], theirs["drawn"], case["name"])
 
@@ -164,8 +166,9 @@ class Types(unittest.TestCase):
             self.assertEqual(ours["styles"], theirs["styles"], case["name"])
 
     def test_the_cases_draw_every_type_graphviz_draws(self):
-        # the table proves what it says: each type is drawn (the table, by the plugin's host, with
-        # no plan), one stops fitting and is drawn as a network, and a Diagram's words are checked
+        # The table proves what it says:
+        # - each type is drawn (the table, by the plugin's host, with no plan).
+        # - one stops fitting and is drawn as a network, and a Diagram's words are checked.
         drawn = {c["drawn"]: c.get("plan") for a in self.core for c in a["choice"].values()}
         self.assertEqual(set(drawn), set(DIAGRAM_TYPES))
         self.assertIsNone(drawn["table"])

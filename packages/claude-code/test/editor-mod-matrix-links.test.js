@@ -1,7 +1,7 @@
-// The matrix note and links (editor spec §26, cc_classified_asks; §19, model_ceiling): the mod resolves the note's real
-// path and the vault's, and refuses a note whose real path is outside the vault, whether the note or a folder above it is
-// a link; with no real-path call to ask, it refuses the note too. A refused note gives no matrix, so the row clears
-// nothing and both gates fail closed, saying why. The vault-only path check is in editor-mod-matrix.test.js.
+// The matrix note and links (editor spec §26, cc_classified_asks; §19, model_ceiling). The mod resolves the note's real
+// path and the vault's. It refuses a note whose real path is outside the vault. That holds whether the note or a folder
+// above it is a link. With no real-path call to ask, it refuses the note too. A refused note gives no matrix. So the row
+// clears nothing and both gates fail closed, saying why. The vault-only path check is in editor-mod-matrix.test.js.
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
@@ -174,7 +174,7 @@ describe('the real path asked of a host that can only start a process', () => {
     let killed = false;
     const hung = () => ({
       [Symbol.asyncIterator]: () => ({
-        // the process says nothing until it is killed; here it ends a turn later, so the code before the timeout
+        // the process says nothing until it is killed. Here it ends a turn later. So the code from before the timeout
         // existed finishes (rejecting for another reason) instead of waiting for ever
         next: () =>
           new Promise((resolve) =>

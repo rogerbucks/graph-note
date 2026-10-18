@@ -1,6 +1,6 @@
-// The page's session (editor spec §26, cc_undo_safe; §9, block_followed_not_its_copy): when a copy of the block it edits
-// is pasted beside it, so it cannot tell the two apart, undo says that, in the core's words, never that another program
-// changed the block. The review of #465, 15 Oct 2026: the page gave every refusal of a step the words for a change made
+// The page's session (editor spec §26, cc_undo_safe; §9, block_followed_not_its_copy). Say a copy of the block it edits
+// is pasted beside it, so it cannot tell the two apart. Then undo says that, in the core's words. It never says that
+// another program changed the block. The review of #465, 15 Oct 2026: the page gave every refusal of a step the words for a change made
 // by another program.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

@@ -1,7 +1,8 @@
-// Text scaling to 200 per cent (editor spec §44, text_scaling): every text of the interface is sized by a token or by its
-// parent's size, so it follows the host's font size (Obsidian's setting, which its font variables carry) and the
-// browser's (the page's theme in rem), as well as the browser's zoom; no line height is fixed, and no box that holds text
-// has a fixed height that would clip it. The drawing's own marks are sized in its units, so they scale with its zoom.
+// Text scaling to 200 per cent (editor spec §44, text_scaling). Every text of the interface is sized by a token or by
+// its parent's size. So it follows the host's font size (Obsidian's setting, which its font variables carry). It
+// follows the browser's too (the page's theme in rem), and the browser's zoom. No line height is fixed. No box that
+// holds text has a fixed height that would clip it. The drawing's own marks are sized in its units, so they scale with
+// its zoom.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { OBSIDIAN_TOKEN_MAP, THEME_TOKENS } from '../packages/core/src/theme-tokens.ts';

@@ -1,5 +1,5 @@
-// The reasons kept for a test that passed before its code (spec §12, tests_first): one file for each reason in
-// test/seen-failing/, named after its test file and its test. The records of the replay itself are
+// The reasons kept for a test that passed before its code (spec §12, tests_first). There is one file for each reason
+// in test/seen-failing/, named after its test file and its test. The records of the replay itself are
 // tests-first-records.test.js. Split from it on 11 Oct 2026, so the suite runs them side by side.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

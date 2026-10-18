@@ -1,6 +1,7 @@
-// Test support for the editor's note store (editor-store.test.js): a real vault on disk in a temporary folder, with the
-// escapes a page might try laid out in it, the store served by a running server, the change stream read as the page
-// reads it, a watcher the test fires by hand, and file operations a test can hold at one step. Test code only.
+// Test support for the editor's note store (editor-store.test.js). Test code only. It holds:
+// - a real vault on disk in a temporary folder, with the escapes a page might try laid out in it;
+// - the store served by a running server, and the change stream read as the page reads it;
+// - a watcher the test fires by hand, and file operations a test can hold at one step.
 import { after } from 'node:test';
 import http from 'node:http';
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
@@ -22,9 +23,9 @@ export const PLAN_THEIRS = PLAN.replace("'Finish'", "'Done'");
 export const SECRET = 'Outside the vault.\n';
 
 /**
- * A vault in a temporary folder (on macOS, under a symlinked /var, so the store must take its real path), with a data
- * folder and a folder outside it beside it. Inside: the note, a second note, hidden folders, a text file, and symlinks
- * out of the vault, into a hidden folder, onto a text file and, the one allowed, onto the note itself.
+ * A vault in a temporary folder, with a data folder and a folder outside it beside it. On macOS it is under a
+ * symlinked /var, so the store must take its real path. Inside: the note, a second note, hidden folders, a text file.
+ * Symlinks go out of the vault, into a hidden folder, onto a text file and onto the note itself (the one allowed).
  */
 export function tempVault() {
   const top = mkdtempSync(join(tmpdir(), 'editor-store-'));

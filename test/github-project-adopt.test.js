@@ -1,6 +1,7 @@
-// Whose issues the GitHub mirror and the build status take for their own: those the repository's owner wrote, and those
-// the workflows' bot wrote, as the mirror running on main makes them; nobody else's, whatever the issue says. Every case
-// runs against the in-memory stand-ins for gh, so no network is touched. Editor spec §12, requirements_checked_in_ci.
+// Whose issues the GitHub mirror and the build status take for their own. Those the repository's owner wrote, and
+// those the workflows' bot wrote, as the mirror running on main makes them. Nobody else's, whatever the issue says.
+// Every case runs against the in-memory stand-ins for gh, so no network is touched. Editor spec §12,
+// requirements_checked_in_ci.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readBoard } from '../scripts/slice-board.mjs';

@@ -1,8 +1,8 @@
-// The page's export cases (C6, cc_export_same), registered by editor-page.test.js, which is test_cc_page's file: kept here
-// so that file stays within the repository's size baseline. The page exports through the shared display layer's Export form
-// and the core's own export, so a file it saves is the file the Obsidian plugin would write: the same name, the same bytes,
-// the same question first for a classified note. The page draws the PNG; the server only writes what it is handed
-// (editor-export.test.js). Test code only.
+// The page's export cases (C6, cc_export_same). They are registered by editor-page.test.js, which is test_cc_page's
+// file. They are kept here so that file stays within the repository's size baseline. The page exports through the
+// shared display layer's Export form and the core's own export. So a file it saves is the file the Obsidian plugin would
+// write. It has the same name and the same bytes, with the same question first for a classified note. The page draws
+// the PNG. The server only writes what it is handed (editor-export.test.js). Test code only.
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';

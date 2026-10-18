@@ -1,11 +1,14 @@
-// A keyboard-only run of every view of every host (editor spec §41, a11y_keyboard_auto). Each view of each host, the same
-// views test/wcag.test.js checks, is walked with Tab and Shift+Tab round its whole tab order, with the page's own key
-// handlers live: every element in the order must be reached, no element may keep the focus (a field that takes Tab for itself is left with Escape then Tab), and an open
-// dialog of ours must keep the focus in it. An action out of the tab order must be in a widget whose arrow keys reach it.
-// One of each kind of action the page draws itself (no browser operates it) is operated with Enter or Space, and each
+// A keyboard-only run of every view of every host (editor spec §41, a11y_keyboard_auto). Each view of each host is
+// walked with Tab and Shift+Tab round its whole tab order. These are the same views test/wcag.test.js checks. The
+// page's own key handlers are live. The rules are:
+// - every element in the order must be reached.
+// - no element may keep the focus. A field that takes Tab for itself is left with Escape then Tab.
+// - an open dialog of ours must keep the focus in it.
+// - an action out of the tab order must be in a widget whose arrow keys reach it.
+// One of each kind of action the page draws itself is operated with Enter or Space. No browser operates these. Each
 // dialog of ours is left with Escape from every element in it. The check itself is tried first, on planted faults, so a
-// pass means it looked. The browser editor's page is run in test/a11y-keyboard-page-*.test.js, its states split over
-// those files so they run side by side; here each state is checked to be in one of them. Test support:
+// pass means it looked. The browser editor's page is run in test/a11y-keyboard-page-*.test.js. Its states are split
+// over those files so they run side by side. Here each state is checked to be in one of them. Test support:
 // test/repository/keyboard-run.js and keyboard-page.js.
 import { test, describe, before } from 'node:test';
 import { existsSync } from 'node:fs';

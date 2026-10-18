@@ -1,4 +1,4 @@
-// The project wiki (spec §41, wiki_generated): every page made from the repository's own files, each saying where it
+// The project wiki (spec §41, wiki_generated). Every page is made from the repository's own files, each saying where it
 // came from, with the figures the requirements and the waves give. Pure: the real files are read, nothing is fetched.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

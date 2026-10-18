@@ -1,5 +1,5 @@
-// req:3.gql-escapes (graph spec §3, decided by Roger, 11 Oct 2026): a backslash in quoted text is read as ISO GQL reads
-// it, and an escape GQL does not name is refused, with the fix that doubles the backslash. The cases are one table,
+// req:3.gql-escapes (graph spec §3, decided by Roger, 11 Oct 2026). A backslash in quoted text is read as ISO GQL
+// reads it. An escape GQL does not name is refused, with the fix that doubles the backslash. The cases are one table,
 // escape-cases.json, which the Python reader answers too: python/graph_spec/tests/test_escapes.py.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

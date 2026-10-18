@@ -78,8 +78,8 @@ function review(w, jg, sw = new Set()) {
   }
   return out;
 }
-// The why layer of a view: current judgements in jg resting on, or assuming, anything shown of path top in graph dg at
-// that altitude — or folded into it, unless 'why-folded' is switched off. Sorted.
+// The why layer of a view. It is the current judgements in jg resting on, or assuming, anything shown of path top in
+// graph dg at that altitude. It also takes what is folded into it, unless 'why-folded' is switched off. Sorted.
 function whyLayer(w, jg, dg, top, level, sw = new Set()) {
   const g = w[dg],
     seen = new Set([top, ...viewAt(g, top, level)]);

@@ -46,10 +46,10 @@ import textwrap
 import zlib
 from collections.abc import Collection, Mapping, Sequence
 
-# arrowheads hidden and the diagram type (editor spec §15), properties shown inline (§14), links
-# that move (§7), nudges (§6), and folds, trunks and routing (§25), written into the source as the
-# plugin's core writes them; they live with the style graph that chooses them, as do the
-# directions laid out (re-exported here)
+# Arrowheads hidden and the diagram type (editor spec §15), and properties shown inline (§14). Also
+# links that move (§7), nudges (§6), and folds, trunks and routing (§25). Each is written into the
+# source as the plugin's core writes it. They live with the style graph that chooses them, as do
+# the directions laid out (re-exported here)
 from graphspec.style.arrows import arrowless_source
 from graphspec.style.diagram_types import directions, typed_source
 from graphspec.style.drawn import render_args  # noqa: F401 — re-exported: render(**render_args(…))
@@ -174,9 +174,9 @@ def dot_source(
             of.get(s) == kind and of.get(d) == kind for s, _, d in edges
         ):
             out.append("  { rank=same; " + " ".join(f'"{m}";' for m in members) + " }")
-    # A kind that only receives links (a dead end, like Source) and is not the graph's main
-    # destination is laid out on the far side, so its links stay short instead of crossing the
-    # middle; the arrow still points the way the link reads.
+    # A kind that only receives links (a dead end, like Source), and is not the graph's main
+    # destination, is laid out on the far side. So its links stay short instead of crossing the
+    # middle. The arrow still points the way the link reads.
     reach = {k: set() for k in kinds}
     for _ in kinds:
         for s, _, d in edges:
@@ -241,9 +241,9 @@ def _themed(svg, kinds, readings=()):
         "#000000": style["edge"],
     }
 
-    # Contrast (WCAG 2.2): a theme's own hues fall short on its background — light-mode yellow is
-    # 2.1:1 — so each is blended with the theme's text colour: lines and borders to line_mix (3:1
-    # for shapes, SC 1.4.11), labels to label_mix (4.5:1 for text, SC 1.4.3). Measured on
+    # Contrast (WCAG 2.2): a theme's own hues fall short on its background. Light-mode yellow is
+    # 2.1:1. So each is blended with the theme's text colour. Lines and borders go to line_mix (3:1
+    # for shapes, SC 1.4.11). Labels go to label_mix (4.5:1 for text, SC 1.4.3). Measured on
     # Obsidian's default themes: every label 5.4:1 or more, every line 3.2:1 or more.
     def blend(h, pct):
         return f"color-mix(in srgb, var(--color-{h}) {pct}%, var(--text-normal))"
@@ -288,12 +288,13 @@ def _themed(svg, kinds, readings=()):
     m = re.search(r'<svg width="([\d.]+)pt" height="([\d.]+)pt"', svg)
     if m:
         w = float(m.group(1)) * 4 / 3
-        # A natural width, no height, capped at the page: the note shrinks it to fit and never
-        # clips it, and the zoom plugin's full-screen view, which lays the SVG out at its intrinsic
-        # width, has one to use. Tried and dropped, 6 Oct 2026, each seen in Obsidian: a minimum
-        # width (the plugin's box clipped the right edge); a fixed height (full-screen lost the
-        # bottom); width 100% (no intrinsic width, so full-screen fell back to the browser's 300 px
-        # and showed it tiny).
+        # A natural width, no height, capped at the page. The note shrinks it to fit and never
+        # clips it. The zoom plugin's full-screen view lays the SVG out at its intrinsic width, so
+        # it has one to use. Tried and dropped, 6 Oct 2026, each seen in Obsidian:
+        # - a minimum width (the plugin's box clipped the right edge);
+        # - a fixed height (full-screen lost the bottom);
+        # - width 100% (no intrinsic width, so full-screen fell back to the browser's 300 px and
+        #   showed it tiny).
         svg = svg.replace(
             m.group(0), f'<svg width="{w:.0f}" style="max-width:100%;height:auto;filter:none"', 1
         )

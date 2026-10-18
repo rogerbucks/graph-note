@@ -1,8 +1,10 @@
-// The page's editing cases (C9; cc_editor_opens, cc_core_only), registered by editor-page.test.js, which is test_cc_page's
-// file: kept here so that file stays within the repository's size baseline. The page opens the note with the drawing, the
-// details and the edit pane of the Obsidian host, and all of it is the display layer's: the editor, its drawing and its
-// details are the very code the plugin runs, over a note that is the editor server's store. Each case runs the page as built,
-// its own script in a DOM, against the real server and a real vault in a temporary folder (editor-page-live.js). Test code only.
+// The page's editing cases (C9; cc_editor_opens, cc_core_only). They are registered by editor-page.test.js, which is
+// test_cc_page's file. They are kept here so that file stays within the repository's size baseline.
+// - The page opens the note with the drawing, the details and the edit pane of the Obsidian host.
+// - All of it is the display layer's. The editor, its drawing and its details are the very code the plugin runs.
+// - The note is the editor server's store.
+// Each case runs the page as built, its own script in a DOM. It runs against the real server and a real vault in a
+// temporary folder (editor-page-live.js). Test code only.
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync, rmSync } from 'node:fs';

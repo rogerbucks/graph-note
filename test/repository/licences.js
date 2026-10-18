@@ -1,4 +1,4 @@
-// Licence helpers for the licence tests: the allow-list, a reader of SPDX
+// Licence helpers for the licence tests. They hold the allow-list, a reader of SPDX
 // licence expressions, and the bundled packages and build tools as the
 // lockfile records them. Test code only.
 import { readJSON } from './repo.js';
@@ -84,9 +84,12 @@ export const lockedNames = () => lockEntries().map((p) => p.name);
 
 /**
  * What is wrong with the allowance for GPL tools that run in CI alone (spec §13, build_tool_licences), in `record`
- * (licences/bundled.json): each must be a GPL tool, with where its licence is stated, how it is installed, the jobs
- * that install it and why; and none may be a package the lockfile holds (`locked`: so nothing in node_modules, dev or
- * not), a bundled package, or anything a bundled package carries inside it. Names are compared in any case.
+ * (licences/bundled.json). Each must be a GPL tool, with where its licence is stated, how it is installed, the jobs
+ * that install it and why. None may be:
+ * - a package the lockfile holds (`locked`: so nothing in node_modules, dev or not);
+ * - a bundled package;
+ * - anything a bundled package carries inside it.
+ * Names are compared in any case.
  */
 export function ciOnlyProblems(record, locked) {
   const lower = (s) => String(s).toLowerCase();
@@ -110,8 +113,9 @@ export function ciOnlyProblems(record, locked) {
 }
 
 /**
- * Each package a workflow's job installs with apt or apt-get, as `<file> <job>` against the package's name and whether
- * its line asks for no recommended packages: `apt install x`, `apt-get -y install a b`, flags anywhere among the names.
+ * Each package a workflow's job installs with apt or apt-get. It is keyed as `<file> <job>`, against the package's
+ * name and whether its line asks for no recommended packages. It reads `apt install x`, `apt-get -y install a b`, and
+ * flags anywhere among the names.
  */
 export function aptInstalls(file, jobLines) {
   const out = [];

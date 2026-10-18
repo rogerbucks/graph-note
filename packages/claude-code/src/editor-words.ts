@@ -1,12 +1,14 @@
-// What `/graph edit` says and understands (spec §26, workstream C2 and C3): the outcome of a call, the words of the pane's
-// answer, the command line, and who may say yes. None holds the address, the token or the note's text
+// What `/graph edit` says and understands (spec §26, workstream C2 and C3). That is the outcome of a call, the words of
+// the pane's answer, the command line, and who may say yes. None holds the address, the token or the note's text
 // (cc_transcript_clean).
 import { notePath } from './graph-view.ts';
 
 /**
- * What `/graph edit` came to: the note it opened, or why it could not. A note held back by the gate says so in `held`:
- * `asks` waits for `confirm` (a yes), `refused` has no yes (the highest classification, a credential, or a note or
- * settings that could not be read), and neither is drawn in its place.
+ * What `/graph edit` came to: the note it opened, or why it could not. A note held back by the gate says so in `held`.
+ * - `asks` waits for `confirm` (a yes).
+ * - `refused` has no yes. That is the highest classification, a credential, or a note or settings that could not be
+ *   read.
+ * Neither is drawn in its place.
  */
 export type EditOutcome =
   { ok: true; title: string; reused: boolean } | { ok: false; why: string; held?: 'asks' | 'refused' };

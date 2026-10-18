@@ -1,9 +1,11 @@
-// The editor server run as a process (spec §26, slice 4): what `mod/bin/editor-server.mjs` does, and what the tests'
-// own process does with their API handed in. It takes no argument, so nothing can make it listen anywhere but
-// 127.0.0.1 or on a port of its own choosing, and it will not start orphaned, with no session to stop it. It hands its
-// address over once, as one line of JSON on stdout, `{"url":"http://127.0.0.1:<port>/#token=<token>"}`: the token in
-// the fragment, which a browser never sends, and written nowhere else. It stops on the first of an idle period, its
-// input closing, its parent exiting or a stop signal, says why on stderr, and exits.
+// The editor server run as a process (spec §26, slice 4). It is what `mod/bin/editor-server.mjs` does. It is also what
+// the tests' own process does, with their API handed in.
+// - It takes no argument. So nothing can make it listen anywhere but 127.0.0.1, or on a port of its own choosing.
+// - It will not start orphaned, with no session to stop it.
+// - It hands its address over once, as one line of JSON on stdout, `{"url":"http://127.0.0.1:<port>/#token=<token>"}`.
+//   The token is in the fragment, which a browser never sends. It is written nowhere else.
+// - It stops on the first of an idle period, its input closing, its parent exiting or a stop signal. It says why on
+//   stderr, and exits.
 import type { PageAssets } from './page-assets.ts';
 import { startEditorServer, type ApiHandler } from './start-server.ts';
 import { watchSession } from './session-watch.ts';
@@ -54,7 +56,7 @@ export async function runEditorProcess(args: string[], options: EditorProcessOpt
   process.stdout.write(`${JSON.stringify({ url: pageAddress(server.origin, server.token, options.note) })}\n`);
 }
 
-/** The address the page opens at: the token and the note's id in the fragment, the id encoded so no character in it can end or add a field. */
+/** The address the page opens at, with the token and the note's id in the fragment. The id is encoded so no character in it can end or add a field. */
 export function pageAddress(origin: string, token: string, note?: string): string {
   return `${origin}/#token=${token}${note ? `&note=${encodeURIComponent(note)}` : ''}`;
 }

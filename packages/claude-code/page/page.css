@@ -1,10 +1,10 @@
-/* The browser page's own styles (spec §26). The colours are the theme's variables (theme-css.ts); the shared display layer's
-   styles (the plugin's styles.css) are added to this file when the page is built. No inline style and no remote address:
+/* The browser page's own styles (spec §26). The colours are the theme's variables (theme-css.ts). The shared display
+   layer's styles (the plugin's styles.css) are added to this file when the page is built. No inline style and no remote address:
    every file named here is the server's own. */
 
-/* The design tokens (editor spec §44, ui_theme_tokens): the page's theme (theme-css.ts, written in the names of
-   Obsidian's, which the drawing's Obsidian palette reads too) mapped to the --gn-* tokens every rule of the page and of
-   the shared styles reads. The page has no theme class on its body, so this is the one mapping it has. */
+/* The design tokens (editor spec §44, ui_theme_tokens). The page's theme (theme-css.ts) is written in the names of
+   Obsidian's. The drawing's Obsidian palette reads those too. Here they map to the --gn-* tokens that every rule of the
+   page and the shared styles reads. The page has no theme class on its body, so this is the one mapping it has. */
 :root {
   --gn-bg: var(--background-primary);
   --gn-bg-alt: var(--background-secondary);
@@ -65,8 +65,8 @@
   --gn-cursor-link: var(--cursor-link);
 }
 
-/* Forced colours and more contrast (editor spec §44, forced_colours): the same tables as the shared styles
-   (theme-tokens.ts, FORCED_TOKEN_COLOURS and MORE_CONTRAST_TOKENS), for the page's own elements. */
+/* Forced colours and more contrast (editor spec §44, forced_colours), for the page's own elements. They use the same
+   tables as the shared styles (theme-tokens.ts, FORCED_TOKEN_COLOURS and MORE_CONTRAST_TOKENS). */
 @media (forced-colors: active) {
   :root {
     --gn-bg: Canvas;
@@ -133,8 +133,8 @@ header {
   font-size: 1.3em;
 }
 
-/* the keyboard (spec §26, WCAG 2.2 AA 2.4.1, 2.4.7, 2.4.11): a skip link, off the screen until it has the focus, and a
-   visible focus ring in the text colour on every control and every target the keyboard can rest on */
+/* the keyboard (spec §26, WCAG 2.2 AA 2.4.1, 2.4.7, 2.4.11). A skip link is off the screen until it has the focus. A
+   visible focus ring in the text colour is on every control and every target the keyboard can rest on */
 .gn-skip {
   position: absolute;
   inset-inline-start: -999px;
@@ -169,8 +169,8 @@ textarea:focus-visible,
   padding-inline-start: var(--gn-space-5);
 }
 
-/* reduced motion (cc_reduced_motion, WCAG 2.2 AA 2.3.3): the system asks for none, so nothing moves, fades or scrolls
-   smoothly, the shared layer's own movements among them; nothing is hidden, so the editor is the same without them */
+/* reduced motion (cc_reduced_motion, WCAG 2.2 AA 2.3.3): the system asks for none. So nothing moves, fades or scrolls
+   smoothly, the shared layer's own movements among them. Nothing is hidden, so the editor is the same without them */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -295,8 +295,8 @@ textarea:focus-visible,
   color: var(--gn-text-error);
 }
 
-/* Claude's proposals on a card (spec §26, WCAG 2.2 AA): the text colours are the theme's locked pairs; a control has a
-   visible focus ring in the text colour, at least 24 CSS pixels to hit, and nothing is told by colour alone */
+/* Claude's proposals on a card (spec §26, WCAG 2.2 AA). The text colours are the theme's locked pairs. A control has a
+   visible focus ring in the text colour, and is at least 24 CSS pixels to hit. Nothing is told by colour alone */
 .gn-card {
   margin: var(--gn-space-4) 0;
   padding: var(--gn-space-3);

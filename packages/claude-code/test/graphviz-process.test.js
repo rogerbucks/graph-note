@@ -1,5 +1,5 @@
-// Graphviz for the Claude Code host, run as a process through node (spec §10; decision of 11 Oct 2026): the core's own
-// engine, DOT in and SVG out. When node is missing the host says so in words, and never shows a blank drawing.
+// Graphviz for the Claude Code host, run as a process through node (spec §10; decision of 11 Oct 2026). It is the
+// core's own engine, DOT in and SVG out. When node is missing the host says so in words, and never shows a blank drawing.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
