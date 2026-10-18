@@ -4,7 +4,10 @@ import type { Block } from './note-reading.ts';
 
 const FENCE = /^ {0,3}(`{3,}|~{3,})\s*gql\s*$/i;
 
-/** A gql block's place in a note. Its text is its lines joined by \\n. Open and close are the 0-based lines of its fences. Close is the line count when the block has no closing fence. */
+/**
+ * A gql block's place in a note. It holds the block's text, with its lines joined by \\n. It also holds the 0-based
+ * lines of its opening and closing fences. An unclosed block's closing line is the line count.
+ */
 export interface Span {
   text: string;
   open: number;
