@@ -125,3 +125,50 @@ export const currentLanguage = (): string => language;
 /** The word kept as `key`, in the current language, with `values` filled in; in UK English when the translation lacks it. */
 export const word = (key: WordKey, values?: WordValues): string =>
   sayWords(words[key] ?? SOURCE_WORDS[key], values, words[key] === undefined ? SOURCE_LANGUAGE : language);
+
+/** The languages written right to left, for a runtime that cannot say a language's direction itself. */
+const RIGHT_TO_LEFT = new Set([
+  'ar',
+  'arc',
+  'ckb',
+  'dv',
+  'fa',
+  'he',
+  'iw',
+  'ks',
+  'ku-Arab',
+  'pa-Arab',
+  'ps',
+  'sd',
+  'ug',
+  'ur',
+  'yi',
+]);
+
+/**
+ * The direction language `tag` is read in (editor spec §42, rtl_mirrors): the runtime's own text information where it has
+ * it, else by the language and its script; a tag that is no language is read left to right.
+ */
+export function directionOf(tag: string): 'ltr' | 'rtl' {
+  const exact = canonical(tag);
+  if (!exact) return 'ltr';
+  const locale = new Intl.Locale(exact) as Intl.Locale & {
+    getTextInfo?: () => { direction?: string };
+    textInfo?: { direction?: string };
+  };
+  const said = locale.getTextInfo?.().direction ?? locale.textInfo?.direction;
+  if (said === 'rtl' || said === 'ltr') return said;
+  const script = locale.maximize().script;
+  if (script && ['Arab', 'Hebr', 'Thaa', 'Syrc', 'Nkoo', 'Adlm', 'Rohg'].includes(script)) return 'rtl';
+  return RIGHT_TO_LEFT.has(locale.language) || RIGHT_TO_LEFT.has(`${locale.language}-${script}`) ? 'rtl' : 'ltr';
+}
+
+let direction: 'ltr' | 'rtl' = 'ltr';
+
+/** Sets the direction the interface is read in, as the host says it or as its language is read. */
+export function setDirection(to: 'ltr' | 'rtl'): void {
+  direction = to;
+}
+
+/** The direction the interface is read in now: the `dir` each of its views is drawn with. */
+export const currentDirection = (): 'ltr' | 'rtl' => direction;

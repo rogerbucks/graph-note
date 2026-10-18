@@ -879,6 +879,8 @@ details.graph-note-style > summary {
   top: 0;
   max-width: none;
   transform: translate(var(--graph-note-x, 0), var(--graph-note-y, 0));
+  /* laid out in the screen's coordinates, so it keeps the screen's direction in a right-to-left host (rtl_mirrors) */
+  direction: ltr;
   /* the drawing's words are not text to select: a double click zooms, it never highlights them */
   -webkit-user-select: none;
   user-select: none;
@@ -891,6 +893,22 @@ details.graph-note-style > summary {
 }
 .graph-note-svg g.node:focus-visible > :is(path, polygon) {
   stroke-width: 3;
+}
+
+/* Names, labels and values as the person wrote them (editor spec §42, bidi_labels): each is read in its own direction,
+   from its first strong letter, and set apart from the words around it, so an Arabic name in an English panel, or an
+   English one in a Hebrew panel, is neither reordered nor reorders what follows it. */
+.graph-note-quick-name,
+.graph-note-quick-kind,
+.graph-note-quick-properties li,
+.graph-note-quick-note,
+.graph-note-details-head strong,
+.graph-note-kind,
+.graph-note-link-thing,
+.graph-note-table td,
+.graph-note-details .metadata-property-key,
+.graph-note-details .metadata-property-value {
+  unicode-bidi: plaintext;
 }
 
 /* Full screen: over the whole window, inside the phone's safe area. */

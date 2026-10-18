@@ -6,7 +6,7 @@
 import type { DisplayHost, MenuEntry } from './host.ts';
 
 /** The version of the host interface these checks hold a host to; it changes with every change to `DisplayHost`. */
-export const HOST_CONTRACT_VERSION = 2;
+export const HOST_CONTRACT_VERSION = 3;
 
 /** A menu row as the person sees it: its title, and whether it is ticked or a warning. */
 export type MenuRowSeen = { title: string; checked?: boolean; warning?: boolean } | 'separator';
@@ -139,6 +139,15 @@ export function hostContract(make: () => HostUnderTest): ContractCheck[] {
           known = false;
         }
         if (!known) fail('language', 'a language tag such as en-GB', tag);
+      },
+    },
+    {
+      name: 'the direction is ltr or rtl, or left unsaid',
+      run: () => {
+        const { host } = make();
+        if (host.direction === undefined) return;
+        const way: unknown = host.direction();
+        if (way !== 'ltr' && way !== 'rtl') fail('direction', 'ltr or rtl', way);
       },
     },
   ];
