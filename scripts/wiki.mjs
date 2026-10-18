@@ -17,6 +17,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { requirementsGraph } from './check-requirements.mjs';
 import { readBoard } from './slice-board.mjs';
+import { roadmapPage } from './wiki-roadmap.mjs';
 import { SHOTS } from './wiki-screens.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -178,42 +179,10 @@ export function renderWiki({
   const out = {};
   for (const [name, text] of Object.entries(pages)) out[name] = fillMarkers(text, fills);
 
-  const wavesTable = [
-    '| Wave | Dates | Proved | State |',
-    '|---|---|---|---|',
-    ...states.map(
-      (w) =>
-        `| ${w.title} | ${day(w.start)} to ${day(w.end)}${w.estimate ? ' (estimate)' : ''} | ` +
-        `${w.total ? `${w.proved} / ${w.total}` : '—'} | ${w.total || w.state !== 'done' ? STATE_MARK[w.state] : '—'} |`,
-    ),
-  ].join('\n');
-  const gantt = [
-    '```mermaid',
-    'gantt',
-    '  dateFormat YYYY-MM-DD',
-    '  axisFormat %d %b',
-    ...states.map(
-      (w) =>
-        `  ${w.title.replace(/[:#;,]/g, ' ')} :${w.state === 'done' ? 'done, ' : w.state === 'now' ? 'active, ' : w.state === 'late' ? 'crit, ' : ''}${w.start}, ${w.end}`,
-    ),
-    '```',
-  ].join('\n');
-  out['Roadmap.md'] =
-    `# Roadmap\n\nThe order the work is planned in. Dates marked as estimates are plans, not promises.\n\n${gantt}\n\n${wavesTable}\n\n` +
-    states
-      .filter((w) => w.workstreams.length)
-      .map(
-        (w) =>
-          `### ${w.title}\n\n` +
-          w.workstreams
-            .map((k) => {
-              const c = counted(workstreams[k]?.requirements ?? [], requirements);
-              return `- **${workstreams[k]?.title ?? k}** (${k}): ${c.proved} of ${c.total} proved`;
-            })
-            .join('\n'),
-      )
-      .join('\n\n') +
-    footer('`requirements/waves.json` and `requirements/workstreams.json`', sha, today);
+  out['Roadmap.md'] = roadmapPage(
+    { states, workstreams, requirements, releases, sha, today },
+    { counted, day, footer, STATE_MARK },
+  );
 
   out['Status.md'] =
     `# Status\n\n${fills.now}\n\n## By slice\n\n${fills.slices}\n\n` +
