@@ -5,7 +5,7 @@
 // proposed for the note is a card under the graph, for the user to accept or reject; the page follows the note's changes,
 // so a proposal appears as it lands. Whatever goes wrong is said in words on the page; it is never left blank.
 import { installDomHelpers } from '@graph-note/core/display/dom-helpers';
-import { installHost, notice } from '@graph-note/core/display/host';
+import { installHost, notice, readInHostDirection } from '@graph-note/core/display/host';
 import { toggleExportForm } from '@graph-note/core/display/export/export-form';
 import { button } from '@graph-note/core/display/graph-view/view-bar';
 import { gqlBlocks } from '../../core/src/blocks.ts';
@@ -34,6 +34,8 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
   const doc = win.document;
   installDomHelpers(win);
   installHost(browserHost(win));
+  // the whole page reads in the browser's language's direction, so its own parts mirror with the shared ones (rtl_mirrors)
+  readInHostDirection(doc.documentElement);
   const root = doc.getElementById('gn-page');
   if (!root) return;
   const skip = doc.querySelector<HTMLElement>('.gn-skip');

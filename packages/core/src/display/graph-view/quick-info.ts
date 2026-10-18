@@ -4,6 +4,7 @@
 // the keyboard focus, so nothing depends on hover (§5); Escape closes it; and it is put beside the thing, never over it.
 // The tooltip is made of text, and the note by Obsidian's own renderer through the card's links; it sits on the page itself,
 // so no card clips it and a full-screen card does not hide it. One tooltip to a card, taken away with the card.
+import { readInHostDirection } from '../host';
 import { Lifecycle } from '../lifecycle';
 import type { View } from '@graph-note/core';
 import { plural } from './view-bar';
@@ -187,10 +188,9 @@ export class QuickInfo {
     const owner = new Lifecycle();
     owner.load();
     this.owner = owner;
-    const el = (this.el ??= activeDocument.body.createDiv({
-      cls: 'graph-note-quick-info',
-      attr: { role: 'tooltip' },
-    }));
+    const el = (this.el ??= readInHostDirection(
+      activeDocument.body.createDiv({ cls: 'graph-note-quick-info', attr: { role: 'tooltip' } }),
+    ));
     el.hidden = true;
     el.empty();
     const head = el.createDiv({ cls: 'graph-note-quick-head' });

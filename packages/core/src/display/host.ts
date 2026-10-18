@@ -4,7 +4,7 @@
 // before anything is drawn. Obsidian installs one made of its own `setIcon`, `Platform`, `Notice` and `Menu`; the browser
 // editor's page installs one of its own. The layer imports no host, so nothing else tells it which it is in.
 
-import { setLanguage, SOURCE_LANGUAGE } from '@graph-note/core';
+import { currentDirection, directionOf, setDirection, setLanguage, SOURCE_LANGUAGE } from '@graph-note/core';
 
 /** A row of a menu the layer asks the host to show. */
 export interface MenuRow {
@@ -44,6 +44,11 @@ export interface DisplayHost {
    * translation for it is added, else in UK English. Not set: UK English.
    */
   language?: () => string;
+  /**
+   * The direction the host reads in, when it sets one of its own (editor spec §42, rtl_mirrors). Not set: the direction
+   * of its language, so an Arabic or Hebrew host mirrors the interface with no word from it.
+   */
+  direction?: () => 'ltr' | 'rtl';
 }
 
 /** What is said when the layer is used before any host was installed. */
@@ -54,7 +59,18 @@ let installed: DisplayHost | null = null;
 /** Installs the host the layer draws in; the host that installs it last is the one used. */
 export function installHost(host: DisplayHost): void {
   installed = host;
-  setLanguage(host.language?.() ?? SOURCE_LANGUAGE);
+  const language = host.language?.() ?? SOURCE_LANGUAGE;
+  setLanguage(language);
+  setDirection(host.direction?.() ?? directionOf(language));
+}
+
+/**
+ * `el` set to read in the host's direction, as the root of a view is: everything in it mirrors through the style sheets'
+ * logical sides, and the drawing keeps the screen's (styles.css, .graph-note-svg).
+ */
+export function readInHostDirection<T extends HTMLElement>(el: T): T {
+  el.dir = currentDirection();
+  return el;
 }
 
 /** The installed host; throws `NO_HOST` when there is none, so a missing one is never a silent blank. */

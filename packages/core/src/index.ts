@@ -187,9 +187,12 @@ export { OBSIDIAN_TOKEN_MAP, THEME_TOKENS, themeTokenCss } from './theme-tokens.
 export type { ThemeToken, ThemeTokenUse } from './theme-tokens.ts';
 export {
   addTranslation,
+  currentDirection,
   currentLanguage,
+  directionOf,
   placeholdersOf,
   sayWords,
+  setDirection,
   setLanguage,
   SOURCE_LANGUAGE,
   translationProblems,

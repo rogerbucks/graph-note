@@ -3,7 +3,7 @@
 // full screen, and shows a box's details when it is tapped or opened from the keyboard. This module ties together the
 // parts in its folder: the bar, the drawing, taps, the details, and where the card is placed.
 import { Lifecycle } from '../lifecycle';
-import { inHost, isPhone, setIcon } from '../host';
+import { inHost, isPhone, readInHostDirection, setIcon } from '../host';
 import { AcrossZoom, Zoom, scrollsOneWay } from '@graph-note/core';
 import type { Drawn, View } from '@graph-note/core';
 import { SourceToggle } from './source-toggle';
@@ -105,7 +105,7 @@ export class GraphView extends Lifecycle {
   override onload(): void {
     const { problems, mode } = this.o,
       root = this.containerEl;
-    root.addClass('graph-note-view', `is-${mode}`);
+    readInHostDirection(root).addClass('graph-note-view', `is-${mode}`);
 
     let list: HTMLElement | null = null;
     const placed = renderBar(root, this.o, {

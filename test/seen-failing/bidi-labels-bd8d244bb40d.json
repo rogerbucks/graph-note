@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/bidi-labels.test.js",
+  "test": "the person’s own words keep their own direction > each of those elements is one the display layer makes",
+  "seen_failing_first": false,
+  "evidence": "a guard on the list: the elements already existed, and the test keeps the list to ones that still do"
+}

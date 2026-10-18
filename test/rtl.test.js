@@ -65,3 +65,29 @@ describe('the style sheets mirror in a right-to-left language', () => {
       }
   });
 });
+
+/** The roots of the interface's views, by file: each is set to read in the host's direction as it is made. */
+const ROOTS = {
+  'packages/core/src/display/graph-view/graph-view.ts': 'a drawing’s card',
+  'packages/core/src/display/editor/editor-layout.ts': 'the edit pane',
+  'packages/core/src/display/graph-view/full-screen.ts': 'full screen, made on the page’s body',
+  'packages/core/src/display/graph-view/quick-info.ts': 'the tooltip, made on the page’s body',
+  'packages/claude-code/page/page-main.ts': 'the browser page, as a whole',
+};
+
+describe('the interface reads in the host’s direction', () => {
+  test('each view’s root is set to the host’s direction as it is made', () => {
+    for (const [file, what] of Object.entries(ROOTS))
+      assert.match(
+        readFileSync(new URL(`../${file}`, import.meta.url), 'utf8'),
+        /readInHostDirection\(/,
+        `${what} (${file})`,
+      );
+  });
+
+  test('the drawing keeps the screen’s direction, as it is laid out and walked by arrow keys in the screen’s coordinates', () => {
+    const css = readFileSync(new URL('../styles.css', import.meta.url), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    const rule = /\n\.graph-note-svg \{([^}]*)\}/.exec(css)?.[1] ?? '';
+    assert.match(rule, /direction: ltr;/);
+  });
+});

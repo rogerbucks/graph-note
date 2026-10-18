@@ -2,7 +2,7 @@
 // Drawing and Text tabs, the text field over its coloured picture, the fix and suggestion bars, the problems list and the
 // announcer for screen readers — built once for each block shown, in the pane or in place in a drawing's card.
 import type { PaneSession } from '@graph-note/core';
-import { isPhone, notice, setIcon } from '../host';
+import { isPhone, notice, readInHostDirection, setIcon } from '../host';
 
 /** Where the editor sits: in the edit pane, with its own drawing, a picker and, on a phone, tabs; or in place, in a drawing's card. */
 export type Layout = 'pane' | 'inline';
@@ -53,7 +53,9 @@ export function buildEditor(
   on: { showDrawing: () => void },
 ): EditorParts {
   const inline = layout === 'inline';
-  const pane = container.createDiv({ cls: inline ? 'graph-note-pane graph-note-inline' : 'graph-note-pane' });
+  const pane = readInHostDirection(
+    container.createDiv({ cls: inline ? 'graph-note-pane graph-note-inline' : 'graph-note-pane' }),
+  );
 
   const head = pane.createDiv({ cls: 'graph-note-pane-head' });
   const tools = head.createDiv({ cls: 'graph-note-pane-tools' });
