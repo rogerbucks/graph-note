@@ -1,7 +1,7 @@
-// What the quick-info tooltip says of a thing or a link (editor spec §24, quick_info): its name, its kind, its first few
-// properties, how many problems it has, and the first paragraph of its note — all of it found by the core, as the details
-// find it, so the tooltip and the details never disagree.
-import { details, linkDetails, propertiesOf } from '@graph-note/core';
+// What the quick-info tooltip says of a thing or a link (editor spec §24, quick_info): its name, its kind, how a thing is
+// linked (quick_info_links), its first few properties, how many problems it has, and the first paragraph of its note —
+// all of it found by the core, as the details find it, so the tooltip and the details never disagree.
+import { details, linkDetails, linksSaid, propertiesOf } from '@graph-note/core';
 import type { NoteReading } from '@graph-note/core';
 
 /** How many properties the tooltip lists. */
@@ -11,6 +11,8 @@ export const FIRST_PROPERTIES = 3;
 export interface Info {
   name: string;
   kind: string;
+  /** How a thing is linked, as its details say it (quick_info_links); a link's name already says what it links. */
+  links?: string;
   /** The first properties, each as `name: value`. */
   properties: string[];
   problems: number;
@@ -28,6 +30,7 @@ export function infoOf(reading: NoteReading, graph: string, target: { key: strin
     return {
       name: d.text,
       kind: d.kind,
+      links: linksSaid(reading, graph, d.key),
       properties: propertiesOf(reading, graph, { thing: d.key })
         .slice(0, FIRST_PROPERTIES)
         .map((p) => `${p.key}: ${p.value}`),

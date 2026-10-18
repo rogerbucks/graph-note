@@ -2002,6 +2002,10 @@ details.graph-note-style > summary {
   letter-spacing: 0.08em;
   color: var(--gn-text-muted);
 }
+/* how a thing is linked, as its details say it (quick_info_links): a line of its own under the name */
+.graph-note-quick-links {
+  margin-top: var(--gn-space-1);
+}
 .graph-note-quick-info ul {
   margin: var(--gn-space-1) 0;
   padding-inline-start: var(--gn-space-4);

@@ -1,7 +1,8 @@
 // Quick info (editor spec §24, quick_info, quick_info_no_hover_only): pointing at a thing or a link for a moment shows a
-// tooltip, in the theme's style, with its name, its kind, its first few properties, how many problems it has and the first
+// tooltip, in the theme's style, with its name, its kind, how a thing is linked, its first few properties, how many problems it has and the first
 // paragraph of its note, rendered as the details render it. It also opens by a long press on touch and when the thing has
-// the keyboard focus, so nothing depends on hover (§5); Escape closes it; and it is put beside the thing, never over it.
+// the keyboard focus, so nothing depends on hover (§5), and then describes it, so a screen reader reads it
+// (quick_info_read_aloud); Escape closes it; and it is put beside the thing, never over it.
 // The tooltip is made of text, and the note by Obsidian's own renderer through the card's links; it sits on the page itself,
 // so no card clips it and a full-screen card does not hide it. One tooltip to a card, taken away with the card.
 import { readInHostDirection } from '../host';
@@ -32,6 +33,9 @@ export interface QuickInfoHost {
   byKeyboard: () => boolean;
 }
 
+/** How many tooltips have been made, so each has the page's only id. */
+let tips = 0;
+
 /** A thing or a link the tooltip can speak of. */
 type Subject = { key: string } | { link: number };
 /** How it was opened. */
@@ -57,7 +61,7 @@ export class QuickInfo {
   private timer: number | null = null;
   /** What the pointer is over, so moving between the parts of one thing starts nothing again. */
   private pointed: Subject | null = null;
-  private shown: { via: Via } | null = null;
+  private shown: { via: Via; at: Element } | null = null;
   /** The finger held down, and whether holding opened the tooltip, so the lift is not a tap. */
   private held: { id: number; x: number; y: number } | null = null;
   private fired = false;
@@ -137,6 +141,7 @@ export class QuickInfo {
     this.cancel();
     this.token++;
     this.pointed = null;
+    if (this.shown?.via === 'focus') this.shown.at.removeAttribute('aria-describedby');
     this.shown = null;
     if (this.el) this.el.hidden = true;
     this.owner?.unload();
@@ -189,13 +194,17 @@ export class QuickInfo {
     owner.load();
     this.owner = owner;
     const el = (this.el ??= readInHostDirection(
-      activeDocument.body.createDiv({ cls: 'graph-note-quick-info', attr: { role: 'tooltip' } }),
+      activeDocument.body.createDiv({
+        cls: 'graph-note-quick-info',
+        attr: { role: 'tooltip', id: `graph-note-tip-${++tips}` },
+      }),
     ));
     el.hidden = true;
     el.empty();
     const head = el.createDiv({ cls: 'graph-note-quick-head' });
     head.createEl('strong', { cls: 'graph-note-quick-name', text: info.name });
     head.createSpan({ cls: 'graph-note-quick-kind', text: info.kind });
+    if (info.links) el.createDiv({ cls: 'graph-note-quick-links', text: info.links });
     if (info.properties.length) {
       const ul = el.createEl('ul', { cls: 'graph-note-quick-properties' });
       for (const p of info.properties) ul.createEl('li', { text: p });
@@ -211,8 +220,10 @@ export class QuickInfo {
     }
     // asked for again, or closed, while the note was being rendered: this one is no longer wanted
     if (token !== this.token) return;
-    this.shown = { via };
+    this.shown = { via, at };
     el.hidden = false;
+    // the thing with the focus is described by its tooltip, so a screen reader reads it (quick_info_read_aloud)
+    if (via === 'focus') at.setAttribute('aria-describedby', el.id);
     this.place(el, at);
   }
 
