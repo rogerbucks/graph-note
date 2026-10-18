@@ -12,8 +12,13 @@ import { word } from '@graph-note/core';
  */
 export function pageStates(open) {
   const withNote = '#token=t&note=Reader.md';
-  const drawn = (page) =>
-    until(() => !!page.window.document.querySelector('.graph-note-pane-drawing svg.graph-note-svg'), 8000);
+  // on a phone the pane opens on its text tab: the drawing is drawn once its tab is chosen, as a person chooses it
+  const drawn = async (page) => {
+    const doc = page.window.document;
+    await until(() => !!doc.querySelector('.graph-note-pane-drawing'), 8000);
+    doc.querySelector('.graph-note-tabs [role="tab"]')?.click();
+    await until(() => !!doc.querySelector('.graph-note-pane-drawing svg.graph-note-svg'), 8000);
+  };
   // a link naming a thing that is not there: a problem, listed with its fix, and an estimated link in the drawing
   const SLIPPED = PAGE_NOTE.replace(
     '(large)-[:ANSWERS]->(q)',

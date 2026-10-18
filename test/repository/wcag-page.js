@@ -52,12 +52,19 @@ export function workerFor(window, file) {
   return () => Promise.all(threads.map((t) => t.terminate()));
 }
 
+/** Whether a window `width` pixels wide matches `media`, a max-width query: a page's phone layout asks this. */
+function narrower(media, width) {
+  const most = /max-width:\s*(\d+)px/.exec(media);
+  return width !== undefined && !!most && width <= Number(most[1]);
+}
+
 /**
  * The page as built in `dir`, opened at `hash` (the address's fragment, which carries the token and the note), with the
  * script run. Returns {dom, window, stop}: `stop` puts away the worker threads; the caller closes the DOM (audit does).
- * `draft` is a draft the server holds for the note, which the page offers back; `language`, the browser's language.
+ * `draft` is a draft the server holds for the note, which the page offers back; `language`, the browser's language;
+ * `width`, the width of the window in CSS pixels, which the page's width queries are answered by (none: a wide window).
  */
-export function openEditorPage(dir, hash, note = PAGE_NOTE, draft = null, language = undefined) {
+export function openEditorPage(dir, hash, note = PAGE_NOTE, draft = null, language = undefined, width = undefined) {
   const html = readFileSync(join(dir, 'index.html'), 'utf8');
   // the built page is one module whose last line exports the starter; run as a plain script, it starts itself
   const script = readFileSync(join(dir, 'page.js'), 'utf8').replace(/\nexport \{[^}]*\};?\s*$/, '\n');
@@ -65,7 +72,12 @@ export function openEditorPage(dir, hash, note = PAGE_NOTE, draft = null, langua
   const { window } = dom;
   // the page's script is run below by hand and its style sheet added by styleFor: its tags are taken out through the DOM
   window.document.querySelectorAll('script, link[rel="stylesheet"]').forEach((e) => e.remove());
-  window.matchMedia = (media) => ({ media, matches: false, addEventListener() {}, removeEventListener() {} });
+  window.matchMedia = (media) => ({
+    media,
+    matches: narrower(media, width),
+    addEventListener() {},
+    removeEventListener() {},
+  });
   window.URL.createObjectURL = () => 'blob:drawing';
   window.URL.revokeObjectURL = () => {};
   window.ResizeObserver = class {
