@@ -83,4 +83,4 @@ MATCH (n {id: 'nowhere'})-[]-{1,1}(m) RETURN n, m
 
 > **W-02** Each of the five kinds draws: picked by hand, near a thing, how one reaches another, only some kinds (`MATCH (n IS Place|Person) RETURN n`), a walked path. A query of another shape is refused, the card naming the five shapes. A view of a thing not in the graph says it matches nothing, with Change the view, which opens the note at the view.
 
-**Back to the checklist:** [W-02 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for W-02 in its list.
+**Back to the checklist:** [W-02 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for W-02 in its list.

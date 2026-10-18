@@ -33,4 +33,4 @@
 
 > **V-06** The misspelt link is drawn dashed, labelled "⚠ … (estimated)". Tapping or clicking it selects it, drawn heavier, and explains it in one sentence, with two buttons: the quick fix "Change … to …", which writes the name it was taken to mean, and Edit the link, which opens the editor with the misspelt name selected.
 
-**Back to the checklist:** [V-06 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for V-06 in its list.
+**Back to the checklist:** [V-06 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for V-06 in its list.

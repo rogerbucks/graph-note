@@ -162,7 +162,7 @@ describe('the tally the mirror prints', () => {
     const gh = fakeGithub();
     const out = [];
     const desired = desiredWith(withWaves((w) => w.pop()));
-    const deps = { run: gh.run, originRepo: 'rogerbucks/graph-note', write: (t) => out.push(t), sleep: () => {} };
+    const deps = { run: gh.run, originRepo: 'rogerbucks/thoughtknot', write: (t) => out.push(t), sleep: () => {} };
     mirror({ desired, mode: 'check' }, deps);
     const text = out.join('');
     assert.match(text, /^wave Wave 1 · Focus \(2026-10-20 to 2026-11-02, estimate\): 2 requirements/m);

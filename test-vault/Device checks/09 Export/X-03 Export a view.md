@@ -31,4 +31,4 @@ MATCH (n {id: 'park'})-[]-{1,1}(m) RETURN n, m
 
 > **X-03** On a view's card: the view alone, then with the rest faded.
 
-**Back to the checklist:** [X-03 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for X-03 in its list.
+**Back to the checklist:** [X-03 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for X-03 in its list.

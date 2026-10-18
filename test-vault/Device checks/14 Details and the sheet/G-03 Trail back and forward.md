@@ -29,4 +29,4 @@
 > **G-03** Choose three things in turn from the details, then press Back twice and Forward once: each step returns to
 > the thing it names, and tapping a box in the drawing starts the trail again.
 
-**Back to the checklist:** [G-03 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for G-03 in its list.
+**Back to the checklist:** [G-03 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for G-03 in its list.

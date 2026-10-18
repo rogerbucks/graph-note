@@ -15,12 +15,12 @@ import { fileURLToPath } from 'node:url';
 import { SHOTS } from './wiki-screens.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const REPO = 'https://github.com/rogerbucks/graph-note';
+const REPO = 'https://github.com/rogerbucks/thoughtknot';
 const WIKI = `${REPO}/wiki`;
 const LICENCE = 'https://www.mozilla.org/en-US/MPL/2.0/';
 
 /** The page's address on GitHub Pages, used when no other is given. */
-export const SITE_URL = 'https://rogerbucks.github.io/graph-note/';
+export const SITE_URL = 'https://rogerbucks.github.io/thoughtknot/';
 
 /** The languages written right to left, by their primary code. */
 const RIGHT_TO_LEFT = new Set(['ar', 'dv', 'fa', 'he', 'ps', 'ur', 'yi']);

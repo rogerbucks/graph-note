@@ -36,4 +36,4 @@ The style block: a picture on every cat's box.
 > the details is still, its first frame, each saying it is still as the system asks; press Play on one: only that
 > one moves. Turn the setting off again afterwards.
 
-**Back to the checklist:** [K-04 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for K-04 in its list.
+**Back to the checklist:** [K-04 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for K-04 in its list.

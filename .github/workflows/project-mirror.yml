@@ -1,6 +1,6 @@
 name: Project mirror
 
-# Mirrors the requirements into their issues and the "graph-note requirements" GitHub Project on every push to main, so
+# Mirrors the requirements into their issues and the "thoughtknot requirements" GitHub Project on every push to main, so
 # the issues close and the project's Proof, Closed on, Wave, Order and Started on follow main with no session doing it.
 # scripts/github-project.mjs --apply does the work; in GitHub Actions it hands over to scripts/github-project-run.mjs.
 #

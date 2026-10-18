@@ -24,4 +24,4 @@
 > meant: the block is written with the right name. Create the note: the note is made, and the link is no longer
 > broken.
 
-**Back to the checklist:** [H-06 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for H-06 in its list.
+**Back to the checklist:** [H-06 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for H-06 in its list.

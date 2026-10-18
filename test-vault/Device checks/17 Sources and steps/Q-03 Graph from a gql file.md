@@ -27,4 +27,4 @@
 
 > **Q-03** Mac: with the plain text file `trip.gql` made by the generator (reset-test-vault) in a folder `Graph files` at the root of the vault, holding a graph that starts `// graph: trip`. A block `// graph: trip · FROM Graph files/trip.gql` draws it, under a line naming the file. Edit opens this block; the bar has no Edit here. Change the file in another editor and save it: the card draws the change. Add a line that cannot be read: the rest is still drawn, and the problem is listed.
 
-**Back to the checklist:** [Q-03 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Q-03 in its list.
+**Back to the checklist:** [Q-03 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Q-03 in its list.

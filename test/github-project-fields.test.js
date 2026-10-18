@@ -20,7 +20,7 @@ import { readWaves } from '../scripts/github-project-waves.mjs';
 import { fakeGithub } from './repository/github-project-fake.js';
 import { FIXTURE, WAVES, WORKSTREAMS } from './repository/github-project-fixture.js';
 
-const REPO = 'rogerbucks/graph-note';
+const REPO = 'rogerbucks/thoughtknot';
 const board = readBoard(FIXTURE);
 const planOf = (waves = WAVES) => readWaves(JSON.stringify(waves), WORKSTREAMS);
 const desiredFor = (waves = null) => desiredState(board, WORKSTREAMS, [3, 4], waves && planOf(waves));

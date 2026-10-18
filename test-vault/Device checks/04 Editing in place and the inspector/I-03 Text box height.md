@@ -27,4 +27,4 @@
 
 > **I-03** In the card, the text box is as tall as the text and one more line: no empty area below it for the caret to land in. Each read-back sits on its own line's right, never wrapping under it, and typing lands where the text shows.
 
-**Back to the checklist:** [I-03 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-03 in its list.
+**Back to the checklist:** [I-03 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-03 in its list.

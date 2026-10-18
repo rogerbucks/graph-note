@@ -24,4 +24,4 @@
 
 > **I-10** A value is written when its field is left; a value that does not fit its type says why, and nothing changes.
 
-**Back to the checklist:** [I-10 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-10 in its list.
+**Back to the checklist:** [I-10 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-10 in its list.

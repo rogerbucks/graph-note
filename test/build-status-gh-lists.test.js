@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { mergedPullNumbers, openPullNumbers } from '../scripts/build-status-gh.mjs';
 import { fakeRepoSide, pull } from './repository/build-status-fake.js';
 
-const REPO = 'rogerbucks/graph-note';
+const REPO = 'rogerbucks/thoughtknot';
 const SHA = 'b'.repeat(40);
 const fork = { headRepo: 'someone/thoughtknot' };
 const merged = (n, extra = {}) =>

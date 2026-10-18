@@ -73,7 +73,7 @@ describe('search engines and AI assistants can find and read it', () => {
     assert.equal(data.url, SITE_URL);
     assert.equal(data.softwareVersion, '0.6.0');
     assert.equal(data.license, 'https://www.mozilla.org/en-US/MPL/2.0/');
-    assert.equal(data.codeRepository, 'https://github.com/rogerbucks/graph-note');
+    assert.equal(data.codeRepository, 'https://github.com/rogerbucks/thoughtknot');
     assert.equal(data.offers.price, '0');
     assert.equal(data.description, meta('meta[name="description"]'));
   });
@@ -93,7 +93,7 @@ describe('search engines and AI assistants can find and read it', () => {
     assert.match(llms, /^# ThoughtKnot\n\n> Free, open-source Obsidian plugin/);
     assert.match(
       llms,
-      /\n## Docs\n\n- \[How to use ThoughtKnot\]\(https:\/\/github\.com\/rogerbucks\/graph-note\/wiki\/How-to-use-ThoughtKnot\)/,
+      /\n## Docs\n\n- \[How to use ThoughtKnot\]\(https:\/\/github\.com\/rogerbucks\/thoughtknot\/wiki\/How-to-use-ThoughtKnot\)/,
     );
     assert.equal(files['.nojekyll'], '');
   });

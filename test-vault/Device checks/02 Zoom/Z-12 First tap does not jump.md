@@ -25,4 +25,4 @@
 
 > **Z-12** Phone, Live Preview, the note just opened and scrolled down: the first tap on Zoom in zooms, and the page does not jump to the top. Nor does the first tap on Find, which opens its box.
 
-**Back to the checklist:** [Z-12 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Z-12 in its list.
+**Back to the checklist:** [Z-12 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Z-12 in its list.

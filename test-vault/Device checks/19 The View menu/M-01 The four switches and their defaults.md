@@ -37,4 +37,4 @@
 
 > **M-01** Press View on a graph's bar: four switches, Labels by zoom, Busy hubs folded, Groups folded and Parallel links merged, each saying on or off; labels and hubs are on, groups and merging off. In Settings › ThoughtKnot, change a switch's default under Drawing, then open the note again: its graphs start as the settings now say.
 
-**Back to the checklist:** [M-01 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for M-01 in its list.
+**Back to the checklist:** [M-01 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for M-01 in its list.

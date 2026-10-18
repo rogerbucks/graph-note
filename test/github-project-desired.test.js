@@ -350,8 +350,8 @@ describe('the project fields', () => {
     assert.deepEqual(desiredState(board, WORKSTREAMS, [4]).fields.Slice, ['Slice 4']);
   });
 
-  test('belong to a project titled graph-note requirements', () => {
-    assert.equal(PROJECT_TITLE, 'graph-note requirements');
+  test('belong to a project titled thoughtknot requirements', () => {
+    assert.equal(PROJECT_TITLE, 'thoughtknot requirements');
   });
 });
 

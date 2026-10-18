@@ -24,4 +24,4 @@
 
 > **I-09** A number has a number field, a date opens the date picker, and true or false is a checkbox.
 
-**Back to the checklist:** [I-09 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-09 in its list.
+**Back to the checklist:** [I-09 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-09 in its list.
