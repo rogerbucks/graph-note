@@ -81,7 +81,8 @@ Signed-off-by: Your Name <you@example.com>
 
 `git commit -s` adds it. It is how a fork or a pull request stays clear about who wrote what, and it keeps the project
 free to stay under the [Mozilla Public License 2.0](LICENSE). People who take part follow the
-[code of conduct](CODE_OF_CONDUCT.md), and a fork goes by its own name ([TRADEMARKS.md](TRADEMARKS.md)).
+[code of conduct](CODE_OF_CONDUCT.md), and a fork goes by its own name ([TRADEMARKS.md](TRADEMARKS.md)). A security problem
+is reported in private, as [SECURITY.md](SECURITY.md) says, never in a public issue.
 
 ## Obsidian’s guidelines
 
@@ -238,7 +239,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/build-status-workflow.test.js` — the two build status workflows: woken only by the checks of a pull request, a push to main and a release; the project secret given only to the script on main; no event text in a command line; least privilege.
 - `test/classification.test.js` — the content check refuses confidential or personal files.
 - `test/conventions.test.js` — the conventions on this page.
-- `test/community-files.test.js` — the code of conduct says how to report a problem in private, `TRADEMARKS.md` keeps the name for the original, and CONTRIBUTING.md and the pull request template ask for every commit to be signed off (editor spec §13, community_files).
+- `test/community-files.test.js` — the code of conduct says how to report a problem in private, `TRADEMARKS.md` keeps the name for the original, and CONTRIBUTING.md and the pull request template ask for every commit to be signed off (editor spec §13, community_files); `SECURITY.md` names the supported versions, a private way to report and a reply time (security_policy).
 - `test/device-check-notes.test.js` — the device checklist numbers every item, the test vault holds one note for each item after Before in `Device checks/`, the note's checklist line is the item's words, each note's graph blocks read as it says they do (the repository's reader and checker, and `parseView` for a view), and the index lists the notes in order (editor spec §3, tried first in a test vault).
 - `test/device-check-quotes.test.js` — what a device check note quotes from Obsidian's screen (a read-back, a label, the tap text of an estimate, a box's details, an export's footer and file name, the conversion notice) is computed from the note's own graph blocks with the real functions and matches exactly; the notes' generator scripts and filler set up the case they describe (editor spec §3).
 - `test/engine-version.test.js` — the Graphviz version is read from the engine, named in the notices, and checked against published advisories.
