@@ -28,7 +28,12 @@ export function linkWords(reading: NoteReading, graph: string, link: number): st
 /** A step of the trail, or the selection, by name: a thing's text, or "the link Tablet answers Which device?". */
 export function stepName(reading: NoteReading, graph: string, step: TrailStep): string {
   if ('key' in step) return reading.graphs.get(graph)?.boxes.find((b) => b.key === step.key)?.text ?? step.key;
-  return `the link ${linkWords(reading, graph, step.link).replace(/^Link: /, '')}`;
+  const d = reading.graphs.get(graph),
+    l = d?.links[step.link],
+    text = (k: string) => d?.boxes.find((b) => b.key === k)?.text ?? k;
+  return l
+    ? word('details.step-link', { from: text(l.from), reading: l.reading, to: text(l.to) })
+    : word('details.step-link-unknown');
 }
 
 /**

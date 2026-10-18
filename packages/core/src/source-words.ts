@@ -3,6 +3,7 @@
 // `{name}`; a word that changes with a count gives `one` and `other`. Words move here from the code as each place is
 // brought to the catalogue; the plain-English check (ux_copy_auto) reads them here.
 
+import { EDIT_SOURCE_WORDS } from './edit-source-words.ts';
 import { PAGE_SOURCE_WORDS } from './page-source-words.ts';
 import { SETTINGS_SOURCE_WORDS } from './settings-source-words.ts';
 
@@ -14,15 +15,6 @@ export const SOURCE_WORDS = {
   'editor.block-gone': 'That graph block is no longer in the note: choose again from the blocks it has now.',
   'editor.draft-gone':
     'That draft is no longer kept: it was restored or discarded elsewhere, so nothing was changed. Any other draft is offered when the block is opened again.',
-  'properties.type.text': 'Text',
-  'properties.type.number': 'Number',
-  'properties.type.boolean': 'Checkbox',
-  'properties.type.date': 'Date',
-  'properties.type.datetime': 'Date & time',
-  'properties.type.list': 'List',
-  'properties.type-of': 'Type of {name}: {type}',
-  'properties.new': 'new property',
-  'properties.remove': 'Remove',
   'find.none': 'No thing matches.',
   'find.found': { one: '{count} thing found.', other: '{count} things found.' },
   'bar.name': 'Graph {graph}',
@@ -72,6 +64,19 @@ export const SOURCE_WORDS = {
   'details.forward-to': 'Forward to {name}',
   'details.link': 'Link',
   'details.link-said': 'Link: {from} {reading} {to}',
+  'details.step-link': 'the link {from} {reading} {to}',
+  'details.step-link-unknown': 'the link',
+  'details.estimated-link': 'the estimated link',
+  'details.note': 'Note',
+  'details.not-declared': 'The block is no longer being edited, so nothing was declared.',
+  'details.show-only': 'Show only this and its neighbours',
+  'details.shortest-path': 'Shortest path to another thing',
+  'details.open-hub': 'Open its {count} links',
+  'details.fold-hub': 'Fold its {count} links',
+  'details.edit-link': 'Edit the link',
+  'details.not-as-drawn':
+    'The text being edited is not as drawn, so nothing was written. Try again once the drawing is redrawn.',
+  'details.edit-block': 'Edit the block to fix it: nothing was written.',
   'summary.counts': '{things}, {links}',
   'summary.things': { one: '{count} thing', other: '{count} things' },
   'summary.links': { one: '{count} link', other: '{count} links' },
@@ -363,6 +368,8 @@ export const SOURCE_WORDS = {
   'parked.why-waits': 'Why it waits',
   'parked.revisit-by': 'Revisit by',
   'parked.park-it': 'Park it',
+  // the words of editing (edit-source-words.ts)
+  ...EDIT_SOURCE_WORDS,
   // the browser page's own words (page-source-words.ts)
   ...PAGE_SOURCE_WORDS,
   // each option of the settings page, by its key (settings-source-words.ts)
