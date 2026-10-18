@@ -687,5 +687,17 @@
       "board_authorship",
       "board_comments"
     ]
+  },
+  "M1": {
+    "title": "Copilot Cowork skill",
+    "requirements": [
+      "cowork_skill",
+      "cowork_core_only",
+      "cowork_same_bytes",
+      "cowork_drawing",
+      "cowork_ceiling",
+      "cowork_no_server",
+      "cowork_released"
+    ]
   }
 }

@@ -36,3 +36,6 @@ plan to add them, is in the [design review](Design-review).
 
 The whiteboard, a board view for brainstorming with several people that decomposes into graph items, is designed in
 the [whiteboard design](Whiteboard-design).
+
+A Copilot Cowork skill, which brings graph notes kept in OneDrive or SharePoint into Microsoft 365 Copilot Cowork, is
+designed in the [Copilot Cowork skill design](Copilot-Cowork-skill-design).
