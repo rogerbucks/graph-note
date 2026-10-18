@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/box-drag-view.test.js",
+  "test": "moving a box with a finger > a hold lifted without moving is a long press, as before: no details open and nothing moves",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that held before a finger could pick a box up and must still hold with it: a swipe still scrolls or pans, and a long press is still a long press"
+}
