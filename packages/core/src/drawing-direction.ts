@@ -1,8 +1,8 @@
-// A drawing in the direction it is read (editor spec §42, rtl_drawing_direction): Graphviz lays a drawing out left to
-// right, and in a right-to-left language one that runs across is shown running right to left. It is mirrored after
-// layout, by its coordinates, so the layout source and every export stay byte for byte the same, and every step that
-// reads the drawing's shapes (taps, dragging, the map, a path played) reads the mirrored ones. Its words are not mirrored:
-// each label keeps its letters and is anchored at its other end.
+// A drawing in the direction it is read (editor spec §42, rtl_drawing_direction). Graphviz lays a drawing out left to
+// right. In a right-to-left language, one that runs across is shown running right to left.
+// It is mirrored after layout, by its coordinates. So the layout source and every export stay byte for byte the same.
+// Every step that reads the drawing's shapes reads the mirrored ones: taps, dragging, the map, a path played.
+// Its words are not mirrored. Each label keeps its letters and is anchored at its other end.
 import type { Drawn } from './render.ts';
 import { fixed } from './theme.ts';
 import { currentDirection } from './words.ts';
@@ -12,8 +12,8 @@ const nums = (s: string) => (s.match(new RegExp(NUMBER, 'g')) ?? []).map(Number)
 const ANCHOR: Record<string, string> = { start: 'end', end: 'start' };
 
 /**
- * `svg` as Graphviz drew it, mirrored side to side within its own box: each point's distance from the left edge becomes
- * its distance from the right one. Mirrored twice it is the drawing it was.
+ * `svg` as Graphviz drew it, mirrored side to side within its own box. Each point's distance from the left edge becomes
+ * its distance from the right one. Mirrored twice, it is the drawing it was.
  */
 export function mirrored(svg: string): string {
   const [, , width = 0] = nums(/<svg\b[^>]*\bviewBox="([^"]*)"/.exec(svg)?.[1] ?? '');
@@ -38,14 +38,14 @@ export function mirrored(svg: string): string {
 }
 
 /**
- * The drawing as it is shown in `direction` (the interface's, by default): mirrored when it runs across in a
- * right-to-left language, marked so, and its direction kept as laid out; any other drawing as it is.
+ * The drawing as it is shown in `direction`, the interface's by default. It is mirrored, and marked so, when it runs
+ * across in a right-to-left language. Its direction is kept as laid out. Any other drawing is shown as it is.
  */
 export function inReadingDirection(drawn: Drawn, direction: 'ltr' | 'rtl' = currentDirection()): Drawn {
   if (direction !== 'rtl' || drawn.rankdir !== 'LR' || !drawn.svg) return drawn;
   return { ...drawn, svg: mirrored(drawn.svg), mirrored: true };
 }
 
-/** A layout's result as it is shown: a drawing in the direction the interface is read in; a refusal or nothing as it is. */
+/** A layout's result as shown: a drawing in the direction the interface is read in; a refusal or nothing as it is. */
 export const shownAsRead = <T>(laid: Drawn | T): Drawn | T =>
   laid && typeof laid === 'object' && 'svg' in laid ? inReadingDirection(laid) : laid;
