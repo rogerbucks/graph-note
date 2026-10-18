@@ -24,6 +24,8 @@
 
 **Checklist line:**
 
-> **U-06** Stop the local model's server and send: a notice says the model could not be reached and that nothing was changed, and the note is as it was. The plugin's data.json lists the last sends, failed ones too, each with a digest and the size of what was sent, never its text, the model and the time, and never a key; "Clear the record of sends to AI models" empties it.
+> **U-06** Stop the local model's server and send. A notice says the model could not be reached and that nothing was changed, and the note is as it was.
+>
+> - The plugin's data.json lists the last sends, failed ones too. Each has a digest and the size of what was sent (never its text), the model and the time, and never a key. "Clear the record of sends to AI models" empties it.
 
 **Back to the checklist:** [U-06 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for U-06 in its list.

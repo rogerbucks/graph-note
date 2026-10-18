@@ -80,6 +80,6 @@
 
 **Checklist line:**
 
-> **E-05** Phone: a wide flow, a wide tree and a wide timeline each show at a readable size, fitted top to bottom; a finger moves the drawing sideways only, and up and down still scroll the note.
+> **E-05** Phone: a wide flow, a wide tree and a wide timeline each show at a readable size, fitted top to bottom. A finger moves the drawing sideways only, and up and down still scroll the note.
 
 **Back to the checklist:** [E-05 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for E-05 in its list.

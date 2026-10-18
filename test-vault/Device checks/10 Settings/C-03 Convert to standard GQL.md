@@ -23,6 +23,6 @@
 
 **Checklist line:**
 
-> **C-03** With such a note in front, "Convert this note to standard GQL" from the command palette, and the button on the page: the comma is written, a notice says how many were converted, and one undo takes it back.
+> **C-03** With such a note in front, try "Convert this note to standard GQL" from the command palette, and the button on the page. The comma is written, and a notice says how many were converted. One undo takes it back.
 
 **Back to the checklist:** [C-03 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for C-03 in its list.

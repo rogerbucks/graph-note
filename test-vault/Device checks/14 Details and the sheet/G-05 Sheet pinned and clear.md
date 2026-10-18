@@ -41,8 +41,9 @@
 **Checklist line:**
 
 > **G-05** iPhone, reading view and Live Preview, a card taller than the screen: tap a box near the foot of the screen.
-> The details open as a sheet at the foot of the screen, over the card and as wide as it, and the drawing moves up
-> so the box sits above the sheet. Scroll the note: the sheet stays where it is; scroll the card off the screen: the
-> sheet goes, and comes back with the card. Same on the Mac.
+>
+> - The details open as a sheet at the foot of the screen, over the card and as wide as it. The drawing moves up so the box sits above the sheet.
+> - Scroll the note: the sheet stays where it is. Scroll the card off the screen: the sheet goes, and comes back with the card.
+> - Same on the Mac.
 
 **Back to the checklist:** [G-05 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for G-05 in its list.

@@ -45,6 +45,6 @@ MATCH (n:Person) RETURN n
 
 **Checklist line:**
 
-> **M-07** Select a box, then turn each switch in turn: the drawing redraws at once, the box stays selected, its details stay open and its neighbours stay in focus; nothing in the note changes, in reading view too. In a view, Save as shown writes the switches into the style block; close the note and open it again: the view opens with them.
+> **M-07** Select a box, then turn each switch in turn. The drawing redraws at once, the box stays selected, its details stay open and its neighbours stay in focus. Nothing in the note changes, in reading view too. In a view, Save as shown writes the switches into the style block. Close the note and open it again: the view opens with them.
 
 **Back to the checklist:** [M-07 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for M-07 in its list.

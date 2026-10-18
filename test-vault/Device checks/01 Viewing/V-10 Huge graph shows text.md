@@ -7586,6 +7586,10 @@ The block that must still draw while the huge one is checked.
 
 **Checklist line:**
 
-> **V-10** A huge graph (over 2,000 things: graph theory and this project, made by a script) shows its text with a banner — an icon, and the limit and the numbers in words — and Obsidian stays responsive: the note scrolls and other blocks draw while it is checked. On the desktop and on the phone (§9, layout_contained; the tests run the worker in a Node thread, not a web view). The text has no Export button: with no drawing there is nothing to export, and an export is held to the same limits.
+> **V-10** A huge graph shows its text with a banner. The graph has over 2,000 things: graph theory and this project, made by a script.
+>
+> - The banner has an icon, and the limit and the numbers in words.
+> - Obsidian stays responsive: the note scrolls and other blocks draw while it is checked. This holds on the desktop and on the phone (§9, layout_contained; the tests run the worker in a Node thread, not a web view).
+> - The text has no Export button. With no drawing there is nothing to export, and an export is held to the same limits.
 
 **Back to the checklist:** [V-10 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for V-10 in its list.

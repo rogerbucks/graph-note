@@ -27,6 +27,9 @@
 
 **Checklist line:**
 
-> **C-07** With the pane in front showing a note in reading view, "Convert this note to standard GQL" from the command palette, and the button on the page: the note is left as it is, and the notice says why. With no note in the pane in front (the ThoughtKnot pane, a canvas, a PDF, an empty tab), nothing is converted, and the notice says the pane holds no note. The pane in front decides: in Live Preview it converts, even while another pane shows the note in reading view.
+> **C-07** The pane in front shows a note in reading view. Try "Convert this note to standard GQL" from the command palette, and the button on the page. The note is left as it is, and the notice says why.
+>
+> - With no note in the pane in front (the ThoughtKnot pane, a canvas, a PDF, an empty tab), nothing is converted. The notice says the pane holds no note.
+> - The pane in front decides: in Live Preview it converts, even while another pane shows the note in reading view.
 
 **Back to the checklist:** [C-07 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for C-07 in its list.

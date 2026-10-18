@@ -27,6 +27,9 @@
 
 **Checklist line:**
 
-> **D-01** Edit here on a card, tap a box, press Park for later, fill what is needed and why, press Park it: a Deferred is written into the block; when the card redraws, the box is dashed with "⏳ later" at its top right, readable in light and dark, and the badge says "No problems, 1 parked". On a box drawn under a suggested name (I-19), Park it is refused with "accept its name first", and nothing is written.
+> **D-01** Edit here on a card, tap a box, press Park for later, fill what is needed and why, press Park it.
+>
+> - A Deferred is written into the block. When the card redraws, the box is dashed with "⏳ later" at its top right, readable in light and dark. The badge says "No problems, 1 parked".
+> - On a box drawn under a suggested name (I-19), Park it is refused with "accept its name first". Nothing is written.
 
 **Back to the checklist:** [D-01 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for D-01 in its list.

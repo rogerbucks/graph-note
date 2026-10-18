@@ -31,6 +31,9 @@ MATCH (n {id: 'park'})-[]-{1,1}(m) RETURN n, m
 
 **Checklist line:**
 
-> **Q-02** A note whose block says `// graph: trip · FROM [[…]]`, naming the note of Q-01, with a view under it: the FROM block draws the whole graph of Q-01, read-only, and the view draws its part, each under a line saying "Drawn from the note …" with an Open button that opens Q-01. Change a name in Q-01's graph block and come back: both cards draw the new name, and this note still holds none of the data.
+> **Q-02** A note whose block says `// graph: trip · FROM [[…]]`, naming the note of Q-01, with a view under it.
+>
+> - The FROM block draws the whole graph of Q-01, read-only, and the view draws its part. Each is under a line saying "Drawn from the note …" with an Open button that opens Q-01.
+> - Change a name in Q-01's graph block and come back: both cards draw the new name. This note still holds none of the data.
 
 **Back to the checklist:** [Q-02 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Q-02 in its list.

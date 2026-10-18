@@ -23,6 +23,6 @@
 
 **Checklist line:**
 
-> **Z-05** Zoom stops at four times natural size and, going out, where the whole drawing fits (natural size when it fits larger), and text stays sharp at every level.
+> **Z-05** Zoom stops at four times natural size. Going out, it stops where the whole drawing fits (natural size when it fits larger). Text stays sharp at every level.
 
 **Back to the checklist:** [Z-05 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Z-05 in its list.

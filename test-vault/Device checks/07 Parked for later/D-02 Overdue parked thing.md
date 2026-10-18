@@ -30,6 +30,6 @@ An ℹ hint on `later_small`, "the thing later_small has no text", is expected h
 
 **Checklist line:**
 
-> **D-02** Change its revisit_by to a day in the past: the mark says "⏳ overdue", the badge adds "1 overdue", and the list behind the badge names it with what is needed. VoiceOver reads the box as "parked for later, overdue".
+> **D-02** Change its revisit_by to a day in the past. The mark says "⏳ overdue", and the badge adds "1 overdue". The list behind the badge names it with what is needed. VoiceOver reads the box as "parked for later, overdue".
 
 **Back to the checklist:** [D-02 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for D-02 in its list.
