@@ -1,6 +1,6 @@
 name: Wiki
 
-# Makes the project's GitHub wiki from the repository on every push to main and every published release (spec §41,
+# Makes the project's GitHub wiki from the repository on every push to main and every published stable release (spec §41,
 # wiki_generated and user_guide_wiki): scripts/wiki-screens.mjs takes the user guide's screenshots from the build in
 # the runner's Chrome, and scripts/wiki.mjs writes every page. A button of the drawing the guide does not explain is a
 # warning on the run, never a failure.
@@ -18,7 +18,7 @@ on:
   push:
     branches: [main]
   release:
-    types: [published]
+    types: [released]
   gollum:
 
 permissions:
@@ -49,7 +49,7 @@ jobs:
       - name: List the releases
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName,name,publishedAt > "$RUNNER_TEMP/releases.json"
+        run: gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --exclude-pre-releases --json tagName,name,publishedAt > "$RUNNER_TEMP/releases.json"
       - name: Take the user guide's screenshots
         run: node scripts/wiki-screens.mjs --out wiki-out/images --chrome "$(command -v google-chrome)"
       - name: Write the pages

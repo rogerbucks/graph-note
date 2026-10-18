@@ -5,7 +5,7 @@ name: Build status
 # request, updated at each step. The values come from GitHub's events alone. scripts/build-status-run.mjs does the work.
 #
 # It is never woken by a pull request itself: it follows the checks of one (CI, and the "Build status trigger" workflow
-# that runs when one is opened, pushed to, reopened or closed), a push to main (a merge) and a published release. So its
+# that runs when one is opened, pushed to, reopened or closed), a push to main (a merge) and a published stable release (never a nightly pre-release). So its
 # definition is always the one on main, and the job runs the script on main: nothing of a pull request is checked out or
 # run. The pull request's requirements file is read through the API as data. PROJECT_TOKEN (a classic token with the
 # project and public_repo scopes) is for the project board alone: listing the project, reading it and setting its values.
@@ -21,7 +21,7 @@ on:
   push:
     branches: [main]
   release:
-    types: [published]
+    types: [released]
 
 permissions:
   contents: read

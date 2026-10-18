@@ -13,6 +13,7 @@ import {
   mergedPullNumbers,
   openPullNumbers,
   parentOf,
+  publishedReleases,
   pullNumbersForSha,
   readPullRequest,
   readRequirementsAt,
@@ -188,6 +189,7 @@ describe('the release before another', () => {
     { tag_name: 'v0.3.0', draft: false, published_at: '2026-10-01T10:00:00Z' },
     { tag_name: 'v0.4.0', draft: false, published_at: '2026-10-10T10:00:00Z' },
     { tag_name: 'v0.4.1-draft', draft: true, published_at: null },
+    { tag_name: '0.4.1-nightly.20261011', draft: false, prerelease: true, published_at: '2026-10-11T16:00:00Z' },
     { tag_name: 'v0.2.0', draft: false, published_at: '2026-09-01T10:00:00Z' },
   ];
 
@@ -204,6 +206,16 @@ describe('the release before another', () => {
     assert.equal(releaseBefore(run, REPO, 'v0.2.0'), null);
     hub.releases = [];
     assert.equal(releaseBefore(run, REPO, 'v0.1.0'), null);
+  });
+
+  test('is never a nightly pre-release, which has not been released', () => {
+    const { hub, run } = fakeRepoSide();
+    hub.releases = releases;
+    assert.equal(releaseBefore(run, REPO, 'v0.5.0').tag, 'v0.4.0');
+    assert.equal(
+      publishedReleases(run, REPO).some((r) => /nightly/.test(r.tag)),
+      false,
+    );
   });
 
   test('is the newest release when the tag is not in the list yet, as when it has only just been published', () => {

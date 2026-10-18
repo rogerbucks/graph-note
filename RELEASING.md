@@ -4,6 +4,15 @@ What is done by a person for each release, beyond what CI proves. The automated 
 the licence and notice checks) are in [CONTRIBUTING.md](CONTRIBUTING.md); the device checklist for Obsidian is
 `packages/obsidian/test/device-checklist.md`. This page holds the walk-through that finds what an automated check cannot.
 
+## Nightly builds and stable releases
+
+Two channels. **Nightly**: `.github/workflows/nightly.yml` builds main each night at 16:00 UTC (2 am in Brisbane), and
+when run by hand, if main moved since the last one. It runs the full suite and publishes only if every test passes, as a
+GitHub pre-release named for the next patch and the day (`0.6.1-nightly.20261018`, from `scripts/nightly-version.mjs`),
+keeping the last seven. It skips the quality ratchet and the walk-through below, so it is for those who want the newest
+work: in Obsidian, BRAT with pre-releases on follows it. A pre-release never counts as a release: the build status and
+the wiki leave it out. **Stable**: a bare version tag on main, through `release.yml`, with every check on this page.
+
 ## Accessibility walk-through, every release
 
 The spec (§11) says every interface, in every host, meets WCAG 2.2 Level AA, and that a new host meets it before its first

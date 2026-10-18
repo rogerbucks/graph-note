@@ -18,13 +18,13 @@ const permissionLines = (blockLines) =>
 describe('the workflow that updates the board and the comment', () => {
   const text = read(UPDATE);
 
-  test('wakes on the checks of a pull request, on a push to main and on a published release', () => {
+  test('wakes on the checks of a pull request, on a push to main and on a published stable release, never a pre-release', () => {
     const on = block(lines(UPDATE), 'on', 0).join('\n');
     assert.match(on, /workflow_run:/);
     assert.match(on, /workflows: \[CI, Build status trigger\]/);
     assert.match(on, /types: \[completed\]/);
     assert.match(on, /push:\s*\n\s*branches: \[main\]/);
-    assert.match(on, /release:\s*\n\s*types: \[published\]/);
+    assert.match(on, /release:\s*\n\s*types: \[released\]/);
   });
 
   test('is not woken by a pull request itself, so its definition is always the one on main', () => {

@@ -15,10 +15,10 @@ const given = (job) =>
     .filter(Boolean);
 
 describe('the workflow that makes the wiki', () => {
-  test('is woken by a push to main, a published release and an edit of the wiki, never by a pull request', () => {
+  test('is woken by a push to main, a published stable release (never a pre-release) and an edit of the wiki, never by a pull request', () => {
     const on = block(lines, 'on', 0).join('\n');
     assert.match(on, /push:\s*\n\s*branches: \[main\]/);
-    assert.match(on, /release:\s*\n\s*types: \[published\]/);
+    assert.match(on, /release:\s*\n\s*types: \[released\]/);
     assert.match(on, /gollum:/);
     assert.doesNotMatch(on, /pull_request|workflow_run/);
   });
@@ -38,9 +38,9 @@ describe('the workflow that makes the wiki', () => {
     assert.match(runs, /node scripts\/wiki\.mjs --out wiki-out --sha "\$GITHUB_SHA"/);
   });
 
-  test('asks gh only for the release fields it offers', () => {
+  test('asks gh only for the release fields it offers, stable releases alone', () => {
     const runs = runCommands(jobs(text).make.join('\n')).join('\n');
-    assert.match(runs, /gh release list .*--json tagName,name,publishedAt /);
+    assert.match(runs, /gh release list .*--exclude-pre-releases --json tagName,name,publishedAt /);
   });
 
   test('says how to start the wiki when it has no pages yet: the review checks nothing, the publish stops', () => {
