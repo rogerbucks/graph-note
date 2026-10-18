@@ -1,0 +1,6 @@
+{
+  "file": "test/quality-instructions.test.js",
+  "test": "the committed baseline holds the counts > in CI on the same machine its own counts pass, and a steady count 10% worse fails",
+  "seen_failing_first": false,
+  "evidence": "renamed and moved to a steady benchmark: a steady count 10% worse failed before the drawings had more room, as it still does"
+}
