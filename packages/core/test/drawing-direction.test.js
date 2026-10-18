@@ -10,6 +10,7 @@ import { hitAreas, centres } from '../src/hits.ts';
 import { mirrored, inReadingDirection } from '../src/drawing-direction.ts';
 import { landingFor } from '../src/box-drag.ts';
 import { setDirection } from '../src/words.ts';
+import { AcrossZoom } from '../src/zoom-across.ts';
 
 const NOTE = ["// graph: g\n(a:T {name: 'Ann'}),\n(b:T {name: 'Bob', age: 3}),\n(c:T),\n(a)-[:R]->(b), (b)-[:S]->(c)"];
 const graph = () => readNote(NOTE).graphs.get('g');
@@ -100,5 +101,16 @@ describe('a drawing in a right-to-left language', () => {
     assert.equal(landingFor('a', right, boxes, 'LR')?.side, 'after');
     assert.equal(landingFor('a', right, boxes, 'RL')?.side, 'before');
     assert.equal(landingFor('a', left, boxes, 'RL')?.side, 'after');
+  });
+
+  test('a wide flow scrolled across on a phone opens at its start, which is now its right end', () => {
+    const viewport = { width: 375, height: 400 };
+    const z = new AcrossZoom({ width: 2000, height: 400, fromRight: true }, viewport, 'note');
+    assert.equal(z.view().x, 375 - 2000, 'its right end in view');
+    assert.ok(z.isFitted());
+    z.zoomIn();
+    z.fit();
+    assert.equal(z.view().x, 375 - 2000, 'Fit brings it back to its start');
+    assert.equal(new AcrossZoom({ width: 2000, height: 400 }, viewport, 'note').view().x, 0, 'laid out: its left end');
   });
 });
