@@ -1,0 +1,47 @@
+// The browser page's own words, in UK English (editor spec §42, words_catalogue): its changes and review sections and
+// its landmarks, which only the page shows (packages/claude-code/page). source-words.ts keeps them with every other word.
+
+/** The browser page's own words, by key, in UK English. */
+export const PAGE_SOURCE_WORDS = {
+  'changes.not-drawn': 'The changes are listed as text only: not drawn here.',
+  'changes.alt': {
+    one: '{name}: {count} change, added drawn heavy, changed dashed, removed dotted',
+    other: '{name}: {count} changes, added drawn heavy, changed dashed, removed dotted',
+  },
+  'changes.section': 'Changes',
+  'changes.compare': 'Compare with…',
+  'changes.reading': 'Reading that version…',
+  'changes.heading': 'Changes in graph {graph} since {label}',
+  'changes.figure': 'Graph {graph} since {label}',
+  'changes.reading-versions': 'Reading the earlier versions…',
+  'changes.version': 'Version to compare with',
+  'changes.show': 'Show changes',
+  'review.pull': 'Pull request #{id}: {title}{by}',
+  'review.merge': 'Merge {id}: {title}{by}',
+  'review.commit': 'Commit {id}: {title}{by}',
+  'review.by': ' ({who})',
+  'review.section': 'Review a change',
+  'review.open': 'Review a change from GitHub…',
+  'review.summary': 'Summary',
+  'review.by-section': 'By section',
+  'review.by-workstream': 'By workstream',
+  'review.requirements': 'Requirements changed',
+  'review.others': {
+    one: '{count} other file changed, with no graph.',
+    other: '{count} other files changed, with no graph.',
+  },
+  'review.not-shown': 'Not shown',
+  'review.unread': '{count} more files changed than were read.',
+  'review.graphs': 'Graphs changed ({count})',
+  'review.graph': 'Graph {graph} in {path}',
+  'review.graph-of': 'Graph {graph} in {path}, {item}',
+  'review.lines': 'Lines changed, file by file ({count})',
+  'review.too-many': 'Too many lines changed to show line by line.',
+  'review.reading': 'Reading that change from GitHub…',
+  'review.reading-all': 'Reading the repository’s changes from GitHub…',
+  'review.pick': 'Change to review',
+  'review.go': 'Review',
+  'review.none': 'The repository has no pull requests or commits to review.',
+  'page.menu': 'Menu',
+  'page.note': 'The note',
+} as const;

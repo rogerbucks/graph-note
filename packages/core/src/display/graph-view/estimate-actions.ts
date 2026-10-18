@@ -4,7 +4,7 @@
 // the core's `estimateFix` — written into the text being edited, or else into the note; and Edit the link, which opens
 // the editor with the misspelt word selected, where the fix bar offers the same fix. Both write only through the card's
 // options, which read-only.ts gates; where the card is read-only neither is offered.
-import { estimateFix } from '@graph-note/core';
+import { estimateFix, word } from '@graph-note/core';
 import { withFix } from '../fix-changes';
 import { button } from './view-bar';
 import type { ViewOptions } from './view-options';
@@ -32,10 +32,10 @@ export function estimateActions(el: HTMLElement, index: number, o: ViewOptions):
   // while the block is edited, choosing selects where it is written (§4); else the editor opens there
   button(
     row,
-    'Edit the link',
+    word('details.edit-link'),
     'pencil',
     () => (o.editing?.()?.session || !o.onEditHere ? o.onSelect?.(at) : o.onEditHere(at)),
-    'Edit the link',
+    word('details.edit-link'),
   );
   status = row.createSpan({ cls: 'graph-note-fix', attr: { role: 'status' } });
 }
@@ -47,10 +47,9 @@ export function estimateActions(el: HTMLElement, index: number, o: ViewOptions):
 async function accept(o: ViewOptions, block: number, was: string, now: string): Promise<string | null> {
   const ed = o.editing?.();
   if (ed?.session) {
-    if (ed.session.text !== was)
-      return 'The text being edited is not as drawn, so nothing was written. Try again once the drawing is redrawn.';
+    if (ed.session.text !== was) return word('details.not-as-drawn');
     ed.replace(now);
     return null;
   }
-  return o.writeBlock ? o.writeBlock(block, was, now) : 'Edit the block to fix it: nothing was written.';
+  return o.writeBlock ? o.writeBlock(block, was, now) : word('details.edit-block');
 }

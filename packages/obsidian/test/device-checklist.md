@@ -50,6 +50,9 @@ holds the two together).
       has no Export button either.
 - [ ] **V-12** The drawing reads well in the light theme and in the dark theme. Dark, several drawings in a note, each card
       standing out: Mac ✓ 0.3.0, 9 Oct 2026 (relayed as the Mac). The light theme, and the phone, to come.
+- [ ] **V-13** A block that holds only a graph's schema is drawn as the schema: each kind a box, each relationship type an
+      arrow between the kinds it joins, read by its reading, and a type not used yet a box saying so. Source shows its text,
+      and the card offers no Edit here (§3, schema_drawn).
 
 ## Zoom — spec §3
 

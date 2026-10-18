@@ -4,7 +4,7 @@
 // drawing by class only, so nothing moves, and it never reaches the note. What is chosen from the details is brought into
 // view, readable, by a brief move (details_choose_moves, details_move_motion); the selection is kept clear of the details
 // sheet (sheet_keeps_thing_clear), and pointed to by an arrow at the edge when it is out of view (selection_pointer).
-import { FocusState, READABLE_SCALE, coverOf, estimateEdge, nextAlong, pointerTo } from '@graph-note/core';
+import { FocusState, READABLE_SCALE, coverOf, estimateEdge, nextAlong, pointerTo, word } from '@graph-note/core';
 import type {
   Bounds,
   FocusTarget,
@@ -211,7 +211,7 @@ export class Selection {
   private pointAt(): void {
     const t = this.target,
       at = t && this.box ? pointerTo(this.box, this.host.zoom().view(), this.host.size(), this.kept) : null;
-    const name = !t ? '' : 'estimate' in t ? 'the estimated link' : stepName(this.o.reading, this.o.graph, t);
+    const name = !t ? '' : 'estimate' in t ? word('details.estimated-link') : stepName(this.o.reading, this.o.graph, t);
     this.arrow.show(at, name);
   }
 

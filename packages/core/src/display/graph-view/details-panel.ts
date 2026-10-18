@@ -4,7 +4,7 @@
 // changes its properties in the text. What its links reach can be chosen from it, and the walk retraced (§25); in view
 // mode, in a note's card, it is the sheet pinned to the foot of the screen (details-sheet.ts).
 import { isPhone } from '../host';
-import { Trail, details, linkDetails, linkGroups, linkInBlock, propertiesOf, word } from '@graph-note/core';
+import { Trail, details, linkDetails, linkGroups, linkInBlock, propertiesOf, thingSaid, word } from '@graph-note/core';
 import type { Estimate, TrailStep } from '@graph-note/core';
 import { renderProperties } from '../properties/properties';
 import { problemText } from './problems-list';
@@ -12,7 +12,7 @@ import { showSuggested } from './suggested-name';
 import { parkButton, parkedNote } from './parked';
 import { estimateActions } from './estimate-actions';
 import { button } from './view-bar';
-import { linkWords, reducedMotion, renderLinkGroups, renderTrail, stepName, thingButton } from './details-nav';
+import { linkWords, reducedMotion, renderInsOuts, renderTrail, stepName, thingButton } from './details-nav';
 import type { NavActions } from './details-nav';
 import { DetailsSheet } from './details-sheet';
 import { RichDetails } from './rich-details';
@@ -278,30 +278,22 @@ export class DetailsPanel {
     this.shown = { key };
     const el = this.panel(d.text, d.kind);
     this.retrace(el, { key });
+    // what is going on, in a sentence or two, before anything else (details_said)
+    el.createEl('p', { cls: 'graph-note-details-said', text: thingSaid(this.o.reading, this.o.graph, key) });
     this.rich.thing(el, key, d.text); // the note it stands for, and its text rendered by Obsidian (§18)
     const links = (title: string, items: string[]) => {
       if (!items.length) return;
-      el.createEl('h4', { text: title });
+      el.createEl('h4', { cls: 'graph-note-section-label', text: title });
       const ul = el.createEl('ul');
       for (const i of items) ul.createEl('li', { text: i });
     };
-    // its links by relationship type and direction, in words, each thing and link a choice (§25)
-    const groups = linkGroups(this.o.reading, this.o.graph, key);
-    for (const [title, way] of [
-      [word('details.links-out'), 'out'],
-      [word('details.links-in'), 'in'],
-    ] as const) {
-      const these = groups.filter((g) => g.direction === way);
-      if (!these.length) continue;
-      el.createEl('h4', { text: title });
-      renderLinkGroups(
-        el,
-        these,
-        (n) => linkWords(this.o.reading, this.o.graph, n),
-        (s) => this.choose(s),
-      );
-    }
-    if (!groups.length) el.createEl('p', { text: word('details.no-links') });
+    // its links in and out, by relationship type and direction, in words, each thing and link a choice (§25)
+    renderInsOuts(
+      el,
+      linkGroups(this.o.reading, this.o.graph, key),
+      (n) => linkWords(this.o.reading, this.o.graph, n),
+      (s) => this.choose(s),
+    );
     if (!this.o.diagram?.table) untangleOffers(el, key, this.actions);
     this.readOnlyProperties(
       el,
@@ -335,9 +327,7 @@ export class DetailsPanel {
         // the fix for a locked graph whose schema lacks Deferred and DEFERS: only while this editor is still open on the
         // card, as for every write here, so a control left from before Done declares nothing
         () =>
-          this.o.editing?.() === ed
-            ? ed.declareDeferred()
-            : Promise.reject(new Error('The block is no longer being edited, so nothing was declared.')),
+          this.o.editing?.() === ed ? ed.declareDeferred() : Promise.reject(new Error(word('details.not-declared'))),
         // the note as it is now: a thing written in another block is found, and one only suggested is not parked (§4)
         () => ed.session?.current() ?? this.o.reading,
       );

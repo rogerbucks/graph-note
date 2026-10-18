@@ -115,6 +115,39 @@ describe('Diagram type on a card', () => {
   });
 });
 
+describe('the Diagram type list looks native', () => {
+  test('its button says Diagram type in words, and each type is a tile marked drawn, suggested or not fitting', async () => {
+    const { env, el } = await card(noteOf(ORG));
+    try {
+      const toggle = labelled(el, 'Diagram type');
+      assert.equal(
+        toggle.querySelector('.graph-note-badge-text')?.textContent,
+        'Diagram type',
+        'words, not an icon alone',
+      );
+      toggle.click();
+      const marks = el
+        .querySelectorAll('.graph-note-type-list li')
+        .map((li) =>
+          ['graph-note-type-now', 'graph-note-type-suggested', 'graph-note-type-unfit']
+            .filter((c) => li.classList.contains(c))
+            .join(' '),
+        );
+      assert.deepEqual(marks, [
+        'graph-note-type-now',
+        'graph-note-type-suggested',
+        '',
+        '',
+        'graph-note-type-unfit',
+        'graph-note-type-unfit',
+        '',
+      ]);
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
 describe('a wide flow', () => {
   const note = noteOf(
     `${ORG},\n(eve:Person {name: 'Eve'}),\n(fay:Person {name: 'Fay'}),\n(dee)-[:MANAGES]->(eve),\n(eve)-[:MANAGES]->(fay)`,

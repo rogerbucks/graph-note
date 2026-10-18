@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { build } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
 import { load, GRAPH, show, styles } from './host/view-notes.js';
+import { groupsRead } from './host/details-read.js';
 
 before(() => build());
 
@@ -31,9 +32,10 @@ describe('details on demand', () => {
     const panel = el.querySelector('.graph-note-details');
     assert.ok(!panel.hidden);
     const text = panel.textContent;
+    for (const s of ['Large reader', 'Option']) assert.ok(text.includes(s), s);
     // its links read in words, grouped by type and direction (§25, details_links_listed)
-    for (const s of ['Large reader', 'Option', 'answers Which device?', 'is favoured by Easy on the eyes'])
-      assert.ok(text.includes(s), s);
+    for (const s of ['answers Which device?', 'is favoured by Easy on the eyes'])
+      assert.ok(groupsRead(panel).includes(s), s);
   });
 
   test('each box can be reached and opened from the keyboard', async () => {

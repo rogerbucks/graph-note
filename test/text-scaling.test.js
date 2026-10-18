@@ -15,6 +15,9 @@ const FIXED = /(?<![\w.-])\d*\.?\d+(?:px|pt)\b/;
 const FIXED_HEIGHT = {
   '.graph-note-image img': 'an image, shown whole within its height',
   '.graph-note-sr': 'the screen reader’s text, kept off the screen on purpose',
+  '.graph-note-switch-track':
+    'a switch drawn as a toggle, sized in em so it grows with the text; its words sit beside it',
+  '.graph-note-switch-track::before': 'the toggle’s knob, sized in em',
 };
 
 /** A rule of the drawing: its marks are in its own units, laid out with it, and scale with its zoom. */

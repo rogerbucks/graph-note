@@ -7,7 +7,7 @@ import type { EditorParts } from './editor-layout';
 import { paintText } from './text-picture';
 import { announce, caretLine, heardKey, listProblems, showFixes } from './problem-help';
 import type { FixChanges } from './problem-help';
-import { acceptSuggestion, showSuggestions } from './suggestions';
+import { acceptSuggestion, chooseSuggestion, placeSuggestions, showSuggestions } from './suggestions';
 import { InlineCompletion } from './inline-completion';
 import { unnamedPlace } from '../graph-view/suggested-name';
 import type { Chosen } from '../graph-view/view-options';
@@ -25,8 +25,13 @@ export class TextHelp {
   private heard = new Set<string>();
   /** What the fix bar shows now, so it is drawn again only when that changes. */
   private shownFixes: { bar: HTMLElement; problems: Diagnostic[]; line: number } | null = null;
-  /** What the suggestion bar shows now, by its words, for the same reason. */
+  /** What the suggestion list shows now, by its words, for the same reason. */
   private shownSuggestions: { bar: HTMLElement; words: string } | null = null;
+  /**
+   * Whether the suggestion list is open, and the option chosen in it: it opens as a word is typed (or by Control+Space),
+   * and closes on Escape, a click, the caret moved by the keys, or the focus leaving, so the keys are the field's again.
+   */
+  private list = { open: false, active: 0 };
   private readonly on: { fix: (changes: FixChanges) => void; accept: (item: CompletionItem) => void };
 
   /** `fix` is called with the edits of a fix chosen, and `accept` with a suggestion chosen. */
@@ -64,6 +69,8 @@ export class TextHelp {
     el.text.setAttribute('rows', String(text.split('\n').length + 1)); // grown to its text: it never scrolls apart from its colours
     this.suggest(el, s);
     this.picture(el, s);
+    // put again under the caret once the picture it is measured in shows what was typed
+    if (!el.suggest.hidden) placeSuggestions(el.suggest, el.text, el.overlay);
     listProblems(el.list, this.problems);
     this.fixbar(el);
   }
@@ -89,22 +96,46 @@ export class TextHelp {
   }
 
   /**
-   * Names, kinds and relationships already in the graph, offered where the caret is: the bar drawn again only when they
-   * change, so a suggestion the keyboard is going to is still there to take it. A bar kept is the same suggestions, at the
-   * same word, so it takes what it shows.
+   * Names, kinds and relationships already in the graph, offered where the caret is: the list drawn again only when they
+   * change, so the option chosen stays chosen as the caret moves within the word. A list kept is the same suggestions, at
+   * the same word, so it takes what it shows. It shows only while open.
    */
   suggest(el: EditorParts, s: PaneSession): void {
     if (!this.reading) return;
     const caret = el.text.selectionStart ?? el.text.value.length;
     this.suggestions = completions(this.reading, s.graph, el.text.value, caret);
     const { from, items } = this.suggestions;
-    const words = JSON.stringify([from, items.map((i) => [i.label, i.insertText, i.detail, i.from])]);
+    const shown = this.list.open ? items : [];
+    const words = JSON.stringify([from, shown.map((i) => [i.label, i.insertText, i.detail, i.from])]);
     const was = this.shownSuggestions;
     if (!was || was.bar !== el.suggest || was.words !== words) {
       this.shownSuggestions = { bar: el.suggest, words };
-      showSuggestions(el.suggest, this.suggestions.items, (item) => this.on.accept(item));
+      this.list.active = 0;
+      showSuggestions(el.suggest, shown, this.list.active, (item) => this.on.accept(item));
     }
+    if (shown.length) placeSuggestions(el.suggest, el.text, el.overlay);
+    chooseSuggestion(el.suggest, el.text, shown.length ? this.list.active : null);
     this.moved = this.inline.update(el.text, this.reading, s.graph, this.suggestions.items.length > 0);
+  }
+
+  /** Opens the list (as a word is typed, or by Control+Space) or closes it, and shows it so. */
+  openList(el: EditorParts, s: PaneSession | null, open: boolean): void {
+    if (this.list.open === open) return;
+    this.list.open = open;
+    if (s) this.suggest(el, s);
+  }
+
+  /** Whether the list is open with options in it, for the field's keys to work it. */
+  listShown(): boolean {
+    return this.list.open && this.suggestions.items.length > 0;
+  }
+
+  /** Moves the choice in the list by `by`, round from the last to the first and back. */
+  moveChoice(el: EditorParts, by: number): void {
+    const n = this.suggestions.items.length;
+    if (!n) return;
+    this.list.active = (((this.list.active + by) % n) + n) % n;
+    chooseSuggestion(el.suggest, el.text, this.list.active);
   }
 
   /** Moves the help with the caret: the suggestions and the inline match where it is, and the fixes on its line. */
@@ -146,11 +177,12 @@ export class TextHelp {
   }
 
   /**
-   * The first suggestion, which Tab takes in `t`: none when the word being typed already is it, as taking it would change
-   * nothing, so Tab leaves the field as it does anywhere else (spec §41, a11y_keyboard_auto).
+   * The option chosen in the open list, which Enter or Tab takes in `t`: none when the list is closed, or when the word
+   * being typed already is it, as taking it would change nothing, so the key does what it does anywhere else: Tab leaves
+   * the field and Enter ends the line (spec §41, a11y_keyboard_auto).
    */
-  first(t: HTMLTextAreaElement): CompletionItem | undefined {
-    const item = this.suggestions.items[0];
+  chosen(t: HTMLTextAreaElement): CompletionItem | undefined {
+    const item = this.listShown() ? this.suggestions.items[this.list.active] : undefined;
     if (!item) return undefined;
     const caret = t.selectionStart ?? t.value.length;
     return t.value.slice(item.from ?? this.suggestions.from, caret) === (item.insertText ?? item.label)

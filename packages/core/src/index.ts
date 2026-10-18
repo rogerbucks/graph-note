@@ -104,6 +104,7 @@ export { Zoom, MAX_SCALE, STEP } from './zoom.ts';
 export { AcrossZoom } from './zoom-across.ts';
 export type { Mode, Place, Size, View, ZoomEvent } from './zoom.ts';
 export { MOVE_MS, READABLE_SCALE, Trail, coverOf, glideAt, linkGroups, pointerTo, sheetLimit } from './details-nav.ts';
+export { thingSaid } from './details-said.ts';
 export type { LinkGroup, Pointing, TrailStep } from './details-nav.ts';
 export { tokenize, TOKEN_CLASSES } from './tokens.ts';
 export type { Token, TokenClass } from './tokens.ts';
@@ -112,6 +113,9 @@ export type { Diagnostic, CodeAction, CompletionItem, Range, Position, TextEdit 
 export { inlineCompletion, stepOver } from './autocomplete.ts';
 export type { Inline, InlineKind } from './autocomplete.ts';
 export { isDraft, lockBlock, reverseGuess } from './lock.ts';
+export { schemaPicture } from './schema-picture.ts';
+export { withStandardSchemas } from './standard-schemas.ts';
+export type { SchemaPicture } from './schema-picture.ts';
 export { PaneSession } from './pane.ts';
 export { PathPlayer, PathRecorder, mergePathProblems, pathBlock, pathProblems, pathsOf } from './paths.ts';
 export type { PathBlock, PathReading, PathStep, WalkedPath } from './paths.ts';
@@ -345,7 +349,8 @@ export {
 export type { Fold, ViewSwitch, ViewSwitches } from './view-switches.ts';
 export { linksOf } from './style.ts';
 export type { Links, OnOff, Routing } from './style-graph.ts';
-export type { MiniMapSetting, SwitchSetting } from './settings.ts';
+export type { DrawingHeightSetting, MiniMapSetting, SwitchSetting } from './settings.ts';
+export { tallestOf } from './settings-aids.ts';
 export {
   applyChanges,
   attachmentType,

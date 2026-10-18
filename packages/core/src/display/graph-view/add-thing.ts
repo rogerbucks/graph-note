@@ -2,7 +2,7 @@
 // Add a thing asks for the thing's text first, and suggests its name from the text as it is typed — in the style of the
 // graph's names, never one of them — shown before anything is written. Add the thing then writes it into the text being
 // edited, as one edit an undo takes back. A name of the user's own is kept as the text changes, and held to the same rules.
-import { addThing, suggestName } from '@graph-note/core';
+import { addThing, suggestName, word } from '@graph-note/core';
 import { button } from './view-bar';
 import type { ViewOptions } from './view-options';
 
@@ -19,7 +19,10 @@ export class AddThing {
     parent: HTMLElement,
     private readonly o: ViewOptions,
   ) {
-    this.el = parent.createDiv({ cls: 'graph-note-add-thing', attr: { role: 'group', 'aria-label': 'Add a thing' } });
+    this.el = parent.createDiv({
+      cls: 'graph-note-add-thing',
+      attr: { role: 'group', 'aria-label': word('add.group') },
+    });
     this.controls = this.el.createDiv({ cls: 'graph-note-add-thing-controls' });
     this.said = this.el.createSpan({ cls: 'graph-note-walk-said', attr: { 'aria-live': 'polite' } });
     this.show();
@@ -37,7 +40,7 @@ export class AddThing {
     }
     this.el.hidden = false;
     if (this.open) this.form();
-    else button(this.controls, 'Add a thing', 'plus', () => this.start(), 'Add a thing');
+    else button(this.controls, word('add.thing'), 'plus', () => this.start(), word('add.thing'));
   }
 
   private start(): void {
@@ -54,12 +57,12 @@ export class AddThing {
       parent
         .createEl('label', { text: words })
         .createEl('input', { attr: { type: 'text', 'aria-label': words, ...attr } });
-    const text = label(el, 'Text of the new thing');
+    const text = label(el, word('add.text'));
     const row = el.createDiv({ cls: 'graph-note-add-name' });
     row.hidden = true;
-    const name = label(row, 'Name of the new thing', { autocapitalize: 'none' });
+    const name = label(row, word('add.name'), { autocapitalize: 'none' });
     const listId = `graph-note-kinds-${++forms}`;
-    const kind = label(el, 'Kind of the new thing', { list: listId });
+    const kind = label(el, word('add.kind'), { list: listId });
     const kinds = el.createEl('datalist', { attr: { id: listId } });
     const boxes = this.o.reading.graphs.get(this.o.graph)?.boxes ?? [];
     for (const k of [...new Set(boxes.flatMap((b) => b.kind.split(' · ').filter(Boolean)))].sort())
@@ -82,11 +85,7 @@ export class AddThing {
           kind.value.trim() || undefined,
           this.o.editing?.()?.session?.text,
         );
-      this.said.setText(
-        own
-          ? `Name: ${name.value}.`
-          : `Suggested name: ${name.value}. Nothing is written until you press Add the thing.`,
-      );
+      this.said.setText(own ? word('add.named', { name: name.value }) : word('add.suggested', { name: name.value }));
     };
     text.addEventListener('input', suggest);
     kind.addEventListener('input', suggest);
@@ -97,8 +96,7 @@ export class AddThing {
     const submit = () => {
       const ed = this.o.editing?.(),
         block = ed?.session?.text;
-      if (!ed || block === undefined)
-        return alert.setText('The block is no longer being edited, so nothing was written.');
+      if (!ed || block === undefined) return alert.setText(word('add.not-editing'));
       // the name written is the name shown: a name taken since is refused, never swapped for another unseen
       const r = addThing(now(), this.o.graph, block, {
         text: text.value,
@@ -109,7 +107,7 @@ export class AddThing {
       ed.replace(r.text);
       this.open = false;
       this.show();
-      this.said.setText(`Added ${text.value.trim()} as ${r.name}.`);
+      this.said.setText(word('add.added', { text: text.value.trim(), name: r.name }));
       this.controls.querySelector('button')?.focus();
     };
     const cancel = () => {
@@ -129,7 +127,7 @@ export class AddThing {
           cancel();
         }
       });
-    button(el, 'Add the thing', 'check', submit);
-    button(el, 'Cancel adding', 'x', cancel);
+    button(el, word('add.it'), 'check', submit);
+    button(el, word('add.cancel'), 'x', cancel);
   }
 }

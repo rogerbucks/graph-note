@@ -1,5 +1,6 @@
 // What typing in the block editor's field does (spec §4): each change is read, the caret moving moves the help with it,
-// Tab takes the inline match or else the first suggestion, Enter takes the inline match, Escape puts it away, and undo
+// typing a word opens the suggestions under the caret, whose arrows move the choice and whose Enter or Tab takes it;
+// else Tab and Enter take the inline match, Escape puts away the list or the match, and undo
 // and redo — by key, by the Edit menu or by a phone's gesture — step through the editor's own history in place of the
 // field's.
 import type { Lifecycle } from '../lifecycle';
@@ -13,8 +14,14 @@ import type { TextHelp } from './text-help';
 export interface Typing {
   typed: () => void;
   caretMoved: () => void;
-  /** The suggestion Tab takes, if there is one that would change the text. */
-  first: () => CompletionItem | undefined;
+  /** The suggestion Enter or Tab takes, chosen in the open list, if there is one that would change the text. */
+  chosen: () => CompletionItem | undefined;
+  /** Whether the suggestion list is open with options in it. */
+  listShown: () => boolean;
+  /** Opens or closes the suggestion list. */
+  openList: (open: boolean) => void;
+  /** Moves the choice in the open list. */
+  moveChoice: (by: number) => void;
   accept: (item: CompletionItem) => void;
   step: (e: Event, which: Step) => void;
   /** Takes the inline match, if one is shown — a closer only for Tab, never for Enter; says whether it did. */
@@ -27,6 +34,8 @@ export interface Typing {
 export interface FieldActions {
   typed: (change?: Change) => void;
   caretMoved: () => void;
+  /** Opens or closes the suggestion list. */
+  openList: (open: boolean) => void;
   accept: (item: CompletionItem) => void;
   /** The field's text was changed to another, by undo or redo. */
   changed: () => void;
@@ -43,7 +52,10 @@ export function fieldTyping(
   return {
     typed: () => act.typed(),
     caretMoved: act.caretMoved,
-    first: () => help.first(el.text),
+    chosen: () => help.chosen(el.text),
+    listShown: () => help.listShown(),
+    openList: act.openList,
+    moveChoice: (by) => help.moveChoice(el, by),
     accept: act.accept,
     step: (e, which) => {
       if (!undoes.started) return;
@@ -73,13 +85,59 @@ function stepOfKey(e: KeyboardEvent): Step | null {
 export function watchTyping(owner: Lifecycle, text: HTMLTextAreaElement, on: Typing): void {
   owner.registerDomEvent(text, 'input', () => on.typed());
   owner.registerDomEvent(text, 'keyup', () => on.caretMoved());
-  owner.registerDomEvent(text, 'click', () => on.caretMoved());
-  // the inline match shows only while the field has the focus
+  // a click puts the caret somewhere else: the suggestions were for where it was
+  owner.registerDomEvent(text, 'click', () => {
+    on.openList(false);
+    on.caretMoved();
+  });
+  // the inline match and the suggestions show only while the field has the focus
   owner.registerDomEvent(text, 'focus', () => on.caretMoved());
-  owner.registerDomEvent(text, 'blur', () => on.caretMoved());
+  owner.registerDomEvent(text, 'blur', () => {
+    on.openList(false);
+    on.caretMoved();
+  });
 }
 
-/** Watches the keys and input events that take a suggestion or ask for undo or redo. */
+/** The keys that move the caret, which close the suggestion list: it was for where the caret was. */
+const CARET_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageUp', 'PageDown']);
+
+/**
+ * What a key does to the suggestion list: Control+Space opens it; while it is open, the arrows move the choice, Enter or
+ * Tab takes the one chosen, Escape closes it with the inline match, and a key that moves the caret closes it too. Says whether it took the key.
+ */
+function listKey(e: KeyboardEvent, on: Typing): boolean {
+  const plain = !(e.shiftKey || e.ctrlKey || e.metaKey || e.altKey);
+  if (e.key === ' ' && e.ctrlKey && !e.metaKey && !e.altKey) {
+    e.preventDefault();
+    on.openList(true);
+    return true;
+  }
+  if (!on.listShown()) return false;
+  if (CARET_KEYS.has(e.key)) {
+    on.openList(false);
+    return false;
+  }
+  if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && plain) {
+    e.preventDefault();
+    on.moveChoice(e.key === 'ArrowDown' ? 1 : -1);
+    return true;
+  }
+  // one Escape puts all the help away, the list and the inline match with it
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    e.stopPropagation();
+    on.openList(false);
+    on.dismissInline();
+    return true;
+  }
+  const chosen = (e.key === 'Enter' || e.key === 'Tab') && plain ? on.chosen() : undefined;
+  if (!chosen) return false;
+  e.preventDefault();
+  on.accept(chosen);
+  return true;
+}
+
+/** Watches the keys and input events that work the suggestions, take the inline match, or ask for undo or redo. */
 export function watchKeys(owner: Lifecycle, text: HTMLTextAreaElement, on: Typing): void {
   // WebKit ends a composition, then sends the Enter that committed it with isComposing false: so a composition just
   // ended counts as composing for the next key, and until the next tick
@@ -91,7 +149,9 @@ export function watchKeys(owner: Lifecycle, text: HTMLTextAreaElement, on: Typin
   owner.registerDomEvent(text, 'keydown', (e: KeyboardEvent) => {
     const composing = e.isComposing || composedJustNow;
     composedJustNow = false;
-    // the inline match first; with none shown, each key does what it did
+    // the suggestion list first, while it is open: its arrows, Enter, Tab and Escape; the caret moved by the keys closes it
+    if (!composing && listKey(e, on)) return;
+    // then the inline match; with none shown, each key does what it did
     if (e.key === 'Escape' && on.dismissInline()) {
       e.preventDefault();
       e.stopPropagation();
@@ -100,12 +160,6 @@ export function watchKeys(owner: Lifecycle, text: HTMLTextAreaElement, on: Typin
     const plain = !(e.shiftKey || e.ctrlKey || e.metaKey || e.altKey || composing);
     if ((e.key === 'Tab' || e.key === 'Enter') && plain && on.takeInline(e.key)) {
       e.preventDefault();
-      return;
-    }
-    const first = on.first();
-    if (e.key === 'Tab' && !e.shiftKey && first) {
-      e.preventDefault();
-      on.accept(first);
       return;
     }
     const which = stepOfKey(e);

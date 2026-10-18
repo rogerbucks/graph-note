@@ -24,7 +24,7 @@ const LANGUAGES = Object.entries(PSEUDO_LANGUAGES);
 const DRAWN_BY_OBSIDIAN = ['the settings page'];
 
 /** The words the code still says itself in each host's views, not yet from the catalogue: lowered as each moves there. */
-const STILL_SAID_BY_CODE = { obsidian: 131, page: 47 };
+const STILL_SAID_BY_CODE = { obsidian: 40, page: 14 };
 
 /** The parts set at a point measured on the screen, by class: these keep a physical side (as in test/rtl.test.js). */
 const PLACED = [
@@ -212,6 +212,9 @@ describe('the browser editor’s page: every state, in each test language', () =
 const CLIPS = {
   '.graph-note-view': 'the card, whose words wrap inside it; it clips only its rounded corners',
   '.graph-note-viewport': 'the drawing, which is moved and zoomed inside it',
+  '.graph-note-overlay':
+    'the coloured picture of the text, which wraps; it clips only the plain-English note after a long line',
+  '.graph-note-text': 'the field over that picture, which wraps as the picture does and is as tall as it',
   '.graph-note-table th': 'a column of the table, which scrolls sideways when wide',
   '.graph-note-table td': 'a cell of the table, which scrolls sideways when wide',
   '.graph-note-sr': 'the screen reader’s text, kept off the screen on purpose',
@@ -222,6 +225,8 @@ const HOLDS_NO_WORDS = {
   '.graph-note-swatch': 'a line in a colour of the drawing',
   '.graph-note-sr': 'the screen reader’s text, kept off the screen on purpose',
   '.gn-icon': 'an icon',
+  '.graph-note-switch-track': 'a switch drawn as a toggle; its words sit beside it',
+  '.graph-note-switch-track::before': 'the toggle’s knob',
 };
 
 /** A length that does not grow with the words: pixels, points, em or characters. */

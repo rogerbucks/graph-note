@@ -23,6 +23,7 @@ import {
   styleOf,
   viewsOf,
   underStrictness,
+  word,
 } from '@graph-note/core';
 import type { Block, Drawn, NudgeWrite, Problem, Refusal } from '@graph-note/core';
 import type GraphNotePlugin from './main';
@@ -33,6 +34,7 @@ import { renderViewBlock, writeStyle, writeViewBlock } from './view-block';
 import { renderProposalBlock } from './proposals/proposal-block';
 import { renderSourceBlock } from './sources/sources';
 import { renderStepBlock } from './step-block';
+import { renderSchemaBlock } from './schema-block';
 import { graphCard } from './graph-card';
 import { aidsOf } from '@graph-note/core/display/graph-view/viewer-aids';
 import { diagramShown, tableDrawn } from '@graph-note/core/display/graph-view/type-strip';
@@ -155,6 +157,8 @@ export async function renderBlock(
     renderStyleBlock(el, source, styled, all.includes(source) ? all : [...all, source]);
     return;
   }
+  // a block that holds only a schema, a graph's own or a shared one, is drawn as the schema itself (§3, schema_drawn)
+  if (await renderSchemaBlock(plugin, source, el, ctx, owner)) return;
   const graph = graphOfBlock(source);
   if (!graph) {
     renderCode(el, source);
@@ -235,9 +239,12 @@ export async function renderBlock(
     }
     const empty = root.createDiv({ cls: 'graph-note-empty' });
     empty.createEl('p', {
-      text: `Graph ${graph} has nothing in it yet. Start with a thing: write (name:Kind {name: 'Its text'}) below the graph line, or press Edit.`,
+      text: word('editor.empty-graph', { graph }),
     });
-    const edit = empty.createEl('button', { text: 'Edit', attr: { 'aria-label': 'Edit', type: 'button' } });
+    const edit = empty.createEl('button', {
+      text: word('editor.edit'),
+      attr: { 'aria-label': word('editor.edit'), type: 'button' },
+    });
     edit.addEventListener('click', () => {
       void plugin.openEditor(target);
     });

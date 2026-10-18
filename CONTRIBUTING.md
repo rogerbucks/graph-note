@@ -307,6 +307,9 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/a11y-keyboard-page-2.test.js` — part 2 of the keyboard-only run of the browser editor's page: the states `test/repository/keyboard-page.js` gives part 2, split over four files so they run side by side (editor spec §41, a11y_keyboard_auto).
 - `test/a11y-keyboard-page-3.test.js` — part 3 of the keyboard-only run of the browser editor's page: the states `test/repository/keyboard-page.js` gives part 3, split over four files so they run side by side (editor spec §41, a11y_keyboard_auto).
 - `test/a11y-keyboard-page-4.test.js` — part 4 of the keyboard-only run of the browser editor's page: the states `test/repository/keyboard-page.js` gives part 4, split over four files so they run side by side (editor spec §41, a11y_keyboard_auto).
+- `test/a11y-keyboard-devices.test.js` — the keyboard-only run of every view of the Obsidian host again, on a phone and on a tablet with a keyboard attached, where the layout differs: tabs and a bottom sheet in the pane, a sheet for the details (editor spec §11, keyboard_any_device).
+- `test/a11y-keyboard-devices-page-1.test.js` — half 1 of the keyboard-only run of the browser editor's page in a phone's width, its phone layout: the states `test/repository/keyboard-page.js` gives half 1 (editor spec §11, keyboard_any_device).
+- `test/a11y-keyboard-devices-page-2.test.js` — half 2 of the keyboard-only run of the browser editor's page in a phone's width, its phone layout: the states `test/repository/keyboard-page.js` gives half 2 (editor spec §11, keyboard_any_device).
 - `test/speed-budgets.test.js` — each host held, in CPU instructions, to a budget for drawing 50 things and 500, a query over a 10 000-thing mesh (100 notes of 100 things, until slice 6 builds the mesh) and a cold start of each host: every budget set in `scripts/benchmarks/budgets.mjs` with where its number comes from, each a benchmark's claim in the quality ratchet, each case doing its work, and a count over its budget breaking the claim (editor spec §41, speed_budgets).
 - `test/ux-copy.test.js` — every message the user reads in every view of every host (the views `test/wcag.test.js` checks, with the notices and menu items the host shows; the person's own words left out) reads at grade 9 or lower, keeps its sentences to 25 words and uses none of the listed jargon (scored by `scripts/plain-english.mjs`); a message that misses for a reason is recorded in `quality/copy.json` and may never score worse without the record raised; the check is tried first (editor spec §41, ux_copy_auto).
 - `test/whitespace.test.js` — the three copies of the one whitespace set are the same, and the set is openGQL's.
@@ -494,8 +497,9 @@ left. A person's edit to a page the wiki makes is listed there before the next r
   cases is a ratio of instruction counts, so it is exact on every run. Each setup first runs its cases' code once,
   small, so a first compile is never inside a ratio. `node scripts/instruction-counts.mjs` runs each case, and its
   setup alone, in a process of its own under Valgrind's Cachegrind (`--cache-sim=no`), as many at once as there are
-  cores, with Node pinned to one thread, V8's predictable mode, a fixed collector schedule and one random seed, and
-  keeps each case less its setup; a case that counts nothing beyond its setup fails the run. It runs on Linux only, in
+  cores, with Node pinned to one thread, V8's predictable mode, a fixed collector schedule, one random seed and
+  WebAssembly compiled once (the drawings' by the optimising compiler, in their warm draw), and keeps each case less its
+  setup; a case that counts nothing beyond its setup fails the run. It runs on Linux only, in
   the release, its dry run and the "Quality baseline" workflow, on `ubuntu-24.04` with Node pinned exactly (a patch
   can move the counts; none of them may set `GITHUB_ACTIONS`), which install Valgrind; it does not
   run on Apple-silicon Macs. Where Valgrind is missing it says so in one line and counts nothing: on any machine but
@@ -537,9 +541,12 @@ left. A person's edit to a page the wiki makes is listed there before the next r
   `scripts/fixed-sleeps.mjs`, run by `test/fixed-sleeps.test.js`, fails a fixed sleep beyond each file's allowance in
   `test/fixed-sleeps.json`, and an allowance higher than the file needs, so a sleep taken out stays out.
 - **A baseline from the CI runner:** run the "Quality baseline" workflow by hand, download its `quality-metrics`
-  artifact, and commit its `metrics.json` as `quality/baseline.json` in a normal pull request. The same artifact's
-  `instruction-spread.json` counts every benchmark three times: its `largest_spread` is how far a count moved between
-  runs there, which the tolerance must stay well above.
+  artifact (its log prints the same), and commit its `metrics.json` as `quality/baseline.json` in a normal pull
+  request. Each benchmark is bundled on its own, and the hash of its bundle, with the machine, Node, Valgrind and the
+  flags, is its fingerprint: one whose fingerprint is unchanged since the committed baseline keeps that count, so only
+  the benchmarks a change reaches are counted again. Tick "count every benchmark" to count them all; a release always
+  does. Ticked, "spread" also writes `instruction-spread.json`, every benchmark counted three times: its
+  `largest_spread` is how far a count moved between runs there, which the tolerance must stay well above.
 - **The Graphviz inside the engine is watched** (spec §13): `node scripts/engine-version.mjs` reads its version from the
   engine, checks the notices name it, and checks `quality/advisories.json` offline (it warns when the cache was last
   checked over 14 days ago). Only `--refresh` and `--watch` ask: OSV and NVD for Graphviz, merged, and OSV for the

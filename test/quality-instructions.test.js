@@ -64,7 +64,7 @@ describe('the metrics', () => {
     for (const name of COUNTS) {
       assert.equal(METRICS[name].instructions, true, name);
       assert.equal(METRICS[name].better, 'lower');
-      assert.equal(METRICS[name].tolerance, INSTRUCTION_TOLERANCE);
+      assert.ok(METRICS[name].tolerance >= INSTRUCTION_TOLERANCE && METRICS[name].tolerance <= 0.4, name);
       assert.ok(!METRICS[name].scaled, 'a count is never stretched by how fast a machine is');
     }
     assert.ok(INSTRUCTION_TOLERANCE > 0 && INSTRUCTION_TOLERANCE <= 0.05);
@@ -156,13 +156,16 @@ describe('no baseline yet', () => {
 describe('held to a baseline that holds them', () => {
   const base = () => run(counted());
 
-  test('a count worse by more than the tolerance fails, naming it; within it passes', () => {
+  test('a count worse by more than the tolerance fails, naming it; within it passes; a drawing’s alike', () => {
     const name = COUNTS[1];
     const by = (share) => run({ ...counted(), [name]: base().metrics[name] * (1 + share) });
     assert.deepEqual(compare(base(), by(INSTRUCTION_TOLERANCE * 0.9), []).failures, []);
     const r = compare(base(), by(INSTRUCTION_TOLERANCE * 1.5), []);
     assert.deepEqual(failed(r), [name]);
     assert.match(r.failures[0].message, /instructions_reading_limits got worse/);
+    const drawing = compare(base(), run({ ...counted(), [COUNTS[0]]: base().metrics[COUNTS[0]] * 1.1 }), []);
+    assert.deepEqual(failed(drawing), [COUNTS[0]]);
+    assert.match(drawing.failures[0].message, /instructions_draw_fifty got worse/);
   });
 
   test('counted on another machine, a worse count only warns', () => {
@@ -175,12 +178,13 @@ describe('held to a baseline that holds them', () => {
       const r = compare(base(), run(counted(2), { counter }), []);
       assert.deepEqual(r.failures, [], JSON.stringify(counter));
       assert.deepEqual(warned(r), COUNTS);
-      assert.match(r.warnings[0].message, /a different machine/);
+      const steady = r.warnings.find((w) => w.metric === COUNTS[1]);
+      assert.match(steady.message, /a different machine/);
     }
   });
 
   test('a worse count names the machine that counted it: Node, Valgrind and the processor', () => {
-    const r = compare(base(), run({ ...counted(), [COUNTS[0]]: 2e8 }), []);
+    const r = compare(base(), run({ ...counted(), [COUNTS[1]]: base().metrics[COUNTS[1]] * 2 }), []);
     assert.match(r.failures[0].message, /counted on linux x64, Node v24\.9\.0, valgrind-3\.22\.0, AMD EPYC 7763/);
   });
 });
@@ -251,12 +255,25 @@ describe('the committed baseline holds the counts', () => {
     assert.match(b.details.instructions.machine.valgrind, /^valgrind-/);
   });
 
-  test('in CI on the same machine its own counts pass, and a count 10% worse fails', () => {
+  test('in CI on the same machine its own counts pass, and a steady count 10% worse fails', () => {
     const b = readJSON('quality/baseline.json');
     assert.deepEqual(compare(b, structuredClone(b), [], { ci: true }).failures, []);
+    const steady = 'instructions_reading_limits';
     const worse = structuredClone(b);
-    worse.metrics[COUNTS[0]] = Math.round(b.metrics[COUNTS[0]] * 1.1);
-    assert.deepEqual(failed(compare(b, worse, [], { ci: true })), [COUNTS[0]]);
+    worse.metrics[steady] = Math.round(b.metrics[steady] * 1.1);
+    assert.deepEqual(failed(compare(b, worse, [], { ci: true })), [steady]);
+  });
+});
+
+describe('how far a count may move', () => {
+  test('every count may grow by 5% with no reason recorded, and none is only reported', async () => {
+    const { METRICS, INSTRUCTION_TOLERANCE } = await import('../scripts/quality-spec.mjs');
+    assert.equal(INSTRUCTION_TOLERANCE, 0.05);
+    // three counts of each on the release runner (18 Oct 2026), WebAssembly compiled once: none moved by 0.03%
+    for (const [name, spec] of Object.entries(METRICS).filter(([, s]) => s.instructions && s.unit === 'instructions')) {
+      assert.equal(spec.tolerance, INSTRUCTION_TOLERANCE, name);
+      assert.equal(spec.warnOnly, undefined, name);
+    }
   });
 });
 
@@ -272,12 +289,30 @@ describe('the workflows that count them', () => {
     }
   });
 
-  test('the quality baseline workflow counts them too, three times over, for the spread its tolerance needs', () => {
+  test('the quality baseline workflow counts them too, three times over when asked, for the spread its tolerance needs', () => {
     const runs = commands('quality-baseline.yml', 'measure');
     assert.ok(runs.some((r) => /sudo apt-get install -y --no-install-recommends valgrind$/.test(r)));
     assert.ok(runs.includes('node scripts/instruction-counts.mjs --runs 3 --out quality/instruction-spread.json'));
+    assert.match(
+      read('.github/workflows/quality-baseline.yml'),
+      /if: \$\{\{ inputs\.spread \}\}\n +run: node scripts\/instruction-counts\.mjs --runs 3/,
+    );
     assert.match(read('.github/workflows/quality-baseline.yml'), /quality\/instruction-spread\.json\n/);
     assert.match(read('.gitignore'), /^quality\/instruction-spread\.json$/m);
+  });
+
+  test('the quality baseline keeps the count of each unchanged benchmark, unless every one is asked for; a release counts all', () => {
+    const runs = commands('quality-baseline.yml', 'measure');
+    assert.ok(
+      runs.includes('node scripts/quality-metrics.mjs --out quality/metrics.json --reuse quality/baseline.json'),
+    );
+    assert.ok(runs.includes('node scripts/quality-metrics.mjs --out quality/metrics.json'));
+    assert.match(
+      read('.github/workflows/quality-baseline.yml'),
+      /if: \$\{\{ inputs\.count_all \}\}\n +run: node scripts\/quality-metrics\.mjs --out quality\/metrics\.json\n/,
+    );
+    for (const file of ['release.yml', 'release-check.yml'])
+      assert.ok(!read(`.github/workflows/${file}`).includes('--reuse'), `${file} counts every benchmark`);
   });
 
   test('every counting job runs on one pinned runner, with a time limit, so its counts come from the same machine', () => {

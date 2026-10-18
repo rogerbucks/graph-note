@@ -2,17 +2,18 @@
 // kinds of view; the boxes tapped choose what it shows — picked by hand, the thing it is near, where a route starts and
 // ends, the kinds — and its reading is said in plain English as it is built; Write the view writes its query as a view
 // block of its own after the graph's last block. The strip is built once; only its words change as it goes.
-import { makeView, pathsOf, readingOf } from '@graph-note/core';
+import { makeView, pathsOf, readingOf, word } from '@graph-note/core';
+import type { WordKey } from '@graph-note/core';
 import type { ViewKind, ViewSpec } from '@graph-note/core';
 import { button } from './view-bar';
 import type { ViewOptions } from './view-options';
 
-const KINDS: [ViewKind, string][] = [
-  ['picked', 'Picked by hand'],
-  ['near', 'Near a thing'],
-  ['reaches', 'How one reaches another'],
-  ['kinds', 'Only some kinds'],
-  ['path', 'A walked path'],
+const KINDS: [ViewKind, WordKey][] = [
+  ['picked', 'maker.picked'],
+  ['near', 'maker.near'],
+  ['reaches', 'maker.reaches'],
+  ['kinds', 'maker.kinds'],
+  ['path', 'maker.path'],
 ];
 
 /** The view-making strip of one drawing. */
@@ -30,7 +31,10 @@ export class ViewMaker {
     parent: HTMLElement,
     private readonly o: ViewOptions,
   ) {
-    this.el = parent.createDiv({ cls: 'graph-note-view-maker', attr: { role: 'group', 'aria-label': 'Make a view' } });
+    this.el = parent.createDiv({
+      cls: 'graph-note-view-maker',
+      attr: { role: 'group', 'aria-label': word('maker.group') },
+    });
     this.show();
   }
 
@@ -64,18 +68,18 @@ export class ViewMaker {
     }
     this.el.hidden = false;
     if (!this.making) {
-      button(this.el, 'Make a view', 'filter', () => this.start(), 'Make a view');
+      button(this.el, word('maker.start'), 'filter', () => this.start(), word('maker.start'));
       return;
     }
-    const kinds = this.el.createEl('select', { attr: { 'aria-label': 'Kind of view' } });
-    for (const [v, n] of KINDS) kinds.createEl('option', { text: n, attr: { value: v } });
+    const kinds = this.el.createEl('select', { attr: { 'aria-label': word('maker.kind') } });
+    for (const [v, n] of KINDS) kinds.createEl('option', { text: word(n), attr: { value: v } });
     kinds.value = this.kind;
     kinds.addEventListener('change', () => {
       this.kind = kinds.value as ViewKind;
       this.picked = [];
       this.update();
     });
-    const steps = this.el.createEl('select', { attr: { 'aria-label': 'Steps' } });
+    const steps = this.el.createEl('select', { attr: { 'aria-label': word('maker.steps') } });
     for (const n of ['1', '2', '3']) steps.createEl('option', { text: n, attr: { value: n } });
     steps.value = String(this.depth);
     steps.addEventListener('change', () => {
@@ -83,10 +87,10 @@ export class ViewMaker {
       this.update();
     });
     this.name = this.el.createEl('input', {
-      attr: { type: 'text', 'aria-label': 'View name', placeholder: 'View name' },
+      attr: { type: 'text', 'aria-label': word('maker.name'), placeholder: word('maker.name') },
     });
-    button(this.el, 'Write the view', 'check', () => void this.write());
-    button(this.el, 'Stop making the view', 'x', () => {
+    button(this.el, word('maker.write'), 'check', () => void this.write());
+    button(this.el, word('maker.stop'), 'x', () => {
       this.making = false;
       this.show();
     });
@@ -121,21 +125,20 @@ export class ViewMaker {
   private update(): void {
     const spec = this.spec();
     const hint: Record<ViewKind, string> = {
-      picked: 'Tap the things to show.',
-      near: 'Tap the thing at the middle.',
-      reaches: this.picked.length ? 'Tap where it ends.' : 'Tap where it starts.',
-      kinds: 'Tap a thing of each kind to show.',
-      path: 'Tap the walked path.',
+      picked: word('maker.hint-picked'),
+      near: word('maker.hint-near'),
+      reaches: word(this.picked.length ? 'maker.hint-reaches-end' : 'maker.hint-reaches-start'),
+      kinds: word('maker.hint-kinds'),
+      path: word('maker.hint-path'),
     };
-    this.live?.setText(spec ? `The view: ${readingOf(spec, this.textOf)}.` : hint[this.kind]);
+    this.live?.setText(spec ? word('maker.the-view', { reading: readingOf(spec, this.textOf) }) : hint[this.kind]);
   }
 
   private async write(): Promise<void> {
     const spec = this.spec(),
       name = this.name?.value.trim() ?? '';
-    if (!spec) return void this.alert?.setText('Tap the things the view shows first.');
-    if (!/^\w+$/.test(name))
-      return void this.alert?.setText('Give the view a name of one word: letters, digits and _.');
+    if (!spec) return void this.alert?.setText(word('maker.none-yet'));
+    if (!/^\w+$/.test(name)) return void this.alert?.setText(word('maker.bad-name'));
     // the core makes the block, or says why not: a graph or a kind whose name a view query cannot hold; nothing is then
     // written. Writing it checks it against the note as it is then: a thing only suggested there is refused (§4)
     const made = makeView(this.o.graph, name, spec);

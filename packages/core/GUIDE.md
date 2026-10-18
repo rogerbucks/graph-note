@@ -285,6 +285,13 @@ own handlers. Nothing here reaches the network.
 - `lists-held.ts` — the lists a thing holds, read from a drawing (`listsOf`, `linkedValues`); `linked-list.ts` re-exports them.
 - `lock.ts` — Lock the graph: a draft's schema written out, indented as the settings say; `kindLines` and `typeLines`
   are the lines that declare one kind or relationship type, which `declareDeferred` writes the same way.
+- `schema-picture.ts` — a block that holds only a schema, a graph's own or a shared one, drawn as the schema itself
+  (§3, schema_drawn): `schemaPicture` writes its kinds as boxes and its relationship types as arrows between the kinds
+  the data joins, a type not used yet a box of its own, as a small graph of GQL, and reads it; never the note's text.
+- `standard-schemas.ts` — the standard schemas (§27, standard_schemas): shared schemas named with their version
+  (`decision@1`), read for a note that names one; `withStandardSchemas` adds each the vault has none of its name of.
+- `schema-names.ts` — `missingSchemas`: a graph naming a shared schema neither the vault nor the standard ones hold,
+  warned of with the versions there are (schema_named_found); `readNote` asks it only when given the vault's schemas.
 
 **Paths (spec §7; graph spec §22)**
 
@@ -585,6 +592,9 @@ a GQL block, CSV or GraphML (`DATA_FORMATS`), each read back into the very thing
   translation is checked by `translationProblems` and added by `addTranslation`; `setLanguage`, called by
   `installHost` with the host's `language()`, picks it, or its base language's, else UK English. A word a translation
   lacks is said in UK English, never as its key. Places move their words into `source-words.ts` one at a time.
+  The settings options' words sit apart in `settings-source-words.ts`, and the browser page's own in
+  `page-source-words.ts`, and editing's (properties, adding a thing, Edit, kept drafts) in `edit-source-words.ts`, and the AI dialog's and AI models' in `ai-source-words.ts`, each spread
+  into `SOURCE_WORDS`.
 - `plugins.ts` — the plug-in interface (editor spec §43, plugin_interface, plugin_manifest_limits): `pluginRegistry`,
   where a `GraphNotePlugin` is installed once its manifest (`id`, `version`, `api` of `PLUGIN_API`, the `uses` it names
   of `EXTENSION_POINTS`) is accepted, given only the points it names; a refused plug-in leaves nothing behind, and a

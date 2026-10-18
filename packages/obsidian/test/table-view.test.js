@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { build, load } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
 import { show } from './host/view-notes.js';
+import { groupsRead } from './host/details-read.js';
 
 before(() => build());
 
@@ -70,7 +71,7 @@ describe('a graph drawn as a table', () => {
       const panel = el.querySelector('.graph-note-details');
       assert.ok(!panel.hidden);
       assert.match(panel.textContent, /The park/);
-      assert.match(panel.textContent, /Home near this/);
+      assert.ok(groupsRead(panel).includes('near this Home'), 'its link in, with no reading back');
       assert.equal(row.getAttribute('aria-pressed'), 'true');
       assert.ok(row.classList.contains('is-selected'));
     } finally {
