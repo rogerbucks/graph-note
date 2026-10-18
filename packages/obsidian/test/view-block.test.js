@@ -1,6 +1,6 @@
 // A view in a note (editor spec §2, views_in_the_note; §7, view_is_query, view_profile, empty_view, fade_or_hide_in_style,
 // styled_paths_and_views, styling_keeps_locked_rules, view_saved_as_shown).
-// - A query block named as a view is drawn as the things it picks out of its graph, said in plain English.
+// - A query block named as a view is drawn as the things it picks out of its graph, said in plain language.
 // - What is outside it is faded or hidden as its style says. Looks are drawn with their legend.
 // - A query outside the view profile is refused, saying what is allowed.
 // - A view that matches nothing says so, with a way to change it, never a blank drawing.

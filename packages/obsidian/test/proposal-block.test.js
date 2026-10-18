@@ -2,7 +2,7 @@
 // - A change set block is drawn over its graph. What it adds, changes and removes is marked in words as well as drawn
 //   (proposal_shown_not_applied).
 // - Who proposed it, when, and what it read are shown. A notice comes first if the graph has moved since (proposal_provenance).
-// - Each change is listed in plain English with Accept and Reject (proposal_one_by_one, proposals_read_back). There are
+// - Each change is listed in plain language with Accept and Reject (proposal_one_by_one, proposals_read_back). There are
 //   groups when there are many (big_proposal).
 // - Nothing is written until a person presses one (person_decides).
 // - An Accept writes the change as an edit that can be undone (accepting_is_an_edit).

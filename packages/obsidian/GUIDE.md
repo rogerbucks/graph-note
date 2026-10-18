@@ -211,7 +211,7 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   - It says what the graph spec's check of the change set said: all passed, or each line that failed.
   - When the graph has moved since, it shows a notice, with a button to say it has been read. Accept stays off until
     then.
-  - It lists the changes one to a row, each in plain English and its exact text, with Accept and Reject. The exact text
+  - It lists the changes one to a row, each in plain language and its exact text, with Accept and Reject. The exact text
     is the GQL, the SET line or the removal, in a code span and in the buttons' names.
   - It gives each change's reason as plain text. A model's reason is kept escaped in the note, and unescaped for the
     card.
@@ -407,7 +407,7 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
 
 - `view-maker.ts` — making a view by tapping (§7), while the block is edited. It has the kind of view, the boxes tapped,
   and its reading said as it is built. Write the view writes a view block after the graph's last block.
-- `view-strip.ts` — a view's card: its reading in plain English, Fade or Hide others, and Save as shown. Save as shown
+- `view-strip.ts` — a view's card: its reading in plain language, Fade or Hide others, and Save as shown. Save as shown
   keeps the legend's choices that untangle (§25 untangle_legend), and a view saved so opens with them. The card has the
   legend too, and what is outside it faded and its looks drawn on the drawing.
 - `type-strip.ts` — the diagram type (§15), on every card, a graph's or a view's: how it is drawn, and Diagram type.

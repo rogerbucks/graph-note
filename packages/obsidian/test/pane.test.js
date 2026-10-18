@@ -1,6 +1,6 @@
 // The edit pane (spec §4, §9).
 // - It opens beside the note, on the block whose Edit was pressed. A note with several graphs gets a picker.
-// - The text is coloured as gql-highlight colours it. Each line is read back in plain English.
+// - The text is coloured as gql-highlight colours it. Each line is read back in plain language.
 // - It shows the drawing of what is typed. On a phone, Drawing and Text are two tabs.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';

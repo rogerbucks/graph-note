@@ -119,7 +119,7 @@ describe('the box in the card, untouched by the theme', () => {
 
 describe('a long line wraps, in the pane and in place', () => {
   // long_lines_wrap (spec §4, Roger, 18 Oct 2026). A long line ran off the right of the box, cut off.
-  // Its plain-English note came after it. Now the field and its coloured picture wrap alike.
+  // Its plain-language note came after it. Now the field and its coloured picture wrap alike.
   // The note sits out of the flow, so it never adds a row the field does not have.
   // The picture, not the field, sets the box's height.
   const all = rules(readFileSync(new URL('../../../styles.css', import.meta.url), 'utf8'), 'thoughtknot');
