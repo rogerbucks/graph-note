@@ -1,5 +1,5 @@
-// The words of a style graph (editor spec §2, style_words_checked): a key the style graph does not know, and a frame that
-// is not a well-formed list of numbers, are each a problem with its fix, applied by the diagnostics' code actions; and a
+// The words of a style graph (editor spec §2, style_words_checked). A key the style graph does not know is a problem
+// with its fix. So is a frame that is not a well-formed list of numbers. The diagnostics' code actions apply the fix. A
 // view's name, which is the user's own, is never checked against anything. Beside style.test.js, which holds the rest of
 // the style graph's tests.
 import { test, describe } from 'node:test';

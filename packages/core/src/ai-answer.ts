@@ -1,7 +1,7 @@
-// An AI's answer as a proposal (editor spec §19, answers_are_proposals; §17): the changes it proposes are made into a
-// proposal from the model, against the state of the graph that was sent, naming the record of the send; and the
-// proposal is written into the note as a change set beside the graph — never into the graph, which changes only when a
-// person accepts a change in the review.
+// An AI's answer as a proposal (editor spec §19, answers_are_proposals; §17). The changes it proposes are made into a
+// proposal from the model, against the state of the graph that was sent. It names the record of the send. The proposal
+// is written into the note as a change set beside the graph. It is never written into the graph, which changes only
+// when a person accepts a change in the review.
 import { gqlSpans, graphOfBlock } from './blocks.ts';
 import { withProposer } from './proposals-author.ts';
 import { checkProposal, checkRefusal } from './proposals-check.ts';
@@ -34,10 +34,10 @@ export function proposalFrom(changes: ChangeInput[], from: AnswerSource): Propos
 }
 
 /**
- * The note with the proposal's change set written after the last block of its graph (after the last gql block when the
- * graph has none here), every other byte kept. The graph's own blocks are not touched. A proposal is written only if the
- * graph spec's own check passes it, against the note as it is: otherwise nothing is written, and it says which lines failed
- * (the check wants the proposer known, so the editor declares it first among the additions).
+ * The note with the proposal's change set written after the last block of its graph, every other byte kept. When the
+ * graph has none here, it goes after the last gql block. The graph's own blocks are not touched. A proposal is written
+ * only if the graph spec's own check passes it, against the note as it is. Otherwise nothing is written, and it says
+ * which lines failed. The check wants the proposer known, so the editor declares it first among the additions.
  */
 export function noteWithProposal(note: string, given: Proposal): string | { refused: string } {
   // the editor declares the proposer in the proposal itself, unless the note already does (proposals-author.ts)

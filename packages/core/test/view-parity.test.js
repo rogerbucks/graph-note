@@ -1,8 +1,9 @@
 // Every view returns the same things in the core as in Grafeo (editor spec §2 views_in_the_note; §7 view_is_query,
-// five_view_kinds, view_profile, views_agree_with_grafeo). One table, python/graph_spec/tests/view_cases.json, holds small
-// notes with views of each of the five kinds written in them as named query blocks, what each view returns, and queries
-// outside the view profile with the refusal each gets. This test holds the core to the table; the Python library's
-// tests/test_view_parity.py holds Grafeo, running the same queries, to it. Together they prove the two return the same.
+// five_view_kinds, view_profile, views_agree_with_grafeo). One table, python/graph_spec/tests/view_cases.json, holds
+// small notes with views of each of the five kinds. The views are written in them as named query blocks, with what each
+// view returns. The table also holds queries outside the view profile with the refusal each gets. This test holds the
+// core to the table; the Python library's tests/test_view_parity.py holds Grafeo, running the same queries, to it.
+// Together they prove the two return the same.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';

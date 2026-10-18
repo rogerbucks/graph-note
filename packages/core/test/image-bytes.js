@@ -1,6 +1,7 @@
-// Small images made byte by byte for the tests of animated images (editor spec §18): a GIF, a PNG or APNG, a WebP and an
-// SVG, each still or moving, of a size and frame count given, laid out as each format writes them. Only the parts the
-// header reader looks at are real; the picture data itself is a placeholder, as nothing here is decoded for display.
+// Small images made byte by byte for the tests of animated images (editor spec §18). There is a GIF, a PNG or APNG, a
+// WebP and an SVG, each still or moving, of a size and frame count given. They are laid out as each format writes them.
+// Only the parts the header reader looks at are real; the picture data itself is a placeholder, as nothing here is
+// decoded for display.
 
 const ascii = (s) => [...s].map((c) => c.charCodeAt(0));
 const le16 = (n) => [n & 0xff, (n >> 8) & 0xff];

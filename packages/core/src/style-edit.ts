@@ -1,9 +1,9 @@
-// Writing to the style graph (editor spec §2, §6, §7, §14, §15): a nudge, a look, whether a view fades or hides what is
-// outside it, how a view was shown, a property switched on or off inline, arrowheads hidden or shown, and the diagram
-// type chosen — each written as text into the graph's style block, never into a data block. A note with no style block
-// for the graph gets one, after the graph's last block, with its graph line and a comment saying whose style it is. A
-// view's setting, how it was shown, and a choice of properties, arrowheads or diagram type are each changed in place
-// when already written for the same place, never written twice.
+// Writing to the style graph (editor spec §2, §6, §7, §14, §15). It writes a nudge, a look, and whether a view fades
+// or hides what is outside it. It writes how a view was shown, a property switched on or off inline, arrowheads hidden
+// or shown, and the diagram type chosen. Each is written as text into the graph's style block, never a data block. A
+// note with no style block for the graph gets one after its last block. It has its graph line and a comment saying
+// whose style it is. A view's setting and how it was shown are changed in place when already written for the same
+// place. So is a choice of properties, arrowheads or diagram type. None is ever written twice.
 import { dataKind, gqlSpans, graphOf, styleOf } from './blocks.ts';
 import type { Span } from './blocks.ts';
 import { items } from './block-items.ts';
@@ -317,14 +317,14 @@ function appended(block: string, thing: string): string {
 }
 
 /**
- * The note with one change written to the style graph of `graph` (§2), as text: a nudge or a look added at the end of
- * the graph's last style block; a view's fade or hide, or how it was shown, changed in place where already written for
- * that view, else added. With no style block, one is made after the graph's last block: `// graph: <graph>_style · STYLE
- * <graph>` and a comment saying whose style it is. Ids are fresh (`nudge_1`, `look_2`). No data block is ever touched.
- * Refused, with the reason, for a graph the note lacks or a change the style graph would not accept — and for one that
- * names a thing drawn only under a suggested name, which it would write without the thing's fix (§4): accept its name
- * first. Such a thing is found in the note being written, as the reader reads it (`unnamedIn`), never in a drawing,
- * which can be older than the note.
+ * The note with one change written to the style graph of `graph` (§2), as text. A nudge or a look is added at the end
+ * of the graph's last style block. A view's fade or hide, or how it was shown, is changed in place where already
+ * written for that view, else added. With no style block, one is made after the graph's last block: `// graph:
+ * <graph>_style · STYLE <graph>` and a comment saying whose style it is. Ids are fresh (`nudge_1`, `look_2`). No data
+ * block is ever touched. Refused, with the reason, for a graph the note lacks or a change the style graph would not
+ * accept. Refused too for one naming a thing drawn only under a suggested name, which it would write without the
+ * thing's fix (§4). Accept its name first. Such a thing is found in the note being written, as the reader reads it
+ * (`unnamedIn`). Never in a drawing, which can be older than the note.
  */
 export function styleEdit(note: string, graph: string, change: StyleChange): StyleEdit {
   const spans = gqlSpans(note);
@@ -338,8 +338,8 @@ export function styleEdit(note: string, graph: string, change: StyleChange): Sty
   const styles = spans.filter((s) => styleOf(s.text) === graph);
   const written = styles.flatMap((s) => writtenIn(s.text).map((w) => ({ s, w })));
   const taken = new Set(written.flatMap(({ w }) => (w.variable ? [w.variable.name] : [])));
-  // a view's setting, how it was shown, or a choice of properties or arrowheads, already written for the same place:
-  // changed where it is, keeping its id
+  // a view's setting, how it was shown, or a choice of properties or arrowheads, already written for the same place.
+  // It is changed where it is, keeping its id
   const match = thing.match;
   const same = match
     ? written.find(

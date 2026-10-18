@@ -1,9 +1,9 @@
 // A model's row of the destination matrix (editor spec §19, model_ceiling; Roger, 16 Oct 2026): in a model's settings the
 // user picks a row, never guessed from the model's address or name. The model may receive exactly the classes the row
-// marks yes; each conditional class is off until the user switches it on for that model; a no is never allowed. What a
-// model may receive is a set of classes, not a rank. The host hands the core plain rows (the Obsidian layer reads the
-// note, tested in packages/obsidian/test/matrix-note.test.js); classes match by name, a settings table maps other names
-// by hand, and a class matched by neither is flagged, never guessed. With no row picked the model's ceiling stands.
+// marks yes. Each conditional class is off until the user switches it on for that model. A no is never allowed. What a
+// model may receive is a set of classes, not a rank. The host hands the core plain rows. The Obsidian layer reads the
+// note, tested in packages/obsidian/test/matrix-note.test.js. Classes match by name, and a settings table maps other
+// names by hand. A class matched by neither is flagged, never guessed. With no row picked the model's ceiling stands.
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { prepareSend } from '../src/ai.ts';

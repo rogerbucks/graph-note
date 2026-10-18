@@ -1,6 +1,7 @@
-// Aiming the view at a thing (editor spec §25): where the view goes to bring a chosen thing into sight, keeping the zoom
-// unless the thing would be too small to read (details_choose_moves), and the strip at the bottom of the viewport that a
-// sheet covers, which the drawing may pan up into so the chosen thing stays visible above it (sheet_keeps_thing_clear).
+// Aiming the view at a thing (editor spec §25). It says where the view goes to bring a chosen thing into sight. It
+// keeps the zoom unless the thing would be too small to read (details_choose_moves). It also gives the strip at the
+// bottom of the viewport that a sheet covers. The drawing may pan up into it, so the chosen thing stays visible above
+// it (sheet_keeps_thing_clear).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { Zoom } from '../src/zoom.ts';

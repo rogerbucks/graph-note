@@ -1,9 +1,9 @@
 // The words the person reads, kept by key in one catalogue (editor spec §42, words_catalogue, language_follows_host and
-// translations_as_files). UK English is the source (source-words.ts); a translation is a plain file of the same keys for
-// one language, checked to hold the source's placeholders and plural forms before it is used. The host says the
-// language once (`setLanguage`, from `DisplayHost.language`); a word a translation leaves out is said in UK English,
-// never as its key. A placeholder is written `{name}`; a word that changes with a count is written once for each
-// plural form the language has (`Intl.PluralRules`), with `{count}` shown in the reader's locale.
+// translations_as_files). UK English is the source (source-words.ts). A translation is a plain file of the same keys
+// for one language. It is checked to hold the source's placeholders and plural forms before it is used. The host says
+// the language once (`setLanguage`, from `DisplayHost.language`). A word a translation leaves out is said in UK
+// English, never as its key. A placeholder is written `{name}`. A word that changes with a count is written once for
+// each plural form the language has (`Intl.PluralRules`), with `{count}` shown in the reader's locale.
 import { formatCount } from './locale-formats.ts';
 import { PSEUDO_LANGUAGES, pseudoWords } from './pseudo-words.ts';
 import { SOURCE_WORDS } from './source-words.ts';
@@ -48,9 +48,9 @@ export function placeholdersOf(entry: Words): string[] {
 }
 
 /**
- * What is wrong with `translation` of the source `source`, for language `tag`, one line each, or none: a key the source
- * lacks, an entry that is not a word or plural forms, or one whose placeholders or kind differ from the source's. A key
- * the translation leaves out is no problem: that word is said in the source language.
+ * What is wrong with `translation` of the source `source`, for language `tag`, one line each, or none. It may be a key
+ * the source lacks, or an entry that is not a word or plural forms. Or it may be one whose placeholders or kind differ
+ * from the source's. A key the translation leaves out is no problem: that word is said in the source language.
  */
 export function translationProblems(source: Catalogue, translation: Catalogue, tag: string): string[] {
   const problems: string[] = [];
@@ -98,8 +98,8 @@ let language = SOURCE_LANGUAGE;
 let words: Catalogue = SOURCE_WORDS;
 
 /**
- * Adds the translation for language `tag`, so `setLanguage` can choose it; throws, saying every problem, when it does not
- * hold to the source, and then adds nothing.
+ * Adds the translation for language `tag`, so `setLanguage` can choose it. When it does not hold to the source, it
+ * throws, saying every problem, and then adds nothing.
  */
 export function addTranslation(tag: string, translation: Catalogue): void {
   const problems = translationProblems(SOURCE_WORDS, translation, tag);
@@ -149,8 +149,8 @@ const RIGHT_TO_LEFT = new Set([
 ]);
 
 /**
- * The direction language `tag` is read in (editor spec §42, rtl_mirrors): the runtime's own text information where it has
- * it, else by the language and its script; a tag that is no language is read left to right.
+ * The direction language `tag` is read in (editor spec §42, rtl_mirrors). It uses the runtime's own text information
+ * where it has it, else the language and its script. A tag that is no language is read left to right.
  */
 export function directionOf(tag: string): 'ltr' | 'rtl' {
   const exact = canonical(tag);

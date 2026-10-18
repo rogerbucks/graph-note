@@ -1,6 +1,6 @@
-// The names of a graph kept up to date as names are added (editor spec §4; spec §9, layout_contained: never freeze): the
-// style and the names a NameBook gives are those the old nameStyleOf and nameFromText gave from all the names at once —
-// proved against them, kept here as the oracle, on random graphs of names and kinds.
+// The names of a graph kept up to date as names are added (editor spec §4; spec §9, layout_contained: never freeze).
+// The style and the names a NameBook gives are those the old nameStyleOf and nameFromText gave from all the names at
+// once. This is proved against them, kept here as the oracle, on random graphs of names and kinds.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { NameBook } from '../src/name-book.ts';
@@ -120,7 +120,7 @@ describe('a book of names gives what the old reading of every name gave', () => 
     }
   });
 
-  // that naming 5,000 things of the same text takes work linear in them, never in their square, is counted in
-  // instructions by the naming benchmark (scripts/benchmarks/naming.mjs), on every release: a test asserts the work
-  // done, never the time taken (spec §12, quality_ratchet, 12 Oct 2026)
+  // naming 5,000 things of the same text takes work linear in them, never in their square. The naming benchmark
+  // (scripts/benchmarks/naming.mjs) counts that in instructions, on every release. A test asserts the work done, never
+  // the time taken (spec §12, quality_ratchet, 12 Oct 2026)
 });

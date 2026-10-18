@@ -1,6 +1,6 @@
-// The language the words are said in follows the host (editor spec §42, language_follows_host): a host says its language
-// as it is installed, a translation for it, or for its base language, is used, and a word a translation lacks is said in
-// UK English, never as its key.
+// The language the words are said in follows the host (editor spec §42, language_follows_host). A host says its
+// language as it is installed. A translation for it, or for its base language, is used. A word a translation lacks is
+// said in UK English, never as its key.
 import { test, describe, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { addTranslation, currentLanguage, setLanguage, SOURCE_LANGUAGE, word } from '../src/words.ts';

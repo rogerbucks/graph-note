@@ -1,11 +1,12 @@
 // A model's row of the destination matrix (editor spec §19, model_ceiling; Roger, 16 Oct 2026). In a model's settings the
 // user picks a row of the vault's matrix, never guessed from the model's address or name. The model may receive exactly
-// the classes its row marks yes; each class marked conditional is off until the user switches it on for that model, with
-// the row's condition shown beside the switch, and the switch holds only for the condition it was given under; one marked
-// no, or marked in any other way, is never allowed. What a model may receive is a set of classes, not a rank. The host
-// reads the matrix note and hands the core plain rows, so the core never reads the note's layout. Classes match by exact
-// name, with a table in the settings for other names; a class matched by neither is flagged and never guessed, so it is
-// never allowed. A row named twice, or two columns standing for one classification, is never resolved by taking the first.
+// the classes its row marks yes. Each class marked conditional is off until the user switches it on for that model. The
+// row's condition is shown beside the switch. The switch holds only for the condition it was given under. A class
+// marked no, or marked in any other way, is never allowed. What a model may receive is a set of classes, not a rank.
+// The host reads the matrix note and hands the core plain rows, so the core never reads the note's layout. Classes
+// match by exact name, with a table in the settings for other names. A class matched by neither is flagged and never
+// guessed. So it is never allowed. A row named twice, or two columns standing for one classification, is never resolved
+// by taking the first.
 import type { AiModel } from './settings.ts';
 
 /** What a row says of a class: yes, conditional on what the row says, no, or unknown (not exactly one of the marks). */
@@ -51,8 +52,8 @@ export interface ClassGrant {
   allowed: boolean;
 }
 
-// a name is exact: a character that changes under compatibility normalisation (the Kelvin sign, a full-width letter) is
-// never taken for the plain one, so it is flagged rather than matched
+// a name is exact. A character that changes under compatibility normalisation (the Kelvin sign, a full-width letter) is
+// never taken for the plain one. So it is flagged rather than matched
 const plainName = (s: string) => s.trim().normalize('NFKC') === s.trim();
 const same = (a: string, b: string) =>
   plainName(a) && plainName(b) && a.trim().toLowerCase() === b.trim().toLowerCase();
@@ -71,9 +72,9 @@ export function switchesFrom(given: unknown): MatrixSwitch[] {
 }
 
 /**
- * The classification a matrix class name stands for: the same name, else the table's, else null (flagged). A table that
- * disagrees with itself (keys differing only in case that map apart), or with the name (an entry for a name that is a
- * classification, mapped to another), matches nothing.
+ * The classification a matrix class name stands for: the same name, else the table's, else null (flagged). A table may
+ * disagree with itself (keys differing only in case that map apart). Or it may disagree with the name (an entry for a
+ * name that is a classification, mapped to another). Such a table matches nothing.
  */
 export function matchClass(name: string, classifications: string[], classMap: Record<string, string>): string | null {
   const exact = classifications.find((c) => same(c, name));
@@ -191,7 +192,9 @@ export function classMapFrom(text: string): Record<string, string> {
   return map;
 }
 
-/** Why a note of `level` may not go to `model` by its row, or null when it may; `said` is how the note's level is said. */
+/**
+ * Why a note of `level` may not go to `model` by its row, or null when it may. `said` is how the note's level is said.
+ */
 export function matrixRefusal(
   level: string,
   said: string,

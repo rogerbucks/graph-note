@@ -1,6 +1,6 @@
-// A thing's details open with what is going on, in a sentence or two (editor spec §25, details_said): what it is, what
-// links to it and what it links to, naming up to two things in a group and counting more, then how many properties and
-// problems it has. Host-free: the plugin puts the sentence at the top of the panel.
+// A thing's details open with what is going on, in a sentence or two (editor spec §25, details_said). They say what it
+// is, what links to it and what it links to. They name up to two things in a group and count more. Then they say how
+// many properties and problems it has. Host-free: the plugin puts the sentence at the top of the panel.
 import { test, describe, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';

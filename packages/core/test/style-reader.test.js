@@ -1,5 +1,5 @@
-// The reader of one style thing's properties (style-reader.ts): a word not allowed is reported in the message it is given,
-// with the word written in the place of every $ in it, never only the first.
+// The reader of one style thing's properties (style-reader.ts). A word not allowed is reported in the message it is
+// given. The word is written in the place of every $ in it, never only the first.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { reader } from '../src/style-reader.ts';

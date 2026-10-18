@@ -1,9 +1,10 @@
-// Graph sources (editor spec §20 gql_file_source, gql_file_missing; §7 view_of_another_note): a block whose graph line
-// says FROM and a place, `// graph: trip · FROM Graphs/trip.gql` or `// graph: trip · FROM [[Trip plan]]`, draws its graph
-// from that .gql file or that note, read where it is written and never copied: the block holds nothing of its own, and
-// every view of the graph in the note draws from the same place. The host fetches the text (the core reads no file); this
-// reads it with the same partial reader and limits as a note's own blocks (`readNote`), or says, naming the place, why
-// nothing can be drawn: missing, moved, unreadable, or holding no such graph. Never a blank drawing.
+// Graph sources (editor spec §20 gql_file_source, gql_file_missing; §7 view_of_another_note). A block whose graph line
+// says FROM and a place draws its graph from that .gql file or that note. Two examples: `// graph: trip · FROM
+// Graphs/trip.gql` and `// graph: trip · FROM [[Trip plan]]`. The graph is read where it is written and never copied.
+// The block holds nothing of its own, and every view of the graph in the note draws from the same place. The host
+// fetches the text (the core reads no file). This reads it with the same partial reader and limits as a note's own
+// blocks (`readNote`). Or it says, naming the place, why nothing can be drawn: missing, moved, unreadable, or holding
+// no such graph. Never a blank drawing.
 import { gqlBlocks, graphOf, graphOfBlock, isSourceBlock } from './blocks.ts';
 import { readNote } from './drawing.ts';
 import { READ_LIMITS } from './layout-limits.ts';
@@ -28,8 +29,8 @@ export interface SourceFault {
 }
 
 /**
- * What the host found at a source's place: the text read there, or why there is none: unreadable, missing, or larger
- * than `READ_LIMITS.bytes` by the size it keeps (`tooLarge`, in bytes), so it was never read.
+ * What the host found at a source's place: the text read there, or why there is none. It may be unreadable or missing.
+ * Or it may be larger than `READ_LIMITS.bytes`, so it was never read; `tooLarge` keeps its size in bytes.
  */
 export type Fetched =
   | { found: string; text: string }
@@ -66,8 +67,9 @@ function placeOf(written: string): string {
 }
 
 /**
- * Whether a place could reach outside the vault, or into what it hides: a leading slash or backslash, a drive letter, a
- * `..` part, or any part starting with a dot (the config folder, `.trash`, a hidden folder), split at either slash.
+ * Whether a place could reach outside the vault, or into what it hides. That is a leading slash or backslash, a drive
+ * letter, or a `..` part. So is any part starting with a dot (the config folder, `.trash`, a hidden folder), split at
+ * either slash.
  */
 export const outsideVault = (place: string): boolean =>
   /^[/\\]/.test(place) || /^[A-Za-z]:/.test(place) || place.split(/[/\\]/).some((part) => part.startsWith('.'));
@@ -77,8 +79,9 @@ const holds = (line: string) => !!trim(line) && !trim(line).startsWith('//');
 
 /**
  * The source a block names, a fault saying what to change, or null when the block draws from nowhere else. The place
- * after FROM is a .gql file (its path from the vault's root, or a link to it) or a note (its link, `[[Note]]`, or its
- * path); a block holding lines of its own beside FROM is a fault, so data is never copied into the note.
+ * after FROM is a .gql file or a note. A file is named by its path from the vault's root, or a link to it. A note is
+ * named by its link, `[[Note]]`, or its path. A block holding lines of its own beside FROM is a fault, so data is never
+ * copied into the note.
  */
 export function sourceOf(text: string, block = 0): Source | SourceFault | null {
   if (!isSourceBlock(text)) return null;
@@ -140,11 +143,12 @@ const fileBlock = (text: string) =>
     .join('\n');
 
 /**
- * A source read from what the host fetched (gql_file_source): a .gql file is one block, a note its gql blocks, read as
- * a note's own blocks are, by the same partial reader and limits (`readNote`), so a line that cannot be read is listed
- * and the rest drawn, and a source too large to read is not read (`reading.tooLarge` says why). `shared` are the
- * vault's shared schemas. Or why nothing can be drawn (gql_file_missing), naming the place: not there, moved (a file of
- * the same name found `elsewhere`), unreadable, with no graph line, or holding no graph of that name.
+ * A source read from what the host fetched (gql_file_source). A .gql file is one block, a note its gql blocks. They are
+ * read as a note's own blocks are, by the same partial reader and limits (`readNote`). So a line that cannot be read is
+ * listed and the rest drawn. A source too large to read is not read (`reading.tooLarge` says why). `shared` are the
+ * vault's shared schemas. Or why nothing can be drawn (gql_file_missing), naming the place. It may be not there, or
+ * moved (a file of the same name found `elsewhere`). It may be unreadable, with no graph line, or holding no graph of
+ * that name.
  */
 export function readSource(source: Source, fetched: Fetched, shared: string[] = []): SourceRead | SourceRefusal {
   const name = sourceName(source),

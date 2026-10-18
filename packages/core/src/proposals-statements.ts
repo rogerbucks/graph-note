@@ -1,8 +1,8 @@
-// A change as the statement a change set holds (editor spec §17, §24 of the graph spec): an addition is the item as a block
-// writes it, a change of a property is a `SET`, and a removal is a `DELETE` of exactly one thing or link, so every tool
-// that reads GQL reads them and graph-spec's own check dry-runs them. A change's id is derived from its statement by the
-// graph library, never written by anyone, so the same change has the same id wherever it is read. This module writes a
-// statement from a change and reads one back, with the library's own reading of it.
+// A change as the statement a change set holds (editor spec §17, §24 of the graph spec). An addition is the item as a
+// block writes it, and a change of a property is a `SET`. A removal is a `DELETE` of exactly one thing or link. So
+// every tool that reads GQL reads them, and graph-spec's own check dry-runs them. A change's id is derived from its
+// statement by the graph library, never written by anyone. So the same change has the same id wherever it is read.
+// This module writes a statement from a change and reads one back, with the library's own reading of it.
 import gs from '@thoughtknot/graph-spec';
 import { blankText } from './block-items.ts';
 import type { ChangeOp } from './proposals.ts';
@@ -16,7 +16,7 @@ export function statementOf(c: ChangeOp): string {
     return c.labels?.length
       ? `MATCH (v${kinds(c.labels)} {id: ${gs.quote(c.thing)}}) SET v.${c.key} = ${c.value}`
       : `SET ${c.thing}.${c.key} = ${c.value}`;
-  // a thing goes with the links it has unless the statement is a plain DELETE (`detach: false`), which keeps to what the
+  // a thing goes with the links it has unless the statement is a plain DELETE (`detach: false`). That keeps to what the
   // graph spec says of it: no link left without its end
   if (c.op === 'remove-thing')
     return `MATCH (v${kinds(c.labels)} {id: ${gs.quote(c.thing)}}) ${c.detach === false ? '' : 'DETACH '}DELETE v`;
@@ -39,8 +39,8 @@ function shapeOf(gql: string): string {
 
 /**
  * A change's id, derived from its statement and never written. A DELETE or a SET has the id the graph library gives it
- * (the one `checkChangeset` reports), an addition the sixteen digits of its tokens' hash: the same change, written either
- * way, has the same id.
+ * (the one `checkChangeset` reports). An addition has the sixteen digits of its tokens' hash. The same change, written
+ * either way, has the same id.
  */
 export function changeIdOf(c: ChangeOp): string {
   if (c.op === 'add') return gs.hash16({ op: 'add', gql: shapeOf(c.gql) });
@@ -54,7 +54,7 @@ export function changeIdOf(c: ChangeOp): string {
 
 /**
  * The change a DELETE or SET statement makes, read as the check reads it; or why the editor cannot review it. A SET of
- * a link's property, or of more than one property, is the library's to check but is not one this editor lists, since
+ * a link's property, or of more than one property, is the library's to check. This editor does not list it, since
  * each row is one change of one value.
  */
 export function readStatement(text: string): ChangeOp | { refused: string } {

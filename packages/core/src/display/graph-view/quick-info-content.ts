@@ -1,6 +1,7 @@
-// What the quick-info tooltip says of a thing or a link (editor spec §24, quick_info): its name, its kind, how a thing is
-// linked (quick_info_links), its first few properties, how many problems it has, and the first paragraph of its note —
-// all of it found by the core, as the details find it, so the tooltip and the details never disagree.
+// What the quick-info tooltip says of a thing or a link (editor spec §24, quick_info). It says its name, its kind, and
+// how a thing is linked (quick_info_links). It says its first few properties, how many problems it has, and the first
+// paragraph of its note. The core finds all of it, as the details find it. So the tooltip and the details never
+// disagree.
 import { details, linkDetails, linksSaid, propertiesOf } from '@thoughtknot/core';
 import type { NoteReading } from '@thoughtknot/core';
 

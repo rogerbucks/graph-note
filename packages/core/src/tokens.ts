@@ -1,4 +1,4 @@
-// The GQL tokenizer of the gql-highlight plugin (ISO/IEC 39075 GQL), so the text pane and drawn code blocks colour text
+// The GQL tokenizer of the gql-highlight plugin (ISO/IEC 39075 GQL). So the text pane and drawn code blocks colour text
 // exactly as it does (spec §4, "colour"). Proved token for token against answers recorded from gql-highlight itself.
 // `--` is not a comment here: the standard allows it, but it collides with edge patterns, and graph notes write `//`.
 // Whitespace is GQL's (graph spec §3), as the reader reads it, not JavaScript's \s.

@@ -1,9 +1,11 @@
-// The rich parts of a box's or link's details (editor spec §18): a thing's text and properties rendered as Markdown by
-// Obsidian's own MarkdownRenderer, so images, maths, links and embeds appear as in a note (rich_details), the plugin
-// writing no HTML of its own; a thing whose id is a global note id or a link to a note showing that note, read and
-// rendered made safe, with a link that opens it (node_is_a_note); and the links and attachments it holds
-// (links-list.ts). What is rendered is owned by a component
-// of its own, unloaded when the details are drawn again or close, so nothing rendered outlives what it was rendered for.
+// The rich parts of a box's or link's details (editor spec §18).
+// - A thing's text and properties are rendered as Markdown by Obsidian's own MarkdownRenderer. So images, maths, links
+//   and embeds appear as in a note (rich_details), the plugin writing no HTML of its own.
+// - A thing whose id is a global note id or a link to a note shows that note, read and rendered made safe. A link opens
+//   it (node_is_a_note).
+// - The links and attachments it holds are listed (links-list.ts).
+// What is rendered is owned by a component of its own, unloaded when the details are drawn again or close. So nothing
+// rendered outlives what it was rendered for.
 import { Lifecycle } from '../lifecycle';
 import { attachmentsOf, linksHeld, noteOf, withMeant, word } from '@thoughtknot/core';
 import type { Target, View } from '@thoughtknot/core';
@@ -60,8 +62,8 @@ export class RichDetails {
   }
 
   /**
-   * What a thing stands for and says: the note its id links to, rendered, with a link that opens it (node_is_a_note);
-   * then its text, rendered, when it holds Markdown.
+   * What a thing stands for and says. First the note its id links to, rendered, with a link that opens it
+   * (node_is_a_note). Then its text, rendered, when it holds Markdown.
    */
   thing(el: HTMLElement, key: string, text: string): void {
     const host = this.o.links,
@@ -76,9 +78,9 @@ export class RichDetails {
   }
 
   /**
-   * A thing's or link's note (editor spec §24, note_shown), under a heading of its own: its whole text rendered as
-   * Markdown by the same renderer as the rest of the details, which writes no HTML of its own and is handed none to
-   * render. Nothing when it has no note.
+   * A thing's or link's note (editor spec §24, note_shown), under a heading of its own. Its whole text is rendered as
+   * Markdown by the same renderer as the rest of the details. That renderer writes no HTML of its own and is handed
+   * none to render. Nothing when it has no note.
    */
   private note(el: HTMLElement, target: { thing: string } | { link: number }): void {
     const drawing = this.o.reading.graphs.get(this.o.graph),

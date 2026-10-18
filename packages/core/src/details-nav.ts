@@ -1,8 +1,11 @@
-// Finding your way from a thing's details (editor spec §25, slice 3): its links grouped by relationship type and
-// direction and read in words with a count (details_links_listed); the trail of things chosen from them, with back and
-// forward steps (details_trail); the eased move to a chosen thing and the scale below which a thing is too small to read
-// (details_choose_moves, details_move_motion); the arrow at the edge of the view pointing to a selection out of sight
-// (selection_pointer); and how much of the screen the details sheet may take (sheet_min_max). Pure: the host draws it.
+// Finding your way from a thing's details (editor spec §25, slice 3):
+// - its links grouped by relationship type and direction and read in words with a count (details_links_listed);
+// - the trail of things chosen from them, with back and forward steps (details_trail);
+// - the eased move to a chosen thing, and the scale below which a thing is too small to read (details_choose_moves,
+//   details_move_motion);
+// - the arrow at the edge of the view pointing to a selection out of sight (selection_pointer);
+// - how much of the screen the details sheet may take (sheet_min_max).
+// Pure: the host draws it.
 import gs from '@thoughtknot/graph-spec';
 import type { Bounds } from './hits.ts';
 import { STYLE } from './layout.ts';
@@ -16,7 +19,7 @@ export interface LinkGroup {
   /** The reading this way: "reports to" out, "is reported to by" in. */
   reading: string;
   /**
-   * The things at the other ends, each once, in the order their first links are written: `link` is the index of that
+   * The things at the other ends, each once, in the order their first links are written. `link` is the index of that
    * first link in the drawing, `links` of every link to it of this type and way.
    */
   things: { key: string; text: string; link: number; links: number[] }[];
@@ -44,10 +47,11 @@ function reverses(reading: NoteReading, graph: string): Map<string, string | und
 }
 
 /**
- * A thing's links grouped by relationship type and direction (details_links_listed): the groups of links out first, then
- * those in, each in the order its first link is written. A group reads as a sentence, with the count in brackets when it
- * holds more than one link. A link in reads by the schema's reverse reading, or the one the graph library guesses; where
- * it can guess none, as the link reads forward, ending "this": "Bob and Cy part of plan this".
+ * A thing's links grouped by relationship type and direction (details_links_listed). The groups of links out come
+ * first, then those in, each in the order its first link is written. A group reads as a sentence, with the count in
+ * brackets when it holds more than one link. A link in reads by the schema's reverse reading, or the one the graph
+ * library guesses. Where it can guess none, it reads as the link reads forward, ending "this": "Bob and Cy part of plan
+ * this".
  */
 export function linkGroups(reading: NoteReading, graph: string, key: string): LinkGroup[] {
   const d = reading.graphs.get(graph);
@@ -95,8 +99,8 @@ const same = (a: TrailStep, b: TrailStep) =>
   'key' in a ? 'key' in b && a.key === b.key : 'link' in b && a.link === b.link;
 
 /**
- * The trail of things chosen from the details (details_trail): started again by a thing chosen in the drawing, added to
- * by each choice from its links, and walked with back and forward. A choice made after going back drops what was ahead,
+ * The trail of things chosen from the details (details_trail). A thing chosen in the drawing starts it again; each
+ * choice from its links adds to it; back and forward walk it. A choice made after going back drops what was ahead,
  * as a browser's history does.
  */
 export class Trail {
@@ -196,9 +200,9 @@ export interface Pointing {
 const EDGE = 22;
 
 /**
- * The arrow at the edge of the view pointing to a selection out of sight (selection_pointer): none while any of it shows
- * in the part of the viewport not covered by the sheet (`clear` pixels at its foot); otherwise at the edge of that part,
- * on the line from its middle towards the selection, pointing along it.
+ * The arrow at the edge of the view pointing to a selection out of sight (selection_pointer). There is none while any
+ * of it shows in the part of the viewport not covered by the sheet (`clear` pixels at its foot). Otherwise it sits at
+ * the edge of that part, on the line from its middle towards the selection, pointing along it.
  */
 export function pointerTo(box: Bounds, view: View, viewport: Size, clear = 0): Pointing | null {
   const room = Math.max(0, viewport.height - clear);
@@ -227,8 +231,9 @@ export const ABOVE_SHEET = 160;
 const BAR_PX = 52;
 
 /**
- * The tallest the restored sheet may be on a visible screen `screen` pixels high (sheet_min_max): its share of the screen,
- * less where that would leave too little above it for the chosen thing and some of the drawing; never less than its bar.
+ * The tallest the restored sheet may be on a visible screen `screen` pixels high (sheet_min_max). It is its share of
+ * the screen, less where that would leave too little above it for the chosen thing and some of the drawing. It is
+ * never less than its bar.
  */
 export function sheetLimit(screen: number): number {
   return Math.max(BAR_PX, Math.min(screen * SHEET_SHARE, screen - ABOVE_SHEET));

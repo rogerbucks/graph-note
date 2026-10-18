@@ -1,9 +1,9 @@
-// Moving a box by dragging it (editor spec §6, nudge_preview, drag_moves_box): where a box let go at a point would land,
-// read from the boxes as drawn, and the nudge that place writes. Graphviz lays things out in ranks, across the drawing
-// (LR) or down it (TB): dropped above or below a box, across the ranks, the box goes beside it, on its rank; dropped to
-// one side, along the ranks, it goes before or after it. Away from every box, or where the same nudge is already written,
-// it lands nowhere. In a radial drawing it goes before or after a thing around the centre. Host-free: the host reads
-// the boxes from the drawing, in its own units, and draws the preview.
+// Moving a box by dragging it (editor spec §6, nudge_preview, drag_moves_box). It says where a box let go at a point
+// would land, read from the boxes as drawn, and the nudge that place writes. Graphviz lays things out in ranks, across
+// the drawing (LR) or down it (TB). Dropped above or below a box, across the ranks, the box goes beside it, on its
+// rank. Dropped to one side, along the ranks, it goes before or after it. Away from every box, or where the same nudge
+// is already written, it lands nowhere. In a radial drawing it goes before or after a thing around the centre.
+// Host-free: the host reads the boxes from the drawing, in its own units, and draws the preview.
 import type { NudgeWrite } from './style-edit.ts';
 import { word } from './words.ts';
 
@@ -57,9 +57,9 @@ const turn = (c: { x: number; y: number }, from: { x: number; y: number }, to: {
   (Math.atan2(c.y - to.y, to.x - c.x) - Math.atan2(c.y - from.y, from.x - c.x) + 4 * Math.PI) % (2 * Math.PI);
 
 /**
- * Where box `dragged`, let go at `at`, would land among the `boxes` drawn in direction `rankdir` (LR or TB): by the
- * nearest other box within its reach — beside it when dropped across the ranks, before or after it along them, whichever
- * way the point lies further from its middle for the box's size.
+ * Where box `dragged`, let go at `at`, would land among the `boxes` drawn in direction `rankdir` (LR or TB). It goes by
+ * the nearest other box within its reach. It lands beside it when dropped across the ranks, or before or after it along
+ * them. Which applies is whichever way the point lies further from its middle for the box's size.
  *
  * A radial drawing has the box of `centre` in the middle (radial_spoke_order). The things go round it in the order
  * written, anticlockwise as drawn. Dropped on the clockwise side of one, the box goes just before it. Dropped on the

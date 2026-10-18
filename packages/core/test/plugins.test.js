@@ -1,5 +1,5 @@
-// The plug-in interface (editor spec §43, plugin_interface): one typed, versioned way in, which the built-in data exports
-// use too, and through which a plug-in's own export is offered and written beside them.
+// The plug-in interface (editor spec §43, plugin_interface): one typed, versioned way in, which the built-in data
+// exports use too. A plug-in's own export is offered through it and written beside them.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { EXTENSION_POINTS, PLUGIN_API, pluginRegistry } from '../src/plugins.ts';

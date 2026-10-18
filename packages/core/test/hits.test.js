@@ -1,5 +1,5 @@
-// Tapping near things (editor spec §3, tap_cycles_near; asked for 7 Oct 2026): a tap that lands on or near one or more
-// boxes or links selects the nearest; tapping again in the same place selects the next, round and back to the first.
+// Tapping near things (editor spec §3, tap_cycles_near; asked for 7 Oct 2026). A tap that lands on or near one or more
+// boxes or links selects the nearest. Tapping again in the same place selects the next, round and back to the first.
 // Host-free: the areas come from the drawing's own SVG, and a tap is a point in the drawing's units.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

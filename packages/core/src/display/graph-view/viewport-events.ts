@@ -1,7 +1,8 @@
-// How a card's drawing is worked by pointer, wheel and keyboard (spec §3, §25): each event passed to the core's Zoom,
-// which decides; a tap on or near a box or link opens it, a tap again in the same place the next of them, and a tap on
-// empty space clears the selection; a box pressed with a mouse or pen and dragged moves it, and so does M on a box (§6);
-// the highlight under the pointer and with the keyboard focus; and the details sheet placed again as the window and the
+// How a card's drawing is worked by pointer, wheel and keyboard (spec §3, §25). Each event is passed to the core's
+// Zoom, which decides. A tap on or near a box or link opens it, and a tap again in the same place the next of them. A
+// tap on empty space clears the selection. A box pressed with a mouse or pen and dragged moves it, and so does M on a
+// box (§6). It also covers the highlight under the pointer and with the keyboard focus. The details sheet is placed
+// again as the window and the
 // note move. The card (graph-view.ts) binds these once it has built its parts.
 import type { Lifecycle } from '../lifecycle';
 import type { Zoom, ZoomEvent } from '@thoughtknot/core';
@@ -99,7 +100,7 @@ export function bindViewportEvents(host: ViewportHost): void {
       vp.setPointerCapture(e.pointerId);
       vp.focus({ preventScroll: true });
     }
-    // a box pressed with a mouse or pen may be dragged to move it (§6, drag_moves_box); a finger held there first
+    // a box pressed with a mouse or pen may be dragged to move it (§6, drag_moves_box). A finger is held there first
     // (hold_to_drag_touch), so a swipe still scrolls or pans
     const box = (e.target as Element | null)?.closest?.<SVGElement>('g.node');
     if (drag && e.button === 0 && target && 'key' in target && box) {
@@ -143,9 +144,9 @@ export function bindViewportEvents(host: ViewportHost): void {
     // on touch there is no hover: the tap that selects gives the highlight (§25)
     sel.touched(down.touch);
   });
-  // a touch the drawing uses — one finger panning it zoomed in, a pinch, a finger moving a box — goes no further, so
-  // the host never takes it for its own swipe, as Obsidian's side panels do (§25, gestures_stay_in_drawing); a swipe on
-  // a fitted drawing goes on, to scroll the note. While a box is picked up the page under it does not scroll (§6)
+  // a touch the drawing uses goes no further: one finger panning it zoomed in, a pinch, a finger moving a box. So the
+  // host never takes it for its own swipe, as Obsidian's side panels do (§25, gestures_stay_in_drawing). A swipe on a
+  // fitted drawing goes on, to scroll the note. While a box is picked up the page under it does not scroll (§6)
   const owned = (e: TouchEvent) => e.touches.length > 1 || zoom.touchAction() === 'none' || !!drag?.holding;
   card.registerDomEvent(
     vp,
@@ -250,8 +251,8 @@ export function bindViewportEvents(host: ViewportHost): void {
 
 /**
  * What moves the boxes of a card given `o` and drawing `svg` (§6): the drag (drag_moves_box) and the keys
- * (move_box_keyboard), in the direction the card was laid out in, each box named by the text drawn on it; none when the
- * card was given no way to write a nudge, or draws a table. Nothing moves while the card is only read.
+ * (move_box_keyboard). They move in the direction the card was laid out in, each box named by the text drawn on it.
+ * None when the card was given no way to write a nudge, or draws a table. Nothing moves while the card is only read.
  */
 function boxMoversFor(
   o: ViewOptions,

@@ -1,11 +1,13 @@
-// The Markdown a host renders for a thing's details (editor spec §18, rich_details, safe_to_click; §13): as written, but
-// for what could load something remote, run a script or put HTML on the page. An image from outside the vault, written as
-// Markdown or as HTML, becomes a link showing its address, so nothing is fetched until the user asks
-// (remote_images_asked, slice 5); a Markdown link or a reference definition the user may not open is shown as text; any
-// other raw HTML is shown as text, never rendered, inside maths too; and a note embedded is cut out for the host to read
-// itself and render made safe, so nothing the note holds loads either (offline_and_mobile_apis). Code is left exactly as
-// written, and is told apart as CommonMark tells it: a backtick escaped by a backslash opens no span, and a backtick fence
-// with a backtick in its words is no fence, closed only by a line of its marks alone.
+// The Markdown a host renders for a thing's details (editor spec §18, rich_details, safe_to_click; §13). It is as
+// written, but for what could load something remote, run a script or put HTML on the page:
+// - An image from outside the vault, written as Markdown or as HTML, becomes a link showing its address. So nothing is
+//   fetched until the user asks (remote_images_asked, slice 5).
+// - A Markdown link or a reference definition the user may not open is shown as text.
+// - Any other raw HTML is shown as text, never rendered, inside maths too.
+// - A note embedded is cut out for the host to read itself and render made safe. So nothing the note holds loads
+//   either (offline_and_mobile_apis).
+// Code is left exactly as written, and is told apart as CommonMark tells it. A backtick escaped by a backslash opens
+// no span. A backtick fence with a backtick in its words is no fence, closed only by a line of its marks alone.
 import { attachmentType, destinationRefused, linkKind, linksIn } from './link-scan.ts';
 import type { FoundLink } from './link-scan.ts';
 
@@ -28,7 +30,7 @@ function backslashesBefore(line: string, at: number): number {
 
 /**
  * Where each code span of a line is: a run of backticks closed by the next run of the same length, as Markdown pairs
- * them; a run's first backtick after an odd number of backslashes is escaped, so is no part of the run. Each run is
+ * them. A run's first backtick after an odd number of backslashes is escaped, so is no part of the run. Each run is
  * looked at once.
  */
 function guarded(line: string): Uint8Array {
@@ -76,7 +78,7 @@ const asLabel = (words: string) => words.replace(/[\\[\]*_`<>$~|!]/g, '\\$&');
 
 /** One line outside a fence, made safe. */
 function safeLine(written: string, next = ''): string {
-  // a reference definition of an address the user may not open defines nothing: its bracket is escaped; its address
+  // a reference definition of an address the user may not open defines nothing. Its bracket is escaped; its address
   // is on its own line, or on the next
   const reference = REFERENCE.exec(written),
     open = reference ? null : REFERENCE_OPEN.exec(written);
@@ -95,9 +97,9 @@ function safeLine(written: string, next = ''): string {
     }
     const link = starts.get(i);
     if (c === '!' && line[i + 1] === '[') {
-      // an image, a sound, a video or a PDF of the vault is shown in place; an embedded note is a link here, as a host
-      // reads one itself (embedParts); anything else, a canvas, a base or an image from outside the vault among it, is
-      // a link to it, never loaded
+      // an image, a sound, a video or a PDF of the vault is shown in place. An embedded note is a link here, as a
+      // host reads one itself (embedParts). Anything else, a canvas, a base or an image from outside the vault among
+      // it, is a link to it, never loaded
       if (link?.embed && link.kind === 'file' && SHOWN_IN_PLACE.has(attachmentType(link.target) ?? '')) out += c;
       else if (link?.markdown && link.kind === 'refused') out += '\\';
       else if (link?.markdown && !link.label) {
@@ -131,8 +133,8 @@ function safeLine(written: string, next = ''): string {
 
 /**
  * Each line of `markdown` given to `outside` when it is outside a fenced code block, else kept as it is. A fence opens
- * as CommonMark opens one (a backtick fence's words hold no backtick) and closes only on a line of at least as many of
- * its marks and nothing else, so no line is taken for code that the renderer would not take for code.
+ * as CommonMark opens one (a backtick fence's words hold no backtick). It closes only on a line of at least as many of
+ * its marks and nothing else. So no line is taken for code that the renderer would not take for code.
  */
 function outsideFences(markdown: string, outside: (line: string, at: number, next: string) => string): string {
   let fence: string | null = null,
@@ -168,8 +170,8 @@ export function safeMarkdown(markdown: string): string {
 export type EmbedPart = { text: string } | { embed: FoundLink };
 
 /**
- * `markdown` cut at each note it embeds (`![[Note]]`, or a Markdown image of a note), outside code: so a host reads each
- * note itself and renders it made safe (`embeddedMarkdown`), and never hands its renderer an embed that would load
+ * `markdown` cut at each note it embeds (`![[Note]]`, or a Markdown image of a note), outside code. So a host reads
+ * each note itself and renders it made safe (`embeddedMarkdown`). It never hands its renderer an embed that would load
  * what the note holds, a remote image among it (offline_and_mobile_apis). An embedded file stays in the text.
  */
 export function embedParts(markdown: string): EmbedPart[] {
@@ -199,8 +201,8 @@ function headingWords(words: string): string {
 }
 
 /**
- * The lines of the section headed `heading`, outside code: its heading down to the next heading of its level or higher,
- * or the end; a nested heading (`A#B`) found by its last part. Null when there is no such heading.
+ * The lines of the section headed `heading`, outside code: its heading down to the next heading of its level or
+ * higher, or the end. A nested heading (`A#B`) is found by its last part. Null when there is no such heading.
  */
 function sectionOf(lines: string[], heading: string): string[] | null {
   const want = headingWords(heading.slice(heading.lastIndexOf('#') + 1));
@@ -231,9 +233,10 @@ function sectionOf(lines: string[], heading: string): string[] | null {
 }
 
 /**
- * An embedded note's text as a host renders it in the details: its front matter left out, only the section a heading
- * names when the embed names one (`![[Note#Heading]]`; the whole note when there is no such heading), then made safe as
- * `safeMarkdown` makes it, so every remote image in it is a link to the image, and a note it embeds in turn a link.
+ * An embedded note's text as a host renders it in the details. Its front matter is left out. Only the section a
+ * heading names is kept when the embed names one (`![[Note#Heading]]`; the whole note when there is no such heading).
+ * Then it is made safe as `safeMarkdown` makes it. So every remote image in it is a link to the image, and a note it
+ * embeds in turn a link.
  */
 export function embeddedMarkdown(note: string, heading?: string): string {
   const lines = note.split('\n');

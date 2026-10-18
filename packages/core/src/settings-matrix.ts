@@ -1,5 +1,6 @@
-// The options for the destination matrix (editor spec §19, model_ceiling), with the rest of the AI models section of the
-// settings page: the note that holds the matrix, and how class names that are not classifications are mapped to them.
+// The options for the destination matrix (editor spec §19, model_ceiling), with the rest of the AI models section of
+// the settings page. They are the note that holds the matrix, and how class names that are not classifications are
+// mapped to them.
 import type { Option } from './settings.ts';
 
 /** The matrix options, in the order the settings page shows them. */

@@ -1,5 +1,5 @@
-// The layout source as a Node program (spec §12, "same layout as Python"): the vault's conformance suite sends it every
-// note and every shared schema, and compares each graph's layout source with graph_svg.py's. One JSON request on stdin,
+// The layout source as a Node program (spec §12, "same layout as Python"). The vault's conformance suite sends it every
+// note and every shared schema. It compares each graph's layout source with graph_svg.py's. One JSON request on stdin,
 // one JSON answer on stdout, as the graph library's own Node harness works.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

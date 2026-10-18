@@ -1,6 +1,7 @@
-// The test languages (editor spec §42, pseudo_locales_checked): each word of the source said accented, bracketed and 40 per
-// cent longer, its placeholders and plural forms kept, so it passes the check every translation passes; the right-to-left
-// one is read right to left. Setting either makes it from the source words, so a host can be tried in it as it is.
+// The test languages (editor spec §42, pseudo_locales_checked). Each word of the source is said accented, bracketed and
+// 40 per cent longer. Its placeholders and plural forms are kept, so it passes the check every translation passes. The
+// right-to-left one is read right to left. Setting either makes it from the source words, so a host can be tried in it
+// as it is.
 import { test, describe, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { isPseudoWord, PSEUDO_LANGUAGES, pseudoWords } from '../src/pseudo-words.ts';

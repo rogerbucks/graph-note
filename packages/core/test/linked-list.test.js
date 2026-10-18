@@ -1,6 +1,6 @@
-// A property held as a list of linked things (editor spec §14, list_as_linked_things): choosing List turns a property's
-// values into things linked to this one — of a kind and by a relationship the user names, reusing a thing that already has
-// that name — and a value is added or removed as an edit of the block's text that reads back as intended (§2).
+// A property held as a list of linked things (editor spec §14, list_as_linked_things). Choosing List turns a property's
+// values into things linked to this one, of a kind and by a relationship the user names. It reuses a thing that already
+// has that name. A value is added or removed as an edit of the block's text that reads back as intended (§2).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';

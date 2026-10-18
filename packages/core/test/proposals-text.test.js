@@ -1,7 +1,7 @@
-// A proposal as a change set in the note (editor spec §17): graph-spec's change set — the things and links it adds as a
-// block writes them, a SET for a change of a property and a DELETE for a removal, so every tool that reads GQL reads
-// it — with who proposed it and what it read as comments its readers pass over. A change's id is derived from its
-// statement and never written; the reason is an optional `//@ reason:` line. What a person decided is not in it.
+// A proposal as a change set in the note (editor spec §17). It is graph-spec's change set, so every tool that reads GQL
+// reads it. It holds the things and links it adds as a block writes them. A change of a property is a SET, and a
+// removal a DELETE. Who proposed it and what it read are comments its readers pass over. A change's id is derived from
+// its statement and never written; the reason is an optional `//@ reason:` line. What a person decided is not in it.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import gs from '@thoughtknot/graph-spec';

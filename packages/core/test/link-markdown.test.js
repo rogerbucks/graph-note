@@ -1,7 +1,8 @@
-// The Markdown a host renders for a thing's details (editor spec §18, rich_details, safe_to_click; §13): every way found
-// for raw HTML, a remote image or a script link to slip past `safeMarkdown` to the renderer, each closed: maths, an
-// escaped backtick, a fence that is not one, an image with no words, a titled destination, a reference definition and a
-// destination that starts with an encoded space. Nothing remote is loaded, so nothing reaches the network (§13).
+// The Markdown a host renders for a thing's details (editor spec §18, rich_details, safe_to_click; §13). Every way
+// found for raw HTML, a remote image or a script link to slip past `safeMarkdown` to the renderer is closed. The ways
+// are maths, an escaped backtick, a fence that is not one, an image with no words, and a titled destination. They also
+// include a reference definition and a destination that starts with an encoded space. Nothing remote is loaded, so
+// nothing reaches the network (§13).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { embedParts, embeddedMarkdown, safeMarkdown } from '../src/link-markdown.ts';

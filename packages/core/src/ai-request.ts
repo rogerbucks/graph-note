@@ -1,7 +1,8 @@
-// The request an AI model is sent, and its answer read back (editor spec §19, seen_before_sent, answers_are_proposals):
-// one wire format, the chat completions shape that local servers (Ollama, LM Studio, llama.cpp) and most remote services
-// take, built here as the exact text sent, so what the user is shown is byte for byte what goes. The answer is read as
-// changes only — things and links to add, a property to change, a thing or link to remove — never as an edit.
+// The request an AI model is sent, and its answer read back (editor spec §19, seen_before_sent, answers_are_proposals).
+// There is one wire format: the chat completions shape that local servers (Ollama, LM Studio, llama.cpp) and most
+// remote services take. It is built here as the exact text sent, so what the user is shown is byte for byte what goes.
+// The answer is read as changes only, never as an edit. The changes are things and links to add, a property to change,
+// a thing or link to remove.
 import type { AiScope } from './ai-scope.ts';
 import { linkChange, thingChange, valueGql } from './proposals.ts';
 import type { ChangeInput } from './proposals.ts';
@@ -95,8 +96,8 @@ function propertiesOf(v: unknown): Record<string, string | number | boolean> | n
 }
 
 /**
- * A model's words as plain text wherever they are rendered as Markdown (a `///` note is, from slice 4): each character
- * Markdown or HTML gives a meaning to is escaped with a backslash, so no reason can become an image, a link, emphasis,
+ * A model's words as plain text wherever they are rendered as Markdown (a `///` note is, from slice 4). Each character
+ * Markdown or HTML gives a meaning to is escaped with a backslash. So no reason can become an image, a link, emphasis,
  * a heading or HTML, and every word of it is still read.
  */
 function plainText(s: string): string {
@@ -124,7 +125,7 @@ function changeOf(c: unknown, n: number): ChangeInput | string {
     case 'add-link':
       if (!words(c, 'from', 'type', 'to')) return `${at} lacks a one-word from, type or to`;
       // a plan is the engine's, an attribution the editor's, and an association would make a cache ordinary (the graph
-      // spec's §24): nothing a model writes can add one
+      // spec's §24). Nothing a model writes can add one
       if (['had_plan', 'associated_with', 'was_attributed_to'].includes((c.type as string).toLowerCase()))
         return `${at} cannot add a HAD_PLAN, ASSOCIATED_WITH or WAS_ATTRIBUTED_TO link: a plan is the engine's, and the editor records who proposed and decided`;
       return linkChange(c.from as string, c.type as string, c.to as string, props, extra);
@@ -148,8 +149,8 @@ function changeOf(c: unknown, n: number): ChangeInput | string {
 }
 
 /**
- * The changes an answer proposes, read from the JSON in it (fenced or not); or why it cannot be read, in words, the whole
- * answer refused if one change cannot be, so nothing is taken from an answer only partly understood.
+ * The changes an answer proposes, read from the JSON in it (fenced or not); or why it cannot be read, in words. The
+ * whole answer is refused if one change cannot be, so nothing is taken from an answer only partly understood.
  */
 export function changesIn(content: string): ChangeInput[] | { unread: string } {
   const from = content.indexOf('{'),

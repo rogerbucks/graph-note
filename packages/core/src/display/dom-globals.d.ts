@@ -1,6 +1,6 @@
 // The types of the DOM helpers the layer draws with (dom-helpers.ts), for the layer's own type check. In the Obsidian
-// plugin's type check the same helpers come from Obsidian's own declarations, so this file is read by the layer's
-// tsconfig alone and no module imports it.
+// plugin's type check the same helpers come from Obsidian's own declarations. So this file is read by the layer's
+// tsconfig alone, and no module imports it.
 interface ElementInfo {
   cls?: string | string[];
   text?: string | DocumentFragment;

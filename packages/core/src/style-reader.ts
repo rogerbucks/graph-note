@@ -1,7 +1,7 @@
-// Reading one thing of a style graph (editor spec §2, style_graph_checked): each property read as text, a number, a word
-// it allows or a name of the graph it styles, and each fault reported as a problem on the thing's line with its fix — the
-// nearest word or name where there is one, as an edit on the written word. Shared by every check of a style thing
-// (style-checks.ts, link-flow.ts).
+// Reading one thing of a style graph (editor spec §2, style_graph_checked). Each property is read as text, a number, a
+// word it allows or a name of the graph it styles. Each fault is reported as a problem on the thing's line with its
+// fix. The fix is the nearest word or name where there is one, as an edit on the written word. Shared by every check of
+// a style thing (style-checks.ts, link-flow.ts).
 import { nearest } from './estimates.ts';
 import type { Problem } from './note-reading.ts';
 import { orList, styleProblem, wordFix } from './style-graph.ts';

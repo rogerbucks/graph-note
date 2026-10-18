@@ -1,6 +1,6 @@
-// A drawing's bar (spec §3): the problems badge, Fit, zoom out, zoom in, Find a thing, Filter by kind or link, View (§25),
-// Full screen, and where the note is edited, Edit here and Edit in pane; in reading view, Source. Each control says what
-// it is in words as well as by its icon.
+// A drawing's bar (spec §3). It holds the problems badge, Fit, zoom out, zoom in, Find a thing, Filter by kind or link,
+// View (§25) and Full screen. Where the note is edited, it holds Edit here and Edit in pane; in reading view, Source.
+// Each control says what it is in words as well as by its icon.
 import { setIcon } from '../host';
 import { parkedCount, word } from '@thoughtknot/core';
 import type { ViewOptions } from './view-options';
@@ -93,8 +93,8 @@ export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): Ba
   button(bar, word('bar.fit'), 'maximize', () => on.fit());
   button(bar, word('bar.zoom-out'), 'zoom-out', () => on.zoomOut());
   button(bar, word('bar.zoom-in'), 'zoom-in', () => on.zoomIn());
-  // finding a thing and filtering by kind only change the picture, never the note, so they are offered wherever it is (§25);
-  // a graph drawn as a table (§15) has nothing to fade or hide, so there it is found but never filtered
+  // finding a thing and filtering by kind only change the picture, never the note. So they are offered wherever it is
+  // (§25). A graph drawn as a table (§15) has nothing to fade or hide, so there it is found but never filtered
   const find = button(bar, word('bar.find'), 'search', () => on.find(find));
   find.setAttribute('aria-expanded', 'false');
   if (!o.diagram?.table) {

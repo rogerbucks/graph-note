@@ -1,11 +1,12 @@
-// The limits a drawing is zoomed and panned within (spec §3, §25): how far in and out it zooms, the scale that fits the
-// whole drawing, and where it may sit in its viewport. Pure and host-free: zoom.ts's `Zoom`, and zoom-across.ts's
-// `AcrossZoom` through it, hold a drawing to them, and work them out again from the sizes they hold each time they ask,
-// so a resized view, full screen entered or left, or a drawing laid out again has its own (zoom_fit_recomputed).
+// The limits a drawing is zoomed and panned within (spec §3, §25). They are how far in and out it zooms, the scale that
+// fits the whole drawing, and where it may sit in its viewport. Pure and host-free. zoom.ts's `Zoom` holds a drawing to
+// them, and zoom-across.ts's `AcrossZoom` does through it. They work them out again from the sizes they hold each time
+// they ask. So a resized view, full screen entered or left, or a drawing laid out again has its own
+// (zoom_fit_recomputed).
 //
-// From slice 3 the furthest out is the fit (zoom_out_to_fit): where the whole drawing fits its view, or natural size
-// when it would fit larger. It replaces §3's quarter of natural size, so a drawing that fits only below a quarter can
-// still be seen whole; four times natural size stays the furthest in.
+// From slice 3 the furthest out is the fit (zoom_out_to_fit). That is where the whole drawing fits its view, or natural
+// size when it would fit larger. It replaces §3's quarter of natural size. So a drawing that fits only below a quarter
+// can still be seen whole. Four times natural size stays the furthest in.
 
 /** The furthest the drawing zooms in. */
 export const MAX_SCALE = 4;
@@ -61,9 +62,9 @@ export interface Room {
 }
 
 /**
- * Keeps the drawing in view: centred on an axis where it is smaller than the viewport, edge to edge where it is larger;
- * up and down, it may also rise into the strip kept clear at the foot, by as much as the strip and no further. With
- * `centre`, centred on both axes.
+ * Keeps the drawing in view. It is centred on an axis where it is smaller than the viewport, edge to edge where it is
+ * larger. Up and down, it may also rise into the strip kept clear at the foot, by as much as the strip and no further.
+ * With `centre`, centred on both axes.
  */
 export function clampPan(room: Room, scale: number, x: number, y: number, centre = false): [number, number] {
   const w = room.content.width * scale,

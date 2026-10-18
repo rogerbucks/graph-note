@@ -1,6 +1,6 @@
-// The companion note of an export saved into the vault (editor spec §16, export_companion_note): a short Markdown note that
-// links the image, names the note it came from, the graph or view, the day and the scope, and holds nothing of the data
-// beyond what the image shows.
+// The companion note of an export saved into the vault (editor spec §16, export_companion_note). It is a short Markdown
+// note that links the image. It names the note it came from, the graph or view, the day and the scope. It holds nothing
+// of the data beyond what the image shows.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { companionNote } from '../src/export-note.ts';

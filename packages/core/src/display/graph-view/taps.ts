@@ -1,6 +1,6 @@
-// Taps and keys in a drawing (spec §3, tap_cycles_near): what a tap or a key lands on — a box, a written link or an
-// estimated one — and what is near enough to a tap to be what was meant: within a fingertip, the nearest first, and the
-// next of them when the same place is tapped again.
+// Taps and keys in a drawing (spec §3, tap_cycles_near). It finds what a tap or a key lands on: a box, a written link
+// or an estimated one. It finds what is near enough to a tap to be what was meant: within a fingertip, the nearest
+// first. The next of them comes when the same place is tapped again.
 import { TapCycle, boundsOf, centres, hitAreas, nearby } from '@thoughtknot/core';
 import type { Bounds, HitAreas, PlacedBox, View } from '@thoughtknot/core';
 
@@ -24,7 +24,10 @@ export function targetAt(target: EventTarget | null): Target | null {
   return link ? { link: Number(link) } : null;
 }
 
-/** The fold an element of the drawing opens, if it is a busy hub's stub or a folded group's box (§25): `hub:` or `group:` and its name. */
+/**
+ * The fold an element of the drawing opens, if it is a busy hub's stub or a folded group's box (§25). It is `hub:` or
+ * `group:` and its name.
+ */
 export function foldAt(target: EventTarget | null): string | null {
   return (target as Element | null)?.closest?.('[data-fold]')?.getAttribute('data-fold') ?? null;
 }
@@ -58,7 +61,7 @@ export class Taps {
 
   /**
    * What a tap at a point in the viewport reaches, with the drawing shown at `v`, nearest first, by their ids in the
-   * drawing: what it lands on, then what is within a fingertip of it (tap_cycles_near, §3).
+   * drawing. First what it lands on, then what is within a fingertip of it (tap_cycles_near, §3).
    */
   near(p: { x: number; y: number }, v: View): string[] {
     this.areas ??= hitAreas(this.svgText);
@@ -93,7 +96,10 @@ export class Taps {
     return { x: vb.x + ((p.x - v.x) * vb.width) / v.width, y: vb.y + ((p.y - v.y) * vb.height) / v.height };
   }
 
-  /** Each box, by the key `keyOf` gives its id in the drawing, with its edges in the drawing's own units: where a dragged box can land (§6). */
+  /**
+   * Each box, by the key `keyOf` gives its id in the drawing, with its edges in the drawing's own units. These are
+   * where a dragged box can land (§6).
+   */
   boxes(keyOf: (id: string) => string | null): PlacedBox[] {
     this.areas ??= hitAreas(this.svgText);
     const vb = this.areas.viewBox,

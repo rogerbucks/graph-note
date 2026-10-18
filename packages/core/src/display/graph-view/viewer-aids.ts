@@ -1,8 +1,10 @@
-// The viewer's aids as the settings say (editor spec §24), and the card's use of them: when the mini-map shows
-// (mini_map_setting), whether the details panel stays open (details_always_visible) and where it goes (details_narrow),
-// how tall a drawing in a note may be (drawing_height_setting),
-// and the quick-info tooltip. A card is given the settings with its other options, the same in a note, the pane and full
-// screen; `Aids` holds the parts a card builds from them.
+// The viewer's aids as the settings say (editor spec §24), and the card's use of them:
+// - when the mini-map shows (mini_map_setting);
+// - whether the details panel stays open (details_always_visible) and where it goes (details_narrow);
+// - how tall a drawing in a note may be (drawing_height_setting);
+// - the quick-info tooltip.
+// A card is given the settings with its other options, the same in a note, the pane and full screen. `Aids` holds the
+// parts a card builds from them.
 import type { Lifecycle } from '../lifecycle';
 import { tallestOf } from '@thoughtknot/core';
 import type { Drawn, MiniMapSetting, Settings, View, Zoom } from '@thoughtknot/core';

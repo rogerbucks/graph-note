@@ -1,6 +1,6 @@
-// The numbers a rule leaves open (editor spec §41, thresholds_named): each is named once, with a default inside a stated
-// range, a unit, what it governs and the requirement that leaves it open; a value handed in is taken only inside the
-// range; and each behaves as stated at both edges of its range where the code reads it.
+// The numbers a rule leaves open (editor spec §41, thresholds_named). Each is named once, with a default inside a
+// stated range, a unit, what it governs and the requirement that leaves it open. A value handed in is taken only inside
+// the range. Each behaves as stated at both edges of its range where the code reads it.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';

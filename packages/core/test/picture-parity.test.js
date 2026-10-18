@@ -1,8 +1,8 @@
-// animated_image_shown (editor spec §18), drawn alike by both renderers (§12): where a graph's style graph asks, a
-// thing's image is drawn on its box, and graph_svg.py keeps the same room for it as the core — the same problems reading
-// each style, the same boxes drawn with a picture, and the source of each direction laid out, byte for byte. The cases
-// are shared with python/graph_spec/tests/test_graph_svg_picture.py, whose Python answer (python_answer: read_style, and
-// the sources graph_svg.render hands Graphviz from render_args) is run here.
+// animated_image_shown (editor spec §18), drawn alike by both renderers (§12). Where a graph's style graph asks, a
+// thing's image is drawn on its box. graph_svg.py keeps the same room for it as the core. It has the same problems
+// reading each style and the same boxes drawn with a picture. The source of each direction is laid out the same, byte
+// for byte. The cases are shared with python/graph_spec/tests/test_graph_svg_picture.py. Its Python answer is run here
+// (python_answer: read_style, and the sources graph_svg.render hands Graphviz from render_args).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';

@@ -1,11 +1,15 @@
-// The block editor's parts on the page (spec §4, §9): the head with its tools, the draft banner, on a phone the
-// Drawing and Text tabs, the text field over its coloured picture, the fix and suggestion bars, the problems list and the
-// announcer for screen readers — built once for each block shown, in the pane or in place in a drawing's card.
+// The block editor's parts on the page (spec §4, §9). They are the head with its tools, the draft banner, and on a
+// phone the Drawing and Text tabs. They are also the text field over its coloured picture, the fix and suggestion bars,
+// the problems list and the announcer for screen readers. They are built once for each block shown, in the pane or in
+// place in a drawing's card.
 import { word } from '@thoughtknot/core';
 import type { PaneSession } from '@thoughtknot/core';
 import { isPhone, notice, readInHostDirection, setIcon } from '../host';
 
-/** Where the editor sits: in the edit pane, with its own drawing, a picker and, on a phone, tabs; or in place, in a drawing's card. */
+/**
+ * Where the editor sits. In the edit pane, with its own drawing, a picker and, on a phone, tabs; or in place, in a
+ * drawing's card.
+ */
 export type Layout = 'pane' | 'inline';
 
 /** The editor's parts its code works with once they are built. */
@@ -44,8 +48,9 @@ export function button(
 }
 
 /**
- * Builds the editor of a session's block into a container: in the pane with its drawing and, on a phone, tabs, its head
- * left for the picker (block-picker.ts); in place, the text alone. `showDrawing` is called when the Drawing tab is chosen.
+ * Builds the editor of a session's block into a container. In the pane it has its drawing and, on a phone, tabs. Its
+ * head is left for the picker (block-picker.ts). In place, it is the text alone. `showDrawing` is called when the
+ * Drawing tab is chosen.
  */
 export function buildEditor(
   container: HTMLElement,
@@ -112,8 +117,8 @@ export function buildEditor(
     },
   });
   text.value = s.text;
-  // the suggestions drop down under the caret, inside the field's frame: a list the field's own keys work, as a code
-  // editor's does, so the hands never leave the keys (§4, keyboard_any_device)
+  // the suggestions drop down under the caret, inside the field's frame. It is a list the field's own keys work, as a
+  // code editor's does. So the hands never leave the keys (§4, keyboard_any_device)
   const suggest = editor.createDiv({
     cls: 'thoughtknot-suggestions',
     attr: { role: 'listbox', id: `${name.id}-suggestions`, 'aria-label': word('editor.suggestions') },
@@ -137,10 +142,10 @@ export function buildEditor(
 }
 
 /**
- * The head's tools: Done in place, Open again while the editor is stopped by a copy of its block (`again`, §9), Undo and
- * Redo, and Lock the graph while the graph is a draft. An Undo or Redo with nothing to take back since the block changed
- * outside the editor (`why`, §9) keeps its name, so voice control still finds it, is marked unavailable and described
- * by why, and pressed it says so.
+ * The head's tools. Done in place, and Open again while the editor is stopped by a copy of its block (`again`, §9).
+ * Undo and Redo, and Lock the graph while the graph is a draft. An Undo or Redo may have nothing to take back since the
+ * block changed outside the editor (`why`, §9). It keeps its name, so voice control still finds it. It is marked
+ * unavailable and described by why, and pressed it says so.
  */
 export function showTools(
   tools: HTMLElement,
@@ -175,8 +180,8 @@ export function showTools(
 export const toolsSaid = (why: { undo: string | null; redo: string | null }): string => `${why.undo}\n${why.redo}`;
 
 /**
- * Says why Undo or Redo was refused (§9): in a notice, and to screen readers, cleared first and said on the next frame,
- * so the same words said again are heard again.
+ * Says why Undo or Redo was refused (§9), in a notice and to screen readers. It is cleared first and said on the next
+ * frame, so the same words said again are heard again.
  */
 export function sayRefused(announce: HTMLElement, reason: string): void {
   notice(reason);

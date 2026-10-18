@@ -1,5 +1,5 @@
-// What looks like a credential (editor spec §19, never_credential): found by common patterns, wherever its name is in a
-// longer one written with underscores, and named by kind, never quoted.
+// What looks like a credential (editor spec §19, never_credential). It is found by common patterns, wherever its name
+// is in a longer one written with underscores, and named by kind, never quoted.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { credentialsIn } from '../src/ai-ceiling.ts';

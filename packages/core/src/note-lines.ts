@@ -1,6 +1,7 @@
-// The comment lines a thing or link owns (editor spec §24, note_comment): the lines of exactly three slashes (its note) and
-// the //@ lines (its tags) directly above it, which an edit that takes the thing out takes out with it, and which no
-// other thing may be left holding. Host-free; the one definition of what such a line is, as the reader reads it.
+// The comment lines a thing or link owns (editor spec §24, note_comment). They are the lines of exactly three slashes
+// (its note) and the //@ lines (its tags) directly above it. An edit that takes the thing out takes them out with it,
+// and no other thing may be left holding them. Host-free; the one definition of what such a line is, as the reader
+// reads it.
 import { trim } from './whitespace.ts';
 
 /** A note line: exactly three slashes, then a space or the line's end. */
@@ -22,7 +23,7 @@ export function ownedAbove(lines: readonly string[], index: number): number[] {
 }
 
 /**
- * Where the run of note and tag lines directly above the line starting at `lineStart` of `text` begins, as an offset:
+ * Where the run of note and tag lines directly above the line starting at `lineStart` of `text` begins, as an offset.
  * `lineStart` itself when there is none. An item taken out by its line takes the run from here.
  */
 export function runStart(text: string, lineStart: number): number {

@@ -1,9 +1,9 @@
-// Exports carry title, legend and source (editor spec §16): an image of the whole diagram or of a view, as SVG or PNG, with
-// its theme colours fixed so it reads the same outside Obsidian, drawn at no less than twice natural size, and saying on
-// its face what it is, what its colours mean, and which note and day it came from. A view export holds only the view,
-// unless the faded context is asked for. An image too large for one sharp PNG is split across pages (big_export). The
-// data is exported as a GQL block, as CSV and as GraphML, and each reads back into the very things and links exported,
-// however large the graph (export_data_formats, export_lossless).
+// Exports carry title, legend and source (editor spec §16). An image is of the whole diagram or of a view, as SVG or
+// PNG. Its theme colours are fixed so it reads the same outside Obsidian. It is drawn at no less than twice natural
+// size. It says on its face what it is, what its colours mean, and which note and day it came from. A view export holds
+// only the view, unless the faded context is asked for. An image too large for one sharp PNG is split across pages
+// (big_export). The data is exported as a GQL block, as CSV and as GraphML (export_data_formats). Each reads back into
+// the very things and links exported, however large the graph (export_lossless).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import GraphLayout from '@thoughtknot/graph-spec/src/graph-layout.js';
@@ -246,8 +246,8 @@ describe('nothing to export, and an engine that fails', () => {
   });
 });
 
-// layout_contained: an export is laid out where a drawing is, apart from the interface and under the same limits, so the
-// host hands in the layout (its worker's runner), never an engine to run on the page's own thread
+// layout_contained: an export is laid out where a drawing is, apart from the interface and under the same limits. So
+// the host hands in the layout (its worker's runner), never an engine to run on the page's own thread
 describe('laid out by the host’s layout, under its limits', () => {
   const CLOCK = { setTimeout: (run, ms) => setTimeout(run, ms), clearTimeout: (t) => clearTimeout(t) };
   const runner = (limits) =>

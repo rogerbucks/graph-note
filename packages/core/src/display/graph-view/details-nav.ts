@@ -1,8 +1,10 @@
-// Finding your way from a card's details (editor spec §25, slice 3): a thing's links listed by relationship type and
-// direction in the core's words, in and out each in a part of its own (details_ins_outs), each linked thing and each link a button that chooses it (details_links_listed,
-// details_choose_moves); the back and forward steps of the trail of things chosen (details_trail); and the move to what
-// is chosen, brief and eased, at once when the system asks for reduced motion (details_move_motion). The words, the walk
-// and the easing are the core's; this puts them on the page and runs the move frame by frame.
+// Finding your way from a card's details (editor spec §25, slice 3):
+// - a thing's links listed by relationship type and direction in the core's words;
+// - in and out each in a part of its own (details_ins_outs);
+// - each linked thing and each link a button that chooses it (details_links_listed, details_choose_moves);
+// - the back and forward steps of the trail of things chosen (details_trail);
+// - the move to what is chosen, brief and eased, at once when the system asks for reduced motion (details_move_motion).
+// The words, the walk and the easing are the core's; this puts them on the page and runs the move frame by frame.
 import { MOVE_MS, glideAt, word } from '@thoughtknot/core';
 import type { LinkGroup, NoteReading, Place, Trail, TrailStep, Zoom } from '@thoughtknot/core';
 import { button } from './view-bar';
@@ -37,9 +39,9 @@ export function stepName(reading: NoteReading, graph: string, step: TrailStep): 
 }
 
 /**
- * A thing's links in two labelled parts, in before out (details_ins_outs): each part headed with its name and how many
- * links it holds, its groups listed as `renderLinkGroups` lists them, or a line saying it has none. Side by side where
- * the panel is wide, one above the other where it is narrow, as the style sheet lays them out.
+ * A thing's links in two labelled parts, in before out (details_ins_outs). Each part is headed with its name and how
+ * many links it holds. Its groups are listed as `renderLinkGroups` lists them, or a line says it has none. Side by side
+ * where the panel is wide, one above the other where it is narrow, as the style sheet lays them out.
  */
 export function renderInsOuts(
   el: HTMLElement,
@@ -67,9 +69,9 @@ export function renderInsOuts(
 let parts = 0;
 
 /**
- * A thing's groups of links, one item each: the group's reading as its heading, with its count when it holds more than
- * one link, then its things one to a row, each a button that chooses the thing with a button beside it for each link
- * that reaches it.
+ * A thing's groups of links, one item each. The group's reading is its heading, with its count when it holds more than
+ * one link. Then come its things one to a row. Each is a button that chooses the thing, with a button beside it for
+ * each link that reaches it.
  */
 export function renderLinkGroups(
   el: HTMLElement,

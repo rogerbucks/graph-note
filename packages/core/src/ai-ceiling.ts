@@ -1,9 +1,9 @@
-// What a model may be sent (editor spec §19, model_ceiling, never_above_ceiling, never_credential): each model carries a
-// ceiling, the highest classification of note it may be sent; a note above it is never sent to it, and the editor says
-// why and names the models cleared for it. Nothing at the highest classification set is sent to any model, and nothing
-// that looks like a credential, whatever the note's classification. A note with no classification counts as the level
-// set for unlabelled notes, the most sensitive until the user chooses (unclassified_strictest), so by default it goes
-// to no model.
+// What a model may be sent (editor spec §19, model_ceiling, never_above_ceiling, never_credential). Each model carries
+// a ceiling, the highest classification of note it may be sent. A note above it is never sent to it, and the editor
+// says why and names the models cleared for it. Nothing at the highest classification set is sent to any model. Nothing
+// that looks like a credential is sent either, whatever the note's classification. A note with no classification counts
+// as the level set for unlabelled notes. That is the most sensitive until the user chooses (unclassified_strictest). So
+// by default it goes to no model.
 import { matrixRefusal } from './ai-matrix.ts';
 import type { MatrixInput } from './ai-matrix.ts';
 import type { AiModel } from './settings.ts';
@@ -45,11 +45,12 @@ export type Clearance = { cleared: true } | { refused: string; cleared: string[]
 
 /**
  * Whether a note of `level` may be sent to `model`, against the classifications set (lowest first) and the models that
- * may be asked. A note with no classification (null) counts as `unlabelled`, the level set for such notes, the most
- * sensitive until the user chooses (unclassified_strictest); one not among those set counts as above every ceiling; one
- * at the highest is never sent. When it may not, the refusal says why and names the models cleared for it, and for a
- * note with no classification, what to change: give it one, or choose a lower level for unlabelled notes. A model with
- * a matrix row picked is held to the classes its row allows, in place of its ceiling, against the `matrix` the host read.
+ * may be asked. A note with no classification (null) counts as `unlabelled`, the level set for such notes. That is the
+ * most sensitive until the user chooses (unclassified_strictest). One not among those set counts as above every
+ * ceiling. One at the highest is never sent. When it may not, the refusal says why and names the models cleared for it.
+ * For a note with no classification it says what to change: give it one, or choose a lower level for unlabelled notes.
+ * A model with a matrix row picked is held to the classes its row allows, in place of its ceiling. That is against the
+ * `matrix` the host read.
  */
 export function clearance(
   level: string | null,
@@ -87,9 +88,10 @@ const luhn = (digits: string) => {
 };
 
 // A secret's name, ending the name a value is given under. In snake_case (user_password, db_secret) it is bounded by
-// what is not a letter or digit, never by \b, for which an underscore is part of the word; in camelCase (smtpPassword,
-// apiKey) it starts with a capital after a lower-case letter or digit. A bare `key` is an ordinary word (key: 'primary'),
-// so only a name ending in _key or Key is a secret's; a real key under a bare name is still found by its value's shape.
+// what is not a letter or digit. It is never bounded by \b, for which an underscore is part of the word. In camelCase
+// (smtpPassword, apiKey) it starts with a capital after a lower-case letter or digit. A bare `key` is an ordinary word
+// (key: 'primary'), so only a name ending in _key or Key is a secret's. A real key under a bare name is still found by
+// its value's shape.
 const SECRET_NAMES = [
   // the character before is matched, not looked behind at: a lookbehind is a syntax error on iOS before 16.4
   /(?:^|[^A-Za-z0-9])(?:pass(?:word|wd|phrase|code)?|pwd|pin|secret|token|credentials?)(?![A-Za-z0-9])/i,
@@ -127,8 +129,8 @@ const CREDENTIALS: { what: string; test: (line: string) => boolean }[] = [
 ];
 
 /**
- * The kinds of credential `text` holds, each once and in words (never the text that matched), with `secrets` — such as
- * the key of the model asked — found wherever they are written.
+ * The kinds of credential `text` holds, each once and in words (never the text that matched). It finds `secrets`, such
+ * as the key of the model asked, wherever they are written.
  */
 export function credentialsIn(text: string, secrets: readonly string[] = []): string[] {
   const found = new Set<string>();

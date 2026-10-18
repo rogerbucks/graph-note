@@ -1,9 +1,10 @@
-// What is selected in a card and how it shows (editor spec §25, slice 3): the selection is the focus — the thing or link
-// chosen, its links and what is at their other ends stay at full strength — joined with the highlight under the pointer or
-// the keyboard focus, the untangling (filter, legend, path, search) and the arrow keys that walk the links. It marks the
-// drawing by class only, so nothing moves, and it never reaches the note. What is chosen from the details is brought into
-// view, readable, by a brief move (details_choose_moves, details_move_motion); the selection is kept clear of the details
-// sheet (sheet_keeps_thing_clear), and pointed to by an arrow at the edge when it is out of view (selection_pointer).
+// What is selected in a card and how it shows (editor spec §25, slice 3). The selection is the focus: the thing or link
+// chosen, its links and what is at their other ends stay at full strength. It is joined with the highlight under the
+// pointer or the keyboard focus. So are the untangling (filter, legend, path, search) and the arrow keys that walk the
+// links. It marks the drawing by class only, so nothing moves, and it never reaches the note. What is chosen from the
+// details is brought into view, readable, by a brief move (details_choose_moves, details_move_motion). The selection is
+// kept clear of the details sheet (sheet_keeps_thing_clear). It is pointed to by an arrow at the edge when it is out of
+// view (selection_pointer).
 import { FocusState, READABLE_SCALE, coverOf, estimateEdge, nextAlong, pointerTo, word } from '@thoughtknot/core';
 import type {
   Bounds,
@@ -49,9 +50,9 @@ export interface SelectionHost {
 }
 
 /**
- * How the selection came, which decides how it is brought into view: a tap, moved only to keep it clear of the sheet;
- * chosen from the details, brought into view readable; pointed to by the arrow, brought into view as it is; found or
- * walked to, brought into view at once, as finding always has.
+ * How the selection came, which decides how it is brought into view. A tap is moved only to keep it clear of the
+ * sheet. Chosen from the details, it is brought into view readable; pointed to by the arrow, as it is. Found or walked
+ * to, it is brought into view at once, as finding always has.
  */
 type How = 'tap' | 'chosen' | 'shown' | 'found';
 
@@ -142,8 +143,8 @@ export class Selection {
 
   /** A thing or link chosen from the details: the selection, its details shown, brought into view readable (§25). */
   private bring(step: TrailStep): void {
-    // one hidden by a filter or the legend would be chosen out of sight: the whole graph is shown first, as finding does;
-    // a link is numbered among the drawing's links as its edge is
+    // one hidden by a filter or the legend would be chosen out of sight. So the whole graph is shown first, as finding
+    // does; a link is numbered among the drawing's links as its edge is
     const { hidden } = this.layers;
     if ('key' in step ? hidden.things.has(step.key) : hidden.edges.has(step.link)) this.untangle.reset();
     this.came('chosen', () => this.host.open(step, true));
@@ -160,9 +161,9 @@ export class Selection {
   }
 
   /**
-   * Brings the selection into sight as it came (`How`), clear of the details sheet: the drawing pans up into the strip the
-   * sheet covers, never more; where the sheet covers the whole drawing the note scrolls instead. A tap moves the view only
-   * for the sheet; from the details the thing is also made readable; the move is brief, or at once (§25).
+   * Brings the selection into sight as it came (`How`), clear of the details sheet. The drawing pans up into the strip
+   * the sheet covers, never more. Where the sheet covers the whole drawing, the note scrolls instead. A tap moves the
+   * view only for the sheet; from the details the thing is also made readable. The move is brief, or at once (§25).
    */
   private inSight(): void {
     const box = this.box,
@@ -191,8 +192,8 @@ export class Selection {
   }
 
   /**
-   * The drawing was laid out again, as a View menu switch lays it out (§25, view_switch_view_only): the selection and the
-   * focus are kept, and marked on the new drawing; where things are is found afresh.
+   * The drawing was laid out again, as a View menu switch lays it out (§25, view_switch_view_only). The selection and
+   * the focus are kept, and marked on the new drawing; where things are is found afresh.
    */
   redrawn(): void {
     this.marks = null;
@@ -335,8 +336,8 @@ export class Selection {
       : Array.from(this.host.viewport().querySelectorAll<HTMLElement>('tr[data-key]')).find(
           (r) => r.getAttribute('data-key') === key,
         );
-    // brought into view at once, clear of the details sheet, as it is selected; and so even when it answers a question
-    // for a second thing, or is a step recorded, rather than the selection
+    // brought into view at once, clear of the details sheet, as it is selected. It is so even when it answers a
+    // question for a second thing, or is a step recorded, rather than the selection
     this.came('found', () => this.host.open({ key }, walking));
     const box = svg && g ? this.host.taps.bounds(g.getAttribute('id') ?? '') : null;
     if (box) this.host.zoom().reveal(box);

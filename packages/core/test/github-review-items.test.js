@@ -1,6 +1,6 @@
-// Pull requests, merges and commits as items to review (editor spec §41, github_review_items): listed as items, each
-// opening in the changes view, reviewed in levels from a summary by section, workstream and requirement down to each
-// thing, link and line; and nothing read from the source until the user asks.
+// Pull requests, merges and commits as items to review (editor spec §41, github_review_items). They are listed as
+// items, each opening in the changes view. They are reviewed in levels, from a summary by section, workstream and
+// requirement down to each thing, link and line. Nothing is read from the source until the user asks.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {

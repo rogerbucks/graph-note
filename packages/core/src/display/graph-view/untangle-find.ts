@@ -1,7 +1,7 @@
-// The search box over a drawing (editor spec §25, untangle_find): typing lists the things whose name or property holds what
-// was typed, each with its kind and, for a property, which; choosing one — or pressing Enter for the first — selects it and
-// brings it into view, as opening its details does. Escape closes the row. Searching only reads: nothing is changed in the
-// drawing or the note.
+// The search box over a drawing (editor spec §25, untangle_find). Typing lists the things whose name or property holds
+// what was typed. Each comes with its kind and, for a property, which. Choosing one, or pressing Enter for the first,
+// selects it. It brings it into view, as opening its details does. Escape closes the row. Searching only reads: nothing
+// is changed in the drawing or the note.
 import { word } from '@thoughtknot/core';
 import type { Found } from '@thoughtknot/core';
 

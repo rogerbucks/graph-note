@@ -1,20 +1,26 @@
-// Views in a note (editor spec §2 views_in_the_note, §7 view_is_query, views_by_tapping): a view is a named query block,
-// its graph line `// graph: <graph> · QUERY view <name>`. This finds them, and says each in plain English. The shapes a
-// view may take are in view-profile.ts, and what a view returns is in view-evaluate.ts.
+// Views in a note (editor spec §2 views_in_the_note, §7 view_is_query, views_by_tapping). A view is a named query
+// block, its graph line `// graph: <graph> · QUERY view <name>`. This finds them, and says each in plain English. The
+// shapes a view may take are in view-profile.ts, and what a view returns is in view-evaluate.ts.
 //
-// The reader already reads `· QUERY` as a query block, and the core draws no query as data (blocks.ts `dataKind`), so a
+// The reader already reads `· QUERY` as a query block. The core draws no query as data (blocks.ts `dataKind`), so a
 // view is never drawn as a graph of its own.
 import gs from '@thoughtknot/graph-spec';
 import type { ViewSpec } from './view-profile.ts';
 import { N, S, trim } from './whitespace.ts';
 
-/** A view found in a note: its name, the graph it is of, the block it is written in (0-based, among the blocks given), and its query text. */
+/**
+ * A view found in a note: its name, the graph it is of, the block it is written in and its query text. The block is
+ * counted from 0, among the blocks given.
+ */
 export interface NamedView {
   name: string;
   graph: string;
   block: number;
   query: string;
-  /** Set when the block is meant as a view but cannot be used as one: its name is missing, is not one word, or is another view's. */
+  /**
+   * Set when the block is meant as a view but cannot be used as one. Its name is missing, is not one word, or is
+   * another view's.
+   */
   fault?: string;
 }
 
@@ -22,9 +28,10 @@ const VIEW = new RegExp(`·${S}*QUERY${S}+view\\b(?:${S}+(${N}+))?`);
 const ONE_WORD = /^\w+$/;
 
 /**
- * The views of a note, in the order written: every query block whose graph line says `QUERY view <name>`. The name is one
- * word (letters, digits, underscore); a block that says it is a view but gives no usable name is still listed, with a
- * `fault` saying what to change, so it is never skipped in silence. A query with no `view` in its header is not a view.
+ * The views of a note, in the order written: every query block whose graph line says `QUERY view <name>`. The name is
+ * one word (letters, digits, underscore). A block that says it is a view but gives no usable name is still listed,
+ * with a `fault` saying what to change. So it is never skipped in silence. A query with no `view` in its header is not
+ * a view.
  */
 export function viewsOf(texts: string[]): NamedView[] {
   const out: NamedView[] = [],
@@ -57,9 +64,9 @@ const and = (xs: string[]) => (xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1
 const steps = (n: number) => `${n} step${n === 1 ? '' : 's'}`;
 
 /**
- * A view in plain English (views_by_tapping): "Alice, Bob and Carol, picked by hand", "everything within 2 steps of
- * Alice", "how Alice reaches Dan, in up to 6 steps", "only Person and Team", "the walked path Tour, in order". `textOf`
- * gives a thing's text as the drawing shows it; the kinds are named as they are written.
+ * A view in plain English (views_by_tapping). Examples: "Alice, Bob and Carol, picked by hand"; "everything within 2
+ * steps of Alice"; "how Alice reaches Dan, in up to 6 steps"; "only Person and Team"; "the walked path Tour, in order".
+ * `textOf` gives a thing's text as the drawing shows it; the kinds are named as they are written.
  */
 export function readingOf(view: ViewSpec, textOf: (id: string) => string): string {
   switch (view.kind) {

@@ -1,5 +1,5 @@
 // Numbers, sizes, dates and lists shown in the reader's locale (editor spec §42, locale_formats), through the platform's
-// formatters, UK English until a host says another, and the same words as before for UK English.
+// formatters. UK English is used until a host says another, with the same words as before for UK English.
 import { test, describe, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import {

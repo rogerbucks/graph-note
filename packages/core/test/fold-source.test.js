@@ -1,8 +1,10 @@
-// The layout source written as a drawing is folded, merged and routed (editor spec §25): a busy hub's links as one stub
-// with their count (untangle_hubs), a group as one box with its count (untangle_groups), the links between two groups
-// as one trunk with each link still its own line at either end (untangle_merge), and the links straight or right-angled
-// (untangle_routing). Every box and link still drawn keeps the number Graphviz gave it unfolded, so a tap, a focus or a
-// selection finds it as before; with nothing folded, merged or routed the source is the one the Python library writes.
+// The layout source written as a drawing is folded, merged and routed (editor spec §25):
+// - a busy hub's links as one stub with their count (untangle_hubs);
+// - a group as one box with its count (untangle_groups);
+// - the links between two groups as one trunk, with each link still its own line at either end (untangle_merge);
+// - the links straight or right-angled (untangle_routing).
+// Every box and link still drawn keeps the number Graphviz gave it unfolded, so a tap, a focus or a selection finds it
+// as before. With nothing folded, merged or routed, the source is the one the Python library writes.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';

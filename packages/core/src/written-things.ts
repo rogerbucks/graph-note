@@ -1,5 +1,6 @@
-// The things written in a block, found by their parentheses (editor spec §4): each with its name, kinds and properties and
-// where they are, so what a thing is missing can be told and fixed in place. Text inside strings and comments is never read.
+// The things written in a block, found by their parentheses (editor spec §4). Each has its name, kinds and properties
+// and where they are, so what a thing is missing can be told and fixed in place. Text inside strings and comments is
+// never read.
 import { blankText, items } from './block-items.ts';
 import { isSpace, S, SPACE, trim, trimEnd } from './whitespace.ts';
 

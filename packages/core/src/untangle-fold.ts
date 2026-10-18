@@ -1,9 +1,11 @@
-// Folding a large graph (editor spec §25, slice 3): a busy hub's links drawn folded into one stub marked with their count
-// (untangle_hubs), a group drawn as one box showing its count (untangle_groups), and the links running between the same
-// two groups merged into shared trunks (untangle_merge). Host-free and pure: this works out only what is folded, hidden
-// or merged, as a plan the layout source is written from (fold-source.ts), so the host changes the drawing and nothing
-// else (untangle_data_untouched). The Python library works out the same plan (graphspec/style/folding.py), held to this
-// byte for byte by the shared cases (python/graph_spec/tests/fold_cases.json).
+// Folding a large graph (editor spec §25, slice 3). It covers three things:
+// - a busy hub's links drawn folded into one stub marked with their count (untangle_hubs);
+// - a group drawn as one box showing its count (untangle_groups);
+// - the links running between the same two groups merged into shared trunks (untangle_merge).
+// Host-free and pure. This works out only what is folded, hidden or merged. That is a plan the layout source is written
+// from (fold-source.ts). So the host changes the drawing and nothing else (untangle_data_untouched). The Python library
+// works out the same plan (graphspec/style/folding.py). The shared cases hold it to this byte for byte
+// (python/graph_spec/tests/fold_cases.json).
 import { adjacency } from './focus.ts';
 import type { FocusEdge } from './focus.ts';
 import type { Nudge } from './style-graph.ts';
@@ -13,10 +15,13 @@ import { THRESHOLDS, thresholdValue } from './thresholds.ts';
 export const BUSY_HUB = THRESHOLDS.busy_hub.value;
 
 /**
- * What a drawing folds and merges, for the layout source: things not drawn, each hidden with a hub it hung from; links
- * not drawn, by their place among the drawing's links (`edgesOf`), folded into a stub or inside a folded box; each hub
- * folded, with how many links its stub stands for; every group drawn, with its things and whether it is folded into one
- * box; and whether the links between two groups are merged into trunks. Plain lists, so it crosses to a layout worker.
+ * What a drawing folds and merges, for the layout source. It holds:
+ * - things not drawn, each hidden with a hub it hung from;
+ * - links not drawn, by their place among the drawing's links (`edgesOf`), folded into a stub or inside a folded box;
+ * - each hub folded, with how many links its stub stands for;
+ * - every group drawn, with its things and whether it is folded into one box;
+ * - whether the links between two groups are merged into trunks.
+ * Plain lists, so it crosses to a layout worker.
  */
 export interface Folding {
   hidden: string[];
@@ -53,9 +58,9 @@ export function busyHubs(keys: readonly string[], edges: readonly FocusEdge[], m
 }
 
 /**
- * The groups a drawing's nudges draw (§6), as `nudgedSource` draws their boxes: each label in the order first written,
- * with its things drawn among `keys`, each once. None when the drawing is laid out as lanes (`diagram`, §15), which draw
- * each group inside its lane.
+ * The groups a drawing's nudges draw (§6), as `nudgedSource` draws their boxes. Each label comes in the order first
+ * written, with its things drawn among `keys`, each once. None when the drawing is laid out as lanes (`diagram`, §15).
+ * Lanes draw each group inside its lane.
  */
 export function drawnGroups(
   nudges: readonly Pick<Nudge, 'word' | 'thing' | 'other' | 'group'>[],
@@ -76,12 +81,12 @@ export function drawnGroups(
 }
 
 /**
- * The plan of what a drawing folds and merges, or undefined when it folds and merges nothing, so its source is the one
- * the Python library writes unfolded. `keys` are its things in order, `edges` its links (`edgesOf`), `groups` the groups
- * it draws (`drawnGroups`). Folded groups come first: each link inside one is folded, and its things are drawn as its box.
- * Then each busy hub outside them that is not opened again folds each of its links not folded yet into its stub; a thing
- * none of whose links is drawn any more, and no hub, is hidden with them. Merging leaves the links to the source, which
- * draws two or more running from one group to another as a trunk (fold-source.ts).
+ * The plan of what a drawing folds and merges. It is undefined when it folds and merges nothing. Then its source is the
+ * one the Python library writes unfolded. `keys` are its things in order, `edges` its links (`edgesOf`), `groups` the
+ * groups it draws (`drawnGroups`). Folded groups come first. Each link inside one is folded, and its things are drawn
+ * as its box. Then come the busy hubs outside them that are not opened again. Each folds its links not folded yet into
+ * its stub. A thing none of whose links is drawn any more, and no hub, is hidden with them. Merging leaves the links to
+ * the source. It draws two or more running from one group to another as a trunk (fold-source.ts).
  */
 export function foldPlan(
   keys: readonly string[],
@@ -124,8 +129,8 @@ export function foldPlan(
 }
 
 /**
- * The folds that hide a thing, so finding it can open them: each hub whose stub stands for one of its links, when none
- * of them is drawn (the thing is hidden with them), and the folded group whose box it is drawn as.
+ * The folds that hide a thing, so finding it can open them. That is each hub whose stub stands for one of its links,
+ * when none of them is drawn (the thing is hidden with them). It is also the folded group whose box it is drawn as.
  */
 export function foldsHiding(
   plan: Folding | undefined,

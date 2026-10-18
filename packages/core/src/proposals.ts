@@ -1,9 +1,10 @@
-// Proposals (editor spec §17, AI proposals — accepted or rejected in the editor): a set of changes to a graph that
-// somebody other than the person reading proposes — an AI's answer (§19), a graph step's output (§20), or anyone — as
-// plain data the editor can show over the graph, read back in plain English and have a person decide, one change at a
-// time. A proposal never writes anything: `proposals-review.ts` shows it and, when a person accepts, writes the change
-// as an ordinary edit. This module is the data: who proposed it, when, what it read and the state of the graph it was
-// made against (`provenance`), and its changes — each an addition, a change of a property or a removal — in groups.
+// Proposals (editor spec §17, AI proposals — accepted or rejected in the editor). A proposal is a set of changes to a
+// graph that somebody other than the person reading proposes. That may be an AI's answer (§19), a graph step's output
+// (§20), or anyone. It is plain data the editor can show over the graph and read back in plain English. A person
+// decides on it one change at a time. A proposal never writes anything: `proposals-review.ts` shows it and, when a
+// person accepts, writes the change as an ordinary edit. This module is the data. It holds who proposed it, when, what
+// it read and the state of the graph it was made against (`provenance`). It also holds its changes in groups, each an
+// addition, a change of a property or a removal.
 import { blankText, items } from './block-items.ts';
 import { readNote } from './drawing.ts';
 import { hops } from './estimates.ts';
@@ -36,24 +37,25 @@ export interface Provenance {
 }
 
 /**
- * The change itself. An addition is one item of GQL as a block writes it (a thing, or a link or a path); a set changes
- * one property of a thing already there (`value` as GQL writes it); a removal names the thing, or the link, to take out.
+ * The change itself. An addition is one item of GQL as a block writes it (a thing, or a link or a path). A set changes
+ * one property of a thing already there (`value` as GQL writes it). A removal names the thing, or the link, to take
+ * out.
  */
 export type ChangeOp =
   | { op: 'add'; gql: string }
   | { op: 'set'; thing: string; key: string; value: string; labels?: string[] }
   | { op: 'remove-thing'; thing: string; detach?: false; labels?: string[] }
   | { op: 'remove-link'; from: string; type: string; to: string; ends?: [string[], string[]] };
-// `detach: false` is a plain DELETE, which leaves no link without its end and so is refused for a thing that has links;
-// without it a removal of a thing is a DETACH DELETE. `labels` and `ends` are the kinds the statement's MATCH names, which
-// the target must have; a change a source builds names none.
+// `detach: false` is a plain DELETE. That leaves no link without its end, and so is refused for a thing that has links.
+// Without it a removal of a thing is a DETACH DELETE. `labels` and `ends` are the kinds the statement's MATCH names,
+// which the target must have. A change a source builds names none.
 
-/** A change as a source offers it: its group is given by the proposal when the source leaves it out, and it never has an id. */
+/** A change as a source offers it. The proposal gives its group when the source leaves it out; it never has an id. */
 export type ChangeInput = ChangeOp & { group?: string; reason?: string };
 
 /**
- * A change in a proposal: its id, derived from its statement (so the same change has the same id wherever it is read and
- * nobody writes one), the group it is reviewed in and, if the source gave one, its reason.
+ * A change in a proposal: its id, the group it is reviewed in and, if the source gave one, its reason. The id is
+ * derived from its statement, so the same change has the same id wherever it is read and nobody writes one.
  */
 export type ProposedChange = ChangeOp & { id: string; group: string; reason?: string };
 
@@ -88,8 +90,8 @@ export function groupOf(c: ChangeOp): string {
 
 /**
  * Whether a value is one value: written as `(v:T {k: VALUE})` it reads as exactly one thing with exactly one property,
- * `k`, and nothing wrong. A value that carries more — another property, another thing, a stray bracket — is not one,
- * whatever it is dressed as, so a change of a property can write no more than it shows.
+ * `k`, and nothing wrong. A value that carries more is not one, whatever it is dressed as. More means another property,
+ * another thing or a stray bracket. So a change of a property can write no more than it shows.
  */
 function isOneValue(value: string): boolean {
   const r = readNote([`// graph: v\n(v:T {k: ${value}})`]);
@@ -161,9 +163,9 @@ export interface ProposalInput {
 }
 
 /**
- * A proposal, checked: it must say who proposed it and the state of the graph it was made against, hold at least one
- * change, and each change must be written the way a block writes it. The changes are given the ids `c1`… and the groups
- * their source left out; or the reason it is refused.
+ * A proposal, checked; or the reason it is refused. It must say who proposed it and the state of the graph it was made
+ * against. It must hold at least one change, and each change must be written the way a block writes it. The changes are
+ * given the ids `c1`… and the groups their source left out.
  */
 export function makeProposal(input: ProposalInput): Proposal | { refused: string } {
   const { id, graph, by, basis } = input;
@@ -183,7 +185,7 @@ export function makeProposal(input: ProposalInput): Proposal | { refused: string
   if (fault) return { refused: fault };
   const changes = input.changes.map((c): ProposedChange => {
     const { group, reason } = c;
-    // the change itself, in one order of keys, whatever order its source wrote them in; an addition is kept as the item
+    // the change itself, in one order of keys, whatever order its source wrote them in. An addition is kept as the item
     // itself: what a comment or a comma around it said is not part of the change
     const item = c.op === 'add' ? items(c.gql)[0] : undefined;
     const op = opOf(c.op === 'add' && item ? { op: 'add', gql: c.gql.slice(item.from, item.to) } : c);

@@ -1,10 +1,11 @@
-// Graph steps (editor spec §20: graph_step_io, step_inputs_checked, run_declared_only, step_output_proposal). A step is a
-// query block named as one, `// graph: <graph> · QUERY step <name>`: the named points it takes a graph at, each with
-// what it takes (`// takes <point>: (:Kind), [:TYPE]`), then its rule, MATCH a pattern and INSERT the links it implies
-// (steps-rule.ts), a query over graph data and never code or a named action. A step runs only when a host asks, which is
-// only when the user presses Run (`runStep`): what is given at each point, a graph of the note or a view of one, is
-// checked against the point first (steps-input.ts); the rule is matched over the inputs together (steps-match.ts); and
-// the graph it gives is offered as a proposal (§17) of the links new to the step's graph, never written by the step.
+// Graph steps (editor spec §20: graph_step_io, step_inputs_checked, run_declared_only, step_output_proposal). A step is
+// a query block named as one, `// graph: <graph> · QUERY step <name>`. It names the points it takes a graph at, each
+// with what it takes (`// takes <point>: (:Kind), [:TYPE]`). Then comes its rule: MATCH a pattern and INSERT the links
+// it implies (steps-rule.ts). The rule is a query over graph data, never code or a named action. A step runs only when
+// a host asks, which is only when the user presses Run (`runStep`). What is given at each point, a graph of the note or
+// a view of one, is checked against the point first (steps-input.ts). The rule is matched over the inputs together
+// (steps-match.ts). The graph it gives is offered as a proposal (§17) of the links new to the step's graph, never
+// written by the step.
 import gs from '@thoughtknot/graph-spec';
 import { firstLine, gqlBlocks, graphOfBlock, isStepBlock } from './blocks.ts';
 import { readNote } from './drawing.ts';
@@ -74,7 +75,7 @@ function pointOf(line: string): StepPoint | string {
 
 /**
  * The step a block holds, a fault saying what to change, or null when the block is not a step. A step has a name of
- * one word, says what it takes at each named point, and its rule matches no kind or type no point says it takes.
+ * one word and says what it takes at each named point. Its rule matches no kind or type no point says it takes.
  */
 export function stepOf(text: string, block = 0): Step | StepFault | null {
   // a block is a step by its graph line alone, so one that is not, however long, is never read further (§9)
@@ -94,7 +95,7 @@ export function stepOf(text: string, block = 0): Step | StepFault | null {
   if (!name) return fault('a step needs a name: write it after step, as QUERY step <name>');
   if (!WORD.test(name))
     return fault(`the step name '${name}' is not one word: use letters, digits and underscores only`);
-  // a step is a short rule: a longer block is refused before its rule is read, so no text pasted or synced into a
+  // a step is a short rule. A longer block is refused before its rule is read, so no text pasted or synced into a
   // note can hold the editor (§9)
   if (text.length > MOST_STEP_CHARACTERS)
     return fault(
@@ -184,11 +185,12 @@ function proposalId(name: string, texts: readonly string[]): string {
 }
 
 /**
- * Runs a step on the note as it is (`note`), with what the user gave at each point, only because the user asked: the
- * step's own fault, a graph the note does not write, and each input are checked first, and any fault refuses the run
- * before the rule is matched. The graph it gives is the links its INSERT names for each match; those its graph does not
- * hold already are offered as a proposal from the step (each with the match that found it, and any thing they join that
- * the graph lacks), against the graph's state now. Nothing is written: the host writes the proposal beside the graph.
+ * Runs a step on the note as it is (`note`), with what the user gave at each point, only because the user asked. The
+ * step's own fault, a graph the note does not write, and each input are checked first. Any fault refuses the run
+ * before the rule is matched. The graph it gives is the links its INSERT names for each match. Those its graph does
+ * not hold already are offered as a proposal from the step, against the graph's state now. Each comes with the match
+ * that found it, and any thing they join that the graph lacks. Nothing is written: the host writes the proposal beside
+ * the graph.
  */
 export function runStep(
   note: string,
@@ -236,7 +238,8 @@ export function runStep(
   const fresh = all.filter(({ link }) => !held.has(link.join(' ')));
   if (!fresh.length)
     return { nothing: `Step ${name} works out nothing new: every link it gives is already in ${graph}.`, output };
-  // an id is written into the change set as a name: only a plain word is, never text that could write a line of its own
+  // an id is written into the change set as a name. Only a plain word is, never text that could write a line of its
+  // own
   const odd = fresh.flatMap(({ link }) => [link[0], link[2]]).find((id) => !/^[A-Za-z_]\w*$/.test(id));
   if (odd !== undefined)
     return {

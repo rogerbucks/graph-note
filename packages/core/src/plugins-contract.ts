@@ -1,6 +1,6 @@
-// The contract suite of each extension point (editor spec §43, plugin_contract_suites): checks any plug-in runs against
-// what it adds, and every built-in passes in CI. Like the host contract, the checks need no test framework: each throws,
-// saying what was wanted, when what was added breaks a promise of its point.
+// The contract suite of each extension point (editor spec §43, plugin_contract_suites). It checks any plug-in runs
+// against what it adds, and every built-in passes in CI. Like the host contract, the checks need no test framework.
+// Each throws, saying what was wanted, when what was added breaks a promise of its point.
 import type { DataInfo, ExportedData } from './export-data-model.ts';
 import type { DataExporter } from './plugins.ts';
 import {

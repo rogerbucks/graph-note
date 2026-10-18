@@ -1,8 +1,8 @@
-// The numbers a rule leaves open (editor spec §41, thresholds_named): where a requirement says "more than a set number",
-// "at a pace the user sets" or leaves a limit to the build, the number is named here once, with its default, the
-// least and most it may be, its unit and what it governs, and the requirement it serves. Code reads the default from
-// here, and a value handed in from a setting or a caller is taken only inside its range, else the default stands.
-// Rules of later slices add their own entries as they are built (type_suggestion_bundle, centroid_cycle_guard).
+// The numbers a rule leaves open (editor spec §41, thresholds_named). A requirement may say "more than a set number" or
+// "at a pace the user sets", or leave a limit to the build. Then the number is named here once, with its default, the
+// least and most it may be, its unit and what it governs. The requirement it serves is named too. Code reads the
+// default from here. A value handed in from a setting or a caller is taken only inside its range, else the default
+// stands. Rules of later slices add their own entries as they are built (type_suggestion_bundle, centroid_cycle_guard).
 
 /** One open number: its default, the least and most it may be, its unit, what it governs, and the rule that leaves it open. */
 export interface Threshold {

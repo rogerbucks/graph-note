@@ -1,5 +1,6 @@
-// The banner over an untangled drawing (editor spec §25): what the drawing is filtered to, the path asked for, or the
-// question waiting for a second thing — each in a sentence with its way back — announced to screen readers as it changes.
+// The banner over an untangled drawing (editor spec §25). It shows what the drawing is filtered to, the path asked for,
+// or the question waiting for a second thing. Each is said in a sentence with its way back, and announced to screen
+// readers as it changes.
 
 /** One line of the banner: what it says, and the buttons that act on it. */
 export interface BannerRow {

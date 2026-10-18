@@ -1,5 +1,6 @@
-// The lines changed between two texts (editor spec §41, github_review_items): the lowest level of a review, every line
-// kept, added or removed, in the fewest edits, numbered in both texts, and a limit past which nothing is compared.
+// The lines changed between two texts (editor spec §41, github_review_items): the lowest level of a review. Every line
+// is kept, added or removed, in the fewest edits, numbered in both texts. There is a limit past which nothing is
+// compared.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { DIFF_LIMIT, lineDiff } from '../src/line-diff.ts';

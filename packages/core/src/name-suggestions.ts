@@ -1,5 +1,6 @@
-// Names and texts suggested for things (editor spec §4): a name from a text, following the pattern of the names already in
-// the graph and never one of them; a text from a name. They only suggest — nothing here writes to a note.
+// Names and texts suggested for things (editor spec §4). A name comes from a text, following the pattern of the names
+// already in the graph and never one of them. A text comes from a name. They only suggest — nothing here writes to a
+// note.
 
 /** How the names of a graph are written: their casing, how many words they usually have, and whether a kind starts them. */
 export interface NameStyle {
@@ -59,8 +60,10 @@ function startsWithKind(name: string, kind: string): 'kind' | 'initial' | null {
 }
 
 /**
- * The style the names of a graph are written in: the casing most of them show (a name of one word shows none, so does
- * not vote), the words they usually have, and a prefix from the kind where most names with a kind show one.
+ * The style the names of a graph are written in:
+ * - the casing most of them show (a name of one word shows none, so does not vote);
+ * - the words they usually have;
+ * - a prefix from the kind, where most names with a kind show one.
  */
 export function nameStyleOf(names: GraphNames): NameStyle {
   const tally = emptyTally();
@@ -68,7 +71,7 @@ export function nameStyleOf(names: GraphNames): NameStyle {
   return styleOfTally(tally);
 }
 
-/** Of the names in one casing: how many, their words in all, and how many of those with a kind start with it, or its initial. */
+/** Of the names in one casing: how many, their words in all, and how many with a kind start with it or its initial. */
 interface CasingTally {
   names: number;
   words: number;
@@ -77,8 +80,8 @@ interface CasingTally {
 }
 
 /**
- * What a style is found from, counted name by name, so it can be kept as names are added (name-book.ts) rather than
- * counted again for each: the names in each casing, and those with a kind, and of them those that start with it.
+ * What a style is found from, counted name by name. It can then be kept as names are added (name-book.ts), not counted
+ * again for each. It counts the names in each casing, those with a kind, and of them those that start with it.
  */
 export interface NameTally {
   casings: Record<NameStyle['casing'], CasingTally>;
@@ -108,8 +111,10 @@ export function tallyName(tally: NameTally, name: string, kind: string | undefin
 }
 
 /**
- * The style a tally shows: the casing most names show (a name of one word shows none, so does not vote), the words they
- * usually have, and a prefix from the kind where most names with a kind show one.
+ * The style a tally shows:
+ * - the casing most names show (a name of one word shows none, so does not vote);
+ * - the words they usually have;
+ * - a prefix from the kind, where most names with a kind show one.
  */
 export function styleOfTally(tally: NameTally): NameStyle {
   const casing = CASINGS.map(([c]) => c).reduce((best, c) =>
@@ -132,7 +137,7 @@ export function styleOfTally(tally: NameTally): NameStyle {
 /**
  * The words of a text, lowercased and plain ASCII: accents taken off their letters, apostrophes and hyphens closed up,
  * other marks parting words. The graph reader takes only A–Z, a–z, digits and _ in a name (reader/tokens.js, and
- * lexer.py in the Python library), so a word in another script is left out, whole; small words are kept.
+ * lexer.py in the Python library). So a word in another script is left out, whole; small words are kept.
  */
 export function nameWords(text: string): string[] {
   return text
@@ -148,10 +153,10 @@ export function nameWords(text: string): string[] {
 const kindWord = (kind?: string) => (kind ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
 /**
- * A text as a name made of its words joined by _ (snake_case), cut at a word to 32 characters: the step a name takes
- * before the graph's style and the names taken are applied. A text with no ASCII letter or digit left — such as one in
- * another script — gives the kind, else `thing`; a first word that is a number gets `item` before it. Always a name the
- * graph can read.
+ * A text as a name made of its words joined by _ (snake_case), cut at a word to 32 characters. This is the step a name
+ * takes before the graph's style and the names taken are applied. A text with no ASCII letter or digit left, such as
+ * one in another script, gives the kind, else `thing`. A first word that is a number gets `item` before it. Always a
+ * name the graph can read.
  */
 export function nameSlug(text: string, kind?: string): string {
   let words = nameWords(text);
@@ -170,12 +175,12 @@ function joined(words: string[], casing: NameStyle['casing']): string {
 }
 
 /**
- * A name for a thing given text but no name, from the first few words of the text, following the style of the names
- * already in the graph (its casing, its length, a prefix from the kind when `kind` is given and the names have one), and
- * never a name the graph already has — compared without regard to case; a number is added, in the same style, until it is
- * not. Never a word the language keeps for itself (match, set, true, id …), which is numbered in the same way. Always a
- * name the graph can read. With `given`, that style is followed in place of the one `names` show (the names still keep a
- * new name unique): for naming several things in one style, whatever is named among them.
+ * A name for a thing given text but no name, from the first few words of the text. It follows the casing and length
+ * of the names already in the graph. It adds a prefix from the kind when `kind` is given and the names have one. It is
+ * never a name the graph already has, compared without regard to case. A number is added, in the same style, until it
+ * is not. Never a word the language keeps for itself (match, set, true, id …), which is numbered in the same way.
+ * Always a name the graph can read. With `given`, that style is followed in place of the one `names` show. The names
+ * still keep a new name unique. This is for naming several things in one style, whatever is named among them.
  */
 export function nameFromText(text: string, names: GraphNames, kind?: string, given?: NameStyle): string {
   const style = given ?? nameStyleOf(names),
@@ -184,9 +189,10 @@ export function nameFromText(text: string, names: GraphNames, kind?: string, giv
 }
 
 /**
- * The name nameFromText gives, in a style already found, against names taken as `taken` says (lowercased): the name, the
- * base it was made from, and its place among the base's numbered names (1 for the base itself). `from` is the first place
- * worth trying, when every place before it is known to be taken (name-book.ts keeps it, so as not to count up again).
+ * The name nameFromText gives, in a style already found, against names taken as `taken` says (lowercased). It gives
+ * the name, the base it was made from, and its place among the base's numbered names (1 for the base itself). `from`
+ * is the first place worth trying, when every place before it is known to be taken. name-book.ts keeps it, so as not
+ * to count up again.
  */
 export function composeName(
   text: string,

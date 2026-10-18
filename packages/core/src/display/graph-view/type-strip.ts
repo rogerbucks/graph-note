@@ -1,8 +1,9 @@
-// The diagram type on a card (spec §15): the strip under the bar saying how the graph is drawn, and Diagram type, which
-// lists the seven types — each that fits to choose, written into the style graph; each that does not with why; the one
-// suggested said so, and never drawn until chosen (diagram_type_set, type_only_when_fits, suggest_type). A chosen type
-// that has stopped fitting is said, with why, and the nearest type that fits offered (type_stops_fitting); a graph of more
-// than 50 things is offered the table or a view as the way in (large_way_in). The core decides all of it (types.ts).
+// The diagram type on a card (spec §15). The strip under the bar says how the graph is drawn. Diagram type lists the
+// seven types (diagram_type_set, type_only_when_fits, suggest_type). Each that fits can be chosen, written into the
+// style graph. Each that does not comes with why. The one suggested is said so, and never drawn until chosen. A chosen
+// type that has stopped fitting is said, with why, and the nearest type that fits offered (type_stops_fitting). A graph
+// of more than 50 things is offered the table or a view as the way in (large_way_in). The core decides all of it
+// (types.ts).
 import { diagramOffer, tableOf, wayIn, word } from '@thoughtknot/core';
 import type {
   DiagramOffer,
@@ -33,10 +34,10 @@ const said = (type: DiagramType): string => word(`type.${type}.as`);
 const named = (type: DiagramType): string => word(`type.${type}`);
 
 /**
- * What a card shows of the diagram types for `drawing` — a graph, or a view (`view`) as drawn — styled by `style`, its
- * values from `g`: the core's offer, the way in to a large graph, the table when drawn as one, and Choose, which hands
- * `write` the change to the style graph and what to say once it is written. A tree is chosen along the relationship it
- * fits best, so it stays the tree that was offered.
+ * What a card shows of the diagram types for `drawing`, a graph or a view (`view`) as drawn. It is styled by `style`,
+ * its values from `g`. It shows the core's offer, the way in to a large graph, and the table when drawn as one. Choose
+ * hands `write` the change to the style graph and what to say once it is written. A tree is chosen along the
+ * relationship it fits best, so it stays the tree that was offered.
  */
 export function diagramShown(
   drawing: GraphDrawing,
@@ -66,9 +67,9 @@ export function diagramShown(
 export const tableDrawn = (table: DiagramTable): Drawn => ({ svg: '', rankdir: 'LR', ...tableSize(table) });
 
 /**
- * The strip under a card's bar: how it is drawn, Diagram type and its list, and, when there is one to say, that the type
- * chosen has stopped fitting, or the way in to a large graph. Returns the controls that write, which a read-only card
- * takes away; what it says stays.
+ * The strip under a card's bar: how it is drawn, and Diagram type and its list. When there is one to say, it says the
+ * type chosen has stopped fitting, or gives the way in to a large graph. Returns the controls that write, which a
+ * read-only card takes away; what it says stays.
  */
 export function renderTypeStrip(root: HTMLElement, d: DiagramShown): HTMLElement[] {
   const { choice, suggested } = d,

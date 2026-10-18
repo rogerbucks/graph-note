@@ -1,7 +1,8 @@
-// The data an export holds, and how each format writes it (editor spec §16, export_data_formats, export_lossless): only
-// the things drawn and the links written between them, never a schema's own things or a guess; a GQL block the
-// profile reads as written; CSV as RFC 4180 has it, typed by its header and safe to open in a spreadsheet; GraphML that
-// XML reads as written, or a refusal where XML cannot hold a character.
+// The data an export holds, and how each format writes it (editor spec §16, export_data_formats, export_lossless):
+// - only the things drawn and the links written between them, never a schema's own things or a guess;
+// - a GQL block the profile reads as written;
+// - CSV as RFC 4180 has it, typed by its header and safe to open in a spreadsheet;
+// - GraphML that XML reads as written, or a refusal where XML cannot hold a character.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';

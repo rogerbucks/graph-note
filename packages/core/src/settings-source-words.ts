@@ -1,6 +1,7 @@
-// The settings page's words, in UK English (editor spec §42, words_catalogue): each option of settings.ts by its key, its
-// name, its sentence and each choice by its value. The settings page says them from here (settings-words.ts), and
-// settings-words.test.js holds them to the options; source-words.ts keeps them with every other word.
+// The settings page's words, in UK English (editor spec §42, words_catalogue). Each option of settings.ts is here by
+// its key, with its name, its sentence and each choice by its value. The settings page says them from here
+// (settings-words.ts), and settings-words.test.js holds them to the options. source-words.ts keeps them with every
+// other word.
 
 /** Each settings option's words, by key, in UK English. */
 export const SETTINGS_SOURCE_WORDS = {

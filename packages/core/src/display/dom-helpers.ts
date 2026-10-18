@@ -1,8 +1,8 @@
-// The DOM helpers the display layer draws with (editor spec §26, cc_core_only). The layer is written as Obsidian's pages
-// are, with `createDiv`, `createEl`, `setText`, `empty`, `addClass` and the rest on elements, and `activeWindow` and
-// `activeDocument` for the window in use. Obsidian provides them; a plain browser page does not, so its host calls
-// `installDomHelpers(window)` once before anything is drawn. Each helper is added only where it is missing, so in
-// Obsidian this changes nothing, and each does what Obsidian's does for the way the layer uses it.
+// The DOM helpers the display layer draws with (editor spec §26, cc_core_only). The layer is written as Obsidian's
+// pages are, with `createDiv`, `createEl`, `setText`, `empty`, `addClass` and the rest on elements. It uses
+// `activeWindow` and `activeDocument` for the window in use. Obsidian provides them; a plain browser page does not, so
+// its host calls `installDomHelpers(window)` once before anything is drawn. Each helper is added only where it is
+// missing, so in Obsidian this changes nothing. Each does what Obsidian's does for the way the layer uses it.
 
 /** What `createEl` and `createDiv` take: a class or classes, text, attributes, a title, a parent, and an input's value and type. */
 export interface ElementInfo {

@@ -1,7 +1,8 @@
-// The proposer is declared by the editor, in the proposal itself (editor spec §17, proposals_checked; the graph spec's §24
-// author rule): the graph spec's check wants a change set's author to be a known person or model, so the editor puts the
-// declaration (the Model from the AI settings, or the Step as a Person) first among the proposal's additions, shown on the
-// card like any change and never in the data until a change is accepted. Nothing a model writes can declare an author.
+// The proposer is declared by the editor, in the proposal itself (editor spec §17, proposals_checked; the graph spec's
+// §24 author rule). The graph spec's check wants a change set's author to be a known person or model. So the editor
+// puts the declaration (the Model from the AI settings, or the Step as a Person) first among the proposal's additions.
+// It is shown on the card like any change and never in the data until a change is accepted. Nothing a model writes can
+// declare an author.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import gs from '@thoughtknot/graph-spec';

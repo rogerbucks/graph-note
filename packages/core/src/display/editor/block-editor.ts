@@ -1,6 +1,6 @@
-// The block editor (spec §4, §9): the text of one graph block, with everything that helps write it — a plain text field
-// over a coloured picture of it, problems with fixes, suggestions, each line read back, the comma added for you — and the
-// safe writing behind it (the core's session never overwrites a block changed meanwhile), undo, redo and Lock the graph.
+// The block editor (spec §4, §9): one graph block's text, with all that helps write it. That is a plain text field over
+// a coloured picture of it, problems with fixes, suggestions, each line read back, the comma added for you. Behind it
+// are safe writing (the core's session never overwrites a block changed meanwhile), undo, redo and Lock the graph.
 import { indentText, isDraft } from '@thoughtknot/core';
 import type { Change, CompletionItem, NoteReading, PaneSession } from '@thoughtknot/core';
 import { Lifecycle } from '../lifecycle';
@@ -23,7 +23,7 @@ import { TypingRests } from './typing-rests';
 
 export type { Layout } from './editor-layout';
 
-/** The text editor for one graph block (spec §4), in the pane or in place in the block's card: colours, fixes, suggestions, read-back, and writing back to the note. */
+/** The text editor for one graph block (spec §4), in the pane or in place in the block's card. It has colours, fixes, suggestions, read-back, and writing back to the note. */
 export class BlockEditor extends Lifecycle {
   readonly layout: Layout;
   private readonly host: PaneHost;
@@ -124,8 +124,8 @@ export class BlockEditor extends Lifecycle {
   declareDeferred = () => this.note.declareDeferred(indentText(this.host.settings().indent));
 
   /**
-   * Replaces the whole text, as an edit made from the drawing: a step of its own, shown, checked and written like typing,
-   * and the names it newly writes checked again against the note as it is written (§4). False with no field.
+   * Replaces the whole text, as an edit made from the drawing. It is a step of its own, shown, checked and written like
+   * typing. The names it newly writes are checked again against the note as it is written (§4). False with no field.
    */
   replace(text: string): boolean {
     const t = this.el?.text;

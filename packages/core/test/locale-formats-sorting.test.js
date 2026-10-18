@@ -1,5 +1,5 @@
 // Lists sorted for the reader (editor spec §42, locale_sorting): in the collation of the reader's locale, digits as
-// numbers, while an order written into text keeps one order in every locale.
+// numbers. An order written into text keeps one order in every locale.
 import { test, describe, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { DEFAULT_LOCALE, setLocale, sortedForReader } from '../src/locale-formats.ts';

@@ -1,5 +1,5 @@
-// The words of the AI send dialog, the AI models' settings and the question before leaving the app, in UK English (editor
-// spec §42, words_catalogue). source-words.ts keeps them with every other word.
+// The words of the AI send dialog, the AI models' settings and the question before leaving the app. They are in UK
+// English (editor spec §42, words_catalogue). source-words.ts keeps them with every other word.
 
 /** The AI dialog's, the AI models' and leaving the app's words, by key, in UK English. */
 export const AI_SOURCE_WORDS = {

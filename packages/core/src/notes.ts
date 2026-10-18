@@ -1,6 +1,6 @@
-// Notes on things and links (editor spec §24): each data block's notes, read by the graph library's own reader
-// (`notes`, which the Python reader is held to by one table), put on the box or link drawn directly below them
-// (note_comment, note_text), and a note above a line holding more than one thing said, with its fix (note_one_owner).
+// Notes on things and links (editor spec §24). Each data block's notes are read by the graph library's own reader
+// (`notes`, which the Python reader is held to by one table). They are put on the box or link drawn directly below them
+// (note_comment, note_text). A note above a line holding more than one thing is said, with its fix (note_one_owner).
 // The layout source never reads a note, so it stays byte-identical with the Python library's (note_standard).
 import gs from '@thoughtknot/graph-spec';
 import { dataKind } from './blocks.ts';
@@ -18,8 +18,8 @@ const duplicate = (key: string) =>
     `this note is on ${key}, which already has a note where it is first written, so this one is not shown`,
   duplicateFix = (key: string) => `join the two notes into one, above ${key} where it is first written`;
 
-/** The id each name in a block stands for: a thing written there, or found by MATCH, with an id of its own has that id;
- * any other name is its own id (§3: a thing's name is its id). */
+/** The id each name in a block stands for. A thing written there, or found by MATCH, with an id of its own has that id.
+ * Any other name is its own id (§3: a thing's name is its id). */
 function idsIn(text: string): (name: string) => string {
   const ids = new Map<string, string>();
   for (const w of writtenIn(text)) {
@@ -29,8 +29,8 @@ function idsIn(text: string): (name: string) => string {
   return (name) => ids.get(name) ?? name;
 }
 
-/** The link drawn for one written: the first with its ends and no note yet, of its type as written or, for a type
- * written without its colon, the type the reader read it as, which differs only by case. */
+/** The link drawn for one written: the first with its ends and no note yet, of its type as written. For a type written
+ * without its colon, it is of the type the reader read it as, which differs only by case. */
 function linkFor(links: Link[], from: string, type: string, to: string): Link | undefined {
   const free = links.filter((l) => l.from === from && l.to === to && !l.note);
   return free.find((l) => l.type === type) ?? free.find((l) => l.type.toLowerCase() === type.toLowerCase());
@@ -49,8 +49,8 @@ function notesOf(text: string | null | undefined): Read | null {
   }
 }
 
-/** The first /// line (1-based) of each run of note and //@ lines that sits directly above one of the `dropped` lines:
- * the notes on what the reader left out, found without reading the block, which could not be read whole. */
+/** The first /// line (1-based) of each run of note and //@ lines that sits directly above one of the `dropped` lines.
+ * These are the notes on what the reader left out, found without reading the block, which could not be read whole. */
 function notesAbove(text: string, dropped: readonly number[]): number[] {
   const out: number[] = [],
     at = new Set(dropped);
@@ -88,11 +88,11 @@ function attach(d: GraphDrawing, notes: Read['notes'], id: (name: string) => str
 }
 
 /**
- * Puts each note written in the blocks on the box or link drawn directly below it, in the graphs drawn, and says what
- * cannot be shown: a warning for each note above a line holding more than one thing, and for a note on what the reader
- * left out; a hint for a note on a thing that already has one where it is first written. Notes are read from each block
- * as the reader read it (`read`, from partial-read.ts), so a thing drawn under a suggested name keeps its note. Only a
- * data block holding `///` is read again for its notes.
+ * Puts each note written in the blocks on the box or link drawn directly below it, in the graphs drawn. It says what
+ * cannot be shown. A warning goes on each note above a line holding more than one thing, and on a note on what the
+ * reader left out. A hint goes on a note on a thing that already has one where it is first written. Notes are read from
+ * each block as the reader read it (`read`, from partial-read.ts). So a thing drawn under a suggested name keeps its
+ * note. Only a data block holding `///` is read again for its notes.
  */
 export function addNotes(graphs: Map<string, GraphDrawing>, texts: string[], read: Map<number, ReadText>): Problem[] {
   const problems: Problem[] = [];

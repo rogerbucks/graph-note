@@ -1,8 +1,8 @@
-// links_show_flow, flow_in_style_graph and motion_not_alone (editor spec §7), drawn alike by both renderers (§12): a
-// graph's style graph moves its links, and graph_svg.py draws it as the core does — the same problems reading each style,
-// the same links moving and how, and the source of each direction laid out, byte for byte. The cases are shared with
-// python/graph_spec/tests/test_graph_svg_flow.py, whose Python answer (python_answer: read_style, and the sources
-// graph_svg.render hands Graphviz from render_args) is run here.
+// links_show_flow, flow_in_style_graph and motion_not_alone (editor spec §7), drawn alike by both renderers (§12). A
+// graph's style graph moves its links, and graph_svg.py draws it as the core does. It has the same problems reading
+// each style, the same links moving and how, and the source of each direction laid out, byte for byte. The cases are
+// shared with python/graph_spec/tests/test_graph_svg_flow.py. Its Python answer is run here (python_answer: read_style,
+// and the sources graph_svg.render hands Graphviz from render_args).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';

@@ -1,7 +1,8 @@
-// A view's card (spec §7): the strip under the bar — the view in plain English, Fade others or Hide others, which writes
-// the choice in the style graph (fade_or_hide_in_style), and Save as shown (view_saved_as_shown); the legend of the
-// colours its looks use, each with what it means (styling_keeps_locked_rules); and, on the drawing, what is outside the
-// view faded, and each look drawn in the locked style's own blend of its hue (styled_paths_and_views).
+// A view's card (spec §7). The strip under the bar holds the view in plain English, and Fade others or Hide others.
+// That button writes the choice in the style graph (fade_or_hide_in_style). The strip also holds Save as shown
+// (view_saved_as_shown). The legend gives the colours its looks use, each with what it means
+// (styling_keeps_locked_rules). On the drawing, what is outside the view is faded. Each look is drawn in the locked
+// style's own blend of its hue (styled_paths_and_views).
 import { hueColour, word } from '@thoughtknot/core';
 import type { LegendChoice, LegendEntry, Outside, ThingLook, View } from '@thoughtknot/core';
 import { button } from './view-bar';
@@ -27,7 +28,7 @@ export interface ViewShown {
 
 /**
  * The strip under the bar, and the legend. `now` gives how the drawing is shown, what is selected and what the legend
- * that untangles has chosen, which Save as shown writes and nothing else does.
+ * that untangles has chosen. Save as shown writes that, and nothing else does.
  */
 export function renderViewStrip(
   root: HTMLElement,

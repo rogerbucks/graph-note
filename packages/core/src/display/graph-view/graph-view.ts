@@ -1,7 +1,7 @@
-// A drawn graph (spec §3): the bar — problems badge, Fit, zoom out, zoom in, Full screen, Edit — and the drawing, which
-// zooms and pans by button, gesture and key (the core's Zoom decides; this passes the events in and shows the view), opens
-// full screen, and shows a box's details when it is tapped or opened from the keyboard. This module ties together the
-// parts in its folder: the bar, the drawing, taps, the details, and where the card is placed.
+// A drawn graph (spec §3). The bar holds the problems badge, Fit, zoom out, zoom in, Full screen and Edit. The drawing
+// zooms and pans by button, gesture and key. The core's Zoom decides; this passes the events in and shows the view. It
+// opens full screen, and shows a box's details when it is tapped or opened from the keyboard. This module ties together
+// the parts in its folder: the bar, the drawing, taps, the details, and where the card is placed.
 import { Lifecycle } from '../lifecycle';
 import { inHost, isPhone, readInHostDirection, setIcon } from '../host';
 import { AcrossZoom, Zoom, scrollsOneWay, word } from '@thoughtknot/core';
@@ -73,8 +73,8 @@ export class GraphView extends Lifecycle {
     this.containerEl = inHost(containerEl);
     // whether the card is where the note is only read: in reading view, or opened from a card that is (spec §3)
     this.readOnly = () => !!options.readOnly?.() || (options.mode === 'note' && readOnlyHere(containerEl));
-    // every write the card can make goes through that one check: none where the card is read-only; and the card's parts
-    // are given the same check as `readOnly`, so a control that writes is not offered at all there
+    // every write the card can make goes through that one check: none where the card is read-only. The card's parts are
+    // given the same check as `readOnly`. So a control that writes is not offered at all there
     this.o = gateWrites({ ...options, readOnly: this.readOnly }, this.readOnly);
     this.taps = new Taps(options.drawn.svg);
     this.drawn = options.drawn;
@@ -172,8 +172,8 @@ export class GraphView extends Lifecycle {
     if (this.o.proposal) writes.push(...renderProposalStrip(root, this.o.proposal));
     // how it is drawn, and the diagram types to choose from (§15)
     if (this.o.diagram) writes.push(...renderTypeStrip(root, this.o.diagram));
-    // what its moving links mean, in words beside their icons (§7, motion_not_alone): only those drawn, never a link folded
-    // into a stub or a box (§25), so its slot is filled again whenever the View menu lays the graph out again
+    // what its moving links mean, in words beside their icons (§7, motion_not_alone). Only those drawn, never a link
+    // folded into a stub or a box (§25). So its slot is filled again whenever the View menu lays the graph out again
     this.legendSlot = root.createDiv({ cls: 'thoughtknot-flow-legend-slot' });
     this.flowLegend();
     this.viewport = root.createDiv({
@@ -318,9 +318,9 @@ export class GraphView extends Lifecycle {
   }
 
   /**
-   * The graph laid out again, as a View menu switch, a stub or a box asks (§25): put in the same SVG element, marked as
-   * a view or a proposal marks it, sized and tapped afresh, the selection, its focus and its details kept, and the
-   * keyboard back on the box or link it was on (view_switch_view_only).
+   * The graph laid out again, as a View menu switch, a stub or a box asks (§25). It goes in the same SVG element,
+   * marked as a view or a proposal marks it, and sized and tapped afresh. The selection, its focus and its details are
+   * kept. The keyboard goes back on the box or link it was on (view_switch_view_only).
    */
   private relaid(drawn: Drawn): void {
     const svg = this.svg;

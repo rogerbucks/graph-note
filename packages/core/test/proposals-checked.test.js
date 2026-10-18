@@ -1,9 +1,9 @@
 // A proposal checked by the graph spec's own change-set check, and who decided it (editor spec §17: proposals_checked,
 // decider_named; the graph spec's cs-rejected-out). Every proposal the editor writes, removals and decisions included,
 // passes `checkChangeset`, and its answer is shown. A removal is a real DELETE and a change of a value a real SET; a
-// change's id is derived from its statement. An accepted or rejected change is kept as a Decision in the note's judgement
-// graph (reused, or added), a rejected addition is nowhere in the live graph, and the decider is the settings' text as
-// typed, or "you".
+// change's id is derived from its statement. An accepted or rejected change is kept as a Decision in the note's
+// judgement graph (reused, or added). A rejected addition is nowhere in the live graph. The decider is the settings'
+// text as typed, or "you".
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import gs from '@thoughtknot/graph-spec';

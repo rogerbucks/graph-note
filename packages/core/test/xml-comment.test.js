@@ -1,6 +1,6 @@
-// A note written as an XML comment (editor spec §24, note_standard; graph spec req:26.plain): held to the table the
-// Python library's SCXML export is held to (python/graph_spec/tests/note_comment_cases.json), so both write the same
-// comment for the same note, and read back by the strict reader of export-data-readers.js.
+// A note written as an XML comment (editor spec §24, note_standard; graph spec req:26.plain). It is held to the table
+// the Python library's SCXML export is held to (python/graph_spec/tests/note_comment_cases.json). So both write the
+// same comment for the same note. It is read back by the strict reader of export-data-readers.js.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';

@@ -1,6 +1,7 @@
-// A box drawn under a suggested name (spec §4, unnamed_drawn_suggested; Roger, 10 Oct 2026): a thing written without a
-// name, drawn under the name suggested for it until that is written — where it is written in the block being edited,
-// what its details say of it, and the one-click fix that writes the name, as an edit one undo takes back.
+// A box drawn under a suggested name (spec §4, unnamed_drawn_suggested; Roger, 10 Oct 2026). It is a thing written
+// without a name, drawn under the name suggested for it until that is written. Here are where it is written in the
+// block being edited, and what its details say of it. Here too is the one-click fix that writes the name, as an edit
+// one undo takes back.
 import { spanOf } from '@thoughtknot/core';
 import type { Details, NoteReading } from '@thoughtknot/core';
 import { button } from './view-bar';
@@ -18,8 +19,9 @@ export function unnamedPlace(
 }
 
 /**
- * The name the thing just after `place`'s ( in the block as typed is suggested now, in the note as it is now (§4): another
- * block can have changed it since the card was drawn. Undefined when the thing there is no longer without a name.
+ * The name the thing just after `place`'s ( in the block as typed is suggested now, in the note as it is now (§4).
+ * Another block can have changed it since the card was drawn. Undefined when the thing there is no longer without a
+ * name.
  */
 function nameNow(now: NoteReading, graph: string, place: { line: number; character: number }, text: string) {
   const box = now.graphs
@@ -38,8 +40,8 @@ export const boxLabel = (box: { key: string; kind: string; text: string; suggest
   `${box.kind ? `${box.kind}: ${box.text}` : box.text}${box.suggested ? ` (suggested name ${box.key}, not yet written)` : ''}`;
 
 /**
- * In a box's details, its suggested name, said by a sign and in words; and, while its block is edited in place, the fix
- * that writes the name after its (. Outside edit mode nothing can be written, so it says how to write it.
+ * In a box's details, its suggested name, said by a sign and in words. While its block is edited in place, it also
+ * gives the fix that writes the name after its (. Outside edit mode nothing can be written, so it says how to write it.
  */
 export function showSuggested(
   el: HTMLElement,
@@ -68,9 +70,9 @@ export function showSuggested(
 }
 
 /**
- * Writes a suggested name after the thing's ( in the text being edited, as it is now; or, when the thing there has a name
- * by now, is no longer there, or is suggested another name by now, writes nothing and says why. The note checks the name
- * again as it is written (§4).
+ * Writes a suggested name after the thing's ( in the text being edited, as it is now. It writes nothing, and says why,
+ * when the thing there has a name by now or is no longer there. It does the same when the thing is suggested another
+ * name by now. The note checks the name again as it is written (§4).
  */
 function writeName(ed: Editing, graph: string, name: string, place: { line: number; character: number }): string {
   const text = ed.session?.text;

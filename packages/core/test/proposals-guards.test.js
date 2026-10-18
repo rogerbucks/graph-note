@@ -1,7 +1,8 @@
-// What the review will not accept or write (editor spec §17: proposals_checked; the graph spec's cs-rejected-out), from the
-// security review of #480: an accept is refused when the graph spec's check fails on the change set the note holds, and a
-// proposal that fails it is not written; a DELETE keeps being plain or DETACH, and the kinds its MATCH names are held to;
-// only a block of data is the judgement block; an addition is on one line. Test support is that of proposals-checked.
+// What the review will not accept or write (editor spec §17: proposals_checked; the graph spec's cs-rejected-out). It
+// comes from the security review of #480. An accept is refused when the graph spec's check fails on the change set the
+// note holds. A proposal that fails it is not written. A DELETE keeps being plain or DETACH, and the kinds its MATCH
+// names are held to. Only a block of data is the judgement block. An addition is on one line. Test support is that of
+// proposals-checked.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import gs from '@thoughtknot/graph-spec';

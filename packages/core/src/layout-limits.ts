@@ -1,7 +1,7 @@
-// How large a graph may be before it is shown as text instead of drawn, and how long its layout may take (spec §9,
-// layout_contained): the note's text, measured before it is read; the graph's things, links, longest word and drawing
-// instructions, counted before any are written or laid out; and tighter limits on the page's own thread, where a layout,
-// once started, cannot be stopped.
+// How large a graph may be before it is shown as text instead of drawn (spec §9, layout_contained). Also how long its
+// layout may take. The note's text is measured before it is read. The graph's things, links, longest word and drawing
+// instructions are counted before any are written or laid out. The page's own thread has tighter limits. There a
+// layout, once started, cannot be stopped.
 import type { GraphDrawing } from './note-reading.ts';
 import { directions } from './render.ts';
 import type { Direction } from './render.ts';
@@ -15,9 +15,9 @@ export interface ReadLimits {
 }
 
 /**
- * 512 kB and 10,000 lines: a graph at the drawing limits below — 2,000 things and 5,000 links, one to a line, at about a
- * hundred bytes each — is about 7,000 lines and 400 kB, so these leave room for comments and blank lines, while a block
- * pasted or generated past them, which would take seconds to read on a phone, is shown as text unread.
+ * 512 kB and 10,000 lines. Take a graph at the drawing limits below: 2,000 things and 5,000 links, one to a line. At
+ * about a hundred bytes each, it is about 7,000 lines and 400 kB. So these leave room for comments and blank lines. A
+ * block pasted or generated past them would take seconds to read on a phone. It is shown as text unread.
  */
 export const READ_LIMITS: ReadLimits = { bytes: 512_000, lines: 10_000 };
 
@@ -36,11 +36,11 @@ export interface LayoutLimits {
 }
 
 /**
- * The limits in a worker, until a setting changes them. A note's graphs are tens of things; 2,000 things or 5,000 links is
- * far past anything readable as a drawing, and about the most that lays out in a few seconds on a phone. 1 MB of drawing
- * instructions is about 2,000 things written at 500 characters each. A word is held only by the source limit: in a
- * worker, the time limit stops a long one. Five seconds is ten times the half second a 50-thing graph may take (spec
- * §11); thirty to start, as a phone compiling the engine on a cold start may take several.
+ * The limits in a worker, until a setting changes them. A note's graphs are tens of things. 2,000 things or 5,000 links
+ * is far past anything readable as a drawing. It is about the most that lays out in a few seconds on a phone. 1 MB of
+ * drawing instructions is about 2,000 things written at 500 characters each. A word is held only by the source limit:
+ * in a worker, the time limit stops a long one. Five seconds is ten times the half second a 50-thing graph may take
+ * (spec §11). Thirty to start, as a phone compiling the engine on a cold start may take several.
  */
 export const LAYOUT_LIMITS: LayoutLimits = {
   things: 2000,
@@ -52,10 +52,10 @@ export const LAYOUT_LIMITS: LayoutLimits = {
 };
 
 /**
- * The limits on the page's own thread, where no worker can run and nothing can stop a layout: only what lays out well
- * within a second there. 300 things and 750 links lay out in under a second on a desktop; 100 kB of drawing instructions
- * is their size written at length; and a word of 1,000 characters is wrapped in a moment, where the 999,000 of a hostile
- * one would hold the page for minutes.
+ * The limits on the page's own thread, where no worker can run and nothing can stop a layout. They allow only what lays
+ * out well within a second there. 300 things and 750 links lay out in under a second on a desktop. 100 kB of drawing
+ * instructions is their size written at length. A word of 1,000 characters is wrapped in a moment. The 999,000 of a
+ * hostile one would hold the page for minutes.
  */
 export const PAGE_LIMITS: LayoutLimits = {
   ...LAYOUT_LIMITS,
@@ -66,9 +66,10 @@ export const PAGE_LIMITS: LayoutLimits = {
 };
 
 /**
- * Why a graph is shown as text instead of drawn: which limit it is over and the numbers; how long its layout was given;
- * or that layouts were stopped after too many in a row took too long or failed to start. A source refused before it was written is counted
- * from its texts alone (`atLeast`): the source would be longer still. `page` says the page's tighter limits applied.
+ * Why a graph is shown as text instead of drawn. It gives which limit it is over and the numbers, or how long its
+ * layout was given. Or it says layouts were stopped after too many in a row took too long or failed to start. A source
+ * refused before it was written is counted from its texts alone (`atLeast`): the source would be longer still. `page`
+ * says the page's tighter limits applied.
  */
 export type Refusal =
   | {
@@ -124,8 +125,8 @@ function longestWord(text: string): number {
 }
 
 /**
- * Over the things, links or word limit, or plainly over the source limit by the boxes' texts alone: all cheap, before any
- * drawing instruction is written.
+ * Over the things, links or word limit, or plainly over the source limit by the boxes' texts alone. All are cheap,
+ * before any drawing instruction is written.
  */
 export function counted(drawing: GraphDrawing, limits: LayoutLimits): Refusal | null {
   if (drawing.boxes.length > limits.things)

@@ -1,9 +1,10 @@
 // The size of a card's viewport (spec §3, §15, §25): how large the drawing's viewport is drawn, and the size the zoom is
-// told. In a note it is as tall as the drawing fitted to its width, as a note sizes a drawing, up to the share of the
-// window the settings allow (note_height_capped), a taller drawing fitted inside it so what follows it stays in reach;
-// scrolled across, as tall as the drawing, up to a smaller part of the window. A viewport the page has given no size yet, or no longer — a card hidden
-// by display: none or another tab, or not yet laid out — is drawn at the drawing's own size, but the zoom is told it has
-// none, so it keeps its view, a zoom saved as shown among it, for when the card shows (zoom_fit_recomputed).
+// told. In a note it is as tall as the drawing fitted to its width, as a note sizes a drawing. It goes up to the share
+// of the window the settings allow (note_height_capped). A taller drawing is fitted inside it, so what follows it stays
+// in reach. Scrolled across, it is as tall as the drawing, up to a smaller part of the window. The page may have given
+// a viewport no size yet, or no longer. The card may be hidden by display: none or another tab, or not yet laid out.
+// Then it is drawn at the drawing's own size, but the zoom is told it has none. So it keeps its view, a zoom saved as
+// shown among it, for when the card shows (zoom_fit_recomputed).
 import type { Mode, Size } from '@thoughtknot/core';
 
 /** How much of the window's height a drawing scrolled across may take, at most (§15, wide_types_phone). */

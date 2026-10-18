@@ -1,8 +1,9 @@
-// A played path exported as an animated SVG (editor spec §7, path_animation_export): CSS inside the file moves a heavier
-// outline from step to step at the pace set, and a dot along the link between two steps that a link joins, with no
-// encoder and nothing loaded from elsewhere; still under reduced motion, every step outlined and numbered and the order
-// said in words (motion_reduced_respected, motion_not_alone); and refused before it starts when it is too large for the
-// device, saying why and what would make it fit (animation_export_fits). Spans path-animation.ts and export.ts.
+// A played path exported as an animated SVG (editor spec §7, path_animation_export). CSS inside the file moves a
+// heavier outline from step to step at the pace set. A dot moves along the link between two steps that a link joins.
+// There is no encoder, and nothing is loaded from elsewhere. Under reduced motion it is still, every step outlined and
+// numbered and the order said in words (motion_reduced_respected, motion_not_alone). It is refused before it starts
+// when it is too large for the device, saying why and what would make it fit (animation_export_fits). Spans
+// path-animation.ts and export.ts.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';

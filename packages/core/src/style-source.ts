@@ -1,7 +1,7 @@
-// Nudges applied to the layout (editor spec §6): a step after the layout source is made, never a change to it, so the
-// source stays byte-identical to the Python library's (spec §12) and, with no nudges, a drawing is laid out from exactly
-// that source (no_nudges_layout_places). Beside puts two things on one rank, before orders them with a link never drawn,
-// group draws its things in a labelled box, and direction sets the direction the drawing is laid out in.
+// Nudges applied to the layout (editor spec §6): a step after the layout source is made, never a change to it. So the
+// source stays byte-identical to the Python library's (spec §12). With no nudges, a drawing is laid out from exactly
+// that source (no_nudges_layout_places). Beside puts two things on one rank. Before orders them with a link never
+// drawn. Group draws its things in a labelled box. Direction sets the direction the drawing is laid out in.
 import GraphLayout from '@thoughtknot/graph-spec/src/graph-layout.js';
 import type { Graph } from '@thoughtknot/graph-spec';
 import { arrowlessLinks } from './arrows.ts';
@@ -30,13 +30,14 @@ function writtenBefore(lines: string[], thing?: string, other?: string): string[
 }
 
 /**
- * The Graphviz source `dot` (from `layoutSource` or `drawingSource`) with the nudges written in before its last line:
- * each beside a `{rank=same; …}` line and each before an invisible link, in the order written, after every link drawn —
- * so Graphviz numbers the drawn links as before — then one box (a cluster) for each group label, in the order first
- * written, its label in the kind caption's size and colour. A nudge naming a thing not among `keys` (the boxes drawn
- * here, as in a view that leaves it out) is left out; so is a group when the drawing is laid out as lanes (`diagram`, §15),
- * which draw each group inside its lane already (graph-layout.js, typedSource). With nothing to add, `dot` is returned
- * unchanged. In a radial drawing, a before nudge writes the thing's box just before the other's, not a link.
+ * The Graphviz source `dot` (from `layoutSource` or `drawingSource`) with the nudges written in before its last line.
+ * Each beside is a `{rank=same; …}` line and each before an invisible link, in the order written, after every link
+ * drawn. So Graphviz numbers the drawn links as before. Then comes one box (a cluster) for each group label, in the
+ * order first written, its label in the kind caption's size and colour. A nudge naming a thing not among `keys` (the
+ * boxes drawn here, as in a view that leaves it out) is left out. So is a group when the drawing is laid out as lanes
+ * (`diagram`, §15), which draw each group inside its lane already (graph-layout.js, typedSource). With nothing to add,
+ * `dot` is returned unchanged. In a radial drawing, a before nudge writes the thing's box just before the other's, not
+ * a link.
  */
 export function nudgedSource(
   dot: string,
@@ -69,7 +70,7 @@ export function nudgedSource(
   if (!added.length) return dot;
   const end = dot.lastIndexOf('}');
   const nudged = `${dot.slice(0, end)}${added.join('\n')}\n${dot.slice(end)}`;
-  // the layout source puts unlinked things of one kind on one rank; without newrank, Graphviz takes such things out of
+  // the layout source puts unlinked things of one kind on one rank. Without newrank, Graphviz takes such things out of
   // a group's box without a word. Only when a group is written, so any other source stays the Python library's
   if (!groups.size) return nudged;
   const open = nudged.indexOf('{') + 1;
@@ -83,10 +84,13 @@ export function nudgedDrawing(drawing: GraphDrawing, style: Pick<StyleGraph, 'di
 
 /**
  * The drawing as its style graph draws it in `view` (none: the whole graph), as every host draws a graph, a view or an
- * export: in the direction its direction nudge sets, with its nudges (§6), the links it draws without their arrowheads
- * (§15), the properties it shows inline (§14), their values from `g`, the graph as read (none: no property shown), the
- * links it moves (§7, link-flow.ts), the boxes it draws a picture on (§18, picture.ts; none without `g`), and laid out
- * as the diagram type it chooses while the data fits it (§15, types.ts); a network otherwise.
+ * export. It is drawn:
+ * - in the direction its direction nudge sets, with its nudges (§6);
+ * - with the links it draws without their arrowheads (§15);
+ * - with the properties it shows inline (§14), their values from `g`, the graph as read (none: no property shown);
+ * - with the links it moves (§7, link-flow.ts);
+ * - with the boxes it draws a picture on (§18, picture.ts; none without `g`);
+ * - laid out as the diagram type it chooses while the data fits it (§15, types.ts); a network otherwise.
  */
 export function styledDrawing(drawing: GraphDrawing, style: StyleGraph, g?: Graph, view?: string): GraphDrawing {
   const arrowless = arrowlessLinks(drawing, style, view),

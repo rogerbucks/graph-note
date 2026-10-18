@@ -1,8 +1,9 @@
-// Marking a drawn SVG for an export (editor spec §16, §7): what is outside a view faded, and each look drawn. In Obsidian
-// both are classes the stylesheet draws; an image cannot take the stylesheet, so here they are written into the SVG itself,
-// as the style attribute of the group or shape, in the palette's fixed colours. A look's hue is drawn on the outline only,
-// in the locked line blend (theme.ts `hueColour`); text is never recoloured, so its locked contrast holds on any box. Groups are found by Graphviz's numbering, node1,
-// node2… and edge1, edge2…, in the order the drawing's things and links were given.
+// Marking a drawn SVG for an export (editor spec §16, §7): what is outside a view faded, and each look drawn. In
+// Obsidian both are classes the stylesheet draws. An image cannot take the stylesheet, so here they are written into
+// the SVG itself. They go in the style attribute of the group or shape, in the palette's fixed colours. A look's hue is
+// drawn on the outline only, in the locked line blend (theme.ts `hueColour`). Text is never recoloured, so its locked
+// contrast holds on any box. Groups are found by Graphviz's numbering, node1, node2… and edge1, edge2…, in the order
+// the drawing's things and links were given.
 import type { Palette } from './palette.ts';
 import type { ThingLook } from './style-graph.ts';
 import { hueColour } from './theme.ts';
@@ -33,7 +34,7 @@ function styled(tag: string, set: [string, string][]): string {
   return tag.replace(/\s*(\/?)>$/, (_, slash: string) => `${style}${slash}>`);
 }
 
-/** The declarations a look sets on a shape (a box or a line) and on a text; an arrowhead is a shape filled in the line's colour. */
+/** The declarations a look sets on a shape (a box or a line) and on a text. An arrowhead is a shape filled in the line's colour. */
 function declarations(look: ThingLook, p: Palette, part: 'shape' | 'arrow' | 'text'): [string, string][] {
   const out: [string, string][] = [];
   if (part === 'text') {

@@ -1,6 +1,6 @@
-// The layout source the core writes for a note is byte-identical to the one graph_svg.py writes for it (spec §12, "same
-// layout as Python"), in both directions. Python chooses the boxes and links as graph-spec-draw.py does — the lines below
-// mirror it — from the Python library, live. The vault's conformance suite runs the same comparison on every vault graph.
+// The core writes a note's layout source byte for byte as graph_svg.py does (spec §12, "same layout as Python"), in
+// both directions. Python chooses the boxes and links as graph-spec-draw.py does, from the Python library, live; the
+// lines below mirror it. The vault's conformance suite runs the same comparison on every vault graph.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -129,8 +129,8 @@ const PARTIAL = {
   'a block ending in a comma with nothing after it': [
     fence("// graph: trip\n(home:Place {name: 'Home'}),\n(walk:Leg {name: 'Walk'}),\n(walk)-[:STARTS_AT]->(home),"),
   ].join('\n'),
-  // a block that cannot be read is drawn in part, by every reader (decided with Roger, 8 Oct 2026): what the vault's
-  // layout check found Python dropping whole while the plugin drew the rest
+  // a block that cannot be read is drawn in part, by every reader (decided with Roger, 8 Oct 2026). The vault's
+  // layout check found Python dropping such a block whole while the plugin drew the rest
   'a block opening with a MATCH for a thing not in the graph, then new things and links': [
     fence("// graph: trip\n(home:Place {name: 'Home'})"),
     fence(`// graph: trip
@@ -153,9 +153,9 @@ INSERT (walk:Leg {name: 'Walk'}),
   ].join('\n'),
 };
 
-// never freeze (spec §9, 10 Oct 2026): past a budget of reading a broken block again, both readers leave the rest of it out
-// at once, from the failing line; each read again, and each trial of which part on a line is at fault, is charged its
-// length in UTF-16 units. A small budget, given to both, shows the cut on a note of a few lines.
+// never freeze (spec §9, 10 Oct 2026). Past a budget of reading a broken block again, both readers leave the rest of
+// it out at once, from the failing line. Each read again, and each trial of which part on a line is at fault, is
+// charged its length in UTF-16 units. A small budget, given to both, shows the cut on a note of a few lines.
 const LINES = `// graph: trip
 (home:Place {name: 'Home 🏠'}),
 (walk:Leg {name: 'Walk'}),
@@ -188,7 +188,7 @@ test('a block that cannot be read is drawn in part, the same by both readers, by
 });
 
 const UNNAMED = {
-  // unnamed_drawn_suggested (spec §4, Roger, 10 Oct 2026): a thing written without a name is drawn under its suggested
+  // unnamed_drawn_suggested (spec §4, Roger, 10 Oct 2026). A thing written without a name is drawn under its suggested
   // name, dashed and labelled as suggested, by every reader alike
   'things written without a name, in two blocks of one graph, one after an emoji, one in a path': [
     fence(`// graph: reader
@@ -216,7 +216,7 @@ test('a thing written without a name is drawn under the same suggested name, mar
 
 const REFERRED = {
   // a link written to the name shown on the drawing links to the thing drawn under it, by both readers (review of
-  // 224929a): a name only referred to is not taken, so the suggestion does not move away from it
+  // 224929a). A name only referred to is not taken, so the suggestion does not move away from it
   'a link to the suggested name, written before the name is': [
     fence(`// graph: reader
 (:Option {name: 'Large reader'}),
@@ -241,7 +241,7 @@ test('a link written to a suggested name links to the thing drawn under it, the 
 });
 
 // a line neither reader can read is quoted cut at 20 UTF-16 units, never inside an emoji, by both readers (review of
-// PR #28): the cases are shared with python/graph_spec/tests/test_parity.py
+// PR #28). The cases are shared with python/graph_spec/tests/test_parity.py
 const { cases: CANNOT_READ } = JSON.parse(
   readFileSync(new URL('../../graph-spec/test/cannot-read-cases.json', import.meta.url), 'utf8'),
 );
@@ -300,8 +300,8 @@ test('whitespace as GQL names it is read and drawn the same by both readers, byt
   same(WHITESPACE);
 });
 
-// python_honours_nudges (editor spec §6): a graph's style block nudges its layout, and graph_svg.py draws it as the core
-// does — the same problems reading each style, and the source of each direction laid out, nudges written in, byte for
+// python_honours_nudges (editor spec §6): a graph's style block nudges its layout, and graph_svg.py draws it as the
+// core does. Each style reads with the same problems, and each direction's layout source, nudges in, matches byte for
 // byte. The cases are shared with python/graph_spec/tests/test_graph_svg_nudges.py, which holds the same from Python.
 const { cases: NUDGED } = JSON.parse(
   readFileSync(new URL('../../../python/graph_spec/tests/nudge_cases.json', import.meta.url), 'utf8'),
@@ -359,11 +359,11 @@ test('a graph with nudges is drawn the same by both, its style read alike, byte 
   });
 });
 
-// arrows_both_renderers (editor spec §15), and properties shown inline (§14): a graph's style graph hides or shows its
-// arrowheads and shows properties below the text of boxes and links, and graph_svg.py draws it as the core does — the
-// same problems reading each style, the same links without arrowheads, the same rows, and the source of each direction
-// laid out, byte for byte. The cases are shared with python/graph_spec/tests/test_graph_svg_styled.py, whose Python
-// answer (python_answer: read_for_drawing, read_style, arrowless, inline_rows and graph_svg's sources) is run here.
+// arrows_both_renderers (editor spec §15), and properties shown inline (§14). A graph's style graph hides or shows
+// its arrowheads and shows properties below the text of boxes and links. graph_svg.py draws it as the core does: the
+// same problems reading each style, the same links without arrowheads, the same rows. Each direction's layout source
+// matches byte for byte. The cases are shared with python/graph_spec/tests/test_graph_svg_styled.py. Its Python answer
+// (python_answer: read_for_drawing, read_style, arrowless, inline_rows and graph_svg's sources) is run here.
 const { cases: STYLED } = JSON.parse(
   readFileSync(new URL('../../../python/graph_spec/tests/style_cases.json', import.meta.url), 'utf8'),
 );
@@ -413,11 +413,11 @@ test('arrowheads hidden or shown, and properties shown inline, are drawn the sam
   );
 });
 
-// type_both_renderers (editor spec §15): every diagram type drawn by Graphviz has the same layout source in the core as in
-// graph_svg.py — the same problems reading each style, the same answer for whether each type fits and why not, the same
-// type drawn (and, when the chosen one has stopped fitting, the same why and nearest type), and the source of each
-// direction laid out, byte for byte. The cases are shared with python/graph_spec/tests/test_graph_svg_types.py, whose
-// Python answer (python_answer) is run here.
+// type_both_renderers (editor spec §15): every diagram type Graphviz draws has the same layout source in the core as
+// in graph_svg.py. Both give the same problems reading each style, and the same answer for whether each type fits and
+// why not. Both draw the same type (and, when the chosen one has stopped fitting, give the same why and nearest type).
+// Each direction's layout source matches byte for byte. The cases are shared with
+// python/graph_spec/tests/test_graph_svg_types.py, whose Python answer (python_answer) is run here.
 const { cases: TYPED } = JSON.parse(
   readFileSync(new URL('../../../python/graph_spec/tests/type_cases.json', import.meta.url), 'utf8'),
 );
@@ -464,11 +464,11 @@ test('every diagram type Graphviz draws is laid out from the same source by both
   );
 });
 
-// untangle_hubs, untangle_groups, untangle_merge, untangle_routing (editor spec §25): a graph folded, merged and routed
-// as its View menu and style graph say is drawn the same by graph_svg.py as by the core — the same problems reading
-// each style, and the source of each direction laid out, byte for byte. The cases are shared with
-// python/graph_spec/tests/test_graph_svg_folds.py, whose Python answer (python_answer: graph_svg's render_args and
-// drawn_source) is run here; the core's state of the switches starts from the default settings (view_switch_defaults).
+// untangle_hubs, untangle_groups, untangle_merge, untangle_routing (editor spec §25). A graph folded, merged and
+// routed as its View menu and style graph say is drawn alike by graph_svg.py and the core. Each style reads with the
+// same problems, and each direction's layout source matches byte for byte. The cases are shared with
+// python/graph_spec/tests/test_graph_svg_folds.py. Its Python answer (python_answer: graph_svg's render_args and
+// drawn_source) is run here. The core's state of the switches starts from the default settings (view_switch_defaults).
 const { cases: FOLDED } = JSON.parse(
   readFileSync(new URL('../../../python/graph_spec/tests/fold_cases.json', import.meta.url), 'utf8'),
 );

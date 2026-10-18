@@ -1,8 +1,10 @@
-// A graph step's pattern matched (editor spec §20, graph_step_io): every way the things and links of the pattern can be
-// found in the graph the step is given, as GQL matches a path pattern: a link is used once in a match (different
-// edges), a name used twice is the same thing, and a link written either way matches both. The work is bounded, so a
-// step over a large graph never holds the page (spec §9): past `MOST_MATCHES`, or `MOST_TRIES` things and links looked at, it stops
-// and says so rather than give part of an answer.
+// A graph step's pattern matched (editor spec §20, graph_step_io). It finds every way the things and links of the
+// pattern can be found in the graph the step is given. It matches as GQL matches a path pattern:
+// - a link is used once in a match (different edges);
+// - a name used twice is the same thing;
+// - a link written either way matches both.
+// The work is bounded, so a step over a large graph never holds the page (spec §9). Past `MOST_MATCHES`, or
+// `MOST_TRIES` things and links looked at, it stops. It then says so rather than give part of an answer.
 import type { StepRule, ThingPattern } from './steps-rule.ts';
 
 /** A graph as a step takes it: its things, each with its kinds and properties, and its links, from, type and to. */
@@ -32,7 +34,7 @@ function fits(g: StepGraph, id: string, p: ThingPattern, named: Map<string, stri
 }
 
 /**
- * Every match of the rule's pattern in `g`, in the order its things and links are written; `over` when the work went
+ * Every match of the rule's pattern in `g`, in the order its things and links are written. `over` when the work went
  * past its bound, and then nothing is given.
  */
 export function matchesOf(rule: StepRule, g: StepGraph): { found: StepMatch[]; over: boolean } {
@@ -63,7 +65,7 @@ export function matchesOf(rule: StepRule, g: StepGraph): { found: StepMatch[]; o
     ids.pop();
     if (fresh) named.delete(p.name as string);
   };
-  // every thing and every link looked at is one try, whether or not it fits, so a pattern that almost matches
+  // every thing and every link looked at is one try, whether or not it fits. So a pattern that almost matches
   // everywhere is stopped as surely as one that matches
   const tried = () => {
     if (++tries > MOST_TRIES) over = true;

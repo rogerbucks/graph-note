@@ -1,6 +1,7 @@
-// The coloured picture under the block editor's text field (spec §4): the text in gql-highlight's colours, each problem
-// underlined over exactly its words with a sign at the end of its line, each link in a text or a comment marked as a
-// link (§18, links_shown), and each line read back in plain English after it, wrapping as the field wraps.
+// The coloured picture under the block editor's text field (spec §4). It shows the text in gql-highlight's colours.
+// Each problem is underlined over exactly its words with a sign at the end of its line. Each link in a text or a
+// comment is marked as a link (§18, links_shown). Each line is read back in plain English after it, wrapping as the
+// field wraps.
 import { linksIn, tokenize } from '@thoughtknot/core';
 import type { Diagnostic } from '@thoughtknot/core';
 import type { Ghost } from './inline-completion';

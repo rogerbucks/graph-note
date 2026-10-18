@@ -1,8 +1,9 @@
-// A note or file renamed in the host, followed by every link to it inside graph blocks (editor spec §18, renames_follow):
-// the changes to a note's text that write the new name where each link names the old, keeping its alias, heading and
-// form (a name alone, or a path; with `.md` or without; percent-encoded in a Markdown link). Prose outside the blocks is
-// never touched: it is the host's own to update. A link that still finds another file, or whose new name a block could
-// not hold as written (a quote, a backslash or a link's own marks in it), is left, and is reported broken instead.
+// A note or file renamed in the host, followed by every link to it inside graph blocks (editor spec §18,
+// renames_follow). These are the changes to a note's text that write the new name where each link names the old. Each
+// keeps its alias, heading and form (a name alone, or a path; with `.md` or without; percent-encoded in a Markdown
+// link). Prose outside the blocks is never touched: it is the host's own to update. A link may still find another file.
+// Or a block could not hold its new name as written (a quote, a backslash or a link's own marks in it). Such a link is
+// left, and is reported broken instead.
 import { gqlSpans } from './blocks.ts';
 import type { TextChange } from './commas.ts';
 import { linksIn } from './link-scan.ts';

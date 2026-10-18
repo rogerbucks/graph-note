@@ -1,6 +1,6 @@
-// One change of a proposal written as text (editor spec §17, accepting_is_an_edit): on the texts of a graph's blocks, so the
-// same code lays a proposal over a graph without writing and writes an accepted change. What cannot be done by taking out
-// or putting in whole items is refused, not guessed at.
+// One change of a proposal written as text (editor spec §17, accepting_is_an_edit), on the texts of a graph's blocks.
+// So the same code lays a proposal over a graph without writing, and writes an accepted change. What cannot be done by
+// taking out or putting in whole items is refused, not guessed at.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
