@@ -5,8 +5,8 @@
 // a session has one server, reused for the same note and replaced for another (cc_one_server); and it ends when the
 // session does, on `/graph stop`, or by itself when the server stops (cc_server_stops). No Node module is imported here:
 // the host's calls are handed in, so the tests run the launcher over real processes and the mod over the host's own.
-import { CLAUDE, claudeGate, sha256 } from '@graph-note/core';
-import type { Gate, GateSettings } from '@graph-note/core';
+import { CLAUDE, claudeGate, sha256 } from '@thoughtknot/core';
+import type { Gate, GateSettings } from '@thoughtknot/core';
 import { withMatrix } from './editor-matrix.ts';
 import { folderOf, fullPath, nameOf } from './editor-paths.ts';
 import { sendProposal } from './editor-propose.ts';
@@ -278,17 +278,17 @@ export class EditorLauncher {
     const key = this.#ports.propose ? (this.#ports.key?.() ?? null) : null;
     const env = {
       // the key itself goes on standard input, where a process listing cannot show it
-      GRAPH_NOTE_EDITOR_PROPOSER: key === null ? '' : 'stdin',
-      GRAPH_NOTE_EDITOR_VAULT: await this.#vaultOf(note),
-      GRAPH_NOTE_EDITOR_NOTE: note,
-      GRAPH_NOTE_EDITOR_DRAFTS: this.#ports.drafts,
+      THOUGHTKNOT_EDITOR_PROPOSER: key === null ? '' : 'stdin',
+      THOUGHTKNOT_EDITOR_VAULT: await this.#vaultOf(note),
+      THOUGHTKNOT_EDITOR_NOTE: note,
+      THOUGHTKNOT_EDITOR_DRAFTS: this.#ports.drafts,
       // the server asks the gate again before every send, with the same settings and the digest of the text said yes to
       // (never the text); none given means the defaults, the strictest
       // and the settings the page shows with, which it is told read only (settingsEnvironment)
-      GRAPH_NOTE_EDITOR_SETTINGS: settings ? settingsEnvironment(settings, settingsForServer(settings)) : '',
-      GRAPH_NOTE_EDITOR_CONFIRMED: confirmed ?? '',
+      THOUGHTKNOT_EDITOR_SETTINGS: settings ? settingsEnvironment(settings, settingsForServer(settings)) : '',
+      THOUGHTKNOT_EDITOR_CONFIRMED: confirmed ?? '',
       // the host closes a child's input when it starts it, so the input's closing is not the session's end here
-      GRAPH_NOTE_EDITOR_INPUT: 'ignore',
+      THOUGHTKNOT_EDITOR_INPUT: 'ignore',
     };
     let iterator: AsyncIterator<SpawnedPiece, SpawnedEnd>;
     try {

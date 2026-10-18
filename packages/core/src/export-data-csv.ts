@@ -10,7 +10,7 @@
 // - a number is written as it reads back, -0 too; a truth value as true or false; a day as YYYY-MM-DD; an instant in UTC.
 // CSV has no comments, so a thing's or link's `///` note is left out (§24, note_standard): never a `note` column, which
 // a reader could not tell from a property called note, and which would make a comment data.
-import type { Value } from '@graph-note/graph-spec';
+import type { Value } from '@thoughtknot/graph-spec';
 import { kindOf, numberText, timeText } from './export-data-model.ts';
 import type { ExportedData, ValueKind } from './export-data-model.ts';
 

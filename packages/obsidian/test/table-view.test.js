@@ -40,7 +40,7 @@ describe('a graph drawn as a table', () => {
     try {
       assert.equal(asked.length, 0, 'nothing laid out');
       assert.equal(el.querySelector('svg g.node'), null);
-      const [things, links] = el.querySelectorAll('.graph-note-table table');
+      const [things, links] = el.querySelectorAll('.thoughtknot-table table');
       assert.deepEqual(
         things.querySelectorAll('th').map((th) => th.textContent),
         ['Thing', 'Kind', 'open', 'since'],
@@ -63,12 +63,12 @@ describe('a graph drawn as a table', () => {
   test('a row tapped shows its details, as a box tapped does, and is marked as the one shown', async () => {
     const { env, el } = await card();
     try {
-      const vp = el.querySelector('.graph-note-viewport');
+      const vp = el.querySelector('.thoughtknot-viewport');
       const row = el.querySelectorAll('tr[data-key]')[1];
       const cell = row.querySelector('td');
       vp.dispatch('pointerdown', { target: cell, pointerId: 1, pointerType: 'touch', clientX: 20, clientY: 20 });
       vp.dispatch('pointerup', { target: cell, pointerId: 1, pointerType: 'touch', clientX: 21, clientY: 20 });
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       assert.ok(!panel.hidden);
       assert.match(panel.textContent, /The park/);
       assert.ok(groupsRead(panel).includes('near this Home'), 'its link in, with no reading back');
@@ -89,7 +89,7 @@ describe('a graph drawn as a table', () => {
       const link = el.querySelectorAll('tr[data-link]')[0];
       assert.equal(link.getAttribute('aria-label'), 'Link: Home near The park');
       link.dispatch('keydown', { key: 'Enter' });
-      assert.match(el.querySelector('.graph-note-details').textContent, /From: Home/);
+      assert.match(el.querySelector('.thoughtknot-details').textContent, /From: Home/);
     } finally {
       env.uninstall();
     }
@@ -99,12 +99,12 @@ describe('a graph drawn as a table', () => {
   test('zooms by the bar’s buttons, as a drawing does', async () => {
     const { env, el } = await card();
     try {
-      const table = el.querySelector('.graph-note-table');
-      const before = Number(table.cssProps['--graph-note-scale']);
+      const table = el.querySelector('.thoughtknot-table');
+      const before = Number(table.cssProps['--thoughtknot-scale']);
       labelled(el, 'Zoom in').click();
-      assert.ok(Number(table.cssProps['--graph-note-scale']) > before, 'larger');
+      assert.ok(Number(table.cssProps['--thoughtknot-scale']) > before, 'larger');
       labelled(el, 'Fit').click();
-      assert.equal(Number(table.cssProps['--graph-note-scale']), before);
+      assert.equal(Number(table.cssProps['--thoughtknot-scale']), before);
     } finally {
       env.uninstall();
     }
@@ -119,7 +119,7 @@ describe('the selection on a graph drawn as a table', () => {
   const marked = (el) =>
     el
       .querySelectorAll('tr')
-      .filter((r) => ['graph-note-dim', 'graph-note-kept', 'graph-note-hot'].some((c) => r.classList.contains(c)));
+      .filter((r) => ['thoughtknot-dim', 'thoughtknot-kept', 'thoughtknot-hot'].some((c) => r.classList.contains(c)));
 
   // proves: type_one_way_to_work
   test('with a row selected, an arrow key walks nowhere: the selection stays and the key is left to the page', async () => {
@@ -163,11 +163,11 @@ describe('the selection on a graph drawn as a table', () => {
     const { env, el } = await card();
     try {
       labelled(el, 'Find a thing').click();
-      const input = el.querySelector('.graph-note-find input');
+      const input = el.querySelector('.thoughtknot-find input');
       input.value = 'park';
       input.dispatch('input');
-      el.querySelectorAll('.graph-note-find-results button')[0].click();
-      assert.match(el.querySelector('.graph-note-details').textContent, /The park/);
+      el.querySelectorAll('.thoughtknot-find-results button')[0].click();
+      assert.match(el.querySelector('.thoughtknot-details').textContent, /The park/);
       assert.ok(rowOf(el, 'park').classList.contains('is-selected'));
       // compared, not printed: a failure would otherwise print the whole page
       assert.ok(env.doc.activeElement === rowOf(el, 'park'), 'the row found has the keyboard focus');
@@ -187,7 +187,7 @@ describe('the selection on a graph drawn as a table', () => {
       assert.ok(e.defaultPrevented);
       assert.ok(!row.classList.contains('is-selected'));
       assert.equal(row.getAttribute('aria-pressed'), 'false');
-      assert.ok(el.querySelector('.graph-note-details').hidden);
+      assert.ok(el.querySelector('.thoughtknot-details').hidden);
     } finally {
       env.uninstall();
     }
@@ -200,7 +200,7 @@ describe('the selection on a graph drawn as a table', () => {
       assert.ok(labelled(el, 'Find a thing'), 'Find is still offered');
       assert.ok(!labelled(el, 'Filter by kind or link'), 'Filter by kind or link is not offered');
       rowOf(el, 'park').dispatch('keydown', { key: 'Enter' });
-      const offered = el.querySelectorAll('.graph-note-details button').map((b) => b.textContent);
+      const offered = el.querySelectorAll('.thoughtknot-details button').map((b) => b.textContent);
       assert.ok(!offered.includes('Show only this and its neighbours'), offered.join(', '));
       assert.ok(!offered.includes('Shortest path to another thing'), offered.join(', '));
     } finally {

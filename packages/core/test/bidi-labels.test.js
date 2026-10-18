@@ -11,16 +11,16 @@ const css = readFileSync(new URL('styles.css', root), 'utf8').replace(/\/\*[\s\S
 
 /** Each element that shows the person's own words, by its selector, with the class the display layer gives it. */
 const SHOWN = {
-  '.graph-note-quick-name': 'graph-note-quick-name',
-  '.graph-note-quick-kind': 'graph-note-quick-kind',
-  '.graph-note-quick-properties li': 'graph-note-quick-properties',
-  '.graph-note-quick-note': 'graph-note-quick-note',
-  '.graph-note-details-head strong': 'graph-note-details-head',
-  '.graph-note-kind': 'graph-note-kind',
-  '.graph-note-link-thing': 'graph-note-link-thing',
-  '.graph-note-table td': 'graph-note-table',
-  '.graph-note-details .metadata-property-key': 'metadata-property-key',
-  '.graph-note-details .metadata-property-value': 'metadata-property-value',
+  '.thoughtknot-quick-name': 'thoughtknot-quick-name',
+  '.thoughtknot-quick-kind': 'thoughtknot-quick-kind',
+  '.thoughtknot-quick-properties li': 'thoughtknot-quick-properties',
+  '.thoughtknot-quick-note': 'thoughtknot-quick-note',
+  '.thoughtknot-details-head strong': 'thoughtknot-details-head',
+  '.thoughtknot-kind': 'thoughtknot-kind',
+  '.thoughtknot-link-thing': 'thoughtknot-link-thing',
+  '.thoughtknot-table td': 'thoughtknot-table',
+  '.thoughtknot-details .metadata-property-key': 'metadata-property-key',
+  '.thoughtknot-details .metadata-property-value': 'metadata-property-value',
 };
 
 /** The display layer's source, every file, as one text. */

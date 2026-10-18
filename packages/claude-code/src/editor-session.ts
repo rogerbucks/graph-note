@@ -5,7 +5,7 @@
 // over another program's change: once one has changed the block, the writes made before it are no longer undone, and
 // undo says so instead; the typing history starts again from the block as reloaded, so it cannot bring theirs back.
 // Host-free: the page sends what `write` and `undo` give, and passes back what the server answers.
-import { PaneSession, TextHistory, type Change, type TextState } from '@graph-note/core';
+import { PaneSession, TextHistory, type Change, type TextState } from '@thoughtknot/core';
 
 /** What a change on disk did to the page: nothing to its block, the block drawn again, or a conflict with what is typed. */
 export type Redraw = 'unchanged' | 'reloaded' | 'conflict';

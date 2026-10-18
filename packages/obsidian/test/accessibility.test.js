@@ -6,7 +6,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { root } from './host/load-plugin.js';
-import { THEME_COLOURS } from '@graph-note/core';
+import { THEME_COLOURS } from '@thoughtknot/core';
 
 const STYLE = JSON.parse(readFileSync(`${root}python/graph_spec/src/graph_svg.style.json`, 'utf8'));
 

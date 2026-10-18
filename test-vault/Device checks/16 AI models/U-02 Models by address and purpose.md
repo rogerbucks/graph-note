@@ -16,7 +16,7 @@
 **Do this:**
 
 0. Open this note in Live Preview (not reading view): the command writes its answer into the note, so it is refused in reading view.
-1. In Settings, Graph Note, AI models, turn Use AI models on and add a model: name it Local, purpose Proposing changes, model the name your local server gives it, endpoint `http://localhost:11434/v1/chat/completions` (Ollama) or your server's own address.
+1. In Settings, ThoughtKnot, AI models, turn Use AI models on and add a model: name it Local, purpose Proposing changes, model the name your local server gives it, endpoint `http://localhost:11434/v1/chat/completions` (Ollama) or your server's own address.
 2. Add a second model: name it Remote, purpose Research questions, endpoint `http://api.example.com/v1/chat/completions`. Check its row says a model on another machine is reached over https only.
 3. Change that endpoint to start with `https://`, and choose a throwaway test key with the key field (never a real one).
 4. Run "Ask an AI model to propose changes". Check the Model list offers Local first, marked as for proposing changes.

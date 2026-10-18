@@ -5,7 +5,7 @@
 // keeps room for it: a fixed cell at the top of the box's label, filled with `PICTURE_MARK`, which Graphviz draws as one
 // square the host finds and fills with the image, or an export embeds it in (export-pictures.ts). The Python library
 // keeps the same room (`graphspec/style/picture.py`), held to this byte for byte.
-import type { Graph } from '@graph-note/graph-spec';
+import type { Graph } from '@thoughtknot/graph-spec';
 import { STYLE } from './layout.ts';
 import type { GraphDrawing, Problem } from './note-reading.ts';
 import type { RawThing, StyledNames } from './style-checks.ts';

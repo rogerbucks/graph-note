@@ -1,5 +1,5 @@
 name: Something is wrong
-description: Graph Note draws, reads or saves something wrongly, or stops working.
+description: ThoughtKnot draws, reads or saves something wrongly, or stops working.
 labels: [bug]
 body:
   - type: textarea
@@ -18,7 +18,7 @@ body:
   - type: input
     id: version
     attributes:
-      label: Graph Note version
+      label: ThoughtKnot version
       placeholder: 0.5.0
     validations:
       required: true

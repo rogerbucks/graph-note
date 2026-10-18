@@ -2,8 +2,8 @@
 // thing, with its kind and properties, and one for each link — from the core's `tableOf`. Each row is reached and named as
 // a box or a link of a drawing is, so tapping, the details and the inspector work as in every other type
 // (type_one_way_to_work); the card zooms it by the same buttons and gestures, scaling it as a whole.
-import { word } from '@graph-note/core';
-import type { DiagramTable } from '@graph-note/core';
+import { word } from '@thoughtknot/core';
+import type { DiagramTable } from '@thoughtknot/core';
 
 /** The heads of the links' table. */
 const linkHeads = (): string[] => [word('table.from'), word('table.link'), word('table.to'), word('table.properties')];
@@ -39,7 +39,7 @@ function openable(tr: HTMLElement, label: string): void {
 
 /** The table, put in the card's viewport: the things, then the links. */
 export function renderTable(viewport: HTMLElement, t: DiagramTable): HTMLElement {
-  const wrap = viewport.createDiv({ cls: 'graph-note-table' });
+  const wrap = viewport.createDiv({ cls: 'thoughtknot-table' });
   const things = wrap.createEl('table', { attr: { 'aria-label': word('table.things') } });
   const head = things.createEl('thead').createEl('tr');
   for (const c of t.columns) head.createEl('th', { text: c, attr: { scope: 'col' } });

@@ -5,7 +5,7 @@
 // Each describe below is one requirement, named by its id.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import gs from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
 import { readNote } from '../src/drawing.ts';
 import { lockBlock } from '../src/lock.ts';
 import { ProposalReview } from '../src/proposals-review.ts';

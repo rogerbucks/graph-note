@@ -7,7 +7,7 @@
 // are hidden. Spans inline-properties.ts (the rows and the source), style-source.ts and render.ts (the source drawn).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import GraphLayout from '@graph-note/graph-spec/src/graph-layout.js';
+import GraphLayout from '@thoughtknot/graph-spec/src/graph-layout.js';
 import { readNote } from '../src/drawing.ts';
 import { loadEngine } from '../src/engine.ts';
 import { INLINE_ROWS, valueText } from '../src/inline-properties.ts';

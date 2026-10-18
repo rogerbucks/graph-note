@@ -1,6 +1,6 @@
 # Code of conduct
 
-Graph Note is made by people from many places, languages and backgrounds. Everyone who takes part, in issues, pull
+ThoughtKnot is made by people from many places, languages and backgrounds. Everyone who takes part, in issues, pull
 requests, discussions, reviews or the wiki, is treated with respect.
 
 ## What we expect

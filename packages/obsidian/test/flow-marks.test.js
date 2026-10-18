@@ -44,13 +44,13 @@ describe('the links a Flow moves', () => {
     try {
       const near = linkOf(el, 0),
         serves = linkOf(el, 1);
-      assert.ok(near.classList.contains('graph-note-flow') && near.classList.contains('graph-note-flow-dashes'));
-      assert.ok(serves.classList.contains('graph-note-flow-dot'));
+      assert.ok(near.classList.contains('thoughtknot-flow') && near.classList.contains('thoughtknot-flow-dashes'));
+      assert.ok(serves.classList.contains('thoughtknot-flow-dot'));
       // a dot runs along a copy of the link's line, so the line itself is still drawn
-      const runners = serves.querySelectorAll('path').filter((p) => p.classList.contains('graph-note-flow-runner'));
+      const runners = serves.querySelectorAll('path').filter((p) => p.classList.contains('thoughtknot-flow-runner'));
       assert.equal(runners.length, 1);
       assert.equal(runners[0].getAttribute('pathLength'), '100');
-      assert.equal(near.querySelectorAll('.graph-note-flow-runner').length, 0, 'dashes need no runner');
+      assert.equal(near.querySelectorAll('.thoughtknot-flow-runner').length, 0, 'dashes need no runner');
     } finally {
       env.uninstall();
     }
@@ -60,9 +60,9 @@ describe('the links a Flow moves', () => {
   test('with no Flow, no link moves and the card has no legend of movement', async () => {
     const { env, el } = await drawn(noteOf(TRIP));
     try {
-      assert.equal(el.querySelectorAll('.graph-note-flow').length, 0);
-      assert.equal(el.querySelectorAll('.graph-note-flow-runner').length, 0);
-      assert.equal(el.querySelector('.graph-note-flow-legend'), null);
+      assert.equal(el.querySelectorAll('.thoughtknot-flow').length, 0);
+      assert.equal(el.querySelectorAll('.thoughtknot-flow-runner').length, 0);
+      assert.equal(el.querySelector('.thoughtknot-flow-legend'), null);
     } finally {
       env.uninstall();
     }
@@ -78,7 +78,7 @@ describe('movement is never the only signal', () => {
         linkOf(el, 0).getAttribute('aria-label'),
         'Link: Home near The park, moving dashes: people walk this way',
       );
-      const legend = el.querySelector('.graph-note-flow-legend');
+      const legend = el.querySelector('.thoughtknot-flow-legend');
       assert.ok(legend, 'a legend of what moves');
       assert.equal(legend.getAttribute('aria-label'), 'What the moving links mean');
       assert.deepEqual(
@@ -99,12 +99,12 @@ describe('under reduced motion', () => {
     });
     try {
       // the dot is drawn whatever the setting, so turning reduced motion off later moves it at once; the styles hide it
-      assert.equal(el.querySelectorAll('.graph-note-flow-runner').length, 2);
+      assert.equal(el.querySelectorAll('.thoughtknot-flow-runner').length, 2);
       const css = styles.replace(/\/\*[\s\S]*?\*\//g, '');
       const still = css.slice(css.indexOf('@media (prefers-reduced-motion: reduce)'));
-      assert.match(still, /\.graph-note-svg path\.graph-note-flow-runner[^{]*\{\s*display: none;/);
+      assert.match(still, /\.thoughtknot-svg path\.thoughtknot-flow-runner[^{]*\{\s*display: none;/);
       assert.match(linkOf(el, 1).getAttribute('aria-label'), /a moving dot: coffee goes this way$/);
-      assert.ok(el.querySelector('.graph-note-flow-legend'));
+      assert.ok(el.querySelector('.thoughtknot-flow-legend'));
     } finally {
       env.uninstall();
     }
@@ -121,9 +121,9 @@ describe('a link guessed from a near miss of its type', () => {
     try {
       const g = el.querySelectorAll('g.edge').find((e) => e.getAttribute('id') === 'edge4');
       assert.ok(g.getAttribute('data-estimate') !== null, 'the misspelt link is drawn as a guess, with no data-link');
-      assert.ok(g.classList.contains('graph-note-flow-dot'));
+      assert.ok(g.classList.contains('thoughtknot-flow-dot'));
       assert.match(g.getAttribute('aria-label'), /, a moving dot: people walk this way$/);
-      assert.equal(g.querySelectorAll('path').filter((p) => p.classList.contains('graph-note-flow-runner')).length, 1);
+      assert.equal(g.querySelectorAll('path').filter((p) => p.classList.contains('thoughtknot-flow-runner')).length, 1);
     } finally {
       env.uninstall();
     }

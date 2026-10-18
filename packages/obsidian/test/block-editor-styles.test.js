@@ -19,7 +19,7 @@ describe('the text in the card fits its text', () => {
       const el = await show(env);
       labelled(el, 'Edit here').click();
       await until(() => !!el.querySelector('textarea'));
-      assert.notEqual(el.querySelector('.graph-note-overlay').tagName, 'PRE');
+      assert.notEqual(el.querySelector('.thoughtknot-overlay').tagName, 'PRE');
       assert.equal(el.querySelector('textarea').getAttribute('rows'), String(READER.split('\n').length + 1));
     } finally {
       env.uninstall();
@@ -28,13 +28,13 @@ describe('the text in the card fits its text', () => {
 
   test('in the card the box keeps no height of its own: as tall as its text, and one line to type on', () => {
     const css = readFileSync(new URL('../../../styles.css', import.meta.url), 'utf8');
-    assert.match(css, /\.graph-note-pane\.graph-note-inline\s*\{[^}]*height:\s*auto;/);
+    assert.match(css, /\.thoughtknot-pane\.thoughtknot-inline\s*\{[^}]*height:\s*auto;/);
     assert.match(
       css,
-      /\.graph-note-inline \.graph-note-editor,\s*\.graph-note-inline \.graph-note-overlay\s*\{[^}]*min-height:\s*0;/,
+      /\.thoughtknot-inline \.thoughtknot-editor,\s*\.thoughtknot-inline \.thoughtknot-overlay\s*\{[^}]*min-height:\s*0;/,
     );
     // the picture sets the height (long_lines_wrap): one more row past its text, to type on
-    assert.match(css, /\.graph-note-overlay::after\s*\{[^}]*content:\s*' ';/);
+    assert.match(css, /\.thoughtknot-overlay::after\s*\{[^}]*content:\s*' ';/);
   });
 });
 
@@ -54,14 +54,14 @@ describe('the box in the card, untouched by the theme', () => {
       assert.equal(t.getAttribute('aria-label'), null);
       const label = el.querySelector(`#${t.getAttribute('aria-labelledby')}`);
       assert.equal(label?.textContent, 'Text of graph reader');
-      assert.ok(label.classList.contains('graph-note-sr'));
+      assert.ok(label.classList.contains('thoughtknot-sr'));
     } finally {
       env.uninstall();
     }
   });
 
   // the try-out of 8 Oct 2026: on mouse hover the box went flat grey and hid the coloured text under it. Obsidian's app.css
-  // styles every textarea, and textarea:hover (0,1,1) outweighed .graph-note-text (0,1,0). These are the rules it gives
+  // styles every textarea, and textarea:hover (0,1,1) outweighed .thoughtknot-text (0,1,0). These are the rules it gives
   // every textarea, as shipped in the Mac app on 8 Oct 2026, cut to the properties that would show.
   const OBSIDIAN = `
     textarea { background: var(--background-modifier-form-field); border: var(--input-border-width) solid var(--background-modifier-border);
@@ -74,15 +74,15 @@ describe('the box in the card, untouched by the theme', () => {
     textarea:active, textarea:focus, textarea:focus-visible { box-shadow: 0 0 0 var(--input-border-width-focus) var(--background-modifier-border-focus); }
     textarea { line-height: var(--line-height-tight); border-radius: var(--textarea-radius, var(--input-radius)); padding: var(--textarea-padding, var(--input-padding)); }
   `;
-  const all = [...rules(OBSIDIAN, 'obsidian'), ...rules(styles, 'graph-note')];
+  const all = [...rules(OBSIDIAN, 'obsidian'), ...rules(styles, 'thoughtknot')];
   const field = (states, inline) => ({
     tag: 'textarea',
-    classes: ['graph-note-text'],
+    classes: ['thoughtknot-text'],
     states,
     ancestors: [
-      { tag: 'div', classes: ['graph-note-editor'] },
-      { tag: 'div', classes: ['graph-note-pane-text'] },
-      { tag: 'div', classes: inline ? ['graph-note-pane', 'graph-note-inline'] : ['graph-note-pane'] },
+      { tag: 'div', classes: ['thoughtknot-editor'] },
+      { tag: 'div', classes: ['thoughtknot-pane-text'] },
+      { tag: 'div', classes: inline ? ['thoughtknot-pane', 'thoughtknot-inline'] : ['thoughtknot-pane'] },
       { tag: 'div', classes: ['markdown-rendered'] },
     ],
   });
@@ -106,7 +106,7 @@ describe('the box in the card, untouched by the theme', () => {
         const el = field(states, inline);
         for (const property of LOOK) {
           const won = winner(all, el, property);
-          assert.equal(won?.source, 'graph-note', `${property} comes from ${won?.selector} (${won?.source})`);
+          assert.equal(won?.source, 'thoughtknot', `${property} comes from ${won?.selector} (${won?.source})`);
         }
         assert.equal(winner(all, el, 'background-color').value, 'transparent');
         assert.equal(winner(all, el, 'color').value, 'transparent');
@@ -119,15 +119,15 @@ describe('a long line wraps, in the pane and in place', () => {
   // long_lines_wrap (spec §4, Roger, 18 Oct 2026): a long line ran off the right of the box, cut off, with its
   // plain-English note after it. The field and its coloured picture wrap alike, the note sits out of the flow so it never
   // adds a row the field does not have, and the picture, not the field, sets the box's height.
-  const all = rules(readFileSync(new URL('../../../styles.css', import.meta.url), 'utf8'), 'graph-note');
+  const all = rules(readFileSync(new URL('../../../styles.css', import.meta.url), 'utf8'), 'thoughtknot');
   const inEditor = (tag, cls, inline) => ({
     tag,
     classes: [cls],
     states: [],
     ancestors: [
-      { tag: 'div', classes: ['graph-note-editor'] },
-      { tag: 'div', classes: ['graph-note-pane-text'] },
-      { tag: 'div', classes: inline ? ['graph-note-pane', 'graph-note-inline'] : ['graph-note-pane'] },
+      { tag: 'div', classes: ['thoughtknot-editor'] },
+      { tag: 'div', classes: ['thoughtknot-pane-text'] },
+      { tag: 'div', classes: inline ? ['thoughtknot-pane', 'thoughtknot-inline'] : ['thoughtknot-pane'] },
     ],
   });
   const won = (el, property) => winner(all, el, property)?.value;
@@ -135,8 +135,8 @@ describe('a long line wraps, in the pane and in place', () => {
   test('the field and its picture wrap alike, each row of the picture over the row of the field it shows', () => {
     for (const inline of [false, true])
       for (const [tag, cls] of [
-        ['textarea', 'graph-note-text'],
-        ['div', 'graph-note-overlay'],
+        ['textarea', 'thoughtknot-text'],
+        ['div', 'thoughtknot-overlay'],
       ]) {
         const el = inEditor(tag, cls, inline);
         assert.equal(won(el, 'white-space'), 'pre-wrap', `${cls} white-space`);
@@ -147,13 +147,13 @@ describe('a long line wraps, in the pane and in place', () => {
 
   test('the picture sets the box’s height, the field laid over it; the note at a line’s end takes no room', () => {
     for (const inline of [false, true]) {
-      assert.equal(won(inEditor('div', 'graph-note-overlay', inline), 'position'), 'relative');
-      assert.equal(won(inEditor('textarea', 'graph-note-text', inline), 'position'), 'absolute');
+      assert.equal(won(inEditor('div', 'thoughtknot-overlay', inline), 'position'), 'relative');
+      assert.equal(won(inEditor('textarea', 'thoughtknot-text', inline), 'position'), 'absolute');
       const end = {
         tag: 'span',
-        classes: ['graph-note-line-end'],
+        classes: ['thoughtknot-line-end'],
         states: [],
-        ancestors: [inEditor('div', 'graph-note-overlay', inline)],
+        ancestors: [inEditor('div', 'thoughtknot-overlay', inline)],
       };
       assert.equal(won(end, 'position'), 'absolute');
       assert.equal(won(end, 'white-space'), 'pre');
@@ -165,11 +165,11 @@ describe('a long line wraps, in the pane and in place', () => {
     try {
       const el = await show(env);
       labelled(el, 'Edit here').click();
-      await until(() => !!el.querySelector('.graph-note-readback'));
+      await until(() => !!el.querySelector('.thoughtknot-readback'));
       assert.equal(el.querySelector('textarea').getAttribute('wrap'), null);
-      const backs = el.querySelectorAll('.graph-note-readback');
+      const backs = el.querySelectorAll('.thoughtknot-readback');
       assert.ok(backs.length > 0);
-      for (const b of backs) assert.ok(b.parentElement.classList.contains('graph-note-line-end'), b.textContent);
+      for (const b of backs) assert.ok(b.parentElement.classList.contains('thoughtknot-line-end'), b.textContent);
     } finally {
       env.uninstall();
     }

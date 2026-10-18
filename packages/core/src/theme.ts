@@ -3,7 +3,7 @@
 // default, written as inline styles, each hue blended with the theme's text colour so labels reach 4.5:1 and lines 3:1
 // in both themes (the reasons are in the style file). A port of graph_svg._themed and of the direction choice in
 // graph_svg.render, proved against them by the theme tests.
-import GraphLayout from '@graph-note/graph-spec/src/graph-layout.js';
+import GraphLayout from '@thoughtknot/graph-spec/src/graph-layout.js';
 import { STYLE } from './layout.ts';
 import { PALETTES } from './palette.ts';
 import type { Palette } from './palette.ts';

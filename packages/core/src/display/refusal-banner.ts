@@ -2,13 +2,13 @@
 // the graph is over and the numbers, or how long its layout was given, with an icon beside the words, never colour alone.
 // The words are the core's (refusal-words.ts), shared with the browser editor's page.
 import { refusalWords } from '../hosts/refusal-words';
-import type { Refusal } from '@graph-note/core';
+import type { Refusal } from '@thoughtknot/core';
 import { setIcon } from './host';
 
 /** Puts the banner saying why the graph is not drawn at the end of `parent`. */
 export function refusalBanner(parent: HTMLElement, r: Refusal): HTMLElement {
-  const banner = parent.createDiv({ cls: 'graph-note-banner graph-note-refusal', attr: { role: 'alert' } });
-  const icon = banner.createSpan({ cls: 'graph-note-refusal-icon' });
+  const banner = parent.createDiv({ cls: 'thoughtknot-banner thoughtknot-refusal', attr: { role: 'alert' } });
+  const icon = banner.createSpan({ cls: 'thoughtknot-refusal-icon' });
   setIcon(icon, r.reason === 'too-large' ? 'alert-triangle' : 'clock');
   banner.createSpan({ text: refusalWords(r) });
   return banner;

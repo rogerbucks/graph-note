@@ -14,23 +14,23 @@ const DASH_SECONDS = 1,
  * The class an exported image carries on its root, which every rule of its style sheet is written under, so a sheet in
  * an SVG put inline in a page reaches nothing of the page's own.
  */
-export const IMAGE_CLASS = 'graph-note-image';
+export const IMAGE_CLASS = 'thoughtknot-image';
 
 /** A selector written under the image's own class. */
 export const inImage = (selector: string): string => `.${IMAGE_CLASS} ${selector}`;
 
 /** The style sheet that moves the links: dashes running, a dot travelling, backwards along a line laid out backwards. */
 const FLOW_CSS = [
-  '@keyframes graph-note-flow-dashes { to { stroke-dashoffset: -20; } }',
-  '@keyframes graph-note-flow-dot { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -100; } }',
-  `${inImage('.graph-note-flow-dashes > path')} { stroke-dasharray: 6 4; ` +
-    `animation: graph-note-flow-dashes ${DASH_SECONDS}s linear infinite; }`,
-  `${inImage('.graph-note-flow-back.graph-note-flow-dashes > path')} { animation-direction: reverse; }`,
-  `${inImage('.graph-note-flow-runner')} { fill: none; stroke-width: 5; stroke-linecap: round; stroke-dasharray: 0 200; ` +
-    `animation: graph-note-flow-dot ${DOT_SECONDS}s linear infinite; }`,
-  `${inImage('.graph-note-flow-back > .graph-note-flow-runner')} { animation-direction: reverse; }`,
-  `@media (prefers-reduced-motion: reduce) { ${inImage('.graph-note-flow-dashes > path')}, ` +
-    `${inImage('.graph-note-flow-runner')} { animation: none; } ${inImage('.graph-note-flow-runner')} { display: none; } }`,
+  '@keyframes thoughtknot-flow-dashes { to { stroke-dashoffset: -20; } }',
+  '@keyframes thoughtknot-flow-dot { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -100; } }',
+  `${inImage('.thoughtknot-flow-dashes > path')} { stroke-dasharray: 6 4; ` +
+    `animation: thoughtknot-flow-dashes ${DASH_SECONDS}s linear infinite; }`,
+  `${inImage('.thoughtknot-flow-back.thoughtknot-flow-dashes > path')} { animation-direction: reverse; }`,
+  `${inImage('.thoughtknot-flow-runner')} { fill: none; stroke-width: 5; stroke-linecap: round; stroke-dasharray: 0 200; ` +
+    `animation: thoughtknot-flow-dot ${DOT_SECONDS}s linear infinite; }`,
+  `${inImage('.thoughtknot-flow-back > .thoughtknot-flow-runner')} { animation-direction: reverse; }`,
+  `@media (prefers-reduced-motion: reduce) { ${inImage('.thoughtknot-flow-dashes > path')}, ` +
+    `${inImage('.thoughtknot-flow-runner')} { animation: none; } ${inImage('.thoughtknot-flow-runner')} { display: none; } }`,
 ].join('\n');
 
 /**
@@ -68,7 +68,7 @@ export function withRunners(svg: string, flow: readonly FlowLink[]): string {
       if (!dots.has(Number(n))) return all;
       const line = /<path\b[^>]*\/>/.exec(body)?.[0];
       return line
-        ? `${open}${body.replace(line, () => `${line}${runnerOf(line, 'graph-note-flow-runner')}`)}${close}`
+        ? `${open}${body.replace(line, () => `${line}${runnerOf(line, 'thoughtknot-flow-runner')}`)}${close}`
         : all;
     },
   );

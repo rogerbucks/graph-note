@@ -11,9 +11,9 @@ import {
   optionSaid,
   unmatchedClasses,
   word,
-} from '@graph-note/core';
-import type { MatrixRow, Option, Settings } from '@graph-note/core';
-import type GraphNotePlugin from '../main';
+} from '@thoughtknot/core';
+import type { MatrixRow, Option, Settings } from '@thoughtknot/core';
+import type ThoughtKnotPlugin from '../main';
 import { knownClass } from '../ai/matrix-known';
 import { readMatrix } from '../ai/matrix-note';
 import { aiModelList, getModelValue, setModelValue } from './ai-models';
@@ -31,10 +31,10 @@ const SECTION_WORDS = {
 } as const;
 
 /** The plugin's settings page. */
-export class GraphNoteSettingTab extends PluginSettingTab {
+export class ThoughtKnotSettingTab extends PluginSettingTab {
   constructor(
     app: App,
-    private readonly owner: GraphNotePlugin,
+    private readonly owner: ThoughtKnotPlugin,
   ) {
     super(app, owner);
   }

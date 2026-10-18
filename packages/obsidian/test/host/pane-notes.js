@@ -24,7 +24,7 @@ export const PATH = 'Reader.md';
 export async function open(options = {}, line = 2) {
   const env = await load({ files: { [PATH]: options.note ?? NOTE }, ...options });
   await env.plugin.openEditor({ path: PATH, line, graph: 'reader' });
-  const leaf = env.app.workspace.getLeavesOfType('graph-note-pane')[0];
+  const leaf = env.app.workspace.getLeavesOfType('thoughtknot-pane')[0];
   return { ...env, leaf, pane: leaf?.view, el: leaf?.view.contentEl };
 }
 /** The pane's text field. */

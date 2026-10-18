@@ -126,13 +126,13 @@ const CASES = [
 /** The suggestion offered under the caret whose name is `name`. */
 const optionNamed = (el, name) =>
   Array.from(el.querySelectorAll('[role="option"]')).find(
-    (o) => o.querySelector('.graph-note-suggestion-name')?.textContent === name,
+    (o) => o.querySelector('.thoughtknot-suggestion-name')?.textContent === name,
   );
 
 /** Obsidian's pane, driven as its own tests drive it. */
 async function inObsidian(note0) {
   const env = await open({ note: note0 });
-  const pane = () => env.el.querySelector('.graph-note-pane-drawing');
+  const pane = () => env.el.querySelector('.thoughtknot-pane-drawing');
   return {
     note: () => note(env),
     field: () => textarea(env.el).value,
@@ -152,7 +152,7 @@ async function inObsidian(note0) {
       const guess = pane()
         .querySelectorAll('g.edge')
         .find((g) => g.getAttribute('data-estimate') === '0');
-      const vp = pane().querySelector('.graph-note-viewport');
+      const vp = pane().querySelector('.thoughtknot-viewport');
       for (const t of ['pointerdown', 'pointerup'])
         vp.dispatch(t, { target: guess, pointerId: 9, pointerType: 'touch', clientX: 5, clientY: 5, button: 0 });
     },
@@ -169,7 +169,7 @@ async function inObsidian(note0) {
     },
     stale: (text) => void env.app.vault.modify({ path: PATH }, text), // (told to the pane at once, as Obsidian tells it)
     async kept() {
-      await until(() => /kept as a draft/.test(env.el.querySelector('.graph-note-draft').textContent), 5000);
+      await until(() => /kept as a draft/.test(env.el.querySelector('.thoughtknot-draft').textContent), 5000);
     },
     done: async (expected) => {
       await until(() => (typeof expected === 'function' ? expected(note(env)) : note(env) === expected), 5000);
@@ -185,7 +185,7 @@ async function onPage(note0, pages) {
   const page = await livePage(note0);
   pages.push(page);
   await page.ready();
-  const drawing = () => page.doc.querySelector('.graph-note-pane-drawing');
+  const drawing = () => page.doc.querySelector('.thoughtknot-pane-drawing');
   // the editor draws its tools again once it has finished a write: what a case waits for before the next press
   let marked = null;
   return {
@@ -209,7 +209,7 @@ async function onPage(note0, pages) {
       await until(() => !!drawing().querySelector('g.edge[data-estimate]'), 8000);
       const guess = drawing().querySelector('g.edge[data-estimate="0"]');
       guess.dispatchEvent(new page.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-      await until(() => !!page.doc.querySelector('.graph-note-details'));
+      await until(() => !!page.doc.querySelector('.thoughtknot-details'));
     },
     async choose(graph) {
       const picker = page.doc.querySelector('select.dropdown');
@@ -225,7 +225,7 @@ async function onPage(note0, pages) {
     // the page is not told, as a change made between two of its checks: its next write is made over a version it has not seen
     stale: (text) => page.write(text, { tell: false }),
     async kept() {
-      await until(() => /kept as a draft/.test(page.doc.querySelector('.graph-note-draft').textContent), 8000);
+      await until(() => /kept as a draft/.test(page.doc.querySelector('.thoughtknot-draft').textContent), 8000);
     },
     done: async (expected) => {
       await until(() => (typeof expected === 'function' ? expected(page.file()) : page.file() === expected), 8000);

@@ -33,7 +33,7 @@ describe('a block drawn from a .gql file', () => {
     try {
       await until(() => keys(el).length > 0);
       assert.deepEqual(keys(el), ['home', 'park']);
-      assert.match(el.querySelector('.graph-note-source').textContent, /Drawn from the file Graphs\/trip\.gql/);
+      assert.match(el.querySelector('.thoughtknot-source').textContent, /Drawn from the file Graphs\/trip\.gql/);
       assert.equal(env.state.writes, undefined);
       assert.equal(env.state.files.get('Some note.md'), note);
     } finally {
@@ -69,7 +69,7 @@ describe('a block drawn from a .gql file', () => {
   test('a file too large to read is not read, and says so under the banner a note’s blocks get', async () => {
     const { env, el } = await card({ [FILE]: `${TRIP}\n${'// padding\n'.repeat(10_010)}` });
     try {
-      assert.match(el.querySelector('.graph-note-banner').textContent, /too large to read/i);
+      assert.match(el.querySelector('.thoughtknot-banner').textContent, /too large to read/i);
       assert.equal(el.querySelector('svg'), null);
     } finally {
       env.uninstall();
@@ -87,7 +87,7 @@ describe('a block drawn from a .gql file', () => {
     };
     try {
       const { el } = await show(env, note, 0);
-      assert.match(el.querySelector('.graph-note-banner').textContent, /too large to read/i);
+      assert.match(el.querySelector('.thoughtknot-banner').textContent, /too large to read/i);
       assert.equal(reads, 0, 'the file was never read');
     } finally {
       env.uninstall();

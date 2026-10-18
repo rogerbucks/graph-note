@@ -2,7 +2,7 @@
 // reading, the layout source, theming and the pane's view, with no Graphviz, which runs as a process (spec §10).
 export { viewOf, PANE_PALETTE, notePath, SVG_MAX, NO_GRAPH } from './graph-view.ts';
 export type { GraphView } from './graph-view.ts';
-export { settingsFrom } from '@graph-note/core';
+export { settingsFrom } from '@thoughtknot/core';
 export { EditorLauncher, confirmArgs, editArgs, sayEdit, sayProposed, sayStopped } from './editor-launch.ts';
 export { DATA_FOLDER_REFUSAL, guardDataFolder } from './data-guard.ts';
 export { readLinkVia, realPathVia } from './editor-realpath.ts';

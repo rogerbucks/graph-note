@@ -3,7 +3,7 @@ Checks graph spec documents in plain JavaScript — reads GQL data blocks in the
 
 Usage:
   In a page:  the built file, dist/graph-spec-check.js, as one script; then  GraphSpecCheck.read([blockText, …])  and  GraphSpecCheck.check(world, 'graph name', matrix)
-  In Node:    require('@graph-note/graph-spec'), or  node bin/graph-spec-check-node.js < request.json   (the conformance suite does this)
+  In Node:    require('@thoughtknot/graph-spec'), or  node bin/graph-spec-check-node.js < request.json   (the conformance suite does this)
 
 Writes: nothing (library).
 

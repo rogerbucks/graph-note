@@ -4,7 +4,7 @@
 // only a block of data is the judgement block; an addition is on one line. Test support is that of proposals-checked.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import gs from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
 import { noteWithProposal } from '../src/ai-answer.ts';
 import { ProposalReview } from '../src/proposals-review.ts';
 import { makeProposal } from '../src/proposals.ts';

@@ -40,7 +40,7 @@ The browser editor's is
 notices and menus your app showed.
 
 ```js
-import { hostContract } from '@graph-note/core/display/host-contract';
+import { hostContract } from '@thoughtknot/core/display/host-contract';
 
 for (const check of hostContract(makeMyHost)) await check.run();
 ```

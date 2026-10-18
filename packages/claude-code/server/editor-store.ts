@@ -19,7 +19,7 @@ import { DraftShelf } from './note-drafts.ts';
 import { NODE_FILES, readNoteFile, writeAtomically, type NoteFiles, type NoteText } from './note-file.ts';
 import { notePlace, type Vault } from './note-place.ts';
 import { watchNote, type Watcher } from './note-watch.ts';
-import { sha256 } from '@graph-note/core';
+import { sha256 } from '@thoughtknot/core';
 
 import type { NoteGate } from './editor-gate.ts';
 import { proposalInto } from './editor-proposals.ts';

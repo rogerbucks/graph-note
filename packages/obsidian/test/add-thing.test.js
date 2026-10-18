@@ -11,11 +11,11 @@ import { editing, field, text } from './host/inspector-steps.js';
 
 before(() => build());
 
-const strip = (el) => el.querySelector('.graph-note-add-thing');
+const strip = (el) => el.querySelector('.thoughtknot-add-thing');
 const said = (el) => strip(el).querySelector('[aria-live]').textContent;
 const alert = (el) => strip(el).querySelector('[role="alert"]');
 const nameField = (el) => field(strip(el), 'Name of the new thing');
-const nameRow = (el) => strip(el).querySelector('.graph-note-add-name');
+const nameRow = (el) => strip(el).querySelector('.thoughtknot-add-name');
 const textField = (el) => field(strip(el), 'Text of the new thing');
 const kindField = (el) => field(strip(el), 'Kind of the new thing');
 const type = (el, input, value) => {

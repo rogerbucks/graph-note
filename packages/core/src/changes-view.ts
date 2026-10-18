@@ -2,7 +2,7 @@
 // text as it is now and the last commit or a branch. The two versions are drawn as one: every thing and link of the
 // newer, and what the older held that the newer does not, each marked added, removed or changed by its line as well as
 // its colour, and listed in words. Nothing is written; the host gives the older text however it reads it.
-import type { Graph, Value } from '@graph-note/graph-spec';
+import type { Graph, Value } from '@thoughtknot/graph-spec';
 import { gqlBlocks } from './blocks.ts';
 import { readNote } from './drawing.ts';
 import { marked } from './export-marks.ts';

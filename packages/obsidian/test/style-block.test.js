@@ -42,7 +42,7 @@ describe('a style block in a note', () => {
   test('is shown folded away until opened, its text inside, and never drawn as a graph', async () => {
     const { env, el } = await shown(noteOf(DATA, STYLE), 1);
     try {
-      const fold = el.querySelector('details.graph-note-style');
+      const fold = el.querySelector('details.thoughtknot-style');
       assert.ok(fold, 'folded');
       assert.equal(fold.hasAttribute('open'), false, 'closed until opened');
       assert.match(fold.querySelector('summary').textContent, /Style of graph reader: 2 nudges/);
@@ -55,7 +55,7 @@ describe('a style block in a note', () => {
 
   test('keeps the browser’s own open and close marker, so it can be seen to open', async () => {
     const { styles } = await import('./host/view-notes.js');
-    const rule = /details\.graph-note-style > summary\s*\{([^}]*)\}/.exec(styles)?.[1] ?? '';
+    const rule = /details\.thoughtknot-style > summary\s*\{([^}]*)\}/.exec(styles)?.[1] ?? '';
     assert.doesNotMatch(rule, /display:\s*flex/);
   });
 
@@ -63,7 +63,7 @@ describe('a style block in a note', () => {
     const bad = STYLE.replace("'beside'", "'besides'");
     const { env, el } = await shown(noteOf(DATA, bad), 1);
     try {
-      assert.match(el.querySelector('details.graph-note-style summary').textContent, /1 problem/);
+      assert.match(el.querySelector('details.thoughtknot-style summary').textContent, /1 problem/);
     } finally {
       env.uninstall();
     }
@@ -135,7 +135,7 @@ describe('properties shown and arrowheads hidden (editor spec §14, §15)', () =
     const { env, el } = await shown(noteOf(DATA, CHOSEN), 1);
     try {
       assert.match(
-        el.querySelector('details.graph-note-style summary').textContent,
+        el.querySelector('details.thoughtknot-style summary').textContent,
         /^Style of graph reader: 1 shown property, 1 arrowhead setting$/,
       );
     } finally {
@@ -150,7 +150,7 @@ describe('properties shown and arrowheads hidden (editor spec §14, §15)', () =
     const { env, el } = await shown(noteOf(DATA, types), 1);
     try {
       assert.equal(
-        el.querySelector('details.graph-note-style summary').textContent,
+        el.querySelector('details.thoughtknot-style summary').textContent,
         'Style of graph reader: 2 diagram types',
       );
     } finally {

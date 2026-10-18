@@ -1,7 +1,7 @@
 // What a card is given to follow its links (editor spec §18), as the display layer sees it: the host decides how a link is
 // opened, previewed and rendered (the Obsidian plugin's `link-host.ts` does it through Obsidian), and the layer draws the
 // links and calls these.
-import type { BrokenLink, FoundLink } from '@graph-note/core';
+import type { BrokenLink, FoundLink } from '@thoughtknot/core';
 import type { Lifecycle } from '../lifecycle';
 
 /** Where a card was left when a link took its place: its zoom, where it was panned, and the thing selected. */

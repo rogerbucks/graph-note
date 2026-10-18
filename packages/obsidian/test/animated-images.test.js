@@ -60,10 +60,10 @@ async function drawn(note = noteOf(PETS, STYLE), options = {}) {
 }
 
 const box = (el, key) => el.querySelectorAll('g.node').find((g) => g.getAttribute('data-key') === key);
-const pictureOf = (el, key) => box(el, key)?.querySelector('image.graph-note-picture') ?? null;
-const controlOf = (el, key) => box(el, key)?.querySelector('.graph-note-image-control') ?? null;
+const pictureOf = (el, key) => box(el, key)?.querySelector('image.thoughtknot-picture') ?? null;
+const controlOf = (el, key) => box(el, key)?.querySelector('.thoughtknot-image-control') ?? null;
 const titleOf = (g) => g.querySelector('title')?.textContent ?? '';
-const figures = (el) => el.querySelectorAll('.graph-note-details figure.graph-note-image');
+const figures = (el) => el.querySelectorAll('.thoughtknot-details figure.thoughtknot-image');
 const figure = (el, name) => figures(el).find((f) => f.querySelector('figcaption').textContent.endsWith(name));
 
 /** Opens a thing's details from the keyboard, and waits for its images. */
@@ -82,14 +82,14 @@ describe('an animated image is shown', () => {
         const f = figure(el, name);
         const img = f.querySelector('img');
         assert.match(img.getAttribute('src'), /^blob:/, `${name} is drawn from the vault's bytes`);
-        assert.ok(img.classList.contains('graph-note-image-moving'), `${name} moves`);
+        assert.ok(img.classList.contains('thoughtknot-image-moving'), `${name} moves`);
         assert.equal(labelled(f, `Pause ${name}`).localName, 'button');
       }
       assert.equal(figure(el, 'loop.svg').querySelector('figcaption').textContent, 'icon: loop.svg');
       await details(el, 'kit', 1);
       const still = figure(el, 'kit.png');
-      assert.ok(!still.querySelector('.graph-note-image-control'), 'an image that does not move has no control');
-      assert.ok(still.querySelector('img').classList.contains('graph-note-image-plain'));
+      assert.ok(!still.querySelector('.thoughtknot-image-control'), 'an image that does not move has no control');
+      assert.ok(still.querySelector('img').classList.contains('thoughtknot-image-plain'));
     } finally {
       env.uninstall();
     }
@@ -101,7 +101,7 @@ describe('an animated image is shown', () => {
     try {
       await until(() => pictureOf(el, 'tom') && pictureOf(el, 'kit'));
       assert.match(pictureOf(el, 'tom').getAttribute('href'), /^blob:/);
-      assert.ok(pictureOf(el, 'tom').classList.contains('graph-note-image-moving'));
+      assert.ok(pictureOf(el, 'tom').classList.contains('thoughtknot-image-moving'));
       assert.equal(controlOf(el, 'tom').getAttribute('aria-label'), 'Pause tom.gif');
       assert.equal(controlOf(el, 'kit'), null, 'a still picture has no control');
       assert.equal(pictureOf(el, 'rex'), null, 'no Picture asks for a dog');
@@ -132,8 +132,8 @@ describe('an animated image is shown', () => {
     const style = "// graph: pets_style · STYLE pets\n(p1:Picture {property: 'site', kind: 'Dog'})";
     const { env, el } = await drawn(noteOf(PETS, style));
     try {
-      await until(() => box(el, 'rex').querySelector('rect.graph-note-picture-missing'));
-      const frame = box(el, 'rex').querySelector('rect.graph-note-picture-missing');
+      await until(() => box(el, 'rex').querySelector('rect.thoughtknot-picture-missing'));
+      const frame = box(el, 'rex').querySelector('rect.thoughtknot-picture-missing');
       assert.match(titleOf(frame), /^Not shown: https:\/\/x\.org\/rex\.gif is outside the vault/);
       assert.equal(pictureOf(el, 'rex'), null);
       assert.ok(!env.read.some((p) => p.includes('rex')), 'nothing read for it');
@@ -157,11 +157,11 @@ describe('pause and play', () => {
       control.dispatch('keydown', { key: 'Enter' });
       await until(() => control.getAttribute('aria-label') === 'Play tom.gif');
       assert.notEqual(picture.getAttribute('href'), moving, 'paused: its first frame');
-      assert.ok(picture.classList.contains('graph-note-image-still'));
+      assert.ok(picture.classList.contains('thoughtknot-image-still'));
       control.dispatch('keydown', { key: ' ' });
       await until(() => control.getAttribute('aria-label') === 'Pause tom.gif');
       assert.equal(picture.getAttribute('href'), moving);
-      assert.ok(el.querySelector('.graph-note-details').hidden, 'the keys worked the control, not the box');
+      assert.ok(el.querySelector('.thoughtknot-details').hidden, 'the keys worked the control, not the box');
     } finally {
       env.uninstall();
     }
@@ -173,13 +173,13 @@ describe('pause and play', () => {
     try {
       await until(() => controlOf(el, 'tom'));
       const control = controlOf(el, 'tom'),
-        vp = el.querySelector('.graph-note-viewport');
+        vp = el.querySelector('.thoughtknot-viewport');
       const at = { target: control, pointerId: 4, pointerType: 'touch', clientX: 30, clientY: 30, button: 0 };
       vp.dispatch('pointerdown', at);
       vp.dispatch('pointerup', at);
       control.click();
       await until(() => control.getAttribute('aria-label') === 'Play tom.gif');
-      assert.ok(el.querySelector('.graph-note-details').hidden, 'the box was not opened');
+      assert.ok(el.querySelector('.thoughtknot-details').hidden, 'the box was not opened');
       assert.ok(!box(el, 'tom').classList.contains('is-selected'));
     } finally {
       env.uninstall();
@@ -194,7 +194,7 @@ describe('pause and play', () => {
       const f = figure(el, 'tom.gif');
       labelled(f, 'Pause tom.gif').click();
       await until(() => labelled(f, 'Play tom.gif'));
-      assert.ok(f.querySelector('img').classList.contains('graph-note-image-still'));
+      assert.ok(f.querySelector('img').classList.contains('thoughtknot-image-still'));
       labelled(f, 'Play tom.gif').click();
       await until(() => labelled(f, 'Pause tom.gif'));
     } finally {
@@ -211,14 +211,14 @@ describe('under reduced motion', () => {
       await until(() => controlOf(el, 'tom'));
       const control = controlOf(el, 'tom');
       assert.equal(control.getAttribute('aria-label'), 'Play tom.gif');
-      assert.ok(pictureOf(el, 'tom').classList.contains('graph-note-image-still'));
+      assert.ok(pictureOf(el, 'tom').classList.contains('thoughtknot-image-still'));
       assert.equal(titleOf(control), 'Still, as the system asks for reduced motion. Press Play to move it.');
       await details(el, 'ann', 3);
       for (const name of ['spin.png', 'dance.webp', 'loop.svg'])
         assert.ok(labelled(figure(el, name), `Play ${name}`), `${name} starts still`);
       control.dispatch('keydown', { key: 'Enter' });
       await until(() => control.getAttribute('aria-label') === 'Pause tom.gif');
-      assert.ok(pictureOf(el, 'tom').classList.contains('graph-note-image-moving'));
+      assert.ok(pictureOf(el, 'tom').classList.contains('thoughtknot-image-moving'));
     } finally {
       env.uninstall();
     }
@@ -258,7 +258,7 @@ describe('past the limits', () => {
     const note = noteOf(PETS.replace("'[[kit.png]]'", "'[[huge.jpg]]'"), STYLE);
     const { env, el } = await drawn(note, { files });
     try {
-      await until(() => pictureOf(el, 'kit')?.classList.contains('graph-note-image-plain'));
+      await until(() => pictureOf(el, 'kit')?.classList.contains('thoughtknot-image-plain'));
       assert.equal(pictureOf(el, 'kit').getAttribute('href'), 'app://vault/huge.jpg');
       assert.equal(controlOf(el, 'kit'), null);
       assert.ok(!env.read.includes('huge.jpg'));
@@ -362,7 +362,7 @@ describe('the control on a box', () => {
     const { env, el } = await drawn();
     try {
       await until(() => controlOf(el, 'tom'));
-      const hit = controlOf(el, 'tom').querySelector('rect.graph-note-image-hit');
+      const hit = controlOf(el, 'tom').querySelector('rect.thoughtknot-image-hit');
       assert.ok(hit, 'a hit area');
       assert.ok(Number(hit.getAttribute('width')) >= 24 && Number(hit.getAttribute('height')) >= 24);
     } finally {
@@ -375,7 +375,7 @@ describe('an export', () => {
   /** Exports the drawing as `format` from its Export form, and gives the notice it said. */
   async function exported(env, el, format) {
     labelled(el, 'Export').click();
-    const form = el.querySelector('.graph-note-export');
+    const form = el.querySelector('.thoughtknot-export');
     const sel = form.querySelectorAll('select').find((s) => s.getAttribute('aria-label') === 'Format');
     sel.value = format;
     sel.dispatch('change');
@@ -396,7 +396,10 @@ describe('an export', () => {
       const held = env.state.files.get(file),
         text = typeof held === 'string' ? held : new TextDecoder().decode(held);
       assert.ok(text.includes(`href="data:image/gif;base64,${Buffer.from(FILES['tom.gif']).toString('base64')}"`));
-      assert.match(text, /@media \(prefers-reduced-motion: reduce\) \{ \.graph-note-image \.graph-note-picture-moving/);
+      assert.match(
+        text,
+        /@media \(prefers-reduced-motion: reduce\) \{ \.thoughtknot-image \.thoughtknot-picture-moving/,
+      );
     } finally {
       env.uninstall();
     }

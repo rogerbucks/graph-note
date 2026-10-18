@@ -11,7 +11,7 @@ import { join } from 'node:path';
 import { SHOTS, findChrome, servedFiles } from '../scripts/wiki-screens.mjs';
 import { read } from './repository/repo.js';
 
-const guide = read('wiki/How-to-use-Graph-Note.md');
+const guide = read('wiki/How-to-use-ThoughtKnot.md');
 
 describe('the user guide', () => {
   test('shows every picture taken, each once, and asks for none that is not taken', () => {

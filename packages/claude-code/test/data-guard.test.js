@@ -19,7 +19,7 @@ afterEach(() => {
 function world() {
   const top = realpathSync(mkdtempSync(join(tmpdir(), 'gn-guard-')));
   made.push(top);
-  const data = join(top, 'data', 'graph-note');
+  const data = join(top, 'data', 'thoughtknot');
   const work = join(top, 'work');
   const elsewhere = join(top, 'elsewhere');
   for (const dir of [data, work, elsewhere]) mkdirSync(dir, { recursive: true });
@@ -55,7 +55,7 @@ describe('file tools are judged by the target’s real path', () => {
 
   test('a relative path into the folder is resolved against the session’s folder', async () => {
     const w = world();
-    refused(await guardDataFolder('Write', { file_path: '../data/graph-note/settings.json' }, w.ports));
+    refused(await guardDataFolder('Write', { file_path: '../data/thoughtknot/settings.json' }, w.ports));
   });
 
   test('a link elsewhere that points into the folder is refused', async () => {
@@ -133,11 +133,11 @@ describe('Bash is refused when the command names the folder at all', () => {
 
   test('the folder named through the home folder, an environment variable or a relative path is refused', async () => {
     const w = world();
-    refused(await guardDataFolder('Bash', { command: 'echo {} > ~/data/graph-note/settings.json' }, w.ports));
-    refused(await guardDataFolder('Bash', { command: 'echo {} > $HOME/data/graph-note/settings.json' }, w.ports));
-    refused(await guardDataFolder('Bash', { command: 'echo {} > "${HOME}/data/graph-note/settings.json"' }, w.ports));
+    refused(await guardDataFolder('Bash', { command: 'echo {} > ~/data/thoughtknot/settings.json' }, w.ports));
+    refused(await guardDataFolder('Bash', { command: 'echo {} > $HOME/data/thoughtknot/settings.json' }, w.ports));
+    refused(await guardDataFolder('Bash', { command: 'echo {} > "${HOME}/data/thoughtknot/settings.json"' }, w.ports));
     refused(await guardDataFolder('Bash', { command: 'echo {} > $CLAUDE_PLUGIN_DATA/settings.json' }, w.ports));
-    refused(await guardDataFolder('Bash', { command: 'echo {} > ../data/graph-note/settings.json' }, w.ports));
+    refused(await guardDataFolder('Bash', { command: 'echo {} > ../data/thoughtknot/settings.json' }, w.ports));
   });
 
   test('a path that only resolves into the folder through a link is refused', async () => {
@@ -179,9 +179,9 @@ describe('the refusal', () => {
 describe('what the first review found', () => {
   test('a different case of the folder’s name is the same folder, for files and for Bash', async () => {
     const w = world();
-    const shouted = join(w.top, 'data', 'GRAPH-NOTE', 'settings.json');
+    const shouted = join(w.top, 'data', 'THOUGHTKNOT', 'settings.json');
     refused(await guardDataFolder('Write', { file_path: shouted }, w.ports));
-    refused(await guardDataFolder('Edit', { file_path: join(w.top, 'DATA', 'graph-note', 'new.json') }, w.ports));
+    refused(await guardDataFolder('Edit', { file_path: join(w.top, 'DATA', 'thoughtknot', 'new.json') }, w.ports));
     refused(await guardDataFolder('Bash', { command: `echo {} > ${shouted}` }, w.ports));
   });
 
@@ -190,7 +190,7 @@ describe('what the first review found', () => {
     symlinkSync(join(w.data, 'not-yet.json'), join(w.elsewhere, 'dangling'));
     refused(await guardDataFolder('Write', { file_path: join(w.elsewhere, 'dangling') }, w.ports));
     // a relative link, settled from the link’s own folder, not the session’s
-    symlinkSync('../data/graph-note/not-yet.json', join(w.elsewhere, 'relative'));
+    symlinkSync('../data/thoughtknot/not-yet.json', join(w.elsewhere, 'relative'));
     refused(await guardDataFolder('Write', { file_path: join(w.elsewhere, 'relative') }, w.ports));
     refused(await guardDataFolder('Write', { file_path: '../elsewhere/relative' }, w.ports));
   });
@@ -227,10 +227,10 @@ describe('what the first review found', () => {
   test('Bash naming plugins/data is refused, even where the folder was renamed', async () => {
     const w = world();
     for (const command of [
-      'mv ~/.claude/plugins/data/graph-note ~/gone',
-      'mv /x/.claude/PLUGINS/Data/graph-note /y',
-      `mv '/x/.claude/plugins'/'data'/graph-note /y`,
-      'mv /x/.claude/plug\\ins/da\\ta/graph-note /y',
+      'mv ~/.claude/plugins/data/thoughtknot ~/gone',
+      'mv /x/.claude/PLUGINS/Data/thoughtknot /y',
+      `mv '/x/.claude/plugins'/'data'/thoughtknot /y`,
+      'mv /x/.claude/plug\\ins/da\\ta/thoughtknot /y',
       'mv "/x/.claude/plugins/data" /y',
     ]) {
       refused(await guardDataFolder('Bash', { command }, w.ports));
@@ -240,8 +240,8 @@ describe('what the first review found', () => {
 
   test('home forms are expanded before matching, a named user’s too', async () => {
     const w = world();
-    refused(await guardDataFolder('Bash', { command: 'echo {} > "$HOME"/data/graph-note/settings.json' }, w.ports));
-    refused(await guardDataFolder('Bash', { command: 'echo {} > ${HOME}/data/graph-note/settings.json' }, w.ports));
+    refused(await guardDataFolder('Bash', { command: 'echo {} > "$HOME"/data/thoughtknot/settings.json' }, w.ports));
+    refused(await guardDataFolder('Bash', { command: 'echo {} > ${HOME}/data/thoughtknot/settings.json' }, w.ports));
     refused(await guardDataFolder('Bash', { command: 'echo {} > ~someone/.claude/plugins/data/x' }, w.ports));
   });
 });
@@ -257,7 +257,7 @@ describe('what the second review found', () => {
     mkdirSync(sub);
     const q = join(w.elsewhere, 'q');
     symlinkSync(sub, q);
-    symlinkSync('../data/graph-note/not-yet.json', join(sub, 'l'));
+    symlinkSync('../data/thoughtknot/not-yet.json', join(sub, 'l'));
     const answer = run('--link', '--', join(q, 'l'));
     assert.equal(answer.stdout, join(w.data, 'not-yet.json'));
     // the guard over the shipped process refuses the write through it
@@ -274,7 +274,7 @@ describe('what the second review found', () => {
   test('Bash that moves, removes, copies, syncs or links an ancestor of the folder below home is refused', async () => {
     const w = world();
     const config = join(w.top, 'home');
-    const fallback = join(config, '.claude', 'plugins', 'data', 'graph-note');
+    const fallback = join(config, '.claude', 'plugins', 'data', 'thoughtknot');
     mkdirSync(fallback, { recursive: true });
     const ports = { ...w.ports, data: fallback, home: config };
     for (const command of [
@@ -293,7 +293,7 @@ describe('what the second review found', () => {
   test('plain reads of those ancestors, and moves of other things below home, are allowed', async () => {
     const w = world();
     const config = join(w.top, 'home');
-    const fallback = join(config, '.claude', 'plugins', 'data', 'graph-note');
+    const fallback = join(config, '.claude', 'plugins', 'data', 'thoughtknot');
     mkdirSync(join(config, 'notes'), { recursive: true });
     mkdirSync(fallback, { recursive: true });
     const ports = { ...w.ports, data: fallback, home: config };
@@ -313,7 +313,7 @@ describe('the shipped real-path process', () => {
 
   test('--link says where a link leads, settled from the link’s own folder, and 3 for a path that is none', () => {
     const w = world();
-    symlinkSync('../data/graph-note/not-yet.json', join(w.elsewhere, 'l'));
+    symlinkSync('../data/thoughtknot/not-yet.json', join(w.elsewhere, 'l'));
     const answer = run('--link', '--', join(w.elsewhere, 'l'));
     assert.equal(answer.status, 0);
     assert.equal(answer.stdout, join(w.data, 'not-yet.json'));
@@ -326,12 +326,12 @@ describe('the data folder is wherever the mod keeps it', () => {
   test('set (as CLAUDE_PLUGIN_DATA) or defaulted under the home folder, that folder is the one guarded', async () => {
     const w = world();
     const defaulted = join(w.top, 'home');
-    const fallback = join(defaulted, '.claude', 'plugins', 'data', 'graph-note');
+    const fallback = join(defaulted, '.claude', 'plugins', 'data', 'thoughtknot');
     mkdirSync(fallback, { recursive: true });
     const ports = { ...w.ports, data: fallback, home: defaulted };
     refused(await guardDataFolder('Write', { file_path: join(fallback, 'settings.json') }, ports));
     refused(
-      await guardDataFolder('Bash', { command: 'echo {} > ~/.claude/plugins/data/graph-note/settings.json' }, ports),
+      await guardDataFolder('Bash', { command: 'echo {} > ~/.claude/plugins/data/thoughtknot/settings.json' }, ports),
     );
     // the folder the other setting names is not guarded now
     allowed(await guardDataFolder('Write', { file_path: join(w.data, 'settings.json') }, ports));

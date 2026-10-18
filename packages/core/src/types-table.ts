@@ -2,7 +2,7 @@
 // each thing a row, with its kind and properties, and each link a row, in the order drawn; the way in to a graph too
 // large for one drawing — the table, or a view (large_way_in); and the types that, wide on a phone, scroll one way only
 // (wide_types_phone). Host-free.
-import type { Graph } from '@graph-note/graph-spec';
+import type { Graph } from '@thoughtknot/graph-spec';
 import { valueText } from './inline-properties.ts';
 import type { GraphDrawing } from './note-reading.ts';
 import type { DiagramType } from './style-graph.ts';

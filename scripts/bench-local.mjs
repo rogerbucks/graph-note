@@ -23,13 +23,13 @@ export const DOCKERFILE = 'docker/benchmarks.Dockerfile';
  * digest of its root, so two worktrees on different lockfiles never install over each other.
  */
 export function modulesVolume(root = ROOT) {
-  return `graph-note-benchmarks-node-modules-${createHash('sha256').update(root).digest('hex').slice(0, 12)}`;
+  return `thoughtknot-benchmarks-node-modules-${createHash('sha256').update(root).digest('hex').slice(0, 12)}`;
 }
 
 /** The image's tag: named for what it is, and for its Dockerfile's content, so a changed Dockerfile builds afresh. */
 export function imageTag(root = ROOT) {
   const text = readFileSync(join(root, DOCKERFILE));
-  return `graph-note-benchmarks:${createHash('sha256').update(text).digest('hex').slice(0, 12)}`;
+  return `thoughtknot-benchmarks:${createHash('sha256').update(text).digest('hex').slice(0, 12)}`;
 }
 
 /**

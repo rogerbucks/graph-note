@@ -19,7 +19,7 @@ describe('details on demand', () => {
   test('tapping a box shows its text, its kind, and its links in and out', async () => {
     const { el } = await show(env, fence(GRAPH));
     const box = el.querySelectorAll('g.node')[1];
-    const vp = el.querySelector('.graph-note-viewport');
+    const vp = el.querySelector('.thoughtknot-viewport');
     vp.dispatch('pointerdown', {
       target: box,
       pointerId: 3,
@@ -29,7 +29,7 @@ describe('details on demand', () => {
       button: 0,
     });
     vp.dispatch('pointerup', { target: box, pointerId: 3, pointerType: 'touch', clientX: 21, clientY: 20, button: 0 });
-    const panel = el.querySelector('.graph-note-details');
+    const panel = el.querySelector('.thoughtknot-details');
     assert.ok(!panel.hidden);
     const text = panel.textContent;
     for (const s of ['Large reader', 'Option']) assert.ok(text.includes(s), s);
@@ -44,13 +44,13 @@ describe('details on demand', () => {
     assert.equal(box.getAttribute('tabindex'), '0');
     assert.equal(box.getAttribute('aria-label'), 'Question: Which device?');
     box.dispatch('keydown', { key: 'Enter' });
-    assert.ok(el.querySelector('.graph-note-details').textContent.includes('Which device?'));
+    assert.ok(el.querySelector('.thoughtknot-details').textContent.includes('Which device?'));
   });
 
   test('a problem on a box is shown with it', async () => {
     const { el } = await show(env, fence(GRAPH + ',\n(eyes)-[:FAVOURS]->(nowhere)'));
     el.querySelectorAll('g.node')[3].dispatch('keydown', { key: 'Enter' });
-    assert.match(el.querySelector('.graph-note-details').textContent, /nowhere/);
+    assert.match(el.querySelector('.thoughtknot-details').textContent, /nowhere/);
   });
 });
 
@@ -71,21 +71,21 @@ describe('a tap near things', () => {
     el = (await show(env, fence(GRAPH))).el;
     // a point in the drawing's own units, as the viewport's pixels
     drawnAt = (x, y) => {
-      const svg = el.querySelector('svg.graph-note-svg'),
-        vp = el.querySelector('.graph-note-viewport'),
+      const svg = el.querySelector('svg.thoughtknot-svg'),
+        vp = el.querySelector('.thoughtknot-viewport'),
         vb = areas.viewBox,
         w = Number(svg.getAttribute('width')),
         h = Number(svg.getAttribute('height'));
       return {
-        clientX: parseFloat(vp.cssProps['--graph-note-x']) + ((x - vb.x) * w) / vb.width,
-        clientY: parseFloat(vp.cssProps['--graph-note-y']) + ((y - vb.y) * h) / vb.height,
+        clientX: parseFloat(vp.cssProps['--thoughtknot-x']) + ((x - vb.x) * w) / vb.width,
+        clientY: parseFloat(vp.cssProps['--thoughtknot-y']) + ((y - vb.y) * h) / vb.height,
       };
     };
   });
   after(() => env.uninstall());
 
   const tapAt = (p) => {
-    const vp = el.querySelector('.graph-note-viewport');
+    const vp = el.querySelector('.thoughtknot-viewport');
     vp.dispatch('pointerdown', { target: vp, pointerId: 7, pointerType: 'touch', button: 0, ...p });
     vp.dispatch('pointerup', { target: vp, pointerId: 7, pointerType: 'touch', button: 0, ...p });
   };
@@ -101,7 +101,7 @@ describe('a tap near things', () => {
     assert.equal(nearby(areas, x, y, 0).length, 0, 'the point is outside every box and link');
     tapAt(drawnAt(x, y));
     assert.equal(selected(), box.id);
-    assert.ok(!el.querySelector('.graph-note-details').hidden);
+    assert.ok(!el.querySelector('.thoughtknot-details').hidden);
   });
 
   test('tapping again in the same place, where two are near, opens the next', async () => {
@@ -134,10 +134,10 @@ describe('a tap near things', () => {
     const x = Math.max(...xs) + 2,
       y = (Math.min(...ys) + Math.max(...ys)) / 2;
     assert.equal(nearby(areas, x, y, 0).length, 0);
-    const svg = el.querySelector('svg.graph-note-svg'),
+    const svg = el.querySelector('svg.thoughtknot-svg'),
       width = svg.getAttribute('width');
     const p = drawnAt(x, y),
-      vp = el.querySelector('.graph-note-viewport');
+      vp = el.querySelector('.thoughtknot-viewport');
     for (const t of [1000, 1100]) {
       vp.dispatch('pointerdown', { target: vp, pointerId: 8, pointerType: 'touch', button: 0, timeStamp: t, ...p });
       vp.dispatch('pointerup', { target: vp, pointerId: 8, pointerType: 'touch', button: 0, timeStamp: t + 40, ...p });
@@ -155,9 +155,9 @@ describe('a tap near things', () => {
     const x = Math.max(...xs) + 2,
       y = (Math.min(...ys) + Math.max(...ys)) / 2;
     assert.equal(nearby(areas, x, y, 0).length, 0);
-    const svg = el.querySelector('svg.graph-note-svg'),
+    const svg = el.querySelector('svg.thoughtknot-svg'),
       width = svg.getAttribute('width'),
-      vp = el.querySelector('.graph-note-viewport'),
+      vp = el.querySelector('.thoughtknot-viewport'),
       p = drawnAt(x, y);
     for (const id of [10, 11]) {
       vp.dispatch('pointerdown', { target: vp, pointerId: id, pointerType: 'mouse', button: 0, ...p });
@@ -169,10 +169,10 @@ describe('a tap near things', () => {
   });
 
   test('a tap far from everything opens nothing', () => {
-    el.querySelector('.graph-note-details').hidden = true;
+    el.querySelector('.thoughtknot-details').hidden = true;
     const vb = areas.viewBox;
     tapAt(drawnAt(vb.x + vb.width + 400, vb.y + vb.height + 400));
-    assert.ok(el.querySelector('.graph-note-details').hidden);
+    assert.ok(el.querySelector('.thoughtknot-details').hidden);
   });
 });
 
@@ -201,7 +201,7 @@ describe('estimated links', () => {
   test('tapping an estimated link explains it in a sentence, on the note’s own line', async () => {
     const { el } = await show(env, TYPO);
     const guess = el.querySelectorAll('g.edge')[4],
-      vp = el.querySelector('.graph-note-viewport');
+      vp = el.querySelector('.thoughtknot-viewport');
     vp.dispatch('pointerdown', {
       target: guess,
       pointerId: 4,
@@ -220,7 +220,7 @@ describe('estimated links', () => {
     });
     assert.equal(
       el
-        .querySelector('.graph-note-details')
+        .querySelector('.thoughtknot-details')
         .textContent.includes(
           'Line 9 links to tablett, which is not in graph reader. It was taken to mean tablet, one letter away. To fix it, change tablett to tablet.',
         ),
@@ -233,7 +233,7 @@ describe('estimated links', () => {
     const { el } = await show(env, TYPO);
     const edges = el.querySelectorAll('g.edge'),
       guess = edges[4],
-      vp = el.querySelector('.graph-note-viewport');
+      vp = el.querySelector('.thoughtknot-viewport');
     assert.equal(guess.getAttribute('aria-pressed'), 'false', 'a button that can be pressed, before it is');
     edges[0].dispatch('keydown', { key: 'Enter' });
     const at = { target: guess, pointerId: 6, pointerType: 'mouse', clientX: 9, clientY: 9, button: 0 };
@@ -251,7 +251,7 @@ describe('estimated links', () => {
   test('the pointer shows an estimated link can be clicked, as it shows a written one can', async () => {
     const { rules, winner } = await import('./host/cascade.js');
     const all = rules(styles, 'styles.css');
-    const svg = { tag: 'svg', classes: ['graph-note-svg'] };
+    const svg = { tag: 'svg', classes: ['thoughtknot-svg'] };
     const edge = (attrs) => ({ tag: 'g', classes: ['edge'], attrs, ancestors: [svg] });
     assert.equal(winner(all, edge({ 'data-link': '0' }), 'cursor')?.value, 'pointer');
     assert.equal(winner(all, edge({ 'data-estimate': '0' }), 'cursor')?.value, 'pointer');
@@ -263,7 +263,7 @@ describe('estimated links', () => {
     assert.equal(guess.getAttribute('tabindex'), '0');
     assert.match(guess.getAttribute('aria-label'), /^Estimated link: Easy on the eyes favours Tablet/);
     guess.dispatch('keydown', { key: 'Enter' });
-    assert.match(el.querySelector('.graph-note-details').textContent, /taken to mean tablet/);
+    assert.match(el.querySelector('.thoughtknot-details').textContent, /taken to mean tablet/);
   });
 });
 
@@ -280,7 +280,7 @@ describe('details of a link', () => {
       fence(GRAPH.replace('(eyes)-[:FAVOURS]->(large)', "(eyes)-[:FAVOURS {strength: 'strong'}]->(large)")),
     );
     const link = el.querySelectorAll('g.edge')[2];
-    const vp = el.querySelector('.graph-note-viewport');
+    const vp = el.querySelector('.thoughtknot-viewport');
     vp.dispatch('pointerdown', {
       target: link,
       pointerId: 5,
@@ -290,7 +290,7 @@ describe('details of a link', () => {
       button: 0,
     });
     vp.dispatch('pointerup', { target: link, pointerId: 5, pointerType: 'touch', clientX: 40, clientY: 40, button: 0 });
-    const panel = el.querySelector('.graph-note-details');
+    const panel = el.querySelector('.thoughtknot-details');
     assert.ok(!panel.hidden);
     for (const s of ['Easy on the eyes', 'favours', 'Large reader', 'FAVOURS', 'strength', 'strong'])
       assert.ok(panel.textContent.includes(s), s);
@@ -303,6 +303,6 @@ describe('details of a link', () => {
     assert.equal(link.getAttribute('tabindex'), '0');
     assert.equal(link.getAttribute('aria-label'), 'Link: Large reader answers Which device?');
     link.dispatch('keydown', { key: 'Enter' });
-    assert.match(el.querySelector('.graph-note-details').textContent, /answers/);
+    assert.match(el.querySelector('.thoughtknot-details').textContent, /answers/);
   });
 });

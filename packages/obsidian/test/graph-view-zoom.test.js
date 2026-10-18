@@ -39,7 +39,7 @@ describe('zoom in the note', () => {
 
   test('plus, minus and zero work when the drawing has focus', async () => {
     const { el } = await show(env, fence(GRAPH));
-    const vp = el.querySelector('.graph-note-viewport'),
+    const vp = el.querySelector('.thoughtknot-viewport'),
       fitted = widthOf(el);
     assert.equal(vp.getAttribute('tabindex'), '0', 'the drawing can take focus');
     assert.ok(vp.dispatch('keydown', { key: '+' }).defaultPrevented);
@@ -50,7 +50,7 @@ describe('zoom in the note', () => {
 
   test('the wheel alone scrolls the note; with Ctrl or Command it zooms the drawing', async () => {
     const { el } = await show(env, fence(GRAPH));
-    const vp = el.querySelector('.graph-note-viewport'),
+    const vp = el.querySelector('.thoughtknot-viewport'),
       fitted = widthOf(el);
     assert.equal(vp.dispatch('wheel', { deltaY: -100, clientX: 10, clientY: 10 }).defaultPrevented, false);
     assert.equal(widthOf(el), fitted);
@@ -60,15 +60,15 @@ describe('zoom in the note', () => {
 
   test('one finger on a fitted drawing is left to scroll the note', async () => {
     const { el } = await show(env, fence(GRAPH));
-    const vp = el.querySelector('.graph-note-viewport');
-    assert.equal(vp.cssProps['--graph-note-touch'], 'pan-x pan-y');
+    const vp = el.querySelector('.thoughtknot-viewport');
+    assert.equal(vp.cssProps['--thoughtknot-touch'], 'pan-x pan-y');
     assert.equal(
       vp.dispatch('pointerdown', { pointerId: 1, pointerType: 'touch', clientX: 50, clientY: 50, button: 0 })
         .defaultPrevented,
       false,
     );
     labelled(el, 'Zoom in').click();
-    assert.equal(vp.cssProps['--graph-note-touch'], 'none', 'once zoomed in, one finger pans');
+    assert.equal(vp.cssProps['--thoughtknot-touch'], 'none', 'once zoomed in, one finger pans');
   });
 });
 
@@ -94,7 +94,7 @@ describe('a touch the drawing uses goes no further', () => {
   // proves: gestures_stay_in_drawing
   test('a swipe on a fitted drawing goes on to the page, to scroll the note or open a panel', async () => {
     const { el } = await show(env, fence(GRAPH));
-    const vp = el.querySelector('.graph-note-viewport');
+    const vp = el.querySelector('.thoughtknot-viewport');
     assert.equal(touchOn(vp, 'touchstart'), false);
     assert.equal(touchOn(vp, 'touchmove'), false);
   });
@@ -102,7 +102,7 @@ describe('a touch the drawing uses goes no further', () => {
   // proves: gestures_stay_in_drawing
   test('one finger panning a drawing zoomed in, and any pinch, go no further than the drawing', async () => {
     const { el } = await show(env, fence(GRAPH));
-    const vp = el.querySelector('.graph-note-viewport');
+    const vp = el.querySelector('.thoughtknot-viewport');
     assert.equal(touchOn(vp, 'touchstart', 2), true, 'a pinch, even on a fitted drawing');
     assert.equal(touchOn(vp, 'touchmove', 2), true);
     labelled(el, 'Zoom in').click();
@@ -133,7 +133,7 @@ describe('a card hidden and shown again', () => {
     try {
       const { el } = await show(env, fence(GRAPH));
       near(widthOf(el), 0.3 * d, 'fitted at 0.3');
-      const vp = el.querySelector('.graph-note-viewport');
+      const vp = el.querySelector('.thoughtknot-viewport');
       vp.dispatch('wheel', { deltaY: -Math.log(1.6) / 0.0028, clientX: 0, clientY: 0, ctrlKey: true });
       near(widthOf(el), 0.48 * d, 'zoomed to 0.48');
       env.doc.width = 0; // display: none, or another tab in front: clientWidth is 0
@@ -158,13 +158,13 @@ describe('full screen', () => {
   test('Full screen shows the drawing over the whole window, and Escape leaves it', async () => {
     const { el } = await show(env, fence(GRAPH));
     labelled(el, 'Full screen').click();
-    const overlay = env.doc.body.querySelector('.graph-note-fullscreen');
+    const overlay = env.doc.body.querySelector('.thoughtknot-fullscreen');
     assert.ok(overlay);
     assert.equal(overlay.getAttribute('role'), 'dialog');
     assert.equal(overlay.querySelectorAll('g.node').length, 4);
     assert.ok(labelled(overlay, 'Close full screen'));
-    overlay.querySelector('.graph-note-viewport').dispatch('keydown', { key: 'Escape' });
-    assert.equal(env.doc.body.querySelector('.graph-note-fullscreen'), null);
+    overlay.querySelector('.thoughtknot-viewport').dispatch('keydown', { key: 'Escape' });
+    assert.equal(env.doc.body.querySelector('.thoughtknot-fullscreen'), null);
   });
 
   test('full screen takes the focus and keeps Tab in it; Escape from any control leaves, back to Full screen', async () => {
@@ -173,7 +173,7 @@ describe('full screen', () => {
     opener.focus();
     opener.click();
     try {
-      const overlay = env.doc.body.querySelector('.graph-note-fullscreen');
+      const overlay = env.doc.body.querySelector('.thoughtknot-fullscreen');
       assert.ok(overlay.contains(env.doc.activeElement), 'the focus is in full screen');
       const stops = overlay
         .querySelectorAll('button, [tabindex]')
@@ -187,11 +187,11 @@ describe('full screen', () => {
       const fit = labelled(overlay, 'Fit');
       fit.focus();
       fit.dispatch('keydown', { key: 'Escape' });
-      assert.ok(!env.doc.body.querySelector('.graph-note-fullscreen'), 'Escape on the bar leaves too');
+      assert.ok(!env.doc.body.querySelector('.thoughtknot-fullscreen'), 'Escape on the bar leaves too');
       assert.ok(env.doc.activeElement === labelled(el, 'Full screen'), 'the focus is back where it was');
     } finally {
       // left open by a failure, full screen would stand in the way of the next test
-      const open = env.doc.body.querySelector('.graph-note-fullscreen');
+      const open = env.doc.body.querySelector('.thoughtknot-fullscreen');
       if (open) labelled(open, 'Close full screen').click();
     }
   });
@@ -199,12 +199,12 @@ describe('full screen', () => {
   test('in full screen the wheel alone zooms', async () => {
     const { el } = await show(env, fence(GRAPH));
     labelled(el, 'Full screen').click();
-    const overlay = env.doc.body.querySelector('.graph-note-fullscreen');
+    const overlay = env.doc.body.querySelector('.thoughtknot-fullscreen');
     assert.ok(
-      overlay.querySelector('.graph-note-viewport').dispatch('wheel', { deltaY: -100, clientX: 10, clientY: 10 })
+      overlay.querySelector('.thoughtknot-viewport').dispatch('wheel', { deltaY: -100, clientX: 10, clientY: 10 })
         .defaultPrevented,
     );
     labelled(overlay, 'Close full screen').click();
-    assert.equal(env.doc.body.querySelector('.graph-note-fullscreen'), null);
+    assert.equal(env.doc.body.querySelector('.thoughtknot-fullscreen'), null);
   });
 });

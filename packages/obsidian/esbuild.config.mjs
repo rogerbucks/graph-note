@@ -25,7 +25,7 @@ const swapIn = {
 
 // The layout worker (spec §9, layout_contained): src/layout-worker/worker-entry.ts bundled on its own, the Graphviz
 // WebAssembly inside it, and handed to the plugin as the body of one function, `layoutWorker`, from the module
-// 'graph-note:layout-worker'. main.js holds it once: the worker is started from the function's own text, and the page
+// 'thoughtknot:layout-worker'. main.js holds it once: the worker is started from the function's own text, and the page
 // calls the function where no worker can run (src/layout-worker/layout-worker.ts says why). Rebuilt with every build, and
 // watched with the rest in --watch. The worker's last build is kept in `workerBuild`, so scripts/quality-metrics.mjs can
 // say what is inside that one function, the engine among it.
@@ -33,7 +33,7 @@ export const workerBuild = { metafile: null };
 export const layoutWorker = {
   name: 'layout-worker',
   setup(build) {
-    build.onResolve({ filter: /^graph-note:layout-worker$/ }, (a) => ({ path: a.path, namespace: 'layout-worker' }));
+    build.onResolve({ filter: /^thoughtknot:layout-worker$/ }, (a) => ({ path: a.path, namespace: 'layout-worker' }));
     build.onLoad({ filter: /.*/, namespace: 'layout-worker' }, async () => {
       const inner = await esbuild.build({
         absWorkingDir: here,
@@ -41,7 +41,7 @@ export const layoutWorker = {
         bundle: true,
         platform: 'browser',
         format: 'iife',
-        globalName: 'graphNoteLayoutWorker',
+        globalName: 'thoughtknotLayoutWorker',
         target: 'es2022',
         legalComments: 'inline',
         write: false,
@@ -51,7 +51,7 @@ export const layoutWorker = {
       workerBuild.metafile = inner.metafile;
       const code = inner.outputFiles[0].text;
       return {
-        contents: `export function layoutWorker(scope) {\n${code}\nreturn graphNoteLayoutWorker;\n}\n`,
+        contents: `export function layoutWorker(scope) {\n${code}\nreturn thoughtknotLayoutWorker;\n}\n`,
         loader: 'js',
         resolveDir: here,
         watchFiles: Object.keys(inner.metafile.inputs).map((f) => join(here, f)),

@@ -309,7 +309,7 @@ describe('in Obsidian', () => {
   };
   /** A link in the details' list of the links a thing holds. */
   const anchor = (el, words) =>
-    el.querySelectorAll('.graph-note-link-list a').find((a) => a.textContent === words) ??
+    el.querySelectorAll('.thoughtknot-link-list a').find((a) => a.textContent === words) ??
     assert.fail(`a link ${words}`);
   const press = (el, words) =>
     el.querySelectorAll('button').find((b) => b.textContent === words) ?? assert.fail(`a button ${words}`);
@@ -320,13 +320,13 @@ describe('in Obsidian', () => {
       const el = await card(env, null);
       const box = el.querySelector('g.node[data-key="plan"]');
       assert.ok(
-        box.querySelectorAll('text').some((t) => t.hasClass('graph-note-link') && t.textContent.includes('[[Plans]]')),
+        box.querySelectorAll('text').some((t) => t.hasClass('thoughtknot-link') && t.textContent.includes('[[Plans]]')),
       );
-      assert.equal(box.querySelector('text.graph-note-attachments')?.textContent, '📎 2');
+      assert.equal(box.querySelector('text.thoughtknot-attachments')?.textContent, '📎 2');
       assert.match(box.getAttribute('aria-label'), /2 attachments/);
-      assert.equal(el.querySelector('g.node[data-key="site"] text.graph-note-attachments'), null);
+      assert.equal(el.querySelector('g.node[data-key="site"] text.thoughtknot-attachments'), null);
       assert.deepEqual(
-        el.querySelectorAll('g.node[data-key="site"] text.graph-note-link').map((t) => t.textContent),
+        el.querySelectorAll('g.node[data-key="site"] text.thoughtknot-link').map((t) => t.textContent),
         [],
         'a link that is never opened is never drawn as one',
       );
@@ -340,17 +340,17 @@ describe('in Obsidian', () => {
     try {
       const el = await card(env);
       for (const w of ['Plans', 'https://example.com/a', 'Plnas']) assert.ok(anchor(el, w));
-      const files = el.querySelectorAll('.graph-note-attachment-list li').map((li) => li.textContent);
+      const files = el.querySelectorAll('.thoughtknot-attachment-list li').map((li) => li.textContent);
       assert.deepEqual(files, ['photo.png — image', 'report.pdf — PDF']);
       // as written, and as Obsidian rendered it: no link anywhere in the details runs script
       const addresses = el
-        .querySelectorAll('.graph-note-details a')
+        .querySelectorAll('.thoughtknot-details a')
         .map((a) => `${a.getAttribute('href')} ${a.getAttribute('data-href')}`);
       assert.deepEqual(
         addresses.filter((t) => /javascript/i.test(t)),
         [],
       );
-      const refused = el.querySelectorAll('.graph-note-link-refused').map((s) => s.textContent);
+      const refused = el.querySelectorAll('.thoughtknot-link-refused').map((s) => s.textContent);
       assert.ok(
         refused.some((t) => /run.*not opened/.test(t)),
         refused.join(' | '),
@@ -371,7 +371,7 @@ describe('in Obsidian', () => {
       host.tapKey(el, 'plan');
       assert.ok(anchor(el, 'Plans'));
       assert.deepEqual(
-        el.querySelectorAll('.graph-note-attachment-list li').map((li) => li.textContent),
+        el.querySelectorAll('.thoughtknot-attachment-list li').map((li) => li.textContent),
         ['photo.png — image', 'report.pdf — PDF'],
       );
     } finally {
@@ -383,8 +383,8 @@ describe('in Obsidian', () => {
     const env = await setUp();
     try {
       await env.plugin.openEditor({ path: PATH, line: 2, graph: 'trip' });
-      const pane = env.app.workspace.getLeavesOfType('graph-note-pane')[0].view.contentEl;
-      const marked = pane.querySelectorAll('.graph-note-overlay .graph-note-text-link').map((s) => s.textContent);
+      const pane = env.app.workspace.getLeavesOfType('thoughtknot-pane')[0].view.contentEl;
+      const marked = pane.querySelectorAll('.thoughtknot-overlay .thoughtknot-text-link').map((s) => s.textContent);
       // every link in the block's texts, each marked whole, in the order written
       assert.deepEqual(marked, [
         '[[Plans]]',
@@ -427,7 +427,7 @@ describe('in Obsidian', () => {
       assert.ok(a.dispatch('auxclick', { button: 1 }).defaultPrevented);
       const asked = env.state.modals.at(-1);
       assert.ok(asked, 'a middle-click asks first too');
-      assert.equal(asked.contentEl.querySelector('.graph-note-leave-host')?.textContent, 'example.com');
+      assert.equal(asked.contentEl.querySelector('.thoughtknot-leave-host')?.textContent, 'example.com');
       assert.match(asked.contentEl.textContent, /This link leaves Obsidian: it opens https:\/\/example\.com\/a/);
       assert.equal(env.doc.opened, undefined, 'nothing opened yet');
       press(asked.contentEl, 'Open').click();
@@ -453,10 +453,10 @@ describe('in Obsidian', () => {
   test('hovering a link shows Obsidian’s own preview of it; on a phone, a long press does (link_preview)', async () => {
     const env = await setUp();
     try {
-      assert.ok(env.state.hoverSources.has('graph-note'), 'the plugin is a hover source Page preview knows');
+      assert.ok(env.state.hoverSources.has('thoughtknot'), 'the plugin is a hover source Page preview knows');
       const el = await card(env);
       anchor(el, 'Plans').dispatch('mouseover', { clientX: 5, clientY: 5 });
-      assert.equal(env.state.hovered.source, 'graph-note');
+      assert.equal(env.state.hovered.source, 'thoughtknot');
       assert.equal(env.state.hovered.linktext, 'Plans');
       assert.equal(env.state.hovered.sourcePath, PATH);
     } finally {
@@ -484,11 +484,11 @@ describe('in Obsidian', () => {
       host.labelled(el, 'Zoom in').click();
       host.labelled(el, 'Zoom in').click();
       const place = (card) => {
-        const vp = card.querySelector('.graph-note-viewport');
+        const vp = card.querySelector('.thoughtknot-viewport');
         return [
           card.querySelector('svg').getAttribute('width'),
-          vp.cssProps['--graph-note-x'],
-          vp.cssProps['--graph-note-y'],
+          vp.cssProps['--thoughtknot-x'],
+          vp.cssProps['--thoughtknot-y'],
         ];
       };
       const left = place(el);
@@ -496,7 +496,7 @@ describe('in Obsidian', () => {
       anchor(el, 'Plans').click();
       // Obsidian's back step shows the note again, and its block is drawn afresh
       const again = await card(env, null);
-      await host.until(() => !again.querySelector('.graph-note-details').hidden);
+      await host.until(() => !again.querySelector('.thoughtknot-details').hidden);
       assert.deepEqual(place(again), left, 'the same zoom, and panned to the same place');
       assert.equal(again.querySelector('g.node.is-selected')?.getAttribute('data-key'), 'plan');
     } finally {
@@ -510,7 +510,9 @@ describe('in Obsidian', () => {
       const el = await card(env);
       assert.ok(anchor(el, 'Plnas').hasClass('is-unresolved'));
       assert.ok(
-        el.querySelectorAll('.graph-note-problems li').some((li) => /\[\[Plnas\]\] names no note/.test(li.textContent)),
+        el
+          .querySelectorAll('.thoughtknot-problems li')
+          .some((li) => /\[\[Plnas\]\] names no note/.test(li.textContent)),
       );
       press(el, 'Create the note Plnas').click();
       await host.until(() => env.state.files.has('Plnas.md'));
@@ -534,7 +536,7 @@ describe('in Obsidian', () => {
       await host.until(() => view.state.doc.toString().includes("see: '[[Plans]]"));
       assert.ok(env.state.files.get(PATH).includes("see: '[[Trip plans]]"), 'written by the editor, which saves it');
       // one change, which one undo takes back whole
-      const made = view.transactions.filter((t) => t.tr.isUserEvent('input.graph-note'));
+      const made = view.transactions.filter((t) => t.tr.isUserEvent('input.thoughtknot'));
       assert.equal(made.length, 1);
       assert.equal(made[0].tr.changes.invert(made[0].before).apply(view.state.doc).toString(), before);
     } finally {

@@ -3,8 +3,8 @@
 // the lines it offers are never those of an older note; a block chosen is found again in the note as it is once what was
 // typed is written, by its place among the graph blocks, its graph and its text, and said when it is no longer there.
 // Open again, in the pane and in place, goes on with the block after the session stopped by a copy of it (§9).
-import { word } from '@graph-note/core';
-import type { Choice, PaneSession } from '@graph-note/core';
+import { word } from '@thoughtknot/core';
+import type { Choice, PaneSession } from '@thoughtknot/core';
 import { notice } from '../host';
 
 /** What the picker asks of its editor: its session, what is typed written, and the block chosen opened. */

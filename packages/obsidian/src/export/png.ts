@@ -1,7 +1,7 @@
 // A PNG of an exported SVG (spec §16, export_png_sharp): drawn on a canvas at the size the core gives, never less than
 // twice natural size, so its text stays sharp; the SVG is self-contained, with fixed colours, so it draws the same here.
 // The SVG is given that size itself before it is read, so no engine draws it small and scales it up.
-import type { PngSize } from '@graph-note/core';
+import type { PngSize } from '@thoughtknot/core';
 
 /** The most pixels a phone's canvas holds (iOS's limit): a larger PNG is refused before it is drawn, never drawn blank. */
 export const PNG_PIXEL_LIMIT = 16_777_216;

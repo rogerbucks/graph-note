@@ -100,14 +100,14 @@ describe('an exported SVG', () => {
   // proves: motion_reduced_respected
   test('shows the first frame instead under reduced motion, by its own style sheet scoped under its class', async () => {
     const { svg } = await exported('svg');
-    assert.match(svg, /<image class="graph-note-picture-moving"/);
-    assert.match(svg, /<image class="graph-note-picture-still"[^>]*href="data:image\/png;base64,/);
+    assert.match(svg, /<image class="thoughtknot-picture-moving"/);
+    assert.match(svg, /<image class="thoughtknot-picture-still"[^>]*href="data:image\/png;base64,/);
     const css = /<style>([\s\S]*?)<\/style>/.exec(svg)[1];
-    assert.match(css, new RegExp(`\\.${IMAGE_CLASS} \\.graph-note-picture-still \\{ display: none; \\}`));
+    assert.match(css, new RegExp(`\\.${IMAGE_CLASS} \\.thoughtknot-picture-still \\{ display: none; \\}`));
     assert.match(
       css,
       new RegExp(
-        `@media \\(prefers-reduced-motion: reduce\\) \\{ \\.${IMAGE_CLASS} \\.graph-note-picture-moving \\{ display: none; \\} \\.${IMAGE_CLASS} \\.graph-note-picture-still \\{ display: inline; \\} \\}`,
+        `@media \\(prefers-reduced-motion: reduce\\) \\{ \\.${IMAGE_CLASS} \\.thoughtknot-picture-moving \\{ display: none; \\} \\.${IMAGE_CLASS} \\.thoughtknot-picture-still \\{ display: inline; \\} \\}`,
       ),
     );
     for (const rule of css.split('\n').filter((l) => l && !l.startsWith('@keyframes')))
@@ -119,7 +119,7 @@ describe('an exported PNG', () => {
   // proves: export_animation_stated
   test('reduces every animated image to its first frame, as a PNG cannot move, and says so', async () => {
     const image = await exported('png');
-    assert.doesNotMatch(image.svg, /graph-note-picture-moving/);
+    assert.doesNotMatch(image.svg, /thoughtknot-picture-moving/);
     assert.deepEqual(image.animation, [
       'Tom: tom.gif reduced to its first frame, as a PNG cannot move',
       'Rex: rex.gif reduced to its first frame, as a PNG cannot move',
@@ -133,7 +133,7 @@ describe('a picture that cannot be drawn', () => {
     const image = await exported('svg', [PETS, STYLE], async (value) =>
       value.includes('tom') ? { why: 'tom.gif is not in the vault' } : load(value),
     );
-    assert.match(image.svg, /<rect class="graph-note-picture-missing"[^>]*stroke-dasharray/);
+    assert.match(image.svg, /<rect class="thoughtknot-picture-missing"[^>]*stroke-dasharray/);
     assert.equal(image.animation[0], 'Tom: not drawn, as tom.gif is not in the vault');
   });
 
@@ -158,7 +158,7 @@ describe('a picture that cannot be drawn', () => {
   // proves: animated_image_shown
   test('with no loader, each is a frame and nothing is said', async () => {
     const image = await exported('svg', [PETS, STYLE], null);
-    assert.equal((image.svg.match(/graph-note-picture-missing/g) ?? []).length, 3);
+    assert.equal((image.svg.match(/thoughtknot-picture-missing/g) ?? []).length, 3);
     assert.equal(image.animation, undefined);
   });
 });

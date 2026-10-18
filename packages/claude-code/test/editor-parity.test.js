@@ -64,7 +64,7 @@ describe('the same edit writes the same bytes in the browser editor and in Obsid
       page.written(sha(written));
       type(env.el, block);
       await until(() => note(env) !== NOTE);
-      const tools = () => env.el.querySelectorAll('.graph-note-pane-tools button');
+      const tools = () => env.el.querySelectorAll('.thoughtknot-pane-tools button');
       const undone = tools()[0];
       undone.click();
       await until(() => note(env) === NOTE);
@@ -94,7 +94,7 @@ describe('a decision on a proposal writes the same bytes through the page’s ca
   const fenced = (t) => '```gql\n' + t + '\n```';
   const PATH = 'Some note.md';
   const proposal = async () => {
-    const { ProposalReview, basisOf, makeProposal } = await import('@graph-note/core');
+    const { ProposalReview, basisOf, makeProposal } = await import('@thoughtknot/core');
     const base = ['# Reader', '', fenced(GRAPH), ''].join('\n');
     const block = new ProposalReview(
       makeProposal({
@@ -123,7 +123,7 @@ describe('a decision on a proposal writes the same bytes through the page’s ca
     const env = await load({ files: { [PATH]: note } });
     try {
       const shown = await show(env, note, 1);
-      await until(() => !!shown.el.querySelector('svg') || !!shown.el.querySelector('.graph-note-banner'));
+      await until(() => !!shown.el.querySelector('svg') || !!shown.el.querySelector('.thoughtknot-banner'));
       act(shown.el);
       await until(() => env.state.files.get(PATH) !== note);
       return env.state.files.get(PATH);
@@ -131,7 +131,7 @@ describe('a decision on a proposal writes the same bytes through the page’s ca
       env.uninstall();
     }
   }
-  const row = (el, n) => el.querySelectorAll('li.graph-note-proposal-row')[n];
+  const row = (el, n) => el.querySelectorAll('li.thoughtknot-proposal-row')[n];
 
   for (const [name, kind, which, act] of [
     ['accepting one change', 'accept', (c) => [c.rows[1].id], (el) => press(row(el, 1), 'Accept')],

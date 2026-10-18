@@ -12,9 +12,9 @@ import { GRAPH, show } from './host/view-notes.js';
 before(() => build());
 
 const WIDTH = 300;
-const mapOf = (el) => el.querySelector('.graph-note-mini-map');
+const mapOf = (el) => el.querySelector('.thoughtknot-mini-map');
 const shown = (el) => !!mapOf(el) && !mapOf(el).hidden;
-const frameOf = (el) => mapOf(el).querySelector('rect.graph-note-mini-frame');
+const frameOf = (el) => mapOf(el).querySelector('rect.thoughtknot-mini-frame');
 /** The outlined part, as fractions of the whole copy, across and down. */
 function framed(el) {
   const [x, y, w, h] = ['x', 'y', 'width', 'height'].map((a) => Number(frameOf(el).getAttribute(a)));
@@ -61,8 +61,8 @@ describe('mini_map: shown when the drawing is bigger than its view', () => {
     try {
       zoomIn(el, 1);
       const map = mapOf(el);
-      assert.equal(map.querySelectorAll('.graph-note-mini-box').length, el.querySelectorAll('g.node').length);
-      assert.equal(map.querySelectorAll('.graph-note-mini-line').length, el.querySelectorAll('g.edge').length);
+      assert.equal(map.querySelectorAll('.thoughtknot-mini-box').length, el.querySelectorAll('g.node').length);
+      assert.equal(map.querySelectorAll('.thoughtknot-mini-line').length, el.querySelectorAll('g.edge').length);
       assert.ok(Number(map.querySelector('svg').getAttribute('width')) < WIDTH, 'small');
     } finally {
       env.uninstall();
@@ -76,7 +76,7 @@ describe('mini_map: shown when the drawing is bigger than its view', () => {
       assert.ok(whole.left < 0.001 && whole.top < 0.001 && whole.right > 0.999 && whole.bottom > 0.999, 'fitted: all');
       zoomIn(el, 2);
       const part = framed(el);
-      const drawing = Number(el.querySelector('svg.graph-note-svg').getAttribute('width'));
+      const drawing = Number(el.querySelector('svg.thoughtknot-svg').getAttribute('width'));
       assert.ok(Math.abs(part.right - part.left - WIDTH / drawing) < 0.01, 'as much of the width as the view holds');
       assert.ok(part.right - part.left < 0.9);
       // the view changed by the bar moves the outline with it
@@ -95,10 +95,10 @@ describe('mini_map: shown when the drawing is bigger than its view', () => {
   test('its look is the theme’s, in the style sheet', () => {
     const css = readFileSync(`${root}styles.css`, 'utf8');
     const rule = (name) => new RegExp(`\\.${name}\\s*\\{([^}]*)\\}`).exec(css)?.[1] ?? '';
-    for (const name of ['graph-note-mini-map', 'graph-note-mini-frame', 'graph-note-mini-box'])
+    for (const name of ['thoughtknot-mini-map', 'thoughtknot-mini-frame', 'thoughtknot-mini-box'])
       assert.match(rule(name), /var\(--/, name);
     assert.ok(
-      !/#[0-9a-f]{3,8}\b/i.test(rule('graph-note-mini-map') + rule('graph-note-mini-frame')),
+      !/#[0-9a-f]{3,8}\b/i.test(rule('thoughtknot-mini-map') + rule('thoughtknot-mini-frame')),
       'no fixed colour',
     );
   });
@@ -128,13 +128,13 @@ describe('mini_map: tapped or dragged, it moves the view', () => {
     const { env, el } = await card();
     try {
       zoomIn(el, 3);
-      const vp = el.querySelector('.graph-note-viewport');
+      const vp = el.querySelector('.thoughtknot-viewport');
       at(el, 'pointerdown', 0.03, 0.5);
       at(el, 'pointerup', 0.03, 0.5);
-      const left = parseFloat(vp.cssProps['--graph-note-x']);
+      const left = parseFloat(vp.cssProps['--thoughtknot-x']);
       at(el, 'pointerdown', 0.97, 0.5);
       at(el, 'pointerup', 0.97, 0.5);
-      assert.ok(parseFloat(vp.cssProps['--graph-note-x']) < left, 'the drawing moved left to show its right side');
+      assert.ok(parseFloat(vp.cssProps['--thoughtknot-x']) < left, 'the drawing moved left to show its right side');
     } finally {
       env.uninstall();
     }
@@ -164,13 +164,13 @@ describe('mini_map: tapped or dragged, it moves the view', () => {
     const { env, el } = await card();
     try {
       zoomIn(el, 2);
-      const before = el.querySelector('svg.graph-note-svg').getAttribute('width');
+      const before = el.querySelector('svg.thoughtknot-svg').getAttribute('width');
       at(el, 'pointerdown', 0.5, 0.5);
       at(el, 'pointerup', 0.5, 0.5);
       mapOf(el).dispatch('dblclick', { clientX: 10, clientY: 10 });
-      assert.equal(el.querySelector('.graph-note-details').hidden, true);
+      assert.equal(el.querySelector('.thoughtknot-details').hidden, true);
       assert.equal(el.querySelectorAll('g.is-selected').length, 0);
-      assert.equal(el.querySelector('svg.graph-note-svg').getAttribute('width'), before);
+      assert.equal(el.querySelector('svg.thoughtknot-svg').getAttribute('width'), before);
     } finally {
       env.uninstall();
     }
@@ -251,7 +251,7 @@ describe('mini_map: in the pane as in a card', () => {
     try {
       await until(() => !!mapOf(env.el));
       assert.equal(shown(env.el), true);
-      assert.equal(mapOf(env.el).querySelectorAll('.graph-note-mini-box').length, 3);
+      assert.equal(mapOf(env.el).querySelectorAll('.thoughtknot-mini-box').length, 3);
       zoomIn(env.el, 3);
       at(env.el, 'pointerdown', 0.97, 0.5);
       at(env.el, 'pointerup', 0.97, 0.5);

@@ -2,7 +2,7 @@
 // Add a thing asks for the thing's text first, and suggests its name from the text as it is typed — in the style of the
 // graph's names, never one of them — shown before anything is written. Add the thing then writes it into the text being
 // edited, as one edit an undo takes back. A name of the user's own is kept as the text changes, and held to the same rules.
-import { addThing, suggestName, word } from '@graph-note/core';
+import { addThing, suggestName, word } from '@thoughtknot/core';
 import { button } from './view-bar';
 import type { ViewOptions } from './view-options';
 
@@ -20,11 +20,11 @@ export class AddThing {
     private readonly o: ViewOptions,
   ) {
     this.el = parent.createDiv({
-      cls: 'graph-note-add-thing',
+      cls: 'thoughtknot-add-thing',
       attr: { role: 'group', 'aria-label': word('add.group') },
     });
-    this.controls = this.el.createDiv({ cls: 'graph-note-add-thing-controls' });
-    this.said = this.el.createSpan({ cls: 'graph-note-walk-said', attr: { 'aria-live': 'polite' } });
+    this.controls = this.el.createDiv({ cls: 'thoughtknot-add-thing-controls' });
+    this.said = this.el.createSpan({ cls: 'thoughtknot-walk-said', attr: { 'aria-live': 'polite' } });
     this.show();
   }
 
@@ -58,10 +58,10 @@ export class AddThing {
         .createEl('label', { text: words })
         .createEl('input', { attr: { type: 'text', 'aria-label': words, ...attr } });
     const text = label(el, word('add.text'));
-    const row = el.createDiv({ cls: 'graph-note-add-name' });
+    const row = el.createDiv({ cls: 'thoughtknot-add-name' });
     row.hidden = true;
     const name = label(row, word('add.name'), { autocapitalize: 'none' });
-    const listId = `graph-note-kinds-${++forms}`;
+    const listId = `thoughtknot-kinds-${++forms}`;
     const kind = label(el, word('add.kind'), { list: listId });
     const kinds = el.createEl('datalist', { attr: { id: listId } });
     const boxes = this.o.reading.graphs.get(this.o.graph)?.boxes ?? [];

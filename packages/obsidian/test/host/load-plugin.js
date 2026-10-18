@@ -58,7 +58,7 @@ export async function load(options = {}) {
   } finally {
     Module._load = real;
   }
-  const plugin = new Plugin(obsidian.app, { id: 'graph-note' });
+  const plugin = new Plugin(obsidian.app, { id: 'thoughtknot' });
   if (options.engine) plugin.loadEngine = options.engine;
   // loaded as Obsidian loads it, marked loaded before its onload runs and left so: what it adds, in onload or after, such
   // as an editor in place that listens for the note changing, is loaded with it

@@ -14,7 +14,7 @@ describe('problems, in place', () => {
     const env = await open();
     try {
       type(env.el, READER + ',\n(eyes)-[:FAVOURS]->(larg)');
-      const fixOf = () => labelled(env.el.querySelector('.graph-note-fixbar'), 'Change larg to large');
+      const fixOf = () => labelled(env.el.querySelector('.thoughtknot-fixbar'), 'Change larg to large');
       await until(() => !!fixOf());
       textarea(env.el).focus();
       const fix = fixOf();
@@ -32,10 +32,10 @@ describe('problems, in place', () => {
       const typo = READER + ',\n(eyes)-[:FAVOURS]->(larg)';
       type(env.el, typo);
       await wait(400);
-      const mark = env.el.querySelector('.graph-note-overlay .graph-note-problem');
+      const mark = env.el.querySelector('.thoughtknot-overlay .thoughtknot-problem');
       assert.equal(mark.textContent, 'larg');
       assert.match(mark.className, /is-warning/);
-      const here = env.el.querySelector('.graph-note-fixbar');
+      const here = env.el.querySelector('.thoughtknot-fixbar');
       assert.ok(!here.hidden, 'the caret is on that line, so its fix is offered there');
       assert.match(here.textContent, /larg is not in graph reader/);
       labelled(here, 'Change larg to large').click();
@@ -54,7 +54,7 @@ describe('problems, in place', () => {
       const typed = READER + ', // the reader graph';
       type(env.el, typed, typed.length);
       await wait(400);
-      const here = env.el.querySelector('.graph-note-fixbar');
+      const here = env.el.querySelector('.thoughtknot-fixbar');
       assert.ok(!here.hidden);
       assert.match(here.textContent, /a comment must be on a line of its own/i);
       labelled(here, 'Put the comment on its own line').click();
@@ -71,10 +71,10 @@ describe('problems, in place', () => {
     try {
       type(env.el, READER + ',\n(eyes)-[:FAVOURS]->(nowhere),\n(x:T {y: })');
       await wait(400);
-      const items = env.el.querySelectorAll('.graph-note-pane-problems li').map((li) => li.textContent);
+      const items = env.el.querySelectorAll('.thoughtknot-pane-problems li').map((li) => li.textContent);
       assert.equal(items.length, 2);
       assert.match(items[0], /^Line 7: /);
-      assert.ok(env.el.querySelectorAll('.graph-note-overlay .graph-note-line-sign').length >= 2);
+      assert.ok(env.el.querySelectorAll('.thoughtknot-overlay .thoughtknot-line-sign').length >= 2);
     } finally {
       env.uninstall();
     }
@@ -83,11 +83,11 @@ describe('problems, in place', () => {
 
 /** The suggestions offered now: each option's name and what it is, as the list shows them; none while it is closed. */
 const offered = (el) => {
-  const list = el.querySelector('.graph-note-suggestions');
+  const list = el.querySelector('.thoughtknot-suggestions');
   return list.hidden
     ? []
     : list.querySelectorAll('[role="option"]').map((o) =>
-        [o.querySelector('.graph-note-suggestion-name'), o.querySelector('.graph-note-suggestion-detail')]
+        [o.querySelector('.thoughtknot-suggestion-name'), o.querySelector('.thoughtknot-suggestion-detail')]
           .map((x) => x?.textContent ?? '')
           .filter(Boolean)
           .join(' — '),
@@ -105,9 +105,9 @@ describe('suggestions while typing', () => {
     const env = await open();
     try {
       type(env.el, READER + ',\n(eyes)-[:F');
-      const list = env.el.querySelector('.graph-note-suggestions');
+      const list = env.el.querySelector('.thoughtknot-suggestions');
       assert.equal(list.getAttribute('role'), 'listbox');
-      assert.ok(list.closest('.graph-note-editor'), 'it drops down inside the field, where the caret is');
+      assert.ok(list.closest('.thoughtknot-editor'), 'it drops down inside the field, where the caret is');
       assert.equal(textarea(env.el).getAttribute('aria-controls'), list.getAttribute('id'));
       assert.equal(textarea(env.el).getAttribute('aria-autocomplete'), 'list');
       assert.deepEqual(offered(env.el), ['FAVOURS — favours']);
@@ -141,7 +141,7 @@ describe('suggestions while typing', () => {
       );
       key(env.el, 'ArrowDown');
       key(env.el, 'ArrowDown');
-      const name = second.querySelector('.graph-note-suggestion-name').textContent;
+      const name = second.querySelector('.thoughtknot-suggestion-name').textContent;
       assert.ok(key(env.el, 'Enter').defaultPrevented, 'Enter takes it, no new line');
       assert.equal(textarea(env.el).value, READER + `,\n(eyes)-[:FAVOURS]->(${name}`);
     } finally {
@@ -214,7 +214,7 @@ describe('suggestions while typing', () => {
     const env = await open();
     try {
       type(env.el, READER + ",\n(x:Reason {title: 'abc");
-      assert.ok(env.el.querySelector('.graph-note-suggestions').hidden);
+      assert.ok(env.el.querySelector('.thoughtknot-suggestions').hidden);
       assert.equal(key(env.el, 'Tab').defaultPrevented, false);
     } finally {
       env.uninstall();
@@ -245,12 +245,12 @@ describe('a name only suggested', () => {
     try {
       type(env.el, UNNAMED + ',\n(eyes)-[:FAVOURS]->(smal_reader)');
       await wait(400);
-      const here = env.el.querySelector('.graph-note-fixbar');
+      const here = env.el.querySelector('.thoughtknot-fixbar');
       assert.ok(!here.hidden, 'the caret is on that line, so its problem is there');
       assert.match(here.textContent, /No thing called smal_reader in graph reader/);
       assert.ok(!/small_reader/.test(here.textContent), here.textContent);
       assert.equal(labelled(here, 'Change smal_reader to small_reader'), undefined, 'no fix that writes it');
-      const items = env.el.querySelectorAll('.graph-note-pane-problems li').map((li) => li.textContent);
+      const items = env.el.querySelectorAll('.thoughtknot-pane-problems li').map((li) => li.textContent);
       assert.ok(
         items.some((t) => /smal_reader/.test(t)),
         items.join(' | '),
@@ -259,7 +259,7 @@ describe('a name only suggested', () => {
         !items.some((t) => /smal_reader/.test(t) && /small_reader/.test(t)),
         'the list names no estimate of it: ' + items.join(' | '),
       );
-      assert.equal(env.el.querySelectorAll('.graph-note-pane-problems li').length, 2, 'it and the unnamed thing');
+      assert.equal(env.el.querySelectorAll('.thoughtknot-pane-problems li').length, 2, 'it and the unnamed thing');
     } finally {
       env.uninstall();
     }
@@ -270,7 +270,7 @@ describe('problems announced', () => {
   test('a new problem is announced to screen readers, and the focus stays in the text', async () => {
     const env = await open();
     try {
-      const live = env.el.querySelector('.graph-note-announce');
+      const live = env.el.querySelector('.thoughtknot-announce');
       assert.equal(live.getAttribute('aria-live'), 'polite');
       textarea(env.el).focus();
       type(env.el, READER + ',\n(eyes)-[:FAVOURS]->(nowhere)');

@@ -28,7 +28,7 @@ const noteOf = (block, ...more) =>
   ['# Reader', '', fence(block), ...more.flatMap((b) => ['', fence(b)]), ''].join('\n');
 const FIRST = /^accept its name first: Small reader is only drawn under the suggested name small_reader/;
 const FIX = 'Add the name small_reader';
-const details = (el) => el.querySelector('.graph-note-details');
+const details = (el) => el.querySelector('.thoughtknot-details');
 
 /** The note as written, and the field's text, both as they were: nothing was written. */
 const unwritten = (env, el, block = BLOCK) => {
@@ -50,7 +50,7 @@ describe('recording a path through a box drawn under a suggested name', () => {
     el.querySelectorAll('input').find((x) => x.getAttribute('aria-label') === 'Path title').value = 'Coffee first';
     labelled(el, 'Save path').click();
   };
-  const alert = (el) => el.querySelector('.graph-note-walk [role="alert"]');
+  const alert = (el) => el.querySelector('.thoughtknot-walk [role="alert"]');
 
   test('is refused in words, and nothing is written; the recording is kept', async () => {
     const { env, el } = await open();
@@ -69,7 +69,7 @@ describe('making a view of a box drawn under a suggested name', () => {
   const make = async (el, kind, ...keys) => {
     await until(() => !!labelled(el, 'Make a view'));
     labelled(el, 'Make a view').click();
-    const strip = el.querySelector('.graph-note-view-maker');
+    const strip = el.querySelector('.thoughtknot-view-maker');
     const kinds = strip.querySelectorAll('select').find((s) => s.getAttribute('aria-label') === 'Kind of view');
     kinds.value = kind;
     kinds.dispatch('change');
@@ -120,7 +120,7 @@ describe('the details of a box drawn under a suggested name, while the card is e
       input('What is needed').value = 'its price';
       input('Why it waits').value = 'the shop has not said';
       labelled(el, 'Park it').click();
-      assert.match(el.querySelector('.graph-note-park [role="alert"]').textContent, FIRST);
+      assert.match(el.querySelector('.thoughtknot-park [role="alert"]').textContent, FIRST);
       unwritten(env, el);
       assert.ok(labelled(details(el), FIX), 'the box’s own fix is still offered');
     } finally {
@@ -133,7 +133,7 @@ describe('the details of a box drawn under a suggested name, while the card is e
     try {
       tapKey(el, 'small_reader');
       const panel = details(el);
-      const alert = () => panel.querySelector('.graph-note-inspector [role="alert"]');
+      const alert = () => panel.querySelector('.thoughtknot-inspector [role="alert"]');
       enter(field(panel, 'Value of name'), 'Little reader');
       assert.match(alert().textContent, /^name: accept its name first: Small reader is only drawn/);
       unwritten(env, el);
@@ -224,7 +224,7 @@ describe('a card drawn before another block of its graph was changed', () => {
       field(el, 'What is needed').value = 'its price';
       field(el, 'Why it waits').value = 'the shop has not said';
       labelled(el, 'Park it').click();
-      assert.match(el.querySelector('.graph-note-park [role="alert"]').textContent, NOW);
+      assert.match(el.querySelector('.thoughtknot-park [role="alert"]').textContent, NOW);
       written(env, el);
     } finally {
       env.uninstall();
@@ -239,7 +239,7 @@ describe('a card drawn before another block of its graph was changed', () => {
       for (const k of ['large', 'small_reader']) tapKey(el, k);
       field(el, 'Path title').value = 'Coffee first';
       labelled(el, 'Save path').click();
-      assert.match(el.querySelector('.graph-note-walk [role="alert"]').textContent, NOW);
+      assert.match(el.querySelector('.thoughtknot-walk [role="alert"]').textContent, NOW);
       written(env, el);
     } finally {
       env.uninstall();

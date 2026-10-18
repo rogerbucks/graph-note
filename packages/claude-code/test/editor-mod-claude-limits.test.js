@@ -5,7 +5,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { READ_LIMITS } from '@graph-note/core';
+import { READ_LIMITS } from '@thoughtknot/core';
 import { ask } from './editor-threats-support.js';
 import { PLAN, launcherFor, modVault, opens, partsOf, writeNote } from './editor-mod-support.js';
 

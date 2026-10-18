@@ -3,8 +3,8 @@
 // Obsidian's preview on hover or, on a touch screen, a long press (link_preview); one that may not be opened shown as text
 // (safe_to_click); one that names nothing marked broken, with its fixes, Create the note and Change it to what it most
 // likely meant (broken_links_problems); and a thing's attachments by name and type (attachments_at_a_glance).
-import { linkTo, refusedWords } from '@graph-note/core';
-import type { Attachment, BrokenLink, FoundLink, PlacedLink } from '@graph-note/core';
+import { linkTo, refusedWords } from '@thoughtknot/core';
+import type { Attachment, BrokenLink, FoundLink, PlacedLink } from '@thoughtknot/core';
 import type { LeftAt, LinkHost } from './link-types';
 
 /** How long a finger rests on a link before Obsidian's preview of it is shown, as a long press. */
@@ -24,7 +24,7 @@ export function linkAnchor(
   const vault = link.kind === 'note' || link.kind === 'file';
   const a = parent.createEl('a', {
     text,
-    cls: ['graph-note-link', vault ? 'is-internal' : 'is-external'],
+    cls: ['thoughtknot-link', vault ? 'is-internal' : 'is-external'],
     attr: { href: link.opens, 'aria-label': vault ? `Open ${link.opens}` : `Open ${link.opens}, outside Obsidian` },
   });
   followAnchor(a, link, host, where);
@@ -32,7 +32,7 @@ export function linkAnchor(
 }
 
 /** Set on an anchor once it follows its link as the card's own do, so it is never made to twice. */
-export const FOLLOWED = 'data-graph-note-followed';
+export const FOLLOWED = 'data-thoughtknot-followed';
 
 /**
  * An anchor on the page made to follow `link` as the card's own links do: opened by Obsidian on a click, a middle-click
@@ -97,7 +97,7 @@ function fixes(li: HTMLElement, a: HTMLElement, broken: BrokenLink, s: LinksShow
   a.addClass('is-unresolved');
   li.appendText(' — names nothing');
   if (s.readOnly()) return;
-  const row = li.createDiv({ cls: 'graph-note-link-fixes' });
+  const row = li.createDiv({ cls: 'thoughtknot-link-fixes' });
   const fixed = () => {
     a.removeClass('is-unresolved');
     row.remove();
@@ -134,12 +134,12 @@ export interface LinksShown {
 export function renderLinks(el: HTMLElement, held: PlacedLink[], attachments: Attachment[], s: LinksShown): void {
   if (held.length) {
     el.createEl('h4', { text: 'Links' });
-    const ul = el.createEl('ul', { cls: 'graph-note-link-list' });
+    const ul = el.createEl('ul', { cls: 'thoughtknot-link-list' });
     for (const { property, link } of held) {
       const li = ul.createEl('li');
       li.appendText(`${property}: `);
       if (link.kind === 'refused') {
-        li.createSpan({ cls: 'graph-note-link-refused', text: refusedWords(link) });
+        li.createSpan({ cls: 'thoughtknot-link-refused', text: refusedWords(link) });
         continue;
       }
       const a = linkAnchor(li, link, s.host, s.where);
@@ -149,7 +149,7 @@ export function renderLinks(el: HTMLElement, held: PlacedLink[], attachments: At
   }
   if (!attachments.length) return;
   el.createEl('h4', { text: `Attachments (${attachments.length})` });
-  const ul = el.createEl('ul', { cls: 'graph-note-attachment-list' });
+  const ul = el.createEl('ul', { cls: 'thoughtknot-attachment-list' });
   for (const f of attachments) {
     const li = ul.createEl('li');
     linkAnchor(li, linkTo(f.target), s.host, s.where, f.name);

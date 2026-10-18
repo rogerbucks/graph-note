@@ -12,12 +12,12 @@ import {
   indentText,
   lockBlock,
   namesSharedSchema,
-} from '@graph-note/core';
-import type GraphNotePlugin from '../main';
-import type { DeclaredDeferred } from '@graph-note/core/display/graph-view/view-options';
+} from '@thoughtknot/core';
+import type ThoughtKnotPlugin from '../main';
+import type { DeclaredDeferred } from '@thoughtknot/core/display/graph-view/view-options';
 import { RECOVER_COMMAND, keyBeside, keyOf, newDraftId } from '../drafts';
-import { NOTE_DELETED } from '@graph-note/core/display/editor/editor-note';
-import type { EditorNote, KeptDraft, Refused, Reread } from '@graph-note/core/display/editor/editor-note';
+import { NOTE_DELETED } from '@thoughtknot/core/display/editor/editor-note';
+import type { EditorNote, KeptDraft, Refused, Reread } from '@thoughtknot/core/display/editor/editor-note';
 import { lockInNote, stepNote, writeThroughEditor, writeThroughVault } from './note-writing';
 
 /** What is said when the note being edited is deleted while what was typed is not yet written. */
@@ -32,9 +32,9 @@ export class BlockNote implements EditorNote {
   text = '';
   /** The session on the block being edited, or null when the note has no graph block to edit. */
   session: PaneSession | null = null;
-  private readonly plugin: GraphNotePlugin;
+  private readonly plugin: ThoughtKnotPlugin;
 
-  constructor(plugin: GraphNotePlugin) {
+  constructor(plugin: ThoughtKnotPlugin) {
     this.plugin = plugin;
   }
 

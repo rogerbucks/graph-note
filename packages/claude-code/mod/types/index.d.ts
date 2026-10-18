@@ -8,6 +8,6 @@ declare module 'claude-code' {
   interface PluginState {
     // `editor` counts the changes of the editor pane (a server started, ended or stopped), so it is drawn again. It
     // holds no address, token or note: those never enter state, which the host may keep.
-    'graph-note': { view: GraphView | null; editor: number };
+    thoughtknot: { view: GraphView | null; editor: number };
   }
 }

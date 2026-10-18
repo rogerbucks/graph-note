@@ -1,7 +1,7 @@
 // A proposal checked by the graph spec's own change-set check (editor spec §17, proposals_checked): the change set as the
 // note holds it, run against the note's other graphs by `checkChangeset`, and every line of its answer kept to be shown.
 // The same check names the proposer's kind: a Model or a Person in the note's graphs, which is all the graph says of it.
-import gs from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
 import { items } from './block-items.ts';
 import { dataKind, gqlSpans } from './blocks.ts';
 import { readNote } from './drawing.ts';
