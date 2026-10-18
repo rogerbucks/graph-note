@@ -199,6 +199,9 @@ holds the two together).
       outlined, and a line at the top says "Put … beside …". Let go: a notice says "Moved: …", the style block gains a
       beside nudge and the two are drawn side by side. Drag again and press Escape: the box goes back and nothing is
       written. A short click still opens the box (nudge_preview, drag_moves_box).
+- [ ] **S-04** Phone: hold a finger on a box for a moment. It lifts (a shadow) and its tooltip opens. Drag it to just
+      below another box: the page does not scroll, the line says "Put … beside …", and letting go writes the nudge. A
+      swipe begun at once still scrolls the note, and a hold lifted without moving opens no details (hold_to_drag_touch).
 
 ## Views — spec §2, §7
 

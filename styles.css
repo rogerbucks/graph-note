@@ -891,8 +891,12 @@ details.graph-note-style > summary {
 .graph-note-svg g.node:focus {
   outline: none;
 }
-/* A box being dragged follows the pointer, faded so the drawing under it still shows; the box it would land by is
-   outlined in the accent, and a line at the top of the drawing says where it would go (§6, drag_moves_box). */
+/* A box a finger has held is lifted by a shadow (§6, hold_to_drag_touch); a box being dragged follows the pointer,
+   faded so the drawing under it still shows; the box it would land by is outlined in the accent, and a line at the top
+   of the drawing says where it would go (drag_moves_box). */
+.graph-note-svg g.node.is-held {
+  filter: drop-shadow(0 2px 4px var(--gn-border-focus));
+}
 .graph-note-svg g.node.is-dragged {
   opacity: 0.6;
   cursor: grabbing;

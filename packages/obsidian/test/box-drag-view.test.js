@@ -1,67 +1,17 @@
 // Moving a box by dragging it (editor spec §6, nudge_preview, drag_moves_box): a box pressed with a mouse and dragged
 // follows the pointer, the box it would land by is marked and a line says the nudge it would write; letting go writes
 // that nudge into the style graph and says so; Escape, or letting go away from every box, writes nothing; a press that
-// hardly moves is still a tap; a drag across empty space still pans; and a finger on a box moves nothing.
+// hardly moves is still a tap; a drag across empty space still pans; and a finger swiped across a box moves nothing.
+// And with a finger (hold_to_drag_touch): held on a box for a moment it picks the box up, and only then does a drag move
+// it; a hold lifted without moving is the long press it was; and while a box is picked up the page does not scroll.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { build, load, until } from './host/load-plugin.js';
+import { build, until } from './host/load-plugin.js';
 import { fence } from './host/notes.js';
-import { show } from './host/view-notes.js';
+import { PATH, TEAM, card, mouse, noteOf, touch } from './host/drag-steps.js';
+import { clock } from './host/quick-info-steps.js';
 
 before(() => build());
-
-const PATH = 'Some note.md';
-const TEAM = `// graph: team
-(ann:Person {name: 'Ann'}),
-(bob:Person {name: 'Bob'}),
-(cy:Person {name: 'Cy'}),
-(ann)-[:ASKS]->(bob),
-(bob)-[:ASKS]->(cy)`;
-const noteOf = (...blocks) => ['# Team', '', ...blocks.flatMap((b) => [fence(b), '']), ''].join('\n');
-
-/** Shows the note's first block at PATH, with the drawing it was laid out as and a way to point at its boxes. */
-async function card(note, options = {}) {
-  const env = await load({ files: { [PATH]: note }, ...options });
-  let drawn = null;
-  const layout = env.plugin.layout.bind(env.plugin);
-  env.plugin.layout = async (drawing, owner) => (drawn = await layout(drawing, owner));
-  // each write to a note, counted as it is asked for, so a test can say none was asked for without waiting
-  const writes = [],
-    process = env.plugin.app.vault.process.bind(env.plugin.app.vault);
-  env.plugin.app.vault.process = (file, f) => (writes.push(file.path), process(file, f));
-  const { el } = await show(env, note);
-  const { hitAreas } = await import('../../core/src/hits.ts');
-  const areas = hitAreas(drawn.svg);
-  const vp = el.querySelector('.graph-note-viewport'),
-    svg = el.querySelector('svg.graph-note-svg');
-  /** A point in the drawing's own units, as the viewport's pixels. */
-  const at = (x, y) => {
-    const vb = areas.viewBox,
-      w = Number(svg.getAttribute('width')),
-      h = Number(svg.getAttribute('height'));
-    return {
-      clientX: parseFloat(vp.cssProps['--graph-note-x']) + ((x - vb.x) * w) / vb.width,
-      clientY: parseFloat(vp.cssProps['--graph-note-y']) + ((y - vb.y) * h) / vb.height,
-    };
-  };
-  const boxOf = (key) => el.querySelectorAll('g.node').find((g) => g.getAttribute('data-key') === key);
-  /** A box's middle and size, in the drawing's own units. */
-  const placeOf = (key) => {
-    const s = areas.shapes.find((x) => x.id === boxOf(key).getAttribute('id'));
-    const xs = s.polygons.flat().map(([x]) => x),
-      ys = s.polygons.flat().map(([, y]) => y);
-    const [l, t, r, b] = [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
-    return { x: (l + r) / 2, y: (t + b) / 2, w: r - l, h: b - t };
-  };
-  /** The point just across the ranks from a box: beside it, for the direction the drawing was laid out in. */
-  const besideOf = (key) => {
-    const p = placeOf(key);
-    return drawn.rankdir === 'TB' ? at(p.x + p.w * 0.8, p.y) : at(p.x, p.y + p.h * 0.8);
-  };
-  return { env, el, vp, at, boxOf, placeOf, besideOf, writes };
-}
-
-const mouse = (id, target, p) => ({ pointerId: id, pointerType: 'mouse', button: 0, target, ...p });
 
 describe('dragging a box with a mouse', () => {
   // proves: nudge_preview, drag_moves_box
@@ -169,12 +119,92 @@ describe('dragging a box with a mouse', () => {
     const note = noteOf(TEAM);
     const { env, vp, boxOf, placeOf, besideOf, at, writes } = await card(note);
     try {
-      const touch = (id, target, p) => ({ ...mouse(id, target, p), pointerType: 'touch' });
       vp.dispatch('pointerdown', touch(6, boxOf('ann'), at(placeOf('ann').x, placeOf('ann').y)));
       vp.dispatch('pointermove', touch(6, vp, besideOf('cy')));
       assert.equal(boxOf('ann').getAttribute('transform'), null);
       vp.dispatch('pointerup', touch(6, vp, besideOf('cy')));
       assert.deepEqual(writes, [], 'nothing written');
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
+describe('moving a box with a finger', () => {
+  // proves: hold_to_drag_touch
+  test('a finger held on a box picks it up, and a drag then moves it, written when let go', async () => {
+    const { env, el, vp, boxOf, placeOf, besideOf, at, writes } = await card(noteOf(TEAM));
+    try {
+      const time = clock(env),
+        ann = boxOf('ann');
+      vp.dispatch('pointerdown', touch(1, ann, at(placeOf('ann').x, placeOf('ann').y)));
+      assert.ok(!ann.classList.contains('is-held'), 'not at once: for a moment');
+      time.fire();
+      assert.ok(ann.classList.contains('is-held'), 'picked up');
+      vp.dispatch('pointermove', touch(1, vp, besideOf('cy')));
+      assert.ok(ann.getAttribute('transform')?.startsWith('translate('), 'the box follows the finger');
+      assert.equal(el.querySelector('.graph-note-move-hint').textContent, 'Put Ann beside Cy');
+      vp.dispatch('pointerup', touch(1, vp, besideOf('cy')));
+      assert.deepEqual(writes, [PATH]);
+      await until(() => /:Nudge /.test(env.state.files.get(PATH)));
+      assert.match(env.state.files.get(PATH), /\(nudge_1:Nudge \{word: 'beside', thing: 'ann', other: 'cy'\}\)/);
+      assert.ok(!ann.classList.contains('is-held'), 'put down');
+      assert.equal(el.querySelector('.graph-note-details').hidden, true, 'nothing opens');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: hold_to_drag_touch
+  test('a swipe begun at once scrolls or pans, and moves nothing, even once the moment has passed', async () => {
+    const { env, vp, boxOf, placeOf, besideOf, at, writes } = await card(noteOf(TEAM));
+    try {
+      const time = clock(env),
+        ann = boxOf('ann');
+      vp.dispatch('pointerdown', touch(2, ann, at(placeOf('ann').x, placeOf('ann').y)));
+      vp.dispatch('pointermove', touch(2, vp, besideOf('cy')));
+      time.fire();
+      vp.dispatch('pointermove', touch(2, vp, besideOf('bob')));
+      assert.ok(!ann.classList.contains('is-held'));
+      assert.equal(ann.getAttribute('transform'), null);
+      vp.dispatch('pointerup', touch(2, vp, besideOf('bob')));
+      assert.deepEqual(writes, [], 'nothing written');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: hold_to_drag_touch
+  test('a hold lifted without moving is a long press, as before: no details open and nothing moves', async () => {
+    const { env, el, vp, boxOf, placeOf, at, writes } = await card(noteOf(TEAM));
+    try {
+      const time = clock(env),
+        ann = boxOf('ann'),
+        p = at(placeOf('ann').x, placeOf('ann').y);
+      vp.dispatch('pointerdown', touch(3, ann, p));
+      time.fire();
+      vp.dispatch('pointerup', touch(3, ann, p));
+      assert.ok(!ann.classList.contains('is-held'), 'put down');
+      assert.equal(el.querySelector('.graph-note-details').hidden, true);
+      assert.deepEqual(writes, []);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: hold_to_drag_touch
+  test('while a box is picked up, the page under it does not scroll; otherwise it does', async () => {
+    const { env, vp, boxOf, placeOf, at } = await card(noteOf(TEAM));
+    try {
+      const time = clock(env),
+        ann = boxOf('ann');
+      assert.equal(vp.dispatch('touchmove', { target: ann }).defaultPrevented, false, 'nothing held: the page scrolls');
+      vp.dispatch('pointerdown', touch(4, ann, at(placeOf('ann').x, placeOf('ann').y)));
+      time.fire();
+      assert.equal(vp.dispatch('touchmove', { target: ann }).defaultPrevented, true, 'held: the page stays');
+      vp.dispatch('pointercancel', touch(4, ann, {}));
+      assert.ok(!ann.classList.contains('is-held'), 'a lost finger puts it down');
+      assert.equal(vp.dispatch('touchmove', { target: ann }).defaultPrevented, false);
     } finally {
       env.uninstall();
     }

@@ -45,6 +45,7 @@ export interface ViewportHost {
 export function bindViewportEvents(host: ViewportHost): void {
   const { card, viewport: vp, zoom, sel, details, taps, svg } = host;
   const drag = host.o ? boxDragFor(host.o, svg, { viewport: vp, taps, zoom }) : null;
+  if (drag) card.register(() => drag.onunload());
   let boxDown: { id: number; x: number; y: number; target: Target; touch: boolean } | null = null;
   /** A press on empty space: if it lifts where it came down, it is a tap there, which clears the focus (§25). */
   let emptyDown: { id: number; x: number; y: number } | null = null;
@@ -86,10 +87,11 @@ export function bindViewportEvents(host: ViewportHost): void {
       vp.setPointerCapture(e.pointerId);
       vp.focus({ preventScroll: true });
     }
-    // a box pressed with a mouse or pen may be dragged to move it (§6, drag_moves_box); a finger scrolls or pans
+    // a box pressed with a mouse or pen may be dragged to move it (§6, drag_moves_box); a finger held there first
+    // (hold_to_drag_touch), so a swipe still scrolls or pans
     const box = (e.target as Element | null)?.closest?.<SVGElement>('g.node');
-    if (drag && pointer !== 'touch' && e.button === 0 && target && 'key' in target && box) {
-      drag.down(e.pointerId, target.key, box, p);
+    if (drag && e.button === 0 && target && 'key' in target && box) {
+      drag.down(e.pointerId, target.key, box, p, pointer === 'touch');
       vp.setPointerCapture(e.pointerId);
     }
   });
@@ -129,6 +131,15 @@ export function bindViewportEvents(host: ViewportHost): void {
     // on touch there is no hover: the tap that selects gives the highlight (§25)
     sel.touched(down.touch);
   });
+  // while a finger has a box picked up, the page under it does not scroll (§6, hold_to_drag_touch)
+  card.registerDomEvent(
+    vp,
+    'touchmove',
+    (e: TouchEvent) => {
+      if (drag?.holding) e.preventDefault();
+    },
+    { passive: false },
+  );
   card.registerDomEvent(vp, 'pointercancel', (e: PointerEvent) => {
     boxDown = emptyDown = foldDown = null;
     drag?.cancel();
