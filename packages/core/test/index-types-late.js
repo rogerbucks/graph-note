@@ -20,6 +20,7 @@ export const TYPES_LATE = [
   'RunnerOptions',
   'SafeWrite',
   'Scheduler',
+  'SchemaPicture',
   'ScopeChoice',
   'SendAsk',
   'SendDeps',

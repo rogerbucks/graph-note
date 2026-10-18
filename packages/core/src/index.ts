@@ -112,6 +112,8 @@ export type { Diagnostic, CodeAction, CompletionItem, Range, Position, TextEdit 
 export { inlineCompletion, stepOver } from './autocomplete.ts';
 export type { Inline, InlineKind } from './autocomplete.ts';
 export { isDraft, lockBlock, reverseGuess } from './lock.ts';
+export { schemaPicture } from './schema-picture.ts';
+export type { SchemaPicture } from './schema-picture.ts';
 export { PaneSession } from './pane.ts';
 export { PathPlayer, PathRecorder, mergePathProblems, pathBlock, pathProblems, pathsOf } from './paths.ts';
 export type { PathBlock, PathReading, PathStep, WalkedPath } from './paths.ts';

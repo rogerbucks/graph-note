@@ -33,6 +33,7 @@ import { renderViewBlock, writeStyle, writeViewBlock } from './view-block';
 import { renderProposalBlock } from './proposals/proposal-block';
 import { renderSourceBlock } from './sources/sources';
 import { renderStepBlock } from './step-block';
+import { renderSchemaBlock } from './schema-block';
 import { graphCard } from './graph-card';
 import { aidsOf } from '@graph-note/core/display/graph-view/viewer-aids';
 import { diagramShown, tableDrawn } from '@graph-note/core/display/graph-view/type-strip';
@@ -155,6 +156,8 @@ export async function renderBlock(
     renderStyleBlock(el, source, styled, all.includes(source) ? all : [...all, source]);
     return;
   }
+  // a block that holds only a schema, a graph's own or a shared one, is drawn as the schema itself (§3, schema_drawn)
+  if (await renderSchemaBlock(plugin, source, el, ctx, owner)) return;
   const graph = graphOfBlock(source);
   if (!graph) {
     renderCode(el, source);
