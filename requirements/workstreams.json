@@ -733,5 +733,14 @@
     "requirements": [
       "landing_page"
     ]
+  },
+  "K1": {
+    "title": "Graphs in a GitHub repository",
+    "requirements": [
+      "github_repo_store",
+      "github_repo_extract",
+      "github_repo_writes_reviewed",
+      "github_repo_access"
+    ]
   }
 }
