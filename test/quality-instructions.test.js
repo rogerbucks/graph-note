@@ -272,12 +272,30 @@ describe('the workflows that count them', () => {
     }
   });
 
-  test('the quality baseline workflow counts them too, three times over, for the spread its tolerance needs', () => {
+  test('the quality baseline workflow counts them too, three times over when asked, for the spread its tolerance needs', () => {
     const runs = commands('quality-baseline.yml', 'measure');
     assert.ok(runs.some((r) => /sudo apt-get install -y --no-install-recommends valgrind$/.test(r)));
     assert.ok(runs.includes('node scripts/instruction-counts.mjs --runs 3 --out quality/instruction-spread.json'));
+    assert.match(
+      read('.github/workflows/quality-baseline.yml'),
+      /if: \$\{\{ inputs\.spread \}\}\n +run: node scripts\/instruction-counts\.mjs --runs 3/,
+    );
     assert.match(read('.github/workflows/quality-baseline.yml'), /quality\/instruction-spread\.json\n/);
     assert.match(read('.gitignore'), /^quality\/instruction-spread\.json$/m);
+  });
+
+  test('the quality baseline keeps the count of each unchanged benchmark, unless every one is asked for; a release counts all', () => {
+    const runs = commands('quality-baseline.yml', 'measure');
+    assert.ok(
+      runs.includes('node scripts/quality-metrics.mjs --out quality/metrics.json --reuse quality/baseline.json'),
+    );
+    assert.ok(runs.includes('node scripts/quality-metrics.mjs --out quality/metrics.json'));
+    assert.match(
+      read('.github/workflows/quality-baseline.yml'),
+      /if: \$\{\{ inputs\.count_all \}\}\n +run: node scripts\/quality-metrics\.mjs --out quality\/metrics\.json\n/,
+    );
+    for (const file of ['release.yml', 'release-check.yml'])
+      assert.ok(!read(`.github/workflows/${file}`).includes('--reuse'), `${file} counts every benchmark`);
   });
 
   test('every counting job runs on one pinned runner, with a time limit, so its counts come from the same machine', () => {

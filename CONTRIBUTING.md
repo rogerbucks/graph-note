@@ -523,9 +523,12 @@ left. A person's edit to a page the wiki makes is listed there before the next r
   `scripts/fixed-sleeps.mjs`, run by `test/fixed-sleeps.test.js`, fails a fixed sleep beyond each file's allowance in
   `test/fixed-sleeps.json`, and an allowance higher than the file needs, so a sleep taken out stays out.
 - **A baseline from the CI runner:** run the "Quality baseline" workflow by hand, download its `quality-metrics`
-  artifact, and commit its `metrics.json` as `quality/baseline.json` in a normal pull request. The same artifact's
-  `instruction-spread.json` counts every benchmark three times: its `largest_spread` is how far a count moved between
-  runs there, which the tolerance must stay well above.
+  artifact (its log prints the same), and commit its `metrics.json` as `quality/baseline.json` in a normal pull
+  request. Each benchmark is bundled on its own, and the hash of its bundle, with the machine, Node, Valgrind and the
+  flags, is its fingerprint: one whose fingerprint is unchanged since the committed baseline keeps that count, so only
+  the benchmarks a change reaches are counted again. Tick "count every benchmark" to count them all; a release always
+  does. Ticked, "spread" also writes `instruction-spread.json`, every benchmark counted three times: its
+  `largest_spread` is how far a count moved between runs there, which the tolerance must stay well above.
 - **The Graphviz inside the engine is watched** (spec §13): `node scripts/engine-version.mjs` reads its version from the
   engine, checks the notices name it, and checks `quality/advisories.json` offline (it warns when the cache was last
   checked over 14 days ago). Only `--refresh` and `--watch` ask: OSV and NVD for Graphviz, merged, and OSV for the
