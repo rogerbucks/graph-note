@@ -138,6 +138,8 @@ const repoJSON = (repo, fresh = false) => {
   return repoCache.get(repo);
 };
 
+/** The repository's name now. GitHub reads an old name after a rename, but will not write to it (HTTP 307). */
+export const canonicalRepo = (repo, read = repoJSON) => read(repo).full_name ?? repo;
 const repoField = (field, want) => ({
   name: field,
   phase: 'always',
@@ -364,7 +366,7 @@ function main(argv) {
     console.log("setup: the README's steps set up a fresh clone, and the documents name no machine");
   else if (since) console.log('setup: the documents name no machine, and no setup input changed');
   if (flag('--settings')) {
-    const repo = repoOf();
+    const repo = canonicalRepo(repoOf());
     const differing = settingsReport(repo, { apply: flag('--apply') });
     if (differing.length) {
       console.error(`${differing.length} setting${differing.length === 1 ? '' : 's'} differ on ${repo}`);
@@ -377,7 +379,7 @@ function main(argv) {
       console.error('Making the repository public cannot be undone in practice: add --yes to mean it.');
       return 1;
     }
-    const repo = repoOf();
+    const repo = canonicalRepo(repoOf());
     gh(['-X', 'PATCH', `repos/${repo}`], { visibility: 'public' });
     console.log(`${repo} is public. Now run: node scripts/public-readiness.mjs --settings --apply`);
   }
