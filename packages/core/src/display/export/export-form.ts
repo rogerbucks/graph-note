@@ -89,8 +89,8 @@ export function openExportForm(parent: HTMLElement, x: Exporting): void {
     el,
     'Theme',
     [
-      ['light', 'Light'],
-      ['dark', 'Dark'],
+      ['light', word('settings.export-theme.light')],
+      ['dark', word('settings.export-theme.dark')],
     ],
     x.theme,
   );

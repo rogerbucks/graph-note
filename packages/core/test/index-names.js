@@ -55,9 +55,8 @@
 // formatList, sortedForReader, locale_formats) the same day, and the catalogue of words (word, setLanguage, currentLanguage,
 // addTranslation, sayWords, placeholdersOf, translationProblems, SOURCE_LANGUAGE, SOURCE_WORDS and their types,
 // words_catalogue) the same day, and the theme tokens (THEME_TOKENS, OBSIDIAN_TOKEN_MAP, themeTokenCss,
-// themeTokenContract, ThemeToken and ThemeTokenUse, ui_theme_tokens) the same day; the test languages (pseudoWords,
-// PSEUDO_LANGUAGES, isPseudoWord, pseudo_locales_checked) on 18 Oct 2026. The lists moved here from
-// index.test.js in the review of #452.
+// themeTokenContract, ThemeToken, ThemeTokenUse) the same day; pseudoWords, PSEUDO_LANGUAGES, isPseudoWord and optionSaid
+// on 18 Oct 2026. The lists moved here from index.test.js in the review of #452.
 import { TYPES_LATE } from './index-types-late.js';
 
 /** The values src/index.ts exports, sorted. */
@@ -308,6 +307,7 @@ export const VALUES = [
   'noteWithProposal',
   'nudgedDrawing',
   'nudgedSource',
+  'optionSaid',
   'outsideOf',
   'paceSaid',
   'pageSvg',
