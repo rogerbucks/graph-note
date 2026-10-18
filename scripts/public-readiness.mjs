@@ -24,6 +24,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { freshCloneProblems, setupInputsChangedSince } from './fresh-clone.mjs';
 import { messageProblems, problemsIn } from './history-text-problems.mjs';
+import { DESCRIPTION, HOMEPAGE, topicsSetting } from './repo-profile.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const git = (root, args, input) => execFileSync('git', args, { cwd: root, input, maxBuffer: 2 ** 31 });
@@ -152,25 +153,6 @@ const security = (feature) => ({
   write: (repo) =>
     gh(['-X', 'PATCH', `repos/${repo}`], { security_and_analysis: { [feature]: { status: 'enabled' } } }),
 });
-/** The line under the repository's name on GitHub. It names every way the project is delivered, not only Obsidian. */
-export const DESCRIPTION =
-  'Draw, edit and keep graph notes. An Obsidian plugin now; an app, a VS Code plugin and a JavaScript library next. Offline and private.';
-/** The home page, on the project's own domain. */
-export const HOMEPAGE = 'https://thoughtknot.app/';
-/** The topics people find the repository by, in order. GitHub allows 20. */
-export const TOPICS = [
-  'diagrams',
-  'graph',
-  'javascript-library',
-  'knowledge-graph',
-  'local-first',
-  'markdown',
-  'note-taking',
-  'obsidian',
-  'obsidian-plugin',
-  'typescript',
-];
-
 const endpoint = (name, phase, path, want, keys) => ({
   name,
   phase,
@@ -228,13 +210,7 @@ export const WANTED = [
   // How the project shows to a stranger: what it is, where its home page is, and the topics it is found by.
   repoField('description', DESCRIPTION),
   repoField('homepage', HOMEPAGE),
-  {
-    name: 'topics',
-    phase: 'always',
-    want: TOPICS,
-    read: (repo) => [...gh([`repos/${repo}/topics`]).names].sort(),
-    write: (repo) => gh(['-X', 'PUT', `repos/${repo}/topics`], { names: TOPICS }),
-  },
+  topicsSetting(gh),
   // Secrets: scanned on every push, and refused at the gate.
   security('secret_scanning'),
   security('secret_scanning_push_protection'),
