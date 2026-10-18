@@ -3,7 +3,8 @@
 // that nudge into the style graph and says so; Escape, or letting go away from every box, writes nothing; a press that
 // hardly moves is still a tap; a drag across empty space still pans; and a finger swiped across a box moves nothing.
 // And with a finger (hold_to_drag_touch): held on a box for a moment it picks the box up, and only then does a drag move
-// it; a hold lifted without moving is the long press it was; and while a box is picked up the page does not scroll.
+// it; a hold lifted without moving is the long press it was; and while a box is picked up the page does not scroll. In
+// a radial drawing (radial_spoke_order), a box let go by a thing around the centre goes just before or after it.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, until } from './host/load-plugin.js';
@@ -213,6 +214,42 @@ describe('moving a box with a finger', () => {
       vp.dispatch('pointercancel', touch(4, ann, {}));
       assert.ok(!ann.classList.contains('is-held'), 'a lost finger puts it down');
       assert.equal(vp.dispatch('touchmove', { target: ann, touches: [{}] }).defaultPrevented, false);
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
+describe('dragging a box in a radial drawing', () => {
+  const HUB = `// graph: hub
+(sun:Thing {name: 'Sun'}),
+(a:Thing {name: 'A'}),
+(b:Thing {name: 'B'}),
+(c:Thing {name: 'C'}),
+(d:Thing {name: 'D'}),
+(sun)-[:SEES]->(a),
+(sun)-[:SEES]->(b),
+(sun)-[:SEES]->(c),
+(sun)-[:SEES]->(d)`;
+  const ROUND = "// graph: hub_style · STYLE hub\n(d1:Diagram {type: 'radial'})";
+
+  // proves: radial_spoke_order
+  test('a box let go just clockwise of another around the centre goes just before it, written as a before nudge', async () => {
+    const { env, el, vp, boxOf, placeOf, at } = await card(noteOf(HUB, ROUND));
+    try {
+      const hub = placeOf('sun'),
+        a = placeOf('a'),
+        c = placeOf('c');
+      // a little further round than A, clockwise as drawn (the drawing's y runs down the page)
+      const angle = Math.atan2(a.y - hub.y, a.x - hub.x) + 0.2,
+        far = Math.hypot(a.x - hub.x, a.y - hub.y),
+        drop = at(hub.x + far * Math.cos(angle), hub.y + far * Math.sin(angle));
+      vp.dispatch('pointerdown', mouse(1, boxOf('c'), at(c.x, c.y)));
+      vp.dispatch('pointermove', mouse(1, vp, drop));
+      assert.equal(el.querySelector('.thoughtknot-move-hint').textContent, 'Put C before A');
+      vp.dispatch('pointerup', mouse(1, vp, drop));
+      await until(() => /:Nudge /.test(env.state.files.get(PATH)));
+      assert.match(env.state.files.get(PATH), /\(nudge_1:Nudge \{word: 'before', thing: 'c', other: 'a'\}\)/);
     } finally {
       env.uninstall();
     }
