@@ -29,7 +29,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       moved: ${{ steps.moved.outputs.moved }}
-      sha: ${{ steps.moved.outputs.sha }}
     steps:
       - name: Has main moved since the last nightly?
         id: moved
@@ -46,7 +45,6 @@ jobs:
           else
             echo "moved=true" >> "$GITHUB_OUTPUT"
           fi
-          echo "sha=$sha" >> "$GITHUB_OUTPUT"
 
   build:
     needs: check
@@ -54,10 +52,11 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
+      sha: ${{ steps.version.outputs.sha }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ needs.check.outputs.sha }}
+          ref: main
           persist-credentials: false
           # the full history: npm test runs the tests-first records test, which needs it
           fetch-depth: 0
@@ -71,7 +70,9 @@ jobs:
       - run: npm run build
       - name: The nightly version, written into the manifest the build carries
         id: version
-        run: echo "version=$(node scripts/nightly-version.mjs --date "$(date -u +%Y%m%d)" --write)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "version=$(node scripts/nightly-version.mjs --date "$(date -u +%Y%m%d)" --write)" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       - name: Bundle the core's layout source into one file, for the vault's layout parity check
         run: npm run build:layout
       - name: Archive the graph-spec libraries from the built commit, for the vault to vendor
@@ -96,7 +97,7 @@ jobs:
           retention-days: 1
 
   publish:
-    needs: [check, build]
+    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -109,7 +110,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.build.outputs.version }}
-          SHA: ${{ needs.check.outputs.sha }}
+          SHA: ${{ needs.build.outputs.sha }}
         run: |
           [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-nightly\.[0-9]{8}$ ]] || { echo "::error::$VERSION is not a nightly version"; exit 1; }
           [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::$SHA is not a commit"; exit 1; }

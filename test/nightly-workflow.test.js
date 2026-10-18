@@ -39,9 +39,9 @@ describe('the nightly workflow', () => {
     assert.match(jobs(text).build.join('\n'), /if: needs\.check\.outputs\.moved == 'true'/);
   });
 
-  test('builds the commit it checked, and publishes only after the full suite and the content check pass', () => {
+  test('builds main, and publishes only after the full suite and the content check pass', () => {
     const build = jobs(text).build.join('\n');
-    assert.match(build, /ref: \$\{\{ needs\.check\.outputs\.sha \}\}\s*\n\s*persist-credentials: false/);
+    assert.match(build, /ref: main\s*\n\s*persist-credentials: false/);
     const runs = runCommands(build);
     const at = (re) => runs.findIndex((r) => re.test(r));
     assert.ok(at(/^npm ci$/) >= 0, 'npm ci');
@@ -54,7 +54,7 @@ describe('the nightly workflow', () => {
       false,
       'never npm install',
     );
-    assert.match(jobs(text).publish.join('\n'), /needs: \[check, build\]/);
+    assert.match(jobs(text).publish.join('\n'), /needs: build\n/);
   });
 
   test('carries the assets a release carries, with the nightly version in the manifest', () => {
