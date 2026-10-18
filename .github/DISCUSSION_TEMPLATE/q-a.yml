@@ -1,0 +1,13 @@
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+      description: What you are trying to do, and where you are stuck.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Graph Note version
+      placeholder: 0.5.0

@@ -1,0 +1,36 @@
+name: Something is wrong
+description: Graph Note draws, reads or saves something wrongly, or stops working.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you saw instead.
+    validations:
+      required: true
+  - type: textarea
+    id: block
+    attributes:
+      label: The graph block
+      description: The smallest graph block that shows it. Leave out anything private.
+      render: markdown
+  - type: input
+    id: version
+    attributes:
+      label: Graph Note version
+      placeholder: 0.5.0
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options:
+        - Obsidian on desktop
+        - Obsidian on a phone or tablet
+        - The JavaScript library
+        - The Python library
+        - Somewhere else
+    validations:
+      required: true

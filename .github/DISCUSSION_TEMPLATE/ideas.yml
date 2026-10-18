@@ -1,0 +1,17 @@
+title: '[Idea] '
+body:
+  - type: markdown
+    attributes:
+      value: The [roadmap](https://github.com/rogerbucks/graph-note/wiki/Roadmap) shows what is planned already.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What you are trying to do, and what gets in the way today.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: What would help. A sketch or an example graph block is welcome.

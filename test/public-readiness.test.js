@@ -348,11 +348,12 @@ describe('the settings on GitHub', () => {
     assert.equal(new Set(WANTED.map((s) => s.name)).size, WANTED.length, 'names are distinct');
   });
 
-  test('only a collaborator can open a pull request or an issue; nothing else is open to anyone', () => {
+  test('only a collaborator can open a pull request or an issue; anyone may read the plan and join a discussion', () => {
     assert.equal(wanted('pull_request_creation_policy').want, 'collaborators_only');
     assert.equal(wanted('has_pull_requests').want, true);
     assert.equal(wanted('has_issues').want, true, 'issues stay on; collaborators-only creation is set by hand');
-    for (const f of ['has_projects', 'has_wiki', 'has_discussions']) assert.equal(wanted(f).want, false, f);
+    // the public requirements project, the generated wiki and discussions are on (Roger, 18 Oct 2026)
+    for (const f of ['has_projects', 'has_wiki', 'has_discussions']) assert.equal(wanted(f).want, true, f);
   });
 
   test('secrets are scanned and refused at the gate, once the repository is public', () => {

@@ -1,0 +1,21 @@
+name: An idea
+description: Something Graph Note should do. Ideas are talked through in Discussions first.
+labels: [idea]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What you are trying to do, and what gets in the way today.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: What would help. A sketch or an example graph block is welcome.
+  - type: input
+    id: discussion
+    attributes:
+      label: The discussion
+      description: A link to the discussion where it was talked through, if there is one.
