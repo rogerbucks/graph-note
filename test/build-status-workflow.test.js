@@ -3,7 +3,17 @@
 // the others. Editor spec §12, requirements_checked_in_ci.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { block, jobs, permissionValues, read, runCommands, stripComment, usesRefs } from './repository/repo.js';
+import { dirname, join, normalize } from 'node:path';
+import {
+  block,
+  importedModules,
+  jobs,
+  permissionValues,
+  read,
+  runCommands,
+  stripComment,
+  usesRefs,
+} from './repository/repo.js';
 import { TRIGGER_JOB } from '../scripts/build-status-gh.mjs';
 
 const UPDATE = '.github/workflows/build-status.yml';
@@ -90,6 +100,25 @@ describe('the workflow that updates the board and the comment', () => {
   test('runs nothing but that script: no install, so no install script ever sees the secret', () => {
     const runs = runCommands(text);
     assert.deepEqual(runs, ['node scripts/build-status-run.mjs']);
+  });
+
+  test('runs a script that needs no package installed: everything it imports is in the repository or in Node', () => {
+    // the job installs nothing, so a package name the script reaches, directly or through other files, fails the run
+    const seen = new Set(),
+      packages = [];
+    const visit = (file) => {
+      if (seen.has(file)) return;
+      seen.add(file);
+      // a type import is gone when Node runs the file, so it needs nothing
+      const code = read(file).replace(/^\s*import\s+type\b[^;]*;/gm, '');
+      for (const spec of importedModules(code)) {
+        if (spec.startsWith('node:')) continue;
+        if (spec.startsWith('.')) visit(normalize(join(dirname(file), spec)));
+        else packages.push(`${file} imports ${spec}`);
+      }
+    };
+    visit('scripts/build-status-run.mjs');
+    assert.deepEqual(packages, []);
   });
 
   test('puts no text of an event into a command line', () => {
