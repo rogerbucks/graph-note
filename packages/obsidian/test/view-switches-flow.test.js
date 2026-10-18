@@ -1,7 +1,8 @@
-// The View menu's folds with links that move and paths that play (editor spec §25 with §7): a graph laid out again by a
-// switch keeps its moving links marked and stops a path playing (view_switch_view_only); a link merged into a trunk moves
-// along both its lines, and a dot playing a path runs both (untangle_merge, links_show_flow, path_autoplay); and a link
-// folded into a busy hub's stub is no moving link of the drawing, so the legend leaves it out (untangle_hubs).
+// The View menu's folds with links that move and paths that play (editor spec §25 with §7).
+// - A graph laid out again by a switch keeps its moving links marked, and stops a path playing (view_switch_view_only).
+// - A link merged into a trunk moves along both its lines. A dot playing a path runs both (untangle_merge,
+//   links_show_flow, path_autoplay).
+// - A link folded into a busy hub's stub is no moving link of the drawing. So the legend leaves it out (untangle_hubs).
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';

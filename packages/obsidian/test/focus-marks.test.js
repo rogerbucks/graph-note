@@ -1,7 +1,10 @@
-// Focus on the drawing (editor spec §25, slice 3): selecting a thing or a link keeps it and its neighbours at full strength
-// and fades the rest, without moving or hiding anything; the faded stay readable and focus is not shown by colour alone;
-// an empty tap or Escape clears the selection and the focus; a setting chooses how far it reaches. The built plugin,
-// loaded against the stand-ins for the page.
+// Focus on the drawing (editor spec §25, slice 3):
+// - Selecting a thing or a link keeps it and its neighbours at full strength and fades the rest.
+//   It moves or hides nothing.
+// - The faded stay readable, and focus is not shown by colour alone.
+// - An empty tap or Escape clears the selection and the focus.
+// - A setting chooses how far it reaches.
+// The built plugin, loaded against the stand-ins for the page.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from './host/load-plugin.js';

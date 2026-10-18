@@ -1,6 +1,6 @@
-// The mini-map (editor spec §24, mini_map, mini_map_setting): when a drawing is bigger than its view, a small copy of the
-// whole drawing with the visible part outlined, which moves the view when tapped or dragged, in a card and in the pane
-// alike; and whether it shows is a setting: Off, When the drawing does not fit (the default), or Always.
+// The mini-map (editor spec §24, mini_map, mini_map_setting). When a drawing is bigger than its view, it shows a small copy
+// of the whole drawing with the visible part outlined. Tapping or dragging it moves the view, in a card and in the pane
+// alike. Whether it shows is a setting: Off, When the drawing does not fit (the default), or Always.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';

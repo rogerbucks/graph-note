@@ -1,5 +1,7 @@
-// Accessibility (spec §11, §8): the drawing meets the contrast of the locked style in both of Obsidian's default themes;
-// theme colours reach the drawing through one mapping table; every action has a keyboard path. Contrast is worked out
+// Accessibility (spec §11, §8):
+// - The drawing meets the contrast of the locked style in both of Obsidian's default themes.
+// - Theme colours reach the drawing through one mapping table.
+// - Every action has a keyboard path. Contrast is worked out
 // from the style's own blends — color-mix in sRGB, a fill's opacity over the page — against WCAG 2.2's ratios: 4.5:1
 // for text (SC 1.4.3) and 3:1 for lines and borders (SC 1.4.11).
 import { test, describe } from 'node:test';
@@ -76,8 +78,9 @@ describe('contrast in both themes', () => {
           line = mix(hue, text, STYLE.line_mix / 100);
         assert.ok(contrast(label, page) >= 4.5, `a label: ${contrast(label, page).toFixed(2)}:1`);
         assert.ok(contrast(line, page) >= 3, `a line: ${contrast(line, page).toFixed(2)}:1`);
-        // a box's border is held to 3:1 against the page around it, as SC 1.4.11 measures a boundary — not against its own
-        // fill, which is the box itself (light yellow's border on its fill is 2.9:1; on the page it passes)
+        // A box's border is held to 3:1 against the page around it, as SC 1.4.11 measures a boundary.
+        // It is not held against its own fill, which is the box itself.
+        // (Light yellow's border on its fill is 2.9:1. On the page it passes.)
         assert.ok(contrast(text, fill) >= 4.5, `a box's text: ${contrast(text, fill).toFixed(2)}:1`);
         assert.ok(contrast(muted, fill) >= 4.5, `a box's kind caption: ${contrast(muted, fill).toFixed(2)}:1`);
       });

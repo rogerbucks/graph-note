@@ -1,6 +1,6 @@
-// Zooming a drawing (spec §3): fitted to the note to start with, zoomed by button, key and Ctrl or Command with the wheel,
-// one finger left to scroll the note; and full screen, where the wheel alone zooms, which keeps the keyboard in it and
-// gives it back on leaving.
+// Zooming a drawing (spec §3). It is fitted to the note to start with. It zooms by button, key, and Ctrl or Command with
+// the wheel; one finger is left to scroll the note. Full screen is checked too. There the wheel alone zooms, and the
+// keyboard stays in it and is given back on leaving.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from './host/load-plugin.js';

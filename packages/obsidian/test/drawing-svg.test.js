@@ -1,7 +1,8 @@
-// The drawing as the card shows it (spec §3): a link's label kept a small gap from its line when the drawing runs down the
-// page (device check V-07, 11 Oct 2026: on a vertical layout the label text began right at the line). Graphviz puts such
-// a label beside its line with no room between; the layout source and the themed SVG are the Python library's byte for
-// byte, so the gap is made here, in the card, by the stylesheet, and the layout is untouched.
+// The drawing as the card shows it (spec §3). A link's label keeps a small gap from its line when the drawing runs down
+// the page. Device check V-07, 11 Oct 2026, found the label text began right at the line on a vertical layout.
+// Graphviz puts such a label beside its line with no room between.
+// The layout source and the themed SVG are the Python library's byte for byte.
+// So the gap is made here, in the card, by the stylesheet, and the layout is untouched.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from './host/load-plugin.js';

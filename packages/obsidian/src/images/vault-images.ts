@@ -1,7 +1,8 @@
-// The images a note's things name, found in the vault (editor spec §18, animated_image_shown): a property's value read
-// by the core (`imageLink`) as a link or a path to an image attached in the vault, found as Obsidian finds a link from
-// that note, and read through the vault's API. Only the vault's own files: an address outside it is never loaded (§13,
-// a later slice), and a place that could leave the vault is refused, each with the core's words.
+// The images a note's things name, found in the vault (editor spec §18, animated_image_shown).
+// - The core (`imageLink`) reads a property's value as a link or a path to an image attached in the vault.
+// - It is found as Obsidian finds a link from that note, and read through the vault's API.
+// Only the vault's own files are used. An address outside it is never loaded (§13, a later slice). A place that could
+// leave the vault is refused. Each is said with the core's words.
 import type { App } from 'obsidian';
 import { TFile } from 'obsidian';
 import { imageLink } from '@thoughtknot/core';

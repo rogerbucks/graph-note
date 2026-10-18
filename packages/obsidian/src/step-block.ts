@@ -1,9 +1,10 @@
 // A graph step in a note (editor spec §20: graph_step_io, step_inputs_checked, run_declared_only, step_output_proposal):
-// a query block named as a step, drawn as a card that says what the step does, each point it takes a graph at and what
-// that point takes, with a choice of the note's graphs and views to give it, and Run. Nothing runs when the card is
-// drawn: only Run runs it, against the note as it is then, the inputs checked by the core first; what it gives is
-// written beside its graph as a proposal (§17), for a person to accept or reject, never into the graph. A step that
-// cannot be one says why, with no Run; reading view, which never changes a note, offers no Run.
+// A query block named as a step, drawn as a card. The card says what the step does and each point it takes a graph at.
+// It says what that point takes, with a choice of the note's graphs and views to give it, and Run.
+// Nothing runs when the card is drawn. Only Run runs it, against the note as it is then.
+// The core checks the inputs first. What it gives is written beside its graph as a proposal (§17), never into the graph.
+// A person accepts or rejects it. A step that cannot be one says why, with no Run.
+// Reading view, which never changes a note, offers no Run.
 import { Notice, TFile } from 'obsidian';
 import type { MarkdownPostProcessorContext } from 'obsidian';
 import {

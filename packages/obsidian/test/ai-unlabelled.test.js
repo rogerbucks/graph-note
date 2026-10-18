@@ -1,7 +1,8 @@
-// A note with no classification in Obsidian (spec §19, unclassified_strictest; Roger, 14 Oct 2026): the setting
-// Unlabelled notes count as on the page, the most sensitive until chosen; the send dialog using it, Send kept off for
-// an unlabelled note by default; the note's classification read from its text and the metadata cache, the higher
-// taken, and read again each time what will be sent is shown. The core's rule is tested in
+// A note with no classification in Obsidian (spec §19, unclassified_strictest; Roger, 14 Oct 2026):
+// - The setting Unlabelled notes count as on the page, the most sensitive until chosen.
+// - The send dialog uses it. Send is kept off for an unlabelled note by default.
+// - The note's classification is read from its text and the metadata cache, and the higher is taken.
+//   It is read again each time what will be sent is shown. The core's rule is tested in
 // packages/core/test/ai-unlabelled.test.js.
 import { after, before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';

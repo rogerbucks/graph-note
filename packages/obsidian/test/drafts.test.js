@@ -1,6 +1,6 @@
-// The drafts kept in the plugin's data (spec §9, nothing_typed_lost; the review of #91, 11 Oct 2026): they follow their
-// note when it is renamed with no editor open on it, still offered when it is edited again; and every one, a deleted
-// note's among them, can be recovered into a new note from the command palette.
+// The drafts kept in the plugin's data (spec §9, nothing_typed_lost; the review of #91, 11 Oct 2026):
+// - They follow their note when it is renamed with no editor open on it. They are still offered when it is edited again.
+// - Every one, a deleted note's among them, can be recovered into a new note from the command palette.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';
@@ -85,8 +85,8 @@ describe('drafts follow their note, never over another', () => {
   });
 });
 
-// Roger's choice A, 11 Oct 2026: each draft has an id from the moment it is kept, which no rename changes; and drafts
-// kept before ids were kept with them are given one when first read, so none is lost or left without one
+// Roger's choice A, 11 Oct 2026: each draft has an id from the moment it is kept, which no rename changes.
+// Drafts kept before ids were kept with them are given one when first read. So none is lost or left without one.
 describe('each draft keeps its id', () => {
   test('a draft kept by an editor has an id, and keeps it when its note, and then its folder, are renamed', async () => {
     const env = await pane.open();
@@ -143,8 +143,8 @@ describe('each draft keeps its id', () => {
   });
 });
 
-// the final review of #91, 11 Oct 2026: crypto.randomUUID is missing on some phones' web views, and a draft must be kept
-// all the same; and an id given to an old draft must be saved, or it changes at each reload
+// The final review of #91, 11 Oct 2026: crypto.randomUUID is missing on some phones' web views.
+// A draft must be kept all the same. And an id given to an old draft must be saved, or it changes at each reload.
 describe('a draft’s id, wherever the plugin runs', () => {
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 

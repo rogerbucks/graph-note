@@ -1,5 +1,5 @@
-// Moving a box in a drawing, for the tests of dragging it (editor spec §6): a note with a small graph, its card shown,
-// each write to the note counted as it is asked for, and the points at and beside its boxes as the viewport's pixels.
+// Moving a box in a drawing, for the tests of dragging it (editor spec §6). A note with a small graph, its card shown.
+// Each write to the note is counted as it is asked for. The points at and beside its boxes are in the viewport's pixels.
 import { load } from './load-plugin.js';
 import { fence } from './notes.js';
 import { show } from './view-notes.js';

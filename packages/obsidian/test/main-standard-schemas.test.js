@@ -1,5 +1,5 @@
-// The standard schemas in the plugin (editor spec §27, standard_schemas, schema_named_found): a graph that names one is
-// typed by it with no schema in the note or the vault, and a graph that names a schema there is none of is warned of.
+// The standard schemas in the plugin (editor spec §27, standard_schemas, schema_named_found). A graph that names one is
+// typed by it with no schema in the note or the vault. A graph that names a schema there is none of is warned of.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from './host/load-plugin.js';

@@ -1,6 +1,6 @@
-// Stand-ins for Obsidian's settings page (spec §21): a plugin's tab, its settings rows and their controls, and the app's
-// own secret store, where a key is kept by name outside the vault. A row is laid out as Obsidian lays one out, a name
-// and a description beside its controls, so a test reads the page as a person does.
+// Stand-ins for Obsidian's settings page (spec §21): a plugin's tab, its settings rows and their controls. Also the
+// app's own secret store, where a key is kept by name outside the vault. A row is laid out as Obsidian lays one out.
+// It has a name and a description beside its controls, so a test reads the page as a person does.
 
 /** The settings classes, and the app's secret store added to `app`; every tab a plugin adds is kept in `state.settingTabs`. */
 export function fakeSettings(state, app) {
@@ -13,9 +13,12 @@ export function fakeSettings(state, app) {
   };
 
   /**
-   * A plugin's tab, drawn from its declarative definitions as Obsidian 1.13 draws them: a group under its heading, a
-   * control in its row, an action as a row that can be clicked, a list with its add and delete buttons, and a page as a
-   * row holding its own rows (Obsidian opens it as a page of its own).
+   * A plugin's tab, drawn from its declarative definitions as Obsidian 1.13 draws them.
+   * - A group under its heading.
+   * - A control in its row.
+   * - An action as a row that can be clicked.
+   * - A list with its add and delete buttons.
+   * - A page as a row holding its own rows. Obsidian opens it as a page of its own.
    */
   class PluginSettingTab {
     constructor(app_, plugin) {

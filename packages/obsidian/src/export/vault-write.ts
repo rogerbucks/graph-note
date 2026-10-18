@@ -1,7 +1,8 @@
-// Writing an export into the vault (spec §16, failed_export): through the vault's own API, never the file system; the
-// plugin's own temporary file removed when a write fails, so none is left among the notes (it goes where the person's
-// deleted files go, as Obsidian's guidelines require); and a name of its own for each export, so an earlier one is
-// never overwritten.
+// Writing an export into the vault (spec §16, failed_export).
+// - It goes through the vault's own API, never the file system.
+// - The plugin's own temporary file is removed when a write fails, so none is left among the notes. It goes where the
+//   person's deleted files go, as Obsidian's guidelines require.
+// - Each export gets a name of its own, so an earlier one is never overwritten.
 import { TFile } from 'obsidian';
 import type { WriteOps } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
@@ -31,16 +32,16 @@ export function vaultOps(plugin: ThoughtKnotPlugin): WriteOps {
     },
     remove: async (path) => {
       const f = at(path);
-      // the plugin's own half-written temporary file: where the person's deleted files go, as they have set it, as
-      // Obsidian's guidelines require of any file a plugin removes; never left among their notes
+      // the plugin's own half-written temporary file goes where the person's deleted files go, as they have set it.
+      // Obsidian's guidelines require this of any file a plugin removes. It is never left among their notes
       if (f instanceof TFile) await plugin.app.fileManager.trashFile(f);
     },
   };
 }
 
 /**
- * `paths`, or, when a file is already at any of them, each as `<name>-2.<ext>`, or `-3`…, the first number free for all of
- * them: the pages of one export keep one number between them.
+ * `paths`, as they are. Or, when a file is already at any of them, each as `<name>-2.<ext>`, or `-3`…. It takes the first
+ * number free for all of them: the pages of one export keep one number between them.
  */
 export function freePaths(plugin: ThoughtKnotPlugin, paths: string[]): string[] {
   const taken = (p: string) => !!plugin.app.vault.getAbstractFileByPath(p);

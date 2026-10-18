@@ -1,6 +1,6 @@
-// A block that holds only a schema, drawn in the note as the schema itself (editor spec §3, schema_drawn): its kinds of
-// thing as boxes and its relationship types as arrows between them, read-only, with Source to show its text; a block
-// that holds data is drawn as its graph, as before, and drawing the schema writes nothing to the note.
+// A block that holds only a schema, drawn in the note as the schema itself (editor spec §3, schema_drawn). Its kinds of
+// thing are boxes and its relationship types are arrows between them. It is read-only, with Source to show its text. A
+// block that holds data is drawn as its graph, as before. Drawing the schema writes nothing to the note.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from './host/load-plugin.js';

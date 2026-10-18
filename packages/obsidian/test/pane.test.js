@@ -1,6 +1,7 @@
-// The edit pane (spec §4, §9): opened beside the note on the block whose Edit was pressed, with a picker when the note has
-// several graphs; the text coloured as gql-highlight colours it, each line read back in plain English, the drawing of what
-// is typed, and Drawing and Text as two tabs on a phone.
+// The edit pane (spec §4, §9).
+// - It opens beside the note, on the block whose Edit was pressed. A note with several graphs gets a picker.
+// - The text is coloured as gql-highlight colours it. Each line is read back in plain language.
+// - It shows the drawing of what is typed. On a phone, Drawing and Text are two tabs.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until, wait } from './host/load-plugin.js';
@@ -125,8 +126,8 @@ describe('the text', () => {
 });
 
 describe('typing keeps the field', () => {
-  // typing_keeps_focus (spec §4, 8 Oct 2026): the pane is never redrawn by Obsidian, so its field keeps the focus, the caret
-  // and the undo history while each write redraws the drawing; a control beside the card's tests in inline.test.js
+  // typing_keeps_focus (spec §4, 8 Oct 2026): Obsidian never redraws the pane. So its field keeps the focus, the caret and
+  // the undo history while each write redraws the drawing. A control beside the card's tests is in inline.test.js
   test('in the pane, each write redraws the drawing and the same field keeps the focus and the caret', async () => {
     const env = await open();
     try {

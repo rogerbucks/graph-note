@@ -1,5 +1,5 @@
-// What the edit pane adds for you as you type (spec §4): the comma when the next pattern starts on a new line, and the
-// colon of a bare link type the graph knows — each a step of its own, taken back by one undo.
+// What the edit pane adds for you as you type (spec §4). It adds the comma when the next pattern starts on a new line. It
+// adds the colon of a bare link type the graph knows. Each is a step of its own, taken back by one undo.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from './host/load-plugin.js';

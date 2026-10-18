@@ -1,11 +1,13 @@
-// The details sheet (editor spec §25, slice 3): in view mode a card's details open as a sheet pinned to the foot of the
-// visible screen, over the card, staying while the note scrolls until it is closed or the card leaves the screen
-// (sheet_pinned); the drawing pans so the chosen thing stays visible above it when it opens or changes size
-// (sheet_keeps_thing_clear); a toggle in its header minimises it to a bar with the thing's name and kind, or restores the
-// full details, scrolling within itself and never filling the screen (sheet_min_max); it opens in the state last chosen
-// for the session (sheet_state_remembered); a close button, Escape or clearing the selection closes it (sheet_closed);
-// and its toggle and close button are named, work by keyboard and are 44 points on touch (sheet_reachable). Keys typed in
-// the note are never taken. The built plugin, against the stand-ins.
+// The details sheet (editor spec §25, slice 3). In view mode a card's details open as a sheet over the card.
+// - It is pinned to the foot of the visible screen. It stays while the note scrolls, until it is closed or the card
+//   leaves the screen (sheet_pinned).
+// - The drawing pans so the chosen thing stays visible above it when it opens or changes size (sheet_keeps_thing_clear).
+// - A toggle in its header minimises it to a bar with the thing's name and kind, or restores the full details.
+//   It scrolls within itself and never fills the screen (sheet_min_max).
+// - It opens in the state last chosen for the session (sheet_state_remembered).
+// - A close button, Escape or clearing the selection closes it (sheet_closed).
+// - Its toggle and close button are named, work by keyboard and are 44 points on touch (sheet_reachable).
+// Keys typed in the note are never taken. The built plugin, against the stand-ins.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from './host/load-plugin.js';
@@ -43,8 +45,8 @@ const rect = (top, bottom, left = 0, width = 700) => ({
   height: bottom - top,
 });
 /**
- * The sheet laid out as a browser lays it out from what the plugin set: fixed, `height` tall, in an 800-pixel window;
- * and, hidden or away with its card (display: none), a box of no size at all.
+ * The sheet laid out as a browser lays it out from what the plugin set: fixed, `height` tall, in an 800-pixel window.
+ * Hidden or away with its card (display: none), it is a box of no size at all.
  */
 const laidOut =
   (d, height = 100) =>
@@ -263,8 +265,8 @@ describe('the sheet follows its card and the window', () => {
     card.getBoundingClientRect = () => rect(760 - high, 800);
     labelled(d, 'Close details').click();
     const y = () => parseFloat(vp.cssProps['--thoughtknot-y']);
-    // a sheet with no height at first, covering nothing; then it is taller, over the lower 90% of the drawing, where the
-    // question is (the graph runs down the page, the question at its foot)
+    // A sheet with no height at first, covering nothing. Then it is taller, over the lower 90% of the drawing, where the
+    // question is. (The graph runs down the page, the question at its foot.)
     d.getBoundingClientRect = laidOut(d, 0);
     tapKey(el, 'q');
     assert.equal(y(), 0, 'nothing covered, nothing moved');

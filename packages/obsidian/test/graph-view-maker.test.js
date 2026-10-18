@@ -1,6 +1,6 @@
-// Making a view by tapping (editor spec §7, views_by_tapping, five_view_kinds): while the card is edited, Make a view
-// offers the kinds of view; the boxes tapped choose what it shows; its reading is said in plain English as it is built;
-// and Write the view writes its query as a view block of its own after the graph's last block, never into the data.
+// Making a view by tapping (editor spec §7, views_by_tapping, five_view_kinds). While the card is edited, Make a view
+// offers the kinds of view. The boxes tapped choose what it shows. Its reading is said in plain language as it is built.
+// Write the view writes its query as a view block of its own after the graph's last block, never into the data.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';

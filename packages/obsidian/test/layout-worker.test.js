@@ -1,6 +1,8 @@
-// The layout kept apart from the interface (spec §9, layout_contained), as the built plugin does it: Graphviz runs in a
-// Web Worker built from main.js itself, one reused for every block; a graph over a size limit, or one whose layout takes
-// too long, is shown as its text with a banner saying which limit and the numbers; and every other block still draws.
+// The layout kept apart from the interface (spec §9, layout_contained), as the built plugin does it.
+// - Graphviz runs in a Web Worker built from main.js itself, one reused for every block.
+// - A graph over a size limit, or one whose layout takes too long, is shown as its text. A banner says which limit and
+//   the numbers.
+// - Every other block still draws.
 // Where Workers cannot run, the layout runs on the page's own thread, the size limit still applied. A note too large to
 // read is never read: its text is shown with the banner, in a card and in the pane.
 import { test, describe, before } from 'node:test';
@@ -90,17 +92,17 @@ describe('a graph over a size limit is shown as its text, with a banner saying w
     });
   });
 
-  // one pattern of 12,000 lines, its ( never closed: one part to the reader, so the code before the limit read it quickly
-  // and showed it as text with its problem, not with this banner (the core's tests hold the many-broken-parts cases)
+  // one pattern of 12,000 lines, its ( never closed: one part to the reader. So the code before the limit read it quickly.
+  // It showed it as text with its problem, not with this banner (the core's tests hold the many-broken-parts cases)
   test('a block too large to read — 600 kB, one pattern left open — is its text and a banner at once, never read', async () => {
     await withPlugin(null, {}, async (env) => {
       const lines = (n) => Array.from({ length: n }, (_, i) => `(n${i}:Thing {name: 'Thing number ${i} of many'},`);
       const note = fence(`// graph: g\n${lines(12_000).join('\n')}`);
       // the control: a tenth of it, 1,200 lines, is under the limits and so is read, not refused
       const tenth = fence(`// graph: g\n${lines(1_200).join('\n')}`);
-      // at once, refusing the whole note costing less than reading a tenth of it, is counted in instructions by the
-      // layout_refusals benchmark (scripts/benchmarks/layout-refusals.mjs), as the core reads a note for the card; that
-      // the core never hands a block over the limit to the reader is counted in layout-limits.test.js. A test asserts
+      // at once, refusing the whole note costing less than reading a tenth of it, is counted in instructions. The
+      // layout_refusals benchmark (scripts/benchmarks/layout-refusals.mjs) counts it, as the core reads a note for the
+      // card. That the core never hands a block over the limit to the reader is counted in layout-limits.test.js. A test asserts
       // the work done, never the time taken (spec §12, quality_ratchet, 12 Oct 2026)
       const el = await card(env, note);
       assert.equal(bannerOf(await card(env, tenth)), null, 'the tenth is read, not refused');

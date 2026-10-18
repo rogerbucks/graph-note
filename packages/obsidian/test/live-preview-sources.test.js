@@ -1,7 +1,7 @@
-// Sources and steps in the editing view (editor spec §20; §7 view_of_another_note): in Live Preview a block drawn FROM
-// a file or a note, and a graph step, each get the plugin's own card, as a graph and a view do, so each redraws with the
-// note's other blocks and its page stays still; a plain query is still left to Obsidian. The step's card is found by
-// its graph line alone, so a long block is never read to decide it.
+// Sources and steps in the editing view (editor spec §20; §7 view_of_another_note). In Live Preview two more kinds of
+// block get the plugin's own card, as a graph and a view do. They are a block drawn FROM a file or a note, and a graph
+// step. So each redraws with the note's other blocks and its page stays still. A plain query is still left to Obsidian.
+// The step's card is found by its graph line alone, so a long block is never read to decide it.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';

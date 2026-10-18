@@ -1,6 +1,6 @@
-// A list in the inspector (spec §14, list_as_linked_things): choosing List for a property asks for the kind and the
-// relationship, then holds its values as things linked to this one; the inspector shows them as chips, each removed in
-// place with its x, and a value is added in place — all written as text into the block being edited.
+// A list in the inspector (spec §14, list_as_linked_things). Choosing List for a property asks for the kind and the
+// relationship. Then it holds its values as things linked to this one. The inspector shows them as chips, each removed in
+// place with its x. A value is added in place. All of it is written as text into the block being edited.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';

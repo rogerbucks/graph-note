@@ -1,8 +1,10 @@
-// The block editor's Undo and Redo never undo over a change another program, a sync or another pane made to the block
-// (editor spec §9, undo_never_over_theirs; §26, cc_undo_safe): after such a change the history starts again from the
-// note as it now is, the buttons say why there is nothing to take back, and pressing one says so and leaves the note as
-// it is. A change elsewhere in the note leaves Undo working. Found in review, 15 Oct 2026: the pane reloaded the other
-// program's block and kept its history, so Undo wrote the old text over it.
+// The block editor's Undo and Redo never undo over another's change to the block (editor spec §9,
+// undo_never_over_theirs; §26, cc_undo_safe). Another program, a sync or another pane may make it. After such a change:
+// - the history starts again from the note as it now is;
+// - the buttons say why there is nothing to take back;
+// - pressing one says so and leaves the note as it is.
+// A change elsewhere in the note leaves Undo working. Found in review, 15 Oct 2026: the pane reloaded the other
+// program's block and kept its history. So Undo wrote the old text over it.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, settled, until } from './host/load-plugin.js';
@@ -55,8 +57,8 @@ function heard(el) {
 }
 
 /**
- * Holds that the button keeps its name, so voice control finds it, and says why there is nothing to take back; and that
- * pressing it, twice, says so each time, to screen readers too, and changes nothing.
+ * Holds that the button keeps its name, so voice control finds it. It says why there is nothing to take back.
+ * Pressing it, twice, says so each time, to screen readers too, and changes nothing.
  */
 async function refuses(env, el, which, expected) {
   const label = which === 'undo' ? 'Undo' : 'Redo',
@@ -152,8 +154,8 @@ describe('a sync changes the block', () => {
       await until(() => el.querySelector('textarea').value === THEIRS);
       assert.equal(note(env), synced, 'the undo is refused: the block changed since');
       await env.app.vault.modify({ path: PATH }, synced); // the change heard late
-      // the editor already holds this text, from the refused Undo, so it finds nothing new and nothing shows it: what it
-      // started, a read of the note, is let finish
+      // The editor already holds this text, from the refused Undo. So it finds nothing new and nothing shows it.
+      // What it started, a read of the note, is let finish.
       await settled();
       env.state.data.drafts = {}; // the refused undo kept its text as a draft, as any refused write does
       await refuses(env, el, 'redo', synced);

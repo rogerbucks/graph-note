@@ -1,5 +1,5 @@
 // A drawn card as Obsidian owns it. The card itself is the display layer's (`@thoughtknot/core/display`), with a lifecycle of
-// its own and no Obsidian in it; Obsidian wants a component, to unload with the note's block, the pane or the page, so the
+// its own and no Obsidian in it. Obsidian wants a component, to unload with the note's block, the pane or the page. So the
 // card is wrapped in a `MarkdownRenderChild` over the same element that loads and unloads it with itself.
 import { MarkdownRenderChild } from 'obsidian';
 import { GraphView } from '@thoughtknot/core/display/graph-view/graph-view';

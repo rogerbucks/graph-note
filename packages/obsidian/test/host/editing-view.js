@@ -1,5 +1,5 @@
-// A note open in the editing view, in Live Preview, with the plugin's own editor extension, as the tests of the editor in
-// place's cards need it: a real CodeMirror state that moves on as it is changed, and the cards it would draw.
+// A note open in the editing view, in Live Preview, with the plugin's own editor extension. The tests of the editor in
+// place's cards need it. It has a real CodeMirror state that moves on as it is changed, and the cards it would draw.
 import { cmState, cmView, editorLivePreviewField, editorInfoField } from './fake-obsidian.js';
 
 /** The plugin's own view plugins, among the editor extensions it registered, however deep they are nested. */
@@ -14,8 +14,8 @@ function viewPlugins(env) {
 }
 
 /**
- * Opens `text` as the note at `path` in the editing view; the plugin sees the editor, through its own view plugins as
- * Obsidian's editor makes them, and writes through it. `view.close()` closes the note as Obsidian closes an editor: its
+ * Opens `text` as the note at `path` in the editing view. The plugin sees the editor through its own view plugins, as
+ * Obsidian's editor makes them, and writes through it. `view.close()` closes the note as Obsidian closes an editor. Its
  * view plugins are destroyed, and the cards drawn at the time are left to the test.
  */
 export function openNote(env, text, path) {

@@ -1,5 +1,5 @@
-// Nothing the plugin offers in reading view changes the note (spec §3, reading_view_whole_note; Roger, 11 Oct 2026): a
-// command that would rewrite a note acts only on the note in the pane in front, and refuses, saying why, while that pane
+// Nothing the plugin offers in reading view changes the note (spec §3, reading_view_whole_note; Roger, 11 Oct 2026). A
+// command that would rewrite a note acts only on the note in the pane in front. It refuses, saying why, while that pane
 // is in reading view or holds no note. Another pane showing the note decides nothing, and an edit pane keeps saving
 // while another pane reads the note.
 import { test, describe, before } from 'node:test';

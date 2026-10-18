@@ -1,7 +1,7 @@
-// The editors open in place, as the plugin keeps track of them (spec §4, typing_keeps_focus; slice 2's end-of-slice
-// review, 11 Oct 2026: the editor in place dropped out of its card when the block's fence line moved, and Edit here
-// pressed twice opened two editors on one block). A block is known by its card's identity, which a line added or taken
-// away above it never changes, so the card and its editor survive the move with the focus and the selection; and a
+// The editors open in place, as the plugin keeps track of them (spec §4, typing_keeps_focus). Slice 2's end-of-slice
+// review, 11 Oct 2026, found two faults. The editor in place dropped out of its card when the block's fence line moved.
+// Edit here pressed twice opened two editors on one block. A block is known by its card's identity. A line added or taken
+// away above it never changes that. So the card and its editor survive the move with the focus and the selection. A
 // block has one editor in place at most.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';

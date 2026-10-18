@@ -1,5 +1,5 @@
-// A style block in a note (spec §2, style_block_in_note): never drawn as a graph, shown folded away until opened — a line
-// saying whose style it is, what it holds and how many problems it has, and its text, coloured, inside.
+// A style block in a note (spec §2, style_block_in_note). It is never drawn as a graph. It is shown folded away until
+// opened. A line says whose style it is, what it holds and how many problems it has. Its text, coloured, is inside.
 import { readNote, readStyle, word } from '@thoughtknot/core';
 import type { WordKey } from '@thoughtknot/core';
 import { renderCode } from '@thoughtknot/core/display/code';

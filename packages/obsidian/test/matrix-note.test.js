@@ -1,7 +1,7 @@
-// The destination matrix note read into plain rows (editor spec §19, model_ceiling; Roger, 16 Oct 2026): the Obsidian
-// layer reads the note named in a setting and hands the core rows of classes with a mark each, so the core never reads
-// the note's layout. The matrix is chosen by its header (destinations down the side, classes across, at least one a known
-// class), with ✅, ⚠️ or ❌ in the cells; a cell is a mark only when it is exactly that, and anything else is unknown, which
+// The destination matrix note read into plain rows (editor spec §19, model_ceiling; Roger, 16 Oct 2026). The Obsidian
+// layer reads the note named in a setting and hands the core rows of classes with a mark each. So the core never reads
+// the note's layout. The matrix is chosen by its header: destinations down the side, classes across, at least one a
+// known class. The cells hold ✅, ⚠️ or ❌. A cell is a mark only when it is exactly that. Anything else is unknown, which
 // refuses. The core's use of the rows is tested in packages/core/test/ai-matrix.test.js.
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';

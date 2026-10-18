@@ -1,5 +1,5 @@
 // The AI models on the settings page (spec §21, settings_ai_models; §19): a list with a page for each model — its name,
-// purpose, ceiling, model, endpoint and key. The key is chosen in the app's own secret store, by name, so it never
+// purpose, ceiling, model, endpoint and key. The key is chosen in the app's own secret store, by name. So it never
 // reaches the vault: the plugin's saved settings hold only that name.
 import { SecretComponent } from 'obsidian';
 import type { App, SettingDefinitionList, SettingTab } from 'obsidian';

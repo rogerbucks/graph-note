@@ -1,8 +1,10 @@
-// The send dialog (spec §19, user_chooses_what, seen_before_sent, never_in_background): the user chooses what of the
-// note's graph is sent — the whole graph, a view, or the things they tick — the model, and the question; Show what will
-// be sent puts the exact request on screen, with the model and its address; and only Send, pressed on exactly that,
-// sends it, once. Any change takes the yes away until it is shown again. The answer is written into the note as a change
-// set beside the graph, and every send is recorded in the plugin's data, whatever came of it.
+// The send dialog (spec §19, user_chooses_what, seen_before_sent, never_in_background).
+// - The user chooses what of the note's graph is sent: the whole graph, a view, or the things they tick.
+// - They choose the model, and the question.
+// - Show what will be sent puts the exact request on screen, with the model and its address.
+// - Only Send, pressed on exactly that, sends it, once. Any change takes the yes away until it is shown again.
+// - The answer is written into the note as a change set beside the graph.
+// - Every send is recorded in the plugin's data, whatever came of it.
 import { Modal, Notice, Setting } from 'obsidian';
 import type { ButtonComponent, TFile } from 'obsidian';
 import { readInHostDirection } from '@thoughtknot/core/display/host';
@@ -214,7 +216,7 @@ export class SendDialog extends Modal {
 
   /** The exact request for what is chosen, or why nothing may be sent. */
   private show(): void {
-    // the matrix note is read now, so a model held to a row is held to the row as the note has it; with none named,
+    // the matrix note is read now. So a model held to a row is held to the row as the note has it. With none named,
     // nothing is waited for
     const note = this.plugin.settings.aiMatrixNote.trim();
     this.prepared = null;
@@ -291,8 +293,8 @@ export class SendDialog extends Modal {
   private async send(): Promise<void> {
     const p = this.prepared;
     if (!p || this.sending) return;
-    // the note's classification read once more as Send is pressed: if it is not what was shown, what was shown is
-    // taken away and nothing goes, so a classification changed meanwhile is never sent under the old one
+    // the note's classification is read once more as Send is pressed. If it is not what was shown, what was shown is
+    // taken away and nothing goes. So a classification changed meanwhile is never sent under the old one
     const now = this.levelOf();
     if (now !== p.level) {
       const was = p.level ?? 'none',

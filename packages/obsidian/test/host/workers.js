@@ -1,6 +1,6 @@
-// A stand-in for the browser's Worker, for the tests of the layout kept apart from the interface (spec §9): each worker
-// the plugin starts runs the very code main.js hands it, from its Blob URL, in a real thread (worker_threads), with the
-// `self` a Web Worker would have. A test may have it swallow some requests, as a worker stuck in a hostile graph does.
+// A stand-in for the browser's Worker, for the tests of the layout kept apart from the interface (spec §9). Each worker
+// the plugin starts runs the very code main.js hands it, from its Blob URL. It runs in a real thread (worker_threads),
+// with the `self` a Web Worker would have. A test may have it swallow some requests, as a worker stuck in a hostile graph does.
 import { resolveObjectURL } from 'node:buffer';
 import { Worker as Thread } from 'node:worker_threads';
 

@@ -1,5 +1,7 @@
-// The note's own editor (spec §4): typing in a graph block in the note adds the comma and the colon as the pane does,
-// with Obsidian's brackets paired as you type; and a note nobody is editing is never rewritten.
+// The note's own editor (spec §4):
+// - Typing in a graph block in the note adds the comma and the colon as the pane does.
+//   Obsidian's brackets are paired as you type.
+// - A note nobody is editing is never rewritten.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, wait } from './host/load-plugin.js';
@@ -146,8 +148,8 @@ describe('what is added for you, with Obsidian’s brackets paired as you type',
 });
 
 describe('a note nobody is editing', () => {
-  // comma_never_rewritten_unasked (spec §4): drawing a note never rewrites it — the line break is read as the comma, and
-  // the fix is offered, not made
+  // comma_never_rewritten_unasked (spec §4): drawing a note never rewrites it.
+  // The line break is read as the comma, and the fix is offered, not made.
   test('is drawn with a missing comma read in, and offered the fix, but never rewritten', async () => {
     const { fakeContext } = await import('./host/fake-obsidian.js');
     const block = "// graph: g\n(a:T {name: 'A'})\n(b:T {name: 'B'})";

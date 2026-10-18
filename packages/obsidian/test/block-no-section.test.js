@@ -1,6 +1,6 @@
-// A graph block drawn with no place in a note (spec §3, reading_view_whole_note): another plugin (Dataview, Kanban and the
-// like) renders Markdown where Obsidian can say nothing of the section a block is in, so the card cannot know which line
-// of which note it would write. It is read-only there: Source and no Edit, and nothing in it writes.
+// A graph block drawn with no place in a note (spec §3, reading_view_whole_note). Another plugin (Dataview, Kanban and
+// the like) renders Markdown where Obsidian can say nothing of the section a block is in.
+// So the card cannot know which line of which note it would write. It is read-only there: Source and no Edit, and nothing in it writes.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until, wait } from './host/load-plugin.js';
@@ -22,8 +22,8 @@ const NOTE = ['# Reader', '', fence(GRAPH), '', fence(VIEW), ''].join('\n');
 /** Draws `source` as another plugin's rendering would: on the page, with no section info (getSectionInfo gives null). */
 async function drawnWithNoSection(env, source, children = []) {
   const el = env.doc.body.createDiv({ cls: 'block-language-gql' });
-  // the processor resolves when the card is drawn: bar, drawing, banner or empty prompt (a layout refused by the worker
-  // is waited for by its test)
+  // The processor resolves when the card is drawn: bar, drawing, banner or empty prompt.
+  // (A layout refused by the worker is waited for by its test.)
   await env.state.processors.get('gql')(source, el, fakeContext(NOTE, -1, children));
   return el;
 }
@@ -65,8 +65,8 @@ describe('a graph with no section info is read-only', () => {
   });
 });
 
-// The paths that show a block as text, or hold its place for an editor, are read-only with no section info too: where
-// the block is edited at the line the card names (line 0, as no section info gives), the editor still never mounts.
+// The paths that show a block as text, or hold its place for an editor, are read-only with no section info too.
+// The block may be edited at the line the card names (line 0, as no section info gives). The editor still never mounts.
 describe('a graph shown as text, or with nothing drawable while edited, is read-only with no section info', () => {
   const AT_TOP = `${fence(GRAPH)}\n`;
 

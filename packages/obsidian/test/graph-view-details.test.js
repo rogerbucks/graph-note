@@ -1,5 +1,5 @@
-// Details on demand (spec §3): tapping a box, a link or an estimated link — or reaching it from the keyboard — shows what
-// it is; a tap near things reaches the nearest, and again the next.
+// Details on demand (spec §3). Tapping a box, a link or an estimated link shows what it is.
+// So does reaching it from the keyboard. A tap near things reaches the nearest, and again the next.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from './host/load-plugin.js';
@@ -56,8 +56,8 @@ describe('details on demand', () => {
 
 describe('a tap near things', () => {
   // tap_cycles_near (spec §3, slice 2; Roger, 7 Oct 2026: "clicking location that's near to one or more objects should
-  // also cycle through those objects for selection"): a tap on or near boxes and links chooses the nearest, and a tap
-  // again in the same place the next. The places are found from the same drawing the plugin shows.
+  // also cycle through those objects for selection"). A tap on or near boxes and links chooses the nearest.
+  // A tap again in the same place chooses the next. The places are found from the same drawing the plugin shows.
   let env, areas, el, drawnAt;
   before(async () => {
     env = await load();
@@ -145,8 +145,9 @@ describe('a tap near things', () => {
     assert.equal(svg.getAttribute('width'), width, 'the drawing is the size it was');
   });
 
-  // device check V-08 (Roger, 11 Oct 2026): "selecting by double-click also zooms" — a link is thin, so a click "on" it is
-  // nearly always a click near it, and the mouse's double click was judged only by the element under the pointer
+  // device check V-08 (Roger, 11 Oct 2026): "selecting by double-click also zooms".
+  // A link is thin, so a click "on" it is nearly always a click near it.
+  // But the mouse's double click was judged only by the element under the pointer.
   test('a double click near a box or link, not on it, selects it and never zooms', async () => {
     const { nearby } = await import('../../core/src/hits.ts');
     const box = areas.shapes.find((s) => s.kind === 'node');

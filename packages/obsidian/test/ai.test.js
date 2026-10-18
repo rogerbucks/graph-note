@@ -1,6 +1,9 @@
-// Asking an AI model from Obsidian (spec §19): off until turned on; the dialog where the user chooses what to send and a
-// model, sees exactly what will be sent, and sends it; the key from the app's secret store; the answer written into the
-// note as a change set beside the graph; every send recorded in the plugin's data, by digest. Obsidian's request
+// Asking an AI model from Obsidian (spec §19):
+// - It is off until turned on.
+// - In the dialog the user chooses what to send and a model, sees exactly what will be sent, and sends it.
+// - The key comes from the app's secret store.
+// - The answer is written into the note as a change set beside the graph.
+// - Every send is recorded in the plugin's data, by digest. Obsidian's request
 // function is the fake host's, which never reaches the network.
 import { before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
