@@ -28,8 +28,8 @@ const opening = (s: string) => s.charAt(0).toLocaleUpperCase() + s.slice(1);
 const kindSaid = (kind: string) =>
   /^\p{Lu}\p{Ll}/u.test(kind) ? kind.charAt(0).toLocaleLowerCase() + kind.slice(1) : kind;
 
-/** The sentence or two at the top of thing `key`'s details, or nothing when graph `graph` does not hold it. */
-export function thingSaid(reading: NoteReading, graph: string, key: string): string {
+/** How thing `key` is linked, in a sentence or more, as its details and its tooltip open with; nothing when graph `graph` does not hold it. */
+export function linksSaid(reading: NoteReading, graph: string, key: string): string {
   const d = details(reading, graph, key);
   if (!d) return '';
   const groups = linkGroups(reading, graph, key),
@@ -41,15 +41,20 @@ export function thingSaid(reading: NoteReading, graph: string, key: string): str
   if (plain.length) said.push(word('details.said-links', { subject, links: listed(plain.map(groupSaid)) }));
   else if (!guessed.length) said.push(word('details.said-alone', { subject }));
   for (const g of guessed) said.push(`${opening(groupSaid(g))}.`);
+  return said.join(' ');
+}
+
+/** The sentence or two at the top of thing `key`'s details, or nothing when graph `graph` does not hold it. */
+export function thingSaid(reading: NoteReading, graph: string, key: string): string {
+  const d = details(reading, graph, key);
+  if (!d) return '';
   const properties = propertiesOf(reading, graph, { thing: key }).length,
     problems = d.problems.length;
-  said.push(
-    word('details.said-has', {
-      properties: properties
-        ? word('details.said-properties', { count: properties })
-        : word('details.said-no-properties'),
-      problems: problems ? word('bar.problems', { count: problems }) : word('details.said-no-problems'),
-    }),
-  );
-  return said.join(' ');
+  const has = word('details.said-has', {
+    properties: properties
+      ? word('details.said-properties', { count: properties })
+      : word('details.said-no-properties'),
+    problems: problems ? word('bar.problems', { count: problems }) : word('details.said-no-problems'),
+  });
+  return `${linksSaid(reading, graph, key)} ${has}`;
 }
