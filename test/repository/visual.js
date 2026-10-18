@@ -161,4 +161,4 @@ export function pictureOf(window, svg, themeVariables) {
 
 /** Every drawing a view shows: each outermost svg drawn by the drawing layer, in the order of the page. */
 export const drawingsIn = (root) =>
-  [...root.querySelectorAll('svg.graph-note-svg')].filter((svg) => !svg.parentElement.closest('svg'));
+  [...root.querySelectorAll('svg.thoughtknot-svg')].filter((svg) => !svg.parentElement.closest('svg'));

@@ -5,7 +5,7 @@
 // be the reference in test/visual/, and each reference must be recorded in quality/visual.json with a reason, so a drawing
 // that changes fails until the change is accepted with one. The picture itself is tried first, so a pass means it looked.
 //
-// To accept the drawings as they are now: GRAPH_NOTE_VISUAL_ACCEPT="why" npm run -s test:ai -- test/visual-regression.test.js
+// To accept the drawings as they are now: THOUGHTKNOT_VISUAL_ACCEPT="why" npm run -s test:ai -- test/visual-regression.test.js
 // writes every reference that differs and records it with that reason and the day. CI never accepts.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -24,7 +24,7 @@ import { ROOT } from './repository/repo.js';
 
 const REFERENCES = join(ROOT, 'test/visual');
 const RECORD = join(ROOT, 'quality/visual.json');
-const ACCEPT = process.env.GRAPH_NOTE_VISUAL_ACCEPT?.trim();
+const ACCEPT = process.env.THOUGHTKNOT_VISUAL_ACCEPT?.trim();
 if (ACCEPT && process.env.GITHUB_ACTIONS)
   throw new Error('CI never accepts a drawing: accept it on a branch, with a reason');
 
@@ -93,7 +93,7 @@ describe('the picture of a drawing', () => {
     const window = page(svg, css);
     return pictureOf(window, drawingsIn(window.document.body)[0], obsidianVariables(theme));
   };
-  const BOX = `<svg class="graph-note-svg" viewBox="0 0 10 10"><g id="node1" class="node q"><title>q</title>
+  const BOX = `<svg class="thoughtknot-svg" viewBox="0 0 10 10"><g id="node1" class="node q"><title>q</title>
     <path class="box" d="M1.234567,2 L3,4"/><text x="5.005" y="6">Which device?</text></g></svg>`;
 
   test('says each shape’s geometry and words, rounded to a hundredth, and leaves out what paints nothing', () => {
