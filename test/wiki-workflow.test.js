@@ -43,6 +43,14 @@ describe('the workflow that makes the wiki', () => {
     assert.match(runs, /gh release list .*--exclude-pre-releases --json tagName,name,publishedAt /);
   });
 
+  test('reads the requirements at the latest stable release’s tag, so the developer pages mark what is only nightly', () => {
+    const runs = runCommands(jobs(text).make.join('\n')).join('\n');
+    assert.match(runs, /select\(\.tagName \| test\("-"\) \| not\)/);
+    assert.match(runs, /git fetch --depth=1 --no-tags origin "refs\/tags\/\$tag"/);
+    assert.match(runs, /git show FETCH_HEAD:requirements\/editor-requirements\.gql > "\$RUNNER_TEMP\/released\.gql"/);
+    assert.match(runs, /node scripts\/wiki\.mjs .*--released "\$RUNNER_TEMP\/released\.gql"/);
+  });
+
   test('says how to start the wiki when it has no pages yet: the review checks nothing, the publish stops', () => {
     const review = jobs(text).review.join('\n');
     assert.match(review, /if ! git clone .*\.wiki\.git/);
