@@ -16,6 +16,7 @@ import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { requirementsGraph } from './check-requirements.mjs';
+import { ethosPage, readEthos } from './ethos.mjs';
 import { readBoard } from './slice-board.mjs';
 import { roadmapPage } from './wiki-roadmap.mjs';
 import { SHOTS } from './wiki-screens.mjs';
@@ -32,6 +33,7 @@ export const MADE_PAGES = [
   'Open-questions.md',
   'Quality.md',
   'Releases.md',
+  'Ethos.md',
   '_Sidebar.md',
 ];
 
@@ -144,10 +146,12 @@ export function unexplained(labels, guide) {
 
 /**
  * Every page of the wiki, as {file name: Markdown}. `pages` are the hand-written pages of wiki/ ({name: text}),
- * `options` the editor's settings, `releases` GitHub's list (or empty), `today` an ISO date.
+ * `options` the editor's settings, `releases` GitHub's list (or empty), `today` an ISO date. `ethosText`, the
+ * project's ethos graph, adds the Ethos page when given.
  */
 export function renderWiki({
   requirementsText,
+  ethosText,
   waves,
   workstreams,
   baseline,
@@ -244,6 +248,9 @@ export function renderWiki({
     `| Version | Name | Published |\n|---|---|---|\n${rows.join('\n')}\n` +
     footer(releases.length ? 'GitHub releases' : '`versions.json`', sha, today);
 
+  if (ethosText !== undefined)
+    out['Ethos.md'] = ethosPage(readEthos(ethosText), requirements) + footer('`requirements/ethos.gql`', sha, today);
+
   out['_Sidebar.md'] = [
     '**[Home](Home)**',
     '',
@@ -251,6 +258,7 @@ export function renderWiki({
     '- [How to use Graph Note](How-to-use-Graph-Note)',
     '',
     '**The project**',
+    ...(ethosText === undefined ? [] : ['- [Ethos](Ethos)']),
     '- [Status](Status)',
     '- [Roadmap](Roadmap)',
     '- [Decisions](Decisions)',
@@ -284,6 +292,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const releasesFile = flag(args, '--releases');
   const made = renderWiki({
     requirementsText: readFileSync(join(ROOT, 'requirements/editor-requirements.gql'), 'utf8'),
+    ethosText: readFileSync(join(ROOT, 'requirements/ethos.gql'), 'utf8'),
     waves: json('requirements/waves.json').waves,
     workstreams: json('requirements/workstreams.json'),
     baseline: json('quality/baseline.json'),
