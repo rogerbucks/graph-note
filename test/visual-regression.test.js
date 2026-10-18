@@ -1,12 +1,15 @@
 // Every view's drawing against its committed reference, in the light and the dark theme (editor spec §41,
-// visual_regression_auto). Each view of each host that shows a drawing (the views test/wcag.test.js checks:
-// test/repository/views-obsidian.js and views-page.js) is drawn, and each drawing written as its picture
-// (test/repository/visual.js): what is seen, with the theme's colours worked out from the real stylesheet. The picture must
-// be the reference in test/visual/, and each reference must be recorded in quality/visual.json with a reason, so a drawing
-// that changes fails until the change is accepted with one. The picture itself is tried first, so a pass means it looked.
+// visual_regression_auto). The views are those test/wcag.test.js checks, in test/repository/views-obsidian.js and
+// views-page.js. Each drawing is written as its picture by test/repository/visual.js: what is seen, with the theme's
+// colours worked out from the real stylesheet.
 //
-// To accept the drawings as they are now: THOUGHTKNOT_VISUAL_ACCEPT="why" npm run -s test:ai -- test/visual-regression.test.js
-// writes every reference that differs and records it with that reason and the day. CI never accepts.
+// The picture must be the reference in test/visual/. Each reference must be recorded in quality/visual.json with a
+// reason. So a drawing that changes fails until the change is accepted with one. The picture itself is tried first, so
+// a pass means it looked.
+//
+// To accept the drawings as they are now, run this. It writes every reference that differs, with the reason and the day:
+//   THOUGHTKNOT_VISUAL_ACCEPT="why" npm run -s test:ai -- test/visual-regression.test.js
+// CI never accepts.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';

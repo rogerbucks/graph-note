@@ -1,0 +1,6 @@
+{
+  "file": "test/visual-regression.test.js",
+  "test": "every drawing has its reference > no reference is left that no view draws, and every host is checked",
+  "seen_failing_first": false,
+  "evidence": "Changed only by the rename to ThoughtKnot (a589006): the accept variable took its new name. The check was already met before it, as every reference was drawn and both hosts were checked."
+}

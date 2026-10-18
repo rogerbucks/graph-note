@@ -1,8 +1,11 @@
-// The pictures the visual check compares (editor spec §41, visual_regression_auto): each drawing of a view, in a theme,
-// written as plain SVG text that says only what is seen. Every shape keeps its geometry and its words; its paint (fill,
-// stroke, their opacity, the stroke's width and dashes, the text's colour, size and weight) is the theme's, as the page
-// works it out from the real stylesheet, written onto it (each var() and color-mix() worked out to one rgb colour); classes, ids, names for a screen reader and other markup that
-// paints nothing are left out, and each number is rounded to a hundredth, so a picture changes only when what is drawn does.
+// The pictures the visual check compares (editor spec §41, visual_regression_auto). Each is one drawing of a view, in a
+// theme, written as plain SVG text that says only what is seen.
+//
+// Every shape keeps its geometry and its words. Its paint is written onto it as the page works it out from the real
+// stylesheet. The paint is the fill, the stroke, their opacity, the stroke's width and dashes, and the text's colour,
+// size and weight. Each var() and color-mix() becomes one rgb colour. Classes, ids, names for a screen reader and other
+// markup that paints nothing are left out. Each number is rounded to a hundredth, so a picture changes only when what
+// is drawn does.
 import { parseColour, withVariables } from './wcag.js';
 
 /** The SVG elements that paint, or group what does. */
@@ -107,8 +110,9 @@ const paintOf = (value, variables) =>
 const escape = (text) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 
 /**
- * The picture of `svg`, an element of a page open in `window` with the theme's stylesheet and `variables`: one element a
- * line, indented by its depth, each giving only the paint that differs from the element it is in. Ids a shape points to (a marker, a clip, a gradient) are numbered in the order they appear.
+ * The picture of `svg`, an element of a page open in `window` with the theme's stylesheet and `variables`. It is one
+ * element a line, indented by its depth. Each line gives only the paint that differs from the element it is in. Ids a
+ * shape points to (a marker, a clip, a gradient) are numbered in the order they appear.
  */
 export function pictureOf(window, svg, themeVariables) {
   const variables = withChannels(themeVariables);
