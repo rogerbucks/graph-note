@@ -1,7 +1,7 @@
 // Help that finds and fixes problems (spec §8), in the shapes of the Language Server Protocol (spec §10). So a VS Code
-// host can show them as its own. Every problem is in plain English, with its place and a fix where one exists. Names,
+// host can show them as its own. Every problem is in plain language, with its place and a fix where one exists. Names,
 // kinds and relationships are suggested while typing, only the schema's in a locked graph. A near duplicate is warned
-// of in a draft. Each line is read back in plain English.
+// of in a draft. Each line is read back in plain language.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';

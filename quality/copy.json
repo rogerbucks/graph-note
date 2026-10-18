@@ -1,4 +1,4 @@
 {
-  "about": "Recorded reasons for a message the user reads that misses the plain-English limits (editor spec §41, ux_copy_auto; scripts/plain-english.mjs): its exact text, its scores when recorded (grade, longest sentence in words, jargon), why it stays, and the day. test/ux-copy.test.js fails on a message that misses with no entry, or scores worse than its entry; an entry no view shows any more must be taken out.",
+  "about": "Recorded reasons for a message the user reads that misses the plain-language limits (editor spec §41, ux_copy_auto; scripts/plain-english.mjs): its exact text, its scores when recorded (grade, longest sentence in words, jargon), why it stays, and the day. test/ux-copy.test.js fails on a message that misses with no entry, or scores worse than its entry; an entry no view shows any more must be taken out.",
   "accepted": []
 }

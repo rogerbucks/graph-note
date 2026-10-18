@@ -1,4 +1,4 @@
-// A view's card (spec §7). The strip under the bar holds the view in plain English, and Fade others or Hide others.
+// A view's card (spec §7). The strip under the bar holds the view in plain language, and Fade others or Hide others.
 // That button writes the choice in the style graph (fade_or_hide_in_style). The strip also holds Save as shown
 // (view_saved_as_shown). The legend gives the colours its looks use, each with what it means
 // (styling_keeps_locked_rules). On the drawing, what is outside the view is faded. Each look is drawn in the locked
@@ -10,7 +10,7 @@ import { button } from './view-bar';
 /** What a drawing shown as a view is given, beyond a plain drawing's options. */
 export interface ViewShown {
   name: string;
-  /** The view in plain English. */
+  /** The view in plain language. */
   reading: string;
   outside: Outside;
   /** What is outside the view, when it is faded rather than hidden: its things, and its links by index. */

@@ -1,4 +1,4 @@
-// The plain-English check of every document and code comment (spec §41, plain_docs_auto). It is written for a
+// The plain-language check of every document and code comment (spec §41, plain_docs_auto). It is written for a
 // reader with ADHD, who should be able to scan any page.
 //
 // A document keeps each sentence to 25 words and each paragraph to 80. It has a heading at least every 400 words. It
