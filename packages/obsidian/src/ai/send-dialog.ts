@@ -25,7 +25,6 @@ import { obsidianTransport } from './send';
 
 /** The purpose a send from this dialog is for: the model set up for it is offered first. */
 const PURPOSE = 'Proposing changes';
-const QUESTION = 'Propose the changes that would make this graph more complete and correct.';
 
 type What = ScopeChoice['what'];
 
@@ -42,7 +41,7 @@ export class SendDialog extends Modal {
   private view = '';
   private readonly ticked = new Set<string>();
   private model: string;
-  private question = QUESTION;
+  private question = word('ai.question');
   private prepared: PreparedSend | null = null;
   private refusal: string | null = null;
   private sending = false;
@@ -81,7 +80,7 @@ export class SendDialog extends Modal {
 
   override onOpen(): void {
     readInHostDirection(this.modalEl);
-    this.setTitle('Ask an AI model to propose changes');
+    this.setTitle(word('ai.title'));
     this.draw();
   }
 
@@ -95,7 +94,7 @@ export class SendDialog extends Modal {
     el.empty();
     this.sendButton = null;
     if (!this.things.size) {
-      el.createEl('p', { text: 'This note has no graph with things in it, so there is nothing to send.' });
+      el.createEl('p', { text: word('ai.nothing') });
       return;
     }
     new Setting(el).setName(word('ai.graph')).addDropdown((d) => {
@@ -108,13 +107,13 @@ export class SendDialog extends Modal {
       });
     });
     new Setting(el)
-      .setName('What to send')
-      .setDesc('Only this is sent, with your question: nothing else of the note or the vault.')
+      .setName(word('ai.what'))
+      .setDesc(word('ai.what.sentence'))
       .addDropdown((d) =>
         d
-          .addOption('graph', 'The whole graph')
-          .addOption('view', 'A view of it')
-          .addOption('things', 'Only the things ticked')
+          .addOption('graph', word('ai.what.graph'))
+          .addOption('view', word('ai.what.view'))
+          .addOption('things', word('ai.what.things'))
           .setValue(this.what)
           .onChange((v) => {
             this.what = v as What;
@@ -125,8 +124,8 @@ export class SendDialog extends Modal {
     if (this.what === 'things') this.drawThings(el);
     this.drawModel(el);
     new Setting(el)
-      .setName('Your question')
-      .setDesc('What you ask the model; it is sent with what you chose.')
+      .setName(word('ai.your-question'))
+      .setDesc(word('ai.your-question.sentence'))
       .addTextArea((t) =>
         t.setValue(this.question).onChange((v) => {
           this.question = v;
@@ -135,14 +134,14 @@ export class SendDialog extends Modal {
       );
     this.shownEl = el.createDiv({ cls: 'graph-note-ai-shown' });
     new Setting(el)
-      .addButton((b) => b.setButtonText('Show what will be sent').onClick(() => void this.show()))
+      .addButton((b) => b.setButtonText(word('ai.show')).onClick(() => void this.show()))
       .addButton((b) => {
         this.sendButton = b
-          .setButtonText('Send')
+          .setButtonText(word('ai.send'))
           .setCta()
           .onClick(() => void this.send());
       })
-      .addButton((b) => b.setButtonText('Cancel').onClick(() => this.close()));
+      .addButton((b) => b.setButtonText(word('ai.cancel')).onClick(() => this.close()));
     this.drawShown();
   }
 
@@ -150,9 +149,7 @@ export class SendDialog extends Modal {
   private drawViews(el: HTMLElement): void {
     const names = this.views.get(this.graph) ?? [];
     if (!names.length) {
-      el.createEl('p', {
-        text: `Graph ${this.graph} has no view in this note: choose the whole graph or tick things.`,
-      });
+      el.createEl('p', { text: word('ai.no-view', { graph: this.graph }) });
       return;
     }
     if (!names.includes(this.view)) this.view = names[0] ?? '';
@@ -185,14 +182,20 @@ export class SendDialog extends Modal {
     const choices = modelChoices(this.plugin.settings, PURPOSE);
     const chosen = this.plugin.settings.aiModels.find((m) => m.name === this.model);
     new Setting(el)
-      .setName('Model')
+      .setName(word('ai.model'))
       .setDesc(
         chosen
-          ? `${chosen.purpose || 'No purpose given'}; ${chosen.matrixRow ? `held to the matrix row ${chosen.matrixRow}` : `sent notes up to ${chosen.ceiling}`}.`
+          ? chosen.matrixRow
+            ? word('ai.model.matrix', { purpose: chosen.purpose || word('ai.model.no-purpose'), row: chosen.matrixRow })
+            : word('ai.model.ceiling', {
+                purpose: chosen.purpose || word('ai.model.no-purpose'),
+                ceiling: chosen.ceiling,
+              })
           : '',
       )
       .addDropdown((d) => {
-        for (const c of choices) d.addOption(c.name, c.forPurpose ? `${c.name}, for ${PURPOSE.toLowerCase()}` : c.name);
+        for (const c of choices)
+          d.addOption(c.name, c.forPurpose ? word('ai.model.for-proposing', { name: c.name }) : c.name);
         d.setValue(this.model).onChange((v) => {
           this.model = v;
           this.changed(true);
@@ -230,8 +233,7 @@ export class SendDialog extends Modal {
       () => {
         if (ticket !== this.asked) return;
         this.prepared = null;
-        this.refusal =
-          'The matrix note could not be read, so nothing is sent: check the note named in the settings, then press Show what will be sent again.';
+        this.refusal = word('ai.matrix-unread');
         this.drawShown();
       },
     );
@@ -279,7 +281,7 @@ export class SendDialog extends Modal {
     if (this.refusal) el.createEl('p', { cls: 'graph-note-ai-refused', text: this.refusal });
     if (!p) return;
     for (const line of p.summary) el.createEl('p', { text: line });
-    el.createEl('p', { text: 'Exactly this is sent, with these headers, and only once you choose to send it:' });
+    el.createEl('p', { text: word('ai.exactly') });
     const headers = Object.entries(p.headersShown).map(([k, v]) => `${k}: ${v}`);
     el.createEl('pre', { cls: 'graph-note-ai-headers', text: headers.join('\n') });
     el.createEl('pre', { cls: 'graph-note-ai-body', text: p.body });
@@ -296,7 +298,7 @@ export class SendDialog extends Modal {
       const was = p.level ?? 'none',
         is = now ?? 'none';
       this.prepared = null;
-      this.refusal = `The note’s classification has changed since what will be sent was shown (it was ${was}, it is now ${is}). Nothing was sent: press Show what will be sent again.`;
+      this.refusal = word('ai.level-changed', { was, is });
       this.drawShown();
       return;
     }
@@ -330,20 +332,16 @@ export class SendDialog extends Modal {
         return now;
       });
     } catch (e) {
-      new Notice(
-        `${p.model.name} answered, but its proposal could not be written into ${this.file.path} (${String(e)}).`,
-      );
+      new Notice(word('ai.not-written-error', { model: p.model.name, path: this.file.path, error: String(e) }));
       return;
     }
     if (outcome.refused) {
-      new Notice(`${p.model.name} answered, but its proposal was not written into the note: ${outcome.refused}`);
+      new Notice(word('ai.not-written', { model: p.model.name, why: outcome.refused }));
       this.refusal = outcome.refused;
       this.drawShown();
       return;
     }
-    new Notice(
-      `${p.model.name} proposed ${n} change${n === 1 ? '' : 's'}: they are in the note as a change set beside the graph, each waiting for you to accept or reject it.`,
-    );
+    new Notice(word('ai.proposed', { model: p.model.name, count: n }));
     this.close();
   }
 }

@@ -24,7 +24,7 @@ const LANGUAGES = Object.entries(PSEUDO_LANGUAGES);
 const DRAWN_BY_OBSIDIAN = ['the settings page'];
 
 /** The words the code still says itself in each host's views, not yet from the catalogue: lowered as each moves there. */
-const STILL_SAID_BY_CODE = { obsidian: 103, page: 36 };
+const STILL_SAID_BY_CODE = { obsidian: 96, page: 36 };
 
 /** The parts set at a point measured on the screen, by class: these keep a physical side (as in test/rtl.test.js). */
 const PLACED = [
@@ -222,6 +222,8 @@ const HOLDS_NO_WORDS = {
   '.graph-note-swatch': 'a line in a colour of the drawing',
   '.graph-note-sr': 'the screen reader’s text, kept off the screen on purpose',
   '.gn-icon': 'an icon',
+  '.graph-note-switch-track': 'a switch drawn as a toggle; its words sit beside it',
+  '.graph-note-switch-track::before': 'the toggle’s knob',
 };
 
 /** A length that does not grow with the words: pixels, points, em or characters. */
