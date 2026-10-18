@@ -133,6 +133,9 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   and gives the nudge the place writes (beside the box it is dropped by, across the ranks; before or after it, along
   them), or null away from every box or where that nudge is written already; `landingSaid` says it, "Put Ann beside
   Bob". The card draws the drag (`display/graph-view/box-drag-view.ts`) and the host writes the nudge (`styleEdit`).
+- `box-drag.ts` also has `placesFor`, which lists every place a box can go, for the keyboard (move_box_keyboard). The
+  card's keys are in `display/graph-view/box-move-keys.ts`. In a radial drawing, a box goes before or after a thing
+  around the centre (radial_spoke_order).
 - `zoom.ts` — zoom, pan and full screen, and `resize` for a new viewport or a drawing laid out again (§25); `reveal` brings a box into view, centred, and leaves one already in view alone;
   `aim` says where the view would go to do so, keeping the zoom unless it is below a scale given (§25); `keepClear` keeps
   a strip at the viewport's foot clear, as a sheet covers it, letting the drawing pan up into it by as much and no more.
