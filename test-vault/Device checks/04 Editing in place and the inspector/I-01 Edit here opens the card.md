@@ -26,4 +26,4 @@
 
 > **I-01** Edit here opens the text inside the drawing's card, and typing there redraws the drawing without losing the place.
 
-**Back to the checklist:** [I-01 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-01 in its list.
+**Back to the checklist:** [I-01 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-01 in its list.

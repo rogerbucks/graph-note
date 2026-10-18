@@ -36,4 +36,4 @@ The style block: the NEAR links move as dashes, and say what the movement means.
 
 > **L-01** A graph whose style block holds a Flow with dashes for one relationship type: the dashes run along each of its links, in the direction of its arrow, and each of its labels opens with ⇢; the other links are still. Under the bar the legend says "⇢ moving dashes:" and what the movement means. Take the Flow out of the style block: every link is still and the legend goes.
 
-**Back to the checklist:** [L-01 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for L-01 in its list.
+**Back to the checklist:** [L-01 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for L-01 in its list.

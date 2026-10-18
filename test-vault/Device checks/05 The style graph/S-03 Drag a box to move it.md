@@ -27,4 +27,4 @@
 
 > **S-03** Desktop: drag a box with the mouse to just below another box. It follows the pointer, the other box is outlined, and a line at the top says "Put … beside …". Let go: a notice says "Moved: …", the style block gains a beside nudge and the two are drawn side by side. Drag again and press Escape: the box goes back and nothing is written. A short click still opens the box.
 
-**Back to the checklist:** [S-03 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for S-03 in its list.
+**Back to the checklist:** [S-03 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for S-03 in its list.

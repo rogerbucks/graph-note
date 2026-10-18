@@ -27,4 +27,4 @@
 
 > **P-06** Editing the same block in the note while typing in the pane: the pane reloads the block, says what was typed is kept as a draft, and Restore draft brings it back.
 
-**Back to the checklist:** [P-06 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for P-06 in its list.
+**Back to the checklist:** [P-06 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for P-06 in its list.

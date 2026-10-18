@@ -33,4 +33,4 @@
 
 > **I-13** A list's chips look as a note's list property looks in the Properties panel in this theme, light and dark. The x on a chip removes it: the link goes, and the thing too when nothing else links to it, and a line under the rows says which. The add field adds a value on Enter, or when it is left; an empty value, or one already there, says why and writes nothing. Phone: the chips, their x and the add field are easy to hit in the sheet, and the keyboard does not cover the field being typed in.
 
-**Back to the checklist:** [I-13 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-13 in its list.
+**Back to the checklist:** [I-13 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-13 in its list.

@@ -24,4 +24,4 @@
 > new name at once, its alias kept. With the note open in Live Preview while renaming, Command-Z takes the change
 > back.
 
-**Back to the checklist:** [H-07 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for H-07 in its list.
+**Back to the checklist:** [H-07 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for H-07 in its list.

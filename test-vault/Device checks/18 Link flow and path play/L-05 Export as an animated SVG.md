@@ -34,4 +34,4 @@
 
 > **L-05** While it plays, press Export as an animated SVG: the Export form opens on the path, SVG chosen, at the pace it was playing. Export it: opened in a browser, the image plays round and round, the outline moving from step to step and a dot along a link between two steps; every step is numbered on its thing, and the frame says the walk in order and its pace. Nothing else needs to be installed.
 
-**Back to the checklist:** [L-05 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for L-05 in its list.
+**Back to the checklist:** [L-05 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for L-05 in its list.

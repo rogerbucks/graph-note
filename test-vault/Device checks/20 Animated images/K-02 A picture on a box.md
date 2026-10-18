@@ -37,4 +37,4 @@ The style block: a picture on every cat's box, from its photo.
 > top of the box above its kind, with a small pause button in the picture's corner; the dog's box has no picture.
 > Light and dark themes both.
 
-**Back to the checklist:** [K-02 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for K-02 in its list.
+**Back to the checklist:** [K-02 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for K-02 in its list.

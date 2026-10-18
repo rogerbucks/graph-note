@@ -734,6 +734,12 @@
       "landing_page"
     ]
   },
+  "D3": {
+    "title": "Developer site",
+    "requirements": [
+      "developer_site"
+    ]
+  },
   "K1": {
     "title": "Graphs in a GitHub repository",
     "requirements": [

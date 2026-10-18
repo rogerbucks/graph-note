@@ -28,4 +28,4 @@
 
 > **Z-06** Full screen covers the window, inside the phone's notch and home bar. Escape or Close leaves it. In full screen the wheel alone zooms.
 
-**Back to the checklist:** [Z-06 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Z-06 in its list.
+**Back to the checklist:** [Z-06 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Z-06 in its list.

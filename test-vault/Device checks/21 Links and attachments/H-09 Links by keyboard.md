@@ -22,4 +22,4 @@
 > **H-09** On the Mac, open a box's details from the keyboard and press Tab: each link is reached in turn, and Return
 > opens the one reached.
 
-**Back to the checklist:** [H-09 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for H-09 in its list.
+**Back to the checklist:** [H-09 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for H-09 in its list.

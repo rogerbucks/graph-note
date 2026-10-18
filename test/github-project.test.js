@@ -35,7 +35,7 @@ const command = (...args) =>
   });
 
 describe('the workstreams file', () => {
-  test('names the workstreams W0 to W15, the slice-end workstream S3, the graph mesh workstreams W16 to W33, the WCAG workstream W34, the test-files workstream W35, the moving-boxes workstream W36, the roadmap workstreams A1, R1, R2, L1, H1, H2, V1 and D1, the design-review workstreams G1, T1, P1 and U1, the open-questions workstream Q, the whiteboard workstreams B1 to B4, the Copilot Cowork workstream M1, the text-to-graph workstream X1, the home page workstream D2 and the GitHub repository workstream K1, with the titles agreed', () => {
+  test('names the workstreams W0 to W15, the slice-end workstream S3, the graph mesh workstreams W16 to W33, the WCAG workstream W34, the test-files workstream W35, the moving-boxes workstream W36, the roadmap workstreams A1, R1, R2, L1, H1, H2, V1 and D1, the design-review workstreams G1, T1, P1 and U1, the open-questions workstream Q, the whiteboard workstreams B1 to B4, the Copilot Cowork workstream M1, the text-to-graph workstream X1, the home page workstream D2, the developer site workstream D3 and the GitHub repository workstream K1, with the titles agreed', () => {
     assert.deepEqual(Object.keys(workstreams), [
       ...Array.from({ length: 16 }, (_, n) => `W${n}`),
       ...Array.from({ length: 9 }, (_, n) => `C${n}`),
@@ -61,6 +61,7 @@ describe('the workstreams file', () => {
       'M1',
       'X1',
       'D2',
+      'D3',
       'K1',
     ]);
     assert.deepEqual(
@@ -133,6 +134,7 @@ describe('the workstreams file', () => {
         'Copilot Cowork skill',
         'Text to graph with AI',
         'Project home page',
+        'Developer site',
         'Graphs in a GitHub repository',
       ],
     );
@@ -216,7 +218,7 @@ describe('the command', () => {
     assert.match(result.stdout, /dry run/i);
     assert.match(result.stdout, /no network call/i);
     assert.match(result.stdout, new RegExp(`issues: create ${inSlices([3, 4]).length} `));
-    assert.match(result.stdout, /create project "graph-note requirements"/);
+    assert.match(result.stdout, /create project "ThoughtKnot requirements"/);
     assert.equal(result.stderr, '');
   });
 
@@ -290,7 +292,7 @@ describe('the command', () => {
 describe('the mirror, read-only with --check and changing with --apply, against a stand-in for gh', () => {
   const real = readBoard(FIXTURE);
   const desired = desiredState(real, WORKSTREAMS, [3, 4]);
-  const ORIGIN = 'rogerbucks/graph-note';
+  const ORIGIN = 'rogerbucks/thoughtknot';
   const run = (gh, mode, over = {}, desiredState_ = desired) => {
     const out = [];
     const sleeps = [];
@@ -321,7 +323,7 @@ describe('the mirror, read-only with --check and changing with --apply, against 
     assert.deepEqual(sleeps, []);
     assert.match(text, /github-project: check/);
     assert.match(text, /read-only/);
-    assert.match(text, /rogerbucks\/graph-note/);
+    assert.match(text, /rogerbucks\/thoughtknot/);
     assert.match(text, /issues: create 5 /);
   });
 
@@ -342,7 +344,7 @@ describe('the mirror, read-only with --check and changing with --apply, against 
     const { text } = run(gh, 'apply');
     const plan = (t) => t.slice(t.indexOf('labels: create'));
     assert.match(text, /github-project: apply/);
-    assert.match(text, /target repository: rogerbucks\/graph-note/);
+    assert.match(text, /target repository: rogerbucks\/thoughtknot/);
     assert.equal(plan(text).split('\ngithub-project: applied')[0] + '\n', plan(checked));
     assert.equal(gh.hub.issues.length, 5);
     assert.match(text, /github-project: applied\n$/);
@@ -351,7 +353,7 @@ describe('the mirror, read-only with --check and changing with --apply, against 
   test('refuses when gh points at another repository than the origin, having asked nothing else', () => {
     for (const mode of ['check', 'apply']) {
       const gh = fakeGithub({ name: 'other' });
-      assert.throws(() => run(gh, mode), /gh points at rogerbucks\/other.*origin is rogerbucks\/graph-note/s);
+      assert.throws(() => run(gh, mode), /gh points at rogerbucks\/other.*origin is rogerbucks\/thoughtknot/s);
       assert.equal(gh.hub.calls.length, 1, mode);
     }
   });

@@ -24,7 +24,7 @@ import {
 import { REQUIREMENTS } from '../scripts/check-requirements.mjs';
 import { fakeRepoSide, pull } from './repository/build-status-fake.js';
 
-const REPO = 'rogerbucks/graph-note';
+const REPO = 'rogerbucks/thoughtknot';
 const SHA = 'b'.repeat(40);
 const MARKER = '<!-- build-status -->';
 

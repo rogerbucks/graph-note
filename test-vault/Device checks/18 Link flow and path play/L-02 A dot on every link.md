@@ -47,4 +47,4 @@ MATCH (n {id: 'park'})-[]-{1,1}(m) RETURN n, m
 
 > **L-02** A Flow with a dot for every link: a dot travels along each link, the link drawn from its far end too, in the direction it reads, and each label opens with •. With VoiceOver, a link is read with "a moving dot:" and what it means. A view whose Flow is still draws its links still.
 
-**Back to the checklist:** [L-02 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for L-02 in its list.
+**Back to the checklist:** [L-02 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for L-02 in its list.

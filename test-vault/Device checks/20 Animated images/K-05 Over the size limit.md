@@ -35,4 +35,4 @@ The style block: a picture on every clip's box.
 > where the picture would be, and its image in the details shows nothing, each saying it is over the 5 MB an animated image may be, and the limits
 > in a sentence; pressing Play leaves it so and says why again. The drawing is drawn at once, without waiting for it.
 
-**Back to the checklist:** [K-05 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for K-05 in its list.
+**Back to the checklist:** [K-05 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for K-05 in its list.

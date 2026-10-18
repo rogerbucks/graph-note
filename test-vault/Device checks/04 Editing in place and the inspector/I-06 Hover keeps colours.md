@@ -25,4 +25,4 @@
 
 > **I-06** Desktop: hovering the mouse over the box in the card, and clicking into it, never turns it grey or hides its coloured text, and no tooltip appears over it.
 
-**Back to the checklist:** [I-06 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-06 in its list.
+**Back to the checklist:** [I-06 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-06 in its list.

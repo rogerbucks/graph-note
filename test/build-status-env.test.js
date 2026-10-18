@@ -45,7 +45,7 @@ describe('the whole run, from the environment a workflow gives', () => {
     const seen = [];
     assert.equal(await runFromEnv(env(), io(w, out, seen)), 0);
     assert.equal(w.value('focus_link'), 'In PR');
-    assert.ok(w.comments()[0].body.includes('[Run](https://github.com/rogerbucks/graph-note/actions/runs/99)'));
+    assert.ok(w.comments()[0].body.includes('[Run](https://github.com/rogerbucks/thoughtknot/actions/runs/99)'));
     assert.ok(seen.includes(WORKFLOW_TOKEN) && seen.includes(TOKEN));
     assert.equal(
       w.side.hub.calls.filter((c) => c.args.includes('project') || /ProjectV2/i.test(String(c.input))).length,

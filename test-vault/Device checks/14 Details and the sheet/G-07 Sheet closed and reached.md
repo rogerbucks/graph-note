@@ -32,4 +32,4 @@ A line to type in, after this colon:
 > keys included: every key reaches the note. With VoiceOver, the arrow and the x are read as "Minimise details" and
 > "Close details", and Tab reaches both.
 
-**Back to the checklist:** [G-07 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for G-07 in its list.
+**Back to the checklist:** [G-07 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for G-07 in its list.

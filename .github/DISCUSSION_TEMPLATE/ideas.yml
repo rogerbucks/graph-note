@@ -2,7 +2,7 @@ title: '[Idea] '
 body:
   - type: markdown
     attributes:
-      value: The [roadmap](https://github.com/rogerbucks/graph-note/wiki/Roadmap) shows what is planned already.
+      value: The [roadmap](https://github.com/rogerbucks/thoughtknot/wiki/Roadmap) shows what is planned already.
   - type: textarea
     id: problem
     attributes:

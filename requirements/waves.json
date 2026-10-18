@@ -142,16 +142,23 @@
       "workstreams": ["D2"]
     },
     {
-      "title": "Wave 21 · Held: graphs in a GitHub repository",
+      "title": "Wave 21 · Held: developer site",
       "start": "2027-06-21",
       "end": "2027-07-04",
+      "estimate": true,
+      "workstreams": ["D3"]
+    },
+    {
+      "title": "Wave 22 · Held: graphs in a GitHub repository",
+      "start": "2027-07-05",
+      "end": "2027-07-18",
       "estimate": true,
       "workstreams": ["K1"]
     },
     {
       "title": "Roger’s held changes, after all waves",
-      "start": "2027-07-05",
-      "end": "2027-07-18",
+      "start": "2027-07-19",
+      "end": "2027-08-01",
       "estimate": true,
       "workstreams": []
     }
