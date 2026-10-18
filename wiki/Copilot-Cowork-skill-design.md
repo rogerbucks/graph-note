@@ -53,14 +53,10 @@ flowchart LR
   as `/graph edit` does in Claude Code (`cowork_ceiling`). No server, connector or secret of ours (`cowork_no_server`).
 - **Release.** Built from the tag, attached to the GitHub release as `graph-note.skill` (`cowork_released`).
 
-## The one open point
+## Scripts
 
-Microsoft's docs show `scripts/` as companion files but do not say how Cowork runs them. The first task of Wave 18 is
-a short spike: upload a skill whose script prints a fixed line, and see whether Cowork runs it.
-
-| If Cowork runs the script | If it does not |
-|---|---|
-| Build as above | Fall back to a connector (an MCP server) running the library, which needs Roger's call and a security review first, since notes would leave Microsoft 365 (`cowork_no_server`) |
+Cowork runs a skill's companion scripts (Roger, 18 October 2026), so the library runs inside Cowork as a script and
+no connector is needed. A connector stays out unless a later security review approves one (`cowork_no_server`).
 
 ## Not in scope
 
