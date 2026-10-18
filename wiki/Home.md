@@ -34,7 +34,9 @@ The [Roadmap](Roadmap) shows when each part lands.
 ## Start here
 
 - **New to ThoughtKnot?** Read [How to use ThoughtKnot](How-to-use-ThoughtKnot).
-- **Following the project?** See the [Status](Status), the [Roadmap](Roadmap) and the [Decisions](Decisions).
-- **Building it, or writing a plug-in?** Start at [For developers](For-developers).
+- **Following the project?** See the [Status](Status), the [Roadmap](Roadmap) and the [Decisions](Decisions) made so far.
+- **Building it, or writing a plug-in?** Start at [For developers](For-developers): the architecture, plug-ins, hosts
+  and the reference.
 
-The figures and lists in this wiki are made from the code each time it changes, so they are always current.
+Every figure, list and drawing in this wiki is made from the repository each time it changes, so they are always
+current. To change a page, change the repository.

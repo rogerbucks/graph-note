@@ -149,9 +149,16 @@
       "workstreams": ["D3"]
     },
     {
-      "title": "Roger’s held changes, after all waves",
+      "title": "Wave 22 · Held: graphs in a GitHub repository",
       "start": "2027-07-05",
       "end": "2027-07-18",
+      "estimate": true,
+      "workstreams": ["K1"]
+    },
+    {
+      "title": "Roger’s held changes, after all waves",
+      "start": "2027-07-19",
+      "end": "2027-08-01",
       "estimate": true,
       "workstreams": []
     }

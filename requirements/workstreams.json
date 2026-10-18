@@ -600,7 +600,8 @@
       "wiki_generated",
       "user_guide_wiki",
       "wiki_reviewed",
-      "developer_wiki"
+      "developer_wiki",
+      "plain_docs_auto"
     ]
   },
   "G1": {
@@ -738,6 +739,15 @@
     "title": "Developer site",
     "requirements": [
       "developer_site"
+    ]
+  },
+  "K1": {
+    "title": "Graphs in a GitHub repository",
+    "requirements": [
+      "github_repo_store",
+      "github_repo_extract",
+      "github_repo_writes_reviewed",
+      "github_repo_access"
     ]
   }
 }
