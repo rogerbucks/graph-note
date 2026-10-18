@@ -82,6 +82,24 @@ describe('judging what a page measured', () => {
   });
 });
 
+describe('judging a view the narrow layout splits, or keeps off-screen on purpose', () => {
+  test('a control placed off-screen at every width, as a skip link is until focused, is not out of reach', async () => {
+    const { findings } = await reflow();
+    const skip = { left: -999, right: -860 };
+    const wide = measure([control('a Skip to the note', skip)]);
+    const narrow = measure([control('a Skip to the note', skip)], { width: 320, scrollWidth: 320 });
+    assert.deepEqual(findings('page', wide, narrow), []);
+  });
+
+  test('a control behind one of the tabs a phone’s layout shows instead is there', async () => {
+    const { findings } = await reflow();
+    const wide = measure([control('button Fit'), control('textarea Text'), control('button Done')]);
+    const at = { width: 320, scrollWidth: 320 };
+    const tabs = [measure([control('textarea Text')], at), measure([control('button Fit')], at)];
+    assert.deepEqual(findings('page', wide, tabs), ['page: at 320 CSS pixels button Done is gone']);
+  });
+});
+
 describe('in a real browser, every view of every host', () => {
   let chrome, why;
   try {
