@@ -24,6 +24,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { freshCloneProblems, setupInputsChangedSince } from './fresh-clone.mjs';
 import { messageProblems, problemsIn } from './history-text-problems.mjs';
+import { DESCRIPTION, HOMEPAGE, topicsSetting } from './repo-profile.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const git = (root, args, input) => execFileSync('git', args, { cwd: root, input, maxBuffer: 2 ** 31 });
@@ -204,6 +205,12 @@ export const WANTED = [
   repoField('has_discussions', true),
   repoField('delete_branch_on_merge', true),
   repoField('allow_auto_merge', true),
+  // Every commit is signed off (the DCO), so a commit made on the website asks for it too.
+  repoField('web_commit_signoff_required', true),
+  // How the project shows to a stranger: what it is, where its home page is, and the topics it is found by.
+  repoField('description', DESCRIPTION),
+  repoField('homepage', HOMEPAGE),
+  topicsSetting(gh),
   // Secrets: scanned on every push, and refused at the gate.
   security('secret_scanning'),
   security('secret_scanning_push_protection'),
