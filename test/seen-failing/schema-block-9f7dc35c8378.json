@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/schema-block.test.js",
+  "test": "a schema block in a note > a data block is still drawn as its graph",
+  "seen_failing_first": false,
+  "evidence": "a guard that a data block is drawn as before, beside the schema picture: it holds behaviour that already existed, so it passes at the parent"
+}

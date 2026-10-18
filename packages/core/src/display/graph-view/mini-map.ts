@@ -3,7 +3,7 @@
 // when the drawing is bigger than its view (the default), or always. It is drawn from the same areas a tap reaches, as a box
 // for each thing and a line for each link, so it is a copy of the layout and never lays anything out; its look is the style
 // sheet's alone (`graph-note-mini-*`). Pointer only: the drawing is moved from the keyboard by its own keys.
-import { hitAreas } from '@graph-note/core';
+import { hitAreas, word } from '@graph-note/core';
 import type { Drawn, HitAreas, MiniMapSetting, Size, View, Zoom } from '@graph-note/core';
 import type { Lifecycle } from '../lifecycle';
 import { make } from './note-callouts';
@@ -40,7 +40,7 @@ export class MiniMap {
     this.host = host;
     this.el = viewport.createDiv({
       cls: 'graph-note-mini-map',
-      attr: { role: 'img', 'aria-label': 'Mini-map of the whole drawing. Tap or drag it to move the view.' },
+      attr: { role: 'img', 'aria-label': word('drawing.mini-map') },
     });
     this.el.hidden = true;
     card.registerDomEvent(this.el, 'pointerdown', (e: PointerEvent) => {

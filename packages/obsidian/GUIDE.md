@@ -45,6 +45,8 @@ card in a component Obsidian owns (`graphCard`). The layer's types for what the 
   Reading view, an embed and a hover preview offer no Run.
 - `edit-in-pane.ts` — Edit on a FROM block's card and a step's, opening the block in the pane as an empty graph's card
   does; taken away where the card is only read.
+- `schema-block.ts` — a block that holds only a schema (§3, schema_drawn), drawn as the core's `schemaPicture`: its
+  kinds and relationship types, read-only with Source showing its text; any other block is left to `block.ts`.
 - `style-block.ts` — a style block (§2): never drawn, folded away until opened, saying whose style it is, what it holds
   (its diagram types among the rest) and how many problems it has. The graph it styles is drawn with its nudges, and its problems listed, by `block.ts`.
 - `code.ts` (now the shared layer's, `core/src/display/code.ts`) — a block that is not a graph, shown as coloured code; a very long one plain.
