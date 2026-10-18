@@ -156,16 +156,16 @@ describe('no baseline yet', () => {
 describe('held to a baseline that holds them', () => {
   const base = () => run(counted());
 
-  test('a count worse by more than the tolerance fails, naming it; within it passes; an unsteady one only warns', () => {
+  test('a count worse by more than the tolerance fails, naming it; within it passes; a drawing’s alike', () => {
     const name = COUNTS[1];
     const by = (share) => run({ ...counted(), [name]: base().metrics[name] * (1 + share) });
     assert.deepEqual(compare(base(), by(INSTRUCTION_TOLERANCE * 0.9), []).failures, []);
     const r = compare(base(), by(INSTRUCTION_TOLERANCE * 1.5), []);
     assert.deepEqual(failed(r), [name]);
     assert.match(r.failures[0].message, /instructions_reading_limits got worse/);
-    const unsteady = compare(base(), run({ ...counted(), [COUNTS[0]]: base().metrics[COUNTS[0]] * 5 }), []);
-    assert.deepEqual(unsteady.failures, []);
-    assert.match(unsteady.warnings[0].message, /instructions_draw_fifty got worse.*reported, never enforced/);
+    const drawing = compare(base(), run({ ...counted(), [COUNTS[0]]: base().metrics[COUNTS[0]] * 1.1 }), []);
+    assert.deepEqual(failed(drawing), [COUNTS[0]]);
+    assert.match(drawing.failures[0].message, /instructions_draw_fifty got worse/);
   });
 
   test('counted on another machine, a worse count only warns', () => {
@@ -266,17 +266,13 @@ describe('the committed baseline holds the counts', () => {
 });
 
 describe('how far a count may move', () => {
-  test('a drawing’s count, which moves from run to run on the release runner, has room for that; every other count 5%', async () => {
-    const { METRICS, INSTRUCTION_TOLERANCE, DRAWING_TOLERANCE, UNSTEADY_BENCHMARKS } =
-      await import('../scripts/quality-spec.mjs');
+  test('every count may grow by 5% with no reason recorded, and none is only reported', async () => {
+    const { METRICS, INSTRUCTION_TOLERANCE } = await import('../scripts/quality-spec.mjs');
     assert.equal(INSTRUCTION_TOLERANCE, 0.05);
-    // four counts on the release runner (18 Oct 2026): draw_five_hundred moved 1.3%, cold_start 20%, draw_fifty fivefold
-    assert.deepEqual(DRAWING_TOLERANCE, { draw_five_hundred: 0.1, cold_start: 0.3 });
-    assert.deepEqual(UNSTEADY_BENCHMARKS, ['draw_fifty']);
+    // three counts of each on the release runner (18 Oct 2026), WebAssembly compiled once: none moved by 0.03%
     for (const [name, spec] of Object.entries(METRICS).filter(([, s]) => s.instructions && s.unit === 'instructions')) {
-      const benchmark = name.replace(/^instructions_/, '');
-      assert.equal(spec.tolerance, DRAWING_TOLERANCE[benchmark] ?? INSTRUCTION_TOLERANCE, name);
-      assert.equal(spec.warnOnly ?? false, UNSTEADY_BENCHMARKS.includes(benchmark), name);
+      assert.equal(spec.tolerance, INSTRUCTION_TOLERANCE, name);
+      assert.equal(spec.warnOnly, undefined, name);
     }
   });
 });
