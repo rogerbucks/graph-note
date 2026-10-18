@@ -8,7 +8,7 @@ import { BoardProblem, readBuildBoard, setBuildStatus, setProgress } from '../sc
 import { fakeGithub } from './repository/github-project-fake.js';
 import { fakeRepoSide, mirroredProject } from './repository/build-status-fake.js';
 
-const REPO = 'rogerbucks/graph-note';
+const REPO = 'rogerbucks/thoughtknot';
 const noSleep = () => {};
 
 /** The mirrored project, and the repository whose issues it was made from. */
@@ -110,7 +110,7 @@ describe('the Build status field of the project', () => {
     const side = fakeRepoSide();
     assert.throws(
       () => readBuildBoard(side.run, none.run, REPO),
-      (e) => e instanceof BoardProblem && /graph-note requirements/.test(e.message),
+      (e) => e instanceof BoardProblem && /ThoughtKnot requirements/.test(e.message),
     );
     const { gh, board } = both();
     gh.hub.projects[0].fields = gh.hub.projects[0].fields.filter((f) => f.name !== 'Build status');

@@ -36,4 +36,4 @@ The reasons, in a second block of the same graph.
 
 > **P-15** Lock a graph built over two blocks, from its first block: the schema declares every kind and relationship of both blocks, and the graph then shows no problems.
 
-**Back to the checklist:** [P-15 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for P-15 in its list.
+**Back to the checklist:** [P-15 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for P-15 in its list.

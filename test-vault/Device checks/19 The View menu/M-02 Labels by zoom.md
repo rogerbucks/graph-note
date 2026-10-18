@@ -37,4 +37,4 @@
 
 > **M-02** On the phone, a wide graph fitted to the note shows its boxes but no link labels; pinch to zoom in and the labels appear once they can be read. Tap a box: its own links keep their labels at any zoom, as does a link under the pointer on the Mac. Turn Labels by zoom off: every label shows at any zoom.
 
-**Back to the checklist:** [M-02 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for M-02 in its list.
+**Back to the checklist:** [M-02 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for M-02 in its list.

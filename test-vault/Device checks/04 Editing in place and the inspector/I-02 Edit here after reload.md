@@ -150,4 +150,4 @@ Filler line 60, so the card below starts below the fold.
 
 > **I-02** Straight after the app starts or reloads, and on a card far down a long note scrolled to only then: Edit here opens the editor in that card, and Done closes it with what was typed in the note. Edit here never does nothing without saying why. Pressed twice quickly, it opens one editor, with the focus in it, never two.
 
-**Back to the checklist:** [I-02 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-02 in its list.
+**Back to the checklist:** [I-02 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-02 in its list.

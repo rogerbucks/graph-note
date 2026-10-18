@@ -28,4 +28,4 @@
 
 > **A-01** Desktop, keyboard only: Tab reaches every button, the drawing, each box and each estimated link. Enter opens a box's details or an estimate's reason.
 
-**Back to the checklist:** [A-01 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for A-01 in its list.
+**Back to the checklist:** [A-01 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for A-01 in its list.

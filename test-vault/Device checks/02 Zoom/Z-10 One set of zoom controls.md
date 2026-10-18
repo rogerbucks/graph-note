@@ -25,4 +25,4 @@
 
 > **Z-10** Only one set of zoom controls appears: the Mermaid Zoom plugin does not add its own to a graph drawing.
 
-**Back to the checklist:** [Z-10 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Z-10 in its list.
+**Back to the checklist:** [Z-10 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Z-10 in its list.

@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 import { SHOTS } from './wiki-screens.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const REPO = 'https://github.com/rogerbucks/graph-note';
+const REPO = 'https://github.com/rogerbucks/thoughtknot';
 const WIKI = `${REPO}/wiki`;
 const LICENCE = 'https://www.mozilla.org/en-US/MPL/2.0/';
 

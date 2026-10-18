@@ -62,7 +62,7 @@ const PRS = [
   {
     number: 71,
     title: 'Add the <b>board</b> & more',
-    url: 'https://github.com/rogerbucks/graph-note/pull/71',
+    url: 'https://github.com/rogerbucks/thoughtknot/pull/71',
     headRefName: 'slice-board',
     mergeable: 'MERGEABLE',
     statusCheckRollup: [
@@ -393,7 +393,7 @@ describe('the open pull requests panel', () => {
     const html = page({ prs: PRS });
     const panel = /<section class="prs"[\s\S]*?<\/section>/.exec(html)?.[0] ?? '';
     assert.match(panel, /Open pull requests/);
-    assert.match(panel, /<a href="https:\/\/github\.com\/rogerbucks\/graph-note\/pull\/71"[^>]*>#71/);
+    assert.match(panel, /<a href="https:\/\/github\.com\/rogerbucks\/thoughtknot\/pull\/71"[^>]*>#71/);
     assert.match(panel, /slice-board/);
     assert.match(panel, /mergeable/i);
     assert.match(panel, /2 passed/);

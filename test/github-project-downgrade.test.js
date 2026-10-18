@@ -13,7 +13,7 @@ import { createGuard } from '../scripts/github-project-issues.mjs';
 import { fakeGithub } from './repository/github-project-fake.js';
 import { FIXTURE, WORKSTREAMS } from './repository/github-project-fixture.js';
 
-const REPO = 'rogerbucks/graph-note';
+const REPO = 'rogerbucks/thoughtknot';
 const BOT = 'github-actions[bot]';
 const board = readBoard(FIXTURE);
 const desiredFor = () => desiredState(board, WORKSTREAMS, [3, 4]);

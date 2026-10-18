@@ -26,4 +26,4 @@
 
 > **U-02** Set up two models: one on this device by `http://localhost`, for Proposing changes, and one by `https://`, for Research questions, its key chosen with the app's own key field. A remote address written with `http://` is said on its model's row to need https. In the dialog the model for proposing changes is offered first, and data.json holds the key's name, never the key.
 
-**Back to the checklist:** [U-02 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for U-02 in its list.
+**Back to the checklist:** [U-02 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for U-02 in its list.

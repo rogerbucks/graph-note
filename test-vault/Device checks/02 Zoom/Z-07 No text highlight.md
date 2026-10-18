@@ -25,4 +25,4 @@
 
 > **Z-07** Double-clicking the drawing to zoom, or dragging across it, never highlights the words of its boxes and links.
 
-**Back to the checklist:** [Z-07 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Z-07 in its list.
+**Back to the checklist:** [Z-07 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Z-07 in its list.

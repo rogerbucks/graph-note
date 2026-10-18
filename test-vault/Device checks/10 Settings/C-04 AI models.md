@@ -24,4 +24,4 @@
 
 > **C-04** AI models: Add a model, open Model 1, fill its name and purpose, pick a ceiling, and choose a key with the app's own key field. Close and reopen the page: all kept. The plugin's data.json in the vault holds the key's name, never the key.
 
-**Back to the checklist:** [C-04 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for C-04 in its list.
+**Back to the checklist:** [C-04 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for C-04 in its list.

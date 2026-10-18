@@ -24,4 +24,4 @@
 
 > **I-18** Phone: the properties open as a sheet at the bottom of the screen, and every field and icon is easy to hit.
 
-**Back to the checklist:** [I-18 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-18 in its list.
+**Back to the checklist:** [I-18 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-18 in its list.

@@ -11,7 +11,7 @@ import { planBlocks } from '../scripts/github-project-blocks.mjs';
 import { fakeGithub } from './repository/github-project-fake.js';
 import { FIXTURE_WITH_QUESTIONS, WORKSTREAMS_WITH_QUESTIONS } from './repository/github-project-fixture.js';
 
-const REPO = 'rogerbucks/graph-note';
+const REPO = 'rogerbucks/thoughtknot';
 const desired = desiredState(readBoard(FIXTURE_WITH_QUESTIONS), WORKSTREAMS_WITH_QUESTIONS, [3, 4]);
 const apply = (gh, state = desired) =>
   executePlan(gh.run, REPO, buildPlan(state, readRemote(gh.run, REPO)), { sleep: () => {} });

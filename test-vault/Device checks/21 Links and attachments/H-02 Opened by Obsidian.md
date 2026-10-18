@@ -22,4 +22,4 @@
 > **H-02** Tap a link to a note in the details: Obsidian opens the note in the same tab. On the Mac, Command-click it:
 > it opens in a new tab, as a link in a note does.
 
-**Back to the checklist:** [H-02 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for H-02 in its list.
+**Back to the checklist:** [H-02 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for H-02 in its list.

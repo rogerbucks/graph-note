@@ -27,4 +27,4 @@
 > link it holds under Links, by property, each underlined. Press Edit here and tap the box again: the inspector lists
 > them too, and in the text the link inside its quotes is underlined.
 
-**Back to the checklist:** [H-01 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for H-01 in its list.
+**Back to the checklist:** [H-01 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for H-01 in its list.
