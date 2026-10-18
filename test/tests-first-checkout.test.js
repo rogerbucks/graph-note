@@ -1,5 +1,5 @@
-// The tests-first replay's checkout of a commit: its own workspace packages are linked by the names its manifests give,
-// so a commit from before a package scope was renamed still finds its own code.
+// The tests-first replay's checkout of a commit. Its own workspace packages are linked by the names its manifests give.
+// So a commit from before a package scope was renamed still finds its own code.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
