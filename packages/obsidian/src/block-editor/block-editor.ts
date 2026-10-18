@@ -1,14 +1,14 @@
 // The block editor as Obsidian owns it (spec §4, §9). The editor itself, the text field over its coloured picture, the
 // problems with fixes, suggestions, the drawing beside it, undo, redo and Lock the graph, is the display layer's
-// (`@graph-note/core/display/editor/block-editor`), the same one the browser editor's page runs; this wraps it in a
+// (`@thoughtknot/core/display/editor/block-editor`), the same one the browser editor's page runs; this wraps it in a
 // component Obsidian owns, to load and unload with the pane or the plugin, over the vault's note (block-note.ts).
 import { Component } from 'obsidian';
-import type { NoteReading, PaneSession } from '@graph-note/core';
-import { BlockEditor as SharedEditor } from '@graph-note/core/display/editor/block-editor';
-import type { Layout } from '@graph-note/core/display/editor/editor-layout';
-import type { Chosen, DeclaredDeferred } from '@graph-note/core/display/graph-view/view-options';
-import type { DeclaredList } from '@graph-note/core/display/properties/list-row';
-import type GraphNotePlugin from '../main';
+import type { NoteReading, PaneSession } from '@thoughtknot/core';
+import { BlockEditor as SharedEditor } from '@thoughtknot/core/display/editor/block-editor';
+import type { Layout } from '@thoughtknot/core/display/editor/editor-layout';
+import type { Chosen, DeclaredDeferred } from '@thoughtknot/core/display/graph-view/view-options';
+import type { DeclaredList } from '@thoughtknot/core/display/properties/list-row';
+import type ThoughtKnotPlugin from '../main';
 import { BlockNote } from './block-note';
 
 export type { Layout };
@@ -20,7 +20,7 @@ export class BlockEditor extends Component {
   /** The lists made while the editor is open, which the inspector shows even before they hold a value. */
   lists?: DeclaredList[];
 
-  constructor(plugin: GraphNotePlugin, layout: Layout) {
+  constructor(plugin: ThoughtKnotPlugin, layout: Layout) {
     super();
     this.layout = layout;
     this.editor = new SharedEditor(

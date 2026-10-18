@@ -145,9 +145,9 @@ class Flow(unittest.TestCase):
         # the table proves what it says: dashes and dots move, a backwards line moves
         # backwards, a view keeps links still, and Flows at fault are each a problem
         sources = [s for answer in self.core for d in answer["drawn"].values() for s in d.values()]
-        self.assertTrue(any("graph-note-flow-dashes" in s for s in sources))
-        self.assertTrue(any("graph-note-flow-dot" in s for s in sources))
-        self.assertTrue(any("graph-note-flow-back" in s for s in sources))
+        self.assertTrue(any("thoughtknot-flow-dashes" in s for s in sources))
+        self.assertTrue(any("thoughtknot-flow-dot" in s for s in sources))
+        self.assertTrue(any("thoughtknot-flow-back" in s for s in sources))
         self.assertTrue(any(f'label="{FLOW_ICONS["dashes"]} ' in s for s in sources))
         self.assertTrue(any(f"<td>{FLOW_ICONS['dot']} near</td>" in s for s in sources))
         quiet = [a for case, a in zip(CASES, self.core, strict=True) if case.get("view")]

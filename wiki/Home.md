@@ -1,6 +1,6 @@
-# Graph Note
+# ThoughtKnot
 
-Graph Note draws the graphs written in your notes, and lets you change them by typing or by tapping and dragging the
+ThoughtKnot draws the graphs written in your notes, and lets you change them by typing or by tapping and dragging the
 drawing. It works on desktop and phone, and offline.
 
 It is being built as one product with four ways in:
@@ -16,7 +16,7 @@ It is being built as one product with four ways in:
 
 ## Start here
 
-- **New to Graph Note?** Read [How to use Graph Note](How-to-use-Graph-Note).
+- **New to ThoughtKnot?** Read [How to use ThoughtKnot](How-to-use-ThoughtKnot).
 - **Following the project?** See the [Status](Status), the [Roadmap](Roadmap) and the [Decisions](Decisions) made so far.
 - **Building it, or writing a plug-in?** Start at [For developers](For-developers): the architecture, plug-ins, hosts
   and the reference.

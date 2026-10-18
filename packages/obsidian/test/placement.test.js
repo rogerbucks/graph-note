@@ -89,8 +89,8 @@ describe('a card placed late, in the note', () => {
       const { el, placed } = await showLate(env, 2500);
       await placed;
       labelled(el, 'Edit here').click();
-      await until(() => !!el.querySelector('.graph-note-view textarea'), 2000);
-      assert.equal(el.querySelector('.graph-note-view textarea').value, READER);
+      await until(() => !!el.querySelector('.thoughtknot-view textarea'), 2000);
+      assert.equal(el.querySelector('.thoughtknot-view textarea').value, READER);
     } finally {
       env.uninstall();
     }

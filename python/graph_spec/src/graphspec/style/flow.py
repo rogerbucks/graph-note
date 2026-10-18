@@ -62,7 +62,7 @@ def flow_links(types: Sequence[str], flows: Iterable[dict], view: str | None = N
 
 def flow_source(dot: str, flow: Sequence[dict]) -> str:
     """The Graphviz source `dot` with each link of `flow` (by index of its link lines, in order)
-    marked as moving: its label opened by its icon, the classes graph-note-flow, -dashes or -dot,
+    marked as moving: its label opened by its icon, the classes thoughtknot-flow, -dashes or -dot,
     and -back when its line runs against it, and dashes drawn dashed. With none, `dot`
     unchanged."""
     if not flow:
@@ -73,8 +73,8 @@ def flow_source(dot: str, flow: Sequence[dict]) -> str:
             n += 1
             f = by.get(n)
             if f:
-                back = " graph-note-flow-back" if line.endswith(_BACK) else ""
-                cls = f"graph-note-flow graph-note-flow-{f['motion']}{back}"
+                back = " thoughtknot-flow-back" if line.endswith(_BACK) else ""
+                cls = f"thoughtknot-flow thoughtknot-flow-{f['motion']}{back}"
                 dashed = ", style=dashed" if f["motion"] == "dashes" else ""
                 icon = FLOW_ICONS[f["motion"]]
                 line = _LABEL.sub(

@@ -13,8 +13,8 @@ import { GRAPH, show } from './host/view-notes.js';
 before(() => build());
 
 const OPEN = { settings: { detailsOpen: 'on' } };
-const panelOf = (el) => el.querySelector('.graph-note-details');
-const rootOf = (el) => el.querySelector('.graph-note-view');
+const panelOf = (el) => el.querySelector('.thoughtknot-details');
+const rootOf = (el) => el.querySelector('.thoughtknot-view');
 /** The card drawn, with the setting on or off, in a note of the width given. */
 async function card({ on = true, width = 700 } = {}) {
   const env = await load({ width, ...(on ? { data: OPEN } : {}) });
@@ -79,7 +79,7 @@ describe('details_always_visible: a setting keeps the details open, showing the 
     try {
       tapKey(el, 'large');
       await until(() => panelOf(el).textContent.includes('Large reader'));
-      assert.equal(panelOf(el).hasClass('graph-note-sheet'), false);
+      assert.equal(panelOf(el).hasClass('thoughtknot-sheet'), false);
     } finally {
       env.uninstall();
     }
@@ -145,10 +145,10 @@ describe('details_narrow: where the card is too narrow, the panel goes below the
 
   test('the style sheet puts the drawing and the panel side by side unless it is below, where they stack', () => {
     const css = readFileSync(`${root}styles.css`, 'utf8');
-    assert.match(css, /\.graph-note-view\.is-details-open:not\(\.is-details-below\)\s*\{[^}]*display:\s*flex/);
+    assert.match(css, /\.thoughtknot-view\.is-details-open:not\(\.is-details-below\)\s*\{[^}]*display:\s*flex/);
     assert.match(
       css,
-      /\.graph-note-view\.is-details-open:not\(\.is-details-below\)\s*>\s*\.graph-note-details\s*\{[^}]*flex/,
+      /\.thoughtknot-view\.is-details-open:not\(\.is-details-below\)\s*>\s*\.thoughtknot-details\s*\{[^}]*flex/,
     );
   });
 });

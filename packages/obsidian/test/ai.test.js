@@ -36,7 +36,7 @@ const REMOTE = {
   ceiling: 'Public',
   endpoint: 'https://api.example.com/v1/chat/completions',
   model: 'big-1',
-  keyName: 'graph-note-remote',
+  keyName: 'thoughtknot-remote',
 };
 const ON = { data: { settings: { aiUse: 'on', aiModels: [LOCAL, REMOTE] } } };
 // a key made here, so no line of this file has the shape of one
@@ -61,8 +61,8 @@ const row = (m, name) =>
     .querySelectorAll('.setting-item')
     .find((r) => r.querySelector('.setting-item-name')?.textContent === name);
 const button = (m, label) => m.contentEl.querySelectorAll('button').find((b) => b.getAttribute('aria-label') === label);
-const shownBody = (m) => m.contentEl.querySelector('.graph-note-ai-body')?.textContent ?? null;
-const said = (m) => m.contentEl.querySelector('.graph-note-ai-shown')?.textContent ?? '';
+const shownBody = (m) => m.contentEl.querySelector('.thoughtknot-ai-body')?.textContent ?? null;
+const said = (m) => m.contentEl.querySelector('.thoughtknot-ai-shown')?.textContent ?? '';
 
 function choose(m, name, value) {
   const sel = row(m, name).querySelector('select');
@@ -148,11 +148,11 @@ describe('asking an AI model to propose changes (§19)', () => {
   test('the key is taken from the app’s secret store as it is sent, and written nowhere', async () => {
     const env = await open(ON);
     try {
-      env.state.secrets.set('graph-note-remote', KEY);
+      env.state.secrets.set('thoughtknot-remote', KEY);
       env.state.reply = reply([{ op: 'remove-thing', thing: 'alice' }]);
       const m = await shown(env, 'Remote');
       assert.ok(!said(m).includes(KEY));
-      assert.match(said(m), /key named graph-note-remote/);
+      assert.match(said(m), /key named thoughtknot-remote/);
       button(m, 'Send').click();
       await until(() => env.state.files.get(PATH).includes('CHANGE SET'));
       assert.equal(env.state.requests[0].headers.Authorization, `Bearer ${KEY}`);
@@ -167,7 +167,7 @@ describe('asking an AI model to propose changes (§19)', () => {
   test('the key of any model set up is never sent, even to a model that has no key', async () => {
     const env = await open(ON, NOTE.replace("'Alice'", `'${KEY}'`));
     try {
-      env.state.secrets.set('graph-note-remote', KEY);
+      env.state.secrets.set('thoughtknot-remote', KEY);
       const m = await shown(env, 'Local');
       assert.equal(shownBody(m), null);
       assert.match(said(m), /the key of a model set up here/);
@@ -262,8 +262,8 @@ describe('asking an AI model to propose changes (§19)', () => {
     const viewer = await load({ files: { 'Some note.md': note } });
     try {
       const card = await show(viewer, note, 1);
-      await until(() => !!card.el.querySelector('.graph-note-proposal-reason'));
-      assert.equal(card.el.querySelectorAll('.graph-note-proposal-reason').at(-1).textContent, ` — ${reason}`);
+      await until(() => !!card.el.querySelector('.thoughtknot-proposal-reason'));
+      assert.equal(card.el.querySelectorAll('.thoughtknot-proposal-reason').at(-1).textContent, ` — ${reason}`);
     } finally {
       viewer.uninstall();
     }

@@ -44,7 +44,7 @@ const filesUnder = (dir) =>
 let vault;
 let made;
 before(() => {
-  vault = mkdtempSync(join(tmpdir(), 'graph-note-test-files-'));
+  vault = mkdtempSync(join(tmpdir(), 'thoughtknot-test-files-'));
   cpSync(path(NOTES), join(vault, 'Device checks'), {
     recursive: true,
     filter: (src) => !statSync(src).isFile() || src.endsWith('.md'),

@@ -48,7 +48,7 @@ async function details(env, key) {
   const el = await show(env);
   await until(() => !!el.querySelector('g.node'));
   tapKey(el, key);
-  const panel = el.querySelector('.graph-note-details');
+  const panel = el.querySelector('.thoughtknot-details');
   await until(() => (env.state.rendered ?? []).length > 0);
   return { el, panel };
 }

@@ -6,7 +6,7 @@
 // of the drawing it covers, so the card can keep the chosen thing clear above it (sheet_keeps_thing_clear). Its keys are
 // its own: nothing typed in the note is taken. While the block is edited, the details are the inspector, in the card.
 import { setIcon } from '../host';
-import { sheetLimit, word } from '@graph-note/core';
+import { sheetLimit, word } from '@thoughtknot/core';
 import { screenOf } from './placement';
 
 /** Minimised to a bar, or restored to the full details. */
@@ -69,7 +69,10 @@ export class DetailsSheet {
   head(head: HTMLElement): void {
     this.toggle = null;
     if (!this.wanted()) return;
-    const t = head.createEl('button', { cls: ['clickable-icon', 'graph-note-sheet-toggle'], attr: { type: 'button' } });
+    const t = head.createEl('button', {
+      cls: ['clickable-icon', 'thoughtknot-sheet-toggle'],
+      attr: { type: 'button' },
+    });
     t.addEventListener('click', () => this.set(this.el.hasClass('is-minimised') ? 'restored' : 'minimised'));
     this.toggle = t;
   }
@@ -81,7 +84,7 @@ export class DetailsSheet {
   opened(body: HTMLElement): void {
     this.body = body;
     const on = this.wanted();
-    this.el.toggleClass('graph-note-sheet', on);
+    this.el.toggleClass('thoughtknot-sheet', on);
     if (!on || !this.place()) return this.inCard();
     this.apply(remembered);
     this.watch();
@@ -93,7 +96,7 @@ export class DetailsSheet {
    */
   moved(resized: boolean): void {
     // away with its card, the sheet is not laid out at all (display: none): it is placed when the card comes back
-    if (this.el.hidden || !this.el.hasClass('graph-note-sheet') || this.el.hasClass('is-away')) return;
+    if (this.el.hidden || !this.el.hasClass('thoughtknot-sheet') || this.el.hasClass('is-away')) return;
     if (!this.place()) return this.inCard();
     if (resized) this.host.moved();
   }
@@ -104,7 +107,7 @@ export class DetailsSheet {
     this.watcher = null;
     this.sizer?.disconnect();
     this.sizer = null;
-    this.el.removeClass('graph-note-sheet', 'is-minimised', 'is-away');
+    this.el.removeClass('thoughtknot-sheet', 'is-minimised', 'is-away');
   }
 
   /** The details shown in the card, not as the sheet: no toggle, and the whole of them. */
@@ -120,7 +123,7 @@ export class DetailsSheet {
    * its card, or not yet laid out (a sheet never reaches the top of the screen it is pinned in).
    */
   top(): number | null {
-    if (this.el.hidden || !this.el.hasClass('graph-note-sheet') || this.el.hasClass('is-away')) return null;
+    if (this.el.hidden || !this.el.hasClass('thoughtknot-sheet') || this.el.hasClass('is-away')) return null;
     const top = this.el.getBoundingClientRect().top;
     return top > screenOf(this.el).top ? top : null;
   }
@@ -157,10 +160,10 @@ export class DetailsSheet {
       height = this.el.win.innerHeight,
       below = Math.max(screen.below, height - Math.min(card.bottom, screen.bottom));
     this.el.setCssProps({
-      '--graph-note-sheet-left': `${card.left}px`,
-      '--graph-note-sheet-width': `${card.width}px`,
-      '--graph-note-sheet-bottom': `${below}px`,
-      '--graph-note-sheet-max': `${sheetLimit(screen.bottom - screen.top)}px`,
+      '--thoughtknot-sheet-left': `${card.left}px`,
+      '--thoughtknot-sheet-width': `${card.width}px`,
+      '--thoughtknot-sheet-bottom': `${below}px`,
+      '--thoughtknot-sheet-max': `${sheetLimit(screen.bottom - screen.top)}px`,
     });
     const laid = this.el.getBoundingClientRect();
     return (
@@ -195,7 +198,7 @@ export class DetailsSheet {
   /** Escape in the sheet closes it, but never in a field being typed in. */
   private key(e: KeyboardEvent): void {
     if (e.key !== 'Escape' || e.ctrlKey || e.metaKey || e.altKey || typing(e.target)) return;
-    if (!this.el.hasClass('graph-note-sheet') || this.el.hidden) return;
+    if (!this.el.hasClass('thoughtknot-sheet') || this.el.hidden) return;
     e.preventDefault();
     this.host.close();
   }

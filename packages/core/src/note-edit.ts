@@ -2,7 +2,7 @@
 // or link written on a line of its own, or takes them away, and nothing else in the block changes. The result is read back
 // by the graph library's own reader, so a note that would belong to none (the line holds more than one thing) is refused
 // and never written. Host-free: the details panel and any other host call it and write the block it gives.
-import gs from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
 import { blankText, items, lineIndex } from './block-items.ts';
 import type { Item } from './block-items.ts';
 import { hops } from './estimates.ts';

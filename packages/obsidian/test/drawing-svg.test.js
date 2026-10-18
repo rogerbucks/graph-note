@@ -30,7 +30,7 @@ const label = (...svgClasses) => ({
   classes: [],
   ancestors: [
     { tag: 'g', classes: ['edge'] },
-    { tag: 'svg', classes: ['graph-note-svg', ...svgClasses] },
+    { tag: 'svg', classes: ['thoughtknot-svg', ...svgClasses] },
   ],
 });
 
@@ -43,13 +43,13 @@ describe('a link’s label in a drawing that runs down the page', () => {
 
   test('the card marks the drawing as running down, and a drawing that runs across is not marked', async () => {
     const down = svgOf((await show(env, fence(DOWN))).el);
-    assert.ok(down.classList.contains('graph-note-down'), 'down');
+    assert.ok(down.classList.contains('thoughtknot-down'), 'down');
     const across = svgOf((await show(env, fence(ACROSS))).el);
-    assert.ok(!across.classList.contains('graph-note-down'), 'across');
+    assert.ok(!across.classList.contains('thoughtknot-down'), 'across');
   });
 
   test('the label is moved right, away from its line, by a small gap', () => {
-    const moved = winner(all, label('graph-note-down'), 'transform');
+    const moved = winner(all, label('thoughtknot-down'), 'transform');
     assert.ok(moved, 'a rule moves it');
     const gap = Number(/^translateX\((\d+(?:\.\d+)?)px\)$/.exec(moved.value)?.[1]);
     assert.ok(gap >= 3 && gap <= 8, `a small gap, not ${moved.value}`);
@@ -59,7 +59,7 @@ describe('a link’s label in a drawing that runs down the page', () => {
     const box = {
       tag: 'text',
       classes: [],
-      ancestors: [{ tag: 'g', classes: ['node'] }, label('graph-note-down').ancestors[1]],
+      ancestors: [{ tag: 'g', classes: ['node'] }, label('thoughtknot-down').ancestors[1]],
     };
     assert.equal(winner(all, box, 'transform'), undefined);
     assert.equal(winner(all, label(), 'transform'), undefined);

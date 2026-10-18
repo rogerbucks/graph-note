@@ -1,7 +1,7 @@
 # The Obsidian plugin: where things live
 
 The plugin draws the graphs written in notes (spec §3) and edits them, in place in a drawing's card or in a pane beside
-the note (spec §4). What a graph means, its problems, its drawing and its edits come from `@graph-note/core`; this
+the note (spec §4). What a graph means, its problems, its drawing and its edits come from `@thoughtknot/core`; this
 package puts them on Obsidian's page. It is bundled by `esbuild.config.mjs` into `main.js` at the repository root.
 
 ## The source, `src/`
@@ -10,7 +10,7 @@ Each module opens with a comment saying what it is for. A feature with several p
 module that ties the parts together, named as the folder is.
 
 **The drawing, the details and the forms are the shared display layer's** (editor spec §26, C4), in
-`packages/core/src/display/` and imported as `@graph-note/core/display/<path>`: `code.ts`, `graph-view/`, `properties/`,
+`packages/core/src/display/` and imported as `@thoughtknot/core/display/<path>`: `code.ts`, `graph-view/`, `properties/`,
 `proposals/proposal-strip.ts` and `mark-proposal.ts`, `export/export-form.ts`, `links/links-list.ts` and
 `link-marks.ts`, `images/still-frame.ts`. Where the sections below describe one of them they still say what it does;
 the layer's own guide (`packages/core/GUIDE.md`) says where it lives. The plugin keeps what is Obsidian's:
@@ -66,7 +66,7 @@ card in a component Obsidian owns (`graphCard`). The layer's types for what the 
   of the worker's bundle; on the page's thread, with lower limits, only where the first worker cannot start; each said
   once in the console, as is drawing paused after three layouts in a row fail. Says why it is built so.
 - `worker-entry.ts` — what runs inside the worker. `esbuild.config.mjs` bundles it on its own, Graphviz and all, into the
-  function `layoutWorker` of the module `graph-note:layout-worker` (typed in `bundled-worker.d.ts`).
+  function `layoutWorker` of the module `thoughtknot:layout-worker` (typed in `bundled-worker.d.ts`).
 - `refusal-banner.ts` — the banner over a graph shown as text because it is too large to read or draw, took too long,
   or drawing is paused: an icon, and the limit and numbers in words.
 - those words are the core's `hosts/refusal-words.ts` (shared with the browser editor's page), in two voices: the banner's, and the notice of an export
@@ -185,7 +185,7 @@ card in a component Obsidian owns (`graphCard`). The layer's types for what the 
 
 ### `src/settings/` — the settings page (spec §21)
 
-- `settings.ts` — `GraphNoteSettingTab`: one page in Obsidian's plugin settings, in its declarative form, built from the
+- `settings.ts` — `ThoughtKnotSettingTab`: one page in Obsidian's plugin settings, in its declarative form, built from the
   core's `OPTIONS` so every option is on it with its sentence: strictness and the departures Simplified allows, with
   the action that converts a note to standard GQL; the classifications; formatting; drawing.
 - `ai-models.ts` — the AI models of §19 as a list, a page for each: name, purpose (the spec's purposes suggested),
@@ -218,7 +218,7 @@ card in a component Obsidian owns (`graphCard`). The layer's types for what the 
   only when a view is saved as shown.
 - `problems-list.ts` — the problems behind the badge, grouped when many, and the completeness report.
 - `drawing-svg.ts` — the SVG put in the card, each box and link reachable by keyboard and named; a drawing that runs
-  down the page is marked `graph-note-down`, which `styles.css` uses to give a link's label a gap from its line, so the
+  down the page is marked `thoughtknot-down`, which `styles.css` uses to give a link's label a gap from its line, so the
   layout source and the SVG stay the Python library's. A busy hub's stub and a folded group's box are buttons
   (`data-fold`), and a link merged into a trunk is itself by either of its lines (§25); laid out again, the new drawing
   goes into the same SVG element (`swapSvg`), so everything that holds it holds the new one.
@@ -229,7 +229,7 @@ card in a component Obsidian owns (`graphCard`). The layer's types for what the 
   readable, and the selection kept clear above the details sheet. Ties the next four to the card; marks the drawing by
   class only.
 - `focus-marks.ts` — what the core says is kept, hidden or highlighted, put on the drawing as classes
-  (`graph-note-kept`, `-dim`, `-hidden`, `-hot`); `styles.css` draws them by strength and outline, never by colour alone,
+  (`thoughtknot-kept`, `-dim`, `-hidden`, `-hot`); `styles.css` draws them by strength and outline, never by colour alone,
   and never by moving or resizing anything, so a highlight lays nothing out again.
 - `hover.ts` — the highlight: under the pointer, with the keyboard focus, and on touch from the tap that selects, so
   nothing depends on hover.
@@ -380,7 +380,7 @@ card in a component Obsidian owns (`graphCard`). The layer's types for what the 
 ### `src/block-editor/` — the text of one graph block, in the pane or in place
 
 **The editor is the display layer's** (editor spec §26, C9), in `packages/core/src/display/editor/` and imported as
-`@graph-note/core/display/editor/<module>`, the same code the browser editor's page runs: `block-editor.ts` (`BlockEditor`,
+`@thoughtknot/core/display/editor/<module>`, the same code the browser editor's page runs: `block-editor.ts` (`BlockEditor`,
 which ties the parts together, the field and what typing in it does; after another program, a sync or another pane changes
 its block, Undo and Redo keep their names, so voice control finds them, and are marked unavailable and described by why
 there is nothing to take back, undo_never_over_theirs; switching block in the picker starts that block's own history,

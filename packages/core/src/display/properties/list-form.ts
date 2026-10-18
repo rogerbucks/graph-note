@@ -1,6 +1,6 @@
 // The form that asks, when List is chosen for a property, for the kind and the relationship (spec §14,
 // list_as_linked_things): two fields, offered the kinds and relationships the graph already uses, and Make list or Cancel.
-import type { ListShape } from '@graph-note/core';
+import type { ListShape } from '@thoughtknot/core';
 
 /** What the form offers: the kinds and relationships the graph uses, and the suggestions to start from. */
 export interface ListFormOptions {
@@ -28,11 +28,11 @@ export function suggestShape(key: string): ListShape {
  * Cancel; it returns false to keep the form open (the shape was refused).
  */
 export function listForm(parent: HTMLElement, o: ListFormOptions, done: (shape: ListShape | null) => boolean): void {
-  const form = parent.createDiv({ cls: 'graph-note-list-form' });
+  const form = parent.createDiv({ cls: 'thoughtknot-list-form' });
   const id = ++forms;
   const of = o.property ? ` of ${o.property}` : '';
   form.createEl('p', {
-    cls: 'graph-note-list-note',
+    cls: 'thoughtknot-list-note',
     text: `Each value${of} becomes a thing linked by the relationship, and the row is named after it.`,
   });
   const ask = (label: string, value: string, options: string[], name: string) => {
@@ -42,12 +42,12 @@ export function listForm(parent: HTMLElement, o: ListFormOptions, done: (shape: 
         type: 'text',
         'aria-label': label,
         placeholder: name,
-        list: `graph-note-list-${id}-${name}`,
+        list: `thoughtknot-list-${id}-${name}`,
         autocapitalize: 'none',
       },
     });
     input.value = value;
-    const list = form.createEl('datalist', { attr: { id: `graph-note-list-${id}-${name}` } });
+    const list = form.createEl('datalist', { attr: { id: `thoughtknot-list-${id}-${name}` } });
     for (const v of options) list.createEl('option', { attr: { value: v } });
     return input;
   };

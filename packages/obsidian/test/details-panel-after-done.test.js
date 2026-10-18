@@ -35,7 +35,7 @@ describe('the details after Done', () => {
     try {
       const el = await editing(env);
       tapKey(el, 'large');
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       assert.ok(
         controls(panel).inputs > 0 && controls(panel).add === 1 && controls(panel).removes === 2,
         'editable while editing',
@@ -63,7 +63,7 @@ describe('the details after Done', () => {
     try {
       const el = await editing(env);
       el.querySelectorAll('g.edge')[0].dispatch('keydown', { key: 'Enter' });
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       assert.ok(controls(panel).add === 1, 'editable while editing');
       labelled(el, 'Done').click();
       await until(() => el.querySelector('textarea') === null);
@@ -80,7 +80,7 @@ describe('the details after Done', () => {
     try {
       const el = await editing(env);
       tapKey(el, 'large');
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       const price = field(panel, 'Value of price'),
         adder = panel.querySelector('input.multi-select-input'),
         x = panel.querySelector('.multi-select-pill-remove-button');
@@ -133,7 +133,7 @@ describe('Park for later after Done', () => {
       const el = await editing(env);
       tapKey(el, 'small');
       labelled(el, 'Park for later').click();
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       enter(field(panel, 'What is needed'), 'its price');
       enter(field(panel, 'Why it waits'), 'the shop has not said');
       labelled(el, 'Park it').click();
@@ -159,7 +159,7 @@ describe('the details when editing starts again', () => {
     try {
       const el = await editing(env);
       tapKey(el, 'large');
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       labelled(el, 'Done').click();
       await until(() => el.querySelector('textarea') === null);
       assert.deepEqual(controls(panel), NONE);
@@ -179,7 +179,7 @@ describe('the details when editing starts again', () => {
     try {
       const el = await show(env);
       tapKey(el, 'large');
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       assert.deepEqual(controls(panel), NONE, 'read-only to begin with');
       labelled(el, 'Edit here').click();
       await until(() => !!el.querySelector('textarea'));

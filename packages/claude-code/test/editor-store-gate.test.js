@@ -5,7 +5,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
-import { sha256 } from '@graph-note/core';
+import { sha256 } from '@thoughtknot/core';
 import { storeGate } from '../server/editor-gate.ts';
 import { ask } from './editor-threats-support.js';
 import { bearer, follow, handWatch, served, tempVault, writing } from './editor-store-support.js';

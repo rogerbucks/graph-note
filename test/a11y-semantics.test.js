@@ -50,7 +50,7 @@ describe('the check itself', () => {
 
   test('finds a drawing with no text version, one that counts too few, and a thing drawn but not listed', () => {
     const box = (key, name) => `<g class="node" data-key="${key}" aria-label="Thing: ${name}"><text>${name}</text></g>`;
-    const svg = (...boxes) => `<svg class="graph-note-svg">${boxes.join('')}</svg>`;
+    const svg = (...boxes) => `<svg class="thoughtknot-svg">${boxes.join('')}</svg>`;
     const lone = planted(svg(box('a', 'Alpha'))).document;
     assert.deepEqual(textVersionProblems(lone), ['a drawing with no text version describing it']);
     const short = planted(

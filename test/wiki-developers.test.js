@@ -78,7 +78,7 @@ describe('the architecture graph', () => {
     assert.match(problems, /iface: no requirement also_missing/);
   });
 
-  test('is drawn as Graph Note draws a graph: each thing with its kind, and a part not built yet dashed', () => {
+  test('is drawn as ThoughtKnot draws a graph: each thing with its kind, and a part not built yet dashed', () => {
     const chart = architectureChart(arch);
     for (const p of arch.parts) assert.match(chart, new RegExp(`${p.id}\\[".*<i>:Part</i>"\\]`));
     for (const i of arch.interfaces) assert.match(chart, new RegExp(`${i.id}\\{\\{".*<i>:Interface</i>"\\}\\}`));

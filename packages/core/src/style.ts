@@ -3,8 +3,8 @@
 // thing checked against the graph it styles, and the things against each other. Reading it never throws and never stops
 // the drawing (broken_style_block): at worst the graph is drawn in the locked style, with the problems listed. And what a
 // host draws with it: the look of a thing or link in a view or path, and the legend for every colour used there.
-import gs from '@graph-note/graph-spec';
-import type { Graph } from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
+import type { Graph } from '@thoughtknot/graph-spec';
 import { blankText } from './block-items.ts';
 import { graphOf, styleOf } from './blocks.ts';
 import { textTooLarge } from './layout-limits.ts';

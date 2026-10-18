@@ -127,7 +127,7 @@ export function treeProblems(window) {
  */
 export function textVersionProblems(root) {
   const problems = [];
-  for (const svg of root.querySelectorAll('svg.graph-note-svg')) {
+  for (const svg of root.querySelectorAll('svg.thoughtknot-svg')) {
     const holder = svg.closest('[aria-describedby]');
     const described = holder && (root.ownerDocument ?? root).getElementById(holder.getAttribute('aria-describedby'));
     const lines = [...(described ?? root).querySelectorAll('li')].map((li) => li.textContent.trim());

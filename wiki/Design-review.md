@@ -1,6 +1,6 @@
 # Design review: language, plug-ins, theming and tests
 
-A solution architect's review of how ready Graph Note is for the things users will ask for. These are other languages
+A solution architect's review of how ready ThoughtKnot is for the things users will ask for. These are other languages
 and cultures, right-to-left scripts, plug-ins, themes, and tests that check each layer and run only what a change
 touches.
 It says what is there today, where the code already has a place to fit each one, and the design to build. Reviewed on
@@ -96,7 +96,7 @@ adapter's and plug-in's contract suite.
 **Design.** One small registry in the core (`plugin_interface`):
 
 ```ts
-interface GraphNotePlugin {
+interface ThoughtKnotPlugin {
   id: string;            // 'acme.mermaid-export'
   version: string;       // semver
   api: '1';              // the plug-in interface version it was built for
@@ -112,7 +112,7 @@ interface GraphNotePlugin {
 - A plug-in gets only the capabilities its manifest lists. One that throws or runs too long is stopped and named. The
   drawing then falls back to text, as a layout that is too large does today.
 - Plug-ins are versioned with the library (`lib_public_api`), so a breaking change needs a new major version.
-- Obsidian plug-ins and VS Code extensions keep working as they are; this is Graph Note's own interface inside them.
+- Obsidian plug-ins and VS Code extensions keep working as they are; this is ThoughtKnot's own interface inside them.
 
 ## 4. Theming, inherited by plug-ins
 
@@ -176,7 +176,7 @@ and the Claude Code
   `packages/claude-code/page/page.css`); 11 already use logical properties.
 - The arrow keys move by screen direction
   ([`packages/core/src/untangle.ts:228`](https://github.com/rogerbucks/graph-note/blob/main/packages/core/src/untangle.ts#L228)).
-- Menus and sheets are placed by left offset (`browser-host.ts` menu, `--graph-note-sheet-left`).
+- Menus and sheets are placed by left offset (`browser-host.ts` menu, `--thoughtknot-sheet-left`).
 - Drawings run left to right or top to bottom only
   ([`packages/core/src/layout.ts:24`](https://github.com/rogerbucks/graph-note/blob/main/packages/core/src/layout.ts#L24)).
 

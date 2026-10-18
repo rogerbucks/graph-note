@@ -3,7 +3,7 @@
 // from an image file the server holds (`/icons/<name>.svg`), so no icon library ships and no icon is ever shown as its name;
 // a name with no file shows a plain dashed square. Everything the page says is set as text.
 import { word } from '../../core/src/words.ts';
-import type { DisplayHost, MenuEntry } from '@graph-note/core/display/host';
+import type { DisplayHost, MenuEntry } from '@thoughtknot/core/display/host';
 
 const NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 

@@ -26,7 +26,7 @@ describe('its own pane, on the block that was tapped', () => {
     const env = await open();
     try {
       await env.plugin.openEditor({ path: PATH, line: 13, graph: 'other' });
-      assert.equal(env.app.workspace.getLeavesOfType('graph-note-pane').length, 1);
+      assert.equal(env.app.workspace.getLeavesOfType('thoughtknot-pane').length, 1);
       assert.equal(textarea(env.el).value, OTHER);
     } finally {
       env.uninstall();
@@ -81,7 +81,7 @@ describe('the text', () => {
   after(() => env.uninstall());
 
   test('is coloured with the same tokenizer as gql-highlight', () => {
-    const overlay = env.el.querySelector('.graph-note-overlay');
+    const overlay = env.el.querySelector('.thoughtknot-overlay');
     assert.equal(
       overlay.getAttribute('aria-hidden'),
       'true',
@@ -98,7 +98,7 @@ describe('the text', () => {
   });
 
   test('each line is read back in plain English beside it', () => {
-    const backs = env.el.querySelectorAll('.graph-note-readback').map((s) => s.textContent);
+    const backs = env.el.querySelectorAll('.thoughtknot-readback').map((s) => s.textContent);
     assert.ok(
       backs.includes(' — Easy on the eyes —FAVOURS→ Large reader'),
       'a draft’s type shows itself until it has words',
@@ -111,7 +111,10 @@ describe('the text', () => {
   });
 
   test('what is hidden stays hidden, whatever the layout rules say', () => {
-    assert.match(styles, /\.graph-note-pane \[hidden\],\s*\.graph-note \[hidden\]\s*\{\s*display:\s*none !important;/);
+    assert.match(
+      styles,
+      /\.thoughtknot-pane \[hidden\],\s*\.thoughtknot \[hidden\]\s*\{\s*display:\s*none !important;/,
+    );
   });
 
   test('the field is for code: no spelling, no capitals, no autocorrect', () => {
@@ -148,8 +151,8 @@ describe('selecting in the pane’s drawing moves the text to it', () => {
   test('choosing a box in the pane’s drawing selects its pattern in the pane’s text', async () => {
     const env = await open();
     try {
-      await until(() => !!env.el.querySelector('.graph-note-pane-drawing g.node'), 3000);
-      const boxes = [...env.el.querySelectorAll('.graph-note-pane-drawing g.node')];
+      await until(() => !!env.el.querySelector('.thoughtknot-pane-drawing g.node'), 3000);
+      const boxes = [...env.el.querySelectorAll('.thoughtknot-pane-drawing g.node')];
       boxes.find((g) => g.getAttribute('data-key') === 'large').dispatch('keydown', { key: 'Enter' });
       const t = textarea(env.el);
       const from = READER.indexOf("(large:Option {name: 'Large reader'})");
@@ -166,14 +169,14 @@ describe('selecting in the pane’s drawing moves the text to it', () => {
 describe('how far focus reaches in the pane’s drawing (editor spec §25, focus_depth)', () => {
   const keptIn = (env) =>
     env.el
-      .querySelectorAll('.graph-note-pane-drawing g.node')
-      .filter((g) => g.hasClass('graph-note-kept'))
+      .querySelectorAll('.thoughtknot-pane-drawing g.node')
+      .filter((g) => g.hasClass('thoughtknot-kept'))
       .map((g) => g.getAttribute('data-key'))
       .sort();
   const choose = async (env, key) => {
-    await until(() => !!env.el.querySelector('.graph-note-pane-drawing g.node'), 3000);
+    await until(() => !!env.el.querySelector('.thoughtknot-pane-drawing g.node'), 3000);
     env.el
-      .querySelectorAll('.graph-note-pane-drawing g.node')
+      .querySelectorAll('.thoughtknot-pane-drawing g.node')
       .find((g) => g.getAttribute('data-key') === key)
       .dispatch('keydown', { key: 'Enter' });
   };
@@ -210,12 +213,12 @@ describe('on a phone', () => {
       const [drawing, text] = tabs.querySelectorAll('button');
       assert.deepEqual([drawing.textContent, text.textContent], ['Drawing', 'Text']);
       assert.equal(text.getAttribute('aria-selected'), 'true', 'it opens on the text');
-      assert.ok(env.el.querySelector('.graph-note-pane-drawing').hidden);
+      assert.ok(env.el.querySelector('.thoughtknot-pane-drawing').hidden);
       drawing.click();
-      assert.ok(!env.el.querySelector('.graph-note-pane-drawing').hidden);
-      assert.ok(env.el.querySelector('.graph-note-pane-text').hidden);
-      assert.ok(env.el.querySelector('.graph-note-sheet'), 'a bottom sheet');
-      assert.ok(env.el.querySelector('.graph-note-sheet .graph-note-pane-problems'));
+      assert.ok(!env.el.querySelector('.thoughtknot-pane-drawing').hidden);
+      assert.ok(env.el.querySelector('.thoughtknot-pane-text').hidden);
+      assert.ok(env.el.querySelector('.thoughtknot-sheet'), 'a bottom sheet');
+      assert.ok(env.el.querySelector('.thoughtknot-sheet .thoughtknot-pane-problems'));
     } finally {
       env.uninstall();
     }
@@ -225,8 +228,8 @@ describe('on a phone', () => {
     const env = await open();
     try {
       assert.equal(env.el.querySelector('[role="tablist"]'), null);
-      assert.ok(!env.el.querySelector('.graph-note-pane-drawing').hidden);
-      assert.ok(!env.el.querySelector('.graph-note-pane-text').hidden);
+      assert.ok(!env.el.querySelector('.thoughtknot-pane-drawing').hidden);
+      assert.ok(!env.el.querySelector('.thoughtknot-pane-text').hidden);
     } finally {
       env.uninstall();
     }
@@ -235,7 +238,7 @@ describe('on a phone', () => {
   test('every control in the pane is at least 44 points', () => {
     assert.match(
       styles,
-      /\.graph-note-pane button,\s*\.graph-note-pane select\s*\{[^}]*min-height:\s*44px;[^}]*min-width:\s*44px;/,
+      /\.thoughtknot-pane button,\s*\.thoughtknot-pane select\s*\{[^}]*min-height:\s*44px;[^}]*min-width:\s*44px;/,
     );
   });
 });
@@ -249,12 +252,12 @@ describe('an empty graph block', () => {
     const env = await load({ files: { [PATH]: EMPTY_NOTE } });
     try {
       await env.plugin.openEditor({ path: PATH, line: 2, graph: 'empty_trial' });
-      const el = env.app.workspace.getLeavesOfType('graph-note-pane')[0].view.contentEl;
+      const el = env.app.workspace.getLeavesOfType('thoughtknot-pane')[0].view.contentEl;
       assert.equal(textarea(el).value, EMPTY);
       for (const typed of [EMPTY + '\n(', EMPTY + '\n(a', EMPTY + '\n(a:']) {
         type(el, typed);
         textarea(el).dispatch('keydown', { key: 'Tab' });
-        const option = el.querySelector('.graph-note-suggestions [role="option"]');
+        const option = el.querySelector('.thoughtknot-suggestions [role="option"]');
         if (option) option.click();
         assert.match(textarea(el).value, /^\/\/ graph: empty_trial · SOURCE\n\(/, typed);
       }

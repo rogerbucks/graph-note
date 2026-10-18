@@ -1,5 +1,5 @@
 // graph: project_ethos · SOURCE
-// What Graph Note stands for, and the rules that follow from it. Each rule names the requirements that check it, or
+// What ThoughtKnot stands for, and the rules that follow from it. Each rule names the requirements that check it, or
 // says a person checks it, or that nothing checks it yet. scripts/ethos.mjs reads it; the wiki's Ethos page is made from it.
 // ── Principles ──
 (everyone:Principle {order: 1, name: 'Everyone can use it', why: 'Graph notes are for every reader, whatever their sight, hands or way of reading.'}),
@@ -30,7 +30,7 @@
 (r_ratchet:Rule {text: 'The quality figures only get better: a release that does worse fails unless the reason is written down.', requirements: 'quality_ratchet'}),
 (r_rules_checked:Rule {text: 'Every rule on this page names its check, or says plainly that it has none yet.', requirements: 'ethos_checked'}),
 (r_licence:Rule {text: 'The licence (MPL-2.0) lets anyone use, fork and change the code and send a pull request, and keeps changed files open.', requirements: 'mpl_licence'}),
-(r_name:Rule {text: 'The name Graph Note marks the original. A fork goes by its own name (TRADEMARKS.md).', requirements: 'community_files'}),
+(r_name:Rule {text: 'The name ThoughtKnot marks the original. A fork goes by its own name (TRADEMARKS.md).', requirements: 'community_files'}),
 (r_conduct:Rule {text: 'Everyone who takes part is treated with respect, and a problem can be reported in private (CODE_OF_CONDUCT.md).', requirements: 'community_files'}),
 (r_signed_off:Rule {text: 'Every commit in a pull request is signed off, saying its author may send it under the licence.', check: 'person', how: 'A box on the pull request template; an automatic check on each commit is the next step.'}),
 // ── Links ──

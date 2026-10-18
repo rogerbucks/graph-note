@@ -1,7 +1,7 @@
 // The block editor's own undo history (spec §4): the text's, whose steps are put into the field. Unlike the field's own
 // history, the text's survives the field leaving the page; the keys that ask for a step are in typing-keys.ts.
-import { TextHistory } from '@graph-note/core';
-import type { Change, TextState } from '@graph-note/core';
+import { TextHistory } from '@thoughtknot/core';
+import type { Change, TextState } from '@thoughtknot/core';
 
 /** A step through the history. */
 export type Step = 'undo' | 'redo';

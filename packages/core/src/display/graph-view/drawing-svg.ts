@@ -4,8 +4,8 @@
 // that opens it; a link merged into a trunk is tapped and named as itself by either of its lines. Words holding a link to
 // a note, a file or an address are drawn as a link, and a thing's attachments counted (§18, links/link-marks.ts). Laid
 // out again, the drawing is put in the same SVG element (`swapSvg`), so everything that holds it holds the new drawing.
-import { textVersion, withoutColorMix } from '@graph-note/core';
-import type { Drawn, Folding, GraphDrawing } from '@graph-note/core';
+import { textVersion, withoutColorMix } from '@thoughtknot/core';
+import type { Drawn, Folding, GraphDrawing } from '@thoughtknot/core';
 import { boxLabel } from './suggested-name';
 import { markParked } from './parked';
 import { markCallouts } from './note-callouts';
@@ -63,7 +63,7 @@ export function insertSvg(
 ): SVGSVGElement {
   const svg = viewport.appendChild(parsed(drawn));
   svg.removeAttribute('style');
-  svg.classList.add('graph-note-svg');
+  svg.classList.add('thoughtknot-svg');
   decorate(svg, drawn, d, plan, o);
   return svg;
 }
@@ -91,7 +91,7 @@ function decorate(
   plan?: Folding,
   o?: ViewOptions,
 ): void {
-  svg.classList.toggle('graph-note-down', drawn.rankdir === 'TB'); // labels sit beside their lines, so they are given a gap
+  svg.classList.toggle('thoughtknot-down', drawn.rankdir === 'TB'); // labels sit beside their lines, so they are given a gap
   const boxes = d?.boxes ?? [];
   for (const g of Array.from(svg.querySelectorAll('g.node'))) {
     const box = boxes[Number(/^node(\d+)$/.exec(g.getAttribute('id') ?? '')?.[1]) - 1];
@@ -174,7 +174,7 @@ function markFolds(svg: SVGSVGElement, plan: Folding | undefined, textOf: (k: st
 
 /** The drawing as sentences, for screen readers (spec §11), named as the viewport's description. */
 export function describeDrawing(root: HTMLElement, viewport: HTMLElement, d: GraphDrawing): void {
-  const sr = root.createDiv({ cls: 'graph-note-sr', attr: { id: `graph-note-sr-${++described}` } });
+  const sr = root.createDiv({ cls: 'thoughtknot-sr', attr: { id: `thoughtknot-sr-${++described}` } });
   const ul = sr.createEl('ul');
   for (const line of textVersion(d)) ul.createEl('li', { text: line });
   viewport.setAttribute('aria-describedby', sr.getAttribute('id') ?? '');

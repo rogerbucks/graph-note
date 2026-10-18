@@ -11,11 +11,11 @@ const SHEETS = ['styles.css', 'packages/claude-code/page/page.css'];
 /** The rules placed at a point measured on the screen, by sheet and selector: these keep a physical side. */
 const PLACED = {
   'styles.css': {
-    '.graph-note-table': 'laid over the drawing, whose coordinates are the screen’s',
-    '.graph-note-svg': 'the drawing itself, moved by the zoom in screen coordinates',
-    '.graph-note-view > .graph-note-details.graph-note-sheet': 'set from the drawing’s measured place',
-    '.graph-note-viewport > .graph-note-pointer': 'set at the point the pointer is',
-    '.graph-note-quick-info': 'set beside the thing pointed at, measured on the screen',
+    '.thoughtknot-table': 'laid over the drawing, whose coordinates are the screen’s',
+    '.thoughtknot-svg': 'the drawing itself, moved by the zoom in screen coordinates',
+    '.thoughtknot-view > .thoughtknot-details.thoughtknot-sheet': 'set from the drawing’s measured place',
+    '.thoughtknot-viewport > .thoughtknot-pointer': 'set at the point the pointer is',
+    '.thoughtknot-quick-info': 'set beside the thing pointed at, measured on the screen',
   },
   'packages/claude-code/page/page.css': {},
 };
@@ -91,7 +91,7 @@ describe('the interface reads in the host’s direction', () => {
 
   test('the drawing keeps the screen’s direction, as it is laid out and walked by arrow keys in the screen’s coordinates', () => {
     const css = readFileSync(new URL('../styles.css', import.meta.url), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
-    const rule = /\n\.graph-note-svg \{([^}]*)\}/.exec(css)?.[1] ?? '';
+    const rule = /\n\.thoughtknot-svg \{([^}]*)\}/.exec(css)?.[1] ?? '';
     assert.match(rule, /direction: ltr;/);
   });
 });

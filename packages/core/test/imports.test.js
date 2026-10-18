@@ -13,7 +13,7 @@ const imports = (text) =>
     ),
   ].map((m) => m[1] ?? m[2] ?? m[3]);
 const HOSTS = /^(obsidian|vscode|@codemirror\/|@lezer\/|node:|fs$|path$|child_process$|electron$)/;
-const ALLOWED = /^(\.\.?\/|@graph-note\/graph-spec(\/|$)|@viz-js\/viz$)/;
+const ALLOWED = /^(\.\.?\/|@thoughtknot\/graph-spec(\/|$)|@viz-js\/viz$)/;
 
 test('there is core source to check', () => assert.ok(sources.length >= 5));
 
@@ -48,7 +48,7 @@ for (const f of displayFiles()) {
       'a host module',
     );
     assert.deepEqual(
-      found.filter((m) => !(ALLOWED.test(m) || /^@graph-note\/core(\/|$)/.test(m))),
+      found.filter((m) => !(ALLOWED.test(m) || /^@thoughtknot\/core(\/|$)/.test(m))),
       [],
       'only the layer, the core and the graph library',
     );

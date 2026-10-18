@@ -12,7 +12,7 @@ import { READER, open, textarea, type, note } from './host/pane-notes.js';
 before(() => build());
 
 /** The ghost text shown in the coloured picture, or null when there is none. */
-const ghost = (el) => el.querySelector('.graph-note-overlay .graph-note-ghost')?.textContent ?? null;
+const ghost = (el) => el.querySelector('.thoughtknot-overlay .thoughtknot-ghost')?.textContent ?? null;
 /** Types into the pane's field with the focus in it, as a person does. */
 function typeFocused(el, value, caret = value.length) {
   textarea(el).focus();
@@ -75,8 +75,8 @@ describe('the best match, shown inline', () => {
 
   test('the ghost takes no room of its own, so the text after it stays under the field’s', () => {
     const css = readFileSync(new URL('../../../styles.css', import.meta.url), 'utf8');
-    assert.match(css, /\.graph-note-ghost\s*\{[^}]*display:\s*inline-block;[^}]*width:\s*0;/);
-    assert.match(css, /\.graph-note-ghost\s*\{[^}]*color:\s*var\(--gn-text-muted\)/);
+    assert.match(css, /\.thoughtknot-ghost\s*\{[^}]*display:\s*inline-block;[^}]*width:\s*0;/);
+    assert.match(css, /\.thoughtknot-ghost\s*\{[^}]*color:\s*var\(--gn-text-muted\)/);
   });
 
   test('nothing is shown while the field has no focus, or with a selection, or with text after the caret', async () => {
@@ -346,7 +346,7 @@ describe('in the card', () => {
       labelled(el, 'Edit here').click();
       await until(() => !!el.querySelector('textarea'));
       const t = el.querySelector('textarea'),
-        shown = () => el.querySelector('.graph-note-overlay .graph-note-ghost')?.textContent ?? null,
+        shown = () => el.querySelector('.thoughtknot-overlay .thoughtknot-ghost')?.textContent ?? null,
         press = (k, more = {}) => t.dispatch('keydown', { key: k, ...more });
       const typed = CARD_READER + ',\n(z:Opt';
       t.value = typed;

@@ -1,6 +1,6 @@
 // The Graphviz process for the Claude Code host (spec §10): the core's own bundled engine, run by node. The DOT sources
 // come in on stdin as a JSON list, and the SVG for each goes out on stdout as a JSON list, in the same order.
-import { loadEngine } from '@graph-note/core';
+import { loadEngine } from '@thoughtknot/core';
 
 let input = '';
 process.stdin.setEncoding('utf8');

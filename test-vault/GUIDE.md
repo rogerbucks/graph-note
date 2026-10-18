@@ -5,7 +5,7 @@ dummies, written to exercise the editor, and hold nothing else.
 
 **Start and end every session clean:** `node scripts/reset-test-vault.mjs` restores the notes and settings to what is
 committed, removes everything a session added, and copies the plugin build (`main.js`, `manifest.json`, `styles.css` at
-the repository root) into `.obsidian/plugins/graph-note/` as real files. Run `npm run build` first. What is typed here is
+the repository root) into `.obsidian/plugins/thoughtknot/` as real files. Run `npm run build` first. What is typed here is
 never committed: only the notes at this folder's root, the notes in `Device checks/` (below), `.obsidian/app.json` and
 `.obsidian/community-plugins.json` are.
 

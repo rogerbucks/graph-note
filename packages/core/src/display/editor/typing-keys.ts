@@ -4,7 +4,7 @@
 // and redo — by key, by the Edit menu or by a phone's gesture — step through the editor's own history in place of the
 // field's.
 import type { Lifecycle } from '../lifecycle';
-import type { Change, CompletionItem, PaneSession } from '@graph-note/core';
+import type { Change, CompletionItem, PaneSession } from '@thoughtknot/core';
 import type { FieldHistory, Step } from './editor-history';
 import { sayRefused } from './editor-layout';
 import type { EditorParts } from './editor-layout';

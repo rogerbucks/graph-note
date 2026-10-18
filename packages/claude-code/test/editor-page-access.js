@@ -200,7 +200,7 @@ export function accessCases({ at, ROOT, LAYER }) {
       host.menu([{ title: 'Open', icon: 'copy', onClick() {} }], { x: 0, y: 0 }, doc);
       assert.deepEqual(unnamed(doc.body.querySelector('.gn-menu')), [], 'in a menu');
       assert.equal(doc.body.querySelector('.gn-menu').getAttribute('aria-label'), 'Menu', 'the menu has a name too');
-      const dir = mkdtempSync(join(tmpdir(), 'graph-note-access-form-'));
+      const dir = mkdtempSync(join(tmpdir(), 'thoughtknot-access-form-'));
       const uninstall = installGlobals(doc);
       try {
         const out = await build({
@@ -227,10 +227,10 @@ export function accessCases({ at, ROOT, LAYER }) {
         graph.append(bar);
         layer.button(bar, 'Export', 'download', () => {}, 'Export');
         layer.toggleExportForm(graph, { path: 'a.md', graph: 'g', theme: 'light', run: async () => ({}) });
-        assert.ok(graph.querySelector('.graph-note-export'), 'the Export form is open');
+        assert.ok(graph.querySelector('.thoughtknot-export'), 'the Export form is open');
         assert.ok(all(graph).filter((e) => CONTROLS.has(e.localName)).length >= 4);
         assert.deepEqual(unnamed(graph), [], 'in the bar and the form');
-        assert.ok(graph.querySelector('.graph-note-export').contains(doc.activeElement), 'the form takes the focus');
+        assert.ok(graph.querySelector('.thoughtknot-export').contains(doc.activeElement), 'the form takes the focus');
       } finally {
         uninstall();
         rmSync(dir, { recursive: true, force: true });
@@ -293,7 +293,7 @@ export function accessCases({ at, ROOT, LAYER }) {
     });
 
     test('the drawing the page shows is still: its image holds no animation, whatever the system asks', async () => {
-      const { readNote } = await import('@graph-note/core');
+      const { readNote } = await import('@thoughtknot/core');
       const [drawing] = readNote([ONE]).graphs.values();
       const thread = runWorker(join((await built()).dir, 'layout-worker.js'));
       await thread.ready();
@@ -333,7 +333,7 @@ export function accessCases({ at, ROOT, LAYER }) {
     };
     const lines = (root) => root.querySelectorAll('.gn-text-version li').map((li) => li.textContent);
     const expected = async (note) => {
-      const { readNote, textVersion } = await import('@graph-note/core');
+      const { readNote, textVersion } = await import('@thoughtknot/core');
       return textVersion([...readNote([note]).graphs.values()][0]);
     };
 
@@ -350,7 +350,7 @@ export function accessCases({ at, ROOT, LAYER }) {
       for (const e of all(section)) {
         assert.equal(e.getAttribute('aria-hidden'), null, 'not hidden from a screen reader');
         assert.equal(e.hasAttribute('hidden'), false);
-        assert.doesNotMatch(e.className, /\bgn-sr\b|graph-note-sr|visually-hidden/);
+        assert.doesNotMatch(e.className, /\bgn-sr\b|thoughtknot-sr|visually-hidden/);
       }
     });
 

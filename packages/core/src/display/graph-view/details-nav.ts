@@ -3,8 +3,8 @@
 // details_choose_moves); the back and forward steps of the trail of things chosen (details_trail); and the move to what
 // is chosen, brief and eased, at once when the system asks for reduced motion (details_move_motion). The words, the walk
 // and the easing are the core's; this puts them on the page and runs the move frame by frame.
-import { MOVE_MS, glideAt, word } from '@graph-note/core';
-import type { LinkGroup, NoteReading, Place, Trail, TrailStep, Zoom } from '@graph-note/core';
+import { MOVE_MS, glideAt, word } from '@thoughtknot/core';
+import type { LinkGroup, NoteReading, Place, Trail, TrailStep, Zoom } from '@thoughtknot/core';
 import { button } from './view-bar';
 
 /** What the details ask of their card when something is chosen from them. */
@@ -47,19 +47,19 @@ export function renderInsOuts(
   linkName: (link: number) => string,
   choose: (step: TrailStep) => void,
 ): void {
-  const both = el.createDiv({ cls: 'graph-note-ins-outs' });
+  const both = el.createDiv({ cls: 'thoughtknot-ins-outs' });
   for (const [way, title, none] of [
     ['in', word('details.links-in'), word('details.none-in')],
     ['out', word('details.links-out'), word('details.none-out')],
   ] as const) {
     const these = groups.filter((g) => g.direction === way);
-    const part = both.createEl('section', { cls: `graph-note-links-part is-${way}` });
-    const id = `graph-note-links-${way}-${++parts}`;
-    const head = part.createEl('h4', { cls: 'graph-note-section-label', text: title, attr: { id } });
+    const part = both.createEl('section', { cls: `thoughtknot-links-part is-${way}` });
+    const id = `thoughtknot-links-${way}-${++parts}`;
+    const head = part.createEl('h4', { cls: 'thoughtknot-section-label', text: title, attr: { id } });
     part.setAttribute('aria-labelledby', id);
-    head.createSpan({ cls: 'graph-note-count', text: String(these.reduce((n, g) => n + g.count, 0)) });
+    head.createSpan({ cls: 'thoughtknot-count', text: String(these.reduce((n, g) => n + g.count, 0)) });
     if (these.length) renderLinkGroups(part, these, linkName, choose);
-    else part.createEl('p', { cls: 'graph-note-none', text: none });
+    else part.createEl('p', { cls: 'thoughtknot-none', text: none });
   }
 }
 
@@ -77,29 +77,29 @@ export function renderLinkGroups(
   linkName: (link: number) => string,
   choose: (step: TrailStep) => void,
 ): void {
-  const ul = el.createEl('ul', { cls: 'graph-note-link-groups' });
+  const ul = el.createEl('ul', { cls: 'thoughtknot-link-groups' });
   for (const g of groups) {
-    const li = ul.createEl('li', { cls: 'graph-note-link-group' });
+    const li = ul.createEl('li', { cls: 'thoughtknot-link-group' });
     // the reading, or, where none could be guessed, the words after the names: "part of plan this"
     const reading = li.createDiv({
-      cls: 'graph-note-link-reading',
+      cls: 'thoughtknot-link-reading',
       text: (g.before || g.after.replace(/ \(\d+\)$/, '')).trim(),
     });
-    if (g.count > 1) reading.createSpan({ cls: 'graph-note-count', text: String(g.count) });
-    const rows = li.createEl('ul', { cls: 'graph-note-link-rows' });
+    if (g.count > 1) reading.createSpan({ cls: 'thoughtknot-count', text: String(g.count) });
+    const rows = li.createEl('ul', { cls: 'thoughtknot-link-rows' });
     for (const t of g.things) {
-      const row = rows.createEl('li', { cls: 'graph-note-link-row' });
+      const row = rows.createEl('li', { cls: 'thoughtknot-link-row' });
       thingButton(row, t.text, () => choose({ key: t.key }));
       // a thing linked twice in the same way is named once, with a button for each of its links
       for (const n of t.links)
-        button(row, linkName(n), 'link', () => choose({ link: n })).addClass('graph-note-link-choice');
+        button(row, linkName(n), 'link', () => choose({ link: n })).addClass('thoughtknot-link-choice');
     }
   }
 }
 
 /** A button naming a thing, which chooses it. */
 export function thingButton(parent: HTMLElement, text: string, onClick: () => void): HTMLButtonElement {
-  const b = parent.createEl('button', { cls: 'graph-note-link-thing', text, attr: { type: 'button' } });
+  const b = parent.createEl('button', { cls: 'thoughtknot-link-thing', text, attr: { type: 'button' } });
   b.addEventListener('click', onClick);
   return b;
 }
@@ -115,7 +115,7 @@ export function renderTrail(
     next = trail.next();
   if (!back && !next) return;
   const row = el.createDiv({
-    cls: 'graph-note-trail',
+    cls: 'thoughtknot-trail',
     attr: { role: 'navigation', 'aria-label': word('details.trail') },
   });
   if (back)

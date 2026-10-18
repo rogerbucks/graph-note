@@ -4,7 +4,7 @@
 // network, and the nearest type that fits is offered (type_stops_fitting); and the plan Graphviz lays each type out by
 // (graph-layout.js, `typedSource`). A table is drawn by the host, from types-table.ts. Host-free. The Python library
 // judges and plans the same way (`graphspec/style/diagram_types.py`), held to this byte for byte (type_both_renderers).
-import type { Graph } from '@graph-note/graph-spec';
+import type { Graph } from '@thoughtknot/graph-spec';
 import type { DiagramPlan, GraphDrawing } from './note-reading.ts';
 import { DIAGRAM_TYPES } from './style-graph.ts';
 import type { Diagram, DiagramType, StyleGraph } from './style-graph.ts';

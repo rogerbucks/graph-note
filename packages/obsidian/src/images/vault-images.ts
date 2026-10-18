@@ -4,8 +4,8 @@
 // a later slice), and a place that could leave the vault is refused, each with the core's words.
 import type { App } from 'obsidian';
 import { TFile } from 'obsidian';
-import { imageLink } from '@graph-note/core';
-import type { FoundImage, ImageSource } from '@graph-note/core/display/images/image-source';
+import { imageLink } from '@thoughtknot/core';
+import type { FoundImage, ImageSource } from '@thoughtknot/core/display/images/image-source';
 
 /** The type each image file is read as, by its extension. */
 const MIME: Record<string, string> = {

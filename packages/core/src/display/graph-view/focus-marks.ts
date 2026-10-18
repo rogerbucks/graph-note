@@ -1,7 +1,7 @@
 // Focus, filters and the highlight put on the drawing (editor spec §25): what the core says is kept at full strength, hidden
 // or highlighted becomes a class on each box and link of the SVG Graphviz drew, and `styles.css` does the rest. Only
 // classes change, never an attribute that places or sizes anything, so nothing moves and nothing is laid out again.
-import type { FocusTarget, Kept } from '@graph-note/core';
+import type { FocusTarget, Kept } from '@thoughtknot/core';
 
 /** What the drawing is to show: what stays at full strength (null: all of it), what is hidden, and what is highlighted. */
 export interface Marks {
@@ -37,9 +37,9 @@ export function sameTarget(a: FocusTarget | null, b: FocusTarget | null): boolea
 }
 
 /**
- * The boxes and links of one drawing, found once, and marked as the drawing is to look: `graph-note-hidden` for what is
- * hidden; with something kept, `graph-note-kept` for what stays at full strength and `graph-note-dim` for what fades —
- * except what is highlighted, which comes forward under the pointer (`graph-note-hot`) over any focus, the focus itself
+ * The boxes and links of one drawing, found once, and marked as the drawing is to look: `thoughtknot-hidden` for what is
+ * hidden; with something kept, `thoughtknot-kept` for what stays at full strength and `thoughtknot-dim` for what fades —
+ * except what is highlighted, which comes forward under the pointer (`thoughtknot-hot`) over any focus, the focus itself
  * being as it was when the highlight goes. A change of highlight marks only the things it touched.
  */
 export class DrawingMarks {
@@ -78,9 +78,9 @@ export class DrawingMarks {
   }
 
   private mark(g: Element, m: Marks, hidden: boolean, kept: boolean, hot: boolean): void {
-    g.classList.toggle('graph-note-hidden', hidden);
-    g.classList.toggle('graph-note-kept', !!m.kept && kept);
-    g.classList.toggle('graph-note-dim', !!m.kept && !kept && !hot);
-    g.classList.toggle('graph-note-hot', hot);
+    g.classList.toggle('thoughtknot-hidden', hidden);
+    g.classList.toggle('thoughtknot-kept', !!m.kept && kept);
+    g.classList.toggle('thoughtknot-dim', !!m.kept && !kept && !hot);
+    g.classList.toggle('thoughtknot-hot', hot);
   }
 }

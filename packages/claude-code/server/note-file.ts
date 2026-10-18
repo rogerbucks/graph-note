@@ -109,7 +109,7 @@ const FOLDER_MOVED = 'folder moved';
 
 /** A temporary name beside `target`, hidden, so the vault's own app passes it by. */
 export function tempBeside(target: string): string {
-  return join(dirname(target), `.${basename(target)}.${randomBytes(6).toString('hex')}.graph-note`);
+  return join(dirname(target), `.${basename(target)}.${randomBytes(6).toString('hex')}.thoughtknot`);
 }
 
 /** Writes `text` to `target` by way of a new file beside it; the result is the new version, or why nothing changed. */

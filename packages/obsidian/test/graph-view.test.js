@@ -27,7 +27,7 @@ describe('drawn where it is written', () => {
     assert.ok(svg, 'there is a drawing');
     assert.equal(el.querySelectorAll('g.node').length, 4);
     assert.equal(el.querySelectorAll('g.edge').length, 4);
-    assert.ok(el.querySelector('.graph-note'), 'inside the plugin’s own box');
+    assert.ok(el.querySelector('.thoughtknot'), 'inside the plugin’s own box');
   });
 
   test('the drawing is never inside a .mermaid box, so the Mermaid Zoom plugin never adds a second set of controls', async () => {
@@ -67,7 +67,7 @@ describe('a graph with problems is still drawn', () => {
     assert.equal(el.querySelectorAll('g.node').length, 4);
     const badge = labelled(el, '2 problems');
     assert.ok(badge, 'the badge counts them');
-    const list = el.querySelector('.graph-note-problems');
+    const list = el.querySelector('.thoughtknot-problems');
     assert.ok(list.hidden, 'listed behind the badge');
     badge.click();
     assert.ok(!list.hidden);
@@ -84,7 +84,7 @@ describe('a graph with problems is still drawn', () => {
     const badge = labelled(el, 'No problems');
     assert.ok(badge, 'a hint is not a problem');
     badge.click();
-    const items = el.querySelector('.graph-note-problems').querySelectorAll('li');
+    const items = el.querySelector('.thoughtknot-problems').querySelectorAll('li');
     assert.equal(items.length, 1);
     assert.match(items[0].textContent, /^ℹ Hint — Line 3:.*Large reader/);
     assert.equal(items[0].className, 'is-hint');
@@ -100,9 +100,9 @@ describe('a graph with problems is still drawn', () => {
     const { el } = await show(env, fence('// graph: g\n(a:T {name: })'));
     assert.equal(svgOf(el), null);
     assert.match(el.querySelector('code').textContent, /\(a:T \{name: \}\)/);
-    assert.match(el.querySelector('.graph-note-problems').textContent, /Line 3/);
+    assert.match(el.querySelector('.thoughtknot-problems').textContent, /Line 3/);
     assert.ok(
-      !el.querySelector('.graph-note-problems').hidden,
+      !el.querySelector('.thoughtknot-problems').hidden,
       'shown at once: there is no drawing to look at instead',
     );
   });
@@ -179,8 +179,8 @@ describe('when something else is wrong, it says so', () => {
     try {
       const { el } = await show(env, fence(GRAPH));
       assert.equal(svgOf(el), null);
-      assert.match(el.querySelector('.graph-note-banner').textContent, /could not start/);
-      assert.match(el.querySelector('.graph-note-banner').textContent, /stale/);
+      assert.match(el.querySelector('.thoughtknot-banner').textContent, /could not start/);
+      assert.match(el.querySelector('.thoughtknot-banner').textContent, /stale/);
       assert.match(el.querySelector('code').textContent, /large_reader|large/);
     } finally {
       env.uninstall();
@@ -224,6 +224,6 @@ describe('older phones', () => {
 describe('the drawing’s words are not text to select', () => {
   // the try-out: the labels of the boxes and links sat on the theme's selection colour after a double click to zoom
   test('the drawing cannot be selected as text, so a double click zooms without highlighting its words', () => {
-    assert.match(styles, /\.graph-note-svg\s*\{[^}]*-webkit-user-select:\s*none;[^}]*user-select:\s*none;/);
+    assert.match(styles, /\.thoughtknot-svg\s*\{[^}]*-webkit-user-select:\s*none;[^}]*user-select:\s*none;/);
   });
 });

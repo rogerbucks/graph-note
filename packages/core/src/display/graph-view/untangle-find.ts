@@ -2,8 +2,8 @@
 // was typed, each with its kind and, for a property, which; choosing one — or pressing Enter for the first — selects it and
 // brings it into view, as opening its details does. Escape closes the row. Searching only reads: nothing is changed in the
 // drawing or the note.
-import { word } from '@graph-note/core';
-import type { Found } from '@graph-note/core';
+import { word } from '@thoughtknot/core';
+import type { Found } from '@thoughtknot/core';
 
 /** What the box asks of its card: the things that match, what to do with the one chosen, and how to close the row. */
 export interface FindActions {
@@ -27,7 +27,7 @@ function said(typed: string, count: number): string {
 
 /** Builds the search row in a card. */
 export function renderFind(root: HTMLElement, on: FindActions): FindRow {
-  const el = root.createDiv({ cls: 'graph-note-find', attr: { role: 'search' } });
+  const el = root.createDiv({ cls: 'thoughtknot-find', attr: { role: 'search' } });
   el.hidden = true;
   const input = el.createEl('input', {
     attr: {
@@ -36,8 +36,8 @@ export function renderFind(root: HTMLElement, on: FindActions): FindRow {
       'aria-label': word('untangle.find'),
     },
   });
-  const status = el.createEl('p', { cls: 'graph-note-quiet', attr: { role: 'status' } });
-  const list = el.createEl('ul', { cls: 'graph-note-find-results' });
+  const status = el.createEl('p', { cls: 'thoughtknot-quiet', attr: { role: 'status' } });
+  const list = el.createEl('ul', { cls: 'thoughtknot-find-results' });
   let shown: Found[] = [];
   const run = () => {
     list.empty();

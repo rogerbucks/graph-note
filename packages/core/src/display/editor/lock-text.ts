@@ -1,6 +1,6 @@
 // Lock the graph, as text (spec §8): the note with the graph's schema `block` written as a new block after the graph's last
 // block. Both hosts' notes take their Lock from this one function, so the bytes written are the same (cc_same_bytes).
-import { gqlSpans, graphOfBlock, insertBlockAfter } from '@graph-note/core';
+import { gqlSpans, graphOfBlock, insertBlockAfter } from '@thoughtknot/core';
 
 /** `note` with `block` after the last block of `graph`, or null when the graph has no block left to put it after. */
 export function lockedNote(note: string, graph: string, block: string): string | null {

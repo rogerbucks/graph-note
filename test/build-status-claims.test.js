@@ -135,7 +135,7 @@ describe('an item two pull requests hold', () => {
 
   test('is not held by a pull request from a fork', async () => {
     const w = world();
-    second(w, LINK_ONLY, { headRepo: 'someone/graph-note' });
+    second(w, LINK_ONLY, { headRepo: 'someone/thoughtknot' });
     await w.trigger();
     w.side.hub.pulls[7].state = 'closed';
     await w.trigger();
@@ -332,7 +332,7 @@ describe('the Requirements line of a draft pull request', () => {
   test('never takes an id into a pull request from a fork', async () => {
     const w = world();
     draft(w, 'Requirements: focus_link');
-    w.side.hub.pulls[7].head.repo.full_name = 'someone/graph-note';
+    w.side.hub.pulls[7].head.repo.full_name = 'someone/thoughtknot';
     await w.trigger();
     assert.equal(w.value('focus_link'), 'Not started');
     assert.deepEqual(w.comments(), []);

@@ -43,12 +43,12 @@ describe('a played path exported as an animated SVG', () => {
     const svg = exported(1000);
     const sheet = sheetOf(svg);
     // the path is drawn over the drawing's things: home is steps 1 and 4, park 2, cafe 3
-    const nodes = [...sheet.matchAll(/@keyframes graph-note-step-(\d+)/g)].map((m) => Number(m[1]));
+    const nodes = [...sheet.matchAll(/@keyframes thoughtknot-step-(\d+)/g)].map((m) => Number(m[1]));
     assert.equal(nodes.length, 3, 'one animation for each thing stepped on');
     for (const n of nodes)
       assert.match(
         sheet,
-        new RegExp(`#node${n} > path[^{]*\\{[^}]*animation: graph-note-step-${n} 4s step-end infinite`),
+        new RegExp(`#node${n} > path[^{]*\\{[^}]*animation: thoughtknot-step-${n} 4s step-end infinite`),
       );
     assert.doesNotMatch(svg, /<script|<image|href="http/, 'nothing runs and nothing is loaded from elsewhere');
   });
@@ -62,7 +62,7 @@ describe('a played path exported as an animated SVG', () => {
     assert.deepEqual(plan.nodes.get(node('park')), [1]);
     assert.deepEqual(plan.nodes.get(node('cafe')), [2]);
     const sheet = sheetOf(exported(1000));
-    const home = new RegExp(`@keyframes graph-note-step-${node('home')} \\{([^@]*?)\\}\\s*(?:#|@|$)`).exec(sheet)?.[1];
+    const home = new RegExp(`@keyframes thoughtknot-step-${node('home')} \\{([^@]*?)\\}\\s*(?:#|@|$)`).exec(sheet)?.[1];
     assert.match(home, /0% \{ stroke-width: 6; \}/);
     assert.match(home, /25% \{ stroke-width: 3; \}/);
     assert.match(home, /75% \{ stroke-width: 6; \}/);
@@ -80,20 +80,20 @@ describe('a played path exported as an animated SVG', () => {
       ],
     );
     const svg = exported(1000);
-    assert.equal((svg.match(/class="graph-note-path-runner"/g) ?? []).length, 2);
-    assert.match(sheetOf(svg), /@keyframes graph-note-run-1/);
+    assert.equal((svg.match(/class="thoughtknot-path-runner"/g) ?? []).length, 2);
+    assert.match(sheetOf(svg), /@keyframes thoughtknot-run-1/);
   });
 
   // proves: path_animation_export
   test('its style sheet reaches only into the image: every rule under the class the image carries', () => {
     const svg = exported(1000);
-    assert.match(svg, /^<svg [^>]*class="graph-note-image"/);
+    assert.match(svg, /^<svg [^>]*class="thoughtknot-image"/);
     assert.deepEqual(unscoped(sheetOf(svg)), []);
   });
 
   // proves: path_animation_export
   test('the pace set is the pace played: half a second a step makes the round two seconds', () => {
-    assert.match(sheetOf(exported(500)), /animation: graph-note-step-\d+ 2s step-end infinite/);
+    assert.match(sheetOf(exported(500)), /animation: thoughtknot-step-\d+ 2s step-end infinite/);
   });
 });
 
@@ -106,7 +106,7 @@ describe('still under reduced motion, and never told by movement alone', () => {
     assert.ok(animated.length >= 4, sheet);
     for (const selector of animated) assert.ok(still.includes(selector), `${selector} is still under reduced motion`);
     assert.match(still, /animation: none/);
-    assert.match(still, /\.graph-note-path-runner \{ display: none; \}/);
+    assert.match(still, /\.thoughtknot-path-runner \{ display: none; \}/);
     assert.match(moving, /stroke-width: 3;/, 'every step outlined when nothing moves');
   });
 
@@ -174,6 +174,6 @@ describe('an animated SVG too large for the device is refused before it starts',
     assert.ok(out.fix);
     const fits = await exportWithLayout(scope, layout, { ...info({ path: tour, pace: 1000 }), device: 'phone' });
     assert.equal(asked, 1);
-    assert.match(fits.svg, /graph-note-step-/);
+    assert.match(fits.svg, /thoughtknot-step-/);
   });
 });

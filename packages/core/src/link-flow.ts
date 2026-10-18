@@ -5,7 +5,7 @@
 // screen-reader name say the movement and its meaning in words. The source carries only classes and the still dashes;
 // the movement itself is a host's style sheet, or an export's (export-motion.ts), each still under reduced motion
 // (motion_reduced_respected). The Python library writes the same source (`graphspec/style/flow.py`).
-import GraphLayout from '@graph-note/graph-spec/src/graph-layout.js';
+import GraphLayout from '@thoughtknot/graph-spec/src/graph-layout.js';
 import { LINK_LINE, linkTypes } from './arrows.ts';
 import { drawingSource, STYLE } from './layout.ts';
 import type { GraphDrawing, Problem } from './note-reading.ts';
@@ -114,7 +114,7 @@ const LABEL = /^( {2}"[^"]*" -> "[^"]*" \[label=")([^"]*)"/;
 
 /**
  * The Graphviz source `dot` with each link of `flow` (indexes of its link lines, in order) marked as moving: its label
- * opened by the icon of its movement, the classes a style sheet moves it by (`graph-note-flow`, `-dashes` or `-dot`, and
+ * opened by the icon of its movement, the classes a style sheet moves it by (`thoughtknot-flow`, `-dashes` or `-dot`, and
  * `-back` when its line runs against it), and dashes drawn dashed, so they show when still. The arrowhead and everything
  * else of the line is as it was. With nothing to move, `dot` unchanged.
  */
@@ -128,7 +128,7 @@ export function flowSource(dot: string, flow: readonly FlowLink[]): string {
       if (!LINK_LINE.test(line)) return line;
       const f = by.get(++n);
       if (!f) return line;
-      const cls = `graph-note-flow graph-note-flow-${f.motion}${line.endsWith(BACK) ? ' graph-note-flow-back' : ''}`;
+      const cls = `thoughtknot-flow thoughtknot-flow-${f.motion}${line.endsWith(BACK) ? ' thoughtknot-flow-back' : ''}`;
       const dashed = f.motion === 'dashes' ? ', style=dashed' : '';
       return line.replace(
         LABEL,

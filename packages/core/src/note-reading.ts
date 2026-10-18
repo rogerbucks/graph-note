@@ -1,6 +1,6 @@
 // What reading a note's graph blocks gives (spec §3): each graph ready to draw — its boxes, its links, and the estimates
 // drawn where what was written was a near miss — and the problems, each with its block, its line and its fix.
-import type { World } from '@graph-note/graph-spec';
+import type { World } from '@thoughtknot/graph-spec';
 import type { Estimate } from './estimates.ts';
 import type { InlineProperties } from './inline-properties.ts';
 import type { Refusal } from './layout-limits.ts';

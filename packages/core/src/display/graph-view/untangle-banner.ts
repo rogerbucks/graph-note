@@ -13,7 +13,7 @@ export class Banner {
 
   /** Puts the banner into a card, where it is at the end of what is there. */
   constructor(root: HTMLElement) {
-    this.el = root.createDiv({ cls: 'graph-note-untangle', attr: { role: 'status' } });
+    this.el = root.createDiv({ cls: 'thoughtknot-untangle', attr: { role: 'status' } });
     this.el.hidden = true;
   }
 
@@ -22,7 +22,7 @@ export class Banner {
     this.el.empty();
     this.el.hidden = rows.length === 0;
     for (const row of rows) {
-      const line = this.el.createDiv({ cls: 'graph-note-untangle-row' });
+      const line = this.el.createDiv({ cls: 'thoughtknot-untangle-row' });
       line.createSpan({ text: row.words });
       for (const a of row.actions) {
         const b = line.createEl('button', { text: a.label, attr: { type: 'button' } });

@@ -50,7 +50,7 @@ describe('the inspector, in edit mode', () => {
     try {
       const el = await show(env);
       tap(el, 1);
-      assert.equal(el.querySelector('.graph-note-details input'), null);
+      assert.equal(el.querySelector('.thoughtknot-details input'), null);
     } finally {
       env.uninstall();
     }
@@ -61,7 +61,7 @@ describe('the inspector, in edit mode', () => {
     try {
       const el = await editing(env);
       tap(el, 1);
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       const box = panel.querySelector('.metadata-container');
       assert.ok(box.querySelector('.metadata-properties-heading .metadata-properties-title'));
       const rows = box.querySelectorAll('.metadata-properties .metadata-property');
@@ -98,11 +98,11 @@ describe('the inspector, in edit mode', () => {
     try {
       const el = await editing(env);
       tap(el, 1);
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       enter(field(panel, 'Value of price'), 'three hundred');
       assert.match(panel.querySelector('[role="alert"]').textContent, /a number/);
       assert.equal(text(el), PRICED, 'nothing written');
-      enter(field(el.querySelector('.graph-note-details'), 'Value of price'), '320');
+      enter(field(el.querySelector('.thoughtknot-details'), 'Value of price'), '320');
       assert.equal(text(el), PRICED.replace('price: 300', 'price: 320'));
       await until(() => env.state.files.get(PATH).includes('price: 320'), 2000);
     } finally {
@@ -115,9 +115,9 @@ describe('the inspector, in edit mode', () => {
     try {
       const el = await editing(env);
       tap(el, 1);
-      enter(field(el.querySelector('.graph-note-details'), 'Value of checked'), false);
+      enter(field(el.querySelector('.thoughtknot-details'), 'Value of checked'), false);
       assert.match(text(el), /checked: FALSE/);
-      enter(field(el.querySelector('.graph-note-details'), 'Value of ordered'), '2026-11-05');
+      enter(field(el.querySelector('.thoughtknot-details'), 'Value of ordered'), '2026-11-05');
       assert.match(text(el), /ordered: DATE '2026-11-05'/);
     } finally {
       env.uninstall();
@@ -129,7 +129,7 @@ describe('the inspector, in edit mode', () => {
     try {
       const el = await editing(env);
       tap(el, 1);
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       panel.querySelector('.metadata-add-button').click();
       const name = field(panel, 'New property name');
       assert.equal(env.doc.activeElement, name, 'the new row’s name has the focus');
@@ -152,16 +152,16 @@ describe('the inspector, in edit mode', () => {
     try {
       const el = await editing(env);
       tap(el, 1);
-      row(el.querySelector('.graph-note-details'), 'price').querySelector('.metadata-property-icon').click();
+      row(el.querySelector('.thoughtknot-details'), 'price').querySelector('.metadata-property-icon').click();
       const menu = env.state.menus.at(-1);
       assert.deepEqual(
         menu.items.map((it) => it.title),
         ['Text', 'List', 'Number', 'Checkbox', 'Date', 'Date & time', 'Remove'],
       );
       assert.equal(menu.items.find((it) => it.checked)?.title, 'Number');
-      pick(env, el.querySelector('.graph-note-details'), 'price', 'Text');
+      pick(env, el.querySelector('.thoughtknot-details'), 'price', 'Text');
       assert.match(text(el), /price: '300'/);
-      pick(env, el.querySelector('.graph-note-details'), 'name', 'Remove');
+      pick(env, el.querySelector('.thoughtknot-details'), 'name', 'Remove');
       assert.doesNotMatch(text(el), /name: 'Large reader'/);
     } finally {
       env.uninstall();
@@ -173,8 +173,8 @@ describe('the inspector, in edit mode', () => {
     try {
       const el = await editing(env);
       tap(el, 1);
-      pick(env, el.querySelector('.graph-note-details'), 'name', 'Number');
-      assert.match(el.querySelector('.graph-note-details [role="alert"]').textContent, /name: expected a number/);
+      pick(env, el.querySelector('.thoughtknot-details'), 'name', 'Number');
+      assert.match(el.querySelector('.thoughtknot-details [role="alert"]').textContent, /name: expected a number/);
       assert.equal(text(el), PRICED);
     } finally {
       env.uninstall();
@@ -186,10 +186,10 @@ describe('the inspector, in edit mode', () => {
     try {
       const el = await editing(env);
       tap(el, 1);
-      pick(env, el.querySelector('.graph-note-details'), 'name', 'List');
-      assert.ok(field(el.querySelector('.graph-note-details'), 'Kind of the linked things'));
-      assert.ok(field(el.querySelector('.graph-note-details'), 'Relationship from this thing'));
-      assert.ok(el.querySelector('.graph-note-details [role="alert"]').hidden, 'nothing refused');
+      pick(env, el.querySelector('.thoughtknot-details'), 'name', 'List');
+      assert.ok(field(el.querySelector('.thoughtknot-details'), 'Kind of the linked things'));
+      assert.ok(field(el.querySelector('.thoughtknot-details'), 'Relationship from this thing'));
+      assert.ok(el.querySelector('.thoughtknot-details [role="alert"]').hidden, 'nothing refused');
       assert.equal(text(el), PRICED, 'and nothing written until they are given');
     } finally {
       env.uninstall();
@@ -202,7 +202,7 @@ describe('the inspector, in edit mode', () => {
       const el = await editing(env);
       tap(el, 1);
       enter(
-        row(el.querySelector('.graph-note-details'), 'price').querySelector('.metadata-property-key-input'),
+        row(el.querySelector('.thoughtknot-details'), 'price').querySelector('.metadata-property-key-input'),
         'cost',
       );
       assert.match(text(el), /cost: 300/);
@@ -217,7 +217,7 @@ describe('the inspector, in edit mode', () => {
     try {
       const el = await editing(env);
       tap(el, 1);
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       enter(row(panel, 'price').querySelector('.metadata-property-key-input'), 'name');
       assert.match(panel.querySelector('[role="alert"]').textContent, /already has a property called name/);
       assert.equal(text(el), PRICED);
@@ -238,7 +238,7 @@ describe('the inspector, in edit mode', () => {
       const el = await editing(env);
       tap(el, 1);
       enter(
-        row(el.querySelector('.graph-note-details'), 'price').querySelector('.metadata-property-key-input'),
+        row(el.querySelector('.thoughtknot-details'), 'price').querySelector('.metadata-property-key-input'),
         'cost',
       );
       assert.match(text(el), /cost: 1\.50/);
@@ -252,7 +252,7 @@ describe('the inspector, in edit mode', () => {
     try {
       const el = await editing(env);
       tap(el, 1);
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       panel.querySelector('.metadata-add-button').click();
       enter(field(panel, 'Value of new property'), 'grey');
       assert.match(panel.querySelector('[role="alert"]').textContent, /name it first/);
@@ -269,7 +269,7 @@ describe('the inspector, in edit mode', () => {
     try {
       const el = await editing(env);
       tap(el, 1);
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       panel.querySelector('.metadata-add-button').click();
       enter(field(panel, 'New property name'), 'colour');
       enter(field(panel, 'Value of new property'), 'grey');
@@ -289,7 +289,7 @@ describe('the inspector, in edit mode', () => {
     try {
       const el = await editing(env);
       tap(el, 1);
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       pick(env, panel, 'status', 'Remove');
       assert.match(panel.querySelector('[role="alert"]').textContent, /status is not written in its pattern here/);
       assert.ok(row(panel, 'status'));
@@ -306,7 +306,7 @@ describe('the inspector, in edit mode', () => {
     try {
       const el = await editing(env);
       tap(el, 1);
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       panel.querySelector('.metadata-add-button').click();
       enter(field(panel, 'New property name'), 'start');
       pick(env, panel, '', 'Date & time');
@@ -324,7 +324,7 @@ describe('the inspector, in edit mode', () => {
     try {
       const el = await editing(env);
       el.querySelectorAll('g.edge')[0].dispatch('keydown', { key: 'Enter' });
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       panel.querySelector('.metadata-add-button').click();
       enter(field(panel, 'New property name'), 'weight');
       pick(env, panel, '', 'Number');
@@ -340,10 +340,10 @@ describe('the inspector, in edit mode', () => {
     try {
       const el = await editing(env);
       tap(el, 1);
-      enter(field(el.querySelector('.graph-note-details'), 'Value of price'), '310');
+      enter(field(el.querySelector('.thoughtknot-details'), 'Value of price'), '310');
       await until(() => env.state.files.get(PATH).includes('price: 310'), 2000);
       const again = await show(env);
-      const reopened = again.querySelector('.graph-note-details');
+      const reopened = again.querySelector('.thoughtknot-details');
       assert.ok(!reopened.hidden);
       assert.equal(field(reopened, 'Value of price').value, '310');
     } finally {
@@ -357,7 +357,7 @@ describe('the inspector, in edit mode', () => {
       try {
         const el = await editing(env);
         tap(el, 1);
-        assert.equal(el.querySelector('.graph-note-details').classList.contains('is-sheet'), mobile);
+        assert.equal(el.querySelector('.thoughtknot-details').classList.contains('is-sheet'), mobile);
       } finally {
         env.uninstall();
       }

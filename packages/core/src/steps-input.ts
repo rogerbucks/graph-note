@@ -2,7 +2,7 @@
 // note, or part of one, a view such as a queried path, put to the graph as the note reads it and never to a copy; each
 // input checked against what its point says it takes before the step runs; and the inputs read together as one graph,
 // a thing by its id, for the rule to match.
-import type { Graph } from '@graph-note/graph-spec';
+import type { Graph } from '@thoughtknot/graph-spec';
 import type { NoteReading } from './note-reading.ts';
 import type { StepGraph } from './steps-match.ts';
 import { evaluate } from './view-evaluate.ts';

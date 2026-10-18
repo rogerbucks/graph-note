@@ -1,8 +1,8 @@
 // The data a data export holds, and the kinds of value in it (editor spec §16, export_data_formats, export_lossless): the
 // things and links as the reader read them, each value one of the five kinds the document profile reads — a text, a
 // number, a truth value, a day or an instant — so each format writes a value in a way that reads back as itself.
-import gs from '@graph-note/graph-spec';
-import type { Value } from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
+import type { Value } from '@thoughtknot/graph-spec';
 
 /** One thing exported: its id, its kinds in the order written, and its properties, its id among them. */
 export type DataThing = [id: string, kinds: string[], properties: Record<string, Value>];

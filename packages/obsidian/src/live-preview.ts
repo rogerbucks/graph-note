@@ -10,11 +10,11 @@ import { Decoration, EditorView, ViewPlugin, WidgetType } from '@codemirror/view
 import type { DecorationSet } from '@codemirror/view';
 import { Component, editorInfoField, editorLivePreviewField } from 'obsidian';
 import type { MarkdownPostProcessorContext } from 'obsidian';
-import { changeSetId, gqlSpans, graphOfBlock, isSourceBlock, isStepBlock, styleOf, viewsOf } from '@graph-note/core';
-import type { Span } from '@graph-note/core';
-import type GraphNotePlugin from './main';
+import { changeSetId, gqlSpans, graphOfBlock, isSourceBlock, isStepBlock, styleOf, viewsOf } from '@thoughtknot/core';
+import type { Span } from '@thoughtknot/core';
+import type ThoughtKnotPlugin from './main';
 import { renderShown } from './block';
-import { settlePlacements } from '@graph-note/core/display/graph-view/placement';
+import { settlePlacements } from '@thoughtknot/core/display/graph-view/placement';
 
 /**
  * The last height each card was seen at, by its note and the line its fence opens on: what CodeMirror is told while the
@@ -89,7 +89,7 @@ function keepFocusFromEditor(e: MouseEvent): void {
 /** One graph block, drawn in the editing view. */
 class GraphBlock extends WidgetType {
   constructor(
-    private readonly plugin: GraphNotePlugin,
+    private readonly plugin: ThoughtKnotPlugin,
     private readonly path: string,
     /** The block's identity, which no line added or taken away above it changes. */
     private readonly id: number,
@@ -123,7 +123,7 @@ class GraphBlock extends WidgetType {
   }
 
   override toDOM(): HTMLElement {
-    const dom = createDiv({ cls: 'graph-note-block cm-embed-block markdown-rendered' });
+    const dom = createDiv({ cls: 'thoughtknot-block cm-embed-block markdown-rendered' });
     const state: Drawn = { component: null, observer: null, asked: 0 };
     drawn.set(dom, state);
     if (typeof ResizeObserver !== 'undefined') {
@@ -212,14 +212,14 @@ class GraphBlock extends WidgetType {
       },
       (e: unknown) => {
         component.unload();
-        console.error('Graph Note could not draw a block', e);
+        console.error('ThoughtKnot could not draw a block', e);
       },
     );
   }
 }
 
 /** The editing view's cards for a document: one block widget over each graph block's fences, in Live Preview only. */
-function cards(plugin: GraphNotePlugin, state: EditorState): DecorationSet {
+function cards(plugin: ThoughtKnotPlugin, state: EditorState): DecorationSet {
   if (!state.field(editorLivePreviewField, false)) return Decoration.none;
   const path = state.field(editorInfoField, false)?.file?.path;
   if (!path) return Decoration.none;
@@ -254,7 +254,7 @@ function cards(plugin: GraphNotePlugin, state: EditorState): DecorationSet {
 }
 
 /** The editor extension: the cards, ahead of Obsidian's own drawing of the same blocks. */
-export function graphBlocks(plugin: GraphNotePlugin): Extension {
+export function graphBlocks(plugin: ThoughtKnotPlugin): Extension {
   const field = StateField.define<DecorationSet>({
     create: (state) => cards(plugin, state),
     update: (set, tr) =>

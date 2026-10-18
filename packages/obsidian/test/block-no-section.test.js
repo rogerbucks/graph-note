@@ -38,7 +38,7 @@ describe('a graph with no section info is read-only', () => {
       assert.ok(!labelled(el, 'Edit here') && !labelled(el, 'Edit in pane'), 'no Edit');
       assert.ok(labelled(el, 'Show source'), 'Source is offered');
       tapKey(el, 'large');
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       assert.ok(propertiesShown(panel).includes('weight: 180'), 'its properties are shown');
       assert.equal(panel.querySelectorAll('input, [role="button"]').length, 0, 'nothing to change them with');
       const card = children.find((c) => c.o?.drawn);
@@ -57,7 +57,7 @@ describe('a graph with no section info is read-only', () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {
       const el = await drawnWithNoSection(env, '// graph: reader');
-      assert.ok(el.querySelector('.graph-note-empty'), 'the prompt is shown');
+      assert.ok(el.querySelector('.thoughtknot-empty'), 'the prompt is shown');
       assert.ok(!el.querySelectorAll('button').some((b) => b.getAttribute('aria-label') === 'Edit'), 'no Edit');
     } finally {
       env.uninstall();
@@ -80,9 +80,9 @@ describe('a graph shown as text, or with nothing drawable while edited, is read-
 
   /** What read-only means here: the text, no editor, no Edit, nothing written, no pane. */
   function assertReadOnly(env, el, why) {
-    assert.ok(el.querySelector('pre.graph-note-code'), `${why}: its text is shown`);
+    assert.ok(el.querySelector('pre.thoughtknot-code'), `${why}: its text is shown`);
     assert.equal(el.querySelector('textarea'), null, `${why}: no editor in the card`);
-    assert.equal(el.querySelector('.graph-note-edit-slot'), null, `${why}: no place held for an editor`);
+    assert.equal(el.querySelector('.thoughtknot-edit-slot'), null, `${why}: no place held for an editor`);
     assert.ok(!labelled(el, 'Edit here') && !labelled(el, 'Edit in pane') && !labelled(el, 'Edit'), `${why}: no Edit`);
     assert.equal(env.state.files.get(PATH), AT_TOP, `${why}: nothing written`);
     assert.equal(env.app.workspace.leaves.length, 0, `${why}: no pane was opened`);
@@ -93,7 +93,7 @@ describe('a graph shown as text, or with nothing drawable while edited, is read-
     try {
       const el = await drawnWithNoSection(env, `${GRAPH}\n${'// padding\n'.repeat(10_000)}`);
       await wait(50);
-      assert.match(el.querySelector('.graph-note-banner')?.textContent ?? '', /too large to read/i);
+      assert.match(el.querySelector('.thoughtknot-banner')?.textContent ?? '', /too large to read/i);
       assertReadOnly(env, el, 'too large');
     } finally {
       env.plugin.onunload();
@@ -106,8 +106,8 @@ describe('a graph shown as text, or with nothing drawable while edited, is read-
     Object.assign(env.plugin.layoutLimits, { things: 1 });
     try {
       const el = await drawnWithNoSection(env, GRAPH);
-      await until(() => !!el.querySelector('.graph-note-banner'));
-      assert.match(el.querySelector('.graph-note-banner')?.textContent ?? '', /too large/i);
+      await until(() => !!el.querySelector('.thoughtknot-banner'));
+      assert.match(el.querySelector('.thoughtknot-banner')?.textContent ?? '', /too large/i);
       assertReadOnly(env, el, 'layout refused');
     } finally {
       env.plugin.onunload();

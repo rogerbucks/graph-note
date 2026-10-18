@@ -1,7 +1,7 @@
 // What the Export form asks for and how an export went (spec §16), as the display layer sees them: the form is drawn by the
 // layer, and the export itself is the host's (the Obsidian plugin writes into the vault; the browser editor will write
 // through its server).
-import type { DataFormat, ExportFormat, ExportTheme, ViewSpec } from '@graph-note/core';
+import type { DataFormat, ExportFormat, ExportTheme, ViewSpec } from '@thoughtknot/core';
 
 /** What the Export form asks for: the note, the graph or view, whether with its faded context, the format and colours. */
 export interface ExportAsk {

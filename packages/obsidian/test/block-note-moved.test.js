@@ -54,7 +54,7 @@ describe('the pane, when its note is renamed or deleted', () => {
       const typed = READER + ',\n(mine:Reason)';
       type(env.el, typed, 10);
       await remove(env, PATH);
-      const banner = env.el.querySelector('.graph-note-draft');
+      const banner = env.el.querySelector('.thoughtknot-draft');
       await until(() => drafts(env)[`${PATH}#reader`]?.text === typed && !banner.hidden, 2000);
       assert.match(banner.textContent, /deleted/, 'the draft is shown, saying why');
       assert.ok(
@@ -111,7 +111,7 @@ describe('an editor’s own draft, after its note is renamed', () => {
   test('Restore brings back its own draft, and leaves the other kept', async () => {
     const env = await keptThenRenamed();
     try {
-      const banner = env.el.querySelector('.graph-note-draft');
+      const banner = env.el.querySelector('.thoughtknot-draft');
       labelled(banner, 'Restore draft').click();
       assert.equal(textarea(env.el).value, READER + ',\n(new:Reason)');
       await until(() => Object.keys(drafts(env)).length === 1, 2000);
@@ -124,7 +124,7 @@ describe('an editor’s own draft, after its note is renamed', () => {
   test('Discard forgets only its own draft', async () => {
     const env = await keptThenRenamed();
     try {
-      labelled(env.el.querySelector('.graph-note-draft'), 'Discard draft').click();
+      labelled(env.el.querySelector('.thoughtknot-draft'), 'Discard draft').click();
       await until(() => Object.keys(drafts(env)).length === 1, 2000);
       assert.deepEqual(texts(env), [OLD.text]);
     } finally {
@@ -150,7 +150,7 @@ describe('an editor’s own draft, after its note is renamed', () => {
     const env = await load({ files: { [card.PATH]: card.NOTE } });
     try {
       await env.plugin.openEditor({ path: card.PATH, line: 2, graph: 'reader' });
-      const inPane = env.app.workspace.getLeavesOfType('graph-note-pane')[0].view.contentEl;
+      const inPane = env.app.workspace.getLeavesOfType('thoughtknot-pane')[0].view.contentEl;
       const el = await card.show(env);
       labelled(el, 'Edit here').click();
       await until(() => !!el.querySelector('textarea'));
@@ -163,8 +163,8 @@ describe('an editor’s own draft, after its note is renamed', () => {
       await until(() => Object.keys(drafts(env)).length === 2, 2000);
       await rename(env, card.PATH, 'Renamed.md');
       await until(() => Object.keys(drafts(env)).every((k) => k.startsWith('Renamed.md')), 2000);
-      await until(() => !el.querySelector('.graph-note-draft').hidden, 2000);
-      labelled(el.querySelector('.graph-note-draft'), 'Discard draft').click();
+      await until(() => !el.querySelector('.thoughtknot-draft').hidden, 2000);
+      labelled(el.querySelector('.thoughtknot-draft'), 'Discard draft').click();
       await until(() => Object.keys(drafts(env)).length === 1, 2000);
       assert.deepEqual(texts(env), [card.READER + ',\n(fromPane:Option)'], 'the pane’s draft is still kept');
     } finally {
@@ -184,11 +184,11 @@ describe('the banner acts on the draft it showed, and on no other', () => {
   async function oldThenP1() {
     const env = await load({ files: { [card.PATH]: card.NOTE }, data: { drafts: { [`${card.PATH}#reader`]: OLD } } });
     await env.plugin.openEditor({ path: card.PATH, line: 2, graph: 'reader' });
-    const inPane = env.app.workspace.getLeavesOfType('graph-note-pane')[0].view.contentEl;
+    const inPane = env.app.workspace.getLeavesOfType('thoughtknot-pane')[0].view.contentEl;
     const el = await card.show(env);
     labelled(el, 'Edit here').click();
-    await until(() => !!el.querySelector('textarea') && !el.querySelector('.graph-note-draft').hidden);
-    labelled(inPane.querySelector('.graph-note-draft'), 'Restore draft').click();
+    await until(() => !!el.querySelector('textarea') && !el.querySelector('.thoughtknot-draft').hidden);
+    labelled(inPane.querySelector('.thoughtknot-draft'), 'Restore draft').click();
     await until(() => Object.keys(drafts(env)).length === 0, 2000);
     await until(() => env.state.files.get(card.PATH).includes('(old:Option)'), 2000);
     const p1 = card.READER + ',\n(old:Option),\n(p1:Option)';
@@ -196,14 +196,14 @@ describe('the banner acts on the draft it showed, and on no other', () => {
     const theirs = env.state.files.get(card.PATH).replace('(old:Option)', '(old:Option),\n(theirs:Option)');
     await env.app.vault.modify({ path: card.PATH }, theirs);
     await until(() => Object.values(drafts(env)).some((d) => d.text === p1), 2000);
-    assert.match(el.querySelector('.graph-note-draft').textContent, /draft/, 'the card still offers what it showed');
+    assert.match(el.querySelector('.thoughtknot-draft').textContent, /draft/, 'the card still offers what it showed');
     return { env, el, p1 };
   }
 
   test('the card’s Discard of the draft it showed, no longer kept, never deletes the pane’s newer one', async () => {
     const { env, el, p1 } = await oldThenP1();
     try {
-      labelled(el.querySelector('.graph-note-draft'), 'Discard draft').click();
+      labelled(el.querySelector('.thoughtknot-draft'), 'Discard draft').click();
       await wait(100);
       assert.deepEqual(
         Object.values(drafts(env)).map((d) => d.text),
@@ -220,7 +220,7 @@ describe('the banner acts on the draft it showed, and on no other', () => {
     try {
       const t = el.querySelector('textarea'),
         before = t.value;
-      labelled(el.querySelector('.graph-note-draft'), 'Restore draft').click();
+      labelled(el.querySelector('.thoughtknot-draft'), 'Restore draft').click();
       await wait(100);
       const said = env.state.notices.some((n) => /no longer kept/.test(n));
       assert.ok(said, 'it says the draft is gone');
@@ -238,7 +238,7 @@ describe('the banner acts on the draft it showed, and on no other', () => {
     const env = await load({ files: { [card.PATH]: card.NOTE } });
     try {
       await env.plugin.openEditor({ path: card.PATH, line: 2, graph: 'reader' });
-      const inPane = env.app.workspace.getLeavesOfType('graph-note-pane')[0].view.contentEl;
+      const inPane = env.app.workspace.getLeavesOfType('thoughtknot-pane')[0].view.contentEl;
       const el = await card.show(env);
       labelled(el, 'Edit here').click();
       await until(() => !!el.querySelector('textarea'));
@@ -267,7 +267,7 @@ describe('the pane and the editor in place on one block, when the note is delete
     const env = await load({ files: { [card.PATH]: card.NOTE } });
     try {
       await env.plugin.openEditor({ path: card.PATH, line: 2, graph: 'reader' });
-      const inPane = env.app.workspace.getLeavesOfType('graph-note-pane')[0].view.contentEl;
+      const inPane = env.app.workspace.getLeavesOfType('thoughtknot-pane')[0].view.contentEl;
       const el = await card.show(env);
       labelled(el, 'Edit here').click();
       await until(() => !!el.querySelector('textarea'));

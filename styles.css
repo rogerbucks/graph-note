@@ -1,13 +1,13 @@
-/* Graph Note — styles for the drawing and the edit pane. Colours come from the theme, so light and dark both work. */
+/* ThoughtKnot — styles for the drawing and the edit pane. Colours come from the theme, so light and dark both work. */
 
 /* The design tokens (editor spec §44, ui_theme_tokens): Obsidian's theme mapped to the --gn-* tokens every rule below reads,
    by the core's one table (packages/core/src/theme-tokens.ts, OBSIDIAN_TOKEN_MAP). They are worked out on each of the
    plugin's own elements, every one with a class of ours, so each reads Obsidian's variables where it is, as its rules did
    before, and a theme that sets them anew inside a sidebar or a modal is followed there; no element of Obsidian's own is
    touched. The browser page reads the same variables of its own theme (theme-css.ts). */
-.graph-note,
-[class^='graph-note-'],
-[class*=' graph-note-'],
+.thoughtknot,
+[class^='thoughtknot-'],
+[class*=' thoughtknot-'],
 [class^='gql-'],
 [class*=' gql-'] {
   --gn-bg: var(--background-primary);
@@ -74,9 +74,9 @@
    it asks for more contrast, secondary text and lines take the full text colour (MORE_CONTRAST_TOKENS). Nothing is said by
    colour alone (§5), so nothing is lost with the hues. */
 @media (forced-colors: active) {
-  .graph-note,
-  [class^='graph-note-'],
-  [class*=' graph-note-'],
+  .thoughtknot,
+  [class^='thoughtknot-'],
+  [class*=' thoughtknot-'],
   [class^='gql-'],
   [class*=' gql-'] {
     --gn-bg: Canvas;
@@ -111,9 +111,9 @@
   }
 }
 @media (prefers-contrast: more) {
-  .graph-note,
-  [class^='graph-note-'],
-  [class*=' graph-note-'],
+  .thoughtknot,
+  [class^='thoughtknot-'],
+  [class*=' thoughtknot-'],
   [class^='gql-'],
   [class*=' gql-'] {
     --gn-text-muted: var(--gn-text-normal);
@@ -125,37 +125,37 @@
 /* The drawing's colours are written on each shape, which the browser does not force: so the drawing keeps its own, and
    each shape, line and word is drawn in the system's colours here, the chosen or focused thing in its highlight. */
 @media (forced-colors: active) {
-  .graph-note-svg {
+  .thoughtknot-svg {
     forced-color-adjust: none;
   }
-  .graph-note-svg :is(g.node, g.cluster) > :is(path, polygon, ellipse) {
+  .thoughtknot-svg :is(g.node, g.cluster) > :is(path, polygon, ellipse) {
     fill: Canvas !important;
     stroke: CanvasText !important;
   }
-  .graph-note-svg g.edge > :is(path, polyline) {
+  .thoughtknot-svg g.edge > :is(path, polyline) {
     stroke: CanvasText !important;
   }
-  .graph-note-svg g.edge > polygon {
+  .thoughtknot-svg g.edge > polygon {
     fill: CanvasText !important;
     stroke: CanvasText !important;
   }
-  .graph-note-svg text:not(.graph-note-link) {
+  .thoughtknot-svg text:not(.thoughtknot-link) {
     fill: CanvasText !important;
   }
-  .graph-note-svg :is(g.is-selected, g.node:focus-visible) > :is(path, polygon, ellipse) {
+  .thoughtknot-svg :is(g.is-selected, g.node:focus-visible) > :is(path, polygon, ellipse) {
     stroke: Highlight !important;
   }
   /* the editor's field is see-through text over its coloured picture: forced, its text would show twice */
-  .graph-note-editor textarea.graph-note-text {
+  .thoughtknot-editor textarea.thoughtknot-text {
     forced-color-adjust: none;
     color: transparent;
     caret-color: CanvasText;
   }
   /* a shadow is dropped in forced colours: each thing lifted by one alone keeps an edge instead */
-  .graph-note-proposal.is-sheet,
-  .graph-note-details.is-sheet,
-  .graph-note-viewport > .graph-note-pointer,
-  .graph-note-sheet {
+  .thoughtknot-proposal.is-sheet,
+  .thoughtknot-details.is-sheet,
+  .thoughtknot-viewport > .thoughtknot-pointer,
+  .thoughtknot-sheet {
     border: 1px solid CanvasText;
   }
 }
@@ -163,27 +163,27 @@
 /* One frame: the bar, the drawing, its problems and its details sit in one card, the bar as its header strip — so it is
    plain which bar and which details belong to which drawing. The card and the bar's rule take the theme's focus border:
    its ordinary border is too faint to tie a bar to its drawing (Roger's choice A, 8 Oct 2026). */
-.graph-note-view {
+.thoughtknot-view {
   border: 1px solid var(--gn-border-focus);
   border-radius: var(--gn-radius-m);
   overflow: hidden;
   background: var(--gn-bg);
 }
-.graph-note-view > .graph-note-bar {
+.thoughtknot-view > .thoughtknot-bar {
   background: var(--gn-bg-alt);
   border-bottom: 1px solid var(--gn-border-focus);
   margin: 0;
   padding: var(--gn-space-1) var(--gn-space-2);
 }
-.graph-note-view > .graph-note-problems,
-.graph-note-view > .graph-note-details {
+.thoughtknot-view > .thoughtknot-problems,
+.thoughtknot-view > .thoughtknot-details {
   margin: 0;
   border: 0;
   border-radius: 0;
   border-top: 1px solid var(--gn-border);
   padding: var(--gn-space-2) var(--gn-space-3);
 }
-.graph-note-view > .graph-note-problems {
+.thoughtknot-view > .thoughtknot-problems {
   border-top: 0;
   border-bottom: 1px solid var(--gn-border);
   background: var(--gn-bg-alt);
@@ -194,83 +194,83 @@
    kept box has the heavier outline. The outline rules are exactly as specific as the selected rule and a view's looks
    below, and come before them, so the selected thing is the heaviest and a look keeps its line; only the fill, which
    nothing below sets, is written more specifically. */
-.graph-note-svg g.node.graph-note-dim > :is(path, polygon) {
+.thoughtknot-svg g.node.thoughtknot-dim > :is(path, polygon) {
   fill-opacity: 0;
 }
-.graph-note-svg g.graph-note-dim > :is(path, polygon) {
+.thoughtknot-svg g.thoughtknot-dim > :is(path, polygon) {
   stroke-width: 1;
 }
-.graph-note-svg g.graph-note-dim > text {
+.thoughtknot-svg g.thoughtknot-dim > text {
   fill-opacity: 0.95;
 }
-.graph-note-svg g.graph-note-kept > :is(path, polygon) {
+.thoughtknot-svg g.thoughtknot-kept > :is(path, polygon) {
   stroke-width: 2;
 }
-.graph-note-svg g.graph-note-hidden {
+.thoughtknot-svg g.thoughtknot-hidden {
   display: none;
 }
-.graph-note-svg g.is-selected > :is(path, polygon) {
+.thoughtknot-svg g.is-selected > :is(path, polygon) {
   stroke-width: 3;
 }
-.graph-note-svg g.edge[data-link],
-.graph-note-svg g.edge[data-estimate] {
+.thoughtknot-svg g.edge[data-link],
+.thoughtknot-svg g.edge[data-estimate] {
   cursor: pointer;
 }
 /* In a drawing that runs down the page Graphviz sets a link's label beside its line with no room between, so the text
    begins at the line. The label is moved a little right, in the drawing's own units, so it scales with zoom; the layout
    source and the SVG are the Python library's byte for byte, and are left as they are (device check V-07, 11 Oct 2026). */
-.graph-note-svg.graph-note-down g.edge > text {
+.thoughtknot-svg.thoughtknot-down g.edge > text {
   transform: translateX(4px);
 }
 /* A thing parked for later (spec §5): dashed, with a later mark in words and a sign, never by colour alone. */
-.graph-note-parked path,
-.graph-note-parked polygon {
+.thoughtknot-parked path,
+.thoughtknot-parked polygon {
   stroke-dasharray: 5 3;
 }
-.graph-note-svg .graph-note-later-mark {
+.thoughtknot-svg .thoughtknot-later-mark {
   font-size: 9pt;
   fill: var(--gn-text-muted);
 }
-.graph-note-svg .is-overdue .graph-note-later-mark {
+.thoughtknot-svg .is-overdue .thoughtknot-later-mark {
   fill: var(--gn-text-error);
   font-weight: var(--gn-font-weight-semibold);
 }
 /* A view (spec §7): what is outside it faded, and said so to screen readers; each look's hue on the outline only, in
    the locked line blend, its text kept in the text colour so the locked contrast holds on any box; the legend says
    what each colour means, a swatch beside the words. */
-.graph-note-svg .graph-note-faded {
+.thoughtknot-svg .thoughtknot-faded {
   opacity: 0.35;
 }
-.graph-note-svg g.graph-note-look > :is(path, polygon) {
-  stroke: var(--graph-note-look-line, var(--gn-text-muted));
+.thoughtknot-svg g.thoughtknot-look > :is(path, polygon) {
+  stroke: var(--thoughtknot-look-line, var(--gn-text-muted));
 }
-.graph-note-svg g.graph-note-line-bold > :is(path, polygon) {
+.thoughtknot-svg g.thoughtknot-line-bold > :is(path, polygon) {
   stroke-width: 3;
 }
-.graph-note-svg g.graph-note-line-dashed > :is(path, polygon) {
+.thoughtknot-svg g.thoughtknot-line-dashed > :is(path, polygon) {
   stroke-dasharray: 6 4;
 }
-.graph-note-svg g.graph-note-line-dotted > :is(path, polygon) {
+.thoughtknot-svg g.thoughtknot-line-dotted > :is(path, polygon) {
   stroke-dasharray: 2 3;
 }
-.graph-note-svg g.graph-note-format-bold > text {
+.thoughtknot-svg g.thoughtknot-format-bold > text {
   font-weight: var(--gn-font-weight-bold);
 }
-.graph-note-svg g.graph-note-format-italic > text {
+.thoughtknot-svg g.thoughtknot-format-italic > text {
   font-style: italic;
 }
-.graph-note-view-strip {
+.thoughtknot-view-strip {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--gn-space-2);
   padding: var(--gn-space-1) var(--gn-space-2);
 }
-.graph-note-view-strip button {
+.thoughtknot-view-strip button {
   min-width: 44px;
   min-height: 44px;
 }
-.graph-note-legend {
+.thoughtknot-legend {
   display: flex;
   flex-wrap: wrap;
   gap: var(--gn-space-3);
@@ -278,55 +278,55 @@
   padding: var(--gn-space-1) var(--gn-space-2);
   list-style: none;
 }
-.graph-note-swatch {
+.thoughtknot-swatch {
   display: inline-block;
   width: 1em;
   height: 0.25em;
   margin-inline-end: var(--gn-space-1);
   vertical-align: middle;
-  background: var(--graph-note-swatch, var(--gn-text-muted));
+  background: var(--thoughtknot-swatch, var(--gn-text-muted));
 }
 /* The highlight (spec §25): under the pointer, with the keyboard focus, or from a touch's tap — a glow round the outline and
    an underline on the words, never a size, a place or a weight, so nothing moves; and over any focus, as the thing comes
    forward from the fade while it is highlighted. */
-.graph-note-svg g.graph-note-hot {
+.thoughtknot-svg g.thoughtknot-hot {
   filter: drop-shadow(0 0 3px var(--gn-accent));
 }
-.graph-note-svg g.graph-note-hot > text {
+.thoughtknot-svg g.thoughtknot-hot > text {
   text-decoration: underline;
 }
 /* Untangling (spec §25): the banner over a filtered drawing, the search row, the legend of kinds and links, and what a
    thing's details offer. Every control is a 44-point target; what a legend line does is said in words as well as shown. */
-.graph-note-view > :is(.graph-note-untangle, .graph-note-find, .graph-note-filter) {
+.thoughtknot-view > :is(.thoughtknot-untangle, .thoughtknot-find, .thoughtknot-filter) {
   margin: 0;
   border-top: 1px solid var(--gn-border);
   padding: var(--gn-space-2) var(--gn-space-3);
 }
-.graph-note-untangle-row {
+.thoughtknot-untangle-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--gn-space-2);
 }
-.graph-note-untangle button,
-.graph-note-untangle-offers button,
-.graph-note-find button,
-.graph-note-filter button {
+.thoughtknot-untangle button,
+.thoughtknot-untangle-offers button,
+.thoughtknot-find button,
+.thoughtknot-filter button {
   min-width: 44px;
   min-height: 44px;
 }
-.graph-note-untangle-offers {
+.thoughtknot-untangle-offers {
   display: flex;
   flex-wrap: wrap;
   gap: var(--gn-space-2);
   margin-block: var(--gn-space-2);
 }
-.graph-note-find input {
+.thoughtknot-find input {
   width: 100%;
   min-height: 44px;
 }
-.graph-note-find-results,
-.graph-note-filter ul {
+.thoughtknot-find-results,
+.thoughtknot-filter ul {
   display: flex;
   flex-wrap: wrap;
   gap: var(--gn-space-2);
@@ -334,7 +334,7 @@
   padding: 0;
   list-style: none;
 }
-.graph-note-filter button.is-hidden {
+.thoughtknot-filter button.is-hidden {
   text-decoration: line-through;
 }
 /* The View menu (spec §25): four switches, each a 44-point row with its name, a toggle drawn as Obsidian draws one, and
@@ -342,7 +342,7 @@
    right-to-left line mirrors. Labels by zoom paints a link's label clear while the drawing is too small to read it, but
    never on a link in focus, highlighted or selected: paint only, as focus and the highlight are, so nothing moves and
    nothing is laid out again. A busy hub's stub and a folded group's box are buttons that open. */
-.graph-note-view > .graph-note-view-menu {
+.thoughtknot-view > .thoughtknot-view-menu {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 16em), 1fr));
   gap: var(--gn-space-1) var(--gn-space-4);
@@ -351,13 +351,13 @@
   background: var(--gn-bg-alt);
   padding: var(--gn-space-2) var(--gn-space-3);
 }
-.graph-note-view-menu > .graph-note-quiet {
+.thoughtknot-view-menu > .thoughtknot-quiet {
   grid-column: 1 / -1;
 }
-.graph-note-view-menu > .graph-note-quiet:empty {
+.thoughtknot-view-menu > .thoughtknot-quiet:empty {
   display: none;
 }
-.graph-note-view-menu button.graph-note-switch {
+.thoughtknot-view-menu button.thoughtknot-switch {
   display: flex;
   align-items: center;
   gap: var(--gn-space-2);
@@ -372,13 +372,13 @@
   font-weight: normal;
   text-align: start;
 }
-.graph-note-view-menu button.graph-note-switch:hover {
+.thoughtknot-view-menu button.thoughtknot-switch:hover {
   background: var(--gn-bg-hover);
 }
-.graph-note-switch-name {
+.thoughtknot-switch-name {
   flex: 1;
 }
-.graph-note-switch-track {
+.thoughtknot-switch-track {
   display: flex;
   flex: none;
   justify-content: flex-start;
@@ -391,71 +391,71 @@
   width: 2.5em;
   height: 1.4em;
 }
-.graph-note-switch-track::before {
+.thoughtknot-switch-track::before {
   border-radius: 50%;
   background: var(--gn-text-muted);
   width: calc(1.4em - 6px);
   height: calc(1.4em - 6px);
   content: '';
 }
-.graph-note-switch[aria-checked='true'] .graph-note-switch-track {
+.thoughtknot-switch[aria-checked='true'] .thoughtknot-switch-track {
   justify-content: flex-end;
   border-color: var(--gn-accent);
   background: var(--gn-accent);
 }
-.graph-note-switch[aria-checked='true'] .graph-note-switch-track::before {
+.thoughtknot-switch[aria-checked='true'] .thoughtknot-switch-track::before {
   background: var(--gn-text-on-accent);
 }
-.graph-note-switch-state {
+.thoughtknot-switch-state {
   flex: none;
   min-width: 2em;
   color: var(--gn-text-muted);
   font-size: var(--gn-font-size-s);
 }
-.graph-note-svg.graph-note-labels-hidden g.edge text {
+.thoughtknot-svg.thoughtknot-labels-hidden g.edge text {
   fill-opacity: 0;
 }
-.graph-note-svg.graph-note-labels-hidden g.edge:is(.graph-note-kept, .graph-note-hot, .is-selected) text {
+.thoughtknot-svg.thoughtknot-labels-hidden g.edge:is(.thoughtknot-kept, .thoughtknot-hot, .is-selected) text {
   fill-opacity: 1;
 }
-.graph-note-svg g[data-fold] {
+.thoughtknot-svg g[data-fold] {
   cursor: pointer;
 }
 /* The slot the legend of moving links is drawn in again after a switch: no box of its own, so the legend sits as before. */
-.graph-note-flow-legend-slot {
+.thoughtknot-flow-legend-slot {
   display: contents;
 }
 /* A proposal laid over the graph (spec §17): what it adds is drawn with a heavier outline, what it changes dashed, what it
    removes dotted, each also marked in words and signed, and said to screen readers, so none is told by colour alone. */
-.graph-note-svg g.graph-note-proposed.is-add > :is(path, polygon),
-.graph-note-svg g.edge.graph-note-proposed.is-add > path {
+.thoughtknot-svg g.thoughtknot-proposed.is-add > :is(path, polygon),
+.thoughtknot-svg g.edge.thoughtknot-proposed.is-add > path {
   stroke: var(--gn-hue-green);
   stroke-width: 3;
 }
-.graph-note-svg g.graph-note-proposed.is-change > :is(path, polygon),
-.graph-note-svg g.edge.graph-note-proposed.is-change > path {
+.thoughtknot-svg g.thoughtknot-proposed.is-change > :is(path, polygon),
+.thoughtknot-svg g.edge.thoughtknot-proposed.is-change > path {
   stroke: var(--gn-hue-orange);
   stroke-dasharray: 6 3;
 }
-.graph-note-svg g.graph-note-proposed.is-remove > :is(path, polygon),
-.graph-note-svg g.edge.graph-note-proposed.is-remove > path {
+.thoughtknot-svg g.thoughtknot-proposed.is-remove > :is(path, polygon),
+.thoughtknot-svg g.edge.thoughtknot-proposed.is-remove > path {
   stroke: var(--gn-hue-red);
   stroke-dasharray: 2 3;
 }
-.graph-note-svg g.graph-note-proposed.is-remove > text:not(.graph-note-proposal-mark) {
+.thoughtknot-svg g.thoughtknot-proposed.is-remove > text:not(.thoughtknot-proposal-mark) {
   text-decoration: line-through;
 }
-.graph-note-svg .graph-note-proposal-mark {
+.thoughtknot-svg .thoughtknot-proposal-mark {
   font-size: 9pt;
   fill: var(--gn-text-muted);
 }
 /* The proposal's list: one change to a row, its sentence and its Accept and Reject; on a phone, a sheet at the bottom of
    the screen. Every control is at least 44 points. */
-.graph-note-proposal {
+.thoughtknot-proposal {
   padding: var(--gn-space-2) var(--gn-space-3);
   border-top: 1px solid var(--gn-border);
 }
-.graph-note-proposal.is-sheet {
+.thoughtknot-proposal.is-sheet {
   position: sticky;
   bottom: 0;
   z-index: 2;
@@ -466,35 +466,35 @@
   border-radius: var(--gn-radius-l) var(--gn-radius-l) 0 0;
   padding-bottom: max(var(--gn-space-2), env(safe-area-inset-bottom));
 }
-.graph-note-proposal-provenance {
+.thoughtknot-proposal-provenance {
   margin: var(--gn-space-1) 0;
   padding-inline-start: var(--gn-space-4);
   color: var(--gn-text-muted);
 }
-.graph-note-proposal-checked {
+.thoughtknot-proposal-checked {
   margin: var(--gn-space-1) 0;
   color: var(--gn-text-muted);
 }
-.graph-note-proposal-checked.is-failed {
+.thoughtknot-proposal-checked.is-failed {
   color: color-mix(in srgb, var(--gn-text-error) 60%, var(--gn-text-normal));
 }
-.graph-note-proposal-bulk {
+.thoughtknot-proposal-bulk {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--gn-space-2);
   margin: var(--gn-space-2) 0;
 }
-.graph-note-proposal button {
+.thoughtknot-proposal button {
   min-width: 44px;
   min-height: 44px;
 }
-.graph-note-proposal-rows {
+.thoughtknot-proposal-rows {
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.graph-note-proposal-row {
+.thoughtknot-proposal-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -504,36 +504,36 @@
   border-bottom: 1px solid var(--gn-border);
   border-inline-start: 3px solid var(--gn-text-muted);
 }
-.graph-note-proposal-row.is-add {
+.thoughtknot-proposal-row.is-add {
   border-inline-start-color: var(--gn-hue-green);
 }
-.graph-note-proposal-row.is-change {
+.thoughtknot-proposal-row.is-change {
   border-inline-start-color: var(--gn-hue-orange);
 }
-.graph-note-proposal-row.is-remove {
+.thoughtknot-proposal-row.is-remove {
   border-inline-start-color: var(--gn-hue-red);
 }
-.graph-note-proposal-row.is-accepted,
-.graph-note-proposal-row.is-rejected {
+.thoughtknot-proposal-row.is-accepted,
+.thoughtknot-proposal-row.is-rejected {
   color: var(--gn-text-muted);
 }
-.graph-note-proposal-text {
+.thoughtknot-proposal-text {
   flex: 1 1 14em;
 }
-.graph-note-proposal-code {
+.thoughtknot-proposal-code {
   display: block;
   margin-top: var(--gn-space-1);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-.graph-note-proposal-blocked {
+.thoughtknot-proposal-blocked {
   color: color-mix(in srgb, var(--gn-text-error) 60%, var(--gn-text-normal));
 }
-.graph-note-proposal-decision {
+.thoughtknot-proposal-decision {
   color: var(--gn-text-muted);
   font-size: var(--gn-font-size-s);
 }
-.graph-note-proposal-actions {
+.thoughtknot-proposal-actions {
   display: flex;
   gap: var(--gn-space-2);
 }
@@ -541,33 +541,33 @@
    tiles. A tile is its button and what is said of it: the whole tile takes the click, the one drawn has the accent edge
    and a heavier name, the suggested one a dashed accent edge, and one that does not fit is faint, each said in words
    beside it too, never by colour alone; every control a 44-point target. */
-.graph-note-type-strip,
-.graph-note-way-in {
+.thoughtknot-type-strip,
+.thoughtknot-way-in {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--gn-space-2);
   padding: var(--gn-space-1) var(--gn-space-2);
 }
-.graph-note-type-strip button,
-.graph-note-way-in button,
-.graph-note-type-stopped button {
+.thoughtknot-type-strip button,
+.thoughtknot-way-in button,
+.thoughtknot-type-stopped button {
   min-width: 44px;
   min-height: 44px;
 }
-.graph-note-type-strip button {
+.thoughtknot-type-strip button {
   gap: var(--gn-space-1);
   width: auto;
 }
-.graph-note-type-strip button[aria-expanded='true'] {
+.thoughtknot-type-strip button[aria-expanded='true'] {
   background: var(--gn-bg-hover);
 }
-.graph-note-type-drawn,
-.graph-note-type-why {
+.thoughtknot-type-drawn,
+.thoughtknot-type-why {
   color: var(--gn-text-muted);
   font-size: var(--gn-font-size-s);
 }
-.graph-note-type-list {
+.thoughtknot-type-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 12em), 1fr));
   gap: var(--gn-space-2);
@@ -578,10 +578,10 @@
   padding: var(--gn-space-3);
   list-style: none;
 }
-.graph-note-type-list[hidden] {
+.thoughtknot-type-list[hidden] {
   display: none;
 }
-.graph-note-type-list li {
+.thoughtknot-type-list li {
   display: flex;
   position: relative;
   flex-direction: column;
@@ -592,11 +592,11 @@
   padding: var(--gn-space-2) var(--gn-space-3);
   min-height: 44px;
 }
-.graph-note-type-list li:not(.graph-note-type-unfit):hover {
+.thoughtknot-type-list li:not(.thoughtknot-type-unfit):hover {
   border-color: var(--gn-border-hover);
   background: var(--gn-bg-hover);
 }
-.graph-note-type-list button {
+.thoughtknot-type-list button {
   display: block;
   box-shadow: none;
   border: none;
@@ -610,40 +610,40 @@
   text-align: start;
 }
 /* the whole tile takes the click of its button, and shows its focus */
-.graph-note-type-list button::after {
+.thoughtknot-type-list button::after {
   position: absolute;
   inset: 0;
   border-radius: var(--gn-radius-m);
   content: '';
 }
-.graph-note-type-list button:focus-visible {
+.thoughtknot-type-list button:focus-visible {
   outline: none;
   box-shadow: none;
 }
-.graph-note-type-list button:focus-visible::after {
+.thoughtknot-type-list button:focus-visible::after {
   outline: 2px solid var(--gn-border-focus);
   outline-offset: 1px;
 }
-.graph-note-type-list button:not(:disabled) {
+.thoughtknot-type-list button:not(:disabled) {
   cursor: var(--gn-cursor-link);
 }
-.graph-note-type-list .graph-note-type-why:empty {
+.thoughtknot-type-list .thoughtknot-type-why:empty {
   display: none;
 }
-.graph-note-type-list li.graph-note-type-now {
+.thoughtknot-type-list li.thoughtknot-type-now {
   border: 2px solid var(--gn-accent);
   padding: calc(var(--gn-space-2) - 1px) calc(var(--gn-space-3) - 1px);
 }
-.graph-note-type-list li.graph-note-type-now button {
+.thoughtknot-type-list li.thoughtknot-type-now button {
   font-weight: var(--gn-font-weight-bold);
 }
-.graph-note-type-list li.graph-note-type-suggested {
+.thoughtknot-type-list li.thoughtknot-type-suggested {
   border-style: dashed;
   border-color: var(--gn-accent);
 }
 /* a type that does not fit cannot be chosen, so it is never focused: it is shown after those that fit, a slim row across
    the panel with why beside its name */
-.graph-note-type-list li.graph-note-type-unfit {
+.thoughtknot-type-list li.thoughtknot-type-unfit {
   flex-direction: row;
   flex-wrap: wrap;
   order: 1;
@@ -654,56 +654,56 @@
   background: transparent;
   padding-block: var(--gn-space-1);
 }
-.graph-note-type-list li.graph-note-type-unfit button {
+.thoughtknot-type-list li.thoughtknot-type-unfit button {
   width: auto;
   color: var(--gn-text-faint);
   font-weight: normal;
 }
-.graph-note-type-stopped {
+.thoughtknot-type-stopped {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--gn-space-2);
 }
 /* A graph drawn as a table: the plugin's own, moved and scaled as a whole by the card's zoom, as a drawing is. */
-.graph-note-table {
+.thoughtknot-table {
   position: absolute;
   left: 0;
   top: 0;
-  transform: translate(var(--graph-note-x, 0), var(--graph-note-y, 0)) scale(var(--graph-note-scale, 1));
+  transform: translate(var(--thoughtknot-x, 0), var(--thoughtknot-y, 0)) scale(var(--thoughtknot-scale, 1));
   transform-origin: 0 0;
   -webkit-user-select: none;
   user-select: none;
 }
-.graph-note-table table {
+.thoughtknot-table table {
   border-collapse: collapse;
   margin-bottom: var(--gn-space-3);
   font-size: var(--gn-font-size-s);
   color: var(--gn-text-normal);
 }
-.graph-note-table th,
-.graph-note-table td {
+.thoughtknot-table th,
+.thoughtknot-table td {
   padding: var(--gn-space-1) var(--gn-space-2);
   border-bottom: 1px solid var(--gn-border);
   text-align: start;
   white-space: nowrap;
 }
-.graph-note-table th {
+.thoughtknot-table th {
   color: var(--gn-text-muted);
 }
-.graph-note-table tr[data-key],
-.graph-note-table tr[data-link] {
+.thoughtknot-table tr[data-key],
+.thoughtknot-table tr[data-link] {
   cursor: pointer;
 }
-.graph-note-table tr.is-selected {
+.thoughtknot-table tr.is-selected {
   background: var(--gn-bg-hover);
   outline: 2px solid var(--gn-accent);
 }
-.graph-note-table tr:focus-visible {
+.thoughtknot-table tr:focus-visible {
   outline: 2px solid var(--gn-accent);
 }
 /* The Export form (spec §16): each choice with its words above it, every control a 44-point target. */
-.graph-note-export {
+.thoughtknot-export {
   display: flex;
   flex-wrap: wrap;
   align-items: end;
@@ -711,18 +711,18 @@
   padding: var(--gn-space-2);
   border-top: 1px solid var(--gn-border);
 }
-.graph-note-export label {
+.thoughtknot-export label {
   display: flex;
   flex-direction: column;
   color: var(--gn-text-muted);
   font-size: var(--gn-font-size-s);
 }
-.graph-note-export :is(button, select) {
+.thoughtknot-export :is(button, select) {
   min-width: 44px;
   min-height: 44px;
 }
 /* A style block (spec §2): folded away until opened, its line in the muted colour, a 44-point target to open it. */
-details.graph-note-style > summary {
+details.thoughtknot-style > summary {
   min-height: 44px;
   padding-block: var(--gn-space-3);
   color: var(--gn-text-muted);
@@ -730,7 +730,7 @@ details.graph-note-style > summary {
 }
 /* The card's tools (spec §5, §7): Play or Record a path, Make a view and Add a thing in one row under the bar, each a
    button until it is opened, when its form takes the whole row; the row is gone when none of them is shown. */
-.graph-note-card-tools {
+.thoughtknot-card-tools {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -738,59 +738,59 @@ details.graph-note-style > summary {
   border-bottom: 1px solid var(--gn-border);
   padding: var(--gn-space-1) var(--gn-space-2);
 }
-.graph-note-card-tools:not(:has(> :not([hidden]))) {
+.thoughtknot-card-tools:not(:has(> :not([hidden]))) {
   display: none;
 }
-.graph-note-card-tools > [hidden] {
+.thoughtknot-card-tools > [hidden] {
   display: none;
 }
-.graph-note-card-tools > :has(input, select, ol, ul) {
+.thoughtknot-card-tools > :has(input, select, ol, ul) {
   flex-basis: 100%;
 }
 /* Walked paths (spec §7): the step playing outlined heavier; each recorded step numbered. */
-.graph-note-walk {
+.thoughtknot-walk {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--gn-space-2);
 }
-.graph-note-walk button {
+.thoughtknot-walk button {
   min-width: 44px;
   min-height: 44px;
 }
 /* Making a view by tapping (spec §7): laid out as the walk strip, every control a 44-point target. */
-.graph-note-view-maker {
+.thoughtknot-view-maker {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--gn-space-2);
 }
-.graph-note-view-maker :is(button, select, input) {
+.thoughtknot-view-maker :is(button, select, input) {
   min-width: 44px;
   min-height: 44px;
 }
 /* Adding a thing (spec §5): laid out as the view-making strip, every control a 44-point target. */
-.graph-note-add-thing,
-.graph-note-add-thing-controls {
+.thoughtknot-add-thing,
+.thoughtknot-add-thing-controls {
   display: flex;
   flex-wrap: wrap;
   align-items: end;
   gap: var(--gn-space-2);
 }
-.graph-note-add-thing label {
+.thoughtknot-add-thing label {
   display: flex;
   flex-direction: column;
   color: var(--gn-text-muted);
   font-size: var(--gn-font-size-s);
 }
-.graph-note-add-thing :is(button, input) {
+.thoughtknot-add-thing :is(button, input) {
   min-width: 44px;
   min-height: 44px;
 }
-.graph-note-svg g.graph-note-step-current > :is(path, polygon) {
+.thoughtknot-svg g.thoughtknot-step-current > :is(path, polygon) {
   stroke-width: 4;
 }
-.graph-note-svg .graph-note-step-number {
+.thoughtknot-svg .thoughtknot-step-number {
   font-size: 10pt;
   font-weight: var(--gn-font-weight-bold);
   fill: var(--gn-text-normal);
@@ -799,16 +799,16 @@ details.graph-note-style > summary {
    says; a line laid out from its far end moves backwards, so it reads forwards. A path playing: the step now on pulses,
    and a dot runs the link from the step before. Every one of them is still under reduced motion (spec §11), below:
    the dashes, the icons, the outline and the words stay. */
-.graph-note-svg .graph-note-flow-dashes > path {
+.thoughtknot-svg .thoughtknot-flow-dashes > path {
   stroke-dasharray: 6 4;
-  animation: graph-note-flow-dashes 1s linear infinite;
+  animation: thoughtknot-flow-dashes 1s linear infinite;
 }
-.graph-note-svg .graph-note-flow-back.graph-note-flow-dashes > path {
+.thoughtknot-svg .thoughtknot-flow-back.thoughtknot-flow-dashes > path {
   animation-direction: reverse;
 }
 /* a runner is a path too: named with its element, so it outranks the dashes of a link that both moves and is walked */
-.graph-note-svg path.graph-note-flow-runner,
-.graph-note-svg path.graph-note-path-runner {
+.thoughtknot-svg path.thoughtknot-flow-runner,
+.thoughtknot-svg path.thoughtknot-path-runner {
   fill: none;
   stroke: var(--gn-text-normal);
   stroke-width: 5;
@@ -816,28 +816,28 @@ details.graph-note-style > summary {
   stroke-dasharray: 0 200;
   pointer-events: none;
 }
-.graph-note-svg path.graph-note-flow-runner {
-  animation: graph-note-flow-dot 2s linear infinite;
+.thoughtknot-svg path.thoughtknot-flow-runner {
+  animation: thoughtknot-flow-dot 2s linear infinite;
 }
-.graph-note-svg .graph-note-flow-back > path.graph-note-flow-runner {
+.thoughtknot-svg .thoughtknot-flow-back > path.thoughtknot-flow-runner {
   animation-direction: reverse;
 }
-.graph-note-svg path.graph-note-path-runner {
+.thoughtknot-svg path.thoughtknot-path-runner {
   stroke: var(--gn-accent);
-  animation: graph-note-flow-dot var(--graph-note-run, 1s) ease-in-out 1 forwards;
+  animation: thoughtknot-flow-dot var(--thoughtknot-run, 1s) ease-in-out 1 forwards;
 }
-.graph-note-svg path.graph-note-path-runner-back {
+.thoughtknot-svg path.thoughtknot-path-runner-back {
   animation-direction: reverse;
 }
-.graph-note-svg g.graph-note-step-current > :is(path, polygon) {
-  animation: graph-note-step-pulse 1.2s ease-in-out infinite alternate;
+.thoughtknot-svg g.thoughtknot-step-current > :is(path, polygon) {
+  animation: thoughtknot-step-pulse 1.2s ease-in-out infinite alternate;
 }
-@keyframes graph-note-flow-dashes {
+@keyframes thoughtknot-flow-dashes {
   to {
     stroke-dashoffset: -20;
   }
 }
-@keyframes graph-note-flow-dot {
+@keyframes thoughtknot-flow-dot {
   from {
     stroke-dashoffset: 0;
   }
@@ -845,7 +845,7 @@ details.graph-note-style > summary {
     stroke-dashoffset: -100;
   }
 }
-@keyframes graph-note-step-pulse {
+@keyframes thoughtknot-step-pulse {
   from {
     stroke-width: 4;
   }
@@ -854,81 +854,81 @@ details.graph-note-style > summary {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .graph-note-svg .graph-note-flow-dashes > path,
-  .graph-note-svg path.graph-note-flow-runner,
-  .graph-note-svg path.graph-note-path-runner,
-  .graph-note-svg g.graph-note-step-current > :is(path, polygon) {
+  .thoughtknot-svg .thoughtknot-flow-dashes > path,
+  .thoughtknot-svg path.thoughtknot-flow-runner,
+  .thoughtknot-svg path.thoughtknot-path-runner,
+  .thoughtknot-svg g.thoughtknot-step-current > :is(path, polygon) {
     animation: none;
   }
-  .graph-note-svg path.graph-note-flow-runner,
-  .graph-note-svg path.graph-note-path-runner {
+  .thoughtknot-svg path.thoughtknot-flow-runner,
+  .thoughtknot-svg path.thoughtknot-path-runner {
     display: none;
   }
 }
 /* Animated images (spec §18): a thing's images in its details, each a figure with its pause and play button and what
    it says; and a picture on a box, in the square Graphviz kept for it, its control drawn in the corner. Whether one
    moves is the plugin's to say, image by image (animated-images.ts), never a style's, so nothing here moves. */
-.graph-note-images {
+.thoughtknot-images {
   display: flex;
   flex-wrap: wrap;
   gap: var(--gn-space-2) var(--gn-space-4);
 }
-.graph-note-image {
+.thoughtknot-image {
   margin: 0;
   max-width: 100%;
 }
-.graph-note-image img {
+.thoughtknot-image img {
   display: block;
   max-width: 100%;
   max-height: 240px;
   object-fit: contain;
 }
-.graph-note-image figcaption,
-.graph-note-image .graph-note-image-said {
+.thoughtknot-image figcaption,
+.thoughtknot-image .thoughtknot-image-said {
   margin: var(--gn-space-1) 0 0;
   color: var(--gn-text-muted);
   font-size: var(--gn-font-size-xs);
 }
-.graph-note-image .graph-note-image-said:empty {
+.thoughtknot-image .thoughtknot-image-said:empty {
   display: none;
 }
-.graph-note-image .graph-note-image-control[aria-disabled='true'] {
+.thoughtknot-image .thoughtknot-image-control[aria-disabled='true'] {
   cursor: not-allowed;
 }
-.graph-note-svg image.graph-note-picture {
+.thoughtknot-svg image.thoughtknot-picture {
   pointer-events: none;
 }
-.graph-note-svg .graph-note-image-control {
+.thoughtknot-svg .thoughtknot-image-control {
   cursor: pointer;
 }
-.graph-note-svg .graph-note-image-control rect.graph-note-image-hit {
+.thoughtknot-svg .thoughtknot-image-control rect.thoughtknot-image-hit {
   fill: transparent;
   stroke: none;
   pointer-events: all;
 }
-.graph-note-svg .graph-note-image-control rect:not(.graph-note-image-hit) {
+.thoughtknot-svg .thoughtknot-image-control rect:not(.thoughtknot-image-hit) {
   fill: var(--gn-bg);
   stroke: var(--gn-text-normal);
   stroke-width: 1;
 }
-.graph-note-svg .graph-note-image-control text {
+.thoughtknot-svg .thoughtknot-image-control text {
   fill: var(--gn-text-normal);
   font-size: 8px;
 }
-.graph-note-svg .graph-note-image-control:focus-visible rect:not(.graph-note-image-hit) {
+.thoughtknot-svg .thoughtknot-image-control:focus-visible rect:not(.thoughtknot-image-hit) {
   stroke: var(--gn-accent);
   stroke-width: 2;
 }
-.graph-note-svg .graph-note-image-control[aria-disabled='true'] {
+.thoughtknot-svg .thoughtknot-image-control[aria-disabled='true'] {
   cursor: not-allowed;
 }
-.graph-note-svg rect.graph-note-picture-missing {
+.thoughtknot-svg rect.thoughtknot-picture-missing {
   fill: none;
   stroke: var(--gn-text-muted);
   stroke-dasharray: 3 3;
 }
 /* What the moving links mean, in words beside their icons (spec §7, motion_not_alone). */
-.graph-note-flow-legend {
+.thoughtknot-flow-legend {
   display: flex;
   flex-wrap: wrap;
   gap: var(--gn-space-1) var(--gn-space-4);
@@ -938,56 +938,56 @@ details.graph-note-style > summary {
   color: var(--gn-text-muted);
   font-size: var(--gn-font-size-s);
 }
-.graph-note-flow-legend .graph-note-flow-icon {
+.thoughtknot-flow-legend .thoughtknot-flow-icon {
   color: var(--gn-text-normal);
   font-weight: var(--gn-font-weight-bold);
 }
-.graph-note-walk-pace {
+.thoughtknot-walk-pace {
   display: flex;
   align-items: center;
   gap: var(--gn-space-1);
   color: var(--gn-text-muted);
   font-size: var(--gn-font-size-s);
 }
-.graph-note-walk select {
+.thoughtknot-walk select {
   min-height: 44px;
 }
-.graph-note-park {
+.thoughtknot-park {
   display: flex;
   flex-wrap: wrap;
   align-items: end;
   gap: var(--gn-space-2);
 }
-.graph-note-park label {
+.thoughtknot-park label {
   display: flex;
   flex-direction: column;
   color: var(--gn-text-muted);
   font-size: var(--gn-font-size-s);
 }
-.graph-note-park :is(button, input) {
+.thoughtknot-park :is(button, input) {
   min-width: 44px;
   min-height: 44px;
 }
-.graph-note-walk input {
+.thoughtknot-walk input {
   min-height: 44px;
 }
 
 /* The graph's text shown as code: a long line scrolls inside its own box, never the note, so the note reflows at 320 CSS
    pixels with nothing lost (spec §41, a11y_targets_reflow_auto). */
-pre.graph-note-code {
+pre.thoughtknot-code {
   overflow-x: auto;
   max-width: 100%;
 }
 
 /* The bar: every control at least 44 points, as touch needs (spec §5), and none that only shows on hover. */
-.graph-note-bar {
+.thoughtknot-bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--gn-space-1);
   margin-bottom: var(--gn-space-1);
 }
-.graph-note-bar button {
+.thoughtknot-bar button {
   min-width: 44px;
   min-height: 44px;
   display: inline-flex;
@@ -995,76 +995,76 @@ pre.graph-note-code {
   justify-content: center;
   gap: var(--gn-space-1);
 }
-.graph-note-badge {
+.thoughtknot-badge {
   margin-inline-end: auto;
 }
 /* In Live Preview, Obsidian puts its own edit-block button at a code block's top right, shown on hover; leave it room, as
    Obsidian does for its PDF toolbar, so it never covers the bar's last button. */
-.cm-embed-block .graph-note-bar {
+.cm-embed-block .thoughtknot-bar {
   padding-inline-end: var(--gn-space-9);
 }
 /* The same button covers the copy button of a block shown as code, which Obsidian also puts at the block's top right: in
    Live Preview the copy button steps in from the right edge by that room and a little more, so the two icons sit side by
    side and neither covers the other (device check V-03, 11 Oct 2026). Only sizes, so the same in light and dark and at
    any width; reading view has no edit-block button, so it keeps Obsidian's place. */
-.cm-embed-block pre.graph-note-code .copy-code-button {
+.cm-embed-block pre.thoughtknot-code .copy-code-button {
   inset-inline-end: calc(var(--gn-space-9) + var(--gn-space-half-2));
 }
-.graph-note-badge-text {
+.thoughtknot-badge-text {
   font-size: var(--gn-font-size-s);
 }
 
 /* The drawing: resized to zoom, never stretched, so its text stays sharp; moved, not scrolled, to pan. */
-.graph-note-viewport {
+.thoughtknot-viewport {
   position: relative;
   overflow: hidden;
-  height: var(--graph-note-height, auto);
-  touch-action: var(--graph-note-touch, pan-x pan-y);
+  height: var(--thoughtknot-height, auto);
+  touch-action: var(--thoughtknot-touch, pan-x pan-y);
   border-radius: var(--gn-radius-s);
 }
-.graph-note-viewport:focus-visible {
+.thoughtknot-viewport:focus-visible {
   outline: 2px solid var(--gn-accent);
   outline-offset: 2px;
 }
-.graph-note-viewport.is-zoomed {
+.thoughtknot-viewport.is-zoomed {
   cursor: grab;
 }
-.graph-note-viewport.is-zoomed:active {
+.thoughtknot-viewport.is-zoomed:active {
   cursor: grabbing;
 }
-.graph-note-svg {
+.thoughtknot-svg {
   position: absolute;
   left: 0;
   top: 0;
   max-width: none;
-  transform: translate(var(--graph-note-x, 0), var(--graph-note-y, 0));
+  transform: translate(var(--thoughtknot-x, 0), var(--thoughtknot-y, 0));
   /* laid out in the screen's coordinates, so it keeps the screen's direction in a right-to-left host (rtl_mirrors) */
   direction: ltr;
   /* the drawing's words are not text to select: a double click zooms, it never highlights them */
   -webkit-user-select: none;
   user-select: none;
 }
-.graph-note-svg g.node {
+.thoughtknot-svg g.node {
   cursor: pointer;
 }
-.graph-note-svg g.node:focus {
+.thoughtknot-svg g.node:focus {
   outline: none;
 }
 /* A box a finger has held is lifted by a shadow (§6, hold_to_drag_touch); a box being dragged follows the pointer,
    faded so the drawing under it still shows; the box it would land by is outlined in the accent, and a line at the top
    of the drawing says where it would go (drag_moves_box). */
-.graph-note-svg g.node.is-held {
+.thoughtknot-svg g.node.is-held {
   filter: drop-shadow(0 2px 4px var(--gn-border-focus));
 }
-.graph-note-svg g.node.is-dragged {
+.thoughtknot-svg g.node.is-dragged {
   opacity: 0.6;
   cursor: grabbing;
 }
-.graph-note-svg g.node.is-landing > :is(path, polygon, ellipse) {
+.thoughtknot-svg g.node.is-landing > :is(path, polygon, ellipse) {
   stroke: var(--gn-accent);
   stroke-width: 3;
 }
-.graph-note-move-hint {
+.thoughtknot-move-hint {
   position: absolute;
   top: var(--gn-space-2);
   inset-inline: 0;
@@ -1078,28 +1078,28 @@ pre.graph-note-code {
   box-shadow: var(--gn-shadow-s);
   pointer-events: none;
 }
-.graph-note-svg g.node:focus-visible > :is(path, polygon) {
+.thoughtknot-svg g.node:focus-visible > :is(path, polygon) {
   stroke-width: 3;
 }
 
 /* Names, labels and values as the person wrote them (editor spec §42, bidi_labels): each is read in its own direction,
    from its first strong letter, and set apart from the words around it, so an Arabic name in an English panel, or an
    English one in a Hebrew panel, is neither reordered nor reorders what follows it. */
-.graph-note-quick-name,
-.graph-note-quick-kind,
-.graph-note-quick-properties li,
-.graph-note-quick-note,
-.graph-note-details-head strong,
-.graph-note-kind,
-.graph-note-link-thing,
-.graph-note-table td,
-.graph-note-details .metadata-property-key,
-.graph-note-details .metadata-property-value {
+.thoughtknot-quick-name,
+.thoughtknot-quick-kind,
+.thoughtknot-quick-properties li,
+.thoughtknot-quick-note,
+.thoughtknot-details-head strong,
+.thoughtknot-kind,
+.thoughtknot-link-thing,
+.thoughtknot-table td,
+.thoughtknot-details .metadata-property-key,
+.thoughtknot-details .metadata-property-value {
   unicode-bidi: plaintext;
 }
 
 /* Full screen: over the whole window, inside the phone's safe area. */
-.graph-note-fullscreen {
+.thoughtknot-fullscreen {
   position: fixed;
   inset: 0;
   z-index: var(--gn-layer-modal);
@@ -1109,46 +1109,46 @@ pre.graph-note-code {
   padding: max(var(--gn-space-2), env(safe-area-inset-top)) max(var(--gn-space-2), env(safe-area-inset-right))
     max(var(--gn-space-2), env(safe-area-inset-bottom)) max(var(--gn-space-2), env(safe-area-inset-left));
 }
-.graph-note-fullscreen > .graph-note {
+.thoughtknot-fullscreen > .thoughtknot {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
-.graph-note-fullscreen .graph-note-viewport {
+.thoughtknot-fullscreen .thoughtknot-viewport {
   flex: 1;
   height: auto;
 }
 
 /* Problems, details and the banner: words and an icon, never colour alone. */
-.graph-note-problems summary {
+.thoughtknot-problems summary {
   cursor: pointer;
   min-height: 44px;
   display: flex;
   align-items: center;
 }
-.graph-note-problems ul,
-.graph-note-details ul {
+.thoughtknot-problems ul,
+.thoughtknot-details ul {
   margin: var(--gn-space-1) 0;
   padding-inline-start: var(--gn-space-6);
 }
-.graph-note-details {
+.thoughtknot-details {
   margin-top: var(--gn-space-2);
   padding: var(--gn-space-2) var(--gn-space-3);
   border: 1px solid var(--gn-border);
   border-radius: var(--gn-radius-m);
 }
-.graph-note-details-head {
+.thoughtknot-details-head {
   display: flex;
   align-items: center;
   gap: var(--gn-space-2);
 }
-.graph-note-details-head button {
+.thoughtknot-details-head button {
   margin-inline-start: auto;
   min-width: 44px;
   min-height: 44px;
 }
-.graph-note-details h4 {
+.thoughtknot-details h4 {
   display: flex;
   align-items: center;
   gap: var(--gn-space-2);
@@ -1159,40 +1159,40 @@ pre.graph-note-code {
   letter-spacing: 0.08em;
   color: var(--gn-text-muted);
 }
-.graph-note-kind {
+.thoughtknot-kind {
   font-size: var(--gn-font-size-xs);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--gn-text-muted);
 }
-.graph-note-banner {
+.thoughtknot-banner {
   padding: var(--gn-space-2) var(--gn-space-3);
   border-inline-start: 3px solid var(--gn-text-error);
   background: var(--gn-bg-alt);
   margin-bottom: var(--gn-space-2);
 }
 /* A graph over a size or time limit, shown as text: the banner's icon beside its words (spec §9, layout_contained). */
-.graph-note-refusal {
+.thoughtknot-refusal {
   display: flex;
   gap: var(--gn-space-2);
   align-items: flex-start;
 }
-.graph-note-refusal-icon {
+.thoughtknot-refusal-icon {
   flex: none;
   display: flex;
   color: color-mix(in srgb, var(--gn-text-error) 60%, var(--gn-text-normal));
 }
-.graph-note-empty {
+.thoughtknot-empty {
   padding: var(--gn-space-3);
   border: 1px dashed var(--gn-border);
   border-radius: var(--gn-radius-m);
 }
-.graph-note-empty button {
+.thoughtknot-empty button {
   min-height: 44px;
 }
 
 /* Where a card's data comes from, when it is written in another note or a .gql file (editor spec §7, §20). */
-.graph-note-source {
+.thoughtknot-source {
   display: flex;
   flex-wrap: wrap;
   gap: var(--gn-space-2);
@@ -1200,27 +1200,27 @@ pre.graph-note-code {
   margin-bottom: var(--gn-space-2);
   color: var(--gn-text-muted);
 }
-.graph-note-source button,
-.graph-note-step-points button,
-.graph-note-card-actions button {
+.thoughtknot-source button,
+.thoughtknot-step-points button,
+.thoughtknot-card-actions button {
   min-height: 44px;
 }
 /* Edit on a card that is not a graph's own drawing: a FROM block's or a step's (editor spec §4, §20). */
-.graph-note-card-actions {
+.thoughtknot-card-actions {
   display: flex;
   justify-content: flex-end;
   margin-bottom: var(--gn-space-2);
 }
 
 /* A graph step's card (editor spec §20): its points, each with its choice, and Run. */
-.graph-note-step-points {
+.thoughtknot-step-points {
   display: flex;
   flex-wrap: wrap;
   gap: var(--gn-space-2);
   align-items: center;
   margin-bottom: var(--gn-space-2);
 }
-.graph-note-step-point {
+.thoughtknot-step-point {
   display: flex;
   flex-wrap: wrap;
   gap: var(--gn-space-2);
@@ -1228,7 +1228,7 @@ pre.graph-note-code {
 }
 
 /* Text for screen readers only: off the screen, never display:none, so it is still read. */
-.graph-note-sr {
+.thoughtknot-sr {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -1241,25 +1241,25 @@ pre.graph-note-code {
 }
 
 /* Hidden means hidden, whatever display a rule gives the element. */
-.graph-note-pane [hidden],
-.graph-note [hidden] {
+.thoughtknot-pane [hidden],
+.thoughtknot [hidden] {
   display: none !important;
 }
 
 /* The inspector: Obsidian's own Properties panel (its metadata classes carry the theme's spacing, type and colours), set
    inside the details; on a phone, a sheet at the bottom of the screen. */
-.graph-note-inspector.metadata-container {
+.thoughtknot-inspector.metadata-container {
   margin-top: var(--gn-space-2);
   margin-block-end: 0;
   transform: none;
 }
-.graph-note-alert {
+.thoughtknot-alert {
   color: color-mix(in srgb, var(--gn-text-error) 60%, var(--gn-text-normal));
 }
-.graph-note-alert::before {
+.thoughtknot-alert::before {
   content: '✖ ';
 }
-.graph-note-details.is-sheet {
+.thoughtknot-details.is-sheet {
   position: sticky;
   bottom: 0;
   z-index: 2;
@@ -1276,17 +1276,17 @@ pre.graph-note-code {
    chosen thing and some of the drawing stay in sight above it, its details scrolling within it. Minimised, its body is
    hidden and it is a bar: the thing's name and kind, the toggle and the close button. Gone while its card is off the
    screen. Sizes and places only, so the same in light and dark. */
-.graph-note-view > .graph-note-details.graph-note-sheet {
+.thoughtknot-view > .thoughtknot-details.thoughtknot-sheet {
   position: fixed;
-  left: var(--graph-note-sheet-left, 0);
-  width: var(--graph-note-sheet-width, 100%);
+  left: var(--thoughtknot-sheet-left, 0);
+  width: var(--thoughtknot-sheet-width, 100%);
   /* its border and padding inside that width, so it is laid out exactly where it was put, as the plugin checks */
   box-sizing: border-box;
-  bottom: var(--graph-note-sheet-bottom, 0);
+  bottom: var(--thoughtknot-sheet-bottom, 0);
   z-index: var(--gn-layer-popover);
   display: flex;
   flex-direction: column;
-  max-height: min(45vh, var(--graph-note-sheet-max, 45vh));
+  max-height: min(45vh, var(--thoughtknot-sheet-max, 45vh));
   margin: 0;
   background: var(--gn-bg);
   border: 1px solid var(--gn-border-focus);
@@ -1295,16 +1295,16 @@ pre.graph-note-code {
   box-shadow: var(--gn-shadow-l);
   padding: 0 var(--gn-space-3) max(var(--gn-space-2), env(safe-area-inset-bottom));
 }
-.graph-note-sheet > .graph-note-details-head {
+.thoughtknot-sheet > .thoughtknot-details-head {
   flex: none;
 }
-.graph-note-sheet > .graph-note-details-body {
+.thoughtknot-sheet > .thoughtknot-details-body {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
-.graph-note-view > .graph-note-details.graph-note-sheet.is-away {
+.thoughtknot-view > .thoughtknot-details.thoughtknot-sheet.is-away {
   display: none;
 }
 
@@ -1314,11 +1314,11 @@ pre.graph-note-code {
    and value (details_properties_table). Section labels are small capitals, as a box's kind is on the drawing; each part
    is a tile, and each row a quiet 44-point button that shows its hover and focus, as the diagram types and the View
    menu's switches are. */
-.graph-note-details-said {
+.thoughtknot-details-said {
   margin: var(--gn-space-2) 0 var(--gn-space-3);
   line-height: 1.5;
 }
-.graph-note-count {
+.thoughtknot-count {
   display: inline-block;
   min-width: 1.6em;
   padding: 0 var(--gn-space-half-2);
@@ -1332,36 +1332,36 @@ pre.graph-note-code {
   letter-spacing: 0;
   color: var(--gn-text-normal);
 }
-.graph-note-ins-outs {
+.thoughtknot-ins-outs {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
   gap: var(--gn-space-3);
   margin: var(--gn-space-2) 0;
 }
-.graph-note-links-part {
+.thoughtknot-links-part {
   min-width: 0;
   padding: var(--gn-space-2) var(--gn-space-3);
   border: 1px solid var(--gn-border);
   border-radius: var(--gn-radius-m);
   background: var(--gn-bg);
 }
-.graph-note-details .graph-note-links-part > h4 {
+.thoughtknot-details .thoughtknot-links-part > h4 {
   margin-top: 0;
 }
-.graph-note-none {
+.thoughtknot-none {
   margin: var(--gn-space-1) 0;
   color: var(--gn-text-muted);
 }
-.graph-note-details ul.graph-note-link-groups,
-.graph-note-details ul.graph-note-link-rows {
+.thoughtknot-details ul.thoughtknot-link-groups,
+.thoughtknot-details ul.thoughtknot-link-rows {
   list-style: none;
   margin: 0;
   padding-inline-start: 0;
 }
-.graph-note-link-group + .graph-note-link-group {
+.thoughtknot-link-group + .thoughtknot-link-group {
   margin-top: var(--gn-space-2);
 }
-.graph-note-link-reading {
+.thoughtknot-link-reading {
   display: flex;
   align-items: center;
   gap: var(--gn-space-2);
@@ -1369,16 +1369,16 @@ pre.graph-note-code {
   font-size: var(--gn-font-size-s);
   color: var(--gn-text-muted);
 }
-.graph-note-link-row {
+.thoughtknot-link-row {
   display: flex;
   align-items: center;
   gap: var(--gn-space-half-2);
   border-top: 1px solid var(--gn-border);
 }
-.graph-note-link-row:first-child {
+.thoughtknot-link-row:first-child {
   border-top: 0;
 }
-.graph-note-link-row button.graph-note-link-thing {
+.thoughtknot-link-row button.thoughtknot-link-thing {
   flex: 1 1 auto;
   min-width: 0;
   min-height: 44px;
@@ -1397,7 +1397,7 @@ pre.graph-note-code {
   overflow-wrap: anywhere;
   cursor: var(--gn-cursor-link);
 }
-.graph-note-link-row button.graph-note-link-choice {
+.thoughtknot-link-row button.thoughtknot-link-choice {
   --icon-size: var(--gn-icon-xs);
   flex: none;
   display: inline-flex;
@@ -1412,45 +1412,45 @@ pre.graph-note-code {
   box-shadow: none;
   color: var(--gn-text-muted);
 }
-.graph-note-link-row button:hover {
+.thoughtknot-link-row button:hover {
   background: var(--gn-bg-hover);
 }
-.graph-note-link-row button:focus-visible {
+.thoughtknot-link-row button:focus-visible {
   outline: 2px solid var(--gn-border-focus);
   outline-offset: -2px;
   box-shadow: none;
 }
-.graph-note-details dl.graph-note-rich-properties {
+.thoughtknot-details dl.thoughtknot-rich-properties {
   display: grid;
   grid-template-columns: minmax(5rem, max-content) minmax(0, 1fr);
   gap: var(--gn-space-1) var(--gn-space-3);
   margin: var(--gn-space-1) 0 var(--gn-space-2);
 }
-.graph-note-rich-properties dt {
+.thoughtknot-rich-properties dt {
   color: var(--gn-text-muted);
   font-size: var(--gn-font-size-s);
   overflow-wrap: anywhere;
 }
-.graph-note-rich-properties dd {
+.thoughtknot-rich-properties dd {
   margin: 0;
   overflow-wrap: anywhere;
 }
-.graph-note-trail {
+.thoughtknot-trail {
   display: flex;
   gap: var(--gn-space-2);
   margin-top: var(--gn-space-1);
 }
-.graph-note-trail button {
+.thoughtknot-trail button {
   min-width: 44px;
   min-height: 44px;
 }
 
 /* The arrow to a selection out of view (spec §25): at the edge of the drawing, turned to point at it, 44 points. */
-.graph-note-viewport > .graph-note-pointer {
+.thoughtknot-viewport > .thoughtknot-pointer {
   position: absolute;
-  left: var(--graph-note-pointer-x, 50%);
-  top: var(--graph-note-pointer-y, 50%);
-  transform: translate(-50%, -50%) rotate(var(--graph-note-pointer-angle, 0deg));
+  left: var(--thoughtknot-pointer-x, 50%);
+  top: var(--thoughtknot-pointer-y, 50%);
+  transform: translate(-50%, -50%) rotate(var(--thoughtknot-pointer-angle, 0deg));
   z-index: 1;
   min-width: 44px;
   min-height: 44px;
@@ -1461,63 +1461,63 @@ pre.graph-note-code {
 }
 
 /* The editor in place sits inside the drawing's card, under the drawing, as part of it. */
-.graph-note-edit-slot:empty {
+.thoughtknot-edit-slot:empty {
   display: none;
 }
-.graph-note-view > .graph-note-edit-slot {
+.thoughtknot-view > .thoughtknot-edit-slot {
   border-top: 1px solid var(--gn-border);
   padding: var(--gn-space-2) var(--gn-space-3);
 }
 /* In the card, the text is as tall as its text and one more line to type on: no height of its own, no empty area. */
-.graph-note-pane.graph-note-inline {
+.thoughtknot-pane.thoughtknot-inline {
   height: auto;
 }
-.graph-note-inline .graph-note-editor,
-.graph-note-inline .graph-note-overlay {
+.thoughtknot-inline .thoughtknot-editor,
+.thoughtknot-inline .thoughtknot-overlay {
   min-height: 0;
 }
 
 /* The edit pane: drawing above, text below; on a phone, two tabs and a bottom sheet. Every control at least 44 points. */
-.graph-note-pane {
+.thoughtknot-pane {
   display: flex;
   flex-direction: column;
   gap: var(--gn-space-2);
   height: 100%;
 }
-.graph-note-pane button,
-.graph-note-pane select {
+.thoughtknot-pane button,
+.thoughtknot-pane select {
   min-height: 44px;
   min-width: 44px;
 }
-.graph-note-pane-head {
+.thoughtknot-pane-head {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--gn-space-2);
 }
-.graph-note-pane-tools {
+.thoughtknot-pane-tools {
   display: flex;
   flex-wrap: wrap;
   gap: var(--gn-space-1);
   margin-inline-start: auto;
 }
-.graph-note-pane-tools button {
+.thoughtknot-pane-tools button {
   display: inline-flex;
   align-items: center;
   gap: var(--gn-space-1);
 }
-.graph-note-pane-tools button[aria-disabled='true'] {
+.thoughtknot-pane-tools button[aria-disabled='true'] {
   cursor: not-allowed;
 }
 /* Done, the way out of editing in place: last in the row, framed in the accent and in bold. Not filled with the accent,
    whose white words fall short of 4.5:1 in Obsidian's default theme. */
-.graph-note-pane-tools button.graph-note-primary {
+.thoughtknot-pane-tools button.thoughtknot-primary {
   order: 1;
   border: 1px solid var(--gn-accent);
   font-weight: var(--gn-font-weight-semibold);
 }
 /* In place, the tools are the header of the text: one frame, the tools on its tinted top strip. */
-.graph-note-inline > .graph-note-pane-head {
+.thoughtknot-inline > .thoughtknot-pane-head {
   margin-bottom: calc(-1 * var(--gn-space-2));
   border: 1px solid var(--gn-border);
   border-bottom: 0;
@@ -1525,26 +1525,26 @@ pre.graph-note-code {
   background: var(--gn-bg-alt);
   padding: var(--gn-space-1) var(--gn-space-2);
 }
-.graph-note-inline .graph-note-editor {
+.thoughtknot-inline .thoughtknot-editor {
   border-start-start-radius: 0;
   border-start-end-radius: 0;
 }
-.graph-note-tabs {
+.thoughtknot-tabs {
   display: flex;
   gap: var(--gn-space-1);
   border-bottom: 1px solid var(--gn-border);
 }
-.graph-note-tabs button[aria-selected='true'] {
+.thoughtknot-tabs button[aria-selected='true'] {
   border-bottom: 2px solid var(--gn-accent);
   font-weight: 600;
 }
-.graph-note-pane-drawing {
+.thoughtknot-pane-drawing {
   min-height: 120px;
 }
-.graph-note-pane-drawing .graph-note-viewport {
+.thoughtknot-pane-drawing .thoughtknot-viewport {
   height: 40vh;
 }
-.graph-note-draft {
+.thoughtknot-draft {
   padding: var(--gn-space-2) var(--gn-space-3);
   border-inline-start: 3px solid var(--gn-text-warning);
   background: var(--gn-bg-alt);
@@ -1553,7 +1553,7 @@ pre.graph-note-code {
   align-items: center;
   gap: var(--gn-space-2);
 }
-.graph-note-draft p {
+.thoughtknot-draft p {
   margin: 0;
   flex: 1 1 100%;
 }
@@ -1561,15 +1561,15 @@ pre.graph-note-code {
 /* The text: a plain field over a coloured picture of it. The field's text is transparent and its caret shows; both use one font,
    one size and the same wrapping, so every character of the picture sits over its own and a long line wraps in both
    alike (long_lines_wrap). The picture is in the flow and sets the box's height; the field is laid over it. */
-.graph-note-editor {
+.thoughtknot-editor {
   position: relative;
   min-height: 12em;
   border: 1px solid var(--gn-border);
   border-radius: var(--gn-radius-s);
   background: var(--gn-code-background, var(--gn-bg-alt));
 }
-.graph-note-overlay,
-.graph-note-text {
+.thoughtknot-overlay,
+.thoughtknot-text {
   margin: 0;
   padding: var(--gn-space-2) var(--gn-space-3);
   font-family: var(--gn-font-mono);
@@ -1581,7 +1581,7 @@ pre.graph-note-code {
   tab-size: 4;
   box-sizing: border-box;
 }
-.graph-note-overlay {
+.thoughtknot-overlay {
   position: relative;
   min-height: 8em;
   pointer-events: none;
@@ -1589,7 +1589,7 @@ pre.graph-note-code {
   background: transparent;
   border: 0;
 }
-.graph-note-text {
+.thoughtknot-text {
   position: absolute;
   inset: 0;
   display: block;
@@ -1599,22 +1599,22 @@ pre.graph-note-code {
   caret-color: var(--gn-text-normal);
 }
 /* one more row past the text, to type on, as the field has */
-.graph-note-overlay::after {
+.thoughtknot-overlay::after {
   content: ' ';
 }
 /* The sign and the plain-English note after a line: out of the flow, so they never add a row the field has not got; a
    note longer than the row left is cut at the box's edge, the text itself never. */
-.graph-note-line-end {
+.thoughtknot-line-end {
   position: absolute;
   white-space: pre;
 }
 /* Obsidian styles every textarea, and at hover and focus its textarea:hover (0,1,1) would paint the field grey over the
    picture. So the field's own look carries more weight than any of those, in every state, and matches the picture exactly. */
-.graph-note-editor textarea.graph-note-text,
-.graph-note-editor textarea.graph-note-text:hover,
-.graph-note-editor textarea.graph-note-text:focus,
-.graph-note-editor textarea.graph-note-text:focus-visible,
-.graph-note-editor textarea.graph-note-text:active {
+.thoughtknot-editor textarea.thoughtknot-text,
+.thoughtknot-editor textarea.thoughtknot-text:hover,
+.thoughtknot-editor textarea.thoughtknot-text:focus,
+.thoughtknot-editor textarea.thoughtknot-text:focus-visible,
+.thoughtknot-editor textarea.thoughtknot-text:active {
   color: transparent;
   background: transparent;
   border: 0;
@@ -1626,38 +1626,38 @@ pre.graph-note-code {
   font-size: var(--gn-code-size, 0.9em);
   line-height: 1.5;
 }
-.graph-note-text::selection {
+.thoughtknot-text::selection {
   background: var(--gn-text-selection);
   color: transparent;
 }
-.graph-note-editor:focus-within {
+.thoughtknot-editor:focus-within {
   outline: 2px solid var(--gn-accent);
   outline-offset: 1px;
 }
-.graph-note-problem {
+.thoughtknot-problem {
   text-decoration: underline wavy;
   text-decoration-skip-ink: none;
   text-underline-offset: 3px;
 }
-.graph-note-problem.is-error {
+.thoughtknot-problem.is-error {
   text-decoration-color: var(--gn-text-error);
 }
-.graph-note-problem.is-warning {
+.thoughtknot-problem.is-warning {
   text-decoration-color: var(--gn-text-warning);
 }
-.graph-note-problem.is-hint {
+.thoughtknot-problem.is-hint {
   text-decoration: underline dotted;
   text-decoration-color: var(--gn-text-faint);
 }
-.graph-note-line-sign {
+.thoughtknot-line-sign {
   color: color-mix(in srgb, var(--gn-text-warning) 50%, var(--gn-text-normal));
 }
-.graph-note-readback {
+.thoughtknot-readback {
   color: var(--gn-text-muted);
   font-family: var(--gn-font-ui);
   font-style: italic;
 }
-.graph-note-fixbar {
+.thoughtknot-fixbar {
   display: flex;
   flex-direction: column;
   gap: var(--gn-space-1);
@@ -1665,27 +1665,27 @@ pre.graph-note-code {
   border-inline-start: 3px solid var(--gn-text-warning);
   background: var(--gn-bg-alt);
 }
-.graph-note-fixbar > div {
+.thoughtknot-fixbar > div {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--gn-space-2);
 }
-.graph-note-fixbar .is-error {
+.thoughtknot-fixbar .is-error {
   border-color: var(--gn-text-error);
 }
 /* The suggestions (spec §4): a list dropped down under the caret, as a code editor's is, in the field's fixed-width font,
    so the caret's line and column place it; the chosen option is marked by its background and a bar at its start, never
    colour alone, and what each is says beside its name. */
-.graph-note-suggestions {
+.thoughtknot-suggestions {
   position: absolute;
-  top: var(--graph-note-caret-top, calc(var(--gn-space-2) + (var(--graph-note-caret-line, 0) + 1) * 1.5em));
+  top: var(--thoughtknot-caret-top, calc(var(--gn-space-2) + (var(--thoughtknot-caret-line, 0) + 1) * 1.5em));
   inset-inline-start: max(
     0px,
     min(
       var(
-        --graph-note-caret-left,
-        calc(var(--gn-space-3) + var(--graph-note-caret-column, 0) * 1ch - var(--graph-note-caret-scroll, 0px))
+        --thoughtknot-caret-left,
+        calc(var(--gn-space-3) + var(--thoughtknot-caret-column, 0) * 1ch - var(--thoughtknot-caret-scroll, 0px))
       ),
       calc(100% - 18em)
     )
@@ -1707,10 +1707,10 @@ pre.graph-note-code {
   font-size: var(--gn-code-size, 0.9em);
   line-height: 1.5;
 }
-.graph-note-suggestions[hidden] {
+.thoughtknot-suggestions[hidden] {
   display: none;
 }
-.graph-note-suggestion {
+.thoughtknot-suggestion {
   display: flex;
   align-items: baseline;
   gap: var(--gn-space-3);
@@ -1721,45 +1721,45 @@ pre.graph-note-code {
   min-height: 44px;
   box-sizing: border-box;
 }
-.graph-note-suggestion:hover {
+.thoughtknot-suggestion:hover {
   background: var(--gn-bg-hover);
 }
-.graph-note-suggestion[aria-selected='true'] {
+.thoughtknot-suggestion[aria-selected='true'] {
   border-inline-start-color: var(--gn-accent);
   background: var(--gn-bg-hover);
   font-weight: var(--gn-font-weight-semibold);
 }
-.graph-note-suggestion-name {
+.thoughtknot-suggestion-name {
   color: var(--gn-text-normal);
 }
-.graph-note-suggestion-detail {
+.thoughtknot-suggestion-detail {
   margin-inline-start: auto;
   color: var(--gn-text-muted);
   font-family: var(--gn-font-ui);
   font-size: var(--gn-font-size-s);
   font-weight: normal;
 }
-.graph-note-pane-problems ul {
+.thoughtknot-pane-problems ul {
   margin: 0;
   padding-inline-start: var(--gn-space-6);
 }
-.graph-note-pane-problems li.is-error::marker {
+.thoughtknot-pane-problems li.is-error::marker {
   content: '✖ ';
   color: color-mix(in srgb, var(--gn-text-error) 60%, var(--gn-text-normal));
 }
-.graph-note-pane-problems li.is-warning::marker {
+.thoughtknot-pane-problems li.is-warning::marker {
   content: '⚠ ';
   color: color-mix(in srgb, var(--gn-text-warning) 50%, var(--gn-text-normal));
 }
-.graph-note-pane-problems li.is-hint::marker {
+.thoughtknot-pane-problems li.is-hint::marker {
   content: 'ℹ ';
   color: var(--gn-text-muted);
 }
-.graph-note-fix,
-.graph-note-quiet {
+.thoughtknot-fix,
+.thoughtknot-quiet {
   color: var(--gn-text-muted);
 }
-.graph-note-sheet {
+.thoughtknot-sheet {
   position: sticky;
   bottom: 0;
   max-height: 40vh;
@@ -1825,13 +1825,13 @@ pre.graph-note-code {
 
 /* The editing view's own card (spec §4): its children's margins stay inside it, so the height CodeMirror is told is the
    height the card takes, and the editor has nothing to correct. */
-.graph-note-block {
+.thoughtknot-block {
   display: flow-root;
   overflow-anchor: none;
 }
 /* The inline match (autocomplete): ghost text after the caret, in the picture. It takes no room, so the text after it
    stays under the field's own; it is faint, and never part of the text until accepted. */
-.graph-note-ghost {
+.thoughtknot-ghost {
   display: inline-block;
   width: 0;
   white-space: pre;
@@ -1840,110 +1840,110 @@ pre.graph-note-code {
 }
 /* The send dialog (§19): what will be sent, exactly, wrapped so a phone shows all of it without scrolling sideways, and
    why nothing may be sent, in the theme's error colour. */
-.graph-note-ai-shown pre {
+.thoughtknot-ai-shown pre {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   max-height: 40vh;
   overflow-y: auto;
   font-size: var(--gn-font-size-text-s);
 }
-.graph-note-ai-refused {
+.thoughtknot-ai-refused {
   color: color-mix(in srgb, var(--gn-text-error) 60%, var(--gn-text-normal));
 }
 
 /* Links (§18): a link in the details, on the drawing and in the text pane is drawn as Obsidian draws a link, in its link
    colour and underlined; one that names nothing as Obsidian draws an unresolved link, dashed; one that is never opened
    as plain, muted text. A thing's attachments are counted by a paperclip at its box's top left. */
-.graph-note-link {
+.thoughtknot-link {
   color: var(--gn-link);
   text-decoration: underline;
   cursor: var(--gn-cursor-link, pointer);
 }
-.graph-note-link.is-unresolved {
+.thoughtknot-link.is-unresolved {
   color: var(--gn-link-unresolved);
   text-decoration-style: dashed;
 }
-.graph-note-svg text.graph-note-link {
+.thoughtknot-svg text.thoughtknot-link {
   fill: var(--gn-link);
   text-decoration: underline;
 }
-.graph-note-svg text.graph-note-link.is-unresolved {
+.thoughtknot-svg text.thoughtknot-link.is-unresolved {
   fill: var(--gn-link-unresolved);
   text-decoration-style: dashed;
 }
-.graph-note-svg text.graph-note-attachments {
+.thoughtknot-svg text.thoughtknot-attachments {
   fill: var(--gn-text-muted);
   font-size: var(--gn-font-size-xs);
 }
-.graph-note-link-refused {
+.thoughtknot-link-refused {
   color: var(--gn-text-muted);
 }
-.graph-note-text-link {
+.thoughtknot-text-link {
   text-decoration: underline;
 }
 /* Where a link that leaves Obsidian goes, first and large in the dialog that asks before it opens. */
-.graph-note-leave-host {
+.thoughtknot-leave-host {
   font-size: var(--gn-font-size-l);
   font-weight: var(--gn-font-weight-bold);
 }
-.graph-note-link-fixes,
-.graph-note-leave-row {
+.thoughtknot-link-fixes,
+.thoughtknot-leave-row {
   display: flex;
   flex-wrap: wrap;
   gap: var(--gn-space-2);
   margin-top: var(--gn-space-1);
 }
 /* A property's value, rendered by Obsidian, sits in its cell of the table with no margin of its own. */
-.graph-note-rich-properties .graph-note-rich-value,
-.graph-note-rich-properties .graph-note-rich-value > p {
+.thoughtknot-rich-properties .thoughtknot-rich-value,
+.thoughtknot-rich-properties .thoughtknot-rich-value > p {
   margin: 0;
 }
-.graph-note-note-body {
+.thoughtknot-note-body {
   border-inline-start: 2px solid var(--gn-border);
   padding-inline-start: var(--gn-space-2);
 }
 /* A note in a thing's or link's details, rendered by Obsidian, and its controls while the block is edited (§24). */
-.graph-note-thing-note {
+.thoughtknot-thing-note {
   border-inline-start: 2px solid var(--gn-accent);
   padding-inline-start: var(--gn-space-2);
 }
-.graph-note-note-controls {
+.thoughtknot-note-controls {
   margin-top: var(--gn-space-2);
 }
-.graph-note-note-field {
+.thoughtknot-note-field {
   width: 100%;
 }
-.graph-note-note-buttons {
+.thoughtknot-note-buttons {
   display: flex;
   flex-wrap: wrap;
   gap: var(--gn-space-2);
   margin-top: var(--gn-space-1);
 }
-.graph-note-note-said:not(:empty) {
+.thoughtknot-note-said:not(:empty) {
   color: color-mix(in srgb, var(--gn-text-error) 60%, var(--gn-text-normal));
   margin-bottom: var(--gn-space-1);
 }
 /* A note drawn as a callout over the finished drawing, joined to its thing by a dashed line (§24, note_callouts). */
-.graph-note-callouts {
+.thoughtknot-callouts {
   pointer-events: none;
 }
-.graph-note-callout-line {
+.thoughtknot-callout-line {
   stroke: var(--gn-text-muted);
   stroke-width: 1;
   stroke-dasharray: 4 3;
 }
-.graph-note-callout-box {
+.thoughtknot-callout-box {
   fill: var(--gn-bg-alt);
   stroke: var(--gn-border-hover);
   stroke-width: 1;
 }
-.graph-note-callout-text {
+.thoughtknot-callout-text {
   fill: var(--gn-text-normal);
 }
 
 /* The mini-map (§24, mini_map): a small copy of the whole drawing in a corner of its view, the part in view outlined; tapped
    or dragged, it moves the view, so a finger on it never scrolls the note. Colours from the theme. */
-.graph-note-mini-map {
+.thoughtknot-mini-map {
   position: absolute;
   inset-inline-end: var(--gn-space-2);
   inset-block-end: var(--gn-space-2);
@@ -1957,25 +1957,25 @@ pre.graph-note-code {
   touch-action: none;
   cursor: crosshair;
 }
-.graph-note-mini-map[hidden] {
+.thoughtknot-mini-map[hidden] {
   display: none;
 }
-.graph-note-mini-svg {
+.thoughtknot-mini-svg {
   display: block;
   max-width: none;
 }
-.graph-note-mini-box {
+.thoughtknot-mini-box {
   fill: var(--gn-bg-alt);
   stroke: var(--gn-text-muted);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
-.graph-note-mini-line {
+.thoughtknot-mini-line {
   stroke: var(--gn-text-muted);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
-.graph-note-mini-frame {
+.thoughtknot-mini-frame {
   fill: var(--gn-accent);
   fill-opacity: 0.15;
   stroke: var(--gn-accent);
@@ -1985,22 +1985,22 @@ pre.graph-note-code {
 
 /* The details kept open (§24, details_always_visible, details_narrow): the panel beside the drawing, wrapping below it in a
    card too narrow for both (the plugin sets is-details-below by the card's width). */
-.graph-note-view.is-details-open:not(.is-details-below) {
+.thoughtknot-view.is-details-open:not(.is-details-below) {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
 }
-.graph-note-view.is-details-open:not(.is-details-below) > * {
+.thoughtknot-view.is-details-open:not(.is-details-below) > * {
   flex: 1 1 100%;
   min-width: 0;
 }
-.graph-note-view.is-details-open:not(.is-details-below) > .graph-note-viewport {
+.thoughtknot-view.is-details-open:not(.is-details-below) > .thoughtknot-viewport {
   flex: 1 1 58%;
 }
-.graph-note-view.is-details-open:not(.is-details-below) > .graph-note-details {
+.thoughtknot-view.is-details-open:not(.is-details-below) > .thoughtknot-details {
   flex: 1 1 14rem;
   align-self: stretch;
-  max-height: var(--graph-note-height, none);
+  max-height: var(--thoughtknot-height, none);
   overflow-y: auto;
   border-top: 0;
   border-inline-start: 1px solid var(--gn-border);
@@ -2008,10 +2008,10 @@ pre.graph-note-code {
 
 /* The quick-info tooltip (§24, quick_info): on the page itself, above the full-screen card, placed beside its thing by the
    plugin and never over it; it takes no pointer, so it never gets between a finger and the drawing. */
-.graph-note-quick-info {
+.thoughtknot-quick-info {
   position: fixed;
-  left: var(--graph-note-qi-x, 0);
-  top: var(--graph-note-qi-y, 0);
+  left: var(--thoughtknot-qi-x, 0);
+  top: var(--thoughtknot-qi-y, 0);
   z-index: var(--gn-layer-tooltip);
   max-width: min(22rem, 90vw);
   padding: var(--gn-space-2) var(--gn-space-3);
@@ -2023,36 +2023,36 @@ pre.graph-note-code {
   font-size: var(--gn-font-size-s);
   pointer-events: none;
 }
-.graph-note-quick-info[hidden] {
+.thoughtknot-quick-info[hidden] {
   display: none;
 }
-.graph-note-quick-head {
+.thoughtknot-quick-head {
   display: flex;
   align-items: baseline;
   gap: var(--gn-space-2);
 }
-.graph-note-quick-kind {
+.thoughtknot-quick-kind {
   font-size: var(--gn-font-size-xs);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--gn-text-muted);
 }
 /* how a thing is linked, as its details say it (quick_info_links): a line of its own under the name */
-.graph-note-quick-links {
+.thoughtknot-quick-links {
   margin-top: var(--gn-space-1);
 }
-.graph-note-quick-info ul {
+.thoughtknot-quick-info ul {
   margin: var(--gn-space-1) 0;
   padding-inline-start: var(--gn-space-4);
 }
-.graph-note-quick-problems {
+.thoughtknot-quick-problems {
   color: var(--gn-text-muted);
 }
-.graph-note-quick-note {
+.thoughtknot-quick-note {
   margin-top: var(--gn-space-1);
   padding-top: var(--gn-space-1);
   border-top: 1px solid var(--gn-border);
 }
-.graph-note-quick-note p {
+.thoughtknot-quick-note p {
   margin: 0;
 }

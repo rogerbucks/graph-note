@@ -1,6 +1,6 @@
-# Graph Note
+# ThoughtKnot
 
-Graph Note draws the graphs written in your notes. You can edit a graph beside its note, by typing or by dragging the
+ThoughtKnot draws the graphs written in your notes. You can edit a graph beside its note, by typing or by dragging the
 drawing. It is an Obsidian plugin, and it works on desktop and phone, offline.
 
 **Status: in development.** It is not in the community plugin directory yet. It is built in nine slices. Slices 1 to 3
@@ -10,7 +10,7 @@ are done, and slice 4 is in progress.
 
 | You want to | Go to |
 |---|---|
-| Use it | [How to use Graph Note](https://github.com/rogerbucks/graph-note/wiki/How-to-use-Graph-Note) |
+| Use it | [How to use ThoughtKnot](https://github.com/rogerbucks/graph-note/wiki/How-to-use-ThoughtKnot) |
 | Know what it sends, and when | [Privacy and network use](#privacy-and-network-use) |
 | Build it or change it | [Developing](#developing) and [CONTRIBUTING.md](CONTRIBUTING.md) |
 | See how it fits together | [How the packages fit](#how-the-packages-fit) |
@@ -134,7 +134,7 @@ The plugin is tested from installed files, not from the plugin store.
 
 1. `npm run build` writes `main.js` once. `npm run dev` writes it on every save.
 2. `node scripts/reset-test-vault.mjs` copies `main.js`, `manifest.json` and `styles.css` into the test vault's
-   `.obsidian/plugins/graph-note/`, as real files.
+   `.obsidian/plugins/thoughtknot/`, as real files.
 3. Reload the plugin in Obsidian.
 
 Obsidian Sync carries the files to a phone when it syncs installed community plugins. A new build reaches the vault only

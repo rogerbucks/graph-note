@@ -1,6 +1,6 @@
 // The plugin's build: `npm run build` once, `npm run dev` on every save. Both write the files the
 // plugin is installed from — main.js, manifest.json and styles.css at the repository root — which the
-// vault's install script copies into .obsidian/plugins/graph-note/ for desktop and phone (spec §13).
+// vault's install script copies into .obsidian/plugins/thoughtknot/ for desktop and phone (spec §13).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
@@ -32,7 +32,7 @@ test('in watch mode the build writes main.js and keeps watching', async (t) => {
 
 test('the files the plugin is installed from are at the repository root', () => {
   for (const f of ['manifest.json', 'styles.css']) assert.ok(existsSync(`${root}${f}`), f);
-  assert.equal(pkg('manifest.json').id, 'graph-note', 'installed as .obsidian/plugins/graph-note');
+  assert.equal(pkg('manifest.json').id, 'thoughtknot', 'installed as .obsidian/plugins/thoughtknot');
 });
 
 // Tests across the plugin rebuild main.js in parallel, and Obsidian reads it while `npm run dev` writes: a reader must
