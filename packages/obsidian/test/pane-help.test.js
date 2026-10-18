@@ -81,32 +81,79 @@ describe('problems, in place', () => {
   });
 });
 
+/** The suggestions offered now: each option's name and what it is, as the list shows them; none while it is closed. */
+const offered = (el) => {
+  const list = el.querySelector('.graph-note-suggestions');
+  return list.hidden
+    ? []
+    : list.querySelectorAll('[role="option"]').map((o) =>
+        [o.querySelector('.graph-note-suggestion-name'), o.querySelector('.graph-note-suggestion-detail')]
+          .map((x) => x?.textContent ?? '')
+          .filter(Boolean)
+          .join(' — '),
+      );
+};
+/** The option the field points at as the one Enter or Tab takes. */
+const active = (el) => {
+  const id = textarea(el).getAttribute('aria-activedescendant');
+  return id ? el.querySelectorAll('[role="option"]').find((o) => o.getAttribute('id') === id) : undefined;
+};
+const key = (el, k, more = {}) => textarea(el).dispatch('keydown', { key: k, ...more });
+
 describe('suggestions while typing', () => {
-  test('names, kinds and relationships already in the graph are offered, and choosing one writes it in', async () => {
+  test('names, kinds and relationships already in the graph drop down under the caret, and choosing one writes it in', async () => {
     const env = await open();
     try {
       type(env.el, READER + ',\n(eyes)-[:F');
-      const bar = env.el.querySelector('.graph-note-suggestions');
-      assert.ok(!bar.hidden);
-      const chip = labelled(bar, 'FAVOURS — favours');
-      assert.ok(chip);
-      chip.click();
+      const list = env.el.querySelector('.graph-note-suggestions');
+      assert.equal(list.getAttribute('role'), 'listbox');
+      assert.ok(list.closest('.graph-note-editor'), 'it drops down inside the field, where the caret is');
+      assert.equal(textarea(env.el).getAttribute('aria-controls'), list.getAttribute('id'));
+      assert.equal(textarea(env.el).getAttribute('aria-autocomplete'), 'list');
+      assert.deepEqual(offered(env.el), ['FAVOURS — favours']);
+      list.querySelector('[role="option"]').click();
       assert.equal(textarea(env.el).value, READER + ',\n(eyes)-[:FAVOURS');
       type(env.el, READER + ',\n(eyes)-[:FAVOURS]->(la');
-      assert.deepEqual(
-        bar.querySelectorAll('button').map((b) => b.getAttribute('aria-label')),
-        ['large — Option: Large reader'],
-      );
+      assert.deepEqual(offered(env.el), ['large — Option: Large reader']);
     } finally {
       env.uninstall();
     }
   });
 
-  test('Tab takes the first suggestion from the keyboard', async () => {
+  test('the keyboard works the list: the arrows move, Enter takes the one chosen, and the hands never leave the keys', async () => {
+    const env = await open();
+    try {
+      type(env.el, READER + ',\n(eyes)-[:FAVOURS]->(');
+      const all = offered(env.el);
+      assert.ok(all.length >= 2, all.join(' | '));
+      assert.equal(active(env.el)?.getAttribute('aria-selected'), 'true', 'the first is chosen to start');
+      const first = active(env.el);
+      assert.ok(key(env.el, 'ArrowDown').defaultPrevented, 'the caret stays; the choice moves');
+      const second = active(env.el);
+      assert.ok(second && second !== first);
+      assert.equal(first.getAttribute('aria-selected'), 'false');
+      assert.ok(key(env.el, 'ArrowUp').defaultPrevented);
+      assert.ok(active(env.el) === first);
+      key(env.el, 'ArrowUp');
+      assert.ok(
+        active(env.el) === env.el.querySelectorAll('[role="option"]').at(-1),
+        'up from the first wraps to the last',
+      );
+      key(env.el, 'ArrowDown');
+      key(env.el, 'ArrowDown');
+      const name = second.querySelector('.graph-note-suggestion-name').textContent;
+      assert.ok(key(env.el, 'Enter').defaultPrevented, 'Enter takes it, no new line');
+      assert.equal(textarea(env.el).value, READER + `,\n(eyes)-[:FAVOURS]->(${name}`);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('Tab takes the one chosen from the keyboard', async () => {
     const env = await open();
     try {
       type(env.el, READER + ',\n(eyes)-[:FAVOURS]->(qu');
-      const ev = textarea(env.el).dispatch('keydown', { key: 'Tab' });
+      const ev = key(env.el, 'Tab');
       assert.ok(ev.defaultPrevented);
       assert.equal(textarea(env.el).value, READER + ',\n(eyes)-[:FAVOURS]->(question');
     } finally {
@@ -114,39 +161,61 @@ describe('suggestions while typing', () => {
     }
   });
 
-  test('once the word is the first suggestion, Tab is left alone, so the keyboard can leave the field', async () => {
+  test('once the word is the one chosen, Tab and Enter are left alone, so the keyboard can leave the field or end the line', async () => {
     const env = await open();
     try {
       type(env.el, READER + ',\n(eyes)-[:FAVOURS]->(qu');
-      assert.ok(textarea(env.el).dispatch('keydown', { key: 'Tab' }).defaultPrevented);
+      assert.ok(key(env.el, 'Tab').defaultPrevented);
       assert.equal(textarea(env.el).value, READER + ',\n(eyes)-[:FAVOURS]->(question');
-      assert.equal(textarea(env.el).dispatch('keydown', { key: 'Tab' }).defaultPrevented, false);
+      assert.equal(key(env.el, 'Tab').defaultPrevented, false);
+      assert.equal(key(env.el, 'Enter').defaultPrevented, false);
       assert.equal(textarea(env.el).value, READER + ',\n(eyes)-[:FAVOURS]->(question');
     } finally {
       env.uninstall();
     }
   });
 
-  test('the keyboard going from the field to a suggestion lands on it: the bar is not drawn again as it goes', async () => {
+  test('Escape closes the list, and the arrows then move the caret; typing opens it again, as does Control+Space', async () => {
     const env = await open();
     try {
-      type(env.el, READER + ',\n(eyes)-[:FAVOURS]->(qu');
-      textarea(env.el).focus();
-      const offered = env.el.querySelector('.graph-note-suggestions button');
-      offered.focus();
-      assert.ok(offered.isConnected, 'the suggestion is still on the page');
-      assert.ok(env.doc.activeElement === offered, 'the suggestion has the focus');
+      type(env.el, READER + ',\n(eyes)-[:FAVOURS]->(');
+      assert.ok(offered(env.el).length);
+      assert.ok(key(env.el, 'Escape').defaultPrevented);
+      assert.deepEqual(offered(env.el), []);
+      assert.equal(textarea(env.el).getAttribute('aria-activedescendant'), null);
+      assert.equal(key(env.el, 'ArrowDown').defaultPrevented, false, 'the arrows are the caret’s again');
+      assert.equal(key(env.el, 'Tab').defaultPrevented, false, 'Tab leaves the field');
+      assert.ok(key(env.el, ' ', { ctrlKey: true }).defaultPrevented);
+      assert.ok(offered(env.el).length, 'Control+Space opens it');
+      key(env.el, 'Escape');
+      type(env.el, READER + ',\n(eyes)-[:FAVOURS]->(l');
+      assert.ok(offered(env.el).length, 'typing opens it');
     } finally {
       env.uninstall();
     }
   });
 
-  test('with nothing to suggest, the bar is hidden and Tab is left alone', async () => {
+  test('moving the caret by the keys or a click closes the list, so the arrows and Tab work as in any field', async () => {
+    const env = await open();
+    try {
+      type(env.el, READER + ',\n(eyes)-[:FAVOURS]->(');
+      assert.ok(offered(env.el).length);
+      key(env.el, 'ArrowLeft');
+      assert.deepEqual(offered(env.el), []);
+      type(env.el, READER + ',\n(eyes)-[:FAVOURS]->(');
+      textarea(env.el).dispatch('click');
+      assert.deepEqual(offered(env.el), []);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('with nothing to suggest, the list is hidden and Tab is left alone', async () => {
     const env = await open();
     try {
       type(env.el, READER + ",\n(x:Reason {title: 'abc");
       assert.ok(env.el.querySelector('.graph-note-suggestions').hidden);
-      assert.equal(textarea(env.el).dispatch('keydown', { key: 'Tab' }).defaultPrevented, false);
+      assert.equal(key(env.el, 'Tab').defaultPrevented, false);
     } finally {
       env.uninstall();
     }
@@ -162,19 +231,10 @@ describe('a name only suggested', () => {
     const env = await open();
     try {
       type(env.el, UNNAMED + ',\n(eyes)-[:FAVOURS]->(sm');
-      const offered = env.el
-        .querySelector('.graph-note-suggestions')
-        .querySelectorAll('button')
-        .map((b) => b.getAttribute('aria-label'));
-      assert.ok(!offered.some((l) => /small_reader/.test(l)), offered.join(' | '));
+      const shown = offered(env.el);
+      assert.ok(!shown.some((l) => /small_reader/.test(l)), shown.join(' | '));
       type(env.el, UNNAMED + ',\n(eyes)-[:FAVOURS]->(la');
-      assert.deepEqual(
-        env.el
-          .querySelector('.graph-note-suggestions')
-          .querySelectorAll('button')
-          .map((b) => b.getAttribute('aria-label')),
-        ['large — Option: Large reader'],
-      );
+      assert.deepEqual(offered(env.el), ['large — Option: Large reader']);
     } finally {
       env.uninstall();
     }

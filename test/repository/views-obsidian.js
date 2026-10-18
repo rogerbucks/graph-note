@@ -168,7 +168,12 @@ export const OBSIDIAN = {
   },
   'the edit pane': async () => {
     const env = await paneNotes.open();
-    await until(() => env.el.querySelectorAll('g.node').length === 3);
+    // on a phone the pane opens on its text tab, the drawing kept until its tab is chosen
+    await until(
+      () =>
+        env.el.querySelectorAll('g.node').length === 3 ||
+        (!!env.el.querySelector('.graph-note-tabs') && !!env.el.querySelector('textarea')),
+    );
     return { env, el: env.el };
   },
   'the export form open on a card': async () => {

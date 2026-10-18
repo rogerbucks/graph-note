@@ -34,8 +34,10 @@ export class Walk {
     private readonly o: ViewOptions,
     /** The drawing, once it is on the card: the strip is built above it, before it is drawn. */
     private readonly drawing: () => SVGSVGElement | undefined,
+    /** Where the strip sits in the card, its row of tools; the card itself when not given. */
+    at: HTMLElement = parent,
   ) {
-    this.el = parent.createDiv({ cls: 'graph-note-walk', attr: { role: 'group', 'aria-label': word('walk.group') } });
+    this.el = at.createDiv({ cls: 'graph-note-walk', attr: { role: 'group', 'aria-label': word('walk.group') } });
     this.controls = this.el.createDiv({ cls: 'graph-note-walk-controls' });
     this.said = this.el.createSpan({ cls: 'graph-note-walk-said', attr: { 'aria-live': 'polite' } });
     this.show();

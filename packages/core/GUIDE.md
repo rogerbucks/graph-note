@@ -284,6 +284,10 @@ own handlers. Nothing here reaches the network.
 - `schema-picture.ts` — a block that holds only a schema, a graph's own or a shared one, drawn as the schema itself
   (§3, schema_drawn): `schemaPicture` writes its kinds as boxes and its relationship types as arrows between the kinds
   the data joins, a type not used yet a box of its own, as a small graph of GQL, and reads it; never the note's text.
+- `standard-schemas.ts` — the standard schemas (§27, standard_schemas): shared schemas named with their version
+  (`decision@1`), read for a note that names one; `withStandardSchemas` adds each the vault has none of its name of.
+- `schema-names.ts` — `missingSchemas`: a graph naming a shared schema neither the vault nor the standard ones hold,
+  warned of with the versions there are (schema_named_found); `readNote` asks it only when given the vault's schemas.
 
 **Paths (spec §7; graph spec §22)**
 

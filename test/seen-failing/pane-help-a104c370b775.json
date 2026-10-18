@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/pane-help.test.js",
+  "test": "suggestions while typing > Tab takes the one chosen from the keyboard",
+  "seen_failing_first": false,
+  "evidence": "Keeps behaviour the old code already had: Tab still takes a suggestion, and with nothing chosen or nothing to suggest Tab and Enter are left alone; the test guards that the new dropdown did not lose it."
+}
