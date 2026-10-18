@@ -101,6 +101,13 @@ describe('a drawing in a right-to-left language', () => {
     assert.equal(landingFor('a', right, boxes, 'LR')?.side, 'after');
     assert.equal(landingFor('a', right, boxes, 'RL')?.side, 'before');
     assert.equal(landingFor('a', left, boxes, 'RL')?.side, 'after');
+    // a radial drawing mirrored runs round the other way: where it went before a thing, it now goes after it
+    const round = [
+      { key: 'sun', left: 80, top: 90, right: 120, bottom: 110 },
+      { key: 'b', left: 180, top: 90, right: 220, bottom: 110 },
+    ];
+    assert.equal(landingFor('a', { x: 200, y: 125 }, round, 'LR', [], 'sun')?.side, 'before');
+    assert.equal(landingFor('a', { x: 200, y: 125 }, round, 'RL', [], 'sun')?.side, 'after');
   });
 
   test('a wide flow scrolled across on a phone opens at its start, which is now its right end', () => {
