@@ -237,7 +237,7 @@ export const OBSIDIAN = {
     const { env, el } = await shownBlock(noteOf(GRAPH), 0);
     tapKey(el, 'large');
     el.querySelectorAll('button')
-      .find((b) => b.textContent.includes('Show only this and its neighbours'))
+      .find((b) => b.textContent.includes(word('details.show-only')))
       .click();
     assert.ok(el.querySelector('.graph-note-untangle'), 'the banner');
     return { env, el };
@@ -267,8 +267,8 @@ export const OBSIDIAN = {
   'adding a thing, while editing in place': async () => {
     const env = await load({ files: { [cardNotes.PATH]: cardNotes.NOTE } });
     const el = await editing(env);
-    await until(() => !!labelled(el, 'Add a thing'));
-    labelled(el, 'Add a thing').click();
+    await until(() => !!labelled(el, word('add.thing')));
+    labelled(el, word('add.thing')).click();
     assert.equal(el.querySelector('.graph-note-add-thing')?.hidden, false, 'the strip');
     return { env, el };
   },

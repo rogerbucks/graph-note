@@ -111,7 +111,7 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
 
   const refuse = (key: string, why: string) => {
     alert.hidden = false;
-    alert.setText(`${key}: ${why}.`);
+    alert.setText(word('properties.refused', { name: key, why }));
   };
   /** Why nothing can be changed yet: the thing is drawn under a suggested name, which a change would have to write (§4). */
   const unnamed = () => ('thing' in o.target ? acceptNameFirst(o.now(), o.graph, [o.target.thing]) : null);
@@ -201,11 +201,12 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
     const icon = keyEl.createSpan({ cls: 'metadata-property-icon', attr: { role: 'button', tabindex: '0' } });
     const name = keyEl.createEl('input', {
       cls: 'metadata-property-key-input',
-      attr: { type: 'text', list: listId, autocapitalize: 'none', placeholder: 'Property name' },
+      attr: { type: 'text', list: listId, autocapitalize: 'none', placeholder: word('properties.name') },
     });
     name.value = state.key;
     const valueEl = el.createDiv({ cls: 'metadata-property-value' });
-    const valueLabel = () => (state.written ? `Value of ${state.key}` : 'Value of new property');
+    const valueLabel = () =>
+      state.written ? word('properties.value-of', { name: state.key }) : word('properties.value-new');
     let input = field(valueEl, state.type, state.words, valueLabel());
     const show = () => {
       setIcon(icon, TYPES.find((t) => t.type === state.type)?.icon ?? 'text');
@@ -213,7 +214,10 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
         'aria-label',
         word('properties.type-of', { name: state.key || word('properties.new'), type: titleOf(state.type) }),
       );
-      name.setAttribute('aria-label', state.written ? `Name of ${state.key}` : 'New property name');
+      name.setAttribute(
+        'aria-label',
+        state.written ? word('properties.name-of', { name: state.key }) : word('properties.name-new'),
+      );
       input.setAttribute('aria-label', valueLabel());
       el.setAttribute('data-property-key', state.written ? state.key : '');
       el.setAttribute('data-property-type', state.type);
@@ -227,9 +231,9 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
     const onValue = () => {
       const words = wordsIn(input, state.type, state.words);
       if (!state.written) {
-        if (!state.key) return refuse('new property', 'name it first');
+        if (!state.key) return refuse(word('properties.new-one'), word('properties.name-first'));
         if (words === '' && state.type !== 'boolean') return;
-        if (keys.has(state.key)) return refuse(state.key, `it already has a property called ${state.key}`);
+        if (keys.has(state.key)) return refuse(state.key, word('properties.taken', { name: state.key }));
       }
       if (!write(state.key, [{ key: state.key, type: state.type, words }])) return;
       state.words = words;
@@ -254,7 +258,7 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
       const r = first
         ? ({ ok: false, reason: first } as const)
         : keys.has(next)
-          ? ({ ok: false, reason: `it already has a property called ${next}` } as const)
+          ? ({ ok: false, reason: word('properties.taken', { name: next }) } as const)
           : renameProperty(o.text(), o.graph, o.inBlock(), state.key, next);
       if (!r.ok) {
         refuse(state.key, r.reason);
@@ -283,7 +287,7 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
         }
         const r = makeList(o.text(), o.now(), o.graph, thing, state.written ? state.key : null, shape);
         if (!r.ok) {
-          refuse(state.key || 'new property', r.reason);
+          refuse(state.key || word('properties.new-one'), r.reason);
           return false;
         }
         alert.hidden = true;
@@ -354,7 +358,7 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
     attr: { role: 'button', tabindex: '0' },
   });
   setIcon(add.createSpan({ cls: 'text-button-icon' }), 'plus');
-  add.createSpan({ cls: 'text-button-label', text: 'Add property' });
+  add.createSpan({ cls: 'text-button-label', text: word('properties.add') });
   const adding = () => row(null).focus();
   add.addEventListener('click', adding);
   add.addEventListener('keydown', (e: KeyboardEvent) => {
