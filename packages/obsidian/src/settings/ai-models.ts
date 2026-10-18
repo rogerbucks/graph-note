@@ -3,24 +3,17 @@
 // reaches the vault: the plugin's saved settings hold only that name.
 import { SecretComponent } from 'obsidian';
 import type { App, SettingDefinitionList, SettingTab } from 'obsidian';
-import { AI_PURPOSES, aiModel, endpointProblem } from '@thoughtknot/core';
+import { AI_PURPOSES, aiModel, endpointProblem, word } from '@thoughtknot/core';
 import type { AiModel, MatrixRow, Settings } from '@thoughtknot/core';
 import { matrixControls, switchIsOn, switchedClass, withSwitch } from './ai-matrix-controls';
 import type ThoughtknotPlugin from '../main';
 
-const TEXTS: [keyof AiModel, string, string][] = [
-  ['name', 'Name', ''],
-  [
-    'purpose',
-    'Purpose',
-    `What it is for: ${AI_PURPOSES.join(', ')}, or your own words. A send for that purpose offers this model first.`,
-  ],
-  ['model', 'Model', 'The model’s own name at its address, as the service names it.'],
-  [
-    'endpoint',
-    'Endpoint',
-    'The address requests go to, such as a chat completions address: http:// for a model on this device, https:// for any other.',
-  ],
+/** Each text field of a model's page, with its name and sentence, said in the person's language when the page is drawn. */
+const texts = (): [keyof AiModel, string, string][] => [
+  ['name', word('models.name'), ''],
+  ['purpose', word('models.purpose'), word('models.purpose.sentence', { purposes: AI_PURPOSES.join(', ') })],
+  ['model', word('models.model'), word('models.model.sentence')],
+  ['endpoint', word('models.endpoint'), word('models.endpoint.sentence')],
 ];
 
 /** The models, each a page of its own, with an affordance to add one and to remove each. */
@@ -37,30 +30,32 @@ export function aiModelList(
   };
   return {
     type: 'list',
-    emptyState: 'No model is set up: nothing is ever sent.',
+    emptyState: word('models.none'),
     items: s.aiModels.map((m, i) => ({
       type: 'page',
-      name: `Model ${i + 1}`,
+      name: word('models.page', { n: i + 1 }),
       desc: [
-        m.name ? `${m.name}: ${m.purpose || 'no purpose given'}, up to ${m.ceiling}` : 'Not named yet',
+        m.name
+          ? word('models.said', { name: m.name, purpose: m.purpose || word('models.no-purpose'), ceiling: m.ceiling })
+          : word('models.unnamed'),
         // a ceiling no longer among the classifications is kept as written, and said, until it is chosen again
-        ...(s.classifications.includes(m.ceiling) ? [] : [`${m.ceiling} is no longer a classification: choose again`]),
+        ...(s.classifications.includes(m.ceiling) ? [] : [word('models.ceiling-gone', { ceiling: m.ceiling })]),
         // an address set but not usable is said, so a model that will never be offered says why (user_models)
         ...(m.endpoint.trim() ? [endpointProblem(m.endpoint) ?? ''].filter(Boolean) : []),
-        ...(m.matrixRow ? [`held to the matrix row ${m.matrixRow}`] : []),
+        ...(m.matrixRow ? [word('models.held', { row: m.matrixRow })] : []),
       ].join('. '),
       items: [
         {
           type: 'group',
           items: [
-            ...TEXTS.map(([field, name, desc]) => ({
+            ...texts().map(([field, name, desc]) => ({
               name,
               ...(desc ? { desc } : {}),
               control: { type: 'text' as const, key: `aiModels.${i}.${field}` },
             })),
             {
-              name: 'Ceiling',
-              desc: 'The highest classification of note this model may be sent.',
+              name: word('models.ceiling'),
+              desc: word('models.ceiling.sentence'),
               control: {
                 type: 'dropdown' as const,
                 key: `aiModels.${i}.ceiling`,
@@ -71,8 +66,8 @@ export function aiModelList(
             },
             ...matrixControls(s, m, i, matrix),
             {
-              name: 'Key',
-              desc: 'Kept in the app’s own secret store, never in the vault.',
+              name: word('models.key'),
+              desc: word('models.key.sentence'),
               render: (setting) => {
                 new SecretComponent(app, setting.controlEl)
                   .setValue(m.keyName)
@@ -85,7 +80,7 @@ export function aiModelList(
     })),
     onDelete: (i) => void save(owner.settings.aiModels.filter((_, j) => j !== i)),
     addItem: {
-      name: 'Add a model',
+      name: word('models.add'),
       action: () => void save([...owner.settings.aiModels, aiModel({}, owner.settings.classifications)]),
     },
   };

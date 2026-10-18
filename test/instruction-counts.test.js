@@ -182,6 +182,7 @@ describe('counting the benchmarks', () => {
       '--predictable-gc-schedule',
       '--random-seed=1',
       '--disable-wasm-trap-handler',
+      '--no-wasm-dynamic-tiering',
     ];
     for (const flag of pinned) assert.ok(NODE_FLAGS.includes(flag), flag);
     const random = () =>
@@ -191,6 +192,17 @@ describe('counting the benchmarks', () => {
     const [once, again] = [random(), random()];
     assert.equal(once.status, 0, once.stderr);
     assert.equal(once.stdout, again.stdout, 'Node takes every flag, and its random numbers start from the one seed');
+  });
+
+  test('a drawing counts its WebAssembly compiled by the optimising compiler alone; a cold start, compiled once quickly', async () => {
+    const { nodeFlagsFor } = await import('../scripts/instruction-counts.mjs');
+    const named = (name) => BENCHMARKS.find((b) => b.name === name);
+    for (const name of ['draw_fifty', 'draw_five_hundred']) {
+      assert.deepEqual(nodeFlagsFor(named(name)), [...NODE_FLAGS, '--no-liftoff'], name);
+    }
+    assert.deepEqual(nodeFlagsFor(named('cold_start')), NODE_FLAGS, 'a first draw runs what was compiled quickly');
+    const r = spawnSync(process.execPath, [...nodeFlagsFor(named('draw_fifty')), '-e', '0'], { encoding: 'utf8' });
+    assert.equal(r.status, 0, r.stderr);
   });
 
   test(

@@ -499,8 +499,9 @@ left. A person's edit to a page the wiki makes is listed there before the next r
   cases is a ratio of instruction counts, so it is exact on every run. Each setup first runs its cases' code once,
   small, so a first compile is never inside a ratio. `node scripts/instruction-counts.mjs` runs each case, and its
   setup alone, in a process of its own under Valgrind's Cachegrind (`--cache-sim=no`), as many at once as there are
-  cores, with Node pinned to one thread, V8's predictable mode, a fixed collector schedule and one random seed, and
-  keeps each case less its setup; a case that counts nothing beyond its setup fails the run. It runs on Linux only, in
+  cores, with Node pinned to one thread, V8's predictable mode, a fixed collector schedule, one random seed and
+  WebAssembly compiled once (the drawings' by the optimising compiler, in their warm draw), and keeps each case less its
+  setup; a case that counts nothing beyond its setup fails the run. It runs on Linux only, in
   the release, its dry run and the "Quality baseline" workflow, on `ubuntu-24.04` with Node pinned exactly (a patch
   can move the counts; none of them may set `GITHUB_ACTIONS`), which install Valgrind; it does not
   run on Apple-silicon Macs. Where Valgrind is missing it says so in one line and counts nothing: on any machine but

@@ -36,11 +36,13 @@ const tap = (el, g, pointerId = 3) => {
 };
 /** Everything that places or sizes the drawing: each element's attributes bar its class and pressed state, and the viewport’s own. */
 const everything = (e) => [e, ...e.children.flatMap(everything)];
+const NOT_PLACE = new Set(['class', 'aria-pressed', 'aria-describedby']);
 const geometry = (el) => {
   const svg = el.querySelector('svg.thoughtknot-svg'),
     all = everything(svg);
   return JSON.stringify([
-    all.map((e) => [e.localName, [...e.attributes].filter(([k]) => k !== 'class' && k !== 'aria-pressed').sort()]),
+    // what a thing says to a screen reader is not where it is: the pressed state, and the tooltip it is described by
+    all.map((e) => [e.localName, [...e.attributes].filter(([k]) => !NOT_PLACE.has(k)).sort()]),
     el.querySelector('.thoughtknot-viewport').cssProps,
   ]);
 };
