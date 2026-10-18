@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/editor-mod-claude.test.js",
+  "test": "Claude is the only AI the browser editor offers (cc_claude_only) > a proposal can name no proposer: Claude is the one, and a body that names another is refused",
+  "seen_failing_first": false,
+  "evidence": "An existing test; only its helper changed, to print the launcher's reason when the editor fails to open, so it passed before by design."
+}

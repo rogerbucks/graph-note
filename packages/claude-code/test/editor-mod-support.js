@@ -1,6 +1,7 @@
 // Test support for the mod's editor tests (editor-mod.test.js): a host that starts a process as Claude Code's
 // `$.process.spawn` does (standard input closed at once, the output handed over piece by piece, the child killed when the
 // loop is left), a vault on disk in a temporary folder, and the launcher made over them. Test code only: nothing here ships.
+// The servers serve the page the build makes; it is built here first when it is not there, as in a fresh checkout.
 import { after } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFile, spawn } from 'node:child_process';
@@ -10,7 +11,22 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { EditorLauncher } from '../src/editor-launch.ts';
+import { buildPage } from '../esbuild.page.mjs';
 import { ENTRY } from './editor-threats-support.js';
+
+/** The folder the build puts the page in, which a server started from the source serves (editor-main.ts, pageFiles). */
+export const PAGE = fileURLToPath(new URL('../mod/page/', import.meta.url));
+
+/**
+ * Builds the page into `folder` unless it is built already. A server refuses to start with no page, and a fresh checkout
+ * has none until something builds it: in CI the suite runs before `npm run build`, beside the build's own test, which
+ * builds it only as these tests start their servers. Building in place is safe beside that test: neither removes a file.
+ */
+export async function pageReady(folder = PAGE) {
+  if (!existsSync(join(folder, 'index.html'))) await buildPage(folder);
+}
+
+await pageReady();
 
 /** The note the tests edit: one graph block between prose. */
 export const PLAN =

@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/editor-mod-claude.test.js",
+  "test": "a proposal touching content above Claude’s clearance is refused (cc_claude_proposes, cc_classified_asks) > a note that cannot be read for its classification takes none: an unknown label is above every ceiling",
+  "seen_failing_first": false,
+  "evidence": "An existing test whose helper now prints the launcher's reason on failure; its behaviour is unchanged."
+}

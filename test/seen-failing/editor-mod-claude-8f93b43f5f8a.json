@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/editor-mod-claude.test.js",
+  "test": "Claude’s direct writes through the editor are refused (cc_claude_proposes) > a proposal takes changes alone: a note’s text, version or path in it is refused, and nothing is written",
+  "seen_failing_first": false,
+  "evidence": "An existing test; only its helper changed, to print the launcher's reason when the editor fails to open, so it passed before by design."
+}

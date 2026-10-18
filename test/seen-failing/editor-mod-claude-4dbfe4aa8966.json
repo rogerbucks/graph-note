@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/editor-mod-claude.test.js",
+  "test": "Claude proposes through the mod, and only accept applies it (cc_claude_proposes) > accept applies the change and records who decided, the settings’ text or you; reject leaves the graph",
+  "seen_failing_first": false,
+  "evidence": "An existing test; only its helper changed, to print the launcher's reason when the editor fails to open, so it passed before by design."
+}

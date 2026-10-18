@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/editor-mod-support.test.js",
+  "test": "the page the servers serve is there once the support is loaded",
+  "seen_failing_first": false,
+  "evidence": "The fix is in test support, which the replay keeps at the new commit, so the code before it already passes with the support that builds the page."
+}
