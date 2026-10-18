@@ -1,23 +1,28 @@
 #!/usr/bin/env node
-// The guard against new fixed sleeps in the tests (spec §12, quality_ratchet: flaky tests, 15 Oct 2026): a test waits for
-// the state it asserts, never for a number of milliseconds and then asserts. A sleep holds only while the machine is as
-// fast as when it was written; under a loaded full run the work it waits for can take longer, and the test fails once in
-// a while and passes alone (block-editor-undo.test.js did, 15 Oct 2026). Wait instead with the test support's `until`,
-// on the state asserted, or, where nothing should change, on a positive sign that the work is done.
+// The guard against new fixed sleeps in the tests (spec §12, quality_ratchet: flaky tests, 15 Oct 2026). A test waits
+// for the state it asserts, never for a number of milliseconds and then asserts.
 //
-// A fixed sleep is an `await` of `wait`, `sleep`, `delay` or timers/promises' `setTimeout` handed a fixed number (a
-// literal, a `const` bound to one, or arithmetic of them), or of a `new Promise` that only resolves from `setTimeout`
-// after one; or an `await` of something holding one, as `Promise.all([work(), wait(20)])`. One inside a poll, a `for`,
-// `while` or `do` whose condition reads state, gives up on waiting rather than standing for the work (as `until` does),
-// and is allowed; a loop over cases, or one that only counts, is no poll. Read from the syntax, so a sleep written in a
-// string, such as a test planted by another test, is not one.
+// A sleep holds only while the machine is as fast as when it was written. Under a loaded full run the work it waits for
+// can take longer. Then the test fails once in a while and passes alone (block-editor-undo.test.js did, 15 Oct 2026).
+// Wait instead with the test support's `until`, on the state asserted. Where nothing should change, wait on a positive
+// sign that the work is done.
 //
-// Those already in the tests are allowed, file by file, in test/fixed-sleeps.json, a ratchet: a file with more than its
-// allowance fails, naming each sleep by line; one with fewer fails too, until the allowance is lowered with --tighten,
-// so a sleep taken out stays out. The allowance is never raised by the command.
+// A fixed sleep is one of these:
+// - an `await` of `wait`, `sleep`, `delay` or timers/promises' `setTimeout` handed a fixed number. That is a literal, a
+//   `const` bound to one, or arithmetic of them;
+// - an `await` of a `new Promise` that only resolves from `setTimeout` after one;
+// - an `await` of something holding one, as `Promise.all([work(), wait(20)])`.
 //
-// Usage: node scripts/fixed-sleeps.mjs             lists each file over or under its allowance; exits 1 if there is one
-//        node scripts/fixed-sleeps.mjs --tighten   lowers each allowance to what the file now has, never raising one
+// One inside a poll is allowed. A poll is a `for`, `while` or `do` whose condition reads state. It gives up on waiting
+// rather than standing for the work (as `until` does). A loop over cases, or one that only counts, is no poll. Read
+// from the syntax, so a sleep written in a string, such as a test planted by another test, is not one.
+//
+// Those already in the tests are allowed, file by file, in test/fixed-sleeps.json, a ratchet. A file with more than its
+// allowance fails, naming each sleep by line. One with fewer fails too, until the allowance is lowered with --tighten.
+// So a sleep taken out stays out. The allowance is never raised by the command.
+//
+// Usage: node scripts/fixed-sleeps.mjs            lists each file over or under its allowance; exits 1 if there is one.
+//        node scripts/fixed-sleeps.mjs --tighten  lowers each allowance to what the file now has, never raising one.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
@@ -162,7 +167,7 @@ export const countByFile = (found) => found.reduce((c, f) => ({ ...c, [f.file]: 
 
 /**
  * Each file whose fixed sleeps differ from its allowance: `over`, with the sleeps found, or `under`, the allowance to be
- * lowered; a file with none and no allowance is not named.
+ * lowered. A file with none and no allowance is not named.
  */
 export function compareAllowance(found, allowance) {
   const counts = countByFile(found),

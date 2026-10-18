@@ -1,17 +1,21 @@
 #!/usr/bin/env node
-// Writes the project's GitHub wiki from the repository (spec §41, wiki_generated and user_guide_wiki): where the work
-// stands, the roadmap, the decisions and open questions, the quality figures and the releases, each page made from the
-// file that holds it, so the wiki never drifts from the code and nobody keeps it by hand. The pages a person writes,
-// the user guide among them, live in wiki/ and are copied, with each <!-- wiki:NAME --> marker filled: the guide's
-// settings come from the editor's own list of options, and its pictures from scripts/wiki-screens.mjs's SHOTS.
-// .github/workflows/wiki.yml runs it on every push to main and every release, and pushes the pages to the wiki.
+// Writes the project's GitHub wiki from the repository (spec §41, wiki_generated and user_guide_wiki). It writes where
+// the work stands, the roadmap, the decisions and open questions, the quality figures and the releases. Each page is
+// made from the file that holds it. So the wiki never drifts from the code and nobody keeps it by hand.
+//
+// The pages a person writes, the user guide among them, live in wiki/. They are copied, with each <!-- wiki:NAME -->
+// marker filled. The guide's settings come from the editor's own list of options, and its pictures from
+// scripts/wiki-screens.mjs's SHOTS. .github/workflows/wiki.yml runs it on every push to main and every release, and
+// pushes the pages to the wiki.
 //
 // Usage:
-//   node scripts/wiki.mjs --out DIR [--sha SHA] [--date YYYY-MM-DD] [--releases FILE] [--released FILE] [--labels FILE]
-// --releases is `gh release list --json tagName,name,publishedAt` saved to a file; without it the versions come
-// from versions.json alone. --released is requirements/editor-requirements.gql as it stood at the latest stable
-// release, so the developer pages tell what is released from what is only in the nightly build. --labels is the labels.json scripts/wiki-screens.mjs writes: each label of the card's
-// buttons the guide does not name is printed as a GitHub warning.
+//   node scripts/wiki.mjs --out DIR [--sha SHA] [--date YYYY-MM-DD] [--releases FILE] [--released FILE]
+//     [--labels FILE].
+// --releases is `gh release list --json tagName,name,publishedAt` saved to a file. Without it the versions come from
+// versions.json alone. --released is requirements/editor-requirements.gql as it stood at the latest stable release. So
+// the developer pages tell what is released from what is only in the nightly build. --labels is the labels.json
+// scripts/wiki-screens.mjs writes. Each label of the card's buttons the guide does not name is printed as a GitHub
+// warning.
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
@@ -150,9 +154,10 @@ export function unexplained(labels, guide) {
 /**
  * Every page of the wiki, as {file name: Markdown}. `pages` are the hand-written pages of wiki/ ({name: text}),
  * `options` the editor's settings, `releases` GitHub's list (or empty), `today` an ISO date. `ethosText`, the
- * project's ethos graph, adds the Ethos page when given. `developer`, the architecture graph and the facts read from the
- * code (wiki-developers.mjs), fills the developer pages' markers and adds the Developer reference; `releasedText`, the
- * requirements as they stood at the latest stable release, tells what is released from what is only on main.
+ * project's ethos graph, adds the Ethos page when given. `developer` is the architecture graph and the facts read from
+ * the code (wiki-developers.mjs). It fills the developer pages' markers and adds the Developer reference.
+ * `releasedText` is the requirements as they stood at the latest stable release. It tells what is released from what
+ * is only on main.
  */
 export function renderWiki({
   requirementsText,

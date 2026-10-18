@@ -1,11 +1,12 @@
-// The instruction-count benchmark of each host's cold start (editor spec §41, speed_budgets): a note of 50 things, from
-// a process that has drawn nothing, to its first drawing, one case for each host. The Obsidian plugin's start: the core's
-// layout runner, the engine started in its worker's port and the note read and drawn, the port served in this process
-// as draw-fifty.mjs serves it, so no second thread, with its own start and its own timing, is in the count. The Claude
-// Code pane's start: its view of the note (graph-view.ts) loaded and run, with the core's engine laid out in this process
-// as the pane's Graphviz process does it (bin/render-process.ts), less Node starting that second process. The engine
-// and each host's own code are loaded in the case; what every benchmark shares is the setup, counted alone and taken
-// off. Run by scripts/instruction-counts.mjs.
+// The instruction-count benchmark of each host's cold start (editor spec §41, speed_budgets). It takes a note of 50
+// things, from a process that has drawn nothing, to its first drawing, one case for each host.
+// - The Obsidian plugin's start: the core's layout runner, the engine started in its worker's port, and the note read
+//   and drawn. The port is served in this process as draw-fifty.mjs serves it. So no second thread, with its own start
+//   and its own timing, is in the count.
+// - The Claude Code pane's start: its view of the note (graph-view.ts) loaded and run. The core's engine is laid out
+//   in this process as the pane's Graphviz process does it (bin/render-process.ts), less Node starting that process.
+// The engine and each host's own code are loaded in the case. What every benchmark shares is the setup, counted alone
+// and taken off. Run by scripts/instruction-counts.mjs.
 import { readNote } from '../../packages/core/src/drawing.ts';
 import { LAYOUT_LIMITS } from '../../packages/core/src/layout-limits.ts';
 import { LayoutRunner, inThreadPort, serveLayouts } from '../../packages/core/src/layout-worker.ts';

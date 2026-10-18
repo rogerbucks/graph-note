@@ -1,13 +1,15 @@
-// The blocked-by links of the GitHub mirror (spec §12, requirements_checked_in_ci): each open question's issue is marked,
-// with GitHub's own issue dependencies, as blocking the issues of the requirements it blocks, so the public project shows
-// what waits on what. One way, like the issues: a link from a question's issue to another mirrored issue that the
-// requirements copy no longer gives is removed; a link to or from any issue the mirror did not make is a person's, and kept.
+// The blocked-by links of the GitHub mirror (spec §12, requirements_checked_in_ci). Each open question's issue is
+// marked, with GitHub's own issue dependencies, as blocking the issues of the requirements it blocks. So the public
+// project shows what waits on what. It works one way, like the issues. A link from a question's issue to another
+// mirrored issue that the requirements copy no longer gives is removed. A link to or from any issue the mirror did not
+// make is a person's, and kept.
 // The calls are REST, through `gh api`, with the workflow's own token (issues: write).
 
 /**
- * The links to make and to remove, as issue numbers: {add: [{blocker, blocked}], remove: [{blocker, blocked}]}. `issues`
- * are the desired issues, each question's with the requirement ids it `blocks`; `known` maps an id to its issue ({number});
- * `blocking` maps each question issue's number to the numbers of the issues GitHub has it blocking now.
+ * The links to make and to remove, as issue numbers: {add: [{blocker, blocked}], remove: [{blocker, blocked}]}.
+ * - `issues` are the desired issues, each question's with the requirement ids it `blocks`.
+ * - `known` maps an id to its issue ({number}).
+ * - `blocking` maps each question issue's number to the numbers of the issues GitHub has it blocking now.
  */
 export function planBlocks(issues, known, blocking) {
   const mirrored = new Set(Object.values(known).map((i) => i.number));

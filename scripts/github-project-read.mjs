@@ -1,7 +1,8 @@
-// Reading the project for the GitHub mirror and the build status (spec §12, requirements_checked_in_ci): finding the
-// project of an owner by its title, and reading its fields and items, all through GraphQL with a runner handed in (see
-// github-project-gh.mjs). The project is found by the owner's login, user or organization, and never by `gh project list`,
-// which asks gh to resolve the owner's type first and fails ("unknown owner type") for a token with only the project scope.
+// Reading the project for the GitHub mirror and the build status (spec §12, requirements_checked_in_ci). It finds the
+// project of an owner by its title, and reads its fields and items. All of it goes through GraphQL with a runner handed
+// in (see github-project-gh.mjs). The project is found by the owner's login, user or organization. It is never found by
+// `gh project list`, which asks gh to resolve the owner's type first. That fails ("unknown owner type") for a token
+// with only the project scope.
 import { PROJECT_TITLE } from './github-project-desired.mjs';
 
 /** The most projects a list is asked for; a list that comes back this long may be cut short. */
@@ -123,9 +124,9 @@ const iterationsOf = (f) =>
   );
 
 /**
- * The projects of an owner, a user or an organization, as [{id, number, title}], found by the owner's login through
- * GraphQL, a hundred to the page. Refused when the list is as long as its cap, and when there is no such owner or the
- * owner has no list, rather than taken for no projects.
+ * The projects of an owner, a user or an organization, as [{id, number, title}]. They are found by the owner's login
+ * through GraphQL, a hundred to the page. Refused when the list is as long as its cap. Refused too when there is no
+ * such owner or the owner has no list, rather than taken for no projects.
  */
 export function readProjects(run, owner) {
   const found = [];

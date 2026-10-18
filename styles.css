@@ -1,10 +1,10 @@
 /* ThoughtKnot — styles for the drawing and the edit pane. Colours come from the theme, so light and dark both work. */
 
-/* The design tokens (editor spec §44, ui_theme_tokens): Obsidian's theme mapped to the --gn-* tokens every rule below reads,
-   by the core's one table (packages/core/src/theme-tokens.ts, OBSIDIAN_TOKEN_MAP). They are worked out on each of the
-   plugin's own elements, every one with a class of ours, so each reads Obsidian's variables where it is, as its rules did
-   before, and a theme that sets them anew inside a sidebar or a modal is followed there; no element of Obsidian's own is
-   touched. The browser page reads the same variables of its own theme (theme-css.ts). */
+/* The design tokens (editor spec §44, ui_theme_tokens): Obsidian's theme mapped to the --gn-* tokens every rule below
+   reads, by the core's one table (packages/core/src/theme-tokens.ts, OBSIDIAN_TOKEN_MAP). They are worked out on each
+   of the plugin's own elements, every one with a class of ours. So each reads Obsidian's variables where it is, as its
+   rules did before. A theme that sets them anew inside a sidebar or a modal is followed there. No element of Obsidian's
+   own is touched. The browser page reads the same variables of its own theme (theme-css.ts). */
 .thoughtknot,
 [class^='thoughtknot-'],
 [class*=' thoughtknot-'],
@@ -69,10 +69,10 @@
   --gn-cursor-link: var(--cursor-link);
 }
 
-/* Forced colours and more contrast (editor spec §44, forced_colours): when the system forces its own colours, such as a
-   high contrast theme of Windows, every colour token is a system colour (theme-tokens.ts, FORCED_TOKEN_COLOURS), and when
-   it asks for more contrast, secondary text and lines take the full text colour (MORE_CONTRAST_TOKENS). Nothing is said by
-   colour alone (§5), so nothing is lost with the hues. */
+/* Forced colours and more contrast (editor spec §44, forced_colours). The system may force its own colours, such as a
+   high contrast theme of Windows. Then every colour token is a system colour (theme-tokens.ts, FORCED_TOKEN_COLOURS).
+   When it asks for more contrast, secondary text and lines take the full text colour (MORE_CONTRAST_TOKENS). Nothing is
+   said by colour alone (§5), so nothing is lost with the hues. */
 @media (forced-colors: active) {
   .thoughtknot,
   [class^='thoughtknot-'],
@@ -122,8 +122,8 @@
     --gn-border-hover: var(--gn-text-normal);
   }
 }
-/* The drawing's colours are written on each shape, which the browser does not force: so the drawing keeps its own, and
-   each shape, line and word is drawn in the system's colours here, the chosen or focused thing in its highlight. */
+/* The drawing's colours are written on each shape, which the browser does not force. So the drawing keeps its own.
+   Here each shape, line and word is drawn in the system's colours, the chosen or focused thing in its highlight. */
 @media (forced-colors: active) {
   .thoughtknot-svg {
     forced-color-adjust: none;
@@ -160,9 +160,9 @@
   }
 }
 
-/* One frame: the bar, the drawing, its problems and its details sit in one card, the bar as its header strip — so it is
-   plain which bar and which details belong to which drawing. The card and the bar's rule take the theme's focus border:
-   its ordinary border is too faint to tie a bar to its drawing (Roger's choice A, 8 Oct 2026). */
+/* One frame: the bar, the drawing, its problems and its details sit in one card, the bar as its header strip. So it is
+   plain which bar and which details belong to which drawing. The card and the bar's rule take the theme's focus border.
+   Its ordinary border is too faint to tie a bar to its drawing (Roger's choice A, 8 Oct 2026). */
 .thoughtknot-view {
   border: 1px solid var(--gn-border-focus);
   border-radius: var(--gn-radius-m);
@@ -189,11 +189,11 @@
   background: var(--gn-bg-alt);
 }
 /* Focus (spec §25): what a selection keeps stands out by strength and outline, never by colour alone and never by moving
-   or hiding anything. A faded box has no fill and an outline no heavier than the drawing's ordinary line; its words and
-   lines keep their colour, so they keep the contrast of §11 (the words at 0.95, which the core's FADE holds to 4.5:1). A
-   kept box has the heavier outline. The outline rules are exactly as specific as the selected rule and a view's looks
-   below, and come before them, so the selected thing is the heaviest and a look keeps its line; only the fill, which
-   nothing below sets, is written more specifically. */
+   or hiding anything. A faded box has no fill and an outline no heavier than the drawing's ordinary line. Its words and
+   lines keep their colour, so they keep the contrast of §11. The words are at 0.95, which the core's FADE holds to
+   4.5:1. A kept box has the heavier outline. The outline rules are exactly as specific as the selected rule and a
+   view's looks below, and come before them. So the selected thing is the heaviest and a look keeps its line. Only the
+   fill, which nothing below sets, is written more specifically. */
 .thoughtknot-svg g.node.thoughtknot-dim > :is(path, polygon) {
   fill-opacity: 0;
 }
@@ -216,9 +216,10 @@
 .thoughtknot-svg g.edge[data-estimate] {
   cursor: pointer;
 }
-/* In a drawing that runs down the page Graphviz sets a link's label beside its line with no room between, so the text
-   begins at the line. The label is moved a little right, in the drawing's own units, so it scales with zoom; the layout
-   source and the SVG are the Python library's byte for byte, and are left as they are (device check V-07, 11 Oct 2026). */
+/* In a drawing that runs down the page, Graphviz sets a link's label beside its line with no room between. So the text
+   begins at the line. The label is moved a little right, in the drawing's own units, so it scales with zoom. The layout
+   source and the SVG are the Python library's byte for byte. They are left as they are (device check V-07, 11 Oct
+   2026). */
 .thoughtknot-svg.thoughtknot-down g.edge > text {
   transform: translateX(4px);
 }
@@ -235,9 +236,11 @@
   fill: var(--gn-text-error);
   font-weight: var(--gn-font-weight-semibold);
 }
-/* A view (spec §7): what is outside it faded, and said so to screen readers; each look's hue on the outline only, in
-   the locked line blend, its text kept in the text colour so the locked contrast holds on any box; the legend says
-   what each colour means, a swatch beside the words. */
+/* A view (spec §7):
+   - what is outside it is faded, and said so to screen readers;
+   - each look's hue is on the outline only, in the locked line blend;
+   - its text is kept in the text colour, so the locked contrast holds on any box;
+   - the legend says what each colour means, a swatch beside the words. */
 .thoughtknot-svg .thoughtknot-faded {
   opacity: 0.35;
 }
@@ -286,9 +289,9 @@
   vertical-align: middle;
   background: var(--thoughtknot-swatch, var(--gn-text-muted));
 }
-/* The highlight (spec §25): under the pointer, with the keyboard focus, or from a touch's tap — a glow round the outline and
-   an underline on the words, never a size, a place or a weight, so nothing moves; and over any focus, as the thing comes
-   forward from the fade while it is highlighted. */
+/* The highlight (spec §25): under the pointer, with the keyboard focus, or from a touch's tap. It is a glow round the
+   outline and an underline on the words, never a size, a place or a weight, so nothing moves. It shows over any focus,
+   as the thing comes forward from the fade while it is highlighted. */
 .thoughtknot-svg g.thoughtknot-hot {
   filter: drop-shadow(0 0 3px var(--gn-accent));
 }
@@ -337,11 +340,11 @@
 .thoughtknot-filter button.is-hidden {
   text-decoration: line-through;
 }
-/* The View menu (spec §25): four switches, each a 44-point row with its name, a toggle drawn as Obsidian draws one, and
-   on or off in words, so the state is never said by colour alone; the knob sits at the line's end when on, which a
-   right-to-left line mirrors. Labels by zoom paints a link's label clear while the drawing is too small to read it, but
-   never on a link in focus, highlighted or selected: paint only, as focus and the highlight are, so nothing moves and
-   nothing is laid out again. A busy hub's stub and a folded group's box are buttons that open. */
+/* The View menu (spec §25): four switches. Each is a 44-point row with its name, a toggle drawn as Obsidian draws one,
+   and on or off in words. So the state is never said by colour alone. The knob sits at the line's end when on, which a
+   right-to-left line mirrors. Labels by zoom paints a link's label clear while the drawing is too small to read it. It
+   never does so on a link in focus, highlighted or selected. It is paint only, as focus and the highlight are. So
+   nothing moves and nothing is laid out again. A busy hub's stub and a folded group's box are buttons that open. */
 .thoughtknot-view > .thoughtknot-view-menu {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 16em), 1fr));
@@ -425,8 +428,9 @@
 .thoughtknot-flow-legend-slot {
   display: contents;
 }
-/* A proposal laid over the graph (spec §17): what it adds is drawn with a heavier outline, what it changes dashed, what it
-   removes dotted, each also marked in words and signed, and said to screen readers, so none is told by colour alone. */
+/* A proposal laid over the graph (spec §17). What it adds is drawn with a heavier outline, what it changes dashed, and
+   what it removes dotted. Each is also marked in words and signed, and said to screen readers. So none is told by
+   colour alone. */
 .thoughtknot-svg g.thoughtknot-proposed.is-add > :is(path, polygon),
 .thoughtknot-svg g.edge.thoughtknot-proposed.is-add > path {
   stroke: var(--gn-hue-green);
@@ -449,8 +453,8 @@
   font-size: 9pt;
   fill: var(--gn-text-muted);
 }
-/* The proposal's list: one change to a row, its sentence and its Accept and Reject; on a phone, a sheet at the bottom of
-   the screen. Every control is at least 44 points. */
+/* The proposal's list: one change to a row, its sentence and its Accept and Reject. On a phone, it is a sheet at the
+   bottom of the screen. Every control is at least 44 points. */
 .thoughtknot-proposal {
   padding: var(--gn-space-2) var(--gn-space-3);
   border-top: 1px solid var(--gn-border);
@@ -538,9 +542,9 @@
   gap: var(--gn-space-2);
 }
 /* The diagram type (spec §15): how the graph is drawn, and Diagram type, which opens the seven types as a panel of
-   tiles. A tile is its button and what is said of it: the whole tile takes the click, the one drawn has the accent edge
-   and a heavier name, the suggested one a dashed accent edge, and one that does not fit is faint, each said in words
-   beside it too, never by colour alone; every control a 44-point target. */
+   tiles. A tile is its button and what is said of it. The whole tile takes the click. The one drawn has the accent edge
+   and a heavier name, and the suggested one a dashed accent edge. One that does not fit is faint. Each is said in words
+   beside it too, never by colour alone. Every control is a 44-point target. */
 .thoughtknot-type-strip,
 .thoughtknot-way-in {
   display: flex;
@@ -641,8 +645,8 @@
   border-style: dashed;
   border-color: var(--gn-accent);
 }
-/* a type that does not fit cannot be chosen, so it is never focused: it is shown after those that fit, a slim row across
-   the panel with why beside its name */
+/* a type that does not fit cannot be chosen, so it is never focused. It is shown after those that fit, a slim row
+   across the panel with why beside its name */
 .thoughtknot-type-list li.thoughtknot-type-unfit {
   flex-direction: row;
   flex-wrap: wrap;
@@ -728,8 +732,8 @@ details.thoughtknot-style > summary {
   color: var(--gn-text-muted);
   cursor: pointer;
 }
-/* The card's tools (spec §5, §7): Play or Record a path, Make a view and Add a thing in one row under the bar, each a
-   button until it is opened, when its form takes the whole row; the row is gone when none of them is shown. */
+/* The card's tools (spec §5, §7): Play or Record a path, Make a view and Add a thing, in one row under the bar. Each is
+   a button until it is opened, when its form takes the whole row. The row is gone when none of them is shown. */
 .thoughtknot-card-tools {
   display: flex;
   flex-wrap: wrap;
@@ -796,7 +800,7 @@ details.thoughtknot-style > summary {
   fill: var(--gn-text-normal);
 }
 /* Links that move (spec §7): dashes running along a link's line, or a dot travelling a copy of it, as the style graph
-   says; a line laid out from its far end moves backwards, so it reads forwards. A path playing: the step now on pulses,
+   says. A line laid out from its far end moves backwards, so it reads forwards. A path playing: the step now on pulses,
    and a dot runs the link from the step before. Every one of them is still under reduced motion (spec §11), below:
    the dashes, the icons, the outline and the words stay. */
 .thoughtknot-svg .thoughtknot-flow-dashes > path {
@@ -865,9 +869,9 @@ details.thoughtknot-style > summary {
     display: none;
   }
 }
-/* Animated images (spec §18): a thing's images in its details, each a figure with its pause and play button and what
-   it says; and a picture on a box, in the square Graphviz kept for it, its control drawn in the corner. Whether one
-   moves is the plugin's to say, image by image (animated-images.ts), never a style's, so nothing here moves. */
+/* Animated images (spec §18). A thing's images sit in its details, each a figure with its pause and play button and
+   what it says. A picture on a box sits in the square Graphviz kept for it, its control drawn in the corner. Whether
+   one moves is the plugin's to say, image by image (animated-images.ts), never a style's, so nothing here moves. */
 .thoughtknot-images {
   display: flex;
   flex-wrap: wrap;
@@ -972,8 +976,8 @@ details.thoughtknot-style > summary {
   min-height: 44px;
 }
 
-/* The graph's text shown as code: a long line scrolls inside its own box, never the note, so the note reflows at 320 CSS
-   pixels with nothing lost (spec §41, a11y_targets_reflow_auto). */
+/* The graph's text shown as code. A long line scrolls inside its own box, never the note. So the note reflows at 320
+   CSS pixels with nothing lost (spec §41, a11y_targets_reflow_auto). */
 pre.thoughtknot-code {
   overflow-x: auto;
   max-width: 100%;
@@ -998,15 +1002,15 @@ pre.thoughtknot-code {
 .thoughtknot-badge {
   margin-inline-end: auto;
 }
-/* In Live Preview, Obsidian puts its own edit-block button at a code block's top right, shown on hover; leave it room, as
-   Obsidian does for its PDF toolbar, so it never covers the bar's last button. */
+/* In Live Preview, Obsidian puts its own edit-block button at a code block's top right, shown on hover. Leave it room,
+   as Obsidian does for its PDF toolbar, so it never covers the bar's last button. */
 .cm-embed-block .thoughtknot-bar {
   padding-inline-end: var(--gn-space-9);
 }
-/* The same button covers the copy button of a block shown as code, which Obsidian also puts at the block's top right: in
-   Live Preview the copy button steps in from the right edge by that room and a little more, so the two icons sit side by
-   side and neither covers the other (device check V-03, 11 Oct 2026). Only sizes, so the same in light and dark and at
-   any width; reading view has no edit-block button, so it keeps Obsidian's place. */
+/* The same button covers the copy button of a block shown as code, which Obsidian also puts at the block's top right.
+   In Live Preview the copy button steps in from the right edge by that room and a little more. So the two icons sit
+   side by side and neither covers the other (device check V-03, 11 Oct 2026). Only sizes, so the same in light and dark
+   and at any width. Reading view has no edit-block button, so it keeps Obsidian's place. */
 .cm-embed-block pre.thoughtknot-code .copy-code-button {
   inset-inline-end: calc(var(--gn-space-9) + var(--gn-space-half-2));
 }
@@ -1050,9 +1054,9 @@ pre.thoughtknot-code {
 .thoughtknot-svg g.node:focus {
   outline: none;
 }
-/* A box a finger has held is lifted by a shadow (§6, hold_to_drag_touch); a box being dragged follows the pointer,
-   faded so the drawing under it still shows; the box it would land by is outlined in the accent, and a line at the top
-   of the drawing says where it would go (drag_moves_box). */
+/* A box a finger has held is lifted by a shadow (§6, hold_to_drag_touch). A box being dragged follows the pointer,
+   faded so the drawing under it still shows. The box it would land by is outlined in the accent. A line at the top of
+   the drawing says where it would go (drag_moves_box). */
 .thoughtknot-svg g.node.is-held {
   filter: drop-shadow(0 2px 4px var(--gn-border-focus));
 }
@@ -1082,8 +1086,8 @@ pre.thoughtknot-code {
   stroke-width: 3;
 }
 
-/* Names, labels and values as the person wrote them (editor spec §42, bidi_labels): each is read in its own direction,
-   from its first strong letter, and set apart from the words around it, so an Arabic name in an English panel, or an
+/* Names, labels and values as the person wrote them (editor spec §42, bidi_labels). Each is read in its own direction,
+   from its first strong letter, and set apart from the words around it. So an Arabic name in an English panel, or an
    English one in a Hebrew panel, is neither reordered nor reorders what follows it. */
 .thoughtknot-quick-name,
 .thoughtknot-quick-kind,
@@ -1246,8 +1250,8 @@ pre.thoughtknot-code {
   display: none !important;
 }
 
-/* The inspector: Obsidian's own Properties panel (its metadata classes carry the theme's spacing, type and colours), set
-   inside the details; on a phone, a sheet at the bottom of the screen. */
+/* The inspector: Obsidian's own Properties panel, set inside the details. Its metadata classes carry the theme's
+   spacing, type and colours. On a phone, it is a sheet at the bottom of the screen. */
 .thoughtknot-inspector.metadata-container {
   margin-top: var(--gn-space-2);
   margin-block-end: 0;
@@ -1271,11 +1275,11 @@ pre.thoughtknot-code {
   padding-bottom: max(var(--gn-space-2), env(safe-area-inset-bottom));
 }
 
-/* The details in view mode (spec §25): a sheet pinned to the foot of the part of the screen the note is seen in, over its
-   card and as wide as it, so it stays in place while the note scrolls; never taller than its share of the screen, so the
-   chosen thing and some of the drawing stay in sight above it, its details scrolling within it. Minimised, its body is
-   hidden and it is a bar: the thing's name and kind, the toggle and the close button. Gone while its card is off the
-   screen. Sizes and places only, so the same in light and dark. */
+/* The details in view mode (spec §25). It is a sheet pinned to the foot of the part of the screen the note is seen in.
+   It sits over its card and is as wide as it, so it stays in place while the note scrolls. It is never taller than its
+   share of the screen. So the chosen thing and some of the drawing stay in sight above it, its details scrolling within
+   it. Minimised, its body is hidden and it is a bar: the thing's name and kind, the toggle and the close button. Gone
+   while its card is off the screen. Sizes and places only, so the same in light and dark. */
 .thoughtknot-view > .thoughtknot-details.thoughtknot-sheet {
   position: fixed;
   left: var(--thoughtknot-sheet-left, 0);
@@ -1308,12 +1312,14 @@ pre.thoughtknot-code {
   display: none;
 }
 
-/* A thing's details (spec §25): a sentence on what is going on (details_said); its links in and out, side by side where
-   the panel is wide and one above the other where it is narrow (details_ins_outs), each group headed by its reading,
-   its things one to a row, each a choice with its link's own small button beside it; its properties as a table of name
-   and value (details_properties_table). Section labels are small capitals, as a box's kind is on the drawing; each part
-   is a tile, and each row a quiet 44-point button that shows its hover and focus, as the diagram types and the View
-   menu's switches are. */
+/* A thing's details (spec §25):
+   - a sentence on what is going on (details_said);
+   - its links in and out, side by side where the panel is wide and one above the other where it is narrow
+     (details_ins_outs). Each group is headed by its reading, its things one to a row. Each is a choice with its link's
+     own small button beside it;
+   - its properties as a table of name and value (details_properties_table).
+   Section labels are small capitals, as a box's kind is on the drawing. Each part is a tile. Each row is a quiet
+   44-point button that shows its hover and focus, as the diagram types and the View menu's switches are. */
 .thoughtknot-details-said {
   margin: var(--gn-space-2) 0 var(--gn-space-3);
   line-height: 1.5;
@@ -1468,7 +1474,8 @@ pre.thoughtknot-code {
   border-top: 1px solid var(--gn-border);
   padding: var(--gn-space-2) var(--gn-space-3);
 }
-/* In the card, the text is as tall as its text and one more line to type on: no height of its own, no empty area. */
+/* In the card, the text is as tall as its text and one more line to type on. It has no height of its own, no empty
+   area. */
 .thoughtknot-pane.thoughtknot-inline {
   height: auto;
 }
@@ -1558,9 +1565,9 @@ pre.thoughtknot-code {
   flex: 1 1 100%;
 }
 
-/* The text: a plain field over a coloured picture of it. The field's text is transparent and its caret shows; both use one font,
-   one size and the same wrapping, so every character of the picture sits over its own and a long line wraps in both
-   alike (long_lines_wrap). The picture is in the flow and sets the box's height; the field is laid over it. */
+/* The text: a plain field over a coloured picture of it. The field's text is transparent and its caret shows. Both use
+   one font, one size and the same wrapping. So every character of the picture sits over its own, and a long line wraps
+   in both alike (long_lines_wrap). The picture is in the flow and sets the box's height; the field is laid over it. */
 .thoughtknot-editor {
   position: relative;
   min-height: 12em;
@@ -1602,8 +1609,8 @@ pre.thoughtknot-code {
 .thoughtknot-overlay::after {
   content: ' ';
 }
-/* The sign and the plain-English note after a line: out of the flow, so they never add a row the field has not got; a
-   note longer than the row left is cut at the box's edge, the text itself never. */
+/* The sign and the plain-English note after a line are out of the flow. So they never add a row the field has not got.
+   A note longer than the row left is cut at the box's edge, the text itself never. */
 .thoughtknot-line-end {
   position: absolute;
   white-space: pre;
@@ -1674,9 +1681,9 @@ pre.thoughtknot-code {
 .thoughtknot-fixbar .is-error {
   border-color: var(--gn-text-error);
 }
-/* The suggestions (spec §4): a list dropped down under the caret, as a code editor's is, in the field's fixed-width font,
-   so the caret's line and column place it; the chosen option is marked by its background and a bar at its start, never
-   colour alone, and what each is says beside its name. */
+/* The suggestions (spec §4): a list dropped down under the caret, as a code editor's is, in the field's fixed-width
+   font. So the caret's line and column place it. The chosen option is marked by its background and a bar at its start,
+   never colour alone. What each is says beside its name. */
 .thoughtknot-suggestions {
   position: absolute;
   top: var(--thoughtknot-caret-top, calc(var(--gn-space-2) + (var(--thoughtknot-caret-line, 0) + 1) * 1.5em));
@@ -1772,10 +1779,10 @@ pre.thoughtknot-code {
 }
 
 /* GQL text, coloured by token class as the gql-highlight plugin colours it, from the theme's own code colours. WCAG 2.2 AA
-   (SC 1.4.3): Obsidian's default code colours are too pale on the page (the comment and punctuation colours, the yellow,
-   cyan and green hues are under 4.5:1), so each hue is mixed with the theme's text colour until the text reaches 4.5:1 on the
-   page and on the code background in both default themes, and the comment and punctuation take the muted text colour. A
-   mix of the theme's own variables follows any theme; nothing here is a fixed colour. */
+   (SC 1.4.3): Obsidian's default code colours are too pale on the page. The comment and punctuation colours, and the
+   yellow, cyan and green hues, are under 4.5:1. So each hue is mixed with the theme's text colour until the text
+   reaches 4.5:1. That holds on the page and on the code background in both default themes. The comment and punctuation
+   take the muted text colour. A mix of the theme's own variables follows any theme; nothing here is a fixed colour. */
 .gql-kw {
   color: color-mix(in srgb, var(--gn-code-keyword) 60%, var(--gn-text-normal));
 }
@@ -1823,8 +1830,8 @@ pre.thoughtknot-code {
   color: var(--gn-text-muted);
 }
 
-/* The editing view's own card (spec §4): its children's margins stay inside it, so the height CodeMirror is told is the
-   height the card takes, and the editor has nothing to correct. */
+/* The editing view's own card (spec §4): its children's margins stay inside it. So the height CodeMirror is told is
+   the height the card takes, and the editor has nothing to correct. */
 .thoughtknot-block {
   display: flow-root;
   overflow-anchor: none;
@@ -1838,8 +1845,8 @@ pre.thoughtknot-code {
   color: var(--gn-text-muted);
   font-style: normal;
 }
-/* The send dialog (§19): what will be sent, exactly, wrapped so a phone shows all of it without scrolling sideways, and
-   why nothing may be sent, in the theme's error colour. */
+/* The send dialog (§19): what will be sent, exactly, wrapped so a phone shows all of it without scrolling sideways. It
+   also shows why nothing may be sent, in the theme's error colour. */
 .thoughtknot-ai-shown pre {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -1851,9 +1858,12 @@ pre.thoughtknot-code {
   color: color-mix(in srgb, var(--gn-text-error) 60%, var(--gn-text-normal));
 }
 
-/* Links (§18): a link in the details, on the drawing and in the text pane is drawn as Obsidian draws a link, in its link
-   colour and underlined; one that names nothing as Obsidian draws an unresolved link, dashed; one that is never opened
-   as plain, muted text. A thing's attachments are counted by a paperclip at its box's top left. */
+/* Links (§18):
+   - a link in the details, on the drawing and in the text pane is drawn as Obsidian draws one: in its link colour,
+     underlined;
+   - one that names nothing is drawn as Obsidian draws an unresolved link, dashed;
+   - one that is never opened is drawn as plain, muted text.
+   A thing's attachments are counted by a paperclip at its box's top left. */
 .thoughtknot-link {
   color: var(--gn-link);
   text-decoration: underline;
@@ -1941,8 +1951,8 @@ pre.thoughtknot-code {
   fill: var(--gn-text-normal);
 }
 
-/* The mini-map (§24, mini_map): a small copy of the whole drawing in a corner of its view, the part in view outlined; tapped
-   or dragged, it moves the view, so a finger on it never scrolls the note. Colours from the theme. */
+/* The mini-map (§24, mini_map): a small copy of the whole drawing in a corner of its view, the part in view outlined.
+   Tapped or dragged, it moves the view, so a finger on it never scrolls the note. Colours from the theme. */
 .thoughtknot-mini-map {
   position: absolute;
   inset-inline-end: var(--gn-space-2);
@@ -1983,8 +1993,8 @@ pre.thoughtknot-code {
   vector-effect: non-scaling-stroke;
 }
 
-/* The details kept open (§24, details_always_visible, details_narrow): the panel beside the drawing, wrapping below it in a
-   card too narrow for both (the plugin sets is-details-below by the card's width). */
+/* The details kept open (§24, details_always_visible, details_narrow): the panel beside the drawing. It wraps below it
+   in a card too narrow for both (the plugin sets is-details-below by the card's width). */
 .thoughtknot-view.is-details-open:not(.is-details-below) {
   display: flex;
   flex-wrap: wrap;
@@ -2006,8 +2016,8 @@ pre.thoughtknot-code {
   border-inline-start: 1px solid var(--gn-border);
 }
 
-/* The quick-info tooltip (§24, quick_info): on the page itself, above the full-screen card, placed beside its thing by the
-   plugin and never over it; it takes no pointer, so it never gets between a finger and the drawing. */
+/* The quick-info tooltip (§24, quick_info): on the page itself, above the full-screen card. The plugin places it beside
+   its thing and never over it. It takes no pointer, so it never gets between a finger and the drawing. */
 .thoughtknot-quick-info {
   position: fixed;
   left: var(--thoughtknot-qi-x, 0);

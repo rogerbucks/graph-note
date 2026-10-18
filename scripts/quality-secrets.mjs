@@ -1,6 +1,6 @@
 // The secrets scan of the quality metrics (spec §12, quality_ratchet): looks through every file git would commit for what
 // looks like a secret. Like the content check beside it (check-classification.mjs) the patterns are general, kinds of
-// secret and never anyone's own, and what matched is never printed: only the file, the line and the kind.
+// secret and never anyone's own. What matched is never printed: only the file, the line and the kind.
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';

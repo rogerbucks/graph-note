@@ -1,9 +1,12 @@
-// How the GitHub mirror (github-project-gh.mjs) goes on after a call to gh fails for a short while: a secondary rate limit
-// is waited out once; a transient failure (a network timeout or reset connection, a 502, 503 or 504, "Bad Gateway",
-// "something went wrong") is waited out up to three times, after 5, 15 and 45 seconds. A call that only reads is simply
-// tried again. A call that changes something is tried again only where that cannot do it twice: a create first looks
-// for what it was making, and a call that a second try could repeat (a comment, a new field) is not tried again at
-// all, so the run stops as it always did and the next run resumes. Nothing here touches the network itself.
+// How the GitHub mirror (github-project-gh.mjs) goes on after a call to gh fails for a short while.
+// - A secondary rate limit is waited out once.
+// - A transient failure is waited out up to three times, after 5, 15 and 45 seconds. That is a network timeout or reset
+//   connection, a 502, 503 or 504, "Bad Gateway", or "something went wrong".
+//
+// A call that only reads is tried again. A call that changes something is tried again only where that cannot do it
+// twice. A create first looks for what it was making. A call that a second try could repeat (a comment, a new field)
+// is not tried again at all. So the run stops as it always did and the next run resumes. Nothing here touches the
+// network itself.
 
 /** An apply stopped, before its next call that changes something, because the time it may take is spent. */
 export class BudgetSpent extends Error {}
@@ -16,8 +19,9 @@ const TRANSIENT =
   /i\/o timeout|context deadline exceeded|timed out waiting|tls handshake timeout|connection reset|reset by peer|\b50[234]\b|bad gateway|service unavailable|gateway time-?out|something went wrong/i;
 
 /**
- * gh's own words in a failure: the stderr ghRunner keeps on its error, else the message without its leading `gh … failed: `,
- * so the arguments of the call (an issue number 503, a title with "timeout" in it) are never taken for gh's words.
+ * gh's own words in a failure: the stderr ghRunner keeps on its error, else the message without its leading
+ * `gh … failed: `. So the arguments of the call (an issue number 503, a title with "timeout" in it) are never taken
+ * for gh's words.
  */
 const wordsOf = (e) => (typeof e.stderr === 'string' ? e.stderr : String(e.message).replace(/^gh .*? failed: /s, ''));
 const isTransient = (e) => TRANSIENT.test(wordsOf(e));
@@ -59,14 +63,19 @@ export function retrying(run, { sleep = waitFor, delays = RETRY_DELAYS_MS } = {}
 }
 
 /**
- * Wraps a runner for the calls that change something: a pause before each but the first, on a secondary rate limit one
- * wait and one more try, and on a transient failure up to three more tries after the `delays`. `lookup(args, input,
- * read)` says, for a call, how to find out whether it already went through: null when a second try could repeat it
- * (then it is not tried again), else a function that re-reads what GitHub holds, through `read`, and gives {value} (what
- * the call would have given) when the thing is there, else undefined. It runs before each retry, and when the re-read
- * itself fails for good, that failure stops the run: a call is never made again on a look that did not happen. Any
- * other failure goes on up. `budget`, where given, is {now (a clock in milliseconds), until}: once the clock reaches
- * `until` no call is made, and BudgetSpent is thrown instead, so a long apply stops in time and the next one goes on.
+ * Wraps a runner for the calls that change something.
+ * - It pauses before each but the first.
+ * - On a secondary rate limit it waits once and tries once more.
+ * - On a transient failure it tries up to three more times after the `delays`.
+ *
+ * `lookup(args, input, read)` says, for a call, how to find out whether it already went through. It is null when a
+ * second try could repeat it (then it is not tried again). Else it is a function that re-reads what GitHub holds,
+ * through `read`. That gives {value} (what the call would have given) when the thing is there, else undefined. It runs
+ * before each retry. When the re-read itself fails for good, that failure stops the run. A call is never made again on
+ * a look that did not happen. Any other failure goes on up.
+ *
+ * `budget`, where given, is {now (a clock in milliseconds), until}. Once the clock reaches `until` no call is made, and
+ * BudgetSpent is thrown instead. So a long apply stops in time and the next one goes on.
  */
 export function paced(run, { sleep, pauseMs, retryMs, delays, lookup, budget }) {
   let first = true;

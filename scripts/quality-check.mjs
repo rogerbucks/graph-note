@@ -1,20 +1,25 @@
 #!/usr/bin/env node
-// The quality ratchet's comparison (spec §12, quality_ratchet): the metrics measured by scripts/quality-metrics.mjs are
-// held against the committed baseline, quality/baseline.json, and any that got worse fails unless quality/accepted.json
+// The quality ratchet's comparison (spec §12, quality_ratchet). The metrics measured by scripts/quality-metrics.mjs are
+// held against the committed baseline, quality/baseline.json. Any that got worse fails, unless quality/accepted.json
 // records the reason for that exact change. The baseline is held the same way against its own earlier copy, so it cannot
 // be loosened without a reason either. Every metric declares which way is better and how much noise it tolerates.
 //
 // Usage:
-//   node scripts/quality-check.mjs quality/metrics.json    compare a full run (the release's quality job)
-//   node scripts/quality-check.mjs --fast                  measure the quick metrics now (file sizes, secrets) and compare
-//   node scripts/quality-check.mjs --baseline-since <ref>  compare the committed baseline with the one at this commit
+//   node scripts/quality-check.mjs quality/metrics.json    compare a full run (the release's quality job).
+//   node scripts/quality-check.mjs --fast                  measure the quick metrics now (file sizes, secrets) and
+//                                                          compare.
+//   node scripts/quality-check.mjs --baseline-since <ref>  compare the committed baseline with the one at this commit.
 //
 // Exits 1 and names each metric that is worse, with the baseline value, the new one and what would let it through. Test
-// duration only warns: a test asserts the work done, never the time taken. The benchmarks' instruction counts are held
-// only against counts from the same machine (operating system, processor, Node major and Valgrind) and otherwise warn;
-// where Valgrind cannot run they are not measured, which warns everywhere but Linux; and while the baseline holds none,
-// a run that counts them prints them, to be committed by a follow-up pull request, and passes on them. In CI
-// (GITHUB_ACTIONS set), no baseline for them, or one counted on another machine, fails, after the figures are printed.
+// duration only warns: a test asserts the work done, never the time taken.
+//
+// The benchmarks' instruction counts are held only against counts from the same machine. That is the operating
+// system, processor, Node major and Valgrind. Otherwise they warn.
+// - Where Valgrind cannot run they are not measured, which warns everywhere but Linux.
+// - While the baseline holds none, a run that counts them prints them and passes on them. They are then committed by a
+//   follow-up pull request.
+// - In CI (GITHUB_ACTIONS set), no baseline for them, or one counted on another machine, fails. It fails after the
+//   figures are printed.
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -57,7 +62,7 @@ const sameCounter = (a, b) =>
 
 /**
  * What is wrong with a baseline as a baseline: a metric missing, tests left out, or no word of the machine. The
- * instruction counts may all be absent, until the first run that counts them is committed; once there, all must be,
+ * instruction counts may all be absent, until the first run that counts them is committed. Once there, all must be,
  * with the machine that counted them.
  */
 export function baselineProblems(baseline) {
@@ -95,17 +100,23 @@ export const CI_RECORDS =
   'quality/baseline.json; once they are committed, the counts are held to them';
 
 /**
- * Holds `current` against `baseline`. Gives `{ failures, warnings, accepted, improved, toRecord }`, each metric by name:
- * a failure when it is worse with no recorded reason, was not measured, has nothing in the baseline to be held to, or is
- * past the most it may ever be; a warning when it is test duration and worse, an instruction count worse than one
- * counted on another machine, or an instruction count not measured on a machine other than Linux; accepted when a reason
- * covers it; improved when it is better; to record when it is an instruction count the baseline does not hold yet. A
- * reason covers a change from the baseline's value to the figure it names, or anything no worse than that; for a timing
- * that figure is scaled with the baseline, to the speed of the machine measuring. With `partial`, a metric the run left
- * out is skipped, but one it measured as nothing still fails. With `baselines`, two baselines are compared: instruction
- * counts neither holds are passed over, and one the earlier held and the later dropped fails. With `ci` (a run in GitHub
- * Actions), counts the baseline cannot hold the run to fail rather than pass: none in it yet, or counted on another
- * machine; every count is still given in `toRecord`, to be printed first.
+ * Holds `current` against `baseline`. Gives `{ failures, warnings, accepted, improved, toRecord }`, each metric by
+ * name.
+ * - A failure when it is worse with no recorded reason, or was not measured. Or when it has nothing in the baseline to
+ *   be held to, or is past the most it may ever be.
+ * - A warning when it is test duration and worse. Or an instruction count worse than one counted on another machine.
+ *   Or an instruction count not measured on a machine other than Linux.
+ * - Accepted when a reason covers it.
+ * - Improved when it is better.
+ * - To record when it is an instruction count the baseline does not hold yet.
+ *
+ * A reason covers a change from the baseline's value to the figure it names, or anything no worse than that. For a
+ * timing that figure is scaled with the baseline, to the speed of the machine measuring. With `partial`, a metric the
+ * run left out is skipped, but one it measured as nothing still fails. With `baselines`, two baselines are compared.
+ * Instruction counts neither holds are passed over, and one the earlier held and the later dropped fails.
+ *
+ * With `ci` (a run in GitHub Actions), counts the baseline cannot hold the run to fail rather than pass. They are none
+ * in it yet, or counted on another machine. Every count is still given in `toRecord`, to be printed first.
  */
 export function compare(baseline, current, accepted = [], { partial = false, baselines = false, ci = false } = {}) {
   const out = { failures: [], warnings: [], accepted: [], improved: [], toRecord: [] };
@@ -192,8 +203,8 @@ export function compare(baseline, current, accepted = [], { partial = false, bas
 }
 
 /**
- * In CI, the instruction counts must be held: with none in the baseline yet, or the baseline's counted on another
- * machine, the run fails, once, saying why, with every count it made to record.
+ * In CI, the instruction counts must be held. With none in the baseline yet, or the baseline's counted on another
+ * machine, the run fails. It fails once, saying why, with every count it made to record.
  */
 function holdInCi(out, current, a, b) {
   const counts = Object.keys(METRICS).filter((n) => METRICS[n].instructions && has(current.metrics[n]));
@@ -235,8 +246,9 @@ export function compareWithRef(ref, root = ROOT) {
 }
 
 /**
- * What a run counted that the baseline does not hold yet, said so it can be committed: the figures as they go into the
- * baseline's metrics, and the machine that counted them, as it goes into its details. Empty when there is none.
+ * What a run counted that the baseline does not hold yet, said so it can be committed. It gives the figures as they go
+ * into the baseline's metrics. It also gives the machine that counted them, as it goes into its details. Empty when
+ * there is none.
  */
 export function toRecordText(toRecord, details) {
   if (!toRecord.length) return '';

@@ -1,11 +1,14 @@
-// The desired state of the GitHub mirror of the requirements (spec §12, requirements_checked_in_ci): for each
-// requirement and each open question of the chosen slices, the issue that should exist — its title, body, labels and
-// whether it is open — and the options of the project fields it fills. A question's issue is labelled kind:question, stays
-// open and lists the requirements it blocks; it carries the same marker as a requirement's, so it is adopted, kept and
-// removed in the same way. Pure: it reads the board that slice-board.mjs reads from the requirements
-// copy, and the workstreams file, and gives values; scripts/github-project-plan.mjs compares them with what GitHub
-// holds, and scripts/github-project-gh.mjs does the difference. The requirements file stays the only source; every
-// issue and project item made from it is a derivative, regenerated and never edited by hand.
+// The desired state of the GitHub mirror of the requirements (spec §12, requirements_checked_in_ci). It covers each
+// requirement and each open question of the chosen slices. For each it gives the issue that should exist: its title,
+// body, labels and whether it is open. It also gives the options of the project fields it fills.
+//
+// A question's issue is labelled kind:question, stays open and lists the requirements it blocks. It carries the same
+// marker as a requirement's, so it is adopted, kept and removed in the same way.
+//
+// Pure: it reads the board that slice-board.mjs reads from the requirements copy, and the workstreams file, and gives
+// values. scripts/github-project-plan.mjs compares them with what GitHub holds, and scripts/github-project-gh.mjs does
+// the difference. The requirements file stays the only source. Every issue and project item made from it is a
+// derivative, regenerated and never edited by hand.
 import { REQUIREMENTS } from './check-requirements.mjs';
 import { iterationsOf, wavesOf } from './github-project-waves.mjs';
 
@@ -25,16 +28,17 @@ export const PROJECT_TITLE = 'graph-note requirements';
 /** The label of an issue whose requirement is no longer in the requirements file. */
 export const REMOVED_LABEL = 'requirement:removed';
 /**
- * The project's single-choice fields, in order. The built-in Status field of a GitHub Project is never used: its options
- * are Todo, In Progress and Done, and a person may use it, so the requirement's status goes in the Proof field instead.
+ * The project's single-choice fields, in order. The built-in Status field of a GitHub Project is never used. Its
+ * options are Todo, In Progress and Done, and a person may use it. So the requirement's status goes in the Proof field
+ * instead.
  */
 export const FIELD_NAMES = ['Slice', 'Workstream', 'Proof', 'Build status'];
 /** The project field that says how far a requirement's build is. Its values come from GitHub's events alone. */
 export const BUILD_STATUS_FIELD = 'Build status';
 /**
  * The stages of a requirement's build, in the order they happen (scripts/build-status.mjs sets them from the events of
- * GitHub): an item starts at the first. This script makes the field and its options and gives a new item the first
- * stage; it never sets any other, and never replaces the options, which would clear every value.
+ * GitHub). An item starts at the first. This script makes the field and its options, and gives a new item the first
+ * stage. It never sets any other, and never replaces the options, which would clear every value.
  */
 export const BUILD_STATUSES = ['Not started', 'In PR', 'Checks failing', 'Checks passing', 'Merged', 'Released'];
 /** The project's built-in single-choice field: Todo, In Progress, Done. The mirror never makes it or changes its options. */
@@ -119,8 +123,8 @@ const cutAtWord = (text, max) => {
 
 /**
  * The title of an issue: the title of the requirement's section, a dot, and the requirement's id with its underscores as
- * spaces. Never over 100 characters: a long section title gives way, cut at a word with an ellipsis, so the id's words
- * always stay; with no section title the title is the id's words alone.
+ * spaces. Never over 100 characters. A long section title gives way, cut at a word with an ellipsis, so the id's words
+ * always stay. With no section title the title is the id's words alone.
  */
 export function titleOf(sectionTitle, id) {
   const words = id.replaceAll('_', ' ');
@@ -144,7 +148,7 @@ export function questionTitleOf(num, text) {
 }
 
 /**
- * Wraps each @name, @org/team and #number of a text in backticks, so that GitHub neither notifies a person nor links an
+ * Wraps each @name, @org/team and #number of a text in backticks. So GitHub neither notifies a person nor links an
  * issue from a generated body. Text already inside backticks is left as it is.
  */
 export function neutralise(text) {
@@ -180,9 +184,9 @@ export function generatedIdOf(body) {
 export const BOT_LOGIN = 'github-actions[bot]';
 
 /**
- * The requirement id of an issue this generator may adopt, or null: it was written by one of `adopters` (a login, or a
- * list of them; the mirror's are the repository's owner and BOT_LOGIN), and its body is one this generator made. A marker
- * alone proves nothing, since anybody can write one.
+ * The requirement id of an issue this generator may adopt, or null. It was written by one of `adopters`, and its body
+ * is one this generator made. `adopters` is a login, or a list of them; the mirror's are the repository's owner and
+ * BOT_LOGIN. A marker alone proves nothing, since anybody can write one.
  */
 export function adoptedId(issue, adopters) {
   const logins = (Array.isArray(adopters) ? adopters : [adopters]).filter(Boolean).map((l) => l.toLowerCase());
@@ -260,13 +264,16 @@ const questionBodyOf = (q, workstream) =>
 
 /**
  * The desired state for the chosen slices, from a board as readBoard gives it and the workstreams: {issues, fields,
- * known}. Each issue is {id, title, body, labels (sorted), state ('open' or 'closed'), slice, workstream, status,
- * buildStatus, progress}, the last five being the options its project item takes (the Build status, and the built-in
- * Status as `progress`, only as the seed of an item that has none, or has Todo; see withSeed); the
- * requirements' issues come first, then one for each open
- * question of the chosen slices, always open, its Proof `open`. `fields` maps each project field to its options.
- * `known` lists every requirement and question id the copy holds, in any slice, so that an issue whose requirement or
- * question is only outside the chosen slices is told from one whose requirement or question went.
+ * known}.
+ *
+ * Each issue is {id, title, body, labels (sorted), state ('open' or 'closed'), slice, workstream, status, buildStatus,
+ * progress}. The last five are the options its project item takes. The Build status, and the built-in Status as
+ * `progress`, are only the seed of an item that has none, or has Todo (see withSeed). The requirements' issues come
+ * first. Then comes one for each open question of the chosen slices, always open, its Proof `open`.
+ *
+ * `fields` maps each project field to its options. `known` lists every requirement and question id the copy holds, in
+ * any slice. So an issue whose requirement or question is only outside the chosen slices is told from one whose
+ * requirement or question went.
  */
 export function desiredState(board, workstreams, slices, plan = null) {
   const chosen = [...new Set(slices)].sort((a, b) => a - b);
@@ -327,13 +334,15 @@ export function desiredState(board, workstreams, slices, plan = null) {
 }
 
 /**
- * A desired state whose issues take, for the ids a seed names, its Build status and built-in Status in place of the first
- * stage and Todo. `seed` maps a requirement id to {buildStatus, progress}, as scripts/build-status-seed.mjs works it out
- * from where the requirement stands on GitHub; an id it does not name keeps the defaults. With `started`, each issue also
- * takes its Started on from the seed: the day a pull request holding it was opened, kept (undefined) for one proved, and
- * for one the seed does not name, which no pull request holds, cleared (null) only while no test of it is written (it is
- * open) — and the plan clears it then only for an item whose Build status is not past Not started — else kept. The state
- * given is not changed.
+ * A desired state whose issues take the seed's Build status and built-in Status, for the ids it names. They stand in
+ * place of the first stage and Todo. `seed` maps a requirement id to {buildStatus, progress}.
+ * scripts/build-status-seed.mjs works that out from where the requirement stands on GitHub. An id it does not name
+ * keeps the defaults.
+ *
+ * With `started`, each issue also takes its Started on from the seed. That is the day a pull request holding it was
+ * opened, kept (undefined) for one proved. An issue the seed does not name is one no pull request holds. Its Started on
+ * is cleared (null) only while no test of it is written (it is open), and else kept. Even then the plan clears it only
+ * for an item whose Build status is not past Not started. The state given is not changed.
  */
 export function withSeed(desired, seed, { started = false } = {}) {
   const issues = desired.issues.map((issue) => {

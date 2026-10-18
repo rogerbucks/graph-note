@@ -1,12 +1,13 @@
 #!/usr/bin/env node
-// The version a nightly build carries (spec §41, nightly_prerelease): the next patch after the manifest's version, with
-// a nightly suffix and the day it was built, as `0.6.1-nightly.20261018`. Semantic versioning puts it after the release
-// it was built from and before the next one, so a tool that follows pre-releases (BRAT in Obsidian) updates to each
-// night's build and then to the stable release that follows. It never matches the release workflow's bare tag pattern.
+// The version a nightly build carries (spec §41, nightly_prerelease). It is the next patch after the manifest's
+// version, with a nightly suffix and the day it was built, as `0.6.1-nightly.20261018`. Semantic versioning puts it
+// after the release it was built from and before the next one. So a tool that follows pre-releases (BRAT in Obsidian)
+// updates to each night's build and then to the stable release that follows. It never matches the release workflow's
+// bare tag pattern.
 //
 // Usage:
-//   node scripts/nightly-version.mjs --date YYYYMMDD           print the version
-//   node scripts/nightly-version.mjs --date YYYYMMDD --write   also write it into manifest.json, for the build's assets
+//   node scripts/nightly-version.mjs --date YYYYMMDD          print the version.
+//   node scripts/nightly-version.mjs --date YYYYMMDD --write  also write it into manifest.json, for the build's assets.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';

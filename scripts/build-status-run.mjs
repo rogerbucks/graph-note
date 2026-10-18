@@ -1,16 +1,22 @@
 #!/usr/bin/env node
 // Shows on the GitHub Project where each requirement's build is up to (spec §12, requirements_checked_in_ci), one event
 // at a time. It runs from the workflow .github/workflows/build-status.yml, which runs the copy on main, never a pull
-// request's. An event is the checks of a pull request (CI, or the workflow that wakes this one when a pull request is
-// opened, pushed to, reopened or closed), a push to main (a merge), or a release. For a pull request of this repository it
-// finds the board items the change moves with no hand-linking, as the requirements whose tests the request's requirements
-// file newly marks written against the base's, sets their Build status from the request's state and CI's run, and leaves
-// one short comment, updated each time, with links to the items and the run. For a release it sets Released on the
-// requirements whose tests were newly written since the release before. The values come from GitHub's events alone.
-// Every read is through the API, as data. PROJECT_TOKEN is for the board alone: when it is missing or refused the run says
-// so in a warning and in the comment, and does not fail. What each pull request gets is build-status-events.mjs.
+// request's. An event is one of these:
+// - the checks of a pull request: CI, or the workflow that wakes this one when a pull request is opened, pushed to,
+//   reopened or closed;
+// - a push to main (a merge);
+// - or a release.
 //
-// Usage (the workflow sets the environment): node scripts/build-status-run.mjs
+// For a pull request of this repository it finds the board items the change moves, with no hand-linking. They are the
+// requirements whose tests the request's requirements file newly marks written against the base's. It sets their Build
+// status from the request's state and CI's run. It leaves one short comment, updated each time, with links to the items
+// and the run. For a release it sets Released on the requirements whose tests were newly written since the release
+// before. The values come from GitHub's events alone.
+//
+// Every read is through the API, as data. PROJECT_TOKEN is for the board alone. When it is missing or refused the run
+// says so in a warning and in the comment, and does not fail. What each pull request gets is build-status-events.mjs.
+//
+// Usage (the workflow sets the environment): node scripts/build-status-run.mjs.
 //   GITHUB_EVENT_NAME, GITHUB_EVENT_PATH, GITHUB_REPOSITORY, GITHUB_RUN_ID, GH_TOKEN (the workflow's), PROJECT_TOKEN
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -24,9 +30,9 @@ const EVENTS = ['workflow_run', 'push', 'release'];
 const RUN_ID = /^\d+$/;
 
 /**
- * The pull requests an event is about and the rules they must meet, as {numbers, rules}: those a push to main merged (only
- * a merged one counts), or those the checks name (or, naming none, those that hold their commit) whose head is still the
- * commit the checks ran on. None for the checks of anything but a pull request.
+ * The pull requests an event is about and the rules they must meet, as {numbers, rules}. They are those a push to main
+ * merged (only a merged one counts). Or they are those the checks name whose head is still the commit the checks ran
+ * on. Naming none, they are those that hold their commit. None for the checks of anything but a pull request.
  */
 function pullsOf(eventName, payload, github, repo) {
   if (eventName === 'push')
@@ -39,11 +45,14 @@ function pullsOf(eventName, payload, github, repo) {
 }
 
 /**
- * Looks after the board for one event: `ctx` is {eventName, payload (the event's JSON), repo (`owner/name`), runUrl}, and
- * `deps` {github (the runner of the workflow's token), project (the runner of PROJECT_TOKEN, or null when it is not set),
- * projectToken, annotate(level, text), write(text), sleep}. Gives {pulls: [{number, stage, ids, comment} or {number,
- * skipped}], release, problems: [{kind, text}]}. A problem with the project token is a warning and a line in each comment,
- * never a throw; anything else that fails, such as reading the pull request, throws.
+ * Looks after the board for one event.
+ * - `ctx` is {eventName, payload (the event's JSON), repo (`owner/name`), runUrl}.
+ * - `deps` is {github, project, projectToken, annotate(level, text), write(text), sleep}. `github` is the runner of the
+ *   workflow's token. `project` is the runner of PROJECT_TOKEN, or null when it is not set.
+ *
+ * Gives {pulls: [{number, stage, ids, comment} or {number, skipped}], release, problems: [{kind, text}]}. A problem
+ * with the project token is a warning and a line in each comment, never a throw. Anything else that fails, such as
+ * reading the pull request, throws.
  */
 export async function handleEvent(ctx, deps) {
   const found = [];
@@ -59,7 +68,7 @@ export async function handleEvent(ctx, deps) {
 }
 
 /**
- * Runs for the environment a workflow gives (see the top of this file), reading the event from the file it names, and
+ * Runs for the environment a workflow gives (see the top of this file), reading the event from the file it names. It
  * gives the exit code: 0 whatever happened to the board, 1 for a mistake in the workflow or a failure to read GitHub. The
  * tokens are never printed. `io` may give another `spawn`, `read` and `write`.
  */

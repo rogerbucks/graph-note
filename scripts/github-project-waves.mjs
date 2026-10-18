@@ -1,8 +1,9 @@
-// The waves plan of the GitHub mirror (spec §12, requirements_checked_in_ci): requirements/waves.json lists the waves in
-// order, each with its workstreams in order and planned start and end dates, marked as estimates. It is the one place the
-// order of the work lives. From it the mirror derives each requirement's Wave (the project's iteration field, one
-// iteration for each wave, with its dates) and Order (a number: the wave's position, then the workstream's, then the
-// requirement's). Pure: text and values in, values out. The fields are set by github-project-gh.mjs.
+// The waves plan of the GitHub mirror (spec §12, requirements_checked_in_ci). requirements/waves.json lists the waves
+// in order. Each has its workstreams in order and planned start and end dates, marked as estimates. It is the one place
+// the order of the work lives. From it the mirror derives two fields for each requirement:
+// - Wave: the project's iteration field, one iteration for each wave, with its dates;
+// - Order: a number, from the wave's position, then the workstream's, then the requirement's.
+// Pure: text and values in, values out. The fields are set by github-project-gh.mjs.
 
 /** The plan, beside the workstreams file. */
 export const WAVES_FILE = 'requirements/waves.json';
@@ -57,9 +58,13 @@ function readWave(wave, workstreams, seen) {
 
 /**
  * Reads the waves file against the workstreams (as readWorkstreams gives them): {waves: [{title, start, end, estimate,
- * workstreams}]}, in order. Throws, naming what is wrong, for anything else: no waves, a wave with no title or one two
- * waves share, a date that is not a day, an end before its start, an estimate mark that is not true or false, a
- * workstream the file does not hold or one in two waves, and a wave that starts before the one before it ends.
+ * workstreams}]}, in order. Throws, naming what is wrong, for anything else:
+ * - no waves;
+ * - a wave with no title, or a title two waves share;
+ * - a date that is not a day, or an end before its start;
+ * - an estimate mark that is not true or false;
+ * - a workstream the file does not hold, or one in two waves;
+ * - a wave that starts before the one before it ends.
  */
 export function readWaves(text, workstreams) {
   let file;
@@ -92,11 +97,11 @@ export function iterationsOf(plan) {
 }
 
 /**
- * The wave and order of each requirement, as a Map from its id to {wave (the wave's title), order}. `requirements` are in
- * the copy's order, `placed` maps each to its workstream (assignWorkstreams), and `workstreams` is the workstreams file.
- * Within a workstream the requirements it lists come first, in its order, then those it holds by default, in the copy's.
- * A requirement whose workstream is in no wave is not in the Map. Throws when a wave has 100 workstreams or a workstream
- * 100 requirements, which Order cannot tell apart.
+ * The wave and order of each requirement, as a Map from its id to {wave (the wave's title), order}. `requirements` are
+ * in the copy's order, `placed` maps each to its workstream (assignWorkstreams), and `workstreams` is the workstreams
+ * file. Within a workstream the requirements it lists come first, in its order, then those it holds by default, in the
+ * copy's. A requirement whose workstream is in no wave is not in the Map. Throws when a wave has 100 workstreams or a
+ * workstream 100 requirements, which Order cannot tell apart.
  */
 export function wavesOf(requirements, placed, workstreams, plan) {
   const found = new Map();
@@ -121,11 +126,12 @@ const count = (list, status) => list.filter((i) => i.status === status).length;
 const proofs = (list) => `${count(list, 'proved')} proved · ${count(list, 'part')} part · ${count(list, 'open')} open`;
 
 /**
- * The lines the mirror prints of the plan: for each wave its dates (marked when they are estimates) and the count of its
- * requirements by proof (a wave with no workstreams, a placeholder, counts none); a note that estimated dates are
- * estimates, when any are; then how many requirements are in no wave, and a warning for each of those not proved. None
- * when the desired state has no plan. `desired.waves` is the plan, with the ids of the requirements (not the questions)
- * of the chosen slices as its `requirements`.
+ * The lines the mirror prints of the plan:
+ * - for each wave, its dates (marked when they are estimates) and the count of its requirements by proof;
+ * - a note that estimated dates are estimates, when any are;
+ * - how many requirements are in no wave, and a warning for each of those not proved.
+ * A wave with no workstreams, a placeholder, counts none. None when the desired state has no plan. `desired.waves` is
+ * the plan, with the ids of the requirements (not the questions) of the chosen slices as its `requirements`.
  */
 export function waveLines(desired) {
   if (!desired.waves) return [];

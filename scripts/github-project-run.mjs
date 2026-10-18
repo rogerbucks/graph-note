@@ -1,14 +1,20 @@
 // The GitHub mirror of the requirements run by the workflow .github/workflows/project-mirror.yml on every push to main
-// (spec §12, requirements_checked_in_ci), so the issues close and the project's values follow main with no session doing
-// it. It is `node scripts/github-project.mjs --apply --slices …` in GitHub Actions, which hands over to runInWorkflow.
+// (spec §12, requirements_checked_in_ci). So the issues close and the project's values follow main with no session
+// doing it. It is `node scripts/github-project.mjs --apply --slices …` in GitHub Actions, which hands over to
+// runInWorkflow.
 //
-// Two tokens, each for its own calls: the workflow's own token (GH_TOKEN, `issues: write`) for the repository, its issues
-// and labels, and PROJECT_TOKEN (the project scope only) for the project alone. The issues the mirror makes are written
-// by the workflows' bot, and only the owner's and the bot's are adopted. It warns and never fails over the project: a
-// missing token, one GitHub refuses (401, 403, Bad credentials) or any other failure of a project call (a mirror error,
-// in gh's words) gives a ::warning:: and the issues are mirrored without the project. A seed made
-// despite warnings is never applied blindly: the apply is skipped with a warning, and --accept-warnings is never passed.
-// Anything else that goes wrong is an ::error:: and exit 1. No token is ever printed.
+// Two tokens, each for its own calls:
+// - the workflow's own token (GH_TOKEN, `issues: write`) for the repository, its issues and labels;
+// - PROJECT_TOKEN (the project scope only) for the project alone.
+//
+// The issues the mirror makes are written by the workflows' bot, and only the owner's and the bot's are adopted. It
+// warns and never fails over the project. These give a ::warning::, and the issues are mirrored without the project:
+// - a missing token;
+// - one GitHub refuses (401, 403, Bad credentials);
+// - any other failure of a project call (a mirror error, in gh's words).
+//
+// A seed made despite warnings is never applied blindly: the apply is skipped with a warning, and --accept-warnings is
+// never passed. Anything else that goes wrong is an ::error:: and exit 1. No token is ever printed.
 import { spawnSync } from 'node:child_process';
 import { annotation, describeProblem, redactSecrets } from './build-status.mjs';
 import { runnersFrom } from './build-status-gh.mjs';
@@ -74,8 +80,8 @@ export function isRateLimited(error) {
 
 /**
  * What to say of a project call that failed. Only GitHub's 401, 403 or "Bad credentials" is the token's trouble, said as
- * such; anything else, a GraphQL input the schema refused among them, is a mirror error in gh's own words (cut short),
- * never blamed on the token. The token itself is taken out of the words by the caller.
+ * such. Anything else is a mirror error in gh's own words (cut short), never blamed on the token. A GraphQL input the
+ * schema refused is among them. The token itself is taken out of the words by the caller.
  */
 export function projectProblem(error, token) {
   const cut = wordsOf(error);
@@ -85,14 +91,18 @@ export function projectProblem(error, token) {
 }
 
 /**
- * Runs the mirror's apply as the workflow does, from its environment (GITHUB_REPOSITORY, GH_TOKEN, PROJECT_TOKEN), and
- * gives the exit code: 0 when it applied, when the project token was missing or refused (the issues are then mirrored
- * alone), and when the seed had warnings (nothing is applied); 1 for anything else. `options` are the command line's;
- * --allow-removals and --accept-warnings are refused here. `io` gives `mirror` and `load(slices)` (the desired state), as
- * scripts/github-project.mjs hands them over, and may give another `spawn`, `write`, `sleep` (the blocking wait that
- * paces the calls) and `now` (the clock, in milliseconds). The apply may take MIRROR_BUDGET_MINUTES (45 by default):
- * once that is spent it makes no more calls and warns that the board is partly updated, exit 0; the next push goes on
- * from what GitHub then holds.
+ * Runs the mirror's apply as the workflow does, from its environment (GITHUB_REPOSITORY, GH_TOKEN, PROJECT_TOKEN). It
+ * gives the exit code.
+ * - 0 when it applied, and when the project token was missing or refused (the issues are then mirrored alone).
+ * - 0 also when the seed had warnings (nothing is applied).
+ * - 1 for anything else.
+ *
+ * `options` are the command line's; --allow-removals and --accept-warnings are refused here. `io` gives `mirror` and
+ * `load(slices)` (the desired state), as scripts/github-project.mjs hands them over. It may also give another `spawn`,
+ * `write`, `sleep` (the blocking wait that paces the calls) and `now` (the clock, in milliseconds).
+ *
+ * The apply may take MIRROR_BUDGET_MINUTES (45 by default). Once that is spent it makes no more calls and warns that
+ * the board is partly updated, exit 0. The next push goes on from what GitHub then holds.
  */
 export function runInWorkflow(options, env, io) {
   const { spawn = spawnSync, write = (text) => process.stdout.write(text), mirror, load, sleep, now = Date.now } = io;

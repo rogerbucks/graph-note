@@ -1,11 +1,12 @@
 #!/usr/bin/env node
-// Makes the project's home page from the repository (spec §41, landing_page): site/index.html filled with the words of
-// site/words.json, the version of the newest stable release and the commit it came from, with what search engines and
-// AI assistants read beside it: structured data, a sitemap, a robots file and an llms.txt. The picture is the user
+// Makes the project's home page from the repository (spec §41, landing_page). It fills site/index.html with the words
+// of site/words.json, the version of the newest stable release and the commit it came from. Beside it goes what search
+// engines and AI assistants read: structured data, a sitemap, a robots file and an llms.txt. The picture is the user
 // guide's own, taken by scripts/wiki-screens.mjs. .github/workflows/pages.yml runs it and publishes the folder.
 //
 // Usage:
 //   node scripts/site.mjs --out DIR [--sha SHA] [--date YYYY-MM-DD] [--releases FILE] [--images DIR] [--url URL]
+//
 // --releases is `gh release list --json tagName,publishedAt,isPrerelease` saved to a file; without it the version is
 // the manifest's. --images is the folder scripts/wiki-screens.mjs wrote: its card.png is shown when it is there. --url
 // is the page's address, for a domain of its own; GitHub Pages' address is the default.
@@ -42,9 +43,9 @@ const withPlaceholders = (text, values) =>
   text.replace(/\{(\w+)\}/g, (whole, name) => (Object.hasOwn(values, name) ? values[name] : whole));
 
 /**
- * `template` with each {{key}} replaced by the word `words` gives it and each {{@name}} by `values[name]`, words escaped
- * as text. Values are markup the page makes itself and are put in as they are. Throws on a key or a name with nothing to
- * fill it, and on a word nothing uses, so the catalogue and the page never drift apart.
+ * `template` with each {{key}} replaced by the word `words` gives it and each {{@name}} by `values[name]`, words
+ * escaped as text. Values are markup the page makes itself and are put in as they are. Throws on a key or a name with
+ * nothing to fill it, and on a word nothing uses. So the catalogue and the page never drift apart.
  */
 export function fillTemplate(template, words, values) {
   const used = new Set();
@@ -118,9 +119,9 @@ function llmsText({ words, url }) {
 }
 
 /**
- * Every file of the site but the ones copied as they are, by name: the page, robots.txt, sitemap.xml, llms.txt and the
- * .nojekyll that tells GitHub Pages to publish the folder as it is. `catalogue` is site/words.json; `image` is
- * {file, alt, width, height} or null.
+ * Every file of the site but the ones copied as they are, by name. These are the page, robots.txt, sitemap.xml,
+ * llms.txt and the .nojekyll that tells GitHub Pages to publish the folder as it is. `catalogue` is site/words.json;
+ * `image` is {file, alt, width, height} or null.
  */
 export function renderSite({ template, catalogue, version, sha, today, url = SITE_URL, image = null }) {
   const lang = catalogue.language;

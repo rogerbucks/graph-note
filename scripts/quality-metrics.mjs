@@ -1,16 +1,19 @@
 #!/usr/bin/env node
-// Measures the code's quality metrics (spec §12, quality_ratchet and slice_end_review): file sizes, a dependency
-// vulnerability scan, a secrets scan, the plugin's bundle size, the work a fixed set of benchmarks takes, counted in CPU
-// instructions (scripts/instruction-counts.mjs, on Linux with Valgrind), the test suite's duration (reported only), its
-// flaky tests and the size of a passing quiet run, and coverage. The result is the metrics JSON that
-// scripts/quality-check.mjs holds against quality/baseline.json, and that the slice-end review reads.
+// Measures the code's quality metrics (spec §12, quality_ratchet and slice_end_review). They are:
+// - file sizes, a dependency vulnerability scan, a secrets scan, and the plugin's bundle size;
+// - the work a fixed set of benchmarks takes, counted in CPU instructions (scripts/instruction-counts.mjs, on Linux
+//   with Valgrind);
+// - the test suite's duration (reported only), its flaky tests and the size of a passing quiet run, and coverage.
+// The result is the metrics JSON that scripts/quality-check.mjs holds against quality/baseline.json, and that the
+// slice-end review reads.
 //
 // Usage:
-//   node scripts/quality-metrics.mjs                       measure everything, print the JSON
-//   node scripts/quality-metrics.mjs --out quality/metrics.json   write it to a file instead
-//   node scripts/quality-metrics.mjs --fast                only the quick metrics, from the files (no audit, build or suite)
-//   node scripts/quality-metrics.mjs --reuse <file>        keep an earlier run's instruction count for each benchmark
-//                                                          whose fingerprint is unchanged (scripts/instruction-counts.mjs)
+//   node scripts/quality-metrics.mjs                  measure everything, print the JSON.
+//   node scripts/quality-metrics.mjs --out quality/metrics.json  write it to a file instead.
+//   node scripts/quality-metrics.mjs --fast           only the quick metrics, from the files
+//                                                     (no audit, build or suite).
+//   node scripts/quality-metrics.mjs --reuse <file>   keep an earlier run's instruction count for each benchmark
+//                                                     whose fingerprint is unchanged (scripts/instruction-counts.mjs).
 //
 // The audit reaches the npm registry, and the suite runs twice (a minute or so): this is the release's job, not CI's.
 import { spawnSync } from 'node:child_process';
@@ -136,8 +139,8 @@ async function measureWork(reuse) {
 }
 
 /**
- * Everything: the quick metrics, the audit, the bundle, the benchmarks' instructions, the machine's speed (by the wall
- * clock, as the suite's duration is), and the suite (twice).
+ * Everything: the quick metrics, the audit, the bundle, the benchmarks' instructions, the machine's speed, and the
+ * suite (twice). The machine's speed is by the wall clock, as the suite's duration is.
  */
 export async function measureAll({ reuse } = {}) {
   const parts = [measureFast(), measureAudit(), await measureBundle(), await measureWork(reuse), measureSuite(ROOT)];

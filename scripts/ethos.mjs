@@ -1,6 +1,7 @@
-// The project's ethos (spec §41, ethos_checked): reads requirements/ethos.gql, each principle with its reason and its
-// rules, finds a rule that names no check or a requirement that does not exist, and writes the body of the wiki's Ethos
-// page, with each rule's state taken from the requirements' own proof. scripts/wiki.mjs adds the page to the wiki.
+// The project's ethos (spec §41, ethos_checked). It reads requirements/ethos.gql, each principle with its reason and
+// its rules. It finds a rule that names no check or a requirement that does not exist. It writes the body of the wiki's
+// Ethos page, with each rule's state taken from the requirements' own proof. scripts/wiki.mjs adds the page to the
+// wiki.
 import { createRequire } from 'node:module';
 
 const { read } = createRequire(import.meta.url)('../packages/graph-spec/src/graph-spec-check.js');
