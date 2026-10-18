@@ -89,6 +89,7 @@
       }
       #note {
         flex: 1;
+        min-width: 0;
         max-width: 700px;
         padding: 16px;
       }
@@ -100,6 +101,19 @@
         overflow: auto;
         padding: 16px;
         border-left: 1px solid var(--background-modifier-border);
+      }
+      /* On a phone's width the pane is a view of its own below the note, as on Obsidian's phone app. */
+      @media (max-width: 700px) {
+        #page {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        #pane {
+          position: static;
+          height: auto;
+          border-left: 0;
+          border-top: 1px solid var(--background-modifier-border);
+        }
       }
       textarea,
       select {

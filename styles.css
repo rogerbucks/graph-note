@@ -972,6 +972,13 @@ details.graph-note-style > summary {
   min-height: 44px;
 }
 
+/* The graph's text shown as code: a long line scrolls inside its own box, never the note, so the note reflows at 320 CSS
+   pixels with nothing lost (spec §41, a11y_targets_reflow_auto). */
+pre.graph-note-code {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
 /* The bar: every control at least 44 points, as touch needs (spec §5), and none that only shows on hover. */
 .graph-note-bar {
   display: flex;
