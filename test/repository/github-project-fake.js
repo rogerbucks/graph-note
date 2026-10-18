@@ -253,6 +253,37 @@ export function fakeGithub({
     return json(readProject(project(variables.number), variables.after));
   };
 
+  // GitHub's issue dependencies, by REST: an issue's id, the issues one blocks, and adding or removing what blocks one.
+  // Each issue's `blockedBy` holds the numbers of the issues blocking it; an issue's REST id is 1000 more than its number.
+  // With `hub.dependenciesRefused` set, every call is refused, as where the feature is off.
+  const restIdOf = (number) => 1000 + number;
+  const dependencies = (args) => {
+    if (hub.dependenciesRefused) throw new Error('gh: Not Found (HTTP 404)');
+    const method = args.includes('--method') ? flag(args, '--method') : 'GET';
+    const path = args[1].split('?')[0].slice(`repos/${hub.repo}/issues/`.length).split('/');
+    const target = issue(path[0]);
+    if (!target) throw new Error(`gh: issue ${path[0]} Not Found (HTTP 404)`);
+    if (path.length === 1 && method === 'GET') return json({ id: restIdOf(target.number), number: target.number });
+    if (path[1] === 'dependencies' && path[2] === 'blocking' && method === 'GET')
+      return json(
+        hub.issues
+          .filter((i) => (i.blockedBy ?? []).includes(target.number))
+          .map((i) => ({ id: restIdOf(i.number), number: i.number })),
+      );
+    if (path[1] === 'dependencies' && path[2] === 'blocked_by' && method === 'POST') {
+      mutate(args);
+      const blocker = hub.issues.find((i) => restIdOf(i.number) === Number(flag(args, '-F').split('=')[1]));
+      (target.blockedBy ??= []).push(blocker.number);
+      return json({ id: restIdOf(target.number) });
+    }
+    if (path[1] === 'dependencies' && path[2] === 'blocked_by' && method === 'DELETE') {
+      mutate(args);
+      target.blockedBy = (target.blockedBy ?? []).filter((n) => restIdOf(n) !== Number(path[3]));
+      return json({ id: restIdOf(target.number) });
+    }
+    throw new Error(`fake gh does not know: ${args.join(' ')}`);
+  };
+
   const run = (args, input) => {
     hub.calls.push({ args, input });
     const [group, verb] = args;
@@ -346,6 +377,7 @@ export function fakeGithub({
       return restIssueList(hub.issues, query, { pulls, unlisted, slurp: args.includes('--slurp') });
     }
     if (group === 'api' && verb === 'graphql') return graphql(args, input);
+    if (group === 'api' && verb.startsWith(`repos/${hub.repo}/issues/`)) return dependencies(args);
     throw new Error(`fake gh does not know: ${args.join(' ')}`);
   };
 
