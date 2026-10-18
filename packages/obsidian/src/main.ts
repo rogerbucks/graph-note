@@ -298,9 +298,8 @@ export default class ThoughtKnotPlugin extends Plugin {
   private unloaded = false;
 
   /**
-   * A graph laid out and themed apart from the interface, in one worker reused for every block (spec §9,
-   * layout_contained); or why it is shown as text; or null when it is no longer wanted — a newer drawing for the same
-   * `owner` (a card, an editor) asked for before it started, or the plugin unloaded. Rejects when the engine cannot start.
+   * A graph laid out in one worker for every block, apart from the interface (§9, layout_contained); or why it is text
+   * only; or null once a newer drawing for its `owner` is asked for, or on unload. Rejects if the engine cannot start.
    */
   layout(drawing: GraphDrawing, owner?: object): Promise<Drawn | Refusal | null> {
     // the graph's own direction (§6) or its type's (§15), else the settings' (§21), else the best fit; then as read (§42)

@@ -2,6 +2,7 @@
 // on the line from its middle towards the selection and pointing along it, named for what it points to; tapped, it brings
 // the selection into view. Where it sits is the core's `pointerTo`; this puts it on the page.
 import { setIcon } from '../host';
+import { word } from '@thoughtknot/core';
 import type { Pointing } from '@thoughtknot/core';
 
 /** Whether an event's target is the arrow, which a tap on is never a tap on the drawing. */
@@ -28,7 +29,7 @@ export class SelectionPointer {
     }
     const b = (this.b ??= this.make());
     b.hidden = false;
-    b.setAttribute('aria-label', `Bring ${name} into view`);
+    b.setAttribute('aria-label', word('drawing.bring-into-view', { name }));
     b.setCssProps({
       '--thoughtknot-pointer-x': `${at.x}px`,
       '--thoughtknot-pointer-y': `${at.y}px`,
