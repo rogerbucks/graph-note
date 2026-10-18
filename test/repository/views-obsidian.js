@@ -269,7 +269,7 @@ export const OBSIDIAN = {
   },
   'the diagram types listed': async () => {
     const { env, el } = await shownBlock(noteOf(TEAM), 0);
-    labelled(el, 'Diagram type').click();
+    labelled(el, word('type.choose')).click();
     assert.equal(el.querySelector('.graph-note-type-list').hidden, false, 'the list');
     return { env, el };
   },
