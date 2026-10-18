@@ -1,4 +1,4 @@
-// Licences through the whole build chain. Spec §13, Licence: the plugin is MIT;
+// Licences through the whole build chain. Spec §13, Licence: the plugin is MPL-2.0;
 // every library bundled into a release, and everything compiled inside one,
 // carries a licence on the allow-list; the notices name them all and ship with
 // every release; build tools should be on the allow-list too, and a GPL tool is
@@ -21,14 +21,16 @@ import { renderNotices } from '../scripts/notices.mjs';
 const record = () => readJSON('licences/bundled.json');
 
 describe('the plugin licence', () => {
-  test('the repository is MIT-licensed', () => {
+  test('the repository is under the Mozilla Public License 2.0 (Roger, 18 Oct 2026)', () => {
     const text = read('LICENSE');
-    assert.match(text, /^MIT License\n/);
-    assert.match(text, /Permission is hereby granted, free of charge/);
+    assert.match(text, /^Mozilla Public License Version 2\.0\n=+\n/);
+    assert.match(text, /Exhibit A - Source Code Form License Notice/);
+    assert.match(text, /Exhibit B - "Incompatible With Secondary Licenses" Notice/);
   });
 
-  test('every package declares MIT', () => {
-    for (const p of jsPackages()) assert.equal(readJSON(`${p}/package.json`).license, 'MIT', p);
+  test('every package declares MPL-2.0, the Python library too', () => {
+    for (const p of jsPackages()) assert.equal(readJSON(`${p}/package.json`).license, 'MPL-2.0', p);
+    assert.match(read('python/graph_spec/pyproject.toml'), /^license = "MPL-2\.0"$/m);
   });
 });
 

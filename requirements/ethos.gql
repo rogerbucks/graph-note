@@ -28,7 +28,7 @@
 (r_tests_first:Rule {text: 'Spec, then test, then code: each test is seen failing before its code is written.', requirements: 'tests_first done_means_proved'}),
 (r_ratchet:Rule {text: 'The quality figures only get better: a release that does worse fails unless the reason is written down.', requirements: 'quality_ratchet'}),
 (r_rules_checked:Rule {text: 'Every rule on this page names its check, or says plainly that it has none yet.', requirements: 'ethos_checked'}),
-(r_licence:Rule {text: 'The licence lets anyone use, fork and change the code, and send a pull request.', requirements: 'mit_licence'}),
+(r_licence:Rule {text: 'The licence (MPL-2.0) lets anyone use, fork and change the code and send a pull request, and keeps changed files open.', requirements: 'mpl_licence'}),
 (r_name:Rule {text: 'The name Graph Note marks the original. A fork goes by its own name.', check: 'not yet', how: 'A trademark note is still to be written.'}),
 (r_conduct:Rule {text: 'Everyone who takes part is treated with respect.', check: 'not yet', how: 'A code of conduct is still to be written.'}),
 // ── Links ──
