@@ -27,7 +27,7 @@ describe('the settings page’s words', () => {
       const keys = optionWordKeys(o);
       const words = wordsOf(o);
       keys.forEach((key, i) =>
-        assert.equal(SOURCE_WORDS[key], words[i], `${key}: change source-words.ts with the option`),
+        assert.equal(SOURCE_WORDS[key], words[i], `${key}: change settings-source-words.ts with the option`),
       );
     }
   });
