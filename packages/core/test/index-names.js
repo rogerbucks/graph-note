@@ -588,11 +588,5 @@ export const TYPES = [
   'PathReading',
   'PathStep',
   'Person',
-  'Picture',
-  'PictureBox',
-  'PictureLoad',
-  'Place',
-  'PlacedBox',
-  'PlacedLink',
   ...TYPES_LATE,
 ];
