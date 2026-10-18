@@ -58,3 +58,29 @@ describe('where a dragged box lands', () => {
     assert.ok(landingFor('ann', { x: 200, y: 15 }, BOXES, 'LR', before), 'another place still lands');
   });
 });
+
+describe('where a dragged box lands in a radial drawing', () => {
+  // the centre, sun, with a to its right, b above it and c to its left: the things around it in the order written,
+  // anticlockwise as drawn (the drawing's y runs down the page)
+  const ROUND = [
+    { key: 'sun', left: 80, top: 90, right: 120, bottom: 110 },
+    { key: 'a', left: 180, top: 90, right: 220, bottom: 110 },
+    { key: 'b', left: 80, top: -10, right: 120, bottom: 10 },
+    { key: 'c', left: -20, top: 90, right: 20, bottom: 110 },
+  ];
+  const named = (k) => k.toUpperCase();
+
+  // proves: radial_spoke_order
+  test('dropped by a thing around the centre, it goes just before or after it, as the order runs, never beside', () => {
+    const before = landingFor('c', { x: 200, y: 125 }, ROUND, 'LR', [], 'sun');
+    assert.deepEqual(before, { side: 'before', other: 'a', nudge: { word: 'before', thing: 'c', other: 'a' } });
+    assert.equal(landingSaid(before, 'c', named), 'Put C before A');
+    const after = landingFor('c', { x: 200, y: 75 }, ROUND, 'LR', [], 'sun');
+    assert.deepEqual(after, { side: 'after', other: 'a', nudge: { word: 'before', thing: 'a', other: 'c' } });
+  });
+
+  // proves: radial_spoke_order
+  test('dropped on the centre, it lands nowhere: the centre stays the centre', () => {
+    assert.equal(landingFor('c', { x: 100, y: 100 }, ROUND, 'LR', [], 'sun'), null);
+  });
+});

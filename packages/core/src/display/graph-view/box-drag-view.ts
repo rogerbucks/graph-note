@@ -17,6 +17,8 @@ const HOLD_MS = 500;
 export interface BoxMoving {
   /** The nudges already written for the graph, so a place already nudged is not offered again. */
   written: readonly WrittenNudge[];
+  /** In a radial drawing, the thing at its centre: the others go round it in order (radial_spoke_order). */
+  centre?: string;
   /** Writes the nudge into the style graph, and says `done` once it is written. */
   move: (nudge: NudgeWrite, done: string) => void;
 }
@@ -107,6 +109,7 @@ export class BoxDrag {
       this.host.taps.boxes(keyOf),
       this.host.rankdir(),
       this.host.moving.written,
+      this.host.moving.centre,
     );
     this.mark(press);
     return true;

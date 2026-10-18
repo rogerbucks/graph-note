@@ -301,6 +301,7 @@ export async function renderBlock(
         : {
             moving: {
               written: styling.style.nudges,
+              ...(drawing.diagram?.type === 'radial' ? { centre: drawing.diagram.centre } : {}),
               move: (nudge: NudgeWrite, done: string) => void writeStyle(plugin, target.path, graph, { nudge }, done),
             },
           }),
