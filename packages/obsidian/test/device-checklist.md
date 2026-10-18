@@ -41,10 +41,11 @@ holds the two together).
       place chooses the next, round to the first, and two quick taps or a double-click on or near things only choose,
       never zoom (slice 2).
 - [ ] **V-09** A 50-thing graph is drawn in under half a second on the phone (§11).
-- [ ] **V-10** A huge graph (over 2,000 things, made by a script) shows its text with a banner — an icon, and the limit and
-      the numbers in words — and Obsidian stays responsive: the note scrolls and other blocks draw while it is checked. On
-      the desktop and on the phone (§9, layout_contained; the tests run the worker in a Node thread, not a web view). The
-      text has no Export button: with no drawing there is nothing to export, and an export is held to the same limits.
+- [ ] **V-10** A huge graph (over 2,000 things: graph theory and this project, made by a script) shows its text with a
+      banner — an icon, and the limit and the numbers in words — and Obsidian stays responsive: the note scrolls and other
+      blocks draw while it is checked. On the desktop and on the phone (§9, layout_contained; the tests run the worker in
+      a Node thread, not a web view). The text has no Export button: with no drawing there is nothing to export, and an
+      export is held to the same limits.
 - [ ] **V-11** A graph whose layout runs past five seconds shows its text with the "took too long" banner and a clock icon, and
       the next graph still draws. The console says nothing about the main thread: the layout ran in a worker (§9). The text
       has no Export button either.

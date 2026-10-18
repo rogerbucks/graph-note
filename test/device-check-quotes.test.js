@@ -2,9 +2,9 @@
 // and its tap text, a box's details, an export's footer and file name. A note that quotes one says so in an
 // `<!-- expect: … -->` line, and this computes the text with the real function (readBack, the layout source, the
 // estimate's explanation, details(), the export footer and plan) from the note's own graph blocks, and holds the note to
-// it exactly, so a note's prose cannot drift from what the code writes. It also holds the graphs the notes ask to be
-// scaled up (the scripts of V-10 and V-11) to the layout limits, and the filler that puts a card below the fold
-// (editor spec §3, tried first in a test vault).
+// it exactly, so a note's prose cannot drift from what the code writes. It also holds the huge graph V-10 carries and the
+// dense one V-11's script makes to the layout limits, and the filler that puts a card below the fold (editor spec §3,
+// tried first in a test vault).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { gqlBlocks, graphOfBlock } from '../packages/core/src/blocks.ts';
@@ -18,7 +18,7 @@ import { details } from '../packages/core/src/render.ts';
 import { linkGroups } from '../packages/core/src/details-nav.ts';
 import { DEFAULT_SETTINGS } from '../packages/core/src/settings.ts';
 import { toStandard } from '../packages/core/src/strictness.ts';
-import { LAYOUT_LIMITS, tooLarge } from '../packages/core/src/layout-limits.ts';
+import { LAYOUT_LIMITS, READ_LIMITS, tooLarge } from '../packages/core/src/layout-limits.ts';
 import { FOLDER, QUOTED, expectations, noteFiles, partsOf } from './repository/device-checks.js';
 import { read } from './repository/repo.js';
 
@@ -139,17 +139,33 @@ function printed(number, graph) {
 }
 
 describe('the diagram sets up its case', () => {
-  test('the script that makes a huge graph makes one over the limit on things, and the dense one stays under both', () => {
-    const huge = printed('V-10', 'huge');
-    assert.equal(huge.reading.tooLarge, undefined, 'a huge graph is read, then refused by the layout limits');
-    assert.ok(huge.drawing.boxes.length > LAYOUT_LIMITS.things, `${huge.drawing.boxes.length} things`);
-    assert.equal(tooLarge(huge.drawing, LAYOUT_LIMITS)?.limit, 'things');
+  test('the huge graph is in its note, over the limit on things and under the read limits, and the dense one stays under both', () => {
+    const note = notes().find(({ file }) => file.includes('/V-10 '));
+    const block = gqlBlocks(note.text).find((b) => graphOfBlock(b.text) === 'huge').text;
+    assert.ok(Buffer.byteLength(block) < READ_LIMITS.bytes, `${Buffer.byteLength(block)} bytes`);
+    assert.ok(block.split('\n').length < READ_LIMITS.lines, `${block.split('\n').length} lines`);
+    const reading = readNote([block]);
+    assert.equal(reading.tooLarge, undefined, 'a huge graph is read, then refused by the layout limits');
+    assert.deepEqual(reading.problems, []);
+    const huge = reading.graphs.get('huge');
+    assert.ok(huge.boxes.length > LAYOUT_LIMITS.things, `${huge.boxes.length} things`);
+    assert.equal(tooLarge(huge, LAYOUT_LIMITS)?.limit, 'things');
     const dense = printed('V-11', 'tangle');
     assert.equal(dense.reading.tooLarge, undefined);
     assert.deepEqual(dense.reading.problems, []);
     assert.ok(dense.drawing.boxes.length < LAYOUT_LIMITS.things && dense.drawing.links.length < LAYOUT_LIMITS.links);
     assert.ok(dense.drawing.links.length > 4000, 'the dense graph is dense');
     assert.equal(tooLarge(dense.drawing, LAYOUT_LIMITS), null);
+  });
+
+  test('the huge graph is real: graph theory and this project, linked where they meet, not numbered fillers', () => {
+    const note = notes().find(({ file }) => file.includes('/V-10 '));
+    const block = gqlBlocks(note.text).find((b) => graphOfBlock(b.text) === 'huge').text;
+    for (const label of ['Person', 'Theorem', 'Algorithm', 'Vertex', 'Requirement', 'Workstream', 'Wave', 'SourceFile'])
+      assert.match(block, new RegExp(`^\\(\\w+:${label} `, 'm'), label);
+    assert.match(block, /^\(gt_euler_trails\)-\[:ANSWERS\]->\(gt_konigsberg\),$/m);
+    assert.match(block, /^\(\w+\)-\[:DRAWS_WITH\]->\(gt_graphviz\),$/m, 'the project meets the theory');
+    assert.doesNotMatch(block, /name: 'Thing \d+'/);
   });
 
   test('a note that needs a card far down starts it below the fold, with sixty lines above its block', () => {
@@ -165,9 +181,7 @@ describe('the diagram sets up its case', () => {
   });
 
   test('the scripts say how they are run: with node, and where the output goes', () => {
-    for (const number of ['V-10', 'V-11']) {
-      const note = notes().find(({ file }) => file.includes(`/${number} `));
-      assert.match(partsOf(note.text).part(2), /run `node make-\w+\.mjs \| pbcopy`/, number);
-    }
+    const note = notes().find(({ file }) => file.includes('/V-11 '));
+    assert.match(partsOf(note.text).part(2), /run `node make-\w+\.mjs \| pbcopy`/);
   });
 });

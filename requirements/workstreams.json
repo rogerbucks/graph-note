@@ -715,5 +715,11 @@
       "text_to_graph_merge",
       "text_to_graph_sources"
     ]
+  },
+  "D2": {
+    "title": "Project home page",
+    "requirements": [
+      "landing_page"
+    ]
   }
 }

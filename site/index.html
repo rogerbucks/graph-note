@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="{{@lang}}" dir="{{@dir}}">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{page.title}}</title>
+    <meta name="description" content="{{page.description}}" />
+    <link rel="canonical" href="{{@url}}" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="sitemap" href="sitemap.xml" type="application/xml" />
+    <link rel="stylesheet" href="site.css" />
+    <meta name="color-scheme" content="light dark" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ThoughtKnot" />
+    <meta property="og:title" content="{{page.title}}" />
+    <meta property="og:description" content="{{page.description}}" />
+    <meta property="og:url" content="{{@url}}" />
+    <meta property="og:locale" content="{{@locale}}" />
+    {{@image-meta}}
+    <meta name="twitter:card" content="summary_large_image" />
+    <script type="application/ld+json">
+      {{@structured-data}}
+    </script>
+  </head>
+  <body>
+    <a class="skip" href="#content">{{page.skip}}</a>
+    <header class="top">
+      <a class="brand" href="{{@url}}"><img src="icon.svg" alt="" width="28" height="28" />ThoughtKnot</a>
+      <nav aria-label="{{nav.label}}">
+        <ul>
+          <li><a href="{{@wiki}}">{{nav.guide}}</a></li>
+          <li><a href="{{@repo}}/releases">{{nav.releases}}</a></li>
+          <li><a href="{{@repo}}">{{nav.source}}</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main id="content">
+      <section class="hero" aria-labelledby="hero-title">
+        <h1 id="hero-title">{{hero.title}}</h1>
+        <p class="lede">{{hero.lede}}</p>
+        <p class="actions">
+          <a class="button primary" href="{{@repo}}/releases/latest">{{hero.get}}</a>
+          <a class="button" href="{{@wiki}}/How-to-use-ThoughtKnot">{{hero.read}}</a>
+        </p>
+        <p class="version">{{hero.version}}</p>
+        {{@image-figure}}
+      </section>
+      <section aria-labelledby="features-title">
+        <h2 id="features-title">{{features.title}}</h2>
+        <ul class="features">
+          <li>
+            <h3>{{features.edit.title}}</h3>
+            <p>{{features.edit.text}}</p>
+          </li>
+          <li>
+            <h3>{{features.views.title}}</h3>
+            <p>{{features.views.text}}</p>
+          </li>
+          <li>
+            <h3>{{features.problems.title}}</h3>
+            <p>{{features.problems.text}}</p>
+          </li>
+          <li>
+            <h3>{{features.offline.title}}</h3>
+            <p>{{features.offline.text}}</p>
+          </li>
+          <li>
+            <h3>{{features.devices.title}}</h3>
+            <p>{{features.devices.text}}</p>
+          </li>
+          <li>
+            <h3>{{features.open.title}}</h3>
+            <p>{{features.open.text}}</p>
+          </li>
+        </ul>
+      </section>
+      <section aria-labelledby="start-title">
+        <h2 id="start-title">{{start.title}}</h2>
+        <ol class="steps">
+          <li>{{start.download}}</li>
+          <li>{{start.copy}}</li>
+          <li>{{start.enable}}</li>
+        </ol>
+        <p class="note">{{start.status}}</p>
+      </section>
+      <section aria-labelledby="more-title">
+        <h2 id="more-title">{{more.title}}</h2>
+        <ul class="links">
+          <li><a href="{{@wiki}}/How-to-use-ThoughtKnot">{{more.guide}}</a></li>
+          <li><a href="{{@wiki}}/Roadmap">{{more.roadmap}}</a></li>
+          <li><a href="{{@repo}}">{{more.source}}</a></li>
+        </ul>
+      </section>
+    </main>
+    <footer class="bottom">
+      <p>{{footer.licence}} <a href="{{@repo}}/blob/main/CODE_OF_CONDUCT.md">{{footer.conduct}}</a></p>
+      <p>{{footer.trademark}}</p>
+      <p class="made">{{footer.made}}</p>
+    </footer>
+  </body>
+</html>

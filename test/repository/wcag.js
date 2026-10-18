@@ -265,7 +265,7 @@ export function openWindow(text, options = {}) {
  */
 export function pageStyleFor(sheet, theme) {
   const css = withoutSystemAsks(sheet);
-  const dark = /@media \(prefers-color-scheme: dark\)\s*\{(:root\s*\{[^}]*\})\s*\}/.exec(css);
+  const dark = /@media \(prefers-color-scheme: dark\)\s*\{\s*(:root\s*\{[^}]*\})\s*\}/.exec(css);
   if (!dark) throw new Error('the page style sheet has no dark scheme to try');
   // the theme's variables and the page's design tokens, mapped from them (page.css), are each a :root block
   const rootOf = (text) => [...text.matchAll(/:root\s*\{([^}]*)\}/g)].map((m) => m[1]).join(';');

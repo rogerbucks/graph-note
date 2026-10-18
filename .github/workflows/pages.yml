@@ -1,0 +1,69 @@
+name: Home page
+
+# Makes the project's home page from the repository and publishes it on GitHub Pages (spec §41, landing_page): on every
+# push to main, so it says what main says, and each morning, so it names the newest release. scripts/wiki-screens.mjs
+# takes the user guide's picture of a drawn graph, and scripts/site.mjs writes the page, its sitemap, robots file and
+# llms.txt. A picture that cannot be taken is a warning, and the page is published without it.
+#
+# Two jobs, so no code runs beside the write. `make` checks out main, installs and runs main's own code with read access
+# only, and uploads the folder. `publish` may write to GitHub Pages, and so runs no code of the repository at all: no
+# checkout, no install, no Node, only GitHub's own deploy action. Nothing of a pull request ever runs here.
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '30 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One publish at a time, none cancelled: each makes the whole page from main as it stands, so the newest one wins.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  make:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm audit signatures
+      - name: List the releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName,publishedAt,isPrerelease > "$RUNNER_TEMP/releases.json"
+      - name: Take the guide's picture
+        run: |
+          node scripts/wiki-screens.mjs --out "$RUNNER_TEMP/images" --chrome "$(command -v google-chrome)" \
+            || echo "::warning::The guide's picture could not be taken, so the page is published without it."
+      - name: Write the page
+        run: node scripts/site.mjs --out site-out --sha "$GITHUB_SHA" --releases "$RUNNER_TEMP/releases.json" --images "$RUNNER_TEMP/images"
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site-out
+          retention-days: 1
+
+  publish:
+    needs: make
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
