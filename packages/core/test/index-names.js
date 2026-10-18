@@ -507,7 +507,6 @@ export const TYPES = [
   'GraphChanges',
   'GraphDrawing',
   'GraphNames',
-  'GraphNotePlugin',
   'GraphShape',
   'GraphSource',
   'GraphStep',

@@ -6,7 +6,7 @@
 //   GET notes/<id>/at/<commit>               {text} at a commit just listed for it
 //   GET notes/<id>/reviews                   {items: [{kind, id, title, author, when, url}]}, or 404 {why}
 //   GET notes/<id>/reviews/<kind>/<item id>  {files: [{path, before, after}], withheld: [{path, why}], workstreams, unread}
-import type { ReviewItem } from '@graph-note/core';
+import type { ReviewItem } from '@thoughtknot/core';
 import type { GitHubReader } from './github-reader.ts';
 import type { NoteHistory } from './note-history.ts';
 import type { ApiAnswer } from './start-server.ts';

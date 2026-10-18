@@ -23,7 +23,7 @@ export function clock(env) {
 }
 
 /** The tooltip on the page, if the card has made one: it goes on the page itself, so it is never clipped by the card. */
-export const tipOf = (env) => env.doc.body.querySelector('.graph-note-quick-info');
+export const tipOf = (env) => env.doc.body.querySelector('.thoughtknot-quick-info');
 /** Whether the tooltip is open. */
 export const open = (env) => {
   const t = tipOf(env);
@@ -44,15 +44,15 @@ export const pointerOut = (g, pointerType = 'mouse') =>
 /** A finger (or pen) put down on an element, and lifted. */
 export const touchDown = (el, g, at = { x: 20, y: 20 }, pointerId = 7) =>
   el
-    .querySelector('.graph-note-viewport')
+    .querySelector('.thoughtknot-viewport')
     .dispatch('pointerdown', { target: g, pointerId, pointerType: 'touch', clientX: at.x, clientY: at.y, button: 0 });
 export const touchMove = (el, g, at, pointerId = 7) =>
   el
-    .querySelector('.graph-note-viewport')
+    .querySelector('.thoughtknot-viewport')
     .dispatch('pointermove', { target: g, pointerId, pointerType: 'touch', clientX: at.x, clientY: at.y });
 export const touchUp = (el, g, at = { x: 20, y: 20 }, pointerId = 7) =>
   el
-    .querySelector('.graph-note-viewport')
+    .querySelector('.thoughtknot-viewport')
     .dispatch('pointerup', { target: g, pointerId, pointerType: 'touch', clientX: at.x, clientY: at.y, button: 0 });
 
 /** The numbers in a string, in order. */
@@ -82,12 +82,12 @@ export function pageRect(el, g) {
     const [cx, cy, rx, ry] = ['cx', 'cy', 'rx', 'ry'].map((a) => Number(e.getAttribute(a)));
     take([cx - rx, cy - ry, cx + rx, cy + ry]);
   }
-  const vp = el.querySelector('.graph-note-viewport'),
+  const vp = el.querySelector('.thoughtknot-viewport'),
     at = vp.getBoundingClientRect(),
     kx = Number(svg.getAttribute('width')) / vw,
     ky = Number(svg.getAttribute('height')) / vh,
-    ox = parseFloat(vp.cssProps['--graph-note-x'] ?? '0') + at.left,
-    oy = parseFloat(vp.cssProps['--graph-note-y'] ?? '0') + at.top;
+    ox = parseFloat(vp.cssProps['--thoughtknot-x'] ?? '0') + at.left,
+    oy = parseFloat(vp.cssProps['--thoughtknot-y'] ?? '0') + at.top;
   return {
     left: (Math.min(...xs) - vx) * kx + ox,
     right: (Math.max(...xs) - vx) * kx + ox,
@@ -100,8 +100,8 @@ export function pageRect(el, g) {
 export function tipRect(env) {
   const t = tipOf(env),
     size = t.getBoundingClientRect(),
-    left = parseFloat(t.cssProps['--graph-note-qi-x']),
-    top = parseFloat(t.cssProps['--graph-note-qi-y']);
+    left = parseFloat(t.cssProps['--thoughtknot-qi-x']),
+    top = parseFloat(t.cssProps['--thoughtknot-qi-y']);
   return { left, top, right: left + size.width, bottom: top + size.height };
 }
 

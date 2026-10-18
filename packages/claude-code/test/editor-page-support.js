@@ -24,7 +24,7 @@ export async function cleanUp() {
 /** The page built into a temporary folder, once: where it is, and what went into the page and the worker bundles. */
 export function built() {
   building ??= (async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'graph-note-built-page-'));
+    const dir = mkdtempSync(join(tmpdir(), 'thoughtknot-built-page-'));
     folders.push(dir);
     return { dir, ...(await buildPage(dir)) };
   })();

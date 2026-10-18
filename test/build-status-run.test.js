@@ -44,7 +44,7 @@ describe('a pull request that is opened', () => {
     for (const id of MOVED)
       assert.match(body, new RegExp(`\`${id}\` \\(\\[#\\d+\\]\\(https://github\\.com/[\\w/.-]+/issues/\\d+\\)\\)`));
     assert.match(body, /\[Board\]\(https:\/\/github\.com\/users\/rogerbucks\/projects\/1\)/);
-    assert.match(body, /\[Run\]\(https:\/\/github\.com\/rogerbucks\/graph-note\/actions\/runs\/99\)/);
+    assert.match(body, /\[Run\]\(https:\/\/github\.com\/rogerbucks\/thoughtknot\/actions\/runs\/99\)/);
     assert.ok(body.split('\n').length <= 10);
   });
 
@@ -191,7 +191,7 @@ describe('the pull requests it leaves alone', () => {
 
   test('one from a fork moves nothing and gets no comment', async () => {
     const w = world();
-    const skipped = await left(w, (p) => (p.head.repo.full_name = 'someone/graph-note'));
+    const skipped = await left(w, (p) => (p.head.repo.full_name = 'someone/thoughtknot'));
     assert.deepEqual([skipped.number, skipped.skipped], [7, 'fork']);
   });
 
@@ -203,7 +203,7 @@ describe('the pull requests it leaves alone', () => {
 
   test('one whose base is another repository is left alone', async () => {
     const w = world();
-    const skipped = await left(w, (p) => (p.base.repo.full_name = 'someone/graph-note'));
+    const skipped = await left(w, (p) => (p.base.repo.full_name = 'someone/thoughtknot'));
     assert.equal(skipped.skipped, 'fork');
   });
 

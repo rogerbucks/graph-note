@@ -20,10 +20,10 @@
 1. With this note in front in Live Preview or Source mode (in reading view the command refuses for another reason: see C-07), open the command palette and run "Convert this note to standard GQL".
 2. Read the notice and check it is the one above.
 3. Check the text of the block has not changed: no comma was written.
-4. In Settings, Graph Note, press the same button on the page, and check the same result.
+4. In Settings, ThoughtKnot, press the same button on the page, and check the same result.
 
 **Checklist line:**
 
 > **C-06** A note with a line that cannot be read, in front, and "Convert this note to standard GQL" from the command palette: the note is left as it is, and the notice says why.
 
-**Back to the checklist:** [C-06 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for C-06 in its list.
+**Back to the checklist:** [C-06 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for C-06 in its list.

@@ -8,8 +8,8 @@ import { FIXTURE } from './repository/github-project-fixture.js';
 import { pull } from './repository/build-status-fake.js';
 import { HEAD_TEXT, MERGE, MOVED, PARENT, world } from './repository/build-status-world.js';
 
-const LOCK = 'repos/rogerbucks/graph-note/issues/7/lock';
-const COMMENTS = 'repos/rogerbucks/graph-note/issues/7/comments';
+const LOCK = 'repos/rogerbucks/thoughtknot/issues/7/lock';
+const COMMENTS = 'repos/rogerbucks/thoughtknot/issues/7/comments';
 const OTHER_MERGE = 'f'.repeat(40);
 const OTHER_PARENT = '9'.repeat(40);
 const ZOOM_TEST =
@@ -200,7 +200,7 @@ describe('a release', () => {
     const w = world();
     release(w);
     mergedAndLocked(w);
-    w.side.hub.pulls[7].head.repo.full_name = 'someone/graph-note';
+    w.side.hub.pulls[7].head.repo.full_name = 'someone/thoughtknot';
     const result = await send(w);
     assert.deepEqual(result.release.pulls, []);
     assert.deepEqual(w.comments(), []);

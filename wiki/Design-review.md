@@ -1,14 +1,14 @@
 # Design review: language, plug-ins, theming and tests
 
-A solution architect's review of how ready Graph Note is for the things users will ask for: other languages and
+A solution architect's review of how ready ThoughtKnot is for the things users will ask for: other languages and
 cultures, right-to-left scripts, plug-ins, themes, and tests that check each layer and run only what a change touches.
 It says what is there today, where the code already has a place to fit each one, and the design to build. Reviewed on
 17 October 2026, against version 0.5.0.
 
 The requirements it adds are in
-[`requirements/editor-requirements.gql`](https://github.com/rogerbucks/graph-note/blob/main/requirements/editor-requirements.gql),
+[`requirements/editor-requirements.gql`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/editor-requirements.gql),
 sections 42 to 44, and the order they are built in is in
-[`requirements/waves.json`](https://github.com/rogerbucks/graph-note/blob/main/requirements/waves.json).
+[`requirements/waves.json`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/waves.json).
 
 ## The short answer
 
@@ -51,7 +51,7 @@ after it, a package's entry, a page module or shared test support ran the whole 
 modules, so most changes ran all of it.
 
 **Done in this change.** The quick run now also follows the import graph
-([`scripts/import-graph.mjs`](https://github.com/rogerbucks/graph-note/blob/main/scripts/import-graph.mjs)): every test
+([`scripts/import-graph.mjs`](https://github.com/rogerbucks/thoughtknot/blob/main/scripts/import-graph.mjs)): every test
 that imports a changed file, directly or through other modules, or names it to build or walk, runs. The whole suite now
 runs for only 6 modules, and a typical change runs about 39 test files out of 435. The full suite still runs before
 every merge and in CI.
@@ -63,12 +63,12 @@ adapter's and plug-in's contract suite.
 
 **Today.**
 - The display layer's host interface is `DisplayHost`
-  ([`packages/core/src/display/host.ts:23`](https://github.com/rogerbucks/graph-note/blob/main/packages/core/src/display/host.ts#L23)):
+  ([`packages/core/src/display/host.ts:23`](https://github.com/rogerbucks/thoughtknot/blob/main/packages/core/src/display/host.ts#L23)):
   icon, phone test, notice, menu and the style policy.
 - Two adapters implement it: Obsidian's
-  ([`packages/obsidian/src/display-host.ts:8`](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/src/display-host.ts#L8))
+  ([`packages/obsidian/src/display-host.ts:8`](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/src/display-host.ts#L8))
   and the browser page's
-  ([`packages/claude-code/page/browser-host.ts:87`](https://github.com/rogerbucks/graph-note/blob/main/packages/claude-code/page/browser-host.ts#L87)).
+  ([`packages/claude-code/page/browser-host.ts:87`](https://github.com/rogerbucks/thoughtknot/blob/main/packages/claude-code/page/browser-host.ts#L87)).
   Each is tested on its own; no one suite proves both behave the same.
 - Boundary checks exist for parts of the stack: `packages/core/test/imports.test.js` and `hosts-boundary.test.js`.
 - `host_contract_published` and `storage_contract` (Wave 6) already plan one shared suite each.
@@ -86,16 +86,16 @@ adapter's and plug-in's contract suite.
 
 **Today.** Every extension point is a closed list in the code:
 - Diagram types: `DIAGRAM_TYPES`
-  ([`packages/core/src/style-graph.ts:49`](https://github.com/rogerbucks/graph-note/blob/main/packages/core/src/style-graph.ts#L49)).
+  ([`packages/core/src/style-graph.ts:49`](https://github.com/rogerbucks/thoughtknot/blob/main/packages/core/src/style-graph.ts#L49)).
 - Data exports: `DATA_FORMATS` and an if-chain
-  ([`packages/core/src/export-data.ts:16`](https://github.com/rogerbucks/graph-note/blob/main/packages/core/src/export-data.ts#L16),
-  [`:82`](https://github.com/rogerbucks/graph-note/blob/main/packages/core/src/export-data.ts#L82)).
+  ([`packages/core/src/export-data.ts:16`](https://github.com/rogerbucks/thoughtknot/blob/main/packages/core/src/export-data.ts#L16),
+  [`:82`](https://github.com/rogerbucks/thoughtknot/blob/main/packages/core/src/export-data.ts#L82)).
 - Graph steps and sources, AI providers and storage have the same shape.
 
 **Design.** One small registry in the core (`plugin_interface`):
 
 ```ts
-interface GraphNotePlugin {
+interface ThoughtKnotPlugin {
   id: string;            // 'acme.mermaid-export'
   version: string;       // semver
   api: '1';              // the plug-in interface version it was built for
@@ -111,12 +111,12 @@ interface GraphNotePlugin {
 - A plug-in gets only the capabilities its manifest lists. One that throws or runs too long is stopped and named, and
   the drawing falls back to text, as a layout that is too large does today.
 - Plug-ins are versioned with the library (`lib_public_api`), so a breaking change needs a new major version.
-- Obsidian plug-ins and VS Code extensions keep working as they are; this is Graph Note's own interface inside them.
+- Obsidian plug-ins and VS Code extensions keep working as they are; this is ThoughtKnot's own interface inside them.
 
 ## 4. Theming, inherited by plug-ins
 
 **Today.** The drawing follows the host: one colour map per host
-([`packages/core/src/palette.ts:1`](https://github.com/rogerbucks/graph-note/blob/main/packages/core/src/palette.ts#L1)),
+([`packages/core/src/palette.ts:1`](https://github.com/rogerbucks/thoughtknot/blob/main/packages/core/src/palette.ts#L1)),
 light and dark, at the locked contrast. The interface's style sheet uses Obsidian's own variables directly (321 uses in
 `styles.css`); the browser page copies them. Drawing themes as a graph (`theme_graph`) are planned for slice 8.
 
@@ -132,12 +132,12 @@ light and dark, at the locked contrast. The interface's style sheet uses Obsidia
 
 **Today.** At least 230 user-facing texts are written inline in the code (notices, labels, settings, problems), across
 the core, the display layer and both hosts. The page says `lang="en"`
-([`packages/claude-code/page/index.html:2`](https://github.com/rogerbucks/graph-note/blob/main/packages/claude-code/page/index.html#L2)).
+([`packages/claude-code/page/index.html:2`](https://github.com/rogerbucks/thoughtknot/blob/main/packages/claude-code/page/index.html#L2)).
 Problems carry free text only
-([`packages/core/src/note-reading.ts:107`](https://github.com/rogerbucks/graph-note/blob/main/packages/core/src/note-reading.ts#L107)).
+([`packages/core/src/note-reading.ts:107`](https://github.com/rogerbucks/thoughtknot/blob/main/packages/core/src/note-reading.ts#L107)).
 
 **Best place to start.** `refusal-words.ts`
-([`packages/core/src/hosts/refusal-words.ts`](https://github.com/rogerbucks/graph-note/blob/main/packages/core/src/hosts/refusal-words.ts))
+([`packages/core/src/hosts/refusal-words.ts`](https://github.com/rogerbucks/thoughtknot/blob/main/packages/core/src/hosts/refusal-words.ts))
 already keeps the reason as data and the words apart. That pattern scales.
 
 **Design.**
@@ -154,12 +154,12 @@ already keeps the reason as data and the words apart. That pattern scales.
 ## 6. Culture (numbers, dates, sorting)
 
 **Today.** Fixed to UK English in five places:
-[`refusal-words.ts:7`](https://github.com/rogerbucks/graph-note/blob/main/packages/core/src/hosts/refusal-words.ts#L7),
-[`steps.ts:100`](https://github.com/rogerbucks/graph-note/blob/main/packages/core/src/steps.ts#L100),
-[`steps.ts:218`](https://github.com/rogerbucks/graph-note/blob/main/packages/core/src/steps.ts#L218),
-[`github-review-items.ts:174`](https://github.com/rogerbucks/graph-note/blob/main/packages/core/src/github-review-items.ts#L174)
+[`refusal-words.ts:7`](https://github.com/rogerbucks/thoughtknot/blob/main/packages/core/src/hosts/refusal-words.ts#L7),
+[`steps.ts:100`](https://github.com/rogerbucks/thoughtknot/blob/main/packages/core/src/steps.ts#L100),
+[`steps.ts:218`](https://github.com/rogerbucks/thoughtknot/blob/main/packages/core/src/steps.ts#L218),
+[`github-review-items.ts:174`](https://github.com/rogerbucks/thoughtknot/blob/main/packages/core/src/github-review-items.ts#L174)
 and the Claude Code
-[`graph-view.ts:33`](https://github.com/rogerbucks/graph-note/blob/main/packages/claude-code/src/graph-view.ts#L33).
+[`graph-view.ts:33`](https://github.com/rogerbucks/thoughtknot/blob/main/packages/claude-code/src/graph-view.ts#L33).
 
 **Design.**
 - One small formatter module in the core (`locale_formats`) for counts, sizes, dates, times, lists and sorting, built
@@ -171,13 +171,13 @@ and the Claude Code
 
 **Today.**
 - 25 style rules use left or right
-  ([`styles.css`](https://github.com/rogerbucks/graph-note/blob/main/styles.css), lines 374 to 1463, and 6 in
+  ([`styles.css`](https://github.com/rogerbucks/thoughtknot/blob/main/styles.css), lines 374 to 1463, and 6 in
   `packages/claude-code/page/page.css`); 11 already use logical properties.
 - The arrow keys move by screen direction
-  ([`packages/core/src/untangle.ts:228`](https://github.com/rogerbucks/graph-note/blob/main/packages/core/src/untangle.ts#L228)).
-- Menus and sheets are placed by left offset (`browser-host.ts` menu, `--graph-note-sheet-left`).
+  ([`packages/core/src/untangle.ts:228`](https://github.com/rogerbucks/thoughtknot/blob/main/packages/core/src/untangle.ts#L228)).
+- Menus and sheets are placed by left offset (`browser-host.ts` menu, `--thoughtknot-sheet-left`).
 - Drawings run left to right or top to bottom only
-  ([`packages/core/src/layout.ts:24`](https://github.com/rogerbucks/graph-note/blob/main/packages/core/src/layout.ts#L24)).
+  ([`packages/core/src/layout.ts:24`](https://github.com/rogerbucks/thoughtknot/blob/main/packages/core/src/layout.ts#L24)).
 
 **Design.**
 - The host tells the layer its direction; the layer sets `dir` on its root, and everything follows.

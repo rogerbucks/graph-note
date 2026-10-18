@@ -1759,7 +1759,7 @@
 (wave_18:Wave {name: 'Wave 18 · Held: Copilot Cowork skill', start: '2027-05-10', end: '2027-05-23'}),
 (wave_19:Wave {name: 'Roger’s held changes, after all waves', start: '2027-05-24', end: '2027-06-06'}),
 // ── This project: its code, file by file ──
-(d1:Folder {name: 'graph-note'}),
+(d1:Folder {name: 'thoughtknot'}),
 (d2:Folder {name: 'packages/claude-code/'}),
 (d3:Folder {name: 'packages/claude-code/bin/'}),
 (d4:Folder {name: 'packages/claude-code/mod/hooks/'}),
@@ -1811,9 +1811,9 @@
 (d50:Folder {name: 'packages/obsidian/test/host/'}),
 (d51:Folder {name: 'scripts/'}),
 (d52:Folder {name: 'scripts/benchmarks/'}),
-(d53:Folder {name: 'spikes/graph-note-spike/'}),
-(d54:Folder {name: 'spikes/graph-note-spike/src/'}),
-(d55:Folder {name: 'spikes/graph-note-spike/test/'}),
+(d53:Folder {name: 'spikes/thoughtknot-spike/'}),
+(d54:Folder {name: 'spikes/thoughtknot-spike/src/'}),
+(d55:Folder {name: 'spikes/thoughtknot-spike/test/'}),
 (d56:Folder {name: 'test/'}),
 (d57:Folder {name: 'test/repository/'}),
 (f1:SourceFile {name: 'eslint.config.mjs'}),
@@ -2560,9 +2560,9 @@
 (f742:SourceFile {name: 'scripts/wiki-roadmap.mjs'}),
 (f743:SourceFile {name: 'scripts/wiki-screens.mjs'}),
 (f744:SourceFile {name: 'scripts/wiki.mjs'}),
-(f745:SourceFile {name: 'spikes/graph-note-spike/esbuild.config.mjs'}),
-(f746:SourceFile {name: 'spikes/graph-note-spike/src/main.ts'}),
-(f747:TestFile {name: 'spikes/graph-note-spike/test/spike.test.mjs'}),
+(f745:SourceFile {name: 'spikes/thoughtknot-spike/esbuild.config.mjs'}),
+(f746:SourceFile {name: 'spikes/thoughtknot-spike/src/main.ts'}),
+(f747:TestFile {name: 'spikes/thoughtknot-spike/test/spike.test.mjs'}),
 (f748:TestFile {name: 'test/a11y-keyboard-page-1.test.js'}),
 (f749:TestFile {name: 'test/a11y-keyboard-page-2.test.js'}),
 (f750:TestFile {name: 'test/a11y-keyboard-page-3.test.js'}),
@@ -7588,4 +7588,4 @@ The block that must still draw while the huge one is checked.
 
 > **V-10** A huge graph (over 2,000 things: graph theory and this project, made by a script) shows its text with a banner — an icon, and the limit and the numbers in words — and Obsidian stays responsive: the note scrolls and other blocks draw while it is checked. On the desktop and on the phone (§9, layout_contained; the tests run the worker in a Node thread, not a web view). The text has no Export button: with no drawing there is nothing to export, and an export is held to the same limits.
 
-**Back to the checklist:** [V-10 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for V-10 in its list.
+**Back to the checklist:** [V-10 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for V-10 in its list.

@@ -53,7 +53,7 @@ describe('sources and steps in Live Preview', () => {
       const host = env.doc.body.createDiv({ cls: 'markdown-source-view' });
       const dom = card.widget.toDOM();
       host.appendChild(dom);
-      await until(() => !!dom.querySelector('.graph-note-step'));
+      await until(() => !!dom.querySelector('.thoughtknot-step'));
       assert.ok(labelled(dom, 'Run step colleagues'), 'Run');
       assert.ok(labelled(dom, 'Edit'), 'Edit');
       assert.equal(env.state.writes, undefined, 'nothing written');
@@ -76,7 +76,7 @@ describe('sources and steps in Live Preview', () => {
       const host = env.doc.body.createDiv({ cls: 'markdown-source-view' });
       const dom = card.widget.toDOM();
       host.appendChild(dom);
-      await until(() => !!dom.querySelector('.graph-note-step [role="alert"]'));
+      await until(() => !!dom.querySelector('.thoughtknot-step [role="alert"]'));
       assert.match(dom.querySelector('[role="alert"]').textContent, /a step is at most 8,192 characters long/);
     } finally {
       view.close();

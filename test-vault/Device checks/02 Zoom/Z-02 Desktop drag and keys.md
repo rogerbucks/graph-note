@@ -31,4 +31,4 @@
 
 > **Z-02** Desktop: dragging empty space pans once zoomed in. Plus, minus and zero work when the drawing has focus.
 
-**Back to the checklist:** [Z-02 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Z-02 in its list.
+**Back to the checklist:** [Z-02 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Z-02 in its list.

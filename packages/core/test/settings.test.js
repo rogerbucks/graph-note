@@ -109,10 +109,10 @@ describe('the AI models of §19', () => {
 
   test('a model keeps only the name of its key in the host’s secret store, never a key itself', () => {
     const s = settingsFrom({
-      aiModels: [{ name: 'A', keyName: 'graph-note-a', key: 'sk-123', apiKey: 'sk-456', token: 't' }],
+      aiModels: [{ name: 'A', keyName: 'thoughtknot-a', key: 'sk-123', apiKey: 'sk-456', token: 't' }],
     });
     assert.deepEqual(Object.keys(s.aiModels[0]).sort(), ['ceiling', 'endpoint', 'keyName', 'model', 'name', 'purpose']);
-    assert.equal(s.aiModels[0].keyName, 'graph-note-a');
+    assert.equal(s.aiModels[0].keyName, 'thoughtknot-a');
     assert.doesNotMatch(JSON.stringify(s), /sk-|"t"/);
   });
 });

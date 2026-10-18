@@ -7,9 +7,9 @@ import assert from 'node:assert/strict';
 import { mergedPullNumbers, openPullNumbers } from '../scripts/build-status-gh.mjs';
 import { fakeRepoSide, pull } from './repository/build-status-fake.js';
 
-const REPO = 'rogerbucks/graph-note';
+const REPO = 'rogerbucks/thoughtknot';
 const SHA = 'b'.repeat(40);
-const fork = { headRepo: 'someone/graph-note' };
+const fork = { headRepo: 'someone/thoughtknot' };
 const merged = (n, extra = {}) =>
   pull(n, { state: 'closed', merged: true, mergedAt: '2026-10-05T10:00:00Z', mergeSha: SHA, ...extra });
 const asked = (hub, text) => hub.calls.filter((c) => c.args[1].includes(text)).length;
@@ -33,7 +33,7 @@ describe('the open pull requests', () => {
   test('leave out one whose head repository has gone, and one whose base is another repository', () => {
     const { hub, run } = fakeRepoSide();
     hub.pulls[1] = pull(1, { headRepo: null });
-    hub.pulls[2] = pull(2, { baseRepo: 'someone/graph-note' });
+    hub.pulls[2] = pull(2, { baseRepo: 'someone/thoughtknot' });
     hub.pulls[3] = pull(3);
     assert.deepEqual(openPullNumbers(run, REPO), [3]);
   });

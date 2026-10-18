@@ -24,7 +24,7 @@ import { roadmapPage } from './wiki-roadmap.mjs';
 import { SHOTS } from './wiki-screens.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const REPO = 'https://github.com/rogerbucks/graph-note';
+const REPO = 'https://github.com/rogerbucks/thoughtknot';
 const { read } = createRequire(import.meta.url)('../packages/graph-spec/src/graph-spec-check.js');
 
 /** The pages this script makes from the repository's files, beside the ones it copies from wiki/. */
@@ -271,7 +271,7 @@ export function renderWiki({
     '**[Home](Home)**',
     '',
     '**Using it**',
-    '- [How to use Graph Note](How-to-use-Graph-Note)',
+    '- [How to use ThoughtKnot](How-to-use-ThoughtKnot)',
     '',
     '**The project**',
     ...(ethosText === undefined ? [] : ['- [Ethos](Ethos)']),
@@ -338,7 +338,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   for (const [name, text] of Object.entries(made)) writeFileSync(join(out, name), text);
   const labelsFile = flag(args, '--labels');
   if (labelsFile && existsSync(labelsFile))
-    for (const label of unexplained(JSON.parse(readFileSync(labelsFile, 'utf8')), pages['How-to-use-Graph-Note.md']))
-      console.log(`::warning::The user guide (wiki/How-to-use-Graph-Note.md) does not explain the "${label}" button`);
+    for (const label of unexplained(JSON.parse(readFileSync(labelsFile, 'utf8')), pages['How-to-use-ThoughtKnot.md']))
+      console.log(`::warning::The user guide (wiki/How-to-use-ThoughtKnot.md) does not explain the "${label}" button`);
   console.log(`wrote ${Object.keys(made).length} pages to ${out}`);
 }

@@ -61,7 +61,7 @@ export async function run(send, expression) {
  */
 export async function startChrome({ chrome, width = 1400, height = 1000, scale = 2 } = {}) {
   const port = 9300 + Math.floor(Math.random() * 500);
-  const profile = mkdtempSync(join(tmpdir(), 'graph-note-chrome-'));
+  const profile = mkdtempSync(join(tmpdir(), 'thoughtknot-chrome-'));
   const browser = spawn(
     findChrome(chrome),
     [

@@ -2,8 +2,8 @@
 // linked to this one, shown as chips as Obsidian's Properties panel shows a list — each removed in place with its x, and
 // a field to add a value in place. Each change is an edit of the block's text, and what it did to the thing is said.
 import { setIcon } from '../host';
-import { addToList, removeFromList } from '@graph-note/core';
-import type { ListShape, ListValue, NoteReading } from '@graph-note/core';
+import { addToList, removeFromList } from '@thoughtknot/core';
+import type { ListShape, ListValue, NoteReading } from '@thoughtknot/core';
 
 /** A list the inspector knows of though the graph may hold no value for it yet: whose thing, and its shape. */
 export interface DeclaredList extends ListShape {
@@ -66,7 +66,7 @@ export function listRow(
   });
   setIcon(icon, 'list');
   keyEl.createSpan({
-    cls: 'metadata-property-key-input graph-note-list-key',
+    cls: 'metadata-property-key-input thoughtknot-list-key',
     text: label ? `${label} · ${shape.rel}` : shape.rel,
     attr: { title: `${shape.kind} things linked by ${shape.rel}` },
   });

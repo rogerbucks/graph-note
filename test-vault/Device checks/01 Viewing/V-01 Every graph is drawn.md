@@ -36,4 +36,4 @@ A second graph, so a note holds more than one.
 
 > **V-01** Every graph block is drawn in reading view, and in Live Preview with the cursor outside the block.
 
-**Back to the checklist:** [V-01 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for V-01 in its list.
+**Back to the checklist:** [V-01 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for V-01 in its list.

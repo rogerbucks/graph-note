@@ -26,4 +26,4 @@
 > and right-clicking it offers no menu to open it. A link to a javascript address is shown as text, never as a link,
 > and tapping it does nothing.
 
-**Back to the checklist:** [H-08 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for H-08 in its list.
+**Back to the checklist:** [H-08 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for H-08 in its list.

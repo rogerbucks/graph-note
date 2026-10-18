@@ -24,6 +24,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { freshCloneProblems, setupInputsChangedSince } from './fresh-clone.mjs';
 import { messageProblems, problemsIn } from './history-text-problems.mjs';
+import { DESCRIPTION, HOMEPAGE, topicsSetting } from './repo-profile.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const git = (root, args, input) => execFileSync('git', args, { cwd: root, input, maxBuffer: 2 ** 31 });
@@ -137,6 +138,8 @@ const repoJSON = (repo, fresh = false) => {
   return repoCache.get(repo);
 };
 
+/** The repository's name now. GitHub reads an old name after a rename, but will not write to it (HTTP 307). */
+export const canonicalRepo = (repo, read = repoJSON) => read(repo).full_name ?? repo;
 const repoField = (field, want) => ({
   name: field,
   phase: 'always',
@@ -204,6 +207,12 @@ export const WANTED = [
   repoField('has_discussions', true),
   repoField('delete_branch_on_merge', true),
   repoField('allow_auto_merge', true),
+  // Every commit is signed off (the DCO), so a commit made on the website asks for it too.
+  repoField('web_commit_signoff_required', true),
+  // How the project shows to a stranger: what it is, where its home page is, and the topics it is found by.
+  repoField('description', DESCRIPTION),
+  repoField('homepage', HOMEPAGE),
+  topicsSetting(gh),
   // Secrets: scanned on every push, and refused at the gate.
   security('secret_scanning'),
   security('secret_scanning_push_protection'),
@@ -357,7 +366,7 @@ function main(argv) {
     console.log("setup: the README's steps set up a fresh clone, and the documents name no machine");
   else if (since) console.log('setup: the documents name no machine, and no setup input changed');
   if (flag('--settings')) {
-    const repo = repoOf();
+    const repo = canonicalRepo(repoOf());
     const differing = settingsReport(repo, { apply: flag('--apply') });
     if (differing.length) {
       console.error(`${differing.length} setting${differing.length === 1 ? '' : 's'} differ on ${repo}`);
@@ -370,7 +379,7 @@ function main(argv) {
       console.error('Making the repository public cannot be undone in practice: add --yes to mean it.');
       return 1;
     }
-    const repo = repoOf();
+    const repo = canonicalRepo(repoOf());
     gh(['-X', 'PATCH', `repos/${repo}`], { visibility: 'public' });
     console.log(`${repo} is public. Now run: node scripts/public-readiness.mjs --settings --apply`);
   }

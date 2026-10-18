@@ -1,8 +1,8 @@
 // What a graph's schema leaves undeclared (graph spec model §5): types its GraphMeta does not DECLARE, as in a graph locked
 // by an earlier build, and, in a locked graph, kinds and link types its blocks use that the schema does not declare.
 // Warnings, each on the line where the block first says it, with a fix where one can be written.
-import gs from '@graph-note/graph-spec';
-import type { World } from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
+import type { World } from '@thoughtknot/graph-spec';
 import { blankText } from './block-items.ts';
 import { graphOfBlock } from './blocks.ts';
 import type { Problem } from './note-reading.ts';

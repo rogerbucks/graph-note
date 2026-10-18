@@ -390,7 +390,7 @@ it. A graph line that says STYLE but names no graph is a problem, never data.
   (flow_in_style_graph). `flowOf` checks one (a Flow that moves links must say what it `means`, motion_not_alone),
   `flowFor` and `flowLinks` choose as `arrows.ts` does (the most particular, the first of two alike), and `flowSource`
   writes each moving link into the source: its label opened by its icon (`FLOW_ICONS`), the classes
-  `graph-note-flow`, `-dashes` or `-dot` and `-back` (its line laid out from its far end, so it moves backwards along
+  `thoughtknot-flow`, `-dashes` or `-dot` and `-back` (its line laid out from its far end, so it moves backwards along
   it), and dashes drawn dashed, so they show when still. `flowLegend` and `flowSaid` say each movement and its meaning in
   words, for the legend and a screen reader; `reversedLinks` says which lines run against their links. The movement
   itself is a style sheet's — the plugin's `styles.css`, or an export's (`export-motion.ts`) — and stops under reduced
@@ -596,7 +596,7 @@ a GQL block, CSV or GraphML (`DATA_FORMATS`), each read back into the very thing
   `page-source-words.ts`, and editing's (properties, adding a thing, Edit, kept drafts) in `edit-source-words.ts`, and the AI dialog's and AI models' in `ai-source-words.ts`, each spread
   into `SOURCE_WORDS`.
 - `plugins.ts` — the plug-in interface (editor spec §43, plugin_interface, plugin_manifest_limits): `pluginRegistry`,
-  where a `GraphNotePlugin` is installed once its manifest (`id`, `version`, `api` of `PLUGIN_API`, the `uses` it names
+  where a `ThoughtKnotPlugin` is installed once its manifest (`id`, `version`, `api` of `PLUGIN_API`, the `uses` it names
   of `EXTENSION_POINTS`) is accepted, given only the points it names; a refused plug-in leaves nothing behind, and a
   call into one that throws is caught and named (`PluginResult`). Its first point is the data exports (`DataExporter`);
   its second, `theme`, hands a plug-in the core's tokens and adds its own (theme-tokens.ts), each refused, saying why,
@@ -777,7 +777,7 @@ exactly what goes and said yes to it. Its answer comes back as a proposal (§17)
   change or the cell is no longer conditional; a cell not exactly ✅, ⚠️ or ❌ is `unknown` and refuses; names are
   compared exactly, so a compatibility character never matches; a table that disagrees with itself or with a name
   matches nothing (`classMapProblems`).
-- `src/hosts/` — host-side code, kept apart from the core proper. `hosts/matrix-table.ts` is reached as `@graph-note/core/hosts/matrix-table` (not from the entry) and
+- `src/hosts/` — host-side code, kept apart from the core proper. `hosts/matrix-table.ts` is reached as `@thoughtknot/core/hosts/matrix-table` (not from the entry) and
   imported by no gate or other core module (`hosts-boundary.test.js`): `matrixRows`, the one reader of the matrix note's
   table, for the hosts that read the note (Obsidian and the Claude Code mod); the gates are only ever handed its rows. `matrixRowsFrom` checks rows handed over
   as data, and takes none at all if anything in them is not a row.
@@ -824,7 +824,7 @@ exactly what goes and said yes to it. Its answer comes back as a proposal (§17)
 
 The DOM half of the viewer (editor spec §26, cc_core_only), shared by the Obsidian plugin and the Claude Code browser
 editor's page: the drawn card (`src/display/graph-view/`), the details and the forms it opens. It is not part of the
-host-free entry: `index.ts` exports none of it, and it is reached by the subpath `@graph-note/core/display/<module>`
+host-free entry: `index.ts` exports none of it, and it is reached by the subpath `@thoughtknot/core/display/<module>`
 (`package.json` `exports`), so a host that draws nothing, like the Claude Code mod's hooks, never bundles it. It is
 DOM code, so it has a `tsconfig.json` of its own with the DOM library (`tsc -p packages/core/src/display`), and the
 core's own type check leaves it out. It is bundled, never run by Node on its own, so it is not held to erasable

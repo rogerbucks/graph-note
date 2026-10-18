@@ -10,7 +10,7 @@
 // the GQL block or CSV, which hold it: never written as something else. A note (§24, note_standard) is kept as an XML
 // comment on the line directly before its node or edge, escaped by xml-comment.ts so it reads back as written and can
 // never end its comment; a comment, not a key, so a tool reading the file takes it for a comment, as GQL's engines do.
-import type { Value } from '@graph-note/graph-spec';
+import type { Value } from '@thoughtknot/graph-spec';
 import { saidDate } from './export-frame.ts';
 import { kindOf, numberText, oneLine, timeText } from './export-data-model.ts';
 import type { DataInfo, ExportedData, ValueKind } from './export-data-model.ts';

@@ -1,6 +1,6 @@
 # Architecture
 
-Graph Note is built in layers. Each layer only uses the ones below it, so a new app can be added on top without
+ThoughtKnot is built in layers. Each layer only uses the ones below it, so a new app can be added on top without
 changing what is underneath.
 
 <!-- wiki:edition -->
@@ -8,7 +8,7 @@ changing what is underneath.
 ## The layers
 
 The drawing is made from
-[`requirements/architecture.gql`](https://github.com/rogerbucks/graph-note/blob/main/requirements/architecture.gql), a
+[`requirements/architecture.gql`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/architecture.gql), a
 graph note kept in the repository. Each box is a part, and each six-sided box is an interface between layers. A dashed
 box is planned.
 

@@ -1,6 +1,6 @@
 # C-01 Settings page
 
-**You should see:** on the desktop and the phone, one Graph Note page in the plugin's settings, with Strictness, AI models, Formatting and Drawing, each option with a sentence saying what it does. Searching the settings for "strictness" finds it.
+**You should see:** on the desktop and the phone, one ThoughtKnot page in the plugin's settings, with Strictness, AI models, Formatting and Drawing, each option with a sentence saying what it does. Searching the settings for "strictness" finds it.
 
 **Test diagram:**
 
@@ -17,13 +17,13 @@
 
 **Do this:**
 
-1. Open Settings, then Graph Note under Community plugins.
+1. Open Settings, then ThoughtKnot under Community plugins.
 2. Check the page has Strictness, AI models, Formatting and Drawing, and that each option has a sentence beside it.
-3. Go back to the settings search, type "strictness", and check the Graph Note option is found.
+3. Go back to the settings search, type "strictness", and check the ThoughtKnot option is found.
 4. Repeat on the phone.
 
 **Checklist line:**
 
-> **C-01** Settings › Graph Note, desktop and phone: one page, with Strictness, AI models, Formatting and Drawing, each option with a sentence saying what it does. Searching the settings for "strictness" finds it.
+> **C-01** Settings › ThoughtKnot, desktop and phone: one page, with Strictness, AI models, Formatting and Drawing, each option with a sentence saying what it does. Searching the settings for "strictness" finds it.
 
-**Back to the checklist:** [C-01 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for C-01 in its list.
+**Back to the checklist:** [C-01 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for C-01 in its list.

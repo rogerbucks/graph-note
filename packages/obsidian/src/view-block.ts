@@ -22,23 +22,23 @@ import {
   reversedLinks,
   styledDrawing,
   underStrictness,
-} from '@graph-note/core';
-import type { GraphDrawing, NamedView, Outside, StyleChange, ThingLook } from '@graph-note/core';
-import type GraphNotePlugin from './main';
-import { renderCode } from '@graph-note/core/display/code';
+} from '@thoughtknot/core';
+import type { GraphDrawing, NamedView, Outside, StyleChange, ThingLook } from '@thoughtknot/core';
+import type ThoughtKnotPlugin from './main';
+import { renderCode } from '@thoughtknot/core/display/code';
 import { graphCard } from './graph-card';
-import { aidsOf } from '@graph-note/core/display/graph-view/viewer-aids';
-import { diagramShown, tableDrawn } from '@graph-note/core/display/graph-view/type-strip';
-import type { ViewShown } from '@graph-note/core/display/graph-view/view-strip';
-import { refusalBanner } from '@graph-note/core/display/refusal-banner';
-import { dataExportBar } from '@graph-note/core/display/export/export-form';
+import { aidsOf } from '@thoughtknot/core/display/graph-view/viewer-aids';
+import { diagramShown, tableDrawn } from '@thoughtknot/core/display/graph-view/type-strip';
+import type { ViewShown } from '@thoughtknot/core/display/graph-view/view-strip';
+import { refusalBanner } from '@thoughtknot/core/display/refusal-banner';
+import { dataExportBar } from '@thoughtknot/core/display/export/export-form';
 import { sourcedView } from './sources/sources';
 import { sourceAlert, sourceStrip } from './sources/source-strip';
 import { linkHost } from './links/link-host';
 
 /** Writes a change to the style graph of `graph` into the note at `path`, against the note as it is when written. */
 export async function writeStyle(
-  plugin: GraphNotePlugin,
+  plugin: ThoughtKnotPlugin,
   path: string,
   graph: string,
   change: StyleChange,
@@ -62,7 +62,7 @@ export async function writeStyle(
  * against the note as it is when written; resolves to why it was not written, or null.
  */
 export async function writeViewBlock(
-  plugin: GraphNotePlugin,
+  plugin: ThoughtKnotPlugin,
   path: string,
   graph: string,
   block: string,
@@ -81,7 +81,7 @@ export async function writeViewBlock(
 }
 
 /** Opens the note at the view's line, for its query to be changed there. */
-function changeView(plugin: GraphNotePlugin, path: string, line: number): void {
+function changeView(plugin: ThoughtKnotPlugin, path: string, line: number): void {
   const file = plugin.app.vault.getAbstractFileByPath(path);
   const leaf = plugin.app.workspace.getLeaf(false);
   if (file instanceof TFile && typeof leaf.openFile === 'function')
@@ -91,7 +91,7 @@ function changeView(plugin: GraphNotePlugin, path: string, line: number): void {
 
 /** Draws the view `v`, written in `source`, where the note shows it. */
 export async function renderViewBlock(
-  plugin: GraphNotePlugin,
+  plugin: ThoughtKnotPlugin,
   source: string,
   el: HTMLElement,
   ctx: MarkdownPostProcessorContext,
@@ -103,11 +103,11 @@ export async function renderViewBlock(
   const blocks = info ? gqlBlocks(info.text) : [{ text: source, line: 0 }];
   const texts = blocks.map((b) => b.text);
   const line = info?.lineStart ?? 0;
-  const root = el.createDiv({ cls: 'graph-note' });
+  const root = el.createDiv({ cls: 'thoughtknot' });
   const spec = v.fault ? { refused: v.fault } : parseView(v.query);
   if ('refused' in spec) {
     root.createDiv({
-      cls: 'graph-note-banner',
+      cls: 'thoughtknot-banner',
       attr: { role: 'alert' },
       text: `This view cannot be drawn: ${spec.refused}`,
     });
@@ -138,7 +138,7 @@ export async function renderViewBlock(
   const result = evaluate(spec, reading, v.graph);
   const textOf = (k: string) => base?.boxes.find((b) => b.key === k)?.text ?? k;
   if (result.empty || !base) {
-    const empty = root.createDiv({ cls: 'graph-note-empty' });
+    const empty = root.createDiv({ cls: 'thoughtknot-empty' });
     empty.createEl('p', { text: `View ${v.name} matches nothing. ${result.why ?? ''}` });
     const change = empty.createEl('button', {
       text: 'Change the view',
@@ -246,9 +246,9 @@ export async function renderViewBlock(
     drawn = diagram.table ? tableDrawn(diagram.table) : await laidOut(owner);
   } catch (e) {
     // a view whose drawing cannot be laid out shows its text and why, never a blank card
-    console.error('Graph Note could not draw view', v.name, e);
+    console.error('ThoughtKnot could not draw view', v.name, e);
     root.createDiv({
-      cls: 'graph-note-banner',
+      cls: 'thoughtknot-banner',
       attr: { role: 'alert' },
       text: `View ${v.name} could not be drawn, so its query is shown.`,
     });

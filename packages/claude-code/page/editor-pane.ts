@@ -4,10 +4,10 @@
 // it, with its details and its quick fixes, are all the layer's; what is the page's is the note behind it (page-note.ts),
 // the settings it reads by, and the layout worker the drawing is laid out in. The drawing is laid out in the host's own
 // colours, which the page's theme names (theme-css.ts), so it follows the system's scheme with no redraw.
-import type { Settings } from '@graph-note/core';
-import { BlockEditor } from '@graph-note/core/display/editor/block-editor';
-import { directed } from '@graph-note/core/display/editor/pane-drawing';
-import type { PaneHost } from '@graph-note/core/display/editor/pane-drawing';
+import type { Settings } from '@thoughtknot/core';
+import { BlockEditor } from '@thoughtknot/core/display/editor/block-editor';
+import { directed } from '@thoughtknot/core/display/editor/pane-drawing';
+import type { PaneHost } from '@thoughtknot/core/display/editor/pane-drawing';
 import type { LayoutRunner } from '../../core/src/layout-worker.ts';
 import type { PageNote } from './page-note.ts';
 

@@ -14,7 +14,7 @@ const MORE = '(prefers-contrast: more)';
 
 /** The selector of each sheet's mapping block, where its tokens are given. */
 const MAPPING = {
-  'styles.css': ".graph-note, [class^='graph-note-'], [class*=' graph-note-'], [class^='gql-'], [class*=' gql-']",
+  'styles.css': ".thoughtknot, [class^='thoughtknot-'], [class*=' thoughtknot-'], [class^='gql-'], [class*=' gql-']",
   'packages/claude-code/page/page.css': ':root',
 };
 
@@ -32,16 +32,16 @@ const SYSTEM = [
 
 /** The rules that keep their own colours in forced colours, each with why: every other is forced by the browser. */
 const KEEPS_OWN = {
-  '.graph-note-svg':
+  '.thoughtknot-svg':
     'the drawing, whose colours are written on each shape: drawn in the system’s colours by its own rules',
-  '.graph-note-editor textarea.graph-note-text': 'the editor’s see-through field over its coloured picture',
+  '.thoughtknot-editor textarea.thoughtknot-text': 'the editor’s see-through field over its coloured picture',
 };
 
 /** Each rule that hides the browser's focus ring, by its first selector, and the rule that shows the focus instead. */
 const FOCUS_SHOWN = {
-  '.graph-note-svg g.node:focus': '.graph-note-svg g.node:focus-visible > :is(path, polygon)',
-  '.graph-note-editor textarea.graph-note-text': '.graph-note-editor:focus-within',
-  '.graph-note-type-list button:focus-visible': '.graph-note-type-list button:focus-visible::after',
+  '.thoughtknot-svg g.node:focus': '.thoughtknot-svg g.node:focus-visible > :is(path, polygon)',
+  '.thoughtknot-editor textarea.thoughtknot-text': '.thoughtknot-editor:focus-within',
+  '.thoughtknot-type-list button:focus-visible': '.thoughtknot-type-list button:focus-visible::after',
 };
 
 const ruleWith = (rules, selector, media = '') =>
@@ -100,20 +100,20 @@ describe('every view in forced colours and with more contrast', () => {
   test('the drawing draws each box, line and word in the system’s colours, the chosen or focused thing highlighted', () => {
     const rules = rulesOf('styles.css').filter((r) => r.media === FORCED);
     const paint = (selector, property) => valueOf(ruleWith(rules, selector, FORCED) ?? { declarations: [] }, property);
-    const box = '.graph-note-svg :is(g.node, g.cluster) > :is(path, polygon, ellipse)';
+    const box = '.thoughtknot-svg :is(g.node, g.cluster) > :is(path, polygon, ellipse)';
     assert.equal(paint(box, 'fill'), 'Canvas !important');
     assert.equal(paint(box, 'stroke'), 'CanvasText !important');
-    assert.equal(paint('.graph-note-svg g.edge > :is(path, polyline)', 'stroke'), 'CanvasText !important');
-    assert.equal(paint('.graph-note-svg g.edge > polygon', 'fill'), 'CanvasText !important');
-    assert.equal(paint('.graph-note-svg text:not(.graph-note-link)', 'fill'), 'CanvasText !important');
+    assert.equal(paint('.thoughtknot-svg g.edge > :is(path, polyline)', 'stroke'), 'CanvasText !important');
+    assert.equal(paint('.thoughtknot-svg g.edge > polygon', 'fill'), 'CanvasText !important');
+    assert.equal(paint('.thoughtknot-svg text:not(.thoughtknot-link)', 'fill'), 'CanvasText !important');
     assert.equal(
-      paint('.graph-note-svg :is(g.is-selected, g.node:focus-visible) > :is(path, polygon, ellipse)', 'stroke'),
+      paint('.thoughtknot-svg :is(g.is-selected, g.node:focus-visible) > :is(path, polygon, ellipse)', 'stroke'),
       'Highlight !important',
     );
   });
 
   test('the editor’s field keeps its text see-through, so the text is not shown twice, with the caret in the text colour', () => {
-    const rule = ruleWith(rulesOf('styles.css'), '.graph-note-editor textarea.graph-note-text', FORCED);
+    const rule = ruleWith(rulesOf('styles.css'), '.thoughtknot-editor textarea.thoughtknot-text', FORCED);
     assert.equal(valueOf(rule, 'color'), 'transparent');
     assert.equal(valueOf(rule, 'caret-color'), 'CanvasText');
   });

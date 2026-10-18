@@ -23,4 +23,4 @@
 > shows, as for a link in a note. On the iPhone, press and hold the link: the preview shows, and lifting the finger
 > opens nothing.
 
-**Back to the checklist:** [H-04 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for H-04 in its list.
+**Back to the checklist:** [H-04 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for H-04 in its list.

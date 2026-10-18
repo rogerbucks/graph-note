@@ -1,6 +1,6 @@
 # Writing a plug-in
 
-A plug-in adds something to Graph Note through one typed, versioned interface. The built-in exports use the same
+A plug-in adds something to ThoughtKnot through one typed, versioned interface. The built-in exports use the same
 interface, so a plug-in is never second class.
 
 <!-- wiki:edition -->
@@ -20,7 +20,7 @@ flowchart LR
 3. Everything it adds is checked as it is added. If one thing is refused, none of it is installed.
 4. Once installed, what it adds is offered in every app: Obsidian, the browser editor and, later, the standalone app
    and VS Code.
-5. If your code throws while running, Graph Note catches it and names your plug-in. A drawing is never left blank.
+5. If your code throws while running, ThoughtKnot catches it and names your plug-in. A drawing is never left blank.
 
 The interface is version <!-- wiki:plugin-api -->. A plug-in built for another version is refused.
 
@@ -37,7 +37,7 @@ This plug-in adds a plain text export: one line for each thing, then one for eac
 this exact code, so it always works with the current interface.
 
 ```js
-import { PLUGIN_API, pluginRegistry } from '@graph-note/core';
+import { PLUGIN_API, pluginRegistry } from '@thoughtknot/core';
 
 const textList = {
   id: 'acme.text-list',
@@ -77,7 +77,7 @@ Run the contract checks against your own plug-in in your tests. They need no tes
 saying what was wanted, when something breaks a promise.
 
 ```js
-import { exporterContract } from '@graph-note/core';
+import { exporterContract } from '@thoughtknot/core';
 
 for (const check of exporterContract(myExporter)) check.run();
 ```
@@ -98,13 +98,13 @@ The app's own theme always wins: each token reads the app's own colours where it
 
 ## Built in
 
-These come with Graph Note, added through the same interface:
+These come with ThoughtKnot, added through the same interface:
 
 <!-- wiki:built-in-plugins -->
 
 ## Where it stands
 
-Today plug-ins are built into Graph Note. Loading one from outside, with its manifest limiting what it may reach, is
+Today plug-ins are built into ThoughtKnot. Loading one from outside, with its manifest limiting what it may reach, is
 being built under the requirements below.
 
 <!-- wiki:section 43 -->

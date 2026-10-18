@@ -28,14 +28,14 @@ describe('edit here, in the card', () => {
       labelled(el, 'Edit here').click();
       await until(() => !!el.querySelector('textarea'));
       const rows = ['Record a path', 'Make a view', 'Add a thing'].map(
-        (name) => labelled(el, name)?.closest('.graph-note-card-tools') ?? null,
+        (name) => labelled(el, name)?.closest('.thoughtknot-card-tools') ?? null,
       );
       assert.ok(rows[0], 'in the card’s tools');
       assert.ok(
         rows.every((r) => r === rows[0]),
         'one row',
       );
-      assert.ok(labelled(el, 'Done').classList.contains('graph-note-primary'), 'Done stands out as the way out');
+      assert.ok(labelled(el, 'Done').classList.contains('thoughtknot-primary'), 'Done stands out as the way out');
     } finally {
       env.uninstall();
     }
@@ -46,16 +46,16 @@ describe('edit here, in the card', () => {
     try {
       const el = await show(env);
       labelled(el, 'Edit here').click();
-      await until(() => !!el.querySelector('.graph-note-view textarea'));
-      const t = el.querySelector('.graph-note-view textarea');
+      await until(() => !!el.querySelector('.thoughtknot-view textarea'));
+      const t = el.querySelector('.thoughtknot-view textarea');
       assert.equal(t.value, READER);
       assert.equal(env.doc.activeElement, t);
-      const card = el.querySelector('.graph-note-view');
+      const card = el.querySelector('.thoughtknot-view');
       for (const part of [
-        '.graph-note-overlay',
-        '.graph-note-readback',
-        '.graph-note-suggestions',
-        '.graph-note-pane-problems',
+        '.thoughtknot-overlay',
+        '.thoughtknot-readback',
+        '.thoughtknot-suggestions',
+        '.thoughtknot-pane-problems',
       ])
         assert.ok(card.querySelector(part), part);
       assert.ok(labelled(card, 'Done') && labelled(card, 'Undo') && labelled(card, 'Lock the graph'));
@@ -80,7 +80,7 @@ describe('edit here, in the card', () => {
       assert.equal(env.state.files.get(PATH), NOTE.replace(READER, typed));
       // Obsidian redraws the block from the note's new text: the same editor appears in the new card
       const again = await show(env);
-      const moved = again.querySelector('.graph-note-view textarea');
+      const moved = again.querySelector('.thoughtknot-view textarea');
       assert.equal(moved, t, 'the same field, not a new one');
       assert.equal(moved.value, typed);
       assert.deepEqual([moved.selectionStart, moved.selectionEnd], [10, 12]);
@@ -161,7 +161,7 @@ describe('edit here, in the card', () => {
         assert.ok(el.querySelector('textarea') === t, `the same field, for ${JSON.stringify(typed.slice(-12))}`);
         assert.ok(env.doc.activeElement === t, 'still focused');
         assert.deepEqual([t.selectionStart, t.selectionEnd], [typed.length, typed.length]);
-        if (typed.endsWith(',')) assert.ok(el.querySelector('.graph-note-problems'), 'and why it cannot be drawn');
+        if (typed.endsWith(',')) assert.ok(el.querySelector('.thoughtknot-problems'), 'and why it cannot be drawn');
       }
     } finally {
       env.uninstall();
@@ -470,7 +470,7 @@ describe('selecting in the drawing moves the text to it', () => {
       const el = await show(env);
       choose(el, 'g.node', 0);
       assert.ok(el.querySelector('textarea') === null);
-      assert.ok(!el.querySelector('.graph-note-details').hidden, 'its details show, as before');
+      assert.ok(!el.querySelector('.thoughtknot-details').hidden, 'its details show, as before');
     } finally {
       env.uninstall();
     }

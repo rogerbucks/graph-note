@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Ask a question or share an idea
-    url: https://github.com/rogerbucks/graph-note/discussions
+    url: https://github.com/rogerbucks/thoughtknot/discussions
     about: Questions, ideas and show-and-tell go in Discussions.
   - name: See the plan
-    url: https://github.com/rogerbucks/graph-note/wiki/Roadmap
+    url: https://github.com/rogerbucks/thoughtknot/wiki/Roadmap
     about: The roadmap, made from the repository on every push.

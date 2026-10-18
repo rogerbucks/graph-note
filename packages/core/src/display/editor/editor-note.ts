@@ -3,7 +3,7 @@
 // safely, are each host's. Obsidian's note is the vault (block-note.ts) and the page's is the editor server's store
 // (page/page-note.ts). Both write through the core's `PaneSession`, which never overwrites a block changed meanwhile, so the
 // same edit writes the same bytes in either (cc_same_bytes).
-import type { PaneSession } from '@graph-note/core';
+import type { PaneSession } from '@thoughtknot/core';
 import type { DeclaredDeferred } from '../graph-view/view-options';
 
 /**

@@ -2,7 +2,7 @@
 // (spec §2): the property is rewritten in the map of the pattern where the thing or link is written, and nothing else in
 // the block changes. A value is checked against its type before it is written, and written as the document profile writes
 // it; the names already used on things of the same kind are offered first.
-import type { Graph } from '@graph-note/graph-spec';
+import type { Graph } from '@thoughtknot/graph-spec';
 import type { NoteReading } from './note-reading.ts';
 import { blockItems } from './block-items.ts';
 import { hops } from './estimates.ts';

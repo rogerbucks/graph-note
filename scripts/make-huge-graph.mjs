@@ -201,7 +201,7 @@ function code(g, reqs) {
   const folderNumber = new Map([...folders].sort().map((d, i) => [d, i + 1]));
   const folderId = (d) => `d${folderNumber.get(d)}`;
   for (const d of [...folders].sort()) {
-    g.thing(folderId(d), 'Folder', { name: d === '.' ? 'graph-note' : `${d}/` });
+    g.thing(folderId(d), 'Folder', { name: d === '.' ? 'thoughtknot' : `${d}/` });
   }
   for (const d of [...folders].sort())
     if (d !== '.' && folders.has(dirname(d))) g.link(folderId(d), 'IN', folderId(dirname(d)));

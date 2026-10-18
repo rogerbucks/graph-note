@@ -35,4 +35,4 @@ MATCH (r:Reason)-[:FAVOURS]->(o:Option) RETURN o.name, count(r)
 
 > **V-03** The query block shows as coloured code with a copy button, not a drawing.
 
-**Back to the checklist:** [V-03 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for V-03 in its list.
+**Back to the checklist:** [V-03 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for V-03 in its list.

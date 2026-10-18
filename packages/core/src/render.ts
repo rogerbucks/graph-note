@@ -1,7 +1,7 @@
 // Drawing a graph (spec §3): laid out by the Graphviz engine in each direction the style lists, the better fit chosen and
 // themed, as graph_svg.render does; and what tapping a box shows. The engine itself is started by engine.ts and handed in,
 // so these steps need no WebAssembly and run in any host (spec §10).
-import GraphLayout from '@graph-note/graph-spec/src/graph-layout.js';
+import GraphLayout from '@thoughtknot/graph-spec/src/graph-layout.js';
 import type { GraphDrawing, NoteReading, Problem } from './note-reading.ts';
 import { drawingSource, layoutSource, STYLE } from './layout.ts';
 import type { LayoutSource } from './layout.ts';

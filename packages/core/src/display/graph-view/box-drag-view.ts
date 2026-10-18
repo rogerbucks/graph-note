@@ -4,8 +4,8 @@
 // marked, and a line says the nudge it would write; letting go writes that nudge to the style graph, through the card's
 // host. Escape, or letting go where no place is shown, puts the box back and writes nothing. The core decides where it
 // lands (box-drag.ts); this draws it.
-import { landingFor, landingSaid, word } from '@graph-note/core';
-import type { Landing, NudgeWrite, View, WrittenNudge } from '@graph-note/core';
+import { landingFor, landingSaid, word } from '@thoughtknot/core';
+import type { Landing, NudgeWrite, View, WrittenNudge } from '@thoughtknot/core';
 import type { Taps } from './taps';
 
 /** How far, in screen pixels, a press on a box moves before it is a drag rather than a tap. */
@@ -146,7 +146,7 @@ export class BoxDrag {
       Array.from(this.host.viewport.querySelectorAll<SVGElement>('g.node'))
         .find((g) => g.getAttribute('data-key') === l.other)
         ?.addClass('is-landing');
-    this.hint ??= this.host.viewport.createDiv({ cls: 'graph-note-move-hint', attr: { role: 'status' } });
+    this.hint ??= this.host.viewport.createDiv({ cls: 'thoughtknot-move-hint', attr: { role: 'status' } });
     this.hint.hidden = false;
     this.hint.textContent = l
       ? landingSaid(l, press.key, this.host.textOf)

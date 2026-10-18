@@ -2,8 +2,8 @@
 // selects where it is written in the text, and its Edit puts the focus back in the text. In place, in a drawing's card,
 // the editor has none: the card's own drawing is its drawing. It is laid out apart from the interface, as every drawing
 // is (spec §9): a graph typed or pasted past a limit is not drawn, and a banner beside its text says why.
-import { ViewState, depthOf, parked, startingSwitches } from '@graph-note/core';
-import type { Drawn, FocusDepth, GraphDrawing, NoteReading, PaneSession, Refusal, Settings } from '@graph-note/core';
+import { ViewState, depthOf, parked, startingSwitches } from '@thoughtknot/core';
+import type { Drawn, FocusDepth, GraphDrawing, NoteReading, PaneSession, Refusal, Settings } from '@thoughtknot/core';
 import { Lifecycle } from '../lifecycle';
 import { refusalBanner } from '../refusal-banner';
 import { GraphView } from '../graph-view/graph-view';
@@ -56,14 +56,14 @@ function drawInPane(
 ) {
   host.empty();
   if (!drawn) {
-    host.createEl('p', { cls: 'graph-note-quiet', text: 'Nothing to draw yet. Start with a thing.' });
+    host.createEl('p', { cls: 'thoughtknot-quiet', text: 'Nothing to draw yet. Start with a thing.' });
     return null;
   }
   if ('reason' in drawn) {
     refusalBanner(host, drawn);
     return null;
   }
-  const card = host.createDiv({ cls: 'graph-note' });
+  const card = host.createDiv({ cls: 'thoughtknot' });
   return new GraphView(card, {
     reading,
     graph: s.graph,
@@ -139,7 +139,7 @@ export class PaneDrawing extends Lifecycle {
       .catch((e: unknown) => {
         host.empty();
         host.createDiv({
-          cls: 'graph-note-banner',
+          cls: 'thoughtknot-banner',
           attr: { role: 'alert' },
           text: `The drawing engine could not start: ${String(e)}`,
         });

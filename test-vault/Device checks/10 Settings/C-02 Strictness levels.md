@@ -15,7 +15,7 @@
 
 **Do this:**
 
-1. In Settings, Graph Note, set Strictness to Standard. Look at the badge: errors, with a cross, and the graph still drawn.
+1. In Settings, ThoughtKnot, set Strictness to Standard. Look at the badge: errors, with a cross, and the graph still drawn.
 2. Set it to Forgiving. The badge shows warnings.
 3. Set it to Simplified and switch "A missing comma" on. The badge shows no problem.
 
@@ -23,4 +23,4 @@
 
 > **C-02** Strictness Standard: a block missing a comma at a line's end shows it as an error (✖) behind the badge, and is still drawn. Forgiving (the default): a warning (⚠). Simplified with "A missing comma" on: no problem at all.
 
-**Back to the checklist:** [C-02 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for C-02 in its list.
+**Back to the checklist:** [C-02 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for C-02 in its list.

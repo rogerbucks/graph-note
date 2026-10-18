@@ -7,7 +7,7 @@ import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { claudeGate } from '@graph-note/core';
+import { claudeGate } from '@thoughtknot/core';
 import { launcherFor, modVault, writeNote } from './editor-mod-support.js';
 import { settingsForServer } from '../src/editor-launch.ts';
 import { storeGate } from '../server/editor-gate.ts';
@@ -110,7 +110,7 @@ describe('the server is handed the same row, switches, class names and rows', ()
       settings: settingsWith(model, { aiClassMap: { Open: 'Public' } }),
     });
     await launcher.edit(writeNote(where, 'p.md', 'Public'));
-    const given = JSON.parse(host.requests[0].env.GRAPH_NOTE_EDITOR_SETTINGS);
+    const given = JSON.parse(host.requests[0].env.THOUGHTKNOT_EDITOR_SETTINGS);
     assert.equal(given.aiModels[0].matrixRow, 'Claude chat');
     assert.deepEqual(given.aiModels[0].matrixOn, [{ class: 'Internal', condition: 'history off' }]);
     assert.deepEqual(given.aiClassMap, { Open: 'Public' });

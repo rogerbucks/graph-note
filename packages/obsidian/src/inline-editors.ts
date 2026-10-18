@@ -3,9 +3,9 @@
 // to sit on its line; one to a block, however often Edit here is pressed; and released, with what was typed written,
 // once its card has left the page and its note is no longer open, so no editor nobody can see keeps listening to the vault.
 import { Component, Notice } from 'obsidian';
-import type GraphNotePlugin from './main';
+import type ThoughtKnotPlugin from './main';
 import type { EditTarget } from './main';
-import type { Editing } from '@graph-note/core/display/graph-view/view-options';
+import type { Editing } from '@thoughtknot/core/display/graph-view/view-options';
 import { BlockEditor } from './block-editor/block-editor';
 import { blocksIn } from './live-preview';
 
@@ -26,13 +26,13 @@ interface Placed {
 
 /** The plugin's editors in place: found by their block, opened by Edit here, released when their card is gone. */
 export class InlineEditors extends Component {
-  private readonly plugin: GraphNotePlugin;
+  private readonly plugin: ThoughtKnotPlugin;
   private readonly open = new Map<BlockEditor, Placed>();
   /** Who to tell when an editor in place opens or closes: each card's edit button. */
   private readonly watchers = new Set<() => void>();
   private releaseTimer: number | null = null;
 
-  constructor(plugin: GraphNotePlugin) {
+  constructor(plugin: ThoughtKnotPlugin) {
     super();
     this.plugin = plugin;
   }
@@ -111,7 +111,7 @@ export class InlineEditors extends Component {
       // same, so a later press never waits on it; and its error is logged, never swallowed
       const failed: { why: string | null } = { why: null };
       at.opening = e.open(target.path, target.line).catch((err: unknown) => {
-        console.error('Graph Note could not open the block to edit it here', err);
+        console.error('ThoughtKnot could not open the block to edit it here', err);
         failed.why = err instanceof Error ? err.message : String(err);
       });
       await at.opening;

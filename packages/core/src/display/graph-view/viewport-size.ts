@@ -4,7 +4,7 @@
 // scrolled across, as tall as the drawing, up to a smaller part of the window. A viewport the page has given no size yet, or no longer — a card hidden
 // by display: none or another tab, or not yet laid out — is drawn at the drawing's own size, but the zoom is told it has
 // none, so it keeps its view, a zoom saved as shown among it, for when the card shows (zoom_fit_recomputed).
-import type { Mode, Size } from '@graph-note/core';
+import type { Mode, Size } from '@thoughtknot/core';
 
 /** How much of the window's height a drawing scrolled across may take, at most (§15, wide_types_phone). */
 const ACROSS_HEIGHT = 0.6;

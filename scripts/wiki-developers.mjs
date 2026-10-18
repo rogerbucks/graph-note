@@ -1,6 +1,6 @@
 // The wiki's pages for developers (spec §41, developer_wiki): the architecture, writing a plug-in, adding a host and the
 // reference, each list made from the file that defines it, so the pages change when the code does. The architecture is a
-// graph note of its own, requirements/architecture.gql, drawn as Graph Note draws a graph: a box for each thing, its kind
+// graph note of its own, requirements/architecture.gql, drawn as ThoughtKnot draws a graph: a box for each thing, its kind
 // under its name, and a dashed box for one not built yet. Each requirement is shown with where it stands: in the latest
 // release, on main only (the nightly build), being built, or planned. scripts/wiki.mjs fills the pages' markers from here.
 import { existsSync, readFileSync } from 'node:fs';
@@ -10,7 +10,7 @@ import { readBoard } from './slice-board.mjs';
 import { architectureChart, architectureProblems, label, readArchitecture } from './wiki-architecture.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const REPO = 'https://github.com/rogerbucks/graph-note';
+const REPO = 'https://github.com/rogerbucks/thoughtknot';
 const cell = (text) => String(text).replace(/[\\|]/g, '\\$&').replace(/</g, '&lt;');
 const fileLink = (path) => `[\`${path}\`](${REPO}/blob/main/${path})`;
 
@@ -72,7 +72,7 @@ export function interfacesTable(arch, states) {
 }
 
 /**
- * One section of the requirements, shown as Graph Note shows a graph: a drawing, each requirement a box joined to its
+ * One section of the requirements, shown as ThoughtKnot shows a graph: a drawing, each requirement a box joined to its
  * section and grouped by where it stands, then the same as a table, with its rule in full.
  */
 export function sectionView(num, board, states) {

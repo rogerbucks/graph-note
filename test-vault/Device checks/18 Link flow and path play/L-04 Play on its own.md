@@ -35,4 +35,4 @@
 
 > **L-04** Press Play \<title>: the path steps on its own, two seconds a step, the step now on outlined and pulsing, and a dot running the link from the step before when a link joins them; "Step 2 of 4: …" is said each step. Choose Half a second a step under Pace: it goes faster at once. Pause holds it on its step and Play on carries on from there; Next pauses it; at the last step it stops; Stop playing clears it. Desktop and phone.
 
-**Back to the checklist:** [L-04 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for L-04 in its list.
+**Back to the checklist:** [L-04 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for L-04 in its list.

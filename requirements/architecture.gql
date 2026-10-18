@@ -1,5 +1,5 @@
 // graph: project_architecture · SOURCE
-// How Graph Note is built: its layers, the parts in each, and the interfaces between them. Each layer uses only the
+// How ThoughtKnot is built: its layers, the parts in each, and the interfaces between them. Each layer uses only the
 // layers below it. A part with a path is built; one without names the requirement that plans it. scripts/wiki-developers.mjs
 // reads it and checks every path and requirement; the wiki's developer pages draw it.
 // ── Layers, top to bottom ──

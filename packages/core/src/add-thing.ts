@@ -2,7 +2,7 @@
 // and its name is suggested from it — in the style of the graph's names, and never one of them — and the thing is written
 // as text after the block's last item, with its text under the key its kind's other things use. A name the user gives
 // instead is held to the same rules. Nothing is written until the host is handed the new text and writes it.
-import gs from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
 import { items } from './block-items.ts';
 import { graphOfBlock } from './blocks.ts';
 import { appended } from './linked-list.ts';

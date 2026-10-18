@@ -4,8 +4,8 @@
 // the configured level, the question asked before anything is written (classified_export). A path that can be played is
 // offered too, as an animated SVG at a pace chosen (path_animation_export). A graph or view too large to draw, shown as
 // text, gets a bar of its own with an Export button for its data alone (`dataExportBar`).
-import { DEFAULT_PACE, PATH_PACES, isDataFormat, word } from '@graph-note/core';
-import type { DataFormat, ExportFormat, ExportTheme, ViewSpec } from '@graph-note/core';
+import { DEFAULT_PACE, PATH_PACES, isDataFormat, word } from '@thoughtknot/core';
+import type { DataFormat, ExportFormat, ExportTheme, ViewSpec } from '@thoughtknot/core';
 import { button } from '../graph-view/view-bar';
 import type { ExportAsk, ExportOutcome } from './export-types';
 // (ExportOutcome's share holds the tap's own action: see export.ts)
@@ -49,7 +49,7 @@ const select = (el: HTMLElement, label: string, options: [string, string][], val
 
 /** The Export form shown in `parent`, if there is one. */
 const shownForm = (parent: HTMLElement) =>
-  Array.from(parent.children).find((c) => c.classList.contains('graph-note-export'));
+  Array.from(parent.children).find((c) => c.classList.contains('thoughtknot-export'));
 
 /** Shows the Export form in `el`, or takes it away when it is shown; the focus goes to its first choice. */
 export function toggleExportForm(parent: HTMLElement, x: Exporting): void {
@@ -64,7 +64,10 @@ export function toggleExportForm(parent: HTMLElement, x: Exporting): void {
  */
 export function openExportForm(parent: HTMLElement, x: Exporting): void {
   shownForm(parent)?.remove();
-  const el = parent.createDiv({ cls: 'graph-note-export', attr: { role: 'group', 'aria-label': word('export.form') } });
+  const el = parent.createDiv({
+    cls: 'thoughtknot-export',
+    attr: { role: 'group', 'aria-label': word('export.form') },
+  });
   const scopes: [string, string][] = x.view
     ? [
         ['view', word('export.view', { name: x.view.name })],
@@ -106,11 +109,11 @@ export function openExportForm(parent: HTMLElement, x: Exporting): void {
   format.addEventListener('change', themed);
   scoped();
   // what the form says beyond the notices: a question, or the image ready to share — never the same words twice
-  const said = el.createDiv({ cls: 'graph-note-export-said', attr: { role: 'alert' } });
+  const said = el.createDiv({ cls: 'thoughtknot-export-said', attr: { role: 'alert' } });
   // closed: the focus goes back to the bar's Export button, never lost to the page
   const close = () => {
     el.remove();
-    Array.from(parent.querySelectorAll<HTMLElement>('.graph-note-bar button'))
+    Array.from(parent.querySelectorAll<HTMLElement>('.thoughtknot-bar button'))
       .find((b) => b.getAttribute('aria-label') === word('bar.export'))
       ?.focus();
   };
@@ -175,7 +178,7 @@ export function openExportForm(parent: HTMLElement, x: Exporting): void {
  */
 export function dataExportBar(parent: HTMLElement, x: Exporting): void {
   const bar = parent.createDiv({
-    cls: 'graph-note-bar',
+    cls: 'thoughtknot-bar',
     attr: { role: 'toolbar', 'aria-label': word('bar.name', { graph: x.graph }) },
   });
   button(bar, word('bar.export'), 'download', () => toggleExportForm(parent, { ...x, dataOnly: true }));

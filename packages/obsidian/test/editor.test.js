@@ -157,7 +157,7 @@ describe('a note nobody is editing', () => {
       const el = env.doc.body.createDiv();
       await env.state.processors.get('gql')(block, el, fakeContext(note, 2));
       assert.equal(el.querySelectorAll('g.node').length, 2, 'both things are drawn');
-      assert.match(el.querySelector('.graph-note-problems').textContent, /a comma is missing at the end of this line/);
+      assert.match(el.querySelector('.thoughtknot-problems').textContent, /a comma is missing at the end of this line/);
       await wait(400);
       assert.equal(env.state.files.get(PATH), note, 'the note is as it was');
     } finally {

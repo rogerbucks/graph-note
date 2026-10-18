@@ -60,13 +60,13 @@ describe('quick_info: pointing at a thing or a link for a moment opens the toolt
       await until(() => open(env));
       const t = tipOf(env);
       assert.equal(t.getAttribute('role'), 'tooltip');
-      assert.equal(t.querySelector('.graph-note-quick-name').textContent, 'Start');
-      assert.ok(t.querySelector('.graph-note-quick-kind').textContent.includes('Place'));
+      assert.equal(t.querySelector('.thoughtknot-quick-name').textContent, 'Start');
+      assert.ok(t.querySelector('.thoughtknot-quick-kind').textContent.includes('Place'));
       // the first three properties, in the order the details give them
       for (const p of ['colour: red', 'days: 3', 'mood: keen']) assert.ok(text(env).includes(p), p);
       assert.ok(!text(env).includes('size: big'), 'only the first few');
       // its note, the first paragraph only, as Markdown
-      const note = t.querySelector('.graph-note-quick-note');
+      const note = t.querySelector('.thoughtknot-quick-note');
       assert.equal(note.querySelector('strong').textContent, 'start');
       assert.ok(!text(env).includes('Packed already.'), 'the first paragraph, not the rest');
     } finally {
@@ -100,11 +100,11 @@ describe('quick_info: pointing at a thing or a link for a moment opens the toolt
       time.fire();
       await until(() => open(env));
       const t = tipOf(env);
-      assert.ok(t.querySelector('.graph-note-quick-name').textContent.includes('Middle'));
-      assert.ok(t.querySelector('.graph-note-quick-kind').textContent.includes('TO'));
+      assert.ok(t.querySelector('.thoughtknot-quick-name').textContent.includes('Middle'));
+      assert.ok(t.querySelector('.thoughtknot-quick-kind').textContent.includes('TO'));
       assert.ok(text(env).includes('by: rail'));
       assert.ok(text(env).includes('Why we go.'));
-      assert.equal(t.querySelector('.graph-note-quick-note a.internal-link')?.getAttribute('data-href'), 'Plan');
+      assert.equal(t.querySelector('.thoughtknot-quick-note a.internal-link')?.getAttribute('data-href'), 'Plan');
     } finally {
       env.uninstall();
     }
@@ -117,7 +117,7 @@ describe('quick_info: pointing at a thing or a link for a moment opens the toolt
       pointerOver(thing(el, 'mid'));
       time.fire();
       await until(() => open(env));
-      assert.equal(tipOf(env).querySelector('.graph-note-quick-note'), null);
+      assert.equal(tipOf(env).querySelector('.thoughtknot-quick-note'), null);
     } finally {
       env.uninstall();
     }
@@ -178,7 +178,7 @@ describe('quick_info: pointing at a thing or a link for a moment opens the toolt
       pointerOver(thing(env.el, 'large'));
       time.fire();
       await until(() => open(env));
-      assert.equal(tipOf(env).querySelector('.graph-note-quick-name').textContent, 'Large reader');
+      assert.equal(tipOf(env).querySelector('.thoughtknot-quick-name').textContent, 'Large reader');
       pointerOut(thing(env.el, 'large'));
       thing(env.el, 'eyes').focus();
       await until(() => text(env).includes('Easy on the eyes'));
@@ -195,7 +195,7 @@ describe('quick_info_no_hover_only: the same tooltip by keyboard focus and by lo
       const { el } = await drawn(env);
       thing(el, 'start').focus();
       await until(() => open(env));
-      assert.equal(tipOf(env).querySelector('.graph-note-quick-name').textContent, 'Start');
+      assert.equal(tipOf(env).querySelector('.thoughtknot-quick-name').textContent, 'Start');
       thing(el, 'start').blur();
       assert.equal(open(env), false);
     } finally {
@@ -219,7 +219,7 @@ describe('quick_info_no_hover_only: the same tooltip by keyboard focus and by lo
     const env = await load({ files: { ...FILES } });
     try {
       const { el } = await drawn(env);
-      const vp = el.querySelector('.graph-note-viewport');
+      const vp = el.querySelector('.thoughtknot-viewport');
       vp.dispatch('pointerdown', {
         target: thing(el, 'start'),
         pointerId: 1,
@@ -242,7 +242,7 @@ describe('quick_info_no_hover_only: the same tooltip by keyboard focus and by lo
       const { el } = await drawn(env);
       thing(el, 'start').focus();
       await until(() => open(env));
-      el.querySelector('.graph-note-viewport').dispatch('keydown', { target: thing(el, 'start'), key: 'Escape' });
+      el.querySelector('.thoughtknot-viewport').dispatch('keydown', { target: thing(el, 'start'), key: 'Escape' });
       assert.equal(open(env), false);
     } finally {
       env.uninstall();
@@ -257,9 +257,9 @@ describe('quick_info_no_hover_only: the same tooltip by keyboard focus and by lo
       assert.equal(open(env), false, 'not until held');
       time.fire();
       await until(() => open(env));
-      assert.equal(tipOf(env).querySelector('.graph-note-quick-name').textContent, 'Start');
+      assert.equal(tipOf(env).querySelector('.thoughtknot-quick-name').textContent, 'Start');
       touchUp(el, thing(el, 'start'));
-      assert.equal(el.querySelector('.graph-note-details').hidden, true, 'a long press is not a tap');
+      assert.equal(el.querySelector('.thoughtknot-details').hidden, true, 'a long press is not a tap');
       assert.equal(open(env), true, 'and the tooltip stays to be read');
     } finally {
       env.uninstall();
@@ -275,7 +275,7 @@ describe('quick_info_no_hover_only: the same tooltip by keyboard focus and by lo
       time.fire();
       await settled();
       assert.equal(open(env), false);
-      assert.equal(el.querySelector('.graph-note-details').hidden, false);
+      assert.equal(el.querySelector('.thoughtknot-details').hidden, false);
     } finally {
       env.uninstall();
     }
@@ -395,7 +395,7 @@ describe('quick_info: it never covers the thing, whichever way it was opened', (
 describe('quick_info: it is the theme’s, and goes with its card', () => {
   test('its box and words use the theme’s colours, never a fixed one, and it is above the full-screen layer', () => {
     const css = readFileSync(`${root}styles.css`, 'utf8');
-    const rule = /\.graph-note-quick-info\s*\{([^}]*)\}/.exec(css)?.[1] ?? '';
+    const rule = /\.thoughtknot-quick-info\s*\{([^}]*)\}/.exec(css)?.[1] ?? '';
     assert.match(rule, /background:\s*var\(--/);
     assert.match(rule, /color:\s*var\(--/);
     assert.match(rule, /position:\s*fixed/);

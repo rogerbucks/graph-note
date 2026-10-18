@@ -34,4 +34,4 @@ MATCH (n {id: 'park'})-[]-{1,1}(m) RETURN n, m
 
 > **W-05** Zoom in, select a box, Save as shown: the style block gets a Shown; close and reopen the note: the view opens at that zoom with that box's details open.
 
-**Back to the checklist:** [W-05 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for W-05 in its list.
+**Back to the checklist:** [W-05 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for W-05 in its list.

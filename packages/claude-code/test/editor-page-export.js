@@ -192,7 +192,7 @@ export function exportSameCases({ at, ROOT, LAYER, importsOf }) {
     });
 
     test('the form is the shared Export form: SVG, PNG, GQL, CSV, GraphML, light or dark, and the page runs it', async () => {
-      const dir = mkdtempSync(join(tmpdir(), 'graph-note-export-form-'));
+      const dir = mkdtempSync(join(tmpdir(), 'thoughtknot-export-form-'));
       const doc = fakeDocument(700),
         uninstall = installGlobals(doc);
       try {
@@ -218,7 +218,7 @@ export function exportSameCases({ at, ROOT, LAYER, importsOf }) {
         const exporting = exportingOf(x, 'trip', 'light');
         assert.deepEqual([exporting.path, exporting.graph, exporting.theme], ['Trips/Trip.md', 'trip', 'light']);
         toggleExportForm(doc.body, exporting);
-        const form = doc.body.querySelector('.graph-note-export');
+        const form = doc.body.querySelector('.thoughtknot-export');
         assert.ok(form, 'the Export form');
         const select = (label) => form.querySelectorAll('select').find((s) => s.getAttribute('aria-label') === label);
         assert.deepEqual(

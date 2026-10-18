@@ -4,8 +4,8 @@
 // and the quick-info tooltip. A card is given the settings with its other options, the same in a note, the pane and full
 // screen; `Aids` holds the parts a card builds from them.
 import type { Lifecycle } from '../lifecycle';
-import { tallestOf } from '@graph-note/core';
-import type { Drawn, MiniMapSetting, Settings, View, Zoom } from '@graph-note/core';
+import { tallestOf } from '@thoughtknot/core';
+import type { Drawn, MiniMapSetting, Settings, View, Zoom } from '@thoughtknot/core';
 import type { DetailsPanel } from './details-panel';
 import { MiniMap } from './mini-map';
 import { QuickInfo } from './quick-info';

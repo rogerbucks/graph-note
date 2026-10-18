@@ -8,19 +8,19 @@
 //   node scripts/site.mjs --out DIR [--sha SHA] [--date YYYY-MM-DD] [--releases FILE] [--images DIR] [--url URL]
 // --releases is `gh release list --json tagName,publishedAt,isPrerelease` saved to a file; without it the version is
 // the manifest's. --images is the folder scripts/wiki-screens.mjs wrote: its card.png is shown when it is there. --url
-// is the page's address, for a domain of its own; GitHub Pages' address is the default.
+// is the page's address, for another domain; the project's own, thoughtknot.app, is the default.
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SHOTS } from './wiki-screens.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const REPO = 'https://github.com/rogerbucks/graph-note';
+const REPO = 'https://github.com/rogerbucks/thoughtknot';
 const WIKI = `${REPO}/wiki`;
 const LICENCE = 'https://www.mozilla.org/en-US/MPL/2.0/';
 
-/** The page's address on GitHub Pages, used when no other is given. */
-export const SITE_URL = 'https://rogerbucks.github.io/graph-note/';
+/** The page's address, the project's own domain served by GitHub Pages, used when no other is given. */
+export const SITE_URL = 'https://thoughtknot.app/';
 
 /** The languages written right to left, by their primary code. */
 const RIGHT_TO_LEFT = new Set(['ar', 'dv', 'fa', 'he', 'ps', 'ur', 'yi']);
@@ -78,7 +78,7 @@ function structuredData({ description, url, version, image }) {
   return {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    name: 'Graph Note',
+    name: 'ThoughtKnot',
     description,
     url,
     applicationCategory: 'ProductivityApplication',
@@ -96,7 +96,7 @@ function structuredData({ description, url, version, image }) {
 /** The llms.txt of llmstxt.org: what the project is, then where an assistant reads more. */
 function llmsText({ words, url }) {
   return [
-    '# Graph Note',
+    '# ThoughtKnot',
     '',
     `> ${words['page.description']}`,
     '',
@@ -104,7 +104,7 @@ function llmsText({ words, url }) {
     '',
     '## Docs',
     '',
-    `- [How to use Graph Note](${WIKI}/How-to-use-Graph-Note): the guide, in plain words, with pictures`,
+    `- [How to use ThoughtKnot](${WIKI}/How-to-use-ThoughtKnot): the guide, in plain words, with pictures`,
     `- [Roadmap](${WIKI}/Roadmap): what is done and what comes next`,
     `- [Releases](${REPO}/releases): the plugin's files and both libraries, for each version`,
     `- [Source code](${REPO}): the plugin, the core and the graph format libraries in JavaScript and Python`,

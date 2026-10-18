@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Readies the test vault, test-vault/, for a session in Obsidian, and clears it after: restores its notes and settings
 // to what is committed, removes everything a session added (notes typed, workspace files, other plugins), and copies the
-// plugin build at the repository root into .obsidian/plugins/graph-note/ as real files, and makes the test files the
+// plugin build at the repository root into .obsidian/plugins/thoughtknot/ as real files, and makes the test files the
 // device checks need (scripts/make-test-files.mjs), the GIF over the size limit among them. Nothing outside test-vault/ is
 // touched.
 //
@@ -23,7 +23,7 @@ import { makeTestFiles } from './make-test-files.mjs';
 
 export const VAULT = 'test-vault';
 export const PLUGIN_FILES = ['main.js', 'manifest.json', 'styles.css'];
-const PLUGIN_DIR = join(VAULT, '.obsidian', 'plugins', 'graph-note');
+const PLUGIN_DIR = join(VAULT, '.obsidian', 'plugins', 'thoughtknot');
 
 /**
  * Files in the vault's .obsidian/ that a reset never removes, or every reset would switch Obsidian Sync off. Patterns for
@@ -55,7 +55,7 @@ export function fresh(root) {
   const changed = git('diff', '--name-only', '-z', '--', VAULT).toString().split('\0').filter(Boolean);
   if (changed.length) git('restore', '--worktree', '--', ...changed);
   // the installed build stays too, so an unchanged file is not deleted and copied again
-  const kept = [...KEEP.map((p) => `.obsidian/${p}`), ...PLUGIN_FILES.map((f) => `.obsidian/plugins/graph-note/${f}`)];
+  const kept = [...KEEP.map((p) => `.obsidian/${p}`), ...PLUGIN_FILES.map((f) => `.obsidian/plugins/thoughtknot/${f}`)];
   const keep = kept.flatMap((p) => ['-e', `/${VAULT}/${p}`]);
   git('clean', '-fdxq', ...keep, '--', VAULT);
   const dir = join(root, PLUGIN_DIR);

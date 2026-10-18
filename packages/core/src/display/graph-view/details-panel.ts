@@ -4,8 +4,8 @@
 // changes its properties in the text. What its links reach can be chosen from it, and the walk retraced (§25); in view
 // mode, in a note's card, it is the sheet pinned to the foot of the screen (details-sheet.ts).
 import { isPhone } from '../host';
-import { Trail, details, linkDetails, linkGroups, linkInBlock, propertiesOf, thingSaid, word } from '@graph-note/core';
-import type { Estimate, TrailStep } from '@graph-note/core';
+import { Trail, details, linkDetails, linkGroups, linkInBlock, propertiesOf, thingSaid, word } from '@thoughtknot/core';
+import type { Estimate, TrailStep } from '@thoughtknot/core';
 import { renderProperties } from '../properties/properties';
 import { problemText } from './problems-list';
 import { showSuggested } from './suggested-name';
@@ -21,7 +21,7 @@ import { untangleOffers } from './details-untangle';
 import { MovingImages, placePictures, renderImages } from './animated-images';
 import type { ThingActions } from './untangle';
 import type { ViewOptions } from './view-options';
-import type { View } from '@graph-note/core';
+import type { View } from '@thoughtknot/core';
 
 /** The details of one drawing, shown in its card below the drawing, or in view mode as the sheet. */
 export class DetailsPanel {
@@ -159,12 +159,12 @@ export class DetailsPanel {
     const el = this.panel(`${d.from.text} ${d.reading} ${d.to.text}`, d.type);
     this.retrace(el, { link: index });
     // each end is a choice, as a linked thing is in a thing's details (§25)
-    const ul = el.createEl('ul', { cls: 'graph-note-link-groups' });
+    const ul = el.createEl('ul', { cls: 'thoughtknot-link-groups' });
     for (const [label, end] of [
       [word('details.from'), d.from],
       [word('details.to'), d.to],
     ] as const) {
-      const li = ul.createEl('li', { cls: 'graph-note-link-group' });
+      const li = ul.createEl('li', { cls: 'thoughtknot-link-group' });
       li.appendText(`${label}: `);
       thingButton(li, end.text, () => this.choose({ key: end.key }));
     }
@@ -199,12 +199,12 @@ export class DetailsPanel {
     el.hidden = false;
     el.setAttribute('aria-label', word('details.of', { name: title }));
     el.toggleClass('is-sheet', isPhone() && !!this.o.editing?.()?.session); // the inspector, on a phone: a bottom sheet (§14)
-    const head = el.createDiv({ cls: 'graph-note-details-head' });
+    const head = el.createDiv({ cls: 'thoughtknot-details-head' });
     head.createEl('strong', { text: title });
-    if (kind) head.createSpan({ cls: 'graph-note-kind', text: kind });
+    if (kind) head.createSpan({ cls: 'thoughtknot-kind', text: kind });
     this.sheet.head(head);
     button(head, word('details.close'), 'x', () => this.close());
-    const body = el.createDiv({ cls: 'graph-note-details-body' });
+    const body = el.createDiv({ cls: 'thoughtknot-details-body' });
     this.sheet.opened(body);
     return body;
   }
@@ -279,11 +279,11 @@ export class DetailsPanel {
     const el = this.panel(d.text, d.kind);
     this.retrace(el, { key });
     // what is going on, in a sentence or two, before anything else (details_said)
-    el.createEl('p', { cls: 'graph-note-details-said', text: thingSaid(this.o.reading, this.o.graph, key) });
+    el.createEl('p', { cls: 'thoughtknot-details-said', text: thingSaid(this.o.reading, this.o.graph, key) });
     this.rich.thing(el, key, d.text); // the note it stands for, and its text rendered by Obsidian (§18)
     const links = (title: string, items: string[]) => {
       if (!items.length) return;
-      el.createEl('h4', { cls: 'graph-note-section-label', text: title });
+      el.createEl('h4', { cls: 'thoughtknot-section-label', text: title });
       const ul = el.createEl('ul');
       for (const i of items) ul.createEl('li', { text: i });
     };

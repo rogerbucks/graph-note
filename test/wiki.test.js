@@ -36,7 +36,7 @@ describe('the wiki', () => {
     assert.doesNotMatch(pages['Home.md'], /<!-- wiki:/);
     assert.match(pages['Guide.md'], /!\[[^\]]+\]\(images\/card\.png\)/);
     assert.match(pages['Guide.md'], /\| \*\*Indent\*\* \| How lines are indented\. \|/);
-    for (const name of [...GENERATED, 'How-to-use-Graph-Note'])
+    for (const name of [...GENERATED, 'How-to-use-ThoughtKnot'])
       assert.match(pages['_Sidebar.md'], new RegExp(`\\(${name.replace('.md', '')}\\)`));
   });
 
@@ -45,7 +45,7 @@ describe('the wiki', () => {
     for (const name of GENERATED) {
       assert.match(
         pages[name],
-        /_Made from .+ at \[`0123456`\]\(https:\/\/github\.com\/rogerbucks\/graph-note\/commit\/0123456789abcdef\)/,
+        /_Made from .+ at \[`0123456`\]\(https:\/\/github\.com\/rogerbucks\/thoughtknot\/commit\/0123456789abcdef\)/,
       );
       assert.match(pages[name], /change the repository, not this page/);
     }
@@ -133,13 +133,13 @@ describe('the wiki', () => {
   test('lists the releases GitHub gives, or the versions file without them', () => {
     assert.match(
       made()['Releases.md'],
-      /\| \[0\.5\.0\]\(https:\/\/github\.com\/rogerbucks\/graph-note\/releases\/tag\/0\.5\.0\)/,
+      /\| \[0\.5\.0\]\(https:\/\/github\.com\/rogerbucks\/thoughtknot\/releases\/tag\/0\.5\.0\)/,
     );
     // gh release list gives no address, so each links to its tag's page
     const releases = [{ tagName: '9.9.9', name: 'Big', publishedAt: '2026-10-01T10:00:00Z' }];
     assert.match(
       made({ releases })['Releases.md'],
-      /\| \[9\.9\.9\]\(https:\/\/github\.com\/rogerbucks\/graph-note\/releases\/tag\/9\.9\.9\) \| Big \| 1 Oct 2026 \|/,
+      /\| \[9\.9\.9\]\(https:\/\/github\.com\/rogerbucks\/thoughtknot\/releases\/tag\/9\.9\.9\) \| Big \| 1 Oct 2026 \|/,
     );
   });
 });

@@ -19,7 +19,7 @@ import { fakeRepoSide } from './repository/build-status-fake.js';
 import { FIXTURE, WAVES, WORKSTREAMS } from './repository/github-project-fixture.js';
 import { path } from './repository/repo.js';
 
-const REPO = 'rogerbucks/graph-note';
+const REPO = 'rogerbucks/thoughtknot';
 const WORKFLOW_TOKEN = 'ghs_TheWorkflowsOwnToken1234';
 const PROJECT_TOKEN = 'ghp_TheProjectTokenForTest99';
 const SLICES = [3, 4];

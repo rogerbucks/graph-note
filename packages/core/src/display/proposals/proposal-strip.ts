@@ -4,8 +4,8 @@
 // person presses Accept. On a phone the list is a sheet at the bottom of the screen (proposals_phone), as the inspector
 // is; each control is a 44-point target and says in words what it does.
 import { isPhone } from '../host';
-import { word } from '@graph-note/core';
-import type { ProposalShown, Which } from '@graph-note/core';
+import { word } from '@thoughtknot/core';
+import type { ProposalShown, Which } from '@thoughtknot/core';
 
 /** What a card is given of a proposal: data to show, and the functions that decide, which reading view closes. */
 export interface ProposalCard {
@@ -31,19 +31,19 @@ export function renderProposalStrip(root: HTMLElement, card: ProposalCard): HTML
   const accepts: { b: HTMLButtonElement; blocked: boolean }[] = [];
   let seen = false;
   const strip = root.createDiv({
-    cls: 'graph-note-proposal',
+    cls: 'thoughtknot-proposal',
     attr: { role: 'region', 'aria-label': word('proposal.region', { id: card.id, graph: card.graph }) },
   });
   strip.toggleClass('is-sheet', isPhone());
-  const head = strip.createDiv({ cls: 'graph-note-proposal-head' });
+  const head = strip.createDiv({ cls: 'thoughtknot-proposal-head' });
   head.createEl('strong', { text: word('proposal.name', { id: card.id }) });
-  head.createSpan({ cls: 'graph-note-kind', text: word('proposal.not-yet-written') });
-  const info = strip.createEl('ul', { cls: 'graph-note-proposal-provenance' });
+  head.createSpan({ cls: 'thoughtknot-kind', text: word('proposal.not-yet-written') });
+  const info = strip.createEl('ul', { cls: 'thoughtknot-proposal-provenance' });
   for (const line of shown.provenance) info.createEl('li', { text: line });
   // the graph spec's own check of the change set, said in words, each line that failed named (proposals_checked)
   const failed = shown.checked.results.filter((r) => !r.ok);
   const checked = strip.createDiv({
-    cls: `graph-note-proposal-checked${failed.length ? ' is-failed' : ''}`,
+    cls: `thoughtknot-proposal-checked${failed.length ? ' is-failed' : ''}`,
     attr: { role: 'status' },
     text: failed.length
       ? word('proposal.check-fails', { failed: failed.length, count: shown.checked.results.length })
@@ -54,7 +54,7 @@ export function renderProposalStrip(root: HTMLElement, card: ProposalCard): HTML
     for (const r of failed) list.createEl('li', { text: r.label });
   }
   const status = strip.createDiv({
-    cls: 'graph-note-proposal-status',
+    cls: 'thoughtknot-proposal-status',
     attr: { role: 'status', 'aria-live': 'polite' },
   });
 
@@ -62,7 +62,7 @@ export function renderProposalStrip(root: HTMLElement, card: ProposalCard): HTML
   const decide = (label: string, said: string, kind: 'accept' | 'reject', which: Which, into: HTMLElement) => {
     const b = into.createEl('button', {
       text: label,
-      cls: `graph-note-proposal-${kind}`,
+      cls: `thoughtknot-proposal-${kind}`,
       attr: { type: 'button', 'aria-label': word('proposal.decide', { label, said }) },
     });
     b.addEventListener('click', () => {
@@ -80,7 +80,7 @@ export function renderProposalStrip(root: HTMLElement, card: ProposalCard): HTML
   };
 
   if (shown.stale) {
-    const notice = strip.createDiv({ cls: 'graph-note-banner graph-note-proposal-stale', attr: { role: 'alert' } });
+    const notice = strip.createDiv({ cls: 'thoughtknot-banner thoughtknot-proposal-stale', attr: { role: 'alert' } });
     notice.createEl('p', { text: shown.stale.message });
     const ok = notice.createEl('button', { text: word('proposal.read-this'), attr: { type: 'button' } });
     writes.push(ok); // it only lets Accept on, so where nothing can be accepted it is taken away with the rest
@@ -92,7 +92,7 @@ export function renderProposalStrip(root: HTMLElement, card: ProposalCard): HTML
   }
 
   const waiting = shown.rows.filter((r) => r.state === 'pending');
-  const bulk = strip.createDiv({ cls: 'graph-note-proposal-bulk' });
+  const bulk = strip.createDiv({ cls: 'thoughtknot-proposal-bulk' });
   if (waiting.length) {
     const some = waiting.filter((r) => !r.blocked).length;
     // the ones that can be accepted now, by id: a change that cannot be does not stop the others
@@ -111,7 +111,7 @@ export function renderProposalStrip(root: HTMLElement, card: ProposalCard): HTML
       { all: true },
       bulk,
     );
-  } else bulk.createSpan({ cls: 'graph-note-quiet', text: word('proposal.all-decided') });
+  } else bulk.createSpan({ cls: 'thoughtknot-quiet', text: word('proposal.all-decided') });
   if (card.undo) {
     const undo = card.undo;
     const b = bulk.createEl('button', {
@@ -123,30 +123,30 @@ export function renderProposalStrip(root: HTMLElement, card: ProposalCard): HTML
   }
 
   const rowsOf = (into: HTMLElement, ids: string[]) => {
-    const list = into.createEl('ul', { cls: 'graph-note-proposal-rows' });
+    const list = into.createEl('ul', { cls: 'thoughtknot-proposal-rows' });
     for (const row of shown.rows.filter((r) => ids.includes(r.id))) {
       const li = list.createEl('li', {
-        cls: `graph-note-proposal-row is-${row.mark} is-${row.state}`,
+        cls: `thoughtknot-proposal-row is-${row.mark} is-${row.state}`,
         attr: { 'data-change': row.id },
       });
-      const text = li.createDiv({ cls: 'graph-note-proposal-text' });
-      text.createSpan({ cls: 'graph-note-proposal-said', text: row.said });
+      const text = li.createDiv({ cls: 'thoughtknot-proposal-text' });
+      text.createSpan({ cls: 'thoughtknot-proposal-said', text: row.said });
       // what the change writes, exactly: the sentence can say less than this, and this is what is written
       text.appendText(' ');
-      text.createEl('code', { cls: 'graph-note-proposal-code', text: row.text });
-      if (row.reason) text.createSpan({ cls: 'graph-note-proposal-reason', text: ` — ${plainReason(row.reason)}` });
+      text.createEl('code', { cls: 'thoughtknot-proposal-code', text: row.text });
+      if (row.reason) text.createSpan({ cls: 'thoughtknot-proposal-reason', text: ` — ${plainReason(row.reason)}` });
       if (row.blocked)
-        text.createDiv({ cls: 'graph-note-proposal-blocked', text: word('proposal.blocked', { why: row.blocked }) });
+        text.createDiv({ cls: 'thoughtknot-proposal-blocked', text: word('proposal.blocked', { why: row.blocked }) });
       if (row.decision)
         text.createDiv({
-          cls: 'graph-note-proposal-decision',
+          cls: 'thoughtknot-proposal-decision',
           text: word(row.decision.state === 'accepted' ? 'proposal.accepted-by' : 'proposal.rejected-by', {
             who: row.decision.by.replace(/_/g, ' '),
             day: day(row.decision.at),
           }),
         });
       if (row.state !== 'pending') continue;
-      const actions = li.createDiv({ cls: 'graph-note-proposal-actions' });
+      const actions = li.createDiv({ cls: 'thoughtknot-proposal-actions' });
       // each button is named for the sentence and the text it acts on
       const named = `${row.said} (${row.text})`;
       accepts.push({ b: decide(word('proposal.accept'), named, 'accept', [row.id], actions), blocked: !!row.blocked });
@@ -161,12 +161,12 @@ export function renderProposalStrip(root: HTMLElement, card: ProposalCard): HTML
     );
   else
     for (const g of shown.groups) {
-      const fold = strip.createEl('details', { cls: 'graph-note-proposal-group', attr: { open: '' } });
+      const fold = strip.createEl('details', { cls: 'thoughtknot-proposal-group', attr: { open: '' } });
       fold.createEl('summary', {
         text: word('proposal.group', { group: g.name, count: g.ids.length, waiting: g.pending }),
       });
       if (g.pending) {
-        const actions = fold.createDiv({ cls: 'graph-note-proposal-bulk' });
+        const actions = fold.createDiv({ cls: 'thoughtknot-proposal-bulk' });
         // those of the group that can be accepted now, by id, so one that cannot be does not stop the rest
         const ready = shown.rows.filter((r) => g.ids.includes(r.id) && r.state === 'pending' && !r.blocked);
         accepts.push({

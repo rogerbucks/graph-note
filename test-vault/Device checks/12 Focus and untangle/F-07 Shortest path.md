@@ -39,4 +39,4 @@
 
 > **F-07** Open a box's details and press Shortest path to another thing, then tap a second box: the path stays at full strength and the banner reads out the boxes along it. With a box that has no route to it, the banner says there is none. Clear the path puts the focus back.
 
-**Back to the checklist:** [F-07 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for F-07 in its list.
+**Back to the checklist:** [F-07 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for F-07 in its list.

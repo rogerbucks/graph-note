@@ -17,7 +17,7 @@ describe('checking a page a person wrote', () => {
   test('passes a page whose links, pictures and versions are all good', () => {
     const page = [
       '# Notes',
-      'See [Status](Status), [[Home]] and the [README](https://github.com/rogerbucks/graph-note/blob/main/README.md).',
+      'See [Status](Status), [[Home]] and the [README](https://github.com/rogerbucks/thoughtknot/blob/main/README.md).',
       '![A card](images/card.png) We are on version 0.5.0. [Docs](https://example.org/x)',
     ].join('\n');
     assert.deepEqual(checkPage(page, context), []);
@@ -26,7 +26,7 @@ describe('checking a page a person wrote', () => {
   test('suggests a fix for a missing page, repository file or picture, naming the line', () => {
     const page = [
       'See [Roadmap](Roadmap) and [[Old Plans]].',
-      'The [guide](https://github.com/rogerbucks/graph-note/blob/main/docs/gone.md).',
+      'The [guide](https://github.com/rogerbucks/thoughtknot/blob/main/docs/gone.md).',
       '![Shot](images/missing.png)',
     ].join('\n');
     assert.deepEqual(texts(checkPage(page, context)), [
@@ -101,7 +101,7 @@ describe('the issue text', () => {
 
   test('knows every page and picture the workflow writes', () => {
     const made = madePaths();
-    for (const p of ['Status.md', '_Sidebar.md', 'How-to-use-Graph-Note.md', 'Home.md', 'images/card.png'])
+    for (const p of ['Status.md', '_Sidebar.md', 'How-to-use-ThoughtKnot.md', 'Home.md', 'images/card.png'])
       assert.ok(made.has(p), p);
   });
 });

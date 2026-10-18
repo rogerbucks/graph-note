@@ -33,7 +33,7 @@ const written = (env, ext) => [...env.state.files.keys()].filter((p) => p.endsWi
 async function exporting(env, n = 0) {
   const { el } = await show(env, env.state.files.get(PATH), n);
   labelled(el, 'Export').click();
-  const form = el.querySelector('.graph-note-export');
+  const form = el.querySelector('.thoughtknot-export');
   assert.ok(form, 'the Export form');
   const choose = (label, value) => {
     const sel = form.querySelectorAll('select').find((s) => s.getAttribute('aria-label') === label);
@@ -147,7 +147,10 @@ describe('the Export button', () => {
       await until(() => written(env, '.svg').length === 1);
       const image = written(env, '.svg')[0];
       const companion = image.replace(/\.svg$/, '.md');
-      assert.match(env.state.files.get(companion), new RegExp(`!\\[\\[${image.replace(/[.]/g, '\\.')}\\]\\]`));
+      assert.match(
+        env.state.files.get(companion),
+        new RegExp(`!\\[\\[${image.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\]\\]`),
+      );
       assert.match(env.state.files.get(companion), /\[\[Some note(\.md)?\]\]/);
     } finally {
       env.uninstall();
@@ -293,7 +296,7 @@ describe('the data', () => {
         throw new Error('data is never laid out');
       };
       const { el, form, choose, go } = await exporting(env);
-      assert.ok(el.querySelector('.graph-note-refusal'), 'shown as text, with the reason');
+      assert.ok(el.querySelector('.thoughtknot-refusal'), 'shown as text, with the reason');
       const formats = form
         .querySelectorAll('select')
         .find((s) => s.getAttribute('aria-label') === 'Format')

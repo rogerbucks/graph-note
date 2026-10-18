@@ -5,8 +5,8 @@
 // matched by no classification, a row named twice and two columns for one class are flagged, never guessed. The row is
 // only ever chosen here, never worked out from the model.
 import type { SettingDefinition } from 'obsidian';
-import { classMapProblems, matrixGrants, matrixProblems, unmatchedClasses, word } from '@graph-note/core';
-import type { AiModel, ClassGrant, MatrixRow, MatrixSwitch, Settings } from '@graph-note/core';
+import { classMapProblems, matrixGrants, matrixProblems, unmatchedClasses, word } from '@thoughtknot/core';
+import type { AiModel, ClassGrant, MatrixRow, MatrixSwitch, Settings } from '@thoughtknot/core';
 
 const NO_ROW = '';
 const MARKS = { yes: '✅', conditional: '⚠️', no: '❌', unknown: '❓' };

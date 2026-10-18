@@ -55,7 +55,7 @@ const LARGE_LINKS = [
   'Link: Large reader has tag cheap',
 ];
 
-const details = (el) => el.querySelector('.graph-note-details');
+const details = (el) => el.querySelector('.thoughtknot-details');
 
 /**
  * The block edited in place in Live Preview, as Roger had it, and the same block drawn in reading view: the case where a
@@ -231,16 +231,16 @@ describe('a card in reading view shows its details and offers nothing that write
     try {
       const shown = await readingWhileEdited(env);
       assert.ok(!labelled(shown.reading, 'Add a thing'), 'no Add a thing');
-      assert.ok(shown.reading.querySelector('.graph-note-add-thing')?.hidden ?? true, 'and the strip is hidden');
+      assert.ok(shown.reading.querySelector('.thoughtknot-add-thing')?.hidden ?? true, 'and the strip is hidden');
       labelled(shown.reading, 'Full screen').click();
-      const full = env.doc.body.querySelector('.graph-note-fullscreen');
+      const full = env.doc.body.querySelector('.thoughtknot-fullscreen');
       assert.ok(full, 'full screen is open');
       assert.ok(!labelled(full, 'Add a thing'), 'no Add a thing in full screen');
       // the one field is the search box, which finds a thing and writes nothing (§25)
       const fields = full.querySelectorAll('input');
       assert.equal(fields.length, 1, 'no field to type a thing in, but the one');
       assert.equal(fields[0].getAttribute('type'), 'search');
-      assert.ok(fields[0].closest('.graph-note-find'), 'it is the search box');
+      assert.ok(fields[0].closest('.thoughtknot-find'), 'it is the search box');
       // typing in it and pressing Enter finds a thing and selects it, and writes nothing
       fields[0].value = 'large';
       fields[0].dispatch('input');
@@ -325,7 +325,7 @@ describe('a card in reading view shows its details and offers nothing that write
     try {
       const shown = await readingWhileEdited(env);
       labelled(shown.reading, 'Full screen').click();
-      const full = env.doc.body.querySelector('.graph-note-fullscreen');
+      const full = env.doc.body.querySelector('.thoughtknot-fullscreen');
       assert.ok(full, 'full screen is open');
       for (const label of ['Edit here', 'Edit in pane', 'Record a path', 'Make a view'])
         assert.ok(!labelled(full, label), `no ${label}`);
@@ -350,7 +350,7 @@ describe('a card in reading view shows its details and offers nothing that write
       await env.state.processors.get('gql')(VIEW, el, fakeContext(VIEW_NOTE, fences[1]));
       await until(() => !!el.querySelector('svg'));
       labelled(el, 'Full screen').click();
-      const full = env.doc.body.querySelector('.graph-note-fullscreen');
+      const full = env.doc.body.querySelector('.thoughtknot-fullscreen');
       for (const label of ['Hide others', 'Fade others', 'Save as shown', 'Edit in pane'])
         assert.ok(!labelled(full, label), `no ${label}`);
       assert.ok(full.textContent.includes('View answers'), 'the view is still said');
@@ -365,8 +365,8 @@ describe('a card in reading view shows its details and offers nothing that write
       const shown = await readingWhileEdited(env);
       const svgs = () => [...env.state.files.keys()].filter((p) => p.endsWith('.svg'));
       for (const n of [1, 2]) {
-        if (!shown.reading.querySelector('.graph-note-export')) labelled(shown.reading, 'Export').click();
-        labelled(shown.reading.querySelector('.graph-note-export'), 'Export it').click();
+        if (!shown.reading.querySelector('.thoughtknot-export')) labelled(shown.reading, 'Export').click();
+        labelled(shown.reading.querySelector('.thoughtknot-export'), 'Export it').click();
         await until(() => svgs().length === n);
       }
       assert.equal(new Set(svgs()).size, 2, 'two files, neither written over');
