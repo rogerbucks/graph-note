@@ -1,21 +1,22 @@
 #!/usr/bin/env node
-// The work the benchmarks take, counted in CPU instructions and never in elapsed time (spec §12, quality_ratchet): each
-// case of each benchmark in scripts/benchmarks/ runs in a process of its own under Valgrind's Cachegrind, and so does
-// its setup alone, which is taken off. The total instructions (Ir) Cachegrind writes to its output file are the count.
-// The same code on the same machine counts the same, under any load; a machine without Valgrind measures nothing and
+// The work the benchmarks take, counted in CPU instructions and never in elapsed time (spec §12, quality_ratchet). Each
+// case of each benchmark in scripts/benchmarks/ runs in a process of its own under Valgrind's Cachegrind. So does its
+// setup alone, which is taken off. The total instructions (Ir) Cachegrind writes to its output file are the count.
+// The same code on the same machine counts the same, under any load. A machine without Valgrind measures nothing and
 // says so, never a number of another kind. Cachegrind runs on Linux, in the release's quality job and its dry run; it
 // does not run on Apple-silicon Macs.
 //
 // Usage:
-//   node scripts/instruction-counts.mjs                    count every benchmark, print the metrics JSON
-//   node scripts/instruction-counts.mjs --only naming      count one benchmark
-//   node scripts/instruction-counts.mjs --runs 3           count each process three times: the least is kept, and the
-//                                                          spread between runs reported (what the tolerance rests on)
-//   node scripts/instruction-counts.mjs --parallel 2       count two processes at once (every core, by default)
-//   node scripts/instruction-counts.mjs --out <file>       write the JSON to a file instead
-//   node scripts/instruction-counts.mjs --reuse <file>     keep the counts of an earlier run (a metrics JSON, such as
-//                                                          quality/baseline.json) for each benchmark whose fingerprint
-//                                                          is unchanged: its bundle, the machine, Node and Valgrind
+//   node scripts/instruction-counts.mjs                    count every benchmark, print the metrics JSON.
+//   node scripts/instruction-counts.mjs --only naming      count one benchmark.
+//   node scripts/instruction-counts.mjs --runs 3           count each process three times. The least is kept, and the
+//                                                          spread between runs reported (what the tolerance rests on).
+//   node scripts/instruction-counts.mjs --parallel 2       count two processes at once (every core, by default).
+//   node scripts/instruction-counts.mjs --out <file>       write the JSON to a file instead.
+//   node scripts/instruction-counts.mjs --reuse <file>     keep the counts of an earlier run for each benchmark whose
+//                                                          fingerprint is unchanged. The run is a metrics JSON, such
+//                                                          as quality/baseline.json. The fingerprint is its bundle,
+//                                                          the machine, Node and Valgrind.
 // Exits 1 when a benchmark's claim does not hold.
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -28,15 +29,19 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const CASE_MS = 15 * 60 * 1000;
 
 /**
- * Node's flags for a count, each to take a source of difference between runs away: V8 runs no background thread
- * (`--single-threaded`: no concurrent compiling, marking or sweeping, whose share of the work depends on timing), makes
- * no decision by the clock (`--predictable`), its collector grows the heap on a fixed schedule rather than by measured
- * speed (`--predictable-gc-schedule`), its random numbers start from one seed (`--random-seed=1`), and WebAssembly
- * checks its bounds in code instead of by catching faults in reserved memory (`--disable-wasm-trap-handler`), which
- * Valgrind follows plainly. Counted three times under Cachegrind (ARM Linux in Docker, 12 Oct 2026), without
- * `--predictable` a metric moved by up to 8.9% between runs; with it, by at most 1.9% (draw_fifty), the rest 0.001%.
+ * Node's flags for a count, each to take a source of difference between runs away:
+ * - V8 runs no background thread (`--single-threaded`). So there is no concurrent compiling, marking or sweeping, whose
+ *   share of the work depends on timing.
+ * - It makes no decision by the clock (`--predictable`).
+ * - Its collector grows the heap on a fixed schedule rather than by measured speed (`--predictable-gc-schedule`).
+ * - Its random numbers start from one seed (`--random-seed=1`).
+ * - WebAssembly checks its bounds in code instead of by catching faults in reserved memory
+ *   (`--disable-wasm-trap-handler`). Valgrind follows that plainly.
+ *
+ * Counted three times under Cachegrind (ARM Linux in Docker, 12 Oct 2026), without `--predictable` a metric moved by up
+ * to 8.9% between runs. With it, it moved by at most 1.9% (draw_fifty), the rest 0.001%.
  * WebAssembly is compiled once, by the quick compiler, and never again when a function runs hot
- * (`--no-wasm-dynamic-tiering`, which with no background thread leaves it there): when a function counted as hot moved
+ * (`--no-wasm-dynamic-tiering`). With no background thread, that leaves it there. A function counted as hot moved
  * draw_fifty's whole process by up to 500 million instructions on the release runner. Counted six times under
  * Cachegrind (x86-64 Linux, 18 Oct 2026), draw_fifty's process moved by 4.4% without it and by 0.002% with it. A
  * benchmark may add flags of its own (`nodeFlags`, see nodeFlagsFor).
@@ -52,15 +57,15 @@ export const NODE_FLAGS = [
 
 /**
  * Node's flags for a benchmark's processes: the shared ones, then its own. A drawing compiles its WebAssembly with the
- * optimising compiler alone (`--no-liftoff`), in its setup's warm draw, so its count is of the code a user's drawings
- * run once the engine is warm; a cold start keeps the quick compile a first draw runs.
+ * optimising compiler alone (`--no-liftoff`), in its setup's warm draw. So its count is of the code a user's drawings
+ * run once the engine is warm. A cold start keeps the quick compile a first draw runs.
  */
 export const nodeFlagsFor = (benchmark) => [...NODE_FLAGS, ...(benchmark.nodeFlags ?? [])];
 
 /**
  * Cachegrind counting instructions only (`--cache-sim=no`), and translating again any code that is rewritten, as V8's
  * compiled code is (`--smc-check=all`). `all-non-file` was 15% quicker, but counted reading_limits 0.13% apart from
- * `all`, where three runs of either agreed to 0.0001%: so every write to code is watched, at the cost of the time.
+ * `all`. Three runs of either agreed to 0.0001%. So every write to code is watched, at the cost of the time.
  */
 export const VALGRIND_FLAGS = ['--tool=cachegrind', '--cache-sim=no', '--smc-check=all'];
 
@@ -74,8 +79,8 @@ export const metricOf = (name) => `instructions_${name}`;
 export const CLAIMS_METRIC = 'instruction_claims_broken';
 
 /**
- * Reads a Cachegrind output file: its command, the events it counted, and their totals (its `summary:` line, or the sum
- * of its cost lines when it has none). Throws when the file holds no count of instructions (Ir).
+ * Reads a Cachegrind output file: its command, the events it counted, and their totals. The totals are its `summary:`
+ * line, or the sum of its cost lines when it has none. Throws when the file holds no count of instructions (Ir).
  */
 export function parseCachegrind(text) {
   const lines = text.split('\n');
@@ -116,8 +121,9 @@ export function notMeasured(names, why = NOT_MEASURED) {
 }
 
 /**
- * The metrics of the counts, each case's already less its setup: for each benchmark, the sum of the cases it counts;
- * and how many of the claims do not hold, each claim listed with what was measured and what is allowed.
+ * The metrics of the counts, each case's already less its setup. For each benchmark, it gives the sum of the cases it
+ * counts. It also gives how many of the claims do not hold. Each claim is listed with what was measured and what is
+ * allowed.
  */
 export function instructionMetrics(benchmarks, counts) {
   const metrics = {},
@@ -141,8 +147,8 @@ export function instructionMetrics(benchmarks, counts) {
 }
 
 /**
- * How far a benchmark's metric could move between runs, as a share of it: each counted case's range over the runs and
- * the setup's, as the metric is each case less the setup. The ratchet's tolerance must be wider than this.
+ * How far a benchmark's metric could move between runs, as a share of it. It adds each counted case's range over the
+ * runs and the setup's, as the metric is each case less the setup. The ratchet's tolerance must be wider than this.
  */
 export function metricSpread(benchmark, range, metrics) {
   const moved = benchmark.counted.reduce((sum, c) => sum + range[c] + range.setup, 0);
@@ -153,9 +159,10 @@ export function metricSpread(benchmark, range, metrics) {
 export const benchmarkFile = (name) => `${name.replaceAll('_', '-')}.mjs`;
 
 /**
- * Bundles each benchmark into a folder of its own, a file to run and a chunk for the engine it loads, so a count reads
- * no TypeScript and a benchmark's process holds its own code alone. Gives each one's file, and its fingerprint: the hash
- * of every file of its bundle, the same wherever the folder is, and changed by any change to the code it runs.
+ * Bundles each benchmark into a folder of its own, a file to run and a chunk for the engine it loads. So a count reads
+ * no TypeScript and a benchmark's process holds its own code alone. Gives each one's file, and its fingerprint. The
+ * fingerprint is the hash of every file of its bundle. It is the same wherever the folder is, and changed by any change
+ * to the code it runs.
  */
 export async function bundleBenchmarks(dir, benchmarks) {
   const { default: esbuild } = await import('esbuild');
@@ -200,8 +207,8 @@ export async function bundleBenchmarks(dir, benchmarks) {
 }
 
 /**
- * Counts processes under Cachegrind: each case of each benchmark in a process of its own, its output file in a folder
- * of its own, so as many can run at once as the machine has cores; a count is the process's alone.
+ * Counts processes under Cachegrind. Each case of each benchmark runs in a process of its own, its output file in a
+ * folder of its own. So as many can run at once as the machine has cores; a count is the process's alone.
  */
 async function cachegrind(benchmarks) {
   const dir = mkdtempSync(join(tmpdir(), 'instruction-counts-'));
@@ -268,12 +275,12 @@ async function inParallel(tasks, width) {
 }
 
 /**
- * Counts every case of `benchmarks` (all of them by default) and its setup, `runs` times each, keeping the least, and
- * gives the metrics and details as quality-metrics.mjs reports them. Without Valgrind (`version` gives null), it counts
+ * Counts every case of `benchmarks` (all of them by default) and its setup, `runs` times each, keeping the least. Gives
+ * the metrics and details as quality-metrics.mjs reports them. Without Valgrind (`version` gives null), it counts
  * nothing and says so. `counter` is what counts a process: Cachegrind, unless a test hands in another. `parallel` is how
  * many processes are counted at once: as many as the machine has cores, by default. `reuse` is an earlier run's
- * instruction details: a benchmark whose fingerprint is the same there, on the same machine with the same flags, keeps
- * that count, uncounted, and is held to its claims as if counted. Counted several times over, nothing is kept.
+ * instruction details. A benchmark whose fingerprint is the same there, on the same machine with the same flags, keeps
+ * that count, uncounted. It is held to its claims as if counted. Counted several times over, nothing is kept.
  */
 export async function measureInstructions(options = {}) {
   const { runs = 1, version = valgrindVersion, counter = cachegrind, parallel = availableParallelism() } = options;

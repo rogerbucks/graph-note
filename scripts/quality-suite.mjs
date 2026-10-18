@@ -1,7 +1,11 @@
-// The test-suite metrics of the quality ratchet (spec §12, quality_ratchet): how long the whole suite takes, which tests
-// are flaky, how big a passing quiet run is, and how much of the core the tests cover. Two full runs of `node --test` do
-// it: the first, plain, gives the duration and the quiet reporter's output; the second, with coverage, is compared with
-// the first to find the tests whose result differs. The readers of Node's JUnit and lcov reports are here too.
+// The test-suite metrics of the quality ratchet (spec §12, quality_ratchet). They are:
+// - how long the whole suite takes;
+// - which tests are flaky;
+// - how big a passing quiet run is;
+// - how much of the core the tests cover.
+// Two full runs of `node --test` do it. The first, plain, gives the duration and the quiet reporter's output. The
+// second, with coverage, is compared with the first to find the tests whose result differs. The readers of Node's
+// JUnit and lcov reports are here too.
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -69,9 +73,9 @@ export function parseLcov(lcov, folder) {
 const CEILING = join(dirname(fileURLToPath(import.meta.url)), 'run-ceiling.mjs');
 
 /**
- * Runs `node --test` over the repository with these arguments, as `npm test` does: under the memory and time ceiling of
- * scripts/run-ceiling.mjs (spec §13, capped_test_run), with each test's own time limit. How long it took and whether it
- * passed; a run the ceiling stopped did not pass, and its `stderr` says which ceiling.
+ * Runs `node --test` over the repository with these arguments, as `npm test` does. It runs under the memory and time
+ * ceiling of scripts/run-ceiling.mjs (spec §13, capped_test_run), with each test's own time limit. How long it took and
+ * whether it passed; a run the ceiling stopped did not pass, and its `stderr` says which ceiling.
  */
 export function nodeTest(root, args) {
   // a run inside a test run would report to it instead of printing its own report
@@ -88,10 +92,13 @@ export function nodeTest(root, args) {
 }
 
 /**
- * Measures the suite: `suite_seconds` and `quiet_run_bytes` from a plain run (the bytes are null if it did not pass:
- * a failing run's output is not the figure being kept down), `flaky_tests` from comparing it with a second run, and
- * `coverage_percent` for packages/core/src from that second run. `details` names the flaky and failing tests. The runs
- * are `node --test` as `npm test` runs it, under the ceiling, with the test discovery a developer's and CI's runs have.
+ * Measures the suite:
+ * - `suite_seconds` and `quiet_run_bytes` from a plain run;
+ * - `flaky_tests` from comparing it with a second run;
+ * - `coverage_percent` for packages/core/src from that second run.
+ * The bytes are null if the plain run did not pass: a failing run's output is not the figure being kept down.
+ * `details` names the flaky and failing tests. The runs are `node --test` as `npm test` runs it, under the ceiling,
+ * with the test discovery a developer's and CI's runs have.
  */
 export function measureSuite(root) {
   const dir = mkdtempSync(join(tmpdir(), 'quality-suite-'));

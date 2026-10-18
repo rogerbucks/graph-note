@@ -1,6 +1,6 @@
-// The stylesheet of the slice board (scripts/slice-board.mjs; spec §12, requirements_checked_in_ci). CSS only: every
-// colour is a custom property on :root, redefined for a dark scheme; the three altitudes are switched by radio inputs
-// and `:checked ~` selectors; the layout holds at 400px. It makes no request: no font, image or import.
+// The stylesheet of the slice board (scripts/slice-board.mjs; spec §12, requirements_checked_in_ci). CSS only. Every
+// colour is a custom property on :root, redefined for a dark scheme. The three altitudes are switched by radio inputs
+// and `:checked ~` selectors. The layout holds at 400px. It makes no request: no font, image or import.
 
 /** The three altitudes, as [id, label]: the id names the radio (`alt-<id>`) and the view (`view-<id>`). */
 export const ALTITUDES = [

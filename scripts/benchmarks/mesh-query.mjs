@@ -1,7 +1,8 @@
-// The instruction-count benchmark of a query over a 10 000-thing mesh (editor spec §41, speed_budgets): a search, as the
-// details panel's find runs it (untangle.ts, untangle_find), over every graph of the mesh, by a thing's name and by a
-// property's value. The mesh itself is slice 6; until it is built, 100 notes of 100 things each stand in, each note
-// read on its own as a host reads it, under the per-note reading limit that one 10 000-thing note would be over. The
+// The instruction-count benchmark of a query over a 10 000-thing mesh (editor spec §41, speed_budgets). It is a search,
+// as the details panel's find runs it (untangle.ts, untangle_find), over every graph of the mesh. It searches by a
+// thing's name and by a property's value. The mesh itself is slice 6. Until it is built, 100 notes of 100 things each
+// stand in. Each note is read on its own as a host reads it, under the per-note reading limit. One 10 000-thing note
+// would be over that limit. The
 // notes are read in the setup, counted alone and taken off, so the count is the query's. Run by
 // scripts/instruction-counts.mjs.
 import { readNote } from '../../packages/core/src/drawing.ts';

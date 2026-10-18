@@ -1,6 +1,7 @@
-// One run of one test file for the tests-first replay (scripts/tests-first.mjs; spec §12, tests_first): which files are
-// tests, how a JavaScript or Python test file is run in a checkout, and what its run shows — each test by its name,
-// passed or failed, and whether the run finished.
+// One run of one test file for the tests-first replay (scripts/tests-first.mjs; spec §12, tests_first). It says:
+// - which files are tests;
+// - how a JavaScript or Python test file is run in a checkout;
+// - what its run shows: each test by its name, passed or failed, and whether the run finished.
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -21,7 +22,7 @@ const ENTITIES = { lt: '<', gt: '>', amp: '&', quot: '"', apos: "'" };
 
 /**
  * An attribute value's entities, decoded in one pass, so `&amp;lt;` is the text `&lt;`. Node's reporter writes `"` as
- * `&amp;quot;` (it escapes `&` again after `&quot;`), so that reads as the character; a name that spelt out `&quot;`
+ * `&amp;quot;`, as it escapes `&` again after `&quot;`. So that reads as the character. A name that spelt out `&quot;`
  * itself cannot be told from a `"`, which the report does not let us. It writes `'` as it is, so `&amp;apos;` is a name
  * that spelt out `&apos;`, and reads as that text.
  */
@@ -63,8 +64,8 @@ function stoppedLine(r) {
 
 /** Runs one JS test file; each test by its suites and name, passed or failed. */
 function runJs(dir, file) {
-  // a run inside another test run would report to it, not print its own report
-  // and where it runs is not told to the tests: a replay on GitHub sees what one on a Mac sees (review of #114)
+  // a run inside another test run would report to it, not print its own report.
+  // And where it runs is not told to the tests: a replay on GitHub sees what one on a Mac sees (review of #114)
   const { NODE_TEST_CONTEXT: _context, GITHUB_ACTIONS: _ci, ...env } = process.env;
   // under the run ceiling (spec §13, capped_test_run), which passes the report and the exit status through unchanged
   const r = spawnSync(process.execPath, [CEILING, process.execPath, '--test', '--test-reporter=junit', file], {
@@ -89,9 +90,9 @@ function runJs(dir, file) {
 }
 
 /**
- * A JUnit report read: each test by its suites and name, passed or failed, and whether the run finished. A report with a
- * testsuite or testcase tag that could not be read did not finish being read, and says how many (`why`): a test lost
- * without a word would be a test the check never saw.
+ * A JUnit report read: each test by its suites and name, passed or failed, and whether the run finished. Some reports
+ * have a testsuite or testcase tag that could not be read. Such a report did not finish being read, and says how many
+ * (`why`). A test lost without a word would be a test the check never saw.
  */
 export function fromJunit(whole) {
   // the reporter writes t.diagnostic() text as comments, and turns `--` inside one into `&#45;&#45;`, so none ends early

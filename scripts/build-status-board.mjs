@@ -1,9 +1,9 @@
-// The project board for the build status (spec §12, requirements_checked_in_ci): reading each requirement's item with its
-// Build status and its built-in Status, and setting either. The issues are read with the workflow's token and only the
-// project with the project token (PROJECT_TOKEN), so that token is used for nothing but the board. It finds the project,
-// its fields and the mirror's issues as the mirror does (github-project-gh.mjs), by the project's title and the issues
-// the mirror made; the mirror is run by the owner of the repository or, on main, by the workflows' bot, so an issue is the
-// mirror's when one of those two wrote it.
+// The project board for the build status (spec §12, requirements_checked_in_ci). It reads each requirement's item with
+// its Build status and its built-in Status, and sets either. The issues are read with the workflow's token. Only the
+// project is read with the project token (PROJECT_TOKEN), so that token is used for nothing but the board. It finds
+// the project, its fields and the mirror's issues as the mirror does (github-project-gh.mjs). It goes by the project's
+// title and the issues the mirror made. The mirror is run by the owner of the repository or, on main, by the
+// workflows' bot. So an issue is the mirror's when one of those two wrote it.
 // The mirror never sets either field after giving a new item its first Build status; the build status workflow does.
 import { BUILD_STATUS_FIELD, PROGRESS_FIELD, PROJECT_TITLE, adoptedId } from './github-project-desired.mjs';
 import { STARTED_FIELD, itemValueMutation } from './github-project-fields.mjs';
@@ -15,13 +15,15 @@ import { retrying } from './github-project-retry.mjs';
 export class BoardProblem extends Error {}
 
 /**
- * The project as {items, issues, field, progressField, startedField, projectId, projectNumber, owner}: `items` maps a
- * requirement id to {itemId, current (its Build status, or null), progress (its built-in Status, or null), started (its
- * Started on, or null), number and url (its issue's)}, `issues` maps an id to its issue {number, url} whether or not it is
- * an item, `field` is the Build status field {id, options}, `progressField` the built-in Status field, or null where the
- * project has none, and `startedField` the Started on date field, or null until the mirror makes it. `github` is the runner of
- * the workflow's token (for the issues) and `project` that of the project token (for the project alone). Throws
- * BoardProblem when the project or the Build status field is not there yet.
+ * The project as {items, issues, field, progressField, startedField, projectId, projectNumber, owner}.
+ * - `items` maps a requirement id to {itemId, current, progress, started, number, url}. current is its Build status,
+ *   progress its built-in Status, and started its Started on, each or null. number and url are its issue's.
+ * - `issues` maps an id to its issue {number, url}, whether or not it is an item.
+ * - `field` is the Build status field {id, options}.
+ * - `progressField` is the built-in Status field, or null where the project has none.
+ * - `startedField` is the Started on date field, or null until the mirror makes it.
+ * `github` is the runner of the workflow's token (for the issues). `project` is that of the project token (for the
+ * project alone). Throws BoardProblem when the project or the Build status field is not there yet.
  */
 export function readBuildBoard(github, project, repo, opts = {}) {
   const owner = repo.split('/')[0];

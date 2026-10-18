@@ -1,13 +1,17 @@
-// What the build status does for one pull request or one release (spec §12, requirements_checked_in_ci): the pull
-// requests it looks after and the ones it leaves alone, the requirements a pull request moves or takes on, the stage it
-// puts them in on the board (the Build status and the built-in Status), and the one comment it leaves.
+// What the build status does for one pull request or one release (spec §12, requirements_checked_in_ci). That is:
+// - the pull requests it looks after and the ones it leaves alone;
+// - the requirements a pull request moves or takes on;
+// - the stage it puts them in on the board (the Build status and the built-in Status);
+// - and the one comment it leaves.
+//
 // build-status-run.mjs hands it each pull request an event is about. Reading is through build-status-gh.mjs, the board is
 // build-status-board.mjs and the pure rules are build-status.mjs.
 //
 // A pull request moves the requirements whose tests its requirements file newly marks written against the base's (its
-// copy). A draft pull request may take items on before its copy proves them, with the line `Requirements: id1, id2` in
-// its description; only ids that are plain and are in main's file count, and once the copy proves anything the copy's diff
-// decides, an id the line names but the copy does not prove being let go, with a warning in the comment.
+// copy). A draft pull request may take items on before its copy proves them. It does so with the line
+// `Requirements: id1, id2` in its description. Only ids that are plain and are in main's file count. Once the copy
+// proves anything, the copy's diff decides. An id the line names but the copy does not prove is let go, with a warning
+// in the comment.
 import { readBoard } from './slice-board.mjs';
 import {
   DEFAULT_BRANCH,
@@ -52,10 +56,12 @@ export function boardAt(run, repo, ref) {
 }
 
 /**
- * Why a pull request is left alone, or null: `fork` for one whose head or base is not this repository (it moves nothing and
- * gets no comment), `stale` for one whose head is no longer the commit the checks ran on (`rules.headSha`; its own event
- * looks after it), `not merged` where only a merged one counts (`rules.mergedOnly`), and `not into main` for one merged
- * into another branch, which is not Merged.
+ * Why a pull request is left alone, or null:
+ * - `fork` for one whose head or base is not this repository (it moves nothing and gets no comment);
+ * - `stale` for one whose head is no longer the commit the checks ran on (`rules.headSha`; its own event looks after
+ *   it);
+ * - `not merged` where only a merged one counts (`rules.mergedOnly`);
+ * - `not into main` for one merged into another branch, which is not Merged.
  */
 export function skipReason(pr, repo, rules = {}) {
   if (pr.headRepo !== repo || pr.baseRepo !== repo) return 'fork';
@@ -66,12 +72,16 @@ export function skipReason(pr, repo, rules = {}) {
 }
 
 /**
- * Looks after the board for one event: reads it once, on first need, and once it fails goes on without it, saying so once
- * in a warning. `settle(moves)` does each move, {id, build, progress, started} (the Build status and the built-in Status to
- * give the requirement's item, either may be left out, both for an item that is only listed; and the day for its Started
- * on where it has none, or null to clear it, or left out to leave it), and gives the entries of the
- * comment ({id, number, status}); `problem()` is the text to put in a comment, or null; `url()` is the board's address,
- * once it is read. Each problem is also added to `found`, once.
+ * Looks after the board for one event. It reads it once, on first need. Once it fails it goes on without it, saying so
+ * once in a warning.
+ * - `settle(moves)` does each move, {id, build, progress, started}, and gives the entries of the comment ({id, number,
+ *   status}). `build` and `progress` are the Build status and the built-in Status to give the requirement's item.
+ *   Either may be left out, and both for an item that is only listed. `started` is the day for its Started on where it
+ *   has none, or null to clear it, or left out to leave it.
+ * - `problem()` is the text to put in a comment, or null.
+ * - `url()` is the board's address, once it is read.
+ *
+ * Each problem is also added to `found`, once.
  */
 export function boardKeeper(ctx, deps, found) {
   let board;
@@ -124,9 +134,12 @@ export function boardKeeper(ctx, deps, found) {
 }
 
 /**
- * What a pull request takes on, as {proved, claimed, landed}: `proved` the requirements its copy newly proves (against the
- * base branch's file, or for a merged one its merge commit against that commit's first parent), `claimed` the ones its
- * Requirements line names that are in the base's file and not proved, and `landed` whether its copy proves anything yet.
+ * What a pull request takes on, as {proved, claimed, landed}.
+ * - `proved` is the requirements its copy newly proves. That is against the base branch's file, or for a merged one its
+ *   merge commit against that commit's first parent.
+ * - `claimed` is the ones its Requirements line names that are in the base's file and not proved.
+ * - `landed` is whether its copy proves anything yet.
+ *
  * Throws Unreadable where a file cannot be read.
  */
 export function claimsOf(pr, ctx, deps) {
@@ -159,11 +172,11 @@ function heldByOthers(number, ctx, deps) {
 }
 
 /**
- * The moves of a pull request: each requirement its copy proves gets the stage of the pull request; each the line names but
- * the copy does not prove is In PR and In Progress while the pull request is open and its copy has not landed, and let go
- * (back to Not started and Todo, its Started on cleared) otherwise. So is each of a pull request closed unmerged, except
- * those another open pull request of this repository holds, which are only listed. What it takes on gets the day it was
- * opened as its Started on, where the item has none.
+ * The moves of a pull request. Each requirement its copy proves gets the stage of the pull request. Then there is each
+ * the line names but the copy does not prove. It is In PR and In Progress while the pull request is open and its copy
+ * has not landed. Otherwise it is let go: back to Not started and Todo, its Started on cleared. So is each of a pull
+ * request closed unmerged, except those another open pull request of this repository holds, which are only listed.
+ * What it takes on gets the day it was opened as its Started on, where the item has none.
  */
 function movesOf(pr, stage, claims, held) {
   const holding = pr.state === 'open' && !claims.landed;
@@ -225,7 +238,7 @@ export function handlePull(number, ctx, deps, keeper, rules) {
 
 /**
  * Leaves the one comment of a pull request, on a conversation that may be locked and closed (as a merged pull request's
- * is), and says in warnings what could not be done: the comment itself, or the lock taken up again after it. Gives the
+ * is). It says in warnings what could not be done: the comment itself, or the lock taken up again after it. Gives the
  * outcome: created, updated, unchanged, absent or failed.
  */
 function postComment(number, { stage, items, problems }, create, ctx, deps, keeper) {
@@ -241,9 +254,9 @@ function postComment(number, { stage, items, problems }, create, ctx, deps, keep
 }
 
 /**
- * Looks after a release: Released and Done on the requirements newly proved since the release before it, and a comment on
- * each pull request merged in between that proved any of them, with the stage Released. Gives {tag, since, ids, pulls:
- * [{number, comment}]}.
+ * Looks after a release. It puts Released and Done on the requirements newly proved since the release before it. It
+ * leaves a comment, with the stage Released, on each pull request merged in between that proved any of them. Gives
+ * {tag, since, ids, pulls: [{number, comment}]}.
  */
 export function handleRelease(payload, ctx, deps, keeper) {
   const tag = payload.release?.tag_name;

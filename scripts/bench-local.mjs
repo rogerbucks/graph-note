@@ -1,13 +1,13 @@
 #!/usr/bin/env node
-// The instruction-count benchmarks on a developer's own machine (spec §12, quality_ratchet): Valgrind does not run on
-// Apple-silicon macOS, so this runs scripts/instruction-counts.mjs in a Linux container with Node 24 and Valgrind
-// (docker/benchmarks.Dockerfile), building the image first when it is not there. For counts before and after a change
-// on one machine: its counts are never compared with the baseline CI counts, as on a Mac they are ARM Linux's.
+// The instruction-count benchmarks on a developer's own machine (spec §12, quality_ratchet). Valgrind does not run on
+// Apple-silicon macOS. So this runs scripts/instruction-counts.mjs in a Linux container with Node 24 and Valgrind
+// (docker/benchmarks.Dockerfile). It builds the image first when it is not there. It is for counts before and after a
+// change on one machine. Its counts are never compared with the baseline CI counts, as on a Mac they are ARM Linux's.
 //
-// The repository is mounted, never copied; node_modules is the container's own volume, installed with `npm ci` when the
-// lockfile has changed since, so the host's node_modules is never touched.
+// The repository is mounted, never copied. node_modules is the container's own volume, installed with `npm ci` when the
+// lockfile has changed since. So the host's node_modules is never touched.
 //
-// Usage: npm run bench:local -- [the arguments of scripts/instruction-counts.mjs, such as --only naming or --runs 3]
+// Usage: npm run bench:local -- [the arguments of scripts/instruction-counts.mjs, such as --only naming or --runs 3].
 // Needs Docker running (Docker Desktop on a Mac); it says so in one line when it is not.
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
@@ -19,8 +19,8 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 /** The image's Dockerfile, from the repository's root. */
 export const DOCKERFILE = 'docker/benchmarks.Dockerfile';
 /**
- * The volume the container's node_modules is kept in, apart from the host's: one for each checkout, named for a short
- * digest of its root, so two worktrees on different lockfiles never install over each other.
+ * The volume the container's node_modules is kept in, apart from the host's. There is one for each checkout, named for
+ * a short digest of its root. So two worktrees on different lockfiles never install over each other.
  */
 export function modulesVolume(root = ROOT) {
   return `thoughtknot-benchmarks-node-modules-${createHash('sha256').update(root).digest('hex').slice(0, 12)}`;

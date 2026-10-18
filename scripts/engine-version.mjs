@@ -5,15 +5,18 @@
 //
 // The advisories are read from a committed cache, quality/advisories.json, so a check runs offline and never touches the
 // network. Only --refresh and --watch ask: OSV and NVD for Graphviz, answers merged, and OSV for the package that wraps
-// it. --refresh runs in the release's quality job; --watch, read-only, in a workflow that is run by hand and fails when
-// the published advisories differ from the cache, so someone refreshes it in a pull request. The plugin never asks.
+// it. --refresh runs in the release's quality job. --watch, read-only, runs in a workflow that is run by hand. It
+// fails when the published advisories differ from the cache, so someone refreshes it in a pull request. The plugin
+// never asks.
 //
 // Usage:
-//   node scripts/engine-version.mjs                   check: the engine, the notices, the cache (offline); exit 1 on a flaw
-//   node scripts/engine-version.mjs --refresh         ask about this engine and rewrite the cache
-//   node scripts/engine-version.mjs --watch [--write <file>]   ask, change nothing; exit 1 if the answer is not the cache
-//   node scripts/engine-version.mjs --notes <file>    also write the release notes' paragraph on the engine (offline)
-//   --cache <file>                                    read or write this cache instead of quality/advisories.json
+//   node scripts/engine-version.mjs                  check: the engine, the notices, the cache (offline);
+//                                                    exit 1 on a flaw.
+//   node scripts/engine-version.mjs --refresh        ask about this engine and rewrite the cache.
+//   node scripts/engine-version.mjs --watch [--write <file>]
+//                                                    ask, change nothing; exit 1 if the answer is not the cache.
+//   node scripts/engine-version.mjs --notes <file>   also write the release notes' paragraph on the engine (offline).
+//   --cache <file>                                   read or write this cache instead of quality/advisories.json.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -43,9 +46,11 @@ function order(a, b) {
 }
 
 /**
- * True when the advisory affects this version: by a range (from `introduced`, up to but not including `fixed`, or up to
- * and including `last_affected`), by a list of affected versions, or, when it gives neither, because the cache was asked
- * about exactly this version and the service named the advisory. A withdrawn advisory affects nothing.
+ * True when the advisory affects this version, in one of three ways:
+ * - by a range: from `introduced`, up to but not including `fixed`, or up to and including `last_affected`;
+ * - by a list of affected versions;
+ * - when it gives neither, because the cache was asked about exactly this version and the service named the advisory.
+ * A withdrawn advisory affects nothing.
  */
 export function affects(advisory, version) {
   if (advisory.withdrawn) return false;
@@ -259,10 +264,10 @@ const failure = async (name, ask) => {
 };
 
 /**
- * Asks about this engine and gives the new cache and whether the answer changed from `previous` (its date apart). Graphviz
- * is asked of OSV by its repository and of NVD, and the two answers merged; the wrapper is asked of OSV as an npm
- * package. A question any service cannot answer is an error, never an empty answer: a release is not made on advisories
- * nobody could read.
+ * Asks about this engine and gives the new cache and whether the answer changed from `previous` (its date apart).
+ * Graphviz is asked of OSV by its repository and of NVD, and the two answers merged. The wrapper is asked of OSV as an
+ * npm package. A question any service cannot answer is an error, never an empty answer. A release is not made on
+ * advisories nobody could read.
  */
 export async function refresh({ graphviz, wrapper, fetch = globalThis.fetch, today, previous }) {
   const osv = await failure('OSV', () => askOsv(fetch, GRAPHVIZ_REPO, graphviz, 'GIT'));

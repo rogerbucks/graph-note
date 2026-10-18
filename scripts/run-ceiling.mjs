@@ -1,27 +1,27 @@
 #!/usr/bin/env node
-// Runs a test command under a memory ceiling and a time ceiling (spec §13, capped_test_run), so a runaway test is
+// Runs a test command under a memory ceiling and a time ceiling (spec §13, capped_test_run). So a runaway test is
 // stopped, with one line saying why, long before it can exhaust the machine. A single `node --test` run once grew to
 // hundreds of gigabytes of swap in minutes, and the machine stopped dozens of other processes to survive it.
 //
 // The command runs in its own process group. About every 500 ms the resident memory of every process in the group is
-// added up (`ps -A -o pgid=,rss=`, on macOS and Linux); over the memory ceiling, or past the time ceiling, the whole
-// group is killed, one line is written to stderr, and the exit status is 1. Otherwise the command's output and exit
+// added up (`ps -A -o pgid=,rss=`, on macOS and Linux). Over the memory ceiling, or past the time ceiling, the whole
+// group is killed. One line is written to stderr, and the exit status is 1. Otherwise the command's output and exit
 // status pass through unchanged. On Windows only the time ceiling is kept. The command also gets a JavaScript heap
-// limit (`--max-old-space-size`) in NODE_OPTIONS, unless one is already set, so a heap runaway fails fast with a stack.
+// limit (`--max-old-space-size`) in NODE_OPTIONS, unless one is already set. So a heap runaway fails fast with a stack.
 //
-// Defaults, measured on 11 Oct 2026 with the whole suite (`node --test`, about 700 tests): it peaked at 1.3 GB
-// resident across 21 processes and took 64 s, on a 10-core machine (more cores run more test files at once, and use
-// more memory; fewer take longer). The slowest single test took 23 s. So:
-//   THOUGHTKNOT_TEST_MEMORY_MB   memory ceiling for the whole run, in MB: default 4096, three times the measured peak,
-//                               and inside a CI runner's 7 to 16 GB
-//   THOUGHTKNOT_TEST_MINUTES     time ceiling for the whole run, in minutes (a fraction is allowed): default 20
-//   the heap limit              3072 MB for each Node process, under the memory ceiling
-//   --test-timeout=300000       each test's own limit, set in package.json: 5 minutes, well over the slowest test
+// Defaults, measured on 11 Oct 2026 with the whole suite (`node --test`, about 700 tests). It peaked at 1.3 GB
+// resident across 21 processes and took 64 s, on a 10-core machine. More cores run more test files at once, and use
+// more memory; fewer take longer. The slowest single test took 23 s. So:
+//   THOUGHTKNOT_TEST_MEMORY_MB   memory ceiling for the whole run, in MB: default 4096. That is three times the
+//                               measured peak, and inside a CI runner's 7 to 16 GB.
+//   THOUGHTKNOT_TEST_MINUTES     time ceiling for the whole run, in minutes (a fraction is allowed): default 20.
+//   the heap limit              3072 MB for each Node process, under the memory ceiling.
+//   --test-timeout=300000       each test's own limit, set in package.json: 5 minutes, well over the slowest test.
 //
 // Usage:
-//   node scripts/run-ceiling.mjs node --test                       (npm test; npm run test:ai and test:changed too)
-//   THOUGHTKNOT_TEST_MEMORY_MB=8192 npm test                         a run that really needs more memory
-//   THOUGHTKNOT_TEST_MINUTES=40 npm test                             or longer
+//   node scripts/run-ceiling.mjs node --test                       (npm test; npm run test:ai and test:changed too).
+//   THOUGHTKNOT_TEST_MEMORY_MB=8192 npm test                         a run that really needs more memory.
+//   THOUGHTKNOT_TEST_MINUTES=40 npm test                             or longer.
 //
 // Writes: nothing (it only runs the command, and kills it when it passes a ceiling).
 import { execFile, spawn } from 'node:child_process';

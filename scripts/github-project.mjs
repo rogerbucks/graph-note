@@ -1,37 +1,43 @@
 #!/usr/bin/env node
 // Mirrors the editor's requirements into a GitHub Project, one issue for each requirement and one for each open
-// question (spec §12, requirements_checked_in_ci). One way only: requirements/editor-requirements.gql stays the only
-// source, and the issues and project items made from it are derivatives, regenerated and never edited by hand. A
-// requirement's status (proved, part or open) is the one the slice board reads from the same file; its workstream is
-// the one in requirements/workstreams.json. A question's issue is labelled kind:question, lists the requirements it
+// question (spec §12, requirements_checked_in_ci). It works one way only. requirements/editor-requirements.gql stays
+// the only source. The issues and project items made from it are derivatives, regenerated and never edited by hand. A
+// requirement's status (proved, part or open) is the one the slice board reads from the same file. Its workstream is
+// the one in requirements/workstreams.json. A question's issue is labelled kind:question. It lists the requirements it
 // blocks and stays open; its workstream is the one that lists it, or Q, Open questions. The planning is in
 // github-project-plan.mjs and the gh calls in github-project-gh.mjs.
 //
-// When the options of Slice or Workstream change, as when workstreams are added or more slices are chosen, the next
-// --apply replaces that field's options in GitHub. That clears the field on every item, and the run sets it again on
-// each item it manages: growing Workstream from 17 options to 36 re-sets Workstream on every item, and choosing
+// The options of Slice or Workstream may change, as when workstreams are added or more slices are chosen. Then the
+// next --apply replaces that field's options in GitHub. That clears the field on every item. The run sets it again on
+// each item it manages. Growing Workstream from 17 options to 36 re-sets Workstream on every item. Choosing
 // --slices 3,4,6,7,8,9 re-sets Slice too.
 //
 // Usage:
-//   node scripts/github-project.mjs [--slices 3,4] [--dry-run]    print the plan; makes no network call (the default)
-//   node scripts/github-project.mjs [--slices 3,4] --check        read GitHub and print the real diff; changes nothing
+//   node scripts/github-project.mjs [--slices 3,4] [--dry-run]    print the plan; makes no network call (the default).
+//   node scripts/github-project.mjs [--slices 3,4] --check        read GitHub and print the real diff; changes nothing.
 //   node scripts/github-project.mjs [--slices 3,4] --apply [--allow-removals] [--accept-warnings]
-//                                                                  do the plan with gh, which needs a token that may
-//                                                                  write issues and projects (the `project` scope)
+//                                                                  do the plan with gh. It needs a token that may
+//                                                                  write issues and projects (the `project` scope).
 //
-// On every push to main the workflow .github/workflows/project-mirror.yml runs the --apply above in GitHub Actions, where
-// scripts/github-project-run.mjs runs it with the workflow's own token for the issues and PROJECT_TOKEN for the project.
+// On every push to main the workflow .github/workflows/project-mirror.yml runs the --apply above in GitHub Actions.
+// There scripts/github-project-run.mjs runs it with the workflow's own token for the issues and PROJECT_TOKEN for the
+// project.
 //
-// --check and --apply also work out the values an item with none is given (see scripts/build-status-seed.mjs), from main
-// and the releases and open pull requests of GitHub, and print the tally of them. If a file they read could not be read, the
-// seed carries a warning; --check says that an apply would stop, and --apply stops unless --accept-warnings is given.
+// --check and --apply also work out the values an item with none is given (see scripts/build-status-seed.mjs). They
+// work them out from main and the releases and open pull requests of GitHub, and print the tally of them. If a file
+// they read could not be read, the seed carries a warning. --check says that an apply would stop, and --apply stops
+// unless --accept-warnings is given.
 //
-// A dry run cannot see GitHub, so it compares with an empty one: every issue shows as a create. --check and --apply
-// first confirm that gh points at this checkout's own origin repository, then read GitHub, find each issue it made by
-// its hidden marker (only issues written by the owner or the workflows' bot, with the generated banner and the marker at the end),
-// change only what differs, and never delete: an issue whose requirement went is labelled requirement:removed and
-// closed, with a comment. --apply stops, unless --allow-removals is given, when the requirements file holds no
-// requirements or the plan removes more than 10 issues. It is safe to run again.
+// A dry run cannot see GitHub, so it compares with an empty one: every issue shows as a create. --check and --apply:
+// - first confirm that gh points at this checkout's own origin repository;
+// - then read GitHub;
+// - find each issue it made by its hidden marker. It takes only issues written by the owner or the workflows' bot,
+//   with the generated banner and the marker at the end;
+// - change only what differs, and never delete.
+//
+// An issue whose requirement went is labelled requirement:removed and closed, with a comment. --apply stops, unless
+// --allow-removals is given, when the requirements file holds no requirements or the plan removes more than 10 issues.
+// It is safe to run again.
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -107,20 +113,24 @@ function originRepo() {
 /**
  * Reads GitHub and prints the plan for `desired`, in 'check' mode (read-only) or 'apply' mode (then does it). `deps` are
  * the gh runner, the origin repository (`owner/name`), a function that writes text and the blocking sleep to pace calls
- * with. Throws, having changed nothing further, when gh points at another repository than the origin, or when apply is
- * stopped by the guard against removing too much and `allowRemovals` is not given. `seed(run, repo)`, if given, gives {seed,
- * warnings}: the Map from a requirement id to the {buildStatus, progress} an item with none takes
- * (scripts/build-status-seed.mjs), where the requirement stands on GitHub in place of Not started and Todo, and the warnings
- * (a requirements file that could not be read) the seed was made despite. The plan prints the tally of what it would seed.
- * An apply with warnings in the seed stops (SeedWarnings), since it would fix wrong values for good, unless
- * `acceptWarnings` is given; a check says that it would. With `project` false the project is not read and nothing is done
- * to it, and no seed is made: only the issues are mirrored. `deps.creator`, where given, is the login that makes issues
- * (the workflow's bot), so GitHub is not asked who is signed in; `deps.budget`, where given, is the time the apply may
- * take ({now, until}, see paced in github-project-retry.mjs), after which it stops with BudgetSpent. With `maxCreates`
- * (the workflow's), an apply that would make more issues than that on a board with issues of its own stops before
- * anything changes (CreatesCapped); and any apply stops making issues (CreatesUnlisted) when the list by creator does
- * not give back what it made (github-project-issues.mjs). An apply by a login whose issues would not be adopted
- * (neither the owner nor the bot) is refused before anything changes.
+ * with. Throws, having changed nothing further, when gh points at another repository than the origin. It also throws
+ * when apply is stopped by the guard against removing too much and `allowRemovals` is not given.
+ *
+ * `seed(run, repo)`, if given, gives {seed, warnings}. The seed is the Map from a requirement id to the
+ * {buildStatus, progress} an item with none takes (scripts/build-status-seed.mjs). That is where the requirement stands
+ * on GitHub, in place of Not started and Todo. The warnings (a requirements file that could not be read) are what the
+ * seed was made despite. The plan prints the tally of what it would seed. An apply with warnings in the seed stops
+ * (SeedWarnings), since it would fix wrong values for good, unless `acceptWarnings` is given. A check says that it
+ * would. With `project` false the project is not read and nothing is done to it, and no seed is made: only the issues
+ * are mirrored.
+ *
+ * `deps.creator`, where given, is the login that makes issues (the workflow's bot). So GitHub is not asked who is
+ * signed in. `deps.budget`, where given, is the time the apply may take ({now, until}, see paced in
+ * github-project-retry.mjs). After it the apply stops with BudgetSpent. `maxCreates` is the workflow's limit. An apply
+ * that would make more issues than that, on a board with issues of its own, stops before anything changes
+ * (CreatesCapped). Any apply stops making issues (CreatesUnlisted) when the list by creator does not give back what it
+ * made (github-project-issues.mjs). An apply by a login whose issues would not be adopted (neither the owner nor the
+ * bot) is refused before anything changes.
  */
 export function mirror(
   { desired: base, mode, allowRemovals, acceptWarnings, seed, project = true, maxCreates },
@@ -170,8 +180,8 @@ export function loadDesired(slices) {
 }
 
 /**
- * The command line. An --apply in a GitHub Actions run (GITHUB_ACTIONS is true) is the workflow's, run by
- * github-project-run.mjs with the workflow's two tokens; anything else runs as a person runs it.
+ * The command line. An --apply in a GitHub Actions run (GITHUB_ACTIONS is true) is the workflow's. It is run by
+ * github-project-run.mjs with the workflow's two tokens. Anything else runs as a person runs it.
  */
 function main(args, env = process.env) {
   try {

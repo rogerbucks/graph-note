@@ -1,8 +1,12 @@
-// The pure part of the build status of each requirement (spec §12, requirements_checked_in_ci): which items of the
-// GitHub Project a pull request moves, found with no hand-linking from the tests it newly marks written; the stage an
-// event puts them in; which value may replace which; and the words of the pull request's one comment and of the
-// annotations. Pure — values in, values out, no network and no file — so a test can prove it. The calls to GitHub are
-// build-status-gh.mjs, the events are build-status-run.mjs, and the stages are BUILD_STATUSES, the options of the
+// The pure part of the build status of each requirement (spec §12, requirements_checked_in_ci). It holds:
+// - which items of the GitHub Project a pull request moves, found with no hand-linking from the tests it newly marks
+//   written;
+// - the stage an event puts them in;
+// - which value may replace which;
+// - and the words of the pull request's one comment and of the annotations.
+//
+// Pure — values in, values out, no network and no file — so a test can prove it. The calls to GitHub are
+// build-status-gh.mjs, and the events are build-status-run.mjs. The stages are BUILD_STATUSES, the options of the
 // project's Build status field, which github-project.mjs makes. A stage comes from GitHub's events alone, never from
 // what a person wrote: nothing here reads a pull request's title, description or comments.
 import { BUILD_STATUSES } from './github-project-desired.mjs';
@@ -38,8 +42,8 @@ const writtenIds = (board) =>
 
 /**
  * The ids of the requirements a change moves, from the boards (as readBoard gives them) of the requirements file before
- * and after it: the tests the later file marks written and the earlier one did not (or did not hold), and every
- * requirement that names such a test. Sorted, once each; an id that is not plain is left out.
+ * and after it. The tests are those the later file marks written and the earlier one did not (or did not hold). The ids
+ * are every requirement that names such a test. Sorted, once each; an id that is not plain is left out.
  */
 export function movedRequirements(before, after) {
   const was = writtenIds(before);
@@ -76,10 +80,12 @@ export function stageOf(pr, rollup) {
 
 /**
  * The value to set an item to, or null to leave it. `current` is its value (none counts as Not started) and `wanted` the
- * stage an event gives. Forward through the stages and between Checks failing and Checks passing, either way; never back
- * from Merged or Released, since a late event of a pull request must not undo its merge or a release; and back to Not
- * started only from a pull request's own stage, when the pull request is closed unmerged. Throws for a value that is not
- * one of BUILD_STATUSES.
+ * stage an event gives.
+ * - Forward through the stages, and between Checks failing and Checks passing, either way.
+ * - Never back from Merged or Released, since a late event of a pull request must not undo its merge or a release.
+ * - Back to Not started only from a pull request's own stage, when the pull request is closed unmerged.
+ *
+ * Throws for a value that is not one of BUILD_STATUSES.
  */
 export function nextStatus(current, wanted) {
   const have = current ?? BUILD_STATUSES[0];
@@ -108,9 +114,9 @@ export function progressOf(stage) {
 }
 
 /**
- * The Status to set an item to, or null to leave it: Todo to In Progress to Done, never back from Done, and back to Todo
- * from In Progress when the pull request that held it is let go. None counts as Todo. Throws for a value that is not one of
- * PROGRESS.
+ * The Status to set an item to, or null to leave it. It goes Todo to In Progress to Done, never back from Done. It goes
+ * back to Todo from In Progress when the pull request that held it is let go. None counts as Todo. Throws for a value
+ * that is not one of PROGRESS.
  */
 export function nextProgress(current, wanted) {
   const have = current ?? PROGRESS[0];
@@ -123,10 +129,10 @@ const REQUIREMENTS_LINE = 'Requirements:';
 const MAX_LINE_LENGTH = 20_000;
 
 /**
- * The requirement ids a pull request's description names in its fixed line, `Requirements: id1, id2`: the first line that
- * opens with exactly `Requirements:`, split at commas, each id kept only if it isSafeId, once each, at most MAX_IDS. The
- * description is untrusted: no other line is read, and nothing of it is kept but those ids. Not text, or no such line,
- * gives none.
+ * The requirement ids a pull request's description names in its fixed line, `Requirements: id1, id2`. That is the first
+ * line that opens with exactly `Requirements:`. It is split at commas, each id kept only if it isSafeId, once each, at
+ * most MAX_IDS. The description is untrusted: no other line is read, and nothing of it is kept but those ids. Not
+ * text, or no such line, gives none.
  */
 export function requestedIds(body) {
   if (typeof body !== 'string') return [];
@@ -159,9 +165,12 @@ const wordsOf = (e) =>
   typeof e?.stderr === 'string' ? e.stderr : String(e?.message ?? e).replace(/^gh .*? failed: /s, '');
 
 /**
- * What to say of a failed or missing use of the project token, as {kind, text}: kind `missing` for no token, `rejected`
- * for GitHub's 401 or Bad credentials (an expired token), `failed` for anything else, with GitHub's words cut short and
- * every token left out. `token` is the PROJECT_TOKEN as given; `error` is what the call threw.
+ * What to say of a failed or missing use of the project token, as {kind, text}. kind is one of these:
+ * - `missing` for no token;
+ * - `rejected` for GitHub's 401 or Bad credentials (an expired token);
+ * - `failed` for anything else, with GitHub's words cut short and every token left out.
+ *
+ * `token` is the PROJECT_TOKEN as given; `error` is what the call threw.
  */
 export function describeProblem(error, token) {
   if (!String(token ?? '').trim())
@@ -192,10 +201,11 @@ const itemLine = (repo, item) => {
 };
 
 /**
- * The text of the pull request's one comment: the hidden marker, the stage, each requirement it moves (twenty at most,
- * the rest counted) with its issue linked, any problem in a line of its own, and links to the board and the run. Only ids
- * that isSafeId, numbers and github.com links go in, so nothing a pull request wrote can reach it. `items` are {id,
- * number (the issue's, or null), status (its value, or null)}; `problems` are texts; `repo` is `owner/name`.
+ * The text of the pull request's one comment. It holds the hidden marker and the stage. It holds each requirement it
+ * moves (twenty at most, the rest counted) with its issue linked. It holds any problem in a line of its own, and links
+ * to the board and the run. Only ids that isSafeId, numbers and github.com links go in, so nothing a pull request wrote
+ * can reach it. `items` are {id, number (the issue's, or null), status (its value, or null)}; `problems` are texts;
+ * `repo` is `owner/name`.
  */
 export function commentBody({ stage, items, problems, repo, runUrl, boardUrl }) {
   if (!BUILD_STATUSES.includes(stage)) throw new Error(`${stage} is not a build status`);

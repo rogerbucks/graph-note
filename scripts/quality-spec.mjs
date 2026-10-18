@@ -1,5 +1,5 @@
-// The quality metrics, declared (spec §12, quality_ratchet): each one's name, which way is better, and how much noise it
-// tolerates before a worse figure counts. Measured by quality-metrics.mjs, compared by quality-check.mjs.
+// The quality metrics, declared (spec §12, quality_ratchet). Each has its name, which way is better, and how much noise
+// it tolerates before a worse figure counts. Measured by quality-metrics.mjs, compared by quality-check.mjs.
 
 /** The instruction-count benchmarks, by name (scripts/benchmarks/index.mjs; a test holds the two lists the same). */
 export const BENCHMARK_NAMES = [
@@ -15,8 +15,8 @@ export const BENCHMARK_NAMES = [
 
 /**
  * How much an instruction count may grow with no reason recorded: 5%. Cachegrind counts the same code alike from run to
- * run; what varies is the little a JIT and a collector do differently, and the processor's model, which the release
- * runner's varies in and the baseline's machine does not hold. Counted three times on the release runner (18 Oct 2026,
+ * run. What varies is the little a JIT and a collector do differently, and the processor's model. The release runner's
+ * model varies, and the baseline's machine does not hold it. Counted three times on the release runner (18 Oct 2026,
  * the "Quality baseline" job, WebAssembly compiled once: instruction-counts.mjs), no metric moved by 0.03%.
  */
 export const INSTRUCTION_TOLERANCE = 0.05;
@@ -30,13 +30,18 @@ const instructionMetric = {
 };
 
 /**
- * Every metric: `better` is the direction that is an improvement; `tolerance` the share of the baseline a noisy metric may
- * worsen by with no reason recorded; `slack` an absolute amount it may worsen by, for a figure too small for a share to
- * mean anything; `scaled` marks a timing, whose baseline is stretched by how much slower this machine measured itself
- * than the baseline's did; `warnOnly` one that is reported when worse, never failed on; `instructions` a count of the
- * benchmarks' instructions, measured only where Valgrind runs and held only against a baseline counted on the same
- * machine; `most` a figure no metric may pass, baseline or none; `fast` marks the metrics that are measured in a moment,
- * from the files alone; `waivable: false` marks one no recorded reason can excuse.
+ * Every metric:
+ * - `better` is the direction that is an improvement.
+ * - `tolerance` is the share of the baseline a noisy metric may worsen by with no reason recorded.
+ * - `slack` is an absolute amount it may worsen by, for a figure too small for a share to mean anything.
+ * - `scaled` marks a timing. Its baseline is stretched by how much slower this machine measured itself than the
+ *   baseline's did.
+ * - `warnOnly` marks one that is reported when worse, never failed on.
+ * - `instructions` marks a count of the benchmarks' instructions. It is measured only where Valgrind runs. It is held
+ *   only against a baseline counted on the same machine.
+ * - `most` is a figure no metric may pass, baseline or none.
+ * - `fast` marks the metrics that are measured in a moment, from the files alone.
+ * - `waivable: false` marks one no recorded reason can excuse.
  */
 export const METRICS = {
   max_source_lines: { better: 'lower', tolerance: 0, slack: 0, unit: 'lines', fast: true },
