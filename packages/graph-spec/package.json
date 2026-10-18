@@ -1,6 +1,6 @@
 {
   "name": "@thoughtknot/graph-spec",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "private": true,
   "description": "Reads graph blocks in the document profile and checks them against the graph spec's rules, in plain JavaScript with no dependencies.",
   "license": "MPL-2.0",

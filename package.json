@@ -1,6 +1,6 @@
 {
   "name": "thoughtknot",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "private": true,
   "description": "Draw the graphs written in notes, and edit them by typing or by dragging the drawing.",
   "license": "MPL-2.0",
