@@ -527,6 +527,15 @@
       "test_files_generated"
     ]
   },
+  "W36": {
+    "title": "Moving boxes",
+    "requirements": [
+      "drag_moves_box",
+      "hold_to_drag_touch",
+      "move_box_keyboard",
+      "radial_spoke_order"
+    ]
+  },
   "A1": {
     "title": "Automated quality checks",
     "requirements": [

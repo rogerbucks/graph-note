@@ -195,6 +195,10 @@ holds the two together).
 - [ ] **S-02** Change a nudge's word to `besides`: the fold says "⚠ 1 problem"; the graph's badge lists "a nudge must be one of
       four words…" and the graph is still drawn (four_nudge_words, nudge_problems). Break the block's text: the graph
       is drawn in the locked style and the problem listed (broken_style_block).
+- [ ] **S-03** Desktop: drag a box with the mouse to just below another box. It follows the pointer, the other box is
+      outlined, and a line at the top says "Put … beside …". Let go: a notice says "Moved: …", the style block gains a
+      beside nudge and the two are drawn side by side. Drag again and press Escape: the box goes back and nothing is
+      written. A short click still opens the box (nudge_preview, drag_moves_box).
 
 ## Views — spec §2, §7
 
