@@ -1,7 +1,10 @@
 # ThoughtKnot
 
-ThoughtKnot draws the graphs written in your notes. You can edit a graph beside its note, by typing or by dragging the
-drawing. It is an Obsidian plugin, and it works on desktop and phone, offline.
+ThoughtKnot turns what you know into a map you can see, change and share. You write things and the links between them
+as plain text, and it draws them. You can edit a graph by typing or by dragging the drawing.
+
+It is one product with several ways in. The Obsidian plugin works now, on desktop and phone, offline. A standalone app,
+a VS Code plugin and a JavaScript library come next.
 
 **Status: in development.** It is not in the community plugin directory yet. It is built in nine slices. Slices 1 to 3
 are done, and slice 4 is in progress.
