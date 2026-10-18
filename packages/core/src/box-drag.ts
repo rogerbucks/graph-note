@@ -49,7 +49,7 @@ const writtenAlready = (n: NudgeWrite, written: readonly WrittenNudge[]): boolea
   );
 
 /**
- * Where box `dragged`, let go at `at`, would land among the `boxes` drawn in direction `rankdir` (LR or TB): by the
+ * Where box `dragged`, let go at `at`, would land among the `boxes` drawn in direction `rankdir` (LR, RL or TB): by the
  * nearest other box within its reach — beside it when dropped across the ranks, before or after it along them, whichever
  * way the point lies further from its middle for the box's size. Null away from every box, or where the nudge it would
  * write is `written` already.
@@ -71,7 +71,7 @@ export function landingFor(
     height = near.bottom - near.top || 1;
   const dx = (at.x - (near.left + near.right) / 2) / width,
     dy = (at.y - (near.top + near.bottom) / 2) / height;
-  const [along, across] = rankdir === 'TB' ? [dy, dx] : [dx, dy];
+  const [along, across] = rankdir === 'TB' ? [dy, dx] : [rankdir === 'RL' ? -dx : dx, dy];
   const side: Side = Math.abs(along) <= Math.abs(across) ? 'beside' : along < 0 ? 'before' : 'after';
   const nudge: NudgeWrite =
     side === 'beside'

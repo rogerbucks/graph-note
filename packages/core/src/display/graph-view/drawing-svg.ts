@@ -92,6 +92,7 @@ function decorate(
   o?: ViewOptions,
 ): void {
   svg.classList.toggle('thoughtknot-down', drawn.rankdir === 'TB'); // labels sit beside their lines, so they are given a gap
+  svg.classList.toggle('thoughtknot-mirrored', !!drawn.mirrored); // read right to left (§42)
   const boxes = d?.boxes ?? [];
   for (const g of Array.from(svg.querySelectorAll('g.node'))) {
     const box = boxes[Number(/^node(\d+)$/.exec(g.getAttribute('id') ?? '')?.[1]) - 1];

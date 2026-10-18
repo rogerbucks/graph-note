@@ -7,6 +7,7 @@ import {
   isSharedSchema,
   LAYOUT_LIMITS,
   settingsFrom,
+  shownAsRead,
   standardBlocks,
   startingSwitches,
   SWITCH_SETTINGS,
@@ -302,9 +303,9 @@ export default class ThoughtKnotPlugin extends Plugin {
    * `owner` (a card, an editor) asked for before it started, or the plugin unloaded. Rejects when the engine cannot start.
    */
   layout(drawing: GraphDrawing, owner?: object): Promise<Drawn | Refusal | null> {
-    // the direction set on the settings page, one the locked style allows (spec §21); else the best fit
-    // a direction the graph's own style sets (§6), or its diagram type's (§15), comes before the settings' default
-    return this.layoutsOf()?.draw(directed(drawing, this.settings.direction), owner) ?? Promise.resolve(null);
+    // the graph's own direction (§6) or its type's (§15), else the settings' (§21), else the best fit; then as read (§42)
+    const laid = this.layoutsOf()?.draw(directed(drawing, this.settings.direction), owner);
+    return laid?.then(shownAsRead) ?? Promise.resolve(null);
   }
 
   /**

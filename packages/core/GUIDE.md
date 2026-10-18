@@ -102,6 +102,9 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   imports this one, so the rest of the core runs in a host with no WebAssembly, such as a Claude Code mod.
 - `render.ts` — laying out with the engine it is handed, or around one run elsewhere (`directions`, then `chosen` with
   the SVGs it drew), and what a box's or link's details are.
+- `drawing-direction.ts` — a drawing in the direction it is read (spec §42, rtl_drawing_direction): one that runs across
+  is mirrored after layout in a right-to-left language (`inReadingDirection`, `shownAsRead` for a host's layout), its
+  labels anchored at their other end, so the layout source and the exports stay the same.
 - `layout-limits.ts` — how large a graph may be before it is shown as text (spec §9, layout_contained), each limit with
   its reason: the note's text, measured before it is read (`READ_LIMITS`, `textTooLarge`, which `readNote` applies to the
   graph blocks and shared schemas, never to a query or an excerpt); the things, links, longest word and drawing

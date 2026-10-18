@@ -242,7 +242,7 @@ function boxDragFor(
   return new BoxDrag({
     ...host,
     view: () => host.zoom.view(),
-    rankdir: () => o.drawn.rankdir,
+    rankdir: () => (o.drawn.mirrored ? 'RL' : o.drawn.rankdir),
     moving,
     textOf: (key) => boxes.find((b) => b.key === key)?.text ?? key,
     readOnly: () => !!o.readOnly?.(),
