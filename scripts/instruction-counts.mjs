@@ -35,6 +35,11 @@ const CASE_MS = 15 * 60 * 1000;
  * checks its bounds in code instead of by catching faults in reserved memory (`--disable-wasm-trap-handler`), which
  * Valgrind follows plainly. Counted three times under Cachegrind (ARM Linux in Docker, 12 Oct 2026), without
  * `--predictable` a metric moved by up to 8.9% between runs; with it, by at most 1.9% (draw_fifty), the rest 0.001%.
+ * WebAssembly is compiled once, by the quick compiler, and never again when a function runs hot
+ * (`--no-wasm-dynamic-tiering`, which with no background thread leaves it there): when a function counted as hot moved
+ * draw_fifty's whole process by up to 500 million instructions on the release runner. Counted six times under
+ * Cachegrind (x86-64 Linux, 18 Oct 2026), draw_fifty's process moved by 4.4% without it and by 0.002% with it. A
+ * benchmark may add flags of its own (`nodeFlags`, see nodeFlagsFor).
  */
 export const NODE_FLAGS = [
   '--single-threaded',
@@ -42,7 +47,15 @@ export const NODE_FLAGS = [
   '--predictable-gc-schedule',
   '--random-seed=1',
   '--disable-wasm-trap-handler',
+  '--no-wasm-dynamic-tiering',
 ];
+
+/**
+ * Node's flags for a benchmark's processes: the shared ones, then its own. A drawing compiles its WebAssembly with the
+ * optimising compiler alone (`--no-liftoff`), in its setup's warm draw, so its count is of the code a user's drawings
+ * run once the engine is warm; a cold start keeps the quick compile a first draw runs.
+ */
+export const nodeFlagsFor = (benchmark) => [...NODE_FLAGS, ...(benchmark.nodeFlags ?? [])];
 
 /**
  * Cachegrind counting instructions only (`--cache-sim=no`), and translating again any code that is rewritten, as V8's
@@ -195,12 +208,14 @@ async function cachegrind(benchmarks) {
   const { files, fingerprints } = await bundleBenchmarks(join(dir, 'bundle'), benchmarks);
   // a fixed, small environment, so nothing of the shell's reaches the count
   const env = { PATH: process.env.PATH ?? '', LC_ALL: 'C', TZ: 'UTC' };
+  const named = new Map(benchmarks.map((b) => [b.name, b]));
   let n = 0;
   return {
     fingerprints,
     count(benchmark, which) {
       const out = join(dir, `cachegrind.out.${n++}`);
-      const args = [...VALGRIND_FLAGS, `--cachegrind-out-file=${out}`, process.execPath, ...NODE_FLAGS];
+      const node = nodeFlagsFor(named.get(benchmark));
+      const args = [...VALGRIND_FLAGS, `--cachegrind-out-file=${out}`, process.execPath, ...node];
       return new Promise((counted, failed) => {
         const child = spawn('valgrind', [...args, files[benchmark], which], {
           env,
