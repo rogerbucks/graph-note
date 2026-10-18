@@ -147,7 +147,10 @@ describe('the Export button', () => {
       await until(() => written(env, '.svg').length === 1);
       const image = written(env, '.svg')[0];
       const companion = image.replace(/\.svg$/, '.md');
-      assert.match(env.state.files.get(companion), new RegExp(`!\\[\\[${image.replace(/[.]/g, '\\.')}\\]\\]`));
+      assert.match(
+        env.state.files.get(companion),
+        new RegExp(`!\\[\\[${image.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\]\\]`),
+      );
       assert.match(env.state.files.get(companion), /\[\[Some note(\.md)?\]\]/);
     } finally {
       env.uninstall();
