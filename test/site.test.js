@@ -53,6 +53,10 @@ describe('search engines and AI assistants can find and read it', () => {
   const doc = pageOf(html);
   const meta = (sel) => doc.querySelector(sel)?.getAttribute('content');
 
+  test('lives at the project’s own domain, thoughtknot.app', () => {
+    assert.equal(SITE_URL, 'https://thoughtknot.app/');
+  });
+
   test('has a short title and description, a canonical address and the sharing cards', () => {
     assert.ok(doc.title.length <= 60, doc.title);
     const description = meta('meta[name="description"]');
