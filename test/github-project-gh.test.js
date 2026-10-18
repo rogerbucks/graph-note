@@ -72,7 +72,7 @@ describe('the first apply, against an empty GitHub', () => {
 
   test('creates the project with its Slice, Workstream and Proof fields, each a single choice', () => {
     const [project] = gh.hub.projects;
-    assert.equal(project.title, 'thoughtknot requirements');
+    assert.equal(project.title, 'ThoughtKnot requirements');
     const options = (name) => project.fields.find((f) => f.name === name).options.map((o) => o.name);
     assert.deepEqual(options('Slice'), ['Slice 3', 'Slice 4']);
     assert.deepEqual(options('Workstream'), ['W0: Zoom', 'W1: Focus, hover and untangle', 'S3: Slice end']);

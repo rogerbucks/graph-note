@@ -21,7 +21,7 @@ export const QUESTIONS_WORKSTREAM = 'Q';
  */
 export const QUESTION_LABEL = 'kind:question';
 /** The title of the project the issues are collected in. */
-export const PROJECT_TITLE = 'thoughtknot requirements';
+export const PROJECT_TITLE = 'ThoughtKnot requirements';
 /** The label of an issue whose requirement is no longer in the requirements file. */
 export const REMOVED_LABEL = 'requirement:removed';
 /**

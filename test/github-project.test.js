@@ -214,7 +214,7 @@ describe('the command', () => {
     assert.match(result.stdout, /dry run/i);
     assert.match(result.stdout, /no network call/i);
     assert.match(result.stdout, new RegExp(`issues: create ${inSlices([3, 4]).length} `));
-    assert.match(result.stdout, /create project "thoughtknot requirements"/);
+    assert.match(result.stdout, /create project "ThoughtKnot requirements"/);
     assert.equal(result.stderr, '');
   });
 

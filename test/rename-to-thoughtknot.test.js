@@ -20,7 +20,7 @@ describe('the rename to ThoughtKnot', () => {
       'https://github.com/rogerbucks/thoughtknot/wiki · https://rogerbucks.github.io/thoughtknot/',
     );
     assert.equal(renameText(String.raw`rogerbucks\/graph-note`), String.raw`rogerbucks\/thoughtknot`);
-    assert.equal(renameText("'graph-note requirements'"), "'thoughtknot requirements'");
+    assert.equal(renameText("'graph-note requirements'"), "'ThoughtKnot requirements'");
     assert.equal(renameText('a graph note holds graph notes'), 'a graph note holds graph notes');
   });
 

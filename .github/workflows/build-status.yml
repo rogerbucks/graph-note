@@ -1,6 +1,6 @@
 name: Build status
 
-# Shows on the "thoughtknot requirements" GitHub Project where each requirement's build is up to, in its Build status
+# Shows on the "ThoughtKnot requirements" GitHub Project where each requirement's build is up to, in its Build status
 # field (Not started, In PR, Checks failing, Checks passing, Merged, Released), and leaves one short comment on the pull
 # request, updated at each step. The values come from GitHub's events alone. scripts/build-status-run.mjs does the work.
 #

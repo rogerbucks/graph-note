@@ -36,6 +36,7 @@ const SKIP = [
 
 /** The renames, in order: longer and cased forms first. Lower-case "graph note" is the kind of note and stays. */
 const RENAMES = [
+  [/graph-note requirements/g, 'ThoughtKnot requirements'], // the GitHub Project's title, as Roger named it
   [/Graph Note/g, 'ThoughtKnot'],
   [/Graph-Note/g, 'ThoughtKnot'],
   [/GraphNote/g, 'ThoughtKnot'],

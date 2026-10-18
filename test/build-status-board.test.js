@@ -110,7 +110,7 @@ describe('the Build status field of the project', () => {
     const side = fakeRepoSide();
     assert.throws(
       () => readBuildBoard(side.run, none.run, REPO),
-      (e) => e instanceof BoardProblem && /thoughtknot requirements/.test(e.message),
+      (e) => e instanceof BoardProblem && /ThoughtKnot requirements/.test(e.message),
     );
     const { gh, board } = both();
     gh.hub.projects[0].fields = gh.hub.projects[0].fields.filter((f) => f.name !== 'Build status');

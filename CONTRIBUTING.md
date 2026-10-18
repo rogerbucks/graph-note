@@ -323,7 +323,7 @@ These test behaviour across modules, or the repository itself, so they are named
 ## The requirements in a GitHub Project
 
 - **One way only.** `requirements/editor-requirements.gql` stays the only source. `scripts/github-project.mjs` mirrors it
-  into a GitHub Project titled "thoughtknot requirements", one issue for each requirement of the chosen slices
+  into a GitHub Project titled "ThoughtKnot requirements", one issue for each requirement of the chosen slices
   (`--slices 3,4` by default). The issues and project items are derivatives: regenerated, never edited by hand, and each
   opens on its rule, then a do-not-edit banner. Its title is the requirement's section, a dot and the id's words.
 - **Where each requirement goes.** `requirements/workstreams.json` maps a workstream id to its title and its requirement

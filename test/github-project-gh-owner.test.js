@@ -75,7 +75,7 @@ describe('making and filling the project through GraphQL', () => {
     const gh = fakeGithub();
     apply(gh, unknownOwnerType(gh));
     const [project] = gh.hub.projects;
-    assert.equal(project.title, 'thoughtknot requirements');
+    assert.equal(project.title, 'ThoughtKnot requirements');
     assert.equal(project.items.length, 5);
     const item = project.items.find((i) => i.number === issueOf(gh, 'focus_link').number);
     assert.equal(item.values.Proof, 'open');
@@ -87,7 +87,7 @@ describe('making and filling the project through GraphQL', () => {
     apply(gh);
     const queries = gh.hub.calls.filter((c) => c.args[1] === 'graphql').map((c) => JSON.parse(c.input));
     const made = queries.find((q) => /createProjectV2\(/.test(q.query));
-    assert.deepEqual(made.variables, { owner: 'OWNER_rogerbucks', title: 'thoughtknot requirements' });
+    assert.deepEqual(made.variables, { owner: 'OWNER_rogerbucks', title: 'ThoughtKnot requirements' });
     const added = queries.filter((q) => /addProjectV2ItemById\(/.test(q.query));
     assert.equal(added.length, 5);
     assert.ok(added.every((q) => /^ISSUE_\d+$/.test(q.variables.content)));
