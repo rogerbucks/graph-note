@@ -91,6 +91,16 @@ export function fixedPalette(t: ThemeColours): Palette {
   };
 }
 
+/** The drawing in forced colours: the canvas behind and in every box, and every word and line in the canvas's text. */
+const FORCED: Palette = {
+  text: 'CanvasText',
+  muted: 'CanvasText',
+  edge: 'CanvasText',
+  page: 'Canvas',
+  fill: () => 'Canvas',
+  blend: () => 'CanvasText',
+};
+
 /**
  * A palette that follows the system's light or dark setting with no help from its host: the drawing carries its own
  * style sheet, naming each colour of the light palette and, under prefers-color-scheme: dark, of the dark one, and its
@@ -131,7 +141,8 @@ export function systemPalette(light: Palette, dark: Palette): Palette {
       if (!mixes.includes(pct)) throw new Error(`the style blends at ${mixes.join(' and ')} only, not ${pct}`);
       return `var(--gn-${h}-${pct})`;
     },
-    style: `${sheet(light)}@media (prefers-color-scheme: dark){${sheet(dark)}}`,
+    // forced colours (§44): an image is not forced by the browser, so its sheet gives the system's colours itself
+    style: `${sheet(light)}@media (prefers-color-scheme: dark){${sheet(dark)}}@media (forced-colors: active){${sheet(FORCED)}}`,
   };
 }
 
