@@ -107,7 +107,6 @@ export function buildEditor(
       autocapitalize: 'off',
       autocomplete: 'off',
       autocorrect: 'off',
-      wrap: 'off',
       // named by a hidden label, not aria-label: Obsidian shows a tooltip for every aria-label
       'aria-labelledby': name.id,
     },

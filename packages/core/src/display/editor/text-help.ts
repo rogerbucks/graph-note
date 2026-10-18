@@ -69,6 +69,8 @@ export class TextHelp {
     el.text.setAttribute('rows', String(text.split('\n').length + 1)); // grown to its text: it never scrolls apart from its colours
     this.suggest(el, s);
     this.picture(el, s);
+    // put again under the caret once the picture it is measured in shows what was typed
+    if (!el.suggest.hidden) placeSuggestions(el.suggest, el.text, el.overlay);
     listProblems(el.list, this.problems);
     this.fixbar(el);
   }
@@ -111,7 +113,7 @@ export class TextHelp {
       this.list.active = 0;
       showSuggestions(el.suggest, shown, this.list.active, (item) => this.on.accept(item));
     }
-    if (shown.length) placeSuggestions(el.suggest, el.text);
+    if (shown.length) placeSuggestions(el.suggest, el.text, el.overlay);
     chooseSuggestion(el.suggest, el.text, shown.length ? this.list.active : null);
     this.moved = this.inline.update(el.text, this.reading, s.graph, this.suggestions.items.length > 0);
   }

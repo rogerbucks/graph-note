@@ -1341,7 +1341,7 @@ details.graph-note-style > summary {
   height: auto;
 }
 .graph-note-inline .graph-note-editor,
-.graph-note-inline .graph-note-text {
+.graph-note-inline .graph-note-overlay {
   min-height: 0;
 }
 
@@ -1427,7 +1427,8 @@ details.graph-note-style > summary {
 }
 
 /* The text: a plain field over a coloured picture of it. The field's text is transparent and its caret shows; both use one font,
-   one size and no wrapping, so every character of the picture sits under its own. */
+   one size and the same wrapping, so every character of the picture sits over its own and a long line wraps in both
+   alike (long_lines_wrap). The picture is in the flow and sets the box's height; the field is laid over it. */
 .graph-note-editor {
   position: relative;
   min-height: 12em;
@@ -1442,27 +1443,38 @@ details.graph-note-style > summary {
   font-family: var(--gn-font-mono);
   font-size: var(--gn-code-size, 0.9em);
   line-height: 1.5;
-  white-space: pre;
-  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  overflow: hidden;
   tab-size: 4;
   box-sizing: border-box;
 }
 .graph-note-overlay {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  min-height: 8em;
   pointer-events: none;
   color: var(--gn-code-normal, var(--gn-text-normal));
   background: transparent;
   border: 0;
 }
 .graph-note-text {
-  position: relative;
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
-  min-height: 8em;
+  height: 100%;
   resize: none;
-  overflow-y: hidden;
   caret-color: var(--gn-text-normal);
+}
+/* one more row past the text, to type on, as the field has */
+.graph-note-overlay::after {
+  content: ' ';
+}
+/* The sign and the plain-English note after a line: out of the flow, so they never add a row the field has not got; a
+   note longer than the row left is cut at the box's edge, the text itself never. */
+.graph-note-line-end {
+  position: absolute;
+  white-space: pre;
 }
 /* Obsidian styles every textarea, and at hover and focus its textarea:hover (0,1,1) would paint the field grey over the
    picture. So the field's own look carries more weight than any of those, in every state, and matches the picture exactly. */
@@ -1535,11 +1547,14 @@ details.graph-note-style > summary {
    colour alone, and what each is says beside its name. */
 .graph-note-suggestions {
   position: absolute;
-  top: calc(var(--gn-space-2) + (var(--graph-note-caret-line, 0) + 1) * 1.5em);
+  top: var(--graph-note-caret-top, calc(var(--gn-space-2) + (var(--graph-note-caret-line, 0) + 1) * 1.5em));
   inset-inline-start: max(
     0px,
     min(
-      calc(var(--gn-space-3) + var(--graph-note-caret-column, 0) * 1ch - var(--graph-note-caret-scroll, 0px)),
+      var(
+        --graph-note-caret-left,
+        calc(var(--gn-space-3) + var(--graph-note-caret-column, 0) * 1ch - var(--graph-note-caret-scroll, 0px))
+      ),
       calc(100% - 18em)
     )
   );

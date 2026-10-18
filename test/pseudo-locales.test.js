@@ -212,6 +212,9 @@ describe('the browser editor’s page: every state, in each test language', () =
 const CLIPS = {
   '.graph-note-view': 'the card, whose words wrap inside it; it clips only its rounded corners',
   '.graph-note-viewport': 'the drawing, which is moved and zoomed inside it',
+  '.graph-note-overlay':
+    'the coloured picture of the text, which wraps; it clips only the plain-English note after a long line',
+  '.graph-note-text': 'the field over that picture, which wraps as the picture does and is as tall as it',
   '.graph-note-table th': 'a column of the table, which scrolls sideways when wide',
   '.graph-note-table td': 'a cell of the table, which scrolls sideways when wide',
   '.graph-note-sr': 'the screen reader’s text, kept off the screen on purpose',
