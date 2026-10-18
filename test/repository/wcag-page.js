@@ -55,9 +55,9 @@ export function workerFor(window, file) {
 /**
  * The page as built in `dir`, opened at `hash` (the address's fragment, which carries the token and the note), with the
  * script run. Returns {dom, window, stop}: `stop` puts away the worker threads; the caller closes the DOM (audit does).
- * `draft` is a draft the server holds for the note, which the page offers back.
+ * `draft` is a draft the server holds for the note, which the page offers back; `language`, the browser's language.
  */
-export function openEditorPage(dir, hash, note = PAGE_NOTE, draft = null) {
+export function openEditorPage(dir, hash, note = PAGE_NOTE, draft = null, language = undefined) {
   const html = readFileSync(join(dir, 'index.html'), 'utf8');
   // the built page is one module whose last line exports the starter; run as a plain script, it starts itself
   const script = readFileSync(join(dir, 'page.js'), 'utf8').replace(/\nexport \{[^}]*\};?\s*$/, '\n');
@@ -77,6 +77,7 @@ export function openEditorPage(dir, hash, note = PAGE_NOTE, draft = null) {
     const body = answer(String(url), note, draft);
     return { ok: true, status: 200, json: async () => body, text: async () => JSON.stringify(body) };
   };
+  if (language) Object.defineProperty(window.navigator, 'language', { value: language });
   const stop = workerFor(window, join(dir, 'layout-worker.js'));
   window.eval(script);
   return { dom, window, stop };

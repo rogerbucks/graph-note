@@ -73,6 +73,10 @@ const ROOTS = {
   'packages/core/src/display/graph-view/full-screen.ts': 'full screen, made on the page’s body',
   'packages/core/src/display/graph-view/quick-info.ts': 'the tooltip, made on the page’s body',
   'packages/claude-code/page/page-main.ts': 'the browser page, as a whole',
+  'packages/obsidian/src/style-block.ts': 'a style block’s fold',
+  'packages/obsidian/src/step-block.ts': 'a step’s card',
+  'packages/obsidian/src/ai/send-dialog.ts': 'the AI send dialog',
+  'packages/obsidian/src/links/link-host.ts': 'the dialog before leaving Obsidian for a link',
 };
 
 describe('the interface reads in the host’s direction', () => {

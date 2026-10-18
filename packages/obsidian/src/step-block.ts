@@ -16,6 +16,7 @@ import {
   stepOf,
   viewsOf,
 } from '@graph-note/core';
+import { readInHostDirection } from '@graph-note/core/display/host';
 import type { GraphStep, StepFault, StepGiven, StepRun } from '@graph-note/core';
 import type GraphNotePlugin from './main';
 import { renderCode } from '@graph-note/core/display/code';
@@ -96,7 +97,7 @@ export function renderStepBlock(
   ctx: MarkdownPostProcessorContext,
   step: GraphStep | StepFault,
 ): void {
-  const root = el.createDiv({ cls: 'graph-note graph-note-step' });
+  const root = readInHostDirection(el.createDiv({ cls: 'graph-note graph-note-step' }));
   const info = ctx.getSectionInfo(el);
   // the step's text is edited in the pane, as an empty graph's is (§4)
   const target = info ? { path: ctx.sourcePath, line: info.lineStart, graph: step.graph } : null;

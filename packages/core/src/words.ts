@@ -5,6 +5,7 @@
 // never as its key. A placeholder is written `{name}`; a word that changes with a count is written once for each
 // plural form the language has (`Intl.PluralRules`), with `{count}` shown in the reader's locale.
 import { formatCount } from './locale-formats.ts';
+import { PSEUDO_LANGUAGES, pseudoWords } from './pseudo-words.ts';
 import { SOURCE_WORDS } from './source-words.ts';
 
 /** The language of the source words, which every translation falls back to. */
@@ -108,10 +109,12 @@ export function addTranslation(tag: string, translation: Catalogue): void {
 
 /**
  * Sets the language the words are said in: its translation, else that of its base language (`fr` for `fr-CA`), else UK
- * English. The language used.
+ * English. The language used. A test language (pseudo-words.ts) is made from the source words when first set.
  */
 export function setLanguage(tag: string): string {
   const exact = canonical(tag);
+  if (exact && Object.hasOwn(PSEUDO_LANGUAGES, exact) && !translations.has(exact))
+    translations.set(exact, pseudoWords(SOURCE_WORDS, exact as keyof typeof PSEUDO_LANGUAGES));
   const base = exact?.split('-')[0];
   const found = [exact, base].find((t): t is string => !!t && translations.has(t));
   language = found ?? SOURCE_LANGUAGE;

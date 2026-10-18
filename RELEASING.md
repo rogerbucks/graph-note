@@ -62,6 +62,16 @@ VoiceOver on macOS and on iOS; NVDA on Windows where one is at hand. Turn the di
 - [ ] **AX-19** Pointer: a press that can be undone is done on release, not on press, and a tooltip can be reached, held and
       dismissed (SC 2.5.2, 1.4.13).
 
+### In the test languages
+
+Open the browser editor's page with the browser's language set to `en-XA`, then to `ar-XB` (the test languages of
+`packages/core/src/pseudo-words.ts`). `test/pseudo-locales.test.js` checks the words and the direction of every view in a
+DOM with no layout; this checks what it cannot see.
+
+- [ ] **AX-20** In `en-XA` no longer word is cut off, overlaps another part, or pushes a control out of its view.
+- [ ] **AX-21** In `ar-XB` the page and the details mirror, the drawing does not, and the arrow keys still move the way the
+      drawing shows.
+
 ## What a failure leaves
 
 A fault found here becomes a test that fails first, in `test/wcag.test.js` where it can be seen there, or a case in the
