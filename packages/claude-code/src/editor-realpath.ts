@@ -1,9 +1,12 @@
-// A file's real path, asked of a host that can only start a process (spec §26): the mod's file calls read and test for a
-// file but do not settle links, so to know where a matrix note really is, the mod starts the shipped process
-// (bin/real-path.mjs, run by node). The start has no shell; the path is one argument, after `--` so that a path
-// starting with a dash is never an option; only stdout is read; a process that does not answer in time is killed; and
-// any error is a rejection, which the caller takes as not knowing, and refuses what it cannot place. A path that is not
-// there is a rejection with `code` `ENOENT` (the process's exit code 2), so a caller can tell it from a failure.
+// A file's real path, asked of a host that can only start a process (spec §26). The mod's file calls read and test for
+// a file, but do not settle links. So to know where a matrix note really is, the mod starts the shipped process
+// (bin/real-path.mjs, run by node).
+// - The start has no shell.
+// - The path is one argument, after `--`, so a path starting with a dash is never an option.
+// - Only stdout is read. A process that does not answer in time is killed.
+// - Any error is a rejection. The caller takes it as not knowing, and refuses what it cannot place.
+// A path that is not there is a rejection with `code` `ENOENT` (the process's exit code 2). So a caller can tell it
+// from a failure.
 import type { EditorPorts } from './editor-launch.ts';
 
 /** How long the process has to answer before it is killed. */
@@ -54,7 +57,7 @@ export function realPathVia(
 }
 
 /**
- * Where the link at a path leads, as a full path (the process settles a relative one from the link's own folder), or
+ * Where the link at a path leads, as a full path. The process settles a relative one from the link's own folder. It is
  * null when the path is no link or is not there. A process that cannot run or fails is a rejection.
  */
 export function readLinkVia(

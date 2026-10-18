@@ -1,6 +1,6 @@
 // The comments an element owns (graph spec §26 notes, §27 tagged comments): /// note lines and //@ key: value lines,
 // owned by the element on the line directly below them. The cases are owned-comment-cases.json, which the Python
-// library answers the same (python/graph_spec/tests/test_owned_comments.py), so both readers read the same //@ lines
+// library answers the same (python/graph_spec/tests/test_owned_comments.py). So both readers read the same //@ lines
 // and notes from the same text (§26 and §27, "Two readers, one answer").
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

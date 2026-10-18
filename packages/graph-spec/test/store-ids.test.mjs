@@ -1,6 +1,6 @@
 // A node's id in the reader (graph spec §3, decided with Roger, 10 Oct 2026): SET never changes a node's id
 // (req:3.set-keeps-id), and a node's id is always text (req:3.id-is-text). The Python reader answers the same:
-// python/graph_spec/tests/test_store_ids.py, and python/graph_spec/tests/test_parity.py holds the two together live.
+// python/graph_spec/tests/test_store_ids.py. python/graph_spec/tests/test_parity.py holds the two together live.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';

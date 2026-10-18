@@ -1,7 +1,7 @@
 // A file's real path, for the Claude Code host (spec §26): run by node as a process, because the mod's file calls settle
-// no links. It is started with no shell and the path is the one argument, after `--`, so a path that starts with a dash
-// is a path. The answer goes out on stdout and nothing else does; an argument list that is not exactly `-- <path>` (or
-// `--link -- <path>`) exits with a code that is not 0 and says nothing of the path.
+// no links. It is started with no shell, and the path is the one argument, after `--`. So a path that starts with a
+// dash is a path. The answer goes out on stdout, and nothing else does. An argument list that is not exactly
+// `-- <path>` (or `--link -- <path>`) exits with a code that is not 0, and says nothing of the path.
 //
 // `-- <path>`: the real path, links settled, in the case the disk keeps (`realpathSync.native`). Exit 2 when the path is
 // not there (ENOENT, ENOTDIR), 1 when it cannot be settled for any other reason.

@@ -15,7 +15,8 @@ const isJudgementGraph = (g) =>
   g.labelled('ElementType').some((t) => g.p(t).name === 'RESTS_ON') ||
   g.labelled('Proposal').length > 0 ||
   g.labelled('Serving').length > 0;
-// §5 drafts (6 Oct 2026), as graph_rules.py: a graph with no schema — none of its own, none named — has its kinds and types worked out from the data
+// §5 drafts (6 Oct 2026), as graph_rules.py. A graph with no schema (none of its own, none named) has its kinds and
+// types worked out from the data
 const isDraft = (w, name) => !w[name].labelled('ElementType').length && !(w.__named || {})[name];
 const drafted = (g) => [
   [...new Set([...g.nodes.values()].flatMap(([labels]) => [...labels].filter((x) => !SPEC_NODES.includes(x))))].sort(),

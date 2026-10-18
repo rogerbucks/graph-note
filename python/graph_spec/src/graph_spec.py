@@ -279,9 +279,9 @@ from graphspec.engine.embedded_queries import (
 )
 
 
-# A setting a host assigns here — graph_spec.CLASSIFICATION_NOTE = path — must reach the code that
-# reads it, which reads it from graphspec.engine.settings when it runs; so each setting is a
-# property of this module that reads and writes there.
+# A setting a host assigns here, such as graph_spec.CLASSIFICATION_NOTE = path, must reach the code
+# that reads it. That code reads it from graphspec.engine.settings when it runs. So each setting is
+# a property of this module that reads and writes there.
 
 
 class _Settings(_types.ModuleType):

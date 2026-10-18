@@ -29,8 +29,8 @@ from graphspec.engine.documents.fill import compute, fill, fill_check  # noqa: E
 from engine_support import module_needs_engine  # noqa: E402
 
 
-# These tests are of the route into the engine, which a host asks for: the reader is the default
-# parser (req:3.reader-default), so every test here runs under Grafeo's, and needs it installed.
+# These tests are of the route into the engine, which a host asks for. The reader is the default
+# parser (req:3.reader-default). So every test here runs under Grafeo's, and needs it installed.
 def setUpModule():  # noqa: N802
     module_needs_engine()
     global _DEFAULT

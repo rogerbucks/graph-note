@@ -1,6 +1,7 @@
 /*
-The Graphviz layout source for a graph, in plain JavaScript — byte-identical to what graph_svg.py writes (python/graph_spec), so a
-drawing made in the editor and one made by the Python drawing script are laid out from the same text (spec §12).
+The Graphviz layout source for a graph, in plain JavaScript. It is byte-identical to what graph_svg.py writes
+(python/graph_spec). So a drawing made in the editor and one made by the Python drawing script are laid out from the
+same text (spec §12).
 
 Usage:
   In a page:  <script src="graph-layout.js"></script>  then  GraphLayout.dotSource(nodes, edges, 'LR', style)
@@ -8,7 +9,7 @@ Usage:
 
 Writes: nothing (library).
 
-nodes: [[key, kind, text]]; edges: [[source key, reading, target key]]; style: the locked style, graph_svg.style.json;
+nodes: [[key, kind, text]]. edges: [[source key, reading, target key]]. style: the locked style, graph_svg.style.json.
 suggested (optional): the keys of boxes drawn under a suggested name, dashed and labelled so, as dot_source's suggested.
 Returns [source, kinds, readings], as dot_source does. typedSource(source, plan, style) lays that source out as a
 diagram type (editor spec §15), as graph_svg's diagram_types.typed_source does. The parts Python lends it — textwrap, zlib.crc32, html.escape and
@@ -88,7 +89,7 @@ round — are ported here exactly, each proved against Python by the layout test
       .split(/([\t\n\v\f\r ]+)/)
       .filter((c) => c)
       .reverse();
-    // a chunk Python's str.strip() empties, by its isspace(): unlike JavaScript's trim(), that takes in U+001C–U+001F and
+    // a chunk Python's str.strip() empties, by its isspace(). Unlike JavaScript's trim(), that takes in U+001C–U+001F and
     // U+0085 and leaves out U+FEFF. Not the reader's whitespace, since this mirrors textwrap
     const blank = (s) => [...s].every((c) => PY_SPACE.includes(c));
     const lines = [];
@@ -147,7 +148,7 @@ round — are ported here exactly, each proved against Python by the layout test
    * [source, kinds, readings] for nodes [[key, kind, text]] and edges [[source key, reading, target key]], as
    * graph_svg.dot_source. suggested: the keys of boxes drawn under a suggested name, each outlined in the style's
    * suggested_style and labelled with its suggested_label. One key given as a plain string is refused, as Python refuses
-   * it: read letter by letter, it would mark boxes whose keys are part of it.
+   * it. Read letter by letter, it would mark boxes whose keys are part of it.
    */
   function dotSource(nodes, edges, rankdir, style, suggested = []) {
     if (typeof suggested === 'string')
@@ -224,12 +225,15 @@ round — are ported here exactly, each proved against Python by the layout test
   const typeDirection = (plan) => TYPE_DIRECTION[plan.type];
 
   /**
-   * The layout source `dot` laid out as a diagram type, by its plan (the core's types.ts): a radial drawing around its
-   * centre, by Graphviz's twopi, its links curved around the things they do not join (splines=true), never through
-   * them; a tree, a flow, lanes and a timeline with every link laid out forward and no kind put in a column of its own,
-   * a tree's other links and every link of a timeline never moving a thing (constraint=false); lanes a box for each
-   * kind, labelled as a group is; a timeline each day's things on one rank, the days in order, joined by links never
-   * drawn, after every link drawn, so Graphviz numbers the drawn links as before. No plan: `dot`.
+   * The layout source `dot` laid out as a diagram type, by its plan (the core's types.ts):
+   * - radial: around its centre, by Graphviz's twopi. Its links curve around the things they do not join
+   *   (splines=true), never through them.
+   * - tree, flow, lanes and timeline: every link laid out forward, and no kind put in a column of its own. A tree's
+   *   other links and every link of a timeline never move a thing (constraint=false).
+   * - lanes: a box for each kind, labelled as a group is.
+   * - timeline: each day's things on one rank, the days in order. They are joined by links never drawn, after every
+   *   link drawn, so Graphviz numbers the drawn links as before.
+   * No plan: `dot`.
    */
   function typedSource(dot, plan, style) {
     if (!plan) return dot;

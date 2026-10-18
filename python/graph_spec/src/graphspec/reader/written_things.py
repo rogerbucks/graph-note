@@ -16,7 +16,7 @@ from graphspec.reader.block_items import _items, blank_text
 from graphspec.reader.whitespace import S as _S
 from graphspec.reader.whitespace import SPACE
 
-# whitespace as GQL names it (§3), as the graph reader reads a block, in both languages; and a
+# whitespace as GQL names it (§3), as the graph reader reads a block, in both languages. And a
 # line that ends only at a line feed
 _W = "[A-Za-z0-9_]"
 _NOT_BREAK = "[^\n]"

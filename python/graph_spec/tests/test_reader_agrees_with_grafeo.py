@@ -147,8 +147,8 @@ class Agreement(unittest.TestCase):
                 raise
             try:
                 db, graphs = in_grafeo(blocks)
-            # any error, never narrowed: what is caught is held to KNOWN_GRAFEO_REFUSES exactly
-            # (test_every_case_grafeo_refuses_is_a_known_one), so nothing new passes unseen
+            # Any error, never narrowed. What is caught is held to KNOWN_GRAFEO_REFUSES exactly
+            # (test_every_case_grafeo_refuses_is_a_known_one). So nothing new passes unseen.
             except Exception as e:
                 cls.grafeo_refused[c["name"]] = str(e).splitlines()[0]
                 continue
@@ -252,8 +252,8 @@ class Agreement(unittest.TestCase):
                             f"{c['name']} {g} {p} at {level}",
                         )
                 for x in G.nodes:
-                    # Grafeo orders the paths above by altitude and leaves a tie unordered; the
-                    # reader breaks it by id, an order Grafeo's answer is put in to compare
+                    # Grafeo orders the paths above by altitude and leaves a tie unordered. The
+                    # reader breaks it by id. Grafeo's answer is put in that order to compare.
                     theirs = sorted(gs.lift(db, x), key=lambda p: (G.p(p).get("altitude") or 0, p))
                     self.assertEqual(theirs, gr.lift(G, x), f"{c['name']} {g} lift {x}")
 

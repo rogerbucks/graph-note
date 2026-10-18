@@ -1,9 +1,11 @@
 // The card that shows what Claude proposed, for the user to accept or reject (spec §17, §26 cc_claude_proposes). Plain DOM,
-// every word set as text. Built to WCAG 2.2 level AA (spec §11): each control is a real button with a name that says what
-// it acts on, reached by the keyboard in reading order with a visible focus (page.css), nothing is said by colour alone
-// (a change is "Added", "Changed" or "Removed" in words, a state is a word), a decision or a refusal is announced in the
-// page's status region, and after a decision focus returns to the heading of the card. The review itself is the core's
-// (proposal-review.ts); the card only shows its rows and passes the user's choice on.
+// every word set as text. Built to WCAG 2.2 level AA (spec §11):
+// - Each control is a real button with a name that says what it acts on.
+// - The keyboard reaches each in reading order, with a visible focus (page.css).
+// - Nothing is said by colour alone. A change is "Added", "Changed" or "Removed" in words. A state is a word.
+// - A decision or a refusal is announced in the page's status region.
+// - After a decision, focus returns to the heading of the card.
+// The review itself is the core's (proposal-review.ts). The card only shows its rows and passes the user's choice on.
 import { MARK_WORDS } from '../../core/src/proposals-marks.ts';
 import type { Which } from '../../core/src/proposals-shown.ts';
 import type { Card } from './proposal-review.ts';

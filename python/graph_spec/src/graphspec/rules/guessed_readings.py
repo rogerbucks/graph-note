@@ -7,9 +7,9 @@ import re
 
 
 # ── Readings guessed for a type with none declared ───────────────────────────────────────────────
-# Forward and reverse, from the type's own words, as the lock writes them for checking (vault task
-# of 6 Oct 2026; the same rules as graph-spec-check.js guessReadings, held to one table:
-# packages/graph-spec/test/reading-cases.json).
+# Forward and reverse. They come from the type's own words, as the lock writes them for checking
+# (vault task of 6 Oct 2026). The rules are those of graph-spec-check.js guessReadings, held to one
+# table: packages/graph-spec/test/reading-cases.json.
 _IRREGULAR = {
     "chose": "was chosen by",
     "made": "was made by",

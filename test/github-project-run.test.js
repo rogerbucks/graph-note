@@ -1,7 +1,9 @@
-// The GitHub mirror run by its workflow on a push to main: the issues made and edited with the workflow's own token and
-// written by its bot, the project with PROJECT_TOKEN alone, and every way that can go wrong warned of, never failed over:
-// a missing or refused project token mirrors the issues alone, and a seed made despite warnings applies nothing. A
-// stand-in `spawn` answers gh by the token it is started with, so no network is touched. Editor spec §12,
+// The GitHub mirror run by its workflow on a push to main:
+// - The issues are made and edited with the workflow's own token, and written by its bot.
+// - The project uses PROJECT_TOKEN alone.
+// - Every way that can go wrong is warned of, never failed over. A missing or refused project token mirrors the issues
+//   alone. A seed made despite warnings applies nothing.
+// A stand-in `spawn` answers gh by the token it is started with, so no network is touched. Editor spec §12,
 // requirements_checked_in_ci.
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -27,11 +29,12 @@ const load = (slices) =>
   desiredState(readBoard(FIXTURE), WORKSTREAMS, slices, readWaves(JSON.stringify(WAVES), WORKSTREAMS));
 
 /**
- * The world of one run: GitHub as the bot sees it (issues, labels and the project in `gh`, the files and pull requests
- * the seed reads in `side`), and a `spawn` that answers by the token gh is started with, refusing a call made with the
- * wrong one, as GitHub would. `refuseProject` makes every call with the project token fail with GitHub's words, and
- * `refuseIssues` every label made with the workflow's; `refuse(args)`, where given, gives the words any call fails with,
- * or null.
+ * The world of one run. It holds GitHub as the bot sees it. That is the issues, labels and the project in `gh`, and the
+ * files and pull requests the seed reads in `side`. Its `spawn` answers by the token gh is started with. Like GitHub,
+ * it refuses a call made with the wrong one.
+ * - `refuseProject` makes every call with the project token fail with GitHub's words.
+ * - `refuseIssues` does the same for every label made with the workflow's token.
+ * - `refuse(args)`, where given, gives the words any call fails with, or null.
  */
 function setUp({ refuseProject = null, refuseIssues = null, refuse = () => null } = {}) {
   const gh = fakeGithub({ login: 'app/github-actions' });

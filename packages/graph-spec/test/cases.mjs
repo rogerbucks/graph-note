@@ -1,7 +1,7 @@
 // Characterisation cases for the graph-spec library: requests in the shape the
 // Node adapter (bin/graph-spec-check-node.js) takes. Every graph here is
 // written for this repository. The expected answers in expected.json were recorded
-// from the library before it moved into this repository, so a case that
+// from the library before it moved into this repository. So a case that
 // changes answer is a change in behaviour.
 const lines = (...xs) => xs.join('\n');
 
@@ -70,8 +70,9 @@ export const cases = {
     matrix: {},
   },
 
-  // Whitespace is what GQL names (§3): TAB, LF, VT, FF, CR, U+001C–U+001F, the space, U+00A0, U+1680, U+180E,
-  // U+2000–U+200A, U+2028, U+2029, U+202F, U+205F and U+3000; never U+0085, U+FEFF or U+200B. A line ends at LF only.
+  // Whitespace is what GQL names (§3). It is TAB, LF, VT, FF, CR and U+001C–U+001F. It is also the space, U+00A0,
+  // U+1680, U+180E and U+2000–U+200A. And it is U+2028, U+2029, U+202F, U+205F and U+3000. It is never U+0085, U+FEFF
+  // or U+200B. A line ends at LF only.
   // Every reader uses that one set, not its language's own idea of whitespace (decided 10 Oct 2026).
   'whitespace inside a string is kept as written, line and paragraph separators too (§3)': {
     blocks: [
@@ -254,8 +255,10 @@ export const cases = {
     },
   },
 
-  // W3C PROV is normative for provenance (graph spec §11, §12, §24; Roger, 16 Oct 2026): a derivation links to its rule
-  // with HAD_PLAN, an attribution goes to an agent, a revision is generated after what it supersedes
+  // W3C PROV is normative for provenance (graph spec §11, §12, §24; Roger, 16 Oct 2026).
+  // - A derivation links to its rule with HAD_PLAN.
+  // - An attribution goes to an agent.
+  // - A revision is generated after what it supersedes.
   'provenance kept: a plan, an agent and a revision in order': {
     blocks: [
       lines(

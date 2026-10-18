@@ -1,6 +1,6 @@
-// The ceiling on a test run (spec §13, capped_test_run): every run through the npm test commands is stopped, with one
-// line saying which ceiling it hit, before it can take the machine's memory or run on for ever. The runner is tried on
-// small fixtures made in a temporary folder, never picked up by `npm test`, each under a small ceiling of its own: a
+// The ceiling on a test run (spec §13, capped_test_run). Every run through the npm test commands is stopped before it
+// can take the machine's memory or run on for ever. One line says which ceiling it hit. The runner is tried on small
+// fixtures made in a temporary folder, never picked up by `npm test`. Each is under a small ceiling of its own. A
 // runaway fixture also stops itself well short of harm, so it is safe even before the runner exists.
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -55,12 +55,12 @@ const gone = async (pid) => {
 /** The id the fixture wrote, once it has run; the fixture runs as a grandchild of the runner, inside `node --test`. */
 const fixturePid = (dir) => Number(readFileSync(join(dir, 'pid'), 'utf8'));
 
-// Grows by 4 MB every 40 ms, as a test that allocates without bound does; stops itself at 1.5 GB, about 15 s on, writes
-// `grown`, and then waits. It reaches the 300 MB ceiling about 3 s on, and the runner looks every 500 ms, so it is
-// stopped some 12 s before it could write `grown`, inside the run's 60 s limit; at 10 ms a step it grew to 1.5 GB in
-// 4 s, too near the ceiling's look for a loaded machine (the review of #109). Before it grows, it writes its own pid,
-// starts a child of its own and writes that pid too: the memory ceiling can only be reached after both exist, so the
-// stopping of the whole group is seen however slowly the fixture starts.
+// Grows by 4 MB every 40 ms, as a test that allocates without bound does. It stops itself at 1.5 GB, about 15 s on,
+// writes `grown`, and then waits. It reaches the 300 MB ceiling about 3 s on, and the runner looks every 500 ms. So it
+// is stopped some 12 s before it could write `grown`, inside the run's 60 s limit. At 10 ms a step it grew to 1.5 GB in
+// 4 s. That was too near the ceiling's look for a loaded machine (the review of #109). Before it grows, it writes its
+// own pid. It then starts a child of its own and writes that pid too. The memory ceiling can only be reached after both
+// exist. So the stopping of the whole group is seen however slowly the fixture starts.
 const RUNAWAY = `import { test } from 'node:test';
 import { spawn } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
@@ -78,13 +78,14 @@ test('grows without bound', async () => {
 });
 `;
 
-// Sleeps 30 s, then writes `woke`. Whether a run was stopped at its time ceiling is read from that file: a stopped run's
-// whole group is killed, so the fixture never wakes, and a run that was not stopped lasts the 30 s and leaves the file
-// (the run's output is the fixture's too, so the run does not end before it). Never from how long the run took, nor from
-// whether the fixture had started by the ceiling, which a loaded machine's start-up decides: a start-up slower than the
-// 1.8 s ceiling failed the test though the ceiling worked, and a run under load took longer by the clock alike (12 Oct
-// 2026). The stopping of a started fixture and its own child is seen at the memory ceiling, which only a started fixture
-// can reach; both ceilings stop a run through the runner's one `stop`, which kills the whole group.
+// Sleeps 30 s, then writes `woke`. Whether a run was stopped at its time ceiling is read from that file. A stopped
+// run's whole group is killed, so the fixture never wakes. A run that was not stopped lasts the 30 s and leaves the
+// file. The run's output is the fixture's too, so the run does not end before it. It is never read from how long the
+// run took. Nor is it read from whether the fixture had started by the ceiling, which a loaded machine's start-up
+// decides. A start-up slower than the 1.8 s ceiling failed the test though the ceiling worked. A run under load took
+// longer by the clock alike (12 Oct 2026). The stopping of a started fixture and its own child is seen at the memory
+// ceiling, which only a started fixture can reach. Both ceilings stop a run through the runner's one `stop`, which
+// kills the whole group.
 const SLEEPER = `const { writeFileSync } = require('node:fs');
 setTimeout(() => writeFileSync('woke', ''), 30000);
 `;
@@ -146,11 +147,12 @@ describe('a test run under the ceiling', () => {
   });
 });
 
-// the quality ratchet's own two full runs of the suite (scripts/quality-suite.mjs) are test runs too: a bare `node --test`
-// there is the uncapped run the requirement forbids (11 Oct 2026)
+// the quality ratchet's own two full runs of the suite (scripts/quality-suite.mjs) are test runs too. A bare
+// `node --test` there is the uncapped run the requirement forbids (11 Oct 2026)
 describe('the quality ratchet’s runs of the suite run under the ceiling', () => {
-  // it does not look for the fixture's process: the ceiling stops the run at its time whether or not `node --test` has
-  // started the file yet, so the test does not depend on start-up time (the ceiling's own kill of the group is tested above)
+  // it does not look for the fixture's process. The ceiling stops the run at its time, whether or not `node --test`
+  // has started the file yet. So the test does not depend on start-up time. The ceiling's own kill of the group is
+  // tested above
   test('a run it starts that goes on past the time ceiling is stopped, with the ceiling’s line, and does not pass', async () => {
     const suite = await import('../scripts/quality-suite.mjs');
     const dir = scratch({ 'sleeper.test.js': SLEEPER });

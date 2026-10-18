@@ -1,6 +1,6 @@
-// One whitespace set in every reader (spec §3): the core, the JavaScript library and the Python library each hold a copy
-// of the code points, written out by hand, and those copies must stay the same as each other and as the set openGQL's
-// grammar names (GQL.g4, rule WHITESPACE and its fragments) — U+0085 and U+FEFF are not in it (decided 10 Oct 2026).
+// One whitespace set in every reader (spec §3). The core, the JavaScript library and the Python library each hold a
+// copy of the code points, written out by hand. Those copies must stay the same as each other, and as the set openGQL's
+// grammar names (GQL.g4, rule WHITESPACE and its fragments). U+0085 and U+FEFF are not in it (decided 10 Oct 2026).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';

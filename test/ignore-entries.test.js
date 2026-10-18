@@ -1,5 +1,5 @@
 // The entries of `.ignore` that must exist (scripts/ignore-entries.mjs). An entry git ignores is build output, so a fresh,
-// unbuilt checkout lacks it; any other entry naming a file must exist, so a misspelt path is caught. Tried on a small
+// unbuilt checkout lacks it. Any other entry naming a file must exist, so a misspelt path is caught. Tried on a small
 // repository made in a temporary folder.
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';

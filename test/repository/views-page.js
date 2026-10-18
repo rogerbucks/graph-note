@@ -1,14 +1,14 @@
-// The states of the browser editor's page, each reached on the page as built in a DOM (editor spec §11, §41): the one list
-// every accessibility check of the page goes through (test/wcag.test.js, test/a11y-semantics.test.js and
-// test/a11y-keyboard.test.js), so a state a later workstream adds gets its case here once and every check covers it.
+// The states of the browser editor's page, each reached on the page as built in a DOM (editor spec §11, §41). Every
+// accessibility check of the page goes through this one list (test/wcag.test.js, test/a11y-semantics.test.js and
+// test/a11y-keyboard.test.js). So a state a later workstream adds gets its case here once, and every check covers it.
 import { until } from '../../packages/obsidian/test/host/load-plugin.js';
 import { browserHost } from '../../packages/claude-code/page/browser-host.ts';
 import { PAGE_NOTE } from './wcag-page.js';
 import { word } from '@thoughtknot/core';
 
 /**
- * Each state of the page by its name, reached through `open(hash, note, draft)`, which opens the page as the pane opens it
- * (the token and the note in the address), or with neither, and gives it back.
+ * Each state of the page by its name, reached through `open(hash, note, draft)`, and given back. `open` opens the page
+ * as the pane opens it (the token and the note in the address), or with neither.
  */
 export function pageStates(open) {
   const withNote = '#token=t&note=Reader.md';

@@ -1,20 +1,22 @@
 // WCAG 2.2 Level AA in every interface of every host (editor spec §11; wcag_aa, wcag_new_hosts, wcag_checked). Every view
-// and page of every host is put through an automated check, in the light and the dark theme: axe-core's rules for WCAG 2.0,
-// 2.1 and 2.2 at A and AA (names, roles, labels, language, headings, ARIA and the like), and the contrast of every piece of
-// text (SC 1.4.3), worked out from the real stylesheet with the theme's own colours. The check itself is tried first, on
-// planted faults, so a pass means it looked. Test support: test/repository/wcag.js and wcag-page.js.
+// and page of every host is put through an automated check, in the light and the dark theme:
+// - axe-core's rules for WCAG 2.0, 2.1 and 2.2 at A and AA (names, roles, labels, language, headings, ARIA and the
+//   like);
+// - the contrast of every piece of text (SC 1.4.3), worked out from the real stylesheet with the theme's own colours.
+// The check itself is tried first, on planted faults, so a pass means it looked. Test support: test/repository/wcag.js
+// and wcag-page.js.
 //
 // A view a later workstream adds gets its case in test/repository/views-obsidian.js or views-page.js, with the same
 // commit as the view.
 //
-// Not done here, because jsdom has no layout or paint: the contrast of lines and controls (SC 1.4.11) and text
-// spacing (SC 1.4.12); target size and reflow (SC 2.5.8, 1.4.10) are held in a real Chrome, by
+// Not done here, as jsdom has no layout or paint: line and control contrast (SC 1.4.11) and text spacing
+// (SC 1.4.12). Target size and reflow (SC 2.5.8, 1.4.10) are held in a real Chrome, by
 // test/a11y-targets-reflow.test.js. The release walk-through (RELEASING.md, "Accessibility walk-through") covers those
 // by hand, with the keyboard and a screen reader.
-// Obsidian draws its own settings page from the plugin's definitions; the stand-in for it labels each control by its row's
-// name, which is how a screen reader reads a settings row, and the plugin's part (every row named, no two alike) is held
-// directly. Obsidian draws its own menus too, from the items the plugin gives it: the stand-in for one lists them as a
-// screen reader reads a menu, and the plugin's part (every item named) is held directly. The drawing's own colours are
+// Obsidian draws its own settings page from the plugin's definitions. The stand-in for it labels each control by its
+// row's name, which is how a screen reader reads a settings row. The plugin's part (every row named, no two alike) is
+// held directly. Obsidian draws its own menus too, from the items the plugin gives it. The stand-in for one lists them
+// as a screen reader reads a menu. The plugin's part (every item named) is held directly. The drawing's own colours are
 // held by test/accessibility.test.js.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';

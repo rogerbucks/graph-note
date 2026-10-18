@@ -1,6 +1,8 @@
-// The workflow that publishes the home page (spec §41, landing_page): what wakes it, that the job running the
-// repository's code only reads, and that the one job that may write to GitHub Pages runs no code of the repository, only
-// GitHub's deploy action. Read as text, by indentation, as policy.test.js reads the others.
+// The workflow that publishes the home page (spec §41, landing_page). Checked here:
+// - What wakes it.
+// - The job running the repository's code only reads.
+// - The one job that may write to GitHub Pages runs no code of the repository, only GitHub's deploy action.
+// Read as text, by indentation, as policy.test.js reads the others.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { block, jobs, permissionValues, read, runCommands, stripComment, usesRefs } from './repository/repo.js';

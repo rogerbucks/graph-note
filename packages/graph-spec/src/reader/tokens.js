@@ -68,8 +68,8 @@ function tokens(block) {
     if (trim(raw).startsWith('//')) return;
     let pos = 0;
     while (pos < raw.length) {
-      // whether only whitespace is left, told without cutting the rest of the line out and trimming it before every
-      // token: that cost a 137 kB line 20% of its reading time (10 Oct 2026)
+      // whether only whitespace is left. It is told without cutting the rest of the line out and trimming it before
+      // every token. That cost a 137 kB line 20% of its reading time (10 Oct 2026)
       let at = pos;
       while (at < raw.length && isSpace(raw[at])) at++;
       if (at === raw.length) break;
@@ -130,8 +130,8 @@ function codePoint(s, i) {
   return cp > 0x10ffff || (cp >= 0xd800 && cp <= 0xdfff) ? null : cp;
 }
 /**
- * The first escape GQL does not name in a quoted text (quotes off): where its backslash is, and the escape as written —
- * for \u and \U, with the digits that follow. null when every escape is one GQL names.
+ * The first escape GQL does not name in a quoted text (quotes off). It gives where its backslash is, and the escape
+ * as written. For \u and \U, that includes the digits that follow. null when every escape is one GQL names.
  */
 function badEscape(s) {
   let i = s.indexOf('\\');
@@ -146,8 +146,8 @@ function badEscape(s) {
   return null;
 }
 const WRITTEN = { '\\': '\\\\', "'": "\\'", '\n': '\\n', '\t': '\\t', '\r': '\\r', '\b': '\\b', '\f': '\\f' };
-// a text quoted as the profile writes it: a backslash, a quote and each control character GQL has an escape for written
-// as that escape, so the text reads back on one line, as itself
+// a text quoted as the profile writes it. A backslash, a quote and each control character GQL has an escape for are
+// written as that escape. So the text reads back on one line, as itself
 const quote = (s) => "'" + [...s].map((c) => WRITTEN[c] ?? c).join('') + "'";
 // a quoted text's text, its escapes read as GQL reads them (tokens has refused any GQL does not name)
 const unquote = (s) =>
@@ -156,9 +156,9 @@ const unquote = (s) =>
     .replace(/\\(u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{6}|[^])/g, (_, e) =>
       e[0] in HEX && e.length > 1 ? String.fromCodePoint(parseInt(e.slice(1), 16)) : ESCAPES[e],
     );
-// A DATETIME's text as its UTC time, YYYY-MM-DDTHH:MM:SS with microseconds only when they are not 0, as Python's
-// isoformat() writes it and Grafeo returns it. Throws a ProfileError for a text that is no instant, or one without
-// its offset (§9, principle 11).
+// A DATETIME's text as its UTC time, YYYY-MM-DDTHH:MM:SS, as Python's isoformat() writes it and Grafeo returns it.
+// Microseconds are written only when they are not 0. Throws a ProfileError for a text that is no instant, or one
+// without its offset (§9, principle 11).
 function utcNaive(s, line) {
   const m = /^(\d{4})-(\d\d)-(\d\d)[T ](\d\d):(\d\d)(?::(\d\d)(?:\.(\d{1,6}))?)?(Z|[+-]\d\d:?\d\d)?$/.exec(s);
   if (!m)

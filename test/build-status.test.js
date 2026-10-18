@@ -1,7 +1,9 @@
-// The pure part of the build status of each requirement (editor spec §12, requirements_checked_in_ci): which board items
-// a pull request moves, found from the tests it newly marks written; which stage an event puts them in; which value may
-// replace which; and the words of the comment and the annotations. Hand-made small graphs stand in for the real file;
-// nothing here touches the network.
+// The pure part of the build status of each requirement (editor spec §12, requirements_checked_in_ci). It covers:
+// - which board items a pull request moves, found from the tests it newly marks written.
+// - which stage an event puts them in.
+// - which value may replace which.
+// - the words of the comment and the annotations.
+// Hand-made small graphs stand in for the real file; nothing here touches the network.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readBoard } from '../scripts/slice-board.mjs';

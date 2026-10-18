@@ -1,7 +1,8 @@
-// A note's earlier versions in the browser editor's server (editor spec §41, changes_view): the commits that changed the
-// open note and the branches, read from a real git repository made for the test, listed only when asked, and the note's
-// text at one of them; never at a commit not listed for it, never past the gate, and never by running a program the
-// repository names.
+// A note's earlier versions in the browser editor's server (editor spec §41, changes_view). They are read from a real
+// git repository made for the test.
+// - The commits that changed the open note, and the branches, are listed only when asked.
+// - The note's text is read at one of them. It is never read at a commit not listed for it, and never past the gate.
+// - It is never read by running a program the repository names.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';

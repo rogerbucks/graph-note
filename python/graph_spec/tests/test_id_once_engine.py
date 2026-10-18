@@ -28,8 +28,8 @@ from graphspec.engine.documents.fill import compute  # noqa: E402
 from engine_support import module_needs_engine  # noqa: E402
 
 
-# These tests are of the route into the engine, which a host asks for: the reader is the default
-# parser (req:3.reader-default), so every test here runs under Grafeo's, and needs it installed.
+# These tests are of the route into the engine, which a host asks for. The reader is the default
+# parser (req:3.reader-default). So every test here runs under Grafeo's, and needs it installed.
 def setUpModule():  # noqa: N802
     module_needs_engine()
     global _DEFAULT
@@ -46,8 +46,8 @@ HEAD = "// graph: g · document {doc} · schema s1 · as of 2026-10-01"
 ID_TWICE = "(a:Person {id: 'x', name: 'A'}),\n(b:Person {id: 'x', name: 'B'})"
 # one variable, a, written for two nodes in one block
 VAR_TWICE = "(a:Person {name: 'A'}),\n(a:Person {name: 'B'})"
-# one id given to two nodes in two INSERT statements: the reader cannot read this block (a data
-# block ends after its INSERT and SET), so to_gql hands it to Grafeo unchanged, PR #36 or not
+# One id given to two nodes in two INSERT statements. The reader cannot read this block (a data
+# block ends after its INSERT and SET). So to_gql hands it to Grafeo unchanged, PR #36 or not.
 TWO_INSERTS = "INSERT (a:Person {id: 'x', name: 'A'})\nINSERT (b:Person {id: 'x', name: 'B'})"
 
 
@@ -141,27 +141,27 @@ class EnginePathsSkipTheReader(unittest.TestCase):
     read it with the reader first (req:3.engine-reads-first). The class keeps its name, so the
     tests-first record knows its tests."""
 
-    # (test_the_default_parser_is_grafeo went with req:3.reader-default: the reader is the default
-    # now, held by test_settings_reader_default.py, and these tests ask for Grafeo in setUpModule)
+    # (test_the_default_parser_is_grafeo went with req:3.reader-default. The reader is the default
+    # now, held by test_settings_reader_default.py. These tests ask for Grafeo in setUpModule.)
 
-    # Was a GAP: parse() under the default PARSER ('grafeo', reading.py:95-101) ran no reader; on
-    # main to_gql did not refuse an id given twice, Grafeo stored two nodes, and parse keyed its
-    # nodes by id (reading.py:107), so one was silently dropped. PR #36's to_gql refuses this case,
-    # so on its base this test passes and its expectedFailure decorator is off.
+    # Was a GAP. parse() under the default PARSER ('grafeo', reading.py:95-101) ran no reader. On
+    # main, to_gql did not refuse an id given twice, and Grafeo stored two nodes. parse keyed its
+    # nodes by id (reading.py:107), so one was silently dropped. PR #36's to_gql refuses this case.
+    # So on its base this test passes and its expectedFailure decorator is off.
     def test_parse_by_default_refuses_an_id_repeated_in_one_block(self):
         with self.assertRaisesRegex(gp.ProfileError, "id 'x' is already a node"):
             parse_block(ID_TWICE)
 
-    # Was a GAP: the same path with a variable written twice: on main to_gql wrote id: twice into
-    # the first node and none into the second, Grafeo made a second node with no id, and parse
+    # Was a GAP. The same path with a variable written twice. On main, to_gql wrote id: twice into
+    # the first node and none into the second. Grafeo made a second node with no id. parse
     # failed with KeyError 'id' (reading.py:101) — a crash, not the reader's refusal. PR #36
-    # refuses it, so on its base this test passes and its expectedFailure decorator is off.
+    # refuses it. So on its base this test passes and its expectedFailure decorator is off.
     def test_parse_by_default_refuses_a_variable_written_twice(self):
         with self.assertRaisesRegex(gp.ProfileError, "a is written twice"):
             parse_block(VAR_TWICE)
 
-    # Was a GAP, open after PR #36 too: a block the reader cannot read was handed to Grafeo
-    # unchanged (to_gql.py:94-97), so parse() kept one node of two with one id, and reported
+    # Was a GAP, open after PR #36 too. A block the reader cannot read was handed to Grafeo
+    # unchanged (to_gql.py:94-97). So parse() kept one node of two with one id, and reported
     # nothing. parse now reads the block with the reader first (req:3.engine-reads-first).
     def test_parse_by_default_refuses_a_block_the_reader_cannot_read(self):
         with self.assertRaisesRegex(gp.ProfileError, "^line 3: unexpected 'INSERT' — "):
@@ -173,9 +173,9 @@ class EnginePathsSkipTheReader(unittest.TestCase):
         with self.assertRaisesRegex(gp.ProfileError, "^line 3: unexpected 'INSERT' — "):
             gs.load("// graph: joined\n" + TWO_INSERTS)
 
-    # Was a GAP, open after PR #36 too: compute() loaded each block of a recipe into its graph
-    # (fill.py:58-65) with no reader, so an id written in two blocks of one graph gave a state
-    # hash for a graph of two nodes with one id, and nothing was refused. compute now reads the
+    # Was a GAP, open after PR #36 too. compute() loaded each block of a recipe into its graph
+    # (fill.py:58-65) with no reader. So an id written in two blocks of one graph gave a state
+    # hash for a graph of two nodes with one id. Nothing was refused. compute now reads the
     # recipe's blocks together with the reader first, in their graphs (req:3.engine-reads-first).
     def test_compute_refuses_an_id_repeated_across_two_blocks_of_one_graph(self):
         text = (
@@ -200,7 +200,7 @@ class EnginePathsSkipTheReader(unittest.TestCase):
             problems,
         )
 
-    # Was a GAP, open after PR #36 too: graph_spec.check_changeset is the engine's
+    # Was a GAP, open after PR #36 too. graph_spec.check_changeset is the engine's
     # (changesets.py:141), and loaded each base text with no reader (:173). An id in two base
     # blocks of one graph was never named; only §18's rebuild failed, with "see the rule in the
     # graph spec model". The base is now read with the reader first (req:3.engine-reads-first).
@@ -212,9 +212,9 @@ class EnginePathsSkipTheReader(unittest.TestCase):
         block = f"// graph: g · CHANGE SET cs1 · against {state_hash(base)} · by a\n(c:Person)"
         self.assertTrue(names_the_id(gs.check_changeset(base, block)[0], "a"))
 
-    # Was a GAP, open after PR #36 too: a change set that writes a new node with an id the base
-    # already holds (changesets.py:213) passed "it only adds", since _state keys nodes by id
-    # (:74-80); graph_rules.check_changeset, which runs the reader, refuses it as "id 'a' is
+    # Was a GAP, open after PR #36 too. Take a change set that writes a new node with an id the
+    # base already holds (changesets.py:213). It passed "it only adds", since _state keys nodes by
+    # id (:74-80). graph_rules.check_changeset runs the reader, and refuses it as "id 'a' is
     # already a node". The engine's now reads the change set with the reader too, on its base.
     def test_check_changeset_refuses_a_change_set_reusing_a_base_id(self):
         base = [("g", "// graph: g\n(a:Person {name: 'A'})")]
@@ -224,9 +224,10 @@ class EnginePathsSkipTheReader(unittest.TestCase):
         )
         self.assertTrue(names_the_id(gs.check_changeset(base, block)[0], "a"))
 
-    # Review of #37: the reader reads a base text in the graph its own first line names, Grafeo
-    # in the graph its tuple gives, so a base text naming h given as g was read in a graph Grafeo
-    # never loaded it into: the reused id was not refused, and failed later as "changed ['a']".
+    # Review of #37. The reader reads a base text in the graph its own first line names. Grafeo
+    # reads it in the graph its tuple gives. So a base text naming h, given as g, was read in a
+    # graph Grafeo never loaded it into. The reused id was not refused, and failed later as
+    # "changed ['a']".
     def test_check_changeset_refuses_a_base_text_whose_first_line_names_another_graph(self):
         base = [("g", "// graph: h\n(a:Person {name: 'A'})")]
         block = (
@@ -252,11 +253,11 @@ class ValidateComesAfterGrafeo(unittest.TestCase):
     """Question 4: parse, then normalise, then validate — validate is given a document whose
     nodes are already keyed by id."""
 
-    # GAP: by the time validate() runs (breaches.py:108), parse has keyed nodes by id
-    # (reading.py:107) and the second node is gone; validate logs nothing, so the repeat is
+    # GAP. By the time validate() runs (breaches.py:108), parse has keyed nodes by id
+    # (reading.py:107). The second node is gone. validate logs nothing, so the repeat is
     # silently wrong data, not a reported problem. Since req:3.engine-reads-first, parse refuses
-    # this block with the reader before validate is reached, so it still fails here, by that
-    # refusal; validate itself is unchanged.
+    # this block with the reader before validate is reached. So it still fails here, by that
+    # refusal. validate itself is unchanged.
     @unittest.expectedFailure
     def test_validate_reports_an_id_repeated_in_one_document(self):
         log = []

@@ -1,9 +1,10 @@
-// The repository's changes to review on the page (editor spec §41, github_review_items): "Review a change from GitHub…"
-// asks the server for the pull requests, merges and commits of the repository the note lives in, only when pressed; the
-// one picked is read once and shown in levels, each showing more than the one above: a summary by section, workstream
-// and requirement; then each graph changed, drawn in the changes view with every thing and link marked and listed;
-// then every line of every file, each marked by a sign as well as its colour. GitHub's titles and texts are shown as
-// text, never as markup.
+// The repository's changes to review on the page (editor spec §41, github_review_items). "Review a change from GitHub…"
+// asks the server for the pull requests, merges and commits of the repository the note lives in. It asks only when
+// pressed. The one picked is read once. It is shown in levels, each showing more than the one above:
+// - a summary by section, workstream and requirement;
+// - then each graph changed, drawn in the changes view, with every thing and link marked and listed;
+// - then every line of every file, each marked by a sign as well as its colour.
+// GitHub's titles and texts are shown as text, never as markup.
 import { changesFigure } from './changes-section.ts';
 import type { ChangesDeps } from './changes-section.ts';
 import { groupSaid, reviewLevels, workstreamsFrom } from '../../core/src/github-review-items.ts';

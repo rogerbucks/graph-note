@@ -1,6 +1,6 @@
-// A small GitHub for the build status tests to act in: a repository with pull request 7 open, main holding the fixture’s
-// requirements, the pull request’s head writing one more test, and the project mirrored. Test code only — nothing here
-// ships, and nothing here touches the network.
+// A small GitHub for the build status tests to act in. It has a repository with pull request 7 open, and main holding
+// the fixture’s requirements. The pull request’s head writes one more test, and the project is mirrored. Test code
+// only — nothing here ships, and nothing here touches the network.
 import { handleEvent } from '../../scripts/build-status-run.mjs';
 import { FIXTURE } from './github-project-fixture.js';
 import { fakeRepoSide, mirroredProject, pull } from './build-status-fake.js';
@@ -34,9 +34,12 @@ export const checksOf = (numbers, head = HEAD) => ({
 });
 
 /**
- * The world: `side` (the repository, `hub` to set up and read back), `gh` (the project), `deps` for handleEvent,
- * `annotations`, `writes` (the lines the run logs), and `send(eventName, payload)`, `trigger()` (the checks of pull request 7), `value(id, field)`,
- * `values()` (the Build status of the fixture’s ids), `comments(n)`.
+ * The world:
+ * - `side`: the repository, with `hub` to set up and read back.
+ * - `gh`: the project.
+ * - `deps` for handleEvent, `annotations`, and `writes` (the lines the run logs).
+ * - `send(eventName, payload)`, and `trigger()` (the checks of pull request 7).
+ * - `value(id, field)`, `values()` (the Build status of the fixture’s ids) and `comments(n)`.
  */
 export function world({ token = TOKEN } = {}) {
   const gh = mirroredProject();

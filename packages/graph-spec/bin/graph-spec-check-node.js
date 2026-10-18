@@ -6,10 +6,10 @@ Usage:
 
 Writes: nothing (prints to stdout).
 
-The checker itself is plain JavaScript with nothing Node-specific; this harness is the only Node-specific part, so a
-Python test suite can run the checker a browser page loads and require the same answers as the Python checker. A system
-that only loads the checker never needs Node or this file. In the repository ../src/graph-spec-check.js is the entry point
-over the feature modules; in the release archive it is the built file, all of them in one (GUIDE.md).
+The checker itself is plain JavaScript with nothing Node-specific. This harness is the only Node-specific part. So a
+Python test suite can run the checker a browser page loads, and require the same answers as the Python checker. A system
+that only loads the checker never needs Node or this file. In the repository ../src/graph-spec-check.js is the entry
+point over the feature modules. In the release archive it is the built file, all of them in one (GUIDE.md).
 */
 const C = require('../src/graph-spec-check.js');
 let input = '';

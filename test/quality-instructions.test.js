@@ -1,8 +1,9 @@
-// The benchmarks' instruction counts in the quality ratchet (spec §12, quality_ratchet): one metric for each benchmark,
-// with a small tolerance, held only against counts from the same machine; not measured, and said so, where Valgrind
-// cannot run, which fails only on Linux, where the release counts them; recorded and printed, not held, until the
-// baseline holds them; and a benchmark's claim that does not hold failing always. Test duration only warns. Proved on
-// the committed baseline and copies of it with counts added.
+// The benchmarks' instruction counts in the quality ratchet (spec §12, quality_ratchet):
+// - One metric for each benchmark, with a small tolerance, held only against counts from the same machine.
+// - Not measured, and said so, where Valgrind cannot run. That fails only on Linux, where the release counts them.
+// - Recorded and printed, not held, until the baseline holds them.
+// - A benchmark's claim that does not hold fails always.
+// Test duration only warns. Proved on the committed baseline and copies of it with counts added.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';

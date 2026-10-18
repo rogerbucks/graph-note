@@ -1,6 +1,6 @@
 // gh checks the token's scopes before any `gh project …` verb (read:org, read:discussion), and PROJECT_TOKEN holds the
-// project scope alone, by design. So the scripts reach the project through GraphQL only, and no script may build a gh
-// argument list that starts with 'project' (the first live run of the mirror failed on `gh project item-edit`).
+// project scope alone, by design. So the scripts reach the project through GraphQL only. No script may build a gh
+// argument list that starts with 'project'. The first live run of the mirror failed on `gh project item-edit`.
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';

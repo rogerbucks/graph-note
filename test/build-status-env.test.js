@@ -1,7 +1,7 @@
-// The build status run whole, from the environment a workflow gives: the event read from its file, the two tokens each
-// going to its own runner, and the exit code whatever happens to the board. A stand-in `spawn` answers gh as the
-// repository or as the project by the token it is started with, so no network is touched. Editor spec §12,
-// requirements_checked_in_ci.
+// The build status run whole, from the environment a workflow gives. It covers the event read from its file, and the
+// two tokens each going to its own runner. It covers the exit code whatever happens to the board. A stand-in `spawn`
+// answers gh as the repository or as the project by the token it is started with, so no network is touched. Editor
+// spec §12, requirements_checked_in_ci.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { runFromEnv } from '../scripts/build-status-run.mjs';

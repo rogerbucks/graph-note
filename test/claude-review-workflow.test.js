@@ -1,6 +1,6 @@
-// The workflow that leaves Claude's review on a pull request: what wakes it, whom it skips, what it may do, and that its
-// token goes only to the step that checks it and to the action. Read as text, by indentation, as policy.test.js reads
-// the others.
+// The workflow that leaves Claude's review on a pull request. It checks what wakes it, whom it skips and what it may
+// do. It checks that its token goes only to the step that checks it and to the action. Read as text, by indentation,
+// as policy.test.js reads the others.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { block, exists, jobs, permissionValues, read, runCommands, stripComment, usesRefs } from './repository/repo.js';

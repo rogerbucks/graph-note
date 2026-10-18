@@ -34,7 +34,7 @@ TOKEN = re.compile(
     re.ASCII,  # \d and \b as JavaScript's: a digit or letter in another script is neither
 )
 KEYWORDS = {"INSERT", "MATCH", "SET", "DATE", "DATETIME", "TRUE", "FALSE"}
-# only whitespace from here to the line's end: matched in place, as slicing the rest of the line
+# only whitespace from here to the line's end, matched in place. Slicing the rest of the line
 # before every token would make one long line quadratic to read (editor spec §9)
 BLANK_REST = re.compile(rf"{S}*\Z")
 EXCERPT = re.compile(rf"{S}*//{S}*excerpt\b", re.I | re.ASCII)

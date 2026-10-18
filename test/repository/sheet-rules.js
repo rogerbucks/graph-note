@@ -24,8 +24,8 @@ function splitTop(text, sep) {
 }
 
 /**
- * Each rule of `sheet`, its comments dropped and in order: its selectors, its declarations as [property, value] pairs,
- * and the condition of the @media it sits in, or '' at the top.
+ * Each rule of `sheet`, its comments dropped and in order. A rule has its selectors, its declarations as [property,
+ * value] pairs, and the condition of the @media it sits in, or '' at the top.
  */
 export function rulesOf(sheet) {
   const css = read(sheet).replace(/\/\*[\s\S]*?\*\//g, '');

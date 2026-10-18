@@ -150,8 +150,8 @@ def _tree_fit(shape, relationship, text):
         if why:
             return _no("tree", f"along {relationship}, {why}")
         return {**_yes("tree"), "relationship": relationship}
-    # the most links first; of two with as many, the first by name, compared in UTF-16 code units
-    # as JavaScript compares them, so the choice never hangs on the order written
+    # The most links first. Of two with as many, the first by name. Names compare in UTF-16 code
+    # units, as JavaScript compares them, so the choice never hangs on the order written.
     types = list(dict.fromkeys(link["type"] for link in shape["links"]))
     types.sort(
         key=lambda t: (

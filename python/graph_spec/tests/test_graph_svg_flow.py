@@ -33,9 +33,11 @@ from graphspec.style.flow import FLOW_ICONS, flow_source  # noqa: E402
 with open(os.path.join(HERE, "flow_cases.json"), encoding="utf-8") as f:
     CASES = json.load(f)["cases"]
 
-# The core's answer for each note: as the plugin draws a graph (packages/obsidian/src/block.ts and
-# view-block.ts), the style read for it and the drawing styled for the view it is drawn in
-# (style-source.ts, styledDrawing), laid out in each direction (render.ts, directions).
+# The core's answer for each note, as the plugin draws a graph (packages/obsidian/src/block.ts and
+# view-block.ts). It holds:
+# - the style read for it.
+# - the drawing styled for the view it is drawn in (style-source.ts, styledDrawing).
+# - laid out in each direction (render.ts, directions).
 CORE_SCRIPT = """
 const [src, cases] = [process.argv[1], JSON.parse(process.argv[2])];
 const { readNote } = await import(`${src}/drawing.ts`);
@@ -124,8 +126,8 @@ class Flow(unittest.TestCase):
 
     def test_links_move_as_the_core_moves_them(self):
         # links_show_flow, flow_in_style_graph: the same links moving, the same way, meaning the
-        # same (a plain loop, never subTest: the tests-first replay counts a test by its own
-        # result)
+        # same. A plain loop, never subTest. The tests-first replay counts a test by its own
+        # result.
         for case, ours, theirs in zip(CASES, self.python, self.core, strict=True):
             self.assertEqual(ours["flow"], theirs["flow"], case["name"])
 
@@ -136,14 +138,15 @@ class Flow(unittest.TestCase):
             self.assertEqual(ours["drawn"], theirs["drawn"], case["name"])
 
     def test_each_style_gives_the_cores_problems(self):
-        # the same problems for a Flow as the core's, at the same block and line, with the same
-        # words and fix: what cannot be used is left out by both
+        # The same problems for a Flow as the core's, at the same block and line. They have the
+        # same words and fix. What cannot be used is left out by both.
         for case, ours, theirs in zip(CASES, self.python, self.core, strict=True):
             self.assertEqual(ours["styles"], theirs["styles"], case["name"])
 
     def test_the_cases_move_what_they_say(self):
-        # the table proves what it says: dashes and dots move, a backwards line moves
-        # backwards, a view keeps links still, and Flows at fault are each a problem
+        # The table proves what it says:
+        # - dashes and dots move, and a backwards line moves backwards.
+        # - a view keeps links still, and Flows at fault are each a problem.
         sources = [s for answer in self.core for d in answer["drawn"].values() for s in d.values()]
         self.assertTrue(any("thoughtknot-flow-dashes" in s for s in sources))
         self.assertTrue(any("thoughtknot-flow-dot" in s for s in sources))

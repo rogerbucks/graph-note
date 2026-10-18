@@ -21,8 +21,9 @@ from graphspec.reader.store import Store  # noqa: E402
 GOOD = "// graph: g\n(a:T {name: 'A'})"
 # an instant whose time in UTC falls before year 1, which Python's datetime cannot hold
 BEFORE_YEAR_ONE = "// graph: g\n(b:T {at: DATETIME '0001-01-01T00:30:00+01:00'})"
-# a block that changes every part of the store a block can: a thing, a link, a type written without
-# its colon (bares and their fixes), a missing comma (commas and their places), the schema it names
+# A block that changes every part of the store a block can. It has a thing and a link. It has a
+# type written without its colon (bares and their fixes). It has a missing comma (commas and
+# their places). It has the schema it names.
 CHANGES_EVERYTHING = "// graph: g · schema shared\n(c:T {name: 'C'})\n(a)-[r]->(c)"
 
 
@@ -62,8 +63,8 @@ class ManyThings(unittest.TestCase):
 
     def test_four_times_the_things_are_read_in_about_four_times_the_time(self):
         small, large = many_lines(1000), many_lines(4000)
-        # timed against each other in the same run, never against a fixed time; processor time,
-        # so waiting on a loaded machine is not counted, and the fastest of several runs, taken in
+        # Timed against each other in the same run, never against a fixed time. Processor time,
+        # so waiting on a loaded machine is not counted. The fastest of several runs, taken in
         # turn. Linear reading gives a ratio of about 4, quadratic about 16.
         t_small = t_large = float("inf")
         for _ in range(5):

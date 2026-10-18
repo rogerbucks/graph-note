@@ -76,7 +76,7 @@ def nudged_source(
         return dot
     end = dot.rfind("}")
     nudged = dot[:end] + "\n".join(added) + "\n" + dot[end:]
-    # the layout source puts unlinked things of one kind on one rank; without newrank, Graphviz
+    # The layout source puts unlinked things of one kind on one rank. Without newrank, Graphviz
     # takes such things out of a group's box without a word. Only when a group is written, so any
     # other source stays the plugin's
     if not groups:

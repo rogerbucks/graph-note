@@ -6,12 +6,13 @@ const { pystr, pyeq, vtext, identStr, keystr } = require('./python-text.js');
 const { newJ, addClaim, sortedPair } = require('./claims.js');
 
 // ── §21 joins (graph_spec.py: normalise, validate, union, merge3, finish) ──────────────────────────
-// Python's printing decides two things a join's result depends on — the order it walks relationships in, and the text of a
-// nondeterminism warning — so those few places reproduce it (pyrepr). Identifiers use vtext, which is the same everywhere.
+// Python's printing decides two things a join's result depends on. They are the order it walks relationships in, and
+// the text of a nondeterminism warning. So those few places reproduce it (pyrepr). Identifiers use vtext, which is
+// the same everywhere.
 const ABSENT = { absent: true };
-// Two revisions of one earlier version: a change made on one side only is kept — including a removal; changes on
-// both sides that differ are contested. With hold, a thing or relationship one side removes while the other changes
-// it is held back, its removal contested with the change, rather than removed.
+// Two revisions of one earlier version. A change made on one side only is kept, including a removal. Changes on
+// both sides that differ are contested. With hold, say one side removes a thing or relationship while the other
+// changes it. Then it is held back, its removal contested with the change, rather than removed.
 function merge3(base, a, b, config, hold = true) {
   const joined = newJ();
   const slots = (d) => {

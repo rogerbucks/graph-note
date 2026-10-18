@@ -1,7 +1,8 @@
-// The editor server's threat model as a process (spec §26, slice 4; test_cc_threats, with editor-threats.test.js): it
-// takes nothing that could make it listen elsewhere, hands its token over once and keeps it nowhere, will not start
-// orphaned, and stops when its input closes, on a stop signal and when the process that started it exits. Each is
-// tried on the process itself, started here and stopped after; a test asserts the work done, never the time taken.
+// The editor server's threat model as a process (spec §26, slice 4; test_cc_threats, with editor-threats.test.js):
+// - It takes nothing that could make it listen elsewhere.
+// - It hands its token over once and keeps it nowhere. It will not start orphaned.
+// - It stops when its input closes, on a stop signal and when the process that started it exits.
+// Each is tried on the process itself, started here and stopped after. A test asserts the work done, never the time taken.
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
@@ -120,7 +121,7 @@ describe('the server stops (cc_server_stops)', () => {
   });
 
   test('it will not start when the process that started it has already gone', async () => {
-    // the parent says its child's pid and exits at once, before the child has loaded; the child's output comes on the
+    // the parent says its child's pid and exits at once, before the child has loaded. The child's output comes on the
     // same pipes, so they close only when it has exited too
     const parent = parentOf(
       ['ignore', 'inherit', 'inherit'],

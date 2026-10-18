@@ -1,8 +1,9 @@
-// The speed budgets (editor spec §41, speed_budgets): each host is held, in CPU instructions and never in time, to a
-// budget for drawing 50 things and 500, a query over a 10 000-thing mesh, and a cold start. Each budget is a benchmark's
-// claim in the quality ratchet (scripts/benchmarks/), counted by Cachegrind in the release's quality job, where a claim
-// that does not hold fails whatever the baseline says. Here: every budget has its benchmark and its claim, each case does
-// its work, and a count over its budget breaks the claim. Until slice 6 builds the mesh, 100 notes of 100 things stand in.
+// The speed budgets (editor spec §41, speed_budgets). Each host is held to a budget in CPU instructions, never in time.
+// There is a budget for drawing 50 things and 500, a query over a 10 000-thing mesh, and a cold start. Each budget is a
+// benchmark's claim in the quality ratchet (scripts/benchmarks/). It is counted by Cachegrind in the release's quality
+// job. There a claim that does not hold fails whatever the baseline says. Here: every budget has its benchmark and its
+// claim, each case does its work, and a count over its budget breaks the claim. Until slice 6 builds the mesh, 100
+// notes of 100 things stand in.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { BENCHMARKS } from '../scripts/benchmarks/index.mjs';

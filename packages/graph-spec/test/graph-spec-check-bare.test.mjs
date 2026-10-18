@@ -1,7 +1,7 @@
-// A relationship type written without its colon (format spec req:3.bare-link-type, decided 7 Oct 2026): in a data block,
-// a bracketed name matching exactly one relationship type of the graph, ignoring case, is read as that type and reported
-// with a fix that writes the colon. A first use, a name matching case-only twins, and query blocks are not read so. The
-// Python reader answers the same: python/graph_spec/tests/test_gql_profile_bare.py.
+// A relationship type written without its colon (format spec req:3.bare-link-type, decided 7 Oct 2026). Take a
+// bracketed name in a data block that matches exactly one relationship type of the graph, ignoring case. It is read as
+// that type and reported with a fix that writes the colon. A first use, a name matching case-only twins, and query
+// blocks are not read so. The Python reader answers the same: python/graph_spec/tests/test_gql_profile_bare.py.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';

@@ -1,6 +1,9 @@
-// The replay of a commit (tests-first.test.js) when the test and its code do not come together: a test wrong at its own
-// commit and corrected later, one that comes a commit before its code, a new file whose code is not there yet, and test
-// support changed in the same commit. Split from tests-first.test.js on 11 Oct 2026, so the suite runs them side by side.
+// The replay of a commit (tests-first.test.js) when the test and its code do not come together:
+// - a test wrong at its own commit and corrected later;
+// - one that comes a commit before its code;
+// - a new file whose code is not there yet;
+// - test support changed in the same commit.
+// Split from tests-first.test.js on 11 Oct 2026, so the suite runs them side by side.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { replay, unexplained } from '../scripts/tests-first.mjs';
@@ -10,8 +13,8 @@ const JS_TEST = (body) =>
   `import { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { twice } from '../src/twice.js';\n${body}\n`;
 
 describe('replaying a commit against its parent’s code', () => {
-  // review of #69: a test that failed at the parent was taken for one held before, so a test wrong at its own commit and
-  // corrected later, with no change to the code, was never judged
+  // review of #69: a test that failed at the parent was taken for one held before. So a test wrong at its own commit
+  // and corrected later, with no change to the code, was never judged
   test('a test wrong at its own commit and corrected later, with the code unchanged, is judged when corrected: it passed first', () => {
     const r = repository([
       { 'src/twice.js': 'export const twice = (x) => x * 2;\n' },

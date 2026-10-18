@@ -1,7 +1,7 @@
-// The gate inside the editor's server (spec §26, cc_classified_asks, cc_credential_never): the note is checked before
-// every send, not only when it is opened, so a note changed on disk after the check, a draft, a conflict's copy and the
-// change stream never carry what Claude may not read. A refusal sends "gone" and no text, and a yes is for the content
-// it was given about, never for what the note has become.
+// The gate inside the editor's server (spec §26, cc_classified_asks, cc_credential_never). The note is checked before
+// every send, not only when it is opened. So a note changed on disk after the check never carries what Claude may not
+// read. Nor do a draft, a conflict's copy or the change stream. A refusal sends "gone" and no text. A yes is for the
+// content it was given about, never for what the note has become.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';

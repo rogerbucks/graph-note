@@ -1,7 +1,7 @@
-// A missing comma between graph patterns (format spec §3, req:3.missing-comma; decided 7 Oct 2026). When two complete
-// patterns sit on separate lines with no comma between them, and a comma there would make the block valid, both readers
-// read it as if the comma were there and report where it is missing; anything else is refused as before. Each block is
-// read by the JavaScript reader and by gql_profile.py, live, and they must agree on the graph, the commas and the refusals.
+// A missing comma between graph patterns (format spec §3, req:3.missing-comma; decided 7 Oct 2026). Take two complete
+// patterns on separate lines with no comma between them, where a comma would make the block valid. Both readers read
+// it as if the comma were there, and report where it is missing. Anything else is refused as before. Each block is
+// read live by the JavaScript reader and by gql_profile.py. They must agree on the graph, the commas and the refusals.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -169,8 +169,8 @@ test('random blocks: the two readers correct each to the same text, with no line
   // the high bits of each step: the low bits of this generator repeat every few steps
   const next = (n) => ((s = (s * 1103515245 + 12345) >>> 0) >>> 16) % n;
   const pick = (xs) => xs[next(xs.length)];
-  // what stands between two patterns: a comma, or a line break with none (read in), with CRLF, NBSP, U+3000, a blank
-  // line or a comment line on the way; rarely a space alone, which is refused
+  // what stands between two patterns: a comma, or a line break with none (read in). On the way may be CRLF, NBSP,
+  // U+3000, a blank line or a comment line. Rarely it is a space alone, which is refused
   const SEPARATORS = [',\n', ', ', ',\r\n', '\n', '\n', '\r\n', ' \n', '　\n', '\n\n', '\n// a note, (x)\n', ' '];
   const blocks = Array.from({ length: 400 }, () => {
     const written = [];

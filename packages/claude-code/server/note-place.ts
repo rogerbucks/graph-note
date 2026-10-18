@@ -1,8 +1,10 @@
-// Where a note may be (spec §26, cc_no_escape): inside the vault, a .md file, in no hidden folder, and never reached by
-// a symlink that leads out of the vault, nor a file with a second hard link, which could lie anywhere on the same
-// disk. The path is checked as written and again as its real path, every link
-// followed, so neither `..` nor a link can leave the vault. The note store checks a note's place when it is opened and
-// again before every read and write, so a note swapped for a link after it was opened is refused too.
+// Where a note may be (spec §26, cc_no_escape):
+// - inside the vault, a .md file, in no hidden folder;
+// - never reached by a symlink that leads out of the vault;
+// - never a file with a second hard link, which could lie anywhere on the same disk.
+// The path is checked as written, and again as its real path, every link followed. So neither `..` nor a link can leave
+// the vault. The note store checks a note's place when it is opened, and again before every read and write. So a note
+// swapped for a link after it was opened is refused too.
 import { promises as fs } from 'node:fs';
 import { isAbsolute, relative, resolve, sep } from 'node:path';
 

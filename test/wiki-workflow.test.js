@@ -1,6 +1,8 @@
-// The workflow that makes the wiki (spec §41, wiki_generated): what wakes it, that the job running the repository's
-// code only reads, and that the one job that may write runs no code of the repository, only git. Read as text, by
-// indentation, as policy.test.js reads the others.
+// The workflow that makes the wiki (spec §41, wiki_generated). Checked here:
+// - What wakes it.
+// - The job running the repository's code only reads.
+// - The one job that may write runs no code of the repository, only git.
+// Read as text, by indentation, as policy.test.js reads the others.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { block, jobs, permissionValues, read, runCommands, stripComment, usesRefs } from './repository/repo.js';

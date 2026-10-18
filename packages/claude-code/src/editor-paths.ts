@@ -1,5 +1,5 @@
-// The paths `/graph edit` works with (spec §26, workstream C2): a note named from the session's folder, settled to a full
-// path, with no Node module: the separator of the session's folder is kept, whichever kind of system it is.
+// The paths `/graph edit` works with (spec §26, workstream C2). A note named from the session's folder is settled to a
+// full path, with no Node module. The separator of the session's folder is kept, whichever kind of system it is.
 
 /** Whether a path is a full one, on either kind of system. */
 const isFull = (path: string) => /^([\\/]|[A-Za-z]:[\\/])/.test(path);
@@ -19,9 +19,9 @@ export function fullPath(cwd: string, given: string): string {
 }
 
 /**
- * `given`, a path written relative to the vault, as a full path inside `vault`; null when it is empty, full, starts with
- * `~`, or once `.` and `..` are settled reaches the vault's own folder or outside it. A link out of the vault is not
- * seen here, as the mod has only the host's file calls.
+ * `given`, a path written relative to the vault, as a full path inside `vault`. It is null when it is empty, full, or
+ * starts with `~`. It is null too when, once `.` and `..` are settled, it reaches the vault's own folder or outside it.
+ * A link out of the vault is not seen here, as the mod has only the host's file calls.
  */
 export function insideVault(vault: string, given: string): string | null {
   const path = given.trim();

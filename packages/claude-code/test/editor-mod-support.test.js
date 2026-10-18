@@ -1,6 +1,6 @@
-// The editor tests' own support (editor-mod-support.js): the servers they start serve the page the build makes, in
-// `mod/page/`, which a fresh checkout does not hold until something builds it. In CI the suite runs before `npm run build`,
-// so only the build's own test made it, at the same time as these tests started servers, and a server started first
+// The editor tests' own support (editor-mod-support.js). The servers they start serve the page the build makes, in
+// `mod/page/`. A fresh checkout does not hold it until something builds it. In CI the suite runs before `npm run build`.
+// So only the build's own test made it, at the same time as these tests started servers. A server started first
 // refused to start (the page is not built). The support makes sure of the page before any server is started.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

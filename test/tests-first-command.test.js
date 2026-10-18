@@ -1,8 +1,7 @@
 // The tests-first replay's command line (spec §12, tests_first), run as CI and a person run it, on small repositories
 // made for the purpose: --check reads the reasons kept in test/seen-failing/, --excuse keeps one, --migrate moves the
-// old single files over. --complete, which fails a commit that changed a test and has no record, is
-// tests-first-complete.test.js, and --tally, which prints what the records prove as JSON and writes nothing,
-// tests-first-tally.test.js.
+// old single files over. --complete is in tests-first-complete.test.js: it fails a commit that changed a test and has
+// no record. --tally is in tests-first-tally.test.js: it prints what the records prove as JSON, and writes nothing.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';

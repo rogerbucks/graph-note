@@ -37,8 +37,8 @@ def graph_parts(world: World, graph: str, problems: Iterable[dict] = ()) -> dict
     every thing but the schema's, and every link between two of them."""
     g = world[graph]
     ids = [i for i, (labels, _) in g.nodes.items() if not labels & SCHEMA_LABELS]
-    # each link in its schema's words: the graph's own, else the shared schema it names, as the
-    # core reads them (drawing.ts) and as reading.py's _names finds its types
+    # Each link in its schema's words. That is the graph's own schema, else the shared schema it
+    # names. The core reads them so (drawing.ts), and reading.py's _names finds its types so.
     drawn, words = set(ids), readings(g, world.schema_for(graph)[1])
 
     def text(i):

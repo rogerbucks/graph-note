@@ -1,6 +1,9 @@
-// The nightly pre-release (spec §41, nightly_prerelease): what wakes the workflow, that it builds only when main moved and
-// publishes only after the full suite passes, that the one job that may write runs no code of the repository, only gh,
-// and the version it carries. Read as text, by indentation, as policy.test.js reads the others.
+// The nightly pre-release (spec §41, nightly_prerelease). Checked here:
+// - What wakes the workflow.
+// - It builds only when main moved, and publishes only after the full suite passes.
+// - The one job that may write runs no code of the repository, only gh.
+// - The version it carries.
+// Read as text, by indentation, as policy.test.js reads the others.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { block, jobs, permissionValues, read, runCommands, stripComment, usesRefs } from './repository/repo.js';

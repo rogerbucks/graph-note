@@ -1,7 +1,8 @@
-// The lists the build status reads from GitHub — the open pull requests, the pull requests merged in a span, the issues —
-// are of this repository’s own only before any cap is applied, so that a crowd of pull requests from forks, or of issues
-// somebody else wrote, cannot hide a pull request that holds an item or push the mirror’s issues past the cap. Every case
-// runs against an in-memory stand-in for gh, so no network is touched. Editor spec §12, requirements_checked_in_ci.
+// The lists the build status reads from GitHub are the open pull requests, the pull requests merged in a span, and the
+// issues. Each is cut to this repository’s own before any cap is applied. So a crowd of pull requests from forks, or of
+// issues somebody else wrote, cannot hide a pull request that holds an item. Nor can it push the mirror’s issues past
+// the cap. Every case runs against an in-memory stand-in for gh, so no network is touched. Editor spec §12,
+// requirements_checked_in_ci.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { mergedPullNumbers, openPullNumbers } from '../scripts/build-status-gh.mjs';

@@ -1,6 +1,10 @@
-// The slice board's stylesheet: CSS only, light and dark colour tokens that agree, the altitude switch done with radio
-// inputs and `:checked ~` selectors, a layout that holds at 400px, and the source written one rule and one declaration
-// to a line, as Prettier writes CSS. Spec §12, requirements_checked_in_ci.
+// The slice board's stylesheet:
+// - CSS only.
+// - Light and dark colour tokens that agree.
+// - The altitude switch done with radio inputs and `:checked ~` selectors.
+// - A layout that holds at 400px.
+// - The source written one rule and one declaration to a line, as Prettier writes CSS.
+// Spec §12, requirements_checked_in_ci.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { ALTITUDES, BOARD_CSS } from '../scripts/slice-board-style.mjs';

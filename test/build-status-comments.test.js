@@ -1,7 +1,8 @@
-// The comments the build status leaves after a pull request is closed and its conversation locked: the Merged comment,
-// and the Released comment a release leaves on each pull request it moves. Every comment is tried first; only a refusal
-// because the conversation is locked unlocks it, comments and locks it again, in the one step. Each case runs the whole of
-// scripts/build-status-run.mjs against in-memory stand-ins for gh. Editor spec §12, requirements_checked_in_ci.
+// The comments the build status leaves after a pull request is closed and its conversation locked. They are the Merged
+// comment, and the Released comment a release leaves on each pull request it moves. Every comment is tried first; only
+// a refusal because the conversation is locked unlocks it, comments and locks it again, in the one step. Each case runs
+// the whole of scripts/build-status-run.mjs against in-memory stand-ins for gh. Editor spec §12,
+// requirements_checked_in_ci.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { FIXTURE } from './repository/github-project-fixture.js';

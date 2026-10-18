@@ -1,7 +1,9 @@
-// The build status of each requirement, event by event: a pull request opened, its checks failing and passing, its merge,
-// a release, the pull requests it leaves alone, and every way the project token can be missing or refused. Each case runs
-// the whole of scripts/build-status-run.mjs against in-memory stand-ins for gh, so no network is touched and no code of a
-// pull request is run. Editor spec §12, requirements_checked_in_ci.
+// The build status of each requirement, event by event. The events are:
+// - a pull request opened, its checks failing and passing, and its merge.
+// - a release, and the pull requests it leaves alone.
+// - every way the project token can be missing or refused.
+// Each case runs the whole of scripts/build-status-run.mjs against in-memory stand-ins for gh. So no network is touched
+// and no code of a pull request is run. Editor spec §12, requirements_checked_in_ci.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { FIXTURE } from './repository/github-project-fixture.js';

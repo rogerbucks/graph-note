@@ -30,8 +30,8 @@ const EXACT = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
 const RUNTIME_ALLOWED = new Set(['@viz-js/viz']);
 // The one addition spec §13 allows, for the browser host alone (§26, cc_one_renderer): a Markdown renderer.
 const MARKDOWN_RENDERER = 'marked';
-// The one place that may reach the network: sending to an AI the user has set
-// up, only when the user sends (spec §13 and §19). Only the send dialog reaches it.
+// The one place that may reach the network: sending to an AI the user has set up.
+// It sends only when the user sends (spec §13 and §19). Only the send dialog reaches it.
 const AI_SEND_MODULE = 'packages/obsidian/src/ai/send.ts';
 const AI_SEND_DIALOG = 'packages/obsidian/src/ai/send-dialog.ts';
 const TEST_FRAMEWORKS = ['jest', 'mocha', 'vitest', 'ava', 'tap', 'jasmine', 'uvu', 'chai'];
@@ -82,7 +82,7 @@ describe('the plugin-store files', () => {
     for (const p of jsPackages()) assert.equal(readJSON(`${p}/package.json`).version, version, p);
   });
 
-  // found on the 0.2.0 bump: a sibling asked for at the old version is looked for on the npm registry, and npm ci fails
+  // found on the 0.2.0 bump: a sibling asked for at the old version is looked for on the npm registry. npm ci fails
   test('each package asks for its siblings at their own version, in the package and in the lockfile', () => {
     const own = new Map(jsPackages().map((p) => [readJSON(`${p}/package.json`).name, readJSON(`${p}/package.json`)]));
     const lock = readJSON('package-lock.json').packages;
@@ -246,7 +246,7 @@ describe('GitHub Actions', () => {
         if (!perms) continue;
         const writes = permissionValues(perms).some((v) => /write/.test(v));
         if (!writes) continue;
-        // the three other writers may touch nothing else: one locks pull request conversations, one leaves the build
+        // the three other writers may touch nothing else. One locks pull request conversations. One leaves the build
         // status comment on a pull request, with read access to what it reads (test/build-status-workflow.test.js)
         const given = perms
           .slice(1)
@@ -264,7 +264,7 @@ describe('GitHub Actions', () => {
         const mirror = only('/project-mirror.yml', 'mirror', 'contents: read,issues: write');
         // one leaves Claude's review on a pull request (test/claude-review-workflow.test.js)
         const review = only('/claude-review.yml', 'review', 'contents: read,pull-requests: write');
-        // the wiki's pages, its review issue, the nightly pre-release and the home page, none running code of the
+        // the wiki's pages, its review issue, the nightly pre-release and the home page. None runs code of the
         // repository (test/wiki-workflow.test.js, nightly-workflow.test.js and site-workflow.test.js)
         const wiki = only('/wiki.yml', 'publish', 'contents: write') || only('/wiki.yml', 'report', 'issues: write');
         const nightly = only('/nightly.yml', 'publish', 'contents: write');
@@ -515,9 +515,9 @@ describe('the shipped source', () => {
     assert.deepEqual(offenders, []);
   });
 
-  // never_in_background (spec §19): the send module is reached from the send dialog alone, whose Send button is the
-  // user saying yes; nothing in the AI's folder runs on a timer or on an event, so nothing is ever sent unasked (the
-  // scans themselves are tested in test/repository-scans.test.js)
+  // never_in_background (spec §19): the send module is reached from the send dialog alone. Its Send button is the
+  // user saying yes. Nothing in the AI's folder runs on a timer or on an event, so nothing is ever sent unasked. The
+  // scans themselves are tested in test/repository-scans.test.js.
   test('the AI send module is there, and only the send dialog reaches it', () => {
     assert.ok(exists(AI_SEND_MODULE), AI_SEND_MODULE);
     assert.deepEqual(

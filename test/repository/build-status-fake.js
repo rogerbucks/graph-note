@@ -1,5 +1,5 @@
-// A stand-in for the gh command on the repository side of the build status: pull requests, the files at a ref, commits,
-// CI runs, releases, issues and a pull request's comments and lock, held in memory. It answers the calls
+// A stand-in for the gh command on the repository side of the build status, held in memory. It holds pull requests,
+// the files at a ref, commits, CI runs, releases, issues, and a pull request's comments and lock. It answers the calls
 // scripts/build-status-gh.mjs makes the way GitHub does, records every call, and says which of them changed something.
 // The project side is test/repository/github-project-fake.js. Test code only — nothing here ships, and nothing here
 // touches the network.
@@ -18,12 +18,18 @@ const LOCKED = 'HTTP 403: Unable to create comment because issue is locked.';
 const page = (list, n) => list.sort((a, b) => b.number - a.number).slice((Number(n) - 1) * 100, Number(n) * 100);
 
 /**
- * A GitHub repository `repo`. `hub` holds what a test sets up and reads back: `pulls` (number to the pull request as the
- * API gives it), `files` (ref to the text of the requirements file at it), `parents` (sha to its first parent's sha),
- * `forSha` (sha to the numbers of the pull requests the commit is in), `workflowRuns` (sha to its workflow runs),
- * `releases`, `comments` (pull request number to its comments), `locked` (the numbers of the locked conversations, which
- * refuse a comment as GitHub does), `failComments`, `failUnlock` and `failLock` (the words every such call fails with),
- * `failAfterUnlock` (the words a comment fails with once its conversation has been unlocked), and `afterList` (a function run once, after the next listing of comments, as another run would write in between).
+ * A GitHub repository `repo`. `hub` holds what a test sets up and reads back:
+ * - `pulls`: number to the pull request as the API gives it.
+ * - `files`: ref to the text of the requirements file at it.
+ * - `parents`: sha to its first parent's sha.
+ * - `forSha`: sha to the numbers of the pull requests the commit is in.
+ * - `workflowRuns`: sha to its workflow runs.
+ * - `releases`.
+ * - `comments`: pull request number to its comments.
+ * - `locked`: the numbers of the locked conversations, which refuse a comment as GitHub does.
+ * - `failComments`, `failUnlock` and `failLock`: the words every such call fails with.
+ * - `failAfterUnlock`: the words a comment fails with once its conversation has been unlocked.
+ * - `afterList`: a function run once, after the next listing of comments, as another run would write in between.
  * `issues()` gives the issues `gh issue list` prints.
  */
 export function fakeRepoSide({ repo = 'rogerbucks/thoughtknot', pageSize = 100, issues = () => [] } = {}) {
@@ -97,8 +103,8 @@ export function fakeRepoSide({ repo = 'rogerbucks/thoughtknot', pageSize = 100, 
     hub.calls.push({ args, input });
     if (args[0] === 'issue' && args[1] === 'list') {
       if (flag(args, '--repo') !== repo) throw new Error('gh issue list: names no repository, or the wrong one');
-      // only the issues one author (or one GitHub App, app/<name> as gh gives it) wrote when asked for, as GitHub gives
-      // them, so others’ never count against the cap
+      // only the issues one author wrote when asked for, as GitHub gives them. The author may be a GitHub App
+      // (app/<name> as gh gives it). So others’ never count against the cap
       const author = args.includes('--app') ? `app/${flag(args, '--app')}` : flag(args, '--author');
       const asked = args.includes('--author') || args.includes('--app');
       return json(issues().filter((i) => !asked || i.author?.login === author));

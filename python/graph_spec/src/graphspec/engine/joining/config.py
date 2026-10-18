@@ -71,7 +71,7 @@ def config_from(data: dict[str, Any] | None) -> dict[str, Any]:
     )
     cfg = _c
     # a constraint written in GQL with a named twin runs as that twin, whatever the parser
-    # (req:3.reader-default) — tests/test_reader_agrees_with_grafeo.py proves the two agree; one
+    # (req:3.reader-default). tests/test_reader_agrees_with_grafeo.py proves the two agree. One
     # with no twin is database work, run by the engine
     cfg["constraints"] = {
         c["why"]: (

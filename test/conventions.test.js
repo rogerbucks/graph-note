@@ -1,6 +1,9 @@
-// Best practice, Obsidian's and the code's (spec §13, test_conventions): Obsidian's guidelines beyond what the linter
-// checks, one code style with its formatter and linter in CI, the naming conventions, the code's layout, and the
-// conventions written down in CONTRIBUTING.md. Each convention a tool can check is checked here.
+// Best practice, Obsidian's and the code's (spec §13, test_conventions). It covers:
+// - Obsidian's guidelines beyond what the linter checks.
+// - one code style, with its formatter and linter in CI.
+// - the naming conventions, and the code's layout.
+// - the conventions written down in CONTRIBUTING.md.
+// Each convention a tool can check is checked here.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -209,8 +212,8 @@ describe('the code’s layout', () => {
   });
 
   test('the graph-spec library documents its interface too: every name a module exports has its comment', () => {
-    // its modules are CommonJS: the names are those of `module.exports = { … }`, each declared in the module itself
-    // (the entry point only gathers them, and graph-layout.js keeps one UMD api object, documented as a whole)
+    // Its modules are CommonJS. The names are those of `module.exports = { … }`, each declared in the module itself.
+    // (The entry point only gathers them. graph-layout.js keeps one UMD api object, documented as a whole.)
     const bare = [];
     const modules = sourceFiles('packages/graph-spec').filter((f) => !/\/(graph-spec-check|graph-layout)\.js$/.test(f));
     for (const f of modules) {
@@ -263,9 +266,11 @@ describe('the code’s layout', () => {
 });
 
 describe('small modules, easy to find and to work in', () => {
-  // no_monolith_files and "Easy for an AI to work in" (spec §13; Roger, 9 Oct 2026: "Structure the code as a senior dev
-  // would, rather than a monolith file"): small modules with one responsibility each, in folders named for their
-  // feature, each package with a guide to where things live; a package's entry points stay, re-exporting the modules
+  // no_monolith_files and "Easy for an AI to work in" (spec §13). Roger, 9 Oct 2026: "Structure the code as a senior
+  // dev would, rather than a monolith file". So:
+  // - small modules with one responsibility each, in folders named for their feature.
+  // - each package with a guide to where things live.
+  // - a package's entry points stay, re-exporting the modules.
   const SOURCE = [
     ...PACKAGES.flatMap((p) => ['src', 'bin', 'server', 'page'].flatMap((d) => walk(`${p}/${d}`))).filter(
       (f) => /\.(ts|js|mjs)$/.test(f) && !f.endsWith('.d.ts'),
@@ -361,8 +366,9 @@ describe('Obsidian’s guidelines, beyond the linter', () => {
     const css = read('styles.css').replace(/\/\*[\s\S]*?\*\//g, '');
     assert.doesNotMatch(css, /#[0-9a-f]{3,8}\b/i, 'no hex colours');
     assert.doesNotMatch(css, /\b(rgba?|hsla?)\(\s*\d/, 'no fixed rgb or hsl');
-    // an element of ours is named by one of our classes, or, where the design tokens are mapped for each of them
-    // (theme-tokens.test.js), by the start of one: a class that begins thoughtknot- or gql-, and nothing of Obsidian's
+    // An element of ours is named by one of our classes. Or it is named by the start of one, where the design tokens
+    // are mapped for each of them (theme-tokens.test.js). That is a class that begins thoughtknot- or gql-, and nothing
+    // of Obsidian's.
     const ourClassStarts = /^\[class\^='(thoughtknot-|gql-)'\]$|^\[class\*=' (thoughtknot-|gql-)'\]$/;
     for (const [, sel] of css.matchAll(/(?:^|[{};])\s*([^{}@;]+?)\s*\{/gm)) {
       for (const s of sel.split(/,(?![^(]*\))/))

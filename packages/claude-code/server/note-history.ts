@@ -1,8 +1,11 @@
-// A note's earlier versions, for the changes view (editor spec §41, changes_view): the commits that changed the open note
-// and the tips of the local branches, read from the git repository the note lives in, and the note's text at one of
-// them. Read only and local: git is run with fixed arguments and no shell, its hooks, file-system monitor and pager off,
-// every transport refused and no fetch of a missing object, so nothing runs that the repository names and nothing
-// leaves the machine. Only the open note is ever read, and only at a commit this module listed for it.
+// A note's earlier versions, for the changes view (editor spec §41, changes_view). They are the commits that changed
+// the open note and the tips of the local branches. They are read from the git repository the note lives in. So is the
+// note's text at one of them. Read only and local:
+// - git is run with fixed arguments and no shell;
+// - its hooks, file-system monitor and pager are off;
+// - every transport is refused, and there is no fetch of a missing object.
+// So nothing runs that the repository names, and nothing leaves the machine. Only the open note is ever read, and only
+// at a commit this module listed for it.
 import { execFile } from 'node:child_process';
 import { dirname, relative, sep } from 'node:path';
 import { BODY_LIMIT } from './request-body.ts';

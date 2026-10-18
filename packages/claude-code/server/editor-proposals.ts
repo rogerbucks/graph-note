@@ -1,10 +1,13 @@
-// A proposal from Claude, made into the change set the note will hold (spec §26, cc_claude_proposes; §17 and §19): what
-// Claude sends through the mod is its changes and what it read, nothing else, and is read as a model's answer is read
-// (`changesIn`): things and links to add, a property to change, a thing or link to take out, and never a Person, a Model or
-// a Step, so no text of Claude's declares an author. The editor declares the proposer, the Model named Claude in the
-// settings, as the first addition, and writes the proposal only if the graph spec's own check passes it. The note comes
-// back with the change set beside its graph and every other byte kept: the graph itself is never touched, and changes
-// only when a person accepts a change on the card. Pure: the store writes what this returns, under its lock.
+// A proposal from Claude, made into the change set the note will hold (spec §26, cc_claude_proposes; §17 and §19).
+// - Claude sends its changes and what it read through the mod, and nothing else.
+// - It is read as a model's answer is read (`changesIn`). That is things and links to add, a property to change, or a
+//   thing or link to take out.
+// - It is never a Person, a Model or a Step. So no text of Claude's declares an author.
+// - The editor declares the proposer as the first addition. That is the Model named Claude in the settings.
+// - The editor writes the proposal only if the graph spec's own check passes it.
+// The note comes back with the change set beside its graph, and every other byte kept. The graph itself is never
+// touched. It changes only when a person accepts a change on the card. Pure: the store writes what this returns, under
+// its lock.
 import {
   CLAUDE,
   basisOf,
@@ -76,8 +79,10 @@ const openIn = (note: string): number =>
 
 /**
  * The note with Claude's proposal written beside its graph. `body` is the request's JSON, `proposer` the name in the
- * change set's header, `at` the time. Refused, with a status and plain words, when the body is not changes alone, the
- * changes cannot be read, the note has no graph, the same proposal is in the note already, or the check fails it.
+ * change set's header, `at` the time. It is refused, with a status and plain words, when:
+ * - the body is not changes alone, or the changes cannot be read;
+ * - the note has no graph, or the same proposal is in the note already;
+ * - or the check fails it.
  */
 export function proposalInto(note: string, body: string, proposer: string, at: string): Proposed {
   let given: unknown;

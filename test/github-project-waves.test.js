@@ -1,5 +1,5 @@
-// The waves plan of the GitHub mirror: requirements/waves.json lists the waves in order, each with its workstreams in
-// order and planned dates marked as estimates, and the mirror derives each requirement's Wave and Order from it. Pure:
+// The waves plan of the GitHub mirror. requirements/waves.json lists the waves in order. Each wave has its workstreams
+// in order, and planned dates marked as estimates. The mirror derives each requirement's Wave and Order from it. Pure:
 // no network. The real plan is read too, against the real requirements copy and workstreams file.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

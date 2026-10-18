@@ -1,9 +1,10 @@
-// The proposals a note holds, as the card shows them, and a person's decision about one (spec §17, §26 cc_claude_proposes):
-// the core's own review, run on the note's text. Nothing here touches the DOM or the server. `proposalsIn` reads each
-// change set the note holds, with what the note's judgement graph says was decided of it, and shows it over the note
-// without writing anything; `decide` is the user's accept or reject, and gives back the note's new text for the page to
-// send through its own, version-checked write. The decider is the name set in the settings, else "you"; what proposed a
-// change, Claude among it, cannot decide it.
+// The proposals a note holds, as the card shows them, and a person's decision about one (spec §17, §26
+// cc_claude_proposes). It is the core's own review, run on the note's text. Nothing here touches the DOM or the server.
+// - `proposalsIn` reads each change set the note holds, with what the note's judgement graph says was decided of it. It
+//   shows it over the note without writing anything.
+// - `decide` is the user's accept or reject. It gives back the note's new text. The page sends it through its own,
+//   version-checked write.
+// The decider is the name set in the settings, else "you". What proposed a change, Claude among it, cannot decide it.
 import { gqlSpans } from '../../core/src/blocks.ts';
 import { deciderName } from '../../core/src/proposals-judgement.ts';
 import { ProposalReview } from '../../core/src/proposals-review.ts';

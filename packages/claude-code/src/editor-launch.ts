@@ -1,10 +1,10 @@
-// The browser editor's server as the mod runs it (spec §26, workstream C2): `/graph edit <note>` starts the session's
-// one server on the shipped process through the host's `$.process.spawn`, reads the address it prints, and keeps that
-// address to itself: the one place it can be read is `link`, which the pane draws, so it never enters a command's
-// answer, a log line, state or the conversation (cc_transcript_clean). A start that fails says why (cc_start_failure);
-// a session has one server, reused for the same note and replaced for another (cc_one_server); and it ends when the
-// session does, on `/graph stop`, or by itself when the server stops (cc_server_stops). No Node module is imported here:
-// the host's calls are handed in, so the tests run the launcher over real processes and the mod over the host's own.
+// The browser editor's server as the mod runs it (spec §26, workstream C2). `/graph edit <note>` starts the session's
+// one server on the shipped process, through the host's `$.process.spawn`. It reads the address the server prints and
+// keeps it to itself. The one place it can be read is `link`, which the pane draws. So it never enters a command's
+// answer, a log line, state or the conversation (cc_transcript_clean). A start that fails says why (cc_start_failure).
+// A session has one server, reused for the same note and replaced for another (cc_one_server). It ends when the session
+// does, on `/graph stop`, or by itself when the server stops (cc_server_stops). No Node module is imported here. The
+// host's calls are handed in, so the tests run the launcher over real processes and the mod over the host's own.
 import { CLAUDE, claudeGate, sha256 } from '@thoughtknot/core';
 import type { Gate, GateSettings } from '@thoughtknot/core';
 import { withMatrix } from './editor-matrix.ts';
@@ -30,8 +30,8 @@ export interface EditorPorts {
   /** `$.process.spawn`, narrowed to what the launcher asks of it: a command by its arguments, and its environment. */
   spawn: (request: { argv: readonly string[]; env?: Record<string, string>; input?: string }) => Spawned;
   /**
-   * A file's real path, links settled (`realPathVia` over the host's process call); with none, a matrix note cannot be
-   * placed inside the vault and is refused.
+   * A file's real path, links settled (`realPathVia` over the host's process call). With none, a matrix note cannot be
+   * placed inside the vault, and is refused.
    */
   realPath?: (path: string) => Promise<string>;
   /** `$.fs.exists`. */
@@ -110,7 +110,7 @@ export class EditorLauncher {
 
   /**
    * Opens `given` in the session's server: the one running when it is for this note, else a new one in its place. The
-   * `origin` is the host's account of who ran the command: only the person typing (`composer`) is asked a question; for
+   * `origin` is the host's account of who ran the command. Only the person typing (`composer`) is asked a question. For
    * any other, or none given, a note above Claude's level is refused (cc_classified_asks).
    */
   edit(given: string, cwd: string = this.#ports.cwd, origin?: unknown): Promise<EditOutcome> {
@@ -142,8 +142,8 @@ export class EditorLauncher {
   }
 
   /**
-   * Whether the note named may open in a pane Claude can read (cc_classified_asks, cc_credential_never): the note is
-   * read here, for the gate alone, and its text is neither kept nor said. Settings or a note that cannot be read refuse.
+   * Whether the note named may open in a pane Claude can read (cc_classified_asks, cc_credential_never). The note is
+   * read here, for the gate alone. Its text is neither kept nor said. Settings or a note that cannot be read refuse.
    */
   async gate(given: string, cwd: string = this.#ports.cwd): Promise<Gate> {
     return (await this.#check(fullPath(cwd, given))).gate;
@@ -173,9 +173,9 @@ export class EditorLauncher {
   }
 
   /**
-   * The settings the gate reads for `note`. When a row of the destination matrix is picked for Claude, the matrix note
-   * named in the settings is read from inside the vault (a path that is outside it is never read) and its rows are
-   * handed on; a note that is not there, cannot be read or is refused gives no rows, so the row clears nothing.
+   * The settings the gate reads for `note`. A row of the destination matrix may be picked for Claude. Then the matrix
+   * note named in the settings is read from inside the vault, and its rows are handed on. A path outside it is never
+   * read. A note that is not there, cannot be read or is refused gives no rows. So the row clears nothing.
    */
   async gateSettings(note: string): Promise<GateSettings> {
     const settings = await this.#ports.settings();
@@ -282,9 +282,9 @@ export class EditorLauncher {
       THOUGHTKNOT_EDITOR_VAULT: await this.#vaultOf(note),
       THOUGHTKNOT_EDITOR_NOTE: note,
       THOUGHTKNOT_EDITOR_DRAFTS: this.#ports.drafts,
-      // the server asks the gate again before every send, with the same settings and the digest of the text said yes to
-      // (never the text); none given means the defaults, the strictest
-      // and the settings the page shows with, which it is told read only (settingsEnvironment)
+      // the server asks the gate again before every send. It uses the same settings, and the digest of the text said
+      // yes to (never the text). None given means the defaults, the strictest and the settings the page shows with,
+      // which it is told read only (settingsEnvironment)
       THOUGHTKNOT_EDITOR_SETTINGS: settings ? settingsEnvironment(settings, settingsForServer(settings)) : '',
       THOUGHTKNOT_EDITOR_CONFIRMED: confirmed ?? '',
       // the host closes a child's input when it starts it, so the input's closing is not the session's end here

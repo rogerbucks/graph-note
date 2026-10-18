@@ -1,7 +1,8 @@
-// The files of the browser editor's page, as the server holds them (spec §26, cc_offline, cc_worker_same_origin): read once
-// when the server starts from the folder the build made (`mod/page/`), kept in memory, and served by their exact paths
-// from its own origin. No path from a request is ever joined to a folder, so none can reach a file that was not read here;
-// a file of a kind the page does not use is not read at all. The page itself loads nothing from anywhere else.
+// The files of the browser editor's page, as the server holds them (spec §26, cc_offline, cc_worker_same_origin). They
+// are read once when the server starts, from the folder the build made (`mod/page/`). They are kept in memory. They are
+// served by their exact paths from its own origin. No path from a request is ever joined to a folder. So none can reach
+// a file that was not read here. A file of a kind the page does not use is not read at all. The page itself loads
+// nothing from anywhere else.
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { CSP } from './request-guard.ts';
@@ -28,8 +29,8 @@ const TYPES: Record<string, string> = {
 export const WORKER_FILE = '/layout-worker.js';
 
 /**
- * The worker's policy: the server's own with one addition to `script-src`, `'wasm-unsafe-eval'`, which lets the worker
- * compile the Graphviz engine's WebAssembly and nothing else (no script from a string, no eval): a browser refuses to
+ * The worker's policy: the server's own with one addition to `script-src`, `'wasm-unsafe-eval'`. It lets the worker
+ * compile the Graphviz engine's WebAssembly and nothing else (no script from a string, no eval). A browser refuses to
  * compile WebAssembly under any policy that lacks it. The page's own policy is the server's, unchanged.
  */
 export const WORKER_CSP = CSP.replace("script-src 'self'", "script-src 'self' 'wasm-unsafe-eval'");

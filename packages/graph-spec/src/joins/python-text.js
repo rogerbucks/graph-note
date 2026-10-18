@@ -53,27 +53,27 @@ function pyrepr(v) {
     '}'
   );
 }
-// A value as Python's str writes it: a string as itself, a date as ISO 8601, a datetime with a space for the T,
-// anything else as pyrepr.
+// A value as Python's str writes it. A string is written as itself, and a date as ISO 8601. A datetime has a space for
+// the T. Anything else is written as pyrepr.
 const pystr = (v) =>
   typeof v === 'string' ? v : isTime(v) ? (v.kind === 'date' ? v.s : v.s.replace('T', ' ')) : pyrepr(v);
-// Whether two values are equal as Python's == finds them: numbers and booleans by value (True == 1), times when they
-// are the same time; it is how values are grouped as a dict's keys would group them.
+// Whether two values are equal as Python's == finds them. Numbers and booleans are equal by value (True == 1). Times
+// are equal when they are the same time. It is how values are grouped as a dict's keys would group them.
 const pyeq = (a, b) =>
   a === b ||
   ((typeof a === 'number' || typeof a === 'boolean') &&
     (typeof b === 'number' || typeof b === 'boolean') &&
     Number(a) === Number(b)) ||
   (isTime(a) && isTime(b) && same(a, b));
-// Python's round(): a half goes to the even neighbour (round(2.5) is 2), where Math.round would go up, so a value a
+// Python's round(): a half goes to the even neighbour (round(2.5) is 2), where Math.round would go up. So a value a
 // unit map restates is the one the Python library writes.
 const pyround = (x) => {
   const f = Math.floor(x),
     d = x - f;
   return d > 0.5 ? f + 1 : d < 0.5 ? f : f % 2 === 0 ? f : f + 1;
 };
-// A value as it is written inside an identifier, the same in every language: a time in ISO 8601, a string as itself,
-// anything else as RFC 8785 JSON. Claim ids use it, never pyrepr.
+// A value as it is written inside an identifier, the same in every language. A time is written in ISO 8601, and a
+// string as itself. Anything else is written as RFC 8785 JSON. Claim ids use it, never pyrepr.
 const vtext = (v) => (isTime(v) ? v.s : typeof v === 'string' ? v : jcs(v));
 // A relationship key's identifying values, each written as in an identifier, those absent left out, joined by ';'.
 const identStr = (k) =>
@@ -81,7 +81,7 @@ const identStr = (k) =>
     .filter((x) => x !== null && x !== undefined)
     .map(vtext)
     .join(';');
-// A key as text, to index a Map by and sort by: its Python repr, so keys Python holds as one tuple are one here, and a
+// A key as text, to index a Map by and sort by: its Python repr. So keys Python holds as one tuple are one here. A
 // sort by it walks them in the order Python's sorted(…, key=str) does.
 const keystr = (k) => pyrepr(k);
 

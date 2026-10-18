@@ -1,5 +1,5 @@
 // The requirements graph is the one source of the requirements, edited here in pull requests (Roger, 16 Oct 2026: no
-// vault holds them any more). A pull request may add, change and remove records, links and comments; it may never move
+// vault holds them any more). A pull request may add, change and remove records, links and comments. It may never move
 // a test back, flip one forward without its file, or remove one that is partial or written. Each case is a small edit
 // of the real graph, compared with the real graph as the base.
 import { test, describe } from 'node:test';
@@ -167,8 +167,8 @@ describe('a hand change to the requirements copy', () => {
     assert.equal(none.status, 2, none.stdout + none.stderr);
     const flag = run('--base-ref', '--base');
     assert.equal(flag.status, 2, flag.stdout + flag.stderr);
-    // the empty tree holds no copy: only then is there nothing to compare
-    // (writing it makes sure the repository holds that object; it is the same object every time)
+    // The empty tree holds no copy. Only then is there nothing to compare. (Writing it makes sure the repository holds
+    // that object. It is the same object every time.)
     const tree = spawnSync('git', ['hash-object', '-w', '-t', 'tree', '--stdin'], {
       cwd: path('.'),
       input: '',

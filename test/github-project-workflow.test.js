@@ -1,5 +1,8 @@
-// The workflow that runs the GitHub mirror on every push to main: what wakes it, what it may do, that it runs main's own
-// code only, that one mirror runs at a time, and that the project secret goes only to the one step that runs the script.
+// The workflow that runs the GitHub mirror on every push to main. Checked here:
+// - What wakes it, and what it may do.
+// - It runs main's own code only.
+// - One mirror runs at a time.
+// - The project secret goes only to the one step that runs the script.
 // Read as text, by indentation, as policy.test.js reads the others. Editor spec §12, requirements_checked_in_ci.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

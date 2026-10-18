@@ -1,6 +1,8 @@
-// The project's ethos (spec §41, ethos_checked): requirements/ethos.gql holds each principle with its rules, every rule
-// names the requirements that check it or says a person checks it or nothing does yet, and the wiki's Ethos page is made
-// from it with each rule's state. Pure: the real files are read, nothing is fetched.
+// The project's ethos (spec §41, ethos_checked):
+// - requirements/ethos.gql holds each principle with its rules.
+// - every rule names the requirements that check it, or says a person checks it, or that nothing does yet.
+// - the wiki's Ethos page is made from it with each rule's state.
+// Pure: the real files are read, nothing is fetched.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { ethosPage, ethosProblems, readEthos } from '../scripts/ethos.mjs';

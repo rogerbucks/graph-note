@@ -1,8 +1,8 @@
-// The layout engine's version, watched (spec §13, engine_version_watched): the exact Graphviz version is read from the
-// engine itself, named in the release notes and the notices, and checked against the published advisories for Graphviz
-// and for the package that wraps it; a known flaw fails the release. The check reads a committed cache, so it runs offline;
-// only the refresh reaches the network (OSV, with NVD behind it), and it runs in the release and a weekly workflow.
-// Nothing here touches the network: the refresh is proved with a fetch made for the purpose.
+// The layout engine's version, watched (spec §13, engine_version_watched). The exact Graphviz version is read from the
+// engine itself. It is named in the release notes and the notices. It is checked against the published advisories for
+// Graphviz and for the package that wraps it. A known flaw fails the release. The check reads a committed cache, so it
+// runs offline. Only the refresh reaches the network (OSV, with NVD behind it). It runs in the release and a weekly
+// workflow. Nothing here touches the network: the refresh is proved with a fetch made for the purpose.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';

@@ -1,7 +1,8 @@
-// The replay of a commit (tests-first.test.js) when something at the commit's own code cannot be trusted: a commit that
-// cannot be replayed at all, and a record updated over what it holds (a new test failing at its own commit is
-// tests-first-failing.test.js, and a reason kept for a recorded fault, tests-first-faults.test.js). Split from
-// tests-first.test.js on 11 Oct 2026, so the suite runs it beside the others.
+// The replay of a commit (tests-first.test.js) when something at the commit's own code cannot be trusted:
+// - a commit that cannot be replayed at all;
+// - a record updated over what it holds.
+// A new test failing at its own commit is tests-first-failing.test.js. A reason kept for a recorded fault is
+// tests-first-faults.test.js. Split from tests-first.test.js on 11 Oct 2026, so the suite runs it beside the others.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';

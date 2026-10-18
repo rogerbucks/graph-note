@@ -1,11 +1,15 @@
-// The editor's local server (spec §26, slice 4; workstream C0): Node's own http, no framework, listening on 127.0.0.1
-// alone, on a port the system chooses, one for each session (cc_loopback_only, cc_one_server). Every request passes the
-// checks of request-guard.ts first; an API call needs the session's token; a body is held to the core's read limit; and
-// the server stops after an idle period with no page, or at once when told. It makes no outgoing request (cc_no_remote).
-// The page and its files say nothing about any note, so they are served without the token, which a browser's
-// navigation cannot carry as a header; the token reaches the page in the address's fragment, which is never sent.
-// What the API does is handed in (`api`): the note store (editor-store.ts, workstream C1), whose answers may be a
-// stream (`feed`), and what a stop waits for (`drain`), so a write under way is finished before the process exits.
+// The editor's local server (spec §26, slice 4; workstream C0). It is Node's own http, with no framework. It listens on
+// 127.0.0.1 alone, on a port the system chooses, one for each session (cc_loopback_only, cc_one_server).
+// - Every request passes the checks of request-guard.ts first.
+// - An API call needs the session's token.
+// - A body is held to the core's read limit.
+// - The server stops after an idle period with no page, or at once when told.
+// - It makes no outgoing request (cc_no_remote).
+// The page and its files say nothing about any note. So they are served without the token. A browser's navigation
+// cannot carry it as a header. The token reaches the page in the address's fragment, which is never sent. What the API
+// does is handed in (`api`):
+// - the note store (editor-store.ts, workstream C1), whose answers may be a stream (`feed`);
+// - what a stop waits for (`drain`), so a write under way is finished before the process exits.
 import {
   STATUS_CODES,
   createServer,
@@ -27,8 +31,8 @@ export const IDLE_MS = 30 * 60 * 1000;
 export const IDLE_CHECK_MS = 60 * 1000;
 
 /**
- * The server's own limits on what a client may hold of it: time to send the headers, time for a whole request, how
- * long an idle connection is kept, how many headers are read, and how many connections at once.
+ * The server's own limits on what a client may hold of it. They are the time to send the headers and the time for a
+ * whole request. Also how long an idle connection is kept, how many headers are read, and how many connections at once.
  */
 export const SERVER_LIMITS = {
   headersTimeout: 10_000,
@@ -52,8 +56,8 @@ export interface ApiRequest {
 }
 
 /**
- * A stream the page reads with fetch, so the token stays in a header: `start` is handed what sends each piece, and
- * gives back what ends the stream's part in the API once the connection closes, whoever closes it.
+ * A stream the page reads with fetch, so the token stays in a header. `start` is handed what sends each piece. It gives
+ * back what ends the stream's part in the API once the connection closes, whoever closes it.
  */
 export type ApiFeed = (send: (text: string) => void) => () => void;
 
@@ -79,13 +83,13 @@ export interface EditorServerOptions {
   /** What answers the API; with none, every API call that passes the checks is not found. */
   api?: ApiHandler;
   /**
-   * What a stop waits for before the server counts as stopped: the note store refusing any further write and finishing
-   * those under way (C0 review), so the process never exits half way through one.
+   * What a stop waits for before the server counts as stopped. The note store refuses any further write and finishes
+   * those under way (C0 review). So the process never exits half way through one.
    */
   drain?: () => Promise<void>;
   /**
-   * The page's files, by their paths from the root (page-assets.ts), served by exact path with no token, as they say
-   * nothing of any note; the file at `/` is the page. With none, the placeholder page is served at `/` alone.
+   * The page's files, by their paths from the root (page-assets.ts). They are served by exact path with no token, as
+   * they say nothing of any note. The file at `/` is the page. With none, the placeholder page is served at `/` alone.
    */
   page?: PageAssets;
   /**
@@ -195,7 +199,8 @@ export async function startEditorServer(options: EditorServerOptions = {}): Prom
       seen();
       return send(res, 200, PAGE, { 'content-type': 'text/html; charset=utf-8' });
     }
-    // the proposal route takes the proposer's key and no other; every other route takes the session's token and not that key
+    // the proposal route takes the proposer's key and no other; every other route takes the session's token and not
+    // that key
     const as: 'page' | 'proposer' | null = PROPOSAL.test(url)
       ? options.proposerKey && tokenMatches(req.headers.authorization, options.proposerKey)
         ? 'proposer'
@@ -226,7 +231,7 @@ export async function startEditorServer(options: EditorServerOptions = {}): Prom
     else res.on('close', end);
   }
 
-  // a request with no Host comes to `handle`, which refuses it with the headers every answer carries (Node takes
+  // a request with no Host comes to `handle`. It refuses it with the headers every answer carries. (Node takes
   // `requireHostHeader`, which the types this repository pins do not name yet)
   const server = createServer({ requireHostHeader: false } as ServerOptions, (req, res) => {
     open++;

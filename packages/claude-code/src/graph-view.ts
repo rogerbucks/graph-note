@@ -1,6 +1,8 @@
-// What the Claude Code pane shows for a note (spec §10, a Claude Code host): its first graph, read and themed by the
-// core in the host's palette from the one table, laid out by Graphviz through node (graphviz-process.ts); and always the
-// same graph as lines of text, which stand in, with the reason, wherever no drawing can be (spec §9): never a blank pane.
+// What the Claude Code pane shows for a note (spec §10, a Claude Code host):
+// - its first graph, read and themed by the core in the host's palette from the one table. Graphviz lays it out through
+//   node (graphviz-process.ts).
+// - always the same graph as lines of text. They stand in, with the reason, wherever no drawing can be (spec §9).
+// It is never a blank pane.
 import {
   chosen,
   directions,
@@ -94,8 +96,8 @@ export async function viewOf(
 
 /**
  * The pane's palette: the one that follows the system, carrying both the light and the dark colours and choosing by
- * prefers-color-scheme. The mod API says nothing of the desktop app's appearance, and Claude Code's theme setting is the
- * terminal's, which draws no picture: so nothing is guessed, and the drawing takes the scheme the app hands its pages.
+ * prefers-color-scheme. The mod API says nothing of the desktop app's appearance. Claude Code's theme setting is the
+ * terminal's, which draws no picture. So nothing is guessed, and the drawing takes the scheme the app hands its pages.
  */
 export const PANE_PALETTE: Palette = PALETTES.system;
 

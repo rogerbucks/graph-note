@@ -92,8 +92,8 @@ class OneLongLine(unittest.TestCase):
 
     def test_a_line_four_times_as_long_is_read_in_about_four_times_the_time(self):
         short, long = one_line(2000), one_line(8000)
-        # timed against each other in the same run, never against a fixed time; processor time,
-        # so waiting on a loaded machine is not counted, and the fastest of several runs, taken in
+        # Timed against each other in the same run, never against a fixed time. Processor time,
+        # so waiting on a loaded machine is not counted. The fastest of several runs, taken in
         # turn. Linear reading gives a ratio of about 4, quadratic about 16.
         t_short = t_long = float("inf")
         for _ in range(5):
