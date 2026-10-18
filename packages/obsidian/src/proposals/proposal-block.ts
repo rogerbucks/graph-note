@@ -1,9 +1,11 @@
-// A change set in a note (spec §17): a block whose graph line says CHANGE SET is a proposal, drawn over its graph with
-// what it adds, changes and removes marked, and listed with Accept and Reject for each change (proposal_shown_not_applied,
-// proposal_one_by_one). Showing it writes nothing. A person's Accept writes the change into the graph's block through the
-// core's review, which has the pane's own session check it first (accepting_is_an_edit); a Reject writes only the record
-// in the note's judgement graph (rejecting_recorded). Both take the change out of the change set and go through the
-// vault's API against the note as it is then, and can be undone. The card shows the graph spec's check of the change set.
+// A change set in a note (spec §17). A block whose graph line says CHANGE SET is a proposal. It is drawn over its graph
+// with what it adds, changes and removes marked. Each change is listed with Accept and Reject (proposal_shown_not_applied,
+// proposal_one_by_one). Showing it writes nothing.
+// - A person's Accept writes the change into the graph's block through the core's review. The review has the pane's own
+//   session check it first (accepting_is_an_edit).
+// - A Reject writes only the record in the note's judgement graph (rejecting_recorded).
+// Both take the change out of the change set. Both go through the vault's API against the note as it is then, and can
+// be undone. The card shows the graph spec's check of the change set.
 import { Notice, TFile } from 'obsidian';
 import type { MarkdownPostProcessorContext } from 'obsidian';
 import {
@@ -25,8 +27,8 @@ import { renderProposalStrip } from '@thoughtknot/core/display/proposals/proposa
 import type { ProposalCard } from '@thoughtknot/core/display/proposals/proposal-strip';
 
 /**
- * Who decides here. Obsidian says nothing of who is at the keyboard, so it is the name set in the settings, exactly as
- * typed, or "you" when none is set (decider_named); the judgement graph records it with the time, beside what was
+ * Who decides here. Obsidian says nothing of who is at the keyboard. So it is the name set in the settings, exactly as
+ * typed, or "you" when none is set (decider_named). The judgement graph records it with the time, beside what was
  * decided. The core compares a person's name with the proposer's as they are written, in any case.
  */
 const personOf = (plugin: ThoughtKnotPlugin) => ({ name: deciderName(plugin.settings.decider) });
@@ -52,8 +54,8 @@ export async function renderProposalBlock(
   const root = el.createDiv({ cls: 'thoughtknot' });
   const info = ctx.getSectionInfo(el);
   const path = ctx.sourcePath;
-  // with no section info, as when another plugin renders the block, the card cannot know which note it would write: it
-  // shows the proposal and writes nothing, as in reading view (spec §3)
+  // with no section info, as when another plugin renders the block, the card cannot know which note it would write. It
+  // shows the proposal and writes nothing, as in reading view (spec §3).
   // `held` is the note as it is when the card is drawn again after the change set was found changed under it
   const note = held ?? info?.text ?? source;
   // read with the note, which says what the proposer is and what has been decided of it already

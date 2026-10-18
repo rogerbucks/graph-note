@@ -1,8 +1,9 @@
-// A stand-in for Obsidian's MarkdownRenderer, enough to see what the plugin hands it and how Obsidian would show it: each
-// render kept in `state.rendered` (the Markdown, the note it is rendered from, and the component that owns it), and the
-// Markdown drawn as Obsidian draws a few marks — an embed (a note's own text drawn inside it, as Obsidian embeds one), a
-// wikilink, an image, a Markdown link, maths, bold and emphasis, raw HTML for an <img> or a <b>, and the escapes `&lt;`
-// and `\[` — each into an element, the rest as text.
+// A stand-in for Obsidian's MarkdownRenderer, enough to see what the plugin hands it and how Obsidian would show it.
+// - Each render is kept in `state.rendered`: the Markdown, the note it is rendered from, and the component that owns it.
+// - The Markdown is drawn as Obsidian draws a few marks, each into an element, the rest as text.
+// - One mark is an embed: a note's own text drawn inside it, as Obsidian embeds one.
+// - The others are a wikilink, an image, a Markdown link, maths, bold and emphasis.
+// - Also raw HTML for an <img> or a <b>, and the escapes `&lt;` and `\[`.
 
 const MARKS = [
   ['embed', /^!\[\[([^\]|]+)(?:\|[^\]]*)?\]\]/],

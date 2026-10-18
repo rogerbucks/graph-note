@@ -1,6 +1,7 @@
-// The help in the edit pane (spec §4, §8): problems marked where they are with their fixes on that line, every problem
-// listed with a sign as well as a colour, names, kinds and relationships suggested while typing, and new problems
-// announced to screen readers.
+// The help in the edit pane (spec §4, §8).
+// - Problems are marked where they are, with their fixes on that line.
+// - Every problem is listed with a sign as well as a colour.
+// - Names, kinds and relationships are suggested while typing. New problems are announced to screen readers.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, until, wait } from './host/load-plugin.js';
@@ -222,7 +223,7 @@ describe('suggestions while typing', () => {
   });
 });
 
-// editor spec §4, unnamed_drawn_suggested: nothing is written until a thing's own fix is accepted, so a name only
+// editor spec §4, unnamed_drawn_suggested: nothing is written until a thing's own fix is accepted. So a name only
 // suggested is neither offered to be typed nor named in a fix for a near miss
 describe('a name only suggested', () => {
   const UNNAMED = READER + ",\n(:Option {name: 'Small reader'})";

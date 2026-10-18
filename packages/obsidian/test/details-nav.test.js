@@ -1,9 +1,13 @@
-// Finding your way from the details (editor spec §25, slice 3): a thing's links listed by relationship type and
-// direction, in words with a count (details_links_listed), links in before links out; choosing one selects it, shows its details and brings it into
-// view, keeping the zoom unless the thing would be too small to read (details_choose_moves), briefly animated, and at once
-// when the system asks for reduced motion (details_move_motion); a trail of the things chosen, with back and forward
-// (details_trail); an arrow at the edge pointing to a selection out of view (selection_pointer); and, in view mode, the
-// details on screen without covering the thing chosen (details_on_screen). The built plugin, against the stand-ins.
+// Finding your way from the details (editor spec §25, slice 3):
+// - A thing's links are listed by relationship type and direction, in words with a count (details_links_listed).
+//   Links in come before links out.
+// - Choosing one selects it, shows its details and brings it into view.
+//   It keeps the zoom unless the thing would be too small to read (details_choose_moves).
+// - The move is briefly animated, and at once when the system asks for reduced motion (details_move_motion).
+// - A trail of the things chosen, with back and forward (details_trail).
+// - An arrow at the edge points to a selection out of view (selection_pointer).
+// - In view mode, the details are on screen without covering the thing chosen (details_on_screen).
+// The built plugin, against the stand-ins.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load as loadCard, until } from './host/load-plugin.js';
@@ -203,8 +207,8 @@ describe('choosing a linked thing or a link in the list', () => {
   });
 });
 
-// zooming out stops at the fit (zoom_out_to_fit), so only a drawing that fits its card below a readable scale is ever
-// shown too small to read: a narrow card's
+// Zooming out stops at the fit (zoom_out_to_fit). So only a drawing that fits its card below a readable scale is
+// ever shown too small to read: a narrow card's
 describe('choosing a linked thing in a narrow card', () => {
   let env, el;
   before(async () => {
@@ -412,8 +416,8 @@ describe('in view mode, details in a tall card show on screen without covering t
   test('the details open on screen, and the drawing pans so the thing chosen is above them', () => {
     const vp = el.querySelector('.thoughtknot-viewport'),
       high = shown(el).high;
-    // the card runs off the foot of an 800-pixel screen: its drawing is in the screen's last `high` pixels, and the
-    // details, pinned to the foot of the screen, are half as tall as the drawing
+    // The card runs off the foot of an 800-pixel screen. Its drawing is in the screen's last `high` pixels.
+    // The details, pinned to the foot of the screen, are half as tall as the drawing.
     const sheet = high / 2;
     vp.getBoundingClientRect = () => ({ top: 800 - high, bottom: 800, left: 0, right: 700, width: 700, height: high });
     el.querySelector('.thoughtknot-view').getBoundingClientRect = () => ({

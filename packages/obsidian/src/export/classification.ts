@@ -1,6 +1,9 @@
-// A note's classification, as an export reads it (spec §16, classified_export): from its front matter however that writes
-// it — the key in any case; a word, a number, or a list, whose highest level is taken; anything else, which is never
-// taken as no classification — and from the note's own text when the metadata cache has not indexed it yet.
+// A note's classification, as an export reads it (spec §16, classified_export). It is read from its front matter,
+// however that writes it:
+// - the key in any case;
+// - a word, a number, or a list, whose highest level is taken;
+// - anything else, which is never taken as no classification.
+// It is read from the note's own text when the metadata cache has not indexed it yet.
 import { getFrontMatterInfo, parseYaml } from 'obsidian';
 import type { App, TFile } from 'obsidian';
 
@@ -47,9 +50,9 @@ export function classificationInText(text: string, levels: string[]): string | n
 }
 
 /**
- * The higher of two classifications read of one note (`levels` lowest first): one that is not among the levels counts
- * above every one, and none counts as `unlabelled`, the level a note with none counts as (below every one when not
- * given), so a disagreement is always settled the cautious way. A tie between none and its level gives none, so the
+ * The higher of two classifications read of one note (`levels` lowest first). One that is not among the levels counts
+ * above every one. None counts as `unlabelled`, the level a note with none counts as (below every one when not given).
+ * So a disagreement is always settled the cautious way. A tie between none and its level gives none, so the
  * note is still said to have none.
  */
 export function higherClassification(

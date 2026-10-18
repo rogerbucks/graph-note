@@ -1,6 +1,6 @@
-// The editing view's own cards (spec §4, "The page stays still"; Roger's choice C, 9 Oct 2026): in Live Preview the
-// plugin draws each graph block with a CodeMirror widget of its own, which outlives every change to the block's text —
-// redrawn in place, never torn down — and tells CodeMirror the card's last height, so the editor has nothing to correct
+// The editing view's own cards (spec §4, "The page stays still"; Roger's choice C, 9 Oct 2026). In Live Preview the
+// plugin draws each graph block with a CodeMirror widget of its own. It outlives every change to the block's text: it is
+// redrawn in place, never torn down. It tells CodeMirror the card's last height. So the editor has nothing to correct
 // and the page stays still. What is typed in place is written as one editor transaction, never through the vault.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
@@ -143,8 +143,8 @@ describe('the editing view draws graph blocks with its own widget', () => {
   });
 
   // proves: card_keeps_focus_from_editor
-  // on a phone a tapped button takes no focus, so it fell to the editor around the card, which scrolled to its cursor at
-  // the note's top: the first tap on Zoom in jumped the page (Roger, 18 Oct 2026)
+  // On a phone a tapped button takes no focus, so it fell to the editor around the card. That scrolled to its cursor at
+  // the note's top. The first tap on Zoom in jumped the page (Roger, 18 Oct 2026)
   test('a press on the card’s bar keeps the focus off the editor and the page still; one in a text box is the box’s', async () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {
@@ -218,8 +218,8 @@ describe('the editing view draws graph blocks with its own widget', () => {
 });
 
 describe('the editor in place, in the editing view’s own card', () => {
-  // found in headless Chrome, 9 Oct 2026: the new drawing went in at once, but the box joined it only at the card's next
-  // look, 16 ms later; for that moment the card was the box's height shorter, and CodeMirror moved the page to suit
+  // found in headless Chrome, 9 Oct 2026: the new drawing went in at once. But the box joined it only at the card's next
+  // look, 16 ms later. For that moment the card was the box's height shorter, and CodeMirror moved the page to suit
   test('the box moves into the new drawing as it is put in place, so the card is never without it', async () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {
@@ -315,7 +315,7 @@ describe('what is typed in place is written through the editor', () => {
   });
 
   // Roger's test vault, 9 Oct 2026: written through Obsidian's Editor, the change scrolled the note to the editor's own
-  // cursor, which sat at the note's start, as the typing is in the card's box, not the editor
+  // cursor. That sat at the note's start, as the typing is in the card's box, not the editor
   test('the change moves neither the editor’s own cursor nor its scroll', async () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {

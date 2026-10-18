@@ -23,8 +23,8 @@ export const speakIn = (tag) => {
 
 let device = {};
 /**
- * Sets the device every load after is on, unless a load names its own: a phone or a tablet (`mobile`, with the
- * document's `width`), for a check run on each device (keyboard_any_device); undefined puts it back.
+ * Sets the device every load after is on, unless a load names its own. It is a phone or a tablet (`mobile`, with the
+ * document's `width`), for a check run on each device (keyboard_any_device). Undefined puts it back.
  */
 export const onDevice = (d) => {
   device = d ?? {};
@@ -60,8 +60,8 @@ export async function load(options = {}) {
   }
   const plugin = new Plugin(obsidian.app, { id: 'thoughtknot' });
   if (options.engine) plugin.loadEngine = options.engine;
-  // loaded as Obsidian loads it, marked loaded before its onload runs and left so: what it adds, in onload or after, such
-  // as an editor in place that listens for the note changing, is loaded with it
+  // loaded as Obsidian loads it, marked loaded before its onload runs and left so. What it adds, in onload or after, is
+  // loaded with it. An example is an editor in place that listens for the note changing
   plugin._loaded = true;
   await plugin.onload();
   return { plugin, state, doc, app: obsidian.app, obsidian, uninstall };
@@ -70,8 +70,8 @@ export async function load(options = {}) {
 export const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /**
- * Resolves once every promise already under way has run on, where none waits on a timer, a frame or a worker: an order,
- * not a sleep, so the same under any load. For a change that should do nothing visible, where there is no state to wait for.
+ * Resolves once every promise already under way has run on, where none waits on a timer, a frame or a worker. It is an
+ * order, not a sleep, so the same under any load. For a change that should do nothing visible, where there is no state to wait for.
  */
 export const settled = () => new Promise((r) => setImmediate(r));
 

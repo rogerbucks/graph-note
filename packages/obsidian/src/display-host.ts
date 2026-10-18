@@ -1,5 +1,5 @@
-// Obsidian's side of the display layer (`@thoughtknot/core/display/host`): the icons, the phone test, the notice and the menu
-// the layer asks its host for, made of Obsidian's own `setIcon`, `Platform`, `Notice` and `Menu`. Installed once, when the
+// Obsidian's side of the display layer (`@thoughtknot/core/display/host`). The layer asks its host for the icons, the
+// phone test, the notice and the menu. Here they are made of Obsidian's own `setIcon`, `Platform`, `Notice` and `Menu`. Installed once, when the
 // plugin loads, before anything is drawn.
 import { getLanguage, Menu, Notice, Platform, setIcon } from 'obsidian';
 import { installHost } from '@thoughtknot/core/display/host';

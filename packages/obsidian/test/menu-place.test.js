@@ -1,6 +1,6 @@
-// The property type menu stays on screen (spec §14, inspector_native): opened from an icon near the bottom of the window it
-// is shown above the icon, so its last item, Checkbox among them, is not cut off; opened with room below it is shown
-// under the icon as before. Obsidian's own Menu places itself from the position it is given, so the position is what is tested.
+// The property type menu stays on screen (spec §14, inspector_native). Opened from an icon near the bottom of the window,
+// it is shown above the icon. So its last item, Checkbox among them, is not cut off. Opened with room below, it is shown
+// under the icon as before. Obsidian's own Menu places itself from the position it is given, so the position is tested.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load } from './host/load-plugin.js';

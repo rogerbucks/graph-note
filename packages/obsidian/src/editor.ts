@@ -1,7 +1,9 @@
-// What is added for you in the note's own editor (spec §4, comma_added_for_you and colon_added_for_you): when a ( typed in
-// a graph block starts the next pattern on a new line, and the line before is otherwise valid, the comma is added at the
-// end of that line; when a ] typed closes a link type written without its colon that matches one type of the graph, the
-// colon is added, with the type as the graph spells it. Each goes in as its own step, apart from the typing, so one undo
+// What is added for you in the note's own editor (spec §4, comma_added_for_you and colon_added_for_you).
+// - A ( typed in a graph block may start the next pattern on a new line. If the line before is otherwise valid, the
+//   comma is added at the end of that line.
+// - A ] typed may close a link type written without its colon that matches one type of the graph. Then the colon is
+//   added, with the type as the graph spells it.
+// Each goes in as its own step, apart from the typing, so one undo
 // takes back only it. The rules are the core's.
 import { EditorView } from '@codemirror/view';
 import { Transaction } from '@codemirror/state';

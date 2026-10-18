@@ -1,8 +1,11 @@
-// Play stepping through a walked path in a drawing (editor spec §7, §11): on its own, at a pace the user sets, with a
-// moving highlight on the current step and a dot running the link from the step before (path_autoplay); paused or
-// stopped at any step; exported as an animated SVG (path_animation_export), refused before it starts when too large for
-// the device (animation_export_fits); and, whenever the system asks for reduced motion, still or instant: no dot runs,
-// and every animation in the plugin's styles stops (motion_reduced_respected).
+// Play stepping through a walked path in a drawing (editor spec §7, §11).
+// - It steps on its own, at a pace the user sets (path_autoplay). A moving highlight marks the current step. A dot runs
+//   the link from the step before.
+// - It can be paused or stopped at any step.
+// - It exports as an animated SVG (path_animation_export). Too large for the device, it is refused before it starts
+//   (animation_export_fits).
+// - Whenever the system asks for reduced motion, it is still or instant (motion_reduced_respected). No dot runs, and
+//   every animation in the plugin's styles stops.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';

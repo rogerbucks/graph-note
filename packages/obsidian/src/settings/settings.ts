@@ -1,6 +1,7 @@
-// The settings page (spec §21): one page in Obsidian's plugin settings, holding every option the editor offers, each
-// with its sentence, defined from the core's list of options so none can be left off, in Obsidian's declarative form
-// so each is found by the settings search. Each change is saved at once, read back as the core reads settings.
+// The settings page (spec §21): one page in Obsidian's plugin settings, holding every option the editor offers. Each
+// comes with its sentence. Each is defined from the core's list of options, so none can be left off. They are in
+// Obsidian's declarative form, so each is found by the settings search. Each change is saved at once, read back as the
+// core reads settings.
 import { PluginSettingTab } from 'obsidian';
 import type { App, SettingDefinition, SettingDefinitionItem } from 'obsidian';
 import {
@@ -104,8 +105,8 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
           control: { type: 'textarea', key: 'aiClassMap' },
         },
       ];
-    // the level an export asks above, and the level an unlabelled note counts as for AI, are each one of the
-    // classifications as they are set now
+    // two levels are each one of the classifications as they are set now. They are the level an export asks above,
+    // and the level an unlabelled note counts as for AI
     if (o.key === 'exportAsksAbove' || o.key === 'aiUnlabelled')
       return [
         {

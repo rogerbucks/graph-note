@@ -1,5 +1,5 @@
-// An image's first frame drawn on a canvas (editor spec §18, §11): never for an image whose frame is over 50 million
-// pixels, which would hold the page and the device's memory (review of #443), and null, never a rejection, wherever it
+// An image's first frame drawn on a canvas (editor spec §18, §11). Never for an image whose frame is over 50 million
+// pixels: that would hold the page and the device's memory (review of #443). Null, never a rejection, wherever it
 // cannot be drawn. The browser's Image is stood in for: it says its size as a decoded image would, and records whether a
 // canvas was asked for.
 import { test, describe } from 'node:test';

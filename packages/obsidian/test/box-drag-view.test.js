@@ -1,9 +1,14 @@
-// Moving a box by dragging it (editor spec §6, nudge_preview, drag_moves_box): a box pressed with a mouse and dragged
-// follows the pointer, the box it would land by is marked and a line says the nudge it would write; letting go writes
-// that nudge into the style graph and says so; Escape, or letting go away from every box, writes nothing; a press that
-// hardly moves is still a tap; a drag across empty space still pans; and a finger swiped across a box moves nothing.
-// And with a finger (hold_to_drag_touch): held on a box for a moment it picks the box up, and only then does a drag move
-// it; a hold lifted without moving is the long press it was; and while a box is picked up the page does not scroll.
+// Moving a box by dragging it (editor spec §6, nudge_preview, drag_moves_box):
+// - A box pressed with a mouse and dragged follows the pointer.
+// - The box it would land by is marked, and a line says the nudge it would write.
+// - Letting go writes that nudge into the style graph and says so.
+// - Escape, or letting go away from every box, writes nothing.
+// - A press that hardly moves is still a tap. A drag across empty space still pans.
+// - A finger swiped across a box moves nothing.
+// And with a finger (hold_to_drag_touch):
+// - Held on a box for a moment it picks the box up. Only then does a drag move it.
+// - A hold lifted without moving is the long press it was.
+// - While a box is picked up the page does not scroll.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, until } from './host/load-plugin.js';

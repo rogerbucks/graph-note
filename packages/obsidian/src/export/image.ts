@@ -1,9 +1,11 @@
-// The image an export writes (spec §16): laid out where a drawing is, apart from the interface and under the same limits
-// (layout_contained), in the fixed colours chosen, framed, and kept as SVG or drawn as a PNG at twice natural size or
-// more (export_png_sharp). A PNG too large for one sharp image is drawn on pages, each its own file, named in order
-// (big_export); one too large even for pages is refused, with the SVG suggested. Every page is drawn before any is
-// written, so a page that cannot be drawn leaves nothing behind. The images on boxes are read from the vault and
-// embedded in the file (§18), and what was done with each animated image is said (export_animation_stated).
+// The image an export writes (spec §16).
+// - It is laid out where a drawing is, apart from the interface and under the same limits (layout_contained).
+// - It is in the fixed colours chosen, and framed.
+// - It is kept as SVG, or drawn as a PNG at twice natural size or more (export_png_sharp).
+// A PNG too large for one sharp image is drawn on pages. Each page is its own file, named in order (big_export). One
+// too large even for pages is refused, with the SVG suggested. Every page is drawn before any is written. So a page
+// that cannot be drawn leaves nothing behind. The images on boxes are read from the vault and embedded in the file
+// (§18). What was done with each animated image is said (export_animation_stated).
 import { Platform, arrayBufferToBase64 } from 'obsidian';
 import {
   IMAGE_LIMITS,
@@ -40,8 +42,8 @@ export interface ExportFile {
 
 /**
  * What the image is made from: the scope, the colours, the style, where it came from, and the plan's names. The style
- * comes with the graph as read (`data`), whose values the properties it shows inline are drawn with (spec §14): one
- * without the other is a type error, as in the core's `ExportInfo`.
+ * comes with the graph as read (`data`). The properties it shows inline are drawn with that graph's values (spec §14).
+ * One without the other is a type error, as in the core's `ExportInfo`.
  */
 export type ImageAsk = {
   scope: ExportScope;
@@ -77,8 +79,8 @@ export async function imageFiles(
       layoutFailed = true;
       throw e;
     });
-  // drawn with its style — nudges, arrowheads hidden and properties shown inline — and the values those properties have;
-  // an SVG moves the links its style moves, and plays a path it is given (§7), where a PNG is drawn still
+  // drawn with its style and the values its properties have. The style holds nudges, arrowheads hidden and properties
+  // shown inline. An SVG moves the links its style moves, and plays a path it is given (§7), where a PNG is drawn still
   const basics = {
     note: x.note,
     date: x.date,
@@ -141,8 +143,8 @@ export async function imageFiles(
 }
 
 /**
- * The loader of the images on an export's boxes (§18, export-pictures.ts): each found from the note at `note`, read
- * through the vault, what its bytes say, and, for one that moves, its first frame drawn; or why it cannot be had.
+ * The loader of the images on an export's boxes (§18, export-pictures.ts). Each is found from the note at `note` and
+ * read through the vault. It gives what its bytes say and, for one that moves, its first frame drawn. Or why it cannot be had.
  */
 function picturesFrom(plugin: ThoughtKnotPlugin, note: string): PictureLoad {
   const source = vaultImages(plugin.app, note);

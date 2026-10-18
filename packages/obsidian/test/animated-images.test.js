@@ -1,11 +1,13 @@
-// Animated images (editor spec §18, §11, §16): a thing's image, a GIF, APNG, animated WebP or animated SVG attached in the
-// vault, is shown in its details and, where its style asks, as a picture on its box (animated_image_shown); every one
-// has a pause and play control, reachable from the keyboard and by touch (animation_pause_play); under reduced motion it
-// starts still, its first frame, and moves only when played (motion_reduced_respected); past the stated limits of size
-// and count it is shown as its first frame, saying why, and playing it is refused with the reason
-// (animated_image_limited); and an export says what it did with each (export_animation_stated). Images come only from
-// the vault: an address outside it is never loaded. The browser's own decoding draws them; the first frame is drawn by
-// the plugin's `stillFrame`, which a test stands in for, as it does `rasterise`.
+// Animated images (editor spec §18, §11, §16). A thing's image is a GIF, APNG, animated WebP or animated SVG attached in
+// the vault.
+// - It is shown in its details and, where its style asks, as a picture on its box (animated_image_shown).
+// - Every one has a pause and play control, reachable from the keyboard and by touch (animation_pause_play).
+// - Under reduced motion it starts still, its first frame, and moves only when played (motion_reduced_respected).
+// - Past the stated limits of size and count it is shown as its first frame, saying why.
+//   Playing it is refused with the reason (animated_image_limited).
+// - An export says what it did with each (export_animation_stated).
+// Images come only from the vault. An address outside it is never loaded. The browser's own decoding draws them.
+// The first frame is drawn by the plugin's `stillFrame`, which a test stands in for, as it does `rasterise`.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';

@@ -1,6 +1,6 @@
 // The details of a thing or link are the editable inspector only while the card is in edit mode (spec §14,
-// inspector_in_details); when Done closes the editor, a details panel that is open turns read-only, with nothing left in it
-// that could write to the note — and a control kept from before cannot write either.
+// inspector_in_details). When Done closes the editor, a details panel that is open turns read-only.
+// Nothing is left in it that could write to the note. And a control kept from before cannot write either.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until, wait } from './host/load-plugin.js';
@@ -110,8 +110,8 @@ describe('the details after Done', () => {
 });
 
 describe('Park for later after Done', () => {
-  // a locked graph whose schema, in a later block, does not declare Deferred and DEFERS: declaring them writes that
-  // block through the vault, apart from the text being edited (graph-view-parked.test.js)
+  // A locked graph whose schema, in a later block, does not declare Deferred and DEFERS.
+  // Declaring them writes that block through the vault, apart from the text being edited (graph-view-parked.test.js).
   const PLAIN = `// graph: reader
 (q:Question {title: 'Which device?'}),
 (small:Option {name: 'Small reader'}),

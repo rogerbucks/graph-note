@@ -1,8 +1,10 @@
-// A stand-in for Obsidian's Live Preview, on a real CodeMirror 6 (the versions Obsidian ships): the note as an editor,
-// each gql block drawn by the plugin's processor in a block widget that is built again whenever the block's text
-// changes, as Obsidian's own does, and a write to the note applied as one change, as Obsidian applies a file changed
-// under an open editor (app.js, MarkdownView: onModify → setViewData → the editor's set: a line diff, one dispatch with
-// userEvent "set"). For seeing in a browser what the editing view does to a card, and to the page, on each write.
+// A stand-in for Obsidian's Live Preview, on a real CodeMirror 6 (the versions Obsidian ships).
+// - The note is an editor.
+// - Each gql block is drawn by the plugin's processor in a block widget. The widget is built again whenever the
+//   block's text changes, as Obsidian's own is.
+// - A write to the note is applied as one change, as Obsidian applies a file changed under an open editor. See app.js,
+//   MarkdownView: onModify → setViewData → the editor's set. That is a line diff, one dispatch with userEvent "set".
+// It is for seeing in a browser what the editing view does to a card, and to the page, on each write.
 import { EditorState, StateField, Prec } from '@codemirror/state';
 import { Decoration, EditorView, WidgetType } from '@codemirror/view';
 import { processors, files, editorExtensions, editorInfoField, editorLivePreviewField } from 'obsidian';
@@ -105,10 +107,10 @@ export function livePreview(parent, own) {
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /**
- * "The page stays still" (spec §4, decided 9 Oct 2026): with a card edited in place and the editor scrolled to a given
- * place, a comma typed at the end of its text is written and redrawn; the editor's scroll, the box's place on screen and
- * its focus must all be as they were. `card` is which graph card; `at` is how far the card's top is above the view, in
- * pixels, or 'end' for the editor scrolled to its very end, where a correction sticks. Returns what was seen.
+ * "The page stays still" (spec §4, decided 9 Oct 2026). A card is edited in place, with the editor scrolled to a given
+ * place. A comma typed at the end of its text is written and redrawn. The editor's scroll, the box's place on screen and
+ * its focus must all be as they were. `card` is which graph card. `at` is how far the card's top is above the view, in
+ * pixels. Or it is 'end' for the editor scrolled to its very end, where a correction sticks. Returns what was seen.
  */
 export async function pageStaysStill(card = 1, at = 120) {
   await pause(800);

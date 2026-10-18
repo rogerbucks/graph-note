@@ -1,6 +1,8 @@
-// Writing the block editor's text into its note (spec §4, §9), safely: through the core's session, which never overwrites a
-// block changed meanwhile, either through the note's editor when it is open in the editing view or atomically through the
-// vault; undo and redo of the note's own changes; and Lock the graph, which writes its schema as a new block (spec §8).
+// Writing the block editor's text into its note (spec §4, §9), safely.
+// - It goes through the core's session, which never overwrites a block changed meanwhile. The write goes through the
+//   note's editor when it is open in the editing view. Otherwise it goes atomically through the vault.
+// - Undo and redo of the note's own changes.
+// - Lock the graph, which writes its schema as a new block (spec §8).
 import { Notice } from 'obsidian';
 import type { TFile, Vault } from 'obsidian';
 import type { EditorView } from '@codemirror/view';
@@ -23,8 +25,8 @@ const refusal = (r: Refused): Refused => ({
 type Keep = (note: string) => void;
 
 /**
- * Writes what is typed into a note open in the editing view, through its editor, as one change of just what differs, never
- * behind its back: Obsidian would apply the file to the editor, and the page would move (§4). Straight through CodeMirror,
+ * Writes what is typed into a note open in the editing view, through its editor. It is one change of just what differs.
+ * Never behind its back: Obsidian would apply the file to the editor, and the page would move (§4). Straight through CodeMirror,
  * so neither the editor's own cursor nor its scroll moves: Obsidian's Editor would scroll to that cursor.
  */
 export function writeThroughEditor(cm: EditorView, s: PaneSession, keep: Keep): Refused | null {
@@ -69,8 +71,8 @@ export async function writeThroughVault(
 }
 
 /**
- * Undo or Redo of the session's changes to the note, through the vault; refused, never over a change made outside the
- * editor (§9); a refused write keeps the note as it was found.
+ * Undo or Redo of the session's changes to the note, through the vault. It is refused, never written over a change made
+ * outside the editor (§9). A refused write keeps the note as it was found.
  */
 export async function stepNote(
   vault: Vault,

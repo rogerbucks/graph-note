@@ -1,6 +1,6 @@
-// The cards' heights in the editing view (spec §4, page_stays_still; the review of #91, 11 Oct 2026): a card's last height
-// is kept by its note and the line its block opens on, so a note opened again tells CodeMirror its cards' heights at once;
-// and only the heights of blocks the note still has are kept, so the store never grows past the notes' blocks.
+// The cards' heights in the editing view (spec §4, page_stays_still; the review of #91, 11 Oct 2026). A card's last
+// height is kept by its note and the line its block opens on. So a note opened again tells CodeMirror its cards' heights
+// at once. Only the heights of blocks the note still has are kept, so the store never grows past the notes' blocks.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';

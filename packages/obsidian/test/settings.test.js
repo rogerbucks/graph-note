@@ -1,7 +1,8 @@
-// The settings page (editor spec §21): one page in Obsidian's plugin settings holding every option with its sentence;
-// strictness at three levels, read as stated wherever a graph is read; one action converting a note back to standard
-// GQL, checked first; engines and exports given standard GQL; the AI models of §19, their keys kept out of the vault; and
-// formatting and drawing defaults.
+// The settings page (editor spec §21).
+// - One page in Obsidian's plugin settings holds every option with its sentence.
+// - Strictness has three levels, read as stated wherever a graph is read.
+// - One action converts a note back to standard GQL, checked first. Engines and exports are given standard GQL.
+// - The AI models of §19, with their keys kept out of the vault. And formatting and drawing defaults.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until, wait } from './host/load-plugin.js';

@@ -153,8 +153,8 @@ export default class ThoughtKnotPlugin extends Plugin {
   }
 
   /**
-   * Saves the settings, read back as the core reads them, so nothing out of range or secret is kept; and when the
-   * strictness or the drawing direction changed, every drawing and editor already shown reads and draws again.
+   * Saves the settings, read back as the core reads them, so nothing out of range or secret is kept. When the strictness
+   * or the drawing direction changed, every drawing and editor already shown reads and draws again.
    */
   async saveSettings(next: Settings): Promise<void> {
     const was = this.settings;
@@ -173,8 +173,8 @@ export default class ThoughtKnotPlugin extends Plugin {
   private readonly viewStates = new Map<string, ViewState>();
 
   /**
-   * The View menu's state of a graph, or of one of its views, in a note (§25): the same for every card that draws it, so
-   * a card drawn again keeps it; started from the settings, the style graph's merging and a view saved as shown
+   * The View menu's state of a graph, or of one of its views, in a note (§25). It is the same for every card that draws
+   * it, so a card drawn again keeps it. Started from the settings, the style graph's merging and a view saved as shown
    * (view_switch_defaults). It is the drawing's alone, never written to the note (view_switch_view_only).
    */
   switchesFor(path: string, graph: string, style: StyleGraph, view?: string): ViewState {
@@ -298,18 +298,18 @@ export default class ThoughtKnotPlugin extends Plugin {
 
   /**
    * A graph laid out and themed apart from the interface, in one worker reused for every block (spec §9,
-   * layout_contained); or why it is shown as text; or null when it is no longer wanted — a newer drawing for the same
-   * `owner` (a card, an editor) asked for before it started, or the plugin unloaded. Rejects when the engine cannot start.
+   * layout_contained). Or why it is shown as text. Or null when it is no longer wanted. That is when a newer drawing for
+   * the same `owner` (a card, an editor) was asked for before it started, or the plugin unloaded. Rejects when the engine cannot start.
    */
   layout(drawing: GraphDrawing, owner?: object): Promise<Drawn | Refusal | null> {
-    // the direction set on the settings page, one the locked style allows (spec §21); else the best fit
+    // the direction set on the settings page, one the locked style allows (spec §21). Else the best fit.
     // a direction the graph's own style sets (§6), or its diagram type's (§15), comes before the settings' default
     return this.layoutsOf()?.draw(directed(drawing, this.settings.direction), owner) ?? Promise.resolve(null);
   }
 
   /**
-   * A graph laid out for an export, in the fixed colours of `theme` (spec §16): in the same worker, and under the same
-   * size and time limits, as a drawing, so an export never holds the page; the result is as `layout`'s.
+   * A graph laid out for an export, in the fixed colours of `theme` (spec §16). It uses the same worker, and the same
+   * size and time limits, as a drawing. So an export never holds the page. The result is as `layout`'s.
    */
   layoutForExport(drawing: GraphDrawing, theme: ExportTheme): Promise<Drawn | Refusal | null> {
     return this.layoutsOf()?.draw(drawing, undefined, theme) ?? Promise.resolve(null);

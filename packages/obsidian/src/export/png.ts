@@ -1,5 +1,5 @@
-// A PNG of an exported SVG (spec §16, export_png_sharp): drawn on a canvas at the size the core gives, never less than
-// twice natural size, so its text stays sharp; the SVG is self-contained, with fixed colours, so it draws the same here.
+// A PNG of an exported SVG (spec §16, export_png_sharp). It is drawn on a canvas at the size the core gives, never less
+// than twice natural size, so its text stays sharp. The SVG is self-contained, with fixed colours, so it draws the same here.
 // The SVG is given that size itself before it is read, so no engine draws it small and scales it up.
 import type { PngSize } from '@thoughtknot/core';
 

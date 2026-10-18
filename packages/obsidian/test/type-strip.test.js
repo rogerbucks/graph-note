@@ -1,8 +1,11 @@
-// Diagram types on a drawing's card (editor spec §15): Diagram type lists the seven types, each that fits to choose and
-// each that does not with why; the suggested one says so, and nothing is drawn as it until chosen; choosing writes the
-// type into the style graph, for the graph or the view the card shows; a chosen type that has stopped fitting is said,
-// with the nearest that fits offered, and the graph is drawn as a network meanwhile; and a graph of more than 50 things
-// offers the table or a view as the way in. Reading view says how the graph is drawn and writes nothing.
+// Diagram types on a drawing's card (editor spec §15).
+// - Diagram type lists the seven types. Each that fits can be chosen. Each that does not says why.
+// - The suggested one says so, and nothing is drawn as it until chosen.
+// - Choosing writes the type into the style graph, for the graph or the view the card shows.
+// - A chosen type that has stopped fitting is said, with the nearest that fits offered. The graph is drawn as a network
+//   meanwhile.
+// - A graph of more than 50 things offers the table or a view as the way in.
+// Reading view says how the graph is drawn and writes nothing.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';
