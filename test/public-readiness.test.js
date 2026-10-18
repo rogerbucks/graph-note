@@ -356,6 +356,21 @@ describe('the settings on GitHub', () => {
     for (const f of ['has_projects', 'has_wiki', 'has_discussions']) assert.equal(wanted(f).want, true, f);
   });
 
+  test('a commit made on the website is signed off too', () => {
+    assert.equal(wanted('web_commit_signoff_required').want, true);
+  });
+
+  test('a stranger sees what the project is, its home page, and topics to find it by', () => {
+    assert.match(wanted('description').want, /Obsidian/);
+    assert.match(wanted('description').want, /app/, 'names more than the Obsidian plugin');
+    assert.ok(wanted('description').want.length <= 350, 'GitHub allows 350 characters');
+    assert.equal(wanted('homepage').want, 'https://thoughtknot.app/');
+    const topics = wanted('topics').want;
+    assert.ok(topics.length >= 1 && topics.length <= 20, 'GitHub allows 20 topics');
+    assert.deepEqual(topics, [...topics].sort(), 'in order, as they are read back');
+    for (const t of topics) assert.match(t, /^[a-z0-9][a-z0-9-]{0,49}$/, t);
+  });
+
   test('secrets are scanned and refused at the gate, once the repository is public', () => {
     for (const f of ['security: secret_scanning', 'security: secret_scanning_push_protection']) {
       assert.equal(wanted(f).phase, 'public', f);

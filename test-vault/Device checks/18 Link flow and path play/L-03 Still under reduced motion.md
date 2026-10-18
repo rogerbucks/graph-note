@@ -42,4 +42,4 @@ The style block: dashes on the NEAR links, a dot on the SERVES link.
 
 > **L-03** Turn the system's reduce-motion setting on, and redraw the notes of L-01 and L-02: the dashes stand still, no dot is drawn, and the icons and the legend stay. Press Play on a path: each step is marked at once, with no pulse and no dot. Open an exported animated SVG in a browser: it is still, every step outlined and numbered. Turn the setting off again afterwards.
 
-**Back to the checklist:** [L-03 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for L-03 in its list.
+**Back to the checklist:** [L-03 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for L-03 in its list.

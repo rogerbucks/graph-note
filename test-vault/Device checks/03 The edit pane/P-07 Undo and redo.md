@@ -24,4 +24,4 @@
 
 > **P-07** Undo and Redo take back and put back each change in the note.
 
-**Back to the checklist:** [P-07 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for P-07 in its list.
+**Back to the checklist:** [P-07 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for P-07 in its list.

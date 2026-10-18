@@ -37,4 +37,4 @@ The type the drawing starts as, in its own block: change it by Diagram type to t
 
 > **E-03** In each type, the table among them: tap a box or a row for its details; Edit here, then change a property in the inspector; zoom in and out with the buttons and a pinch, Fit, and Full screen. Each works as in the network.
 
-**Back to the checklist:** [E-03 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for E-03 in its list.
+**Back to the checklist:** [E-03 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for E-03 in its list.

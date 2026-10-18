@@ -43,4 +43,4 @@ Its schema, written after the data.
 
 > **V-13** A block that holds only a graph's schema is drawn as the schema: each kind a box, each relationship type an arrow between the kinds it joins, read by its reading, and a type not used yet a box saying so. Source shows its text, and the card offers no Edit here (§3, schema_drawn).
 
-**Back to the checklist:** [V-13 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for V-13 in its list.
+**Back to the checklist:** [V-13 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for V-13 in its list.

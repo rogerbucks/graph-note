@@ -26,7 +26,7 @@ const page = (list, n) => list.sort((a, b) => b.number - a.number).slice((Number
  * `failAfterUnlock` (the words a comment fails with once its conversation has been unlocked), and `afterList` (a function run once, after the next listing of comments, as another run would write in between).
  * `issues()` gives the issues `gh issue list` prints.
  */
-export function fakeRepoSide({ repo = 'rogerbucks/graph-note', pageSize = 100, issues = () => [] } = {}) {
+export function fakeRepoSide({ repo = 'rogerbucks/thoughtknot', pageSize = 100, issues = () => [] } = {}) {
   const hub = {
     repo,
     pulls: {},
@@ -163,8 +163,8 @@ export function pull(
     head = 'a'.repeat(40),
     base = 'main',
     mergeSha = null,
-    headRepo = 'rogerbucks/graph-note',
-    baseRepo = 'rogerbucks/graph-note',
+    headRepo = 'rogerbucks/thoughtknot',
+    baseRepo = 'rogerbucks/thoughtknot',
     body = null,
     draft = false,
     mergedAt = null,
@@ -182,14 +182,14 @@ export function pull(
     body,
     head: { sha: head, repo: headRepo && { full_name: headRepo } },
     base: { ref: base, repo: baseRepo && { full_name: baseRepo } },
-    html_url: `https://github.com/rogerbucks/graph-note/pull/${number}`,
+    html_url: `https://github.com/rogerbucks/thoughtknot/pull/${number}`,
   };
 }
 
 /** The in-memory project (github-project-fake.js) with the fixture’s requirements mirrored into it, as the mirror leaves it. */
 export function mirroredProject() {
   const gh = fakeGithub();
-  const repo = 'rogerbucks/graph-note';
+  const repo = 'rogerbucks/thoughtknot';
   const desired = desiredState(readBoard(FIXTURE), WORKSTREAMS, [3, 4]);
   executePlan(gh.run, repo, buildPlan(desired, readRemote(gh.run, repo)), { sleep: () => {} });
   gh.hub.mutations.length = 0;

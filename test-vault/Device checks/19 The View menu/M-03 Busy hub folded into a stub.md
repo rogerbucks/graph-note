@@ -32,4 +32,4 @@
 
 > **M-03** A thing with 13 links or more is drawn with its links folded into one dashed stub saying how many. Tap the stub: the links and the things on them come back, the drawing redrawn at once. Tap the thing and press Fold its 14 links in its details: they fold again; Open its 14 links opens them.
 
-**Back to the checklist:** [M-03 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for M-03 in its list.
+**Back to the checklist:** [M-03 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for M-03 in its list.

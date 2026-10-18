@@ -25,4 +25,4 @@
 
 > **X-06** Android, if one is to hand: a phone that cannot share a file saves the export in the vault and says so.
 
-**Back to the checklist:** [X-06 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for X-06 in its list.
+**Back to the checklist:** [X-06 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for X-06 in its list.

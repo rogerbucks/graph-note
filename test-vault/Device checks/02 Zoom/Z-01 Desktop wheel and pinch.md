@@ -35,4 +35,4 @@
 
 > **Z-01** Desktop: the mouse wheel alone scrolls the note. With Ctrl or Command it zooms about the pointer, and so does a trackpad pinch, a little quicker than the fingers move.
 
-**Back to the checklist:** [Z-01 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Z-01 in its list.
+**Back to the checklist:** [Z-01 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Z-01 in its list.

@@ -28,4 +28,4 @@
 
 > **U-05** Give the note a classification above the chosen model's ceiling: Show what will be sent says why, names a model cleared for it, and Send stays off. At the highest classification set, nothing is sent to any model; nor is a note holding a password property. With no classification the note counts as the most sensitive level, so it goes to no model, and the dialog points to Unlabelled notes count as; set that to Internal, and it goes to a model cleared for Internal and to none cleared only for Public.
 
-**Back to the checklist:** [U-05 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for U-05 in its list.
+**Back to the checklist:** [U-05 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for U-05 in its list.

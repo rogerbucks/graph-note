@@ -26,4 +26,4 @@
 
 > **I-11** Tapping a property's icon opens a menu to change its type or remove it. Add property adds a row in place, its name suggested from the names already used.
 
-**Back to the checklist:** [I-11 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-11 in its list.
+**Back to the checklist:** [I-11 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-11 in its list.
