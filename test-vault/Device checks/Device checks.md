@@ -1,6 +1,6 @@
 # Device checks
 
-One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md)): 158 checks in 21 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
+One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md)): 160 checks in 21 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
 
 ## 01 Viewing
 
@@ -81,6 +81,8 @@ One note for each check in the device checklist ([the checklist, on GitHub](http
 - [[Device checks/05 The style graph/S-02 Broken nudge word|S-02 Broken nudge word]]
 - [[Device checks/05 The style graph/S-03 Drag a box to move it|S-03 Drag a box to move it]]
 - [[Device checks/05 The style graph/S-04 Hold a box to move it|S-04 Hold a box to move it]]
+- [[Device checks/05 The style graph/S-05 Move a box from the keyboard|S-05 Move a box from the keyboard]]
+- [[Device checks/05 The style graph/S-06 Move a box round a radial drawing|S-06 Move a box round a radial drawing]]
 
 ## 06 Views
 

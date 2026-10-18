@@ -6,6 +6,7 @@
 // lands (box-drag.ts); this draws it.
 import { landingFor, landingSaid, word } from '@graph-note/core';
 import type { Landing, NudgeWrite, View, WrittenNudge } from '@graph-note/core';
+import { moveHint } from './box-move-keys';
 import type { Taps } from './taps';
 
 /** How far, in screen pixels, a press on a box moves before it is a drag rather than a tap. */
@@ -149,7 +150,7 @@ export class BoxDrag {
       Array.from(this.host.viewport.querySelectorAll<SVGElement>('g.node'))
         .find((g) => g.getAttribute('data-key') === l.other)
         ?.addClass('is-landing');
-    this.hint ??= this.host.viewport.createDiv({ cls: 'graph-note-move-hint', attr: { role: 'status' } });
+    this.hint ??= moveHint(this.host.viewport);
     this.hint.hidden = false;
     this.hint.textContent = l
       ? landingSaid(l, press.key, this.host.textOf)

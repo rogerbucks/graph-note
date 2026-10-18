@@ -210,6 +210,11 @@ holds the two together).
 - [ ] **S-04** Phone: hold a finger on a box for a moment. It lifts (a shadow) and its tooltip opens. Drag it to just
       below another box: the page does not scroll, the line says "Put … beside …", and letting go writes the nudge. A
       swipe begun at once still scrolls the note, and a hold lifted without moving opens no details (hold_to_drag_touch).
+- [ ] **S-05** Keyboard: Tab to a box and press M. The line at the top says "Put … (1 of …)" and the box it would go by
+      is outlined. The arrow keys step through the places; Enter writes the nudge and says "Moved: …"; Escape writes
+      nothing. Move… in a box's details does the same. In reading view there is no Move… (move_box_keyboard).
+- [ ] **S-06** In a radial drawing, drag a box to just past another one around the centre. The line says "Put … before
+      …" or "… after …", never beside, and letting go moves the box round to that place (radial_spoke_order).
 
 ## Views — spec §2, §7
 

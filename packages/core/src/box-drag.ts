@@ -92,6 +92,27 @@ export function landingFor(
   return placed(side, dragged, near.key, written);
 }
 
+/**
+ * Every place box `dragged` can be moved to among the `boxes` drawn, one after another, as the keyboard steps through them
+ * (move_box_keyboard): beside, before and after each other box, the nearest first; in a radial drawing about the box of
+ * `centre`, before and after each thing around it. A place whose nudge is `written` already is left out.
+ */
+export function placesFor(
+  dragged: string,
+  boxes: readonly PlacedBox[],
+  written: readonly WrittenNudge[] = [],
+  centre?: string,
+): Landing[] {
+  const from = boxes.find((b) => b.key === dragged),
+    sides: Side[] = centre === undefined ? ['beside', 'before', 'after'] : ['before', 'after'];
+  const away = (b: PlacedBox) => (from ? distance(middle(from), b) : 0);
+  return boxes
+    .filter((b) => b.key !== dragged && b.key !== centre)
+    .sort((p, q) => away(p) - away(q))
+    .flatMap((b) => sides.map((side) => placed(side, dragged, b.key, written)))
+    .filter((l): l is Landing => l !== null);
+}
+
 /** Box `dragged` placed on `side` of box `other`, and the nudge that writes it; null when it is `written` already. */
 function placed(side: Side, dragged: string, other: string, written: readonly WrittenNudge[]): Landing | null {
   const nudge: NudgeWrite =

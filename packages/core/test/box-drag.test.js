@@ -4,7 +4,7 @@
 // already written, it lands nowhere and writes nothing.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { landingFor, landingSaid } from '../src/box-drag.ts';
+import { landingFor, landingSaid, placesFor } from '../src/box-drag.ts';
 
 // three boxes laid out left to right (LR): ann, then bob, with cy below bob
 const BOXES = [
@@ -82,5 +82,32 @@ describe('where a dragged box lands in a radial drawing', () => {
   // proves: radial_spoke_order
   test('dropped on the centre, it lands nowhere: the centre stays the centre', () => {
     assert.equal(landingFor('c', { x: 100, y: 100 }, ROUND, 'LR', [], 'sun'), null);
+  });
+});
+
+describe('the places a box can be moved to, one after another, from the keyboard', () => {
+  // proves: move_box_keyboard
+  test('are beside, before and after each other box, the nearest box first, less any nudge written already', () => {
+    const places = placesFor('cy', BOXES, [{ word: 'beside', thing: 'bob', other: 'cy' }]);
+    assert.deepEqual(
+      places.map((l) => landingSaid(l, 'cy', text)),
+      ['Put Cy before Bob', 'Put Cy after Bob', 'Put Cy beside Ann', 'Put Cy before Ann', 'Put Cy after Ann'],
+    );
+  });
+
+  // proves: move_box_keyboard, radial_spoke_order
+  test('in a radial drawing, are before and after each thing around the centre, and never by the centre', () => {
+    const ROUND = [
+      { key: 'sun', left: 80, top: 90, right: 120, bottom: 110 },
+      { key: 'a', left: 180, top: 90, right: 220, bottom: 110 },
+      { key: 'c', left: -20, top: 90, right: 20, bottom: 110 },
+    ];
+    assert.deepEqual(
+      placesFor('c', ROUND, [], 'sun').map((l) => [l.side, l.other]),
+      [
+        ['before', 'a'],
+        ['after', 'a'],
+      ],
+    );
   });
 });
